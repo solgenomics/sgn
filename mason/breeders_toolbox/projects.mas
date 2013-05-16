@@ -81,6 +81,11 @@
           <input id="max_block_size" name="block_size" />
 	  <br>
 	</div>
+	<br>
+	<label for="show_plot_naming_options">Custom plot naming/numbering</label>
+        <input type="checkbox" id="show_plot_naming_options">
+	<div id="plot_naming_options" style="display: none">
+	  <hr>
 	  <label for id="plot_prefix" style="display: inline-block; width: 200px;">Plot name prefix:</label>
 	  <input id="plot_prefix" name="plot_prefix" />
 	  <br>
@@ -90,6 +95,7 @@
 	  <label for id="increment" style="display: inline-block; width: 200px;">Plot number increment:</label>
           <input id="increment" name="increment" />
 	  <br>
+      </div>
       </div>
       </div>
     </div>
@@ -105,6 +111,10 @@
 <script defer="defer">
 
 jQuery(document).ready(function () {
+
+
+    //var add_project_dialog_initial_height = 380;
+    //var add_project_dialog_current_height = add_project_dialog_initial_height;
 
     jQuery("<option>", {
         value: '',
@@ -144,21 +154,34 @@ jQuery(document).ready(function () {
     jQuery("#select_design_method").one('mousedown', function () {
         jQuery("option:first", this).remove();
         jQuery("#trial_design_more_info").show();
-        jQuery("#add_project_dialog").dialog("option", "height", 570);
+        jQuery("#add_project_dialog").dialog("option", "height","auto");
 	jQuery("#select_design_method").change();
     });
+
+    jQuery("#show_plot_naming_options").click(function () {
+	var current_height = jQuery("#add_project_dialog").dialog("option", "height");
+	if (jQuery('#show_plot_naming_options').is(':checked')) {
+	    jQuery("#plot_naming_options").show();
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
+	}
+	else {
+	    jQuery("#plot_naming_options").hide();
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
+	}
+    });
+
 
     jQuery("#format_type_radio").change(function () {
         var method_to_use = jQuery('.format_type:checked').val();
         if (method_to_use == "empty") {
-            jQuery("#add_project_dialog").dialog("option", "height", 380);
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
             jQuery("#trial_design_info").hide();
             jQuery("#trial_design_more_info").hide();
             jQuery("#get_file_upload_data").hide();
         }
         if (method_to_use == "create_with_upload") {
             jQuery("#get_file_upload_data").show();
-            jQuery("#add_project_dialog").dialog("option", "height", 440);
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
             jQuery("#trial_design_info").hide();
             jQuery("#trial_design_more_info").hide();
         } else {
@@ -166,7 +189,7 @@ jQuery(document).ready(function () {
         }
         if (method_to_use == "create_with_design_tool") {
             jQuery("#trial_design_info").show();
-            jQuery("#add_project_dialog").dialog("option", "height", 440);
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
 	    jQuery("#select_design_method").change();
         } else {
             jQuery("trial_design_info").hide();
@@ -176,10 +199,11 @@ jQuery(document).ready(function () {
     jQuery("#select_design_method").change(function () {
         //var design_method = "CRD";
         //jQuery("#trial_design_more_info").show();
+        jQuery("#add_project_dialog").dialog("option", "height","auto");
         var design_method = jQuery("#select_design_method").val();
         if (design_method == "CRD") {
             jQuery("#trial_design_more_info").show();
-            jQuery("#add_project_dialog").dialog("option", "height", 580);
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
             jQuery("#list_of_checks_section").hide();
             jQuery("#rep_count_section").show();
             jQuery("#block_number_section").hide();
@@ -187,7 +211,7 @@ jQuery(document).ready(function () {
             jQuery("#max_block_section").hide();
         } else if (design_method == "CBD") {
             jQuery("#trial_design_more_info").show();
-            jQuery("#add_project_dialog").dialog("option", "height", 580);
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
             jQuery("#list_of_checks_section").hide();
             jQuery("#rep_count_section").hide();
             jQuery("#block_number_section").show();
@@ -195,7 +219,7 @@ jQuery(document).ready(function () {
             jQuery("#max_block_size_section").hide();
         } else if (design_method == "ALP") {
             jQuery("#trial_design_more_info").show();
-            jQuery("#add_project_dialog").dialog("option", "height", 600);
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
             jQuery("#list_of_checks_section").hide();
             jQuery("#rep_count_section").show();
             jQuery("#block_number_section").hide();
@@ -203,14 +227,14 @@ jQuery(document).ready(function () {
             jQuery("#max_block_size_section").hide();
         } else if (design_method == "AUG") {
             jQuery("#trial_design_more_info").show();
-            jQuery("#add_project_dialog").dialog("option", "height", 610);
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
             jQuery("#list_of_checks_section").show();
             jQuery("#rep_count_section").hide();
             jQuery("#block_number_section").hide();
             jQuery("#block_size_section").hide();
             jQuery("#max_block_size_section").show();
         } else if (design_method == "") {
-            jQuery("#add_project_dialog").dialog("option", "height",440);
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
             jQuery("#list_of_checks_section").hide();
             jQuery("#trial_design_more_info").hide();
             jQuery("#rep_count_section").hide();
@@ -227,8 +251,8 @@ jQuery(document).ready(function () {
     jQuery('#add_project_dialog').dialog({
         autoOpen: false,
         modal: true,
+	autoResize:true,
         width: 500,
-        height: 380,
         position: ['top', 75],
         title: "Add new trial",
         buttons: {
@@ -300,95 +324,6 @@ jQuery(document).ready(function () {
 
     }
 
-    jQuery('#experimental_design_dialog').dialog({
-        autoOpen: false,
-        buttons: {
-            "Cancel": function () {
-                jQuery('#experimental_design_dialog').dialog("close");
-            },
-            "Continue": function () {
-                continue_design();
-            }
-        },
-        modal: true,
-        width: 500,
-        height: 300,
-        title: "Field plot design"
-
-    });
-
-    jQuery('#completely_randomized_design_dialog').dialog({
-        autoOpen: false,
-        buttons: {
-            "Cancel": function () {
-                jQuery('#completely_randomized_design_dialog').dialog("close");
-            },
-            "Create": function () {
-                create_design();
-            }
-        },
-        modal: true,
-        width: 500,
-        height: 300,
-        title: "Completely randomized field plot design"
-
-    });
-
-    jQuery('#complete_block_design_dialog').dialog({
-        autoOpen: false,
-        buttons: {
-            "Cancel": function () {
-                jQuery('#complete_block_design_dialog').dialog("close");
-            },
-            "Create": function () {
-                create_design();
-            }
-        },
-        modal: true,
-        width: 500,
-        height: 300,
-        title: "Complete randomized block field plot design"
-
-    });
-
-    jQuery('#incomplete_block_design_dialog').dialog({
-        autoOpen: false,
-        buttons: {
-            "Cancel": function () {
-                jQuery('#incomplete_block_design_dialog').dialog("close");
-            },
-            "Create": function () {
-                create_design();
-            }
-        },
-        modal: true,
-        width: 500,
-        height: 300,
-        title: "Incomplete randomized block field plot design"
-
-    });
-
-    jQuery('#experimental_design_link').click(function () {
-        open_experimental_design_dialog()
-    });
-
-    function open_experimental_design_dialog() {
-
-        jQuery('#experimental_design_dialog').dialog("open");
-    }
-
-    function continue_design() {
-        var design = jQuery('#Design').val();
-        if (design == 'CRD') {
-            jQuery('#completely_randomized_design_dialog').dialog("open");
-        }
-        if (design == 'CBD') {
-            jQuery('#complete_block_design_dialog').dialog("open");
-        }
-        if (design == 'IBD') {
-            jQuery('#incomplete_block_design_dialog').dialog("open");
-        }
-    }
 
     function create_design() {
         var name = jQuery('#project_name').val();
