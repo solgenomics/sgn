@@ -9,13 +9,13 @@
 
 <div id="add_project_dialog" class="ui-widget">
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
-    <label for id="add_project_name" style="display: inline-block; width: 100px;">Trial name:</label>
+    <label for="add_project_name" style="display: inline-block; width: 100px;">Trial name:</label>
     <input id="add_project_name" name="add_project_name" />
     <br>
-    <label for id="add_project_year" style="display: inline-block; width: 100px;">Year(s):</label>
+    <label for="add_project_year" style="display: inline-block; width: 100px;">Year(s):</label>
     <input id="add_project_year" name="add_project_year" />
     <br>
-    <label for id="add_project_location" style="display: inline-block; width: 100px;">Location:</label>
+    <label for="add_project_location" style="display: inline-block; width: 100px;">Location:</label>
     <select id="add_project_location" name="add_project_location">
       <%perl>foreach my $location (@locations) { print "
       <option value=".@$location[1].">".@$location[1]."</option>"; }
@@ -23,7 +23,7 @@
     </select>
     <br>
     <br>
-    <label for id="add_project_description" style="display: inline-block; vertical-align:top; width: 100px;">Description:</label>
+    <label for="add_project_description" style="display: inline-block; vertical-align:top; width: 100px;">Description:</label>
     <textarea id="add_project_description" name="add_project_description" form="create_new_trial_form" cols="40"></textarea>
     <br><br>
     <div id="format_type_radio">
@@ -42,8 +42,8 @@
       <label for="trial_upload_file" style="display: inline-block; width: 100px;">Upload file:</label>
       <input type="file" name="trial_upload_file" id="trial_upload_file" encoding="multipart/form-data" />
     </div>
-    <hr>
     <div id="trial_design_info" style="display: none">
+      <hr>
       <label for="select_design_method" style="display: inline-block; width: 200px;">Design type:</label>
       <select id="select_design_method" name="select_design_method">
 	<option value=CRD>Completely Randomized</option>
@@ -51,18 +51,17 @@
         <option value=ALP>Alpha Lattice</option>
         <option value=AUG>Augmented</option>
       </select>
-      <br>
+      <br><br>
+      <div id="trial_design_more_info" style="display: none">
       <div id="select_list" name="select_list">
 	<label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of stocks to include:</label>
-
+      </div>
+      <div id="list_of_checks_section" style="display: none"> 
+	<label id="select_list_of_checks_label" for="select_list_of_checks_list_select" style="display: inline-block; width: 200px;">List of checks:</label>
       </div>
       <br>
-      <div id="list_of_checks_secton" style="display: none"> 
-	<label for="select_list_of_checks" style="display: inline-block; width: 200px;">List of stocks to include as checks:</label>
-	<div id="select_list_of_checks" name="select_list_of_checks"></div>
-      </div>
       <div id="design_info" name="design_info">
-	<div id="rep_count_section">
+	<div id="rep_count_section" style="display: none">
 	  <label for id="rep_count" style="display: inline-block; width: 200px;">Number of replicates:</label>
 	  <input id="rep_count" name="rep_count" />
 	  <br>
@@ -92,6 +91,7 @@
           <input id="increment" name="increment" />
 	  <br>
       </div>
+      </div>
     </div>
   </form>
 </div>
@@ -106,6 +106,15 @@
 
 jQuery(document).ready(function () {
 
+    jQuery("<option>", {
+        value: '',
+        selected: true
+    }).prependTo("#add_project_location");
+
+    jQuery("#add_project_location").one('mousedown', function () {
+        jQuery("option:first", this).remove();
+    });
+
     var list = new CXGN.List();
     jQuery("#select_list").append(list.listSelect("select_list"));
     jQuery("<option>", {
@@ -116,6 +125,17 @@ jQuery(document).ready(function () {
     jQuery("#select_list_list_select").one('mousedown', function () {
         jQuery("option:first", this).remove();
     });
+
+    jQuery("#list_of_checks_section").append(list.listSelect("list_of_checks_section"));
+    jQuery("<option>", {
+        text: '',
+        value: '',
+        selected: true
+    }).prependTo("#list_of_checks_section_list_select");
+    jQuery("#list_of_checks_section_list_select").one('mousedown', function () {
+        jQuery("option:first", this).remove();
+    });
+
     jQuery("<option>", {
         text: '',
         value: '',
@@ -123,6 +143,9 @@ jQuery(document).ready(function () {
     }).prependTo("#select_design_method");
     jQuery("#select_design_method").one('mousedown', function () {
         jQuery("option:first", this).remove();
+        jQuery("#trial_design_more_info").show();
+        jQuery("#add_project_dialog").dialog("option", "height", 570);
+	jQuery("#select_design_method").change();
     });
 
     jQuery("#format_type_radio").change(function () {
@@ -130,20 +153,21 @@ jQuery(document).ready(function () {
         if (method_to_use == "empty") {
             jQuery("#add_project_dialog").dialog("option", "height", 380);
             jQuery("#trial_design_info").hide();
+            jQuery("#trial_design_more_info").hide();
             jQuery("#get_file_upload_data").hide();
         }
         if (method_to_use == "create_with_upload") {
             jQuery("#get_file_upload_data").show();
             jQuery("#add_project_dialog").dialog("option", "height", 440);
             jQuery("#trial_design_info").hide();
+            jQuery("#trial_design_more_info").hide();
         } else {
             jQuery("#get_file_upload_data").hide();
         }
         if (method_to_use == "create_with_design_tool") {
             jQuery("#trial_design_info").show();
-
-
-            jQuery("#add_project_dialog").dialog("option", "height", 570);
+            jQuery("#add_project_dialog").dialog("option", "height", 440);
+	    jQuery("#select_design_method").change();
         } else {
             jQuery("trial_design_info").hide();
         }
@@ -151,19 +175,48 @@ jQuery(document).ready(function () {
 
     jQuery("#select_design_method").change(function () {
         //var design_method = "CRD";
+        //jQuery("#trial_design_more_info").show();
         var design_method = jQuery("#select_design_method").val();
         if (design_method == "CRD") {
-            jQuery("#add_project_dialog").dialog("option", "height", 570);
+            jQuery("#trial_design_more_info").show();
+            jQuery("#add_project_dialog").dialog("option", "height", 580);
+            jQuery("#list_of_checks_section").hide();
             jQuery("#rep_count_section").show();
             jQuery("#block_number_section").hide();
             jQuery("#block_size_section").hide();
             jQuery("#max_block_section").hide();
         } else if (design_method == "CBD") {
-            jQuery("#add_project_dialog").dialog("option", "height", 570);
+            jQuery("#trial_design_more_info").show();
+            jQuery("#add_project_dialog").dialog("option", "height", 580);
+            jQuery("#list_of_checks_section").hide();
             jQuery("#rep_count_section").hide();
             jQuery("#block_number_section").show();
             jQuery("#block_size_section").hide();
-            jQuery("#max_block_section").hide();
+            jQuery("#max_block_size_section").hide();
+        } else if (design_method == "ALP") {
+            jQuery("#trial_design_more_info").show();
+            jQuery("#add_project_dialog").dialog("option", "height", 600);
+            jQuery("#list_of_checks_section").hide();
+            jQuery("#rep_count_section").show();
+            jQuery("#block_number_section").hide();
+            jQuery("#block_size_section").show();
+            jQuery("#max_block_size_section").hide();
+        } else if (design_method == "AUG") {
+            jQuery("#trial_design_more_info").show();
+            jQuery("#add_project_dialog").dialog("option", "height", 610);
+            jQuery("#list_of_checks_section").show();
+            jQuery("#rep_count_section").hide();
+            jQuery("#block_number_section").hide();
+            jQuery("#block_size_section").hide();
+            jQuery("#max_block_size_section").show();
+        } else if (design_method == "") {
+            jQuery("#add_project_dialog").dialog("option", "height",440);
+            jQuery("#list_of_checks_section").hide();
+            jQuery("#trial_design_more_info").hide();
+            jQuery("#rep_count_section").hide();
+            jQuery("#block_number_section").hide();
+            jQuery("#block_size_section").hide();
+            jQuery("#max_block_size_section").hide();
         } else {
             //jQuery("#randomized_block_design_info").hide();
             alert("Unknown design method");
