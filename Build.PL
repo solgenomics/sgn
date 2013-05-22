@@ -130,6 +130,7 @@ my $build = SGN::Build->new(
         'XML::Atom'                                => 0,
         'XML::Twig'                                => 0,
         'YAML::Any'                                => 0,
+	'R::YapRI'                                 => 0,
         'WWW::Mechanize::TreeBuilder'              => 0,
     },
 );
