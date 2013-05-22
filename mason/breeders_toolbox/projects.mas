@@ -193,6 +193,9 @@ jQuery(document).ready(function () {
                     }
                     jQuery("#create_new_trial_form").submit();
                 }
+                if (method_to_use == "create_with_design_tool") {
+		    generate_experimental_design(name,year,desc);
+		}
                 //jQuery( this).dialog("close"); 
                 //location.reload();
             }
@@ -284,6 +287,31 @@ jQuery(document).ready(function () {
 	}
     });
 
+
+    function generate_experimental_design() {
+        var name = jQuery('#project_name').val();
+        var year = jQuery('#project_year').val();
+        var desc = jQuery('#project_description').val();
+
+        if (name == '' || year == '') {
+            alert('Name and year are required.');
+            return;
+        }
+
+        new jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/trial/generate_experimental_design',
+            data: {
+                'project_name': name,
+                'project_description': desc,
+                'year': year
+            },
+
+        }).done(alert("Done saving project info"));
+        jQuery('#add_project_dialog').dialog("close");
+    }
+
+
     function save_project_info(name, year, desc) {
         alert('data = ' + name + ' ' + year + ' ' + desc);
         new jQuery.ajax({
@@ -332,7 +360,7 @@ jQuery(document).ready(function () {
         }).done(alert("Done saving project info"));
         jQuery('#add_project_dialog').dialog("close");
     }
-});
+
 
 jQuery('#create_new_trial_form').iframePostForm({
     json: true,
@@ -375,7 +403,7 @@ jQuery('#create_new_trial_form').iframePostForm({
     }
 });
 
-
+});
 
 </script>
 

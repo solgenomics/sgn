@@ -1,21 +1,20 @@
 
 =head1 NAME
 
-SGN::Controller::AJAX::TrialLayoutUpload - a REST controller class to provide the
-backend for uploading trial layouts
+SGN::Controller::AJAX::Trial - a REST controller class to provide the
+backend for adding trials and viewing trials
 
 =head1 DESCRIPTION
 
-Uploading trial layouts
+Creating and viewing trials
 
 =head1 AUTHOR
 
 Jeremy Edwards <jde22@cornell.edu>
 
-
 =cut
 
-package SGN::Controller::AJAX::TrialLayoutUpload;
+package SGN::Controller::AJAX::Trial;
 
 use Moose;
 
@@ -26,6 +25,8 @@ use CXGN::Chado::Stock;
 use Scalar::Util qw(looks_like_number);
 use File::Slurp;
 use Data::Dumper;
+use R::YapRI::Base;
+use R::YapRI::Data::Matrix;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -43,6 +44,63 @@ has 'schema' => (
 sub _build_schema {
   shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
 }
+
+sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
+
+sub generate_experimental_design_POST : Args(0) {
+
+  my $rbase = R::YapRI::Base->new();
+
+
+  my @stock_list;
+  push(@stock_list, "A");
+  push(@stock_list, "B");
+  push(@stock_list, "C");
+
+  print STDERR "Length of list: ".length(@stock_list)."first: ".$stock_list[1]."\n";
+
+  my $stock_data_matrix =  R::YapRI::Data::Matrix->new(
+						       {
+							name => 'stock_data_matrix',
+							rown => 1,
+							coln => scalar(@stock_list),
+							data => \@stock_list,
+						       }
+						      );
+
+
+  #my $newblock = $rbase->create_block('lengthblock', 'default');
+  my $newblock = $rbase->create_block('lengthblock');
+  $newblock->add_command('library(agricolae)');
+  $stock_data_matrix->send_rbase($rbase, 'lengthblock');
+  #$newblock->add_command('trt <- c("A", "B", "C")');
+  $newblock->add_command('trt <- stock_data_matrix[1,]');
+  $newblock->add_command('repetition <- c(4, 3, 4)');
+  $newblock->add_command('plan1 <- design.crd(trt,r=repetition)');
+  $newblock->add_command('d<-as.matrix(plan1)');
+  $newblock->add_command('print(plan1)');
+  $newblock->run_block();
+  my @results = $newblock->read_results();
+
+  my $firstresult = $results[0];
+  print STDERR "YapRI Result: $firstresult\n";
+
+  my $blockname = $newblock->get_blockname();
+
+  my $rmatrix = R::YapRI::Data::Matrix->read_rbase( $rbase,$blockname,'d');
+
+
+
+  my @rownames = @{$rmatrix->get_rownames()};
+  my $row1name = $rownames[2];
+  my @colnames = @{$rmatrix->get_colnames()};
+  my $col1name = $colnames[2];
+  print STDERR "row: $row1name col: $col1name\n";
+  my $elem2_3 = $rmatrix->get_element($row1name, $col1name);
+
+  print STDERR "Element 3,2: $elem2_3\n";
+}
+
 
 sub upload_trial_layout :  Path('/trial/upload_trial_layout') : ActionClass('REST') { }
 
