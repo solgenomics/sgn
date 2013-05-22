@@ -130,6 +130,7 @@ my $build = SGN::Build->new(
         'URI'                                      => 0,
         'URI::Escape'                              => 0,
         'URI::FromHash'                            => 0,
+	'XML::Feed'                                => 0,
         'XML::Generator'                           => 0,
         'XML::Atom'                                => 0,
         'XML::Twig'                                => 0,
