@@ -5,7 +5,6 @@ options(echo = FALSE)
 
 library(rrBLUP)
 library(plyr)
-#library(sendmailR)
 library(mail)
 library(imputation)
 
@@ -139,11 +138,9 @@ print('phenotyped lines after averaging')
 print(length(row.names(phenoTrait)))
 
 #make stock_names row names
-#print(phenoTrait)
 row.names(phenoTrait) <- phenoTrait[, 1]
 phenoTrait[, 1] <- NULL
-#print(phenoTrait)
-#traitPhenoData <- as.data.frame(round(phenoTrait, digits=2)) 
+
 #find genotype file name
 genoFile <- grep("genotype_data",
                  inFiles,
@@ -216,7 +213,6 @@ rownames(commonObs)<-commonObs[, 1]
 #include in the genotype dataset only observation lines
 #with phenotype data
 genoData<-genoData[(rownames(genoData) %in% rownames(commonObs)), ]
-#print(genoData[1:10, 1:10])
 
 #drop observation lines without genotype data
 phenoTrait <- merge(data.frame(phenoTrait), commonObs, by=0, all=FALSE)
@@ -258,7 +254,6 @@ if (sum(is.na(genoDataMatrix)) > 0)
 
 #change genotype coding to [-1, 0, 1], to use the A.mat )
 genoDataMatrix <- genoDataMatrix - 1
-
 if (length(predictionData) != 0)
   {
     predictionData <- predictionData - 1
@@ -350,9 +345,6 @@ genotypeGroups <- rep(1:10, reps) [- (nrow(phenoTrait) %% 10)]
 set.seed(4567)                                   
 genotypeGroups <- genotypeGroups[order (runif(nrow(phenoTrait))) ]                     
 
-##convert genotype values from [1,2] to [0,1]
-genoDataMatrix <- genoDataMatrix - 1
-
 validationAll <- c()
 
 for (i in 1:10)
@@ -374,8 +366,7 @@ for (i in 1:10)
                          mixed.method = "REML",
                          K.method = "RR"
                          )
-print("BLUP for prediction pop")
-#print(result)
+
   assign(kblup, result)
  
 #calculate cross-validation accuracy
@@ -383,7 +374,7 @@ print("BLUP for prediction pop")
 
   validation <- paste("validation", i, sep = ".")
 
-  cvTest <- paste("Test", i, sep = " ")
+  cvTest <- paste("CV test", i, sep = " ")
 
   if (class(accuracy) != "try-error")
     {
