@@ -220,11 +220,11 @@ function jqueryStuff() {
 <br />
 
    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 &>
-      <& /stock/stockprops.mas, props=> $stockprops , subset=> $resources  &>
+      <& /stock/stockprops.mas, stock_id => $stock_id &>
 </&>
 
     <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1 &>
-      <& /stock/stockprops.mas, props=> $stockprops, subset=> $metadata  &>
+      <& /stock/stockprops.mas, stock_id => $stock_id  &>
 </&>
 
 
@@ -239,7 +239,7 @@ function jqueryStuff() {
 
 
 <&| /page/info_section.mas, title => "Experimental data" , collapsible=> 1, is_subsection => 0 &>
-      <& /stock/stockprops.mas, props=> $stockprops, subset=> $experiment  &>
+      <& /stock/stockprops.mas, stock_id => $stock_id  &>
 </&>
 
 % if($is_owner) {
