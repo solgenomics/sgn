@@ -235,9 +235,12 @@ sub genotype_data {
         my $markers   = $self->extract_project_markers($stock_genotype_rs);
         my $geno_data = "\t" . $markers . "\n";
     
+<<<<<<< HEAD
         my $markers_no = scalar(split(/\t/, $markers));
         print STDERR "\nmarkers no.: $markers_no\n\n";
 
+=======
+>>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
         my @stocks = ();
 
         while (my $geno = $stock_genotype_rs->next)
@@ -247,6 +250,7 @@ sub genotype_data {
 
             unless (grep(/^$stock$/, @stocks)) 
             {
+<<<<<<< HEAD
                 my $geno_values = $self->stock_genotype_values($geno);
                 my $geno_values_no = scalar(split(/\t/, $geno_values));
                 print STDERR "\ngeno values no.: $geno_values_no\n\n";
@@ -259,6 +263,10 @@ sub genotype_data {
                 {
                     print STDERR "\n$stock was genotyped using a different GBS markers than the ones on the header. It will excluded from the training population set.\n\n";
                 }
+=======
+                $geno_data .=  $self->stock_genotype_values($geno);
+                push @stocks, $stock;
+>>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
             }  
         }
 

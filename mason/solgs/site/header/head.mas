@@ -1,0 +1,17 @@
+% my $t = $m->request_args->{'page_title'};
+  <title><% $t ? "$t - " : '' %>solGS: Genomic Selection</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <link rel="stylesheet" href="/static/sgn.css" type="text/css" />
+  <link rel="stylesheet" href="/static/jquery-sgn-theme/jquery-ui-1.8.4.custom.css" type="text/css" />
+  <link rel="stylesheet" href="/static/colorbox/colorbox.css" type="text/css" />
+
+  <script language="javascript" type="text/javascript">
+     JSAN = {};
+     JSAN.use = function() {};
+     MochiKit = {__export__: false};
+  </script>
+
+  <& /util/import_javascript.mas, classes => [qw[ sgn jquery.simpletooltip CXGN.Effects CXGN.Page.FormattingHelpers CXGN.UserPrefs CXGN.Page.Toolbar ]] &>
+
+  <!-- INSERT_JS_PACK -->

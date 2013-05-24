@@ -1,0 +1,74 @@
+<%doc>
+
+=head1 NAME
+
+info_table.mas - a mason component to display information in a table format
+
+=head1 DESCRIPTION
+
+parameters:
+
+=over 3
+
+=item title
+
+Title to use for the table.
+
+=item sub
+
+set to true if this table is contained in another table, styles will be subtly changed to reflect its subtableness.
+
+=item tableattrs
+
+the attributes to use for each table cell.
+
+=item border
+
+if true, draws a border. Default is on.
+
+=item data
+
+a hashref with the data to be displayed in the info table.
+
+=back
+
+Example:
+
+ <& /page/info_table.mas, data => { name => $name, description => $desc } &>
+
+=head1 AUTHOR
+
+Lukas Mueller. Based on code by R. Buels.
+
+=cut
+
+</%doc>
+
+<%args>
+  $sub        => 0
+  $title      => ''
+  $tableattrs => ''
+  $multicol   => 1
+  $caption    => ''
+  $border     => 0
+
+  $data       => undef
+</%args>
+<% info_table_html( %mapped_args, @$data ) %>
+<%init>
+
+  my %mapped_args = (
+      __border   => $border,
+      __caption  => $caption,
+      __multicol => $multicol,
+      __tableattrs => $tableattrs,
+      __title    => $title,
+      __sub      => $sub
+   );
+
+  $data ||= [ split /^\s*\-{2,}\s*$/m, $m->content ];
+
+</%init>
+<%once>
+  use CXGN::Page::FormattingHelpers 'info_table_html';
+</%once>

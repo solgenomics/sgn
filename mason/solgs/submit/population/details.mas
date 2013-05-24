@@ -1,0 +1,56 @@
+<%doc>
+
+=head1 NAME 
+qtl/qtl_form/pop_form.mas - a mason component for the qtl pop detail webform
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$form
+
+</%args>
+
+<%perl>
+
+use CXGN::Phenome::Qtl::Tools;
+use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
+
+</%perl>
+
+
+<& /page/page_title.mas, title => "Step 1: Submit QTL Population Details" &>
+<&| /page/info_section.mas,
+  title => "Population Details",
+&>
+
+<form action="/submit/population/details" method="POST" enctype="MULTIPART/FORM-DATA"> 
+ <% $form->get_element(name =>"pop_name") %>
+ <% $form->get_element(name =>"pop_desc") %>
+ <% $form->get_element(name =>"pop_is_public") %>
+ <% $form->get_element(name =>"type") %>
+ <% $form->get_element(name =>"submit") %>
+       
+     <table>
+     <tr>
+	<td><% $form->get_element(name =>"pop_name") %></td>    
+     </tr>
+     <tr>
+         <td><% $form->get_element(name =>"pop_desc") %></td>
+     </tr>  
+     <tr>
+              <td><% $form->get_element(name =>"pop_is_public") %></td>
+     </tr>
+     <tr>
+         <td><% $form->get_element(name =>"type") %></td>
+            <td><% $form->get_element(name =>"submit") %></td>
+     </tr>
+     </table>
+     </form>
+
+</&>

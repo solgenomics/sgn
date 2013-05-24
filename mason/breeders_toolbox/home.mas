@@ -53,6 +53,13 @@ $field_designs => undef
 %#<& /breeders_toolbox/accessions.mas, user_id=>$user_id &>
 %#</&>
 
+<<<<<<< HEAD
+=======
+
+<&| /page/info_section.mas, title=>'Search Wizard', collapsible=>1, collapsed=>1 &>
+
+<& /breeders_toolbox/breeder_search.mas &>
+>>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 
 
 

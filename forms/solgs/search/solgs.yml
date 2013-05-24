@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 action: "/solgs/search"
+=======
+action: "/search/solgs"
+>>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 method: "POST"
 enctype: "multipart/form-data"
 

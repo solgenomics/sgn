@@ -1,0 +1,15 @@
+method: "POST"
+enctype: "multipart/form-data"
+
+auto_fieldset: 1
+
+---
+elements:
+   - type: Checkboxgroup
+     name: traits_list
+     options:
+      
+       
+   - type: Submit
+     name: select
+     value: Select

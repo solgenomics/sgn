@@ -1,0 +1,61 @@
+<%doc>
+
+displays list of GS populations evaluated for a trait.
+
+</%doc>
+
+<%args>
+
+$result
+$form
+$pager
+$page_links
+$query
+$trait_id
+$trait_name
+
+</%args>
+
+<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+
+<& /page/page_title.mas,
+    title => "GS Populations evaluated for $query" ,
+&>
+  
+% if ($result) 
+% { 
+
+<&| /page/info_section.mas,
+      title => "select a training population to calculate GEBVs for $trait_name",
+&>
+
+<& /solgs/population/project_details_form.mas,
+   result     => $result,
+   pager      => $pager,
+   page_links => $page_links
+&>
+
+</&>
+
+%}
+%else
+%{
+<&| /page/info_section.mas,
+      title => 'No Search Results',
+&>
+
+%if ( $query )
+%{
+<br>No results found for <i><strong>'<% $query %>'.</strong></i><br />
+%}
+%else
+%{
+<br>No results. Search again with a trait name.<br />
+%}
+</&>
+%}
+
+
+
+
+

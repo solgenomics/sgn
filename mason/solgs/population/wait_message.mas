@@ -1,0 +1,39 @@
+<%doc>
+
+=head1 NAME
+ 
+population/wait_message.mas - message to users running GS on multiple traits
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$trait_pages
+
+</%args>
+
+
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 0, 
+    title       => "GS output"
+  &>     
+  
+  <& /page/columnar_table.mas,        
+     data         => $trait_pages,
+     __alt_freq   => 1,
+     __align      => "l",
+     __tableattrs => 'style="padding: 1px"',    
+  &>
+ 
+</&>
+
+
+

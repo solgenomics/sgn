@@ -1,0 +1,50 @@
+<%doc>
+=head1 NAME
+
+  pagination_control.mas - make an HTML pagination control using a L<Data::Page>
+
+=head1 ARGS
+
+=head2 link_maker
+
+subroutine ref that takes one argument, the page number, and returns a
+link URL
+
+=head2 pager
+
+L<Data::Page>-compliant pager.  For example, this might come from a
+L<DBIx::Class::ResultSet> via C<$rs->pager>.
+
+=cut
+
+</%doc>
+
+<%args>
+  $link_maker
+  $pager
+</%args>
+
+% if( $pager->previous_page || $pager->next_page ) {
+   <div class="paginate_nav">
+%    if( $pager->previous_page ) {
+        <a class="paginate_nav" href="<% $link_maker->($pager->previous_page) %>">&lt;</a>
+%    }
+%    for my $page ( $pagelink_first .. $pagelink_last ) {
+%       if( $pager->current_page == $page ) {
+            <span class="paginate_nav_currpage paginate_nav"><% $page %></span>
+%       } else {
+            <a class="paginate_nav" href="<% $link_maker->($page) %>"><% $page %></a>
+%       }
+%    }
+%    if( $pager->next_page ) {
+        <a class="paginate_nav" href="<% $link_maker->($pager->next_page) %>">&gt;</a>
+%    }
+   </div>
+% }
+
+<%init>
+  my $pagelink_first = $pager->current_page - 6;
+  $pagelink_first = $pager->first_page if $pagelink_first < $pager->first_page;
+  my $pagelink_last = $pager->current_page + 5;
+  $pagelink_last = $pager->last_page if $pagelink_last > $pager->last_page;
+</%init>

@@ -1,0 +1,77 @@
+<%doc>
+
+=head1 NAME
+
+columnar_table.mas - a Mason module to display tables
+
+=head1 DESCRIPTION
+
+Arguments:
+
+ headings => [ col name, col name,...],
+ data     => [ [html, html, ...],
+               [ html,
+                 { onmouseover => "alert('ow!')",
+                   content => some html
+                 },
+                 html,
+                 ...
+                       ],
+                 ...
+             ],
+__align      => 'cccccc...',
+__tableattrs => 'summary="" cellspacing="0" width="100%"',
+__border     => 1,
+
+__caption    => 'Optional table caption',
+
+__alt_freq   => 4,
+__alt_width  => 2,
+__alt_offset => 0,
+
+# also can generate simple frequency tables of the values in the given
+# columns, makes one table per column, printed before the main table.
+# These auxiliary frequency tables will only be printed if there are
+# more than 4 rows in the table.
+frequency_tables => ['col name','col name', ...],
+
+=head1 AUTHORS
+
+Lukas Mueller, based on Perl code by Rob Buels
+
+=cut
+
+</%doc>
+<%args>
+  $data
+  $headings  => undef
+  $frequency_tables => []
+</%args>
+<%once>
+  use List::Util ();
+  use Lingua::EN::Inflect ();
+  use CXGN::Page::FormattingHelpers qw | columnar_table_html |;
+</%once>
+<%perl>
+if( @$frequency_tables && @$data > 4) {
+    my %heading_idx = do { my $i = 0; map {lc $_ => $i++} @$frequency_tables };
+    for my $colname (@$frequency_tables) {
+        my $idx = $heading_idx{ lc $colname };
+        my $name = $headings->[$idx];
+        my @data_slice = map $_->[$idx], @$data;
+        my %stats;
+        $stats{$_}++ for @data_slice;
+        my @stat_disp = map {
+            [ $stats{$_}, $_ ]
+        } sort keys %stats;
+
+        if( @stat_disp > 1 ) {
+            push @stat_disp, [ List::Util::sum( map $_->[0], @stat_disp ), '<b>Total</b>' ];
+        }
+
+        print '<div style="width: 30%; float: left; margin: 2px;">'.columnar_table_html( data => \@stat_disp, __caption => Lingua::EN::Inflect::PL_N( $name ), __align => 'rl' ).'</div>';
+    }
+}
+</%perl>
+<% columnar_table_html( %ARGS ) %>
+

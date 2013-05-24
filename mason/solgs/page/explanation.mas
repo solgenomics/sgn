@@ -1,0 +1,10 @@
+<table style="border: 1px solid gray; padding: 1em 2em; margin: 25px 15px; background: #f3f3ff;">
+  <tr>
+    <td>
+      <img src="/documents/img/info_icon.png" border="0" style="margin-right: 10px; vertical-align: middle" />
+    </td>
+    <td style="padding-top: 0.35em; vertical-align: middle">
+<% $m->content %>
+     </td>
+  </tr>
+</table>
