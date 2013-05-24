@@ -112,6 +112,7 @@ my $build = SGN::Build->new(
         'Spreadsheet::ParseExcel'                  => 0,
         'Statistics::Descriptive'                  => 0,
         'Storable'                                 => 0,
+	'String::CRC'                              => 0,
 	'SVG'                                      => 0,
         'Test::More'                               => 0,
         'Test::Class'                              => 0,
