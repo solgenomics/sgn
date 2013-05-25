@@ -1,409 +1,210 @@
 
 <%args>
-@projects => ()
-@locations => ()
-@roles => ()
+$projects
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List',] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
-<div id="add_project_dialog" class="ui-widget">
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
-    <label for="add_project_name" style="display: inline-block; width: 100px;">Trial name:</label>
-    <input id="add_project_name" name="add_project_name" />
-    <br>
-    <label for="add_project_year" style="display: inline-block; width: 100px;">Year(s):</label>
-    <input id="add_project_year" name="add_project_year" />
-    <br>
-    <label for="add_project_location" style="display: inline-block; width: 100px;">Location:</label>
-    <select id="add_project_location" name="add_project_location">
-      <%perl>foreach my $location (@locations) { print "
-      <option value=".@$location[1].">".@$location[1]."</option>"; }
-      </%perl>
-    </select>
-    <br>
-    <br>
-    <label for="add_project_description" style="display: inline-block; vertical-align:top; width: 100px;">Description:</label>
-    <textarea id="add_project_description" name="add_project_description" form="create_new_trial_form" cols="40"></textarea>
-    <br><br>
-    <div id="format_type_radio">
-      <input type="radio" id="format_radio1" name="radio" class="format_type" value="empty" checked="checked" />
-      <label for="radio1">Create empty trial</label>
-      <br>
-      <input type="radio" id="format_radio2" name="radio" class="format_type" value="create_with_upload" />
-      <label for="radio2">Create from uploaded file</label>
-      <br>
-      <input type="radio" id="format_radio3" name="radio" class="format_type" value="create_with_design_tool" />
-      <label for="radio3">Create using trial design tool</label>
-      <br>
-    </div>
-    <div id="get_file_upload_data" style="display: none">
-      <hr>
-      <label for="trial_upload_file" style="display: inline-block; width: 100px;">Upload file:</label>
-      <input type="file" name="trial_upload_file" id="trial_upload_file" encoding="multipart/form-data" />
-    </div>
-    <div id="trial_design_info" style="display: none">
-      <hr>
-      <label for="select_design_method" style="display: inline-block; width: 200px;">Design type:</label>
-      <select id="select_design_method" name="select_design_method">
-	<option value=CRD>Completely Randomized</option>
-        <option value=CBD>Complete Block</option>
-        <option value=ALP>Alpha Lattice</option>
-        <option value=AUG>Augmented</option>
-      </select>
-      <br><br>
-      <div id="trial_design_more_info" style="display: none">
-      <div id="select_list" name="select_list">
-	<label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of stocks to include:</label>
-      </div>
-      <div id="list_of_checks_section" style="display: none"> 
-	<label id="select_list_of_checks_label" for="select_list_of_checks_list_select" style="display: inline-block; width: 200px;">List of checks:</label>
-      </div>
-      <br>
-      <div id="design_info" name="design_info">
-	<div id="rep_count_section" style="display: none">
-	  <label for id="rep_count" style="display: inline-block; width: 200px;">Number of replicates:</label>
-	  <input id="rep_count" name="rep_count" />
-	  <br>
-	</div>
-        <div id="block_number_section" style="display: none" >
-	  <label for id="block_number" style="display: inline-block; width: 200px;">Number of blocks:</label>
-	  <input id="block_number" name="block_number" />
-	  <br>
-       	</div>
-        <div id="block_size_section" style="display: none">
-	  <label for id="block_size" style="display: inline-block; width: 200px;">Block size:</label>
-          <input id="block_size" name="block_size" />
-	  <br>
-        </div>
-        <div id="max_block_size_section" style="display: none">
-	  <label for id="max_block_size" style="display: inline-block; width: 200px;">Maximum block size:</label>
-          <input id="max_block_size" name="block_size" />
-	  <br>
-	</div>
-	<br>
-	<label for="show_plot_naming_options">Custom plot naming/numbering</label>
-        <input type="checkbox" id="show_plot_naming_options">
-	<div id="plot_naming_options" style="display: none">
-	  <hr>
-	  <label for id="plot_prefix" style="display: inline-block; width: 200px;">Plot name prefix:</label>
-	  <input id="plot_prefix" name="plot_prefix" />
-	  <br>
-	  <label for id="start_number" style="display: inline-block; width: 200px;">Plot start number:</label>
-          <input id="start_number" name="start_number" />
-	  <br>
-	  <label for id="increment" style="display: inline-block; width: 200px;">Plot number increment:</label>
-          <input id="increment" name="increment" />
-	  <br>
-      </div>
-      </div>
-      </div>
-    </div>
-  </form>
+<div id="add_project_dialog"  class="ui-widget" >
+
+<table><tr><td>Trial name</td><td><input id="add_project_name" /></td></tr>
+<tr><td>Year</td><td><input id="add_project_year" /></td></tr>
+<tr><td colspan="2">Description</td></tr>
+<tr><td colspan="2"><textarea id="add_project_description" cols="60" >
+</textarea>
+</td></tr></table>
+
 </div>
 
-<div id="upload_trial_error_display" class="ui-widget">
-  <table>
-    <tbody></tbody>
-  </table>
+<div id="experimental_design_dialog"  class="ui-widget" >
+<table><tr><td>Experiment name</td><td><input name="project_name" /></td></tr>
+<tr><td>Year</td><td><input id="project_year" name="year" /></td></tr>
+<tr><td>Design</td><td>
+<select id="Design" name="design">
+<option value=CRD>Completely Randomized</option>
+<option value=CBD>Complete Block</option>
+<option value=IBD>Incomplete Block</option>
+</select>
+<tr><td colspan="2">Description</td></tr>
+<tr><td colspan="2"><textarea name="project_description" cols="60" >
+</textarea>
+</td></tr>
+</table>
 </div>
+
+<div id="completely_randomized_design_dialog"  class="ui-widget" >
+<table>
+<tr><td>Number of breeding lines</td><td><input id="line_count" name="line_count" /></td></tr>
+<tr><td>Replications per line</td><td><input id="rep_count" name="rep_count" /></td></tr>
+<tr><td>Prefix</td><td><input id="prefix" name="prefix" /></td></tr>
+<tr><td>Start number</td><td><input id="start_number" name="start_number" /></td></tr>
+<tr><td>Increment</td><td><input id="increment" name="increment" /></td></tr>
+</td></tr>
+</table>
+</div>
+
+<div id="complete_block_design_dialog"  class="ui-widget" >
+<table>
+<tr><td>Number of breeding lines</td><td><input id="line_count" name="line_count" /></td></tr>
+<tr><td>Replications per line in each block</td><td><input id="rep_count" name="rep_count" /></td></tr>
+<tr><td>Number of blocks</td><td><input id="blocks" name="blocks" /></td></tr>
+<tr><td>Prefix</td><td><input id="prefix" name="prefix" /></td></tr>
+<tr><td>Start number</td><td><input id="start_number" name="start_number" /></td></tr>
+<tr><td>Increment</td><td><input id="increment" name="increment" /></td></tr>
+</td></tr>
+</table>
+</div>
+
+<div id="incomplete_block_design_dialog"  class="ui-widget" >
+<table>
+<tr><td>Number of breeding lines</td><td><input id="line_count" name="line_count" /></td></tr>
+<tr><td>Replications per line in each block</td><td><input id="rep_count" name="rep_count" /></td></tr>
+<tr><td>Number of blocks</td><td><input id="blocks" name="blocks" /></td></tr>
+<tr><td>Number of lines per block</td><td><input id="blocks" name="blocks" /></td></tr>
+<tr><td>Prefix</td><td><input id="prefix" name="prefix" /></td></tr>
+<tr><td>Start number</td><td><input id="start_number" name="start_number" /></td></tr>
+<tr><td>Increment</td><td><input id="increment" name="increment" /></td></tr>
+</td></tr>
+</table>
+</div>
+
 
 <script defer="defer">
 
-jQuery(document).ready(function () {
+ jQuery(document).ready(function() {
 
-    jQuery('#add_project_link').click(function () {
-        open_project_dialog()
-    });
+  jQuery('#add_project_dialog').dialog( {
+     autoOpen: false,
+     modal: true,
+     width: 500,
+     height: 300,
+     title: "Add new trial",
 
-    function open_project_dialog() {
-        jQuery('#add_project_dialog').dialog("open");
+     buttons:  { "Cancel" : function() { jQuery('#add_project_dialog').dialog("close"); }, 
+                     "Add": function() { 
+                                var name = jQuery('#add_project_name').val();
+                                var year = jQuery('#add_project_year').val();
+                                var desc = jQuery('textarea#add_project_description').val();
 
-	//removes any old list selects before adding current ones.  this is important so that lists that are added and will appear without page refresh
-	jQuery("#select_list_list_select").remove();
-	jQuery("#list_of_checks_section_list_select").remove();
+  //alert('Name and year = '+ name + ' ' + year);
+                                if (name === '' || year === '' || desc === '') { alert('Name, year and description are required.'); return; }
 
-	//add lists to the list select and list of checks select dropdowns.  
-	var list = new CXGN.List();
-	jQuery("#select_list").append(list.listSelect("select_list"));
-	jQuery("#list_of_checks_section").append(list.listSelect("list_of_checks_section"));
-
-	//add a blank line to location select dropdown that dissappears when dropdown is opened 
-	jQuery("#add_project_location").prepend("<option value=''></option>").val('');
-	jQuery("#add_project_location").one('mousedown', function () {
-            jQuery("option:first", this).remove();
-	});
-
-	//add a blank line to list select dropdown that dissappears when dropdown is opened 
-	jQuery("#select_list_list_select").prepend("<option value=''></option>").val('');
-	jQuery("#select_list_list_select").one('mousedown', function () {
-            jQuery("option:first", this).remove();
-	});
-
-	//add a blank line to list of checks select dropdown that dissappears when dropdown is opened 
-	jQuery("#list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
-	jQuery("#list_of_checks_section_list_select").one('mousedown', function () {
-            jQuery("option:first", this).remove();
-	});
-
-	//add a blank line to design method select dropdown that dissappears when dropdown is opened 
-	jQuery("#select_design_method").prepend("<option value=''></option>").val('');
-	jQuery("#select_design_method").one('mousedown', function () {
-            jQuery("option:first", this).remove();
-            jQuery("#trial_design_more_info").show();
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-	    //trigger design method change events in case the first one is selected after removal of the first blank select item
-	    jQuery("#select_design_method").change();
-	});
-	
-	//reset previous selections
-	jQuery("#select_design_method").change();
-    }
-
-    jQuery('#add_project_dialog').dialog({
-        autoOpen: false,
-        modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 75],
-        title: "Add new trial",
-        buttons: {
-            "Cancel": function () {
-                jQuery('#add_project_dialog').dialog("close");
-            },
-            "Add": function () {
-                var name = jQuery('#add_project_name').val();
-                var year = jQuery('#add_project_year').val();
-                var desc = jQuery('textarea#add_project_description').val();
-                var method_to_use = jQuery('.format_type:checked').val();
-                if (name === '' || year === '' || desc === '') {
-                    alert('Name, year and description are required.');
-                    return;
-                }
-                if (method_to_use == "empty") {
-                    alert('adding a project');
-                    save_project_info(name, year, desc);
-                }
-                if (method_to_use == "create_with_upload") {
-                    var uploadFile = jQuery("#trial_upload_file").val();
-                    jQuery('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
-                    if (uploadFile === '') {
-                        alert("Please select a file");
-                        return;
-                    }
-                    jQuery("#create_new_trial_form").submit();
-                }
-                if (method_to_use == "create_with_design_tool") {
-		    generate_experimental_design(name,year,desc);
-		}
-                //jQuery( this).dialog("close"); 
-                //location.reload();
-            }
-        }
-    });
-
-    jQuery("#format_type_radio").change(function () {
-        var method_to_use = jQuery('.format_type:checked').val();
-        if (method_to_use == "empty") {
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-            jQuery("#trial_design_info").hide();
-            jQuery("#trial_design_more_info").hide();
-            jQuery("#get_file_upload_data").hide();
-        }
-        if (method_to_use == "create_with_upload") {
-            jQuery("#get_file_upload_data").show();
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-            jQuery("#trial_design_info").hide();
-            jQuery("#trial_design_more_info").hide();
-        } else {
-            jQuery("#get_file_upload_data").hide();
-        }
-        if (method_to_use == "create_with_design_tool") {
-            jQuery("#trial_design_info").show();
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-	    jQuery("#select_design_method").change();
-        } else {
-            jQuery("trial_design_info").hide();
-        }
-    });
-
-    jQuery("#select_design_method").change(function () {
-        jQuery("#add_project_dialog").dialog("option", "height","auto");
-        var design_method = jQuery("#select_design_method").val();
-        if (design_method == "CRD") {
-            jQuery("#trial_design_more_info").show();
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-            jQuery("#list_of_checks_section").hide();
-            jQuery("#rep_count_section").show();
-            jQuery("#block_number_section").hide();
-            jQuery("#block_size_section").hide();
-            jQuery("#max_block_section").hide();
-        } else if (design_method == "CBD") {
-            jQuery("#trial_design_more_info").show();
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-            jQuery("#list_of_checks_section").hide();
-            jQuery("#rep_count_section").hide();
-            jQuery("#block_number_section").show();
-            jQuery("#block_size_section").hide();
-            jQuery("#max_block_size_section").hide();
-        } else if (design_method == "ALP") {
-            jQuery("#trial_design_more_info").show();
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-            jQuery("#list_of_checks_section").hide();
-            jQuery("#rep_count_section").show();
-            jQuery("#block_number_section").hide();
-            jQuery("#block_size_section").show();
-            jQuery("#max_block_size_section").hide();
-        } else if (design_method == "AUG") {
-            jQuery("#trial_design_more_info").show();
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-            jQuery("#list_of_checks_section").show();
-            jQuery("#rep_count_section").hide();
-            jQuery("#block_number_section").hide();
-            jQuery("#block_size_section").hide();
-            jQuery("#max_block_size_section").show();
-        } else if (design_method == "") {
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-            jQuery("#list_of_checks_section").hide();
-            jQuery("#trial_design_more_info").hide();
-            jQuery("#rep_count_section").hide();
-            jQuery("#block_number_section").hide();
-            jQuery("#block_size_section").hide();
-            jQuery("#max_block_size_section").hide();
-        } else {
-            alert("Unsupported design method");
-        }
-    });
-
-    jQuery("#show_plot_naming_options").click(function () {
-	var current_height = jQuery("#add_project_dialog").dialog("option", "height");
-	if (jQuery('#show_plot_naming_options').is(':checked')) {
-	    jQuery("#plot_naming_options").show();
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-	}
-	else {
-	    jQuery("#plot_naming_options").hide();
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-	}
-    });
-
-
-    function generate_experimental_design() {
-        var name = jQuery('#project_name').val();
-        var year = jQuery('#project_year').val();
-        var desc = jQuery('#project_description').val();
-
-        if (name == '' || year == '') {
-            alert('Name and year are required.');
-            return;
-        }
-
-        new jQuery.ajax({
-            type: 'POST',
-            url: '/ajax/trial/generate_experimental_design',
-            data: {
-                'project_name': name,
-                'project_description': desc,
-                'year': year
-            },
-
-        }).done(alert("Done saving project info"));
-        jQuery('#add_project_dialog').dialog("close");
-    }
-
-
-    function save_project_info(name, year, desc) {
-        alert('data = ' + name + ' ' + year + ' ' + desc);
-        new jQuery.ajax({
-            type: 'GET',
-            async: false,
-            url: '/ajax/breeders/project/insert',
-            data: {
-                'project_name': name,
-                'project_description': desc,
-                'year': year
-            },
-            success: function (response) {
-                if (response.error) {
-                    alert(response.error);
-                } else {
-                    alert('The trial information was saved.');
-                }
-            },
-            error: function () {
-                alert('An error occurred. sorry');
-            }
-
-        });
-
-    }
-
-    function create_design() {
-        var name = jQuery('#project_name').val();
-        var year = jQuery('#project_year').val();
-        var desc = jQuery('#project_description').val();
-
-        if (name == '' || year == '') {
-            alert('Name and year are required.');
-            return;
-        }
-
-        new jQuery.ajax({
-            type: 'GET',
-            url: '/breeders/project/insert',
-            data: {
-                'project_name': name,
-                'project_description': desc,
-                'year': year
-            },
-
-        }).done(alert("Done saving project info"));
-        jQuery('#add_project_dialog').dialog("close");
-    }
-
-
-jQuery('#create_new_trial_form').iframePostForm({
-    json: true,
-    post: function () {
-        var uploadTrialLayoutFile = jQuery("#trial_upload_file").val();
-        if (uploadTrialLayoutFile === '') {
-            alert("No file selected");
-        }
-    },
-    complete: function (response) {
-
-        if (response.error_string) {
-            //alert(response.error_string);
-            jQuery("#upload_trial_error_display tbody").html('');
-            jQuery("#upload_trial_error_display tbody").append(response.error_string);
-
-            jQuery(function () {
-                jQuery("#upload_trial_error_display").dialog({
-                    modal: true,
-                    title: "Errors in uploaded file",
-                    buttons: {
-                        Ok: function () {
-                            jQuery(this).dialog("close");
-                        }
-                    }
-                });
-            });
-            return;
-        }
-
-        if (response.error) {
-            alert(response.error);
-            return;
-        }
-
-        if (response.success) {
-            alert("File uploaded successfully");
-        }
-
-    }
-});
+                                save_project_info(name, year, desc); 
+                                jQuery( this).dialog("close"); 
+                                location.reload();
+                             } 
+               }
 
 });
+
+  jQuery('#add_project_link').click( function() { open_project_dialog() } );
+
+  function open_project_dialog() { 
+     jQuery('#add_project_dialog').dialog("open");
+  }
+
+  function save_project_info(name, year, desc) { 
+     alert('data = '+name +' '+year+' '+desc);
+     new jQuery.ajax( {
+       type: 'GET',
+       async: false,
+       url: '/ajax/breeders/project/insert',
+       data: { 'project_name': name,  'project_description': desc, 'year': year },
+       success: function(response) { 
+                  if (response.error) { alert(response.error); }
+                  else { alert('The trial information was saved.'); 
+                  }
+                },
+  error: function() { alert('An error occurred. sorry'); }
+
+       
+
+  });
+     
+  }
+    
+  jQuery('#experimental_design_dialog').dialog( {
+     autoOpen: false,
+     buttons:  { "Cancel" : function() { jQuery('#experimental_design_dialog').dialog("close"); }, 
+                     "Continue": function() { continue_design(); } },
+     modal: true,
+     width: 500,
+     height: 300,
+     title: "Field plot design"
+
+});
+
+  jQuery('#completely_randomized_design_dialog').dialog( {
+     autoOpen: false,
+     buttons:  { "Cancel" : function() { jQuery('#completely_randomized_design_dialog').dialog("close"); }, 
+                     "Create": function() { create_design(); } },
+     modal: true,
+     width: 500,
+     height: 300,
+     title: "Completely randomized field plot design"
+
+});
+
+  jQuery('#complete_block_design_dialog').dialog( {
+     autoOpen: false,
+     buttons:  { "Cancel" : function() { jQuery('#complete_block_design_dialog').dialog("close"); }, 
+                     "Create": function() { create_design(); } },
+     modal: true,
+     width: 500,
+     height: 300,
+     title: "Complete randomized block field plot design"
+
+});
+
+  jQuery('#incomplete_block_design_dialog').dialog( {
+     autoOpen: false,
+     buttons:  { "Cancel" : function() { jQuery('#incomplete_block_design_dialog').dialog("close"); }, 
+                     "Create": function() { create_design(); } },
+     modal: true,
+     width: 500,
+     height: 300,
+     title: "Incomplete randomized block field plot design"
+
+});
+
+  jQuery('#experimental_design_link').click( function() { open_experimental_design_dialog() } );
+
+  function open_experimental_design_dialog() { 
+      
+
+     jQuery('#experimental_design_dialog').dialog("open");
+  }
+
+
+  function continue_design() {
+      var design = jQuery('#Design').val();
+      if (design == 'CRD') {
+           jQuery('#completely_randomized_design_dialog').dialog("open");
+      }
+      if (design == 'CBD') {
+           jQuery('#complete_block_design_dialog').dialog("open");
+      }
+      if (design == 'IBD') {
+           jQuery('#incomplete_block_design_dialog').dialog("open");
+      }
+  }
+
+  function create_design() { 
+     var name = jQuery('#project_name').val();
+     var year = jQuery('#project_year').val();
+     var desc = jQuery('#project_description').val();
+
+      if (name == '' || year == '') { alert('Name and year are required.');  return; }
+   
+     new jQuery.ajax( {
+       type: 'GET',
+       url: '/breeders/project/insert',
+       data: { 'project_name': name,  'project_description': desc, 'year': year },
+
+     }).done(alert("Done saving project info"));
+     jQuery('#add_project_dialog').dialog("close");
+  }
+});  
 
 </script>
 
@@ -416,7 +217,7 @@ jQuery('#create_new_trial_form').iframePostForm({
 
 
 
-foreach my $p (@projects){ 
+foreach my $p (@$projects){ 
    print "<tr><td><a href=\"/breeders_toolbox/trial/$p->[0]\">$p->[1]</td><td>$p->[2]</td></tr>\n";
 }
 </%perl>

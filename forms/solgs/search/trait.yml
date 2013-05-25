@@ -1,0 +1,17 @@
+action: "/search/traits"
+method: "POST"
+enctype: "multipart/form-data"
+
+auto_fieldset: 1
+ 
+elements:
+       - type: Text
+         name: trait_search
+         size: 40
+         constraints:
+            - type: Text
+              minimum: 3
+            - Required                     
+       - type: Submit
+         name: search
+         value: Search

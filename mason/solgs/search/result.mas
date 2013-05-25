@@ -1,0 +1,58 @@
+<%doc>
+
+solGS search results view.
+
+</%doc>
+
+<%args>
+
+$result
+$form
+
+</%args>
+
+<& /page/page_title.mas,
+    title => 'solGS search results',
+&>
+  
+% if ($result) 
+% { 
+
+<&| /page/info_section.mas,
+      title => 'Search Results',
+&>
+
+<& /page/columnar_table.mas,
+     headings    => [ 'Population', 'Location', 'Year', 'PI' ],
+     data        => $result,
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __align      => 'l'
+ &>
+</&>
+
+%}
+%else
+%{
+<&| /page/info_section.mas,
+      title => 'No Search Results',
+&>
+
+<br>No results. Search again with a different term.<br />
+
+</&>
+
+%}
+
+<&| /page/info_section.mas,
+    title       => 'Search',
+    collapsible => '1',
+    collapsed   =>  1
+&>
+
+<& /search/solgs.mas, form => $form &>
+
+</&>
+
+
+

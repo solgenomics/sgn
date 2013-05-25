@@ -139,268 +139,201 @@ foreach my $role (@roles) {
 
 <script defer="defer" >
 
-jQuery(document).ready(function() {
+ jQuery(document).ready(function() {
 
-    jQuery("#maternal_parent").autocomplete({
-        source: '/ajax/stock/stock_autocomplete'
-    });
-
-    jQuery("#paternal_parent").autocomplete({
-        source: '/ajax/stock/stock_autocomplete'
-    });
-
-    jQuery("#selfed_parent").autocomplete({
-        source: '/ajax/stock/stock_autocomplete'
-    });
-
-    jQuery("#doubled_haploid_parent").autocomplete({
-        source: '/ajax/stock/stock_autocomplete'
-    });
-
-    jQuery("#open_pollinated_maternal_parent").autocomplete({
-        source: '/ajax/stock/stock_autocomplete'
-    });
-
-    jQuery("#paternal_population").autocomplete({
-        source: '/ajax/stock/stock_autocomplete'
-    });
-
-    jQuery("#bulked_maternal_population").autocomplete({
-        source: '/ajax/stock/stock_autocomplete'
-    });
-
-    jQuery("#bulked_paternal_parent").autocomplete({
-        source: '/ajax/stock/stock_autocomplete'
-    });
-
-    jQuery("#bulked_selfed_population").autocomplete({
-        source: '/ajax/stock/stock_autocomplete'
-    });
-
-    jQuery("#bulked_open_maternal_population").autocomplete({
-        source: '/ajax/stock/stock_autocomplete'
-    });
-
-    jQuery("#bulked_open_paternal_population").autocomplete({
-        source: '/ajax/stock/stock_autocomplete'
-    });
-
-    jQuery("#create_cross").dialog({
-        autoOpen: false,
-        buttons: {
-            "Cancel": function() {
-                jQuery("#create_cross").dialog("close");
-            },
-            "Submit": function() {
-                add_cross()
-                }
-        },
-        modal: true,
-	position: ['top', 75],
-        width: 700,
-        height: 400
-    });
-
-    jQuery("#cross_type").change(function() {
-        jQuery("#get_maternal_parent").toggle(jQuery("#cross_type").val() == "biparental");
-        // show if biparental is cross type selected
-        jQuery("#get_paternal_parent").toggle(jQuery("#cross_type").val() == "biparental");
-        // show if biparental is cross type selected
-        jQuery("#get_selfed_parent").toggle(jQuery("#cross_type").val() == "self");
-        // show if self is cross type selected
-        jQuery("#get_bulked_selfed_population").toggle(jQuery("#cross_type").val() == "bulk_self");
-        // show if self is cross type selected
-        jQuery("#get_open_pollinated_maternal_parent").toggle(jQuery("#cross_type").val() == "open");
-        // show if open is cross type selected
-        jQuery("#get_open_pollinated_population").toggle(jQuery("#cross_type").val() == "open");
-        // show if open is cross type selected
-        jQuery("#get_bulk_maternal_population").toggle(jQuery("#cross_type").val() == "bulk");
-        // show if biparental is cross type selected
-        jQuery("#get_bulk_paternal_parent").toggle(jQuery("#cross_type").val() == "bulk");
-        // show if biparental is cross type selected
-        jQuery("#get_bulk_open_maternal_population").toggle(jQuery("#cross_type").val() == "bulk_open");
-        jQuery("#select_bulk_open_paternal_population").toggle(jQuery("#cross_type").val() == "bulk_open");
-        jQuery("#get_doubled_haploid_parent").toggle(jQuery("#cross_type").val() == "doubled_haploid");
-        // show if doubled haploid is cross type selected
-        });
-
-    jQuery("#specify_paternal_population_checkbox").change(function() {
-        jQuery("#get_paternal_population").toggle(this.checked);
-        // show if it is checked, otherwise hide
-        });
-
-    jQuery("#specify_bulk_open_paternal_population_checkbox").change(function() {
-        jQuery("#get_bulk_open_paternal_population").toggle(this.checked);
-        // show if it is checked, otherwise hide
-        });
-
-    jQuery("#flower_number_checkbox").change(function() {
-        jQuery("#get_flower_number").toggle(this.checked);
-        // show if it is checked, otherwise hide
-        });
-
-    jQuery("#seed_number_checkbox").change(function() {
-        jQuery("#get_seed_number").toggle(this.checked);
-        // show if it is checked, otherwise hide
-        });
-
-    jQuery("#create_progeny_checkbox").change(function() {
-        jQuery("#create_progeny_number").toggle(this.checked);
-        // show if it is checked, otherwise hide
-        jQuery("#use_prefix_suffix").toggle(this.checked);
-        // show if it is checked, otherwise hide
-        });
-
-    jQuery("#use_prefix_suffix_checkbox").change(function() {
-        jQuery("#get_prefix_suffix").toggle(this.checked);
-        // show if it is checked, otherwise hide
-        });
-
-    jQuery("#data_access_checkbox").change(function() {
-        jQuery("#show_visible_to_role_selection").toggle(this.checked);
-        // show if it is checked, otherwise hide
-        });
-
-    jQuery("#add_cross_link").click(function() {
-        jQuery("#create_cross").dialog("open");
-    });
-
-    function add_cross() {
-
-        var crossName = jQuery("#cross_name").val();
-        var crossType = jQuery("#cross_type").val();
-        var progenyNumber = jQuery("#progeny_number").val();
-        var flowerNumber = jQuery("#flower_number").val();
-        var seedNumber = jQuery("#seed_number").val();
-        var prefix = jQuery("#prefix").val();
-        var suffix = jQuery("#suffix").val();
-        var visibleToRole = jQuery("#visible_to_role").val();
-        var location = jQuery("#location").val();
-        var trial = jQuery("#trial").val();
-
-        //biparental
-        var maternalParent = jQuery("#maternal_parent").val();
-        //biparental cross maternal parent
-        var paternalParent = jQuery("#paternal_parent").val();
-        //biparental cross paternal parent
-        //selfed
-        var selfedParent = jQuery("#selfed_parent").val();
-        //selfed parent
-        //doulbed haploid
-        var doubledHaploidParent = jQuery("#doubled_haploid_parent").val();
-        //doubled haploid parent
-        //open pollinated
-        var openPollinatedMaternalParent = jQuery("#open_pollinated_maternal_parent").val();
-        //open pollinated maternal parent
-        var paternalParentPopulation = jQuery("#paternal_population").val();
-        //open pollinated paternal parent (may not be specified)
-        //bulk
-        var bulkedMaternalPopulation = jQuery("#bulked_maternal_population").val();
-        //bulked maternal population
-        var bulkedPaternalParent = jQuery("#bulked_paternal_parent").val();
-        //bulked paternal parent (may not be specified)
-        //selfed bulk
-        var bulkedSelfedPopulation = jQuery("#bulked_selfed_population").val();
-        //selfed bulk
-        //open pollinated bulk
-        var bulkedOpenMaternalPopulation = jQuery("#bulked_open_maternal_population").val();
-        //bulked open pollinated maternal population
-        var bulkedOpenPaternalPopulation = jQuery("#bulked_open_paternal_population").val();
-        //bulked paternal parent population (may not be specified)
-        //set maternal and paternal parents based on cross type
-        if (crossType == "self") {
-            maternalParent = selfedParent;
-            paternalParent = selfedParent;
-        }
-        if (crossType == "open") {
-            maternalParent = openPollinatedMaternalParent;
-            paternalParent = paternalParentPopulation;
-        }
-        //paternal parent may not be specified
-        if (crossType == "bulk") {
-            maternalParent = bulkedMaternalPopulation;
-            paternalParent = bulkedPaternalParent;
-        }
-        if (crossType == "bulk_self") {
-            maternalParent = bulkedSelfedPopulation;
-            paternalParent = bulkedSelfedPopulation;
-        }
-        if (crossType == "bulk_open") {
-            maternalParent = bulkedOpenMaternalPopulation;
-            paternalParent = bulkedOpenPaternalPopulation;
-        }
-        //paternal population may not be specified
-        if (crossType == "doubled_haploid") {
-            maternalParent = doubledHaploidParent;
-            paternalParent = doubledHaploidParent;
-        }
-
-        if (!crossName) {
-            alert("A cross name is required");
-            return;
-        }
-        alert("Sending AJAX request.. /ajax/cross/add_cross");
-
-        jQuery.ajax({
-            url: '/ajax/cross/add_cross',
-            dataType: "json",
-            type: 'GET',
-            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal_parent=' + maternalParent + '&paternal_parent=' + paternalParent + '&progeny_number=' + progenyNumber + '&flower_number=' + flowerNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix + '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&trial_id=' + trial + '&location_id=' + location,
-            error: function(response) {
-                alert("An error occurred. Please try again later!" + response);
-            },
-            parseerror: function(response) {
-                alert("A parse error occurred. Please try again." + response);
-            },
-            success: function(response) {
-                if (response.error) {
-                    alert(response.error);
-                } else {
-                    jQuery("#create_cross").dialog("close");
-                    alert("The cross has been added. [" + response.error + "]");
-                }
-            },
-            //complete: function(response) { 
-            //     alert(response.error);
-            //}
-            });
-    }
-
-    jQuery("#upload_crosses_dialog").dialog({
-        autoOpen: false,
-        buttons: {
-            "Cancel": function() {
-                jQuery("#upload_crosses_dialog").dialog("close");
-            },
-            "Submit": function() {
-                read_cross_upload()
-                }
-        },
-        modal: true,
-	position: ['top', 75],
-        width: 500,
-        height: 250
-    });
-
-    jQuery("#upload_crosses_link").click(function() {
-        jQuery("#upload_crosses_dialog").dialog("open");
-    });
-
-    function read_cross_upload() {
-        var formatType = jQuery('input[name=format_type]:checked').val();
-        var uploadFile = jQuery("#upload_file").val();
-        if (!uploadFile) {
-            alert("Please select a file");
-            return;
-        } else if (! (formatType == "barcode" || formatType == "spreadsheet")) {
-            alert("Please choose a format");
-            return;
-        } else {
-            jQuery("#upload_form").submit();
-        }
-    }
-
+  jQuery("#maternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
 });
+
+  jQuery("#paternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#selfed_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#doubled_haploid_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#open_pollinated_maternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#paternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_maternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_paternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_selfed_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_open_maternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_open_paternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+   jQuery("#create_cross").dialog( {
+      autoOpen: false,
+      buttons: { "Cancel" :  function() { jQuery("#create_cross").dialog("close"); }, "Submit": function() { add_cross() }  },
+      modal: true,
+      width: 550,
+      height: 400
+    });
+
+   jQuery("#cross_type").change(function(){
+      jQuery("#get_maternal_parent").toggle(jQuery("#cross_type").val()=="biparental");  // show if biparental is cross type selected
+      jQuery("#get_paternal_parent").toggle(jQuery("#cross_type").val()=="biparental");  // show if biparental is cross type selected
+      jQuery("#get_selfed_parent").toggle(jQuery("#cross_type").val()=="self");  // show if self is cross type selected
+      jQuery("#get_bulked_selfed_population").toggle(jQuery("#cross_type").val()=="bulk_self");  // show if self is cross type selected
+      jQuery("#get_open_pollinated_maternal_parent").toggle(jQuery("#cross_type").val()=="open");  // show if open is cross type selected
+      jQuery("#get_open_pollinated_population").toggle(jQuery("#cross_type").val()=="open");  // show if open is cross type selected
+      jQuery("#get_bulk_maternal_population").toggle(jQuery("#cross_type").val()=="bulk");  // show if biparental is cross type selected
+      jQuery("#get_bulk_paternal_parent").toggle(jQuery("#cross_type").val()=="bulk");  // show if biparental is cross type selected
+      jQuery("#get_bulk_open_maternal_population").toggle(jQuery("#cross_type").val()=="bulk_open");
+      jQuery("#select_bulk_open_paternal_population").toggle(jQuery("#cross_type").val()=="bulk_open");
+      jQuery("#get_doubled_haploid_parent").toggle(jQuery("#cross_type").val()=="doubled_haploid");  // show if doubled haploid is cross type selected
+
+   });
+
+   jQuery("#specify_paternal_population_checkbox").change(function(){
+      jQuery("#get_paternal_population").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
+
+   jQuery("#specify_bulk_open_paternal_population_checkbox").change(function(){
+      jQuery("#get_bulk_open_paternal_population").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
+
+   jQuery("#flower_number_checkbox").change(function(){
+      jQuery("#get_flower_number").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
+
+   jQuery("#seed_number_checkbox").change(function(){
+      jQuery("#get_seed_number").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
+
+   jQuery("#create_progeny_checkbox").change(function(){
+      jQuery("#create_progeny_number").toggle(this.checked);  // show if it is checked, otherwise hide
+      jQuery("#use_prefix_suffix").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
+    
+   jQuery("#use_prefix_suffix_checkbox").change(function(){
+      jQuery("#get_prefix_suffix").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
+  
+   jQuery("#data_access_checkbox").change(function(){
+      jQuery("#show_visible_to_role_selection").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
+
+    jQuery("#add_cross_link").click( function () { 
+     jQuery("#create_cross" ).dialog("open");
+    });
+
+    function add_cross() { 
+   
+      var crossName = jQuery("#cross_name").val();
+      var crossType = jQuery("#cross_type").val();
+      var progenyNumber = jQuery("#progeny_number").val();
+      var flowerNumber = jQuery("#flower_number").val();
+      var seedNumber = jQuery("#seed_number").val();
+      var prefix = jQuery("#prefix").val();
+      var suffix = jQuery("#suffix").val();
+      var visibleToRole = jQuery("#visible_to_role").val();
+      var location = jQuery("#location").val();
+      var trial = jQuery("#trial").val();
+
+
+      //biparental
+      var maternalParent = jQuery("#maternal_parent").val();  //biparental cross maternal parent
+      var paternalParent = jQuery("#paternal_parent").val();  //biparental cross paternal parent
+
+      //selfed
+      var selfedParent = jQuery("#selfed_parent").val(); //selfed parent
+
+      //doulbed haploid
+      var doubledHaploidParent = jQuery("#doubled_haploid_parent").val();  //doubled haploid parent
+
+      //open pollinated
+      var openPollinatedMaternalParent = jQuery("#open_pollinated_maternal_parent").val(); //open pollinated maternal parent
+      var paternalParentPopulation = jQuery("#paternal_population").val();  //open pollinated paternal parent (may not be specified)
+
+      //bulk
+      var bulkedMaternalPopulation = jQuery("#bulked_maternal_population").val();  //bulked maternal population
+      var bulkedPaternalParent = jQuery("#bulked_paternal_parent").val();  //bulked paternal parent (may not be specified)
+
+      //selfed bulk
+      var bulkedSelfedPopulation = jQuery("#bulked_selfed_population").val();  //selfed bulk
+
+      //open pollinated bulk
+      var bulkedOpenMaternalPopulation = jQuery("#bulked_open_maternal_population").val();  //bulked open pollinated maternal population
+      var bulkedOpenPaternalPopulation = jQuery("#bulked_open_paternal_population").val();  //bulked paternal parent population (may not be specified)
+
+      //set maternal and paternal parents based on cross type
+      if (crossType =="self") { maternalParent = selfedParent; paternalParent = selfedParent; }
+      if (crossType =="open") { maternalParent = openPollinatedMaternalParent; paternalParent = paternalParentPopulation; }  //paternal parent may not be specified
+      if (crossType =="bulk") { maternalParent = bulkedMaternalPopulation; paternalParent = bulkedPaternalParent; } 
+      if (crossType =="bulk_self") { maternalParent = bulkedSelfedPopulation; paternalParent = bulkedSelfedPopulation; }  
+      if (crossType =="bulk_open") { maternalParent = bulkedOpenMaternalPopulation; paternalParent = bulkedOpenPaternalPopulation; }  //paternal population may not be specified
+      if (crossType =="doubled_haploid") { maternalParent = doubledHaploidParent; paternalParent = doubledHaploidParent; }
+
+
+      if (!crossName) { alert("A cross name is required"); return; }
+       alert("Sending AJAX request.. /ajax/cross/add_cross");
+  
+      jQuery.ajax({
+        url: '/ajax/cross/add_cross',
+        dataType: "json",
+        type: 'GET',
+        data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&trial_id='+trial+'&location_id='+location,
+        error: function(response) { alert("An error occurred. Please try again later!"+response); },
+        parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
+        success: function(response) { 
+          if (response.error) { alert(response.error); }
+          else {
+            jQuery("#create_cross").dialog("close");
+            alert("The cross has been added. ["+response.error+"]");
+          }
+        }, 
+        //complete: function(response) { 
+        //     alert(response.error);
+        //}
+      });
+   }
+
+
+   jQuery("#upload_crosses_dialog").dialog( {
+      autoOpen: false,
+      buttons: { "Cancel" :  function() { jQuery("#upload_crosses_dialog").dialog("close"); }, "Submit": function() { read_cross_upload() }  },
+      modal: true,
+      width: 500,
+      height: 250
+    });
+    
+    jQuery("#upload_crosses_link").click( function () { 
+     jQuery("#upload_crosses_dialog" ).dialog("open");
+    });
+   
+    function read_cross_upload() { 
+      var formatType = jQuery('input[name=format_type]:checked').val();
+      var uploadFile = jQuery("#upload_file").val();
+      if (!uploadFile) { alert("Please select a file");return;}
+      else if (!(formatType == "barcode" || formatType == "spreadsheet")) {alert("Please choose a format");return;}
+      else { jQuery("#upload_form").submit();}
+    }
+
+ });
 
 </script>
 

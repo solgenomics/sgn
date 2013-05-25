@@ -1,0 +1,29 @@
+<%doc>
+
+=head1 NAME 
+
+/form/population/phenotype.mas - a view for phenotype file upload webform
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$form
+
+</%args>
+
+
+<& /page/page_title.mas, title => "Step 2 of 3: Submit phenotype file" &>
+<&| /page/info_section.mas,
+  title => "Phenotype file",
+&>
+
+<% $form %>
+
+</&>

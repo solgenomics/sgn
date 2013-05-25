@@ -1,0 +1,64 @@
+<%doc>
+
+=head1 NAME
+ 
+model/model_summary.mas - displays multiple traits GS analysis output and links to traits' GS detailed output pages
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$model_data
+
+</%args>
+
+<%perl>
+
+</%perl>
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 0, 
+    title       => "Genomic selection model output"
+&>     
+  
+<table  style="width:95%">
+  <tr>
+    <th>Model</th>
+    <th>Training Population Composition</th>
+    <th>Applied to</th>
+  </tr>
+   
+% foreach my $model (@$model_data)
+%{
+    
+  <tr style="background-color:#ccccff">
+    <td>
+   <%  $model->[0] %>
+    </td>
+    <td>
+   <%  $model->[1] %>
+    </td>    
+    <td>
+      <& /page/columnar_table.mas,
+         headings    => ['Trait', 'Model Accuracy'],
+         data        => $model->[2],
+        __alt_freq   => 1,
+        __align      => "l",
+        __tableattrs => 'style="padding: 1px"',    
+      &>
+    </td>
+  </tr>
+
+%}
+
+</table>
+
+</&>
+

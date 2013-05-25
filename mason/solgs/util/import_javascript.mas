@@ -1,0 +1,25 @@
+<%doc>
+
+=head1 DESCRIPTION
+
+Produces a list of <script src=""></script> lines for a set of
+JavaScript library names, including any necessary dependencies.
+
+=head1 ARGS
+
+=head2 C<classes> - single class name, or arrayref of JavaScript classes to import
+
+=head1 EXAMPLE
+
+  <& /import_javascript, classes => [qw[ CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM ]] &>
+
+=cut
+
+</%doc>
+<%args>
+ $classes
+</%args>
+<%perl>
+  $classes = [ $classes ] unless ref $classes; #< coerce to arrayref
+  push @{ $c->stash->{pack_js} }, @$classes;
+</%perl>

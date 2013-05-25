@@ -306,6 +306,14 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     }
 }
 
+
+sub breeder_search : Path('/breeder_search/') :Args(0) { 
+    my ($self, $c) = @_;
+    
+    $c->stash->{template} = '/breeders_toolbox/breeder_search.mas';
+
+}
+
 sub trial_info : Path('/breeders_toolbox/trial') Args(1) { 
     my $self = shift;
     my $c = shift;
