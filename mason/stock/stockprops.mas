@@ -18,84 +18,30 @@ hashref of stockprops . keys = prop name (cvterm.name) values = list of prop val
 =back
 
 =head1 AUTHOR
-
 Naama Menda <nm249@cornell.edu>
 
-Refactored into an editable AJAX-based gizmo by Lukas.
 
 =cut
 
 </%doc>
 
 <%args>
-$stock_id
-@categories => ( 'synonym' )
-$document_id => ''
+  $subset
+  $props
+
 </%args>
 
 <%perl>
 
-my $div_name = "stock_props_".join("_", @categories);
-
-my $select_html = "";
-if (@categories == 1) { 
-  $select_html = $categories[0];
-}
-else { 
-   $select_html = qq { <select id="$document_id"><option> };
-
-  $select_html .= join "</option\n><option>", @categories;
-
-    $select_html .= qq { </option></select> };
+my $string;
+foreach my $name ( @$subset ) {
+  $string .= "<tr><td>" . $name . ": </td><td><b>" .  join(', ' , @{ $props->{$name} } ) . "</b></td></tr>" if  ref($props->{$name} );
 }
 
 </%perl>
 
+% if ($string) {
+<table> <% $string %> </table>
 
-<div id="<% $div_name %>">
-[loading...]
-</div>
-
-<div id="<% $div_name %>_dialog">
-Add <% $select_html %> <input id="add_stockprop_input" size="20" />
-</div>
-
-<div id="<% $div_name %>_confirm_delete">
-  
-</div>
-
-<script defer="true">
-  
-  jQuery('#<% $div_name %>_dialog').dialog(
-    {
-    modal: true,
-   autoOpen: false,
-   title: 'Add properties',
-    buttons: { "Cancel" : function() { jQuery(this).dialog("close");  }, "Add" : function() { jQuery(this).dialog("close"); } }
-  });
-
-  function displayItems() { 
-    var props = new Array();
-    jQuery.ajax({
-     url: '/stock/props/get/<% $stock_id %>/synonym',
-     async: false,
-     success: function(response) { 
-       props = response.props
-     },
-     error: alert("An error occurred!")
-		 
-   });
-
-    for(var i=0; i<props.length; i++) { 
-      document.write(props[i][prop]);
-    }
-  document.write('<a href="javascript:jQuery(\'#<% $div_name%>_dialog\').dialog(\'open\')">Add...</a>');
-  }
-
-  displayItems();
-
-</script>
-
-  
-
+%}
 
