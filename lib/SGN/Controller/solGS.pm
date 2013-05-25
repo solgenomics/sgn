@@ -151,10 +151,7 @@ sub search : Path('/solgs/search') Args() {
   
     $self->load_yaml_file($c, 'search/solgs.yml');
     my $form = $c->stash->{form};
-<<<<<<< HEAD
     
-=======
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
     $self->gs_traits_index($c);
     my $gs_traits_index = $c->stash->{gs_traits_index};
     
@@ -162,11 +159,8 @@ sub search : Path('/solgs/search') Args() {
     $self->projects_links($c, $project_rs);
     my $projects = $c->stash->{projects_pages};
 
-<<<<<<< HEAD
    
 
-=======
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
     my $query;
     if ($form->submitted_and_valid) 
     {
@@ -940,11 +934,7 @@ sub gebv_rel_weights {
         unless ($tr eq 'rank')
         {
             $rel_wts .= $tr . "\t" . $wt;
-<<<<<<< HEAD
             $rel_wts .= "\n";# unless( (keys %$params)[-1] eq $tr);
-=======
-            $rel_wts .= "\n" unless( (keys %$params)[-1] eq $tr);
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
         }
     }
 
@@ -1117,11 +1107,7 @@ sub list_of_prediction_pops {
     my ($self, $c, $training_pop_id, $download_prediction) = @_;
    
     my $prediction_pop_id = 268;
-<<<<<<< HEAD
     my $pred_pop_name = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id" onclick="solGS.waitPage()">Barley prediction population test</a> |;
-=======
-    my $pred_pop_name = qq | <a href="/model/$training_pop_id/prediction/$prediction_pop_id" onclick="solGS.waitPage()">Barley prediction population test</a> |;
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 
     my $pred_pop = [ ['', $pred_pop_name, 'barley prediction population from crosses...', 'F1', '2013', $download_prediction]];
     
@@ -1260,10 +1246,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      {
          my $acronym_pairs = $self->get_acronym_pairs($c);
          my $trait_name;
-<<<<<<< HEAD
          my $trait_id;
-=======
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
          if ($acronym_pairs)
          {
              foreach my $r (@$acronym_pairs) 
@@ -1274,25 +1257,16 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
                      $trait_name =~ s/\n//g;
                      $c->stash->{trait_name} = $trait_name;
                      $c->stash->{trait_abbr} = $r->[0];
-<<<<<<< HEAD
                      $trait_id   =  $c->model('solGS')->get_trait_id($c, $trait_name);
 
-=======
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
                  }
              }
 
          }
 
-<<<<<<< HEAD
          $self->get_trait_name($c, $trait_id);
          my $trait_abbr = $c->stash->{trait_abbr}; 
         
-=======
-         my $trait_id   = $c->model('solGS')->get_trait_id($c, $trait_name);
-         my $trait_abbr = $c->stash->{trait_abbr}; 
-         
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
          my $dir = $c->stash->{solgs_cache_dir};
          opendir my $dh, $dir or die "can't open $dir: $!\n";
         
@@ -1644,7 +1618,6 @@ sub analyzed_traits {
     my $dir = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir or die "can't open $dir: $!\n";
     
-<<<<<<< HEAD
    
    my @all_files =   grep { /gebv_kinship_[a-zA-Z0-9]/ && -f "$dir/$_" } 
                   readdir($dh); 
@@ -1662,17 +1635,6 @@ sub analyzed_traits {
 
     $c->stash->{analyzed_traits} = \@traits;
     $c->stash->{analyzed_traits_files} = \@traits_files;
-=======
-    my @files  = map { $_ =~ /($pop_id)/ ? $_ : 0 } 
-                 grep { /gebv_kinship_[a-zA-Z0-9]/ && -f "$dir/$_" } 
-                 readdir($dh);   
-    closedir $dh;                     
-    
-    my @traits = map { s/gebv|kinship|_|($pop_id)//g ? $_ : 0} @files;
-  
-    $c->stash->{analyzed_traits} = \@traits;
-    $c->stash->{analyzed_traits_files} = \@files;
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 }
 
 
@@ -1921,11 +1883,7 @@ sub genotype_file  {
     my $pop_id     = $c->stash->{pop_id};
     
     die "Population id must be provided to get the genotype data set." if !$pop_id;
-<<<<<<< HEAD
    
-=======
-  
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
     my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
     $file_cache->purge();
    
@@ -2180,17 +2138,10 @@ sub cache_file {
     $c->stash->{$cache_data->{stash_key}} = $file;
 }
 
-<<<<<<< HEAD
 #sub default :Path {
 #    my ( $self, $c ) = @_; 
 #    $c->forward('search');
 #}
-=======
-sub default :Path {
-    my ( $self, $c ) = @_; 
-    $c->forward('search');
-}
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 
 
 
@@ -2226,7 +2177,6 @@ Attempt to render a view, if needed.
     
 #}
 
-<<<<<<< HEAD
 =head2 begin
 
 Run for every request.
@@ -2238,38 +2188,6 @@ sub begin : Private {
 
     $self->get_solgs_dirs($c);
   
-=======
-=head2 auto
-
-Run for every request to the site.
-
-=cut
-
-sub auto : Private {
-    my ($self, $c) = @_;
-    CatalystX::GlobalContext->set_context( $c );
-    $c->stash->{c} = $c;
-    weaken $c->stash->{c};
-
-    $self->get_solgs_dirs($c);
-  
-    # gluecode for logins
-    #
-#  #   unless( $c->config->{'disable_login'} ) {
-   #      my $dbh = $c->dbc->dbh;
-   #      if ( my $sp_person_id = CXGN::Login->new( $dbh )->has_session ) {
-
-   #          my $sp_person = CXGN::People::Person->new( $dbh, $sp_person_id);
-
-   #          $c->authenticate({
-   #              username => $sp_person->get_username(),
-   #              password => $sp_person->get_password(),
-   #          });
-   #      }
-   # }
-
-    return 1;
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 }
 
 

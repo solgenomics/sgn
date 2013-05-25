@@ -43,11 +43,6 @@ sub default_toolbar_data {
                     link => '/search/phenotypes/qtl',
                     desc => 'A web interface for uploading QTL raw data, on-the-fly QTL mapping and search interface for QTLs.'
                 },
- {
-                    name => 'Genomic Selection',
-                    link => '/solgs/search/',
-                    desc => 'A tool for estimating breeding values using rrBlUP.'
-                },
                 {
                     name => 'Unigenes',
                     link => '/search/transcripts/unigene',

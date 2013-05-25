@@ -21,11 +21,7 @@ $validation_download_url
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-<<<<<<< HEAD
   title       => "10 folds cross-validation (CV) report" 
-=======
-  title       => "10 folds cross-validation report" 
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 &> 
 
 <& /page/columnar_table.mas,

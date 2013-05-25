@@ -5,10 +5,6 @@ options(echo = FALSE)
 
 library(rrBLUP)
 library(plyr)
-<<<<<<< HEAD
-=======
-#library(sendmailR)
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 library(mail)
 library(imputation)
 
@@ -122,35 +118,11 @@ if (sum(is.na(phenoTrait)) > 0)
     phenoTrait2<-phenoTrait[1:10, ]
     print(phenoTrait2)
 
-<<<<<<< HEAD
     #fill in for missing data with trait mean value
     phenoTrait[, trait]  <- replace (phenoTrait[, trait],
                                          is.na(phenoTrait[, trait]),
                                          mean(phenoTrait[, trait], na.rm =TRUE)
                                          )  
-=======
-    #impute phenotype values for obs with missing values,
-    #based on mean of neighbouring 50 (arbitrary) obs
-    phenoTrait <-kNNImpute(phenoTrait, 50)
-    phenoTrait <-as.data.frame(phenoTrait)
-
-    #extract columns with imputed values
-    phenoTrait <- subset(phenoTrait,
-                         select = grep("^x", names(phenoTrait))
-                         )
-
-    phenoTrait2<-phenoTrait[543:563, ]
-    print(phenoTrait2)
-
-    #remove prefix 'x.' from imputed columns
-    names(phenoTrait) <- sub("x.", "", names(phenoTrait))
-
-    phenoTrait <- as.data.frame(phenoTrait)
-
-    #convert trait column into numeric
-    phenoTrait[, trait] <-sapply(phenoTrait[, trait], as.numeric)
-  
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
   }
 
 #calculate mean of reps/plots of the same accession and
@@ -166,17 +138,9 @@ print('phenotyped lines after averaging')
 print(length(row.names(phenoTrait)))
 
 #make stock_names row names
-<<<<<<< HEAD
 row.names(phenoTrait) <- phenoTrait[, 1]
 phenoTrait[, 1] <- NULL
 
-=======
-#print(phenoTrait)
-row.names(phenoTrait) <- phenoTrait[, 1]
-phenoTrait[, 1] <- NULL
-#print(phenoTrait)
-#traitPhenoData <- as.data.frame(round(phenoTrait, digits=2)) 
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 #find genotype file name
 genoFile <- grep("genotype_data",
                  inFiles,
@@ -226,11 +190,7 @@ if (length(predictionFile) !=0 )
     predictionData <- read.table(predictionFile,
                        header = TRUE,
                        row.names = 1,
-<<<<<<< HEAD
                        sep = "\t",
-=======
-                       sep = ",",
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
                        na.strings = c("NA", " ", "--", "-"),
                        dec = "."
                       )
@@ -253,10 +213,6 @@ rownames(commonObs)<-commonObs[, 1]
 #include in the genotype dataset only observation lines
 #with phenotype data
 genoData<-genoData[(rownames(genoData) %in% rownames(commonObs)), ]
-<<<<<<< HEAD
-=======
-#print(genoData[1:10, 1:10])
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 
 #drop observation lines without genotype data
 phenoTrait <- merge(data.frame(phenoTrait), commonObs, by=0, all=FALSE)
@@ -298,10 +254,6 @@ if (sum(is.na(genoDataMatrix)) > 0)
 
 #change genotype coding to [-1, 0, 1], to use the A.mat )
 genoDataMatrix <- genoDataMatrix - 1
-<<<<<<< HEAD
-=======
-
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 if (length(predictionData) != 0)
   {
     predictionData <- predictionData - 1
@@ -393,12 +345,6 @@ genotypeGroups <- rep(1:10, reps) [- (nrow(phenoTrait) %% 10)]
 set.seed(4567)                                   
 genotypeGroups <- genotypeGroups[order (runif(nrow(phenoTrait))) ]                     
 
-<<<<<<< HEAD
-=======
-##convert genotype values from [1,2] to [0,1]
-genoDataMatrix <- genoDataMatrix - 1
-
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 validationAll <- c()
 
 for (i in 1:10)
@@ -420,12 +366,7 @@ for (i in 1:10)
                          mixed.method = "REML",
                          K.method = "RR"
                          )
-<<<<<<< HEAD
 
-=======
-print("BLUP for prediction pop")
-#print(result)
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
   assign(kblup, result)
  
 #calculate cross-validation accuracy
@@ -433,11 +374,7 @@ print("BLUP for prediction pop")
 
   validation <- paste("validation", i, sep = ".")
 
-<<<<<<< HEAD
   cvTest <- paste("CV test", i, sep = " ")
-=======
-  cvTest <- paste("Test", i, sep = " ")
->>>>>>> parent of 066865a... Revert "Merge branch 'master' into topic/plot_layout_upload"
 
   if (class(accuracy) != "try-error")
     {
