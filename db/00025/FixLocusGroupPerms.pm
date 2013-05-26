@@ -64,6 +64,9 @@ sub patch {
 GRANT select, update, insert, delete  ON phenome.locusgroup_member to postgres, web_usr;
 GRANT select, update, usage  ON phenome.locusgroup_member_locusgroup_member_id_seq to postgres, web_usr;
 
+GRANT select, update, insert, delete  ON phenome.locusgroup to postgres, web_usr;
+GRANT select, update, usage  ON phenome.locusgroup_locusgroup_id_seq to postgres, web_usr;
+
 
 EOSQL
 
