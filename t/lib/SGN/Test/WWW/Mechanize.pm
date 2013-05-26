@@ -383,6 +383,8 @@ DELETE FROM metadata.md_image WHERE sp_person_id=?
     $_->do( <<'', undef, $u_id);
 DELETE FROM phenome.locusgroup_member WHERE sp_person_id=?
 
+    $_->do( <<'', undef, $u_id);
+DELETE FROM phenome.locusgroup WHERE sp_person_id=?
 
 
     });
