@@ -15,7 +15,7 @@ use Cache::File;
 use Try::Tiny;
 use List::MoreUtils qw /uniq/;
 use Scalar::Util 'weaken';
-use CatalystX::GlobalContext ();
+#use CatalystX::GlobalContext ();
 use Statistics::Descriptive;
 use Math::Round::Var;
 #use CXGN::Login;
@@ -30,7 +30,7 @@ BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
 # so they function identically to actions created in MyApp.pm
 #
 
-__PACKAGE__->config(namespace => '');
+#__PACKAGE__->config(namespace => '');
 
 =head1 NAME
 
