@@ -56,6 +56,7 @@ my $build = SGN::Build->new(
         'Catalyst::Controller::HTML::FormFu'       => 0,
         'Catalyst::View::JavaScript::Minifier::XS' => '2.100000',
         'CatalystX::GlobalContext'                 => 0,
+	'Class::Singleton'                         => 0,
         'Config::JFDI'                             => 0,
         'CGI'                                      => 0,
         'Data::Page'                               => 0,
