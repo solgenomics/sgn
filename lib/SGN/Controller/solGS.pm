@@ -392,8 +392,13 @@ sub project_description {
     $self->genotype_file($c);
     my $geno_file  = $c->stash->{genotype_file};
     my @geno_lines = read_file($geno_file);
-    my $stocks_no  = scalar(@geno_lines) - 1;
     my $markers_no = scalar(split ('\t', $geno_lines[0])) - 1;
+
+    $self->trait_phenodata_file($c);
+    my $trait_pheno_file  = $c->stash->{trait_phenodata_file};
+    my @trait_pheno_lines = read_file($trait_pheno_file) if $trait_pheno_file;
+
+    my $stocks_no = @trait_pheno_lines ? scalar(@trait_pheno_lines) - 1 : scalar(@geno_lines) - 1;
 
     $self->phenotype_file($c);
     my $pheno_file = $c->stash->{phenotype_file};
@@ -563,12 +568,15 @@ sub trait_phenodata_file {
     my $pop_id = $c->stash->{pop_id};
     my $trait  = $c->stash->{trait_abbr};
     
-    my $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait,
-                      file      => 'phenotype_trait_' . $trait . '_' . $pop_id,
-                      stash_key => 'trait_phenodata_file'
-    };
+    if ($trait) 
+    {
+        my $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait,
+                          file      => 'phenotype_trait_' . $trait . '_' . $pop_id,
+                          stash_key => 'trait_phenodata_file'
+        };
 
-    $self->cache_file($c, $cache_data);
+        $self->cache_file($c, $cache_data);
+    }
 
 }
 
