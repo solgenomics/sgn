@@ -73,13 +73,15 @@ Target sequences:
 	    var markup_el = document.getElementById('markup');
 	    var regions = <% $json->encode(\@regions) %>;
 
-
 	    var hilite_regions = [];
-
 
 	    for (var i=0; i<regions.length; i++) { 
 		//alert("HERE " + regions[i]); //regions[i].join('X'));
-		hilite_regions[i]=[ 'highlight', regions[i][0]-1, regions[i][1]-1 ];
+		if (regions[i][0] == 0) {
+		   regions[i][0] = 1
+		}
+		hilite_regions[i]=[ 'highlight', regions[i][0], regions[i][1] ];
+                //hilite_regions[i]=[ 'highlight', 1, 934 ];
             }	       
 
 	    var sequence = source_el.innerHTML;
@@ -90,7 +92,7 @@ Target sequences:
  	    }
 
             var space_regions = [];
-	    for (var i =0; i<sequence.length; i=i+6) { 
+	    for (var i =0; i<sequence.length; i=i+10) { 
 	       space_regions.push(['space', i, i]);
             }	       
 	    	    
@@ -107,15 +109,20 @@ Target sequences:
 	    var leading_spaces = new Array('', '', '', '', '', ''); 
 	    for (var i=1; i<lines.length; i++) { 
                leading_str = leading_spaces.slice(0,Math.ceil(6-(Math.log(current_pos)/Math.log(10)))).join('&nbsp;');  // poor man's sprintf
-		leading_str2 = leading_spaces.slice(0,Math.ceil(6-(Math.log(current_pos +line_length -1)/Math.log(10)))).join('&nbsp;');													
-               final_seq = final_seq + leading_str + current_pos + ' ' + lines[i] + ' ' + leading_str2 + ( current_pos + line_length - 1) + '<br />';
+	       leading_str2 = leading_spaces.slice(0,Math.ceil(6-(Math.log(current_pos +line_length -1)/Math.log(10)))).join('&nbsp;');
+	       
+	       if (current_pos + line_length < sequence.length) {
+	       	  final_seq = final_seq + leading_str + current_pos + ' ' + lines[i] + ' ' + leading_str2 + ( current_pos + line_length - 1) + '<br />';
+	       } else {
+	       	  final_seq = final_seq + leading_str + current_pos + ' ' + lines[i] + ' ' + leading_str2 + sequence.length + '<br />';
+	       }
+
                current_pos += line_length;
             }
 
 	    markup_el.innerHTML='<font face="courier" size="2">'+final_seq+'</font>';
 
 	}
-
 
 </script>
 
@@ -128,7 +135,7 @@ Target sequences:
 
 </&>
 
-<&| /page/info_section.mas, title=>"Sequences with perfect matches of $fragment_size-mers",    collapsible => 1,    collapsed   => 0 &>
+<&| /page/info_section.mas, title=>"Sequences with perfect matches of $fragment_size-mers", collapsible => 1, collapsed => 0 &>
 % foreach my $id (@ids) { 
 % print $id->[0]." (".$id->[1].")<br />";
 % }

@@ -22,6 +22,7 @@ use CXGN::Page::FormattingHelpers qw| page_title_html info_table_html hierarchic
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/evens distinct/;
 use CXGN::Tools::Run;
+use Data::Dumper;
 
 our %urlencode;
 
@@ -57,15 +58,33 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     my $sequence = $c->req->param("sequence");
     my $fragment_size = $c->req->param("fragment_size");
 
+    my $upload = $c->req->upload("expression_file");
+    my $expr_file = undef;
+
+    if (defined($upload)) {
+	$expr_file = $upload->tempname;
+    
+	$expr_file =~ s/\/tmp\///;
+	# print STDERR "tmp name: $expr_file\n";
+    
+	my $expr_dir = $c->generated_file_uri('expr_files', $expr_file);
+	my $final_path = $c->path_to($expr_dir);
+    
+	write_file($final_path, $upload->slurp);
+    }
+
     # clean the sequence 
     # more than one sequence pasted
     if ($sequence =~ tr/>/>/ > 1) {
-	push ( @errors , "Please, paste only one sequence at time.\n");	
+	push ( @errors , "Please, paste only one sequence.\n");	
     }
     my $id = "pasted_sequence";
+    my @seq = [];
 
-    $sequence =~ s/[^\w> \-\_\#\(\)\%\'\"\[\]\{\}\:\;\=\+\\\/]/\n/gi;
-    my @seq = split(/\n/,$sequence);
+    if ($sequence =~ /^>/) {
+	$sequence =~ s/[ \,\-\.\#\(\)\%\'\"\[\]\{\}\:\;\=\+\\\/]/_/gi;
+        @seq = split(/\s/,$sequence);
+    }
 
     if ($seq[0] =~ />(\S+)/) {
 	shift(@seq);
@@ -73,7 +92,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     }
     $sequence = join("",@seq);
     
-    # print STDERR "*********************\nseq:$sequence\n*********************\n";
+    # print STDERR "*********************\nid: $id\n*********************\nseq:$sequence\n*********************\n";
     # Check input sequence and fragment size    
     if (length($sequence) < 15) { 
 	push ( @errors , "You should paste a valid sequence (15 bp or longer) in the VIGS Tool Sequence window.\n");	
@@ -162,9 +181,38 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     if ($err) { die "bowtie2 run failed."; }
 
     $id = $urlencode{basename($seq_filename)};
-    $c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&database=$database_title&targets=0");
+    $c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&database=$database_title&targets=0&exprfile=$expr_file");
 }
 
+
+sub get_expression_hash {
+    my $expr_file = shift;
+    
+    my %expr_values;
+
+    open (my $expr_fh, $expr_file);
+    my @file = <$expr_fh>;
+    
+    # get header
+    my $first_line = shift(@file);
+    chomp($first_line);
+    $first_line =~ s/\"//g;
+    my @header = split(/\t/,$first_line);
+    $expr_values{"header"} = \@header;
+
+    # print "header: ".Dumper(@header)."\n";
+    
+    # save gene data
+    foreach my $line (@file) {
+	chomp($line);
+	$line =~ s/\"//g;
+	my @line_cols = split(/\t/, $line);
+	my $gene_id = shift(@line_cols);
+	$expr_values{$gene_id} = \@line_cols;
+    }
+
+    return \%expr_values
+}
 
 sub view :Path('/tools/vigs/view') Args(0) { 
     my $self = shift;
@@ -174,14 +222,26 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $fragment_size = $c->req->param("fragment_size") || 21;
     my $coverage = $c->req->param("targets");
     my $database = $c->req->param("database");
+    my $expr_file = $c->req->param("exprfile") || undef;
+    
+    my $expr_hash = undef;
+
+    if (defined ($expr_file)) {
+	my $expr_dir = $c->generated_file_uri('expr_files', $expr_file);
+	my $expr_path = $c->path_to($expr_dir);
+      	# print "file name: $expr_path\n";
+    
+	$expr_hash = get_expression_hash($expr_path);
+   
+	# print STDERR "hash header: ".Dumper($$expr_hash{"header"})."\n";
+    }
 
     $seq_filename = File::Spec->catfile($c->config->{cluster_shared_tempdir}, $seq_filename);
-
     $c->stash->{query_file} = $seq_filename;
-
     $seq_filename =~ s/\%2F/\//g;
+    
+    # print STDERR "seq_filename: $seq_filename\n";
 
-    print $seq_filename;
     my $io = Bio::SeqIO->new(-file=>$seq_filename, -format=>'fasta');
     my $query = $io->next_seq();
 
@@ -203,20 +263,20 @@ sub view :Path('/tools/vigs/view') Args(0) {
     $vg->query_seq($query->seq());
     #$vg->seq_window_size($seq_window_size);
     $vg->parse();    
-
+    
     if (!$coverage) { 
 	$coverage = $vg->get_best_coverage;
     }
 
-    #print STDERR "BEST COVERAGE: $coverage\n";
+    # print STDERR "BEST COVERAGE: $coverage\n";
     my @regions = $vg->longest_vigs_sequence($coverage);
     
-    #print STDERR "REGION: ", join ", ", @{$regions[0]};
-    #print STDERR "\n";
-
+    # print STDERR "REGION: ", join ", ", @{$regions[0]};
+    # print STDERR "\n";
+    
     $vg->hilite_regions( [ [ $regions[0]->[4], $regions[0]->[5] ] ] );
     
-    my $image_map = $vg->render($graph_img_path, $coverage);
+    my $image_map = $vg->render($graph_img_path, $coverage, $expr_hash);
 
     $c->stash->{image_map} = $image_map;
     $c->stash->{ids} = [ $vg->subjects_by_match_count($vg->matches()) ];
