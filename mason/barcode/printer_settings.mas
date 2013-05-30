@@ -1,0 +1,34 @@
+
+<%args>
+
+</%args>
+
+<table>
+<!-- tr><td>Pages </td><td><input name="label_pages" size="3" /></td>
+<td></td><td></td>
+</tr -->
+
+<tr>
+<td>Number of label rows </td><td><input name="label_rows" size="3" value="10" ></td>
+<td>Number of label columns per page </td><td><input name="label_cols" size="3" value="3" ></td>
+</tr>
+
+<tr>
+<td>Page format </td><td>
+<select name="page_format">
+  <option value="letter" selected="1">letter</option>
+  <option value="A4">A4</option>
+</select>
+</td>
+<td></td><td></td></tr>
+
+<tr>
+<td>Top margin [mm]</td><td><input name="top_margin" size="3" value="12" /></td>
+<td>Left margin [mm]</td><td><input name="left_margin" size="3" value="70" /></td>
+</tr>
+
+<tr>
+<td>Bottom margin [mm]</td><td><input name="bottom_margin" size="3" value="12" /></td>
+<td>Right margin [mm]</td><td><input name="right_margin" size="3" value="20" /></td>
+</tr>
+</table>

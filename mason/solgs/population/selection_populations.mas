@@ -1,0 +1,61 @@
+<%doc>
+
+displays list of prediction populations and their GS output.
+
+</%doc>
+
+<%args>
+
+$result => undef;
+$download_prediction
+$analyzed_traits
+$pop_id
+$prediction_pop_id
+$list_of_prediction_pops
+
+</%args>
+
+<%perl>
+
+
+</%perl>
+
+
+<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 0, 
+    title       => "Select a prediction population to apply the model on",
+&>
+
+<& /page/columnar_table.mas,
+     headings    => ['',  'Prediction Population', 'Description', 'Generation', 'Year', 'Download GEBVs' ],
+     data        => $list_of_prediction_pops,
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __align      => 'l'
+&>
+
+<p>&nbsp</p>
+
+% if ($download_prediction ne 'N/A') 
+%{
+
+<& rank_genotypes.mas, 
+   analyzed_traits   => $analyzed_traits,
+   pop_id            => $pop_id,
+   prediction_pop_id => $prediction_pop_id
+&>
+
+%}
+
+</&>
+
+
+
+
+
+
+
+

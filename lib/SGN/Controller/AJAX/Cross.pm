@@ -56,6 +56,7 @@ sub add_cross_GET :Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cross_name = $c->req->param('cross_name');
+    my $cross_type = $c->req->param('cross_type');
     $c->stash->{cross_name} = $cross_name;
     my $trial_id = $c->req->param('trial_id');
     $c->stash->{trial_id} = $trial_id;
@@ -66,7 +67,15 @@ sub add_cross_GET :Args(0) {
     my $suffix = $c->req->param('suffix');
     my $progeny_number = $c->req->param('progeny_number');
     my $number_of_flowers = $c->req->param('number_of_flowers');
+    my $number_of_seeds = $c->req->param('number_of_seeds');
     my $visible_to_role = $c->req->param('visible_to_role');
+
+    my $paternal_parent_not_required;
+    if ($cross_type eq "open" || $cross_type eq "bulk_open") {
+      $paternal_parent_not_required = 1;
+    }
+
+    print STDERR "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type\n";
 
     if (!$c->user()) { 
 	print STDERR "User not logged in... not adding a cross.\n";
@@ -91,9 +100,15 @@ sub add_cross_GET :Args(0) {
       }
     }
 
-    #check that parent names are not blank
-    if ($maternal eq "" or $paternal eq "") {
-      $c->stash->{rest} = {error =>  "parent names cannot be blank." };
+    #check that maternal name is not blank
+    if ($maternal eq "") {
+      $c->stash->{rest} = {error =>  "maternal parent name cannot be blank." };
+      return;
+    }
+
+    #if required, check that paternal parent name is not blank;
+    if ($paternal eq "" && !$paternal_parent_not_required) {
+      $c->stash->{rest} = {error =>  "paternal parent name cannot be blank." };
       return;
     }
 
@@ -102,6 +117,7 @@ sub add_cross_GET :Args(0) {
       $c->stash->{rest} = {error =>  "maternal parent does not exist." };
       return;
     }
+
     if (! $schema->resultset("Stock::Stock")->find({name=>$paternal,})){
       $c->stash->{rest} = {error =>  "paternal parent does not exist." };
       return;
@@ -119,15 +135,6 @@ sub add_cross_GET :Args(0) {
       return;
     }
 
-    my $organism = $schema->resultset("Organism::Organism")->find_or_create(
-    {
-	genus   => 'Manihot',
-	species => 'Manihot esculenta',
-    } );
-    my $organism_id = $organism->organism_id();
-
-
-
     my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
            {
                 nd_geolocation_id => $location_id,
@@ -137,6 +144,7 @@ sub add_cross_GET :Args(0) {
             {
                 project_id => $trial_id,
             } ) ;
+
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
@@ -158,6 +166,8 @@ sub add_cross_GET :Args(0) {
             { name       => $maternal,
             } );
 
+    my $organism_id = $female_parent_stock->organism_id();
+
     my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
             { name       => $paternal,
             } );
@@ -168,6 +178,7 @@ sub add_cross_GET :Args(0) {
 	      uniquename => $cross_name,
 	      type_id => $population_cvterm->cvterm_id,
             } );
+
       my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'female_parent',
       cv     => 'stock relationship',
@@ -202,6 +213,21 @@ sub add_cross_GET :Args(0) {
 	dbxref => 'number_of_flowers',
     });
 
+   my $number_of_seeds_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'number_of_seeds',
+	cv     => 'local',
+	db     => 'null',
+	dbxref => 'number_of_seeds',
+    });
+
+   my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'cross_type',
+	cv     => 'local',
+	db     => 'null',
+	dbxref => 'cross_type',
+    });
+
+
     my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
             {
                 nd_geolocation_id => $geolocation->nd_geolocation_id(),
@@ -219,6 +245,14 @@ sub add_cross_GET :Args(0) {
 	    type_id  =>  $population_cvterm->cvterm_id(),
                                            });
 
+    if ($cross_type) {
+      $experiment->find_or_create_related('nd_experimentprops' , {
+								  nd_experiment_id => $experiment->nd_experiment_id(),
+								  type_id  =>  $cross_type_cvterm->cvterm_id(),
+								  value  =>  $cross_type,
+								 });
+    }
+
     if ($number_of_flowers) {
       #set flower number in experimentprop
       $experiment->find_or_create_related('nd_experimentprops' , {
@@ -228,8 +262,13 @@ sub add_cross_GET :Args(0) {
 								 });
     }
 
-
-
+    if ($number_of_seeds) {
+      $experiment->find_or_create_related('nd_experimentprops' , {
+								  nd_experiment_id => $experiment->nd_experiment_id(),
+								  type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
+								  value  =>  $number_of_seeds,
+								 });
+    }
 
     my $increment = 1;
     if ($progeny_number) {
@@ -269,108 +308,12 @@ sub add_cross_GET :Args(0) {
     }
 
 
-    if ($@) { 
+    if ($@) {
 	$c->stash->{rest} = { error => "An error occurred: $@"};
     }
 
     $c->stash->{rest} = { error => '', };
-									
 }
-
-
-#/ajax/cross/upload_cross
-
-=head2 upload_cross
-
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-# sub upload_cross : Local : ActionClass('REST') { }
-
-# sub upload_cross_GET :Args(0) { 
-#     my ($self, $c) = @_;
-#     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-#     my $file_name = $c->req->param('file_name');
-#     $c->stash->{file_name} = $file_name;
-
-#     if (!$c->user()) { 
-# 	print STDERR "User not logged in... not adding a cross.\n";
-# 	$c->stash->{rest} = {error => "You need to be logged in to add a cross." };
-# 	return;
-#     }
-
-#     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) { 
-# 	print STDERR "User does not have sufficient privileges.\n";
-# 	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
-# 	return;
-#     }
-
-#     print STDERR "loading cross file: $file_name\n";
-
-
-#     if ($@) { 
-# 	$c->stash->{rest} = { error => "An error occurred: $@"};
-#     }
-
-#     $c->stash->{rest} = { error => '', };
-									
-# }
-
-
-# sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
-#   # my ($self, $c) = @_;
-#   # my $file_name = $c->req->upload('file_name');
-#   # my $basename = $file_name->basename;
-#   # my $tempfile = $file_name->tempname;
-#   #  print STDERR "loading cross file: $tempfile Basename: $basename\n";
-#   #$c->stash->{rest} = { error => '', };
-#   #$c->stash->{tempfile} = $tempfile;
-#   #  $c->stash(
-#   #      template => '/breeders_toolbox/upload_crosses2.mas',
-#   #      tempfile => $tempfile,
-#   #      );
-# }
-
-# sub upload_barcode_output : Path('/breeders/cross/uploads') :Args(0) {
-#     my ($self, $c) = @_;
-#     my $upload = $c->req->upload('file_name');
-#     my @contents = split /\n/, $upload->slurp;
-#     my $basename = $upload->basename;
-#     my $tempfile = $upload->tempname; #create a tempfile with the uploaded file
-#     if (! -e $tempfile) { 
-#         die "The file does not exist!\n\n";
-#     }
-#     my $archive_path = $c->config->{archive_path};
-
-#     $tempfile = $archive_path . "/" . $basename ;
-#     my $upload_err = $upload->copy_to($archive_path . "/" . $basename);
-
-#     my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
-#     my $identifier_prefix = $c->config->{identifier_prefix};
-#     my $db_name = $c->config->{trait_ontology_db_name};
-
-#     $sb->parse(\@contents, $identifier_prefix, $db_name);
-#     my $parse_errors = $sb->parse_errors;
-#     $sb->verify; #calling the verify function
-#     my $verify_errors = $sb->verify_errors;
-#     my @errors = (@$parse_errors, @$verify_errors);
-#     my $warnings = $sb->warnings;
-#     $c->stash->{tempfile} = $tempfile;
-#     $c->stash(
-#         template => '/stock/barcode/upload_confirm.mas',
-#         tempfile => $tempfile,
-#         errors   => \@errors,
-#         warnings => $warnings,
-#         feedback_email => $c->config->{feedback_email},
-#         );
-
-#}
 
 
 1;

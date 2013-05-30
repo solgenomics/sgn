@@ -84,16 +84,17 @@ print info_section_html( title => 'General Tools', contents => <<EOHTML);
     <a href="change-account.pl?action=edit&sp_person_id=$sp_person_id">Update account information</a><br />
     <a href="/forum/topics.pl">Post to SGN forum</a><br />
 EOHTML
-my $queries =
-    qq|<div id="queryTable">|
-  . CXGN::BlastWatch::get_queries( $dbh, $sp_person_id )
-  . '</div>';
-print info_section_html( title => 'BLAST Watch', contents => <<EOHTML);
-    <div style="margin-bottom: 1em">BLAST Watch is an SGN service that lets users submit recurring BLAST queries to SGN.  Our software repeats your BLAST search every week and notifies you by email if the BLAST results change.</div>
-    <a href="/tools/blast/watch/index.pl">Submit a query to SGN BLAST Watch</a><br />
-    <a href="javascript:toggleLayer('queryTable');" title="View your BLAST Watch queries">View your BLAST Watch queries</a>
-    $queries
-EOHTML
+
+# my $queries =
+#     qq|<div id="queryTable">|
+#   . CXGN::BlastWatch::get_queries( $dbh, $sp_person_id )
+#   . '</div>';
+# print info_section_html( title => 'BLAST Watch', contents => <<EOHTML);
+#     <div style="margin-bottom: 1em">BLAST Watch is an SGN service that lets users submit recurring BLAST queries to SGN.  Our software repeats your BLAST search every week and notifies you by email if the BLAST results change.</div>
+#     <a href="/tools/blast/watch/index.pl">Submit a query to SGN BLAST Watch</a><br />
+#     <a href="javascript:toggleLayer('queryTable');" title="View your BLAST Watch queries">View your BLAST Watch queries</a>
+#     $queries
+# EOHTML
 
 #return 1 if the first term is eq to one of the other terms given
 sub in(@) {

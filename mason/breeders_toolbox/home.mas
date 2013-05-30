@@ -48,15 +48,14 @@ $field_designs => undef
 
 </&>
 
-<&| /page/info_section.mas, title=>'Accessions & plots' &>
+%#<&| /page/info_section.mas, title=>'Accessions & plots' &>
+%#<& /breeders_toolbox/accessions.mas, user_id=>$user_id &>
+%#</&>
 
-<& /breeders_toolbox/accessions.mas, user_id=>$user_id &>
 
-</&>
+<&| /page/info_section.mas, title=>'Search Wizard', collapsible=>1, collapsed=>1 &>
 
-<&| /page/info_section.mas, title=>'Field plot designs', collapsible=>1, collapsed=>1, subtitle=>'[<a id="experimental_design_link">Field plot design</a>]' &>
-    
-    <& /breeders_toolbox/field_designs.mas, field_designs=>$field_designs &>
+<& /breeders_toolbox/breeder_search.mas &>
 
 </&>
 

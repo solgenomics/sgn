@@ -1,0 +1,29 @@
+<%doc>
+
+=head1 NAME 
+
+/search/trait.mas - a view for trait search form
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$form
+
+</%args>
+
+
+<& /page/page_title.mas, title => "solGS: Search Traits" &>
+<&| /page/info_section.mas,
+  title => "Search ",
+&>
+
+<% $form %>
+
+</&>

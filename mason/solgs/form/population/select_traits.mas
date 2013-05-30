@@ -1,0 +1,65 @@
+<%doc>
+
+=head1 NAME
+ 
+/form/population/select_traits.mas - list of traits to select for GS analysis
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$traits_form
+$pop_id
+$all_traits_file
+
+</%args>
+
+<%perl>
+
+  open FH, "<", $all_traits_file or die "Can't open $all_traits_file: $!\n";
+  my $headers = <FH>; 
+ 
+  my $trait_rows;
+
+  while (<FH>)
+  {
+     my ($trait, $id) = split (/\t/);      
+     my $trait_link =  qq | <a href="/trait/$id/populaton/$pop_id">$trait</a> |;
+     
+     my $row = <<ROW;    
+     <tr>
+       <td>
+         <input type  = "checkbox" 
+                 name  = "trait"
+                 value = $trait > $trait_link
+       </td>
+     </tr> 
+ROW
+
+     $trait_rows .=  $row;
+
+  }
+
+</%perl>
+
+
+<form>
+  <table>
+    <% $trait_rows %>
+    <tr>   
+      <td>
+
+        <input type="submit" 
+               name="submit"
+               value="Select"
+               >
+      </td
+    </tr>
+  </table>
+</form>

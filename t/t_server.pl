@@ -12,8 +12,10 @@ use Catalyst::ScriptRunner;
 use lib 'lib';
 use SGN::Devel::MyDevLibs;
 
+my $verbose = 0;
 GetOptions(
     "carpalways" => \( my $carpalways = 0 ),
+    "verbose" => \$verbose ,
     );
 
 require Carp::Always if $carpalways;
@@ -28,22 +30,23 @@ $ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'testing';
 my $server_pid = fork;
 unless( $server_pid ) {
     # web server process
-
+    
     $ENV{SGN_TEST_MODE} = 1;
-    @ARGV = (
-        -p => 3003,
-        ( $parallel ? ('--fork') : () ),
-     );
+@ARGV = (
+    -p => 3003,
+    ( $parallel ? ('--fork') : () ),
+    );
 
-my $logfile = "logfile.$$.txt";
-print STDERR "Redirecting server STDERR to file $logfile..\n";
-open (STDERR, ">$logfile") || die "can't open logfile.";
-
-    Catalyst::ScriptRunner->run('SGN', 'Server');
-
-    exit;
+if (!$verbose) { 
+    my $logfile = "logfile.$$.txt";
+    print STDERR "Redirecting server STDERR to file $logfile..\n";
+    open (STDERR, ">$logfile") || die "can't open logfile.";
 }
-warn "$0: starting web server with PID $server_pid.\n";
+Catalyst::ScriptRunner->run('SGN', 'Server');
+
+exit;
+}
+print STDERR  "$0: starting web server with PID $server_pid... ";
 
 
 
@@ -55,6 +58,7 @@ warn "$0: starting web server with PID $server_pid.\n";
         die "\nTest server failed to start.  Aborting.\n";
     };
     sleep 1 until !kill(0, $server_pid) || get 'http://localhost:3003';
+    print STDERR "Done.\n";
 }
 
 my $prove_pid = fork;

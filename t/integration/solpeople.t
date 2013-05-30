@@ -28,7 +28,6 @@ $mech->while_logged_in_all( sub {
     $mech->get_ok('/solpeople/top-level.pl');
     $mech->content_contains('My '.$mech->context->get_conf("project_name") );
     $mech->content_contains('[log out]');
-    $mech->content_contains('BLAST Watch');
     $mech->content_contains('User Status');
     $mech->content_contains('General Tools');
     $mech->content_like(qr{Your current user status is\s+<b>$user_info->{user_type}</b>});

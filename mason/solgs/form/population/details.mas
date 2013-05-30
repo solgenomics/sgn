@@ -1,0 +1,28 @@
+<%doc>
+
+=head1 NAME
+ 
+/form/population/details.mas - a view for pop detail webform
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$form
+
+</%args>
+
+<& /page/page_title.mas, title => "Step 1 of 3: Submit population details" &>
+<&| /page/info_section.mas,
+  title => "Population Details",
+&>
+ 
+<% $form %>
+
+</&>

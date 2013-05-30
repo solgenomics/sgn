@@ -43,6 +43,11 @@ sub default_toolbar_data {
                     link => '/search/phenotypes/qtl',
                     desc => 'A web interface for uploading QTL raw data, on-the-fly QTL mapping and search interface for QTLs.'
                 },
+ {
+                    name => 'Genomic Selection',
+                    link => '/solgs/search/',
+                    desc => 'A tool for estimating breeding values using rrBlUP.'
+                },
                 {
                     name => 'Unigenes',
                     link => '/search/transcripts/unigene',
@@ -376,6 +381,12 @@ sub default_toolbar_data {
                     link => '/search/phenotypes/qtl',
                     desc =>
 'A web interface for uploading raw QTL data, on-the-fly QTL mapping, linking predicted QTLs to relevant genetic and genomic data in SGN, and search interface for QTLs.'
+                },
+                {
+                    name => 'solGS: Genomic Selection',
+                    link => '/solgs/search',
+                    desc =>
+                        'Builds genomic selection models and predicts genomic estimated breeding values. Prediction is done using Ridge Regression - Best Linear Unbiased Prediction (RR-BLUP).'
                 },
                 #Molecular Biology
                 { name => "Molecular Biology" },

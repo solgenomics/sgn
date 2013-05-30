@@ -1,0 +1,17 @@
+<%doc>
+
+=head1 NAME 
+a mason component for displaying default message for missing pages
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<&| /page/info_section.mas, title => "missing page" &>    
+  <p>
+    Default page content goes here...
+  </p>      
+</&>
