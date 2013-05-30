@@ -17,7 +17,10 @@ Latitude <input name="latitude" size="4" />
 
 </div>
 
-<script>
+<script defer="defer">
+
+jQuery(document).ready(function() {
+
   jQuery('#add_location_dialog').dialog( {
      autoOpen: false,
      buttons:  { "Cancel" : function() { jQuery('#add_location_dialog').dialog("close"); }, 
@@ -44,13 +47,21 @@ Latitude <input name="latitude" size="4" />
    
      new jQuery.ajax( {
        type: 'GET',
-       url: '/breeders/location/insert',
+       async: false,
+       url: '/ajax/breeders/location/insert',
        data: { 'description': desc,  'longitude':longitude, 'latitude':latitude },
-
-     }).done(alert("Done saving location info"));
+       success: function(response) { 
+                  if (response.error) { alert(response.error); }
+                  else { alert('The new location was saved.'); 
+                  }
+                },
+       error: function() { alert('An error occurred. sorry'); }
+     });
      jQuery('#add_location_dialog').dialog("close");
+     location.reload();
   }
     
+});
 
 </script>
 

@@ -1,0 +1,48 @@
+<%doc>
+
+=head1 NAME
+ 
+model/top_genotypes.mas - displays top 10  genotypes, based on multiple traits performance, and entire data download link
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$top_ranked_genotypes
+$ranked_genotypes_download_url
+
+</%args>
+
+
+<div id="top_genotypes">
+
+  <&| /page/info_section.mas, 
+      collapsible => 1, 
+      collapsed   => 0, 
+      title       => "Genotype ranking based on multiple traits performance" 
+  &>
+ 
+  <i>Top 10 genotypes</i>:
+
+  <& /page/columnar_table.mas,
+     headings     => ["Genotypes", "Mean GEBV"], 
+     data         => $top_ranked_genotypes,
+     __alt_freq   => 2,
+     __alt_width  => 1,
+     __alt_offset => 3,
+     __align      => 'l',
+   &>
+
+   <br />
+
+   [ <% $ranked_genotypes_download_url %> ]
+
+   </&>
+
+</div>

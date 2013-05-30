@@ -1,0 +1,46 @@
+
+<%doc>
+
+</%doc>
+
+<%args>
+$trial_name
+@location_data
+@phenotype_data
+@years
+@plot_data
+</%args>
+
+
+<%perl>
+
+</%perl>
+
+<& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
+
+<&| /page/info_section.mas, title=>"Year(s)" &>
+<% join ", ", @years %>
+</&>
+
+<&| /page/info_section.mas, title=>"Locations" &>
+
+% foreach my $loc (@location_data) { 
+%  print "$loc->[0]\t$loc->[1]\t($loc->[2] experiments)<br />\n";
+%}
+
+</&>
+
+<br /><br />
+
+<&| /page/info_section.mas, title=>"Traits assayed" &>
+% foreach my $trait (@phenotype_data) { 
+%  print "$trait->[0] ($trait->[1] assays)<br />\n";
+%}
+
+</&>
+
+% foreach my $p (@plot_data) { 
+%   print $p."<br />\n";
+% }
+
+

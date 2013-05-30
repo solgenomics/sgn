@@ -7,10 +7,10 @@ $projects
 
 <div id="add_project_dialog"  class="ui-widget" >
 
-<table><tr><td>Trial name</td><td><input name="project_name" /></td></tr>
-<tr><td>Year</td><td><input id="project_year" name="year" /></td></tr>
+<table><tr><td>Trial name</td><td><input id="add_project_name" /></td></tr>
+<tr><td>Year</td><td><input id="add_project_year" /></td></tr>
 <tr><td colspan="2">Description</td></tr>
-<tr><td colspan="2"><textarea name="project_description" cols="60" >
+<tr><td colspan="2"><textarea id="add_project_description" cols="60" >
 </textarea>
 </td></tr></table>
 
@@ -69,40 +69,58 @@ $projects
 </div>
 
 
-<script>
+<script defer="defer">
+
+ jQuery(document).ready(function() {
+
   jQuery('#add_project_dialog').dialog( {
      autoOpen: false,
-     buttons:  { "Cancel" : function() { jQuery('#add_project_dialog').dialog("close"); }, 
-                     "Add": function() { save_project_info(); } },
      modal: true,
      width: 500,
      height: 300,
-     title: "Add new trial"
+     title: "Add new trial",
+
+     buttons:  { "Cancel" : function() { jQuery('#add_project_dialog').dialog("close"); }, 
+                     "Add": function() { 
+                                var name = jQuery('#add_project_name').val();
+                                var year = jQuery('#add_project_year').val();
+                                var desc = jQuery('textarea#add_project_description').val();
+
+  //alert('Name and year = '+ name + ' ' + year);
+                                if (name === '' || year === '' || desc === '') { alert('Name, year and description are required.'); return; }
+
+                                save_project_info(name, year, desc); 
+                                jQuery( this).dialog("close"); 
+                                location.reload();
+                             } 
+               }
 
 });
 
   jQuery('#add_project_link').click( function() { open_project_dialog() } );
 
   function open_project_dialog() { 
-      
-
      jQuery('#add_project_dialog').dialog("open");
   }
 
-  function save_project_info() { 
-     var name = jQuery('#project_name').val();
-     var year = jQuery('#project_year').val();
-     var desc = jQuery('#project_description').val();
-
-      if (name == '' || year == '') { alert('Name and year are required.');  return; }
-   
+  function save_project_info(name, year, desc) { 
+     alert('data = '+name +' '+year+' '+desc);
      new jQuery.ajax( {
        type: 'GET',
-       url: '/breeders/project/insert',
+       async: false,
+       url: '/ajax/breeders/project/insert',
        data: { 'project_name': name,  'project_description': desc, 'year': year },
+       success: function(response) { 
+                  if (response.error) { alert(response.error); }
+                  else { alert('The trial information was saved.'); 
+                  }
+                },
+  error: function() { alert('An error occurred. sorry'); }
 
-     }).done(alert("Done saving project info"));
-     jQuery('#add_project_dialog').dialog("close");
+       
+
+  });
+     
   }
     
   jQuery('#experimental_design_dialog').dialog( {
@@ -186,7 +204,7 @@ $projects
      }).done(alert("Done saving project info"));
      jQuery('#add_project_dialog').dialog("close");
   }
-  
+});  
 
 </script>
 
@@ -200,7 +218,7 @@ $projects
 
 
 foreach my $p (@$projects){ 
-   print "<tr><td>$p->[1]</td><td>$p->[2]</td></tr>\n";
+   print "<tr><td><a href=\"/breeders_toolbox/trial/$p->[0]\">$p->[1]</td><td>$p->[2]</td></tr>\n";
 }
 </%perl>
 </table>

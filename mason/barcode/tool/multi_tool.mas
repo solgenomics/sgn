@@ -1,0 +1,68 @@
+
+
+<%args>
+$operator
+$date
+$project
+$location
+@cvterms
+</%args>
+
+
+<%perl>
+use Tie::UrlEncoder;
+
+our %urlencode;
+my $encoded_operator = $urlencode{$operator};
+my $encoded_date     = $urlencode{$date};
+my $size = "small";
+</%perl>
+
+
+<center>
+<h1>CASSAVABASE MULTI-BARCODE SHEET</h1>
+
+<br />
+<br />
+<div class="boxbgcolor5">
+Scan the following barcodes once
+</div>
+
+<table>
+<tr><td><font size="4">Operator</font></td>
+
+<td><img src="/barcode/image/?code=O:<% $encoded_operator %>&size=<% $size %>" /></td></tr>
+
+<tr><td><font size="4">Today's Date</font></td>
+<td><img src="/barcode/image/?code=D:<% $encoded_date %>&size=<% $size %>" /></td></tr>
+<tr><td><font size="4">Project</font></td>
+
+<td><img src="/barcode/image/?code=P:<% $project %>&size=<% $size %>" /></td></tr>
+<tr><td><font size="4">Location</font></td>
+<td><img src="/barcode/image/?code=L:<% $location %>&size=<% $size %>" /></td></tr>
+</table>
+
+
+<br /><br /><br /><br />
+
+
+<div class="boxbgcolor5">
+Scan the barcode for the plant to be phenotyped, then scan the phenotype barcode, then enter the number on the keypad
+</div>
+
+
+<table border="0" cellpadding="20">
+<%perl>
+
+foreach my $t (@cvterms) { 
+     my $definition = $t->{cvterm_definition};
+     $definition =~ s/(.{40})/$1\<br \\\>/g; 
+     print qq { <tr><td><img src="/barcode/image/?code=$t->{cvterm}&size=$size" /></td><td>$definition</td></tr> };
+
+}
+
+</%perl>
+</table>
+</center>
+
+

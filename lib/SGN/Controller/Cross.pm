@@ -72,15 +72,17 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
      my $first_line = shift(@contents);
      my @first_row = split /\t/, $first_line;
      if ($first_row[0] ne 'cross_name' ||
-	 $first_row[1] ne 'maternal_parent' ||
-	 $first_row[2] ne 'paternal_parent' ||
-	 $first_row[3] ne 'trial' ||
-	 $first_row[4] ne 'location' ||
-	 $first_row[5] ne 'number_of_progeny' ||
-	 $first_row[6] ne 'prefix' ||
-	 $first_row[7] ne 'suffix' ||
-	 $first_row[8] ne 'number_of_flowers') {
-       $header_error = "<b>Error in header:</b><br>Header should contain the following tab-delimited fields:<br>cross_name<br>maternal_parent<br>paternal_parent<br>trial<br>location<br>number_of_progeny<br>prefix<br>suffix<br>number_of_flowers<br>";
+	 $first_row[1] ne 'cross_type' ||
+	 $first_row[2] ne 'maternal_parent' ||
+	 $first_row[3] ne 'paternal_parent' ||
+	 $first_row[4] ne 'trial' ||
+	 $first_row[5] ne 'location' ||
+	 $first_row[6] ne 'number_of_progeny' ||
+	 $first_row[7] ne 'prefix' ||
+	 $first_row[8] ne 'suffix' ||
+	 $first_row[9] ne 'number_of_flowers' ||
+	 $first_row[10] ne 'number_of_seeds') {
+       $header_error = "<b>Error in header:</b><br>Header should contain the following tab-delimited fields:<br>cross_name<br>cross_type<br>maternal_parent<br>paternal_parent<br>trial<br>location<br>number_of_progeny<br>prefix<br>suffix<br>number_of_flowers<br>number_of_seeds<br>";
        print STDERR "$header_error\n";
      }
      else {
@@ -88,23 +90,25 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
        foreach my $line (@contents) {
 	 $line_number++;
 	 my @row = split /\t/, $line;
-	 if (scalar(@row) < 5) {
+	 if (scalar(@row) < 6) {
 	   $line_errors{$line_number} = "Line $line_number has too few columns\n";
 	 }
-	 elsif (!$row[0] || !$row[1] || !$row[2] || !$row[3] || !$row[4]) {
+	 elsif (!$row[0] || !$row[1] || !$row[2] || !$row[3] || !$row[4] || !$row[5]) {
 	   $line_errors{$line_number} = "Line $line_number is missing a required field\n";
 	 }
 	 else {
 	   my %cross;
 	   $cross{'cross_name'} = $row[0];
-	   $cross{'maternal_parent'} = $row[1];
-	   $cross{'paternal_parent'} = $row[2];
-	   $cross{'cross_trial'} = $row[3];
-	   $cross{'cross_location'} = $row[4];
-	   if ($row[5]) {$cross{'number_of_progeny'} = $row[5];}
-	   if ($row[6]) {$cross{'prefix'} = $row[6];}
-	   if ($row[7]) {$cross{'suffix'} = $row[7];}
-	   if ($row[8]) {$cross{'number_of_flowers'} = $row[8];}
+	   $cross{'cross_type'} = $row[1];
+	   $cross{'maternal_parent'} = $row[2];
+	   $cross{'paternal_parent'} = $row[3];
+	   $cross{'cross_trial'} = $row[4];
+	   $cross{'cross_location'} = $row[5];
+	   if ($row[5]) {$cross{'number_of_progeny'} = $row[6];}
+	   if ($row[6]) {$cross{'prefix'} = $row[7];}
+	   if ($row[7]) {$cross{'suffix'} = $row[8];}
+	   if ($row[8]) {$cross{'number_of_flowers'} = $row[9];}
+	   if ($row[9]) {$cross{'number_of_seeds'} = $row[10];}
 	   my $line_verification = _verify_cross($c,\%cross, \%line_errors, $line_number);
 	   if ($line_verification) {
 	     print STDERR "Verified\n";
@@ -150,21 +154,25 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
        my %cross;
        my @row = split /\t/, $line;
        $cross{'cross_name'} = $row[0];
-       $cross{'maternal_parent'} = $row[1];
-       $cross{'paternal_parent'} = $row[2];
-       $cross{'cross_trial'} = $row[3];
-       $cross{'cross_location'} = $row[4];
-       if ($row[5]) {
-	 $cross{'number_of_progeny'} = $row[5];
-       }
+       $cross{'cross_type'} = $row[1];
+       $cross{'maternal_parent'} = $row[2];
+       $cross{'paternal_parent'} = $row[3];
+       $cross{'cross_trial'} = $row[4];
+       $cross{'cross_location'} = $row[5];
        if ($row[6]) {
-	 $cross{'prefix'} = $row[6];
+	 $cross{'number_of_progeny'} = $row[6];
        }
        if ($row[7]) {
-	 $cross{'suffix'} = $row[7];
+	 $cross{'prefix'} = $row[7];
        }
        if ($row[8]) {
-	 $cross{'number_of_flowers'} = $row[8];
+	 $cross{'suffix'} = $row[8];
+       }
+       if ($row[9]) {
+	 $cross{'number_of_flowers'} = $row[9];
+       }
+       if ($row[10]) {
+	 $cross{'number_of_seeds'} = $row[10];
        }
        $cross{'visible_to_role'} = $visible_to_role;
        _add_cross($c,\%cross);
@@ -194,16 +202,26 @@ sub _verify_cross {
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $is_verified = 0;
   my $cross_name = $cross_ref->{'cross_name'};
+  my $cross_type = $cross_ref->{'cross_type'};
   my $maternal_parent = $cross_ref->{'maternal_parent'};
   my $paternal_parent = $cross_ref->{'paternal_parent'};
   my $cross_trial = $cross_ref->{'cross_trial'};
   my $cross_location = $cross_ref->{'cross_location'};
   my $max_progeny = 20000;
   my $max_flowers = 10000;
+  my $max_seeds = 10000;
   #print STDERR "name: ".$cross_ref->{'cross_name'}."\n";
   if (! $schema->resultset("Stock::Stock")->find({name=>$maternal_parent,})){
     $error_ref->{$line_number} .= "Line number $line_number, Maternal parent $maternal_parent does not exist in database\n <br>";
     }
+  if ($cross_type ne "biparental" && $cross_type ne "self" && $cross_type ne "open" && $cross_type ne "bulk" && $cross_type ne "bulk_self" && $cross_type ne "bulk_open" && $cross_type ne "doubled_haploid") {
+    $error_ref->{$line_number} .= "Line number $line_number, Cross type $cross_type is not valid\n <br>";
+  }
+  if ($cross_type eq "self" || $cross_type eq "bulk_self" || $cross_type eq "doubled_haploid") {
+    if ($maternal_parent ne $paternal_parent) {
+      $error_ref->{$line_number} .= "Line number $line_number, maternal and paternal parents must match for cross type $cross_type\n <br>";
+    }
+  }
   if (! $schema->resultset("Stock::Stock")->find({name=>$paternal_parent,})){
     $error_ref->{$line_number} .= "Line number $line_number, Paternal parent $paternal_parent does not exist in database\n <br>";
     }
@@ -235,6 +253,15 @@ sub _verify_cross {
       $error_ref->{$line_number} .= "Line number $line_number, Number of flowers ". $cross_ref->{'number_of_flowers'}." is not an integer\n <br>";
     }
   }
+  if ($cross_ref->{'number_of_seeds'}) {
+    if ($cross_ref->{'number_of_seeds'}  =~ /^[0-9]+$/) { #is an integer
+      if ($cross_ref->{'number_of_seeds'} > $max_seeds || $cross_ref->{'number_of_seeds'} < 1) {
+	$error_ref->{$line_number} .= "Line number $line_number, Number of seeds ". $cross_ref->{'number_of_seeds'}." exceeds the maximum of $max_seeds or is invalid\n <br>";
+      }
+    } else {
+      $error_ref->{$line_number} .= "Line number $line_number, Number of seeds ". $cross_ref->{'number_of_seeds'}." is not an integer\n <br>";
+    }
+  }
   if ($cross_ref->{'prefix'} =~ m/\-/) {
 	$error_ref->{$line_number} .= "Line number $line_number, Prefix ". $cross_ref->{'prefix'}." contains an illegal character: -\n <br>";
   }
@@ -250,6 +277,7 @@ sub _add_cross {
   my %cross = %{$cross_ref};
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $cross_name = $cross{'cross_name'};
+  my $cross_type =  $cross{'cross_type'};
   my $maternal_parent =  $cross{'maternal_parent'};
   my $paternal_parent =  $cross{'paternal_parent'};
   my $trial =  $cross{'cross_trial'};
@@ -258,15 +286,8 @@ sub _add_cross {
   my $prefix = $cross{'prefix'};#check if exists
   my $suffix = $cross{'suffix'};#check if exists
   my $number_of_flowers = $cross{'number_of_flowers'};#check if exists
+  my $number_of_seeds = $cross{'number_of_seeds'};#check if exists
   my $visible_to_role = $cross{'visible_to_role'};
-######################################################
-  ###get organism from $c instead
-  my $organism = $schema->resultset("Organism::Organism")->find_or_create(
-									  {
-									   genus   => 'Manihot',
-									   species => 'Manihot esculenta',
-									  } );
-  my $organism_id = $organism->organism_id();
   my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$location,});
   my $project = $schema->resultset("Project::Project")->find({name=>$trial,});
   my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
@@ -279,9 +300,18 @@ sub _add_cross {
 								 { name   => 'cross',
 								 });
 
+  my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'cross_type',
+	cv     => 'local',
+	db     => 'null',
+	dbxref => 'cross_type',
+    });
+
   my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
 								     { name       => $maternal_parent,
 								     } );
+  my $organism_id = $female_parent_stock->organism_id();
+
   my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
 								   { name       => $paternal_parent,
 								   } );
@@ -320,6 +350,12 @@ sub _add_cross {
 									     db     => 'null',
 									     dbxref => 'number_of_flowers',
 									   });
+  my $number_of_seeds_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+									   { name   => 'number_of_seeds',
+									     cv     => 'local',
+									     db     => 'null',
+									     dbxref => 'number_of_seeds',
+									   });
   my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
 										{
 										 nd_geolocation_id => $geolocation->nd_geolocation_id(),
@@ -342,6 +378,23 @@ sub _add_cross {
 								value  =>  $number_of_flowers,
 							       });
   }
+  if ($number_of_seeds) {
+    #set seed number in experimentprop
+    $experiment->find_or_create_related('nd_experimentprops' , {
+								nd_experiment_id => $experiment->nd_experiment_id(),
+								type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
+								value  =>  $number_of_seeds,
+							       });
+  }
+
+  if ($cross_type) {
+      $experiment->find_or_create_related('nd_experimentprops' , {
+								  nd_experiment_id => $experiment->nd_experiment_id(),
+								  type_id  =>  $cross_type_cvterm->cvterm_id(),
+								  value  =>  $cross_type,
+								 });
+  }
+
   ############
   #if progeny number exists
   my $increment = 1;

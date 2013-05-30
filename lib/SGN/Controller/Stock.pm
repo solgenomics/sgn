@@ -220,6 +220,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             ontology_count => $c->stash->{ontology_count},
 	    has_pedigree => $c->stash->{has_pedigree},
 	    has_descendants => $c->stash->{has_descendants},
+            trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
 
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
@@ -555,6 +556,40 @@ SELECT sp_person_id FROM sgn_people.sp_person
                              distinct => 1
                            } );
     }
+    ###search for stocks involved in nd_experiments (phenotyping and genotyping)
+    if ( my $project = $c->req->param('project') ) {
+        $rs = $rs->search(
+            {
+                'lower(project.name)' => { -like  => lc($project) },
+            },
+            { join => { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => 'project' } } },
+              columns => [ qw/stock_id uniquename type_id organism_id / ],
+              distinct => 1
+            } );
+    }
+    if ( my $location = $c->req->param('location') ) {
+        $rs = $rs->search(
+            {
+                'lower(nd_geolocation.description)' => { -like  => lc($location) },
+            },
+            { join => { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } },
+              columns => [ qw/stock_id uniquename type_id organism_id / ],
+              distinct => 1
+            } );
+    }
+    if ( my $year = $c->req->param('year') ) {
+        $rs = $rs->search(
+            {
+                'lower(projectprops.value)' => { -like  => lc($year) },
+            },
+            { join => { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => 'projectprops' } } } },
+              columns => [ qw/stock_id uniquename type_id organism_id / ],
+              distinct => 1
+            } );
+    }
+
+    #########
+    ##########
     if ( my $has_image = $c->req->param('has_image') ) {
     }
     if ( my $has_locus = $c->req->param('has_locus') ) {

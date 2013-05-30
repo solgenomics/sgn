@@ -5,6 +5,7 @@
 
 use strict;
 
+use lib 't/lib';
 use Test::More qw/no_plan/;
 use JSON::Any;
 use Data::Dumper;
