@@ -57,6 +57,8 @@ sub generate_experimental_design_POST : Args(0) {
   push(@stock_list, "B");
   push(@stock_list, "C");
 
+  my $number_of_blocks = 4;
+
   print STDERR "Length of list: ".length(@stock_list)."first: ".$stock_list[1]."\n";
 
   my $stock_data_matrix =  R::YapRI::Data::Matrix->new(
@@ -70,24 +72,45 @@ sub generate_experimental_design_POST : Args(0) {
 
 
   #my $newblock = $rbase->create_block('lengthblock', 'default');
-  my $newblock = $rbase->create_block('lengthblock');
-  $newblock->add_command('library(agricolae)');
-  $stock_data_matrix->send_rbase($rbase, 'lengthblock');
-  #$newblock->add_command('trt <- c("A", "B", "C")');
-  $newblock->add_command('trt <- stock_data_matrix[1,]');
-  $newblock->add_command('repetition <- c(4, 3, 4)');
-  $newblock->add_command('plan1 <- design.crd(trt,r=repetition)');
-  $newblock->add_command('d<-as.matrix(plan1)');
-  $newblock->add_command('print(plan1)');
-  $newblock->run_block();
-  my @results = $newblock->read_results();
+  my $design_setup_block = $rbase->create_block('design_setup');
+  $design_setup_block->add_command('library(agricolae)');
+  $stock_data_matrix->send_rbase($rbase, 'design_setup');
 
-  my $firstresult = $results[0];
-  print STDERR "YapRI Result: $firstresult\n";
+  $design_setup_block->run_block();
 
-  my $blockname = $newblock->get_blockname();
+  my $rcbd_block = $rbase->create_block('rcbd_block');
+  $stock_data_matrix->send_rbase($rbase, 'rcbd_block');
+  $rcbd_block->add_command('trt <- stock_data_matrix[1,]');
+  $rcbd_block->add_command('number_of_blocks <- '.$number_of_blocks);
+  $rcbd_block->add_command('library(agricolae)');
+  $rcbd_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks)');
+  $rcbd_block->add_command('rcbd<-as.matrix(rcbd)');
+  $rcbd_block->run_block();
 
-  my $rmatrix = R::YapRI::Data::Matrix->read_rbase( $rbase,$blockname,'d');
+  my $blockname = $rcbd_block->get_blockname();
+  print STDERR "Blockname: $blockname \n";
+
+  my $rmatrix = R::YapRI::Data::Matrix->read_rbase( $rbase,$blockname,'rcbd');
+
+
+
+#  $newblock->add_command('repetition <- c(4, 3, 4)');
+#  $newblock->add_command('plan1 <- design.crd(trt,r=repetition)');
+#  $newblock->add_command('d<-as.matrix(plan1)');
+#  $newblock->add_command('print(plan1)');
+#  $newblock->run_block();
+
+
+
+#  my @results = $rcbd_block->read_results();
+#  print STDERR "length of results: ".scalar(@results)."\n";
+
+#  my $firstresult = $results[0];
+#  print STDERR "YapRI Result: $firstresult\n";
+
+
+
+  #my $rmatrix = R::YapRI::Data::Matrix->read_rbase( $rbase,$blockname,'d');
 
 
 
@@ -98,7 +121,7 @@ sub generate_experimental_design_POST : Args(0) {
   print STDERR "row: $row1name col: $col1name\n";
   my $elem2_3 = $rmatrix->get_element($row1name, $col1name);
 
-  print STDERR "Element 3,2: $elem2_3\n";
+  #print STDERR "Element 3,2: $elem2_3\n";
 }
 
 
