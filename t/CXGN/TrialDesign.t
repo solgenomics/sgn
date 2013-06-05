@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests=>26;
+use Test::More tests=>30;
 
 BEGIN {use_ok('CXGN::TrialDesign');}
 
@@ -21,6 +21,8 @@ my $maximum_block_size = 30;
 my $plot_name_prefix = "pre_";
 my $plot_name_suffix = "_suf";
 my $plot_number_increment = 10;
+my $design_type = "RCBD";
+my $design;
 
 ok(my $trial_design = CXGN::TrialDesign->new(), "Create TrialDesign object");
 ok($trial_design->set_stock_list(\@stock_names), "Set stock names for trial design");
@@ -41,3 +43,8 @@ ok($trial_design->set_plot_name_suffix($plot_name_suffix), "Set plot name suffix
 is_deeply($trial_design->get_plot_name_suffix(),$plot_name_suffix, "Get plot name suffix for trial design");
 ok($trial_design->set_plot_number_increment($plot_number_increment), "Set plot number increment for trial design");
 is_deeply($trial_design->get_plot_number_increment(),$plot_number_increment, "Get plot number increment for trial design");
+ok($trial_design->set_design_type($design_type), "Set design type for trial design");
+is_deeply($trial_design->get_design_type(),$design_type, "Get design type for trial design");
+ok($trial_design->calculate_design(), "Calculate trial design");
+ok($design = $trial_design->get_design(), "Get trial design");
+
