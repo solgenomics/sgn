@@ -48,25 +48,41 @@ Stores a new stockprop in the database
 
 =cut
 
-sub stockprop : Local : ActionClass('REST') { }
+sub add_stockprop : Path('/stock/prop/add') : ActionClass('REST') { }
 
-sub stockprop_POST {
+sub add_stockprop_POST {
     my ( $self, $c ) = @_;
     my $response;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    if (!$c->user()) { 
+	$c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;  
+    }
+
     if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
         my $req = $c->req;
-
+	# refactor this code  using $stock->create_stockprop
         my $stock_id = $c->req->param('stock_id');
-        my $propvalue  = $c->req->param('propvalue');
-        my $type_id = $c->req->param('type_id');
+        my $prop  = $c->req->param('prop');
+        my $prop_type = $c->req->param('prop_type');
+
+	my $type_row = $schema->resultset("Cv::Cvterm")->find( { name => $prop_type } );
+
+	if (!defined($type_row)) { 
+	    $c->stash->{rest} = { error => "the type $prop_type does not exist" }; return ;
+	        #$schema->resultset("Stock::Stock")->create_stockprop({ });
+	}
+	
+
+	my $type_id = $type_row->cvterm_id();
+				  
         my ($existing_prop) = $schema->resultset("Stock::Stockprop")->search( {
             stock_id => $stock_id,
             type_id => $type_id,
-            value => $propvalue, } );
-        if ($existing_prop) { $response = { error=> 'type_id/propvalue '.$type_id." ".$propvalue." already associated" } ; 
-        }else {
+            value => $prop, } );
 
+        if ($existing_prop) { $c->stash->{rest} = { error=> 'type_id/prop '.$type_id." ".$prop." already associated" } ; 
+        } 
+	else {
             my $prop_rs = $schema->resultset("Stock::Stockprop")->search( {
                 stock_id => $stock_id,
                 type_id => $type_id, } );
@@ -74,32 +90,100 @@ sub stockprop_POST {
             $rank++;
 
             try {
-            $schema->resultset("Stock::Stockprop")->find_or_create( {
-                stock_id => $stock_id,
-                type_id => $type_id,
-                value => $propvalue,
-                rank => $rank, } );
-            $response = { message => "stock_id $stock_id and type_id $type_id associated with value $propvalue", }
-            } catch {
-                $response = { error => "Failed: $_" }
+		$schema->resultset("Stock::Stockprop")->find_or_create( {
+		    stock_id => $stock_id,
+		    type_id => $type_id,
+		    value => $prop,
+		    rank => $rank, } );
+		
+		$c->stash->{rest} = { message => "stock_id $stock_id and type_id $type_id have been associated with value $prop", }
+            } 
+	    catch {
+                $c->stash->{rest} = { error => "Failed: $_" }
             };
         }
-    } else {  $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+    } 
+    else {  
+	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
+    #$c->stash->{rest} = { message => 'success' };
+}
+
+sub add_stockprop_GET { 
+    my $self = shift;
+    my $c = shift;
+    return $self->add_stockprop_POST($c);
 }
 
 
-sub stockprop_GET {
+=head2 get_stockprops
+
+ Usage:
+ Desc:         Gets the stockprops of type type_id associated with a stock_id
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+
+
+sub get_stockprops : Path('/stock/prop/get') : ActionClass('REST') { }
+
+sub get_stockprops_GET { 
     my ($self, $c) = @_;
+    
+    my $stock_id = $c->req->param("stock_id");
+    my $type_id = $c->req->param("type_id");
+    
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $stock_id = $c->req->param('stock_id');
-    my $stock = $c->stash->{stock};
-    my $type_id; ###
-    my $prop_rs = $stock->stockprops(
-        { type_id => $type_id, } );
-    # print the prop name and value#
-    $c->stash->{rest} =  ['sucess'];
+    
+    my $prop_rs = $schema->resultset("Stock::Stockprop")->search( 
+	{
+	    stock_id => $stock_id,
+	    #type_id => $type_id,
+	}, { join => 'type' } );
+
+    my @propinfo = ();
+    while (my $prop = $prop_rs->next()) { 
+	push @propinfo, { stockprop_id => $prop->stockprop_id, stock_id => $prop->stock_id, type_id => $prop->type_id(), type_name => $prop->type->name(), value => $prop->value() }
+    }
+	
+    $c->stash->{rest} = \@propinfo;
+    
+
 }
+
+
+sub delete_stockprop : Path('/stock/prop/delete') : ActionClass('REST') { }
+
+sub delete_stockprop_GET { 
+    my $self = shift;
+    my $c = shift;
+    my $stockprop_id = $c->req->param("stockprop_id");
+    if (! any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+	$c->stash->{rest} = { error => 'Log in required for deletion of stock properties.' };
+	return;
+    }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $spr = $schema->resultset("Stock::Stockprop")->find( { stockprop_id => $stockprop_id });
+    if (! $spr) { 
+	$c->stash->{rest} = { error => 'The specified prop does not exist' };
+	return;
+    }
+    eval { 
+	$spr->delete();
+    };
+    if ($@) { 
+	$c->stash->{rest} = { error => "An error occurred during deletion: $@" };
+	    return;
+    }
+    $c->stash->{rest} = { message => "The element was removed from the database." };
+    
+}
+
+
 
 sub associate_locus:Path('/ajax/stock/associate_locus') :ActionClass('REST') {}
 
