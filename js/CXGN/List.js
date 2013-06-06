@@ -268,26 +268,26 @@ function setUpLists() {
       title: 'List contents'
     });
     
-    jQuery('#confirm_delete_dialog').dialog( { 
-	height: 300,
-	width:  300,
-	autoOpen: false,
-	buttons: { 
-            "Yes" : function() {
-		var lo = new CXGN.List();
-		var list_id = jQuery('#delete_dialog_list_id').html();
-		lo.deleteList(list_id);
-		alert("Deleted list "+list_id);
-	        jQuery('#confirm_delete_dialog').dialog("close"); 
-		lo.renderLists('list_dialog');
-	    }, 
-            "No"  : function() {
-		jQuery('#confirm_delete_dialog').dialog("close"); 
-	    }
-	},
-	modal: true,
-	title: 'Delete?'
-    });
+    // jQuery('#confirm_delete_dialog').dialog( { 
+    // 	height: 300,
+    // 	width:  300,
+    // 	autoOpen: false,
+    // 	buttons: { 
+    //         "Yes" : function() {
+    // 		var lo = new CXGN.List();
+    // 		var list_id = jQuery('#delete_dialog_list_id').html();
+    // 		lo.deleteList(list_id);
+    // 		alert("Deleted list "+list_id);
+    // 	        jQuery('#confirm_delete_dialog').dialog("close"); 
+    // 		lo.renderLists('list_dialog');
+    // 	    }, 
+    //         "No"  : function() {
+    // 		jQuery('#confirm_delete_dialog').dialog("close"); 
+    // 	    }
+    // 	},
+    // 	modal: true,
+    // 	title: 'Delete?'
+    // });
     
     jQuery('#lists_link').click(
 	function() { show_lists(); }
@@ -436,9 +436,14 @@ var lo = new CXGN.List();
 function deleteList(list_id) { 
     var lo = new CXGN.List();
     var list_name = lo.listNameById(list_id);
-    jQuery('#delete_dialog_list_name').html(list_name);
-    jQuery('#delete_dialog_list_id').html(list_id);
-    jQuery('#confirm_delete_dialog').dialog("open");
+//    jQuery('#delete_dialog_list_name').html(list_name);
+//    jQuery('#delete_dialog_list_id').html(list_id);
+//    jQuery('#confirm_delete_dialog').dialog("open");
+    if (confirm('Delete list '+list_name+'? (ID='+list_id+')')) { 
+	lo.deleteList(list_id);
+	alert('Deleted list '+list_name);
+    }
+    lo.renderLists('list_dialog');
 }
 	
 function deleteItemLink(list_item_id) { 
