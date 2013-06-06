@@ -181,62 +181,36 @@ sub longest_vigs_sequence {
 
         # @targets contains the coverage of every position, values are >0 when all target subjects overlap in the region
 	for (my $i=0; $i<@targets; $i++) { 
-	    
-	    if (($targets[$i] !=0) && (!defined($off_targets[$i]) || $off_targets[$i]==0)) {
-		# print STDERR "target at: $i\n";
-		if (defined($start)) { 
-		    # print STDERR "extending... $i\n";
-		    $score +=$targets[$i];
-		}
-		else { 
-		    # print STDERR "creating... $i\n";
-		    $start = $i;
-		    $score +=$targets[$i];
-		}
-	    }
-	    elsif (($targets[$i] == 0) || (defined($off_targets[$i]) || $off_targets[$i]!=0) || $i == @targets) { 
-		# a target region ends or is the end of the subjects sequences
-                if (defined($start)) { 
-		    # print STDERR "ending... $i\n";
-		    $end = $i;
-		    my $length = $end - $start;
-		    # print STDERR "end of target at: $start - $end: ".($end-$start+1)."\n";
-         	    push @regions, [ $coverage, $score * $length, $score, $length, $start, $end ];
-		}
-		$score = 0;
-		$start = undef;
-		$end = undef;
-	    }
+	   if (defined($targets[$i])) {
+	      if (($targets[$i] !=0) && (!defined($off_targets[$i]) || $off_targets[$i]==0)) {
+		  # print STDERR "target at: $i\n";
+		  if (defined($start)) { 
+		      # print STDERR "extending... $i\n";
+		      $score +=$targets[$i];
+		  }
+		  else { 
+		      # print STDERR "creating... $i\n";
+		      $start = $i;
+		      $score +=$targets[$i];
+		  }
+	      }
+	      elsif (($targets[$i] == 0) || (defined($off_targets[$i]) || $off_targets[$i]!=0) || $i == @targets) { 
+		  # a target region ends or is the end of the subjects sequences
+		  if (defined($start)) { 
+		      # print STDERR "ending... $i\n";
+		      $end = $i;
+		      my $length = $end - $start;
+		      # print STDERR "end of target at: $start - $end: ".($end-$start+1)."\n";
+		      push @regions, [ $coverage, $score * $length, $score, $length, $start, $end ];
+		  }
+		  $score = 0;
+		  $start = undef;
+		  $end = undef;
+	      }
+	   }
 	}
   #  print STDERR "regions: ".Dumper(@regions)."\n";
 
-
-# old version
-#	for (my $i=0; $i<@targets; $i++) { 
-#	    if (!defined($off_targets[$i]) || $off_targets[$i]==0) {
-#		if (defined($start)) { 
-		    # print STDERR "extending... $i\n";
-#		    $score =$targets[$i];
-#		}
-#		else { 
-		    # print STDERR "creating... $i\n";
-#		    $start = $i;
-#		    $score =$targets[$i];
-#		}
-#	    }
-#	    elsif ($off_targets[$i]!=0 || $i == @targets) { 
-#		if (defined($start)) { 
-		    # print STDERR "ending... $i\n";
-#		    $end = $i;
-#		    my $length = $end - $start;
-#        	    push @regions, [ $coverage, $score * $length, $score, $length, $start, $end ];
-#		}
-#		$score = 0;
-#		$start = undef;
-#		$end = undef;
-#	    }
-#	}
-   #}
     my @sorted = sort sort_keys @regions;
     
     my @ten_best = @sorted[0..9];
