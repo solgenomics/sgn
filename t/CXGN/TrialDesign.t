@@ -22,7 +22,7 @@ my $plot_name_prefix = "pre_";
 my $plot_name_suffix = "_suf";
 my $plot_number_increment = 10;
 my $design_type = "RCBD";
-my $design;
+my %design;
 
 ok(my $trial_design = CXGN::TrialDesign->new(), "Create TrialDesign object");
 ok($trial_design->set_stock_list(\@stock_names), "Set stock names for trial design");
@@ -46,5 +46,17 @@ is_deeply($trial_design->get_plot_number_increment(),$plot_number_increment, "Ge
 ok($trial_design->set_design_type($design_type), "Set design type for trial design");
 is_deeply($trial_design->get_design_type(),$design_type, "Get design type for trial design");
 ok($trial_design->calculate_design(), "Calculate trial design");
-ok($design = $trial_design->get_design(), "Get trial design");
+ok(%design = %{$trial_design->get_design()}, "Get trial design");
+print STDERR "\nbn:".$design{1}->{stock_name}."\n";
+print STDERR "bn:".$design{2}->{stock_name}."\n";
+print STDERR "bn:".$design{3}->{stock_name}."\n";
+print STDERR "bn:".$design{4}->{stock_name}."\n";
+
+
+#my %design_hash = %{$design};
+#print STDERR "\n foo $design\n";
+#my %bnn = $design_hash{1};
+#my $bn = $bnn{block};
+#my %line_hash = %{$design_hash{'1'}};
+#print STDERR "\nBlock num: $bn \n";
 
