@@ -17,6 +17,7 @@ has 'plot_name_prefix' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name
 has 'plot_name_suffix' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name_suffix', clearer => 'clear_plot_name_suffix');
 has 'plot_start_number' => (isa => 'Int', is => 'rw', predicate => 'has_plot_start_number', clearer => 'clear_plot_start_number', default => 1);
 has 'plot_number_increment' => (isa => 'Int', is => 'rw', predicate => 'has_plot_number_increment', clearer => 'clear_plot_number_increment', default => 1);
+has 'randomization_seed' => (isa => 'Int', is => 'rw', predicate => 'has_randomization_seed', clearer => 'clear_randomization_seed');
 subtype 'RandomizationMethodType',
   as 'Str',
   where { $_ eq "Wichmann-Hill" || $_ eq  "Marsaglia-Multicarry" || $_ eq  "Super-Duper" || $_ eq  "Mersenne-Twister" || $_ eq  "Knuth-
@@ -105,8 +106,14 @@ sub _get_rcbd_design {
   $r_block->add_command('library(agricolae)');
   $r_block->add_command('trt <- stock_data_matrix[1,]');
   $r_block->add_command('number_of_blocks <- '.$number_of_blocks);
-  #$r_block->add_command('plot_start_number <- '.$self->get_plot_start_number());
-  $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,number=1,kinds="Wichmann-Hill")');
+  $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
+  if ($self->has_randomization_seed()){
+    $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
+    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,number=1,kinds=randomization_method, seed=randomization_seed)');
+  }
+  else {
+    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,number=1,kinds=randomization_method)');
+  }
   $r_block->add_command('rcbd<-as.matrix(rcbd)');
   $r_block->run_block();
   $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','rcbd');
