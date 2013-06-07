@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests=>30;
+use Test::More tests=>59;
 
 BEGIN {use_ok('CXGN::TrialDesign');}
 
@@ -20,6 +20,7 @@ my $block_size = 20;
 my $maximum_block_size = 30;
 my $plot_name_prefix = "pre_";
 my $plot_name_suffix = "_suf";
+my $plot_start_number = 101;
 my $plot_number_increment = 10;
 my $design_type = "RCBD";
 my %design;
@@ -41,23 +42,38 @@ ok($trial_design->set_plot_name_prefix($plot_name_prefix), "Set plot name prefix
 is_deeply($trial_design->get_plot_name_prefix(),$plot_name_prefix, "Get plot name prefix for trial design");
 ok($trial_design->set_plot_name_suffix($plot_name_suffix), "Set plot name suffix for trial design");
 is_deeply($trial_design->get_plot_name_suffix(),$plot_name_suffix, "Get plot name suffix for trial design");
+ok($trial_design->set_plot_start_number($plot_start_number), "Set plot start number for trial design");
+is_deeply($trial_design->get_plot_start_number(),$plot_start_number, "Get plot start number for trial design");
 ok($trial_design->set_plot_number_increment($plot_number_increment), "Set plot number increment for trial design");
 is_deeply($trial_design->get_plot_number_increment(),$plot_number_increment, "Get plot number increment for trial design");
 ok($trial_design->set_design_type($design_type), "Set design type for trial design");
 is_deeply($trial_design->get_design_type(),$design_type, "Get design type for trial design");
 ok($trial_design->calculate_design(), "Calculate trial design");
 ok(%design = %{$trial_design->get_design()}, "Get trial design");
-print STDERR "\n1:".$design{101}->{stock_name}."\n";
-print STDERR "2:".$design{102}->{stock_name}."\n";
-print STDERR "3:".$design{103}->{stock_name}."\n";
-print STDERR "4:".$design{104}->{stock_name}."\n";
-print STDERR "20:".$design{120}->{stock_name}."\n";
-
-
-#my %design_hash = %{$design};
-#print STDERR "\n foo $design\n";
-#my %bnn = $design_hash{1};
-#my $bn = $bnn{block};
-#my %line_hash = %{$design_hash{'1'}};
-#print STDERR "\nBlock num: $bn \n";
-
+ok(scalar(keys %design) == scalar(@stock_names) * $number_of_blocks,"Result of RCBD design has a number of plots equal to the number of stocks times the number of blocks");
+ok($design{$plot_start_number}->{stock_name} eq $stock_names[0],"First plot has correct stock name");
+ok($design{$plot_start_number}->{block_number} == 1, "First plot is in block 1");
+ok($design{$plot_start_number+$plot_number_increment}->{stock_name} eq $stock_names[1], "Second plot has correct stock name");
+ok($design{$plot_start_number}->{plot_name} eq $plot_name_prefix.$plot_start_number.$plot_name_suffix,"Plot names contain prefix and suffix");
+ok($trial_design->set_plot_start_number(1), "Change plot start number for trial design to 1");
+ok($trial_design->set_plot_number_increment(1), "Change plot number increment for trial design to 1");
+ok($trial_design->calculate_design(), "Calculate design with plot start number and increment set to 1");
+ok(%design = %{$trial_design->get_design()}, "Get trial design with plot start number and increment set to 1");
+ok($design{1}->{stock_name} eq $stock_names[0],"First plot has correct stock name when plot number and increment are 1");
+ok($design{2}->{stock_name} eq $stock_names[1],"Second plot has correct stock name when plot number and increment are 1");
+ok($design{3}->{stock_name} eq $stock_names[2],"Third plot has correct stock name when plot number and increment are 1");
+ok($trial_design->set_plot_start_number(-2), "Change plot start number for trial design to -2");
+ok($trial_design->calculate_design(), "Calculate trial design with a negative plot start number");
+ok(%design = %{$trial_design->get_design()}, "Get trial design with a negative plot start number");
+ok($design{-2}->{stock_name} eq $stock_names[0],"First plot has correct stock name with a negative plot start number");
+ok($design{-1}->{stock_name} eq $stock_names[1],"Second plot has correct stock name with a negative plot start number");
+ok($design{0}->{stock_name} eq $stock_names[2],"Third plot has correct stock name with a negative plot start number");
+ok($design{1}->{stock_name} eq $stock_names[3],"Fourth plot has correct stock name with a negative plot start number");
+ok($trial_design->set_plot_start_number(2), "Change plot start number for trial design to 2");
+ok($trial_design->set_plot_number_increment(-1), "Change plot number increment for trial design to -1");
+ok($trial_design->calculate_design(), "Calculate trial design with a negative plot number increment");
+ok(%design = %{$trial_design->get_design()}, "Get trial design with a negative plot number increment");
+ok($design{2}->{stock_name} eq $stock_names[0],"First plot has correct stock name with a negative plot number increment");
+ok($design{1}->{stock_name} eq $stock_names[1],"Second plot has correct stock name with a negative plot number increment");
+ok($design{0}->{stock_name} eq $stock_names[2],"Third plot has correct stock name with a negative plot number increment");
+ok($design{-1}->{stock_name} eq $stock_names[3],"Fourth plot has correct stock name with a negative plot number increment");

@@ -75,8 +75,7 @@ sub _get_rcbd_design {
   my @plot_numbers;
   my @stock_names;
   my @block_numbers;
-
-
+  my @converted_plot_numbers;
   if ($self->has_stock_list()) {
     @stock_list = @{$self->get_stock_list()};
   } else {
@@ -100,24 +99,66 @@ sub _get_rcbd_design {
   $r_block->add_command('library(agricolae)');
   $r_block->add_command('trt <- stock_data_matrix[1,]');
   $r_block->add_command('number_of_blocks <- '.$number_of_blocks);
-  $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,number=101,kinds="Wichmann-Hill")');
+  #$r_block->add_command('plot_start_number <- '.$self->get_plot_start_number());
+  $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,number=1,kinds="Wichmann-Hill")');
   $r_block->add_command('rcbd<-as.matrix(rcbd)');
   $r_block->run_block();
   $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','rcbd');
-
   @plot_numbers = $result_matrix->get_column("plots");
   @block_numbers = $result_matrix->get_column("block");
   @stock_names = $result_matrix->get_column("trt");
-
-
-  for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+  for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
     $plot_info{'block_number'} = $block_numbers[$i];
-    $rcbd_design{$plot_numbers[$i]} = \%plot_info;
-    #print STDERR "Line $i: $plot_numbers[$i] $stock_names[$i] $block_numbers[$i] \n";
+    $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+    $rcbd_design{$converted_plot_numbers[$i]} = \%plot_info;
   }
+  %rcbd_design = %{_build_plot_names($self,\%rcbd_design)};
   return \%rcbd_design;
+}
+
+sub _convert_plot_numbers {
+  my $self = shift;
+  my $plot_numbers_ref = shift;
+  my @plot_numbers = @{$plot_numbers_ref};
+
+  for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
+    my $plot_number;
+    my $first_plot_number;
+    if ($self->has_plot_start_number()){
+      $first_plot_number = $self->get_plot_start_number();
+    } else {
+      $first_plot_number = 1;
+    }
+    if ($self->has_plot_number_increment()){
+      $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
+    }
+    else {
+      $plot_number = $first_plot_number + $i;
+    }
+    $plot_numbers[$i] = $plot_number;
+  }
+  return \@plot_numbers;
+}
+
+sub _build_plot_names {
+  my $self = shift;
+  my $design_ref = shift;
+  my %design = %{$design_ref};
+  my $prefix = '';
+  my $suffix = '';
+  if ($self->has_plot_name_prefix()) {
+    $prefix = $self->get_plot_name_prefix();
+  }
+  if ($self->has_plot_name_suffix()) {
+    $suffix = $self->get_plot_name_suffix();
+  }
+  foreach my $key (keys %design) {
+    $design{$key}->{plot_name} = $prefix.$key.$suffix;
+  }
+  return \%design;
 }
 
 1;
