@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests=>59;
+use Test::More tests=>61;
 
 BEGIN {use_ok('CXGN::TrialDesign');}
 
@@ -22,6 +22,7 @@ my $plot_name_prefix = "pre_";
 my $plot_name_suffix = "_suf";
 my $plot_start_number = 101;
 my $plot_number_increment = 10;
+my $randomization_method = "Super-Duper";
 my $design_type = "RCBD";
 my %design;
 
@@ -46,6 +47,8 @@ ok($trial_design->set_plot_start_number($plot_start_number), "Set plot start num
 is_deeply($trial_design->get_plot_start_number(),$plot_start_number, "Get plot start number for trial design");
 ok($trial_design->set_plot_number_increment($plot_number_increment), "Set plot number increment for trial design");
 is_deeply($trial_design->get_plot_number_increment(),$plot_number_increment, "Get plot number increment for trial design");
+ok($trial_design->set_randomization_method($randomization_method), "Set randomization method for trial design");
+is_deeply($trial_design->get_randomization_method(),$randomization_method, "Get randomization method for trial design");
 ok($trial_design->set_design_type($design_type), "Set design type for trial design");
 is_deeply($trial_design->get_design_type(),$design_type, "Get design type for trial design");
 ok($trial_design->calculate_design(), "Calculate trial design");
