@@ -47,10 +47,11 @@ ok($trial_design->set_design_type($design_type), "Set design type for trial desi
 is_deeply($trial_design->get_design_type(),$design_type, "Get design type for trial design");
 ok($trial_design->calculate_design(), "Calculate trial design");
 ok(%design = %{$trial_design->get_design()}, "Get trial design");
-print STDERR "\nbn:".$design{1}->{stock_name}."\n";
-print STDERR "bn:".$design{2}->{stock_name}."\n";
-print STDERR "bn:".$design{3}->{stock_name}."\n";
-print STDERR "bn:".$design{4}->{stock_name}."\n";
+print STDERR "\n1:".$design{101}->{stock_name}."\n";
+print STDERR "2:".$design{102}->{stock_name}."\n";
+print STDERR "3:".$design{103}->{stock_name}."\n";
+print STDERR "4:".$design{104}->{stock_name}."\n";
+print STDERR "20:".$design{120}->{stock_name}."\n";
 
 
 #my %design_hash = %{$design};
