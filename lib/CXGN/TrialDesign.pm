@@ -3,7 +3,6 @@ package CXGN::TrialDesign;
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
-use Try::Tiny;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 
@@ -43,16 +42,16 @@ sub calculate_design {
   }
   else {
     if ($self->get_design_type() eq "CRD") {
-      $design = _get_crd_design();
+      $design = _get_crd_design($self);
     }
     elsif ($self->get_design_type() eq "RCBD") {
       $design = _get_rcbd_design($self);
     }
     elsif ($self->get_design_type() eq "Alpha") {
-      $design = _get_alpha_lattice_design();
+      $design = _get_alpha_lattice_design($self);
     }
     elsif ($self->get_design_type() eq "Augmented") {
-      $design = _get_augmented_design();
+      $design = _get_augmented_design($self);
     }
     else {
       die "Trial design" . $self->get_design_type() ." not supported\n";
@@ -67,7 +66,10 @@ sub calculate_design {
 
 sub _get_crd_design {
   my $self = shift;
-  return 1;
+  my %crd_design;
+  $self->set_number_of_blocks(1);
+  %crd_design=%{_get_rcbd_design($self)};
+  return \%crd_design;
 }
 
 sub _get_rcbd_design {
