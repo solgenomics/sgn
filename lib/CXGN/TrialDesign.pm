@@ -88,12 +88,12 @@ sub _get_rcbd_design {
   if ($self->has_stock_list()) {
     @stock_list = @{$self->get_stock_list()};
   } else {
-    return;
+    die "No stock list specified\n";
   }
   if ($self->has_number_of_blocks()) {
     $number_of_blocks = $self->get_number_of_blocks();
   } else {
-    return;
+    die "Number of blocks not specified\n";
   }
   $stock_data_matrix =  R::YapRI::Data::Matrix->new(
 						       {
@@ -134,11 +134,97 @@ sub _get_rcbd_design {
   return \%rcbd_design;
 }
 
+sub _get_alpha_lattice_design {
+  my $self = shift;
+  my %alpha_design;
+  my $rbase = R::YapRI::Base->new();
+  my @stock_list;
+  my $block_size;
+  my $number_of_blocks;
+  my $number_of_reps;
+  my $stock_data_matrix;
+  my $r_block;
+  my $result_matrix;
+  my @plot_numbers;
+  my @stock_names;
+  my @block_numbers;
+  my @rep_numbers;
+  my @converted_plot_numbers;
+  if ($self->has_stock_list()) {
+    @stock_list = @{$self->get_stock_list()};
+  } else {
+    die "No stock list specified\n";
+  }
+  if ($self->has_block_size()) {
+    $block_size = $self->get_block_size();
+    if ($block_size < 3) {
+      die "Block size must be greater than 2\n";
+    }
+    if (scalar(@stock_list) % $block_size != 0) {
+      die "Number of stocks (".scalar(@stock_list).") is not divisible by the block size ($block_size)\n";
+    }
+    $number_of_blocks = scalar(@stock_list)/$block_size;
+    if ($number_of_blocks < $block_size) {
+      die "The number of blocks ($number_of_blocks) must not be less than the block size ($block_size)\n";
+    }
+  } else {
+    die "No block size specified\n";
+  }
+  if ($self->has_number_of_reps()) {
+    $number_of_reps = $self->get_number_of_reps();
+    if ($number_of_reps < 2) {
+      die "Number of reps for alpha lattice design must be 2 or greater\n";
+    }
+  } else {
+    die "Number of reps not specified\n";
+  }
+  $stock_data_matrix =  R::YapRI::Data::Matrix->new(
+						       {
+							name => 'stock_data_matrix',
+							rown => 1,
+							coln => scalar(@stock_list),
+							data => \@stock_list,
+						       }
+						      );
+  $r_block = $rbase->create_block('r_block');
+  $stock_data_matrix->send_rbase($rbase, 'r_block');
+  $r_block->add_command('library(agricolae)');
+  $r_block->add_command('trt <- stock_data_matrix[1,]');
+  $r_block->add_command('block_size <- '.$block_size);
+  $r_block->add_command('number_of_reps <- '.$number_of_reps);
+  $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
+  if ($self->has_randomization_seed()){
+    $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
+    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,number=1,kinds=randomization_method, seed=randomization_seed)');
+  }
+  else {
+    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,number=1,kinds=randomization_method)');
+  }
+  $r_block->add_command('alpha_book<-alpha$book');
+  $r_block->add_command('alpha_book<-as.matrix(alpha_book)');
+  $r_block->run_block();
+  $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','alpha_book');
+  @plot_numbers = $result_matrix->get_column("plots");
+  @block_numbers = $result_matrix->get_column("block");
+  @rep_numbers = $result_matrix->get_column("replication");
+  @stock_names = $result_matrix->get_column("trt");
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+  for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
+    my %plot_info;
+    $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'block_number'} = $block_numbers[$i];
+    $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+    $plot_info{'rep_number'} = $rep_numbers[$i];
+    $alpha_design{$converted_plot_numbers[$i]} = \%plot_info;
+  }
+  %alpha_design = %{_build_plot_names($self,\%alpha_design)};
+  return \%alpha_design;
+}
+
 sub _convert_plot_numbers {
   my $self = shift;
   my $plot_numbers_ref = shift;
   my @plot_numbers = @{$plot_numbers_ref};
-
   for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
     my $plot_number;
     my $first_plot_number;
