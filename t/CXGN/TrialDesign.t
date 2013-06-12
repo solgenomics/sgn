@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests=>75;
+use Test::More tests=>78;
 use Test::Exception;
 
 BEGIN {use_ok('CXGN::TrialDesign');}
@@ -11,13 +11,14 @@ BEGIN {require_ok('MooseX::FollowPBP');}
 BEGIN {require_ok('Moose::Util::TypeConstraints');}
 BEGIN {require_ok('R::YapRI::Base');}
 BEGIN {require_ok('R::YapRI::Data::Matrix');}
+BEGIN {require_ok('POSIX');}
 
 my @stock_names = ("A","B","C","D","E","F","G","H","I","J","K","L");
 my @control_names = ("C1","C2","C3");
 my $number_of_blocks = 4;
 my $number_of_reps = 2;
 my $block_size = 3;
-my $maximum_block_size = 30;
+my $maximum_block_size = 14;
 my $plot_name_prefix = "pre_";
 my $plot_name_suffix = "_suf";
 my $plot_start_number = 101;
@@ -30,10 +31,6 @@ my %design;
 ok(my $trial_design = CXGN::TrialDesign->new(), "Create TrialDesign object");
 ok($trial_design->set_stock_list(\@stock_names), "Set stock names for trial design");
 is_deeply($trial_design->get_stock_list(),\@stock_names, "Get stock names for trial design");
-ok($trial_design->set_control_list(\@control_names), "Set control names for trial design");
-is_deeply($trial_design->get_control_list(),\@control_names, "Get control names for trial design");
-ok($trial_design->set_maximum_block_size($maximum_block_size), "Set maximum block size for trial design");
-is_deeply($trial_design->get_maximum_block_size(),$maximum_block_size, "Get maximum block size for trial design");
 ok($trial_design->set_plot_name_prefix($plot_name_prefix), "Set plot name prefix for trial design");
 is_deeply($trial_design->get_plot_name_prefix(),$plot_name_prefix, "Get plot name prefix for trial design");
 ok($trial_design->set_plot_name_suffix($plot_name_suffix), "Set plot name suffix for trial design");
@@ -107,6 +104,13 @@ $trial_design->set_block_size(5);
 throws_ok { $trial_design->calculate_design() } '/is not divisible by the block size/', 'Does not allow number of stocks that is not divisible by block size';
 $trial_design->set_block_size($block_size);
 $trial_design->set_number_of_reps(1);
-throws_ok { $trial_design->calculate_design() } '/Number of reps for alpha lattice design must be 2 or greater/', 'Does not less than 2 reps for alpha lattice design';
+throws_ok { $trial_design->calculate_design() } '/Number of reps for alpha lattice design must be 2 or greater/', 'Does not allow less than 2 reps for alpha lattice design';
 $trial_design->set_number_of_reps($number_of_reps);
 
+#tests for Augmented design
+ok($trial_design->set_design_type("Augmented"), "Set design type to Augmented");
+ok($trial_design->set_control_list(\@control_names), "Set control names for trial design");
+is_deeply($trial_design->get_control_list(),\@control_names, "Get control names for trial design");
+ok($trial_design->set_maximum_block_size($maximum_block_size), "Set maximum block size for trial design");
+is_deeply($trial_design->get_maximum_block_size(),$maximum_block_size, "Get maximum block size for trial design");
+ok($trial_design->calculate_design(), "Calculate Augmented trial design");

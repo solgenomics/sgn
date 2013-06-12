@@ -5,6 +5,7 @@ use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
+use POSIX;
 
 has 'stock_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_stock_list', clearer => 'clear_stock_list');
 has 'control_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_control_list', clearer => 'clear_control_list');
@@ -158,14 +159,14 @@ sub _get_alpha_lattice_design {
   if ($self->has_block_size()) {
     $block_size = $self->get_block_size();
     if ($block_size < 3) {
-      die "Block size must be greater than 2\n";
+      die "Block size must be greater than 2 for alpha lattice design\n";
     }
     if (scalar(@stock_list) % $block_size != 0) {
-      die "Number of stocks (".scalar(@stock_list).") is not divisible by the block size ($block_size)\n";
+      die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
     }
     $number_of_blocks = scalar(@stock_list)/$block_size;
     if ($number_of_blocks < $block_size) {
-      die "The number of blocks ($number_of_blocks) must not be less than the block size ($block_size)\n";
+      die "The number of blocks ($number_of_blocks) for alpha lattice design must not be less than the block size ($block_size)\n";
     }
   } else {
     die "No block size specified\n";
@@ -220,6 +221,106 @@ sub _get_alpha_lattice_design {
   %alpha_design = %{_build_plot_names($self,\%alpha_design)};
   return \%alpha_design;
 }
+
+sub _get_augmented_design {
+  my $self = shift;
+  my %augmented_design;
+  my $rbase = R::YapRI::Base->new();
+  my @stock_list;
+  my @control_list;
+  my $maximum_block_size;
+  my $number_of_blocks;
+  my $stock_data_matrix;
+  my $control_stock_data_matrix;
+  my $r_block;
+  my $result_matrix;
+  my @plot_numbers;
+  my @stock_names;
+  my @block_numbers;
+  my @converted_plot_numbers;
+  my %control_names_lookup;
+  my $stock_name_iter;
+  if ($self->has_stock_list()) {
+    @stock_list = @{$self->get_stock_list()};
+  } else {
+    die "No stock list specified\n";
+  }
+  if ($self->has_control_list()) {
+    @control_list = @{$self->get_control_list()};
+    %control_names_lookup = map { $_ => 1 } @control_list;
+    foreach $stock_name_iter (@stock_names) {
+      if (exists($control_names_lookup{$stock_name_iter})) {
+	die "Names in stock list cannot be used also as controls\n";
+      }
+    }
+  } else {
+    die "No list of control stocks specified.  Required for augmented design.\n";
+  }
+
+  if ($self->has_maximum_block_size()) {
+    $maximum_block_size = $self->get_maximum_block_size();
+    if ($maximum_block_size <= scalar(@control_list)) {
+      die "Maximum block size must be greater the number of control stocks for augmented design\n";
+    }
+    if ($maximum_block_size >= scalar(@control_list)+scalar(@stock_list)) {
+      die "Maximum block size must be less than the number of stocks plus the number of controls for augmented design\n";
+    }
+    $number_of_blocks = ceil(scalar(@stock_list)/($maximum_block_size-scalar(@control_list)));
+  } else {
+    die "No block size specified\n";
+  }
+  $stock_data_matrix =  R::YapRI::Data::Matrix->new(
+						       {
+							name => 'stock_data_matrix',
+							rown => 1,
+							coln => scalar(@stock_list),
+							data => \@stock_list,
+						       }
+						      );
+  $control_stock_data_matrix =  R::YapRI::Data::Matrix->new(
+						       {
+							name => 'control_stock_data_matrix',
+							rown => 1,
+							coln => scalar(@control_list),
+							data => \@control_list,
+						       }
+						      );
+  $r_block = $rbase->create_block('r_block');
+  $stock_data_matrix->send_rbase($rbase, 'r_block');
+  $control_stock_data_matrix->send_rbase($rbase, 'r_block');
+  $r_block->add_command('library(agricolae)');
+  $r_block->add_command('trt <- stock_data_matrix[1,]');
+  $r_block->add_command('control_trt <- control_stock_data_matrix[1,]');
+  $r_block->add_command('number_of_blocks <- '.$number_of_blocks);
+  $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
+  if ($self->has_randomization_seed()){
+    $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
+    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,number=1,kinds=randomization_method, seed=randomization_seed)');
+  }
+  else {
+    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,number=1,kinds=randomization_method)');
+  }
+  $r_block->add_command('augmented<-as.matrix(augmented)');
+
+  $r_block->run_block();
+  $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','augmented');
+  @plot_numbers = $result_matrix->get_column("plots");
+  @block_numbers = $result_matrix->get_column("block");
+  @stock_names = $result_matrix->get_column("trt");
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+
+  for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
+    my %plot_info;
+    $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'block_number'} = $block_numbers[$i];
+    $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+    $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
+    $augmented_design{$converted_plot_numbers[$i]} = \%plot_info;
+  }
+  %augmented_design = %{_build_plot_names($self,\%augmented_design)};
+  return \%augmented_design;
+}
+
 
 sub _convert_plot_numbers {
   my $self = shift;
