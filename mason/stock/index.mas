@@ -109,7 +109,7 @@ my $metadata = ['variety', 'donor', 'donor institute', 'country', 'state' , 'ada
 
 my $experiment = ['year', 'location', 'replicate']; # these values should be in nd_experimentprop ?
 
-my $resources = ['solcap number' , 'synonym'];
+my $resources = [ 'synonym', 'solcap number'];
 
 my $allele_div = "stock_alleles";
 my $new_locus_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in to associate new locus]</a> | : '' ;
@@ -174,7 +174,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a href="javascript:Tools.toggleContent('add_phenotype_form', 'stock_phenotype')" >[Add phenotype]</a> | :   qq |<span class = "ghosted"> [Add phenotype]</span> |;
 
-
+my $edit_privs = $curator || $submitter || $sequencer;
 </%perl>
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers"] &>
 
@@ -218,13 +218,14 @@ function jqueryStuff() {
 <div><a href=<% $db_url %>><% $source_dbs{$db_url} %></a> </div>
 %}
 <br />
-
-   <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 &>
-      <& /stock/stockprops.mas, props=> $stockprops , subset=> $resources  &>
+% my $div_name = join("_", @$resources);
+% my $subtitle = $edit_privs ? "[<a href=\"javascript:synonyms_addPropDialog()\">Add...</a>]" : "[Add]";
+   <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
+      <& /stock/stockprops.mas, stock_id=> $stock_id, props=> $stockprops , div_name=>'synonyms', subset=>$resources, editable=> [ 'synonym' ], edit_privs => $edit_privs   &>
 </&>
-
+%  $div_name = join("_", @$metadata);
     <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1 &>
-      <& /stock/stockprops.mas, props=> $stockprops, subset=> $metadata  &>
+      <& /stock/stockprops.mas, stock_id=>$stock_id, props=> $stockprops, subset=> $metadata  &>
 </&>
 
 
@@ -239,7 +240,7 @@ function jqueryStuff() {
 
 
 <&| /page/info_section.mas, title => "Experimental data" , collapsible=> 1, is_subsection => 0 &>
-      <& /stock/stockprops.mas, props=> $stockprops, subset=> $experiment  &>
+      <& /stock/stockprops.mas, stock_id=>$stock_id, props=> $stockprops, subset=> $experiment  &>
 </&>
 
 % if($is_owner) {
