@@ -289,9 +289,14 @@ jQuery(document).ready(function () {
 
 
     function generate_experimental_design() {
-        var name = jQuery('#project_name').val();
-        var year = jQuery('#project_year').val();
+        var name = jQuery('#add_project_name').val();
+        var year = jQuery('#add_project_year').val();
         var desc = jQuery('#project_description').val();
+        var stock_list_id = jQuery('#select_list_list_select').val();
+        alert(stock_list_id);
+        var list = new CXGN.List();
+        var stock_list = list.getList(59);
+        alert(stock_list);
 
         if (name == '' || year == '') {
             alert('Name and year are required.');
@@ -304,7 +309,8 @@ jQuery(document).ready(function () {
             data: {
                 'project_name': name,
                 'project_description': desc,
-                'year': year
+                'year': year,
+                'stock_list': stock_list,
             },
 
         }).done(alert("Done saving project info"));

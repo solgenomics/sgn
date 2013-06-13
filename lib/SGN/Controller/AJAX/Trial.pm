@@ -25,8 +25,7 @@ use CXGN::Chado::Stock;
 use Scalar::Util qw(looks_like_number);
 use File::Slurp;
 use Data::Dumper;
-use R::YapRI::Base;
-use R::YapRI::Data::Matrix;
+use CXGN::TrialDesign;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -48,80 +47,11 @@ sub _build_schema {
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
 
 sub generate_experimental_design_POST : Args(0) {
-
-  my $rbase = R::YapRI::Base->new();
-
-
-  my @stock_list;
-  push(@stock_list, "A");
-  push(@stock_list, "B");
-  push(@stock_list, "C");
-
-  my $number_of_blocks = 4;
-
-  print STDERR "Length of list: ".length(@stock_list)."first: ".$stock_list[1]."\n";
-
-  my $stock_data_matrix =  R::YapRI::Data::Matrix->new(
-						       {
-							name => 'stock_data_matrix',
-							rown => 1,
-							coln => scalar(@stock_list),
-							data => \@stock_list,
-						       }
-						      );
-
-
-  #my $newblock = $rbase->create_block('lengthblock', 'default');
-  my $design_setup_block = $rbase->create_block('design_setup');
-  $design_setup_block->add_command('library(agricolae)');
-  $stock_data_matrix->send_rbase($rbase, 'design_setup');
-
-  $design_setup_block->run_block();
-
-  my $rcbd_block = $rbase->create_block('rcbd_block');
-  $stock_data_matrix->send_rbase($rbase, 'rcbd_block');
-  $rcbd_block->add_command('trt <- stock_data_matrix[1,]');
-  $rcbd_block->add_command('number_of_blocks <- '.$number_of_blocks);
-  $rcbd_block->add_command('library(agricolae)');
-  $rcbd_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks)');
-  $rcbd_block->add_command('rcbd<-as.matrix(rcbd)');
-  $rcbd_block->run_block();
-
-  my $blockname = $rcbd_block->get_blockname();
-  print STDERR "Blockname: $blockname \n";
-
-  my $rmatrix = R::YapRI::Data::Matrix->read_rbase( $rbase,$blockname,'rcbd');
-
-
-
-#  $newblock->add_command('repetition <- c(4, 3, 4)');
-#  $newblock->add_command('plan1 <- design.crd(trt,r=repetition)');
-#  $newblock->add_command('d<-as.matrix(plan1)');
-#  $newblock->add_command('print(plan1)');
-#  $newblock->run_block();
-
-
-
-#  my @results = $rcbd_block->read_results();
-#  print STDERR "length of results: ".scalar(@results)."\n";
-
-#  my $firstresult = $results[0];
-#  print STDERR "YapRI Result: $firstresult\n";
-
-
-
-  #my $rmatrix = R::YapRI::Data::Matrix->read_rbase( $rbase,$blockname,'d');
-
-
-
-  my @rownames = @{$rmatrix->get_rownames()};
-  my $row1name = $rownames[2];
-  my @colnames = @{$rmatrix->get_colnames()};
-  my $col1name = $colnames[2];
-  print STDERR "row: $row1name col: $col1name\n";
-  my $elem2_3 = $rmatrix->get_element($row1name, $col1name);
-
-  #print STDERR "Element 3,2: $elem2_3\n";
+  my ($self, $c) = @_;
+  my $stock_list_id = $c->req->param('stock_list');
+  my $control_list_name = $c->req->param('list_of_checks_section_list_select');
+  print STDERR "List: $stock_list_id\n";
+#  print "first in list: $list[0] \n";
 }
 
 
