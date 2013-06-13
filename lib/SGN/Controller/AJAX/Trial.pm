@@ -26,6 +26,7 @@ use Scalar::Util qw(looks_like_number);
 use File::Slurp;
 use Data::Dumper;
 use CXGN::TrialDesign;
+use JSON qw( decode_json );
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -46,12 +47,80 @@ sub _build_schema {
 
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
 
-sub generate_experimental_design_POST : Args(0) {
+sub generate_experimental_design_GET : Args(0) {
   my ($self, $c) = @_;
-  my $stock_list_id = $c->req->param('stock_list');
-  my $control_list_name = $c->req->param('list_of_checks_section_list_select');
-  print STDERR "List: $stock_list_id\n";
-#  print "first in list: $list[0] \n";
+  my $trial_design = CXGN::TrialDesign->new();
+  my %design;
+  my $project_name = $c->req->param('project_name');
+  my $project_description = $c->req->param('project_description');
+  my $year = $c->req->param('year');
+  my @stock_names;
+  if ($c->req->param('stock_list')) {
+    @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
+  }
+  my @control_names;
+  if ($c->req->param('control_list')) {
+    @control_names = @{_parse_list_from_json($c->req->param('control_list'))};
+  }
+  #print STDERR "first in stock list: ".$stock_list[0]."\n";
+  my $design_type =  $c->req->param('design_type');
+  my $rep_count =  $c->req->param('rep_count');
+  my $block_number =  $c->req->param('block_number');
+  my $block_size =  $c->req->param('block_size');
+  my $max_block_size =  $c->req->param('max_block_size');
+  my $plot_prefix =  $c->req->param('plot_prefix');
+  my $start_number =  $c->req->param('start_number');
+  my $increment =  $c->req->param('increment');
+  if (@stock_names) {
+    $trial_design->set_stock_list(\@stock_names);
+  } else {
+    $c->stash->{rest} = {error => "No list of stocks supplied." };
+    return;
+  }
+  if (@control_names) {
+    $trial_design->set_control_list(\@control_names);
+  }
+  if ($start_number) {
+    $trial_design->set_plot_start_number($start_number);
+  } else {
+    $trial_design->set_plot_start_number(1);
+  }
+  if ($increment) {
+    $trial_design->set_plot_number_increment($increment);
+  } else {
+    $trial_design->set_plot_number_increment(1);
+  }
+  if ($plot_prefix) {
+    $trial_design->set_plot_name_prefix($plot_prefix);
+  }
+  if ($design_type eq "CRD") {
+    $trial_design->set_design_type("CRD");
+    $trial_design->calculate_design();
+    %design = %{$trial_design->get_design()};
+  }
+
+print STDERR "Design: ". Dumper(%design)."\n";
+
+
+
+  $c->stash->{rest} = {success => "1"};
+}
+
+sub _parse_list_from_json {
+  my $list_json = shift;
+  if ($list_json) {
+    my $decoded_list = decode_json($list_json);
+    my @array_of_list_items = @{$decoded_list};
+    my @list;
+    foreach my $list_item_array_ref (@array_of_list_items) {
+      my @list_item_array = @{$list_item_array_ref};
+      push (@list,$list_item_array[1]);
+    }
+    return \@list;
+  }
+  else {
+    return;
+  }
 }
 
 

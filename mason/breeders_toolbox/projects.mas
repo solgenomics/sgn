@@ -47,9 +47,9 @@
       <label for="select_design_method" style="display: inline-block; width: 200px;">Design type:</label>
       <select id="select_design_method" name="select_design_method">
 	<option value=CRD>Completely Randomized</option>
-        <option value=CBD>Complete Block</option>
-        <option value=ALP>Alpha Lattice</option>
-        <option value=AUG>Augmented</option>
+        <option value=RCBD>Complete Block</option>
+        <option value=Alpha>Alpha Lattice</option>
+        <option value=Augmented>Augmented</option>
       </select>
       <br><br>
       <div id="trial_design_more_info" style="display: none">
@@ -238,7 +238,7 @@ jQuery(document).ready(function () {
             jQuery("#block_number_section").hide();
             jQuery("#block_size_section").hide();
             jQuery("#max_block_section").hide();
-        } else if (design_method == "CBD") {
+        } else if (design_method == "RCBD") {
             jQuery("#trial_design_more_info").show();
             jQuery("#add_project_dialog").dialog("option", "height","auto");
             jQuery("#list_of_checks_section").hide();
@@ -246,7 +246,7 @@ jQuery(document).ready(function () {
             jQuery("#block_number_section").show();
             jQuery("#block_size_section").hide();
             jQuery("#max_block_size_section").hide();
-        } else if (design_method == "ALP") {
+        } else if (design_method == "Alpha") {
             jQuery("#trial_design_more_info").show();
             jQuery("#add_project_dialog").dialog("option", "height","auto");
             jQuery("#list_of_checks_section").hide();
@@ -254,7 +254,7 @@ jQuery(document).ready(function () {
             jQuery("#block_number_section").hide();
             jQuery("#block_size_section").show();
             jQuery("#max_block_size_section").hide();
-        } else if (design_method == "AUG") {
+        } else if (design_method == "Augmented") {
             jQuery("#trial_design_more_info").show();
             jQuery("#add_project_dialog").dialog("option", "height","auto");
             jQuery("#list_of_checks_section").show();
@@ -293,10 +293,24 @@ jQuery(document).ready(function () {
         var year = jQuery('#add_project_year').val();
         var desc = jQuery('#project_description').val();
         var stock_list_id = jQuery('#select_list_list_select').val();
-        alert(stock_list_id);
+        var control_list_id = jQuery('#list_of_checks_section_list_select').val();
         var list = new CXGN.List();
-        var stock_list = list.getList(59);
-        alert(stock_list);
+	var stock_list;
+	if (! stock_list_id == "") {
+            stock_list = JSON.stringify(list.getList(stock_list_id));
+	}
+	var control_list;
+	if (! control_list_id === "") {
+            control_list = JSON.stringify(list.getList(control_list_id));
+	}
+        var design_type = jQuery('#select_design_method').val();
+	var rep_count = jQuery('#rep_count').val();
+	var block_number  = jQuery('#rep_count').val();
+	var block_size = jQuery('#block_size').val();
+	var max_block_size = jQuery('#max_block_size').val();
+	var plot_prefix = jQuery('#plot_prefix').val();
+	var start_number = jQuery('#start_number').val();
+	var increment = jQuery('#increment').val();
 
         if (name == '' || year == '') {
             alert('Name and year are required.');
@@ -304,17 +318,37 @@ jQuery(document).ready(function () {
         }
 
         new jQuery.ajax({
-            type: 'POST',
+            type: 'GET',
             url: '/ajax/trial/generate_experimental_design',
+	    dataType: "json",
             data: {
                 'project_name': name,
                 'project_description': desc,
                 'year': year,
                 'stock_list': stock_list,
+		'control_list': control_list,
+		'design_type': design_type,
+		'rep_count': rep_count,
+		'block_number': block_number,
+		'block_size': block_size,
+		'max_block_size': max_block_size,
+		'plot_prefix': plot_prefix,
+		'start_number': start_number,
+		'increment': increment,
             },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert('The trial was created.');
+                }
+            },
+            error: function () {
+                alert('An error occurred. sorry');
+            }
 
-        }).done(alert("Done saving project info"));
-        jQuery('#add_project_dialog').dialog("close");
+       });
+
     }
 
 
