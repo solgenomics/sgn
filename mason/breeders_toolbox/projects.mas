@@ -301,7 +301,7 @@ jQuery(document).ready(function () {
             stock_list = JSON.stringify(list.getList(stock_list_id));
 	}
 	var control_list;
-	if (! control_list_id === "") {
+	if (! control_list_id == "") {
             control_list = JSON.stringify(list.getList(control_list_id));
 	}
         var design_type = jQuery('#select_design_method').val();
