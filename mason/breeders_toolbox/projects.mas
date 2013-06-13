@@ -312,9 +312,6 @@ jQuery(document).ready(function () {
 	var plot_prefix = jQuery('#plot_prefix').val();
 	var start_number = jQuery('#start_number').val();
 	var increment = jQuery('#increment').val();
-	alert(name);
-	alert(block_number);
-	alert(year);
 
         if (name == '' || year == '') {
             alert('Name and year are required.');

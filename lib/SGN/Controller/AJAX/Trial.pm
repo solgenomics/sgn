@@ -51,6 +51,7 @@ sub generate_experimental_design_GET : Args(0) {
   my ($self, $c) = @_;
   my $trial_design = CXGN::TrialDesign->new();
   my %design;
+  my $error;
   my $project_name = $c->req->param('project_name');
   my $project_description = $c->req->param('project_description');
   my $year = $c->req->param('year');
@@ -70,7 +71,6 @@ sub generate_experimental_design_GET : Args(0) {
   my $plot_prefix =  $c->req->param('plot_prefix');
   my $start_number =  $c->req->param('start_number');
   my $increment =  $c->req->param('increment');
-  print STDERR "block num: $block_number\n";
 
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
@@ -121,8 +121,10 @@ sub generate_experimental_design_GET : Args(0) {
     $trial_design->calculate_design();
   } catch {
     $c->stash->{rest} = {error => "Could not calculate design: $_"};
-    return;
+    $error=1;
   };
+  if ($error) {return;}
+
 
   if ($trial_design->get_design()) {
     %design = %{$trial_design->get_design()};
