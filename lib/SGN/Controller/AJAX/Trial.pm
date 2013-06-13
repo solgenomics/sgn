@@ -62,7 +62,6 @@ sub generate_experimental_design_GET : Args(0) {
   if ($c->req->param('control_list')) {
     @control_names = @{_parse_list_from_json($c->req->param('control_list'))};
   }
-  #print STDERR "first in stock list: ".$stock_list[0]."\n";
   my $design_type =  $c->req->param('design_type');
   my $rep_count =  $c->req->param('rep_count');
   my $block_number =  $c->req->param('block_number');
@@ -71,6 +70,8 @@ sub generate_experimental_design_GET : Args(0) {
   my $plot_prefix =  $c->req->param('plot_prefix');
   my $start_number =  $c->req->param('start_number');
   my $increment =  $c->req->param('increment');
+  print STDERR "block num: $block_number\n";
+
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
   } else {
@@ -93,16 +94,44 @@ sub generate_experimental_design_GET : Args(0) {
   if ($plot_prefix) {
     $trial_design->set_plot_name_prefix($plot_prefix);
   }
-  if ($design_type eq "CRD") {
-    $trial_design->set_design_type("CRD");
-    $trial_design->calculate_design();
-    %design = %{$trial_design->get_design()};
+  if ($rep_count) {
+    $trial_design->set_number_of_reps($rep_count);
+  }
+  if ($block_number) {
+    $trial_design->set_number_of_blocks($block_number);
+  }
+  if ($block_size) {
+    $trial_design->set_block_size($block_size);
+  }
+  if ($max_block_size) {
+    $trial_design->set_maximum_block_size($max_block_size);
+  }
+  if ($design_type) {
+    $trial_design->set_design_type($design_type);
+  } else {
+    $c->stash->{rest} = {error => "No design type supplied." };
+    return;
+  }
+  if (!$trial_design->has_design_type()) {
+    $c->stash->{rest} = {error => "Design type not supported." };
+    return;
   }
 
-print STDERR "Design: ". Dumper(%design)."\n";
+  try {
+    $trial_design->calculate_design();
+  } catch {
+    $c->stash->{rest} = {error => "Could not calculate design: $_"};
+    return;
+  };
 
+  if ($trial_design->get_design()) {
+    %design = %{$trial_design->get_design()};
+  } else {
+    $c->stash->{rest} = {error => "Could not generate design" };
+    return;
+  }
 
-
+  print STDERR "Design: ". Dumper(%design)."\n";
   $c->stash->{rest} = {success => "1"};
 }
 

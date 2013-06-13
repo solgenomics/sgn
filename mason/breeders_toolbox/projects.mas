@@ -62,22 +62,22 @@
       <br>
       <div id="design_info" name="design_info">
 	<div id="rep_count_section" style="display: none">
-	  <label for id="rep_count" style="display: inline-block; width: 200px;">Number of replicates:</label>
+	  <label for="rep_count" style="display: inline-block; width: 200px;">Number of replicates:</label>
 	  <input id="rep_count" name="rep_count" />
 	  <br>
 	</div>
-        <div id="block_number_section" style="display: none" >
-	  <label for id="block_number" style="display: inline-block; width: 200px;">Number of blocks:</label>
+        <div id="block_number_section" style="display: none">
+	  <label for="block_number" style="display: inline-block; width: 200px;">Number of blocks:</label>
 	  <input id="block_number" name="block_number" />
 	  <br>
        	</div>
         <div id="block_size_section" style="display: none">
-	  <label for id="block_size" style="display: inline-block; width: 200px;">Block size:</label>
+	  <label for="block_size" style="display: inline-block; width: 200px;">Block size:</label>
           <input id="block_size" name="block_size" />
 	  <br>
         </div>
         <div id="max_block_size_section" style="display: none">
-	  <label for id="max_block_size" style="display: inline-block; width: 200px;">Maximum block size:</label>
+	  <label for="max_block_size" style="display: inline-block; width: 200px;">Maximum block size:</label>
           <input id="max_block_size" name="block_size" />
 	  <br>
 	</div>
@@ -86,13 +86,13 @@
         <input type="checkbox" id="show_plot_naming_options">
 	<div id="plot_naming_options" style="display: none">
 	  <hr>
-	  <label for id="plot_prefix" style="display: inline-block; width: 200px;">Plot name prefix:</label>
+	  <label for="plot_prefix" style="display: inline-block; width: 200px;">Plot name prefix:</label>
 	  <input id="plot_prefix" name="plot_prefix" />
 	  <br>
-	  <label for id="start_number" style="display: inline-block; width: 200px;">Plot start number:</label>
+	  <label for="start_number" style="display: inline-block; width: 200px;">Plot start number:</label>
           <input id="start_number" name="start_number" />
 	  <br>
-	  <label for id="increment" style="display: inline-block; width: 200px;">Plot number increment:</label>
+	  <label for="increment" style="display: inline-block; width: 200px;">Plot number increment:</label>
           <input id="increment" name="increment" />
 	  <br>
       </div>
@@ -292,6 +292,7 @@ jQuery(document).ready(function () {
         var name = jQuery('#add_project_name').val();
         var year = jQuery('#add_project_year').val();
         var desc = jQuery('#project_description').val();
+        var block_number = jQuery('#block_number').val();
         var stock_list_id = jQuery('#select_list_list_select').val();
         var control_list_id = jQuery('#list_of_checks_section_list_select').val();
         var list = new CXGN.List();
@@ -305,12 +306,15 @@ jQuery(document).ready(function () {
 	}
         var design_type = jQuery('#select_design_method').val();
 	var rep_count = jQuery('#rep_count').val();
-	var block_number  = jQuery('#rep_count').val();
+
 	var block_size = jQuery('#block_size').val();
 	var max_block_size = jQuery('#max_block_size').val();
 	var plot_prefix = jQuery('#plot_prefix').val();
 	var start_number = jQuery('#start_number').val();
 	var increment = jQuery('#increment').val();
+	alert(name);
+	alert(block_number);
+	alert(year);
 
         if (name == '' || year == '') {
             alert('Name and year are required.');
