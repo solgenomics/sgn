@@ -95,6 +95,7 @@ The accession sequenced is referred to as "Nb-1". Seeds can be obtained by conta
 
 <i>N. benthamiana</i> Genome v0.42 Contigs<br /><br />
 <br />
+<font face="courier">
 ==========================================================<br />
 = REPORT: Niben.genome.v0.4.2.scaffolds.nrcontigs.fasta  =<br />
 ==========================================================<br />
@@ -135,8 +136,9 @@ N25 length:     29264 bp<br />
 N25 index:      14540 sequences<br />
 ==========================================================<br />
 <br />
+</font>
 
-<i>N. benthamiana</i> Genome v0.3 Contigs<br /><br />
+<!-- i>N. benthamiana</i> Genome v0.3 Contigs<br /><br />
 
 <font face="courier">
 Contigs for Nicotiana benthamiana draft genome assembly version 0.3.
@@ -187,7 +189,7 @@ N25 length:	15951 bp<br />
 N25 index:	32376 sequences<br />
 ==========================================================<br />
 <br />
-</font>
+</font -->
 
 <h4>Tools</h4>
 
