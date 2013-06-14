@@ -49,6 +49,7 @@ sub generate_experimental_design : Path('/ajax/trial/generate_experimental_desig
 
 sub generate_experimental_design_GET : Args(0) {
   my ($self, $c) = @_;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_design = CXGN::TrialDesign->new();
   my %design;
   my $error;
@@ -71,6 +72,22 @@ sub generate_experimental_design_GET : Args(0) {
   my $plot_prefix =  $c->req->param('plot_prefix');
   my $start_number =  $c->req->param('start_number');
   my $increment =  $c->req->param('increment');
+  my $trial_location = $c->req->param('trial_location');
+
+  if (!$c->user()) {
+    $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
+    return;
+  }
+
+  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {  #user must have privileges to add a trial
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
+    return;
+  }
+
+  if (! $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=> $trial_location,})){
+    $c->stash->{rest} = {error => "Trial location not found"};
+    return;
+  }
 
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
@@ -209,7 +226,7 @@ sub upload_trial_layout_POST : Args(0) {
   if (! $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$c->req->param('add_project_location'),})){
     $c->stash->{rest} = {error => "File upload failed: location not found"};
     return;
-    }
+  }
 
 
   try { #verify contents of file
@@ -245,6 +262,8 @@ sub upload_trial_layout_POST : Args(0) {
   print STDERR  "First line is:\n" . $contents[0] . "\n";
   print STDERR "You shouldn't see this if there is an error in the upload\n";
 }
+
+
 
 sub _add_trial_layout_to_database {
   my $self = shift;
