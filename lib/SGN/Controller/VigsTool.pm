@@ -159,7 +159,8 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     
     # run bowtie2
 
-    my $bowtie2_path = $c->config->{bowtie2_path};
+#    my $bowtie2_path = $c->config->{bowtie2_path};
+    my $bowtie2_path = $c->config->{cluster_shared_bindir};
     
     my @command = (File::Spec->catfile($bowtie2_path, "bowtie2"), 
 	   " --threads 1", 
