@@ -100,6 +100,7 @@ my $build = SGN::Build->new(
         'Memoize'                                  => 0,
         'Modern::Perl'                             => 0,
         'Module::Build'                            => '0.36',
+	'Module::Runtime'                          => 0,
         'Module::Find'                             => 0,
         'Module::Pluggable::Object'                => 0,
         'Moose'                                    => 0,
