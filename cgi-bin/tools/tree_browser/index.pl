@@ -129,8 +129,8 @@ our $HTML_ROOT_PATH = $c->path_to->stringify;
 our $DOC_PATH = $c->tempfiles_subdir('align_viewer');
 our $PATH     = $c->path_to( $DOC_PATH );
 
-our $CMD_QUICKTREE = "/data/prod/bin/quicktree";
-our $CMD_SREFORMAT = "/data/prod/bin/sreformat";
+our $CMD_QUICKTREE = $c->config->{cluster_shared_bindir}."/quicktree";
+our $CMD_SREFORMAT = $c->config->{cluster_shared_bindir}."/sreformat";
 $CMD_QUICKTREE = "quicktree" unless ( -x $CMD_QUICKTREE );
 $CMD_SREFORMAT = "sreformat" unless ( -x $CMD_SREFORMAT );
 

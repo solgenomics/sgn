@@ -5,6 +5,7 @@ $graph_url => undef
 $seq_filename
 $database => 'unknown database'
 @regions => ()  # list of listrefs, with start and end positions
+$best3 => ()
 @scores => ()
 $error => undef
 $fragment_size => undef
@@ -77,10 +78,10 @@ Target sequences:
 
 	    for (var i=0; i<regions.length; i++) { 
 		//alert("HERE " + regions[i]); //regions[i].join('X'));
-		if (regions[i][0] == 0) {
+		if (regions[i][0] < 1) {
 		   regions[i][0] = 1
 		}
-		hilite_regions[i]=[ 'highlight', regions[i][0], regions[i][1] ];
+		hilite_regions[i]=[ 'highlight', regions[i][0]-1, regions[i][1] ];
                 //hilite_regions[i]=[ 'highlight', 1, 934 ];
             }	       
 
@@ -126,7 +127,21 @@ Target sequences:
 
 </script>
 
-<&| /page/info_section.mas, title=>"Sequence overview", collapsible => 1, collapsed   => 0 &>
+<&| /page/info_section.mas, title=>"Top 3 hits", collapsible => 1, collapsed  => 0 &>
+
+    <p><b>Best target region</b></p>
+
+    <% $$best3[0] %>
+
+    <p><b>2nd Best target region</b></p>
+    
+    <% $$best3[1] %>
+
+    <p><b>3rd Best target region</b></p>
+    <% $$best3[2] %>
+</&>
+
+<&| /page/info_section.mas, title=>"Sequence overview", collapsible => 1, collapsed => 0 &>
 
 <span id="query" style="display:none" ><% $query->seq() %></span>
 <div id="markup" style="align:left;"> 
