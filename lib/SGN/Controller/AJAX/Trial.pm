@@ -48,6 +48,7 @@ sub _build_schema {
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
 
 sub generate_experimental_design_GET : Args(0) {
+  print STDERR "begin experimental design function\n";
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_design = CXGN::TrialDesign->new();
@@ -135,15 +136,17 @@ sub generate_experimental_design_GET : Args(0) {
     return;
   }
 
+  print STDERR "trying experimental design\n";
   try {
     $trial_design->calculate_design();
   } catch {
+  print STDERR "calculating experimental design\n";
     $c->stash->{rest} = {error => "Could not calculate design: $_"};
     $error=1;
   };
   if ($error) {return;}
 
-
+  print STDERR "getting experimental design\n";
   if ($trial_design->get_design()) {
     %design = %{$trial_design->get_design()};
   } else {
