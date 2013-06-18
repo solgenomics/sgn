@@ -9,8 +9,8 @@
 
 <div id="add_project_dialog" class="ui-widget">
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
-    <label for="add_project_name" style="display: inline-block; width: 100px;">Trial name:</label>
-    <input id="add_project_name" name="add_project_name" />
+    <label for="add_project_name" style="display: none; inline-block; width: 100px;">Trial name:</label>
+    <input id="add_project_name" name="add_project_name" style="display: none" />
     <br>
     <label for="add_project_year" style="display: inline-block; width: 100px;">Year(s):</label>
     <input id="add_project_year" name="add_project_year" />
@@ -176,8 +176,8 @@ jQuery(document).ready(function () {
                 var year = jQuery('#add_project_year').val();
                 var desc = jQuery('textarea#add_project_description').val();
                 var method_to_use = jQuery('.format_type:checked').val();
-                if (name === '' || year === '' || desc === '') {
-                    alert('Name, year and description are required.');
+                if (year === '' || desc === '') {
+                    alert('Year and description are required.');
                     return;
                 }
                 if (method_to_use == "empty") {
@@ -314,8 +314,8 @@ jQuery(document).ready(function () {
 	var start_number = jQuery('#start_number').val();
 	var increment = jQuery('#increment').val();
 
-        if (name == '' || year == '') {
-            alert('Name and year are required.');
+        if (desc == '' || year == '') {
+            alert('Year and description are required.');
             return;
         }
 
@@ -343,6 +343,7 @@ jQuery(document).ready(function () {
                 if (response.error) {
                     alert(response.error);
                 } else {
+                    alert(response.design_text);
                     alert('The trial was created.');
                 }
             },

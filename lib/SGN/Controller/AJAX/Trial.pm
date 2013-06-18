@@ -57,6 +57,7 @@ sub generate_experimental_design_GET : Args(0) {
   my $project_description = $c->req->param('project_description');
   my $year = $c->req->param('year');
   my @stock_names;
+  my $design_result_text;
   if ($c->req->param('stock_list')) {
     @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
   }
@@ -151,7 +152,12 @@ sub generate_experimental_design_GET : Args(0) {
   }
 
   print STDERR "Design: ". Dumper(%design)."\n";
-  $c->stash->{rest} = {success => "1"};
+
+  $design_result_text = "plot_name\tstock_name\tblock\trep\n";
+  foreach my $key (sort { $a <=> $b} keys %design) {
+    $design_result_text .= $design{$key}->{plot_name} ."\t".$design{$key}->{stock_name} ."\t".$design{$key}->{block}."\t".$design{$key}->{rep}."\n";
+  }
+  $c->stash->{rest} = {success => "1", design_text => $design_result_text};
 }
 
 sub _parse_list_from_json {
@@ -171,6 +177,35 @@ sub _parse_list_from_json {
   }
 }
 
+sub _verify_stock {
+  my $self = shift;
+  my $c = shift;
+  my $schema = shift;
+  my $stock_name = shift;
+
+  my $stock_rs = $schema->resultset("Stock::Stock")->search(
+							    {
+							     -or => [
+								     'lower(me.uniquename)' => { like => lc($stock_name) },
+								     -and => [
+									      'lower(type.name)'       => { like => '%synonym%' },
+									      'lower(stockprops.value)' => { like => lc($stock_name) },
+									     ],
+								    ],
+							    },
+							    {
+							     join => { 'stockprops' => 'type'} ,
+							     distinct => 1
+							    }
+							   );
+  if ($stock_rs->count >1 ) {
+    die ("Multiple stocks found matching $stock_name");
+  } elsif ($stock_rs->count == 1) {
+    $stock_name = $stock_rs->first;
+  } else {
+    die ("Multiple stocks found matching $stock_name");
+  }
+}
 
 sub upload_trial_layout :  Path('/trial/upload_trial_layout') : ActionClass('REST') { }
 
