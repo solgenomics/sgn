@@ -4,8 +4,9 @@ $query
 $graph_url => undef
 $seq_filename
 $database => 'unknown database'
-@regions => ()  # list of listrefs, with start and end positions
+# @regions => () # list of listrefs, with start and end positions
 $best3 => ()
+$coords3 => ()
 @scores => ()
 $error => undef
 $fragment_size => undef
@@ -35,7 +36,7 @@ if ($messages) { print $messages; }
 <& /page/page_title.mas, title=>"VIGS Tool Results" &>
 
 
-%if ($scores[0]->[0] == 0) { 
+%if ($scores[0]->[0] == 0) {
   Note: No results were found.
 
 %}
@@ -44,16 +45,22 @@ if ($messages) { print $messages; }
 
 User sequence matched against <% $database %>.<br />
 <form action="/tools/vigs/view">
-Target sequences: 
-<input size="2" name="targets" value="<% $coverage %>" />
-<input type="hidden" name="id" value="<% $seq_filename %>" />
-<input type="hidden" name="fragment_size" value="<% $fragment_size %>" />
-<input type="submit" value="change" />
-
+      Target sequences:
+      <input size="2" name="targets" value="<% $coverage %>" />
+      <input type="hidden" name="id" value="<% $seq_filename %>" />
+      <input type="hidden" name="fragment_size" value="<% $fragment_size %>" />
+      <input type="hidden" name="database" value="<% $database %>" />
+      <input type="submit" value="change" />
 </form><br />
 
 
-<&| /page/info_section.mas, title=>"Distribution of $fragment_size-mers",    collapsible => 1,    collapsed   => 0 &>
+Start: <input type="text" id="cbr_start" value=1 size=4> End: <input type="text" id="cbr_end" size=4 value="<% length($query->seq()) %>">
+<input type="button" value="Customize best region" onClick="getCustomRegion()">
+
+<br /><br />
+
+
+<&| /page/info_section.mas, title=>"Distribution of $fragment_size-mers", collapsible => 1, collapsed => 0 &>
 
 <div align="center" style="color: #777777">
 <img src="<% $graph_url %>" usemap="#blabla" />
@@ -66,96 +73,125 @@ Target sequences:
 <br /><br />
 
 <script>
-	function hilite_sequence() { 
+function hilite_sequence(best_region) {
+	 
+	 var regions = best_region;
 
-	    var markup = new Text.Markup( { 'highlight' : [ '<span class="highlighted">', '</span>' ], 'break' : [ '<br />', '' ], 'space' : [ '<span>&nbsp;</span>', '' ] });
-	    
-	    var source_el = document.getElementById('query');
-	    var markup_el = document.getElementById('markup');
-	    var regions = <% $json->encode(\@regions) %>;
+	 var markup = new Text.Markup( { 'highlight' : [ '<span class="highlighted">', '</span>' ], 'break' : [ '<br />', '' ], 'space' : [ '<span>&nbsp;</span>', '' ] });
 
-	    var hilite_regions = [];
+	 var source_el = document.getElementById('query');
+	 var markup_el = document.getElementById('markup');
+	 
+//	 var regions = <%# $json->encode(\@regions) %>;
 
-	    for (var i=0; i<regions.length; i++) { 
-		//alert("HERE " + regions[i]); //regions[i].join('X'));
-		if (regions[i][0] < 1) {
-		   regions[i][0] = 1
-		}
-		hilite_regions[i]=[ 'highlight', regions[i][0]-1, regions[i][1] ];
-                //hilite_regions[i]=[ 'highlight', 1, 934 ];
-            }	       
+	 var hilite_regions = [];
 
-	    var sequence = source_el.innerHTML;
+	 for (var i=0; i<regions.length; i++) {
+	     //alert("HERE " + regions[i]); //regions[i].join('X'));
+	     if (regions[i][0] <= 1) {
+	 	 regions[i][0] = 2
+	     }
+	     hilite_regions[i]=[ 'highlight', regions[i][0]-1, regions[i][1] ];
+             //hilite_regions[i]=[ 'highlight', 1, 934 ];
+         }
 
-	    var break_regions = [];
-	    for (var i=0; i<sequence.length; i=i+60) { 
-	        break_regions.push([ 'break', i, i ]);
- 	    }
+	 var sequence = source_el.innerHTML;
 
-            var space_regions = [];
-	    for (var i =0; i<sequence.length; i=i+10) { 
-	       space_regions.push(['space', i, i]);
-            }	       
-	    	    
-	    var all_regions = break_regions.concat(hilite_regions, space_regions);
+	 var break_regions = [];
+	 for (var i=0; i<sequence.length; i=i+60) {
+	     break_regions.push([ 'break', i, i ]);
+	 }
 
-	    var markedup_seq = markup.markup(all_regions, sequence);
-					      //alert('Markedup Seq: '+markedup_seq);
+         var space_regions = [];
+	 for (var i =0; i<sequence.length; i=i+10) {
+	     space_regions.push(['space', i, i]);
+         }
 
-            //insert line numbers
-            var line_length = 60;
-            var current_pos = 1;
-	    var lines = markedup_seq.split('<br />');
-            var final_seq = '';
-	    var leading_spaces = new Array('', '', '', '', '', ''); 
-	    for (var i=1; i<lines.length; i++) { 
-               leading_str = leading_spaces.slice(0,Math.ceil(6-(Math.log(current_pos)/Math.log(10)))).join('&nbsp;');  // poor man's sprintf
-	       leading_str2 = leading_spaces.slice(0,Math.ceil(6-(Math.log(current_pos +line_length -1)/Math.log(10)))).join('&nbsp;');
-	       
-	       if (current_pos + line_length < sequence.length) {
-	       	  final_seq = final_seq + leading_str + current_pos + ' ' + lines[i] + ' ' + leading_str2 + ( current_pos + line_length - 1) + '<br />';
-	       } else {
-	       	  final_seq = final_seq + leading_str + current_pos + ' ' + lines[i] + ' ' + leading_str2 + sequence.length + '<br />';
-	       }
+	 var all_regions = break_regions.concat(hilite_regions, space_regions);
+
+	 var markedup_seq = markup.markup(all_regions, sequence);
+	 //alert('Markedup Seq: '+markedup_seq);
+
+         //insert line numbers
+         var line_length = 60;
+         var current_pos = 1;
+	 var lines = markedup_seq.split('<br />');
+         var final_seq = '';
+	 var leading_spaces = new Array('', '', '', '', '', '');
+	 
+	 for (var i=1; i<lines.length; i++) {
+             leading_str = leading_spaces.slice(0,Math.ceil(6-(Math.log(current_pos)/Math.log(10)))).join('&nbsp;'); // poor man's sprintf
+	     leading_str2 = leading_spaces.slice(0,Math.ceil(6-(Math.log(current_pos +line_length -1)/Math.log(10)))).join('&nbsp;');
+
+	     if (current_pos + line_length < sequence.length) {
+	     	final_seq = final_seq + leading_str + current_pos + ' ' + lines[i] + ' ' + leading_str2 + ( current_pos + line_length - 1) + '<br />';
+	     } else {
+	        final_seq = final_seq + leading_str + current_pos + ' ' + lines[i] + ' ' + leading_str2 + sequence.length + '<br />';
+	     }
 
                current_pos += line_length;
-            }
+          }
 
-	    markup_el.innerHTML='<font face="courier" size="2">'+final_seq+'</font>';
+	  markup_el.innerHTML='<font face="courier" size="2">'+final_seq+'</font>';
 
-	}
+}
 
 </script>
 
-<&| /page/info_section.mas, title=>"Top 3 hits", collapsible => 1, collapsed  => 0 &>
-
-    <p><b>Best target region</b></p>
-
+<&| /page/info_section.mas, title=>"Best regions", collapsible => 1, collapsed => 0 &>
+<div id="br_seq">
+    <p><b>Best target region (<% $$coords3[0][0] %>-<%$$coords3[0][1]%>)</b></p>
     <% $$best3[0] %>
 
-    <p><b>2nd Best target region</b></p>
-    
+    <p><b>2nd Best target region (<% $$coords3[1][0] %>-<%$$coords3[1][1]%>)</b></p>
     <% $$best3[1] %>
 
-    <p><b>3rd Best target region</b></p>
+    <p><b>3rd Best target region (<% $$coords3[2][0] %>-<%$$coords3[2][1]%>)</b></p>
     <% $$best3[2] %>
+</div>
 </&>
 
 <&| /page/info_section.mas, title=>"Sequence overview", collapsible => 1, collapsed => 0 &>
 
 <span id="query" style="display:none" ><% $query->seq() %></span>
-<div id="markup" style="align:left;"> 
+<div id="markup" style="align:left;">
 
 </div>
 
 </&>
 
 <&| /page/info_section.mas, title=>"Sequences with perfect matches of $fragment_size-mers", collapsible => 1, collapsed => 0 &>
-% foreach my $id (@ids) { 
+% foreach my $id (@ids) {
 % print $id->[0]." (".$id->[1].")<br />";
 % }
 
 </&>
 <script>
-	hilite_sequence();
+	var regions = <% $json->encode($coords3) %>;
+	hilite_sequence(regions);
+</script>
+
+<script>
+	function getCustomRegion() {
+		 var cbr_start = parseInt(document.getElementById("cbr_start").value);
+		 var cbr_end = parseInt(document.getElementById("cbr_end").value);
+		 
+		 var source_el = document.getElementById('query'); 
+		 var sequence = source_el.innerHTML;
+
+		 document.getElementById("br_seq").innerHTML ="<p><b>Best Custom Region (" + cbr_start + "-" + cbr_end + ")</b></p>";
+		 for (var i=cbr_start; i<cbr_end; i= i+60) {
+		     document.getElementById("br_seq").innerHTML += sequence.substring(i-1,i+59)+"<br>";
+		     //document.getElementById("br_seq").innerHTML += i-1+"<br>";
+		 }
+		 document.getElementById("br_seq").innerHTML += "\
+		 <p><b>Best target region (<% $$coords3[0][0] %>-<%$$coords3[0][1]%>)</b></p>\
+		 <p><b>2nd Best target region (<% $$coords3[1][0] %>-<%$$coords3[1][1]%>)</b></p>\
+		 <p><b>3rd Best target region (<% $$coords3[2][0] %>-<%$$coords3[2][1]%>)</b></p>";
+
+		 
+		 
+		 var best_region = [[cbr_start,cbr_end]];
+		 hilite_sequence(best_region);
+	}
 </script>
