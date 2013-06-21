@@ -108,6 +108,11 @@
   </table>
 </div>
 
+<div id="trial_design_confirm" title="Confirm trial design?">
+  <p><span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 20px 0;"></span>The following design will be created</p>
+</div>
+
+
 <script defer="defer">
 
 jQuery(document).ready(function () {
@@ -343,8 +348,8 @@ jQuery(document).ready(function () {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    alert(response.design_text);
-                    alert('The trial was created.');
+                    jQuery('#trial_design_confirm').html(response.design_text);
+                    jQuery('#trial_design_confirm').dialog("open");
                 }
             },
             error: function () {
@@ -355,6 +360,23 @@ jQuery(document).ready(function () {
 
     }
 
+        jQuery('#trial_design_confirm').dialog({
+        autoOpen: false,
+	autoResize:true,
+        modal: true,
+        buttons: {
+        Save: function() {
+          $( this ).dialog( "close" );
+        },
+        Cancel: function() {
+          $( this ).dialog( "close" );
+        }
+      }
+    });
+
+ 
+
+ 
 
     function save_project_info(name, year, desc) {
         alert('data = ' + name + ' ' + year + ' ' + desc);

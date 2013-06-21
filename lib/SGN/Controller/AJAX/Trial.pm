@@ -26,7 +26,8 @@ use Scalar::Util qw(looks_like_number);
 use File::Slurp;
 use Data::Dumper;
 use CXGN::TrialDesign;
-use JSON qw( decode_json );
+use JSON;
+use SGN::View::Trial qw/design_view/;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -158,9 +159,11 @@ sub generate_experimental_design_GET : Args(0) {
 
   $design_result_text = "plot_name\tstock_name\tblock\trep\n";
   foreach my $key (sort { $a <=> $b} keys %design) {
-    $design_result_text .= $design{$key}->{plot_name} ."\t".$design{$key}->{stock_name} ."\t".$design{$key}->{block}."\t".$design{$key}->{rep}."\n";
+    $design_result_text .= $design{$key}->{plot_name} ."\t".$design{$key}->{stock_name} ."\t".$design{$key}->{block_number}."\t".$design{$key}->{rep_number}."\n";
   }
-  $c->stash->{rest} = {success => "1", design_text => $design_result_text};
+  my $view_text = design_view(\%design);
+
+  $c->stash->{rest} = {success => "1", design_text => $view_text};
 }
 
 sub _parse_list_from_json {
