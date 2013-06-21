@@ -54,6 +54,7 @@ sub generate_experimental_design_GET : Args(0) {
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_design = CXGN::TrialDesign->new();
   my %design;
+  my %design_info;
   my $error;
   my $project_name = $c->req->param('project_name');
   my $project_description = $c->req->param('project_description');
@@ -94,12 +95,14 @@ sub generate_experimental_design_GET : Args(0) {
 
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
+    $design_info{'number_of_stocks'} = scalar(@stock_names);
   } else {
     $c->stash->{rest} = {error => "No list of stocks supplied." };
     return;
   }
   if (@control_names) {
     $trial_design->set_control_list(\@control_names);
+    $design_info{'number_of_controls'} = scalar(@control_names);
   }
   if ($start_number) {
     $trial_design->set_plot_start_number($start_number);
@@ -130,6 +133,7 @@ sub generate_experimental_design_GET : Args(0) {
     $trial_design->set_design_type($design_type);
   } else {
     $c->stash->{rest} = {error => "No design type supplied." };
+    $design_info{'design_type'} = $design_type;
     return;
   }
   if (!$trial_design->has_design_type()) {
@@ -161,7 +165,7 @@ sub generate_experimental_design_GET : Args(0) {
   foreach my $key (sort { $a <=> $b} keys %design) {
     $design_result_text .= $design{$key}->{plot_name} ."\t".$design{$key}->{stock_name} ."\t".$design{$key}->{block_number}."\t".$design{$key}->{rep_number}."\n";
   }
-  my $view_text = design_view(\%design);
+  my $view_text = design_view(\%design, \%design_info);
 
   $c->stash->{rest} = {success => "1", design_text => $view_text};
 }

@@ -109,9 +109,13 @@
 </div>
 
 <div id="trial_design_confirm" title="Confirm trial design?">
-  <p><span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 20px 0;"></span>The following design will be created</p>
+  <p><span class="ui-icon ui-icon-check" style="float: left; margin: 0 7px 20px 0;"></span>The following design will be created</p>
+  <button id="view_trial_layout_button" class="ui-widget">View trail layout</button> 
 </div>
 
+<div id="trial_design_view_layout" title="Trial design layout">
+  <p><span class="ui-icon ui-icon-info" style="float: left; margin: 0 7px 20px 0;"></span>Trial layout</p>
+</div>
 
 <script defer="defer">
 
@@ -348,7 +352,7 @@ jQuery(document).ready(function () {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    jQuery('#trial_design_confirm').html(response.design_text);
+                    jQuery('#trial_design_view_layout').html(response.design_text);
                     jQuery('#trial_design_confirm').dialog("open");
                 }
             },
@@ -360,21 +364,34 @@ jQuery(document).ready(function () {
 
     }
 
-        jQuery('#trial_design_confirm').dialog({
-        autoOpen: false,
+    jQuery('#trial_design_confirm').dialog({
+	autoOpen: false,
 	autoResize:true,
         modal: true,
         buttons: {
-        Save: function() {
-          $( this ).dialog( "close" );
+        Confirm: function() {
+	    jQuery( this ).dialog( "close" );
         },
         Cancel: function() {
-          $( this ).dialog( "close" );
-        }
+	    jQuery( this ).dialog( "close" );
+	}
       }
     });
 
- 
+    jQuery('#view_trial_layout_button').click(function () {
+	jQuery('#trial_design_view_layout').dialog("open");
+    });
+
+    jQuery('#trial_design_view_layout').dialog({
+	autoOpen: false,
+	autoResize:true,
+        modal: true,
+        buttons: {
+        Close: function() {
+	    jQuery( this ).dialog( "close" );
+	}
+      }
+    }); 
 
  
 
