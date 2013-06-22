@@ -108,13 +108,16 @@
   </table>
 </div>
 
-<div id="trial_design_confirm" title="Confirm trial design?">
-  <p><span class="ui-icon ui-icon-check" style="float: left; margin: 0 7px 20px 0;"></span>The following design will be created</p>
+<div id="trial_design_confirm" title="Confirm trial design">
+  <p><span class="ui-icon ui-icon-check"></span>Trial is valid<br>The following trial will be added to the database</p>
   <button id="view_trial_layout_button" class="ui-widget">View trail layout</button> 
+  <hr>
+  <div id="trial_design_information" class="ui-widget"> </div>
+
 </div>
 
 <div id="trial_design_view_layout" title="Trial design layout">
-  <p><span class="ui-icon ui-icon-info" style="float: left; margin: 0 7px 20px 0;"></span>Trial layout</p>
+  <p><span class="ui-icon ui-icon-info"></span>Trial layout</p>
 </div>
 
 <script defer="defer">
@@ -352,7 +355,8 @@ jQuery(document).ready(function () {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    jQuery('#trial_design_view_layout').html(response.design_text);
+		    jQuery('#trial_design_information').html(response.design_info_view_html);
+                    jQuery('#trial_design_view_layout').html(response.design_layout_view_html);
                     jQuery('#trial_design_confirm').dialog("open");
                 }
             },
@@ -367,15 +371,16 @@ jQuery(document).ready(function () {
     jQuery('#trial_design_confirm').dialog({
 	autoOpen: false,
 	autoResize:true,
+	width: 450,
         modal: true,
         buttons: {
-        Confirm: function() {
-	    jQuery( this ).dialog( "close" );
+	    Confirm: function() {
+		jQuery( this ).dialog( "close" );
+	    },
+	    Cancel: function() {
+		jQuery( this ).dialog( "close" );
+	    }
         },
-        Cancel: function() {
-	    jQuery( this ).dialog( "close" );
-	}
-      }
     });
 
     jQuery('#view_trial_layout_button').click(function () {
@@ -385,6 +390,7 @@ jQuery(document).ready(function () {
     jQuery('#trial_design_view_layout').dialog({
 	autoOpen: false,
 	autoResize:true,
+	width: 400,
         modal: true,
         buttons: {
         Close: function() {

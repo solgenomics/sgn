@@ -27,7 +27,7 @@ use File::Slurp;
 use Data::Dumper;
 use CXGN::TrialDesign;
 use JSON;
-use SGN::View::Trial qw/design_view/;
+use SGN::View::Trial qw/design_layout_view design_info_view/;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -60,7 +60,8 @@ sub generate_experimental_design_GET : Args(0) {
   my $project_description = $c->req->param('project_description');
   my $year = $c->req->param('year');
   my @stock_names;
-  my $design_result_text;
+  my $design_layout_view_html;
+  my $design_info_view_html;
   if ($c->req->param('stock_list')) {
     @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
   }
@@ -131,9 +132,9 @@ sub generate_experimental_design_GET : Args(0) {
   }
   if ($design_type) {
     $trial_design->set_design_type($design_type);
+    $design_info{'design_type'} = $design_type;
   } else {
     $c->stash->{rest} = {error => "No design type supplied." };
-    $design_info{'design_type'} = $design_type;
     return;
   }
   if (!$trial_design->has_design_type()) {
@@ -161,13 +162,15 @@ sub generate_experimental_design_GET : Args(0) {
 
   print STDERR "Design: ". Dumper(%design)."\n";
 
-  $design_result_text = "plot_name\tstock_name\tblock\trep\n";
-  foreach my $key (sort { $a <=> $b} keys %design) {
-    $design_result_text .= $design{$key}->{plot_name} ."\t".$design{$key}->{stock_name} ."\t".$design{$key}->{block_number}."\t".$design{$key}->{rep_number}."\n";
-  }
-  my $view_text = design_view(\%design, \%design_info);
 
-  $c->stash->{rest} = {success => "1", design_text => $view_text};
+  $design_layout_view_html = design_layout_view(\%design, \%design_info);
+  $design_info_view_html = design_info_view(\%design, \%design_info);
+
+  $c->stash->{rest} = {
+		       success => "1", 
+		       design_layout_view_html => $design_layout_view_html,
+		       design_info_view_html => $design_info_view_html,
+		      };
 }
 
 sub _parse_list_from_json {
