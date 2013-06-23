@@ -1,0 +1,105 @@
+
+<%doc>
+</%doc>
+
+<%args>
+$db_id => undef
+$databases => []
+$popular_dbs => []
+$popular_species_dbs => []
+$unigene_dbs => []
+$genome_dbs => []
+$programs
+$preload_seq => ''
+</%args>
+
+<%perl>
+
+my $dataset_select = <<SELECT;
+<select id="dataset_select">
+<option>Popular datasets</option>
+<option>Popular species</option>
+<option>Genomes</options>
+<option>Unigenes</option>
+<option>Tomato datasets</option>
+<option>Potato datasets</option>
+<option>N. benthamiana datasets</option>
+<option>all datasets</option>
+</select>
+SELECT
+
+</%perl>
+
+<& /page/page_title.mas, title=>"BLAST" &>
+
+<form method="post" action="blast_result.pl" name="blastform">
+
+
+  <input type="hidden" checked="checked" name="filterq" value="1" />
+  <input type="hidden" name="interface_type" value="simple" />
+  <input type="hidden" name="outformat" value="0" />
+  <table align="center" summary="" cellpadding="0" cellspacing="15">
+    <tr><td><b>Show</b></td><td><% $dataset_select %></td></tr>
+    <tr><td><b>Sequence Database</b> </td><td><% $databases %><a style="font-size: 80%" title="View details of each database" href="dbinfo.pl">db details</a></td></tr>
+    <tr><td><b>Program</b> </td><td><% $programs %></td></tr>
+    <tr><td><b>Query</b></td><td>
+	<select>
+	  <option value="sequence">Sequence</option>
+	  <option value="fasta">Fasta sequence</option>
+	  <option value="tomato_gene_ids">Tomato gene identifiers</option>
+	  <option value="unigene_ids">Unigene identifiers</option>
+	  </select>
+	</td></tr>
+<tr><td colspan="2">
+
+	    
+
+<div style="font-size: 80%">single sequence only, use Advanced for multiple</div><textarea name="sequence" id="sequence_input" rows="8" cols="80"><% $preload_seq %></textarea></td></tr>
+    <tr><td colspan="2">
+      <table width="100%"><tr>
+         <td>
+
+<%perl>
+
+  my $substitution_matrix_select = ''; #simple_selectbox_html( name => 'matrix',
+				#				    choices => [ [ 'BLOSUM62', 'BLOSUM62 (default)' ],
+				#						 [ 'BLOSUM80', 'BLOSUM80 (recent divergence)' ],
+				#						 [ 'BLOSUM45', 'BLOSUM45 (ancient divergence)' ],
+				#						 'PAM30',
+				#						 'PAM70',
+				#					       ],
+				#				  ),
+  my $show_graphics_select = '';#<%  $show_graphics_select %>, # simple_selectbox_html( name => 'output_graphs',
+        #	      choices => [ [ 'bioperl_histogram', 'all' ],
+						#			   'none',
+						#			   [ 'bioperl_only', 'alignment summary only' ],
+						#			   [ 'histogram_only', 'conservedness histogram only' ],
+						#			 ],
+						#	    ),
+#		    __multicol => 2,
+#  __border => 0,
+		 #   __tableattrs => 'width="100%"',
+</%perl>
+
+<& /page/info_table.mas, title=>'', data => [ 
+  'Expect (e-value) Threshold' => '<input type="text" size="6" value="1e-10" name="expect" />',
+  'Substitution Matrix' => $substitution_matrix_select,
+  'Max. hits to show' => '<input type="text" name="maxhits" size="6" value="100" />',
+  ' ' => '<div style="text-align: right"><input type="reset" value="Clear" onclick="clearField(); "/> <input type="submit" name="search" value="Search" /></div>',
+  'Show Graphics' => $show_graphics_select, 
+]
+&>
+		  
+
+         </td>
+      </tr>
+      </table>
+    </td></tr>
+  </table>
+</form>
+<script language="JavaScript" type="text/javascript">
+$programs_js
+$spellcheck_js
+</script>
+
+
