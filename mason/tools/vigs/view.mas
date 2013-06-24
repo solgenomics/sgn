@@ -53,20 +53,37 @@ User sequence matched against <% $database %>.<br />
       <input type="submit" value="change" />
 </form><br />
 
-
 Start: <input type="text" id="cbr_start" value=1 size=4> End: <input type="text" id="cbr_end" size=4 value="<% length($query->seq()) %>">
 <input type="button" value="Customize best region" onClick="getCustomRegion()">
-
 <br /><br />
 
 
 <&| /page/info_section.mas, title=>"Distribution of $fragment_size-mers", collapsible => 1, collapsed => 0 &>
 
-<div align="center" style="color: #777777">
-<img src="<% $graph_url %>" usemap="#blabla" />
+<div class="seq_map" align="center" style="color: #777777">
+<img id="map_img" src="<% $graph_url %>" usemap="#blabla" />
+<div id="square" class="square"></div>
 </div>
 
-<% $image_map %>
+<style>
+.seq_map {
+    position:relative;
+}
+
+.square {
+    position:absolute;
+    top:18px;
+    left:0px;
+    width:0px;
+    height:161px;
+    border:0px solid #000000;
+    background-color:rgba(0,0,0,0.2);
+}
+</style>
+
+
+
+<%# $image_map %>
 
 </&>
 
@@ -166,6 +183,16 @@ function hilite_sequence(best_region) {
 % }
 
 </&>
+
+<form id="custom_map" action="/tools/vigs/view">
+      <input type="hidden" name="targets" value="<% $coverage %>" />
+      <input type="hidden" name="id" value="<% $seq_filename %>" />
+      <input type="hidden" name="fragment_size" value="<% $fragment_size %>" />
+      <input type="hidden" name="database" value="<% $database %>" />
+      <input type="hidden" name="three_best" value="<% [[20,111]] %>" />
+</form>
+
+
 <script>
 	var regions = <% $json->encode($coords3) %>;
 	hilite_sequence(regions);
@@ -178,10 +205,19 @@ function hilite_sequence(best_region) {
 		 
 		 var source_el = document.getElementById('query'); 
 		 var sequence = source_el.innerHTML;
+		 var img_left = (cbr_start*700/<% length($query->seq()) %>)-1;
+		 var img_width = ((cbr_end-cbr_start+1)*700/<% length($query->seq()) %>)-1;
+		 var map_el = document.getElementById('map_img');
+		 var img_height = (map_el.height - 20);
 
-		 document.getElementById("br_seq").innerHTML ="<p><b>Best Custom Region (" + cbr_start + "-" + cbr_end + ")</b></p>";
+		 document.getElementById("br_seq").innerHTML ="<p><b>Custom Region (" + cbr_start + "-" + cbr_end + ")</b></p>";
 		 for (var i=cbr_start; i<cbr_end; i= i+60) {
-		     document.getElementById("br_seq").innerHTML += sequence.substring(i-1,i+59)+"<br>";
+		     if (cbr_end<i+61) {
+		     	document.getElementById("br_seq").innerHTML += sequence.substring(i-1,cbr_end)+"<br>";
+		     }
+		     else {
+		     	document.getElementById("br_seq").innerHTML += sequence.substring(i-1,i+59)+"<br>";
+		     }
 		     //document.getElementById("br_seq").innerHTML += i-1+"<br>";
 		 }
 		 document.getElementById("br_seq").innerHTML += "\
@@ -189,8 +225,11 @@ function hilite_sequence(best_region) {
 		 <p><b>2nd Best target region (<% $$coords3[1][0] %>-<%$$coords3[1][1]%>)</b></p>\
 		 <p><b>3rd Best target region (<% $$coords3[2][0] %>-<%$$coords3[2][1]%>)</b></p>";
 
-		 
-		 
+		// document.getElementById("custom_map").submit();
+		 document.getElementById("square").style.border="2px solid #000000";
+		 document.getElementById("square").style.left=""+img_left+"px";
+		 document.getElementById("square").style.width=""+img_width+"px";
+		 document.getElementById("square").style.height=""+img_height+"px";
 		 var best_region = [[cbr_start,cbr_end]];
 		 hilite_sequence(best_region);
 	}
