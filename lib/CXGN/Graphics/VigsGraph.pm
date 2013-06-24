@@ -412,7 +412,7 @@ sub render {
     
     # adjust image height
     #
-    if ($offset > 2400) { $offset = 2400; }
+#    if ($offset > 2400) { $offset = 2400; }
     my $cropped = GD::Image->new($image->width, $offset);
     $cropped->copy($image, 0, 0, 0, 0, $image->width(), $offset);
 

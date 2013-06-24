@@ -224,7 +224,7 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $coverage = $c->req->param("targets");
     my $database = $c->req->param("database");
     my $expr_file = $c->req->param("exprfile") || undef;
-    
+    my @three_best = $c->req->param("best_regions") || undef;
     my $expr_hash = undef;
 
     if (defined ($expr_file)) {
@@ -310,6 +310,7 @@ sub view :Path('/tools/vigs/view') Args(0) {
     $c->stash->{seq_filename} = basename($seq_filename);
     $c->stash->{database} = $database;
     $c->stash->{fragment_size} = $fragment_size;
+#    $c->stash->{img_height} = $vg->height;
 }
 
 sub user_error {
