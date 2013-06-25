@@ -112,16 +112,17 @@
 </div>
 
 <div id="trial_design_confirm" title="Confirm trial design">
-  
+  <p><span class="ui-icon ui-icon-check"></span>Trial is valid<br>The following trial will be added</p>  
   <button id="view_trial_layout_button" class="ui-widget">View trail layout</button> 
   <hr>
-  <div id="trial_design_information" class="ui-widget"> </div>
+  <div id="trial_design_information" class="ui-widget"></div>
 
 </div>
 
 <div id="trial_design_view_layout" title="Trial design layout">
   <p><span class="ui-icon ui-icon-info"></span>Trial layout</p>
 </div>
+
 
 <script defer="defer">
 
