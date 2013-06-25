@@ -53,10 +53,13 @@
       </select>
       <br><br>
       <div id="trial_design_more_info" style="display: none">
+
       <div id="select_list" name="select_list">
-	<label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of stocks to include:</label>
+	<label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of stocks to include:
+	</label>
       </div>
-      <div id="list_of_checks_section" style="display: none"> 
+
+      <div id="list_of_checks_section" style="display: none">
 	<label id="select_list_of_checks_label" for="select_list_of_checks_list_select" style="display: inline-block; width: 200px;">List of checks:</label>
       </div>
       <br>
@@ -109,7 +112,7 @@
 </div>
 
 <div id="trial_design_confirm" title="Confirm trial design">
-  <p><span class="ui-icon ui-icon-check"></span>Trial is valid<br>The following trial will be added to the database</p>
+  
   <button id="view_trial_layout_button" class="ui-widget">View trail layout</button> 
   <hr>
   <div id="trial_design_information" class="ui-widget"> </div>
@@ -152,10 +155,28 @@ jQuery(document).ready(function () {
             jQuery("option:first", this).remove();
 	});
 
+	jQuery("#select_list_list_select").focusout(function() {
+	    var stock_list_id = jQuery('#select_list_list_select').val();
+	    var stock_list;
+	    if (! stock_list_id == "") {
+		stock_list = JSON.stringify(list.getList(stock_list_id));
+	    }
+	    verify_stock_list(stock_list);
+	});
+
 	//add a blank line to list of checks select dropdown that dissappears when dropdown is opened 
 	jQuery("#list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
 	jQuery("#list_of_checks_section_list_select").one('mousedown', function () {
             jQuery("option:first", this).remove();
+	});
+
+	jQuery("#list_of_checks_section_list_select").focusout(function() {
+	    var stock_list_id = jQuery('#list_of_checks_section_list_select').val();
+	    var stock_list;
+	    if (! stock_list_id == "") {
+		stock_list = JSON.stringify(list.getList(stock_list_id));
+	    }
+	    verify_stock_list(stock_list);
 	});
 
 	//add a blank line to design method select dropdown that dissappears when dropdown is opened 
@@ -367,6 +388,32 @@ jQuery(document).ready(function () {
        });
 
     }
+
+
+    function verify_stock_list(stock_list) {
+
+        new jQuery.ajax({
+            type: 'GET',
+            url: '/ajax/trial/verify_stock_list',
+	    dataType: "json",
+            data: {
+                'stock_list': stock_list,
+            },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+
+                }
+            },
+            error: function () {
+                alert('An error occurred. sorry');
+            }
+	});
+    }
+
+
+
 
     jQuery('#trial_design_confirm').dialog({
 	autoOpen: false,

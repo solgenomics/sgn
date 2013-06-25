@@ -190,6 +190,43 @@ sub _parse_list_from_json {
   }
 }
 
+sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
+
+sub verify_stock_list_GET : Args(0) {
+  my ($self, $c) = @_;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my @stock_names;
+  my $error;
+  my %errors;
+  my $error_alert;
+  if ($c->req->param('stock_list')) {
+    @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
+  }
+  if (!@stock_names) {
+    $c->stash->{rest} = {error => "No stock names supplied"};
+    return;
+  }
+  foreach my $stock_name (@stock_names) {
+    try {
+      _verify_stock($self,$c,$schema,$stock_name);
+    } catch {
+      $errors{$stock_name} = $_};
+    };
+  if (%errors) {
+    foreach my $key (keys %errors) {
+      $error_alert .= "Stock $key: ".$errors{$key}."\n";
+    }
+    $c->stash->{rest} = {error => $error_alert};
+  } else {
+    $c->stash->{rest} = {
+		       success => "1",
+		      };
+  }
+}
+
+
+
+
 sub _verify_stock {
   my $self = shift;
   my $c = shift;
@@ -212,11 +249,11 @@ sub _verify_stock {
 							    }
 							   );
   if ($stock_rs->count >1 ) {
-    die ("Multiple stocks found matching $stock_name");
+    die ("Multiple stocks found matching $stock_name\n");
   } elsif ($stock_rs->count == 1) {
     $stock_name = $stock_rs->first;
   } else {
-    die ("Multiple stocks found matching $stock_name");
+    die ("No stocks found matching $stock_name\n");
   }
 }
 
