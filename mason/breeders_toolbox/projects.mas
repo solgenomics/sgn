@@ -124,6 +124,19 @@
 </div>
 
 
+<div id="trial_saving_dialog" title="Saving">
+  <p>
+    <span class="ui-icon ui-icon-clock" style="float: left; margin: 0 7px 50px 0;"></span>
+    Saving trial
+  </p>
+</div>
+
+<style>
+#progressbar .ui-progressbar-value {
+background-color: #ccc;
+}
+</style>
+
 <div id="trial_saved_dialog_message" title="Trial saved">
   <p>
     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
@@ -413,6 +426,7 @@ jQuery(document).ready(function () {
     }
 
  function commit_experimental_design(design_json) {
+     jQuery('#trial_saving_dialog').dialog("open");
         var name = jQuery('#add_project_name').val();
         var year = jQuery('#add_project_year').val();
         var desc = jQuery('#add_project_description').val();
@@ -477,6 +491,7 @@ jQuery(document).ready(function () {
                     alert(response.error);
                 } else {
 		    //alert('Trial design saved');
+		    jQuery('#trial_saving_dialog').dialog("close");
 		    jQuery('#trial_saved_dialog_message').dialog("open");
                 }
             },
@@ -489,6 +504,13 @@ jQuery(document).ready(function () {
     }
 
 
+
+    jQuery( "#trial_saving_dialog" ).dialog({
+	autoOpen: false,
+	modal: true,
+    });
+
+
     jQuery( "#trial_saved_dialog_message" ).dialog({
 	autoOpen: false,
 	modal: true,
@@ -499,6 +521,8 @@ jQuery(document).ready(function () {
             }
 	}
     });
+
+    
 
     function verify_stock_list(stock_list) {
 	var return_val;
