@@ -207,8 +207,8 @@ sub commit_experimental_design_GET : Args(0) {
   my $project_description = $c->req->param('project_description');
   my $year = $c->req->param('year');
   my @stock_names;
-  my $design_layout_view_html;
-  my $design_info_view_html;
+  my $trial_location = $c->req->param('trial_location');
+
   if ($c->req->param('stock_list')) {
     @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
   }
@@ -220,12 +220,91 @@ sub commit_experimental_design_GET : Args(0) {
     %design = %{_parse_design_from_json($c->req->param('design_json'))};
     print "found design\n"
   }
+
+  my $trial_name = "Cassava Trial $trial_location $year";
+
+  my $plot_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+    { name   => 'plot',
+      cv     => 'stock type',
+      db     => 'null',
+      dbxref => 'plot',
+    });
+
+  my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
+    {
+        description => $trial_location,
+    } ) ;
+
+
+  #create project
+  print STDERR "\n\nDesc: $project_description\n";
+  my $project = $schema->resultset('Project::Project')->find_or_create(
+								       {
+									name => $trial_name,
+									description => $project_description,
+								       }
+								      );
+  $project->create_projectprops( { 'project year' => $year,}, {autocreate=>1});
+
+  my $plot_exp_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
+    { name   => 'plot experiment',
+      cv     => 'experiment type',
+      db     => 'null',
+      dbxref => 'plot experiment',
+    });
+
   foreach my $key (sort { $a <=> $b} keys %design) {
     my $plot_name = $design{$key}->{plot_name};
     my $stock_name = $design{$key}->{stock_name};
     my $block_number = $design{$key}->{block_number};
     my $rep_number = $design{$key}->{rep_number};
+    my $stock;
     print STDERR "design line: $plot_name $stock_name $block_number\n";
+
+    my $stock_rs = $schema->resultset("Stock::Stock")->search(
+								{
+								 -or => [
+									 'lower(me.uniquename)' => { like => lc($stock_name) },
+									 -and => [
+										  'lower(type.name)'       => { like => '%synonym%' },
+										  'lower(stockprops.value)' => { like => lc($stock_name) },
+										 ],
+									],
+								},
+								{
+								 join => { 'stockprops' => 'type'} ,
+								 distinct => 1
+								}
+							       );
+      if ($stock_rs->count >1 ) {
+	die ("multiple stocks found matching $stock_name");
+      } elsif ($stock_rs->count == 1) {
+	$stock = $stock_rs->first;
+      } else {
+	die ("no stocks found matching $stock_name");
+      }
+
+    my $plot = $schema->resultset("Stock::Stock")->find_or_create(
+            { organism_id => $stock->organism_id(),
+	      name       => $plot_name."_".$stock_name."_".$trial_name,
+	      uniquename => $plot_name."_".$stock_name."_".$trial_name,
+	      type_id => $plot_cvterm->cvterm_id,
+            } );
+     my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
+            {
+                nd_geolocation_id => $geolocation->nd_geolocation_id(),
+                type_id => $plot_exp_cvterm->cvterm_id(),
+            } );
+
+    $experiment->find_or_create_related('nd_experiment_projects', {
+            project_id => $project->project_id()
+                                            } );
+        #link the experiment to the stock
+        $experiment->find_or_create_related('nd_experiment_stocks' , {
+            stock_id => $plot->stock_id(),
+            type_id  =>  $plot_exp_cvterm->cvterm_id(),
+                                            });
+
   }
 
 

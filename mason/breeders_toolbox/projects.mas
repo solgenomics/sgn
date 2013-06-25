@@ -325,7 +325,7 @@ jQuery(document).ready(function () {
     function generate_experimental_design() {
         var name = jQuery('#add_project_name').val();
         var year = jQuery('#add_project_year').val();
-        var desc = jQuery('#project_description').val();
+        var desc = jQuery('#add_project_description').val();
         var trial_location = jQuery('#add_project_location').val();
         var block_number = jQuery('#block_number').val();
         var stock_list_id = jQuery('#select_list_list_select').val();
@@ -389,6 +389,8 @@ jQuery(document).ready(function () {
                     jQuery('#trial_design_view_layout').html(response.design_layout_view_html);
                     jQuery('#trial_design_confirm').dialog("open");
 		    commit_experimental_design(response.design_json);
+		    jQuery('#add_project_dialog').dialog("close");
+		    
                 }
             },
             error: function () {
@@ -402,7 +404,7 @@ jQuery(document).ready(function () {
  function commit_experimental_design(design_json) {
         var name = jQuery('#add_project_name').val();
         var year = jQuery('#add_project_year').val();
-        var desc = jQuery('#project_description').val();
+        var desc = jQuery('#add_project_description').val();
         var trial_location = jQuery('#add_project_location').val();
         var block_number = jQuery('#block_number').val();
         var stock_list_id = jQuery('#select_list_list_select').val();
@@ -512,6 +514,7 @@ jQuery(document).ready(function () {
 		jQuery( this ).dialog( "close" );
 	    },
 	    Cancel: function() {
+		jQuery('#add_project_dialog').dialog("close");
 		jQuery( this ).dialog( "close" );
 	    }
         },
