@@ -1,0 +1,56 @@
+<%doc>
+
+=head1 NAME 
+
+/population/sumary.mas - displays project metadata.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$project_id =>''
+$project_name
+$project_desc
+$stocks_no
+$markers_no
+$traits_no =>''
+
+</%args>
+
+
+<table>
+  <tr>
+    <td>
+      <& /page/columnar_table.mas,
+         data         => [['Name', $project_name],
+                          ['Description', $project_desc],
+                          ['Owner', 'NextGen Cassava'],
+                         ],
+         __alt_freq   => 0,
+         __align      => "l",
+         __tableattrs => 'style="padding: 1px 225px 1px 1px"',   
+        &>
+    </td>    
+    <td>
+      <& /page/columnar_table.mas,        
+         data       => [['No. of lines', $stocks_no],
+                        ['No. of markers', $markers_no],
+                       ],
+        __alt_freq  => 1,
+        __align     => "l",
+       __tableattrs => 'style="padding: 1px"',    
+        &>
+    </td>
+  </tr>
+</table>
+    
+
+ 
+
+
