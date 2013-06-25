@@ -354,12 +354,12 @@ jQuery(document).ready(function () {
             return;
         }
 
-	    alert(stock_verified);
-	if (stock_verified == false) {
-
-	    alert('Stock list errors.');
-	    return;
-	}
+	//    alert(stock_verified);
+	//if (stock_verified == false) {
+	//
+	//    alert('Stock list errors.');
+	//    return;
+	//}
 
         new jQuery.ajax({
             type: 'GET',
