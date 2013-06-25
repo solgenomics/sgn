@@ -13,10 +13,18 @@ JSAN.use('Prototype');
 
 jQuery(window).load( function() {
 
-        var popId   = jQuery('input[name=population_id]').val();
-        var traitId = jQuery('input[name=trait_id]').val();
-   
-        var params = 'pop_id' + '=' + popId + '&' + 'trait_id' + '=' + traitId;
+        var popId       = jQuery('input[name=population_id]').val();
+        var traitId     = jQuery('input[name=trait_id]').val();
+        var comboPopsId = jQuery('input[name=combo_pops_id]').val();
+        var popsList    = jQuery('input[name=pops_list]').val(); 
+        var params;
+
+        if(popId) {
+            params = 'pop_id=' + popId + '&trait_id=' + traitId;
+        } else {
+            params = 'combo_pops_id=' + comboPopsId + '&trait_id='  + traitId + '&combined_populations=' + popsList;  
+        }
+       
         var action = '/solgs/trait/gebv/graph';
        
         var graphArray      = [];
