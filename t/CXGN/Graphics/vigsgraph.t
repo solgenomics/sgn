@@ -55,19 +55,13 @@ is($off_targets[-1], 1, "off target array test 3");
 my @regions = $vg ->longest_vigs_sequence(2);
 #print Dumper(\@regions);
 
-is($regions[0]->[4], 1026, "best region start coord test");
-is($regions[0]->[5], 1115, "best region end coord test");
+is($regions[0]->[4], 378, "best region start coord test");
+is($regions[0]->[5], 494, "best region end coord test");
 
 # only one target match
 my @regions = $vg ->longest_vigs_sequence(1);
 
 is($regions[0]->[4], 159, "one target best region start test");
 is($regions[0]->[5], 214, "one target best region end test");
-
-
-
-
-
-
 
 
