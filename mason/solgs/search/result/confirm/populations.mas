@@ -1,0 +1,33 @@
+<%doc>
+
+confirmation form of selected populations (and some metadata) before combining their dataset.
+
+</%doc>
+
+<%args>
+
+$selected_pops_details
+$trait_id
+
+</%args>
+
+
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations", "jquery.cookie"] &>
+
+<& /page/page_title.mas,
+    title => "Confirm" ,
+&>
+
+<& /solgs/population/project_details_form.mas,
+   result     => $selected_pops_details,
+&>
+
+<div id="confirm">
+  <br />
+  <input type="button" id="confirm" name="confirm" value="Confirm" onclick="confirmSelections();"/>
+  <input type="hidden" id="trait_id" name="trait_id" value= "<% $trait_id %>" />
+</div>
+
+
+
+
