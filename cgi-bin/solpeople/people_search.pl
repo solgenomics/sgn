@@ -39,8 +39,8 @@ my $search_again_html = info_section_html(
 );
 
 
-_add_to_param( $query, $_, '&t NOT LIKE ? AND &t IS NOT NULL', '%contact-info.pl%')
-    for 'last_name', 'first_name';
+#_add_to_param( $query, $_, '&t NOT LIKE ? AND &t IS NOT NULL', '%contact-info.pl%')
+#    for 'last_name', 'first_name';
 
 my $result = $search->do_search($query);    #execute the search
 my @results;

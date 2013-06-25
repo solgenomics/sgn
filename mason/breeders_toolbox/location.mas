@@ -11,9 +11,10 @@ $user_id => undef
 
 <div id="add_location_dialog"  class="ui-widget" >
 
-Name <input id="location_description" size="8" /> 
-Longitude <input name="longitude" size="4" /> 
-Latitude <input name="latitude" size="4" />
+Name <input id="location_description" size="20" /><br /><br /> 
+Longitude <input id="longitude" name="longitude" size="4" /> 
+&nbsp;&nbsp;Latitude <input id="latitude" name="latitude" size="4" />
+&nbsp;&nbsp;Altitude [m]<input id="altitude" name="altitude" size="4" />
 
 </div>
 
@@ -27,7 +28,7 @@ jQuery(document).ready(function() {
                      "Add": function() { save_location_info(); } },
      modal: true,
      width: 500,
-     height: 150,
+     height: 200,
      title: "Add new location"
 
 });
@@ -42,6 +43,7 @@ jQuery(document).ready(function() {
      var desc = jQuery('#location_description').val();
      var longitude = jQuery('#longitude').val();
      var latitude = jQuery('#latitude').val();
+     var altitude = jQuery('#altitude').val();
 
      if (desc == '') { alert('Description is required.');  return; }
    
@@ -49,16 +51,17 @@ jQuery(document).ready(function() {
        type: 'GET',
        async: false,
        url: '/ajax/breeders/location/insert',
-       data: { 'description': desc,  'longitude':longitude, 'latitude':latitude },
+       data: { 'description': desc,  'longitude':longitude, 'latitude':latitude, 'altitude': altitude },
        success: function(response) { 
                   if (response.error) { alert(response.error); }
-                  else { alert('The new location was saved.'); 
+                  else { 
+                     alert('The new location was saved.'); 
+                     jQuery('#add_location_dialog').dialog("close");
+                     location.reload();
                   }
                 },
-       error: function() { alert('An error occurred. sorry'); }
+       error: function() { alert('An error occurred. Please try again later.'); }
      });
-     jQuery('#add_location_dialog').dialog("close");
-     location.reload();
   }
     
 });

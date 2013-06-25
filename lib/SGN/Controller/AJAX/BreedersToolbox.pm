@@ -60,8 +60,9 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
     my $params = $c->request->parameters();
 
     my $description = $params->{description};
-    my $longitude =   $params->{longitude};
-    my $latitude  =   $params->{latitude};
+    my $longitude   = $params->{longitude};
+    my $latitude    = $params->{latitude};
+    my $altitude    = $params->{altitude};
 
     if (! $c->user()) { # redirect
 	$c->stash->{rest} = { error => 'You must be logged in to add a location.' };
@@ -72,10 +73,13 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
 
     my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $description } )->count();
 
-
-
     if ($exists > 0) { 
 	$c->stash->{rest} = { error => "The location - $description - already exists. Please choose another name." };
+	return;
+    }
+
+    if ( ($longitude && $longitude !~ /^[0-9.]+$/) || ($latitude && $latitude !~ /^[0-9.]+$/) || ($altitude && $altitude !~ /^[0-9.]+$/) ) { 
+	$c->stash->{rest} = { error => "Longitude, latitude and altitude must be numbers." };
 	return;
     }
 
@@ -84,11 +88,12 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
 	    description => $description,
 	    longitude   => $longitude,
 	    latitude    => $latitude,
+	    altitude    => $altitude,
 	});
 
     $new_row->insert();
 
-    $c->stash->{rest} = { error => '' };
+    $c->stash->{rest} = { success => 1, error => '' };
     
 }
 

@@ -81,7 +81,7 @@ sub target_graph {
     # print Dumper(@match_counts);
     my @targets = ();
     
-    # print STDERR "coverage: $coverage\n";
+#    print STDERR "coverage: $coverage\n";
 
     # array with target subject names, coverage is the number of target subjects
     my @target_keys = ();
@@ -90,11 +90,11 @@ sub target_graph {
 	push @target_keys, $e->[0]; 
     }
 
- #   print STDERR "TARGET KEYS: ".join(",", @target_keys);
- #   print STDERR "\n";
+#    print STDERR "TARGET KEYS: ".join(",", @target_keys);
+#    print STDERR "\n";
 
-    # print STDERR "TARGETS: ". join ", ", @targets;
-    # print STDERR "SIZE =" .scalar(@targets)."\n";
+#    print STDERR "TARGETS: ". join ", ", @targets;
+#    print STDERR "SIZE =" .scalar(@targets)."\n";
 
     my @target_tracks = ();
     
@@ -114,7 +114,7 @@ sub target_graph {
 	
     }
     
-    # print STDERR "TARGET TRACKS: ".Dumper(@target_tracks);
+#     print STDERR "TARGET TRACKS: ".Dumper(@target_tracks);
 
     # multiply the different track scores
     #
@@ -172,74 +172,69 @@ sub longest_vigs_sequence {
 	my @targets = $self->target_graph($coverage);
 	my @off_targets = $self->off_target_graph($coverage);
         
-        # print STDERR "targets_array: ", join ", ", @targets;
-        # print STDERR "\n";
+#        print STDERR "targets_array: ", join ", ", @targets;
+#        print STDERR "\n";
+#        print STDERR "off_targets_array: ", join ", ", @off_targets;
+#        print STDERR "\n";
 	
         my $start = undef;
 	my $end = undef;
 	my $score = 0;
 
         # @targets contains the coverage of every position, values are >0 when all target subjects overlap in the region
-	for (my $i=0; $i<@targets; $i++) { 
-	    
-	    if (($targets[$i] !=0) && (!defined($off_targets[$i]) || $off_targets[$i]==0)) {
-		# print STDERR "target at: $i\n";
-		if (defined($start)) { 
-		    # print STDERR "extending... $i\n";
-		    $score +=$targets[$i];
-		}
-		else { 
-		    # print STDERR "creating... $i\n";
-		    $start = $i;
-		    $score +=$targets[$i];
-		}
-	    }
-	    elsif (($targets[$i] == 0) || (defined($off_targets[$i]) || $off_targets[$i]!=0) || $i == @targets) { 
-		# a target region ends or is the end of the subjects sequences
-                if (defined($start)) { 
-		    # print STDERR "ending... $i\n";
-		    $end = $i;
-		    my $length = $end - $start;
-		    # print STDERR "end of target at: $start - $end: ".($end-$start+1)."\n";
-         	    push @regions, [ $coverage, $score * $length, $score, $length, $start, $end ];
-		}
-		$score = 0;
-		$start = undef;
-		$end = undef;
-	    }
+	for (my $i=0; $i<@targets; $i++) {
+	   if (defined($targets[$i]))  {
+              # print STDERR "t:$i, ";
+
+
+	      if (!defined($off_targets[$i]) || $off_targets[$i] == 0) {
+		   
+                    if (defined($start)) { 
+		       # print STDERR "extending... $i\n";
+		       $score += $targets[$i];
+		    }
+		    else { 
+		       # print STDERR "creating... $i\n";
+		       $start = $i;
+		       $score += $targets[$i];
+		    }
+            
+	      }
+	      elsif ($targets[$i] == 0 || defined($off_targets[$i]) || $off_targets[$i]!=0 || $i == @targets) { 
+		  # a target region ends or is the end of the subjects sequences
+		  if (defined($start)) { 
+		      # print STDERR "ending... $i\n";
+		      $end = $i;
+		      my $length = $end - $start;
+		      # print STDERR "end of target at: $start - $end: ".($end-$start+1)."\n";
+		      push @regions, [ $coverage, $score * $length, $score, $length, $start, $end ];
+		  }
+		  $score = 0;
+		  $start = undef;
+		  $end = undef;
+	      }
+	   }
+           else {
+	      # print STDERR "ndt:$i, ";
+              # a target region ends or is the end of the subjects sequences
+	      if (defined($start)) { 
+        	 # print STDERR "ending... $i\n";
+		 $end = $i;
+		 my $length = $end - $start;
+		 # print STDERR "end of target at: $start - $end: ".($end-$start+1)."\n";
+		 push @regions, [ $coverage, $score * $length, $score, $length, $start, $end ];
+	      }
+
+	      $score = 0;
+	      $start = undef;
+	      $end = undef;
+	   }
 	}
   #  print STDERR "regions: ".Dumper(@regions)."\n";
 
-
-# old version
-#	for (my $i=0; $i<@targets; $i++) { 
-#	    if (!defined($off_targets[$i]) || $off_targets[$i]==0) {
-#		if (defined($start)) { 
-		    # print STDERR "extending... $i\n";
-#		    $score =$targets[$i];
-#		}
-#		else { 
-		    # print STDERR "creating... $i\n";
-#		    $start = $i;
-#		    $score =$targets[$i];
-#		}
-#	    }
-#	    elsif ($off_targets[$i]!=0 || $i == @targets) { 
-#		if (defined($start)) { 
-		    # print STDERR "ending... $i\n";
-#		    $end = $i;
-#		    my $length = $end - $start;
-#        	    push @regions, [ $coverage, $score * $length, $score, $length, $start, $end ];
-#		}
-#		$score = 0;
-#		$start = undef;
-#		$end = undef;
-#	    }
-#	}
-   #}
     my @sorted = sort sort_keys @regions;
     
-    my @ten_best = @sorted[0..9];
+    # my @ten_best = @sorted[0..3];
 
     # print STDERR "TEN BEST: ".Dumper(\@ten_best);
     # print STDERR "Sorted: ".Dumper(\@sorted);
@@ -302,10 +297,14 @@ sub render {
     my $image = GD::Image->new($self->width, $self->height);
     my $white = $image->colorAllocate(255,255,255);
     my $red   = $image->colorResolve(180, 0, 0);
+#    my $light_red   = $image->colorResolve(230, 150, 0);
     my $color = $image->colorResolve(0, 0, 0);    
     my $blue = $image->colorResolve(0, 0, 180);
     my $grey = $image->colorResolve(150,150,150);
     my $yellow = $image->colorResolve(255, 255, 0);
+    my $yellow2 = $image->colorResolve(255, 255, 140);
+    my $yellow3 = $image->colorResolve(255, 255, 200);
+#    my $green = $image->colorResolve(0, 255, 0);
     my $black  = $image->colorResolve(0, 0, 0);
     
     my $font = GD::Font->Small();
@@ -325,10 +324,13 @@ sub render {
     my @track_names = ();
 
     # hightlight the regions
-    foreach my $r (@{$self->{regions}}) { 
+    my @colors = ($yellow, $yellow2, $yellow3);
+    my $color_counter = 0; 
+    foreach my $r (@{$self->{regions}}) {  
 	my ($start, $end) = ($r->[0], $r->[1]);
 	# print STDERR "LONGEST REGION: $start, $end\n";
-	$image->filledRectangle($start * $x_scale, 0, $end * $x_scale, $self->height, $yellow);
+	$image->filledRectangle($start * $x_scale, 0, $end * $x_scale, $self->height, $colors[$color_counter]);
+        $color_counter++;
     }
     
     my $matches = $self->matches();
@@ -410,7 +412,7 @@ sub render {
     
     # adjust image height
     #
-    if ($offset > 2400) { $offset = 2400; }
+#    if ($offset > 2400) { $offset = 2400; }
     my $cropped = GD::Image->new($image->width, $offset);
     $cropped->copy($image, 0, 0, 0, 0, $image->width(), $offset);
 
@@ -470,22 +472,36 @@ sub draw_ruler {
     
     # tick labels
     #
-    if ($seq_length < 4000) { 
-	$self->write_ticks($image, $seq_length, $scale, 200);
+    if ($seq_length > 4000) {	   
+        $self->write_ticks($image, $seq_length, $scale, 500);
+    }
+    elsif ($seq_length < 200) { 
+        $self->write_ticks($image, $seq_length, $scale, 10);
+    }
+    elsif ($seq_length < 1400) { 
+        $self->write_ticks($image, $seq_length, $scale, 100);
+    }
+    else {
+        $self->write_ticks($image, $seq_length, $scale, 200);
     }
 
-    if ($seq_length < 1400) { 
-	
-	foreach my $tick (0 .. int($seq_length /100) ) { 
-	    $self->write_ticks($image, $seq_length, $scale, 100); #$image->string($self->font(), $tick * 100 * $scale+1, 1, $tick * 100, $black);
-	}
-    }
 
-    if ($seq_length < 200) { 
-	foreach my $tick (0.. int($seq_length/10) ) { 
-	    $self->write_ticks($image, $seq_length, $scale, 10); #$image->string($self->font(), $tick*10*$scale, 2, $tick * 10, $black);
-	}
-    }
+#    if ($seq_length < 4000) {
+#	foreach my $tick (0 .. int($seq_length /200) ) { 
+#	    $self->write_ticks($image, $seq_length, $scale, 200);
+#	}
+#    }
+#    if ($seq_length < 1400) { 	
+#	foreach my $tick (0 .. int($seq_length /100) ) { 
+#	    $self->write_ticks($image, $seq_length, $scale, 100); #$image->string($self->font(), $tick * 100 * $scale+1, 1, $tick * 100, $black);
+#	}
+#    }
+#    if ($seq_length < 200) { 
+#	foreach my $tick (0.. int($seq_length/10) ) { 
+#	    $self->write_ticks($image, $seq_length, $scale, 10); #$image->string($self->font(), $tick*10*$scale, 2, $tick * 10, $black);
+#	}
+#    }
+
 }
     
 

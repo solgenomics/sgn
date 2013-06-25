@@ -80,7 +80,7 @@ $mech->while_logged_in( { user_type=>'submitter' }, sub {
     #locus network
     $mech->get_ok("/locus/$locus_id/network");
 
-    #obsolete the locus group memner
+    #obsolete the locus group member
     #"/ajax/locus/obsolete_locus_group_member"
 
     #now test the printed page
@@ -110,7 +110,19 @@ END {
         if ($a_locus_id) {
             $write_dbh->do( "DELETE FROM phenome.$_ WHERE locus_id = ?", undef, $a_locus_id )
                 for "allele", "locus";
-            $write_dbh->do( "DELETE FROM phenome.locusgroup WHERE relationship_id = ?", undef, $homolog_id );
+		my $h = $write_dbh->prepare("SELECT phenome.locusgroup.locusgroup_id FROM phenome.locusgroup JOIN phenome.locusgroup_member using(locusgroup_id) WHERE locus_id=?");
+		$h->execute($locus_id);
+		my @locusgroup_ids;
+		while (my ($id) = $h->fetchrow_array()) { 
+		   push @locusgroup_ids, $id;
+		}		   
+
+		$write_dbh->do("DELETE FROM phenome.locusgroup_member WHERE locus_id= ?", undef, $locus_id);
+		$write_dbh->do("DELETE FROM phenome.locusgroup_member WHERE locus_id= ?", undef, $a_locus_id);
+		foreach my $id (@locusgroup_ids) { 
+         	   $write_dbh->do("DELETE FROM phenome.locusgroup WHERE locusgroup_id = ? ", undef, $id);
+		}
+  		$write_dbh->do("DELETE FROM cvterm WHERE cvterm_id=?", undef, $homolog_id);
         }
     }
 }

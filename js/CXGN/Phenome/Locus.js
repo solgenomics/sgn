@@ -176,7 +176,7 @@ var Locus = {
 	if (!allele_id) {  allele_id = $('allele_select').value; } 
 	var stock_id = $('stock_select').value;
 
-	new Ajax.Request("phenome/associate_allele.pl", { //move to controller
+	new Ajax.Request("/phenome/associate_allele.pl", { //move to controller
 		parameters: {allele_id: allele_id, stock_id: stock_id, sp_person_id: sp_person_id}, 
 		    onSuccess: function(response) {
                     var json = response.responseText;
