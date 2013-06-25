@@ -208,6 +208,7 @@ sub commit_experimental_design_GET : Args(0) {
   my $year = $c->req->param('year');
   my @stock_names;
   my $trial_location = $c->req->param('trial_location');
+  my $design_type =  $c->req->param('design_type');
 
   if ($c->req->param('stock_list')) {
     @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
@@ -221,13 +222,27 @@ sub commit_experimental_design_GET : Args(0) {
     print "found design\n"
   }
 
-  my $trial_name = "Cassava Trial $trial_location $year";
+  my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year.
+
+  my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+    { name   => 'accession',
+      cv     => 'stock type',
+      db     => 'null',
+      dbxref => 'accession',
+    });
 
   my $plot_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'plot',
       cv     => 'stock type',
       db     => 'null',
       dbxref => 'plot',
+    });
+
+  my $plot_of = $schema->resultset("Cv::Cvterm")->create_with(
+    { name   => 'plot_of',
+      cv     => 'stock relationship',
+      db     => 'null',
+      dbxref => 'plot_of',
     });
 
   my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
@@ -244,71 +259,105 @@ sub commit_experimental_design_GET : Args(0) {
 									description => $project_description,
 								       }
 								      );
-  $project->create_projectprops( { 'project year' => $year,}, {autocreate=>1});
+  $project->create_projectprops( { 'project year' => $year,'design' => $design_type}, {autocreate=>1});
 
-  my $plot_exp_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-    { name   => 'plot experiment',
+# find the cvterm for a phenotyping experiment
+my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
+    { name   => 'phenotyping experiment',
       cv     => 'experiment type',
       db     => 'null',
-      dbxref => 'plot experiment',
+      dbxref => 'phenotyping experiment',
     });
 
   foreach my $key (sort { $a <=> $b} keys %design) {
     my $plot_name = $design{$key}->{plot_name};
     my $stock_name = $design{$key}->{stock_name};
-    my $block_number = $design{$key}->{block_number};
-    my $rep_number = $design{$key}->{rep_number};
-    my $stock;
-    print STDERR "design line: $plot_name $stock_name $block_number\n";
-
-    my $stock_rs = $schema->resultset("Stock::Stock")->search(
-								{
-								 -or => [
-									 'lower(me.uniquename)' => { like => lc($stock_name) },
-									 -and => [
-										  'lower(type.name)'       => { like => '%synonym%' },
-										  'lower(stockprops.value)' => { like => lc($stock_name) },
-										 ],
-									],
-								},
-								{
-								 join => { 'stockprops' => 'type'} ,
-								 distinct => 1
-								}
-							       );
+    my $block_number;
+    if ($design{$key}->{block_number}) {
+      $block_number = $design{$key}->{block_number};
+    } else {
+      $block_number = 1;
+    }
+    my $rep_number;
+    if ($design{$key}->{rep_number}) {
+      $rep_number = $design{$key}->{rep_number};
+    } else {
+      $rep_number = 1;
+    }
+    my $is_a_control = $design{$key}->{is_a_control};
+    my $plot_unique_name = $stock_name."_replicate:".$rep_number."_block:".$block_number."_plot:".$plot_name."_".$year."_".$trial_location;
+    my $plot;
+    my $parent_stock;
+    my $stock_rs = $schema->resultset("Stock::Stock")
+      ->search({
+		-or => [
+			'lower(me.uniquename)' => { like => lc($stock_name) },
+			-and => [
+				 'lower(type.name)'       => { like => '%synonym%' },
+				 'lower(stockprops.value)' => { like => lc($stock_name) },
+				],
+		       ],
+	       },
+	       {
+		join => { 'stockprops' => 'type'} ,
+		distinct => 1
+	       }
+	      );
       if ($stock_rs->count >1 ) {
 	die ("multiple stocks found matching $stock_name");
       } elsif ($stock_rs->count == 1) {
-	$stock = $stock_rs->first;
+	$parent_stock = $stock_rs->first;
       } else {
 	die ("no stocks found matching $stock_name");
       }
 
-    my $plot = $schema->resultset("Stock::Stock")->find_or_create(
-            { organism_id => $stock->organism_id(),
-	      name       => $plot_name."_".$stock_name."_".$trial_name,
-	      uniquename => $plot_name."_".$stock_name."_".$trial_name,
-	      type_id => $plot_cvterm->cvterm_id,
-            } );
-     my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
-            {
-                nd_geolocation_id => $geolocation->nd_geolocation_id(),
-                type_id => $plot_exp_cvterm->cvterm_id(),
-            } );
+    #create the plot
+    $plot = $schema->resultset("Stock::Stock")
+      ->find_or_create({
+			organism_id => $parent_stock->organism_id(),
+			name       => $plot_unique_name,
+			uniquename => $plot_unique_name,
+			type_id => $plot_cvterm->cvterm_id,
+		       } );
 
+
+    if ($rep_number) {
+      $plot->stockprops({'replicate' => $rep_number}, {autocreate => 1} );
+    }
+    if ($block_number) {
+      $plot->stockprops({'block' => $block_number}, {autocreate => 1} );
+    }
+    $plot->stockprops({'plot number' => $key}, {autocreate => 1});
+    if ($is_a_control) {
+      $plot->stockprops({'is a control' => $is_a_control}, {autocreate => 1} );
+    }
+    #create the stock_relationship with the accession
+    $parent_stock
+      ->find_or_create_related('stock_relationship_objects',
+			       {
+				type_id => $plot_of->cvterm_id(),
+				subject_id => $plot->stock_id(),
+			       } );
+
+    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
+										  {
+										   nd_geolocation_id => $geolocation->nd_geolocation_id(),
+										   type_id => $pheno_cvterm->cvterm_id(),
+										  } );
+    #link to the project
     $experiment->find_or_create_related('nd_experiment_projects', {
-            project_id => $project->project_id()
-                                            } );
-        #link the experiment to the stock
-        $experiment->find_or_create_related('nd_experiment_stocks' , {
-            stock_id => $plot->stock_id(),
-            type_id  =>  $plot_exp_cvterm->cvterm_id(),
-                                            });
+								   project_id => $project->project_id()
+								  } );
+    #link the experiment to the stock
+    $experiment->find_or_create_related('nd_experiment_stocks' , {
+								  stock_id => $plot->stock_id(),
+								  type_id  =>  $pheno_cvterm->cvterm_id(),
+								 });
 
   }
 
 
-  my $design_type =  $c->req->param('design_type');
+
   my $rep_count =  $c->req->param('rep_count');
   my $block_number =  $c->req->param('block_number');
   my $block_size =  $c->req->param('block_size');
