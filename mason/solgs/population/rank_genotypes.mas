@@ -14,9 +14,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$pop_id
-$prediction_pop_id
+$pop_id => ''
+$prediction_pop_id => ''
 $analyzed_traits
+$prediction_pop_name => '' 
 
 </%args>
 
@@ -48,36 +49,40 @@ ROW
     }
 }
 
+$trait_rows .= qq | <tr><td> <input type = "hidden" name="prediction_pop_name" value="$prediction_pop_name"></td></tr> |;
+
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ "solGS.rankGenotypes"] &>
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 0, 
-    title       => "Rank Genotypes based on GEBV of multiple traits"
-&> 
+%if (@$analyzed_traits > 1 )
+%{
+  <&| /page/info_section.mas, 
+      collapsible => 1, 
+       collapsed  => 0, 
+       title      => "Rank Genotypes based on GEBV of multiple traits"
+   &> 
   
-<p>Fill in the relative weight you want to apply to each trait.</p>
-<div id="mulitple_traits">
- <div id="rel_gebv_form">
-   <table>
-     <% $trait_rows %>
-     <tr>      
-       <td>
-         <input type    = "submit" 
-                value   = "rank"
-                name    = "rank"
-                id      = "rank_genotypes"               
-                onclick = "rankGenotypes.gebvWeights('<% $pop_id %>', '<% $prediction_pop_id %>')" >
-       </td>     
-     </tr>
-   </table>
-</div>
- 
+    <p>Fill in the relative weight you want to apply to each trait.</p>
+    <div id="mulitple_traits">
+      <div id="rel_gebv_form">
+        <table>
+          <% $trait_rows %>
+          <tr>      
+            <td>
+              <input type    = "submit" 
+                     value   = "rank"
+                     name    = "rank"
+                     id      = "rank_genotypes"               
+                     onclick = "rankGenotypes.gebvWeights('<% $pop_id %>', '<% $prediction_pop_id %>')" >
+            </td>     
+          </tr>
+        </table>
+      </div>
 
-<& /solgs/model/top_genotypes.mas &> 
+      <& /solgs/model/top_genotypes.mas &> 
 
-</div>
+    </div>
 
-</&>
+    </&>
+%}

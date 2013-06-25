@@ -19,8 +19,9 @@ $analyzed_traits
 $pop_id
 $model_data
 $download_prediction
-$prediction_pop_id
+$prediction_pop_id => ''
 $list_of_prediction_pops
+$prediction_pop_name => '' 
 
 </%args>
 
@@ -32,24 +33,24 @@ $list_of_prediction_pops
 <& /solgs/model/model_summary.mas, 
      model_data => $model_data
 &>
-% if ($download_prediction eq 'N/A')
+% if ($prediction_pop_id eq 'N/A')
 %{
 
-%if(scalar(@$analyzed_traits) > 1)
-%{
-    <& rank_genotypes.mas, 
-     analyzed_traits   => $analyzed_traits,
-     pop_id            => $pop_id,
-     prediction_pop_id => $prediction_pop_id    
-   &>
-%}
+  <& rank_genotypes.mas, 
+     analyzed_traits     => $analyzed_traits,
+     pop_id              => $pop_id,
+     prediction_pop_id   => $prediction_pop_id,
+     prediction_pop_name => $prediction_pop_name,    
+  &>
+
 %}
 
-<& /solgs/population/selection_populations.mas, 
+<& selection_populations.mas, 
    download_prediction     => $download_prediction,
    analyzed_traits         => $analyzed_traits,
    pop_id                  => $pop_id,
    prediction_pop_id       => $prediction_pop_id,
-   list_of_prediction_pops => $list_of_prediction_pops
+   list_of_prediction_pops => $list_of_prediction_pops,
+   prediction_pop_name     => $prediction_pop_name, 
 &>
 

@@ -14,7 +14,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$pop_id
+$pop_id => ''
+$combo_pops_id => ''
 $trait_id
 $descriptive_stat
 
@@ -28,6 +29,7 @@ $descriptive_stat
 <div id="phenoPlot">
 
  <input type="hidden" name="population_id" value="<% $pop_id %>" /> 
+ <input type="hidden" name="combo_pops_id" value="<% $combo_pops_id %>" /> 
  <input type="hidden" name="trait_id" value="<% $trait_id %>" /> 
 
 </div>

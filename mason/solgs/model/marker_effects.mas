@@ -15,7 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $top_marker_effects
-$marker_effects_download_url
+$marker_effects_download_url =>''
 
 </%args>
 

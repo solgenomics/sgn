@@ -7,8 +7,8 @@ a general format for projects details presentation.
 <%args>
 
 $result
-$pager
-$page_links
+$pager => ''
+$page_links => ''
 
 </%args>
 
@@ -20,12 +20,14 @@ $page_links
     __align      => 'l'
 &>
  
+%if ($pager)
+%{
 <& /page/pagination_control.mas, 
      pager      => $pager, 
      link_maker => $page_links 
 &> 
 
-
+%}
 
 
 
