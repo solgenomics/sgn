@@ -5,16 +5,22 @@
 */
 
 //JSAN.use('MochiKit.LoggingPane');
-JSAN.use('flot.jquery');
+JSAN.use('jquery');
 JSAN.use('Prototype');
-
 
 jQuery(window).load( function() {
 
-        var popId   = jQuery('input[name=population_id]').val();
-        var traitId = jQuery('input[name=trait_id]').val();
-      
-        var params = 'pop_id' + '=' + popId + '&' + 'trait_id' + '=' + traitId;
+        var popId       = jQuery('input[name=population_id]').val();
+        var traitId     = jQuery('input[name=trait_id]').val();
+        var comboPopsId = jQuery('input[name=combo_pops_id]').val();
+
+        var params;
+        if(popId) {
+            params = 'pop_id=' + popId + '&trait_id=' + traitId;
+        } else {
+            params = 'combo_pops_id=' + comboPopsId + '&trait_id=' + traitId;  
+        }
+
         var action = '/solgs/phenotype/graph';
      
         var phenoPlotData        = [];
