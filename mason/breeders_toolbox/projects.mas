@@ -346,11 +346,19 @@ jQuery(document).ready(function () {
 	var plot_prefix = jQuery('#plot_prefix').val();
 	var start_number = jQuery('#start_number').val();
 	var increment = jQuery('#increment').val();
+	var stock_verified = verify_stock_list(stock_list);
 
         if (desc == '' || year == '') {
             alert('Year and description are required.');
             return;
         }
+
+	    alert(stock_verified);
+	if (stock_verified == false) {
+
+	    alert('Stock list errors.');
+	    return;
+	}
 
         new jQuery.ajax({
             type: 'GET',
@@ -391,8 +399,8 @@ jQuery(document).ready(function () {
 
 
     function verify_stock_list(stock_list) {
-
-        new jQuery.ajax({
+	var return_val;
+	new jQuery.ajax({
             type: 'GET',
             url: '/ajax/trial/verify_stock_list',
 	    dataType: "json",
@@ -402,14 +410,17 @@ jQuery(document).ready(function () {
             success: function (response) {
                 if (response.error) {
                     alert(response.error);
+		    verify_stock_list.return_val = 0;
                 } else {
-
+		    verify_stock_list.return_val = 1;
                 }
             },
             error: function () {
                 alert('An error occurred. sorry');
+	    verify_stock_list.return_val = 0;
             }
 	});
+	return return_val;
     }
 
 
