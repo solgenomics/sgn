@@ -388,6 +388,7 @@ jQuery(document).ready(function () {
 		    jQuery('#trial_design_information').html(response.design_info_view_html);
                     jQuery('#trial_design_view_layout').html(response.design_layout_view_html);
                     jQuery('#trial_design_confirm').dialog("open");
+		    commit_experimental_design(response.design_json);
                 }
             },
             error: function () {
@@ -398,6 +399,80 @@ jQuery(document).ready(function () {
 
     }
 
+ function commit_experimental_design(design_json) {
+        var name = jQuery('#add_project_name').val();
+        var year = jQuery('#add_project_year').val();
+        var desc = jQuery('#project_description').val();
+        var trial_location = jQuery('#add_project_location').val();
+        var block_number = jQuery('#block_number').val();
+        var stock_list_id = jQuery('#select_list_list_select').val();
+        var control_list_id = jQuery('#list_of_checks_section_list_select').val();
+        var list = new CXGN.List();
+	var stock_list;
+	if (! stock_list_id == "") {
+            stock_list = JSON.stringify(list.getList(stock_list_id));
+	}
+	var control_list;
+	if (! control_list_id == "") {
+            control_list = JSON.stringify(list.getList(control_list_id));
+	}
+        var design_type = jQuery('#select_design_method').val();
+	var rep_count = jQuery('#rep_count').val();
+
+	var block_size = jQuery('#block_size').val();
+	var max_block_size = jQuery('#max_block_size').val();
+	var plot_prefix = jQuery('#plot_prefix').val();
+	var start_number = jQuery('#start_number').val();
+	var increment = jQuery('#increment').val();
+	var stock_verified = verify_stock_list(stock_list);
+
+        if (desc == '' || year == '') {
+            alert('Year and description are required.');
+            return;
+        }
+
+	//    alert(stock_verified);
+	//if (stock_verified == false) {
+	//
+	//    alert('Stock list errors.');
+	//    return;
+	//}
+
+        new jQuery.ajax({
+            type: 'GET',
+            url: '/ajax/trial/commit_experimental_design',
+	    dataType: "json",
+            data: {
+                'project_name': name,
+                'project_description': desc,
+                'year': year,
+                'trial_location': trial_location,
+                'stock_list': stock_list,
+		'control_list': control_list,
+		'design_type': design_type,
+		'rep_count': rep_count,
+		'block_number': block_number,
+		'block_size': block_size,
+		'max_block_size': max_block_size,
+		'plot_prefix': plot_prefix,
+		'start_number': start_number,
+		'increment': increment,
+		'design_json': design_json,
+            },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+		    //close
+                }
+            },
+            error: function () {
+                alert('An error occurred. sorry');
+            }
+
+       });
+
+    }
 
     function verify_stock_list(stock_list) {
 	var return_val;

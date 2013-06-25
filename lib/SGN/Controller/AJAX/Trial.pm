@@ -166,10 +166,14 @@ sub generate_experimental_design_GET : Args(0) {
   $design_layout_view_html = design_layout_view(\%design, \%design_info);
   $design_info_view_html = design_info_view(\%design, \%design_info);
 
+  my $design_json = encode_json(\%design);
+  print STDERR "\n\njson design: $design_json\n";
+
   $c->stash->{rest} = {
 		       success => "1", 
 		       design_layout_view_html => $design_layout_view_html,
 		       design_info_view_html => $design_info_view_html,
+		       design_json => $design_json,
 		      };
 }
 
@@ -189,6 +193,73 @@ sub _parse_list_from_json {
     return;
   }
 }
+
+sub commit_experimental_design : Path('/ajax/trial/commit_experimental_design') : ActionClass('REST') { }
+
+sub commit_experimental_design_GET : Args(0) {
+  my ($self, $c) = @_;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $trial_design = CXGN::TrialDesign->new();
+  my %design;
+  #my %design_info;
+  my $error;
+  my $project_name = $c->req->param('project_name');
+  my $project_description = $c->req->param('project_description');
+  my $year = $c->req->param('year');
+  my @stock_names;
+  my $design_layout_view_html;
+  my $design_info_view_html;
+  if ($c->req->param('stock_list')) {
+    @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
+  }
+  my @control_names;
+  if ($c->req->param('control_list')) {
+    @control_names = @{_parse_list_from_json($c->req->param('control_list'))};
+  }
+  if ($c->req->param('design_json')) {
+    %design = %{_parse_design_from_json($c->req->param('design_json'))};
+    print "found design\n"
+  }
+  foreach my $key (sort { $a <=> $b} keys %design) {
+    my $plot_name = $design{$key}->{plot_name};
+    my $stock_name = $design{$key}->{stock_name};
+    my $block_number = $design{$key}->{block_number};
+    my $rep_number = $design{$key}->{rep_number};
+    print STDERR "design line: $plot_name $stock_name $block_number\n";
+  }
+
+
+  my $design_type =  $c->req->param('design_type');
+  my $rep_count =  $c->req->param('rep_count');
+  my $block_number =  $c->req->param('block_number');
+  my $block_size =  $c->req->param('block_size');
+  my $max_block_size =  $c->req->param('max_block_size');
+  my $plot_prefix =  $c->req->param('plot_prefix');
+  my $start_number =  $c->req->param('start_number');
+  my $increment =  $c->req->param('increment');
+  my $trial_location = $c->req->param('trial_location');
+
+
+
+  $c->stash->{rest} = {
+		       success => "1",
+		      };
+}
+
+sub _parse_design_from_json {
+  my $design_json = shift;
+  if ($design_json) {
+    print STDERR "found design json\n";
+    my $decoded_json = decode_json($design_json);
+    my %design = %{$decoded_json};
+    print STDERR "parse esign: ". Dumper(%design)."parsed\n";
+    return \%design;
+  }
+  else {
+    return;
+  }
+}
+
 
 sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
 
