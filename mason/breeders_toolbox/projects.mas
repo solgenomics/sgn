@@ -124,6 +124,14 @@
 </div>
 
 
+<div id="trial_saved_dialog_message" title="Trial saved">
+  <p>
+    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    The trial was sucessfully saved
+  </p>
+</div>
+
+
 <script defer="defer">
 
 jQuery(document).ready(function () {
@@ -468,8 +476,8 @@ jQuery(document).ready(function () {
                 if (response.error) {
                     alert(response.error);
                 } else {
-		    alert('Trial design saved');
-		    location.reload();
+		    //alert('Trial design saved');
+		    jQuery('#trial_saved_dialog_message').dialog("open");
                 }
             },
             error: function () {
@@ -479,6 +487,18 @@ jQuery(document).ready(function () {
        });
 
     }
+
+
+    jQuery( "#trial_saved_dialog_message" ).dialog({
+	autoOpen: false,
+	modal: true,
+	buttons: {
+            Ok: function() {
+		jQuery( this ).dialog( "close" );
+		location.reload();
+            }
+	}
+    });
 
     function verify_stock_list(stock_list) {
 	var return_val;
@@ -516,8 +536,8 @@ jQuery(document).ready(function () {
         buttons: {
 	    Confirm: function() {
 		commit_experimental_design(design_json);
-		jQuery( this ).dialog( "close" );
-		jQuery('#add_project_dialog').dialog("close");
+		//jQuery( this ).dialog( "close" );
+		//jQuery('#add_project_dialog').dialog("close");
 	    },
 	    Cancel: function() {
 		//jQuery('#add_project_dialog').dialog("close");
