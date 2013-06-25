@@ -128,6 +128,8 @@
 
 jQuery(document).ready(function () {
 
+    var design_json;
+
     jQuery('#add_project_link').click(function () {
         open_project_dialog()
     });
@@ -388,8 +390,9 @@ jQuery(document).ready(function () {
 		    jQuery('#trial_design_information').html(response.design_info_view_html);
                     jQuery('#trial_design_view_layout').html(response.design_layout_view_html);
                     jQuery('#trial_design_confirm').dialog("open");
-		    commit_experimental_design(response.design_json);
-		    jQuery('#add_project_dialog').dialog("close");
+		    design_json = response.design_json;
+		    //commit_experimental_design(response.design_json);
+		    //jQuery('#add_project_dialog').dialog("close");
 		    
                 }
             },
@@ -465,7 +468,8 @@ jQuery(document).ready(function () {
                 if (response.error) {
                     alert(response.error);
                 } else {
-		    //close
+		    alert('Trial design saved');
+		    location.reload();
                 }
             },
             error: function () {
@@ -511,11 +515,14 @@ jQuery(document).ready(function () {
         modal: true,
         buttons: {
 	    Confirm: function() {
+		commit_experimental_design(design_json);
 		jQuery( this ).dialog( "close" );
+		jQuery('#add_project_dialog').dialog("close");
 	    },
 	    Cancel: function() {
-		jQuery('#add_project_dialog').dialog("close");
+		//jQuery('#add_project_dialog').dialog("close");
 		jQuery( this ).dialog( "close" );
+		return;
 	    }
         },
     });
