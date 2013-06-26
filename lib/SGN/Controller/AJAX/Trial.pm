@@ -49,7 +49,6 @@ sub _build_schema {
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
 
 sub generate_experimental_design_GET : Args(0) {
-  print STDERR "begin experimental design function\n";
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_design = CXGN::TrialDesign->new();
@@ -141,34 +140,22 @@ sub generate_experimental_design_GET : Args(0) {
     $c->stash->{rest} = {error => "Design type not supported." };
     return;
   }
-
-  print STDERR "trying experimental design\n";
   try {
     $trial_design->calculate_design();
   } catch {
-  print STDERR "calculating experimental design\n";
     $c->stash->{rest} = {error => "Could not calculate design: $_"};
     $error=1;
   };
   if ($error) {return;}
-
-  print STDERR "getting experimental design\n";
   if ($trial_design->get_design()) {
     %design = %{$trial_design->get_design()};
   } else {
     $c->stash->{rest} = {error => "Could not generate design" };
     return;
   }
-
-  print STDERR "Design: ". Dumper(%design)."\n";
-
-
   $design_layout_view_html = design_layout_view(\%design, \%design_info);
   $design_info_view_html = design_info_view(\%design, \%design_info);
-
   my $design_json = encode_json(\%design);
-  print STDERR "\n\njson design: $design_json\n";
-
   $c->stash->{rest} = {
 		       success => "1", 
 		       design_layout_view_html => $design_layout_view_html,
@@ -201,7 +188,6 @@ sub commit_experimental_design_GET : Args(0) {
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_design = CXGN::TrialDesign->new();
   my %design;
-  #my %design_info;
   my $error;
   my $project_name = $c->req->param('project_name');
   my $project_description = $c->req->param('project_description');
@@ -209,7 +195,6 @@ sub commit_experimental_design_GET : Args(0) {
   my @stock_names;
   my $trial_location = $c->req->param('trial_location');
   my $design_type =  $c->req->param('design_type');
-
   if ($c->req->param('stock_list')) {
     @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
   }
@@ -219,40 +204,32 @@ sub commit_experimental_design_GET : Args(0) {
   }
   if ($c->req->param('design_json')) {
     %design = %{_parse_design_from_json($c->req->param('design_json'))};
-    print "found design\n"
   }
-
   my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year.
-
   my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'accession',
       cv     => 'stock type',
       db     => 'null',
       dbxref => 'accession',
     });
-
   my $plot_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'plot',
       cv     => 'stock type',
       db     => 'null',
       dbxref => 'plot',
     });
-
   my $plot_of = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'plot_of',
       cv     => 'stock relationship',
       db     => 'null',
       dbxref => 'plot_of',
     });
-
   my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
     {
         description => $trial_location,
     } ) ;
 
-
   #create project
-  print STDERR "\n\nDesc: $project_description\n";
   my $project = $schema->resultset('Project::Project')->find_or_create(
 								       {
 									name => $trial_name,
@@ -261,13 +238,14 @@ sub commit_experimental_design_GET : Args(0) {
 								      );
   $project->create_projectprops( { 'project year' => $year,'design' => $design_type}, {autocreate=>1});
 
-# find the cvterm for a phenotyping experiment
-my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-    { name   => 'phenotyping experiment',
-      cv     => 'experiment type',
-      db     => 'null',
-      dbxref => 'phenotyping experiment',
-    });
+  #find the cvterm for a phenotyping experiment
+  my $pheno_cvterm = $schema->resultset('Cv::Cvterm')
+    ->create_with({
+		   name   => 'phenotyping experiment',
+		   cv     => 'experiment type',
+		   db     => 'null',
+		   dbxref => 'phenotyping experiment',
+		  });
 
   foreach my $key (sort { $a <=> $b} keys %design) {
     my $plot_name = $design{$key}->{plot_name};
@@ -320,7 +298,6 @@ my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
 			type_id => $plot_cvterm->cvterm_id,
 		       } );
 
-
     if ($rep_number) {
       $plot->stockprops({'replicate' => $rep_number}, {autocreate => 1} );
     }
@@ -331,6 +308,7 @@ my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
     if ($is_a_control) {
       $plot->stockprops({'is a control' => $is_a_control}, {autocreate => 1} );
     }
+
     #create the stock_relationship with the accession
     $parent_stock
       ->find_or_create_related('stock_relationship_objects',
@@ -339,55 +317,35 @@ my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
 				subject_id => $plot->stock_id(),
 			       } );
 
-    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
-										  {
-										   nd_geolocation_id => $geolocation->nd_geolocation_id(),
-										   type_id => $pheno_cvterm->cvterm_id(),
-										  } );
+    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+      ->create({
+		nd_geolocation_id => $geolocation->nd_geolocation_id(),
+		type_id => $pheno_cvterm->cvterm_id(),
+		});
+
     #link to the project
-    $experiment->find_or_create_related('nd_experiment_projects', {
-								   project_id => $project->project_id()
-								  } );
+    $experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});
+
     #link the experiment to the stock
     $experiment->find_or_create_related('nd_experiment_stocks' , {
 								  stock_id => $plot->stock_id(),
 								  type_id  =>  $pheno_cvterm->cvterm_id(),
 								 });
-
   }
-
-
-
-  my $rep_count =  $c->req->param('rep_count');
-  my $block_number =  $c->req->param('block_number');
-  my $block_size =  $c->req->param('block_size');
-  my $max_block_size =  $c->req->param('max_block_size');
-  my $plot_prefix =  $c->req->param('plot_prefix');
-  my $start_number =  $c->req->param('start_number');
-  my $increment =  $c->req->param('increment');
-  my $trial_location = $c->req->param('trial_location');
-
-
-
-  $c->stash->{rest} = {
-		       success => "1",
-		      };
+  $c->stash->{rest} = {success => "1",};
 }
 
 sub _parse_design_from_json {
   my $design_json = shift;
   if ($design_json) {
-    print STDERR "found design json\n";
     my $decoded_json = decode_json($design_json);
     my %design = %{$decoded_json};
-    print STDERR "parse esign: ". Dumper(%design)."parsed\n";
     return \%design;
   }
   else {
     return;
   }
 }
-
 
 sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
 
@@ -423,30 +381,26 @@ sub verify_stock_list_GET : Args(0) {
   }
 }
 
-
-
-
 sub _verify_stock {
   my $self = shift;
   my $c = shift;
   my $schema = shift;
   my $stock_name = shift;
-
-  my $stock_rs = $schema->resultset("Stock::Stock")->search(
-							    {
-							     -or => [
-								     'lower(me.uniquename)' => { like => lc($stock_name) },
-								     -and => [
-									      'lower(type.name)'       => { like => '%synonym%' },
-									      'lower(stockprops.value)' => { like => lc($stock_name) },
-									     ],
-								    ],
-							    },
-							    {
-							     join => { 'stockprops' => 'type'} ,
-							     distinct => 1
-							    }
-							   );
+  my $stock_rs = $schema->resultset("Stock::Stock")
+    ->search({
+	      -or => [
+		      'lower(me.uniquename)' => { like => lc($stock_name) },
+		      -and => [
+			       'lower(type.name)' => { like => '%synonym%' },
+			       'lower(stockprops.value)' => { like => lc($stock_name) },
+			      ],
+		     ],
+	     },
+	     {
+	      join => { 'stockprops' => 'type'} ,
+	      distinct => 1
+	     }
+	    );
   if ($stock_rs->count >1 ) {
     die ("Multiple stocks found matching $stock_name\n");
   } elsif ($stock_rs->count == 1) {
@@ -466,22 +420,18 @@ sub upload_trial_layout_POST : Args(0) {
   my $header_line;
   my @header_contents;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-
   if (!$c->user()) {  #user must be logged in
     $c->stash->{rest} = {error => "You need to be logged in to upload a file." };
     return;
   }
-
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {  #user must have privileges to add a trial
     $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a file." };
     return;
   }
-
   if (!$upload) { #upload file required
     $c->stash->{rest} = {error => "File upload failed: no file name received"};
     return;
   }
-
   try { #get file contents
     @contents = split /\n/, $upload->slurp;
   } catch {
@@ -489,15 +439,12 @@ sub upload_trial_layout_POST : Args(0) {
     $error = 1;
   };
   if ($error) {return;}
-
   if (@contents < 2) { #upload file must contain at least one line of data plus a header
     $c->stash->{rest} = {error => "File upload failed: contains less than two lines"};
     return;
   }
-
   $header_line = shift(@contents);
   @header_contents = split /\t/, $header_line;
-
   try { #verify header contents
   _verify_trial_layout_header(\@header_contents);
   } catch {
@@ -512,42 +459,29 @@ sub upload_trial_layout_POST : Args(0) {
     return;
   }
 
-
   try { #verify contents of file
   _verify_trial_layout_contents($self, $c, \@contents);
   } catch {
     my %error_hash = %{$_};
-    print STDERR "the error hash:\n".Dumper(%error_hash)."\n";
     #my $error_string = Dumper(%error_hash);
     my $error_string = _formatted_string_from_error_hash(\%error_hash);
-
-     $c->stash->{rest} = {error => "File upload failed: missing or invalid content (see details that follow..)", error_string => "$error_string"};
+    $c->stash->{rest} = {error => "File upload failed: missing or invalid content (see details that follow..)", error_string => "$error_string"};
     $error = 1;
   };
   if ($error) {return;}
 
-  print STDERR "adding to database\n";
   try { #add file contents to the database
     _add_trial_layout_to_database($self,$c,\@contents);
   } catch {
     $c->stash->{rest} = {error => "File upload failed: $_"};
-    print "add error $_\n";
   };
 
   if ($error) {
-    print "there was an error\n";
     return;
   } else {
      $c->stash->{rest} = {success => "1"};
   }
-
-
-
-  print STDERR  "First line is:\n" . $contents[0] . "\n";
-  print STDERR "You shouldn't see this if there is an error in the upload\n";
 }
-
-
 
 sub _add_trial_layout_to_database {
   my $self = shift;
@@ -559,58 +493,42 @@ sub _add_trial_layout_to_database {
   my $location = $c->req->param('add_project_location');
   my $project_name = $c->req->param('add_project_name');
   my $project_description = $c->req->param('add_project_description');
+  my $plot_cvterm = $schema->resultset("Cv::Cvterm")
+    ->create_with({
+		   name   => 'plot',
+		   cv     => 'stock type',
+		   db     => 'null',
+		   dbxref => 'plot',
+		  });
+  my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")
+    ->find_or_create({
+		      description => $location, #add this as an option
+		     });
+  my $organism = $schema->resultset("Organism::Organism")
+    ->find_or_create({
+		      genus   => 'Manihot',
+		      species => 'Manihot esculenta',
+		     });
 
-  print STDERR "loc: $location\n";
-
-my $plot_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'plot',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'plot',
-    });
-
-my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
-    {
-        description => $location, #add this as an option
-    } ) ;
-
-my $organism = $schema->resultset("Organism::Organism")->find_or_create(
-    {
-	genus   => 'Manihot',
-	species => 'Manihot esculenta',
-    } );
-
-
-
-#???????????????????????
-my $plot_exp_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-    { name   => 'plot experiment',
-      cv     => 'experiment type',
-      db     => 'null',
-      dbxref => 'plot experiment',
-    });
+  #this is wrong
+  my $plot_exp_cvterm = $schema->resultset('Cv::Cvterm')
+    ->create_with({
+		   name   => 'plot experiment',
+		   cv     => 'experiment type',
+		   db     => 'null',
+		   dbxref => 'plot experiment',
+		  });
 
   #create project
-  my $project = $schema->resultset('Project::Project')->find_or_create(
-	{
-	    name => $project_name,
-	 description => $location,
-	}
-	);
+  my $project = $schema->resultset('Project::Project')
+    ->find_or_create({
+		      name => $project_name,
+		      description => $location,
+		     }
+		    );
 
- my $projectprop_year = $project->create_projectprops( { 'project year' => $year,}, {autocreate=>1});
-
-  print STDERR "sub for adding to database\n";
-  print "project: $project_name\n";
-  print "project desc: $project_description\n";
-
-
-
-
-my $organism_id = $organism->organism_id();
-
-
-
+  my $projectprop_year = $project->create_projectprops( { 'project year' => $year,}, {autocreate=>1});
+  my $organism_id = $organism->organism_id();
 
   foreach my $content_line (@contents) {
     my @line_contents = split /\t/, $content_line;
@@ -619,55 +537,53 @@ my $organism_id = $organism->organism_id();
     my $rep_number = $line_contents[2];
     my $stock_name = $line_contents[3];
     my $stock;
-    my $stock_rs = $schema->resultset("Stock::Stock")->search(
-								{
-								 -or => [
-									 'lower(me.uniquename)' => { like => lc($stock_name) },
-									 -and => [
-										  'lower(type.name)'       => { like => '%synonym%' },
-										  'lower(stockprops.value)' => { like => lc($stock_name) },
-										 ],
-									],
-								},
-								{
-								 join => { 'stockprops' => 'type'} ,
-								 distinct => 1
-								}
-							       );
-      if ($stock_rs->count >1 ) {
-	die ("multiple stocks found matching $stock_name");
-      } elsif ($stock_rs->count == 1) {
-	$stock = $stock_rs->first;
-      } else {
-	die ("no stocks found matching $stock_name");
-      }
-
-
-    my $unique_plot_name = $project_name."_".$stock_name."_plot_".$plot_name."_block_".$block_number."_rep_".$rep_number."_".$year."_".$location;
-
-      my $plot = $schema->resultset("Stock::Stock")->find_or_create(
-            { organism_id => $stock->organism_id(),
-	      name       => $unique_plot_name,
-	      uniquename => $unique_plot_name,
-	      type_id => $plot_cvterm->cvterm_id,
-            } );
-
-    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
-            {
+    my $stock_rs = $schema->resultset("Stock::Stock")
+      ->search({
+		-or => [
+			'lower(me.uniquename)' => { like => lc($stock_name) },
+			-and => [
+				 'lower(type.name)'       => { like => '%synonym%' },
+				 'lower(stockprops.value)' => { like => lc($stock_name) },
+				],
+		       ],
+	       },
+	       {
+		join => { 'stockprops' => 'type'} ,
+		distinct => 1
+	       }
+	      );
+    if ($stock_rs->count >1 ) {
+      die ("multiple stocks found matching $stock_name");
+    } elsif ($stock_rs->count == 1) {
+      $stock = $stock_rs->first;
+    } else {
+      die ("no stocks found matching $stock_name");
+    }
+    my $unique_plot_name = 
+      $project_name."_".$stock_name."_plot_".$plot_name."_block_".$block_number."_rep_".$rep_number."_".$year."_".$location;
+    my $plot = $schema->resultset("Stock::Stock")
+      ->find_or_create({
+			organism_id => $stock->organism_id(),
+			name       => $unique_plot_name,
+			uniquename => $unique_plot_name,
+			type_id => $plot_cvterm->cvterm_id,
+		       });
+    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+      ->create({
                 nd_geolocation_id => $geolocation->nd_geolocation_id(),
                 type_id => $plot_exp_cvterm->cvterm_id(),
-            } );
-
-#link to the project
-        $experiment->find_or_create_related('nd_experiment_projects', {
-            project_id => $project->project_id()
-                                            } );
-        #link the experiment to the stock
-        $experiment->find_or_create_related('nd_experiment_stocks' , {
-            stock_id => $plot->stock_id(),
-            type_id  =>  $plot_exp_cvterm->cvterm_id(),
-                                            });
-
+	       });
+    #link to the project
+    $experiment
+      ->find_or_create_related('nd_experiment_projects',{
+							 project_id => $project->project_id()
+							});
+    #link the experiment to the stock
+    $experiment
+      ->find_or_create_related('nd_experiment_stocks' ,{
+							stock_id => $plot->stock_id(),
+							type_id  =>  $plot_exp_cvterm->cvterm_id(),
+						       });
     }
 }
 
@@ -703,55 +619,43 @@ sub _verify_trial_layout_contents {
   my %stock_name_errors;
   my %column_number_errors;
   foreach my $content_line (@contents) {
-    print STDERR "verifying line $line_number\n";
     my @line_contents = split /\t/, $content_line;
     if (@line_contents != 4) {
       my $column_count = scalar(@line_contents);
       $column_number_errors{$line_number} = "Line $line_number: wrong number of columns, expected 4, found $column_count";
       $line_number++;
-      print STDERR "count: $column_count\n";
       next;
     }
     my $plot_name = $line_contents[0];
     my $block_number = $line_contents[1];
     my $rep_number = $line_contents[2];
     my $stock_name = $line_contents[3];
-
-
-
-
-    #if (! $schema->resultset("Stock::Stock")->find({name=>$stock_name,})){
-    #  $stock_name_errors{$line_number} = "Line $line_number: stock name $stock_name not found";
-    #}
-
     if (!$stock_name) {
       $stock_name_errors{$line_number} = "Line $line_number: stock name is missing";
     } else {
-      my $stock_rs = $schema->resultset("Stock::Stock")->search( #make sure stock name exists and returns a unique result
-								{
-								 -or => [
-									 'lower(me.uniquename)' => { like => lc($stock_name) },
-									 -and => [
-										  'lower(type.name)'       => { like => '%synonym%' },
-										  'lower(stockprops.value)' => { like => lc($stock_name) },
-										 ],
-									],
-								},
-								{
-								 join => { 'stockprops' => 'type'} ,
-								 distinct => 1
-								}
-							       );
+      #make sure stock name exists and returns a unique result
+      my $stock_rs = $schema->resultset("Stock::Stock")
+	->search({
+		  -or => [
+			  'lower(me.uniquename)' => { like => lc($stock_name) },
+			  -and => [
+				   'lower(type.name)'       => { like => '%synonym%' },
+				   'lower(stockprops.value)' => { like => lc($stock_name) },
+				  ],
+			 ],
+		 },
+		 {
+		  join => { 'stockprops' => 'type'} ,
+		  distinct => 1
+		 }
+		);
       if ($stock_rs->count >1 ) {
-	print STDERR "ERROR: found multiple accessions for name $stock_name! \n";
 	my $error_string = "Line $line_number:  multiple accessions found for stock name $stock_name (";
 	while ( my $st = $stock_rs->next) {
-	  print STDERR "stock name = " . $st->uniquename . "\n";
 	  my $error_string .= $st->uniquename.",";
 	}
 	$stock_name_errors{$line_number} = $error_string;
       } elsif ($stock_rs->count == 1) {
-	print STDERR "Found stock name $stock_name\n";
       } else {
 	$stock_name_errors{$line_number} = "Line $line_number: stock name $stock_name not found";
       }
@@ -761,7 +665,6 @@ sub _verify_trial_layout_contents {
       $plot_name_errors{$line_number} = "Line $line_number: plot name is missing";
     } else {
       my $unique_plot_name = $project_name."_".$stock_name."_plot_".$plot_name."_block_".$block_number."_rep_".$rep_number."_".$year."_".$location;
-      print STDERR "Unique plot:  $unique_plot_name\n";
       if ($schema->resultset("Stock::Stock")->find({uniquename=>$unique_plot_name,})) {
 	$plot_name_errors{$line_number} = "Line $line_number: plot name $unique_plot_name is not unique";
       }
@@ -788,7 +691,6 @@ sub _verify_trial_layout_contents {
 	$rep_number_errors{$line_number} = "Line $line_number: rep number $block_number is out of range";
       }
     }
-
     $line_number++;
   }
 
@@ -802,7 +704,6 @@ sub _verify_trial_layout_contents {
   }
   return;
 }
-
 
 sub _formatted_string_from_error_hash {
   my $error_hash_ref = shift;

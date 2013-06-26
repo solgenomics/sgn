@@ -148,7 +148,6 @@ background-color: #ccc;
 <script defer="defer">
 
 jQuery(document).ready(function () {
-
     var design_json;
 
     jQuery('#add_project_link').click(function () {
@@ -156,9 +155,10 @@ jQuery(document).ready(function () {
     });
 
     function open_project_dialog() {
-        jQuery('#add_project_dialog').dialog("open");
+	jQuery('#add_project_dialog').dialog("open");
 
-	//removes any old list selects before adding current ones.  this is important so that lists that are added and will appear without page refresh
+	//removes any old list selects before adding current ones.
+	//his is important so that lists that are added and will appear without page refresh
 	jQuery("#select_list_list_select").remove();
 	jQuery("#list_of_checks_section_list_select").remove();
 
@@ -217,8 +217,33 @@ jQuery(document).ready(function () {
 	jQuery("#select_design_method").change();
     }
 
+    jQuery("#format_type_radio").change(function () {
+        var method_to_use = jQuery('.format_type:checked').val();
+        if (method_to_use == "empty") {
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
+            jQuery("#trial_design_info").hide();
+            jQuery("#trial_design_more_info").hide();
+            jQuery("#get_file_upload_data").hide();
+        }
+        if (method_to_use == "create_with_upload") {
+            jQuery("#get_file_upload_data").show();
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
+            jQuery("#trial_design_info").hide();
+            jQuery("#trial_design_more_info").hide();
+        } else {
+            jQuery("#get_file_upload_data").hide();
+        }
+        if (method_to_use == "create_with_design_tool") {
+            jQuery("#trial_design_info").show();
+            jQuery("#add_project_dialog").dialog("option", "height","auto");
+	    jQuery("#select_design_method").change();
+        } else {
+            jQuery("trial_design_info").hide();
+        }
+    });
+
     jQuery('#add_project_dialog').dialog({
-        autoOpen: false,
+	autoOpen: false,
         modal: true,
 	autoResize:true,
         width: 500,
@@ -259,33 +284,8 @@ jQuery(document).ready(function () {
         }
     });
 
-    jQuery("#format_type_radio").change(function () {
-        var method_to_use = jQuery('.format_type:checked').val();
-        if (method_to_use == "empty") {
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-            jQuery("#trial_design_info").hide();
-            jQuery("#trial_design_more_info").hide();
-            jQuery("#get_file_upload_data").hide();
-        }
-        if (method_to_use == "create_with_upload") {
-            jQuery("#get_file_upload_data").show();
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-            jQuery("#trial_design_info").hide();
-            jQuery("#trial_design_more_info").hide();
-        } else {
-            jQuery("#get_file_upload_data").hide();
-        }
-        if (method_to_use == "create_with_design_tool") {
-            jQuery("#trial_design_info").show();
-            jQuery("#add_project_dialog").dialog("option", "height","auto");
-	    jQuery("#select_design_method").change();
-        } else {
-            jQuery("trial_design_info").hide();
-        }
-    });
-
     jQuery("#select_design_method").change(function () {
-        jQuery("#add_project_dialog").dialog("option", "height","auto");
+	jQuery("#add_project_dialog").dialog("option", "height","auto");
         var design_method = jQuery("#select_design_method").val();
         if (design_method == "CRD") {
             jQuery("#trial_design_more_info").show();
@@ -344,7 +344,6 @@ jQuery(document).ready(function () {
 	}
     });
 
-
     function generate_experimental_design() {
         var name = jQuery('#add_project_name').val();
         var year = jQuery('#add_project_year').val();
@@ -364,25 +363,16 @@ jQuery(document).ready(function () {
 	}
         var design_type = jQuery('#select_design_method').val();
 	var rep_count = jQuery('#rep_count').val();
-
 	var block_size = jQuery('#block_size').val();
 	var max_block_size = jQuery('#max_block_size').val();
 	var plot_prefix = jQuery('#plot_prefix').val();
 	var start_number = jQuery('#start_number').val();
 	var increment = jQuery('#increment').val();
 	var stock_verified = verify_stock_list(stock_list);
-
         if (desc == '' || year == '') {
             alert('Year and description are required.');
             return;
         }
-
-	//    alert(stock_verified);
-	//if (stock_verified == false) {
-	//
-	//    alert('Stock list errors.');
-	//    return;
-	//}
 
         new jQuery.ajax({
             type: 'GET',
@@ -412,17 +402,12 @@ jQuery(document).ready(function () {
                     jQuery('#trial_design_view_layout').html(response.design_layout_view_html);
                     jQuery('#trial_design_confirm').dialog("open");
 		    design_json = response.design_json;
-		    //commit_experimental_design(response.design_json);
-		    //jQuery('#add_project_dialog').dialog("close");
-		    
                 }
             },
             error: function () {
                 alert('An error occurred. sorry');
             }
-
        });
-
     }
 
  function commit_experimental_design(design_json) {
@@ -445,26 +430,16 @@ jQuery(document).ready(function () {
 	}
         var design_type = jQuery('#select_design_method').val();
 	var rep_count = jQuery('#rep_count').val();
-
 	var block_size = jQuery('#block_size').val();
 	var max_block_size = jQuery('#max_block_size').val();
 	var plot_prefix = jQuery('#plot_prefix').val();
 	var start_number = jQuery('#start_number').val();
 	var increment = jQuery('#increment').val();
 	var stock_verified = verify_stock_list(stock_list);
-
         if (desc == '' || year == '') {
             alert('Year and description are required.');
             return;
         }
-
-	//    alert(stock_verified);
-	//if (stock_verified == false) {
-	//
-	//    alert('Stock list errors.');
-	//    return;
-	//}
-
         new jQuery.ajax({
             type: 'GET',
             url: '/ajax/trial/commit_experimental_design',
@@ -498,18 +473,13 @@ jQuery(document).ready(function () {
             error: function () {
                 alert('An error occurred. sorry');
             }
-
        });
-
     }
-
-
 
     jQuery( "#trial_saving_dialog" ).dialog({
 	autoOpen: false,
 	modal: true,
     });
-
 
     jQuery( "#trial_saved_dialog_message" ).dialog({
 	autoOpen: false,
@@ -521,8 +491,6 @@ jQuery(document).ready(function () {
             }
 	}
     });
-
-    
 
     function verify_stock_list(stock_list) {
 	var return_val;
@@ -548,9 +516,6 @@ jQuery(document).ready(function () {
 	});
 	return return_val;
     }
-
-
-
 
     jQuery('#trial_design_confirm').dialog({
 	autoOpen: false,
@@ -587,8 +552,6 @@ jQuery(document).ready(function () {
       }
     }); 
 
- 
-
     function save_project_info(name, year, desc) {
         alert('data = ' + name + ' ' + year + ' ' + desc);
         new jQuery.ajax({
@@ -610,9 +573,7 @@ jQuery(document).ready(function () {
             error: function () {
                 alert('An error occurred. sorry');
             }
-
         });
-
     }
 
     function create_design() {
@@ -624,7 +585,6 @@ jQuery(document).ready(function () {
             alert('Name and year are required.');
             return;
         }
-
         new jQuery.ajax({
             type: 'GET',
             url: '/breeders/project/insert',
@@ -633,68 +593,52 @@ jQuery(document).ready(function () {
                 'project_description': desc,
                 'year': year
             },
-
         }).done(alert("Done saving project info"));
         jQuery('#add_project_dialog').dialog("close");
     }
 
-
-jQuery('#create_new_trial_form').iframePostForm({
-    json: true,
-    post: function () {
-        var uploadTrialLayoutFile = jQuery("#trial_upload_file").val();
-        if (uploadTrialLayoutFile === '') {
-            alert("No file selected");
-        }
-    },
-    complete: function (response) {
-
-        if (response.error_string) {
-            //alert(response.error_string);
-            jQuery("#upload_trial_error_display tbody").html('');
-            jQuery("#upload_trial_error_display tbody").append(response.error_string);
-
-            jQuery(function () {
-                jQuery("#upload_trial_error_display").dialog({
-                    modal: true,
-                    title: "Errors in uploaded file",
-                    buttons: {
-                        Ok: function () {
-                            jQuery(this).dialog("close");
-                        }
-                    }
-                });
-            });
-            return;
-        }
-
-        if (response.error) {
-            alert(response.error);
-            return;
-        }
-
-        if (response.success) {
-            alert("File uploaded successfully");
-        }
-
-    }
-});
-
+    jQuery('#create_new_trial_form').iframePostForm({
+	json: true,
+	post: function () {
+            var uploadTrialLayoutFile = jQuery("#trial_upload_file").val();
+            if (uploadTrialLayoutFile === '') {
+		alert("No file selected");
+            }
+	},
+	complete: function (response) {
+            if (response.error_string) {
+		jQuery("#upload_trial_error_display tbody").html('');
+		jQuery("#upload_trial_error_display tbody").append(response.error_string);
+		jQuery(function () {
+                    jQuery("#upload_trial_error_display").dialog({
+			modal: true,
+			title: "Errors in uploaded file",
+			buttons: {
+                            Ok: function () {
+				jQuery(this).dialog("close");
+                            }
+			}
+                    });
+		});
+		return;
+            }
+            if (response.error) {
+		alert(response.error);
+		return;
+            }
+            if (response.success) {
+		alert("File uploaded successfully");
+            }
+	}
+    });
 });
 
 </script>
 
-
-
 <table>
-
-
-<%perl>
-
-
-
-foreach my $p (@projects){ 
-   print "<tr><td><a href=\"/breeders_toolbox/trial/$p->[0]\">$p->[1]</td><td>$p->[2]</td></tr>\n";
-}
-</%perl>
+  <%perl>
+    foreach my $p (@projects){
+      print "<tr><td><a href=\"/breeders_toolbox/trial/$p->[0]\">$p->[1]</td><td>$p->[2]</td></tr>\n";
+    }
+  </%perl>
 </table>
