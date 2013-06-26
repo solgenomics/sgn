@@ -15,11 +15,15 @@ $trait_id
 $combo_pops_id
 $trait_combo_pops
 $descriptive_stat
+$download_prediction
+$prediction_pop_id => ''
+$list_of_prediction_pops
+$prediction_pop_name => ''
+$analyzed_traits =>''
 
 </%args>
 
 <%perl>
-
 
 </%perl>
 
@@ -86,3 +90,11 @@ $descriptive_stat
   validation_download_url => $validation_download_url
 &>
 
+<& /solgs/population/selection_populations.mas, 
+   download_prediction     => $download_prediction,
+   analyzed_traits         => $analyzed_traits,
+   pop_id                  => $combo_pops_id,
+   prediction_pop_id       => $prediction_pop_id,
+   list_of_prediction_pops => $list_of_prediction_pops,
+   prediction_pop_name     => $prediction_pop_name, 
+&>
