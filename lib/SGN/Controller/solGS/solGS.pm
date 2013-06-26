@@ -168,8 +168,8 @@ sub projects_links {
         my $pr_year     = $projects->{$pr_id}{project_year};
         my $pr_location = $projects->{$pr_id}{project_location};
                
-        my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" /> </form> |;
-        push @projects_pages, [ $checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
+        #my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" /> </form> |;
+        push @projects_pages, [ qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
                                $pr_desc, $pr_location, $pr_year
         ];
     }
@@ -304,7 +304,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
         my $def  = $row->definition;
         #my $checkbox = qq |<form> <input type="checkbox" name="trait" value="$name" onclick="getPopIds()"/> </form> |;
         my $checkbox;
-        push @rows, [ $checkbox, qq |<a href="/solgs/search/result/populations/$id">$name</a>|, $def];      
+        push @rows, [ qq |<a href="/solgs/search/result/populations/$id">$name</a>|, $def];      
     }
 
     if (@rows)
@@ -1563,7 +1563,7 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
     my $pop_location = $pop_details->{$pop_id}{project_location};
                
     my $checkbox = qq |<form> <input type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
-    push @selected_pops_details, [ $checkbox, qq|<a href="/solgs/population/$pop_id" onclick="solGS.waitPage()">$pop_name</a>|, 
+    push @selected_pops_details, [$checkbox,  qq|<a href="/solgs/population/$pop_id" onclick="solGS.waitPage()">$pop_name</a>|, 
                                $pop_desc, $pop_location, $pop_year
     ];
   
