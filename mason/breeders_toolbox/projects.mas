@@ -542,7 +542,7 @@ jQuery(document).ready(function () {
 
     jQuery('#trial_design_view_layout').dialog({
 	autoOpen: false,
-	autoResize:true,
+	height: 500,
 	width: 400,
         modal: true,
         buttons: {
