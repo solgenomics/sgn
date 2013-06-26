@@ -13,7 +13,7 @@ $page_links => ''
 </%args>
 
 <& /page/columnar_table.mas,
-     headings    => ['',  'Projects', 'Description', 'Location', 'Year' ],
+     headings    => [ 'Projects', 'Description', 'Location', 'Year' ],
      data        => $result,
     __alt_freq   => 2,
     __alt_width  => 1,

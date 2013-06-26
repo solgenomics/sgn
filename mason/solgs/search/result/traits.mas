@@ -23,7 +23,7 @@ $form => undef;
       title => 'Search Results',
 &>
   <& /page/columnar_table.mas,
-     headings    => ['Select trait',  'Name', 'Definition'],
+     headings    => ['Name', 'Definition'],
     data         => $result,
     __alt_freq   => 2,
     __alt_width  => 1,
