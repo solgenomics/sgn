@@ -121,6 +121,7 @@ sub genotype_form : Path('/solgs/form/population/genotype') Args(0) {
 
 }
 
+
 sub search : Path('/solgs/search') Args() {
     my ($self, $c) = @_;
 
@@ -933,7 +934,7 @@ sub download_prediction_urls {
     }
     else
     {
-        $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$prediction_pop_id""  onclick="solGS.waitPage()">[ Predict Now ]</a> |;
+        $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$prediction_pop_id"  onclick="solGS.waitPage()">[ Predict Now ]</a> |;
     }
   
 }
