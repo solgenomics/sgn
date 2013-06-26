@@ -685,7 +685,6 @@ sub download_marker_effects :Path('/solgs/download/marker/pop') Args(3) {
     my $marker_exp = "gebv_marker_${trait_abbr}_${pop_id}";
     my $markers_file = $self->grep_file($dir, $marker_exp);
 
-    print STDERR "\nmarkers file: $markers_file :\t $marker_exp\n";
     unless (!-e $markers_file || -s $markers_file == 0) 
     {
         my @effects =  map { [ split(/\t/) ] }  read_file($markers_file);
@@ -911,8 +910,8 @@ sub download_prediction_urls {
 
     my $download_url;# = $c->stash->{download_prediction};
 
-    if ($page =~ /solgs\/trait\//)
-    {
+    if ($page =~ /[{solgs\/trait\/}{solgs\/model\/combined\/populations\/}]/  )
+    { 
         $trait_ids = [$page_trait_id];
     }
 
@@ -1438,8 +1437,6 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      $self->analyzed_traits($c);
      my @analyzed_traits = @{$c->stash->{analyzed_traits}};
  
-     print STDERR "all_traits_out prediction pop: $analyzed_traits[0]\n";
-
      if (!@analyzed_traits) 
      {
          $c->res->redirect("/solgs/population/$pop_id/selecttraits/");
@@ -1679,6 +1676,11 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations') Args
     $self->gebv_marker_file($c);
     $self->top_markers($c);
     $self->combined_pops_summary($c);
+    
+    $self->download_prediction_urls($c);
+    my $download_prediction = $c->stash->{download_prediction};
+
+    $self->list_of_prediction_pops($c, $combo_pops_id, $download_prediction);
 
     $c->stash->{template} = $self->template('/model/combined/populations/trait.mas');
 }
@@ -1713,13 +1715,13 @@ sub combined_pops_summary {
 
     my $dir = $c->{stash}->{solgs_cache_dir};
 
-    my $geno_exp  = "genotype_data_trait_${trait_id}_${combo_pops_id}";
+    my $geno_exp  = "genotype_data_${combo_pops_id}_${trait_abbr}_combined";
     my $geno_file = $self->grep_file($dir, $geno_exp);  
   
     my @geno_lines = read_file($geno_file);
     my $markers_no = scalar(split ('\t', $geno_lines[0])) - 1;
 
-    my $pheno_exp = "phenotype_trait_${trait_abbr}_${combo_pops_id}_combined";
+    my $pheno_exp = "phenotype_data_${combo_pops_id}_${trait_abbr}_combined";
     my $trait_pheno_file = $self->grep_file($dir, $pheno_exp);  
     
     my @trait_pheno_lines = read_file($trait_pheno_file);
@@ -1803,16 +1805,18 @@ sub compare_genotyping_platforms {
 sub cache_combined_pops_data {
     my ($self, $c) = @_;
 
-    my $trait_id = $c->stash->{trait_id};
+    my $trait_id   = $c->stash->{trait_id};
+    my $trait_abbr = $c->stash->{trait_abbr};
+
     my $combo_pops_id = $c->stash->{combo_pops_id};
 
     my  $cache_pheno_data = {key       => "phenotype_data_trait_${trait_id}_${combo_pops_id}_combined",
-                             file      => "phenotype_data_trait_${trait_id}_${combo_pops_id}_combined",
+                             file      => "phenotype_data_${combo_pops_id}_${trait_abbr}_combined",
                              stash_key => 'trait_combined_pheno_file'
     };
       
-    my  $cache_geno_data = {key       => "genotype_data_trait_${trait_id}_${combo_pops_id}_combined",
-                            file      => "genotype_data_trait_${trait_id}_${combo_pops_id}_combined",
+    my  $cache_geno_data = {key       => "genotype_data_trait_${trait_abbr}_${combo_pops_id}_combined",
+                            file      => "genotype_data_${combo_pops_id}_${trait_abbr}_combined",
                             stash_key => 'trait_combined_geno_file'
     };
 
