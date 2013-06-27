@@ -4,46 +4,63 @@
 
 <%args>
 $db_id => undef
-$databases => []
-$popular_dbs => []
-$popular_species_dbs => []
-$unigene_dbs => []
-$genome_dbs => []
+$dataset_groups => []
+$databases => {}
 $programs
 $preload_seq => ''
 </%args>
 
 <%perl>
+use JSON::Any;
 
-my $dataset_select = <<SELECT;
-<select id="dataset_select">
-<option>Popular datasets</option>
-<option>Popular species</option>
-<option>Genomes</options>
-<option>Unigenes</option>
-<option>Tomato datasets</option>
-<option>Potato datasets</option>
-<option>N. benthamiana datasets</option>
-<option>all datasets</option>
-</select>
-SELECT
+my $menus = {};
+foreach my $d (keys(%$databases)) { 
+   $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", id=>"database", choices => [ @{$databases->{$d}} ]);
+}
+
+my $substitution_matrix_select = $m->scomp('/page/html_select.mas', 
+   name=>"substitution_matrix", 
+   id=>"substitution_matrix", 
+   choices => [  [ 'BLOSUM62', 'BLOSUM62 (default)' ],
+                 [ 'BLOSUM80', 'BLOSUM80 (recent divergence)' ],
+		 [ 'BLOSUM45', 'BLOSUM45 (ancient divergence)' ],
+		 'PAM30',
+		 'PAM70',
+              ]);
+
+my $show_graphics_select = $m->scomp('/page/html_select.mas',  name => 'output_graphs', id=>'output_graphs',
+        	      choices => [ [ 'bioperl_histogram', 'all' ],
+	                	   'none',
+			           [ 'bioperl_only', 'alignment summary only' ],
+				   [ 'histogram_only', 'conservedness histogram only' ],
+				 ],
+				 ),
+
+
+
+print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
 </%perl>
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
-<form method="post" action="blast_result.pl" name="blastform">
-
-
   <input type="hidden" checked="checked" name="filterq" value="1" />
   <input type="hidden" name="interface_type" value="simple" />
   <input type="hidden" name="outformat" value="0" />
   <table align="center" summary="" cellpadding="0" cellspacing="15">
-    <tr><td><b>Show</b></td><td><% $dataset_select %></td></tr>
-    <tr><td><b>Sequence Database</b> </td><td><% $databases %><a style="font-size: 80%" title="View details of each database" href="dbinfo.pl">db details</a></td></tr>
-    <tr><td><b>Program</b> </td><td><% $programs %></td></tr>
-    <tr><td><b>Query</b></td><td>
-	<select>
+    <tr><td><b>Show</b></td><td>
+	<& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select" &>
+</td></tr>
+    <tr><td><b>Sequence Database</b> </td>
+      <td><div id="database_select"></div>
+	<a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>
+    </td></tr>
+    <tr><td><b>Program</b></td>
+      <td><& /page/html_select.mas, name=>'program_select', id=>'program_select', choices=>$programs &>
+    </td></tr>
+
+<tr><td><b>Query</b></td><td>
+	<select id="input_type_select">
 	  <option value="sequence">Sequence</option>
 	  <option value="fasta">Fasta sequence</option>
 	  <option value="tomato_gene_ids">Tomato gene identifiers</option>
@@ -52,42 +69,29 @@ SELECT
 	</td></tr>
 <tr><td colspan="2">
 
-	    
-
-<div style="font-size: 80%">single sequence only, use Advanced for multiple</div><textarea name="sequence" id="sequence_input" rows="8" cols="80"><% $preload_seq %></textarea></td></tr>
+<!-- div style="font-size: 80%">single sequence only, use Advanced for multiple</div -->
+<textarea name="sequence" id="sequence" rows="8" cols="80"><% $preload_seq %></textarea></td></tr>
     <tr><td colspan="2">
       <table width="100%"><tr>
          <td>
 
-<%perl>
-
-  my $substitution_matrix_select = ''; #simple_selectbox_html( name => 'matrix',
-				#				    choices => [ [ 'BLOSUM62', 'BLOSUM62 (default)' ],
-				#						 [ 'BLOSUM80', 'BLOSUM80 (recent divergence)' ],
-				#						 [ 'BLOSUM45', 'BLOSUM45 (ancient divergence)' ],
-				#						 'PAM30',
-				#						 'PAM70',
-				#					       ],
-				#				  ),
-  my $show_graphics_select = '';#<%  $show_graphics_select %>, # simple_selectbox_html( name => 'output_graphs',
-        #	      choices => [ [ 'bioperl_histogram', 'all' ],
-						#			   'none',
-						#			   [ 'bioperl_only', 'alignment summary only' ],
-						#			   [ 'histogram_only', 'conservedness histogram only' ],
-						#			 ],
-						#	    ),
-#		    __multicol => 2,
-#  __border => 0,
-		 #   __tableattrs => 'width="100%"',
-</%perl>
+  <div id="blast_status">Please select your input parameters.</div>
 
 <& /page/info_table.mas, title=>'', data => [ 
-  'Expect (e-value) Threshold' => '<input type="text" size="6" value="1e-10" name="expect" />',
+  'Expect (e-value) Threshold' => '<input id="evalue" type="text" size="6" value="1e-10" name="expect" />',
   'Substitution Matrix' => $substitution_matrix_select,
-  'Max. hits to show' => '<input type="text" name="maxhits" size="6" value="100" />',
-  ' ' => '<div style="text-align: right"><input type="reset" value="Clear" onclick="clearField(); "/> <input type="submit" name="search" value="Search" /></div>',
+  'Max. hits to show' => '<input id="max_hits" type="text" name="maxhits" size="6" value="100" />',
   'Show Graphics' => $show_graphics_select, 
+  ' ' => '<div style="text-align: right">
+
+
+<input id="clear_button" type="reset" value="Clear" onclick="clearField(); "/> <input id="submit_button" type="submit" name="search" value="Search" onclick="javascript:run_blast();" /></div>',
+  __multicol => 2,
+  __border => 0,
+  __tableattrs => 'width="100%"',
+
 ]
+
 &>
 		  
 
@@ -96,10 +100,87 @@ SELECT
       </table>
     </td></tr>
   </table>
-</form>
-<script language="JavaScript" type="text/javascript">
-$programs_js
-$spellcheck_js
+<script>
+
+swap_menu(1);
+
+function swap_menu(group_id) { 
+   var menu_html = eval( <% JSON::Any->encode($menus) %>);
+   alert('Displaying menu '+menu_html[group_id]);
+   jQuery('#database_select').html(menu_html[group_id]);
+
+}
+
+function run_blast() { 
+   var jobid = 0;
+
+   var status = "Initializing run... ";
+   jQuery('blast_status').html(status);
+
+   var program  = jQuery('#program_select').val();
+   var sequence = jQuery('#sequence').val();
+   var database = jQuery('#database').val();
+   var evalue   = jQuery('#evalue').val();
+   var matrix   = jQuery('#substitution_matrix').val();
+   var graphics = jQuery('#graphics').val();
+   var maxhits  = jQuery('#maxhits').val();
+   var filterq  = jQuery('#filterq').val();
+
+   if (sequence == '') { 
+      alert("Please enter a sequence :=)"); 
+      jQuery('blast_status').html('');
+      return; 
+  
+   }
+
+   alert('program: '+program + ' sequence: '+sequence+' database '+database+' evalue '+evalue+'matrix '+matrix);
+
+   jQuery.ajax( { 
+      url: '/tools/blast/init',
+      async: false,
+      success: function(response) { jobid = response.jobid; alert("JOBID: "+jobid); },
+      error: function(response) { alert("ERROR!") }
+   });
+
+
+   status += "Running BLAST... ";
+   jQuery('#blast_status').html(status);
+
+   jQuery.ajax( { 
+      url: '/tools/blast/run/'+jobid,
+      async: true,
+      method: 'POST',
+      data: {  'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 'filterq': filterq, 'database': database, 'program': program },
+      success: function(response) { alert("SUCCESS!!!!!"); },
+      error: function(response) { }
+   });
+
+
+   done = false;
+ 
+   while (done == false) { 
+      jQuery.ajax( { 
+          url: '/tools/blast/check/'+jobid,
+          async: false,
+          success: function(response) { 
+             if (response.complete == 1) { 
+                done = true; 
+             }
+          },
+          error: function(response) { alert("An error occurred!"); exit; }
+     });
+     status = status + "."; jQuery('#blast_status').html(status);      
+   }
+
+   status = status +  "Run complete.";
+   jQuery('#blast_status').html(status);
+}
+
+
+//$programs_js
+//$spellcheck_js
+
+
 </script>
 
 

@@ -10,7 +10,8 @@ use Tie::UrlEncoder; our %urlencode;
 use CXGN::Tools::Run;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
-
+use File::Temp qw | tempfile |;
+use File::Basename qw | basename |;
 
 BEGIN { extends 'Catalyst::Controller::REST'; };
 
@@ -20,19 +21,16 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-
 sub init_run : Path('/tools/blast/init') Args(0) { 
     my $self = shift;
     my $c = shift;
 
-    my ($seq_fh, $seqfile) = tempfile( "seqXXXXXX",
+    my ($seq_fh, $seqfile) = tempfile( "blastquery_XXXXXX",
 					    DIR=> $c->get_conf('cluster_shared_tempdir'),
 	);
 
     my $jobid = basename($seqfile);
     $c->stash->{rest} = { jobid =>  basename($jobid), };
-    
-
 }
 
 sub run : Path('/tools/blast/run') Args(1) { 
@@ -40,12 +38,13 @@ sub run : Path('/tools/blast/run') Args(1) {
     my $c = shift;
     my $jobid = shift;
 
-    my %params = $c->req->params();
+
+    my $params = $c->req->params();
 
     my $seqfile =  $c->get_conf('cluster_shared_tempdir')."/".$jobid;
 
     my $seq_count;
-    
+
     my %arg_handlers =
 	(
 	 interface_type =>
@@ -53,7 +52,7 @@ sub run : Path('/tools/blast/run') Args(1) {
 	 
 	 sequence =>
 	 sub {
-	     my $sequence = $params{sequence};
+	     my $sequence = $params->{sequence};
 	     if( $sequence ) {
 		 $sequence =~ s/^\s+|\s+$|\n\s*\n//g; #< trim out leading and trailing whitespace and blank lines
 		 if ($sequence !~ /^\s*>/) {
@@ -88,7 +87,7 @@ sub run : Path('/tools/blast/run') Args(1) {
 	     try {
 		 while ( my $s = $i->next_seq ) {
 		     $seq_count++ if $s->length;
-		     validate_seq( $s, $params{program} );
+		     $self->validate_seq($c, $s, $params->{program} );
 		     $s->length or $c->throw(
 			 message  => 'Sequence '.encode_entities('"'.$s->id.'"').' is empty, this is not allowed by BLAST.',
 			 is_error => 0, 
@@ -120,7 +119,7 @@ sub run : Path('/tools/blast/run') Args(1) {
 	 
 	 matrix =>
 	 sub {
-	     my $m = $params{matrix};
+	     my $m = $params->{matrix};
 	     $m =~ /^(BLOSUM|PAM)\d\d$/
 		 or $c->throw( is_error => 0, message => "invalid matrix '$m'" );
 	     return -M => $m;
@@ -129,101 +128,94 @@ sub run : Path('/tools/blast/run') Args(1) {
 	 
 	 expect =>
 	 sub {
-	     $params{expect} =~ s/[^\d\.e\-\+]//gi; #can only be these characters
-	     return -e => $params{expect} || 1
+	     $params->{evalue} =~ s/[^\d\.e\-\+]//gi; #can only be these characters
+	     return -e => $params->{evalue} || 1
 	 },
 	 
 	 maxhits =>
 	 sub {
-	     my $h = $params{maxhits} || 100;
+	     my $h = $params->{maxhits} || 100;
 	     $h =~ s/\D//g; #only digits allowed
 	     return -b => $h
 	 },
 	 
 	 filterq =>
 	 sub {
-	     return -F => $params{filterq} ? 'T' : 'F'
+	     return -F => $params->{filterq} ? 'T' : 'F'
 	 },
 	 
 	 outformat =>
 	 sub {
-	     $params{outformat} =~ s/\D//g; #only digits allowed
-	     return -m => $params{outformat}
+	     $params->{outformat} =~ s/\D//g; #only digits allowed
+	     return -m => $params->{outformat};
 	 },
 	 
-	 database =>
-	 sub {
+	 database => 
+           sub { 
+             return '/data/prod/blast/databases/current/genomes/cassava'; 
+           },
+
+#	 sub {
 	     #my ($bdb) = CXGN::BlastDB->search( file_base => $params{database} )
 	     #or die "could not find bdb with file_base '$params{database}'";
 	     
 	     #     warn "setting pref last_blast_db_fil
 	     #database object for specific ID_No
-	     my $bdb = CXGN::BlastDB->from_id($params{database});
-	     my $basename = $bdb->full_file_basename;
+#	     my $bdb = SGN::Schema::BlastDb->from_id($params->{database});
+#	     my $basename = $bdb->full_file_basename;
 	     #returns '/data/shared/blast/databases/genbank/nr'
 	     #remember the ID of the blast db the user just blasted with
 	     
-	     return -d => $basename;
-	 },
+#	     return -d => $basename;
+	   
+#	 },
 	 
 	 program =>
 	 sub {
-	     $params{program} =~ s/[^a-z]//g; #only lower-case letters
-	     return -p => $params{program}
+	     $params->{program} =~ s/[^a-z]//g; #only lower-case letters
+	     return -p => $params->{program}
 	 },
 	 
-	 output_graphs =>
-	 sub {()}, #< no effect on command line
+	 output_graphs => sub {()}, #< no effect on command line
 	 
 	 file => sub {},
 	 #sub {warn "GOT FILE $params{file}\n"; ()},
 	);
-    
-#get all the params from our request
-#    @params{keys %arg_handlers} = $page->get_arguments(keys %arg_handlers);
-    
-#build our command with our arg handlers
+
+
+    # build our command with our arg handlers
+    #
     my @command =
 	( 'blastall',
-	  map $_->(), values %arg_handlers
+	  map  { join " ", ($_, $arg_handlers{$_}->()) }  keys %arg_handlers
 	);
-    
-# save our prefs
- #   $prefs->save;
-    
-#check some specific error conditions
-#   multiple sequences in given to simple BLAST
-#    if($params{interface_type} eq 'simple' && $seq_count > 1) {
-	
-#	$c->throw( is_error => 0,
-#		   message  => <<EOM,
-#		   The Simple BLAST interface is limited to one query sequence.  Please
-#use the Advanced BLAST for multiple query sequences.
-#EOM
- #           );
 
-
+    print STDERR "COMMAND: ".join " ", @command;
     
-    #now run the blast
+    # save our prefs
+    # $prefs->save;
+    
+    # now run the blast
+    #
     my $job = CXGN::Tools::Run->run_cluster(
 	@command,
 	{ 
-	    temp_base => $c->get_conf('cluster_shared_tempdir'),
-	    queue => $c->get_conf('web_cluster_queue'),
-	    working_dir => $c->get_conf('cluster_shared_tempdir'),
+	    temp_base => $c->config->{'cluster_shared_tempdir'},
+	    queue => $c->config->{'web_cluster_queue'},
+	    working_dir => $c->config->{'cluster_shared_tempdir'},
 	    # don't block and wait if the cluster looks full
 	    max_cluster_jobs => 1_000_000_000,
 	}
 	);
     
-#$job->do_not_cleanup(1);
+
+    #$job->do_not_cleanup(1);
     
     while ($job->alive()) { 
 	sleep(1);
-	
     }
     
-    my $apache_temp = $c->config->{tempfiles_subdir} ."/blast/$jobid";
+    my $apache_temp = jobid_to_file($c, $jobid);
 
     system("ls /data/prod/tmp 2>&1 >/dev/null");
     copy($job->out_file, $apache_temp)
@@ -232,6 +224,8 @@ sub run : Path('/tools/blast/run') Args(1) {
 
     # the existence of the following file signals we are done
     touch $apache_temp.".done";
+    
+    $c->stash->{rest} = { done => 1 };
 }
 
 
@@ -240,11 +234,12 @@ sub check : Path('/tools/blast/check') Args(1) {
     my $c = shift;
     my $jobid = shift;
 
-    if (-e $c->config->{tempfiles_subdir}."/blast/$jobid".".done") { 
-	return { complete => 1 };
+    sleep(1);
+    if (-e $self->jobid_to_file($c, $jobid).".done") { 
+	$c->stash->{rest} = { complete => 1 };
     }
     else { 
-	return { complete => 0 };
+	$c->stash->{rest} = { complete => 0 };
     }
 }
 
@@ -253,20 +248,17 @@ sub get_result : Path('/tools/blast/result') Args(1) {
     my $self = shift;
     my $c = shift;
     my $jobid = shift;
+    my $parse_method = shift || "basic";
 
     my $format = $c->req->param('format');
 
-    my $result_file = $c->req->{tempfiles_subdir}."/blast/$jobid";
+    my $result_file = $self->jobid_to_file($c, $jobid);
 
-    if (!$format || $format eq 'raw') { 
-	$c->stash->{rest} = { report => [ read_file($result_file) ] };
-    }
-    elsif ($format eq 'bioperl') { 
-	$c->stash->{rest} = { report => [ read_file($result_file) ] }; # have to format this with bioperl
-    }
-    else { 
-	$c->stash->{rest} = { error => "No report of format '$format' found", };
-    }
+    my $parser = CXGN::ParseBlast->new();
+    my $parsed_file = $parser->parse($parse_method, $result_file);
+
+    $c->stash->{rest} = { blast_report => read_file($parsed_file), };
+
 }
 
 sub blast_overview_graph : Path('/tools/blast/overview') Args(1) { 
@@ -353,5 +345,15 @@ sub validate_seq : Path('/tools/blast/validate') Args(0) {
 	error => '',
     };
 }
+
+sub jobid_to_file { 
+    my $self = shift;
+    my $c = shift;
+    my $jobid = shift;
+    return $c->req->{tempfiles_subdir}."/blast/$jobid";
+    
+}
+
+
 
 1;
