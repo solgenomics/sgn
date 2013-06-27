@@ -826,7 +826,7 @@ sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
  
 sub prediction_population :Path('/solgs/model') Args(3) {
     my ($self, $c, $model_id, $pop, $prediction_pop_id) = @_;
- 
+    
     $c->res->redirect("/solgs/analyze/traits/population/$model_id/$prediction_pop_id");
 
 }
@@ -1286,7 +1286,7 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
     my ($self, $c) = @_; 
    
     my ($pop_id, $prediction_id) = @{$c->req->captures};
-    
+   
     $c->stash->{pop_id} = $pop_id;
     $c->stash->{prediction_pop_id} = $prediction_id;
   
@@ -1308,7 +1308,7 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
     {
         $single_trait_id = $selected_traits[0];
         if (!$prediction_id)
-        {
+        { 
             $c->res->redirect("/solgs/trait/$single_trait_id/population/$pop_id");
         } 
         else
@@ -1334,11 +1334,11 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
                     }
                 }
             }
-            
+           
             $c->forward('get_rrblup_output');
         }
     }
-    elsif(scalar(@selected_traits) > 1)
+    elsif (scalar(@selected_traits) > 1) 
     {
         my ($traits, $trait_ids);    
         
@@ -1401,7 +1401,20 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
     
 #     print STDERR "\ndo nothing for now..\n";
 #     }
-    $c->res->redirect("/solgs/traits/all/population/$pop_id/$prediction_id");
+    my $referer    = $c->req->referer;   
+    my $base       = $c->req->base;
+    $referer       =~ s/$base//;
+    my ($tr_id)    = $referer =~ /(\d+)/;
+    my $trait_page = "solgs\/trait\/$tr_id\/population\/$pop_id";
+    
+    if ($referer =~ m/[$trait_page]/) 
+    { 
+        $c->res->redirect("/solgs/trait/$tr_id/population/$pop_id");      
+    }
+    else 
+    {
+        $c->res->redirect("/solgs/traits/all/population/$pop_id/$prediction_id");
+    }
 
 }
 
