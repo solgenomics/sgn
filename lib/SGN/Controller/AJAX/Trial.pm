@@ -26,7 +26,7 @@ use Scalar::Util qw(looks_like_number);
 use File::Slurp;
 use Data::Dumper;
 use CXGN::TrialDesign;
-use JSON;
+use JSON -support_by_pp;
 use SGN::View::Trial qw/design_layout_view design_info_view/;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -166,8 +166,10 @@ sub generate_experimental_design_GET : Args(0) {
 
 sub _parse_list_from_json {
   my $list_json = shift;
+  my $json = new JSON;
   if ($list_json) {
-    my $decoded_list = decode_json($list_json);
+    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+    #my $decoded_list = decode_json($list_json);
     my @array_of_list_items = @{$decoded_list};
     my @list;
     foreach my $list_item_array_ref (@array_of_list_items) {
