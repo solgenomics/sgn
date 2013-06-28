@@ -519,7 +519,7 @@ jQuery(document).ready(function () {
 
     jQuery('#trial_design_confirm').dialog({
 	autoOpen: false,
-	autoResize:true,
+        height: 400,
 	width: 450,
         modal: true,
         buttons: {
