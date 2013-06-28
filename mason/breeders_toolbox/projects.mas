@@ -126,8 +126,8 @@
 
 <div id="trial_saving_dialog" title="Saving">
   <p>
-    <span class="ui-icon ui-icon-clock" style="float: left; margin: 0 7px 50px 0;"></span>
-    Saving trial
+    Saving trial<br>
+    <span style="float: center;"><img src="../img/wheel.gif"/></span>
   </p>
 </div>
 
