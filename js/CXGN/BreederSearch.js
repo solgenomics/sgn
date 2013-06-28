@@ -50,13 +50,14 @@ window.onload = function initialize() {
 	jQuery('#c3_data').html('');
 	jQuery('#stock_data').html('');
 	var select1 = jQuery('#select1').val();
+	var select4 = jQuery('#select4').val();
 	var c1_data = jQuery('#c1_data').val() || [];
 	//alert("HELLO!");
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
 	    async: true,
 	    timeout: 60000,
-	    data: {'select1':select1, 'c1_data': c1_data.join(",")  },
+	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select4':select4  },
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
@@ -74,6 +75,7 @@ window.onload = function initialize() {
     jQuery('#select2').change(function() { 
  	var select1 = jQuery('#select1').val();
 	var select2 = jQuery('#select2').val();
+	var select4 = jQuery('#select4').val();
 	var c1_data = jQuery('#c1_data').val() || [];
 	jQuery('#select3').val('please select');
 	jQuery('#c2_data').val('');
@@ -85,7 +87,7 @@ window.onload = function initialize() {
 	    url: '/ajax/breeder/search',
 	    async: true,
 	    timeout: 60000,
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(",") },
+	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","), 'select4':select4 },
 	    success: function(response) { 
 		if (response.error) { 
 		    alert("ERROR: "+response.error);
@@ -117,6 +119,7 @@ window.onload = function initialize() {
 
 	var select1 = jQuery('#select1').val();
 	var select2 = jQuery('#select2').val();
+	var select4 = jQuery('#select4').val();
 	var c1_data = jQuery('#c1_data').val() || [];
 	var c2_data = jQuery('#c2_data').val() || [];
 
@@ -124,7 +127,7 @@ window.onload = function initialize() {
 	    url: '/ajax/breeder/search',
 	    async: true,
 	    timeout: 60000,
-	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select2':select2, 'c2_data':c2_data.join(",")  },
+	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select2':select2, 'c2_data':c2_data.join(","), 'select4':select4  },
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
@@ -144,6 +147,7 @@ window.onload = function initialize() {
  	var select1 = jQuery('#select1').val();
 	var select2 = jQuery('#select2').val();
 	var select3 = jQuery('#select3').val();
+	var select4 = jQuery('#select4').val();
 	var c1_data = jQuery('#c1_data').val() || [];
 	var c2_data = jQuery('#c2_data').val() || [];
 	//alert('Select1: '+select1+', select2: '+select2+' c1_data = '+c1_data.join(","));
@@ -155,7 +159,7 @@ window.onload = function initialize() {
 	    url: '/ajax/breeder/search',
 	    async: true,
 	    timeout: 60000,
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3 },
+	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4 },
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
@@ -180,6 +184,7 @@ window.onload = function initialize() {
 	var select1 = jQuery('#select1').val();
 	var select2 = jQuery('#select2').val();
 	var select3 = jQuery('#select3').val();
+	var select4 = jQuery('#select4').val();
 	var c1_data = jQuery('#c1_data').val() || [];
 	var c2_data = jQuery('#c2_data').val() || [];
 	var c3_data = jQuery('#c3_data').val() || [];
@@ -190,7 +195,7 @@ window.onload = function initialize() {
 	    url: '/ajax/breeder/search',
 	    async: true,
 	    timeout: 30000,
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'c3_data': c3_data.join(",") },
+	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'c3_data': c3_data.join(","), 'select4' : select4 },
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
@@ -210,6 +215,7 @@ window.onload = function initialize() {
 function update_stocks(stocks) { 
     var stock_data = format_options_list(stocks);
     jQuery('#stock_data').html(stock_data);
+
     jQuery('#stock_count').html('Stocks: '+stocks.length);
 }
 
