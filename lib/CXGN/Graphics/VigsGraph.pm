@@ -81,7 +81,7 @@ sub target_graph {
     # print Dumper(@match_counts);
     my @targets = ();
     
-    # print STDERR "coverage: $coverage\n";
+#    print STDERR "coverage: $coverage\n";
 
     # array with target subject names, coverage is the number of target subjects
     my @target_keys = ();
@@ -90,11 +90,11 @@ sub target_graph {
 	push @target_keys, $e->[0]; 
     }
 
- #   print STDERR "TARGET KEYS: ".join(",", @target_keys);
- #   print STDERR "\n";
+#    print STDERR "TARGET KEYS: ".join(",", @target_keys);
+#    print STDERR "\n";
 
-    # print STDERR "TARGETS: ". join ", ", @targets;
-    # print STDERR "SIZE =" .scalar(@targets)."\n";
+#    print STDERR "TARGETS: ". join ", ", @targets;
+#    print STDERR "SIZE =" .scalar(@targets)."\n";
 
     my @target_tracks = ();
     
@@ -114,7 +114,7 @@ sub target_graph {
 	
     }
     
-    # print STDERR "TARGET TRACKS: ".Dumper(@target_tracks);
+#     print STDERR "TARGET TRACKS: ".Dumper(@target_tracks);
 
     # multiply the different track scores
     #
@@ -172,29 +172,35 @@ sub longest_vigs_sequence {
 	my @targets = $self->target_graph($coverage);
 	my @off_targets = $self->off_target_graph($coverage);
         
-        # print STDERR "targets_array: ", join ", ", @targets;
-        # print STDERR "\n";
+#        print STDERR "targets_array: ", join ", ", @targets;
+#        print STDERR "\n";
+#        print STDERR "off_targets_array: ", join ", ", @off_targets;
+#        print STDERR "\n";
 	
         my $start = undef;
 	my $end = undef;
 	my $score = 0;
 
         # @targets contains the coverage of every position, values are >0 when all target subjects overlap in the region
-	for (my $i=0; $i<@targets; $i++) { 
-	   if (defined($targets[$i])) {
-	      if (($targets[$i] !=0) && (!defined($off_targets[$i]) || $off_targets[$i]==0)) {
-		  # print STDERR "target at: $i\n";
-		  if (defined($start)) { 
-		      # print STDERR "extending... $i\n";
-		      $score +=$targets[$i];
-		  }
-		  else { 
-		      # print STDERR "creating... $i\n";
-		      $start = $i;
-		      $score +=$targets[$i];
-		  }
+	for (my $i=0; $i<@targets; $i++) {
+	   if (defined($targets[$i]))  {
+              # print STDERR "t:$i, ";
+
+
+	      if (!defined($off_targets[$i]) || $off_targets[$i] == 0) {
+		   
+                    if (defined($start)) { 
+		       # print STDERR "extending... $i\n";
+		       $score += $targets[$i];
+		    }
+		    else { 
+		       # print STDERR "creating... $i\n";
+		       $start = $i;
+		       $score += $targets[$i];
+		    }
+            
 	      }
-	      elsif (($targets[$i] == 0) || (defined($off_targets[$i]) || $off_targets[$i]!=0) || $i == @targets) { 
+	      elsif ($targets[$i] == 0 || defined($off_targets[$i]) || $off_targets[$i]!=0 || $i == @targets) { 
 		  # a target region ends or is the end of the subjects sequences
 		  if (defined($start)) { 
 		      # print STDERR "ending... $i\n";
@@ -208,12 +214,27 @@ sub longest_vigs_sequence {
 		  $end = undef;
 	      }
 	   }
+           else {
+	      # print STDERR "ndt:$i, ";
+              # a target region ends or is the end of the subjects sequences
+	      if (defined($start)) { 
+        	 # print STDERR "ending... $i\n";
+		 $end = $i;
+		 my $length = $end - $start;
+		 # print STDERR "end of target at: $start - $end: ".($end-$start+1)."\n";
+		 push @regions, [ $coverage, $score * $length, $score, $length, $start, $end ];
+	      }
+
+	      $score = 0;
+	      $start = undef;
+	      $end = undef;
+	   }
 	}
   #  print STDERR "regions: ".Dumper(@regions)."\n";
 
     my @sorted = sort sort_keys @regions;
     
-    # my @ten_best = @sorted[0..9];
+    # my @ten_best = @sorted[0..3];
 
     # print STDERR "TEN BEST: ".Dumper(\@ten_best);
     # print STDERR "Sorted: ".Dumper(\@sorted);
@@ -391,7 +412,7 @@ sub render {
     
     # adjust image height
     #
-    if ($offset > 2400) { $offset = 2400; }
+#    if ($offset > 2400) { $offset = 2400; }
     my $cropped = GD::Image->new($image->width, $offset);
     $cropped->copy($image, 0, 0, 0, 0, $image->width(), $offset);
 

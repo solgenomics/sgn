@@ -25,7 +25,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     foreach my $s (@selects) { 
 	push @$criteria_list, $c->req->param($s);
     }
-    
+    my $output = $c->req->param('select4') || 'plot';
+
     my $dataref = {};
     
     my @params = qw | c1_data c2_data c3_data |;
@@ -74,9 +75,10 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
      my $results_ref = $bs->get_intersect($criteria_list, $dataref); 
 
     my $stock_ref = [];
-    my $stockdataref->{stock} = $dataref->{$criteria_list->[-1]};
+    my $stockdataref->{$output} = $dataref->{$criteria_list->[-1]};
 
-    push @$criteria_list, 'stock';
+    push @$criteria_list, $output;
+    print STDERR "OUTPUT: $output CRITERIA: ", Data::Dumper::Dumper($criteria_list);
     my $stock_ref = $bs->get_intersect($criteria_list, $stockdataref);
     
     print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);

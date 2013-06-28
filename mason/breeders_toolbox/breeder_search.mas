@@ -4,50 +4,64 @@
 
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreederSearch' ] &>
+
 Search plots using location, year, trial, and trait data.
   
-<table>
+<table alt="breeder search" border="0">
 <tr>
 
 <td width="200">
   <select id="select1">
 </select>
-<br />
+</td>
+<td>
+ <select id="select2"></select>
+</td>
+<td>
+  <select id="select3" ></select>
+</td>
+<td>Show 
+  <select id="select4">
+    <option value="plot">plots</option>
+    <option value="accession">accessions</option>
+  </select>
+</td>
+</tr>
+<tr>
+<td>
+
 <select multiple id="c1_data" size="10"></select>
 
 </td>
 
 <td width="200">
-
-  <select id="select2"></select>
-<br />
-
-    <select multiple id="c2_data" size="10" width="30"></select>
-
+  <select multiple id="c2_data" size="10" width="30"></select>
 </td>
 
 <td width="200">
-
-    <select id="select3" ></select>
-<br />
   <select multiple id="c3_data" size="10"></select>
-
-
 </td>
+
 <td width="200">
-  <div id="stock_count">&nbsp;</div>
-
   <select multiple id="stock_data" size="10"></select>
+</td>
 
-  <script defer="defer">
+</tr>
+<tr>
+<td></td><td></td><td></td><td>
+<div id="stock_count">&nbsp;</div>
+</td></tr>
+<tr>
+<td></td><td></td><td></td><td>
+  <script>
     addSelectToListMenu('stock_data');
   </script>
+</td></tr>
 
-</td>
-</tr>
 </table>
 
 
 
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.BreederSearch' ] &>
+
