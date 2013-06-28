@@ -4,6 +4,8 @@
 
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreederSearch' ] &>
+
 Search plots using location, year, trial, and trait data.
   
 <table>
@@ -50,4 +52,4 @@ Search plots using location, year, trial, and trait data.
 
 
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.BreederSearch' ] &>
+
