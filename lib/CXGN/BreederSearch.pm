@@ -21,17 +21,17 @@ sub get_intersect {
     
     my %queries = ( 
 	stock => {
-	    location => "SELECT distinct(stock.stock_id), stock.uniquename FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) WHERE nd_geolocation.nd_geolocation_id in ($dataref->{stock}->{location})",
+	    location => "SELECT distinct(stock.uniquename), stock.uniquename FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) WHERE nd_geolocation.nd_geolocation_id in ($dataref->{stock}->{location})",
 	    
-	    year     => "SELECT distinct(stock.stock_id), stock.uniquename FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE projectprop.value in ($dataref->{stock}->{year})",
+	    year     => "SELECT distinct(stock.uniquename), stock.uniquename FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE projectprop.value in ($dataref->{stock}->{year})",
 	    
-	    project  => "SELECT distinct(stock.stock_id), stock.uniquename FROM project JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE project.project_id in ($dataref->{stock}->{project})",
+	    project  => "SELECT distinct(stock.uniquename), stock.uniquename FROM project JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE project.project_id in ($dataref->{stock}->{project})",
 	    
-	    trait    => "SELECT distinct(stock.stock_id), stock.uniquename FROM phenotype JOIN nd_experiment_phenotype using(phenotype_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) WHERE phenotype.cvalue_id in ($dataref->{stock}->{trait})",
+	    trait    => "SELECT distinct(stock.uniquename), stock.uniquename FROM phenotype JOIN nd_experiment_phenotype using(phenotype_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) WHERE phenotype.cvalue_id in ($dataref->{stock}->{trait})",
 	    
-	    stock    => "SELECT distinct(stock_id), stock.uniquename FROM stock",
+	    stock    => "SELECT distinct(stock.uniquename), stock.uniquename FROM stock",
 
-	    genotype => "SELECT distinct(stock_id), stock.uniquename FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN ",
+	    genotype => "SELECT distinct(uniquename), stock.uniquename FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN ",
 	    
 	},
 
