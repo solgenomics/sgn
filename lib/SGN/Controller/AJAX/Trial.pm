@@ -46,6 +46,20 @@ sub _build_schema {
   shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
 }
 
+sub get_trial_layout : Path('/ajax/trial/layout') : ActionClass('REST') { }
+
+sub get_trial_layout_GET : Args(0) {
+  my ($self, $c) = @_;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  #my $trial_id = $c->req->parm('trial_id');
+  # my $project = $schema->resultset('Project::Project')->find(
+  # 							     {
+  # 							      id => $trial_id,
+  # 							     }
+  # 							    );
+}
+
+
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
 
 sub generate_experimental_design_GET : Args(0) {
