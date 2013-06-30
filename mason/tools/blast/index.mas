@@ -7,6 +7,7 @@ $db_id => undef
 $dataset_groups => []
 $databases => {}
 $programs
+@input_options => ()
 $preload_seq => ''
 </%args>
 
@@ -19,8 +20,8 @@ foreach my $d (keys(%$databases)) {
 }
 
 my $substitution_matrix_select = $m->scomp('/page/html_select.mas', 
-   name=>"substitution_matrix", 
-   id=>"substitution_matrix", 
+   name=>"matrix", 
+   id=>"matrix", 
    choices => [  [ 'BLOSUM62', 'BLOSUM62 (default)' ],
                  [ 'BLOSUM80', 'BLOSUM80 (recent divergence)' ],
 		 [ 'BLOSUM45', 'BLOSUM45 (ancient divergence)' ],
@@ -36,7 +37,9 @@ my $show_graphics_select = $m->scomp('/page/html_select.mas',  name => 'output_g
 				 ],
 				 ),
 
-
+my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', id=>'input_options',
+			      choices => [ @input_options ]
+);
 
 print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
@@ -44,28 +47,25 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
+<&| /page/info_section.mas, title=>"Input parameters", collapsible=>1, collapsed=>0 &>
+
   <input type="hidden" checked="checked" name="filterq" value="1" />
   <input type="hidden" name="interface_type" value="simple" />
   <input type="hidden" name="outformat" value="0" />
-  <table align="center" summary="" cellpadding="0" cellspacing="15">
+  <table align="center" summary="" cellpadding="0" cellspacing="5">
     <tr><td><b>Show</b></td><td>
 	<& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select" &>
 </td></tr>
     <tr><td><b>Sequence Database</b> </td>
-      <td><div id="database_select"></div>
-	<a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>
+      <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>
+	
     </td></tr>
     <tr><td><b>Program</b></td>
       <td><& /page/html_select.mas, name=>'program_select', id=>'program_select', choices=>$programs &>
     </td></tr>
 
 <tr><td><b>Query</b></td><td>
-	<select id="input_type_select">
-	  <option value="sequence">Sequence</option>
-	  <option value="fasta">Fasta sequence</option>
-	  <option value="tomato_gene_ids">Tomato gene identifiers</option>
-	  <option value="unigene_ids">Unigene identifiers</option>
-	  </select>
+  <% $input_options_select %>
 	</td></tr>
 <tr><td colspan="2">
 
@@ -75,38 +75,53 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
       <table width="100%"><tr>
          <td>
 
-  <div id="blast_status">Please select your input parameters.</div>
+
 
 <& /page/info_table.mas, title=>'', data => [ 
   'Expect (e-value) Threshold' => '<input id="evalue" type="text" size="6" value="1e-10" name="expect" />',
   'Substitution Matrix' => $substitution_matrix_select,
-  'Max. hits to show' => '<input id="max_hits" type="text" name="maxhits" size="6" value="100" />',
+  'Max. hits to show' => '<input id="maxhits" type="text" name="maxhits" size="6" value="100" />',
   'Show Graphics' => $show_graphics_select, 
-  ' ' => '<div style="text-align: right">
+  'Filter' => '<input type="checkbox" name="filterq" checked="1" />',
+  '  ' => '<div style="text-align: right">
 
 
 <input id="clear_button" type="reset" value="Clear" onclick="clearField(); "/> <input id="submit_button" type="submit" name="search" value="Search" onclick="javascript:run_blast();" /></div>',
-  __multicol => 2,
+  __multicol => 3,
   __border => 0,
-  __tableattrs => 'width="100%"',
+  __tableattrs => 'width="80%"',
 
 ]
 
 &>
-		  
-
          </td>
       </tr>
       </table>
     </td></tr>
+</table>
+</&>
+
+<&| /page/info_section.mas, title=>"Status", collapsible=>1, collapsed =>0 &>
+  <div id="blast_status">Please select your input parameters.</div>
+</&>
+
+<&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0 &>
+<table>
+<tr><td><div id="blast_report"></div></td></tr>
   </table>
+</&>
+
 <script>
 
 swap_menu(1);
 
+jQuery('#sequence').attr('spellcheck',false);
+
+enable_ui();
+
 function swap_menu(group_id) { 
    var menu_html = eval( <% JSON::Any->encode($menus) %>);
-   alert('Displaying menu '+menu_html[group_id]);
+   //alert('Displaying menu '+menu_html[group_id]);
    jQuery('#database_select').html(menu_html[group_id]);
 
 }
@@ -121,65 +136,120 @@ function run_blast() {
    var sequence = jQuery('#sequence').val();
    var database = jQuery('#database').val();
    var evalue   = jQuery('#evalue').val();
-   var matrix   = jQuery('#substitution_matrix').val();
+   var matrix   = jQuery('#matrix').val();
    var graphics = jQuery('#graphics').val();
    var maxhits  = jQuery('#maxhits').val();
    var filterq  = jQuery('#filterq').val();
+   var input_options = jQuery('#input_options').val();
 
    if (sequence == '') { 
       alert("Please enter a sequence :=)"); 
       jQuery('blast_status').html('');
       return; 
-  
    }
 
-   alert('program: '+program + ' sequence: '+sequence+' database '+database+' evalue '+evalue+'matrix '+matrix);
-
-   jQuery.ajax( { 
-      url: '/tools/blast/init',
-      async: false,
-      success: function(response) { jobid = response.jobid; alert("JOBID: "+jobid); },
-      error: function(response) { alert("ERROR!") }
-   });
-
+   //alert('program: '+program + ' sequence: '+sequence+' database '+database+' evalue '+evalue+'matrix '+matrix);
 
    status += "Running BLAST... ";
    jQuery('#blast_status').html(status);
 
+   disable_ui();
+
+   var jobid ="";
+
    jQuery.ajax( { 
-      url: '/tools/blast/run/'+jobid,
-      async: true,
+      url: '/tools/blast/run/',
+      async: false,
       method: 'POST',
-      data: {  'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 'filterq': filterq, 'database': database, 'program': program },
-      success: function(response) { alert("SUCCESS!!!!!"); },
-      error: function(response) { }
+      data: {  'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 'filterq': filterq, 'database': database, 'program': program, 'input_options': input_options },
+      success: function(response) { if (response.error) { alert("ERROR: "+response.error);
+                                     enable_ui();
+                                     exit();
+}
+                                    else{ 
+                                      
+                                      jobid = response.jobid; 
+                                       alert("JOB ID: "+jobid);
+                                     }
+
+                                  },
+
+      error: function(response) { alert("An error occurred"); enable_ui(); exit(); }
    });
 
-
-   done = false;
+   var done = false;
  
+   alert("JOBID NOW: "+jobid);
    while (done == false) { 
       jQuery.ajax( { 
           url: '/tools/blast/check/'+jobid,
           async: false,
           success: function(response) { 
-             if (response.complete == 1) { 
+             if (response.status == "complete") { 
+                alert("DONE!!!!");
                 done = true; 
              }
+             else { 
+                alert("STatus"+repsonse.status);
+            }
           },
           error: function(response) { alert("An error occurred!"); exit; }
      });
-     status = status + "."; jQuery('#blast_status').html(status);      
+     status = status + "."; 
+     jQuery('#blast_status').html(status);      
    }
 
    status = status +  "Run complete.";
    jQuery('#blast_status').html(status);
+
+   jQuery.ajax( { 
+       url: '/tools/blast/result/'+jobid,
+       data: { 'format': 'bioperl', 'db_id': database },
+       async: false,
+       success: function(response) { 
+          if (response.blast_report) { 
+              jQuery('#blast_report').html(response.blast_report);
+              alert("BLAST report: "+response.blast_report);
+          };
+},
+       error: function(response) { alert("Parse BLAST: An error occurred. "+response.error); }
+   });
+     
+   enable_ui();
+
+}
+
+function disable_ui() { 
+   jQuery('#program_select').attr("disabled", "disabled");
+   jQuery('#sequence').attr("disabled", "disabled");
+   jQuery('#database').attr("disabled", "disabled");
+   jQuery('#evalue').attr("disabled", "disabled");
+   jQuery('#matrix').attr("disabled", "disabled");
+   jQuery('#graphics').attr("disabled", "disabled");
+   jQuery('#maxhits').attr("disabled", "disabled");
+   jQuery('#filterq').attr("disabled", "disabled");
+   jQuery('#submit_button').attr("disabled", "disabled");
+   jQuery('#input_options').attr("disabled", "disabled");
+
+}
+
+function enable_ui() { 
+   jQuery('#program_select').removeAttr("disabled");
+   jQuery('#sequence').removeAttr("disabled");
+   jQuery('#database').removeAttr("disabled");
+   jQuery('#evalue').removeAttr("disabled");
+   jQuery('#matrix').removeAttr("disabled");
+   jQuery('#graphics').removeAttr("disabled");
+   jQuery('#maxhits').removeAttr("disabled");
+   jQuery('#filterq').removeAttr("disabled");
+   jQuery('#submit_button').removeAttr("disabled");
+   jQuery('#input_options').removeAttr("disabled");
 }
 
 
-//$programs_js
-//$spellcheck_js
 
+
+//$programs_js
 
 </script>
 

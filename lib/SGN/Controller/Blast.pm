@@ -5,6 +5,7 @@ use Moose;
 
 use Data::Dumper;
 use List::Util qw/sum/;
+use CXGN::Blast::SeqQuery;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -33,8 +34,12 @@ sub index :Path('/tools/new-blast/') :Args(0) {
 	push @$dataset_groups, [ $d->blast_db_group->blast_db_group_id, $d->blast_db_group->name ];
     }
 
-    print STDERR "GROUPS: ".Data::Dumper::Dumper($dataset_groups);
+    my $cbsq = CXGN::Blast::SeqQuery->new();
+    my @input_options = map { $_->name() } $cbsq->plugins();
+    
 
+    print STDERR "GROUPS: ".Data::Dumper::Dumper($dataset_groups);
+    $c->stash->{input_options} = \@input_options;
     $c->stash->{db_id} = $db_id;
     $c->stash->{seq} = $seq;
     $c->stash->{databases} = $databases;
