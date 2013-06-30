@@ -34,6 +34,7 @@ my $build = SGN::Build->new(
         'version'                                  => '0.77',
         'autodie'                                  => 0,
         'IPC::System::Simple'                      => 0,         #< required for autodie :all
+        'Algorithm::Combinatorics'                 => 0,
         'Bio::Chado::Schema'                       => '0.20000',
 	'Barcode::Code128'                         => '2.21',
         'Bio::Root::Version'                       => '1.006001',
