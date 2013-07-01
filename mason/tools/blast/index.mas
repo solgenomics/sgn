@@ -113,6 +113,11 @@ swap_menu(1);
 
 jQuery('#sequence').attr('spellcheck',false);
 
+jQuery('#dataset_select').change( function() { 
+   var selectedId = jQuery('option:selected', this).attr('id');
+   swap_menu(selectedId);
+});
+
 enable_ui();
 
 function swap_menu(group_id) { 
