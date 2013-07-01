@@ -30,8 +30,15 @@ sub index :Path('/tools/new-blast/') :Args(0) {
     my $dataset_groups = [];
     foreach my $d (@dataset_rows) { 
 	print STDERR "processing dataset $d...\n";
-	push @{$databases->{ $d->blast_db_group->blast_db_group_id }}, [ $d->blast_db_id, $d->title ];
-	push @$dataset_groups, [ $d->blast_db_group->blast_db_group_id, $d->blast_db_group->name ];
+	if ($d->blast_db_group()) { 
+	    push @{$databases->{ $d->blast_db_group->blast_db_group_id }}, [ $d->blast_db_id, $d->title ];
+	    push @$dataset_groups, [ $d->blast_db_group->blast_db_group_id, $d->blast_db_group->name ];
+	}
+	else { 
+	    push @{$databases->{ 'other' }}, [ $d->blast_db_id, $d->title ];
+	    push @$dataset_groups-> [ 0, 'other' ];
+	} 
+
     }
 
     my $cbsq = CXGN::Blast::SeqQuery->new();
