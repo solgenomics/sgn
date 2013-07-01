@@ -36,7 +36,7 @@ sub index :Path('/tools/new-blast/') :Args(0) {
 	}
 	else { 
 	    push @{$databases->{ 'other' }}, [ $d->blast_db_id, $d->title ];
-	    push @$dataset_groups-> [ 0, 'other' ];
+	    push @$dataset_groups, [ 0, 'other' ];
 	} 
 
     }
