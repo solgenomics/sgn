@@ -48,7 +48,7 @@ sub index :Path('/tools/new-blast/') :Args(0) {
     $c->stash->{db_id} = $db_id;
     $c->stash->{seq} = $seq;
     $c->stash->{databases} = $databases;
-    @{ $c->stash->{dataset_groups}} = map { [ $_, $dataset_groups->{$_} ] } $dataset_groups;
+    @{ $c->stash->{dataset_groups}} = map { [ $_, $dataset_groups->{$_} ] } keys %$dataset_groups;
     $c->stash->{programs} = [ 'blastn', 'blastp', 'blastx', 'tblastx' ];
     $c->stash->{template} = '/tools/blast/index.mas';
 }
