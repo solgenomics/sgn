@@ -4,6 +4,8 @@
 @locations => ()
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
+
 <form action="/breeders/phenotype/upload" method="post"  enctype="multipart/form-data" >
 
 <table><tr><td>
@@ -34,3 +36,11 @@ Upload phenotype file
 </td></tr></table>
 <input type="submit" value="Upload" />
 </form>
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+    jQuery('#upload_phenotypes_link').click( function() { alert("upload dialog") } );
+});  
+
+</script>
