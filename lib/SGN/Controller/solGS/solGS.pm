@@ -874,7 +874,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
       
         $self->list_of_prediction_pops($c, $combo_pops_id, $download_prediction);
         
-        $c->res->redirect(catfile($base, $referer));
+        $c->res->redirect('/'. $referer);
                                   
     }
     else 
