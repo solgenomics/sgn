@@ -443,8 +443,7 @@ sub trait :Path('/solgs/trait') Args(3) {
         
         $self->download_prediction_urls($c);     
         my $download_prediction = $c->stash->{download_prediction};
-     
-        #get prediction populations list..     
+    
         $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
      
         $self->get_trait_name($c, $trait_id);
@@ -524,11 +523,13 @@ sub output_files {
     $self->trait_phenodata_file($c);
 
     my $prediction_id = $c->stash->{prediction_pop_id};
+     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
     my $identifier    = $pop_id . '_' . $prediction_id;
     my $pred_pop_gebvs_file;
     
     if ($prediction_id) 
     {
+       
         $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
         $pred_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
     }
@@ -564,7 +565,7 @@ sub gebv_marker_file {
     if ($data_set_type =~ /combined populations/)
     {
         my $combo_identifier = $c->stash->{combo_pops_id}; 
-
+       
         $cache_data = {key       => 'gebv_marker_combined_pops_'.  $trait . '_' . $combo_identifier,
                        file      => 'gebv_marker_'. $trait . '_' . $combo_identifier . '_combined_pops',
                        stash_key => 'gebv_marker_file'
@@ -826,8 +827,61 @@ sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
  
 sub prediction_population :Path('/solgs/model') Args(3) {
     my ($self, $c, $model_id, $pop, $prediction_pop_id) = @_;
+
+    my $referer = $c->req->referer;
+    my $base    = $c->req->base;
+    $referer    =~ s/$base//;
+    my $path    = $c->req->path;
+    $path       =~ s/$base//;
+
+    my $page = "solgs/model/combined/populations/";
+    if ($referer =~ m/[{$page}]/)
+    {
+        
+        my ($combo_pops_id, $trait_id) = $referer =~ m/(\d+)/g;
     
-    $c->res->redirect("/solgs/analyze/traits/population/$model_id/$prediction_pop_id");
+        my $dir = $c->stash->{solgs_cache_dir};
+        
+        $self->get_trait_name($c, $trait_id);
+        my $trait_abbr = $c->stash->{trait_abbr};
+
+        my $exp = "phenotype_data_${model_id}_${trait_abbr}"; 
+        my $pheno_file = $self->grep_file($dir, $exp);
+
+        $exp = "genotype_data_${model_id}_${trait_abbr}"; 
+        my $geno_file = $self->grep_file($dir, $exp);
+
+        $c->stash->{trait_combined_pheno_file} = $pheno_file;
+        $c->stash->{trait_combined_geno_file}  = $geno_file;
+        $self->prediction_population_file($c, $prediction_pop_id);
+
+        $c->stash->{data_set_type} = "combined populations"; 
+        $c->stash->{combo_pops_id} = $model_id;
+        $c->stash->{model_id}      = $model_id;                          
+        $c->stash->{prediction_pop_id} = $prediction_pop_id;  
+  
+        $c->forward('get_rrblup_output'); 
+        
+        $self->combined_pops_summary($c);        
+        $self->trait_phenotype_stat($c);
+        $self->gs_files($c);
+        
+        my $identifier = $combo_pops_id . '_' . $prediction_pop_id;
+        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+
+        $self->download_prediction_urls($c, $combo_pops_id, $prediction_pop_id );
+        my $download_prediction = $c->stash->{download_prediction};
+      
+        $self->list_of_prediction_pops($c, $combo_pops_id, $download_prediction);
+        
+        $c->res->redirect(catfile($base, $referer));
+                                  
+    }
+    else 
+    {
+        $c->res->redirect("/solgs/analyze/traits/population/$model_id/$prediction_pop_id");
+    }
+
 
 }
 
@@ -900,7 +954,7 @@ sub download_prediction_urls {
     my $page_trait_id = $c->stash->{trait_id};
     my $page = $c->req->path;
          
-    if($prediction_pop_id)
+    if ($prediction_pop_id)
     {
         $self->prediction_pop_analyzed_traits($c, $training_pop_id, $prediction_pop_id);
         $trait_ids = $c->stash->{prediction_pop_analyzed_traits};
@@ -911,7 +965,7 @@ sub download_prediction_urls {
 
     my $download_url;# = $c->stash->{download_prediction};
 
-    if ($page =~ /[{solgs\/trait\/}{solgs\/model\/combined\/populations\/}]/  )
+    if ($page =~ /[{solgs\/trait\/} | {solgs\/model\/combined\/populations\/}]/ )
     { 
         $trait_ids = [$page_trait_id];
     }
@@ -1210,7 +1264,7 @@ sub list_of_prediction_pops {
         }
         write_file($pred_pops_file, $pop_ids);
     }
-
+ 
     my @pred_pops;
 
     foreach my $prediction_pop_id (@pred_pops_ids)
@@ -1237,7 +1291,7 @@ sub list_of_prediction_pops {
 
             $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
             my $download_prediction = $c->stash->{download_prediction};
-
+     
             push @pred_pops,  ['', $pred_pop_link, $desc, 'F1', $project_yr, $download_prediction];
         }
     }
@@ -1313,7 +1367,6 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
         } 
         else
         {
-    
             my $name  = "trait_info_${single_trait_id}_pop_${pop_id}";
             my $file2 = $self->create_tempfile($c, $name);
        
@@ -1405,9 +1458,9 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
     my $base       = $c->req->base;
     $referer       =~ s/$base//;
     my ($tr_id)    = $referer =~ /(\d+)/;
-    my $trait_page = "solgs\/trait\/$tr_id\/population\/$pop_id";
+    my $trait_page = "solgs/trait/$tr_id/population/$pop_id";
     
-    if ($referer =~ m/[$trait_page]/) 
+    if ($referer =~ m/[{$trait_page}]/) 
     { 
         $c->res->redirect("/solgs/trait/$tr_id/population/$pop_id");      
     }
@@ -1503,7 +1556,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      $c->stash->{trait_pages} = \@trait_pages;
      $c->stash->{model_data}  = \@model_desc;
 
-     $self->download_prediction_urls($c);
+     $self->download_prediction_urls($c, $pop_id, $pred_pop_id);
      my $download_prediction = $c->stash->{download_prediction};
      
      #get prediction populations list..     
@@ -1638,7 +1691,6 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
             if (-s $combined_pops_pheno_file > 1 && -s $combined_pops_geno_file > 1) 
             {
                 my $tr_abbr = $c->stash->{trait_abbr};  
-                print STDERR "\nThere are combined phenotype and genotype datasets for trait $tr_abbr\n";
                 $c->stash->{data_set_type} = 'combined populations';                
                 $self->get_rrblup_output($c); 
                 my $analysis_result = $c->stash->{combo_pops_analysis_result};
@@ -1669,8 +1721,8 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
 }
 
 
-sub display_combined_pops_result :Path('/solgs/model/combined/populations') Args(3){
-    my ($self, $c, $combo_pops_id, $trait_key, $trait_id) = @_;
+sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Args(3){
+    my ($self, $c,  $combo_pops_id, $trait_key,  $trait_id,) = @_;
     
     $c->stash->{data_set_type} = 'combined populations';
     $c->stash->{combo_pops_id} = $combo_pops_id;
@@ -2628,19 +2680,22 @@ sub run_rrblup_trait {
 
         my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
         my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-              
+       
         my $trait_info   = $trait_id . "\t" . $trait_abbr;     
         my $trait_file  = $self->create_tempfile($c, "trait_info_${trait_id}");
         write_file($trait_file, $trait_info);
 
         my $dataset_file  = $self->create_tempfile($c, "dataset_info_${trait_id}");
         write_file($dataset_file, $data_set_type);
-
+ 
+        my $prediction_population_file = $c->stash->{prediction_population_file};
+       
         my $input_files = join("\t",
                                    $c->stash->{trait_combined_pheno_file},
                                    $c->stash->{trait_combined_geno_file},
                                    $trait_file,
-                                   $dataset_file
+                                   $dataset_file,
+                                   $prediction_population_file
             );
 
         my $input_file = $self->create_tempfile($c, "input_files_combo_${trait_abbr}");
