@@ -35,7 +35,7 @@ sub index :Path('/tools/new-blast/') :Args(0) {
     }
 
     my $cbsq = CXGN::Blast::SeqQuery->new();
-    my @input_options = map { $_->name() } $cbsq->plugins();
+    my @input_options = sort map { $_->name() } $cbsq->plugins();
     
 
     print STDERR "GROUPS: ".Data::Dumper::Dumper($dataset_groups);
