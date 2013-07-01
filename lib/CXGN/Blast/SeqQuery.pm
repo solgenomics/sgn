@@ -12,13 +12,15 @@ use Module::Pluggable require => 1;
 
 sub validate { 
     my $self = shift;
+    my $c = shift;
     my $method = shift;
     my $input = shift;
+
 
     my $valid = "OK";
     foreach my $m ($self->plugins()) { 
 	if ($m->name eq $method) { 
-	    $valid = $m->validate($input);
+	    $valid = $m->validate($c, $input);
 	}
     }
     return $valid;
@@ -27,13 +29,14 @@ sub validate {
 
 sub process { 
     my $self = shift;
+    my $c = shift;
     my $method = shift;
     my $input = shift;
 
     my $seq_fasta = "";
     foreach my $m ($self->plugins()) { 
 	if ($m->name eq $method) { 
-	    $seq_fasta = $m->process($input);
+	    $seq_fasta = $m->process($c, $input);
 	}
     }
     return $seq_fasta;

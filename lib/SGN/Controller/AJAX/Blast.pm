@@ -49,13 +49,15 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     my $input_query = CXGN::Blast::SeqQuery->new();
 
-    my $valid = $input_query->validate($params->{input_options}, $params->{sequence});
+    my $valid = $input_query->validate($c, $params->{input_options}, $params->{sequence});
     
     if ($valid ne "OK") { 
 	$c->stash->{rest} = { error => "Your input contains illegal characters. Please verify your input. ($valid)" };
 	return;
     }
     
+    $params->{sequence} = $input_query->process($c, $params->{input_options}, $params->{sequence});
+
     my ($seq_fh, $seqfile) = tempfile( 
 	"blast_XXXXXX",
 	DIR=> $c->get_conf('cluster_shared_tempdir'),

@@ -47,7 +47,7 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
-<&| /page/info_section.mas, title=>"Input parameters", collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0 &>
 
   <input type="hidden" checked="checked" name="filterq" value="1" />
   <input type="hidden" name="interface_type" value="simple" />
@@ -86,7 +86,7 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
   '  ' => '<div style="text-align: right">
 
 
-<input id="clear_button" type="reset" value="Clear" onclick="clearField(); "/> <input id="submit_button" type="submit" name="search" value="Search" onclick="javascript:run_blast();" /></div>',
+<input id="clear_button" type="button" value="Clear" onclick="clear_input_sequence(); "/> <input id="submit_button" type="submit" name="search" value="Search" onclick="javascript:run_blast();" /></div>',
   __multicol => 3,
   __border => 0,
   __tableattrs => 'width="80%"',
@@ -158,10 +158,13 @@ function run_blast() {
    var jobid ="";
 
    jQuery.ajax( { 
-      url: '/tools/blast/run/',
-      async: false,
-      method: 'POST',
-      data: {  'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 'filterq': filterq, 'database': database, 'program': program, 'input_options': input_options },
+      url:     '/tools/blast/run/',
+      async:   false,
+      method:  'POST',
+      data:    { 'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 
+                 'filterq': filterq, 'database': database, 'program': program, 
+                  'input_options': input_options 
+               },
       success: function(response) { if (response.error) { alert("ERROR: "+response.error);
                                      enable_ui();
                                      exit();
@@ -169,12 +172,12 @@ function run_blast() {
                                     else{ 
                                       
                                       jobid = response.jobid; 
-                                       alert("JOB ID: "+jobid);
+                                      // alert("JOB ID: "+jobid);
                                      }
 
                                   },
 
-      error: function(response) { alert("An error occurred"); enable_ui(); exit(); }
+      error:   function(response) { alert("An error occurred. The service may not be available right now."); enable_ui(); exit(); }
    });
 
    var done = false;
@@ -186,7 +189,7 @@ function run_blast() {
           async: false,
           success: function(response) { 
              if (response.status == "complete") { 
-                alert("DONE!!!!");
+                //alert("DONE!!!!");
                 done = true; 
              }
              else { 
@@ -214,7 +217,11 @@ function run_blast() {
 },
        error: function(response) { alert("Parse BLAST: An error occurred. "+response.error); }
    });
-     
+
+   Effects.swapElements('input_parameter_section_offswitch', 'input_parameter_section_onswitch'); 
+   Effects.hideElement('input_parameter_section_content');
+
+
    enable_ui();
 
 }
@@ -246,7 +253,9 @@ function enable_ui() {
    jQuery('#input_options').removeAttr("disabled");
 }
 
-
+function clear_input_sequence() { 
+   jQuery('#sequence').val('');
+}
 
 
 //$programs_js

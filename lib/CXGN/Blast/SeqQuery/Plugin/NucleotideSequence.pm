@@ -11,6 +11,7 @@ sub name {
 
 sub validate { 
     my $self = shift;
+    my $c = shift;
     my $sequence = shift;
     
     print STDERR "SEQUENCE: $sequence\n";
@@ -25,8 +26,9 @@ sub validate {
 }
 
 
-sub convert { 
+sub process { 
     my $self = shift;
+    my $c = shift;
     my $sequence = shift;
     return ">Untitled Sequence\n$sequence\n";
 }

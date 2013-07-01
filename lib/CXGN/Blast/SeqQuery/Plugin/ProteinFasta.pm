@@ -12,14 +12,15 @@ sub name {
 
 sub validate { 
     my $self = shift;
+    my $c = shift;
     my $sequence = shift;
     
     eval { 
 	my $string_fh = IO::String->new($sequence);
-	my $io = Bio::SeqIO->new( -file => $string_fh,
+	my $io = Bio::SeqIO->new( -fh => $string_fh,
 		       -format => 'fasta');
 	while (my $seq = $io ->next_seq()) { 
-	    if ($seq->seq() !~ /^[ACDEFGHIKLMNPQRSTVWYX]$/i) { 
+	    if ($seq->seq() !~ /^[ACDEFGHIKLMNPQRSTVWYX\n\s\t]+$/i) { 
 		die "Protein sequence contains illegal characters: ".($seq->id);
 	    }
 	}
@@ -35,6 +36,7 @@ sub validate {
 
 sub process { 
     my $self = shift;
+    my $c = shift;
     my $sequence = shift;
     return $sequence;
 }
