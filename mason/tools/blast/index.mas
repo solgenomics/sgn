@@ -51,7 +51,7 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
   <input type="hidden" name="outformat" value="0" />
   <table border="0" align="center" summary="" cellpadding="0" cellspacing="5">
     <tr><td width="200"><b>Show</b></td><td width="400">
-	<& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select" &>
+	<& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select" &>
 </td><td rowspan="4" align="center"><div id="status_wheel"></div></td></tr>
     <tr><td><b>Sequence Database</b></td>
       <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>	
@@ -109,12 +109,13 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
 <script>
 
-swap_menu(1);
+swap_menu(3);
 
 jQuery('#sequence').attr('spellcheck',false);
 
 jQuery('#dataset_select').change( function() { 
-   var selectedId = jQuery('option:selected', this).attr('id');
+   var selectedId = jQuery('#dataset_select').find(':selected').attr('value');
+   alert("SELECTED ID: "+selectedId);
    swap_menu(selectedId);
 });
 
@@ -122,7 +123,9 @@ enable_ui();
 
 function swap_menu(group_id) { 
    var menu_html = eval( <% JSON::Any->encode($menus) %>);
-   //alert('Displaying menu '+menu_html[group_id]);
+   alert(group_id);
+   
+   alert('Displaying menu '+menu_html[group_id]);
    jQuery('#database_select').html(menu_html[group_id]);
 
 }

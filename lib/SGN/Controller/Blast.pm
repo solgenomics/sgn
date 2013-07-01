@@ -44,6 +44,7 @@ sub index :Path('/tools/new-blast/') :Args(0) {
     my @input_options = sort map { $_->name() } $cbsq->plugins();
     
     print STDERR "GROUPS: ".Data::Dumper::Dumper($dataset_groups);
+    print STDERR "DATASETS: ".Data::Dumper::Dumper($databases);
     $c->stash->{input_options} = \@input_options;
     $c->stash->{db_id} = $db_id;
     $c->stash->{seq} = $seq;
