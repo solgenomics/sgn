@@ -193,12 +193,12 @@ function run_blast() {
                 done = true; 
              }
              else { 
-                alert("STatus"+repsonse.status);
+                alert("STatus "+response.status);
             }
           },
           error: function(response) { alert("An error occurred!"); exit; }
      });
-     status = status + "."; 
+     status += 'IMAGE<img src="/static/documents/img/wheel.gif" />'; 
      jQuery('#blast_status').html(status);      
    }
 
