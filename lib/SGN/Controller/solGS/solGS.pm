@@ -833,40 +833,46 @@ sub prediction_population :Path('/solgs/model') Args(3) {
     $referer    =~ s/$base//;
     my $path    = $c->req->path;
     $path       =~ s/$base//;
-
-    my $page = "solgs/model/combined/populations/";
+    my $page    = "solgs/model/combined/populations/";
+    
     if ($referer =~ m/[{$page}]/)
     {
-        
         my ($combo_pops_id, $trait_id) = $referer =~ m/(\d+)/g;
-    
-        my $dir = $c->stash->{solgs_cache_dir};
-        
-        $self->get_trait_name($c, $trait_id);
-        my $trait_abbr = $c->stash->{trait_abbr};
-
-        my $exp = "phenotype_data_${model_id}_${trait_abbr}"; 
-        my $pheno_file = $self->grep_file($dir, $exp);
-
-        $exp = "genotype_data_${model_id}_${trait_abbr}"; 
-        my $geno_file = $self->grep_file($dir, $exp);
-
-        $c->stash->{trait_combined_pheno_file} = $pheno_file;
-        $c->stash->{trait_combined_geno_file}  = $geno_file;
-        $self->prediction_population_file($c, $prediction_pop_id);
 
         $c->stash->{data_set_type} = "combined populations"; 
         $c->stash->{combo_pops_id} = $model_id;
         $c->stash->{model_id}      = $model_id;                          
         $c->stash->{prediction_pop_id} = $prediction_pop_id;  
+
+        $self->get_trait_name($c, $trait_id);
+        my $trait_abbr = $c->stash->{trait_abbr};
+
+        my $identifier = $combo_pops_id . '_' . $prediction_pop_id;
+        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+        
+        my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+      
+        if (! -s $prediction_pop_gebvs_file)
+        {
+            my $dir = $c->stash->{solgs_cache_dir};
+        
+            my $exp = "phenotype_data_${model_id}_${trait_abbr}"; 
+            my $pheno_file = $self->grep_file($dir, $exp);
+
+            $exp = "genotype_data_${model_id}_${trait_abbr}"; 
+            my $geno_file = $self->grep_file($dir, $exp);
+
+            $c->stash->{trait_combined_pheno_file} = $pheno_file;
+            $c->stash->{trait_combined_geno_file}  = $geno_file;
+            $self->prediction_population_file($c, $prediction_pop_id);
   
-        $c->forward('get_rrblup_output'); 
+            $c->forward('get_rrblup_output'); 
+        }
         
         $self->combined_pops_summary($c);        
         $self->trait_phenotype_stat($c);
         $self->gs_files($c);
         
-        my $identifier = $combo_pops_id . '_' . $prediction_pop_id;
         $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
 
         $self->download_prediction_urls($c, $combo_pops_id, $prediction_pop_id );
