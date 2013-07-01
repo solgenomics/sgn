@@ -1361,7 +1361,7 @@ sub catalogue_combined_pops {
     my $file = $self->combined_pops_catalogue_file($c);
     if (! -s $file) 
     {
-        my $header = 'combo_pops_id' . "\t" . 'population_ids';
+        my $header = 'combo_pops_id' . "\t" . 'population_ids' . "\n";
         write_file($file, ($header, $entry));    
     }
     else 
