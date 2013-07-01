@@ -43,9 +43,9 @@ $field_designs => undef
 </&>
 
 
-<&| /page/info_section.mas, title=>'Phenotypes' &>
+<&| /page/info_section.mas, title=>'Phenotypes' , subtitle=>'[<a id="upload_phenotypes_link" > Upload phenotypes</a>]' &>
 
-<&| /page/info_section.mas, title=>'Upload', is_subsection=>1, collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>'Upload', is_subsection=>1, collapsible=>1, collapsed=>1&>
 
 <& /breeders_toolbox/upload_phenotypes.mas, projects=>$projects, locations=>\@locations &>  
 
