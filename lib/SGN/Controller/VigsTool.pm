@@ -159,7 +159,8 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     
     # run bowtie2
 
-    my $bowtie2_path = $c->config->{bowtie2_path};
+#    my $bowtie2_path = $c->config->{bowtie2_path};
+    my $bowtie2_path = $c->config->{cluster_shared_bindir};
     
     my @command = (File::Spec->catfile($bowtie2_path, "bowtie2"), 
 	   " --threads 1", 
@@ -223,7 +224,7 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $coverage = $c->req->param("targets");
     my $database = $c->req->param("database");
     my $expr_file = $c->req->param("exprfile") || undef;
-    
+    my @three_best = $c->req->param("best_regions") || undef;
     my $expr_hash = undef;
 
     if (defined ($expr_file)) {
@@ -273,20 +274,43 @@ sub view :Path('/tools/vigs/view') Args(0) {
     
     # print STDERR "REGION: ", join ", ", @{$regions[0]};
     # print STDERR "\n";
+
+    my @three_best = [ [$regions[0]->[4], $regions[0]->[5]], [$regions[1]->[4], $regions[1]->[5]], [$regions[2]->[4], $regions[2]->[5]] ];
     
-    $vg->hilite_regions( [ [ $regions[0]->[4], $regions[0]->[5] ] ] );
+    $vg->hilite_regions( @three_best );
     
     my $image_map = $vg->render($graph_img_path, $coverage, $expr_hash);
-
+#    my $tmp_seq = $query->seq();
+    
+    my @best3;
+    my $tmp_str="";
+    my @coords3;
+    
+    for (my $i=0; $i<3; $i++) {
+	$tmp_str = substr($query->seq(), $regions[$i]->[4]-1, $regions[$i]->[5]-$regions[$i]->[4]+1);
+	my @seq60 = $tmp_str =~ /(.{1,60})/g;
+        my $seq_str = join('<br />',@seq60);
+	# print "seq: $seq_str\n";
+	push(@best3, $seq_str);
+        my @tmp_a = ($regions[$i]->[4], $regions[$i]->[5]);
+        push(@coords3, \@tmp_a);
+    }
+    
     $c->stash->{image_map} = $image_map;
     $c->stash->{ids} = [ $vg->subjects_by_match_count($vg->matches()) ];
-    $c->stash->{regions} =  [ [ $regions[0]->[4], $regions[0]->[5] ] ];
+
+    $c->stash->{best3} =  \@best3;
+#    $c->stash->{regions} =  [ [ $regions[0]->[4], $regions[0]->[5], [$regions[1]->[4], $regions[1]->[5]], [$regions[2]->[4], $regions[2]->[5]] ] ];
+#    $c->stash->{regions} =  [ [ $regions[0]->[4], $regions[0]->[5] ] ];
+    $c->stash->{coords3} = \@coords3;
+
     $c->stash->{scores}  =  [ [ $regions[0]->[1] ] ];
     $c->stash->{graph_url} = $graph_img_url;
     $c->stash->{coverage} = $coverage;
     $c->stash->{seq_filename} = basename($seq_filename);
     $c->stash->{database} = $database;
     $c->stash->{fragment_size} = $fragment_size;
+#    $c->stash->{img_height} = $vg->height;
 }
 
 sub user_error {
