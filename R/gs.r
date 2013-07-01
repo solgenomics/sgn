@@ -230,7 +230,7 @@ predictionTempFile <- grep("prediction_population",
                        )
 
 predictionFile <- c()
-
+message('prediction temp genotype file: ', predictionTempFile)
 if (length(predictionTempFile) !=0 )
   {
     predictionFile <- scan(predictionTempFile,
@@ -238,12 +238,15 @@ if (length(predictionTempFile) !=0 )
                        )
 }
 
+message('prediction genotype file: ', predictionTempFile)
 predictionPopGEBVsFile <- grep("prediction_pop_gebvs",
                        outFiles,
                        ignore.case = TRUE,
                        fixed = FALSE,
                        value = TRUE
                        )
+
+message("prediction gebv file: ",  predictionPopGEBVsFile)
 
 if (trait == 'FHB' || trait == 'DON')
   {
@@ -508,6 +511,7 @@ if (is.null(validationAll) == FALSE)
 if (length(predictionData) !=0 )
   {
     predictionData <- data.matrix(round(predictionData, digits = 0 ))
+    print("prediction genotype data")
     print(predictionData[1:10, 1:20])
   }
 
@@ -528,6 +532,8 @@ if(length(predictionData) != 0)
 
    
     colnames(predictionPopGEBVs) <- c(trait)
+    print("prediction output")
+    print(predictionPopGEBVs[1:10,])
   
   }
 

@@ -344,12 +344,23 @@ sub prediction_pops {
   
   if ($training_pop_id) 
   {
-      my $stock_subj_rs = $c->controller('solGS::solgsStock')->project_subject_stocks_rs($training_pop_id);
-      my $stock_obj_rs  = $c->controller('solGS::solgsStock')->stocks_object_rs($stock_subj_rs);
-      my $stock_genotype_rs = $self->stock_genotypes_rs($c, $stock_obj_rs);
-      my $markers   = $self->extract_project_markers($stock_genotype_rs);
+      my $dir = $c->stash->{solgs_cache_dir};
+      opendir my $dh, $dir or die "can't open $dir: $!\n";
+    
+      my ($geno_file) =   grep { /genotype_data_${training_pop_id}/ && -f "$dir/$_" } 
+                            readdir($dh); 
+      closedir $dh;
 
+      $geno_file = catfile($dir, $geno_file);
+      open my $fh, "<", $geno_file or die "can't open genotype file: $!";
+     
+      my $markers = <$fh>;
+      chomp($markers);
+      
+      $fh->close;
+      
       @tr_pop_markers = split(/\t/, $markers);
+      shift(@tr_pop_markers);      
   }
  
   my @sample_pred_projects;
@@ -373,10 +384,13 @@ sub prediction_pops {
 
           my @pred_pop_markers = split(/\t/, $markers);
            
+          print STDERR "\ncheck if prediction populations are genotyped using the same set of markers as for the training population : " . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
+
           if (@pred_pop_markers ~~ @tr_pop_markers) 
           {
               $cnt++;
               push @sample_pred_projects, $project_id; 
+       
           }
       }
        
