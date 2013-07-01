@@ -1336,6 +1336,36 @@ sub prediction_population_file {
 }
 
 
+sub combined_pops_catalogue_file {
+    my ($self, $c) = @_;
+ 
+    my $cache_data = {key       => 'combined_pops_catalogue_file',
+                      file      => 'combined_pops_catalogue_file',
+                      stash_key => 'combined_pops_catalogue_file'
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+
+sub catalogue_combined_pops {
+    my ($self, $c, $entry) = @_;
+    
+    my $file = $self->combined_pops_catalogue_file($c);
+    if (! -s $file) 
+    {
+        my $header = 'combo_pops_id' . "\t" . 'population_ids';
+        write_file($file, ($header, $entry));    
+    }
+    else 
+    {
+        write_file($file, {append => 1}, $entry);
+    }
+    
+}
+
+
 sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]+))?') {
     my ($self, $c) = @_; 
    
@@ -1699,6 +1729,9 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
                 $ret->{combo_pops_id} = $combo_pops_id; 
                 $ret->{status}        = $analysis_result;
 
+                my $entry = $combo_pops_id . "\t" . $ids;
+                $self->catalogue_combined_pops($c, $entry);
+
               }           
         }
         else 
@@ -1727,8 +1760,29 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $c->stash->{data_set_type} = 'combined populations';
     $c->stash->{combo_pops_id} = $combo_pops_id;
     
+
     my $pops_ids = $c->req->param('combined_populations');
-    $c->stash->{trait_combo_pops} = $pops_ids;
+    
+    if($pops_ids)
+    {
+        $c->stash->{trait_combo_pops} = $pops_ids;
+    }
+    else
+    {
+        $self->combined_pops_catalogue_file($c);
+        my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
+    
+        my @combos = read_file($combo_pops_catalogue_file);
+    
+        foreach (@combos)
+        {
+            if ($_ =~ m/$combo_pops_id/)
+            {
+                my ($identifier, $pops)  = split(/\t/, $_);
+                $c->stash->{trait_combo_pops} = $pops;        
+            }   
+        }
+    }
 
     $self->get_trait_name($c, $trait_id);
 
