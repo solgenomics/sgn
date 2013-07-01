@@ -48,17 +48,13 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 <& /page/page_title.mas, title=>"BLAST" &>
 
 <&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0 &>
-
-  <input type="hidden" checked="checked" name="filterq" value="1" />
-  <input type="hidden" name="interface_type" value="simple" />
   <input type="hidden" name="outformat" value="0" />
-  <table align="center" summary="" cellpadding="0" cellspacing="5">
-    <tr><td><b>Show</b></td><td>
+  <table border="0" align="center" summary="" cellpadding="0" cellspacing="5">
+    <tr><td width="200"><b>Show</b></td><td width="400">
 	<& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select" &>
-</td></tr>
-    <tr><td><b>Sequence Database</b> </td>
-      <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>
-	
+</td><td rowspan="4" align="center"><div id="status_wheel"></div></td></tr>
+    <tr><td><b>Sequence Database</b></td>
+      <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>	
     </td></tr>
     <tr><td><b>Program</b></td>
       <td><& /page/html_select.mas, name=>'program_select', id=>'program_select', choices=>$programs &>
@@ -67,11 +63,11 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 <tr><td><b>Query</b></td><td>
   <% $input_options_select %>
 	</td></tr>
-<tr><td colspan="2">
+<tr><td colspan="3">
 
 <!-- div style="font-size: 80%">single sequence only, use Advanced for multiple</div -->
 <textarea name="sequence" id="sequence" rows="8" cols="80"><% $preload_seq %></textarea></td></tr>
-    <tr><td colspan="2">
+    <tr><td colspan="3">
       <table width="100%"><tr>
          <td>
 
@@ -181,7 +177,8 @@ function run_blast() {
    });
 
    var done = false;
- 
+
+   jQuery('#status_wheel').html('<img src="/static/documents/img/wheel.gif" />'); 
    alert("JOBID NOW: "+jobid);
    while (done == false) { 
       jQuery.ajax( { 
@@ -198,8 +195,9 @@ function run_blast() {
           },
           error: function(response) { alert("An error occurred!"); exit; }
      });
-     status += 'IMAGE<img src="/static/documents/img/wheel.gif" />'; 
+     status += ' Running...'; 
      jQuery('#blast_status').html(status);      
+
    }
 
    status = status +  "Run complete.";
@@ -217,7 +215,7 @@ function run_blast() {
 },
        error: function(response) { alert("Parse BLAST: An error occurred. "+response.error); }
    });
-
+   jQuery('#status_wheel').html('');
    Effects.swapElements('input_parameter_section_offswitch', 'input_parameter_section_onswitch'); 
    Effects.hideElement('input_parameter_section_content');
 

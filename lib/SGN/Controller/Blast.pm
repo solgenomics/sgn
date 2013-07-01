@@ -27,33 +27,30 @@ sub index :Path('/tools/new-blast/') :Args(0) {
     my @dataset_rows = $schema->resultset("BlastDb")->search( {}, { order_by=>'ordinal', join=>'blast_db_group' })->all();
 
     my $databases = {};
-    my $dataset_groups = [];
+    my $dataset_groups = {};
     foreach my $d (@dataset_rows) { 
 	print STDERR "processing dataset $d...\n";
 	if ($d->blast_db_group()) { 
 	    push @{$databases->{ $d->blast_db_group->blast_db_group_id }}, [ $d->blast_db_id, $d->title ];
-	    push @$dataset_groups, [ $d->blast_db_group->blast_db_group_id, $d->blast_db_group->name ];
+	    $dataset_groups->{ $d->blast_db_group->blast_db_group_id } =  $d->blast_db_group->name();
 	}
 	else { 
 	    push @{$databases->{ 'other' }}, [ $d->blast_db_id, $d->title ];
-	    push @$dataset_groups, [ 0, 'other' ];
+	    $dataset_groups->{'0'}= 'other';
 	} 
-
     }
 
     my $cbsq = CXGN::Blast::SeqQuery->new();
     my @input_options = sort map { $_->name() } $cbsq->plugins();
     
-
     print STDERR "GROUPS: ".Data::Dumper::Dumper($dataset_groups);
     $c->stash->{input_options} = \@input_options;
     $c->stash->{db_id} = $db_id;
     $c->stash->{seq} = $seq;
     $c->stash->{databases} = $databases;
-    $c->stash->{dataset_groups} = $dataset_groups;
+    @{ $c->stash->{dataset_groups}} = map { [ $_, $dataset_groups->{$_} ] } $dataset_groups;
     $c->stash->{programs} = [ 'blastn', 'blastp', 'blastx', 'tblastx' ];
     $c->stash->{template} = '/tools/blast/index.mas';
-
 }
 
 sub dbinfo : Path('/tools/blast/dbinfo') Args(0) { 
