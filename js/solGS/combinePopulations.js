@@ -155,7 +155,7 @@ var confirmSelections =  function() {
                         alert('populations ' + res.not_matching_pops + 
                               ' were genotyped using different marker sets. ' + 
                               'Please make new selections to combine.' );
-                        window.location.href =  '/ssolgs/earch/result/populations/' + trId;
+                        window.location.href =  '/solgs/search/result/populations/' + trId;
                     }
 
                     if (res.redirect_url) {
