@@ -52,10 +52,8 @@ Upload phenotype file
 </div>
 
 <div id="upload_wait_dialog" title="Uploading">
-  <p>
-    Uploading and storing spreadsheet<br>
+    Uploading and storing spreadsheet
     <span style="float: center;"><img src="../img/wheel.gif"/></span>
-  </p>
 </div>
 
 
@@ -128,6 +126,7 @@ jQuery(document).ready(function() {
     jQuery( "#upload_wait_dialog" ).dialog({
 	autoOpen: false,
 	modal: true,
+	width: 300,
     });
 
 });  
