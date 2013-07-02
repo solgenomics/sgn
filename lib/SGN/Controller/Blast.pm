@@ -62,13 +62,15 @@ sub dbinfo : Path('/tools/blast/dbinfo') Args(0) {
 
     my @groups = map {
 	my $grp = $_;
-	if( my @dbs = $grp->blast_dbs->search({ web_interface_visible => 't'}) ) {
+	if( my @dbs = $grp->blast_dbs->search({ web_interface_visible => 't'})->all() ) {
 	    [$grp->name, @dbs ]
 	} else {
 	    ()
         }
-    } $schema->resultset('BlastDbGroup')->search({}, {order_by => 'ordinal, name'});
+    } $schema->resultset('BlastDbGroup')->search({}, {order_by => 'ordinal, name'})->all();
     
+    print STDERR "GROUPS: ".join ", ", map { $_->[0] } @groups;
+
     if (my @ungrouped = grep $_->file_modtime, $schema->resultset('BlastDb')->search( { blast_db_group_id => undef, web_interface_visible => 't' }, {order_by => 'title'} ) ) {
 	push @groups, ['Other', @ungrouped ];
     }

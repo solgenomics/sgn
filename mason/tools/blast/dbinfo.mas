@@ -27,7 +27,7 @@
 
 use Data::Dumper;
 
-print Data::Dumper::Dumper(\@groups);
+#print Data::Dumper::Dumper(\@groups);
 
 
 # sub info_html {
@@ -40,7 +40,7 @@ print Data::Dumper::Dumper(\@groups);
 #  if( $db->needs_update ) {
 #    $timestamp_str = qq|<span style="background: #c22; padding: 3px; color: white">$timestamp_str (needs update)</span>|;
 #  }
-#  my $update_freq = $db->update_freq;
+##  my $update_freq = $db->update_freq;
 
 #  return info_section_html( title => $db->title.'<a name="'.$db->file_base.'"></a>',
 #			    subtitle => "<b>Category:</b> $groupname",
