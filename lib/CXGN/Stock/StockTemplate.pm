@@ -352,7 +352,7 @@ sub store {
     my $error;
     try {
         $schema->txn_do($coderef);
-        $error = "Store completed!";
+        #$error = "Store completed!";
     } catch {
         # Transaction failed
         $error =  "An error occured! Cannot store data! <br />" . $_ . "\n";
