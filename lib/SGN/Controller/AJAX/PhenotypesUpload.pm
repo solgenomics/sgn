@@ -27,6 +27,7 @@ use File::Slurp;
 use File::Spec;
 use File::Temp qw | tempfile |;
 use List::MoreUtils qw /any /;
+use SGN::View::ArrayElements qw(array_elements_simple_view);
 
 #use Data::Dumper;
 use CXGN::Stock::StockTemplate;
@@ -98,16 +99,14 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   if ($error) {
     return;
   }
-
   if ($stock_template->parse_errors()) {
-    print STDERR "parse error\n";
-    my $parse_errors_string;
-    my @parse_errors = @{$stock_template->parse_errors()};
-    foreach my $error_item (@parse_errors) {
-      $parse_errors_string .= $error_item ."\n";
-    }
-    $c->stash->{rest} = {error => $parse_errors_string };
-#    $c->stash->{rest} = {error => "parse error" };
+    #my $parse_errors_string;
+    #my @parse_errors = @{$stock_template->parse_errors()};
+    my $parse_errors_html = array_elements_simple_view($stock_template->parse_errors());
+    #foreach my $error_item (@parse_errors) {
+    #  $parse_errors_string .= $error_item ."\n";
+    #}
+    $c->stash->{rest} = {error => $parse_errors_html };
     return;
   }
 

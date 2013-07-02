@@ -76,7 +76,7 @@ sub parse {
     my $parser   = Spreadsheet::ParseExcel->new();
     my $workbook = $parser->parse($file); # $file is an Excel file
     if ( !defined $workbook ) {
-        push @errors,  $parser->error(), ".\n";
+        push @errors,  $parser->error();
         $self->parse_errors(\@errors);
         #die;
 	return;
@@ -85,7 +85,7 @@ sub parse {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if ($col_max < 3 || $row_max < 9 ) {#must have header and at least one row of phenotypes
-      push @errors, "Spreadsheet is missing header\n";
+      push @errors, "Spreadsheet is missing header";
       $self->parse_errors(\@errors);
       return;
     }
@@ -99,23 +99,24 @@ sub parse {
     my $operator        = $worksheet->get_cell(5,2);
     my $date            = $worksheet->get_cell(6,2);
     if (!$spreadsheet_id) {
-      push @errors, "Spreadsheet ID is missing from the header\n";
+      push @errors, "Spreadsheet ID is missing from the header";
     }
     if (!$trial_name) {
-      push @errors, "Trial name is missing from the header\n";
+      push @errors, "Trial name is missing from the header";
     }
+    #add function to check that the trial name exists?
     if (!$operator) {
-      push @errors, "The name of the operator is missing from the header\n";
+      push @errors, "The name of the operator is missing from the header";
     }
+    #add function to check if the operator name exists in the database and matches the logged in user?
     if (!$date) {
-      push @errors, "The date is missing from the header\n";
+      push @errors, "The date is missing from the header";
     }
-    #add a check to make sure that the data is valid?
+    #add a check to make sure that the header data is valid?
     if (@errors) {
       $self->parse_errors(\@errors);
       return;
     }
-
     # Row #7 can be skipped, as it contains trait names just for human readability
 #    for my $row ( 8 .. $row_max ) {
     for my $col ( $col_min .. $col_max ) {
@@ -150,7 +151,7 @@ sub parse {
                 #skip non-numeric values
                 if ($value !~ /^\d/) {
                     if ($value eq "\." ) { next; }
-                    push @errors,  "** Found non-numeric value in column $header (value = '" . $value ."') Row = $row. \n";
+                    push @errors,  "** Found non-numeric value in column $header (value = '" . $value ."') Row = $row.";
                     next;
                 }
                 #####################
@@ -189,12 +190,12 @@ sub verify {
             #check if the stock exists
             print STDERR "verify .. Looking for stock_id $plot_stock_id\n";
             my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $plot_stock_id } );
-            if (!$stock) { push @errors, "Stock $plot_stock_id does not exist in the database!\n"; }
+            if (!$stock) { push @errors, "Stock $plot_stock_id does not exist in the database!"; }
             foreach my $cvterm_accession (keys %{$hashref->{$key}->{$plot_stock_id} } ) {
                 print STDERR "verify ... Looking for accession $cvterm_accession..\n";
                 my ($db_name, $accession) = split (/:/, $cvterm_accession);
-                if (!$db_name) { push @errors, "could not find valid db_name in accession $cvterm_accession\n";}
-                if (!$accession) { push @errors, "Could not find valid cvterm accession in $cvterm_accession\n";}
+                if (!$db_name) { push @errors, "could not find valid db_name in accession $cvterm_accession";}
+                if (!$accession) { push @errors, "Could not find valid cvterm accession in $cvterm_accession";}
                 #check if the cvterm exists
                 my $db = $schema->resultset("General::Db")->search(
                     { 'me.name' => $db_name } );
@@ -203,13 +204,13 @@ sub verify {
 
                     if ($dbxref->count) {
                         my $cvterm = $dbxref->search_related("cvterm", {} )->single;
-                        if (!$cvterm) { push @errors, "NO cvterm found in the database for accession $cvterm_accession!\n db_name = '" .  $db_name  . "' , accession = '" .  $accession . "' \n";
+                        if (!$cvterm) { push @errors, "NO cvterm found in the database for accession $cvterm_accession!\n db_name = '" .  $db_name  . "' , accession = '" .  $accession . "'";
 			}
                     } else {
-                        push @errors, "No dbxref found for cvterm accession $accession\n";
+                        push @errors, "No dbxref found for cvterm accession $accession";
                     }
                 } else {
-                    push @errors , "db_name $db_name does not exist in the database! \n";
+                    push @errors , "db_name $db_name does not exist in the database!";
                 }
             }
         }
