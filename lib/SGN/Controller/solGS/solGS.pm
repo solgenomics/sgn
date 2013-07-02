@@ -1735,6 +1735,8 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
                 $ret->{combo_pops_id} = $combo_pops_id; 
                 $ret->{status}        = $analysis_result;
 
+                $self->list_of_prediction_pops($c, $combo_pops_id);
+
                 my $entry = $combo_pops_id . "\t" . $ids;
                 $self->catalogue_combined_pops($c, $entry);
 
