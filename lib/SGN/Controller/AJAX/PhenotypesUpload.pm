@@ -56,6 +56,7 @@ sub upload_phenotype_spreadsheet :  Path('/ajax/phenotype/upload_spreadsheet') :
 
 sub upload_phenotype_spreadsheet_POST : Args(0) {
   my ($self, $c) = @_;
+  my $error;
   my $stock_template = new CXGN::Stock::StockTemplate;
   my $upload = $c->req->upload('upload_phenotype_spreadsheet_file_input');
   my $upload_file_name;
@@ -88,9 +89,15 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   $upload_file_temporary_full_path = $upload_file_temporary_directory.$upload_file_name;
   print "full path: $upload_file_temporary_full_path\n";
   write_file($upload_file_temporary_full_path, $upload->slurp);
-  $stock_template->parse($upload_file_temporary_full_path);
-
-
+  try {
+    $stock_template->parse($upload_file_temporary_full_path);
+  } catch {
+    $c->stash->{rest} = {error => "Error parsing spreadsheet: $_"};
+    $error=1;
+  };
+  if ($error) {
+    return;
+  }
 
   if ($stock_template->parse_errors()) {
     print STDERR "parse error\n";
