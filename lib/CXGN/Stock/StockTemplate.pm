@@ -84,7 +84,7 @@ sub parse {
     my $worksheet = ( $workbook->worksheets() )[0]; #support only one worksheet
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
-    if ($col_max < 4 || $row_max < 11 ) {#must have header and at least one row of phenotypes
+    if ($col_max < 3 || $row_max < 9 ) {#must have header and at least one row of phenotypes
       push @errors, "Spreadsheet is missing header\n";
       $self->parse_errors(\@errors);
       return;
@@ -98,6 +98,24 @@ sub parse {
     my $plants_per_plot = $worksheet->get_cell(4,2);
     my $operator        = $worksheet->get_cell(5,2);
     my $date            = $worksheet->get_cell(6,2);
+    if (!$spreadsheet_id) {
+      push @errors, "Spreadsheet ID is missing from the header\n";
+    }
+    if (!$trial_name) {
+      push @errors, "Trial name is missing from the header\n";
+    }
+    if (!$operator) {
+      push @errors, "The name of the operator is missing from the header\n";
+    }
+    if (!$date) {
+      push @errors, "The date is missing from the header\n";
+    }
+    #add a check to make sure that the data is valid?
+    if (@errors) {
+      $self->parse_errors(\@errors);
+      return;
+    }
+
     # Row #7 can be skipped, as it contains trait names just for human readability
 #    for my $row ( 8 .. $row_max ) {
     for my $col ( $col_min .. $col_max ) {
