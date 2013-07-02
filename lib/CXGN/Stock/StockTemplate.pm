@@ -84,6 +84,11 @@ sub parse {
     my $worksheet = ( $workbook->worksheets() )[0]; #support only one worksheet
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
+    if ($col_max < 4 || $row_max < 11 ) {#must have header and at least one row of phenotypes
+      push @errors, "Spreadsheet is missing header\n";
+      $self->parse_errors(\@errors);
+      return;
+    }
     #hash for column headers
     my %headers;
     #metadata is stored in rows 1..6
