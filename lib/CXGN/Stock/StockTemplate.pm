@@ -61,8 +61,6 @@ sub parse {
     my $self = shift;
     my @errors;
     my ($file , $metadata, $identifier_prefix, $db_name ) = @_;
-    print STDERR "file: $file\n";
-    #print STDERR "Identifier prefix = $identifier_prefix, db_name = $db_name\n";
     my $hashref; #hashref of hashrefs for storing the uploaded data , to be used for checking the fields
  
 #Expected format:
@@ -76,7 +74,7 @@ sub parse {
 #1.. A. $row_number B. $clone_name C. $block D. $plot_id E. $rep F. $number_of_surviving_plants G. $trait_ontology_id 
 
     my $parser   = Spreadsheet::ParseExcel->new();
-    my $workbook = $parser->parse('$file'); # $file is an Excel file
+    my $workbook = $parser->parse($file); # $file is an Excel file
     if ( !defined $workbook ) {
         push @errors,  $parser->error(), ".\n";
         $self->parse_errors(\@errors);

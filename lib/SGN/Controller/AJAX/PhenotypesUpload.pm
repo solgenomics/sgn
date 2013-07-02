@@ -59,7 +59,14 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   my $stock_template = new CXGN::Stock::StockTemplate;
   my $upload = $c->req->upload('upload_phenotype_spreadsheet_file_input');
   my $upload_file_name;
+  my $upload_file_temporary_directory;
+  my $upload_file_temporary_full_path;
+
   my $archive_path = $c->config->{archive_path};
+  if (!-d $archive_path) {
+    mkdir $archive_path;
+  }
+
   if (!$c->user()) {  #user must be logged in
     $c->stash->{rest} = {error => "You need to be logged in to upload a file." };
     return;
@@ -74,18 +81,16 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   }
   $upload_file_name = $upload->tempname;
   $upload_file_name =~ s/\/tmp\///;
-  print STDERR "archive path: $archive_path \n";
-#  write_file($archive_path.'/phenotype_spreadsheet_uploads/tmp/'.$upload_file_name, $upload->slurp);
-  write_file($archive_path.'/'.$upload_file_name, $upload->slurp);
+  $upload_file_temporary_directory = $archive_path.'/tmp/';
+  if (!-d $upload_file_temporary_directory) {
+    mkdir $upload_file_temporary_directory;
+  }
+  $upload_file_temporary_full_path = $upload_file_temporary_directory.$upload_file_name;
+  print "full path: $upload_file_temporary_full_path\n";
+  write_file($upload_file_temporary_full_path, $upload->slurp);
+  $stock_template->parse($upload_file_temporary_full_path);
 
-  #my $metadata;
-  #my $identifier_prefix;
-  #my $db_name;
 
-  print STDERR "upload name: $upload_file_name\n";
-  write_file($upload_file_name, $upload->slurp);
-
-  $stock_template->parse($archive_path.'/'.$upload_file_name);
 
   if ($stock_template->parse_errors()) {
     print STDERR "parse error\n";
