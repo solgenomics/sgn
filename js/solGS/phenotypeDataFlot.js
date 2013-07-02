@@ -103,10 +103,10 @@ jQuery(window).load( function() {
                 xaxis:{
                     mode: 'categories',
                     tickColor: '#ffffff',
-                    ticks: xAxisPhenoValues, 
+                    ticks: '', 
                     axisLabel: 'Genotypes',
                     position: 'bottom',
-                    axisLabelPadding: 10,
+                    axisLabelPadding: 20,
                     color: '#0066CC',
                 },
                 yaxis: {                                
