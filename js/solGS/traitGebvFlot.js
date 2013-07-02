@@ -107,11 +107,11 @@ jQuery(window).load( function() {
                 },
                 xaxis:{
                     mode: 'categories',                 
-                    ticks: xAxisValues,
+                    ticks: '',
                     tickColor: '#ffffff',
                     axisLabel: 'Genotypes',
                     position: 'bottom',
-                    axisLabelPadding: 10,
+                    axisLabelPadding: 20,
                     color: '#0066CC',
                 },
                 yaxis: {                                
