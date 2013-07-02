@@ -106,7 +106,7 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     #foreach my $error_item (@parse_errors) {
     #  $parse_errors_string .= $error_item ."\n";
     #}
-    $c->stash->{rest} = {error => $parse_errors_html };
+    $c->stash->{rest} = {error_list_html => $parse_errors_html };
     return;
   }
 

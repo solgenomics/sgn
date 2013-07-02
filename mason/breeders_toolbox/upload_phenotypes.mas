@@ -89,14 +89,14 @@ jQuery(document).ready(function() {
             }
 	},
 	complete: function (response) {
-            if (response.error_table_html) {
-		jQuery("#upload_phenotype_spreadsheet_error_display").html('');
-		jQuery("#upload_phenotype_spreadsheet_error_display").append(response.error_string);
-                jQuery("#upload_phenotype_spreadsheet_error_display").dialog("open");
-		return;
-            }
             if (response.error) {
 		alert(response.error);
+		return;
+            }
+            if (response.error_list_html) {
+		//jQuery("#upload_phenotype_spreadsheet_error_display").html('');
+		jQuery("#upload_phenotype_spreadsheet_error_display").html(response.error_list_html);
+                jQuery("#upload_phenotype_spreadsheet_error_display").dialog("open");
 		return;
             }
             if (response.success) {
