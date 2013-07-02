@@ -18,7 +18,7 @@ $trait_id
     title => "Confirm" ,
 &>
 
-<& /solgs/population/project_details_form.mas,
+<& populations_list.mas,
    result     => $selected_pops_details,
 &>
 
