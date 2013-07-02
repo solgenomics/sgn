@@ -61,7 +61,8 @@ sub parse {
     my $self = shift;
     my @errors;
     my ($file , $metadata, $identifier_prefix, $db_name ) = @_;
-    print STDERR "Identifier prefix = $identifier_prefix, db_name = $db_name\n";
+    print STDERR "file: $file\n";
+    #print STDERR "Identifier prefix = $identifier_prefix, db_name = $db_name\n";
     my $hashref; #hashref of hashrefs for storing the uploaded data , to be used for checking the fields
  
 #Expected format:
@@ -79,7 +80,8 @@ sub parse {
     if ( !defined $workbook ) {
         push @errors,  $parser->error(), ".\n";
         $self->parse_errors(\@errors);
-        die;
+        #die;
+	return;
     }
     my $worksheet = ( $workbook->worksheets() )[0]; #support only one worksheet
     my ( $row_min, $row_max ) = $worksheet->row_range();
