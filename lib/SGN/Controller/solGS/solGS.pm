@@ -1849,7 +1849,7 @@ sub combined_pops_summary {
     my @geno_lines = read_file($geno_file);
     my $markers_no = scalar(split ('\t', $geno_lines[0])) - 1;
 
-    my $pheno_exp = "phenotype_data_${combo_pops_id}_${trait_abbr}_combined";
+    my $pheno_exp = "phenotype_trait_${trait_abbr}_${combo_pops_id}_combined";
     my $trait_pheno_file = $self->grep_file($dir, $pheno_exp);  
     
     my @trait_pheno_lines = read_file($trait_pheno_file);
