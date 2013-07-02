@@ -64,6 +64,9 @@ create table blast_db_blast_db_group (
     blast_db_group_id bigint REFERENCES blast_db_group
 );
 
+-- populate table with current data from blast_db table
+insert into sgn.blast_db_blast_db_group (blast_db_id, blast_db_group_id) SELECT blast_db_id, blast_db_group_id FROM sgn.blast_db;
+
 EOSQL
 
 print "You're done!\n";
