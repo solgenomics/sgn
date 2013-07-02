@@ -31,7 +31,7 @@ $trait_name
 
 
 
-<& ../../population/project_details_form.mas,
+<& /solgs/search/result/confirm/populations_list.mas,
    result     => $result,
    pager      => $pager,
    page_links => $page_links
