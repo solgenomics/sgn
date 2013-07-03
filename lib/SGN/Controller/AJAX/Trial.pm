@@ -91,6 +91,7 @@ sub generate_experimental_design_GET : Args(0) {
   my $start_number =  $c->req->param('start_number');
   my $increment =  $c->req->param('increment');
   my $trial_location = $c->req->param('trial_location');
+  my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
 
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
@@ -106,6 +107,12 @@ sub generate_experimental_design_GET : Args(0) {
     $c->stash->{rest} = {error => "Trial location not found"};
     return;
   }
+
+  if($schema->resultset('Project::Project')->find({name => $trial_name}))
+    {
+      $c->stash->{rest} = {error => "Trial name \"$trial_name\" already exists" };
+      return;
+    }
 
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
@@ -202,6 +209,14 @@ sub commit_experimental_design : Path('/ajax/trial/commit_experimental_design') 
 sub commit_experimental_design_GET : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  if (!$c->user()) {
+    $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
+    return;
+  }
+  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {  #user must have privileges to add a trial
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
+    return;
+  }
   my $trial_design = CXGN::TrialDesign->new();
   my %design;
   my $error;
@@ -245,16 +260,21 @@ sub commit_experimental_design_GET : Args(0) {
         description => $trial_location,
     } ) ;
 
-  #create project
-  my $project = $schema->resultset('Project::Project')->find_or_create(
-								       {
-									name => $trial_name,
-									description => $project_description,
-								       }
-								      );
+  if($schema->resultset('Project::Project')->find({name => $trial_name}))
+    {
+      $c->stash->{rest} = {error => "Trial name \"$trial_name\" already exists" };
+      return;
+    }
+
+  my $project = $schema->resultset('Project::Project')->create({
+								name => $trial_name,
+								description => $project_description,
+							       }
+							      );
+
   $project->create_projectprops( { 'project year' => $year,'design' => $design_type}, {autocreate=>1});
 
-  #find the cvterm for a phenotyping experiment
+  #find the cvterm for a field layout experiment
   my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')
     ->create_with({
 		   name   => 'field layout',
