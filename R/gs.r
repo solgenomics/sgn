@@ -361,6 +361,7 @@ if (length(predictionData) != 0)
 #use REML (default) to calculate variance components
 
 #calculate GEBV using marker effects (as random effects)
+
 markerGEBV <- mixed.solve(y = phenoTrait,
                           Z = genoDataMatrix
                          )
@@ -380,12 +381,12 @@ genocrsprd <- tcrossprod(genoDataMatrix)
 
 #construct an identity matrix for genotypes
 identityMatrix <- diag(nrow(phenoTrait))
-                     
+                  
 iGEBV <- mixed.solve(y = phenoTrait,
                      Z = identityMatrix,
                      K = genocrsprd
                      )
-
+ 
 #correlation between breeding values based on
 #marker effects and relationship matrix
 corGEBVs <- cor(genoDataMatrix %*% markerGEBV$u, iGEBV$u)
@@ -440,10 +441,17 @@ colnames(ordered.iGEBV) <- c(trait)
 
 reps <- round_any(nrow(phenoTrait), 10, f = ceiling) %/% 10
 
-genotypeGroups <- rep(1:10, reps) [- (nrow(phenoTrait) %% 10)]
+genotypeGroups <-c()
+
+if (nrow(phenoTrait) %% 10 == 0)
+  {
+    genotypeGroups <- rep(1:10, reps)   
+  } else {
+    genotypeGroups <- rep(1:10, reps) [- (nrow(phenoTrait) %% 10) ]
+  }
 
 set.seed(4567)                                   
-genotypeGroups <- genotypeGroups[order (runif(nrow(phenoTrait))) ]                     
+genotypeGroups <- genotypeGroups[ order (runif(nrow(phenoTrait))) ]
 
 validationAll <- c()
 
@@ -454,7 +462,7 @@ for (i in 1:10)
  
   trG <- which(genotypeGroups != i)
   slG <- which(genotypeGroups == i)
-
+ 
   assign(tr, trG)
   assign(sl, slG)
 
@@ -466,8 +474,7 @@ for (i in 1:10)
                          mixed.method = "REML",
                          K.method = "RR"
                          )
-print("BLUP for prediction pop")
-#print(result)
+ 
   assign(kblup, result)
  
 #calculate cross-validation accuracy
@@ -484,7 +491,7 @@ print("BLUP for prediction pop")
 
       colnames(accuracy) <- c("correlation")
       rownames(accuracy) <- cvTest
-
+    
       assign(validation, accuracy)
 
       validationAll <- rbind(validationAll, accuracy)
