@@ -255,12 +255,12 @@ sub commit_experimental_design_GET : Args(0) {
   $project->create_projectprops( { 'project year' => $year,'design' => $design_type}, {autocreate=>1});
 
   #find the cvterm for a phenotyping experiment
-  my $pheno_cvterm = $schema->resultset('Cv::Cvterm')
+  my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')
     ->create_with({
-		   name   => 'phenotyping experiment',
+		   name   => 'field layout',
 		   cv     => 'experiment type',
 		   db     => 'null',
-		   dbxref => 'phenotyping experiment',
+		   dbxref => 'field layout',
 		  });
 
   foreach my $key (sort { $a <=> $b} keys %design) {
@@ -336,7 +336,7 @@ sub commit_experimental_design_GET : Args(0) {
     my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
       ->create({
 		nd_geolocation_id => $geolocation->nd_geolocation_id(),
-		type_id => $pheno_cvterm->cvterm_id(),
+		type_id => $field_layout_cvterm->cvterm_id(),
 		});
 
     #link to the project
@@ -345,7 +345,7 @@ sub commit_experimental_design_GET : Args(0) {
     #link the experiment to the stock
     $experiment->find_or_create_related('nd_experiment_stocks' , {
 								  stock_id => $plot->stock_id(),
-								  type_id  =>  $pheno_cvterm->cvterm_id(),
+								  type_id  =>  $field_layout_cvterm->cvterm_id(),
 								 });
   }
   $c->stash->{rest} = {success => "1",};
