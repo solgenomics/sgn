@@ -835,7 +835,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
     $path       =~ s/$base//;
     my $page    = "solgs/model/combined/populations/";
     
-    if ($referer =~ m/[{$page}]/)
+    if ($referer =~ m/$page/)
     {
         my ($combo_pops_id, $trait_id) = $referer =~ m/(\d+)/g;
 
@@ -843,7 +843,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         $c->stash->{combo_pops_id} = $model_id;
         $c->stash->{model_id}      = $model_id;                          
         $c->stash->{prediction_pop_id} = $prediction_pop_id;  
-
+        
         $self->get_trait_name($c, $trait_id);
         my $trait_abbr = $c->stash->{trait_abbr};
 
@@ -929,11 +929,7 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
 sub prediction_pop_analyzed_traits {
     my ($self, $c, $training_pop_id, $prediction_pop_id) = @_;
         
-   # my $training_pop_id = $c->stash->{pop_id}; #134
-   # my $prediction_pop_id = $c->stash->{prediction_pop_id}; #268
-   # my $pred_pops_ids = $c->stash->{list_of_prediction_pops_ids};
-
-    
+ 
     my $dir = $c->stash->{solgs_cache_dir};
     my @pred_files;
 
@@ -1485,18 +1481,14 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
         $c->forward('get_rrblup_output');
   
     }
-    # else
-#     {
-    
-#     print STDERR "\ndo nothing for now..\n";
-#     }
+ 
     my $referer    = $c->req->referer;   
     my $base       = $c->req->base;
     $referer       =~ s/$base//;
     my ($tr_id)    = $referer =~ /(\d+)/;
     my $trait_page = "solgs/trait/$tr_id/population/$pop_id";
     
-    if ($referer =~ m/[{$trait_page}]/) 
+    if ($referer =~ m/$trait_page/) 
     { 
         $c->res->redirect("/solgs/trait/$tr_id/population/$pop_id");      
     }
@@ -1514,7 +1506,8 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      my ($pop_id, $pred_pop_id) = @{$c->req->captures};
 
      my @traits = $c->req->param; 
-     @traits = grep {$_ ne 'rank'} @traits;
+     @traits    = grep {$_ ne 'rank'} @traits;
+
      $c->stash->{pop_id} = $pop_id;
 
      if ($pred_pop_id)
@@ -2729,13 +2722,6 @@ sub run_rrblup_trait {
   
     if ($data_set_type =~ /combined populations/i) 
     {
-        
-       #  my $name = "trait_${trait_id}_combined_pops";
-
-#         my $file = $self->create_tempfile($c, $name);    
-#         $c->stash->{trait_file} = $file;       
-#         write_file($file, $trait_abbr);
-
         my $prediction_id = $c->stash->{prediction_pop_id};
 
         $self->output_files($c);
