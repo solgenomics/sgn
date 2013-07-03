@@ -475,7 +475,9 @@ jQuery(document).ready(function () {
                 }
             },
             error: function () {
+                jQuery('#trial_saving_dialog').dialog("close");
                 alert('An error occurred saving the trial.');
+                jQuery('#trial_design_confirm').dialog("close");
             }
        });
     }
