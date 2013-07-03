@@ -880,15 +880,54 @@ sub prediction_population :Path('/solgs/model') Args(3) {
       
         $self->list_of_prediction_pops($c, $combo_pops_id, $download_prediction);
         
-        $c->res->redirect('/'. $referer);
-                                  
     }
     else 
     {
-        $c->res->redirect("/solgs/analyze/traits/population/$model_id/$prediction_pop_id");
+         my ($trait_id, $pop_id) = $referer =~ m/(\d+)/g;
+
+        $c->stash->{data_set_type}     = "single population"; 
+        $c->stash->{pop_id}            = $pop_id;
+        $c->stash->{model_id}          = $model_id;                          
+        $c->stash->{prediction_pop_id} = $prediction_pop_id;  
+        
+        $self->get_trait_name($c, $trait_id);
+        my $trait_abbr = $c->stash->{trait_abbr};
+
+        my $identifier = $pop_id . '_' . $prediction_pop_id;
+        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+        
+        my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+      
+        if (! -s $prediction_pop_gebvs_file)
+        {
+            my $dir = $c->stash->{solgs_cache_dir};
+        
+            my $exp = "phenotype_data_${pop_id}"; 
+            my $pheno_file = $self->grep_file($dir, $exp);
+
+            $exp = "genotype_data_${pop_id}"; 
+            my $geno_file = $self->grep_file($dir, $exp);
+
+            $c->stash->{pheno_file} = $pheno_file;
+            $c->stash->{geno_file}  = $geno_file;
+            $self->prediction_population_file($c, $prediction_pop_id);
+  
+            $c->forward('get_rrblup_output'); 
+        }
+                   
+        $self->trait_phenotype_stat($c);
+        $self->gs_files($c);
+        
+        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+
+        $self->download_prediction_urls($c, $pop_id, $prediction_pop_id );
+        my $download_prediction = $c->stash->{download_prediction};
+      
+        $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
+             
     }
 
-
+    $c->res->redirect('/'. $referer);
 }
 
 
@@ -1487,7 +1526,7 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
     $referer       =~ s/$base//;
     my ($tr_id)    = $referer =~ /(\d+)/;
     my $trait_page = "solgs/trait/$tr_id/population/$pop_id";
-    
+   
     if ($referer =~ m/$trait_page/) 
     { 
         $c->res->redirect("/solgs/trait/$tr_id/population/$pop_id");      
