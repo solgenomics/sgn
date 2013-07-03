@@ -27,14 +27,14 @@
     <textarea id="add_project_description" name="add_project_description" form="create_new_trial_form" cols="40"></textarea>
     <br><br>
     <div id="format_type_radio">
-      <input type="radio" id="format_radio1" name="radio" class="format_type" value="empty" checked="checked" />
-      <label for="radio1">Create empty trial</label>
+      <input type="radio" id="format_radio3" name="radio" class="format_type" value="create_with_design_tool" checked="checked" />
+      <label for="radio3">Create using trial design tool</label>
       <br>
       <input type="radio" id="format_radio2" name="radio" class="format_type" value="create_with_upload" />
       <label for="radio2">Create from uploaded file</label>
       <br>
-      <input type="radio" id="format_radio3" name="radio" class="format_type" value="create_with_design_tool" />
-      <label for="radio3">Create using trial design tool</label>
+      <input type="radio" id="format_radio1" name="radio" class="format_type" value="empty" />
+      <label for="radio1">Create empty trial</label>
       <br>
     </div>
     <div id="get_file_upload_data" style="display: none">
@@ -241,6 +241,8 @@ jQuery(document).ready(function () {
             jQuery("trial_design_info").hide();
         }
     });
+
+    jQuery("#format_type_radio").change();
 
     jQuery('#add_project_dialog').dialog({
 	autoOpen: false,
