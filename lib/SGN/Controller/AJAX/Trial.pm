@@ -25,7 +25,7 @@ use CXGN::Chado::Stock;
 use Scalar::Util qw(looks_like_number);
 use File::Slurp;
 use Data::Dumper;
-use CXGN::TrialDesign;
+use CXGN::Trial::TrialDesign;
 use JSON -support_by_pp;
 use SGN::View::Trial qw/design_layout_view design_info_view/;
 
@@ -65,7 +65,7 @@ sub generate_experimental_design : Path('/ajax/trial/generate_experimental_desig
 sub generate_experimental_design_GET : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my $trial_design = CXGN::TrialDesign->new();
+  my $trial_design = CXGN::Trial::TrialDesign->new();
   my %design;
   my %design_info;
   my $error;
@@ -217,7 +217,6 @@ sub commit_experimental_design_GET : Args(0) {
     $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
     return;
   }
-  my $trial_design = CXGN::TrialDesign->new();
   my %design;
   my $error;
   my $project_name = $c->req->param('project_name');

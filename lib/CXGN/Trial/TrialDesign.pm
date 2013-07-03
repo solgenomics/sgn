@@ -1,4 +1,4 @@
-package CXGN::TrialDesign;
+package CXGN::Trial::TrialDesign;
 
 use Moose;
 use MooseX::FollowPBP;
