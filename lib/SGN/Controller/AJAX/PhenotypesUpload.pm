@@ -44,6 +44,13 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   my $upload_file_name;
   my $upload_file_temporary_directory;
   my $upload_file_temporary_full_path;
+  my $operator_directory;
+  my $upload_file_archive_full_path;
+  my $timestamp = localtime(time);
+  my %parsed_header;
+
+
+  print STDERR "Timestamp: $timestamp\n";
 
   my $archive_path = $c->config->{archive_path};
   if (!-d $archive_path) {
@@ -81,11 +88,38 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   if ($error) {
     return;
   }
+
   if ($stock_template->parse_errors()) {
     my $parse_errors_html = array_elements_simple_view($stock_template->parse_errors());
     $c->stash->{rest} = {error_list_html => $parse_errors_html };
     return;
   }
+
+  %parsed_header=%{$stock_template->parsed_header()};
+  if (!$parsed_header{'operator'}) {
+    $c->stash->{rest} = {error => "Cound not get operator name from spreadsheet"};
+    return;
+  }
+  if (!$parsed_header{'trial_name'}) {
+    $c->stash->{rest} = {error => "Cound not get trial name from spreadsheet"};
+    return;
+  }
+  $operator_directory = $archive_path.'/'.$parsed_header{'operator'};
+  if (!-d $operator_directory) {
+    mkdir $operator_directory;
+  }
+  $upload_file_archive_full_path = $operator_directory.'/'.$parsed_header{'trial_name'}.$timestamp.".xls";
+
+  try {
+    write_file($upload_file_archive_full_path, $upload->slurp);
+  } catch {
+    $c->stash->{rest} = {error => "Could not save spreadsheet file: $_"};
+    $error=1;
+  };
+  if ($error) {
+    return;
+  }
+  unlink $upload_file_temporary_full_path;
 
   try {
     $stock_template->verify();
@@ -94,11 +128,13 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     $error=1;
   };
   if ($error) {
+    unlink $upload_file_archive_full_path;
     return;
   }
   if ($stock_template->verify_errors()) {
     my $verify_errors_html = array_elements_simple_view($stock_template->verify_errors());
     $c->stash->{rest} = {error_list_html => $verify_errors_html };
+    unlink $upload_file_archive_full_path;
     return;
   }
 
@@ -109,11 +145,13 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     $error=1;
   };
   if ($error) {
+    unlink $upload_file_archive_full_path;
     return;
   }
   if ($stock_template->store_errors()) {
     my $store_errors_html = array_elements_simple_view($stock_template->store_errors());
     $c->stash->{rest} = {error_list_html => $store_errors_html };
+    unlink $upload_file_archive_full_path;
     return;
   }
 }

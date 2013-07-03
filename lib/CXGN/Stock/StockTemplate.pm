@@ -39,6 +39,10 @@ has 'parsed_data' => (
     is => 'rw'
     );
 
+has 'parsed_header' => (
+    is => 'rw'
+    );
+
 has 'parse_errors' => (
     is => 'rw'
     );
@@ -62,7 +66,8 @@ sub parse {
     my @errors;
     my ($file , $metadata, $identifier_prefix, $db_name ) = @_;
     my $hashref; #hashref of hashrefs for storing the uploaded data , to be used for checking the fields
- 
+    my %header_hash;
+
 #Expected format:
 #A. Spreadsheet identifier: B. $spreadsheet_unique_id
 #A. trial name B. $name 
@@ -117,6 +122,9 @@ sub parse {
       $self->parse_errors(\@errors);
       return;
     }
+    $header_hash{'operator'} = $operator;
+    $header_hash{'trial_name'} = $trial_name;
+
     # Row #7 can be skipped, as it contains trait names just for human readability
 #    for my $row ( 8 .. $row_max ) {
     for my $col ( $col_min .. $col_max ) {
@@ -168,6 +176,7 @@ sub parse {
 #################################
     #my ($op_name, $project_id, $location_id, $stock_id, $cvterm_accession, $value, $date, $count);
     $self->parsed_data($hashref);
+    $self->parsed_header(\%header_hash);
     $self->parse_errors(\@errors);
 }
 
