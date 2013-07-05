@@ -41,6 +41,23 @@ my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_optio
 			      choices => [ @input_options ]
 );
 
+my $db_type = {};
+foreach my $g (keys %$databases) {
+  foreach my $d (@{$databases->{$g}}) {  
+     $db_type->{$d->[0]} = $d->[2];
+  }
+}
+my $database_type_json = JSON::Any->encode($db_type);
+
+print STDERR Data::Dumper::Dumper($database_type_json);
+
+my $q_type = {};
+foreach my $t (@input_options) {
+  $q_type->{$t->[1]} = $t->[2];
+}
+print STDERR Data::Dumper::Dumper($q_type);
+my $input_option_json = JSON::Any->encode($q_type);
+
 print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
 </%perl>
@@ -125,6 +142,9 @@ function swap_menu(group_id) {
    jQuery('#database_select').html(menu_html[group_id]);
 }
 
+var database_types = eval (<% $database_type_json %>);
+var input_option_types = eval(<% $input_option_json %>);
+
 function run_blast() { 
    var jobid = 0;
 
@@ -139,12 +159,18 @@ function run_blast() {
    var graphics = jQuery('#graphics').val();
    var maxhits  = jQuery('#maxhits').val();
    var filterq  = jQuery('#filterq').val();
-   var input_options = jQuery('#input_options').val();
+   var input_option = jQuery('#input_options').val();
 
    if (sequence == '') { 
       alert("Please enter a sequence :=)"); 
       jQuery('blast_status').html('');
       return; 
+   }
+
+
+   if (!blast_program_ok(program,  input_option_types[input_option], database_types[database])) { 
+      alert("The BLAST program does not match the selected database and query.");
+      return;
    }
 
    status += "Running BLAST... ";
@@ -160,7 +186,7 @@ function run_blast() {
       method:  'POST',
       data:    { 'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 
                  'filterq': filterq, 'database': database, 'program': program, 
-                  'input_options': input_options 
+                  'input_options': input_option 
                },
       success: function(response) { if (response.error) { alert("ERROR: "+response.error);
                                      enable_ui();
@@ -262,9 +288,19 @@ function clear_input_sequence() {
    jQuery('#sequence').val('');
 }
 
+function blast_program_ok(program, query_type, database_type) { 
+   var ok = new Array();
+   // query database program
+   
+   ok = { 'protein': { nucleotide : { tblastn: 1 }, protein : { 'blastp': 1 } }, 
+          'nucleotide' : { nucleotide : { blastn: 1, tblastx: 1}, protein: { blastx: 1 } } };
+
+   return ok[query_type][database_type][program];
+}
 
 //$programs_js
 
 </script>
+
 
 
