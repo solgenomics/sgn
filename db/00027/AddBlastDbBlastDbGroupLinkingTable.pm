@@ -65,7 +65,16 @@ create table blast_db_blast_db_group (
 );
 
 -- populate table with current data from blast_db table
+
 insert into sgn.blast_db_blast_db_group (blast_db_id, blast_db_group_id) SELECT blast_db_id, blast_db_group_id FROM sgn.blast_db;
+
+-- also add blast_db_organism table
+
+create table blast_db_organism ( 
+    blast_db_organism_id serial primary key,
+    blast_db_id bigint reference sgn.blast_db,
+    organism_id bigint reference public.organism
+);
 
 EOSQL
 
