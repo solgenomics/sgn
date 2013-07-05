@@ -7,6 +7,9 @@
 </%args>
 
 <%perl>
+
+  print Data::Dumper::Dumper(\@groups);
+
 </%perl>
 
 <& /page/page_title.mas, title=>"BLAST db details" &>
@@ -15,17 +18,38 @@
 
 % foreach my $g (@groups) { 
 
-<&| /page/info_section.mas, title=>$g->[0] &>
-  
-  
+<&| /page/info_section.mas, title=>$g->[1] &>
 
+%   foreach my $d (@{$g->[2]}) { 
+
+       <&| /page/info_section.mas, title=> $d->{title}, is_subsection=>1 &>
+       <& /page/info_table.mas, data => [
+	   'Type'    => $d->{sequence_type}, 
+           'Seq count'   => $d->{sequence_count},
+	   'Current as of'    => $d->{current_as_of},
+	   'Updates' => $d->{update_freq},
+	   ' '     => $d->{needs_update},
+         ],
+	 'multicol'=>5 &>
+       <& /page/info_table.mas, data => [ 
+	 'Source URL'       => $d->{source_url} 
+          ],
+       &>
+       <& /page/info_table.mas, data => [
+         'Description'      => $d->{description} 
+         ],
+       &>
+       </&>
+%   }
+  
 </&>
 
 %}
 
 <%perl>
 
-use Data::Dumper;
+
+
 
 #print Data::Dumper::Dumper(\@groups);
 

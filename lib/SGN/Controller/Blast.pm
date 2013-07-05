@@ -3,6 +3,7 @@ package SGN::Controller::Blast;
 
 use Moose;
 
+use POSIX;
 use Data::Dumper;
 use List::Util qw/sum/;
 use CXGN::Blast::SeqQuery;
@@ -60,26 +61,53 @@ sub dbinfo : Path('/tools/blast/dbinfo') Args(0) {
 
     my $schema = $c->dbic_schema("SGN::Schema");
 
-    my @groups = map {
-	my $grp = $_;
-	if( my @dbs = $grp->blast_dbs->search({ web_interface_visible => 't'})->all() ) {
-	    [$grp->name, @dbs ]
-	} else {
-	    ()
-        }
-    } $schema->resultset('BlastDbGroup')->search({}, {order_by => 'ordinal, name'})->all();
-    
-    print STDERR "GROUPS: ".join ", ", map { $_->[0] } @groups;
+    # my @groups = map {
+    # 	my $grp = $_;
+    # 	if( my @dbs = $grp->blast_dbs->search({ web_interface_visible => 't'})->all() ) {
+    # 	    [$grp->name, @dbs ]
+    # 	} else {
+    # 	    ()
+    #     }
+    # } $schema->resultset('BlastDbGroup')->search({}, {order_by => 'ordinal, name'})->all();
 
-    if (my @ungrouped = grep $_->file_modtime, $schema->resultset('BlastDb')->search( { blast_db_group_id => undef, web_interface_visible => 't' }, {order_by => 'title'} ) ) {
-	push @groups, ['Other', @ungrouped ];
+    my @data = ();
+
+    my $group_rs = $schema->resultset('BlastDbGroup')->search({}, { order_by => 'ordinal, name' });
+    while (my $group_row = $group_rs->next()) { 
+	my $db_rs = $group_row->blast_dbs->search({ web_interface_visible => 't'});
+	my @groups = ();
+	while (my $db_row = $db_rs->next()) { 
+	    if ($db_row->files_exist()) { 
+		my $source_url = $db_row->source_url();
+		if ($source_url && $source_url =~ m/^http|^ftp/) { 
+		    $source_url = qq | <a href="$source_url">$source_url</a> |;
+		}
+		my $needs_update = $db_row->needs_update() ?  qq|<span style="background: #c22; padding: 3px; color: white">needs update</span>| : qq|<span style="background: #2c2; padding: 3ppx; color: white">up to date</span>|;
+		push @groups, { 
+		    title              => $db_row->title(),
+		    sequence_type      => $db_row->type(),
+                    sequence_count     => $db_row->sequences_count(),
+		    update_freq        => $db_row->update_freq(),
+		    description        => $db_row->description(),
+		    source_url         => $source_url,
+		    current_as_of      => strftime('%m-%d-%y %R GMT',gmtime $db_row->file_modtime),
+		    needs_update       => $needs_update,
+		};
+	    }
+	}
+	push @data, [ $group_row->blast_db_group_id(), $group_row->name(), \@groups ];
     }
     
-    my $grpcount = @groups;
-    my $dbcount = sum(map scalar(@$_),@groups)-$grpcount;
+    #my @groups = ();
+    #if (my @ungrouped = grep $_->file_modtime, $schema->resultset('BlastDb')->search( { blast_db_group_id => undef, web_interface_visible => 't' }, {order_by => 'title'} ) ) {
+#	push @groups, ['Other', @ungrouped ];
+#    }
+    
+    #my $grpcount = @groups;
+    #my $dbcount = sum(map scalar(@$_),@groups)-$grpcount;
 
     $c->stash->{template} = '/tools/blast/dbinfo.mas';
-    $c->stash->{groups} = \@groups;
+    $c->stash->{groups} = \@data;
 }
 
 1;
