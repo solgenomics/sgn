@@ -8,6 +8,10 @@ sub name {
     return 'nucleotide fasta';
 }
 
+sub type { 
+    return 'nucleotide';
+}
+
 sub validate { 
     my $self = shift;
     my $c = shift;
@@ -24,7 +28,7 @@ sub validate {
 	}
     };
     if ($@) { 
-	return $@;
+	return "The input is not legal fasta format";
     }
     else { 
 	return "OK";

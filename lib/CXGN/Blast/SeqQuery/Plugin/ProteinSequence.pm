@@ -9,6 +9,10 @@ sub name {
     return "protein sequence";
 }
 
+sub type { 
+    return 'protein';
+}
+
 sub validate { 
     my $self = shift;
     my $c = shift;

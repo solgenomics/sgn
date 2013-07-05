@@ -10,6 +10,10 @@ sub name {
     return 'protein fasta';
 }
 
+sub type { 
+    return 'protein';
+}
+
 sub validate { 
     my $self = shift;
     my $c = shift;

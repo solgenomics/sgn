@@ -7,6 +7,10 @@ sub name {
     return "tomato genome identifiers";
 }
 
+sub type { 
+    return 'nucleotide';
+}
+
 sub validate { 
     my $self = shift;
     my $c = shift;
@@ -15,15 +19,19 @@ sub validate {
 
     my @ids = split /\s+/, $input; 
     
-    my @errors = ();
-    foreach my $id (@ids){
-	if($id !~ m/solyc\d{1,2}g\d{6}/i){
-	    push @errors, $id;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $rna_id = $schema->resultset("Cv::Cvterm")->find( { name=>'mRNA' })->cvterm_id();
+    
+    my @missing = ();
+    foreach my $id (@ids) { 
+	my $rs = $schema->resultset("Sequence::Feature")->search( { type_id=>$rna_id, name => "$id" } );
+	if (!my $row = $rs->next()) { 
+	    push @missing, $id;
 	}
-    }
 
-    if (@errors) { 
-	return "Illegal identifier(s): ".(join ", ", @errors);
+    }
+      if (@missing) { 
+	return "The folloing ids entered do not exist: ".join ",", @missing;
     }
     else { 
 	return "OK";
