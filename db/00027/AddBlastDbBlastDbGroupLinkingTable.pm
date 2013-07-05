@@ -72,9 +72,13 @@ insert into sgn.blast_db_blast_db_group (blast_db_id, blast_db_group_id) SELECT 
 
 create table blast_db_organism ( 
     blast_db_organism_id serial primary key,
-    blast_db_id bigint reference sgn.blast_db,
-    organism_id bigint reference public.organism
+    blast_db_id bigint references sgn.blast_db,
+    organism_id bigint references public.organism
 );
+
+    GRANT select ON sgn.blast_db_organism TO web_usr;
+    GRANT select ON sgn.blast_db_blast_db_group TO web_usr;
+
 
 EOSQL
 
