@@ -22,26 +22,36 @@
 
 %   foreach my $d (@{$g->[2]}) { 
 
-       <&| /page/info_section.mas, title=> $d->{title}, is_subsection=>1 &>
-       <& /page/info_table.mas, data => [
-	   'Type'    => $d->{sequence_type}, 
-           'Seq count'   => $d->{sequence_count},
-	   'Current as of'    => $d->{current_as_of},
-	   'Updates' => $d->{update_freq},
-	   ' '     => $d->{needs_update},
-         ],
-	 'multicol'=>5 &>
-       <& /page/info_table.mas, data => [ 
-	 'Source URL'       => $d->{source_url} 
-          ],
-       &>
-       <& /page/info_table.mas, data => [
-         'Description'      => $d->{description} 
-         ],
-       &>
-       </&>
+   <%perl>
+     my $needs_update ="";
+     if ($d->{needs_update}) { $needs_update = $d->{needs_update} ? qq|<span style="background: #c22; padding: 3px; color: white">needs update</span>| : qq|<span style="background: #2c2; padding: 3ppx; color: white">up to date</span>|;
+}
+     my $source_url = "";
+     if (exists($d->{source_url}) && $d->{source_url} =~ m/^http|^ftp/) { 
+       $source_url = qq | <a href="$source_url">$source_url</a> |;
+     }
+   </%perl>
+      
+<&| /page/info_section.mas, title=> $d->{title}, is_subsection=>1 &>
+  <& /page/info_table.mas, data => [
+    'Type'    => $d->{sequence_type}, 
+    'Seq count'   => $d->{sequence_count},
+				    'Current as of'    => $d->{current_as_of},
+				    'Updates' => $d->{update_freq},
+				    ' '     => $needs_update,
+				   ],
+    'multicol'=>5 &>
+    <& /page/info_table.mas, data => [ 
+				      'Source URL'       => $source_url,
+				     ],
+      &>
+      <& /page/info_table.mas, data => [
+        'Description'      => $d->{description} 
+				       ],
+					 &>
+</&>
 %   }
-  
+
 </&>
 
 %}
