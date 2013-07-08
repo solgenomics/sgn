@@ -879,9 +879,10 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         my $download_prediction = $c->stash->{download_prediction};
       
         $self->list_of_prediction_pops($c, $combo_pops_id, $download_prediction);
+        $c->res->redirect('/'. $referer);
         
     }
-    else 
+    elsif ($referer =~ /solgs\/trait\//) 
     {
          my ($trait_id, $pop_id) = $referer =~ m/(\d+)/g;
 
@@ -924,10 +925,15 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         my $download_prediction = $c->stash->{download_prediction};
       
         $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
+         $c->res->redirect('/'. $referer); 
              
     }
+    else 
+    {
+        $c->res->redirect("/solgs/analyze/traits/population/$model_id/$prediction_pop_id");
+    }
 
-    $c->res->redirect('/'. $referer);
+   
 }
 
 
@@ -994,19 +1000,18 @@ sub download_prediction_urls {
     my $trait_ids;
     my $page_trait_id = $c->stash->{trait_id};
     my $page = $c->req->path;
-         
+   
     if ($prediction_pop_id)
     {
         $self->prediction_pop_analyzed_traits($c, $training_pop_id, $prediction_pop_id);
         $trait_ids = $c->stash->{prediction_pop_analyzed_traits};
-        
     } 
   
-    my $trait_is_predicted = grep {/$page_trait_id/ } @$trait_ids;
+    my ($trait_is_predicted) = grep {/$page_trait_id/ } @$trait_ids;
 
     my $download_url;# = $c->stash->{download_prediction};
-
-    if ($page =~ /[{solgs\/trait\/} | {solgs\/model\/combined\/populations\/}]/ )
+  
+    if ($page =~ /(solgs\/trait\/)|(solgs\/model\/combined\/populations\/)/ )
     { 
         $trait_ids = [$page_trait_id];
     }
@@ -1017,7 +1022,6 @@ sub download_prediction_urls {
         my $trait_abbr = $c->stash->{trait_abbr};
         my $trait_name = $c->stash->{trait_name};
 
-        
         $download_url   .= " | " if $download_url;        
         $download_url   .= qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$prediction_pop_id/$trait_id">$trait_abbr</a> | if $trait_id;
         $download_url = '' if (!$trait_is_predicted);
@@ -1034,7 +1038,6 @@ sub download_prediction_urls {
   
 }
     
-
 
 sub model_accuracy {
     my ($self, $c) = @_;
@@ -1596,7 +1599,6 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
              }
 
          }
-
          my $trait_id   = $c->model('solGS::solGS')->get_trait_id($c, $trait_name);
          my $trait_abbr = $c->stash->{trait_abbr}; 
         
@@ -1612,12 +1614,11 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
 
          push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value[1] ];
      }
-
-
+  
      $self->project_description($c, $pop_id);
      my $project_name = $c->stash->{project_name};
      my $project_desc = $c->stash->{project_desc};
-     
+  
      my @model_desc = ([qq | <a href="/solgs/population/$pop_id">$project_name</a> |, $project_desc, \@trait_pages]);
      
      $c->stash->{template}    = $self->template('/population/multiple_traits_output.mas');
@@ -1626,7 +1627,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
 
      $self->download_prediction_urls($c, $pop_id, $pred_pop_id);
      my $download_prediction = $c->stash->{download_prediction};
-     
+    
      #get prediction populations list..     
      $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
     
@@ -1639,6 +1640,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      if (@values) 
      {
          $self->get_gebv_files_of_traits($c, \@traits, $pred_pop_id);
+      
          my $params = $c->req->params;
          $self->gebv_rel_weights($c, $params, $pred_pop_id);
          
