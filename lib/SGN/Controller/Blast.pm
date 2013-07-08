@@ -28,17 +28,16 @@ sub index :Path('/tools/new-blast/') :Args(0) {
 
     my $schema = $c->dbic_schema("SGN::Schema");
 
-    my @dataset_rows = $schema->resultset("BlastDb")->search( {}, { order_by=>'ordinal', join=>'blast_db_group' })->all();
-
+    my @dataset_rows = $schema->resultset("BlastDbBlastDbGroup")->search( {}, { join=>'blast_db_groups',  order_by=>'ordinal'} )->all();
     my $databases = {};
     my $dataset_groups = {};
     foreach my $d (@dataset_rows) { 
 	print STDERR "processing dataset $d...\n";
-	if ($d->blast_db_group()) { 
-	    push @{$databases->{ $d->blast_db_group->blast_db_group_id }}, 
-	    [ $d->blast_db_id, $d->title, $d->type ];
-	    $dataset_groups->{ $d->blast_db_group->blast_db_group_id } =  
-		$d->blast_db_group->name();
+	if ($d->blast_db_groups->blast_db_group_id()) { 
+	    push @{$databases->{ $d->blast_db_groups->blast_db_group_id }}, 
+	    [ $d->blast_dbs->blast_db_id(), $d->blast_dbs->title(), $d->blast_dbs->type() ];
+	    $dataset_groups->{ $d->blast_db_groups->blast_db_group_id } =  
+		$d->blast_db_groups->name();
 	}
 	else { 
 	    push @{$databases->{ 'other' }}, 
