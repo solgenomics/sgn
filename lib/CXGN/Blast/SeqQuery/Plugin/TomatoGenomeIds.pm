@@ -25,13 +25,13 @@ sub validate {
     my @missing = ();
     foreach my $id (@ids) { 
 	my $rs = $schema->resultset("Sequence::Feature")->search( { type_id=>$rna_id, name => "$id" } );
-	if (!my $row = $rs->next()) { 
+	if (! (my $row = $rs->next())) { 
 	    push @missing, $id;
 	}
 
     }
-      if (@missing) { 
-	return "The folloing ids entered do not exist: ".join ",", @missing;
+    if (@missing) { 
+	return "The folloing ids entered do not exist: ".(join ",", @missing);
     }
     else { 
 	return "OK";
