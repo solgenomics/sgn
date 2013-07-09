@@ -2,7 +2,7 @@ package CXGN::Trial::TrialCreate;
 
 =head1 NAME
 
-CXGN::Trial::TrialCreate - an object to create a trial based on a specified design.
+CXGN::Trial::TrialCreate - Module to create a trial based on a specified design.
 
 
 =head1 USAGE

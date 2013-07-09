@@ -2,7 +2,7 @@ package CXGN::Stock::StockLookup;
 
 =head1 NAME
 
-CXGN::Stock::StockLookup - an object to lookup stock names by unique name or synonym.
+CXGN::Stock::StockLookup - a module to lookup stock names by unique name or synonym.
 
 =head1 USAGE
 

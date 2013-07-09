@@ -2,7 +2,7 @@ package CXGN::Trial::TrialDesign;
 
 =head1 NAME
 
-CXGN::Trial::TrialDesign - an object to create a trial design using the R CRAN package Agricolae.
+CXGN::Trial::TrialDesign - a module to create a trial design using the R CRAN package Agricolae.
 
 
 =head1 USAGE
@@ -12,7 +12,7 @@ CXGN::Trial::TrialDesign - an object to create a trial design using the R CRAN p
 
 =head1 DESCRIPTION
 
-This object uses the the R CRAN package "Agricolae" to calculate experimental designs for field layouts.
+This module uses the the R CRAN package "Agricolae" to calculate experimental designs for field layouts.
 
 =head1 AUTHORS
 

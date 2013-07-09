@@ -2,7 +2,7 @@ package CXGN::Location::LocationLookup;
 
 =head1 NAME
 
-CXGN::Location::LocationLookup - an object to lookup geolocations by name.
+CXGN::Location::LocationLookup - a module to lookup geolocations by name.
 
 
 =head1 USAGE
