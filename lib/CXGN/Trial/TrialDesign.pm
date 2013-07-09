@@ -1,5 +1,25 @@
 package CXGN::Trial::TrialDesign;
 
+=head1 NAME
+
+CXGN::Trial::TrialDesign - an object to create a trial design using the R CRAN package Agricolae.
+
+
+=head1 USAGE
+
+ my $trial_design = CXGN::Trial::TrialDesign->new({schema => $schema} );
+
+
+=head1 DESCRIPTION
+
+This object uses the the R CRAN package "Agricolae" to calculate experimental designs for field layouts.
+
+=head1 AUTHORS
+
+ Jeremy D. Edwards (jde22@cornell.edu)
+
+=cut
+
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;

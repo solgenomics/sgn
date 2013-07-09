@@ -1,5 +1,24 @@
 package CXGN::Stock::StockLookup;
 
+=head1 NAME
+
+CXGN::Stock::StockLookup - an object to lookup stock names by unique name or synonym.
+
+=head1 USAGE
+
+ my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
+
+
+=head1 DESCRIPTION
+
+Looks up stocks ("Stock::Stock") that have a match with the unique name or synonym to the searched name.  Provides a count of matching stocks when more than one stock is found.  Provides the Stock::Stock object when only a single stock matches.
+
+=head1 AUTHORS
+
+ Jeremy D. Edwards (jde22@cornell.edu)
+
+=cut
+
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;

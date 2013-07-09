@@ -1,5 +1,25 @@
 package CXGN::Location::LocationLookup;
 
+=head1 NAME
+
+CXGN::Location::LocationLookup - an object to lookup geolocations by name.
+
+
+=head1 USAGE
+
+ my $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema} );
+
+
+=head1 DESCRIPTION
+
+Looks up geolocations ("NaturalDiversity::NdGeolocation") by name. Provides the NaturalDiversity::NdGeolocation object when a geolocation matches.
+
+=head1 AUTHORS
+
+ Jeremy D. Edwards (jde22@cornell.edu)
+
+=cut
+
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;

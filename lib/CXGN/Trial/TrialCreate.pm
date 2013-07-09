@@ -1,5 +1,25 @@
 package CXGN::Trial::TrialCreate;
 
+=head1 NAME
+
+CXGN::Trial::TrialCreate - an object to create a trial based on a specified design.
+
+
+=head1 USAGE
+
+ my $trial_create = CXGN::Trial::TrialCreate->new({schema => $schema} );
+
+
+=head1 DESCRIPTION
+
+
+=head1 AUTHORS
+
+ Jeremy D. Edwards (jde22@cornell.edu)
+
+=cut
+
+
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
