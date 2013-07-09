@@ -27,6 +27,9 @@ use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use JSON -support_by_pp;
 use SGN::View::Trial qw/design_layout_view design_info_view/;
+use CXGN::Location::LocationLookup;
+use CXGN::Stock::StockLookup;
+
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -41,9 +44,6 @@ has 'schema' => (
 		 isa      => 'DBIx::Class::Schema',
 		 lazy_build => 1,
 		);
-#sub _build_schema {
-#  shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
-#}
 
 sub get_trial_layout : Path('/ajax/trial/layout') : ActionClass('REST') { }
 
@@ -90,7 +90,7 @@ sub generate_experimental_design_GET : Args(0) {
   my $start_number =  $c->req->param('start_number');
   my $increment =  $c->req->param('increment');
   my $trial_location = $c->req->param('trial_location');
-  my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
+  #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
 
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
@@ -102,13 +102,19 @@ sub generate_experimental_design_GET : Args(0) {
     return;
   }
 
-  if (! $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=> $trial_location,})){
+  my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
+  $geolocation_lookup->set_location_name($c->req->param('trial_location'));
+  if (!$geolocation_lookup->get_geolocation()){
     $c->stash->{rest} = {error => "Trial location not found"};
     return;
   }
 
-  if ($schema->resultset('Project::Project')->find({name => $trial_name})) {
-    $c->stash->{rest} = {error => "Trial name \"$trial_name\" already exists" };
+  my $trial_name;
+  my $trial_create = CXGN::Trial::TrialCreate->new(schema => $schema);
+  $trial_create->set_trial_year($c->req->param('year'));
+  $trial_create->set_trial_location($c->req->param('trial_location'));
+  if ($trial_create->trial_name_already_exists()) {
+    $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
     return;
   }
 
@@ -176,44 +182,11 @@ sub generate_experimental_design_GET : Args(0) {
   $design_info_view_html = design_info_view(\%design, \%design_info);
   my $design_json = encode_json(\%design);
   $c->stash->{rest} = {
-		       success => "1", 
+		       success => "1",
 		       design_layout_view_html => $design_layout_view_html,
 		       design_info_view_html => $design_info_view_html,
 		       design_json => $design_json,
 		      };
-}
-
-sub _parse_list_from_json {
-  my $list_json = shift;
-  my $json = new JSON;
-  if ($list_json) {
-    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-    #my $decoded_list = decode_json($list_json);
-    my @array_of_list_items = @{$decoded_list};
-    my @list;
-    foreach my $list_item_array_ref (@array_of_list_items) {
-      my @list_item_array = @{$list_item_array_ref};
-      push (@list,$list_item_array[1]);
-    }
-    return \@list;
-  }
-  else {
-    return;
-  }
-}
-
-sub _parse_design_from_json {
-  my $design_json = shift;
-  my $json = new JSON;
-  if ($design_json) {
-    my $decoded_json = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
-    #my $decoded_json = decode_json($design_json);
-    my %design = %{$decoded_json};
-    return \%design;
-  }
-  else {
-    return;
-  }
 }
 
 sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : ActionClass('REST') { }
@@ -275,11 +248,20 @@ sub verify_stock_list_GET : Args(0) {
     return;
   }
   foreach my $stock_name (@stock_names) {
-    try {
-      _verify_stock($self,$c,$schema,$stock_name);
-    } catch {
-      $errors{$stock_name} = $_};
-    };
+
+    my $stock;
+    my $number_of_stocks_found;
+    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+    $stock_lookup->set_stock_name($stock_name);
+    $stock = $stock_lookup->get_stock();
+    $number_of_stocks_found = $stock_lookup->get_matching_stock_count();
+    if ($number_of_stocks_found > 1) {
+      $errors{$stock_name} = "Multiple stocks found matching $stock_name\n";
+    }
+    if (!$number_of_stocks_found) {
+      $errors{$stock_name} = "No stocks found matching $stock_name\n";
+    }
+  }
   if (%errors) {
     foreach my $key (keys %errors) {
       $error_alert .= "Stock $key: ".$errors{$key}."\n";
@@ -292,34 +274,40 @@ sub verify_stock_list_GET : Args(0) {
   }
 }
 
-sub _verify_stock {
-  my $self = shift;
-  my $c = shift;
-  my $schema = shift;
-  my $stock_name = shift;
-  my $stock_rs = $schema->resultset("Stock::Stock")
-    ->search({
-	      -or => [
-		      'lower(me.uniquename)' => { like => lc($stock_name) },
-		      -and => [
-			       'lower(type.name)' => { like => '%synonym%' },
-			       'lower(stockprops.value)' => { like => lc($stock_name) },
-			      ],
-		     ],
-	     },
-	     {
-	      join => { 'stockprops' => 'type'} ,
-	      distinct => 1
-	     }
-	    );
-  if ($stock_rs->count >1 ) {
-    die ("Multiple stocks found matching $stock_name\n");
-  } elsif ($stock_rs->count == 1) {
-    $stock_name = $stock_rs->first;
-  } else {
-    die ("No stocks found matching $stock_name\n");
+sub _parse_list_from_json {
+  my $list_json = shift;
+  my $json = new JSON;
+  if ($list_json) {
+    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+    #my $decoded_list = decode_json($list_json);
+    my @array_of_list_items = @{$decoded_list};
+    my @list;
+    foreach my $list_item_array_ref (@array_of_list_items) {
+      my @list_item_array = @{$list_item_array_ref};
+      push (@list,$list_item_array[1]);
+    }
+    return \@list;
+  }
+  else {
+    return;
   }
 }
+
+sub _parse_design_from_json {
+  my $design_json = shift;
+  my $json = new JSON;
+  if ($design_json) {
+    my $decoded_json = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
+    #my $decoded_json = decode_json($design_json);
+    my %design = %{$decoded_json};
+    return \%design;
+  }
+  else {
+    return;
+  }
+}
+
+###################################################################################
 
 sub upload_trial_layout :  Path('/trial/upload_trial_layout') : ActionClass('REST') { }
 

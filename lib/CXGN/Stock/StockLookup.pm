@@ -26,7 +26,16 @@ sub get_matching_stock_count {
   my $self = shift;
   my $stock_name = $self->get_stock_name();
   my $stock_rs = $self->_get_stock_resultset();
+  if (!$stock_rs) {
+    return;
+  }
   my $stock_match_count = $stock_rs->count;
+  if (!$stock_match_count) {
+    return 0;
+  }
+  if ($stock_match_count == 0) {
+    return;
+  }
   return $stock_match_count;
 }
 
