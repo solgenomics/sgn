@@ -412,7 +412,7 @@ jQuery(document).ready(function () {
        });
     }
 
- function commit_experimental_design(design_json) {
+ function save_experimental_design(design_json) {
      jQuery('#trial_saving_dialog').dialog("open");
         var name = jQuery('#add_project_name').val();
         var year = jQuery('#add_project_year').val();
@@ -444,7 +444,7 @@ jQuery(document).ready(function () {
         }
         new jQuery.ajax({
             type: 'GET',
-            url: '/ajax/trial/commit_experimental_design',
+            url: '/ajax/trial/save_experimental_design',
 	    dataType: "json",
             data: {
                 'project_name': name,
@@ -530,7 +530,7 @@ jQuery(document).ready(function () {
         modal: true,
         buttons: {
 	    Confirm: function() {
-		commit_experimental_design(design_json);
+		save_experimental_design(design_json);
 		//jQuery( this ).dialog( "close" );
 		//jQuery('#add_project_dialog').dialog("close");
 	    },

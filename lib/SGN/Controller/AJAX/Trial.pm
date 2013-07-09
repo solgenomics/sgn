@@ -20,12 +20,11 @@ use Moose;
 
 use List::MoreUtils qw /any /;
 use Try::Tiny;
-use CXGN::Phenome::Schema;
-use CXGN::Chado::Stock;
 use Scalar::Util qw(looks_like_number);
 use File::Slurp;
 use Data::Dumper;
 use CXGN::Trial::TrialDesign;
+use CXGN::Trial::TrialCreate;
 use JSON -support_by_pp;
 use SGN::View::Trial qw/design_layout_view design_info_view/;
 
@@ -42,9 +41,9 @@ has 'schema' => (
 		 isa      => 'DBIx::Class::Schema',
 		 lazy_build => 1,
 		);
-sub _build_schema {
-  shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
-}
+#sub _build_schema {
+#  shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
+#}
 
 sub get_trial_layout : Path('/ajax/trial/layout') : ActionClass('REST') { }
 
@@ -108,11 +107,10 @@ sub generate_experimental_design_GET : Args(0) {
     return;
   }
 
-  if($schema->resultset('Project::Project')->find({name => $trial_name}))
-    {
-      $c->stash->{rest} = {error => "Trial name \"$trial_name\" already exists" };
-      return;
-    }
+  if ($schema->resultset('Project::Project')->find({name => $trial_name})) {
+    $c->stash->{rest} = {error => "Trial name \"$trial_name\" already exists" };
+    return;
+  }
 
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
@@ -204,182 +202,60 @@ sub _parse_list_from_json {
   }
 }
 
-sub commit_experimental_design : Path('/ajax/trial/commit_experimental_design') : ActionClass('REST') { }
-
-sub commit_experimental_design_GET : Args(0) {
-  my ($self, $c) = @_;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  if (!$c->user()) {
-    $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
-    return;
-  }
-  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {  #user must have privileges to add a trial
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
-    return;
-  }
-  my %design;
-  my $error;
-  my $project_name = $c->req->param('project_name');
-  my $project_description = $c->req->param('project_description');
-  my $year = $c->req->param('year');
-  my @stock_names;
-  my $trial_location = $c->req->param('trial_location');
-  my $design_type =  $c->req->param('design_type');
-  if ($c->req->param('stock_list')) {
-    @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
-  }
-  my @control_names;
-  if ($c->req->param('control_list')) {
-    @control_names = @{_parse_list_from_json($c->req->param('control_list'))};
-  }
-  if ($c->req->param('design_json')) {
-    %design = %{_parse_design_from_json($c->req->param('design_json'))};
-  }
-  my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year.
-  my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'accession',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'accession',
-    });
-  my $plot_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'plot',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'plot',
-    });
-  my $plot_of = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'plot_of',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'plot_of',
-    });
-  my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
-    {
-        description => $trial_location,
-    } ) ;
-
-  if($schema->resultset('Project::Project')->find({name => $trial_name}))
-    {
-      $c->stash->{rest} = {error => "Trial name \"$trial_name\" already exists" };
-      return;
-    }
-
-  my $project = $schema->resultset('Project::Project')->create({
-								name => $trial_name,
-								description => $project_description,
-							       }
-							      );
-
-  $project->create_projectprops( { 'project year' => $year,'design' => $design_type}, {autocreate=>1});
-
-  #find the cvterm for a field layout experiment
-  my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')
-    ->create_with({
-		   name   => 'field layout',
-		   cv     => 'experiment type',
-		   db     => 'null',
-		   dbxref => 'field layout',
-		  });
-
-  foreach my $key (sort { $a <=> $b} keys %design) {
-    my $plot_name = $design{$key}->{plot_name};
-    my $stock_name = $design{$key}->{stock_name};
-    my $block_number;
-    if ($design{$key}->{block_number}) {
-      $block_number = $design{$key}->{block_number};
-    } else {
-      $block_number = 1;
-    }
-    my $rep_number;
-    if ($design{$key}->{rep_number}) {
-      $rep_number = $design{$key}->{rep_number};
-    } else {
-      $rep_number = 1;
-    }
-    my $is_a_control = $design{$key}->{is_a_control};
-    my $plot_unique_name = $stock_name."_replicate:".$rep_number."_block:".$block_number."_plot:".$plot_name."_".$year."_".$trial_location;
-    my $plot;
-    my $parent_stock;
-    my $stock_rs = $schema->resultset("Stock::Stock")
-      ->search({
-		-or => [
-			'lower(me.uniquename)' => { like => lc($stock_name) },
-			-and => [
-				 'lower(type.name)'       => { like => '%synonym%' },
-				 'lower(stockprops.value)' => { like => lc($stock_name) },
-				],
-		       ],
-	       },
-	       {
-		join => { 'stockprops' => 'type'} ,
-		distinct => 1
-	       }
-	      );
-      if ($stock_rs->count >1 ) {
-	die ("multiple stocks found matching $stock_name");
-      } elsif ($stock_rs->count == 1) {
-	$parent_stock = $stock_rs->first;
-      } else {
-	die ("no stocks found matching $stock_name");
-      }
-
-    #create the plot
-    $plot = $schema->resultset("Stock::Stock")
-      ->find_or_create({
-			organism_id => $parent_stock->organism_id(),
-			name       => $plot_unique_name,
-			uniquename => $plot_unique_name,
-			type_id => $plot_cvterm->cvterm_id,
-		       } );
-
-    if ($rep_number) {
-      $plot->stockprops({'replicate' => $rep_number}, {autocreate => 1} );
-    }
-    if ($block_number) {
-      $plot->stockprops({'block' => $block_number}, {autocreate => 1} );
-    }
-    $plot->stockprops({'plot number' => $key}, {autocreate => 1});
-    if ($is_a_control) {
-      $plot->stockprops({'is a control' => $is_a_control}, {autocreate => 1} );
-    }
-
-    #create the stock_relationship with the accession
-    $parent_stock
-      ->find_or_create_related('stock_relationship_objects',
-			       {
-				type_id => $plot_of->cvterm_id(),
-				subject_id => $plot->stock_id(),
-			       } );
-
-    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-      ->create({
-		nd_geolocation_id => $geolocation->nd_geolocation_id(),
-		type_id => $field_layout_cvterm->cvterm_id(),
-		});
-
-    #link to the project
-    $experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});
-
-    #link the experiment to the stock
-    $experiment->find_or_create_related('nd_experiment_stocks' , {
-								  stock_id => $plot->stock_id(),
-								  type_id  =>  $field_layout_cvterm->cvterm_id(),
-								 });
-  }
-  $c->stash->{rest} = {success => "1",};
-}
-
 sub _parse_design_from_json {
   my $design_json = shift;
+  my $json = new JSON;
   if ($design_json) {
-    my $decoded_json = decode_json($design_json);
+    my $decoded_json = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
+    #my $decoded_json = decode_json($design_json);
     my %design = %{$decoded_json};
     return \%design;
   }
   else {
     return;
   }
+}
+
+sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : ActionClass('REST') { }
+
+sub save_experimental_design_GET : Args(0) {
+  my ($self, $c) = @_;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $trial_create = new CXGN::Trial::TrialCreate(schema => $schema);
+  if (!$c->user()) {
+    $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
+    return;
+  }
+  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
+    return;
+  }
+  my $error;
+
+  $trial_create->set_user($c->user()->id());
+  $trial_create->set_trial_year($c->req->param('year'));
+  $trial_create->set_trial_location($c->req->param('trial_location'));
+  $trial_create->set_trial_description($c->req->param('project_description'));
+  $trial_create->set_design_type($c->req->param('design_type'));
+  $trial_create->set_design(_parse_design_from_json($c->req->param('design_json')));
+  $trial_create->set_stock_list(_parse_list_from_json($c->req->param('stock_list')));
+  if ($c->req->param('control_list')) {
+    $trial_create->set_control_list(_parse_list_from_json($c->req->param('control_list')));
+  }
+  if ($trial_create->trial_name_already_exists()) {
+    $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
+    return;
+  }
+
+  try {
+    $trial_create->save_trial();
+  } catch {
+    $c->stash->{rest} = {error => "Error saving trial in the database $_"};
+    $error = 1;
+  };
+  if ($error) {return;}
+  $c->stash->{rest} = {success => "1",};
+  return;
 }
 
 sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
