@@ -342,6 +342,11 @@ sub render {
 
     $self->draw_ruler($image, $x_len, $x_scale);
     
+    # draw vertical grid of seq_window_size in size
+    for (my $x=0; $x < length($self->query_seq()); $x += $self->seq_window_size()) { 
+	$image->line($x * $x_scale, 15, $x * $x_scale, $self->height, $grey);
+    }
+
     # draw squares
     for (my $track=0; $track< @sorted; $track++) {
 	my $max_tracks =0;
@@ -380,6 +385,7 @@ sub render {
 	#print STDERR "Done with $sorted->[0] - drawing red line.. at ".($offset + $max_tracks * $glyph_height)."\n";
 
 	$offset += 20;
+	# horizontal lines
 	$image->line(0, $offset + ($max_tracks+1) * $glyph_height, $self->width, $offset + ($max_tracks+1) * $glyph_height, $grey);
 	
 	push @track_heights, $offset + ($max_tracks+1) * $glyph_height;
@@ -399,15 +405,9 @@ sub render {
 	    }
 	}
 	# print subject names
-	$image->string($font, 5, ($offset + $max_tracks * $glyph_height - 10),  $subject_msg, $black);
+	$image->string(GD::Font->MediumBold(), 5, ($offset + $max_tracks * $glyph_height - 10),  $subject_msg, $black);
 
 	$offset += $max_tracks * $glyph_height + 10;
-    }
-
-    # draw vertical grid of seq_window_size in size
-    #
-    for (my $x=0; $x < length($self->query_seq()); $x += $self->seq_window_size()) { 
-	$image->line($x * $x_scale, 15, $x * $x_scale, $self->height, $grey);
     }
     
     # adjust image height

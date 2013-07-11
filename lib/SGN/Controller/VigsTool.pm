@@ -84,13 +84,17 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     if ($sequence =~ /^>/) {
 	$sequence =~ s/[ \,\-\.\#\(\)\%\'\"\[\]\{\}\:\;\=\+\\\/]/_/gi;
         @seq = split(/\s/,$sequence);
+
+	if ($seq[0] =~ />(\S+)/) {
+	    shift(@seq);
+	    $id = $1;
+	}
+	$sequence = join("",@seq);
+    }
+    else {
+	$sequence =~ s/[^ACGT]+//gi;
     }
 
-    if ($seq[0] =~ />(\S+)/) {
-	shift(@seq);
-	$id = $1;
-    }
-    $sequence = join("",@seq);
     
     # print STDERR "*********************\nid: $id\n*********************\nseq:$sequence\n*********************\n";
     # Check input sequence and fragment size    
@@ -287,12 +291,12 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my @coords3;
     
     for (my $i=0; $i<3; $i++) {
-	$tmp_str = substr($query->seq(), $regions[$i]->[4]-1, $regions[$i]->[5]-$regions[$i]->[4]+1);
+	$tmp_str = substr($query->seq(), $regions[$i]->[4], $regions[$i]->[5]-$regions[$i]->[4]+1);
 	my @seq60 = $tmp_str =~ /(.{1,60})/g;
         my $seq_str = join('<br />',@seq60);
 	# print "seq: $seq_str\n";
 	push(@best3, $seq_str);
-        my @tmp_a = ($regions[$i]->[4], $regions[$i]->[5]);
+        my @tmp_a = ($regions[$i]->[4]+1, $regions[$i]->[5]+1);
         push(@coords3, \@tmp_a);
     }
     
