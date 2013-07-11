@@ -74,7 +74,7 @@ sub save_trial {
   my $geolocation;
   my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
   $geolocation_lookup->set_location_name($self->get_trial_location());
-  my $geolocation = $geolocation_lookup->get_geolocation();
+  $geolocation = $geolocation_lookup->get_geolocation();
   if (!$geolocation) {
     return;
   }
@@ -114,10 +114,22 @@ sub save_trial {
 	      description => $self->get_trial_description(),
 	     });
 
+  my $field_layout_experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+      ->create({
+		nd_geolocation_id => $geolocation->nd_geolocation_id(),
+		type_id => $field_layout_cvterm->cvterm_id(),
+		});
+
+  #link to the project
+  $field_layout_experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});
+
+
+
   $project->create_projectprops( { 'project year' => $self->get_trial_year(),'design' => $self->get_design_type()}, {autocreate=>1});
 
   foreach my $key (sort { $a <=> $b} keys %design) {
     my $plot_name = $design{$key}->{plot_name};
+    my $plot_number = $design{$key}->{plot_number};
     my $stock_name = $design{$key}->{stock_name};
     my $block_number;
     if ($design{$key}->{block_number}) { #set block number to 1 if no blocks are specified
@@ -150,40 +162,36 @@ sub save_trial {
 			uniquename => $plot_unique_name,
 			type_id => $plot_cvterm->cvterm_id,
 		       } );
-
     if ($rep_number) {
-      $plot->stockprops({'replicate' => $rep_number}, {autocreate => 1} );
+      $plot->create_stockprops({'replicate' => $rep_number}, {autocreate => 1} );
     }
     if ($block_number) {
-      $plot->stockprops({'block' => $block_number}, {autocreate => 1} );
+      $plot->create_stockprops({'block' => $block_number}, {autocreate => 1} );
     }
-    $plot->stockprops({'plot number' => $key}, {autocreate => 1});
+    if ($plot_number) {
+      $plot->create_stockprops({'plot number' => $plot_number}, {autocreate => 1});
+    }
+    else {
+      $plot->create_stockprops({'plot number' => $key}, {autocreate => 1});
+    }
+
     if ($is_a_control) {
-      $plot->stockprops({'is a control' => $is_a_control}, {autocreate => 1} );
+      $plot->create_stockprops({'is a control' => $is_a_control}, {autocreate => 1} );
     }
 
     #create the stock_relationship with the accession
     $parent_stock
-      ->find_or_create_related('stock_relationship_objects',
-			       {
-				type_id => $plot_of->cvterm_id(),
-				subject_id => $plot->stock_id(),
-			       } );
-
-    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-      ->create({
-		nd_geolocation_id => $geolocation->nd_geolocation_id(),
-		type_id => $field_layout_cvterm->cvterm_id(),
-		});
-
-    #link to the project
-    $experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});
+      ->find_or_create_related('stock_relationship_objects',{
+							     type_id => $plot_of->cvterm_id(),
+							     subject_id => $plot->stock_id(),
+							    } );
 
     #link the experiment to the stock
-    $experiment->find_or_create_related('nd_experiment_stocks' , {
-								  stock_id => $plot->stock_id(),
-								  type_id  =>  $field_layout_cvterm->cvterm_id(),
-								 });
+    $field_layout_experiment
+      ->find_or_create_related('nd_experiment_stocks' , {
+							 type_id => $field_layout_cvterm->cvterm_id(),
+							 stock_id => $plot->stock_id(),
+							});
   }
 }
 

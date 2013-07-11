@@ -440,6 +440,7 @@ sub _build_plot_names {
   }
   foreach my $key (keys %design) {
     $design{$key}->{plot_name} = $prefix.$key.$suffix;
+    $design{$key}->{plot_number} = $key;
   }
   return \%design;
 }

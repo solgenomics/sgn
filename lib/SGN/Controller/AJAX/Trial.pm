@@ -29,6 +29,7 @@ use JSON -support_by_pp;
 use SGN::View::Trial qw/design_layout_view design_info_view/;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
+use CXGN::Trial::TrialLayout;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -50,6 +51,10 @@ sub get_trial_layout : Path('/ajax/trial/layout') : ActionClass('REST') { }
 sub get_trial_layout_GET : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $project;
+  print STDERR "\n\ntrial layout controller\n";
+  my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, project => $project} );
+
   #my $trial_id = $c->req->parm('trial_id');
   # my $project = $schema->resultset('Project::Project')->find(
   # 							     {
