@@ -45,6 +45,10 @@ has 'trial_year' => (isa => 'Str', is => 'ro', predicate => 'has_trial_year', re
 has 'trial_name' => (isa => 'Str', is => 'ro', predicate => 'has_trial_name', reader => 'get_trial_name', writer => '_set_trial_name');
 has 'trial_description' => (isa => 'Str', is => 'ro', predicate => 'has_trial_description', reader => 'get_trial_description', writer => '_set_trial_description');
 has 'design' => (isa => 'HashRef[HashRef[Str]]', is => 'ro', predicate => 'has_design', reader => 'get_design', writer => '_set_design');
+has 'plot_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_plot_names', reader => 'get_plot_names', writer => '_set_plot_names');
+has 'block_numbers' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_block_numbers', reader => 'get_block_numbers', writer => '_set_block_numbers');
+has 'replicate_numbers' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_replicate_numbers', reader => 'get_replicate_numbers', writer => '_set_replicate_numbers');
+
 
 
 sub _lookup_trial_id {
@@ -58,7 +62,27 @@ sub _lookup_trial_id {
   $self->_set_trial_name($self->get_project->name());
   $self->_set_trial_description($self->get_project->description());
   $self->_set_design($self->_get_design_from_trial());
+  $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name"));
+  $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number"));
+  $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number"));
+  #$self->_set_is_a_control($self->_get_plot_info_fields_from_trial("is_a_control"));
 }
+
+sub _get_plot_info_fields_from_trial {
+  my $self = shift;
+  my $field_name = shift;
+  my %design = %{$self->get_design()};
+  my @field_values;
+  foreach my $key (sort { $a <=> $b} keys %design) {
+    my %design_info = %{$design{$key}};
+    push(@field_values, $design_info{$field_name});
+  }
+  if (! scalar(@field_values) >= 1){
+    return;
+  }
+  return \@field_values;
+}
+
 
 sub _get_design_from_trial {
   my $self = shift;
@@ -77,27 +101,29 @@ sub _get_design_from_trial {
     my $block_number_prop = $plot->stockprops->find( { 'type.name' => 'block' }, { join => 'type'} );
     my $replicate_number_prop = $plot->stockprops->find( { 'type.name' => 'replicate' }, { join => 'type'} );
     my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
-    $design_info{"plot name"}=$plot->uniquename;
+    $design_info{"plot_name"}=$plot->uniquename;
     if ($plot_number_prop) {
-      $design_info{"plot number"}=$plot_number_prop->value();
+      $design_info{"plot_number"}=$plot_number_prop->value();
       print STDERR "plot# value: ".$plot_number_prop->value()."\n"
     }
     else {die "no plot number stockprop found for plot $plot_name";}
     if ($block_number_prop) {
-      $design_info{"block"}=$block_number_prop->value();
+      $design_info{"block_number"}=$block_number_prop->value();
       print STDERR "block# value: ".$block_number_prop->value()."\n"
     }
     if ($replicate_number_prop) {
-      $design_info{"replicate"}=$replicate_number_prop->value();
+      $design_info{"rep_number"}=$replicate_number_prop->value();
       print STDERR "rep# value: ".$replicate_number_prop->value()."\n"
     }
     if ($is_a_control_prop) {
-      $design_info{"is a control"}=$is_a_control_prop->value();
+      $design_info{"is_a_control"}=$is_a_control_prop->value();
     }
     $design{$plot_number_prop->value}=\%design_info;
   }
   return \%design;
+
 }
+
 
 sub _get_field_layout_experiment_from_project {
   my $self = shift;
@@ -200,7 +226,7 @@ sub _get_plots {
   return \@plots;
 }
 
-sub get_plot_names {
+sub oldget_plot_names {
   my $self = shift;
   my $plots_ref;
   my @plots;
