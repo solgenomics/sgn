@@ -28,22 +28,17 @@ sub index :Path('/tools/new-blast/') :Args(0) {
 
     my $schema = $c->dbic_schema("SGN::Schema");
 
-    my $group_rs = $schema->resultset("BlastDbGroup")->search( {}, { order_by=>'ordinal' });
+    my $group_rs = $schema->resultset("BlastDbGroup")->search( undef, { order_by=>'ordinal' });
 
     my $databases = {};
-    my $dataset_groups = {};
-
-    print STDERR "GROUP COUNT: ".$group_rs->count."\n";
+    my $dataset_groups = [];
 
     foreach my $g ($group_rs->all()) { 
 	my @blast_dbs = $g->blast_dbs();
-	print STDERR "DEALING WITH ".$g->name()."\n";
+	push @$dataset_groups, [ $g->blast_db_group_id, $g->name() ];
 	foreach my $db (@blast_dbs) { 
-	    print STDERR "Add ".$db->title()."\n";
 	    push @{$databases->{ $g->blast_db_group_id  }},
     	    [ $db->blast_db_id(), $db->title(), $db->type() ];
-    	    $dataset_groups->{ $g->blast_db_group_id } =  
-    		$g->name();
 	}
     }
     # else { 
@@ -64,7 +59,7 @@ my $cbsq = CXGN::Blast::SeqQuery->new();
     $c->stash->{db_id} = $db_id;
     $c->stash->{seq} = $seq;
     $c->stash->{databases} = $databases;
-    @{ $c->stash->{dataset_groups}} = map { [ $_, $dataset_groups->{$_} ] } keys %$dataset_groups;
+    $c->stash->{dataset_groups} = $dataset_groups;
     $c->stash->{preload_seq} = $seq;
     $c->stash->{programs} = [ 'blastn', 'blastp', 'blastx', 'tblastx' ];
     $c->stash->{template} = '/tools/blast/index.mas';
