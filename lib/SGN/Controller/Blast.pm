@@ -8,7 +8,7 @@ use Data::Dumper;
 use List::Util qw/sum/;
 use Bio::SeqIO;
 use CXGN::Tools::Text qw/ sanitize_string /;
-use SGN::Schema;
+#use SGN::Schema;
 use CXGN::Blast::SeqQuery;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -28,25 +28,28 @@ sub index :Path('/tools/new-blast/') :Args(0) {
 
     my $schema = $c->dbic_schema("SGN::Schema");
 
-    my @dataset_rows = $schema->resultset("BlastDbBlastDbGroup")->search( {}, { join=>'blast_db_groups',  order_by=>'ordinal'} )->all();
+    my $group_rs = $schema->resultset("BlastDbGroup")->search( {}, { order_by=>'ordinal' });
+
     my $databases = {};
     my $dataset_groups = {};
-    foreach my $d (@dataset_rows) { 
-	print STDERR "processing dataset $d...\n";
-	if ($d->blast_db_groups->blast_db_group_id()) { 
-	    push @{$databases->{ $d->blast_db_groups->blast_db_group_id }}, 
-	    [ $d->blast_dbs->blast_db_id(), $d->blast_dbs->title(), $d->blast_dbs->type() ];
-	    $dataset_groups->{ $d->blast_db_groups->blast_db_group_id } =  
-		$d->blast_db_groups->name();
-	}
-	else { 
-	    push @{$databases->{ 'other' }}, 
-	    [ $d->blast_db_id, $d->title, $d->type ];
-	    $dataset_groups->{'0'}= 'other';
-	} 
-    }
 
-    my $cbsq = CXGN::Blast::SeqQuery->new();
+    foreach my $g ($group_rs->next()) { 
+	my @blast_dbs = $g->blast_dbs();
+	foreach my $db (@blast_dbs) { 
+	push @{$databases->{ $g->blast_db_group_id  }},
+    	    [ $db->blast_db_id(), $db->title(), $db->type() ];
+    	    $dataset_groups->{ $g->blast_db_group_id } =  
+    		$g->name();
+	}
+    }
+    # else { 
+    #     push @{$databases->{ 'other' }}, 
+    #     [ $g->blast_dbs->blast_db_id, $g->blast_dbs->title, $g->blast_dbs->type ];
+    #     $dataset_groups->{'0'}= 'other';
+    # } 
+
+
+my $cbsq = CXGN::Blast::SeqQuery->new();
     my @input_options = sort map { [ $_->name(), $_->name(), $_->type()] } $cbsq->plugins();
 
 
