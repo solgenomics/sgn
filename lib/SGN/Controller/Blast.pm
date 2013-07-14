@@ -33,10 +33,14 @@ sub index :Path('/tools/new-blast/') :Args(0) {
     my $databases = {};
     my $dataset_groups = {};
 
-    foreach my $g ($group_rs->next()) { 
+    print STDERR "GROUP COUNT: ".$group_rs->count."\n";
+
+    foreach my $g ($group_rs->all()) { 
 	my @blast_dbs = $g->blast_dbs();
+	print STDERR "DEALING WITH ".$g->name()."\n";
 	foreach my $db (@blast_dbs) { 
-	push @{$databases->{ $g->blast_db_group_id  }},
+	    print STDERR "Add ".$db->title()."\n";
+	    push @{$databases->{ $g->blast_db_group_id  }},
     	    [ $db->blast_db_id(), $db->title(), $db->type() ];
     	    $dataset_groups->{ $g->blast_db_group_id } =  
     		$g->name();
