@@ -932,7 +932,6 @@ sub prediction_population :Path('/solgs/model') Args(3) {
     {
         $c->res->redirect("/solgs/analyze/traits/population/$model_id/$prediction_pop_id");
     }
-
    
 }
 
@@ -946,6 +945,33 @@ sub prediction_pop_gebvs_file {
     };
 
     $self->cache_file($c, $cache_data);
+
+}
+
+
+sub list_predicted_selection_pops {
+    my ($self, $c, $model_id) = @_;
+
+    my $dir = $c->stash->{solgs_cache_dir};
+   
+    opendir my $dh, $dir or die "can't open $dir: $!\n";
+   
+    my  @files  =  grep { /prediction_pop_gebvs_${model_id}_/ && -f "$dir/$_" } 
+    readdir($dh); 
+   
+    closedir $dh; 
+    
+    my @pred_pops;
+    
+    foreach (@files) 
+    { 
+        my ($model_id2, $pred_pop_id, $trait_id) = $_ =~ m/\d+/g;
+        push @pred_pops, $pred_pop_id;  
+    }
+
+    @pred_pops = uniq(@pred_pops);
+
+    $c->stash->{list_of_predicted_selection_pops} = \@pred_pops;
 
 }
 
@@ -1204,7 +1230,7 @@ sub rank_genotypes : Private {
     my ($self, $c, $pred_pop_id) = @_;
 
     my $pop_id      = $c->stash->{pop_id};
-    
+    $c->stash->{prediction_pop_id} = $pred_pop_id;
 
     my $input_files = join("\t", 
                            $c->stash->{rel_weights_file},
@@ -1299,11 +1325,13 @@ sub list_of_prediction_pops {
 
     if(!@pred_pops_ids)
     {
+       
         my $pred_pops_ids2 = $c->model('solGS::solGS')->prediction_pops($c, $training_pop_id);
         @pred_pops_ids = @$pred_pops_ids2;
 
         foreach (@pred_pops_ids)
         {
+            
             $pop_ids .= $_ ."\n";
         }
         write_file($pred_pops_file, $pop_ids);
@@ -1321,8 +1349,12 @@ sub list_of_prediction_pops {
         {
             my $name = $row->name;
             my $desc = $row->description;
+           
+            my $id_pop_name->{id} = $prediction_pop_id;
+            $id_pop_name->{name}  = $name;
+            $id_pop_name          = to_json($id_pop_name);
 
-            $pred_pop_link = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id" onclick="solGS.waitPage()">$name</a> |;
+            $pred_pop_link = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id" onclick="solGS.waitPage()"><input type="hidden" value=\'$id_pop_name\'>$name</data> </a> |;
 
             my $pr_yr_rs = $c->model('solGS::solGS')->project_year($c, $prediction_pop_id);
             my $project_yr;
@@ -1335,7 +1367,7 @@ sub list_of_prediction_pops {
 
             $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
             my $download_prediction = $c->stash->{download_prediction};
-     
+            
             push @pred_pops,  ['', $pred_pop_link, $desc, 'F1', $project_yr, $download_prediction];
         }
     }
@@ -1551,7 +1583,15 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      @traits    = grep {$_ ne 'rank'} @traits;
 
      $c->stash->{pop_id} = $pop_id;
+     $self->list_predicted_selection_pops($c, $pop_id);
 
+     my $predicted_selection_pops = $c->stash->{list_of_predicted_selection_pops};
+     
+     if (!$pred_pop_id)  
+     {
+         $pred_pop_id = $predicted_selection_pops->[0];   
+     }
+                                      
      if ($pred_pop_id)
      {
          $c->stash->{prediction_pop_id} = $pred_pop_id;
@@ -1639,6 +1679,8 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
       
      if (@values) 
      {
+         my $ret->{status} = 'No GEBV values to rank.';
+
          $self->get_gebv_files_of_traits($c, \@traits, $pred_pop_id);
       
          my $params = $c->req->params;
@@ -1650,7 +1692,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
         
          my $link = $c->stash->{ranked_genotypes_download_url};
          
-         my $ret->{status} = 'failed';
+        
          my $ranked_genos = $c->stash->{top_ranked_genotypes};
         
          if (@$ranked_genos) 
