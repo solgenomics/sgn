@@ -18,15 +18,33 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     my $trial_year =  $trial_layout->get_trial_year();
     my $design_type = $trial_layout->get_design_type();
     my $plot_names_ref = $trial_layout->get_plot_names();
+    my $accession_names_ref = $trial_layout->get_accession_names();
+    my $control_names_ref = $trial_layout->get_control_names();
+    my $block_numbers = $trial_layout->get_block_numbers();
+    my $replicate_numbers = $trial_layout->get_replicate_numbers();
+
+
     my @plot_names;
     if ($plot_names_ref) {
       @plot_names = @{$trial_layout->get_plot_names()};
     }
-    print "first plot: ".$plot_names[0]."\n";
 
-    print STDERR "\n\nTrial name: $trial_name\nTrial description: $trial_description\nTrial year: $trial_year\nDesign type: $design_type\n";
-    my $testing = $trial_layout->get_plot_names();
-    
+    $c->stash->{design_type} = $design_type;
+    $c->stash->{accession_names} = $accession_names_ref;
+    $c->stash->{control_names} = $control_names_ref;
+    $c->stash->{plot_names} = $plot_names_ref;
+    $c->stash->{design_type} = $design_type;
+    my $number_of_blocks;
+    if ($block_numbers) {
+      $number_of_blocks = scalar(@{$block_numbers});
+    }
+    $c->stash->{number_of_blocks} = $number_of_blocks;
+    my $number_of_replicates;
+    if ($replicate_numbers) {
+      $number_of_replicates = scalar(@{$replicate_numbers});
+    }
+    $c->stash->{number_of_replicates} = $number_of_replicates;
+
     if (!$c->user()) { 
 	$c->stash->{template} = '/generic_message.mas';
 	$c->stash->{message}  = 'You must be logged in to access this page.';

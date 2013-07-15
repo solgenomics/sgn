@@ -62,15 +62,15 @@ sub _lookup_trial_id {
   my $accession_names_ref;
   my $control_names_ref;
   my $design_type_from_project;
+  $self->_set_trial_year($self->_get_trial_year_from_project());
+  $self->_set_trial_name($self->get_project->name());
+  $self->_set_trial_description($self->get_project->description());
   $design_type_from_project =  $self->_get_design_type_from_project();
   if (! $design_type_from_project) {
     return;
   }
-  $self->_set_design_type($self->_get_design_type_from_project());
-  $self->_set_trial_year($self->_get_trial_year_from_project());
-  $self->_set_trial_name($self->get_project->name());
-  $self->_set_trial_description($self->get_project->description());
   $self->_set_trial_location($self->_get_location_from_field_layout_experiment());
+  $self->_set_design_type($self->_get_design_type_from_project());
   $self->_set_design($self->_get_design_from_trial());
   $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name"));
   $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number"));
@@ -111,10 +111,15 @@ sub _get_plot_info_fields_from_trial {
   my $field_name = shift;
   my %design = %{$self->get_design()};
   my @field_values;
+  my %unique_field_values;
   foreach my $key (sort { $a <=> $b} keys %design) {
     my %design_info = %{$design{$key}};
-    push(@field_values, $design_info{$field_name});
+    if (! $unique_field_values{$design_info{$field_name}}) {
+      push(@field_values, $design_info{$field_name});
+    }
+    $unique_field_values{$design_info{$field_name}} = 1;
   }
+
   if (! scalar(@field_values) >= 1){
     return;
   }
@@ -346,7 +351,9 @@ sub _get_trial_accession_names_and_control_names {
     if ($is_a_control) {
       $unique_controls{$accession->uniquename}=1;
     }
-    $unique_accessions{$accession->uniquename}=1;
+    else {
+      $unique_accessions{$accession->uniquename}=1;
+    }
   }
   foreach my $accession_name (sort { lc($a) cmp lc($b)} keys %unique_accessions) {
     push(@accession_names, $accession_name);
