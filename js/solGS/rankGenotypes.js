@@ -255,7 +255,7 @@ var rankGenotypes = {
                                title: 'Select a population', 
                                minWidth: 400,                                  
                                buttons: { 
-                               OK: function() { 
+                               Select: function() { 
                                    jQuery( this ).dialog( "close" ); },  
                                    Cancel: function() {  
                                    jQuery('#selected_pop').val('');
