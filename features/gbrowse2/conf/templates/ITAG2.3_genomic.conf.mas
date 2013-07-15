@@ -75,7 +75,7 @@ search options = default +autocomplete +fulltext
 # bigwig file showing RNA-Seq coverage, thanks to srs218
 [rnaseq_bigwig:database]
 db_adaptor    = Bio::DB::BigWig
-db_args       = -bigwig /data/prod/public/genomes/Solanum_lycopersicum/RNA_seq/curr/SL2.40_all_rna_seq.bigwig
+db_args       = -bigwig /export/prod/public/genomes/Solanum_lycopersicum/RNA_seq/curr/SL2.40_all_rna_seq.bigwig
 
 
 ### TRACK CONFIGURATION ####
