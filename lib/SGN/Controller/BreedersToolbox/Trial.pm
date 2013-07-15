@@ -17,13 +17,15 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     my $trial_description =  $trial_layout->get_trial_description();
     my $trial_year =  $trial_layout->get_trial_year();
     my $design_type = $trial_layout->get_design_type();
-    my @plot_names = @{$trial_layout->get_plot_names()};
-
+    my $plot_names_ref = $trial_layout->get_plot_names();
+    my @plot_names;
+    if ($plot_names_ref) {
+      @plot_names = @{$trial_layout->get_plot_names()};
+    }
     print "first plot: ".$plot_names[0]."\n";
 
     print STDERR "\n\nTrial name: $trial_name\nTrial description: $trial_description\nTrial year: $trial_year\nDesign type: $design_type\n";
     my $testing = $trial_layout->get_plot_names();
-    $trial_layout->get_trial_accession_names();
     
     if (!$c->user()) { 
 	$c->stash->{template} = '/generic_message.mas';
