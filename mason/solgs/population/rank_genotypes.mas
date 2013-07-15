@@ -25,28 +25,33 @@ $prediction_pop_name => ''
 
 my $trait_rows;
 my $cnt = 1;
+my $row_no = 1;
 
 foreach (@$analyzed_traits)
 {    
   if ($_) 
     {
-      my $rw_b = qq | <tr> | if $cnt == 1;
-      my $rw_e = qq | </tr> | if $cnt == 3;
+      my $rw_b    = qq | <tr> | if $cnt == 1;
+      my $rw_e    = qq | </tr> | if $cnt == 3;
+      my $onclick = qq | onclick="rankGenotypes.selectAPopulation($pop_id)" | if $row_no == 1;
+     
       my $row  = <<ROW;    
                    $rw_b                     
                    <td>
                      $_: <input type  = "text" 
                                 name  = $_
                                 size  = 5px
+                                $onclick
                                 >
                    </td>      
                  $rw_e
 ROW
   
-      $cnt++;   
-      $cnt = 0 if $cnt == 3; 
+      $cnt++;
+      $cnt = 0 if $cnt == 3;
       $trait_rows .=  $row;
     }
+  $row_no++;
 }
 
 $trait_rows .= qq | <tr><td> <input type = "hidden" name="prediction_pop_name" value="$prediction_pop_name"></td></tr> |;
@@ -55,6 +60,41 @@ $trait_rows .= qq | <tr><td> <input type = "hidden" name="prediction_pop_name" v
 
 <& /util/import_javascript.mas, classes => [ "solGS.rankGenotypes"] &>
 
+<style>
+
+#select_a_population .ui-selecting { 
+background:#ccccff ; 
+}
+#select_a_population .ui-selected {
+background: #ccccff; 
+color: white; 
+}
+
+#select_a_population { 
+list-style-type: none; 
+margin: 0; 
+padding: 0; 
+width: 100%; 
+}
+
+#select_a_population li {
+margin: 3px; 
+padding: 0.4em; 
+font-size: 1.4em; 
+height: 18px; 
+border-style: solid;
+border-width: 1px; 
+border-color: #ccccff;  
+}
+
+.ui-dialog-titlebar-close {
+  visibility: hidden;
+}
+
+</style>
+
+
+
 %if (@$analyzed_traits > 1 )
 %{
   <&| /page/info_section.mas, 
@@ -62,7 +102,12 @@ $trait_rows .= qq | <tr><td> <input type = "hidden" name="prediction_pop_name" v
        collapsed  => 0, 
        title      => "Rank Genotypes based on GEBV of multiple traits"
    &> 
-  
+
+  <div id="select_a_population_div" align="center" style="display:none"></div>
+  <div id="selected_population_div" style="display:none">
+     <input type="hidden" id="selected_pop" value="" />
+  </div>
+
     <p>Fill in the relative weight you want to apply to each trait.</p>
     <div id="mulitple_traits">
       <div id="rel_gebv_form">
@@ -74,7 +119,7 @@ $trait_rows .= qq | <tr><td> <input type = "hidden" name="prediction_pop_name" v
                      value   = "rank"
                      name    = "rank"
                      id      = "rank_genotypes"               
-                     onclick = "rankGenotypes.gebvWeights('<% $pop_id %>', '<% $prediction_pop_id %>')" >
+                     onclick = "rankGenotypes.gebvWeights('<% $pop_id %>')" >
             </td>     
           </tr>
         </table>
