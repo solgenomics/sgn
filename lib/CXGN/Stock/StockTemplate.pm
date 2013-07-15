@@ -89,7 +89,8 @@ sub parse {
     my $worksheet = ( $workbook->worksheets() )[0]; #support only one worksheet
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
-    if ($col_max < 3 || $row_max < 9 ) {#must have header and at least one row of phenotypes
+    print STDERR "$row_min $row_max $col_min $col_max \n";
+    if ($col_max < 2 || $row_max < 8 ) {#must have header and at least one row of phenotypes
       push @errors, "Spreadsheet is missing header";
       $self->parse_errors(\@errors);
       return;
@@ -97,12 +98,12 @@ sub parse {
     #hash for column headers
     my %headers;
     #metadata is stored in rows 1..6
-    my $spreadsheet_id  = $worksheet->get_cell(1,2);
-    my $trial_name      = $worksheet->get_cell(2,2);
-    my $trial_desc      = $worksheet->get_cell(3,1);
-    my $plants_per_plot = $worksheet->get_cell(4,2);
-    my $operator        = $worksheet->get_cell(5,2);
-    my $date            = $worksheet->get_cell(6,2);
+    my $spreadsheet_id  = $worksheet->get_cell(0,1);
+    my $trial_name      = $worksheet->get_cell(1,1);
+    my $trial_desc      = $worksheet->get_cell(2,0);
+    my $plants_per_plot = $worksheet->get_cell(3,1);
+    my $operator        = $worksheet->get_cell(4,1);
+    my $date            = $worksheet->get_cell(5,1);
     if (!$spreadsheet_id) {
       push @errors, "Spreadsheet ID is missing from the header";
     }
@@ -128,14 +129,15 @@ sub parse {
     # Row #7 can be skipped, as it contains trait names just for human readability
 #    for my $row ( 8 .. $row_max ) {
     for my $col ( $col_min .. $col_max ) {
-        my $cell = $worksheet->get_cell( 8, $col );
+        my $cell;
+	$cell = $worksheet->get_cell( 7, $col );
+        next unless $cell;
         my $value  =  $cell->value() ;
         my $unformatted_value = $cell->unformatted() ;
-        next unless $cell;
         ## read the header row, make a hash of names to column numbers, then in the data rows, get_cell($row, $col_for_header{'SomeHeader'})
         $headers{$value} = $col;
     }
-    for my $row ( 9 .. $row_max ) { # phenotypes should be from row 9 and on
+    for my $row ( 8 .. $row_max ) { # phenotypes should be from row 9 and on
         # got the row number, now look at the column headers
         my $plot_stock_id =  $worksheet->get_cell ($row , $headers{'PLOT'} );
         my $replicate = $worksheet->get_cell ($row , $headers{'REP'});
