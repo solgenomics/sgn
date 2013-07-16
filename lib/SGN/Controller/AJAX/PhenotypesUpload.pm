@@ -78,6 +78,7 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   $upload_file_temporary_full_path = $upload_file_temporary_directory.$upload_file_name;
   print "full path: $upload_file_temporary_full_path\n";
   write_file($upload_file_temporary_full_path, $upload->slurp);
+  print STDERR "Parsing\n";
 
   try {
     $stock_template->parse($upload_file_temporary_full_path);
@@ -92,6 +93,7 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   if ($stock_template->parse_errors()) {
     my $parse_errors_html = array_elements_simple_view($stock_template->parse_errors());
     $c->stash->{rest} = {error_list_html => $parse_errors_html };
+    $c->stash->{rest} = {error => "Error parsing spreadsheet"};
     return;
   }
 
@@ -120,6 +122,7 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     return;
   }
   unlink $upload_file_temporary_full_path;
+  print STDERR "Verifying\n";
 
   try {
     $stock_template->verify();
@@ -154,6 +157,8 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     unlink $upload_file_archive_full_path;
     return;
   }
+    $c->stash->{rest} = {success => 1 };
+  print STDERR "Finishing\n";
 }
 
 

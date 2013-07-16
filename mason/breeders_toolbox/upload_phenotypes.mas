@@ -96,17 +96,18 @@ jQuery(document).ready(function() {
 	complete: function (response) {
 	    jQuery('#upload_wait_dialog').dialog("close");
             if (response.error) {
-		alert(response.error);
-		return;
-            }
-            if (response.error_list_html) {
-		jQuery("#upload_phenotype_spreadsheet_error_display").html(response.error_list_html);
-                jQuery("#upload_phenotype_spreadsheet_error_display").dialog("open");
-		return;
+		//alert(response.error);
+
+                if (response.error_list_html) {
+                     alert("something");
+		     jQuery("#upload_phenotype_spreadsheet_error_display").html(response.error_list_html);
+                     jQuery("#upload_phenotype_spreadsheet_error_display").dialog("open");
+                }
+		//return;
             }
             if (response.success) {
 		alert("Spreadsheet file stored successfully");
-		jQuery('#upload_phenotype_spreadsheet_dialog').dialog("close"); 
+		//jQuery('#upload_phenotype_spreadsheet_dialog').dialog("close"); 
                 location.reload();
             }
 	}
@@ -115,6 +116,8 @@ jQuery(document).ready(function() {
     jQuery("#upload_phenotype_spreadsheet_error_display").dialog({
 	autoOpen: false,
 	modal: true,
+	autoResize:true,
+        width: 300,
 	title: "Errors in uploaded file",
 	buttons: {
             Ok: function () {
