@@ -235,6 +235,9 @@ sub _get_design_type_from_project {
     return;
   }
   $design_type = $design_prop->value;
+  if (!$design_type) {
+    return;
+  }
   return $design_type;
 }
 

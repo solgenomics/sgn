@@ -34,6 +34,7 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     $c->stash->{control_names} = $control_names_ref;
     $c->stash->{plot_names} = $plot_names_ref;
     $c->stash->{design_type} = $design_type;
+    $c->stash->{trial_description} = $trial_description;
     my $number_of_blocks;
     if ($block_numbers) {
       $number_of_blocks = scalar(@{$block_numbers});
