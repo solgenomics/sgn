@@ -68,9 +68,12 @@ $analyzed_traits =>''
   descriptive_stat => $descriptive_stat,
  &>
 
-
-
 </&>
+
+<& /solgs/model/accuracy.mas, 
+   accuracy_report        => $accuracy_report,
+  validation_download_url => $validation_download_url
+&>
 
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
@@ -85,10 +88,6 @@ $analyzed_traits =>''
    marker_effects_download_url => $marker_effects_download_url
 &>
 
-<& /solgs/model/accuracy.mas, 
-   accuracy_report        => $accuracy_report,
-  validation_download_url => $validation_download_url
-&>
 
 <& /solgs/population/selection_populations.mas, 
    download_prediction     => $download_prediction,
