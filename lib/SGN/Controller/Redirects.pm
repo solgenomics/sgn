@@ -58,6 +58,8 @@ my %paths = (
         /search/solgs/            /solgs/search
         /solgs                    /solgs/search
         /solgs/                   /solgs/search
+        /gs                       /solgs/search
+        /gs/                      /solgs/search
     ),
 
     # genomes redirects
