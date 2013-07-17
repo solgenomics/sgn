@@ -1,4 +1,4 @@
-package SGN::Model::solGS;
+package SGN::Model::solGS::solGS;
 
 use Moose;
 use namespace::autoclean;
@@ -8,6 +8,7 @@ use File::Path qw / mkpath /;
 use File::Spec::Functions;
 use List::MoreUtils qw / uniq /;
 use JSON::Any;
+use Math::Round::Var;
 
 extends 'Catalyst::Model';
 
@@ -91,7 +92,7 @@ sub search_populations {
         ->search_related('nd_experiment_stocks')
         ->search_related('stock');
 
-    my $pr_rs = $c->controller('solgsStock')->stock_projects_rs($rs);
+    my $pr_rs = $c->controller('solGS::solgsStock')->stock_projects_rs($rs);
 
     $pr_rs = $pr_rs->search(
         {},                                
@@ -213,7 +214,7 @@ sub phenotype_data {
      if ($pop_id) 
      {
          my $results  = [];   
-         my $stock_rs = $c->controller('solgsStock')->project_subject_stocks_rs($pop_id);
+         my $stock_rs = $c->controller('solGS::solgsStock')->project_subject_stocks_rs($pop_id);
          $results     = $self->schema($c)->resultset("Stock::Stock")->recursive_phenotypes_rs($stock_rs, $results);
          my $data     = $self->phenotypes_by_trait($c, $results);
       
@@ -227,8 +228,8 @@ sub genotype_data {
     
     if ($project_id) 
     {
-        my $stock_subj_rs = $c->controller('solgsStock')->project_subject_stocks_rs($project_id);
-        my $stock_obj_rs  = $c->controller('solgsStock')->stocks_object_rs($stock_subj_rs);
+        my $stock_subj_rs = $c->controller('solGS::solgsStock')->project_subject_stocks_rs($project_id);
+        my $stock_obj_rs  = $c->controller('solGS::solgsStock')->stocks_object_rs($stock_subj_rs);
       
         my $stock_genotype_rs = $self->stock_genotypes_rs($c, $stock_obj_rs);
    
@@ -236,8 +237,8 @@ sub genotype_data {
         my $geno_data = "\t" . $markers . "\n";
     
         my $markers_no = scalar(split(/\t/, $markers));
-        print STDERR "\nmarkers no.: $markers_no\n\n";
 
+        print STDERR "\nmarkers no.: $markers_no\n\n";
         my @stocks = ();
 
         while (my $geno = $stock_genotype_rs->next)
@@ -259,6 +260,7 @@ sub genotype_data {
                 {
                     print STDERR "\n$stock was genotyped using a different GBS markers than the ones on the header. It will excluded from the training population set.\n\n";
                 }
+               
             }  
         }
 
@@ -320,14 +322,83 @@ sub stock_genotype_values {
     my @markers = keys %$values;
     my $m_c = scalar(@markers); my $v_c = scalar(values %$values);
     print STDERR "count markers and values: $m_c\t$v_c\n"; 
+   
+    my $round =  Math::Round::Var->new(0);
+    
     foreach my $marker (keys %$values) 
     {
-        $geno_values .= $values->{$marker};
+        my $genotype =  $values->{$marker};
+        $geno_values .= $genotype =~ /\d+/g ? $round->round($genotype) : $genotype;       
         $geno_values .= "\t" unless $marker eq $markers[-1];
-    }    
+    }
+    
     $geno_values .= "\n";        
 
     return $geno_values;
+}
+
+sub prediction_pops {
+  my ($self, $c, $training_pop_id) = @_;
+ 
+  my @tr_pop_markers;
+  
+  if ($training_pop_id) 
+  {
+      my $dir = $c->stash->{solgs_cache_dir};
+      opendir my $dh, $dir or die "can't open $dir: $!\n";
+    
+      my ($geno_file) =   grep { /genotype_data_${training_pop_id}/ && -f "$dir/$_" } 
+                            readdir($dh); 
+      closedir $dh;
+
+      $geno_file = catfile($dir, $geno_file);
+      open my $fh, "<", $geno_file or die "can't open genotype file: $!";
+     
+      my $markers = <$fh>;
+      chomp($markers);
+      
+      $fh->close;
+      
+      @tr_pop_markers = split(/\t/, $markers);
+      shift(@tr_pop_markers);      
+  }
+ 
+  my @sample_pred_projects;
+  my $cnt = 0;
+ 
+  my $projects_rs = $self->all_projects($c);
+
+  while (my $row = $projects_rs->next) 
+  {
+     
+      my $project_id = $row->id; 
+      
+      if ($project_id) 
+      {
+          my $stock_subj_rs = $c->controller('solGS::solgsStock')->project_subject_stocks_rs($project_id);
+          my $stock_obj_rs  = $c->controller('solGS::solgsStock')->stocks_object_rs($stock_subj_rs);
+      
+          my $stock_genotype_rs = $self->stock_genotypes_rs($c, $stock_obj_rs);
+   
+          my $markers   = $self->extract_project_markers($stock_genotype_rs);
+
+          my @pred_pop_markers = split(/\t/, $markers);
+           
+          print STDERR "\ncheck if prediction populations are genotyped using the same set of markers as for the training population : " . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
+
+          if (@pred_pop_markers ~~ @tr_pop_markers) 
+          {
+              $cnt++;
+              push @sample_pred_projects, $project_id; 
+       
+          }
+      }
+       
+      last if $cnt == 3;
+  }
+
+  return \@sample_pred_projects;
+  
 }
 
 
@@ -390,7 +461,7 @@ sub phenotypes_by_trait {
         # print the value by cvterm name
 
         my $subject_id       = $phen_hashref->{$key}{stock_id};
-        my $stock_object_row = $c->controller('solgsStock')->map_subject_to_object($c, $subject_id)->single;       
+        my $stock_object_row = $c->controller('solGS::solgsStock')->map_subject_to_object($c, $subject_id)->single;       
         my $object_name      = $stock_object_row->name;
         my $object_id        = $stock_object_row->stock_id;
                 

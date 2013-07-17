@@ -16,7 +16,7 @@ $trait_name
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations", "jquery.cookie"] &>
 
 <& /page/page_title.mas,
     title => "GS Populations evaluated for $query" ,
@@ -29,11 +29,21 @@ $trait_name
       title => "select a training population to calculate GEBVs for $trait_name",
 &>
 
-<& /solgs/population/project_details_form.mas,
+
+
+<& /solgs/search/result/confirm/populations_list.mas,
    result     => $result,
    pager      => $pager,
    page_links => $page_links
 &>
+
+<div id="trait_id">
+<input type="hidden" name="trait_id" value="<% $trait_id %>" />
+</div>
+
+<div id="select_done">
+<input type="button" id="done_selecting" name="done_selecting" value="Done!" onclick="selectedPops();"/>
+</div>
 
 </&>
 

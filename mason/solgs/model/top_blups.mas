@@ -15,10 +15,11 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $top_blups
-$blups_download_url
-$pop_id
+$blups_download_url => ''
+$pop_id =>''
+$combo_pops_id => ''
 $trait_id
-
+$trait_combo_pops => ''
 </%args>
 
 
@@ -32,6 +33,8 @@ $trait_id
 
 <div id="gebvPlot2"> 
   <input type="hidden" name="population_id" value="<% $pop_id %>" /> 
+  <input type="hidden" name="combo_pops_id" value="<% $combo_pops_id %>" /> 
+  <input type="hidden" name="pops_list" value="<% $trait_combo_pops %>" /> 
   <input type="hidden" name="trait_id" value="<% $trait_id %>" /> 
 </div> 
 

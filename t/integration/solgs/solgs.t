@@ -23,14 +23,14 @@ BEGIN { use_ok( 'Test::More' ) or
             BAIL_OUT('Could not load Test::More');
 }
 
-BEGIN { use_ok(  'SGN::Controller::solGS'  ) or
-        BAIL_OUT( 'Could not load SGN::Controller::solGS');   
+BEGIN { use_ok(  'SGN::Controller::solGS::solGS'  ) or
+        BAIL_OUT( 'Could not load SGN::Controller::solGS::solGS');   
 }
-BEGIN { use_ok(  'SGN::Model::solGS'  ) or
-        BAIL_OUT( 'Could not load SGN::Model::solGS');   
+BEGIN { use_ok(  'SGN::Model::solGS::solGS'  ) or
+        BAIL_OUT( 'Could not load SGN::Model::solGS::solGS');   
 }
-BEGIN { use_ok(  'SGN::Controller::solgsStock'  ) or
-        BAIL_OUT( 'Could not load SGN::Controller::solgsStock');   
+BEGIN { use_ok(  'SGN::Controller::solGS::solgsStock'  ) or
+        BAIL_OUT( 'Could not load SGN::Controller::solGS::solgsStock');   
 }   
 
 
@@ -136,9 +136,21 @@ $mech->content_contains($_)
         'Top 10 genotypes',
         'Marker Effects',
         '10 folds cross-validation report',
+        'prediction population',
       );
 
-
+diag("Please wait... combining populations...this may a few minutes..");
+$mech->get_ok('/solgs/combine/populations/trait/confirm/70762', 'confirmation page for populations to be combined');
+$mech->get_ok('/solgs/model/combined/populations/2789927696/trait/70762', 'GEBV output for combined training populations');
+$mech->content_contains($_)
+      for (
+        'Population summary',
+        'Trait phenotype data',
+        'Predicted genomc estimated breeding values', 
+        'Top 10 genotypes',
+        'Marker Effects',
+        '10 folds cross-validation report',
+      );
 
 done_testing()
 
