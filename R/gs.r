@@ -116,7 +116,7 @@ traitPhenoFile <- grep(traitPhenoFile,
 
 print(traitPhenoFile)
 
-formattedPhenoDataFile <- grep("formatted_pheno_data",
+formattedPhenoDataFile <- grep("formatted_phenotype_data",
                                outFiles,
                                ignore.case = TRUE,
                                fixed = FALSE,

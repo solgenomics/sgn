@@ -521,10 +521,12 @@ sub output_files {
     $self->gebv_kinship_file($c); 
     $self->validation_file($c);
     $self->trait_phenodata_file($c);
+    $self->formatted_phenodata_file($c);
 
     my $prediction_id = $c->stash->{prediction_pop_id};
-     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
+    if (!$pop_id) {$pop_id = $c->stash->{model_id};}
     my $identifier    = $pop_id . '_' . $prediction_id;
+    
     my $pred_pop_gebvs_file;
     
     if ($prediction_id) 
@@ -539,6 +541,7 @@ sub output_files {
                           $c->stash->{gebv_marker_file},
                           $c->stash->{validation_file},
                           $c->stash->{trait_phenodata_file},
+                          $c->stash->{formatted_phenodata_file},
                           $c->stash->{selected_traits_gebv_file},
                           $pred_pop_gebvs_file
         );
@@ -611,6 +614,21 @@ sub trait_phenodata_file {
                        stash_key => 'trait_phenodata_file'
         };
     }
+
+    $self->cache_file($c, $cache_data);
+}
+
+
+sub formatted_phenodata_file {
+    my ($self, $c) = @_;
+   
+    my $pop_id = $c->stash->{pop_id};
+   
+    my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id, 
+                       file      => 'formatted_phenotype_data_' . $pop_id,
+                       stash_key => 'formatted_phenodata_file'
+    };
+    
 
     $self->cache_file($c, $cache_data);
 }
@@ -2615,7 +2633,7 @@ sub phenotype_file {
         $file_cache->set($key, $pheno_file, '30 days');
     }
    
-    $c->stash->{phenotype_file} = $pheno_file;
+    $c->stash->{phenotype_file} = $pheno_file;   
 
 }
 
