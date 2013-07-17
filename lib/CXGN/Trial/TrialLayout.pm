@@ -129,6 +129,7 @@ sub _get_plot_info_fields_from_trial {
 
 sub _get_design_from_trial {
   my $self = shift;
+  my $schema = $self->get_schema();
   my $plots_ref;
   my @plots;
   my %design;
@@ -139,12 +140,18 @@ sub _get_design_from_trial {
   @plots = @{$plots_ref};
   foreach my $plot (@plots) {
     my %design_info;
+    my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
     my $plot_name = $plot->uniquename;
     my $plot_number_prop = $plot->stockprops->find( { 'type.name' => 'plot number' }, { join => 'type'} );
     my $block_number_prop = $plot->stockprops->find( { 'type.name' => 'block' }, { join => 'type'} );
     my $replicate_number_prop = $plot->stockprops->find( { 'type.name' => 'replicate' }, { join => 'type'} );
     my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
+    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => $plot_of_cv->cvterm_id()})->object;
+    my $accession_name = $accession->uniquename;
     $design_info{"plot_name"}=$plot->uniquename;
+    $design_info{"plot_id"}=$plot->stock_id;
+    print STDERR "stock id of plot: ". $plot->stock_id."\n";
+    print STDERR "plotprop: $plot_number_prop\n";
     if ($plot_number_prop) {
       $design_info{"plot_number"}=$plot_number_prop->value();
       print STDERR "plot# value: ".$plot_number_prop->value()."\n"
@@ -161,6 +168,10 @@ sub _get_design_from_trial {
     if ($is_a_control_prop) {
       $design_info{"is_a_control"}=$is_a_control_prop->value();
     }
+    if ($accession_name) {
+      $design_info{"accession_name"}=$accession_name;
+    }
+    print STDERR "accession name in plot: $accession_name\n";
     $design{$plot_number_prop->value}=\%design_info;
   }
   return \%design;
