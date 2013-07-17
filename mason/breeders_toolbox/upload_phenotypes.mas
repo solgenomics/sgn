@@ -96,10 +96,8 @@ jQuery(document).ready(function() {
 	complete: function (response) {
 	    jQuery('#upload_wait_dialog').dialog("close");
             if (response.error) {
-		//alert(response.error);
-
+		alert(response.error);
                 if (response.error_list_html) {
-                     alert("something");
 		     jQuery("#upload_phenotype_spreadsheet_error_display").html(response.error_list_html);
                      jQuery("#upload_phenotype_spreadsheet_error_display").dialog("open");
                 }
@@ -108,7 +106,7 @@ jQuery(document).ready(function() {
             if (response.success) {
 		alert("Spreadsheet file stored successfully");
 		//jQuery('#upload_phenotype_spreadsheet_dialog').dialog("close"); 
-                location.reload();
+                //location.reload();
             }
 	}
     });

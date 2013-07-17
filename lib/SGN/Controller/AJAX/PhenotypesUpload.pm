@@ -38,8 +38,9 @@ sub upload_phenotype_spreadsheet :  Path('/ajax/phenotype/upload_spreadsheet') :
 
 sub upload_phenotype_spreadsheet_POST : Args(0) {
   my ($self, $c) = @_;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $error;
-  my $stock_template = new CXGN::Stock::StockTemplate;
+  my $stock_template = new CXGN::Stock::StockTemplate(schema => $schema);
   my $upload = $c->req->upload('upload_phenotype_spreadsheet_file_input');
   my $upload_file_name;
   my $upload_file_temporary_directory;
@@ -90,10 +91,17 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     return;
   }
 
+  print STDERR "Parsing done\n";
+
   if ($stock_template->parse_errors()) {
+    print STDERR "temp: ".$stock_template->parse_errors()."\n";
     my $parse_errors_html = array_elements_simple_view($stock_template->parse_errors());
-    $c->stash->{rest} = {error_list_html => $parse_errors_html };
-    $c->stash->{rest} = {error => "Error parsing spreadsheet"};
+    print STDERR "parse errors: $parse_errors_html\n";
+    #$c->stash->{rest} = {error_list_html => $parse_errors_html };
+    $c->stash->{rest} = {
+			 error => "Error parsing spreadsheet",
+			 error_list_html => $parse_errors_html,
+			};
     return;
   }
 
@@ -136,7 +144,9 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   }
   if ($stock_template->verify_errors()) {
     my $verify_errors_html = array_elements_simple_view($stock_template->verify_errors());
-    $c->stash->{rest} = {error_list_html => $verify_errors_html };
+    $c->stash->{rest} = {
+			 error => "Spreadsheet did not pass verification",
+			 error_list_html => $verify_errors_html, };
     unlink $upload_file_archive_full_path;
     return;
   }
@@ -151,13 +161,17 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     unlink $upload_file_archive_full_path;
     return;
   }
-  if ($stock_template->store_errors()) {
-    my $store_errors_html = array_elements_simple_view($stock_template->store_errors());
-    $c->stash->{rest} = {error_list_html => $store_errors_html };
+  if ($stock_template->store_error()) {
+    #my $store_errors_html = array_elements_simple_view($stock_template->store_error());
+    my $store_error;
+    $store_error = $stock_template->store_error();
+    if ($store_error) {
+      $c->stash->{rest} = {error => $store_error };
+    }
     unlink $upload_file_archive_full_path;
     return;
   }
-    $c->stash->{rest} = {success => 1 };
+  $c->stash->{rest} = {success => 1 };
   print STDERR "Finishing\n";
 }
 

@@ -136,6 +136,7 @@ sub parse {
         my $unformatted_value = $cell->unformatted() ;
         ## read the header row, make a hash of names to column numbers, then in the data rows, get_cell($row, $col_for_header{'SomeHeader'})
         $headers{$value} = $col;
+	print STDERR "cell value: $value\n";
     }
     for my $row ( 8 .. $row_max ) { # phenotypes should be from row 9 and on
         # got the row number, now look at the column headers
@@ -146,8 +147,11 @@ sub parse {
         my $planted_plants = $worksheet->get_cell ($row , $headers{'NOPLT'});
         my $surv_plants = $worksheet->get_cell ($row , $headers{'NOSV'});
         foreach my $header (keys %headers) {
-            if ($header =~ m/^CO.+?:\d{7}.+?/ ) {
-                my $value = $worksheet->get_cell( $row , $header );
+	      print STDERR "header loop header: $header\n";
+            if ($header =~ m/^CO:\d{7}/ ) {
+	      print STDERR "has header: $header row: $row col: ".$headers{$header}."\n";
+	      my $value = $worksheet->get_cell( $row , $headers{$header} )->value();
+	      print STDERR "has value: $value\n";
                 ## remove spaces
                 $value =~ s/^\s+//;
                 $value =~ s/\s+$//;
@@ -161,7 +165,8 @@ sub parse {
                 #skip non-numeric values
                 if ($value !~ /^\d/) {
                     if ($value eq "\." ) { next; }
-                    push @errors,  "** Found non-numeric value in column $header (value = '" . $value ."') Row = $row.";
+		    print STDERR "measurement:  $value \n";
+                    #push @errors,  "** Found non-numeric value in column $header (value = '" . $value ."') Row = $row.";
                     next;
                 }
                 #####################
@@ -170,6 +175,7 @@ sub parse {
                 $hashref->{join("\t", $spreadsheet_id, $operator, $date, $row) }->{$plot_stock_id}->{$full_accession}->{planted_plants} = $planted_plants;
                 $hashref->{join("\t", $spreadsheet_id, $operator, $date, $row) }->{$plot_stock_id}->{$full_accession}->{surviving_plants} = $surv_plants;
                 $hashref->{join("\t", $spreadsheet_id, $operator, $date, $row) }->{$plot_stock_id}->{$full_accession}->{value} = $value;
+		print STDERR "Accession: $full_accession Replicate: $replicate Block: $block\n";
             }
         }
     }
@@ -179,7 +185,10 @@ sub parse {
     #my ($op_name, $project_id, $location_id, $stock_id, $cvterm_accession, $value, $date, $count);
     $self->parsed_data($hashref);
     $self->parsed_header(\%header_hash);
-    $self->parse_errors(\@errors);
+    if (scalar(@errors) >= 1) {
+      $self->parse_errors(\@errors);
+      print STDERR "More than one parse error\n";
+    }
 }
 
 sub verify {
@@ -230,7 +239,9 @@ sub verify {
     foreach my $err (@errors) {
         print STDERR " *!*!*!error = $err\n";
     }
-    $self->verify_errors(\@errors);
+    if (scalar(@errors) >= 1) {
+      $self->verify_errors(\@errors);
+    }
 }
 
 sub store {
@@ -358,9 +369,11 @@ sub store {
                     }
                 }
             }
-        }
+	  }
     };
     my $error;
+    print "STDERR coderef: $coderef\n";
+    print "STDERR schema: $schema\n";
     try {
         $schema->txn_do($coderef);
         #$error = "Store completed!";
@@ -368,8 +381,12 @@ sub store {
         # Transaction failed
         $error =  "An error occured! Cannot store data! <br />" . $_ . "\n";
     };
-    $self->store_error($error);
-    $self->store_message($message);
+    if ($error) {
+      $self->store_error($error);
+    }
+    if ($message) {
+      $self->store_message($message);
+    }
 }
 
 ###
