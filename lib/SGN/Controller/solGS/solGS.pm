@@ -55,6 +55,25 @@ The root page (/)
 #     $c->forward('search');
 # }
 
+sub gs :Path('/gs')  { 
+     my ($self, $c) = @_;
+     $c->res->redirect("/solgs/search");
+
+ }
+
+
+sub solgs  :Path('/solgs') { 
+     my ($self, $c) = @_;
+     $c->res->redirect("/solgs/search");
+
+ }
+
+
+sub search_solgs  :Path('/search/solgs') { 
+     my ($self, $c) = @_;
+     $c->res->redirect("/solgs/search");
+ }
+
 
 sub submit :Path('/solgs/submit/intro')  Args(0) {
     my ($self, $c) = @_;
