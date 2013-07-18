@@ -106,6 +106,7 @@ my $build = SGN::Build->new(
         'Module::Pluggable::Object'                => 0,
         'Moose'                                    => 0,
         'MooseX::Declare'                          => 0,
+	'MooseX::FollowPBP'                        => 0,
         'MooseX::Method::Signatures'               => '0.30',
         'MooseX::Types::Path::Class'               => 0,
         'MooseX::Types::URI'                       => 0,
