@@ -1,0 +1,34 @@
+
+<& /page/page_title.mas, title=>"SSR Marker Help" &>    
+
+    <p>While microsatellites or simple sequence repeats (SSRs)
+    normally occur in non-coding regions of the genome, they can
+    also occur in either 3' or 5' UTRs of ESTs or even in coding
+    regions (usually triplet repeats). For this reason, the tomato
+    and potato EST sequences contained in SGN were screened for
+    microsatellite sequence motifs in May 2001 using analytical
+    tools developed by Genomics Edge Technologies, Inc; St. Louis,
+    Missouri. The purpose was to identify SSRs that might be useful
+    a polymorphic molecular markers genetic and breeding studies in
+    tomato. The search parameters were for all possible repeat
+    motifs 2 bp to 6 bp with repeat blocks &gt; 20 bp. The search
+    algorithms allowed for imperfect repeats as well as complex
+    repeats.</p>
+
+    <p>For those wishing to test SSRs for mapping/polymorphism
+    studies, it is recommended (based on empirical testing) to start
+    with:<br /></p>
+
+    <ul>
+      <li>dinucleotides &gt; 12 repeats</li>
+
+      <li>trinucleotide &gt; 8 repeats</li>
+
+      <li>tetra to hexonuclotides &gt; 6 repeats</li>
+    </ul>
+    <p>
+    <a href="/search/markers/markersearch.pl?searchtype=startswith&amp;name=&amp;submit=search&amp;mapped=on&amp;confidence=0&amp;offsetstart=&amp;offsetend=&amp;chromosomes=all&amp;species=all&amp;maps=all&amp;types=SSR&amp;techniques=all">See all SSR markers in marker search results</a><br />
+    <a href="/documents/markers/microsat_list.txt">Old text version SSR list</a>
+    </p>
+    
+  </center>
