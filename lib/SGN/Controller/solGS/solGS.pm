@@ -1764,7 +1764,7 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
     my $pop_location = $pop_details->{$pop_id}{project_location};
                
     my $checkbox = qq |<form> <input type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
-    push @selected_pops_details, [$checkbox,  qq|<a href="/solgs/population/$pop_id" onclick="solGS.waitPage()">$pop_name</a>|, 
+    push @selected_pops_details, [$checkbox,  qq|<a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$pop_name</a>|, 
                                $pop_desc, $pop_location, $pop_year
     ];
   
