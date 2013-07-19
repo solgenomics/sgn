@@ -51,15 +51,7 @@ my %paths = (
         /qtl                      /search/phenotypes/qtl
         /qtl/                     /search/phenotypes/qtl
     ),
-
-     # solgs redirects
-    qw(
-        /search/solgs             /solgs/search
-        /search/solgs/            /solgs/search
-        /solgs                    /solgs/search
-        /solgs/                   /solgs/search
-    ),
-
+   
     # genomes redirects
     qw(
         /genomes/index.pl                            /genomes

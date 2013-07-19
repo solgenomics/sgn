@@ -78,6 +78,12 @@ $analyzed_traits => ''
 % if ($show_data) 
 %{
 
+<& /solgs/model/accuracy.mas, 
+   accuracy_report        => $accuracy_report,
+  validation_download_url => $validation_download_url
+&>
+
+
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
@@ -88,11 +94,6 @@ $analyzed_traits => ''
 <& /solgs/model/marker_effects.mas, 
    top_marker_effects          => $top_marker_effects,
    marker_effects_download_url => $marker_effects_download_url
-&>
-
-<& /solgs/model/accuracy.mas, 
-   accuracy_report        => $accuracy_report,
-  validation_download_url => $validation_download_url
 &>
 
 <& selection_populations.mas, 

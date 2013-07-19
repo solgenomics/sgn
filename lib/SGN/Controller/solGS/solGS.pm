@@ -55,6 +55,25 @@ The root page (/)
 #     $c->forward('search');
 # }
 
+sub gs :Path('/gs')  { 
+     my ($self, $c) = @_;
+     $c->res->redirect("/solgs/search");
+
+ }
+
+
+sub solgs  :Path('/solgs') { 
+     my ($self, $c) = @_;
+     $c->res->redirect("/solgs/search");
+
+ }
+
+
+sub search_solgs  :Path('/search/solgs') { 
+     my ($self, $c) = @_;
+     $c->res->redirect("/solgs/search");
+ }
+
 
 sub submit :Path('/solgs/submit/intro')  Args(0) {
     my ($self, $c) = @_;
@@ -430,6 +449,8 @@ sub select_traits   {
 sub trait :Path('/solgs/trait') Args(3) {
     my ($self, $c, $trait_id, $key, $pop_id) = @_;
    
+    my $ajaxredirect = $c->req->param('source');
+  
     if ($pop_id && $trait_id)
     {   
         $self->get_trait_name($c, $trait_id);
@@ -449,13 +470,17 @@ sub trait :Path('/solgs/trait') Args(3) {
         $self->get_trait_name($c, $trait_id);
         $c->stash->{template} = $self->template("/population/trait.mas");
     }
-    else 
+    
+    if ($ajaxredirect) 
     {
-        $c->throw(public_message =>"Required population id or/and trait id are missing.", 
-                  is_client_error => 1, 
-            );
+        my $ret->{status} = 'success';
+        $ret = to_json($ret);
+        
+        $c->res->content_type('application/json');
+        $c->res->body($ret);
+        
     }
-   
+    
 }
 
 
@@ -1432,7 +1457,7 @@ sub prediction_population_file {
 
 sub combined_pops_catalogue_file {
     my ($self, $c) = @_;
- 
+
     my $cache_data = {key       => 'combined_pops_catalogue_file',
                       file      => 'combined_pops_catalogue_file',
                       stash_key => 'combined_pops_catalogue_file'
@@ -1449,7 +1474,7 @@ sub catalogue_combined_pops {
     my $file = $self->combined_pops_catalogue_file($c);
     if (! -s $file) 
     {
-        my $header = 'combo_pops_id' . "\t" . 'population_ids' . "\n";
+        my $header = 'combo_pops_id' . "\t" . 'population_ids';
         write_file($file, ($header, $entry));    
     }
     else 
@@ -1831,7 +1856,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
 
                 $self->list_of_prediction_pops($c, $combo_pops_id);
 
-                my $entry = $combo_pops_id . "\t" . $ids;
+                my $entry = "\n" . $combo_pops_id . "\t" . $ids;
                 $self->catalogue_combined_pops($c, $entry);
 
               }           
@@ -1862,9 +1887,8 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $c->stash->{data_set_type} = 'combined populations';
     $c->stash->{combo_pops_id} = $combo_pops_id;
     
-
     my $pops_ids = $c->req->param('combined_populations');
-    
+   
     if($pops_ids)
     {
         $c->stash->{trait_combo_pops} = $pops_ids;

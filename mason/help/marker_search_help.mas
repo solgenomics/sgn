@@ -1,0 +1,74 @@
+
+
+<p>
+The <a href="/search/markers/markersearch.pl">marker search</a> is a
+tool for locating markers in SGN's database. 
+</p>
+
+<img src="/documents/help/screenshots/marker_search_form.png" alt="screenshot of marker search form" style="margin: auto; border: 1px solid black;" />
+
+<h4>1. Marker name</h4>
+<p>
+If you know the name of your marker, type it in. By default, the database will be searched for all markers with a name that <i>starts with</i> what you type in.For example, if you type in "TG1", your results might include TG1, TG10, TG11, TG150, etc.
+</p><p>
+ To search for an exact name, choose "exactly" from the menu. Or choose "contains" if you don't know the beginning of the marker's name. For example, a "contains" search on "T16" will include CT16, T1600, T1601, etc.
+</p>
+<p>
+The search is not case-sensitive; "Tm2" and "TM2" are equivalent searches, though those two names could refer to two different markers in our database.
+</p>
+
+<h4>2. BAC associations</h4>
+<p>
+Some markers have been associated with BACS from the <a href="/about/tomato_sequencing.pl">tomato sequencing project</a>. Most of these associations come from the <a href="http://siren/maps/physical/overgo_process_explained.pl">overgo plating process</a> in which markers were hybridized to BAC DNA. Other associations are computational, meaning they were made by BLAST comparisons. Still others are "manual" associations, meaning they were associated in some other way and then entered into our database. 
+</p>
+
+
+<h4>3. Species</h4>
+<p>
+In this multiple-select box you will see a list of the common names of species (or groups of species, such as "tomato") that make up the mapping populations in our collection of maps. Selecting a species here limits your search results to markers that have been mapped in that species. 
+</p>
+
+
+<h4>4. Mapped by</h4>
+<p>
+This multiple-select box shows a list of experimental protocols. Selecting one or more of these protocols, for example CAPS, will limit the search results to markers that have been mapped with this protocol.
+</p>
+
+
+<h4>5. Group</h4>
+<p>
+Some of our markers have been grouped into collections for organizational purposes, or because all markers in that group are part of a particular project. Here are the meanings of the markers in our collections:
+</p>
+<ul>
+<li><b>COS</b> - Conserved Ortholog Set, markers that have been mapped in both tomato and <i>Arabidopsis</i>. </li>
+<li><b>COSII</b> - Conserved Ortholog Set, part II - markers that have been mapped in several asterid species, including several solanaceous species. <a href="http://www.sgn.cornell.edu/markers/cosii_markers.pl">Learn more about COSII markers here</a></li>
+<li><b>KFG</b> - Known Function Genes - markers that correspond to known genes in tomato</li>
+<li><b>P</b> - a subset of our EST collection</li>
+<li><b>TM</b> - also EST-derived markers</li>
+</ul>
+
+
+<h4>6. Chromosomes</h4>
+<p>
+Choose a chromosome from this box to limit results to markers mapped on that chromosome or linkage group.
+</p>
+
+
+<h4>7. Position</h4>
+<p>
+If you are interested in a particular region of the chromosome, enter the bounds of that region here. 
+</p>
+
+
+<h4>8. Confidence</h4>
+<p>
+Some of our markers have a confidence assigned by the mapping program MapMaker. To view only markers with a certain level of confidence or greater, select that confidence from this list. Markers not mapped by MapMaker will have a confidence listed as "uncalculated". Leaving this setting on "uncalculated", the default, will not exclude any markers.
+</p>
+
+
+<h4>9. Maps</h4>
+<p>
+This multiple-select box shows a list of our available maps. For more information on these maps, see the <a href="/cview/">map overview page</a>.
+</p>
+
+
