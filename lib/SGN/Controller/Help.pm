@@ -18,17 +18,20 @@ sub help_section : Path('/help') Args(1) {
     my $self = shift;
     my $c = shift;
     my $section = shift;
-    $section =~ s/\.\.|\///g; # clean for shenanigans
+    $section =~ s/\.\.//g; # prevent shenanigans
 
     
-    eval { 
+    my $component = '/help/'.$section.".mas";
+    if ($c->view("Mason")->interp->comp_exists($component)) { 
 	$c->stash->{basepath} = $c->config->{basepath};
 	$c->stash->{documents_subdir} = $c->config->{documents_subdir};
 	$c->stash->{template} = '/help/'.$section.".mas";
-    };
-    if ($@) { 
-	$c->stash->{template} = '/generic_message.mas';
-	$c->stash->{message}  = 'The page requested could not be found.';
+
+	
+    }
+    else { 
+    	$c->stash->{template} = '/generic_message.mas';
+	$c->stash->{message}  = 'The requested page could not be found. <br /><a href="/help">Help page</a>';
     }
 }
 
