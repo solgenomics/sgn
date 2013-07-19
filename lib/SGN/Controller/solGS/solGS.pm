@@ -449,6 +449,8 @@ sub select_traits   {
 sub trait :Path('/solgs/trait') Args(3) {
     my ($self, $c, $trait_id, $key, $pop_id) = @_;
    
+    my $ajaxredirect = $c->req->param('source');
+  
     if ($pop_id && $trait_id)
     {   
         $self->get_trait_name($c, $trait_id);
@@ -468,13 +470,17 @@ sub trait :Path('/solgs/trait') Args(3) {
         $self->get_trait_name($c, $trait_id);
         $c->stash->{template} = $self->template("/population/trait.mas");
     }
-    else 
+    
+    if ($ajaxredirect) 
     {
-        $c->throw(public_message =>"Required population id or/and trait id are missing.", 
-                  is_client_error => 1, 
-            );
+        my $ret->{status} = 'success';
+        $ret = to_json($ret);
+        
+        $c->res->content_type('application/json');
+        $c->res->body($ret);
+        
     }
-   
+    
 }
 
 
