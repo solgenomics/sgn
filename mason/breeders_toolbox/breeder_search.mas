@@ -6,7 +6,7 @@
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreederSearch' ] &>
 
-Search plots using location, year, trial, and trait data.
+Search plots using location, year, trial, and trait data. <span id="wheel">[?]</span>
   
 <table alt="breeder search" border="0">
 <tr>
