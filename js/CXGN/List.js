@@ -367,13 +367,17 @@ function addToListMenu(listMenuDiv, dataDiv) {
 
 function getData(id) { 
     var divType = jQuery("#"+id).get(0).tagName;
-    if (divType == 'DIV' || divType == 'SELECT' || divType === undefined) { 
+    alert("DIV TYPE="+divType);
+    if (divType == 'DIV' ||  divType === undefined) { 
 	data = jQuery('#'+id).html();
+    }
+    if (divType == 'SELECT') { 
+	data = jQuery('#'+id).val().join("\n");
     }
     if (divType == 'TEXTAREA') { 
 	data = jQuery('textarea#'+id).val();
     }
-
+    alert("DATA="+data);
     return data;
 }
            
