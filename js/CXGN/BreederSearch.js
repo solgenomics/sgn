@@ -242,7 +242,7 @@ function update_stocks(stocks) {
     var stock_data = format_options_list(stocks);
     jQuery('#stock_data').html(stock_data);
 
-    jQuery('#stock_count').html('Stocks: '+stocks.length);
+    jQuery('#stock_count').html(stocks.length+' items');
 }
 
 
