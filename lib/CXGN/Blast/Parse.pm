@@ -9,13 +9,13 @@ sub parse {
     my $self = shift;
     my $method = shift;
     my $file = shift; 
-    my $db_id = shift;
+    my $dbd = shift;
 
     my $done = 0;
     my $parsed_file = '';
     foreach my $p ($self->plugins()) { 
 	if ($method eq $p->name()) { 
-	    $parsed_file = $p->parse($file, $db_id);
+	    $parsed_file = $p->parse($file, $dbd);
 	    $done = 1;
 	}
     }
