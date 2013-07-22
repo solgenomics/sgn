@@ -28,7 +28,7 @@ my $trait_rows;
 my $cnt = 1;
 my $row_no = 1;
 
-$analyzed_traits = $prediction_pop_analyzed_traits if $prediction_pop_analyzed_traits;
+$analyzed_traits = $prediction_pop_analyzed_traits if @$prediction_pop_analyzed_traits;
 
 foreach (@$analyzed_traits)
 {    
