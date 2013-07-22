@@ -140,12 +140,12 @@ sub parse {
     }
     for my $row ( 8 .. $row_max ) { # phenotypes should be from row 9 and on
         # got the row number, now look at the column headers
-        my $plot_stock_id =  $worksheet->get_cell ($row , $headers{'PLOT'} );
-        my $replicate = $worksheet->get_cell ($row , $headers{'REP'});
-        my $clone_name = $worksheet->get_cell ($row , $headers{'DESIG'});
-        my $block = $worksheet->get_cell ($row , $headers{'BLOCK'});
-        my $planted_plants = $worksheet->get_cell ($row , $headers{'NOPLT'});
-        my $surv_plants = $worksheet->get_cell ($row , $headers{'NOSV'});
+        my $plot_stock_id =  $worksheet->get_cell ($row , $headers{'PLOT'} )->value();
+        my $replicate = $worksheet->get_cell ($row , $headers{'REP'})->value();
+        my $clone_name = $worksheet->get_cell ($row , $headers{'DESIG'})->value();
+        my $block = $worksheet->get_cell ($row , $headers{'BLOCK'})->value();
+        my $planted_plants = $worksheet->get_cell ($row , $headers{'NOPLT'})->value();
+        my $surv_plants = $worksheet->get_cell ($row , $headers{'NOSV'})->value;
         foreach my $header (keys %headers) {
 	      print STDERR "header loop header: $header\n";
             if ($header =~ m/^CO:\d{7}/ ) {
@@ -208,8 +208,9 @@ sub verify {
         ###
         foreach my $plot_stock_id (keys %{$hashref->{$key} } ) {
             #check if the stock exists
-            print STDERR "verify .. Looking for stock_id $plot_stock_id\n";
-            my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $plot_stock_id } );
+            print STDERR "verify .. Looking for stock_id ".$plot_stock_id."\n";
+	    my $stock;
+	    $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $plot_stock_id } );
             if (!$stock) { push @errors, "Stock $plot_stock_id does not exist in the database!"; }
             foreach my $cvterm_accession (keys %{$hashref->{$key}->{$plot_stock_id} } ) {
                 print STDERR "verify ... Looking for accession $cvterm_accession..\n";
