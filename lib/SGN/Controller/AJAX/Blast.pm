@@ -67,6 +67,8 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     my $seq_count;
 
+        my $schema = $c->dbic_schema("SGN::Schema");
+
     my %arg_handlers =
 	(
 ##	 interface_type =>
@@ -166,24 +168,17 @@ sub run : Path('/tools/blast/run') Args(0) {
 	 # },
 	 
 	 database => 
-           sub { 
-             return -d =>  '/data/prod/blast/databases/current/genomes/cassava'; 
-           },
-
-#	 sub {
-	     #my ($bdb) = CXGN::BlastDB->search( file_base => $params{database} )
-	     #or die "could not find bdb with file_base '$params{database}'";
+                  
+	 sub {
+	     my $bdb = $schema->resultset("BlastDb")->find($params->{database} )
+		 or die "could not find bdb with file_base '$params->{database}'";
 	     
-	     #     warn "setting pref last_blast_db_fil
-	     #database object for specific ID_No
-#	     my $bdb = SGN::Schema::BlastDb->from_id($params->{database});
-#	     my $basename = $bdb->full_file_basename;
+	     my $basename = $bdb->full_file_basename;
 	     #returns '/data/shared/blast/databases/genbank/nr'
 	     #remember the ID of the blast db the user just blasted with
 	     
-#	     return -d => $basename;
-	   
-#	 },
+	     return -d => $basename;  
+	 },
 	 
 	 program =>
 	 sub {
