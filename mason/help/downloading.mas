@@ -1,4 +1,6 @@
 
+<& /page/page_title.mas, title=>"Data Download Options" &>
+
 <div>
 <p>SGN provides various data files for download via anonymous FTP and
 anonymous rsync.

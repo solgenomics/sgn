@@ -65,10 +65,17 @@ sub new_list :Path('/list/new') Args(0) {
 	return;
     }
 	
+    my $new_list_id = 0;
     eval { 
 	my $q = "INSERT INTO sgn_people.list (name, description, owner) VALUES (?, ?, ?)";
 	my $h = $c->dbc->dbh->prepare($q);
 	$h->execute($name, $desc, $user_id);
+	
+	$q = "SELECT currval('sgn_people.list_list_id_seq')";
+	$h = $c->dbc->dbh->prepare($q);
+	$h->execute();
+	($new_list_id) = $h->fetchrow_array();
+	
     };
 
     if ($@) { 
@@ -76,7 +83,7 @@ sub new_list :Path('/list/new') Args(0) {
 	return;
     }
     else { 
-	$c->stash->{rest}  = [ 1 ];
+	$c->stash->{rest}  = { list_id => $new_list_id };
     }
 }
 

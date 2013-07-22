@@ -1,6 +1,6 @@
 
 
-var choices = { '': 'please select', project :'program', year : 'year', location : 'location', trait: 'trait' };
+var choices = { '': 'please select', project :'trial', year : 'year', location : 'location', trait: 'trait' };
 
 window.onload = function initialize() { 
     //alert('initialize...');
@@ -13,10 +13,12 @@ window.onload = function initialize() {
 
     jQuery('#select1').change(function() { 
 	var select1 = jQuery( this ).val();
-	//alert('Getting the data...'+select1);
+
+	disable_ui();
+
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: true,
+	    async: false,
 	    timeout: 60000,
 	    data: {'select1':select1},
 	    success: function(response) { 
@@ -26,6 +28,7 @@ window.onload = function initialize() {
            else {
                c1_html = format_options_list(response.list);
 	       update_stocks(response.stocks);
+	       enable_ui();
            }
 	   jQuery('#c1_data').html(c1_html);
 	   jQuery('#c2_data').html('');
@@ -33,17 +36,24 @@ window.onload = function initialize() {
 
 	   
 	   
-       }
+	    }
 	});
+
+
 	
 	var second_choices = copy_hash(choices);
 	delete second_choices[select1];
 	var html = format_options(second_choices);
 	jQuery('#select2').html(html);
 	
+	enable_ui();
+	
     });
     
+
     jQuery('#c1_data').change(function() { 
+	disable_ui();
+
 	jQuery('#select2').val('please select');
 	jQuery('#select3').val('please select');
 	jQuery('#c2_data').html('');
@@ -52,10 +62,10 @@ window.onload = function initialize() {
 	var select1 = jQuery('#select1').val();
 	var select4 = jQuery('#select4').val();
 	var c1_data = jQuery('#c1_data').val() || [];
-	//alert("HELLO!");
+
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: true,
+	    async: false,
 	    timeout: 60000,
 	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select4':select4  },
 	    success: function(response) { 
@@ -64,10 +74,11 @@ window.onload = function initialize() {
 		} 
 		else {
 		    update_stocks(response.stocks);
+		    enable_ui();
 		}
 	    }
 	});
-
+	enable_ui();
 
     });
     
@@ -83,9 +94,12 @@ window.onload = function initialize() {
 	
 	var c2_data = '';
 	var stock_data = '';
+
+	disable_ui();
+
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: true,
+	    async: false,
 	    timeout: 60000,
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","), 'select4':select4 },
 	    success: function(response) { 
@@ -97,6 +111,7 @@ window.onload = function initialize() {
 
 		    jQuery('#c2_data').html(c2_html);
 		    update_stocks(response.stocks);
+		    enable_ui();
 		    		    
 		}
 		
@@ -109,7 +124,7 @@ window.onload = function initialize() {
 	var html = format_options(third_choices);
 	jQuery('#select3').html(html);
 	
-	
+	enable_ui();
     });
 
     
@@ -123,9 +138,10 @@ window.onload = function initialize() {
 	var c1_data = jQuery('#c1_data').val() || [];
 	var c2_data = jQuery('#c2_data').val() || [];
 
+	disable_ui();
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: true,
+	    async: false,
 	    timeout: 60000,
 	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select2':select2, 'c2_data':c2_data.join(","), 'select4':select4  },
 	    success: function(response) { 
@@ -135,10 +151,12 @@ window.onload = function initialize() {
 		else {
 		    c3_html = format_options_list(response.list);
 		    update_stocks(response.stocks);
+		    enable_ui();
 		    //jQuery('#c3_data').html(c3_html);
 		}
 	    }
 	});
+	enable_ui();
 
     });
 
@@ -155,9 +173,12 @@ window.onload = function initialize() {
 	var stock_data = '';
 
 	jQuery('#stock_data').html('');
+
+	disable_ui();
+
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: true,
+	    async: false,
 	    timeout: 60000,
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4 },
 	    success: function(response) { 
@@ -175,7 +196,7 @@ window.onload = function initialize() {
 	    }
 	});
 
-
+	enable_ui();
     });
     
     jQuery('#c3_data').change(function() { 
@@ -191,9 +212,11 @@ window.onload = function initialize() {
 	
 	var stock_data;
 
+	disable_ui();
+
     	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: true,
+	    async: false,
 	    timeout: 30000,
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'c3_data': c3_data.join(","), 'select4' : select4 },
 	    success: function(response) { 
@@ -202,13 +225,16 @@ window.onload = function initialize() {
 		} 
 		else {
 		    update_stocks(response.stocks);
+		    enable_ui();
 		}		
 	    },
 	    error: function(response) { 
 		alert("an error occurred. (possible timeout)");
 	    }
 	});
+	enable_ui();
     });    
+
 }
 
 
@@ -216,7 +242,7 @@ function update_stocks(stocks) {
     var stock_data = format_options_list(stocks);
     jQuery('#stock_data').html(stock_data);
 
-    jQuery('#stock_count').html('Stocks: '+stocks.length);
+    jQuery('#stock_count').html(stocks.length+' items');
 }
 
 
@@ -245,4 +271,21 @@ function copy_hash(hash) {
     return new_hash;
 }
 
+function disable_ui() { 
 
+    jQuery('#wheel').html('<img src="/static/documents/img/wheel.gif" />');
+
+    var ids = [ '#select1', '#select2','#select3', '#select4', '#c1_data', '#c2_data', '#c3_data', '#stock_data' ];
+
+    for each (var id in ids) { 
+	jQuery(id).attr("disabled", "disabled");
+    }
+}
+
+function enable_ui() { 
+    var ids = [ '#select1', '#select2','#select3', '#select4', '#c1_data', '#c2_data', '#c3_data', '#stock_data' ];
+    for each (var id in ids) { 
+	jQuery(id).removeAttr("disabled");
+    }
+    jQuery('#wheel').html('');
+}

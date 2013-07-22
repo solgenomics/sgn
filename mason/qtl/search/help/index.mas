@@ -11,7 +11,7 @@ my $pop_list        = qq | <img src="/documents/help/screenshots/qtl_cvterm_popl
 my $qtl_genome      = qq | <img src="/documents/help/screenshots/qtl_genome.png" /> |;
 my $qtl_detail      = qq | <img src="/documents/help/screenshots/qtl_detail2.png" /> |;
 my $chr_location    = qq | <img src="/documents/help/screenshots/qtl_cvterm_qtl_chrloc.png" /> |;
-my $cview_help      = qq | <a href="/help/cview.pl"> |;
+my $cview_help      = qq | <a href="/help/cview"> |;
 my $contact         = qq | <a href="mailto:sgn-feedback\@solgenomics.net">sgn-feedback\@solgenomics.net</a> |; 
 
 </%perl>

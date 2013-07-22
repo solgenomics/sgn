@@ -449,6 +449,8 @@ sub select_traits   {
 sub trait :Path('/solgs/trait') Args(3) {
     my ($self, $c, $trait_id, $key, $pop_id) = @_;
    
+    my $ajaxredirect = $c->req->param('source');
+  
     if ($pop_id && $trait_id)
     {   
         $self->get_trait_name($c, $trait_id);
@@ -468,13 +470,17 @@ sub trait :Path('/solgs/trait') Args(3) {
         $self->get_trait_name($c, $trait_id);
         $c->stash->{template} = $self->template("/population/trait.mas");
     }
-    else 
+    
+    if ($ajaxredirect) 
     {
-        $c->throw(public_message =>"Required population id or/and trait id are missing.", 
-                  is_client_error => 1, 
-            );
+        my $ret->{status} = 'success';
+        $ret = to_json($ret);
+        
+        $c->res->content_type('application/json');
+        $c->res->body($ret);
+        
     }
-   
+    
 }
 
 
@@ -1032,8 +1038,17 @@ sub prediction_pop_analyzed_traits {
 
     my @copy_files = @files;
     my @trait_ids = map { s/prediction_pop_gebvs_|($training_pop_id)|($prediction_pop_id)|_//g ? $_ : 0} @copy_files;
-  
-    $c->stash->{prediction_pop_analyzed_traits} = \@trait_ids;
+
+    my @traits = ();
+
+    foreach (@trait_ids)
+    {
+        $self->get_trait_name($c, $_);
+        push @traits, $c->stash->{trait_abbr};
+    }
+    
+    $c->stash->{prediction_pop_analyzed_traits} = \@traits;
+    $c->stash->{prediction_pop_analyzed_traits_ids} = \@trait_ids;
     $c->stash->{prediction_pop_analyzed_traits_files} = \@files;
     
 }
@@ -1049,7 +1064,7 @@ sub download_prediction_urls {
     if ($prediction_pop_id)
     {
         $self->prediction_pop_analyzed_traits($c, $training_pop_id, $prediction_pop_id);
-        $trait_ids = $c->stash->{prediction_pop_analyzed_traits};
+        $trait_ids = $c->stash->{prediction_pop_analyzed_traits_ids};   
     } 
   
     my ($trait_is_predicted) = grep {/$page_trait_id/ } @$trait_ids;
@@ -1129,7 +1144,6 @@ sub get_trait_name {
 sub get_gebv_files_of_traits {
     my ($self, $c, $traits, $pred_pop_id) = @_;
     
-
     my $pop_id = $c->stash->{pop_id}; 
     my $dir = $c->stash->{solgs_cache_dir};
     my $gebv_files; 
@@ -1433,7 +1447,7 @@ sub prediction_population_file {
 
 sub combined_pops_catalogue_file {
     my ($self, $c) = @_;
- 
+
     my $cache_data = {key       => 'combined_pops_catalogue_file',
                       file      => 'combined_pops_catalogue_file',
                       stash_key => 'combined_pops_catalogue_file'
@@ -1450,7 +1464,7 @@ sub catalogue_combined_pops {
     my $file = $self->combined_pops_catalogue_file($c);
     if (! -s $file) 
     {
-        my $header = 'combo_pops_id' . "\t" . 'population_ids' . "\n";
+        my $header = 'combo_pops_id' . "\t" . 'population_ids';
         write_file($file, ($header, $entry));    
     }
     else 
@@ -1632,6 +1646,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
 
      $c->stash->{model_id} = $pop_id; 
      $self->analyzed_traits($c);
+
      my @analyzed_traits = @{$c->stash->{analyzed_traits}};
  
      if (!@analyzed_traits) 
@@ -1683,13 +1698,17 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      $c->stash->{template}    = $self->template('/population/multiple_traits_output.mas');
      $c->stash->{trait_pages} = \@trait_pages;
      $c->stash->{model_data}  = \@model_desc;
-
+    
      $self->download_prediction_urls($c, $pop_id, $pred_pop_id);
      my $download_prediction = $c->stash->{download_prediction};
     
      #get prediction populations list..     
      $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
-    
+
+     $self->list_predicted_selection_pops($c, $pop_id);
+     my $predicted_selection_pops = $c->stash->{list_of_predicted_selection_pops};
+     $self->prediction_pop_analyzed_traits($c, $pop_id, $predicted_selection_pops->[0]);
+           
      my @values;
      foreach (@traits)
      {
@@ -1698,6 +1717,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
       
      if (@values) 
      {
+         
          my $ret->{status} = 'No GEBV values to rank.';
 
          $self->get_gebv_files_of_traits($c, \@traits, $pred_pop_id);
@@ -1725,7 +1745,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
         
          $c->res->content_type('application/json');
          $c->res->body($ret);
-    }
+    }     
 }
 
 
@@ -1758,7 +1778,7 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
     my $pop_location = $pop_details->{$pop_id}{project_location};
                
     my $checkbox = qq |<form> <input type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
-    push @selected_pops_details, [$checkbox,  qq|<a href="/solgs/population/$pop_id" onclick="solGS.waitPage()">$pop_name</a>|, 
+    push @selected_pops_details, [$checkbox,  qq|<a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$pop_name</a>|, 
                                $pop_desc, $pop_location, $pop_year
     ];
   
@@ -1832,7 +1852,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
 
                 $self->list_of_prediction_pops($c, $combo_pops_id);
 
-                my $entry = $combo_pops_id . "\t" . $ids;
+                my $entry = "\n" . $combo_pops_id . "\t" . $ids;
                 $self->catalogue_combined_pops($c, $entry);
 
               }           
@@ -1863,9 +1883,8 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $c->stash->{data_set_type} = 'combined populations';
     $c->stash->{combo_pops_id} = $combo_pops_id;
     
-
     my $pops_ids = $c->req->param('combined_populations');
-    
+   
     if($pops_ids)
     {
         $c->stash->{trait_combo_pops} = $pops_ids;

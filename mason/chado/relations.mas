@@ -5,7 +5,11 @@
   $list_component
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'CXGN.List' ] &>
+
 <%init>
+  use JSON::Any;
+  my $item_json = "";
 
     # make a hash of relationship_type => {
     #    upstream   => \@list_of_objects
@@ -21,6 +25,7 @@
     my $type = $principle->type ? $m->scomp('/chado/cvterm_link.mas', cvterm => $principle->type) : 'dataset';
 
 </%init>
+
 
 %  for my $reltype ( sort keys %rels ) {
 %    my $updown = $rels{$reltype};
@@ -39,7 +44,36 @@
      &>
 </&>
 
+<div id="item_list"></div>
+
+<div id="whatever" style="text-align:right">
+Add accessions to a list:
+
+<div id="item_list_menu"></div>
+</div>
+% my @items = map { $_->uniquename() } @$objects;
+
+% $item_json = JSON::Any->new->encode(\@items);
 
 %         }
 %       }
 %  }
+
+
+<script>
+
+  jQuery(document).ready( function() { 
+    var items = eval(<% $item_json %>);
+
+    if (jQuery.cookie("sgn_session_id")) { 
+      jQuery('#item_list').hide();
+      jQuery('#item_list').html(items.join("\n"));
+      
+      addToListMenu('item_list_menu', 'item_list', 'div');
+    }
+    else { 
+      jQuery('#item_list_menu').html('Log in to use lists.');
+    }
+  });
+
+</script>

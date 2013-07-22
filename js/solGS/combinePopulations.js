@@ -73,14 +73,35 @@ var selectedPops = function () {
             var cookieName = getCookieName(trId);
             var cookieData = jQuery.cookie(cookieName);
             var cookieArrayData = [];
-
+           
             if (cookieData) {
                 cookieArrayData = cookieData.split(",");
                 cookieArrayData = cookieArrayData.unique();
             }
             
-            // alert('submited pops: ' +  cookieArrayData);
-            if( cookieArrayData.length > 0 ) {
+            if (cookieArrayData.length == 1) {
+                var redirectUrl =  '/solgs/trait/' + trId + '/population/' + cookieData;
+                
+                jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+                jQuery.blockUI({message: 'Please wait..'});
+
+                jQuery.ajax({  
+                        type: 'POST',
+                            dataType: "json",
+                            url: redirectUrl,
+                            data: 'source=ajaxredirect',
+                            success: function(res) {                                                                                
+                            var suc = res.status;                            
+                            if (suc == 'success') {                                                             
+                                jQuery.cookie(cookieName, null, {expires: -1, path: '/'});
+                                window.location.href = redirectUrl;                                                               
+                            }
+                        }
+                    
+                    });                
+            }
+
+            else if( cookieArrayData.length > 1 ) {
             
                 var action = "/solgs/search/result/populations/" + trId;
                 var selectedPops = trId + "=" + cookieArrayData + '&' + 'combine=confirm';

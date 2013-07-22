@@ -372,8 +372,8 @@ sub prediction_pops {
   {
      
       my $project_id = $row->id; 
-      
-      if ($project_id) 
+       
+      if ($project_id && $training_pop_id != $project_id) 
       {
           my $stock_subj_rs = $c->controller('solGS::solgsStock')->project_subject_stocks_rs($project_id);
           my $stock_obj_rs  = $c->controller('solGS::solgsStock')->stocks_object_rs($stock_subj_rs);
@@ -388,13 +388,14 @@ sub prediction_pops {
 
           if (@pred_pop_markers ~~ @tr_pop_markers) 
           {
+                  
               $cnt++;
               push @sample_pred_projects, $project_id; 
        
           }
       }
        
-      last if $cnt == 3;
+          last if $cnt == 3;
   }
 
   return \@sample_pred_projects;

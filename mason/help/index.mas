@@ -14,29 +14,29 @@ Bombarely A, Menda N, Tecle IY, Buels RM, Strickler S, Fischer-York T, Pujar A, 
 <br /><br />
 </div>
 
-<br>See more <a href="/help/publications.pl">SGN publications</a>
+<br>See more <a href="/help/publications">SGN publications</a>
 </p>
 
 <a name="individual"></a>
 <h4>Help files for specific SGN components:</h4>
 <ul>
-<li><a href="toolbar.pl">Toolbar</a></li>
-<li><a href="quick_search.pl">Quick search</a></li>
+<li><a href="/help/toolbar">Toolbar</a></li>
+<li><a href="/help/quick_search">Quick search</a></li>
 
-<li><a href="/help/gene_search_help.pl">Gene search</a></li>
-<li><a href="/help/phenotype_search_help.pl">Phenotype search</a></li>
-<li><a href="/help/qtl_cvterm_search_help.pl">QTL search</a></li>
+<li><a href="/help/gene_search_help">Gene search</a></li>
+<li><a href="/help/phenotype_search_help">Phenotype search</a></li>
+<li><a href="/qtl/search/help/">QTL search</a></li>
 <li><a href="/help/gbrowse.pl">GBrowse annotation viewer</a></li>
-<li><a href="/help/cview.pl">Comparative viewer</a></li>
-<li><a href="/help/marker_search_help.pl">Marker search</a></li>
+<li><a href="/help/cview">Comparative viewer</a></li>
+<li><a href="/help/marker_search_help">Marker search</a></li>
 <ul>
-  <li><a href="/markers/cos_markers.pl">COS</a> and <a href="/markers/cosii_markers.pl">COSII markers</a></li>
-  <li><a href="/markers/microsats.pl">SSRs markers</a></li>
+  <li><a href="/help/cos_markers">COS</a> and <a href="/help/cosii_markers">COSII markers</a></li>
+  <li><a href="/help/microsats">SSRs markers</a></li>
 </ul>
 </li>
-<li><a href="/about/clone_policy.pl">Clone Request Policy</a></li>
-<li><a href="/help/downloading.pl">Rsync downloading options</a></li>
-<li><a href="/help/faq.pl">Frequently asked questions</a></li>
+<li><a href="/help/clone_policy">Clone Request Policy</a></li>
+<li><a href="/help/downloading">Rsync downloading options</a></li>
+<li><a href="/help/faq">Frequently asked questions</a></li>
 
 </ul>
 
@@ -80,7 +80,7 @@ Submitters are always accredited on each information page related to theur work 
 <li>How do I contribute information on my <a href="/phenome/">favorite gene?</a></li>
 <li><a href="/cview/help/map_submission">Submit your phenotyped population</a> and we will add it to our <a href="/search/direct_search.pl?search=phenotypes">phenotype database</a></li>
 
-<li>To submit fluorescence in-situ hybridization (FISH) data, please follow the <a href="/content/fish.pl">these guidelines</a>.</li>
+<li>To submit fluorescence in-situ hybridization (FISH) data, please follow the <a href="/help/fish_submission">these guidelines</a>.</li>
 <li>To submit genetic map data, please see the <a href="/content/map_submissions.pl">map and marker submission guidelines</a>.</li>
 <li>To submit genotypic and phenotypic data from a QTL study, please see the <a href="/qtl/guide.pl">QTL data submission guidelines</a>.</li>
 
