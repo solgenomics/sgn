@@ -372,33 +372,30 @@ sub prediction_pops {
   {
      
       my $project_id = $row->id; 
-      
-      unless ($training_pop_id == $project_id) 
-      {   
-          if ($project_id) 
-          {
-              my $stock_subj_rs = $c->controller('solGS::solgsStock')->project_subject_stocks_rs($project_id);
-              my $stock_obj_rs  = $c->controller('solGS::solgsStock')->stocks_object_rs($stock_subj_rs);
-      
-              my $stock_genotype_rs = $self->stock_genotypes_rs($c, $stock_obj_rs);
-   
-              my $markers   = $self->extract_project_markers($stock_genotype_rs);
-
-              my @pred_pop_markers = split(/\t/, $markers);
-           
-              print STDERR "\ncheck if prediction populations are genotyped using the same set of markers as for the training population : " . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
-
-              if (@pred_pop_markers ~~ @tr_pop_markers) 
-              {
-                  
-                  $cnt++;
-                  push @sample_pred_projects, $project_id; 
        
-              }
+      if ($project_id && $training_pop_id != $project_id) 
+      {
+          my $stock_subj_rs = $c->controller('solGS::solgsStock')->project_subject_stocks_rs($project_id);
+          my $stock_obj_rs  = $c->controller('solGS::solgsStock')->stocks_object_rs($stock_subj_rs);
+      
+          my $stock_genotype_rs = $self->stock_genotypes_rs($c, $stock_obj_rs);
+   
+          my $markers   = $self->extract_project_markers($stock_genotype_rs);
+
+          my @pred_pop_markers = split(/\t/, $markers);
+           
+          print STDERR "\ncheck if prediction populations are genotyped using the same set of markers as for the training population : " . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
+
+          if (@pred_pop_markers ~~ @tr_pop_markers) 
+          {
+                  
+              $cnt++;
+              push @sample_pred_projects, $project_id; 
+       
           }
+      }
        
           last if $cnt == 3;
-      }
   }
 
   return \@sample_pred_projects;
