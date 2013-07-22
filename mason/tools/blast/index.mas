@@ -8,6 +8,7 @@ $dataset_groups => []
 $databases => {}
 $programs
 @input_options => ()
+@parse_options => ()
 $preload_seq => ''
 </%args>
 
@@ -41,6 +42,8 @@ my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_optio
 			      choices => [ @input_options ]
 );
 
+my $parse_options_checkboxes = join "&nbsp;&nbsp;", map { qq{<input type="checkbox" name="$_->[0]">$_->[1]</a>} } @parse_options;
+
 my $db_type = {};
 foreach my $g (keys %$databases) {
   foreach my $d (@{$databases->{$g}}) {  
@@ -52,11 +55,16 @@ my $database_type_json = JSON::Any->encode($db_type);
 print STDERR Data::Dumper::Dumper($database_type_json);
 
 my $q_type = {};
+my $q_example = {};
 foreach my $t (@input_options) {
   $q_type->{$t->[1]} = $t->[2];
+  $q_example->{$t->[1]} = $t->[3];
 }
 print STDERR Data::Dumper::Dumper($q_type);
 my $input_option_json = JSON::Any->encode($q_type);
+my $input_example_json = JSON::Any->encode($q_example);
+
+
 
 print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
@@ -79,6 +87,7 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
 <tr><td><b>Query</b></td><td>
   <% $input_options_select %>
+  <a id="input_example" href="javascript:show_example()" style="font-size: 80%">Show example</a>
 	</td></tr>
 <tr><td colspan="3">
 
@@ -107,6 +116,14 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 ]
 
 &>
+
+<br />
+
+<&| /page/info_section.mas, title=>"Output options", is_subsection=>"1" &>
+<% $parse_options_checkboxes %>
+</&>
+
+
          </td>
       </tr>
       </table>
@@ -135,7 +152,16 @@ jQuery('#dataset_select').change( function() {
    swap_menu(selectedId);
 });
 
+//jQuery('#input_').change( function() { 
+  // jQuery('#input_example').html( input_examples[jQuery('#input_options').val() ] );
+//});
+
+function show_example(input_option) { 
+	 jQuery('#sequence').html( input_examples[jQuery('#input_options').val() ] );
+}
+
 enable_ui();
+
 
 function swap_menu(group_id) { 
    var menu_html = eval( <% JSON::Any->encode($menus) %>);
@@ -144,6 +170,7 @@ function swap_menu(group_id) {
 
 var database_types = eval (<% $database_type_json %>);
 var input_option_types = eval(<% $input_option_json %>);
+var input_examples = eval(<% $input_example_json %>);
 
 function run_blast() { 
    var jobid = 0;
@@ -190,7 +217,7 @@ function run_blast() {
                },
       success: function(response) { if (response.error) { alert("ERROR: "+response.error);
                                      enable_ui();
-                                     exit();
+                                     return;
 }
                                     else{ 
                                       
@@ -200,12 +227,10 @@ function run_blast() {
 
                                   },
 
-      error:   function(response) { alert("An error occurred. The service may not be available right now."); enable_ui(); exit(); }
+      error:   function(response) { alert("An error occurred. The service may not be available right now."); enable_ui(); return; }
    });
 
    var done = false;
-
-
    
    while (done == false) { 
       jQuery.ajax( { 
@@ -220,9 +245,9 @@ function run_blast() {
                 //alert("STatus "+response.status);
             }
           },
-          error: function(response) { alert("An  error occurred. "); enable_ui(); exit; }
+          error: function(response) { alert("An  error occurred. "); enable_ui(); return; }
      });
-     status += ' Running...'; 
+     status += '.'; 
      jQuery('#blast_status').html(status);      
 
    }
@@ -232,7 +257,7 @@ function run_blast() {
 
    jQuery.ajax( { 
        url: '/tools/blast/result/'+jobid,
-       data: { 'format': 'bioperl', 'db_id': database },
+       data: { 'format': 'Bioperl', 'db_id': database },
        async: false,
        success: function(response) { 
           if (response.blast_report) { 

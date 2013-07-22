@@ -41,21 +41,17 @@ sub index :Path('/tools/new-blast/') :Args(0) {
     	    [ $db->blast_db_id(), $db->title(), $db->type() ];
 	}
     }
-    # else { 
-    #     push @{$databases->{ 'other' }}, 
-    #     [ $g->blast_dbs->blast_db_id, $g->blast_dbs->title, $g->blast_dbs->type ];
-    #     $dataset_groups->{'0'}= 'other';
-    # } 
 
+    my $cbsq = CXGN::Blast::SeqQuery->new();
+    my @input_options = sort map { [ $_->name(), $_->name(), $_->type(), $_->example() ] } $cbsq->plugins();
 
-my $cbsq = CXGN::Blast::SeqQuery->new();
-    my @input_options = sort map { [ $_->name(), $_->name(), $_->type()] } $cbsq->plugins();
-
+    my $cbp = CXGN::Blast::Parse->new();
+    my @parse_options = sort map { [ $_->name(), $_->name() ] } $cbp->plugins();
 
     print STDERR "GROUPS: ".Data::Dumper::Dumper($dataset_groups);
     print STDERR "DATASETS: ".Data::Dumper::Dumper($databases);
     $c->stash->{input_options} = \@input_options;
-
+    $c->stash->{parse_options} = \@parse_options;
     $c->stash->{db_id} = $db_id;
     $c->stash->{seq} = $seq;
     $c->stash->{databases} = $databases;

@@ -11,6 +11,10 @@ sub type {
     return 'nucleotide';
 }
 
+sub example { 
+    return "SGN-U222222\nSGN-U222223\nSGN-U222224\n";
+}
+
 sub validate { 
     my $self = shift;
     my $c = shift;

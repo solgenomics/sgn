@@ -4,7 +4,7 @@ package CXGN::Blast::Parse::Plugin::Basic;
 use Moose;
 
 sub name { 
-    return "basic";
+    return "Basic";
 }
 
 sub parse { 

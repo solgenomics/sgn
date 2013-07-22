@@ -14,13 +14,75 @@ use CXGN::Tools::Identifiers;
 use constant MAX_FORMATTABLE_REPORT_FILE_SIZE => 2_000_000;
 
 sub name { 
-    return "bioperl";
+    return "Bioperl";
 }
+
 
 sub parse { 
     my $self = shift;
     my $raw_report_file = shift;
     my $bdb = shift;
+
+# stuff to support AJAXy disambiguation of site xrefs
+print <<EOJS;
+<div id="xref_menu_popup" title="Match information">
+  <dl>
+    <dt>Hit region <span class="region_string"></span></dt>
+      <dd>
+        <div style="margin: 0.5em 0"><a class="match_details" href="">View matched sequence</a></div>
+        <div class="hit_region_xrefs"></div>
+      </dd>
+    <dt>Subject sequence <span class="sequence_name"></span></dt>
+      <dd class="subject_sequence_xrefs">
+      </dd>
+  </dl>
+</div>
+<script>
+
+  function resolve_blast_ident( id, id_region, match_detail_url, identifier_url ) {
+    var popup = jQuery( "#xref_menu_popup" );
+
+    var sequence_name = popup.find('.sequence_name');
+    if( identifier_url == null ) {
+       sequence_name.html( id );
+    } else {
+       sequence_name.html( '<a href="' + identifier_url + '">' + id + '</a>' );
+    }
+
+    popup.find('.region_string').html( id_region );
+
+    popup.find('a.match_details').attr( 'href', match_detail_url );
+
+    // look up xrefs for overall subject sequence
+    var subj = popup.find('.subject_sequence_xrefs');
+    subj.html( '<img src="/img/throbber.gif" /> searching ...' );
+    subj.load( '/api/v1/feature_xrefs?q='+id );
+
+    // look up xrefs for the hit region
+    var region = popup.find('.hit_region_xrefs');
+    region.html( '<img src="/img/throbber.gif" /> searching ...' );
+    region.load( '/api/v1/feature_xrefs?q='+id_region );
+
+    popup.dialog( 'open' );
+    jQuery( "body .ui-widget-overlay").click( function() { popup.dialog( "close" ); } );
+
+    popup.find('a').blur();
+
+    return false;
+  }
+
+  jQuery( "#xref_menu_popup" ).dialog({
+          autoOpen: false,
+          height: 400,
+          width: 680,
+          modal: true
+  });
+
+</script>
+
+EOJS
+
+
 
     # check if $raw_report_file exists
     unless (-e $raw_report_file) {
@@ -34,6 +96,8 @@ sub parse {
     
     #don't do any formatting on report files that are huge
     return $raw_report_file if -s $raw_report_file > MAX_FORMATTABLE_REPORT_FILE_SIZE;
+
+    print STDERR "Starting to format BLAST report...\n";
 
     my $formatted_report_file = $raw_report_file.".formatted.html";
     
@@ -77,6 +141,8 @@ sub parse {
     }
     print $fmt qq|</pre>\n|;
     
+    print STDERR "FORMATTED BLAST REPORT AVAILABLE AT: $formatted_report_file\n";
+
     return $formatted_report_file;
 }
 
