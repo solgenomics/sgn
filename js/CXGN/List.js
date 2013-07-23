@@ -34,13 +34,12 @@ CXGN.List.prototype = {
 
     newList: function(name) { 
 	var oldListId = this.existsList(name);
-	//alert("OLD LIST ID = "+oldListId);
+	var newListId = 0;
 	
 	if (name == '') { 
 	    alert('Please enter a name for the new list.');
 	    return 0;
 	}
-
 
 	if (oldListId === null) { 
 	    jQuery.ajax( { 
@@ -51,10 +50,12 @@ CXGN.List.prototype = {
 		    if (response.error) { 
 			alert(response.error);
 		    }
+		    else { 
+			newListId=response.list_id;
+		    }
 		}
 	    });
-	    //alert("stored list");
-	    return 1;
+	    return newListId;
 	}
 	else { 
 	    alert('A list with name "'+ name + '" already exists. Please choose another list name.');
@@ -240,8 +241,11 @@ CXGN.List.prototype = {
 		duplicates.push(list[n]);
 	    }
 	}
-	lo.renderLists('list_dialog');
-	alert('Duplicate items ('+ duplicates.join(",") + ') were not stored');
+	//lo.renderLists('list_dialog'); // do this after this function was called
+	if (duplicates.length > 0) { 
+	    alert('Duplicate items ('+ duplicates.join(",") + ') were not stored');
+	}
+	return list.length - duplicates.length;
     },
 
     listSelect: function(div_name) { 
@@ -324,6 +328,60 @@ function pasteList(div_name) {
     }
     jQuery('#'+div_name).text(list_text);
 }
+
+function addToListMenu(listMenuDiv, dataDiv) { 
+    var lo = new CXGN.List();
+    
+    var html = '<input type="text" id="'+dataDiv+'_new_list_name" size="8" /><input id="'+dataDiv+'_add_to_new_list" type="button" value="add to new list" /><br />';
+    html += lo.listSelect(dataDiv);
+
+    html += '<input id="'+dataDiv+'_button" type="button" value="add to list" />';
+    
+    jQuery('#'+listMenuDiv).html(html);
+    
+    var list_id = 0;
+
+    jQuery('#'+dataDiv+'_add_to_new_list').click(
+	function() { 
+	    var lo = new CXGN.List();
+	    var new_name = jQuery('#'+dataDiv+'_new_list_name').val();
+	    
+	    var data = getData(dataDiv);
+	    list_id = lo.newList(new_name);
+	    if (list_id > 0) { 
+		var elementsAdded = lo.addToList(list_id, data);
+		alert("Added "+elementsAdded+" list elements to list "+new_name);
+	    }
+	}
+    );
+
+    jQuery('#'+dataDiv+'_button').click( 
+	function() { 
+	    var data = getData(dataDiv);
+	    list_id = jQuery('#'+dataDiv+'_list_select').val();
+	    var elementsAdded = lo.addToList(list_id, data);
+	    alert("Added "+elementsAdded+" list elements.");
+	}
+    );
+}
+
+function getData(id) { 
+    var divType = jQuery("#"+id).get(0).tagName;
+    alert("DIV TYPE="+divType);
+    if (divType == 'DIV' ||  divType === undefined) { 
+	data = jQuery('#'+id).html();
+    }
+    if (divType == 'SELECT') { 
+	data = jQuery('#'+id).val().join("\n");
+    }
+    if (divType == 'TEXTAREA') { 
+	data = jQuery('textarea#'+id).val();
+    }
+    alert("DATA="+data);
+    return data;
+}
+           
+	
 
 function addTextToListMenu(div) { 
     var lo = new CXGN.List();

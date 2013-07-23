@@ -51,11 +51,14 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
 <tr>
 <td></td><td></td><td></td><td>
 <div id="stock_count">&nbsp;</div>
+<div id="add_to_list_menu"></div>
 </td></tr>
 <tr>
 <td></td><td></td><td></td><td>
-  <script>
-    addSelectToListMenu('stock_data');
+  <script defer="defer">
+    jQuery(document).ready(function() { 
+      addToListMenu('add_to_list_menu', 'stock_data');
+    });
   </script>
 </td></tr>
 
