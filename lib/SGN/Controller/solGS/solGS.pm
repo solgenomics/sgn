@@ -2457,7 +2457,10 @@ sub analyzed_traits {
     {                     
         $_ =~ s/gebv_kinship_//;
         $_ =~ s/$model_id|_//g;
-        push @traits, $_;
+        unless ($_ =~ /combined/)
+        {
+            push @traits, $_;
+        }
     }
 
     $c->stash->{analyzed_traits} = \@traits;
