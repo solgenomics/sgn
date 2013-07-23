@@ -289,12 +289,7 @@ sub store {
                             my $stock = $self->schema->resultset("Stock::Stock")->find( { stock_id => $plot_stock_id});
                             my $stock_name = $stock->name;
 ################
-                            my $field_exp = $stock->nd_experiment_stocks->search_related(
-                                'nd_experiments' ,
-                                {
-                                    'type.name' => $field_layout_experiment },
-                                { join => 'type' }
-                                )->single; # there should be one field experiment per plot stock
+                            my $field_exp = $stock->search_related('nd_experiment_stocks')->search_related('nd_experiment')->find({'type.name' => $field_layout_experiment },{ join => 'type' });
                             my $location_id = $field_exp->nd_geolocation_id;
                             my $project = $field_exp->nd_experiment_projects->single ; #there should be one project linked with the field experiment
                             my $project_id = $project->project_id;
