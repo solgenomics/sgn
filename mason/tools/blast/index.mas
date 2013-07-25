@@ -70,6 +70,8 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
 </%perl>
 
+<& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
+
 <& /page/page_title.mas, title=>"BLAST" &>
 
 <&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0 &>
@@ -137,6 +139,7 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
 <&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0 &>
 <table>
+<tr><td><div id="prereqs"></div></td></tr>
 <tr><td><div id="blast_report"></div></td></tr>
   </table>
 </&>
@@ -231,7 +234,8 @@ function run_blast() {
    });
 
    var done = false;
-   
+   var error = false;
+
    while (done == false) { 
       jQuery.ajax( { 
           url: '/tools/blast/check/'+jobid,
@@ -242,18 +246,38 @@ function run_blast() {
                 done = true; 
              }
              else { 
-                //alert("STatus "+response.status);
+                //alert("Status "+response.status);
             }
           },
-          error: function(response) { alert("An  error occurred. "); enable_ui(); return; }
+          error: function(response) { alert("An  error occurred. "); enable_ui(); done=true; error=true;  }
      });
      status += '.'; 
      jQuery('#blast_status').html(status);      
 
    }
 
+   if (error) { return; }
+
    status = status +  "Run complete.";
    jQuery('#blast_status').html(status);
+
+   jQuery.ajax( { 
+       url: '/tools/blast/prereqs/'+jobid,
+       data: { 'format': 'Bioperl' },
+       async: false,
+       success: function(response) { 
+         if (response.error) { 
+            alert("An error occurred fetching prereqs.");
+         }
+         else { 
+           alert("PREREQS: "+response.prereqs);
+           jQuery('#prereqs').html(response.prereqs);
+         }
+       },
+       error: function(response) { 
+         alert("An protocol error occurred."+response);
+       }
+   });
 
    jQuery.ajax( { 
        url: '/tools/blast/result/'+jobid,
@@ -264,13 +288,12 @@ function run_blast() {
               jQuery('#blast_report').html(response.blast_report);
               //alert("BLAST report: "+response.blast_report);
           };
-},
+       },
        error: function(response) { alert("Parse BLAST: An error occurred. "+response.error); }
    });
    
    Effects.swapElements('input_parameter_section_offswitch', 'input_parameter_section_onswitch'); 
    Effects.hideElement('input_parameter_section_content');
-
 
    enable_ui();
 

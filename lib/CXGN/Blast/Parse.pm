@@ -5,6 +5,20 @@ use Moose;
 
 use Module::Pluggable require => 1;
 
+sub prereqs { 
+    my $self = shift;
+    my $method = shift;
+
+    my $prereqs = "";
+
+    foreach my $p ($self->plugins()) { 
+	if ($method eq $p->name()) { 
+	    $prereqs = $p->prereqs();
+	}
+    }
+    return $prereqs;
+}
+
 sub parse { 
     my $self = shift;
     my $method = shift;

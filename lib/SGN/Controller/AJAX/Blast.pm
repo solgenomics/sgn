@@ -270,7 +270,7 @@ sub check : Path('/tools/blast/check') Args(1) {
 	# rather than STDOUT from the job.  Use the out_file_override
 	# parameter if this is the case.
 	#my $out_file = $out_file_override || $job->out_file();
-	system("ls /data/prod/tmp 2>&1 >/dev/null");
+	system("ls $c->{config}->{cluster_shared_tempdir} 2>&1 >/dev/null");
 	copy($job_out_file, $result_file)
 	    or die "Can't copy result file '$job_out_file' to $result_file ($!)";
 	
@@ -283,6 +283,17 @@ sub check : Path('/tools/blast/check') Args(1) {
     }
 }
 
+# fetch some html/js required for displaying the parse report
+sub get_prereqs : Path('/tools/blast/prereqs') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $jobid = shift;
+
+    my $format=$c->req->param('format');
+    my $parser = CXGN::Blast::Parse->new();
+    my $prereqs = $parser->prereqs($format);
+    $c->stash->{rest} = { prereqs => $prereqs };
+}
 
 sub get_result : Path('/tools/blast/result') Args(1) { 
     my $self = shift;

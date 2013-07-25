@@ -17,14 +17,10 @@ sub name {
     return "Bioperl";
 }
 
+sub prereqs { 
 
-sub parse { 
-    my $self = shift;
-    my $raw_report_file = shift;
-    my $bdb = shift;
-
-# stuff to support AJAXy disambiguation of site xrefs
-print <<EOJS;
+    # stuff to support AJAXy disambiguation of site xrefs
+return <<EOJS;
 <div id="xref_menu_popup" title="Match information">
   <dl>
     <dt>Hit region <span class="region_string"></span></dt>
@@ -82,7 +78,12 @@ print <<EOJS;
 
 EOJS
 
+}
 
+sub parse { 
+    my $self = shift;
+    my $raw_report_file = shift;
+    my $bdb = shift;
 
     # check if $raw_report_file exists
     unless (-e $raw_report_file) {
@@ -95,7 +96,10 @@ EOJS
     
     
     #don't do any formatting on report files that are huge
-    return $raw_report_file if -s $raw_report_file > MAX_FORMATTABLE_REPORT_FILE_SIZE;
+    if (-s $raw_report_file > MAX_FORMATTABLE_REPORT_FILE_SIZE) { 
+	print STDERR "raw report too large ".(-s $raw_report_file)."\n";
+	return $raw_report_file;
+    }
 
     print STDERR "Starting to format BLAST report...\n";
 
@@ -114,12 +118,15 @@ EOJS
     sub linkit {
         my $bdb = shift;
         my $s = shift;
-	
+
         $s =~ s/^lcl\|//;
         my $url = $bdb->lookup_url || CXGN::Tools::Identifiers::identifier_url($s);
+	print STDERR "CHECKING ID $s FOR URL... found $url\nLOOKUPURL: ".$bdb->lookup_url."\n".CXGN::Tools::Identifiers::identifier_url($s)."\n";
         return qq { <a class="blast_match_ident" href="$url">$s</a> };
     }
     
+    
+    print STDERR "Parse file $raw_report_file using bioperl...\n";
     my $in = Bio::SearchIO->new(-format => 'blast', -file   => "< $raw_report_file")
 	or die "$! opening $raw_report_file for reading";
     my $writer = $self->make_bioperl_result_writer( $bdb->blast_db_id() );
@@ -128,18 +135,18 @@ EOJS
 	);
     $out->write_result($in->next_result);
     
-    open my $raw,$raw_report_file
-	or die "$! opening $raw_report_file for reading";
-    open my $fmt,'>',$formatted_report_file
-	or die "$! opening $formatted_report_file for writing";
+    # open my $raw,$raw_report_file
+    # 	or die "$! opening $raw_report_file for reading";
+    # open my $fmt,'>',$formatted_report_file
+    # 	or die "$! opening $formatted_report_file for writing";
     
-    print $fmt qq|<pre>|;
-    while (my $line = <$raw>) {
-	$line = encode_entities($line);
-	$line =~ s/(?<=Query[=:]\s)(\S+)/linkit($bdb,$MATCH)/eg;
-	print $fmt $line;
-    }
-    print $fmt qq|</pre>\n|;
+    # print $fmt qq|<pre>|;
+    # while (my $line = <$raw>) {
+    # 	$line = encode_entities($line);
+    # 	$line =~ s/(?<=Query[=:]\s)(\S+)/linkit($bdb,$MATCH)/eg;
+    # 	print $fmt $line;
+    # }
+    # print $fmt qq|</pre>\n|;
     
     print STDERR "FORMATTED BLAST REPORT AVAILABLE AT: $formatted_report_file\n";
 
@@ -150,7 +157,10 @@ sub make_bioperl_result_writer {
     my $self = shift;
     my $db_id = shift;
 
+    print STDERR "MAKE_BIOPERL_RESULT_WRITER\n";
+
     my $writer = Bio::SearchIO::Writer::HTMLResultWriter->new;
+
     
     $writer->id_parser( sub {
 	my ($idline) = @_;
@@ -165,15 +175,18 @@ sub make_bioperl_result_writer {
     });
     
     my $hit_link = sub {
+
 	my ($self, $hit, $result) = @_;
-	
+
+	print STDERR "HIT LINK: $hit->name, $result\n";
+
 	my $id = $hit->name;
 	
 	#see if we can link it as a CXGN identifier.  Otherwise,
 	#use the default bioperl link generat	
 	my $identifier_url = CXGN::Tools::Identifiers::identifier_url( $id );
 	my $js_identifier_url = $identifier_url ? "'$identifier_url'" : 'null';
-		
+	
 	my $region_string = $id.':'.join('..', minmax map { $_->start('subject'), $_->end('subject') } $hit->hsps );
 	
 	my $coords_string =
