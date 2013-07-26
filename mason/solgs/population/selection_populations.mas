@@ -38,7 +38,7 @@ $prediction_pop_analyzed_traits => ''
      data        => $list_of_prediction_pops,
     __alt_freq   => 2,
     __alt_width  => 1,
-    __align      => 'l'
+    __align      => 'llllll'
 &>
 
 </div>

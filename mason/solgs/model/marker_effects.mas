@@ -34,7 +34,7 @@ $marker_effects_download_url =>''
   __alt_freq   => 2,
   __alt_width  => 1,
   __alt_offset => 3,
-  __align      => 'l',
+  __align      => 'll',
 &>
 
 <br />
