@@ -64,7 +64,7 @@ $trait_rows .= qq | <tr><td> <input type = "hidden" name="prediction_pop_name" v
 
 <& /util/import_javascript.mas, classes => [ "solGS.rankGenotypes"] &>
 
-<link rel="stylesheet" href="/static/solgs/solgs.css" type="text/css" />
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 %if (@$analyzed_traits > 1 )
 %{
