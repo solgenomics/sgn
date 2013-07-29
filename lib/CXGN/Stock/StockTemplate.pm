@@ -20,13 +20,13 @@ CXGN::Stock::StockTemplate - an object to handle SGN stock data uploaded from a 
 
 =cut
 
-
 use strict;
 use warnings;
 use Moose;
 use Bio::Chado::Schema;
 use Try::Tiny;
-
+use Digest::MD5;
+use File::Basename qw | basename |;
 use Spreadsheet::ParseExcel;
 
 
@@ -50,15 +50,29 @@ has 'parse_errors' => (
 has 'verify_errors' => (
     is => 'rw'
     );
+
 has 'warnings' => (
     is => 'rw'
     );
+
 has 'store_error' => (
     is => 'rw'
     );
+
 has 'store_message' => (
     is => 'rw'
     );
+
+has 'filename' => (
+    is => 'rw',
+    isa => 'Str',
+    );
+
+has 'user_id' => (
+    is => 'rw',
+    isa => 'Int',
+    );
+
 
 sub parse {
 ################################ 
@@ -249,6 +263,9 @@ sub store {
     my $self = shift;
     my $schema = $self->schema;
     my $hashref = $self->parsed_data;
+    my $filename = $self->filename();
+    my $user_id = $self->user_id();
+
     my $message;
 
     my $coderef = sub {
@@ -365,24 +382,51 @@ sub store {
                     }
                 }
             }
-	  }
+	}
+
+	
     };
     my $error;
     print "STDERR coderef: $coderef\n";
     print "STDERR schema: $schema\n";
     try {
         $schema->txn_do($coderef);
-        #$error = "Store completed!";
     } catch {
         # Transaction failed
         $error =  "An error occured! Cannot store data! <br />" . $_ . "\n";
     };
+
     if ($error) {
       $self->store_error($error);
     }
+    else { 
+	open(my $F, "<", $self->filename()) || die "Can't open file ".$self->filename();
+	binmode $F;
+	my $md5 = Digest::MD5->new();
+	$md5->addfile($F);
+	close($F);
+
+	my $md_row = $schema->resultset("CXGN::Metadata::Schema::Metadata")->create(
+	    create_person_id => $user_id,
+	    );
+	$md_row->insert();
+
+	my $file_row = $schema->resultset("CXGN::Metadata::Schema::Files")->create(
+	    basename => basename($self->filename()),
+	    dirname => dirname($self->filename()),
+	    filetype => '',
+	    md5checksum => $md5->digest(),
+	    );
+	$file_row->insert();
+    }
+	    
+	
     if ($message) {
       $self->store_message($message);
     }
+
+    
+
 }
 
 ###

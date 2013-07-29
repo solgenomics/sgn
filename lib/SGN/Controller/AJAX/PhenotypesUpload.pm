@@ -19,7 +19,10 @@ package SGN::Controller::AJAX::PhenotypesUpload;
 
 use Moose;
 use Try::Tiny;
+use DateTime;
 use File::Slurp;
+use File::Spec::Functions;
+use File::Copy;
 use List::MoreUtils qw /any /;
 use SGN::View::ArrayElements qw/array_elements_simple_view/;
 use CXGN::Stock::StockTemplate;
@@ -47,7 +50,8 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   my $upload_file_temporary_full_path;
   my $operator_directory;
   my $upload_file_archive_full_path;
-  my $timestamp = localtime(time);
+  my $time = DateTime->now();
+  my $timestamp = $time->ymd()."_".$time->hms();
   my %parsed_header;
 
 
@@ -57,6 +61,7 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   if (!-d $archive_path) {
     mkdir $archive_path;
   }
+
 
   if (!$c->user()) {  #user must be logged in
     $c->stash->{rest} = {error => "You need to be logged in to upload a file." };
@@ -71,7 +76,16 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     return;
   }
   $upload_file_name = $upload->tempname;
+  my $upload_original_name = $upload->filename();
   $upload_file_name =~ s/\/tmp\///;
+
+  my $user_id = $c->user()->get_object()->get_sp_person_id();
+  my $archived_file_name = catfile($user_id, $timestamp."_".$upload_original_name);
+  
+  if (! -d catfile($archive_path, $user_id)) { 
+      mkdir (catfile($archive_path, $user_id));
+  }
+      
   $upload_file_temporary_directory = $archive_path.'/tmp/';
   if (!-d $upload_file_temporary_directory) {
     mkdir $upload_file_temporary_directory;
@@ -151,6 +165,9 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     return;
   }
 
+  $stock_template->filename($upload_file_archive_full_path);
+  $stock_template->user_id($user_id);
+  
   try {
     $stock_template->store();
   } catch {
@@ -171,6 +188,8 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     unlink $upload_file_archive_full_path;
     return;
   }
+
+  move($upload_file_temporary_full_path, catfile($archive_path, $archived_file_name));
   $c->stash->{rest} = {success => 1 };
   print STDERR "Finishing\n";
 }
