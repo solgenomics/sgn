@@ -17,7 +17,7 @@ $page_links => ''
      data        => $result,
     __alt_freq   => 2,
     __alt_width  => 1,
-    __align      => 'l'
+    __align      => 'llll'
 &>
  
 %if ($pager)

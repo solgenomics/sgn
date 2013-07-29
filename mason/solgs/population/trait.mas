@@ -38,7 +38,7 @@ $analyzed_traits => ''
   &>
 
 
-<link rel="stylesheet" href="/static/solgs/solgs.css" type="text/css" />
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 <& /page/page_title.mas, 
    title => "Genomic Selection Model for $trait_abbr in $project_name"

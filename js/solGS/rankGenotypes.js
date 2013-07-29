@@ -142,7 +142,7 @@ var rankGenotypes = {
                             genos = res.genotypes;
                             var download_link = res.link;
                           
-                            table = '<table  style="padding: 1px; width:75%;">';
+                            table = '<table  style="text-align:left; border:0px; padding: 1px; width:75%;">';
                             table += '<tr><th>Genotypes</th><th>Weighted Mean</th></tr>';
                        
                             var sorted = []; 
@@ -152,7 +152,7 @@ var rankGenotypes = {
                             }
 
                             for (var i=0; i<sorted.length; i++) {
-                                table += '<tr class="columnar_table bgcoloralt1">';
+                                table += '<tr>';
                                 table += '<td>' 
                                       + sorted[i][0] + '</td>' + '<td>' 
                                       + sorted[i][1] + '</td>';

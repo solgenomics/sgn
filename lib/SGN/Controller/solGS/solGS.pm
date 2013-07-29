@@ -55,25 +55,6 @@ The root page (/)
 #     $c->forward('search');
 # }
 
-sub gs :Path('/gs')  { 
-     my ($self, $c) = @_;
-     $c->res->redirect("/solgs/search");
-
- }
-
-
-sub solgs  :Path('/solgs') { 
-     my ($self, $c) = @_;
-     $c->res->redirect("/solgs/search");
-
- }
-
-
-sub search_solgs  :Path('/search/solgs') { 
-     my ($self, $c) = @_;
-     $c->res->redirect("/solgs/search");
- }
-
 
 sub submit :Path('/solgs/submit/intro')  Args(0) {
     my ($self, $c) = @_;
@@ -1188,7 +1169,7 @@ sub gebv_rel_weights {
     
     my $pop_id      = $c->stash->{pop_id};
   
-    my $rel_wts = "trait" . 'relative_weight' . "\n";
+    my $rel_wts = "trait" . "\t" . 'relative_weight' . "\n";
     foreach my $tr (keys %$params)
     {      
         my $wt = $params->{$tr};
@@ -2457,7 +2438,10 @@ sub analyzed_traits {
     {                     
         $_ =~ s/gebv_kinship_//;
         $_ =~ s/$model_id|_//g;
-        push @traits, $_;
+        unless ($_ =~ /combined/)
+        {
+            push @traits, $_;
+        }
     }
 
     $c->stash->{analyzed_traits} = \@traits;
