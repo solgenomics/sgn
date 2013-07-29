@@ -1018,7 +1018,7 @@ sub prediction_pop_analyzed_traits {
     closedir $dh; 
 
     my @copy_files = @files;
-    my @trait_ids = map { s/prediction_pop_gebvs_|($training_pop_id)|($prediction_pop_id)|_//g ? $_ : 0} @copy_files;
+    my @trait_ids = map { s/prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}_//g ? $_ : 0} @copy_files;
 
     my @traits = ();
 
