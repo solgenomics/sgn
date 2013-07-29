@@ -1169,7 +1169,7 @@ sub gebv_rel_weights {
     
     my $pop_id      = $c->stash->{pop_id};
   
-    my $rel_wts = "trait" . 'relative_weight' . "\n";
+    my $rel_wts = "trait" . "\t" . 'relative_weight' . "\n";
     foreach my $tr (keys %$params)
     {      
         my $wt = $params->{$tr};
