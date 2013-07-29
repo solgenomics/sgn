@@ -41,7 +41,7 @@ sub upload_phenotype_spreadsheet :  Path('/ajax/phenotype/upload_spreadsheet') :
 
 sub upload_phenotype_spreadsheet_POST : Args(0) {
   my ($self, $c) = @_;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'CXGN::Metadata::Schema', 'sgn_chado');
   my $error;
   my $stock_template = new CXGN::Stock::StockTemplate(schema => $schema);
   my $upload = $c->req->upload('upload_phenotype_spreadsheet_file_input');
