@@ -55,6 +55,11 @@ The root page (/)
 #     $c->forward('search');
 # }
 
+sub solgs : Path('/solgs'){
+    my ($self, $c) = @_;
+    $c->forward('search');
+}
+
 
 sub submit :Path('/solgs/submit/intro')  Args(0) {
     my ($self, $c) = @_;
