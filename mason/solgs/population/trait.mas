@@ -9,6 +9,7 @@ $marker_effects_download_url
 $top_marker_effects
 $validation_download_url
 $trait_abbr
+$trait_name
 $project_name
 $project_desc
 $stocks_no
@@ -41,7 +42,7 @@ $analyzed_traits => ''
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 <& /page/page_title.mas, 
-   title => "Genomic Selection Model for $trait_abbr in $project_name"
+   title => "Genomic Selection Model for $trait_name ($trait_abbr) in $project_name"
 &>
 
 <&| /page/info_section.mas, 
