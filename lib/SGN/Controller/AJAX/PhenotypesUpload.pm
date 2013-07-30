@@ -83,6 +83,8 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   my $user_id = $c->user()->get_object()->get_sp_person_id();
   my $archived_file_name = catfile($user_id, $timestamp."_".$upload_original_name);
   
+
+
   if (! -d catfile($archive_path, $user_id)) { 
       mkdir (catfile($archive_path, $user_id));
   }
@@ -129,22 +131,22 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     $c->stash->{rest} = {error => "Cound not get trial name from spreadsheet"};
     return;
   }
-  $operator_directory = $archive_path.'/'.$parsed_header{'operator'};
-  if (!-d $operator_directory) {
-    mkdir $operator_directory;
-  }
-  $upload_file_archive_full_path = $operator_directory.'/'.$parsed_header{'trial_name'}.$timestamp.".xls";
+  #$operator_directory = $archive_path.'/'.$parsed_header{'operator'};
+  #if (!-d $operator_directory) {
+  #  mkdir $operator_directory;
+  #}
+  #$upload_file_archive_full_path = $operator_directory.'/'.$parsed_header{'trial_name'}.$timestamp.".xls";
 
-  try {
-    write_file($upload_file_archive_full_path, $upload->slurp);
-  } catch {
-    $c->stash->{rest} = {error => "Could not save spreadsheet file: $_"};
-    $error=1;
-  };
+  #try {
+  #  write_file($upload_file_archive_full_path, $upload->slurp);
+  #} catch {
+  #  $c->stash->{rest} = {error => "Could not save spreadsheet file: $_"};
+  #  $error=1;
+  #};
   if ($error) {
     return;
   }
-  unlink $upload_file_temporary_full_path;
+  #unlink $upload_file_temporary_full_path;
   print STDERR "Verifying\n";
 
   try {
@@ -154,7 +156,7 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     $error=1;
   };
   if ($error) {
-    unlink $upload_file_archive_full_path;
+    #unlink $upload_file_archive_full_path;
     return;
   }
   if ($stock_template->verify_errors()) {
@@ -162,13 +164,13 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     $c->stash->{rest} = {
 			 error => "Spreadsheet did not pass verification",
 			 error_list_html => $verify_errors_html, };
-    unlink $upload_file_archive_full_path;
+    #unlink $upload_file_archive_full_path;
     return;
   }
 
-  $stock_template->filename($upload_file_archive_full_path);
+  $stock_template->filename($upload_file_temporary_full_path);
   $stock_template->user_id($user_id);
-  
+
   try {
     $stock_template->store();
   } catch {
@@ -190,8 +192,12 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     return;
   }
 
-  move($upload_file_temporary_full_path, catfile($archive_path, $archived_file_name));
+  
+  my $file_destination =  catfile($archive_path, $archived_file_name);
+  print STDERR "from: $upload_file_temporary_full_path \nto: $file_destination \n";
+  move($upload_file_temporary_full_path,$file_destination);
   $c->stash->{rest} = {success => 1 };
+
   print STDERR "Finishing\n";
 }
 
