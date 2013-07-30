@@ -140,7 +140,7 @@ background-color: #ccc;
 <div id="trial_saved_dialog_message" title="Trial saved">
   <p>
     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    The trial was sucessfully saved
+    The trial was saved successfully
   </p>
 </div>
 

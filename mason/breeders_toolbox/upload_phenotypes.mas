@@ -72,8 +72,8 @@ jQuery(document).ready(function() {
             }
             if (response.success) {
 		alert("Spreadsheet file stored successfully");
-		//jQuery('#upload_phenotype_spreadsheet_dialog').dialog("close"); 
-                //location.reload();
+		jQuery('#upload_phenotype_spreadsheet_dialog').dialog("close"); 
+                window.location.reload();
             }
 	}
     });
