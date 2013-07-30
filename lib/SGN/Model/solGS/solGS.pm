@@ -238,9 +238,8 @@ sub genotype_data {
     
         my $markers_no = scalar(split(/\t/, $markers));
 
-        print STDERR "\nmarkers no.: $markers_no\n\n";
         my @stocks = ();
-
+        my $cnt_clones_diff_markers;
         while (my $geno = $stock_genotype_rs->next)
         {
             my $stock = $geno->get_column('stock_name');
@@ -250,22 +249,28 @@ sub genotype_data {
             {
                 my $geno_values = $self->stock_genotype_values($geno);
                 my $geno_values_no = scalar(split(/\t/, $geno_values));
-                print STDERR "\ngeno values no.: $geno_values_no\n\n";
+               
                 if($geno_values_no - 1 == $markers_no )
                 {
                     $geno_data .=  $geno_values;
-                     push @stocks, $stock;
+                    push @stocks, $stock;
                 }
                 else 
                 {
-                    print STDERR "\n$stock was genotyped using a different GBS markers than the ones on the header. It will excluded from the training population set.\n\n";
+                    $cnt_clones_diff_markers++;                                     
                 }
                
             }  
         }
 
         $c->stash->{genotype_data} = $geno_data; 
-    }  
+        
+        print STDERR "\n$cnt_clones_diff_markers clones were  genotyped using a 
+                        different GBS markers than the ones on the header. 
+                        They are excluded from the training set.\n\n";
+    } 
+     
+   
 
 }
 
@@ -318,14 +323,11 @@ sub stock_genotype_values {
     my $geno_values .= $geno_row->get_column('stock_name') . "\t";    
     my $json_values  = $geno_row->value;
     my $values       = JSON::Any->decode($json_values);
-
-    my @markers = keys %$values;
-    my $m_c = scalar(@markers); my $v_c = scalar(values %$values);
-    print STDERR "count markers and values: $m_c\t$v_c\n"; 
-   
+    my @markers      = keys %$values;
+       
     my $round =  Math::Round::Var->new(0);
     
-    foreach my $marker (keys %$values) 
+    foreach my $marker (@markers) 
     {
         my $genotype =  $values->{$marker};
         $geno_values .= $genotype =~ /\d+/g ? $round->round($genotype) : $genotype;       
@@ -424,13 +426,16 @@ sub phenotypes_by_trait {
     my %cvterms ; #hash for unique cvterms
     my $replicate = 1;
     my $cvterm_name;
+ 
+    no warnings 'uninitialized';
+
     foreach my $rs (@$phenotypes) 
     {
         while ( my $r =  $rs->next )  
         {
             my $observable = $r->get_column('observable');
             next if !$observable;
-            no warnings 'uninitialized';
+           
             if ($cvterm_name eq $observable) { $replicate ++ ; } else { $replicate = 1 ; }
             $cvterm_name = $observable;
             my $accession = $r->get_column('accession');
