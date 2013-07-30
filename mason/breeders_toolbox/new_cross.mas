@@ -196,8 +196,8 @@ foreach my $role (@roles) {
       autoOpen: false,
       buttons: { "Cancel" :  function() { jQuery("#create_cross").dialog("close"); }, "Submit": function() { add_cross() }  },
       modal: true,
-      width: 550,
-      height: 400
+      width: 750,
+      autoResize:true,
     });
 
    jQuery("#cross_type").change(function(){
