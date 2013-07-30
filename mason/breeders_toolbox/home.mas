@@ -51,6 +51,8 @@ $deleted_phenotype_files => undef
 %# </&>
 
 <a href="/search/phenotypes/stock">Phenotype search</a><br /><br />
+  <& /breeders_toolbox/upload_phenotypes.mas &>  
+
 
 <&| /page/info_section.mas, title=>'Uploaded Files', is_subsection=>1 &>
   
