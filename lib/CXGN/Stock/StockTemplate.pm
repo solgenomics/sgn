@@ -26,11 +26,16 @@ use Moose;
 use Bio::Chado::Schema;
 use Try::Tiny;
 use Digest::MD5;
-use File::Basename qw | basename |;
+use File::Basename qw | basename dirname|;
 use Spreadsheet::ParseExcel;
 
 
 has 'schema' => (
+    is  => 'rw',
+    isa =>  'DBIx::Class::Schema',
+    );
+
+has 'metadata_schema' => (
     is  => 'rw',
     isa =>  'DBIx::Class::Schema',
     );
@@ -262,6 +267,7 @@ sub verify {
 sub store {
     my $self = shift;
     my $schema = $self->schema;
+    my $metadata_schema = $self->metadata_schema;
     my $hashref = $self->parsed_data;
     my $filename = $self->filename();
     my $user_id = $self->user_id();
@@ -406,17 +412,17 @@ sub store {
 	$md5->addfile($F);
 	close($F);
 
-	my $md_row = $schema->resultset("CXGN::Metadata::Schema::Metadata")->create(
+	my $md_row = $metadata_schema->resultset("MdMetadata")->create({
 	    create_person_id => $user_id,
-	    );
+	    });
 	$md_row->insert();
 
-	my $file_row = $schema->resultset("CXGN::Metadata::Schema::Files")->create(
+	my $file_row = $metadata_schema->resultset("MdFiles")->create({
 	    basename => basename($self->filename()),
 	    dirname => dirname($self->filename()),
 	    filetype => '',
 	    md5checksum => $md5->digest(),
-	    );
+	    });
 	$file_row->insert();
     }
 	    
