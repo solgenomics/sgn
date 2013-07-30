@@ -1,0 +1,19 @@
+
+<%docs>
+$files_ref => undef
+</%docs>
+
+<%args>
+
+</%args>
+
+<&| /page/info_section.mas, title=>"Uploaded files", is_subsection=>1 &>
+
+<table cellpadding="5" alt="">
+% foreach $f (keys(%$files_ref)) { 
+  <tr><td><% $f->{filename} %></td><td><% $f->{upload_time} %></td><td><a href="">delete</a>| <a href="">view</a></td></tr>
+% }
+</table>
+
+
+</&>
