@@ -64,6 +64,8 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
     my $latitude    = $params->{latitude};
     my $altitude    = $params->{altitude};
 
+    print STDERR "\nlocation desc: $description long:$longitude\n";
+
     if (! $c->user()) { # redirect
 	$c->stash->{rest} = { error => 'You must be logged in to add a location.' };
 	return;
@@ -83,18 +85,22 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
 	return;
     }
 
-    my $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')->new( 
-	{ 
-	    description => $description,
-	    longitude   => $longitude,
-	    latitude    => $latitude,
-	    altitude    => $altitude,
-	});
-
+    my $new_row;
+    $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
+      ->new({
+	     description => $description,
+	    });
+    if ($longitude) {
+      $new_row->longitude($longitude);
+    }
+    if ($latitude) {
+      $new_row->latitude($latitude);
+    }
+    if ($altitude) {
+      $new_row->altitude($altitude);
+    }
     $new_row->insert();
-
     $c->stash->{rest} = { success => 1, error => '' };
-    
 }
 
 
