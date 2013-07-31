@@ -37,7 +37,7 @@ $descriptive_stat
 <button id="phenozoom-reset">Reset zoom</button>
 <br/>
 <br/>
-<h1 style="text-align:center">Overview</h1>
+<h3 style="text-align:center">Overview</h3>
 <div id="phenoPlotOverview"> 
 </div>
  
