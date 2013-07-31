@@ -170,7 +170,9 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     return;
   }
 
-  $stock_template->filename($upload_file_temporary_full_path);
+  my $file_destination =  catfile($archive_path, $archived_file_name);
+  $stock_template->filename($file_destination);
+  $stock_template->tmp_filename($upload_file_temporary_full_path);
   $stock_template->user_id($user_id);
 
   try {
@@ -195,7 +197,7 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   }
 
   
-  my $file_destination =  catfile($archive_path, $archived_file_name);
+
   print STDERR "from: $upload_file_temporary_full_path \nto: $file_destination \n";
   move($upload_file_temporary_full_path,$file_destination);
   $c->stash->{rest} = {success => 1 };

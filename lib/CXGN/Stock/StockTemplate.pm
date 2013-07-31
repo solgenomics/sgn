@@ -73,6 +73,11 @@ has 'filename' => (
     isa => 'Str',
     );
 
+has 'tmp_filename' => (
+    is => 'rw',
+    isa => 'Str',
+    );
+
 has 'user_id' => (
     is => 'rw',
     isa => 'Int',
@@ -406,7 +411,7 @@ sub store {
       $self->store_error($error);
     }
     else { 
-	open(my $F, "<", $self->filename()) || die "Can't open file ".$self->filename();
+	open(my $F, "<", $self->tmp_filename()) || die "Can't open file ".$self->filename();
 	binmode $F;
 	my $md5 = Digest::MD5->new();
 	$md5->addfile($F);
