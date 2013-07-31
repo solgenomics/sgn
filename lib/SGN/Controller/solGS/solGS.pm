@@ -174,10 +174,15 @@ sub projects_links {
         my $pr_year     = $projects->{$pr_id}{project_year};
         my $pr_location = $projects->{$pr_id}{project_location};
                
-        #my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" /> </form> |;
-        push @projects_pages, [ qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
+        my $dummy_name = $pr_name =~ /test\w*/ig;
+        my $dummy_desc = $pr_desc =~ /test\w*/ig;
+
+        unless ($dummy_name | $dummy_desc ) 
+        {
+            push @projects_pages, [ qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
                                $pr_desc, $pr_location, $pr_year
-        ];
+            ];
+        }
     }
 
     $c->stash->{projects_pages} = \@projects_pages;
