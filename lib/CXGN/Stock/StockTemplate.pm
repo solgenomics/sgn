@@ -422,6 +422,7 @@ sub store {
 	    dirname => dirname($self->filename()),
 	    filetype => '',
 	    md5checksum => $md5->digest(),
+	    metadata_id => $md_row->metadata_id(),
 	    });
 	$file_row->insert();
     }

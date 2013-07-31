@@ -318,7 +318,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 	    while (my $file_row = $file_rs->next()) { 
 		push @$file_info, { basename => $file_row->basename,
 				    dirname  => $file_row->dirname,
-				    file_type => $file_row->file_type,
+				    file_type => $file_row->filetype,
 				    md5checksum => $file_row->md5checksum,
 				    create_date => $md_row->create_date,
 		};
@@ -328,7 +328,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 	    while (my $file_row = $file_rs->next()) { 
 		push @$deleted_file_info, { basename => $file_row->basename,
 					    dirname => $file_row->dirname,
-					    file_type => $file_row->file_type,
+					    file_type => $file_row->filetype,
 					    md5checksum => $file_row->md5checksum,
 					    create_date => $md_row->create_date,
 		};
