@@ -8,6 +8,7 @@
   $sp_person_autocomplete_uri => '/ajax/people/autocomplete'
   $trait_autocomplete_uri     => '/ajax/stock/trait_autocomplete'
   $onto_autocomplete_uri      => '/ajax/cvterm/autocomplete'
+  $trait_db_name              => 'SP'
 </%args>
 
 <%once>
@@ -68,5 +69,6 @@ my $new_stock_link = qq| <a href="/stock/0/new">Submit new stock</a> \| <a href=
     sp_person_autocomplete_uri => $sp_person_autocomplete_uri,
     trait_autocomplete_uri     => $trait_autocomplete_uri,
     onto_autocomplete_uri      => $onto_autocomplete_uri,
+    trait_db_name              => $trait_db_name,
   &>
 </&>

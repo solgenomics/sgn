@@ -22,11 +22,6 @@ javascript:
         });
     });
 elements:
-    - type: Checkbox
-      name: advanced
-      label: Advanced
-      id: advanced_toggle
-      default: 0
 
     - type: Text
       name: stock_name

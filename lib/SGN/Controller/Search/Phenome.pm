@@ -32,7 +32,10 @@ sub trait_search : Path('/search/phenotypes/traits') Args(0) {
     my $c = shift;
     my $db_name = $c->config->{trait_ontology_db_name} || 'SP';
     $c->stash->{db_name} = $db_name;
-    $c->stash->{template} = '/search/phenotypes/traits.mas';
+    $c->stash(
+	template => '/search/phenotypes/traits.mas',
+	trait_db_name => $db_name,
+	);
 }
 
 

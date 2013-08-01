@@ -5,6 +5,7 @@
   $sp_person_autocomplete_uri
   $trait_autocomplete_uri
   $onto_autocomplete_uri
+  $trait_db_name => 'SP'
 </%args>
 
 <& /util/import_javascript.mas,
@@ -48,7 +49,7 @@ div.paginate_nav {
         source: '<% $trait_autocomplete_uri %>'
      });
      jQuery("#onto").autocomplete({
-        source: '<% $onto_autocomplete_uri %>' + "?db_name=SP"
+        source: '<% $onto_autocomplete_uri %>' + "?db_name=" + '<% $trait_db_name %>'
      });
      jQuery("#stock_name").autocomplete({
         source: '/ajax/stock/stock_autocomplete',
