@@ -38,11 +38,14 @@ my $show_graphics_select = $m->scomp('/page/html_select.mas',  name => 'output_g
 				 ],
 				 ),
 
+print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
 my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', id=>'input_options',
-			      choices => [ @input_options ]
+			      choices => \@input_options
 );
 
-my $parse_options_checkboxes = join "&nbsp;&nbsp;", map { qq{<input type="checkbox" name="$_->[0]">$_->[1]</a>} } @parse_options;
+my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', choices => [ map { $_->[0] } @parse_options ], multiple=>1, select=> [ sort (map { $_->[0] } @parse_options) ] );
+
+#my $parse_options_checkboxes = join "&nbsp;&nbsp;", map { qq{<input type="checkbox" name="$_->[0]">$_->[1]</a>} } @parse_options;
 
 my $db_type = {};
 foreach my $g (keys %$databases) {
@@ -52,7 +55,7 @@ foreach my $g (keys %$databases) {
 }
 my $database_type_json = JSON::Any->encode($db_type);
 
-print STDERR Data::Dumper::Dumper($database_type_json);
+#print STDERR Data::Dumper::Dumper($database_type_json);
 
 my $q_type = {};
 my $q_example = {};
@@ -60,13 +63,13 @@ foreach my $t (@input_options) {
   $q_type->{$t->[1]} = $t->[2];
   $q_example->{$t->[1]} = $t->[3];
 }
-print STDERR Data::Dumper::Dumper($q_type);
+#print STDERR Data::Dumper::Dumper($q_type);
 my $input_option_json = JSON::Any->encode($q_type);
 my $input_example_json = JSON::Any->encode($q_example);
 
 
 
-print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
+#print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
 </%perl>
 
@@ -99,8 +102,6 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
       <table width="100%"><tr>
          <td>
 
-
-
 <& /page/info_table.mas, title=>'', data => [ 
   'Expect (e-value) Threshold' => '<input id="evalue" type="text" size="6" value="1e-10" name="expect" />',
   'Substitution Matrix' => $substitution_matrix_select,
@@ -108,7 +109,6 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
   'Show Graphics' => $show_graphics_select, 
   'Filter' => '<input type="checkbox" name="filterq" checked="1" />',
   '  ' => '<div style="text-align: right">
-
 
 <input id="clear_button" type="button" value="Clear" onclick="clear_input_sequence(); "/> <input id="submit_button" type="submit" name="search" value="Search" onclick="javascript:run_blast();" /></div>',
   __multicol => 3,
@@ -121,11 +121,11 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
 <br />
 
+
+
 <&| /page/info_section.mas, title=>"Output options", is_subsection=>"1" &>
-<% $parse_options_checkboxes %>
+<% $parse_options_select %>
 </&>
-
-
          </td>
       </tr>
       </table>
@@ -137,7 +137,7 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
   <div id="blast_status">Please select your input parameters.</div>
 </&>
 
-<&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a href="javascript:download();">Download</a>' &>
 <table>
 <tr><td><div id="prereqs"></div></td></tr>
 <tr><td><div id="blast_report"></div></td></tr>
@@ -147,6 +147,7 @@ print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 <script>
 
 swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
+
 
 jQuery('#sequence').attr('spellcheck',false);
 
@@ -176,8 +177,6 @@ var input_option_types = eval(<% $input_option_json %>);
 var input_examples = eval(<% $input_example_json %>);
 
 function run_blast() { 
-   var jobid = 0;
-
    var status = "Initializing run... ";
    jQuery('blast_status').html(status);
 
@@ -190,13 +189,13 @@ function run_blast() {
    var maxhits  = jQuery('#maxhits').val();
    var filterq  = jQuery('#filterq').val();
    var input_option = jQuery('#input_options').val();
+   var format   = jQuery('#parse_options').val() || [ 'Basic' ];
 
    if (sequence == '') { 
       alert("Please enter a sequence :=)"); 
       jQuery('blast_status').html('');
       return; 
    }
-
 
    if (!blast_program_ok(program,  input_option_types[input_option], database_types[database])) { 
       alert("The BLAST program does not match the selected database and query.");
@@ -225,7 +224,8 @@ function run_blast() {
                                     else{ 
                                       
                                       jobid = response.jobid; 
-                                      // alert("JOB ID: "+jobid);
+            
+                          alert("JOB ID: "+jobid);
                                      }
 
                                   },
@@ -235,7 +235,7 @@ function run_blast() {
 
    var done = false;
    var error = false;
-
+   alert("JOBID:   "+jobid);
    while (done == false) { 
       jQuery.ajax( { 
           url: '/tools/blast/check/'+jobid,
@@ -260,38 +260,36 @@ function run_blast() {
 
    status = status +  "Run complete.";
    jQuery('#blast_status').html(status);
+   jQuery('#blast_report').html('');
 
-   jQuery.ajax( { 
-       url: '/tools/blast/prereqs/'+jobid,
-       data: { 'format': 'Bioperl' },
-       async: false,
-       success: function(response) { 
-         if (response.error) { 
-            alert("An error occurred fetching prereqs.");
-         }
-         else { 
-           alert("PREREQS: "+response.prereqs);
-           jQuery('#prereqs').html(response.prereqs);
-         }
-       },
-       error: function(response) { 
-         alert("An protocol error occurred."+response);
-       }
-   });
+   var blast_reports = new Array();
+   var prereqs = new Array();
 
-   jQuery.ajax( { 
+   for (var n in format) { 
+     alert("Parsing format "+format[n]);
+
+     jQuery.ajax( { 
        url: '/tools/blast/result/'+jobid,
-       data: { 'format': 'Bioperl', 'db_id': database },
+       data: { 'format': format[n], 'db_id': database },
        async: false,
        success: function(response) { 
           if (response.blast_report) { 
-              jQuery('#blast_report').html(response.blast_report);
-              //alert("BLAST report: "+response.blast_report);
-          };
+              blast_reports.push(response.blast_report);
+              alert("BLAST report: "+response.blast_report);
+          }
+          if (response.prereqs) { 
+              prereqs.push(response.prereqs);
+          }
+
        },
        error: function(response) { alert("Parse BLAST: An error occurred. "+response.error); }
-   });
-   
+     });
+   }
+
+   jQuery('#prereqs').html(prereqs.join("\n\n<br />\n\n"));
+
+   jQuery('#blast_report').html(blast_reports.join("<hr />\n"));
+
    Effects.swapElements('input_parameter_section_offswitch', 'input_parameter_section_onswitch'); 
    Effects.hideElement('input_parameter_section_content');
 
