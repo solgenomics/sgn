@@ -1309,9 +1309,9 @@ h6 {
   text-rendering: optimizelegibility;
 }
 
-h1 {font-size: 30px; line-height: 36px; margin: 0;}			
-h2 {font-size: 24px; line-height: 36px; }		
-h3 {font-size: 16px; line-height: 27px; }
+h1 {font-size: 22px; line-height: 32px; margin: 0;}			
+h2 {font-size: 18px; line-height: 28px; }		
+h3 {font-size: 16px; line-height: 26px; }
 h4,
 h5,
 h6 {line-height: 18px; }
