@@ -2,9 +2,14 @@
 package CXGN::Blast::Parse::Plugin::Basic;
 
 use Moose;
+use File::Slurp qw | read_file |;
 
 sub name { 
     return "Basic";
+}
+
+sub priority { 
+    return 10;
 }
 
 sub prereqs { 
@@ -12,8 +17,9 @@ sub prereqs {
 
 sub parse { 
     my $self = shift;
+    my $c = shift;
     my $file = shift;
-    return $file;
+    return read_file($file);
 }
 
 1;

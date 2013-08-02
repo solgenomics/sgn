@@ -4,7 +4,7 @@ package CXGN::Blast::SeqQuery::Plugin::Unigene;
 use Moose;
 
 sub name { 
-    return "SGN unigene identifiers";
+    return "unigene identifiers";
 }
 
 sub type { 

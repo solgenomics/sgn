@@ -10,6 +10,7 @@ use Bio::SeqIO;
 use Bio::SearchIO;
 use Bio::SearchIO::Writer::HTMLResultWriter;
 use CXGN::Tools::Identifiers;
+use File::Slurp qw | read_file |;
 
 use constant MAX_FORMATTABLE_REPORT_FILE_SIZE => 2_000_000;
 
@@ -82,6 +83,7 @@ EOJS
 
 sub parse { 
     my $self = shift;
+    my $c = shift;
     my $raw_report_file = shift;
     my $bdb = shift;
 
@@ -98,7 +100,7 @@ sub parse {
     #don't do any formatting on report files that are huge
     if (-s $raw_report_file > MAX_FORMATTABLE_REPORT_FILE_SIZE) { 
 	print STDERR "raw report too large ".(-s $raw_report_file)."\n";
-	return $raw_report_file;
+	return read_file($raw_report_file);
     }
 
     print STDERR "Starting to format BLAST report...\n";
@@ -150,17 +152,14 @@ sub parse {
     
     print STDERR "FORMATTED BLAST REPORT AVAILABLE AT: $formatted_report_file\n";
 
-    return $formatted_report_file;
+    return read_file($formatted_report_file);
 }
 
 sub make_bioperl_result_writer {
     my $self = shift;
     my $db_id = shift;
 
-    print STDERR "MAKE_BIOPERL_RESULT_WRITER\n";
-
     my $writer = Bio::SearchIO::Writer::HTMLResultWriter->new;
-
     
     $writer->id_parser( sub {
 	my ($idline) = @_;
