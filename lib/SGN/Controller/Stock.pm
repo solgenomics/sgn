@@ -56,7 +56,6 @@ sub search :Path('/stock/search') Args(0) {
     my $trait_db_name = $c->get_conf('trait_ontology_db_name');
     $c->stash(
         template                   => '/search/phenotypes/stock.mas',
-	trait_db_name              => $trait_db_name,
         request                    => $c->req,
         form                       => $form,
         form_opts                  => { stock_types => stock_types($self->schema), organisms => stock_organisms($self->schema)} ,
@@ -64,6 +63,7 @@ sub search :Path('/stock/search') Args(0) {
         sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
         trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
         onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
+	trait_db_name              => $trait_db_name,
         pagination_link_maker      => sub {
             return uri( query => { %{$c->req->params} , page => shift } );
         },

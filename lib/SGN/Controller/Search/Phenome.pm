@@ -14,10 +14,12 @@ sub auto : Private {
 sub stock_search : Path('/search/phenotypes/stock') Args(0) {
     my ( $self, $c ) = @_;
     my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
+    my $db_name = $c->config->{trait_ontology_db_name} || 'SP'; 
     $c->stash(
         template => '/search/phenotypes/stock.mas',
         form     => $form,
         schema   => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
+	trait_db_name => $db_name,
     );
 }
 
