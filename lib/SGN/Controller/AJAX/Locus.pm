@@ -167,11 +167,12 @@ sub display_ontologies_GET  {
     if ($c->user) {
         if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
     }
-    #now add all GO PO SP annotations to an array
+    my $trait_db_name = $c->config->{trait_ontology_db_name} || 'SP'; 
+    #now add all GO PO SP CO annotations to an array
     my @ont_annot;
     foreach ( @{ $dbs{'GO'} } ) { push @ont_annot, $_; }
     foreach ( @{ $dbs{'PO'} } ) { push @ont_annot, $_; }
-    foreach ( @{ $dbs{'SP'} } ) { push @ont_annot, $_; }
+    foreach ( @{ $dbs{ $trait_db_name } } ) { push @ont_annot, $_; }
     my @obs_annot;
     my %ont_hash = () ; #keys= cvterms, values= hash of arrays (keys= ontology details, values= list of evidences)
     foreach (@ont_annot) {
@@ -181,7 +182,7 @@ sub display_ontologies_GET  {
         my $db_name      = $_->[0]->get_db_name();
         my $accession    = $_->[0]->get_accession();
         my $db_accession = $accession;
-        $db_accession = $cvterm_id if $db_name eq 'SP';
+        $db_accession = $cvterm_id if $db_name eq $trait_db_name;
         my $url = $_->[0]->get_urlprefix() . $_->[0]->get_url();
         my $cvterm_link =
             qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id" target="blank">$cvterm_name</a>|;

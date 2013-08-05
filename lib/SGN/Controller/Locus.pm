@@ -112,6 +112,7 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
     my $sequencer   = $logged_user->check_roles('sequencer') if $logged_user;
     my $dbh = $c->dbc->dbh;
 
+    my $trait_db_name => $c->get_conf('trait_ontology_db_name');
     ##################
 
     ###Check if a locus page can be printed###
@@ -185,6 +186,7 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
             cview_basepath => $c->get_conf('basepath'),
             image_ids      => $image_ids,
             xrefs      => \@locus_xrefs,
+	    trait_db_name => $trait_db_name,
         },
         locus_add_uri  => $c->uri_for( '/ajax/locus/associate_locus' ),
         cvterm_add_uri => $c->uri_for( '/ajax/locus/associate_ontology'),

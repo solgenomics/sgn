@@ -72,7 +72,7 @@ $evidence_with_uri => undef
 $show_form => 0
 $div_id => 'ontology_terms'
 $ontology_url
-$trait_db_name => undef
+$trait_db_name => 'SP'
 
 </%args>
 
@@ -131,7 +131,7 @@ $trait_db_name => undef
             <select id = "db_name" onchange = "jQuery('#term_name').val('');" >
               <option value="GO">GO (gene ontology)</option>
               <option value="PO">PO (plant ontology)</option>
-              <option value="SP">SP (Solanaceae phenotypes)</option>
+              <option value="<% $trait_db_name %>"><% $trait_db_name %>  phenotype ontology</option>
             </select>
             </td>
           <td><b>Type a term name</b><br /><input type="text" size ="60"  id="term_name" name="term_name" />
