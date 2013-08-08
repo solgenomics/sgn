@@ -44,28 +44,26 @@ sub input :Path('/tools/vigs/')  :Args(0) {
     }
 
     $c->stash->{template} = '/tools/vigs/input.mas';
-    $c->stash->{databases} = \@databases;
-    
+    $c->stash->{databases} = \@databases;    
 }
 
 sub calculate :Path('/tools/vigs/result') :Args(0) { 
     my ($self, $c) = @_;
-
-    my @errors; #to store erros as they happen
+    
+    # to store erros as they happen
+    my @errors; 
  
     # get variables from catalyst object
     my $params = $c->req->body_params();
     my $sequence = $c->req->param("sequence");
     my $fragment_size = $c->req->param("fragment_size");
-
-    my $upload = $c->req->upload("expression_file");
+    my $seq_fragment = $c->req->param("seq_fragment");
+    my $upload = $c->req->upload("expr_file");
     my $expr_file = undef;
 
     if (defined($upload)) {
-	$expr_file = $upload->tempname;
-    
+	$expr_file = $upload->tempname;    
 	$expr_file =~ s/\/tmp\///;
-	# print STDERR "tmp name: $expr_file\n";
     
 	my $expr_dir = $c->generated_file_uri('expr_files', $expr_file);
 	my $final_path = $c->path_to($expr_dir);
@@ -73,8 +71,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 	write_file($final_path, $upload->slurp);
     }
 
-    # clean the sequence 
-    # more than one sequence pasted
+    # clean the sequence and check if there are more than one sequence pasted
     if ($sequence =~ tr/>/>/ > 1) {
 	push ( @errors , "Please, paste only one sequence.\n");	
     }
@@ -84,28 +81,35 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     if ($sequence =~ /^>/) {
 	$sequence =~ s/[ \,\-\.\#\(\)\%\'\"\[\]\{\}\:\;\=\+\\\/]/_/gi;
         @seq = split(/\s/,$sequence);
+
+	if ($seq[0] =~ />(\S+)/) {
+	    shift(@seq);
+	    $id = $1;
+	}
+	$sequence = join("",@seq);
+    }
+    else {
+	$sequence =~ s/[^ACGT]+//gi;
     }
 
-    if ($seq[0] =~ />(\S+)/) {
-	shift(@seq);
-	$id = $1;
-    }
-    $sequence = join("",@seq);
     
-    # print STDERR "*********************\nid: $id\n*********************\nseq:$sequence\n*********************\n";
+    # print STDERR "******************\nid: $id\n******************\nseq:$sequence\n******************\n";
     # Check input sequence and fragment size    
     if (length($sequence) < 15) { 
 	push ( @errors , "You should paste a valid sequence (15 bp or longer) in the VIGS Tool Sequence window.\n");	
     }
     elsif ($sequence =~ /([^ACGT]+)/i) {
-	push ( @errors , "Unexpected characters found in the sequence: $1\n");	
+	push (@errors, "Unexpected characters found in the sequence: $1\n");	
     }
     elsif (length($sequence) < $fragment_size) {
-	push ( @errors , "Fragment size must be lower or equal to sequence length.\n");
+	push (@errors, "n-mer size must be lower or equal to sequence length.\n");
     }
 
     if (!$fragment_size ||$fragment_size < 15 || $fragment_size > 30 ) { 
-	push @errors, "Fragment size ($fragment_size) should be a value between 15-30 bp.\n";
+	push (@errors, "n-mer size ($fragment_size) should be a value between 15-30 bp.\n");
+    }
+    if (!$seq_fragment || $seq_fragment < 100 || $seq_fragment > length($sequence)) {
+	push (@errors, "Wrong fragment size ($seq_fragment), it should be higher than 100 bp and lower than sequence length\n");
     }
 
     # Send error message to the web if something is wrong
@@ -158,7 +162,6 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 #    $basename = "/home/noe/cxgn/blast_dbs/niben_bt2_index";
     
     # run bowtie2
-
 #    my $bowtie2_path = $c->config->{bowtie2_path};
     my $bowtie2_path = $c->config->{cluster_shared_bindir};
     
@@ -182,7 +185,14 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     if ($err) { die "bowtie2 run failed."; }
 
     $id = $urlencode{basename($seq_filename)};
-    $c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&database=$database_title&targets=0&exprfile=$expr_file");
+    
+
+    if (defined($expr_file)) {
+	$c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&database=$database_title&targets=0&seq_fragment=$seq_fragment&expr_file=$expr_file");
+    }
+    else {
+	$c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&database=$database_title&targets=0&seq_fragment=$seq_fragment");
+    }
 }
 
 
@@ -221,20 +231,21 @@ sub view :Path('/tools/vigs/view') Args(0) {
     
     my $seq_filename = $c->req->param("id");
     my $fragment_size = $c->req->param("fragment_size") || 21;
+    my $seq_window_size = $c->req->param("seq_window_size") || 100;
+    my $seq_fragment = $c->req->param("seq_fragment") || 300;
     my $coverage = $c->req->param("targets");
     my $database = $c->req->param("database");
-    my $expr_file = $c->req->param("exprfile") || undef;
-    my @three_best = $c->req->param("best_regions") || undef;
+    my $expr_file = $c->req->param("expr_file") || undef;
     my $expr_hash = undef;
 
-    if (defined ($expr_file)) {
+    if (defined($expr_file)) {
 	my $expr_dir = $c->generated_file_uri('expr_files', $expr_file);
 	my $expr_path = $c->path_to($expr_dir);
-      	# print "file name: $expr_path\n";
+#      	print "file name: $expr_path\n";
     
 	$expr_hash = get_expression_hash($expr_path);
    
-	# print STDERR "hash header: ".Dumper($$expr_hash{"header"})."\n";
+#	print STDERR "hash header: ".Dumper($$expr_hash{"header"})."\n";
     }
 
     $seq_filename = File::Spec->catfile($c->config->{cluster_shared_tempdir}, $seq_filename);
@@ -249,7 +260,6 @@ sub view :Path('/tools/vigs/view') Args(0) {
     $c->stash->{query} = $query;
     $c->stash->{template} = '/tools/vigs/view.mas';
     
-#    open(my $F, "<", $job_file_tempdir."/".$file) || die "Can't open file $file.";
     my %matches;
     my @queries = ();
     
@@ -257,60 +267,59 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $graph_img_filename = basename($c->tempfile(TEMPLATE=>'imgXXXXXX', UNLINK=>0) . ".png");
     my $graph_img_path = File::Spec->catfile($c->config->{basepath}, $c->tempfiles_subdir('vigs'), $graph_img_filename);
     my $graph_img_url  = File::Spec->catfile($c->tempfiles_subdir('vigs'), $graph_img_filename);
-
+    
+    # send variables to VigsGraph
     my $vg = CXGN::Graphics::VigsGraph->new();
     $vg->bwafile($seq_filename.".bt2.out");
     $vg->fragment_size($fragment_size);
+    $vg->seq_fragment($seq_fragment);
     $vg->query_seq($query->seq());
-    #$vg->seq_window_size($seq_window_size);
+
+    if (defined($expr_hash)) {
+	$vg->expr_hash($expr_hash);
+    }
     $vg->parse();    
     
     if (!$coverage) { 
 	$coverage = $vg->get_best_coverage;
     }
+    
+    my @regions = [[0,0,0,1,1,1]];
+    my @best_region = [[1,1]];
 
-    # print STDERR "BEST COVERAGE: $coverage\n";
-    my @regions = $vg->longest_vigs_sequence($coverage);
+    if ($coverage > 0) {
+	@regions = $vg->longest_vigs_sequence($coverage);
     
-    # print STDERR "REGION: ", join ", ", @{$regions[0]};
-    # print STDERR "\n";
+	# print STDERR "REGION: ", join ", ", @{$regions[0]};
+	# print STDERR "\n";
 
-    my @three_best = [ [$regions[0]->[4], $regions[0]->[5]], [$regions[1]->[4], $regions[1]->[5]], [$regions[2]->[4], $regions[2]->[5]] ];
+	@best_region = [ [$regions[0]->[4], $regions[0]->[5]] ];
     
-    $vg->hilite_regions( @three_best );
-    
-    my $image_map = $vg->render($graph_img_path, $coverage, $expr_hash);
-#    my $tmp_seq = $query->seq();
-    
-    my @best3;
-    my $tmp_str="";
-    my @coords3;
-    
-    for (my $i=0; $i<3; $i++) {
-	$tmp_str = substr($query->seq(), $regions[$i]->[4]-1, $regions[$i]->[5]-$regions[$i]->[4]+1);
-	my @seq60 = $tmp_str =~ /(.{1,60})/g;
-        my $seq_str = join('<br />',@seq60);
-	# print "seq: $seq_str\n";
-	push(@best3, $seq_str);
-        my @tmp_a = ($regions[$i]->[4], $regions[$i]->[5]);
-        push(@coords3, \@tmp_a);
+	$vg->hilite_regions( @best_region );
     }
+    else {
+	$coverage = 0;
+    }
+
+    my $image_map = $vg->render($graph_img_path, $coverage, $expr_hash);    
+
+    my $tmp_str="";
+    $tmp_str = substr($query->seq(), $regions[0]->[4], $regions[0]->[5]-$regions[0]->[4]+1);
+    my @seq60 = $tmp_str =~ /(.{1,60})/g;
+    my $seq_str = join('<br />',@seq60);
     
     $c->stash->{image_map} = $image_map;
     $c->stash->{ids} = [ $vg->subjects_by_match_count($vg->matches()) ];
-
-    $c->stash->{best3} =  \@best3;
-#    $c->stash->{regions} =  [ [ $regions[0]->[4], $regions[0]->[5], [$regions[1]->[4], $regions[1]->[5]], [$regions[2]->[4], $regions[2]->[5]] ] ];
-#    $c->stash->{regions} =  [ [ $regions[0]->[4], $regions[0]->[5] ] ];
-    $c->stash->{coords3} = \@coords3;
-
-    $c->stash->{scores}  =  [ [ $regions[0]->[1] ] ];
+    $c->stash->{best_window} = [[ $regions[0]->[4], $regions[0]->[5] ]];
+    $c->stash->{best_seq} = $seq_str;
+    $c->stash->{scores} = [[ $regions[0]->[1] ]];
     $c->stash->{graph_url} = $graph_img_url;
     $c->stash->{coverage} = $coverage;
     $c->stash->{seq_filename} = basename($seq_filename);
     $c->stash->{database} = $database;
     $c->stash->{fragment_size} = $fragment_size;
-#    $c->stash->{img_height} = $vg->height;
+    $c->stash->{seq_fragment} = $seq_fragment;
+    $c->stash->{expr_file} = $expr_file;
 }
 
 sub user_error {

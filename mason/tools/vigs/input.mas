@@ -24,19 +24,21 @@ Sequence:
 <br />
 <form method="post" action="/tools/vigs/result" name="PCRform" enctype="multipart/form-data">
 
-<!--<table summary="" width="100%" cellpadding="1">
-  <tr>
-    <td>-->
-      <textarea id="sequence" name="sequence" cols=50" rows="12"></textarea>
-<!--    </td>
-  </tr>
-</table>-->
+      <textarea id="sequence" name="sequence" cols=62" rows="8"></textarea>
 
 <br />
 <br />
 
-Fragment size <input type="input" value="21" name="fragment_size" size="3" />&nbsp; &nbsp; &nbsp;
-Database <select name="database">
+<span title="siRNA selected size">n-mer size</span> 
+<input type="input" value="21" name="fragment_size" size="2" />&nbsp; &nbsp; &nbsp;
+
+<span title="desired VIGS fragment length">Fragment length</span> 
+<input type="input" value="300" name="seq_fragment" size="3" /> 
+<br />
+<br />
+Database <select name="database"> 
+<br />
+
 <%perl>
 foreach my $d (@databases) { 
 	print "<option value=\"".$d->id()."\">".$d->title()."</option><br />";
@@ -45,14 +47,12 @@ foreach my $d (@databases) {
 </select>
 <br />
 <br />
-Upload expression file (optional) <input type="file" name="expression_file" />
+Upload expression file (optional) <input type="file" name="expr_file" />
 <br />
 <br />
 
-
-<!-- Target sequence length <input type="input" value="300" name="seq_window_size" size="4" /><br /><br / -->
-<input type="reset" value="clear" />&nbsp; &nbsp; &nbsp;
-<input type="submit" value="Run VIGS Analysis" />
+<button type="reset" value="clear" />Clear</button>&nbsp; &nbsp; &nbsp;
+<button type="submit" value="Run VIGS Analysis" />Run VIGS Analysis</button>
 
 </form>
 <br />
@@ -62,15 +62,16 @@ Upload expression file (optional) <input type="file" name="expression_file" />
 </center>
       <p>
          <b>Usage:</b><br />
-         1. Paste a sequence like in one of the examples:<br />
+         1. Paste a <b>sequence</b> like in one of the examples:<br />
          &nbsp;&nbsp;>seq1<br />&nbsp;&nbsp;accgatcgatcgatcgta<br />
 
          &nbsp;&nbsp;Or:<br />
          &nbsp;&nbsp;acgtagctagctgatcat<br />
-<!--         &nbsp;&nbsp;Or paste a valid gene ID like <i>Solyc01g005080.2</i> or <i>NbS00038998g001.1</i><br /><br /> -->
          
-         2. Choose fragment size<br />
-         3. Choose database<br />
-         4. Upload a file with expression values (optional), gene identifiers must be in first column and a header in the first row
+         2. Choose <b>n-mer size</b>, nucleotide stretch size in bp, used to identify targeted regions (15-30, Default=21)<br />
+         3. Choose <b>Fragment length</b>, desired VIGS fragment length in bp (100-Sequence length, Default=300)<br />
+         4. Choose <b>database</b><br />
+         5. Upload a <b>expression values file</b> (optional), gene identifiers must be in first column and a header in the first row
       </p>
 <hr />
+
