@@ -4,12 +4,13 @@ $query
 $graph_url => undef
 $seq_filename
 $database => 'unknown database'
-# @regions => () # list of listrefs, with start and end positions
-$best3 => ()
-$coords3 => ()
+$best_window => () # best region coordinates
+$best_seq => () # best region sequence
 @scores => ()
 $error => undef
 $fragment_size => undef
+$seq_fragment => undef
+$expr_file => undef
 $messages => ""
 $errors => ""
 $coverage => 0
@@ -27,8 +28,6 @@ my $json = JSON::Any->new;
 if ($errors) { print "An error occurred. $error." }
 if ($messages) { print $messages; }
 
-#print STDERR Dumper(\@regions);
-
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ 'Text.Markup', 'sprintf'] &>
@@ -38,25 +37,29 @@ if ($messages) { print $messages; }
 
 %if ($scores[0]->[0] == 0) {
   Note: No results were found.
-
 %}
 
 <% $messages %><br /><br />
 
-User sequence matched against <% $database %>.<br />
+User sequence matched against <% $database %>.<br /><br />
+
 <form action="/tools/vigs/view">
       Target sequences:
       <input size="2" name="targets" value="<% $coverage %>" />
       <input type="hidden" name="id" value="<% $seq_filename %>" />
       <input type="hidden" name="fragment_size" value="<% $fragment_size %>" />
       <input type="hidden" name="database" value="<% $database %>" />
-      <input type="submit" value="change" />
-</form><br />
+      Fragment length:
+      <input size= "3" name="seq_fragment" value="<% $seq_fragment %>" />
+      <input type="hidden" name="expr_file" value="<% $expr_file %>" />
+      <button type="submit" value="change" />Change</button>
+</form>
 
-Start: <input type="text" id="cbr_start" value=1 size=4> End: <input type="text" id="cbr_end" size=4 value="<% length($query->seq()) %>">
-<input type="button" value="Customize best region" onClick="getCustomRegion()">
-<br /><br />
-
+<p>
+Start: <input type="text" id="cbr_start" value=<% $$best_window[0][0]+1 %> size=4> 
+End: <input type="text" id="cbr_end" size=4 value="<% $$best_window[0][1]+1 %>">
+<button type="button" value="Customize best region" onClick="getCustomRegion()">Customize Best Region</button>
+</p>
 
 <&| /page/info_section.mas, title=>"Distribution of $fragment_size-mers", collapsible => 1, collapsed => 0 &>
 
@@ -81,13 +84,72 @@ Start: <input type="text" id="cbr_start" value=1 size=4> End: <input type="text"
 }
 </style>
 
+</&>
 
+<br />
+<br />
 
-<%# $image_map %>
+<&| /page/info_section.mas, title=>"Best region", collapsible => 1, collapsed => 0 &>
+<div id="br_seq">
+
+% if (length($best_seq) > 10) {
+% print "<p><b>Best target region (".($$best_window[0][0]+1)."-".($$best_window[0][1]+1).")</b></p>";
+% print "$best_seq <br />";
+% } else {
+% print "<p><b>No results were found</b></p>";
+% }
+
+</div>
+</&>
+
+<&| /page/info_section.mas, title=>"Sequence overview", collapsible => 1, collapsed => 0 &>
+
+<span id="query" style="display:none" ><% $query->seq() %></span>
+<div id="markup" style="align:left;">
+
+</div>
 
 </&>
 
-<br /><br />
+<&| /page/info_section.mas, title=>"Sequences with perfect matches of $fragment_size-mers", collapsible => 1, collapsed => 0 &>
+% foreach my $id (@ids) {
+% print $id->[0]." (".$id->[1].")<br />";
+% }
+
+</&>
+
+<script>
+	function getCustomRegion() {
+		 var cbr_start = parseInt(document.getElementById("cbr_start").value);
+		 var cbr_end = parseInt(document.getElementById("cbr_end").value);
+		 
+		 var source_el = document.getElementById('query'); 
+		 var sequence = source_el.innerHTML;
+		 var img_left = (cbr_start*700/<% length($query->seq()) %>)-1;
+		 var img_width = ((cbr_end-cbr_start+1)*700/<% length($query->seq()) %>)-1;
+		 var map_el = document.getElementById('map_img');
+		 var img_height = (map_el.height - 20);
+
+		 document.getElementById("br_seq").innerHTML ="<p><b>Custom Region (" + cbr_start + "-" + cbr_end + ")</b></p>";
+		 for (var i=cbr_start; i<cbr_end; i= i+60) {
+		     if (cbr_end<i+61) {
+		     	document.getElementById("br_seq").innerHTML += sequence.substring(i-1,cbr_end)+"<br>";
+		     }
+		     else {
+		     	document.getElementById("br_seq").innerHTML += sequence.substring(i-1,i+59)+"<br>";
+		     }
+		 }
+		 document.getElementById("br_seq").innerHTML += "\
+		 <p><b>Best target region (<% $$best_window[0][0]+1 %>-<%$$best_window[0][1]+1 %>)</b></p>";
+
+		 document.getElementById("square").style.border="2px solid #000000";
+		 document.getElementById("square").style.left=""+img_left+"px";
+		 document.getElementById("square").style.width=""+img_width+"px";
+		 document.getElementById("square").style.height=""+img_height+"px";
+		 var best_region = [[cbr_start,cbr_end]];
+		 hilite_sequence(best_region);
+	}
+</script>
 
 <script>
 function hilite_sequence(best_region) {
@@ -98,18 +160,17 @@ function hilite_sequence(best_region) {
 
 	 var source_el = document.getElementById('query');
 	 var markup_el = document.getElementById('markup');
-	 
-//	 var regions = <%# $json->encode(\@regions) %>;
 
 	 var hilite_regions = [];
 
 	 for (var i=0; i<regions.length; i++) {
 	     //alert("HERE " + regions[i]); //regions[i].join('X'));
-	     if (regions[i][0] <= 1) {
-	 	 regions[i][0] = 2
+	     if (regions[i][0] < 1) {
+	 	 regions[i][0] = 1
 	     }
-	     hilite_regions[i]=[ 'highlight', regions[i][0]-1, regions[i][1] ];
-             //hilite_regions[i]=[ 'highlight', 1, 934 ];
+	     if (regions[i][1] > 10) {
+	     	hilite_regions[i]=['highlight', regions[i][0], regions[i][1]+1];
+	     }
          }
 
 	 var sequence = source_el.innerHTML;
@@ -155,82 +216,9 @@ function hilite_sequence(best_region) {
 
 </script>
 
-<&| /page/info_section.mas, title=>"Best regions", collapsible => 1, collapsed => 0 &>
-<div id="br_seq">
-    <p><b>Best target region (<% $$coords3[0][0] %>-<%$$coords3[0][1]%>)</b></p>
-    <% $$best3[0] %>
-
-    <p><b>2nd Best target region (<% $$coords3[1][0] %>-<%$$coords3[1][1]%>)</b></p>
-    <% $$best3[1] %>
-
-    <p><b>3rd Best target region (<% $$coords3[2][0] %>-<%$$coords3[2][1]%>)</b></p>
-    <% $$best3[2] %>
-</div>
-</&>
-
-<&| /page/info_section.mas, title=>"Sequence overview", collapsible => 1, collapsed => 0 &>
-
-<span id="query" style="display:none" ><% $query->seq() %></span>
-<div id="markup" style="align:left;">
-
-</div>
-
-</&>
-
-<&| /page/info_section.mas, title=>"Sequences with perfect matches of $fragment_size-mers", collapsible => 1, collapsed => 0 &>
-% foreach my $id (@ids) {
-% print $id->[0]." (".$id->[1].")<br />";
-% }
-
-</&>
-
-<form id="custom_map" action="/tools/vigs/view">
-      <input type="hidden" name="targets" value="<% $coverage %>" />
-      <input type="hidden" name="id" value="<% $seq_filename %>" />
-      <input type="hidden" name="fragment_size" value="<% $fragment_size %>" />
-      <input type="hidden" name="database" value="<% $database %>" />
-      <input type="hidden" name="three_best" value="<% [[20,111]] %>" />
-</form>
-
-
 <script>
-	var regions = <% $json->encode($coords3) %>;
+	var regions = <% $json->encode($best_window) %>;
 	hilite_sequence(regions);
 </script>
 
-<script>
-	function getCustomRegion() {
-		 var cbr_start = parseInt(document.getElementById("cbr_start").value);
-		 var cbr_end = parseInt(document.getElementById("cbr_end").value);
-		 
-		 var source_el = document.getElementById('query'); 
-		 var sequence = source_el.innerHTML;
-		 var img_left = (cbr_start*700/<% length($query->seq()) %>)-1;
-		 var img_width = ((cbr_end-cbr_start+1)*700/<% length($query->seq()) %>)-1;
-		 var map_el = document.getElementById('map_img');
-		 var img_height = (map_el.height - 20);
-
-		 document.getElementById("br_seq").innerHTML ="<p><b>Custom Region (" + cbr_start + "-" + cbr_end + ")</b></p>";
-		 for (var i=cbr_start; i<cbr_end; i= i+60) {
-		     if (cbr_end<i+61) {
-		     	document.getElementById("br_seq").innerHTML += sequence.substring(i-1,cbr_end)+"<br>";
-		     }
-		     else {
-		     	document.getElementById("br_seq").innerHTML += sequence.substring(i-1,i+59)+"<br>";
-		     }
-		     //document.getElementById("br_seq").innerHTML += i-1+"<br>";
-		 }
-		 document.getElementById("br_seq").innerHTML += "\
-		 <p><b>Best target region (<% $$coords3[0][0] %>-<%$$coords3[0][1]%>)</b></p>\
-		 <p><b>2nd Best target region (<% $$coords3[1][0] %>-<%$$coords3[1][1]%>)</b></p>\
-		 <p><b>3rd Best target region (<% $$coords3[2][0] %>-<%$$coords3[2][1]%>)</b></p>";
-
-		// document.getElementById("custom_map").submit();
-		 document.getElementById("square").style.border="2px solid #000000";
-		 document.getElementById("square").style.left=""+img_left+"px";
-		 document.getElementById("square").style.width=""+img_width+"px";
-		 document.getElementById("square").style.height=""+img_height+"px";
-		 var best_region = [[cbr_start,cbr_end]];
-		 hilite_sequence(best_region);
-	}
-</script>
+<script language="javascript" type="text/javascript" src="/js/popup.js"></script>
