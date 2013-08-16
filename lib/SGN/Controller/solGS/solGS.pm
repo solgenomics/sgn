@@ -1029,10 +1029,29 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
 }
 
 
+sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
+    my ($self, $c) = @_;
+    
+    my $pred_pop_id = $c->req->param('pred_pop_id');
+    my $training_pop_id = $c->req->param('training_pop_id');
+   
+    $self->prediction_pop_analyzed_traits($c, $training_pop_id, $pred_pop_id);
+    my @traits = @{ $c->stash->{prediction_pop_analyzed_traits} };
+   
+    my $ret->{status} = 'success';
+    $ret->{traits} = \@traits;
+     
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+    
+}
+
+
 sub prediction_pop_analyzed_traits {
     my ($self, $c, $training_pop_id, $prediction_pop_id) = @_;
-        
- 
+           
     my $dir = $c->stash->{solgs_cache_dir};
     my @pred_files;
 
