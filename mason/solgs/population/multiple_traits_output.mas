@@ -57,3 +57,4 @@ $prediction_pop_analyzed_traits => ''
    prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
 &>
 
+<div id="selection_index"></div>
