@@ -17,9 +17,7 @@ var rankGenotypes = {
      selectedIdPop     = selectedIdPop.split(':');
      prediction_pop_id = selectedIdPop[0];
      var predPopName   = selectedIdPop[1];
-    
-     // alert('got selected pop: ' + prediction_pop_id + ": " + predPopName);
-    
+   
      var rel_form = document.getElementById('rel_gebv_form');
      var all = rel_form.getElementsByTagName('input');
      var params, validate;
@@ -129,6 +127,13 @@ var rankGenotypes = {
                 action = '/solgs/traits/all/population/' + pop_id +  '/' + prediction_pop_id;
             }
 
+         //    if (prediction_pop_id && isNaN(prediction_pop_id) == true) {
+                  
+//                     action = '/solgs/selection/index/' + pop_id;
+//             }else{
+//                 action = '/solgs/selection/index/' + pop_id +  '/' + prediction_pop_id;
+//             }
+
             jQuery.ajax({
                     type: 'POST',
                         dataType: "json",
@@ -169,8 +174,10 @@ var rankGenotypes = {
                         
                         jQuery('#top_genotypes').append(table).show(); 
                         jQuery('#selected_pop').val('');
+                        //jQuery("#select_a_population_div").empty();
+                        
                         jQuery.unblockUI(); 
-                        // this.selectAPopulation();
+                      
                     }
                 });
         }           
@@ -216,7 +223,7 @@ var rankGenotypes = {
         var selPopsDiv   = document.getElementById("selection_populations");
         var selPopsTable = selPopsDiv.getElementsByTagName("table");
         var selPopsRows  = selPopsTable[0].rows;
-
+       
         var predictedPopExists;
        
         for (var i=0; i < selPopsRows.length; i++) {
@@ -231,7 +238,8 @@ var rankGenotypes = {
         }
              
         var selectedPop  = jQuery('#selected_pop').val();
-     
+        var selectedPopId;
+        
         if(!selectedPop) {
             var popsList = this.listSelPopulations(); 
             //alert('popList: ' + popsList);           
@@ -245,27 +253,99 @@ var rankGenotypes = {
                                jQuery(".ui-selected").each(function() {
                                        selectedPop =  jQuery(this).children('input').val();
                                        jQuery("#selected_pop").val(selectedPop);
+
+                                       var selectedPopArray    = selectedPop.split(':');
+                                       selectedPopId = selectedPopArray[0];
+                                   
                                        // jQuery("#select_a_population_div").append(selectedPop).show();                 
                                    });
-                           }                    
+                           } 
+
                        });
-       
+
+                   var traits;
                    jQuery('#select_a_population_div').dialog({
                            modal: true, 
                                title: 'Select a population', 
                                minWidth: 400,                                  
                                buttons: { 
                                Select: function() { 
+                                   jQuery.ajax({
+                                           type: 'POST',
+                                               dataType: "json",
+                                               url: '/solgs/selection/index/form',
+                                               data: {'pred_pop_id': selectedPopId, 'training_pop_id': modelId},
+                                               success: function(res){
+                                               if (res.status == 'success') {
+                                                       var traits = res.traits;                                                      
+                                                       var table  = rankGenotypes.selectionIndexForm(traits, modelId, selectedPopId);
+                                                       
+                                                       var selectionIndex = jQuery('#selection_index').empty().append(table);
+                                                       jQuery('#rel_gebv_form').empty();
+                                                       //jQuery('#selection_index').empty();
+                                                      
+                                                       jQuery('#rel_gebv_form').append(selectionIndex).show(); 
+                                                     
+                                               }                                               
+                                           }
+                                       });
+                                  
                                    jQuery( this ).dialog( "close" ); },  
                                    Cancel: function() {  
                                    jQuery('#selected_pop').val('');
                                    jQuery( this ).dialog( "close" ); 
                                } 
-                           },                                          
-                  });
-               }
+                           }//,                                          
+                       });                
+               }               
         }
     },
+
+
+    selectionIndexForm: function(predictedTraits, modelId, predictionPopId) {
+        //alert('traits: ' + predictedTraits + ' modelid: ' + modelId + ' predictionPopId: ' + predictionPopId);
+        var cnt = 1;
+        var row = '';
+        var totalCount = 1;
+        var selectAPop = 'onclick="rankGenotypes.selectAPopulation(' + modelId + ')"';
+        for (var i=0; i < predictedTraits.length; i++) {
+           
+                if (totalCount !==1) { 
+                    selectAPop = '';
+                }
+
+                var tdCell  = '<td>' + predictedTraits[i]  + '</td>';
+                var rowTag  = '';
+                  
+                if ( cnt === 3 ) {
+                    rowTag = '</tr><tr>';
+                }
+               
+                row += tdCell 
+                    + '<td><input type="text" name=' +  predictedTraits[i]
+                    + ' size = 5px '
+                    + selectAPop
+                    + '></td>'  
+                    + rowTag;
+                                                           
+                if (cnt === 3 ) { cnt=0;}
+                cnt++;
+                totalCount++;
+
+                          
+        }
+
+        var rankButton =  '<tr><td>'
+                         +  '<input type="submit" value="rank" name= "rank" id="rank_genotypes"' 
+                         +  ' onclick="rankGenotypes.gebvWeights('+ modelId + ', ' + predictionPopId + ')">'
+                         +  '</td></tr>';
+
+        var table = '<table><tr>' +  row + '</tr>' + rankButton + '</table>';
+        //alert(table);
+        return table;
+
+    },
+
 
 
 ///////
