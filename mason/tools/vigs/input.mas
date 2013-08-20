@@ -33,7 +33,10 @@ Sequence:
 <input type="input" value="21" name="fragment_size" size="2" />&nbsp; &nbsp; &nbsp;
 
 <span title="desired VIGS fragment length">Fragment length</span> 
-<input type="input" value="300" name="seq_fragment" size="3" /> 
+<input type="input" value="300" name="seq_fragment" size="3" />&nbsp; &nbsp; &nbsp;
+
+<span title="Number of miss-matches allowed in BowTie 2 alignment">miss-matches</span> 
+<input type="input" value="0" name="missmatch" size="1" />
 <br />
 <br />
 Database <select name="database"> 
@@ -68,10 +71,11 @@ Upload expression file (optional) <input type="file" name="expr_file" />
          &nbsp;&nbsp;Or:<br />
          &nbsp;&nbsp;acgtagctagctgatcat<br />
          
-         2. Choose <b>n-mer size</b>, nucleotide stretch size in bp, used to identify targeted regions (15-30, Default=21)<br />
+         2. Choose <b>n-mer size</b>, nucleotide stretch size in bp, used to identify targeted regions (18-30, Default=21)<br />
          3. Choose <b>Fragment length</b>, desired VIGS fragment length in bp (100-Sequence length, Default=300)<br />
-         4. Choose <b>database</b><br />
-         5. Upload a <b>expression values file</b> (optional), gene identifiers must be in first column and a header in the first row
+         4. Choose <b>miss-matches</b>, number of miss-matches allowed in the alignment (0-3, Default=0)<br />
+         5. Choose <b>database</b><br />
+         6. Upload a <b>expression values file</b> (optional), gene identifiers must be in first column and a header in the first row
       </p>
 <hr />
 

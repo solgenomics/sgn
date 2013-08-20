@@ -58,6 +58,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     my $sequence = $c->req->param("sequence");
     my $fragment_size = $c->req->param("fragment_size");
     my $seq_fragment = $c->req->param("seq_fragment");
+    my $missmatch = $c->req->param("missmatch");
     my $upload = $c->req->upload("expr_file");
     my $expr_file = undef;
 
@@ -92,11 +93,9 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 	$sequence =~ s/[^ACGT]+//gi;
     }
 
-    
-    # print STDERR "******************\nid: $id\n******************\nseq:$sequence\n******************\n";
     # Check input sequence and fragment size    
-    if (length($sequence) < 15) { 
-	push ( @errors , "You should paste a valid sequence (15 bp or longer) in the VIGS Tool Sequence window.\n");	
+    if (length($sequence) < 100) { 
+	push ( @errors , "You should paste a valid sequence (100 bp or longer) in the VIGS Tool Sequence window.\n");	
     }
     elsif ($sequence =~ /([^ACGT]+)/i) {
 	push (@errors, "Unexpected characters found in the sequence: $1\n");	
@@ -105,11 +104,14 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 	push (@errors, "n-mer size must be lower or equal to sequence length.\n");
     }
 
-    if (!$fragment_size ||$fragment_size < 15 || $fragment_size > 30 ) { 
-	push (@errors, "n-mer size ($fragment_size) should be a value between 15-30 bp.\n");
+    if (!$fragment_size ||$fragment_size < 18 || $fragment_size > 30 ) { 
+	push (@errors, "n-mer size ($fragment_size) must be a value between 18-30 bp.\n");
     }
     if (!$seq_fragment || $seq_fragment < 100 || $seq_fragment > length($sequence)) {
-	push (@errors, "Wrong fragment size ($seq_fragment), it should be higher than 100 bp and lower than sequence length\n");
+	push (@errors, "Wrong fragment size ($seq_fragment), it must be higher than 100 bp and lower than sequence length\n");
+    }
+    if ($missmatch =~ /[^\d]/ || $missmatch < 0 || $missmatch > 3 ) { 
+	push (@errors, "miss-match value ($missmatch) must be between 0-3\n");
     }
 
     # Send error message to the web if something is wrong
@@ -188,10 +190,10 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     
 
     if (defined($expr_file)) {
-	$c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&database=$database_title&targets=0&seq_fragment=$seq_fragment&expr_file=$expr_file");
+	$c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&database=$database_title&targets=0&seq_fragment=$seq_fragment&missmatch=$missmatch&expr_file=$expr_file");
     }
     else {
-	$c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&database=$database_title&targets=0&seq_fragment=$seq_fragment");
+	$c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&database=$database_title&targets=0&seq_fragment=$seq_fragment&missmatch=$missmatch");
     }
 }
 
@@ -211,7 +213,7 @@ sub get_expression_hash {
     my @header = split(/\t/,$first_line);
     $expr_values{"header"} = \@header;
 
-    # print "header: ".Dumper(@header)."\n";
+#    print "header: ".Dumper(@header)."\n";
     
     # save gene data
     foreach my $line (@file) {
@@ -231,8 +233,8 @@ sub view :Path('/tools/vigs/view') Args(0) {
     
     my $seq_filename = $c->req->param("id");
     my $fragment_size = $c->req->param("fragment_size") || 21;
-    my $seq_window_size = $c->req->param("seq_window_size") || 100;
     my $seq_fragment = $c->req->param("seq_fragment") || 300;
+    my $missmatch = $c->req->param("missmatch") || 0;
     my $coverage = $c->req->param("targets");
     my $database = $c->req->param("database");
     my $expr_file = $c->req->param("expr_file") || undef;
@@ -274,26 +276,27 @@ sub view :Path('/tools/vigs/view') Args(0) {
     $vg->fragment_size($fragment_size);
     $vg->seq_fragment($seq_fragment);
     $vg->query_seq($query->seq());
+#    $vg->missmatch($missmatch);
 
     if (defined($expr_hash)) {
 	$vg->expr_hash($expr_hash);
     }
-    $vg->parse();    
+    $vg->parse($missmatch);    
     
     if (!$coverage) { 
 	$coverage = $vg->get_best_coverage;
     }
     
-    my @regions = [[0,0,0,1,1,1]];
-    my @best_region = [[1,1]];
+    my @regions = [0,0,0,1,1,1];
+    my @best_region = [1,1];
 
     if ($coverage > 0) {
 	@regions = $vg->longest_vigs_sequence($coverage);
-    
-	# print STDERR "REGION: ", join ", ", @{$regions[0]};
-	# print STDERR "\n";
 
-	@best_region = [ [$regions[0]->[4], $regions[0]->[5]] ];
+#	print STDERR "REGION: ", join ", ", @regions;
+#	print STDERR "\n";
+
+	@best_region = [$regions[4], $regions[5]];
     
 	$vg->hilite_regions( @best_region );
     }
@@ -304,21 +307,23 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $image_map = $vg->render($graph_img_path, $coverage, $expr_hash);    
 
     my $tmp_str="";
-    $tmp_str = substr($query->seq(), $regions[0]->[4], $regions[0]->[5]-$regions[0]->[4]+1);
+    $tmp_str = substr($query->seq(), $regions[4], $regions[5]-$regions[4]+1);
     my @seq60 = $tmp_str =~ /(.{1,60})/g;
     my $seq_str = join('<br />',@seq60);
     
     $c->stash->{image_map} = $image_map;
     $c->stash->{ids} = [ $vg->subjects_by_match_count($vg->matches()) ];
-    $c->stash->{best_window} = [[ $regions[0]->[4], $regions[0]->[5] ]];
+    $c->stash->{best_window} = [$regions[4]+1, $regions[5]+1];
     $c->stash->{best_seq} = $seq_str;
-    $c->stash->{scores} = [[ $regions[0]->[1] ]];
+    $c->stash->{score} = $regions[1];
+    $c->stash->{all_scores} = $regions[2];
     $c->stash->{graph_url} = $graph_img_url;
     $c->stash->{coverage} = $coverage;
     $c->stash->{seq_filename} = basename($seq_filename);
     $c->stash->{database} = $database;
     $c->stash->{fragment_size} = $fragment_size;
     $c->stash->{seq_fragment} = $seq_fragment;
+    $c->stash->{missmatch} = $missmatch;
     $c->stash->{expr_file} = $expr_file;
 }
 
