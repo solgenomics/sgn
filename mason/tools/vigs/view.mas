@@ -1,15 +1,20 @@
 
+<script src="http://code.jquery.com/jquery-1.8.2.js"></script>
+<script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+
 <%args>
 $query
 $graph_url => undef
 $seq_filename
 $database => 'unknown database'
-$best_window => () # best region coordinates
+@best_window => () # best region coordinates
 $best_seq => () # best region sequence
-@scores => ()
+$score => ()
+$all_scores => ()
 $error => undef
 $fragment_size => undef
 $seq_fragment => undef
+$missmatch => undef
 $expr_file => undef
 $messages => ""
 $errors => ""
@@ -35,37 +40,52 @@ if ($messages) { print $messages; }
 <& /page/page_title.mas, title=>"VIGS Tool Results" &>
 
 
-%if ($scores[0]->[0] == 0) {
+%if ($score == 0) {
   Note: No results were found.
 %}
 
-<% $messages %><br /><br />
+<% $messages %><br />
 
-User sequence matched against <% $database %>.<br /><br />
+<table>
+  <tr>
+    <td width="55%">
+      <p id="score_p">
+        <b>Score:</b> <% sprintf("%.2f",($score*100/$seq_fragment)/$coverage) %> (-&infin;&mdash;100)<br />
+      </p>
 
-<form action="/tools/vigs/view">
-      Target sequences:
-      <input size="2" name="targets" value="<% $coverage %>" />
-      <input type="hidden" name="id" value="<% $seq_filename %>" />
-      <input type="hidden" name="fragment_size" value="<% $fragment_size %>" />
-      <input type="hidden" name="database" value="<% $database %>" />
-      Fragment length:
-      <input size= "3" name="seq_fragment" value="<% $seq_fragment %>" />
-      <input type="hidden" name="expr_file" value="<% $expr_file %>" />
-      <button type="submit" value="change" />Change</button>
-</form>
-
-<p>
-Start: <input type="text" id="cbr_start" value=<% $$best_window[0][0]+1 %> size=4> 
-End: <input type="text" id="cbr_end" size=4 value="<% $$best_window[0][1]+1 %>">
-<button type="button" value="Customize best region" onClick="getCustomRegion()">Customize Best Region</button>
-</p>
+      <form action="/tools/vigs/view">
+        Target genes:
+        <input size="1" name="targets" value="<% $coverage %>" />
+        <input type="hidden" name="id" value="<% $seq_filename %>" />
+        <input type="hidden" name="fragment_size" value="<% $fragment_size %>" />
+        <input type="hidden" name="database" value="<% $database %>" />
+        Fragment size:
+        <input id="f_size" size="3" name="seq_fragment" value="<% $seq_fragment %>" />
+        <input type="hidden" name="expr_file" value="<% $expr_file %>" />
+        <button type="submit" value="change" />Change</button>
+      </form>
+      <p>
+        Region Start: <input type="text" id="cbr_start" value=<% $best_window[0] %> size="3"> 
+        End: <input type="text" id="cbr_end" size="3" value="<% $best_window[1] %>">
+        <button type="button" value="set custom best region" onClick="getCustomRegion()">Set Custom Region</button> <p style="color:red" id="cbr_p"></p>
+      </p>
+    </td>
+    <td>
+      <p style="background-color:#EFEBFC; border-style:solid; border-color:#A9A9A9; border-width:1px;">
+        &nbsp;<b>Parameters used</b><br /><br />
+	&nbsp;&bull;<b>Database:</b> <% $database %>&nbsp;<br />
+	&nbsp;&bull;<b>Fragment size: </b> <% $seq_fragment %>&nbsp;&nbsp;&nbsp;&nbsp;&bull;<b>n-mer:</b> <% $fragment_size %><br />
+	&nbsp;&bull;<b>Miss-matches:</b> <% $missmatch %><br />
+      </p>
+    </td>
+  </tr>
+</table>
 
 <&| /page/info_section.mas, title=>"Distribution of $fragment_size-mers", collapsible => 1, collapsed => 0 &>
 
 <div class="seq_map" align="center" style="color: #777777">
-<img id="map_img" src="<% $graph_url %>" usemap="#blabla" />
-<div id="square" class="square"></div>
+     <div id="region_square" onmouseup="getSquareCoords()"></div>
+     <img id="map_img" src="<% $graph_url %>" usemap="#blabla" />
 </div>
 
 <style>
@@ -73,32 +93,24 @@ End: <input type="text" id="cbr_end" size=4 value="<% $$best_window[0][1]+1 %>">
     position:relative;
 }
 
-.square {
+#region_square {
     position:absolute;
-    top:18px;
-    left:0px;
-    width:0px;
-    height:161px;
-    border:0px solid #000000;
-    background-color:rgba(0,0,0,0.2);
 }
+
 </style>
 
 </&>
 
-<br />
-<br />
-
 <&| /page/info_section.mas, title=>"Best region", collapsible => 1, collapsed => 0 &>
 <div id="br_seq">
-
+<p id="best_seq" style="font-family:courier;font-size:16px;">
 % if (length($best_seq) > 10) {
-% print "<p><b>Best target region (".($$best_window[0][0]+1)."-".($$best_window[0][1]+1).")</b></p>";
-% print "$best_seq <br />";
+% print "<b>>best_target_region_(".($best_window[0])."-".($best_window[1]).")</b><br />";
+% print "$best_seq\n";
 % } else {
-% print "<p><b>No results were found</b></p>";
+% print "<b>No results were found</b>\n";
 % }
-
+</p>
 </div>
 </&>
 
@@ -118,39 +130,121 @@ End: <input type="text" id="cbr_end" size=4 value="<% $$best_window[0][1]+1 %>">
 
 </&>
 
+<!--Function to change values of custom region by dragging the selection square-->
+<script>
+	function getSquareCoords() {
+		var r_left = document.getElementById("region_square").style.left;
+		var r_width = document.getElementById("region_square").style.width;
+		var left_num = r_left.replace("px","");
+		var right_num = r_width.replace("px","");
+		var sqr_left = Math.round(+left_num*<% length($query->seq()) %>/700);
+		var sqr_right = Math.round((+left_num + +right_num)*<% length($query->seq()) %>/700);
+
+		var cbr_start = (+sqr_left + 1);
+		var cbr_end = (+sqr_right);
+		var fragment = (+cbr_end - +cbr_start +1);
+		
+		document.getElementById("cbr_start").value = cbr_start;
+		document.getElementById("cbr_end").value = cbr_end;
+		document.getElementById("f_size").value = fragment;
+
+		var best_region = [cbr_start,cbr_end];
+		hilite_sequence(best_region);
+		printCustomSeq(cbr_start,cbr_end);
+		printCustomScore(cbr_start,cbr_end);
+	}
+</script>
+
+<!--Prints custom sequence in Best Region field -->
+<script>
+	function printCustomSeq(cbr_start,cbr_end) {
+		 var sequence = document.getElementById('query').innerHTML;
+		 var best_seq = document.getElementById("best_seq");
+		 best_seq.innerHTML = "<b>>custom_region_("+cbr_start+"-"+cbr_end+")</b><br />";
+
+		 for (var i=cbr_start; i<cbr_end; i=i+60) {
+		     if (cbr_end<i+61) {
+		     	best_seq.innerHTML += sequence.substring(i-1,cbr_end)+"<br />";
+		     }
+		     else {
+		     	best_seq.innerHTML += sequence.substring(i-1,i+59)+"<br />";
+		     }
+		 }
+		 best_seq.innerHTML += "<br /><b>>best_target_region_(<% $best_window[0] %>-<%$best_window[1] %>)</b><br />";
+		 best_seq.innerHTML += "<% $best_seq %><br />";
+	}
+</script>
+
+<!--Prints Scores-->
+<script>
+	function printCustomScore(start,end){
+		 var custom_score = 0;
+		 var score_array = <% $json->encode($all_scores) %>;
+
+		 for (var i=start-1; i<end; i++) {
+		     custom_score += +score_array[i];
+		 }
+		 var fragment_length = (+end - +start + 1);
+		 //alert("length: "+fragment_length+" score: "+custom_score);
+
+		 var final_score = ((custom_score*100/fragment_length)/<% $coverage %>).toFixed(2)
+
+		 document.getElementById("score_p").innerHTML="<b>Score:</b> <% sprintf("%.2f",($score*100/$seq_fragment)/$coverage) %> ";
+		 document.getElementById("score_p").innerHTML+="&nbsp;&nbsp; <b> Custom Score: </b>"+final_score+" &nbsp;&nbsp; (-&infin;&mdash;100)";
+	}
+</script>
+
+<!--Creates the draggable selection square and modifies custom region when push a button-->
 <script>
 	function getCustomRegion() {
 		 var cbr_start = parseInt(document.getElementById("cbr_start").value);
 		 var cbr_end = parseInt(document.getElementById("cbr_end").value);
+		 var l = <% length($query->seq()) %>;
+		 if ((cbr_start > 0) && (cbr_end <= l) && (cbr_end >= cbr_start+99)) {
+		        var img_left = Math.round((cbr_start-1)*700/<% length($query->seq()) %>);
+		    	var img_width = Math.round((cbr_end-cbr_start)*700/<% length($query->seq()) %>);
+		    	var map_el = document.getElementById('map_img');
+		    	var img_height = (map_el.height - 20);
+		 	
+			// a border will add pixels to all end coordinates
+			document.getElementById("region_square").style.border="0px solid #000000";
+		 	document.getElementById("region_square").style.top="20px";
+		 	document.getElementById("region_square").style.background="rgba(0,0,0,0.2)";
+		 	document.getElementById("region_square").style.left=""+img_left+"px";
+		 	document.getElementById("region_square").style.width=""+img_width+"px";
+		 	document.getElementById("region_square").style.height=""+img_height+"px";
 		 
-		 var source_el = document.getElementById('query'); 
-		 var sequence = source_el.innerHTML;
-		 var img_left = (cbr_start*700/<% length($query->seq()) %>)-1;
-		 var img_width = ((cbr_end-cbr_start+1)*700/<% length($query->seq()) %>)-1;
-		 var map_el = document.getElementById('map_img');
-		 var img_height = (map_el.height - 20);
+			var min100 = (100*700/<% length($query->seq()) %>);
 
-		 document.getElementById("br_seq").innerHTML ="<p><b>Custom Region (" + cbr_start + "-" + cbr_end + ")</b></p>";
-		 for (var i=cbr_start; i<cbr_end; i= i+60) {
-		     if (cbr_end<i+61) {
-		     	document.getElementById("br_seq").innerHTML += sequence.substring(i-1,cbr_end)+"<br>";
-		     }
-		     else {
-		     	document.getElementById("br_seq").innerHTML += sequence.substring(i-1,i+59)+"<br>";
-		     }
-		 }
-		 document.getElementById("br_seq").innerHTML += "\
-		 <p><b>Best target region (<% $$best_window[0][0]+1 %>-<%$$best_window[0][1]+1 %>)</b></p>";
+		 	$("#region_square").draggable({
+				axis: 'x',
+				containment:map_el,
+				cursor: "move"
+		 		});
 
-		 document.getElementById("square").style.border="2px solid #000000";
-		 document.getElementById("square").style.left=""+img_left+"px";
-		 document.getElementById("square").style.width=""+img_width+"px";
-		 document.getElementById("square").style.height=""+img_height+"px";
-		 var best_region = [[cbr_start,cbr_end]];
-		 hilite_sequence(best_region);
-	}
+		 		$("#region_square").resizable({
+				handles: 'e, w',
+				minWidth: min100,
+				containment:map_el,
+		 	});
+			
+			document.getElementById("cbr_p").innerHTML = "";
+		 	var best_region = [cbr_start,cbr_end];
+			var fragment = (+cbr_end - +cbr_start +1);
+			document.getElementById("f_size").value = fragment;
+
+		 	hilite_sequence(best_region);
+
+		 	printCustomSeq(cbr_start,cbr_end);
+			printCustomScore(cbr_start,cbr_end);
+
+		} else {
+		        document.getElementById("cbr_p").innerHTML = "Values must be between 1 and "+l+", getting a sequence not shorter than 100 bp!";
+		}
+	}	
 </script>
 
+<!--Highlights best region in Sequence Overview section-->
 <script>
 function hilite_sequence(best_region) {
 	 
@@ -161,17 +255,16 @@ function hilite_sequence(best_region) {
 	 var source_el = document.getElementById('query');
 	 var markup_el = document.getElementById('markup');
 
-	 var hilite_regions = [];
+	 var hilite_regions=[];
 
-	 for (var i=0; i<regions.length; i++) {
-	     //alert("HERE " + regions[i]); //regions[i].join('X'));
-	     if (regions[i][0] < 1) {
-	 	 regions[i][0] = 1
+	 //alert("HERE " + regions[0] + "-" + regions[1]); //regions[i].join('X'));
+	 if (regions[1] > 10) {
+	     regions[0] = regions[0]-1;
+	     if (regions[0] < 1) {
+	 	regions[0] = 1;
 	     }
-	     if (regions[i][1] > 10) {
-	     	hilite_regions[i]=['highlight', regions[i][0], regions[i][1]+1];
-	     }
-         }
+	     hilite_regions.push(['highlight', regions[0], regions[1]]);
+	 }
 
 	 var sequence = source_el.innerHTML;
 
@@ -207,7 +300,7 @@ function hilite_sequence(best_region) {
 	        final_seq = final_seq + leading_str + current_pos + ' ' + lines[i] + ' ' + leading_str2 + sequence.length + '<br />';
 	     }
 
-               current_pos += line_length;
+             current_pos += line_length;
           }
 
 	  markup_el.innerHTML='<font face="courier" size="2">'+final_seq+'</font>';
@@ -217,8 +310,9 @@ function hilite_sequence(best_region) {
 </script>
 
 <script>
-	var regions = <% $json->encode($best_window) %>;
+	var regions = <% $json->encode(\@best_window) %>;
 	hilite_sequence(regions);
 </script>
+
 
 <script language="javascript" type="text/javascript" src="/js/popup.js"></script>

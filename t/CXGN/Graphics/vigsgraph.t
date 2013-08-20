@@ -30,9 +30,10 @@ is(scalar(keys(%$matches)), 7, "all subjects count");
 #$vg->seq_window_size(200);
 ##my @seqs = $vg->get_best_vigs_seqs(1);
 
-my ($best, $regions) = $vg->get_best_coverage();
+#my ($best, $regions) = $vg->get_best_coverage();
+my $coverage = $vg->get_best_coverage();
 # 5. check coverage value
-is($best, 2, "coverage test (target subjects)");
+is($coverage, 2, "coverage test (target subjects)");
 
 $vg->render("/tmp/vigs_test.png", 1);
 
@@ -74,16 +75,19 @@ my @regions = $vg ->longest_vigs_sequence(2);
 #print Dumper(\@regions);
 
 # 14. check best region start
-is($regions[0]->[4], 378, "best region start coord test");
+is($regions[4], 378, "best region start coord test");
 # 15. check best region end
-is($regions[0]->[5], 678, "best region end coord test");
+is($regions[5], 677, "best region end coord test");
+
+# 16. check score value
+is($regions[1], 436, "score test");
 
 # only one target match
 @regions = $vg ->longest_vigs_sequence(3);
 
-# 16. check best region start when coverage=3
-is($regions[0]->[4], 588, "three target best region start test");
-# 17. check best region end when coverage=3
-is($regions[0]->[5], 888, "three target best region end test");
+# 17. check best region start when coverage=3
+is($regions[4], 587, "three target best region start test");
+# 18. check best region end when coverage=3
+is($regions[5], 886, "three target best region end test");
 
 
