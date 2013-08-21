@@ -1,3 +1,32 @@
+
+/*
+
+=head1 NAME
+
+CXGN.List - a javascript library to implement the lists on the SGN platform
+
+=head1 DESCRIPTION
+
+There are two important list functions in this library, listed below. All other functions should be considered private and/or deprecated.
+
+
+* addToListMenu(listMenuDiv, dataDiv)
+
+this function will generate a select of all available lists and allow the content to be added to a list (from a search, etc). The first parameter is the id of the div tag where the menu should be drawn. The second parameter is the div that contains the data to be added. This can be a textfield, a div or span tag, or a multiple select tag.
+
+* pasteListMenu(divName, menuDiv)
+
+this will generate an html select box of all the lists, and a "paste" button, to paste into a textarea (typically). The divName is the id of the textarea, the menuDiv is the id where the paste menu should be placed.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+*/
+
+
 JSAN.use('jqueryui');
 
 if (!CXGN) CXGN = function () { };
