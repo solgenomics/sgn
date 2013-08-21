@@ -322,7 +322,7 @@ var rankGenotypes = {
                     selectAPop = '';
                 }
 
-                var tdCell  = '<td>' + predictedTraits[i]  + '</td>';
+                var tdCell  = '<td>' + predictedTraits[i]  + ':</td>';
                 var rowTag  = '';
                   
                 if ( cnt === 3 ) {
@@ -348,7 +348,7 @@ var rankGenotypes = {
                          +  ' onclick="rankGenotypes.gebvWeights('+ modelId + ', ' + predictionPopId + ')">'
                          +  '</td></tr>';
 
-        var table = '<table><tr>' +  row + '</tr>' + rankButton + '</table>';
+        var table = '<table style="align:left;width:90%"><tr>' +  row + '</tr>' + rankButton + '</table>';
         //alert(table);
         return table;
 
