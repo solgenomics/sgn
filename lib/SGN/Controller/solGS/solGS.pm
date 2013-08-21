@@ -1727,6 +1727,9 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      $c->stash->{trait_pages} = \@trait_pages;
      $c->stash->{model_data}  = \@model_desc;
     
+     my $acronym = $self->get_acronym_pairs($c);
+     $c->stash->{acronym} = $acronym;
+     
      $self->download_prediction_urls($c, $pop_id, $pred_pop_id);
      my $download_prediction = $c->stash->{download_prediction};
     
@@ -2435,7 +2438,7 @@ sub get_acronym_pairs {
 sub traits_acronym_table {
     my ($self, $c, $acronym_table) = @_;
     
-    my $table = 'acronym' . "\t" . 'name' . "\n"; 
+    my $table = 'Acronym' . "\t" . 'Trait name' . "\n"; 
 
     foreach (keys %$acronym_table)
     {
