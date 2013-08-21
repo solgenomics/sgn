@@ -189,26 +189,34 @@ var rankGenotypes = {
         var selPopsDiv   = document.getElementById("selection_populations");
         var selPopsTable = selPopsDiv.getElementsByTagName("table");
         var selPopsRows  = selPopsTable[0].rows;
-        var predictedPop;
+        var predictedPop = [];
 
         var  popsList =  '<ul  id="select_a_population">';
        
         for (var i = 1; i < selPopsRows.length; i++) {
            
-            var row = selPopsRows[i];
+            var row    = selPopsRows[i];
             var popRow = row.innerHTML;
-            predictedPop = popRow.match(/\/solgs\/download\/prediction\/model\//);
+            
+            predictedPop = popRow.match(/\/solgs\/download\/prediction\/model\//g);
            
-            if(predictedPop) {
-                var selPopsInput = row.getElementsByTagName("input")[0];
-                var idPopName    = selPopsInput.value;
+            if (predictedPop) {
+                if (predictedPop.length > 1) {
+                  
+                    var selPopsInput = row.getElementsByTagName("input")[0];
+                    var idPopName    = selPopsInput.value;
 
-                idPopName = JSON.parse(idPopName);
-                var popName = idPopName.name;
+                    idPopName = JSON.parse(idPopName);
+                    var popName = idPopName.name;
         
-                popsList += '<li>' + '<input class="predicted_pop" type="hidden" value="' + 
-                             idPopName.id +':'+idPopName.name  +'"/>' + 
-                             popName + '</li>';
+                    popsList += '<li>' + '<input class="predicted_pop" type="hidden" value="' 
+                             +  idPopName.id 
+                             + ':' 
+                             + idPopName.name  
+                             + '"/>' 
+                             +  popName 
+                             + '</li>';
+                }
             }
         }
         
@@ -345,6 +353,17 @@ var rankGenotypes = {
         return table;
 
     },
+
+
+  //   singleTraitMessage: function (predictionPopId, predictionPopName) {
+//         var message = predictionPopName + ' has only a single trait analyzed. If you want to apply a selection index for multiple traits in that population, analyzed for more traits first.' ;
+        
+//         return message;
+
+//    },
+
+
+
 
 
 
