@@ -11,7 +11,7 @@ JSAN.use('Prototype');
 JSAN.use('jquery.blockUI');
 
 var rankGenotypes = {
-    gebvWeights: function( pop_id, prediction_pop_id )
+    gebvWeights: function( trainingPopId, predictionPopId )
  {    
      var selectedIdPop = jQuery('#selected_pop').val();
      selectedIdPop     = selectedIdPop.split(':');
@@ -69,7 +69,7 @@ var rankGenotypes = {
      }   
 
      if (params && validate) {
-         this.sendArguments(params, legend, pop_id, prediction_pop_id);
+         this.sendArguments(params, legend, trainingPopId, predictionPopId);
      }//else {
      // params = false;
      //  window.location = '/traits/all/population/' + pop_id;
@@ -111,7 +111,7 @@ var rankGenotypes = {
         return sum;
     },
 
-    sendArguments: function(params, legend, pop_id, prediction_pop_id) {
+    sendArguments: function(params, legend, trainingPopId, predictionPopId) {
        
         if(params) {
                                  
@@ -120,11 +120,11 @@ var rankGenotypes = {
             
             var action;
            
-            if (prediction_pop_id && isNaN(prediction_pop_id) == true) {
+            if (predictionPopId && isNaN(predictionPopId) == true) {
                   
-                    action = '/solgs/traits/all/population/' + pop_id;
+                    action = '/solgs/traits/all/population/' + trainingPopId;
             }else{
-                action = '/solgs/traits/all/population/' + pop_id +  '/' + prediction_pop_id;
+                action = '/solgs/traits/all/population/' + trainingPopId +  '/' + predictionPopId;
             }
 
          //    if (prediction_pop_id && isNaN(prediction_pop_id) == true) {
