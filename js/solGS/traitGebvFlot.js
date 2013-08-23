@@ -11,6 +11,24 @@ JSAN.use('flot.jquery');
 JSAN.use('Prototype');
 
 
+//executes two functions alternately
+jQuery.fn.clicktoggle = function(a, b) {
+    return this.each(function() {
+        var clicked = false;
+        jQuery(this).bind("click", function() {
+            if (clicked) {
+                clicked = false;
+                return b.apply(this, arguments);
+              
+            }
+            clicked = true;
+             return a.apply(this, arguments);
+           
+        });
+    });
+};
+//
+
 jQuery(window).load( function() {
 
         var popId       = jQuery('input[name=population_id]').val();
@@ -42,7 +60,7 @@ jQuery(window).load( function() {
                         success: function(data) {
                         var gebvData  = data.gebv_data;
                         var state     = data.status;
-                     
+                       
                         if (state == 'success') {
                             for (var i=0; i < gebvData.length; i++) {
                                 var xD = gebvData[i][0];
@@ -82,7 +100,8 @@ jQuery(window).load( function() {
         var minYLabel   = minY - (0.2*minY);
         var maxYLabel   = maxY + (0.2*maxY);
         var plotData    = allData.bothAxisValues;
-          
+     
+       
         if (plotData == 'undefined') {
              var message = 'There is no GEBV data to plot. Please report this problem';  
              jQuery('#gebvPlot2').append(message).show();
@@ -105,15 +124,16 @@ jQuery(window).load( function() {
                     mode: 'xy',
                     color: '#0066CC',
                 },
-                xaxis:{
+               xaxis:{
                     mode: 'categories',                 
                     ticks: '',
                     tickColor: '#ffffff',
                     axisLabel: 'Genotypes',
                     position: 'bottom',
                     axisLabelPadding: 20,
-                    color: '#0066CC',
-                },
+                    color: '#0066CC',    
+               },
+
                 yaxis: {                                
                     min: null,
                     max: null, 
@@ -130,10 +150,11 @@ jQuery(window).load( function() {
                     interactive: false,                
                 },                        
             };
-                   
-            var plot = jQuery.plot('#gebvPlot2', plotData, options);
-
-            var overview = $.plot($("#gebvPlotOverview"), plotData, {
+             
+           
+            var plot        = jQuery.plot('#gebvPlot2', plotData, options);
+                     
+            var overview = jQuery.plot(jQuery("#gebvPlotOverview"), plotData, {
                     series: {
                         lines: { 
                             show: true, 
@@ -230,7 +251,69 @@ jQuery(window).load( function() {
                         previousPoint = null;                      
                     }          
                 });
-            
+
+
+      
+            //inverse plot: plots genotypes from high to low gebv values or vice versa
+
+             var inverseOptions = { 
+                series: {
+                    lines: { 
+                        show: true 
+                    },
+                    points: { 
+                        show: true 
+                    },                
+                },              
+                grid: {
+                    show: true,
+                    clickable: true,
+                    hoverable: true,               
+                },
+                selection: {
+                    mode: 'xy',
+                    color: '#0066CC',
+                },
+               xaxis:{
+                    mode: 'categories',                 
+                    ticks: '',
+                    tickColor: '#ffffff',
+                    axisLabel: 'Genotypes',
+                    position: 'bottom',
+                    axisLabelPadding: 20,
+                    color: '#0066CC',
+                    transform: function (v) { return -v; },
+                    inverseTransform: function (v) { return -v; }
+               },
+
+                yaxis: {                                
+                    min: null,
+                    max: null, 
+                    axisLabel: 'Trait GEBVs',
+                    position: 'left',
+                    color: '#0066CC',                    
+                },
+                zoom: {
+                    interactive: true,
+                    amount: 1.5,
+                    trigger: 'dblclick',
+                },
+                pan: {
+                    interactive: false,                
+                },                        
+            };
+      
+            function normalPlot() {
+                jQuery.plot('#gebvPlot2', plotData, options);
+            }
+
+            function inversePlot() {
+                jQuery.plot('#gebvPlot2', plotData, inverseOptions);
+            }
+
+            jQuery("#inverse_gebv_plot").clicktoggle(normalPlot, inversePlot);
+
+
  ////
         }
  //////
@@ -239,6 +322,7 @@ jQuery(window).load( function() {
 ////
 
 
+            
 
 
    
