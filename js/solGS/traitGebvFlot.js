@@ -11,24 +11,6 @@ JSAN.use('flot.jquery');
 JSAN.use('Prototype');
 
 
-//executes two functions alternately
-jQuery.fn.clicktoggle = function(a, b) {
-    return this.each(function() {
-        var clicked = false;
-        jQuery(this).bind("click", function() {
-            if (clicked) {
-                clicked = false;
-                return b.apply(this, arguments);
-              
-            }
-            clicked = true;
-             return a.apply(this, arguments);
-           
-        });
-    });
-};
-//
-
 jQuery(window).load( function() {
 
         var popId       = jQuery('input[name=population_id]').val();
@@ -311,7 +293,7 @@ jQuery(window).load( function() {
                 jQuery.plot('#gebvPlot2', plotData, inverseOptions);
             }
 
-            jQuery("#inverse_gebv_plot").clicktoggle(normalPlot, inversePlot);
+            jQuery("#inverse_gebv_plot").alternateFunctions(normalPlot, inversePlot);
 
 
  ////
