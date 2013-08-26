@@ -92,7 +92,7 @@ sub search_populations {
         ->search_related('nd_experiment_stocks')
         ->search_related('stock');
 
-    my $pr_rs = $c->controller('solGS::solgsStock')->stock_projects_rs($rs);
+    my $pr_rs = $self->stock_projects_rs($c, $rs);
 
     $pr_rs = $pr_rs->search(
         {},                                
@@ -214,7 +214,7 @@ sub phenotype_data {
      if ($pop_id) 
      {
          my $results  = [];   
-         my $stock_rs = $c->controller('solGS::solgsStock')->project_subject_stocks_rs($pop_id);
+         my $stock_rs = $self->project_subject_stocks_rs($c, $pop_id);
          $results     = $self->schema($c)->resultset("Stock::Stock")->recursive_phenotypes_rs($stock_rs, $results);
          my $data     = $self->phenotypes_by_trait($c, $results);
       
@@ -228,10 +228,10 @@ sub genotype_data {
     
     if ($project_id) 
     {
-        my $stock_subj_rs = $c->controller('solGS::solgsStock')->project_subject_stocks_rs($project_id);
-        my $stock_obj_rs  = $c->controller('solGS::solgsStock')->stocks_object_rs($stock_subj_rs);
+        my $stock_subj_rs = $self->project_subject_stocks_rs($c, $project_id);
+        my $stock_obj_rs  = $self->stocks_object_rs($c, $stock_subj_rs);
       
-        my $stock_genotype_rs = $self->stock_genotypes_rs($c, $stock_obj_rs);
+        my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs);
    
         my $markers   = $self->extract_project_markers($stock_genotype_rs);
         my $geno_data = "\t" . $markers . "\n";
@@ -276,7 +276,7 @@ sub genotype_data {
 
 
 sub stock_genotypes_rs {
-    my ($self, $c, $stock_rs) = @_;
+    my ($self, $stock_rs) = @_;
     
     my $genotype_rs = $stock_rs
         ->search_related('nd_experiment_stocks')
@@ -339,6 +339,7 @@ sub stock_genotype_values {
     return $geno_values;
 }
 
+
 sub prediction_pops {
   my ($self, $c, $training_pop_id) = @_;
  
@@ -377,10 +378,10 @@ sub prediction_pops {
        
       if ($project_id && $training_pop_id != $project_id) 
       {
-          my $stock_subj_rs = $c->controller('solGS::solgsStock')->project_subject_stocks_rs($project_id);
-          my $stock_obj_rs  = $c->controller('solGS::solgsStock')->stocks_object_rs($stock_subj_rs);
+          my $stock_subj_rs = $self->project_subject_stocks_rs($c, $project_id);
+          my $stock_obj_rs  = $self->stocks_object_rs($c, $stock_subj_rs);
       
-          my $stock_genotype_rs = $self->stock_genotypes_rs($c, $stock_obj_rs);
+          my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs);
    
           my $markers   = $self->extract_project_markers($stock_genotype_rs);
 
@@ -467,7 +468,7 @@ sub phenotypes_by_trait {
         # print the value by cvterm name
 
         my $subject_id       = $phen_hashref->{$key}{stock_id};
-        my $stock_object_row = $c->controller('solGS::solgsStock')->map_subject_to_object($c, $subject_id)->single;       
+        my $stock_object_row = $self->map_subject_to_object($c, $subject_id)->single;       
         my $object_name      = $stock_object_row->name;
         my $object_id        = $stock_object_row->stock_id;
                 
@@ -482,6 +483,78 @@ sub phenotypes_by_trait {
     }
    
     return $d;
+}
+
+
+sub stock_projects_rs {
+    my ($self, $stock_rs) = @_;
+ 
+    my $project_rs = $stock_rs->search_related('nd_experiment_stocks')
+        ->search_related('nd_experiment')
+        ->search_related('nd_experiment_projects')
+        ->search_related('project', 
+                         {},
+                         { 
+                             distinct => 1,
+                         } 
+        );
+
+    return $project_rs;
+
+}
+
+
+sub project_subject_stocks_rs {
+    my ($self, $c, $project_id) = @_;
+  
+    my $stock_rs =  $self->schema($c)->resultset("Project::Project")
+        ->search({'me.project_id' => $project_id})
+        ->search_related('nd_experiment_projects')
+        ->search_related('nd_experiment')
+        ->search_related('nd_experiment_stocks')
+        ->search_related('stock')
+        ->search_related('stock_relationship_subjects')
+        ->search_related('subject', 
+                         {},
+                         { 
+                             '+select' => [ qw /me.project_id me.name/ ], 
+                             '+as'     => [ qw /project_id project_name/ ] 
+                         },
+                         {
+                             order_by => {-desc => [qw /me.name/ ]} 
+                         }
+        );
+
+    return $stock_rs;
+}
+
+
+sub stocks_object_rs {
+    my ($self, $c, $stock_subj_rs) = @_;
+
+    my $stock_obj_rs = $stock_subj_rs
+        ->search_related('stock_relationship_subjects')
+        ->search_related('object', 
+                         {},       
+                         { 
+                             '+select' => [ qw /me.project_id me.name/ ], 
+                             '+as'     => [ qw /project_id project_name/ ]
+                         }
+        );
+    
+    return $stock_obj_rs;
+}
+
+
+sub map_subject_to_object {
+    my ($self, $c, $stock_id) = @_;
+
+    my $stock_obj_rs = $self->schema($c)->resultset("Stock::Stock")
+        ->search({'me.stock_id' => $stock_id})
+        ->search_related('stock_relationship_subjects')
+        ->search_related('object');
+         
+    return $stock_obj_rs;
 }
 
 
