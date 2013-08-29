@@ -289,29 +289,35 @@ sub view :Path('/tools/vigs/view') Args(0) {
     
     my @regions = [0,0,0,1,1,1];
     my @best_region = [1,1];
+    my $seq_length = length($query->seq());
 
-    if ($coverage > 0) {
-	@regions = $vg->longest_vigs_sequence($coverage);
-
-#	print STDERR "REGION: ", join ", ", @regions;
-#	print STDERR "\n";
-
-	@best_region = [$regions[4], $regions[5]];
+    @regions = $vg->longest_vigs_sequence($coverage, $seq_length);
+    @best_region = [$regions[4], $regions[5]];
     
-	$vg->hilite_regions( @best_region );
-    }
-    else {
-	$coverage = 0;
+#	$vg->hilite_regions( @best_region );
+    if ($coverage == 0) {
+	$coverage = 1;
     }
 
-    my $image_map = $vg->render($graph_img_path, $coverage, $expr_hash);    
+    my $matches_AoA = $vg->get_matches();
+    my $img_height = $vg->get_img_height();
+    
+#    my $image_map = $vg->render($graph_img_path, $coverage, $expr_hash);    
 
     my $tmp_str="";
     $tmp_str = substr($query->seq(), $regions[4], $regions[5]-$regions[4]+1);
     my @seq60 = $tmp_str =~ /(.{1,60})/g;
     my $seq_str = join('<br />',@seq60);
     
-    $c->stash->{image_map} = $image_map;
+#    $c->stash->{image_map} = $image_map;
+
+    if (defined($$expr_hash{"header"})) {
+	$c->stash->{expr_msg} = [$vg->add_expression_values($expr_hash)];
+    } else {
+	$c->stash->{expr_msg} = [$vg->subjects_by_match_count($vg->matches())];
+    }
+
+    $c->stash->{expr_file} = $expr_file;
     $c->stash->{ids} = [ $vg->subjects_by_match_count($vg->matches()) ];
     $c->stash->{best_window} = [$regions[4]+1, $regions[5]+1];
     $c->stash->{best_seq} = $seq_str;
@@ -324,7 +330,8 @@ sub view :Path('/tools/vigs/view') Args(0) {
     $c->stash->{fragment_size} = $fragment_size;
     $c->stash->{seq_fragment} = $seq_fragment;
     $c->stash->{missmatch} = $missmatch;
-    $c->stash->{expr_file} = $expr_file;
+    $c->stash->{matches_aoa} = $matches_AoA;
+    $c->stash->{img_height} = ($img_height+52);
 }
 
 sub user_error {
