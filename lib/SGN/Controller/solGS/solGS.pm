@@ -23,6 +23,7 @@ use Algorithm::Combinatorics qw /combinations/;
 #use CXGN::People::Person;
 use CXGN::Tools::Run;
 use JSON;
+use jQuery::File::Upload;
 
 BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
 
@@ -1028,6 +1029,48 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
  
 }
 
+
+sub prediction_genotypes_upload :Path('/solgs/upload/prediction/genotypes') Args(0) {
+    my ($self, $c) = @_;
+
+    print STDERR "\n\n prediction genotypes file upload start....\n\n";
+
+    my $file_upload = jQuery::File::Upload->new();
+   
+   
+
+    $file_upload->ctx($c);
+    $file_upload->field_name('files[]');
+    
+    my $tmp_dir   = $c->config->{tempfiles_subdir};
+    my $base_path = $c->config->{basepath};   
+    my $solgs_tmp_dir = catfile($base_path, $tmp_dir, 'solgs/prediction');
+    my $solgs_tmp_dir_thumbs = catfile($base_path, $tmp_dir, 'solgs/thumbs');
+    print STDERR "\n\n prediction genotypes file upload start....$solgs_tmp_dir\n\n";
+    mkpath ([$solgs_tmp_dir, $solgs_tmp_dir_thumbs], 0, 0755); 
+    $file_upload->upload_dir($solgs_tmp_dir);
+    #$file_upload->thumbbail_upload_dir($solgs_tmp_dir_thumbs);
+    # $file_upload->upload_url_base('/solgs/upload/prediction/genotypes/files');
+    $file_upload->relative_url_path('/solgs/upload/prediction/genotypes/files');
+    $file_upload->accept_file_types(['text/html']);
+    $file_upload->tmp_dir($solgs_tmp_dir);
+    $file_upload->script_url('/solgs/upload/prediction/genotypes');
+    
+    print STDERR "\n\nprediction genotypes file upload..... start....handle request\n\n";
+    $file_upload->handle_request;
+    print STDERR "\n\n prediction genotypes file upload ..done handling request\n\n";
+    my $file_name = $file_upload->filename;
+    my $absolute_filename = $file_upload->absolute_filename;
+    
+    my $client_filename = $file_upload->client_filename;
+
+    print STDERR "\n  file_name: $file_name\tabsolute_name: $absolute_filename \t client_filename: $client_filename\n";
+
+    $file_upload->print_response;
+ 
+
+
+}
 
 sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     my ($self, $c) = @_;
