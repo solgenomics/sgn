@@ -92,7 +92,7 @@ sub search_populations {
         ->search_related('nd_experiment_stocks')
         ->search_related('stock');
 
-    my $pr_rs = $self->stock_projects_rs($c, $rs);
+    my $pr_rs = $self->stock_projects_rs($rs);
 
     $pr_rs = $pr_rs->search(
         {},                                
