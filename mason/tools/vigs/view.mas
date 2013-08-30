@@ -1,6 +1,11 @@
 
+<!-- for drag and resize -->
 <script src="http://code.jquery.com/jquery-1.8.2.js"></script>
 <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+
+<!-- tabs --> 
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 
 <%args>
 $query
@@ -43,14 +48,14 @@ if ($messages) { print $messages; }
 
 
 %if ($score == 0) {
-  Note: No results were found.
+  <span style="color:red;">Note: No results were found!</span>
 %}
 
 <% $messages %><br />
 
 <table>
   <tr>
-    <td width="55%">
+    <td width="50%">
       <p id="score_p">
         <b>Score:</b> 
 %if ($coverage > 0) {
@@ -77,19 +82,9 @@ if ($messages) { print $messages; }
       </p>
     </td>
     <td>
-      <p style="background-color:#EFEBFC; border-style:solid; border-color:#A9A9A9; border-width:1px;">
-        &nbsp;<b>Parameters used</b><br /><br />
-	&nbsp;&bull;<b>Database:</b> <% $database %>&nbsp;<br />
-	&nbsp;&bull;<b>Fragment size: </b> <span id="seq_length"><% $seq_fragment %></span>&nbsp;&nbsp;&nbsp;&nbsp;&bull;<b>n-mer:</b> <% $fragment_size %><br />
-	&nbsp;&bull;<b>Miss-matches:</b> <% $missmatch %><br />
-      </p>
     </td>
   </tr>
 </table>
-<!--<p id="msgs_p">
-    Targets are shown in blue, off-targets in red, the yellow area highlights the <%# $seq_fragment %>bp region of highest score.<br />
-    In the bottom is shown the score graph. Score value = 0 is represented by the green line, under this line are represented the region with more off-targets than targets, and the opposite when the score is over the green line
-</p>-->
 
 <&| /page/info_section.mas, title=>"Distribution of $fragment_size-mers", collapsible => 1, collapsed => 0 &>
 
@@ -103,6 +98,7 @@ if ($messages) { print $messages; }
 <br />
 <button id="collapse" type="button" value="1" onClick="activateCollapse()">Expand Graph</button>
 <button id="zoom" type="button" value="0" onClick="activateZoom()">Zoom In</button>
+<button onclick="openWin()">Parameters and Help</button>
 
 <style>
 .seq_map {
@@ -164,9 +160,49 @@ if ($messages) { print $messages; }
 %}
 </&>
 
+<div id="tabs" style="display:none;">
+    <ul>
+	<li><a href="#tabs-1">Parameter used</a></li>
+	<li><a href="#tabs-2">Help</a></li>
+    </ul>
+    <div id="tabs-1">
+ 	<p>
+	    &bull;<b>Fragment size: </b> <% $seq_fragment %><br />
+	    &nbsp;&bull;<b>n-mer:</b> <% $fragment_size %><br />
+	    &bull;<b>Miss-matches:</b> <% $missmatch %><br />
+	    &bull;<b>Database:</b> <% $database %>&nbsp;
+	</p>
+    </div>
+    <div id="tabs-2">
+        <p>
+	    Targets are shown in blue, off-targets in red, the yellow area highlights the <% $seq_fragment %>bp region of highest score.
+	</p>
+	<p>
+    	    In the bottom is shown the score graph. Score value = 0 is represented by the green line, under this line are represented the region with more off-targets than targets, and the opposite when the score is over the green line.
+        </p>
+	<p>
+	    Dragging or resizing the transparent grey square will select a custom region.
+	</p>
+    </div>
+</div>
 
 
 <!-- javascript-->
+<script>
+    function openWin() {
+    var help=document.getElementById("tabs")
+    help.style.visibility="visible";
+    $(function() {
+    	$( "#tabs" ).tabs();
+    	$( "#tabs" ).dialog({
+	    width:450,
+	    closeOnEscape: true,
+	    title: "SGN VIGS Tool Help",
+	});
+    });
+}
+</script>
+
 
 
 <!--prints the squares-->
@@ -647,7 +683,6 @@ if ($messages) { print $messages; }
 				printCustomScore(cbr_start,cbr_end);
 			}
 
-			//document.getElementById("msgs_p").innerHTML = "Dragging or resizing the transparent grey square will select a custom region";
 		} else {
 		        document.getElementById("cbr_p").innerHTML = "Values must be between 1 and "+seq_length+", getting a sequence not shorter than 100 bp!";
 		}
