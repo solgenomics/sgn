@@ -1043,10 +1043,13 @@ sub prediction_genotypes_upload :Path('/solgs/upload/prediction/genotypes') Args
     $file_upload->field_name('files[]');
     
     my $tmp_dir   = $c->config->{tempfiles_subdir};
-    my $base_path = $c->config->{basepath};   
+    my $base_path = $c->config->{basepath};  
+    my $solgs_dir = $c->stash->{solgs_tempfiles_dir};
     my $solgs_tmp_dir = catfile($base_path, $tmp_dir, 'solgs/prediction');
     my $solgs_tmp_dir_thumbs = catfile($base_path, $tmp_dir, 'solgs/thumbs');
-    print STDERR "\n\n prediction genotypes file upload start....$solgs_tmp_dir\n\n";
+  
+    my $solgs_tmp_dir_thumbs = catfile($solgs_dir, 'solgs/thumbs');
+    print STDERR "\n\n prediction genotypes file upload start....$solgs_dir\n\n";
     mkpath ([$solgs_tmp_dir, $solgs_tmp_dir_thumbs], 0, 0755); 
     $file_upload->upload_dir($solgs_tmp_dir);
     #$file_upload->thumbbail_upload_dir($solgs_tmp_dir_thumbs);
@@ -1055,7 +1058,8 @@ sub prediction_genotypes_upload :Path('/solgs/upload/prediction/genotypes') Args
     $file_upload->accept_file_types(['text/html']);
     $file_upload->tmp_dir($solgs_tmp_dir);
     $file_upload->script_url('/solgs/upload/prediction/genotypes');
-    
+    $file_upload->should_delete(0);
+    $file_upload->use_client_filename(1);
     print STDERR "\n\nprediction genotypes file upload..... start....handle request\n\n";
     $file_upload->handle_request;
     print STDERR "\n\n prediction genotypes file upload ..done handling request\n\n";
