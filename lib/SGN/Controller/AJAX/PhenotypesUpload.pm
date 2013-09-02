@@ -192,7 +192,7 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     if ($store_error) {
       $c->stash->{rest} = {error => $store_error };
     }
-    unlink $upload_file_archive_full_path;
+    #unlink $upload_file_archive_full_path;
     return;
   }
 

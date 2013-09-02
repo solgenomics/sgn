@@ -280,120 +280,163 @@ sub store {
     my $message;
 
     my $coderef = sub {
-        # find the cvterm for a phenotyping experiment
-        my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-            { name   => 'phenotyping experiment',
-              cv     => 'experiment type',
-              db     => 'null',
-              dbxref => 'phenotyping experiment',
-            });
-        print STDERR " ***store: phenotyping experiment cvterm = " . $pheno_cvterm->cvterm_id . "\n";
-        ##################
-        #This has to be stored in the database when adding a new project for these plots
-        my $field_layout_experiment = 'field layout'; #############################
-        ################
-        foreach my $key (keys %$hashref) {
-            my ($spreadsheet_id, $operator, $date, $row) = split(/\t/, $key);
-            foreach my $plot_stock_id (keys %{$hashref->{$key} } ) {
-                print STDERR " *** store: loading information for stock $plot_stock_id \n";
-                foreach my $cvterm_accession (keys %{$hashref->{$key}->{$plot_stock_id} } ) {
-                    print STDERR " ** store: cvterm_accession = $cvterm_accession\n";
-                    my $replicate = $hashref->{$key}->{$plot_stock_id}->{$cvterm_accession}->{replicate};
-                    my $block = $hashref->{$key}->{$plot_stock_id}->{$cvterm_accession}->{block};
-                    my $planted_plants = $hashref->{$key}->{$plot_stock_id}->{$cvterm_accession}->{planted_plants};
-                    my $surviving_plants = $hashref->{$key}->{$plot_stock_id}->{$cvterm_accession}->{surviving_plants};
-                    my $value = $hashref->{$key}->{$plot_stock_id}->{$cvterm_accession}->{value};
+      open(my $F, "<", $self->tmp_filename()) || die "Can't open file ".$self->filename();
+      binmode $F;
+      my $md5 = Digest::MD5->new();
+      $md5->addfile($F);
+      close($F);
 
-                    print STDERR " ** store: value = $value\n";
-                    my ($db_name, $accession) = split (/:/, $cvterm_accession);
-                    my $db = $schema->resultset("General::Db")->search(
-                        {'me.name' => $db_name, } );
-                    print STDERR " ** store: found db $db_name , accession = $accession \n";
-                    if ($db) {
-                        my $dbxref = $db->search_related("dbxrefs", { accession => $accession, });
-                        if ($dbxref) {
-                            my $cvterm = $dbxref->search_related("cvterm")->single;
-                            #now get the value and store the whole thing in the database!
-                            my $stock = $self->schema->resultset("Stock::Stock")->find( { stock_id => $plot_stock_id});
-                            my $stock_name = $stock->name;
-################
-                            my $field_exp = $stock->search_related('nd_experiment_stocks')->search_related('nd_experiment')->find({'type.name' => $field_layout_experiment },{ join => 'type' });
-                            my $location_id = $field_exp->nd_geolocation_id;
-                            my $project = $field_exp->nd_experiment_projects->single ; #there should be one project linked with the field experiment
-                            my $project_id = $project->project_id;
+      my $md_row = $metadata_schema->resultset("MdMetadata")->create({
+								      create_person_id => $user_id,
+								     });
+      $md_row->insert();
 
-                            ###store a new nd_experiment. One phenotyping experiment per upload
-                            #find if a phenotyping experiment exists for this location
-                            my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find(
-                                {
-                                    nd_geolocation_id => $location_id,
-                                    type_id => $pheno_cvterm->cvterm_id(),
-                                } );
-                            my ($op_prop, $date_prop);
-                            ## Find if the experiment has the date and person of this upload, if yes, use the existing one, if no, create a new nd_experiment
-                            if ($experiment) {
-                                $op_prop = $experiment->search_related(
-                                    'nd_experimentprops' , {
-                                        'type.name' => 'operator',
-                                        value       => $operator,
-                                    },
-                                    { join => 'type' }
-                                    )->single;
-                                $date_prop = $experiment->search_related(
-                                    'nd_experimentprops' , {
-                                        'type.name' => 'date',
-                                        value       => $date,
-                                    },
-                                    { join => 'type' }
-                                    )->single;
-                            }
-                            # Create a new experiment, if one does not exist
-                            # or ff operator and date are not linked with the existing experiment
-                            if ( !($op_prop && $date_prop) || !$experiment ) {
-                                $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find(
-                                    {
-                                        nd_geolocation_id => $location_id,
-                                        type_id => $pheno_cvterm->cvterm_id(),
-                                    } );
-                                print STDERR " ** store: created new experiment " . $experiment->nd_experiment_id . "\n";
-                                $experiment->create_nd_experimentprops(
-                                    { date => $date } ,
-                                    { autocreate => 1 , cv_name => 'local' }
-                                    );
-                                $experiment->create_nd_experimentprops(
-                                    { operator => $operator } ,
-                                    { autocreate => 1 , cv_name => 'local' }
-                                    );
-                            }
-                            ##
-                            #link the experiment to the project
-                            $experiment->find_or_create_related('nd_experiment_projects', {
-                                project_id => $project_id
-                                                                } );
-                            print STDERR " ** store: linking experiment " . $experiment->nd_experiment_id . " with project $project_id \n";
-                            #link the experiment to the stock
-                            $experiment->find_or_create_related('nd_experiment_stocks' , {
-                                stock_id => $plot_stock_id,
-                                type_id  =>  $pheno_cvterm->cvterm_id,
-                                                                });
-                            print STDERR " ** store: linking experiment " . $experiment->nd_experiment_id . " to stock $plot_stock_id \n";
-                            my $uniquename = "Stock: " . $plot_stock_id . ", trait: " . $cvterm->name . " date: $date" . "  operator = $operator" ;
-                            my $phenotype = $cvterm->find_or_create_related(
-                                "phenotype_cvalues", {
-                                    observable_id => $cvterm->cvterm_id,
-                                    value => $value ,
-                                    uniquename => $uniquename,
-                                });
-                            print STDERR " ** store: added phenotype value $value , observable = " . $cvterm->name ." uniquename = $uniquename \n";
-                            #link the phenotpe to the experiment
-                            $experiment->find_or_create_related('nd_experiment_phenotypes' , {
-                                phenotype_id => $phenotype->phenotype_id });
-                            $message .= "Added phenotype: trait= " . $cvterm->name . ", value = $value, to stock " . qq|<a href="/stock/$plot_stock_id/view">$stock_name</a><br />| ;
-                        }
-                    }
-                }
-            }
+      my $file_row = $metadata_schema->resultset("MdFiles")->create({
+								     basename => basename($self->filename()),
+								     dirname => dirname($self->filename()),
+								     filetype => '',
+								     md5checksum => $md5->digest(),
+								     metadata_id => $md_row->metadata_id(),
+								    });
+      $file_row->insert();
+
+
+      print STDERR "\nFile id: ".$file_row->file_id()."\n";
+
+
+
+
+
+
+
+
+
+
+      # find the cvterm for a phenotyping experiment
+      my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
+								       { name   => 'phenotyping experiment',
+									 cv     => 'experiment type',
+									 db     => 'null',
+									 dbxref => 'phenotyping experiment',
+								       });
+      print STDERR " ***store: phenotyping experiment cvterm = " . $pheno_cvterm->cvterm_id . "\n";
+      ##################
+      #This has to be stored in the database when adding a new project for these plots
+      my $field_layout_experiment = 'field layout'; #############################
+      ################
+      foreach my $key (keys %$hashref) {
+	my ($spreadsheet_id, $operator, $date, $row) = split(/\t/, $key);
+	foreach my $plot_stock_id (keys %{$hashref->{$key} } ) {
+	  print STDERR " *** store: loading information for stock $plot_stock_id \n";
+	  foreach my $cvterm_accession (keys %{$hashref->{$key}->{$plot_stock_id} } ) {
+	    print STDERR " ** store: cvterm_accession = $cvterm_accession\n";
+	    my $replicate = $hashref->{$key}->{$plot_stock_id}->{$cvterm_accession}->{replicate};
+	    my $block = $hashref->{$key}->{$plot_stock_id}->{$cvterm_accession}->{block};
+	    my $planted_plants = $hashref->{$key}->{$plot_stock_id}->{$cvterm_accession}->{planted_plants};
+	    my $surviving_plants = $hashref->{$key}->{$plot_stock_id}->{$cvterm_accession}->{surviving_plants};
+	    my $value = $hashref->{$key}->{$plot_stock_id}->{$cvterm_accession}->{value};
+
+	    print STDERR " ** store: value = $value\n";
+	    my ($db_name, $accession) = split (/:/, $cvterm_accession);
+	    my $db = $schema->resultset("General::Db")->search(
+							       {
+								'me.name' => $db_name, } );
+	    print STDERR " ** store: found db $db_name , accession = $accession \n";
+	    if ($db) {
+	      my $dbxref = $db->search_related("dbxrefs", { accession => $accession, });
+	      if ($dbxref) {
+		my $cvterm = $dbxref->search_related("cvterm")->single;
+		#now get the value and store the whole thing in the database!
+		my $stock = $self->schema->resultset("Stock::Stock")->find( { stock_id => $plot_stock_id});
+		my $stock_name = $stock->name;
+		################
+		my $field_exp = $stock->search_related('nd_experiment_stocks')->search_related('nd_experiment')->find({'type.name' => $field_layout_experiment },{ join => 'type' });
+		my $location_id = $field_exp->nd_geolocation_id;
+		my $project = $field_exp->nd_experiment_projects->single ; #there should be one project linked with the field experiment
+		my $project_id = $project->project_id;
+
+		###store a new nd_experiment. One phenotyping experiment per upload
+		#find if a phenotyping experiment exists for this location
+		my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find(
+											    {
+											     nd_geolocation_id => $location_id,
+											     type_id => $pheno_cvterm->cvterm_id(),
+											    } );
+		my ($op_prop, $date_prop);
+		## Find if the experiment has the date and person of this upload, if yes, use the existing one, if no, create a new nd_experiment
+		if ($experiment) {
+		  $op_prop = $experiment->search_related(
+							 'nd_experimentprops' , {
+										 'type.name' => 'operator',
+										 value       => $operator,
+										},
+							 {
+							  join => 'type' }
+							)->single;
+		  $date_prop = $experiment->search_related(
+							   'nd_experimentprops' , {
+										   'type.name' => 'date',
+										   value       => $date,
+										  },
+							   {
+							    join => 'type' }
+							  )->single;
+		}
+		# Create a new experiment, if one does not exist
+		# or ff operator and date are not linked with the existing experiment
+		if ( !($op_prop && $date_prop) || !$experiment ) {
+		  $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find(
+											   {
+											    nd_geolocation_id => $location_id,
+											    type_id => $pheno_cvterm->cvterm_id(),
+											   } );
+		  print STDERR " ** store: created new experiment " . $experiment->nd_experiment_id . "\n";
+		  $experiment->create_nd_experimentprops(
+							 {
+							  date => $date } ,
+							 {
+							  autocreate => 1 , cv_name => 'local' }
+							);
+		  $experiment->create_nd_experimentprops(
+							 {
+							  operator => $operator } ,
+							 {
+							  autocreate => 1 , cv_name => 'local' }
+							);
+		}
+		##
+		#link the experiment to the project
+		$experiment->find_or_create_related('nd_experiment_projects', {
+									       project_id => $project_id
+									      } );
+		print STDERR " ** store: linking experiment " . $experiment->nd_experiment_id . " with project $project_id \n";
+		#link the experiment to the stock
+		$experiment->find_or_create_related('nd_experiment_stocks' , {
+									      stock_id => $plot_stock_id,
+									      type_id  =>  $pheno_cvterm->cvterm_id,
+									     });
+		print STDERR " ** store: linking experiment " . $experiment->nd_experiment_id . " to stock $plot_stock_id \n";
+		my $uniquename = "Stock: " . $plot_stock_id . ", trait: " . $cvterm->name . " date: $date" . "  operator = $operator" ;
+		my $phenotype = $cvterm->find_or_create_related(
+								"phenotype_cvalues", {
+										      observable_id => $cvterm->cvterm_id,
+										      value => $value ,
+										      uniquename => $uniquename,
+										     });
+		print STDERR " ** store: added phenotype value $value , observable = " . $cvterm->name ." uniquename = $uniquename \n";
+		#link the phenotpe to the experiment
+		$experiment->find_or_create_related('nd_experiment_phenotypes' , {
+										  phenotype_id => $phenotype->phenotype_id });
+		$message .= "Added phenotype: trait= " . $cvterm->name . ", value = $value, to stock " . qq|<a href="/stock/$plot_stock_id/view">$stock_name</a><br />| ;
+
+		#link the file to the experiment
+		#$experiment->find_or_create_related('nd_experiment_md_files',{file_id => $file_row->file_id(),});
+
+	      }
+	    }
+	  }
 	}
+      }
 
 	
     };
@@ -401,35 +444,16 @@ sub store {
     print "STDERR coderef: $coderef\n";
     print "STDERR schema: $schema\n";
     try {
-        $schema->txn_do($coderef);
+      $schema->txn_do($coderef);
     } catch {
-        # Transaction failed
-        $error =  "An error occured! Cannot store data! <br />" . $_ . "\n";
+      # Transaction failed
+      $error =  "An error occured! Cannot store data! <br />" . $_ . "\n";
     };
 
     if ($error) {
       $self->store_error($error);
-    }
-    else { 
-	open(my $F, "<", $self->tmp_filename()) || die "Can't open file ".$self->filename();
-	binmode $F;
-	my $md5 = Digest::MD5->new();
-	$md5->addfile($F);
-	close($F);
-
-	my $md_row = $metadata_schema->resultset("MdMetadata")->create({
-	    create_person_id => $user_id,
-	    });
-	$md_row->insert();
-
-	my $file_row = $metadata_schema->resultset("MdFiles")->create({
-	    basename => basename($self->filename()),
-	    dirname => dirname($self->filename()),
-	    filetype => '',
-	    md5checksum => $md5->digest(),
-	    metadata_id => $md_row->metadata_id(),
-	    });
-	$file_row->insert();
+    } else { 
+      #############
     }
 	    
 	
@@ -439,8 +463,8 @@ sub store {
 
     
 
-}
+  }
 
 ###
-1;#
+1;				#
 ###
