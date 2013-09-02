@@ -1,5 +1,5 @@
 /*
- * jquery UI Effects 1.8.4
+ * jQuery UI Effects 1.8.4
  *
  * Copyright 2010, AUTHORS.txt (http://jqueryui.com/about)
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -7,7 +7,7 @@
  *
  * http://docs.jquery.com/UI/Effects/
  */
-;jquery.effects || (function($, undefined) {
+;jQuery.effects || (function($, undefined) {
 
 $.effects = {};
 
@@ -365,7 +365,7 @@ $.extend($.effects, {
 				});
 
 		element.wrap(wrapper);
-		wrapper = element.parent(); //Hotfix for jquery 1.4 since some change in wrap() seems to actually loose the reference to the wrapped element
+		wrapper = element.parent(); //Hotfix for jQuery 1.4 since some change in wrap() seems to actually loose the reference to the wrapped element
 
 		// transfer positioning properties to the wrapper
 		if (element.css('position') == 'static') {
@@ -475,7 +475,7 @@ $.fn.extend({
 		}
 	},
 
-	// jquery core overloads toggle and create _toggle
+	// jQuery core overloads toggle and create _toggle
 	__toggle: $.fn.toggle,
 	toggle: function(speed) {
 		if (!speed || typeof speed == 'number' || $.fx.speeds[speed] ||
@@ -506,12 +506,12 @@ $.fn.extend({
 /******************************************************************************/
 
 /*
- * jquery Easing v1.3 - http://gsgd.co.uk/sandbox/jquery/easing/
+ * jQuery Easing v1.3 - http://gsgd.co.uk/sandbox/jquery/easing/
  *
- * Uses the built in easing capabilities added In jquery 1.1
+ * Uses the built in easing capabilities added In jQuery 1.1
  * to offer multiple easing options
  *
- * TERMS OF USE - jquery Easing
+ * TERMS OF USE - jQuery Easing
  *
  * Open source under the BSD License.
  *
@@ -711,4 +711,4 @@ $.extend($.easing,
  *
  */
 
-})(jquery);
+})(jQuery);
