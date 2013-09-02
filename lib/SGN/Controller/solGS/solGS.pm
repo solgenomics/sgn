@@ -55,6 +55,11 @@ The root page (/)
 #     $c->forward('search');
 # }
 
+sub solgs : Path('/solgs'){
+    my ($self, $c) = @_;
+    $c->forward('search');
+}
+
 
 sub submit :Path('/solgs/submit/intro')  Args(0) {
     my ($self, $c) = @_;
@@ -169,10 +174,15 @@ sub projects_links {
         my $pr_year     = $projects->{$pr_id}{project_year};
         my $pr_location = $projects->{$pr_id}{project_location};
                
-        #my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" /> </form> |;
-        push @projects_pages, [ qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
+        my $dummy_name = $pr_name =~ /test\w*/ig;
+        my $dummy_desc = $pr_desc =~ /test\w*/ig;
+
+        unless ($dummy_name | $dummy_desc ) 
+        {
+            push @projects_pages, [ qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
                                $pr_desc, $pr_location, $pr_year
-        ];
+            ];
+        }
     }
 
     $c->stash->{projects_pages} = \@projects_pages;
@@ -500,6 +510,8 @@ sub input_files {
     my $trait_file  = $c->stash->{trait_file};
     my $pop_id      = $c->stash->{pop_id};
    
+    no warnings 'uninitialized';
+
     my $input_files = join ("\t",
                             $pheno_file,
                             $geno_file,
@@ -529,7 +541,10 @@ sub output_files {
     $self->trait_phenodata_file($c);
 
     my $prediction_id = $c->stash->{prediction_pop_id};
-     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
+    if (!$pop_id) {$pop_id = $c->stash->{model_id};}
+
+    no warnings 'uninitialized';
+
     my $identifier    = $pop_id . '_' . $prediction_id;
     my $pred_pop_gebvs_file;
     
@@ -563,6 +578,8 @@ sub gebv_marker_file {
    
     my $pop_id = $c->stash->{pop_id};
     my $trait  = $c->stash->{trait_abbr};
+    
+    no warnings 'uninitialized';
 
     my $data_set_type = $c->stash->{data_set_type};
        
@@ -601,6 +618,8 @@ sub trait_phenodata_file {
     
     my $cache_data;
 
+    no warnings 'uninitialized';
+
     if ($data_set_type =~ /combined populations/)
     {
         my $combo_identifier = $c->stash->{combo_pops_id}; 
@@ -630,6 +649,8 @@ sub gebv_kinship_file {
     my $data_set_type = $c->stash->{data_set_type};
         
     my $cache_data;
+    
+    no warnings 'uninitialized';
 
     if ($data_set_type =~ /combined populations/)
     {
@@ -709,6 +730,8 @@ sub download_urls {
     my $data_set_type = $c->stash->{data_set_type};
     my $pop_id;
     
+    no warnings 'uninitialized';
+
     if ($data_set_type =~ /combined populations/)
     {
         $pop_id         = $c->stash->{combo_pops_id};
@@ -718,8 +741,9 @@ sub download_urls {
         $pop_id         = $c->stash->{pop_id};  
     }
     
-    my $trait_id       = $c->stash->{trait_id};
+    my $trait_id          = $c->stash->{trait_id};
     my $ranked_genos_file = $c->stash->{genotypes_mean_gebv_file};
+
     if ($ranked_genos_file) 
     {
         ($ranked_genos_file) = fileparse($ranked_genos_file);
@@ -773,6 +797,8 @@ sub validation_file {
     my $data_set_type = $c->stash->{data_set_type};
        
     my $cache_data;
+
+    no warnings 'uninitialized';
 
     if ($data_set_type =~ /combined populations/) 
     {
@@ -1003,10 +1029,29 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
 }
 
 
+sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
+    my ($self, $c) = @_;
+    
+    my $pred_pop_id = $c->req->param('pred_pop_id');
+    my $training_pop_id = $c->req->param('training_pop_id');
+   
+    $self->prediction_pop_analyzed_traits($c, $training_pop_id, $pred_pop_id);
+    my @traits = @{ $c->stash->{prediction_pop_analyzed_traits} };
+   
+    my $ret->{status} = 'success';
+    $ret->{traits} = \@traits;
+     
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+    
+}
+
+
 sub prediction_pop_analyzed_traits {
     my ($self, $c, $training_pop_id, $prediction_pop_id) = @_;
-        
- 
+           
     my $dir = $c->stash->{solgs_cache_dir};
     my @pred_files;
 
@@ -1018,7 +1063,7 @@ sub prediction_pop_analyzed_traits {
     closedir $dh; 
 
     my @copy_files = @files;
-    my @trait_ids = map { s/prediction_pop_gebvs_|($training_pop_id)|($prediction_pop_id)|_//g ? $_ : 0} @copy_files;
+    my @trait_ids = map { s/prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}_//g ? $_ : 0} @copy_files;
 
     my @traits = ();
 
@@ -1042,6 +1087,8 @@ sub download_prediction_urls {
     my $page_trait_id = $c->stash->{trait_id};
     my $page = $c->req->path;
    
+    no warnings 'uninitialized';
+
     if ($prediction_pop_id)
     {
         $self->prediction_pop_analyzed_traits($c, $training_pop_id, $prediction_pop_id);
@@ -1680,6 +1727,9 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      $c->stash->{trait_pages} = \@trait_pages;
      $c->stash->{model_data}  = \@model_desc;
     
+     my $acronym = $self->get_acronym_pairs($c);
+     $c->stash->{acronym} = $acronym;
+     
      $self->download_prediction_urls($c, $pop_id, $pred_pop_id);
      my $download_prediction = $c->stash->{download_prediction};
     
@@ -1687,7 +1737,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
 
      $self->list_predicted_selection_pops($c, $pop_id);
-     my $predicted_selection_pops = $c->stash->{list_of_predicted_selection_pops};
+     $predicted_selection_pops = $c->stash->{list_of_predicted_selection_pops};
      $self->prediction_pop_analyzed_traits($c, $pop_id, $predicted_selection_pops->[0]);
            
      my @values;
@@ -2388,7 +2438,7 @@ sub get_acronym_pairs {
 sub traits_acronym_table {
     my ($self, $c, $acronym_table) = @_;
     
-    my $table = 'acronym' . "\t" . 'name' . "\n"; 
+    my $table = 'Acronym' . "\t" . 'Trait name' . "\n"; 
 
     foreach (keys %$acronym_table)
     {
@@ -2760,34 +2810,38 @@ sub get_rrblup_output :Private{
         {
             push  @traits, $content;
         }
-            
-       foreach my $tr (@traits) 
-       { 
-           my $acronym_pairs = $self->get_acronym_pairs($c);
-           my $trait_name;
-           if ($acronym_pairs)
-           {
-               foreach my $r (@$acronym_pairs) 
-               {
-                   if ($r->[0] eq $tr) 
-                   {
-                       $trait_name = $r->[1];
-                       $trait_name =~ s/\n//g;
-                       $c->stash->{trait_name} = $trait_name;
-                       $c->stash->{trait_abbr} = $r->[0];
-                   }
-               }
-           }    
+               
+        no warnings 'uninitialized';
+        
+        foreach my $tr (@traits) 
+        { 
+            my $acronym_pairs = $self->get_acronym_pairs($c);
+            my $trait_name;
+            if ($acronym_pairs)
+            {
+                foreach my $r (@$acronym_pairs) 
+                {
+                    if ($r->[0] eq $tr) 
+                    {
+                        $trait_name = $r->[1];
+                        $trait_name =~ s/\n//g;
+                        $c->stash->{trait_name} = $trait_name;
+                        $c->stash->{trait_abbr} = $r->[0];
+                    }
+                }
+            }    
            
-           $self->run_rrblup_trait($c, $tr);
+            $self->run_rrblup_trait($c, $tr);
            
-           my $trait_id = $c->model('solGS::solGS')->get_trait_id($c, $trait_name);
-           push @trait_pages, [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$tr</a>| ];
-       }    
+            my $trait_id = $c->model('solGS::solGS')->get_trait_id($c, $trait_name);
+            push @trait_pages, [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$tr</a>| ];
+        }    
     }
 
     $c->stash->{combo_pops_analysis_result} = 0;
 
+    no warnings 'uninitialized';
+ 
     if($data_set_type !~ /combined populations/) 
     {
         if (scalar(@traits) == 1) 
@@ -2816,15 +2870,15 @@ sub get_rrblup_output :Private{
 sub run_rrblup_trait {
     my ($self, $c, $trait_abbr) = @_;
     
-    my $pop_id     = $c->stash->{pop_id};
-    my $trait_name = $c->stash->{trait_name};
-    my $trait_abbr = $c->stash->{trait_abbr};
+    my $pop_id        = $c->stash->{pop_id};
+    my $trait_name    = $c->stash->{trait_name};
     my $data_set_type = $c->stash->{data_set_type};
 
     my $trait_id = $c->model('solGS::solGS')->get_trait_id($c, $trait_name);
     $c->stash->{trait_id} = $trait_id; 
-                                
-  
+    
+    no warnings 'uninitialized';
+    
     if ($data_set_type =~ /combined populations/i) 
     {
         my $prediction_id = $c->stash->{prediction_pop_id};

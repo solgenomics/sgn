@@ -28,13 +28,13 @@ $prediction_pop_analyzed_traits => ''
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => 0, 
-    title       => "Select a prediction population to apply the model on",
+    title       => "Click on a selection population to predict GEBVs using the model",
 &>
 
 <div id="selection_populations">
 
 <& /page/columnar_table.mas,
-     headings    => ['',  'Prediction Population', 'Description', 'Generation', 'Year', 'Download GEBVs' ],
+     headings    => ['',  'Selection population', 'Description', 'Generation', 'Year', 'Download GEBVs' ],
      data        => $list_of_prediction_pops,
     __alt_freq   => 2,
     __alt_width  => 1,
@@ -48,7 +48,7 @@ $prediction_pop_analyzed_traits => ''
 % if ($prediction_pop_id ne 'N/A') 
 %{
 
-% if ($analyzed_traits)
+% if ($prediction_pop_analyzed_traits)
 %{
 <& rank_genotypes.mas, 
    analyzed_traits                => $analyzed_traits,

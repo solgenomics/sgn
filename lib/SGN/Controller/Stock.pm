@@ -53,7 +53,7 @@ sub search :Path('/stock/search') Args(0) {
 
     my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
     my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
-
+    my $trait_db_name = $c->get_conf('trait_ontology_db_name');
     $c->stash(
         template                   => '/search/phenotypes/stock.mas',
         request                    => $c->req,
@@ -63,6 +63,7 @@ sub search :Path('/stock/search') Args(0) {
         sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
         trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
         onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
+	trait_db_name              => $trait_db_name,
         pagination_link_maker      => sub {
             return uri( query => { %{$c->req->params} , page => shift } );
         },

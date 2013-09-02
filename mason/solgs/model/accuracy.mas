@@ -21,7 +21,7 @@ $validation_download_url => ''
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "10 folds cross-validation report" 
+  title       => "Model accuracy tests" 
 &> 
 
 <& /page/columnar_table.mas,

@@ -26,7 +26,7 @@ $trait_name
 % { 
 
 <&| /page/info_section.mas,
-      title => "select a training population to calculate GEBVs for $trait_name",
+      title => "select one or a combination of training population(s) to calculate GEBVs for $trait_name",
 &>
 
 
@@ -42,7 +42,7 @@ $trait_name
 </div>
 
 <div id="select_done">
-<input type="button" id="done_selecting" name="done_selecting" value="Done!" onclick="selectedPops();"/>
+<input type="button" id="done_selecting" name="done_selecting" value="Combine" onclick="selectedPops();"/>
 </div>
 
 </&>

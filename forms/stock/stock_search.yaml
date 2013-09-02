@@ -22,11 +22,6 @@ javascript:
         });
     });
 elements:
-    - type: Checkbox
-      name: advanced
-      label: Advanced
-      id: advanced_toggle
-      default: 0
 
     - type: Text
       name: stock_name
@@ -59,71 +54,53 @@ elements:
       name: description
       id: description
       label: Description
-      container_attributes:
-        class: advanced
 
     - type: Text
       name: person
       id: person
       label: Editor
-      container_attributes:
-        class: advanced
 
     - type: Text
       name: onto
       id: onto
       label: Ontology term
       size: 50
-      container_attributes:
-        class: advanced
 
     - type: Text
       name: trait
       id: trait
       label: Trait
       size: 50
-      container_attributes:
-        class: advanced
 
     - type: Text
       name: min_limit
       id: min_limit
       label: Min. value
       size: 5
-      container_attributes:
-        class: advanced
 
     - type: Text
       name: max_limit
       id: max_limit
       label: Max. value
       size: 5
-      container_attributes:
-        class: advanced
 
     - type: Text
       name: project
       id: project
       label: Project
       size: 50
-      container_attributes:
-        class: advanced
 
     - type: Text
       name: location
       id: location
       label: Project location
       size: 40
-      container_attributes:
-        class: advanced
 
     - type: Text
       name: year
       id: year
       label: Project year
       size: 15
-      container_attributes:
-        class: advanced
 
     - type: Submit
       name: submit

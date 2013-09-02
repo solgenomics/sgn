@@ -6,30 +6,14 @@
 * custom css for Flot plots
 */
 
-#gebvbutton-reset {
-    margin-top: 10px;
-    position: left;     
-    width: 90px;
-    height: 20px;
-    font-size: 10px;
-  }
-
-#gebvzoom-reset {
+.button {
     position: relative;
     margin-top: 10px;
     margin-right: 10px;  
     width: 90px;
     height: 20px;
     font-size: 10px;
-}
-
-#phenozoom-reset {
-    position: relative;
-    margin-top: 10px;
-    margin-right: 10px;  
-    width: 90px;
-    height: 20px;
-    font-size: 10px;
+  
 }
 
 #gebvPlot2  {
