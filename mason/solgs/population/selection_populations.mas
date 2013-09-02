@@ -45,6 +45,7 @@ $prediction_pop_analyzed_traits => ''
 
 <p>&nbsp</p>
 
+
 % if ($prediction_pop_id ne 'N/A') 
 %{
 
@@ -62,7 +63,7 @@ $prediction_pop_analyzed_traits => ''
 
 </&>
 
-
+<& prediction_genotypes_upload.mas &>
 
 
 
