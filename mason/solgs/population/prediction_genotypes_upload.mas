@@ -17,15 +17,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%args>
 
 
-<& /util/import_javascript.mas, classes => ["jqueryfileupload.vendor.ui-widget", "jqueryfileupload.iframe-transport",   "jqueryfileupload.fileupload", "jqueryfileupload.fileupload-jui", "solGS.fileUpload"] &>
+<& /util/import_javascript.mas, classes => ["jqueryfileupload.vendor.ui-widget", "jqueryfileupload.iframe-transport",   "jqueryfileupload.fileupload",  "solGS.fileUpload"] &>
 
-<!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> -->
 <link rel="stylesheet" href="/static/css/solgs/jqueryfileupload/fileupload-ui.css" type="text/css" />
 <!-- <link rel="stylesheet" href="/static/css/solgs/jqueryfileupload/bootstrap.css" type="text/css" /> -->
 
 <link rel="stylesheet" href="/static/css/solgs/jqueryfileupload/style.css">
 
- <!-- The fileinput-button span is used to style the file input field as button -->
+<!-- The fileinput-button span is used to style the file input field as button --> 
 </div class="fileupload-buttonbar">
     <span class="btn btn-success fileinput-button">
         <i class="glyphicon glyphicon-plus"></i>
@@ -44,4 +43,5 @@ Isaak Y Tecle (iyt2@cornell.edu)
     <br>
 
 </div>
+
 
