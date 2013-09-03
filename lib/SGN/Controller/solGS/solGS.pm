@@ -1707,14 +1707,19 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
          my $dir = $c->stash->{solgs_cache_dir};
          opendir my $dh, $dir or die "can't open $dir: $!\n";
     
-         my @validation_file  = grep { /cross_validation_${trait_abbr}_${pop_id}/ && -f "$dir/$_" } 
+         my ($validation_file)  = grep { /cross_validation_${trait_abbr}_${pop_id}/ && -f "$dir/$_" } 
                                 readdir($dh);   
          closedir $dh; 
         
-         my @accuracy_value = grep {/Average/} read_file(catfile($dir, $validation_file[0]));
+         my $validation_file = catfile($dir, $validation_file);
+         
+         my @accuracy_value = grep {/Average/} read_file($validation_file);
          @accuracy_value    = split(/\t/,  $accuracy_value[0]);
 
-         push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value[1] ];
+         if (-s $validation_file > 1)
+         {
+             push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value[1] ];
+         }
      }
   
      $self->project_description($c, $pop_id);
@@ -2485,12 +2490,12 @@ sub analyzed_traits {
     
     my @traits;
     foreach  (@traits_files) 
-    {                     
+    {  
         $_ =~ s/gebv_kinship_//;
         $_ =~ s/$model_id|_//g;
         unless ($_ =~ /combined/)
-        {
-            push @traits, $_;
+        {  
+            push @traits, $_;     
         }
     }
 
