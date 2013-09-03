@@ -91,6 +91,7 @@ my $build = SGN::Build->new(
         'JSON'                                     => 0,
         'JSON::XS'                                 => '2.24',
         'JSON::Any'                                => 0,
+        'jQuery::File::Upload'                     => 0,
         'Lingua::EN::Inflect'                      => 0,
         'List::AllUtils'                           => 0,
         'List::Util'                               => 0,
