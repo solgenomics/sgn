@@ -7,4 +7,5 @@ Disallow: /phenome/qtl_analysis.pl
 Disallow: /phenome/qtl.pl
 Disallow: /phenome/population.pl
 Disallow: /qtl/download/
+Disallow: /solgs/
 Crawl-delay: 30
