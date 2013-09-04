@@ -1057,6 +1057,8 @@ sub prediction_pop_analyzed_traits {
 
     opendir my $dh, $dir or die "can't open $dir: $!\n";
    
+    no warnings 'uninitialized';
+
     my  @files  =  grep { /prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}/ && -f "$dir/$_" } 
                  readdir($dh); 
    
@@ -2489,16 +2491,26 @@ sub analyzed_traits {
     my @traits_files = grep {/($model_id)/} @all_files;
     
     my @traits;
-    foreach  (@traits_files) 
+    foreach my $trait_file  (@traits_files) 
     {  
-        $_ =~ s/gebv_kinship_//;
-        $_ =~ s/$model_id|_//g;
-        unless ($_ =~ /combined/)
-        {  
-            push @traits, $_;     
+        my $trait_file_path = catfile($dir, $trait_file);
+        if (-s $trait_file_path > 1) 
+        { 
+            my $trait = $trait_file;
+            $trait =~ s/gebv_kinship_//;
+            $trait =~ s/$model_id|_//g;
+            
+            unless ($trait =~ /combined/)
+            {  
+                push @traits, $trait;     
+            }
+        }      
+        else 
+        {
+            @traits_files = grep { $_ ne $trait_file } @traits_files;
         }
     }
-
+        
     $c->stash->{analyzed_traits} = \@traits;
     $c->stash->{analyzed_traits_files} = \@traits_files;
    
