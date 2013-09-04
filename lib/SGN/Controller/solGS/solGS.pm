@@ -948,17 +948,20 @@ sub prediction_population :Path('/solgs/model') Args(3) {
             $c->forward('get_rrblup_output'); 
         }
                    
-        $self->trait_phenotype_stat($c);
-        $self->gs_files($c);
+         $self->trait_phenotype_stat($c);
+         $self->gs_files($c);
         
-        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+         $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
 
-        $self->download_prediction_urls($c, $pop_id, $prediction_pop_id );
-        my $download_prediction = $c->stash->{download_prediction};
+         $self->download_prediction_urls($c, $pop_id, $prediction_pop_id );
+         my $download_prediction = $c->stash->{download_prediction};
       
-        $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
-         $c->res->redirect('/'. $referer); 
-             
+         $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
+          
+         $referer = '/' . $referer;
+         
+         $c->res->redirect($referer); 
+           
     }
     else 
     {
