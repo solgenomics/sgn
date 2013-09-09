@@ -949,17 +949,20 @@ sub prediction_population :Path('/solgs/model') Args(3) {
             $c->forward('get_rrblup_output'); 
         }
                    
-        $self->trait_phenotype_stat($c);
-        $self->gs_files($c);
+         $self->trait_phenotype_stat($c);
+         $self->gs_files($c);
         
-        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+         $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
 
-        $self->download_prediction_urls($c, $pop_id, $prediction_pop_id );
-        my $download_prediction = $c->stash->{download_prediction};
+         $self->download_prediction_urls($c, $pop_id, $prediction_pop_id );
+         my $download_prediction = $c->stash->{download_prediction};
       
-        $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
-         $c->res->redirect('/'. $referer); 
-             
+         $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
+          
+         $referer = '/' . $referer;
+         
+         $c->res->redirect($referer); 
+           
     }
     else 
     {
@@ -1089,6 +1092,8 @@ sub prediction_pop_analyzed_traits {
 
     opendir my $dh, $dir or die "can't open $dir: $!\n";
    
+    no warnings 'uninitialized';
+
     my  @files  =  grep { /prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}/ && -f "$dir/$_" } 
                  readdir($dh); 
    
@@ -1739,14 +1744,19 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
          my $dir = $c->stash->{solgs_cache_dir};
          opendir my $dh, $dir or die "can't open $dir: $!\n";
     
-         my @validation_file  = grep { /cross_validation_${trait_abbr}_${pop_id}/ && -f "$dir/$_" } 
+         my ($validation_file)  = grep { /cross_validation_${trait_abbr}_${pop_id}/ && -f "$dir/$_" } 
                                 readdir($dh);   
          closedir $dh; 
         
-         my @accuracy_value = grep {/Average/} read_file(catfile($dir, $validation_file[0]));
+         my $validation_file = catfile($dir, $validation_file);
+         
+         my @accuracy_value = grep {/Average/} read_file($validation_file);
          @accuracy_value    = split(/\t/,  $accuracy_value[0]);
 
-         push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value[1] ];
+         if (-s $validation_file > 1)
+         {
+             push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value[1] ];
+         }
      }
   
      $self->project_description($c, $pop_id);
@@ -2462,6 +2472,7 @@ sub get_acronym_pairs {
         shift(@acronym_pairs); # remove header;
     }
 
+    @acronym_pairs = sort {uc $a->[0] cmp uc $b->[0] } @acronym_pairs;
     return \@acronym_pairs;
 
 }
@@ -2516,16 +2527,26 @@ sub analyzed_traits {
     my @traits_files = grep {/($model_id)/} @all_files;
     
     my @traits;
-    foreach  (@traits_files) 
-    {                     
-        $_ =~ s/gebv_kinship_//;
-        $_ =~ s/$model_id|_//g;
-        unless ($_ =~ /combined/)
+    foreach my $trait_file  (@traits_files) 
+    {  
+        my $trait_file_path = catfile($dir, $trait_file);
+        if (-s $trait_file_path > 1) 
+        { 
+            my $trait = $trait_file;
+            $trait =~ s/gebv_kinship_//;
+            $trait =~ s/$model_id|_//g;
+            
+            unless ($trait =~ /combined/)
+            {  
+                push @traits, $trait;     
+            }
+        }      
+        else 
         {
-            push @traits, $_;
+            @traits_files = grep { $_ ne $trait_file } @traits_files;
         }
     }
-
+        
     $c->stash->{analyzed_traits} = \@traits;
     $c->stash->{analyzed_traits_files} = \@traits_files;
    

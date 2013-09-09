@@ -32,7 +32,6 @@ JSAN.use('jqueryui');
 if (!CXGN) CXGN = function () { };
 
 CXGN.List = function () { 
-    //alert("CREATE LIST!");
     this.list = [];
 };
 
@@ -51,12 +50,10 @@ CXGN.List.prototype = {
 		    alert(response.error);
 		}
 		else { 
-		    //alert('Response = '+response);
 		    list = response;
 		}
 	    }
 	});
-	//alert('List='+list);
 	return list;
 
     },
@@ -144,7 +141,6 @@ CXGN.List.prototype = {
     },
 
     renderLists: function(div) { 
-	//alert("render lists...");
 	var lists = this.availableLists();
 	var html = '';
 	html = html + '<input id="add_list_input" type="text" /><input id="add_list_button" type="button" value="new list" /><br />';
@@ -209,16 +205,13 @@ CXGN.List.prototype = {
 
 	for (var n=0; n<items.length; n++) { 
 	    var list_item_id = items[n][0];
-	    //alert('constructing button '+list_item_id);
+
 	    jQuery('#'+items[n][0]).click(
 		function() { 
-		    //alert("ID = "+this.id);
 		    var lo = new CXGN.List();
 		    var i = lo.availableLists();
 		    
-		    //alert(i.join(",")); //+'removing n= '+n+' item '+ i[n][0] + ' ' + i[n][1]);
 		    lo.removeItem(list_id, this.id );
-		    //alert("REMOVED ITEM "+this.id);
 		    lo.renderItems(div, list_id);
 		    lo.renderLists('list_dialog');
 		});
@@ -260,17 +253,15 @@ CXGN.List.prototype = {
     },
     
     addToList: function(list_id, text) { 
-	//alert('start addToList'+list_id+", "+text);
 	var list = text.split("\n");
 	var duplicates = [];
 	for(var n=0; n<list.length; n++) { 
-	    //alert('adding '+list[n]);
 	    var id = this.addItem(list_id, list[n]);
 	    if (id == 0) { 
 		duplicates.push(list[n]);
 	    }
 	}
-	//lo.renderLists('list_dialog'); // do this after this function was called
+
 	if (duplicates.length > 0) { 
 	    alert('Duplicate items ('+ duplicates.join(",") + ') were not stored');
 	}
@@ -343,11 +334,7 @@ function pasteListMenu (div_name, menu_div) {
 
 function pasteList(div_name) { 
     var lo = new CXGN.List();
-    
     var list_name = jQuery('#'+div_name+'_list_select').val();
-
-    //alert('paste list '+list_name);
-
     var list_content = lo.getList(list_name);
     
     // textify list
@@ -396,8 +383,8 @@ function addToListMenu(listMenuDiv, dataDiv) {
 
 function getData(id) { 
     var divType = jQuery("#"+id).get(0).tagName;
-    alert("DIV TYPE="+divType);
-    if (divType == 'DIV' ||  divType === undefined) { 
+
+    if (divType == 'DIV' || divType =='SPAN' ||  divType === undefined) { 
 	data = jQuery('#'+id).html();
     }
     if (divType == 'SELECT') { 
@@ -406,7 +393,6 @@ function getData(id) {
     if (divType == 'TEXTAREA') { 
 	data = jQuery('textarea#'+id).val();
     }
-    alert("DATA="+data);
     return data;
 }
            
@@ -449,18 +435,15 @@ function addSelectToListMenu(div) {
 
 // add the text in a div to a list
 function addDivToList(div_name) { 
-    //alert('start addDivToList');
     var list_id = jQuery('#'+div_name+'_list_select').val();
     var lo = new CXGN.List();
     var list = jQuery('#'+div_name).val();
-    //alert('list-id: '+list_id+' list= '+list);
     var items = list.split("\n");
 
     for(var n=0; n<items.length; n++) { 
 	var added = lo.addItem(list_id, items[n]);
 	if (added > 0) { }
     }
-    //alert('added text to list');
 }
 
 function addTextToList(div, list_id) { 
@@ -482,7 +465,6 @@ return;
     }
     var items = content.split("\n");
     
-    alert("ITEMS: "+items.length);
     var duplicates = new Array();
     for (var n=0; n<items.length; n++) { 
 	var id = lo.addItem(list_id, items[n]);
@@ -525,7 +507,6 @@ function deleteItemLink(list_item_id) {
     var lo = new CXGN.List();
     lo.deleteItem(list_item_id);
     lo.renderLists('list_dialog');
-    //alert('Deleted '+list_item_id);
 }
 	
 function showListItems(div, list_id) { 
@@ -544,7 +525,6 @@ function addNewList(div_id) {
     }
     
     var list_id = lo.existsList(name);
-    //alert('this list name has id '+list_id);
     if (list_id > 0) {
 	alert('The list '+name+' already exists. Please choose another name.');
 	return;

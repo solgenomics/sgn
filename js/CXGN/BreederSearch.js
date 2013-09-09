@@ -274,17 +274,18 @@ function copy_hash(hash) {
 function disable_ui() { 
 
     jQuery('#wheel').html('<img src="/static/documents/img/wheel.gif" />');
+    var ids = new Array();
+    ids = [ '#select1', '#select2','#select3', '#select4', '#c1_data', '#c2_data', '#c3_data', '#stock_data' ];
 
-    var ids = [ '#select1', '#select2','#select3', '#select4', '#c1_data', '#c2_data', '#c3_data', '#stock_data' ];
-
-    for each (var id in ids) { 
+    for (var id in ids) { 
 	jQuery(id).attr("disabled", "disabled");
     }
 }
 
 function enable_ui() { 
-    var ids = [ '#select1', '#select2','#select3', '#select4', '#c1_data', '#c2_data', '#c3_data', '#stock_data' ];
-    for each (var id in ids) { 
+    var ids = new Array();
+    ids = [ '#select1', '#select2','#select3', '#select4', '#c1_data', '#c2_data', '#c3_data', '#stock_data' ];
+    for (var id in ids) { 
 	jQuery(id).removeAttr("disabled");
     }
     jQuery('#wheel').html('');

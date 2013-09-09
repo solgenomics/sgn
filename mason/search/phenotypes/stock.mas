@@ -15,6 +15,7 @@
   use Number::Format;
   use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;
   use SGN::View::Stock qw/stock_link stock_organisms stock_types /;
+  use JSON::Any;
 </%once>
 
 <%perl>
@@ -26,7 +27,7 @@ my $new_stock_link = qq| <a href="/stock/0/new">Submit new stock</a> \| <a href=
 </%perl>
 
 <& /util/import_javascript.mas,
-    classes => [qw(jquery CXGN.Effects)]
+    classes => [qw(jquery jquery.cookie	CXGN.Effects)]
 &>
 
 
@@ -39,8 +40,9 @@ my $new_stock_link = qq| <a href="/stock/0/new">Submit new stock</a> \| <a href=
                                           .'-'.$pager->last
                                           .' of '.Number::Format->new->format_number($pager->total_entries)
    &>
+% my @data =();	
 %   if( $results->count ) {
-%               my @data =
+%               @data =
 %            map {
 %                my $organism = $_->organism;
 %            [
@@ -57,6 +59,37 @@ my $new_stock_link = qq| <a href="/stock/0/new">Submit new stock</a> \| <a href=
 %   } else {
      <h3 style="text-align: center">no matching results found</h3>
 %   }
+
+<div style="text-align:right">
+Copy items on this page to list: 
+<span id="item_list_menu">
+</span>
+
+<div id="item_list">
+</div>	
+</div>
+
+% my @items = map { $_->uniquename() } $results->all();
+% my $item_json = JSON::Any->new()->encode(\@items);
+<script>
+
+  jQuery(document).ready( function() { 
+    var items = eval(<% $item_json %>);
+
+    if (jQuery.cookie("sgn_session_id")) { 
+      jQuery('#item_list').hide();
+      jQuery('#item_list').html(items.join("\n"));
+      
+      addToListMenu('item_list_menu', 'item_list', 'div');
+    }
+    else { 
+      jQuery('#item_list_menu').html('Log in to use lists.');
+    }
+  });
+
+</script>
+
+
   </&>
 
   <& /page/pagination_control.mas, pager => $pager, link_maker => $pagination_link_maker &>

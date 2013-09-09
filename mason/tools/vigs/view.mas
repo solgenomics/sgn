@@ -1,6 +1,11 @@
 
+<!-- for drag and resize -->
 <script src="http://code.jquery.com/jquery-1.8.2.js"></script>
 <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+
+<!-- tabs --> 
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 
 <%args>
 $query
@@ -11,16 +16,18 @@ $database => 'unknown database'
 $best_seq => () # best region sequence
 $score => ()
 $all_scores => ()
+$matches_aoa => ()
 $error => undef
 $fragment_size => undef
 $seq_fragment => undef
 $missmatch => undef
+$expr_msg => undef
 $expr_file => undef
 $messages => ""
 $errors => ""
 $coverage => 0
-$image_map => ""
 @ids => ()
+$img_height => 594
 </%args>
 
 <%perl>
@@ -41,21 +48,24 @@ if ($messages) { print $messages; }
 
 
 %if ($score == 0) {
-  Note: No results were found.
+  <span style="color:red;">Note: No results were found!</span>
 %}
 
 <% $messages %><br />
 
 <table>
   <tr>
-    <td width="55%">
+    <td width="50%">
       <p id="score_p">
-        <b>Score:</b> <% sprintf("%.2f",($score*100/$seq_fragment)/$coverage) %> (-&infin;&mdash;100)<br />
+        <b>Score:</b> 
+%if ($coverage > 0) {
+% print sprintf("%.2f",($score*100/$seq_fragment)/$coverage);
+%} 
+&nbsp;&nbsp;(-&infin;&mdash;100)<br />
       </p>
-
       <form action="/tools/vigs/view">
         Target genes:
-        <input size="1" name="targets" value="<% $coverage %>" />
+        <input size="1" name="targets" value="<% $coverage %>" min="1" />
         <input type="hidden" name="id" value="<% $seq_filename %>" />
         <input type="hidden" name="fragment_size" value="<% $fragment_size %>" />
         <input type="hidden" name="database" value="<% $database %>" />
@@ -67,34 +77,55 @@ if ($messages) { print $messages; }
       <p>
         Region Start: <input type="text" id="cbr_start" value=<% $best_window[0] %> size="3"> 
         End: <input type="text" id="cbr_end" size="3" value="<% $best_window[1] %>">
-        <button type="button" value="set custom best region" onClick="getCustomRegion()">Set Custom Region</button> <p style="color:red" id="cbr_p"></p>
+        <button type="button" value="set custom best region" onClick="getCustomRegion()">Set Custom Region</button>
+	<p style="color:red" id="cbr_p"></p>
       </p>
     </td>
     <td>
-      <p style="background-color:#EFEBFC; border-style:solid; border-color:#A9A9A9; border-width:1px;">
-        &nbsp;<b>Parameters used</b><br /><br />
-	&nbsp;&bull;<b>Database:</b> <% $database %>&nbsp;<br />
-	&nbsp;&bull;<b>Fragment size: </b> <% $seq_fragment %>&nbsp;&nbsp;&nbsp;&nbsp;&bull;<b>n-mer:</b> <% $fragment_size %><br />
-	&nbsp;&bull;<b>Miss-matches:</b> <% $missmatch %><br />
-      </p>
     </td>
   </tr>
 </table>
 
 <&| /page/info_section.mas, title=>"Distribution of $fragment_size-mers", collapsible => 1, collapsed => 0 &>
 
-<div class="seq_map" align="center" style="color: #777777">
-     <div id="region_square" onmouseup="getSquareCoords()"></div>
-     <img id="map_img" src="<% $graph_url %>" usemap="#blabla" />
+
+<div class="seq_map" id="seq_map">
+     <div class="region_square" id="region_square" onmouseup="getSquareCoords()"></div>
+     <canvas id="myCanvas" width="700" height="<%$img_height%>">
+     	 Your browser does not support the HTML5 canvas
+     </canvas>
 </div>
+<br />
+<button id="collapse" type="button" value="1" onClick="activateCollapse()">Expand Graph</button>
+<button id="zoom" type="button" value="0" onClick="activateZoom()">Zoom In</button>
+<button onclick="openWin()">Parameters and Help</button>
 
 <style>
 .seq_map {
+    color: #777777;
+    width: 700px;
     position:relative;
+    overflow: auto;
+    align: left;
+}
+
+#msgs_p {
+    align:center;
+    margin-left:auto;
+    margin-right:auto;
+    margin-top:0px;
+    text-align:center;
+    color:#FFFFFF;
+    width:98%; 
+    background-color:#303030; 
+    border-style:dotted; 
+    border-color:#585858; 
+    border-width:2px;
 }
 
 #region_square {
     position:absolute;
+    vertical-align:middle;
 }
 
 </style>
@@ -123,36 +154,425 @@ if ($messages) { print $messages; }
 
 </&>
 
-<&| /page/info_section.mas, title=>"Sequences with perfect matches of $fragment_size-mers", collapsible => 1, collapsed => 0 &>
-% foreach my $id (@ids) {
-% print $id->[0]." (".$id->[1].")<br />";
-% }
-
+<&| /page/info_section.mas, title=>"Sequences with matches of $fragment_size-mers", collapsible => 1, collapsed => 0 &>
+%foreach my $id (@ids) {
+%print $id->[0]." (".$id->[1].")<br />";
+%}
 </&>
+
+<div id="tabs" style="display:none;">
+    <ul>
+	<li><a href="#tabs-1">Parameter used</a></li>
+	<li><a href="#tabs-2">Help</a></li>
+    </ul>
+    <div id="tabs-1">
+ 	<p>
+	    &bull;<b>Fragment size: </b> <% $seq_fragment %><br />
+	    &nbsp;&bull;<b>n-mer:</b> <% $fragment_size %><br />
+	    &bull;<b>Miss-matches:</b> <% $missmatch %><br />
+	    &bull;<b>Database:</b> <% $database %>&nbsp;
+	</p>
+    </div>
+    <div id="tabs-2">
+        <p>
+	    Targets are shown in blue, off-targets in red, the yellow area highlights the <% $seq_fragment %>bp region of highest score.
+	</p>
+	<p>
+    	    In the bottom is shown the score graph. Score value = 0 is represented by the green line, under this line are represented the region with more off-targets than targets, and the opposite when the score is over the green line.
+        </p>
+	<p>
+	    Dragging or resizing the transparent grey square will select a custom region.
+	</p>
+    </div>
+</div>
+
+
+<!-- javascript-->
+<script>
+    function openWin() {
+    var help=document.getElementById("tabs")
+    help.style.visibility="visible";
+    $(function() {
+    	$( "#tabs" ).tabs();
+    	$( "#tabs" ).dialog({
+	    width:450,
+	    closeOnEscape: true,
+	    title: "SGN VIGS Tool Help",
+	});
+    });
+}
+</script>
+
+
+
+<!--prints the squares-->
+<script>
+    function printSquares(collapsed,zoom) {
+        var m=<% $json->encode($matches_aoa) %>; // aoa with the matches from avery subject
+	var ids_aoa = <% $json->encode(\@ids) %>; // aoa with subject ids and number of matches
+        var coverage = <% $coverage %>;
+    	var seq_length = +<% length($query->seq()) %>;
+    	var xscale = +(700/seq_length); // to transform sequence length to pixels
+        var img_width = 700;
+    	var off_set = 20; // just under the horizontal line
+	var coord_y = 0;
+	
+	var before_block = 20;
+	var after_block = 10;
+	
+	if (collapsed) {
+	    before_block = 25;
+        }
+	if (seq_length < 700 || zoom) {
+	    xscale = 1;
+	    img_width = seq_length;
+        }
+
+	var off_set_array = []; //to print names
+	
+    	var c=document.getElementById("myCanvas");
+    	var ctx=c.getContext("2d");
+	
+	ctx.lineWidth=1;
+
+        // each track
+        for (var t=0; t<ids_aoa.length;t++) {
+	    var max_row_num = 0; //to calculate the height of every track
+	    off_set_array.push(off_set);
+	    
+	    off_set += before_block; //add some space for the names
+
+    	    //target and off-target colors
+	    if (t < coverage) {
+    	        ctx.strokeStyle='rgb(0,0,180)';
+    	        ctx.fillStyle='rgb(0,120,255)';
+	    } else {
+	        ctx.strokeStyle='rgb(150,0,0)';
+		ctx.fillStyle='rgb(255,0,0)';
+	    }
+	    var row = 1;
+	    var prev_match_end = 9999;
+	    var prev_match_start = 0;
+	    var collapsed_start = 0;
+	    var collapsed_end = 0;
+
+	    //each match (rectangles)
+            for (var i=0; i<m[t].length;i++) {
+
+    	    	var coord = m[t][i].split("-"); //array with start and end for every match
+	    	m_width = +((+coord[1] - +coord[0] +1)*xscale); //rectangle width in pixels
+	    	m_start = +(+coord[0]*xscale); //rectangle start in pixels
+		
+		//to allow as many rows as the n-mer size
+		var match_distance = +(+coord[0] - +prev_match_start);
+		if ((row < <% $fragment_size %>-1) && (coord[0] <= prev_match_end) && prev_match_end != 9999) {
+		   if ((match_distance > 1) && ((+row + match_distance) > <% $fragment_size %>)) {
+		       row = 1;
+		   } else {
+		       row++;
+		   }
+		} else {
+		   row = 1;
+		}
+		
+		if (!collapsed) {
+		   coord_y = off_set + row*4;
+
+ 		   //print rectangles		
+            	   ctx.beginPath();
+    	    	   ctx.rect(m_start,coord_y,m_width,4);
+    	    	   ctx.fill();
+    	    	   ctx.stroke();
+
+		} else {
+		   if (collapsed_start == 0) {
+		       collapsed_start = +coord[0];
+		   }
+		   if (+coord[0] < +prev_match_end) {
+		       collapsed_end = prev_match_end;
+		   } else {
+		       //alert("start: "+collapsed_start+", prev_end: "+collapsed_end+"xscale: "+xscale);
+
+ 		       coord_y = off_set; //to collapse all rectangles of the track
+		       if (collapsed_end == 9999) {collapsed_end = prev_match_end;}
+		       var collapsed_width = (+collapsed_end - +collapsed_start + 1)*xscale;		      
+		       
+  		       //print rectangles		
+            	       ctx.beginPath();
+    	    	       ctx.rect(collapsed_start*xscale,coord_y,collapsed_width,4);
+    	    	       ctx.fill();
+    	    	       ctx.stroke();
+		       
+		       collapsed_start = coord[0];
+		       collapsed_end = coord[1];
+		   }
+		}
+		prev_match_end = +coord[1];
+		prev_match_start = +coord[0];
+
+		if (row > max_row_num) {max_row_num = row;} //get maximum number of rows per track to calculate the track height
+	    }
+
+	    if (!collapsed) {
+	    	var track_height = (max_row_num*4)+after_block; 
+	    	off_set += track_height; //add space for next track
+     	    } else {
+	        if (collapsed_end == 9999) {collapsed_end = prev_match_end;}
+ 		coord_y = off_set; //to collapse all rectangles of the track
+		var collapsed_width = (+collapsed_end - +collapsed_start + 1)*xscale;
+
+  		//print rectangles		
+            	ctx.beginPath();
+    	    	ctx.rect(collapsed_start*xscale,coord_y,collapsed_width,4);
+    	    	ctx.fill();
+    	    	ctx.stroke();
+
+	        off_set += 10;
+	    }
+
+	    // print horizontal line under tracks
+    	    ctx.beginPath();
+    	    ctx.moveTo(0,off_set);
+    	    ctx.lineTo(img_width,off_set);
+    	    ctx.lineWidth=1;
+    	    ctx.strokeStyle='rgb(200,200,200)';
+    	    ctx.stroke();
+        }
+	return off_set_array;
+    }
+</script>
+
+<!--lets create the score graph-->
+<script>
+  function printScoreGraph(collapsed,zoom) {
+    var seq_length = +<% length($query->seq()) %>;
+    var xscale = +(700/seq_length); // to transform sequence legth to pixels
+    var img_h = +(<% $img_height %>-52);
+    var img_width = 700;
+
+    if (collapsed) {
+       img_h = +(((<% $#ids %>+1)*35)+21);
+    }
+    if (seq_length < 700 || zoom) {
+       xscale = 1;
+       img_width = seq_length;
+    }
+
+    var c=document.getElementById("myCanvas");
+    var ctx=c.getContext("2d");
+    
+    //print black background
+    ctx.beginPath();
+    ctx.rect(0,img_h,img_width,52);
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle='rgb(30,30,30)';
+    ctx.fill();
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    //print x axis
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.strokeStyle='rgb(0,200,0)';
+    ctx.moveTo(0,(img_h+26));
+    ctx.lineTo(img_width,(img_h+26));
+    ctx.stroke();
+    
+    if (<% defined($all_scores) %>) { 
+        var score_array = <% $json->encode($all_scores) %>;
+    	ctx.beginPath();
+    	ctx.moveTo(0,+img_h+25);
+    	ctx.strokeStyle='rgb(255,0,0)';
+    
+	for (var i=0; i<score_array.length; i++) {
+	    var xpos = (i+1)*xscale;
+	    var ypos = 0;
+	 
+	    var final_score = (+score_array[i]*100/<% $coverage %>).toFixed(2);
+
+	    if (+final_score >= 0) {
+	        ypos = 25-(+final_score*25/100)+2;
+	    } else {
+	        ypos = 50-(+final_score*25/100);
+	    }
+	    if (ypos > 50) {
+	        ypos = 50;
+	    }
+    	    ctx.lineTo(xpos,img_h+ypos);
+    	    ctx.stroke();
+        }
+    }
+  }
+</script>
+
+<!--lets create the graph-->
+<script>
+  function createMap(collapsed,zoom) {
+    var img_height = <% $img_height %>;
+    var img_width = 700;
+    var seq_length = +<% length($query->seq()) %>;
+    var xscale = +(700/seq_length); // to transform sequence length to pixels
+    var vline_tag = 100;
+    var c=document.getElementById("myCanvas");
+    var ctx=c.getContext("2d");
+    
+    if (collapsed) {
+	c.height = +(((<% $#ids %>+1)*35)+73);
+	img_height = c.height;
+    } else {
+	c.height = +(<% $img_height %>);
+    }
+    if (seq_length < 700 || zoom) {
+	xscale = 1;
+	img_width = seq_length;
+    }
+
+    c.width = img_width;
+
+    var cbr_start = +(<% $best_window[0] %>*xscale);
+    var cbr_width = +(<% $best_window[1]-$best_window[0] %>*xscale);
+    
+    //print black background
+    ctx.beginPath();
+    ctx.rect(0,(img_height-52),img_width,102);
+    ctx.fillStyle='rgb(30,30,30)';
+    ctx.fill();
+    ctx.stroke();
+
+    //print yellow rectangle for the best region
+    ctx.beginPath();
+    ctx.rect(cbr_start,0,cbr_width,img_height);
+    ctx.strokeStyle='yellow';
+    ctx.fillStyle='yellow';
+    ctx.fill();
+    ctx.stroke();
+    
+    //print the rectangles
+    off_set_array = printSquares(collapsed,zoom);
+
+    //print vertical lines and tick values
+    ctx.fillStyle='black';
+    ctx.lineWidth=1;
+    ctx.strokeStyle='rgb(200,200,200)';
+    ctx.font="10px Arial";
+    if (seq_length >=2700) {ctx.font="8px Arial";}
+    if (seq_length >=4500) {ctx.font="6px Arial";}
+
+    for (var l=100; l<seq_length; l+=100) {
+    	var i = l*xscale;
+        ctx.beginPath();
+    	ctx.moveTo(i,15);
+    	ctx.lineTo(i,img_height);
+    	ctx.fillText(vline_tag,i-14,12);
+    	ctx.stroke();
+
+    	vline_tag+=100;
+    }
+
+    // print horizontal line under ticks
+    ctx.beginPath();
+    ctx.moveTo(0,20);
+    ctx.lineTo(img_width,20);
+    ctx.lineWidth=2;
+    ctx.strokeStyle='#000000';
+    ctx.stroke();
+
+    //print subject names
+    var ids_aoa = <% $json->encode($expr_msg) %>; // aoa with subject ids and number of matches
+
+    for (var t=0; t<ids_aoa.length;t++) {
+        ctx.beginPath();
+    	ctx.fillStyle='#000000';
+	ctx.font="12px Arial";
+    	ctx.fillText(ids_aoa[t][0],5,off_set_array[t]+17);
+    	ctx.stroke();
+    }
+    printScoreGraph(collapsed,zoom);    
+  }  
+</script>
+
+<script>
+    createMap(1,0);
+</script>
+
+<script>
+    function activateCollapse() {
+ 	document.getElementById("region_square").style.height="0px";
+        var collapsed = document.getElementById("collapse").value;
+        var zoom = document.getElementById("zoom").value;
+
+        if (collapsed == 0) {
+           document.getElementById("collapse").innerHTML = "Expand Graph";
+       	   document.getElementById("collapse").value = 1;
+	   collapsed = 1;
+        } else {
+       	   document.getElementById("collapse").innerHTML = "Collapse Graph";
+       	   document.getElementById("collapse").value = 0;
+	   collapsed = 0;
+        }
+    	createMap(+collapsed,+zoom);
+	getCustomRegion();
+    }
+</script>
+
+<script>
+    function activateZoom() {
+        var collapsed = document.getElementById("collapse").value;
+        var zoom = document.getElementById("zoom").value;
+
+        if (zoom == 0) {
+           document.getElementById("zoom").innerHTML = "Zoom Out";
+       	   document.getElementById("zoom").value = 1;
+	   zoom = 1;
+        } else {
+       	   document.getElementById("zoom").innerHTML = "Zoom In";
+       	   document.getElementById("zoom").value = 0;
+	   zoom = 0;
+        }
+    	createMap(+collapsed,+zoom);
+	getCustomRegion();
+    }
+</script>
 
 <!--Function to change values of custom region by dragging the selection square-->
 <script>
-	function getSquareCoords() {
-		var r_left = document.getElementById("region_square").style.left;
-		var r_width = document.getElementById("region_square").style.width;
-		var left_num = r_left.replace("px","");
-		var right_num = r_width.replace("px","");
-		var sqr_left = Math.round(+left_num*<% length($query->seq()) %>/700);
-		var sqr_right = Math.round((+left_num + +right_num)*<% length($query->seq()) %>/700);
+    function getSquareCoords() {
+        var seq_length = +<% length($query->seq()) %>;
+	var img_width = 700;
+	var zoom = document.getElementById("zoom").value
+    	var rev_xscale = +(seq_length/img_width); // to transform sequence length to pixels
 
-		var cbr_start = (+sqr_left + 1);
-		var cbr_end = (+sqr_right);
-		var fragment = (+cbr_end - +cbr_start +1);
-		
-		document.getElementById("cbr_start").value = cbr_start;
-		document.getElementById("cbr_end").value = cbr_end;
-		document.getElementById("f_size").value = fragment;
-
-		var best_region = [cbr_start,cbr_end];
-		hilite_sequence(best_region);
-		printCustomSeq(cbr_start,cbr_end);
-		printCustomScore(cbr_start,cbr_end);
+	if (+zoom || seq_length < 700) {
+	   rev_xscale = 1;
+	   img_width = seq_length;
 	}
+
+	var r_left = document.getElementById("region_square").style.left;
+	var r_width = document.getElementById("region_square").style.width;
+	var left_num = r_left.replace("px","");
+	var right_num = r_width.replace("px","");
+	var sqr_left = Math.round(+left_num*rev_xscale);
+	var sqr_right = Math.round((+left_num + +right_num)*rev_xscale);
+
+	var cbr_start = (+sqr_left + 1);
+	var cbr_end = (+sqr_right);
+	var fragment = (+cbr_end - +cbr_start +1);
+		
+	if (+cbr_end > seq_length) {cbr_end = seq_length;}
+	if (+cbr_start < 1) {cbr_start = 1;}
+
+	document.getElementById("cbr_start").value = cbr_start;
+	document.getElementById("cbr_end").value = cbr_end;
+	document.getElementById("f_size").value = fragment;
+
+	var best_region = [cbr_start,cbr_end];
+	hilite_sequence(best_region);
+	printCustomSeq(cbr_start,cbr_end);
+	
+	if (<% defined($all_scores) %>) {
+	    printCustomScore(cbr_start,cbr_end);
+	}
+    }
 </script>
 
 <!--Prints custom sequence in Best Region field -->
@@ -179,18 +599,26 @@ if ($messages) { print $messages; }
 <script>
 	function printCustomScore(start,end){
 		 var custom_score = 0;
+		 var coverage = <% $coverage %>;
 		 var score_array = <% $json->encode($all_scores) %>;
+		 var seq_length = +<% length($query->seq()) %>;
 
-		 for (var i=start-1; i<end; i++) {
-		     custom_score += +score_array[i];
+		 if (+end > seq_length) {end = seq_length;}
+		 if (+start < 1) {start = 1;}
+		 
+		 if (<% defined($all_scores) %>) {
+		     for (var i=start-1; i<end; i++) {
+		         custom_score += +score_array[i];
+		     }
 		 }
 		 var fragment_length = (+end - +start + 1);
 		 //alert("length: "+fragment_length+" score: "+custom_score);
 
+		 if (<% $coverage %> > 0 && fragment_length > 0) {
 		 var final_score = ((custom_score*100/fragment_length)/<% $coverage %>).toFixed(2)
-
-		 document.getElementById("score_p").innerHTML="<b>Score:</b> <% sprintf("%.2f",($score*100/$seq_fragment)/$coverage) %> ";
+		 document.getElementById("score_p").innerHTML="<b>Score:</b> "+(<% ($score*100/$seq_fragment) %>/coverage).toFixed(2);
 		 document.getElementById("score_p").innerHTML+="&nbsp;&nbsp; <b> Custom Score: </b>"+final_score+" &nbsp;&nbsp; (-&infin;&mdash;100)";
+		 }
 	}
 </script>
 
@@ -199,33 +627,47 @@ if ($messages) { print $messages; }
 	function getCustomRegion() {
 		 var cbr_start = parseInt(document.getElementById("cbr_start").value);
 		 var cbr_end = parseInt(document.getElementById("cbr_end").value);
-		 var l = <% length($query->seq()) %>;
-		 if ((cbr_start > 0) && (cbr_end <= l) && (cbr_end >= cbr_start+99)) {
-		        var img_left = Math.round((cbr_start-1)*700/<% length($query->seq()) %>);
-		    	var img_width = Math.round((cbr_end-cbr_start)*700/<% length($query->seq()) %>);
-		    	var map_el = document.getElementById('map_img');
-		    	var img_height = (map_el.height - 20);
-		 	
+		 var seq_length = +<% length($query->seq()) %>;
+		 var map_el = document.getElementById('myCanvas');
+
+		 var img_width = 700;
+    		 var xscale = +(+img_width/+seq_length); // to transform sequence length to pixels
+
+		 var zoom = document.getElementById("zoom").value
+
+		 if (zoom == 1 || seq_length < 700) {
+	   	     xscale = 1;
+		     img_width = seq_length;
+		 }
+		 if (seq_length < 700) {document.getElementById("seq_map").style.width=""+seq_length+"px";}
+
+		 if ((cbr_start > 0) && (cbr_end <= seq_length) && (cbr_end >= cbr_start+99)) {
+		        var cbr_left = Math.round((+cbr_start-1)*xscale);
+		    	var cbr_width = ((+cbr_end - +cbr_start +1)*xscale);
+
+		    	var cbr_height = (map_el.height - 21);
+
 			// a border will add pixels to all end coordinates
 			document.getElementById("region_square").style.border="0px solid #000000";
-		 	document.getElementById("region_square").style.top="20px";
-		 	document.getElementById("region_square").style.background="rgba(0,0,0,0.2)";
-		 	document.getElementById("region_square").style.left=""+img_left+"px";
-		 	document.getElementById("region_square").style.width=""+img_width+"px";
-		 	document.getElementById("region_square").style.height=""+img_height+"px";
-		 
-			var min100 = (100*700/<% length($query->seq()) %>);
+		 	document.getElementById("region_square").style.top="21px";
+		 	document.getElementById("region_square").style.background="rgba(80,100,100,0.3)";
+		 	document.getElementById("region_square").style.left=""+cbr_left+"px";
+		 	document.getElementById("region_square").style.width=""+cbr_width+"px";
+		 	document.getElementById("region_square").style.height=""+cbr_height+"px";
+
+			$(document).ready(function() {
+    			    $("div.region_square").resizable({
+			        containment: $('div.seq_map'),
+				handles: 'e, w',
+				minWidth: 100*xscale,
+			    });
+			});
+
 
 		 	$("#region_square").draggable({
 				axis: 'x',
 				containment:map_el,
 				cursor: "move"
-		 		});
-
-		 		$("#region_square").resizable({
-				handles: 'e, w',
-				minWidth: min100,
-				containment:map_el,
 		 	});
 			
 			document.getElementById("cbr_p").innerHTML = "";
@@ -236,10 +678,13 @@ if ($messages) { print $messages; }
 		 	hilite_sequence(best_region);
 
 		 	printCustomSeq(cbr_start,cbr_end);
-			printCustomScore(cbr_start,cbr_end);
+			
+			if (<% defined($all_scores) %>) {
+				printCustomScore(cbr_start,cbr_end);
+			}
 
 		} else {
-		        document.getElementById("cbr_p").innerHTML = "Values must be between 1 and "+l+", getting a sequence not shorter than 100 bp!";
+		        document.getElementById("cbr_p").innerHTML = "Values must be between 1 and "+seq_length+", getting a sequence not shorter than 100 bp!";
 		}
 	}	
 </script>

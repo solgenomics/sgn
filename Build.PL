@@ -66,6 +66,7 @@ my $build = SGN::Build->new(
         # Remove the following dep when XML::Atom is fixed to depend on it and released
         'DateTime::TimeZone'                       => '1.31',
         'DateTime::Format::Flexible'               => 0,
+	'DateTime::Format::Pg'                     => 0,
         'DBIx::Class'                              => 0,
         'DBIx::Connector'                          => 0,
         'File::Basename'                           => 0,
@@ -107,6 +108,7 @@ my $build = SGN::Build->new(
         'Module::Pluggable::Object'                => 0,
         'Moose'                                    => 0,
         'MooseX::Declare'                          => 0,
+	'MooseX::FollowPBP'                        => 0,
         'MooseX::Method::Signatures'               => '0.30',
         'MooseX::Types::Path::Class'               => 0,
         'MooseX::Types::URI'                       => 0,
