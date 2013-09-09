@@ -73,7 +73,7 @@ ROW
   <&| /page/info_section.mas, 
       collapsible => 1, 
        collapsed  => 0, 
-       title      => "Rank Genotypes based on GEBV of multiple traits"
+       title      => "Rank Genotypes based on weighted mean GEBV of multiple traits"
    &> 
 
  
@@ -85,11 +85,13 @@ ROW
     <input type="hidden" id="selected_population_id" value="" />
   </div>
 
-   
-    <div id="mulitple_traits">
-      <div id="select_a_population_div" align="left" ></div>
-      <div id="rel_gebv_form">
-        <table style="align:left;padding: 5px;width:100%">          
+ 
+  <div id="select_a_population_div" style="float:left"></div>
+  <div style="float:left"><p style="padding-left: 20px">And assign relative weights to traits.</p></div>
+
+  <div id="mulitple_traits" style="clear: both;">  
+    <div id="rel_gebv_form">
+      <table style="align:left;padding: 5px;width:100%">                          
           <% $trait_rows %>
           <tr>      
             <td>
