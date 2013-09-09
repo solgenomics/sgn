@@ -101,8 +101,12 @@ function selectAPopulation(modelId){
                        
             jQuery(document).bind('click', function(e) {
                     var clicked = jQuery(e.target);
+                    
                     if (! clicked.parents().hasClass("si_dropdown"))
                         jQuery(".si_dropdown dd ul").hide();
+
+                    e.preventDefault();
+
                 });           
         }  
     }               
