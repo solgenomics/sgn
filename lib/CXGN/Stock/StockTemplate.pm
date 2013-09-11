@@ -40,6 +40,11 @@ has 'metadata_schema' => (
     isa =>  'DBIx::Class::Schema',
     );
 
+has 'phenome_schema' => (
+    is  => 'rw',
+    isa =>  'DBIx::Class::Schema',
+    );
+
 has 'parsed_data' => (
     is => 'rw'
     );
@@ -273,6 +278,7 @@ sub store {
     my $self = shift;
     my $schema = $self->schema;
     my $metadata_schema = $self->metadata_schema;
+    my $phenome_schema = $self->phenome_schema;
     my $hashref = $self->parsed_data;
     my $filename = $self->filename();
     my $user_id = $self->user_id();
@@ -431,6 +437,11 @@ sub store {
 
 		#link the file to the experiment
 		#$experiment->find_or_create_related('nd_experiment_md_files',{file_id => $file_row->file_id(),});
+		my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+												  nd_experiment_id => $experiment->nd_experiment_id(),
+												  file_id => $file_row->file_id(),
+												 });
+		$experiment_files->insert();
 
 	      }
 	    }
