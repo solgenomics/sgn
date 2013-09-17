@@ -1,0 +1,21 @@
+
+<%args>
+$projects => undef
+$user_id => undef
+@roles => ()
+</%args>
+
+<& /page/page_title.mas, title=>'Field Book Tools' &>
+
+<&| /page/info_section.mas, title=>'Field Layout Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_new_field_layout_file_link">Create new field layout file</a>]' &>
+</&>
+
+<&| /page/info_section.mas, title=>'Trait Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_new_trait_file_link">Create new trait file</a>]' &>
+</&>
+
+
+
+
+
+
+
