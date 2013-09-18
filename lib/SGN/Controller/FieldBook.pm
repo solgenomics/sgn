@@ -8,6 +8,7 @@ use File::Slurp qw | read_file |;
 use File::Temp;
 use Data::Dumper;
 use CXGN::Trial::TrialLayout;
+use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -19,12 +20,27 @@ sub field_book :Path("/fieldbook") Args(0) {
 	return;
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    # get projects
-    #
     my @rows = $schema->resultset('Project::Project')->all();
     my @projects = ();
-    foreach my $row (@rows) { 
-	push @projects, [ $row->project_id, $row->name, $row->description ];
+    foreach my $row (@rows) {
+      my $design_prop;
+      $design_prop =  $row->projectprops->find(
+        { 'type.name' => 'design' },
+        { join => 'type'}
+        ); #there should be only one design prop.
+      if ($design_prop) {
+	my $design_type;
+	$design_type = $design_prop->value;
+	if ($design_type) {
+	  my $trial_layout;
+	  try {
+	    $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $row->project_id} );
+	  };
+	  if ($trial_layout){
+	    push @projects, [ $row->project_id, $row->name, $row->description];
+	  }
+	}
+      }
     }
     $c->stash->{projects} = \@projects;
     # get roles
