@@ -300,7 +300,7 @@ sub store {
       my $file_row = $metadata_schema->resultset("MdFiles")->create({
 								     basename => basename($self->filename()),
 								     dirname => dirname($self->filename()),
-								     filetype => '',
+								     filetype => 'phenotype spreadsheet upload xls',
 								     md5checksum => $md5->digest(),
 								     metadata_id => $md_row->metadata_id(),
 								    });
