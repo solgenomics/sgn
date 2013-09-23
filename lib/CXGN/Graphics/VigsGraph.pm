@@ -9,18 +9,19 @@ has 'bwafile' => ( is=>'rw' );
 has 'fragment_size' => (is => 'rw', isa=>'Int', default=>21);
 has 'matches' => (is=>'rw', isa=>'Ref');
 has 'seq_window_size' => (is=>'rw', isa=>'Int', default=>100);
+has 'seq_fragment' => (is=>'rw', isa=>'Int', default=>300);
 has 'query_seq' => (is=>'rw', isa=>'Str');
 has 'step_size' => (is=>'rw', isa=>'Int', default=>4);
 has 'width' => (is=>'rw', isa=>'Int', default=>700);
-has 'height'=> (is=>'rw', isa=>'Int', default=>2400);
+has 'height'=> (is=>'rw', isa=>'Int', default=>3600);
 has 'font' => (is =>'rw', isa=>'GD::Font');
 has 'ruler_height' => (is => 'ro', isa=>'Int', default=>20);
-has 'expression_file' => (is => 'rw', default=>undef);
+has 'expr_hash' => (is => 'rw', default=>undef);
 has 'link_url' => (is => 'rw', isa=>'Str');
 
 sub parse { 
     my $self = shift;
-    
+    my $mm = shift || 0;
     # warn("Parsing file ".$self->bwafile()."\n");
 
     open(my $bt2_fh, "<", $self->bwafile()) || die "Can't open file ".$self->bwafile();
@@ -32,20 +33,24 @@ sub parse {
 	my ($seq_id, $code, $subject, $scoord) = (split /\t/, $line);
 	
 	# get perfect matches 
-	if ($line =~ /XM:i:0/) { 
-	    my ($start_coord, $end_coord);
-	    if ($seq_id=~/(\d+)/)  {
-		$start_coord = $1;
-		$end_coord = $start_coord+$self->fragment_size() -1;
-	    }
-	    
-	    # new match sequence object
-	    my $ms = CXGN::Graphics::VigsGraph::MatchSegment->new();
-	    $ms->start($start_coord);
-	    $ms->end($end_coord);
-	    $ms->id($subject);
+	if ($line =~ /XM:i:(\d+)/) { 
+	    my $mm_found = $1;
 
-	    push @{$matches->{$subject}}, $ms;
+	    if ($mm_found <= $mm) {
+		my ($start_coord, $end_coord);
+		if ($seq_id=~/(\d+)/)  {
+		    $start_coord = $1;
+		    $end_coord = $start_coord+$self->fragment_size() -1;
+		}
+	    
+		# new match sequence object
+		my $ms = CXGN::Graphics::VigsGraph::MatchSegment->new();
+		$ms->start($start_coord);
+		$ms->end($end_coord);
+		$ms->id($subject);
+
+		push @{$matches->{$subject}}, $ms;
+	    }
 	}
     }
     $self->matches($matches);
@@ -79,9 +84,7 @@ sub target_graph {
     my $matches = $self->matches();
     my @match_counts = $self->subjects_by_match_count($matches);
     # print Dumper(@match_counts);
-    my @targets = ();
-    
-#    print STDERR "coverage: $coverage\n";
+    my @target_scores;
 
     # array with target subject names, coverage is the number of target subjects
     my @target_keys = ();
@@ -92,49 +95,30 @@ sub target_graph {
 
 #    print STDERR "TARGET KEYS: ".join(",", @target_keys);
 #    print STDERR "\n";
-
-#    print STDERR "TARGETS: ". join ", ", @targets;
-#    print STDERR "SIZE =" .scalar(@targets)."\n";
-
-    my @target_tracks = ();
-    
-    # foreach match (squares in the graph) in the subjects saves in $s_targets the coverage in each position
+   
+    # foreach match (blue squares in the graph), saves in $s_targets the coverage in each position
     foreach my $s (@target_keys) { 
-	if (! defined($matches->{$s})) { next; }
-	my @s_targets = ();
+	if (! defined($matches->{$s})) { 
+	    next; 
+	}
+	my %s_targets = ();
 	foreach my $m (@{$matches->{$s}}) { 
 	    # print STDERR "m: ".$m->start()."\n";
-	    foreach my $n ($m->start() .. $m->end()) { 
-		$s_targets[$n]++;
+	    foreach my $n ($m->start()-1 .. $m->end()) { 
+		$s_targets{$n} = 1;
                 # print STDERR "m: ".$m->start()." - ". $m->end()." $n\n";
 	    }   
 	}
-        # @target_tracks is an array of subjects with arrays of their coverage  
-	push @target_tracks, [ @s_targets ];
-	
-    }
-    
-#     print STDERR "TARGET TRACKS: ".Dumper(@target_tracks);
 
-    # multiply the different track scores
-    #
-    if (@target_tracks == 1) { 
-       	@targets =  @{$target_tracks[0]}; }
-    else { 
-
-	for (my $t=1; $t< @target_tracks; $t++) { 
-	    for (my $i = 0; $i< length($self->query_seq()); $i++) { 
-		if (!defined($target_tracks[$t-1]->[$i])) { $target_tracks[$t-1]->[$i] = 0; }
-		if (!defined($target_tracks[$t]->[$i])) { $target_tracks[$t]->[$i] = 0; }
-		
-		$targets[$i]  = $target_tracks[$t]->[$i] * $target_tracks[$t-1]->[$i];
-	    }
+	# when the position is not mapped over the targets we get 0, 
+        # if it is mapped we get the number of targets where mapped in that position
+	foreach my $pos (sort keys %s_targets) {
+	    $target_scores[$pos]++;
 	}
+	%s_targets = ();	
     }
 
-    # print STDERR "\n\nNEW TARESTsn". join ",", @targets;
-
-    return @targets;
+    return @target_scores;
 }
 
 sub off_target_graph { 
@@ -145,7 +129,8 @@ sub off_target_graph {
 
     my $matches = $self->matches();
     my @match_counts = $self->subjects_by_match_count($matches);
-    
+    my %off_t_counts;
+
     my @coverage_keys = ();
     foreach my $k (0..$coverage-1) { 
 	shift @match_counts;
@@ -153,93 +138,94 @@ sub off_target_graph {
     @coverage_keys = map { $_->[0] } @match_counts;
     
     foreach my $s (@coverage_keys) { 
-	foreach my $m (@{$matches->{$s}}) { 
-	    foreach my $n ($m->start() .. $m->end()) { 
-		$off_targets[$n]++;
+	foreach my $m (@{$matches->{$s}}) {
+#	    print STDERR "$s, ".$m->start()."-".$m->end()."\n";
+	    foreach my $n ($m->start()-1 .. $m->end()) {
+		$off_t_counts{$n} = 1;
 	    }
 	}
+	
+	foreach my $pos (sort keys %off_t_counts) {
+	    $off_targets[$pos]++;
+	}
+	%off_t_counts = ();
     }
+
     return @off_targets;
 }
 
 sub longest_vigs_sequence { 
     my $self = shift;
     my $coverage = shift;
+    my $seq_length = shift;
 
-    my @regions = ();
-#    foreach my $coverage (1..8) { 
-	
-	my @targets = $self->target_graph($coverage);
-	my @off_targets = $self->off_target_graph($coverage);
-        
-#        print STDERR "targets_array: ", join ", ", @targets;
-#        print STDERR "\n";
-#        print STDERR "off_targets_array: ", join ", ", @off_targets;
-#        print STDERR "\n";
-	
-        my $start = undef;
-	my $end = undef;
-	my $score = 0;
-
-        # @targets contains the coverage of every position, values are >0 when all target subjects overlap in the region
-	for (my $i=0; $i<@targets; $i++) {
-	   if (defined($targets[$i]))  {
-              # print STDERR "t:$i, ";
-
-
-	      if (!defined($off_targets[$i]) || $off_targets[$i] == 0) {
-		   
-                    if (defined($start)) { 
-		       # print STDERR "extending... $i\n";
-		       $score += $targets[$i];
-		    }
-		    else { 
-		       # print STDERR "creating... $i\n";
-		       $start = $i;
-		       $score += $targets[$i];
-		    }
-            
-	      }
-	      elsif ($targets[$i] == 0 || defined($off_targets[$i]) || $off_targets[$i]!=0 || $i == @targets) { 
-		  # a target region ends or is the end of the subjects sequences
-		  if (defined($start)) { 
-		      # print STDERR "ending... $i\n";
-		      $end = $i;
-		      my $length = $end - $start;
-		      # print STDERR "end of target at: $start - $end: ".($end-$start+1)."\n";
-		      push @regions, [ $coverage, $score * $length, $score, $length, $start, $end ];
-		  }
-		  $score = 0;
-		  $start = undef;
-		  $end = undef;
-	      }
-	   }
-           else {
-	      # print STDERR "ndt:$i, ";
-              # a target region ends or is the end of the subjects sequences
-	      if (defined($start)) { 
-        	 # print STDERR "ending... $i\n";
-		 $end = $i;
-		 my $length = $end - $start;
-		 # print STDERR "end of target at: $start - $end: ".($end-$start+1)."\n";
-		 push @regions, [ $coverage, $score * $length, $score, $length, $start, $end ];
-	      }
-
-	      $score = 0;
-	      $start = undef;
-	      $end = undef;
-	   }
-	}
-  #  print STDERR "regions: ".Dumper(@regions)."\n";
-
-    my @sorted = sort sort_keys @regions;
+    my @best_region;    
+    my $start = undef;
+    my $end = undef;
+    my $score = 0;
+    my @window_sum = [];
+    my $window_score = 0;
+    my $best_score = -9999;
+    my $best_start = 1;
+    my $best_end = 1;
+    my $no_result = 0;
     
-    # my @ten_best = @sorted[0..3];
+    if ($coverage == 0) {
+	$coverage = 1;
+	$no_result = 1;
+    }
+    
+    my @targets = $self->target_graph($coverage);
+    my @off_targets = $self->off_target_graph($coverage);
+    my $seq_fragment = $self->seq_fragment();
 
-    # print STDERR "TEN BEST: ".Dumper(\@ten_best);
-    # print STDERR "Sorted: ".Dumper(\@sorted);
+    # @targets contains the coverage of target at every position. Same thing for off_targets
+    # $window sum[position] contain the score for each position. 
+    # It will be positive when there are more targets than off_targets, and negative in the opposite case.
+    for (my $i=0; $i<$seq_length; $i++) {
+        
+	$window_sum[$i] = 0;
+	if (defined($targets[$i]) && $targets[$i]>0) {
+	    $window_sum[$i] += $targets[$i];
+	}
+	else {
+	    $window_sum[$i] += 0;
+	    $targets[$i] = 0;
+	}
 
-    return @sorted;
+	if (defined($off_targets[$i]) && $off_targets[$i]>0) {
+	    $window_sum[$i] -= ($off_targets[$i]*1.5);
+	}
+	else {
+	    $window_sum[$i] += 0;
+	    $off_targets[$i] = 0;
+	}
+
+#	print "$i: $window_sum[$i]\tt:$targets[$i]\tot:$off_targets[$i]\n";
+
+	if ($i+1 >= $seq_fragment) {
+	    $window_score = 0;
+	    for (my $e=($i-$seq_fragment+1); $e<=$i; $e++) {
+#		print "$e\t";
+		if ($window_sum[$e] && $window_sum[$e] =~ /^[\d+-\.]+$/) { 
+		    $window_score += $window_sum[$e];
+		}
+	    }
+#	    print "\ntest: ".($i+1-$seq_fragment)."-".($i).": $window_score\n";
+
+	    if ($window_score > $best_score) {
+		$best_score = $window_score;
+		$best_start = $i-$seq_fragment+1;
+		$best_end = $i;
+	    }
+#	    print "best: $best_start-$best_end: $best_score\n";
+	    $window_score = 0;
+	}
+    }
+    if ($no_result) {$best_score = 0;}
+    
+    @best_region = ($coverage, $best_score, \@window_sum, $seq_fragment, $best_start, $best_end);
+    return @best_region;
 }
 
 
@@ -252,16 +238,16 @@ sub get_best_coverage {
     my $self = shift;
     my @subjects = $self->subjects_by_match_count($self->matches);
     
-    # print Dumper(\@subjects);
+#    print Dumper(\@subjects);
     
     # detect a high gap in the number of reads mapped between subjects
     for (my $i=1; $i<@subjects; $i++) {
 	if ($subjects[$i-1]->[1] * 0.5 > $subjects[$i]->[1]) { 
-	    # print STDERR "COVERAGE: $i\n";
+	     # print STDERR "COVERAGE: $i\n";
 	    return $i;
 	}
     }
-    return undef;
+    return 0;
 }
 
 sub subjects_by_match_count { 
@@ -277,247 +263,104 @@ sub subjects_by_match_count {
     return @sorted;
 }
 
-sub hilite_regions { 
-    my $self = shift;
-    my $regions = shift;
-    my ($r, $g, $b) = @_; #optional color
-
-    $self->{regions} = $regions;
-    $self->{region_hilite}->{r} = $r;
-    $self->{region_hilite}->{g} = $g;
-    $self->{region_hilite}->{b} = $b;
-}
-
-sub render { 
-    my $self = shift;
-    my $filename = shift;
-    my $coverage = shift;
-    my $expr = shift;
-
-    my $image = GD::Image->new($self->width, $self->height);
-    my $white = $image->colorAllocate(255,255,255);
-    my $red   = $image->colorResolve(180, 0, 0);
-#    my $light_red   = $image->colorResolve(230, 150, 0);
-    my $color = $image->colorResolve(0, 0, 0);    
-    my $blue = $image->colorResolve(0, 0, 180);
-    my $grey = $image->colorResolve(150,150,150);
-    my $yellow = $image->colorResolve(255, 255, 0);
-    my $yellow2 = $image->colorResolve(255, 255, 140);
-    my $yellow3 = $image->colorResolve(255, 255, 200);
-#    my $green = $image->colorResolve(0, 255, 0);
-    my $black  = $image->colorResolve(0, 0, 0);
-    
-    my $font = GD::Font->Small();
-    $self->font($font);
-
-    $image->filledRectangle(0, 0, $self->width, $self->height, $white);
-
-    #my @suggested_sequences = $self->get_best_vigs_seqs($coverage);
-   
-    my $x_len = length($self->query_seq());
-
-    my $x_scale = $self->width / $x_len;
-    #warn "X-scale: $x_scale\n";
-    my $glyph_height = 3;
-    
-    my @track_heights = ();
-    my @track_names = ();
-
-    # hightlight the regions
-    my @colors = ($yellow, $yellow2, $yellow3);
-    my $color_counter = 0; 
-    foreach my $r (@{$self->{regions}}) {  
-	my ($start, $end) = ($r->[0], $r->[1]);
-	# print STDERR "LONGEST REGION: $start, $end\n";
-	$image->filledRectangle($start * $x_scale, 0, $end * $x_scale, $self->height, $colors[$color_counter]);
-        $color_counter++;
+sub uniq_array{
+    my %hash;
+    my $input = shift;
+    for my $e (@{$input}) {
+	$hash{$e}=1;
     }
     
-    my $matches = $self->matches();
-    my $offset = $self->ruler_height + 10;
-    my $track_height = 0;
-    my @sorted = $self->subjects_by_match_count($self->matches);
+    my (@output) = sort {$a <=> $b} keys %hash;
+    return \@output;
+}
+
+sub get_matches { 
+    my $self = shift;
+    my @all_matches;
+
+    #HoAoH
+    my $matches_h = $self->matches();
     
-    # print Dumper(\@sorted);
-
-    $self->draw_ruler($image, $x_len, $x_scale);
-    
-    # draw squares
-    for (my $track=0; $track< @sorted; $track++) {
-	my $max_tracks =0;
-	my $current_track = 0;
-
-	if ($track < $coverage) { $color = $blue; }
-	else { $color = $red; }
-
-	my @tracks = ();
-	# print STDERR "Processing $sorted->[0]\n";
-	foreach my $i (@{$matches->{$sorted[$track]->[0]}}) { 
-	    my $t = 0;
-	    my $MAXTRACKS = $self->fragment_size();
-	    while ($t <= $MAXTRACKS) { 
-
-		if (!exists($tracks[$t]) || $tracks[$t]->{end} <= $i->start()) { 
-		    $tracks[$t]->{end} = $i->end();
-		    $current_track = $t;
-		    last();
-		}
-		else { 
-		    $t++;
-		}
-		if ($t > $max_tracks) { $max_tracks = $t; }
-	
-	#	if (!exists($tracks[$t]) && !defined($tracks[$t])) { 
-	#	    $tracks[$t]->{end} = $i->[1];
-	#	    $current_track = $t;
-	#	    last();
-	#	}
-		
+    foreach my $key (sort{$#{$$matches_h{$b}}<=>$#{$$matches_h{$a}}} keys(%{$matches_h})) {
+	my @subject_a;
+	for (my $i=0; $i<@{$$matches_h{$key}}; $i++) {
+#	    print STDERR "start: $$h{'start'}, end: $$h{'end'}\n";
+	    # to remove duplicates
+	    if ($i > 0 && $$matches_h{$key}[$i]{'start'} != $$matches_h{$key}[$i-1]{'start'}) {
+		push(@subject_a, "$$matches_h{$key}[$i]{'start'}-$$matches_h{$key}[$i]{'end'}");
+	    } elsif ($i == 0) {
+		push(@subject_a, "$$matches_h{$key}[$i]{'start'}-$$matches_h{$key}[$i]{'end'}");		
 	    }
-	    $image->rectangle($i->start() *  $x_scale, $offset + $current_track * $glyph_height, $i->end() * $x_scale, $offset + ($current_track+1)*$glyph_height, $color);
-	    
 	}
-	#print STDERR "Done with $sorted->[0] - drawing red line.. at ".($offset + $max_tracks * $glyph_height)."\n";
+	push(@all_matches, \@subject_a);
+    }
+#    print Dumper(@all_matches);
 
-	$offset += 20;
-	$image->line(0, $offset + ($max_tracks+1) * $glyph_height, $self->width, $offset + ($max_tracks+1) * $glyph_height, $grey);
-	
-	push @track_heights, $offset + ($max_tracks+1) * $glyph_height;
-	push @track_names, $sorted[$track]->[0];
-	
-	my $subject_msg = "$track_names[-1]";
-	if (defined($expr)) {
-	    for (my $i=1; $i <= length($$expr{"header"}); $i++) {
-		if (defined($$expr{$track_names[-1]}[$i-1])) {
-		    $$expr{"header"}[$i] =~ s/\s+/_/g;
-		    my $col_value = $$expr{$track_names[-1]}[$i-1];
+    return \@all_matches;
+}
+
+sub add_expression_values {
+    my $self = shift;
+    my $expr_hash = shift;
+    my @expr_msg;
+    my @sorted = $self->subjects_by_match_count($self->matches);
+
+# $sorted[$track]->[0]
+    for (my $track=0; $track< @sorted; $track++) {
+
+	my $subject_msg = "$sorted[$track]->[0]";
+	if (defined($$expr_hash{"header"})) {
+	    for (my $i=0; $i<length($$expr_hash{"header"}); $i++) {
+		if (defined($$expr_hash{$sorted[$track][0]}[$i])) {
+		    $$expr_hash{"header"}[$i+1] =~ s/\s+/_/g;
+		    my $col_value = $$expr_hash{$sorted[$track][0]}[$i];
 		    if (($col_value =~ /^\d+\.(\d+)$/) && (length($1) > 5)) {
 			$col_value = sprintf("%.6f",$col_value);
 		    }
-		    $subject_msg = "$subject_msg    $$expr{'header'}[$i]: $col_value";
+		    $subject_msg = "$subject_msg    $$expr_hash{'header'}[$i+1]: $col_value";
 		}
 	    }
 	}
-	# print subject names
-	$image->string($font, 5, ($offset + $max_tracks * $glyph_height - 10),  $subject_msg, $black);
-
-	$offset += $max_tracks * $glyph_height + 10;
+	push(@expr_msg,[$subject_msg,""]);
     }
-
-    # draw vertical grid of seq_window_size in size
-    #
-    for (my $x=0; $x < length($self->query_seq()); $x += $self->seq_window_size()) { 
-	$image->line($x * $x_scale, 15, $x * $x_scale, $self->height, $grey);
-    }
-    
-    # adjust image height
-    #
-#    if ($offset > 2400) { $offset = 2400; }
-    my $cropped = GD::Image->new($image->width, $offset);
-    $cropped->copy($image, 0, 0, 0, 0, $image->width(), $offset);
-
-    $image = $cropped;
-
-    open(my $F, ">", $filename) || die "Can't open file $filename.";
-    print $F $image->png();
-    close($F);
-
-    my $image_map = qq { <map name="blabla" > };
-    my $previous_height =0;
-    for (my $i=0; $i<@track_heights; $i++) { 
-	my $coords = join ",", (0, $previous_height, $self->width(), $track_heights[$i]);
-	$previous_height = $track_heights[$i];
-	
-	$image_map .= qq { <area shape="rect" coords="$coords" alt="$track_names[$i]" />\n };
-#	$image_map .= qq { <area shape="rect" coords="$coords" href="$track_names[$i]" alt="$track_names[$i]" />\n };
-
-    }
-
-    $image_map .= qq{ </map> };
-
-    return $image_map;
+    #print STDERR "msg: $expr_msg[0]\n";
+    return @expr_msg;
 }
 
-sub draw_ruler { 
+sub get_img_height { 
     my $self = shift;
-    my $image = shift;
+    my $img_height = 20; #grid on top
+    my $max_row_num = 0;
+    my $row_num = 1;
+    my $prev_end = 0;
 
-    my $seq_length = shift;
-    my $scale = shift;
+    #HoAoH
+    my $matches_h = $self->matches();
     
-    my $black = $image->colorResolve(0, 0, 0);
+    foreach my $key (keys(%{$matches_h})) {
+	foreach my $h (@{$$matches_h{$key}}) {
+	    if ($$h{'start'} <= $prev_end) {
+		$row_num++;
+	    } else {
+		$row_num = 1;
+	    }
+	    if ($max_row_num < $row_num && $row_num <= $self->fragment_size) {$max_row_num = $row_num;}
+	    if ($max_row_num == $self->fragment_size) {last;}
 
-    $image->line(0, $self->ruler_height, $seq_length * $scale, $self->ruler_height, $black);
-
-    # tick lines
-    #
-    if ($seq_length > 1000) { 
-	foreach my $tick (int($seq_length / 1000)) { 
-	    $image->line($tick * 1000 * $scale, 1, $tick * 1000 * $scale, 5, $black);
+#	    print STDERR "start: $$h{'start'}, end: $$h{'end'}\n";
+	    $prev_end = $$h{'end'};
 	}
+	$img_height += (($max_row_num*4) + 30); # rectangles height + before and after the block values
+#        print STDERR "max_row_num: $max_row_num\n";
 
+	$max_row_num = 0;
+	$prev_end = 0;
+	$row_num = 0;
     }
+#    print STDERR "IMAGE HEIGHT: $img_height\n";
     
-    if ($seq_length > 100 && $seq_length < 3000) { 
-	foreach my $tick (0 .. int($seq_length / 100)) { 
-	    $image->line($tick * 100 * $scale, 0, $tick * 100 * $scale, 5, $black);
-	}
-    }
-    
-    if ($seq_length > 10 && $seq_length < 200) { 
-	foreach my $tick (0.. int($seq_length / 10)) { 
-	    $image->line($tick * 10 * $scale, 1, $tick * 10 * $scale+1, 5, $black);
-	}
-    }
-    
-    # tick labels
-    #
-    if ($seq_length > 4000) {	   
-        $self->write_ticks($image, $seq_length, $scale, 500);
-    }
-    elsif ($seq_length < 200) { 
-        $self->write_ticks($image, $seq_length, $scale, 10);
-    }
-    elsif ($seq_length < 1400) { 
-        $self->write_ticks($image, $seq_length, $scale, 100);
-    }
-    else {
-        $self->write_ticks($image, $seq_length, $scale, 200);
-    }
-
-
-#    if ($seq_length < 4000) {
-#	foreach my $tick (0 .. int($seq_length /200) ) { 
-#	    $self->write_ticks($image, $seq_length, $scale, 200);
-#	}
-#    }
-#    if ($seq_length < 1400) { 	
-#	foreach my $tick (0 .. int($seq_length /100) ) { 
-#	    $self->write_ticks($image, $seq_length, $scale, 100); #$image->string($self->font(), $tick * 100 * $scale+1, 1, $tick * 100, $black);
-#	}
-#    }
-#    if ($seq_length < 200) { 
-#	foreach my $tick (0.. int($seq_length/10) ) { 
-#	    $self->write_ticks($image, $seq_length, $scale, 10); #$image->string($self->font(), $tick*10*$scale, 2, $tick * 10, $black);
-#	}
-#    }
-
+    return $img_height;
 }
-    
-
-sub write_ticks { 
-    my $self =shift;
-    my $image = shift;
-    my $seq_length = shift;
-    my $scale = shift;
-    my $nucleotide_interval = shift;
-
-    my $black = $image->colorAllocate(0,0,0);
-    foreach my $tick (1..int($seq_length/$nucleotide_interval)) { 
-	$image->string($self->font(), $tick * $nucleotide_interval * $scale + 2, 4, $tick * $nucleotide_interval, $black);
-    }
-}
-
 
 
 package CXGN::Graphics::VigsGraph::MatchSegment;

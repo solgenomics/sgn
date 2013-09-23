@@ -136,6 +136,13 @@ foreach my $role (@roles) {
 </div>
 
 
+<div id="cross_saved_dialog_message" title="Cross saved">
+  <p>
+    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    The cross was saved successfully
+  </p>
+</div>
+
 
 <script defer="defer" >
 
@@ -189,8 +196,8 @@ foreach my $role (@roles) {
       autoOpen: false,
       buttons: { "Cancel" :  function() { jQuery("#create_cross").dialog("close"); }, "Submit": function() { add_cross() }  },
       modal: true,
-      width: 550,
-      height: 400
+      width: 750,
+      autoResize:true,
     });
 
    jQuery("#cross_type").change(function(){
@@ -290,7 +297,7 @@ foreach my $role (@roles) {
 
 
       if (!crossName) { alert("A cross name is required"); return; }
-       alert("Sending AJAX request.. /ajax/cross/add_cross");
+       //alert("Sending AJAX request.. /ajax/cross/add_cross");
   
       jQuery.ajax({
         url: '/ajax/cross/add_cross',
@@ -303,7 +310,9 @@ foreach my $role (@roles) {
           if (response.error) { alert(response.error); }
           else {
             jQuery("#create_cross").dialog("close");
-            alert("The cross has been added. ["+response.error+"]");
+            //alert("The cross has been added.");
+            jQuery('#trial_saved_dialog_message').dialog("open");
+            location.reload();
           }
         }, 
         //complete: function(response) { 
@@ -311,6 +320,18 @@ foreach my $role (@roles) {
         //}
       });
    }
+
+
+    jQuery( "#cross_saved_dialog_message" ).dialog({
+	autoOpen: false,
+	modal: true,
+	buttons: {
+            Ok: function() {
+		jQuery( this ).dialog( "close" );
+		location.reload();
+            }
+	}
+    });
 
 
    jQuery("#upload_crosses_dialog").dialog( {

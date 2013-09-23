@@ -1,9 +1,37 @@
+
+/*
+
+=head1 NAME
+
+CXGN.List - a javascript library to implement the lists on the SGN platform
+
+=head1 DESCRIPTION
+
+There are two important list functions in this library, listed below. All other functions should be considered private and/or deprecated.
+
+
+* addToListMenu(listMenuDiv, dataDiv)
+
+this function will generate a select of all available lists and allow the content to be added to a list (from a search, etc). The first parameter is the id of the div tag where the menu should be drawn. The second parameter is the div that contains the data to be added. This can be a textfield, a div or span tag, or a multiple select tag.
+
+* pasteListMenu(divName, menuDiv)
+
+this will generate an html select box of all the lists, and a "paste" button, to paste into a textarea (typically). The divName is the id of the textarea, the menuDiv is the id where the paste menu should be placed.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+*/
+
+
 JSAN.use('jqueryui');
 
 if (!CXGN) CXGN = function () { };
 
 CXGN.List = function () { 
-    //alert("CREATE LIST!");
     this.list = [];
 };
 
@@ -22,25 +50,22 @@ CXGN.List.prototype = {
 		    alert(response.error);
 		}
 		else { 
-		    //alert('Response = '+response);
 		    list = response;
 		}
 	    }
 	});
-	//alert('List='+list);
 	return list;
 
     },
 
     newList: function(name) { 
 	var oldListId = this.existsList(name);
-	//alert("OLD LIST ID = "+oldListId);
+	var newListId = 0;
 	
 	if (name == '') { 
 	    alert('Please enter a name for the new list.');
 	    return 0;
 	}
-
 
 	if (oldListId === null) { 
 	    jQuery.ajax( { 
@@ -51,10 +76,12 @@ CXGN.List.prototype = {
 		    if (response.error) { 
 			alert(response.error);
 		    }
+		    else { 
+			newListId=response.list_id;
+		    }
 		}
 	    });
-	    //alert("stored list");
-	    return 1;
+	    return newListId;
 	}
 	else { 
 	    alert('A list with name "'+ name + '" already exists. Please choose another list name.');
@@ -114,7 +141,6 @@ CXGN.List.prototype = {
     },
 
     renderLists: function(div) { 
-	//alert("render lists...");
 	var lists = this.availableLists();
 	var html = '';
 	html = html + '<input id="add_list_input" type="text" /><input id="add_list_button" type="button" value="new list" /><br />';
@@ -179,16 +205,13 @@ CXGN.List.prototype = {
 
 	for (var n=0; n<items.length; n++) { 
 	    var list_item_id = items[n][0];
-	    //alert('constructing button '+list_item_id);
+
 	    jQuery('#'+items[n][0]).click(
 		function() { 
-		    //alert("ID = "+this.id);
 		    var lo = new CXGN.List();
 		    var i = lo.availableLists();
 		    
-		    //alert(i.join(",")); //+'removing n= '+n+' item '+ i[n][0] + ' ' + i[n][1]);
 		    lo.removeItem(list_id, this.id );
-		    //alert("REMOVED ITEM "+this.id);
 		    lo.renderItems(div, list_id);
 		    lo.renderLists('list_dialog');
 		});
@@ -230,18 +253,19 @@ CXGN.List.prototype = {
     },
     
     addToList: function(list_id, text) { 
-	//alert('start addToList'+list_id+", "+text);
 	var list = text.split("\n");
 	var duplicates = [];
 	for(var n=0; n<list.length; n++) { 
-	    //alert('adding '+list[n]);
 	    var id = this.addItem(list_id, list[n]);
 	    if (id == 0) { 
 		duplicates.push(list[n]);
 	    }
 	}
-	lo.renderLists('list_dialog');
-	alert('Duplicate items ('+ duplicates.join(",") + ') were not stored');
+
+	if (duplicates.length > 0) { 
+	    alert('Duplicate items ('+ duplicates.join(",") + ') were not stored');
+	}
+	return list.length - duplicates.length;
     },
 
     listSelect: function(div_name) { 
@@ -310,11 +334,7 @@ function pasteListMenu (div_name, menu_div) {
 
 function pasteList(div_name) { 
     var lo = new CXGN.List();
-    
     var list_name = jQuery('#'+div_name+'_list_select').val();
-
-    //alert('paste list '+list_name);
-
     var list_content = lo.getList(list_name);
     
     // textify list
@@ -324,6 +344,59 @@ function pasteList(div_name) {
     }
     jQuery('#'+div_name).text(list_text);
 }
+
+function addToListMenu(listMenuDiv, dataDiv) { 
+    var lo = new CXGN.List();
+    
+    var html = '<input type="text" id="'+dataDiv+'_new_list_name" size="8" /><input id="'+dataDiv+'_add_to_new_list" type="button" value="add to new list" /><br />';
+    html += lo.listSelect(dataDiv);
+
+    html += '<input id="'+dataDiv+'_button" type="button" value="add to list" />';
+    
+    jQuery('#'+listMenuDiv).html(html);
+    
+    var list_id = 0;
+
+    jQuery('#'+dataDiv+'_add_to_new_list').click(
+	function() { 
+	    var lo = new CXGN.List();
+	    var new_name = jQuery('#'+dataDiv+'_new_list_name').val();
+	    
+	    var data = getData(dataDiv);
+	    list_id = lo.newList(new_name);
+	    if (list_id > 0) { 
+		var elementsAdded = lo.addToList(list_id, data);
+		alert("Added "+elementsAdded+" list elements to list "+new_name);
+	    }
+	}
+    );
+
+    jQuery('#'+dataDiv+'_button').click( 
+	function() { 
+	    var data = getData(dataDiv);
+	    list_id = jQuery('#'+dataDiv+'_list_select').val();
+	    var elementsAdded = lo.addToList(list_id, data);
+	    alert("Added "+elementsAdded+" list elements.");
+	}
+    );
+}
+
+function getData(id) { 
+    var divType = jQuery("#"+id).get(0).tagName;
+
+    if (divType == 'DIV' || divType =='SPAN' ||  divType === undefined) { 
+	data = jQuery('#'+id).html();
+    }
+    if (divType == 'SELECT') { 
+	data = jQuery('#'+id).val().join("\n");
+    }
+    if (divType == 'TEXTAREA') { 
+	data = jQuery('textarea#'+id).val();
+    }
+    return data;
+}
+           
+	
 
 function addTextToListMenu(div) { 
     var lo = new CXGN.List();
@@ -362,18 +435,15 @@ function addSelectToListMenu(div) {
 
 // add the text in a div to a list
 function addDivToList(div_name) { 
-    //alert('start addDivToList');
     var list_id = jQuery('#'+div_name+'_list_select').val();
     var lo = new CXGN.List();
     var list = jQuery('#'+div_name).val();
-    //alert('list-id: '+list_id+' list= '+list);
     var items = list.split("\n");
 
     for(var n=0; n<items.length; n++) { 
 	var added = lo.addItem(list_id, items[n]);
 	if (added > 0) { }
     }
-    //alert('added text to list');
 }
 
 function addTextToList(div, list_id) { 
@@ -395,7 +465,6 @@ return;
     }
     var items = content.split("\n");
     
-    alert("ITEMS: "+items.length);
     var duplicates = new Array();
     for (var n=0; n<items.length; n++) { 
 	var id = lo.addItem(list_id, items[n]);
@@ -438,7 +507,6 @@ function deleteItemLink(list_item_id) {
     var lo = new CXGN.List();
     lo.deleteItem(list_item_id);
     lo.renderLists('list_dialog');
-    //alert('Deleted '+list_item_id);
 }
 	
 function showListItems(div, list_id) { 
@@ -457,7 +525,6 @@ function addNewList(div_id) {
     }
     
     var list_id = lo.existsList(name);
-    //alert('this list name has id '+list_id);
     if (list_id > 0) {
 	alert('The list '+name+' already exists. Please choose another name.');
 	return;

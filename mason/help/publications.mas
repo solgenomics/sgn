@@ -1,0 +1,18 @@
+<%args>
+$basepath
+$documents_subdir
+</%args>
+
+<& /page/page_title.mas, title=>"Publications" &>
+
+<%perl>
+
+use File::Slurp qw | slurp |;
+
+my $documents_folder = $basepath . $documents_subdir;
+
+my $PUBLICATIONS=slurp("$documents_folder/SGNpublications.txt")||'';
+
+print $PUBLICATIONS;
+
+</%perl>

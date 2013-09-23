@@ -13,10 +13,18 @@ JSAN.use('Prototype');
 
 jQuery(window).load( function() {
 
-        var popId   = jQuery('input[name=population_id]').val();
-        var traitId = jQuery('input[name=trait_id]').val();
-   
-        var params = 'pop_id' + '=' + popId + '&' + 'trait_id' + '=' + traitId;
+        var popId       = jQuery('input[name=population_id]').val();
+        var traitId     = jQuery('input[name=trait_id]').val();
+        var comboPopsId = jQuery('input[name=combo_pops_id]').val();
+        var popsList    = jQuery('input[name=pops_list]').val(); 
+        var params;
+
+        if(popId) {
+            params = 'pop_id=' + popId + '&trait_id=' + traitId;
+        } else {
+            params = 'combo_pops_id=' + comboPopsId + '&trait_id='  + traitId + '&combined_populations=' + popsList;  
+        }
+       
         var action = '/solgs/trait/gebv/graph';
        
         var graphArray      = [];
@@ -34,7 +42,7 @@ jQuery(window).load( function() {
                         success: function(data) {
                         var gebvData  = data.gebv_data;
                         var state     = data.status;
-                     
+                       
                         if (state == 'success') {
                             for (var i=0; i < gebvData.length; i++) {
                                 var xD = gebvData[i][0];
@@ -74,7 +82,8 @@ jQuery(window).load( function() {
         var minYLabel   = minY - (0.2*minY);
         var maxYLabel   = maxY + (0.2*maxY);
         var plotData    = allData.bothAxisValues;
-          
+     
+       
         if (plotData == 'undefined') {
              var message = 'There is no GEBV data to plot. Please report this problem';  
              jQuery('#gebvPlot2').append(message).show();
@@ -97,15 +106,16 @@ jQuery(window).load( function() {
                     mode: 'xy',
                     color: '#0066CC',
                 },
-                xaxis:{
+               xaxis:{
                     mode: 'categories',                 
-                    ticks: xAxisValues,
+                    ticks: '',
                     tickColor: '#ffffff',
                     axisLabel: 'Genotypes',
                     position: 'bottom',
-                    axisLabelPadding: 10,
-                    color: '#0066CC',
-                },
+                    axisLabelPadding: 20,
+                    color: '#0066CC',    
+               },
+
                 yaxis: {                                
                     min: null,
                     max: null, 
@@ -122,10 +132,11 @@ jQuery(window).load( function() {
                     interactive: false,                
                 },                        
             };
-                   
-            var plot = jQuery.plot('#gebvPlot2', plotData, options);
-
-            var overview = $.plot($("#gebvPlotOverview"), plotData, {
+             
+           
+            var plot        = jQuery.plot('#gebvPlot2', plotData, options);
+                     
+            var overview = jQuery.plot(jQuery("#gebvPlotOverview"), plotData, {
                     series: {
                         lines: { 
                             show: true, 
@@ -222,7 +233,69 @@ jQuery(window).load( function() {
                         previousPoint = null;                      
                     }          
                 });
-            
+
+
+      
+            //inverse plot: plots genotypes from high to low gebv values or vice versa
+
+             var inverseOptions = { 
+                series: {
+                    lines: { 
+                        show: true 
+                    },
+                    points: { 
+                        show: true 
+                    },                
+                },              
+                grid: {
+                    show: true,
+                    clickable: true,
+                    hoverable: true,               
+                },
+                selection: {
+                    mode: 'xy',
+                    color: '#0066CC',
+                },
+               xaxis:{
+                    mode: 'categories',                 
+                    ticks: '',
+                    tickColor: '#ffffff',
+                    axisLabel: 'Genotypes',
+                    position: 'bottom',
+                    axisLabelPadding: 20,
+                    color: '#0066CC',
+                    transform: function (v) { return -v; },
+                    inverseTransform: function (v) { return -v; }
+               },
+
+                yaxis: {                                
+                    min: null,
+                    max: null, 
+                    axisLabel: 'Trait GEBVs',
+                    position: 'left',
+                    color: '#0066CC',                    
+                },
+                zoom: {
+                    interactive: true,
+                    amount: 1.5,
+                    trigger: 'dblclick',
+                },
+                pan: {
+                    interactive: false,                
+                },                        
+            };
+      
+            function normalPlot() {
+                jQuery.plot('#gebvPlot2', plotData, options);
+            }
+
+            function inversePlot() {
+                jQuery.plot('#gebvPlot2', plotData, inverseOptions);
+            }
+
+            jQuery("#inverse_gebv_plot").alternateFunctions(normalPlot, inversePlot);
+
+
  ////
         }
  //////
@@ -231,6 +304,7 @@ jQuery(window).load( function() {
 ////
 
 
+            
 
 
    

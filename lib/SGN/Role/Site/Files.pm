@@ -45,29 +45,44 @@ before 'setup_finalize' => sub {
         }
     }
 
+    # temp_base ~ /tmp/www-data/SGN-site
+    # temp_subdir ~ .../documents/tempfiles
+
     $c->log->debug("symlinking tempfiles_base '$temp_base' -> legacy location '$temp_subdir'") if $c->debug;
     $c->make_generated_dir($temp_base);
-
+    
     # Only symlink if it doesn't exist already
     unless( -l $temp_subdir ) {
-        symlink $temp_base, $temp_subdir or die "$! linking $temp_base => $temp_subdir";
+	symlink $temp_base, $temp_subdir or die "$! linking $temp_base => $temp_subdir";
     }
+    
+    # unless( $temp_subdir eq $temp_base ) {
+    # 	print STDERR "WARNING: symlinking tempfiles_subdir $temp_subdir to $temp_base\n\n";
+    # 	my $count = unlink $temp_base;
+    # 	print STDERR "DELETED $temp_base ($count)\n";
+    # 	$count = rmdir $temp_subdir;
+    # 	print STDERR "DELETED $temp_subdir ($count)\n";
+    # 	symlink $temp_subdir, $temp_base
+    # 	    or die "$! symlinking $temp_subdir => $temp_base";
+    # }
+  #  if ($ENV{MOD_PERL}) { 
 
-#     unless( $temp_subdir eq $temp_base ) {
-#         $c->log->warn("WARNING: symlinking tempfiles_subdir() $temp_subdir to $temp_base");
-#         unlink $temp_subdir;
-#         symlink $temp_subdir, $temp_base
-#             or die "$! symlinking $temp_subdir => $temp_base";
-#     }
+    print STDERR "CHOWN $temp_subdir...\n";
+    if ($< == 0) { 
 
-    $c->chown_generated_dir( $temp_subdir ); #< force-set the
-                                             # permissions on the
-                                             # main tempfiles dir
-
-    # also chown any subdirs that are in the temp dir.
-    # this line should be removed eventually, the application itself should take
-    # care of creating temp dirs if it wants.
-    $c->chown_generated_dir( $_ ) for grep -d, $temp_subdir->children;
+     $c->chown_generated_dir( $temp_subdir )  || die "Can't chown $temp_subdir"; #< force-set the
+	# permissions on the
+	# main tempfiles dir
+	
+	# also chown any subdirs that are in the temp dir.
+	# this line should be removed eventually, the application itself should take
+	# care of creating temp dirs if it wants.
+    print STDERR "CHOWN childre of $temp_subdir...\n";
+	$c->chown_generated_dir( $_ ) for grep -d, $temp_subdir->children;
+    }
+    else { 
+	print STDERR "Not running as root... not chowning dirs.\n";
+    }
 
 };
 
@@ -228,7 +243,7 @@ sub make_generated_dir {
         return;
     }
 
-    $self->chown_generated_dir( $tempdir );
+    #$self->chown_generated_dir( $tempdir );
     return 1;
 }
 
@@ -243,8 +258,9 @@ sub chown_generated_dir {
 
     return unless $www_uid && $www_gid;
 
-    chown -1, $www_gid, $temp;
+    my $changed = chown -1, $www_gid, $temp;
 
+    if ($changed == 0) { die "Could not chown $temp to gid $www_gid!\n"; }
     # 02775 = sticky group bit (makes files created in that dir belong to that group),
     #         rwx for user,
     #         rwx for group,
@@ -261,6 +277,7 @@ sub _www_gid {
     my $grname = $self->config->{www_group};
     my $gid = (getgrnam $grname )[2];
     defined $gid or warn "WARNING: www_group '$grname' does not exist, please check configuration\n";
+    print STDERR "CURRENT www_group is $grname\n";
     return $gid;
 }
 sub _www_uid {
@@ -268,6 +285,7 @@ sub _www_uid {
     my $uname = $self->config->{www_user};
     my $uid = (getpwnam( $uname ))[2];
     defined $uid or warn "WARNING: www_user '$uname' does not exist, please check configuration\n";
+    print STDERR "CURRENT www_user is $uname\n";
     return $uid;
 }
 

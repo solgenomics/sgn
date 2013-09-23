@@ -7,25 +7,27 @@ a general format for projects details presentation.
 <%args>
 
 $result
-$pager
-$page_links
+$pager => ''
+$page_links => ''
 
 </%args>
 
 <& /page/columnar_table.mas,
-     headings    => ['',  'Projects', 'Description', 'Location', 'Year' ],
+     headings    => [ 'Projects', 'Description', 'Location', 'Year' ],
      data        => $result,
     __alt_freq   => 2,
     __alt_width  => 1,
-    __align      => 'l'
+    __align      => 'llll'
 &>
  
+%if ($pager)
+%{
 <& /page/pagination_control.mas, 
      pager      => $pager, 
      link_maker => $page_links 
 &> 
 
-
+%}
 
 
 

@@ -1,0 +1,100 @@
+<%args>
+
+$accuracy_report
+$top_blups
+$blups_download_url
+$marker_effects_download_url
+$top_marker_effects
+$validation_download_url
+$trait_abbr
+$trait_name
+$project_name
+$project_desc
+$stocks_no
+$markers_no
+$trait_id
+$combo_pops_id
+$trait_combo_pops
+$descriptive_stat
+$download_prediction
+$prediction_pop_id => ''
+$list_of_prediction_pops
+$prediction_pop_name => ''
+$analyzed_traits =>''
+
+</%args>
+
+<%perl>
+
+</%perl>
+
+  <& /util/import_javascript.mas, classes => ["solGS.phenotypeDataFlot", "solGS.traitGebvFlot", 
+                                              "flot.flot", "flot.categories", 
+                                              "flot.tooltip", "flot.selection", "flot.navigate", 
+                                              "flot.axisLabels"
+                                             ] 
+  &>
+
+
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+
+<& /page/page_title.mas, 
+   title => "Genomic selection model for $trait_name ($trait_abbr) in $project_name"
+&>
+
+<&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed   => 0, 
+  title       => "Population summary",
+  &>
+
+<& summary.mas,
+    project_name => $project_name,
+    project_desc => $project_desc,
+    stocks_no    => $stocks_no,
+    markers_no   => $markers_no,
+ &>
+ 
+</&>
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 0, 
+    title       => "Trait phenotype data"
+&> 
+  
+<& /solgs/population/trait_phenotype_data.mas,
+  combo_pops_id    => $combo_pops_id,
+  trait_id         => $trait_id,
+  descriptive_stat => $descriptive_stat,
+ &>
+
+</&>
+
+<& /solgs/model/accuracy.mas, 
+   accuracy_report        => $accuracy_report,
+  validation_download_url => $validation_download_url
+&>
+
+<& /solgs/model/top_blups.mas, 
+   top_blups          => $top_blups,
+   blups_download_url => $blups_download_url,
+   combo_pops_id      => $combo_pops_id,
+   trait_combo_pops   => $trait_combo_pops,
+   trait_id           => $trait_id
+&>
+
+<& /solgs/model/marker_effects.mas, 
+   top_marker_effects          => $top_marker_effects,
+   marker_effects_download_url => $marker_effects_download_url
+&>
+
+
+<& /solgs/population/selection_populations.mas, 
+   download_prediction     => $download_prediction,
+   analyzed_traits         => $analyzed_traits,
+   pop_id                  => $combo_pops_id,
+   prediction_pop_id       => $prediction_pop_id,
+   list_of_prediction_pops => $list_of_prediction_pops,
+   prediction_pop_name     => $prediction_pop_name, 
+&>

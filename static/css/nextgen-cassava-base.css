@@ -852,6 +852,9 @@ table#siteheader {
 table.toolbar { 
   width: 100%;
   margin: 0;
+  background: none;
+  border: none;
+  box-shadow:none;
 }
 
 td.toolbar_l, td.toolbar_r { 

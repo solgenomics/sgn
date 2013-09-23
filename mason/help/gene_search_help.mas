@@ -1,0 +1,80 @@
+
+<& /page/page_title.mas, title=>"Gene Search Help" &>
+
+<p>
+The <a href="/search/direct_search.pl?search=loci">gene search</a> is a tool for searching genes in SGN's database. 
+These genes originate from various sources, including GenBank, PubMed literature mining, historic collections of gene names, and SGN user-contributed data.
+</p>
+
+<img src="/documents/help/screenshots/gene_search_help.png" alt="screenshot of gene search form" style="margin: auto; border: 1px solid black;" />
+
+<h4>1. Simple search option: search by locus or allele name or symbol</h4>
+<p>
+Use this option for searching the database for genes with a locus or allele name/symbol/synonym/description containing what you typed in. You can search these fields for an exact match, begin with or end with your input, by selecting the desired option from the drop-down menu. 
+The search is case-insensitive.
+
+
+</p>
+
+
+<p>
+<b>The following search options can be combined with the generic locus/allele search option. These are visible by clicking the \'Advanced search options\' button:</b>.
+</p>
+
+<h4>2. Organism</h4>
+<p>
+In this drop-down menu you will see a list of the common names of species that make up the collection of genes. You can use this optionfor limiting your search results to loci of only the organism you selected.
+
+</p>
+
+
+<h4>3. Chromosome</h4>
+<p>
+Choose a chromosome from this menu to limit results to loci mapped on that chromosome or linkage group.
+
+
+</p>
+
+<h4>4. Locus editor</h4>
+<p>
+Each locus in the genes database has an owner (either an SGN curator or a submitter). the owner also has certain edit privileges. You can search for loci owned by a specific <a href= "../search/direct_search.pl?search=directory">SGN user</a> by typing a first or a last name.
+Anyone interested in obtaining an SGN user account may do so by <a href="../solpeople/new-account.pl">signing up for a new account</a>. After obtaining an SGN user account you may upload new loci to SGN\'s database.
+If you are interested in obtaining editor privileges to a specific locus, please follow the link in the locus details page.  
+
+
+</p>
+
+<h4>5. Annotation features</h4>
+<p>
+Use these checkboxes for narrowing your search to only genes with one or more of the following features:
+<ul>
+<li>Sequence: genes that have sequence annotation (GenBank ID and/or SGN unigene ID)</li>
+<li>Marker: genes that correspond to a specific marker from SGN\'s <a href="../search/direct_search.pl?search=markers">marker database</a></li>
+<li>GO/PO annotation: genes that are annotated to at least one  <a href="http://geneontology.org">Gene Ontology</a> or <a href="http://plantontology.org">Plant Ontology</a> term</li>
+
+</ul>
+
+</p>
+
+<h4>6. Phenotype</h4>
+<p>
+Some genes may have a phenotype description, either as an associated allele, or an associated phenotyped accession. This option  will narrow the search results for  only genes with a phenotype description containing the word or string you typed in. 
+For searching phenotypes of accessions not necessarily associated with a gene, you should use SGN\'s <a href="../search/direct_search.pl?search=phenotypes">phenotype search</a> page. 
+
+</p>
+
+<h4>7. Ontology term</h4>
+<p>
+Use this box for searching for genes that are annotated to specific <a href="http://geneontology.org">Gene Ontology</a> or <a href="http://plantontology.org">Plant Ontology</a> terms. You may search for ontology annotations by typing any part of the ontology term ID, term name, term synonym, or term definition.
+
+
+</p>
+
+
+<h4>8. GenBank ID</h4>
+<p>
+Use this box for searching genes annotated to a specific GenBank ID. You may search using either a GI number or a GenBank accession.
+
+
+</p>
+

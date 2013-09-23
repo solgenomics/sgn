@@ -7,6 +7,7 @@ library(rrBLUP)
 library(plyr)
 library(mail)
 library(imputation)
+library(stringr)
 
 allArgs <- commandArgs()
 
@@ -27,10 +28,12 @@ outFile <- grep("output_files",
 outFiles <- scan(outFile,
                  what = "character"
                  )
+print(outFiles)
 
 inFiles <- scan(inFile,
                 what = "character"
                 )
+print(inFiles)
 
 traitsFile <- grep("traits",
                    inFiles,
@@ -39,20 +42,43 @@ traitsFile <- grep("traits",
                    value = TRUE
                    )
 
-traitFile <- grep("trait_",
+traitFile <- grep("trait_info",
                    inFiles,
                    ignore.case = TRUE,
                    fixed = FALSE,
                    value = TRUE
-                   )
+                  )
 
-trait <- scan(traitFile,
+print(traitFile)
+
+traitInfo <- scan(traitFile,
                what = "character",
                )
 
-#traitList<-strsplit(traits, "\t");
-#traitsTotal<-length(traitList)
-#trait<-traitList[[1]]
+traitInfo<-strsplit(traitInfo, "\t");
+traitId<-traitInfo[[1]]
+trait<-traitInfo[[2]]
+
+datasetInfoFile <- grep("dataset_info",
+                        inFiles,
+                        ignore.case = TRUE,
+                        fixed = FALSE,
+                        value = TRUE
+                        )
+datasetInfo <- c()
+
+if(length(datasetInfoFile) != 0 )
+  {
+    datasetInfo <- scan(datasetInfoFile,
+                        what= "character"
+                        )
+    
+    datasetInfo <- paste(datasetInfo, collapse = " ")
+    
+  } else {    
+    datasetInfo <- c('single population')
+    
+  }
 
 validationTrait <- paste("validation", trait, sep = "_")
 
@@ -71,7 +97,7 @@ blupFile <- grep(kinshipTrait,
                  fixed = FALSE,
                  value = TRUE
                  )
-
+print(blupFile)
 markerTrait <- paste("marker", trait, sep = "_")
 markerFile  <- grep(markerTrait,
                    outFiles,
@@ -79,7 +105,7 @@ markerFile  <- grep(markerTrait,
                    fixed = FALSE,
                    value = TRUE
                    )
-
+print(markerFile)
 traitPhenoFile <- paste("phenotype_trait", trait, sep = "_")
 traitPhenoFile <- grep(traitPhenoFile,
                        outFiles,
@@ -88,13 +114,24 @@ traitPhenoFile <- grep(traitPhenoFile,
                        value = TRUE
                        )
 
+print(traitPhenoFile)
+
 phenoFile <- grep("phenotype_data",
                   inFiles,
                   ignore.case = TRUE,
                   fixed = FALSE,
                   value = TRUE
                   )
-
+message("phenotype dataset file: ", phenoFile)
+message("dataset info: ", datasetInfo)
+## rowNamesColumn <- c()
+## if (datasetInfo == 'combined populations')
+##   {
+##     rowNamesColumn <- 1    
+##   }else {
+##     rowNamesColumn <- NULL  
+##   }
+## message("row names column: ", rowNamesColumn)
 phenoData <- read.table(phenoFile,
                         header = TRUE,
                         row.names = NULL,
@@ -103,51 +140,71 @@ phenoData <- read.table(phenoFile,
                         dec = "."
                         )
 
-dropColumns <- c("uniquename", "stock_name")
-phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
+phenoTrait <- c()
 
-phenoTrait <- subset(phenoData,
+if (datasetInfo == 'combined populations')
+  {  
+    dropColumns <- grep(trait,
+                        names(phenoData),
+                        ignore.case = TRUE,
+                        value = TRUE,
+                        fixed = FALSE
+                        )
+    
+    phenoTrait <- phenoData[,!(names(phenoData) %in% dropColumns)]
+   
+    row.names(phenoTrait) <- phenoTrait[, 1]
+    phenoTrait[, 1] <- NULL
+    
+    print(phenoTrait[1:10, ])
+
+  } else {
+   
+    dropColumns <- c("uniquename", "stock_name")
+    phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
+    phenoTrait  <- subset(phenoData,
                      select = c("object_name", "stock_id", trait)
                      )
+   
+    if (sum(is.na(phenoTrait)) > 0)
+      {
+        print("sum of pheno missing values")
+        print(sum(is.na(phenoTrait)))
 
-if (sum(is.na(phenoTrait)) > 0)
-  {
-    print("sum of pheno missing values")
-    print(sum(is.na(phenoTrait)))
-
-    phenoTrait2<-phenoTrait[1:10, ]
-    print(phenoTrait2)
-
-    #fill in for missing data with trait mean value
-    phenoTrait[, trait]  <- replace (phenoTrait[, trait],
+        #fill in for missing data with mean value
+        phenoTrait[, trait]  <- replace (phenoTrait[, trait],
                                          is.na(phenoTrait[, trait]),
                                          mean(phenoTrait[, trait], na.rm =TRUE)
-                                         )  
+                                         ) 
+      }
+
+    #calculate mean of reps/plots of the same accession and
+    #create new df with the accession means
+    dropColumns  <- c("stock_id")
+    phenoTrait   <- phenoTrait[,!(names(phenoTrait) %in% dropColumns)]
+    phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
+    phenoTrait   <- data.frame(phenoTrait)
+    print('phenotyped lines before averaging')
+    print(length(row.names(phenoTrait)))
+    phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
+    print('phenotyped lines after averaging')
+    print(length(row.names(phenoTrait)))
+
+    #make stock_names row names
+    row.names(phenoTrait) <- phenoTrait[, 1]
+    phenoTrait[, 1] <- NULL
+    
   }
 
-#calculate mean of reps/plots of the same accession and
-#create new df with the accession means
-dropColumns  <- c("stock_id")
-phenoTrait   <- phenoTrait[,!(names(phenoTrait) %in% dropColumns)]
-phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
-phenoTrait   <- data.frame(phenoTrait)
-print('phenotyped lines before averaging')
-print(length(row.names(phenoTrait)))
-phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
-print('phenotyped lines after averaging')
-print(length(row.names(phenoTrait)))
 
-#make stock_names row names
-row.names(phenoTrait) <- phenoTrait[, 1]
-phenoTrait[, 1] <- NULL
-
-#find genotype file name
 genoFile <- grep("genotype_data",
                  inFiles,
                  ignore.case = TRUE,                
                  fixed = FALSE,
                  value = TRUE
                  )
+
+print(genoFile)
 
 if (trait == 'FHB' || trait == 'DON')
   {
@@ -163,20 +220,33 @@ genoData <- read.table(genoFile,
                       )
 
 genoData   <- data.matrix(genoData[order(row.names(genoData)), ])
+print(genoData[1:10, 1:4])
 
-predictionFile <- grep("prediction_population",
+predictionTempFile <- grep("prediction_population",
                        inFiles,
                        ignore.case = TRUE,
                        fixed = FALSE,
                        value = TRUE
                        )
 
+predictionFile <- c()
+message('prediction temp genotype file: ', predictionTempFile)
+if (length(predictionTempFile) !=0 )
+  {
+    predictionFile <- scan(predictionTempFile,
+                       what="character"
+                       )
+}
+
+message('prediction genotype file: ', predictionTempFile)
 predictionPopGEBVsFile <- grep("prediction_pop_gebvs",
                        outFiles,
                        ignore.case = TRUE,
                        fixed = FALSE,
                        value = TRUE
                        )
+
+message("prediction gebv file: ",  predictionPopGEBVsFile)
 
 if (trait == 'FHB' || trait == 'DON')
   {
@@ -199,27 +269,29 @@ if (length(predictionFile) !=0 )
 #add checks for all input data
 #create phenotype and genotype datasets with
 #common stocks only
-print('phenotyped lines')
-print(length(row.names(phenoTrait)))
-print('genotyped lines')
-print(length(row.names(genoData)))
+message('phenotyped lines: ', length(row.names(phenoTrait)))
+message('genotyped lines: ', length(row.names(genoData)))
 
 #extract observation lines with both
 #phenotype and genotype data only.
 commonObs <- intersect(row.names(phenoTrait), row.names(genoData))
 commonObs<-data.frame(commonObs)
 rownames(commonObs)<-commonObs[, 1]
-
+message('lines with both genotype and phenotype data: ', length(row.names(commonObs)))
 #include in the genotype dataset only observation lines
 #with phenotype data
+message("genotype lines before filtering for phenotyped only: ", length(row.names(genoData)))        
 genoData<-genoData[(rownames(genoData) %in% rownames(commonObs)), ]
-
+message("genotype lines after filtering for phenotyped only: ", length(row.names(genoData)))
 #drop observation lines without genotype data
+message("phenotype lines before filtering for genotyped only: ", length(row.names(phenoTrait)))        
+
 phenoTrait <- merge(data.frame(phenoTrait), commonObs, by=0, all=FALSE)
 rownames(phenoTrait) <-phenoTrait[,1]
 phenoTrait[, 1] <- NULL
-print(phenoTrait)
 phenoTrait[, 2] <- NULL
+
+message("phenotype lines after filtering for genotyped only: ", length(row.names(phenoTrait)))
 
 #a set of only observation lines with genotype data
 traitPhenoData <- as.data.frame(round(phenoTrait, digits=2))
@@ -251,9 +323,36 @@ if (sum(is.na(genoDataMatrix)) > 0)
     genoDataMatrix <- data.matrix(genoDataMatrix)
   }
 
+#impute missing data in prediction data
+if (length(predictionData) != 0)
+  {
+    predictionData <- data.matrix(predictionData)
+    print('before imputation prediction data')
+    print(predictionData[1:10, 1:4])
+    if (sum(is.na(predictionData)) > 0)
+      {
+        print("sum of geno missing values")
+        print(sum(is.na(predictionData)))
+        predictionData <-kNNImpute(predictionData, 10)
+        predictionData <-as.data.frame(predictionData)
+
+        #extract columns with imputed values
+        predictionData <- subset(predictionData,
+                                 select = grep("^x", names(predictionData))
+                                 )
+
+        #remove prefix 'x.' from imputed columns
+        names(predictionData) <- sub("x.", "", names(predictionData))
+
+        predictionData <- round(predictionData, digits = 0)
+        predictionData <- data.matrix(predictionData)
+      }
+
+}
 
 #change genotype coding to [-1, 0, 1], to use the A.mat )
 genoDataMatrix <- genoDataMatrix - 1
+
 if (length(predictionData) != 0)
   {
     predictionData <- predictionData - 1
@@ -262,6 +361,7 @@ if (length(predictionData) != 0)
 #use REML (default) to calculate variance components
 
 #calculate GEBV using marker effects (as random effects)
+
 markerGEBV <- mixed.solve(y = phenoTrait,
                           Z = genoDataMatrix
                          )
@@ -281,12 +381,12 @@ genocrsprd <- tcrossprod(genoDataMatrix)
 
 #construct an identity matrix for genotypes
 identityMatrix <- diag(nrow(phenoTrait))
-                     
+                  
 iGEBV <- mixed.solve(y = phenoTrait,
                      Z = identityMatrix,
                      K = genocrsprd
                      )
-
+ 
 #correlation between breeding values based on
 #marker effects and relationship matrix
 corGEBVs <- cor(genoDataMatrix %*% markerGEBV$u, iGEBV$u)
@@ -331,7 +431,8 @@ if (length(combinedGebvsFile) != 0)
         rownames(allGebvs) <- allGebvs[,1]
         allGebvs[,1] <- NULL
      }
-  }   
+  }
+
 colnames(ordered.iGEBV) <- c(trait)
           
 #TO-DO:account for minor allele frequency                
@@ -340,10 +441,17 @@ colnames(ordered.iGEBV) <- c(trait)
 
 reps <- round_any(nrow(phenoTrait), 10, f = ceiling) %/% 10
 
-genotypeGroups <- rep(1:10, reps) [- (nrow(phenoTrait) %% 10)]
+genotypeGroups <-c()
+
+if (nrow(phenoTrait) %% 10 == 0)
+  {
+    genotypeGroups <- rep(1:10, reps)   
+  } else {
+    genotypeGroups <- rep(1:10, reps) [- (nrow(phenoTrait) %% 10) ]
+  }
 
 set.seed(4567)                                   
-genotypeGroups <- genotypeGroups[order (runif(nrow(phenoTrait))) ]                     
+genotypeGroups <- genotypeGroups[ order (runif(nrow(phenoTrait))) ]
 
 validationAll <- c()
 
@@ -354,7 +462,7 @@ for (i in 1:10)
  
   trG <- which(genotypeGroups != i)
   slG <- which(genotypeGroups == i)
-
+ 
   assign(tr, trG)
   assign(sl, slG)
 
@@ -366,7 +474,7 @@ for (i in 1:10)
                          mixed.method = "REML",
                          K.method = "RR"
                          )
-
+ 
   assign(kblup, result)
  
 #calculate cross-validation accuracy
@@ -374,7 +482,7 @@ for (i in 1:10)
 
   validation <- paste("validation", i, sep = ".")
 
-  cvTest <- paste("CV test", i, sep = " ")
+  cvTest <- paste("Test", i, sep = " ")
 
   if (class(accuracy) != "try-error")
     {
@@ -383,7 +491,7 @@ for (i in 1:10)
 
       colnames(accuracy) <- c("correlation")
       rownames(accuracy) <- cvTest
-
+    
       assign(validation, accuracy)
 
       validationAll <- rbind(validationAll, accuracy)
@@ -410,6 +518,7 @@ if (is.null(validationAll) == FALSE)
 if (length(predictionData) !=0 )
   {
     predictionData <- data.matrix(round(predictionData, digits = 0 ))
+    print("prediction genotype data")
     print(predictionData[1:10, 1:20])
   }
 
@@ -428,7 +537,11 @@ if(length(predictionData) != 0)
     predictionPopGEBVs <- round(data.matrix(predictionPopResult$g.pred), digits = 2)
     predictionPopGEBVs <- data.matrix(predictionPopGEBVs[order(-predictionPopGEBVs[, 1]), ])
 
-    colnames(predictionPopGEBVs) <- c(trait)    
+   
+    colnames(predictionPopGEBVs) <- c(trait)
+    print("prediction output")
+    print(predictionPopGEBVs[1:10,])
+  
   }
 
 

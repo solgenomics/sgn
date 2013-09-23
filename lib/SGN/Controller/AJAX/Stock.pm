@@ -298,12 +298,13 @@ sub display_ontologies_GET  {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
     my $stock = $c->stash->{stock};
     my $stock_id = $stock->get_stock_id;
-    my $sp_cvterms = $c->stash->{stock_cvterms}->{SP};
+    my $trait_db_name => $c->get_conf('trait_ontology_db_name');
+    my $trait_cvterms = $c->stash->{stock_cvterms}->{$trait_db_name};
     my $po_cvterms = $c->stash->{stock_cvterms}->{PO} ;
     # should GO be here too?
     my $go_cvterms = $c->stash->{stock_cvterms}->{GO};
     my @stock_cvterms;
-    push @stock_cvterms, @$sp_cvterms if $sp_cvterms;
+    push @stock_cvterms, @$trait_cvterms if $trait_cvterms;
     push @stock_cvterms, @$po_cvterms if $po_cvterms;
     ################################
     ###the following code should be re-formatted in JSON object,
@@ -337,7 +338,7 @@ sub display_ontologies_GET  {
         my $db_name      = $_->cvterm->dbxref->db->name;
         my $accession    = $_->cvterm->dbxref->accession;
         my $db_accession = $accession;
-        $db_accession = $cvterm_id if $db_name eq 'SP';
+        $db_accession = $cvterm_id if $db_name eq $trait_db_name;
         my $url = $_->cvterm->dbxref->db->urlprefix . $_->cvterm->dbxref->db->url;
         my $cvterm_link =
             qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id" target="blank">$cvterm_name</a>|;
@@ -677,7 +678,8 @@ sub trait_autocomplete_GET :Args(0) {
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
     my @response_list;
-    my $q = "select distinct cvterm.name from stock join nd_experiment_stock using (stock_id) join nd_experiment_phenotype using (nd_experiment_id) join phenotype using (phenotype_id) join cvterm on cvterm_id = phenotype.observable_id WHERE cvterm.name ilike ?";
+    my $q = "SELECT DISTINCT cvterm.name FROM phenotype JOIN cvterm ON cvterm_id = observable_id WHERE cvterm.name ilike ? ORDER BY cvterm.name";
+    #my $q = "select distinct cvterm.name from stock join nd_experiment_stock using (stock_id) join nd_experiment_phenotype using (nd_experiment_id) join phenotype using (phenotype_id) join cvterm on cvterm_id = phenotype.observable_id WHERE cvterm.name ilike ?";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute( '%'.$term.'%');
     while  (my ($term_name) = $sth->fetchrow_array ) {
@@ -710,7 +712,7 @@ sub project_autocomplete_GET :Args(0) {
   nd_experiment_stock JOIN
   nd_experiment_project USING (nd_experiment_id) JOIN
   project USING (project_id)
-  WHERE project.name ilike ?";
+  WHERE project.name ilike ? ORDER BY project.name";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute( '%'.$term.'%');
     while  (my ($project_name) = $sth->fetchrow_array ) {
@@ -808,9 +810,9 @@ sub stock_autocomplete_GET :Args(0) {
     $term =~ s/\s+/ /g;
 
     my @response_list;
-    my $q = "select distinct(name) from stock where name ilike ?";
+    my $q = "select distinct(name) from stock where name ilike ? ORDER BY stock.name";
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute($term.'%');
+    $sth->execute('%'.$term.'%');
     while (my ($stock_name) = $sth->fetchrow_array) { 
 	push @response_list, $stock_name;
     }
