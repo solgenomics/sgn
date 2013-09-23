@@ -31,6 +31,8 @@ use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
 use Spreadsheet::WriteExcel;
+use Digest::MD5;
+use File::Basename qw | basename dirname|;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -52,6 +54,7 @@ sub create_fieldbook_from_trial_GET : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_id = $c->req->param('trial_id');
+  my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
   chomp($trial_id);
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
@@ -109,6 +112,39 @@ sub create_fieldbook_from_trial_GET : Args(0) {
   }
   $wb->close();
 
+  my $user_id = $c->user()->get_object()->get_sp_person_id();
+  open(my $F, "<", $tempfile) || die "Can't open file ".$self->filename();
+  binmode $F;
+  my $md5 = Digest::MD5->new();
+  $md5->addfile($F);
+  close($F);
+  my $md_row = $metadata_schema->resultset("MdMetadata")->create({
+								  create_person_id => $user_id,
+								 });
+  $md_row->insert();
+  my $file_row = $metadata_schema->resultset("MdFiles")->create({
+								     basename => basename($tempfile),
+								     dirname => dirname($tempfile),
+								     filetype => 'field layout xls',
+								     md5checksum => $md5->digest(),
+								     metadata_id => $md_row->metadata_id(),
+								    });
+  $file_row->insert();
+
+  my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')
+    ->create_with({
+		   name   => 'field layout',
+		   cv     => 'experiment type',
+		   db     => 'null',
+		   dbxref => 'field layout',
+		  });
+
+
+  my $project = $trial_layout->project;
+#  my $field_layout_experiment = $project->;
+
+  my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find(
+
 
   print STDERR "create field book here\n";
   $c->stash->{rest} = {
@@ -116,6 +152,8 @@ sub create_fieldbook_from_trial_GET : Args(0) {
 		       result => $tempfile,
 		       file => "",
 		      };
+####put all of the above in a sub
+
 }
 
 
