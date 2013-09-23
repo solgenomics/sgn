@@ -29,29 +29,46 @@ sub parse {
     
     return 'graphical display not available for BLAST reports larger than 1 MB' if -s $raw_report_file > 1_000_000;
     
-    open(STDOUT, ">", $raw_report_file.".blast_graph.html");
+    return '<b>Overview graph:</b> Not shown because no hits were found.<br /><br />' if no_hits($raw_report_file);
 
-#    my $inc_str = join ',', map qq|"$_"|, @INC;
-#    my $cmd = <<EOP;
-#    @INC = ( $inc_str );
-#    require Bio::GMOD::Blast::Graph;
-    my $graph = Bio::GMOD::Blast::Graph->new(-outputfile => $raw_report_file,
-					     -dstDir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir},
-                                              -dstURL => $c->config->{tempfiles_subdir},
-                                              -imgName=> $raw_report_file.".blast_graph.png",
-	);
-    
-    die unless $graph;
-    
-    $graph->showGraph();
-#EOP
-	
- #   my $html = `perl -e '$cmd'`;
-    select STDOUT;
+    open(my $fh, ">", $raw_report_file.".blast_graph.html") || die "Can't open $raw_report_file .blast_graph.html";
 
-    my $html = read_file($raw_report_file.".blast_graph.html");
+    my $filename = basename($raw_report_file);
+    my $image_url = $c->config->{tempfiles_subdir}."/blast/$filename".".blast_graph.png";
+
+    eval { 
+	my $graph = Bio::GMOD::Blast::Graph->new(-outputfile => $raw_report_file,
+						 -dstDir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir}."/blast",
+						 -format => 'blast',
+						 -dstURL => $c->config->{tempfiles_subdir}."/blast",
+						 -imgName=> $filename.".blast_graph.png",
+						 -fh     => $fh
+	    );
+
+	    
+	$graph->showGraph();
+    };
+
+    if ($@) { 
+	return "<b>No overview graph available</b> ($@)";
+    }
+
+    my $html = "<center><img src=\"$image_url\" border=\"0\" /></center>". read_file($raw_report_file.".blast_graph.html")."</center>";
     
     return $html;
 }
+
+sub no_hits { 
+    my $file = shift;
+    my $contents = read_file($file);
+    
+    if ($contents =~ /No hits found/) { 
+	return 1;
+    }
+    
+    return 0;
+}
+
+
 
 1;
