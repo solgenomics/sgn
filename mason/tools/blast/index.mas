@@ -225,7 +225,7 @@ function run_blast() {
                                       
                                       jobid = response.jobid; 
             
-                          alert("JOB ID: "+jobid);
+                          // alert("JOB ID: "+jobid);
                                      }
 
                                   },
@@ -235,7 +235,7 @@ function run_blast() {
 
    var done = false;
    var error = false;
-   alert("JOBID:   "+jobid);
+   //alert("JOBID:   "+jobid);
    while (done == false) { 
       jQuery.ajax( { 
           url: '/tools/blast/check/'+jobid,
@@ -266,7 +266,7 @@ function run_blast() {
    var prereqs = new Array();
 
    for (var n in format) { 
-     alert("Parsing format "+format[n]);
+     //alert("Parsing format "+format[n]);
 
      jQuery.ajax( { 
        url: '/tools/blast/result/'+jobid,
@@ -275,7 +275,7 @@ function run_blast() {
        success: function(response) { 
           if (response.blast_report) { 
               blast_reports.push(response.blast_report);
-              alert("BLAST report: "+response.blast_report);
+              //alert("BLAST report: "+response.blast_report);
           }
           if (response.prereqs) { 
               prereqs.push(response.prereqs);
