@@ -3,7 +3,7 @@ package CXGN::Blast::Parse::Plugin::CoverageGraph;
 
 use Moose;
 use File::Basename;
-
+use File::Slurp;
 
 sub name { 
     return "Coverage graph";
@@ -19,6 +19,10 @@ sub parse {
     
     my $basename = basename($raw_report_file);
 
+      if (no_hits($raw_report_file)) { 
+     	return "<b>Coverage Graph:</b> Not shown, because no hits were found.<br /><br />";
+     }
+
     #graph variables for just Evan's graph package
     my $graph_img_fileurl = $c->tempfile(TEMPLATE=> "blast/blast_coverage_XXXXXX", UNLINK=>0);
     my $graph_img_filepath = $c->path_to($graph_img_fileurl);
@@ -30,8 +34,11 @@ sub parse {
   return { error => "BLAST report too large for this parse method", } if -s $raw_report_file > 1_000_000;
 
   my $errstr = $graph2->write_img();
-  $errstr and die "<b>ERROR:</b> $errstr";
+  if ($errstr) { 
+      #return "<b>Sorry, and error occurred.</b> $errstr";
+  }
 
+ 
 
   return join '',
     ( <<EOH,
@@ -48,6 +55,16 @@ EOH
 
 }
 
+
+sub no_hits { 
+    my $file = shift;
+    my $contents = read_file($file);
+    
+    if ($contents =~ /No hits found/) { 
+	return 1;
+    }
+    return 0;
+}
 
 
 
