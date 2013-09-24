@@ -19,7 +19,7 @@ sub parse {
     my $self = shift;
     my $c = shift;
     my $file = shift;
-    return read_file($file);
+    return "<pre>".read_file($file)."</pre>";
 }
 
 1;
