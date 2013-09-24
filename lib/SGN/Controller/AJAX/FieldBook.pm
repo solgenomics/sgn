@@ -33,6 +33,9 @@ use CXGN::Trial::TrialLayout;
 use Spreadsheet::WriteExcel;
 use Digest::MD5;
 use File::Basename qw | basename dirname|;
+use DateTime;
+use File::Spec::Functions;
+use File::Copy;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -120,14 +123,40 @@ sub create_fieldbook_from_trial_GET : Args(0) {
   my $md5 = Digest::MD5->new();
   $md5->addfile($F);
   close($F);
+
+  my $project = $trial_layout->get_project;
+
+  my $time = DateTime->now();
+  my $timestamp = $time->ymd()."_".$time->hms();
+  my $user_name = $c->user()->get_object()->get_username();
+  my $user_string = $user_name.'_'.$user_id;
+  my $subdirectory_name = "tablet_field_layout";
+  my $archived_file_name = catfile($user_string, $subdirectory_name,$timestamp."_".$project->name.".xls");
+  my $archive_path = $c->config->{archive_path};
+  my $file_destination =  catfile($archive_path, $archived_file_name);
+
+  if (!-d $archive_path) {
+    mkdir $archive_path;
+  }
+
+  if (! -d catfile($archive_path, $user_string)) { 
+      mkdir (catfile($archive_path, $user_string));
+  }
+
+  if (! -d catfile($archive_path, $user_string,$subdirectory_name)) { 
+      mkdir (catfile($archive_path, $user_string, $subdirectory_name));
+  }
+
+
+
   my $md_row = $metadata_schema->resultset("MdMetadata")->create({
 								  create_person_id => $user_id,
 								 });
   $md_row->insert();
   my $file_row = $metadata_schema->resultset("MdFiles")->create({
-								     basename => basename($tempfile),
-								     dirname => dirname($tempfile),
-								     filetype => 'field layout xls',
+								     basename => basename($file_destination),
+								     dirname => dirname($file_destination),
+								     filetype => 'tablet field layout xls',
 								     md5checksum => $md5->digest(),
 								     metadata_id => $md_row->metadata_id(),
 								    });
@@ -141,7 +170,7 @@ sub create_fieldbook_from_trial_GET : Args(0) {
 		   dbxref => 'field layout',
 		  });
 
-  my $project = $trial_layout->get_project;
+
   my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find({
 									       'nd_experiment_projects.project_id' => $project->project_id,
 									       type_id => $field_layout_cvterm->cvterm_id(),
@@ -157,10 +186,14 @@ sub create_fieldbook_from_trial_GET : Args(0) {
 										   });
 
 
+
+  move($tempfile,$file_destination);
+  unlink $tempfile;
+
   print STDERR "create field book here\n";
   $c->stash->{rest} = {
 		       success => "1",
-		       result => $tempfile,
+		       result => $file_destination,
 		       file => "",
 		      };
 ####put all of the above in a sub
