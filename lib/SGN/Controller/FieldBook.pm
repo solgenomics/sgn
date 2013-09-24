@@ -9,11 +9,15 @@ use File::Temp;
 use Data::Dumper;
 use CXGN::Trial::TrialLayout;
 use Try::Tiny;
+use File::Basename qw | basename dirname|;
+use File::Spec::Functions;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
 sub field_book :Path("/fieldbook") Args(0) { 
     my ($self , $c) = @_;
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     if (!$c->user()) { 
 	# redirect to login page
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
@@ -22,34 +26,64 @@ sub field_book :Path("/fieldbook") Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my @rows = $schema->resultset('Project::Project')->all();
     my @projects = ();
+    my @layout_files = ();
+
+    my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')
+      ->create_with({
+		     name   => 'field layout',
+		     cv     => 'experiment type',
+		     db     => 'null',
+		     dbxref => 'field layout',
+		    });
+
     foreach my $row (@rows) {
-      my $design_prop;
-      $design_prop =  $row->projectprops->find(
-        { 'type.name' => 'design' },
-        { join => 'type'}
-        ); #there should be only one design prop.
-      if ($design_prop) {
-	my $design_type;
-	$design_type = $design_prop->value;
-	if ($design_type) {
-	  my $trial_layout;
-	  try {
-	    $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $row->project_id} );
-	  };
-	  if ($trial_layout){
-	    push @projects, [ $row->project_id, $row->name, $row->description];
-	  }
+      my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find({
+										   'nd_experiment_projects.project_id' => $row->project_id,
+										   type_id => $field_layout_cvterm->cvterm_id(),
+										  },
+										  {
+										   join => 'nd_experiment_projects',
+										  });
+      if (!$experiment) {
+	next;
+      }
+      my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->search({nd_experiment_id => $experiment->nd_experiment_id(),});
+      while (my $experiment_file = $experiment_files->next) {
+	my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $experiment_file->file_id});
+	if ($file_row->filetype eq 'tablet field layout xls') {
+	  my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+	  push @projects, [ $row->project_id, $row->name, $row->description, $file_row->dirname,$file_row->basename, $file_row->file_id];
+	  push @layout_files, $file_destination;
 	}
       }
     }
     $c->stash->{projects} = \@projects;
+    $c->stash->{layout_files} = \@projects;
+
     # get roles
     my @roles = $c->user->roles();
     $c->stash->{roles}=\@roles;
     $c->stash->{template} = '/fieldbook/home.mas';
 }
 
+
 sub trial_field_book_download : Path('/fieldbook/trial_download/') Args(1) { 
+    my $self  =shift;
+    my $c = shift;
+    my $file_id = shift;
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
+    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    print STDERR "\n\n\nfile name:".$file_row->basename."\n";
+    my $contents = read_file($file_destination);
+    my $file_name = $file_row->basename;
+    $c->res->content_type('Application/xls');
+    $c->res->header('Content-Disposition', qq[attachment; filename="fieldbook_layout_$file_name"]);
+    $c->res->body($contents);
+}
+
+
+sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(1) { 
     my $self  =shift;
     my $c = shift;
     my $trial_id = shift;

@@ -2,6 +2,7 @@
 <%args>
 @projects => undef
 $user_id => undef
+@layout_files => undef
 @roles => ()
 </%args>
 
@@ -11,11 +12,12 @@ $user_id => undef
 <%perl>
 foreach my $project_ref (@projects) {
    my @trial_array = @{$project_ref};
-   my $trial_layout_download = '[<a href="\\fieldbook\\trial_download\\'.$trial_array[0].'">Download</a>]';
-   print $trial_array[1]."$trial_layout_download</br>";
+   my $file_name = $trial_array[4];
+   my $trial_layout_download = '[<a href="\\fieldbook\\trial_download\\'.$trial_array[5].'">Download</a>]';
+   print $trial_array[4]."$trial_layout_download</br>";
+   #print $trial_array[4]."</br>";
 }
 </%perl>
-
 </&>
 
 <&| /page/info_section.mas, title=>'Trait Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_new_trait_file_link">Create new trait file</a>]' &>

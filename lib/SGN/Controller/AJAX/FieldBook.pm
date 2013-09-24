@@ -185,16 +185,16 @@ sub create_fieldbook_from_trial_GET : Args(0) {
 										    file_id => $file_row->file_id(),
 										   });
 
+  $experiment_files->insert();
 
 
   move($tempfile,$file_destination);
   unlink $tempfile;
 
-  print STDERR "create field book here\n";
   $c->stash->{rest} = {
 		       success => "1",
-		       result => $file_destination,
-		       file => "",
+		       result => $file_row->file_id,
+		       file => "$file_destination",
 		      };
 ####put all of the above in a sub
 
