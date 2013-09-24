@@ -506,7 +506,8 @@ sub simple_selectbox_html {
 	    my $selected = '';
 
             my ( $name, $text ) = ref $_ ? @$_ : ( $_, $_ );
-	    if (!ref($params{selected})) { 
+	    
+	    if (defined($params{selected}) && !ref($params{selected})) { 
 		@selected = ( $params{selected} );
 	    }
 	    else { 
