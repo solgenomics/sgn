@@ -48,6 +48,8 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     print STDERR "SEQUENCE now : ".$params->{sequence}."\n";
 
+    my $seq_count = $params->{sequence} =~ /^\>/g; 
+
     my ($seq_fh, $seqfile) = tempfile( 
 	"blast_XXXXXX",
 	DIR=> $c->get_conf('cluster_shared_tempdir'),
@@ -61,6 +63,8 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     my $schema = $c->dbic_schema("SGN::Schema");
     
+    
+
     my %arg_handlers =
 	(
 
@@ -230,7 +234,9 @@ sub run : Path('/tools/blast/run') Args(0) {
     }
     else { 
 	print STDERR "Passing jobid code ".(basename($jobid))."\n";
-	$c->stash->{rest} = { jobid =>  basename($jobid), };
+	$c->stash->{rest} = { jobid =>  basename($jobid), 
+	                      seq_count => $seq_count, 
+	};
     }
 }
 

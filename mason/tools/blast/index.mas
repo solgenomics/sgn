@@ -48,7 +48,15 @@ my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_optio
 			      choices => \@input_options
 );
 
-my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', choices => [ map { $_->[0] } @parse_options ], multiple=>1, selected=> [ sort (map { $_->[0] } @parse_options) ] );
+my @parse_options_selected = ();
+foreach my $po (@parse_options) { 
+  if ($po->[0] ne "Basic") { 
+    push @parse_options_selected, $po;
+  }
+}
+
+
+my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', choices => [ map { $_->[0] } @parse_options ], multiple=>1, selected=> [ sort (map { $_->[0] } @parse_options_selected) ] );
 
 print STDERR "SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n\n\n";
 
@@ -112,12 +120,12 @@ my $input_example_json = JSON::Any->encode($q_example);
   'Expect (e-value) Threshold' => '<input id="evalue" type="text" size="6" value="1e-10" name="expect" />',
   'Substitution Matrix' => $substitution_matrix_select,
   'Max. hits to show' => '<input id="maxhits" type="text" name="maxhits" size="6" value="100" />',
-  'Show Graphics' => $show_graphics_select, 
+
   'Filter' => '<input type="checkbox" name="filterq" checked="1" />',
   '  ' => '<div style="text-align: right">
 
 <input id="clear_button" type="button" value="Clear" onclick="clear_input_sequence(); "/> <input id="submit_button" type="submit" name="search" value="Search" onclick="javascript:run_blast();" /></div>',
-  __multicol => 3,
+  __multicol => 2,
   __border => 0,
   __tableattrs => 'width="80%"',
 
@@ -208,12 +216,13 @@ function run_blast() {
       return;
    }
 
-   status += "Running BLAST... ";
+   status += "Submitting job... ";
    jQuery('#blast_status').html(status);
 
    disable_ui();
 
    var jobid ="";
+   var seq_count = 0;
 
    jQuery.ajax( { 
       url:     '/tools/blast/run/',
@@ -230,6 +239,7 @@ function run_blast() {
                                     else{ 
                                       
                                       jobid = response.jobid; 
+                                      seq_count = response.seq_count;
             
                           // alert("JOB ID: "+jobid);
                                      }
@@ -238,6 +248,9 @@ function run_blast() {
 
       error:   function(response) { alert("An error occurred. The service may not be available right now."); enable_ui(); return; }
    });
+
+   status += 'id='+jobid+' ';
+   jQuery('#blast_status').html(status);
 
    var done = false;
    var error = false;
@@ -265,12 +278,18 @@ function run_blast() {
 
    if (error) { return; }
 
-   status = status +  "Run complete.";
+   status = status +  " Run complete.";
    jQuery('#blast_status').html(status);
    jQuery('#blast_report').html('');
 
    var blast_reports = new Array();
    var prereqs = new Array();
+
+
+   if (seq_count > 1) { 
+     format = [ "Basic" ];
+     alert("Multiple sequences were detected. The output will be shown in the basic format");
+   }
 
    for (var n in format) { 
      //alert("Parsing format "+format[n]);
