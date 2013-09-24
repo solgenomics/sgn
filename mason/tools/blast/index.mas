@@ -175,7 +175,6 @@ enable_ui();
 
 function swap_menu(group_id) { 
    var menu_html = eval( <% JSON::Any->encode($menus) %>);
-   alert("MENU HTML: "+ menu_html[group_id]);
    jQuery('#database_select').html(menu_html[group_id]);
 }
 
@@ -199,7 +198,7 @@ function run_blast() {
    var format   = jQuery('#parse_options').val() || [ 'Basic' ];
 
    if (sequence == '') { 
-      alert("Please enter a sequence :=)"); 
+      alert("Please enter a sequence :-)"); 
       jQuery('blast_status').html('');
       return; 
    }
@@ -258,7 +257,8 @@ function run_blast() {
           },
           error: function(response) { alert("An  error occurred. "); enable_ui(); done=true; error=true;  }
      });
-     status += '.'; 
+     status += '.';
+     if (status.length > 80) { status += '<br />'; }
      jQuery('#blast_status').html(status);      
 
    }
