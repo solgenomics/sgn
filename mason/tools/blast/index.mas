@@ -3,7 +3,8 @@
 </%doc>
 
 <%args>
-$db_id => undef
+$preselected_database => ''
+$preselected_category => ''
 $dataset_groups => []
 $databases => {}
 $programs
@@ -17,8 +18,12 @@ use JSON::Any;
 
 my $menus = {};
 foreach my $d (keys(%$databases)) { 
-   $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", id=>"database", choices => [ @{$databases->{$d}} ]);
+   $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", id=>"database", choices => [ @{$databases->{$d}} ], selected=> $preselected_database );
 }
+
+print STDERR "PRESELECTED DATABASE: $preselected_database\n";
+
+
 
 my $substitution_matrix_select = $m->scomp('/page/html_select.mas', 
    name=>"matrix", 
@@ -43,9 +48,10 @@ my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_optio
 			      choices => \@input_options
 );
 
-my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', choices => [ map { $_->[0] } @parse_options ], multiple=>1, select=> [ sort (map { $_->[0] } @parse_options) ] );
+my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', choices => [ map { $_->[0] } @parse_options ], multiple=>1, selected=> [ sort (map { $_->[0] } @parse_options) ] );
 
-#my $parse_options_checkboxes = join "&nbsp;&nbsp;", map { qq{<input type="checkbox" name="$_->[0]">$_->[1]</a>} } @parse_options;
+print STDERR "SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n\n\n";
+
 
 my $db_type = {};
 foreach my $g (keys %$databases) {
@@ -80,8 +86,8 @@ my $input_example_json = JSON::Any->encode($q_example);
 <&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0 &>
   <input type="hidden" name="outformat" value="0" />
   <table border="0" align="center" summary="" cellpadding="0" cellspacing="5">
-    <tr><td width="200"><b>Show</b></td><td width="400">
-	<& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select" &>
+    <tr><td width="200"><b>Categories</b></td><td width="400">
+	<& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select", selected=>"$preselected_category" &>
 </td><td rowspan="4" align="center"><div id="status_wheel"></div></td></tr>
     <tr><td><b>Sequence Database</b></td>
       <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>	
@@ -169,6 +175,7 @@ enable_ui();
 
 function swap_menu(group_id) { 
    var menu_html = eval( <% JSON::Any->encode($menus) %>);
+   alert("MENU HTML: "+ menu_html[group_id]);
    jQuery('#database_select').html(menu_html[group_id]);
 }
 
