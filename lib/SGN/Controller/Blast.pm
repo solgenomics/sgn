@@ -41,8 +41,6 @@ sub index :Path('/tools/new-blast/') :Args(0) {
 	my $rs = $schema->resultset("BlastDb")->search( { blast_db_id => $db_id }, { join => 'blast_db_group' });
 	$preselected_database = $rs->first()->blast_db_id();
 	$preselected_category = $rs->first()->blast_db_group_id();
-
-	print STDERR "PRESELECTED: $preselected_database, $preselected_category\n";
     }
     
     foreach my $g ($group_rs->all()) { 
@@ -57,22 +55,18 @@ sub index :Path('/tools/new-blast/') :Args(0) {
     my $cbsq = CXGN::Blast::SeqQuery->new();
     my @input_options = sort {$a->[0] cmp $b->[0]} ( map { [ $_->name(), $_->name(), $_->type(), $_->example() ] } $cbsq->plugins() );
     
-
-
     my $cbp = CXGN::Blast::Parse->new();
     my @parse_options = sort { $b->[0] cmp $a->[0] } ( map { [ $_->name(), $_->name() ] } $cbp->plugins() );
 
     # remove the Basic option from the list (it will still be the default if nothing is selected)
+    #
     for (my $i=0; $i<@parse_options; $i++) { 
 	if ($parse_options[$i]->[0] eq 'Basic') { 
 	    delete($parse_options[$i]);
 	}
     }
 
-    print "PARSE OPTIONS: ".join(",",@parse_options)."\n";
-	
-
-    print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
+    #print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
     #print STDERR "GROUPS: ".Data::Dumper::Dumper($dataset_groups);
     #print STDERR "DATASETS: ".Data::Dumper::Dumper($databases);
     $c->stash->{input_options} = \@input_options;
