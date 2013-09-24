@@ -442,7 +442,8 @@ EOH
   args:    - hash-style list as:
                      name     => 'the name of the variable',
                      choices  => [array of choices],
-                     selected => (optional) the selected value (from choices),
+                     selected => (optional) the selected value (from choices), either
+                                 single value or listref (for multiple select box),
                      multiple => (optional) anything true here makes it a multiple-select
                                  box
                      id       => (optional) a specific HTML id to be given to this <select>
@@ -501,13 +502,27 @@ sub simple_selectbox_html {
             $retstring .= qq{<optgroup label="$_">};
         }
         else {
+	    my @selected = ();
+	    my $selected = '';
+
             my ( $name, $text ) = ref $_ ? @$_ : ( $_, $_ );
-            my $selected =
-              ( defined $params{selected} && $params{selected} eq $name )
-              ? ' selected="selected"'
-              : '';
-            $retstring .= qq{<option value="$name"$selected>$text</option>\n};
-        }
+	    if (!ref($params{selected})) { 
+		@selected = ( $params{selected} );
+	    }
+	    else { 
+		@selected = @{$params{selected}};
+
+	    
+	    }
+
+	    foreach my $s (@selected) { 
+		if (defined($s) && ($s eq $name)) { 
+		    $selected = ' selected="selected" '; 
+		    last();
+		}
+	    }
+	    $retstring .= qq{<option value="$name"$selected>$text</option>\n};
+	}
     }
     $retstring .= qq{</optgroup>} if $in_group;
     $retstring .= "</select>\n";
