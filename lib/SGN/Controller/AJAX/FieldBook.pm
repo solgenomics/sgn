@@ -55,6 +55,8 @@ sub create_fieldbook_from_trial_GET : Args(0) {
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_id = $c->req->param('trial_id');
   my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+  my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+
   chomp($trial_id);
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
@@ -139,11 +141,20 @@ sub create_fieldbook_from_trial_GET : Args(0) {
 		   dbxref => 'field layout',
 		  });
 
+  my $project = $trial_layout->get_project;
+  my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find({
+									       'nd_experiment_projects.project_id' => $project->project_id,
+									       type_id => $field_layout_cvterm->cvterm_id(),
+									      },
+									      {
+									       join => 'nd_experiment_projects',
+									      });
 
-  my $project = $trial_layout->project;
-#  my $field_layout_experiment = $project->;
 
-  my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find(
+  my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+										    nd_experiment_id => $experiment->nd_experiment_id(),
+										    file_id => $file_row->file_id(),
+										   });
 
 
   print STDERR "create field book here\n";
