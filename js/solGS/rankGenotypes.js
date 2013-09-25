@@ -5,8 +5,6 @@
 *
 */
 
-
-JSAN.use('Prototype');
 JSAN.use('jquery.blockUI');
 
 function listSelPopulations ()  {
@@ -198,7 +196,9 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
                     var suc = res.status;
                     var table;
                     if (suc == 'success' ) {
-                        var genos = new Hash();
+                       
+                        var genos = new Object();
+              
                         genos = res.genotypes;
                         var download_link = res.link;
                           
@@ -230,9 +230,9 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
                     jQuery('#top_genotypes').append(table).show(); 
                     jQuery('#selected_pop').val('');
                     //jQuery("#select_a_population_div").empty();
-                        
+                   
                     jQuery.unblockUI(); 
-                      
+                                        
                 }
             });
     }           
