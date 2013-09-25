@@ -247,7 +247,7 @@ sub genotype_data {
 
             unless (grep(/^$stock$/, @stocks)) 
             {
-                my $geno_values = $self->stock_genotype_values($geno);
+                my $geno_values = $self->stock_genotype_values($c, $geno);
                 my $geno_values_no = scalar(split(/\t/, $geno_values));
                
                 if($geno_values_no - 1 == $markers_no )
@@ -271,6 +271,81 @@ sub genotype_data {
     } 
      
    
+
+}
+
+
+sub search_stock {
+    my ($self, $c, $stock_name) = @_;
+  
+    my $rs = $self->schema($c)->resultset("Stock::Stock")
+        ->search({'me.name' =>  $stock_name});
+         
+    return $rs; 
+
+}
+
+
+sub format_user_list_genotype_data {
+    my ($self, $c) = @_;
+
+    my @stocks_names = @{ $c->stash->{prediction_genotypes_list_stocks_names} };
+    
+    my $cnt = 0;
+    my $header_markers;
+    my $geno_data;
+
+    foreach my $stock_name (@stocks_names)
+    {
+        my $stock_rs = $self->search_stock($c, $stock_name);
+        my $stock_genotype_rs = $self->individual_stock_genotypes_rs($stock_rs);
+       
+        $cnt++;
+        if($cnt == 1)
+        {
+            $header_markers   = $self->extract_project_markers($stock_genotype_rs);
+            $geno_data = "\t" . $header_markers . "\n";
+           
+        }
+
+        my @header_markers = split(/\t/, $header_markers);
+    
+        while (my $geno = $stock_genotype_rs->next)
+        {        
+            my $json_values  = $geno->value;
+            my $values       = JSON::Any->decode($json_values);
+            my @markers      = keys %$values;
+
+            if (@header_markers && @markers ~~ @header_markers) 
+            {
+                my $geno_values = $self->stock_genotype_values($c, $geno);               
+                $geno_data .= $geno_values;
+            }
+        }       
+    }
+
+    $c->stash->{user_list_genotype_data} = $geno_data;
+
+}
+
+
+sub individual_stock_genotypes_rs {
+    my ($self, $stock_rs) = @_;
+    
+    my $genotype_rs = $stock_rs
+        ->search_related('nd_experiment_stocks')
+        ->search_related('nd_experiment')
+        ->search_related('nd_experiment_genotypes')
+        ->search_related('genotype')
+        ->search_related('genotypeprops',
+                         {},
+                         { 
+                             '+select' => [ qw /  me.stock_id me.name / ], 
+                             '+as'     => [ qw / stock_id stock_name / ] 
+                         }
+        );
+
+    return $genotype_rs;
 
 }
 
@@ -318,23 +393,31 @@ sub extract_project_markers {
 
 
 sub stock_genotype_values {
-    my ($self, $geno_row) = @_;
+    my ($self, $c, $geno_row) = @_;
        
-    my $geno_values .= $geno_row->get_column('stock_name') . "\t";    
+       
     my $json_values  = $geno_row->value;
     my $values       = JSON::Any->decode($json_values);
     my @markers      = keys %$values;
-       
+   
+    my $stock_name = $geno_row->get_column('stock_name');
+    my $size = scalar(@markers);
+    print STDERR "\n marker count: $stock_name : $ size\n"; 
+ 
     my $round =  Math::Round::Var->new(0);
-    
-    foreach my $marker (@markers) 
-    {
-        my $genotype =  $values->{$marker};
-        $geno_values .= $genotype =~ /\d+/g ? $round->round($genotype) : $genotype;       
-        $geno_values .= "\t" unless $marker eq $markers[-1];
-    }
-    
-    $geno_values .= "\n";        
+        
+    my $geno_values;
+              
+        $geno_values .= $geno_row->get_column('stock_name') . "\t";
+        foreach my $marker (@markers) 
+        {
+        
+            my $genotype =  $values->{$marker};
+            $geno_values .= $genotype =~ /\d+/g ? $round->round($genotype) : $genotype;       
+            $geno_values .= "\t" unless $marker eq $markers[-1];
+        }
+
+    $geno_values .= "\n";      
 
     return $geno_values;
 }
