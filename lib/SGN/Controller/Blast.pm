@@ -5,11 +5,13 @@ use Moose;
 
 use POSIX;
 use Data::Dumper;
+use Storable qw | nstore retrieve |;
 use List::Util qw/sum/;
 use Bio::SeqIO;
 use CXGN::Tools::Text qw/ sanitize_string /;
 #use SGN::Schema;
 use CXGN::Blast::SeqQuery;
+
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -58,13 +60,13 @@ sub index :Path('/tools/new-blast/') :Args(0) {
     my $cbp = CXGN::Blast::Parse->new();
     my @parse_options = sort { $b->[0] cmp $a->[0] } ( map { [ $_->name(), $_->name() ] } $cbp->plugins() );
 
-    # remove the Basic option from the list (it will still be the default if nothing is selected)
-    #
-    for (my $i=0; $i<@parse_options; $i++) { 
-	if ($parse_options[$i]->[0] eq 'Basic') { 
-	    delete($parse_options[$i]);
-	}
-    }
+    # # remove the Basic option from the list (it will still be the default if nothing is selected)
+    # #
+    # for (my $i=0; $i<@parse_options; $i++) { 
+    # 	if ($parse_options[$i]->[0] eq 'Basic') { 
+    # 	    delete($parse_options[$i]);
+    # 	}
+    # }
 
     #print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
     #print STDERR "GROUPS: ".Data::Dumper::Dumper($dataset_groups);
@@ -81,63 +83,70 @@ sub index :Path('/tools/new-blast/') :Args(0) {
     $c->stash->{template} = '/tools/blast/index.mas';
 }
 
-sub dbinfo : Path('/tools/blast/dbinfo') Args(0) { 
+sub dbinfo : Path('/tools/new-blast/dbinfo') Args(0) { 
     my $self = shift;
     my $c = shift;
 
+    my $data = [];
+
     my $schema = $c->dbic_schema("SGN::Schema");
 
-    my @data = ();
-
-    my $group_rs = $schema->resultset('BlastDbGroup')->search({}, { order_by => 'ordinal, name' });
-    while (my $group_row = $group_rs->next()) { 
-	my $db_rs = $group_row->blast_dbs->search({ web_interface_visible => 't'});
-	my @groups = ();
-	while (my $db_row = $db_rs->next()) { 
-	    if ($db_row->files_exist()) { 
-
-		push @groups, { 
-		    title              => $db_row->title(),
-		    sequence_type      => $db_row->type(),
-                    sequence_count     => $db_row->sequences_count(),
-		    update_freq        => $db_row->update_freq(),
-		    description        => $db_row->description(),
-		    source_url         => $db_row->source_url(),
-		    current_as_of      => strftime('%m-%d-%y %R GMT',gmtime $db_row->file_modtime),
-		    needs_update       => $db_row->needs_update(),
-		};
-	    }
-	}
-	push @data, [ $group_row->blast_db_group_id(), $group_row->name(), \@groups ];
+    my $cache = $c->config->{basepath}."/".$c->tempfiles_subdir("blast")."/dbinfo_cache";
+    if ((-e $cache) && ($c->req->param("force") != 1)) { 
+	$data = retrieve($cache);
     }
-    
-    my $ungrouped_rs = $schema->resultset('BlastDb')->search(
-	{ blast_db_group_id => undef, 
-	  web_interface_visible => 't' }, 
-	{order_by => 'title'} 
-	);
-
-    my @other_groups = ();
-    if ($ungrouped_rs) {
-	while (my $db_row = $ungrouped_rs->next()) { 
-	    if ($db_row->files_exist()) { 
-		push @other_groups, { 
-		    title              => $db_row->title(),
-		    sequence_type      => $db_row->type(),
-		    sequence_count     => $db_row->sequences_count(),
-		    update_freq        => $db_row->update_freq(),
-		    description        => $db_row->description(),
-		    source_url         => $db_row->source_url(),
-		    current_as_of      => strftime('%m-%d-%y %R GMT',gmtime $db_row->file_modtime),
-		    needs_update       => $db_row->needs_update(),
-		};
+    else { 
+	my $group_rs = $schema->resultset('BlastDbGroup')->search({}, { order_by => 'ordinal, name' });
+	while (my $group_row = $group_rs->next()) { 
+	    my $db_rs = $group_row->blast_dbs->search({ web_interface_visible => 't'});
+	    my @groups = ();
+	    while (my $db_row = $db_rs->next()) { 
+		if ($db_row->files_exist()) { 
+		    
+		    push @groups, { 
+			title              => $db_row->title(),
+			sequence_type      => $db_row->type(),
+			sequence_count     => $db_row->sequences_count(),
+			update_freq        => $db_row->update_freq(),
+			description        => $db_row->description(),
+			source_url         => $db_row->source_url(),
+			current_as_of      => strftime('%m-%d-%y %R GMT',gmtime $db_row->file_modtime),
+			needs_update       => $db_row->needs_update(),
+		    };
+		}
 	    }
+	    push @$data, [ $group_row->blast_db_group_id(), $group_row->name(), \@groups ];
 	}
-	push @data, [ 0, 'Other', \@other_groups ];
+	
+	my $ungrouped_rs = $schema->resultset('BlastDb')->search(
+	    { blast_db_group_id => undef, 
+	      web_interface_visible => 't' }, 
+	    {order_by => 'title'} 
+	    );
+	
+	my @other_groups = ();
+	if ($ungrouped_rs) {
+	    while (my $db_row = $ungrouped_rs->next()) { 
+		if ($db_row->files_exist()) { 
+		    push @other_groups, { 
+			title              => $db_row->title(),
+			sequence_type      => $db_row->type(),
+			sequence_count     => $db_row->sequences_count(),
+			update_freq        => $db_row->update_freq(),
+			description        => $db_row->description(),
+			source_url         => $db_row->source_url(),
+			current_as_of      => strftime('%m-%d-%y %R GMT',gmtime $db_row->file_modtime),
+			needs_update       => $db_row->needs_update(),
+		    };
+		}
+	    }
+	    push @$data, [ 0, 'Other', \@other_groups ];
+	}
+	nstore($data, $cache);
+	
     }
-    
     $c->stash->{template} = '/tools/blast/dbinfo.mas';
-    $c->stash->{groups} = \@data;
+    $c->stash->{groups} = $data;
 }
 
 sub show_match_seq : Path('/tools/blast/match/show') Args(0) { 
