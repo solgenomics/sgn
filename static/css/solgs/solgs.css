@@ -10,10 +10,16 @@
     position: relative;
     margin-top: 10px;
     margin-right: 10px;  
-    width: 90px;
-    height: 20px;
-    font-size: 10px;
-  
+    width: auto;
+    height: 30px;
+    font-size: 12px;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    background: #5cb85c; 
+}
+
+.button:hover {
+    background-color: #c6e6c6; 
 }
 
 #gebvPlot2  {
@@ -110,14 +116,14 @@
     outline:none;
 }
 .si_dropdown a:hover { 
-    color:#5d4617;
+    color: #5d4617;
 }
 .si_dropdown dt a:hover, .si_dropdown dt a:focus { 
-    color:#5d4617; 
+    color: ##5d4617; 
     border: 1px solid #5d4617;
 }
 .si_dropdown dt a {
-    background:#ccccff url(/static/img/glyphicons_free/glyphicons/png/glyphicons_367_expand.png) no-repeat scroll right center; 
+    background:#ccccff url(/static/documents/img/glyphicons_expand.png) no-repeat scroll right center; 
     display:block; 
     padding-right:10px;
     width:250px;
@@ -129,8 +135,8 @@
 }
 .si_dropdown dd ul { 
     background:#ccccff none repeat scroll 0 0;
-    border:1px solid #d4ca9a; 
-    color:#C5C0B0; 
+    border:1px solid #ccccff; 
+    color: #C5C0B0;
     display:none;
     left:0px; 
     padding:2px 0px; 
@@ -148,9 +154,47 @@
     display:block;
 }
 .si_dropdown dd ul li a:hover { 
-    background-color:#d0c9af;
+    background-color:#efefef;
 }
         
         
+/* prediction upload */
 
+#list_label {   
+   
+}
 
+#prediction_genotypes_list {
+    display: inline-block; 
+    margin-right: 5px;
+}
+
+#prediction_genotypes_list_upload { 
+ 
+}
+
+#prediction_genotypes_list_upload input {
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    background: #5cb85c;
+}
+
+#prediction_genotypes_list_upload input:hover {
+    background-color: #c6e6c6; 
+}
+
+.list_upload {
+    height: 30px;
+    color: #ffffff;
+    float: left;
+    background: #5cb85c;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+}
+
+.solgs_table table th tr td {
+    width: 100%;
+    align: left;
+    
+}
