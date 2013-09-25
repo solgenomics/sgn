@@ -6,6 +6,8 @@ $user_id => undef
 @roles => ()
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List',] &>
+
 <& /page/page_title.mas, title=>'Field Book Tools' &>
 
 <&| /page/info_section.mas, title=>'Field Layout Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_new_field_layout_file_link">Create new field layout file</a>]' &>
@@ -23,6 +25,45 @@ foreach my $project_ref (@projects) {
 <&| /page/info_section.mas, title=>'Trait Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_new_trait_file_link">Create new trait file</a>]' &>
 </&>
 
+
+<div id="create_trait_file_dialog" class="ui-widget">
+  <div id="select_list" name="select_list" id="select_list">
+    <label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of traits to include:
+    </label>
+  </div>
+</div>
+
+
+
+<script defer="defer">
+
+jQuery(document).ready(function () {
+
+    var list = new CXGN.List();
+
+
+    jQuery("#select_list").append(list.listSelect("select_list"));
+
+    jQuery('#create_new_trait_file_link').click(function () {
+        jQuery('#create_trait_file_dialog').dialog("open");
+        //alert("something");
+    });
+    //function create_trait_file_dialog() {
+    //  alert("something");
+    //}
+    jQuery( "#create_trait_file_dialog" ).dialog({
+	autoOpen: false,
+	modal: true,
+	buttons: {
+            Ok: function() {
+		jQuery( this ).dialog( "close" );
+		//location.reload();
+            }
+	}
+    });
+});
+
+</script>
 
 
 
