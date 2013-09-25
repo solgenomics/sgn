@@ -84,7 +84,7 @@ function loadGenotypesList(listId) {
                     if(response.status == 'success') {
     
                         var uploadedSelPops = jQuery("#uploaded_selection_pops_table").doesExist();
-                        cnt++;
+                       
                         if (uploadedSelPops == false) {  
                            
                             uploadedSelPops = getUserUploadedSelPop(listId);                        
@@ -209,7 +209,7 @@ function loadPredictionOutput (url, listId) {
                 success: function (response) {
                 
                 if(response.status == 'success') {
-                    alert(response.output);
+                    // alert(response.output);
                     var tdId = '#list_prediction_output_' + listId;
                     jQuery(tdId).html(response.output);
                 }
