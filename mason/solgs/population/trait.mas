@@ -119,3 +119,5 @@ $analyzed_traits => ''
 %}
 
 
+ <input type="hidden"  id="model_id" value="<% $pop_id %>" /> 
+ <input type="hidden"  id="trait_id" value="<% $trait_id %>" /> 
