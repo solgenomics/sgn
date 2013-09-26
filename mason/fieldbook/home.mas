@@ -38,6 +38,7 @@ foreach my $trait_ref (@trait_files) {
 <&| /page/info_section.mas, title=>'Uploaded Phenotype Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_tablet_phenotype_file_link">Upload</a>]' &>
 </&>
 
+
 <div id="create_trait_file_dialog" class="ui-widget" title="Create Trait File">
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_trait_file_form" name="create_trait_file_form">
     <label for="trait_file_name" style="inline-block; width: 100px;">Trait file name:</label>
@@ -49,6 +50,14 @@ foreach my $trait_ref (@trait_files) {
   </form>
 </div>
 
+
+
+<div id="upload_fieldbook_phenotypes_dialog" class="ui-widget" title="Upload Fieldbook File">
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_fieldbook_form" name="upload_fieldbook_form">
+      <label for="fieldbook_upload_file">Upload file:</label>
+      <input type="file" name="fieldbook_upload_file" id="fieldbook_upload_file" encoding="multipart/form-data" />
+  </form>
+</div>
 
 
 <script defer="defer">
@@ -70,6 +79,9 @@ jQuery(document).ready(function () {
     jQuery( "#create_trait_file_dialog" ).dialog({
 	autoOpen: false,
 	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
 	buttons: {
             Ok: function() {
                  generate_trait_file();
@@ -103,9 +115,27 @@ jQuery(document).ready(function () {
                 alert('An error occurred. sorry');
             }
         });
-
-
    }
+
+   jQuery('#upload_tablet_phenotype_file_link').click(function () {
+        jQuery('#upload_fieldbook_phenotypes_dialog').dialog("open");
+        //alert("something");
+   });
+
+    jQuery( "#upload_fieldbook_phenotypes_dialog" ).dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+            Ok: function() {
+                 //generate_trait_file();
+		//jQuery( this ).dialog( "close" );
+		//location.reload();
+            }
+	}
+    });
 
 });
 
