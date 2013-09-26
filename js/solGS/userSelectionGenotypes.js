@@ -13,6 +13,7 @@ iyt2@cornell.edu
 
 JSAN.use("jquery.cookie");
 JSAN.use("CXGN.List");
+JSAN.use("jquery.blockUI");
 
 
 jQuery(document).ready( function() {
@@ -70,7 +71,11 @@ function loadGenotypesList(listId) {
     if ( list.length === 0) {       
         alert('The list is empty. Please select a list with content.' );
     }
-    else {     
+    else {  
+
+        jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+        jQuery.blockUI({message: 'Please wait..'});
+
         list = JSON.stringify(list);
    
         jQuery.ajax({
@@ -81,7 +86,7 @@ function loadGenotypesList(listId) {
                    
                     success: function(response) {
                     
-                    if(response.status == 'success') {
+                    if (response.status == 'success') {
     
                         var uploadedSelPops = jQuery("#uploaded_selection_pops_table").doesExist();
                        
@@ -115,9 +120,16 @@ function loadGenotypesList(listId) {
 
                             }                          
                         }
+                        jQuery.unblockUI();                        
+                      
+                    } else {
+                                    
+                    alert("Error occured while uploading the list of selection genotypes.");
+                    jQuery.unblockUI();   
                     }
-                }
-            });
+                     
+                }             
+            });        
     }
 }
 
@@ -195,6 +207,9 @@ function loadPredictionOutput (url, listId) {
     var traitId        = getTraitId();
     var modelId        = getModelId();
     
+    jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+    jQuery.blockUI({message: 'Please wait..'});
+   
     jQuery.ajax({
             type: 'POST',
                 url: url,
@@ -212,11 +227,17 @@ function loadPredictionOutput (url, listId) {
                     // alert(response.output);
                     var tdId = '#list_prediction_output_' + listId;
                     jQuery(tdId).html(response.output);
+                    jQuery.unblockUI();
                 }
                 else {                
-                    alert('error occured.');
+                    alert('Error occured displaying prediction output for the list of selection genotypes.');
+                    jQuery.unblockUI();
                 }
              }
+            
+            
          });
+    
+    
     
 }
