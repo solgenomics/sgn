@@ -7,6 +7,9 @@
 <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
 <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 
+<!-- AJAX -->
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
 <%args>
 $query
 $graph_url => undef
@@ -27,7 +30,7 @@ $messages => ""
 $errors => ""
 $coverage => 0
 @ids => ()
-$img_height => 594
+#$img_height => 594
 </%args>
 
 <%perl>
@@ -63,17 +66,27 @@ if ($messages) { print $messages; }
 %} 
 &nbsp;&nbsp;(-&infin;&mdash;100)<br />
       </p>
-      <form action="/tools/vigs/view">
+
         Target genes:
-        <input size="1" name="targets" value="<% $coverage %>" min="1" />
-        <input type="hidden" name="id" value="<% $seq_filename %>" />
-        <input type="hidden" name="fragment_size" value="<% $fragment_size %>" />
-        <input type="hidden" name="database" value="<% $database %>" />
+        <input id="t_num" size="1" name="targets" value="<% $coverage %>" min="1" />
         Fragment size:
         <input id="f_size" size="3" name="seq_fragment" value="<% $seq_fragment %>" />
-        <input type="hidden" name="expr_file" value="<% $expr_file %>" />
+        <button type="button" value="recalculate" onClick="changeTargets()">Change</button>
+
+
+<!--   <form action="/tools/vigs/view">
+        Target genes:
+        <input size="1" name="targets" value="<%# $coverage %>" min="1" />
+        <input type="hidden" name="id" value="<%# $seq_filename %>" />
+        <input type="hidden" name="fragment_size" value="<%# $fragment_size %>" />
+        <input type="hidden" name="database" value="<%# $database %>" />
+        Fragment size:
+        <input id="f_size" size="3" name="seq_fragment" value="<%# $seq_fragment %>" />
+        <input type="hidden" name="expr_file" value="<%# $expr_file %>" />
         <button type="submit" value="change" />Change</button>
-      </form>
+      </form> -->
+
+
       <p>
         Region Start: <input type="text" id="cbr_start" value=<% $best_window[0] %> size="3"> 
         End: <input type="text" id="cbr_end" size="3" value="<% $best_window[1] %>">
@@ -188,6 +201,35 @@ if ($messages) { print $messages; }
 
 
 <!-- javascript-->
+<script>
+    function changeTargets() {
+        var targets_num = document.getElementById("t_num").value;
+        var f_size = document.getElementById("f_size").value;
+
+	jQuery.ajax( {
+	    url: '/tools/vigs/view/',
+	    async: false,
+	    method: 'POST',
+	    data: {'coverage': targets_num, 'f_size': f_size},
+	    success: function(response) {
+	        if (response.error) {
+		    alert("ERROR: "+response.error);
+		    enable_ui();
+		    return;
+		} else{
+
+		}
+	        
+	    },
+	    error: function(response) {alert("An error ocurred"); enable_ui();return;}
+	});
+    }
+</script>
+
+<script>
+    changeTargets();
+</script>
+
 <script>
     function openWin() {
     var help=document.getElementById("tabs")
