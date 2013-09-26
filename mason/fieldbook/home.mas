@@ -72,7 +72,7 @@ jQuery(document).ready(function () {
             Ok: function() {
                  generate_trait_file();
 		jQuery( this ).dialog( "close" );
-		//location.reload();
+		location.reload();
             }
 	}
     });
