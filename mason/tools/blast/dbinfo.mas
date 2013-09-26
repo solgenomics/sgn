@@ -8,7 +8,7 @@
 
 <%perl>
 
-  print Data::Dumper::Dumper(\@groups);
+#print Data::Dumper::Dumper(\@groups);
 
 </%perl>
 
