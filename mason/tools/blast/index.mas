@@ -158,6 +158,8 @@ my $input_example_json = JSON::Any->encode($q_example);
   </table>
 </&>
 
+<div id="jobid"></div>
+
 <script>
 
 swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
@@ -316,6 +318,8 @@ function run_blast() {
 
    jQuery('#blast_report').html(blast_reports.join("<hr />\n"));
 
+   jQuery('#jobid').html(jobid);
+
    Effects.swapElements('input_parameter_section_offswitch', 'input_parameter_section_onswitch'); 
    Effects.hideElement('input_parameter_section_content');
 
@@ -370,7 +374,16 @@ function blast_program_ok(program, query_type, database_type) {
    return ok[query_type][database_type][program];
 }
 
-//$programs_js
+function download() { 
+   var jobid = jQuery('#jobid').html();
+
+   if (jobid == '') { alert("No BLAST has been run yet. Please run BLAST before downloading."); return; }
+
+   window.location.href= '/documents/tempfiles/blast/'+jobid+'.out';
+
+}
+
+
 
 </script>
 
