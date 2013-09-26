@@ -91,7 +91,7 @@ my $input_example_json = JSON::Any->encode($q_example);
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
-<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a href="/help/tools/blast">Help</a>' &>
   <input type="hidden" name="outformat" value="0" />
   <table border="0" align="center" summary="" cellpadding="0" cellspacing="5">
     <tr><td width="200"><b>Categories</b></td><td width="400">

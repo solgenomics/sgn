@@ -212,6 +212,13 @@ sub show_match_seq : Path('/tools/blast/match/show') Args(0) {
     }
 }
 
+sub blast_help :Path('/help/tools/blast') :Args(0) { 
+    my $self = shift;
+    my $c = shift;
 
+    $c->stash->{template} = '/help/blast.mas';
+
+}
+    
 
 1;
