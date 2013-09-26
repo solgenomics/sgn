@@ -84,7 +84,7 @@ jQuery(document).ready(function () {
         position: ['top', 150],
 	buttons: {
             Ok: function() {
-                 generate_trait_file();
+                generate_trait_file();
 		jQuery( this ).dialog( "close" );
 		location.reload();
             }
@@ -119,7 +119,8 @@ jQuery(document).ready(function () {
 
    jQuery('#upload_tablet_phenotype_file_link').click(function () {
         jQuery('#upload_fieldbook_phenotypes_dialog').dialog("open");
-        //alert("something");
+        //jQuery( this ).dialog( "close" );
+	//location.reload();
    });
 
     jQuery( "#upload_fieldbook_phenotypes_dialog" ).dialog({
@@ -130,12 +131,44 @@ jQuery(document).ready(function () {
         position: ['top', 150],
 	buttons: {
             Ok: function() {
-                 //generate_trait_file();
-		//jQuery( this ).dialog( "close" );
-		//location.reload();
+                 upload_fieldbook_phenotype_file();
+		 //jQuery( this ).dialog( "close" );
+		 //location.reload();
             }
 	}
     });
+
+    function upload_fieldbook_phenotype_file() {
+        var uploadFile = jQuery("#fieldbook_upload_file").val();
+        jQuery('#upload_fieldbook_form').attr("action", "/ajax/fieldbook/upload_phenotype_file");
+        if (uploadFile === '') {
+           alert("Please select a file");
+           return;
+        }
+        jQuery("#upload_fieldbook_form").submit();
+    }
+
+    jQuery('#upload_fieldbook_form').iframePostForm({
+	json: true,
+	post: function () {
+            var uploadFile = jQuery("#fieldbook_upload_file").val();
+            if (uploadFile === '') {
+		alert("No file selected");
+            }
+	},
+	complete: function (response) {
+            if (response.error) {
+		alert(response.error);
+		return;
+            }
+            if (response.success) {
+		alert("File uploaded successfully");
+            }
+	}
+    });
+
+
+
 
 });
 

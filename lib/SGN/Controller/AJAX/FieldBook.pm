@@ -307,6 +307,25 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 }
 
 
+
+
+
+
+
+sub upload_phenotype_file_for_field_book : Path('/ajax/fieldbook/upload_phenotype_file') : ActionClass('REST') { }
+
+sub upload_phenotype_file_for_field_book_POST : Args(0) {
+  my ($self, $c) = @_;
+
+
+
+  $c->stash->{rest} = {
+		       success => "1",
+		      };
+}
+
+
+
 sub _parse_list_from_json {
   my $list_json = shift;
   my $json = new JSON;
