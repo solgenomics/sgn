@@ -510,7 +510,7 @@ sub simple_selectbox_html {
 	    if (defined($params{selected}) && !ref($params{selected})) { 
 		@selected = ( $params{selected} );
 	    }
-	    else { 
+	    elsif (ref($params{selected})) { 
 		@selected = @{$params{selected}};
 
 	    
