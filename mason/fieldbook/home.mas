@@ -26,11 +26,13 @@ foreach my $project_ref (@projects) {
 </&>
 
 
-<div id="create_trait_file_dialog" class="ui-widget">
-  <div id="select_list" name="select_list" id="select_list">
-    <label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of traits to include:
-    </label>
-  </div>
+<div id="create_trait_file_dialog" class="ui-widget" title="Create Trait File">
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_trait_file_form" name="create_trait_file_form">
+    <div id="select_list" name="select_list" id="select_list">
+      <label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of traits to include:
+      </label>
+    </div>
+  </form>
 </div>
 
 
@@ -56,11 +58,39 @@ jQuery(document).ready(function () {
 	modal: true,
 	buttons: {
             Ok: function() {
+                 generate_trait_file();
 		jQuery( this ).dialog( "close" );
 		//location.reload();
             }
 	}
     });
+
+   function generate_trait_file() {
+      var trait_list_id = jQuery('#select_list_list_select').val();
+      var trait_list = JSON.stringify(list.getList(trait_list_id));
+
+      new jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/fieldbook/traitfile/create',
+	    dataType: "json",
+            data: {
+                'trait_list': trait_list,
+            },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert('The trait file was saved.');
+                }
+            },
+            error: function () {
+                alert('An error occurred. sorry');
+            }
+        });
+
+
+   }
+
 });
 
 </script>
