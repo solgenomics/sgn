@@ -57,8 +57,18 @@ sub field_book :Path("/fieldbook") Args(0) {
 	}
       }
     }
+
+    my @trait_files = ();
+    #limit to those owned by user
+    my $md_files = $metadata_schema->resultset("MdFiles")->search({filetype=>'tablet trait file'});
+    while (my $md_file = $md_files->next) {
+      push @trait_files, [$md_file->basename,$md_file->file_id];
+    }
+
+
     $c->stash->{projects} = \@projects;
     $c->stash->{layout_files} = \@projects;
+    $c->stash->{trait_files} = \@trait_files;
 
     # get roles
     my @roles = $c->user->roles();
@@ -82,6 +92,21 @@ sub trial_field_book_download : Path('/fieldbook/trial_download/') Args(1) {
     $c->res->body($contents);
 }
 
+
+sub tablet_trait_file_download : Path('/fieldbook/trait_file_download/') Args(1) { 
+    my $self  =shift;
+    my $c = shift;
+    my $file_id = shift;
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
+    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    print STDERR "\n\n\nfile name:".$file_row->basename."\n";
+    my $contents = read_file($file_destination);
+    my $file_name = $file_row->basename;
+    $c->res->content_type('Application/trt');
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    $c->res->body($contents);
+}
 
 sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(1) { 
     my $self  =shift;
