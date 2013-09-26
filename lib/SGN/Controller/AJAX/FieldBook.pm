@@ -219,7 +219,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   if ($c->req->param('trait_list')) {
     @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
   }
-  my $trait_file_name='testing';
+  my $trait_file_name = $c->req->param('trait_file_name');
 
 
   my $user_id = $c->user()->get_object()->get_sp_person_id();

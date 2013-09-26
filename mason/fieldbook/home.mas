@@ -40,6 +40,8 @@ foreach my $trait_ref (@trait_files) {
 
 <div id="create_trait_file_dialog" class="ui-widget" title="Create Trait File">
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_trait_file_form" name="create_trait_file_form">
+    <label for="trait_file_name" style="inline-block; width: 100px;">Trait file name:</label>
+    <input id="trait_file_name" name="trait_file_name" />
     <div id="select_list" name="select_list" id="select_list">
       <label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of traits to include:
       </label>
@@ -80,6 +82,7 @@ jQuery(document).ready(function () {
    function generate_trait_file() {
       var trait_list_id = jQuery('#select_list_list_select').val();
       var trait_list = JSON.stringify(list.getList(trait_list_id));
+      var trait_file_name = jQuery('#trait_file_name').val();
 
       new jQuery.ajax({
             type: 'POST',
@@ -87,6 +90,7 @@ jQuery(document).ready(function () {
 	    dataType: "json",
             data: {
                 'trait_list': trait_list,
+                'trait_file_name': trait_file_name,
             },
             success: function (response) {
                 if (response.error) {
