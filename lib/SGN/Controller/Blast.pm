@@ -21,7 +21,7 @@ sub AUTO {
     SGN::Schema::BlastDb->dbpath($c->config->{blast_db_path});
 }
 
-sub index :Path('/tools/new-blast/') :Args(0) { 
+sub index :Path('/tools/blast/') :Args(0) { 
     my $self = shift;
     my $c = shift;
 
@@ -83,7 +83,7 @@ sub index :Path('/tools/new-blast/') :Args(0) {
     $c->stash->{template} = '/tools/blast/index.mas';
 }
 
-sub dbinfo : Path('/tools/new-blast/dbinfo') Args(0) { 
+sub dbinfo : Path('/tools/blast/dbinfo') Args(0) { 
     my $self = shift;
     my $c = shift;
 
@@ -91,6 +91,7 @@ sub dbinfo : Path('/tools/new-blast/dbinfo') Args(0) {
 
     my $schema = $c->dbic_schema("SGN::Schema");
 
+    # 
     my $cache = $c->config->{basepath}."/".$c->tempfiles_subdir("blast")."/dbinfo_cache";
     if ((-e $cache) && ($c->req->param("force") != 1)) { 
 	$data = retrieve($cache);
