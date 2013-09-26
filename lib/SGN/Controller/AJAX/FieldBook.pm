@@ -247,13 +247,27 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 
 
   open FILE, ">$file_destination" or die $!;
-
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   print FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";
   my $order = 1;
   foreach my $trait (@trait_list) {
-    print FILE "$trait,text,,,,,,TRUE,$order\n";
+    #my $trait_desctiption = $schema;
+    my ($db_name, $accession) = split (/:/, $trait);
+    my $db = $schema->resultset("General::Db")->search(
+						       {
+							'me.name' => $db_name, } );
+
+    print STDERR " ** store: found db $db_name , accession = $accession \n";
+    if ($db) {
+      my $dbxref = $db->search_related("dbxrefs", { accession => $accession, });
+      if ($dbxref) {
+	my $cvterm = $dbxref->search_related("cvterm")->single;
+	my $trait_name = $cvterm->name;
+	print FILE "$trait,text,,,,$trait_name,,TRUE,$order\n";
+      }
+    }
     $order++;
-    print STERR "trait: $trait\n\n"
+    print STDERR "trait: $trait\n\n"
   }
 
 
