@@ -26,7 +26,36 @@ sub get_list :Path('/list/get') Args(0) {
     my $list = $self->retrieve_list($c, $list_id);
 
     $c->stash->{rest} = $list;
+   
+			  
 }
+
+
+sub get_list_data :Path('/list/data') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $list_id = $c->req->param("list_id");
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) { 
+	$c->stash->{rest} = { error => 'You must be logged in to use lists.', }; 
+	return;
+    }
+
+    my $list = $self->retrieve_list($c, $list_id);
+
+    my ($type_id, $list_type) = $self->retrieve_type($c, $list_id);
+
+    $c->stash->{rest} = { 
+	type_id     => $type_id,
+	type_name   => $list_type,
+	elements    => $list,
+    };
+			  
+}
+
+
 
 sub retrieve_list { 
     my $self = shift;
@@ -40,7 +69,8 @@ sub retrieve_list {
     my @list = ();
     while (my ($id, $content) = $h->fetchrow_array()) { 
 	push @list, [ $id, $content ];
-    }my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
+    }
+    my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
 
     my $h = $c->dbc->dbh()->prepare($q);
     $h->execute($list_id);
@@ -49,6 +79,18 @@ sub retrieve_list {
 	push @list, [ $id, $content ];
     }
     return \@list;
+}
+
+
+sub retrieve_type { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+    my $q = "SELECT type_id, cvterm.name FROM sgn_people.list JOIN cvterm ON (type_id=cvterm_id) WHERE list_id=?";
+    my $h = $c->dbc->dbh()->prepare($q);
+    $h->execute($list_id);
+    my ($type_id, $list_type) = $h->fetchrow_array();
+    return ($type_id, $list_type);
 }
 
 sub new_list :Path('/list/new') Args(0) { 
@@ -87,6 +129,21 @@ sub new_list :Path('/list/new') Args(0) {
     }
 }
 
+sub all_types : Path('/list/alltypes') :Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $q = "SELECT cvterm_id, cvterm.name FROM cvterm JOIN cv USING(cv_id) WHERE cv.name = 'list_types' ";
+    my $h = $c->dbc->dbh->prepare($q);
+    $h->execute();
+    my @all_types = ();
+    while (my ($id, $name) = $h->fetchrow_array()) { 
+	push @all_types, [ $id, $name ];
+    }
+    $c->stash->{rest} = \@all_types;
+
+}
+
 sub available_lists : Path('/list/available') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -97,13 +154,13 @@ sub available_lists : Path('/list/available') Args(0) {
 	return;
     }
 
-    my $q = "SELECT list_id, name, description, count(distinct(list_item_id)) FROM sgn_people.list left join sgn_people.list_item using(list_id) WHERE owner=? GROUP BY list_id, name, description ORDER BY name";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name ORDER BY list.name";
     my $h = $c->dbc->dbh()->prepare($q);
     $h->execute($user_id);
 
     my @lists = ();
-    while (my ($id, $name, $desc, $item_count) = $h->fetchrow_array()) { 
-	push @lists, [ $id, $name, $desc, $item_count ] ;
+    while (my ($id, $name, $desc, $item_count, $type_id, $type) = $h->fetchrow_array()) { 
+	push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ] ;
     }
     $c->stash->{rest} = \@lists;
 }
