@@ -1,0 +1,104 @@
+
+<%doc>
+</%doc>
+
+<%args>
+@groups => ()
+</%args>
+
+<%perl>
+
+#print Data::Dumper::Dumper(\@groups);
+
+</%perl>
+
+<& /page/page_title.mas, title=>"BLAST db details" &>
+
+<div >This page provides details for each of the BLAST sequence sets available at SGN.</div>
+
+% foreach my $g (@groups) { 
+
+<&| /page/info_section.mas, title=>$g->[1] &>
+
+%   foreach my $d (@{$g->[2]}) { 
+
+   <%perl>
+     my $needs_update ="";
+     if ($d->{needs_update}) { $needs_update = $d->{needs_update} ? qq|<span style="background: #c22; padding: 3px; color: white">needs update</span>| : qq|<span style="background: #2c2; padding: 3ppx; color: white">up to date</span>|;
+}
+     my $source_url = "";
+     if (exists($d->{source_url}) && $d->{source_url} =~ m/^http|^ftp/) { 
+       $source_url = qq | <a href="$source_url">$source_url</a> |;
+     }
+   </%perl>
+      
+<&| /page/info_section.mas, title=> $d->{title}, is_subsection=>1 &>
+  <& /page/info_table.mas, data => [
+    'Type'    => $d->{sequence_type}, 
+    'Seq count'   => $d->{sequence_count},
+				    'Current as of'    => $d->{current_as_of},
+				    'Updates' => $d->{update_freq},
+				    ' '     => $needs_update,
+				   ],
+    'multicol'=>5 &>
+    <& /page/info_table.mas, data => [ 
+				      'Source URL'       => $source_url,
+				     ],
+      &>
+      <& /page/info_table.mas, data => [
+        'Description'      => $d->{description} 
+				       ],
+					 &>
+</&>
+%   }
+
+</&>
+
+%}
+
+<%perl>
+
+
+
+
+#print Data::Dumper::Dumper(\@groups);
+
+
+# sub info_html {
+#  my ($db,$groupname) = @_;
+
+#  my $timestamp = $db->file_modtime
+#    or return;
+
+#  my $timestamp_str = strftime('%m-%d-%y %R GMT',gmtime $db->file_modtime);
+#  if( $db->needs_update ) {
+#    $timestamp_str = qq|<span style="background: #c22; padding: 3px; color: white">$timestamp_str (needs update)</span>|;
+#  }
+##  my $update_freq = $db->update_freq;
+
+#  return info_section_html( title => $db->title.'<a name="'.$db->file_base.'"></a>',
+#			    subtitle => "<b>Category:</b> $groupname",
+#			    is_subsection => 0,
+#			    contents =>
+#			    info_table_html(
+#					    'Sequence Type' => $db->type,
+#					    'Sequence Count' => commify_number($db->sequences_count),
+#					    'Current as of ' => $timestamp_str,
+#					    'Update Frequency' => $update_freq,
+#					     __multicol => 5,
+#					     __border => 0,
+#					   )
+#			    .info_table_html(
+#					     $db->info_url ? ('Source Information' => '<a href="'.$db->info_url.'">'.truncate_string($db->info_url,40).'</a>') : (),
+#					     $db->source_url ? ('FASTA Sequences' => '<a href="'.$db->source_url.'">'.truncate_string($db->source_url,40).'</a>') : (),
+#					     __multicol => 2,
+#					    __border => 0,
+#					   )
+#			    .info_table_html(
+#					     'Description' => $db->description || '<span class="ghosted">Not available</span>',
+#					    __border => 0,
+#					   ),
+#
+#			  );
+#}
+</%perl>
