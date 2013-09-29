@@ -63,55 +63,27 @@ ALTER TABLE sgn_people.list ADD COLUMN type_id bigint REFERENCES cvterm;
 
 INSERT INTO cv (name, definition) VALUES ('list_types', '');
 
-INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), 'plots');
+EOSQL
+    
+    print STDERR "INSERTING CV TERMS...\n";
+    
+    my @terms = qw | plots acessions locations trials years traits unigene_ids locus_ids | ;
 
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT currval('cv_cv_id_seq')), 'plots', 'Plot names', (SELECT dbxref_id FROM dbxref WHERE accession='plots'));
+    foreach my $t (@terms) { 
 
-INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), 'accessions');
+	$self->dbh->do(<<EOSQL);
+INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), '$t');
 
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT currval('cv_cv_id_seq')), 'accessions', 'Accession names', (SELECT dbxref_id FROM dbxref WHERE accession='accessions'));
-
-
-INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), 'locations');
-
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT currval('cv_cv_id_seq') ), 'locations', 'Locations', (SELECT dbxref_id FROM dbxref WHERE accession='locations'));
-
-
-INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), 'trials' );
-
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT currval('cv_cv_id_seq') ), 'trials', 'Trial names', (SELECT dbxref_id FROM dbxref WHERE accession='trials'));
-
-
-INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), 'traits');
-
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT currval('cv_cv_id_seq')), 'traits', 'Trait names', (SELECT dbxref_id FROM dbxref WHERE accession='traits'));
-
-
-INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), 'years');
-
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT currval('cv_cv_id_seq') ), 'years', 'Trial years', (SELECT dbxref_id FROM dbxref WHERE accession='years'));
-
-
-INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), 'sgn_unigene_ids');
-
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT currval('cv_cv_id_seq')), 'sgn_unigene_ids', 'SGN unigene IDs', (SELECT dbxref_id FROM dbxref WHERE accession='sgn_unigene_ids'));
-
-
-INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), 'sgn_locus_ids');
-
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT currval('cv_cv_id_seq')), 'sgn_locus_ids', 'SGN locus IDs', (SELECT dbxref_id FROM dbxref WHERE accession='sgn_locus_ids'));
-
-
-INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), 'organisms');
-
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT currval('cv_cv_id_seq')), 'organisms', 'Organism names', (SELECT dbxref_id FROM dbxrefs WHERE accession='organisms'));
+INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT currval('cv_cv_id_seq')), '$t', '$t', (SELECT dbxref_id FROM dbxref WHERE accession='$t'));
 
 
 EOSQL
 
-print "Done!\n";
 }
 
+print "Done!\n";
+
+}
 
 ####
 1; #
