@@ -236,7 +236,7 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $coverage = $c->req->param("targets") || 0;
     my $expr_file = $c->req->param("expr_file") || undef;
     my $expr_hash = undef;
-    my $status = $c->req->param("status") || "complete";
+    my $status = $c->req->param("status") || 1;
 
     if (defined($expr_file)) {
 	my $expr_dir = $c->generated_file_uri('expr_files', $expr_file);
@@ -277,7 +277,7 @@ sub view :Path('/tools/vigs/view') Args(0) {
     }
     
     # parse Bowtie 2 result file
-    if ($status eq "complete") {
+    if ($status == 1) {
         $vg->parse($missmatch);
     }
 
