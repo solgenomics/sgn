@@ -3,6 +3,10 @@ package CXGN::List::Validate::Plugin::Plots;
 
 use Moose;
 
+sub name { 
+    return "plots";
+}
+
 sub validate { 
     my $self = shift;
     my $c = shift;
