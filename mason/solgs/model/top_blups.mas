@@ -59,3 +59,5 @@ $trait_combo_pops => ''
 [ <% $blups_download_url %> ]
 
 </&>
+
+<input type="hidden" id="pops_list" value="<% $trait_combo_pops %>" />  
