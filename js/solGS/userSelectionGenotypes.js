@@ -178,7 +178,7 @@ function getUserUploadedSelPop (listId) {
     var modelId        = getModelId();
     var traitId        = getTraitId();
     var selectionPopId = listId;
-    
+   
     var url =   '\'/solgs/model/'+ modelId + '/uploaded/prediction/'+ selectionPopId + '\'' ;
     var listIdArg = '\'' + listId +'\'';
   
@@ -206,7 +206,7 @@ function loadPredictionOutput (url, listId) {
    
     var traitId        = getTraitId();
     var modelId        = getModelId();
-    
+   
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
     jQuery.blockUI({message: 'Please wait..'});
    
@@ -215,29 +215,31 @@ function loadPredictionOutput (url, listId) {
                 url: url,
                 dataType: 'json',
                 data: {
-                       'data_set_type': 'uploaded prediction', 
+                       'uploaded_prediction': 1, 
                        'trait_id': traitId, 
                        'model_id': modelId, 
                        'prediction_id': listId
                       },
 
                 success: function (response) {
-                
-                if(response.status == 'success') {
-                    // alert(response.output);
+               
+                if (response.status == 'success') {
                     var tdId = '#list_prediction_output_' + listId;
                     jQuery(tdId).html(response.output);
                     jQuery.unblockUI();
                 }
                 else {                
-                    alert('Error occured displaying prediction output for the list of selection genotypes.');
+                    alert('Error occured calculating GEBVs for the list of selection genotypes.');
                     jQuery.unblockUI();
                 }
-             }
+            },
+                error: function(response) {
+                alert('error' + res.responseText);
+
+            }
             
             
          });
-    
     
     
 }
