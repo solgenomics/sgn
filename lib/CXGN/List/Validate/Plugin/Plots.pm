@@ -1,5 +1,5 @@
 
-package SGN::Controller::AJAX::List::Validate::Plugin::Plots;
+package CXGN::List::Validate::Plugin::Plots;
 
 use Moose;
 
