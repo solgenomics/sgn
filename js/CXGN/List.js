@@ -37,6 +37,9 @@ CXGN.List = function () {
 
 CXGN.List.prototype = { 
     
+
+    // deprecated. Use getListData.
+    //
     getList: function(list_id) { 
 	
 	var list;
@@ -50,12 +53,110 @@ CXGN.List.prototype = {
 		    alert(response.error);
 		}
 		else { 
-		    list = response;
+		    list = response.elements;
 		}
+		
 	    }
 	});
 	return list;
 
+    },
+
+
+    // this function also returns some metadata about
+    // list, namely its type.
+    //
+    getListData: function(list_id) { 
+	var list;
+	
+	jQuery.ajax( { 
+	    url: 'list/data',
+	    async: false,
+	    data: { 'list_id': list_id },
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    list = response;
+		}
+	    }
+	});
+	
+	return list;
+    },
+
+    getListType: function(list_id) { 
+	var type;
+
+	jQuery.ajax( { 
+	    url: '/list/type',
+	    async: false,
+	    data: { 'list_id':list_id },
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    type = response;
+		}
+	    },
+	    error: alert('An error occurred.')
+	});
+	return type;
+    },
+	    
+    setListType: function(list_id, type_id) { 
+	
+	jQuery.ajax( { 
+	    url: '/list/type',
+	    async: false,
+	    data: { 'list_id': list_id, 'type_id':type_id },
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    alert('Type of list '+list_id+' set to '+type_id);
+		}
+	    }
+	    
+	});
+
+    },
+
+    allListTypes: function() { 
+	var types;
+	jQuery.ajax( { 
+	    url: '/list/alltypes',
+	    async: false,
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    types = response;
+		}
+	    }
+	});
+	return types;
+		     
+    },
+    
+    typesHtmlSelect: function(id, selected) { 
+	var types = this.allListTypes();
+	var html = '<select id="'+id+'" >';
+
+	for (var i=0; i<types.length; i++) { 
+	    var selected_html = '';
+	    if (types[i][0] == selected) { 
+		selected_html = ' selected="selected" ';
+	    }
+	    html += '<option name="'+types[i][0]+'"'+selected_html+'>'+types[i][1]+'</option>';
+	}
+	html += '</select>';
+	alert(html);
+	return html;
     },
 
     newList: function(name) { 
@@ -145,17 +246,15 @@ CXGN.List.prototype = {
 	var html = '';
 	html = html + '<input id="add_list_input" type="text" /><input id="add_list_button" type="button" value="new list" /><br />';
 	
-
-
 	if (lists.length===0) { 
 	    html = html + "None";
 	    jQuery('#'+div).html(html);
-
 	}
 
-	html = html + '<table border="0" title="Available lists">';
+	html += '<table border="0" title="Available lists">';
+	html += '<tr><td><i>list name</i></td><td><i>#</i></td><td><i>type</i></td><td colspan="3"><i>actions</i></td></tr>\n'; 
 	for (var i = 0; i < lists.length; i++) { 
-	    html = html + '<tr><td><b>'+lists[i][1]+'</b></td><td>(' + lists[i][3] +' elements) </td><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')">view</a></td><td>|</td><td><a href="javascript:deleteList('+lists[i][0]+')">delete</a></td><td>|</td><td><a href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>\n';
+	    html = html + '<tr><td><b>'+lists[i][1]+'</b></td><td>'+lists[i][3]+'</td><td>'+lists[i][5]+'</td><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')">view</a></td><td>|</td><td><a href="javascript:deleteList('+lists[i][0]+')">delete</a></td><td>|</td><td><a href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>\n';
 	    
 	    //var items = this.getList(lists[i][0]);
 	    
@@ -189,11 +288,16 @@ CXGN.List.prototype = {
 
     renderItems: function(div, list_id) { 
 
-	var items = this.getList(list_id);
+	var list_data = this.getListData(list_id);
+	var items = list_data.elements;
+	var list_type = list_data.type_name;
 	var list_name = this.listNameById(list_id);
 
-	var html = '<h4>List '+list_name+'</h4>';
-	html = html + '<textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="add" /><br />';
+	var html = 'List name <b>'+list_name+'</b><br />Type '+this.typesHtmlSelect('type_select')+'   <input type="button" value="validate" /><br />';
+
+	html += 'New elements: <br /><textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="Add" /><br />';
+
+	html += '<b>List elements:</b><br />';
 	
 	for(var n=0; n<items.length; n++) { 
 	    html = html + items[n][1] + '   <input id="'+items[n][0]+'" type="button" value="remove" /><br />';
