@@ -1,5 +1,5 @@
 
-package SGN::Controller::AJAX::List::Validate;
+package CXGN::List::Validate;
 
 use Moose;
 
