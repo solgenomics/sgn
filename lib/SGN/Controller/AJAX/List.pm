@@ -291,10 +291,10 @@ sub validate : Path('/list/validate') Args(2) {
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
-    my $type_id = shift;
+    my $type = shift;
 
     my $lv = CXGN::List::Validate->new();
-    my @missing = $lv->validate($list_id, $type_id);
+    my @missing = $lv->validate($list_id, $type);
 
     $c->stash->{rest} = { missing => \@missing };
 }
