@@ -70,7 +70,7 @@ CXGN.List.prototype = {
 	var list;
 	
 	jQuery.ajax( { 
-	    url: 'list/data',
+	    url: '/list/data',
 	    async: false,
 	    data: { 'list_id': list_id },
 	    success: function(response) { 
