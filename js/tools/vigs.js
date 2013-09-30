@@ -32,7 +32,6 @@
 
     function runBt2(n_mer) {
 	disable_ui();
-	alert("hi");
         var seq = document.getElementById("sequence").value;
         document.getElementById("si_rna").value = n_mer;
         si_rna = n_mer;
