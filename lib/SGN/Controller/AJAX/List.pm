@@ -2,6 +2,8 @@
 package SGN::Controller::AJAX::List;
 
 use Moose;
+use CXGN::List::Validate;
+
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -285,6 +287,18 @@ sub list_size : Path('/list/size') Args(0) {
     $c->stash->{rest} = { count => $count };
 }    
     
+sub validate : Path('/list/validate') Args(2) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+    my $type_id = shift;
+
+    my $lv = CXGN::List::Validate->new();
+    my @missing = $lv->validate($list_id, $type_id);
+
+    $c->stash->{rest} = { missing => \@missing };
+}
+
 
 sub remove_element :Path('/list/item/remove') Args(0) { 
     my $self = shift;
