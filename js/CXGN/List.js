@@ -293,9 +293,9 @@ CXGN.List.prototype = {
 	var list_type = list_data.type_name;
 	var list_name = this.listNameById(list_id);
 
-	var html = 'List name <b>'+list_name+'</b> type '+this.typesHtmlSelect('type_select')+'<input type="button" value="validate" /><br />';
+	var html = 'List name <b>'+list_name+'</b><br />Type '+this.typesHtmlSelect('type_select')+'   <input type="button" value="validate" /><br />';
 
-	html += '<textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="add" /><br />';
+	html += 'New elements: <br /><textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="Add" /><br />';
 
 	html += '<b>List elements:</b><br />';
 	
