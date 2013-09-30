@@ -545,7 +545,8 @@ sub output_files {
     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
 
     no warnings 'uninitialized';
-    $prediction_id = "uploaded_${prediction_id}" if $c->stash->{data_set_type} eq 'uploaded prediction';
+   
+    $prediction_id = "uploaded_${prediction_id}" if $c->stash->{uploaded_prediction};
     my $identifier    = $pop_id . '_' . $prediction_id;
     my $pred_pop_gebvs_file;
     
@@ -1073,12 +1074,11 @@ sub prediction_pop_analyzed_traits {
     opendir my $dh, $dir or die "can't open $dir: $!\n";
    
     no warnings 'uninitialized';
-    print STDERR "\n prediction_pop_id: $prediction_pop_id \n ";
-    my $prediction_is_uploaded = $c->stash->{data_set_type};
-  #  if ($prediction_is_uploaded ) 
-  #  {
-        $prediction_pop_id = "uploaded_${prediction_pop_id}" if $prediction_is_uploaded eq 'uploaded prediction';
-  #  }
+  
+    my $prediction_is_uploaded = $c->stash->{uploaded_prediction};
+  
+    $prediction_pop_id = "uploaded_${prediction_pop_id}" if $prediction_is_uploaded;
+ 
     
     my  @files  =  grep { /prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}/ && -f "$dir/$_" } 
                  readdir($dh); 
@@ -1118,13 +1118,10 @@ sub download_prediction_urls {
 
     if ($prediction_pop_id)
     {
-         print STDERR "\ndownload: $prediction_pop_id\n";
-       #  $prediction_pop_id = "uploaded_${prediction_pop_id}" if $c->stash->{data_set_type} eq 'uploaded prediction';
         $self->prediction_pop_analyzed_traits($c, $training_pop_id, $prediction_pop_id);
         $trait_ids = $c->stash->{prediction_pop_analyzed_traits_ids};   
     } 
-  
-    print STDERR "\ndownload id: $prediction_pop_id\t$trait_ids->[0], $trait_ids->[1]\n";
+     
    my ($trait_is_predicted) = grep {/$page_trait_id/ } @$trait_ids;
 
     my $download_url;# = $c->stash->{download_prediction};
@@ -1139,15 +1136,13 @@ sub download_prediction_urls {
         $trait_ids = [$page_trait_id];
     }
 
-    #my $referer = $c->req->referer;
-    print STDERR "\n page: $page \n";
     foreach my $trait_id (@$trait_ids) 
     {
         $self->get_trait_name($c, $trait_id);
         my $trait_abbr = $c->stash->{trait_abbr};
         my $trait_name = $c->stash->{trait_name};
-       # $prediction_pop_id =~ s/_uploaded_// if $c->stash->{data_set_type} eq 'uploaded prediction';
-        if  ($c->stash->{data_set_type} eq 'uploaded prediction') 
+     
+        if  ($c->stash->{uploaded_prediction}) 
         {  
             unless ($prediction_pop_id =~ /uploaded/) 
             {
@@ -1170,7 +1165,7 @@ sub download_prediction_urls {
         
         $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$prediction_pop_id"  onclick="solGS.waitPage()">[ Predict Now ]</a> |;
 
-        $c->stash->{download_prediction} = '' if $c->stash->{data_set_type} eq 'uploaded prediction';
+         $c->stash->{download_prediction} = '' if $c->stash->{uploaded_prediction};
     }
   
 }
@@ -2821,11 +2816,10 @@ sub genotype_file  {
     {       
         $pop_id = $c->stash->{prediction_pop_id};      
         $geno_file = $c->stash->{user_list_genotype_data_file};
-    }
+    } 
     
     die "Population id must be provided to get the genotype data set." if !$pop_id;
   
-
     unless($geno_file) {
    
     my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
@@ -3020,8 +3014,10 @@ sub run_rrblup_trait {
         
         if ($prediction_id)
         { 
-            $prediction_id = "uploaded_${prediction_id}" if $c->stash->{data_set_type} eq 'uploaded prediction';
+           
+            $prediction_id = "uploaded_${prediction_id}" if $c->stash->{uploaded_prediction};
             my $identifier =  $pop_id . '_' . $prediction_id;
+
             $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
             my $pred_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
 
