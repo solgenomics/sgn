@@ -129,8 +129,6 @@ sub create_user_list_genotype_data_file {
 sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
     my ($self, $c, $model_id,  $uploaded, $prediction, $prediction_pop_id) = @_;
 
-    print STDERR "\n$model_id, $uploaded, $prediction, $prediction_pop_id\n";
-
     my $referer = $c->req->referer;
     my $base    = $c->req->base;
     $referer    =~ s/$base//;
@@ -140,83 +138,88 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
     
     if ($referer =~ m/$page/)
     {
-        my ($combo_pops_id, $trait_id) = $referer =~ m/(\d+)/g;
-
-        $c->stash->{data_set_type} = "combined populations"; 
-        $c->stash->{combo_pops_id} = $model_id;
-        $c->stash->{model_id}      = $model_id;                          
-        $c->stash->{prediction_pop_id} = $prediction_pop_id;  
+        my $trait_id = $c->req->param('trait_id');
+        my $combo_pops_id = $model_id;
+        my $uploaded_prediction = $c->req->param('uploaded_prediction');
         
-        $self->get_trait_name($c, $trait_id);
+        $c->stash->{data_set_type}       = "combined populations"; 
+        $c->stash->{combo_pops_id}       = $model_id;
+        $c->stash->{model_id}            = $model_id;                          
+        $c->stash->{prediction_pop_id}   = $prediction_pop_id;  
+        $c->stash->{uploaded_prediction} = $uploaded_prediction;
+        
+        $c->controller("solGS::solGS")->get_trait_name($c, $trait_id);
         my $trait_abbr = $c->stash->{trait_abbr};
 
-        my $identifier = $combo_pops_id . '_' . $prediction_pop_id;
-        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-        
+        my $identifier = $combo_pops_id. '_uploaded_' . $prediction_pop_id;
+        $c->controller("solGS::solGS")->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+      
         my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
       
-        if (! -s $prediction_pop_gebvs_file)
+        if ( ! -s $prediction_pop_gebvs_file )
         {
             my $dir = $c->stash->{solgs_cache_dir};
         
             my $exp = "phenotype_data_${model_id}_${trait_abbr}"; 
-            my $pheno_file = $self->grep_file($dir, $exp);
+            my $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
 
             $exp = "genotype_data_${model_id}_${trait_abbr}"; 
-            my $geno_file = $self->grep_file($dir, $exp);
+            my $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
 
             $c->stash->{trait_combined_pheno_file} = $pheno_file;
             $c->stash->{trait_combined_geno_file}  = $geno_file;
-            $self->prediction_population_file($c, $prediction_pop_id);
-  
-            $c->forward('get_rrblup_output'); 
+           
+            $self->user_prediction_population_file($c, $prediction_pop_id);
+          
+            $c->controller("solGS::solGS")->get_rrblup_output($c); 
         }
         
-        $self->combined_pops_summary($c);        
-        $self->trait_phenotype_stat($c);
-        $self->gs_files($c);
-        
-        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-
-        $self->download_prediction_urls($c, $combo_pops_id, $prediction_pop_id );
+        $c->controller("solGS::solGS")->gs_files($c);
+   
+        $c->controller("solGS::solGS")->download_prediction_urls($c, $combo_pops_id,  $prediction_pop_id );
         my $download_prediction = $c->stash->{download_prediction};
-      
-        $self->list_of_prediction_pops($c, $combo_pops_id, $download_prediction);
-        $c->res->redirect('/'. $referer);
-        
+     
+        my $ret->{status} = 'failed';
+    
+        if (-s $prediction_pop_gebvs_file) 
+        {
+            $ret->{status} = 'success';
+            $ret->{output} = $download_prediction;
+        }
+              
+        $ret = to_json($ret);
+       
+        $c->res->content_type('application/json');
+        $c->res->body($ret);
+       
     }
     elsif ($referer =~ /solgs\/(trait|traits)\//) 
     {
-        # my ($trait_id, $pop_id) = $referer =~ m/(\d+)/g;
-         print STDERR "\nreferer: $referer\n";
-         $model_id = $c->req->param('model_id');
-         $prediction_pop_id = $c->req->param('prediction_id');
-         my $trait_id = $c->req->param('trait_id');
-         my $data_set_type = $c->req->param('data_set_type');
-         print STDERR "\nmodel id: $model_id : prediction_pop_id: $prediction_pop_id : data_set_type: $data_set_type\n";
-        # $c->stash->{data_set_type}     = "single population"; 
-         $c->stash->{pop_id}            = $model_id;
-         $c->stash->{model_id}          = $model_id;                          
-         $c->stash->{prediction_pop_id} = $prediction_pop_id;  
-         $c->stash->{data_set_type}     = $data_set_type;
-
-         my @analyzed_traits;
+        my $trait_id = $c->req->param('trait_id');
+        my $uploaded_prediction = $c->req->param('uploaded_prediction');
         
-         if ($data_set_type =~ /uploaded prediction/) 
-         {
-             $c->controller("solGS::solGS")->analyzed_traits($c);
-             @analyzed_traits = @{ $c->stash->{analyzed_traits} }; 
-             print STDERR "\nuploaded prediction trait id: $analyzed_traits[0]\n";             
+        $c->stash->{data_set_type}       = "single population"; 
+        $c->stash->{pop_id}              = $model_id;
+        $c->stash->{model_id}            = $model_id;                          
+        $c->stash->{prediction_pop_id}   = $prediction_pop_id;  
+        $c->stash->{uploaded_prediction} = $uploaded_prediction;
+
+        my @analyzed_traits;
+       
+        if ($uploaded_prediction) 
+        {
+            $c->controller("solGS::solGS")->analyzed_traits($c);
+            @analyzed_traits = @{ $c->stash->{analyzed_traits} };            
          }
 
-         my $prediction_pop_gebvs_file;
-         foreach my $trait_name (@analyzed_traits) 
-         {            
-             my $acronym_pairs = $c->controller("solGS::solGS")->get_acronym_pairs($c);
+        my $prediction_pop_gebvs_file;
+        foreach my $trait_name (@analyzed_traits) 
+        {            
+            my $acronym_pairs = $c->controller("solGS::solGS")->get_acronym_pairs($c);
             
-             if ($acronym_pairs)
-             {
-                 foreach my $r (@$acronym_pairs) 
+            if ($acronym_pairs)
+            {
+                foreach my $r (@$acronym_pairs) 
                  {
                      if ($r->[0] eq $trait_name) 
                      {
@@ -239,14 +242,13 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
              if (! -s $prediction_pop_gebvs_file)
              {
                  my $dir = $c->stash->{solgs_cache_dir};
-                 # my $pheno_dir = $c->stash->{solgs_cache_dir};
-
+           
                  my $exp = "phenotype_data_${model_id}"; 
                  my $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
-                 print STDERR "\npheno file: $pheno_file\n";
+                
                  $exp = "genotype_data_${model_id}"; 
                  my $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
-                 print STDERR "\ngeno file: $geno_file\n";
+                
                  $c->stash->{phenotype_file} = $pheno_file;
                  $c->stash->{genotype_file}  = $geno_file;
 
@@ -271,14 +273,12 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
              $ret->{status} = 'success';
              $ret->{output} = $download_prediction;
          }
-               
-         $ret = to_json($ret);
         
+         $ret = to_json($ret);
+       
          $c->res->content_type('application/json');
          $c->res->body($ret);
-      
-
-
+         
     }
 
 
