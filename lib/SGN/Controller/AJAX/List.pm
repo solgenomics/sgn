@@ -293,10 +293,14 @@ sub validate : Path('/list/validate') Args(2) {
     my $list_id = shift;
     my $type = shift;
 
-    my $lv = CXGN::List::Validate->new();
-    my @missing = $lv->validate($list_id, $type);
+    my $list = $self->retrieve_list($c, $list_id);
 
-    $c->stash->{rest} = { missing => \@missing };
+    my @flat_list = map { $_->[1] } @$list;
+
+    my $lv = CXGN::List::Validate->new();
+    my $data = $lv->validate($c, $type, \@flat_list);
+
+    $c->stash->{rest} = $data;
 }
 
 
