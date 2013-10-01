@@ -23,7 +23,7 @@ sub validate {
 	my $rs = $schema->resultset("Stock::Stock")->search(
 	    { 
 		type_id=>$type_id,
-		name => $l, 
+		uniquename => $l, 
 	    });	
 	if ($rs->count() == 0) { 
 	    push @missing, $l;
