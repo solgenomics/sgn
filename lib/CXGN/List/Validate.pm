@@ -11,12 +11,16 @@ sub validate {
     my $type = shift;
     my $list = shift;
 
+    my $data;
+
+    
+
     foreach my $p ($self->plugins()) { 
         if ($type eq $p->name()) { 
-	    my @missing = $p->validate($c, $list);
+	     $data = $p->validate($c, $list);
 	}
     }
-    
+    return $data;
 }
 
 1;

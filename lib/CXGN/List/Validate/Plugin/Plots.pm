@@ -14,20 +14,22 @@ sub validate {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     
-    my $type_id = $schema->resultset("Cvterm::Cvterm")->search({ name=>"plot" })->first->type_id();
+    my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"plot" })->first->cvterm_id();
     
+    print STDERR "PLOT TYPE ID $type_id\n";
+
     my @missing = ();
     foreach my $l (@$list) { 
-	my $rs = $schema->resultset("Stock")->search(
+	my $rs = $schema->resultset("Stock::Stock")->search(
 	    { 
 		type_id=>$type_id,
 		name => $l, 
 	    });	
-	if (!$rs) { 
+	if ($rs->count() == 0) { 
 	    push @missing, $l;
 	}
     }
-    return @missing;
+    return { missing => \@missing };
 }
 
 1;
