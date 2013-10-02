@@ -67,7 +67,7 @@ EOSQL
     
     print STDERR "INSERTING CV TERMS...\n";
     
-    my @terms = qw | plots acessions locations trials years traits unigene_ids locus_ids | ;
+    my @terms = qw | plots accessions locations trials years traits unigene_ids locus_ids | ;
 
     foreach my $t (@terms) { 
 
