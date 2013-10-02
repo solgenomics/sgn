@@ -382,6 +382,7 @@ CXGN.List.prototype = {
 
     validate: function(list_id, type) { 
 	var missing = new Array();
+	var error = 0;
 	jQuery.ajax( { 
 	    url: '/list/validate/'+list_id+'/'+type,
 	    async: false,
@@ -393,10 +394,12 @@ CXGN.List.prototype = {
 		    missing = response.missing;
 		}
 	    },
-	    error: function(response) { alert("An error occurred while validating the list "+list_id) }
+	    error: function(response) { alert("An error occurred while validating the list "+list_id); error=1; }
 	});
 
-	alert("MISSING: "+missing.join(","));
+	if (error ===1 ) { return; }
+
+	//alert("MISSING: "+missing.join(","));
 
 	if (missing.length==0) { 
 	    alert("This list passed validation.");
