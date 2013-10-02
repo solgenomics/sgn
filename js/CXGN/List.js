@@ -90,9 +90,8 @@ CXGN.List.prototype = {
 	var type;
 
 	jQuery.ajax( { 
-	    url: '/list/type',
+	    url: '/list/type/'+list_id,
 	    async: false,
-	    data: { 'list_id':list_id },
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
@@ -106,24 +105,22 @@ CXGN.List.prototype = {
 	return type;
     },
 	    
-    setListType: function(list_id, type_id) { 
+    setListType: function(list_id, type) { 
 	
 	jQuery.ajax( { 
-	    url: '/list/type',
+	    url: '/list/type/'+list_id+'/'+type,
 	    async: false,
-	    data: { 'list_id': list_id, 'type_id':type_id },
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
 		}
 		else { 
-		    alert('Type of list '+list_id+' set to '+type_id);
+		    alert('Type of list '+list_id+' set to '+type);
 		}
-	    }
-	    
+	    } 
 	});
-
     },
+
 
     allListTypes: function() { 
 	var types;
@@ -143,16 +140,18 @@ CXGN.List.prototype = {
 		     
     },
     
-    typesHtmlSelect: function(id, selected) { 
-	var types = this.allListTypes();
-	var html = '<select id="'+id+'" >';
 
+    typesHtmlSelect: function(list_id, html_select_id, selected) { 
+	var types = this.allListTypes();
+	var html = '<select id="'+html_select_id+'" onchange="javascript:changeListType(\''+html_select_id+'\', '+list_id+');" >';
+	html += '<option name="null">(none)</option>';
 	for (var i=0; i<types.length; i++) { 
 	    var selected_html = '';
-	    if (types[i][0] == selected) { 
+	    if (types[i][1] == selected) { 
+		alert("Match: "+types[i][0]);
 		selected_html = ' selected="selected" ';
 	    }
-	    html += '<option name="'+types[i][0]+'"'+selected_html+'>'+types[i][1]+'</option>';
+	    html += '<option name="'+types[i][1]+'"'+selected_html+'>'+types[i][1]+'</option>';
 	}
 	html += '</select>';
 	alert(html);
@@ -293,7 +292,7 @@ CXGN.List.prototype = {
 	var list_type = list_data.type_name;
 	var list_name = this.listNameById(list_id);
 
-	var html = 'List name <b>'+list_name+'</b><br />Type '+this.typesHtmlSelect('type_select')+'   <input type="button" value="validate" /><br />';
+	var html = 'List name <b>'+list_name+'</b><br />Type '+this.typesHtmlSelect(list_id, 'type_select', list_type)+'   <input type="button" value="validate" /><br />';
 
 	html += 'New elements: <br /><textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="Add" /><br />';
 
@@ -637,3 +636,13 @@ function addNewList(div_id) {
     lo.renderLists('list_item_dialog');
 }
 
+function changeListType(html_select_id, list_id) { 
+    alert("HTML SELECT ID: "+html_select_id+" LIST_ID "+list_id);
+    var type = jQuery('#'+html_select_id).val();
+    var l = new CXGN.List();
+
+    alert("setting list "+list_id+" to type "+type);
+    l.setListType(list_id, type);
+    l.renderLists('list_dialog');
+
+}
