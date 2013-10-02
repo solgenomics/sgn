@@ -95,6 +95,18 @@ sub retrieve_type {
     return ($type_id, $list_type);
 }
 
+sub get_type :Path('/list/type') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+
+    my ($type_id, $list_type) = $self->retrieve_type($c, $list_id);
+    
+    $c->stash->{rest} = { type_id => $type_id,
+			  list_type => $list_type,
+    };
+}
+
 sub set_type :Path('/list/type') Args(2) { 
     my $self = shift;
     my $c = shift;
