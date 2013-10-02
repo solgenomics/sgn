@@ -38,25 +38,21 @@
         f_length = document.getElementById("f_length").value;
 	mm = document.getElementById("mm").value;
         db = document.getElementById("bt2_db").value;
-        expr_file = document.getElementById("expr_file").value;
 	
-	disable_ui();
-//alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", db: "+db);
+//alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", db: "+db+", expr_file: "+expr_file);
 
    	jQuery.ajax({
       	    url: '/tools/vigs/result/',
       	    async: false,
       	    method: 'POST',
-      	    data: { 'sequence': seq, 'fragment_size': si_rna, 'seq_fragment': f_length, 'missmatch': mm, 'expr_file': expr_file, 'database': db },
+      	    data: { 'sequence': seq, 'fragment_size': si_rna, 'seq_fragment': f_length, 'missmatch': mm, 'database': db },
 	    success: function(response) { 
 	        if (response.error) { 
 		    alert("ERROR: "+response.error);
+		    enable_ui();
 		} else {                             
-//alert("EXPR: "+response.expr_file);
 		    db_name = response.db_name;
 		    bt2_res = response.jobid;
-		    expr_file = response.expr_file;
-
 		    getResults(1);
                 }
             },
@@ -66,7 +62,7 @@
 
     function getResults(status) {
 	var t_info = "";
-
+//alert("getR expr_file: "+expr_file);
    	jQuery.ajax({
       	    url: '/tools/vigs/view/',
       	    async: false,
@@ -692,12 +688,20 @@ function disable_ui() {
     $('#status_wheel').html('<img src="/static/documents/img/wheel.gif" />');
 }
 
+function enable_ui() {
+    $("input").prop("disabled", false);
+    //$("usage_view").prop("disabled", true);
+    $('#status_wheel').html("");
+}
+
+
 function hide_ui() {
     document.getElementById("status_wheel").style.display="none";
     $("#input_view").hide("blind");
     $("#usage_view").hide("blind");
     $("input").prop("disabled", false);
-
 }
+
+
 
 
