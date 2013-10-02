@@ -95,6 +95,52 @@ sub retrieve_type {
     return ($type_id, $list_type);
 }
 
+sub set_type :Path('/list/type') Args(2) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+    my $type = shift;
+
+    my $user_id = $self->get_user($c);
+
+    if (!$user_id) { 
+	$c->stash->{rest} = { error => "You need to be logged in to set the type of a list" };
+	return;
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $rs = $schema->resultset("Cv::Cvterm")->search({ 'me.name' => $type }, { join => "cv" });
+    if ($rs->count ==0) { 
+	$c->stash->{rest}= { error => "The type specified does not exist" };
+	return;
+    }
+    my $type_id = $rs->first->cvterm_id();
+
+    my $q = "SELECT owner FROM sgn_people.list WHERE list_id=?";
+    my $h = $c->dbc->dbh->prepare($q);
+    $h->execute($list_id);
+
+    my ($list_owner) = $h->fetchrow_array();
+
+    if ($list_owner != $user_id) { 
+	$c->stash->{rest} = { error => "Only the list owner can change the type of a list" };
+	return;
+    }
+
+    eval { 
+	$q = "UPDATE sgn_people.list SET type_id=? WHERE list_id=?";
+	$h = $c->dbc->dbh->prepare($q);
+	$h->execute($type_id, $list_id);
+    };
+    if ($@) { 
+	$c->stash->{rest} = { error => "An error occurred. $@" };
+	return;
+    }
+    
+    $c->stash->{rest} = { success => 1 };
+    
+}
+
 sub new_list :Path('/list/new') Args(0) { 
     my $self = shift;
     my $c = shift;
