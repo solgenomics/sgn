@@ -33,27 +33,5 @@ sub input :Path('/tools/vigs/')  :Args(0) {
     $c->stash->{databases} = \@databases;    
 }
 
-sub upload_file :Path('/tools/vigs/upload/') :Args(0) {
-    my $c = shift;
-    my $upload = $c->req->upload("expr_file");
-    my $expr_file = undef;
-    print STDERR "upload: $upload\n";
-
-    if (defined($upload)) {
-	$expr_file = $upload->tempname;    
-	$expr_file =~ s/\/tmp\///;
-    print STDERR "expr file: $expr_file\n";
-    
-	my $expr_dir = $c->generated_file_uri('expr_files', $expr_file);
-	my $final_path = $c->path_to($expr_dir);
-    
-	write_file($final_path, $upload->slurp);
-    }
-
-    print STDERR "expr file: $expr_file\n";
-
-    $c->stash->{expr_file} = $expr_file;
-}
-
 
 1;
