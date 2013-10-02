@@ -1,10 +1,10 @@
 
-package CXGN::List::Validate::Plugin::Plots;
+package CXGN::List::Validate::Plugin::Accessions;
 
 use Moose;
 
 sub name { 
-    return "plots";
+    return "accessions";
 }
 
 sub validate { 
@@ -13,12 +13,11 @@ sub validate {
     my $list = shift;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    
-    my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"plot" })->first->cvterm_id();
-    
-    print STDERR "PLOT TYPE ID $type_id\n";
+
+    my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"accession" })->first->cvterm_id();
 
     my @missing = ();
+    
     foreach my $l (@$list) { 
 	my $rs = $schema->resultset("Stock::Stock")->search(
 	    { 
@@ -29,7 +28,8 @@ sub validate {
 	    push @missing, $l;
 	}
     }
-    return { missing => \@missing };
+    return  { missing => \@missing, };
+    
 }
 
 1;
