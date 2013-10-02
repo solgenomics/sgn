@@ -18,7 +18,6 @@ $sequence => undef
 </%args>
 
 
-
 <div id="input_view">
 <& /page/page_title.mas, title=>"VIGS Tool" &>
 
@@ -35,12 +34,12 @@ Sequence:
 	    document.getElementById("sequence").value=seq;
 	}	    
 </script>
-
+<span id="status_wheel"></span>
 <br />
+
 <textarea id="sequence" name="sequence" cols=62" rows="8"></textarea>
 <br />
 <br />
-
 
 <span title="siRNA selected size">n-mer size</span> 
 <input id="si_rna" type="input" value="21" name="fragment_size" size="2" />&nbsp; &nbsp; &nbsp;
