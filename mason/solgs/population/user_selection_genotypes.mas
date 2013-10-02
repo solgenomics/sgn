@@ -16,8 +16,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%args>
 
-
-<& /util/import_javascript.mas, classes => ["jqueryfileupload.vendor.ui-widget", "jqueryfileupload.iframe-transport",   "jqueryfileupload.fileupload",  "solGS.fileUpload", "solGS.userSelectionGenotypes"] &>
+<& /util/import_javascript.mas, classes => ["jqueryfileupload.vendor.ui-widget", "jqueryfileupload.iframe-transport",   "jqueryfileupload.fileupload",   "solGS.userSelectionGenotypes"] &>
 
  <link rel="stylesheet" href="/static/css/solgs/jqueryfileupload/fileupload-ui.css" type="text/css" />
 
@@ -27,7 +26,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
         <i class="glyphicon glyphicon-plus"></i>
         <span>Upload selection genotypes</span>
         <!-- The file input field used as target for the file upload widget -->        
-        <input id="fileupload"  type="file" name="files[]" multiple>       
+        <input id="fileupload"  type="file" name="files[]" multiple>
+        <input type="hidden" id="check_value" value=""> 
     </span>
    
    
