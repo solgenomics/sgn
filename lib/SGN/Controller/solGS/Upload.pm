@@ -9,6 +9,7 @@ use JSON;
 use File::Temp qw / tempfile tempdir /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
+use String::CRC;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -32,13 +33,52 @@ sub upload_prediction_genotypes_file :Path('/solgs/upload/prediction/genotypes/f
     $file_upload->script_url('/solgs/upload/prediction/genotypes');
     $file_upload->use_client_filename(1);
    
-    $file_upload->handle_request(1);
- 
+    $file_upload->handle_request;
+    
     my $file_name         = $file_upload->filename;
     my $absolute_filename = $file_upload->absolute_filename;
     my $client_filename   = $file_upload->client_filename;
-   
+  
+    my $geno_list = $self->get_selection_genotypes_list_from_file($absolute_filename);
+    
+    my @genotypes_list = uniq(@$geno_list);
+    $c->stash->{prediction_genotypes_list_stocks_names} = \@genotypes_list;
+    
+    $c->stash->{list_name} = $file_name;
+    $c->stash->{list_id}   = crc($file_name);
+
+    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->model('solGS::solGS')->format_user_list_genotype_data($c);
+    
+    $self->create_user_list_genotype_data_file($c);
+
+    $file_upload->print_response;
+
     print STDERR "\n  file_name: $file_name\t absolute_name: $absolute_filename \t client_filename: $client_filename\n";
+
+
+}
+
+
+sub generate_check_value :Path('/solgs/generate/checkvalue') Args(0) {
+    my ($self, $c) = @_;
+    
+    my $file_name = $c->req->param('file_name');
+    my $check_value = crc($file_name);
+
+   # print STDERR "\nfile_name: $file_name \t check_value: $check_value\n";
+    my $ret->{status} = 'failed';
+    
+    if ($check_value) 
+    {
+        $ret->{status} = 'success';
+        $ret->{check_value} = $check_value;
+    }
+               
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
 
 
 }
@@ -50,13 +90,10 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
     my $list_id    = $c->req->param('id');
     my $list_name  = $c->req->param('name');   
     my $list       = $c->req->param('list');
-    print STDERR "\nbefore $list \n";
+  
     $list =~ s/\\//g;
-    print STDERR "\n after $list \n";
-    $list          = from_json($list);
-     
-    print STDERR "\n after after $list \n";
-
+    $list = from_json($list);
+ 
     my @stocks_names = ();  
     foreach my $stock (@$list)
     {
@@ -79,8 +116,6 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
     if (-s $c->stash->{user_list_genotype_data_file}) 
     {
         $ret->{status} = 'success';
-        
-        print STDERR "\nsuccess: ajax\n";  
     }
                
     $ret = to_json($ret);
@@ -91,8 +126,8 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
 }
 
 
-sub user_prediction_genotypes_file {
-    my ($self, $c, $file) = @_;
+sub get_selection_genotypes_list_from_file {
+    my ($self, $file) = @_;
     my @clones;
 
     open my $fh, $file or die "Can't open file $file: $!";
@@ -113,7 +148,11 @@ sub create_user_list_genotype_data_file {
     my ($self, $c) = @_;
       
     my $tmp_dir   = $c->stash->{solgs_prediction_upload_dir};
-    my $list_id = $c->stash->{list_id};
+    my $list_id =  $c->stash->{list_id};
+   
+    # if ($c->stash->{list_source}  eq 'from_db') { $list_id= $c->stash->{list_id} };
+    # if ($c->stash->{list_source}  eq 'from_file') { $list_id= $c->stash->{list_id} };
+
     my $user_id   = $c->user->id;  
     my $geno_data = $c->stash->{user_list_genotype_data};
     my $file = catfile ($tmp_dir, "genotype_data_${user_id}_${list_id}");
@@ -122,9 +161,9 @@ sub create_user_list_genotype_data_file {
 
     $c->stash->{user_list_genotype_data_file} = $file;
 
-    print STDERR "\nuser id $user_id : file: $file dir: $tmp_dir\n";
 
 }
+
 
 sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
     my ($self, $c, $model_id,  $uploaded, $prediction, $prediction_pop_id) = @_;
@@ -141,13 +180,15 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
         my $trait_id = $c->req->param('trait_id');
         my $combo_pops_id = $model_id;
         my $uploaded_prediction = $c->req->param('uploaded_prediction');
-        
+        my $list_source = $c->req->param('list_source');
+
         $c->stash->{data_set_type}       = "combined populations"; 
         $c->stash->{combo_pops_id}       = $model_id;
         $c->stash->{model_id}            = $model_id;                          
         $c->stash->{prediction_pop_id}   = $prediction_pop_id;  
         $c->stash->{uploaded_prediction} = $uploaded_prediction;
-        
+        $c->stash->{list_source}         = $list_source;
+
         $c->controller("solGS::solGS")->get_trait_name($c, $trait_id);
         my $trait_abbr = $c->stash->{trait_abbr};
 
@@ -197,12 +238,14 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
     {
         my $trait_id = $c->req->param('trait_id');
         my $uploaded_prediction = $c->req->param('uploaded_prediction');
-        
+        my $list_source = $c->req->param('list_source');
+
         $c->stash->{data_set_type}       = "single population"; 
         $c->stash->{pop_id}              = $model_id;
         $c->stash->{model_id}            = $model_id;                          
         $c->stash->{prediction_pop_id}   = $prediction_pop_id;  
         $c->stash->{uploaded_prediction} = $uploaded_prediction;
+        $c->stash->{list_source}         = $list_source;
 
         my @analyzed_traits;
        
@@ -291,19 +334,25 @@ sub user_prediction_population_file {
     my $user_id   = $c->user->id; 
     my $upload_dir = $c->stash->{solgs_prediction_upload_dir};
     
-    print STDERR "\nupload dir : $upload_dir\n";
     my ($fh, $tempfile) = tempfile("prediction_population_${pred_pop_id}-XXXXX", 
                                    DIR => $upload_dir
         );
 
     $c->stash->{prediction_pop_id} = $pred_pop_id;
 
+    
     my $exp = "genotype_data_${user_id}_${pred_pop_id}";
-    my $pred_pop_file = $c->controller("solGS::solGS")->grep_file($upload_dir, $exp);
+   # if($c->stash->{'list_source'} eq 'from_db')
+   # {
+    my  $pred_pop_file = $c->controller("solGS::solGS")->grep_file($upload_dir, $exp);
+   # } else 
+   # {
+   #    my $solgs_prediction_upload = $c->stash->{solgs_prediction_upload_dir}      
+
+    #}
 
     $c->stash->{user_list_genotype_data_file} = $pred_pop_file;
-    print STDERR "\npred pop file: $pred_pop_file\n";
-
+   
     $fh->print($pred_pop_file);
     $fh->close; 
 
