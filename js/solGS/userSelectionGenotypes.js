@@ -209,7 +209,7 @@ function loadPredictionOutput (url, listId, listSource) {
     var traitId        = getTraitId();
     var modelId        = getModelId();
    
-    alert('loadPredictionOutput listId, listSource, url: ' + listId +" " + listSource + " " + url);
+    //  alert('loadPredictionOutput listId, listSource, url: ' + listId +" " + listSource + " " + url);
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
     jQuery.blockUI({message: 'Please wait..'});
    
@@ -248,16 +248,24 @@ function loadPredictionOutput (url, listId, listSource) {
 
 jQuery(function () {
         var url = '/solgs/upload/prediction/genotypes/file';
+       
         jQuery('#fileupload').fileupload({
                 url: url,
                     dataType: 'json',
+                    submit: function(e, data) {                    
+                    jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+                    jQuery.blockUI({message: 'Please wait..'});
+                },
                     done: function (e, data) {
                     jQuery.each(data.result.files, function (index, file) { 
                       
                             getCheckValue(file.name);
-
+                          
                         });
-                }
+
+                    jQuery.unblockUI();
+
+                }                                
             });
     });
 
@@ -274,15 +282,15 @@ function getCheckValue(fileName) {
                 success: function (response) {
                
                 if (response.status == 'success') {
-                    alert('check_value: ' +  response.check_value);
+                    
                     var checkValue = response.check_value;
                     jQuery("#check_value").empty();
                     jQuery("#check_value").val(checkValue);
-                    // alert('checkvalue :' +  jQuery("#check_value").val());
                     
                     loadListFromFile(fileName, checkValue);
-                        
-                }              
+          
+                } 
+               
             }
         });
 
@@ -290,7 +298,7 @@ function getCheckValue(fileName) {
 
 
 function loadListFromFile(fileName, listId) {
-    // alert('loadListFromFile file name: ' + fileName + " " + listId);
+   
     var listName       = fileName;
     var modelId        = getModelId();
     var traitId        = getTraitId();
@@ -299,18 +307,13 @@ function loadListFromFile(fileName, listId) {
     if ( ! fileName ) {       
         alert('The list is empty. Please select a list with content.' );
     }
-    else {  
-
-        jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-        jQuery.blockUI({message: 'Please wait..'});
-        
+    else {    
         var uploadedSelPops = jQuery("#uploaded_selection_pops_table").doesExist();
                        
         if (uploadedSelPops == false) {  
                            
             uploadedSelPops = getUserUploadedFile(fileName, listId);                        
             jQuery("#uploaded_selection_populations").append(uploadedSelPops).show();
-            jQuery.unblockUI();
         }
         else {
                        
@@ -334,7 +337,6 @@ function loadListFromFile(fileName, listId) {
                            
             if (addedRow == false) {
                 jQuery("#uploaded_selection_pops_table tr:last").after(addRow);
-                jQuery.unblockUI();
             }                          
         }                      
     }
@@ -348,7 +350,7 @@ function getUserUploadedFile (fileName, listId) {
     var modelId        = getModelId();
     var traitId        = getTraitId();
     var selectionPopId = listId;
-    //alert('getUserUploadedFile selectionPopId :' + selectionPopId);
+    
     var url =   '\'/solgs/model/'+ modelId + '/uploaded/prediction/'+ selectionPopId + '\'' ;
     var listIdArg = '\'' + listId +'\'';
     var listSource = '\'from_file \'';
