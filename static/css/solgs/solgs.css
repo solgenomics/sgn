@@ -198,3 +198,85 @@
     align: left;
     
 }
+
+
+
+/*
+ * jQuery File Upload UI Plugin CSS 6.10
+ * https://github.com/blueimp/jQuery-File-Upload
+ *
+ * Copyright 2010, Sebastian Tschan
+ * https://blueimp.net
+ *
+ * Licensed under the MIT license:
+ * http://www.opensource.org/licenses/MIT
+
+* adapted and simplied for use in solgs
+*/
+
+.fileinput-button {
+  position: relative;
+  overflow: hidden;
+  float: left;
+  margin-right: 5px;
+
+  height: 30px;
+  color: #ffffff;
+  background: #5cb85c;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 5px;
+
+}
+
+.fileinput-button:hover {
+ background-color: #c6e6c6; 
+}
+
+.fileinput-button input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  opacity: 0;
+  filter: alpha(opacity=0);
+  transform: translate(-300px, 0) scale(4);
+  font-size: 23px;
+  direction: ltr;
+  cursor: pointer;
+}
+.fileupload-buttonbar .ui-button,
+.fileupload-buttonbar .toggle {
+  margin-bottom: 5px;
+}
+
+/* Fix for IE 6: */
+* html .fileinput-button {
+  margin-right: 1px;
+}
+* html .fileinput-button .ui-button-text {
+  line-height: 24px;
+}
+* html .fileupload-buttonbar .ui-button {
+  margin-left: 3px;
+}
+
+/* Fix for IE 7: */
+* + html .fileinput-button {
+  margin-right: 4px;
+}
+* + html .fileinput-button .ui-button-text {
+  line-height: 24px;
+}
+* + html .fileupload-buttonbar .ui-button {
+  margin-left: 3px;
+}
+
+
+.glyphicon-plus:before {
+  content: "\2b";
+  font-weight: bold;
+  font-style: normal;
+  font-size: 16px;
+  
+}
