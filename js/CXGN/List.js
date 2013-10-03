@@ -286,13 +286,12 @@ CXGN.List.prototype = {
     },
 
     renderItems: function(div, list_id) { 
-
 	var list_data = this.getListData(list_id);
 	var items = list_data.elements;
 	var list_type = list_data.type_name;
 	var list_name = this.listNameById(list_id);
 
-	var html = 'List name <b>'+list_name+'</b><br />Type '+this.typesHtmlSelect(list_id, 'type_select', list_type)+'   <input type="button" value="validate" onclick="javascript:validateList('+list_id+', \''+list_type+'\')"  /><br />';
+	var html = 'List name <b>'+list_name+'</b><br />Type '+this.typesHtmlSelect(list_id, 'type_select', list_type)+'   <input type="button" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /><br />';
 
 	html += 'New elements: <br /><textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="Add" /><br />';
 
@@ -383,6 +382,7 @@ CXGN.List.prototype = {
 
     validate: function(list_id, type) { 
 	var missing = new Array();
+	var error = 0;
 	jQuery.ajax( { 
 	    url: '/list/validate/'+list_id+'/'+type,
 	    async: false,
@@ -394,13 +394,18 @@ CXGN.List.prototype = {
 		    missing = response.missing;
 		}
 	    },
-	    error: function(response) { alert("An error occurred while validating the list "+list_id) }
+	    error: function(response) { alert("An error occurred while validating the list "+list_id); error=1; }
 	});
+
+	if (error ===1 ) { return; }
+
+	//alert("MISSING: "+missing.join(","));
+
 	if (missing.length==0) { 
-	    alert("List validation failed. Elements not found: "+ missing.join(","));
+	    alert("This list passed validation.");
 	}
 	else { 
-	    alert("This list passed validation.");
+	    alert("List validation failed. Elements not found: "+ missing.join(","));
 	}
     }
 
@@ -671,7 +676,8 @@ function changeListType(html_select_id, list_id) {
     l.renderLists('list_dialog');
 }
 
-function validateList(list_id, type) { 
+function validateList(list_id, html_select_id) { 
     var lo = new CXGN.List();
+    var type = jQuery('#'+html_select_id).val();
     lo.validate(list_id, type);
 }

@@ -31,6 +31,7 @@
     }
 
     function runBt2(n_mer) {
+	disable_ui();
         var seq = document.getElementById("sequence").value;
         document.getElementById("si_rna").value = n_mer;
         si_rna = n_mer;
@@ -38,7 +39,8 @@
 	mm = document.getElementById("mm").value;
         db = document.getElementById("bt2_db").value;
         expr_file = document.getElementById("expr_file").value;
-
+	
+	disable_ui();
 //alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", db: "+db);
 
    	jQuery.ajax({
@@ -51,13 +53,11 @@
 		    alert("ERROR: "+response.error);
 		} else {                             
 //alert("EXPR: "+response.expr_file);
-		    $( "#input_view" ).hide("blind");
-		    $( "#usage_view" ).hide("blind");
 		    db_name = response.db_name;
 		    bt2_res = response.jobid;
 		    expr_file = response.expr_file;
 
-		    getResults("complete");
+		    getResults(1);
                 }
             },
       	    error: function(response) { alert("An error occurred. The service may not be available right now.");}
@@ -76,7 +76,9 @@
 	        if (response.error) { 
 		     alert("ERROR: "+response.error);
 		} else {              
-		    //alert("SCORE: "+response.score);               
+		    //alert("SCORE: "+response.score);      
+		    hide_ui();
+
 		    document.getElementById("hide1").style.display="inline";
 
 		    if (+response.score > 0) {
@@ -672,14 +674,30 @@
 	    mm = align_mm;
 	    f_length = f_size;
 	    coverage = t_num;
-	    getResults("complete");
+	    getResults(1);
 	    getCustomRegion();		     
         } else if (t_num != coverage || f_size != f_length) {
 	    f_length = f_size;
 	    coverage = t_num;
-	    getResults("targets");
+	    getResults(0);
 	    getCustomRegion();		     
 	} else {
 	    alert("there are no parameters to change");
 	}
     }
+
+function disable_ui() {
+    $("input").prop("disabled", true);
+    //$("usage_view").prop("disabled", true);
+    $('#status_wheel').html('<img src="/static/documents/img/wheel.gif" />');
+}
+
+function hide_ui() {
+    document.getElementById("status_wheel").style.display="none";
+    $("#input_view").hide("blind");
+    $("#usage_view").hide("blind");
+    $("input").prop("disabled", false);
+
+}
+
+
