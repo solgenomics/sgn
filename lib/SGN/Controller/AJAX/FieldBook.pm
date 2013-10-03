@@ -36,6 +36,7 @@ use File::Basename qw | basename dirname|;
 use DateTime;
 use File::Spec::Functions;
 use File::Copy;
+use CXGN::Phenotypes::StorePhenotypes;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -317,7 +318,29 @@ sub upload_phenotype_file_for_field_book : Path('/ajax/fieldbook/upload_phenotyp
 sub upload_phenotype_file_for_field_book_POST : Args(0) {
   my ($self, $c) = @_;
 
+  print STDERR "Uploading phenotypes\n";
+  my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 
+  my @plot_list = ("58308_replicate:1_block:1_plot:1_8000_Ibadan","95D019_replicate:1_block:1_plot:2_8000_Ibadan");
+  my @trait_list = ("CO:0000018","CO:0000063");
+  my %plot_trait_value;
+  my %phenotype_metadata;
+  my %trait_value;
+
+  $trait_value{'CO:0000018'} = 1;
+  $trait_value{'CO:0000063'} = 2;
+
+  $plot_trait_value{'58308_replicate:1_block:1_plot:1_8000_Ibadan'} = \%trait_value;
+  $plot_trait_value{'95D019_replicate:1_block:1_plot:2_8000_Ibadan'} = \%trait_value;
+  #$plot_trait_value{'58308_replicate:1_block:1_plot:1_8000_Ibadan'} = 'a';
+  #$plot_trait_value{'95D019_replicate:1_block:1_plot:2_8000_Ibadan'} = 'b';
+  my $plot_trait_value_ref = \%plot_trait_value;
+
+
+  #print STDERR "empty_hash: ". Data::Dumper::Dumper(\%phenotype_metadata)."\n";
+  #print STDERR "in_hash: ". Data::Dumper::Dumper(\%plot_trait_value)."\n";
+
+  $store_phenotypes->store($c,\@plot_list,\@trait_list, \%plot_trait_value, \%phenotype_metadata);
 
   $c->stash->{rest} = {
 		       success => "1",
