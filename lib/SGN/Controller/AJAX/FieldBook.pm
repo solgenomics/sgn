@@ -327,10 +327,18 @@ sub upload_phenotype_file_for_field_book_POST : Args(0) {
   my %phenotype_metadata;
   my %trait_value;
 
+  my $time = DateTime->now();
+  my $timestamp = $time->ymd()."_".$time->hms();
+
+  $phenotype_metadata{'archived_file'}="file.txt";
+  $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
+  $phenotype_metadata{'operator'}="tester_operator";
+  $phenotype_metadata{'date'}="$timestamp";
+
   $trait_value{'CO:0000018'} = 1;
   $trait_value{'CO:0000063'} = 2;
 
-  $plot_trait_value{'58308_replicate:1_block:1_plot:1_8000_Ibadan'} = \%trait_value;
+  $plot_trait_value{'58308_replicate:1_block:1_plot:1_8000_Ibadana'} = \%trait_value;
   $plot_trait_value{'95D019_replicate:1_block:1_plot:2_8000_Ibadan'} = \%trait_value;
   #$plot_trait_value{'58308_replicate:1_block:1_plot:1_8000_Ibadan'} = 'a';
   #$plot_trait_value{'95D019_replicate:1_block:1_plot:2_8000_Ibadan'} = 'b';

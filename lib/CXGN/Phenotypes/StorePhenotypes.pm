@@ -31,12 +31,14 @@ use Data::Dumper;
 sub _verify {
     my $self = shift;
     my $c = shift;
-    my @plot_list = shift;
-    my @trait_list = shift;
-    my %plot_trait_value = shift;
-    #my @plot_list = @{$plot_list_ref} || die "Plot list required to store phenotypes\n";
-    #my @trait_list = @{$trait_list_ref} || die "Trait list required to store phenotypes\n";
-   # my %plot_trait_value = %{$plot_trait_value_hashref} || die "No data provided to store phenotypes\n";
+    my $plot_list_ref = shift;
+    my $trait_list_ref = shift;
+    my $plot_trait_value_hashref = shift;
+    my $phenotype_metadata = shift;
+    my $transaction_error;
+    my @plot_list = @{$plot_list_ref};
+    my @trait_list = @{$trait_list_ref};
+    my %plot_trait_value = %{$plot_trait_value_hashref};
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
     my $plot_validated = $plot_validator->validate($c,'plot',\@plot_list);
@@ -50,6 +52,7 @@ sub _verify {
 	    #check that trait value is valid for trait name
 	}
     }
+    print STDERR "Validated traits and plots\n";
     return 1;
 }
 
@@ -159,7 +162,7 @@ sub store {
 
 		## Link the phenotype to the experiment
 		$experiment->find_or_create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-		print STDERR "[StorePhenotypes] Linking phenotype:\n\t $plot_trait_uniquename \n\t to experiment" . $experiment->nd_experiment_id . "\n";
+		print STDERR "[StorePhenotypes] Linking phenotype:\n\t $plot_trait_uniquename \n\t to experiment " . $experiment->nd_experiment_id . "\n";
 
 		$experiment_ids{$experiment->nd_experiment_id()}=1;
 	    }
@@ -167,9 +170,9 @@ sub store {
     };
 
     ## Verify phenotype data
-    #if (!$self->_verify($c, $plot_list_ref, $trait_list_ref, $plot_trait_value_hashref)) {
-#	return;
- #   }
+    if (!$self->_verify($c, $plot_list_ref, $trait_list_ref, $plot_trait_value_hashref, $phenotype_metadata)) {
+	return;
+    }
 
     ## Verify metadata
     ####
