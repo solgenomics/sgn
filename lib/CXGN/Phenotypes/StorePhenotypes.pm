@@ -57,7 +57,8 @@ sub _verify {
     print STDERR "Plots and traits are valid\n";
 
     ## Verify metadata
-    if ($phenotype_metadata{'archived_file'} && (!$phenotype_metadata{'archived_file_type'} || $phenotype_metadata{'archived_file_type'} eq "")) {
+    if ($phenotype_metadata{'archived_file'} && (!$phenotype_metadata{'archived_file_type'} ||
+						 $phenotype_metadata{'archived_file_type'} eq "")) {
 	print STDERR "No file type provided for archived file\n";
 	return;
     }
@@ -182,12 +183,17 @@ sub store {
 		print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " with project $project_id \n";
 
 		# Link the experiment to the stock
-		$experiment->find_or_create_related('nd_experiment_stocks', {stock_id => $plot_stock_id, type_id => $phenotyping_experiment_cvterm->cvterm_id});
+		$experiment->find_or_create_related('nd_experiment_stocks', 
+						    {
+						     stock_id => $plot_stock_id,
+						     type_id => $phenotyping_experiment_cvterm->cvterm_id
+						    });
 		print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " to stock $plot_stock_id \n";
 
 		## Link the phenotype to the experiment
 		$experiment->find_or_create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-		print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " . $experiment->nd_experiment_id . "\n";
+		print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .
+		    $experiment->nd_experiment_id . "\n";
 
 		$experiment_ids{$experiment->nd_experiment_id()}=1;
 	    }
@@ -224,7 +230,7 @@ sub store {
 	    ->create({
 		      basename => basename($archived_file),
 		      dirname => dirname($archived_file),
-		      filetype => 'phenotype spreadsheet upload xls',
+		      filetype => $archived_file_type,
 		      md5checksum => $md5->digest(),
 		      metadata_id => $md_row->metadata_id(),
 		     });
