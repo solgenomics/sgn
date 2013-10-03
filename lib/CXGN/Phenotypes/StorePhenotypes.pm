@@ -41,9 +41,10 @@ sub _verify {
     my %plot_trait_value = %{$plot_trait_value_hashref};
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
-    my $plot_validated = $plot_validator->validate($c,'plot',\@plot_list);
-    my $trait_validated = $trait_validator->validate($c,'trait',\@trait_list);
-    if ($plot_validated->{'error'} || $trait_validated->{'error'}) {
+    my @plots_missing = @{$plot_validator->validate($c,'plots',\@plot_list)->{'missing'}};
+    my @traits_missing = @{$trait_validator->validate($c,'traits',\@trait_list)->{'missing'}};
+    if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
+	print STDERR "Not validated\n";
 	return;
     }
     foreach my $plot_name (@plot_list) {
