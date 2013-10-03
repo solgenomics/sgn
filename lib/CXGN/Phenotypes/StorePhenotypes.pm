@@ -121,11 +121,16 @@ sub store {
 	    my $plot_stock_id = $plot_stock->stock_id;
 
 	    ###This has to be stored in the database when creating a trial for these plots
-	    my $field_layout_experiment = $plot_stock->search_related('nd_experiment_stocks')->search_related('nd_experiment')->find({'type.name' => 'field layout' },{ join => 'type' });
+	    my $field_layout_experiment = $plot_stock
+		->search_related('nd_experiment_stocks')
+		    ->search_related('nd_experiment')
+			->find({'type.name' => 'field layout' },
+			       { join => 'type' });
 	    #####
 
 	    my $location_id = $field_layout_experiment->nd_geolocation_id;
-	    my $project = $field_layout_experiment->nd_experiment_projects->single ; #there should be one project linked with the field experiment
+	    my $project = $field_layout_experiment
+		->nd_experiment_projects->single ; #there should be one project linked with the field experiment
 	    my $project_id = $project->project_id;
 
 
@@ -136,7 +141,11 @@ sub store {
 		my $ontology_db = $schema->resultset("General::Db")->search({'me.name' => $db_name, });
 		my $ontology_dbxref = $ontology_db->search_related("dbxrefs", { accession => $ontology_accession, });
 		my $trait_cvterm = $ontology_dbxref->search_related("cvterm")->single;
-		my $plot_trait_uniquename = "Stock: " . $plot_stock_id . ", trait: " . $trait_cvterm->name . " date: $phenotyping_date" . "  operator = $operator" ;
+		my $plot_trait_uniquename = "Stock: " .
+		    $plot_stock_id . ", trait: " .
+			$trait_cvterm->name .
+			    " date: $phenotyping_date" .
+				"  operator = $operator" ;
 		my $phenotype = $trait_cvterm->find_or_create_related("phenotype_cvalues", {
 											    observable_id => $trait_cvterm->cvterm_id,
 											    value => $trait_value ,
@@ -145,25 +154,24 @@ sub store {
 
 		print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
 
-		## Store a new nd_experiment. One phenotyping experiment per upload
-		## find if a phenotyping experiment exists for this location
+		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
 		my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
 		    ->find({
 			    nd_geolocation_id => $location_id,
 			    type_id => $phenotyping_experiment_cvterm->cvterm_id(),
+			    'type.name' => 'operator',
+			    'nd_experimentprops.value' => $operator,
+			    'type_2.name' => 'date',
+			    'nd_experimentprops_2.value' => $phenotyping_date,
+			   },
+			   {
+			    join => [{'nd_experimentprops' => 'type'},{'nd_experimentprops' => 'type'}],
 			   });
 
-		## Find if the experiment has the date and person of this upload, if yes, use the existing one, if no, create a new nd_experiment
-		my ($op_prop, $date_prop);
-		if ($experiment) {
-		    $op_prop = $experiment->search_related('nd_experimentprops',{'type.name' => 'operator', value => $operator},{ join => 'type'})->single;
-		    $date_prop = $experiment->search_related('nd_experimentprops',{'type.name' => 'date', value => $phenotyping_date},{ join => 'type'})->single;
-		}
-
 		# Create a new experiment, if one does not exist
-		# or operator and date are not linked with the existing experiment
-		if ( !($op_prop && $date_prop) || !$experiment ) {
-		    $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
+		if (!$experiment) {
+		    $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+			->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
 		    $experiment->create_nd_experimentprops({date => $phenotyping_date},{autocreate => 1, cv_name => 'local'});
 		    $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
 		    print STDERR "[StorePhenotypes] Created new experiment: " . $experiment->nd_experiment_id . "\n";
@@ -179,7 +187,7 @@ sub store {
 
 		## Link the phenotype to the experiment
 		$experiment->find_or_create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-		print STDERR "[StorePhenotypes] Linking phenotype:\n\t $plot_trait_uniquename \n\t to experiment " . $experiment->nd_experiment_id . "\n";
+		print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " . $experiment->nd_experiment_id . "\n";
 
 		$experiment_ids{$experiment->nd_experiment_id()}=1;
 	    }
@@ -190,7 +198,6 @@ sub store {
     if (!$self->_verify($c, $plot_list_ref, $trait_list_ref, $plot_trait_value_hashref, $phenotype_metadata)) {
 	return;
     }
-
 
     try {
 	$schema->txn_do($coderef);
@@ -208,6 +215,7 @@ sub store {
 	my $md5 = Digest::MD5->new();
 	my $file_row;
 	my $md_row;
+	my $file_metadata_transaction_error;
 	open(my $F, "<", $archived_file) || die "Can't open file ".$archived_file;
 	binmode $F;
 	$md5->addfile($F);
