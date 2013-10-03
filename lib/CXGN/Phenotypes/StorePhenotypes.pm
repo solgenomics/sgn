@@ -34,17 +34,18 @@ sub _verify {
     my $plot_list_ref = shift;
     my $trait_list_ref = shift;
     my $plot_trait_value_hashref = shift;
-    my $phenotype_metadata = shift;
+    my $phenotype_metadata_ref = shift;
     my $transaction_error;
     my @plot_list = @{$plot_list_ref};
     my @trait_list = @{$trait_list_ref};
+    my %phenotype_metadata = %{$phenotype_metadata_ref};
     my %plot_trait_value = %{$plot_trait_value_hashref};
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($c,'plots',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($c,'traits',\@trait_list)->{'missing'}};
     if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
-	print STDERR "Not validated\n";
+	print STDERR "Plots or traits not valid\n";
 	return;
     }
     foreach my $plot_name (@plot_list) {
@@ -53,7 +54,22 @@ sub _verify {
 	    #check that trait value is valid for trait name
 	}
     }
-    print STDERR "Validated traits and plots\n";
+    print STDERR "Plots and traits are valid\n";
+
+    ## Verify metadata
+    if ($phenotype_metadata{'archived_file'} && (!$phenotype_metadata{'archived_file_type'} || $phenotype_metadata{'archived_file_type'} eq "")) {
+	print STDERR "No file type provided for archived file\n";
+	return;
+    }
+    if (!$phenotype_metadata{'operator'} || $phenotype_metadata{'operator'} eq "") {
+	print STDERR "No operaror provided in file upload metadata\n";
+	return;
+    }
+    if (!$phenotype_metadata{'date'} || $phenotype_metadata{'date'} eq "") {
+	print STDERR "No date provided in file upload metadata\n";
+	return;
+    }
+
     return 1;
 }
 
@@ -174,9 +190,6 @@ sub store {
     if (!$self->_verify($c, $plot_list_ref, $trait_list_ref, $plot_trait_value_hashref, $phenotype_metadata)) {
 	return;
     }
-
-    ## Verify metadata
-    ####
 
 
     try {
