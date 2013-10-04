@@ -1003,8 +1003,10 @@ sub list_predicted_selection_pops {
     
     foreach (@files) 
     { 
+        print STDERR "\nlist_predicted_selection_pops: file: $_\n";
         unless ($_ =~ /uploaded/) {
             my ($model_id2, $pred_pop_id, $trait_id) = $_ =~ m/\d+/g;
+            print STDERR "\nlist_predicted_selection_pops: model_id: $model_id\tpred_pop_id: $pred_pop_id\ttrait_id: $trait_id\n";
             push @pred_pops, $pred_pop_id;  
         }
     }
@@ -1334,6 +1336,7 @@ sub download_ranked_genotypes :Path('/solgs/download/ranked/genotypes/pop') Args
 sub rank_genotypes : Private {
     my ($self, $c, $pred_pop_id) = @_;
 
+    print STDERR "\n rank_genotypes pred_pop_id: $pred_pop_id\n";
     my $pop_id      = $c->stash->{pop_id};
     $c->stash->{prediction_pop_id} = $pred_pop_id;
 
@@ -1695,7 +1698,6 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      if (!$pred_pop_id)  
      {
          $pred_pop_id = $predicted_selection_pops->[0];
-          print STDERR "\npred_pop_Id 1: $pred_pop_id\n";
      }
                                       
      if ($pred_pop_id)
@@ -1703,7 +1705,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
          $c->stash->{prediction_pop_id} = $pred_pop_id;
          $c->stash->{population_is} = 'prediction population';
          $self->prediction_population_file($c, $pred_pop_id);
-         print STDERR "\npred_pop_Id: $pred_pop_id\n";
+        
          my $pr_rs = $c->model('solGS::solGS')->project_details($c, $pred_pop_id);
          
          while (my $row = $pr_rs->next) 
@@ -1788,50 +1790,64 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
    
      $self->list_predicted_selection_pops($c, $pop_id);
      $predicted_selection_pops = $c->stash->{list_of_predicted_selection_pops};
-     print STDERR "\nstart............ prediction_pop_analyzed_traits: id : $predicted_selection_pops->[0]\n";
+    
      if(@$predicted_selection_pops){
          $self->prediction_pop_analyzed_traits($c, $pop_id, $predicted_selection_pops->[0]);
      }
-        print STDERR "\nend.........prediction_pop_analyzed_traits\n";     
-     my @values;
+           
+  
+}
+
+
+sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) {
+    my ($self, $c, $model_id, $pred_pop_id) = @_;
+    
+    $c->stash->{pop_id} = $model_id;
+    $c->stash->{prediction_pop_id} = $pred_pop_id;
+
+    my @traits = $c->req->param; 
+    @traits    = grep {$_ ne 'rank'} @traits;
+   
+    my @values;
      foreach (@traits)
      {
          push @values, $c->req->param($_);
      }
       
-     if (@values) 
-     {
-         
-         my $ret->{status} = 'No GEBV values to rank.';
-
-         $self->get_gebv_files_of_traits($c, \@traits, $pred_pop_id);
+    if (@values) 
+    {
+        $self->get_gebv_files_of_traits($c, \@traits, $pred_pop_id);
       
-         my $params = $c->req->params;
-         $self->gebv_rel_weights($c, $params, $pred_pop_id);
+        my $params = $c->req->params;
+        $self->gebv_rel_weights($c, $params, $pred_pop_id);
          
-         $c->forward('rank_genotypes', [$pred_pop_id]);
+        $c->forward('rank_genotypes', [$pred_pop_id]);
          
-         my $geno = $self->tohtml_genotypes($c);
+        my $geno = $self->tohtml_genotypes($c);
         
-         my $link = $c->stash->{ranked_genotypes_download_url};
+        my $link = $c->stash->{ranked_genotypes_download_url};
          
         
          my $ranked_genos = $c->stash->{top_ranked_genotypes};
         
-         if (@$ranked_genos) 
-         {
-             $ret->{status} = 'success';
-             $ret->{genotypes} = $geno;
-             $ret->{link} = $link;
-         }
-               
-         $ret = to_json($ret);
-        
-         $c->res->content_type('application/json');
-         $c->res->body($ret);
-    }     
-}
+        my $ret->{status} = 'No GEBV values to rank.';
 
+        if (@$ranked_genos) 
+        {
+            $ret->{status} = 'success';
+            $ret->{genotypes} = $geno;
+            $ret->{link} = $link;
+        }
+               
+        $ret = to_json($ret);
+        
+        $c->res->content_type('application/json');
+        $c->res->body($ret);
+    }     
+    
+
+
+}
 
 sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm') Args(1) {
     my ($self, $c, $trait_id) = @_;
