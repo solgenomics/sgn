@@ -101,9 +101,13 @@ function loadGenotypesList(listId) {
                             var listIdArg = '\'' + listId +'\'';
                             var listSource = '\'from_db\'';
                        
+                            var popIdName   = {id : 'uploaded_' + listId, name: listName,};
+                            popIdName       = JSON.stringify(popIdName);
+                            var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
+                            
                             var addRow = '<tr><td>'
                                 +'<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
-                                + listIdArg + ',' + listSource + '); return false;">' 
+                                + listIdArg + ',' + listSource + '); return false;">' + '<data>'+ hiddenInput + '</data>'
                                 + listName + '</a>'
                                 + '</td>'
                                 + '<td id="list_prediction_output_' + listId +  '">'
@@ -232,9 +236,7 @@ function loadPredictionOutput (url, listId, listSource) {
                 if (response.status == 'success') {
                     var tdId = '#list_prediction_output_' + listId;
                     jQuery(tdId).html(response.output);
-                    
-                   
-                    
+                                        
                     var popsList = listSelPopulationsUploaded();
                     
                     jQuery("#select_a_population_div").html('');
@@ -332,12 +334,14 @@ function loadListFromFile(fileName, listId) {
             var url =   '\'/solgs/model/'+ modelId + '/uploaded/prediction/'+ selectionPopId + '\'' ;
             var listIdArg = '\'' + listId +'\'';
             var listSource = '\'from_file \'';
-            var popIdName   = {'id' : 'uploaded_' + listId, 'name': listName};
-            var hiddenInput =  '<input type="hidden" value=\"' + popIdName + '\">';
+
+            var popIdName   = {id : 'uploaded_' + listId, name: listName,};
+            popIdName       = JSON.stringify(popIdName);
+            var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
            
             var addRow = '<tr><td>'
                 +'<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
-                + listIdArg + ',' + listSource + '); return false;">' + '<data>'+ hiddenInput + '</data>' +
+                + listIdArg + ',' + listSource + '); return false;">' + '<data>'+ hiddenInput + '</data>'
                 + listName + '</a>'
                 + '</td>'
                 + '<td id="list_prediction_output_' + listId +  '">'
@@ -369,6 +373,11 @@ function getUserUploadedFile (fileName, listId) {
     var listIdArg = '\'' + listId +'\'';
     var listSource = '\'from_file \'';
 
+
+    var popIdName   = {id : 'uploaded_' + listId, name: listName,};
+    popIdName       = JSON.stringify(popIdName);
+    var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
+
     var uploadedSelPop ='<table id="uploaded_selection_pops_table" ""style="width:100%; text-align:left"><tr>'
                                 + '<th>Uploaded Selection Population</th>'
                                 + '<th>Prediction output</th>'
@@ -376,7 +385,7 @@ function getUserUploadedFile (fileName, listId) {
                                 + '<tr>'
                                 + '<td>'
                                 + '<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
-                                + listIdArg + ',' + listSource + '); return false;">' 
+                                + listIdArg + ',' + listSource + '); return false;">' + '<data>'+ hiddenInput + '</data>' 
                                 + listName + '</a>'
                                 + '</td>'
                                 + '<td id="list_prediction_output_' + listId +  '">'
