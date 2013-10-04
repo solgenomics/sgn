@@ -1809,10 +1809,10 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
     @traits    = grep {$_ ne 'rank'} @traits;
    
     my @values;
-     foreach (@traits)
-     {
-         push @values, $c->req->param($_);
-     }
+    foreach (@traits)
+    {
+        push @values, $c->req->param($_);
+    }
       
     if (@values) 
     {
