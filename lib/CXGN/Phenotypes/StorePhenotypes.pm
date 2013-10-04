@@ -147,11 +147,12 @@ sub store {
 			$trait_cvterm->name .
 			    " date: $phenotyping_date" .
 				"  operator = $operator" ;
-		my $phenotype = $trait_cvterm->find_or_create_related("phenotype_cvalues", {
-											    observable_id => $trait_cvterm->cvterm_id,
-											    value => $trait_value ,
-											    uniquename => $plot_trait_uniquename,
-											   });
+		my $phenotype = $trait_cvterm
+		    ->find_or_create_related("phenotype_cvalues", {
+								   observable_id => $trait_cvterm->cvterm_id,
+								   value => $trait_value ,
+								   uniquename => $plot_trait_uniquename,
+								  });
 
 		print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
 
