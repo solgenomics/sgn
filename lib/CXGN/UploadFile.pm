@@ -23,6 +23,9 @@ use strict;
 use warnings;
 use Moose;
 use Try::Tiny;
+use List::MoreUtils qw /any /;
+use File::Copy;
+use File::Spec::Functions;
 use File::Basename qw | basename dirname|;
 use Digest::MD5;
 
@@ -42,19 +45,19 @@ sub archive {
     my $file_destination;
     my $error;
     if (!$c->user()) {		#user must be logged in
-	die "You need to be logged in to upload a file.\n";
+	die "You need to be logged in to archive a file.\n";
     }
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-	die  "You have insufficient privileges to upload a file.\n";
+	die  "You have insufficient privileges to archive a file.\n";
     }
-    if (!$upload) {		#upload file required
-	die "File upload failed: no file name received.\n";
+    if (!$subdirectory || !$tempfile || !$archive_filename ) {
+	die "File archive failed: incomplete information to archive file.\n";
     }
     $user_id = $c->user()->get_object()->get_sp_person_id();
     $user_name = $c->user()->get_object()->get_username();
     $user_string = $user_name.'_'.$user_id;
     $archived_file_name = catfile($user_string, $timestamp."_".$archive_filename);
-    $file_destination =  catfile($archive_path, $user_string, $subdirectory, $archived_filename);
+    $file_destination =  catfile($archive_path, $user_string, $subdirectory, $archive_filename);
     try {
 	if (!-d $archive_path) {
 	    mkdir $archive_path;
@@ -77,7 +80,7 @@ sub archive {
 
 sub get_md5 {
     my $self = shift;
-    my $file_name_and_location;
+    my $file_name_and_location = shift;
     open(my $F, "<", $file_name_and_location) || die "Can't open file ";
     binmode $F;
     my $md5 = Digest::MD5->new();
