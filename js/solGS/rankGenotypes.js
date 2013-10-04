@@ -39,13 +39,14 @@ function listSelPopulations ()  {
             }
         }
     }
-        
-    popsList += '</ul></dd/</dl>';  
+   
+
+    popsList += '</ul></dd></dl>';  
     return popsList;
 }
 
         
-function selectAPopulation(modelId){
+function selectAPopulation(modelId, userUploadedSelPops){
     var selPopsDiv   = document.getElementById("selection_populations");
     var selPopsTable = selPopsDiv.getElementsByTagName("table");
     var selPopsRows  = selPopsTable[0].rows;
@@ -69,9 +70,16 @@ function selectAPopulation(modelId){
     var modelId;
         
     if(!selectedPop) {
-        var popsList = listSelPopulations(); 
-             
+        
         if(predictedPopExists) {
+            
+            var popsList;
+            if(userUploadedSelPops) {
+                popsList = userUploadedSelPops;
+            } else {
+                popsList = listSelPopulations();            
+            }
+
             jQuery("#select_a_population_div").append(popsList);
             
             jQuery(".si_dropdown dt a").click(function() {
@@ -86,10 +94,10 @@ function selectAPopulation(modelId){
                     var idPopName = jQuery("#selected_population").find("dt a span.value").html();
                     idPopName     = JSON.parse(idPopName);
                     modelId = jQuery("#model_id").val();
-                    //alert(model_id);
+                    
                     selectedPopId   = idPopName.id;
                     selectedPopName = idPopName.name;
-                                       
+                   
                     jQuery("#selected_population_name").val(selectedPopName);
                     jQuery("#selected_population_id").val(selectedPopId);
                     
@@ -180,11 +188,19 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
             
         var action;
            
-        if (predictionPopId && isNaN(predictionPopId) == true) {
+        // if (predictionPopId && isNaN(predictionPopId) == true) {
                   
-            action = '/solgs/traits/all/population/' + trainingPopId;
-        }else{
-            action = '/solgs/traits/all/population/' + trainingPopId +  '/' + predictionPopId;
+//             action = '/solgs/traits/all/population/' + trainingPopId;
+//         }else{
+//             action = '/solgs/traits/all/population/' + trainingPopId +  '/' + predictionPopId;
+//         }
+
+
+        if (!predictionPopId) {
+                  
+            action = '/solgs/calculate/selection/index/' + trainingPopId;
+        } else {
+            action = '/solgs/calculate/selection/index/' + trainingPopId +  '/' + predictionPopId;
         }
 
         jQuery.ajax({
@@ -353,3 +369,42 @@ jQuery(document).ready( function () {
 jQuery(document).ready( function () {
         selectAPopulation();
     });
+
+
+function listSelPopulationsUploaded ()  {
+
+    var selPopsDivUploaded   = document.getElementById("uploaded_selection_populations");
+
+    var selPopsTableUploaded = selPopsDivUploaded.getElementsByTagName("table");
+    var selPopsRowsUploaded  = selPopsTableUploaded[0].rows;
+    var predictedPopUploaded = [];
+   
+
+
+    var popsList;
+    for (var i = 1; i < selPopsRowsUploaded.length; i++) {
+        var row    = selPopsRowsUploaded[i];
+        var popRow = row.innerHTML;
+            
+        predictedPopUploaded = popRow.match(/\/solgs\/download\/prediction\/model\//g);
+     
+        if (predictedPopUploaded) {
+                var selPopsInput = row.getElementsByTagName("input")[0];
+                var idPopName    = selPopsInput.value;     
+                var idPopNameCopy = idPopName;
+                idPopNameCopy     = JSON.parse(idPopNameCopy);
+                var popName       = idPopNameCopy.name;
+                             
+                popsList = '<li>'
+                    + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
+                    + '</li>';
+        }
+    }
+
+   
+    jQuery("#select_a_population_div ul").append(popsList);
+    popsList = jQuery("#select_a_population_div").html();
+ 
+    return popsList;
+ 
+}
