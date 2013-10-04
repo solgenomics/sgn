@@ -227,6 +227,8 @@ sub store {
 	binmode $F;
 	$md5->addfile($F);
 	close($F);
+	$md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id,});
+	$md_row->insert();
 	$file_row = $metadata_schema->resultset("MdFiles")
 	    ->create({
 		      basename => basename($archived_file),
@@ -236,8 +238,6 @@ sub store {
 		      metadata_id => $md_row->metadata_id(),
 		     });
 	$file_row->insert();
-	$md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id,});
-	$md_row->insert();
 	foreach my $nd_experiment_id (keys %experiment_ids) {
 	    ## Link the file to the experiment
 	    my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")

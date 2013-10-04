@@ -1,5 +1,4 @@
-
-package CXGN::Phenotype::ParseUpload;
+package CXGN::Phenotypes::ParseUpload;
 
 use Moose;
 
@@ -7,32 +6,30 @@ use Module::Pluggable require => 1;
 
 sub validate {
     my $self = shift;
-    my $c = shift;
-    my $type;
+    my $type = shift;
     my $filename = shift;
     my $validate_result;
 
     foreach my $p ($self->plugins()) {
         if ($type eq $p->name()) {
-	     $validate_result = $p->validate($c, $filename);
+	     $validate_result = $p->validate($filename);
 	}
     }
-    return;
+    return $validate_result;
 }
 
 sub parse {
     my $self = shift;
-    my $c = shift;
-    my $type;
+    my $type = shift;
     my $filename = shift;
     my $parse_result;
 
     foreach my $p ($self->plugins()) {
         if ($type eq $p->name()) {
-	     $parse_result = $p->parse($c, $filename);
+	     $parse_result = $p->parse($filename);
 	}
     }
-    return;
+    return $parse_result;
 }
 
 1;

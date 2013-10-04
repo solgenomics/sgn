@@ -38,6 +38,7 @@ use File::Spec::Functions;
 use File::Copy;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::UploadFile;
+use CXGN::Phenotypes::ParseUpload;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -320,54 +321,96 @@ sub upload_phenotype_file_for_field_book_POST : Args(0) {
   my ($self, $c) = @_;
   my $uploader = CXGN::UploadFile->new();
   my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
+  my $parser = CXGN::Phenotypes::ParseUpload->new();
   my $upload = $c->req->upload('fieldbook_upload_file');
   my $upload_original_name = $upload->filename();
   my $upload_tempfile = $upload->tempname;
   my $subdirectory = "tablet_phenotype_upload";
-  my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name);
-  my $md5 = $uploader->get_md5($archived_filename_with_path);
+  my $archived_filename_with_path;
+  my $md5;
+  my $validate_file;
+  my $parsed_file;
+  my %parsed_data;
+  my @plots;
+  my @traits;
+  my %phenotype_metadata;
+
+  print STDERR "Move uploaded file to archive\n";
+
+  ## Store uploaded temporary file in archive
+  $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name);
+  $md5 = $uploader->get_md5($archived_filename_with_path);
   if (!$archived_filename_with_path) {
       $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
       return;
   }
   unlink $upload_tempfile;
 
-
-
-
-  print STDERR "Uploading phenotypes\n";
-
-
-  my @plot_list = ("58308_replicate:1_block:1_plot:1_8000_Ibadan","95D019_replicate:1_block:1_plot:2_8000_Ibadan");
-  my @trait_list = ("CO:0000018","CO:0000063");
-  my %plot_trait_value;
-  my %phenotype_metadata;
-  my %trait_value;
+  ## Set metadata
 
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
-
-  $phenotype_metadata{'archived_file'}="file.txt";
+  $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
   $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
   $phenotype_metadata{'operator'}="tester_operator";
   $phenotype_metadata{'date'}="$timestamp";
 
-  $trait_value{'CO:0000018'} = 1;
-  $trait_value{'CO:0000063'} = 2;
+  print STDERR "Validate uploaded file\n";
+
+  ## Validate and parse uploaded file
+  $validate_file = $parser->validate('field book', $archived_filename_with_path);
+  if (!$validate_file) {
+      $c->stash->{rest} = {error => "File not valid: $upload_original_name",};
+      return;
+  }
+
+  print STDERR "Parse uploaded file\n";
+
+  $parsed_file = $parser->parse('field book', $archived_filename_with_path);
+  if (!$parsed_file) {
+      $c->stash->{rest} = {error => "Error parsing file $upload_original_name",};
+      return;
+  }
+  if ($parsed_file->{'error'}) {
+      $c->stash->{rest} = {error => $parsed_file->{'error'},};
+      return;
+  }
+  %parsed_data = %{$parsed_file->{'data'}};
+  @plots = @{$parsed_file->{'plots'}};
+  @traits = @{$parsed_file->{'traits'}};
+
+  print STDERR "store phenotypes from uploaded file\n";
+  $store_phenotypes->store($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
 
 
-  $plot_trait_value{'58308_replicate:1_block:1_plot:1_8000_Ibadan'} = \%trait_value;
-  $plot_trait_value{'95D019_replicate:1_block:1_plot:2_8000_Ibadan'} = \%trait_value;
 
 
-  #$plot_trait_value{'58308_replicate:1_block:1_plot:1_8000_Ibadan'} = 'a';
-  #$plot_trait_value{'95D019_replicate:1_block:1_plot:2_8000_Ibadan'} = 'b';
+  # my @plot_list = ("58308_replicate:1_block:1_plot:1_8000_Ibadan","95D019_replicate:1_block:1_plot:2_8000_Ibadan");
+  # my @trait_list = ("CO:0000018","CO:0000063");
+  # my %plot_trait_value;
+  # my %phenotype_metadata;
+  # my %trait_value;
 
 
-  #print STDERR "empty_hash: ". Data::Dumper::Dumper(\%phenotype_metadata)."\n";
-  #print STDERR "in_hash: ". Data::Dumper::Dumper(\%plot_trait_value)."\n";
+  # $phenotype_metadata{'archived_file'}="file.txt";
+  # $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
+  # $phenotype_metadata{'operator'}="tester_operator";
+  # $phenotype_metadata{'date'}="$timestamp";
 
-  $store_phenotypes->store($c,\@plot_list,\@trait_list, \%plot_trait_value, \%phenotype_metadata);
+  # $trait_value{'CO:0000018'} = 1;
+  # $trait_value{'CO:0000063'} = 2;
+
+
+  # $plot_trait_value{'58308_replicate:1_block:1_plot:1_8000_Ibadan'} = \%trait_value;
+  # $plot_trait_value{'95D019_replicate:1_block:1_plot:2_8000_Ibadan'} = \%trait_value;
+
+
+
+
+  # #print STDERR "empty_hash: ". Data::Dumper::Dumper(\%phenotype_metadata)."\n";
+  # #print STDERR "in_hash: ". Data::Dumper::Dumper(\%plot_trait_value)."\n";
+
+  # $store_phenotypes->store($c,\@plot_list,\@trait_list, \%plot_trait_value, \%phenotype_metadata);
 
   $c->stash->{rest} = {
 		       success => "1",
