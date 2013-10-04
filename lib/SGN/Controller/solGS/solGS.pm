@@ -1715,7 +1715,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      }
      else
      {
-         $c->stash->{prediction_pop_id} = 'N/A';
+         $c->stash->{prediction_pop_id} = undef;
          $c->stash->{population_is} = 'training population';
      }
 
@@ -1803,7 +1803,16 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
     my ($self, $c, $model_id, $pred_pop_id) = @_;
     
     $c->stash->{pop_id} = $model_id;
-    $c->stash->{prediction_pop_id} = $pred_pop_id;
+
+    if( $pred_pop_id =~ /\d+/)
+    {
+        $c->stash->{prediction_pop_id} = $pred_pop_id;
+    }
+    else
+    {
+        $pred_pop_id = undef;
+        $c->stash->{prediction_pop_id} = $pred_pop_id;
+    }
 
     my @traits = $c->req->param; 
     @traits    = grep {$_ ne 'rank'} @traits;
@@ -1844,10 +1853,8 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
         $c->res->content_type('application/json');
         $c->res->body($ret);
     }     
-    
-
-
 }
+
 
 sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm') Args(1) {
     my ($self, $c, $trait_id) = @_;
