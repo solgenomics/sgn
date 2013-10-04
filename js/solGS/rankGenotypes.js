@@ -188,21 +188,14 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
             
         var action;
            
-        // if (predictionPopId && isNaN(predictionPopId) == true) {
-                  
-//             action = '/solgs/traits/all/population/' + trainingPopId;
-//         }else{
-//             action = '/solgs/traits/all/population/' + trainingPopId +  '/' + predictionPopId;
-//         }
-
-
         if (!predictionPopId) {
-                  
-            action = '/solgs/calculate/selection/index/' + trainingPopId;
-        } else {
-            action = '/solgs/calculate/selection/index/' + trainingPopId +  '/' + predictionPopId;
+        
+            predictionPopId = 'undef';
+       
         }
-
+        
+        var action = '/solgs/calculate/selection/index/' + trainingPopId +  '/' + predictionPopId;
+          
         jQuery.ajax({
                 type: 'POST',
                     dataType: "json",
@@ -217,7 +210,7 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
               
                         genos = res.genotypes;
                         var download_link = res.link;
-                          
+                 
                         table = '<table  style="text-align:left; border:0px; padding: 1px; width:75%;">';
                         table += '<tr><th>Genotypes</th><th>Weighted Mean</th></tr>';
                        
@@ -249,6 +242,10 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
                    
                     jQuery.unblockUI(); 
                                         
+                },
+                    error: function(res){
+                    alert('error occured calculating selection index.');
+                    jQuery.unblockUI(); 
                 }
             });
     }           
@@ -387,7 +384,7 @@ function listSelPopulationsUploaded ()  {
         var popRow = row.innerHTML;
             
         predictedPopUploaded = popRow.match(/\/solgs\/download\/prediction\/model\//g);
-     
+       
         if (predictedPopUploaded) {
                 var selPopsInput = row.getElementsByTagName("input")[0];
                 var idPopName    = selPopsInput.value;     
