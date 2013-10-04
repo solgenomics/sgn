@@ -31,11 +31,12 @@ $acronym
 
 </%perl>
 
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 <& /solgs/model/model_summary.mas, 
      model_data => $model_data
 &>
-% if ($prediction_pop_id eq 'N/A')
+% if (!$prediction_pop_id)
 %{
 
   <& rank_genotypes.mas,
