@@ -50,7 +50,7 @@ $prediction_pop_analyzed_traits => ''
 % if ($prediction_pop_id ne 'N/A') 
 %{
 
-% if ($prediction_pop_analyzed_traits)
+% if ($prediction_pop_id)
 %{
 <& rank_genotypes.mas, 
    analyzed_traits                => $analyzed_traits,
