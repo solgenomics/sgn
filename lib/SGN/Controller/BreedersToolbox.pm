@@ -216,6 +216,11 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     
+    # get breeding programs
+    #
+    my $breeding_program_cvterm_id = $schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program' });
+    my @rows = $schema->resultset('Project::Project')->search({ 'projectprop.type_id' => $breeding_program_cvterm_id }, { join => projectprop } );
+
     # get projects
     #
     my @rows = $schema->resultset('Project::Project')->all();
