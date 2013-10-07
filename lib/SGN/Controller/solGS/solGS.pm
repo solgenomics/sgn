@@ -1042,11 +1042,6 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
 }
 
 
-
-
-
-
-
 sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     my ($self, $c) = @_;
     
@@ -1807,6 +1802,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
     if( $pred_pop_id =~ /\d+/)
     {
         $c->stash->{prediction_pop_id} = $pred_pop_id;
+        
     }
     else
     {
