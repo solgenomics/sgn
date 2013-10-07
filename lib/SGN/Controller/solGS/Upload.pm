@@ -302,29 +302,26 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
              }
          } 
             
-         $c->controller("solGS::solGS")->trait_phenotype_stat($c);
-         $c->controller("solGS::solGS")->gs_files($c);
-        
+        $c->controller("solGS::solGS")->trait_phenotype_stat($c);
+        $c->controller("solGS::solGS")->gs_files($c);
+               
+        $c->controller("solGS::solGS")->download_prediction_urls($c, $model_id, $prediction_pop_id );
+        my $download_prediction = $c->stash->{download_prediction};
       
-         $c->controller("solGS::solGS")->download_prediction_urls($c, $model_id, $prediction_pop_id );
-         my $download_prediction = $c->stash->{download_prediction};
-      
-         my $ret->{status} = 'failed';
+        my $ret->{status} = 'failed';
     
-         if (-s $prediction_pop_gebvs_file) 
-         {
-             $ret->{status} = 'success';
-             $ret->{output} = $download_prediction;
-         }
+        if (-s $prediction_pop_gebvs_file) 
+        {
+            $ret->{status} = 'success';
+            $ret->{output} = $download_prediction;
+        }
         
-         $ret = to_json($ret);
+        $ret = to_json($ret);
        
-         $c->res->content_type('application/json');
-         $c->res->body($ret);
+        $c->res->content_type('application/json');
+        $c->res->body($ret);
          
     }
-
-
 }
 
 
