@@ -37,6 +37,9 @@ CXGN.List = function () {
 
 CXGN.List.prototype = { 
     
+
+    // deprecated. Use getListData.
+    //
     getList: function(list_id) { 
 	
 	var list;
@@ -50,12 +53,109 @@ CXGN.List.prototype = {
 		    alert(response.error);
 		}
 		else { 
-		    list = response;
+		    list = response.elements;
 		}
+		
 	    }
 	});
 	return list;
 
+    },
+
+
+    // this function also returns some metadata about
+    // list, namely its type.
+    //
+    getListData: function(list_id) { 
+	var list;
+	
+	jQuery.ajax( { 
+	    url: '/list/data',
+	    async: false,
+	    data: { 'list_id': list_id },
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    list = response;
+		}
+	    }
+	});
+	
+	return list;
+    },
+
+    getListType: function(list_id) { 
+	var type;
+
+	jQuery.ajax( { 
+	    url: '/list/type/'+list_id,
+	    async: false,
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    type = response;
+		}
+	    },
+	    error: alert('An error occurred.')
+	});
+	return type;
+    },
+	    
+    setListType: function(list_id, type) { 
+	
+	jQuery.ajax( { 
+	    url: '/list/type/'+list_id+'/'+type,
+	    async: false,
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    alert('Type of list '+list_id+' set to '+type);
+		}
+	    } 
+	});
+    },
+
+
+    allListTypes: function() { 
+	var types;
+	jQuery.ajax( { 
+	    url: '/list/alltypes',
+	    async: false,
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    types = response;
+		}
+	    }
+	});
+	return types;
+		     
+    },
+    
+
+    typesHtmlSelect: function(list_id, html_select_id, selected) { 
+	var types = this.allListTypes();
+	var html = '<select id="'+html_select_id+'" onchange="javascript:changeListType(\''+html_select_id+'\', '+list_id+');" >';
+	html += '<option name="null">(none)</option>';
+	for (var i=0; i<types.length; i++) { 
+	    var selected_html = '';
+	    if (types[i][1] == selected) { 
+		//alert("Match: "+types[i][0]);
+		selected_html = ' selected="selected" ';
+	    }
+	    html += '<option name="'+types[i][1]+'"'+selected_html+'>'+types[i][1]+'</option>';
+	}
+	html += '</select>';
+	//alert(html);
+	return html;
     },
 
     newList: function(name) { 
@@ -145,17 +245,15 @@ CXGN.List.prototype = {
 	var html = '';
 	html = html + '<input id="add_list_input" type="text" /><input id="add_list_button" type="button" value="new list" /><br />';
 	
-
-
 	if (lists.length===0) { 
 	    html = html + "None";
 	    jQuery('#'+div).html(html);
-
 	}
 
-	html = html + '<table border="0" title="Available lists">';
+	html += '<table border="0" title="Available lists">';
+	html += '<tr><td><i>list name</i></td><td><i>#</i></td><td><i>type</i></td><td colspan="3"><i>actions</i></td></tr>\n'; 
 	for (var i = 0; i < lists.length; i++) { 
-	    html = html + '<tr><td><b>'+lists[i][1]+'</b></td><td>(' + lists[i][3] +' elements) </td><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')">view</a></td><td>|</td><td><a href="javascript:deleteList('+lists[i][0]+')">delete</a></td><td>|</td><td><a href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>\n';
+	    html = html + '<tr><td><b>'+lists[i][1]+'</b></td><td>'+lists[i][3]+'</td><td>'+lists[i][5]+'</td><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')">view</a></td><td>|</td><td><a href="javascript:deleteList('+lists[i][0]+')">delete</a></td><td>|</td><td><a href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>\n';
 	    
 	    //var items = this.getList(lists[i][0]);
 	    
@@ -188,12 +286,16 @@ CXGN.List.prototype = {
     },
 
     renderItems: function(div, list_id) { 
-
-	var items = this.getList(list_id);
+	var list_data = this.getListData(list_id);
+	var items = list_data.elements;
+	var list_type = list_data.type_name;
 	var list_name = this.listNameById(list_id);
 
-	var html = '<h4>List '+list_name+'</h4>';
-	html = html + '<textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="add" /><br />';
+	var html = 'List name <b>'+list_name+'</b><br />Type '+this.typesHtmlSelect(list_id, 'type_select', list_type)+'   <input type="button" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /><br />';
+
+	html += 'New elements: <br /><textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="Add" /><br />';
+
+	html += '<b>List elements:</b><br />';
 	
 	for(var n=0; n<items.length; n++) { 
 	    html = html + items[n][1] + '   <input id="'+items[n][0]+'" type="button" value="remove" /><br />';
@@ -276,7 +378,38 @@ CXGN.List.prototype = {
 	}
 	html = html + '</select>';
 	return html;
+    },
+
+    validate: function(list_id, type) { 
+	var missing = new Array();
+	var error = 0;
+	jQuery.ajax( { 
+	    url: '/list/validate/'+list_id+'/'+type,
+	    async: false,
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    missing = response.missing;
+		}
+	    },
+	    error: function(response) { alert("An error occurred while validating the list "+list_id); error=1; }
+	});
+
+	if (error ===1 ) { return; }
+
+	//alert("MISSING: "+missing.join(","));
+
+	if (missing.length==0) { 
+	    alert("This list passed validation.");
+	}
+	else { 
+	    alert("List validation failed. Elements not found: "+ missing.join(","));
+	}
     }
+
+    
 };
 
 function setUpLists() { 
@@ -317,14 +450,17 @@ function show_lists() {
 }
 
 
-function pasteListMenu (div_name, menu_div) { 
+function pasteListMenu (div_name, menu_div, button_name) { 
     var lo = new CXGN.List();
 
     var html='';
 
+    if (button_name === undefined) { 
+	button_name = 'paste';
+    }
     if (jQuery.cookie("sgn_session_id")) {
 	html = lo.listSelect(div_name);
-	html = html + '<input type="button" value="paste" onclick="javascript:pasteList(\''+div_name+'\')" /><br />';
+	html = html + '<input type="button" value="'+button_name+'" onclick="javascript:pasteList(\''+div_name+'\')" /><br />';
     }
     else { 
 	html = html + 'please log in for lists';
@@ -396,8 +532,6 @@ function getData(id) {
     return data;
 }
            
-	
-
 function addTextToListMenu(div) { 
     var lo = new CXGN.List();
     var html = lo.listSelect(div);
@@ -500,7 +634,6 @@ function deleteList(list_id) {
 	lo.renderLists('list_dialog');
 	alert('Deleted list '+list_name);
     }
-
 }
 	
 function deleteItemLink(list_item_id) { 
@@ -533,3 +666,18 @@ function addNewList(div_id) {
     lo.renderLists('list_item_dialog');
 }
 
+function changeListType(html_select_id, list_id) { 
+    //alert("HTML SELECT ID: "+html_select_id+" LIST_ID "+list_id);
+    var type = jQuery('#'+html_select_id).val();
+    var l = new CXGN.List();
+
+    //alert("setting list "+list_id+" to type "+type);
+    l.setListType(list_id, type);
+    l.renderLists('list_dialog');
+}
+
+function validateList(list_id, html_select_id) { 
+    var lo = new CXGN.List();
+    var type = jQuery('#'+html_select_id).val();
+    lo.validate(list_id, type);
+}

@@ -31,6 +31,12 @@ $m->while_logged_in(
 	
 	my $list_id = $data->{list_id};
 			 
+	$m->get_ok('/list/type/'.$list_id.'/plots');
+
+	$m->get_ok('/list/type/'.$list_id);
+	
+	$m->content_contains("plots");
+
 	$m->get_ok("/list/item/add?list_id=$list_id&element=blabla");
 
 	$m->content_contains("SUCCESS");

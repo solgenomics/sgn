@@ -205,6 +205,14 @@ sub hash2param {
 }
 
 print page_title_html("NCBI BLAST$blast_version");
+
+print <<HTML;
+
+<div class="boxbgcolor5">This is the old BLAST interface. The new interface is available <a href="/tools/blast">here</a>.
+</div><br />
+
+HTML
+
 print modesel([ ['?'.hash2param(%params, interface_type => 0),'Simple'],
 		['?'.hash2param(%params, interface_type => 1),'Advanced'],
 	      ],

@@ -42,8 +42,6 @@ $schema
 $unigene_build
 </%args>
 
-</%doc>
-
 
 <%perl>
 use strict;
