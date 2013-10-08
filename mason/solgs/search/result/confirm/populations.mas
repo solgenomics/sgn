@@ -12,7 +12,7 @@ $trait_id
 </%args>
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations", "jquery.cookie"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations",] &>
 
 <& /page/page_title.mas,
     title => "Confirm" ,
