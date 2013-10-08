@@ -53,23 +53,6 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     my $missmatch = $c->req->param("missmatch");
     my $database = $c->req->param("database");
 
-    my $upload = $c->req->upload("expr_file");
-    my $expr_file = undef;
-    print STDERR "upload: $upload\n";
-
-    if (defined($upload)) {
-	$expr_file = $upload->tempname;    
-	$expr_file =~ s/\/tmp\///;
-    print STDERR "expr file: $expr_file\n";
-    
-	my $expr_dir = $c->generated_file_uri('expr_files', $expr_file);
-	my $final_path = $c->path_to($expr_dir);
-    
-	write_file($final_path, $upload->slurp);
-    }
-
-    print STDERR "expr file: $expr_file\n";
-
     # clean the sequence and check if there are more than one sequence pasted
     if ($sequence =~ tr/>/>/ > 1) {
 	push ( @errors , "Please, paste only one sequence.\n");	
@@ -189,7 +172,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     $c->stash->{rest} = {jobid =>basename($seq_filename),
                          seq_length => length($sequence),
                          db_name => $database_title,
-			 expr_file => $expr_file,
+#			 expr_file => $expr_file,
     };
 
 }
@@ -237,6 +220,7 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $expr_file = $c->req->param("expr_file") || undef;
     my $expr_hash = undef;
     my $status = $c->req->param("status") || 1;
+    
 
     if (defined($expr_file)) {
 	my $expr_dir = $c->generated_file_uri('expr_files', $expr_file);
@@ -245,7 +229,7 @@ sub view :Path('/tools/vigs/view') Args(0) {
     
 	$expr_hash = get_expression_hash($expr_path);
    
-	print STDERR "hash header: ".Dumper($$expr_hash{"header"})."\n";
+	#print STDERR "hash header: ".Dumper($$expr_hash{"header"})."\n";
     }
 
     $seq_filename = File::Spec->catfile($c->config->{cluster_shared_tempdir}, $seq_filename);
@@ -311,15 +295,9 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $expr_msg;
     if (defined($$expr_hash{"header"})) {
 	$expr_msg = [$vg->add_expression_values($expr_hash)];
-    print STDERR "EXPR: OK!!\n";
-
     } else {
 	$expr_msg = [$vg->subjects_by_match_count($vg->matches())];
-    print STDERR "NO EXPR!!\n";
-
     }
-
-    print STDERR "$$expr_msg[0][0]\n";
 
     # return variables
     $c->stash->{rest} = {score => sprintf("%.2f",($regions[1]*100/$seq_fragment)/$coverage),
@@ -343,6 +321,33 @@ sub hash2param {
   my %args = @_;
   return join '&', map "$urlencode{$_}=$urlencode{$args{$_}}", distinct evens @_;
 }
+
+
+sub upload_expression_file_for_vigs : Path('/ajax/upload_expression_file') : ActionClass('REST') { }
+
+sub upload_expression_file_for_vigs_POST : Args(0) {
+    my ($self, $c) = @_;
+
+    my $upload = $c->req->upload("expression_file");
+    my $expr_file = undef;
+
+    if (defined($upload)) {
+	$expr_file = $upload->tempname;    
+	$expr_file =~ s/\/tmp\///;
+    
+	my $expr_dir = $c->generated_file_uri('expr_files', $expr_file);
+	my $final_path = $c->path_to($expr_dir);
+
+	write_file($final_path, $upload->slurp);
+    }
+    
+    $c->stash->{rest} = {
+      expr_file => $expr_file,
+      success => "1",
+    };
+}
+
+
 
 
 1;

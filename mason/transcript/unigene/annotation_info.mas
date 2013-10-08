@@ -172,7 +172,7 @@ EOH
 	   $defline =~ s/^\|//; 
 	   
 	   if (length($defline) > 100) {
-	       $defline_format = substr($defline, 0, 95) . '&hellip';
+	       $defline_format = substr($defline, 0, 95) . '&hellip;';
 	   } 
 	   else {
 	       $defline_format = $defline;

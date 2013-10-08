@@ -17,6 +17,7 @@ $sequence => undef
 
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List',] &>
 
 <div id="input_view">
 <& /page/page_title.mas, title=>"VIGS Tool" &>
@@ -37,6 +38,7 @@ Sequence:
 <span id="status_wheel"></span>
 <br />
 
+
 <textarea id="sequence" name="sequence" cols=62" rows="8"></textarea>
 <br />
 <br />
@@ -56,21 +58,29 @@ Database <select name="database">
 
 <%perl>
 foreach my $d (@databases) { 
-	print "<option id='bt2_db' value=\"".$d->id()."\">".$d->title()."</option><br />";
-	}     
+    print "<option id='bt2_db' value=\"".$d->id()."\">".$d->title()."</option><br />";
+}     
 </%perl>
 </select>
 <br />
 <br />
-Upload expression file (optional) <input id="expr_file" type="file" name="expr_file" />
+
+
+<form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_expression_form" name="upload_expression_form" action="/ajax/upload_expression_file">
+    Upload Expression file: <input type="file" name="expression_file" id="expression_file" encoding="multipart/form-data" />
+</form>
+
+
+<br />
+<br />
+<button type="buttom" value="clear" onClick="clearForm()">Clear</button>&nbsp; &nbsp; &nbsp;
+<button type="buttom" id="upload_expression_file" value="Run VIGS Analysis">Run VIGS Analysis</button>
+
+
 <br />
 <br />
 
-    <button type="buttom" value="clear" onClick="clearForm()">Clear</button>&nbsp; &nbsp; &nbsp;
-    <button type="buttom" value="Run VIGS Analysis" onClick="runBt2(document.getElementById('si_rna').value)">Run VIGS Analysis</button>
 
-    <br />
-    <br />
 </center>
 </div>
 
@@ -259,8 +269,12 @@ Upload expression file (optional) <input id="expr_file" type="file" name="expr_f
 <!-- javascript-->
 
 <script src="/js/tools/vigs.js" type="text/javascript"></script>
+<script src="/js/jquery/iframe-post-form.js" type="text/javascript"></script>
 
-<script>
+
+
+<script defer="defer">
+
     var bt2_res;
     var db;
     var db_name;
@@ -279,8 +293,40 @@ Upload expression file (optional) <input id="expr_file" type="file" name="expr_f
     var best_seq;
     var best_score;
     var coverage=0;
+
+
+    jQuery(document).ready(function () {
+
+        jQuery('#upload_expression_file').click(function () {
+	    var expr_f = jQuery('#expression_file').val();
+	    if (expr_f === '') {
+		si_rna = jQuery("#si_rna").val();
+		runBt2(si_rna);	        
+	    } else {
+                jQuery("#upload_expression_form").submit();
+	    }
+        });
+
+    	jQuery('#upload_expression_form').iframePostForm({
+	    json: true,
+	    post: function () {
+    	    },
+            complete: function (response) {
+                if (response.error) {
+	            alert(response.error);
+		    return;
+            	}
+            	if (response.success) {
+	            //alert("File uploaded successfully");
+        	    expr_file = response.expr_file;
+		    si_rna = jQuery("#si_rna").val();
+		    runBt2(si_rna);
+                }
+    	    }
+        });
+
+    });
+
 </script>
-
-
 
 
