@@ -167,7 +167,7 @@ function  selectionIndexForm(modelId, predictionPopId, predictedTraits) {
     }
    
     var rankButton =  '<tr><td>'
-        +  '<input type="submit" value="Rank" name= "rank" id="rank_genotypes"'     
+        +  '<input class="button" type="submit" value="Rank" name= "rank" id="rank_genotypes"'     
         +  '</td></tr>';
 
     var table = '<table id="selection_index_table" style="align:left;width:90%"><tr>' 
