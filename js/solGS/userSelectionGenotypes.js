@@ -47,13 +47,15 @@ function getGenotypesList(listId) {
     var genotypesList;
     
     if (! listId == "") {
-        genotypesList = list.getList(listId);
+        genotypesList = list.getListData(listId);
     }
 
     var listName = list.listNameById(listId);
-   
-    return {'name'   : listName,
-            'list'   : genotypesList             
+    var listType = list.getListType(listId);
+
+    return {'name'      : listName,
+            'list'      : genotypesList.elements,
+            'list_type' : listType,
             };
 }
 
@@ -66,7 +68,9 @@ function loadGenotypesList(listId) {
     var modelId        = getModelId();
     var traitId        = getTraitId();
     var selectionPopId = listId;
-   
+    var listType       = genoList.list_type;
+
+    alert('list type ' + listType);
     if ( list.length === 0) {       
         alert('The list is empty. Please select a list with content.' );
     }
@@ -84,14 +88,14 @@ function loadGenotypesList(listId) {
                     url: '/solgs/upload/prediction/genotypes/list',
                    
                     success: function(response) {
-                    
+                   
                     if (response.status == 'success') {
     
                         var uploadedSelPops = jQuery("#uploaded_selection_pops_table").doesExist();
                        
                         if (uploadedSelPops == false) {  
-                           
-                            uploadedSelPops = getUserUploadedSelPop(listId);                        
+                            
+                            uploadedSelPops = getUserUploadedSelPop(listId);                    
                             jQuery("#uploaded_selection_populations").append(uploadedSelPops).show();
                            
                         }
@@ -128,11 +132,15 @@ function loadGenotypesList(listId) {
                       
                     } else {
                                     
-                    alert("Error occured while uploading the list of selection genotypes.");
-                    jQuery.unblockUI();   
+                        alert("Error occured while uploading the list of selection genotypes.");
+                        jQuery.unblockUI();   
                     }
                      
-                }             
+                }
+                   //  error: function(res) {
+//                     alert("Error occured while uploading the list of selection genotypes.");
+//                     jQuery.unblockUI();   
+//                 }            
             });        
     }
 }
@@ -176,6 +184,7 @@ function getTraitId () {
 
 
 function getUserUploadedSelPop (listId) {
+   
     var genoList       = getGenotypesList(listId);
     var listName       = genoList.name;
     var list           = genoList.list;
