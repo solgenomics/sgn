@@ -41,7 +41,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
     <br>
    
     <!-- The container for the uploaded files -->
-    <div  id="uploaded_selection_populations" style="display:none"></div>
+    <div class="sub_infosectioncontent" id="uploaded_selection_populations" style="display:none"></div>
     <br>
 
 </div>
