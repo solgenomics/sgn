@@ -217,10 +217,12 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $seq_fragment = $c->req->param("seq_fragment") || 300;
     my $missmatch = $c->req->param("missmatch") || 0;
     my $coverage = $c->req->param("targets") || 0;
+    my $db = $c->req->param("database")||undef;
     my $expr_file = $c->req->param("expr_file") || undef;
     my $expr_hash = undef;
     my $status = $c->req->param("status") || 1;
     
+    #print "DB: $db\n";
 
     if (defined($expr_file)) {
 	my $expr_dir = $c->generated_file_uri('expr_files', $expr_file);
@@ -246,7 +248,12 @@ sub view :Path('/tools/vigs/view') Args(0) {
     
     my %matches;
     my @queries = ();
-        
+
+    my $bdb = CXGN::BlastDB->from_id($db);
+    my $basename = $c->config->{blast_db_path};
+    my $database = $bdb->file_base;
+    my $bdb_full_name = File::Spec->catfile($basename, $database);
+
     # send variables to VigsGraph
     my $vg = CXGN::Graphics::VigsGraph->new();
     $vg->bwafile($seq_filename.".bt2.out");
@@ -290,13 +297,13 @@ sub view :Path('/tools/vigs/view') Args(0) {
     $tmp_str = substr($query->seq(), $regions[4], $regions[5]-$regions[4]+1);
     my @seq60 = $tmp_str =~ /(.{1,60})/g;
     my $seq_str = join('<br />',@seq60);
-    
+   
     # add expression values to subjects names
     my $expr_msg;
     if (defined($$expr_hash{"header"})) {
 	$expr_msg = [$vg->add_expression_values($expr_hash)];
     } else {
-	$expr_msg = [$vg->subjects_by_match_count($vg->matches())];
+	$expr_msg = [$vg->subjects_by_match_count(0, $vg->matches())];
     }
 
     # return variables
@@ -306,7 +313,7 @@ sub view :Path('/tools/vigs/view') Args(0) {
 			 cbr_start => ($regions[4]+1),
 			 cbr_end => ($regions[5]+1),
                          expr_msg => $expr_msg,
-                         ids => [ $vg->subjects_by_match_count($vg->matches()) ],
+                         ids => [ $vg->subjects_by_match_count($bdb_full_name, $vg->matches()) ],
                          best_seq => $seq_str,
 			 query_seq => $query->seq(),
                          all_scores => $regions[2],
