@@ -49,12 +49,12 @@ Sequence:
 <input id="mm" type="input" value="0" name="mismatch" size="1" />
 <br />
 <br />
-Database <select name="database"> 
+Database <select id='bt2_db' name="database"> 
 <br />
 
 <%perl>
 foreach my $d (@databases) { 
-    print "<option id='bt2_db' value=\"".$d->id()."\">".$d->title()."</option><br />";
+    print "<option value=\"".$d->id()."\">".$d->title()."</option><br />";
 }     
 </%perl>
 </select>
@@ -69,8 +69,8 @@ foreach my $d (@databases) {
 
 <br />
 <br />
-<button type="buttom" value="clear" onClick="clearForm()">Clear</button>&nbsp; &nbsp; &nbsp;
-<button type="buttom" id="upload_expression_file" value="Run VIGS Analysis">Run VIGS Analysis</button>
+<button id="clear_form" value="clear">Clear</button>&nbsp; &nbsp; &nbsp;
+<button id="upload_expression_file" value="Run VIGS Analysis">Run VIGS Analysis</button>
 
 
 <br />
@@ -156,9 +156,9 @@ foreach my $d (@databases) {
      	 </canvas>
     </div>
     <br />
-    <button id="collapse" type="button" value="1">Expand Graph</button>
-    <button id="zoom" type="button" value="0"">Zoom In</button>
-    <button onClick="openWin()">Parameters and Help</button>
+    <button id="collapse" value="1">Expand Graph</button>
+    <button id="zoom" value="0"">Zoom In</button>
+    <button id="params_dialog">Parameters and Help</button>
 </&>
 </div>
 
