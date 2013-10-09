@@ -109,15 +109,15 @@ jQuery(document).ready(function () {
 
     });
 
-    function clearForm() {
+    jQuery('#clear_form').click(function () {
         jQuery("#sequence").val(null);
         jQuery("#si_rna").val(21);
         jQuery("#f_length").val(300);
 	jQuery("#mm").val(0);
         jQuery("#expression_file").val(null);
-    }
+    });
 
-    function openWin() {
+    jQuery('#params_dialog').click(function () {
         jQuery("tabs").css("display","inline");
 
     	$(function() {
@@ -131,11 +131,12 @@ jQuery(document).ready(function () {
 	    	title: "SGN VIGS Tool Help",
 	    });
         });
-    }
+    });
 
     function runBt2(seq, si_rna, f_length, mm, db) {
 	disable_ui();
 	var bt2_file;
+	var db_name;
 	jQuery("#no_results").html("");
 
         //alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", db: "+db+", expr_file: "+expr_file);
@@ -150,16 +151,18 @@ jQuery(document).ready(function () {
 		    alert("ERROR: "+response.error);
 		    enable_ui();
 		} else {                        
-		    jQuery("#help_fsize").html(f_length);
-		    jQuery("#help_nmer").html(si_rna);
-		    jQuery("#help_mm").html(mm);
-		    jQuery("#help_db").html(response.db_name);
-     
+		    db_name = response.db_name;
 		    bt2_file = response.jobid;
                 }
             },
       	    error: function(response) { alert("An error occurred. The service may not be available right now. Bowtie2 could not be executed");enable_ui();}
 	});
+
+	jQuery("#help_fsize").html(f_length);
+	jQuery("#help_nmer").html(si_rna);
+	jQuery("#help_mm").html(mm);
+	jQuery("#help_db").html(db_name);
+
 	return bt2_file;
     }
 
@@ -241,10 +244,20 @@ jQuery(document).ready(function () {
 		    }
  		    jQuery("#query").html(seq);
 		    hilite_sequence(best_start,best_end);
+		    
+		    var desc="";
+		    var gene_name="";
 
 		    for (var i=0; i<ids.length; i=i+1) {
-			var desc = ids[i][2].replace(/Niben\d+Scf[\:\.\d]+/,"");
-		     	t_info += "<tr><td>"+ids[i][0]+"</td><td style='text-align:right;'>"+ids[i][1]+"</td><td>"+desc+"</td></tr>";
+			if (ids[i][2].match(/Niben/)) {
+			    desc = ids[i][2].replace(/Niben\d+Scf[\:\.\d]+/,"");
+			    gene_name = ids[i][0];
+			} else if (ids[i][0].match(/Solyc/)) {
+			    desc = ids[i][2].replace(/.+functional_description:/,"");
+			    desc = desc.replace(/\"/g,"");
+			    gene_name = ids[i][0].replace(/lcl\|/,"");
+			}
+		     	    t_info += "<tr><td>"+gene_name+"</td><td style='text-align:right;'>"+ids[i][1]+"</td><td>"+desc+"</td></tr>";
 		    }
 
 		    jQuery("#target_info").html(t_info);

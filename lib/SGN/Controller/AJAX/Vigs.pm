@@ -235,7 +235,7 @@ sub view :Path('/tools/vigs/view') Args(0) {
     }
 
     $seq_filename = File::Spec->catfile($c->config->{cluster_shared_tempdir}, $seq_filename);
-    $c->stash->{rest} = {query_file => $seq_filename};
+    #$c->stash->{rest} = {query_file => $seq_filename};
     $seq_filename =~ s/\%2F/\//g;
     
 #     print STDERR "seq_filename: $seq_filename\n";
@@ -243,8 +243,8 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $io = Bio::SeqIO->new(-file=>$seq_filename, -format=>'fasta');
     my $query = $io->next_seq();
 
-    $c->stash->{rest} = {query => $query};
-    $c->stash->{rest} = {template => '/tools/vigs/view.mas'};
+    #$c->stash->{rest} = {query => $query};
+    #$c->stash->{rest} = {template => '/tools/vigs/view.mas'};
     
     my %matches;
     my @queries = ();
