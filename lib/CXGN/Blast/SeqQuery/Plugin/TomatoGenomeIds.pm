@@ -65,7 +65,7 @@ sub process {
     print STDERR "RNA: $rna_id\n";
     my @seqs = ();
     foreach my $id (@ids) { 
-	my $rs = $schema->resultset("Sequence::Feature")->search( { type_id=>$rna_id, name => { ilike => "$id".'.%.1' } );
+	my $rs = $schema->resultset("Sequence::Feature")->search( { type_id=>$rna_id, name => { ilike => "$id".'.%.1' } } );
 	if (my $row = $rs->next()) { 
 	    
 	    push @seqs, ">".$row->name."\n".$->residues();
