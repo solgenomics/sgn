@@ -140,7 +140,6 @@ jQuery(document).ready(function () {
 	jQuery("#no_results").html("");
 
         //alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", db: "+db+", expr_file: "+expr_file);
-
    	jQuery.ajax({
       	    url: '/tools/vigs/result/',
       	    async: false,

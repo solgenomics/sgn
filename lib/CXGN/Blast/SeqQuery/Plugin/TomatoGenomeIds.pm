@@ -38,7 +38,7 @@ sub validate {
     my @missing = ();
     foreach my $id (@ids) { 
 	my $rs = $schema->resultset("Sequence::Feature")->search( { type_id=>$rna_id, name => "$id" } );
-	if (! (my $row = $rs->next())) { 
+	if ($rs->count() ==0) { 
 	    push @missing, $id;
 	}
 

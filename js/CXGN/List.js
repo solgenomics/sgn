@@ -483,8 +483,10 @@ function pasteList(div_name) {
 
 function addToListMenu(listMenuDiv, dataDiv) { 
     var lo = new CXGN.List();
-    
-    var html = '<input type="text" id="'+dataDiv+'_new_list_name" size="8" /><input id="'+dataDiv+'_add_to_new_list" type="button" value="add to new list" /><br />';
+
+    var html;
+
+    html = '<input type="text" id="'+dataDiv+'_new_list_name" size="8" /><input id="'+dataDiv+'_add_to_new_list" type="button" value="add to new list" /><br />';
     html += lo.listSelect(dataDiv);
 
     html += '<input id="'+dataDiv+'_button" type="button" value="add to list" />';
