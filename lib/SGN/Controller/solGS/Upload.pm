@@ -42,7 +42,7 @@ sub upload_prediction_genotypes_file :Path('/solgs/upload/prediction/genotypes/f
     my $geno_list = $self->get_selection_genotypes_list_from_file($absolute_filename);
     
     my @genotypes_list = uniq(@$geno_list);
-    $c->stash->{prediction_genotypes_list_stocks_names} = \@genotypes_list;
+    $c->stash->{selection__genotypes_list_stocks_names} = \@genotypes_list;
     
     $c->stash->{list_name} = $file_name;
     $c->stash->{list_id}   = crc($file_name);
@@ -97,11 +97,13 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
     my @stocks_names = ();  
     foreach my $stock (@$list)
     {
-        push @stocks_names, $stock->[1];   
+        push @stocks_names, $stock->[1]; 
+        print STDERR "upload_prediction_genotypes_list stock_name:  $stock->[1]\n";
     }
     
+
     @stocks_names = uniq(@stocks_names);
-    $c->stash->{prediction_genotypes_list_stocks_names} = \@stocks_names;
+    $c->stash->{selection_genotypes_list_stocks_names} = \@stocks_names;
     
     $c->stash->{list_name} = $list_name;
     $c->stash->{list_id}   = $list_id;
@@ -110,10 +112,10 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
     $c->model('solGS::solGS')->format_user_list_genotype_data($c);
     
     $self->create_user_list_genotype_data_file($c);
-
+print STDERR "\nupload_prediction_genotypes_list stock_name: created_user_list_genotype_data-file\n";
     my $ret->{status} = 'failed';
     
-    if (-s $c->stash->{user_list_genotype_data_file}) 
+    if (-s $c->stash->{user_selection_list_genotype_data_file}) 
     {
         $ret->{status} = 'success';
     }
@@ -122,7 +124,8 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
         
     $c->res->content_type('application/json');
     $c->res->body($ret);
-    
+   # print STDERR "\nupload_prediction_genotypes_list stock_name:responded to ajax request\n";
+
 }
 
 
@@ -149,18 +152,34 @@ sub create_user_list_genotype_data_file {
       
     my $tmp_dir   = $c->stash->{solgs_prediction_upload_dir};
     my $list_id =  $c->stash->{list_id};
-   
+    my $population_type = $c->stash->{population_type};
     # if ($c->stash->{list_source}  eq 'from_db') { $list_id= $c->stash->{list_id} };
     # if ($c->stash->{list_source}  eq 'from_file') { $list_id= $c->stash->{list_id} };
 
-    my $user_id   = $c->user->id;  
-    my $geno_data = $c->stash->{user_list_genotype_data};
+    my $user_id   = $c->user->id;
+    my $geno_data;
+    
+    if ($population_type =~ /reference/) 
+    {   
+        $geno_data = $c->stash->{user_reference_list_genotype_data};
+    }
+    else 
+    {
+        $geno_data = $c->stash->{user_selection_list_genotype_data};    
+    }
+
     my $file = catfile ($tmp_dir, "genotype_data_${user_id}_${list_id}");
 
     write_file($file, $geno_data);
 
-    $c->stash->{user_list_genotype_data_file} = $file;
-
+    if ($population_type =~ /reference/) 
+    {
+        $c->stash->{user_reference_list_genotype_data_file} = $file;
+    }
+    else
+    {
+        $c->stash->{user_selection_list_genotype_data_file} = $file;   
+    }
 
 }
 
@@ -348,13 +367,84 @@ sub user_prediction_population_file {
 
     #}
 
-    $c->stash->{user_list_genotype_data_file} = $pred_pop_file;
+    $c->stash->{user_selection_list_genotype_data_file} = $pred_pop_file;
    
     $fh->print($pred_pop_file);
     $fh->close; 
 
     $c->stash->{prediction_population_file} = $tempfile;
   
+}
+
+
+
+sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/list') Args(0) {
+    my ($self, $c) = @_;
+    
+    my $list_id    = $c->req->param('id');
+    my $list_name  = $c->req->param('name');   
+    my $list       = $c->req->param('list');
+
+    my $population_type          = $c->req->param('population_type');
+    $c->stash->{population_type} = $population_type;
+
+    $list =~ s/\\//g;
+    $list = from_json($list);
+ 
+    my @plots_names = ();  
+    foreach my $plot (@$list)
+    {
+        push @plots_names, $plot->[1]; 
+        print STDERR "upload_prediction_genotypes_list stock_name:  $plot->[1]\n";
+    }
+    
+
+   # @stocks_names = uniq(@stocks_names);
+
+    my $accessions = $self->parse_accessions_from_plot_names(\@plots_names);
+    $c->stash->{reference_genotypes_list_stocks_names} = $accessions;
+    
+    $c->stash->{list_name} = $list_name;
+    $c->stash->{list_id}   = $list_id;
+
+   # $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->model('solGS::solGS')->format_user_list_genotype_data($c);
+    
+    $self->create_user_list_genotype_data_file($c);
+    my $geno_file = $c->stash->{user_reference_list_genotype_data_file};
+    print STDERR "\nupload_prediction_genotypes_list geno_file:  $geno_file\n";
+    my $ret->{status} = 'failed';
+    
+    if (-s $c->stash->{user_reference_list_genotype_data_file}) 
+    {
+        $ret->{status} = 'success';
+ print STDERR "\nupload_prediction_genotypes_list geno_file: $geno_file\n";
+    }
+               
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+   # print STDERR "\nupload_prediction_genotypes_list stock_name:responded to ajax request\n";
+
+}
+
+
+sub parse_accessions_from_plot_names {
+    my ($self, $plots) = @_;
+
+    my @accessions = ();
+   
+    foreach my $plot ( @$plots ) {
+        my ($accession, $more_stuff) = split(/_plot_/, $plot);
+        print STDERR "\naplot: $plot \t accession: $accession \t more_stuff: $more_stuff\n";
+        push @accessions, $accession;
+  }  
+    my $count1 = scalar(@accessions);
+    @accessions = uniq(@accessions);
+     my $count2 = scalar(@accessions);
+    print STDERR "\naccesions count: $count1 vs $count2\n";
+    return \@accessions;
 }
 
 

@@ -32,7 +32,7 @@ if ($current_page > 1) { $collapse = 0; }
 
 </%perl>
 
-<link rel="stylesheet" href="/css/solgs/solgs_formfu.css" type="text/css" />
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 
 
@@ -75,5 +75,16 @@ if ($current_page > 1) { $collapse = 0; }
    pager      => $pager,
    page_links => $page_links,
 &>
+   
+</&>
+
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => $collapse,
+    title       => "Upload a reference population",
+  &>
+
+  <& /solgs/population/user_reference_genotypes.mas &>
    
 </&>

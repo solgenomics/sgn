@@ -154,6 +154,7 @@ sub project_details {
         ->search( {'me.project_id' => $pr_id});
 }
 
+
 sub get_population_details {
     my ($self, $c, $pop_id) = @_;
    
@@ -289,42 +290,95 @@ sub search_stock {
 sub format_user_list_genotype_data {
     my ($self, $c) = @_;
 
-    my @stocks_names = @{ $c->stash->{prediction_genotypes_list_stocks_names} };
+    my @stocks_names = ();
+    my $population_type = $c->stash->{population_type};
     
-    my $cnt = 0;
+    if($population_type =~ /reference/) 
+    {
+        @stocks_names = @{ $c->stash->{reference_genotypes_list_stocks_names} };
+    }
+    else
+    {
+        @stocks_names = @{ $c->stash->{selection_genotypes_list_stocks_names} };
+    }    
+    
+    my $cnt1 = 0;
+    my $cnt2=0;
+    my $cnt3 = 0;
     my $header_markers;
     my $geno_data;
+    my @sts = ();
 
+my @prototype_stocks = ('CB-10(80411)','I95D069','MM961751','MM961871','MM964496','MM965280','MM96JW1','O8400275','O8800695','O8900003','TMS-B9100455','TMS-I30001','TMS-I30040','TMS-I30211','TMS-I30555','TMS-I30555P3-2','TMS-I30572','TMS-I40764','TMS-I42025','TMS-I4(2)1425','TMS-I60142','TMS-I60506','TMS-I63397','TMS-I71673','TMS-I8101635','TMS-I8200058','TMS-I8400353','TMS-I84537','TMS-I8500680','TMS-I8700052','TMS-I8802090','TMS-I8802343','TMS-I8900250','TMS-I8900963','TMS-I8902195','TMS-I9001554','TMS-I9100416','TMS-I9100420','TMS-I9100459','TMS-I9101730','TMS-I9102312','TMS-I9102322','TMS-I9102324','TMS-I9102325','TMS-I91934','TMS-I920057','TMS-I920067','TMS-I920110','TMS-I920325','TMS-I920326','TMS-I920342','TMS-I920397','TMS-I920398','TMS-I920427','TMS-I920429','TMS-I930007','TMS-I930084','TMS-I930098','TMS-I930114','TMS-I930134','TMS-I930184','TMS-I930223','TMS-I930248','TMS-I930265','TMS-I930266','TMS-I930272','TMS-I940006','TMS-I940018','TMS-I940026','TMS-I940039','TMS-I940237','TMS-I940239','TMS-I940263','TMS-I940270','TMS-I940330','TMS-I940459','TMS-I940561','TMS-I950041','TMS-I950058','TMS-I950061','TMS-I950063','TMS-I950104','TMS-I950166','TMS-I950211','TMS-I950248','TMS-I950269','TMS-I950279','TMS-I950289','TMS-I950306','TMS-I950379','TMS-I950528','TMS-I950645','TMS-I950902','TMS-I950925','TMS-I950947','TMS-I950971','TMS-I951038','TMS-I960011','TMS-I960016','TMS-I960023','TMS-I960035','TMS-I960062','TMS-I960102','TMS-I960249','TMS-I960304','TMS-I960409','TMS-I960532','TMS-I960557','TMS-I960565','TMS-I960590','TMS-I960595','TMS-I960596','TMS-I960603','TMS-I960619','TMS-I960860','TMS-I960869','TMS-I960963','TMS-I960986','TMS-I961039','TMS-I961087','TMS-I961165','TMS-I961317','TMS-I961427','TMS-I961431','TMS-I961439','TMS-I961551','TMS-I961556','TMS-I961569','TMS-I961613','TMS-I961630','TMS-I961632','TMS-I961642','TMS-I961708','TMS-I970103','TMS-I970162','TMS-I970211','TMS-I970255','TMS-I970286','TMS-I970296','TMS-I970299','TMS-I970335','TMS-I970425','TMS-I971149','TMS-I971228','TMS-I972205','TMS-I974013','TMS-I974580','TMS-I974763','TMS-I974766','TMS-I974769','TMS-I974779','TMS-I980002','TMS-I980196','TMS-I980378','TMS-I980406','TMS-I980505','TMS-I980510','TMS-I982101','TMS-I982132','TMS-I982226','TMS-I990111','TMS-I990114','TMS-I990119','TMS-I990222','TMS-I990304','TMS-I990411','TMS-I990503','TMS-I990543','TMS-I990554','TMS-I990564','TMS-I990621','TMS-I991579','TMS-I991590','TMS-I991702','TMS-I991734','TMS-I991903','TMS-I992123','TMS-I993073','TMS-I993151','TMS-I996012','TMS-I996016','TMS-I996017','TMS-I996069','TMS-I996076','TMS-I997533','TMS-J920253','TMS-K950286','TMS-K950562','TMS-K950671','TMS-K950725','TMS-M940583','TMS-M980004','TMS-M980028','TMS-M980040','TMS-M980057','TMS-M980068','TMS-M980115','TMS-O8500066','TMS-O8700813','TMS-O920168','TMS-W940102','TMS-Z920250','TMS-Z960058','TMS-Z970002','W4092','W820249','W940009','W940017','W940727','Z930151','Z940033','Z940153','Z940394','Z950415','Z950432','Z950680','Z960012','Z970474');
+
+
+#     print STDERR "\nformat_user_list_genotype_data size: $size\tcnt: $cnt1\t cnt2: $cnt2\tcnt3: $cnt3\n";
+   @stocks_names = @prototype_stocks; 
     foreach my $stock_name (@stocks_names)
     {
+        #print STDERR "\nformat_user_list_genotype_data: stock_name: $stock_name\n";
         my $stock_rs = $self->search_stock($c, $stock_name);
         my $stock_genotype_rs = $self->individual_stock_genotypes_rs($stock_rs);
        
-        $cnt++;
-        if($cnt == 1)
-        {
+       
+      #  while ( my $st = $stock_rs->next) {
+            
+            $cnt1++;
+      #      push @sts, $st->id;
+      #  }
+       # if($cnt == 1)
+       # {
+        unless ($header_markers) {
             $header_markers   = $self->extract_project_markers($stock_genotype_rs);
+           # print STDERR "\nformat_user_list_genotype_data header_markers : $header_markers\n";
             $geno_data = "\t" . $header_markers . "\n";
-           
         }
+           
+       # }
 
         my @header_markers = split(/\t/, $header_markers);
-    
+           
         while (my $geno = $stock_genotype_rs->next)
-        {        
+        {  $cnt2++; 
+           # if ($geno) 
+           # {
+               
+           # print STDERR "\nformat_user_list_genotype_data geno : $geno\n";
             my $json_values  = $geno->value;
             my $values       = JSON::Any->decode($json_values);
             my @markers      = keys %$values;
 
-            if (@header_markers && @markers ~~ @header_markers) 
-            {
+            if (@header_markers && @markers ~~ @header_markers)
+                
+            { $cnt3++;
+                 my $size1 = scalar(@header_markers); my $size2 = scalar(@markers);
+                 print STDERR "\nformat_user_list_genotype_data marker no: count: $cnt3\t $size1 vs $size2 \n";
+                 my $size1 = scalar(@prototype_stocks); my $size2 = scalar(@stocks_names);
+               
                 my $geno_values = $self->stock_genotype_values($c, $geno);               
                 $geno_data .= $geno_values;
             }
+
+            if($values) {
+               # $cnt2++;
+            }
+           # }
         }       
     }
+    my $size1 = scalar(@prototype_stocks); my $size2 = scalar(@stocks_names);
+  print STDERR "\nformat_user_list_genotype_data cnt1: $cnt1\t cnt2: $cnt2\tcnt3: $cnt3\t $size1 vs $size2 \n"; 
+   # $cnt1=0;
 
-    $c->stash->{user_list_genotype_data} = $geno_data;
+
+
+    if($population_type =~ /reference/) 
+    {
+        $c->stash->{user_reference_list_genotype_data} = $geno_data;
+    }
+    else
+    {
+        $c->stash->{user_selection_list_genotype_data} = $geno_data;   
+    }
 
 }
 
@@ -373,21 +427,21 @@ sub stock_genotypes_rs {
 
 sub extract_project_markers {
     my ($self, $genopropvalue_rs) = @_;
-    
-    my $row = $genopropvalue_rs->single;
+         
+    my $row = $genopropvalue_rs->single; 
 
     my $genotype_json = $row->value;
     my $genotype_hash = JSON::Any->decode($genotype_json);
-
-    my $markers;
+           
     my @markers = keys %$genotype_hash;
-   
+    my $markers;
     foreach my $marker (@markers) 
     {
         $markers .= $marker;
         $markers .= "\t" unless $marker eq $markers[-1];
     }
-
+            
+  
     return $markers;  
 }
 
@@ -655,3 +709,4 @@ __PACKAGE__->meta->make_immutable;
 #####
 1;
 #####
+

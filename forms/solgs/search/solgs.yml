@@ -20,3 +20,5 @@ elements:
        - type: Submit
          name: search
          value: Search
+         attributes:
+           class: fieldset button
