@@ -1,112 +1,150 @@
 
 
+function show_help_dialog(msg_id_num) {
+    var msg_id;
+    if (msg_id_num == 0) {
+	alert(
+	    "• The score value indicates how good is the yellow region to silence only the targets and avoiding off-targets. The closer to 100 the better is the value. In the same way, the custom score indicates the value of the custom region, represented by the transparent grey rectangle.\n\n"
+	    +"• Set Custom Region button will activate a draggable and resizable transparent grey rectangle to select a custom region.\n\n"
+	    +"• Change button will recalculate the results using the new parameters chosen. In case of changing the n-mer size, the algorithm will run Bowtie 2 again, so this process could take a while.\n\n"
+	);
+    }
+    if (msg_id_num == 1) {
+	alert(
+	    "• Targets are shown in blue, off-targets in red, the yellow area highlights the region of highest score (for the selected fragment size).\n\n"
+    	    +"• At the bottom the score graph shows score values in a red line over a black background. Score value = 0 is represented by the green line, under this line are represented the regions with more off-targets than targets, and the opposite when the score is over the green line.\n\n"
+
+	    +"• Expand graph button will display every siRNA fragment aligned over the query for each subject.\n\n"
+	    +"• Zoom button will zoom in/out the VIGS map representation.\n"
+	);
+    }
+    if (msg_id_num == 2) {
+	alert(
+	    "• This section shows the best or the custom region sequence in FASTA format.\n\n"
+	    +"• The custom region will update as the grey selection rectangle is moved.\n"
+	);
+    }
+    if (msg_id_num == 3) {
+        alert(
+            "• In this section is shown your query sequence, highlighting in yellow the best or custom region.\n\n"
+	    +"• The custom region will update as the grey selection rectangle is moved.\n"
+	);
+    }
+    if (msg_id_num == 4) {
+        alert(
+            "• In this section is displayed each subject name, their number of matches over the query and their gene functional description.\n\n"
+	    +"• The View link will open a draggable dialog with this information."
+	);
+    }
+}
+
+
 jQuery(document).ready(function () {
-        var score_array;
-	var seq;
-	var seq_length;
-	var bt2_file;
-	var best_start;
-	var best_end;
-	var best_seq;
-	var expr_msg;
-	var expr_f;
-	var ids;
-    	var m_aoa;
+    var score_array;
+    var seq;
+    var seq_length;
+    var bt2_file;
+    var best_start;
+    var best_end;
+    var best_seq;
+    var expr_msg;
+    var expr_f;
+    var ids;
+    var m_aoa;
 
-        jQuery('#upload_expression_file').click(function () {
+
+    jQuery('#upload_expression_file').click(function () {
 	     
-            seq = jQuery("#sequence").val();
-	    seq_length = seq.length;
-            si_rna = jQuery("#si_rna").val();
-            f_length = jQuery("#f_length").val();
-	    mm = jQuery("#mm").val();
-            db = jQuery("#bt2_db").val();
-	    expr_f = jQuery('#expression_file').val();
+        seq = jQuery("#sequence").val();
+	seq_length = seq.length;
+        si_rna = jQuery("#si_rna").val();
+        f_length = jQuery("#f_length").val();
+	mm = jQuery("#mm").val();
+        db = jQuery("#bt2_db").val();
+	expr_f = jQuery('#expression_file').val();
 
-	    if (expr_f === '') {
-		bt2_file = runBt2(seq, si_rna, f_length, mm, db);
-		res = getResults(1, bt2_file, seq, si_rna, f_length, mm, 0, db, expr_f);    
-  		score_array = res[0];
-		seq = res[1];
-		best_seq = res[2];
-		expr_msg = res[3];
-		ids = res[4];
-		m_aoa = res[5];
-	    } else {
-                jQuery("#upload_expression_form").submit();
-	    }
-        });
-
-    	jQuery('#upload_expression_form').iframePostForm({
-	    json: true,
-	    post: function () {
-    	    },
-            complete: function (response) {
-                if (response.error) {
-	            alert(response.error);
-		    return;
-            	}
-            	if (response.success) {
-        	    expr_f = response.expr_file;
-
-            	    seq = jQuery("#sequence").val();
-            	    si_rna = jQuery("#si_rna").val();
-            	    f_length = jQuery("#f_length").val();
-	    	    mm = jQuery("#mm").val();
-            	    db = jQuery("#bt2_db").val();
-
-		    bt2_file = runBt2(seq, si_rna, f_length, mm, db);
-		    res = getResults(1, bt2_file, seq, si_rna, f_length, mm, 0, db, expr_f);
-		    score_array = res[0];
-		    seq = res[1];
-		    best_seq = res[2];
-		    expr_msg = res[3];
-    		    ids = res[4];
- 		    m_aoa = res[5];
-               }
-    	    }
-        });
-
-        jQuery('#collapse').click(function () {
-	    activateCollapse(score_array,best_seq,seq,expr_msg,ids,m_aoa);
-	});
-
-        jQuery('#zoom').click(function () {
-	    activateZoom(score_array,best_seq,seq,expr_msg,ids,m_aoa);
-	});
-
-	jQuery('#set_custom').click(function () {
-	    getCustomRegion(score_array,best_seq,seq);
-	});
-
-	jQuery('#change_par').click(function () {
-	    res = changeTargets(seq,bt2_file,score_array,seq,best_seq,expr_f,ids,m_aoa);
-	    score_array = res[0];
+	if (expr_f === '') {
+	    bt2_file = runBt2(seq, si_rna, f_length, mm, db);
+	    res = getResults(1, bt2_file, seq, si_rna, f_length, mm, 0, db, expr_f);    
+  	    score_array = res[0];
 	    seq = res[1];
 	    best_seq = res[2];
 	    expr_msg = res[3];
 	    ids = res[4];
 	    m_aoa = res[5];
+	} else {
+            jQuery("#upload_expression_form").submit();
+	}
+    });
+
+    jQuery('#upload_expression_form').iframePostForm({
+	json: true,
+	post: function () {
+    	},
+        complete: function (response) {
+            if (response.error) {
+	        alert("The expression file could not be uploaded"+response.error);
+		return;
+            }
+            if (response.success) {
+        	expr_f = response.expr_file;
+
+            	seq = jQuery("#sequence").val();
+            	si_rna = jQuery("#si_rna").val();
+            	f_length = jQuery("#f_length").val();
+	    	mm = jQuery("#mm").val();
+            	db = jQuery("#bt2_db").val();
+
+		bt2_file = runBt2(seq, si_rna, f_length, mm, db);
+		res = getResults(1, bt2_file, seq, si_rna, f_length, mm, 0, db, expr_f);
+		score_array = res[0];
+		seq = res[1];
+		best_seq = res[2];
+		expr_msg = res[3];
+    		ids = res[4];
+ 		m_aoa = res[5];
+            }
+    	}
+    });
+
+    jQuery('#collapse').click(function () {
+	activateCollapse(score_array,best_seq,seq,expr_msg,ids,m_aoa);
+    });
+
+    jQuery('#zoom').click(function () {
+	activateZoom(score_array,best_seq,seq,expr_msg,ids,m_aoa);
+    });
+
+    jQuery('#set_custom').click(function () {
+	getCustomRegion(score_array,best_seq,seq);
+    });
+
+    jQuery('#change_par').click(function () {
+	res = changeTargets(seq,bt2_file,score_array,seq,best_seq,expr_f,ids,m_aoa);
+	score_array = res[0];
+	seq = res[1];
+	best_seq = res[2];
+	expr_msg = res[3];
+	ids = res[4];
+	m_aoa = res[5];
+    });
+
+    jQuery('#region_square').mouseup(function () {
+	getSquareCoords(score_array,best_seq,seq);
+    });
+        
+    jQuery('#open_descriptions_dialog').click(function () {
+	jQuery('#dialog_info').replaceWith(jQuery('#target_info').clone());
+
+        jQuery('#desc_dialog').dialog({
+	    draggable:true,
+	    resizable:false,
+	    width:900,
+	    minWidth:400,
+	    maxHeight:400,
+	    closeOnEscape:true,
+	    title: "Gene Functional annotation",
 	});
-
-	jQuery('#region_square').mouseup(function () {
-	    getSquareCoords(score_array,best_seq,seq);
-	});
-
-	jQuery('#open_descriptions_dialog').click(function () {
-	    $('#dialog_info').replaceWith($('#target_info').clone());
-
-            jQuery('#desc_dialog').dialog({
-	       	draggable:true,
-		resizable:false,
-	        width:900,
-		minWidth:400,
-		maxHeight:400,
-	    	closeOnEscape:true,
-	    	title: "Gene Functional annotation",
-	    });
-        });
-
     });
 
     jQuery('#clear_form').click(function () {
@@ -118,19 +156,12 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#params_dialog').click(function () {
-        jQuery("tabs").css("display","inline");
-
-    	$(function() {
-    	    $( "#tabs" ).tabs();
-    	    $( "#tabs" ).dialog({
-		draggable:true,
-		resizable:false,
-	        width:450,
-		height:300,
-	    	closeOnEscape:true,
-	    	title: "SGN VIGS Tool Help",
-	    });
-        });
+	alert(
+	    "• Fragment size: "+jQuery("#help_fsize").val()+"\n"
+	    +"• n-mer: "+jQuery("#help_nmer").val()+"\n"
+	    +"• Mismatches: "+jQuery("#help_mm").val()+"\n"
+	    +"• Database: "+jQuery("#db_name").val()+"\n"
+	);
     });
 
     function runBt2(seq, si_rna, f_length, mm, db) {
@@ -157,10 +188,10 @@ jQuery(document).ready(function () {
       	    error: function(response) { alert("An error occurred. The service may not be available right now. Bowtie2 could not be executed");enable_ui();}
 	});
 
-	jQuery("#help_fsize").html(f_length);
-	jQuery("#help_nmer").html(si_rna);
-	jQuery("#help_mm").html(mm);
-	jQuery("#help_db").html(db_name);
+	jQuery("#help_fsize").val(f_length);
+	jQuery("#help_nmer").val(si_rna);
+	jQuery("#help_mm").val(mm);
+	jQuery("#db_name").val(db_name);
 
 	return bt2_file;
     }
@@ -208,12 +239,11 @@ jQuery(document).ready(function () {
 		     	jQuery("#score_p").html("<b>Score:</b> "+best_score+" &nbsp;&nbsp;(-&infin;&mdash;100)<br />");
 		     	jQuery("#t_num").val(coverage);
 		    } else {
-		        jQuery("#no_results").html("Note: No results found!");
+		        jQuery("#no_results").html("Note: No results found! Try again increasing the number of targets, decreasing the fragment size or modifing other parameters");
 		    }
 		    
 		    //show result sections
-		    jQuery("#hide2").css("display","inline");
-		    jQuery("#hide3").css("display","inline");
+		    jQuery("#hide1").css("display","inline");
 		    
 		    //assign values to html variables
 		    jQuery("#coverage_val").val(coverage);
@@ -260,12 +290,14 @@ jQuery(document).ready(function () {
 		    }
 
 		    jQuery("#target_info").html(t_info);
-		    jQuery("#hide4").css("display","inline");
-		    jQuery("#hide5").css("display","inline");
+		    jQuery("#hide2").css("display","inline");
+		    jQuery("#hide3").css("display","inline");
                 }
             },
       	    error: function(response) { alert("An error occurred. The service may not be available right now.");enable_ui();}
 	});
+	jQuery("#help_fsize").val(f_length);
+	jQuery("#help_mm").val(mm);
 
 	return [score_array,seq,best_seq,expr_msg,ids,m_aoa];
     }
@@ -760,25 +792,23 @@ jQuery(document).ready(function () {
 	    var cbr_height = (map_el.height - 21);
 
 	    //a border will add pixels to all end coordinates
-	    document.getElementById("region_square").style.border="0px solid #000000";
-	    document.getElementById("region_square").style.top="21px";
-	    document.getElementById("region_square").style.background="rgba(80,100,100,0.3)";
-	    document.getElementById("region_square").style.left=""+cbr_left+"px";
-	    document.getElementById("region_square").style.width=""+cbr_width+"px";
-	    document.getElementById("region_square").style.height=""+cbr_height+"px";
+	    jQuery("#region_square").css("border","0px solid #000000");
+	    jQuery("#region_square").css("top","21px");
+	    jQuery("#region_square").css("background","rgba(80,100,100,0.3)");
+	    jQuery("#region_square").css("left",cbr_left+"px");
+	    jQuery("#region_square").css("width",cbr_width+"px");
+	    jQuery("#region_square").css("height",cbr_height+"px");
 
-	   $(document).ready(function() {
-    		jQuery("#region_square").resizable({
-		    containment:map_el,
-		    handles: 'e, w',
-		    minWidth: 100*xscale,
-		});
+    	    jQuery("#region_square").resizable({
+		containment:map_el,
+		handles: 'e, w',
+		minWidth: 100*xscale,
+	    });
 
-		jQuery("#region_square").draggable({
-		    axis: 'x',
-		    containment:map_el,
-		    cursor: "move"
-		});
+	    jQuery("#region_square").draggable({
+		axis: 'x',
+		containment:map_el,
+		cursor: "move"
 	    });
 			
 	    jQuery("#cbr_p").html("");
@@ -799,7 +829,7 @@ jQuery(document).ready(function () {
     }	
 
 
-function changeTargets(seq,bt2_file,score_array,seq,best_seq,expr_f,ids,m_aoa) {
+    function changeTargets(seq,bt2_file,score_array,seq,best_seq,expr_f,ids,m_aoa) {
         var t_num = jQuery("#t_num").val();
         var coverage = jQuery("#coverage_val").val();
         var f_size = jQuery("#f_size").val();
@@ -841,14 +871,10 @@ function changeTargets(seq,bt2_file,score_array,seq,best_seq,expr_f,ids,m_aoa) {
 	    ids = res[4];
 	    m_aoa = res[5];
 
-	    jQuery("#help_fsize").html(f_size);
-	    jQuery("#help_mm").html(align_mm);
-
 	    getCustomRegion(score_array,best_seq,seq)
         } else if (t_num != coverage || f_size != f_length) {
 	    jQuery("#f_length").val(f_size);
 	    jQuery("#coverage_val").val(t_num);
-	    jQuery("#help_fsize").html(f_size);
 
 	    res = getResults(0, bt2_file, seq, n_mer, f_size, align_mm, t_num, db, expr_f);
 	    score_array = res[0];
@@ -885,6 +911,9 @@ function changeTargets(seq,bt2_file,score_array,seq,best_seq,expr_f,ids,m_aoa) {
 	jQuery("input").prop("disabled", false);
     }
 
+
+
+});
 
 
 
