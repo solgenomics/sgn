@@ -68,7 +68,7 @@ sub process {
 	my $rs = $schema->resultset("Sequence::Feature")->search( { type_id=>$rna_id, name => { ilike => "$id".'.%.1' } } );
 	if (my $row = $rs->next()) { 
 	    
-	    push @seqs, ">".$row->name."\n".$->residues();
+	    push @seqs, ">".$row->name."\n".$row->residues();
 	}
 	else { 
 	    	    die "ID $id does not exist!";
