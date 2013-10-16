@@ -20,9 +20,6 @@ sub validate {
     my @missing = ();
     foreach my $term (@$list) { 
 
-	my ($db_name, $accession) = split ":", $term;
-	
-	print STDERR "Checking $term...\n";
 	my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search( { name => $term } );
 
 	if ($rs->count == 0) { 
