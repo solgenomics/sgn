@@ -45,8 +45,14 @@ sub download_phenotype_spreadsheet_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_id = $c->req->param('trial_id');
-  my $list_id = $c->req->param('list_id');
-  my $create_spreadsheet = CXGN::Phenotypes::CreateSpreadsheet->new({schema => $schema, trial_id => $trial_id, list_id => $list_id});
+  my $trait_list_ref = $c->req->param('trait_list');
+  my @trait_list = @{$trait_list_ref};
+  my $create_spreadsheet = CXGN::Phenotypes::CreateSpreadsheet
+    ->new({
+	   schema => $schema,
+	   trial_id => $trial_id,
+	   trait_list => \@trait_list,
+	  });
   my $created = $create_spreadsheet->create();
   my $filename;
   if (!$created) {

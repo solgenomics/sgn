@@ -6,7 +6,7 @@ CXGN::Phenotypes::CreateSpreadsheet - an object to create a spreadsheet for coll
 
 =head1 USAGE
 
- my $phenotype_spreadsheet = CXGN::Phenotypes::CreateSpreadsheet->new({schema => $schema, trial_id => $trial_id, list_id => $list_id} );
+ my $phenotype_spreadsheet = CXGN::Phenotypes::CreateSpreadsheet->new({schema => $schema, trial_id => $trial_id, trait_list => \$trait_list} );
  $create_spreadsheet->create();
 
 =head1 DESCRIPTION
@@ -36,7 +36,7 @@ has 'schema' => (
 		 required => 1,
 		);
 has 'trial_id' => (isa => 'Int', is => 'rw', predicate => 'has_trial_id', required => 1);
-has 'list_id' => (isa => 'Int', is => 'rw', predicate => 'has_list_id', required => 1);
+has 'trait_list' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_trait_list', required => 1);
 has 'filename' => (isa => 'Str', is => 'ro',
 		   predicate => 'has_filename',
 		   reader => 'get_filename',
@@ -49,7 +49,7 @@ sub _verify {
     my $self = shift;
 
     my $trial_id = $self->get_trial_id();
-    my $list_id = $self->get_list_id();
+    my @trait_list = @{$self->get_trait_list()};
 
     return 1;
 }
@@ -59,7 +59,7 @@ sub create {
     my $self = shift;
     my $schema = $self->get_schema();
     my $trial_id = $self->get_trial_id();
-    my $list_id = $self->get_list_id();
+    my @trait_list = @{$self->get_trait_list()};
     my $spreadsheet_metadata = $self->get_file_metadata();
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
     my %design = %{$trial_layout->get_design()};
