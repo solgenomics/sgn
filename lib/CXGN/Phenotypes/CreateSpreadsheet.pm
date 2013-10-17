@@ -6,8 +6,8 @@ CXGN::Phenotypes::CreateSpreadsheet - an object to create a spreadsheet for coll
 
 =head1 USAGE
 
- my $phenotype_spreadsheet = CXGN::Phenotypes::CreateSpreadsheet->new();
- $create_spreadsheet->create($c,$trial_id, \@trait_list, \%spreadsheet_metadata);
+ my $phenotype_spreadsheet = CXGN::Phenotypes::CreateSpreadsheet->new({schema => $schema, trial_id => $trial_id, list_id => $list_id} );
+ $create_spreadsheet->create();
 
 =head1 DESCRIPTION
 
@@ -21,6 +21,8 @@ CXGN::Phenotypes::CreateSpreadsheet - an object to create a spreadsheet for coll
 use strict;
 use warnings;
 use Moose;
+use MooseX::FollowPBP;
+use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use Digest::MD5;
@@ -28,39 +30,48 @@ use CXGN::List::Validate;
 use Data::Dumper;
 use CXGN::Trial::TrialLayout;
 
+has 'schema' => (
+		 is       => 'rw',
+		 isa      => 'DBIx::Class::Schema',
+		 required => 1,
+		);
+has 'trial_id' => (isa => 'Int', is => 'rw', predicate => 'has_trial_id', required => 1);
+has 'list_id' => (isa => 'Int', is => 'rw', predicate => 'has_list_id', required => 1);
+has 'filename' => (isa => 'Str', is => 'ro',
+		   predicate => 'has_filename',
+		   reader => 'get_filename',
+		   writer => '_set_filename',
+		  );
+has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
+
+
 sub _verify {
     my $self = shift;
-    my $c = shift;
-    my $trial_id = shift;
-    my $trait_list_ref = shift;
-    my $spreadsheet_metadata_ref = shift;
+
+    my $trial_id = $self->get_trial_id();
+    my $list_id = $self->get_list_id();
+
     return 1;
 }
 
 
 sub create {
     my $self = shift;
-    my $c = shift;
-    my $self = shift;
-    my $c = shift;
-    my $trial_id = shift;
-    my $trait_list_ref = shift;
-    my $spreadsheet_metadata_ref = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $self->get_schema();
+    my $trial_id = $self->get_trial_id();
+    my $list_id = $self->get_list_id();
+    my $spreadsheet_metadata = $self->get_file_metadata();
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
-
     my %design = %{$trial_layout->get_design()};
     my @plot_names = @{$trial_layout->get_plot_names};
 
     foreach my $key (sort { $a <=> $b} keys %design) {
       my %design_info = %{$design{$key}};
-      my $plot_name = $design_info{'plot_name'];
-      my $block_number = $design_info{'block_number'];
-      my $rep_number = $design_info{'rep_number'];
-
+      my $plot_name = $design_info{'plot_name'};
+      my $block_number = $design_info{'block_number'};
+      my $rep_number = $design_info{'rep_number'};
+      print STDERR "spreadsheet row:  $plot_name $block_number $rep_number\n";
     }
-
-
 
     return 1;
 }
