@@ -75,7 +75,7 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
 </&>
 
 
-<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>'[<a id="download_spreadsheet_link">Download Spreadsheet</a>] [<a id="create_fieldbook_link">Create Field Book</a>]' &>
+<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, &>
 
 %print "Design: $design_type <br /><br />";
 %print "Number of blocks: $number_of_blocks <br />";
@@ -96,7 +96,7 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
 
 </&>
 
-<&| /page/info_section.mas, title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $plots_empty&>
+<&| /page/info_section.mas, title=>"Plots",  is_subsection => 0, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $plots_empty&>
 % foreach my $plot (@plot_names) { 
 %  print "$plot <br />\n";
 %}
@@ -118,6 +118,32 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
 %   print $p."<br />\n";
 % }
 
+<&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
+
+<&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+
+<&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_spreadsheet_link">Create Spreadsheet</a>]' &>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Android Field Book Layout", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_fieldbook_link">Create Field Book</a>]' &>
+
+</&>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+
+<&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_phenotyping_spreadsheet_link">Upload</a>]'&>
+</&>
+<&| /page/info_section.mas, title=>"Android Field Book Exported", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_field_book_link">Upload</a>]'&>
+</&>
+</&>
+
+</&>
+
+
+
 <div
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
@@ -137,10 +163,10 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
 <script defer="defer">
 
 jQuery(document).ready(function () {
-    jQuery('#download_spreadsheet_link').click(function () {
-        open_download_spreadsheet_dialog();
+    jQuery('#create_spreadsheet_link').click(function () {
+        open_create_spreadsheet_dialog();
     });
-    function open_download_spreadsheet_dialog() {
+    function open_create_spreadsheet_dialog() {
         var trialID = parseInt(jQuery('#trialIDDiv').text());
         var listID = '1';
         new jQuery.ajax({
@@ -154,7 +180,7 @@ jQuery(document).ready(function () {
         success: function (response) {
           if (response.error) {
             alert(response.error);
-            jQuery('#open_download_spreadsheet_dialog').dialog("close");
+            jQuery('#open_create_spreadsheet_dialog').dialog("close");
           } else {
             alert('success');
 
