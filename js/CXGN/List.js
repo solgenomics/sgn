@@ -53,9 +53,12 @@ CXGN.List.prototype = {
 		    alert(response.error);
 		}
 		else { 
-		    list = response.elements;
+		    if (response.elements) { 
+			for(var i=0; i<response.elements.length; i++) { 
+			    list.push(response.elements[i][1]);
+			}
+		    }
 		}
-		
 	    }
 	});
 	return list;
