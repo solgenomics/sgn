@@ -44,9 +44,8 @@ CXGN.List.prototype = {
 	var list;
 	
 	jQuery.ajax( { 
-	    url: '/list/contents',
+	    url: '/list/contents/'+list_id,
 	    async: false,
-	    data: { 'list_id':list_id },
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
