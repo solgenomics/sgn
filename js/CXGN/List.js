@@ -37,15 +37,14 @@ CXGN.List = function () {
 
 CXGN.List.prototype = { 
     
-
-    // deprecated. Use getListData.
+    // Return the data as a straight list
     //
     getList: function(list_id) { 
 	
 	var list;
 	
 	jQuery.ajax( { 
-	    url: '/list/get',
+	    url: '/list/contents',
 	    async: false,
 	    data: { 'list_id':list_id },
 	    success: function(response) { 
@@ -53,11 +52,7 @@ CXGN.List.prototype = {
 		    alert(response.error);
 		}
 		else { 
-		    if (response.elements) { 
-			for(var i=0; i<response.elements.length; i++) { 
-			    list.push(response.elements[i][1]);
-			}
-		    }
+		    list = response.list;
 		}
 	    }
 	});
