@@ -72,16 +72,25 @@ sub retrieve_list {
     while (my ($id, $content) = $h->fetchrow_array()) { 
 	push @list, [ $id, $content ];
     }
-    my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
+    return \@list;
+}
+
+sub retrieve_contents :Path('/list/contents') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+
+    my $q = "SELECT  content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
 
     my $h = $c->dbc->dbh()->prepare($q);
     $h->execute($list_id);
     my @list = ();
-    while (my ($id, $content) = $h->fetchrow_array()) { 
-	push @list, [ $id, $content ];
+    while (my ($content) = $h->fetchrow_array()) { 
+	push @list, $content;
     }
-    return \@list;
+    $c->stash->{rest} =  \@list;
 }
+
 
 
 sub retrieve_type { 
