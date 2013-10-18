@@ -4,7 +4,8 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.BreederSearch' ] &>
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List' ] &>
+
 
 Search plots using location, year, trial, and trait data. <span id="wheel">[?]</span>
   
@@ -23,46 +24,74 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
 </td>
 <td>Show 
   <select id="select4">
-    <option value="plot">plots</option>
-    <option value="accession">accessions</option>
+    <option value="plots">plots</option>
+    <option value="accessions">accessions</option>
   </select>
 </td>
 </tr>
 <tr>
-<td>
-
-<select multiple id="c1_data" size="10"></select>
-
+<td >
+<div id="c1_div" >
+<select multiple id="c1_data" size="10" style="width:200px; overflow:auto;" >> </select>
+</div>
 </td>
 
 <td width="200">
-  <select multiple id="c2_data" size="10" width="30"></select>
+  <select multiple id="c2_data" size="10"  style="width:200px; overflow:auto;"></select>
 </td>
 
 <td width="200">
-  <select multiple id="c3_data" size="10"></select>
+  <select multiple id="c3_data" size="10" style="width:200px; overflow:auto;"></select>
 </td>
 
 <td width="200">
-  <select multiple id="stock_data" size="10"></select>
+  <select multiple id="stock_data" size="10" style="width:200px; overflow:auto;>"</select>
 </td>
 
 </tr>
 <tr>
-<td></td><td></td><td></td><td>
-<div id="stock_count">&nbsp;</div>
+<td>
+<div id="c1_data_count"></div>
+<div id="c1_to_list_menu"></div>
+<div id="c1_data_text" style="display:none;" >HELLO!</div>
+</td>
+<td>
+<div id="c2_data_count"></div>
+<div id="c2_to_list_menu"></div>
+<div id="c2_data_text" style="visibility:hidden;"></div>
+</td>
+<td>
+<div id="c3_data_count"></div>
+<div id="c3_to_list_menu"></div>
+<div id="c3_data_text" style="visibility:hidden;"></div>
+</td>
+<td>
+<div id="stock_count"></div>
 <div id="add_to_list_menu"></div>
-</td></tr>
-<tr>
-<td></td><td></td><td></td><td>
-  <script defer="defer">
-    jQuery(document).ready(function() { 
-      addToListMenu('add_to_list_menu', 'stock_data');
-    });
-  </script>
 </td></tr>
 
 </table>
+
+
+<script defer="defer">
+  jQuery(document).ready(function() { 
+    alert("whazzup?");
+
+    if (!jQuery.cookie("sgn_session_id")) {
+      jQuery('#c1_to_list_menu').html('(log in to use lists)');
+      jQuery('#c2_to_list_menu').html('(log in to use lists)');
+      jQuery('#c3_to_list_menu').html('(log in to use lists)');
+      jQuery('#add_to_list_menu').html('(log in to use lists)');
+    }
+    else { 
+      addToListMenu('c1_to_list_menu', 'c1_data_text');
+      addToListMenu('c2_to_list_menu', 'c2_data');
+      addToListMenu('c3_to_list_menu', 'c3_data');      
+      addToListMenu('add_to_list_menu', 'stock_data');
+    }
+ });
+
+</script>
 
 
 

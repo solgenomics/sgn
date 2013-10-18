@@ -1,46 +1,176 @@
 
 
-
-    function clearForm() {
-        document.getElementById("sequence").value = null;
-        document.getElementById("si_rna").value = 21;
-        document.getElementById("f_length").value = 300;
-	document.getElementById("mm").value = 0;
-        document.getElementById("expr_file").value = null;
+function show_help_dialog(msg_id_num) {
+    var msg_id;
+    if (msg_id_num == 0) {
+	alert(
+	    "• The score value indicates how good is the yellow region to silence only the targets and avoiding off-targets. The closer to 100 the better is the value. In the same way, the custom score indicates the value of the custom region, represented by the transparent grey rectangle.\n\n"
+	    +"• Set Custom Region button will activate a draggable and resizable transparent grey rectangle to select a custom region.\n\n"
+	    +"• Change button will recalculate the results using the new parameters chosen. In case of changing the n-mer size, the algorithm will run Bowtie 2 again, so this process could take a while.\n\n"
+	);
     }
+    if (msg_id_num == 1) {
+	alert(
+	    "• Targets are shown in blue, off-targets in red, the yellow area highlights the region of highest score (for the selected fragment size).\n\n"
+    	    +"• At the bottom the score graph shows score values in a red line over a black background. Score value = 0 is represented by the green line, under this line are represented the regions with more off-targets than targets, and the opposite when the score is over the green line.\n\n"
 
-    function openWin() {
-        document.getElementById("tabs").style.display="inline";
-
-	document.getElementById("help_fsize").innerHTML=f_length;
-	document.getElementById("help_nmer").innerHTML=si_rna;
-	document.getElementById("help_mm").innerHTML=mm;
-	document.getElementById("help_db").innerHTML=db_name;
-
-    	$(function() {
-    	    $( "#tabs" ).tabs();
-    	    $( "#tabs" ).dialog({
-		draggable:true,
-		resizable:false,
-	        width:450,
-		height:400,
-	    	closeOnEscape:true,
-	    	title: "SGN VIGS Tool Help",
-	    });
-        });
+	    +"• Expand graph button will display every siRNA fragment aligned over the query for each subject.\n\n"
+	    +"• Zoom button will zoom in/out the VIGS map representation.\n"
+	);
     }
+    if (msg_id_num == 2) {
+	alert(
+	    "• This section shows the best or the custom region sequence in FASTA format.\n\n"
+	    +"• The custom region will update as the grey selection rectangle is moved.\n"
+	);
+    }
+    if (msg_id_num == 3) {
+        alert(
+            "• In this section is shown your query sequence, highlighting in yellow the best or custom region.\n\n"
+	    +"• The custom region will update as the grey selection rectangle is moved.\n"
+	);
+    }
+    if (msg_id_num == 4) {
+        alert(
+            "• In this section is displayed each subject name, their number of matches over the query and their gene functional description.\n\n"
+	    +"• The View link will open a draggable dialog with this information."
+	);
+    }
+}
 
-    function runBt2(n_mer) {
+
+jQuery(document).ready(function () {
+    var score_array;
+    var seq;
+    var seq_length;
+    var bt2_file;
+    var best_start;
+    var best_end;
+    var best_seq;
+    var expr_msg;
+    var expr_f;
+    var ids;
+    var m_aoa;
+
+
+    jQuery('#upload_expression_file').click(function () {
+	     
+        seq = jQuery("#sequence").val();
+	seq_length = seq.length;
+        si_rna = jQuery("#si_rna").val();
+        f_length = jQuery("#f_length").val();
+	mm = jQuery("#mm").val();
+        db = jQuery("#bt2_db").val();
+	expr_f = jQuery('#expression_file').val();
+
+	if (expr_f === '') {
+	    bt2_file = runBt2(seq, si_rna, f_length, mm, db);
+	    res = getResults(1, bt2_file, seq, si_rna, f_length, mm, 0, db, expr_f);    
+  	    score_array = res[0];
+	    seq = res[1];
+	    best_seq = res[2];
+	    expr_msg = res[3];
+	    ids = res[4];
+	    m_aoa = res[5];
+	} else {
+            jQuery("#upload_expression_form").submit();
+	}
+    });
+
+    jQuery('#upload_expression_form').iframePostForm({
+	json: true,
+	post: function () {
+    	},
+        complete: function (response) {
+            if (response.error) {
+	        alert("The expression file could not be uploaded"+response.error);
+		return;
+            }
+            if (response.success) {
+        	expr_f = response.expr_file;
+
+            	seq = jQuery("#sequence").val();
+            	si_rna = jQuery("#si_rna").val();
+            	f_length = jQuery("#f_length").val();
+	    	mm = jQuery("#mm").val();
+            	db = jQuery("#bt2_db").val();
+
+		bt2_file = runBt2(seq, si_rna, f_length, mm, db);
+		res = getResults(1, bt2_file, seq, si_rna, f_length, mm, 0, db, expr_f);
+		score_array = res[0];
+		seq = res[1];
+		best_seq = res[2];
+		expr_msg = res[3];
+    		ids = res[4];
+ 		m_aoa = res[5];
+            }
+    	}
+    });
+
+    jQuery('#collapse').click(function () {
+	activateCollapse(score_array,best_seq,seq,expr_msg,ids,m_aoa);
+    });
+
+    jQuery('#zoom').click(function () {
+	activateZoom(score_array,best_seq,seq,expr_msg,ids,m_aoa);
+    });
+
+    jQuery('#set_custom').click(function () {
+	getCustomRegion(score_array,best_seq,seq);
+    });
+
+    jQuery('#change_par').click(function () {
+	res = changeTargets(seq,bt2_file,score_array,seq,best_seq,expr_f,ids,m_aoa);
+	score_array = res[0];
+	seq = res[1];
+	best_seq = res[2];
+	expr_msg = res[3];
+	ids = res[4];
+	m_aoa = res[5];
+    });
+
+    jQuery('#region_square').mouseup(function () {
+	getSquareCoords(score_array,best_seq,seq);
+    });
+        
+    jQuery('#open_descriptions_dialog').click(function () {
+	jQuery('#dialog_info').replaceWith(jQuery('#target_info').clone());
+
+        jQuery('#desc_dialog').dialog({
+	    draggable:true,
+	    resizable:false,
+	    width:900,
+	    minWidth:400,
+	    maxHeight:400,
+	    closeOnEscape:true,
+	    title: "Gene Functional annotation",
+	});
+    });
+
+    jQuery('#clear_form').click(function () {
+        jQuery("#sequence").val(null);
+        jQuery("#si_rna").val(21);
+        jQuery("#f_length").val(300);
+	jQuery("#mm").val(0);
+        jQuery("#expression_file").val(null);
+    });
+
+    jQuery('#params_dialog').click(function () {
+	alert(
+	    "• Fragment size: "+jQuery("#help_fsize").val()+"\n"
+	    +"• n-mer: "+jQuery("#help_nmer").val()+"\n"
+	    +"• Mismatches: "+jQuery("#help_mm").val()+"\n"
+	    +"• Database: "+jQuery("#db_name").val()+"\n"
+	);
+    });
+
+    function runBt2(seq, si_rna, f_length, mm, db) {
 	disable_ui();
-        var seq = document.getElementById("sequence").value;
-        document.getElementById("si_rna").value = n_mer;
-        si_rna = n_mer;
-        f_length = document.getElementById("f_length").value;
-	mm = document.getElementById("mm").value;
-        db = document.getElementById("bt2_db").value;
-	
-//alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", db: "+db+", expr_file: "+expr_file);
+	var bt2_file;
+	var db_name;
+	jQuery("#no_results").html("");
 
+        //alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", db: "+db+", expr_file: "+expr_file);
    	jQuery.ajax({
       	    url: '/tools/vigs/result/',
       	    async: false,
@@ -50,98 +180,138 @@
 	        if (response.error) { 
 		    alert("ERROR: "+response.error);
 		    enable_ui();
-		} else {                             
+		} else {                        
 		    db_name = response.db_name;
-		    bt2_res = response.jobid;
-		    getResults(1);
+		    bt2_file = response.jobid;
                 }
             },
-      	    error: function(response) { alert("An error occurred. The service may not be available right now.");}
+      	    error: function(response) { alert("An error occurred. The service may not be available right now. Bowtie2 could not be executed");enable_ui();}
 	});
+
+	jQuery("#help_fsize").val(f_length);
+	jQuery("#help_nmer").val(si_rna);
+	jQuery("#help_mm").val(mm);
+	jQuery("#db_name").val(db_name);
+
+	return bt2_file;
     }
 
-    function getResults(status) {
-	var t_info = "";
-//alert("getR expr_file: "+expr_file);
+
+    function getResults(status, bt2_res, seq, si_rna, f_length, mm, coverage, db, expr_file) {
+	var score_array;
+	var best_seq;
+	var expr_msg;
+	var ids;
+	var m_aoa;
+	var t_info = "<tr><th>Gene</th><th>matches</th><th>Functional Description</th></tr>";
+	jQuery("#no_results").html("");
+
+        //alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", coverage: "+coverage+" db: "+db+", expr_file: "+expr_file);
+
    	jQuery.ajax({
       	    url: '/tools/vigs/view/',
       	    async: false,
       	    method: 'POST',
-      	    data: {'id': bt2_res, 'sequence': seq, 'fragment_size': si_rna, 'seq_fragment': f_length, 'missmatch': mm, 'targets': coverage, 'expr_file': expr_file, 'status': status},
+      	    data: {'id': bt2_res, 'sequence': seq, 'fragment_size': si_rna, 'seq_fragment': f_length, 'missmatch': mm, 'targets': coverage, 'expr_file': expr_file, 'status': status, 'database': db},
 	    success: function(response) { 
 	        if (response.error) { 
 		     alert("ERROR: "+response.error);
+		     enable_ui();
 		} else {              
 		    //alert("SCORE: "+response.score);      
 		    hide_ui();
 
-		    document.getElementById("hide1").style.display="inline";
-
-		    if (+response.score > 0) {
-		     	document.getElementById("score_p").innerHTML= "<b>Score:</b> "+response.score+" &nbsp;&nbsp;(-&infin;&mdash;100)<br />";
-		     	document.getElementById("t_num").value = response.coverage
-		    } else {
-		        document.getElementById("no_results").innerHTML="Note: No results found!";
-		    }
-
-		    document.getElementById("hide2").style.display="inline";
-		    document.getElementById("hide3").style.display="inline";
-		     
 		    //assign values to global variables
+    		    score_array = response.all_scores;
+		    best_seq = response.best_seq;
+    		    expr_msg = response.expr_msg;
+		    var best_score = response.score;
+		    var best_start = response.cbr_start;
+		    var best_end = response.cbr_end;
+		    seq = response.query_seq;
+		    var seq_length = seq.length;
+		    coverage = response.coverage;
 		    ids = response.ids;
     		    m_aoa = response.matches_aoa;
-    		    score_array = response.all_scores;
-		    best_score = response.score;
-    		    expr_msg = response.expr_msg;
-		    query_seq = response.query_seq;
-		    seq_length = +query_seq.length;
-		    best_start = response.cbr_start;
-		    best_end = response.cbr_end;
-		    best_seq = response.best_seq;
-		    coverage = response.coverage;
 
-		    document.getElementById("f_size").value = response.f_size;
-		    document.getElementById("n_mer").value = si_rna;
-		    document.getElementById("align_mm").value = response.missmatch;
-		    document.getElementById("cbr_start").value = best_start;
-		    document.getElementById("cbr_end").value = best_end;
-		    document.getElementById("img_height").value = response.img_height;
-		    
-		    document.getElementById("collapse").value = 1;
-		    document.getElementById("collapse").innerHTML = "Expand Graph";
 
-		    document.getElementById("zoom").value = 0;
-       		    document.getElementById("zoom").innerHTML = "Zoom In";
- 
-		    createMap(1,0);		     
-
-		    if (+response.best_seq.length > 10) {
-		     	document.getElementById("best_seq").innerHTML="<b>>best_target_region_("+best_start+"-"+best_end+")</b><br />"+best_seq;
+		    if (+response.score > 0) {
+		     	jQuery("#score_p").html("<b>Score:</b> "+best_score+" &nbsp;&nbsp;(-&infin;&mdash;100)<br />");
+		     	jQuery("#t_num").val(coverage);
 		    } else {
-		        document.getElementById("best_seq").innerHTML="<b>No results were found</b>";
+		        jQuery("#no_results").html("Note: No results found! Try again increasing the number of targets, decreasing the fragment size or modifing other parameters");
 		    }
- 		    document.getElementById("query").innerHTML=response.query_seq;
-		    hilite_sequence(response.cbr_start,response.cbr_end);
+		    
+		    //show result sections
+		    jQuery("#hide1").css("display","inline");
+		    
+		    //assign values to html variables
+		    jQuery("#coverage_val").val(coverage);
+		    jQuery("#seq_length").val(seq_length);
+		    jQuery("#f_size").val(response.f_size);
+		    jQuery("#n_mer").val(si_rna);
+		    jQuery("#align_mm").val(response.missmatch);
+		    jQuery("#best_start").val(best_start);
+		    jQuery("#best_end").val(best_end);
+		    jQuery("#cbr_start").val(best_start);
+		    jQuery("#cbr_end").val(best_end);
+		    jQuery("#best_score").val(best_score);
+		    jQuery("#img_height").val(response.img_height);
+		    
+		    //set collapse and zoom buttons
+		    jQuery("#collapse").val(1);
+		    jQuery("#collapse").html("Expand Graph");
+		    jQuery("#zoom").val(0);
+       		    jQuery("#zoom").html("Zoom In");
 
-		    for (var i=0; i<response.ids.length; i=i+1) {
-		     	t_info += response.ids[i][0]+" ("+response.ids[i][1]+")";
-			t_info += "<br />";
+		    createMap(1,0,score_array,expr_msg,ids,m_aoa);
+
+		    if (+best_seq.length > 10) {
+		     	jQuery("#best_seq").html("<b>>best_target_region_("+best_start+"-"+best_end+")</b><br />"+best_seq);
+		    } else {
+		        jQuery("#best_seq").html("<b>No results were found</b>");
 		    }
-		    document.getElementById("target_info").innerHTML=t_info;
-		    document.getElementById("hide4").style.display="inline";
-		    document.getElementById("hide5").style.display="inline";
+ 		    jQuery("#query").html(seq);
+		    hilite_sequence(best_start,best_end);
+		    
+		    var desc="";
+		    var gene_name="";
+
+		    for (var i=0; i<ids.length; i=i+1) {
+			if (ids[i][2].match(/Niben/)) {
+			    desc = ids[i][2].replace(/Niben\d+Scf[\:\.\d]+/,"");
+			    gene_name = ids[i][0];
+			} else if (ids[i][0].match(/Solyc/)) {
+			    desc = ids[i][2].replace(/.+functional_description:/,"");
+			    desc = desc.replace(/\"/g,"");
+			    gene_name = ids[i][0].replace(/lcl\|/,"");
+			}
+		     	    t_info += "<tr><td>"+gene_name+"</td><td style='text-align:right;'>"+ids[i][1]+"</td><td>"+desc+"</td></tr>";
+		    }
+
+		    jQuery("#target_info").html(t_info);
+		    jQuery("#hide2").css("display","inline");
+		    jQuery("#hide3").css("display","inline");
                 }
             },
-      	    error: function(response) { alert("An error occurred2. The service may not be available right now.");}
+      	    error: function(response) { alert("An error occurred. The service may not be available right now.");enable_ui();}
 	});
+	jQuery("#help_fsize").val(f_length);
+	jQuery("#help_mm").val(mm);
+
+	return [score_array,seq,best_seq,expr_msg,ids,m_aoa];
     }
 
 
-    function createMap(collapsed,zoom) {
-        var img_height = document.getElementById("img_height").value;
-    	var img_width = 700;
+    function createMap(collapsed,zoom,score_array,expr_msg,ids,m_aoa) {
+        var img_height = +jQuery("#img_height").val();
+    	var best_start = +jQuery("#best_start").val();
+	var best_end = +jQuery("#best_end").val();
+	var seq_length = +jQuery("#seq_length").val();
+	var img_width = 700;
     	var xscale = +(700/seq_length); // to transform sequence length to pixels
     	var vline_tag = 100;
+
     	var c=document.getElementById("myCanvas");
     	var ctx=c.getContext("2d");
 
@@ -177,7 +347,7 @@
     	ctx.stroke();
     
 	//print the rectangles
-    	off_set_array = printSquares(collapsed,zoom);
+        off_set_array = printSquares(collapsed,zoom,ids,m_aoa);
 
     	//print vertical lines and tick values
     	ctx.fillStyle='black';
@@ -207,8 +377,7 @@
     	ctx.stroke();
 
     	//print subject names
-//alert("expr: "+expr_msg[0][0]);
-    	var ids_aoa = expr_msg; // aoa with subject ids
+    	var ids_aoa = expr_msg; //aoa with subject ids
     	for (var t=0; t<ids_aoa.length;t++) {
             ctx.beginPath();
   	    ctx.fillStyle='#000000';
@@ -216,12 +385,14 @@
   	    ctx.fillText(ids_aoa[t][0],5,off_set_array[t]+17);
     	    ctx.stroke();
         }
-    	printScoreGraph(collapsed,zoom);    
+        printScoreGraph(collapsed,zoom,score_array,ids);    
     }  
 
 
-    function printSquares(collapsed,zoom) {
-        var coverage = document.getElementById("t_num").value;
+    function printSquares(collapsed,zoom,ids,m_aoa) {
+        var coverage = jQuery("#coverage_val").val();
+	var seq_length = jQuery("#seq_length").val();
+
     	var xscale = +(700/seq_length); // to transform sequence length to pixels
         var img_width = 700;
     	var off_set = 20; //just under the horizontal line
@@ -351,8 +522,10 @@
     }
 
 
-    function printScoreGraph(collapsed,zoom) {
+    function printScoreGraph(collapsed,zoom,score_array,ids) {
         var img_height = document.getElementById("img_height").value;
+        var coverage = jQuery("#coverage_val").val();
+	var seq_length = jQuery("#seq_length").val();
 
     	var xscale = +(700/seq_length); // to transform sequence legth to pixels
     	var img_h = +(img_height-52);
@@ -405,7 +578,7 @@
 	        if (ypos > 50) {
 	            ypos = 50;
 	        }
-    	        ctx.lineTo(xpos,img_h+ypos);
+  	        ctx.lineTo(xpos,img_h+ypos);
     	        ctx.stroke();
             }
         }
@@ -457,7 +630,7 @@
 	     leading_str2 = leading_spaces.slice(0,Math.ceil(6-(Math.log(current_pos +line_length -1)/Math.log(10)))).join('&nbsp;');
 
 	     if (current_pos + line_length < sequence.length) {
-	     	final_seq = final_seq + leading_str + current_pos + ' ' + lines[i] + ' ' + leading_str2 + ( current_pos + line_length - 1) + '<br />';
+	     	final_seq = final_seq + leading_str + current_pos +' '+ lines[i] +' '+ leading_str2 + ( current_pos + line_length - 1) +'<br />';
 	     } else {
 	        final_seq = final_seq + leading_str + current_pos + ' ' + lines[i] + ' ' + leading_str2 + sequence.length + '<br />';
 	     }
@@ -469,47 +642,50 @@
     }
 
 
-    function activateCollapse() {
+    function activateCollapse(score_array,best_seq,seq,expr_msg,ids,m_aoa) {
  	document.getElementById("region_square").style.height="0px";
-        var collapsed = document.getElementById("collapse").value;
-        var zoom = document.getElementById("zoom").value;
+        var collapsed = jQuery("#collapse").val();
+        var zoom = jQuery("#zoom").val();
+	var seq_length = jQuery("#seq_length").val();
 
         if (collapsed == 0) {
-           document.getElementById("collapse").innerHTML = "Expand Graph";
-       	   document.getElementById("collapse").value = 1;
+           jQuery("#collapse").html("Expand Graph");
+       	   jQuery("#collapse").val(1);
 	   collapsed = 1;
         } else {
-       	   document.getElementById("collapse").innerHTML = "Collapse Graph";
-       	   document.getElementById("collapse").value = 0;
+       	    jQuery("#collapse").html("Collapse Graph");
+       	    jQuery("#collapse").val(0);
 	   collapsed = 0;
         }
-    	createMap(+collapsed,+zoom);
-	getCustomRegion();
+        createMap(+collapsed,+zoom,score_array,expr_msg,ids,m_aoa);
+        getCustomRegion(score_array,best_seq,seq);
     }
 
-    function activateZoom() {
-        var collapsed = document.getElementById("collapse").value;
-        var zoom = document.getElementById("zoom").value;
+    function activateZoom(score_array,best_seq,seq,expr_msg,ids,m_aoa) {
+        var collapsed = jQuery("#collapse").val();
+        var zoom = jQuery("#zoom").val();
+	var seq_length = jQuery("#seq_length").val();
 
         if (zoom == 0) {
-           document.getElementById("zoom").innerHTML = "Zoom Out";
-       	   document.getElementById("zoom").value = 1;
-	   zoom = 1;
+            jQuery("#zoom").html("Zoom Out");
+       	    jQuery("#zoom").val(1);
+	    zoom = 1;
         } else {
-       	   document.getElementById("zoom").innerHTML = "Zoom In";
-       	   document.getElementById("zoom").value = 0;
-	   zoom = 0;
+       	    jQuery("#zoom").html("Zoom In");
+       	    jQuery("#zoom").val(0);
+	    zoom = 0;
         }
-    	createMap(+collapsed,+zoom);
-	getCustomRegion();
+        createMap(+collapsed,+zoom,score_array,expr_msg,ids,m_aoa);
+        getCustomRegion(score_array,best_seq,seq);
     }
 
 //Function to change values of custom region by dragging the selection square
-
-    function getSquareCoords() {
+    function getSquareCoords(score_array,best_seq,seq) {
 	var img_width = 700;
-	var zoom = document.getElementById("zoom").value
+	var seq_length = jQuery("#seq_length").val();
+	var zoom = jQuery("#zoom").val();
     	var rev_xscale = +(seq_length/img_width); // to transform sequence length to pixels
+	jQuery("#cbr_p").html("");
 
 	if (+zoom || seq_length < 700) {
 	   rev_xscale = 1;
@@ -530,31 +706,34 @@
 	if (+cbr_end > seq_length) {cbr_end = seq_length;}
 	if (+cbr_start < 1) {cbr_start = 1;}
 
-	document.getElementById("cbr_start").value = cbr_start;
-	document.getElementById("cbr_end").value = cbr_end;
-	document.getElementById("f_size").value = fragment;
+	jQuery("#cbr_start").val(cbr_start);
+	jQuery("#cbr_end").val(cbr_end);
+	jQuery("#f_size").val(fragment);
 
 	var best_region = [cbr_start,cbr_end];
 	hilite_sequence(cbr_start,cbr_end);
-	printCustomSeq(cbr_start,cbr_end);
+        printCustomSeq(best_seq,seq);
 	
 	if (score_array) {
-	    printCustomScore(cbr_start,cbr_end);
+	    printCustomScore(cbr_start,cbr_end,score_array);
 	}
     }
 
 //Prints custom sequence in Best Region field
-
-    function printCustomSeq(cbr_start,cbr_end) {
+    function printCustomSeq(best_seq,seq) {
 	var best_seq_el = document.getElementById("best_seq");
+    	var cbr_start = +jQuery("#cbr_start").val();
+	var cbr_end = +jQuery("#cbr_end").val();
+    	var best_start = +jQuery("#best_start").val();
+	var best_end = +jQuery("#best_end").val();
 
 	best_seq_el.innerHTML = "<b>>custom_region_("+cbr_start+"-"+cbr_end+")</b><br />";
 
 	for (var i=cbr_start; i<cbr_end; i=i+60) {
 	    if (cbr_end<i+61) {
-		best_seq_el.innerHTML += query_seq.substring(i-1,cbr_end)+"<br />";
+		best_seq_el.innerHTML += seq.substring(i-1,cbr_end)+"<br />";
 	    } else {
-		best_seq_el.innerHTML += query_seq.substring(i-1,i+59)+"<br />";
+		best_seq_el.innerHTML += seq.substring(i-1,i+59)+"<br />";
 	    }
 	}
 	best_seq_el.innerHTML += "<br /><b>>best_target_region_("+best_start+"-"+best_end+")</b><br />";
@@ -563,42 +742,48 @@
 
 
 // Prints Scores
-    function printCustomScore(start,end){
+    function printCustomScore(start,end,score_array){
 	var custom_score = 0;
+	var coverage = +jQuery("#coverage_val").val();
+	var seq_length = +jQuery("#seq_length").val();
+	var best_score = +jQuery("#best_score").val();
 
 	if (+end > seq_length) {end = seq_length;}
 	if (+start < 1) {start = 1;}
 		 
 	if (score_array) {
-	    for (var i=start-1; i<end; i++) {
+	    for (var i= +start-1; i< +end; i++) {
 	        custom_score += +score_array[i];
 	    }
 	}
+
 	var fragment_length = (+end - +start + 1);
 
 	if (coverage > 0 && fragment_length > 0) {
 	    var final_score = ((custom_score*100/fragment_length)/coverage).toFixed(2)
-	    document.getElementById("score_p").innerHTML= "<b>Score:</b> "+best_score+" &nbsp;&nbsp; <b> Custom Score: </b>"+final_score+" &nbsp;&nbsp; (-&infin;&mdash;100)";
+	    jQuery("#score_p").html("<b>Score:</b> "+best_score+" &nbsp;&nbsp; <b> Custom Score: </b>"+final_score+" &nbsp;&nbsp; (-&infin;&mdash;100)");
 	}
     }
 
-// Creates the draggable selection square and modifies custom region when push a button
 
-    function getCustomRegion() {
-	var cbr_start = parseInt(document.getElementById("cbr_start").value);
-	var cbr_end = parseInt(document.getElementById("cbr_end").value);
+// Creates the draggable selection square and modifies custom region when push a button
+    function getCustomRegion(score_array,best_seq,seq) {
+	var cbr_start = +jQuery("#cbr_start").val();
+	var cbr_end = +jQuery("#cbr_end").val();
 	var map_el = document.getElementById('myCanvas');
+	var seq_length = +jQuery("#seq_length").val();
 
 	var img_width = 700;
     	var xscale = +(+img_width/+seq_length); // to transform sequence length to pixels
 
-	var zoom = document.getElementById("zoom").value;
+        var zoom = jQuery("#zoom").val();
 
 	if (zoom == 1 || seq_length < 700) {
 	    xscale = 1;
 	    img_width = seq_length;
 	}
 	if (seq_length < 700) {document.getElementById("seq_map").style.width=""+seq_length+"px";}
+
 
 	if ((cbr_start > 0) && (cbr_end <= seq_length) && (cbr_end >= cbr_start+99)) {
 	    var cbr_left = Math.round((+cbr_start-1)*xscale);
@@ -607,101 +792,128 @@
 	    var cbr_height = (map_el.height - 21);
 
 	    //a border will add pixels to all end coordinates
-	    document.getElementById("region_square").style.border="0px solid #000000";
-	    document.getElementById("region_square").style.top="21px";
-	    document.getElementById("region_square").style.background="rgba(80,100,100,0.3)";
-	    document.getElementById("region_square").style.left=""+cbr_left+"px";
-	    document.getElementById("region_square").style.width=""+cbr_width+"px";
-	    document.getElementById("region_square").style.height=""+cbr_height+"px";
+	    jQuery("#region_square").css("border","0px solid #000000");
+	    jQuery("#region_square").css("top","21px");
+	    jQuery("#region_square").css("background","rgba(80,100,100,0.3)");
+	    jQuery("#region_square").css("left",cbr_left+"px");
+	    jQuery("#region_square").css("width",cbr_width+"px");
+	    jQuery("#region_square").css("height",cbr_height+"px");
 
-	   $(document).ready(function() {
-    		$("div.region_square").resizable({
-		    containment:map_el,
-		    handles: 'e, w',
-		    minWidth: 100*xscale,
-		});
-
-		$("div.region_square").draggable({
-		    axis: 'x',
-		    containment:map_el,
-		    cursor: "move"
-		});
+    	    jQuery("#region_square").resizable({
+		containment:map_el,
+		handles: 'e, w',
+		minWidth: 100*xscale,
 	    });
 
+	    jQuery("#region_square").draggable({
+		axis: 'x',
+		containment:map_el,
+		cursor: "move"
+	    });
 			
-	    document.getElementById("cbr_p").innerHTML = "";
-	    var best_region = [cbr_start,cbr_end];
+	    jQuery("#cbr_p").html("");
 	    var fragment = (+cbr_end - +cbr_start +1);
-	    document.getElementById("f_size").value = fragment;
+	    jQuery("#f_size").val(fragment);
 
 	    hilite_sequence(cbr_start,cbr_end);
 
-	    printCustomSeq(cbr_start,cbr_end);
+	    printCustomSeq(best_seq,seq);
 			
 	    if (score_array) {
-		printCustomScore(cbr_start,cbr_end);
+		printCustomScore(cbr_start,cbr_end,score_array);
 	    }
 
 	} else {
-	    document.getElementById("cbr_p").innerHTML = "Values must be between 1 and "+seq_length+", getting a sequence not shorter than 100 bp!";
+	    jQuery("#cbr_p").html("Values must be between 1 and "+seq_length+", getting a sequence not shorter than 100 bp!");
 	}
     }	
 
 
-    function changeTargets() {
-        var t_num = document.getElementById("t_num").value;
-        var f_size = document.getElementById("f_size").value;
-        var n_mer = document.getElementById("n_mer").value;
-        var align_mm = document.getElementById("align_mm").value;
+    function changeTargets(seq,bt2_file,score_array,seq,best_seq,expr_f,ids,m_aoa) {
+        var t_num = jQuery("#t_num").val();
+        var coverage = jQuery("#coverage_val").val();
+        var f_size = jQuery("#f_size").val();
+        var f_length = jQuery("#f_length").val();
+        var n_mer = jQuery("#n_mer").val();
+        var si_rna = jQuery("#si_rna").val();
+        var align_mm = jQuery("#align_mm").val();
+	var mm = jQuery("#mm").val();
+        var db = jQuery("#bt2_db").val();
+	var expr_msg;
 
 	if (n_mer != si_rna) {
-	   // alert("I will run bowtie2 again");
-	    mm = align_mm;
-	    f_length = f_size;
-	    coverage = t_num;
+	    jQuery("#f_length").val(f_size);
+	    jQuery("#mm").val(align_mm);
+	    jQuery("#si_rna").val(n_mer);
+	    jQuery("#coverage_val").val(t_num);
 
-	    document.getElementById("f_length").value = f_length;
-	    document.getElementById("mm").value = mm;
-	    runBt2(n_mer);	            
-	
+	    bt2_file = runBt2(seq, n_mer, f_size, align_mm, db);	            
+	    res = getResults(1, bt2_file, seq, n_mer, f_size, align_mm, t_num, db, expr_f);
+	    score_array = res[0];
+	    seq = res[1];   
+	    best_seq = res[2];
+	    expr_msg = res[3];
+       	    ids = res[4];
+	    m_aoa = res[5];
+
 	    document.getElementById("region_square").style.height="0px";
      
         } else if (align_mm != mm) {
-	    mm = align_mm;
-	    f_length = f_size;
-	    coverage = t_num;
-	    getResults(1);
-	    getCustomRegion();		     
+	    jQuery("#f_length").val(f_size);
+	    jQuery("#mm").val(align_mm);
+	    jQuery("#coverage_val").val(t_num);
+
+	    res = getResults(1, bt2_file, seq, n_mer, f_size, align_mm, t_num, db, expr_f);
+	    score_array = res[0];
+	    seq = res[1];   
+	    best_seq = res[2];
+	    expr_msg = res[3];
+	    ids = res[4];
+	    m_aoa = res[5];
+
+	    getCustomRegion(score_array,best_seq,seq)
         } else if (t_num != coverage || f_size != f_length) {
-	    f_length = f_size;
-	    coverage = t_num;
-	    getResults(0);
-	    getCustomRegion();		     
+	    jQuery("#f_length").val(f_size);
+	    jQuery("#coverage_val").val(t_num);
+
+	    res = getResults(0, bt2_file, seq, n_mer, f_size, align_mm, t_num, db, expr_f);
+	    score_array = res[0];
+	    seq = res[1];   
+	    best_seq = res[2];
+	    expr_msg = res[3];
+	    ids = res[4];
+	    m_aoa = res[5];
+
+	    getCustomRegion(score_array,best_seq,seq)
 	} else {
 	    alert("there are no parameters to change");
 	}
+	return [score_array,seq,best_seq,expr_msg,ids,m_aoa]
     }
 
-function disable_ui() {
-    $("input").prop("disabled", true);
-    //$("usage_view").prop("disabled", true);
-    $('#status_wheel').html('<img src="/static/documents/img/wheel.gif" />');
-}
+    function disable_ui() {
+        jQuery("input").prop("disabled", true);
+	jQuery('#status_wheel').html('<img src="/static/documents/img/wheel.gif" />');
+    }
 
-function enable_ui() {
-    $("input").prop("disabled", false);
-    //$("usage_view").prop("disabled", true);
-    $('#status_wheel').html("");
-}
+    function enable_ui() {
+        jQuery("input").prop("disabled", false);
+	jQuery('#status_wheel').html("");
+    }
 
 
-function hide_ui() {
-    document.getElementById("status_wheel").style.display="none";
-    $("#input_view").hide("blind");
-    $("#usage_view").hide("blind");
-    $("input").prop("disabled", false);
-}
+    function hide_ui() {
+        document.getElementById("status_wheel").style.display="none";
+	Effects.swapElements('vigs_input_offswitch', 'vigs_input_onswitch');
+	Effects.hideElement('vigs_input_content');
+	Effects.swapElements('vigs_usage_offswitch', 'vigs_usage_onswitch');
+	Effects.hideElement('vigs_usage_content');
+	jQuery("input").prop("disabled", false);
+    }
 
+
+
+});
 
 
 

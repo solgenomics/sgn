@@ -210,7 +210,7 @@ sub available_lists : Path('/list/available') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) { 
-	$c->stash->{rest} = { error => "You must be logged in to use lists.", };
+	#$c->stash->{rest} = { error => "You must be logged in to use lists.", };
 	return;
     }
 
