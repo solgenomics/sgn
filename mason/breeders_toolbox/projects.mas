@@ -505,6 +505,7 @@ jQuery(document).ready(function () {
             url: '/ajax/trial/verify_stock_list',
 	    dataType: "json",
             data: {
+                //'stock_list': stock_list.join(","),
                 'stock_list': stock_list,
             },
             success: function (response) {
