@@ -38,15 +38,15 @@ __PACKAGE__->config(
    );
 
 
-sub download_phenotype_spreadsheet :  Path('/ajax/phenotype/download_spreadsheet') : ActionClass('REST') { }
+sub create_phenotype_spreadsheet :  Path('/ajax/phenotype/create_spreadsheet') : ActionClass('REST') { }
 
-sub download_phenotype_spreadsheet_POST : Args(0) {
+sub create_phenotype_spreadsheet_POST : Args(0) {
   print STDERR "phenotype download controller\n";
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_id = $c->req->param('trial_id');
   my $trait_list_ref = $c->req->param('trait_list');
-  my @trait_list = @{$trait_list_ref};
+  my @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
   my $create_spreadsheet = CXGN::Phenotypes::CreateSpreadsheet
     ->new({
 	   schema => $schema,
@@ -70,6 +70,19 @@ sub download_phenotype_spreadsheet_POST : Args(0) {
 
 }
 
+sub _parse_list_from_json {
+  my $list_json = shift;
+  my $json = new JSON;
+  if ($list_json) {
+    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+    #my $decoded_list = decode_json($list_json);
+    my @array_of_list_items = @{$decoded_list};
+    return \@array_of_list_items;
+  }
+  else {
+    return;
+  }
+}
 
 #########
 1;

@@ -160,6 +160,14 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
   </p>
 </div>
 
+<div id="create_spreadsheet_dialog" title="Create Phenotyping Spreadsheet">
+  <div id="trait_list" name="trait_list">
+    <label id="trait_list_label" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
+    </label>
+  </div>
+</div>
+
+
 <script defer="defer">
 
 jQuery(document).ready(function () {
@@ -167,15 +175,26 @@ jQuery(document).ready(function () {
         open_create_spreadsheet_dialog();
     });
     function open_create_spreadsheet_dialog() {
+        var list = new CXGN.List();
+        jQuery("#trait_list").html(list.listSelect("trait_list"));
+        jQuery('#create_spreadsheet_dialog').dialog("open");
+    }
+
+    function create_spreadsheet() {
         var trialID = parseInt(jQuery('#trialIDDiv').text());
-        var listID = '1';
+        var list = new CXGN.List();
+        var trait_list_id = jQuery('#trait_list_list_select').val();
+	var trait_list;
+	if (! trait_list_id == "") {
+            trait_list = JSON.stringify(list.getList(trait_list_id));
+	}
         new jQuery.ajax({
         type: 'POST',
-        url: '/ajax/phenotype/download_spreadsheet',
+        url: '/ajax/phenotype/create_spreadsheet',
 	dataType: "json",
         data: {
           'trial_id': trialID,
-          'list_id': listID,
+          'trait_list': trait_list,
         },
         success: function (response) {
           if (response.error) {
@@ -191,8 +210,8 @@ jQuery(document).ready(function () {
           jQuery('#open_download_spreadsheet_dialog').dialog("close");
         }
       });
-    }
 
+    }
 
 
 
@@ -236,6 +255,27 @@ jQuery(document).ready(function () {
 		location.reload();
             }
 	}
+    });
+
+    jQuery('#create_spreadsheet_dialog').dialog({
+	autoOpen: false,
+        modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 75],
+        modal: true,
+        buttons: {
+	    Cancel: function() {
+		jQuery( this ).dialog( "close" );
+		return;
+	    },
+	    Create: function() {
+                create_spreadsheet();
+		//save_experimental_design(design_json);
+		//jQuery( this ).dialog( "close" );
+		//jQuery('#add_project_dialog').dialog("close");
+	    },
+        },
     });
 
 });
