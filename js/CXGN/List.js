@@ -51,7 +51,7 @@ CXGN.List.prototype = {
 		    alert(response.error);
 		}
 		else { 
-		    list = response.list;
+		    list = response;
 		}
 	    }
 	});
@@ -188,10 +188,11 @@ CXGN.List.prototype = {
 	return 0;
     },
 
-    availableLists: function() { 
+    availableLists: function(list_type) { 
 	var lists = [];
 	jQuery.ajax( { 
 	    url: '/list/available',
+	    data: { 'list_type': list_type },
 	    async: false,
 	    success: function(response) { 
 		if (response.error) { 
