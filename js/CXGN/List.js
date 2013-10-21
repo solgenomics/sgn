@@ -220,7 +220,34 @@ CXGN.List.prototype = {
 	else { return 0; }
     },
 
+    addBulk: function(list_id, items) { 
+	var exists_item_id = this.existsItem(list_id,item);
+	
+	var elements = items.join("\t");
 
+	if (exists_item_id ===0 ) { 
+	    jQuery.ajax( { 
+		async: false,
+		url: '/list/add/bulk',
+		data:  { 'list_id': list_id, 'elements': elements },
+		success: function(response) { 
+		    if (response.error) { 
+			alert(response.error);
+		    }
+		    else { 
+			if (response.duplicates) { 
+			    alert("The following items are already in the list and were not added: "+duplicates.join(", "));
+			}
+		    }
+		}
+			
+	    });
+		
+	    return new_list_item_id;
+	}
+	else { return 0; }
+    },
+    
     removeItem: function(list_id, item_id) {
 	jQuery.ajax( {
 	    async: false,
@@ -229,7 +256,6 @@ CXGN.List.prototype = {
 	});
     },
     
-
     deleteList: function(list_id) { 
 	jQuery.ajax( { 
 	    url: '/list/delete',
@@ -248,7 +274,7 @@ CXGN.List.prototype = {
 	    jQuery('#'+div).html(html);
 	}
 
-	html += '<table border="0" title="Available lists">';
+	html += '<table border="0" cellpadding="2" title="Available lists">';
 	html += '<tr><td><i>list name</i></td><td><i>#</i></td><td><i>type</i></td><td colspan="3"><i>actions</i></td></tr>\n'; 
 	for (var i = 0; i < lists.length; i++) { 
 	    html = html + '<tr><td><b>'+lists[i][1]+'</b></td><td>'+lists[i][3]+'</td><td>'+lists[i][5]+'</td><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')">view</a></td><td>|</td><td><a href="javascript:deleteList('+lists[i][0]+')">delete</a></td><td>|</td><td><a href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>\n';
@@ -289,7 +315,7 @@ CXGN.List.prototype = {
 	var list_type = list_data.type_name;
 	var list_name = this.listNameById(list_id);
 
-	var html = 'List name <b>'+list_name+'</b><br />Type '+this.typesHtmlSelect(list_id, 'type_select', list_type)+'   <input type="button" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /><br />';
+	var html = 'List name <b>'+list_name+'</b> ('+items.length+' items)<br />Type '+this.typesHtmlSelect(list_id, 'type_select', list_type)+'   <input type="button" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /><br />';
 
 	html += 'New elements: <br /><textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="Add" /><br />';
 
@@ -405,9 +431,24 @@ CXGN.List.prototype = {
 	else { 
 	    alert("List validation failed. Elements not found: "+ missing.join(","));
 	}
-    }
+    },
 
-    
+    transform: function(type1, type2, list_id) { 
+	var transformed = new List();
+	jQuery.ajax( { 
+	    url: '/list/'+list_id+'/'+type,
+	    async: false,
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    transformed = response.transform;
+		}
+	    },
+	    error: function(response) { alert("An error occurred while validating the list "+list_id); error=1; }
+	});
+    }
 };
 
 function setUpLists() { 

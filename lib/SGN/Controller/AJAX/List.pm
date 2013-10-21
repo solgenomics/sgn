@@ -4,7 +4,6 @@ package SGN::Controller::AJAX::List;
 use Moose;
 use CXGN::List::Validate;
 
-
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
 __PACKAGE__->config(
@@ -27,11 +26,8 @@ sub get_list :Path('/list/get') Args(0) {
 
     my $list = $self->retrieve_list($c, $list_id);
 
-    $c->stash->{rest} = $list;
-   
-			  
+    $c->stash->{rest} = $list;			  
 }
-
 
 sub get_list_data :Path('/list/data') Args(0) { 
     my $self = shift;
@@ -39,10 +35,10 @@ sub get_list_data :Path('/list/data') Args(0) {
 
     my $list_id = $c->req->param("list_id");
 
-    my $user_id = $self->get_user($c);
-    if (!$user_id) { 
-	$c->stash->{rest} = { error => 'You must be logged in to use lists.', }; 
-	return;
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return; 
     }
 
     my $list = $self->retrieve_list($c, $list_id);
@@ -63,6 +59,12 @@ sub retrieve_list {
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
+    
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
 
     my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
 
@@ -79,6 +81,12 @@ sub retrieve_contents :Path('/list/contents') Args(1) {
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
+
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
 
     my $q = "SELECT  content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
 
@@ -124,8 +132,9 @@ sub set_type :Path('/list/type') Args(2) {
 
     my $user_id = $self->get_user($c);
 
-    if (!$user_id) { 
-	$c->stash->{rest} = { error => "You need to be logged in to set the type of a list" };
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
 	return;
     }
 
@@ -213,13 +222,29 @@ sub all_types : Path('/list/alltypes') :Args(0) {
 
 }
 
+=head2 available_lists()
+
+ Usage:
+ Desc:          returns the available lists. Optionally, a 
+                parameter "list_type" can be provided that will limit the 
+                lists to the provided type.
+
+ Ret:
+ Args:
+ Side Effects:  
+ Example:
+
+=cut
+
 sub available_lists : Path('/list/available') Args(0) { 
     my $self = shift;
     my $c = shift;
+    
+    my $requested_type = $c->req->param("type");
 
     my $user_id = $self->get_user($c);
     if (!$user_id) { 
-	#$c->stash->{rest} = { error => "You must be logged in to use lists.", };
+	$c->stash->{rest} = { error => "You must be logged in to use lists.", };
 	return;
     }
 
@@ -229,7 +254,14 @@ sub available_lists : Path('/list/available') Args(0) {
 
     my @lists = ();
     while (my ($id, $name, $desc, $item_count, $type_id, $type) = $h->fetchrow_array()) { 
-	push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ] ;
+	if ($requested_type) { 
+	    if ($type eq $requested_type) { 
+		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
+	    }
+	}
+	else { 
+	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
+	}
     }
     $c->stash->{rest} = \@lists;
 }
@@ -242,8 +274,10 @@ sub add_item :Path('/list/item/add') Args(0) {
     my $element = $c->req->param("element");
 
     my $user_id = $self->get_user($c);
-    if (!$user_id) { 
-	$c->stash->{rest} = { error => "You must be logged in to add elements to a list" };
+    
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
 	return;
     }
 
@@ -258,9 +292,7 @@ sub add_item :Path('/list/item/add') Args(0) {
     }
 
     eval { 
-	my $iq = "INSERT INTO sgn_people.list_item (list_id, content) VALUES (?, ?)";
-	my $ih = $c->dbc->dbh()->prepare($iq);
-	$ih->execute($list_id, $element);
+	$self->insert_element($c, $list_id, $element);
     };
     if ($@) { 
 	$c->stash->{rest} = { error => "An error occurred: $@" };
@@ -271,15 +303,66 @@ sub add_item :Path('/list/item/add') Args(0) {
     }
 }
 
+sub add_bulk : Path('/list/bulk/add') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id");
+    my $elements = $c->req->param("elements");
+
+    my $user_id = $self->get_user($c);
+    
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
+
+    if (!$elements) { 
+	$c->stash->{rest} = { error => "You must provide one or more elements to add to the list" };
+	return;
+    }
+
+    my @elements = split "\t", $elements;
+
+    my @duplicates = ();
+    my $count = 0;
+    foreach my $element (@elements) { 
+	if ($self->exists_item($c, $list_id, $element)) { 
+	    push @duplicates, $element;
+	}
+	else { 
+	    $self->insert_element($c, $list_id, $element);
+	    $count++;
+	}
+    }
+    if (@duplicates) { 
+	$c->stash->{rest} = { error => "The following items are already in the list (list_id=$list_id) and were not added: ".(join ",", @duplicates)."." };
+	return;
+    }
+    $c->stash->{rest} = { success => $count };
+
+}
+
+sub insert_element : Private { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+    my $element = shift;
+
+    my $iq = "INSERT INTO sgn_people.list_item (list_id, content) VALUES (?, ?)";
+    my $ih = $c->dbc->dbh()->prepare($iq);
+    $ih->execute($list_id, $element);
+}
+
 sub delete_list :Path('/list/delete') Args(0) { 
     my $self = shift;
     my $c = shift;
 
     my $list_id = $c->req->param("list_id");
     
-    my $user_id = $self->get_user($c);
-    if (!$user_id) { 
-	$c->stash->{rest} = { error => "You must be logged in to delete a list" };
+    my $error = $self->check_user($c, $list_id);
+    if ($error) {
+	$c->stash->{rest} = { error => $error };
 	return;
     }
     
@@ -321,20 +404,26 @@ sub exists_list : Path('/list/exists') Args(0) {
     }
 }
 
-sub exists_item : Path('/list/exists_item') :Args(0) { 
+sub exists_item_action : Path('/list/exists_item') :Args(0) { 
     my $self =shift;
     my $c = shift;
     my $list_id = $c->req->param("list_id");
     my $name = $c->req->param("name");
 
-    my $user_id = $self->get_user($c);
-    if (!$user_id) { 
-	$c->stash->{rest} = { error => 'You need to be logged in to use lists.' };
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return;
     }
-    my $q = "SELECT list_item_id FROM sgn_people.list join sgn_people.list_item using(list_id) where list.list_id =? and content = ? and owner=?";
-    my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($list_id, $name, $user_id);
-    my ($list_item_id) = $h->fetchrow_array();
+
+    my $user_id = $self->get_user($c);
+    
+    if ($self->get_list_owner($c, $list_id) != $user_id) { 
+	$c->stash->{rest} = { error => "You have insufficient privileges to manipulate this list.", };
+	return;
+    }
+
+    my $list_item_id = $self->exists_item($c, $list_id, $name);
 
     if ($list_item_id) { 
 	$c->stash->{rest} = { list_item_id => $list_item_id };
@@ -370,30 +459,114 @@ sub validate : Path('/list/validate') Args(2) {
     $c->stash->{rest} = $data;
 }
 
-
-sub remove_element :Path('/list/item/remove') Args(0) { 
+sub tranform :Path('/list/transform/') Args(3) { 
     my $self = shift;
     my $c = shift;
+    my $type1 = shift;
+    my $type2 = shift;
+    my $list_id = shift;
+
+    my $t = CXGN::List::Transform->new();
+
+    if (!$t->can($type1, $type2)) { 
+	$c->stash->{rest} = { error => "Cannot transform $type1 into $type2\n", };
+	return;
+    }
     
+    my $list_data = $self->retrieve_list($list_id);
+
+    my @list_items = map { $_->[1] } @$list_data;
+
+    my $result = $t->transform($type1, $type2, \@list_items);
+
+    if (scalar(@{$result->{missing}}) > 0) { 
+	$c->stash->{rest} = { error => "This lists contains elements that cannot be converted. Not converting list.", };
+	return;
+    }
+	
+    $c->stash->{rest} = $result;
+
+}
+    
+sub replace_elements :Path('/list/item/replace') Args(2) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $list_id = shift;
+    my $new_list = shift; # tab delimited new list elements
+
+    
+
+}
+
+sub remove_element_action :Path('/list/item/remove') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+ 
     my $list_id = $c->req->param("list_id");
     my $item_id = $c->req->param("item_id");
+
+    my $error = $self->check_user($c, $list_id);
+
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
     
+    my $response = $self->remove_element($c, $list_id, $item_id);
     
+    $c->stash->{rest} = $response;
+    
+}
+
+sub remove_element : Private { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+    my $item_id = shift;
+
     my $h = $c->dbc->dbh()->prepare("DELETE FROM sgn_people.list_item where list_id=? and list_item_id=?");
 
     eval { 
 	$h->execute($list_id, $item_id);
     };
     if ($@) { 
-	$c->stash->{rest} = { error => "An error occurred. $@\n", };
-	return;
+	
+	return { error => "An error occurred while attempting to delete item $item_id" };
     }
-    $c->stash->{rest} = [ 1 ];
+    else { 
+	return { success => 1 };
+    }
+ 
 }
 
+sub exists_item : Private { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+    my $item = shift;
 
+    my $q = "SELECT list_item_id FROM sgn_people.list join sgn_people.list_item using(list_id) where list.list_id =? and content = ?";
+    my $h = $c->dbc->dbh()->prepare($q);
+    $h->execute($list_id, $item);
+    my ($list_item_id) = $h->fetchrow_array();
+
+    return $list_item_id;
+}
+
+sub get_list_owner : Private { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+
+    my $q = "SELECT owner FROM sgn_people.list WHERE list_id=?";
+    my $h = $c->dbc->dbh()->prepare($q);
+    $h->execute($list_id);
+    my ($owner_id) = $h->fetchrow_array();
+    return $owner_id;
+}
     
-sub get_user { 
+sub get_user : Private { 
     my $self = shift;
     my $c = shift;
 
@@ -406,3 +579,24 @@ sub get_user {
     return undef;
 }
     
+sub check_user : Private { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+
+    my $user_id = $self->get_user($c);
+
+    my $error = "";
+
+    if (!$user_id) { 
+	$error = "You must be logged in to delete a list";
+
+    }
+
+    if ($self->get_list_owner($c, $list_id) != $user_id) { 
+	$error = "You have insufficient privileges to manipulate this list.";
+	
+    }
+    return $error;
+
+}
