@@ -353,13 +353,31 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 } 
 
 
-sub population : Regex('^solgs/population/([\d]+)(?:/([\w+]+))?'){
+sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?'){
     my ($self, $c) = @_;
    
     my ($pop_id, $action) = @{$c->req->captures};
 
+    my $uploaded_reference = $c->req->param('uploaded_reference');
+    $c->stash->{uploaded_reference} = $uploaded_reference;
+
+    if ($uploaded_reference) 
+    {
+        $pop_id = $c->req->param('model_id');
+
+        $c->stash->{model_id}   = $c->req->param('model_id'),
+        $c->stash->{list_name} = $c->req->param('list_name'),
+
+    }
+
     if ($pop_id )
     {   
+        if($pop_id =~ /uploaded/) 
+        {
+            $c->stash->{uploaded_reference} = 1;
+            $uploaded_reference = 1;
+        }
+
         $c->stash->{pop_id} = $pop_id;  
         $self->phenotype_file($c);
         $self->genotype_file($c);
@@ -377,28 +395,67 @@ sub population : Regex('^solgs/population/([\d]+)(?:/([\w+]+))?'){
 
         $self->select_traits($c);
     }
-    else 
-    {
-        $c->throw(public_message =>"Required population id is missing.", 
-                  is_client_error => 1, 
-            );
-    }
+ 
+    my $pheno_data_file = $c->stash->{phenotype_file};
+    
+        if($uploaded_reference) 
+        {
+            my $ret->{status} = 'failed';
+            if( !-s $pheno_data_file )
+            {
+                print STDERR "\n phenotype file size: $pheno_data_file > 1\n";
+                $ret->{status} = 'failed';
+            
+                $ret = to_json($ret);
+                
+                $c->res->content_type('application/json');
+                $c->res->body($ret); 
+            }
+        }
 } 
 
 
 sub project_description {
     my ($self, $c, $pr_id) = @_;
 
-    my $pr_rs = $c->model('solGS::solGS')->project_details($c, $pr_id);
+    $c->stash->{uploaded_reference} = 1 if ($pr_id =~ /uploaded/);
 
-    while (my $row = $pr_rs->next)
+    if(!$c->stash->{uploaded_reference}) {
+        my $pr_rs = $c->model('solGS::solGS')->project_details($c, $pr_id);
+
+        while (my $row = $pr_rs->next)
+        {
+            $c->stash(project_id   => $row->id,
+                      project_name => $row->name,
+                      project_desc => $row->description
+                );
+        }
+    } 
+    else 
     {
-        $c->stash(project_id   => $row->id,
-                  project_name => $row->name,
-                  project_desc => $row->description
-            );
+        my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
+        my $user_id = $c->user->id;
+
+        my $metadata_file = catfile ($tmp_dir, "metadata_${user_id}_${pr_id}");
+       
+        my @metadata = read_file($metadata_file);
+        
+        my ($key, $list_name, $desc);
+     
+        ($desc)        = grep {/description/} @metadata;       
+        ($key, $desc)  = split(/\t/, $desc);
+      
+        ($list_name)       = grep {/list_name/} @metadata;      
+        ($key, $list_name) = split(/\t/, $list_name); 
+
+        $c->stash(project_id   => $pr_id,
+                  project_name => $list_name,
+                  project_desc => $desc,
+                  owner        => $user_id
+                );
+
     }
-    
+   
     $self->genotype_file($c);
     my $geno_file  = $c->stash->{genotype_file};
     my @geno_lines = read_file($geno_file);
@@ -409,7 +466,7 @@ sub project_description {
     my @trait_pheno_lines = read_file($trait_pheno_file) if $trait_pheno_file;
 
     my $stocks_no = @trait_pheno_lines ? scalar(@trait_pheno_lines) - 1 : scalar(@geno_lines) - 1;
-
+   
     $self->phenotype_file($c);
     my $pheno_file = $c->stash->{phenotype_file};
     my @phe_lines  = read_file($pheno_file);   
@@ -421,7 +478,7 @@ sub project_description {
     $traits       =~ s/$filter_header//g;
 
     my @traits    =  split (/\t/, $traits);    
-    my $traits_no = scalar(uniq(@traits));
+    my $traits_no = scalar(@traits);
 
     $c->stash(markers_no => $markers_no,
               traits_no  => $traits_no,
@@ -2447,14 +2504,17 @@ sub add_trait_ids {
     my @traits = split (/\t/, $list);
   
     my $table = 'trait_name' . "\t" . 'trait_id' . "\n"; 
-    
+    print STDERR "\nadd_trait_ids: table $table\n";
+
     my $acronym_pairs = $self->get_acronym_pairs($c);
     foreach (@$acronym_pairs)
     {
         my $trait_name = $_->[1];
         $trait_name =~ s/\n//g;
+         print STDERR "\nadd_trait_ids: acronyms trait_name: $trait_name\n";
         my $trait_id = $c->model('solGS::solGS')->get_trait_id($c, $trait_name);
         $table .= $trait_name . "\t" . $trait_id . "\n";
+         print STDERR "\nadd_trait_ids: iterate acronyms  table: $table\n";
     }
 
     $self->all_traits_file($c);
@@ -2753,22 +2813,42 @@ sub phenotype_file {
     
     die "Population id must be provided to get the phenotype data set." if !$pop_id;
   
-    my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
-    $file_cache->purge();
+    my $pheno_file;
+
+    if ($c->stash->{uploaded_reference}) {
+        my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};     
+        my $user_id = $c->user->id;
+
+        $pheno_file = catfile ($tmp_dir, "phenotype_data_${user_id}_${pop_id}");
+        print STDERR "uploaded phenotype_file: $pheno_file\n";
+
+       # my $pheno_data = read_file($pheno_file);
+      #  print STDERR "\nphenotype_file: pheno_data: $pheno_data\n";
+      #  $pheno_data = $self->format_phenotype_dataset($c, $pheno_data);
+      #  write_file($pheno_file, $pheno_data);
+
+    }
+
+    unless (-s $pheno_file) 
+    {
+
+        my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
+        $file_cache->purge();
    
-    my $key        = "phenotype_data_" . $pop_id;
-    my $pheno_file = $file_cache->get($key);
+        my $key        = "phenotype_data_" . $pop_id;
+        $pheno_file = $file_cache->get($key);
 
-    unless ($pheno_file)
-    {  
-        $pheno_file = catfile($c->stash->{solgs_cache_dir}, "phenotype_data_" . $pop_id . ".txt");
-        $c->model('solGS::solGS')->phenotype_data($c, $pop_id);
-        my $data = $c->stash->{phenotype_data};
+        unless ($pheno_file)
+        {  
+            $pheno_file = catfile($c->stash->{solgs_cache_dir}, "phenotype_data_" . $pop_id . ".txt");
+            $c->model('solGS::solGS')->phenotype_data($c, $pop_id);
+            my $data = $c->stash->{phenotype_data};
         
-        $data = $self->format_phenotype_dataset($c, $data);
-        write_file($pheno_file, $data);
+            $data = $self->format_phenotype_dataset($c, $data);
+            write_file($pheno_file, $data);
 
-        $file_cache->set($key, $pheno_file, '30 days');
+            $file_cache->set($key, $pheno_file, '30 days');
+        }
     }
    
     $c->stash->{phenotype_file} = $pheno_file;
@@ -2793,7 +2873,7 @@ sub format_phenotype_dataset {
     $self->filter_phenotype_header($c);
     my $filter_header = $c->stash->{filter_phenotype_header};
     $filter_header =~ s/\t//g;
-
+ print STDERR "\nformat_phenotype_data: header (row 1): $rows[0]\n";
     my $cnt = 0;
     foreach my $trait_name (@headers)
     {
@@ -2801,7 +2881,7 @@ sub format_phenotype_dataset {
         
         my $abbr = $self->abbreviate_term($c, $trait_name);
         $header .= $abbr;
-       
+    print STDERR "\nformat_phenotype_data: abbr vs trait_name: $abbr vs $trait_name\n";  
         unless ($cnt == scalar(@headers))
         {
             $header .= "\t";
@@ -2839,24 +2919,35 @@ sub genotype_file  {
     
     die "Population id must be provided to get the genotype data set." if !$pop_id;
   
-    unless($geno_file) {
-   
-    my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
-    $file_cache->purge();
-   
-    my $key        = "genotype_data_" . $pop_id;
-    $geno_file = $file_cache->get($key);
+    if ($c->stash->{uploaded_reference}) {
+        my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};     
+        my $user_id = $c->user->id;
 
-    unless ($geno_file)
-    {  
-        $geno_file = catfile($c->stash->{solgs_cache_dir}, "genotype_data_" . $pop_id . ".txt");
-        $c->model('solGS::solGS')->genotype_data($c, $pop_id);
-        my $data = $c->stash->{genotype_data};
-        
-        write_file($geno_file, $data);
+        $geno_file = catfile ($tmp_dir, "genotype_data_${user_id}_${pop_id}");
+        print STDERR "uploaded genotype_file: $geno_file\n";
 
-        $file_cache->set($key, $geno_file, '30 days');
     }
+
+
+    unless($geno_file) 
+    {
+   
+        my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
+        $file_cache->purge();
+   
+        my $key        = "genotype_data_" . $pop_id;
+        $geno_file = $file_cache->get($key);
+
+        unless ($geno_file)
+        {  
+            $geno_file = catfile($c->stash->{solgs_cache_dir}, "genotype_data_" . $pop_id . ".txt");
+            $c->model('solGS::solGS')->genotype_data($c, $pop_id);
+            my $data = $c->stash->{genotype_data};
+        
+            write_file($geno_file, $data);
+
+            $file_cache->set($key, $geno_file, '30 days');
+        }
     }
    
     if ($pred_pop_id) 
