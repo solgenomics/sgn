@@ -18,13 +18,13 @@ $f_size => 0
 
 <& /util/import_javascript.mas, classes => ['Text.Markup', 'sprintf', 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List'] &>
 
-<div id="input_view">
 <& /page/page_title.mas, title=>"VIGS Tool" &>
 
 
 
 <&| /page/info_section.mas, id=>"vigs_input" , title=>"Run VIGS Tool", collapsible => 1, collapsed => 0  &>
 <center>
+<div id="input_view">
 
 Sequence:
 
@@ -37,30 +37,36 @@ Sequence:
 	    document.getElementById("sequence").value=seq;
 	}	    
 </script>
-<span id="status_wheel"></span>
+<div id="status_wheel" style="display:none"><img src="/static/documents/img/wheel.gif" /></div>
 <br />
 
 
-<textarea id="sequence" name="sequence" cols=62" rows="8"></textarea>
+<textarea class="input" id="sequence" name="sequence" cols=62" rows="8"></textarea>
 <br />
 <br />
 
 <span title="siRNA selected size">n-mer size</span> 
-<input id="si_rna" type="input" value="21" name="fragment_size" size="2" />&nbsp; &nbsp; &nbsp;
+<input class="input" id="si_rna" type="input" value="21" name="fragment_size" size="2" />&nbsp; &nbsp; &nbsp;
 
 <span title="desired VIGS fragment length">Fragment length</span> 
-<input id="f_length" type="input" value="300" name="seq_fragment" size="3" />&nbsp; &nbsp; &nbsp;
+<input class="input" id="f_length" type="input" value="300" name="seq_fragment" size="3" />&nbsp; &nbsp; &nbsp;
 
 <span title="Number of mismatches allowed in BowTie 2 alignment">mismatches</span> 
-<input id="mm" type="input" value="0" name="mismatch" size="1" />
+<input class="input" id="mm" type="input" value="0" name="mismatch" size="1" />
 <br />
 <br />
-Database <select id='bt2_db' name="database"> 
+Database <select class="input" id='bt2_db' name="database"> 
 <br />
 
 <%perl>
 foreach my $d (@databases) { 
-    print "<option value=\"".$d->id()."\">".$d->title()."</option><br />";
+    my $db_title = $d->title();
+    if ($db_title =~ /Benthamiana/) {
+        $db_title = 'N. benthamiana gene models (Genome release v0.4.4)';
+    } elsif ($db_title =~ /ITAG/) {
+        $db_title = 'Tomato gene models (ITAG release 2.3)';
+    }
+    print "<option value=\"".$d->id()."\">".$db_title."</option><br />";
 }     
 </%perl>
 </select>
@@ -74,11 +80,10 @@ foreach my $d (@databases) {
 
 
 <br />
+<button class="input" id="clear_form" value="clear">Clear</button>&nbsp; &nbsp; &nbsp;
+<button class="input" id="upload_expression_file" value="Run VIGS Analysis">Run VIGS Analysis</button>
+
 <br />
-<button id="clear_form" value="clear">Clear</button>&nbsp; &nbsp; &nbsp;
-<button id="upload_expression_file" value="Run VIGS Analysis">Run VIGS Analysis</button>
-
-
 <br />
 <div id="coverage_val" val="0"></div>
 <div id="seq_length" val="0"></div>
@@ -108,7 +113,7 @@ foreach my $d (@databases) {
         3. Choose <b>Fragment length</b>, desired VIGS fragment length in bp (100-Sequence length, Default=300)<br />
         4. Choose <b>mismatches</b>, number of mismatches allowed in the alignment (0-3, Default=0)<br />
         5. Choose <b>database</b><br />
-        6. Upload a <b>expression values file</b> (optional), gene identifiers must be in first column and a header in the first row
+        6. Upload a <b>expression values file</b> (optional), It must be a tab delimited text file, with gene identifiers in the first column and a header in the first row
      </p>
   </div>
 </&>
@@ -196,7 +201,7 @@ foreach my $d (@databases) {
 </&>
 
 
-<&| /page/info_section.mas, title=>"Sequences with matches of n-mers", collapsible => 1, collapsed => 0, subtitle=>'[<a id="open_descriptions_dialog">View</a>]&nbsp;&nbsp;[<a id="help_dialog" onclick="show_help_dialog(4)">Help</a>]', is_subsection=>"1" &>
+<&| /page/info_section.mas, title=>"Description of genes with matches of n-mers", collapsible => 1, collapsed => 0, subtitle=>'[<a id="open_descriptions_dialog">View</a>]&nbsp;&nbsp;[<a id="help_dialog" onclick="show_help_dialog(4)">Help</a>]', is_subsection=>"1" &>
     <table id="target_info"></table>
 </&>
 

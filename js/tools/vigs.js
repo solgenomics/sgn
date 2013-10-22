@@ -4,17 +4,17 @@ function show_help_dialog(msg_id_num) {
     var msg_id;
     if (msg_id_num == 0) {
 	alert(
-	    "• The score value indicates how good is the yellow region to silence only the targets and avoiding off-targets. The closer to 100 the better is the value. In the same way, the custom score indicates the value of the custom region, represented by the transparent grey rectangle.\n\n"
-	    +"• Set Custom Region button will activate a draggable and resizable transparent grey rectangle to select a custom region.\n\n"
+	    "• The best target region score value indicates how good the yellow highlighted region is, taking into account the number of target and off-target n-mers. The closer to 100 the better is the value. In the same way, the custom region score indicates the value of the custom region, represented by the transparent grey rectangle.\n\n"
+	    +"• Set Custom Region button will activate a draggable and resizable transparent grey rectangle to manually select a custom region.\n\n"
 	    +"• Change button will recalculate the results using the new parameters chosen. In case of changing the n-mer size, the algorithm will run Bowtie 2 again, so this process could take a while.\n\n"
 	);
     }
     if (msg_id_num == 1) {
 	alert(
-	    "• Targets are shown in blue, off-targets in red, the yellow area highlights the region of highest score (for the selected fragment size).\n\n"
-    	    +"• At the bottom the score graph shows score values in a red line over a black background. Score value = 0 is represented by the green line, under this line are represented the regions with more off-targets than targets, and the opposite when the score is over the green line.\n\n"
+	    "• N-mers mapping to the target/s are shown in blue and to off-targets in red. The yellow area highlights the region with the highest score using the selected parameters.\n\n"
+    	    +"• The bottom graph represents in red the score values along the sequence. The score value = 0 is indicated with a green line. Below this line are represented the regions with more off-targets than targets, and the opposite when the score is above the green line.\n\n"
 
-	    +"• Expand graph button will display every siRNA fragment aligned over the query for each subject.\n\n"
+	    +"• Expand graph button will display every n-mer fragment aligned over the query for each subject.\n\n"
 	    +"• Zoom button will zoom in/out the VIGS map representation.\n"
 	);
     }
@@ -26,13 +26,13 @@ function show_help_dialog(msg_id_num) {
     }
     if (msg_id_num == 3) {
         alert(
-            "• In this section is shown your query sequence, highlighting in yellow the best or custom region.\n\n"
-	    +"• The custom region will update as the grey selection rectangle is moved.\n"
+            "• In this section is shown the query sequence, highlighting in yellow the best target region or the custom region.\n\n"
+	    +"• The custom region will be updated as the grey selection rectangle is moved.\n"
 	);
     }
     if (msg_id_num == 4) {
         alert(
-            "• In this section is displayed each subject name, their number of matches over the query and their gene functional description.\n\n"
+            "• Number of n-mer matches and gene functional description are shown for each matched gene.\n\n"
 	    +"• The View link will open a draggable dialog with this information."
 	);
     }
@@ -54,7 +54,8 @@ jQuery(document).ready(function () {
 
 
     jQuery('#upload_expression_file').click(function () {
-	     
+	disable_ui();
+
         seq = jQuery("#sequence").val();
 	seq_length = seq.length;
         si_rna = jQuery("#si_rna").val();
@@ -62,6 +63,7 @@ jQuery(document).ready(function () {
 	mm = jQuery("#mm").val();
         db = jQuery("#bt2_db").val();
 	expr_f = jQuery('#expression_file').val();
+     	jQuery("#region_square").css("height","0px");
 
 	if (expr_f === '') {
 	    bt2_file = runBt2(seq, si_rna, f_length, mm, db);
@@ -72,6 +74,7 @@ jQuery(document).ready(function () {
 	    expr_msg = res[3];
 	    ids = res[4];
 	    m_aoa = res[5];
+	    hide_ui();
 	} else {
             jQuery("#upload_expression_form").submit();
 	}
@@ -84,6 +87,7 @@ jQuery(document).ready(function () {
         complete: function (response) {
             if (response.error) {
 	        alert("The expression file could not be uploaded"+response.error);
+		hide_ui();
 		return;
             }
             if (response.success) {
@@ -103,6 +107,8 @@ jQuery(document).ready(function () {
 		expr_msg = res[3];
     		ids = res[4];
  		m_aoa = res[5];
+
+		hide_ui();
             }
     	}
     });
@@ -165,7 +171,6 @@ jQuery(document).ready(function () {
     });
 
     function runBt2(seq, si_rna, f_length, mm, db) {
-	disable_ui();
 	var bt2_file;
 	var db_name;
 	jQuery("#no_results").html("");
@@ -219,7 +224,6 @@ jQuery(document).ready(function () {
 		     enable_ui();
 		} else {              
 		    //alert("SCORE: "+response.score);      
-		    hide_ui();
 
 		    //assign values to global variables
     		    score_array = response.all_scores;
@@ -236,7 +240,7 @@ jQuery(document).ready(function () {
 
 
 		    if (+response.score > 0) {
-		     	jQuery("#score_p").html("<b>Score:</b> "+best_score+" &nbsp;&nbsp;(-&infin;&mdash;100)<br />");
+		     	jQuery("#score_p").html("<b>Best target region score:</b> "+best_score+" &nbsp;&nbsp;(-&infin;&mdash;100)<br />");
 		     	jQuery("#t_num").val(coverage);
 		    } else {
 		        jQuery("#no_results").html("Note: No results found! Try again increasing the number of targets, decreasing the fragment size or modifing other parameters");
@@ -244,7 +248,7 @@ jQuery(document).ready(function () {
 		    
 		    //show result sections
 		    jQuery("#hide1").css("display","inline");
-		    
+
 		    //assign values to html variables
 		    jQuery("#coverage_val").val(coverage);
 		    jQuery("#seq_length").val(seq_length);
@@ -272,7 +276,7 @@ jQuery(document).ready(function () {
 		        jQuery("#best_seq").html("<b>No results were found</b>");
 		    }
  		    jQuery("#query").html(seq);
-		    hilite_sequence(best_start,best_end);
+		    hilite_sequence(best_start,best_end,0);
 		    
 		    var desc="";
 		    var gene_name="";
@@ -327,6 +331,7 @@ jQuery(document).ready(function () {
         }
 
         c.width = img_width;
+
 
         var cbr_start = +(best_start*xscale);
         var cbr_width = +((best_end-best_start)*xscale);
@@ -586,9 +591,13 @@ jQuery(document).ready(function () {
 
 
 // Highlights best region in Sequence Overview section
-    function hilite_sequence(cbr_start,cbr_end) {
+    function hilite_sequence(cbr_start,cbr_end,color) {
 	 
-	 var markup = new Text.Markup( { 'highlight' : [ '<span class="highlighted">', '</span>' ], 'break' : [ '<br />', '' ], 'space' : [ '<span>&nbsp;</span>', '' ] });
+	if (color) {
+	    var markup = new Text.Markup( { 'highlight' : [ '<span class="highlighted2" style="background:#D2D4D6;">', '</span>' ], 'break' : [ '<br />', '' ], 'space' : [ '<span>&nbsp;</span>', '' ] });
+	} else {
+	    var markup = new Text.Markup( { 'highlight' : [ '<span class="highlighted">', '</span>' ], 'break' : [ '<br />', '' ], 'space' : [ '<span>&nbsp;</span>', '' ] });
+	}
 
 	 var source_el = document.getElementById('query');
 	 var markup_el = document.getElementById('markup');
@@ -711,7 +720,7 @@ jQuery(document).ready(function () {
 	jQuery("#f_size").val(fragment);
 
 	var best_region = [cbr_start,cbr_end];
-	hilite_sequence(cbr_start,cbr_end);
+	hilite_sequence(cbr_start,cbr_end,1);
         printCustomSeq(best_seq,seq);
 	
 	if (score_array) {
@@ -761,7 +770,7 @@ jQuery(document).ready(function () {
 
 	if (coverage > 0 && fragment_length > 0) {
 	    var final_score = ((custom_score*100/fragment_length)/coverage).toFixed(2)
-	    jQuery("#score_p").html("<b>Score:</b> "+best_score+" &nbsp;&nbsp; <b> Custom Score: </b>"+final_score+" &nbsp;&nbsp; (-&infin;&mdash;100)");
+	    jQuery("#score_p").html("<b>Best target region score:</b> "+best_score+" &nbsp;&nbsp; <b> Custom region score: </b>"+final_score+" &nbsp;&nbsp; (-&infin;&mdash;100)");
 	}
     }
 
@@ -815,7 +824,7 @@ jQuery(document).ready(function () {
 	    var fragment = (+cbr_end - +cbr_start +1);
 	    jQuery("#f_size").val(fragment);
 
-	    hilite_sequence(cbr_start,cbr_end);
+	    hilite_sequence(cbr_start,cbr_end,1);
 
 	    printCustomSeq(best_seq,seq);
 			
@@ -856,8 +865,8 @@ jQuery(document).ready(function () {
        	    ids = res[4];
 	    m_aoa = res[5];
 
-	    document.getElementById("region_square").style.height="0px";
-     
+     	    jQuery("#region_square").css("height","0px");
+
         } else if (align_mm != mm) {
 	    jQuery("#f_length").val(f_size);
 	    jQuery("#mm").val(align_mm);
@@ -871,7 +880,8 @@ jQuery(document).ready(function () {
 	    ids = res[4];
 	    m_aoa = res[5];
 
-	    getCustomRegion(score_array,best_seq,seq)
+     	    jQuery("#region_square").css("height","0px");
+	    //getCustomRegion(score_array,best_seq,seq)
         } else if (t_num != coverage || f_size != f_length) {
 	    jQuery("#f_length").val(f_size);
 	    jQuery("#coverage_val").val(t_num);
@@ -884,7 +894,8 @@ jQuery(document).ready(function () {
 	    ids = res[4];
 	    m_aoa = res[5];
 
-	    getCustomRegion(score_array,best_seq,seq)
+     	    jQuery("#region_square").css("height","0px");
+	    //getCustomRegion(score_array,best_seq,seq)
 	} else {
 	    alert("there are no parameters to change");
 	}
@@ -892,26 +903,24 @@ jQuery(document).ready(function () {
     }
 
     function disable_ui() {
-        jQuery("input").prop("disabled", true);
-	jQuery('#status_wheel').html('<img src="/static/documents/img/wheel.gif" />');
+        jQuery("#status_wheel").css("display","inline");
+        jQuery(".input").prop("disabled", true);
     }
 
     function enable_ui() {
-        jQuery("input").prop("disabled", false);
-	jQuery('#status_wheel').html("");
+        jQuery("#status_wheel").css("display","none");
+        jQuery(".input").prop("disabled", false);
     }
 
 
     function hide_ui() {
-        document.getElementById("status_wheel").style.display="none";
+        jQuery("#status_wheel").css("display","none");
 	Effects.swapElements('vigs_input_offswitch', 'vigs_input_onswitch');
 	Effects.hideElement('vigs_input_content');
 	Effects.swapElements('vigs_usage_offswitch', 'vigs_usage_onswitch');
 	Effects.hideElement('vigs_usage_content');
-	jQuery("input").prop("disabled", false);
+	jQuery(".input").prop("disabled", false);
     }
-
-
 
 });
 
