@@ -60,13 +60,7 @@ Database <select class="input" id='bt2_db' name="database">
 
 <%perl>
 foreach my $d (@databases) { 
-    my $db_title = $d->title();
-    if ($db_title =~ /Benthamiana/) {
-        $db_title = 'N. benthamiana gene models (Genome release v0.4.4)';
-    } elsif ($db_title =~ /ITAG/) {
-        $db_title = 'Tomato gene models (ITAG release 2.3)';
-    }
-    print "<option value=\"".$d->id()."\">".$db_title."</option><br />";
+    print "<option value=\"".$d->id()."\">".$d->title()."</option><br />";
 }     
 </%perl>
 </select>
