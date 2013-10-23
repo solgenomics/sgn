@@ -208,7 +208,7 @@ jQuery(document).ready(function () {
 	var expr_msg;
 	var ids;
 	var m_aoa;
-	var t_info = "<tr><th>Gene</th><th>matches</th><th>Functional Description</th></tr>";
+	var t_info = "<tr><th>Gene</th><th>Matches</th><th>Functional Description</th></tr>";
 	jQuery("#no_results").html("");
 
         //alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", coverage: "+coverage+" db: "+db+", expr_file: "+expr_file);
