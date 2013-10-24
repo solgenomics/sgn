@@ -133,12 +133,15 @@ sub project_location {
 
 sub all_projects {
     my ($self, $c) = @_;
+
+    my $rows = $c->stash->{get_selection_populations} ? 40 : 10;
+
     my $projects_rs =  $self->schema($c)->resultset("Project::Project")
         ->search({}, 
                  { 
                      distinct => 1,
                      page     => $c->req->param('page') || 1,
-                     rows     => 10,
+                     rows     => $rows,
                      order_by => 'name'              
                  },                       
         );
@@ -344,6 +347,8 @@ sub prediction_pops {
  
   my @tr_pop_markers;
   
+  $c->stash->{get_selection_populations} = 1;
+ 
   if ($training_pop_id) 
   {
       my $dir = $c->stash->{solgs_cache_dir};
