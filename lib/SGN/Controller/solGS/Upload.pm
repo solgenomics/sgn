@@ -67,7 +67,6 @@ sub generate_check_value :Path('/solgs/generate/checkvalue') Args(0) {
     my $file_name = $c->req->param('file_name');
     my $check_value = crc($file_name);
 
-   # print STDERR "\nfile_name: $file_name \t check_value: $check_value\n";
     my $ret->{status} = 'failed';
     
     if ($check_value) 
@@ -113,7 +112,8 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
     $c->model('solGS::solGS')->format_user_list_genotype_data($c);
     
     $self->create_user_list_genotype_data_file($c);
-print STDERR "\nupload_prediction_genotypes_list stock_name: created_user_list_genotype_data-file\n";
+   # my $genotype_file = $c->stash->{user_selection_list_genotype_data_file};
+
     my $ret->{status} = 'failed';
     
     if (-s $c->stash->{user_selection_list_genotype_data_file}) 
@@ -125,7 +125,6 @@ print STDERR "\nupload_prediction_genotypes_list stock_name: created_user_list_g
         
     $c->res->content_type('application/json');
     $c->res->body($ret);
-   # print STDERR "\nupload_prediction_genotypes_list stock_name:responded to ajax request\n";
 
 }
 
@@ -195,7 +194,7 @@ sub create_user_reference_list_phenotype_data_file {
 
     my $user_id    = $c->user->id;
     my $pheno_data = $c->stash->{user_reference_list_phenotype_data};
-   # print STDERR "\ncreate_user_reference_list_phenotype_data_file pheno_data: $pheno_data\n";
+   
     $pheno_data = $c->controller("solGS::solGS")->format_phenotype_dataset($c, $pheno_data);
     
     my $file = catfile ($tmp_dir, "phenotype_data_${user_id}_${model_id}");
@@ -346,7 +345,6 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
                      {
                          $trait_name = $r->[1];
                          $trait_name =~ s/\n//g;
-                         print STDERR "\ntrait_name: $r->[0] $r->[1] : $trait_name\n";
                      }
                  }
              }
@@ -362,25 +360,43 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
       
              if (! -s $prediction_pop_gebvs_file)
              {
-                 my $dir = $c->stash->{solgs_cache_dir};
-           
-                 my $exp = "phenotype_data_${model_id}"; 
-                 my $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
+
+                 my ($pheno_file, $geno_file);
+
+                 if ($model_id =~ /uploaded/) 
+                 {
+                     my $dir = $c->stash->{solgs_prediction_upload_dir};
+                     my $user_id = $c->user->id;
+                     my $exp = "phenotype_data_${user_id}_${model_id}"; 
+                     $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
                 
-                 $exp = "genotype_data_${model_id}"; 
-                 my $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
+                     $exp = "genotype_data_${user_id}_{model_id}"; 
+                     $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);    
+
+                 }
+                 else 
+                 {
+                     my $dir = $c->stash->{solgs_cache_dir};
+           
+                     my $exp = "phenotype_data_${model_id}"; 
+                     $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
+                
+                     $exp = "genotype_data_${model_id}"; 
+                     $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
+                 }
                 
                  $c->stash->{phenotype_file} = $pheno_file;
                  $c->stash->{genotype_file}  = $geno_file;
-
+                 print STDERR "\ncall user_prediction_population_file\n";
                  $self->user_prediction_population_file($c, $prediction_pop_id);
-  
+                 print STDERR "\ncall get_rrblup_output\n";  
                  $c->controller("solGS::solGS")->get_rrblup_output($c); 
 
              }
          } 
-            
+          
         $c->controller("solGS::solGS")->trait_phenotype_stat($c);
+  
         $c->controller("solGS::solGS")->gs_files($c);
                
         $c->controller("solGS::solGS")->download_prediction_urls($c, $model_id, $prediction_pop_id );
@@ -397,8 +413,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
         $ret = to_json($ret);
        
         $c->res->content_type('application/json');
-        $c->res->body($ret);
-         
+        $c->res->body($ret);         
     }
 }
 
@@ -414,7 +429,8 @@ sub user_prediction_population_file {
         );
 
     $c->stash->{prediction_pop_id} = $pred_pop_id;
-
+    
+    print STDERR "\nuser_prediction_population_file: pred_pop_id - $pred_pop_id\n";
     
     my $exp = "genotype_data_${user_id}_${pred_pop_id}";
    # if($c->stash->{'list_source'} eq 'from_db')
@@ -425,7 +441,7 @@ sub user_prediction_population_file {
    #    my $solgs_prediction_upload = $c->stash->{solgs_prediction_upload_dir}      
 
     #}
-
+    
     $c->stash->{user_selection_list_genotype_data_file} = $pred_pop_file;
    
     $fh->print($pred_pop_file);
@@ -436,11 +452,10 @@ sub user_prediction_population_file {
 }
 
 
-
 sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/list') Args(0) {
     my ($self, $c) = @_;
     
-    my $model_id    = $c->req->param('model_id');
+    my $model_id   = $c->req->param('model_id');
     my $list_name  = $c->req->param('list_name');   
     my $list       = $c->req->param('list');
 
@@ -456,32 +471,26 @@ sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/lis
         push @plots_names, $plot->[1]; 
     }
     
-
-   # my $accessions = $self->parse_accessions_from_plot_names(\@plots_names);
     $c->stash->{reference_population_plot_names} = \@plots_names;
-   # $c->stash->{reference_genotypes_list_stocks_names} = $accessions;
-    
+     
     $c->stash->{list_name} = $list_name;
     $c->stash->{model_id}   = $model_id;
 
   
-    # $c->model('solGS::solGS')->format_user_list_genotype_data($c);
-#     $c->model('solGS::solGS')->format_user_reference_list_phenotype_data($c);
+   # $c->model('solGS::solGS')->format_user_list_genotype_data($c);
+   # $c->model('solGS::solGS')->format_user_reference_list_phenotype_data($c);
    
-#     $self->create_user_list_genotype_data_file($c);
-#     my $geno_file = $c->stash->{user_reference_list_genotype_data_file};
+   # $self->create_user_list_genotype_data_file($c);
+   # my $geno_file = $c->stash->{user_reference_list_genotype_data_file};
 
-#     $self->create_user_reference_list_phenotype_data_file($c);
-#     my $pheno_file =  $c->stash->{user_reference_list_phenotype_data_file};
+   # $self->create_user_reference_list_phenotype_data_file($c);
+   # my $pheno_file =  $c->stash->{user_reference_list_phenotype_data_file};
    
-   
-   # print STDERR "\nupload_prediction_genotypes_list geno_file:  $geno_file\n";
     my $pheno_file = '/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/phenotype_data_isaaktecle_uploaded_67';
     my $geno_file = '/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/genotype_data_isaaktecle_uploaded_67'; 
     
-    $self-> create_user_reference_list_metadata_file($c);
-   # print STDERR "\nupload_prediction_genotypes_list pheno_file:  $pheno_file\n";
-    
+    $self->create_user_reference_list_metadata_file($c);
+     
     my $ret->{status} = 'failed';
     
     if (-s $geno_file && -s $pheno_file) 
