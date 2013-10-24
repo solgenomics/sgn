@@ -11,7 +11,7 @@ $download_prediction
 $analyzed_traits
 $pop_id
 $prediction_pop_id
-$list_of_prediction_pops
+$list_of_prediction_pops=>''
 $prediction_pop_name => ''
 $prediction_pop_analyzed_traits => ''
 
@@ -32,7 +32,8 @@ $prediction_pop_analyzed_traits => ''
 &>
 
 <div id="selection_populations">
-
+% if ($list_of_prediction_pops)
+% {
 <& /page/columnar_table.mas,
      headings    => ['',  'Selection population', 'Description', 'Generation', 'Year', 'Download GEBVs' ],
      data        => $list_of_prediction_pops,
@@ -40,7 +41,7 @@ $prediction_pop_analyzed_traits => ''
     __alt_width  => 1,
     __align      => 'llllll'
 &>
-
+%}
 </div>
 
 <p>&nbsp</p>
