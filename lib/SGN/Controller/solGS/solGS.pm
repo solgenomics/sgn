@@ -403,7 +403,6 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?'){
             my $ret->{status} = 'failed';
             if( !-s $pheno_data_file )
             {
-                print STDERR "\n phenotype file size: $pheno_data_file > 1\n";
                 $ret->{status} = 'failed';
             
                 $ret = to_json($ret);
@@ -514,9 +513,13 @@ sub trait :Path('/solgs/trait') Args(3) {
         $self->download_prediction_urls($c);     
         my $download_prediction = $c->stash->{download_prediction};
     
-        $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
-     
+        unless($pop_id =~ /uploaded/) 
+        {
+            $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
+        }
+        
         $self->get_trait_name($c, $trait_id);
+        $c->stash->{owner} = $c->user->id;
         $c->stash->{template} = $self->template("/population/trait.mas");
     }
     
@@ -550,6 +553,7 @@ sub input_files {
     my ($self, $c) = @_;
     
     $self->genotype_file($c);
+
     $self->phenotype_file($c);
    
     # my $prediction_population_file = 'cap123geno_prediction.csv';
@@ -1060,10 +1064,10 @@ sub list_predicted_selection_pops {
     
     foreach (@files) 
     { 
-        print STDERR "\nlist_predicted_selection_pops: file: $_\n";
+       
         unless ($_ =~ /uploaded/) {
             my ($model_id2, $pred_pop_id, $trait_id) = $_ =~ m/\d+/g;
-            print STDERR "\nlist_predicted_selection_pops: model_id: $model_id\tpred_pop_id: $pred_pop_id\ttrait_id: $trait_id\n";
+            
             push @pred_pops, $pred_pop_id;  
         }
     }
@@ -1083,7 +1087,6 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
 
     my $path = $c->req->path; my $referer= $c->req->referer;
    
-    print STDERR "\npath: $path \t referer: $referer\tprediction_id: $prediction_id\n ";
     my $identifier = $pop_id . "_" . $prediction_id;
     $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     my $prediction_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
@@ -1388,7 +1391,6 @@ sub download_ranked_genotypes :Path('/solgs/download/ranked/genotypes/pop') Args
 sub rank_genotypes : Private {
     my ($self, $c, $pred_pop_id) = @_;
 
-    print STDERR "\n rank_genotypes pred_pop_id: $pred_pop_id\n";
     my $pop_id      = $c->stash->{pop_id};
     $c->stash->{prediction_pop_id} = $pred_pop_id;
 
@@ -2504,22 +2506,21 @@ sub add_trait_ids {
     my @traits = split (/\t/, $list);
   
     my $table = 'trait_name' . "\t" . 'trait_id' . "\n"; 
-    print STDERR "\nadd_trait_ids: table $table\n";
-
+ 
     my $acronym_pairs = $self->get_acronym_pairs($c);
     foreach (@$acronym_pairs)
     {
         my $trait_name = $_->[1];
         $trait_name =~ s/\n//g;
-         print STDERR "\nadd_trait_ids: acronyms trait_name: $trait_name\n";
+        
         my $trait_id = $c->model('solGS::solGS')->get_trait_id($c, $trait_name);
         $table .= $trait_name . "\t" . $trait_id . "\n";
-         print STDERR "\nadd_trait_ids: iterate acronyms  table: $table\n";
+       
     }
 
     $self->all_traits_file($c);
     my $traits_file =  $c->stash->{all_traits_file};
-    
+  
     write_file($traits_file, $table);
 
 }
@@ -2814,19 +2815,13 @@ sub phenotype_file {
     die "Population id must be provided to get the phenotype data set." if !$pop_id;
   
     my $pheno_file;
-
-    if ($c->stash->{uploaded_reference}) {
+ 
+    if ($c->stash->{uploaded_reference} || $pop_id =~ /uploaded/) {
         my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};     
         my $user_id = $c->user->id;
 
         $pheno_file = catfile ($tmp_dir, "phenotype_data_${user_id}_${pop_id}");
-        print STDERR "uploaded phenotype_file: $pheno_file\n";
-
-       # my $pheno_data = read_file($pheno_file);
-      #  print STDERR "\nphenotype_file: pheno_data: $pheno_data\n";
-      #  $pheno_data = $self->format_phenotype_dataset($c, $pheno_data);
-      #  write_file($pheno_file, $pheno_data);
-
+ 
     }
 
     unless (-s $pheno_file) 
@@ -2873,7 +2868,7 @@ sub format_phenotype_dataset {
     $self->filter_phenotype_header($c);
     my $filter_header = $c->stash->{filter_phenotype_header};
     $filter_header =~ s/\t//g;
- print STDERR "\nformat_phenotype_data: header (row 1): $rows[0]\n";
+
     my $cnt = 0;
     foreach my $trait_name (@headers)
     {
@@ -2881,7 +2876,7 @@ sub format_phenotype_dataset {
         
         my $abbr = $self->abbreviate_term($c, $trait_name);
         $header .= $abbr;
-    print STDERR "\nformat_phenotype_data: abbr vs trait_name: $abbr vs $trait_name\n";  
+     
         unless ($cnt == scalar(@headers))
         {
             $header .= "\t";
@@ -2912,9 +2907,10 @@ sub genotype_file  {
     my $geno_file;
 
     if ($pred_pop_id) 
-    {       
+    {      
         $pop_id = $c->stash->{prediction_pop_id};      
-        $geno_file = $c->stash->{user_list_genotype_data_file};
+        $geno_file = $c->stash->{user_selection_list_genotype_data_file};
+      
     } 
     
     die "Population id must be provided to get the genotype data set." if !$pop_id;
@@ -2924,10 +2920,18 @@ sub genotype_file  {
         my $user_id = $c->user->id;
 
         $geno_file = catfile ($tmp_dir, "genotype_data_${user_id}_${pop_id}");
-        print STDERR "uploaded genotype_file: $geno_file\n";
-
+ 
     }
 
+    if ($pop_id =~ /uploaded/) 
+    {
+        my $dir = $c->stash->{solgs_prediction_upload_dir};
+        my $user_id = $c->user->id;
+      
+        my $exp = "genotype_data_${user_id}_${pop_id}"; 
+        $geno_file = $self->grep_file($dir, $exp);    
+      
+    }
 
     unless($geno_file) 
     {
@@ -2943,7 +2947,7 @@ sub genotype_file  {
             $geno_file = catfile($c->stash->{solgs_cache_dir}, "genotype_data_" . $pop_id . ".txt");
             $c->model('solGS::solGS')->genotype_data($c, $pop_id);
             my $data = $c->stash->{genotype_data};
-        
+
             write_file($geno_file, $data);
 
             $file_cache->set($key, $geno_file, '30 days');
@@ -2958,7 +2962,7 @@ sub genotype_file  {
     {
         $c->stash->{genotype_file} = $geno_file; 
     }
-   
+ 
 }
 
 
@@ -2977,6 +2981,7 @@ sub get_rrblup_output :Private{
     if ($trait_abbr)     
     {
         $self->run_rrblup_trait($c, $trait_abbr);
+
     }
     else 
     {    
@@ -3124,7 +3129,6 @@ sub run_rrblup_trait {
         
         if ($prediction_id)
         { 
-           
             $prediction_id = "uploaded_${prediction_id}" if $c->stash->{uploaded_prediction};
             my $identifier =  $pop_id . '_' . $prediction_id;
 
@@ -3132,8 +3136,8 @@ sub run_rrblup_trait {
             my $pred_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
 
             unless (-s $pred_pop_gebvs_file != 0) 
-            {
-                $self->input_files($c);            
+            { 
+                $self->input_files($c); 
                 $self->run_rrblup($c); 
             }
         }
