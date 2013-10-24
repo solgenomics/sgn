@@ -51,7 +51,7 @@ function getGenotypesList(listId) {
     }
 
     var listName = list.listNameById(listId);
-    var listType = list.getListType(listId);
+    var listType;// = list.getListType(listId);
 
     return {'name'      : listName,
             'list'      : genotypesList.elements,
@@ -68,9 +68,9 @@ function loadGenotypesList(listId) {
     var modelId        = getModelId();
     var traitId        = getTraitId();
     var selectionPopId = listId;
-    var listType       = genoList.list_type;
+    // var listType       = genoList.list_type;
 
-    alert('list type ' + listType);
+    // alert('list type ' + listType);
     if ( list.length === 0) {       
         alert('The list is empty. Please select a list with content.' );
     }
@@ -136,11 +136,12 @@ function loadGenotypesList(listId) {
                         jQuery.unblockUI();   
                     }
                      
-                }
-                   //  error: function(res) {
-//                     alert("Error occured while uploading the list of selection genotypes.");
-//                     jQuery.unblockUI();   
-//                 }            
+                },
+                    error: function(res) {
+                 
+                    jQuery.unblockUI();
+                    alert("Error occured while uploading the list of selection genotypes.\n\n" + res.responseText);
+                }            
             });        
     }
 }
@@ -239,27 +240,36 @@ function loadPredictionOutput (url, listId, listSource) {
                        'prediction_id': listId,
                        'list_source': listSource,
                       },
-
+                
                 success: function (response) {
-               
+                  
                 if (response.status == 'success') {
+                    
                     var tdId = '#list_prediction_output_' + listId;
                     jQuery(tdId).html(response.output);
-                                        
-                    var popsList = listSelPopulationsUploaded();
+                                       
+                    var page = document.URL;
                     
-                    jQuery("#select_a_population_div").html('');
+                    if (page.match('/solgs/trait/') == 'undefined') {
+                        
+                        var popsList = listSelPopulationsUploaded();                        
+                        jQuery("#select_a_population_div").html('');
                     
-                    selectAPopulation(modelId,  popsList);
+                        selectAPopulation(modelId,  popsList);
+                  
+                    }
                     
                     jQuery.unblockUI();
-                 
+            
                 }
                 else {                
+                    
                     alert('Error occured calculating GEBVs for the list of selection genotypes.');
                     jQuery.unblockUI();
+                    
                 }
             },
+                
                 error: function(response) {
                 alert('error: ' + res.responseText);
 
