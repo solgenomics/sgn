@@ -20,7 +20,7 @@ sub validate {
     my @missing = ();
     foreach my $term (@$list) { 
 
-	my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search( { name => $term } );
+	my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search( { description => $term } );
 
 	if ($rs->count == 0) { 
 	    push @missing, $term;
