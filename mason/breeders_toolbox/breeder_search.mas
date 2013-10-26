@@ -45,7 +45,7 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
 </td>
 
 <td width="200">
-  <select multiple id="stock_data" size="10" style="width:200px; overflow:auto;>"</select>
+  <select multiple id="stock_data" size="10" style="width:200px; overflow:auto;>"</select>	  
 </td>
 
 </tr>
@@ -53,17 +53,14 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
 <td>
 <div id="c1_data_count"></div>
 <div id="c1_to_list_menu"></div>
-<div id="c1_data_text" style="display:none;" >HELLO!</div>
 </td>
 <td>
 <div id="c2_data_count"></div>
 <div id="c2_to_list_menu"></div>
-<div id="c2_data_text" style="visibility:hidden;"></div>
 </td>
 <td>
 <div id="c3_data_count"></div>
 <div id="c3_to_list_menu"></div>
-<div id="c3_data_text" style="visibility:hidden;"></div>
 </td>
 <td>
 <div id="stock_count"></div>
@@ -83,9 +80,9 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
       jQuery('#add_to_list_menu').html('(log in to use lists)');
     }
     else { 
-      addToListMenu('c1_to_list_menu', 'c1_data_text');
-      addToListMenu('c2_to_list_menu', 'c2_data');
-      addToListMenu('c3_to_list_menu', 'c3_data');      
+      addToListMenu('c1_to_list_menu', 'c1_data', true);
+      addToListMenu('c2_to_list_menu', 'c2_data', true);
+      addToListMenu('c3_to_list_menu', 'c3_data', true);      
       addToListMenu('add_to_list_menu', 'stock_data');
     }
  });
