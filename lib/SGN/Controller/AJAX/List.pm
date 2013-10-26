@@ -2,7 +2,10 @@
 package SGN::Controller::AJAX::List;
 
 use Moose;
+
+use List::MoreUtils qw | uniq |;
 use CXGN::List::Validate;
+use CXGN::List::Transform;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -12,7 +15,7 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-sub get_list :Path('/list/get') Args(0) { 
+sub get_list_action :Path('/list/get') Args(0) { 
     my $self = shift;
     my $c = shift;
 
@@ -29,12 +32,14 @@ sub get_list :Path('/list/get') Args(0) {
     $c->stash->{rest} = $list;			  
 }
 
-sub get_list_data :Path('/list/data') Args(0) { 
+sub get_list_data_action :Path('/list/data') Args(0) { 
     my $self = shift;
     my $c = shift;
 
     my $list_id = $c->req->param("list_id");
 
+    my $type_id = ""; # fIX this
+    my $list_type = ""; #fix this
     my $error = $self->check_user($c, $list_id);
     if ($error) { 
 	$c->stash->{rest} = { error => $error };
@@ -43,39 +48,15 @@ sub get_list_data :Path('/list/data') Args(0) {
 
     my $list = $self->retrieve_list($c, $list_id);
 
-    my ($type_id, $list_type) = $self->retrieve_type($c, $list_id);
+    my $metadata = $self->get_list_metadata($c, $list_id);
 
     $c->stash->{rest} = { 
 	type_id     => $type_id,
 	type_name   => $list_type,
 	elements    => $list,
-    };
-			  
+    };			  
 }
 
-
-
-sub retrieve_list { 
-    my $self = shift;
-    my $c = shift;
-    my $list_id = shift;
-    
-    my $error = $self->check_user($c, $list_id);
-    if ($error) { 
-	$c->stash->{rest} = { error => $error };
-	return;
-    }
-
-    my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
-
-    my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($list_id);
-    my @list = ();
-    while (my ($id, $content) = $h->fetchrow_array()) { 
-	push @list, [ $id, $content ];
-    }
-    return \@list;
-}
 
 sub retrieve_contents :Path('/list/contents') Args(1) { 
     my $self = shift;
@@ -99,25 +80,27 @@ sub retrieve_contents :Path('/list/contents') Args(1) {
     $c->stash->{rest} =  \@list;
 }
 
-
-
-sub retrieve_type { 
+sub get_list_metadata { 
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
-    my $q = "SELECT type_id, cvterm.name FROM sgn_people.list JOIN cvterm ON (type_id=cvterm_id) WHERE list_id=?";
+    my $q = "SELECT list.name, list.description, type_id, cvterm.name FROM sgn_people.list JOIN cvterm ON (type_id=cvterm_id) WHERE list_id=?";
     my $h = $c->dbc->dbh()->prepare($q);
     $h->execute($list_id);
-    my ($type_id, $list_type) = $h->fetchrow_array();
-    return ($type_id, $list_type);
+    my ($name, $desc, $type_id, $list_type) = $h->fetchrow_array();
+    return { name => $name,
+	     description => $desc,
+	     type_id => $type_id,
+	     list_type => $list_type
+    };
 }
 
-sub get_type :Path('/list/type') Args(1) { 
+sub get_type_action :Path('/list/type') Args(1) { 
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
 
-    my ($type_id, $list_type) = $self->retrieve_type($c, $list_id);
+    my ($name, $desc, $type_id, $list_type) = $self->get_list_metadata($c, $list_id);
     
     $c->stash->{rest} = { type_id => $type_id,
 			  list_type => $list_type,
@@ -171,7 +154,7 @@ sub set_type :Path('/list/type') Args(2) {
     
 }
 
-sub new_list :Path('/list/new') Args(0) { 
+sub new_list_action :Path('/list/new') Args(0) { 
     my $self = shift;
     my $c = shift;
 
@@ -187,15 +170,7 @@ sub new_list :Path('/list/new') Args(0) {
 	
     my $new_list_id = 0;
     eval { 
-	my $q = "INSERT INTO sgn_people.list (name, description, owner) VALUES (?, ?, ?)";
-	my $h = $c->dbc->dbh->prepare($q);
-	$h->execute($name, $desc, $user_id);
-	
-	$q = "SELECT currval('sgn_people.list_list_id_seq')";
-	$h = $c->dbc->dbh->prepare($q);
-	$h->execute();
-	($new_list_id) = $h->fetchrow_array();
-	
+	$new_list_id = $self->new_list($c, $name, $desc, $user_id);
     };
 
     if ($@) { 
@@ -303,7 +278,7 @@ sub add_item :Path('/list/item/add') Args(0) {
     }
 }
 
-sub add_bulk : Path('/list/bulk/add') Args(0) { 
+sub add_bulk : Path('/list/add/bulk') Args(0) { 
     my $self = shift;
     my $c = shift;
     my $list_id = $c->req->param("list_id");
@@ -324,6 +299,8 @@ sub add_bulk : Path('/list/bulk/add') Args(0) {
 
     my @elements = split "\t", $elements;
 
+    #print STDERR "ADDING ELEMENTS: ".join(", ", @elements)."\n";
+
     my @duplicates = ();
     my $count = 0;
     foreach my $element (@elements) { 
@@ -336,10 +313,9 @@ sub add_bulk : Path('/list/bulk/add') Args(0) {
 	}
     }
     if (@duplicates) { 
-	$c->stash->{rest} = { error => "The following items are already in the list (list_id=$list_id) and were not added: ".(join ",", @duplicates)."." };
-	return;
+	$c->stash->{rest} = { duplicates => \@duplicates };
     }
-    $c->stash->{rest} = { success => $count };
+    $c->stash->{rest}->{success} = $count;
 
 }
 
@@ -354,7 +330,7 @@ sub insert_element : Private {
     $ih->execute($list_id, $element);
 }
 
-sub delete_list :Path('/list/delete') Args(0) { 
+sub delete_list_action :Path('/list/delete') Args(0) { 
     my $self = shift;
     my $c = shift;
 
@@ -382,7 +358,7 @@ sub delete_list :Path('/list/delete') Args(0) {
 }
 
 
-sub exists_list : Path('/list/exists') Args(0) { 
+sub exists_list_action : Path('/list/exists') Args(0) { 
     my $self =shift;
     my $c = shift;
     my $name = $c->req->param("name");
@@ -499,6 +475,63 @@ sub replace_elements :Path('/list/item/replace') Args(2) {
 
 }
 
+sub combine_lists : Path('/list/combine') Args(2) { 
+    my $self = shift;
+    my $c = shift;
+    my $list1_id = shift;
+    my $list2_id = shift;
+    
+    my $list1 = $self->get_list($c, $list1_id);
+    my $list2 = $self->get_list($c, $list2_id);
+
+    my $combined_list_id = $self->new_list(
+	$c, 
+	$list1->{name}."_".$list2->{name}, 
+	$list1->{description}.", ".$list2->{description});
+
+    my @combined_elements = (@{$list1->{elements}}, @{$list2->{elements}});
+    
+    my @unique_elements = uniq(@combined_elements);
+
+    foreach my $item (@unique_elements) { 
+	$self->add_item($c, $combined_list_id, $item);
+    }
+}
+
+sub intersect_lists : Path('/list/intersect') Args(2) { 
+    my $self = shift;
+    my $c = shift;
+    my $list1_id = shift;
+    my $list2_id = shift;
+    
+    my $list1 = $self->get_list($c, $list1_id);
+    my $list2 = $self->get_list($c, $list2_id);
+
+    my $combined_list_id = $self->new_list(
+	$c, 
+	$list1->{name}."_".$list2->{name}."_intersect", 
+	$list1->{description}.", ".$list2->{description});
+
+    my @intersect_elements = ();
+
+    my $list1_hashref; my $list2_hashref;
+    map { $list1_hashref->{$_}=1 } @{$list1->{elements}};
+    map { $list2_hashref->{$_}=1 } @{$list2->{elements}};
+
+    foreach my $item (keys(%{$list1_hashref})) { 
+	if (exists($list1_hashref->{$item}) && exists($list2_hashref->{$item})) { 
+	    push @intersect_elements, $item;
+	}
+    }
+    
+    my @unique_elements = uniq(@intersect_elements);
+
+    foreach my $item (@unique_elements) { 
+	$self->add_item($c, $combined_list_id, $item);
+    }
+}
+
+
 sub remove_element_action :Path('/list/item/remove') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -518,6 +551,67 @@ sub remove_element_action :Path('/list/item/remove') Args(0) {
     $c->stash->{rest} = $response;
     
 }
+
+sub new_list : Private { 
+    my $self = shift;
+    my $c = shift;
+    my ($name, $desc, $owner) = @_;
+
+    my $user_id = $self->get_user($c);
+
+    my $q = "INSERT INTO sgn_people.list (name, description, owner) VALUES (?, ?, ?)";
+    my $h = $c->dbc->dbh->prepare($q);
+    $h->execute($name, $desc, $user_id);
+    
+    $q = "SELECT currval('sgn_people.list_list_id_seq')";
+    $h = $c->dbc->dbh->prepare($q);
+    $h->execute();
+    my ($new_list_id) = $h->fetchrow_array();
+    
+    return $new_list_id;
+    
+}
+
+sub get_list : Private { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+
+    my $list = $self->retrieve_list($c, $list_id);
+
+    my ($name, $desc, $type_id, $list_type) = $self->get_list_metadata($c, $list_id);
+
+    $c->stash->{rest} = { 
+	name        => $name,
+	description => $desc,
+	type_id     => $type_id,
+	type_name   => $list_type,
+	elements    => $list,
+    };
+}
+
+sub retrieve_list : Private { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+    
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
+
+    my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
+
+    my $h = $c->dbc->dbh()->prepare($q);
+    $h->execute($list_id);
+    my @list = ();
+    while (my ($id, $content) = $h->fetchrow_array()) { 
+	push @list, [ $id, $content ];
+    }
+    return \@list;
+}
+
 
 sub remove_element : Private { 
     my $self = shift;
@@ -600,3 +694,5 @@ sub check_user : Private {
     return $error;
 
 }
+
+

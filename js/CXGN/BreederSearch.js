@@ -15,7 +15,7 @@ window.onload = function initialize() {
 	var select1 = jQuery( this ).val();
 	var select4 = jQuery('#select4').val();
 
-	alert(select1+" "+select4);
+	//alert(select1+" "+select4);
 	disable_ui();
 
 	var list = new Array();
@@ -33,7 +33,7 @@ window.onload = function initialize() {
 		    list = response.list;
 		    c1_html = format_options_list(response.list);
 		    show_list_total_count('#c1_data_count', response.list.length);
-		    update_stocks(response.stocks);
+		    update_stocks(response.stocks, response.message);
 		    enable_ui();
 		}
 		jQuery('#c1_data_text').html(retrieve_sublist(list, 1).join("\n"));
@@ -42,13 +42,6 @@ window.onload = function initialize() {
 		jQuery('#c3_data').html('');	
 	    }
 	});
-
-
-	
-	var second_choices = copy_hash(choices);
-	delete second_choices[select1];
-	var html = format_options(second_choices);
-	jQuery('#select2').html(html);
 	
 	enable_ui();
 	
@@ -58,15 +51,22 @@ window.onload = function initialize() {
     jQuery('#c1_data').change(function() { 
 
 	disable_ui();
-
+	
 	jQuery('#select2').val('please select');
-	jQuery('#select3').val('please select');
+	jQuery('#select3').html('');
 	jQuery('#c2_data').html('');
 	jQuery('#c3_data').html('');
 	jQuery('#stock_data').html('');
 	var select1 = jQuery('#select1').val();
 	var select4 = jQuery('#select4').val();
 	var c1_data = jQuery('#c1_data').val() || [];
+
+	// as soon as a data item is selected, show the next menu select
+	//
+	var second_choices = copy_hash(choices);
+	delete second_choices[select1];
+	var html = format_options(second_choices);
+	jQuery('#select2').html(html);
 
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
@@ -83,6 +83,10 @@ window.onload = function initialize() {
 		}
 	    }
 	});
+
+	show_list_total_count('#c1_data_count', jQuery('#c1_data').text().split("\n").length-1, jQuery('#c1_data').val().length);
+	show_list_total_count('#c2_data_count', 0, 0);
+	show_list_total_count('#c3_data_count', 0, 0);
 	enable_ui();
 	
     });
@@ -124,11 +128,6 @@ window.onload = function initialize() {
 	    } 
 	});
 	
-	var third_choices = copy_hash(choices);
-	delete third_choices[select1];
-	delete third_choices[select2];
-	var html = format_options(third_choices);
-	jQuery('#select3').html(html);
 	
 	enable_ui();
     });
@@ -143,6 +142,13 @@ window.onload = function initialize() {
 	var select4 = jQuery('#select4').val();
 	var c1_data = jQuery('#c1_data').val() || [];
 	var c2_data = jQuery('#c2_data').val() || [];
+
+	var third_choices = copy_hash(choices);
+	delete third_choices[select1];
+	delete third_choices[select2];
+	var html = format_options(third_choices);
+	jQuery('#select3').html(html);
+
 
 	disable_ui();
 	jQuery.ajax( { 
@@ -162,6 +168,9 @@ window.onload = function initialize() {
 		}
 	    }
 	});
+
+	show_list_total_count('#c2_data_count', jQuery('#c2_data').text().split("\n").length-1, jQuery('#c2_data').val().length);
+	show_list_total_count('#c3_data_count', 0, 0);
 	enable_ui();
 
     });
@@ -182,6 +191,8 @@ window.onload = function initialize() {
 
 	disable_ui();
 
+	var list;
+
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
 	    async: false,
@@ -193,7 +204,7 @@ window.onload = function initialize() {
 		} 
 		else {
 		    c3_html = format_options_list(response.list);
-		    show_list_total_count('#c3_data_count', response.list.length);
+		    list = response.list;
 		    update_stocks(response.stocks);
 		    jQuery('#c3_data').html(c3_html);
 		}
@@ -202,7 +213,9 @@ window.onload = function initialize() {
 		alert("An error occurred. Timeout?");
 	    }
 	});
+	
 
+	show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, 0);
 	enable_ui();
     });
     
@@ -239,6 +252,8 @@ window.onload = function initialize() {
 		alert("an error occurred. (possible timeout)");
 	    }
 	});
+
+	show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, jQuery('#c3_data').val().length);
 	enable_ui();
     });    
 
@@ -297,11 +312,18 @@ window.onload = function initialize() {
 }
 
 
-function update_stocks(stocks) { 
-    var stock_data = format_options_list(stocks);
-    jQuery('#stock_data').html(stock_data);
+function update_stocks(stocks, message) { 
 
-    jQuery('#stock_count').html(stocks.length+' items');
+    if (! message) { 
+	var stock_data = format_options_list(stocks);
+	jQuery('#stock_data').html(stock_data);
+    }
+    if (stocks) { 
+	jQuery('#stock_count').html(stocks.length+' items');
+    }
+    else { 
+	jQuery('#stock_count').html(message);
+    }
 }
 
 
@@ -324,10 +346,13 @@ function retrieve_sublist(list, sublist_index) {
 
 function format_options_list(items) { 
     var html = '';
-    for(var i=0; i<items.length; i++) { 
-	html = html + '<option value="'+items[i][0]+'">'+items[i][1]+'</a>\n';
+    if (items) { 
+	for(var i=0; i<items.length; i++) { 
+	    html = html + '<option value="'+items[i][0]+'">'+items[i][1]+'</a>\n';
+	}
+	return html;
     }
-    return html;
+    return "no data";
 }
 
 function copy_hash(hash) { 
@@ -341,26 +366,33 @@ function copy_hash(hash) {
 
 function disable_ui() { 
 
-    jQuery('#wheel').html('<img src="/static/documents/img/wheel.gif" />');
-    var ids = new Array();
-    ids = [ '#select1', '#select2','#select3', '#select4', '#c1_data', '#c2_data', '#c3_data', '#stock_data' ];
+    jQuery('#working').dialog("open");
+    //jQuery('#wheel').html('<img src="/static/documents/img/wheel.gif" />');
+    // var ids = new Array();
+    // ids = [ '#select1', '#select2','#select3', '#select4', '#c1_data', '#c2_data', '#c3_data', '#stock_data' ];
 
-    for (var id in ids) { 
-	jQuery(id).attr("disabled", "disabled");
-    }
+    // for (var id in ids) { 
+    // 	jQuery(id).attr("disabled", "disabled");
+    // }
 }
 
 function enable_ui() { 
-    var ids = new Array();
-    ids = [ '#select1', '#select2','#select3', '#select4', '#c1_data', '#c2_data', '#c3_data', '#stock_data' ];
-    for (var id in ids) { 
-	jQuery(id).removeAttr("disabled");
-    }
-    jQuery('#wheel').html('');
+    // var ids = new Array();
+    // ids = [ '#select1', '#select2','#select3', '#select4', '#c1_data', '#c2_data', '#c3_data', '#stock_data' ];
+    // for (var id in ids) { 
+    // 	jQuery(id).removeAttr("disabled");
+    // }
+    //jQuery('#wheel').html('');
+    jQuery('#working').dialog("close");
 }
 
-function show_list_total_count(count_div, total_count) { 
-    jQuery(count_div).html('Items: '+total_count);
+function show_list_total_count(count_div, total_count, selected) { 
+    var html = 'Items: '+total_count+'<br />';
+    if (selected) { 
+	html += 'Selected: '+selected;
+    }
+    jQuery(count_div).html(html);
+
 }
 
 function show_list_selected_count(select_div, selected_count_div) { 
@@ -371,3 +403,15 @@ function show_list_selected_count(select_div, selected_count_div) {
     jQuery(count_div).html('selected: '+selected_count);
 }
     
+ function convert_selection_to_string(select_div, type_div, target_div) { 
+//     var selected_ids = jQuery('#'+select_div).val();
+//     var type = jQuery('#'+type_div).val();
+    
+//     var lo = new CXGN.List();
+
+//     var type_id = type.substring(0, type.length - 1)+"_ids";
+//     var transformed_list = lo.transform(type_id, type, selected_ids)
+
+//     alert("TRANSFORMED: "+transformed_list);
+ }
+	

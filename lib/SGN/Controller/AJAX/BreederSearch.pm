@@ -85,10 +85,20 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     my $stock_ref = $bs->get_intersect($criteria_list, $stockdataref);
     
     print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
-    $c->stash->{rest} = { 
-	list => $results_ref,
-	stocks => $stock_ref,
-    };
+
+    if ($stock_ref->{message}) { 
+	$c->stash->{rest} = { 
+	    list => $results_ref->{results},
+	    message => $stock_ref->{message},
+	};
+    }
+    else { 
+	
+	$c->stash->{rest} = { 
+	    list => $results_ref->{results},
+	    stocks => $stock_ref->{results},
+	};
+    }
 }
     
 

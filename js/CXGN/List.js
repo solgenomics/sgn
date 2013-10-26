@@ -221,31 +221,28 @@ CXGN.List.prototype = {
     },
 
     addBulk: function(list_id, items) { 
-	var exists_item_id = this.existsItem(list_id,item);
 	
 	var elements = items.join("\t");
 
-	if (exists_item_id ===0 ) { 
-	    jQuery.ajax( { 
-		async: false,
-		url: '/list/add/bulk',
-		data:  { 'list_id': list_id, 'elements': elements },
-		success: function(response) { 
-		    if (response.error) { 
-			alert(response.error);
-		    }
-		    else { 
-			if (response.duplicates) { 
-			    alert("The following items are already in the list and were not added: "+duplicates.join(", "));
-			}
-		    }
+	var count;
+	jQuery.ajax( { 
+	    async: false,
+	    method: 'POST',
+	    url: '/list/add/bulk',
+	    data:  { 'list_id': list_id, 'elements': elements },
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
 		}
-			
-	    });
-		
-	    return new_list_item_id;
-	}
-	else { return 0; }
+		else { 
+		    if (response.duplicates) { 
+			alert("The following items are already in the list and were not added: "+response.duplicates.join(", "));
+		    }
+		    count = response.success;
+		}		
+	    }
+	});
+	return count;
     },
     
     removeItem: function(list_id, item_id) {
@@ -278,28 +275,18 @@ CXGN.List.prototype = {
 	html += '<tr><td><i>list name</i></td><td><i>#</i></td><td><i>type</i></td><td colspan="3"><i>actions</i></td></tr>\n'; 
 	for (var i = 0; i < lists.length; i++) { 
 	    html = html + '<tr><td><b>'+lists[i][1]+'</b></td><td>'+lists[i][3]+'</td><td>'+lists[i][5]+'</td><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')">view</a></td><td>|</td><td><a href="javascript:deleteList('+lists[i][0]+')">delete</a></td><td>|</td><td><a href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>\n';
-	    
-	    //var items = this.getList(lists[i][0]);
-	    
-
-	    
-	    
 	}
 	html = html + '</table>';
 	jQuery('#'+div).html(html);
 
-	jQuery('#add_list_button').click( 
-	    function() { 
-		var lo = new CXGN.List();
-		
-		var name = jQuery('#add_list_input').val();
-
-		lo.newList(name);
-		lo.renderLists(div);
-	    });
-
-	
-	
+	jQuery('#add_list_button').click(function() { 
+	    var lo = new CXGN.List();
+	    
+	    var name = jQuery('#add_list_input').val();
+	    
+	    lo.newList(name);
+	    lo.renderLists(div);
+	});
     },
     
     listNameById: function(list_id) { 
@@ -381,17 +368,26 @@ CXGN.List.prototype = {
     addToList: function(list_id, text) { 
 	var list = text.split("\n");
 	var duplicates = [];
-	for(var n=0; n<list.length; n++) { 
-	    var id = this.addItem(list_id, list[n]);
-	    if (id == 0) { 
-		duplicates.push(list[n]);
-	    }
-	}
 
-	if (duplicates.length > 0) { 
-	    alert('Duplicate items ('+ duplicates.join(",") + ') were not stored');
-	}
-	return list.length - duplicates.length;
+	
+	
+	var info = this.addBulk(list_id, list);
+	
+	
+	// for(var n=0; n<list.length; n++) { 
+	//     var id = this.addItem(list_id, list[n]);
+	//     if (id == 0) { 
+	// 	duplicates.push(list[n]);
+	//     }
+	// }
+
+	// if (duplicates.length > 0) { 
+	//     alert('Duplicate items ('+ duplicates.join(",") + ') were not stored');
+	// }
+	// return list.length - duplicates.length;
+
+	return info;
+	
     },
 
     listSelect: function(div_name) { 
@@ -520,7 +516,7 @@ function pasteList(div_name) {
     jQuery('#'+div_name).text(list_text);
 }
 
-function addToListMenu(listMenuDiv, dataDiv) { 
+function addToListMenu(listMenuDiv, dataDiv, selectText) { 
     var lo = new CXGN.List();
 
     var html;
@@ -539,7 +535,7 @@ function addToListMenu(listMenuDiv, dataDiv) {
 	    var lo = new CXGN.List();
 	    var new_name = jQuery('#'+dataDiv+'_new_list_name').val();
 	    
-	    var data = getData(dataDiv);
+	    var data = getData(dataDiv, selectText);
 	    list_id = lo.newList(new_name);
 	    if (list_id > 0) { 
 		var elementsAdded = lo.addToList(list_id, data);
@@ -550,7 +546,7 @@ function addToListMenu(listMenuDiv, dataDiv) {
 
     jQuery('#'+dataDiv+'_button').click( 
 	function() { 
-	    var data = getData(dataDiv);
+	    var data = getData(dataDiv, selectText);
 	    list_id = jQuery('#'+dataDiv+'_list_select').val();
 	    var elementsAdded = lo.addToList(list_id, data);
 	    alert("Added "+elementsAdded+" list elements.");
@@ -558,13 +554,16 @@ function addToListMenu(listMenuDiv, dataDiv) {
     );
 }
 
-function getData(id) { 
+function getData(id, selectText) { 
     var divType = jQuery("#"+id).get(0).tagName;
 
     if (divType == 'DIV' || divType =='SPAN' ||  divType === undefined) { 
 	data = jQuery('#'+id).html();
     }
-    if (divType == 'SELECT') { 
+    if (divType == 'SELECT' && selectText) {
+	data = jQuery('#'+id+" option:selected").text();
+    }
+    if (divType == 'SELECT' && ! selectText) { 
 	data = jQuery('#'+id).val().join("\n");
     }
     if (divType == 'TEXTAREA') { 
