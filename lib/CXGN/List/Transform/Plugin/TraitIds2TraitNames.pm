@@ -24,29 +24,23 @@ sub can {
 
 sub transform { 
     my $self = shift;
-    my $c = shift;
+    my $schema = shift;
     my $list = shift;
 
     my @transform = ();
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    
-    my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"plot" })->first->cvterm_id();
-    
-
-
-    print STDERR "PLOT TYPE ID $type_id\n";
-
     my @missing = ();
     foreach my $l (@$list) { 
-        my $rs = $schema->resultset("Stock::Stock")->search(
+        my $rs = $schema->resultset("Cv::Cvterm")->search(
             { 
-                type_id=>$type_id,
-                uniquename => $l, 
+                cvterm_id => $l, 
             }); 
         if ($rs->count() == 0) { 
             push @missing, $l;
         }
+	else { 
+	    push @transform, $rs->first()->name();
+	}
     }
     return { transform => \@transform,
 	     missing => \@missing,
