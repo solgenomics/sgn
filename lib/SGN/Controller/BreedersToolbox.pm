@@ -235,7 +235,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     
     # get crosses
     #
-    my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
+    my $population_cvterm = $schema->resultset("Cv::Cvterm")->find_or_create(
 	{ name   => 'cross',
 	});
     
