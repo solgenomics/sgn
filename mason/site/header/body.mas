@@ -22,6 +22,15 @@
   <img src="/img/wheel.gif" />
 </div>
 
+
+<div id="login_window">
+  <table>
+    <tr><td>Username</td><td><input type="text" size="20" id="username_field" name="username_field" /></td></tr>
+    <tr><td>Password</td><td><input type="password" size="20" id="password_field" name="password_field" /></td></tr>
+  </table>  
+</div>  
+
+  
     <a href="/"><img id="sgntext" src="/documents/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="Sol Genomics Network Home" /></a>
 
   </td>
@@ -83,8 +92,27 @@ jQuery(document).ready( function() {
     title: "Working...",
     closeOnEscape: false,
     autoOpen: false
-  } );
+  });
   
+jQuery('#login_window').dialog( { 
+    height: 180,
+    width: 300,
+    modal: true,
+    title: 'Login',
+    autoOpen: false,
+    buttons: { 
+      "Login" : 
+        function() { 
+          login();
+        },
+      "Cancel": 
+        function() { 
+          jQuery('#login_window').dialog("close");
+        }
+    }
+     
+   
+  });
 
   setUpLists();
 });
