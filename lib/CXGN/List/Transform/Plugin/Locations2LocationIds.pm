@@ -10,7 +10,7 @@ sub display_name {
     return "locations to location IDs";
 }
 
-sub can { 
+sub can_transform { 
     my $self = shift;
     my $type1 = shift;
     my $type2 = shift;
@@ -32,6 +32,7 @@ sub transform {
     my @missing = ();
 
     foreach my $l (@$list) { 
+	#print STDERR "Converting location $l to location_id...\n";
         my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search(
             { 
 		description => $l,
@@ -39,7 +40,9 @@ sub transform {
         if ($rs->count() == 0) { 
             push @missing, $l;
         }
-	push @transform, $rs->first()->nd_geolocation_id();
+	else { 
+	    push @transform, $rs->first()->nd_geolocation_id();
+	}
     }
     return { transform => \@transform,
 	     missing => \@missing,

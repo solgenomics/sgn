@@ -5,13 +5,13 @@ use Moose;
 
 use Module::Pluggable require => 1;
 
-sub can { 
+sub can_transform { 
     my $self = shift;
     my $type1 = shift;
     my $type2 = shift;
 
     foreach my $p ($self->plugins()) { 
-	if ($p->can($type1, $type2)) { 
+	if ($p->can_transform($type1, $type2)) { 
 	    return $p->name();
 	}
     }
@@ -22,7 +22,7 @@ sub can {
 sub transform { 
     my $self = shift;
     my $schema = shift;
-    my $type = shift;
+    my $transform_name = shift;
     my $list = shift;
 
     my $data;
@@ -30,7 +30,7 @@ sub transform {
     
 
     foreach my $p ($self->plugins()) { 
-        if ($type eq $p->name()) { 
+        if ($transform_name eq $p->name()) { 
              $data = $p->transform($schema, $list);
         }
     }
