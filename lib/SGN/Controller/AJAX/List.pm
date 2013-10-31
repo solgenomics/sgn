@@ -51,8 +51,9 @@ sub get_list_data_action :Path('/list/data') Args(0) {
     my $metadata = $self->get_list_metadata($c, $list_id);
 
     $c->stash->{rest} = { 
-	type_id     => $type_id,
-	type_name   => $list_type,
+	list_id     => $list_id,
+	type_id     => $metadata->{type_id},
+	type_name   => $metadata->{list_type},
 	elements    => $list,
     };			  
 }
@@ -100,11 +101,50 @@ sub get_type_action :Path('/list/type') Args(1) {
     my $c = shift;
     my $list_id = shift;
 
-    my ($name, $desc, $type_id, $list_type) = $self->get_list_metadata($c, $list_id);
+    my $data = $self->get_list_metadata($c, $list_id);
     
-    $c->stash->{rest} = { type_id => $type_id,
-			  list_type => $list_type,
+    $c->stash->{rest} = { type_id => $data->{type_id},
+			  list_type => $data->{list_type},
     };
+}
+
+sub update_list_name_action :Path('/list/name/update') :Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param('list_id');
+    my $name = $c->req->param('name');
+
+    my $user_id = $self->get_user($c);
+    my $error = $self->check_user($c, $list_id);
+
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
+
+    my $q = "SELECT list_id FROM sgn_people.list where name=? and owner=?";
+    my $h = $c->dbc->dbh->prepare($q);
+    $h->execute($name, $user_id);
+    my ($old_list) = $h->fetchrow_array();
+    if ($old_list) { 
+	$c->stash->{rest} = { error => "The list name $name already exists. Please choose another name." };
+	return;
+    }
+
+    my $q = "UPDATE sgn_people.list SET name=? WHERE list_id=?";
+    my $h = $c->dbc->dbh->prepare($q);
+
+    eval { 
+	$h->execute($name, $list_id);
+    };
+    
+    if ($@) { 
+	$c->stash->{rest} = { error => 'An error occurred when trying to update the name of the list.' };
+	return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
 }
 
 sub set_type :Path('/list/type') Args(2) { 
@@ -230,7 +270,7 @@ sub available_lists : Path('/list/available') Args(0) {
     my @lists = ();
     while (my ($id, $name, $desc, $item_count, $type_id, $type) = $h->fetchrow_array()) { 
 	if ($requested_type) { 
-	    if ($type eq $requested_type) { 
+	    if ($type && ($type eq $requested_type)) { 
 		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
 	    }
 	}
@@ -435,25 +475,27 @@ sub validate : Path('/list/validate') Args(2) {
     $c->stash->{rest} = $data;
 }
 
-sub tranform :Path('/list/transform/') Args(3) { 
+sub transform :Path('/list/transform/') Args(2) { 
     my $self = shift;
     my $c = shift;
-    my $type1 = shift;
-    my $type2 = shift;
     my $list_id = shift;
+    my $new_type = shift;
 
     my $t = CXGN::List::Transform->new();
 
-    if (!$t->can($type1, $type2)) { 
-	$c->stash->{rest} = { error => "Cannot transform $type1 into $type2\n", };
+    my $data = $self->get_list_metadata($c, $list_id);
+
+    my $transform_name = $t->can_transform($data->{list_type}, $new_type);
+    if (!$transform_name) {
+	$c->stash->{rest} = { error => "Cannot transform $data->{list_type} into $new_type\n", };
 	return;
     }
     
-    my $list_data = $self->retrieve_list($list_id);
+    my $list_data = $self->retrieve_list($c, $list_id);
 
     my @list_items = map { $_->[1] } @$list_data;
 
-    my $result = $t->transform($type1, $type2, \@list_items);
+    my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema"), $transform_name, \@list_items);
 
     if (scalar(@{$result->{missing}}) > 0) { 
 	$c->stash->{rest} = { error => "This lists contains elements that cannot be converted. Not converting list.", };
@@ -664,7 +706,7 @@ sub get_user : Private {
     my $self = shift;
     my $c = shift;
 
-    my $user = $c->user;
+    my $user = $c->user();
  
     if ($user) { 
 	my $user_object = $c->user->get_object();
