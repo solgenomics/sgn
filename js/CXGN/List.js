@@ -26,13 +26,14 @@ Lukas Mueller <lam87@cornell.edu>
 
 */
 
-JSAN.use('jqueryui');
+//JSAN.use('jqueryui');
 
 if (!CXGN) CXGN = function () { };
 
 CXGN.List = function () { 
     this.list = [];
 };
+
 
 CXGN.List.prototype = { 
     
@@ -46,11 +47,14 @@ CXGN.List.prototype = {
 	    async: false,
 	    success: function(response) { 
 		if (response.error) { 
-		    document.write(response.error);
+		    //document.write(response.error);
 		}
 		else { 
 		    list = response;
 		}
+	    },
+	    error: function(response) { 
+		alert("An error occurred.");
 	    }
 	});
 	return list;
@@ -136,7 +140,6 @@ CXGN.List.prototype = {
 		     
     },
     
-
     typesHtmlSelect: function(list_id, html_select_id, selected) { 
 	var types = this.allListTypes();
 	var html = '<select id="'+html_select_id+'" onchange="javascript:changeListType(\''+html_select_id+'\', '+list_id+');" >';
@@ -330,6 +333,7 @@ CXGN.List.prototype = {
 		    lo.renderLists('list_dialog');
 		});
 	}
+    
 	
 	jQuery('#dialog_add_list_item_button').click(
 	    function() { 
@@ -346,10 +350,8 @@ CXGN.List.prototype = {
 		var list_id = jQuery('#list_id_div').html();
 		lo.updateName(list_id, new_name);
 		alert("Changed name to "+new_name+" for list id "+list_id);
-
 	    }
 	);
-
     },
     
     existsList: function(name) { 
@@ -395,8 +397,8 @@ CXGN.List.prototype = {
 	
 	var lists;
 	if (types) {
-	    for each (t in types) { 
-		lists = concat(lists, this.availableLists(type));
+	    for (var n=0; n<types.length; n++) { 
+		lists = concat(lists, this.availableLists(types[n]));
 	    }
 	}
 	else { 
@@ -427,8 +429,6 @@ CXGN.List.prototype = {
 	    error: function(response) { alert("An error occurred."); }
 	});
 	this.renderLists('list_dialog');
-	
-	
     },
 
     validate: function(list_id, type) { 
@@ -473,13 +473,12 @@ CXGN.List.prototype = {
 		    transformed = response.transform;
 		}
 	    },
-	    error: function(response) { alert("An error occurred while validating the list "+list_id); error=1; }
+	    error: function(response) { alert("An error occurred while validating the list "+list_id); }
 	});
     },
 
     transform2Ids: function(list_id) { 
 	var list_type = this.getListType(list_id);
-	alert("LIST TYPE: "+list_type);
 	var new_type;
 	if (list_type == 'traits') { new_type = 'trait_ids'; }
 	if (list_type == 'locations') { new_type = 'location_ids'; }
@@ -512,16 +511,14 @@ function setUpLists() {
 		 },
 	modal: true 
     });
-    
-
-    
+       
     jQuery('#list_item_dialog').dialog( { 
 	height: 400,
 	width: 400,
 	autoOpen: false,
 	buttons: { 
-		"Done": function() { 
-		    jQuery('#list_item_dialog').dialog("close"); }
+	    "Done": function() { 
+		jQuery('#list_item_dialog').dialog("close"); }
 	},
 	modal: true,
       title: 'List contents'
