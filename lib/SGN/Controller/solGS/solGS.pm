@@ -1136,7 +1136,6 @@ sub prediction_pop_analyzed_traits {
   
     $prediction_pop_id = "uploaded_${prediction_pop_id}" if $prediction_is_uploaded;
  
-    
     my  @files  =  grep { /prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}/ && -f "$dir/$_" } 
                  readdir($dh); 
    
@@ -1169,6 +1168,7 @@ sub download_prediction_urls {
   
     my $trait_ids;
     my $page_trait_id = $c->stash->{trait_id};
+    $page_trait_id = $c->stash->{page_trait_id} if $c->stash->{page_trait_id}; 
     my $page = $c->req->path;
    
     no warnings 'uninitialized';
@@ -1604,7 +1604,7 @@ sub catalogue_combined_pops {
 }
 
 
-sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]+))?') {
+sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\d+]+))?') {
     my ($self, $c) = @_; 
    
     my ($pop_id, $prediction_id) = @{$c->req->captures};
@@ -1613,7 +1613,7 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
     $c->stash->{prediction_pop_id} = $prediction_id;
   
     my @selected_traits = $c->req->param('trait_id');
-  
+   
     my $single_trait_id;
     if (!@selected_traits)
     {
@@ -1629,9 +1629,11 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
     elsif (scalar(@selected_traits) == 1)
     {
         $single_trait_id = $selected_traits[0];
+        
         if (!$prediction_id)
         { 
-            $c->res->redirect("/solgs/trait/$single_trait_id/population/$pop_id");
+              $c->res->redirect("/solgs/trait/$single_trait_id/population/$pop_id");
+              $c->detach();              
         } 
         else
         {
@@ -1655,8 +1657,8 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
                     }
                 }
             }
-           
-            $c->forward('get_rrblup_output');
+              
+            $c->forward('get_rrblup_output');     
         }
     }
     elsif (scalar(@selected_traits) > 1) 
@@ -1736,7 +1738,7 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
 }
 
 
-sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?') {
+sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+))?') {
      my ($self, $c) = @_;
      
      my ($pop_id, $pred_pop_id) = @{$c->req->captures};
@@ -1745,15 +1747,19 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      @traits    = grep {$_ ne 'rank'} @traits;
 
      $c->stash->{pop_id} = $pop_id;
-     $self->list_predicted_selection_pops($c, $pop_id);
 
-     my $predicted_selection_pops = $c->stash->{list_of_predicted_selection_pops};
-     
-     if (!$pred_pop_id)  
+     unless ($pop_id =~ /uploaded/)
      {
-         $pred_pop_id = $predicted_selection_pops->[0];
-     }
-                                      
+         $self->list_predicted_selection_pops($c, $pop_id);
+
+         my $predicted_selection_pops = $c->stash->{list_of_predicted_selection_pops};
+     
+         if (!$pred_pop_id)  
+         {
+             $pred_pop_id = $predicted_selection_pops->[0];
+         }
+     }                                      
+     
      if ($pred_pop_id)
      {
          $c->stash->{prediction_pop_id} = $pred_pop_id;
@@ -1772,12 +1778,12 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
          $c->stash->{prediction_pop_id} = undef;
          $c->stash->{population_is} = 'training population';
      }
-
+    
      $c->stash->{model_id} = $pop_id; 
      $self->analyzed_traits($c);
 
      my @analyzed_traits = @{$c->stash->{analyzed_traits}};
- 
+  
      if (!@analyzed_traits) 
      {
          $c->res->redirect("/solgs/population/$pop_id/selecttraits/");
@@ -1840,16 +1846,20 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      my $download_prediction = $c->stash->{download_prediction};
     
      #get prediction populations list..     
-     $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
-   
-     $self->list_predicted_selection_pops($c, $pop_id);
-     $predicted_selection_pops = $c->stash->{list_of_predicted_selection_pops};
+ 
+     unless ($pop_id =~ /uploaded/)
+     {
+         $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
+        
+         $self->list_predicted_selection_pops($c, $pop_id);
+
+         my $predicted_selection_pops = $c->stash->{list_of_predicted_selection_pops};
     
-     if(@$predicted_selection_pops){
-         $self->prediction_pop_analyzed_traits($c, $pop_id, $predicted_selection_pops->[0]);
+         if(@$predicted_selection_pops)
+         {
+             $self->prediction_pop_analyzed_traits($c, $pop_id, $predicted_selection_pops->[0]);
+         }
      }
-           
-  
 }
 
 
@@ -2614,23 +2624,23 @@ sub analyzed_traits {
     my @all_files =   grep { /gebv_kinship_[a-zA-Z0-9]/ && -f "$dir/$_" } 
                   readdir($dh); 
     closedir $dh;
-
+   
     my @traits_files = grep {/($model_id)/} @all_files;
     
     my @traits;
     foreach my $trait_file  (@traits_files) 
-    {  
+    {          
         my $trait_file_path = catfile($dir, $trait_file);
+       
         if (-s $trait_file_path > 1) 
         { 
             my $trait = $trait_file;
             $trait =~ s/gebv_kinship_//;
             $trait =~ s/$model_id|_//g;
-            
+           
             unless ($trait =~ /combined/)
             {  
-                push @traits, $trait; 
-        
+                push @traits, $trait;  
             }
         }      
         else 
