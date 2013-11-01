@@ -20,7 +20,7 @@ $pop_id
 $model_data
 $download_prediction
 $prediction_pop_id => ''
-$list_of_prediction_pops
+$list_of_prediction_pops=>''
 $prediction_pop_name => ''
 $prediction_pop_analyzed_traits => ''
 $acronym
@@ -32,6 +32,8 @@ $acronym
 </%perl>
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+
+<& /util/import_javascript.mas, classes => ["jqueryfileupload.vendor.ui-widget", "jqueryfileupload.iframe-transport",   "jqueryfileupload.fileupload",   "solGS.userSelectionGenotypes"] &>
 
 <& /solgs/model/model_summary.mas, 
      model_data => $model_data
@@ -48,6 +50,8 @@ $acronym
   &>
 
 %}
+
+
 
 <& selection_populations.mas,
    download_prediction            => $download_prediction,
