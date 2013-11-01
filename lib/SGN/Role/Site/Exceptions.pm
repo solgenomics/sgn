@@ -112,9 +112,12 @@ sub throw_404 {
             public_message => "$message  We apologize for the inconvenience.",
            );
 
+    # not sure if this logic works if we run under Ambikon
     my $self_uri  = $c->uri_for('/');
-    my $our_fault = ($c->req->referer || '') =~ /$self_uri/;
-
+    my $our_fault;
+    if (defined($c->req->referer())) { 
+	$our_fault = $c->req->referer() =~ /$self_uri/;
+    }
     if( $our_fault ) {
         $throw{is_server_error} = 1;
         $throw{is_client_error} = 0;

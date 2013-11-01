@@ -176,7 +176,7 @@ my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a href="j
 
 my $edit_privs = $curator || $submitter || $sequencer;
 </%perl>
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers"] &>
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie"] &>
 
 
 <script language="javascript">

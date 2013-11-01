@@ -143,11 +143,14 @@ sub get_intersect {
 	push @results, [ $id, $name ];
     }    
     
-    #  if ($item eq "stock" && 
-    # my $genotype_q = "SELECT distinct(stock_id), uniquename FROM stock as accession JOIN stock_relationship on (accession.stock_id=object_id) JOIN stock as plot on (plot.stock_id=subject_id) where plot.uniquename in ($plot_list)";
+    if (@results <= 10_000) { 
+	return { results => \@results };
+    }
+    else { 
+	
+	return { message => 'Too many items to display ('.(scalar(@results)).')' };
 
-
-    return \@results;
+    }
 }
 
 

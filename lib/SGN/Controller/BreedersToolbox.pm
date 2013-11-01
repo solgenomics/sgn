@@ -232,25 +232,26 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     #
     my @roles = $c->user->roles();
     $c->stash->{roles}=\@roles;
-    
+
     # get crosses
     #
-    my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
+    my $cross_cvterm = $schema->resultset("Cv::Cvterm")->find(
 	{ name   => 'cross',
 	});
-    
-    my @cross_population_stocks = $schema->resultset("Stock::Stock")->search(
-	{ type_id => $population_cvterm->cvterm_id,
-	} );
-    
     my @cross_populations = ();
-    
-    foreach my $cross_pop (@cross_population_stocks) {
+
+    if ($cross_cvterm) {
+
+      my @cross_population_stocks = $schema->resultset("Stock::Stock")->search(
+									       { type_id => $cross_cvterm->cvterm_id,
+									       } );
+      foreach my $cross_pop (@cross_population_stocks) {
 	push @cross_populations, [$cross_pop->name,$cross_pop->stock_id];
+      }
     }
-       
+
     $c->stash->{cross_populations} = \@cross_populations;
-    
+
     my $stockrel = $schema->resultset("Cv::Cvterm")->create_with(
 	{ name   => 'cross',
 	  cv     => 'stock relationship',

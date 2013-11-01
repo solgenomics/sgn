@@ -117,7 +117,7 @@
     border: 1px solid #5d4617;
 }
 .si_dropdown dt a {
-    background:#ccccff url(/static/img/glyphicons_free/glyphicons/png/glyphicons_367_expand.png) no-repeat scroll right center; 
+    background:#ccccff url(/static/documents/img/glyphicons_expand.png) no-repeat scroll right center; 
     display:block; 
     padding-right:10px;
     width:250px;

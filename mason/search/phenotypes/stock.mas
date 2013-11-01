@@ -27,7 +27,7 @@ my $new_stock_link = qq| <a href="/stock/0/new">Submit new stock</a> \| <a href=
 </%perl>
 
 <& /util/import_javascript.mas,
-    classes => [qw(jquery CXGN.Effects)]
+    classes => [qw(jquery CXGN.Effects jquery.cookie)]
 &>
 
 
