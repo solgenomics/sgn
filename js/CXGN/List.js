@@ -343,7 +343,7 @@ CXGN.List.prototype = {
 	    function() { 
 		var lo = new CXGN.List();
 		var new_name =  jQuery('#updateNameField').val();
-		var list_id = jQuery('#list_id_div').html()
+		var list_id = jQuery('#list_id_div').html();
 		lo.updateName(list_id, new_name);
 		alert("Changed name to "+new_name+" for list id "+list_id);
 
