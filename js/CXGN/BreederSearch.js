@@ -9,17 +9,16 @@ window.onload = function initialize() {
     html = html + format_options(choices);
 
     if (isLoggedIn()) { 
-	alert("We detected a login!");
 	var lo = new CXGN.List();
 	
-	for each (var t in choices) { 
-	    if (!typeof(choices[t])=='undefined') { 
-		var lists = lo.availableLists(choices[t]);
-		alert("type "+choices[t]+" List:"+lists);
+	for (var i=0; i<choices.length; i++) { 
+	    if (!typeof(choices[i])=='undefined') { 
+		var lists = lo.availableLists(choices[i]);
+		//alert("type "+choices[t]+" List:"+lists);
 		var options = [];
-		for each (l in lists) { 
-		    alert("List: "+l);
-		    options[l[0]] = l[1]+" ("+l[5]+")";
+		for (var n=0; n<lists.length; n++) { 
+		    //alert("List: "+l);
+		    options[lists[n][0]] = lists[n][1]+" ("+lists[n][5]+")";
 		    html += "<optgroup>\n";
 		    html += format_options(options);
 		    html += "</optgroup>\n";
@@ -41,11 +40,11 @@ window.onload = function initialize() {
 	if (parseInt(select1)) { 
 	    var lo = new CXGN.List();
 	    var list_data = lo.getListData(select1);
-	    alert(JSON.stringify(list_data));
+	    //alert(JSON.stringify(list_data));
 	    var id_data = lo.transform2Ids(select1);
-	    alert(id_data);
+	    //alert(id_data);
 	    var dump = JSON.stringify(id_data);
-	    alert(dump);
+	    //alert(dump);
 	}
 	
 	var stocks;
@@ -325,7 +324,7 @@ window.onload = function initialize() {
 		alert("an error occurred. ("+ message.responseText +")");
 	    }
 	});
-	alert("DONE!");
+	//alert("DONE!");
 	enable_ui();
     });    
 }
