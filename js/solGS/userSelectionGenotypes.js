@@ -19,7 +19,7 @@ JSAN.use("jquery.blockUI");
 jQuery(document).ready( function() {
         var list = new CXGN.List();
         var listMenu = list.listSelect("prediction_genotypes");
-	
+
         jQuery("#prediction_genotypes_list").append(listMenu);
                
     });
@@ -157,7 +157,7 @@ function getModelId () {
     var modelId;
     var modelIdExists = jQuery("#model_id").doesExist();
     var comboPopsIdExists = jQuery("#combo_pops_id").doesExist();
-
+   
     if ( modelIdExists == true ) {        
         modelId = jQuery("#model_id").val();
     }
@@ -248,9 +248,8 @@ function loadPredictionOutput (url, listId, listSource) {
                     var tdId = '#list_prediction_output_' + listId;
                     jQuery(tdId).html(response.output);
                                        
-                    var page = document.URL;
-                    
-                    if (page.match('/solgs/trait/') == 'undefined') {
+                    var page = document.URL;                 
+                    if (page.match('/trait/') == null) {
                         
                         var popsList = listSelPopulationsUploaded();                        
                         jQuery("#select_a_population_div").html('');
