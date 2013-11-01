@@ -9,7 +9,29 @@ use URI::FromHash 'uri';
 
 BEGIN { extends 'Catalyst::Controller'; }
 
+sub trials : Path("/breeders/trials") Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    
+    # get projects
+    #
+    my @rows = $schema->resultset('Project::Project')->all();
+    
+    my @projects = ();
+    foreach my $row (@rows) { 
+	push @projects, [ $row->project_id, $row->name, $row->description ];
+	
+    }
+    
+    $c->stash->{projects} = \@projects;
 
+    $c->stash->{template} = '/breeders_toolbox/projects.mas';
+
+
+
+}
 
 
 
