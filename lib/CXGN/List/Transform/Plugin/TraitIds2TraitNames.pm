@@ -10,7 +10,7 @@ sub display_name {
     return "Trait IDs to trait names";
 }
 
-sub can { 
+sub can_transform { 
     my $self = shift;
     my $type1 = shift;
     my $type2 = shift;

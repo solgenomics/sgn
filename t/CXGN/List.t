@@ -55,6 +55,9 @@ $m->while_logged_in(
 
 	$m->content_contains("blabla");
 
+	$m->get_ok("/list/type/$list_id/locations");
+	$m->get_ok("/list/transform/$list_id/location_ids");
+
 	$m->get_ok("/list/data?list_id=$list_id");
 
 	$json = $m->content();
@@ -80,7 +83,7 @@ $m->while_logged_in(
 
 	$m->content_lacks("test");
 
-	
+
 	
 	
     });

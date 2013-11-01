@@ -1,0 +1,46 @@
+
+package SGN::Controller::AJAX::Login;
+
+use Moose;
+use CXGN::Login;
+
+BEGIN { extends 'Catalyst::Controller::REST' }
+
+__PACKAGE__->config(
+    default   => 'application/json',
+    stash_key => 'rest',
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+   );
+
+
+sub is_logged_in :Path('/user/logged_in') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    if (my $user = $c->user()) { 
+	my $user_id = $user->get_object->get_sp_person_id();
+	$c->stash->{rest} = { user_id => $user_id };
+	return;
+    }
+    $c->stash->{rest} = { user_id => 0 };
+}
+
+sub log_in :Path('/user/login') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $login = CXGN::Login->new();
+    
+    # implement
+
+}
+    
+sub log_out :Path('/user/logout') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    # implement
+
+}
+
+1;

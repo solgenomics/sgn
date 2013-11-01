@@ -73,7 +73,7 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
 <script defer="defer">
   jQuery(document).ready(function() { 
   
-    if (!jQuery.cookie("sgn_session_id")) {
+    if (!isLoggedIn()) {
       jQuery('#c1_to_list_menu').html('(log in to use lists)');
       jQuery('#c2_to_list_menu').html('(log in to use lists)');
       jQuery('#c3_to_list_menu').html('(log in to use lists)');

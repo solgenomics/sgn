@@ -1,13 +1,14 @@
-package CXGN::List::Transform::Plugin::Locations2LocationIds;
+
+package CXGN::List::Transform::Plugin::LocationIds2Locations;
 
 use Moose;
 
 sub name { 
-    return "locations_2_location_ids";
+    return "locations_ids_2_location";
 }
 
 sub display_name { 
-    return "locations to location IDs";
+    return "location IDs to location";
 }
 
 sub can_transform { 
@@ -15,7 +16,7 @@ sub can_transform {
     my $type1 = shift;
     my $type2 = shift;
 
-    if (($type1 eq "locations") and ($type2 eq "location_ids")) { 
+    if (($type1 eq "location_ids") and ($type2 eq "locations")) { 
 	return 1;
     }
     else {  return 0; }
@@ -32,17 +33,11 @@ sub transform {
     my @missing = ();
 
     foreach my $l (@$list) { 
-	#print STDERR "Converting location $l to location_id...\n";
-        my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search(
-            { 
-		description => $l,
-            }); 
+        my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->find($l); 
         if ($rs->count() == 0) { 
             push @missing, $l;
         }
-	else { 
-	    push @transform, $rs->first()->nd_geolocation_id();
-	}
+	push @transform, $rs->first()->nd_geolocation_id();
     }
     return { transform => \@transform,
 	     missing => \@missing,
