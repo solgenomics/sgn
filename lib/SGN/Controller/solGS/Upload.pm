@@ -43,7 +43,7 @@ sub upload_prediction_genotypes_file :Path('/solgs/upload/prediction/genotypes/f
     my $geno_list = $self->get_selection_genotypes_list_from_file($absolute_filename);
     
     my @genotypes_list = uniq(@$geno_list);
-    $c->stash->{selection__genotypes_list_stocks_names} = \@genotypes_list;
+    $c->stash->{selection_genotypes_list_stocks_names} = \@genotypes_list;
     
     $c->stash->{list_name} = $file_name;
     $c->stash->{list_id}   = crc($file_name);
@@ -323,7 +323,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
         $c->stash->{prediction_pop_id}   = $prediction_pop_id;  
         $c->stash->{uploaded_prediction} = $uploaded_prediction;
         $c->stash->{list_source}         = $list_source;
-
+        $c->stash->{page_trait_id}       = $trait_id;
         my @analyzed_traits;
        
         if ($uploaded_prediction) 
@@ -387,9 +387,9 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
                 
                  $c->stash->{phenotype_file} = $pheno_file;
                  $c->stash->{genotype_file}  = $geno_file;
-                 print STDERR "\ncall user_prediction_population_file\n";
+                
                  $self->user_prediction_population_file($c, $prediction_pop_id);
-                 print STDERR "\ncall get_rrblup_output\n";  
+               
                  $c->controller("solGS::solGS")->get_rrblup_output($c); 
 
              }
@@ -401,9 +401,9 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
                
         $c->controller("solGS::solGS")->download_prediction_urls($c, $model_id, $prediction_pop_id );
         my $download_prediction = $c->stash->{download_prediction};
-      
+       
         my $ret->{status} = 'failed';
-    
+     
         if (-s $prediction_pop_gebvs_file) 
         {
             $ret->{status} = 'success';
@@ -476,19 +476,21 @@ sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/lis
     $c->stash->{list_name} = $list_name;
     $c->stash->{model_id}   = $model_id;
 
-  
-   # $c->model('solGS::solGS')->format_user_list_genotype_data($c);
-   # $c->model('solGS::solGS')->format_user_reference_list_phenotype_data($c);
+  #####
+    $c->model('solGS::solGS')->format_user_list_genotype_data($c);
+    $c->model('solGS::solGS')->format_user_reference_list_phenotype_data($c);
    
-   # $self->create_user_list_genotype_data_file($c);
-   # my $geno_file = $c->stash->{user_reference_list_genotype_data_file};
+    $self->create_user_list_genotype_data_file($c);
+    my $geno_file = $c->stash->{user_reference_list_genotype_data_file};
 
-   # $self->create_user_reference_list_phenotype_data_file($c);
-   # my $pheno_file =  $c->stash->{user_reference_list_phenotype_data_file};
-   
-    my $pheno_file = '/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/phenotype_data_isaaktecle_uploaded_67';
-    my $geno_file = '/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/genotype_data_isaaktecle_uploaded_67'; 
-    
+    $self->create_user_reference_list_phenotype_data_file($c);
+    my $pheno_file =  $c->stash->{user_reference_list_phenotype_data_file};
+  #####
+
+###### 
+   # my $pheno_file = '/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/phenotype_data_isaaktecle_uploaded_67';
+   # my $geno_file = '/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/genotype_data_isaaktecle_uploaded_67'; 
+#####    
     $self->create_user_reference_list_metadata_file($c);
      
     my $ret->{status} = 'failed';
