@@ -113,15 +113,15 @@ function loadReferenceGenotypesList(listId) {
                                 + listIdArg + ',' + listSource + ')">' + '<data>'+ hiddenInput + '</data>'
                                 + listName + '</a>'
                                 + '</td>'
-                                + '<td id="list_reference_page' + modelId +  '">'
+                                + '<td id="list_reference_page_' + modelId +  '">'
                                 + '<a href="'+ url + '\" onclick="javascript:loadPopulationPage(' + url + ',' 
                                 + listIdArg + ',' + listSource + ')">' 
-                                + '[ Predict GEBVs ]'+ '</a>'             
+                                + '[ Build Model ]'+ '</a>'             
                                 + '</td><tr>';
-
+                            // alert(addRow);
                             var tdId = '#list_reference_page_' + modelId;
                             var addedRow = jQuery(tdId).doesExist();
-                           
+                            // alert(addedRow);
                             if (addedRow == false) {
                                 jQuery("#uploaded_reference_pops_table tr:last").after(addRow);
 
