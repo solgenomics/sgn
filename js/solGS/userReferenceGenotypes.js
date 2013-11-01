@@ -109,14 +109,14 @@ function loadReferenceGenotypesList(listId) {
                             var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
                             
                             var addRow = '<tr><td>'
-                                +'<a href="'+ url + '\" onclick="javascript:loadPopulationPage(' + url + ',' 
+                                + '<a href="/solgs/population/' + modelId + '\"  onclick="javascript:loadPopulationPage(' + url + ',' 
                                 + listIdArg + ',' + listSource + ')">' + '<data>'+ hiddenInput + '</data>'
                                 + listName + '</a>'
                                 + '</td>'
                                 + '<td id="list_reference_page_' + modelId +  '">'
-                                + '<a href="'+ url + '\" onclick="javascript:loadPopulationPage(' + url + ',' 
+                                + '<a href="/solgs/population/' + modelId + '\" onclick="javascript:loadPopulationPage(' + url + ',' 
                                 + listIdArg + ',' + listSource + ')">' 
-                                + '[ Build Model ]'+ '</a>'             
+                                + '[ Build Model ]'+ '</a>'          
                                 + '</td><tr>';
                             // alert(addRow);
                             var tdId = '#list_reference_page_' + modelId;
