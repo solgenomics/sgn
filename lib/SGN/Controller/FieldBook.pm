@@ -23,8 +23,11 @@ sub field_book :Path("/fieldbook") Args(0) {
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
 	return;
     }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my @rows = $schema->resultset('Project::Project')->all();
+    #limit to owner 
     my @projects = ();
     my @layout_files = ();
 
@@ -51,9 +54,16 @@ sub field_book :Path("/fieldbook") Args(0) {
       while (my $experiment_file = $experiment_files->next) {
 	my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $experiment_file->file_id});
 	if ($file_row->filetype eq 'tablet field layout xls') {
-	  my $file_destination =  catfile($file_row->dirname, $file_row->basename);
-	  push @projects, [ $row->project_id, $row->name, $row->description, $file_row->dirname,$file_row->basename, $file_row->file_id];
-	  push @layout_files, $file_destination;
+	  #my $file_metadata = $file_row->search_related('md_metadata')->find({create_person_id => $user_id,});
+	  my $metadata_id = $file_row->metadata_id->metadata_id;
+	  if ($metadata_id) {
+	    my $file_metadata = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id});
+	    if ( $file_metadata->create_person_id() eq $user_id) {
+	      my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+	      push @projects, [ $row->project_id, $row->name, $row->description, $file_row->dirname,$file_row->basename, $file_row->file_id];
+	      push @layout_files, $file_destination;
+	    }
+	  }
 	}
       }
     }
@@ -62,7 +72,11 @@ sub field_book :Path("/fieldbook") Args(0) {
     #limit to those owned by user
     my $md_files = $metadata_schema->resultset("MdFiles")->search({filetype=>'tablet trait file'});
     while (my $md_file = $md_files->next) {
-      push @trait_files, [$md_file->basename,$md_file->file_id];
+      my $metadata_id = $md_file->metadata_id->metadata_id;
+      my $file_metadata = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id});
+      if ( $file_metadata->create_person_id() eq $user_id) {
+	push @trait_files, [$md_file->basename,$md_file->file_id];
+      }
     }
 
 

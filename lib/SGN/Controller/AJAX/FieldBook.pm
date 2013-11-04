@@ -382,9 +382,13 @@ sub upload_phenotype_file_for_field_book_POST : Args(0) {
   print STDERR "store phenotypes from uploaded file\n";
   $store_phenotypes->store($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
 
-  $c->stash->{rest} = {
-		       success => "1",
-		      };
+  if ($store_phenotypes) {
+    $c->stash->{rest} = { error => 'Error storing uploaded file', };
+    return;
+  }
+
+  $c->stash->{rest} = {success => "1",};
+
 }
 
 sub _parse_list_from_json {
