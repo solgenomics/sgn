@@ -18,6 +18,8 @@ $trait_name
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations", "jquery.cookie"] &>
 
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+
 <& /page/page_title.mas,
     title => "GS Populations evaluated for $query" ,
 &>
@@ -42,7 +44,7 @@ $trait_name
 </div>
 
 <div id="select_done">
-<input type="button" id="done_selecting" name="done_selecting" value="Combine" onclick="selectedPops();"/>
+<input  class="button" type="button" id="done_selecting" name="done_selecting" value="Combine" onclick="selectedPops();"/>
 </div>
 
 </&>
