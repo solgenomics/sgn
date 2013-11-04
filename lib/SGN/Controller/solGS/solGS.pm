@@ -429,16 +429,20 @@ sub project_description {
                       project_desc => $row->description
                 );
         }
+
+       
+        $self->get_project_owners($c, $pr_id);       
+        $c->stash->{owner} = $c->stash->{project_owners};
     } 
     else 
     {
         my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
-        my $user_id = $c->user->id;
-
-        my $metadata_file = catfile ($tmp_dir, "metadata_${user_id}_${pr_id}");
+        my $user_name = $c->user->id;
+        
+        my $metadata_file = catfile ($tmp_dir, "metadata_${user_name}_${pr_id}");
        
         my @metadata = read_file($metadata_file);
-        
+       
         my ($key, $list_name, $desc);
      
         ($desc)        = grep {/description/} @metadata;       
@@ -450,11 +454,11 @@ sub project_description {
         $c->stash(project_id   => $pr_id,
                   project_name => $list_name,
                   project_desc => $desc,
-                  owner        => $user_id
+                  owner        => $user_name
                 );
 
     }
-   
+    
     $self->genotype_file($c);
     my $geno_file  = $c->stash->{genotype_file};
     my @geno_lines = read_file($geno_file);
@@ -481,7 +485,7 @@ sub project_description {
 
     $c->stash(markers_no => $markers_no,
               traits_no  => $traits_no,
-              stocks_no  => $stocks_no
+              stocks_no  => $stocks_no,
         );
 }
 
@@ -517,9 +521,12 @@ sub trait :Path('/solgs/trait') Args(3) {
         {
             $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
         }
-        
+       
         $self->get_trait_name($c, $trait_id);
-        $c->stash->{owner} = $c->user->id;
+
+        $self->get_project_owners($c, $pop_id);       
+        $c->stash->{owner} = $c->stash->{project_owners};
+
         $c->stash->{template} = $self->template("/population/trait.mas");
     }
     
@@ -2100,6 +2107,29 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
 }
 
 
+sub get_project_owners {
+    my ($self, $c, $pr_id) = @_;
+
+    my $owners = $c->model("solGS::solGS")->get_stock_owners($c, $pr_id);
+    my $owners_names;
+
+    if ($owners)
+    {
+        for (my $i=0; $i < scalar(@$owners); $i++) 
+        {
+            my $owner_name = $owners->[$i]->{'first_name'} . "\t" . $owners->[$i]->{'last_name'} if $owners->[$i];
+           
+            unless (!$owner_name)
+            {
+                $owners_names .= $owners_names ? ', ' . $owner_name : $owner_name;
+            }
+        }
+    }      
+
+    $c->stash->{project_owners} = $owners_names;
+}
+
+
 sub combined_pops_summary {
     my ($self, $c) = @_;
     
@@ -2109,6 +2139,7 @@ sub combined_pops_summary {
     
     my $desc = 'This training population is a combination of ';
     
+    my $projects_owners;
     foreach (@pops)
     {  
         my $pr_rs = $c->model('solGS::solGS')->project_details($c, $_);
@@ -2120,9 +2151,17 @@ sub combined_pops_summary {
             my $pr_name = $row->name;
             $desc .= qq | <a href="/solgs/population/$pr_id">$pr_name </a>|; 
             $desc .= $_ == $pops[-1] ? '.' : ' and ';
-        }         
-    }
+        } 
 
+        $self->get_project_owners($c, $_);
+        my $project_owners = $c->stash->{project_owners};
+
+        unless (!$project_owners)
+        {
+             $projects_owners.= $projects_owners ? ', ' . $project_owners : $project_owners;
+        }
+    }
+   
     my $trait_abbr = $c->stash->{trait_abbr};
     my $trait_id = $c->stash->{trait_id};
     my $combo_pops_id = $c->stash->{combo_pops_id};
@@ -2147,6 +2186,7 @@ sub combined_pops_summary {
               stocks_no    => $stocks_no,
               project_desc => $desc,
               project_name => $training_pop,
+              owner        => $projects_owners
         );
 
 
