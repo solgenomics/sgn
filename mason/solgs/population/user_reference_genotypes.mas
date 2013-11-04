@@ -28,6 +28,12 @@ Isaak Y Tecle (iyt2@cornell.edu)
     <div class="list_upload" id="reference_genotypes_list_upload">
       <input type="button" value="Upload" />
     </div>
+    
+    <div class="list_upload" style="margin-left:5px">     
+      <i class="glyphicon-plus"></i>
+      <a href="/breeders/home" style="color:#ffffff">make a new list</a>  
+    </div>
+
     <br>
     <br>
    
