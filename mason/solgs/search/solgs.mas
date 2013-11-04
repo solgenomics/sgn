@@ -36,7 +36,7 @@ if ($current_page > 1) { $collapse = 0; }
 
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.ajaxAutocomplete"] &>
 
 <p>&nbsp</p>
 
@@ -88,3 +88,5 @@ if ($current_page > 1) { $collapse = 0; }
   <& /solgs/population/user_reference_genotypes.mas &>
    
 </&>
+
+
