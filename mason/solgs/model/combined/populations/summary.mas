@@ -20,9 +20,11 @@ $project_desc
 $stocks_no
 $markers_no
 $traits_no =>''
+$owner=>''
 
 </%args>
 
+% if (!$owner) {$owner = 'NextGen Cassava Project'; } 
 
 <table>
   <tr>
@@ -30,7 +32,7 @@ $traits_no =>''
       <& /page/columnar_table.mas,
          data         => [['Name', $project_name],
                           ['Description', $project_desc],
-                          ['Owner', 'NextGen Cassava'],
+                          ['Owner', $owner],
                          ],
          __alt_freq   => 0,
          __align      => "l",
