@@ -209,6 +209,33 @@ sub check_stock_type {
 }
 
 
+sub get_stock_owners {
+    my ($self, $c, $stock_id) = @_;
+      
+    my $q = "SELECT sp_person_id, first_name, last_name 
+                    FROM phenome.stock_owner 
+                    JOIN sgn_people.sp_person USING (sp_person_id)
+                    WHERE stock_id = ? ";
+    
+   
+    my $sth = $c->dbc->dbh()->prepare($q);
+    $sth->execute($stock_id);
+    
+    my $owners;   
+    while (my ($id, $fname, $lname) = $sth->fetchrow_array)
+    {
+      push @$owners, {'id'         => $id, 
+                      'first_name' => $fname, 
+                      'last_name'  => $lname
+                     };  
+
+    }
+    
+    return $owners;
+
+}
+
+
 sub genotype_data {
     my ($self, $c, $project_id) = @_;
     
