@@ -153,7 +153,7 @@ CXGN.List.prototype = {
 	    html += '<option name="'+types[i][1]+'"'+selected_html+'>'+types[i][1]+'</option>';
 	}
 	html += '</select>';
-	alert(selected + "\n "+html);
+	//alert(selected + "\n "+html);
 	return html;
     },
 
