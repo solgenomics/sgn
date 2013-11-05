@@ -27,7 +27,7 @@ my $new_stock_link = qq| <a href="/stock/0/new">Submit new stock</a> \| <a href=
 </%perl>
 
 <& /util/import_javascript.mas,
-    classes => [qw(jquery jquery.cookie	CXGN.Effects)]
+    classes => [qw(jquery CXGN.Effects jquery.cookie)]
 &>
 
 
@@ -76,7 +76,7 @@ Copy items on this page to list:
   jQuery(document).ready( function() { 
     var items = eval(<% $item_json %>);
 
-    if (jQuery.cookie("sgn_session_id")) { 
+    if (isLoggedIn()) { 
       jQuery('#item_list').hide();
       jQuery('#item_list').html(items.join("\n"));
       

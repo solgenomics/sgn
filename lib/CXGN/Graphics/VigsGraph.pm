@@ -4,6 +4,11 @@ package CXGN::Graphics::VigsGraph;
 use Moose;
 use GD::Image;
 use Data::Dumper;
+use Bio::SeqIO;
+
+
+use Bio::BLAST::Database;
+
 
 has 'bwafile' => ( is=>'rw' );
 has 'fragment_size' => (is => 'rw', isa=>'Int', default=>21);
@@ -82,7 +87,7 @@ sub target_graph {
     my $coverage = shift;
 
     my $matches = $self->matches();
-    my @match_counts = $self->subjects_by_match_count($matches);
+    my @match_counts = $self->subjects_by_match_count(0,$matches);
     # print Dumper(@match_counts);
     my @target_scores;
 
@@ -128,7 +133,7 @@ sub off_target_graph {
     my @off_targets = ();
 
     my $matches = $self->matches();
-    my @match_counts = $self->subjects_by_match_count($matches);
+    my @match_counts = $self->subjects_by_match_count(0,$matches);
     my %off_t_counts;
 
     my @coverage_keys = ();
@@ -236,7 +241,7 @@ sub sort_keys {
 
 sub get_best_coverage { 
     my $self = shift;
-    my @subjects = $self->subjects_by_match_count($self->matches);
+    my @subjects = $self->subjects_by_match_count(0,$self->matches);
     
 #    print Dumper(\@subjects);
     
@@ -252,11 +257,32 @@ sub get_best_coverage {
 
 sub subjects_by_match_count { 
     my $self = shift;
+    my $db = shift;
     my $matches = shift;
     my @counts = ();
-    foreach my $s (keys %$matches) { 
-	push @counts, [ $s, scalar(@{$matches->{$s}}) ];
+    my $fs;
+    my $primseqi;
+    my $desc;
+
+    if ($db) {
+	#print STDERR "db: $db\n";
+    
+	$fs = Bio::BLAST::Database->open(
+	    full_file_basename => $db,
+	);
     }
+
+    foreach my $s (keys %$matches) { 
+        if ($db) {
+	    $primseqi = $fs->get_sequence($s);
+	    $desc = $primseqi->desc();
+
+	    push @counts, [ $s, scalar(@{$matches->{$s}}),$desc];
+	} else {
+	    push @counts, [ $s, scalar(@{$matches->{$s}}),"" ];
+	}
+    }
+
     # print Dumper(\@counts);
     my @sorted = sort sort_keys @counts;
     
@@ -303,7 +329,7 @@ sub add_expression_values {
     my $self = shift;
     my $expr_hash = shift;
     my @expr_msg;
-    my @sorted = $self->subjects_by_match_count($self->matches);
+    my @sorted = $self->subjects_by_match_count(0,$self->matches);
 
 # $sorted[$track]->[0]
     for (my $track=0; $track< @sorted; $track++) {

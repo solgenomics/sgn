@@ -326,6 +326,13 @@ sub default_toolbar_data {
 'Compare a given sequence to known sequences using the Basic Local Alignment Search Tool, NCBI BLAST v. 2.2.9 [May-01-2004]'
                 },
                 {
+                    name => 'VIGS Tool',
+                    link => '/tools/vigs',
+                    desc =>
+'Determine which genes a probe will silence using VIGS.'
+                },
+
+                {
                     name => 'Alignment Analyzer',
                     link => '/tools/align_viewer/',
                     desc =>

@@ -59,8 +59,6 @@ sub prop_select {
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ['jquery.cookie' ] &>
-
 <div id="<% $div_name %>_content">
 </div>
 

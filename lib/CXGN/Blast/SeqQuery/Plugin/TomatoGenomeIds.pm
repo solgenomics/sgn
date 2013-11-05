@@ -29,7 +29,6 @@ sub validate {
     my $c = shift;
     my $input = shift;
 
-
     my @ids = split /\s+/, $input; 
     
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -37,10 +36,13 @@ sub validate {
     
     my @missing = ();
     foreach my $id (@ids) { 
-	my $rs = $schema->resultset("Sequence::Feature")->search( { type_id=>$rna_id, name => "$id" } );
-	if (! (my $row = $rs->next())) { 
+	print STDERR "Validating $id... ";
+	my $rs = $schema->resultset("Sequence::Feature")->search( { type_id=>$rna_id, name => { ilike => "$id".'.%.1' } } );
+	if ($rs->count() ==0) { 
+	    print STDERR " not found.\n";
 	    push @missing, $id;
 	}
+	else { print STDERR "OK\n"; }
 
     }
     if (@missing) { 
@@ -63,10 +65,10 @@ sub process {
     print STDERR "RNA: $rna_id\n";
     my @seqs = ();
     foreach my $id (@ids) { 
-	my $rs = $schema->resultset("Sequence::Feature")->search( { type_id=>$rna_id, name => "$id" } );
+	my $rs = $schema->resultset("Sequence::Feature")->search( { type_id=>$rna_id, name => { ilike => "$id".'.%.1' } } );
 	if (my $row = $rs->next()) { 
 	    
-	    push @seqs, ">".$row->name."\n".$->residues();
+	    push @seqs, ">".$row->name."\n".$row->residues();
 	}
 	else { 
 	    	    die "ID $id does not exist!";

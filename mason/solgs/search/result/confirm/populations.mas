@@ -15,6 +15,7 @@ $trait_id
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations", "jquery.cookie"] &>
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
+
 <& /page/page_title.mas,
     title => "Confirm" ,
 &>

@@ -1537,7 +1537,7 @@ sub list_of_prediction_pops {
             $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
             my $download_prediction = $c->stash->{download_prediction};
             
-            push @pred_pops,  ['', $pred_pop_link, $desc, 'F1', $project_yr, $download_prediction];
+            push @pred_pops,  ['', $pred_pop_link, $desc, 'NA', $project_yr, $download_prediction];
         }
     }
 

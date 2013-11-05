@@ -15,8 +15,6 @@ my $dt = DateTime->from_epoch( epoch=>time );
 my $date = join "/", ($dt->year, $dt->month, $dt->day);
 </%perl>
 
-<& /util/import_javascript.mas, classes => ['jquery.cookie' ] &>
-
 <& /page/page_title.mas, title=>"Barcode Tools" &>
 
 <&| /page/info_section.mas, title=>"Barcode Tools", collapsible=>1, collapsed=>0 &>

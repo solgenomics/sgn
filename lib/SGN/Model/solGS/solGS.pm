@@ -132,12 +132,15 @@ sub project_location {
 
 sub all_projects {
     my ($self, $c) = @_;
+
+    my $rows = $c->stash->{get_selection_populations} ? 40 : 10;
+
     my $projects_rs =  $self->schema($c)->resultset("Project::Project")
         ->search({}, 
                  { 
                      distinct => 1,
                      page     => $c->req->param('page') || 1,
-                     rows     => 10,
+                     rows     => $rows,
                      order_by => 'name'              
                  },                       
         );
@@ -244,7 +247,7 @@ sub genotype_data {
         my $stock_subj_rs = $self->project_subject_stocks_rs($c, $project_id);
         my $stock_obj_rs  = $self->stocks_object_rs($c, $stock_subj_rs);
       
-        my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs);
+        my $stock_genotype_rs = $self->stock_genotypes_rs($c, $stock_obj_rs);
    
         my $markers   = $self->extract_project_markers($stock_genotype_rs);
         my $geno_data = "\t" . $markers . "\n";
@@ -260,7 +263,7 @@ sub genotype_data {
 
             unless (grep(/^$stock$/, @stocks)) 
             {
-                my $geno_values = $self->stock_genotype_values($c, $geno);
+                my $geno_values = $self->stock_genotype_values($geno);
                 my $geno_values_no = scalar(split(/\t/, $geno_values));
                
                 if($geno_values_no - 1 == $markers_no )
@@ -406,7 +409,7 @@ sub individual_stock_genotypes_rs {
 
 
 sub stock_genotypes_rs {
-    my ($self, $stock_rs) = @_;
+    my ($self, $c, $stock_rs) = @_;
     
     my $genotype_rs = $stock_rs
         ->search_related('nd_experiment_stocks')
@@ -428,21 +431,24 @@ sub stock_genotypes_rs {
 
 sub extract_project_markers {
     my ($self, $genopropvalue_rs) = @_;
-         
-    my $row = $genopropvalue_rs->single; 
-
-    my $genotype_json = $row->value;
-    my $genotype_hash = JSON::Any->decode($genotype_json);
-           
-    my @markers = keys %$genotype_hash;
+   
+    my $row = $genopropvalue_rs->single;
     my $markers;
-    foreach my $marker (@markers) 
+
+    if (defined $row)    
     {
-        $markers .= $marker;
-        $markers .= "\t" unless $marker eq $markers[-1];
+        my $genotype_json = $row->value;
+        my $genotype_hash = JSON::Any->decode($genotype_json);
+
+        my @markers = keys %$genotype_hash;
+   
+        foreach my $marker (@markers) 
+        {
+            $markers .= $marker;
+            $markers .= "\t" unless $marker eq $markers[-1];
+        }
     }
-            
-  
+    
     return $markers;  
 }
 
@@ -483,6 +489,8 @@ sub prediction_pops {
  
   my @tr_pop_markers;
   
+  $c->stash->{get_selection_populations} = 1;
+ 
   if ($training_pop_id) 
   {
       my $dir = $c->stash->{solgs_cache_dir};
@@ -519,20 +527,26 @@ sub prediction_pops {
           my $stock_subj_rs = $self->project_subject_stocks_rs($c, $project_id);
           my $stock_obj_rs  = $self->stocks_object_rs($c, $stock_subj_rs);
       
-          my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs);
-   
-          my $markers   = $self->extract_project_markers($stock_genotype_rs);
-
-          my @pred_pop_markers = split(/\t/, $markers);
-           
-          print STDERR "\ncheck if prediction populations are genotyped using the same set of markers as for the training population : " . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
-
-          if (@pred_pop_markers ~~ @tr_pop_markers) 
+          my $stock_genotype_rs = $self->stock_genotypes_rs($c, $stock_obj_rs);
+        
+          if ($stock_genotype_rs)
           {
+              my $markers   = $self->extract_project_markers($stock_genotype_rs);
+
+              if ($markers) 
+              {
+                 my @pred_pop_markers = split(/\t/, $markers);
+           
+                 print STDERR "\ncheck if prediction populations are genotyped using the same set of markers as for the training population : " . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
+
+                 if (@pred_pop_markers ~~ @tr_pop_markers) 
+                 {
                   
-              $cnt++;
-              push @sample_pred_projects, $project_id; 
+                     $cnt++;
+                     push @sample_pred_projects, $project_id; 
        
+                 }
+             }
           }
       }
        
