@@ -1,0 +1,24 @@
+
+<& /page/page_title.mas, title => "BLAST Help" &>
+
+<p>The SGN BLAST is based on NCBI BLAST and accessible on <a href="/tools/blast">/tools/blast</a>. </p>
+
+<p>The BLAST databases are organized in different categories, which can be selected using the categories pull-down menu. Each category contains a number of BLAST databases.</p>
+
+<p>Select the category, then the database.</p>
+
+<p>Enter the sequence in the Query textarea and choose the appropriate format from the format selector (for example, nucleotide fasta). Choose the appropriate blast program (for example, blastn for running a nucleotide query against a nucleotide database).</p>
+
+<p>If you would like to filter the query for low-complexity sequence, leave the Filter checkbox selected. This is the recommended setting.</p>
+
+<p>Select an appropriate e-value threshold. The default of 1e-10 should work for common applications.</p>
+
+<h4>Output options</h4>
+
+<p>You can choose different output options. The "Overview graph" option will show a graphic represenations of the hits in the database. The "Coverage graph" displays a graphical representation how the matches line up on the query sequence. The "Bioperl" parser displays a formatted version of the BLAST report with embedded links to other pages on the site. The "Basic" version shows the raw output of the BLAST report. Note that if the query contains several sequences (such as multi-fasta), the output will always default to the "Basic" parse option.</p>
+
+<h4>Results</h4>
+
+<p>The Results section will show the ouput (depending on your chosen Output options) when a BLAST analysis has been run. When the analysis is finished, the Input parameters sections will be closed and the Results section opened. To re-run a query, simply click on the + sign in the Input parameter section header to view that section again and adjust the parameters.</p>
+
+<p>The raw BLAST report can be downloaded using the download link in the Results section header.</p>

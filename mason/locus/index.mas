@@ -44,6 +44,7 @@ Naama Menda <nm249@cornell.edu>
   $locus_autocomplete_uri => undef
   $cvterm_add_uri => ''
   $cvterm_autocomplete_uri => undef
+  $trait_db_name => 'SP'
 </%args>
 
 <%once>
