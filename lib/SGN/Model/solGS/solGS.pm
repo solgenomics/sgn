@@ -234,7 +234,7 @@ sub genotype_data {
         my $stock_subj_rs = $self->project_subject_stocks_rs($c, $project_id);
         my $stock_obj_rs  = $self->stocks_object_rs($c, $stock_subj_rs);
       
-        my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs);
+        my $stock_genotype_rs = $self->stock_genotypes_rs($c, $stock_obj_rs);
    
         my $markers   = $self->extract_project_markers($stock_genotype_rs);
         my $geno_data = "\t" . $markers . "\n";
@@ -250,7 +250,7 @@ sub genotype_data {
 
             unless (grep(/^$stock$/, @stocks)) 
             {
-                my $geno_values = $self->stock_genotype_values($c, $geno);
+                my $geno_values = $self->stock_genotype_values($geno);
                 my $geno_values_no = scalar(split(/\t/, $geno_values));
                
                 if($geno_values_no - 1 == $markers_no )
@@ -354,7 +354,7 @@ sub individual_stock_genotypes_rs {
 
 
 sub stock_genotypes_rs {
-    my ($self, $stock_rs) = @_;
+    my ($self, $c, $stock_rs) = @_;
     
     my $genotype_rs = $stock_rs
         ->search_related('nd_experiment_stocks')
