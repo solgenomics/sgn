@@ -214,25 +214,30 @@ sub check_stock_type {
 
 sub get_stock_owners {
     my ($self, $c, $stock_id) = @_;
-      
-    my $q = "SELECT sp_person_id, first_name, last_name 
-                    FROM phenome.stock_owner 
-                    JOIN sgn_people.sp_person USING (sp_person_id)
-                    WHERE stock_id = ? ";
+   
+    my $owners; 
+    
+    unless ($stock_id =~ /uploaded/) 
+    { 
+        my $q = "SELECT sp_person_id, first_name, last_name 
+                        FROM phenome.stock_owner 
+                        JOIN sgn_people.sp_person USING (sp_person_id)
+                        WHERE stock_id = ? ";
     
    
-    my $sth = $c->dbc->dbh()->prepare($q);
-    $sth->execute($stock_id);
+        my $sth = $c->dbc->dbh()->prepare($q);
+        $sth->execute($stock_id);
     
-    my $owners;   
-    while (my ($id, $fname, $lname) = $sth->fetchrow_array)
-    {
-      push @$owners, {'id'         => $id, 
-                      'first_name' => $fname, 
-                      'last_name'  => $lname
-                     };  
+   
+        while (my ($id, $fname, $lname) = $sth->fetchrow_array)
+        {
+            push @$owners, {'id'         => $id, 
+                            'first_name' => $fname, 
+                            'last_name'  => $lname
+                           };  
 
-    }
+        }
+    } 
     
     return $owners;
 
@@ -369,7 +374,7 @@ sub format_user_list_genotype_data {
             if (@header_markers && @markers ~~ @header_markers)
                 
             { 
-                my $geno_values = $self->stock_genotype_values($c, $geno);               
+                my $geno_values = $self->stock_genotype_values($geno);               
                 $geno_data .= $geno_values;
             }       
         }       
@@ -454,9 +459,8 @@ sub extract_project_markers {
 
 
 sub stock_genotype_values {
-    my ($self, $c, $geno_row) = @_;
-       
-       
+    my ($self, $geno_row) = @_;
+              
     my $json_values  = $geno_row->value;
     my $values       = JSON::Any->decode($json_values);
     my @markers      = keys %$values;
