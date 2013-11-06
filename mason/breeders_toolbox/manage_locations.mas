@@ -1,0 +1,15 @@
+
+<%args>
+$locations
+$user_id => undef
+</%args>
+
+<br />
+
+<& /page/page_title.mas, title=>"Manage locations" &>
+
+<&| /page/info_section.mas, title=>'Locations',  collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_location_link">Add location</a>]' &>
+
+<& /breeders_toolbox/location.mas, locations=>$locations, user_id=>$user_id &>
+
+</&>
