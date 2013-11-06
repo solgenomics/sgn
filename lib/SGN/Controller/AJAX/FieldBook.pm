@@ -334,11 +334,15 @@ sub upload_phenotype_file_for_field_book_POST : Args(0) {
   my @plots;
   my @traits;
   my %phenotype_metadata;
+  my $time = DateTime->now();
+  my $timestamp = $time->ymd()."_".$time->hms();
 
   print STDERR "Move uploaded file to archive\n";
 
+  print STDERR "\n\nTimestamp: $timestamp\n";
+
   ## Store uploaded temporary file in archive
-  $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name);
+  $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
   $md5 = $uploader->get_md5($archived_filename_with_path);
   if (!$archived_filename_with_path) {
       $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -348,8 +352,6 @@ sub upload_phenotype_file_for_field_book_POST : Args(0) {
 
   ## Set metadata
 
-  my $time = DateTime->now();
-  my $timestamp = $time->ymd()."_".$time->hms();
   $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
   $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
   $phenotype_metadata{'operator'}="tester_operator";
@@ -382,7 +384,7 @@ sub upload_phenotype_file_for_field_book_POST : Args(0) {
   print STDERR "store phenotypes from uploaded file\n";
   $store_phenotypes->store($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
 
-  if ($store_phenotypes) {
+  if (!$store_phenotypes) {
     $c->stash->{rest} = { error => 'Error storing uploaded file', };
     return;
   }

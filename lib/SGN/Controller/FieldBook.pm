@@ -30,6 +30,7 @@ sub field_book :Path("/fieldbook") Args(0) {
     #limit to owner 
     my @projects = ();
     my @layout_files = ();
+    my @phenotype_files = ();
 
     my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')
       ->create_with({
@@ -79,10 +80,19 @@ sub field_book :Path("/fieldbook") Args(0) {
       }
     }
 
+    my $uploaded_md_files = $metadata_schema->resultset("MdFiles")->search({filetype=>'tablet phenotype file'});
+    while (my $md_file = $uploaded_md_files->next) {
+      my $metadata_id = $md_file->metadata_id->metadata_id;
+      my $file_metadata = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id});
+      if ( $file_metadata->create_person_id() eq $user_id) {
+	push @phenotype_files, [$md_file->basename,$md_file->file_id];
+      }
+    }
 
     $c->stash->{projects} = \@projects;
     $c->stash->{layout_files} = \@projects;
     $c->stash->{trait_files} = \@trait_files;
+    $c->stash->{phenotype_files} = \@phenotype_files;
 
     # get roles
     my @roles = $c->user->roles();

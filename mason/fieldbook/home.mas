@@ -4,6 +4,7 @@
 $user_id => undef
 @layout_files => undef
 @trait_files => undef
+@phenotype_files => undef
 @roles => ()
 </%args>
 
@@ -24,18 +25,27 @@ foreach my $project_ref (@projects) {
 </&>
 
 <&| /page/info_section.mas, title=>'Trait Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_new_trait_file_link">New</a>]' &>
-<%perl>
-foreach my $trait_ref (@trait_files) {
-   my @trait_array = @{$trait_ref};
-   my $trait_file_name = $trait_array[0];
-   my $trait_file_download = '[<a href="\\fieldbook\\trait_file_download\\'.$trait_array[1].'">Download</a>]';
-   print $trait_array[0]."$trait_file_download</br>";
-   #print $trial_array[4]."</br>";
-}
-</%perl>
+  <%perl>
+  foreach my $trait_ref (@trait_files) {
+    my @trait_array = @{$trait_ref};
+    my $trait_file_name = $trait_array[0];
+    my $trait_file_download = '[<a href="\\fieldbook\\trait_file_download\\'.$trait_array[1].'">Download</a>]';
+    print $trait_array[0]."$trait_file_download</br>";
+    #print $trial_array[4]."</br>";
+  }
+  </%perl>
 </&>
 
 <&| /page/info_section.mas, title=>'Uploaded Phenotype Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_tablet_phenotype_file_link">Upload</a>]' &>
+  <%perl>
+  foreach my $phenotype_ref (@phenotype_files) {
+    my @phenotype_array = @{$phenotype_ref};
+    my $phenotype_file_name = $phenotype_array[0];
+    #my $phenotype_file_download = '[<a href="\\fieldbook\\trait_file_download\\'.$trait_array[1].'">Download</a>]';
+    #print $phenotype_array[0]."$trait_file_download</br>";
+    print $phenotype_array[0]."</br>";
+  }
+  </%perl>
 </&>
 
 

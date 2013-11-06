@@ -35,8 +35,7 @@ sub archive {
     my $subdirectory = shift;
     my $tempfile = shift;
     my $archive_filename = shift;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
+    my $timestamp = shift;
     my $archive_path = $c->config->{archive_path};
     my $user_id;
     my $user_name;
@@ -55,18 +54,17 @@ sub archive {
     }
     $user_id = $c->user()->get_object()->get_sp_person_id();
     $user_name = $c->user()->get_object()->get_username();
-    $user_string = $user_name.'_'.$user_id;
-    $archived_file_name = catfile($user_string, $timestamp."_".$archive_filename);
-    $file_destination =  catfile($archive_path, $user_string, $subdirectory, $archive_filename);
+    #$archived_file_name = catfile($user_string, $timestamp."_".$archive_filename);
+    $file_destination =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
     try {
 	if (!-d $archive_path) {
 	    mkdir $archive_path;
 	}
-	if (! -d catfile($archive_path, $user_string)) {
-	    mkdir (catfile($archive_path, $user_string));
+	if (! -d catfile($archive_path, $user_id)) {
+	  mkdir (catfile($archive_path, $user_id));
 	}
-	if (! -d catfile($archive_path, $user_string, $subdirectory)) {
-	    mkdir (catfile($archive_path, $user_string, $subdirectory));
+	if (! -d catfile($archive_path, $user_id, $subdirectory)) {
+	  mkdir (catfile($archive_path, $user_id, $subdirectory));
 	}
 	copy($tempfile,$file_destination);
     } catch {
