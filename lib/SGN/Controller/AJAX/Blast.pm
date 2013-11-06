@@ -57,6 +57,7 @@ sub run : Path('/tools/blast/run') Args(0) {
     
     my $jobid = basename($seqfile);
 
+
     print STDERR "JOB ID CREATED: $jobid\n";
 
     my $seq_count;
@@ -222,6 +223,8 @@ sub run : Path('/tools/blast/run') Args(0) {
 	    );
 	 
 	 print STDERR "Saving job state to $seqfile.job for id ".$job->job_id()."\n";
+
+	 $job->do_not_cleanup(1);
 
 	 nstore( $job, $seqfile.".job" )
 	     or die 'could not serialize job object';
