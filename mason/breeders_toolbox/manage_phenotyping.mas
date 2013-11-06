@@ -13,7 +13,7 @@ $locations => undef
   <& /breeders_toolbox/upload_phenotypes.mas &>  
 
 
-<&| /page/info_section.mas, title=>'Uploaded Files', is_subsection=>1 &>
+<&| /page/info_section.mas, title=>'Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_phenotypes_link" > Upload phenotypes</a>]' &>
   
   <& /breeders_toolbox/file_list.mas, files=>$phenotype_files &>  
 
