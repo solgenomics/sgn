@@ -132,9 +132,8 @@ sub create_fieldbook_from_trial_GET : Args(0) {
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
   my $user_name = $c->user()->get_object()->get_username();
-  my $user_string = $user_name.'_'.$user_id;
   my $subdirectory_name = "tablet_field_layout";
-  my $archived_file_name = catfile($user_string, $subdirectory_name,$timestamp."_".$project->name.".xls");
+  my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$project->name.".xls");
   my $archive_path = $c->config->{archive_path};
   my $file_destination =  catfile($archive_path, $archived_file_name);
 
@@ -142,12 +141,12 @@ sub create_fieldbook_from_trial_GET : Args(0) {
     mkdir $archive_path;
   }
 
-  if (! -d catfile($archive_path, $user_string)) { 
-      mkdir (catfile($archive_path, $user_string));
+  if (! -d catfile($archive_path, $user_id)) { 
+    mkdir (catfile($archive_path, $user_id));
   }
 
-  if (! -d catfile($archive_path, $user_string,$subdirectory_name)) { 
-      mkdir (catfile($archive_path, $user_string, $subdirectory_name));
+  if (! -d catfile($archive_path, $user_id,$subdirectory_name)) { 
+    mkdir (catfile($archive_path, $user_id, $subdirectory_name));
   }
 
 
@@ -227,11 +226,10 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 
   my $user_id = $c->user()->get_object()->get_sp_person_id();
   my $user_name = $c->user()->get_object()->get_username();
-  my $user_string = $user_name.'_'.$user_id;
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
   my $subdirectory_name = "tablet_trait_files";
-  my $archived_file_name = catfile($user_string, $subdirectory_name,$timestamp."_".$trait_file_name.".trt");
+  my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$trait_file_name.".trt");
   my $archive_path = $c->config->{archive_path};
   my $file_destination =  catfile($archive_path, $archived_file_name);
 
@@ -240,12 +238,12 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     mkdir $archive_path;
   }
 
-  if (! -d catfile($archive_path, $user_string)) { 
-      mkdir (catfile($archive_path, $user_string));
+  if (! -d catfile($archive_path, $user_id)) { 
+    mkdir (catfile($archive_path, $user_id));
   }
 
-  if (! -d catfile($archive_path, $user_string,$subdirectory_name)) { 
-      mkdir (catfile($archive_path, $user_string, $subdirectory_name));
+  if (! -d catfile($archive_path, $user_id,$subdirectory_name)) { 
+      mkdir (catfile($archive_path, $user_id, $subdirectory_name));
   }
 
 

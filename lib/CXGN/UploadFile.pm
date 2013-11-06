@@ -39,7 +39,6 @@ sub archive {
     my $archive_path = $c->config->{archive_path};
     my $user_id;
     my $user_name;
-    my $user_string;
     my $archived_file_name;
     my $file_destination;
     my $error;
@@ -54,7 +53,6 @@ sub archive {
     }
     $user_id = $c->user()->get_object()->get_sp_person_id();
     $user_name = $c->user()->get_object()->get_username();
-    #$archived_file_name = catfile($user_string, $timestamp."_".$archive_filename);
     $file_destination =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
     try {
 	if (!-d $archive_path) {
