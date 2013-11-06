@@ -1,0 +1,72 @@
+
+<%args>
+@projects => undef
+$user_id => undef
+@layout_files => undef
+@trait_files => undef
+@phenotype_files => undef
+@roles => ()
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.FieldBook'] &>
+
+<& /page/page_title.mas, title=>'Field Book Tools' &>
+
+<&| /page/info_section.mas, title=>'Field Layout Files', collapsible=>1, collapsed=>0, &>
+<%perl>
+foreach my $project_ref (@projects) {
+   my @trial_array = @{$project_ref};
+   my $file_name = $trial_array[4];
+   my $trial_layout_download = '[<a href="\\fieldbook\\trial_download\\'.$trial_array[5].'">Download</a>]';
+   print $trial_array[4]."$trial_layout_download</br>";
+   #print $trial_array[4]."</br>";
+}
+</%perl>
+</&>
+
+<&| /page/info_section.mas, title=>'Trait Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_new_trait_file_link">New</a>]' &>
+  <%perl>
+  foreach my $trait_ref (@trait_files) {
+    my @trait_array = @{$trait_ref};
+    my $trait_file_name = $trait_array[0];
+    my $trait_file_download = '[<a href="\\fieldbook\\trait_file_download\\'.$trait_array[1].'">Download</a>]';
+    print $trait_array[0]."$trait_file_download</br>";
+    #print $trial_array[4]."</br>";
+  }
+  </%perl>
+</&>
+
+<&| /page/info_section.mas, title=>'Uploaded Phenotype Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_tablet_phenotype_file_link">Upload</a>]' &>
+  <%perl>
+  foreach my $phenotype_ref (@phenotype_files) {
+    my @phenotype_array = @{$phenotype_ref};
+    my $phenotype_file_name = $phenotype_array[0];
+    #my $phenotype_file_download = '[<a href="\\fieldbook\\trait_file_download\\'.$trait_array[1].'">Download</a>]';
+    #print $phenotype_array[0]."$trait_file_download</br>";
+    print $phenotype_array[0]."</br>";
+  }
+  </%perl>
+</&>
+
+
+<div id="create_trait_file_dialog" class="ui-widget" title="Create Trait File">
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_trait_file_form" name="create_trait_file_form">
+    <label for="trait_file_name" style="inline-block; width: 100px;">Trait file name:</label>
+    <input id="trait_file_name" name="trait_file_name" />
+    <div id="select_list" name="select_list" id="select_list">
+      <label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of traits to include:
+      </label>
+    </div>
+  </form>
+</div>
+
+
+
+<div id="upload_fieldbook_phenotypes_dialog" class="ui-widget" title="Upload Fieldbook File">
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_fieldbook_form" name="upload_fieldbook_form">
+      <label for="fieldbook_upload_file">Upload file:</label>
+      <input type="file" name="fieldbook_upload_file" id="fieldbook_upload_file" encoding="multipart/form-data" />
+  </form>
+</div>
+
+
