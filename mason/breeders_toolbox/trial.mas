@@ -220,7 +220,6 @@ jQuery(document).ready(function () {
     });
     function open_create_fieldbook_dialog() {
       var trialID = parseInt(jQuery('#trialIDDiv').text());
-      alert(trialID);
       new jQuery.ajax({
         type: 'GET',
         url: '/ajax/fieldbook/create',

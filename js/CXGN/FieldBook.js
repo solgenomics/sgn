@@ -26,11 +26,8 @@ window.onload = function initialize() {
 
 	jQuery('#create_new_trait_file_link').click(function () {
             jQuery('#create_trait_file_dialog').dialog("open");
-            //alert("something");
 	});
-	//function create_trait_file_dialog() {
-	//  alert("something");
-	//}
+
 	jQuery( "#create_trait_file_dialog" ).dialog({
 	    autoOpen: false,
 	    modal: true,
@@ -118,6 +115,8 @@ window.onload = function initialize() {
 		}
 		if (response.success) {
 		    alert("File uploaded successfully");
+		    jQuery( this ).dialog( "close" );
+		    location.reload();
 		}
 	    }
 	});
