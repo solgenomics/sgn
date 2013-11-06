@@ -303,19 +303,22 @@ sub extract_project_markers {
     my ($self, $genopropvalue_rs) = @_;
     
     my $row = $genopropvalue_rs->single;
-
-    my $genotype_json = $row->value;
-    my $genotype_hash = JSON::Any->decode($genotype_json);
-
     my $markers;
-    my @markers = keys %$genotype_hash;
-   
-    foreach my $marker (@markers) 
-    {
-        $markers .= $marker;
-        $markers .= "\t" unless $marker eq $markers[-1];
-    }
 
+    if (defined $row)    
+    {
+        my $genotype_json = $row->value;
+        my $genotype_hash = JSON::Any->decode($genotype_json);
+
+        my @markers = keys %$genotype_hash;
+   
+        foreach my $marker (@markers) 
+        {
+            $markers .= $marker;
+            $markers .= "\t" unless $marker eq $markers[-1];
+        }
+    }
+    
     return $markers;  
 }
 
@@ -387,21 +390,24 @@ sub prediction_pops {
       
           my $stock_genotype_rs = $self->stock_genotypes_rs($c, $stock_obj_rs);
         
-          if($stock_genotype_rs)
+          if ($stock_genotype_rs)
           {
               my $markers   = $self->extract_project_markers($stock_genotype_rs);
 
-              my @pred_pop_markers = split(/\t/, $markers);
+             if ($markers) 
+             {
+                 my @pred_pop_markers = split(/\t/, $markers);
            
-              print STDERR "\ncheck if prediction populations are genotyped using the same set of markers as for the training population : " . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
+                 print STDERR "\ncheck if prediction populations are genotyped using the same set of markers as for the training population : " . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
 
-              if (@pred_pop_markers ~~ @tr_pop_markers) 
-              {
+                 if (@pred_pop_markers ~~ @tr_pop_markers) 
+                 {
                   
-                  $cnt++;
-                  push @sample_pred_projects, $project_id; 
+                     $cnt++;
+                     push @sample_pred_projects, $project_id; 
        
-              }
+                 }
+             }
           }
       }
        
