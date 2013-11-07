@@ -41,6 +41,24 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_projects.mas';
 }
 
+sub manage_accessions : Path("/breeders/accessions") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) { 	
+	# redirect to login page
+	#
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+	return;
+    }
+
+    $c->stash->{accessions} = ();
+
+    $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
+
+}
+
+
 sub manage_locations : Path("/breeders/locations") Args(0) { 
     my $self = shift;
     my $c = shift;

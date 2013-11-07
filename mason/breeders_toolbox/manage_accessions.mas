@@ -1,0 +1,17 @@
+
+<%args>
+$accessions
+</%args>
+
+<br />
+<& /page/page_title.mas, title=>"Manage accessions" &>
+
+
+<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_accessions_link">Upload Accessions</a>]' &>
+    
+    <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
+
+</&>
+
+
+
