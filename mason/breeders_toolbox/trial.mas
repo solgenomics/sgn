@@ -59,7 +59,7 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<&| /page/info_section.mas, title=>"Breeding program", subtitle=>'<a href="javascript:show_change_breeding_program_dialog()">change</a>' &>
+<&| /page/info_section.mas, title=>"Breeding program", subtitle=>'<a id="show_change_breeding_program_link">change</a>' &>
 % foreach my $bp (@$breeding_program) { print $bp->[1] . "&nbsp;(".$bp->[2].")"; } 
 </&>
 
@@ -176,26 +176,26 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
   
 jQuery(document).ready(function () {
 
-  jQuery('#change_breeding_program_dialog').dialog( { 
+  jQuery('#show_change_breeding_program_link').click(
+     function() {
+       jQuery('#change_breeding_program_dialog').dialog("open");
+       get_breeding_select();
+     }
+  );
+
+  jQuery('#change_breeding_program_dialog').dialog( {
      height: 150,
      width: 300,
      title: 'Select Breeding Program',
      autoOpen: false,
-     buttons: { 
-       'OK': function() { 
-          alert("HELLO");
+     buttons: {
+       'OK': function() {
           associate_breeding_program();
-          alert("balblabla");
           jQuery('#change_breeding_program_dialog').dialog("close"); 
-        },
+       },
        'Cancel': function() { jQuery('#change_breeding_program_dialog').dialog("close"); }
      }
   });
-
-  function show_change_breeding_program_dialog() { 
-     jQuery('#change_breeding_program_dialog').dialog("open");
-     get_breeding_select();
-  }
 
   function get_breeding_select() { 
     var programs = new Array();
@@ -210,25 +210,23 @@ jQuery(document).ready(function () {
       }
     });
     var html = "";
-    for (var i=0; i<programs.length; i++) {  
+    for (var i=0; i< programs.length; i++) {  
       	html += '<option value='+programs[i][0]+'>'+programs[i][1]+'</a>';
     }
-
     jQuery('#change_breeding_program_select').html(html);
-    alert(html);
-}
+  }
 
-function associate_breeding_program() { 
-  var program = jQuery('#change_breeding_program_select').val();				    
-  alert("Program: "+program);
-  jQuery.ajax( { 
-    url: '/breeders/program/associate/'+program+'/'+ <% $trial_id %>,
-    async: false,
-    success: function(response) { 
-      alert("Associated this and that.");
-    }
-  });
-}
+  function associate_breeding_program() { 
+    var program = jQuery('#change_breeding_program_select').val();				    
+    alert("Program: "+program);
+    jQuery.ajax( { 
+      url: '/breeders/program/associate/'+program+'/'+ <% $trial_id %>,
+      async: false,
+      success: function(response) { 
+        alert("Associated program with id "+program + " to trial with id "+<% $trial_id %>);
+      }
+    });
+   }
 
 
     jQuery('#create_spreadsheet_link').click(function () {
@@ -272,8 +270,6 @@ function associate_breeding_program() {
       });
 
     }
-
-
 
     jQuery('#create_fieldbook_link').click(function () {
         open_create_fieldbook_dialog();
@@ -337,7 +333,8 @@ function associate_breeding_program() {
         },
     });
 
-});
+  }  
+);
 
 </script>
  
