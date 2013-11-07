@@ -13,7 +13,7 @@ sub get_breeding_programs {
     my $self = shift;
     
 
-    my $breeding_program_cvterm_id = $self->schema->resultset('Cv::Cvterm')->find_or_create( { name => 'breeding_program' })->cvterm_id();
+    my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
     my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
 
