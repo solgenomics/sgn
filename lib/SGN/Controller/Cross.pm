@@ -464,6 +464,7 @@ sub make_cross_form :Path("/stock/cross/new") :Args(0) {
       }
       $c->stash->{locations} = \@locations;
 
+
     }
     else {
       $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );

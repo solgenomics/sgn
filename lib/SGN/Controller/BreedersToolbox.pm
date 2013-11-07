@@ -98,12 +98,17 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
 	return;
     }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $breeding_programs = $bp->get_breeding_programs();
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
     
     $c->stash->{locations} = $self->get_locations($c);
 
-    $c->stash->{projects} = $self->get_projects($c);
+    #$c->stash->{projects} = $self->get_projects($c);
+
+    $c->stash->{programs} = $breeding_programs;;
 
     $c->stash->{roles} = $c->user()->roles();
 
