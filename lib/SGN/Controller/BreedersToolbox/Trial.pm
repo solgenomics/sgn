@@ -98,6 +98,8 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 
     $c->stash->{plot_data} = [];
 
+    $c->stash->{trial_id} = $trial_id;
+
     $c->stash->{template} = '/breeders_toolbox/trial.mas';
 }
 

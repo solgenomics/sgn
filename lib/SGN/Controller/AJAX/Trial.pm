@@ -48,7 +48,7 @@ has 'schema' => (
 
 sub get_trial_layout : Path('/ajax/trial/layout') : ActionClass('REST') { }
 
-sub get_trial_layout_GET : Args(0) {
+sub get_trial_layout_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $project;
@@ -66,7 +66,7 @@ sub get_trial_layout_GET : Args(0) {
 
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
 
-sub generate_experimental_design_GET : Args(0) {
+sub generate_experimental_design_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_design = CXGN::Trial::TrialDesign->new();
@@ -196,7 +196,7 @@ sub generate_experimental_design_GET : Args(0) {
 
 sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : ActionClass('REST') { }
 
-sub save_experimental_design_GET : Args(0) {
+sub save_experimental_design_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_create = new CXGN::Trial::TrialCreate(schema => $schema);
@@ -238,7 +238,7 @@ sub save_experimental_design_GET : Args(0) {
 
 sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
 
-sub verify_stock_list_GET : Args(0) {
+sub verify_stock_list_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my @stock_names;

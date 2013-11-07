@@ -18,7 +18,7 @@ $trials_by_breeding_project => ()
     <label for="add_project_location" style="display: inline-block; width: 100px;">Location:</label>
     <select id="add_project_location" name="add_project_location">
       <%perl>foreach my $location (@locations) { print "
-      <option value=".@$location[1].">".@$location[1]."</option>"; }
+      <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
       </%perl>
     </select>
     <br>
@@ -377,7 +377,7 @@ jQuery(document).ready(function () {
         }
 
         new jQuery.ajax({
-            type: 'GET',
+            type: 'POST',
             url: '/ajax/trial/generate_experimental_design',
 	    dataType: "json",
             data: {
@@ -443,7 +443,7 @@ jQuery(document).ready(function () {
             return;
         }
         new jQuery.ajax({
-            type: 'GET',
+            type: 'POST',
             url: '/ajax/trial/save_experimental_design',
 	    dataType: "json",
             data: {
@@ -501,7 +501,7 @@ jQuery(document).ready(function () {
     function verify_stock_list(stock_list) {
 	var return_val;
 	new jQuery.ajax({
-            type: 'GET',
+            type: 'POST',
             url: '/ajax/trial/verify_stock_list',
 	    dataType: "json",
             data: {
