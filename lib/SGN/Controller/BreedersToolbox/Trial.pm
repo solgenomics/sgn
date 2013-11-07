@@ -3,6 +3,7 @@ package SGN::Controller::BreedersToolbox::Trial;
 
 use Moose;
 use CXGN::Trial::TrialLayout;
+use CXGN::BreedersToolbox::Projects;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -13,6 +14,8 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     my $trial_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+    my $breeding_program = $program_object->get_breeding_program_with_trial($trial_id);
     my $trial_name =  $trial_layout->get_trial_name();
     my $trial_description =  $trial_layout->get_trial_description();
     my $trial_year =  $trial_layout->get_trial_year();
@@ -35,6 +38,7 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     $c->stash->{plot_names} = $plot_names_ref;
     $c->stash->{design_type} = $design_type;
     $c->stash->{trial_description} = $trial_description;
+    $c->stash->{trial_id} = $trial_id;
     my $number_of_blocks;
     if ($block_numbers) {
       $number_of_blocks = scalar(@{$block_numbers});
@@ -88,6 +92,7 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 	push @years, $year;
     }
     
+    $c->stash->{breeding_program} = $breeding_program;
 
     $c->stash->{years} = \@years;
 

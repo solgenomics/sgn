@@ -4,6 +4,8 @@
 </%doc>
 
 <%args>
+$trial_id
+$breeding_program => ''
 $trial_name
 @location_data
 @phenotype_data
@@ -54,6 +56,10 @@ if (!$design_type eq "") {
 </%perl>
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
+
+<&| /page/info_section.mas, title=>"Breeding program", subtitle=>'<a href="javascript:show_change_breeding_program_dialog()">change</a>' &>
+% foreach my $bp (@$breeding_program) { print $bp->[1] . "&nbsp;(".$bp->[2].")"; } 
+</&>
 
 <&| /page/info_section.mas, title=>"Year(s)" &>
 <% join ", ", @years %>
@@ -113,4 +119,66 @@ if (!$design_type eq "") {
 %   print $p."<br />\n";
 % }
 
+<div id="change_breeding_program_dialog">
+  <select id="change_breeding_program_select">
+  </select>
+<div>
 
+<script>
+  
+  jQuery('#change_breeding_program_dialog').dialog( { 
+     height: 150,
+     width: 300,
+     title: 'Select Breeding Program',
+     autoOpen: false,
+     buttons: { 
+       'OK': function() { 
+          alert("HELLO");
+          associate_breeding_program();
+          alert("balblabla");
+          jQuery('#change_breeding_program_dialog').dialog("close"); 
+        },
+       'Cancel': function() { jQuery('#change_breeding_program_dialog').dialog("close"); }
+     }
+  });
+
+  function show_change_breeding_program_dialog() { 
+     jQuery('#change_breeding_program_dialog').dialog("open");
+     get_breeding_select();
+  }
+
+  function get_breeding_select() { 
+    var programs = new Array();
+    jQuery.ajax( { 
+      url: '/breeders/programs',
+      async: false,
+      success: function(response) { 
+        programs = response;
+      },
+      error: function(response){ 
+        alert("An error occurred.");
+      }
+    });
+    var html = "";
+    for (var i=0; i<programs.length; i++) {  
+      	html += '<option value='+programs[i][0]+'>'+programs[i][1]+'</a>';
+    }
+
+    jQuery('#change_breeding_program_select').html(html);
+    alert(html);
+}
+
+function associate_breeding_program() { 
+  var program = jQuery('#change_breeding_program_select').val();				    
+  alert("Program: "+program);
+  jQuery.ajax( { 
+    url: '/breeders/program/associate/'+program+'/'+ <% $trial_id %>,
+    async: false,
+    success: function(response) { 
+      alert("Associated this and that.");
+    }
+  });
+}
+
+</script>
+ 

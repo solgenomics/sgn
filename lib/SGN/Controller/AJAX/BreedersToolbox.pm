@@ -5,6 +5,8 @@ use Moose;
 
 use URI::FromHash 'uri';
 
+use CXGN::BreedersToolbox::Projects;
+
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
@@ -101,5 +103,37 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
     $c->stash->{rest} = { success => 1, error => '' };
 }
 
+sub get_breeding_programs : Path('/breeders/programs') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $po = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+
+    my $breeding_programs = $po->get_breeding_programs();
+    
+    $c->stash->{rest} = $breeding_programs;
+}
+
+sub associate_breeding_program_with_trial : Path('/breeders/program/associate') Args(2) { 
+    my $self = shift;
+    my $c = shift;
+    my $breeding_program_id = shift;
+    my $trial_id = shift;
+
+    my $message = "";
+
+    if ($c->user() && $c->user()->check_roles('submitter')) { 
+	my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $c->dbic_schema("Bio::Chado::Schema") } );
+	
+	$message = $program->associate_breeding_program_with_trial($breeding_program_id, $trial_id);
+	
+	#print STDERR "MESSAGE: $xmessage->{error}\n";
+    }
+    else { 
+	$message = { error => "You need to be logged in and have sufficient privileges to associate trials to programs." };
+    }
+    $c->stash->{rest} = $message;
+    
+}
 
 1;

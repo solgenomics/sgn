@@ -1,7 +1,7 @@
 
 <%args>
 $user_id => undef
-@locations => ()
+$locations => ()
 </%args>
 
 
@@ -68,19 +68,18 @@ jQuery(document).ready(function() {
 
 </script>
 
-
-
-
-
 <table>
 <%perl>
 
-  if (!@locations) { 
-    print "<tr><td>Not locations available for your account.</td></tr>";
+  if (!$locations) { 
+    print "<tr><td>No locations have been added yet.</td></tr>";
   }
 
-foreach my $loc (@locations) { 
-  print "<tr><td>".$loc->[1]."</td><td>(<a href=\"\">".$loc->[5]." plots</a>)</td></tr>";
+foreach my $prog (sort keys %$locations) { 
+  print "<tr><td colspan=\"2\"><h4>$prog</h4></td></tr>";
+  foreach my $loc (@{$locations->{$prog}}) { 
+     print "<tr><td>".$loc->[1]."</td><td>(<a href=\"\">".$loc->[2]." plots</a>)</td></tr>";
+   }
 }
 </%perl>
   </table>

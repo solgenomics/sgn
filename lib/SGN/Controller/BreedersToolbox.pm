@@ -5,7 +5,7 @@ use Moose;
 
 use CXGN::Trial::TrialLayout;
 use URI::FromHash 'uri';
-
+use CXGN::BreedersToolbox::Projects;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -19,16 +19,26 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
 	return;
     }
- 
-   
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    
+
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
+
+    my $breeding_projects = $projects->get_breeding_programs();
+   
+    my %trials_by_breeding_project = ();
+
+    foreach my $bp (@$breeding_projects) { 
+	$trials_by_breeding_project{$bp->[1]}= $projects->get_trials_by_breeding_program($bp->[0]);
+
+    }
+    $trials_by_breeding_project{'Other'} = $projects->get_trials_by_breeding_program();
+
     $c->stash->{locations} = $self->get_locations($c);
 
-    $c->stash->{projects} = $self->get_projects($c);
+    $c->stash->{trials_by_breeding_project} = \%trials_by_breeding_project; #$self->get_projects($c);
 
     $c->stash->{template} = '/breeders_toolbox/manage_projects.mas';
-
 }
 
 sub manage_locations : Path("/breeders/locations") Args(0) { 
@@ -43,9 +53,18 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
 	return;
     }
 
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $breeding_programs = $bp->get_breeding_programs();
+    my $locations = {};
+    foreach my $b (@$breeding_programs) { 
+	$locations->{$b->[1]} = $bp->get_locations_by_breeding_program($b->[0]);
+    }
+    $locations->{'Other'} = $bp->get_locations_by_breeding_program();
+
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
     
-    $c->stash->{locations} = $self->get_locations($c);
+    $c->stash->{locations} = $locations;
 
     $c->stash->{template} = '/breeders_toolbox/manage_locations.mas';
 }
@@ -236,30 +255,31 @@ sub get_locations : Private {
 
 }
 
-sub get_projects : Private { 
-    my $self = shift;
-    my $c = shift;
+# sub get_projects : Private { 
+#     my $self = shift;
+#     my $c = shift;
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+#     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     
-    # get breeding programs
-    #
-    my $breeding_program_cvterm_id = $schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program' });
-    my @rows = $schema->resultset('Project::Project')->search({ 'projectprop.type_id' => $breeding_program_cvterm_id }, { join => projectprop } );
 
-    # get projects
-    #
-    my @rows = $schema->resultset('Project::Project')->all();
-    
-    my @projects = ();
-    foreach my $row (@rows) { 
-	push @projects, [ $row->project_id, $row->name, $row->description ];
+#    # get breeding programs
+#     #
+
+#     my $bp_rows = ();
+#     # get projects
+#     #
+#     my @projects = ();
+#     foreach my $bp (@bp_rows) { 
+# 	my @project_rows = $schema->resultset('Project::Project')->search( { }, { join => 'project_relationship', { join => 'project' }}) ;
 	
-    }
-    
-    return \@projects;
-
-}
+	
+# 	foreach my $row (@project_rows) { 
+# 	    push @projects, [ $row->project_id, $row->name, $row->description ];
+	    
+# 	}
+#     }
+#     return \@projects;
+# }
 
 sub get_crosses : Private { 
     my $self = shift;

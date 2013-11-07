@@ -1,6 +1,6 @@
 
 <%args>
-@projects => ()
+$trials_by_breeding_project => ()
 @locations => ()
 @roles => ()
 </%args>
@@ -644,8 +644,13 @@ jQuery(document).ready(function () {
 
 <table>
   <%perl>
-    foreach my $p (@projects){
-      print "<tr><td><a href=\"/breeders_toolbox/trial/$p->[0]\">$p->[1]</td><td>$p->[2]</td></tr>\n";
+
+  use Data::Dumper;
+  foreach my $p (sort keys %$trials_by_breeding_project){
+    print "<tr><td colspan=\"3\"><h4>$p</h4></td></tr>\n";
+    foreach my $t (@{$trials_by_breeding_project->{$p}}) { 
+      print "<tr><td><a href=\"/breeders_toolbox/trial/$t->[0]\">$t->[1]</td><td>$t->[2]</td></tr>\n";
     }
+  }
   </%perl>
 </table>
