@@ -31,7 +31,7 @@ sub get_trials_by_breeding_program {
     my $breeding_project_id = shift;
 
     my $dbh = $self->schema->storage->dbh();
-    my $breeding_program_cvterm_id = $self->schema->resultset('Cv::Cvterm')->find_or_create( { name => 'breeding_program' })->cvterm_id();
+    my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
         
     my $trials = [];
     my $h;
@@ -163,4 +163,28 @@ sub associate_breeding_program_with_trial {
     return {};
 }
 
+sub get_breeding_program_cvterm_id {
+    my $self = shift;
+    
+    my $breeding_program_cvterm_rs = $self->schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program' });
+
+    my $row;
+
+    if ($breeding_program_cvterm_rs->count() == 0) { 
+	$row = $self->schema->resultset('Cv::Cvterm')->create_with( 
+	    { 
+		name => 'breeding_program',
+		cv   => 'local',
+		db   => 'local',
+		dbxref => 'breeding_program',
+	    });
+
+    }
+    else { 
+	$row = $breeding_program_cvterm_rs->first();
+    }
+
+    return $row->cvterm_id();
+}
+ 
 1;
