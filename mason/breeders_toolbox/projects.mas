@@ -18,7 +18,7 @@
     <label for="add_project_location" style="display: inline-block; width: 100px;">Location:</label>
     <select id="add_project_location" name="add_project_location">
       <%perl>foreach my $location (@locations) { print "
-      <option value=".@$location[1].">".@$location[1]."</option>"; }
+      <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
       </%perl>
     </select>
     <br>
