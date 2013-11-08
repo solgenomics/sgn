@@ -51,7 +51,7 @@ if ($current_page > 1) { $collapse = 0; }
 <p style="color:red">There is no phenotype data for <b>'<% $message %>'</b>.</p>
 %}
 
-<p style="text-align:center">Browse by traits: <b><% $gs_traits_index %> </b></p>
+<p style="text-align:center">Traits index: <b><% $gs_traits_index %> </b></p>
 <p>&nbsp</p>
 <p>&nbsp</p>
 
