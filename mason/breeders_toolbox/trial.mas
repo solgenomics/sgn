@@ -5,7 +5,7 @@
 
 <%args>
 $trial_id
-$breeding_program => ''
+$breeding_program => ()
 $trial_name
 @location_data
 @phenotype_data
@@ -18,6 +18,7 @@ $design_type
 $number_of_blocks
 $number_of_replicates
 $trial_description
+$user_can_modify => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui',] &>
@@ -55,12 +56,18 @@ if (!$design_type eq "") {
   $design_empty = 0;
 }
 my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Download Field Book</a>]';
+
+my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $user_can_modify;
+
 </%perl>
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<&| /page/info_section.mas, title=>"Breeding program", subtitle=>'<a id="show_change_breeding_program_link">change</a>' &>
-% foreach my $bp (@$breeding_program) { print $bp->[1] . "&nbsp;(".$bp->[2].")"; } 
+<&| /page/info_section.mas, title=>"Breeding program", subtitle=>$subtitle &>
+% foreach my $bp (@$breeding_program) { 
+%   print $bp->[1] . "&nbsp;(".$bp->[2].")"; 
+%   if ($user_can_modify) { print " <a title=\"remove program\" id=\"delete_breeding_program_trial_association_link\"><font color=\"red\"><b>X</b></font></a>"; }
+% }
 </&>
 
 <&| /page/info_section.mas, title=>"Year(s)" &>
@@ -181,6 +188,19 @@ jQuery(document).ready(function () {
        jQuery('#change_breeding_program_dialog').dialog("open");
        get_breeding_select();
      }
+  );
+
+  jQuery('#delete_breeding_program_trial_association_link').click(
+     function() { 
+       var yes = confirm("Do you really want to remove this trial from the breeding program?");
+       if (yes) { 
+         jQuery.ajax( { 
+           url: '/breeders/program/remove/',
+           data: { },
+           async: false,
+           success: function(response) { 
+           }
+       }
   );
 
   jQuery('#change_breeding_program_dialog').dialog( {
