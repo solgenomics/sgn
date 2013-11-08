@@ -35,11 +35,11 @@ Isaak Y Tecle (iyt2@cornell.edu)
     <div class="list_upload" id="prediction_genotypes_list">      
     </div>
     <div class="list_upload" id="prediction_genotypes_list_upload">
-      <input type="button" value="Upload" />
+      <input type="button" value="Go" />
     </div>
-    <br>
-    <br>
    
+    <br>
+    <br>  
     <!-- The container for the uploaded files -->
     <div class="sub_infosectioncontent" id="uploaded_selection_populations" style="display:none"></div>
     <br>
