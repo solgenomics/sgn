@@ -18,8 +18,9 @@ JSAN.use("jquery.blockUI");
 
 jQuery(document).ready( function() {
         var list = new CXGN.List();
-        var listMenu = list.listSelect("prediction_genotypes");
-
+        var listMenu = list.listSelect("prediction_genotypes", ["accessions"]);
+        
+       
         jQuery("#prediction_genotypes_list").append(listMenu);
                
     });
@@ -27,6 +28,8 @@ jQuery(document).ready( function() {
 
 jQuery(document).ready( function() { 
         var listId;
+        
+        jQuery("<option>", {value: '', selected: true}).prependTo("#prediction_genotypes_list_select");
         jQuery("#prediction_genotypes_list_select").change(function() {
            
                 listId = jQuery(this).find("option:selected").val();              
