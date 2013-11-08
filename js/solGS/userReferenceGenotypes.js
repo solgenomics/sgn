@@ -15,8 +15,10 @@ JSAN.use("jquery.blockUI");
 
 
 jQuery(document).ready( function() {
+       
         var list = new CXGN.List();
-        var listMenu = list.listSelect("reference_genotypes");
+        
+        var listMenu = list.listSelect("reference_genotypes", ['plots']);
 	
         jQuery("#reference_genotypes_list").append(listMenu);
                
@@ -24,14 +26,15 @@ jQuery(document).ready( function() {
 
 
 jQuery(document).ready( function() { 
+       
         var listId;
-        jQuery("#reference_genotypes_list_select").change(function() {
-           
+        
+        jQuery("<option>", {value: '', selected: true}).prependTo("#reference_genotypes_list_select");
+        
+        jQuery("#reference_genotypes_list_select").change(function() {        
                 listId = jQuery(this).find("option:selected").val();              
-                
-                
-                if(listId) {
-                
+                                
+                if(listId) {                
                     jQuery("#reference_genotypes_list_upload").click(function() {
                             //alert('get list: ' + listId);
                             loadReferenceGenotypesList(listId);
@@ -41,7 +44,7 @@ jQuery(document).ready( function() {
     });
 
 
-function getReferenceGenotypesList(listId) {
+function getReferenceGenotypesList(listId) {   
     
     var list = new CXGN.List();
     var genotypesList;
@@ -52,7 +55,7 @@ function getReferenceGenotypesList(listId) {
 
     var listName = list.listNameById(listId);
     var listType;// = list.getListType(listId);
-
+   
     return {'name'      : listName,
             'list'      : genotypesList.elements,
             'list_type' : listType,
@@ -60,8 +63,8 @@ function getReferenceGenotypesList(listId) {
 }
 
 
-function loadReferenceGenotypesList(listId) {
-     
+function loadReferenceGenotypesList(listId) {     
+    
     var genoList       = getReferenceGenotypesList(listId);
     var listName       = genoList.name;
     var list           = genoList.list;
@@ -187,8 +190,8 @@ function getUserUploadedRefPop (listId) {
 }
 
 
-function loadPopulationPage (url, listId, listSource) {
-   
+function loadPopulationPage (url, listId, listSource) {   
+    
     // var traitId        = getTraitId();
     var genoList       = getReferenceGenotypesList(listId);
     var listName       = genoList.name;
