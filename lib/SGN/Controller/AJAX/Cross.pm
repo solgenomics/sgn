@@ -52,7 +52,7 @@ __PACKAGE__->config(
 
 sub add_cross : Local : ActionClass('REST') { }
 
-sub add_cross_GET :Args(0) { 
+sub add_cross_POST :Args(0) { 
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cross_name = $c->req->param('cross_name');
