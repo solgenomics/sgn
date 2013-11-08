@@ -4,10 +4,7 @@ $user_id => undef
 $locations => ()
 </%args>
 
-
-
 <& /util/import_javascript.mas, classes => [ ] &>
-
 
 <div id="add_location_dialog"  class="ui-widget" >
 
