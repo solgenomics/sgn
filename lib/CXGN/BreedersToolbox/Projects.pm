@@ -92,8 +92,41 @@ sub get_accessions_by_breeding_program {
 
 
 sub new_breeding_program { 
+    my $self= shift;
+    my $name = shift;
+    my $description = shift;
 
+    my $type_id = $self->get_breeding_program_cvterm_id();
 
+    my $rs = $self->schema()->resultset("Project::Project")->search( 
+	{ 
+	    name => $name,
+	});
+    if ($rs->count() > 0) { 
+	return "A breeding program with name '$name' already exists.";
+    }
+
+    eval { 
+	my $row = $self->schema()->resultset("Project::Project")->create( 
+	    { 
+		name => $name,
+		description => $description,
+	    });
+	
+	$row->insert();
+
+	my $prop_row = $self->schema()->resultset("Project::Projectprop")->create(
+	    { 
+		type_id => $type_id,
+		project_id => $row->project_id(),
+		
+	    });
+	$prop_row->insert();
+
+    };
+    if ($@) { 
+	return "An error occurred while generating a new breeding program. ($@)";
+    }
 
 }
 
@@ -126,21 +159,7 @@ sub associate_breeding_program_with_trial {
     my $breeding_project_id = shift;
     my $trial_id = shift;
 
-    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'local' } )->cv_id();
-
-    my $breeding_trial_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program_trial_relationship' });
-    
-    if (!$breeding_trial_cvterm_row) { 
-	my $row = $self->schema->resultset('Cv::Cvterm')->create_with( 
-	    { 
-		name => 'breeding_program_trial_relationship',
-		cv   => 'local',
-		db   => 'local',
-		dbxref => 'breeding_program_trial_relationship',
-	    });
-	$breeding_trial_cvterm_row = $row;
-    }
-    my $breeding_trial_cvterm_id = $breeding_trial_cvterm_row ->cvterm_id();
+    my $breeding_trial_cvterm_id = $self->get_breeding_trial_cvterm_id();
     
     # to do: check if the two provided IDs are of the proper type
 
@@ -162,6 +181,33 @@ sub associate_breeding_program_with_trial {
     }
     return {};
 }
+
+sub remove_breeding_program_from_trial { 
+    my $self = shift;
+    my $breeding_program_id = shift;
+    my $trial_id = shift;
+    
+    my $breeding_trial_cvterm_id = $self->get_breeding_trial_cvterm_id();
+
+    eval { 
+	my $breeding_trial_assoc_rs = $self->schema->resultset("Project::ProjectRelationship")->search( 
+	    { 
+		object_project_id => $breeding_program_id,
+		subject_project_id => $trial_id,
+		type_id => $breeding_trial_cvterm_id,
+	    }
+	    );
+	if (my $row = $breeding_trial_assoc_rs->first()) { 
+	    $row->delete();
+	}
+    };
+    
+    if ($@) { 
+	return { error => "An error occurred while deleting a breeding program - trial association. $@" };
+    }
+    return {};
+}
+
 
 sub get_breeding_program_cvterm_id {
     my $self = shift;
@@ -187,4 +233,25 @@ sub get_breeding_program_cvterm_id {
     return $row->cvterm_id();
 }
  
+sub get_breeding_trial_cvterm_id { 
+    my $self = shift;
+
+    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'local' } )->cv_id();
+
+    my $breeding_trial_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program_trial_relationship' });
+    
+    if (!$breeding_trial_cvterm_row) { 
+	my $row = $self->schema->resultset('Cv::Cvterm')->create_with( 
+	    { 
+		name => 'breeding_program_trial_relationship',
+		cv   => 'local',
+		db   => 'local',
+		dbxref => 'breeding_program_trial_relationship',
+	    });
+	$breeding_trial_cvterm_row = $row;
+    }
+    return $breeding_trial_cvterm_row->cvterm_id();
+}
+
+
 1;

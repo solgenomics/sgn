@@ -9,6 +9,31 @@ use CXGN::BreedersToolbox::Projects;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
+
+sub manage_breeding_programs : Path("/breeders/manage_programs") :Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) { 
+	
+	# redirect to login page
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+	return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
+
+    my $breeding_programs = $projects->get_breeding_programs();
+    
+    $c->stash->{breeding_programs} = $breeding_programs;
+
+    $c->stash->{template} = '/breeders_toolbox/breeding_programs.mas';
+    
+
+}
+
 sub manage_trials : Path("/breeders/trials") Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -30,8 +55,8 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     foreach my $bp (@$breeding_projects) { 
 	$trials_by_breeding_project{$bp->[1]}= $projects->get_trials_by_breeding_program($bp->[0]);
-
     }
+
     $trials_by_breeding_project{'Other'} = $projects->get_trials_by_breeding_program();
 
     $c->stash->{locations} = $self->get_locations($c);

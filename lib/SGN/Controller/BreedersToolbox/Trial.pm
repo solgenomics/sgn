@@ -50,7 +50,8 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     }
     $c->stash->{number_of_replicates} = $number_of_replicates;
 
-    if (!$c->user()) { 
+    my $user = $c->user();
+    if (!$user) { 
 	$c->stash->{template} = '/generic_message.mas';
 	$c->stash->{message}  = 'You must be logged in to access this page.';
 	return;
@@ -92,6 +93,8 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 	push @years, $year;
     }
     
+    $c->stash->{user_can_modify} = $user->check_roles("submitter");
+
     $c->stash->{breeding_program} = $breeding_program;
 
     $c->stash->{years} = \@years;
