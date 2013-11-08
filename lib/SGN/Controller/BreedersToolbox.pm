@@ -6,6 +6,7 @@ use Moose;
 use CXGN::Trial::TrialLayout;
 use URI::FromHash 'uri';
 use CXGN::BreedersToolbox::Projects;
+use CXGN::BreedersToolbox::Accessions;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -44,6 +45,7 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 sub manage_accessions : Path("/breeders/accessions") Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     if (!$c->user()) { 	
 	# redirect to login page
@@ -52,7 +54,11 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
 	return;
     }
 
-    $c->stash->{accessions} = ();
+    my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
+
+    my $accessions = $ac->get_all_accessions();
+
+    $c->stash->{accessions} = $accessions;
 
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
 

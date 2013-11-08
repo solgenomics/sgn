@@ -27,14 +27,26 @@ has 'schema' => ( isa => 'Bio::Chado::Schema',
 
 sub get_all_accessions { 
     my $self = shift;
-    my $rs = $self->schema->resultset('Stock::Stock')->all();
+    my $schema = $self->schema();
+
+    my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'accession',
+      cv     => 'stock type',
+      db     => 'null',
+      dbxref => 'accession',
+    });
+
+    my $rs = $self->schema->resultset('Stock::Stock')->search({type_id => $accession_cvterm->cvterm_id});
     #my $rs = $self->schema->resultset('Stock::Stock')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
     my @accessions = ();
+
+
+
     while (my $row = $rs->next()) { 
 	push @accessions, [ $row->stock_id, $row->name, $row->description ];
     }
 
-    return \@projects;
+    return \@accessions;
 }
 
 
