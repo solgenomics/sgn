@@ -26,7 +26,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
     <div class="list_upload" id="reference_genotypes_list">      
     </div>
     <div class="list_upload" id="reference_genotypes_list_upload">
-      <input type="button" value="Upload" />
+      <input type="button" value="Go" />
     </div>
     
     <div class="list_upload" style="margin-left:5px">     
