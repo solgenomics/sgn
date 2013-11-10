@@ -32,6 +32,15 @@ foreach my $role (@roles) {
 </td></tr>
 </table>
 </form>
+<&| /page/explanation.mas, title=>'Template information' &>
+  <p>
+    <b>File format information</b>
+    </br>
+    <a id="cross_upload_spreadsheet_format_info">Spreadsheet format</a>
+    </br>
+    <a id="cross_upload_barcode_format_info">Barcode format</a>
+  </p>
+</&>
 </div>
 
 
@@ -336,7 +345,7 @@ foreach my $role (@roles) {
       buttons: { "Cancel" :  function() { jQuery("#upload_crosses_dialog").dialog("close"); }, "Submit": function() { read_cross_upload() }  },
       modal: true,
       width: 500,
-      height: 370
+      height: 390
     });
     
     jQuery("#upload_crosses_link").click( function () { 
