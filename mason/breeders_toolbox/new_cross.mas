@@ -14,8 +14,8 @@
 <table>
 <tr><td><input type="file" name="upload_file" value="Choose file" id="upload_file"/><br /></td></tr>
 <tr><td>
-<input type="radio" name="format_type" value="barcode" /> Barcode format<br />
 <input type="radio" name="format_type" value="spreadsheet" checked="checked"/> Spreadsheet<br />
+<input type="radio" name="format_type" value="barcode" /> Barcode format<br />
 </td></tr>
 <tr><td>
 <div style="display: none">
