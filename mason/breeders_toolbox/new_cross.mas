@@ -8,10 +8,7 @@
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
 
-<div id="upload_crosses_dialog"  class="ui-widget" >
-<b>
-Upload a list of crosses:<br>
-</b>
+<div id="upload_crosses_dialog"  class="ui-widget" title="Upload a list of crosses" >
 <br>
 <form action="/cross/upload_cross"  method="post"  enctype="multipart/form-data" id="upload_form" >
 <table>
@@ -339,7 +336,7 @@ foreach my $role (@roles) {
       buttons: { "Cancel" :  function() { jQuery("#upload_crosses_dialog").dialog("close"); }, "Submit": function() { read_cross_upload() }  },
       modal: true,
       width: 500,
-      height: 250
+      height: 370
     });
     
     jQuery("#upload_crosses_link").click( function () { 
