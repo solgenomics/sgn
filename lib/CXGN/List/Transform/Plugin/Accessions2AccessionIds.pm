@@ -31,7 +31,7 @@ sub transform {
 
     my @missing = ();
 
-    my $type_id = $schema->resultset("Cv::Cvterm")->search( { name=>'accession' })->first()->type_id();
+    my $type_id = $schema->resultset("Cv::Cvterm")->search( { name=>'accession' })->first()->cvterm_id();
 
     foreach my $l (@$list) { 
 	#print STDERR "Converting location $l to location_id...\n";

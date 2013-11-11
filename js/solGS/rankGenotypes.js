@@ -5,8 +5,6 @@
 *
 */
 
-
-JSAN.use('Prototype');
 JSAN.use('jquery.blockUI');
 
 function listSelPopulations ()  {
@@ -41,13 +39,14 @@ function listSelPopulations ()  {
             }
         }
     }
-        
-    popsList += '</ul></dd/</dl>';  
+   
+
+    popsList += '</ul></dd></dl>';  
     return popsList;
 }
 
         
-function selectAPopulation(modelId){
+function selectAPopulation(modelId, userUploadedSelPops){
     var selPopsDiv   = document.getElementById("selection_populations");
     var selPopsTable = selPopsDiv.getElementsByTagName("table");
     var selPopsRows  = selPopsTable[0].rows;
@@ -71,9 +70,16 @@ function selectAPopulation(modelId){
     var modelId;
         
     if(!selectedPop) {
-        var popsList = listSelPopulations(); 
-             
+        
         if(predictedPopExists) {
+            
+            var popsList;
+            if(userUploadedSelPops) {
+                popsList = userUploadedSelPops;
+            } else {
+                popsList = listSelPopulations();            
+            }
+
             jQuery("#select_a_population_div").append(popsList);
             
             jQuery(".si_dropdown dt a").click(function() {
@@ -88,10 +94,10 @@ function selectAPopulation(modelId){
                     var idPopName = jQuery("#selected_population").find("dt a span.value").html();
                     idPopName     = JSON.parse(idPopName);
                     modelId = jQuery("#model_id").val();
-                    //alert(model_id);
+                    
                     selectedPopId   = idPopName.id;
                     selectedPopName = idPopName.name;
-                                       
+                   
                     jQuery("#selected_population_name").val(selectedPopName);
                     jQuery("#selected_population_id").val(selectedPopId);
                     
@@ -161,7 +167,7 @@ function  selectionIndexForm(modelId, predictionPopId, predictedTraits) {
     }
    
     var rankButton =  '<tr><td>'
-        +  '<input type="submit" value="Rank" name= "rank" id="rank_genotypes"'     
+        +  '<input class="button" type="submit" value="Rank" name= "rank" id="rank_genotypes"'     
         +  '</td></tr>';
 
     var table = '<table id="selection_index_table" style="align:left;width:90%"><tr>' 
@@ -182,13 +188,14 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
             
         var action;
            
-        if (predictionPopId && isNaN(predictionPopId) == true) {
-                  
-            action = '/solgs/traits/all/population/' + trainingPopId;
-        }else{
-            action = '/solgs/traits/all/population/' + trainingPopId +  '/' + predictionPopId;
+        if (!predictionPopId) {
+        
+            predictionPopId = 'undef';
+       
         }
-
+        
+        var action = '/solgs/calculate/selection/index/' + trainingPopId +  '/' + predictionPopId;
+          
         jQuery.ajax({
                 type: 'POST',
                     dataType: "json",
@@ -198,10 +205,12 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
                     var suc = res.status;
                     var table;
                     if (suc == 'success' ) {
-                        var genos = new Hash();
+                       
+                        var genos = new Object();
+              
                         genos = res.genotypes;
                         var download_link = res.link;
-                          
+                 
                         table = '<table  style="text-align:left; border:0px; padding: 1px; width:75%;">';
                         table += '<tr><th>Genotypes</th><th>Weighted Mean</th></tr>';
                        
@@ -230,9 +239,13 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
                     jQuery('#top_genotypes').append(table).show(); 
                     jQuery('#selected_pop').val('');
                     //jQuery("#select_a_population_div").empty();
-                        
+                   
                     jQuery.unblockUI(); 
-                      
+                                        
+                },
+                    error: function(res){
+                    alert('error occured calculating selection index.');
+                    jQuery.unblockUI(); 
                 }
             });
     }           
@@ -353,3 +366,42 @@ jQuery(document).ready( function () {
 jQuery(document).ready( function () {
         selectAPopulation();
     });
+
+
+function listSelPopulationsUploaded ()  {
+
+    var selPopsDivUploaded   = document.getElementById("uploaded_selection_populations");
+
+    var selPopsTableUploaded = selPopsDivUploaded.getElementsByTagName("table");
+    var selPopsRowsUploaded  = selPopsTableUploaded[0].rows;
+    var predictedPopUploaded = [];
+   
+
+
+    var popsList;
+    for (var i = 1; i < selPopsRowsUploaded.length; i++) {
+        var row    = selPopsRowsUploaded[i];
+        var popRow = row.innerHTML;
+            
+        predictedPopUploaded = popRow.match(/\/solgs\/download\/prediction\/model\//g);
+       
+        if (predictedPopUploaded) {
+                var selPopsInput = row.getElementsByTagName("input")[0];
+                var idPopName    = selPopsInput.value;     
+                var idPopNameCopy = idPopName;
+                idPopNameCopy     = JSON.parse(idPopNameCopy);
+                var popName       = idPopNameCopy.name;
+                             
+                popsList = '<li>'
+                    + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
+                    + '</li>';
+        }
+    }
+
+   
+    jQuery("#select_a_population_div ul").append(popsList);
+    popsList = jQuery("#select_a_population_div").html();
+ 
+    return popsList;
+ 
+}

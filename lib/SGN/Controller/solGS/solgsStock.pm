@@ -224,74 +224,7 @@ sub download_genotypes : Path('genotypes') Args(1) {
     }
 }
 
-sub stock_projects_rs {
-    my ($self, $stock_rs) = @_;
- 
-    my $project_rs = $stock_rs->search_related('nd_experiment_stocks')
-        ->search_related('nd_experiment')
-        ->search_related('nd_experiment_projects')
-        ->search_related('project', 
-                         {},
-                         { 
-                             distinct => 1,
-                         } 
-        );
 
-    return $project_rs;
-
-}
-
-
-sub project_subject_stocks_rs {
-    my ($self, $project_id) = @_;
-  
-    my $stock_rs =  $self->schema->resultset("Project::Project")
-        ->search({'me.project_id' => $project_id})
-        ->search_related('nd_experiment_projects')
-        ->search_related('nd_experiment')
-        ->search_related('nd_experiment_stocks')
-        ->search_related('stock')
-        ->search_related('stock_relationship_subjects')
-        ->search_related('subject', 
-                         {},
-                         { 
-                             '+select' => [ qw /me.project_id me.name/ ], 
-                             '+as'     => [ qw /project_id project_name/ ] 
-                         },
-                         {
-                             order_by => {-desc => [qw /me.name/ ]} 
-                         }
-        );
-
-    return $stock_rs;
-}
-
-sub stocks_object_rs {
-    my ($self, $stock_subj_rs) = @_;
-
-    my $stock_obj_rs = $stock_subj_rs
-        ->search_related('stock_relationship_subjects')
-        ->search_related('object', 
-                         {},       
-                         { 
-                             '+select' => [ qw /me.project_id me.name/ ], 
-                             '+as'     => [ qw /project_id project_name/ ]
-                         }
-        );
-    
-    return $stock_obj_rs;
-}
-
-sub map_subject_to_object {
-    my ($self, $c, $stock_id) = @_;
-
-    my $stock_obj_rs = $self->schema->resultset("Stock::Stock")
-        ->search({'me.stock_id' => $stock_id})
-        ->search_related('stock_relationship_subjects')
-        ->search_related('object');
-         
-    return $stock_obj_rs;
-}
 
 
 

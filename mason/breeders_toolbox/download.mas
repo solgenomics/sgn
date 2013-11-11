@@ -1,0 +1,74 @@
+
+<%args>
+
+
+
+</%args>
+
+<& /page/page_title.mas, title=>"Download using lists" &>
+
+Choose a list for each parameter and click "download".
+<br /><br />
+
+<center>
+<form action="/breeders/download_action" method="POST" >
+<table cellpadding="10">
+  <tr>
+    <th>
+      Accessions
+    </th>
+    <th>
+      Trials
+    </th>
+    <th>
+      Traits
+    </th>
+  </tr>
+
+  <tr>
+    <td>
+      <div id="accession_list">
+      </div>
+      
+    </td>
+    <td>
+      <div id="trial_list">
+      </div>
+    </td>
+    <td>
+      <div id="trait_list">
+      </div>
+    </td>
+  </tr>
+</table>
+<br />
+<br />
+<input type="submit" id="download_submission" value="Download" />
+</form>
+</center>
+
+
+<script>
+  
+  jQuery(document).ready(function() { 
+    var lo = new CXGN.List();
+    var accession_list_select = lo.listSelect('accession_list', [ 'accessions' ]);
+    alert(accession_list_select);
+    jQuery('#accession_list').html(accession_list_select);
+    jQuery('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ] ));
+    jQuery('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ] ));
+
+    
+  
+
+    jQuery('#download_submission').click(function() {
+       
+  
+    });
+
+
+  });
+
+
+  
+</script>

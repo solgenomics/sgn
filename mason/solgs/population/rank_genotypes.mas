@@ -18,7 +18,7 @@ $pop_id => ''
 $prediction_pop_id => ''
 $analyzed_traits
 $prediction_pop_analyzed_traits => ''
-$prediction_pop_name => '' 
+$prediction_pop_name => ''
 
 </%args>
 
@@ -28,7 +28,7 @@ my $trait_rows;
 my $cnt = 1;
 my $row_no = 1;
 
-$analyzed_traits = $prediction_pop_analyzed_traits if @$prediction_pop_analyzed_traits;
+$analyzed_traits = $prediction_pop_analyzed_traits if $prediction_pop_analyzed_traits;
 
 foreach (@$analyzed_traits)
 {
@@ -59,8 +59,13 @@ ROW
 
 }
 
-#$trait_rows .= qq | <tr><td> <input type = "hidden" id="default_prediction_pop_name" value="$prediction_pop_name"></td></tr> |;
-#$trait_rows .= qq | <tr><td> <input type = "hidden" id="default_prediction_pop_id" value="$prediction_pop_id"></td></tr> |;
+
+my $phrase = 'Assign ';
+if($prediction_pop_id =~ /\d+/) 
+  {
+    $phrase = 'And assign ';
+  }
+
 
 </%perl>
 
@@ -85,9 +90,9 @@ ROW
     <input type="hidden" id="selected_population_id" value="" />
   </div>
 
- 
+  
   <div id="select_a_population_div" style="float:left"></div>
-  <div style="float:left"><p style="padding-left: 20px">And assign relative weights to traits.</p></div>
+  <div style="float:left"><p style="padding-left: 20px"><% $phrase %> relative weights to traits.</p></div>
 
   <div id="mulitple_traits" style="clear: both;">  
     <div id="rel_gebv_form">
@@ -95,7 +100,8 @@ ROW
           <% $trait_rows %>
           <tr>      
             <td>
-              <input type    = "submit" 
+              <input class   = "button"
+                     type    = "submit" 
                      value   = "Rank"
                      name    = "rank"
                      id      = "rank_genotypes"               

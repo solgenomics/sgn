@@ -45,7 +45,7 @@ jQuery(document).ready(function() {
      if (desc == '') { alert('Description is required.');  return; }
    
      new jQuery.ajax( {
-       type: 'GET',
+       type: 'POST',
        async: false,
        url: '/ajax/breeders/location/insert',
        data: { 'description': desc,  'longitude':longitude, 'latitude':latitude, 'altitude': altitude },
