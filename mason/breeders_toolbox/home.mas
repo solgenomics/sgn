@@ -1,7 +1,9 @@
 
 <%args>
-$projects => undef
+
+$programs => undef
 @locations => ()
+$locations_by_breeding_program => []
 $crosses => undef
 $user_id => undef
 @stockrelationships => ()
@@ -25,19 +27,19 @@ $deleted_phenotype_files => undef
 
 <&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>1, subtitle=>'[<a id="add_project_link">Add trial</a>]' &>
     
-    <& /breeders_toolbox/projects.mas, projects=>$projects,locations=>\@locations&>
+    <& /breeders_toolbox/projects.mas, trials_by_breeding_program=>$programs,locations=>\@locations&>
 
 </&>
 
 <&| /page/info_section.mas, title=>'Locations',  collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_location_link">Add location</a>]' &>
 
-<& /breeders_toolbox/location.mas, locations=>\@locations, user_id=>$user_id &>
+<& /breeders_toolbox/location.mas, locations=>$locations_by_breeding_program, user_id=>$user_id &>
 
 </&>
 
 <&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_crosses_link" >Upload crosses</a>]    [<a id="add_cross_link" >Add cross</a>]' &>
 
-  <& /breeders_toolbox/new_cross.mas, locations=>\@locations,projects=>$projects,roles=>\@roles &>
+  <& /breeders_toolbox/new_cross.mas, locations=>\@locations, programs=>$programs,roles=>\@roles &>
   <& /breeders_toolbox/crosses.mas, cross_populations=>\@cross_populations, user_id=>$user_id &>
 
 </&>
@@ -46,7 +48,7 @@ $deleted_phenotype_files => undef
 
 %# <&| /page/info_section.mas, title=>'Upload', is_subsection=>1, collapsible=>1, collapsed=>1&>
 
-%# <& /breeders_toolbox/upload_phenotypes.mas, projects=>$projects, locations=>\@locations &>  
+%# <& /breeders_toolbox/upload_phenotypes.mas, programs=>$programs, locations=>\@locations &>  
 
 %# </&>
 
