@@ -173,9 +173,19 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 	return;
     }
  
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $breeding_programs = $bp->get_breeding_programs();
+
+    $c->stash->{programs} = $breeding_programs;
     
-    $c->stash->{projects} = $self->get_projects($c);
+    my $locations_by_breeding_program;
+    foreach my $b (@$breeding_programs) { 
+        $locations_by_breeding_program->{$b->[1]} = $bp->get_locations_by_breeding_program($b->[0]);
+    }
+    $locations_by_breeding_program->{'Other'} = $bp->get_locations_by_breeding_program();
+
+    $c->stash->{locations_by_breeding_program} = $locations_by_breeding_program;
     
     # get roles
     #
@@ -188,6 +198,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 
     my $locations = $self->get_locations($c);
     
+    $c->stash->{locations} = $locations;
     # get uploaded phenotype files
     #
 
