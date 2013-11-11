@@ -1,0 +1,283 @@
+
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
+<!-- javascript-->
+<script src="/js/tools/vigs.js" type="text/javascript"></script>
+<script src="/js/jquery/iframe-post-form.js" type="text/javascript"></script>
+
+<script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.7.2.min.js"></script>
+
+<!--charts-->
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/highcharts-more.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+
+<!--<%args>
+
+#@databases
+#$sequence => undef
+#$f_size => 0
+
+</%args>-->
+
+<& /util/import_javascript.mas, classes => ['Text.Markup', 'sprintf', 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List'] &>
+
+<& /page/page_title.mas, title=>"Expression Tool" &>
+
+
+
+<&| /page/info_section.mas, id=>"expr_input" , title=>"Run Expression Tool", collapsible => 1, collapsed => 0  &>
+<center>
+
+<div id="status_wheel" style="display:none"><img src="/static/documents/img/wheel.gif" /></div>
+<br />
+
+<span title="query gene">Select a gene:</span> 
+<input class="input" id="gene" type="input" value="CV017951_at" name="input_gene" size="15" />&nbsp; &nbsp; &nbsp;
+
+<button class="input" id="run_tool" value="Run Expression Tool">Get Expression</button>
+
+<br />
+<br />
+
+</center>
+
+
+<&| /page/info_section.mas, id=>"expression_usage" , title=>"Usage", collapsible => 1, collapsed => 0, is_subsection=>"1"  &>
+  <div id="usage_view">
+    <p>
+        1. Select a <b>Gene name</b> an push the 'Get Expression' button to see its expression in the different tissues of the plant<br />
+     </p>
+  </div>
+</&>
+
+</&>
+
+
+<!-- ##################################################################################### -->
+<!-- OUTPUT VIEW -->
+<!-- ##################################################################################### -->
+
+
+<&| /page/info_section.mas, title=>"Results", collapsible => 1, collapsed => 0  &>
+
+<div id="hide_results" style="display:none;">
+
+<&| /page/info_section.mas, title=>"Experiment Map", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
+<div id="my_stage"></div>
+</&>
+
+<&| /page/info_section.mas, title=>"Bar Graph", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
+    <div id="bar_graph" style="width: 700px; height: 500px; margin: 0 auto">A Expression graph should be here!</div>
+</&>
+
+<&| /page/info_section.mas, title=>"Experiment Data", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
+    <table id="exp_table" cellpadding="2" cellspacing="2"></table>
+</&>
+
+</div>
+
+</&>
+
+
+
+<script defer="defer">
+
+$(document).ajaxStart(function(){
+  $('#status_wheel').show();
+});
+
+$(document).ajaxStop(function(){
+  $('#status_wheel').hide();
+});
+
+jQuery(document).ready(function () {
+
+    var data_array;
+    var experiment_info;
+    var error_var = 0;
+
+    jQuery('#run_tool').click(function () {
+       	//alert("clicking");
+	error_var = 0;
+	query_gene = jQuery('#gene').val();
+
+        jQuery.ajax({
+            url: '/tools/expression/result/',
+            async: false,
+            method: 'POST',
+            data: { 'gene': query_gene },
+            success: function(response) { 
+                if (response.error) { 
+                    alert("ERROR: "+response.error);
+		    error_var = 1;
+                } else {
+		      data_array = response.all_exp_design;
+		      //alert("hi: "+response.gene_name);
+                }
+            },
+            error: function(response) { alert("An error occurred. The service may not be available right now.");error_var = 1;}
+        });
+	
+	if (!error_var) {
+	    hide_ui();
+	    show_hiden_divs();
+	    display_pictures();
+	    print_bar_chart(data_array);
+	    
+	    var experiment_info = "";
+	    //alert("data: "+data_array.length);
+            experiment_info += "<tr><th>Experiment</th><th>Replicates</th><th>Mean</th><th>Median</th><th>SD</th><th>CV</th></tr>";
+
+	    for (var i=0; i<data_array.length; i=i+1) {
+	        experiment_info += "<tr><td><a href='/gem/experiment.pl?id="+data_array[i][0]+"' target='_blank'>"+data_array[i][1]+"</a></td>";
+		for (var j=2; j<data_array[i].length; j=j+1) {
+	    	    experiment_info += "<td style='text-align:right;'>"+data_array[i][j]+"</td>";
+		}
+		experiment_info += "</tr>";
+    	    }
+            jQuery('#exp_table').html(experiment_info);
+	}
+    });
+
+    function hide_ui() {
+	Effects.swapElements('expr_input_offswitch', 'expr_input_onswitch');
+        Effects.hideElement('expr_input_content');
+    }
+
+    function show_hiden_divs() {
+       	jQuery("#hide_results").css("display","inline");
+    }
+
+
+
+
+
+    function print_bar_chart(data_a) {
+    	    var exp_cond = [];
+	    var mean_val = [];
+	    var error_bar = new Array();
+
+	    for (var i=0; i<data_a.length; i=i+1) {
+	        exp_cond.push(data_a[i][1]);
+		var one_mean = parseFloat(data_a[i][3]); 
+	        var one_sd = parseFloat(data_a[i][5]);
+
+		mean_val.push(one_mean);
+		var min_err = (one_mean - one_sd).toFixed(2);
+		var max_err = (one_mean + one_sd).toFixed(2);
+
+		var error_values = [];
+		error_values.push(parseFloat(min_err));
+		error_values.push(parseFloat(max_err));
+		error_bar.push(error_values);
+    	    }
+
+        jQuery('#bar_graph').highcharts({
+            chart: {type: 'column', margin: [ 50, 10, 200, 50]},
+            title: {text: 'Expression Data'},
+            xAxis: {
+                categories: exp_cond,
+                labels: {
+                    rotation: -70,
+                    align: 'right',
+                    style: {fontSize: '13px', fontFamily: 'Verdana, sans-serif'}
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {text: 'Expression'}
+            },
+            legend: {enabled: false},
+            tooltip: {shared: true},
+            series: [{
+                name: 'Expression',
+                data: mean_val,
+                dataLabels: {
+                    enabled: true,
+                    rotation: -90,
+                    color: '#FFFFFF',
+                    align: 'right',
+                    x: 4,
+                    y: 10,
+                },
+		tooltip: {pointFormat: 'Expression: <b>{point.y:.2f} units</b> ',}
+            }, {
+                name: 'expression error',
+		type: 'errorbar',
+		data: error_bar,
+		tooltip: {pointFormat: '(Error: {point.low}-{point.high})<br/>'}
+	    }]
+        });
+    }
+
+
+
+
+function dump(arr,level) {
+	var dumped_text = "";
+	if(!level) level = 0;
+	
+	//The padding given at the beginning of the line.
+	var level_padding = "";
+	for(var j=0;j<level+1;j++) level_padding += "    ";
+	
+	if(typeof(arr) == 'object') { //Array/Hashes/Objects 
+		for(var item in arr) {
+			var value = arr[item];
+			
+			if(typeof(value) == 'object') { //If it is an array,
+				dumped_text += level_padding + "'" + item + "' ...\n";
+				dumped_text += dump(value,level+1);
+			} else {
+				dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
+			}
+		}
+	} else { //Stings/Chars/Numbers etc.
+		dumped_text = "===>"+arr+"<===("+typeof(arr)+")";
+	}
+	return dumped_text;
+}
+
+
+
+
+
+
+    function display_pictures() {
+        var stage = new Kinetic.Stage({
+    	    container: "my_stage",
+      	    width: 700,
+      	    height: 800
+    	});
+    	var layer = new Kinetic.Layer();
+        var plantObj = new Image();
+    	plantObj.src = "/static/documents/img/expression_tool/black_tomato_plant.png";
+
+        // tomato plant img
+      	var tomato_plant = new Kinetic.Image({
+            image: plantObj,
+            x: 0,
+            y: 0,
+            width: 250,
+            height: 400,
+        });
+        layer.add(tomato_plant);
+      	stage.add(layer);
+    }
+
+});
+
+</script>
+
+<style>
+
+#my_stage {
+    border-style:dashed;
+    border-width:1px;
+    height:400px;
+    width:700px;
+}
+
+</style>

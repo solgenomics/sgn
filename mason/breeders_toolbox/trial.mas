@@ -5,6 +5,7 @@
 
 <%args>
 $trial_name
+$trial_id
 @location_data
 @phenotype_data
 @years
@@ -18,6 +19,7 @@ $number_of_replicates
 $trial_description
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui',] &>
 
 <%perl>
 my $description_empty = 1;
@@ -51,6 +53,7 @@ my $design_empty = 1;
 if (!$design_type eq "") {
   $design_empty = 0;
 }
+my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Download Field Book</a>]';
 </%perl>
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
@@ -71,7 +74,9 @@ if (!$design_type eq "") {
 %  print "$trial_description <br />\n";
 </&>
 
-<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty &>
+
+<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, &>
+
 %print "Design: $design_type <br /><br />";
 %print "Number of blocks: $number_of_blocks <br />";
 %print "Number of replicates: $number_of_replicates <br />";
@@ -91,7 +96,7 @@ if (!$design_type eq "") {
 
 </&>
 
-<&| /page/info_section.mas, title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $plots_empty&>
+<&| /page/info_section.mas, title=>"Plots",  is_subsection => 0, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $plots_empty&>
 % foreach my $plot (@plot_names) { 
 %  print "$plot <br />\n";
 %}
@@ -113,4 +118,165 @@ if (!$design_type eq "") {
 %   print $p."<br />\n";
 % }
 
+<&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
 
+<&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+
+<&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_spreadsheet_link">Create Spreadsheet</a>]' &>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Android Field Book Layout", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_fieldbook_link">Create Field Book</a>]' &>
+
+</&>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+
+<&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_phenotyping_spreadsheet_link">Upload</a>]'&>
+</&>
+<&| /page/info_section.mas, title=>"Android Field Book Exported", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_field_book_link">Upload</a>]'&>
+</&>
+</&>
+
+</&>
+
+
+
+<div
+
+<div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
+%print $trial_id;
+</div>
+
+<div id="tablet_field_layout_saved_dialog_message" title="Field book layout file">
+  <p>
+    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    The field book layout file was saved successfully
+  </p>
+  <p>
+    <a id="tablet_layout_download_link">Download File</a>
+  </p>
+</div>
+
+<div id="create_spreadsheet_dialog" title="Create Phenotyping Spreadsheet">
+  <div id="trait_list" name="trait_list">
+    <label id="trait_list_label" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
+    </label>
+  </div>
+</div>
+
+
+<script defer="defer">
+
+jQuery(document).ready(function () {
+    jQuery('#create_spreadsheet_link').click(function () {
+        open_create_spreadsheet_dialog();
+    });
+    function open_create_spreadsheet_dialog() {
+        var list = new CXGN.List();
+        jQuery("#trait_list").html(list.listSelect("trait_list"));
+        jQuery('#create_spreadsheet_dialog').dialog("open");
+    }
+
+    function create_spreadsheet() {
+        var trialID = parseInt(jQuery('#trialIDDiv').text());
+        var list = new CXGN.List();
+        var trait_list_id = jQuery('#trait_list_list_select').val();
+	var trait_list;
+	if (! trait_list_id == "") {
+            trait_list = JSON.stringify(list.getList(trait_list_id));
+	}
+        new jQuery.ajax({
+        type: 'POST',
+        url: '/ajax/phenotype/create_spreadsheet',
+	dataType: "json",
+        data: {
+          'trial_id': trialID,
+          'trait_list': trait_list,
+        },
+        success: function (response) {
+          if (response.error) {
+            alert(response.error);
+            jQuery('#open_create_spreadsheet_dialog').dialog("close");
+          } else {
+            alert('success');
+
+          }
+        },
+        error: function () {
+          alert('An error occurred creating a phenotype file.');
+          jQuery('#open_download_spreadsheet_dialog').dialog("close");
+        }
+      });
+
+    }
+
+
+
+    jQuery('#create_fieldbook_link').click(function () {
+        open_create_fieldbook_dialog();
+    });
+    function open_create_fieldbook_dialog() {
+      var trialID = parseInt(jQuery('#trialIDDiv').text());
+      new jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/fieldbook/create',
+	dataType: "json",
+        data: {
+          'trial_id': trialID,
+        },
+        success: function (response) {
+          if (response.error) {
+            alert(response.error);
+            jQuery('#open_create_fieldbook_dialog').dialog("close");
+          } else {
+            jQuery('#tablet_layout_download_link').attr('href',response.file);
+            jQuery("#tablet_field_layout_saved_dialog_message").dialog("open");
+            //alert(response.file);
+            jQuery('#open_create_fieldbook_dialog').dialog("close");
+          }
+        },
+        error: function () {
+          alert('An error occurred creating the field book.');
+          jQuery('#open_create_fieldbook_dialog').dialog("close");
+        }
+      });
+    }
+
+    jQuery( "#tablet_field_layout_saved_dialog_message" ).dialog({
+	autoOpen: false,
+	modal: true,
+	buttons: {
+            Ok: function() {
+		jQuery( this ).dialog( "close" );
+		location.reload();
+            }
+	}
+    });
+
+    jQuery('#create_spreadsheet_dialog').dialog({
+	autoOpen: false,
+        modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 75],
+        modal: true,
+        buttons: {
+	    Cancel: function() {
+		jQuery( this ).dialog( "close" );
+		return;
+	    },
+	    Create: function() {
+                create_spreadsheet();
+		//save_experimental_design(design_json);
+		//jQuery( this ).dialog( "close" );
+		//jQuery('#add_project_dialog').dialog("close");
+	    },
+        },
+    });
+
+});
+
+</script>

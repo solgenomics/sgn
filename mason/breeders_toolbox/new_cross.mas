@@ -8,17 +8,14 @@
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
 
-<div id="upload_crosses_dialog"  class="ui-widget" >
-<b>
-Upload a list of crosses:<br>
-</b>
+<div id="upload_crosses_dialog"  class="ui-widget" title="Upload a list of crosses" >
 <br>
 <form action="/cross/upload_cross"  method="post"  enctype="multipart/form-data" id="upload_form" >
 <table>
 <tr><td><input type="file" name="upload_file" value="Choose file" id="upload_file"/><br /></td></tr>
 <tr><td>
-<input type="radio" name="format_type" value="barcode" /> Barcode format<br />
 <input type="radio" name="format_type" value="spreadsheet" checked="checked"/> Spreadsheet<br />
+<input type="radio" name="format_type" value="barcode" /> Barcode format<br />
 </td></tr>
 <tr><td>
 <div style="display: none">
@@ -35,8 +32,21 @@ foreach my $role (@roles) {
 </td></tr>
 </table>
 </form>
+<&| /page/explanation.mas, title=>'Template information' &>
+  <p>
+    <b>File format information</b>
+    </br>
+    <a id="cross_upload_spreadsheet_format_info">Spreadsheet format</a>
+    </br>
+    <a id="cross_upload_barcode_format_info">Barcode format</a>
+  </p>
+</&>
 </div>
 
+<div id="cross_upload_spreadsheet_info_dialog" title="Format for uploading crosses in a spreadsheet">
+<&| /breeders_toolbox/spreadsheet_upload_format_info.mas &>
+</&>
+</div>
 
 <div id="create_cross" title="Add cross" >
 <table cellspacing="0" cellpadding="1" >
@@ -147,6 +157,19 @@ foreach my $role (@roles) {
 <script defer="defer" >
 
  jQuery(document).ready(function() {
+
+ jQuery("#cross_upload_spreadsheet_format_info").click( function () { 
+ jQuery("#cross_upload_spreadsheet_info_dialog" ).dialog("open");
+ });
+
+   jQuery("#cross_upload_spreadsheet_info_dialog").dialog( {
+      autoOpen: false,
+      buttons: { "OK" :  function() { jQuery("#cross_upload_spreadsheet_info_dialog").dialog("close"); },},
+      modal: true,
+      width: 750,
+      autoResize:true,
+    });
+
 
   jQuery("#maternal_parent").autocomplete( { 
     source: '/ajax/stock/stock_autocomplete'
@@ -339,7 +362,7 @@ foreach my $role (@roles) {
       buttons: { "Cancel" :  function() { jQuery("#upload_crosses_dialog").dialog("close"); }, "Submit": function() { read_cross_upload() }  },
       modal: true,
       width: 500,
-      height: 250
+      height: 390
     });
     
     jQuery("#upload_crosses_link").click( function () { 

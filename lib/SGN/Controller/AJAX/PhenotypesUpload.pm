@@ -83,13 +83,12 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
 
   my $user_id = $c->user()->get_object()->get_sp_person_id();
   my $user_name = $c->user()->get_object()->get_username();
-  my $user_string = $user_name.'_'.$user_id;
-  my $archived_file_name = catfile($user_string, $timestamp."_".$upload_original_name);
+  my $archived_file_name = catfile($user_id, $timestamp."_".$upload_original_name);
   
 
 
-  if (! -d catfile($archive_path, $user_string)) { 
-      mkdir (catfile($archive_path, $user_string));
+  if (! -d catfile($archive_path, $user_id)) { 
+    mkdir (catfile($archive_path, $user_id));
   }
       
   $upload_file_temporary_directory = $archive_path.'/tmp/';

@@ -62,6 +62,7 @@ sub _lookup_trial_id {
   my $accession_names_ref;
   my $control_names_ref;
   my $design_type_from_project;
+  if (!$self->_get_trial_year_from_project()) {return;}
   $self->_set_trial_year($self->_get_trial_year_from_project());
   $self->_set_trial_name($self->get_project->name());
   $self->_set_trial_description($self->get_project->description());
@@ -69,7 +70,9 @@ sub _lookup_trial_id {
   if (! $design_type_from_project) {
     return;
   }
+  if (!$self->_get_location_from_field_layout_experiment()) {return;}
   $self->_set_trial_location($self->_get_location_from_field_layout_experiment());
+  if (!$self->has_trial_location) {return;}
   $self->_set_design_type($self->_get_design_type_from_project());
   $self->_set_design($self->_get_design_from_trial());
   $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name"));

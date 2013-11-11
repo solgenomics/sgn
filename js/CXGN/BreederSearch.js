@@ -54,6 +54,7 @@ window.onload = function initialize() {
 	    url: '/ajax/breeder/search',
 	    async: false,
 	    timeout: 60000,
+	    method: 'POST',
 	    data: {'select1':select1, 'select4': select4 },
 	    success: function(response) { 
 		if (response.error) { 
@@ -106,6 +107,7 @@ window.onload = function initialize() {
 	    url: '/ajax/breeder/search',
 	    async: false,
 	    timeout: 60000,
+	    method: 'POST',
 	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select4':select4  },
 	    success: function(response) { 
 		if (response.error) { 
@@ -143,6 +145,7 @@ window.onload = function initialize() {
 	    url: '/ajax/breeder/search',
 	    async: false,
 	    timeout: 60000,
+	    method: 'POST',
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","), 'select4':select4 },
 	    success: function(response) { 
 		if (response.error) { 
@@ -182,6 +185,7 @@ window.onload = function initialize() {
 	    url: '/ajax/breeder/search',
 	    async: false,
 	    timeout: 60000,
+	    method: 'POST',
 	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select2':select2, 'c2_data':c2_data.join(","), 'select4':select4  },
 	    success: function(response) { 
 		if (response.error) { 
@@ -222,6 +226,7 @@ window.onload = function initialize() {
 	    url: '/ajax/breeder/search',
 	    async: false,
 	    timeout: 60000,
+	    method: 'POST',
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4 },
 	    success: function(response) { 
 		if (response.error) { 
@@ -262,6 +267,7 @@ window.onload = function initialize() {
 	    url: '/ajax/breeder/search',
 	    async: false,
 	    timeout: 30000,
+	    method: 'POST',
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'c3_data': c3_data.join(","), 'select4' : select4 },
 	    success: function(response) { 
 		if (response.error) { 
@@ -310,6 +316,7 @@ window.onload = function initialize() {
 	    url: '/ajax/breeder/search',
 	    async: false,
 	    timeout: 30000,
+	    method: 'POST',
 	    data: {'select1':select1, 'c1_data': c1_str, 'select2': select2, 'c2_data': c2_str, 'select3':select3, 'c3_data': c3_str, 'select4' : select4 },
 	    success: function(response) { 
 		if (response.error) { 
