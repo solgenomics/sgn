@@ -229,6 +229,7 @@ function loadPredictionOutput (url, listId, listSource) {
     var traitId        = getTraitId();
     var modelId        = getModelId();
    
+    alert('traitid ' + traitId);
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
     jQuery.blockUI({message: 'Please wait..'});
    
@@ -251,13 +252,17 @@ function loadPredictionOutput (url, listId, listSource) {
                     var tdId = '#list_prediction_output_' + listId;
                     jQuery(tdId).html(response.output);
                                        
-                    var page = document.URL;                 
+                    var page = document.URL; 
+                    
                     if (page.match('/trait/') == null) {
                         
-                        var popsList = listSelPopulationsUploaded();                        
-                        jQuery("#select_a_population_div").html('');
+                        if (modelId.match('uploaded') == null) {
+                            
+                            var popsList = listSelPopulationsUploaded();                        
+                            jQuery("#select_a_population_div").html('');
                     
-                        selectAPopulation(modelId,  popsList);
+                            selectAPopulation(modelId,  popsList);
+                        }
                   
                     }
                     
