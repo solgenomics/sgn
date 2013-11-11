@@ -399,7 +399,13 @@ CXGN.List.prototype = {
 	
     },
 
-
+    /* listSelect: Creates an html select with lists of requested types.
+ 
+       Parameters: 
+         div_name: The div_name where the select should appear
+         types: a list of list types that should be listed in the menu
+    */
+    
     listSelect: function(div_name, types) { 	
 	var lists = new Array();
 
@@ -417,7 +423,7 @@ CXGN.List.prototype = {
 	    lists = this.availableLists();
 	}
 
-	var html = '<select id="'+div_name+'_list_select">';
+	var html = '<select id="'+div_name+'_list_select" name="'+div_name+'_list_select" >';
 	for (var n=0; n<lists.length; n++) {
 	    html = html + '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
 	}
