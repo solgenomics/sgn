@@ -15,50 +15,50 @@ use POSIX qw(strftime);
 BEGIN { extends 'Catalyst::Controller' }
 
 
-sub upload_prediction_genotypes_file :Path('/solgs/upload/prediction/genotypes/file') Args(0) {
-    my ($self, $c) = @_;
+# sub upload_prediction_genotypes_file :Path('/solgs/upload/prediction/genotypes/file') Args(0) {
+#     my ($self, $c) = @_;
 
-    my $file_upload = jQuery::File::Upload->new();
+#     my $file_upload = jQuery::File::Upload->new();
    
-    $file_upload->ctx($c);
-    $file_upload->field_name('files[]');
+#     $file_upload->ctx($c);
+#     $file_upload->field_name('files[]');
     
-   # $c->controller("solGS::solGS")->get_solgs_dirs($c);
-    my $solgs_prediction_upload = $c->stash->{solgs_prediction_upload_dir};
+#    # $c->controller("solGS::solGS")->get_solgs_dirs($c);
+#     my $solgs_prediction_upload = $c->stash->{solgs_prediction_upload_dir};
     
-    $file_upload->upload_dir($solgs_prediction_upload);
+#     $file_upload->upload_dir($solgs_prediction_upload);
    
-    $file_upload->relative_url_path('/solgs/upload/prediction/genotypes/files');
+#     $file_upload->relative_url_path('/solgs/upload/prediction/genotypes/files');
   
-    $file_upload->tmp_dir($solgs_prediction_upload);
-    $file_upload->script_url('/solgs/upload/prediction/genotypes');
-    $file_upload->use_client_filename(1);
+#     $file_upload->tmp_dir($solgs_prediction_upload);
+#     $file_upload->script_url('/solgs/upload/prediction/genotypes');
+#     $file_upload->use_client_filename(1);
    
-    $file_upload->handle_request;
+#     $file_upload->handle_request;
     
-    my $file_name         = $file_upload->filename;
-    my $absolute_filename = $file_upload->absolute_filename;
-    my $client_filename   = $file_upload->client_filename;
+#     my $file_name         = $file_upload->filename;
+#     my $absolute_filename = $file_upload->absolute_filename;
+#     my $client_filename   = $file_upload->client_filename;
   
-    my $geno_list = $self->get_selection_genotypes_list_from_file($absolute_filename);
+#     my $geno_list = $self->get_selection_genotypes_list_from_file($absolute_filename);
     
-    my @genotypes_list = uniq(@$geno_list);
-    $c->stash->{selection_genotypes_list_stocks_names} = \@genotypes_list;
+#     my @genotypes_list = uniq(@$geno_list);
+#     $c->stash->{selection_genotypes_list_stocks_names} = \@genotypes_list;
     
-    $c->stash->{list_name} = $file_name;
-    $c->stash->{list_id}   = crc($file_name);
+#     $c->stash->{list_name} = $file_name;
+#     $c->stash->{list_id}   = crc($file_name);
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
-    $c->model('solGS::solGS')->format_user_list_genotype_data($c);
+#     $c->controller("solGS::solGS")->get_solgs_dirs($c);
+#     $c->model('solGS::solGS')->format_user_list_genotype_data($c);
     
-    $self->create_user_list_genotype_data_file($c);
+#     $self->create_user_list_genotype_data_file($c);
 
-    $file_upload->print_response;
+#     $file_upload->print_response;
 
-    print STDERR "\n  file_name: $file_name\t absolute_name: $absolute_filename \t client_filename: $client_filename\n";
+#     print STDERR "\n  file_name: $file_name\t absolute_name: $absolute_filename \t client_filename: $client_filename\n";
 
 
-}
+# }
 
 
 sub generate_check_value :Path('/solgs/generate/checkvalue') Args(0) {
