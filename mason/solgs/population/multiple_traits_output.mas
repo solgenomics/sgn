@@ -69,3 +69,4 @@ $acronym
    acronym => $acronym,
 &>
 
+<input type="hidden"  id="model_id" value="<% $pop_id %>" /> 
