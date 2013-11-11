@@ -43,6 +43,10 @@ foreach my $role (@roles) {
 </&>
 </div>
 
+<div id="cross_upload_spreadsheet_info_dialog" title="Format for uploading crosses in a spreadsheet">
+<&| /breeders_toolbox/spreadsheet_upload_format_info.mas &>
+</&>
+</div>
 
 <div id="create_cross" title="Add cross" >
 <table cellspacing="0" cellpadding="1" >
@@ -153,6 +157,19 @@ foreach my $role (@roles) {
 <script defer="defer" >
 
  jQuery(document).ready(function() {
+
+ jQuery("#cross_upload_spreadsheet_format_info").click( function () { 
+ jQuery("#cross_upload_spreadsheet_info_dialog" ).dialog("open");
+ });
+
+   jQuery("#cross_upload_spreadsheet_info_dialog").dialog( {
+      autoOpen: false,
+      buttons: { "OK" :  function() { jQuery("#cross_upload_spreadsheet_info_dialog").dialog("close"); },},
+      modal: true,
+      width: 750,
+      autoResize:true,
+    });
+
 
   jQuery("#maternal_parent").autocomplete( { 
     source: '/ajax/stock/stock_autocomplete'
