@@ -488,8 +488,8 @@ sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/lis
   #####
 
 ###### 
-   # my $pheno_file = '/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/phenotype_data_isaaktecle_uploaded_67';
-   # my $geno_file = '/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/genotype_data_isaaktecle_uploaded_67'; 
+  #  my $pheno_file = '/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/phenotype_data_isaaktecle_${model_id}';
+  #  my $geno_file = '/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/genotype_data_isaaktecle_${model_id}'; 
 #####    
     $self->create_user_reference_list_metadata_file($c);
      
