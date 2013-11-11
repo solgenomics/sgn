@@ -11,12 +11,34 @@ has 'dbh' => (
     );
 
 
+=head2 get_intersect
+
+ Usage:        my %info = $bs->get_intersect($criteria_list, $dataref);
+ Desc:         
+ Ret:          returns a hash with a key called results that contains 
+               a listref of listrefs specifying the matching list with ids
+               and names. 
+ Args:         criteria_list: a comma separated string called a criteria_list, 
+               listing all the criteria that need to be applied. Possible 
+               criteria are trials, years, traits, and locations. The last 
+               criteria in the list is the return type.
+               dataref: The dataref is a hashref of hashrefs. The first key
+               is the target of the transformation, and the second is the
+               source type of the transformation, containing comma separated
+               values of the source type. 
+ Side Effects:
+ Example:
+
+=cut
 
 sub get_intersect { 
     my $self = shift;
     my $criteria_list = shift;
     my $dataref = shift;
     
+    #print STDERR "CRITERIA LIST: ".(join ",", @$criteria_list)."\n";
+    #print STDERR Data::Dumper::Dumper($dataref);
+
     my $type_id = $self->get_type_id('project year');
     my $accession_id = $self->get_stock_type_id('accession');
     my $plot_id = $self->get_stock_type_id('plot');
@@ -47,6 +69,8 @@ sub get_intersect {
 	    traits    => "SELECT distinct(stock.uniquename), stock.uniquename FROM phenotype JOIN nd_experiment_phenotype using(phenotype_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) WHERE  stock.type_id=$plot_id and phenotype.cvalue_id in ($dataref->{plots}->{traits})",
 	    
 	    plots    => "SELECT distinct(stock.uniquename), stock.uniquename FROM stock WHERE  stock.type_id=$plot_id",
+	    
+	    accessions => "SELECT distinct(plot.uniquename), plot.uniquename FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id)  JOIN stock as plot ON (stock_relationship.subject_id=plot.stock_id) WHERE plot.type_id=$plot_id and stock.stock_id in ($dataref->{plots}->{accessions})",
 
 	    #genotype => "SELECT distinct(uniquename), stock.uniquename FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN ",
 	    
@@ -62,6 +86,7 @@ sub get_intersect {
 	    
 	    traits    => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment USING (nd_geolocation_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) WHERE cvalue_id in ($dataref->{locations}->{traits})",
 
+	    accessions => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment USING (nd_geolocation_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.type_id=$accession_id and stock.stock_id in ($dataref->{locations}->{accessions})",
 	    #genotype => "",
 	    
 	},
@@ -77,6 +102,7 @@ sub get_intersect {
 	    
 	    traits    => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING(phenotype_id) WHERE type_id=$type_id AND cvalue_id IN ($dataref->{years}->{traits})",
 
+	    accessions => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) WHERE type_id=$accession_id and stock.stock_id in ($dataref->{years}->{accessions})",
 	    #genotype => "",
 	    
 	    
@@ -93,6 +119,7 @@ sub get_intersect {
 	    
 	    traits    => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) WHERE cvalue_id in ($dataref->{projects}->{traits})",
 
+	    accessions => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.type_id=$accession_id and stock.stock_id in ($dataref->{projects}->{accessions})",
 	    #genotype => "",
 	    
 	},
@@ -111,6 +138,8 @@ sub get_intersect {
 
 	    plots => "SELECT distinct(cvterm_id), cvterm.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (cvalue_id=cvterm_id) WHERE stock_id IN ($dataref->{traits}->{plots})",
 
+	    accessions => "SELECT distinct(cvterm_id), cvterm.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (cvalue_id=cvterm_id) WHERE stock_id IN ($dataref->{traits}->{plots})",
+
 	    #genotype => "",
 	    
 	},
@@ -128,13 +157,12 @@ sub get_intersect {
 
     foreach my $criterion (@$criteria_list) { 
 	if (exists($queries{$item}->{$criterion}) && $queries{$item}->{$criterion} && $dataref->{$item}->{$criterion}) { 
-	    print STDERR "ITEM: $item. CRIT: $criterion. DATA: $queries{$item}->{$criterion}\n";
-	    push @query, $queries{$item}{$criterion};
+       	    push @query, $queries{$item}{$criterion};
 	}
     }
     my $query = join (" INTERSECT ", @query);
-        
-    print STDERR "QUERY: $query\n";
+    
+    #print STDERR "QUERY: $query\n";
     my $h = $self->dbh->prepare($query);
     $h->execute();
     
@@ -151,6 +179,20 @@ sub get_intersect {
 	return { message => 'Too many items to display ('.(scalar(@results)).')' };
 
     }
+}
+
+sub get_phenotype_info {  
+    my $self = shift;
+    my $plot_list = shift;
+
+    my $q = "DROP TABLE IF EXISTS temporary_plot_data";
+    $self->dbh->do($q);
+    
+    $q = "CREATE TABLE temporary_plot_data(plotname varchar(100))";
+    $self->dbh->do($q);
+   
+    
+    $q = "SELECT project.name, stock.uniquename, cvterm.name, phenotype.value FROM stock as plot JOIN ... ";
 }
 
 
