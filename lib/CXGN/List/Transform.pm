@@ -27,8 +27,6 @@ sub transform {
 
     my $data;
 
-    
-
     foreach my $p ($self->plugins()) { 
         if ($transform_name eq $p->name()) { 
              $data = $p->transform($schema, $list);
