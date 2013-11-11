@@ -3,12 +3,42 @@ package SGN::Controller::BreedersToolbox;
 
 use Moose;
 
+use Data::Dumper;
+
 use CXGN::Trial::TrialLayout;
 use URI::FromHash 'uri';
+
+use CXGN::BreederSearch;
+use SGN::Controller::AJAX::List;
+use CXGN::List::Transform;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::BreedersToolbox::Accessions;
 
 BEGIN { extends 'Catalyst::Controller'; }
+
+sub manage_breeding_programs : Path("/breeders/manage_programs") :Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) { 
+	
+	# redirect to login page
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+	return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
+
+    my $breeding_programs = $projects->get_breeding_programs();
+    
+    $c->stash->{breeding_programs} = $breeding_programs;
+
+    $c->stash->{template} = '/breeders_toolbox/breeding_programs.mas';
+    
+
+}
 
 sub manage_trials : Path("/breeders/trials") Args(0) { 
     my $self = shift;
@@ -31,8 +61,8 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     foreach my $bp (@$breeding_projects) { 
 	$trials_by_breeding_project{$bp->[1]}= $projects->get_trials_by_breeding_program($bp->[0]);
-
     }
+
     $trials_by_breeding_project{'Other'} = $projects->get_trials_by_breeding_program();
 
     $c->stash->{locations} = $self->get_locations($c);
@@ -143,6 +173,200 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
 
 }
 
+
+sub make_cross_form :Path("/stock/cross/new") :Args(0) { 
+    my ($self, $c) = @_;
+    $c->stash->{template} = '/breeders_toolbox/new_cross.mas';
+    if ($c->user()) { 
+      my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+      # get projects
+      my @rows = $schema->resultset('Project::Project')->all();
+      my @projects = ();
+      foreach my $row (@rows) { 
+	push @projects, [ $row->project_id, $row->name, $row->description ];
+      }
+      $c->stash->{project_list} = \@projects;
+      @rows = $schema->resultset('NaturalDiversity::NdGeolocation')->all();
+      my @locations = ();
+      foreach my $row (@rows) {
+	push @locations,  [ $row->nd_geolocation_id,$row->description ];
+      }
+      $c->stash->{locations} = \@locations;
+
+    }
+    else {
+      $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+      return;
+    }
+}
+
+
+sub make_cross :Path("/stock/cross/generate") :Args(0) { 
+    my ($self, $c) = @_;
+    $c->stash->{template} = '/breeders_toolbox/progeny_from_crosses.mas';
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $cross_name = $c->req->param('cross_name');
+    $c->stash->{cross_name} = $cross_name;
+    my $trial_id = $c->req->param('trial_id');
+    $c->stash->{trial_id} = $trial_id;
+    #my $location = $c->req->param('location_id');
+    my $maternal = $c->req->param('maternal');
+    my $paternal = $c->req->param('paternal');
+    my $prefix = $c->req->param('prefix');
+    my $suffix = $c->req->param('suffix');
+    my $progeny_number = $c->req->param('progeny_number');
+    my $visible_to_role = $c->req->param('visible_to_role');
+    
+    if (! $c->user()) { # redirect
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+
+    #check that progeny number is an integer less than maximum allowed
+    my $maximum_progeny_number = 1000;
+    if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number)){
+      #redirect to error page?
+      return;
+    }
+
+    #check that parent names are not blank
+    if ($maternal eq "" or $paternal eq "") {
+      return;
+    }
+
+    #check that parents exist in the database
+    if (! $schema->resultset("Stock::Stock")->find({name=>$maternal,})){
+      return;
+    }
+    if (! $schema->resultset("Stock::Stock")->find({name=>$paternal,})){
+      return;
+    }
+
+    #check that cross name does not already exist
+    if ($schema->resultset("Stock::Stock")->find({name=>$cross_name})){
+      return;
+    }
+
+    #check that progeny do not already exist
+    if ($schema->resultset("Stock::Stock")->find({name=>$prefix.$cross_name.$suffix."-1",})){
+      return;
+    }
+
+    my $organism = $schema->resultset("Organism::Organism")->find_or_create(
+    {
+	genus   => 'Manihot',
+	species => 'Manihot esculenta',
+    } );
+    my $organism_id = $organism->organism_id();
+
+    my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'accession',
+      cv     => 'stock type',
+      db     => 'null',
+      dbxref => 'accession',
+    });
+
+#    my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+#      { name   => 'member',
+#      cv     => 'stock type',
+#      db     => 'null',
+#      dbxref => 'member',
+#    });
+
+    my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
+      { name   => 'population',
+    });
+
+#    my $cross_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+#    { name   => 'cross',
+#      cv     => 'stock relationship',
+#      db     => 'null',
+#      dbxref => 'cross',
+#    });
+
+    my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
+            { name       => $maternal,
+            } );
+
+    my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
+            { name       => $paternal,
+            } );
+
+    my $population_stock = $schema->resultset("Stock::Stock")->find_or_create(
+            { organism_id => $organism_id,
+	      name       => $cross_name,
+	      uniquename => $cross_name,
+	      type_id => $population_cvterm->cvterm_id,
+            } );
+      my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
+    { name   => 'female_parent',
+      cv     => 'stock relationship',
+      db     => 'null',
+      dbxref => 'female_parent',
+    });
+
+      my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
+    { name   => 'male_parent',
+      cv     => 'stock relationship',
+      db     => 'null',
+      dbxref => 'male_parent',
+    });
+
+      my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
+    { name   => 'cross_name',
+      cv     => 'stock relationship',
+      db     => 'null',
+      dbxref => 'cross_name',
+    });
+
+      my $visible_to_role_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+    { name   => 'visible_to_role',
+      cv => 'local',
+      db => 'null',
+    });
+
+    my $increment = 1;
+    while ($increment < $progeny_number + 1) {
+	my $stock_name = $prefix.$cross_name."-".$increment.$suffix;
+      my $accession_stock = $schema->resultset("Stock::Stock")->create(
+            { organism_id => $organism_id,
+              name       => $stock_name,
+              uniquename => $stock_name,
+              type_id     => $accession_cvterm->cvterm_id,
+            } );
+      $accession_stock->find_or_create_related('stock_relationship_objects', {
+		type_id => $female_parent->cvterm_id(),
+		object_id => $accession_stock->stock_id(),
+		subject_id => $female_parent_stock->stock_id(),
+	 					  } );
+      $accession_stock->find_or_create_related('stock_relationship_objects', {
+		type_id => $male_parent->cvterm_id(),
+		object_id => $accession_stock->stock_id(),
+		subject_id => $male_parent_stock->stock_id(),
+	 					  } );
+      $accession_stock->find_or_create_related('stock_relationship_objects', {
+		type_id => $population_members->cvterm_id(),
+		object_id => $accession_stock->stock_id(),
+		subject_id => $population_stock->stock_id(),
+	 					  } );
+      if ($visible_to_role ne "") {
+	my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
+	       { type_id =>$visible_to_role_cvterm->cvterm_id(),
+		 value => $visible_to_role,
+		 stock_id => $accession_stock->stock_id()
+		 });
+      }
+      $increment++;
+
+    }
+    if ($@) { 
+    }
+}
+
+
+
+    
 sub breeder_home :Path("/breeders/home") Args(0) { 
     my ($self , $c) = @_;
 
@@ -153,10 +377,20 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
 	return;
     }
- 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     
-    $c->stash->{projects} = $self->get_projects($c);
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $breeding_programs = $bp->get_breeding_programs();
+
+    $c->stash->{programs} = $breeding_programs;
+    
+    my $locations_by_breeding_program;
+    foreach my $b (@$breeding_programs) { 
+        $locations_by_breeding_program->{$b->[1]} = $bp->get_locations_by_breeding_program($b->[0]);
+    }
+    $locations_by_breeding_program->{'Other'} = $bp->get_locations_by_breeding_program();
+
+    $c->stash->{locations_by_breeding_program} = $locations_by_breeding_program;
     
     # get roles
     #
@@ -169,6 +403,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 
     my $locations = $self->get_locations($c);
     
+    $c->stash->{locations} = $locations;
     # get uploaded phenotype files
     #
 
@@ -179,6 +414,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     $c->stash->{phenotype_files} = $data->{file_info};
     $c->stash->{deleted_phenotype_files} = $data->{deleted_file_info};
 
+    
     $c->stash->{template} = '/breeders_toolbox/home.mas';
 }
 
@@ -190,63 +426,71 @@ sub breeder_search : Path('/breeder_search/') :Args(0) {
 
 }
 
-# sub trial_info : Path('/breeders_toolbox/trial') Args(1) { 
-#   my $self = shift;
-#   my $c = shift;
+sub breeder_download : Path('/breeders/download/') Args(0) { 
+    my $self = shift;
+    my $c = shift;
 
-#   my $trial_id = shift;
+    if (!$c->user()) { 	
+	# redirect to login page
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+	return;
+    }
     
+    $c->stash->{template} = '/breeders_toolbox/download.mas';
+}
 
+sub download_action : Path('/breeders/download_action') Args(0) { 
+    my $self = shift;
+    my $c = shift;
     
-#   if (!$c->user()) { 
-#     $c->stash->{template} = '/generic_message.mas';
-#     $c->stash->{message}  = 'You must be logged in to access this page.';
-#     return;
-#   }
-#   my $dbh = $c->dbc->dbh();
+    my $accession_list_id = $c->req->param("accession_list_list_select");
+    my $trial_list_id     = $c->req->param("trial_list_list_select");
+    my $trait_list_id     = $c->req->param("trait_list_list_select");
+
+    print STDERR "IDS: $accession_list_id, $trial_list_id, $trait_list_id\n";
+
+    my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+    my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
+    my $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
+
+    my @accession_list = map { $_->[1] } @$accession_data;
+    my @trial_list = map { $_->[1] } @$trial_data;
+    my @trait_list = map { $_->[1] } @$trait_data;
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $t = CXGN::List::Transform->new();
     
-#   my $h = $dbh->prepare("SELECT project.name FROM project WHERE project_id=?");
-#   $h->execute($trial_id);
+    print STDERR Data::Dumper::Dumper(\@accession_list);
+    print STDERR Data::Dumper::Dumper(\@trial_list);
+    print STDERR Data::Dumper::Dumper(\@trait_list);
 
-#   my ($name) = $h->fetchrow_array();
+    my $acc_t = $t->can_transform("accessions", "accession_ids");
+    my $accession_id_data = $t->transform($schema, $acc_t, \@accession_list);
 
-#   $c->stash->{trial_name} = $name;
-
-#   $h = $dbh->prepare("SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description, count(*) FROM nd_geolocation JOIN nd_experiment USING(nd_geolocation_id) JOIN nd_experiment_project USING (nd_experiment_id) JOIN project USING (project_id) WHERE project_id=? GROUP BY nd_geolocation_id, nd_geolocation.description");
-#   $h->execute($trial_id);
-
-#   my @location_data = ();
-#   while (my ($id, $desc, $count) = $h->fetchrow_array()) { 
-#     push @location_data, [$id, $desc, $count];
-#   }		       
-
-#   $c->stash->{location_data} = \@location_data;
-
-#   $h = $dbh->prepare("SELECT distinct(cvterm.name), count(*) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? GROUP BY cvterm.name");
-
-#   $h->execute($trial_id);
-
-#   my @phenotype_data;
-#   while (my ($trait, $count) = $h->fetchrow_array()) { 
-#     push @phenotype_data, [$trait, $count];
-#   }
-#   $c->stash->{phenotype_data} = \@phenotype_data;
-
-#   $h = $dbh->prepare("SELECT distinct(projectprop.value) FROM projectprop WHERE project_id=? AND type_id=(SELECT cvterm_id FROM cvterm WHERE name='project year')");
-#   $h->execute($trial_id);
-
-#   my @years;
-#   while (my ($year) = $h->fetchrow_array()) { 
-#     push @years, $year;
-#   }
+    my $trial_t = $t->can_transform("trials", "trial_ids");
+    my $trial_id_data = $t->transform($schema, $trial_t, \@trial_list);
     
+    my $trait_t = $t->can_transform("traits", "trait_ids");
+    my $trait_id_data = $t->transform($schema, $trait_t, \@trait_list);
 
-#   $c->stash->{years} = \@years;
+    my $accession_sql = join ",", map { "\'$_\'" } @{$accession_id_data->{transform}};
+    my $trial_sql = join ",", map { "\'$_\'" } @{$trial_id_data->{transform}};
+    my $trait_sql = join ",", map { "\'$_\'" } @{$trait_id_data->{transform}};
 
-#   $c->stash->{plot_data} = [];
+    print STDERR "SQL-READY: $accession_sql | $trial_sql | $trait_sql \n";
 
-#   $c->stash->{template} = '/breeders_toolbox/trial.mas';
-# }
+    my $result = $bs->get_intersect([ 'accessions', 'trials', 'traits', 'plots' ], 
+		       { plots => { accessions => "$accession_sql", trials=> "$trial_sql", traits => "$trait_sql" }  },
+		       );
+    
+    print STDERR Data::Dumper::Dumper($result);
+
+    $c->res->body(Data::Dumper::Dumper($result));
+	#ate} = '/breeders_toolbox/download.mas';
+
+}
 
 sub get_locations : Private { 
     my $self = shift;
@@ -410,5 +654,7 @@ sub get_phenotyping_data : Private {
 		 
 
 }
+
+
 
 1;

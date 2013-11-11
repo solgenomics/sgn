@@ -14,10 +14,9 @@ window.onload = function initialize() {
 	for (var i=0; i<choices.length; i++) { 
 	    if (!typeof(choices[i])=='undefined') { 
 		var lists = lo.availableLists(choices[i]);
-		//alert("type "+choices[t]+" List:"+lists);
+
 		var options = [];
 		for (var n=0; n<lists.length; n++) { 
-		    //alert("List: "+l);
 		    options[lists[n][0]] = lists[n][1]+" ("+lists[n][5]+")";
 		    html += "<optgroup>\n";
 		    html += format_options(options);
@@ -40,11 +39,8 @@ window.onload = function initialize() {
 	if (parseInt(select1)) { 
 	    var lo = new CXGN.List();
 	    var list_data = lo.getListData(select1);
-	    //alert(JSON.stringify(list_data));
 	    var id_data = lo.transform2Ids(select1);
-	    //alert(id_data);
 	    var dump = JSON.stringify(id_data);
-	    //alert(dump);
 	}
 	
 	var stocks;
@@ -80,6 +76,10 @@ window.onload = function initialize() {
 	jQuery('#select2').html('');
 	jQuery('#select3').html('');
 	
+	addToListMenu('c1_to_list_menu', 'c1_data', {
+	    selectText: true,
+	    typeSourceDiv: 'select1' });
+
 	enable_ui();	
     });
     
@@ -134,7 +134,6 @@ window.onload = function initialize() {
 	var c1_data = jQuery('#c1_data').val() || [];
 	jQuery('#select3').val('please select');
 	jQuery('#c2_data').val('');
-//	alert('Select1: '+select1+', select2: '+select2+' c1_data = '+c1_data.join(","));
 	
 	var c2_data = '';
 	var stock_data = '';
@@ -161,6 +160,11 @@ window.onload = function initialize() {
 		}	
 	    } 
 	});		
+
+	addToListMenu('c2_to_list_menu', 'c2_data', {
+	    selectText: true,
+	    typeSourceDiv: 'select2' });
+
 	enable_ui();
     });
 
@@ -212,7 +216,6 @@ window.onload = function initialize() {
 	var select4 = jQuery('#select4').val();
 	var c1_data = jQuery('#c1_data').val() || [];
 	var c2_data = jQuery('#c2_data').val() || [];
-	//alert('Select1: '+select1+', select2: '+select2+' c1_data = '+c1_data.join(","));
 	
 	var stock_data = '';
 
@@ -245,6 +248,12 @@ window.onload = function initialize() {
 	});
 	
 	show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, 0);
+
+	addToListMenu('c3_to_list_menu', 'c3_data', {
+	    selectText: true,
+	    typeSourceDiv: 'select3' });
+	
+
 	enable_ui();
     });
     
@@ -331,7 +340,12 @@ window.onload = function initialize() {
 		alert("an error occurred. ("+ message.responseText +")");
 	    }
 	});
-	//alert("DONE!");
+
+	addToListMenu('add_to_list_menu', 'stock_data', {
+	    selectText: true,
+	    typeSourceDiv: 'select4' });
+	
+
 	enable_ui();
     });    
 }

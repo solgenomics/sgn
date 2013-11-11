@@ -136,4 +136,28 @@ sub associate_breeding_program_with_trial : Path('/breeders/program/associate') 
     
 }
 
+sub new_breeding_program :Path('/breeders/program/new') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $name = $c->req->param("name");
+    my $desc = $c->req->param("desc");
+
+    if (!($c->user() || $c->user()->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add a breeding program.' };
+    }
+	    
+       
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+
+    my $error = $p->new_breeding_program($name, $desc);
+
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+    }
+    else { 
+	$c->stash->{rest} =  {};
+    }
+
+}
+
 1;

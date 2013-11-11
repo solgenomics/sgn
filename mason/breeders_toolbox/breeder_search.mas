@@ -80,10 +80,23 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
       jQuery('#add_to_list_menu').html('(log in to use lists)');
     }
     else { 
-      addToListMenu('c1_to_list_menu', 'c1_data', true);
-      addToListMenu('c2_to_list_menu', 'c2_data', true);
-      addToListMenu('c3_to_list_menu', 'c3_data', true);      
-      addToListMenu('add_to_list_menu', 'stock_data');
+      addToListMenu('c1_to_list_menu', 'c1_data', { 
+        selectText: true,
+        typeSourceDiv: 'select1',
+      });
+      addToListMenu('c2_to_list_menu', 'c2_data', { 
+        selectText: true,
+        typeSourceDiv: 'select2',
+      });
+      addToListMenu('c3_to_list_menu', 'c3_data', { 
+        selectText: true,
+        typeSourceDiv: 'select3',
+       });      
+      addToListMenu('add_to_list_menu', 'stock_data', { 
+        selectText: true,
+        typeSourceDiv: 'select4',
+        }
+      );
     }
  });
 
