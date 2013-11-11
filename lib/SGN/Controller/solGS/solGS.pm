@@ -23,7 +23,7 @@ use Algorithm::Combinatorics qw /combinations/;
 #use CXGN::People::Person;
 use CXGN::Tools::Run;
 use JSON;
-use jQuery::File::Upload;
+#use jQuery::File::Upload;
 
 BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
 

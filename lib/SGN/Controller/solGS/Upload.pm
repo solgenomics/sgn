@@ -4,7 +4,7 @@ use Moose;
 use namespace::autoclean;
 
 use List::MoreUtils qw /uniq/;
-use jQuery::File::Upload;
+#use jQuery::File::Upload;
 use JSON;
 use File::Temp qw / tempfile tempdir /;
 use File::Spec::Functions qw / catfile catdir/;
