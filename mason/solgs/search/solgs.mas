@@ -32,11 +32,11 @@ if ($current_page > 1) { $collapse = 0; }
 
 </%perl>
 
-<link rel="stylesheet" href="/css/solgs/solgs_formfu.css" type="text/css" />
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.ajaxAutocomplete"] &>
 
 <p>&nbsp</p>
 
@@ -51,7 +51,7 @@ if ($current_page > 1) { $collapse = 0; }
 <p style="color:red">There is no phenotype data for <b>'<% $message %>'</b>.</p>
 %}
 
-<p style="text-align:center">Browse by traits: <b><% $gs_traits_index %> </b></p>
+<p style="text-align:center">Traits index: <b><% $gs_traits_index %> </b></p>
 <p>&nbsp</p>
 <p>&nbsp</p>
 
@@ -77,3 +77,16 @@ if ($current_page > 1) { $collapse = 0; }
 &>
    
 </&>
+
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => $collapse,
+    title       => "Upload a reference population",
+  &>
+
+  <& /solgs/population/user_reference_genotypes.mas &>
+   
+</&>
+
+

@@ -395,10 +395,10 @@ CXGN.List.prototype = {
 
     listSelect: function(div_name, types) { 
 	
-	var lists;
+	var lists = [];
 	if (types) {
 	    for (var n=0; n<types.length; n++) { 
-		lists = concat(lists, this.availableLists(types[n]));
+		lists = lists.concat(lists, this.availableLists(types[n]));
 	    }
 	}
 	else { 

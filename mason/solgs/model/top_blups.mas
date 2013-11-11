@@ -32,10 +32,7 @@ $trait_combo_pops => ''
 
 
 <div id="gebvPlot2"> 
-  <input type="hidden" name="population_id" value="<% $pop_id %>" /> 
-  <input type="hidden" name="combo_pops_id" value="<% $combo_pops_id %>" /> 
-  <input type="hidden" name="pops_list" value="<% $trait_combo_pops %>" /> 
-  <input type="hidden" name="trait_id" value="<% $trait_id %>" /> 
+ 
 </div> 
 
 <button class="button" id="gebvzoom-reset">Reset zoom</button>
@@ -62,3 +59,5 @@ $trait_combo_pops => ''
 [ <% $blups_download_url %> ]
 
 </&>
+
+<input type="hidden" id="pops_list" value="<% $trait_combo_pops %>" />  

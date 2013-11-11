@@ -154,6 +154,49 @@ jQuery(document).ready(function () {
         open_project_dialog()
     });
 
+    jQuery('#add_project_dialog').dialog({
+	autoOpen: false,
+        modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 75],
+        title: "Add new trial",
+        buttons: {
+            "Cancel": function () {
+                jQuery('#add_project_dialog').dialog("close");
+            },
+            "Add": function () {
+                var name = jQuery('#add_project_name').val();
+                var year = jQuery('#add_project_year').val();
+                var desc = jQuery('textarea#add_project_description').val();
+                var method_to_use = jQuery('.format_type:checked').val();
+                if (year === '' || desc === '') {
+                    alert('Year and description are required.');
+                    return;
+                }
+                if (method_to_use == "empty") {
+                    alert('adding a project');
+                    save_project_info(name, year, desc);
+                }
+                if (method_to_use == "create_with_upload") {
+                    var uploadFile = jQuery("#trial_upload_file").val();
+                    jQuery('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
+                    if (uploadFile === '') {
+                        alert("Please select a file");
+                        return;
+                    }
+                    jQuery("#create_new_trial_form").submit();
+                }
+                if (method_to_use == "create_with_design_tool") {
+		    generate_experimental_design(name,year,desc);
+		}
+                //jQuery( this).dialog("close"); 
+                //location.reload();
+            }
+        }
+    });
+
+
     function open_project_dialog() {
 	jQuery('#add_project_dialog').dialog("open");
 
@@ -244,47 +287,6 @@ jQuery(document).ready(function () {
 
     jQuery("#format_type_radio").change();
 
-    jQuery('#add_project_dialog').dialog({
-	autoOpen: false,
-        modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 75],
-        title: "Add new trial",
-        buttons: {
-            "Cancel": function () {
-                jQuery('#add_project_dialog').dialog("close");
-            },
-            "Add": function () {
-                var name = jQuery('#add_project_name').val();
-                var year = jQuery('#add_project_year').val();
-                var desc = jQuery('textarea#add_project_description').val();
-                var method_to_use = jQuery('.format_type:checked').val();
-                if (year === '' || desc === '') {
-                    alert('Year and description are required.');
-                    return;
-                }
-                if (method_to_use == "empty") {
-                    alert('adding a project');
-                    save_project_info(name, year, desc);
-                }
-                if (method_to_use == "create_with_upload") {
-                    var uploadFile = jQuery("#trial_upload_file").val();
-                    jQuery('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
-                    if (uploadFile === '') {
-                        alert("Please select a file");
-                        return;
-                    }
-                    jQuery("#create_new_trial_form").submit();
-                }
-                if (method_to_use == "create_with_design_tool") {
-		    generate_experimental_design(name,year,desc);
-		}
-                //jQuery( this).dialog("close"); 
-                //location.reload();
-            }
-        }
-    });
 
     jQuery("#select_design_method").change(function () {
 	jQuery("#add_project_dialog").dialog("option", "height","auto");
