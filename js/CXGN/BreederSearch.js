@@ -134,7 +134,6 @@ window.onload = function initialize() {
 	var c1_data = jQuery('#c1_data').val() || [];
 	jQuery('#select3').val('please select');
 	jQuery('#c2_data').val('');
-//	alert('Select1: '+select1+', select2: '+select2+' c1_data = '+c1_data.join(","));
 	
 	var c2_data = '';
 	var stock_data = '';
@@ -217,7 +216,6 @@ window.onload = function initialize() {
 	var select4 = jQuery('#select4').val();
 	var c1_data = jQuery('#c1_data').val() || [];
 	var c2_data = jQuery('#c2_data').val() || [];
-	//alert('Select1: '+select1+', select2: '+select2+' c1_data = '+c1_data.join(","));
 	
 	var stock_data = '';
 
