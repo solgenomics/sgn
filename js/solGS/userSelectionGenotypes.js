@@ -229,7 +229,6 @@ function loadPredictionOutput (url, listId, listSource) {
     var traitId        = getTraitId();
     var modelId        = getModelId();
    
-    alert('traitid ' + traitId);
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
     jQuery.blockUI({message: 'Please wait..'});
    
