@@ -130,33 +130,28 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
 %   print $p."<br />\n";
 % }
 <&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
-<&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-<&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_spreadsheet_link">Create Spreadsheet</a>]' &>
-</&>
-<&| /page/info_section.mas, title=>"Android Field Book Layout", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_fieldbook_link">Create Field Book</a>]' &>
-
-</&>
-
-</&>
-
-<&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-
-<&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_phenotyping_spreadsheet_link">Upload</a>]'&>
-</&>
-<&| /page/info_section.mas, title=>"Android Field Book Exported", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_field_book_link">Upload</a>]'&>
-</&>
-</&>
-
+  <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_spreadsheet_link">Create Spreadsheet</a>]' &>
+    </&>
+    <&| /page/info_section.mas, title=>"Android Field Book Layout", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_fieldbook_link">Create Field Book</a>]' &>
+    </&>
+  </&>
+  <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_phenotyping_spreadsheet_link">Upload</a>]'&>
+    </&>
+    <&| /page/info_section.mas, title=>"Android Field Book Exported", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_field_book_link">Upload</a>]'&>
+    </&>
+  </&>
 </&>
 
 
-<div
+
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 %print $trial_id;
 </div>
 
-<div id="tablet_field_layout_saved_dialog_message" title="Field book layout file">
+<div id="tablet_field_layout_saved_dialog_message" title="Field book layout file" style="display:none;">
   <p>
     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
     The field book layout file was saved successfully
@@ -166,7 +161,7 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
   </p>
 </div>
 
-<div id="create_spreadsheet_dialog" title="Create Phenotyping Spreadsheet">
+<div id="create_spreadsheet_dialog" title="Create Phenotyping Spreadsheet" style="display:none;">
   <div id="trait_list" name="trait_list">
     <label id="trait_list_label" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
     </label>
@@ -183,25 +178,7 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
   
 jQuery(document).ready(function () {
 
-  jQuery('#show_change_breeding_program_link').click(
-     function() {
-       jQuery('#change_breeding_program_dialog').dialog("open");
-       get_breeding_select();
-     }
-  );
 
-  jQuery('#delete_breeding_program_trial_association_link').click(
-     function() { 
-       var yes = confirm("Do you really want to remove this trial from the breeding program?");
-       if (yes) { 
-         jQuery.ajax( { 
-           url: '/breeders/program/remove/',
-           data: { },
-           async: false,
-           success: function(response) { 
-           }
-       }
-  );
 
   jQuery('#change_breeding_program_dialog').dialog( {
      height: 150,
@@ -234,7 +211,9 @@ jQuery(document).ready(function () {
       	html += '<option value='+programs[i][0]+'>'+programs[i][1]+'</a>';
     }
     jQuery('#change_breeding_program_select').html(html);
-  }
+	
+   }
+
 
   function associate_breeding_program() { 
     var program = jQuery('#change_breeding_program_select').val();				    
@@ -249,9 +228,7 @@ jQuery(document).ready(function () {
    }
 
 
-    jQuery('#create_spreadsheet_link').click(function () {
-        open_create_spreadsheet_dialog();
-    });
+
     function open_create_spreadsheet_dialog() {
         var list = new CXGN.List();
         jQuery("#trait_list").html(list.listSelect("trait_list"));
@@ -291,9 +268,7 @@ jQuery(document).ready(function () {
 
     }
 
-    jQuery('#create_fieldbook_link').click(function () {
-        open_create_fieldbook_dialog();
-    });
+
     function open_create_fieldbook_dialog() {
       var trialID = parseInt(jQuery('#trialIDDiv').text());
       new jQuery.ajax({
@@ -353,8 +328,36 @@ jQuery(document).ready(function () {
         },
     });
 
-  }  
+  jQuery('#show_change_breeding_program_link').click(
+     function() {
+       jQuery('#change_breeding_program_dialog').dialog("open");
+       get_breeding_select();
+     }
+  );
+
+  jQuery('#delete_breeding_program_trial_association_link').click(
+     function() { 
+       var yes = confirm("Do you really want to remove this trial from the breeding program?");
+       if (yes) { 
+         jQuery.ajax( { 
+           url: '/breeders/program/remove/',
+           data: { },
+           async: false,
+           success: function(response) { 
+           }
+	});
+      }
+    }
+
 );
+    jQuery('#create_spreadsheet_link').click(function () {
+        open_create_spreadsheet_dialog();
+    });
+
+    jQuery('#create_fieldbook_link').click(function () {
+        open_create_fieldbook_dialog();
+    });
+});
 
 </script>
  
