@@ -3,6 +3,8 @@
 $accessions
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions'] &>
+
 <br />
 <& /page/page_title.mas, title=>"Manage accessions" &>
 
@@ -14,4 +16,5 @@ $accessions
     </div>
 </&>
 
-
+<div id="add_accessions_dialog" class="ui-widget" title="Add accessions">
+</div>
