@@ -75,11 +75,12 @@ window.onload = function initialize() {
 	jQuery('#c3_data').html('');	
 	jQuery('#select2').html('');
 	jQuery('#select3').html('');
-	
-	addToListMenu('c1_to_list_menu', 'c1_data', {
-	    selectText: true,
-	    typeSourceDiv: 'select1' });
 
+	if (isLoggedIn()) { 
+	    addToListMenu('c1_to_list_menu', 'c1_data', {
+		selectText: true,
+		typeSourceDiv: 'select1' });
+	}
 	enable_ui();	
     });
     
@@ -161,10 +162,11 @@ window.onload = function initialize() {
 	    } 
 	});		
 
-	addToListMenu('c2_to_list_menu', 'c2_data', {
-	    selectText: true,
-	    typeSourceDiv: 'select2' });
-
+	if (isLoggedIn()) { 
+	    addToListMenu('c2_to_list_menu', 'c2_data', {
+		selectText: true,
+		typeSourceDiv: 'select2' });
+	}
 	enable_ui();
     });
 
@@ -249,10 +251,11 @@ window.onload = function initialize() {
 	
 	show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, 0);
 
-	addToListMenu('c3_to_list_menu', 'c3_data', {
-	    selectText: true,
-	    typeSourceDiv: 'select3' });
-	
+	if (isLoggedIn()) { 
+	    addToListMenu('c3_to_list_menu', 'c3_data', {
+		selectText: true,
+		typeSourceDiv: 'select3' });
+	}
 
 	enable_ui();
     });
@@ -341,10 +344,11 @@ window.onload = function initialize() {
 	    }
 	});
 
-	addToListMenu('add_to_list_menu', 'stock_data', {
-	    selectText: true,
-	    typeSourceDiv: 'select4' });
-	
+	if (isLoggedIn()) { 
+	    addToListMenu('add_to_list_menu', 'stock_data', {
+		selectText: true,
+		typeSourceDiv: 'select4' });
+	}
 
 	enable_ui();
     });    
