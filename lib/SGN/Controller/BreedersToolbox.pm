@@ -481,14 +481,23 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     print STDERR "SQL-READY: $accession_sql | $trial_sql | $trait_sql \n";
 
-    my $result = $bs->get_intersect([ 'accessions', 'trials', 'traits', 'plots' ], 
-		       { plots => { accessions => "$accession_sql", trials=> "$trial_sql", traits => "$trait_sql" }  },
-		       );
+    #my $result = $bs->get_intersect([ 'accessions', 'trials', 'traits', 'plots' ], 
+    #{ plots => { accessions => "$accession_sql", trials=> "$trial_sql", traits => "$trait_sql" }  },
+#		       );
     
-    print STDERR Data::Dumper::Dumper($result);
+    #print STDERR Data::Dumper::Dumper($result);
 
-    $c->res->body(Data::Dumper::Dumper($result));
-	#ate} = '/breeders_toolbox/download.mas';
+ #   my @plot_list = map { $_->[1] } @{$result->{results}};
+    my $data = $bs->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
+
+    my $output = "";
+    foreach my $d (@$data) { 
+	$output .= join "\t", @$d;
+	$output .= "\n";
+    }
+    
+    $c->res->content_type("text/plain");
+   $c->res->body($output);
 
 }
 
