@@ -24,10 +24,6 @@ window.onload = function initialize() {
 
 	jQuery("#select_list").append(list.listSelect("select_list"));
 
-	jQuery('#create_new_trait_file_link').click(function () {
-            jQuery('#create_trait_file_dialog').dialog("open");
-	});
-
 	jQuery( "#create_trait_file_dialog" ).dialog({
 	    autoOpen: false,
 	    modal: true,
@@ -41,6 +37,10 @@ window.onload = function initialize() {
 		    location.reload();
 		}
 	    }
+	});
+
+	jQuery('#create_new_trait_file_link').click(function () {
+            jQuery('#create_trait_file_dialog').dialog("open");
 	});
 
 	function generate_trait_file() {
@@ -69,11 +69,6 @@ window.onload = function initialize() {
             });
 	}
 
-	jQuery('#upload_tablet_phenotype_file_link').click(function () {
-            jQuery('#upload_fieldbook_phenotypes_dialog').dialog("open");
-            //jQuery( this ).dialog( "close" );
-	    //location.reload();
-	});
 
 	jQuery( "#upload_fieldbook_phenotypes_dialog" ).dialog({
 	    autoOpen: false,
@@ -88,6 +83,12 @@ window.onload = function initialize() {
 		    //location.reload();
 		}
 	    }
+	});
+
+	jQuery('#upload_tablet_phenotype_file_link').click(function () {
+            jQuery('#upload_fieldbook_phenotypes_dialog').dialog("open");
+            //jQuery( this ).dialog( "close" );
+	    //location.reload();
 	});
 
 	function upload_fieldbook_phenotype_file() {
