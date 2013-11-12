@@ -38,6 +38,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
       <input type="button" value="Go" />
     </div>
    
+    <div class="list_upload" style="margin-left:5px">     
+      <i class="glyphicon-plus"></i>
+      <a href="/breeders/home" style="color:#ffffff">make a new list</a>  
+    </div>
     <br>
     <br>  
     <!-- The container for the uploaded files -->
