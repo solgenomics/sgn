@@ -158,6 +158,8 @@ foreach my $role (@roles) {
 
  jQuery(document).ready(function() {
 
+
+
  jQuery("#cross_upload_spreadsheet_format_info").click( function () { 
  jQuery("#cross_upload_spreadsheet_info_dialog" ).dialog("open");
  });
@@ -169,51 +171,6 @@ foreach my $role (@roles) {
       width: 750,
       autoResize:true,
     });
-
-
-  jQuery("#maternal_parent").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#paternal_parent").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#selfed_parent").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#doubled_haploid_parent").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#open_pollinated_maternal_parent").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#paternal_population").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#bulked_maternal_population").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#bulked_paternal_parent").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#bulked_selfed_population").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#bulked_open_maternal_population").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#bulked_open_paternal_population").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
 
    jQuery("#create_cross").dialog( {
       autoOpen: false,
@@ -376,6 +333,50 @@ foreach my $role (@roles) {
       else if (!(formatType == "barcode" || formatType == "spreadsheet")) {alert("Please choose a format");return;}
       else { jQuery("#upload_form").submit();}
     }
+
+  jQuery("#maternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#paternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#selfed_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#doubled_haploid_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#open_pollinated_maternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#paternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_maternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_paternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_selfed_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_open_maternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_open_paternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
 
  });
 
