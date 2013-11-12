@@ -1,0 +1,8 @@
+
+<& /page/page_title.mas, title=>"Search Wizard" &>
+
+<&| /page/info_section.mas, title=>"Search" &>
+  
+  <& /breeders_toolbox/breeder_search.mas &>
+
+</&>

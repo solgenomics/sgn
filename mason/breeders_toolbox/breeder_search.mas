@@ -7,7 +7,7 @@
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List' ] &>
 
 
-Search plots using location, year, trial, and trait data. <span id="wheel">[?]</span>
+Search accessions and plots using location, year, trial, and trait data.
   
 <table alt="breeder search" border="0">
 <tr>
@@ -25,7 +25,7 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
 <td>Show 
   <select id="select4">
     <option value="plots">plots</option>
-    <option value="accessions">accessions</option>
+    <option value="accessions" selected="selected">accessions</option>
   </select>
 </td>
 </tr>
