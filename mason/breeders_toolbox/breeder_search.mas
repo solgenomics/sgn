@@ -7,7 +7,7 @@
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List' ] &>
 
 
-Search plots using location, year, trial, and trait data. <span id="wheel">[?]</span>
+Search accessions and plots using location, year, trial, and trait data.
   
 <table alt="breeder search" border="0">
 <tr>
@@ -25,7 +25,7 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
 <td>Show 
   <select id="select4">
     <option value="plots">plots</option>
-    <option value="accessions">accessions</option>
+    <option value="accessions" selected="selected">accessions</option>
   </select>
 </td>
 </tr>
@@ -80,10 +80,23 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
       jQuery('#add_to_list_menu').html('(log in to use lists)');
     }
     else { 
-      addToListMenu('c1_to_list_menu', 'c1_data', true);
-      addToListMenu('c2_to_list_menu', 'c2_data', true);
-      addToListMenu('c3_to_list_menu', 'c3_data', true);      
-      addToListMenu('add_to_list_menu', 'stock_data');
+      addToListMenu('c1_to_list_menu', 'c1_data', { 
+        selectText: true,
+        typeSourceDiv: 'select1',
+      });
+      addToListMenu('c2_to_list_menu', 'c2_data', { 
+        selectText: true,
+        typeSourceDiv: 'select2',
+      });
+      addToListMenu('c3_to_list_menu', 'c3_data', { 
+        selectText: true,
+        typeSourceDiv: 'select3',
+       });      
+      addToListMenu('add_to_list_menu', 'stock_data', { 
+        selectText: true,
+        typeSourceDiv: 'select4',
+        }
+      );
     }
  });
 

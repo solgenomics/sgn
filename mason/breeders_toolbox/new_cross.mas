@@ -1,6 +1,6 @@
 
 <%args>
-@projects => ()
+@programs => ()
 @locations => ()
 @roles => ()
 </%args>
@@ -91,10 +91,10 @@ foreach my $role (@roles) {
 </tr>
 
 <tr><td><br></td></tr>
-<tr><td>Trial</td><td><select id="trial" name="trial">
+<tr><td>Program</td><td><select id="program" name="program">
 <%perl>
-foreach my $project (@projects) {
-	print "<option value=".@$project[0].">".@$project[1]."</option>";
+foreach my $program (@programs) {
+	print "<option value=".@$program[0].">".@$program[1]."</option>";
 }
 </%perl>
 </select></td></tr>
@@ -282,7 +282,7 @@ foreach my $role (@roles) {
       var suffix = jQuery("#suffix").val();
       var visibleToRole = jQuery("#visible_to_role").val();
       var location = jQuery("#location").val();
-      var trial = jQuery("#trial").val();
+      var program = jQuery("#program").val();
 
 
       //biparental
@@ -325,8 +325,8 @@ foreach my $role (@roles) {
       jQuery.ajax({
         url: '/ajax/cross/add_cross',
         dataType: "json",
-        type: 'GET',
-        data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&trial_id='+trial+'&location_id='+location,
+        type: 'POST',
+        data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&program_id='+program+'&location_id='+location,
         error: function(response) { alert("An error occurred. Please try again later!"+response); },
         parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
         success: function(response) { 
@@ -334,7 +334,7 @@ foreach my $role (@roles) {
           else {
             jQuery("#create_cross").dialog("close");
             //alert("The cross has been added.");
-            jQuery('#trial_saved_dialog_message').dialog("open");
+            jQuery('#cross_saved_dialog_message').dialog("open");
             location.reload();
           }
         }, 

@@ -18,15 +18,22 @@ sub validate {
     print STDERR "LIST: ".Data::Dumper::Dumper($list);
 
     my @missing = ();
+    my $rs;
     foreach my $term (@$list) { 
 
-	my ($db_name, $accession) = split ":", $term;
+	if ($term =~ /\:/) { 
+	    my ($db_name, $accession) = split ":", $term;
+	    
+	    print STDERR "Checking $term...\n";
+	    $rs = $schema->resultset("General::Dbxref")->search( { 'db.name'=>$db_name, 'accession'=>$accession }, { join => 'db' });
+	    
+	    print STDERR "COUNT: ".$rs->count."\n";
 	
-	print STDERR "Checking $term...\n";
-	my $rs = $schema->resultset("General::Dbxref")->search( { 'db.name'=>$db_name, 'accession'=>$accession }, { join => 'db' });
 
-	print STDERR "COUNT: ".$rs->count."\n";
-	
+	}
+	else { 
+	    $rs = $schema->resultset("Cv::Cvterm")->search( { name=>$term } );
+	}
 	if ($rs->count == 0) { 
 	    push @missing, $term;
 	}
