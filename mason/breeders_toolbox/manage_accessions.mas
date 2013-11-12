@@ -6,12 +6,12 @@ $accessions
 <br />
 <& /page/page_title.mas, title=>"Manage accessions" &>
 
-
-<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_accessions_link">Upload Accessions</a>]' &>
-    
-    <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
-
+<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add</a>]' &>
+  <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
+    <div>
+      </br>
+      <a href="/search/phenotypes/stock">Search Accessions</a>
+    </div>
 </&>
-
 
 
