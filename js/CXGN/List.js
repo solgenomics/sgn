@@ -624,7 +624,7 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 
     html += '<input id="'+dataDiv+'_button" type="button" value="add to list" />';
    
-    if (dataDiv == 'stock_data' ) {
+    if (dataDiv == 'stock_data' && document.referrer.match(/solgs/)) {
         html += '<input  style="clear: both" id="goto_gs_button" type="button" value="Go to GS" />';
     }
   
