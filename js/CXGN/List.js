@@ -450,7 +450,7 @@ CXGN.List.prototype = {
 	this.renderLists('list_dialog');
     },
 
-    validate: function(list_id, type) { 
+    validate: function(list_id, type, non_interactive) { 
 	var missing = new Array();
 	var error = 0;
 	jQuery.ajax( { 
@@ -467,13 +467,15 @@ CXGN.List.prototype = {
 	    error: function(response) { alert("An error occurred while validating the list "+list_id); error=1; }
 	});
 
-	if (error ===1 ) { return; }
+	if (error === 1 ) { return; }
 
 	if (missing.length==0) { 
-	    alert("This list passed validation.");
+	    if (!non_interactive) { alert("This list passed validation."); } 
+	    return 1;
 	}
 	else { 
 	    alert("List validation failed. Elements not found: "+ missing.join(","));
+	    return 0;
 	}
     },
 
