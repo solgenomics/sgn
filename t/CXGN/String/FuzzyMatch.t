@@ -4,17 +4,16 @@ use warnings;
 use Test::More tests=>8;
 
 BEGIN {use_ok('CXGN::String::FuzzyMatch');}
-BEGIN {require_ok('String::Approx');}
 BEGIN {require_ok('Moose');}
-use Data::Dumper;
+BEGIN {require_ok('String::Approx');}
+
+#use Data::Dumper;
 
 my $query_string = "testing";
 my @string_array = qw(test testing texting testing123 testingtesting123 Testing different);
-my $max_distance = 0.1;
+my $max_distance = 1;
 my $fuzzy_string_search;
 my @string_matches;
-my $expected_string;
-my $expected_distance;
 my %string_distance_expected;
 my %string_distance_result;
 
@@ -26,7 +25,6 @@ $string_distance_expected{'string'}='testing';
 $string_distance_expected{'distance'}=0;
 is_deeply($string_matches[0], \%string_distance_expected, 'String match returns perfect match');
 
-
-#print STDERR "\n\ndump:\n".Data::Dumper::Dumper(@string_matches)."\n".Data::Dumper::Dumper(\%string_distance_expected)."\n";
+#print STDERR "\n\nResult:\n".Data::Dumper::Dumper(@string_matches)."\n";
 
 
