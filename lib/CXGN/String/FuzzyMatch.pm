@@ -1,4 +1,4 @@
-package CXGN::String::FuzzMatch;
+package CXGN::String::FuzzyMatch;
 
 =head1 NAME
 
