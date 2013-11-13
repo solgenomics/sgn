@@ -30,7 +30,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
    
    
     <div class="list_upload" id="list_label">
-      <label for="prediction_genotypes_list">Select a list </label>
+      <label for="prediction_genotypes_list">Select a selection population </label>
     </div> 
     <div class="list_upload" id="prediction_genotypes_list">      
     </div>
@@ -40,7 +40,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
    
     <div class="list_upload" style="margin-left:5px">     
       <i class="glyphicon-plus"></i>
-      <a href="/breeders/home" style="color:#ffffff">make a new list</a>  
+      <a href="/breeders/home" style="color:#ffffff">Make a new list of clones</a>  
     </div>
     <br>
     <br>  
