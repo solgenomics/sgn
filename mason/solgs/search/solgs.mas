@@ -67,7 +67,7 @@ if ($current_page > 1) { $collapse = 0; }
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => $collapse,
-    title       => "Select a training population",
+    title       => "Use a trial as a training population",
   &>
 
 <& /solgs/population/project_details_form.mas,
