@@ -41,6 +41,25 @@ jQuery(document).ready(function () {
 	var accession_list_id = jQuery('#accessions_list_select').val();
 	var accession_list = JSON.stringify(list.getList(accession_list_id));
 	alert(accession_list);
+
+	new jQuery.ajax({
+	    type: 'POST',
+	    url: '/ajax/accession_list/verify',
+	    dataType: "json",
+	    data: {
+                'accession_list': accession_list,
+	    },
+	    success: function (response) {
+                if (response.error) {
+		    alert(response.error);
+                } else {
+		    //alert('success');
+                }
+	    },
+	    error: function () {
+                alert('An error occurred. sorry');
+	    }
+        });
     }
 
 });
