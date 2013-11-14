@@ -25,6 +25,20 @@ has gene_cache => (
 );
 
 
+sub index : Path('/tools/bulk/') :Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $mode = $c->req->param("mode");
+    my $debug = $c->req->param("debug");
+    
+    $c->stash->{mode} = $mode;
+    $c->stash->{debug} = $debug;
+
+    $c->stash->{template} = '/bulk/index.mas';
+
+}
+
 sub _build_feature_cache {
     my $self = shift;
 
