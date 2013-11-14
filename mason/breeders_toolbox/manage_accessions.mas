@@ -17,4 +17,8 @@ $accessions
 </&>
 
 <div id="add_accessions_dialog" class="ui-widget" title="Add accessions">
+  <div id="list_div">
+    <label id="select_list_label" for="list_div_list_select" style="display: inline-block; width: 200px;">List of accessions to add:
+    </label>
+  </div>
 </div>
