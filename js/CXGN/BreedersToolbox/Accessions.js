@@ -15,6 +15,8 @@ Jeremy D. Edwards <jde22@cornell.edu>
 
 jQuery(document).ready(function () {
 
+    var list = new CXGN.List();
+
     jQuery( "#add_accessions_dialog" ).dialog({
 	autoOpen: false,
 	modal: true,
@@ -23,7 +25,8 @@ jQuery(document).ready(function () {
         position: ['top', 150],
 	buttons: {
 	    Ok: function() {
-		jQuery( this ).dialog( "close" );
+		verify_accession_list();
+		jQuery(this).dialog( "close" );
 		location.reload();
 	    }
 	}
@@ -31,8 +34,13 @@ jQuery(document).ready(function () {
 
     jQuery('#add_accessions_link').click(function () {
         jQuery('#add_accessions_dialog').dialog("open");
-	var list = new CXGN.List();
-	jQuery("#list_div").append(list.listSelect("select_list"));
+	jQuery("#list_div").append(list.listSelect("accessions"));
     });
+
+    function verify_accession_list () {
+	var accession_list_id = jQuery('#accessions_list_select').val();
+	var accession_list = JSON.stringify(list.getList(accession_list_id));
+	alert(accession_list);
+    }
 
 });
