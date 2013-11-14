@@ -38,7 +38,7 @@ sub verify_accession_list_POST : Args(0) {
   my $accession_list_json = $c->req->param('accession_list');
   my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
   my $fuzzy_search_result;
-  my $max_distance = 0.2;
+  my $max_distance = 0.01;
   my @accession_list;
 
   if (!$c->user()) {
@@ -73,5 +73,6 @@ sub _parse_list_from_json {
     return;
   }
 }
+
 
 1;

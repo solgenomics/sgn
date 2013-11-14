@@ -47,8 +47,7 @@ sub get_matches {
     my @synonym_names;
     my @matches;
     my $fuzzy_string_search = CXGN::String::FuzzyMatch->new();
-    my @uniquename_matches;
-    my @synonym_matches;
+    my @accession_matches;
 
     while ($stock = $stock_rs->next()) {
       my $unique_name = $stock->uniquename();
@@ -71,9 +70,24 @@ sub get_matches {
       }
     }
     @synonym_names = keys %synonym_uniquename_lookup;
-    @uniquename_matches = @{$fuzzy_string_search->get_matches($accession_name, \@stock_names, $max_distance)};
-    @synonym_matches = @{$fuzzy_string_search->get_matches($accession_name, \@synonym_names, $max_distance)};
+    push (@stock_names, @synonym_names);
+    @accession_matches = @{$fuzzy_string_search->get_matches($accession_name, \@stock_names, $max_distance)};
 
+    foreach my $match (@accession_matches) {
+      my $matched_name = $match->{'string'};
+      my $distance = $match->{'distance'};
+      my %match_info;
+      $match_info{'name'} = $matched_name;
+      $match_info{'distance'} = $distance;
+      if ($synonym_uniquename_lookup{$matched_name}) {
+	$match_info{'unique_names'} = $synonym_uniquename_lookup{$matched_name};
+      }
+      else {
+	my @unique_names_array = [$matched_name];
+	$match_info{'unique_names'} = \@unique_names_array;
+      }
+      push (@matches, \%match_info);
+    }
 
     #@matches = @accession_matches;
     return \@matches;
