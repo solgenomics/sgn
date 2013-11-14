@@ -1,3 +1,6 @@
+# A test for fuzzy searching of an array of strings with a query string
+## Jeremy D. Edwards (jde22@cornell.edu) 2013
+
 use strict;
 use warnings;
 
@@ -6,8 +9,6 @@ use Test::More tests=>8;
 BEGIN {use_ok('CXGN::String::FuzzyMatch');}
 BEGIN {require_ok('Moose');}
 BEGIN {require_ok('String::Approx');}
-
-#use Data::Dumper;
 
 my $query_string = "testing";
 my @string_array = qw(test testing texting testing123 testingtesting123 Testing different);
@@ -24,7 +25,5 @@ isa_ok($string_matches[0],'HASH','Match is a hash reference');
 $string_distance_expected{'string'}='testing';
 $string_distance_expected{'distance'}=0;
 is_deeply($string_matches[0], \%string_distance_expected, 'String match returns perfect match');
-
-#print STDERR "\n\nResult:\n".Data::Dumper::Dumper(@string_matches)."\n";
 
 
