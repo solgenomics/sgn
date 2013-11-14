@@ -18,6 +18,24 @@ this function will generate a select of all available lists and allow the conten
 
 this will generate an html select box of all the lists, and a "paste" button, to paste into a textarea (typically). The divName is the id of the textarea, the menuDiv is the id where the paste menu should be placed.
 
+
+Public List object functions
+
+* listSelect(divName, types)
+
+will create an html select with id and name 'divName'. Optionally, a list of types can be specified that will limit the menu to the respective types. 
+
+Usage:
+You have to instantiate the list object first:
+
+var lo = new CXGN.List(); var s = lo.listSelect('myseldiv', [ 'trials' ]);
+
+
+* validate(list_id, type, non_interactive)
+
+* transform(list_id, new_type)
+
+
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
