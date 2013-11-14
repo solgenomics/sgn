@@ -41,19 +41,41 @@ sub get_matches {
     my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"accession" })->first->cvterm_id();
     my $stock_rs = $schema->resultset("Stock::Stock")->search({type_id=>$type_id,});
     my $stock;
+    my $synonym_prop;
     my %synonym_uniquename_lookup;
     my @stock_names;
+    my @synonym_names;
     my @matches;
     my $fuzzy_string_search = CXGN::String::FuzzyMatch->new();
-    my @accession_matches;
+    my @uniquename_matches;
+    my @synonym_matches;
 
     while ($stock = $stock_rs->next()) {
-      push (@stock_names, $stock->uniquename());
+      my $unique_name = $stock->uniquename();
+      my $synonym_rs =$schema->resultset("Stock::Stockprop")
+	->search({
+		  stock_id => $stock->stock_id(),
+		  'lower(type.name)'       => { like => '%synonym%' },
+		 },{join => 'type' });
+      push (@stock_names, $unique_name);
+      while ($synonym_prop = $synonym_rs->next()) {
+	my $synonym_name = $synonym_prop->value();
+	#push (@synonym_names, $synonym_name);
+	if ($synonym_uniquename_lookup{$synonym_name}) {
+	  push (@{$synonym_uniquename_lookup{$synonym_name}},$unique_name);
+	}
+	else {
+	  my @unique_names = [$unique_name];
+	  $synonym_uniquename_lookup{$synonym_name} = \@unique_names;
+	}
+      }
     }
+    @synonym_names = keys %synonym_uniquename_lookup;
+    @uniquename_matches = @{$fuzzy_string_search->get_matches($accession_name, \@stock_names, $max_distance)};
+    @synonym_matches = @{$fuzzy_string_search->get_matches($accession_name, \@synonym_names, $max_distance)};
 
-    @accession_matches = @{$fuzzy_string_search->get_matches($accession_name, \@stock_names, $max_distance)};
 
-    @matches = @accession_matches;
+    #@matches = @accession_matches;
     return \@matches;
 }
 
