@@ -44,10 +44,16 @@ sub get_matches {
     my %synonym_uniquename_lookup;
     my @stock_names;
     my @matches;
+    my $fuzzy_string_search = CXGN::String::FuzzyMatch->new();
+    my @accession_matches;
+    my $max_distance = 0.5;
 
     while ($stock = $stock_rs->next()) {
-      print STDERR "1\n";
+      push (@stock_names, $stock->uniquename());
     }
+
+    @accession_matches = @{$fuzzy_string_search->get_matches($accession_name, \@stock_names, $max_distance)};
+
     return \@matches;
 }
 
