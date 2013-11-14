@@ -26,8 +26,8 @@ jQuery(document).ready(function () {
 	buttons: {
 	    Ok: function() {
 		verify_accession_list();
-		jQuery(this).dialog( "close" );
-		location.reload();
+		//jQuery(this).dialog( "close" );
+		//location.reload();
 	    }
 	}
     });
@@ -53,11 +53,11 @@ jQuery(document).ready(function () {
                 if (response.error) {
 		    alert(response.error);
                 } else {
-		    //alert('success');
+		    alert('success');
                 }
 	    },
 	    error: function () {
-                alert('An error occurred. sorry');
+                alert('An error occurred in processing. sorry');
 	    }
         });
     }

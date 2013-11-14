@@ -46,7 +46,6 @@ sub get_matches {
     my @matches;
     my $fuzzy_string_search = CXGN::String::FuzzyMatch->new();
     my @accession_matches;
-    my $max_distance = 0.5;
 
     while ($stock = $stock_rs->next()) {
       push (@stock_names, $stock->uniquename());
@@ -54,6 +53,7 @@ sub get_matches {
 
     @accession_matches = @{$fuzzy_string_search->get_matches($accession_name, \@stock_names, $max_distance)};
 
+    @matches = @accession_matches;
     return \@matches;
 }
 

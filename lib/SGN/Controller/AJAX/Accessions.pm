@@ -18,6 +18,9 @@ package SGN::Controller::AJAX::Accessions;
 
 use Moose;
 use JSON -support_by_pp;
+use List::MoreUtils qw /any /;
+use CXGN::BreedersToolbox::AccessionsFuzzySearch;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -32,8 +35,43 @@ sub verify_accession_list : Path('/ajax/accession_list/verify') : ActionClass('R
 sub verify_accession_list_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my $accession_list = $c->req->param('accession_list');
-  $c->stash->{rest} = {success => "1",};
+  my $accession_list_json = $c->req->param('accession_list');
+  my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
+  my $fuzzy_search_result;
+  my $max_distance = 0.2;
+  my @accession_list;
+
+  if (!$c->user()) {
+    $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+    return;
+  }
+  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
+    return;
+  }
+
+  @accession_list = @{_parse_list_from_json($accession_list_json)};
+
+  foreach my $accession_name (@accession_list) {
+    $fuzzy_search_result = $fuzzy_accession_search->get_matches($accession_name, $max_distance);
+    print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
+  }
+
+ $c->stash->{rest} = {success => "1",};
+}
+
+sub _parse_list_from_json {
+  my $list_json = shift;
+  my $json = new JSON;
+  if ($list_json) {
+    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+    #my $decoded_list = decode_json($list_json);
+    my @array_of_list_items = @{$decoded_list};
+    return \@array_of_list_items;
+  }
+  else {
+    return;
+  }
 }
 
 1;
