@@ -16,7 +16,9 @@ my $test = SGN::Test::WWW::Mechanize->new();
 my $schema = $test->context->dbic_schema('Bio::Chado::Schema');
 my $accession_name = "testing";
 my $max_distance = 1;
+my @accession_list;
+push (@accession_list, $accession_name);
 
 ok(my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema}),"Create AccessionsFuzzySearch object");
-ok(my $fuzzy_search_result = $fuzzy_accession_search->get_matches($accession_name, $max_distance),"Do a fuzzy accession search");
+ok(my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance),"Do a fuzzy accession search");
 isa_ok($fuzzy_search_result,'ARRAY',"Result is an array reference");

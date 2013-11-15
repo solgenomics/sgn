@@ -59,7 +59,6 @@ sub get_matches {
       push (@stock_names, $unique_name);
       while ($synonym_prop = $synonym_rs->next()) {
 	my $synonym_name = $synonym_prop->value();
-	#print STDERR "found synonym: $synonym_name\n";
 	if ($synonym_uniquename_lookup{$synonym_name}) {
 	  push (@{$synonym_uniquename_lookup{$synonym_name}},$unique_name);
 	}
