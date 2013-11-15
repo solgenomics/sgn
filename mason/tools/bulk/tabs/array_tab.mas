@@ -1,0 +1,63 @@
+
+<%args>
+$debug => ''
+$ug_select 
+$output_list
+</%args>
+
+<%perl>
+
+=head2 array_search
+
+  Desc: sub array_search
+  Args: n/a
+  Ret : array tab format
+
+  Defines the format of the array tab using html, perl and perl dbi. Specifies
+  information fields available for searching microarrays. Prints the debug
+  checkbox when debug parameter is set to one.
+
+=cut
+
+</%perl>
+
+<form name="bulkform" action="/tools/bulk/download" method="post" enctype="multipart/form-data">
+<br />
+<table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
+
+<% $ug_select %>
+<br /><br />
+	<br />
+Enter a list of identifiers or upload a file containing one identifier:<br />
+<table summary="" width="100%"><tr><td>
+<textarea name="ids" rows="5" cols="20"></textarea>
+</td>
+<td>
+<i>Example:</i>
+<pre style="border: 1px solid gray; width: 10em; height: 5em">
+1-1-1.2.3.4
+1-1-1.2.4.5
+1-1-1.5.3.6
+</pre>
+</td></tr></table>
+<br />
+<br />
+And/or upload list file: <br /><input type="file" name="file" />
+<br />
+<br />
+
+ </td><td valign="top" bgcolor="#EEEEEE" width="320">
+
+    <% $output_list %>
+
+</td></tr></table>
+
+%    if ( $debug eq "1" ) {
+%        print qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />\n|;
+%    }
+
+<input type="hidden" name="idType" value="microarray" />
+	<input type="reset" />&nbsp;&nbsp;
+<input type="submit" value="Submit" /><br />
+</form>
+

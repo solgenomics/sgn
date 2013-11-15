@@ -110,7 +110,6 @@ sub create_dumpfile {
 
 sub result_summary_page {
     my $self         = shift;
-    my $page         = shift;
     my $summary_file = $self->{tempdir} . "/" . $self->{dumpfile} . ".summary";
 
     # open file for writing the result summary page
@@ -118,9 +117,9 @@ sub result_summary_page {
       or die "Can't open .summary file for writing! : $!";
 
     my $lines_read =
-      ( $self->getFileLines( $self->{tempdir} . "/" . $self->{dumpfile} ) ) - 1;
+      ( $self->get_file_lines( $self->{tempdir} . "/" . $self->{dumpfile} ) ) - 1;
     my $notfoundcount =
-      $self->getFileLines( $self->{tempdir} . "/" . $self->{notfoundfile} );
+      $self->get_file_lines( $self->{tempdir} . "/" . $self->{notfoundfile} );
     my $total        = $lines_read;
     my $file         = $self->{dumpfile};
     my $notfoundfile = $self->{notfoundfile};
@@ -214,11 +213,7 @@ EOHTML
 
     close($summary_fh);
 
-    $self->{page}->header;
-
-    print slurp( $summary_file);
-
-    $self->{page}->footer;
+    return $summary_file;
 }
 
 =head2 error_message
@@ -234,9 +229,10 @@ EOHTML
 
 sub error_message {
     my $self = shift;
-    $self->{page}->header();
-    print $self ->{content} . "\n";
-    print <<EOH;
+
+
+    my $html = $self ->{content} . "\n";
+    $html .= <<EOH;
 <h3>Bulk download error</h3>
 I could not process your input.  Possible reasons for this include:
 <ul>
@@ -247,20 +243,21 @@ I could not process your input.  Possible reasons for this include:
 </ul>
 Please check your input and use your browser\'s "back" button to go back and try again!
 EOH
-    $self->{page}->footer();
+
+return $html;
 }
 
-=head2 getFileLines
+=head2 get_file_lines
 
-  Desc: sub getFileLines
-  Args: file; example. $self -> getFileLines($self->{tempdir});
+  Desc: sub get_file_lines
+  Args: file; example. $self -> get_file_lines($self->{tempdir});
   Ret : $list[0];
 
   Counts file lines (used on temp directories).
 
 =cut
 
-sub getFileLines {
+sub get_file_lines {
     my $self   = shift;
     my $file   = shift;
     open my $f, $file or die "$! opening $file";

@@ -1,0 +1,21 @@
+
+<& /page/page_title.mas, title=>"Bulk Converter" &>
+
+Paste the identifiers you would like to convert
+
+<textarea id="converter_input" >
+
+</textarea>
+<br />
+<br />
+Input is:<br />
+
+Output<br />
+<select id="converter_output_select" name="converter_output_select" >
+<option value="unigenes"> Unigenes</option>
+<option value="gene_models"> Gene models (ITAG 2.3)</option>
+<option value="tom_microarray"> TOM Microarray Identifiers</option>
+<option value="affymetrix"> Affymetrix Chip Identifiers</option>
+</select>
+
+

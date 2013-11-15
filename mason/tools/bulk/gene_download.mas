@@ -1,0 +1,19 @@
+<%args>
+    $content => ''
+    $sha1
+    $bulk_js_menu
+    $bulk_download_stats
+    $bulk_download_success
+</%args>
+
+<& /page/page_title.mas, title=>"Gene Download Summary" &>
+
+% if($bulk_download_success) {
+    Your query was successful.<br>
+<div id="bulk_download_stats">
+<% $bulk_download_stats %>
+</div>
+Download as <a href="/bulk/gene/download/<% $sha1 %>.fasta">Fasta</a>
+% } else {
+    Your query did not contain any valid identifiers. Please try again.
+% }

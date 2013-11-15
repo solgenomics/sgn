@@ -1,0 +1,115 @@
+
+<%args>
+$debug => ''
+</%args>
+
+<%perl>
+
+=head2 unigene_search
+
+  Desc: sub unigene_search
+  Args: n/a
+  Ret : unigene tab format
+
+  Defines the format of the unigene tab using html, perl and perl dbi. Speicfies
+  information fields available for searching unigenes. Prints the debug
+  checkbox when debug parameter is set to one.
+
+=cut
+
+sub unigene_search {
+
+#
+# displays the unigene input form
+#
+# Note: the unigene input form does not display the drop down of unigene builds, because a unigene ID is by definition mapped to a
+# given build.
+#
+# This form supports to different types of unigene queries: getting information pertaining to unigenes themselves (annotations and seq)
+# and unigene membership information. The two queries are distinguished by the unigene_mode radio control. Some adjustments have to
+# be made in the download.pl program when distinguishing the two modes.
+#
+    my ( $page, $db, $debug ) = @_;
+
+    my $content   = "";
+    my $ug_select = ug_build_selectbox($db);
+
+}
+</%perl>
+
+<form name="bulkform" action="/tools/bulk/download" method="post" enctype="multipart/form-data">
+
+<br />
+<table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
+
+<br />
+Enter a list of identifiers or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
+
+
+<table summary="" width="100%" cellpadding="0"><tr><td>
+<textarea name="ids" rows="5" cols="20"></textarea>
+</td>
+<td>
+<i>Example:</i>
+<pre style="border: 1px solid gray; width: 10em; height: 5em">
+SGN-U268057
+SGN-U562661
+SGN-U196026
+</pre>
+</td></tr></table>
+<br />
+<br />
+
+And/or upload list file: <br /><input type="file" name="file" />
+<br />
+<br />
+
+</td><td valign="top" bgcolor="#EEEEEE" width="320">
+
+ <input type="checkbox" name="convert_to_current" checked="checked" /><label for="convert_to_current"><a class="stealth" title="Check this box to convert each unigene in the list to its equivalent in the most current corresponding unigene build(s), if available"><img src="/documents/img/new.gif" />convert unigene list to current build</a></label>
+
+ <hr />
+
+<input type="radio" name="unigene_mode" value="unigene_info" checked="checked" /> <b>Download unigene information</b>:<br />
+<!-- SGN_U for Unigene Info -->
+<div style="padding-left: 1em">
+    <input type="checkbox" name="SGN_U_U" checked="checked" /> unigene id (SGN-U)<br />
+    <input type="checkbox" name="automatic_annotation" checked="checked" /> automatic (BLAST) annotation<br />
+    <input type="checkbox" name="best_genbank_match" checked="checked" /> best genbank match<br />
+    <input type="checkbox" name="best_arabidopsis_match" checked="checked" /> best arabidopsis match<br />
+    <input type="checkbox" name="associated_loci" checked="checked" /> associated loci<br />
+    <input type="checkbox" name = "uni_seq" checked="checked" onclick="check_fasta_option()"/> sequence<br />
+    <div style="padding-left: 1em">
+         <input type="radio" name="seq_mode" value="unigene_seq" checked="checked" /> unigene nucleotide sequence<br />
+         <input type="radio" name="seq_mode" value="estscan_seq" /> estscan predicted proteins<br />
+         <input type="radio" name="seq_mode" value="longest6frame_seq" /> longest ORF from 6-frame translation<br />
+         <input type="radio" name="seq_mode" value="preferred_protein_seq" /> preferred sequence<br />
+    </div>
+</div>
+
+<input type="radio" name="unigene_mode" value="member_info" /> <b>Download member information</b>:
+<div style="padding-left: 1em">
+    <input type="checkbox" name="clone_name" checked="checked" /> clone name<br />
+    <input type="checkbox" name="SGN_C" checked="checked" /> clone id (SGN-C)<br />
+    <input type="checkbox" name="SGN_T" checked="checked" /> sequence read id (SGN-T)<br />
+    <input type="checkbox" name="SGN_E" checked="checked" /> est id (SGN-E)<br />
+    <input type="checkbox" name="build_nr" checked="checked" /> unigene build number<br />
+    <!-- SGN_U for Member Info -->
+    <input type="checkbox" name="SGN_U_M" checked="checked" /> unigene id (SGN-U)<br />
+    <input type="checkbox" name="chipname" checked="checked" /> chipname<br />
+    <input type="checkbox" name="SGN_S" checked="checked" /> microarray spot id (SGN-S)<br />
+    <input type="checkbox" name="TUS" checked="checked" /> TUS number<br />
+    <input type="checkbox" name="manual_annotation" /> manual annotation<br />
+    <input type="checkbox" name="est_seq" checked="checked" /> EST sequence<br />
+</div>
+</td></tr></table>
+
+%    if ( $debug eq "1" ) {
+%        print qq|<input type="checkbox" checked="checked" name=debug /> print debug statements<br /><br />\n|;
+%    }
+
+	<input type=hidden name="idType" value="unigene" />
+	<input type="reset" />&nbsp;&nbsp;
+<input type="submit" value="Submit" /><br />
+</form>
+

@@ -1,0 +1,81 @@
+
+<%args>
+$debug => ''
+</%args>
+
+<%perl>
+
+=head2 bac_end_search
+
+  Desc: sub bac_end_search
+  Args: n/a
+  Ret : BAC end tab format
+
+  Defines the format of the BAC end=head2 bac_end_search tab using html & perl.
+  Specifies information fields available for searching BAC ends. Prints the debug
+  checkbox when debug parameter is set to one.
+
+=cut
+
+</%perl>
+
+<form name="bulkform" action="/tools/bulk/download" method="post" enctype="multipart/form-data">
+
+<br />
+<table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="370">
+
+
+<br />
+Enter a list of identifiers or upload a file containing identifers separated by whitespace (returns, spaces or tabs):<br />
+<table summary="" width="100%"><tr><td>
+<textarea name="ids" rows="5" cols="25"></textarea>
+</td>
+<td>
+<i>Example:</i>
+<pre style="border: 1px solid gray; width: 15em; height: 5em">
+LE_HBa0011C24_SP6_121022
+SL_MboI0033A13_SP6_294865
+SL_EcoRI0022A07_T7_229350
+
+</pre>
+</td></tr></table>
+<br />
+<br />
+And/or upload list file: <br /><input type="file" name="file" />
+<br />
+<br />
+
+</td><td valign="top" bgcolor="#EEEEEE" width="280">
+
+<b>Download BAC end information:</b><br />
+<div style="margin-left: 1em; white-space: nowrap">
+  <input type="checkbox" name="bac_id" checked= "checked" /> bac end identifier <br />
+  <input type="checkbox" name="clone_type" checked="checked" /> clone type <br />
+  <input type="checkbox" name="org_name" checked="checked" /> organism name <br />
+  <input type="checkbox" name="accession_name" checked="checked" /> accession name <br />
+  <input type="checkbox" name="library_name" checked="checked" /> library name <br />
+  <input type="checkbox" name="estimated_length" checked="checked" /> estimated length <br />
+  <input type="checkbox" name="genbank_accession" checked="checked" /> genbank accession<br />
+  <!--	<input type="checkbox" name="overgo_matches" checked="checked" DISABLED /> overgo matches <br /> -->  <br />
+  <b>Choose format and type:</b><br />
+  <input type="checkbox" name="bac_end_sequence" checked="checked" /> bac end sequence <br />
+  <input type="checkbox" name="qual_value_seq" checked="checked" /> quality value <br />
+  <div style="margin-left: 1em">
+    <input type="radio" name="bac_seq_type" value="raw_seq" />raw sequence and/or quality<br />
+    <input type="radio" name="bac_seq_type" value="trim_seq" checked="checked" />trimmed seq. and/or quality<br />
+  </div>
+</div>
+	
+	
+</td></tr></table>
+
+%    if ( $debug eq "1" ) {
+%        print qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />|;
+%    }
+
+	<input type="hidden" name="idType" value="bac_end" />
+	<input type="reset" />&nbsp;&nbsp;
+        <input type="submit" value="Submit"><br />
+   </form>
+
+
