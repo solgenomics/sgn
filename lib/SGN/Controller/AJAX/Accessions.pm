@@ -52,10 +52,9 @@ sub verify_accession_list_POST : Args(0) {
 
   @accession_list = @{_parse_list_from_json($accession_list_json)};
 
-  foreach my $accession_name (@accession_list) {
-    $fuzzy_search_result = $fuzzy_accession_search->get_matches($accession_name, $max_distance);
-    print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
-  }
+  $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
+  print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
+
 
  $c->stash->{rest} = {success => "1",};
 }

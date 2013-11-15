@@ -7,7 +7,7 @@ CXGN::BreedersToolbox::AccessionsFuzzySearch - an object to find approximate mat
 =head1 USAGE
 
  my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
- my $fuzzy_search_result = $fuzzy_accession_search->get_matches($accession_name, $max_distance)};
+ my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance)};
 
 =head1 DESCRIPTION
 
@@ -35,19 +35,19 @@ has 'schema' => (
 
 sub get_matches {
     my $self = shift;
-    my $accession_name = shift;
+    my $accession_list_ref = shift;
     my $max_distance = shift;
     my $schema = $self->get_schema();
     my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"accession" })->first->cvterm_id();
     my $stock_rs = $schema->resultset("Stock::Stock")->search({type_id=>$type_id,});
+    my @accession_list = @{$accession_list_ref};
     my $stock;
     my $synonym_prop;
     my %synonym_uniquename_lookup;
     my @stock_names;
     my @synonym_names;
-    my @matches;
     my $fuzzy_string_search = CXGN::String::FuzzyMatch->new();
-    my @accession_matches;
+    my @results;
 
     while ($stock = $stock_rs->next()) {
       my $unique_name = $stock->uniquename();
@@ -59,7 +59,7 @@ sub get_matches {
       push (@stock_names, $unique_name);
       while ($synonym_prop = $synonym_rs->next()) {
 	my $synonym_name = $synonym_prop->value();
-	#push (@synonym_names, $synonym_name);
+	#print STDERR "found synonym: $synonym_name\n";
 	if ($synonym_uniquename_lookup{$synonym_name}) {
 	  push (@{$synonym_uniquename_lookup{$synonym_name}},$unique_name);
 	}
@@ -69,28 +69,32 @@ sub get_matches {
 	}
       }
     }
+
     @synonym_names = keys %synonym_uniquename_lookup;
     push (@stock_names, @synonym_names);
-    @accession_matches = @{$fuzzy_string_search->get_matches($accession_name, \@stock_names, $max_distance)};
 
-    foreach my $match (@accession_matches) {
-      my $matched_name = $match->{'string'};
-      my $distance = $match->{'distance'};
-      my %match_info;
-      $match_info{'name'} = $matched_name;
-      $match_info{'distance'} = $distance;
-      if ($synonym_uniquename_lookup{$matched_name}) {
-	$match_info{'unique_names'} = $synonym_uniquename_lookup{$matched_name};
+    foreach my $accession_name (@accession_list) {
+      my @matches;
+      my @accession_matches = @{$fuzzy_string_search->get_matches($accession_name, \@stock_names, $max_distance)};
+
+      foreach my $match (@accession_matches) {
+	my $matched_name = $match->{'string'};
+	my $distance = $match->{'distance'};
+	my %match_info;
+	$match_info{'name'} = $matched_name;
+	$match_info{'distance'} = $distance;
+	if ($synonym_uniquename_lookup{$matched_name}) {
+	  $match_info{'unique_names'} = $synonym_uniquename_lookup{$matched_name};
+	} else {
+	  my @unique_names_array = [$matched_name];
+	  $match_info{'unique_names'} = \@unique_names_array;
+	}
+	push (@matches, \%match_info);
       }
-      else {
-	my @unique_names_array = [$matched_name];
-	$match_info{'unique_names'} = \@unique_names_array;
-      }
-      push (@matches, \%match_info);
+      push (@results, \@matches);
     }
 
-    #@matches = @accession_matches;
-    return \@matches;
+    return \@results;
 }
 
 ###
