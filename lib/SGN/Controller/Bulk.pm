@@ -35,7 +35,7 @@ sub index : Path('/tools/bulk/') :Args(0) {
     $c->stash->{mode} = $mode;
     $c->stash->{debug} = $debug;
 
-    $c->stash->{template} = '/bulk/index.mas';
+    $c->stash->{template} = '/tools/bulk/index.mas';
 }
 
 sub clone_tab : Path('/tools/bulk/tabs/clone_tab') Args(0) { 
@@ -44,7 +44,7 @@ sub clone_tab : Path('/tools/bulk/tabs/clone_tab') Args(0) {
 
     $c->stash->{ug_build_select} = $self->ug_build_selectbox($c);
 
-    $c->stash->{template} = '/bulk/tabs/clone_tab.mas';
+    $c->stash->{template} = '/tools/bulk/tabs/clone_tab.mas';
 
 }
 
@@ -54,7 +54,7 @@ sub array_tab: Path('/tools/bulk/tabs/array_tab') Args(0) {
     
     $c->stash->{ug_select} = $self->ug_build_selectbox($c);
     $c->stash->{output_list} = $self->output_list();
-    $c->stash->{template} = '/bulk/tabs/array_tab.mas';
+    $c->stash->{template} = '/tools/bulk/tabs/array_tab.mas';
 }
 
 sub unigene_tab : Path('/tools/bulk/tabs/unigene_tab') Args(0) { 
@@ -62,28 +62,28 @@ sub unigene_tab : Path('/tools/bulk/tabs/unigene_tab') Args(0) {
     my $c = shift;
 
     $c->stash->{ug_build_select} = $self->ug_build_selectbox($c);
-    $c->stash->{template} = '/bulk/tabs/unigene_tab.mas';
+    $c->stash->{template} = '/tools/bulk/tabs/unigene_tab.mas';
 }
 
 sub bac_tab : Path('/tools/bulk/tabs/bac_tab') Args(0) { 
     my $self = shift;
     my $c = shift;
 
-    $c->stash->{template} = '/bulk/tabs/bac_tab.mas';
+    $c->stash->{template} = '/tools/bulk/tabs/bac_tab.mas';
 }
 
 sub bac_end_tab: Path('/tools/bulk/tabs/bac_end_tab') Args(0) { 
     my $self = shift;
     my $c = shift;
     
-    $c->stash->{template} = '/bulk/tabs/bac_end_tab.mas';
+    $c->stash->{template} = '/tools/bulk/tabs/bac_end_tab.mas';
 }
 
 sub ftp_tab : Path('/tools/bulk/tabs/ftp_tab') Args(0) { 
     my $self = shift;
     my $c = shift;
     
-    $c->stash->{template} = '/bulk/tabs/ftp_tab.mas';
+    $c->stash->{template} = '/tools/bulk/tabs/ftp_tab.mas';
 }
 
 
@@ -203,7 +203,7 @@ sub gene_tab : Path('/tools/bulk/tabs/gene_tab') Args(0) {
     my $self = shift;
     my $c = shift;
     
-    $c->stash->{template} = '/bulk/tabs/gene_tab.mas';
+    $c->stash->{template} = '/tools/bulk/tabs/gene_tab.mas';
 
 }
 
@@ -262,7 +262,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     $c->stash( bulk_download_stats   => <<STATS);
 Insert stats
 STATS
-    $c->stash( template              => 'bulk/gene_download.mas');
+    $c->stash( template              => '/tools/bulk/gene_download.mas');
 }
 
 sub cache_gene_sequences :Local :Args(0) {
@@ -393,7 +393,7 @@ sub bulk_feature :Path('/tools/bulk/tabs/feature_tab') :Args(0) {
 
     #$c->forward('bulk_js_menu');
 
-    $c->stash( template => '/bulk/tabs/feature_tab.mas');
+    $c->stash( template => '/tools/bulk/tabs/feature_tab.mas');
 
     # trigger cache creation
     $self->feature_cache->get("");
@@ -454,7 +454,7 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
     $c->forward('bulk_js_menu');
     $c->forward('bulk_download_stats');
 
-    $c->stash( template  => '/bulk/feature_download.mas', sha1 => $sha1 );
+    $c->stash( template  => '/tools/bulk/feature_download.mas', sha1 => $sha1 );
 }
 
 
