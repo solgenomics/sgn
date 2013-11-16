@@ -71,9 +71,7 @@ function loadGenotypesList(listId) {
     var modelId        = getModelId();
     var traitId        = getTraitId();
     var selectionPopId = listId;
-    // var listType       = genoList.list_type;
-
-    // alert('list type ' + listType);
+    
     if ( list.length === 0) {       
         alert('The list is empty. Please select a list with content.' );
     }
@@ -250,19 +248,13 @@ function loadPredictionOutput (url, listId, listSource) {
                     
                     var tdId = '#list_prediction_output_' + listId;
                     jQuery(tdId).html(response.output);
-                                       
+                                 
                     var page = document.URL; 
                     
-                    if (page.match('/trait/') == null) {
-                        
-                        if (modelId.match('uploaded') == null) {
-                            
-                            var popsList = listSelPopulationsUploaded();                        
-                            jQuery("#select_a_population_div").html('');
+                    if (page.match('/traits/all/population/') != null) {
+                   
+                        listAllPopulations();                  
                     
-                            selectAPopulation(modelId,  popsList);
-                        }
-                  
                     }
                     
                     jQuery.unblockUI();
