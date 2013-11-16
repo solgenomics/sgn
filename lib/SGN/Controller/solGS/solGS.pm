@@ -1115,9 +1115,22 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     my $pred_pop_id = $c->req->param('pred_pop_id');
     my $training_pop_id = $c->req->param('training_pop_id');
    
-    $self->prediction_pop_analyzed_traits($c, $training_pop_id, $pred_pop_id);
-    my @traits = @{ $c->stash->{prediction_pop_analyzed_traits} };
+    $c->stash->{model_id} = $training_pop_id;
+    $c->stash->{prediction_pop_id} = $pred_pop_id;
    
+    my @traits;
+    if( !$pred_pop_id) {
+      
+        $self->analyzed_traits($c);
+        @traits = @{ $c->stash->{analyzed_traits} };
+     
+    }
+    else  
+    {
+        $self->prediction_pop_analyzed_traits($c, $training_pop_id, $pred_pop_id);
+        @traits = @{ $c->stash->{prediction_pop_analyzed_traits} };
+    }
+
     my $ret->{status} = 'success';
     $ret->{traits} = \@traits;
      
@@ -1162,7 +1175,7 @@ sub prediction_pop_analyzed_traits {
             push @traits, $c->stash->{trait_abbr};
         }
     }
-    
+   
     $c->stash->{prediction_pop_analyzed_traits} = \@traits;
     $c->stash->{prediction_pop_analyzed_traits_ids} = \@trait_ids;
     $c->stash->{prediction_pop_analyzed_traits_files} = \@files;
