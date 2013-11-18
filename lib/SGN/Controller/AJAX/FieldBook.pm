@@ -242,8 +242,8 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     mkdir (catfile($archive_path, $user_id));
   }
 
-  if (! -d catfile($archive_path, $user_id,$subdirectory_name)) { 
-      mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+  if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
+    mkdir (catfile($archive_path, $user_id, $subdirectory_name));
   }
 
 
@@ -251,26 +251,39 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   print FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";
   my $order = 1;
-  foreach my $trait (@trait_list) {
-    #my $trait_desctiption = $schema;
-    my ($db_name, $accession) = split (/:/, $trait);
-    my $db = $schema->resultset("General::Db")->search(
-						       {
-							'me.name' => $db_name, } );
+  #foreach my $trait (@trait_list) {
+    #my ($db_name, $accession) = split (/:/, $trait);
+    #my ($db_name, $trait_description) = split (/:/, $trait);
+    #my $db = $schema->resultset("General::Db")->search(
+#						       {
+#							'me.name' => $db_name, } );
+#
+#  print STDERR " ** store: found db $db_name , accession = $accession \n";
 
-    print STDERR " ** store: found db $db_name , accession = $accession \n";
-    if ($db) {
-      my $dbxref = $db->search_related("dbxrefs", { accession => $accession, });
-      if ($dbxref) {
-	my $cvterm = $dbxref->search_related("cvterm")->single;
-	my $trait_name = $cvterm->name;
-	print FILE "$trait,text,,,,$trait_name,,TRUE,$order\n";
-      }
-    }
+  foreach my $term (@trait_list) {
+
+    my ($db_name, $trait_name) = split ":", $term;
+
+    #my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
+    # $rs = $schema->resultset("Cv::Cvterm")
+    #   ->search( {
+    # 		 'dbxref.db_id' => $db_rs->first()->db_id(),
+    # 		 'name'=>$name
+    # 		},
+    # 		{
+    # 		 'join' => 'dbxref'
+    # 		}
+    # 	      );
+
+
+#    if ($db) {
+#      my $dbxref = $db->search_related("dbxrefs", { description => $description, });
+#      if ($dbxref) {
+#	my $cvterm = $dbxref->search_related("cvterm")->single;
+#	my $trait_name = $cvterm->name;
+    print FILE "$db_name:$trait_name,text,,,,,,TRUE,$order\n";
     $order++;
-    print STDERR "trait: $trait\n\n"
   }
-
 
   close FILE;
 
