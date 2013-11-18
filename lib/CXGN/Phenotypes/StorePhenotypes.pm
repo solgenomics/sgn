@@ -139,7 +139,6 @@ sub store {
 	    foreach my $trait_name (@trait_list) {
 		print STDERR "trait: $trait_name\n";
 		my $trait_description;
-		#my ($db_name, $ontology_accession) = split (/:/, $trait_name);
 		my ($db_name, $trait_description) = split (/:/, $trait_name);
 
 		my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
@@ -154,13 +153,8 @@ sub store {
 			    }
 			  );
 
-
-
-
 		my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
-		#my $ontology_db = $schema->resultset("General::Db")->search({'me.name' => $db_name, });
-		#my $ontology_dbxref = $ontology_db->search_related("dbxrefs", { accession => $ontology_accession, });
-		#my $trait_cvterm = $ontology_dbxref->search_related("cvterm")->single;
+
 		my $plot_trait_uniquename = "Stock: " .
 		    $plot_stock_id . ", trait: " .
 			$trait_cvterm->name .
