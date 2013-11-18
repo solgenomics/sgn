@@ -16,7 +16,7 @@ $trait_name
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations",] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations", "jquery.cookie"] &>
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
