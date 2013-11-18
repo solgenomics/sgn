@@ -33,8 +33,6 @@ window.onload = function initialize() {
 	    buttons: {
 		Ok: function() {
                     generate_trait_file();
-		    jQuery( this ).dialog( "close" );
-		    location.reload();
 		}
 	    }
 	});
@@ -48,7 +46,7 @@ window.onload = function initialize() {
 	    var trait_list = JSON.stringify(list.getList(trait_list_id));
 	    var trait_file_name = jQuery('#trait_file_name').val();
 
-	    new jQuery.ajax({
+	    jQuery.ajax({
 		type: 'POST',
 		url: '/ajax/fieldbook/traitfile/create',
 		dataType: "json",
@@ -61,11 +59,12 @@ window.onload = function initialize() {
 			alert(response.error);
                     } else {
 			alert('The trait file was saved.');
+			location.reload();
                     }
 		},
-		error: function () {
-                    alert('An error occurred. sorry');
-		}
+		error: function (response) {
+                    alert('An error occurred generating the trait file.'+response.error);
+		},
             });
 	}
 

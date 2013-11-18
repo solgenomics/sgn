@@ -313,11 +313,10 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 
 
 
+  print STDERR "Finished making trait file\n";
 
+  $c->stash->{rest} = {success => "1",};
 
-  $c->stash->{rest} = {
-		       success => "1",
-		      };
 }
 
 
