@@ -17,28 +17,27 @@ Jeremy Edwards <jde22@cornell.edu>
 package SGN::Controller::AJAX::FieldBook;
 
 use Moose;
-
 use List::MoreUtils qw /any /;
-use Try::Tiny;
 use Scalar::Util qw(looks_like_number);
+use DateTime;
+use Try::Tiny;
+use File::Basename qw | basename dirname|;
+use File::Copy;
 use File::Slurp;
-use Data::Dumper;
-use CXGN::Trial::TrialDesign;
-use CXGN::Trial::TrialCreate;
+use File::Spec::Functions;
+use Digest::MD5;
 use JSON -support_by_pp;
+use Spreadsheet::WriteExcel;
 use SGN::View::Trial qw/design_layout_view design_info_view/;
+use CXGN::Phenotypes::ParseUpload;
+use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::Trial::TrialCreate;
+use CXGN::Trial::TrialDesign;
+use CXGN::Trial::TrialLayout;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
-use CXGN::Trial::TrialLayout;
-use Spreadsheet::WriteExcel;
-use Digest::MD5;
-use File::Basename qw | basename dirname|;
-use DateTime;
-use File::Spec::Functions;
-use File::Copy;
-use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::UploadFile;
-use CXGN::Phenotypes::ParseUpload;
+#use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -48,11 +47,6 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-has 'schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		 lazy_build => 1,
-		);
 
 sub create_fieldbook_from_trial : Path('/ajax/fieldbook/create') : ActionClass('REST') { }
 
@@ -206,8 +200,7 @@ sub create_trait_file_for_field_book : Path('/ajax/fieldbook/traitfile/create') 
 
 sub create_trait_file_for_field_book_POST : Args(0) {
   my ($self, $c) = @_;
-  my @trait_list;
-  print STDERR "\n\n\n creating trait file\n\n";
+
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
     return;
@@ -217,13 +210,8 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     return;
   }
 
-
-  if ($c->req->param('trait_list')) {
-    @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
-  }
+  my @trait_list;
   my $trait_file_name = $c->req->param('trait_file_name');
-
-
   my $user_id = $c->user()->get_object()->get_sp_person_id();
   my $user_name = $c->user()->get_object()->get_username();
   my $time = DateTime->now();
@@ -233,6 +221,9 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   my $archive_path = $c->config->{archive_path};
   my $file_destination =  catfile($archive_path, $archived_file_name);
 
+  if ($c->req->param('trait_list')) {
+    @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
+  }
 
   if (!-d $archive_path) {
     mkdir $archive_path;
@@ -246,41 +237,14 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     mkdir (catfile($archive_path, $user_id, $subdirectory_name));
   }
 
-
   open FILE, ">$file_destination" or die $!;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   print FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";
   my $order = 1;
-  #foreach my $trait (@trait_list) {
-    #my ($db_name, $accession) = split (/:/, $trait);
-    #my ($db_name, $trait_description) = split (/:/, $trait);
-    #my $db = $schema->resultset("General::Db")->search(
-#						       {
-#							'me.name' => $db_name, } );
-#
-#  print STDERR " ** store: found db $db_name , accession = $accession \n";
 
   foreach my $term (@trait_list) {
 
     my ($db_name, $trait_name) = split ":", $term;
-
-    #my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
-    # $rs = $schema->resultset("Cv::Cvterm")
-    #   ->search( {
-    # 		 'dbxref.db_id' => $db_rs->first()->db_id(),
-    # 		 'name'=>$name
-    # 		},
-    # 		{
-    # 		 'join' => 'dbxref'
-    # 		}
-    # 	      );
-
-
-#    if ($db) {
-#      my $dbxref = $db->search_related("dbxrefs", { description => $description, });
-#      if ($dbxref) {
-#	my $cvterm = $dbxref->search_related("cvterm")->single;
-#	my $trait_name = $cvterm->name;
     print FILE "$db_name:$trait_name,text,,,,,,TRUE,$order\n";
     $order++;
   }
@@ -292,7 +256,6 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   my $md5 = Digest::MD5->new();
   $md5->addfile($F);
   close($F);
-
 
   my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
 
@@ -310,19 +273,9 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 								    });
   $file_row->insert();
 
-
-
-
-  print STDERR "Finished making trait file\n";
-
   $c->stash->{rest} = {success => "1",};
 
 }
-
-
-
-
-
 
 
 sub upload_phenotype_file_for_field_book : Path('/ajax/fieldbook/upload_phenotype_file') : ActionClass('REST') { }
