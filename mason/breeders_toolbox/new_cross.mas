@@ -91,7 +91,7 @@ foreach my $role (@roles) {
 </tr>
 
 <tr><td><br></td></tr>
-<tr><td>Program</td><td><select id="program" name="program">
+<tr><td>Breeding Program</td><td><select id="program" name="program">
 <%perl>
 foreach my $program (@programs) {
 	print "<option value=".@$program[0].">".@$program[1]."</option>";

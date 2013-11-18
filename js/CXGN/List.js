@@ -18,6 +18,24 @@ this function will generate a select of all available lists and allow the conten
 
 this will generate an html select box of all the lists, and a "paste" button, to paste into a textarea (typically). The divName is the id of the textarea, the menuDiv is the id where the paste menu should be placed.
 
+
+Public List object functions
+
+* listSelect(divName, types)
+
+will create an html select with id and name 'divName'. Optionally, a list of types can be specified that will limit the menu to the respective types. 
+
+Usage:
+You have to instantiate the list object first:
+
+var lo = new CXGN.List(); var s = lo.listSelect('myseldiv', [ 'trials' ]);
+
+
+* validate(list_id, type, non_interactive)
+
+* transform(list_id, new_type)
+
+
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
@@ -450,7 +468,7 @@ CXGN.List.prototype = {
 	this.renderLists('list_dialog');
     },
 
-    validate: function(list_id, type) { 
+    validate: function(list_id, type, non_interactive) { 
 	var missing = new Array();
 	var error = 0;
 	jQuery.ajax( { 
@@ -467,13 +485,15 @@ CXGN.List.prototype = {
 	    error: function(response) { alert("An error occurred while validating the list "+list_id); error=1; }
 	});
 
-	if (error ===1 ) { return; }
+	if (error === 1 ) { return; }
 
 	if (missing.length==0) { 
-	    alert("This list passed validation.");
+	    if (!non_interactive) { alert("This list passed validation."); } 
+	    return 1;
 	}
 	else { 
 	    alert("List validation failed. Elements not found: "+ missing.join(","));
+	    return 0;
 	}
     },
 

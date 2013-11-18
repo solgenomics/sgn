@@ -21,21 +21,24 @@ sub validate {
     my $rs;
     foreach my $term (@$list) { 
 
-	if ($term =~ /\:/) { 
-	    my ($db_name, $accession) = split ":", $term;
-	    
-	    print STDERR "Checking $term...\n";
-	    $rs = $schema->resultset("General::Dbxref")->search( { 'db.name'=>$db_name, 'accession'=>$accession }, { join => 'db' });
-	    
-	    print STDERR "COUNT: ".$rs->count."\n";
-	
+	my ($db_name, $name) = split ":", $term;
 
+	my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
+	if ($db_rs->count() == 0) {  
+	    push @missing, $term;
 	}
 	else { 
-	    $rs = $schema->resultset("Cv::Cvterm")->search( { name=>$term } );
-	}
-	if ($rs->count == 0) { 
-	    push @missing, $term;
+	    $rs = $schema->resultset("Cv::Cvterm")->search( { 
+		'dbxref.db_id' => $db_rs->first()->db_id(),
+		'name'=>$name }, {
+		    'join' => 'dbxref' }
+		);
+	    
+	    print STDERR "COUNT: ".$rs->count."\n";
+	    
+	    if ($rs->count == 0) { 
+		push @missing, $term;
+	    }
 	}
     }
     return { missing => \@missing };

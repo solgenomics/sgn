@@ -34,12 +34,24 @@ sub transform {
         my $rs = $schema->resultset("Cv::Cvterm")->search(
             { 
                 cvterm_id => $l, 
-            }); 
+            },
+	    { 
+	       join => 'dbxref'
+	    }); 
         if ($rs->count() == 0) { 
             push @missing, $l;
         }
 	else { 
-	    push @transform, $rs->first()->name();
+	    my $db_rs = $schema->resultset("General::Db")->search( 
+		{
+		    db_id => $rs->first()->db()->name()
+		});
+	    if ($db_rs->count()> 0) { 
+		push @transform, $db_rs->first()->name().":".$rs->first()->name();
+	    }
+	    else { 
+		push @missing, $l;
+	    }
 	}
     }
     return { transform => \@transform,
