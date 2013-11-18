@@ -50,7 +50,7 @@ __PACKAGE__->config(
 
 sub create_fieldbook_from_trial : Path('/ajax/fieldbook/create') : ActionClass('REST') { }
 
-sub create_fieldbook_from_trial_GET : Args(0) {
+sub create_fieldbook_from_trial_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_id = $c->req->param('trial_id');
