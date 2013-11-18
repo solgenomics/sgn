@@ -7,9 +7,6 @@ Isaak Y Tecle
 iyt2@cornell.edu
 */
 
-
-
-JSAN.use("jquery.cookie");
 JSAN.use("CXGN.List");
 JSAN.use("jquery.blockUI");
 
@@ -19,8 +16,15 @@ jQuery(document).ready( function() {
         var list = new CXGN.List();
         
         var listMenu = list.listSelect("reference_genotypes", ['plots']);
-	
-        jQuery("#reference_genotypes_list").append(listMenu);
+       
+	if(listMenu.match(/option/) != null) {
+            
+            jQuery("#reference_genotypes_list").append(listMenu);
+
+        } else {
+            
+            jQuery("#reference_genotypes_list").append("<select><option>no lists found</option></select>");
+        }
                
     });
 
