@@ -215,6 +215,7 @@ sub save_experimental_design_POST : Args(0) {
   $trial_create->set_trial_location($c->req->param('trial_location'));
   $trial_create->set_trial_description($c->req->param('project_description'));
   $trial_create->set_design_type($c->req->param('design_type'));
+  $trial_create->set_breeding_program_id($c->req->param('breeding_program_id'));
   $trial_create->set_design(_parse_design_from_json($c->req->param('design_json')));
   $trial_create->set_stock_list(_parse_list_from_json($c->req->param('stock_list')));
   if ($c->req->param('control_list')) {
