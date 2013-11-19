@@ -25,62 +25,18 @@ $project_name
 
 <%perl>
 
-my $trait_rows;
-my $cnt = 1;
-my $row_no = 1;
-
-$analyzed_traits = $prediction_pop_analyzed_traits if $prediction_pop_analyzed_traits;
-
-foreach (@$analyzed_traits)
-{
-  if ($_)
-    {
-      my $rw_b    = qq | <tr> | if $cnt == 1;
-      my $rw_e    = qq | </tr> | if $cnt == 3;
-
-      my $row  = <<ROW;
-                   $rw_b
-                   <td>
-                     $_:
-                   </td>
-                   <td>
-                       <input type    = "text" 
-                              name    = $_
-                              size    = 5px
-                              >
-                   </td>
-                 $rw_e
-ROW
-
-      $cnt++;
-      $cnt = 0 if $cnt == 3;
-      $trait_rows .=  $row;
-    }
-  $row_no++;
-
-}
-
-
-my $phrase = 'Assign ';
-if($prediction_pop_id =~ /\d+/) 
-  {
-    $phrase = 'And assign ';
-  }
-
-
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ "solGS.rankGenotypes"] &>
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
-%if (@$analyzed_traits > 1 )
-%{
-  <&| /page/info_section.mas, 
-      collapsible => 1, 
-       collapsed  => 0, 
-       title      => "Rank Genotypes based on weighted mean GEBV of multiple traits"
-   &> 
+
+<&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed  => 0, 
+  title      => "Rank Genotypes based on weighted mean GEBV of multiple traits"
+  &> 
 
  
   <div id="selected_population_div" style="display:none">    
@@ -96,7 +52,7 @@ if($prediction_pop_id =~ /\d+/)
 
   
   <div id="select_a_population_div" style="float:left; z-index:10; position:absolute;"></div>
- <div id="select_a_population_div_text" style="float:left"><p style="padding-left: 275px"><% $phrase %> relative weights to traits.</p></div> 
+ <div id="select_a_population_div_text" style="float:left"><p style="padding-left: 275px"> And assign relative weights to traits.</p></div> 
 
 
   <div id="selection_index_form" style="clear:both"> </div>
@@ -106,6 +62,6 @@ if($prediction_pop_id =~ /\d+/)
    
 
     </&>
-%}
+
 
 
