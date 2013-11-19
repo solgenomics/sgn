@@ -168,20 +168,24 @@ sub store {
 								  });
 
 		print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
+		my $experiment;
 
 		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
-		my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-		    ->find({
-			    nd_geolocation_id => $location_id,
-			    type_id => $phenotyping_experiment_cvterm->cvterm_id(),
-			    'type.name' => 'operator',
-			    'nd_experimentprops.value' => $operator,
-			    'type_2.name' => 'date',
-			    'nd_experimentprops_2.value' => $phenotyping_date,
-			   },
-			   {
-			    join => [{'nd_experimentprops' => 'type'},{'nd_experimentprops' => 'type'}],
-			   });
+		# my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+		#     ->find({
+		# 	    nd_geolocation_id => $location_id,
+		# 	    type_id => $phenotyping_experiment_cvterm->cvterm_id(),
+		# 	    'type.name' => 'operator',
+		# 	    'nd_experimentprops.value' => $operator,
+		# 	    'type_2.name' => 'date',
+		# 	    'nd_experimentprops_2.value' => $phenotyping_date,
+		# 	   },
+		# 	   {
+		# 	    join => [{'nd_experimentprops' => 'type'},{'nd_experimentprops' => 'type'},{'nd_experiment_phenotypes' => 'type'}],
+		# 	   });
+
+
+		#Need to add function to detect if phenotype data point already exists and decide to replace or throw error.
 
 		# Create a new experiment, if one does not exist
 		if (!$experiment) {
