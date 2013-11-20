@@ -21,4 +21,4 @@ push (@accession_list, $accession_name);
 
 ok(my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema}),"Create AccessionsFuzzySearch object");
 ok(my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance),"Do a fuzzy accession search");
-isa_ok($fuzzy_search_result,'ARRAY',"Result is an array reference");
+isa_ok($fuzzy_search_result,'HASH',"Result is an array reference");
