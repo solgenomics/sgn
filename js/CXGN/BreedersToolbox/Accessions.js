@@ -20,7 +20,21 @@ jQuery(document).ready(function ($) {
 
     var list = new CXGN.List();
 
-    function verify_accession_list () {
+
+    function review_verification_results( verifyResponse ){
+	if (verifyResponse.found) {
+	    alert("found");
+	}
+	if (verifyResponse.fuzzy) {
+	    alert("fuzzy");
+	}
+	if (verifyResponse.absent) {
+	    alert("absent");
+	}
+
+    } 
+
+    function verify_accession_list() {
 	var accession_list_id = $('#accessions_list_select').val();
 	var accession_list = JSON.stringify(list.getList(accession_list_id));
 	alert(accession_list);
@@ -36,7 +50,8 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
 		    alert(response.error);
                 } else {
-		    alert('success');
+		    //alert('success');
+		    review_verification_results(response);
                 }
 	    },
 	    error: function () {
@@ -65,17 +80,5 @@ jQuery(document).ready(function ($) {
 	$("#list_div").append(list.listSelect("accessions"));
     });
 
-    $( "${0:my_dialog_div_id}" ).dialog({
-	autoOpen: false,	
-	modal: true,
-	autoResize:true,
-	width: 500,
-	position: ['top', 150],
-	buttons: {
-	    Ok: function() {
-		
-	    },
-	}
-    });
     
 });
