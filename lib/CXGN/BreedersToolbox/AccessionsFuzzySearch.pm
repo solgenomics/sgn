@@ -86,7 +86,7 @@ sub get_matches {
       push (@absent_accessions, $accession_name);
     } else {
       my $matched_string = $accession_matches[0]->{'string'};
-
+      my $synonym_lookup_of_matched_string = $synonym_uniquename_lookup{$matched_string};
 
       #Make sure that there isn't more than one perfect match
       if ($accession_matches[1]) {
@@ -96,20 +96,29 @@ sub get_matches {
 	}
       }
 
-      #Store accession name to found list if there is one unique match
-      if ( $matched_string eq $accession_name && !$more_than_one_perfect_match) {
-	my %found_accession_and_uniquename;
-	my @unique_names_of_synonym;
-	@unique_names_of_synonym = @{$synonym_uniquename_lookup{$matched_string}};
-	if (scalar @unique_names_of_synonym > 0) {
+      #Make sure that there isn't more than one unique name for the searched string if synonym
+      if ($synonym_lookup_of_matched_string) {
+	if (scalar @{$synonym_lookup_of_matched_string} > 1) {
 	  $more_than_one_unique_name_for_synonym = 1;
 	}
-	else {
-	  $found_accession_and_uniquename{'matched_string'} = $accession_name;
+      }
+
+      #Store accession name to found list if there is one unique match
+      if ( $matched_string eq $accession_name && !$more_than_one_perfect_match && !$more_than_one_unique_name_for_synonym) {
+	my %found_accession_and_uniquename;
+	$found_accession_and_uniquename{'matched_string'} = $accession_name;
+
+	#when there is a synonym, store the unique name and the searched string
+	if ($synonym_lookup_of_matched_string) {
+	  my @unique_names_of_synonym;
+	  @unique_names_of_synonym = @{$synonym_lookup_of_matched_string};
+	  #should not be more than one unique name for synonym because checked array length earlier
 	  $found_accession_and_uniquename{'unique_name'} = $unique_names_of_synonym[0];
-	  push (@found_accessions, \%found_accession_and_uniquename);
-	  $has_one_unique_match = 1;
+	} else {
+	  $found_accession_and_uniquename{'unique_name'} = $accession_name;
 	}
+	push (@found_accessions, \%found_accession_and_uniquename);
+	$has_one_unique_match = 1;
       }
 
       if (!$has_one_unique_match) {
