@@ -55,8 +55,11 @@ sub verify_accession_list_POST : Args(0) {
   $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
   print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
-
  $c->stash->{rest} = {success => "1",};
+ $c->stash->{rest} = {found => "1",};
+ $c->stash->{rest} = {fuzzy => "1",};
+ $c->stash->{rest} = {absent => "1",};
+
 }
 
 sub _parse_list_from_json {
