@@ -61,5 +61,17 @@ jQuery(document).ready(function () {
 	    }
         });
     }
-
+jQuery( "${0:my_dialog_div_id}" ).dialog({
+    autoOpen: false,	
+    modal: true,
+    autoResize:true,
+    width: 500,
+    position: ['top', 150],
+    buttons: {
+	Ok: function() {
+	    
+	},
+    }
+});
+    
 });

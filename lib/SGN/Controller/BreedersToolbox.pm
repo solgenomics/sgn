@@ -386,6 +386,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     my $breeding_programs = $bp->get_breeding_programs();
 
     $c->stash->{programs} = $breeding_programs;
+    $c->stash->{breeding_programs} = $breeding_programs;
     
     my $locations_by_breeding_program;
     foreach my $b (@$breeding_programs) { 
