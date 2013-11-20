@@ -1,3 +1,5 @@
+/*jslint browser: true, devel: true */
+
 /**
 
 =head1 FieldBook.js
@@ -13,31 +15,12 @@ Jeremy D. Edwards <jde22@cornell.edu>
 
 */
 
+
 var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
 
     var list = new CXGN.List();
-
-
-    $("#select_list").append(list.listSelect("select_list"));
-
-    $("#create_trait_file_dialog").dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 150],
-	buttons: {
-	    Ok: function() {
-                generate_trait_file();
-	    }
-	}
-    });
-
-    $('#create_new_trait_file_link').click(function () {
-        $('#create_trait_file_dialog').dialog("open");
-    });
 
     function generate_trait_file() {
 	var trait_list_id = $('#select_list_list_select').val();
@@ -66,6 +49,34 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    function upload_fieldbook_phenotype_file() {
+        var uploadFile = $("#fieldbook_upload_file").val();
+        $('#upload_fieldbook_form').attr("action", "/ajax/fieldbook/upload_phenotype_file");
+        if (uploadFile === '') {
+	    alert("Please select a file");
+	    return;
+        }
+        $("#upload_fieldbook_form").submit();
+    }
+
+    $("#select_list").append(list.listSelect("select_list"));
+
+    $("#create_trait_file_dialog").dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+	    Ok: function() {
+                generate_trait_file();
+	    }
+	}
+    });
+
+    $('#create_new_trait_file_link').click(function () {
+        $('#create_trait_file_dialog').dialog("open");
+    });
 
     $( "#upload_fieldbook_phenotypes_dialog" ).dialog({
 	autoOpen: false,
@@ -88,16 +99,6 @@ jQuery(document).ready(function ($) {
 	//location.reload();
     });
 
-    function upload_fieldbook_phenotype_file() {
-        var uploadFile = $("#fieldbook_upload_file").val();
-        $('#upload_fieldbook_form').attr("action", "/ajax/fieldbook/upload_phenotype_file");
-        if (uploadFile === '') {
-	    alert("Please select a file");
-	    return;
-        }
-        $("#upload_fieldbook_form").submit();
-    }
-
     $('#upload_fieldbook_form').iframePostForm({
 	json: true,
 	post: function () {
@@ -119,10 +120,4 @@ jQuery(document).ready(function ($) {
 	}
     });
 
-
-
-
 });
-
-
-
