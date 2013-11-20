@@ -1,0 +1,104 @@
+
+<& "/page/page_title.mas", title => "TOKN Clone Request" &>
+
+% #The form
+<% $ENV{REMOTE_ADDR} %>
+<form method="POST" action= "/kinases/clones/submit" name = "contactForm">
+<div style="margin-left: 30px">
+<table summary="" border="0" cellpadding="5" cellspacing="5">
+
+% #Uses Perl to print out the fields with similar HTML tags
+<%perl>
+my $infoNeeded = ["name", "email", "address", "organization"];
+my $defaultVal = {
+   "name" => $name, 
+   "email" => $email,
+   "address" => $address,
+   "organization" => $organization
+   };
+
+</%perl>
+
+% foreach my $info_category (@$infoNeeded) {
+<tr><td align="left" valign="top">
+<strong><% ucfirst $info_category %>*</strong>
+</td>
+% # If user did not fill out a field and submitted the form, then it will 
+% # show in red letters above the field this field is needed above it. 
+% # Otherwise, the form is filled out normally.
+% unless ($filled{$info_category}) {
+</td>
+<td style = "color:red; font-size: 10px;" align = "left" valign = "top">     
+<% ucfirst $info_category %> is required 
+<br />
+% } else {
+<td align = "left" valign = "top"> 
+%}
+<input type="text" size="50" value="<% $$defaultVal{$info_category} |h%>"
+				name="<% $info_category %>" />
+</td></tr>
+% }     
+
+
+
+% # Body uses a text_area so it is hardcoded.
+% # Like the other inputs, it will display a red message above saying 
+% # "Message needed."
+<tr><td align="left" valign="top">
+<strong>Clone list and Notes*</strong>
+</td>
+% unless ($filled{body}) {
+<td style = "color:red; font-size: 10px;" align = "left" valign = "top">
+Message is required
+<br />
+% } else {
+<td align = "left" valign = "top">
+% }
+<textarea cols="57" rows="7" name="body"><% $body |h%></textarea>
+</td></tr>
+
+
+<tr><td><strong>Are you human?*</strong><br />What is <% $contact_form_human_question %>?</td>
+
+<td>
+% if (!$contact_form_human_answer_correct) { 
+<font style = "color:red; font-size: 10px;" align = "left" valign = "top">     
+% if (!$contact_form_human_answer) { 
+Prove that you are a human being is required<br /></font>
+% } else { 
+Either you are not human - or you are not very good at math! ;-)</font>
+<br />
+%    }
+% }
+  <input type="text" value="" name="contact_form_human_answer" size="4" />
+
+</td></tr>
+
+
+<tr><td colspan="2" align="center" valign="middle" style = "color:red; font-size: 90%; font-style:italic;">
+fields marked with <% '"*"' |h %> are required
+</td></tr>
+
+
+<tr><td colspan="2" align="center" valign="middle">
+<input type="submit" value="Submit" />
+</td></tr>
+</table>
+</div>
+</form>
+
+
+<%args>
+  $name                     => ''
+  $email                    => ''
+  $address                  => ''
+  $organization             => ''
+  $body                     => ''
+  %filled                   => (name => 1, email => 1, address => 1, organization => 1, body => 1)
+  $contact_form_human_answer => ''
+  $contact_form_human_question => ''
+  $contact_form_human_answer_correct => 0
+</%args>
+<%once>
+  use CXGN::Page::FormattingHelpers 'info_table_html';
+</%once>

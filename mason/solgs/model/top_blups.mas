@@ -32,16 +32,14 @@ $trait_combo_pops => ''
 
 
 <div id="gebvPlot2"> 
-  <input type="hidden" name="population_id" value="<% $pop_id %>" /> 
-  <input type="hidden" name="combo_pops_id" value="<% $combo_pops_id %>" /> 
-  <input type="hidden" name="pops_list" value="<% $trait_combo_pops %>" /> 
-  <input type="hidden" name="trait_id" value="<% $trait_id %>" /> 
+ 
 </div> 
 
-<button id="gebvzoom-reset">Reset zoom</button>
+<button class="button" id="gebvzoom-reset">Reset zoom</button>
+<button  class="button" id="inverse_gebv_plot">Inverse plot</button>
 <br/>
 <br/>
-<h1 style="text-align:center">Overview</h1>
+<h3 style="text-align:center">Overview</h3>
 <div id="gebvPlotOverview"> 
 </div>
 <br/>
@@ -54,10 +52,12 @@ $trait_combo_pops => ''
   __alt_freq   => 2,
   __alt_width  => 1,
   __alt_offset => 3,
-  __align      => 'l',
+  __align      => 'll',
 &>
 
 <br />
 [ <% $blups_download_url %> ]
 
 </&>
+
+<input type="hidden" id="pops_list" value="<% $trait_combo_pops %>" />  

@@ -31,8 +31,8 @@ $model_data
 <table  style="width:95%">
   <tr>
     <th>Model</th>
-    <th>Training Population Composition</th>
-    <th>Applied to</th>
+    <th>Training population description</th>
+    <th>Model output</th>
   </tr>
    
 % foreach my $model (@$model_data)
@@ -47,11 +47,11 @@ $model_data
     </td>    
     <td>
       <& /page/columnar_table.mas,
-         headings    => ['Trait', 'Model Accuracy'],
+         headings    => ['Trait', 'Model accuracy'],
          data        => $model->[2],
         __alt_freq   => 1,
         __align      => "l",
-        __tableattrs => 'style="padding: 1px"',    
+        __tableattrs => 'style="padding: 1px"',
       &>
     </td>
   </tr>

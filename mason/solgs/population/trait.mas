@@ -9,6 +9,7 @@ $marker_effects_download_url
 $top_marker_effects
 $validation_download_url
 $trait_abbr
+$trait_name
 $project_name
 $project_desc
 $stocks_no
@@ -18,9 +19,10 @@ $trait_id
 $descriptive_stat
 $download_prediction
 $prediction_pop_id => ''
-$list_of_prediction_pops
-$prediction_pop_name => '' 
+$list_of_prediction_pops=> ''
+$prediction_pop_name => ''
 $analyzed_traits => ''
+$owner=>''
 
 </%args>
 
@@ -38,10 +40,10 @@ $analyzed_traits => ''
   &>
 
 
-<link rel="stylesheet" href="/static/solgs/solgs.css" type="text/css" />
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 <& /page/page_title.mas, 
-   title => "Genomic Selection Model for $trait_abbr in $project_name"
+   title => "Genomic selection model for $trait_name ($trait_abbr) in $project_name"
 &>
 
 <&| /page/info_section.mas, 
@@ -56,7 +58,8 @@ $analyzed_traits => ''
     project_desc => $project_desc,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
-    traits_no    => $traits_no
+    traits_no    => $traits_no,
+    owner        => $owner
  &>
  
 </&>
@@ -96,10 +99,12 @@ $analyzed_traits => ''
    marker_effects_download_url => $marker_effects_download_url
 &>
 
+
 <& selection_populations.mas, 
    download_prediction     => $download_prediction,
    analyzed_traits         => $analyzed_traits,
    pop_id                  => $pop_id,
+   project_name            => $project_name,
    prediction_pop_id       => $prediction_pop_id,
    list_of_prediction_pops => $list_of_prediction_pops,
    prediction_pop_name     => $prediction_pop_name, 
@@ -118,3 +123,5 @@ $analyzed_traits => ''
 %}
 
 
+ <input type="hidden"  id="model_id" value="<% $pop_id %>" /> 
+ <input type="hidden"  id="trait_id" value="<% $trait_id %>" /> 

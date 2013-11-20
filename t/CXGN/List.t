@@ -31,6 +31,18 @@ $m->while_logged_in(
 	
 	my $list_id = $data->{list_id};
 			 
+	# set list to type 'plots'...
+	#
+	$m->get_ok('/list/type/'.$list_id.'/plots');
+
+	# retrieve the type of the list...
+	#
+	$m->get_ok('/list/type/'.$list_id);
+	
+	$m->content_contains("plots");
+
+	# add an element...
+	#
 	$m->get_ok("/list/item/add?list_id=$list_id&element=blabla");
 
 	$m->content_contains("SUCCESS");
@@ -39,16 +51,26 @@ $m->while_logged_in(
 
 	$m->content_contains("blabla");
 
+	$m->get_ok("/list/contents/$list_id");
+
+	$m->content_contains("blabla");
+
+	$m->get_ok("/list/type/$list_id/locations");
+	$m->get_ok("/list/transform/$list_id/location_ids");
+
+	$m->get_ok("/list/data?list_id=$list_id");
+
 	$json = $m->content();
-
+	
+	print STDERR "JSON: $json\n";
 	$data = JSON::Any->decode($json);
-
-	my $item_id = $data->[0]->[0];
+	print STDERR Data::Dumper::Dumper($data);
+	my $item_id = $data->{elements}->[0]->[0];
 
 	#print $item_id."\n";
 	#print Data::Dumper::Dumper($data);
 
-	$m->get_ok("/list/item/remove?list_id=$list_id&item_id=$data->[0]->[0]");
+	$m->get_ok("/list/item/remove?list_id=$list_id&item_id=$data->{elements}->[0]->[0]");
 	$m->get_ok("/list/get?list_id=$list_id");
 	
 	$m->content_lacks("blabla");
@@ -60,6 +82,8 @@ $m->while_logged_in(
 	$m->get_ok("/list/available");
 
 	$m->content_lacks("test");
+
+
 	
 	
     });

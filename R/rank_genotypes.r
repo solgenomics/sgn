@@ -92,6 +92,7 @@ for (i in 1:traitsTotal)
 
   
     traitGEBV <- traitGEBV[order(rownames(traitGEBV)),,drop=FALSE]
+
    
     trait <- colnames(traitGEBV)
     relWeight <- relWeights[trait, ]
@@ -111,8 +112,11 @@ for (i in 1:traitsTotal)
         combinedRelGebvs[, 1] <- NULL
       }
   }
+sumRelWeights <- apply(relWeights, 2, sum)
+sumRelWeights <- sumRelWeights[[1]]
 
-combinedRelGebvs$mean <- apply(combinedRelGebvs, 1, mean)
+combinedRelGebvs$mean <- apply(combinedRelGebvs, 1, function (x) sum(x)/sumRelWeights)
+
 combinedRelGebvs <- combinedRelGebvs[ with(combinedRelGebvs,
                                            order(-combinedRelGebvs$mean)
                                            ),
@@ -122,7 +126,10 @@ combinedRelGebvs <- round(combinedRelGebvs,
                           digits = 2
                           )
 
+print(combinedRelGebvs[1:10, ])
+
 genotypesMeanGebv <-c()
+
 if (is.null(combinedRelGebvs) == FALSE)
   {
     genotypesMeanGebv <- subset(combinedRelGebvs,

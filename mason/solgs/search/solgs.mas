@@ -25,17 +25,23 @@ $gs_traits_index
 
 <%perl>
 
- my $current_page = $pager->current_page();
- my $collapse = 1;
- if ($current_page > 1) { $collapse = 0; }
+my $current_page = $pager->current_page();
+my $collapse = 1;
+
+if ($current_page > 1) { $collapse = 0; }
 
 </%perl>
 
-<link rel="stylesheet" href="/css/solgs/solgs_formfu.css" type="text/css" />
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+
+
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.ajaxAutocomplete"] &>
+
+<p>&nbsp</p>
 
 <& /page/page_title.mas, title => "solGS: start building a GS model by searching for a trait or selecting a training population" &>
+
 <&| /page/info_section.mas,
   title => "Search for a trait ",
 &>
@@ -45,11 +51,13 @@ $gs_traits_index
 <p style="color:red">There is no phenotype data for <b>'<% $message %>'</b>.</p>
 %}
 
-<p style="text-align:center">Browse by traits: <b><% $gs_traits_index %> </b></p>
+<p style="text-align:center">Traits index: <b><% $gs_traits_index %> </b></p>
 <p>&nbsp</p>
 <p>&nbsp</p>
 
+
 <% $form %>
+
 
 <p>&nbsp</p>
 <p>&nbsp</p>
@@ -59,7 +67,7 @@ $gs_traits_index
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => $collapse,
-    title       => "Select a training population",
+    title       => "Use a trial as a training population",
   &>
 
 <& /solgs/population/project_details_form.mas,
@@ -69,3 +77,16 @@ $gs_traits_index
 &>
    
 </&>
+
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => $collapse,
+    title       => "Create a training population",
+  &>
+
+  <& /solgs/population/user_reference_genotypes.mas &>
+   
+</&>
+
+

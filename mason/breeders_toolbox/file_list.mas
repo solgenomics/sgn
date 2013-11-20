@@ -1,0 +1,20 @@
+
+<%doc>
+</%doc>
+
+<%args>
+$files => []
+</%args>
+
+
+<table cellpadding="5" alt="">
+% foreach my $f (@$files) { 
+  <tr>
+    <td><% $f->{basename} %></td>
+    <td><% $f->{create_date} %></td>
+    <td><a href="">delete</a> | <a href="">view</a></td>
+  </tr>
+% }
+</table>
+
+

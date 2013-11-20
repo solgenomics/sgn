@@ -1,36 +1,102 @@
 
 <%args>
-@projects => ()
-@locations => ()
 </%args>
 
-<form action="/breeders/phenotype/upload" method="post"  enctype="multipart/form-data" >
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form' ] &>
 
-<table><tr><td>
-Trial:</td><td>
-<select name="project">
-% foreach my $p (@projects) {
-<option name="<% $p->[0] %>"><% $p->[1] %></option><br />
-% }
-</select>
-<br />
-</td></tr>
-<tr><td>
-Location:
-</td><td>
-<select>
-% foreach my $l (@locations) { 
-<option name="<% $l->[0] %>"><% $l->[1] %></option><br />
-% }
-</select>
-</td></tr>
-<tr><td>
-Upload phenotype file
-</td><td>
 
- <input type="file" name="phenotype_file" /><br />
-<input type="radio" name="format" value="barcode" checked="1" /> Barcode format<br />
-<input type="radio" name="format" value="Spreadsheet" /> Spreadsheet (IBP format)<br />
-</td></tr></table>
-<input type="submit" value="Upload" />
-</form>
+<div id="upload_phenotype_spreadsheet_dialog" class="ui-widget">
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_phenotype_spreadsheet_file_form" name="upload_phenotype_spreadsheet_file_form">
+    <label for="upload_phenotype_spreadsheet_file_input" style="display: inline-block; width: 100px;">Phenotype spreadsheet:</label>
+    <input type="file" name="upload_phenotype_spreadsheet_file_input" id="upload_phenotype_spreadsheet_file_input" encoding="multipart/form-data" />
+  </form>
+</div>
+
+<div id="upload_phenotype_spreadsheet_error_display" class="ui-widget">
+  <table>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div id="upload_wait_dialog" title="Uploading">
+    Uploading and storing spreadsheet
+    <span style="float: center;"><img src="../img/wheel.gif"/></span>
+</div>
+
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+
+    jQuery('#upload_phenotype_spreadsheet_dialog').dialog( {
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+	width: 500,
+     title: "Upload phenotype spreadsheet",
+
+	buttons:  { 
+	    "Cancel" : function() {
+		jQuery('#upload_phenotype_spreadsheet_dialog').dialog("close"); 
+	    }, 
+            "Add": function() {
+                var uploadFile = jQuery("#upload_phenotype_spreadsheet_file_input").val();
+		if (uploadFile === '') {
+		    alert("Please select a file");
+		} else {
+		    jQuery('#upload_wait_dialog').dialog("open");
+		    jQuery('#upload_phenotype_spreadsheet_file_form').attr("action", "/ajax/phenotype/upload_spreadsheet");
+                    jQuery('#upload_phenotype_spreadsheet_file_form').submit();
+		}
+            } 
+        }
+    });
+
+    jQuery('#upload_phenotypes_link').click( function() {
+	jQuery('#upload_phenotype_spreadsheet_dialog').dialog("open");
+    });
+
+    jQuery('#upload_phenotype_spreadsheet_file_form').iframePostForm({
+	json: true,
+	post: function () {
+	},
+	complete: function (response) {
+	    jQuery('#upload_wait_dialog').dialog("close");
+            if (response.error) {
+		alert(response.error);
+                if (response.error_list_html) {
+		     jQuery("#upload_phenotype_spreadsheet_error_display").html(response.error_list_html);
+                     jQuery("#upload_phenotype_spreadsheet_error_display").dialog("open");
+                }
+		//return;
+            }
+            if (response.success) {
+		alert("Spreadsheet file stored successfully");
+		jQuery('#upload_phenotype_spreadsheet_dialog').dialog("close"); 
+                window.location.reload();
+            }
+	}
+    });
+
+    jQuery("#upload_phenotype_spreadsheet_error_display").dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+        width: 300,
+	title: "Errors in uploaded file",
+	buttons: {
+            Ok: function () {
+		jQuery(this).dialog("close");
+            }
+	}
+    });
+
+    jQuery( "#upload_wait_dialog" ).dialog({
+	autoOpen: false,
+	modal: true,
+	width: 300,
+    });
+
+});  
+
+</script>

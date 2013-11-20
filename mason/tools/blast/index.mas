@@ -1,0 +1,389 @@
+
+<%doc>
+</%doc>
+
+<%args>
+$preselected_database => ''
+$preselected_category => ''
+$dataset_groups => []
+$databases => {}
+$programs
+@input_options => ()
+@parse_options => ()
+$preload_seq => ''
+</%args>
+
+<%perl>
+use JSON::Any;
+
+my $menus = {};
+foreach my $d (keys(%$databases)) { 
+   $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", id=>"database", choices => [ @{$databases->{$d}} ], selected=> $preselected_database );
+}
+
+my $substitution_matrix_select = $m->scomp('/page/html_select.mas', 
+   name=>"matrix", 
+   id=>"matrix", 
+   choices => [  [ 'BLOSUM62', 'BLOSUM62 (default)' ],
+                 [ 'BLOSUM80', 'BLOSUM80 (recent divergence)' ],
+		 [ 'BLOSUM45', 'BLOSUM45 (ancient divergence)' ],
+		 'PAM30',
+		 'PAM70',
+              ]);
+
+my $show_graphics_select = $m->scomp('/page/html_select.mas',  name => 'output_graphs', id=>'output_graphs',
+        	      choices => [ [ 'bioperl_histogram', 'all' ],
+	                	   'none',
+			           [ 'bioperl_only', 'alignment summary only' ],
+				   [ 'histogram_only', 'conservedness histogram only' ],
+				 ],
+				 ),
+
+print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
+my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', id=>'input_options',
+			      choices => \@input_options
+);
+
+my @parse_options_selected = ();
+foreach my $po (@parse_options) { 
+  if ($po->[0] ne "Basic") { 
+    push @parse_options_selected, $po;
+  }
+}
+
+
+my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', choices => [ map { $_->[0] } @parse_options ], multiple=>1, selected=> [ sort (map { $_->[0] } @parse_options_selected) ] );
+
+print STDERR "SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n\n\n";
+
+
+my $db_type = {};
+foreach my $g (keys %$databases) {
+  foreach my $d (@{$databases->{$g}}) {  
+     $db_type->{$d->[0]} = $d->[2];
+  }
+}
+my $database_type_json = JSON::Any->encode($db_type);
+
+#print STDERR Data::Dumper::Dumper($database_type_json);
+
+my $q_type = {};
+my $q_example = {};
+foreach my $t (@input_options) {
+  $q_type->{$t->[1]} = $t->[2];
+  $q_example->{$t->[1]} = $t->[3];
+}
+#print STDERR Data::Dumper::Dumper($q_type);
+my $input_option_json = JSON::Any->encode($q_type);
+my $input_example_json = JSON::Any->encode($q_example);
+
+
+
+#print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
+
+</%perl>
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
+
+<& /page/page_title.mas, title=>"BLAST" &>
+
+<div class="boxbgcolor5">This is the new BLAST interface. The old interface is still available <a href="/tools/blast/index.pl">here</a>. Please <a href="mailto:sgn-feedback@solgenomics.net">let us know</a> how you like the new interface.</div><br />
+
+<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a href="/help/tools/blast">Help</a>' &>
+  <input type="hidden" name="outformat" value="0" />
+  <table border="0" align="center" summary="" cellpadding="0" cellspacing="5">
+    <tr><td width="200"><b>Categories</b></td><td width="400">
+	<& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select", selected=>"$preselected_category" &>
+</td><td rowspan="4" align="center"><div id="status_wheel"></div></td></tr>
+    <tr><td><b>Sequence Database</b></td>
+      <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>	
+    </td></tr>
+    <tr><td><b>Program</b></td>
+      <td><& /page/html_select.mas, name=>'program_select', id=>'program_select', choices=>$programs &>
+    </td></tr>
+
+<tr><td><b>Query</b></td><td>
+  <% $input_options_select %>
+  <a id="input_example" href="javascript:show_example()" style="font-size: 80%">Show example</a>
+	</td></tr>
+<tr><td colspan="3">
+
+<!-- div style="font-size: 80%">single sequence only, use Advanced for multiple</div -->
+<textarea name="sequence" id="sequence" rows="8" cols="80"><% $preload_seq %></textarea></td></tr>
+    <tr><td colspan="3">
+      <table width="100%"><tr>
+         <td>
+
+<& /page/info_table.mas, title=>'', data => [ 
+  'Expect (e-value) Threshold' => '<input id="evalue" type="text" size="6" value="1e-10" name="expect" />',
+  'Substitution Matrix' => $substitution_matrix_select,
+  'Max. hits to show' => '<input id="maxhits" type="text" name="maxhits" size="6" value="100" />',
+
+  'Filter' => '<input type="checkbox" name="filterq" checked="1" />',
+  '  ' => '<div style="text-align: right">
+
+<input id="clear_button" type="button" value="Clear" onclick="clear_input_sequence(); "/> <input id="submit_button" type="submit" name="search" value="Search" onclick="javascript:run_blast();" /></div>',
+  __multicol => 2,
+  __border => 0,
+  __tableattrs => 'width="80%"',
+
+]
+
+&>
+
+<br />
+
+
+
+<&| /page/info_section.mas, title=>"Output options", is_subsection=>"1" &>
+<% $parse_options_select %>
+</&>
+         </td>
+      </tr>
+      </table>
+    </td></tr>
+</table>
+</&>
+
+<&| /page/info_section.mas, title=>"Status", collapsible=>1, collapsed =>0 &>
+  <div id="blast_status">Please select your input parameters.</div>
+</&>
+
+<&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a href="javascript:download();">Download</a>' &>
+<table>
+<tr><td><div id="prereqs"></div></td></tr>
+<tr><td><div id="blast_report"></div></td></tr>
+  </table>
+</&>
+
+<div id="jobid"></div>
+
+<script>
+
+swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
+
+
+jQuery('#sequence').attr('spellcheck',false);
+
+jQuery('#dataset_select').change( function() { 
+   var selectedId = jQuery('#dataset_select').find(':selected').attr('value');
+   swap_menu(selectedId);
+});
+
+//jQuery('#input_').change( function() { 
+  // jQuery('#input_example').html( input_examples[jQuery('#input_options').val() ] );
+//});
+
+function show_example(input_option) { 
+	 jQuery('#sequence').html( input_examples[jQuery('#input_options').val() ] );
+}
+
+enable_ui();
+
+
+function swap_menu(group_id) { 
+   var menu_html = eval( <% JSON::Any->encode($menus) %>);
+   jQuery('#database_select').html(menu_html[group_id]);
+}
+
+var database_types = eval (<% $database_type_json %>);
+var input_option_types = eval(<% $input_option_json %>);
+var input_examples = eval(<% $input_example_json %>);
+
+function run_blast() { 
+   var status = "Initializing run... ";
+   jQuery('blast_status').html(status);
+
+   var program  = jQuery('#program_select').val();
+   var sequence = jQuery('#sequence').val();
+   var database = jQuery('#database').val();
+   var evalue   = jQuery('#evalue').val();
+   var matrix   = jQuery('#matrix').val();
+   var graphics = jQuery('#graphics').val();
+   var maxhits  = jQuery('#maxhits').val();
+   var filterq  = jQuery('#filterq').val();
+   var input_option = jQuery('#input_options').val();
+   var format   = jQuery('#parse_options').val() || [ 'Basic' ];
+
+   if (sequence == '') { 
+      alert("Please enter a sequence :-)"); 
+      jQuery('blast_status').html('');
+      return; 
+   }
+
+   if (!blast_program_ok(program,  input_option_types[input_option], database_types[database])) { 
+      alert("The BLAST program does not match the selected database and query.");
+      return;
+   }
+
+   status += "Submitting job... ";
+   jQuery('#blast_status').html(status);
+
+   disable_ui();
+
+   var jobid ="";
+   var seq_count = 0;
+
+   jQuery.ajax( { 
+      url:     '/tools/blast/run/',
+      async:   false,
+      method:  'POST',
+      data:    { 'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 
+                 'filterq': filterq, 'database': database, 'program': program, 
+                  'input_options': input_option 
+               },
+      success: function(response) { if (response.error) { alert("ERROR: "+response.error);
+                                     enable_ui();
+                                     return;
+}
+                                    else{ 
+                                      
+                                      jobid = response.jobid; 
+                                      seq_count = response.seq_count;
+            
+                          // alert("JOB ID: "+jobid);
+                                     }
+
+                                  },
+
+      error:   function(response) { alert("An error occurred. The service may not be available right now."); enable_ui(); return; }
+   });
+
+   status += 'id='+jobid+' ';
+   jQuery('#blast_status').html(status);
+
+   var done = false;
+   var error = false;
+   //alert("JOBID:   "+jobid);
+   while (done == false) { 
+      jQuery.ajax( { 
+          url: '/tools/blast/check/'+jobid,
+          async: false,
+          success: function(response) { 
+             if (response.status == "complete") { 
+                //alert("DONE!!!!");
+                done = true; 
+             }
+             else { 
+                //alert("Status "+response.status);
+            }
+          },
+          error: function(response) { alert("An  error occurred. "); enable_ui(); done=true; error=true;  }
+     });
+     status += '.';
+     if (status.length > 80) { status += '<br />'; }
+     jQuery('#blast_status').html(status);      
+
+   }
+
+   if (error) { return; }
+
+   status = status +  " Run complete.";
+   jQuery('#blast_status').html(status);
+   jQuery('#blast_report').html('');
+
+   var blast_reports = new Array();
+   var prereqs = new Array();
+
+
+   if (seq_count > 1) { 
+     format = [ "Basic" ];
+     alert("Multiple sequences were detected. The output will be shown in the basic format");
+   }
+
+   for (var n in format) { 
+     //alert("Parsing format "+format[n]);
+
+     jQuery.ajax( { 
+       url: '/tools/blast/result/'+jobid,
+       data: { 'format': format[n], 'db_id': database },
+       async: false,
+       success: function(response) { 
+          if (response.blast_report) { 
+              blast_reports.push(response.blast_report);
+              //alert("BLAST report: "+response.blast_report);
+          }
+          if (response.prereqs) { 
+              prereqs.push(response.prereqs);
+          }
+
+       },
+       error: function(response) { alert("Parse BLAST: An error occurred. "+response.error); }
+     });
+   }
+
+   jQuery('#prereqs').html(prereqs.join("\n\n<br />\n\n"));
+
+   jQuery('#blast_report').html(blast_reports.join("<hr />\n"));
+
+   jQuery('#jobid').html(jobid);
+
+   Effects.swapElements('input_parameter_section_offswitch', 'input_parameter_section_onswitch'); 
+   Effects.hideElement('input_parameter_section_content');
+
+   enable_ui();
+
+}
+
+function disable_ui() { 
+   jQuery('#program_select').attr("disabled", "disabled");
+   jQuery('#sequence').attr("disabled", "disabled");
+   jQuery('#database').attr("disabled", "disabled");
+   jQuery('#evalue').attr("disabled", "disabled");
+   jQuery('#matrix').attr("disabled", "disabled");
+   jQuery('#graphics').attr("disabled", "disabled");
+   jQuery('#maxhits').attr("disabled", "disabled");
+   jQuery('#filterq').attr("disabled", "disabled");
+   jQuery('#submit_button').attr("disabled", "disabled");
+   jQuery('#input_options').attr("disabled", "disabled");
+   jQuery('#dataset_select').attr("disabled", "disabled");
+   jQuery('#clear_button').attr("disabled", "disabled");
+   jQuery('#status_wheel').html('<img src="/static/documents/img/wheel.gif" />'); 
+
+}
+
+function enable_ui() { 
+   jQuery('#program_select').removeAttr("disabled");
+   jQuery('#sequence').removeAttr("disabled");
+   jQuery('#database').removeAttr("disabled");
+   jQuery('#evalue').removeAttr("disabled");
+   jQuery('#matrix').removeAttr("disabled");
+   jQuery('#graphics').removeAttr("disabled");
+   jQuery('#maxhits').removeAttr("disabled");
+   jQuery('#filterq').removeAttr("disabled");
+   jQuery('#submit_button').removeAttr("disabled");
+   jQuery('#input_options').removeAttr("disabled");
+   jQuery('#dataset_select').removeAttr("disabled");
+   jQuery('#clear_button').removeAttr("disabled");
+   jQuery('#status_wheel').html('');
+}
+
+function clear_input_sequence() { 
+   jQuery('#sequence').val('');
+}
+
+function blast_program_ok(program, query_type, database_type) { 
+   var ok = new Array();
+   // query database program
+   
+   ok = { 'protein': { nucleotide : { tblastn: 1 }, protein : { 'blastp': 1 } }, 
+          'nucleotide' : { nucleotide : { blastn: 1, tblastx: 1}, protein: { blastx: 1 } } };
+
+   return ok[query_type][database_type][program];
+}
+
+function download() { 
+   var jobid = jQuery('#jobid').html();
+
+   if (jobid == '') { alert("No BLAST has been run yet. Please run BLAST before downloading."); return; }
+
+   window.location.href= '/documents/tempfiles/blast/'+jobid+'.out';
+
+}
+
+
+
+</script>
+
+
+

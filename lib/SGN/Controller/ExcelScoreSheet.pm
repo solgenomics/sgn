@@ -8,8 +8,28 @@ use Spreadsheet::WriteExcel;
 use File::Slurp qw | read_file |;
 use File::Temp;
 use Data::Dumper;
+use CXGN::Trial::TrialLayout;
 
 BEGIN { extends 'Catalyst::Controller'; }
+
+
+sub excel_download_trial : Path('/barcode/trial_excel_download') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id=shift;
+
+    my $tl = CXGN::Trial::TrialLayout->new( { schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+
+    my $trial_data = $tl->get_design();
+
+    print STDERR Data::Dumper::Dumper($trial_data);
+    
+    
+
+
+
+}
+
 
 sub excel_download : Path('/barcode/excel_download/') Args(0) { 
     my $self  =shift;

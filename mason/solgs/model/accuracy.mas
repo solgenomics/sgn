@@ -21,7 +21,7 @@ $validation_download_url => ''
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "10 folds cross-validation report" 
+  title       => "Model accuracy tests" 
 &> 
 
 <& /page/columnar_table.mas,
@@ -30,7 +30,7 @@ $validation_download_url => ''
   __alt_freq   => 2,
   __alt_width  => 1,
   __alt_offset => 3,
-  __align      => 'l',
+  __align      => 'll',
 &>
 
 <br />

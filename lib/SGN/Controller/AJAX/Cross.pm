@@ -52,14 +52,14 @@ __PACKAGE__->config(
 
 sub add_cross : Local : ActionClass('REST') { }
 
-sub add_cross_GET :Args(0) { 
+sub add_cross_POST :Args(0) { 
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
     $c->stash->{cross_name} = $cross_name;
-    my $trial_id = $c->req->param('trial_id');
-    $c->stash->{trial_id} = $trial_id;
+    my $program_id = $c->req->param('program_id');
+    $c->stash->{program_id} = $program_id;
     my $location_id = $c->req->param('location_id');
     my $maternal = $c->req->param('maternal_parent');
     my $paternal = $c->req->param('paternal_parent');
@@ -140,22 +140,27 @@ sub add_cross_GET :Args(0) {
                 nd_geolocation_id => $location_id,
            } ) ;
 
-    my $project = $schema->resultset("Project::Project")->find_or_create(
-            {
-                project_id => $trial_id,
-            } ) ;
+    my $project;
+
+    if ($program_id && $program_id ne 'null') {
+	$project = $schema->resultset("Project::Project")
+	    ->find_or_create(
+			     {
+			      project_id => $program_id,
+			     } ) ;
+    }
 
 
-    my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'accession',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'accession',
-    });
+     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+       { name   => 'accession',
+       cv     => 'stock type',
+       db     => 'null',
+       dbxref => 'accession',
+     });
 
-    #my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
-    #  { name   => 'population',
-    #});
+     #my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
+     #  { name   => 'population',
+     #});
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
       { name   => 'cross',
@@ -234,10 +239,12 @@ sub add_cross_GET :Args(0) {
                 type_id => $population_cvterm->cvterm_id(),
             } );
 
-    #link to the project
-    $experiment->find_or_create_related('nd_experiment_projects', {
-	    project_id => $project->project_id()
-                                            } );
+    if ($project) {
+	#link to the project
+	$experiment->find_or_create_related('nd_experiment_projects', {
+								       project_id => $project->project_id()
+								      } );
+    }
 
     #link the experiment to the stock
     $experiment->find_or_create_related('nd_experiment_stocks' , {

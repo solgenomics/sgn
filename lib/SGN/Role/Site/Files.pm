@@ -27,11 +27,16 @@ attempt to chown tempfiles_subdir and children to the web user
 before 'setup_finalize' => sub {
     my $c = shift;
 
+    print STDERR "CURRENT USER IDS: $<, $>\n";
     # the tempfiles_subdir() function makes and chmods the given
     # directory.  with no arguments, will make and chmod the main
     # tempfiles directory
     my $temp_subdir = Path::Class::Dir->new( $c->path_to( $c->get_conf('tempfiles_subdir') ) );
     my $temp_base   = $c->tempfiles_base;
+
+    print STDERR "TEMP_SUBDIR: $temp_subdir\n";
+    print STDERR "TEMP_BASE: $temp_base\n";
+    
 
     # if clear_tempfiles_on_restart, attempt to delete our temp_base dir
     if( $c->config->{clear_tempfiles_on_restart} ) {
@@ -45,12 +50,15 @@ before 'setup_finalize' => sub {
         }
     }
 
-    $c->log->debug("symlinking tempfiles_base '$temp_base' -> legacy location '$temp_subdir'") if $c->debug;
+    print STDERR "symlinking tempfiles_base '$temp_base' -> legacy location '$temp_subdir'\n";
     $c->make_generated_dir($temp_base);
 
     # Only symlink if it doesn't exist already
     unless( -l $temp_subdir ) {
-        symlink $temp_base, $temp_subdir or die "$! linking $temp_base => $temp_subdir";
+        symlink $temp_base, $temp_subdir or warn "ERROR! $! linking $temp_base => $temp_subdir";
+    }
+    else { 
+	print STDERR "$temp_subdir successfully linked to $temp_base\n";
     }
 
 #     unless( $temp_subdir eq $temp_base ) {
@@ -60,14 +68,14 @@ before 'setup_finalize' => sub {
 #             or die "$! symlinking $temp_subdir => $temp_base";
 #     }
 
-    $c->chown_generated_dir( $temp_subdir ); #< force-set the
+    $c->chown_generated_dir( $temp_base ); #< force-set the
                                              # permissions on the
                                              # main tempfiles dir
 
     # also chown any subdirs that are in the temp dir.
     # this line should be removed eventually, the application itself should take
     # care of creating temp dirs if it wants.
-    $c->chown_generated_dir( $_ ) for grep -d, $temp_subdir->children;
+    $c->chown_generated_dir( $_ ) for grep -d, $temp_base->children;
 
 };
 
@@ -193,11 +201,11 @@ sub tempfiles_subdir {
   my $abs = $self->path_to($dir);
   -d $abs
       or $self->make_generated_dir( $abs )
-      or confess "tempfiles dir '$abs' does not exist, and could not create ($!)";
+      or warn "tempfiles dir '$abs' does not exist, and could not create ($!)";
 
   -w $abs
       or $self->chown_generated_dir( $abs )
-      or confess "could not change permissions of tempdir abs, and '$abs' is not writable. aborting.";
+      or warn "could not change permissions of tempdir abs, and '$abs' is not writable.";
 
   $dir = "/$dir" unless $dir =~ m!^/!;
 
@@ -222,7 +230,13 @@ sub _default_temp_base {
 sub make_generated_dir {
     my ( $self, $tempdir ) = @_;
 
-    mkpath( "$tempdir" );
+    eval { mkpath( "$tempdir" ); };
+
+    if ($@) { 
+	print STDERR "the following error occurred while attempting to generate $tempdir : $@ (may be ok)\n";
+    }
+    else { print STDERR "Successfully created dir $tempdir.\n";  }
+
     unless( -d $tempdir ) {
         warn "dir '$tempdir' creation failed ($!)";
         return;
@@ -236,6 +250,12 @@ sub make_generated_dir {
 # intended only to be used here, and in SGN::Apache2::Startup
 sub chown_generated_dir {
     my ( $self, $temp ) = @_;
+
+    if ($< != 0) { 
+	print STDERR "Not running as root - skipping chown of $temp.\n";
+	return;
+    }
+
     # NOTE:  $temp can be either a dir or a file
 
     my $www_uid = $self->_www_uid; #< this will warn if group is not set correctly
@@ -243,7 +263,9 @@ sub chown_generated_dir {
 
     return unless $www_uid && $www_gid;
 
-    chown -1, $www_gid, $temp;
+    print STDERR "CHOWNING WITH $www_uid, $www_gid\n";
+
+    chown $www_uid, $www_gid, $temp;
 
     # 02775 = sticky group bit (makes files created in that dir belong to that group),
     #         rwx for user,

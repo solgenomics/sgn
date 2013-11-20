@@ -5,6 +5,8 @@ use Moose;
 
 use URI::FromHash 'uri';
 
+use CXGN::BreedersToolbox::Projects;
+
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
@@ -83,19 +85,79 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
 	return;
     }
 
-    my $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')->new( 
-	{ 
-	    description => $description,
-	    longitude   => $longitude,
-	    latitude    => $latitude,
-	    altitude    => $altitude,
-	});
-
+    my $new_row;
+    $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
+      ->new({
+	     description => $description,
+	    });
+    if ($longitude) {
+      $new_row->longitude($longitude);
+    }
+    if ($latitude) {
+      $new_row->latitude($latitude);
+    }
+    if ($altitude) {
+      $new_row->altitude($altitude);
+    }
     $new_row->insert();
-
     $c->stash->{rest} = { success => 1, error => '' };
+}
+
+sub get_breeding_programs : Path('/breeders/programs') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $po = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+
+    my $breeding_programs = $po->get_breeding_programs();
+    
+    $c->stash->{rest} = $breeding_programs;
+}
+
+sub associate_breeding_program_with_trial : Path('/breeders/program/associate') Args(2) { 
+    my $self = shift;
+    my $c = shift;
+    my $breeding_program_id = shift;
+    my $trial_id = shift;
+
+    my $message = "";
+
+    if ($c->user() && $c->user()->check_roles('submitter')) { 
+	my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $c->dbic_schema("Bio::Chado::Schema") } );
+	
+	$message = $program->associate_breeding_program_with_trial($breeding_program_id, $trial_id);
+	
+	#print STDERR "MESSAGE: $xmessage->{error}\n";
+    }
+    else { 
+	$message = { error => "You need to be logged in and have sufficient privileges to associate trials to programs." };
+    }
+    $c->stash->{rest} = $message;
     
 }
 
+sub new_breeding_program :Path('/breeders/program/new') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $name = $c->req->param("name");
+    my $desc = $c->req->param("desc");
+
+    if (!($c->user() || $c->user()->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add a breeding program.' };
+    }
+	    
+       
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+
+    my $error = $p->new_breeding_program($name, $desc);
+
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+    }
+    else { 
+	$c->stash->{rest} =  {};
+    }
+
+}
 
 1;

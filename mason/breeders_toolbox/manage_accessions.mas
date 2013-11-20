@@ -1,0 +1,36 @@
+
+<%args>
+$accessions
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions'] &>
+
+<br />
+<& /page/page_title.mas, title=>"Manage accessions" &>
+
+<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add</a>]' &>
+  <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
+    <div>
+      </br>
+      <a href="/search/phenotypes/stock">Search Accessions</a>
+    </div>
+</&>
+
+<div id="add_accessions_dialog" class="ui-widget" title="Add accessions">
+  <div id="list_div">
+    <label id="select_list_label" for="list_div_list_select" style="display: inline-block; width: 200px;">List of accessions to add:
+    </label>
+  </div>
+</div>
+
+<div id="found_accessions_dialog" class="ui-widget" title="Found accessions">
+  
+</div>
+
+<div id="fuzzy_accessions_dialog" class="ui-widget" title="Fuzzy matches">
+  
+</div>
+
+<div id="absent_accessions_dialog" class="ui-widget" title="Accessions not found">
+  
+</div>

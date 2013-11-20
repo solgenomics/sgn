@@ -176,7 +176,7 @@ my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a href="j
 
 my $edit_privs = $curator || $submitter || $sequencer;
 </%perl>
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers"] &>
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie"] &>
 
 
 <script language="javascript">
@@ -314,6 +314,7 @@ function jqueryStuff() {
   collapsed=>1,
   subtitle=>$ontology_subtitle &>
   <& /ontology/associate_ontology.mas,
+  trait_db_name => $trait_ontology_db_name,
   object_id     => $stock_id ,
   object_name   => "stock",
   cvterm_add_uri=> $cvterm_add_uri,

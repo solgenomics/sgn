@@ -11,105 +11,134 @@ has 'dbh' => (
     );
 
 
+=head2 get_intersect
+
+ Usage:        my %info = $bs->get_intersect($criteria_list, $dataref);
+ Desc:         
+ Ret:          returns a hash with a key called results that contains 
+               a listref of listrefs specifying the matching list with ids
+               and names. 
+ Args:         criteria_list: a comma separated string called a criteria_list, 
+               listing all the criteria that need to be applied. Possible 
+               criteria are trials, years, traits, and locations. The last 
+               criteria in the list is the return type.
+               dataref: The dataref is a hashref of hashrefs. The first key
+               is the target of the transformation, and the second is the
+               source type of the transformation, containing comma separated
+               values of the source type. 
+ Side Effects:
+ Example:
+
+=cut
 
 sub get_intersect { 
     my $self = shift;
     my $criteria_list = shift;
     my $dataref = shift;
     
+    #print STDERR "CRITERIA LIST: ".(join ",", @$criteria_list)."\n";
+    #print STDERR Data::Dumper::Dumper($dataref);
+
     my $type_id = $self->get_type_id('project year');
     my $accession_id = $self->get_stock_type_id('accession');
     my $plot_id = $self->get_stock_type_id('plot');
 
     my %queries = ( 
-	accession => {
-	    location => "SELECT distinct(accession.uniquename), accession.uniquename FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and nd_geolocation.nd_geolocation_id in ($dataref->{accession}->{location})",
+	accessions => {
+	    location => "SELECT distinct(accession.uniquename), accession.uniquename FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and nd_geolocation.nd_geolocation_id in ($dataref->{accessions}->{locations})",
 	    
-	    year     => "SELECT distinct(accession.uniquename), accession.uniquename FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and projectprop.value in ($dataref->{accession}->{year})",
+	    years     => "SELECT distinct(accession.uniquename), accession.uniquename FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and projectprop.value in ($dataref->{accessions}->{years})",
 	    
-	    project  => "SELECT distinct(accession.uniquename), accession.uniquename FROM project JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and project.project_id in ($dataref->{accession}->{project})",
+	    projects  => "SELECT distinct(accession.uniquename), accession.uniquename FROM project JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and project.project_id in ($dataref->{accessions}->{projects})",
 	    
-	    trait    => "SELECT distinct(accession.uniquename), accession.uniquename FROM phenotype JOIN nd_experiment_phenotype using(phenotype_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and phenotype.cvalue_id in ($dataref->{accession}->{trait})",
+	    traits    => "SELECT distinct(accession.uniquename), accession.uniquename FROM phenotype JOIN nd_experiment_phenotype using(phenotype_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and phenotype.cvalue_id in ($dataref->{accessions}->{traits})",
 	    
-	    accession    => "SELECT distinct(stock.uniquename), stock.uniquename FROM stock WHERE stock.type_id=$accession_id",
+	    accessions    => "SELECT distinct(stock.uniquename), stock.uniquename FROM stock WHERE stock.type_id=$accession_id",
 
 	    #genotype => "SELECT distinct(uniquename), stock.uniquename FROM stock as plot JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) nd_experiment_stock USING(stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN ",
 	    
 	},
 
-	plot => {
-	    location => "SELECT distinct(stock.uniquename), stock.uniquename FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) WHERE stock.type_id=$plot_id and nd_geolocation.nd_geolocation_id in ($dataref->{plot}->{location})",
+	plots => {
+	    locations => "SELECT distinct(stock.uniquename), stock.uniquename FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) WHERE stock.type_id=$plot_id and nd_geolocation.nd_geolocation_id in ($dataref->{plots}->{locations})",
 	    
-	    year     => "SELECT distinct(stock.uniquename), stock.uniquename FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE  stock.type_id=$plot_id and projectprop.value in ($dataref->{plot}->{year})",
+	    years     => "SELECT distinct(stock.uniquename), stock.uniquename FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE  stock.type_id=$plot_id and projectprop.value in ($dataref->{plots}->{years})",
 	    
-	    project  => "SELECT distinct(stock.uniquename), stock.uniquename FROM project JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE  stock.type_id=$plot_id and project.project_id in ($dataref->{plot}->{project})",
+	    projects  => "SELECT distinct(stock.uniquename), stock.uniquename FROM project JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE  stock.type_id=$plot_id and project.project_id in ($dataref->{plots}->{projects})",
 	    
-	    trait    => "SELECT distinct(stock.uniquename), stock.uniquename FROM phenotype JOIN nd_experiment_phenotype using(phenotype_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) WHERE  stock.type_id=$plot_id and phenotype.cvalue_id in ($dataref->{plot}->{trait})",
+	    traits    => "SELECT distinct(stock.uniquename), stock.uniquename FROM phenotype JOIN nd_experiment_phenotype using(phenotype_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) WHERE  stock.type_id=$plot_id and phenotype.cvalue_id in ($dataref->{plots}->{traits})",
 	    
-	    plot    => "SELECT distinct(stock.uniquename), stock.uniquename FROM stock WHERE  stock.type_id=$plot_id",
+	    plots    => "SELECT distinct(stock.uniquename), stock.uniquename FROM stock WHERE  stock.type_id=$plot_id",
+	    
+	    accessions => "SELECT distinct(plot.uniquename), plot.uniquename FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id)  JOIN stock as plot ON (stock_relationship.subject_id=plot.stock_id) WHERE plot.type_id=$plot_id and stock.stock_id in ($dataref->{plots}->{accessions})",
 
 	    #genotype => "SELECT distinct(uniquename), stock.uniquename FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN ",
 	    
 	},
 
-	location => { 
-	    year     => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation join nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project USING (nd_experiment_id) JOIN projectprop using(project_id) where projectprop.value in ($dataref->{location}->{year})",
-	    project  => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE project.project_id in ($dataref->{location}->{project})",
+	locations => { 
+	    years     => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation join nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project USING (nd_experiment_id) JOIN projectprop using(project_id) where projectprop.value in ($dataref->{locations}->{years})",
+	    projects  => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE project.project_id in ($dataref->{locations}->{projects})",
 	    
-	    location => "SELECT nd_geolocation_id, description FROM nd_geolocation",
+	    locations => "SELECT nd_geolocation_id, description FROM nd_geolocation",
 	    
-	    plot    => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock USING (nd_experiment_id) WHERE stock in ($dataref->{location}->{plot})",
+	    plots    => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock USING (nd_experiment_id) WHERE stock in ($dataref->{locations}->{plots})",
 	    
-	    trait    => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment USING (nd_geolocation_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) WHERE cvalue_id in ($dataref->{location}->{trait})",
+	    traits    => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment USING (nd_geolocation_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) WHERE cvalue_id in ($dataref->{locations}->{traits})",
 
+	    accessions => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment USING (nd_geolocation_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.type_id=$accession_id and stock.stock_id in ($dataref->{locations}->{accessions})",
 	    #genotype => "",
 	    
 	},
 	
-	year => {
-	    location => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING (project_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_geolocation USING (nd_geolocation_id) where nd_geolocation_id in ($dataref->{year}->{location})",
+	years => {
+	    locations => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING (project_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_geolocation USING (nd_geolocation_id) where nd_geolocation_id in ($dataref->{years}->{locations})",
 	    
-	    project  => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN  project using(project_id) WHERE project.project_id in ($dataref->{year}->{project})",
+	    projects  => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN  project using(project_id) WHERE project.project_id in ($dataref->{years}->{projects})",
 	    
-	    year     => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop WHERE type_id=$type_id",
+	    years     => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop WHERE type_id=$type_id",
 	    
-            plot    => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) WHERE type_id=$type_id AND stock_id IN ($dataref->{year}->{plot})",
+            plots    => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) WHERE type_id=$type_id AND stock_id IN ($dataref->{years}->{plots})",
 	    
-	    trait    => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING(phenotype_id) WHERE type_id=$type_id AND cvalue_id IN ($dataref->{year}->{trait})",
+	    traits    => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING(phenotype_id) WHERE type_id=$type_id AND cvalue_id IN ($dataref->{years}->{traits})",
 
+	    accessions => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) WHERE type_id=$accession_id and stock.stock_id in ($dataref->{years}->{accessions})",
 	    #genotype => "",
 	    
 	    
 	},
 	
 	
-	project => { 
-	    location => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id) WHERE nd_geolocation_id in ($dataref->{project}->{location})",
-	    year     => "SELECT distinct(project_id), project.name FROM project JOIN projectprop USING (project_id) WHERE projectprop.value in ($dataref->{project}->{year})",
+	projects => { 
+	    locations => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id) WHERE nd_geolocation_id in ($dataref->{projects}->{locations})",
+	    years     => "SELECT distinct(project_id), project.name FROM project JOIN projectprop USING (project_id) WHERE projectprop.value in ($dataref->{projects}->{years})",
 	    
-	    project  => "SELECT project_id, project.name FROM project", 
+	    projects  => "SELECT project_id, project.name FROM project", 
 	    
-	    plot    => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) WHERE stock_id in ($dataref->{project}->{plot})",
+	    plots    => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) WHERE stock_id in ($dataref->{projects}->{plots})",
 	    
-	    trait    => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) WHERE cvalue_id in ($dataref->{project}->{trait})",
+	    traits    => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) WHERE cvalue_id in ($dataref->{projects}->{traits})",
 
+	    accessions => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.type_id=$accession_id and stock.stock_id in ($dataref->{projects}->{accessions})",
 	    #genotype => "",
 	    
 	},
 	
-	trait  => { 
+	traits  => { 
 
 	    prereq   => "DROP TABLE IF EXISTS cvalue_ids; CREATE TEMP TABLE cvalue_ids AS SELECT distinct(cvalue_id), phenotype_id FROM phenotype",
 
-	    location => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id)  WHERE nd_geolocation.nd_geolocation_id in ($dataref->{trait}->{location})",
+	    locations => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE nd_geolocation.nd_geolocation_id in ($dataref->{traits}->{locations})",
 	    
-	    year => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN projectprop USING(project_id) WHERE projectprop.type_id=$type_id and projectprop.value IN ($dataref->{trait}->{year})", 
+	    years => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN projectprop USING(project_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE projectprop.type_id=$type_id and projectprop.value IN ($dataref->{traits}->{years})", 
 	    
-	    project => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING(project_id) WHERE project.project_id in ($dataref->{trait}->{project})",
+	    projects => "SELECT distinct(cvterm_id), db.name || ':' || cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING(project_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE project.project_id in ($dataref->{traits}->{projects})",
 	    
-	    trait => "SELECT distinct(cvterm_id), cvterm.name FROM cvalue_ids JOIN cvterm on (cvalue_id=cvterm_id)",
+	    traits => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM cvalue_ids JOIN  cvterm on (cvalue_id=cvterm_id) JOIN dbxref using(dbxref_id) JOIN db USING(db_id)",
 
-	    plot => "SELECT distinct(cvterm_id), cvterm.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (cvalue_id=cvterm_id) WHERE stock_id IN ($dataref->{trait}->{plot})",
+	    plots => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (cvalue_id=cvterm_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE stock_id IN ($dataref->{traits}->{plots})",
+
+	    accessions => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (cvalue_id=cvterm_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE stock_id IN ($dataref->{traits}->{plots})",
 
 	    #genotype => "",
 	    
@@ -128,13 +157,12 @@ sub get_intersect {
 
     foreach my $criterion (@$criteria_list) { 
 	if (exists($queries{$item}->{$criterion}) && $queries{$item}->{$criterion} && $dataref->{$item}->{$criterion}) { 
-	    print STDERR "ITEM: $item. CRIT: $criterion. DATA: $queries{$item}->{$criterion}\n";
-	    push @query, $queries{$item}{$criterion};
+       	    push @query, $queries{$item}{$criterion};
 	}
     }
     my $query = join (" INTERSECT ", @query);
-        
-    print STDERR "QUERY: $query\n";
+    
+    #print STDERR "QUERY: $query\n";
     my $h = $self->dbh->prepare($query);
     $h->execute();
     
@@ -143,14 +171,35 @@ sub get_intersect {
 	push @results, [ $id, $name ];
     }    
     
-    #  if ($item eq "stock" && 
-    # my $genotype_q = "SELECT distinct(stock_id), uniquename FROM stock as accession JOIN stock_relationship on (accession.stock_id=object_id) JOIN stock as plot on (plot.stock_id=subject_id) where plot.uniquename in ($plot_list)";
+    if (@results <= 10_000) { 
+	return { results => \@results };
+    }
+    else { 
+	
+	return { message => 'Too many items to display ('.(scalar(@results)).')' };
 
-
-    return \@results;
+    }
 }
 
+sub get_phenotype_info {  
+    my $self = shift;
+    my $accession_sql = shift;
+    my $trial_sql = shift;
+    my $trait_sql = shift;
 
+    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) JOIN stock ON (object_id=stock.stock_id) JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id) JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN project USING(project_id)  WHERE cvterm.cvterm_id in ($trait_sql) and project.project_id in ($trial_sql) and stock.stock_id in ($accession_sql)";
+
+    print STDERR "QUERY: $q\n\n";
+    my $h = $self->dbh()->prepare($q);
+    $h->execute();
+
+    my $result = [];
+    while (my ($project_name, $stock_name, $location, $trait, $value) = $h->fetchrow_array()) { 
+	push @$result, [ $project_name, $stock_name, $location, $trait, $value ];
+	
+    }
+    return $result;
+}
 
 
 sub get_type_id { 

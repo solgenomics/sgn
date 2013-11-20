@@ -28,16 +28,12 @@ $descriptive_stat
 
 <div id="phenoPlot">
 
- <input type="hidden" name="population_id" value="<% $pop_id %>" /> 
- <input type="hidden" name="combo_pops_id" value="<% $combo_pops_id %>" /> 
- <input type="hidden" name="trait_id" value="<% $trait_id %>" /> 
-
 </div>
 
-<button id="phenozoom-reset">Reset zoom</button>
+<button class="button" id="phenozoom-reset">Reset zoom</button>
 <br/>
 <br/>
-<h1 style="text-align:center">Overview</h1>
+<h3 style="text-align:center">Overview</h3>
 <div id="phenoPlotOverview"> 
 </div>
  
@@ -51,4 +47,8 @@ $descriptive_stat
 &>
 
 <br/>
+
+<input type="hidden" id="population_id" value="<% $pop_id %>" /> 
+<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
+<input type="hidden" id="trait_id" value="<% $trait_id %>" />  
 

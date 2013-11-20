@@ -1,0 +1,44 @@
+<%doc>
+
+displays a list of traits and their acronyms.
+
+</%doc>
+
+<%args>
+
+$acronym
+
+</%args>
+
+<%perl>
+
+
+</%perl>
+
+
+
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 1, 
+    title       => "Trait names and their acronyms",
+&>
+
+
+<& /page/columnar_table.mas,
+     headings    => ['Acronym',  'Trait'],
+     data        => $acronym,
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __align      => 'll'
+&>
+
+</&>
+
+
+
+
+
+
+
+
