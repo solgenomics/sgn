@@ -1,0 +1,36 @@
+
+<%args>
+$line_count => 0
+$page_size => 50
+$page_number => 1
+$dumpfile
+$idType
+</%args>
+
+<%perl>
+
+=head2 buttons
+
+  Desc: draws buttons
+  Args: default
+  Ret : n/a
+
+  Calls components for buttons that will display on the html display pages.
+
+=cut
+
+if ($page_size == 0) { $page_size = 50; }
+my $pages = ( int( $line_count / $page_size ) ) + 1;
+
+</%perl>
+
+<br />Page <% $page_number %> of <% $pages %> |
+<& /tools/bulk/display/buttons/previous.mas, page_number => $page_number, dumpfile => $dumpfile &>
+ |
+<& /tools/bulk/display/buttons/summary.mas, dumpfile=>$dumpfile, idType=>$idType &>
+ | 
+<a href="/tools/bulk">New query</a>
+ | 
+<& /tools/bulk/display/buttons/next.mas, page_number => $page_number, page_size=>$page_size, line_count => $line_count, dumpfile=>$dumpfile &>
+<br /><br />
+

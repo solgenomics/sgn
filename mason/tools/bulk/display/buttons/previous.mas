@@ -1,0 +1,27 @@
+
+<%args>
+$page_number => 1
+$dumpfile
+</%args>
+
+<%perl>
+
+=head2 previousButtons
+
+  Desc: sub previousButtons
+  Args: default
+  Ret : n/a
+
+  Determines the previous button that will display on the html display pages.
+
+=cut
+
+</%perl>
+
+% if ( ( $page_number - 1 ) > 0 ) {
+<a href="display.pl?dumpfile=<% $dumpfile %>&amp;page_number=<% $page_number - 1 %>">Previous Page</a>
+% }
+% else {
+  Previous Page
+% }
+
