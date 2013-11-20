@@ -21,17 +21,32 @@ jQuery(document).ready(function ($) {
     var list = new CXGN.List();
 
 
+    $("#review_fuzzy_matches_dialog").dialog({
+	autoOpen: false,	
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+	    Ok: function() {
+	    	alert("reviewed fuzzy matches");
+	    },
+	}
+    });
+
     function review_verification_results(verifyResponse){
-	if (verifyResponse.found) {
-	    alert("found");
-	}
+
 	if (verifyResponse.fuzzy) {
-	    alert("fuzzy");
+	    //alert("fuzzy");
+	    $('#review_fuzzy_matches_dialog').dialog('open');
 	}
-	if (verifyResponse.absent) {
-	    alert("absent");
-	}
-	alert("done");
+	//if (verifyResponse.found) {
+	//    alert("found");
+	//}
+	//if (verifyResponse.absent) {
+	//    alert("absent");
+	//}
+	//alert("done");
     } 
 
     function verify_accession_list() {
@@ -51,7 +66,6 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
 		    alert(response.error);
                 } else {
-		    //alert('success');
 		    review_verification_results(response);
                 }
 	    },

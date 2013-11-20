@@ -23,11 +23,14 @@ $accessions
   </div>
 </div>
 
-<div id="found_accessions_dialog" class="ui-widget" title="Found accessions">
-  
+<div id="review_fuzzy_matches_dialog" class="ui-widget" title="Fuzzy matches">
+  Fuzzy matches:<br>
+  <div id="view_fuzzy_matches">
+    
+  </div>
 </div>
 
-<div id="fuzzy_accessions_dialog" class="ui-widget" title="Fuzzy matches">
+<div id="found_accessions_dialog" class="ui-widget" title="Found accessions">
   
 </div>
 
