@@ -34,68 +34,109 @@ has 'schema' => (
 
 
 sub get_matches {
-    my $self = shift;
-    my $accession_list_ref = shift;
-    my $max_distance = shift;
-    my $schema = $self->get_schema();
-    my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"accession" })->first->cvterm_id();
-    my $stock_rs = $schema->resultset("Stock::Stock")->search({type_id=>$type_id,});
-    my @accession_list = @{$accession_list_ref};
-    my $stock;
-    my $synonym_prop;
-    my %synonym_uniquename_lookup;
-    my @stock_names;
-    my @synonym_names;
-    my $fuzzy_string_search = CXGN::String::FuzzyMatch->new();
-    my @results;
+  my $self = shift;
+  my $accession_list_ref = shift;
+  my $max_distance = shift;
+  my $schema = $self->get_schema();
+  my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"accession" })->first->cvterm_id();
+  my $stock_rs = $schema->resultset("Stock::Stock")->search({type_id=>$type_id,});
+  my @accession_list = @{$accession_list_ref};
+  my $stock;
+  my $synonym_prop;
+  my %synonym_uniquename_lookup;
+  my @stock_names;
+  my @synonym_names;
+  my $fuzzy_string_search = CXGN::String::FuzzyMatch->new();
+  my @fuzzy_accessions;
+  my @absent_accessions;
+  my @found_accessions;
+  my %results;
 
-    while ($stock = $stock_rs->next()) {
-      my $unique_name = $stock->uniquename();
-      my $synonym_rs =$schema->resultset("Stock::Stockprop")
-	->search({
-		  stock_id => $stock->stock_id(),
-		  'lower(type.name)'       => { like => '%synonym%' },
-		 },{join => 'type' });
-      push (@stock_names, $unique_name);
-      while ($synonym_prop = $synonym_rs->next()) {
-	my $synonym_name = $synonym_prop->value();
-	if ($synonym_uniquename_lookup{$synonym_name}) {
-	  push (@{$synonym_uniquename_lookup{$synonym_name}},$unique_name);
+
+  while ($stock = $stock_rs->next()) {
+    my $unique_name = $stock->uniquename();
+    my $synonym_rs =$schema->resultset("Stock::Stockprop")
+      ->search({
+		stock_id => $stock->stock_id(),
+		'lower(type.name)'       => { like => '%synonym%' },
+	       },{join => 'type' });
+    push (@stock_names, $unique_name);
+    while ($synonym_prop = $synonym_rs->next()) {
+      my $synonym_name = $synonym_prop->value();
+      if ($synonym_uniquename_lookup{$synonym_name}) {
+	push (@{$synonym_uniquename_lookup{$synonym_name}},$unique_name);
+      } else {
+	my @unique_names = [$unique_name];
+	$synonym_uniquename_lookup{$synonym_name} = \@unique_names;
+      }
+    }
+  }
+
+  @synonym_names = keys %synonym_uniquename_lookup;
+  push (@stock_names, @synonym_names);
+
+  foreach my $accession_name (@accession_list) {
+    my @matches;
+    my @accession_matches = @{$fuzzy_string_search->get_matches($accession_name, \@stock_names, $max_distance)};
+    my $more_than_one_perfect_match = 0;
+    my $more_than_one_unique_name_for_synonym = 0;
+    my $has_one_unique_match = 0;
+
+    if (scalar @accession_matches eq 0) {
+      push (@absent_accessions, $accession_name);
+    } else {
+      my $matched_string = $accession_matches[0]->{'string'};
+
+
+      #Make sure that there isn't more than one perfect match
+      if ($accession_matches[1]) {
+	my $next_matched_string = $accession_matches[1]->{'string'};
+	if ($next_matched_string eq $accession_name) {
+	  $more_than_one_perfect_match = 1;
+	}
+      }
+
+      #Store accession name to found list if there is one unique match
+      if ( $matched_string eq $accession_name && !$more_than_one_perfect_match) {
+	my %found_accession_and_uniquenames;
+	my @unique_names_of_synonym;
+	@unique_names_of_synonym = @{$synonym_uniquename_lookup{$matched_string}};
+	if (scalar @unique_names_of_synonym > 0) {
+	  $more_than_one_unique_name_for_synonym = 1;
 	}
 	else {
-	  my @unique_names = [$unique_name];
-	  $synonym_uniquename_lookup{$synonym_name} = \@unique_names;
+	  #$found_accession_and_uniquenames{'matched_string'} = $accession_name;
+	  #$found_accession_and_uniquenames{'unique_name'} = \@unique_names_of_synonym;
+	  #push (@found_accessions, \%found_accession_and_uniquenames);
+	  push (@found_accessions, $accession_name);
+	  $has_one_unique_match = 1;
 	}
       }
-    }
 
-    @synonym_names = keys %synonym_uniquename_lookup;
-    push (@stock_names, @synonym_names);
-
-    foreach my $accession_name (@accession_list) {
-      my @matches;
-      my @accession_matches = @{$fuzzy_string_search->get_matches($accession_name, \@stock_names, $max_distance)};
-
-      foreach my $match (@accession_matches) {
-	my $matched_name = $match->{'string'};
-	my $distance = $match->{'distance'};
-	my %match_info;
-	$match_info{'name'} = $matched_name;
-	$match_info{'distance'} = $distance;
-	if ($synonym_uniquename_lookup{$matched_name}) {
-	  $match_info{'unique_names'} = $synonym_uniquename_lookup{$matched_name};
-	} else {
-	  my @unique_names_array = [$matched_name];
-	  $match_info{'unique_names'} = \@unique_names_array;
+      if (!$has_one_unique_match) {
+	foreach my $match (@accession_matches) {
+	  my $matched_name = $match->{'string'};
+	  my $distance = $match->{'distance'};
+	  my %match_info;
+	  $match_info{'name'} = $matched_name;
+	  $match_info{'distance'} = $distance;
+	  if ($synonym_uniquename_lookup{$matched_name}) {
+	    $match_info{'unique_names'} = $synonym_uniquename_lookup{$matched_name};
+	  } else {
+	    my @unique_names_array = [$matched_name];
+	    $match_info{'unique_names'} = \@unique_names_array;
+	  }
+	  push (@matches, \%match_info);
 	}
-	push (@matches, \%match_info);
+	push (@fuzzy_accessions, \@matches);
       }
-      push (@results, \@matches);
     }
-
-    return \@results;
+  }
+  $results{'found'} = \@found_accessions;
+  $results{'fuzzy'} = \@fuzzy_accessions;
+  $results{'absent'} = \@absent_accessions;
+  return \%results;
 }
-
 ###
 1;
 ###
