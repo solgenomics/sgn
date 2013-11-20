@@ -1,3 +1,4 @@
+/*jslint browser: true, devel: true */
 /**
 
 =head1 Accessions.js
@@ -13,11 +14,13 @@ Jeremy D. Edwards <jde22@cornell.edu>
 
 */
 
-jQuery(document).ready(function () {
+var $j = jQuery.noConflict();
+
+jQuery(document).ready(function ($) {
 
     var list = new CXGN.List();
 
-    jQuery( "#add_accessions_dialog" ).dialog({
+    $( "#add_accessions_dialog" ).dialog({
 	autoOpen: false,
 	modal: true,
 	autoResize:true,
@@ -26,23 +29,23 @@ jQuery(document).ready(function () {
 	buttons: {
 	    Ok: function() {
 		verify_accession_list();
-		//jQuery(this).dialog( "close" );
+		//$(this).dialog( "close" );
 		//location.reload();
 	    }
 	}
     });
 
-    jQuery('#add_accessions_link').click(function () {
-        jQuery('#add_accessions_dialog').dialog("open");
-	jQuery("#list_div").append(list.listSelect("accessions"));
+    $('#add_accessions_link').click(function () {
+        $('#add_accessions_dialog').dialog("open");
+	$("#list_div").append(list.listSelect("accessions"));
     });
 
     function verify_accession_list () {
-	var accession_list_id = jQuery('#accessions_list_select').val();
+	var accession_list_id = $('#accessions_list_select').val();
 	var accession_list = JSON.stringify(list.getList(accession_list_id));
 	alert(accession_list);
 
-	new jQuery.ajax({
+	$.ajax({
 	    type: 'POST',
 	    url: '/ajax/accession_list/verify',
 	    dataType: "json",
@@ -61,17 +64,17 @@ jQuery(document).ready(function () {
 	    }
         });
     }
-jQuery( "${0:my_dialog_div_id}" ).dialog({
-    autoOpen: false,	
-    modal: true,
-    autoResize:true,
-    width: 500,
-    position: ['top', 150],
-    buttons: {
-	Ok: function() {
-	    
-	},
-    }
-});
+    $( "${0:my_dialog_div_id}" ).dialog({
+	autoOpen: false,	
+	modal: true,
+	autoResize:true,
+	width: 500,
+	position: ['top', 150],
+	buttons: {
+	    Ok: function() {
+		
+	    },
+	}
+    });
     
 });
