@@ -21,7 +21,7 @@ jQuery(document).ready(function ($) {
     var list = new CXGN.List();
 
 
-    function review_verification_results( verifyResponse ){
+    function review_verification_results(verifyResponse){
 	if (verifyResponse.found) {
 	    alert("found");
 	}
@@ -31,7 +31,7 @@ jQuery(document).ready(function ($) {
 	if (verifyResponse.absent) {
 	    alert("absent");
 	}
-
+	alert("done");
     } 
 
     function verify_accession_list() {
@@ -42,6 +42,7 @@ jQuery(document).ready(function ($) {
 	$.ajax({
 	    type: 'POST',
 	    url: '/ajax/accession_list/verify',
+	    async: false,
 	    dataType: "json",
 	    data: {
                 'accession_list': accession_list,

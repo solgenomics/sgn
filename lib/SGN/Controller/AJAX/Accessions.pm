@@ -40,6 +40,10 @@ sub verify_accession_list_POST : Args(0) {
   my $fuzzy_search_result;
   my $max_distance = 0.01;
   my @accession_list;
+  my @found_accessions;
+  my @fuzzy_accessions;
+  my @absent_accessions;
+
 
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
@@ -55,11 +59,11 @@ sub verify_accession_list_POST : Args(0) {
   $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
   print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
- $c->stash->{rest} = {success => "1",};
- $c->stash->{rest} = {found => "1",};
- $c->stash->{rest} = {fuzzy => "1",};
- $c->stash->{rest} = {absent => "1",};
-
+  @found_accessions = $fuzzy_search_result->{'found'};
+  @fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+  @absent_accessions = $fuzzy_search_result->{'absent'};
+  $c->stash->{rest} = {success => "1", absent => \@absent_accessions, fuzzy => \@fuzzy_accessions, found => \@found_accessions};
+  return;
 }
 
 sub _parse_list_from_json {

@@ -98,17 +98,16 @@ sub get_matches {
 
       #Store accession name to found list if there is one unique match
       if ( $matched_string eq $accession_name && !$more_than_one_perfect_match) {
-	my %found_accession_and_uniquenames;
+	my %found_accession_and_uniquename;
 	my @unique_names_of_synonym;
 	@unique_names_of_synonym = @{$synonym_uniquename_lookup{$matched_string}};
 	if (scalar @unique_names_of_synonym > 0) {
 	  $more_than_one_unique_name_for_synonym = 1;
 	}
 	else {
-	  #$found_accession_and_uniquenames{'matched_string'} = $accession_name;
-	  #$found_accession_and_uniquenames{'unique_name'} = \@unique_names_of_synonym;
-	  #push (@found_accessions, \%found_accession_and_uniquenames);
-	  push (@found_accessions, $accession_name);
+	  $found_accession_and_uniquename{'matched_string'} = $accession_name;
+	  $found_accession_and_uniquename{'unique_name'} = $unique_names_of_synonym[0];
+	  push (@found_accessions, \%found_accession_and_uniquename);
 	  $has_one_unique_match = 1;
 	}
       }
