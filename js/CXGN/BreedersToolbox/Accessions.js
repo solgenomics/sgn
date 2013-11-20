@@ -37,7 +37,7 @@ jQuery(document).ready(function ($) {
     function review_verification_results(verifyResponse){
 
 	if (verifyResponse.fuzzy) {
-	    //alert("fuzzy");
+	    alert(verifyResponse[0]);
 	    $('#review_fuzzy_matches_dialog').dialog('open');
 	}
 	//if (verifyResponse.found) {

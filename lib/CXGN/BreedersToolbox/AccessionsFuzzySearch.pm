@@ -136,7 +136,10 @@ sub get_matches {
 	  }
 	  push (@matches, \%match_info);
 	}
-	push (@fuzzy_accessions, \@matches);
+	my %accession_and_fuzzy_matches;
+	$accession_and_fuzzy_matches{'name'} = $accession_name;
+	$accession_and_fuzzy_matches{'matches'} = \@matches;
+	push (@fuzzy_accessions, \%accession_and_fuzzy_matches);
       }
     }
   }
