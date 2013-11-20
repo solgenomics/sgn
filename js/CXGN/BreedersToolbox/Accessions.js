@@ -20,26 +20,6 @@ jQuery(document).ready(function ($) {
 
     var list = new CXGN.List();
 
-    $( "#add_accessions_dialog" ).dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 150],
-	buttons: {
-	    Ok: function() {
-		verify_accession_list();
-		//$(this).dialog( "close" );
-		//location.reload();
-	    }
-	}
-    });
-
-    $('#add_accessions_link').click(function () {
-        $('#add_accessions_dialog').dialog("open");
-	$("#list_div").append(list.listSelect("accessions"));
-    });
-
     function verify_accession_list () {
 	var accession_list_id = $('#accessions_list_select').val();
 	var accession_list = JSON.stringify(list.getList(accession_list_id));
@@ -64,6 +44,27 @@ jQuery(document).ready(function ($) {
 	    }
         });
     }
+
+    $( "#add_accessions_dialog" ).dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+	    Ok: function() {
+		verify_accession_list();
+		//$(this).dialog( "close" );
+		//location.reload();
+	    }
+	}
+    });
+
+    $('#add_accessions_link').click(function () {
+        $('#add_accessions_dialog').dialog("open");
+	$("#list_div").append(list.listSelect("accessions"));
+    });
+
     $( "${0:my_dialog_div_id}" ).dialog({
 	autoOpen: false,	
 	modal: true,
