@@ -5,8 +5,10 @@ use Moose;
 
 BEGIN { extends 'Catalyst::Controller' };
 
-use strict;
-use warnings;
+use Data::Dumper;
+use File::Slurp qw | read_file |;
+use Cache::File; 
+use File::Spec::Functions;
 
 use CXGN::Bulk::BAC;
 use CXGN::Bulk::UnigeneConverter;
@@ -25,11 +27,12 @@ sub download : Path('/tools/bulk/download') Args(0) {
     my $c = shift;
 
     my $params = $c->req->params();
+
+    print STDERR "PARAMS: ".Data::Dumper::Dumper($params);
     
-    _invalid_params() unless $params->{idType};
+    _invalid_params($c) unless $params->{idType};
 
-
-    $params->{dbc}     = CXGN::DB::Connection->new;
+    $params->{dbc}     = $c->dbc->dbh();
     $params->{tempdir} = $c->path_to( $c->tempfiles_subdir('bulk') );
     
     #create correct bulk object
@@ -78,14 +81,19 @@ sub download : Path('/tools/bulk/download') Args(0) {
     
     if ( $bulk->process_parameters() ) {
 	$bulk->process_ids();
-	#die "process 2 ($bulk)" ;
-	$bulk->result_summary_page();
+	$bulk->create_dumpfile();
+
+	$bulk->result_summary();
+
+	my $dumpfile = $bulk->get_dumpfile();
+	my $notfoundfile = $bulk->get_notfoundfile();
+	
+	$c->forward("Bulk::Display", "display_summary_page", [ $dumpfile ]);
     }
     else {
 	$c->stash->{message}  = $bulk->error_message();
 	$c->stash->{template} = '/generic_message.mas';
     }
-    $bulk->clean_up();
 }
 
 =head2 get_parameters

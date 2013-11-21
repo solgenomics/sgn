@@ -12,16 +12,15 @@
 =cut
 
 package CXGN::Bulk;
+
 use strict;
 use warnings;
 use Carp;
 use File::Temp;
-use File::Spec;
+use File::Spec::Functions;
+use Cache::File;
 
 use File::Slurp qw/slurp/;
-
-use CXGN::DB::Connection;
-
 
 =head2 new
 
@@ -76,16 +75,16 @@ sub create_dumpfile {
     {
 
         # generate tmp file names and open files for writing
-        $self->{dumpfile} = File::Temp->new( TEMPLATE => File::Spec->catfile( $self->{tempdir}, "bulk-XXXXXX" ), UNLINK => 0 )->filename;
+        $self->{dumpfile} = File::Temp->new( TEMPLATE => catfile( $self->{tempdir}, "bulk-XXXXXX" ), UNLINK => 0 )->filename;
 	$self->{dumpfile} =~ s!$self->{tempdir}/!!;
 
         $self->debug( "FILENAME: " . $self->{dumpfile} );
-        my $filepath = $self->{tempdir} . "/" . $self->{dumpfile};
+        my $filepath = catfile($self->{tempdir}, $self->{dumpfile});
         open( $self->{dump_fh}, '>', $filepath )
-          || $self->{page}->error_page("Can't open $filepath");
+          || die "Can't open $filepath";
         $self->{notfoundfile} = $self->{dumpfile} . ".notfound";
         open( $self->{notfound_fh}, '>', "$self->{tempdir}/$self->{notfoundfile}" )
-          || $self->{page}->error_page("Can't open $self -> {notfoundfile}");
+	    || die "Can't open $self -> {notfoundfile}";
 
         # write file header
         @output_fields = @{ $self->{output_fields} };
@@ -99,6 +98,8 @@ sub create_dumpfile {
 
 =head2 result_summary_page
 
+    DEPRECATED
+
   Desc: sub result_summary_page
   Args: CXGN::Page object
   Ret : n/a
@@ -108,6 +109,7 @@ sub create_dumpfile {
 
 =cut
 
+### DEPRECATED
 sub result_summary_page {
     my $self         = shift;
     my $summary_file = $self->{tempdir} . "/" . $self->{dumpfile} . ".summary";
@@ -216,6 +218,66 @@ EOHTML
     return $summary_file;
 }
 
+sub result_summary { 
+    my $self = shift;
+    
+    my $cache_root = catfile($self->{tempdir}, $self->{dumpfile} . ".summary");
+
+    my $lines_read =
+	( $self->get_file_lines( catfile($self->{tempdir}, $self->{dumpfile}) ) - 1);
+    my $notfoundcount =
+      $self->get_file_lines( catfile($self->{tempdir}, $self->{notfoundfile} ));
+    my $total        = $lines_read;
+    my $file         = $self->{dumpfile};
+    my $notfoundfile = $self->{notfoundfile};
+    my $idType       = $self->{idType};
+    my $query_time   = $self->{query_time};
+    my $filesize =
+	(stat( catfile($self->{tempdir}, $self->{dumpfile})))[7] / 1000;
+    my $missing_ids     = @{ $self->{ids} } - $notfoundcount - $lines_read;
+    my $missing_ids_msg = "";
+    my $file_lines = 0; #fix
+	#$self->getFileLines( $self->{tempdir} . "/" . $self->{dumpfile} );
+    
+    my $numlines = scalar( @{ $self->{ids} } );
+    if ( $missing_ids > 0 ) {
+        $missing_ids_msg = "$missing_ids ids were not retrieved from the database because they were not part of the corresponding unigene set or because there were duplicate entries in the submitted id list.";
+    }
+
+    my $fastalink     = " Fasta ";
+    my $fastadownload = " Fasta ";
+    my $fastamessage  = "Note: Fasta option is not available because you didn't
+                        choose a sequence to download.<br />";
+    if ( join( " ", @{ $self->{output_fields} } ) =~ /seq/i ) {
+        $fastalink =
+"<a href=\"display.pl?outputType=Fasta&amp;dumpfile=$file\">Fasta</a>";
+        $fastadownload =
+"<a href=\"display.pl?outputType=Fasta&amp;dumpfile=$file&amp;download=1\">Fasta</a>";
+        $fastamessage = "";
+    }
+
+    my $cache = Cache::File->new( cache_root => $cache_root );
+    
+    my $summary_data = { 
+	fastalink => $fastalink,
+	fastadownload => $fastadownload,
+	fastamessage => $fastamessage,
+	missing_ids_msg => $missing_ids_msg,
+	file => $file,
+	total => $total,
+	query_time => $query_time,
+	filesize => $filesize,
+	numlines => $numlines, # number of lines in query
+	lines_read => $lines_read,  # number of lines in file
+	idType => $idType,
+    };
+
+    foreach my $k (keys(%$summary_data)) { 
+	$cache->set($k, $summary_data->{$k});
+    }
+}
+
+
 =head2 error_message
 
   Desc: sub error_message
@@ -279,7 +341,7 @@ sub get_file_lines {
 
 sub clean_up {
     my $self = shift;
-    $self->{db}->disconnect(42);
+    $self->{db}->disconnect();
 }
 
 =head2 debug
@@ -323,14 +385,17 @@ sub check_ids {
 
     #do some simple parameter checking
 
+    print STDERR "PROCESSING IDS: $self->{ids}. ($self->{idType})\n";
+
     return @ids if ( $self->{idType} eq "" );
-    return @ids if ( $self->{ids_string} !~ /\w/ );
+    return @ids if ( $self->{ids} !~ /\w/ );
 
     #make sure the input string isn't too big
-    return @ids if length( $self->{ids_string} ) > 1_000_000;
+    return @ids if length( $self->{ids} ) > 1_000_000;
+
 
     # clean up data retrieved
-    my $ids = $self->{ids_string};
+    my $ids = $self->{ids};
     $ids =~ s/^\s+//;
     $ids =~ s/\n+/ /g;
     $ids =~ s/\s+/ /g;    # compress multiple returns into one
@@ -370,5 +435,66 @@ sub process_parameters {
 sub process_ids {
 
 }
+
+=head2 accessors get_dumpfile, set_dumpfile
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_dumpfile {
+  my $self = shift;
+  return $self->{dumpfile}; 
+}
+
+sub set_dumpfile {
+  my $self = shift;
+  $self->{dumpfile} = shift;
+}
+
+=head2 accessors get_notfoundfile, set_notfoundfile
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_notfoundfile {
+  my $self = shift;
+  return $self->{notfoundfile}; 
+}
+
+sub set_notfoundfile {
+  my $self = shift;
+  $self->{notfoundfile} = shift;
+}
+
+=head2 accessors get_tempdir, set_tempdir
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_tempdir {
+  my $self = shift;
+  return $self->{tempdir}; 
+}
+
+sub set_tempdir {
+  my $self = shift;
+  $self->{tempdir} = shift;
+}
+
 
 1;

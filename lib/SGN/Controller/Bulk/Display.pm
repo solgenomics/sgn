@@ -16,6 +16,9 @@ package SGN::Controller::Bulk::Display;
 
 use Moose;
 
+use Cache::File;
+use File::Spec::Functions;
+
 BEGIN { extends 'Catalyst::Controller' };
 
 =head2 display_page
@@ -87,15 +90,24 @@ sub display_page : Path('/tools/bulk/display') :Args(0) {
 
 =cut
 
-sub display_summary_page {
+sub display_summary_page : Path('/tools/bulk/summary') Args(1){
     my $self = shift;
-    my $file = $self->{tempdir} . "/" . $self->{dumpfile} . ".summary";
-    open( F, "<$file" ) || $self->{page}->error_page("can't open $file");
-    $self->{page}->header();
-    while (<F>) {
-        print $_;
+    my $c = shift;
+    my $dumpfile = shift;
+
+    print STDERR "DUMPFILE = $dumpfile\n";
+    my $cache_root = catfile($c->config->{basepath}, $c->tempfiles_subdir("bulk"), $dumpfile.".summary");;
+    print STDERR "CACHE_ROOT: $cache_root\n";
+    my $cache = Cache::File->new( cache_root =>$cache_root);
+
+    my $summary_data = {};
+    foreach my $k (qw | fastalink fastadownload fastamessage missing_ids_message file total query_time filesize numlines lines_read idType |) {
+	$summary_data->{$k} = $cache->get($k);
+	
     }
-    $self->{page}->footer();
+    $c->stash->{summary_data} = $summary_data;
+    $c->stash->{template} = '/tools/bulk/display/summary_page.mas';
+
 }
 
 =head2 render_html_page

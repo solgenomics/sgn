@@ -147,45 +147,45 @@ STATS
     $c->stash( bulk_download_success => $seqs );
 }
 
-sub bulk_js_menu :Local {
-    my ( $self, $c ) = @_;
+# sub bulk_js_menu :Local {
+#     my ( $self, $c ) = @_;
 
-    my $mode = $c->stash->{bulk_js_menu_mode} || '';
-    # define urls of modes
-    my @mode_links = (
-        [ '/bulk/input.pl?mode=clone_search',    'Clone&nbsp;name<br />(SGN-C)' ],
-        [ '/bulk/input.pl?mode=microarray',      'Array&nbsp;spot&nbsp;ID<br />(SGN-S)' ],
-        [ '/bulk/input.pl?mode=unigene',         'Unigene&nbsp;ID<br />(SGN-U)' ],
-        [ '/bulk/input.pl?mode=bac',             'BACs' ],
-        [ '/bulk/input.pl?mode=bac_end',         'BAC&nbsp;ends' ],
-        [ '/bulk/input.pl?mode=ftp',             'Full&nbsp;datasets<br />(FTP)' ],
-        [ '/bulk/input.pl?mode=unigene_convert', 'Unigene ID Converter<br />(SGN-U)' ],
-        [ '/bulk/feature',                       'Features' ],
-        [ '/bulk/gene',                          'Genes' ],
-    );
+#     my $mode = $c->stash->{bulk_js_menu_mode} || '';
+#     # define urls of modes
+#     my @mode_links = (
+#         [ '/bulk/input.pl?mode=clone_search',    'Clone&nbsp;name<br />(SGN-C)' ],
+#         [ '/bulk/input.pl?mode=microarray',      'Array&nbsp;spot&nbsp;ID<br />(SGN-S)' ],
+#         [ '/bulk/input.pl?mode=unigene',         'Unigene&nbsp;ID<br />(SGN-U)' ],
+#         [ '/bulk/input.pl?mode=bac',             'BACs' ],
+#         [ '/bulk/input.pl?mode=bac_end',         'BAC&nbsp;ends' ],
+#         [ '/bulk/input.pl?mode=ftp',             'Full&nbsp;datasets<br />(FTP)' ],
+#         [ '/bulk/input.pl?mode=unigene_convert', 'Unigene ID Converter<br />(SGN-U)' ],
+#         [ '/bulk/feature',                       'Features' ],
+#         [ '/bulk/gene',                          'Genes' ],
+#     );
 
-    ### figure out which mode we're in ###
-    my $modenum =
-      $mode =~ /clone_search/i    ? 0
-    : $mode =~ /array/i           ? 1
-    : $mode =~ /unigene_convert/i ? 6
-    : $mode =~ /unigene/i         ? 2
-    : $mode =~ /bac_end/i         ? 4
-    : $mode =~ /bac/i             ? 3
-    : $mode =~ /ftp/i             ? 5
-    : $mode =~ /feature/i         ? 7
-    : $mode =~ /gene/i            ? 8
-    :                               0;    # clone search is default
+#     ### figure out which mode we're in ###
+#     my $modenum =
+#       $mode =~ /clone_search/i    ? 0
+#     : $mode =~ /array/i           ? 1
+#     : $mode =~ /unigene_convert/i ? 6
+#     : $mode =~ /unigene/i         ? 2
+#     : $mode =~ /bac_end/i         ? 4
+#     : $mode =~ /bac/i             ? 3
+#     : $mode =~ /ftp/i             ? 5
+#     : $mode =~ /feature/i         ? 7
+#     : $mode =~ /gene/i            ? 8
+#     :                               0;    # clone search is default
 
-    $c->stash( bulk_js_menu =>
-                   $c->view('BareMason')->render( $c, '/page/page_title.mas', { title => 'Bulk download' })
-                   .<<EOH
-<div style="margin-bottom: 1em">Download Unigene or BAC information using a list of identifiers, or complete datasets with FTP.</div>
-EOH
-                  .modesel( \@mode_links, $modenum ),
-             );
+#     $c->stash( bulk_js_menu =>
+#                    $c->view('BareMason')->render( $c, '/page/page_title.mas', { title => 'Bulk download' })
+#                    .<<EOH
+# <div style="margin-bottom: 1em">Download Unigene or BAC information using a list of identifiers, or complete datasets with FTP.</div>
+# EOH
+#                   .modesel( \@mode_links, $modenum ),
+#              );
 
-}
+# }
 
 # sub bulk_gene :Path('/bulk/gene') : Args(0) {
 #     my ( $self, $c ) = @_;

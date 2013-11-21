@@ -18,6 +18,6 @@ $idType
 
 </%perl>
 
-<a href="/tools/bulk/display?summary=1&amp;dumpfile=<% $dumpfile %>"&amp;idType="<% $idType %>" >Summary Page</a>
+<a href="/tools/bulk/summary/<% $dumpfile %>">Summary Page</a>
 
 

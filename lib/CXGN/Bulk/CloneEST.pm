@@ -52,8 +52,7 @@ use base "CXGN::Bulk";
 
 =cut
 
-sub process_parameters
-{
+sub process_parameters {
     my $self = shift;
 
     # @output_list defines the identity on order of all fields that can be output
@@ -93,7 +92,10 @@ sub process_parameters
     $self->{output_fields} = \@output_fields;
 
     my @ids = $self->check_ids();
-    if (@ids == ()) {return 0;}
+    if (!@ids) {
+	print STDERR "No legal ids found. Returning...\n";
+	return 0;
+    }
     $self->debug("IDs to be processed:");
     foreach my $i (@ids)
     {
@@ -126,8 +128,7 @@ sub process_parameters
 
 =cut
 
-sub process_ids
-{
+sub process_ids {
     my $self = shift;
     my $db = $self->{db};
     my @output_fields = @{$self->{output_fields}};
