@@ -29,12 +29,17 @@ has 'schema' => (
 		 is       => 'rw',
 		 isa      => 'DBIx::Class::Schema',
 		 lazy_build => 1,
+		 predicate => 'has_schema',
 		);
 has 'stocks' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_stock_name');
 has 'species' => (isa => 'Str', is => 'rw', predicate => 'has_species');
 
 sub add_accessions {
   my $self = shift;
+  if (!$self->verify_accessions()) {
+    return;
+  }
+  my $schema = $self->get_schema();
   my $species = $self->get_species();
   my $stocks_rs = $self->get_stocks();
   my @stocks = @$stocks_rs;
@@ -78,10 +83,13 @@ sub add_accessions {
 
 sub verify_accessions {
   my $self = shift;
+  if (!$self->has_schema() || !$self->has_species() !$self->has_stocks()) {
+    return;
+  }
   my $species = $self->get_species();
   my $stocks_rs = $self->get_stocks();
   my @stocks = @$stocks_rs;
-
+  return 1;
 }
 
 #######
