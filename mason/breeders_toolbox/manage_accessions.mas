@@ -37,3 +37,10 @@ $accessions
 <div id="absent_accessions_dialog" class="ui-widget" title="Accessions not found">
   
 </div>
+
+<style>
+  div.left {
+    float: left;
+    clear: both;
+  }
+</style>

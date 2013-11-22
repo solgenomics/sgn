@@ -37,15 +37,19 @@ jQuery(document).ready(function ($) {
     function review_verification_results(verifyResponse){
 
 	if (verifyResponse.fuzzy) {
-	    var fuzz = verifyResponse.fuzzy;
-	    //var vname = fuzz.shift();
-	    //var xvname = vname.name;
-	    //alert(verifyResponse);
-	    //var text = JSON.stringify(fuzz, null, '\t');
-	    //alert(text);
 	    alert(verifyResponse.fuzzy[0].name);
-	    //alert('here');
-	    //$('#review_fuzzy_matches_dialog').dialog('open');
+	    var fuzzy_html = '';
+	    for( var i=0; i < verifyResponse.fuzzy.length; i++) {
+		fuzzy_html = fuzzy_html + '<div class="left">'+ verifyResponse.fuzzy[i].name + '</div>';
+		fuzzy_html = fuzzy_html + '<div class="right"><select id ="fuzzyselect'+i+'">';
+		for( var j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
+		    fuzzy_html = fuzzy_html + '<option value="">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
+		}
+		fuzzy_html = fuzzy_html + '</select>';
+	    }
+	    fuzzy_html = fuzzy_html + '</div>';
+	    $('#view_fuzzy_matches').html(fuzzy_html);
+	    $('#review_fuzzy_matches_dialog').dialog('open');
 	} else {
 	    var resp = verifyResponse.name;
 	    var respn = resp.name;
