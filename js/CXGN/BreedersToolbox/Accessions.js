@@ -37,9 +37,23 @@ jQuery(document).ready(function ($) {
     function review_verification_results(verifyResponse){
 
 	if (verifyResponse.fuzzy) {
-	    alert(verifyResponse[0]);
-	    $('#review_fuzzy_matches_dialog').dialog('open');
+	    var fuzz = verifyResponse.fuzzy;
+	    //var vname = fuzz.shift();
+	    //var xvname = vname.name;
+	    //alert(verifyResponse);
+	    //var text = JSON.stringify(fuzz, null, '\t');
+	    //alert(text);
+	    alert(verifyResponse.fuzzy[0].name);
+	    //alert('here');
+	    //$('#review_fuzzy_matches_dialog').dialog('open');
+	} else {
+	    var resp = verifyResponse.name;
+	    var respn = resp.name;
+	    alert(resp);
+	    alert('else');
 	}
+
+	
 	//if (verifyResponse.found) {
 	//    alert("found");
 	//}
@@ -66,6 +80,8 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
 		    alert(response.error);
                 } else {
+		    //var text = JSON.stringify(response, null, '\t');
+		    //alert(text);
 		    review_verification_results(response);
                 }
 	    },
