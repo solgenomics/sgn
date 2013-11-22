@@ -21,6 +21,7 @@ use JSON -support_by_pp;
 use List::MoreUtils qw /any /;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 use Data::Dumper;
+#use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -62,7 +63,7 @@ sub verify_accession_list_POST : Args(0) {
   @found_accessions = $fuzzy_search_result->{'found'};
   @fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
   @absent_accessions = $fuzzy_search_result->{'absent'};
-  $c->stash->{rest} = {success => "1", absent => \@absent_accessions, fuzzy => \@fuzzy_accessions, found => \@found_accessions};
+  $c->stash->{rest} = {success => "1", absent => @absent_accessions, fuzzy => @fuzzy_accessions, found => @found_accessions};
   return;
 }
 
