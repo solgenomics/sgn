@@ -21,6 +21,19 @@ jQuery(document).ready(function ($) {
     var list = new CXGN.List();
 
 
+    $("#review_found_matches_dialog").dialog({
+	autoOpen: false,	
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+	    Ok: function() {
+		$(this).dialog( "close" );
+	    },
+	}
+    });
+
     $("#review_fuzzy_matches_dialog").dialog({
 	autoOpen: false,	
 	modal: true,
@@ -29,7 +42,7 @@ jQuery(document).ready(function ($) {
         position: ['top', 150],
 	buttons: {
 	    Ok: function() {
-	    	alert("reviewed fuzzy matches");
+		$(this).dialog( "close" );
 	    },
 	}
     });
@@ -37,7 +50,6 @@ jQuery(document).ready(function ($) {
     function review_verification_results(verifyResponse){
 
 	if (verifyResponse.fuzzy) {
-	    alert(verifyResponse.fuzzy[0].name);
 	    var fuzzy_html = '';
 	    for( var i=0; i < verifyResponse.fuzzy.length; i++) {
 		fuzzy_html = fuzzy_html + '<div class="left">'+ verifyResponse.fuzzy[i].name + '</div>';
@@ -49,13 +61,19 @@ jQuery(document).ready(function ($) {
 	    }
 	    fuzzy_html = fuzzy_html + '</div>';
 	    $('#view_fuzzy_matches').html(fuzzy_html);
-	    $('#review_fuzzy_matches_dialog').dialog('open');
-	} else {
-
+	    //$('#review_fuzzy_matches_dialog').dialog('open');
 	}
 
-	
-	//if (verifyResponse.found) {
+
+	if (verifyResponse.found) {
+	    var found_html = '';
+	    for( var i=0; i < verifyResponse.found.length; i++){
+		found_html = found_html + '<div class="left">'+verifyResponse.found[i].matched_string+'</div>' + '<div class="right">'+verifyResponse.found[i].unique_name+'</div>';
+	    }
+	    $('#view_found_matches').html(found_html);
+	    $('#review_found_matches_dialog').dialog('open');
+	}
+
 	//    alert("found");
 	//}
 	//if (verifyResponse.absent) {

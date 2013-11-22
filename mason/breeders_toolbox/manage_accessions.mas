@@ -31,8 +31,10 @@ $accessions
   </div>
 </div>
 
-<div id="found_accessions_dialog" class="ui-widget" title="Found accessions">
-  
+<div id="review_found_matches_dialog" class="ui-widget" title="Found accessions">
+  Found
+  <div id="view_found_matches">
+  </div>
 </div>
 
 <div id="absent_accessions_dialog" class="ui-widget" title="Accessions not found">
