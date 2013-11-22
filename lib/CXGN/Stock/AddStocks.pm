@@ -1,4 +1,4 @@
-package CXGN::Stock::StockLookup;
+package CXGN::Stock::AddStocks;;
 
 =head1 NAME
 
@@ -31,7 +31,7 @@ has 'schema' => (
 		 lazy_build => 1,
 		 predicate => 'has_schema',
 		);
-has 'stocks' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_stock_name');
+has 'stocks' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_stocks');
 has 'species' => (isa => 'Str', is => 'rw', predicate => 'has_species');
 
 sub add_accessions {
@@ -69,6 +69,7 @@ sub add_accessions {
     }
   };
 
+  my $transaction_error;
   try {
     $schema->txn_do($coderef);
   } catch {
@@ -83,9 +84,10 @@ sub add_accessions {
 
 sub verify_accessions {
   my $self = shift;
-  if (!$self->has_schema() || !$self->has_species() !$self->has_stocks()) {
+  if (!$self->has_schema() || !$self->has_species() || !$self->has_stocks()) {
     return;
   }
+  my $schema = $self->get_schema();
   my $species = $self->get_species();
   my $stocks_rs = $self->get_stocks();
   my @stocks = @$stocks_rs;
@@ -94,9 +96,9 @@ sub verify_accessions {
   foreach my $stock_name (@stocks) {
     my $accession_search = $schema->resultset("Stock::Stock")
       ->search({
-		uniquename => $accession_name,
+		uniquename => $stock_name,
 	       } );
-    if ($accession_search) {
+    if ($accession_search->first()) {
       $name_conflicts++;
       print STDERR "Stock name conflict for: $stock_name\n";
     }
