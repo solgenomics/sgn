@@ -12,7 +12,7 @@ CXGN::Stock::AddStocks - a module to add a list of stocks.
 
 =head1 DESCRIPTION
 
-Adds an array of stocks. The stock names must not already exist in the database, and the verify function does this check.   This module is intended to be used in independent loading scripts and interactive dialogs.
+Adds an array of stocks. The stock names must not already exist in the database, and the verify function does this check.   This module is intended to be used in independent loading scripts and interactive dialogs.  Stock types "accession" and "plot" are supported by the methods add_accessions() and add_plots().
 
 =head1 AUTHORS
 
@@ -46,7 +46,7 @@ sub add_plots {
   return $added;
 }
 
-sub add_stocks {
+sub _add_stocks {
   my $self = shift;
   my $stock_type = shift;
   if (!$self->verify_accessions()) {
