@@ -38,26 +38,41 @@ sub add_accessions {
   my $species = $self->get_species();
   my $stocks_rs = $self->get_stocks();
   my @stocks = @$stocks_rs;
-  my $accession_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with({
-		   name   => 'accession',
-		   cv     => 'stock type',
-		   db     => 'null',
-		   dbxref => 'accession',
-		  });
-  my $organism = $schema->resultset("Organism::Organism")->find(
-    {
-	species => $species,,
-    } );
-  my $organism_id = $organism->organism_id();
 
-  # my $accession_stock = $schema->resultset("Stock::Stock")
-  #   ->create({
-  # 	      organism_id => $organism_id,
-  # 	      name       => $stock_name,
-  # 	      uniquename => $stock_name,
-  # 	      type_id     => $accession_cvterm->cvterm_id,
-  # 	     } );
+  my $coderef = sub {
+
+    my $accession_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with({
+		     name   => 'accession',
+		     cv     => 'stock type',
+		     db     => 'null',
+		     dbxref => 'accession',
+		    });
+    my $organism = $schema->resultset("Organism::Organism")
+      ->find({
+	      species => $species,
+	     });
+    my $organism_id = $organism->organism_id();
+    foreach my $accession_name (@stocks) {
+      my $accession_stock = $schema->resultset("Stock::Stock")
+	->create({
+		  organism_id => $organism_id,
+		  name       => $accession_name,
+		  uniquename => $accession_name,
+		  type_id     => $accession_cvterm->cvterm_id,
+		 } );
+    }
+  };
+
+  try {
+    $schema->txn_do($coderef);
+  } catch {
+    $transaction_error =  $_;
+  };
+  if ($transaction_error) {
+    print STDERR "Transaction error storing phenotypes: $transaction_error\n";
+    return;
+  }
 
 }
 
