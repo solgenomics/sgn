@@ -21,6 +21,19 @@ jQuery(document).ready(function ($) {
     var list = new CXGN.List();
 
 
+    $("#review_absent_dialog").dialog({
+	autoOpen: false,	
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+	    Ok: function() {
+		$(this).dialog( "close" );
+	    },
+	}
+    });
+
     $("#review_found_matches_dialog").dialog({
 	autoOpen: false,	
 	modal: true,
@@ -64,22 +77,34 @@ jQuery(document).ready(function ($) {
 	    //$('#review_fuzzy_matches_dialog').dialog('open');
 	}
 
-
 	if (verifyResponse.found) {
 	    var found_html = '';
 	    for( var i=0; i < verifyResponse.found.length; i++){
-		found_html = found_html + '<div class="left">'+verifyResponse.found[i].matched_string+'</div>' + '<div class="right">'+verifyResponse.found[i].unique_name+'</div>';
+		found_html = found_html 
+		    +'<div class="left">'+verifyResponse.found[i].matched_string
+		    +'</div>' 
+		    +'<div class="right">'
+		    +verifyResponse.found[i].unique_name
+		    +'</div>';
 	    }
 	    $('#view_found_matches').html(found_html);
 	    $('#review_found_matches_dialog').dialog('open');
 	}
 
-	//    alert("found");
-	//}
-	//if (verifyResponse.absent) {
-	//    alert("absent");
-	//}
-	//alert("done");
+	if (verifyResponse.absent) {
+	    var absent_html = '';
+	    for( var i=0; i < verifyResponse.absent.length; i++){
+		absent_html = absent_html 
+		    +'<div class="left">'+verifyResponse.absent[i]
+		    +'</div>' 
+		    +'<div class="right">'
+		    +verifyResponse.absent[i]
+		    +'</div>';
+	    }
+	    $('#view_absent').html(absent_html);
+	    $('#review_absent_dialog').dialog('open');
+	}
+
     } 
 
     function verify_accession_list() {
