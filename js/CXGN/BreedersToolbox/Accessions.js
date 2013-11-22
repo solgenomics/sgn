@@ -61,13 +61,14 @@ jQuery(document).ready(function ($) {
     });
 
     function review_verification_results(verifyResponse){
-
+	var i;
+	var j;
 	if (verifyResponse.fuzzy) {
 	    var fuzzy_html = '';
-	    for( var i=0; i < verifyResponse.fuzzy.length; i++) {
+	    for( i=0; i < verifyResponse.fuzzy.length; i++) {
 		fuzzy_html = fuzzy_html + '<div class="left">'+ verifyResponse.fuzzy[i].name + '</div>';
 		fuzzy_html = fuzzy_html + '<div class="right"><select id ="fuzzyselect'+i+'">';
-		for( var j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
+		for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
 		    fuzzy_html = fuzzy_html + '<option value="">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
 		}
 		fuzzy_html = fuzzy_html + '</select>';
@@ -79,7 +80,7 @@ jQuery(document).ready(function ($) {
 
 	if (verifyResponse.found) {
 	    var found_html = '';
-	    for( var i=0; i < verifyResponse.found.length; i++){
+	    for( i=0; i < verifyResponse.found.length; i++){
 		found_html = found_html 
 		    +'<div class="left">'+verifyResponse.found[i].matched_string
 		    +'</div>' 
@@ -93,7 +94,7 @@ jQuery(document).ready(function ($) {
 
 	if (verifyResponse.absent) {
 	    var absent_html = '';
-	    for( var i=0; i < verifyResponse.absent.length; i++){
+	    for( i=0; i < verifyResponse.absent.length; i++){
 		absent_html = absent_html 
 		    +'<div class="left">'+verifyResponse.absent[i]
 		    +'</div>' 
