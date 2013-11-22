@@ -51,10 +51,7 @@ jQuery(document).ready(function ($) {
 	    $('#view_fuzzy_matches').html(fuzzy_html);
 	    $('#review_fuzzy_matches_dialog').dialog('open');
 	} else {
-	    var resp = verifyResponse.name;
-	    var respn = resp.name;
-	    alert(resp);
-	    alert('else');
+
 	}
 
 	
@@ -113,6 +110,7 @@ jQuery(document).ready(function ($) {
     $('#add_accessions_link').click(function () {
         $('#add_accessions_dialog').dialog("open");
 	$("#list_div").append(list.listSelect("accessions"));
+	//$( "#fuzzy_check" ).button();
     });
 
     
