@@ -36,6 +36,19 @@ has 'species' => (isa => 'Str', is => 'rw', predicate => 'has_species');
 
 sub add_accessions {
   my $self = shift;
+  my $added = $self->_add_stocks('accession');
+  return $added;
+}
+
+sub add_plots {
+  my $self = shift;
+  my $added = $self->_add_stocks('plot');
+  return $added;
+}
+
+sub add_stocks {
+  my $self = shift;
+  my $stock_type = shift;
   if (!$self->verify_accessions()) {
     return;
   }
@@ -48,7 +61,7 @@ sub add_accessions {
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")
       ->create_with({
-		     name   => 'accession',
+		     name   => $stock_type,
 		     cv     => 'stock type',
 		     db     => 'null',
 		     dbxref => 'accession',
