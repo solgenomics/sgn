@@ -1,4 +1,4 @@
-package CXGN::Stock::AddStocks;;
+package CXGN::Stock::AddStocks;
 
 =head1 NAME
 
@@ -7,7 +7,7 @@ CXGN::Stock::AddStocks - a module to add a list of stocks.
 =head1 USAGE
 
  my $stock_add = CXGN::Stock::AddStock->new({ schema => $schema, stocks => \@stocks, species => $species_name} );
- my $validated = $stock_add->validate_accessions();
+ my $validated = $stock_add->validate_stocks(); #is true when none of the stock names in the array exist in the database.
  $stock_add->add_accessions();
 
 =head1 DESCRIPTION
@@ -49,7 +49,7 @@ sub add_plots {
 sub _add_stocks {
   my $self = shift;
   my $stock_type = shift;
-  if (!$self->verify_accessions()) {
+  if (!$self->validate_stocks()) {
     return;
   }
   my $schema = $self->get_schema();
@@ -65,7 +65,6 @@ sub _add_stocks {
 
   my $coderef = sub {
 
-
     my $stock_cvterm = $schema->resultset("Cv::Cvterm")
       ->create_with({
 		     name   => $stock_type,
@@ -73,7 +72,6 @@ sub _add_stocks {
 		     db     => 'null',
 		     dbxref => $stock_type,
 		    });
-
 
     foreach my $stock_name (@stocks) {
       my $stock = $schema->resultset("Stock::Stock")
@@ -101,7 +99,7 @@ sub _add_stocks {
   }
 }
 
-sub verify_accessions {
+sub validate_stocks {
   my $self = shift;
   if (!$self->has_schema() || !$self->has_species() || !$self->has_stocks()) {
     return;
