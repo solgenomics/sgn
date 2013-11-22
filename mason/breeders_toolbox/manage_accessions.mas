@@ -37,8 +37,9 @@ $accessions
   </div>
 </div>
 
-<div id="absent_accessions_dialog" class="ui-widget" title="Accessions not found">
-  
+<div id="review_absent_dialog" class="ui-widget" title="Accessions not found">
+  <div id="view_absent">
+  </div> 
 </div>
 
 <style>
