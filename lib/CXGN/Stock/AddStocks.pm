@@ -57,27 +57,31 @@ sub _add_stocks {
   my $stocks_rs = $self->get_stocks();
   my @stocks = @$stocks_rs;
 
+  my $organism = $schema->resultset("Organism::Organism")
+    ->find({
+	    species => $species,
+	   } );
+  my $organism_id = $organism->organism_id();
+
   my $coderef = sub {
 
-    my $accession_cvterm = $schema->resultset("Cv::Cvterm")
+
+    my $stock_cvterm = $schema->resultset("Cv::Cvterm")
       ->create_with({
 		     name   => $stock_type,
 		     cv     => 'stock type',
 		     db     => 'null',
-		     dbxref => 'accession',
+		     dbxref => $stock_type,
 		    });
-    my $organism = $schema->resultset("Organism::Organism")
-      ->find({
-	      species => $species,
-	     });
-    my $organism_id = $organism->organism_id();
-    foreach my $accession_name (@stocks) {
-      my $accession_stock = $schema->resultset("Stock::Stock")
+
+
+    foreach my $stock_name (@stocks) {
+      my $stock = $schema->resultset("Stock::Stock")
 	->create({
 		  organism_id => $organism_id,
-		  name       => $accession_name,
-		  uniquename => $accession_name,
-		  type_id     => $accession_cvterm->cvterm_id,
+		  name       => $stock_name,
+		  uniquename => $stock_name,
+		  type_id     => $stock_cvterm->cvterm_id,
 		 } );
     }
   };
@@ -89,10 +93,12 @@ sub _add_stocks {
     $transaction_error =  $_;
   };
   if ($transaction_error) {
-    print STDERR "Transaction error storing phenotypes: $transaction_error\n";
+    print STDERR "Transaction error storing stocks: $transaction_error\n";
     return;
   }
-
+  else {
+    return 1;
+  }
 }
 
 sub verify_accessions {
@@ -107,11 +113,11 @@ sub verify_accessions {
 
   my $name_conflicts = 0;
   foreach my $stock_name (@stocks) {
-    my $accession_search = $schema->resultset("Stock::Stock")
+    my $stock_search = $schema->resultset("Stock::Stock")
       ->search({
 		uniquename => $stock_name,
 	       } );
-    if ($accession_search->first()) {
+    if ($stock_search->first()) {
       $name_conflicts++;
       print STDERR "Stock name conflict for: $stock_name\n";
     }

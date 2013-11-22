@@ -13,9 +13,9 @@ BEGIN {use_ok('CXGN::DB::Connection');}
 BEGIN {use_ok('CXGN::Stock::AddStocks');}
 
 my $test = SGN::Test::WWW::Mechanize->new();
-my $schema = $test->context->dbic_schema('Bio::Chado::Schema');
-my @accession_array = qw(test552344234 testing23342333);
+my $schema = $test->context->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+my @accession_array = qw(test545563334234 testing3443555233);
 my $species = "Manihot esculenta";
 ok(my $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_array, species => $species} ), "Create object for adding stocks");
 ok($stock_add->verify_accessions(), "Verify");
-
+#ok($stock_add->add_accessions(), "Add");
