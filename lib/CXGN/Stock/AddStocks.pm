@@ -89,6 +89,24 @@ sub verify_accessions {
   my $species = $self->get_species();
   my $stocks_rs = $self->get_stocks();
   my @stocks = @$stocks_rs;
+
+  my $name_conflicts = 0;
+  foreach my $stock_name (@stocks) {
+    my $accession_search = $schema->resultset("Stock::Stock")
+      ->search({
+		uniquename => $accession_name,
+	       } );
+    if ($accession_search) {
+      $name_conflicts++;
+      print STDERR "Stock name conflict for: $stock_name\n";
+    }
+  }
+
+  if ($name_conflicts > 0) {
+    print STDERR "There were $name_conflicts conflict(s)\n";
+    return;
+  }
+
   return 1;
 }
 
