@@ -37,6 +37,7 @@ sub verify_accession_list_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $accession_list_json = $c->req->param('accession_list');
+  my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
   my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
   my $fuzzy_search_result;
   my $max_distance = 0.5;

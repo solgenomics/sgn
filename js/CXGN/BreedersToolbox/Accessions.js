@@ -20,7 +20,8 @@ jQuery(document).ready(function ($) {
 
     var list = new CXGN.List();
 
-
+    
+    
     $("#review_absent_dialog").dialog({
 	autoOpen: false,	
 	modal: true,
@@ -111,6 +112,7 @@ jQuery(document).ready(function ($) {
     function verify_accession_list() {
 	var accession_list_id = $('#accessions_list_select').val();
 	var accession_list = JSON.stringify(list.getList(accession_list_id));
+	var doFuzzySearch = $('#fuzzy_check').val();
 	alert(accession_list);
 
 	$.ajax({
@@ -120,6 +122,7 @@ jQuery(document).ready(function ($) {
 	    dataType: "json",
 	    data: {
                 'accession_list': accession_list,
+		'do_fuzzy_search': doFuzzySearch,
 	    },
 	    success: function (response) {
                 if (response.error) {
