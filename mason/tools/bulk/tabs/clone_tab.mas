@@ -15,15 +15,22 @@ $debug => ''
 	
 	Enter a list of identifiers or upload a file containing identifers, one per line:<br />
 	<table summary="" width="100%"><tr><td>
-	      <textarea name="ids" rows="5" cols="20"></textarea>
+	      <textarea id="ids" name="ids" rows="5" cols="20"></textarea>
 	    </td>
 	    <td>
 	      <i>Example:</i> #example box
-	      <pre style="border: 1px solid gray; width: 10em; height: 5em">
-cLEB-1-A2
+	      <div style="border: 1px solid gray; width: 10em; height: 5em">
+<pre><div id="clone_example_ids">cLEB-1-A2
 cLEB-1-A3
-cLEB-1-A4
-	      </pre>
+cLEB-1-A4</div></pre><a href="javascript:copy_example_data()">[copy]</a>
+</div> 
+
+<script>
+function copy_example_data() { 
+document.getElementById("ids").innerHTML=document.getElementById("clone_example_ids").innerHTML;
+}
+</script>
+	 
 	</td></tr></table>
 	
 	<br />
