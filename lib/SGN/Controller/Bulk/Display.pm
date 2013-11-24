@@ -18,7 +18,8 @@ use Moose;
 
 use Cache::File;
 use File::Spec::Functions;
-
+use File::Slurp qw | read_file |;
+use CXGN::Page::FormattingHelpers qw | html_break_string |;
 BEGIN { extends 'Catalyst::Controller' };
 
 =head2 display_page
@@ -36,27 +37,41 @@ sub display_page : Path('/tools/bulk/display') :Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $data = {};
     # define some constants
-    $data->{pagesize} = 50;
-    $data->{content}  = "";
-    $data->{tempdir} = $c->path_to( $c->tempfiles_subdir('bulk') );
+    $self->{pagesize} = 50;
+    $self->{content}  = "";
+    $self->{tempdir} = $c->path_to( $c->tempfiles_subdir('bulk') );
 
     # get cgi arguments
-    $data->{dumpfile}    = $c->req->param("dumpfile");
-    $data->{page_number} = $c->req->param("page_number");
-    $data->{page_size}   = $c->req->param("page_size");
-    $data->{outputType}  = $c->req->param("outputType");
-    $data->{seq_type}    = $c->req->param("seq_type");
-    $data->{idType}      = $c->req->param("idType");
-    $data->{summary}     = $c->req->param("summary");
-    $data->{download}    = $c->req->param("download");
-    $data->{lines_read}  = $c->req->param("lines_read");
+    $self->{dumpfile}    = $c->req->param("dumpfile");
+    $self->{page_number} = $c->req->param("page_number");
+    $self->{page_size}   = $c->req->param("page_size");
+    $self->{outputType}  = $c->req->param("outputType");
+    $self->{seq_type}    = $c->req->param("seq_type");
+    $self->{idType}      = $c->req->param("idType");
+    $self->{summary}     = $c->req->param("summary");
+    $self->{download}    = $c->req->param("download");
+    $self->{lines_read}  = $c->req->param("lines_read");
+    $self->{outputType}  = $c->req->param("outputType");
 
-    $c->stash->{data} = $data;
+    $c->stash->{summary_data} = { 
+	dumpfile => $self->{dumpfile},
+
+	tempdir => $c->path_to($c->tempfiles_subdir("bulk")),
+	page_number => $self->{page_number},
+	page_size => $self->{page_size},
+	outputType => $self->{outputType},
+	seq_type => $self->{seq_type},
+	idType => $self->{idType},
+	summary => $self->{summary},
+	download => $self->{download},
+	lines_read => $self->{lines_read},
+	outputType => $self->{outputType},
+    };
+    $c->stash->{data} = $c->stash->{summary_data};
     # if summary switch is set, display summary page
-    if ( $data->{summary} ) {
-	$c->stash->{data} = $data;
+    if ( $self->{summary} ) {
+
 	$c->stash->{template} = '/tools/bulk/display/summary_page.mas';
 	return;
     }
@@ -66,16 +81,17 @@ sub display_page : Path('/tools/bulk/display') :Args(0) {
 	$c->stash->{template} = '/tools/bulk/display/browse_html.mas';
     }
     elsif ( $self->{outputType} =~ /text/i ) {
-        $self->render_text_page();
+        $self->render_text_page($c);
     }
     elsif ( $self->{outputType} =~ /fasta/i ) {
-        $self->render_fasta_page();
+        $self->render_fasta_page($c);
     }
     elsif ( $self->{outputType} =~ /notfound/i ) {
-        $self->display_ids_notfound();
+        $self->display_ids_notfound($c);
     }
     else { 
-	$c->stash->{template} = '/tools/bulk/display/browse_html.mas';
+	#$c->stash->{template} = '/tools/bulk/display/browse_html.mas';
+	die "NEED OUTPUT TYPE";
     }
 }
 
@@ -309,9 +325,9 @@ sub render_html_table_page {
     close(F);
 }
 
-=head2 render_fasta
+=head2 render_fasta_page
 
-  Desc: sub render_fasta
+  Desc: sub render_fasta_page
   Args: default
   Ret : n/a
 
@@ -323,16 +339,10 @@ sub render_html_table_page {
 
 sub render_fasta_page {
     my $self = shift;
+    my $c = shift;
 
-    # print header
-    #
-    if ( $self->{download} ) {
-        print
-"Pragma: \"no-cache\"\nContent-Disposition: filename=sequences.fasta\nContent-type: application/data\n\n";
-    }
-    else {
-        print "Content-type: text/plain\n\n";
-    }
+    my $fasta = "";
+
     open( F, "<" . $self->{tempdir} . "/" . $self->{dumpfile} )
       || $self->{page}->error_page( "Can't open " . $self->{dumpfile} );
 
@@ -340,15 +350,15 @@ sub render_fasta_page {
     my @output_fields;
     my $defs = <F>;
     if ($defs) { chomp($defs); @output_fields = split /\t/, $defs; }
-
+    my %data;
     while (<F>) {
         chomp;
         my @f    = split /\t/;
-        my %data = ();
-
+#        my %data = ();
+	my %self;
         #convert to hash
         for ( my $i = 0 ; $i < @output_fields ; $i++ ) {
-            $data{ $output_fields[$i] } = $f[$i];
+            $self{ $output_fields[$i] } = $f[$i];
         }
         if ( ( join " ", @output_fields ) =~ /est_seq/i ) {
             $self->{seq_type} = "est_seq";
@@ -470,11 +480,23 @@ sub render_fasta_page {
         $output =~ s/.*?\://
           ; # remove the first label (>SGN_U:SGN_U738473 becomes simply >SGN_U738473)
 
-        print ">$output$seq";    # do not add new lines to this string
+        $fasta .= ">$output$seq";    # do not add new lines to this string
 
     }
-
     close(F);
+
+    # print header
+    #
+    if ( $self->{download} ) {
+	$c->res->content_type("application/data");
+	$c->res->headers()->header("Content-Disposition: filename=sgn_bulk_download.fasta");
+    }
+    else {
+        $c->res->content_type("text/plain");
+    }
+    $c->res->body($fasta);
+
+
 }
 
 =head2 buttons
@@ -568,7 +590,7 @@ sub previousButton {
 sub summaryButton {
     my $self = shift;
     $self->{content} .=
-        "<a href=\"display.pl?summary=1&amp;dumpfile="
+        "<a href=\"/tools/bulk/display?summary=1&amp;dumpfile="
       . ( $self->{dumpfile} )
       . "&amp;idType="
       . ( $self->{idType} )
@@ -612,7 +634,7 @@ sub getFileLines {
 =head2 render_text_page
 
   Desc: sub render_text_page
-  Args: default;
+  Args: $c
   Ret : n/a
 
   Opens dumpfile and displays it (this is the text file).
@@ -621,7 +643,9 @@ sub getFileLines {
 
 sub render_text_page {
     my $self = shift;
-    $self->dumptextfile( $self->{tempdir} . "/" . $self->{dumpfile} );
+    my $c = shift;
+    print STDERR "TEMPDIR = $self->{tempdir}\n\n";
+    $self->dumptextfile($c, $self->{tempdir} . "/" . $self->{dumpfile} );
 }
 
 =head2 display_ids_notfound
@@ -637,9 +661,10 @@ sub render_text_page {
 
 sub display_ids_notfound {
     my $self  = shift;
+    my $c = shift;
     my $file  = $self->{tempdir} . "/" . $self->{dumpfile} . ".notfound";
     my $count = $self->getFileLines($file);
-    $self->dumptextfile( $file, "IDs not found in the database: $count" );
+    $self->dumptextfile($c, $file, "IDs not found in the database: $count" );
 }
 
 =head2 dumptextfile
@@ -653,25 +678,23 @@ sub display_ids_notfound {
 =cut
 
 sub dumptextfile {
-    my $self    = shift;
-    my $file    = shift;
+    my $self = shift;
+    my $c = shift;
+    my $file = shift;
     my $message = shift;
     if ( $self->{download} ) {
-        print
-"Pragma: \"no-cache\"\nContent-Disposition: filename=sgn_dump.txt\nContent-type: application/data\n\n";
+	#"Pragma: \"no-cache\"\nContent-Disposition: filename=sgn_dump.txt\nContent-type: application/data\n\n";
+	$c->res->content_type("application/data");
+	$c->res->headers()->header("Content-Disposition: filename=sgn_bulk_download.fasta");
+#no-cache\nContent-Disposition: filename=sgn_dump.txt\nContent-type: application/data\n\n");
     }
     else {
-        print "Content-type: text/plain\n\n";
+        $c->res->content_type("text/plain");
     }
 
-    # open file
-    print $message. "\n";
-    open( F, "<$file" ) || no_data_error_page();
+    my $contents = read_file($file);
 
-    while (<F>) {
-        print $_;
-    }
-    close(F);
+    $c->res->body($message . $contents);
 }
 
 =head2 debug
