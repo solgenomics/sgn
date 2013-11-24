@@ -142,9 +142,9 @@ sub result_summary_page {
                         choose a sequence to download.<br />";
     if ( join( " ", @{ $self->{output_fields} } ) =~ /seq/i ) {
         $fastalink =
-"<a href=\"display.pl?outputType=Fasta&amp;dumpfile=$file\">Fasta</a>";
+"<a href=\"/tools/bulk/display?outputType=Fasta&amp;dumpfile=$file\">Fasta</a>";
         $fastadownload =
-"<a href=\"display.pl?outputType=Fasta&amp;dumpfile=$file&amp;download=1\">Fasta</a>";
+"<a href=\"/tools/bulk/display?outputType=Fasta&amp;dumpfile=$file&amp;download=1\">Fasta</a>";
         $fastamessage = "";
     }
 
@@ -172,7 +172,7 @@ EOHTML
         print $summary_fh <<EOHTML;
     The file size is $filesize kBytes.
     <br /><br />
-    <a href="display.pl?outputType=HTML&amp;dumpfile=$file&amp;page=1&amp;idType=$idType">Browse</a>
+    <a href="/tools/bulk/display?outputType=HTML&amp;dumpfile=$file&amp;page=1&amp;idType=$idType">Browse</a>
     the results.
     <br />
     <br />
@@ -181,13 +181,13 @@ EOHTML
     <b>Download to disk</b></td></tr>
     <tr><td>
 
-    as <a href="display.pl?outputType=text&amp;dumpfile=$file&amp;idType=$idType">Text</a>
+    as <a href="/tools/bulk/display?outputType=text&amp;dumpfile=$file&amp;idType=$idType">Text</a>
     <br />
     as $fastalink<br />
 
     </td><td>
 
-    as <a href="display.pl?outputType=text&amp;dumpfile=$file&amp;idType=$idType&amp;download=1">
+    as <a href="/tools/bulk/display?outputType=text&amp;dumpfile=$file&amp;idType=$idType&amp;download=1">
     Text</a><br />
     as $fastadownload<br />
 
@@ -200,7 +200,7 @@ EOHTML
     my $notfoundcountlink = "";
     if ( $notfoundcount != 0 ) {
         $notfoundcountlink = "Identifiers not found:<br /><ul>
-    <li><a href=\"display.pl?outputType=notfound&amp;dumpfile=$file\">View IDs</a></li></ul>";
+    <li><a href=\"/tools/bulk/display?outputType=notfound&amp;dumpfile=$file\">View IDs</a></li></ul>";
     }
 
     print $summary_fh "$notfoundcountlink";
@@ -250,9 +250,9 @@ sub result_summary {
                         choose a sequence to download.<br />";
     if ( join( " ", @{ $self->{output_fields} } ) =~ /seq/i ) {
         $fastalink =
-"<a href=\"display.pl?outputType=Fasta&amp;dumpfile=$file\">Fasta</a>";
+"<a href=\"/tools/bulk/display?outputType=Fasta&amp;dumpfile=$file\">Fasta</a>";
         $fastadownload =
-"<a href=\"display.pl?outputType=Fasta&amp;dumpfile=$file&amp;download=1\">Fasta</a>";
+"<a href=\"/tools/bulk/display?outputType=Fasta&amp;dumpfile=$file&amp;download=1\">Fasta</a>";
         $fastamessage = "";
     }
 
