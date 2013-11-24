@@ -29,7 +29,11 @@ jQuery(document).ready(function ($) {
         width: 500,
         position: ['top', 150],
 	buttons: {
-	    Ok: function() {
+	    Add: function() {
+		alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
+		$(this).dialog( "close" );
+	    },
+	    Close: function() {
 		$(this).dialog( "close" );
 	    },
 	}
