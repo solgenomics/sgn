@@ -10,8 +10,7 @@ use CXGN::Tools::List qw/any/;
 
 use base "CXGN::Bulk";
 
-sub new
-{
+sub new {
     my $class = shift;
     my $self = $class->SUPER::new(@_);
 
@@ -45,12 +44,12 @@ sub process_parameters
     my $self = shift;
 
     return 0
-      unless length($self->{ids_string}) <= 1_000_000 && $self->{ids_string} =~ /\w/;
+      unless length($self->{ids}) <= 1_000_000 && $self->{ids} =~ /\w/;
 
     $self->{output_fields} = [grep $self->{$_} eq 'on', @field_list];
 
     # clean up data retrieved
-    my $ids = $self->{ids_string};
+    my $ids = $self->{ids};
     $ids =~ s/[\n\s\r]+/ /g;
     my @ids = grep $_, split /\s+/, $ids;
     return 0 if @ids > 10_000; #limit to 10_000 ids to process
