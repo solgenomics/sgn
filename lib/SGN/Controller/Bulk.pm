@@ -187,17 +187,17 @@ STATS
 
 # }
 
-# sub bulk_gene :Path('/bulk/gene') : Args(0) {
-#     my ( $self, $c ) = @_;
+sub bulk_gene :Path('/bulk/gene') : Args(0) {
+    my ( $self, $c ) = @_;
 
-#     $c->forward('bulk_js_menu');
+#    $c->forward('bulk_js_menu');
 
-#     if( my $ids = $c->req->params->{'ids'} ) {
-#         $c->stash( prefill_ids => $ids );
-#     }
+    if( my $ids = $c->req->params->{'ids'} ) {
+        $c->stash( prefill_ids => $ids );
+    }
 
-#     $c->stash( template => '/bulk_gene.mas');
-# }
+    $c->stash( template => '/bulk_gene.mas');
+}
 
 sub gene_tab : Path('/tools/bulk/tabs/gene_tab') Args(0) { 
     my $self = shift;
@@ -227,8 +227,8 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     my $type = $req->param('gene_type');
     my $mode = $req->param('mode') || 'gene';
 
-    $c->stash( bulk_js_menu_mode => $mode );
-    $c->forward('bulk_js_menu');
+#    $c->stash( bulk_js_menu_mode => $mode );
+#    $c->forward('bulk_js_menu');
 
     $c->log->debug("submitting query with type=$type") if $c->debug;
 
@@ -245,7 +245,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     # Take into account data type, because different data types for the same sequence list
     # produce different results
     my $sha1 = sha1_hex("$type $ids");
-    $c->stash( sha1                  => $sha1 );
+    $c->stash( sha1 => $sha1 );
 
     # remove leading and trailing whitespace
     $ids = trim($ids);
@@ -253,16 +253,16 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     unless ($ids) {
         $c->throw_client_error(
             public_message => 'At least one identifier must be given',
-            http_status    => 200,
+            http_status => 200,
         );
     }
 
     $c->forward('cache_gene_sequences');
 
-    $c->stash( bulk_download_stats   => <<STATS);
+    $c->stash( bulk_download_stats => <<STATS);
 Insert stats
 STATS
-    $c->stash( template              => '/tools/bulk/gene_download.mas');
+    $c->stash( template => '/tools/bulk/display/bulk_gene_download.mas');
 }
 
 sub cache_gene_sequences :Local :Args(0) {
@@ -385,7 +385,7 @@ sub bulk_feature :Path('/tools/bulk/tabs/feature_tab') :Args(0) {
     my ( $self, $c ) = @_;
     my $mode = $c->req->params->{'mode'} || 'feature';
 
-    $c->stash( bulk_js_menu_mode => $mode );
+#    $c->stash( bulk_js_menu_mode => $mode );
 
     if( my $ids = $c->req->params->{'ids'} ) {
         $c->stash( prefill_ids => $ids );
@@ -422,7 +422,7 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
     my $ids  = $req->param('ids') || '';
     my $mode = $req->param('mode') || 'feature';
 
-    $c->stash( bulk_js_menu_mode => $mode );
+#    $c->stash( bulk_js_menu_mode => $mode );
 
     if( $c->req->param('feature_file') ) {
         my ($upload) = $c->req->upload('feature_file');
@@ -451,7 +451,7 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
     $c->log->debug("freezing sequences") if $c->debug;
     $self->feature_cache->freeze( $sha1 , [ $c->stash->{sequence_identifiers}, $c->stash->{sequences} ] );
 
-    $c->forward('bulk_js_menu');
+#    $c->forward('bulk_js_menu');
     $c->forward('bulk_download_stats');
 
     $c->stash( template  => '/tools/bulk/feature_download.mas', sha1 => $sha1 );

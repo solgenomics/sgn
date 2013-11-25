@@ -1,7 +1,6 @@
 <%args>
     $content => ''
     $sha1
-    $bulk_js_menu
     $bulk_download_stats
     $bulk_download_success
 </%args>
