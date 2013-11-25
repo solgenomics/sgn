@@ -1,11 +1,10 @@
 <%args>
     $content => ''
     $sha1
-    $bulk_js_menu
     $bulk_download_stats
     $bulk_download_success
 </%args>
-<% $bulk_js_menu %>
+
 <h1>Gene Download Summary</h1>
 
 % if($bulk_download_success) {
