@@ -454,7 +454,7 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
 #    $c->forward('bulk_js_menu');
     $c->forward('bulk_download_stats');
 
-    $c->stash( template  => '/tools/bulk/feature_download.mas', sha1 => $sha1 );
+    $c->stash( template  => '/tools/bulk/display/feature_download.mas', sha1 => $sha1 );
 }
 
 
