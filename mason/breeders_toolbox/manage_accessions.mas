@@ -26,14 +26,15 @@ $accessions
 </div>
 
 <div id="review_fuzzy_matches_dialog" class="ui-widget" title="Fuzzy matches">
-  Fuzzy matches:<br>
+  <b>Accessions were found with similar names.</b>
+  <br><br>
   <div id="view_fuzzy_matches">
     
   </div>
 </div>
 
 <div id="review_found_matches_dialog" class="ui-widget" title="Found accessions">
-  The following accessions already exist and cannot be added:
+  <b>The following accessions already exist and cannot be added:</b>
   <br><br>
   <div class="left"> <b>Searched name</b> </div>
   <div class="right"> <b>Unique name for synonym</b> </div>
@@ -42,6 +43,8 @@ $accessions
 </div>
 
 <div id="review_absent_dialog" class="ui-widget" title="Accessions not found">
+  <b>Accessions to be added:</b>
+  <br><br>
   <div id="view_absent">
   </div> 
 </div>
