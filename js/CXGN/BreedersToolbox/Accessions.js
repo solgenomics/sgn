@@ -20,8 +20,6 @@ jQuery(document).ready(function ($) {
 
     var list = new CXGN.List();
 
-    
-    
     $("#review_absent_dialog").dialog({
 	autoOpen: false,	
 	modal: true,
@@ -68,20 +66,6 @@ jQuery(document).ready(function ($) {
     function review_verification_results(verifyResponse){
 	var i;
 	var j;
-	if (verifyResponse.fuzzy) {
-	    var fuzzy_html = '';
-	    for( i=0; i < verifyResponse.fuzzy.length; i++) {
-		fuzzy_html = fuzzy_html + '<div class="left">'+ verifyResponse.fuzzy[i].name + '</div>';
-		fuzzy_html = fuzzy_html + '<div class="right"><select id ="fuzzyselect'+i+'">';
-		for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
-		    fuzzy_html = fuzzy_html + '<option value="">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
-		}
-		fuzzy_html = fuzzy_html + '</select>';
-	    }
-	    fuzzy_html = fuzzy_html + '</div>';
-	    $('#view_fuzzy_matches').html(fuzzy_html);
-	    //$('#review_fuzzy_matches_dialog').dialog('open');
-	}
 
 	if (verifyResponse.found) {
 	    var found_html = '';
@@ -100,6 +84,21 @@ jQuery(document).ready(function ($) {
 	    $('#review_found_matches_dialog').dialog('open');
 	}
 
+	if (verifyResponse.fuzzy) {
+	    var fuzzy_html = '';
+	    for( i=0; i < verifyResponse.fuzzy.length; i++) {
+		fuzzy_html = fuzzy_html + '<div class="left">'+ verifyResponse.fuzzy[i].name + '</div>';
+		fuzzy_html = fuzzy_html + '<div class="right"><select id ="fuzzyselect'+i+'">';
+		for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
+		    fuzzy_html = fuzzy_html + '<option value="">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
+		}
+		fuzzy_html = fuzzy_html + '</select>';
+	    }
+	    fuzzy_html = fuzzy_html + '</div>';
+	    $('#view_fuzzy_matches').html(fuzzy_html);
+	    $('#review_fuzzy_matches_dialog').dialog('open');
+	}
+
 	if (verifyResponse.absent) {
 	    var absent_html = '';
 	    for( i=0; i < verifyResponse.absent.length; i++){
@@ -113,7 +112,6 @@ jQuery(document).ready(function ($) {
 	    $('#view_absent').html(absent_html);
 	    $('#review_absent_dialog').dialog('open');
 	}
-
     } 
 
     function verify_accession_list() {
