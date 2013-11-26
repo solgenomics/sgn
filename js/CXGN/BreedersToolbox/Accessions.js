@@ -20,6 +20,7 @@ jQuery(document).ready(function ($) {
 
     var list = new CXGN.List();
 
+
     $("#review_absent_dialog").dialog({
 	autoOpen: false,	
 	modal: true,
@@ -63,24 +64,36 @@ jQuery(document).ready(function ($) {
 	}
     });
 
+
     function review_verification_results(verifyResponse){
 	var i;
 	var j;
 
 	if (verifyResponse.found) {
-	    var found_html = '';
-	    for( i=0; i < verifyResponse.found.length; i++){
+	var found_html = '';
+	for( i=0; i < verifyResponse.found.length; i++){
+	    found_html = found_html 
+		+'<div class="left">'+verifyResponse.found[i].matched_string
+		+'</div>';
+	    if (verifyResponse.found[i].matched_string != verifyResponse.found[i].unique_name){
 		found_html = found_html 
-		    +'<div class="left">'+verifyResponse.found[i].matched_string
-		    +'</div>';
-		if (verifyResponse.found[i].matched_string != verifyResponse.found[i].unique_name){
-		    found_html = found_html 
 		    +'<div class="right">'
 		    +verifyResponse.found[i].unique_name
 		    +'</div>';
-		}
 	    }
+	}
 	    $('#view_found_matches').html(found_html);
+
+	    if (verifyResponse.fuzzy) {
+		$('#review_found_matches_dialog').bind('dialogclose', function() {
+		    $('#review_fuzzy_matches_dialog').dialog('open');
+		});
+	    } else {
+		$('#review_found_matches_dialog').bind('dialogclose', function() {
+		    $('#review_absent_dialog').dialog('open');
+		});
+	    }
+
 	    $('#review_found_matches_dialog').dialog('open');
 	}
 
@@ -96,7 +109,7 @@ jQuery(document).ready(function ($) {
 	    }
 	    fuzzy_html = fuzzy_html + '</div>';
 	    $('#view_fuzzy_matches').html(fuzzy_html);
-	    $('#review_fuzzy_matches_dialog').dialog('open');
+	    //$('#review_fuzzy_matches_dialog').dialog('open');
 	}
 
 	if (verifyResponse.absent) {
@@ -110,7 +123,7 @@ jQuery(document).ready(function ($) {
 		    +'</div>';
 	    }
 	    $('#view_absent').html(absent_html);
-	    $('#review_absent_dialog').dialog('open');
+	    //$('#review_absent_dialog').dialog('open');
 	}
     } 
 
