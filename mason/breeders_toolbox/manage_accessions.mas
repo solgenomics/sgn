@@ -33,7 +33,10 @@ $accessions
 </div>
 
 <div id="review_found_matches_dialog" class="ui-widget" title="Found accessions">
-  Found
+  The following accessions already exist and cannot be added:
+  <br><br>
+  <div class="left"> <b>Searched name</b> </div>
+  <div class="right"> <b>Unique name for synonym</b> </div>
   <div id="view_found_matches">
   </div>
 </div>
