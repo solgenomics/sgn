@@ -68,6 +68,42 @@ sub verify_accession_list_POST : Args(0) {
   return;
 }
 
+sub add_accession_list : Path('/ajax/accession_list/verify') : ActionClass('REST') { }
+
+sub add_accession_list_POST : Args(0) {
+  my ($self, $c) = @_;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $accession_list_json = $c->req->param('accession_list');
+  my $species_name = $c->req->param('species_name');
+  my @accession_list;
+  my $stock_add;
+  my $validated;
+  my $added;
+
+  if (!$c->user()) {
+    $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+    return;
+  }
+  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
+    return;
+  }
+
+  @accession_list = @{_parse_list_from_json($accession_list_json)};
+  $stock_add = CXGN::Stock::AddStock->new({ schema => $schema, stocks => \@accession_list, species => $species_name} );
+  $validated = $stock_add->validate_stocks();
+  if (!$validated) {
+    $c->stash->{rest} = {error =>  "Stocks already exist in the database" };
+  }
+  $added = $stock_add->add_accessions();
+  if (!$added) {
+    $c->stash->{rest} = {error =>  "Could not add stocks to the database" };
+  }
+  $c->stash->{rest} = {success => "1"};
+  return;
+}
+
+
 sub _parse_list_from_json {
   my $list_json = shift;
   my $json = new JSON;
