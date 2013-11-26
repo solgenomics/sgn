@@ -71,7 +71,7 @@ sub get_matches {
       push (@matches, \%string_distance_result);
     };
 
-    #print STDERR "\n\ndist:\n".Data::Dumper::Dumper(@distances)."\n";
+
     return \@matches;
 
 }

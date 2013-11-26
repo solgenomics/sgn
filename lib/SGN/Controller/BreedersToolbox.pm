@@ -55,11 +55,11 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
 
-    my $breeding_projects = $projects->get_breeding_programs();
-   
+    my $breeding_programs = $projects->get_breeding_programs();
+
     my %trials_by_breeding_project = ();
 
-    foreach my $bp (@$breeding_projects) { 
+    foreach my $bp (@$breeding_programs) { 
 	$trials_by_breeding_project{$bp->[1]}= $projects->get_trials_by_breeding_program($bp->[0]);
     }
 
@@ -68,6 +68,9 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     $c->stash->{locations} = $self->get_locations($c);
 
     $c->stash->{trials_by_breeding_project} = \%trials_by_breeding_project; #$self->get_projects($c);
+
+    $c->stash->{breeding_programs} = $breeding_programs;
+
 
     $c->stash->{template} = '/breeders_toolbox/manage_projects.mas';
 }
@@ -144,7 +147,7 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 
     #$c->stash->{projects} = $self->get_projects($c);
 
-    $c->stash->{programs} = $breeding_programs;;
+    $c->stash->{programs} = $breeding_programs;
 
     $c->stash->{roles} = $c->user()->roles();
 
@@ -383,6 +386,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     my $breeding_programs = $bp->get_breeding_programs();
 
     $c->stash->{programs} = $breeding_programs;
+    $c->stash->{breeding_programs} = $breeding_programs;
     
     my $locations_by_breeding_program;
     foreach my $b (@$breeding_programs) { 

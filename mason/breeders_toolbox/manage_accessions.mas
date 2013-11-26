@@ -21,4 +21,37 @@ $accessions
     <label id="select_list_label" for="list_div_list_select" style="display: inline-block; width: 200px;">List of accessions to add:
     </label>
   </div>
+  <input type="checkbox" id="fuzzy_check"></input>
+  <label for="fuzzy_check">Use fuzzy search</label>
 </div>
+
+<div id="review_fuzzy_matches_dialog" class="ui-widget" title="Fuzzy matches">
+  <b>Accessions were found with similar names.</b>
+  <br><br>
+  <div id="view_fuzzy_matches">
+    
+  </div>
+</div>
+
+<div id="review_found_matches_dialog" class="ui-widget" title="Found accessions">
+  <b>The following accessions already exist and cannot be added:</b>
+  <br><br>
+  <div class="left"> <b>Searched name</b> </div>
+  <div class="right"> <b>Unique name for synonym</b> </div>
+  <div id="view_found_matches">
+  </div>
+</div>
+
+<div id="review_absent_dialog" class="ui-widget" title="Accessions not found">
+  <b>Accessions to be added:</b>
+  <br><br>
+  <div id="view_absent">
+  </div> 
+</div>
+
+<style>
+  div.left {
+    float: left;
+    clear: both;
+  }
+</style>

@@ -1,6 +1,7 @@
 
 <%args>
 @projects => undef
+$programs => undef
 $user_id => undef
 @layout_files => undef
 @trait_files => undef
@@ -21,6 +22,10 @@ $user_id => undef
 
 <&| /page/info_section.mas, title=>'Field Layout Files', collapsible=>1, collapsed=>0, &>
 <%perl>
+my @breeding_programs = @{$programs};
+foreach my $prog (@breeding_programs) {
+  print @$prog[0].@$prog[1]."</br>";
+}
 foreach my $project_ref (@projects) {
    my @trial_array = @{$project_ref};
    my $file_name = $trial_array[4];

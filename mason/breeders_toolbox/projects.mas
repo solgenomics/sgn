@@ -3,6 +3,7 @@
 $trials_by_breeding_project => ()
 @locations => ()
 @roles => ()
+$breeding_programs
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List',] &>
@@ -19,6 +20,15 @@ $trials_by_breeding_project => ()
     <select id="add_project_location" name="add_project_location">
       <%perl>foreach my $location (@locations) { print "
       <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
+      </%perl>
+    </select>
+    <br>
+    <label for="select_breeding_program" style="display: inline-block; width: 100px;">Breeding Program:</label>
+    <select id="select_breeding_program" name="select_breeding_program">
+      <%perl>
+      foreach my $program (@$breeding_programs) {
+         print "<option value=".@$program[0].">".@$program[1]."</option>";
+      }
       </%perl>
     </select>
     <br>
@@ -439,6 +449,7 @@ jQuery(document).ready(function () {
 	var plot_prefix = jQuery('#plot_prefix').val();
 	var start_number = jQuery('#start_number').val();
 	var increment = jQuery('#increment').val();
+	var breeding_program_id = jQuery('#select_breeding_program').val();
 	var stock_verified = verify_stock_list(stock_list);
         if (desc == '' || year == '') {
             alert('Year and description are required.');
@@ -464,6 +475,7 @@ jQuery(document).ready(function () {
 		'start_number': start_number,
 		'increment': increment,
 		'design_json': design_json,
+                'breeding_program_id': breeding_program_id,
             },
             success: function (response) {
                 if (response.error) {

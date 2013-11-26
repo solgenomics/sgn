@@ -1,3 +1,5 @@
+/*jslint browser: true, devel: true */
+
 /**
 
 =head1 FieldBook.js
@@ -14,118 +16,108 @@ Jeremy D. Edwards <jde22@cornell.edu>
 */
 
 
-window.onload = function initialize() { 
+var $j = jQuery.noConflict();
 
+jQuery(document).ready(function ($) {
 
-    jQuery(document).ready(function () {
+    var list = new CXGN.List();
 
-	var list = new CXGN.List();
+    function generate_trait_file() {
+	var trait_list_id = $('#select_list_list_select').val();
+	var trait_list = JSON.stringify(list.getList(trait_list_id));
+	var trait_file_name = $('#trait_file_name').val();
 
-
-	jQuery("#select_list").append(list.listSelect("select_list"));
-
-	jQuery( "#create_trait_file_dialog" ).dialog({
-	    autoOpen: false,
-	    modal: true,
-	    autoResize:true,
-            width: 500,
-            position: ['top', 150],
-	    buttons: {
-		Ok: function() {
-                    generate_trait_file();
-		    jQuery( this ).dialog( "close" );
-		    location.reload();
-		}
-	    }
-	});
-
-	jQuery('#create_new_trait_file_link').click(function () {
-            jQuery('#create_trait_file_dialog').dialog("open");
-	});
-
-	function generate_trait_file() {
-	    var trait_list_id = jQuery('#select_list_list_select').val();
-	    var trait_list = JSON.stringify(list.getList(trait_list_id));
-	    var trait_file_name = jQuery('#trait_file_name').val();
-
-	    new jQuery.ajax({
-		type: 'POST',
-		url: '/ajax/fieldbook/traitfile/create',
-		dataType: "json",
-		data: {
-                    'trait_list': trait_list,
-                    'trait_file_name': trait_file_name,
-		},
-		success: function (response) {
-                    if (response.error) {
-			alert(response.error);
-                    } else {
-			alert('The trait file was saved.');
-                    }
-		},
-		error: function () {
-                    alert('An error occurred. sorry');
-		}
-            });
-	}
-
-
-	jQuery( "#upload_fieldbook_phenotypes_dialog" ).dialog({
-	    autoOpen: false,
-	    modal: true,
-	    autoResize:true,
-            width: 500,
-            position: ['top', 150],
-	    buttons: {
-		Ok: function() {
-                    upload_fieldbook_phenotype_file();
-		    //jQuery( this ).dialog( "close" );
-		    //location.reload();
-		}
-	    }
-	});
-
-	jQuery('#upload_tablet_phenotype_file_link').click(function () {
-            jQuery('#upload_fieldbook_phenotypes_dialog').dialog("open");
-            //jQuery( this ).dialog( "close" );
-	    //location.reload();
-	});
-
-	function upload_fieldbook_phenotype_file() {
-            var uploadFile = jQuery("#fieldbook_upload_file").val();
-            jQuery('#upload_fieldbook_form').attr("action", "/ajax/fieldbook/upload_phenotype_file");
-            if (uploadFile === '') {
-		alert("Please select a file");
-		return;
-            }
-            jQuery("#upload_fieldbook_form").submit();
-	}
-
-	jQuery('#upload_fieldbook_form').iframePostForm({
-	    json: true,
-	    post: function () {
-		var uploadFile = jQuery("#fieldbook_upload_file").val();
-		if (uploadFile === '') {
-		    alert("No file selected");
-		}
+	$.ajax({
+	    type: 'POST',
+	    url: '/ajax/fieldbook/traitfile/create',
+	    dataType: "json",
+	    data: {
+                'trait_list': trait_list,
+                'trait_file_name': trait_file_name,
 	    },
-	    complete: function (response) {
-		if (response.error) {
+	    success: function (response) {
+                if (response.error) {
 		    alert(response.error);
-		    return;
-		}
-		if (response.success) {
-		    alert("File uploaded successfully");
-		    jQuery( this ).dialog( "close" );
+                } else {
+		    alert('The trait file was saved.');
 		    location.reload();
-		}
+                }
+	    },
+	    error: function (response) {
+                alert('An error occurred generating the trait file.'+response.error);
+	    },
+        });
+    }
+
+    function upload_fieldbook_phenotype_file() {
+        var uploadFile = $("#fieldbook_upload_file").val();
+        $('#upload_fieldbook_form').attr("action", "/ajax/fieldbook/upload_phenotype_file");
+        if (uploadFile === '') {
+	    alert("Please select a file");
+	    return;
+        }
+        $("#upload_fieldbook_form").submit();
+    }
+
+    $("#select_list").append(list.listSelect("select_list"));
+
+    $("#create_trait_file_dialog").dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+	    Ok: function() {
+                generate_trait_file();
 	    }
-	});
-
-
-
-
+	}
     });
 
+    $('#create_new_trait_file_link').click(function () {
+        $('#create_trait_file_dialog').dialog("open");
+    });
 
-}
+    $( "#upload_fieldbook_phenotypes_dialog" ).dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+	    Ok: function() {
+                upload_fieldbook_phenotype_file();
+		//$( this ).dialog( "close" );
+		//location.reload();
+	    }
+	}
+    });
+
+    $('#upload_tablet_phenotype_file_link').click(function () {
+        $('#upload_fieldbook_phenotypes_dialog').dialog("open");
+        //$( this ).dialog( "close" );
+	//location.reload();
+    });
+
+    $('#upload_fieldbook_form').iframePostForm({
+	json: true,
+	post: function () {
+	    var uploadFile = $("#fieldbook_upload_file").val();
+	    if (uploadFile === '') {
+		alert("No file selected");
+	    }
+	},
+	complete: function (response) {
+	    if (response.error) {
+		alert(response.error);
+		return;
+	    }
+	    if (response.success) {
+		alert("File uploaded successfully");
+		$( this ).dialog( "close" );
+		location.reload();
+	    }
+	}
+    });
+
+});

@@ -11,6 +11,7 @@ use CXGN::Trial::TrialLayout;
 use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use File::Spec::Functions;
+use CXGN::BreedersToolbox::Projects;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -29,6 +30,8 @@ sub field_book :Path("/fieldbook") Args(0) {
     my @rows = $schema->resultset('Project::Project')->all();
     #limit to owner 
     my @projects = ();
+    my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $breeding_programs = $bp->get_breeding_programs();
     my @layout_files = ();
     my @phenotype_files = ();
 
@@ -90,6 +93,7 @@ sub field_book :Path("/fieldbook") Args(0) {
     }
 
     $c->stash->{projects} = \@projects;
+    $c->stash->{programs} = $breeding_programs;
     $c->stash->{layout_files} = \@projects;
     $c->stash->{trait_files} = \@trait_files;
     $c->stash->{phenotype_files} = \@phenotype_files;

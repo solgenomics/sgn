@@ -21,6 +21,7 @@ use JSON -support_by_pp;
 use List::MoreUtils qw /any /;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 use Data::Dumper;
+#use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -36,10 +37,15 @@ sub verify_accession_list_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $accession_list_json = $c->req->param('accession_list');
+  my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
   my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
   my $fuzzy_search_result;
-  my $max_distance = 0.2;
+  my $max_distance = 0.5;
   my @accession_list;
+  my @found_accessions;
+  my @fuzzy_accessions;
+  my @absent_accessions;
+
 
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
@@ -52,12 +58,14 @@ sub verify_accession_list_POST : Args(0) {
 
   @accession_list = @{_parse_list_from_json($accession_list_json)};
 
-  foreach my $accession_name (@accession_list) {
-    $fuzzy_search_result = $fuzzy_accession_search->get_matches($accession_name, $max_distance);
-    print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
-  }
+  $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
+  print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
- $c->stash->{rest} = {success => "1",};
+  @found_accessions = $fuzzy_search_result->{'found'};
+  @fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+  @absent_accessions = $fuzzy_search_result->{'absent'};
+  $c->stash->{rest} = {success => "1", absent => @absent_accessions, fuzzy => @fuzzy_accessions, found => @found_accessions};
+  return;
 }
 
 sub _parse_list_from_json {
@@ -73,5 +81,6 @@ sub _parse_list_from_json {
     return;
   }
 }
+
 
 1;
