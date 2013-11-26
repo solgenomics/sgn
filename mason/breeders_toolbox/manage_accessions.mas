@@ -41,8 +41,8 @@ $accessions
   </div>
 </div>
 
-<div id="review_absent_dialog" class="ui-widget" title="Accessions not found">
-  <b>Accessions to be added:</b>
+<div id="review_absent_dialog" class="ui-widget" title="Accessions to be added">
+  <b>The following accessions will be added to the database:</b>
   <br><br>
   <div id="view_absent">
   </div> 

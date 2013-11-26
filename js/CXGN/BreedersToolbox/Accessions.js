@@ -116,8 +116,6 @@ jQuery(document).ready(function ($) {
 		verifyResponse.absent.push(verifyResponse.fuzzy[i].name);
 	    }
 
-
-
 	    $('#review_fuzzy_matches_dialog').bind('dialogclose', function() {
 		$('#review_absent_dialog').dialog('open');
 	    });
@@ -129,9 +127,6 @@ jQuery(document).ready(function ($) {
 	    for( i=0; i < verifyResponse.absent.length; i++){
 		absent_html = absent_html 
 		    +'<div class="left">'+verifyResponse.absent[i]
-		    +'</div>' 
-		    +'<div class="right">'
-		    +verifyResponse.absent[i]
 		    +'</div>';
 	    }
 	    $('#view_absent').html(absent_html);
