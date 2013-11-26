@@ -111,6 +111,13 @@ jQuery(document).ready(function ($) {
 	    $('#view_fuzzy_matches').html(fuzzy_html);
 	    //$('#review_fuzzy_matches_dialog').dialog('open');
 
+	    //Add to absent
+	    for( i=0; i < verifyResponse.fuzzy.length; i++) {
+		verifyResponse.absent.push(verifyResponse.fuzzy[i].name);
+	    }
+
+
+
 	    $('#review_fuzzy_matches_dialog').bind('dialogclose', function() {
 		$('#review_absent_dialog').dialog('open');
 	    });
