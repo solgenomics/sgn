@@ -4,6 +4,12 @@ $mode => ''
 $debug => ''
 </%args>
 
+<%perl>
+my %modes = ( clone_search => 0,  microarray=>1,  unigene=>2, bac=>3, bac_end=>4, genes=>5, feature=>6, ftp=>7 );
+if (!$mode) { $mode="clone_search";}
+if (!exists($modes{$mode})) { $mode = "clone_search"; }
+</%perl>
+
 <& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
 
 <& /page/page_title.mas, title=>"Bulk Download" &>
@@ -12,6 +18,8 @@ $debug => ''
   jQuery(function() {
     
     jQuery( "#tabs" ).tabs({
+      //show: { effect: 'blind', duration: 800},
+      active: <% $modes{$mode} %>,
       beforeLoad: function( event, ui ) {
         ui.jqXHR.error(function() {
           ui.panel.html(
@@ -19,7 +27,8 @@ $debug => ''
             "If this wouldn't be a demo." );
         });
       }
-    });
+
+  });
   });
 </script>
 
