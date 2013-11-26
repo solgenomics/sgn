@@ -20,6 +20,7 @@ jQuery(document).ready(function ($) {
 
     var list = new CXGN.List();
     var accessionList;
+    var doFuzzySearch;
 
     function add_accessions(accessionsToAdd, speciesName) {
 	var accessionsAsJSON = JSON.stringify(accessionsToAdd);
@@ -99,7 +100,6 @@ jQuery(document).ready(function ($) {
 	}
     });
 
-
     function review_verification_results(verifyResponse){
 	var i;
 	var j;
@@ -119,7 +119,7 @@ jQuery(document).ready(function ($) {
 	}
 	    $('#view_found_matches').html(found_html);
 
-	    if (verifyResponse.fuzzy) {
+	    if (verifyResponse.fuzzy && doFuzzySearch) {
 		$('#review_found_matches_dialog').bind('dialogclose', function() {
 		    $('#review_fuzzy_matches_dialog').dialog('open');
 		});
@@ -176,7 +176,8 @@ jQuery(document).ready(function ($) {
     function verify_accession_list() {
 	var accession_list_id = $('#accessions_list_select').val();
 	var accession_list = JSON.stringify(list.getList(accession_list_id));
-	var doFuzzySearch = $('#fuzzy_check').val();
+	doFuzzySearch = $('#fuzzy_check').attr('checked');
+	alert (doFuzzySearch);
 	alert(accession_list);
 
 	$.ajax({
@@ -186,7 +187,7 @@ jQuery(document).ready(function ($) {
 	    dataType: "json",
 	    data: {
                 'accession_list': accession_list,
-		'do_fuzzy_search': doFuzzySearch,
+		//'do_fuzzy_search': doFuzzySearch,
 	    },
 	    success: function (response) {
                 if (response.error) {
