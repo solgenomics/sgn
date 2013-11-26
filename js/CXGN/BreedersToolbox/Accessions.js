@@ -120,13 +120,18 @@ jQuery(document).ready(function ($) {
 	}
 	    $('#view_found_matches').html(found_html);
 
-	    if (verifyResponse.fuzzy && doFuzzySearch) {
+	    if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
 		$('#review_found_matches_dialog').bind('dialogclose', function() {
 		    $('#review_fuzzy_matches_dialog').dialog('open');
 		});
 	    } else {
 		$('#review_found_matches_dialog').bind('dialogclose', function() {
-		    $('#review_absent_dialog').dialog('open');
+		    if (!accessionList || accessionList.length == 0) {
+			alert("No accessions to add");
+			location.reload();
+		    } else {
+			$('#review_absent_dialog').dialog('open');
+		    }
 		});
 	    }
 
@@ -154,7 +159,12 @@ jQuery(document).ready(function ($) {
 	    accessionList = verifyResponse.absent;
 
 	    $('#review_fuzzy_matches_dialog').bind('dialogclose', function() {
-		$('#review_absent_dialog').dialog('open');
+		if (!accessionList || accessionList.length == 0) {
+		    alert("No accessions to add");
+		    location.reload();
+		} else {
+		    $('#review_absent_dialog').dialog('open');
+		}
 	    });
 
 	}
