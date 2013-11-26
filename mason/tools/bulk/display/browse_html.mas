@@ -4,8 +4,7 @@ $data
 </%args>
 
 <& /tools/bulk/display/buttons.mas, 
-   line_count => $data->{line_count}, 
-   page_size=>$data->{page_size}, 
+   page_size=>$data->{page_size} || 50, 
    page_number => $data->{page_number},
    idType => $data->{idType},
    dumpfile => $data->{dumpfile} &>
@@ -15,6 +14,8 @@ use Data::Dumper;
 use File::Slurp qw | read_file |;
 use CXGN::Page::FormattingHelpers qw | html_break_string |;
 print STDERR "DATA:".Data::Dumper::Dumper($data);
+
+$data->{page_size} || ($data->{page_size} = 50);
 
 if ( !( exists($data->{page_number}) ||  $data->{page_number} ) ) {
 $data->{page_number} = 1;
@@ -71,7 +72,8 @@ if ( @file_lines < 2 ) {
 
             my $show_line = ( $line_count >= ($data->{page_number} - 1 ) * $data->{page_size} + 1 )
                 && ($line_count <=  ( $data->{page_number} ) * $data->{page_size} );
-            if (1) { #$show_line) { 
+
+            if ($show_line) { 
                 my @fields = split /\t/, $fl;
                 my %row;
                 for ( my $i = 0 ; $i < @fields ; $i++ ) {
@@ -81,9 +83,10 @@ if ( @file_lines < 2 ) {
                 # format the sequence data for output to browser.
                 # number of letters in sequence or qual to wrap on
                 my $breakspace_num = 60;
-
+		
                 $row{est_seq} =
                   html_break_string( $row{est_seq}, $breakspace_num );
+
                 $row{est_seq} =
 "<span class=\"sequence\" style=\"font-size: smaller;\"> $row{est_seq}</span>";
 
@@ -170,11 +173,6 @@ print $content;
 
 close(F);
 
-
-sub html_break_string { 
-
-
-}
 
 </%perl>
 
