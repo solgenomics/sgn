@@ -34,7 +34,7 @@ sub download : Path('/tools/bulk/download') Args(0) {
 
     $params->{dbc}     = $c->dbc->dbh();
     $params->{tempdir} = $c->path_to( $c->tempfiles_subdir('bulk') );
-    
+
     #create correct bulk object
     my $bulk;
     my $idType = $params->{idType};
@@ -189,7 +189,7 @@ sub get_parameters {
         if ($fh) {
             ### Uploading file...
             while (<$fh>) {
-                $params->{ids_string} .= $_;
+                $params->{ids} .= $_;
             }
         }
     }
