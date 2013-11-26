@@ -110,6 +110,11 @@ jQuery(document).ready(function ($) {
 	    fuzzy_html = fuzzy_html + '</div>';
 	    $('#view_fuzzy_matches').html(fuzzy_html);
 	    //$('#review_fuzzy_matches_dialog').dialog('open');
+
+	    $('#review_fuzzy_matches_dialog').bind('dialogclose', function() {
+		$('#review_absent_dialog').dialog('open');
+	    });
+
 	}
 
 	if (verifyResponse.absent) {
