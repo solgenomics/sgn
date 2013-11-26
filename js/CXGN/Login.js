@@ -37,3 +37,36 @@ function logout() {
 
 }
 	    
+
+function setUpLogin() { 
+
+ jQuery('#working').dialog( { 
+    height: 80,
+    width: 100,
+    modal: true,
+    title: "Working...",
+    closeOnEscape: false,
+    autoOpen: false
+  });
+  
+jQuery('#login_window').dialog( { 
+    height: 180,
+    width: 300,
+    modal: true,
+    title: 'Login',
+    autoOpen: false,
+    buttons: { 
+      "Login" : 
+        function() { 
+          login();
+        },
+      "Cancel": 
+        function() { 
+          jQuery('#login_window').dialog("close");
+        }
+    }
+     
+   
+  });
+
+}
