@@ -29,6 +29,11 @@ jQuery(document).ready(function ($) {
         position: ['top', 150],
 	buttons: {
 	    Add: function() {
+		var speciesName = $("#species_name_input").val();
+		if (!speciesName) {
+		    alert("Species name required");
+		    return;
+		}
 		alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
 		$(this).dialog( "close" );
 	    },
