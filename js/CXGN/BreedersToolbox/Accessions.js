@@ -19,7 +19,31 @@ var $j = jQuery.noConflict();
 jQuery(document).ready(function ($) {
 
     var list = new CXGN.List();
+    var accessionList;
 
+    function add_accessions(accessionsToAdd, speciesName) {
+	var accessionsAsJSON = JSON.stringify(accessionsToAdd);
+	$.ajax({
+	    type: 'POST',
+	    url: '/ajax/accession_list/add',
+	    async: false,
+	    dataType: "json",
+	    data: {
+		'accession_list': accessionsAsJSON,
+		'species_name': speciesName,
+	    },
+	    success: function (response) {
+		if (response.error) {
+		    alert(response.error);
+		} else {
+		    alert("There were "+accessionsToAdd.length+" accessions added");
+		}
+	    },
+	    error: function () {
+		alert('An error occurred in processing. sorry');
+	    }
+	});
+    }
 
     $("#review_absent_dialog").dialog({
 	autoOpen: false,	
@@ -30,11 +54,17 @@ jQuery(document).ready(function ($) {
 	buttons: {
 	    Add: function() {
 		var speciesName = $("#species_name_input").val();
+		var accessionsToAdd = accessionList;
 		if (!speciesName) {
 		    alert("Species name required");
 		    return;
 		}
+		if (!accessionsToAdd || accessionsToAdd.length == 0) {
+		    alert("No accessions to add");
+		    return;
+		}
 		alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
+		add_accessions(accessionsToAdd, speciesName);
 		$(this).dialog( "close" );
 	    },
 	    Close: function() {
@@ -120,6 +150,7 @@ jQuery(document).ready(function ($) {
 	    for( i=0; i < verifyResponse.fuzzy.length; i++) {
 		verifyResponse.absent.push(verifyResponse.fuzzy[i].name);
 	    }
+	    accessionList = verifyResponse.absent;
 
 	    $('#review_fuzzy_matches_dialog').bind('dialogclose', function() {
 		$('#review_absent_dialog').dialog('open');
