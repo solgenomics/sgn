@@ -20,7 +20,7 @@ $dumpfile
 
 </%perl>
 
-# add next page button if there is a next page
+%# add next page button if there is a next page
 %if ( ( $line_count + $page_size ) >
 %( ( $page_number + 1 ) * $page_size ) )
 %{
