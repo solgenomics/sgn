@@ -67,6 +67,7 @@ jQuery(document).ready(function ($) {
 		alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
 		add_accessions(accessionsToAdd, speciesName);
 		$(this).dialog( "close" );
+		location.reload();
 	    },
 	    Close: function() {
 		$(this).dialog( "close" );
@@ -177,8 +178,8 @@ jQuery(document).ready(function ($) {
 	var accession_list_id = $('#accessions_list_select').val();
 	var accession_list = JSON.stringify(list.getList(accession_list_id));
 	doFuzzySearch = $('#fuzzy_check').attr('checked');
-	alert (doFuzzySearch);
-	alert(accession_list);
+	//alert (doFuzzySearch);
+	//alert(accession_list);
 
 	$.ajax({
 	    type: 'POST',
@@ -193,8 +194,6 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
 		    alert(response.error);
                 } else {
-		    //var text = JSON.stringify(response, null, '\t');
-		    //alert(text);
 		    review_verification_results(response);
                 }
 	    },
@@ -222,7 +221,6 @@ jQuery(document).ready(function ($) {
     $('#add_accessions_link').click(function () {
         $('#add_accessions_dialog').dialog("open");
 	$("#list_div").html(list.listSelect("accessions"));
-	//$( "#fuzzy_check" ).button();
     });
 
     
