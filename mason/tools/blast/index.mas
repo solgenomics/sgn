@@ -11,6 +11,8 @@ $programs
 @input_options => ()
 @parse_options => ()
 $preload_seq => ''
+$preload_id => ''
+$preload_type => ''
 </%args>
 
 <%perl>
@@ -41,7 +43,7 @@ my $show_graphics_select = $m->scomp('/page/html_select.mas',  name => 'output_g
 
 print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
 my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', id=>'input_options',
-			      choices => \@input_options
+			      choices => \@input_options, selected=>$preload_type,
 );
 
 my @parse_options_selected = ();
@@ -77,6 +79,13 @@ foreach my $t (@input_options) {
 my $input_option_json = JSON::Any->encode($q_type);
 my $input_example_json = JSON::Any->encode($q_example);
 
+my $preload = "";
+if ($preload_id && $preload_type) { 
+  $preload = $preload_id;
+}
+if ($preload_seq) { 
+  $preload = $preload_seq;
+}
 
 
 #print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
@@ -109,7 +118,7 @@ my $input_example_json = JSON::Any->encode($q_example);
 <tr><td colspan="3">
 
 <!-- div style="font-size: 80%">single sequence only, use Advanced for multiple</div -->
-<textarea name="sequence" id="sequence" rows="8" cols="80"><% $preload_seq %></textarea></td></tr>
+<textarea name="sequence" id="sequence" rows="8" cols="80"><% $preload %></textarea></td></tr>
     <tr><td colspan="3">
       <table width="100%"><tr>
          <td>
