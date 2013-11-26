@@ -124,6 +124,9 @@ jQuery(document).ready(function ($) {
 
 	if (verifyResponse.absent) {
 	    var absent_html = '';
+	    $("#species_name_input").autocomplete({
+		source: '/organism/autocomplete'
+	    });
 	    for( i=0; i < verifyResponse.absent.length; i++){
 		absent_html = absent_html 
 		    +'<div class="left">'+verifyResponse.absent[i]

@@ -43,6 +43,7 @@ $accessions
 
 <div id="review_absent_dialog" class="ui-widget" title="Accessions to be added">
   <label for="species_name_input">Species name for added accessions</label>
+  <br><br>
   <input type="text" id="species_name_input"></input>
   <b>The following accessions will be added to the database:</b>
   <br><br>
@@ -55,4 +56,17 @@ $accessions
     float: left;
     clear: both;
   }
+.ui-autocomplete {
+  max-height: 100px;
+  overflow-y: auto;
+  /* prevent horizontal scrollbar */
+  overflow-x: hidden;
+}
+
+/* IE 6 doesn't support max-height
+* we use height instead, but this forces the menu to always be this tall
+*/
+* html .ui-autocomplete {
+  height: 100px;
+}
 </style>
