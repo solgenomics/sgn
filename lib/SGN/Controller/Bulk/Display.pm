@@ -44,7 +44,7 @@ sub display_page : Path('/tools/bulk/display') :Args(0) {
 
     # get cgi arguments
     $self->{dumpfile}    = $c->req->param("dumpfile");
-    $self->{page_number} = $c->req->param("page_number");
+    $self->{page_number} = $c->req->param("page_number") || 1;
     $self->{page_size}   = $c->req->param("page_size");
     $self->{outputType}  = $c->req->param("outputType");
     $self->{seq_type}    = $c->req->param("seq_type");
@@ -53,6 +53,8 @@ sub display_page : Path('/tools/bulk/display') :Args(0) {
     $self->{download}    = $c->req->param("download");
     $self->{lines_read}  = $c->req->param("lines_read");
     $self->{outputType}  = $c->req->param("outputType");
+    $self->{unigene_seq} = $c->req->param("unigene_seq");
+    $self->{est_seq}     = $c->req->param("est_seq");
 
     $c->stash->{summary_data} = { 
 	dumpfile => $self->{dumpfile},
@@ -126,204 +128,6 @@ sub display_summary_page : Path('/tools/bulk/summary') Args(1){
 
 }
 
-=head2 render_html_page
-
-  Desc: sub render_html_page
-  Args: default
-  Ret : n/a
-
-  Creates html page in style specified by object that calls the method.
-
-=cut
-
-sub render_html_page {
-    my $self  = shift;
-    my $style = shift;
-    if ( $style =~ /HTML/i || !defined($style) ) {
-        $self->render_html_table_page();
-    }
-    if ( $style =~ /tree/i ) { $self->render_html_tree_page(); }
-}
-
-=head2 render_html_table_page
-
-  Desc: sub render_html_table_page
-  Args: default
-  Ret : n/a
-
-  Creates the html table that will contain the data on the page. Prints page
-  number and links above and below the table. Also determines the format of text
-  that will be place in the table (by download.pl). For example, sequences and
-  quality values are displayed in a smaller font and appear 60 per line (value
-  can be adjusted).
-
-=cut
-
-sub render_html_table_page {
-    my $self = shift;
-
-    #
-    # open the file
-    #
-    if ( !exists( $self->{page_number} ) || ( $self->{page_number} == 0 ) ) {
-        $self->{page_number} = 1;
-    }
-    if ( !exists( $self->{page_size} ) ) { $self->{page_size} = 50; }
-
-    $self->{debug} = 0;
-    my $line_count =
-      $self->getFileLines( $self->{tempdir} . "/" . $self->{dumpfile} );
-    $self->{line_count} = $line_count;
-    $self->debug("Line Count in the file: $line_count");
-    if ( $line_count < 2 ) {
-        $self->{content} .=
-"No data was retrieved. Please verify your input parameters. Thanks.<br /><br />\n";
-    }
-    else {
-        open( F, "<" . $self->{tempdir} . "/" . $self->{dumpfile} )
-          || $self->{page}->error_page("Can't open $self->{dumpfile}");
-
-        #
-        # read the column definitions
-        #
-        my @output_fields;
-        my $defs = <F>;
-        if ($defs) { chomp($defs); @output_fields = split /\t/, $defs; }
-        $self->debug( "column definitions: " . ( join " ", @output_fields ) );
-
-        # define the links
-        my %links = (
-            clone_name =>
-"/search/est.pl?request_type=10&amp;search=Search&amp;request_id=",
-            SGN_U        => "/search/unigene.pl?unigene_id=",
-            converted_id => "/search/unigene.pl?unigene_id=",
-        );
-        $self->{links} = \%links;
-
-        #
-        # read in the required page
-        #
-        my $line = 0;
-        my @data = ();
-        $self->buttons();
-        $self->{content} .= "<table summary=\"\" border=\"1\">\n";
-
-        # print table header
-        $self->{content} .=
-            "<tr><td>line</td><td>"
-          . ( join "</td><td>", @output_fields )
-          . "</td></tr>";
-
-        while (<F>) {
-            chomp;
-            $line++;
-            if ( $line >=
-                ( ( ( $self->{page_number} - 1 ) * $self->{page_size} ) + 1 )
-                && (
-                    $line <= ( ( $self->{page_number} ) * $self->{page_size} ) )
-              )
-            {
-                my @fields = split /\t/;
-                my %row;
-                for ( my $i = 0 ; $i < @fields ; $i++ ) {
-                    $row{ $output_fields[$i] } = $fields[$i];
-                }
-
-                # format the sequence data for output to browser.
-                # number of letters in sequence or qual to wrap on
-                my $breakspace_num = 60;
-
-                $row{est_seq} =
-                  html_break_string( $row{est_seq}, $breakspace_num );
-                $row{est_seq} =
-"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{est_seq}</span>";
-
-                $row{unigene_seq} =
-                  html_break_string( $row{unigene_seq}, $breakspace_num );
-                $row{unigene_seq} =
-"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{unigene_seq}</span>";
-
-                $row{protein_seq} =
-                  html_break_string( $row{protein_seq}, $breakspace_num );
-                $row{protein_seq} =
-"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{protein_seq}</span>";
-                $row{estscan_seq} =
-                  html_break_string( $row{estscan_seq}, $breakspace_num );
-                $row{estscan_seq} =
-"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{estscan_seq}</span>";
-                $row{longest6frame_seq} =
-                  html_break_string( $row{longest6frame_seq}, $breakspace_num );
-                $row{longest6frame_seq} =
-"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{longest6frame_seq}</span>";
-                $row{preferred_protein_seq} =
-                  html_break_string( $row{preferred_protein_seq},
-                    $breakspace_num );
-                $row{preferred_protein_seq} =
-"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{preferred_protein_seq}</span>";
-
-                $row{bac_end_sequence} =
-                  html_break_string( $row{bac_end_sequence}, $breakspace_num );
-                $row{bac_end_sequence} =
-"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{bac_end_sequence}</span>";
-
-                my $qual = $row{qual_value_seq};
-                my @qual = split /\s+/, $qual;
-                $row{qual_value_seq} = "";
-                s/^(\d)$/&nbsp;$1/ foreach (@qual);
-                while ( my @a = splice( @qual, 0, $breakspace_num ) ) {
-                    $row{qual_value_seq} .= join( "&nbsp;", @a ) . "<br />";
-                }
-                $row{qual_value_seq} =
-"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{qual_value_seq}</span>";
-
-                my @output;
-
-         #
-         # cycle through @output_fields and find the corresponding hash elements
-         #
-                $self->{content} .= "<tr><td>$line</td>\n";
-                foreach my $f (@output_fields) {
-
-                    #$self-> debug("outputting $row{$f}...");
-                    if ( !exists( $row{$f} ) || $row{$f} eq undef ) {
-                        $row{$f} = "N.A.";
-                    }
-
-#
-# add links as required. Links for each output field are stored in the %links hash.
-#
-                    if ( exists( $links{$f} ) && $row{$f} ne "N.A." ) {
-                        $row{$f} =
-                          "<a href=\"$links{$f}$row{$f}\">$row{$f}</a>";
-                    }
-                    if ( $f eq "clone_id" ) {
-                        $self->{content} .= "<td>$row{$f}</td>";
-                    }
-                    else {
-                        $self->{content} .= "<td>$row{$f}</td>";
-                    }
-
-                    #push @output, $row{$f};
-                }
-                $self->{content} .= "</tr>\n";
-
-     #$self->{content} .= "<tr><td>".(join "</td><td>", @output) . "</td></tr>";
-
-            }
-
-        }
-        $self->{content} .= "</table><!-- dump info -->\n";
-        $self->buttons();
-
-    }
-
-    #
-    # output to browser
-    #
-    print $self->{content};
-
-    close(F);
-}
 
 =head2 render_fasta_page
 
@@ -350,15 +154,14 @@ sub render_fasta_page {
     my @output_fields;
     my $defs = <F>;
     if ($defs) { chomp($defs); @output_fields = split /\t/, $defs; }
-    my %data;
+
     while (<F>) {
         chomp;
         my @f    = split /\t/;
-#        my %data = ();
-	my %self;
+
         #convert to hash
         for ( my $i = 0 ; $i < @output_fields ; $i++ ) {
-            $self{ $output_fields[$i] } = $f[$i];
+            $self->{ $output_fields[$i] } = $f[$i];
         }
         if ( ( join " ", @output_fields ) =~ /est_seq/i ) {
             $self->{seq_type} = "est_seq";
@@ -382,97 +185,96 @@ sub render_fasta_page {
         my $breakspace_num = 60;
 
         my $seq = "";
-
         # quality values
         my $qual = "";
-        if ( $data{qual_value_seq} ) {
-            $qual = $data{qual_value_seq};
+        if ( $self->{qual_value_seq} ) {
+            $qual = $self->{qual_value_seq};
         }
         else {
-            $data{qual_value_seq} = "";
+            $self->{qual_value_seq} = "";
         }
         my @qual = split /\s+/, $qual;
-        $data{qual_value_seq} = "\n";
+        $self->{qual_value_seq} = "\n";
         while ( my @a = splice( @qual, 0, $breakspace_num ) ) {
-            $data{qual_value_seq} .= join( " ", @a ) . "\n";
+            $self->{qual_value_seq} .= join( " ", @a ) . "\n";
         }
-        if ( $data{qual_value_seq} ) {
-            $seq = $data{qual_value_seq};
-            $data{qual_value_seq} = "";
+        if ( $self->{qual_value_seq} ) {
+            $seq = $self->{qual_value_seq};
+            $self->{qual_value_seq} = "";
         }
 
         # bac end sequences
         # only print sequence if both quality value and sequence selected
-        if ( $data{bac_end_sequence} ) {
+        if ( $self->{bac_end_sequence} ) {
             $seq = "\n"
-              . html_break_string( $data{bac_end_sequence}, $breakspace_num,
+              . html_break_string( $self->{bac_end_sequence}, $breakspace_num,
                 "\n" )
               . "\n";
-            $data{bac_end_sequence} = "";
+            $self->{bac_end_sequence} = "";
         }
         else {
-            $data{bac_end_sequence} = "";
+            $self->{bac_end_sequence} = "";
         }
 
         # est vs. unigene seq
-        $data{est_seq} =
-          html_break_string( $data{est_seq}, $breakspace_num, "\n" )
-          if defined( $data{est_seq} );
-        $data{unigene_seq} =
-          html_break_string( $data{unigene_seq}, $breakspace_num, "\n" )
-          if defined( $data{unigene_seq} );
-        $data{protein_seq} =
-          html_break_string( $data{protein_seq}, $breakspace_num, "\n" )
-          if defined( $data{protein_seq} );
-        $data{estscan_seq} =
-          html_break_string( $data{estscan_seq}, $breakspace_num, "\n" )
-          if defined( $data{estscan_seq} );
-        $data{longest6frame_seq} =
-          html_break_string( $data{longest6frame_seq}, $breakspace_num, "\n" )
-          if defined( $data{longest6frame_seq} );
-        $data{preferred_protein_seq} =
-          html_break_string( $data{preferred_protein_seq},
+        $self->{est_seq} =
+          html_break_string( $self->{est_seq}, $breakspace_num, "\n" )
+          if defined( $self->{est_seq} );
+        $self->{unigene_seq} =
+          html_break_string( $self->{unigene_seq}, $breakspace_num, "\n" )
+          if defined( $self->{unigene_seq} );
+        $self->{protein_seq} =
+          html_break_string( $self->{protein_seq}, $breakspace_num, "\n" )
+          if defined( $self->{protein_seq} );
+        $self->{estscan_seq} =
+          html_break_string( $self->{estscan_seq}, $breakspace_num, "\n" )
+          if defined( $self->{estscan_seq} );
+        $self->{longest6frame_seq} =
+          html_break_string( $self->{longest6frame_seq}, $breakspace_num, "\n" )
+          if defined( $self->{longest6frame_seq} );
+        $self->{preferred_protein_seq} =
+          html_break_string( $self->{preferred_protein_seq},
             $breakspace_num, "\n" )
-          if defined( $data{preferred_protein_seq} );
+          if defined( $self->{preferred_protein_seq} );
 
         if ( $self->{seq_type} eq "est_seq" ) {
-            $seq = "\n" . $data{est_seq} . "\n";
+            $seq = "\n" . $self->{est_seq} . "\n";
             warn "NOTE: est sequence given, seq_type: "
               . $self->{seq_type} . "\n";
-            $data{est_seq} = "";
+            $self->{est_seq} = "";
         }
         elsif ( $self->{seq_type} eq "unigene_seq" ) {
-            $seq = "\n" . $data{unigene_seq} . "\n";
+            $seq = "\n" . $self->{unigene_seq} . "\n";
             warn "NOTE: unigene sequence given, seq_type: "
               . $self->{seq_type} . "\n";
-            $data{unigene_seq} = "";
+            $self->{unigene_seq} = "";
         }
 
         #added for protein
         elsif ( $self->{seq_type} eq "protein_seq" ) {
-            $seq = "\n" . $data{protein_seq} . "\n";
+            $seq = "\n" . $self->{protein_seq} . "\n";
             warn "NOTE: protein sequence given, seq_type: "
               . $self->{seq_type} . "\n";
-            $data{protein_seq} = "";
+            $self->{protein_seq} = "";
         }
         elsif ( $self->{seq_type} eq "estscan_seq" ) {
-            $seq = "\n" . $data{estscan_seq} . "\n";
-            $data{estscan_seq} = "";
+            $seq = "\n" . $self->{estscan_seq} . "\n";
+            $self->{estscan_seq} = "";
         }
         elsif ( $self->{seq_type} eq "preferred_protein_seq" ) {
-            $seq = "\n" . $data{preferred_protein_seq} . "\n";
-            $data{preferred_protein_seq} = "";
+            $seq = "\n" . $self->{preferred_protein_seq} . "\n";
+            $self->{preferred_protein_seq} = "";
         }
         elsif ( $self->{seq_type} eq "longest6frame_seq" ) {
-            $seq = "\n" . $data{longest6frame_seq} . "\n";
-            $data{longest6frame_seq} = "";
+            $seq = "\n" . $self->{longest6frame_seq} . "\n";
+            $self->{longest6frame_seq} = "";
         }
 
         # output
         my $output = "";
         foreach my $o (@output_fields) {
-            if ( exists( $data{$o} ) && $data{$o} ne "" ) {
-                $output .= "$o:$data{$o}\t";
+            if ( exists( $self->{$o} ) && $self->{$o} ne "" ) {
+                $output .= "$o:$self->{$o}\t";
             }
         }
 
