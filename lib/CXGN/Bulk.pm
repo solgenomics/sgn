@@ -96,128 +96,6 @@ sub create_dumpfile {
     return $self->{dump_fh}, $self->{notfound_fh};
 }
 
-=head2 result_summary_page
-
-    DEPRECATED
-
-  Desc: sub result_summary_page
-  Args: CXGN::Page object
-  Ret : n/a
-
-  Prints page that appears after user submits identifiers. Presents data in
-  linked Text and Fasta formats (to view or download).
-
-=cut
-
-### DEPRECATED
-sub result_summary_page {
-    my $self         = shift;
-    my $summary_file = $self->{tempdir} . "/" . $self->{dumpfile} . ".summary";
-
-    # open file for writing the result summary page
-    open( my $summary_fh, '>', $summary_file )
-      or die "Can't open .summary file for writing! : $!";
-
-    my $lines_read =
-      ( $self->get_file_lines( $self->{tempdir} . "/" . $self->{dumpfile} ) ) - 1;
-    my $notfoundcount =
-      $self->get_file_lines( $self->{tempdir} . "/" . $self->{notfoundfile} );
-    my $total        = $lines_read;
-    my $file         = $self->{dumpfile};
-    my $notfoundfile = $self->{notfoundfile};
-    my $idType       = $self->{idType};
-    my $query_time   = $self->{query_time};
-    my $filesize =
-      ( ( stat( $self->{tempdir} . "/" . $self->{dumpfile} ) )[7] / 1000 );
-    my $missing_ids     = @{ $self->{ids} } - $notfoundcount - $lines_read;
-    my $missing_ids_msg = "";
-
-    if ( $missing_ids > 0 ) {
-        $missing_ids_msg = "$missing_ids ids were not retrieved from the database because they were not part of the corresponding unigene set or because there were duplicate entries in the submitted id list.";
-    }
-
-    my $fastalink     = " Fasta ";
-    my $fastadownload = " Fasta ";
-    my $fastamessage  = "Note: Fasta option is not available because you didn't
-                        choose a sequence to download.<br />";
-    if ( join( " ", @{ $self->{output_fields} } ) =~ /seq/i ) {
-        $fastalink =
-"<a href=\"/tools/bulk/display?outputType=Fasta&amp;dumpfile=$file\">Fasta</a>";
-        $fastadownload =
-"<a href=\"/tools/bulk/display?outputType=Fasta&amp;dumpfile=$file&amp;download=1\">Fasta</a>";
-        $fastamessage = "";
-    }
-
-    print $summary_fh $self->{content};
-
-    my $numlines = scalar( @{ $self->{ids} } );
-    print $summary_fh <<EOHTML;
-    <h4>Bulk download summary</h4>
-    The query you submitted contained $numlines lines.<br />
-    Your query resulted in $total lines being read from the database in
-    $query_time seconds.<br />
-    $missing_ids_msg<br /><br />
-EOHTML
-    if ( $total == 0 ) {
-        print $summary_fh <<EOHTML
-     <br /><br />
-     Please verify that you used the correct search and that you chose the right
-     unigene or bac assembly to download from. Also make sure that the submitted
-     identifiers are appropriately formatted.<br />
-     
-     Please try your search again.<br /><br />
-EOHTML
-    }
-    else {
-        print $summary_fh <<EOHTML;
-    The file size is $filesize kBytes.
-    <br /><br />
-    <a href="/tools/bulk/display?outputType=HTML&amp;dumpfile=$file&amp;page=1&amp;idType=$idType">Browse</a>
-    the results.
-    <br />
-    <br />
-
-    <table border="0" cellpadding="0"><tr><td width="120"><b>View</b></td><td width="120">
-    <b>Download to disk</b></td></tr>
-    <tr><td>
-
-    as <a href="/tools/bulk/display?outputType=text&amp;dumpfile=$file&amp;idType=$idType">Text</a>
-    <br />
-    as $fastalink<br />
-
-    </td><td>
-
-    as <a href="/tools/bulk/display?outputType=text&amp;dumpfile=$file&amp;idType=$idType&amp;download=1">
-    Text</a><br />
-    as $fastadownload<br />
-
-    </td></tr></table>
-    <br /><br />$fastamessage<br />
-EOHTML
-
-    }
-
-    my $notfoundcountlink = "";
-    if ( $notfoundcount != 0 ) {
-        $notfoundcountlink = "Identifiers not found:<br /><ul>
-    <li><a href=\"/tools/bulk/display?outputType=notfound&amp;dumpfile=$file\">View IDs</a></li></ul>";
-    }
-
-    print $summary_fh "$notfoundcountlink";
-
-    print $summary_fh <<EOHTML;
-              New search: <a href="input.pl?mode=clone_search">with clone names</a> |
-              <a href="input.pl?mode=array_search">with array spot ids</a> |
-              <a href="input.pl?mode=unigene">with unigene ids</a> |
-              <a href="input.pl?mode=bac">with bac ids</a>
-              <br /><br /><br /><br />
-EOHTML
-
-    close($summary_fh);
-
-    return $summary_file;
-}
-
 sub result_summary { 
     my $self = shift;
     
@@ -232,6 +110,9 @@ sub result_summary {
     my $notfoundfile = $self->{notfoundfile};
     my $idType       = $self->{idType};
     my $query_time   = $self->{query_time};
+    my $seq_type     = $self->{seq_type};
+    my $est_seq      = $self->{est_seq};
+    my $unigene_seq  = $self->{unigene_seq};
     my $filesize =
 	(stat( catfile($self->{tempdir}, $self->{dumpfile})))[7] / 1000;
     my $missing_ids     = @{ $self->{ids} } - $notfoundcount - $lines_read;
@@ -250,9 +131,9 @@ sub result_summary {
                         choose a sequence to download.<br />";
     if ( join( " ", @{ $self->{output_fields} } ) =~ /seq/i ) {
         $fastalink =
-"<a href=\"/tools/bulk/display?outputType=Fasta&amp;dumpfile=$file\">Fasta</a>";
+"<a href=\"/tools/bulk/display?outputType=Fasta&amp;dumpfile=$file&amp;unigene_seq=$unigene_seq&amp;est_seq=$est_seq\">Fasta</a>";
         $fastadownload =
-"<a href=\"/tools/bulk/display?outputType=Fasta&amp;dumpfile=$file&amp;download=1\">Fasta</a>";
+"<a href=\"/tools/bulk/display?outputType=Fasta&amp;dumpfile=$file&amp;unigene_seq=$unigene_seq&amp;est_seq=$est_seq&amp;download=1\">Fasta</a>";
         $fastamessage = "";
     }
 
@@ -270,6 +151,9 @@ sub result_summary {
 	numlines => $numlines, # number of lines in query
 	lines_read => $lines_read,  # number of lines in file
 	idType => $idType,
+	seq_type => $seq_type,
+	est_seq => $est_seq,
+	unigene_seq => $unigene_seq,
     };
 
     foreach my $k (keys(%$summary_data)) { 
