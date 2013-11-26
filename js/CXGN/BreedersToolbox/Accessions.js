@@ -179,7 +179,7 @@ jQuery(document).ready(function ($) {
 
     $('#add_accessions_link').click(function () {
         $('#add_accessions_dialog').dialog("open");
-	$("#list_div").append(list.listSelect("accessions"));
+	$("#list_div").html(list.listSelect("accessions"));
 	//$( "#fuzzy_check" ).button();
     });
 
