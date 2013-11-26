@@ -183,6 +183,11 @@ jQuery('#dataset_select').change( function() {
   // jQuery('#input_example').html( input_examples[jQuery('#input_options').val() ] );
 //});
 
+var input_examples = eval(<% $input_example_json %>);
+var database_types = eval (<% $database_type_json %>);
+var input_option_types = eval(<% $input_option_json %>);
+
+
 function show_example(input_option) { 
 	 jQuery('#sequence').html( input_examples[jQuery('#input_options').val() ] );
 }
@@ -195,9 +200,7 @@ function swap_menu(group_id) {
    jQuery('#database_select').html(menu_html[group_id]);
 }
 
-var database_types = eval (<% $database_type_json %>);
-var input_option_types = eval(<% $input_option_json %>);
-var input_examples = eval(<% $input_example_json %>);
+
 
 function run_blast() { 
    var status = "Initializing run... ";
@@ -335,36 +338,39 @@ function run_blast() {
 }
 
 function disable_ui() { 
-   jQuery('#program_select').attr("disabled", "disabled");
-   jQuery('#sequence').attr("disabled", "disabled");
-   jQuery('#database').attr("disabled", "disabled");
-   jQuery('#evalue').attr("disabled", "disabled");
-   jQuery('#matrix').attr("disabled", "disabled");
-   jQuery('#graphics').attr("disabled", "disabled");
-   jQuery('#maxhits').attr("disabled", "disabled");
-   jQuery('#filterq').attr("disabled", "disabled");
-   jQuery('#submit_button').attr("disabled", "disabled");
-   jQuery('#input_options').attr("disabled", "disabled");
-   jQuery('#dataset_select').attr("disabled", "disabled");
-   jQuery('#clear_button').attr("disabled", "disabled");
-   jQuery('#status_wheel').html('<img src="/static/documents/img/wheel.gif" />'); 
+   //jQuery('#program_select').attr("disabled", "disabled");
+   //jQuery('#sequence').attr("disabled", "disabled");
+   //jQuery('#database').attr("disabled", "disabled");
+   //jQuery('#evalue').attr("disabled", "disabled");
+   //jQuery('#matrix').attr("disabled", "disabled");
+   //jQuery('#graphics').attr("disabled", "disabled");
+   //jQuery('#maxhits').attr("disabled", "disabled");
+   //jQuery('#filterq').attr("disabled", "disabled");
+   //jQuery('#submit_button').attr("disabled", "disabled");
+   //jQuery('#input_options').attr("disabled", "disabled");
+   //jQuery('#dataset_select').attr("disabled", "disabled");
+   //jQuery('#clear_button').attr("disabled", "disabled");
+   //jQuery('#status_wheel').html('<img src="/static/documents/img/wheel.gif" />'); 
+
+   jQuery('#working').dialog("open");
 
 }
 
 function enable_ui() { 
-   jQuery('#program_select').removeAttr("disabled");
-   jQuery('#sequence').removeAttr("disabled");
-   jQuery('#database').removeAttr("disabled");
-   jQuery('#evalue').removeAttr("disabled");
-   jQuery('#matrix').removeAttr("disabled");
-   jQuery('#graphics').removeAttr("disabled");
-   jQuery('#maxhits').removeAttr("disabled");
-   jQuery('#filterq').removeAttr("disabled");
-   jQuery('#submit_button').removeAttr("disabled");
-   jQuery('#input_options').removeAttr("disabled");
-   jQuery('#dataset_select').removeAttr("disabled");
-   jQuery('#clear_button').removeAttr("disabled");
-   jQuery('#status_wheel').html('');
+   //jQuery('#program_select').removeAttr("disabled");
+   //jQuery('#sequence').removeAttr("disabled");
+   //jQuery('#database').removeAttr("disabled");
+   //jQuery('#evalue').removeAttr("disabled");
+   //jQuery('#matrix').removeAttr("disabled");
+   //jQuery('#graphics').removeAttr("disabled");
+   //jQuery('#maxhits').removeAttr("disabled");
+   //jQuery('#filterq').removeAttr("disabled");
+   //jQuery('#submit_button').removeAttr("disabled");
+   //jQuery('#input_options').removeAttr("disabled");
+   //jQuery('#dataset_select').removeAttr("disabled");
+   //jQuery('#clear_button').removeAttr("disabled");
+   //jQuery('#status_wheel').html('');
+   jQuery('#working').dialog("close");
 }
 
 function clear_input_sequence() { 
