@@ -88,10 +88,13 @@ jQuery(document).ready(function ($) {
 	    for( i=0; i < verifyResponse.found.length; i++){
 		found_html = found_html 
 		    +'<div class="left">'+verifyResponse.found[i].matched_string
-		    +'</div>' 
+		    +'</div>';
+		if (verifyResponse.found[i].matched_string != verifyResponse.found[i].unique_name){
+		    found_html = found_html 
 		    +'<div class="right">'
 		    +verifyResponse.found[i].unique_name
 		    +'</div>';
+		}
 	    }
 	    $('#view_found_matches').html(found_html);
 	    $('#review_found_matches_dialog').dialog('open');
