@@ -20,6 +20,7 @@ use Moose;
 use JSON -support_by_pp;
 use List::MoreUtils qw /any /;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
+use CXGN::Stock::AddStocks;
 use Data::Dumper;
 #use JSON;
 
@@ -68,7 +69,7 @@ sub verify_accession_list_POST : Args(0) {
   return;
 }
 
-sub add_accession_list : Path('/ajax/accession_list/verify') : ActionClass('REST') { }
+sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') { }
 
 sub add_accession_list_POST : Args(0) {
   my ($self, $c) = @_;
@@ -90,7 +91,7 @@ sub add_accession_list_POST : Args(0) {
   }
 
   @accession_list = @{_parse_list_from_json($accession_list_json)};
-  $stock_add = CXGN::Stock::AddStock->new({ schema => $schema, stocks => \@accession_list, species => $species_name} );
+  $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name} );
   $validated = $stock_add->validate_stocks();
   if (!$validated) {
     $c->stash->{rest} = {error =>  "Stocks already exist in the database" };
