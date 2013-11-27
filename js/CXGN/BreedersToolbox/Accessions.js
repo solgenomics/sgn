@@ -22,6 +22,14 @@ jQuery(document).ready(function ($) {
     var accessionList;
     var doFuzzySearch;
 
+    function disable_ui() { 
+	$('#working').dialog("open");
+    }
+
+    function enable_ui() { 
+	$('#working').dialog("close");
+    }
+
     function add_accessions(accessionsToAdd, speciesName) {
 	var accessionsAsJSON = JSON.stringify(accessionsToAdd);
 	$.ajax({
@@ -188,19 +196,29 @@ jQuery(document).ready(function ($) {
 	var accession_list_id = $('#accessions_list_select').val();
 	var accession_list = JSON.stringify(list.getList(accession_list_id));
 	doFuzzySearch = $('#fuzzy_check').attr('checked');
+	//alert("should be disabled");
 	//alert (doFuzzySearch);
 	//alert(accession_list);
+	
+
 
 	$.ajax({
 	    type: 'POST',
 	    url: '/ajax/accession_list/verify',
-	    async: false,
+	    //async: false,
 	    dataType: "json",
 	    data: {
                 'accession_list': accession_list,
 		//'do_fuzzy_search': doFuzzySearch,
 	    },
+	    beforeSend: function(){
+		disable_ui();
+            },  
+            complete : function(){
+		enable_ui();
+            },  
 	    success: function (response) {
+		//enable_ui();
                 if (response.error) {
 		    alert(response.error);
                 } else {
@@ -208,6 +226,7 @@ jQuery(document).ready(function ($) {
                 }
 	    },
 	    error: function () {
+		//enable_ui();
                 alert('An error occurred in processing. sorry');
 	    }
         });
@@ -221,8 +240,9 @@ jQuery(document).ready(function ($) {
         position: ['top', 150],
 	buttons: {
 	    Ok: function() {
+		//disable_ui();
 		verify_accession_list();
-		//$(this).dialog( "close" );
+		$(this).dialog( "close" );
 		//location.reload();
 	    }
 	}
