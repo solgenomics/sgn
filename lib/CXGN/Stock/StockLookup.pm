@@ -82,6 +82,21 @@ sub _get_stock_resultset {
   return $stock_rs;
 }
 
+sub _get_stock_resultset_strict {
+  my $self = shift;
+  my $schema = $self->get_schema();
+  my $stock_name = $self->get_stock_name();
+  my $stock_rs = $schema->resultset("Stock::Stock")
+    ->search({
+	      uniquename => $stock_name,
+	     },
+	     {
+	      join => { 'stockprops' => 'type'} ,
+	      distinct => 1,
+	     }
+	    );
+  return $stock_rs;
+}
 
 #######
 1;
