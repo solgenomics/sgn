@@ -19,7 +19,7 @@
 <div id="list_item_dialog" overflow="auto" >
 </div>
 
-<div id="working" >
+<div id="working" style="text-align : center;">
   <img src="/img/wheel.gif" />
 </div>
 
@@ -88,6 +88,17 @@ jQuery(document).ready( function() {
 
   setUpLogin();
   setUpLists();
+
+    jQuery('#working').dialog( { 
+      height: 100,
+      width:  50,
+      modal: true,
+      autoOpen: false,
+      closeOnEscape: false,
+      open: function() { jQuery(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide(); },
+      title: 'Working...'
+    });
+
 });
 
 </script>
