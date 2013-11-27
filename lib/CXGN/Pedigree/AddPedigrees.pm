@@ -55,7 +55,7 @@ sub validate_pedigrees {
   if (!$self->has_pedigrees()) {
     return;
   }
-  @pedigrees = $self->get_pedigrees();
+  @pedigrees = @{$self->get_pedigrees()};
   foreach my $pedigree (@pedigrees) {
     my $validated_pedigree = $self->_validate_pedigree($pedigree);
     if (!$validated_pedigree) {
