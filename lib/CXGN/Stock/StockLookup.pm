@@ -37,6 +37,8 @@ sub get_stock {
   my $stock;
   if ($stock_rs->count == 1) {
     $stock = $stock_rs->first;
+  } else {
+    return;
   }
   return $stock;
 }
