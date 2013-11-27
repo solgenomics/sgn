@@ -43,6 +43,18 @@ sub get_stock {
   return $stock;
 }
 
+sub get_stock_exact {
+  my $self = shift;
+  my $stock_rs = $self->_get_stock_resultset_exact();
+  my $stock;
+  if ($stock_rs->count == 1) {
+    $stock = $stock_rs->first;
+  } else {
+    return;
+  }
+  return $stock;
+}
+
 sub get_matching_stock_count {
   my $self = shift;
   my $stock_name = $self->get_stock_name();
@@ -82,7 +94,7 @@ sub _get_stock_resultset {
   return $stock_rs;
 }
 
-sub _get_stock_resultset_strict {
+sub _get_stock_resultset_exact {
   my $self = shift;
   my $schema = $self->get_schema();
   my $stock_name = $self->get_stock_name();
