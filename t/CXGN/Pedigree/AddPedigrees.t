@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use lib 't/lib';
-use Test::More tests=>11;
+use Test::More tests=>12;
 use SGN::Test::WWW::Mechanize;
 
 BEGIN {use_ok('CXGN::Pedigree::AddPedigrees');}
@@ -24,5 +24,5 @@ ok($pedigree->set_male_parent($male_parent), "Set a male parent for a pedigree")
 my @pedigrees;
 push (@pedigrees, $pedigree);
 ok(my $add_pedigrees = CXGN::Pedigree::AddPedigrees->new(schema => $schema, pedigrees => \@pedigrees),"Create object to add pedigrees");
-
+ok(my $validate_pedigrees = $add_pedigrees->validate_pedigrees(), "Can do validation of pedigrees"); #won't work unless accessions are in the database
 
