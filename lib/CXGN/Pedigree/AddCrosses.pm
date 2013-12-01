@@ -91,11 +91,11 @@ sub validate_pedigrees {
     return;
   }
 
-  if (!$self->has_pedigrees()) {
+  if (!$self->has_crosses()) {
     return;
   }
 
-  @pedigrees = @{$self->get_pedigrees()};
+  @crosses = @{$self->get_crosses()};
 
   foreach my $cross (@crosses) {
     my $validated_crosses = $self->_validate_crosses($crosses);
