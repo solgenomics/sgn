@@ -6,7 +6,7 @@ CXGN::Stock::AddStocks - a module to add a list of stocks.
 
 =head1 USAGE
 
- my $stock_add = CXGN::Stock::AddStock->new({ schema => $schema, stocks => \@stocks, species => $species_name} );
+ my $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@stocks, species => $species_name} );
  my $validated = $stock_add->validate_stocks(); #is true when none of the stock names in the array exist in the database.
  $stock_add->add_accessions();
 

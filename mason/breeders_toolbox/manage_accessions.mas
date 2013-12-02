@@ -29,7 +29,6 @@ $accessions
   <b>Accessions were found with similar names.</b>
   <br><br>
   <div id="view_fuzzy_matches">
-    
   </div>
 </div>
 
@@ -42,8 +41,11 @@ $accessions
   </div>
 </div>
 
-<div id="review_absent_dialog" class="ui-widget" title="Accessions not found">
-  <b>Accessions to be added:</b>
+<div id="review_absent_dialog" class="ui-widget" title="Accessions to be added">
+  <label for="species_name_input">Species name for added accessions</label>
+  <input type="text" id="species_name_input"></input>
+  <br><br>
+  <b>The following accessions will be added to the database:</b>
   <br><br>
   <div id="view_absent">
   </div> 
@@ -54,4 +56,17 @@ $accessions
     float: left;
     clear: both;
   }
+.ui-autocomplete {
+  max-height: 100px;
+  overflow-y: auto;
+  /* prevent horizontal scrollbar */
+  overflow-x: hidden;
+}
+
+/* IE 6 doesn't support max-height
+* we use height instead, but this forces the menu to always be this tall
+*/
+* html .ui-autocomplete {
+  height: 100px;
+}
 </style>

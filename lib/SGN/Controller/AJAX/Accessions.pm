@@ -20,6 +20,7 @@ use Moose;
 use JSON -support_by_pp;
 use List::MoreUtils qw /any /;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
+use CXGN::Stock::AddStocks;
 use Data::Dumper;
 #use JSON;
 
@@ -40,7 +41,7 @@ sub verify_accession_list_POST : Args(0) {
   my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
   my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
   my $fuzzy_search_result;
-  my $max_distance = 0.5;
+  my $max_distance = 0.2;
   my @accession_list;
   my @found_accessions;
   my @fuzzy_accessions;
@@ -67,6 +68,42 @@ sub verify_accession_list_POST : Args(0) {
   $c->stash->{rest} = {success => "1", absent => @absent_accessions, fuzzy => @fuzzy_accessions, found => @found_accessions};
   return;
 }
+
+sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') { }
+
+sub add_accession_list_POST : Args(0) {
+  my ($self, $c) = @_;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $accession_list_json = $c->req->param('accession_list');
+  my $species_name = $c->req->param('species_name');
+  my @accession_list;
+  my $stock_add;
+  my $validated;
+  my $added;
+
+  if (!$c->user()) {
+    $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+    return;
+  }
+  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
+    return;
+  }
+
+  @accession_list = @{_parse_list_from_json($accession_list_json)};
+  $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name} );
+  $validated = $stock_add->validate_stocks();
+  if (!$validated) {
+    $c->stash->{rest} = {error =>  "Stocks already exist in the database" };
+  }
+  $added = $stock_add->add_accessions();
+  if (!$added) {
+    $c->stash->{rest} = {error =>  "Could not add stocks to the database" };
+  }
+  $c->stash->{rest} = {success => "1"};
+  return;
+}
+
 
 sub _parse_list_from_json {
   my $list_json = shift;
