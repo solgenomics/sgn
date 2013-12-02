@@ -113,7 +113,7 @@ if ($preload_seq) {
 
 <tr><td><b>Query</b></td><td>
   <% $input_options_select %>
-  <a id="input_example" href="javascript:show_example()" style="font-size: 80%">Show example</a>
+  <a id="input_example" style="font-size: 80%">Show example</a>
 	</td></tr>
 <tr><td colspan="3">
 
@@ -130,8 +130,8 @@ if ($preload_seq) {
 
   'Filter' => '<input type="checkbox" name="filterq" checked="1" />',
   '  ' => '<div style="text-align: right">
-
-<input id="clear_button" type="button" value="Clear" onclick="clear_input_sequence(); "/> <input id="submit_button" type="submit" name="search" value="Search" onclick="javascript:run_blast();" /></div>',
+<input id="clear_button" type="button" value="Clear" onclick="clear_input_sequence(); "/> 
+<input id="submit_blast_button" type="submit" name="search" value="Search"  /></div>',
   __multicol => 2,
   __border => 0,
   __tableattrs => 'width="80%"',
@@ -168,34 +168,36 @@ if ($preload_seq) {
 <div id="jobid"></div>
 
 <script>
-
-  var $j = jQuery.noConflict();
-
-//  jQuery(document).ready(function ($) {
   
-    swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
+jQuery(document).ready(function() {
 
-    jQuery('#sequence').attr('spellcheck',false);
+swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
 
-    jQuery('#dataset_select').change( function() { 
-      var selectedId = jQuery('#dataset_select').find(':selected').attr('value');
-      swap_menu(selectedId);
-    });
+jQuery('#sequence').attr('spellcheck',false);
 
-    var input_examples = eval(<% $input_example_json %>);
-    var database_types = eval (<% $database_type_json %>);
-    var input_option_types = eval(<% $input_option_json %>);
+jQuery('#dataset_select').change( function() { 
+  var selectedId = jQuery('#dataset_select').find(':selected').attr('value');
+  swap_menu(selectedId);
+});
 
-    function show_example(input_option) { 
-      jQuery('#sequence').html( input_examples[jQuery('#input_options').val() ] );
-    }
+var input_examples = eval(<% $input_example_json %>);
+var database_types = eval (<% $database_type_json %>);
+var input_option_types = eval(<% $input_option_json %>);
 
-    function swap_menu(group_id) { 
-      var menu_html = eval( <% JSON::Any->encode($menus) %>);
-      jQuery('#database_select').html(menu_html[group_id]);
-    }
+jQuery('#input_example').click( function() { 
+  jQuery('#sequence').html( input_examples[jQuery('#input_options').val() ] );
+});
 
-  //});
+jQuery('#submit_blast_button').click( function() { 
+  run_blast(database_types, input_option_types);
+});
+
+function swap_menu(group_id) { 
+  var menu_html = eval( <% JSON::Any->encode($menus) %>);
+    jQuery('#database_select').html(menu_html[group_id]);
+  }
+
+});
 
 </script>
 
