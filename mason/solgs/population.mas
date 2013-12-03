@@ -66,21 +66,10 @@ $owner=>''
 
 </&>
 
-
-<&| /page/info_section.mas, 
-      collapsible => 1, 
-      collapsed   => 0, 
-      title       => "Correlation analysis output"
-&>
        
 <& population/correlation.mas, 
      pop_id  => $pop_id,
 &>
-
-</&>
-
-
-
 
 
 %}

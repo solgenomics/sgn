@@ -24,7 +24,12 @@ $pop_id
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ "solGS.correlation", "d3.d3"] &>
-
+<&| /page/info_section.mas, 
+      collapsible => 1, 
+      collapsed   => 0, 
+      title       => "Correlation analysis output"
+&>
+       
 <input type="hidden" id="population_id" value="<% $pop_id %>" />
 
 <div id="correlation_canvas">
@@ -33,3 +38,6 @@ $pop_id
 <div id="correlation_plot"> </div>
 
 </div>
+
+</&>
+
