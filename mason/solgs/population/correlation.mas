@@ -1,0 +1,37 @@
+<%doc>
+
+=head1 NAME
+ 
+population/correlation.mas - correlation output section
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+
+$pop_id
+
+</%args>
+
+<%perl>
+
+</%perl>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<& /util/import_javascript.mas, classes => [ "solGS.correlation"] &>
+
+
+
+<input type="hidden" id="population_id" value="<% $pop_id %>" />
+
+<div id="correlation_canvas">
+<div id="correlation_message"></div>
+
+<div id="correlation_plot"> </div>
+
+</div>
