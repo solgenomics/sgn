@@ -541,14 +541,4 @@ fieldset .dojoeditor2 .RichTextEditable { /* Dojo::Editor2 */
 	padding-bottom: 0.1em;
 }
 
-/* correlation coefficients plot styling */
-.axis text {
-  font: 10px sans-serif;
-}
 
-.axis line,
-.axis path {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
