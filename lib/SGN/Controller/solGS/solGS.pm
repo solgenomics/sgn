@@ -2396,7 +2396,11 @@ sub grep_file {
     my ($file)  = grep { /$exp/ && -f "$dir/$_" }  readdir($dh);
     close $dh;
    
-    $file = catfile($dir, $file);
+    if ($file)    
+    {
+        $file = catfile($dir, $file);
+    }
+
     return $file;
 }
 
@@ -2914,7 +2918,7 @@ sub phenotype_file {
    
         my $key        = "phenotype_data_" . $pop_id;
         $pheno_file = $file_cache->get($key);
-
+       
         unless ($pheno_file)
         {  
             $pheno_file = catfile($c->stash->{solgs_cache_dir}, "phenotype_data_" . $pop_id . ".txt");
@@ -3407,13 +3411,15 @@ sub get_solgs_dirs {
     my $solgs_cache     = catdir($solgs_dir, 'cache'); 
     my $solgs_tempfiles = catdir($solgs_dir, 'tempfiles');
     my $solgs_prediction_upload = catdir($solgs_dir, 'tempfiles', 'prediction_upload');
+    my $correlation_dir = catdir($solgs_dir, 'cache', 'correlation');
 
-    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_prediction_upload], 0, 0755);
+    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_prediction_upload, $correlation_dir], 0, 0755);
    
     $c->stash(solgs_dir                   => $solgs_dir, 
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
               solgs_prediction_upload_dir => $solgs_prediction_upload,
+              correlation_dir             => $correlation_dir,
         );
 
 }
