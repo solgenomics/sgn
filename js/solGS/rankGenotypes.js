@@ -5,20 +5,92 @@
 *
 */
 
-
-JSAN.use('Prototype');
 JSAN.use('jquery.blockUI');
 
-function listSelPopulations ()  {
+function listAllPopulations ()  {
+   
+    var modelData = getTrainingPopulationData();
+    var trainingPopIdName = JSON.stringify(modelData);
+   
+    var  popsList =  '<dl id="selected_population" class="si_dropdown">'
+        + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
+        + '<dd>'
+        + '<ul>'
+        + '<li>'
+        + '<a href="#">' + modelData.name + '<span class=value>' + trainingPopIdName + '</span></a>'
+        + '</li>';  
+ 
+    popsList += '</ul></dd></dl>'; 
+   
+    jQuery("#select_a_population_div").empty().append(popsList).show();
+     
+    var dbSelPopsList;
+    if( modelData.id.match(/uploaded/) == null) {
+        dbSelPopsList = addSelectionPopulations();
+    }
+
+    if (dbSelPopsList) {
+            jQuery("#select_a_population_div ul").append(dbSelPopsList); 
+    }
+      
+    var userUploadedSelExists = jQuery("#uploaded_selection_pops_table").doesExist();
+    if( userUploadedSelExists == true) {
+        var userSelPops = listUploadedSelPopulations();
+        if (userSelPops) {
+
+            jQuery("#select_a_population_div ul").append(userSelPops);  
+        }
+    }
+
+    getSelectionPopTraits(modelData.id, modelData.id);
+
+
+   jQuery(".si_dropdown dt a").click(function() {
+            jQuery(".si_dropdown dd ul").toggle();
+        });
+                 
+    jQuery(".si_dropdown dd ul li a").click(function() {
+      
+            var text = jQuery(this).html();
+           
+            jQuery(".si_dropdown dt a span").html(text);
+            jQuery(".si_dropdown dd ul").hide();
+                
+            var idPopName = jQuery("#selected_population").find("dt a span.value").html();
+            idPopName     = JSON.parse(idPopName);
+            modelId = jQuery("#model_id").val();
+                   
+            selectedPopId   = idPopName.id;
+            selectedPopName = idPopName.name;
+              
+            jQuery("#selected_population_name").val(selectedPopName);
+            jQuery("#selected_population_id").val(selectedPopId);
+                    
+            getSelectionPopTraits(modelId, selectedPopId);
+                                         
+        });
+                       
+    jQuery(".si_dropdown").bind('click', function(e) {
+            var clicked = jQuery(e.target);
+                    
+            if (! clicked.parents().hasClass("si_dropdown"))
+                jQuery(".si_dropdown dd ul").hide();
+
+            e.preventDefault();
+
+        });           
+
+}
+
+       
+function addSelectionPopulations(){
+    
     var selPopsDiv   = document.getElementById("selection_populations");
     var selPopsTable = selPopsDiv.getElementsByTagName("table");
     var selPopsRows  = selPopsTable[0].rows;
     var predictedPop = [];
    
-    var  popsList =  '<dl id="selected_population" class="si_dropdown">'
-        + '<dt> <a href="#"><span>Choose a selection population</span></a></dt>'
-        + '<dd>'
-        + '<ul>';
+    var  popsList ='';
        
     for (var i = 1; i < selPopsRows.length; i++) {
         var row    = selPopsRows[i];
@@ -41,78 +113,15 @@ function listSelPopulations ()  {
             }
         }
     }
-        
-    popsList += '</ul></dd/</dl>';  
+
     return popsList;
+
 }
 
-        
-function selectAPopulation(modelId){
-    var selPopsDiv   = document.getElementById("selection_populations");
-    var selPopsTable = selPopsDiv.getElementsByTagName("table");
-    var selPopsRows  = selPopsTable[0].rows;
-       
-    var predictedPopExists;
-       
-    for (var i=0; i < selPopsRows.length; i++) {
-        var row    = selPopsRows[i];
-        var popRow = row.innerHTML;
-           
-        predictedPopExists = popRow.match(/\/solgs\/download\/prediction\/model\//);
-         
-        if(predictedPopExists) { 
-            break; 
-        }
-    }
-             
-    var selectedPop  = jQuery('#selected_pop').val();
-    var selectedPopId;
-    var selectedPopName;
-    var modelId;
-        
-    if(!selectedPop) {
-        var popsList = listSelPopulations(); 
-             
-        if(predictedPopExists) {
-            jQuery("#select_a_population_div").append(popsList);
-            
-            jQuery(".si_dropdown dt a").click(function() {
-                    jQuery(".si_dropdown dd ul").toggle();
-                });
-                        
-            jQuery(".si_dropdown dd ul li a").click(function() {
-                    var text = jQuery(this).html();
-                    jQuery(".si_dropdown dt a span").html(text);
-                    jQuery(".si_dropdown dd ul").hide();
-                
-                    var idPopName = jQuery("#selected_population").find("dt a span.value").html();
-                    idPopName     = JSON.parse(idPopName);
-                    modelId = jQuery("#model_id").val();
-                    //alert(model_id);
-                    selectedPopId   = idPopName.id;
-                    selectedPopName = idPopName.name;
-                                       
-                    jQuery("#selected_population_name").val(selectedPopName);
-                    jQuery("#selected_population_id").val(selectedPopId);
-                    
-                    getSelectionPopTraits(modelId, selectedPopId);
-                                         
-                });
-                       
-            jQuery(".si_dropdown").bind('click', function(e) {
-                    var clicked = jQuery(e.target);
-                    
-                    if (! clicked.parents().hasClass("si_dropdown"))
-                        jQuery(".si_dropdown dd ul").hide();
 
-                    e.preventDefault();
+function getSelectionPopTraits (modelId, selectedPopId) {
 
-                });           
-        }  
-    }               
-}
-
-function getSelectionPopTraits (modelId, selectedPopId) {   
+    if (modelId === selectedPopId) {selectedPopId=undefined;}
     jQuery.ajax({
             type: 'POST',
                 dataType: "json",
@@ -122,21 +131,17 @@ function getSelectionPopTraits (modelId, selectedPopId) {
                 
                 if (res.status == 'success') {
                     var traits = res.traits;  
-                    var table  = selectionIndexForm(modelId, selectedPopId, traits);
-                   
-                    var selectionIndex = jQuery('#selection_index').empty().append(table);
-                    jQuery('#rel_gebv_form').empty();
-                    //jQuery('#selection_index').empty();
-                                                      
-                    jQuery('#rel_gebv_form').append(selectionIndex).show(); 
-                    
+                    var table  = selectionIndexForm(traits);
+               
+                    var selectionIndex = jQuery('#selection_index_form').empty().append(table);
+     
                 }                                               
             }
         });
 }
 
 
-function  selectionIndexForm(modelId, predictionPopId, predictedTraits) {   
+function  selectionIndexForm(predictedTraits) {   
     var cnt = 1;
     var row = '';
     var totalCount = 1;
@@ -161,7 +166,7 @@ function  selectionIndexForm(modelId, predictionPopId, predictedTraits) {
     }
    
     var rankButton =  '<tr><td>'
-        +  '<input type="submit" value="Rank" name= "rank" id="rank_genotypes"'     
+        +  '<input style="position:relative;" " class="button" type="submit" value="Rank" name= "rank" id="rank_genotypes"'     
         +  '</td></tr>';
 
     var table = '<table id="selection_index_table" style="align:left;width:90%"><tr>' 
@@ -182,13 +187,14 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
             
         var action;
            
-        if (predictionPopId && isNaN(predictionPopId) == true) {
-                  
-            action = '/solgs/traits/all/population/' + trainingPopId;
-        }else{
-            action = '/solgs/traits/all/population/' + trainingPopId +  '/' + predictionPopId;
+        if (!predictionPopId) {
+        
+            predictionPopId = 'undef';
+       
         }
-
+        
+        var action = '/solgs/calculate/selection/index/' + trainingPopId +  '/' + predictionPopId;
+          
         jQuery.ajax({
                 type: 'POST',
                     dataType: "json",
@@ -198,10 +204,12 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
                     var suc = res.status;
                     var table;
                     if (suc == 'success' ) {
-                        var genos = new Hash();
+                       
+                        var genos = new Object();
+              
                         genos = res.genotypes;
                         var download_link = res.link;
-                          
+                 
                         table = '<table  style="text-align:left; border:0px; padding: 1px; width:75%;">';
                         table += '<tr><th>Genotypes</th><th>Weighted Mean</th></tr>';
                        
@@ -230,9 +238,13 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
                     jQuery('#top_genotypes').append(table).show(); 
                     jQuery('#selected_pop').val('');
                     //jQuery("#select_a_population_div").empty();
-                        
+                   
                     jQuery.unblockUI(); 
-                      
+                                        
+                },
+                    error: function(res){
+                    alert('error occured calculating selection index.');
+                    jQuery.unblockUI(); 
                 }
             });
     }           
@@ -290,7 +302,7 @@ function selectionIndex ( trainingPopId, predictionPopId )
         predictionPopId = jQuery("#default_selected_population_id").val();
     }
    
-    var rel_form = document.getElementById('rel_gebv_form');
+    var rel_form = document.getElementById('selection_index_form');
     var all = rel_form.getElementsByTagName('input');
     var params, validate;
     var allValues = [];
@@ -339,17 +351,62 @@ function selectionIndex ( trainingPopId, predictionPopId )
 
 
 
-jQuery(document).ready( function () {
-        jQuery("#rank_genotypes").live("click", function() {        
-                var modelId          = jQuery("#model_id").val();
-                var selectionPopId   = jQuery("#selected_population_id").val();
+
+jQuery("#rank_genotypes").live("click", function() {        
+        var modelId          = jQuery("#model_id").val();
+        var selectionPopId   = jQuery("#selected_population_id").val();
          
-                selectionIndex(modelId, selectionPopId);        
-            });
+        selectionIndex(modelId, selectionPopId);        
+    });
 
-});
 
 
 jQuery(document).ready( function () {
-        selectAPopulation();
+        listAllPopulations();
     });
+
+
+function listUploadedSelPopulations ()  {
+   
+    var selPopsDivUploaded   = document.getElementById("uploaded_selection_populations");
+    var selPopsTableUploaded = selPopsDivUploaded.getElementsByTagName("table");
+    var selPopsRowsUploaded  = selPopsTableUploaded[0].rows;
+    var predictedPopUploaded = [];
+   
+    var popsList ='';
+    for (var i = 1; i < selPopsRowsUploaded.length; i++) {
+        var row    = selPopsRowsUploaded[i];
+        var popRow = row.innerHTML;
+            
+        predictedPopUploaded = popRow.match(/\/solgs\/download\/prediction\/model\//g);
+      
+        if (predictedPopUploaded) {
+                var selPopsInput = row.getElementsByTagName("input")[0];
+                var idPopName    = selPopsInput.value;     
+                var idPopNameCopy = idPopName;
+                idPopNameCopy     = JSON.parse(idPopNameCopy);
+                var popName       = idPopNameCopy.name;
+                             
+                popsList += '<li>'
+                         + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
+                         + '</li>';
+        }else {
+            popsList = undefined;
+        }
+    }
+ 
+   return popsList;
+
+ 
+}
+
+
+function getTrainingPopulationData () {
+
+    var modelId = jQuery("#model_id").val();
+    var modelName = jQuery("#model_name").val();
+   
+    return { 'id' : modelId, 'name' : modelName};
+        
+}
+

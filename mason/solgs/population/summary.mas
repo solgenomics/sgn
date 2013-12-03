@@ -20,17 +20,27 @@ $project_desc
 $stocks_no
 $markers_no
 $traits_no
+$uploaded_reference=>''
+$owner=>''
 
 </%args>
 
+<%perl>
+
+if (!$owner) {$owner = 'NextGen Cassava Project'; } 
+
+my $project_link = qq |<a href="/solgs/population/$project_id">$project_name </a> | if !$uploaded_reference;
+$project_link = qq |<a href="/solgs/population/$project_id/uploaded">$project_name</a> | if $uploaded_reference;
+
+</%perl>
 
 <table>
   <tr>
     <td>
       <& /page/columnar_table.mas,
-         data         => [['Name', qq |<a href="/solgs/population/$project_id">$project_name</a> |],
+         data         => [['Name', $project_link],
                           ['Description', $project_desc],
-                          ['Owner', 'NextGen Cassava'],
+                          ['Owner', $owner],
                          ],
          __alt_freq   => 0,
          __align      => "l",

@@ -26,6 +26,7 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
+use CXGN::BreedersToolbox::Projects;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -40,6 +41,7 @@ has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', 
 has 'stock_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_stock_list', clearer => 'clear_stock_list');
 has 'control_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_control_list', clearer => 'clear_control_list');
 has 'design' => (isa => 'HashRef[HashRef[Str]]', is => 'rw', predicate => 'has_design', clearer => 'clear_design');
+has 'breeding_program_id' => (isa => 'Int', is => 'rw', predicate => 'has_breeding_program_id', clearer => 'clear_breeding_program_id');
 
 sub get_trial_name {
   my $self = shift;
@@ -78,6 +80,8 @@ sub save_trial {
   if (!$geolocation) {
     return;
   }
+
+  my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
 
   my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')
     ->create_with({
@@ -193,6 +197,11 @@ sub save_trial {
 							 stock_id => $plot->stock_id(),
 							});
   }
+
+
+
+  $program->associate_breeding_program_with_trial($self->get_breeding_program_id, $project->project_id);
+
 }
 
 

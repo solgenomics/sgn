@@ -1,7 +1,9 @@
 
 <%args>
-
+$accessions
 </%args>
 
-List of accessions:
-
+<%perl>
+my $accession_count = scalar(@{$accessions});
+print "Total accessions: $accession_count";
+</%perl>

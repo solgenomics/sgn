@@ -4,8 +4,9 @@
 </%doc>
 
 <%args>
-$trial_name
 $trial_id
+$breeding_program => ()
+$trial_name
 @location_data
 @phenotype_data
 @years
@@ -17,6 +18,7 @@ $design_type
 $number_of_blocks
 $number_of_replicates
 $trial_description
+$user_can_modify => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui',] &>
@@ -54,9 +56,19 @@ if (!$design_type eq "") {
   $design_empty = 0;
 }
 my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Download Field Book</a>]';
+
+my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $user_can_modify;
+
 </%perl>
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
+
+<&| /page/info_section.mas, title=>"Breeding program", subtitle=>$subtitle &>
+% foreach my $bp (@$breeding_program) { 
+%   print $bp->[1] . "&nbsp;(".$bp->[2].")"; 
+%   if ($user_can_modify) { print " <a title=\"remove program\" id=\"delete_breeding_program_trial_association_link\"><font color=\"red\"><b>X</b></font></a>"; }
+% }
+</&>
 
 <&| /page/info_section.mas, title=>"Year(s)" &>
 <% join ", ", @years %>
@@ -96,7 +108,7 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
 
 </&>
 
-<&| /page/info_section.mas, title=>"Plots",  is_subsection => 0, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $plots_empty&>
+<&| /page/info_section.mas, title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $plots_empty&>
 % foreach my $plot (@plot_names) { 
 %  print "$plot <br />\n";
 %}
@@ -117,40 +129,29 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
 % foreach my $p (@plot_data) { 
 %   print $p."<br />\n";
 % }
-
 <&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
-
-<&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-
-<&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_spreadsheet_link">Create Spreadsheet</a>]' &>
-
-</&>
-
-<&| /page/info_section.mas, title=>"Android Field Book Layout", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_fieldbook_link">Create Field Book</a>]' &>
-
-</&>
-
-</&>
-
-<&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-
-<&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_phenotyping_spreadsheet_link">Upload</a>]'&>
-</&>
-<&| /page/info_section.mas, title=>"Android Field Book Exported", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_field_book_link">Upload</a>]'&>
-</&>
-</&>
-
+  <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_spreadsheet_link">Create Spreadsheet</a>]' &>
+    </&>
+    <&| /page/info_section.mas, title=>"Android Field Book Layout", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_fieldbook_link">Create Field Book</a>]' &>
+    </&>
+  </&>
+  <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_phenotyping_spreadsheet_link">Upload</a>]'&>
+    </&>
+    <&| /page/info_section.mas, title=>"Android Field Book Exported", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_field_book_link">Upload</a>]'&>
+    </&>
+  </&>
 </&>
 
 
 
-<div
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 %print $trial_id;
 </div>
 
-<div id="tablet_field_layout_saved_dialog_message" title="Field book layout file">
+<div id="tablet_field_layout_saved_dialog_message" title="Field book layout file" style="display:none;">
   <p>
     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
     The field book layout file was saved successfully
@@ -160,7 +161,7 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
   </p>
 </div>
 
-<div id="create_spreadsheet_dialog" title="Create Phenotyping Spreadsheet">
+<div id="create_spreadsheet_dialog" title="Create Phenotyping Spreadsheet" style="display:none;">
   <div id="trait_list" name="trait_list">
     <label id="trait_list_label" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
     </label>
@@ -168,12 +169,66 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
 </div>
 
 
-<script defer="defer">
+<div id="change_breeding_program_dialog">
+  <select id="change_breeding_program_select">
+  </select>
+<div>
 
+<script defer="defer">
+  
 jQuery(document).ready(function () {
-    jQuery('#create_spreadsheet_link').click(function () {
-        open_create_spreadsheet_dialog();
+
+
+
+  jQuery('#change_breeding_program_dialog').dialog( {
+     height: 150,
+     width: 300,
+     title: 'Select Breeding Program',
+     autoOpen: false,
+     buttons: {
+       'OK': function() {
+          associate_breeding_program();
+          jQuery('#change_breeding_program_dialog').dialog("close"); 
+       },
+       'Cancel': function() { jQuery('#change_breeding_program_dialog').dialog("close"); }
+     }
+  });
+
+  function get_breeding_select() { 
+    var programs = new Array();
+    jQuery.ajax( { 
+      url: '/breeders/programs',
+      async: false,
+      success: function(response) { 
+        programs = response;
+      },
+      error: function(response){ 
+        alert("An error occurred.");
+      }
     });
+    var html = "";
+    for (var i=0; i< programs.length; i++) {  
+      	html += '<option value='+programs[i][0]+'>'+programs[i][1]+'</a>';
+    }
+    jQuery('#change_breeding_program_select').html(html);
+	
+   }
+
+
+  function associate_breeding_program() { 
+    var program = jQuery('#change_breeding_program_select').val();				    
+    alert("Program: "+program);
+    jQuery.ajax( { 
+      url: '/breeders/program/associate/'+program+'/'+ <% $trial_id %>,
+      async: false,
+      success: function(response) { 
+        alert("Associated program with id "+program + " to trial with id "+<% $trial_id %>);
+      }
+    });
+   }
+
+
+
     function open_create_spreadsheet_dialog() {
         var list = new CXGN.List();
         jQuery("#trait_list").html(list.listSelect("trait_list"));
@@ -214,14 +269,10 @@ jQuery(document).ready(function () {
     }
 
 
-
-    jQuery('#create_fieldbook_link').click(function () {
-        open_create_fieldbook_dialog();
-    });
     function open_create_fieldbook_dialog() {
       var trialID = parseInt(jQuery('#trialIDDiv').text());
       new jQuery.ajax({
-        type: 'GET',
+        type: 'POST',
         url: '/ajax/fieldbook/create',
 	dataType: "json",
         data: {
@@ -277,6 +328,36 @@ jQuery(document).ready(function () {
         },
     });
 
+  jQuery('#show_change_breeding_program_link').click(
+     function() {
+       jQuery('#change_breeding_program_dialog').dialog("open");
+       get_breeding_select();
+     }
+  );
+
+  jQuery('#delete_breeding_program_trial_association_link').click(
+     function() { 
+       var yes = confirm("Do you really want to remove this trial from the breeding program?");
+       if (yes) { 
+         jQuery.ajax( { 
+           url: '/breeders/program/remove/',
+           data: { },
+           async: false,
+           success: function(response) { 
+           }
+	});
+      }
+    }
+
+);
+    jQuery('#create_spreadsheet_link').click(function () {
+        open_create_spreadsheet_dialog();
+    });
+
+    jQuery('#create_fieldbook_link').click(function () {
+        open_create_fieldbook_dialog();
+    });
 });
 
 </script>
+ 

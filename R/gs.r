@@ -238,7 +238,7 @@ if (length(predictionTempFile) !=0 )
                        )
 }
 
-message('prediction genotype file: ', predictionTempFile)
+message('prediction genotype file: ', predictionFile)
 predictionPopGEBVsFile <- grep("prediction_pop_gebvs",
                        outFiles,
                        ignore.case = TRUE,

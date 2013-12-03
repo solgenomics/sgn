@@ -10,6 +10,8 @@ $project_desc
 $stocks_no
 $markers_no
 $traits_no
+$uploaded_reference=>''
+$owner=>''
 
 </%args>
 
@@ -37,7 +39,9 @@ $traits_no
     project_desc => $project_desc,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
-    traits_no    => $traits_no
+    traits_no    => $traits_no,
+    owner        => $owner,
+    uploaded_reference => $uploaded_reference
  &>
 
 </&>
@@ -56,7 +60,8 @@ $traits_no
      pop_id             => $pop_id,
      traits_form        => $traits_form,
      all_traits_file    => $all_traits_file,
-     no_traits_selected => $no_traits_selected
+     no_traits_selected => $no_traits_selected,
+     uploaded_reference => $uploaded_reference
 &>
 
 </&>

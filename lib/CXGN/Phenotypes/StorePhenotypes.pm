@@ -88,6 +88,7 @@ sub store {
     my $plot_trait_value_hashref = shift;
     #####
 
+
     my $phenotype_metadata = shift;
     my $transaction_error;
     my @plot_list = @{$plot_list_ref};
@@ -137,11 +138,23 @@ sub store {
 
 	    foreach my $trait_name (@trait_list) {
 		print STDERR "trait: $trait_name\n";
-		my ($db_name, $ontology_accession) = split (/:/, $trait_name);
+		my $trait_description;
+		my ($db_name, $trait_description) = split (/:/, $trait_name);
+
+		my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
+
+		my $trait_cvterm = $schema->resultset("Cv::Cvterm")
+		  ->find( {
+			     'dbxref.db_id' => $db_rs->first()->db_id(),
+			     'name'=>$trait_description 
+			    },
+			    {
+			     'join' => 'dbxref'
+			    }
+			  );
+
 		my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
-		my $ontology_db = $schema->resultset("General::Db")->search({'me.name' => $db_name, });
-		my $ontology_dbxref = $ontology_db->search_related("dbxrefs", { accession => $ontology_accession, });
-		my $trait_cvterm = $ontology_dbxref->search_related("cvterm")->single;
+
 		my $plot_trait_uniquename = "Stock: " .
 		    $plot_stock_id . ", trait: " .
 			$trait_cvterm->name .
@@ -155,20 +168,24 @@ sub store {
 								  });
 
 		print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
+		my $experiment;
 
 		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
-		my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-		    ->find({
-			    nd_geolocation_id => $location_id,
-			    type_id => $phenotyping_experiment_cvterm->cvterm_id(),
-			    'type.name' => 'operator',
-			    'nd_experimentprops.value' => $operator,
-			    'type_2.name' => 'date',
-			    'nd_experimentprops_2.value' => $phenotyping_date,
-			   },
-			   {
-			    join => [{'nd_experimentprops' => 'type'},{'nd_experimentprops' => 'type'}],
-			   });
+		# my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+		#     ->find({
+		# 	    nd_geolocation_id => $location_id,
+		# 	    type_id => $phenotyping_experiment_cvterm->cvterm_id(),
+		# 	    'type.name' => 'operator',
+		# 	    'nd_experimentprops.value' => $operator,
+		# 	    'type_2.name' => 'date',
+		# 	    'nd_experimentprops_2.value' => $phenotyping_date,
+		# 	   },
+		# 	   {
+		# 	    join => [{'nd_experimentprops' => 'type'},{'nd_experimentprops' => 'type'},{'nd_experiment_phenotypes' => 'type'}],
+		# 	   });
+
+
+		#Need to add function to detect if phenotype data point already exists and decide to replace or throw error.
 
 		# Create a new experiment, if one does not exist
 		if (!$experiment) {

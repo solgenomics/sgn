@@ -34,36 +34,40 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     
     my @params = qw | c1_data c2_data c3_data |;
     my $data_tainted = 0;
-    
+
+    if (!$criteria_list) {
+	$c->stash->{rest} = { };
+	return;
+    }
     for (my $i=0; $i<scalar(@$criteria_list); $i++) { 
 	my $data;
 	print STDERR "PARAM: $params[$i]\n";
 	if (defined($params[$i]) && ($params[$i] ne '')) { $data =  $c->req->param($params[$i]); }
-     	if (defined($data) && ($data ne '') && ($data !~ /^[\d,\/ ]+$/g)) { 
-     	    print STDERR "Illegal chars in '$data'\n";
-     	    $data_tainted =1;
-     	}
-     	# items need to be quoted in sql
-     	#
+	if (defined($data) && ($data ne '') && ($data !~ /^[\d,\/ ]+$/g)) { 
+	    print STDERR "Illegal chars in '$data'\n"; 
+	    $data_tainted =1;
+	}
+	# items need to be quoted in sql
+	#
 	print STDERR "DATA: $data\n";
 	if ($data) { 
 	    my $qdata = join ",", (map { "\'$_\'"; } (split ",", $data));
 	    $dataref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $qdata;
 	}
-     }
-
-     if ($data_tainted) { 
-	 $c->stash->{rest} =  { error => "Illegal data.", };
-	 return;
-     }
-
-     my $stocks = undef;
-     my $error = "";
+    }
+    
+    if ($data_tainted) { 
+	$c->stash->{rest} =  { error => "Illegal data.", };
+	return;
+    }
+    
+    my $stocks = undef;
+    my $error = "";
 
      foreach my $select (@$criteria_list) { 
      	print STDERR "Checking $select\n";
      	chomp($select);
-     	if (! any { $select eq $_ } ('projects', 'locations', 'years', 'traits', 'genotypes', undef)) { 
+     	if (! any { $select eq $_ } ('accessions', 'projects', 'locations', 'years', 'traits', 'genotypes', undef)) { 
      	    $error = "Valid keys are projects, years, traits and locations";
      	    $c->stash->{rest} = { error => $error };
      	    return;

@@ -48,7 +48,7 @@ has 'schema' => (
 
 sub get_trial_layout : Path('/ajax/trial/layout') : ActionClass('REST') { }
 
-sub get_trial_layout_GET : Args(0) {
+sub get_trial_layout_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $project;
@@ -66,7 +66,7 @@ sub get_trial_layout_GET : Args(0) {
 
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
 
-sub generate_experimental_design_GET : Args(0) {
+sub generate_experimental_design_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_design = CXGN::Trial::TrialDesign->new();
@@ -196,7 +196,7 @@ sub generate_experimental_design_GET : Args(0) {
 
 sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : ActionClass('REST') { }
 
-sub save_experimental_design_GET : Args(0) {
+sub save_experimental_design_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_create = new CXGN::Trial::TrialCreate(schema => $schema);
@@ -215,6 +215,7 @@ sub save_experimental_design_GET : Args(0) {
   $trial_create->set_trial_location($c->req->param('trial_location'));
   $trial_create->set_trial_description($c->req->param('project_description'));
   $trial_create->set_design_type($c->req->param('design_type'));
+  $trial_create->set_breeding_program_id($c->req->param('breeding_program_id'));
   $trial_create->set_design(_parse_design_from_json($c->req->param('design_json')));
   $trial_create->set_stock_list(_parse_list_from_json($c->req->param('stock_list')));
   if ($c->req->param('control_list')) {
@@ -238,7 +239,7 @@ sub save_experimental_design_GET : Args(0) {
 
 sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
 
-sub verify_stock_list_GET : Args(0) {
+sub verify_stock_list_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my @stock_names;

@@ -12,7 +12,9 @@ $trait_id
 </%args>
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations",] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations", "jquery.cookie"] &>
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+
 
 <& /page/page_title.mas,
     title => "Confirm" ,
@@ -22,9 +24,9 @@ $trait_id
    result     => $selected_pops_details,
 &>
 
-<div id="confirm">
+<div>
   <br />
-  <input type="button" id="confirm" name="confirm" value="Confirm" onclick="confirmSelections();"/>
+  <input class="button" type="button" id="confirm" name="confirm" value="Confirm" onclick="confirmSelections();"/>
   <input type="hidden" id="trait_id" name="trait_id" value= "<% $trait_id %>" />
 </div>
 

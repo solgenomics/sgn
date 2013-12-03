@@ -1,8 +1,9 @@
 
 <%args>
-@projects => ()
+$trials_by_breeding_project => ()
 @locations => ()
 @roles => ()
+$breeding_programs
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List',] &>
@@ -19,6 +20,15 @@
     <select id="add_project_location" name="add_project_location">
       <%perl>foreach my $location (@locations) { print "
       <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
+      </%perl>
+    </select>
+    <br>
+    <label for="select_breeding_program" style="display: inline-block; width: 100px;">Breeding Program:</label>
+    <select id="select_breeding_program" name="select_breeding_program">
+      <%perl>
+      foreach my $program (@$breeding_programs) {
+         print "<option value=".@$program[0].">".@$program[1]."</option>";
+      }
       </%perl>
     </select>
     <br>
@@ -154,6 +164,49 @@ jQuery(document).ready(function () {
         open_project_dialog()
     });
 
+    jQuery('#add_project_dialog').dialog({
+	autoOpen: false,
+        modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 75],
+        title: "Add new trial",
+        buttons: {
+            "Cancel": function () {
+                jQuery('#add_project_dialog').dialog("close");
+            },
+            "Add": function () {
+                var name = jQuery('#add_project_name').val();
+                var year = jQuery('#add_project_year').val();
+                var desc = jQuery('textarea#add_project_description').val();
+                var method_to_use = jQuery('.format_type:checked').val();
+                if (year === '' || desc === '') {
+                    alert('Year and description are required.');
+                    return;
+                }
+                if (method_to_use == "empty") {
+                    alert('adding a project');
+                    save_project_info(name, year, desc);
+                }
+                if (method_to_use == "create_with_upload") {
+                    var uploadFile = jQuery("#trial_upload_file").val();
+                    jQuery('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
+                    if (uploadFile === '') {
+                        alert("Please select a file");
+                        return;
+                    }
+                    jQuery("#create_new_trial_form").submit();
+                }
+                if (method_to_use == "create_with_design_tool") {
+		    generate_experimental_design(name,year,desc);
+		}
+                //jQuery( this).dialog("close"); 
+                //location.reload();
+            }
+        }
+    });
+
+
     function open_project_dialog() {
 	jQuery('#add_project_dialog').dialog("open");
 
@@ -244,47 +297,6 @@ jQuery(document).ready(function () {
 
     jQuery("#format_type_radio").change();
 
-    jQuery('#add_project_dialog').dialog({
-	autoOpen: false,
-        modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 75],
-        title: "Add new trial",
-        buttons: {
-            "Cancel": function () {
-                jQuery('#add_project_dialog').dialog("close");
-            },
-            "Add": function () {
-                var name = jQuery('#add_project_name').val();
-                var year = jQuery('#add_project_year').val();
-                var desc = jQuery('textarea#add_project_description').val();
-                var method_to_use = jQuery('.format_type:checked').val();
-                if (year === '' || desc === '') {
-                    alert('Year and description are required.');
-                    return;
-                }
-                if (method_to_use == "empty") {
-                    alert('adding a project');
-                    save_project_info(name, year, desc);
-                }
-                if (method_to_use == "create_with_upload") {
-                    var uploadFile = jQuery("#trial_upload_file").val();
-                    jQuery('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
-                    if (uploadFile === '') {
-                        alert("Please select a file");
-                        return;
-                    }
-                    jQuery("#create_new_trial_form").submit();
-                }
-                if (method_to_use == "create_with_design_tool") {
-		    generate_experimental_design(name,year,desc);
-		}
-                //jQuery( this).dialog("close"); 
-                //location.reload();
-            }
-        }
-    });
 
     jQuery("#select_design_method").change(function () {
 	jQuery("#add_project_dialog").dialog("option", "height","auto");
@@ -377,7 +389,7 @@ jQuery(document).ready(function () {
         }
 
         new jQuery.ajax({
-            type: 'GET',
+            type: 'POST',
             url: '/ajax/trial/generate_experimental_design',
 	    dataType: "json",
             data: {
@@ -437,13 +449,14 @@ jQuery(document).ready(function () {
 	var plot_prefix = jQuery('#plot_prefix').val();
 	var start_number = jQuery('#start_number').val();
 	var increment = jQuery('#increment').val();
+	var breeding_program_id = jQuery('#select_breeding_program').val();
 	var stock_verified = verify_stock_list(stock_list);
         if (desc == '' || year == '') {
             alert('Year and description are required.');
             return;
         }
         new jQuery.ajax({
-            type: 'GET',
+            type: 'POST',
             url: '/ajax/trial/save_experimental_design',
 	    dataType: "json",
             data: {
@@ -462,6 +475,7 @@ jQuery(document).ready(function () {
 		'start_number': start_number,
 		'increment': increment,
 		'design_json': design_json,
+                'breeding_program_id': breeding_program_id,
             },
             success: function (response) {
                 if (response.error) {
@@ -501,7 +515,7 @@ jQuery(document).ready(function () {
     function verify_stock_list(stock_list) {
 	var return_val;
 	new jQuery.ajax({
-            type: 'GET',
+            type: 'POST',
             url: '/ajax/trial/verify_stock_list',
 	    dataType: "json",
             data: {
@@ -644,8 +658,13 @@ jQuery(document).ready(function () {
 
 <table>
   <%perl>
-    foreach my $p (@projects){
-      print "<tr><td><a href=\"/breeders_toolbox/trial/$p->[0]\">$p->[1]</td><td>$p->[2]</td></tr>\n";
+
+  use Data::Dumper;
+  foreach my $p (sort keys %$trials_by_breeding_project){
+    print "<tr><td colspan=\"3\"><h4>$p</h4></td></tr>\n";
+    foreach my $t (@{$trials_by_breeding_project->{$p}}) { 
+      print "<tr><td><a href=\"/breeders_toolbox/trial/$t->[0]\">$t->[1]</td><td>$t->[2]</td></tr>\n";
     }
+  }
   </%perl>
 </table>
