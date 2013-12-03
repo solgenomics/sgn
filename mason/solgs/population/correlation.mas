@@ -23,6 +23,20 @@ $pop_id
 
 </%perl>
 
+<style>
+/* correlation coefficients plot styling */
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
 <& /util/import_javascript.mas, classes => [ "solGS.correlation", "d3.d3"] &>
 <&| /page/info_section.mas, 
       collapsible => 1, 
@@ -33,7 +47,11 @@ $pop_id
 <input type="hidden" id="population_id" value="<% $pop_id %>" />
 
 <div id="correlation_canvas">
-<div id="correlation_message" style="padding-left: 250px;">Loading correlation output...</div>
+<div id="correlation_message" style="padding-left: 250px;">
+
+Loading correlation output...
+
+</div>
 
 <div id="correlation_plot"> </div>
 
