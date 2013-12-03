@@ -406,8 +406,10 @@ CXGN.List.prototype = {
 	return list_item_id;
     },
     
-    // deprecated
     addToList: function(list_id, text) { 
+	if (! text) { 
+	    return;
+	}
 	var list = text.split("\n");
 	var duplicates = [];
 	
@@ -631,7 +633,9 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 	}
 	if (options.typeSourceDiv) { 
 	    type = getData(options.typeSourceDiv, selectText);
-	    type = type.replace(/(\n|\r)+$/, '');
+	    if (type) { 
+		type = type.replace(/(\n|\r)+$/, '');
+	    }
 	}
 	if (options.types) { 
 	    type = options.listType;
@@ -692,16 +696,34 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
    
 }
 
-
 function getData(id, selectText) { 
     var divType = jQuery("#"+id).get(0).tagName;
     var data; 
     
-    if (divType == 'DIV' || divType =='SPAN' ||  divType === undefined) { 
+    if (divType == 'DIV' || divType =='SPAN' || divType === undefined) { 
 	data = jQuery('#'+id).html();
     }
     if (divType == 'SELECT' && selectText) {
-	data = jQuery('#'+id+" option:selected").text();
+	if (jQuery.browser.msie) {
+	    // Note: MS IE unfortunately removes all whitespace
+            // in the jQuery().text() call. Program it out...
+	    //
+	    var selectbox = document.getElementById(id);
+	    var datalist = new Array();
+	    for (var n=0; n<selectbox.length; n++) { 
+		if (selectbox.options[n].selected) { 
+		    var x=selectbox.options[n].text;
+		    datalist.push(x);
+		}
+	    }
+	    data = datalist.join("\n");
+	    alert("data:"+data);
+	    
+	}
+	else { 
+	    data = jQuery('#'+id+" option:selected").text();
+	}
+
     }
     if (divType == 'SELECT' && ! selectText) { 
 	var return_data = jQuery('#'+id).val();
