@@ -37,6 +37,20 @@ sub get_stock {
   my $stock;
   if ($stock_rs->count == 1) {
     $stock = $stock_rs->first;
+  } else {
+    return;
+  }
+  return $stock;
+}
+
+sub get_stock_exact {
+  my $self = shift;
+  my $stock_rs = $self->_get_stock_resultset_exact();
+  my $stock;
+  if ($stock_rs->count == 1) {
+    $stock = $stock_rs->first;
+  } else {
+    return;
   }
   return $stock;
 }
@@ -80,6 +94,21 @@ sub _get_stock_resultset {
   return $stock_rs;
 }
 
+sub _get_stock_resultset_exact {
+  my $self = shift;
+  my $schema = $self->get_schema();
+  my $stock_name = $self->get_stock_name();
+  my $stock_rs = $schema->resultset("Stock::Stock")
+    ->search({
+	      uniquename => $stock_name,
+	     },
+	     {
+	      join => { 'stockprops' => 'type'} ,
+	      distinct => 1,
+	     }
+	    );
+  return $stock_rs;
+}
 
 #######
 1;

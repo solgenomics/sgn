@@ -215,7 +215,7 @@ EOH
  	unless (defined $blast_content) {
  	    $blast_content = '<tr><td class="center"><span class="ghosted">';
  	    $blast_content .= 'No BLAST annotations have been pre-computed for this sequence. Please try our ';
- 	    $blast_content .= '<a href="/tools/blast/?preload_id=$unigene_id&preload_type=15">online BLAST service</a>.</td></tr>';
+ 	    $blast_content .= '<a href="/tools/blast/?preload_id=$unigene_id&preload_type=unigene+identifiers">online BLAST service</a>.</td></tr>';
  	}
  	$annotation_html .= $blast_content;
 

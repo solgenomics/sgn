@@ -76,6 +76,9 @@ sub index :Path('/tools/blast/') :Args(0) {
     $c->stash->{preselected_database} = $preselected_database;
     $c->stash->{preselected_category} = $preselected_category;
     $c->stash->{seq} = $seq;
+    $c->stash->{preload_id} = $c->req->param('preload_id');
+    $c->stash->{preload_type} = $c->req->param('preload_type');
+    
     $c->stash->{databases} = $databases;
     $c->stash->{dataset_groups} = $dataset_groups;
     $c->stash->{preload_seq} = $seq;
