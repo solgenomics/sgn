@@ -52,6 +52,7 @@ function runCorrelationAnalysis () {
                 url: '/correlation/analysis/output',
                 success: function(response) {         
                 plotCorrelation(response.data);
+                jQuery("#correlation_message").empty();
             },
                 error: function(response) {           
                 alert('there is error running  correlation analysis.');
