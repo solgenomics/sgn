@@ -22,6 +22,6 @@ ok(my $male_parent = Bio::GeneticRelationships::Individual->new(name => 'zyxMale
 ok($cross->set_female_parent($female_parent), "Set a female parent for a pedigree");
 ok($cross->set_male_parent($male_parent), "Set a male parent for a pedigree");
 my @crosses;
-push (@crossess, $cross);
+push (@crosses, $cross);
 
 
