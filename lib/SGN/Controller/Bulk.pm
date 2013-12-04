@@ -86,7 +86,12 @@ sub ftp_tab : Path('/tools/bulk/tabs/ftp_tab') Args(0) {
     $c->stash->{template} = '/tools/bulk/tabs/ftp_tab.mas';
 }
 
-
+sub converter_tab : Path('/tools/bulk/tabs/converter_tab') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    $c->stash->{template} = '/tools/bulk/tabs/converter_tab.mas';
+}
 
 sub _build_feature_cache {
     my $self = shift;
