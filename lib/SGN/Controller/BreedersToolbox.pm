@@ -34,6 +34,7 @@ sub manage_breeding_programs : Path("/breeders/manage_programs") :Args(0) {
     my $breeding_programs = $projects->get_breeding_programs();
     
     $c->stash->{breeding_programs} = $breeding_programs;
+    $c->stash->{user} = $c->user();
 
     $c->stash->{template} = '/breeders_toolbox/breeding_programs.mas';
     
@@ -157,7 +158,7 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) { 
     my $self =shift;
     my $c = shift;
-
+ 
     if (!$c->user()) { 
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
 	return;
@@ -419,10 +420,10 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 }
 
 
-sub breeder_search : Path('/breeder_search/') :Args(0) { 
+sub breeder_search : Path('/breeders/search/') :Args(0) { 
     my ($self, $c) = @_;
     
-    $c->stash->{template} = '/breeders_toolbox/breeder_search.mas';
+    $c->stash->{template} = '/breeders_toolbox/breeder_search_page.mas';
 
 }
 
@@ -481,14 +482,23 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     print STDERR "SQL-READY: $accession_sql | $trial_sql | $trait_sql \n";
 
-    my $result = $bs->get_intersect([ 'accessions', 'trials', 'traits', 'plots' ], 
-		       { plots => { accessions => "$accession_sql", trials=> "$trial_sql", traits => "$trait_sql" }  },
-		       );
+    #my $result = $bs->get_intersect([ 'accessions', 'trials', 'traits', 'plots' ], 
+    #{ plots => { accessions => "$accession_sql", trials=> "$trial_sql", traits => "$trait_sql" }  },
+#		       );
     
-    print STDERR Data::Dumper::Dumper($result);
+    #print STDERR Data::Dumper::Dumper($result);
 
-    $c->res->body(Data::Dumper::Dumper($result));
-	#ate} = '/breeders_toolbox/download.mas';
+ #   my @plot_list = map { $_->[1] } @{$result->{results}};
+    my $data = $bs->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
+
+    my $output = "";
+    foreach my $d (@$data) { 
+	$output .= join "\t", @$d;
+	$output .= "\n";
+    }
+    
+    $c->res->content_type("text/plain");
+   $c->res->body($output);
 
 }
 

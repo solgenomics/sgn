@@ -134,10 +134,26 @@ sub new_breeding_program {
 
 
 sub delete_breeding_program { 
+    my $self = shift;
+    my $project_id = shift;
+    
+    my $type_id = $self->get_breeding_program_type_id();
 
+    my $rs = $self->schema("Project::Project")->search( 
+	type_id => $type_id,
+	project_id => $project_id,
+	);
 
+    if ($rs->count() > 0) { 
+	my $pprs = $self->schema("Project::ProjectRelationship")->search(
+	    object_id => $project_id,
+	    );
 
-
+	if ($pprs->count()>0) { 
+	    $pprs->delete();
+	}
+	$rs->delete();
+    }
 }
 
 sub get_breeding_program_with_trial { 
