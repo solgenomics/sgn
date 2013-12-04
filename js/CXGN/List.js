@@ -648,10 +648,6 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 
     html += '<input id="'+dataDiv+'_button" type="button" value="add to list" />';
    
-    if (dataDiv == 'stock_data' && document.referrer.match(/solgs/)) {
-        html += '<input  style="clear: both" id="goto_gs_button" type="button" value="Go to GS" />';
-    }
-  
     jQuery('#'+listMenuDiv).html(html);
 
     var list_id = 0;
@@ -685,14 +681,7 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 	}
     );
     
-    jQuery(document).on("click", "#goto_gs_button", function() { 
-       
-        if (document.referrer.match(/solgs/)){
-            window.location.href= document.referrer;
-        } else {
-            window.location.href = window.location.protocol + "//" +window.location.host + '/solgs/search'; 
-        }
-    });
+
    
 }
 

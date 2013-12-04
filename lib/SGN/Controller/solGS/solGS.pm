@@ -61,6 +61,12 @@ sub solgs : Path('/solgs'){
     $c->forward('search');
 }
 
+sub solgs_breeder_search :Path('/solgs/breeder_search') Args(0) { 
+    my ($self, $c) = @_;
+    $c->stash->{referer}  = $c->req->referer();
+    $c->stash->{template} = '/solgs/breeder_search_solgs.mas';
+}
+
 
 sub submit :Path('/solgs/submit/intro')  Args(0) {
     my ($self, $c) = @_;
