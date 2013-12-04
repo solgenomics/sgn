@@ -1,5 +1,5 @@
 
-/*
+/* 
 
 =head1 NAME
 
@@ -17,6 +17,24 @@ this function will generate a select of all available lists and allow the conten
 * pasteListMenu(divName, menuDiv, buttonName)
 
 this will generate an html select box of all the lists, and a "paste" button, to paste into a textarea (typically). The divName is the id of the textarea, the menuDiv is the id where the paste menu should be placed.
+
+
+Public List object functions
+
+* listSelect(divName, types)
+
+will create an html select with id and name 'divName'. Optionally, a list of types can be specified that will limit the menu to the respective types. 
+
+Usage:
+You have to instantiate the list object first:
+
+var lo = new CXGN.List(); var s = lo.listSelect('myseldiv', [ 'trials' ]);
+
+
+* validate(list_id, type, non_interactive)
+
+* transform(list_id, new_type)
+
 
 =head1 AUTHOR
 
@@ -388,8 +406,10 @@ CXGN.List.prototype = {
 	return list_item_id;
     },
     
-    // deprecated
     addToList: function(list_id, text) { 
+	if (! text) { 
+	    return;
+	}
 	var list = text.split("\n");
 	var duplicates = [];
 	
@@ -450,7 +470,7 @@ CXGN.List.prototype = {
 	this.renderLists('list_dialog');
     },
 
-    validate: function(list_id, type) { 
+    validate: function(list_id, type, non_interactive) { 
 	var missing = new Array();
 	var error = 0;
 	jQuery.ajax( { 
@@ -467,13 +487,15 @@ CXGN.List.prototype = {
 	    error: function(response) { alert("An error occurred while validating the list "+list_id); error=1; }
 	});
 
-	if (error ===1 ) { return; }
+	if (error === 1 ) { return; }
 
 	if (missing.length==0) { 
-	    alert("This list passed validation.");
+	    if (!non_interactive) { alert("This list passed validation."); } 
+	    return 1;
 	}
 	else { 
 	    alert("List validation failed. Elements not found: "+ missing.join(","));
+	    return 0;
 	}
     },
 
@@ -611,7 +633,9 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 	}
 	if (options.typeSourceDiv) { 
 	    type = getData(options.typeSourceDiv, selectText);
-	    type = type.replace(/(\n|\r)+$/, '');
+	    if (type) { 
+		type = type.replace(/(\n|\r)+$/, '');
+	    }
 	}
 	if (options.types) { 
 	    type = options.listType;
@@ -623,7 +647,7 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
     html += lo.listSelect(dataDiv, [ type ]);
 
     html += '<input id="'+dataDiv+'_button" type="button" value="add to list" />';
-    
+   
     jQuery('#'+listMenuDiv).html(html);
 
     var list_id = 0;
@@ -651,22 +675,44 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 	    list_id = jQuery('#'+dataDiv+'_list_select').val();
 	    var lo = new CXGN.List();
 	    var elementsAdded = lo.addToList(list_id, data);
+
 	    alert("Added "+elementsAdded+" list elements");
 	    return list_id;
 	}
     );
-}
+    
 
+   
+}
 
 function getData(id, selectText) { 
     var divType = jQuery("#"+id).get(0).tagName;
     var data; 
     
-    if (divType == 'DIV' || divType =='SPAN' ||  divType === undefined) { 
+    if (divType == 'DIV' || divType =='SPAN' || divType === undefined) { 
 	data = jQuery('#'+id).html();
     }
     if (divType == 'SELECT' && selectText) {
-	data = jQuery('#'+id+" option:selected").text();
+	if (jQuery.browser.msie) {
+	    // Note: MS IE unfortunately removes all whitespace
+            // in the jQuery().text() call. Program it out...
+	    //
+	    var selectbox = document.getElementById(id);
+	    var datalist = new Array();
+	    for (var n=0; n<selectbox.length; n++) { 
+		if (selectbox.options[n].selected) { 
+		    var x=selectbox.options[n].text;
+		    datalist.push(x);
+		}
+	    }
+	    data = datalist.join("\n");
+	    alert("data:"+data);
+	    
+	}
+	else { 
+	    data = jQuery('#'+id+" option:selected").text();
+	}
+
     }
     if (divType == 'SELECT' && ! selectText) { 
 	var return_data = jQuery('#'+id).val();

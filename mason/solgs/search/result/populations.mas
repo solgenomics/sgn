@@ -16,7 +16,7 @@ $trait_name
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations",] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations", "jquery.cookie"] &>
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
@@ -43,9 +43,14 @@ $trait_name
 <input type="hidden" name="trait_id" value="<% $trait_id %>" />
 </div>
 
+% if (scalar(@$result) > 1) 
+% {
+
 <div id="select_done">
-<input  class="button" type="button" id="done_selecting" name="done_selecting" value="Combine" onclick="selectedPops();"/>
+  <input  class="button" type="button" id="done_selecting" name="done_selecting" value="Combine" onclick="selectedPops();"/>
 </div>
+
+%}
 
 </&>
 

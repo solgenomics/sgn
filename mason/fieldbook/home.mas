@@ -1,6 +1,7 @@
 
 <%args>
 @projects => undef
+$programs => undef
 $user_id => undef
 @layout_files => undef
 @trait_files => undef
@@ -8,7 +9,7 @@ $user_id => undef
 @roles => ()
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.FieldBook'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.FieldBook'] &>
 
 <& /page/page_title.mas, title=>'Field Book Tools' &>
 
@@ -21,11 +22,15 @@ $user_id => undef
 
 <&| /page/info_section.mas, title=>'Field Layout Files', collapsible=>1, collapsed=>0, &>
 <%perl>
+my @breeding_programs = @{$programs};
+foreach my $prog (@breeding_programs) {
+  print @$prog[0].@$prog[1]."</br>";
+}
 foreach my $project_ref (@projects) {
    my @trial_array = @{$project_ref};
    my $file_name = $trial_array[4];
-   my $trial_layout_download = '[<a href="\\fieldbook\\trial_download\\'.$trial_array[5].'">Download</a>]';
-   print $trial_array[4]."$trial_layout_download</br>";
+   my $trial_layout_download = '[<a href="/fieldbook/trial_download/'.$trial_array[5].'">Download</a>]';
+   print $trial_array[4]."$trial_layout_download<br>";
    #print $trial_array[4]."</br>";
 }
 </%perl>
@@ -36,8 +41,8 @@ foreach my $project_ref (@projects) {
   foreach my $trait_ref (@trait_files) {
     my @trait_array = @{$trait_ref};
     my $trait_file_name = $trait_array[0];
-    my $trait_file_download = '[<a href="\\fieldbook\\trait_file_download\\'.$trait_array[1].'">Download</a>]';
-    print $trait_array[0]."$trait_file_download</br>";
+    my $trait_file_download = '[<a href="/fieldbook/trait_file_download/'.$trait_array[1].'">Download</a>]';
+    print $trait_array[0]."$trait_file_download<br>";
     #print $trial_array[4]."</br>";
   }
   </%perl>
@@ -48,8 +53,8 @@ foreach my $project_ref (@projects) {
   foreach my $phenotype_ref (@phenotype_files) {
     my @phenotype_array = @{$phenotype_ref};
     my $phenotype_file_name = $phenotype_array[0];
-    #my $phenotype_file_download = '[<a href="\\fieldbook\\trait_file_download\\'.$trait_array[1].'">Download</a>]';
-    #print $phenotype_array[0]."$trait_file_download</br>";
+    #my $phenotype_file_download = '[<a href="/fieldbook/trait_file_download/'.$trait_array[1].'">Download</a>]';
+    #print $phenotype_array[0]."$trait_file_download<br>";
     print $phenotype_array[0]."</br>";
   }
   </%perl>

@@ -128,17 +128,17 @@ sub get_intersect {
 
 	    prereq   => "DROP TABLE IF EXISTS cvalue_ids; CREATE TEMP TABLE cvalue_ids AS SELECT distinct(cvalue_id), phenotype_id FROM phenotype",
 
-	    locations => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id)  WHERE nd_geolocation.nd_geolocation_id in ($dataref->{traits}->{locations})",
+	    locations => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE nd_geolocation.nd_geolocation_id in ($dataref->{traits}->{locations})",
 	    
-	    years => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN projectprop USING(project_id) WHERE projectprop.type_id=$type_id and projectprop.value IN ($dataref->{traits}->{years})", 
+	    years => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN projectprop USING(project_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE projectprop.type_id=$type_id and projectprop.value IN ($dataref->{traits}->{years})", 
 	    
-	    projects => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING(project_id) WHERE project.project_id in ($dataref->{traits}->{projects})",
+	    projects => "SELECT distinct(cvterm_id), db.name || ':' || cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING(project_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE project.project_id in ($dataref->{traits}->{projects})",
 	    
-	    traits => "SELECT distinct(cvterm_id), cvterm.name FROM cvalue_ids JOIN cvterm on (cvalue_id=cvterm_id)",
+	    traits => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM cvalue_ids JOIN  cvterm on (cvalue_id=cvterm_id) JOIN dbxref using(dbxref_id) JOIN db USING(db_id)",
 
-	    plots => "SELECT distinct(cvterm_id), cvterm.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (cvalue_id=cvterm_id) WHERE stock_id IN ($dataref->{traits}->{plots})",
+	    plots => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (cvalue_id=cvterm_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE stock_id IN ($dataref->{traits}->{plots})",
 
-	    accessions => "SELECT distinct(cvterm_id), cvterm.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (cvalue_id=cvterm_id) WHERE stock_id IN ($dataref->{traits}->{plots})",
+	    accessions => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (cvalue_id=cvterm_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE stock_id IN ($dataref->{traits}->{plots})",
 
 	    #genotype => "",
 	    
@@ -183,19 +183,23 @@ sub get_intersect {
 
 sub get_phenotype_info {  
     my $self = shift;
-    my $plot_list = shift;
+    my $accession_sql = shift;
+    my $trial_sql = shift;
+    my $trait_sql = shift;
 
-    my $q = "DROP TABLE IF EXISTS temporary_plot_data";
-    $self->dbh->do($q);
-    
-    $q = "CREATE TABLE temporary_plot_data(plotname varchar(100))";
-    $self->dbh->do($q);
-   
-    
-    $q = "SELECT project.name, stock.uniquename, cvterm.name, phenotype.value FROM stock as plot JOIN ... ";
+    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) JOIN stock ON (object_id=stock.stock_id) JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id) JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN project USING(project_id)  WHERE cvterm.cvterm_id in ($trait_sql) and project.project_id in ($trial_sql) and stock.stock_id in ($accession_sql)";
+
+    print STDERR "QUERY: $q\n\n";
+    my $h = $self->dbh()->prepare($q);
+    $h->execute();
+
+    my $result = [];
+    while (my ($project_name, $stock_name, $location, $trait, $value) = $h->fetchrow_array()) { 
+	push @$result, [ $project_name, $stock_name, $location, $trait, $value ];
+	
+    }
+    return $result;
 }
-
-
 
 
 sub get_type_id { 

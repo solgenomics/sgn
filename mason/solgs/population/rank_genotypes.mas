@@ -14,58 +14,16 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$pop_id => ''
+$pop_id
 $prediction_pop_id => ''
 $analyzed_traits
 $prediction_pop_analyzed_traits => ''
 $prediction_pop_name => ''
+$project_name
 
 </%args>
 
 <%perl>
-
-my $trait_rows;
-my $cnt = 1;
-my $row_no = 1;
-
-$analyzed_traits = $prediction_pop_analyzed_traits if $prediction_pop_analyzed_traits;
-
-foreach (@$analyzed_traits)
-{
-  if ($_)
-    {
-      my $rw_b    = qq | <tr> | if $cnt == 1;
-      my $rw_e    = qq | </tr> | if $cnt == 3;
-
-      my $row  = <<ROW;
-                   $rw_b
-                   <td>
-                     $_:
-                   </td>
-                   <td>
-                       <input type    = "text" 
-                              name    = $_
-                              size    = 5px
-                              >
-                   </td>
-                 $rw_e
-ROW
-
-      $cnt++;
-      $cnt = 0 if $cnt == 3;
-      $trait_rows .=  $row;
-    }
-  $row_no++;
-
-}
-
-
-my $phrase = 'Assign ';
-if($prediction_pop_id =~ /\d+/) 
-  {
-    $phrase = 'And assign ';
-  }
-
 
 </%perl>
 
@@ -73,17 +31,19 @@ if($prediction_pop_id =~ /\d+/)
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
-%if (@$analyzed_traits > 1 )
-%{
-  <&| /page/info_section.mas, 
-      collapsible => 1, 
-       collapsed  => 0, 
-       title      => "Rank Genotypes based on weighted mean GEBV of multiple traits"
-   &> 
+
+<&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed  => 0, 
+  title      => "Rank Genotypes based on weighted mean GEBV of multiple traits"
+  &> 
 
  
   <div id="selected_population_div" style="display:none">    
     <input type="hidden" id="model_id" value="<% $pop_id %>" />
+    <input type="hidden" id="model_name" value="<% $project_name %>" />
+    <input type="hidden" id="default_selected_population_name" value="<% $project_name %>"/>
+    <input type="hidden" id="default_selected_population_id" value="<% $pop_id %>"/>
     <input type="hidden" id="default_selected_population_name" value="<% $prediction_pop_name %>"/>
     <input type="hidden" id="default_selected_population_id" value="<% $prediction_pop_id %>"/>
     <input type="hidden" id="selected_population_name" value="" />
@@ -91,31 +51,17 @@ if($prediction_pop_id =~ /\d+/)
   </div>
 
   
-  <div id="select_a_population_div" style="float:left"></div>
-  <div style="float:left"><p style="padding-left: 20px"><% $phrase %> relative weights to traits.</p></div>
+  <div id="select_a_population_div" style="float:left; z-index:10; position:absolute;"></div>
+ <div id="select_a_population_div_text" style="float:left"><p style="padding-left: 275px"> And assign relative weights to traits.</p></div> 
 
-  <div id="mulitple_traits" style="clear: both;">  
-    <div id="rel_gebv_form">
-      <table style="align:left;padding: 5px;width:100%">                          
-          <% $trait_rows %>
-          <tr>      
-            <td>
-              <input class   = "button"
-                     type    = "submit" 
-                     value   = "Rank"
-                     name    = "rank"
-                     id      = "rank_genotypes"               
-                  >
-            </td>     
-          </tr>
-        </table>
-      </div>
 
-      <& /solgs/model/top_genotypes.mas &> 
+  <div id="selection_index_form" style="clear:both"> </div>
 
-    </div>
+  <& /solgs/model/top_genotypes.mas &> 
+
+   
 
     </&>
-%}
+
 
 

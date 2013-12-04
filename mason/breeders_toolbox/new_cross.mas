@@ -7,6 +7,21 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
+<style>
+.ui-autocomplete {
+  max-height: 100px;
+  overflow-y: auto;
+  /* prevent horizontal scrollbar */
+  overflow-x: hidden;
+}
+
+/* IE 6 doesn't support max-height
+* we use height instead, but this forces the menu to always be this tall
+*/
+* html .ui-autocomplete {
+  height: 100px;
+}
+</style>
 
 <div id="upload_crosses_dialog"  class="ui-widget" title="Upload a list of crosses" >
 <br>
@@ -91,7 +106,7 @@ foreach my $role (@roles) {
 </tr>
 
 <tr><td><br></td></tr>
-<tr><td>Program</td><td><select id="program" name="program">
+<tr><td>Breeding Program</td><td><select id="program" name="program">
 <%perl>
 foreach my $program (@programs) {
 	print "<option value=".@$program[0].">".@$program[1]."</option>";
@@ -158,6 +173,8 @@ foreach my $role (@roles) {
 
  jQuery(document).ready(function() {
 
+
+
  jQuery("#cross_upload_spreadsheet_format_info").click( function () { 
  jQuery("#cross_upload_spreadsheet_info_dialog" ).dialog("open");
  });
@@ -169,51 +186,6 @@ foreach my $role (@roles) {
       width: 750,
       autoResize:true,
     });
-
-
-  jQuery("#maternal_parent").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#paternal_parent").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#selfed_parent").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#doubled_haploid_parent").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#open_pollinated_maternal_parent").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#paternal_population").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#bulked_maternal_population").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#bulked_paternal_parent").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#bulked_selfed_population").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#bulked_open_maternal_population").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
-
-  jQuery("#bulked_open_paternal_population").autocomplete( { 
-    source: '/ajax/stock/stock_autocomplete'
-});
 
    jQuery("#create_cross").dialog( {
       autoOpen: false,
@@ -376,6 +348,50 @@ foreach my $role (@roles) {
       else if (!(formatType == "barcode" || formatType == "spreadsheet")) {alert("Please choose a format");return;}
       else { jQuery("#upload_form").submit();}
     }
+
+  jQuery("#maternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#paternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#selfed_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#doubled_haploid_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#open_pollinated_maternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#paternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_maternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_paternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_selfed_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_open_maternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_open_paternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
 
  });
 

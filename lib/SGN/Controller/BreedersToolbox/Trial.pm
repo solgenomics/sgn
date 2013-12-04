@@ -93,7 +93,7 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 	push @years, $year;
     }
     
-    $c->stash->{user_can_modify} = $user->check_roles("submitter");
+    $c->stash->{user_can_modify} = ($user->check_roles("submitter") || $user->check_roles("curator")) ;
 
     $c->stash->{breeding_program} = $breeding_program;
 

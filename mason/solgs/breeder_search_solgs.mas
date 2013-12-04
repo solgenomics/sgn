@@ -1,0 +1,21 @@
+
+<%args>
+$referer => ''
+</%args>
+
+<& /page/page_title.mas, title=>"Search Wizard" &>
+
+<& /breeders_toolbox/breeder_search.mas &>
+
+<br />
+<br />
+
+<button id="goto_gs_button" name="Go to solGS" >Go to back to solGS</button>
+
+<script>
+  jQuery('#goto_gs_button').click( function(){
+  window.location.href='<% $referer %>';
+  });
+</script>
+    
+

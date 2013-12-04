@@ -32,7 +32,7 @@ window.onload = function initialize() {
 	var select1 = jQuery( this ).val();
 	var select4 = jQuery('#select4').val();
 
-	disable_ui();
+	//disable_ui();
 
 	var list = new Array();
 
@@ -48,10 +48,16 @@ window.onload = function initialize() {
 
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
 	    data: {'select1':select1, 'select4': select4 },
+	    beforeSend: function(){
+		disable_ui();
+            },  
+            complete : function(){
+		enable_ui();
+            },  
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
@@ -61,31 +67,33 @@ window.onload = function initialize() {
 		    list = response.list;
 		    stocks = response.stocks;
 		    message = response.message;
+		    c1_html = format_options_list(list);
+		    show_list_total_count('#c1_data_count', list.length);
+		    update_stocks(stocks, message);
+		    
+		    jQuery('#c1_data_text').html(retrieve_sublist(list, 1).join("\n"));
+		    jQuery('#c1_data').html(c1_html);
+		    jQuery('#c2_data').html('');
+		    jQuery('#c3_data').html('');	
+		    jQuery('#select2').html('');
+		    jQuery('#select3').html('');
+
+		    if (isLoggedIn()) { 
+			addToListMenu('c1_to_list_menu', 'c1_data', {
+			    selectText: true,
+			    typeSourceDiv: 'select1' });
+		    }
 		}
 	    }
 	});
 
-	c1_html = format_options_list(list);
-	show_list_total_count('#c1_data_count', list.length);
-	update_stocks(stocks, message);
-	
-	jQuery('#c1_data_text').html(retrieve_sublist(list, 1).join("\n"));
-	jQuery('#c1_data').html(c1_html);
-	jQuery('#c2_data').html('');
-	jQuery('#c3_data').html('');	
-	jQuery('#select2').html('');
-	jQuery('#select3').html('');
-	
-	addToListMenu('c1_to_list_menu', 'c1_data', {
-	    selectText: true,
-	    typeSourceDiv: 'select1' });
 
-	enable_ui();	
+	//enable_ui();	
     });
     
     jQuery('#c1_data').change(function() { 
 
-	disable_ui();
+	//disable_ui();
 	
 	jQuery('#select2').val('please select');
 	jQuery('#select3').html('');
@@ -105,26 +113,32 @@ window.onload = function initialize() {
 
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
 	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select4':select4  },
+	    beforeSend: function(){
+		disable_ui();
+            },  
+            complete : function(){
+		enable_ui();
+            },  
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
 		} 
 		else {
 		    update_stocks(response.stocks, response.message);
-		 
-		    enable_ui();
+		    show_list_total_count('#c1_data_count', jQuery('#c1_data').text().split("\n").length-1, jQuery('#c1_data').val().length);
+		    show_list_total_count('#c2_data_count', 0, 0);
+		    show_list_total_count('#c3_data_count', 0, 0);
+		    //enable_ui();
 		}
 	    }
 	});
 
-	show_list_total_count('#c1_data_count', jQuery('#c1_data').text().split("\n").length-1, jQuery('#c1_data').val().length);
-	show_list_total_count('#c2_data_count', 0, 0);
-	show_list_total_count('#c3_data_count', 0, 0);
-	enable_ui();	
+
+	//enable_ui();	
     });
     
     jQuery('#select2').change(function() { 
@@ -138,14 +152,20 @@ window.onload = function initialize() {
 	var c2_data = '';
 	var stock_data = '';
 
-	disable_ui();
+	//disable_ui();
 
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","), 'select4':select4 },
+	    beforeSend: function(){
+		disable_ui();
+            },  
+            complete : function(){
+		enable_ui();
+            },  
 	    success: function(response) { 
 		if (response.error) { 
 		    alert("ERROR: "+response.error);
@@ -156,16 +176,18 @@ window.onload = function initialize() {
 		    jQuery('#c2_data').html(c2_html);
 		    show_list_total_count('#c2_data_count', response.list.length);
 		    update_stocks(response.stocks);
-		    enable_ui();   		    
+		    if (isLoggedIn()) { 
+			addToListMenu('c2_to_list_menu', 'c2_data', {
+			    selectText: true,
+			    typeSourceDiv: 'select2' });
+		    }
+		    //enable_ui();   		    
 		}	
 	    } 
 	});		
 
-	addToListMenu('c2_to_list_menu', 'c2_data', {
-	    selectText: true,
-	    typeSourceDiv: 'select2' });
 
-	enable_ui();
+	//enable_ui();
     });
 
     jQuery('#c2_data').change(function() { 
@@ -184,13 +206,19 @@ window.onload = function initialize() {
 	var html = format_options(third_choices);
 	jQuery('#select3').html(html);
 
-	disable_ui();
+	//disable_ui();
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
 	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select2':select2, 'c2_data':c2_data.join(","), 'select4':select4  },
+	    beforeSend: function(){
+		disable_ui();
+            },  
+            complete : function(){
+		enable_ui();
+            },  
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
@@ -198,15 +226,16 @@ window.onload = function initialize() {
 		else {
 		    c3_html = format_options_list(response.list);
 		    update_stocks(response.stocks);
-		    enable_ui();
+		    show_list_total_count('#c2_data_count', jQuery('#c2_data').text().split("\n").length-1, jQuery('#c2_data').val().length);
+		    show_list_total_count('#c3_data_count', 0, 0);
+		    //enable_ui();
 		    //jQuery('#c3_data').html(c3_html);
 		}
 	    }
 	});
 
-	show_list_total_count('#c2_data_count', jQuery('#c2_data').text().split("\n").length-1, jQuery('#c2_data').val().length);
-	show_list_total_count('#c3_data_count', 0, 0);
-	enable_ui();
+
+	//enable_ui();
     });
 
     jQuery('#select3').change( function() {
@@ -221,16 +250,22 @@ window.onload = function initialize() {
 
 	jQuery('#stock_data').html('');
 
-	disable_ui();
+	//disable_ui();
 
 	var list;
 
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4 },
+	    beforeSend: function(){
+		disable_ui();
+            },  
+            complete : function(){
+		enable_ui();
+            },  
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
@@ -240,6 +275,13 @@ window.onload = function initialize() {
 		    list = response.list;
 		    update_stocks(response.stocks);
 		    jQuery('#c3_data').html(c3_html);
+		    show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, 0);
+
+		    if (isLoggedIn()) { 
+			addToListMenu('c3_to_list_menu', 'c3_data', {
+			    selectText: true,
+			    typeSourceDiv: 'select3' });
+		    }
 		}
 	    },
 	    error: function(response) { 
@@ -247,14 +289,9 @@ window.onload = function initialize() {
 	    }
 	});
 	
-	show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, 0);
 
-	addToListMenu('c3_to_list_menu', 'c3_data', {
-	    selectText: true,
-	    typeSourceDiv: 'select3' });
-	
 
-	enable_ui();
+	//enable_ui();
     });
     
     jQuery('#c3_data').change(function() { 
@@ -270,21 +307,28 @@ window.onload = function initialize() {
 	
 	var stock_data;
 
-	disable_ui();
+	//disable_ui();
 
     	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    //async: false,
 	    timeout: 30000,
 	    method: 'POST',
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'c3_data': c3_data.join(","), 'select4' : select4 },
+	    beforeSend: function(){
+		disable_ui();
+            },  
+            complete : function(){
+		enable_ui();
+            },  
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
 		} 
 		else {
 		    update_stocks(response.stocks);
-		    enable_ui();
+		    show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, jQuery('#c3_data').val().length);
+		    //enable_ui();
 		}		
 	    },
 	    error: function(response) { 
@@ -292,8 +336,8 @@ window.onload = function initialize() {
 	    }
 	});
 
-	show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, jQuery('#c3_data').val().length);
-	enable_ui();
+
+	//enable_ui();
     });    
 
     jQuery('#select4').change(function() { 
@@ -319,21 +363,33 @@ window.onload = function initialize() {
 	if (c2_data.length > 0) { c2_str = c2_data.join(","); }
 	if (c3_data.length > 0) { c3_str = c3_data.join(","); }
 
-	disable_ui();
+	//disable_ui();
 
     	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    //async: false,
 	    timeout: 30000,
 	    method: 'POST',
 	    data: {'select1':select1, 'c1_data': c1_str, 'select2': select2, 'c2_data': c2_str, 'select3':select3, 'c3_data': c3_str, 'select4' : select4 },
+	    beforeSend: function(){
+		disable_ui();
+            },  
+            complete : function(){
+		enable_ui();
+            },  
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
 		} 
 		else {
 		    update_stocks(response.stocks);
-		    enable_ui();
+
+		    if (isLoggedIn()) { 
+			addToListMenu('add_to_list_menu', 'stock_data', {
+			    selectText: true,
+			    typeSourceDiv: 'select4' });
+		    }
+		    //enable_ui();
 		}		
 	    },
 	    error: function(message) { 
@@ -341,12 +397,8 @@ window.onload = function initialize() {
 	    }
 	});
 
-	addToListMenu('add_to_list_menu', 'stock_data', {
-	    selectText: true,
-	    typeSourceDiv: 'select4' });
-	
 
-	enable_ui();
+	//enable_ui();
     });    
 }
 

@@ -2,6 +2,7 @@
 <%args>
 $trials_by_breeding_project
 $locations
+$breeding_programs
 </%args>
 
 <br />
@@ -10,7 +11,7 @@ $locations
 
 <&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_project_link">Add trial</a>]' &>
     
-    <& /breeders_toolbox/projects.mas, trials_by_breeding_project=>$trials_by_breeding_project,locations=>$locations &>
+    <& /breeders_toolbox/projects.mas, trials_by_breeding_project=>$trials_by_breeding_project,locations=>$locations, breeding_programs=>$breeding_programs,&>
 
 </&>
 

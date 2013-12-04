@@ -2,6 +2,7 @@
 <%args>
 
 $programs => undef
+$breeding_programs => undef
 @locations => ()
 $locations_by_breeding_program => []
 $crosses => undef
@@ -27,7 +28,7 @@ $deleted_phenotype_files => undef
 
 <&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>1, subtitle=>'[<a id="add_project_link">Add trial</a>]' &>
     
-    <& /breeders_toolbox/projects.mas, trials_by_breeding_program=>$programs,locations=>\@locations&>
+    <& /breeders_toolbox/projects.mas, trials_by_breeding_program=>$programs,breeding_programs=>$breeding_programs,locations=>\@locations&>
 
 </&>
 

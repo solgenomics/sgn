@@ -3,15 +3,70 @@
 $accessions
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions'] &>
+
 <br />
 <& /page/page_title.mas, title=>"Manage accessions" &>
 
-
-<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_accessions_link">Upload Accessions</a>]' &>
-    
-    <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
-
+<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add</a>]' &>
+  <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
+    <div>
+      </br>
+      <a href="/search/phenotypes/stock">Search Accessions</a>
+    </div>
 </&>
 
+<div id="add_accessions_dialog" class="ui-widget" title="Add accessions">
+  <div id="list_div">
+    <label id="select_list_label" for="list_div_list_select" style="display: inline-block; width: 200px;">List of accessions to add:
+    </label>
+  </div>
+  <input type="checkbox" id="fuzzy_check"></input>
+  <label for="fuzzy_check">Use fuzzy search</label>
+</div>
 
+<div id="review_fuzzy_matches_dialog" class="ui-widget" title="Fuzzy matches">
+  <b>Accessions were found with similar names.</b>
+  <br><br>
+  <div id="view_fuzzy_matches">
+  </div>
+</div>
 
+<div id="review_found_matches_dialog" class="ui-widget" title="Found accessions">
+  <b>The following accessions already exist and cannot be added:</b>
+  <br><br>
+  <div class="left"> <b>Searched name</b> </div>
+  <div class="right"> <b>Unique name for synonym</b> </div>
+  <div id="view_found_matches">
+  </div>
+</div>
+
+<div id="review_absent_dialog" class="ui-widget" title="Accessions to be added">
+  <label for="species_name_input">Species name for added accessions</label>
+  <input type="text" id="species_name_input"></input>
+  <br><br>
+  <b>The following accessions will be added to the database:</b>
+  <br><br>
+  <div id="view_absent">
+  </div> 
+</div>
+
+<style>
+  div.left {
+    float: left;
+    clear: both;
+  }
+.ui-autocomplete {
+  max-height: 100px;
+  overflow-y: auto;
+  /* prevent horizontal scrollbar */
+  overflow-x: hidden;
+}
+
+/* IE 6 doesn't support max-height
+* we use height instead, but this forces the menu to always be this tall
+*/
+* html .ui-autocomplete {
+  height: 100px;
+}
+</style>
