@@ -12,6 +12,7 @@ $markers_no
 $traits_no
 $uploaded_reference=>''
 $owner=>''
+$acronym
 
 </%args>
 
@@ -71,6 +72,9 @@ $owner=>''
      pop_id  => $pop_id,
 &>
 
+<& population/acronym.mas,
+   acronym => $acronym,
+&>
 
 %}
 % else
