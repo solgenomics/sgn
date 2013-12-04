@@ -3,308 +3,400 @@
 function show_help_dialog(msg_id_num) {
     var msg_id;
     if (msg_id_num == 0) {
-	alert(
-	    "• The best target region score value indicates how good the yellow highlighted region is, taking into account the number of target and off-target n-mers. The closer to 100 the better is the value. In the same way, the custom region score indicates the value of the custom region, represented by the transparent grey rectangle.\n\n"
-	    +"• Set Custom Region button will activate a draggable and resizable transparent grey rectangle to manually select a custom region.\n\n"
-	    +"• Change button will recalculate the results using the new parameters chosen. In case of changing the n-mer size, the algorithm will run Bowtie 2 again, so this process could take a while.\n\n"
-	);
+		alert(
+		    "• The best target region score value indicates how good the yellow highlighted region is, taking into account the number of target and off-target n-mers. The closer to 100 the better is the value. In the same way, the custom region score indicates the value of the custom region, represented by the transparent grey rectangle.\n\n"
+		    +"• Set Custom Region button will activate a draggable and resizable transparent grey rectangle to manually select a custom region.\n\n"
+		    +"• Change button will recalculate the results using the new parameters chosen. In case of changing the n-mer size, the algorithm will run Bowtie 2 again, so this process could take a while.\n\n"
+		);
     }
     if (msg_id_num == 1) {
-	alert(
-	    "• N-mers mapping to the target/s are shown in blue and to off-targets in red. The yellow area highlights the region with the highest score using the selected parameters.\n\n"
-    	    +"• The bottom graph represents in red the score values along the sequence. The score value = 0 is indicated with a green line. Below this line are represented the regions with more off-targets than targets, and the opposite when the score is above the green line.\n\n"
+		alert(
+		    "• N-mers mapping to the target/s are shown in blue and to off-targets in red. The yellow area highlights the region with the highest score using the selected parameters.\n\n"
+	    	    +"• The bottom graph represents in red the score values along the sequence. The score value = 0 is indicated with a green line. Below this line are represented the regions with more off-targets than targets, and the opposite when the score is above the green line.\n\n"
 
-	    +"• Expand graph button will display every n-mer fragment aligned over the query for each subject.\n\n"
-	    +"• Zoom button will zoom in/out the VIGS map representation.\n"
-	);
+		    +"• Expand graph button will display every n-mer fragment aligned over the query for each subject.\n\n"
+		    +"• Zoom button will zoom in/out the VIGS map representation.\n"
+		);
     }
     if (msg_id_num == 2) {
-	alert(
-	    "• This section shows the best or the custom region sequence in FASTA format.\n\n"
-	    +"• The custom region will update as the grey selection rectangle is moved.\n"
-	);
+		alert(
+		    "• This section shows the best or the custom region sequence in FASTA format.\n\n"
+		    +"• The custom region will update as the grey selection rectangle is moved.\n"
+		);
     }
     if (msg_id_num == 3) {
-        alert(
-            "• In this section is shown the query sequence, highlighting in yellow the best target region or the custom region.\n\n"
-	    +"• The custom region will be updated as the grey selection rectangle is moved.\n"
-	);
+		alert(
+			"• In this section is shown the query sequence, highlighting in yellow the best target region or the custom region.\n\n"
+			+"• The custom region will be updated as the grey selection rectangle is moved.\n"
+		);
     }
     if (msg_id_num == 4) {
-        alert(
-            "• Number of n-mer matches and gene functional description are shown for each matched gene.\n\n"
-	    +"• The View link will open a draggable dialog with this information."
-	);
+		alert(
+			"• Number of n-mer matches and gene functional description are shown for each matched gene.\n\n"
+			+"• The View link will open a draggable dialog with this information."
+		);
     }
 }
 
 
 jQuery(document).ready(function () {
-    var score_array;
-    var seq;
-    var seq_length;
-    var bt2_file;
-    var best_start;
-    var best_end;
-    var best_seq;
-    var expr_msg;
-    var expr_f;
-    var ids;
-    var m_aoa;
+	
+	safari_alert();
+	
+	var score_array;
+	var seq;
+	var seq_length;
+	var bt2_file;
+	var best_start;
+	var best_end;
+	var best_seq;
+	var expr_msg;
+	var expr_f;
+	var ids;
+	var m_aoa;
+	var temp_file;
+	var bt2_out = "running";
+	
+	jQuery('#upload_expression_file').click(function () {
+		
+		seq = jQuery("#sequence").val();
+		seq_length = seq.length;
+		si_rna = jQuery("#si_rna").val();
+		f_length = jQuery("#f_length").val();
+		mm = jQuery("#mm").val();
+		db = jQuery("#bt2_db").val();
+		expr_f = jQuery('#expression_file').val();
+		jQuery("#region_square").css("height","0px");
 
-
-    jQuery('#upload_expression_file').click(function () {
-	disable_ui();
-
-        seq = jQuery("#sequence").val();
-	seq_length = seq.length;
-        si_rna = jQuery("#si_rna").val();
-        f_length = jQuery("#f_length").val();
-	mm = jQuery("#mm").val();
-        db = jQuery("#bt2_db").val();
-	expr_f = jQuery('#expression_file').val();
-     	jQuery("#region_square").css("height","0px");
-
-	if (expr_f === '') {
-	    bt2_file = runBt2(seq, si_rna, f_length, mm, db);
-	    res = getResults(1, bt2_file, seq, si_rna, f_length, mm, 0, db, expr_f);    
-  	    score_array = res[0];
-	    seq = res[1];
-	    best_seq = res[2];
-	    expr_msg = res[3];
-	    ids = res[4];
-	    m_aoa = res[5];
-	    hide_ui();
-	} else {
-            jQuery("#upload_expression_form").submit();
-	}
+		if (expr_f === '') {
+			temp_file = get_tmp_name();
+			bt2_file = runBt2(temp_file, seq, si_rna, f_length, mm, db);
+			bt2_out = check_bt2_status(temp_file);
+			
+			var check = function() {
+				bt2_out = check_bt2_status(temp_file);
+				if (bt2_out == "running") {
+					setTimeout(function(){check}, 1000); // check again in a second
+					// alert("try again");
+				}
+			}
+			check();
+			
+			// while (bt2_out == "running") {
+			// 	bt2_out = check_bt2_status(temp_file);
+			// 	// if (bt2_out == "running") {
+			// 		setTimeout(function(){check_bt2_status(temp_file)}, 1000); // check again in a second
+			// 		// alert("try again");
+			// 	// }
+			// }
+			
+			// alert("bt2_out: "+bt2_out);
+			res = getResults(1, bt2_out, seq, si_rna, f_length, mm, 0, db, expr_f);    
+			
+			
+			score_array = res[0];
+			seq = res[1];
+			best_seq = res[2];
+			expr_msg = res[3];
+			ids = res[4];
+			m_aoa = res[5];
+			hide_ui();
+		} else {
+			jQuery("#upload_expression_form").submit();
+		}
     });
 
     jQuery('#upload_expression_form').iframePostForm({
-	json: true,
-	post: function () {
-    	},
-        complete: function (response) {
-            if (response.error) {
-	        alert("The expression file could not be uploaded"+response.error);
-		hide_ui();
-		return;
-            }
-            if (response.success) {
-        	expr_f = response.expr_file;
+		json: true,
+		post: function () {
+		},
+		complete: function (response) {
+			if (response.error) {
+				alert("The expression file could not be uploaded"+response.error);
+				hide_ui();
+				return;
+			}
+			if (response.success) {
+				expr_f = response.expr_file;
 
-            	seq = jQuery("#sequence").val();
-            	si_rna = jQuery("#si_rna").val();
-            	f_length = jQuery("#f_length").val();
-	    	mm = jQuery("#mm").val();
-            	db = jQuery("#bt2_db").val();
+				seq = jQuery("#sequence").val();
+				si_rna = jQuery("#si_rna").val();
+				f_length = jQuery("#f_length").val();
+				mm = jQuery("#mm").val();
+				db = jQuery("#bt2_db").val();
 
-		bt2_file = runBt2(seq, si_rna, f_length, mm, db);
-		res = getResults(1, bt2_file, seq, si_rna, f_length, mm, 0, db, expr_f);
+				bt2_file = runBt2(seq, si_rna, f_length, mm, db);
+				res = getResults(1, bt2_file, seq, si_rna, f_length, mm, 0, db, expr_f);
+				score_array = res[0];
+				seq = res[1];
+				best_seq = res[2];
+				expr_msg = res[3];
+				ids = res[4];
+				m_aoa = res[5];
+
+				hide_ui();
+			}
+		}
+    });
+
+	jQuery('#collapse').click(function () {
+		activateCollapse(score_array,best_seq,seq,expr_msg,ids,m_aoa);
+	});
+
+	jQuery('#zoom').click(function () {
+		activateZoom(score_array,best_seq,seq,expr_msg,ids,m_aoa);
+	});
+
+	jQuery('#set_custom').click(function () {
+		getCustomRegion(score_array,best_seq,seq);
+	});
+
+	jQuery('#change_par').click(function () {
+		res = changeTargets(seq,bt2_file,score_array,seq,best_seq,expr_f,ids,m_aoa);
 		score_array = res[0];
 		seq = res[1];
 		best_seq = res[2];
 		expr_msg = res[3];
-    		ids = res[4];
- 		m_aoa = res[5];
+		ids = res[4];
+		m_aoa = res[5];
+	});
 
-		hide_ui();
-            }
-    	}
-    });
-
-    jQuery('#collapse').click(function () {
-	activateCollapse(score_array,best_seq,seq,expr_msg,ids,m_aoa);
-    });
-
-    jQuery('#zoom').click(function () {
-	activateZoom(score_array,best_seq,seq,expr_msg,ids,m_aoa);
-    });
-
-    jQuery('#set_custom').click(function () {
-	getCustomRegion(score_array,best_seq,seq);
-    });
-
-    jQuery('#change_par').click(function () {
-	res = changeTargets(seq,bt2_file,score_array,seq,best_seq,expr_f,ids,m_aoa);
-	score_array = res[0];
-	seq = res[1];
-	best_seq = res[2];
-	expr_msg = res[3];
-	ids = res[4];
-	m_aoa = res[5];
-    });
-
-    jQuery('#region_square').mouseup(function () {
-	getSquareCoords(score_array,best_seq,seq);
-    });
+	jQuery('#region_square').mouseup(function () {
+		getSquareCoords(score_array,best_seq,seq);
+	});
         
     jQuery('#open_descriptions_dialog').click(function () {
-	jQuery('#dialog_info').replaceWith(jQuery('#target_info').clone());
+		jQuery('#dialog_info').replaceWith(jQuery('#target_info').clone());
 
-        jQuery('#desc_dialog').dialog({
-	    draggable:true,
-	    resizable:false,
-	    width:900,
-	    minWidth:400,
-	    maxHeight:400,
-	    closeOnEscape:true,
-	    title: "Gene Functional annotation",
-	});
+		jQuery('#desc_dialog').dialog({
+			draggable:true,
+			resizable:false,
+			width:900,
+			minWidth:400,
+			maxHeight:400,
+			closeOnEscape:true,
+			title: "Gene Functional annotation",
+		});
     });
 
-    jQuery('#clear_form').click(function () {
-        jQuery("#sequence").val(null);
-        jQuery("#si_rna").val(21);
-        jQuery("#f_length").val(300);
-	jQuery("#mm").val(0);
-        jQuery("#expression_file").val(null);
-    });
-
-    jQuery('#params_dialog').click(function () {
-	alert(
-	    "• Fragment size: "+jQuery("#help_fsize").val()+"\n"
-	    +"• n-mer: "+jQuery("#help_nmer").val()+"\n"
-	    +"• Mismatches: "+jQuery("#help_mm").val()+"\n"
-	    +"• Database: "+jQuery("#db_name").val()+"\n"
-	);
-    });
-
-    function runBt2(seq, si_rna, f_length, mm, db) {
-	var bt2_file;
-	var db_name;
-	jQuery("#no_results").html("");
-
-        //alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", db: "+db+", expr_file: "+expr_file);
-   	jQuery.ajax({
-      	    url: '/tools/vigs/result/',
-      	    async: false,
-      	    method: 'POST',
-      	    data: { 'sequence': seq, 'fragment_size': si_rna, 'seq_fragment': f_length, 'missmatch': mm, 'database': db },
-	    success: function(response) { 
-	        if (response.error) { 
-		    alert("ERROR: "+response.error);
-		    enable_ui();
-		} else {                        
-		    db_name = response.db_name;
-		    bt2_file = response.jobid;
-                }
-            },
-      	    error: function(response) { alert("An error occurred. The service may not be available right now. Bowtie2 could not be executed");enable_ui();}
+	jQuery('#clear_form').click(function () {
+		jQuery("#sequence").val(null);
+		jQuery("#si_rna").val(21);
+		jQuery("#f_length").val(300);
+		jQuery("#mm").val(0);
+		jQuery("#expression_file").val(null);
 	});
 
-	jQuery("#help_fsize").val(f_length);
-	jQuery("#help_nmer").val(si_rna);
-	jQuery("#help_mm").val(mm);
-	jQuery("#db_name").val(db_name);
+	jQuery('#params_dialog').click(function () {
+		alert(
+			"• Fragment size: "+jQuery("#help_fsize").val()+"\n"
+			+"• n-mer: "+jQuery("#help_nmer").val()+"\n"
+			+"• Mismatches: "+jQuery("#help_mm").val()+"\n"
+			+"• Database: "+jQuery("#db_name").val()+"\n"
+		);
+	});
 
-	return bt2_file;
-    }
+    function check_bt2_status(tmp_file) {
+		var bt2_output;
 
-
-    function getResults(status, bt2_res, seq, si_rna, f_length, mm, coverage, db, expr_file) {
-	var score_array;
-	var best_seq;
-	var expr_msg;
-	var ids;
-	var m_aoa;
-	var t_info = "<tr><th>Gene</th><th>Matches</th><th>Functional Description</th></tr>";
-	jQuery("#no_results").html("");
-
-        //alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", coverage: "+coverage+" db: "+db+", expr_file: "+expr_file);
-
-   	jQuery.ajax({
-      	    url: '/tools/vigs/view/',
-      	    async: false,
-      	    method: 'POST',
-      	    data: {'id': bt2_res, 'sequence': seq, 'fragment_size': si_rna, 'seq_fragment': f_length, 'missmatch': mm, 'targets': coverage, 'expr_file': expr_file, 'status': status, 'database': db},
-	    success: function(response) { 
-	        if (response.error) { 
-		     alert("ERROR: "+response.error);
-		     enable_ui();
-		} else {              
-		    //alert("SCORE: "+response.score);      
-
-		    //assign values to global variables
-    		    score_array = response.all_scores;
-		    best_seq = response.best_seq;
-    		    expr_msg = response.expr_msg;
-		    var best_score = response.score;
-		    var best_start = response.cbr_start;
-		    var best_end = response.cbr_end;
-		    seq = response.query_seq;
-		    var seq_length = seq.length;
-		    coverage = response.coverage;
-		    ids = response.ids;
-    		    m_aoa = response.matches_aoa;
-
-
-		    if (+response.score > 0) {
-		     	jQuery("#score_p").html("<b>Best target region score:</b> "+best_score+" &nbsp;&nbsp;(-&infin;&mdash;100)<br />");
-		     	jQuery("#t_num").val(coverage);
-		    } else {
-		        jQuery("#no_results").html("Note: No results found! Try again increasing the number of targets, decreasing the fragment size or modifing other parameters");
-		    }
-		    
-		    //show result sections
-		    jQuery("#hide1").css("display","inline");
-
-		    //assign values to html variables
-		    jQuery("#coverage_val").val(coverage);
-		    jQuery("#seq_length").val(seq_length);
-		    jQuery("#f_size").val(response.f_size);
-		    jQuery("#n_mer").val(si_rna);
-		    jQuery("#align_mm").val(response.missmatch);
-		    jQuery("#best_start").val(best_start);
-		    jQuery("#best_end").val(best_end);
-		    jQuery("#cbr_start").val(best_start);
-		    jQuery("#cbr_end").val(best_end);
-		    jQuery("#best_score").val(best_score);
-		    jQuery("#img_height").val(response.img_height);
-		    
-		    //set collapse and zoom buttons
-		    jQuery("#collapse").val(1);
-		    jQuery("#collapse").html("Expand Graph");
-		    jQuery("#zoom").val(0);
-       		    jQuery("#zoom").html("Zoom In");
-
-		    createMap(1,0,score_array,expr_msg,ids,m_aoa);
-
-		    if (+best_seq.length > 10) {
-		     	jQuery("#best_seq").html("<b>>best_target_region_("+best_start+"-"+best_end+")</b><br />"+best_seq);
-		    } else {
-		        jQuery("#best_seq").html("<b>No results were found</b>");
-		    }
- 		    jQuery("#query").html(seq);
-		    hilite_sequence(best_start,best_end,0);
-		    
-		    var desc="";
-		    var gene_name="";
-
-		    for (var i=0; i<ids.length; i=i+1) {
-			if (ids[i][2].match(/Niben/)) {
-			    desc = ids[i][2].replace(/Niben\d+Scf[\:\.\d]+/,"");
-			    gene_name = ids[i][0];
-			} else if (ids[i][0].match(/Solyc/)) {
-			    desc = ids[i][2].replace(/.+functional_description:/,"");
-			    desc = desc.replace(/\"/g,"");
-			    gene_name = ids[i][0].replace(/lcl\|/,"");
+		jQuery.ajax({
+			url: '/tools/vigs/checking_bt2',
+			async: false,
+			method: 'POST',
+			data: {'tmp_file_name': tmp_file},
+			success: function(response) { 
+				if (response.error) { 
+					alert("ERROR: "+response.error);
+				} else {                        
+					bt2_output = response.bt2_output;
+				}
+			},
+			error: function(response) {
+				alert("An error occurred while checking Bowtie2 output. The service may not be available right now.");
 			}
-		     	    t_info += "<tr><td>"+gene_name+"</td><td style='text-align:right;'>"+ids[i][1]+"</td><td>"+desc+"</td></tr>";
-		    }
-
-		    jQuery("#target_info").html(t_info);
-		    jQuery("#hide2").css("display","inline");
-		    jQuery("#hide3").css("display","inline");
-                }
-            },
-      	    error: function(response) { alert("An error occurred. The service may not be available right now.");enable_ui();}
-	});
-	jQuery("#help_fsize").val(f_length);
-	jQuery("#help_mm").val(mm);
-
-	return [score_array,seq,best_seq,expr_msg,ids,m_aoa];
+		});
+		
+		return bt2_output;
     }
+
+    function get_tmp_name() {
+		var tmp_name;
+
+		jQuery.ajax({
+			url: '/tools/vigs/processing_data',
+			async: false,
+			method: 'POST',
+			data: { },
+			beforeSend: function(){
+				
+			},
+			complete: function(){
+				
+			},
+			success: function(response) { 
+				if (response.error) { 
+					alert("ERROR: "+response.error);
+				} else {                        
+					tmp_name = response.file_name;
+				}
+			},
+			error: function(response) {
+				alert("An error occurred. The service may not be available right now. The temporary files could not be created");
+			}
+		});
+		
+		return tmp_name;
+    }
+
+	function runBt2(temp_file, seq, si_rna, f_length, mm, db) {
+		var bt2_file;
+		var db_name;
+		jQuery("#no_results").html("");
+
+		//alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", db: "+db+", expr_file: "+expr_file);
+		jQuery.ajax({
+			url: '/tools/vigs/result/',
+			// async: false,
+			timeout: 600000,
+			method: 'POST',
+			data: { 'tmp_file_name': temp_file, 'sequence': seq, 'fragment_size': si_rna, 'seq_fragment': f_length, 'missmatch': mm, 'database': db },
+			beforeSend: function(){
+				disable_ui();
+			},
+			complete: function(){
+				// enable_ui();
+			},
+			success: function(response) { 
+				if (response.error) { 
+					alert("ERROR: "+response.error);
+					enable_ui();
+				} else {                        
+					db_name = response.db_name;
+					// bt2_file = response.jobid;
+					jQuery("#help_fsize").val(f_length);
+					jQuery("#help_nmer").val(si_rna);
+					jQuery("#help_mm").val(mm);
+					jQuery("#db_name").val(db_name);
+				}
+			},
+			error: function(response) {
+				alert("An error occurred. The service may not be available right now. Bowtie2 could not be executed");
+				safari_alert();
+				enable_ui();
+			}
+		});
+		// return bt2_file;
+	}
+
+
+	function getResults(status, bt2_res, seq, si_rna, f_length, mm, coverage, db, expr_file) {
+		var score_array;
+		var best_seq;
+		var expr_msg;
+		var ids;
+		var m_aoa;
+		var t_info = "<tr><th>Gene</th><th>Matches</th><th>Functional Description</th></tr>";
+		jQuery("#no_results").html("");
+
+		//alert("seq: "+seq.length+", si_rna: "+si_rna+", f_length: "+f_length+", mm: "+mm+", coverage: "+coverage+" db: "+db+", expr_file: "+expr_file);
+
+		jQuery.ajax({
+			url: '/tools/vigs/view/',
+			async: false,
+			// timeout: 60000,
+			method: 'POST',
+			data: {'id': bt2_res, 'sequence': seq, 'fragment_size': si_rna, 'seq_fragment': f_length, 'missmatch': mm, 'targets': coverage, 'expr_file': expr_file, 'status': status, 'database': db},
+			complete: function(){
+				enable_ui();
+			},
+			success: function(response) { 
+				if (response.error) { 
+					alert("ERROR: "+response.error);
+					enable_ui();
+				} else {
+					//assign values to global variables
+					score_array = response.all_scores;
+					best_seq = response.best_seq;
+					expr_msg = response.expr_msg;
+					var best_score = response.score;
+					var best_start = response.cbr_start;
+					var best_end = response.cbr_end;
+					seq = response.query_seq;
+					var seq_length = seq.length;
+					coverage = response.coverage;
+					ids = response.ids;
+					m_aoa = response.matches_aoa;
+
+					if (+response.score > 0) {
+						jQuery("#score_p").html("<b>Best target region score:</b> "+best_score+" &nbsp;&nbsp;(-&infin;&mdash;100)<br />");
+						jQuery("#t_num").val(coverage);
+					} else {
+						jQuery("#no_results").html("Note: No results found! Try again increasing the number of targets, decreasing the fragment size or modifing other parameters");
+					}
+
+					//show result sections
+					jQuery("#hide1").css("display","inline");
+
+					//assign values to html variables
+					jQuery("#coverage_val").val(coverage);
+					jQuery("#seq_length").val(seq_length);
+					jQuery("#f_size").val(response.f_size);
+					jQuery("#n_mer").val(si_rna);
+					jQuery("#align_mm").val(response.missmatch);
+					jQuery("#best_start").val(best_start);
+					jQuery("#best_end").val(best_end);
+					jQuery("#cbr_start").val(best_start);
+					jQuery("#cbr_end").val(best_end);
+					jQuery("#best_score").val(best_score);
+					jQuery("#img_height").val(response.img_height);
+
+					//set collapse and zoom buttons
+					jQuery("#collapse").val(1);
+					jQuery("#collapse").html("Expand Graph");
+					jQuery("#zoom").val(0);
+					jQuery("#zoom").html("Zoom In");
+
+					createMap(1,0,score_array,expr_msg,ids,m_aoa);
+
+					if (+best_seq.length > 10) {
+						jQuery("#best_seq").html("<b>>best_target_region_("+best_start+"-"+best_end+")</b><br />"+best_seq);
+					} else {
+						jQuery("#best_seq").html("<b>No results were found</b>");
+					}
+					jQuery("#query").html(seq);
+					hilite_sequence(best_start,best_end,0);
+
+					var desc="";
+					var gene_name="";
+
+					for (var i=0; i<ids.length; i=i+1) {
+						if (ids[i][2].match(/Niben/)) {
+							desc = ids[i][2].replace(/Niben\d+Scf[\:\.\d]+/,"");
+							gene_name = ids[i][0];
+						} else if (ids[i][0].match(/Solyc/)) {
+							desc = ids[i][2].replace(/.+functional_description:/,"");
+							desc = desc.replace(/\"/g,"");
+							gene_name = ids[i][0].replace(/lcl\|/,"");
+						}
+						t_info += "<tr><td>"+gene_name+"</td><td style='text-align:right;'>"+ids[i][1]+"</td><td>"+desc+"</td></tr>";
+					}
+
+					jQuery("#target_info").html(t_info);
+					jQuery("#hide2").css("display","inline");
+					jQuery("#hide3").css("display","inline");
+				}
+			},
+			error: function(response) {
+				alert("An error occurred. The service may not be available right now.");
+				safari_alert();
+				enable_ui();
+			}
+		});
+		jQuery("#help_fsize").val(f_length);
+		jQuery("#help_mm").val(mm);
+
+		return [score_array,seq,best_seq,expr_msg,ids,m_aoa];
+	}
 
 
     function createMap(collapsed,zoom,score_array,expr_msg,ids,m_aoa) {
@@ -903,13 +995,15 @@ jQuery(document).ready(function () {
     }
 
     function disable_ui() {
-        jQuery("#status_wheel").css("display","inline");
-        jQuery(".input").prop("disabled", true);
+		jQuery('#working').dialog("open");
+        // jQuery("#status_wheel").css("display","inline");
+        // jQuery(".input").prop("disabled", true);
     }
 
     function enable_ui() {
-        jQuery("#status_wheel").css("display","none");
-        jQuery(".input").prop("disabled", false);
+		jQuery('#working').dialog("close");
+        // jQuery("#status_wheel").css("display","none");
+        // jQuery(".input").prop("disabled", false);
     }
 
 
@@ -921,7 +1015,12 @@ jQuery(document).ready(function () {
 	Effects.hideElement('vigs_usage_content');
 	jQuery(".input").prop("disabled", false);
     }
-
+	
+	function safari_alert() {
+		if (navigator.appVersion.match(/Safari/i) && !navigator.appVersion.match(/chrome/i)) {
+			alert("SGN VIGS Tool does not support Safari, please use a different browser like Firefox (recommended) or Google chrome.");
+		}
+	}
 });
 
 
