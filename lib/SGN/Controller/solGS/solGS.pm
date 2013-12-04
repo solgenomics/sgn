@@ -394,6 +394,9 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?'){
         }
 
         $self->select_traits($c);
+
+        my $acronym = $self->get_acronym_pairs($c);
+        $c->stash->{acronym} = $acronym;
     }
  
     my $pheno_data_file = $c->stash->{phenotype_file};
