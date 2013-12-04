@@ -167,7 +167,7 @@ sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
     my $program_id = shift;
 
     if ($c->user && ($c->user->check_roles("curator"))) { 
-	my $p = CXGN::BreedersToolbox::Project->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+	my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 	$p->delete_breeding_program($program_id); 
 	$c->stash->{rest} = [ 1 ];
     }
