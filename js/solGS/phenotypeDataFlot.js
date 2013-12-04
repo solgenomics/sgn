@@ -4,16 +4,12 @@
 *
 */
 
-//JSAN.use('MochiKit.LoggingPane');
-JSAN.use('jquery');
-JSAN.use('Prototype');
-
 jQuery(window).load( function() {
 
-        var popId       = jQuery('input[name=population_id]').val();
-        var traitId     = jQuery('input[name=trait_id]').val();
-        var comboPopsId = jQuery('input[name=combo_pops_id]').val();
-
+        var popId       = jQuery('#model_id').val();
+        var traitId     = jQuery('#trait_id').val();
+        var comboPopsId = jQuery('#combo_pops_id').val();
+        
         var params;
         if(popId) {
             params = 'pop_id=' + popId + '&trait_id=' + traitId;

@@ -7,7 +7,7 @@
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List' ] &>
 
 
-Search plots using location, year, trial, and trait data. <span id="wheel">[?]</span>
+Search accessions and plots using location, year, trial, and trait data.
   
 <table alt="breeder search" border="0">
 <tr>
@@ -25,7 +25,7 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
 <td>Show 
   <select id="select4">
     <option value="plots">plots</option>
-    <option value="accessions">accessions</option>
+    <option value="accessions" selected="selected">accessions</option>
   </select>
 </td>
 </tr>
@@ -45,7 +45,7 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
 </td>
 
 <td width="200">
-  <select multiple id="stock_data" size="10" style="width:200px; overflow:auto;>"</select>
+  <select multiple id="stock_data" size="10" style="width:200px; overflow:auto;>"</select>	  
 </td>
 
 </tr>
@@ -53,17 +53,14 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
 <td>
 <div id="c1_data_count"></div>
 <div id="c1_to_list_menu"></div>
-<div id="c1_data_text" style="display:none;" >HELLO!</div>
 </td>
 <td>
 <div id="c2_data_count"></div>
 <div id="c2_to_list_menu"></div>
-<div id="c2_data_text" style="visibility:hidden;"></div>
 </td>
 <td>
 <div id="c3_data_count"></div>
 <div id="c3_to_list_menu"></div>
-<div id="c3_data_text" style="visibility:hidden;"></div>
 </td>
 <td>
 <div id="stock_count"></div>
@@ -75,19 +72,31 @@ Search plots using location, year, trial, and trait data. <span id="wheel">[?]</
 
 <script defer="defer">
   jQuery(document).ready(function() { 
-    alert("whazzup?");
-
-    if (!jQuery.cookie("sgn_session_id")) {
+  
+    if (!isLoggedIn()) {
       jQuery('#c1_to_list_menu').html('(log in to use lists)');
       jQuery('#c2_to_list_menu').html('(log in to use lists)');
       jQuery('#c3_to_list_menu').html('(log in to use lists)');
       jQuery('#add_to_list_menu').html('(log in to use lists)');
     }
     else { 
-      addToListMenu('c1_to_list_menu', 'c1_data_text');
-      addToListMenu('c2_to_list_menu', 'c2_data');
-      addToListMenu('c3_to_list_menu', 'c3_data');      
-      addToListMenu('add_to_list_menu', 'stock_data');
+      addToListMenu('c1_to_list_menu', 'c1_data', { 
+        selectText: true,
+        typeSourceDiv: 'select1',
+      });
+      addToListMenu('c2_to_list_menu', 'c2_data', { 
+        selectText: true,
+        typeSourceDiv: 'select2',
+      });
+      addToListMenu('c3_to_list_menu', 'c3_data', { 
+        selectText: true,
+        typeSourceDiv: 'select3',
+       });      
+      addToListMenu('add_to_list_menu', 'stock_data', { 
+        selectText: true,
+        typeSourceDiv: 'select4',
+        }
+      );
     }
  });
 

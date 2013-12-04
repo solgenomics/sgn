@@ -28,10 +28,6 @@
 
 jQuery(document).ready(function() {
 
-    jQuery('#upload_phenotypes_link').click( function() {
-	jQuery('#upload_phenotype_spreadsheet_dialog').dialog("open");
-    });
-
     jQuery('#upload_phenotype_spreadsheet_dialog').dialog( {
 	autoOpen: false,
 	modal: true,
@@ -54,6 +50,10 @@ jQuery(document).ready(function() {
 		}
             } 
         }
+    });
+
+    jQuery('#upload_phenotypes_link').click( function() {
+	jQuery('#upload_phenotype_spreadsheet_dialog').dialog("open");
     });
 
     jQuery('#upload_phenotype_spreadsheet_file_form').iframePostForm({

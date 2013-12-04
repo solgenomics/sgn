@@ -1,0 +1,419 @@
+
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
+<!-- javascript-->
+<!-- <script src="/js/tools/vigs.js" type="text/javascript"></script> -->
+<!-- <script src="/js/jquery/iframe-post-form.js" type="text/javascript"></script> -->
+
+<script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.7.2.min.js"></script>
+
+<script type="text/javascript" src="/js/jqplot/jquery.jqplot.js"></script>
+<script type="text/javascript" src="/js/jqplot/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+<script type="text/javascript" src="/js/jqplot/plugins/jqplot.canvasTextRenderer.min.js"></script>
+<script type="text/javascript" src="/js/jqplot/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
+<script type="text/javascript" src="/js/jqplot/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
+<script type="text/javascript" src="/js/jqplot/plugins/jqplot.barRenderer.js"></script>
+<script type="text/javascript" src="/js/jqplot/plugins/jqplot.pointLabels.min.js"></script>
+<script type="text/javascript" src="/js/jqplot/plugins/jqplot.highlighter.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/js/jqplot/jquery.jqplot.css">
+<link rel="stylesheet" type="text/css" href="/js/jqplot/jquery.jqplot.min.css">
+
+
+
+<& /util/import_javascript.mas, classes => ['Text.Markup', 'sprintf', 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List'] &>
+
+<& /page/page_title.mas, title=>"Expression Tool" &>
+
+
+
+<&| /page/info_section.mas, id=>"expr_input" , title=>"Run Expression Tool", collapsible => 1, collapsed => 0  &>
+<center>
+
+<div id="status_wheel" style="display:none"><img src="/static/documents/img/wheel.gif" /></div>
+<br />
+
+<span title="query gene">Select a gene:</span> 
+<input class="input" id="gene" type="input" value="Solyc00g005050.2" name="input_gene" size="15" />&nbsp; &nbsp; &nbsp;
+
+<button class="input" id="run_tool" value="Run Expression Tool">Get Expression</button>
+
+<br />
+<br />
+
+</center>
+
+
+<&| /page/info_section.mas, id=>"expression_usage" , title=>"Usage", collapsible => 1, collapsed => 0, is_subsection=>"1"  &>
+  <div id="usage_view">
+    <p>
+        1. Select a <b>Gene name</b> an push the 'Get Expression' button to see its expression in the different tissues of the plant<br />
+     </p>
+  </div>
+</&>
+
+</&>
+
+
+<!-- ##################################################################################### -->
+<!-- OUTPUT VIEW -->
+<!-- ##################################################################################### -->
+
+
+<&| /page/info_section.mas, title=>"Results", collapsible => 1, collapsed => 0  &>
+
+<div id="hide_results" style="display:none;">
+
+<&| /page/info_section.mas, title=>"Experiment Info", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
+    <p id="exp_title"></p>
+    <p id="exp_dbxref"></p>
+    <p id="exp_pub"></p>
+    <table id="exp_info_table" cellpadding="2" cellspacing="2" width="100%"></table>
+    <br/>
+</&>
+
+
+<&| /page/info_section.mas, title=>"Interactive Control Panel", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
+    Choose a experiment:&nbsp; &nbsp; <select id="exp_list"></select>
+    <br/>
+    <br/>
+    <br/>
+</&>
+
+
+<&| /page/info_section.mas, title=>"Experiment Map", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
+<div id="my_stage"></div>
+</&>
+
+
+<&| /page/info_section.mas, title=>"Bar Graph", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
+	<!-- <div id="chart_margins" style="width: 700px; height: 400px;">
+		<center> -->
+			<div id="bar_graph" style="width: 700px; height: 400px;"></div>
+		<!-- </center>
+	</div> -->
+</&>
+
+
+<&| /page/info_section.mas, title=>"Experiment Data", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
+    <table id="exp_table" cellpadding="2" cellspacing="2" width="100%"></table>
+</&>
+
+
+</div>
+
+</&>
+
+
+
+<style>
+
+#my_stage {
+    border-style:dashed;
+    border-width:1px;
+    height:600px;
+    width:700px;
+}
+.jqplot-title {
+	color:#000000;
+	font-size:16px;
+	line-height:200%;
+	font-family:'Arial';
+}
+
+#bar_tooltip {
+	background-color:rgb(200,200,200);
+}
+
+</style>
+
+
+<script defer="defer">
+
+$(document).ajaxStart(function(){
+  $('#status_wheel').show();
+});
+
+$(document).ajaxStop(function(){
+  $('#status_wheel').hide();
+});
+
+jQuery(document).ready(function () {
+
+    var data_array_obj;
+    //var expression_table_info;
+    var error_var = 1;
+    var perl_hash_obj = new Object();    
+
+    jQuery('#run_tool').click(function () {
+		//alert("clicking");
+		error_var = 1;
+		query_gene = jQuery('#gene').val();
+
+        jQuery.ajax({
+            url: '/tools/expression/result/',
+            async: false,
+            method: 'POST',
+            data: { 'gene': query_gene },
+            success: function(response) { 
+                if (response.error) { 
+                    alert("ERROR: "+response.error);
+		    		error_var = 1;
+                } else {
+					error_var = 0;
+					data_array_obj = response.all_exp_design;
+			  
+				// alert(dump(data_array_obj));
+			  
+		      //perl_hash_obj = response.hash;
+
+		      //alert("hash_name: "+perl_hash_obj["name"]);
+		      //alert("hi: "+response.gene_name);
+                }
+            },
+            error: function(response) { alert("An error occurred. The service may not be available right now.");error_var = 1;}
+        });
+	
+
+
+
+		if (!error_var) {
+	    
+	//	    var designs_array = Object.keys(data_array_obj);
+	//	    for (var n=0; n<designs_array.length; n=n+1) {
+	//	    	    jQuery('#exp_list').append('<option>'+designs_array[n]+'</option>')
+	//	    }
+
+	//	    alert("design names: "+designs_array);
+
+
+		    var data_array = data_array_obj[0]["data"];
+		    var experiment_name = data_array_obj[0]["name"];
+		    var experiment_desc = data_array_obj[0]["description"];
+		    var experiment_pubs = data_array_obj[0]["pub"];
+		    var experiment_dbxrefs = data_array_obj[0]["dbxref"];
+			
+			
+	        jQuery('#exp_title').html("<b>Name:</b> "+experiment_name+"<br/><b>Description:</b> "+experiment_desc);
+	        jQuery('#exp_dbxref').html("<b>External Links:</b> "+experiment_dbxrefs);
+	        jQuery('#exp_pub').html("<b>Publications:</b> "+experiment_pubs);
+			
+			// alert(dump(data_array));
+			
+		    hide_ui();
+		    show_hiden_divs();
+		    display_pictures();
+		    print_bar_chart(data_array);
+	    
+		    var expression_table_info = "";
+		    var experiment_info = "";
+		    //alert("data: "+data_array.length);
+	        expression_table_info += "<tr style='text-align:center;'><th>Experiment</th><th>Replicates</th><th>FPKM</th><th>FPKM_lo</th><th>FPKM_hi</th></tr>";
+	        experiment_info += "<tr style='text-align:center;'><th>Experiment Conditions</th><th>Description</th><th>External Link</th></tr>";
+
+		    for (var i=0; i<data_array.length; i=i+1) {
+		        experiment_info += "<tr><td><a href='/gem/experiment.pl?id="+data_array[i]["id"]+"' target='_blank'>"+data_array[i]["name"]+"</a></td>";
+			    experiment_info += "<td style='text-align:center;'>"+data_array[i]["exp_description"]+"</td>";
+			    experiment_info += "<td style='text-align:center;'>"+data_array[i]["exp_links"]+"</td>";
+
+		        expression_table_info += "<tr><td>"+data_array[i]["name"]+"</td>";
+			    expression_table_info += "<td style='text-align:center;'>"+data_array[i]["replicates"]+"</td>";
+			    expression_table_info += "<td style='text-align:center;'>"+data_array[i]["fpkm"]+"</td>";
+			    // expression_table_info += "<td style='text-align:center;'>"+data_array[i]["median"]+"</td>";
+			    expression_table_info += "<td style='text-align:center;'>"+data_array[i]["fpkm_lo"]+"</td>";
+			    expression_table_info += "<td style='text-align:center;'>"+data_array[i]["fpkm_hi"]+"</td>";
+				expression_table_info += "</tr>";
+			}
+	        jQuery('#exp_table').html(expression_table_info);
+	        jQuery('#exp_info_table').html(experiment_info);
+		}
+    });
+
+    function hide_ui() {
+	Effects.swapElements('expr_input_offswitch', 'expr_input_onswitch');
+        Effects.hideElement('expr_input_content');
+    }
+
+    function show_hiden_divs() {
+       	jQuery("#hide_results").css("display","inline");
+    }
+
+
+
+
+
+
+
+    function print_bar_chart(data_a) {
+		jQuery("#bar_graph").empty();
+		
+		var exp_cond = [];
+	    var bar_data = [];
+	    var error_bar_obj = new Object(); //the error values must be the percentage of the expression 0.1=10%
+	    var error_bar_data = [];
+		var min_serie = [];
+		var max_serie = [];
+		
+	    for (var i=0; i<data_a.length; i=i+1) {
+			var one_exp = []
+			var one_mean = parseFloat(data_a[i]["fpkm"]); 
+			
+			exp_cond.push(data_a[i]["name"]);
+			bar_data.push(one_mean);
+			
+			var one_sd =(parseFloat(data_a[i]["fpkm_lo"]));
+			var one_cv =(parseFloat(data_a[i]["fpkm_hi"]));
+			// var min_ser = (one_mean - one_sd).toFixed(2);
+			// var max_ser = (one_mean + one_sd).toFixed(2);
+			// min_serie.push(parseFloat(min_ser));
+			// max_serie.push(parseFloat(max_ser));
+			
+			var min_err = ((one_mean - one_sd)/one_mean).toFixed(2);
+			var max_err = ((one_cv - one_mean)/one_mean).toFixed(2);
+			
+			// var min_err = (one_sd/one_mean).toFixed(2);
+			// var max_err = (one_sd/one_mean).toFixed(2);
+			
+		    error_bar_obj = new Object();
+			error_bar_obj.min=parseFloat(min_err);
+			error_bar_obj.max=parseFloat(max_err);
+
+			error_bar_data.push(error_bar_obj);
+		}
+		
+
+		// alert(dump(error_bar_data));
+
+
+
+
+
+	    var plot1 = $.jqplot('bar_graph', [bar_data], {
+			title: 'Expression Data',
+			animate: true,
+	        seriesDefaults:{
+	            renderer:$.jqplot.BarRenderer,
+	            rendererOptions: {
+					fillToZero: true,
+					errorBarWidth: 1,
+					errorBarColor: "black",
+					errorData: [error_bar_data],
+					errorTextData: [""],
+					barDirection: 'vertical',
+					animation: {
+						speed: 1000
+					},
+				},
+	        },
+			seriesColors: ['#20608E'],
+		    axesDefaults: {
+		           tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
+		       },
+	        axes: {
+	            // Use a category axis on the x axis and use our custom ticks.
+	            xaxis: {
+	                renderer: $.jqplot.CategoryAxisRenderer,
+	                ticks: exp_cond,
+					tickOptions: {
+						angle: -45,
+						showGridline: false,
+						fontSize: '12pt',
+						textColor: 'black',
+						fontFamily: 'Arial'
+					}
+	            },
+	            // Pad the y axis just a little so bars can get close to, but
+	            // not touch, the grid boundaries.  1.2 is the default padding.
+				yaxis: {
+					// label:'Expression (units)',
+					pad: 1.2,
+					min: 0,
+		            tickOptions: {
+		            	angle: 0,
+						formatString: "%#.2f",
+						fontSize: '10pt',
+						textColor: 'black',
+						fontFamily: 'Arial'
+		            },
+					labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+				}
+	        },
+			grid: {
+				background: "white",
+				borderColor: "black",
+			},
+		    highlighter: {
+				show: true,
+				showMarker:false,
+				tooltipAxes: 'y',
+				
+				
+				formatString:'<div id="bar_tooltip" class="jqplot-highlighter"><table>\
+				<tr><td>Expression val:</td><td>%s</td></tr> \
+								  </table></div>'
+		    }
+	    });
+		
+		
+    }
+
+
+
+
+function dump(arr,level) {
+	var dumped_text = "";
+	if(!level) level = 0;
+	
+	//The padding given at the beginning of the line.
+	var level_padding = "";
+	for(var j=0;j<level+1;j++) level_padding += "    ";
+	
+	if(typeof(arr) == 'object') { //Array/Hashes/Objects 
+		for(var item in arr) {
+			var value = arr[item];
+			
+			if(typeof(value) == 'object') { //If it is an array,
+				dumped_text += level_padding + "'" + item + "' ...\n";
+				dumped_text += dump(value,level+1);
+			} else {
+				dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
+			}
+		}
+	} else { //Stings/Chars/Numbers etc.
+		dumped_text = "===>"+arr+"<===("+typeof(arr)+")";
+	}
+	return dumped_text;
+}
+
+
+
+
+
+
+    function display_pictures() {
+        var stage = new Kinetic.Stage({
+    	    container: "my_stage",
+      	    width: 700,
+      	    height: 600
+    	});
+    	var layer = new Kinetic.Layer();
+        var plantObj = new Image();
+    	plantObj.src = "/static/documents/img/expression_tool/black_tomato_plant.png";
+
+        // tomato plant img
+      	var tomato_plant = new Kinetic.Image({
+            image: plantObj,
+            x: 0,
+            y: 0,
+            width: 210,
+            height: 300,
+        });
+        layer.add(tomato_plant);
+      	stage.add(layer);
+    }
+
+});
+
+</script>
+

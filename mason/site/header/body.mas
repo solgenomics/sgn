@@ -1,3 +1,4 @@
+
 <div id="outercontainer">
   <a name="top"></a>
 
@@ -18,6 +19,19 @@
 <div id="list_item_dialog" overflow="auto" >
 </div>
 
+<div id="working" style="text-align : center; cursor : wait;">
+  <img src="/img/wheel.gif" />
+</div>
+
+
+<div id="login_window">
+  <table>
+    <tr><td>Username</td><td><input type="text" size="20" id="username_field" name="username_field" /></td></tr>
+    <tr><td>Password</td><td><input type="password" size="20" id="password_field" name="password_field" /></td></tr>
+  </table>  
+</div>  
+
+  
     <a href="/"><img id="sgntext" src="/documents/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="Sol Genomics Network Home" /></a>
 
   </td>
@@ -71,7 +85,20 @@
 
 <script defer="defer">
 jQuery(document).ready( function() { 
+
+  setUpLogin();
   setUpLists();
+
+    jQuery('#working').dialog( { 
+      height: 100,
+      width:  50,
+      modal: true,
+      autoOpen: false,
+      closeOnEscape: false,
+      open: function() { jQuery(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide(); },
+      title: 'Working...'
+    });
+
 });
 
 </script>

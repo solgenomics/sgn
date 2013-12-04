@@ -5,7 +5,7 @@
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
   <link rel="stylesheet" href="/css/sgn.css" type="text/css" />
-  <link rel="stylesheet" href="/css/jquery-sgn-theme/jquery-ui-1.8.4.custom.css" type="text/css" />
+  <link rel="stylesheet" href="/css/jquery-sgn-theme/jquery-ui-1.10.3.custom.css" type="text/css" />
   <link rel="stylesheet" href="/css/colorbox/colorbox.css" type="text/css" />
 
   <link rel="search" type="application/opensearchdescription+xml" title="SGN Sol Search" href="/documents/sgn_sol_search.xml" />
@@ -16,6 +16,6 @@
      MochiKit = {__export__: false};
   </script>
 
-  <& /util/import_javascript.mas, classes => [qw[ sgn jquery.simpletooltip CXGN.Effects CXGN.Page.FormattingHelpers CXGN.UserPrefs CXGN.Page.Toolbar CXGN.List jquery.cookie]] &>
+  <& /util/import_javascript.mas, classes => [qw[ sgn jquery.simpletooltip CXGN.Effects CXGN.Page.FormattingHelpers CXGN.UserPrefs CXGN.Page.Toolbar CXGN.List jquery.cookie CXGN.Login ]] &>
 
   <!-- INSERT_HEAD_POST_HTML -->

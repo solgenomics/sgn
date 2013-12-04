@@ -1,6 +1,6 @@
 <% $c->view('Toolbar')->as_html %>
 
-<& /util/import_javascript.mas, classes => ['CXGN.Page.Toolbar','jquery'] &>
+<& /util/import_javascript.mas, classes => ['CXGN.Page.Toolbar','jquery', 'jquerymigrate'] &>
 <script language="JavaScript" type="text/javascript">
 jQuery( function() {
   CXGN.Page.Toolbar.addmenu('search');
