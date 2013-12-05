@@ -39,33 +39,33 @@ __PACKAGE__->config(
 our %urlencode;
 
 # function to set a temporary file name for bowtie2 input and output, needed to run an asycronize AJAX request.
-sub get_bt2_file_name :Path('/tools/vigs/processing_data') :Args(0) { 
-	my ($self, $c) = @_;
-	
-	# generate temporary file name for analysis with Bowtie2.
-	my ($seq_fh, $seq_filename) = tempfile("vigsXXXXXX", DIR=> $c->config->{'cluster_shared_tempdir'},);
-	
-	# return the name
-    $c->stash->{rest} = {file_name=>$seq_filename};
-}
+# sub get_bt2_file_name :Path('/tools/vigs/processing_data') :Args(0) { 
+# 	my ($self, $c) = @_;
+# 	
+# 	# generate temporary file name for analysis with Bowtie2.
+# 	my ($seq_fh, $seq_filename) = tempfile("vigsXXXXXX", DIR=> $c->config->{'cluster_shared_tempdir'},);
+# 	
+# 	# return the name
+#     $c->stash->{rest} = {file_name=>$seq_filename};
+# }
 
 # Check if Bowtie2 has finished
-sub check_bt2_status :Path('/tools/vigs/checking_bt2') :Args(0) { 
-	my ($self, $c) = @_;
-	my $bt2_output = "running";
-	my $seq_filename = $c->req->param("tmp_file_name");
-	
-	my $path = $seq_filename.".bt2.out";
-	
-	if (-e $path) {
-		# print STDERR "File exists!\n";
-		$bt2_output = basename($seq_filename);
-	} else {
-		# print STDERR "Not ready yet!\n";
-	}
-	
-	$c->stash->{rest} = {bt2_output=>$bt2_output};
-}
+# sub check_bt2_status :Path('/tools/vigs/checking_bt2') :Args(0) { 
+# 	my ($self, $c) = @_;
+# 	my $bt2_output = "running";
+# 	my $seq_filename = $c->req->param("tmp_file_name");
+# 	
+# 	my $path = $seq_filename.".bt2.out";
+# 	
+# 	if (-e $path) {
+# 		# print STDERR "File exists!\n";
+# 		$bt2_output = basename($seq_filename);
+# 	} else {
+# 		# print STDERR "Not ready yet!\n";
+# 	}
+# 	
+# 	$c->stash->{rest} = {bt2_output=>$bt2_output};
+# }
 
 # check input data, create Bowtie2 input data and run Bowtie2
 sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) { 
@@ -132,6 +132,9 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		$c->stash->{rest} = {error => $user_errors};
 		return;
 	}
+	
+	# generate temporary file name for analysis with Bowtie2.
+	my ($seq_fh, $seq_filename) = tempfile("vigsXXXXXX", DIR=> $c->config->{'cluster_shared_tempdir'},);
 
     # Lets create the fragment fasta file
     my $query = Bio::Seq->new(-seq=>$sequence, -id=> $id || "temp");
@@ -329,20 +332,20 @@ sub view :Path('/tools/vigs/view') Args(0) {
 
     # return variables
     $c->stash->{rest} = {score => sprintf("%.2f",($regions[1]*100/$seq_fragment)/$coverage),
-			 coverage => $coverage,
-			 f_size => $seq_fragment,
-			 cbr_start => ($regions[4]+1),
-			 cbr_end => ($regions[5]+1),
-                         expr_msg => $expr_msg,
-                         ids => [ $vg->subjects_by_match_count($bdb_full_name, $vg->matches()) ],
-                         best_seq => $seq_str,
-			 query_seq => $query->seq(),
-                         all_scores => $regions[2],
-                         matches_aoa => $matches_AoA,
-			 missmatch => $missmatch,
-                         img_height => ($img_height+52)};
-#                        $c->stash->{rest} = {fragment_size => $fragment_size};
-#                        $c->stash->{rest} = {seq_filename => basename($seq_filename)};
+						coverage => $coverage,
+						f_size => $seq_fragment,
+						cbr_start => ($regions[4]+1),
+						cbr_end => ($regions[5]+1),
+						expr_msg => $expr_msg,
+						ids => [ $vg->subjects_by_match_count($bdb_full_name, $vg->matches()) ],
+						best_seq => $seq_str,
+						query_seq => $query->seq(),
+						all_scores => $regions[2],
+						matches_aoa => $matches_AoA,
+						missmatch => $missmatch,
+						img_height => ($img_height+52)};
+						# $c->stash->{rest} = {fragment_size => $fragment_size};
+						# $c->stash->{rest} = {seq_filename => basename($seq_filename)};
 }
 
 sub hash2param {
