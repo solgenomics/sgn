@@ -54,7 +54,7 @@ sub add_crosses {
 
   @crosses = @{$self->get_crosses()};
 
-  foreach my $cross (@crosses) {
+  foreach my $pedigree (@crosses) {
     my $female_parent_name;
     my $male_parent_name;
     my $female_parent;
@@ -98,7 +98,7 @@ sub validate_pedigrees {
   @crosses = @{$self->get_crosses()};
 
   foreach my $cross (@crosses) {
-    my $validated_crosses = $self->_validate_crosses($crosses);
+    my $validated_crosses = $self->_validate_crosses($cross);
 
     if (!$validated_crosses) {
       $invalid_cross_count++;

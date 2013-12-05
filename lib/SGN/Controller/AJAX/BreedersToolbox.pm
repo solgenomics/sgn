@@ -114,6 +114,7 @@ sub get_breeding_programs : Path('/breeders/programs') Args(0) {
     $c->stash->{rest} = $breeding_programs;
 }
 
+
 sub associate_breeding_program_with_trial : Path('/breeders/program/associate') Args(2) { 
     my $self = shift;
     my $c = shift;
@@ -159,5 +160,22 @@ sub new_breeding_program :Path('/breeders/program/new') Args(0) {
     }
 
 }
+
+sub delete_breeding_program :Path('/breeders/program/delete') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $program_id = shift;
+
+    if ($c->user && ($c->user->check_roles("curator"))) { 
+	my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+	$p->delete_breeding_program($program_id); 
+	$c->stash->{rest} = [ 1 ];
+    }
+    else { 
+	$c->stash->{rest} = { error => "You don't have sufficient privileges to delete breeding programs." };
+    }
+}
+	
+	    
 
 1;
