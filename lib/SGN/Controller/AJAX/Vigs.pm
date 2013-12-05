@@ -38,14 +38,45 @@ __PACKAGE__->config(
 
 our %urlencode;
 
+# function to set a temporary file name for bowtie2 input and output, needed to run an asycronize AJAX request.
+# sub get_bt2_file_name :Path('/tools/vigs/processing_data') :Args(0) { 
+# 	my ($self, $c) = @_;
+# 	
+# 	# generate temporary file name for analysis with Bowtie2.
+# 	my ($seq_fh, $seq_filename) = tempfile("vigsXXXXXX", DIR=> $c->config->{'cluster_shared_tempdir'},);
+# 	
+# 	# return the name
+#     $c->stash->{rest} = {file_name=>$seq_filename};
+# }
 
-sub calculate :Path('/tools/vigs/result') :Args(0) { 
+# Check if Bowtie2 has finished
+# sub check_bt2_status :Path('/tools/vigs/checking_bt2') :Args(0) { 
+# 	my ($self, $c) = @_;
+# 	my $bt2_output = "running";
+# 	my $seq_filename = $c->req->param("tmp_file_name");
+# 	
+# 	my $path = $seq_filename.".bt2.out";
+# 	
+# 	if (-e $path) {
+# 		# print STDERR "File exists!\n";
+# 		$bt2_output = basename($seq_filename);
+# 	} else {
+# 		# print STDERR "Not ready yet!\n";
+# 	}
+# 	
+# 	$c->stash->{rest} = {bt2_output=>$bt2_output};
+# }
+
+# check input data, create Bowtie2 input data and run Bowtie2
+sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) { 
     my ($self, $c) = @_;
     
     # to store erros as they happen
     my @errors; 
  
     # get variables from catalyst object
+    my $seq_filename = $c->req->param("tmp_file_name");
+	
     my $params = $c->req->body_params();
     my $sequence = $c->req->param("sequence");
     my $fragment_size = $c->req->param("fragment_size");
@@ -55,64 +86,63 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 
     # clean the sequence and check if there are more than one sequence pasted
     if ($sequence =~ tr/>/>/ > 1) {
-	push ( @errors , "Please, paste only one sequence.\n");	
+		push ( @errors , "Please, paste only one sequence.\n");	
     }
     my $id = "pasted_sequence";
     my @seq = [];
 
     if ($sequence =~ /^>/) {
-	$sequence =~ s/[ \,\-\.\#\(\)\%\'\"\[\]\{\}\:\;\=\+\\\/]/_/gi;
-        @seq = split(/\s/,$sequence);
+		$sequence =~ s/[ \,\-\.\#\(\)\%\'\"\[\]\{\}\:\;\=\+\\\/]/_/gi;
+		@seq = split(/\s/,$sequence);
 
-	if ($seq[0] =~ />(\S+)/) {
-	    shift(@seq);
-	    $id = $1;
-	}
-	$sequence = join("",@seq);
+		if ($seq[0] =~ />(\S+)/) {
+		    shift(@seq);
+		    $id = $1;
+		}
+		$sequence = join("",@seq);
     }
     else {
-	$sequence =~ s/[^ACGT]+//gi;
+		$sequence =~ s/[^ACGT]+//gi;
     }
 
     # Check input sequence and fragment size    
     if (length($sequence) < 100) { 
-	push ( @errors , "You should paste a valid sequence (100 bp or longer) in the VIGS Tool Sequence window.\n");	
+		push ( @errors , "You should paste a valid sequence (100 bp or longer) in the VIGS Tool Sequence window.\n");	
     }
     elsif ($sequence =~ /([^ACGT]+)/i) {
-	push (@errors, "Unexpected characters found in the sequence: $1\n");	
+		push (@errors, "Unexpected characters found in the sequence: $1\n");	
     }
     elsif (length($sequence) < $fragment_size) {
-	push (@errors, "n-mer size must be lower or equal to sequence length.\n");
+		push (@errors, "n-mer size must be lower or equal to sequence length.\n");
     }
 
     if (!$fragment_size ||$fragment_size < 18 || $fragment_size > 30 ) { 
-	push (@errors, "n-mer size ($fragment_size) must be a value between 18-30 bp.\n");
+		push (@errors, "n-mer size ($fragment_size) must be a value between 18-30 bp.\n");
     }
     if (!$seq_fragment || $seq_fragment < 100 || $seq_fragment > length($sequence)) {
-	push (@errors, "Wrong fragment size ($seq_fragment), it must be higher than 100 bp and lower than sequence length\n");
+		push (@errors, "Wrong fragment size ($seq_fragment), it must be higher than 100 bp and lower than sequence length\n");
     }
     if ($missmatch =~ /[^\d]/ || $missmatch < 0 || $missmatch > 3 ) { 
-	push (@errors, "miss-match value ($missmatch) must be between 0-3\n");
+		push (@errors, "miss-match value ($missmatch) must be between 0-3\n");
     }
 
     # Send error message to the web if something is wrong
-    if (scalar (@errors) > 0){
-	my $user_errors = join("<br />", @errors);
-	$c->stash->{rest} = {error => $user_errors};
-	return;
-    }
-
-    # generate a file with fragments of 'sequence' of length 'fragment_size'
-    # for analysis with Bowtie2.
-    my ($seq_fh, $seq_filename) = tempfile("vigsXXXXXX", DIR=> $c->config->{'cluster_shared_tempdir'},);
+	if (scalar (@errors) > 0){
+		my $user_errors = join("<br />", @errors);
+		$c->stash->{rest} = {error => $user_errors};
+		return;
+	}
+	
+	# generate temporary file name for analysis with Bowtie2.
+	my ($seq_fh, $seq_filename) = tempfile("vigsXXXXXX", DIR=> $c->config->{'cluster_shared_tempdir'},);
 
     # Lets create the fragment fasta file
     my $query = Bio::Seq->new(-seq=>$sequence, -id=> $id || "temp");
     my $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$seq_filename.".fragments");    
     foreach my $i (1..$query->length()-$fragment_size) { 
-	my $subseq = $query->subseq($i, $i + $fragment_size -1);
-	my $subseq_obj = Bio::Seq->new(-seq=>$subseq, -display_id=>"tmp_$i");
-	$io->write_seq($subseq_obj);
+		my $subseq = $query->subseq($i, $i + $fragment_size -1);
+		my $subseq_obj = Bio::Seq->new(-seq=>$subseq, -display_id=>"tmp_$i");
+		$io->write_seq($subseq_obj);
     }
 
     $c->stash->{query} = $query;
@@ -132,47 +162,41 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     print STDERR "DATABASE SELECTED: $database\n";
     my $bdb = CXGN::BlastDB->from_id($database);
     
-    #my $basename = $bdb->full_file_basename;
     my $basename = $c->config->{blast_db_path};
     my $database = $bdb->file_base;
     my $database_fullpath = File::Spec->catfile($basename, $database);
-#    print STDERR "BASENAME: $basename\n";
     my $database_title = $bdb->title;
 
-    # THIS IS A TMP VARIABLE FOR DEVELOPING
-#    $basename = "/home/noe/cxgn/blast_dbs/niben_bt2_index";
     
     # run bowtie2
-#    my $bowtie2_path = $c->config->{bowtie2_path};
     my $bowtie2_path = $c->config->{cluster_shared_bindir};
     
-    my @command = (File::Spec->catfile($bowtie2_path, "bowtie2"), 
-	   " --threads 1", 
-	   " --very-fast", 
-	   " --no-head", 
-	   " --end-to-end", 
-	   " -a", 
-	   " --no-unal", 
-	   " -x ". $database_fullpath,
-	   " -f",
-	   " -U ". $query_file.".fragments",
-	   " -S ". $query_file.".bt2.out",
+	my @command = (File::Spec->catfile($bowtie2_path, "bowtie2"), 
+		" --threads 1", 
+		" --very-fast", 
+		" --no-head", 
+		" --end-to-end", 
+		" -a", 
+		" --no-unal", 
+		" -x ". $database_fullpath,
+		" -f",
+		" -U ". $query_file.".fragments",
+		" -S ". $query_file.".bt2.out",
 	);
 
     print STDERR "Bowtie2 COMMAND: ".(join ", ",@command)."\n";
     
     my $err = system(@command);
 
-    if ($err) {
-        $c->stash->{rest} = {error => "Bowtie2 execution failed"};
-    }
+	if ($err) {
+		$c->stash->{rest} = {error => "Bowtie2 execution failed"};
+	}
 
     $id = $urlencode{basename($seq_filename)};
     
     $c->stash->{rest} = {jobid =>basename($seq_filename),
                          seq_length => length($sequence),
                          db_name => $database_title,
-#			 expr_file => $expr_file,
     };
 
 }
@@ -308,20 +332,20 @@ sub view :Path('/tools/vigs/view') Args(0) {
 
     # return variables
     $c->stash->{rest} = {score => sprintf("%.2f",($regions[1]*100/$seq_fragment)/$coverage),
-			 coverage => $coverage,
-			 f_size => $seq_fragment,
-			 cbr_start => ($regions[4]+1),
-			 cbr_end => ($regions[5]+1),
-                         expr_msg => $expr_msg,
-                         ids => [ $vg->subjects_by_match_count($bdb_full_name, $vg->matches()) ],
-                         best_seq => $seq_str,
-			 query_seq => $query->seq(),
-                         all_scores => $regions[2],
-                         matches_aoa => $matches_AoA,
-			 missmatch => $missmatch,
-                         img_height => ($img_height+52)};
-#                        $c->stash->{rest} = {fragment_size => $fragment_size};
-#                        $c->stash->{rest} = {seq_filename => basename($seq_filename)};
+						coverage => $coverage,
+						f_size => $seq_fragment,
+						cbr_start => ($regions[4]+1),
+						cbr_end => ($regions[5]+1),
+						expr_msg => $expr_msg,
+						ids => [ $vg->subjects_by_match_count($bdb_full_name, $vg->matches()) ],
+						best_seq => $seq_str,
+						query_seq => $query->seq(),
+						all_scores => $regions[2],
+						matches_aoa => $matches_AoA,
+						missmatch => $missmatch,
+						img_height => ($img_height+52)};
+						# $c->stash->{rest} = {fragment_size => $fragment_size};
+						# $c->stash->{rest} = {seq_filename => basename($seq_filename)};
 }
 
 sub hash2param {
