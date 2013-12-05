@@ -89,12 +89,103 @@ $(document).ready(function () {
 
 		$('#desc_dialog').dialog({
 			draggable:true,
-			resizable:false,
+			resizable:true,
 			width:900,
 			minWidth:400,
 			maxHeight:400,
 			closeOnEscape:true,
 			title: "Gene Functional annotation",
+		});
+	});
+
+	$('#params_dialog').click(function () {
+		
+		$('#params').html("&bull;&nbsp;<b>Fragment size: </b>"+$("#help_fsize").val()+"<br /> \
+		&bull;&nbsp;<b>n-mer: </b>"+$("#help_nmer").val()+"<br /> \
+		&bull;&nbsp;<b>Mismatches: </b>"+$("#help_mm").val()+"<br />\
+		&bull;&nbsp;<b>Database: </b>"+$("#db_name").val());
+
+		$('#params').dialog({
+			draggable:true,
+			resizable:false,
+			width:500,
+			closeOnEscape:true,
+			title: "Parameters used",
+		});
+	});
+
+	$('#help_dialog_1').click(function () {
+		
+		$('#help_dialog_tmp').html("&bull;&nbsp;The best target region score value indicates how good the yellow highlighted region is, taking into account the number of target and off-target n-mers. \
+			The closer to 100 the better is the value. In the same way, the custom region score indicates the value of the custom region, represented by the transparent grey rectangle.<br/> \
+			&bull;&nbsp;Set Custom Region button will activate a draggable and resizable transparent grey rectangle to manually select a custom region.<br/> \
+			&bull;&nbsp;Change button will recalculate the results using the new parameters chosen. In case of changing the n-mer size, the algorithm will run Bowtie 2 again, so this process could take a while.");
+
+		$('#help_dialog_tmp').dialog({
+			draggable:true,
+			resizable:false,
+			width:500,
+			closeOnEscape:true,
+			title: "Modify parameters help",
+		});
+	});
+
+	$('#help_dialog_2').click(function () {
+		
+		$('#help_dialog_tmp').html("&bull;&nbsp;N-mers mapping to the target/s are shown in blue and to off-targets in red. The yellow area highlights the region with the highest score using the selected parameters<br/> \
+			&bull;&nbsp;The bottom graph represents in red the score values along the sequence. The score value = 0 is indicated with a green line. \
+			Below this line are represented the regions with more off-targets than targets, and the opposite when the score is above the green line.<br/> \
+			&bull;&nbsp;Expand graph button will display every n-mer fragment aligned over the query for each subject.<br /> \
+			&bull;&nbsp;Zoom button will zoom in/out the VIGS map representation.");
+
+		$('#help_dialog_tmp').dialog({
+			draggable:true,
+			resizable:false,
+			width:500,
+			closeOnEscape:true,
+			title: "Distribution of n-mers help",
+		});
+	});
+
+	$('#help_dialog_3').click(function () {
+		
+		$('#help_dialog_tmp').html("&bull;&nbsp;This section shows the best or the custom region sequence in FASTA format.<br/> \
+			&bull;&nbsp;The custom region will update as the grey selection rectangle is moved.");
+
+		$('#help_dialog_tmp').dialog({
+			draggable:true,
+			resizable:false,
+			width:500,
+			closeOnEscape:true,
+			title: "Best region help",
+		});
+	});
+
+	$('#help_dialog_4').click(function () {
+		
+		$('#help_dialog_tmp').html("&bull;&nbsp;In this section is shown the query sequence, highlighting the best target region in yellow or the custom region in grey.<br/> \
+			&bull;&nbsp;The custom region will be updated as the grey selection rectangle is moved.");
+
+		$('#help_dialog_tmp').dialog({
+			draggable:true,
+			resizable:false,
+			width:500,
+			closeOnEscape:true,
+			title: "Sequence overview help",
+		});
+	});
+
+	$('#help_dialog_5').click(function () {
+		
+		$('#help_dialog_tmp').html("&bull;&nbsp;Number of n-mer matches and gene functional description are shown for each matched gene.<br/> \
+			&bull;&nbsp;The View link will open a draggable dialog with this information.");
+
+		$('#help_dialog_tmp').dialog({
+			draggable:true,
+			resizable:false,
+			width:500,
+			closeOnEscape:true,
+			title: "Description of genes mapped help",
 		});
 	});
 
@@ -104,15 +195,6 @@ $(document).ready(function () {
 		$("#f_length").val(300);
 		$("#mm").val(0);
 		$("#expression_file").val(null);
-	});
-
-	$('#params_dialog').click(function () {
-		alert(
-			"• Fragment size: "+$("#help_fsize").val()+"\n"
-			+"• n-mer: "+$("#help_nmer").val()+"\n"
-			+"• Mismatches: "+$("#help_mm").val()+"\n"
-			+"• Database: "+$("#db_name").val()+"\n"
-		);
 	});
 
 	$('#working').dialog( { 
@@ -149,6 +231,7 @@ $(document).ready(function () {
 				} else {
 					db_name = response.db_name;
 					bt2_file = response.jobid;
+					
 					$("#help_fsize").val(f_length);
 					$("#help_nmer").val(si_rna);
 					$("#help_mm").val(mm);
@@ -826,20 +909,12 @@ $(document).ready(function () {
 
 			runBt2(n_mer, f_size, align_mm, db);
 
-
 		} else if (align_mm != mm) {
 			$("#f_length").val(f_size);
 			$("#mm").val(align_mm);
 			$("#coverage_val").val(t_num);
 
 			getResults(1, bt2_file, n_mer, f_size, align_mm, t_num, db, expr_f);
-			// res = getResults(1, bt2_file, seq, n_mer, f_size, align_mm, t_num, db, expr_f);
-			// score_array = res[0];
-			// seq = res[1];   
-			// best_seq = res[2];
-			// expr_msg = res[3];
-			// ids = res[4];
-			// m_aoa = res[5];
 
 			$("#region_square").css("height","0px");
 			//getCustomRegion(score_array,best_seq,seq)
@@ -848,13 +923,6 @@ $(document).ready(function () {
 			$("#coverage_val").val(t_num);
 
 			getResults(0, bt2_file, n_mer, f_size, align_mm, t_num, db, expr_f);
-			// res = getResults(0, bt2_file, seq, n_mer, f_size, align_mm, t_num, db, expr_f);
-			// score_array = res[0];
-			// seq = res[1];   
-			// best_seq = res[2];
-			// expr_msg = res[3];
-			// ids = res[4];
-			// m_aoa = res[5];
 
 			$("#region_square").css("height","0px");
 			//getCustomRegion(score_array,best_seq,seq)
@@ -887,41 +955,3 @@ $(document).ready(function () {
 	// }
 });
 
-
-function show_help_dialog(msg_id_num) {
-    var msg_id;
-    if (msg_id_num == 0) {
-		alert(
-		    "• The best target region score value indicates how good the yellow highlighted region is, taking into account the number of target and off-target n-mers. The closer to 100 the better is the value. In the same way, the custom region score indicates the value of the custom region, represented by the transparent grey rectangle.\n\n"
-		    +"• Set Custom Region button will activate a draggable and resizable transparent grey rectangle to manually select a custom region.\n\n"
-		    +"• Change button will recalculate the results using the new parameters chosen. In case of changing the n-mer size, the algorithm will run Bowtie 2 again, so this process could take a while.\n\n"
-		);
-    }
-    if (msg_id_num == 1) {
-		alert(
-		    "• N-mers mapping to the target/s are shown in blue and to off-targets in red. The yellow area highlights the region with the highest score using the selected parameters.\n\n"
-	    	    +"• The bottom graph represents in red the score values along the sequence. The score value = 0 is indicated with a green line. Below this line are represented the regions with more off-targets than targets, and the opposite when the score is above the green line.\n\n"
-
-		    +"• Expand graph button will display every n-mer fragment aligned over the query for each subject.\n\n"
-		    +"• Zoom button will zoom in/out the VIGS map representation.\n"
-		);
-    }
-    if (msg_id_num == 2) {
-		alert(
-		    "• This section shows the best or the custom region sequence in FASTA format.\n\n"
-		    +"• The custom region will update as the grey selection rectangle is moved.\n"
-		);
-    }
-    if (msg_id_num == 3) {
-		alert(
-			"• In this section is shown the query sequence, highlighting in yellow the best target region or the custom region.\n\n"
-			+"• The custom region will be updated as the grey selection rectangle is moved.\n"
-		);
-    }
-    if (msg_id_num == 4) {
-		alert(
-			"• Number of n-mer matches and gene functional description are shown for each matched gene.\n\n"
-			+"• The View link will open a draggable dialog with this information."
-		);
-    }
-}

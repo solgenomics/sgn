@@ -127,7 +127,7 @@ foreach my $d (@databases) {
 <div id="img_height" style="display:none;" value="601"></div>
 
 <div id="hide1" style="display:none;">
-<&| /page/info_section.mas, title=>"Modify parameters", collapsible => 1, collapsed => 0, subtitle=>'[<a id="help_dialog" onclick="show_help_dialog(0)">Help</a>]', is_subsection=>"1"  &>
+<&| /page/info_section.mas, title=>"Modify parameters", collapsible => 1, collapsed => 0, subtitle=>'[<a id="help_dialog_1" class="help_dialog">Help</a>]', is_subsection=>"1"  &>
 <table>
   <tr>
     <td id="score_p" style="text-align:'right';"></td>
@@ -137,7 +137,7 @@ foreach my $d (@databases) {
 <table>
   <tr>
     <td>Region Start: </td><td><input type="text" id="cbr_start" size="3"></td>
-    <td>Region End: </td><td><input type="text" id="cbr_end" size="3""> &nbsp;</td>
+    <td>Region End: </td><td><input type="text" id="cbr_end" size="3"> &nbsp;</td>
     <td><button type="button" id="set_custom" value="set custom best region">Set Custom Region</button><br /></td>
   </tr>
   <tr>
@@ -157,7 +157,7 @@ foreach my $d (@databases) {
 </div>
 
 <div id="hide2" style="display:none;">
-<&| /page/info_section.mas, title=>"Distribution of n-mers", collapsible => 1, collapsed => 0, subtitle=>'[<a id="help_dialog" onclick="show_help_dialog(1)">Help</a>]', is_subsection=>"1"  &>
+<&| /page/info_section.mas, title=>"Distribution of n-mers", collapsible => 1, collapsed => 0, subtitle=>'[<a id="help_dialog_2" class="help_dialog">Help</a>]', is_subsection=>"1"  &>
     <div class="seq_map" id="seq_map">
          <div class="region_square" id="region_square"></div>
      	 <canvas id="myCanvas" width="700" height="600">
@@ -166,38 +166,34 @@ foreach my $d (@databases) {
     </div>
     <br />
     <button id="collapse" value="1">Expand Graph</button>
-    <button id="zoom" value="0"">Zoom In</button>
+    <button id="zoom" value="0">Zoom In</button>
     <button id="params_dialog">Parameters Used</button>
 
 </&>
 </div>
 
-<div id="params" style="display:none;">
-    <p>
-        &bull;&nbsp;<b>Fragment size: </b><span id="help_fsize"></span><br />
-	&bull;&nbsp;<b>n-mer: </b><span id="help_nmer"></span><br />
-	&bull;&nbsp;<b>Mismatches: </b><span id="help_mm"></span><br />
-	&bull;&nbsp;<b>Database: </b><span id="help_db"></span>
-    </p>
-</div>
+<div id="help_fsize"></div>
+<div id="help_nmer"></div>
+<div id="help_mm"></div>
+<div id="help_db"></div>
 
 
 <div id="hide3" style="display:none;">
 
-<&| /page/info_section.mas, title=>"Best region", collapsible => 1, collapsed => 0, subtitle=>'[<a id="help_dialog" onclick="show_help_dialog(2)">Help</a>]', is_subsection=>"1" &>
+<&| /page/info_section.mas, title=>"Best region", collapsible => 1, collapsed => 0, subtitle=>'[<a id="help_dialog_3" class="help_dialog">Help</a>]', is_subsection=>"1" &>
     <div id="br_seq">
     	 <p id="best_seq" style="font-family:courier;font-size:16px;"></p>
     </div>
 </&>
 
 
-<&| /page/info_section.mas, title=>"Sequence overview", collapsible => 1, collapsed => 0, subtitle=>'[<a id="help_dialog" onclick="show_help_dialog(3)">Help</a>]', is_subsection=>"1" &>
+<&| /page/info_section.mas, title=>"Sequence overview", collapsible => 1, collapsed => 0, subtitle=>'[<a id="help_dialog_4" class="help_dialog">Help</a>]', is_subsection=>"1" &>
     <span id="query" style="display:none"></span>
     <div id="markup" style="align:left;"></div>
 </&>
 
 
-<&| /page/info_section.mas, title=>"Description of genes with matches of n-mers", collapsible => 1, collapsed => 0, subtitle=>'[<a id="open_descriptions_dialog">View</a>]&nbsp;&nbsp;[<a id="help_dialog" onclick="show_help_dialog(4)">Help</a>]', is_subsection=>"1" &>
+<&| /page/info_section.mas, title=>"Description of genes with matches of n-mers", collapsible => 1, collapsed => 0, subtitle=>'[<a id="open_descriptions_dialog">View</a>]&nbsp;&nbsp;[<a id="help_dialog_5" class="help_dialog">Help</a>]', is_subsection=>"1" &>
     <table id="target_info"></table>
 </&>
 
@@ -207,6 +203,10 @@ foreach my $d (@databases) {
 <div id="desc_dialog">
     <table id="dialog_info"></table>
 </div>
+
+<div id="params" style="display:none;"></div>
+<div id="help_dialog_tmp" style="display:none;"></div>
+
 
 </&>
 
@@ -231,7 +231,7 @@ foreach my $d (@databases) {
     vertical-align:middle;
 }
 
-#help_dialog {
+.help_dialog {
      color:blue;
 }
 
