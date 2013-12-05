@@ -20,7 +20,7 @@ use CXGN::Bulk::CloneUnigene;
 use CXGN::Bulk::ArraySpotEST;
 use CXGN::Bulk::ArraySpotUnigene;
 use CXGN::Bulk::UnigeneMemberInfo;
-
+use CXGN::Bulk::Converter;
 
 sub download : Path('/tools/bulk/download') Args(0) { 
     my $self = shift;
@@ -75,7 +75,12 @@ sub download : Path('/tools/bulk/download') Args(0) {
 	elsif ( $params->{unigene_mode} eq "member_info" ) {
 	    $bulk = CXGN::Bulk::UnigeneMemberInfo->new($params);
 	}
-    } else {
+    } elsif($idType eq "converter") { 
+	my @files = split /\s+/, $c->config->{solyc_converter_files};
+	$params->{solyc_converter_files} = \@files;
+	$bulk = CXGN::Bulk::Converter->new($params);
+    }
+	else {
 	die "invalid idtype '$idType'";
     }
     
