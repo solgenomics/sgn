@@ -26,13 +26,19 @@ phenoDataFile<-grep("phenotype_data",
                value=TRUE
                )
 
-correCoefficientsFile<-grep("corre_coefficients",
+correCoefficientsFile<-grep("corre_coefficients_table",
                allargs,
                ignore.case=TRUE,
                perl=TRUE,
                value=TRUE
                )
 
+correCoefficientsJsonFile<-grep("corre_coefficients_json",
+               allargs,
+               ignore.case=TRUE,
+               perl=TRUE,
+               value=TRUE
+               )
 message("correlation table file:", correCoefficientsFile)
 message("pheno data file:", phenoDataFile)
 
@@ -168,11 +174,11 @@ correlationList <- list(
 
 correlationJson <- paste("{",paste("\"", names(correlationList), "\":", correlationList, collapse=","), "}")
 
-correlationJsonFile <- "/data/prod/tmp/cache/correlation/correlation.json"
-file.create(correlationJsonFile)
+
+#file.create(correlationJsonFile)
 
 message("correlation text file: ", correCoefficientsFile)
-message("correlation json file: ", correlationJsonFile)
+message("correlation json file: ", correCoefficientsJsonFile)
 
 write.table(coefficients,
       file=correCoefficientsFile,
@@ -183,7 +189,7 @@ write.table(coefficients,
       )
 
 write.table(correlationJson,
-      file=correlationJsonFile,
+      file=correCoefficientsJsonFile,
       col.names=FALSE,
       row.names=FALSE,
       )
