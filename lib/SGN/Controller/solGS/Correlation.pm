@@ -106,11 +106,9 @@ sub create_correlation_dir {
     my ($self, $c) = @_;
     
     my $temp_dir        = $c->config->{cluster_shared_tempdir};
-    my $cache_dir       = catdir($temp_dir, 'cache');
-    my $correlation_dir = catdir($cache_dir, 'correlation'); 
-   
-
-    mkpath ([$temp_dir, $cache_dir, $correlation_dir], 0, 0755);
+    my $correlation_dir = catdir($temp_dir, 'correlation', 'cache'); 
+  
+    mkpath ([$temp_dir, $correlation_dir], 0, 0755);
    
     $c->stash->{correlation_dir} = $correlation_dir;
 
@@ -128,19 +126,26 @@ sub correlation_output_file {
     my $file_cache  = Cache::File->new(cache_root => $corre_dir);
     $file_cache->purge();
                                        
-    my $key = 'corre_coefficients_' . $pop_id;
-    my $corre_coefficients_file  = $file_cache->get($key);
-   
-    unless ($corre_coefficients_file)
+    my $key_table = 'corre_coefficients_table_' . $pop_id;
+    my $key_json  = 'corre_coefficients_json_' . $pop_id;
+    my $corre_coefficients_file      = $file_cache->get($key_table);
+    my $corre_coefficients_json_file = $file_cache->get($key_json);
+
+    unless ($corre_coefficients_file && $corre_coefficients_json_file )
     {         
-        $corre_coefficients_file= catfile($corre_dir, "corre_coefficients_${pop_id}");
+        $corre_coefficients_file= catfile($corre_dir, "corre_coefficients_table_${pop_id}");
 
         write_file($corre_coefficients_file);
-        $file_cache->set($key, $corre_coefficients_file, '30 days');
+        $file_cache->set($key_table, $corre_coefficients_file, '30 days');
+
+        $corre_coefficients_json_file = catfile($corre_dir, "corre_coefficients_json_${pop_id}");
+
+        write_file($corre_coefficients_json_file);
+        $file_cache->set($key_json, $corre_coefficients_json_file, '30 days');
     }
 
     $c->stash->{corre_coefficients_file} = $corre_coefficients_file;
-
+    $c->stash->{corre_coefficients_json_file} = $corre_coefficients_json_file;
 }
 
 
@@ -152,20 +157,21 @@ sub correlation_analysis_output :Path('/correlation/analysis/output') Args(0) {
 
     $self->correlation_output_file($c);
     my $corre_coefficients_file = $c->stash->{corre_coefficients_file};
-  
+   
     if (!-s $corre_coefficients_file)
     {
-        $self->run_correlation_analysis($c);
-    
+        $self->run_correlation_analysis($c);  
         $corre_coefficients_file = $c->stash->{corre_coefficients_file};
+  
     }
 
     my $ret->{status} = 'failed';
 
     if (-s $corre_coefficients_file)
     {
-        $ret->{status} = 'success';
-        $ret->{data} = read_file('/data/prod/tmp/cache/correlation/correlation.json')
+        $ret->{status} = 'success';      
+        my $corre_json_file = $c->stash->{corre_coefficients_json_file};       
+        $ret->{data} = read_file($corre_json_file);
                 
     }
 
@@ -190,7 +196,7 @@ sub run_correlation_analysis {
  
     $self->correlation_output_file($c);
     my $corre_table_file = $c->stash->{corre_coefficients_file};
-
+    my $corre_json_file = $c->stash->{corre_coefficients_json_file};
     if (-s $pheno_file) 
     {
         CXGN::Tools::Run->temp_base($corre_dir);
@@ -220,7 +226,7 @@ sub run_correlation_analysis {
           my $r_process = CXGN::Tools::Run->run_cluster(
               'R', 'CMD', 'BATCH',
               '--slave',
-              "--args $corre_table_file $pheno_file",
+              "--args $corre_table_file $corre_json_file $pheno_file",
               $corre_commands_temp,
               $corre_output_temp,
               {
