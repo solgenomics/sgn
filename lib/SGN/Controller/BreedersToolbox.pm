@@ -34,6 +34,7 @@ sub manage_breeding_programs : Path("/breeders/manage_programs") :Args(0) {
     my $breeding_programs = $projects->get_breeding_programs();
     
     $c->stash->{breeding_programs} = $breeding_programs;
+    $c->stash->{user} = $c->user();
 
     $c->stash->{template} = '/breeders_toolbox/breeding_programs.mas';
     
@@ -160,7 +161,7 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) { 
     my $self =shift;
     my $c = shift;
-
+ 
     if (!$c->user()) { 
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
 	return;

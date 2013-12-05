@@ -40,7 +40,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
    
     <div class="list_upload" style="margin-left:5px">     
       <i class="glyphicon-plus"></i>
-      <a href="/breeders/home" style="color:#ffffff">Make a new list of clones</a>  
+      <a href="/solgs/breeder_search" style="color:#ffffff">Make a new list of clones</a>  
     </div>
     <br>
     <br>  
