@@ -41,7 +41,7 @@ $pop_id
 <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 0, 
-      title       => "Correlation analysis output"
+      title       => "Phenotypic correlation analysis output"
 &>
        
 <input type="hidden" id="population_id" value="<% $pop_id %>" />
