@@ -29,6 +29,7 @@ sub process_ids {
     my ($dump_fh, $notfound_fh) = $self->create_dumpfile();
     my @not_found = ();
     foreach my $id (@{$self->{ids}}) { 
+	print STDERR "Converting $id to $solyc_conversion_hash{uc($id)}\n";
 	if (exists($solyc_conversion_hash{uc($id)})) { 
 	    print $dump_fh "$id\t$solyc_conversion_hash{uc($id)}\n";
 	}
