@@ -76,8 +76,8 @@ sub download : Path('/tools/bulk/download') Args(0) {
 	    $bulk = CXGN::Bulk::UnigeneMemberInfo->new($params);
 	}
     } elsif($idType eq "converter") { 
-	my @files = split /\s+/, $c->config->{solyc_converter_files};
-	$params->{solyc_converter_files} = \@files;
+	my @files = split /\s+/, $c->config->{solyc_conversion_files};
+	$params->{solyc_conversion_files} = \@files;
 	$bulk = CXGN::Bulk::Converter->new($params);
     }
 	else {

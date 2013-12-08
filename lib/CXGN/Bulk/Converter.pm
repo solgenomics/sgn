@@ -42,8 +42,11 @@ sub process_ids {
 sub get_hash { 
     my $self = shift;
     
+    print STDERR "Generating hash... ";
+
     my @conversion = ();
-    foreach my $file (@{$self->{solyc_converter_files}}) { 
+    foreach my $file (@{$self->{solyc_conversion_files}}) { 
+	print STDERR "(processing $file) ";
 	my @lines = read_file($file);
 	@conversion = (@conversion, @lines);
     }
@@ -53,7 +56,7 @@ sub get_hash {
 	$solyc_conversion_hash{uc($fields[0])} = $fields[1];
     }
 
-    
+    print STDERR "Done.\n";
 
 }
 
