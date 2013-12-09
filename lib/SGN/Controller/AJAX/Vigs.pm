@@ -38,35 +38,6 @@ __PACKAGE__->config(
 
 our %urlencode;
 
-# function to set a temporary file name for bowtie2 input and output, needed to run an asycronize AJAX request.
-# sub get_bt2_file_name :Path('/tools/vigs/processing_data') :Args(0) { 
-# 	my ($self, $c) = @_;
-# 	
-# 	# generate temporary file name for analysis with Bowtie2.
-# 	my ($seq_fh, $seq_filename) = tempfile("vigsXXXXXX", DIR=> $c->config->{'cluster_shared_tempdir'},);
-# 	
-# 	# return the name
-#     $c->stash->{rest} = {file_name=>$seq_filename};
-# }
-
-# Check if Bowtie2 has finished
-# sub check_bt2_status :Path('/tools/vigs/checking_bt2') :Args(0) { 
-# 	my ($self, $c) = @_;
-# 	my $bt2_output = "running";
-# 	my $seq_filename = $c->req->param("tmp_file_name");
-# 	
-# 	my $path = $seq_filename.".bt2.out";
-# 	
-# 	if (-e $path) {
-# 		# print STDERR "File exists!\n";
-# 		$bt2_output = basename($seq_filename);
-# 	} else {
-# 		# print STDERR "Not ready yet!\n";
-# 	}
-# 	
-# 	$c->stash->{rest} = {bt2_output=>$bt2_output};
-# }
-
 # check input data, create Bowtie2 input data and run Bowtie2
 sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) { 
     my ($self, $c) = @_;
@@ -122,7 +93,7 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
     if (!$seq_fragment || $seq_fragment < 100 || $seq_fragment > length($sequence)) {
 		push (@errors, "Wrong fragment size ($seq_fragment), it must be higher than 100 bp and lower than sequence length\n");
     }
-    if ($missmatch =~ /[^\d]/ || $missmatch < 0 || $missmatch > 3 ) { 
+    if ($missmatch =~ /[^\d]/ || $missmatch < 0 || $missmatch > 5 ) { 
 		push (@errors, "miss-match value ($missmatch) must be between 0-3\n");
     }
 
@@ -175,9 +146,14 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		" --threads 1", 
 		" --very-fast", 
 		" --no-head", 
-		" --end-to-end", 
+		" --omit-sec-seq",
+		" --end-to-end",
+		# " --mp 2,1", 
+		# " -L 3", 
+		# " --score-min L,-1,-0.9", 
+		# " -N 1", 
+		# " -R 10", 
 		" -a", 
-		" --no-unal", 
 		" -x ". $database_fullpath,
 		" -f",
 		" -U ". $query_file.".fragments",
@@ -305,7 +281,14 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my @best_region = [1,1];
     my $seq_length = length($query->seq());
 
-    @regions = $vg->longest_vigs_sequence($coverage, $seq_length);
+	while ($regions[1] <= 0) {
+    	@regions = $vg->longest_vigs_sequence($coverage, $seq_length);
+	
+		if ($regions[1] <= 0) {
+			$coverage = $coverage + 1;
+		}
+	}
+	
     @best_region = [$regions[4], $regions[5]];
     
     if ($coverage == 0) {
