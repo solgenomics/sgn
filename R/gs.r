@@ -116,22 +116,25 @@ traitPhenoFile <- grep(traitPhenoFile,
 
 print(traitPhenoFile)
 
+formattedPhenoDataFile <- grep("formatted_phenotype_data",
+                               outFiles,
+                               ignore.case = TRUE,
+                               fixed = FALSE,
+                               value = TRUE
+                               )
+
+print(formattedPhenoDataFile)
+
 phenoFile <- grep("phenotype_data",
                   inFiles,
                   ignore.case = TRUE,
                   fixed = FALSE,
                   value = TRUE
                   )
+
 message("phenotype dataset file: ", phenoFile)
 message("dataset info: ", datasetInfo)
-## rowNamesColumn <- c()
-## if (datasetInfo == 'combined populations')
-##   {
-##     rowNamesColumn <- 1    
-##   }else {
-##     rowNamesColumn <- NULL  
-##   }
-## message("row names column: ", rowNamesColumn)
+
 phenoData <- read.table(phenoFile,
                         header = TRUE,
                         row.names = NULL,
@@ -162,9 +165,30 @@ if (datasetInfo == 'combined populations')
    
     dropColumns <- c("uniquename", "stock_name")
     phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
+
+
+    #format all-traits population phenotype dataset
+    formattedPhenoData <- phenoData
+
+    dropColumns <- c("object_id", "stock_id")
+
+    formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
+    formattedPhenoData <-ddply(formattedPhenoData,
+                               "object_name",
+                               colwise(mean)
+                               )
+
+    row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+    formattedPhenoData[, 1] <- NULL
+
+    formattedPhenoData <- round(formattedPhenoData,
+                                digits=2
+                                )
+
+    
     phenoTrait  <- subset(phenoData,
-                     select = c("object_name", "stock_id", trait)
-                     )
+                          select = c("object_name", "stock_id", trait)
+                          )
    
     if (sum(is.na(phenoTrait)) > 0)
       {
@@ -195,6 +219,8 @@ if (datasetInfo == 'combined populations')
     phenoTrait[, 1] <- NULL
     
   }
+
+
 
 
 genoFile <- grep("genotype_data",
@@ -614,6 +640,18 @@ if(!is.null(traitPhenoData) & length(traitPhenoFile) != 0)
   {
     write.table(traitPhenoData,
                 file = traitPhenoFile,
+                sep = "\t",
+                col.names = NA,
+                quote = FALSE,
+                append = FALSE
+                )
+  }
+
+
+if(!is.null(formattedPhenoData) & length(formattedPhenoDataFile) != 0)  
+  {
+    write.table(formattedPhenoData,
+                file = formattedPhenoDataFile,
                 sep = "\t",
                 col.names = NA,
                 quote = FALSE,

@@ -400,6 +400,9 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?'){
         }
 
         $self->select_traits($c);
+
+        my $acronym = $self->get_acronym_pairs($c);
+        $c->stash->{acronym} = $acronym;
     }
  
     my $pheno_data_file = $c->stash->{phenotype_file};
@@ -614,6 +617,7 @@ sub output_files {
     $self->gebv_kinship_file($c); 
     $self->validation_file($c);
     $self->trait_phenodata_file($c);
+    $self->formatted_phenodata_file($c);
 
     my $prediction_id = $c->stash->{prediction_pop_id};
     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
@@ -621,7 +625,9 @@ sub output_files {
     no warnings 'uninitialized';
    
     $prediction_id = "uploaded_${prediction_id}" if $c->stash->{uploaded_prediction};
+
     my $identifier    = $pop_id . '_' . $prediction_id;
+    
     my $pred_pop_gebvs_file;
     
     if ($prediction_id) 
@@ -636,6 +642,7 @@ sub output_files {
                           $c->stash->{gebv_marker_file},
                           $c->stash->{validation_file},
                           $c->stash->{trait_phenodata_file},
+                          $c->stash->{formatted_phenodata_file},
                           $c->stash->{selected_traits_gebv_file},
                           $pred_pop_gebvs_file
         );
@@ -712,6 +719,21 @@ sub trait_phenodata_file {
                        stash_key => 'trait_phenodata_file'
         };
     }
+
+    $self->cache_file($c, $cache_data);
+}
+
+
+sub formatted_phenodata_file {
+    my ($self, $c) = @_;
+   
+    my $pop_id = $c->stash->{pop_id};
+   
+    my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id, 
+                       file      => 'formatted_phenotype_data_' . $pop_id,
+                       stash_key => 'formatted_phenodata_file'
+    };
+    
 
     $self->cache_file($c, $cache_data);
 }
@@ -2383,7 +2405,11 @@ sub grep_file {
     my ($file)  = grep { /$exp/ && -f "$dir/$_" }  readdir($dh);
     close $dh;
    
-    $file = catfile($dir, $file);
+    if ($file)    
+    {
+        $file = catfile($dir, $file);
+    }
+
     return $file;
 }
 
@@ -2901,7 +2927,7 @@ sub phenotype_file {
    
         my $key        = "phenotype_data_" . $pop_id;
         $pheno_file = $file_cache->get($key);
-
+       
         unless ($pheno_file)
         {  
             $pheno_file = catfile($c->stash->{solgs_cache_dir}, "phenotype_data_" . $pop_id . ".txt");
@@ -2915,7 +2941,7 @@ sub phenotype_file {
         }
     }
    
-    $c->stash->{phenotype_file} = $pheno_file;
+    $c->stash->{phenotype_file} = $pheno_file;   
 
 }
 
@@ -3394,13 +3420,15 @@ sub get_solgs_dirs {
     my $solgs_cache     = catdir($solgs_dir, 'cache'); 
     my $solgs_tempfiles = catdir($solgs_dir, 'tempfiles');
     my $solgs_prediction_upload = catdir($solgs_dir, 'tempfiles', 'prediction_upload');
+    my $correlation_dir = catdir($solgs_dir, 'cache', 'correlation');
 
-    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_prediction_upload], 0, 0755);
+    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_prediction_upload, $correlation_dir], 0, 0755);
    
     $c->stash(solgs_dir                   => $solgs_dir, 
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
               solgs_prediction_upload_dir => $solgs_prediction_upload,
+              correlation_dir             => $correlation_dir,
         );
 
 }
