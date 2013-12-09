@@ -95,22 +95,42 @@ foreach my $d (@databases) {
 </center>
 
 
-<&| /page/info_section.mas, id=>"vigs_usage" , title=>"VIGS Usage", collapsible => 1, collapsed => 0, is_subsection=>"1"  &>
+<&| /page/info_section.mas, id=>"vigs_usage" , title=>"VIGS Usage", collapsible => 1, collapsed => 1, is_subsection=>"1"  &>
   <div id="usage_view">
     <p>
         <b>Usage:</b><br />
         1. Paste a <b>sequence</b> like in one of the examples:<br />
-        <span style="background-color:#DCDCDC;">&nbsp;&nbsp;>seq1<br />&nbsp;&nbsp;accgatcgatcgatcgta&nbsp;&nbsp;<br /></span>
+        <span style="background-color:#DCDCDC;">&nbsp;&nbsp;>seq1<br />&nbsp;&nbsp;accgatcgatcgatcgta&nbsp;&nbsp;</span><br />
 
         &nbsp;&nbsp;Or:<br />
-        <span style="background-color:#DCDCDC;">&nbsp;&nbsp;acgtagctagctgatcat&nbsp;&nbsp;<br /></span>
+        <span style="background-color:#DCDCDC;">&nbsp;&nbsp;acgtagctagctgatcat&nbsp;&nbsp;</span><br />
          
         2. Choose <b>n-mer size</b>, nucleotide stretch size in bp, used to identify targeted regions (18-30, Default=21)<br />
         3. Choose <b>Fragment length</b>, desired VIGS fragment length in bp (100-Sequence length, Default=300)<br />
-        4. Choose <b>mismatches</b>, number of mismatches allowed in the alignment (0-3, Default=0)<br />
+        4. Choose <b>mismatches</b>, number of mismatches allowed in the alignment (0-5, Default=0)<br />
         5. Choose <b>database</b><br />
-        6. Upload a <b>expression values file</b> (optional), It must be a tab delimited text file, with gene identifiers in the first column and a header in the first row
-     </p>
+        6. Upload a <b>expression values file</b> (optional), It must be a tab delimited text file, with gene identifiers in the first column and a header in the first row:
+	</p>
+	<table style="background-color:#DCDCDC;" cellspacing="5">
+		<tr>
+			<td>gene_id</td>
+			<td>expr_val</td>
+			<td>p_val ...</td>
+		</tr>
+		<tr>
+			<td>Solyc01g000010.1.1</td>
+			<td>4.56</td>
+			<td>0.0001 ...</td>
+		</tr>
+		<tr>
+			<td>Solyc01g000020.1.1</td>
+			<td>3.64</td>
+			<td>0.0032 ...</td>
+		</tr>
+		<tr>
+			<td>...</td>
+		</tr>
+     </table>
   </div>
 </&>
 
