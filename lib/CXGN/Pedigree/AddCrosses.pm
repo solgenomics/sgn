@@ -6,7 +6,7 @@ CXGN::Pedigree::AddCrosses - a module to add cross experiments.
 
 =head1 USAGE
 
- my $cross_add = CXGN::Stock::AddCrosses->new({ schema => $schema, location => $location_name, project => $project_name, crosses =>  \@parents_and_cross_types} );
+ my $cross_add = CXGN::Stock::AddCrosses->new({ schema => $schema, location => $location_name, project => $project_name, crosses =>  \@array_of_pedigree_objects} );
  my $validated = $cross_add->validate_crosses(); #is true when all of the crosses are valid and the accessions they point to exist in the database.
  $cross_add->add_crosses();
 
@@ -27,6 +27,8 @@ use Try::Tiny;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use CXGN::Stock::StockLookup;
+use CXGN::Location::LocationLookup;
+use CXGN::Trial::TrialLookup;
 
 class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 has 'schema' => (
@@ -35,20 +37,18 @@ has 'schema' => (
 		 predicate => 'has_schema',
 		 required => 1,
 		);
-has 'pedigrees' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_pedigrees');
+has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_crosses', required => 1,);
+has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
+has 'project' => (isa =>'Str', is => 'rw', predicate => 'has_project', required => 1,);
 
 sub add_crosses {
   my $self = shift;
   my $schema = $self->get_schema();
   my @crosses;
 
-  if (!$self->has_crosses()){
-    print STDERR "No crosses to add\n";
-    return;
-  }
 
   if (!$self->validate_pedigrees()) {
-    print STDERR "Invalid pedigrees in array.  No pedigrees will be added\n";
+    print STDERR "Invalid pedigrees in array.  No crosses will be added\n";
     return;
   }
 
@@ -80,27 +80,37 @@ sub add_crosses {
   return 1;
 }
 
-sub validate_pedigrees {
+sub validate_crosses {
   my $self = shift;
   my $schema = $self->get_schema();
-  my @crosses;
+  my $trial_name = $self->get_trial_name();
+  my $program = $self->get_program_name();
+  my $location = $self->get_location();
+  my @crosses = @{$self->get_crosses()};
   my $invalid_cross_count = 0;
 
-  if (!$self->has_crosses()){
-    print STDERR "No crosses to add\n";
+  my $location_lookup;
+  my $trial_lookup;
+
+
+  $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema}, location => $location );
+
+  if (!$location_lookup) {
+    print STDERR "Location $location not found\n";
     return;
   }
 
-  if (!$self->has_crosses()) {
+  $trial_lookup = CXGN::Trial::TrialLookup->new({ schema => $schema, trial_name => $trial_name} );
+
+  if (!$trial_lookup) {
+    print STDERR "Trial $trial_name not found\n";
     return;
   }
-
-  @crosses = @{$self->get_crosses()};
 
   foreach my $cross (@crosses) {
-    my $validated_crosses = $self->_validate_crosses($cross);
+    my $validated_cross = $self->_validate_crosses($cross);
 
-    if (!$validated_crosses) {
+    if (!$validated_cross) {
       $invalid_cross_count++;
     }
 
@@ -124,12 +134,6 @@ sub _validate_cross {
   my $male_parent_name;
   my $female_parent;
   my $male_parent;
-  my $accession = $self->_get_accession($name);
-
-  if (!$accession) {
-    print STDERR "Accession name is not a stock\n";
-    return;
-  }
 
   if ($cross_type eq "biparental") {
     $female_parent_name = $pedigree->get_female_parent()->get_name();
@@ -152,6 +156,8 @@ sub _validate_cross {
     }
 
   }
+
+  #add support for other cross types here
 
   else {
     return;
