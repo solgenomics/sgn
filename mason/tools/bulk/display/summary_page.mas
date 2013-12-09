@@ -6,7 +6,7 @@ $summary_data => {}
     <& /page/page_title.mas, title=>"Bulk download summary" &>
 
     The query you submitted contained <% $summary_data->{numlines} %> lines.<br />
-    Your query resulted in <% $summary_data->{total} %> lines being read from the database in
+    Your query resulted in <% $summary_data->{total} %> lines being retrieved in
     <% $summary_data->{query_time} %> seconds.<br />
     <% $summary_data->{missing_ids_msg} %><br /><br />
 

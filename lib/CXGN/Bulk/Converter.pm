@@ -15,8 +15,13 @@ sub process_parameters {
     my @ids = split /\s+/, $self->{ids};
 
     $self->{ids} = \@ids;
-    
-    return 1;
+
+    if (@ids) { 
+	return 1;
+    }
+    else { 
+	return 0;
+    }
 }
 
 sub process_ids { 
@@ -25,7 +30,8 @@ sub process_ids {
     if (!defined(%solyc_conversion_hash)) { 
 	$self->get_hash();
     }
-	
+    
+    $self->{query_start_time} = time();
     my ($dump_fh, $notfound_fh) = $self->create_dumpfile();
     my @not_found = ();
     foreach my $id (@{$self->{ids}}) { 
@@ -37,6 +43,9 @@ sub process_ids {
 	    print $notfound_fh "$id\t(not found)\n";
 	}
     }
+    close($dump_fh);
+    close($notfound_fh);
+    $self->{query_time} = time() - $self -> {query_start_time};
 }
 
 sub get_hash { 

@@ -101,10 +101,9 @@ sub result_summary {
     
     my $cache_root = catfile($self->{tempdir}, $self->{dumpfile} . ".summary");
 
-    my $lines_read =
-	( $self->get_file_lines( catfile($self->{tempdir}, $self->{dumpfile}) ) - 1);
-    my $notfoundcount =
-      $self->get_file_lines( catfile($self->{tempdir}, $self->{notfoundfile} ));
+    my $lines_read = $self->get_file_lines( catfile($self->{tempdir}, $self->{dumpfile}) ) - 1;
+
+    my $notfoundcount = $self->get_file_lines( catfile($self->{tempdir}, $self->{notfoundfile} ));
     my $total        = $lines_read;
     my $file         = $self->{dumpfile};
     my $notfoundfile = $self->{notfoundfile};
@@ -209,6 +208,7 @@ sub get_file_lines {
     open my $f, $file or die "$! opening $file";
     my $cnt = 0;
     $cnt++ while <$f>;
+    close $f;
     return $cnt;
 }
 

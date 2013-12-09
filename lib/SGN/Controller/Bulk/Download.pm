@@ -88,10 +88,10 @@ sub download : Path('/tools/bulk/download') Args(0) {
 	$bulk->process_ids();
 	$bulk->create_dumpfile();
 
-	$bulk->result_summary();
-
 	my $dumpfile = $bulk->get_dumpfile();
 	my $notfoundfile = $bulk->get_notfoundfile();
+
+	$bulk->result_summary();
 	
 	$c->forward("Bulk::Display", "display_summary_page", [ $dumpfile ]);
     }

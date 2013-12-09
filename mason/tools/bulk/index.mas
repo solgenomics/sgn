@@ -5,7 +5,7 @@ $debug => ''
 </%args>
 
 <%perl>
-my %modes = ( clone_search => 0,  microarray=>1,  unigene=>2, bac=>3, bac_end=>4, genes=>5, feature=>6, ftp=>7 );
+my %modes = ( clone_search => 0,  microarray=>1,  unigene=>2, bac=>3, bac_end=>4, genes=>5, feature=>6, converter=>7, ftp=>8, );
 if (!$mode) { $mode="clone_search";}
 if (!exists($modes{$mode})) { $mode = "clone_search"; }
 </%perl>
@@ -42,8 +42,8 @@ if (!exists($modes{$mode})) { $mode = "clone_search"; }
     <li><a href="/tools/bulk/tabs/bac_end_tab">BAC ends</a></li>
     <li><a href="/tools/bulk/tabs/gene_tab">Genes</a></li>
     <li><a href="/tools/bulk/tabs/feature_tab">Features</a></li>
-    <li><a href="/tools/bulk/tabs/ftp_tab">FTP site</a></li>
     <li><a href="/tools/bulk/tabs/converter_tab">Converter</a></li>
+    <li><a href="/tools/bulk/tabs/ftp_tab">FTP site</a></li>
   </ul>
 </div>
 </div>

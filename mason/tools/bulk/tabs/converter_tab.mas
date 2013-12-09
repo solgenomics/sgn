@@ -9,7 +9,7 @@
 <table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
 
 <br />
-Enter a list of identifiers or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
+Enter a list of identifiers (SGN unigene ids or TOM1 array ids) or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
 
 <table summary="" width="100%" cellpadding="0"><tr><td>
 <textarea name="ids" rows="5" cols="20"></textarea>
@@ -39,7 +39,9 @@ And/or upload list file: <br /><input type="file" name="file" />
 <br />
 <br />
 <br />
+</td></tr></table>
 	<input type="reset" />&nbsp;&nbsp;
 <input type="submit" value="Submit" /><br />
+
 
 </form>
