@@ -31,7 +31,7 @@ jQuery(document).ready( function () {
                     data: {'population_id': population.population_id },
                     url: '/correlation/phenotype/data/',
                     success: function(response) {         
-                    runCorrelationAnalysis ();
+                    runCorrelationAnalysis();
                 },
                     error: function(response) {
                     
