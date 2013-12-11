@@ -13,16 +13,20 @@
 
 jQuery(window).load( function() {
 
-        var popId       = jQuery('#model_id').val();
-        var traitId     = jQuery('#trait_id').val();
-        var comboPopsId = jQuery('#combo_pops_id').val();
-        var popsList    = jQuery('#pops_list').val(); 
+        var popId          = jQuery('#model_id').val();
+        var traitId        = jQuery('#trait_id').val();
+        var comboPopsId    = jQuery('#combo_pops_id').val();
+        var popsList       = jQuery('#pops_list').val(); 
+         
+        var selectionPopId = jQuery('#selection_pop_id').val();
         var params;
-       
-        if(popId) {
+        
+        if(popId && !selectionPopId) {
             params = 'pop_id=' + popId + '&trait_id=' + traitId;
-        } else {
+        } else if (comboPopsId)  {
             params = 'combo_pops_id=' + comboPopsId + '&trait_id='  + traitId + '&combined_populations=' + popsList;  
+        } else if (selectionPopId) {
+            params = 'pop_id=' + popId + '&trait_id=' + traitId + '&selection_pop_id=' + selectionPopId;  
         }
        
         var action = '/solgs/trait/gebv/graph';
