@@ -886,7 +886,6 @@ $(document).ready(function () {
 
 
 	function changeTargets(bt2_file,score_array,seq,best_seq,expr_f,ids,m_aoa) {
-		disable_ui();
 		
 		var t_num = $("#t_num").val();
 		var coverage = $("#coverage_val").val();
@@ -898,7 +897,8 @@ $(document).ready(function () {
 		var mm = $("#mm").val();
 		var db = $("#bt2_db").val();
 		var expr_msg;
-
+		var seq_length = $("#seq_length").val();
+		
 		if (n_mer != si_rna) {
 			$("#f_length").val(f_size);
 			$("#mm").val(align_mm);
@@ -906,26 +906,40 @@ $(document).ready(function () {
 			si_rna = n_mer;
 			$("#coverage_val").val(t_num);
 			$("#region_square").css("height","0px");
-
-			runBt2(n_mer, f_size, align_mm, db);
-
+			
+			//check values before recalculate
+			if (+n_mer >= 14 && +n_mer <= 30) {
+				disable_ui();
+				runBt2(n_mer, f_size, align_mm, db);
+			} else {
+				alert("n-mer value must be between 14-30");
+			}
 		} else if (align_mm != mm) {
 			$("#f_length").val(f_size);
 			$("#mm").val(align_mm);
 			$("#coverage_val").val(t_num);
-
-			getResults(1, bt2_file, n_mer, f_size, align_mm, t_num, db, expr_f);
-
-			$("#region_square").css("height","0px");
-			//getCustomRegion(score_array,best_seq,seq)
+			
+			if (!align_mm || +align_mm < 0 || +align_mm > 5) {
+				alert("miss-match value ("+align_mm+") must be between 0-5");
+			} else {
+				disable_ui();
+				getResults(1, bt2_file, n_mer, f_size, align_mm, t_num, db, expr_f);
+				$("#region_square").css("height","0px");
+				//getCustomRegion(score_array,best_seq,seq)
+			}
 		} else if (t_num != coverage || f_size != f_length) {
 			$("#f_length").val(f_size);
 			$("#coverage_val").val(t_num);
-
-			getResults(0, bt2_file, n_mer, f_size, align_mm, t_num, db, expr_f);
-
-			$("#region_square").css("height","0px");
-			//getCustomRegion(score_array,best_seq,seq)
+			
+			//check values before recalculate
+			if (!f_size || +f_size < 100 || +f_size > +seq_length) {
+				alert("Wrong fragment size ("+f_size+"), it must be 100 bp or higher, and lower than sequence length");
+			} else {
+				disable_ui();
+				getResults(0, bt2_file, n_mer, f_size, align_mm, t_num, db, expr_f);
+				$("#region_square").css("height","0px");
+				//getCustomRegion(score_array,best_seq,seq)
+			}
 		} else {
 			alert("there are no parameters to change");
 		}
@@ -939,7 +953,6 @@ $(document).ready(function () {
 	function enable_ui() {
 		$('#working').dialog("close");
 	}
-
 
 	function hide_ui() {
 		Effects.swapElements('vigs_input_offswitch', 'vigs_input_onswitch');
