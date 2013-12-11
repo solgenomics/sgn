@@ -37,7 +37,7 @@ $blups_download_url
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Population summary",
+  title       => "Training population summary",
   &>
 
  <& summary.mas,
