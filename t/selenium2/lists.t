@@ -19,7 +19,7 @@ my $username_field = $d->find_element("username", "name");
 $username_field->send_keys("lam87\@cornell.edu");
 $d->find_element_ok("pd", "name", "find password field test");
 my $password_field = $d->find_element("pd", "name");
-$password_field->send_keys("ca55aV@");
+$password_field->send_keys("******");
 
 $password_field->submit();
 
