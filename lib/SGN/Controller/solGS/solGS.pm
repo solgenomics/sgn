@@ -520,6 +520,13 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
  
     $self->get_trait_name($c, $trait_id);
     
+    my $pop_rs = $c->model("solGS::solGS")->project_details($c, $selection_pop_id);
+    
+    while (my $pop_row = $pop_rs->next) 
+    {      
+        $c->stash->{prediction_pop_name} = $pop_row->name;    
+    }
+
     $self->project_description($c, $model_id);
 
     $self->get_project_owners($c, $model_id);       
