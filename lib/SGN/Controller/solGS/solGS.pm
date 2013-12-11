@@ -507,13 +507,44 @@ sub select_traits   {
 }
 
 
+sub selection_trait :Path('/solgs/selection/') Args(5) {
+    my ($self, $c, $selection_pop_id, 
+        $model_key, $model_id, 
+        $trait_key, $trait_id) = @_;
+
+    $c->stash->{pop_id}   = $model_id;
+    $c->stash->{trait_id} = $trait_id;
+    $c->stash->{prediction_pop_id} = $selection_pop_id;
+
+    $c->stash->{template} = $self->template('/population/selection_trait.mas');
+ 
+    $self->get_trait_name($c, $trait_id);
+    
+    $self->project_description($c, $model_id);
+
+    $self->get_project_owners($c, $model_id);       
+    $c->stash->{owner} = $c->stash->{project_owners};
+    
+
+    my $identifier    = $model_id . '_' . $selection_pop_id;
+ 
+    $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    my $gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+    
+    $self->top_blups($c, $gebvs_file);
+ 
+    $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$model_id/prediction/$selection_pop_id/$trait_id">Download all GEBVs</a>|; 
+
+} 
+
+
 sub trait :Path('/solgs/trait') Args(3) {
     my ($self, $c, $trait_id, $key, $pop_id) = @_;
    
     my $ajaxredirect = $c->req->param('source');
   
     if ($pop_id && $trait_id)
-    {   
+    {          
         $self->get_trait_name($c, $trait_id);
         $c->stash->{pop_id} = $pop_id;
         $self->project_description($c, $pop_id);
@@ -525,14 +556,12 @@ sub trait :Path('/solgs/trait') Args(3) {
         
         $self->download_prediction_urls($c);     
         my $download_prediction = $c->stash->{download_prediction};
-    
+     
         unless($pop_id =~ /uploaded/) 
         {
             $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
         }
        
-        $self->get_trait_name($c, $trait_id);
-
         $self->get_project_owners($c, $pop_id);       
         $c->stash->{owner} = $c->stash->{project_owners};
 
@@ -776,8 +805,8 @@ sub gebv_kinship_file {
 sub blups_file {
     my ($self, $c) = @_;
     
-    $c->stash->{blups} = $c->stash->{gebv_kinship_file};
-    $self->top_blups($c);
+    my $blups_file = $c->stash->{gebv_kinship_file};
+    $self->top_blups($c, $blups_file);
 }
 
 
@@ -861,12 +890,10 @@ sub download_urls {
 
 
 sub top_blups {
-    my ($self, $c) = @_;
-    
-    my $blups_file = $c->stash->{blups};
-    
+    my ($self, $c, $blups_file) = @_;
+      
     my $blups = $self->convert_to_arrayref($c, $blups_file);
-  
+   
     my @top_blups = @$blups[0..9];
  
     $c->stash->{top_blups} = \@top_blups;
@@ -1254,9 +1281,9 @@ sub download_prediction_urls {
                 $prediction_pop_id = 'uploaded_' . $prediction_pop_id;
             }
         }
-        
+        #qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$prediction_pop_id/$trait_id">$trait_abbr</a> |
         $download_url   .= " | " if $download_url;        
-        $download_url   .= qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$prediction_pop_id/$trait_id">$trait_abbr</a> | if $trait_id;
+        $download_url   .= qq | <a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> | if $trait_id;
         
         $download_url = '' if (!$trait_is_predicted);
     }
@@ -1264,6 +1291,7 @@ sub download_prediction_urls {
     if ($download_url) 
     {    
         $c->stash->{download_prediction} = $download_url;
+         
     }
     else
     {
@@ -1602,7 +1630,6 @@ sub list_of_prediction_pops_file {
 
 sub prediction_population_file {
     my ($self, $c, $pred_pop_id) = @_;
-
     
     my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
 
@@ -2534,16 +2561,33 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     my $combo_pops_id = $c->req->param('combo_pops_id');
     my $trait_combo_pops = $c->req->param('combined_populations');
 
+    my $prediction_pop_id = $c->req->param('selection_pop_id');
+
     $c->stash->{pop_id} = $pop_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
     $c->stash->{trait_combo_pops} = $trait_combo_pops;
-
+    $c->stash->{prediction_pop_id} = $prediction_pop_id;
+   
     $self->get_trait_name($c, $trait_id);
-    
+  
     $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
+    my $page = $c->req->referer();
+    my $gebv_file;
 
-    $self->gebv_kinship_file($c);
-    my $gebv_file = $c->stash->{gebv_kinship_file}; 
+    if ($page =~ /solgs\/selection\//) 
+    {     
+        my $identifier =  $pop_id . '_' . $prediction_pop_id;
+        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+   
+        $gebv_file = $c->stash->{prediction_pop_gebvs_file}; 
+    }
+    else
+    { 
+        $self->gebv_kinship_file($c);
+        $gebv_file = $c->stash->{gebv_kinship_file};
+       
+    }
+
     my $gebv_data = $self->convert_to_arrayref($c, $gebv_file);
 
     my $ret->{status} = 'failed';
