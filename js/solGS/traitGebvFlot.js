@@ -6,10 +6,6 @@
 *
 */
 
-//JSAN.use('MochiKit.LoggingPane');
-//JSAN.use('flot.jquery');
-//JSAN.use('Prototype');
-
 
 jQuery(window).load( function() {
 
@@ -86,8 +82,7 @@ jQuery(window).load( function() {
         var minYLabel   = minY - (0.2*minY);
         var maxYLabel   = maxY + (0.2*maxY);
         var plotData    = allData.bothAxisValues;
-     
-       
+            
         if (plotData == 'undefined') {
              var message = 'There is no GEBV data to plot. Please report this problem';  
              jQuery('#gebvPlot2').append(message).show();
@@ -214,35 +209,33 @@ jQuery(window).load( function() {
  
             //calls the tooltip display function and binds the 'plotover' event to
             //the plot
-            var previousPoint = null;
-            var useTooltip = jQuery("#gebvPlot2").bind("plothover", function (event, pos, item) {            
-                    if (item) {
-                        if (previousPoint != item.dataIndex) {                            
-                            previousPoint = item.dataIndex;
+             var previousPoint = null;
+             var useTooltip = jQuery("#gebvPlot2").bind("plothover", function (event, pos, item) {            
+                     if (item) {
+                         if (previousPoint != item.dataIndex) {                            
+                             previousPoint = item.dataIndex;
                             
-                            jQuery("#tooltip").remove();
-                            jQuery("#tooltip_zoom").remove();
+                             jQuery("#tooltip").remove();
+                             jQuery("#tooltip_zoom").remove();
  
-                            var x = item.datapoint[0];
-                            var y = item.datapoint[1].toFixed(2);
-                            var content = xAxisTickValues[x][1] + ', ' + y;
+                             var x = item.datapoint[0];
+                             var y = item.datapoint[1].toFixed(2);
+                             var content = xAxisTickValues[x][1] + ', ' + y;
                   
-                            showTooltip(item.pageX, item.pageY, content);
-                            zoomHelp(item.pageX, item.pageY);
-                        }
-                    }
-                    else {
-                        jQuery("#tooltip").remove();
-                        jQuery("#tooltip_zoom").remove();                   
-                        previousPoint = null;                      
-                    }          
-                });
+                             showTooltip(item.pageX, item.pageY, content);
+                             zoomHelp(item.pageX, item.pageY);
+                         }
+                     }
+                     else {
+                         jQuery("#tooltip").remove();
+                         jQuery("#tooltip_zoom").remove();                   
+                         previousPoint = null;                      
+                     }          
+                 });
 
-
-      
+     
             //inverse plot: plots genotypes from high to low gebv values or vice versa
-
-             var inverseOptions = { 
+            var inverseOptions = { 
                 series: {
                     lines: { 
                         show: true 
@@ -289,15 +282,15 @@ jQuery(window).load( function() {
                 },                        
             };
       
-            function normalPlot() {
-                jQuery.plot('#gebvPlot2', plotData, options);
-            }
+             function normalPlot() {
+                 jQuery.plot('#gebvPlot2', plotData, options);
+             }
 
-            function inversePlot() {
-                jQuery.plot('#gebvPlot2', plotData, inverseOptions);
-            }
+             function inversePlot() {
+                 jQuery.plot('#gebvPlot2', plotData, inverseOptions);
+             }
 
-            jQuery("#inverse_gebv_plot").alternateFunctions(normalPlot, inversePlot);
+             jQuery("#inverse_gebv_plot").alternateFunctions(normalPlot, inversePlot);
 
 
  ////
