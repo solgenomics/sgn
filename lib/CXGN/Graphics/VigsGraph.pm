@@ -24,139 +24,141 @@ has 'ruler_height' => (is => 'ro', isa=>'Int', default=>20);
 has 'expr_hash' => (is => 'rw', default=>undef);
 has 'link_url' => (is => 'rw', isa=>'Str');
 
+# Parse Bowtie file to filter the hits under the number of mismatches selected
 sub parse { 
-    my $self = shift;
-    my $mm = shift || 0;
-    # warn("Parsing file ".$self->bwafile()."\n");
+	my $self = shift;
+	my $mm = shift || 0;
+	# warn("Parsing file ".$self->bwafile()."\n");
 
-    open(my $bt2_fh, "<", $self->bwafile()) || die "Can't open file ".$self->bwafile();
+	open(my $bt2_fh, "<", $self->bwafile()) || die "Can't open file ".$self->bwafile();
 
-    my $matches = {};
-    
-    # parse Bowtie2 file
-    while (my $line = <$bt2_fh>) { 
-	my ($seq_id, $code, $subject, $scoord) = (split /\t/, $line);
-	
-	# get perfect matches 
-	if ($line =~ /XM:i:(\d+)/) { 
-	    my $mm_found = $1;
+	my $matches = {};
 
-	    if ($mm_found <= $mm) {
-		my ($start_coord, $end_coord);
-		if ($seq_id=~/(\d+)/)  {
-		    $start_coord = $1;
-		    $end_coord = $start_coord+$self->fragment_size() -1;
+	# parse Bowtie file
+	while (my $line = <$bt2_fh>) { 
+		my ($seq_id, $code, $subject, $scoord) = (split /\t/, $line);
+		
+		# get perfect matches 
+		# if ($line =~ /NM:i:(\d+)/) { # for Bowtie
+		if ($line =~ /XM:i:(\d+)/) { # for Bowtie2
+			my $mm_found = $1;
+
+			if ($mm_found <= $mm) {
+				# save match coordinates
+				my ($start_coord, $end_coord);
+				if ($seq_id=~/(\d+)/)  {
+					$start_coord = $1;
+					$end_coord = $start_coord+$self->fragment_size() -1;
+				}
+
+				# create new match sequence object
+				my $ms = CXGN::Graphics::VigsGraph::MatchSegment->new();
+				$ms->start($start_coord);
+				$ms->end($end_coord);
+				$ms->id($subject);
+
+				# save match object
+				push @{$matches->{$subject}}, $ms;
+			}
 		}
-	    
-		# new match sequence object
-		my $ms = CXGN::Graphics::VigsGraph::MatchSegment->new();
-		$ms->start($start_coord);
-		$ms->end($end_coord);
-		$ms->id($subject);
-
-		push @{$matches->{$subject}}, $ms;
-	    }
 	}
-    }
-    $self->matches($matches);
+	$self->matches($matches);
 }
  
 sub matches_in_interval { 
-    my $self = shift;
-    my $start = shift;
-    my $end = shift;
-    
-    my $matches = $self->matches();
-    my $interval = {};
+	my $self = shift;
+	my $start = shift;
+	my $end = shift;
 
-    foreach my $s (keys(%$matches)) { 
-	# print  $s."\n";
-	foreach my $m (@{$matches->{$s}}) { 
-	    # print STDERR "checking coords $m->[0], $m->[1] (start, end = $start, $end)\n";
-	    if ( ($m->start() > $start) && ( $m->start() < $end) || ($m->end() > $start ) && ($m->end() < $end)) { 
-		# print STDERR "Match found for sequence $s: $m->[0], $m->[1] ($start, $end)\n";
-		push @{$interval->{$s}}, $m;
-	    }
+	my $matches = $self->matches();
+	my $interval = {};
+
+	foreach my $s (keys(%$matches)) { 
+		# print  $s."\n";
+		foreach my $m (@{$matches->{$s}}) { 
+			# print STDERR "checking coords $m->[0], $m->[1] (start, end = $start, $end)\n";
+			if ( ($m->start() > $start) && ( $m->start() < $end) || ($m->end() > $start ) && ($m->end() < $end)) { 
+				# print STDERR "Match found for sequence $s: $m->[0], $m->[1] ($start, $end)\n";
+				push @{$interval->{$s}}, $m;
+			}
+		}
 	}
-    }
-    return $interval;
+	return $interval;
 }
 
 sub target_graph { 
-    my $self = shift;
-    my $coverage = shift;
+	my $self = shift;
+	my $coverage = shift;
 
-    my $matches = $self->matches();
-    my @match_counts = $self->subjects_by_match_count(0,$matches);
-    # print Dumper(@match_counts);
-    my @target_scores;
+	my $matches = $self->matches();
+	my @match_counts = $self->subjects_by_match_count(0,$matches);
+	# print Dumper(@match_counts);
+	my @target_scores;
 
-    # array with target subject names, coverage is the number of target subjects
-    my @target_keys = ();
-    foreach my $k (1..$coverage) { 
-	my $e = shift @match_counts;
-	push @target_keys, $e->[0]; 
-    }
-
-#    print STDERR "TARGET KEYS: ".join(",", @target_keys);
-#    print STDERR "\n";
-   
-    # foreach match (blue squares in the graph), saves in $s_targets the coverage in each position
-    foreach my $s (@target_keys) { 
-	if (! defined($matches->{$s})) { 
-	    next; 
-	}
-	my %s_targets = ();
-	foreach my $m (@{$matches->{$s}}) { 
-	    # print STDERR "m: ".$m->start()."\n";
-	    foreach my $n ($m->start()-1 .. $m->end()) { 
-		$s_targets{$n} = 1;
-                # print STDERR "m: ".$m->start()." - ". $m->end()." $n\n";
-	    }   
+	# array with target subject names, coverage is the number of target subjects
+	my @target_keys = ();
+	foreach my $k (1..$coverage) { 
+		my $e = shift @match_counts;
+		push @target_keys, $e->[0]; 
 	}
 
-	# when the position is not mapped over the targets we get 0, 
-        # if it is mapped we get the number of targets where mapped in that position
-	foreach my $pos (sort keys %s_targets) {
-	    $target_scores[$pos]++;
-	}
-	%s_targets = ();	
-    }
+	#    print STDERR "TARGET KEYS: ".join(",", @target_keys);
+	#    print STDERR "\n";
 
-    return @target_scores;
+	# foreach match (blue squares in the graph), saves in $s_targets the coverage in each position
+	foreach my $s (@target_keys) { 
+		if (! defined($matches->{$s})) { 
+			next; 
+		}
+		my %s_targets = ();
+		foreach my $m (@{$matches->{$s}}) { 
+			# print STDERR "m: ".$m->start()."\n";
+			foreach my $n ($m->start()-1 .. $m->end()) { 
+				$s_targets{$n} = 1;
+				# print STDERR "m: ".$m->start()." - ". $m->end()." $n\n";
+			}   
+		}
+
+		# when the position is not mapped over the targets we get 0, 
+		# if it is mapped we get the number of targets where mapped in that position
+		foreach my $pos (sort keys %s_targets) {
+			$target_scores[$pos]++;
+		}
+		%s_targets = ();	
+	}
+	return @target_scores;
 }
 
 sub off_target_graph { 
-    my $self = shift;
-    my $coverage = shift;
+	my $self = shift;
+	my $coverage = shift;
 
-    my @off_targets = ();
+	my @off_targets = ();
 
-    my $matches = $self->matches();
-    my @match_counts = $self->subjects_by_match_count(0,$matches);
-    my %off_t_counts;
+	my $matches = $self->matches();
+	my @match_counts = $self->subjects_by_match_count(0,$matches);
+	my %off_t_counts;
 
-    my @coverage_keys = ();
-    foreach my $k (0..$coverage-1) { 
-	shift @match_counts;
-    }
-    @coverage_keys = map { $_->[0] } @match_counts;
-    
-    foreach my $s (@coverage_keys) { 
-	foreach my $m (@{$matches->{$s}}) {
-#	    print STDERR "$s, ".$m->start()."-".$m->end()."\n";
-	    foreach my $n ($m->start()-1 .. $m->end()) {
-		$off_t_counts{$n} = 1;
-	    }
+	my @coverage_keys = ();
+	foreach my $k (0..$coverage-1) { 
+		shift @match_counts;
 	}
-	
-	foreach my $pos (sort keys %off_t_counts) {
-	    $off_targets[$pos]++;
-	}
-	%off_t_counts = ();
-    }
+	@coverage_keys = map { $_->[0] } @match_counts;
 
-    return @off_targets;
+	foreach my $s (@coverage_keys) { 
+		foreach my $m (@{$matches->{$s}}) {
+			# print STDERR "$s, ".$m->start()."-".$m->end()."\n";
+			foreach my $n ($m->start()-1 .. $m->end()) {
+				$off_t_counts{$n} = 1;
+			}
+		}
+
+		foreach my $pos (sort keys %off_t_counts) {
+			$off_targets[$pos]++;
+		}
+		%off_t_counts = ();
+	}
+	return @off_targets;
 }
 
 sub longest_vigs_sequence { 
@@ -256,37 +258,36 @@ sub get_best_coverage {
 }
 
 sub subjects_by_match_count { 
-    my $self = shift;
-    my $db = shift;
-    my $matches = shift;
-    my @counts = ();
-    my $fs;
-    my $primseqi;
-    my $desc;
+	my $self = shift;
+	my $db = shift;
+	my $matches = shift;
+	my @counts = ();
+	my $fs;
+	my $primseqi;
+	my $desc;
 
-    if ($db) {
-	#print STDERR "db: $db\n";
-    
-	$fs = Bio::BLAST::Database->open(
-	    full_file_basename => $db,
-	);
-    }
+	if ($db) {
+		#print STDERR "db: $db\n";
 
-    foreach my $s (keys %$matches) { 
-        if ($db) {
-	    $primseqi = $fs->get_sequence($s);
-	    $desc = $primseqi->desc();
-
-	    push @counts, [ $s, scalar(@{$matches->{$s}}),$desc];
-	} else {
-	    push @counts, [ $s, scalar(@{$matches->{$s}}),"" ];
+		$fs = Bio::BLAST::Database->open(full_file_basename => $db,);
 	}
-    }
 
-    # print Dumper(\@counts);
-    my @sorted = sort sort_keys @counts;
-    
-    return @sorted;
+	foreach my $s (keys %$matches) { 
+		if ($db) {
+			$primseqi = $fs->get_sequence($s);
+			$desc = $primseqi->desc();
+
+			push @counts, [ $s, scalar(@{$matches->{$s}}),$desc];
+		} 
+		else {
+			push @counts, [ $s, scalar(@{$matches->{$s}}),"" ];
+		}
+	}
+
+	# print Dumper(\@counts);
+	my @sorted = sort sort_keys @counts;
+
+	return @sorted;
 }
 
 sub uniq_array{

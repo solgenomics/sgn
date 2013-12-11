@@ -149,32 +149,47 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		" --omit-sec-seq",
 		" --end-to-end",
 		# " --mp 2,1", 
-		# " -L 3", 
-		# " --score-min L,-1,-0.9", 
-		# " -N 1", 
+		" -L ".$fragment_size, 
+		# " --score-min L,-100,-1", 
+		" -N 1", 
 		# " -R 10", 
 		" -a", 
-		" -x ". $database_fullpath,
+		" -x ".$database_fullpath,
 		" -f",
-		" -U ". $query_file.".fragments",
-		" -S ". $query_file.".bt2.out",
+		" -U ".$query_file.".fragments",
+		" -S ".$query_file.".bt2.out",
 	);
 
-    print STDERR "Bowtie2 COMMAND: ".(join ", ",@command)."\n";
+	# my @command = (File::Spec->catfile($bowtie2_path, "bowtie"),
+	# 	" --all",
+	# 	" -v 3",
+	# 	" --threads 1",
+	# 	" --seedlen ".$fragment_size,
+	# 	" --sam",
+	# 	" --sam-nohead",
+	# 	# " --al ".$query_file.".bt2.out",
+	# 	" ".$database_fullpath,
+	# 	" -f ".$query_file.".fragments",
+	# 	" ".$query_file.".bt2.out",
+	# );
+
+    print STDERR "Bowtie2 COMMAND: ".(join " ",@command)."\n";
     
+	# print STDERR "TEST: $bowtie2_path/bowtie  --all -v 3 --threads 1 --seedlen $fragment_size --sam --sam-nohead $database_fullpath -f $query_file.fragments $query_file.bt2.out\n";
+	
+    # my $err = system("$bowtie2_path/bowtie  --all -v 3 --threads 1 --seedlen $fragment_size --sam --sam-nohead $database_fullpath -f $query_file.fragments $query_file.bt2.out");
     my $err = system(@command);
 
 	if ($err) {
 		$c->stash->{rest} = {error => "Bowtie2 execution failed"};
+	} 
+	else {
+		$id = $urlencode{basename($seq_filename)};
+		$c->stash->{rest} = {jobid =>basename($seq_filename),
+							seq_length => length($sequence),
+							db_name => $database_title,
+		};
 	}
-
-    $id = $urlencode{basename($seq_filename)};
-    
-    $c->stash->{rest} = {jobid =>basename($seq_filename),
-                         seq_length => length($sequence),
-                         db_name => $database_title,
-    };
-
 }
 
 
