@@ -257,7 +257,7 @@ $(document).ready(function () {
 		$.ajax({
 			url: '/tools/vigs/view/',
 			// async: false,
-			timeout: 60000,
+			timeout: 600000,
 			method: 'POST',
 			data: {'id': bt2_res, 'sequence': seq, 'fragment_size': si_rna, 'seq_fragment': f_length, 'missmatch': mm, 'targets': coverage, 'expr_file': expr_file, 'status': status, 'database': db},
 			complete: function(){
@@ -287,7 +287,7 @@ $(document).ready(function () {
 						$("#score_p").html("<b>Best target region score:</b> "+best_score+" &nbsp;&nbsp;(-&infin;&mdash;100)<br />");
 						$("#t_num").val(coverage);
 					} else {
-						$("#no_results").html("Note: No results found! Try again increasing the number of targets, decreasing the fragment size or modifing other parameters");
+						$("#no_results").html("Note: No results found! Try again increasing the number of targets or the n-mer length, or decreasing the mismatches");
 					}
 
 					//show result sections

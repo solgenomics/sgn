@@ -46,14 +46,14 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
     my @errors; 
  
     # get variables from catalyst object
-    my $seq_filename = $c->req->param("tmp_file_name");
+    # my $seq_filename = $c->req->param("tmp_file_name");
 	
     my $params = $c->req->body_params();
     my $sequence = $c->req->param("sequence");
     my $fragment_size = $c->req->param("fragment_size");
     my $seq_fragment = $c->req->param("seq_fragment");
     my $missmatch = $c->req->param("missmatch");
-    my $database = $c->req->param("database");
+    my $db_id = $c->req->param("database");
 
     # clean the sequence and check if there are more than one sequence pasted
     if ($sequence =~ tr/>/>/ > 1) {
@@ -130,8 +130,8 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
     if (! -e $query_file) { die "Query file failed to be created."; }
 
     # get arguments to Run Bowtie2
-    print STDERR "DATABASE SELECTED: $database\n";
-    my $bdb = CXGN::BlastDB->from_id($database);
+    print STDERR "DATABASE SELECTED: $db_id\n";
+    my $bdb = CXGN::BlastDB->from_id($db_id);
     
     my $basename = $c->config->{blast_db_path};
     my $database = $bdb->file_base;
@@ -284,12 +284,17 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $seq_length = length($query->seq());
 	
 	my $counter = 0;
-	while ($regions[1] <= 0 || $counter >= 4) {
-		$counter = $counter + 1;
+	while (!$regions[1] || $regions[1] <= 0) {
+		$counter++;
 		@regions = $vg->longest_vigs_sequence($coverage, $seq_length);
+		
+		print STDERR "score: $regions[1], loop iteration: $counter\n";
 		
 		if ($regions[1] <= 0 || $counter >= 4) {
 			$coverage = $coverage + 1;
+		}
+		if ($counter >= 3) {
+			last;
 		}
 	}
 	
