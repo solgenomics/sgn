@@ -144,7 +144,7 @@ phenoData <- read.table(phenoFile,
                         )
 
 phenoTrait <- c()
-
+formattedPhenoData <- c()
 if (datasetInfo == 'combined populations')
   {  
     dropColumns <- grep(trait,
@@ -159,7 +159,6 @@ if (datasetInfo == 'combined populations')
     row.names(phenoTrait) <- phenoTrait[, 1]
     phenoTrait[, 1] <- NULL
     
-    print(phenoTrait[1:10, ])
 
   } else {
    
