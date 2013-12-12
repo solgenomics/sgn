@@ -20,17 +20,25 @@ $project_desc
 $stocks_no
 $markers_no
 $traits_no
-$uploaded_reference=>''
-$owner=>''
+$uploaded_reference => ''
+$owner => ''
+$combined_populations => ''
 
 </%args>
 
 <%perl>
 
 if (!$owner) {$owner = 'NextGen Cassava Project'; } 
+$traits_no = 1 if !$traits_no;
 
-my $project_link = qq |<a href="/solgs/population/$project_id">$project_name </a> | if !$uploaded_reference;
-$project_link = qq |<a href="/solgs/population/$project_id/uploaded">$project_name</a> | if $uploaded_reference;
+my $project_link; 
+if (!$uploaded_reference && !$combined_populations) {
+  $project_link = qq | <a href="/solgs/population/$project_id">$project_name</a> |;
+} elsif ($uploaded_reference) {
+  $project_link = qq | <a href="/solgs/population/$project_id/uploaded">$project_name</a> |;
+} else {
+  $project_link = $project_name;
+}
 
 </%perl>
 
