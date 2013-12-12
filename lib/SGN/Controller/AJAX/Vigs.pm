@@ -87,14 +87,14 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		push (@errors, "n-mer size must be lower or equal to sequence length.\n");
     }
 
-    if (!$fragment_size ||$fragment_size < 14 || $fragment_size > 30 ) { 
-		push (@errors, "n-mer size ($fragment_size) value must be between 14-30 bp.\n");
+    if (!$fragment_size ||$fragment_size < 18 || $fragment_size > 30 ) { 
+		push (@errors, "n-mer size ($fragment_size) value must be between 18-30 bp.\n");
     }
     if (!$seq_fragment || $seq_fragment < 100 || $seq_fragment > length($sequence)) {
 		push (@errors, "Wrong fragment size ($seq_fragment), it must be higher than 100 bp and lower than sequence length\n");
     }
-    if ($missmatch =~ /[^\d]/ || $missmatch < 0 || $missmatch > 5 ) { 
-		push (@errors, "miss-match value ($missmatch) must be between 0-3\n");
+    if ($missmatch =~ /[^\d]/ || $missmatch < 0 || $missmatch > 1 ) { 
+		push (@errors, "miss-match value ($missmatch) must be between 0-1\n");
     }
 
     # Send error message to the web if something is wrong
@@ -159,19 +159,6 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		" -U ".$query_file.".fragments",
 		" -S ".$query_file.".bt2.out",
 	);
-
-	# my @command = (File::Spec->catfile($bowtie2_path, "bowtie"),
-	# 	" --all",
-	# 	" -v 3",
-	# 	" --threads 1",
-	# 	" --seedlen ".$fragment_size,
-	# 	" --sam",
-	# 	" --sam-nohead",
-	# 	# " --al ".$query_file.".bt2.out",
-	# 	" ".$database_fullpath,
-	# 	" -f ".$query_file.".fragments",
-	# 	" ".$query_file.".bt2.out",
-	# );
 
     print STDERR "Bowtie2 COMMAND: ".(join " ",@command)."\n";
     
@@ -295,11 +282,13 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my @regions = [0,0,0,1,1,1];
     my @best_region = [1,1];
     my $seq_length = length($query->seq());
-
-	while ($regions[1] <= 0) {
-    	@regions = $vg->longest_vigs_sequence($coverage, $seq_length);
 	
-		if ($regions[1] <= 0) {
+	my $counter = 0;
+	while ($regions[1] <= 0 || $counter >= 4) {
+		$counter = $counter + 1;
+		@regions = $vg->longest_vigs_sequence($coverage, $seq_length);
+		
+		if ($regions[1] <= 0 || $counter >= 4) {
 			$coverage = $coverage + 1;
 		}
 	}
@@ -329,7 +318,9 @@ sub view :Path('/tools/vigs/view') Args(0) {
     }
 
     # return variables
-    $c->stash->{rest} = {score => sprintf("%.2f",($regions[1]*100/$seq_fragment)/$coverage),
+    $c->stash->{rest} = {
+						score => sprintf("%.2f",($regions[1]*100/$seq_fragment)/$coverage),
+						# score => sprintf("%.2f",($regions[1]*100/$fragment_size/$seq_fragment)/$coverage),
 						coverage => $coverage,
 						f_size => $seq_fragment,
 						cbr_start => ($regions[4]+1),

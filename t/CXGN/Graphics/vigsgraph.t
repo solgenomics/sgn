@@ -70,12 +70,12 @@ my @regions = $vg ->longest_vigs_sequence(2,1116);
 #print Dumper(\@regions);
 
 # 13. check best region start
-is($regions[4], 378, "best region start coord test");
+is($regions[4], 377, "best region start coord test");
 # 14. check best region end
-is($regions[5], 677, "best region end coord test");
+is($regions[5], 676, "best region end coord test");
 
 # 15. check score value
-is($regions[1], 361, "score test");
+is($regions[1], 366, "score test");
 
 # only one target match
 @regions = $vg ->longest_vigs_sequence(3,1116);

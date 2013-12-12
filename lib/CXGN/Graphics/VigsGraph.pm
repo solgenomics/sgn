@@ -86,6 +86,7 @@ sub matches_in_interval {
 	return $interval;
 }
 
+# get the score values for each position of the target genes
 sub target_graph { 
 	my $self = shift;
 	my $coverage = shift;
@@ -95,7 +96,7 @@ sub target_graph {
 	# print Dumper(@match_counts);
 	my @target_scores;
 
-	# array with target subject names, coverage is the number of target subjects
+	# create an array with target names, coverage is the number of targets set
 	my @target_keys = ();
 	foreach my $k (1..$coverage) { 
 		my $e = shift @match_counts;
@@ -113,18 +114,34 @@ sub target_graph {
 		my %s_targets = ();
 		foreach my $m (@{$matches->{$s}}) { 
 			# print STDERR "m: ".$m->start()."\n";
-			foreach my $n ($m->start()-1 .. $m->end()) { 
+			foreach my $n ($m->start()-1 .. $m->end()-1) {
+			# foreach my $n ($m->start()-1 .. $m->end()) {
+				# using coverage in algorithm
+				# if (!$s_targets{$n}) {
+				# 	$s_targets{$n} = 1;
+				# } else {
+				# 	$s_targets{$n} = $s_targets{$n} + 1;
+				# }
+				# print STDERR "m: ".($m->start() - 1)." - ".($m->end() - 1).", $n -> $s_targets{$n}\n";
+				
 				$s_targets{$n} = 1;
-				# print STDERR "m: ".$m->start()." - ". $m->end()." $n\n";
 			}   
 		}
 
 		# when the position is not mapped over the targets we get 0, 
 		# if it is mapped we get the number of targets where mapped in that position
-		foreach my $pos (sort keys %s_targets) {
+		foreach my $pos (keys %s_targets) {
+			# using coverage in algorithm
+			# if ($target_scores[$pos]) {
+			# 	$target_scores[$pos] += $s_targets{$pos};
+			# }
+			# else {
+			# 	$target_scores[$pos] = $s_targets{$pos};
+			# }
+			# print STDERR "Pos:$pos,  $target_scores[$pos]\n";
 			$target_scores[$pos]++;
 		}
-		%s_targets = ();	
+		%s_targets = ();
 	}
 	return @target_scores;
 }
@@ -148,12 +165,25 @@ sub off_target_graph {
 	foreach my $s (@coverage_keys) { 
 		foreach my $m (@{$matches->{$s}}) {
 			# print STDERR "$s, ".$m->start()."-".$m->end()."\n";
-			foreach my $n ($m->start()-1 .. $m->end()) {
+			foreach my $n ($m->start()-1 .. $m->end()-1) {
+				# using coverage in algorithm
+				# if (!$off_t_counts{$n}) {
+				# 	$off_t_counts{$n} = 1;
+				# } else {
+				# 	$off_t_counts{$n} = $off_t_counts{$n} + 1;
+				# }
 				$off_t_counts{$n} = 1;
 			}
 		}
 
-		foreach my $pos (sort keys %off_t_counts) {
+		foreach my $pos (keys %off_t_counts) {
+			# using coverage in algorithm
+			# if ($off_targets[$pos]) {
+			# 	$off_targets[$pos] += $off_t_counts{$pos};
+			# }
+			# else {
+			# 	$off_targets[$pos] = $off_t_counts{$pos};
+			# }
 			$off_targets[$pos]++;
 		}
 		%off_t_counts = ();
@@ -162,77 +192,76 @@ sub off_target_graph {
 }
 
 sub longest_vigs_sequence { 
-    my $self = shift;
-    my $coverage = shift;
-    my $seq_length = shift;
+	my $self = shift;
+	my $coverage = shift;
+	my $seq_length = shift;
 
-    my @best_region;    
-    my $start = undef;
-    my $end = undef;
-    my $score = 0;
-    my @window_sum = [];
-    my $window_score = 0;
-    my $best_score = -9999;
-    my $best_start = 1;
-    my $best_end = 1;
-    my $no_result = 0;
-    
-    if ($coverage == 0) {
-	$coverage = 1;
-	$no_result = 1;
-    }
+	my @best_region;    
+	my $start = undef;
+	my $end = undef;
+	my $score = 0;
+	my @window_sum = [];
+	my $window_score = 0;
+	my $best_score = -9999;
+	my $best_start = 1;
+	my $best_end = 1;
+	my $no_result = 0;
+
+	if ($coverage == 0) {
+		$coverage = 1;
+		$no_result = 1;
+	}
     
     my @targets = $self->target_graph($coverage);
     my @off_targets = $self->off_target_graph($coverage);
     my $seq_fragment = $self->seq_fragment();
 
-    # @targets contains the coverage of target at every position. Same thing for off_targets
-    # $window sum[position] contain the score for each position. 
-    # It will be positive when there are more targets than off_targets, and negative in the opposite case.
-    for (my $i=0; $i<$seq_length; $i++) {
-        
-	$window_sum[$i] = 0;
-	if (defined($targets[$i]) && $targets[$i]>0) {
-	    $window_sum[$i] += $targets[$i];
-	}
-	else {
-	    $window_sum[$i] += 0;
-	    $targets[$i] = 0;
-	}
-
-	if (defined($off_targets[$i]) && $off_targets[$i]>0) {
-	    $window_sum[$i] -= ($off_targets[$i]*1.5);
-	}
-	else {
-	    $window_sum[$i] += 0;
-	    $off_targets[$i] = 0;
-	}
-
-#	print "$i: $window_sum[$i]\tt:$targets[$i]\tot:$off_targets[$i]\n";
-
-	if ($i+1 >= $seq_fragment) {
-	    $window_score = 0;
-	    for (my $e=($i-$seq_fragment+1); $e<=$i; $e++) {
-#		print "$e\t";
-		if ($window_sum[$e] && $window_sum[$e] =~ /^[\d+-\.]+$/) { 
-		    $window_score += $window_sum[$e];
+	# @targets contains the coverage of each target at each position. Same thing for off_targets
+	# $window sum[position] contain the score for each position. 
+	# It will be positive when there are more targets than off_targets, and negative in the opposite case.
+	for (my $i=0; $i<$seq_length; $i++) {
+		$window_sum[$i] = 0;
+		if (defined($targets[$i]) && $targets[$i]>0) {
+			$window_sum[$i] += $targets[$i];
 		}
-	    }
-#	    print "\ntest: ".($i+1-$seq_fragment)."-".($i).": $window_score\n";
+		else {
+			$window_sum[$i] += 0;
+			$targets[$i] = 0;
+		}
 
-	    if ($window_score > $best_score) {
-		$best_score = $window_score;
-		$best_start = $i-$seq_fragment+1;
-		$best_end = $i;
-	    }
-#	    print "best: $best_start-$best_end: $best_score\n";
-	    $window_score = 0;
+		if (defined($off_targets[$i]) && $off_targets[$i]>0) {
+			$window_sum[$i] -= ($off_targets[$i]*1.5);
+		}
+		else {
+			$window_sum[$i] += 0;
+			$off_targets[$i] = 0;
+		}
+
+		# print "$i: $window_sum[$i]\tt:$targets[$i]\tot:$off_targets[$i]\n";
+
+		if ($i+1 >= $seq_fragment) {
+			$window_score = 0;
+			for (my $e=($i-$seq_fragment+1); $e<=$i; $e++) {
+				#		print "$e\t";
+				if ($window_sum[$e] && $window_sum[$e] =~ /^[\d+-\.]+$/) { 
+					$window_score += $window_sum[$e];
+				}
+			}
+			# print "\ntest: ".($i+1-$seq_fragment)."-".($i).": $window_score\n";
+
+			if ($window_score > $best_score) {
+				$best_score = $window_score;
+				$best_start = $i-$seq_fragment+1;
+				$best_end = $i;
+			}
+			# print "best: $best_start-$best_end: $best_score\n";
+			$window_score = 0;
+		}
 	}
-    }
-    if ($no_result) {$best_score = 0;}
-    
-    @best_region = ($coverage, $best_score, \@window_sum, $seq_fragment, $best_start, $best_end);
-    return @best_region;
+	if ($no_result) {$best_score = 0;}
+
+	@best_region = ($coverage, $best_score, \@window_sum, $seq_fragment, $best_start, $best_end);
+	return @best_region;
 }
 
 
