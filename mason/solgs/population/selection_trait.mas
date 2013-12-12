@@ -20,7 +20,7 @@ $blups_download_url
 
 </%perl>
 
-  <& /util/import_javascript.mas, classes => ["solGS.traitGebvFlot", 
+  <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.traitGebvFlot", 
                                               "flot.flot", "flot.categories", 
                                               "flot.tooltip", "flot.selection", "flot.navigate", 
                                               "flot.axisLabels"
