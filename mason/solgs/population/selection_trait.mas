@@ -7,13 +7,14 @@ $project_name
 $project_desc
 $stocks_no
 $markers_no
-$traits_no
+$traits_no => ''
 $trait_id
 $prediction_pop_id
 $prediction_pop_name => ''
 $owner=>''
 $top_blups
 $blups_download_url
+$combined_populations => ''
 </%args>
 
 <%perl>
@@ -47,7 +48,8 @@ $blups_download_url
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
-    owner        => $owner
+    owner        => $owner,
+   combined_populations => $combined_populations,
  &>
  
 </&>
