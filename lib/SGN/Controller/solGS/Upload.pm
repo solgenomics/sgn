@@ -113,7 +113,9 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
     
     $self->create_user_list_genotype_data_file($c);
    # my $genotype_file = $c->stash->{user_selection_list_genotype_data_file};
-
+    $c->stash->{prediction_pop_id} = $list_id;
+    $self->create_list_population_metadata_file($c);
+    
     my $ret->{status} = 'failed';
     
     if (-s $c->stash->{user_selection_list_genotype_data_file}) 
@@ -207,37 +209,39 @@ sub create_user_reference_list_phenotype_data_file {
 
 
 
-sub create_user_reference_list_metadata {
+sub create_list_population_metadata {
     my ($self, $c) = @_;
     my $metadata = 'key' . "\t" . 'value';
     $metadata .= "\n" . 'user_id' . "\t" . $c->user->id;
     $metadata .= "\n" . 'list_name' . "\t" . $c->{stash}->{list_name};
     $metadata .= "\n" . 'description' . "\t" . 'Uploaded on: ' . strftime "%a %b %e %H:%M %Y", localtime;
     
-    $c->stash->{user_reference_list_metadata} = $metadata;
+    $c->stash->{user_list_population_metadata} = $metadata;
   
 }
 
 
 
-sub create_user_reference_list_metadata_file {
+sub create_list_population_metadata_file {
     my ($self, $c) = @_;
       
     my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
     my $model_id = $c->stash->{model_id};
     $c->stash->{pop_id} = $model_id;
 
-    $self->create_user_reference_list_metadata($c);
+    my $selection_pop_id = $c->stash->{prediction_pop_id};
+   
+    $self->create_list_population_metadata($c);
 
     my $user_id    = $c->user->id;
-    my $metadata = $c->stash->{user_reference_list_metadata};
-   # print STDERR "\ncreate_user_reference_list_phenotype_data_file pheno_data: $pheno_data\n";
-    
-    my $file = catfile ($tmp_dir, "metadata_${user_id}_${model_id}");
+    my $metadata = $c->stash->{user_list_population_metadata};
+  
+    my $id = $model_id ? $model_id : $selection_pop_id;
+    my $file = catfile ($tmp_dir, "metadata_${user_id}_${id}");
 
     write_file($file, $metadata);
  
-    $c->stash->{user_reference_list_metadata_file} = $file;
+    $c->stash->{user_list_population_metadata_file} = $file;
   
 }
 
@@ -487,11 +491,12 @@ sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/lis
     my $pheno_file =  $c->stash->{user_reference_list_phenotype_data_file};
   #####
 
-###### 
-  #  my $pheno_file = '/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/phenotype_data_isaaktecle_${model_id}';
-  #  my $geno_file = '/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/genotype_data_isaaktecle_${model_id}'; 
+######
+  #  my $user_id = $c->user->id;
+  #  my $pheno_file = "/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/phenotype_data_${user_id}_${model_id}";
+  #  my $geno_file = "/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/genotype_data_${user_id}_${model_id}"; 
 #####    
-    $self->create_user_reference_list_metadata_file($c);
+    $self->create_list_population_metadata_file($c);
      
     my $ret->{status} = 'failed';
     
