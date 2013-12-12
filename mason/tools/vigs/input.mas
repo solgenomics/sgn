@@ -1,15 +1,4 @@
 
-<!-- <script src="http://code.jquery.com/jquery-1.9.1.js"></script> -->
-<!-- <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script> -->
-
-<!-- javascript-->
-
-<script src="/js/jqueryui/jquery-1.9.1.js"></script>
-<script src="/js/jqueryui/jquery-ui.js"></script>
-<script src="/js/tools/vigs.js" type="text/javascript"></script>
-<script src="/js/jquery/iframe-post-form.js" type="text/javascript"></script>
-
-
 <%args>
 
 @databases
@@ -18,7 +7,8 @@ $f_size => 0
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ['Text.Markup', 'sprintf', 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List'] &>
+<!-- import javascript libraries-->
+<& /util/import_javascript.mas, classes => ['Text.Markup', 'sprintf', 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.List', 'tools/vigs'] &>
 
 <& /page/page_title.mas, title=>"VIGS Tool" &>
 
