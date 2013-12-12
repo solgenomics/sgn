@@ -88,7 +88,7 @@ function loadGenotypesList(listId) {
         jQuery.ajax({
                 type: 'POST',
                     dataType: 'json',
-                    data: {id: listId, 'name': listName, 'list': list},
+                    data: {id: 'uploaded_' + listId, 'name': listName, 'list': list},
                     url: '/solgs/upload/prediction/genotypes/list',
                    
                     success: function(response) {
