@@ -618,6 +618,7 @@ $(document).ready(function () {
 				var xpos = (i+1)*xscale;
 				var ypos = 0;
 
+				// var final_score = (+score_array[i]/+si_rna/coverage*100).toFixed(2); //using coverage in algorithm
 				var final_score = (+score_array[i]*100/coverage).toFixed(2);
 
 				if (+final_score >= 0) {
@@ -814,7 +815,8 @@ $(document).ready(function () {
 		var fragment_length = (+end - +start + 1);
 
 		if (coverage > 0 && fragment_length > 0) {
-			var final_score = ((custom_score*100/fragment_length)/coverage).toFixed(2)
+			var final_score = ((custom_score*100/fragment_length)/coverage).toFixed(2); 
+			// var final_score = (custom_score*100/+si_rna/fragment_length/coverage).toFixed(2); //using coverage
 			$("#score_p").html("<b>Best target region score:</b> "+best_score+" &nbsp;&nbsp; <b> Custom region score: </b>"+final_score+" &nbsp;&nbsp; (-&infin;&mdash;100)");
 		}
 	}
@@ -908,19 +910,19 @@ $(document).ready(function () {
 			$("#region_square").css("height","0px");
 			
 			//check values before recalculate
-			if (+n_mer >= 14 && +n_mer <= 30) {
+			if (+n_mer >= 18 && +n_mer <= 30) {
 				disable_ui();
 				runBt2(n_mer, f_size, align_mm, db);
 			} else {
-				alert("n-mer value must be between 14-30");
+				alert("n-mer value must be between 18-30");
 			}
 		} else if (align_mm != mm) {
 			$("#f_length").val(f_size);
 			$("#mm").val(align_mm);
 			$("#coverage_val").val(t_num);
 			
-			if (!align_mm || +align_mm < 0 || +align_mm > 5) {
-				alert("miss-match value ("+align_mm+") must be between 0-5");
+			if (!align_mm || +align_mm < 0 || +align_mm > 1) {
+				alert("miss-match value ("+align_mm+") must be between 0-1");
 			} else {
 				disable_ui();
 				getResults(1, bt2_file, n_mer, f_size, align_mm, t_num, db, expr_f);
