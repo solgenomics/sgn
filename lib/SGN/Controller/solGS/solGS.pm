@@ -423,6 +423,38 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?'){
 } 
 
 
+sub uploaded_population_summary {
+    my ($self, $c, $pop_id) = @_;
+    
+    my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
+    my $user_name = $c->user->id;
+    
+    my $model_id = $c->stash->{model_id};
+  
+    my $selection_pop_id = $c->stash->{prediction_pop_id};
+    my $id = $model_id ? $model_id : $selection_pop_id;    
+    
+    my $metadata_file = catfile ($tmp_dir, "metadata_${user_name}_${id}");
+       
+    my @metadata = read_file($metadata_file);
+       
+    my ($key, $list_name, $desc);
+     
+    ($desc)        = grep {/description/} @metadata;       
+    ($key, $desc)  = split(/\t/, $desc);
+      
+    ($list_name)       = grep {/list_name/} @metadata;      
+    ($key, $list_name) = split(/\t/, $list_name); 
+
+    $c->stash(project_id   => $pop_id,
+              project_name => $list_name,
+              project_desc => $desc,
+              owner        => $user_name
+        );
+
+
+}
+
 sub project_description {
     my ($self, $c, $pr_id) = @_;
 
@@ -445,26 +477,28 @@ sub project_description {
     } 
     else 
     {
-        my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
-        my $user_name = $c->user->id;
+        $c->stash->{model_id} = $pr_id;
+        $self->uploaded_population_summary($c);
+       #  my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
+#         my $user_name = $c->user->id;
         
-        my $metadata_file = catfile ($tmp_dir, "metadata_${user_name}_${pr_id}");
+#         my $metadata_file = catfile ($tmp_dir, "metadata_${user_name}_${pr_id}");
        
-        my @metadata = read_file($metadata_file);
+#         my @metadata = read_file($metadata_file);
        
-        my ($key, $list_name, $desc);
+#         my ($key, $list_name, $desc);
      
-        ($desc)        = grep {/description/} @metadata;       
-        ($key, $desc)  = split(/\t/, $desc);
+#         ($desc)        = grep {/description/} @metadata;       
+#         ($key, $desc)  = split(/\t/, $desc);
       
-        ($list_name)       = grep {/list_name/} @metadata;      
-        ($key, $list_name) = split(/\t/, $list_name); 
+#         ($list_name)       = grep {/list_name/} @metadata;      
+#         ($key, $list_name) = split(/\t/, $list_name); 
 
-        $c->stash(project_id   => $pr_id,
-                  project_name => $list_name,
-                  project_desc => $desc,
-                  owner        => $user_name
-                );
+#         $c->stash(project_id   => $pr_id,
+#                   project_name => $list_name,
+#                   project_desc => $desc,
+#                   owner        => $user_name
+#                 );
 
     }
     
@@ -520,18 +554,84 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
  
     $self->get_trait_name($c, $trait_id);
     
-    my $pop_rs = $c->model("solGS::solGS")->project_details($c, $selection_pop_id);
+    my $page = $c->req->referer();
+
+    if ($page =~ /solgs\/model\/combined\/populations/)
+    {
+        $self->combined_pops_catalogue_file($c);
+        my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
     
-    while (my $pop_row = $pop_rs->next) 
-    {      
-        $c->stash->{prediction_pop_name} = $pop_row->name;    
+        my @combos = read_file($combo_pops_catalogue_file);
+    
+        foreach (@combos)
+        {
+            if ($_ =~ m/$model_id/)
+            {
+                my ($combo_pops_id, $pops)  = split(/\t/, $_);
+                $c->stash->{trait_combo_pops} = $pops;  
+                print STDERR "\nsolgs/selection/ page: combined_pops - $pops\n";
+            }   
+        } 
+        $c->stash->{combo_pops_id} = $model_id;
+        $self->combined_pops_summary($c);
+        $c->stash->{combined_populations} = 1;   
+    } 
+    elsif ($selection_pop_id =~ /uploaded/)
+    {  
+        $c->stash->{prediction_pop_id} = $selection_pop_id; 
+        $self->uploaded_population_summary($c);
+        $c->stash->{prediction_pop_name} = $c->stash->{project_name};
+
+        $c->stash->{model_id} = $model_id; 
+        $self->uploaded_population_summary($c);
+
+        $self->genotype_file($c);
+        my $geno_file  = $c->stash->{genotype_file};
+        my @geno_lines = read_file($geno_file);
+        my $markers_no = scalar(split ('\t', $geno_lines[0])) - 1;
+
+        $self->trait_phenodata_file($c);
+        my $trait_pheno_file  = $c->stash->{trait_phenodata_file};
+        my @trait_pheno_lines = read_file($trait_pheno_file) if $trait_pheno_file;
+
+        my $stocks_no = @trait_pheno_lines ? scalar(@trait_pheno_lines) - 1 : scalar(@geno_lines) - 1;
+   
+        $self->phenotype_file($c);
+        my $pheno_file = $c->stash->{phenotype_file};
+        my @phe_lines  = read_file($pheno_file);   
+        my $traits     = $phe_lines[0];
+
+        $self->filter_phenotype_header($c);
+        my $filter_header = $c->stash->{filter_phenotype_header};
+   
+        $traits       =~ s/$filter_header//g;
+
+        my @traits    =  split (/\t/, $traits);    
+        my $traits_no = scalar(@traits);
+
+        $c->stash(markers_no => $markers_no,
+                  traits_no  => $traits_no,
+                  stocks_no  => $stocks_no,
+            );
+
+    } 
+    else
+    {
+        $self->project_description($c, $model_id);
+        
+        $self->get_project_owners($c, $model_id);       
+        $c->stash->{owner} = $c->stash->{project_owners}; 
+       
     }
 
-    $self->project_description($c, $model_id);
-
-    $self->get_project_owners($c, $model_id);       
-    $c->stash->{owner} = $c->stash->{project_owners};
-    
+    unless ($selection_pop_id =~ /uploaded/) 
+    {
+        my $pop_rs = $c->model("solGS::solGS")->project_details($c, $selection_pop_id);    
+        while (my $pop_row = $pop_rs->next) 
+        {      
+            $c->stash->{prediction_pop_name} = $pop_row->name;    
+        }
+    }
 
     my $identifier    = $model_id . '_' . $selection_pop_id;
  
@@ -764,7 +864,9 @@ sub formatted_phenodata_file {
     my ($self, $c) = @_;
    
     my $pop_id = $c->stash->{pop_id};
-   
+    $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
+
+    print STDERR "\nformatted_phenodata_file: pop_id $pop_id\n";
     my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id, 
                        file      => 'formatted_phenotype_data_' . $pop_id,
                        stash_key => 'formatted_phenodata_file'
@@ -2051,7 +2153,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
    
     if ($trait_id =~ /\d+/)
     {
-        $ids = $c->req->param("$trait_id");
+        $ids = $c->req->param($trait_id);
         @pop_ids = split(/,/, $ids);
 
         $self->get_trait_name($c, $trait_id);
@@ -2060,7 +2162,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
     my $combo_pops_id;
     my $ret->{status} = 0;
 
-    if (scalar(@pop_ids >1) )
+    if (scalar(@pop_ids) > 1 )
     {
         $combo_pops_id =  crc(join('', @pop_ids));
         $c->stash->{combo_pops_id} = $combo_pops_id;
@@ -2245,7 +2347,7 @@ sub combined_pops_summary {
 
     my $geno_exp  = "genotype_data_${combo_pops_id}_${trait_abbr}_combined";
     my $geno_file = $self->grep_file($dir, $geno_exp);  
-  
+   
     my @geno_lines = read_file($geno_file);
     my $markers_no = scalar(split ('\t', $geno_lines[0])) - 1;
 
