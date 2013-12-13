@@ -424,7 +424,7 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?'){
 
 
 sub uploaded_population_summary {
-    my ($self, $c, $pop_id) = @_;
+    my ($self, $c) = @_;
     
     my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
     my $user_name = $c->user->id;
@@ -446,7 +446,7 @@ sub uploaded_population_summary {
     ($list_name)       = grep {/list_name/} @metadata;      
     ($key, $list_name) = split(/\t/, $list_name); 
 
-    $c->stash(project_id   => $pop_id,
+    $c->stash(project_id   => $id,
               project_name => $list_name,
               project_desc => $desc,
               owner        => $user_name
@@ -479,27 +479,6 @@ sub project_description {
     {
         $c->stash->{model_id} = $pr_id;
         $self->uploaded_population_summary($c);
-       #  my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
-#         my $user_name = $c->user->id;
-        
-#         my $metadata_file = catfile ($tmp_dir, "metadata_${user_name}_${pr_id}");
-       
-#         my @metadata = read_file($metadata_file);
-       
-#         my ($key, $list_name, $desc);
-     
-#         ($desc)        = grep {/description/} @metadata;       
-#         ($key, $desc)  = split(/\t/, $desc);
-      
-#         ($list_name)       = grep {/list_name/} @metadata;      
-#         ($key, $list_name) = split(/\t/, $list_name); 
-
-#         $c->stash(project_id   => $pr_id,
-#                   project_name => $list_name,
-#                   project_desc => $desc,
-#                   owner        => $user_name
-#                 );
-
     }
     
     $self->genotype_file($c);
@@ -549,15 +528,17 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     $c->stash->{pop_id}   = $model_id;
     $c->stash->{trait_id} = $trait_id;
     $c->stash->{prediction_pop_id} = $selection_pop_id;
-
     $c->stash->{template} = $self->template('/population/selection_trait.mas');
  
     $self->get_trait_name($c, $trait_id);
     
     my $page = $c->req->referer();
 
-    if ($page =~ /solgs\/model\/combined\/populations/)
+    if ($page =~ /solgs\/model\/combined\/populations/ || $model_id =~ 'combined')
     {
+        $model_id =~ s/combined_//;
+       
+        $c->stash->{pop_id} = $model_id;
         $self->combined_pops_catalogue_file($c);
         my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
     
@@ -569,12 +550,13 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
             {
                 my ($combo_pops_id, $pops)  = split(/\t/, $_);
                 $c->stash->{trait_combo_pops} = $pops;  
-                print STDERR "\nsolgs/selection/ page: combined_pops - $pops\n";
             }   
         } 
+
         $c->stash->{combo_pops_id} = $model_id;
         $self->combined_pops_summary($c);
-        $c->stash->{combined_populations} = 1;   
+        $c->stash->{combined_populations} = 1;
+   
     } 
     elsif ($selection_pop_id =~ /uploaded/)
     {  
@@ -617,11 +599,9 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     } 
     else
     {
-        $self->project_description($c, $model_id);
-        
+        $self->project_description($c, $model_id);      
         $self->get_project_owners($c, $model_id);       
-        $c->stash->{owner} = $c->stash->{project_owners}; 
-       
+        $c->stash->{owner} = $c->stash->{project_owners};        
     }
 
     unless ($selection_pop_id =~ /uploaded/) 
@@ -705,10 +685,8 @@ sub input_files {
     my ($self, $c) = @_;
     
     $self->genotype_file($c);
-
     $self->phenotype_file($c);
    
-    # my $prediction_population_file = 'cap123geno_prediction.csv';
     my $pred_pop_id = $c->stash->{prediction_pop_id};
     my $prediction_population_file;
 
@@ -866,13 +844,11 @@ sub formatted_phenodata_file {
     my $pop_id = $c->stash->{pop_id};
     $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
 
-    print STDERR "\nformatted_phenodata_file: pop_id $pop_id\n";
     my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id, 
                        file      => 'formatted_phenotype_data_' . $pop_id,
                        stash_key => 'formatted_phenodata_file'
     };
     
-
     $self->cache_file($c, $cache_data);
 }
 
@@ -1390,6 +1366,12 @@ sub download_prediction_urls {
                 $prediction_pop_id = 'uploaded_' . $prediction_pop_id;
             }
         }
+
+        if  ($c->stash->{data_set_type} =~ /combined/) 
+        {  
+                $training_pop_id = 'combined_' . $training_pop_id;
+        }
+        
         #qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$prediction_pop_id/$trait_id">$trait_abbr</a> |
         $download_url   .= " | " if $download_url;        
         $download_url   .= qq | <a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> | if $trait_id;
