@@ -24,213 +24,244 @@ has 'ruler_height' => (is => 'ro', isa=>'Int', default=>20);
 has 'expr_hash' => (is => 'rw', default=>undef);
 has 'link_url' => (is => 'rw', isa=>'Str');
 
+# Parse Bowtie file to filter the hits under the number of mismatches selected
 sub parse { 
-    my $self = shift;
-    my $mm = shift || 0;
-    # warn("Parsing file ".$self->bwafile()."\n");
+	my $self = shift;
+	my $mm = shift || 0;
+	# warn("Parsing file ".$self->bwafile()."\n");
 
-    open(my $bt2_fh, "<", $self->bwafile()) || die "Can't open file ".$self->bwafile();
+	open(my $bt2_fh, "<", $self->bwafile()) || die "Can't open file ".$self->bwafile();
 
-    my $matches = {};
-    
-    # parse Bowtie2 file
-    while (my $line = <$bt2_fh>) { 
-	my ($seq_id, $code, $subject, $scoord) = (split /\t/, $line);
-	
-	# get perfect matches 
-	if ($line =~ /XM:i:(\d+)/) { 
-	    my $mm_found = $1;
+	my $matches = {};
 
-	    if ($mm_found <= $mm) {
-		my ($start_coord, $end_coord);
-		if ($seq_id=~/(\d+)/)  {
-		    $start_coord = $1;
-		    $end_coord = $start_coord+$self->fragment_size() -1;
+	# parse Bowtie file
+	while (my $line = <$bt2_fh>) { 
+		my ($seq_id, $code, $subject, $scoord) = (split /\t/, $line);
+		
+		# get perfect matches 
+		# if ($line =~ /NM:i:(\d+)/) { # for Bowtie
+		if ($line =~ /XM:i:(\d+)/) { # for Bowtie2
+			my $mm_found = $1;
+
+			if ($mm_found <= $mm) {
+				# save match coordinates
+				my ($start_coord, $end_coord);
+				if ($seq_id=~/(\d+)/)  {
+					$start_coord = $1;
+					$end_coord = $start_coord+$self->fragment_size() -1;
+				}
+
+				# create new match sequence object
+				my $ms = CXGN::Graphics::VigsGraph::MatchSegment->new();
+				$ms->start($start_coord);
+				$ms->end($end_coord);
+				$ms->id($subject);
+
+				# save match object
+				push @{$matches->{$subject}}, $ms;
+			}
 		}
-	    
-		# new match sequence object
-		my $ms = CXGN::Graphics::VigsGraph::MatchSegment->new();
-		$ms->start($start_coord);
-		$ms->end($end_coord);
-		$ms->id($subject);
-
-		push @{$matches->{$subject}}, $ms;
-	    }
 	}
-    }
-    $self->matches($matches);
+	$self->matches($matches);
 }
  
 sub matches_in_interval { 
-    my $self = shift;
-    my $start = shift;
-    my $end = shift;
-    
-    my $matches = $self->matches();
-    my $interval = {};
+	my $self = shift;
+	my $start = shift;
+	my $end = shift;
 
-    foreach my $s (keys(%$matches)) { 
-	# print  $s."\n";
-	foreach my $m (@{$matches->{$s}}) { 
-	    # print STDERR "checking coords $m->[0], $m->[1] (start, end = $start, $end)\n";
-	    if ( ($m->start() > $start) && ( $m->start() < $end) || ($m->end() > $start ) && ($m->end() < $end)) { 
-		# print STDERR "Match found for sequence $s: $m->[0], $m->[1] ($start, $end)\n";
-		push @{$interval->{$s}}, $m;
-	    }
+	my $matches = $self->matches();
+	my $interval = {};
+
+	foreach my $s (keys(%$matches)) { 
+		# print  $s."\n";
+		foreach my $m (@{$matches->{$s}}) { 
+			# print STDERR "checking coords $m->[0], $m->[1] (start, end = $start, $end)\n";
+			if ( ($m->start() > $start) && ( $m->start() < $end) || ($m->end() > $start ) && ($m->end() < $end)) { 
+				# print STDERR "Match found for sequence $s: $m->[0], $m->[1] ($start, $end)\n";
+				push @{$interval->{$s}}, $m;
+			}
+		}
 	}
-    }
-    return $interval;
+	return $interval;
 }
 
+# get the score values for each position of the target genes
 sub target_graph { 
-    my $self = shift;
-    my $coverage = shift;
+	my $self = shift;
+	my $coverage = shift;
 
-    my $matches = $self->matches();
-    my @match_counts = $self->subjects_by_match_count(0,$matches);
-    # print Dumper(@match_counts);
-    my @target_scores;
+	my $matches = $self->matches();
+	my @match_counts = $self->subjects_by_match_count(0,$matches);
+	# print Dumper(@match_counts);
+	my @target_scores;
 
-    # array with target subject names, coverage is the number of target subjects
-    my @target_keys = ();
-    foreach my $k (1..$coverage) { 
-	my $e = shift @match_counts;
-	push @target_keys, $e->[0]; 
-    }
-
-#    print STDERR "TARGET KEYS: ".join(",", @target_keys);
-#    print STDERR "\n";
-   
-    # foreach match (blue squares in the graph), saves in $s_targets the coverage in each position
-    foreach my $s (@target_keys) { 
-	if (! defined($matches->{$s})) { 
-	    next; 
-	}
-	my %s_targets = ();
-	foreach my $m (@{$matches->{$s}}) { 
-	    # print STDERR "m: ".$m->start()."\n";
-	    foreach my $n ($m->start()-1 .. $m->end()) { 
-		$s_targets{$n} = 1;
-                # print STDERR "m: ".$m->start()." - ". $m->end()." $n\n";
-	    }   
+	# create an array with target names, coverage is the number of targets set
+	my @target_keys = ();
+	foreach my $k (1..$coverage) { 
+		my $e = shift @match_counts;
+		push @target_keys, $e->[0]; 
 	}
 
-	# when the position is not mapped over the targets we get 0, 
-        # if it is mapped we get the number of targets where mapped in that position
-	foreach my $pos (sort keys %s_targets) {
-	    $target_scores[$pos]++;
-	}
-	%s_targets = ();	
-    }
+	#    print STDERR "TARGET KEYS: ".join(",", @target_keys);
+	#    print STDERR "\n";
 
-    return @target_scores;
+	# foreach match (blue squares in the graph), saves in $s_targets the coverage in each position
+	foreach my $s (@target_keys) { 
+		if (! defined($matches->{$s})) { 
+			next; 
+		}
+		my %s_targets = ();
+		foreach my $m (@{$matches->{$s}}) { 
+			# print STDERR "m: ".$m->start()."\n";
+			foreach my $n ($m->start()-1 .. $m->end()-1) {
+			# foreach my $n ($m->start()-1 .. $m->end()) {
+				# using coverage in algorithm
+				# if (!$s_targets{$n}) {
+				# 	$s_targets{$n} = 1;
+				# } else {
+				# 	$s_targets{$n} = $s_targets{$n} + 1;
+				# }
+				# print STDERR "m: ".($m->start() - 1)." - ".($m->end() - 1).", $n -> $s_targets{$n}\n";
+				
+				$s_targets{$n} = 1;
+			}   
+		}
+
+		# when the position is not mapped over the targets we get 0, 
+		# if it is mapped we get the number of targets where mapped in that position
+		foreach my $pos (keys %s_targets) {
+			# using coverage in algorithm
+			# if ($target_scores[$pos]) {
+			# 	$target_scores[$pos] += $s_targets{$pos};
+			# }
+			# else {
+			# 	$target_scores[$pos] = $s_targets{$pos};
+			# }
+			# print STDERR "Pos:$pos,  $target_scores[$pos]\n";
+			$target_scores[$pos]++;
+		}
+		%s_targets = ();
+	}
+	return @target_scores;
 }
 
 sub off_target_graph { 
-    my $self = shift;
-    my $coverage = shift;
+	my $self = shift;
+	my $coverage = shift;
 
-    my @off_targets = ();
+	my @off_targets = ();
 
-    my $matches = $self->matches();
-    my @match_counts = $self->subjects_by_match_count(0,$matches);
-    my %off_t_counts;
+	my $matches = $self->matches();
+	my @match_counts = $self->subjects_by_match_count(0,$matches);
+	my %off_t_counts;
 
-    my @coverage_keys = ();
-    foreach my $k (0..$coverage-1) { 
-	shift @match_counts;
-    }
-    @coverage_keys = map { $_->[0] } @match_counts;
-    
-    foreach my $s (@coverage_keys) { 
-	foreach my $m (@{$matches->{$s}}) {
-#	    print STDERR "$s, ".$m->start()."-".$m->end()."\n";
-	    foreach my $n ($m->start()-1 .. $m->end()) {
-		$off_t_counts{$n} = 1;
-	    }
+	my @coverage_keys = ();
+	foreach my $k (0..$coverage-1) { 
+		shift @match_counts;
 	}
-	
-	foreach my $pos (sort keys %off_t_counts) {
-	    $off_targets[$pos]++;
-	}
-	%off_t_counts = ();
-    }
+	@coverage_keys = map { $_->[0] } @match_counts;
 
-    return @off_targets;
+	foreach my $s (@coverage_keys) { 
+		foreach my $m (@{$matches->{$s}}) {
+			# print STDERR "$s, ".$m->start()."-".$m->end()."\n";
+			foreach my $n ($m->start()-1 .. $m->end()-1) {
+				# using coverage in algorithm
+				# if (!$off_t_counts{$n}) {
+				# 	$off_t_counts{$n} = 1;
+				# } else {
+				# 	$off_t_counts{$n} = $off_t_counts{$n} + 1;
+				# }
+				$off_t_counts{$n} = 1;
+			}
+		}
+
+		foreach my $pos (keys %off_t_counts) {
+			# using coverage in algorithm
+			# if ($off_targets[$pos]) {
+			# 	$off_targets[$pos] += $off_t_counts{$pos};
+			# }
+			# else {
+			# 	$off_targets[$pos] = $off_t_counts{$pos};
+			# }
+			$off_targets[$pos]++;
+		}
+		%off_t_counts = ();
+	}
+	return @off_targets;
 }
 
 sub longest_vigs_sequence { 
-    my $self = shift;
-    my $coverage = shift;
-    my $seq_length = shift;
+	my $self = shift;
+	my $coverage = shift;
+	my $seq_length = shift;
 
-    my @best_region;    
-    my $start = undef;
-    my $end = undef;
-    my $score = 0;
-    my @window_sum = [];
-    my $window_score = 0;
-    my $best_score = -9999;
-    my $best_start = 1;
-    my $best_end = 1;
-    my $no_result = 0;
-    
-    if ($coverage == 0) {
-	$coverage = 1;
-	$no_result = 1;
-    }
+	my @best_region;    
+	my $start = undef;
+	my $end = undef;
+	my $score = 0;
+	my @window_sum = [];
+	my $window_score = 0;
+	my $best_score = -9999;
+	my $best_start = 1;
+	my $best_end = 1;
+	my $no_result = 0;
+
+	if ($coverage == 0) {
+		$coverage = 1;
+		$no_result = 1;
+	}
     
     my @targets = $self->target_graph($coverage);
     my @off_targets = $self->off_target_graph($coverage);
     my $seq_fragment = $self->seq_fragment();
 
-    # @targets contains the coverage of target at every position. Same thing for off_targets
-    # $window sum[position] contain the score for each position. 
-    # It will be positive when there are more targets than off_targets, and negative in the opposite case.
-    for (my $i=0; $i<$seq_length; $i++) {
-        
-	$window_sum[$i] = 0;
-	if (defined($targets[$i]) && $targets[$i]>0) {
-	    $window_sum[$i] += $targets[$i];
-	}
-	else {
-	    $window_sum[$i] += 0;
-	    $targets[$i] = 0;
-	}
-
-	if (defined($off_targets[$i]) && $off_targets[$i]>0) {
-	    $window_sum[$i] -= ($off_targets[$i]*1.5);
-	}
-	else {
-	    $window_sum[$i] += 0;
-	    $off_targets[$i] = 0;
-	}
-
-#	print "$i: $window_sum[$i]\tt:$targets[$i]\tot:$off_targets[$i]\n";
-
-	if ($i+1 >= $seq_fragment) {
-	    $window_score = 0;
-	    for (my $e=($i-$seq_fragment+1); $e<=$i; $e++) {
-#		print "$e\t";
-		if ($window_sum[$e] && $window_sum[$e] =~ /^[\d+-\.]+$/) { 
-		    $window_score += $window_sum[$e];
+	# @targets contains the coverage of each target at each position. Same thing for off_targets
+	# $window sum[position] contain the score for each position. 
+	# It will be positive when there are more targets than off_targets, and negative in the opposite case.
+	for (my $i=0; $i<$seq_length; $i++) {
+		$window_sum[$i] = 0;
+		if (defined($targets[$i]) && $targets[$i]>0) {
+			$window_sum[$i] += $targets[$i];
 		}
-	    }
-#	    print "\ntest: ".($i+1-$seq_fragment)."-".($i).": $window_score\n";
+		else {
+			$window_sum[$i] += 0;
+			$targets[$i] = 0;
+		}
 
-	    if ($window_score > $best_score) {
-		$best_score = $window_score;
-		$best_start = $i-$seq_fragment+1;
-		$best_end = $i;
-	    }
-#	    print "best: $best_start-$best_end: $best_score\n";
-	    $window_score = 0;
+		if (defined($off_targets[$i]) && $off_targets[$i]>0) {
+			$window_sum[$i] -= ($off_targets[$i]*1.5);
+		}
+		else {
+			$window_sum[$i] += 0;
+			$off_targets[$i] = 0;
+		}
+
+		# print "$i: $window_sum[$i]\tt:$targets[$i]\tot:$off_targets[$i]\n";
+
+		if ($i+1 >= $seq_fragment) {
+			$window_score = 0;
+			for (my $e=($i-$seq_fragment+1); $e<=$i; $e++) {
+				#		print "$e\t";
+				if ($window_sum[$e] && $window_sum[$e] =~ /^[\d+-\.]+$/) { 
+					$window_score += $window_sum[$e];
+				}
+			}
+			# print "\ntest: ".($i+1-$seq_fragment)."-".($i).": $window_score\n";
+
+			if ($window_score > $best_score) {
+				$best_score = $window_score;
+				$best_start = $i-$seq_fragment+1;
+				$best_end = $i;
+			}
+			# print "best: $best_start-$best_end: $best_score\n";
+			$window_score = 0;
+		}
 	}
-    }
-    if ($no_result) {$best_score = 0;}
-    
-    @best_region = ($coverage, $best_score, \@window_sum, $seq_fragment, $best_start, $best_end);
-    return @best_region;
+	if ($no_result) {$best_score = 0;}
+
+	@best_region = ($coverage, $best_score, \@window_sum, $seq_fragment, $best_start, $best_end);
+	return @best_region;
 }
 
 
@@ -256,37 +287,36 @@ sub get_best_coverage {
 }
 
 sub subjects_by_match_count { 
-    my $self = shift;
-    my $db = shift;
-    my $matches = shift;
-    my @counts = ();
-    my $fs;
-    my $primseqi;
-    my $desc;
+	my $self = shift;
+	my $db = shift;
+	my $matches = shift;
+	my @counts = ();
+	my $fs;
+	my $primseqi;
+	my $desc;
 
-    if ($db) {
-	#print STDERR "db: $db\n";
-    
-	$fs = Bio::BLAST::Database->open(
-	    full_file_basename => $db,
-	);
-    }
+	if ($db) {
+		#print STDERR "db: $db\n";
 
-    foreach my $s (keys %$matches) { 
-        if ($db) {
-	    $primseqi = $fs->get_sequence($s);
-	    $desc = $primseqi->desc();
-
-	    push @counts, [ $s, scalar(@{$matches->{$s}}),$desc];
-	} else {
-	    push @counts, [ $s, scalar(@{$matches->{$s}}),"" ];
+		$fs = Bio::BLAST::Database->open(full_file_basename => $db,);
 	}
-    }
 
-    # print Dumper(\@counts);
-    my @sorted = sort sort_keys @counts;
-    
-    return @sorted;
+	foreach my $s (keys %$matches) { 
+		if ($db) {
+			$primseqi = $fs->get_sequence($s);
+			$desc = $primseqi->desc();
+
+			push @counts, [ $s, scalar(@{$matches->{$s}}),$desc];
+		} 
+		else {
+			push @counts, [ $s, scalar(@{$matches->{$s}}),"" ];
+		}
+	}
+
+	# print Dumper(\@counts);
+	my @sorted = sort sort_keys @counts;
+
+	return @sorted;
 }
 
 sub uniq_array{

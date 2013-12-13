@@ -257,7 +257,7 @@ $(document).ready(function () {
 		$.ajax({
 			url: '/tools/vigs/view/',
 			// async: false,
-			timeout: 60000,
+			timeout: 600000,
 			method: 'POST',
 			data: {'id': bt2_res, 'sequence': seq, 'fragment_size': si_rna, 'seq_fragment': f_length, 'missmatch': mm, 'targets': coverage, 'expr_file': expr_file, 'status': status, 'database': db},
 			complete: function(){
@@ -287,7 +287,7 @@ $(document).ready(function () {
 						$("#score_p").html("<b>Best target region score:</b> "+best_score+" &nbsp;&nbsp;(-&infin;&mdash;100)<br />");
 						$("#t_num").val(coverage);
 					} else {
-						$("#no_results").html("Note: No results found! Try again increasing the number of targets, decreasing the fragment size or modifing other parameters");
+						$("#no_results").html("Note: No results found! Try again increasing the number of targets or the n-mer length, or decreasing the mismatches");
 					}
 
 					//show result sections
@@ -618,6 +618,7 @@ $(document).ready(function () {
 				var xpos = (i+1)*xscale;
 				var ypos = 0;
 
+				// var final_score = (+score_array[i]/+si_rna/coverage*100).toFixed(2); //using coverage in algorithm
 				var final_score = (+score_array[i]*100/coverage).toFixed(2);
 
 				if (+final_score >= 0) {
@@ -814,7 +815,8 @@ $(document).ready(function () {
 		var fragment_length = (+end - +start + 1);
 
 		if (coverage > 0 && fragment_length > 0) {
-			var final_score = ((custom_score*100/fragment_length)/coverage).toFixed(2)
+			var final_score = ((custom_score*100/fragment_length)/coverage).toFixed(2); 
+			// var final_score = (custom_score*100/+si_rna/fragment_length/coverage).toFixed(2); //using coverage
 			$("#score_p").html("<b>Best target region score:</b> "+best_score+" &nbsp;&nbsp; <b> Custom region score: </b>"+final_score+" &nbsp;&nbsp; (-&infin;&mdash;100)");
 		}
 	}
@@ -886,7 +888,6 @@ $(document).ready(function () {
 
 
 	function changeTargets(bt2_file,score_array,seq,best_seq,expr_f,ids,m_aoa) {
-		disable_ui();
 		
 		var t_num = $("#t_num").val();
 		var coverage = $("#coverage_val").val();
@@ -898,7 +899,8 @@ $(document).ready(function () {
 		var mm = $("#mm").val();
 		var db = $("#bt2_db").val();
 		var expr_msg;
-
+		var seq_length = $("#seq_length").val();
+		
 		if (n_mer != si_rna) {
 			$("#f_length").val(f_size);
 			$("#mm").val(align_mm);
@@ -906,26 +908,40 @@ $(document).ready(function () {
 			si_rna = n_mer;
 			$("#coverage_val").val(t_num);
 			$("#region_square").css("height","0px");
-
-			runBt2(n_mer, f_size, align_mm, db);
-
+			
+			//check values before recalculate
+			if (+n_mer >= 18 && +n_mer <= 30) {
+				disable_ui();
+				runBt2(n_mer, f_size, align_mm, db);
+			} else {
+				alert("n-mer value must be between 18-30");
+			}
 		} else if (align_mm != mm) {
 			$("#f_length").val(f_size);
 			$("#mm").val(align_mm);
 			$("#coverage_val").val(t_num);
-
-			getResults(1, bt2_file, n_mer, f_size, align_mm, t_num, db, expr_f);
-
-			$("#region_square").css("height","0px");
-			//getCustomRegion(score_array,best_seq,seq)
+			
+			if (!align_mm || +align_mm < 0 || +align_mm > 1) {
+				alert("miss-match value ("+align_mm+") must be between 0-1");
+			} else {
+				disable_ui();
+				getResults(1, bt2_file, n_mer, f_size, align_mm, t_num, db, expr_f);
+				$("#region_square").css("height","0px");
+				//getCustomRegion(score_array,best_seq,seq)
+			}
 		} else if (t_num != coverage || f_size != f_length) {
 			$("#f_length").val(f_size);
 			$("#coverage_val").val(t_num);
-
-			getResults(0, bt2_file, n_mer, f_size, align_mm, t_num, db, expr_f);
-
-			$("#region_square").css("height","0px");
-			//getCustomRegion(score_array,best_seq,seq)
+			
+			//check values before recalculate
+			if (!f_size || +f_size < 100 || +f_size > +seq_length) {
+				alert("Wrong fragment size ("+f_size+"), it must be 100 bp or higher, and lower than sequence length");
+			} else {
+				disable_ui();
+				getResults(0, bt2_file, n_mer, f_size, align_mm, t_num, db, expr_f);
+				$("#region_square").css("height","0px");
+				//getCustomRegion(score_array,best_seq,seq)
+			}
 		} else {
 			alert("there are no parameters to change");
 		}
@@ -939,7 +955,6 @@ $(document).ready(function () {
 	function enable_ui() {
 		$('#working').dialog("close");
 	}
-
 
 	function hide_ui() {
 		Effects.swapElements('vigs_input_offswitch', 'vigs_input_onswitch');
