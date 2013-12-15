@@ -59,14 +59,13 @@ sub new
 
 =cut
 
-sub process_parameters
-{
+sub process_parameters {
     my $self = shift;
 
     #do some simple parameter checking
-
+    print STDERR "IDS (ESTs) $self->{ids}\n\n";
     return 0 if ($self->{idType} eq "");
-    return 0 if ($self->{ids_string} !~ /\w/);
+    #return 0 if ($self->{ids_string} !~ /\w/);
 
     # @output_list defines the identity on order of all fields that can be output
 
@@ -106,7 +105,7 @@ sub process_parameters
     return 0 if length( $self->{ids_string} ) > 1_000_000;
 
     # clean up data retrieved
-    my $ids = $self -> {ids_string};
+    my $ids = $self -> {ids};
     $ids =~ s/\n+/ /g;
     $ids =~ s/\s+/ /g;     # compress multiple returns into one
     $ids =~ s/\r+/ /g;      # convert carriage returns to space

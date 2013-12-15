@@ -43,6 +43,8 @@ if ($current_page > 1) { $collapse = 0; }
 <& /page/page_title.mas, title => "solGS: start building a GS model by searching for a trait or selecting a training population" &>
 
 <&| /page/info_section.mas,
+  collapsible => 1, 
+  collapsed   => 0,
   title => "Search for a trait ",
 &>
 

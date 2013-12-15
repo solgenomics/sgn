@@ -14,7 +14,7 @@ Lukas Mueller, Jonathan "Duke" Leto
 =cut
 
 use Modern::Perl;
-use Test::More tests => 26;
+use Test::More tests => 21;
 use lib 't/lib';
 use SGN::Test;
 use SGN::Test::WWW::Mechanize;
@@ -22,8 +22,8 @@ use SGN::Test::WWW::Mechanize;
 {
     my $mech = SGN::Test::WWW::Mechanize->new;
 
-    for my $input_type (qw/microarray clone_search bac bac_end ftp unigene_convert unigene/) {
-        $mech->get_ok("/bulk/input.pl?mode=$input_type");
+    for my $tab (qw/clone array bac bac_end ftp unigene/) {
+        $mech->get_ok("/tools/bulk/tabs/$tab\_tab");
     }
 
     $mech->content_contains("Download unigene information");
@@ -41,14 +41,14 @@ use SGN::Test::WWW::Mechanize;
     $mech->content_like(qr/The query you submitted contained .*2.*/, "input.pl returns correct data");
     $mech->content_like(qr/Your query resulted in .*2.* lines/, "input.pl returns correct data");
 }
+#{
+#    my $mech = SGN::Test::WWW::Mechanize->new;
+#    $mech->get_ok("/tools/bulk/tabs/bac_tab");
+#    $mech->content_contains("Bulk download error");
+#}
 {
     my $mech = SGN::Test::WWW::Mechanize->new;
-    $mech->get_ok("/bulk/download.pl?idType=bac");
-    $mech->content_contains("Bulk download error");
-}
-{
-    my $mech = SGN::Test::WWW::Mechanize->new;
-    $mech->get("/bulk/input.pl?mode=unigene");
+    $mech->get("/tools/bulk/tabs/unigene_tab");
     my $params =  {
                form_name => "bulkform",
                fields    => {
@@ -57,11 +57,12 @@ use SGN::Test::WWW::Mechanize;
                },
     };
     $mech->submit_form_ok($params, "Submit to Unigene bulkform from input.pl");
-    $mech->content_contains("download summary");
+    #print STDERR $mech->content();
+    $mech->content_contains("download summary", "unigene bulk download summary test");
 }
 {
     my $mech = SGN::Test::WWW::Mechanize->new;
-    $mech->get("/bulk/input.pl?mode=bac");
+    $mech->get("/tools/bulk/tabs/bac_tab");
     my $params =  {
                form_name => "bulkform",
                fields    => {
@@ -69,11 +70,11 @@ use SGN::Test::WWW::Mechanize;
                },
     };
     $mech->submit_form_ok($params, "Submit to BAC bulkform from input.pl");
-    $mech->content_contains("download summary");
+    $mech->content_contains("download summary", "BAC download summary test");
 }
 {
     my $mech = SGN::Test::WWW::Mechanize->new;
-    $mech->get("/bulk/input.pl?mode=clone_search");
+    $mech->get("/tools/bulk/tabs/clone_tab");
     my $params =  {
                form_name => "bulkform",
                fields    => {
@@ -83,11 +84,11 @@ use SGN::Test::WWW::Mechanize;
                },
     };
     $mech->submit_form_ok($params, "Submit to clone_search bulkform from input.pl");
-    $mech->content_contains("download summary");
+    $mech->content_contains("download summary", "Clone download summary test");
 }
 {
     my $mech = SGN::Test::WWW::Mechanize->new;
-    $mech->get("/bulk/input.pl?mode=microarray");
+    $mech->get("/tools/bulk/tabs/array_tab");
     my $params =  {
                form_name => "bulkform",
                fields    => {
@@ -96,11 +97,11 @@ use SGN::Test::WWW::Mechanize;
                },
     };
     $mech->submit_form_ok($params, "Submit to microarray bulkform from input.pl");
-    $mech->content_contains("download summary");
+    $mech->content_contains("download summary", "Array download summary check");
 }
 {
     my $mech = SGN::Test::WWW::Mechanize->new;
-    $mech->get("/bulk/input.pl?mode=bac_end");
+    $mech->get("/tools/bulk/tabs/bac_end_tab");
     my $params =  {
                form_name => "bulkform",
                fields    => {
@@ -108,17 +109,17 @@ use SGN::Test::WWW::Mechanize;
                },
     };
     $mech->submit_form_ok($params, "Submit to bac_end bulkform from input.pl");
-    $mech->content_contains("download summary");
+    $mech->content_contains("download summary", "bac_end download summary test");
 }
 {
-    my $mech = SGN::Test::WWW::Mechanize->new;
-    $mech->get("/bulk/input.pl?mode=unigene_convert");
-    my $params =  {
-               form_name => "bulkform",
-               fields    => {
-                   ids          => 'SGN-U268057',
-               },
-    };
-    $mech->submit_form_ok($params, "Submit to unigene_convert bulkform from input.pl");
-    $mech->content_contains("download summary");
+#    my $mech = SGN::Test::WWW::Mechanize->new;
+#    $mech->get("/bulk/input.pl?mode=unigene_convert");
+#    my $params =  {
+#               form_name => "bulkform",
+#               fields    => {
+#                   ids          => 'SGN-U268057',
+#               },
+#    };
+#    $mech->submit_form_ok($params, "Submit to unigene_convert bulkform from input.pl");
+#    $mech->content_contains("download summary");
 }

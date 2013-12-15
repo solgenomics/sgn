@@ -12,16 +12,15 @@
 =cut
 
 package CXGN::Bulk;
+
 use strict;
 use warnings;
 use Carp;
 use File::Temp;
-use File::Spec;
+use File::Spec::Functions;
+use Cache::File;
 
 use File::Slurp qw/slurp/;
-
-use CXGN::DB::Connection;
-
 
 =head2 new
 
@@ -76,16 +75,16 @@ sub create_dumpfile {
     {
 
         # generate tmp file names and open files for writing
-        $self->{dumpfile} = File::Temp->new( TEMPLATE => File::Spec->catfile( $self->{tempdir}, "bulk-XXXXXX" ), UNLINK => 0 )->filename;
+        $self->{dumpfile} = File::Temp->new( TEMPLATE => catfile( $self->{tempdir}, "bulk-XXXXXX" ), UNLINK => 0 )->filename;
 	$self->{dumpfile} =~ s!$self->{tempdir}/!!;
 
         $self->debug( "FILENAME: " . $self->{dumpfile} );
-        my $filepath = $self->{tempdir} . "/" . $self->{dumpfile};
+        my $filepath = catfile($self->{tempdir}, $self->{dumpfile});
         open( $self->{dump_fh}, '>', $filepath )
-          || $self->{page}->error_page("Can't open $filepath");
+          || die "Can't open $filepath";
         $self->{notfoundfile} = $self->{dumpfile} . ".notfound";
         open( $self->{notfound_fh}, '>', "$self->{tempdir}/$self->{notfoundfile}" )
-          || $self->{page}->error_page("Can't open $self -> {notfoundfile}");
+	    || die "Can't open $self -> {notfoundfile}";
 
         # write file header
         @output_fields = @{ $self->{output_fields} };
@@ -97,40 +96,30 @@ sub create_dumpfile {
     return $self->{dump_fh}, $self->{notfound_fh};
 }
 
-=head2 result_summary_page
+sub result_summary { 
+    my $self = shift;
+    
+    my $cache_root = catfile($self->{tempdir}, $self->{dumpfile} . ".summary");
 
-  Desc: sub result_summary_page
-  Args: CXGN::Page object
-  Ret : n/a
+    my $lines_read = $self->get_file_lines( catfile($self->{tempdir}, $self->{dumpfile}) ) - 1;
 
-  Prints page that appears after user submits identifiers. Presents data in
-  linked Text and Fasta formats (to view or download).
-
-=cut
-
-sub result_summary_page {
-    my $self         = shift;
-    my $page         = shift;
-    my $summary_file = $self->{tempdir} . "/" . $self->{dumpfile} . ".summary";
-
-    # open file for writing the result summary page
-    open( my $summary_fh, '>', $summary_file )
-      or die "Can't open .summary file for writing! : $!";
-
-    my $lines_read =
-      ( $self->getFileLines( $self->{tempdir} . "/" . $self->{dumpfile} ) ) - 1;
-    my $notfoundcount =
-      $self->getFileLines( $self->{tempdir} . "/" . $self->{notfoundfile} );
+    my $notfoundcount = $self->get_file_lines( catfile($self->{tempdir}, $self->{notfoundfile} ));
     my $total        = $lines_read;
     my $file         = $self->{dumpfile};
     my $notfoundfile = $self->{notfoundfile};
     my $idType       = $self->{idType};
     my $query_time   = $self->{query_time};
+    my $seq_type     = $self->{seq_type};
+    my $est_seq      = $self->{est_seq};
+    my $unigene_seq  = $self->{unigene_seq};
     my $filesize =
-      ( ( stat( $self->{tempdir} . "/" . $self->{dumpfile} ) )[7] / 1000 );
+	(stat( catfile($self->{tempdir}, $self->{dumpfile})))[7] / 1000;
     my $missing_ids     = @{ $self->{ids} } - $notfoundcount - $lines_read;
     my $missing_ids_msg = "";
-
+    my $file_lines = 0; #fix
+	#$self->getFileLines( $self->{tempdir} . "/" . $self->{dumpfile} );
+    
+    my $numlines = scalar( @{ $self->{ids} } );
     if ( $missing_ids > 0 ) {
         $missing_ids_msg = "$missing_ids ids were not retrieved from the database because they were not part of the corresponding unigene set or because there were duplicate entries in the submitted id list.";
     }
@@ -141,85 +130,36 @@ sub result_summary_page {
                         choose a sequence to download.<br />";
     if ( join( " ", @{ $self->{output_fields} } ) =~ /seq/i ) {
         $fastalink =
-"<a href=\"display.pl?outputType=Fasta&amp;dumpfile=$file\">Fasta</a>";
+"<a href=\"/tools/bulk/display?outputType=Fasta&amp;dumpfile=$file&amp;unigene_seq=$unigene_seq&amp;est_seq=$est_seq\">Fasta</a>";
         $fastadownload =
-"<a href=\"display.pl?outputType=Fasta&amp;dumpfile=$file&amp;download=1\">Fasta</a>";
+"<a href=\"/tools/bulk/display?outputType=Fasta&amp;dumpfile=$file&amp;unigene_seq=$unigene_seq&amp;est_seq=$est_seq&amp;download=1\">Fasta</a>";
         $fastamessage = "";
     }
 
-    print $summary_fh $self->{content};
+    my $cache = Cache::File->new( cache_root => $cache_root );
+    
+    my $summary_data = { 
+	fastalink => $fastalink,
+	fastadownload => $fastadownload,
+	fastamessage => $fastamessage,
+	missing_ids_msg => $missing_ids_msg,
+	file => $file,
+	total => $total,
+	query_time => $query_time,
+	filesize => $filesize,
+	numlines => $numlines, # number of lines in query
+	lines_read => $lines_read,  # number of lines in file
+	idType => $idType,
+	seq_type => $seq_type,
+	est_seq => $est_seq,
+	unigene_seq => $unigene_seq,
+    };
 
-    my $numlines = scalar( @{ $self->{ids} } );
-    print $summary_fh <<EOHTML;
-    <h4>Bulk download summary</h4>
-    The query you submitted contained $numlines lines.<br />
-    Your query resulted in $total lines being read from the database in
-    $query_time seconds.<br />
-    $missing_ids_msg<br /><br />
-EOHTML
-    if ( $total == 0 ) {
-        print $summary_fh <<EOHTML
-     <br /><br />
-     Please verify that you used the correct search and that you chose the right
-     unigene or bac assembly to download from. Also make sure that the submitted
-     identifiers are appropriately formatted.<br />
-     
-     Please try your search again.<br /><br />
-EOHTML
+    foreach my $k (keys(%$summary_data)) { 
+	$cache->set($k, $summary_data->{$k});
     }
-    else {
-        print $summary_fh <<EOHTML;
-    The file size is $filesize kBytes.
-    <br /><br />
-    <a href="display.pl?outputType=HTML&amp;dumpfile=$file&amp;page=1&amp;idType=$idType">Browse</a>
-    the results.
-    <br />
-    <br />
-
-    <table border="0" cellpadding="0"><tr><td width="120"><b>View</b></td><td width="120">
-    <b>Download to disk</b></td></tr>
-    <tr><td>
-
-    as <a href="display.pl?outputType=text&amp;dumpfile=$file&amp;idType=$idType">Text</a>
-    <br />
-    as $fastalink<br />
-
-    </td><td>
-
-    as <a href="display.pl?outputType=text&amp;dumpfile=$file&amp;idType=$idType&amp;download=1">
-    Text</a><br />
-    as $fastadownload<br />
-
-    </td></tr></table>
-    <br /><br />$fastamessage<br />
-EOHTML
-
-    }
-
-    my $notfoundcountlink = "";
-    if ( $notfoundcount != 0 ) {
-        $notfoundcountlink = "Identifiers not found:<br /><ul>
-    <li><a href=\"display.pl?outputType=notfound&amp;dumpfile=$file\">View IDs</a></li></ul>";
-    }
-
-    print $summary_fh "$notfoundcountlink";
-
-    print $summary_fh <<EOHTML;
-              New search: <a href="input.pl?mode=clone_search">with clone names</a> |
-              <a href="input.pl?mode=array_search">with array spot ids</a> |
-              <a href="input.pl?mode=unigene">with unigene ids</a> |
-              <a href="input.pl?mode=bac">with bac ids</a>
-              <br /><br /><br /><br />
-EOHTML
-
-    close($summary_fh);
-
-    $self->{page}->header;
-
-    print slurp( $summary_file);
-
-    $self->{page}->footer;
 }
+
 
 =head2 error_message
 
@@ -234,9 +174,10 @@ EOHTML
 
 sub error_message {
     my $self = shift;
-    $self->{page}->header();
-    print $self ->{content} . "\n";
-    print <<EOH;
+
+
+    my $html = $self ->{content} . "\n";
+    $html .= <<EOH;
 <h3>Bulk download error</h3>
 I could not process your input.  Possible reasons for this include:
 <ul>
@@ -247,25 +188,27 @@ I could not process your input.  Possible reasons for this include:
 </ul>
 Please check your input and use your browser\'s "back" button to go back and try again!
 EOH
-    $self->{page}->footer();
+
+return $html;
 }
 
-=head2 getFileLines
+=head2 get_file_lines
 
-  Desc: sub getFileLines
-  Args: file; example. $self -> getFileLines($self->{tempdir});
+  Desc: sub get_file_lines
+  Args: file; example. $self -> get_file_lines($self->{tempdir});
   Ret : $list[0];
 
   Counts file lines (used on temp directories).
 
 =cut
 
-sub getFileLines {
+sub get_file_lines {
     my $self   = shift;
     my $file   = shift;
     open my $f, $file or die "$! opening $file";
     my $cnt = 0;
     $cnt++ while <$f>;
+    close $f;
     return $cnt;
 }
 
@@ -282,7 +225,7 @@ sub getFileLines {
 
 sub clean_up {
     my $self = shift;
-    $self->{db}->disconnect(42);
+    $self->{db}->disconnect();
 }
 
 =head2 debug
@@ -326,14 +269,17 @@ sub check_ids {
 
     #do some simple parameter checking
 
+    print STDERR "PROCESSING IDS: $self->{ids}. ($self->{idType})\n";
+
     return @ids if ( $self->{idType} eq "" );
-    return @ids if ( $self->{ids_string} !~ /\w/ );
+    return @ids if ( $self->{ids} !~ /\w/ );
 
     #make sure the input string isn't too big
-    return @ids if length( $self->{ids_string} ) > 1_000_000;
+    return @ids if length( $self->{ids} ) > 1_000_000;
+
 
     # clean up data retrieved
-    my $ids = $self->{ids_string};
+    my $ids = $self->{ids};
     $ids =~ s/^\s+//;
     $ids =~ s/\n+/ /g;
     $ids =~ s/\s+/ /g;    # compress multiple returns into one
@@ -373,5 +319,66 @@ sub process_parameters {
 sub process_ids {
 
 }
+
+=head2 accessors get_dumpfile, set_dumpfile
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_dumpfile {
+  my $self = shift;
+  return $self->{dumpfile}; 
+}
+
+sub set_dumpfile {
+  my $self = shift;
+  $self->{dumpfile} = shift;
+}
+
+=head2 accessors get_notfoundfile, set_notfoundfile
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_notfoundfile {
+  my $self = shift;
+  return $self->{notfoundfile}; 
+}
+
+sub set_notfoundfile {
+  my $self = shift;
+  $self->{notfoundfile} = shift;
+}
+
+=head2 accessors get_tempdir, set_tempdir
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_tempdir {
+  my $self = shift;
+  return $self->{tempdir}; 
+}
+
+sub set_tempdir {
+  my $self = shift;
+  $self->{tempdir} = shift;
+}
+
 
 1;

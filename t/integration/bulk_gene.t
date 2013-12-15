@@ -13,7 +13,7 @@ use Data::Dumper;
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 $mech->with_test_level( remote => sub {
-    $mech->get('/bulk/gene');
+    $mech->get('/tools/bulk/tabs/gene_tab');
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
@@ -24,7 +24,7 @@ $mech->with_test_level( remote => sub {
 });
 
 $mech->with_test_level( remote => sub {
-    $mech->get('/bulk/gene');
+    $mech->get('/tools/bulk/tabs/gene_tab');
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
@@ -36,7 +36,7 @@ $mech->with_test_level( remote => sub {
 });
 
 $mech->with_test_level( remote => sub {
-    $mech->get('/bulk/gene');
+    $mech->get('/tools/bulk/tabs/gene_tab');
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
@@ -48,7 +48,7 @@ $mech->with_test_level( remote => sub {
 });
 
 $mech->with_test_level( remote => sub {
-    $mech->get('/bulk/gene');
+    $mech->get('/tools/bulk/tabs/gene_tab');
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
@@ -60,7 +60,7 @@ $mech->with_test_level( remote => sub {
 });
 
 $mech->with_test_level( remote => sub {
-    $mech->get('/bulk/gene');
+    $mech->get('/tools/bulk/tabs/gene_tab');
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
@@ -75,7 +75,7 @@ $mech->with_test_level( remote => sub {
 $mech->with_test_level( remote => sub {
     my $id        = 'Solyc02g081670';
     my $gene_type = 'cds';
-    $mech->get_ok('/bulk/gene');
+    $mech->get_ok('/tools/bulk/tabs/gene_tab');
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
@@ -88,7 +88,7 @@ $mech->with_test_level( remote => sub {
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
     $mech->content_unlike(qr/Invalid data type/);
     $mech->content_unlike(qr/At least one valid identifier must be given/);
-    my @flinks = $mech->find_all_links( url_regex => qr{/bulk/gene/download/$sha1\.fasta} );
+    my @flinks = $mech->find_all_links( url_regex => qr{/gene/download/$sha1\.fasta} );
     cmp_ok(@flinks, '==', 1, "found one FASTA download link for $gene_type $id $sha1.fasta");
     $mech->links_ok( \@flinks );
 
@@ -131,7 +131,7 @@ SEQ
 $mech->with_test_level( remote => sub {
     my $id        = 'Solyc02g081670';
     my $gene_type = 'cdna';
-    $mech->get_ok('/bulk/gene');
+    $mech->get_ok('/tools/bulk/tabs/gene_tab');
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
@@ -187,7 +187,7 @@ SEQ
 });
 
 $mech->with_test_level( remote => sub {
-    $mech->get('/bulk/gene');
+    $mech->get('/tools/bulk/tabs/gene_tab');
     my $gene_type = 'protein';
     my $id        = "Solyc02g081670";
     $mech->submit_form_ok({
@@ -225,7 +225,7 @@ SEQ
 });
 
 $mech->with_test_level( remote => sub {
-    $mech->get('/bulk/gene');
+    $mech->get('/tools/bulk/tabs/gene_tab');
     my $gene_type = 'protein';
     my $id        = "Solyc02g092680";
     $mech->submit_form_ok({
@@ -270,7 +270,7 @@ SEQ
 
 
 $mech->with_test_level( remote => sub {
-    $mech->get('/bulk/gene');
+    $mech->get('/tools/bulk/tabs/gene_tab');
     my $gene_type = 'protein';
     my $id        = "Os01g0276000";
     $mech->submit_form_ok({

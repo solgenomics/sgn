@@ -1,0 +1,47 @@
+
+<%args>
+$summary_data => {}
+</%args>
+
+    <& /page/page_title.mas, title=>"Bulk download summary" &>
+
+    The query you submitted contained <% $summary_data->{numlines} %> lines.<br />
+    Your query resulted in <% $summary_data->{total} %> lines being retrieved in
+    <% $summary_data->{query_time} %> seconds.<br />
+    <% $summary_data->{missing_ids_msg} %><br /><br />
+
+%    if ( $summary_data->{total} == 0 ) {
+
+     Please verify that you used the correct search and that you chose the right
+     unigene or bac assembly to download from. Also make sure that the submitted
+     identifiers are appropriately formatted.<br />
+     
+     Please try your search again.<br /><br />
+%   }
+%   else {
+ 
+    The file size is <% $summary_data->{filesize} %> kBytes.
+    <br /><br />
+    <a href="/tools/bulk/display?outputType=HTML&amp;line_count=$line_count&amp;dumpfile=<% $summary_data->{file} %>&amp;page=1&amp;idType=<% $summary_data->{idType} %>">Browse</a>
+    the results.
+    <br />
+    <br />
+
+    <table border="0" cellpadding="0"><tr><td width="120"><b>View</b></td><td width="120">
+    <b>Download to disk</b></td></tr>
+    <tr><td>
+
+    as <a href="/tools/bulk/display?outputType=text&amp;dumpfile=<% $summary_data->{file} %>&amp;idType=<% $summary_data->{idType} %>">Text</a>
+    <br />
+    as <% $summary_data->{fastalink} %><br />
+
+    </td><td>
+
+    as <a href="/tools/bulk/display?outputType=text&amp;dumpfile=<% $summary_data->{file} %>&amp;idType=<% $summary_data->{idType} %>&amp;download=1">
+    Text</a><br />
+    as <% $summary_data->{fastadownload} %><br />
+
+    </td></tr></table>
+    <br /><br /><% $summary_data->{fastamessage} %><br />
+
+%}

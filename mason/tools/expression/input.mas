@@ -69,21 +69,20 @@
     <p id="exp_title"></p>
     <p id="exp_dbxref"></p>
     <p id="exp_pub"></p>
-    <table id="exp_info_table" cellpadding="2" cellspacing="2" width="100%"></table>
-    <br/>
-</&>
-
-
-<&| /page/info_section.mas, title=>"Interactive Control Panel", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
-    Choose a experiment:&nbsp; &nbsp; <select id="exp_list"></select>
-    <br/>
-    <br/>
-    <br/>
 </&>
 
 
 <&| /page/info_section.mas, title=>"Experiment Map", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
 <div id="my_stage"></div>
+</&>
+
+<&| /page/info_section.mas, title=>"Interactive Control Panel", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
+    Choose a experiment:&nbsp; &nbsp; 
+	<select id="exp_list">
+		<option>BTI Slyc RNA-Seq</option>
+		<option>Other experiment</option>
+	</select>
+    <br/>
 </&>
 
 
@@ -96,8 +95,13 @@
 </&>
 
 
-<&| /page/info_section.mas, title=>"Experiment Data", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
+<&| /page/info_section.mas, title=>"Experiment Expression Data", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
     <table id="exp_table" cellpadding="2" cellspacing="2" width="100%"></table>
+</&>
+
+<&| /page/info_section.mas, title=>"Experiment Sample Info", collapsible => 1, collapsed => 0, is_subsection=>"1" &>
+	<table id="exp_info_table" cellpadding="2" cellspacing="2" width="100%"></table>
+	<br/>
 </&>
 
 
@@ -210,11 +214,11 @@ jQuery(document).ready(function () {
 		    var experiment_info = "";
 		    //alert("data: "+data_array.length);
 	        expression_table_info += "<tr style='text-align:center;'><th>Experiment</th><th>Replicates</th><th>FPKM</th><th>FPKM_lo</th><th>FPKM_hi</th></tr>";
-	        experiment_info += "<tr style='text-align:center;'><th>Experiment Conditions</th><th>Description</th><th>External Link</th></tr>";
+	        experiment_info += "<tr style='text-align:center;'><th>Sample</th><th>Description</th><th>External Link</th></tr>";
 
 		    for (var i=0; i<data_array.length; i=i+1) {
 		        experiment_info += "<tr><td><a href='/gem/experiment.pl?id="+data_array[i]["id"]+"' target='_blank'>"+data_array[i]["name"]+"</a></td>";
-			    experiment_info += "<td style='text-align:center;'>"+data_array[i]["exp_description"]+"</td>";
+			    experiment_info += "<td style='text-align:left;'>"+data_array[i]["exp_description"]+"</td>";
 			    experiment_info += "<td style='text-align:center;'>"+data_array[i]["exp_links"]+"</td>";
 
 		        expression_table_info += "<tr><td>"+data_array[i]["name"]+"</td>";
@@ -391,27 +395,40 @@ function dump(arr,level) {
 
 
 
-    function display_pictures() {
-        var stage = new Kinetic.Stage({
-    	    container: "my_stage",
-      	    width: 700,
-      	    height: 600
-    	});
-    	var layer = new Kinetic.Layer();
-        var plantObj = new Image();
-    	plantObj.src = "/static/documents/img/expression_tool/black_tomato_plant.png";
+	function display_pictures() {
+		var stage = new Kinetic.Stage({
+			container: "my_stage",
+			width: 700,
+			height: 600
+		});
+		var layer = new Kinetic.Layer();
+		var plantObj = new Image();
+		// var fruit_img = new Image();
+		plantObj.src = "/static/documents/img/expression_tool/expression_example.png";
+		// fruit_img.src = "/static/documents/img/expression_tool/tomato_fruit_1.png";
 
-        // tomato plant img
-      	var tomato_plant = new Kinetic.Image({
-            image: plantObj,
-            x: 0,
-            y: 0,
-            width: 210,
-            height: 300,
-        });
-        layer.add(tomato_plant);
-      	stage.add(layer);
-    }
+		// tomato plant img
+		var tomato_plant = new Kinetic.Image({
+			image: plantObj,
+			x: 0,
+			y: 0,
+			width: 690,
+			height: 570,
+		});
+
+		// // tomato fruit img
+		// var tomato_fruit = new Kinetic.Image({
+		// 	image: fruit_img,
+		// 	x: 40,
+		// 	y: 410,
+		// 	width: 130,
+		// 	height: 120,
+		// });
+
+		layer.add(tomato_plant);
+		// layer.add(tomato_fruit);
+		stage.add(layer);
+	}
 
 });
 

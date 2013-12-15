@@ -24,9 +24,21 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     my $pop_id = $c->req->param('population_id');
     $c->stash->{pop_id} = $pop_id;
   
-    my $phenotype_dir  = catdir($c->config->{solgs_dir}, 'cache');
-    my $phenotype_file = 'phenotype_data_' . $pop_id;
-    $phenotype_file    = $c->controller('solGS::solGS')->grep_file($phenotype_dir, $phenotype_file);
+    my $phenotype_file;
+    
+    if( $pop_id =~ /uploaded/) 
+    {
+        my $phenotype_dir = $c->stash->{solgs_prediction_upload_dir};
+        my $userid        = $c->user->id;
+        $phenotype_file   = "phenotype_data_${userid}_${pop_id}";
+        $phenotype_file   = $c->controller('solGS::solGS')->grep_file($phenotype_dir, $phenotype_file);
+    }
+    else 
+    {
+        my $phenotype_dir = $c->stash->{solgs_cache_dir};
+        $phenotype_file   = 'phenotype_data_' . $pop_id;
+        $phenotype_file   = $c->controller('solGS::solGS')->grep_file($phenotype_dir, $phenotype_file);
+    }
 
     if ($phenotype_file) 
     {
@@ -190,10 +202,20 @@ sub run_correlation_analysis {
    
     $self->create_correlation_dir($c);
     my $corre_dir = $c->stash->{correlation_dir};
+    my $pheno_file;
     
-    my $pheno_file = 'phenotype_data_' . $pop_id;
-    $pheno_file = $c->controller('solGS::solGS')->grep_file($corre_dir, $pheno_file);
- 
+    if($pop_id =~ /uploaded/) 
+    {
+        my $userid  = $c->user->id;
+        $pheno_file = "phenotype_data_${userid}_${pop_id}";
+        $pheno_file = $c->controller('solGS::solGS')->grep_file($corre_dir, $pheno_file);
+    }
+    else
+    {
+        $pheno_file = "phenotype_data_${pop_id}";
+        $pheno_file = $c->controller('solGS::solGS')->grep_file($corre_dir, $pheno_file);
+    } 
+
     $self->correlation_output_file($c);
     my $corre_table_file = $c->stash->{corre_coefficients_file};
     my $corre_json_file = $c->stash->{corre_coefficients_json_file};

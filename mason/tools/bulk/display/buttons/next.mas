@@ -1,0 +1,32 @@
+
+<%args>
+$line_count => 0
+$page_size => 50
+$page_number => 1
+$dumpfile
+</%args>
+
+<%perl>
+
+=head2 nextButtons
+
+  Desc: sub nextButtons
+  Args: default
+  Ret : n/a
+
+  Determines the next button that will display on the html display pages.
+
+=cut
+
+</%perl>
+
+%# add next page button if there is a next page
+%if ( ( $line_count + $page_size ) >
+%( ( $page_number + 1 ) * $page_size ) )
+%{
+<a href="display.pl?dumpfile=<% $dumpfile %>&amp;page_number=<% $page_number %>">Next Page</a>
+%}
+%else {
+   Next Page
+%}
+

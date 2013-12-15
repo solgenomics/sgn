@@ -25,7 +25,7 @@ $mech->with_test_level( local => sub {
 });
 
 $mech->with_test_level( local => sub {
-    $mech->get('/bulk/feature');
+    $mech->get('/tools/bulk/tabs/feature_tab');
     $mech->submit_form_ok({
         form_name => "bulk_feature",
         fields    => {
@@ -37,7 +37,7 @@ $mech->with_test_level( local => sub {
 });
 
 $mech->with_test_level( local => sub {
-    $mech->get('/bulk/feature');
+    $mech->get('/tools/bulk/tabs/feature_tab');
     $mech->submit_form_ok({
         form_name => "bulk_feature",
         fields    => {
@@ -49,7 +49,7 @@ $mech->with_test_level( local => sub {
 });
 
 $mech->with_test_level( local => sub {
-    $mech->get('/bulk/feature');
+    $mech->get('/tools/bulk/tabs/feature_tab');
     $mech->submit_form_ok({
         form_name => "bulk_feature",
         fields    => {
@@ -58,7 +58,7 @@ $mech->with_test_level( local => sub {
     }, "submit bulk_feature form with leading+trailing whitespace");
     $mech->content_unlike(qr/Caught exception/);
 
-    $mech->get('/bulk/feature');
+    $mech->get('/tools/bulk/tabs/feature_tab');
     $mech->submit_form_ok({
         form_name => "bulk_feature",
         fields    => {
@@ -70,7 +70,7 @@ $mech->with_test_level( local => sub {
 });
 
 $mech->with_test_level( local => sub {
-    $mech->get('/bulk/feature');
+    $mech->get('/tools/bulk/tabs/feature_tab');
     $mech->submit_form_ok({
         form_name => "bulk_feature",
         fields    => {
@@ -121,7 +121,7 @@ SGN-E587346
 SGN-E443637
 SGN-E403108
 IDS
-    $mech->get_ok('/bulk/feature');
+    $mech->get_ok('/tools/bulk/tabs/feature_tab');
     $mech->submit_form_ok({
         form_name => "bulk_feature",
         fields    => {

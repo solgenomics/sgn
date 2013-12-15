@@ -1,0 +1,69 @@
+
+<%perl>
+
+=head2 ftp_site
+
+  Desc: sub ftp_site
+  Args: n/a
+  Ret : ftp tab format
+
+  Defines the format of the ftp tab using html & perl. Specifies
+  links for downloading ftp information.
+
+=cut
+
+print <<HTML;
+    <h3 style="margin-bottom: 0.3em">SGN FTP site</h3>
+	<div style="margin: 0 1em 0 1em">Download complete datasets.</div><br />
+
+    <div style="margin: 0; padding: 1em; border: 1px solid #ccccff">
+	<a class="folderlink" href="ftp://ftp.solgenomics.net">ftp top level</a>
+	
+	<ul style="margin: 1em 0 0 0; list-style: none">
+	
+HTML
+
+    my %ftplinks = (
+        'unigene_builds' =>
+'Sequence, quality, and membership information for all SGN unigene builds',
+        'est_sequences' =>
+          'Sequence and quality files for all SGN ESTs, organized by library',
+        'maps_and_markers' =>
+          'Marker sequences and marker position lists for all SGN maps',
+        'physical_mapping' =>
+'Raw data files for Tomato HindIII BAC library FPC and overgo analyses',
+        'blast_annotations' =>
+'Highest-ranked hits vs. Genbank NR and Arabidopsis for all SGN unigenes.',
+        'manual_annotations' =>
+          'Manual annotations for a number of SGN unigenes',
+        'user_requests' =>
+'Custom-generated datasets for individual users (mail special requests to <a href="mailto:sgn-feedback@sgn.cornell.edu">sgn-feedback</a>)',
+        'genomes/Solanum_lycopersicum' =>
+          'Tomato genomic data, including BAC end and full BAC sequences',
+	  'genomes/Solanum_tuberosum' => 
+	  'Potato genome data',
+	  'genomes/Nicotiana_benthamiana' => 'Nicotiana benthamiana genome data',
+        'COSII' => 'COSII marker data'
+    );
+
+    foreach my $dir ( sort keys %ftplinks ) {
+        my $desc = $ftplinks{$dir};
+        print <<HTML;
+	<li><a class="folderlink" href="ftp://ftp.solgenomics.net/$dir"> $dir</a>
+	    <div class="folderdesc">$desc</div>
+	</li>
+HTML
+    }
+
+    print <<HTML;
+        </ul>
+    </div>
+
+	<br />
+	<i>Note:</i> The SGN FTP site can also be accessed directly through <a href="ftp://ftp.solgenomics.net">ftp://ftp.solgenomics.net</a> using a browser or ftp program.
+HTML
+
+
+
+
+</%perl>

@@ -97,5 +97,7 @@ $owner=>''
    pop_id                  => $combo_pops_id,
    prediction_pop_id       => $prediction_pop_id,
    list_of_prediction_pops => $list_of_prediction_pops,
-   prediction_pop_name     => $prediction_pop_name, 
+   prediction_pop_name     => $prediction_pop_name,
+   project_name            => $project_name,
 &>
+

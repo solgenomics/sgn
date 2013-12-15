@@ -1,0 +1,71 @@
+
+<%args>
+$ug_build_select => ''
+$debug => ''
+</%args>
+
+
+<form name="bulkform" action="/tools/bulk/download" method="post" enctype="multipart/form-data">
+  
+  <br />
+  <table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
+	
+	<% $ug_build_select %>
+	<br />
+	
+	Enter a list of identifiers or upload a file containing identifers, one per line:<br />
+	<table summary="" width="100%"><tr><td>
+	      <textarea id="ids" name="ids" rows="5" cols="20"></textarea>
+	    </td>
+	    <td>
+	      <i>Example:</i> #example box
+	      <div style="border: 1px solid gray; width: 10em; height: 5em">
+<pre><div id="clone_example_ids">cLEB-1-A2
+cLEB-1-A3
+cLEB-1-A4</div></pre><a href="javascript:copy_example_data()">[copy]</a>
+</div> 
+
+<script>
+function copy_example_data() { 
+document.getElementById("ids").innerHTML=document.getElementById("clone_example_ids").innerHTML;
+}
+</script>
+	 
+	</td></tr></table>
+	
+	<br />
+	<br />
+	And/or upload list file: <br /><input type="file" name="file" />
+	<br />
+	<br />
+	
+    </td><td valign="top" bgcolor="#EEEEEE" width="320">
+	<b>Please select the information you would like for each identifier:</b><br />
+	<input type="checkbox" name="clone_name" checked="checked" /> clone name<br />
+	<input type="checkbox" name="SGN_C" checked="checked" /> clone id (SGN-C)<br />
+	<input type="checkbox" name="SGN_T" checked="checked" /> sequence read id (SGN-T)<br />
+	<input type="checkbox" name="SGN_E" checked="checked" /> est id (SGN-E)<br />
+	<input type="checkbox" name="build_nr" checked="checked" /> unigene build nr<br />
+	<input type="checkbox" name="SGN_U" checked="checked" /> unigene id (SGN-U)<br />
+	<input type="checkbox" name="chipname" checked="checked" /> chipname<br />
+	<input type="checkbox" name="SGN_S" checked="checked" /> microarray spot id (SGN-S)<br />
+	<input type="checkbox" name="TUS" checked="checked" /> TUS number (used to order clones)<br />
+	<input type="checkbox" name="manual_annotation" /> manual annotation<br />
+	<input type="checkbox" name="automatic_annotation" /> automatic (BLAST) annotation<br />
+	<input type="checkbox" name="sequence" onclick="check_fasta_option()" /> sequence<br />
+	&nbsp;&nbsp;&nbsp;<input type="radio" name="seq_type" value="est_seq" checked="checked" /> EST sequence<br />
+	&nbsp;&nbsp;&nbsp;<input type="radio" name="seq_type" value="unigene_seq" /> Unigene sequence<br />
+
+</td></tr></table>
+
+%    if ( $debug eq "1" ) {
+%        print
+%qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />\n|;
+%    }
+
+ 	<input type="hidden" name="idType" value="clone" />
+	<input type="reset" />&nbsp;&nbsp;
+        <input type="submit" value="Submit" /><br />
+   </form>
+
+

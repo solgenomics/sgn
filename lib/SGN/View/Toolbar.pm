@@ -435,7 +435,7 @@ sub default_toolbar_data {
 
                 {
                     name => 'Unigene and BAC information',
-                    link => '/bulk/input.pl',
+                    link => '/tools/bulk',
                     desc =>
 'Rather than sifting through SGN page by page, here you can download large quantities of information in a single step.'
                 },

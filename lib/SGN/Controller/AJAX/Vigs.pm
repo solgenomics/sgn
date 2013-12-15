@@ -38,35 +38,6 @@ __PACKAGE__->config(
 
 our %urlencode;
 
-# function to set a temporary file name for bowtie2 input and output, needed to run an asycronize AJAX request.
-# sub get_bt2_file_name :Path('/tools/vigs/processing_data') :Args(0) { 
-# 	my ($self, $c) = @_;
-# 	
-# 	# generate temporary file name for analysis with Bowtie2.
-# 	my ($seq_fh, $seq_filename) = tempfile("vigsXXXXXX", DIR=> $c->config->{'cluster_shared_tempdir'},);
-# 	
-# 	# return the name
-#     $c->stash->{rest} = {file_name=>$seq_filename};
-# }
-
-# Check if Bowtie2 has finished
-# sub check_bt2_status :Path('/tools/vigs/checking_bt2') :Args(0) { 
-# 	my ($self, $c) = @_;
-# 	my $bt2_output = "running";
-# 	my $seq_filename = $c->req->param("tmp_file_name");
-# 	
-# 	my $path = $seq_filename.".bt2.out";
-# 	
-# 	if (-e $path) {
-# 		# print STDERR "File exists!\n";
-# 		$bt2_output = basename($seq_filename);
-# 	} else {
-# 		# print STDERR "Not ready yet!\n";
-# 	}
-# 	
-# 	$c->stash->{rest} = {bt2_output=>$bt2_output};
-# }
-
 # check input data, create Bowtie2 input data and run Bowtie2
 sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) { 
     my ($self, $c) = @_;
@@ -75,14 +46,14 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
     my @errors; 
  
     # get variables from catalyst object
-    my $seq_filename = $c->req->param("tmp_file_name");
+    # my $seq_filename = $c->req->param("tmp_file_name");
 	
     my $params = $c->req->body_params();
     my $sequence = $c->req->param("sequence");
     my $fragment_size = $c->req->param("fragment_size");
     my $seq_fragment = $c->req->param("seq_fragment");
     my $missmatch = $c->req->param("missmatch");
-    my $database = $c->req->param("database");
+    my $db_id = $c->req->param("database");
 
     # clean the sequence and check if there are more than one sequence pasted
     if ($sequence =~ tr/>/>/ > 1) {
@@ -117,13 +88,13 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
     }
 
     if (!$fragment_size ||$fragment_size < 18 || $fragment_size > 30 ) { 
-		push (@errors, "n-mer size ($fragment_size) must be a value between 18-30 bp.\n");
+		push (@errors, "n-mer size ($fragment_size) value must be between 18-30 bp.\n");
     }
     if (!$seq_fragment || $seq_fragment < 100 || $seq_fragment > length($sequence)) {
 		push (@errors, "Wrong fragment size ($seq_fragment), it must be higher than 100 bp and lower than sequence length\n");
     }
-    if ($missmatch =~ /[^\d]/ || $missmatch < 0 || $missmatch > 3 ) { 
-		push (@errors, "miss-match value ($missmatch) must be between 0-3\n");
+    if ($missmatch =~ /[^\d]/ || $missmatch < 0 || $missmatch > 1 ) { 
+		push (@errors, "miss-match value ($missmatch) must be between 0-1\n");
     }
 
     # Send error message to the web if something is wrong
@@ -159,8 +130,8 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
     if (! -e $query_file) { die "Query file failed to be created."; }
 
     # get arguments to Run Bowtie2
-    print STDERR "DATABASE SELECTED: $database\n";
-    my $bdb = CXGN::BlastDB->from_id($database);
+    print STDERR "DATABASE SELECTED: $db_id\n";
+    my $bdb = CXGN::BlastDB->from_id($db_id);
     
     my $basename = $c->config->{blast_db_path};
     my $database = $bdb->file_base;
@@ -175,30 +146,37 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		" --threads 1", 
 		" --very-fast", 
 		" --no-head", 
-		" --end-to-end", 
+		" --omit-sec-seq",
+		" --end-to-end",
+		# " --mp 2,1", 
+		" -L ".$fragment_size, 
+		# " --score-min L,-100,-1", 
+		" -N 1", 
+		# " -R 10", 
 		" -a", 
-		" --no-unal", 
-		" -x ". $database_fullpath,
+		" -x ".$database_fullpath,
 		" -f",
-		" -U ". $query_file.".fragments",
-		" -S ". $query_file.".bt2.out",
+		" -U ".$query_file.".fragments",
+		" -S ".$query_file.".bt2.out",
 	);
 
-    print STDERR "Bowtie2 COMMAND: ".(join ", ",@command)."\n";
+    print STDERR "Bowtie2 COMMAND: ".(join " ",@command)."\n";
     
+	# print STDERR "TEST: $bowtie2_path/bowtie  --all -v 3 --threads 1 --seedlen $fragment_size --sam --sam-nohead $database_fullpath -f $query_file.fragments $query_file.bt2.out\n";
+	
+    # my $err = system("$bowtie2_path/bowtie  --all -v 3 --threads 1 --seedlen $fragment_size --sam --sam-nohead $database_fullpath -f $query_file.fragments $query_file.bt2.out");
     my $err = system(@command);
 
 	if ($err) {
 		$c->stash->{rest} = {error => "Bowtie2 execution failed"};
+	} 
+	else {
+		$id = $urlencode{basename($seq_filename)};
+		$c->stash->{rest} = {jobid =>basename($seq_filename),
+							seq_length => length($sequence),
+							db_name => $database_title,
+		};
 	}
-
-    $id = $urlencode{basename($seq_filename)};
-    
-    $c->stash->{rest} = {jobid =>basename($seq_filename),
-                         seq_length => length($sequence),
-                         db_name => $database_title,
-    };
-
 }
 
 
@@ -304,8 +282,22 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my @regions = [0,0,0,1,1,1];
     my @best_region = [1,1];
     my $seq_length = length($query->seq());
-
-    @regions = $vg->longest_vigs_sequence($coverage, $seq_length);
+	
+	my $counter = 0;
+	while (!$regions[1] || $regions[1] <= 0) {
+		$counter++;
+		@regions = $vg->longest_vigs_sequence($coverage, $seq_length);
+		
+		print STDERR "score: $regions[1], loop iteration: $counter\n";
+		
+		if ($regions[1] <= 0 || $counter >= 4) {
+			$coverage = $coverage + 1;
+		}
+		if ($counter >= 3) {
+			last;
+		}
+	}
+	
     @best_region = [$regions[4], $regions[5]];
     
     if ($coverage == 0) {
@@ -331,7 +323,9 @@ sub view :Path('/tools/vigs/view') Args(0) {
     }
 
     # return variables
-    $c->stash->{rest} = {score => sprintf("%.2f",($regions[1]*100/$seq_fragment)/$coverage),
+    $c->stash->{rest} = {
+						score => sprintf("%.2f",($regions[1]*100/$seq_fragment)/$coverage),
+						# score => sprintf("%.2f",($regions[1]*100/$fragment_size/$seq_fragment)/$coverage),
 						coverage => $coverage,
 						f_size => $seq_fragment,
 						cbr_start => ($regions[4]+1),

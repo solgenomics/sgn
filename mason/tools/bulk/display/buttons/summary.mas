@@ -1,0 +1,23 @@
+
+<%args>
+$dumpfile
+$idType
+</%args>
+
+<%perl>
+
+=head2 summary button
+
+  Desc: summary buttons
+  Args: default
+  Ret : n/a
+
+  Determines the summary button that will display on the html display pages.
+
+=cut
+
+</%perl>
+
+<a href="/tools/bulk/summary/<% $dumpfile %>">Summary Page</a>
+
+

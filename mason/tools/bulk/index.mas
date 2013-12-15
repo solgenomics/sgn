@@ -1,0 +1,49 @@
+
+<%args>
+$mode => ''
+$debug => ''
+</%args>
+
+<%perl>
+my %modes = ( clone_search => 0,  microarray=>1,  unigene=>2, bac=>3, bac_end=>4, genes=>5, feature=>6, converter=>7, ftp=>8, );
+if (!$mode) { $mode="clone_search";}
+if (!exists($modes{$mode})) { $mode = "clone_search"; }
+</%perl>
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
+
+<& /page/page_title.mas, title=>"Bulk Download" &>
+
+<script>
+  jQuery(function() {
+    
+    jQuery( "#tabs" ).tabs({
+      //show: { effect: 'blind', duration: 800},
+      active: <% $modes{$mode} %>,
+      beforeLoad: function( event, ui ) {
+        ui.jqXHR.error(function() {
+          ui.panel.html(
+            "Couldn't load this tab. We'll try to fix this as soon as possible. " +
+            "If this wouldn't be a demo." );
+        });
+      }
+
+  });
+  });
+</script>
+
+
+<div id="tabs">
+  <ul>
+    <li><a href="/tools/bulk/tabs/clone_tab">Clones</a></li>
+    <li><a href="/tools/bulk/tabs/array_tab">Arrays</a></li>
+    <li><a href="/tools/bulk/tabs/unigene_tab">Unigenes</a></li>
+    <li><a href="/tools/bulk/tabs/bac_tab">BACs</a></li>
+    <li><a href="/tools/bulk/tabs/bac_end_tab">BAC ends</a></li>
+    <li><a href="/tools/bulk/tabs/gene_tab">Genes</a></li>
+    <li><a href="/tools/bulk/tabs/feature_tab">Features</a></li>
+    <li><a href="/tools/bulk/tabs/converter_tab">Converter</a></li>
+    <li><a href="/tools/bulk/tabs/ftp_tab">FTP site</a></li>
+  </ul>
+</div>
+</div>

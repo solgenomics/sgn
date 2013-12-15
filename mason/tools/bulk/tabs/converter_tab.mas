@@ -1,0 +1,47 @@
+
+<%args>
+
+</%args>
+
+<form id="converter_form" action="/tools/bulk/download" method="post" enctype="multipart/form-data">
+
+<br />
+<table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
+
+<br />
+Enter a list of identifiers (SGN unigene ids or TOM1 array ids) or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
+
+<table summary="" width="100%" cellpadding="0"><tr><td>
+<textarea name="ids" rows="5" cols="20"></textarea>
+</td>
+<td>
+<i>Example:</i>
+<pre style="border: 1px solid gray; width: 10em; height: 5em">
+SGN-U562661
+SGN-U562662
+SGN-U562663
+</pre>
+</td></tr></table>
+<br />
+<br />
+
+And/or upload list file: <br /><input type="file" name="file" />
+<br />
+<br />
+
+</td><td valign="top" bgcolor="#EEEEEE" width="320">
+
+      <input type=hidden name="idType" value="converter" />
+
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+</td></tr></table>
+	<input type="reset" />&nbsp;&nbsp;
+<input type="submit" value="Submit" /><br />
+
+
+</form>

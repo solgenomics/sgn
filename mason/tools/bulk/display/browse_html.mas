@@ -1,0 +1,186 @@
+
+<%args>
+$data
+</%args>
+
+<& /tools/bulk/display/buttons.mas, 
+   page_size=>$data->{page_size} || 50, 
+   page_number => $data->{page_number},
+   idType => $data->{idType},
+   dumpfile => $data->{dumpfile} &>
+
+<%perl>
+use Data::Dumper;
+use File::Slurp qw | read_file |;
+use CXGN::Page::FormattingHelpers qw | html_break_string |;
+print STDERR "DATA:".Data::Dumper::Dumper($data);
+
+$data->{page_size} || ($data->{page_size} = 50);
+
+if ( !( exists($data->{page_number}) ||  $data->{page_number} ) ) {
+$data->{page_number} = 1;
+}
+if ( !( exists($data->{page_size}) || $data->{page_size} )) { $data->{page_size} = 50; }
+my $file = $data->{tempdir} . "/" . $data->{dumpfile};
+
+
+my $content = "";
+my @file_lines = read_file($file);
+
+print STDERR "Line Count in the file: ".scalar(@file_lines)."\n";
+
+if ( @file_lines < 2 ) {
+	      $content .=
+	      "No data was retrieved. Please verify your input parameters. Thanks.<br /><br />\n";
+	      }
+	      else {
+	      
+              # read the column definitions
+              #
+              my @output_fields;
+	      my $defs = shift @file_lines;
+              if ($defs) { chomp($defs); @output_fields = split /\t/, $defs; }
+              print STDERR  "column definitions: " . ( join " ", @output_fields )."\n";
+	      
+              # define the links
+        my %links = (
+            clone_name =>
+"/search/est.pl?request_type=10&amp;search=Search&amp;request_id=",
+            SGN_U        => "/search/unigene.pl?unigene_id=",
+            converted_id => "/search/unigene.pl?unigene_id=",
+        );
+        $data->{links} = \%links;
+
+        #
+        # read in the required page
+        #
+        my $line_count = 0;
+        my @data = ();
+
+        $content .= "<table summary=\"\" border=\"1\">\n";
+
+        # print table header
+        $content .=
+            "<tr><td>line</td><td>"
+          . ( join "</td><td>", @output_fields )
+          . "</td></tr>";
+
+        foreach my $fl (@file_lines) {
+            print STDERR "Processing line $fl...\n";
+            chomp($fl);
+            $line_count++;
+
+            my $show_line = ( $line_count >= ($data->{page_number} - 1 ) * $data->{page_size} + 1 )
+                && ($line_count <=  ( $data->{page_number} ) * $data->{page_size} );
+
+            if ($show_line) { 
+                my @fields = split /\t/, $fl;
+                my %row;
+                for ( my $i = 0 ; $i < @fields ; $i++ ) {
+                    $row{ $output_fields[$i] } = $fields[$i];
+                }
+
+                # format the sequence data for output to browser.
+                # number of letters in sequence or qual to wrap on
+                my $breakspace_num = 60;
+		
+                $row{est_seq} =
+                  html_break_string( $row{est_seq}, $breakspace_num );
+
+                $row{est_seq} =
+"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{est_seq}</span>";
+
+                $row{unigene_seq} =
+                  html_break_string( $row{unigene_seq}, $breakspace_num );
+                $row{unigene_seq} =
+"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{unigene_seq}</span>";
+
+                $row{protein_seq} =
+                  html_break_string( $row{protein_seq}, $breakspace_num );
+                $row{protein_seq} =
+"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{protein_seq}</span>";
+                $row{estscan_seq} =
+                  html_break_string( $row{estscan_seq}, $breakspace_num );
+                $row{estscan_seq} =
+"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{estscan_seq}</span>";
+                $row{longest6frame_seq} =
+                  html_break_string( $row{longest6frame_seq}, $breakspace_num );
+                $row{longest6frame_seq} =
+"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{longest6frame_seq}</span>";
+                $row{preferred_protein_seq} =
+                  html_break_string( $row{preferred_protein_seq},
+                    $breakspace_num );
+                $row{preferred_protein_seq} =
+"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{preferred_protein_seq}</span>";
+
+                $row{bac_end_sequence} =
+                  html_break_string( $row{bac_end_sequence}, $breakspace_num );
+                $row{bac_end_sequence} =
+"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{bac_end_sequence}</span>";
+
+                my $qual = $row{qual_value_seq};
+                my @qual = split /\s+/, $qual;
+                $row{qual_value_seq} = "";
+                s/^(\d)$/&nbsp;$1/ foreach (@qual);
+                while ( my @a = splice( @qual, 0, $breakspace_num ) ) {
+                    $row{qual_value_seq} .= join( "&nbsp;", @a ) . "<br />";
+                }
+                $row{qual_value_seq} =
+"<span class=\"sequence\" style=\"font-size: smaller;\"> $row{qual_value_seq}</span>";
+
+                my @output;
+
+         #
+         # cycle through @output_fields and find the corresponding hash elements
+         #
+                $content .= "<tr><td>$line_count</td>\n";
+                foreach my $f (@output_fields) {
+
+                    #$data-> debug("outputting $row{$f}...");
+                    if ( !exists( $row{$f} ) || $row{$f} eq undef ) {
+                        $row{$f} = "N.A.";
+                    }
+
+#
+# add links as required. Links for each output field are stored in the %links hash.
+#
+                    if ( exists( $links{$f} ) && $row{$f} ne "N.A." ) {
+                        $row{$f} =
+                          "<a href=\"$links{$f}$row{$f}\">$row{$f}</a>";
+                    }
+                    if ( $f eq "clone_id" ) {
+                        $content .= "<td>$row{$f}</td>";
+                    }
+                    else {
+                        $content .= "<td>$row{$f}</td>";
+                    }
+
+                    #push @output, $row{$f};
+                }
+                $content .= "</tr>\n";
+
+     #$content .= "<tr><td>".(join "</td><td>", @output) . "</td></tr>";
+            }
+        }
+        $content .= "</table><!-- dump info -->\n";
+#$data->buttons();
+}
+
+#
+# output to browser
+#
+print $content;
+
+close(F);
+
+
+</%perl>
+
+<& /tools/bulk/display/buttons.mas, 
+  line_count => $data->{line_count}, 
+  page_size=>$data->{page_size}, 
+  page_number => $data->{page_number},
+  dumpfile => $data->{dumpfile},
+  idType => $data->{idType}
+
+&>

@@ -31,7 +31,7 @@ jQuery(document).ready( function () {
                     data: {'population_id': population.population_id },
                     url: '/correlation/phenotype/data/',
                     success: function(response) {         
-                    runCorrelationAnalysis ();
+                    runCorrelationAnalysis();
                 },
                     error: function(response) {
                     
@@ -55,7 +55,10 @@ function runCorrelationAnalysis () {
                 jQuery("#correlation_message").empty();
             },
                 error: function(response) {           
-                alert('there is error running  correlation analysis.');
+                alert('There is error running correlation analysis.');
+                jQuery("#correlation_message")
+                    .css({"padding-left": '0px'})
+                    .html("There is no correlation output for this population.");
             }
                 
         });
