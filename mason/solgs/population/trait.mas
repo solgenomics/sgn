@@ -32,7 +32,7 @@ $owner=>''
 
 </%perl>
 
-  <& /util/import_javascript.mas, classes => ["solGS.phenotypeDataFlot", "solGS.traitGebvFlot", 
+  <& /util/import_javascript.mas, classes => ["solGS.histogram", "solGS.phenotypeDataFlot", "solGS.traitGebvFlot", 
                                               "flot.flot", "flot.categories", 
                                               "flot.tooltip", "flot.selection", "flot.navigate", 
                                               "flot.axisLabels"
@@ -78,6 +78,19 @@ $owner=>''
 
 </&>
 
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 0, 
+    title       => "Trait phenotype data"
+&> 
+
+<& trait_phenotype_histogram.mas,
+   pop_id           => $pop_id,
+   trait_id         => $trait_id,
+ &>
+
+</&>
 % if ($show_data) 
 %{
 
