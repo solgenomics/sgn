@@ -37,7 +37,10 @@ $pop_id
 }
 
 </style>
-<& /util/import_javascript.mas, classes => [ "solGS.correlation", "d3.d3"] &>
+
+<script src="/js/d3/d3.js" charset="utf-8"></script>
+
+<& /util/import_javascript.mas, classes => [ "solGS.correlation"] &>
 <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 0, 
