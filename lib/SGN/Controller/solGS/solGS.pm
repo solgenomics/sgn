@@ -1079,6 +1079,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
     
     if ($referer =~ m/$page/)
     {
+        $model_id =~ s/combined_//;
         my ($combo_pops_id, $trait_id) = $referer =~ m/(\d+)/g;
 
         $c->stash->{data_set_type} = "combined populations"; 
@@ -1121,7 +1122,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         my $download_prediction = $c->stash->{download_prediction};
       
         $self->list_of_prediction_pops($c, $combo_pops_id, $download_prediction);
-         $referer = '/' . $referer;
+        $referer = '/' . $referer;
         $c->res->redirect($referer);
         
     }
@@ -1158,7 +1159,6 @@ sub prediction_population :Path('/solgs/model') Args(3) {
   
             $c->forward('get_rrblup_output'); 
         }
-                   
          $self->trait_phenotype_stat($c);
          $self->gs_files($c);
         
@@ -1791,6 +1791,7 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
     if (!@selected_traits)
     {
         $c->res->redirect("/solgs/population/$pop_id/selecttraits");
+        $c->detach(); 
     }
     elsif (scalar(@selected_traits) == 1)
     {
@@ -1894,11 +1895,13 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
    
     if ($referer =~ m/$trait_page/) 
     { 
-        $c->res->redirect("/solgs/trait/$tr_id/population/$pop_id");      
+        $c->res->redirect("/solgs/trait/$tr_id/population/$pop_id");
+        $c->detach(); 
     }
     else 
     {
         $c->res->redirect("/solgs/traits/all/population/$pop_id/$prediction_id");
+        $c->detach(); 
     }
 
 }
@@ -1953,6 +1956,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
      if (!@analyzed_traits) 
      {
          $c->res->redirect("/solgs/population/$pop_id/selecttraits/");
+         $c->detach(); 
      }
    
      my @trait_pages;
@@ -2089,7 +2093,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
 
 sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm') Args(1) {
     my ($self, $c, $trait_id) = @_;
-   
+  
     my (@pop_ids, $ids);
    
     if ($trait_id =~ /\d+/)
@@ -2132,7 +2136,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
     my ($self, $c, $trait_id) = @_;
    
     my (@pop_ids, $ids);
-   
+  
     if ($trait_id =~ /\d+/)
     {
         $ids = $c->req->param($trait_id);
@@ -2145,7 +2149,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
     my $ret->{status} = 0;
 
     if (scalar(@pop_ids) > 1 )
-    {
+    {  
         $combo_pops_id =  crc(join('', @pop_ids));
         $c->stash->{combo_pops_id} = $combo_pops_id;
         $c->stash->{trait_combo_pops} = $ids;
@@ -2206,7 +2210,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
         my $pop_id = $pop_ids[0];
         $ret->{redirect_url} = "/solgs/trait/$trait_id/population/$pop_id";
     }
-     
+       
     $ret = to_json($ret);
     
     $c->res->content_type('application/json');
@@ -3041,9 +3045,10 @@ sub gs_traits : Path('/solgs/traits') Args(1) {
 sub phenotype_file {
     my ($self, $c) = @_;
     my $pop_id     = $c->stash->{pop_id};
-    
+   
     die "Population id must be provided to get the phenotype data set." if !$pop_id;
-  
+    $pop_id =~ s/combined_//;
+    
     my $pheno_file;
  
     if ($c->stash->{uploaded_reference} || $pop_id =~ /uploaded/) {
