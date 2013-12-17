@@ -6,18 +6,13 @@ reference class = Sequence
 
 search attributes = Note
 
-default features = CDS
-                  DNA/GC Content
-                  mRNAs
-                  gh13_de_novo_blat_matches
-                  gh13_SNPs
-                  exon
-                  CoverageXYplot_gh13
+default features = gh13_SNPs
+                   CoverageXYplot_gh13
                   CoverageXYplot_S.lycopersicum_illum
 
 
 # "automatic" classes to try when an unqualified identifier is given
-##automatic classes =
+automatic classes = Sequence clone match nucleotide_motif
 
 # max and default segment sizes for detailed view
 max segment     = 500000
@@ -126,14 +121,6 @@ bgcolor     = cyan
 fgcolor     = black
 label density = 25
 bump density  = 25
-
-[mummer_matches_gh13_de_novo_contig]
-feature = gh13_nucmer
-glyph   = generic
-
-[mummer_matches_gh13_de_novo_scaffold]
-feature = gh13_scaffold_nucmer
-glyph   = generic
 
 
 [gh13_SNPs]

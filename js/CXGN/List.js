@@ -302,9 +302,15 @@ CXGN.List.prototype = {
 	html += '<table border="0" cellpadding="2" title="Available lists">';
 	html += '<tr><td><i>list name</i></td><td><i>#</i></td><td><i>type</i></td><td colspan="3"><i>actions</i></td></tr>\n'; 
 	for (var i = 0; i < lists.length; i++) { 
-	    html = html + '<tr><td><b>'+lists[i][1]+'</b></td><td>'+lists[i][3]+'</td><td>'+lists[i][5]+'</td><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')">view</a></td><td>|</td><td><a href="javascript:deleteList('+lists[i][0]+')">delete</a></td><td>|</td><td><a href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>\n';
+	    html += '<tr><td><b>'+lists[i][1]+'</b></td>';
+	    html += '<td>'+lists[i][3]+'</td>';
+	    html += '<td>'+lists[i][5]+'</td>';
+	    html += '<td><a id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')">view</a></td><td>|</td>';
+	    html += '<td><a id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')">delete</a></td><td>|</td>';
+	    html += '<td><a id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>\n';
 	}
 	html = html + '</table>';
+
 	jQuery('#'+div).html(html);
 
 	jQuery('#add_list_button').click(function() { 
@@ -333,17 +339,18 @@ CXGN.List.prototype = {
 	var html = '';
 	html += '<table><tr width="100"><td>List name ';
 	
-	html += '</td><td><input type="text" id="updateNameField" size="10" value="'+list_name+'" /></td><td><input type="button" id="updateNameButton" value="update"  /><td width="100%" align="right"><font size="1">List ID</td><td><div id="list_id_div" style="font-size:tiny" >'+list_id+'</div></font></td></tr>';
+	html += '</td><td><input type="text" id="updateNameField" size="10" value="'+list_name+'" /></td>';
+        html += '<td><input type="button" id="updateNameButton" value="update"  /></td>';
+	html += '<td width="100%" align="right"><font size="1">List ID</td><td><div id="list_id_div" style="font-size:tiny" >'+list_id+'</div></font></td></tr>';
 
 	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input type="button" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr></table>';
-
 	html += 'Add new elements: <br /><textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="Add" /><br />';
-
 	html += '<b>List items</b> ('+items.length+')<br />';
 
 	for(var n=0; n<items.length; n++) { 
 	    html = html + items[n][1] + '   <input id="'+items[n][0]+'" type="button" value="remove" /><br />';   
 	}
+	
 	jQuery('#'+div).html(html);
 
 	for (var n=0; n<items.length; n++) { 
@@ -544,9 +551,13 @@ function setUpLists() {
 	width: 500,
 	autoOpen: false,
 	title: 'Available lists',
-	buttons: { "Done" :  function() { 
-	    jQuery('#list_dialog').dialog("close"); }
-		 },
+	buttons: [ { text: "Done",
+		   click: function() { 
+		       jQuery('#list_dialog').dialog("close"); 
+		   },
+		   id: 'close_list_dialog_button'
+		 }],
+	
 	modal: true 
     });
        
@@ -554,10 +565,13 @@ function setUpLists() {
 	height: 400,
 	width: 400,
 	autoOpen: false,
-	buttons: { 
-	    "Done": function() { 
-		jQuery('#list_item_dialog').dialog("close"); }
-	},
+	buttons: [{ 
+	    text: "Done",
+	    click: function() { 
+		jQuery('#list_item_dialog').dialog("close"); 
+	    },
+	    id: 'close_list_item_dialog'
+	}],
 	modal: true,
       title: 'List contents'
     });

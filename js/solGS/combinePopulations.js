@@ -210,7 +210,8 @@ Array.prototype.unique =
 
 
 var getTraitId = function () {
-   var id = jQuery("#trait_id").val();
+   var id = jQuery("input[name='trait_id']").val();
+   
    return id;
 };
 
