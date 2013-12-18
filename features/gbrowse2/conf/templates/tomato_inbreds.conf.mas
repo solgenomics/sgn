@@ -122,9 +122,21 @@ fgcolor     = black
 label density = 25
 bump density  = 25
 
+[DNA/GC_Content]
+glyph           = dna
+global feature  = 1
+database        = scaffolds
+height          = 40
+do_gc           = 1
+gc_window       = auto
+strand          = both
+fgcolor         = red
+axis_color      = blue
+key             = DNA/GC Content
+
 
 [gh13_SNPs]
-feature       = SNP
+feature       = gh13:SNP
 glyph         = triangle
 point         = 1
 orient        = N
@@ -140,6 +152,34 @@ graph_type    = boxes
 scale         = right
 height        = 20
 group_on      = display_name
+
+[bti87_SNPs]
+feature       = bti87:SNP
+glyph         = triangle
+point         = 1
+orient        = N
+height        = 6
+bgcolor       = blue
+fgcolor       = blue
+key           = bti87 SNP marks
+
+[bti87_SNPs:100000]
+feature       = bin
+glyph         = xyplot
+graph_type    = boxes
+scale         = right
+height        = 20
+group_on      = display_name
+
+
+[mummer_matches_gh13_de_novo_contig]
+feature = gh13_contig_nucmer
+glyph   = generic
+
+[mummer_matches_gh13_de_novo_scaffold]
+feature = gh13_scaffold_nucmer
+glyph   = generic
+
 
 [CoverageXYplot_bti87]
 feature               = coverage
@@ -183,7 +223,7 @@ label                   = 0
 
 
 [gh13_SNPs_tw]
-feature      = SNP
+feature      = gh13:SNP
 key          = gh13 SNPs by nucleotide
 glyph        = allele_tower
 label        = 1
