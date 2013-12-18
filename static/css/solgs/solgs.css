@@ -23,12 +23,12 @@
 }
 
 #gebvPlot2  {
-    width: '100%';
+    width: 600px;
     height:400px;
 }
 
 #phenoPlot  {
-    width: '100%';
+    width: 600px;
     height:400px;
 }
 
@@ -57,12 +57,12 @@
 }
 
 #gebvPlotOverview {
-    width:100%;
+    width:600px;
     height:50px;
 }
 
 #phenoPlotOverview {
-    width:100%;
+    width:600px;
     height:50px;
 }
 
