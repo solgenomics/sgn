@@ -4,229 +4,231 @@
 *
 */
 
-jQuery(window).load( function() {
+jQuery(document).ready( function() {
+        plotPhenotypeScatter();
+    });
 
-        var popId       = jQuery('#model_id').val();
-        var traitId     = jQuery('#trait_id').val();
-        var comboPopsId = jQuery('#combo_pops_id').val();
-        
-        var params;
-        if(popId) {
-            params = 'pop_id=' + popId + '&trait_id=' + traitId;
-        } else {
-            params = 'combo_pops_id=' + comboPopsId + '&trait_id=' + traitId;  
-        }
 
-        var action = '/solgs/phenotype/graph';
+function plotPhenotypeScatter () {
+    var popId       = jQuery('#model_id').val();
+    var traitId     = jQuery('#trait_id').val();
+    var comboPopsId = jQuery('#combo_pops_id').val();
+       
+    var params;
+    if(popId) {
+        params = 'pop_id=' + popId + '&trait_id=' + traitId;
+    } else {
+        params = 'combo_pops_id=' + comboPopsId + '&trait_id=' + traitId;  
+    }
+
+    var action = '/solgs/phenotype/graph/';
      
-        var phenoPlotData        = [];
-        phenoPlotData[0]         = [];  
-        var xAxisTickPhenoValues = [];
-        var yAxisTickPhenoValues = [];
-        var yPhenoValues         = [];
+    var phenoPlotData        = [];
+    phenoPlotData[0]         = [];  
+    var xAxisTickPhenoValues = [];
+    var yAxisTickPhenoValues = [];
+    var yPhenoValues         = [];
       
-        var phenoDataRenderer = function() {            
-            jQuery.ajax({
-                    async: false,
-                        url: action,
-                        dataType:"json",
-                        data: params,
-                        success: function(data) {
-                        var phenoData  = data.trait_data;
-                        var state     = data.status;
+    var phenoDataRenderer = function() {            
+        jQuery.ajax({
+                async: false,
+                url: action,
+                dataType:"json",
+                data: params,
+                success: function(data) {
+                    var phenoData  = data.trait_data;
+                    var state     = data.status;
                      
-                        if (state == 'success') {
-                            for (var i=0; i < phenoData.length; i++) {
-                                var xPD = phenoData[i][0];
-                                xPD     = xPD.toString();
-                                var yPD = phenoData[i][1];
-                                yPD     = yPD.replace(/\s/, '');
-                                yPD     = Number(yPD);
+                    if (state == 'success') {
+                        for (var i=0; i < phenoData.length; i++) {
+                            var xPD = phenoData[i][0];
+                            xPD     = xPD.toString();
+                            var yPD = phenoData[i][1];
+                            yPD     = yPD.replace(/\s/, '');
+                            yPD     = Number(yPD);
                                                               
-                                xAxisTickPhenoValues.push([i, xPD]);                               
-                                yAxisTickPhenoValues.push([i, yPD]);
-                                yPhenoValues.push(yPD);
+                            xAxisTickPhenoValues.push([i, xPD]);                               
+                            yAxisTickPhenoValues.push([i, yPD]);
+                            yPhenoValues.push(yPD);
                                                         
-                                phenoPlotData[0][i]    = [];
-                                phenoPlotData[0][i][0] = xPD;
-                                phenoPlotData[0][i][1] = yPD; 
+                            phenoPlotData[0][i]    = [];
+                            phenoPlotData[0][i][0] = xPD;
+                            phenoPlotData[0][i][1] = yPD; 
                                  
-                            }
                         }
                     }
-                });
+                }
+            });
                 
-            return {'bothAxisPhenoValues' : phenoPlotData, 
-                    'xAxisPhenoValues'    : xAxisTickPhenoValues,
-                    'yAxisPhenoValues'    : yAxisTickPhenoValues,
-                    'yPhenoValues'        : yPhenoValues 
-                    };
+        return {'bothAxisPhenoValues' : phenoPlotData, 
+                'xAxisPhenoValues'    : xAxisTickPhenoValues,
+                'yAxisPhenoValues'    : yAxisTickPhenoValues,
+                'yPhenoValues'        : yPhenoValues 
+                };
             
-        };
+    };
           
-        var allPhenoData     = phenoDataRenderer();   
-        var xAxisPhenoValues = allPhenoData.xAxisPhenoValues; 
-        var yAxisPhenoValues = allPhenoData.yAxisPhenoValues;
-        var yPhenoValues     = allPhenoData.yPhenoValues;         
-        var minYPheno        = Math.min.apply(Math, yPhenoValues); 
-        var maxYPheno        = Math.max.apply(Math, yPhenoValues);       
-        var minYPhenoLabel   = minYPheno - (0.2*minYPheno);        
-        var maxYPhenoLabel   = maxYPheno + (0.2*maxYPheno);         
-        var plotPhenoData    = allPhenoData.bothAxisPhenoValues;
+    var allPhenoData     = phenoDataRenderer();   
+    var xAxisPhenoValues = allPhenoData.xAxisPhenoValues; 
+    var yAxisPhenoValues = allPhenoData.yAxisPhenoValues;
+    var yPhenoValues     = allPhenoData.yPhenoValues;         
+    var minYPheno        = Math.min.apply(Math, yPhenoValues); 
+    var maxYPheno        = Math.max.apply(Math, yPhenoValues);       
+    var minYPhenoLabel   = minYPheno - (0.2*minYPheno);        
+    var maxYPhenoLabel   = maxYPheno + (0.2*maxYPheno);         
+    var plotPhenoData    = allPhenoData.bothAxisPhenoValues;
         
-        if (plotPhenoData == 'undefined') {
-            var message = 'There is no phenotype data to plot. Please report this problem';  
-            jQuery('#phenoPlot').append(message).show();
-        } else { 
-            var optionsPheno = { 
+    if (plotPhenoData == 'undefined') {
+        var message = 'There is no phenotype data to plot. Please report this problem';  
+        jQuery('#phenoPlot').append(message).show();
+    } else { 
+        var optionsPheno = { 
+            series: {
+                lines: { 
+                    show: false 
+                },
+                points: { 
+                    show: true 
+                },                
+            },              
+            grid: {
+                show: true,
+                clickable: true,
+                hoverable: true,               
+            },
+            selection: {
+                mode: 'xy',
+                color: '#0066CC',
+            },
+            xaxis:{
+                mode: 'categories',
+                tickColor: '#ffffff',
+                ticks: '', 
+                axisLabel: 'Genotypes',
+                position: 'bottom',
+                axisLabelPadding: 20,
+                color: '#0066CC',
+            },
+            yaxis: {                                
+                min: null,
+                max: null, 
+                axisLabel: 'Trait phenotype values',
+                position: 'left',
+                color: '#0066CC',                    
+            },
+            zoom: {
+                interactive: true,
+                amount: 1.5,
+                trigger: 'dblclick',
+            },
+            pan: {
+                interactive: false,                
+            },                        
+        };
+ 
+        var plotPheno = jQuery.plot('#phenoPlot', plotPhenoData, optionsPheno);
+        
+        var overviewPheno = jQuery.plot(jQuery("#phenoPlotOverview"), plotPhenoData, {
                 series: {
                     lines: { 
-                        show: false 
+                        show: true, 
+                        lineWidth: 2 
                     },
-                    points: { 
-                        show: true 
-                    },                
-                },              
-                grid: {
-                    show: true,
-                    clickable: true,
-                    hoverable: true,               
+                    shadowSize: 0
                 },
-                selection: {
-                    mode: 'xy',
-                    color: '#0066CC',
+                xaxis: { 
+                    ticks: [], 
+                    mode: "categories", 
+                    label: 'Genotypes',
+                },                  
+                selection: { 
+                    mode: "xy", 
                 },
-                xaxis:{
-                    mode: 'categories',
-                    tickColor: '#ffffff',
-                    ticks: '', 
-                    axisLabel: 'Genotypes',
-                    position: 'bottom',
-                    axisLabelPadding: 20,
-                    color: '#0066CC',
-                },
-                yaxis: {                                
-                    min: null,
-                    max: null, 
-                    axisLabel: 'Trait phenotype values',
-                    position: 'left',
-                    color: '#0066CC',                    
-                },
-                zoom: {
-                    interactive: true,
-                    amount: 1.5,
-                    trigger: 'dblclick',
-                },
-                pan: {
-                    interactive: false,                
-                },                        
-            };
-
-            var plotPheno = jQuery.plot('#phenoPlot', plotPhenoData, optionsPheno);
+                colors: ["#cc0000", "#0066CC"],
+            });
             
-            var overviewPheno = jQuery.plot($("#phenoPlotOverview"), plotPhenoData, {
-                    series: {
-                        lines: { 
-                            show: true, 
-                            lineWidth: 2 
-                        },
-                        shadowSize: 0
-                    },
-                    xaxis: { 
-                        ticks: [], 
-                        mode: "categories", 
-                        label: 'Genotypes',
-                    },                  
-                    selection: { 
-                        mode: "xy", 
-                    },
-                    colors: ["#cc0000", "#0066CC"],
-                });
-
-            jQuery("#phenoPlot").bind("plotselected", function (event, ranges) {
-                    //zoom in
-                    plotPheno = jQuery.plot(jQuery("#phenoPlot"), plotPhenoData,
-                                       jQuery.extend(true, {}, optionsPheno, {
-                                               xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to },
-                                               yaxis: { min: ranges.yaxis.from, max: ranges.yaxis.to },                    
-                                           }));
+        jQuery("#phenoPlot").bind("plotselected", function (event, ranges) {
+                //zoom in
+                plotPheno = jQuery.plot(jQuery("#phenoPlot"), plotPhenoData,
+                                        jQuery.extend(true, {}, optionsPheno, {
+                                                xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to },
+                                                yaxis: { min: ranges.yaxis.from, max: ranges.yaxis.to },                    
+                                            }));
         
-                    plotPheno.setSelection(ranges, true);
-                    overviewPheno.setSelection(ranges, true);
-                });
-
-            //highlight selected area on the overview plot
-            jQuery("#phenoPlotOverview").bind("plotselected", function (event, ranges) {
-                    plotPheno.setSelection(ranges);
-                }); 
+                plotPheno.setSelection(ranges, true);
+                overviewPheno.setSelection(ranges, true);
+            });
+ 
+        //highlight selected area on the overview plot
+        jQuery("#phenoPlotOverview").bind("plotselected", function (event, ranges) {
+                plotPheno.setSelection(ranges);
+            }); 
         
-            //reset zooming. Need to figure out zooming out
-            jQuery("#phenozoom-reset").click(function (e) { 
-                    //jQuery.plot("#phenoPlot", plotPhenoData, optionsPheno);
-                    location.reload();
-                    // plot.zoomOut();
-                });
+        //reset zooming. Need to figure out zooming out
+        jQuery("#phenozoom-reset").click(function (e) { 
+                //jQuery.plot("#phenoPlot", plotPhenoData, optionsPheno);
+                location.reload();
+                // plot.zoomOut();
+            });
             
-            //given datapoint position and content, displays a styled tooltip
-             var showTooltipPheno = function(lt, tp, content) {                              
-                jQuery('<div id="phenotooltip">' + content + '</div>').css({ 
-                        position: 'absolute',
+        //given datapoint position and content, displays a styled tooltip
+        var showTooltipPheno = function(lt, tp, content) {                              
+            jQuery('<div id="phenotooltip">' + content + '</div>').css({ 
+                    position: 'absolute',
+                    display: 'none',
+                    'font-weight': 'bold',
+                    top: tp + 10,
+                    left: lt + 10, 
+                    border: '1px solid #ffaf55',
+                    padding: '2px'              
+                }).appendTo("body").show();                
+        };
+
+        var zoomHelp = function (lt, tp) {
+            var help_txt = 'To zoom in, select an area on the plot' + 
+            ' and release or double click at any' +
+            ' point on the plot.';
+                 
+            jQuery('<div id="tooltipZoomPheno">' + help_txt  + '</div>').css({ 
+                    position: 'absolute',
                         display: 'none',
                         'font-weight': 'bold',
-                        top: tp + 10,
-                        left: lt + 10, 
-                        border: '1px solid #ffaf55',
+                        top: tp + 35,
+                        left: lt + 30, 
+                        border: '1px solid #C9BE62',
                         padding: '2px'              
-                    }).appendTo("body").show();                
-             };
+                        }).appendTo("body").show(); 
+        }; 
 
-             var zoomHelp = function (lt, tp) {
-                 var help_txt = 'To zoom in, select an area on the plot' + 
-                                ' and release or double click at any' +
-                                ' point on the plot.';
-                 
-                 jQuery('<div id="tooltipZoomPheno">' + help_txt  + '</div>').css({ 
-                         position: 'absolute',
-                         display: 'none',
-                         'font-weight': 'bold',
-                         top: tp + 35,
-                         left: lt + 30, 
-                         border: '1px solid #C9BE62',
-                         padding: '2px'              
-                    }).appendTo("body").show(); 
-             }; 
-
-            //calls the tooltip display function and binds the 'plotover' event to
-            //the plot
-            var previousPoint = null;
-            var useTooltipPheno = jQuery("#phenoPlot").bind("plothover", function (event, pos, item) {            
-                    if (item) {
-                        if (previousPoint != item.dataIndex) {
-                            previousPoint = item.dataIndex;
+        //calls the tooltip display function and binds the 'plotover' event to
+        //the plot
+        var previousPoint = null;
+        var useTooltipPheno = jQuery("#phenoPlot").bind("plothover", function (event, pos, item) {            
+                if (item) {
+                    if (previousPoint != item.dataIndex) {
+                        previousPoint = item.dataIndex;
                    
-                            jQuery("#phenotooltip").remove();
-                            jQuery("#tooltipZoomPheno").remove();
-
-                            var x = item.datapoint[0];
-                            var y = item.datapoint[1].toFixed(2);
-                            var content = xAxisTickPhenoValues[x][1] + ', ' + y;
-                            
-                            showTooltipPheno(item.pageX, item.pageY, content); 
-                            zoomHelp(item.pageX, item.pageY);
-                        }
-                    }
-                    else {
                         jQuery("#phenotooltip").remove();
                         jQuery("#tooltipZoomPheno").remove();
 
-                        previousPoint = null;            
-                    }          
-                });           
-        }
-     
-////
-});
-////
+                        var x = item.datapoint[0];
+                        var y = item.datapoint[1].toFixed(2);
+                        var content = xAxisTickPhenoValues[x][1] + ', ' + y;
+                            
+                        showTooltipPheno(item.pageX, item.pageY, content); 
+                        zoomHelp(item.pageX, item.pageY);
+                    }
+                }
+                else {
+                    jQuery("#phenotooltip").remove();
+                    jQuery("#tooltipZoomPheno").remove();
+
+                    previousPoint = null;            
+                }          
+            });           
+    }
+}     
+
 
 
 
