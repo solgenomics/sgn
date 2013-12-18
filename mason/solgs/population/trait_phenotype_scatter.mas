@@ -37,16 +37,6 @@ $descriptive_stat
   <h3 style="text-align:center">Overview</h3>
   <div id="phenoPlotOverview"> </div>
 
-  <& /page/columnar_table.mas,
-     headings     => [ '',  ''],
-    data         => $descriptive_stat,
-    __alt_freq   => 2,
-    __alt_width  => 1,
-    __alt_offset => 3,
-    __align      => 'l',
-    &>
-
-    <br/>
-
+ 
 
 
