@@ -14,7 +14,7 @@ function getTraitDetails () {
         populationId = jQuery("#model_id").val();
 
     }
-    alert(traitId + ' ' + populationId);
+    //alert(traitId + ' ' + populationId);
     return {'population_id' : populationId, 
             'trait_id' : traitId
             };
@@ -44,36 +44,12 @@ jQuery(document).ready( function () {
     });
 
 
-// function runCorrelationAnalysis () {
-//     var population = getPopulationDetails();
-    
-//     jQuery.ajax({
-//             type: 'POST',
-//                 dataType: 'json',
-//                 data: {'population_id': population.population_id },
-//                 url: '/correlation/analysis/output',
-//                 success: function(response) {         
-//                 plotCorrelation(response.data);
-//                 jQuery("#correlation_message").empty();
-//             },
-//                 error: function(response) {           
-//                 alert('There is error running correlation analysis.');
-//                 jQuery("#correlation_message")
-//                     .css({"padding-left": '0px'})
-//                     .html("There is no correlation output for this population.");
-//             }
-                
-//         });
-
-// }
-
-
 function plotHistogram (data) {
     // alert(data[0][0] + ' ' + data[0][1] );
      
     var height = 300;
-    var width  = 300;
-    var pad    = {left:20, top:5, right:5, bottom: 20}; 
+    var width  = 500;
+    var pad    = {left:20, top:50, right:40, bottom: 50}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
 
@@ -82,18 +58,15 @@ function plotHistogram (data) {
             d = d[1]; 
             return parseFloat(d); 
         });
-var formatCount = d3.format(",.0f");
-    // console.log(traitValues);
+
     traitValues = traitValues.sort();
     // console.log(traitValues);
-     var histogram = d3.layout.histogram()
-         .bins(10)
-         (traitValues);
-   
-     // alert('test 2');
-     // console.log(histogram);
+    var histogram = d3.layout.histogram()
+        .bins(10)
+        (traitValues);
 
-    
+     // console.log(histogram);
+   
     var xAxisScale = d3.scale.linear()
         .domain([0, d3.max(traitValues)])
         .range([0, width]);
@@ -104,16 +77,22 @@ var formatCount = d3.format(",.0f");
         .domain([0, d3.max(histogram, ( function (d) {return d.y;}) )])
         .range([0, height]);
 
+    var xRange =  d3.max(traitValues) -  d3.min(traitValues);
+    
     var xAxis = d3.svg.axis()
         .scale(xAxisScale)
-        .orient("bottom");
-
+        .orient("bottom")
+        .tickValues(d3.range(d3.min(traitValues), 
+                             d3.max(traitValues),  
+                             0.1 * xRange)
+                    );
+ 
+     var yAxisLabel = d3.scale.linear()
+        .domain([0, d3.max(histogram, ( function (d) {return d.y;}) )])
+        .range([height, 0]);
     var yAxis = d3.svg.axis()
-        .scale(yAxisScale)
+        .scale(yAxisLabel)
         .orient("left");
-
-    // alert('test');
-   
 
     var svg = d3.select("#trait_histogram_canvas")
         .append("svg")
@@ -124,65 +103,63 @@ var formatCount = d3.format(",.0f");
         .attr("id", "trait_histogram_plot")
         .attr("transform", "translate(" + pad.left + "," + pad.top + ")");
 
-    //alert('start grouping bar');
     var bar = histogramPlot.selectAll(".bar")
         .data(histogram)
         .enter()
         .append("g")
         .attr("class", "bar")
-        .attr("transform",  function(d) {return "translate(" + xAxisScale(d.x)  + "," + height -  yAxisScale(d.y) + ")"; });     
-    //alert('end grouping bar');
-    //attr("x", function(d) {return d.x; }
-    //   .attr("y", height)
-
-    //alert('start adding bar');
+        .attr("transform", function(d) {
+                return "translate(" + xAxisScale(d.x)  
+                + "," + height - yAxisScale(d.y) + ")"; 
+            });     
+  
     bar.append("rect")
         .attr("x", function(d) { return xAxisScale(d.x); } )
         .attr("y", function(d) {return height - yAxisScale(d.y); }) 
-        .attr("width", function(d) {return xAxisScale(d.dx); })
+        .attr("width", function(d) {return xAxisScale(d.dx) - 2  ; })
         .attr("height", function(d) { return yAxisScale(d.y); })
-        .style("fill", "blue")
-        .on("mouseover", function() {
-                d3.select(this).style("fill", "red");
+        .style("fill", "green")
+        .on("mouseover", function(d) {
+                d3.select(this).style("fill", "teal");
             })
         .on("mouseout", function() {
-                d3.select(this).style("fill", "blue");
+                d3.select(this).style("fill", "green");
             });
-    //  alert('end adding bar');
-    bar.append("text")
-    .attr("dy", ".75em")
-    .attr("y", 6)
-    .attr("x", xAxisScale(histogram[0].dx) / 2)
-    .attr("text-anchor", "middle")
-    .text(function(d) { return formatCount(d.y); });
-
    
-
-    //  bar.append("text")
-       
-   //  histogramPlot.append("g")
-//         .attr("class", "x axis")
-//         .attr("transform", "translate(0," + height +")")
-//         .call(xAxis)
-//         .selectAll("text")
-//         .attr("y", 0)
-//         .attr("x", 10)
-//         .attr("dy", ".1em")         
-//         .attr("transform", "rotate(90)")
-//         .attr("fill", "purple")
-//         .style({"text-anchor":"start", "fill": "purple"});
+    bar.append("text")
+        .text(function(d) { return d.y; })
+        .attr("y", function(d) {return height - (yAxisScale(d.y) + 10); } )
+        .attr("x",  function(d) { return (pad.left + xAxisScale(d.x)) + 2; } )      
+        .attr("dy", ".6em")
+        .attr("text-anchor", "end")  
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "12px")
+        .attr("fill", "green")
+        .attr("class", "histoLabel");
+                  
+    histogramPlot.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(" + pad.left + "," + height +")")
+        .call(xAxis)
+        .selectAll("text")
+        .attr("y", 0)
+        .attr("x", 10)
+        .attr("dy", ".1em")         
+        .attr("transform", "rotate(90)")
+        .attr("fill", "purple")
+        .style({"text-anchor":"start", "fill": "green"});
+     
           
-
-//     histogramPlot.append("g")
-//         .attr("class", "y axis")
-//         .attr("transform", "translate(0,0)")
-//         .call(yAxis)
-//         .selectAll("text")
-//         .attr("y", 0)
-//         .attr("x", -10)
-//         .attr("fill", "purple")
-//         .style("fill", "purple");      
-    
+    histogramPlot.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate(" + pad.left +  "," + 0 + ")")
+        .call(yAxis)
+        .selectAll("text")
+        .attr("y", 0)
+        .attr("x", -10)
+        .attr("fill", "green")
+        .style("fill", "green");
+       
     
 }   
 
