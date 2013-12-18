@@ -10,7 +10,7 @@ function getPopulationDetails () {
     var populationId = jQuery("#population_id").val();
     var populationName = jQuery("#population_name").val();
    
-    if(populationId == 'undifined' ) {       
+    if(populationId == 'undefined' ) {       
         populationId = jQuery("#model_id").val();
         populationName = jQuery("#model_name").val();
     }
