@@ -1,0 +1,52 @@
+<%doc>
+
+=head1 NAME
+ 
+population/trait_phenotype_scatter.mas - displays scatter plot of trait phenotype data
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id => ''
+$trait_id
+$descriptive_stat
+
+</%args>
+
+<%perl>
+
+
+
+
+
+</%perl>
+ 
+
+<div id="phenoPlot"></div>
+      
+  <button class="button" id="phenozoom-reset">Reset zoom</button>
+  <br/>
+  <br/>
+  <h3 style="text-align:center">Overview</h3>
+  <div id="phenoPlotOverview"> </div>
+
+  <& /page/columnar_table.mas,
+     headings     => [ '',  ''],
+    data         => $descriptive_stat,
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __alt_offset => 3,
+    __align      => 'l',
+    &>
+
+    <br/>
+
+
+
