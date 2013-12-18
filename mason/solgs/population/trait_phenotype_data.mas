@@ -27,7 +27,7 @@ $combo_pops_id => ''
 
  <script>
    jQuery(function() {
-   jQuery("#tabs").tabs({
+   jQuery("#tabs_phenotype").tabs({
    event: "mouseover"
    });
    });
@@ -35,13 +35,13 @@ $combo_pops_id => ''
 </script>
 
 
-<div id="tabs" style="width:100%;height:100%;">
+<div id="tabs_phenotype" style="width:100%;height:100%;border-color:green;">
   <ul>
-    <li><a href="#tabs-1">Scatter Plot</a></li>
-    <li><a href="#tabs-2">Histogram</a></li> 
+    <li><a href="#tabs_scatter">Scatter plot</a></li>
+    <li><a href="#tabs_histogram">Histogram</a></li> 
   </ul>
  
-  <div id="tabs-1">
+  <div id="tabs_scatter">
     <& trait_phenotype_scatter.mas,
        pop_id => $pop_id,
       trait_id => $trait_id,
@@ -49,13 +49,28 @@ $combo_pops_id => ''
       &>
   </div>
 
-  <div id="tabs-2">
+  <div id="tabs_histogram">
     <& trait_phenotype_histogram.mas,
        pop_id => $pop_id,
       trait_id => $trait_id
       &>
   </div>
+  
+  <br/>
+  
+  <& /page/columnar_table.mas,
+     headings    => [ '',  ''],
+    data         => $descriptive_stat,
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __alt_offset => 3,
+    __align      => 'l',
+    &>
+
+    <br/>
+
 </div>
+
 
 
 
