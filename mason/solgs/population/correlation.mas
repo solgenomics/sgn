@@ -38,27 +38,22 @@ $pop_id
 
 </style>
 
-<script src="/js/d3/d3.js" charset="utf-8"></script>
+<!-- <script src="/js/d3/d3.js" charset="utf-8"></script> -->
 
-<& /util/import_javascript.mas, classes => [ "solGS.correlation"] &>
+<& /util/import_javascript.mas, classes => [ "d3.d3", "solGS.correlation"] &>
 <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 0, 
       title       => "Phenotypic correlation analysis output"
 &>
-       
-<input type="hidden" id="population_id" value="<% $pop_id %>" />
+  &nbsp;    
+</&>
 
-<div id="correlation_canvas"> </div>
+<input type="hidden" id="population_id" value="<% $pop_id %>" />
 <div id="correlation_message" style="padding-left: 250px;">
 
 Loading correlation output...
 
 </div>
-
-<div id="correlation_plot"> </div>
-
-
-
-</&>
+<div id="correlation_canvas"> </div>
 
