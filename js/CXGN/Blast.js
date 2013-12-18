@@ -7,7 +7,17 @@ function run_blast(database_types, input_option_types) {
     jQuery('#blast_report').html('');
 
     var program  = jQuery('#program_select').val();
+    //    var sequence_tag = document.getElementById('sequence');
+    //var sequence = sequence_tag.value;
+
+    
     var sequence = jQuery('#sequence').val();
+    
+    if (jQuery.browser.msie) {
+	
+	sequence = sequence.replace(/\s+/g, "\n");
+	
+    }
     var database = jQuery('#database').val();
     var evalue   = jQuery('#evalue').val();
     var matrix   = jQuery('#matrix').val();
@@ -16,8 +26,7 @@ function run_blast(database_types, input_option_types) {
     var filterq  = jQuery('#filterq').val();
     var input_option = jQuery('#input_options').val();
     
-
-    if (sequence == '') { 
+    if (sequence === '') { 
 	alert("Please enter a sequence :-)"); 
 	
 	return; 
@@ -36,7 +45,7 @@ function run_blast(database_types, input_option_types) {
     jQuery.ajax( { 
 	//async: false,
 	url:     '/tools/blast/run/',
-	beforeSend: function() { disable_ui() },
+	beforeSend: function() { disable_ui(); },
 	method:  'POST',
 	data:    { 'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 
                    'filterq': filterq, 'database': database, 'program': program, 
@@ -69,7 +78,7 @@ function wait_result(jobid, seq_count) {
 	    async: false,
 	    url: '/tools/blast/check/'+jobid,
 	    success: function(response) { 
-		if (response.status == "complete") { 
+		if (response.status === "complete") { 
 		    //alert("DONE!!!!");
 		    done = true;
 		    finish_blast(jobid, seq_count);
@@ -166,7 +175,7 @@ function blast_program_ok(program, query_type, database_type) {
 function download() { 
    var jobid = jQuery('#jobid').html();
 
-   if (jobid == '') { alert("No BLAST has been run yet. Please run BLAST before downloading."); return; }
+   if (jobid === '') { alert("No BLAST has been run yet. Please run BLAST before downloading."); return; }
 
    window.location.href= '/documents/tempfiles/blast/'+jobid+'.out';
 
