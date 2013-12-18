@@ -45,7 +45,7 @@ $trait_id
 }
 
 </style>
- <& /util/import_javascript.mas, classes => [ "solGS.correlation", "d3.d3"] &>
+ <& /util/import_javascript.mas, classes => ["solGS.histogram","d3.d3"] &>
 
 <div id="trait_histogram_canvas"></div>
 <div id="trait_histogram_plot"></div>
