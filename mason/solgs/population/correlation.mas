@@ -49,7 +49,7 @@ $pop_id
        
 <input type="hidden" id="population_id" value="<% $pop_id %>" />
 
-<div id="correlation_canvas">
+<div id="correlation_canvas"> </div>
 <div id="correlation_message" style="padding-left: 250px;">
 
 Loading correlation output...
@@ -58,7 +58,7 @@ Loading correlation output...
 
 <div id="correlation_plot"> </div>
 
-</div>
+
 
 </&>
 
