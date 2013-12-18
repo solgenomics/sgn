@@ -82,13 +82,13 @@ sub index :Path('/tools/blast/') :Args(0) {
     $c->stash->{databases} = $databases;
     $c->stash->{dataset_groups} = $dataset_groups;
     $c->stash->{preload_seq} = $seq;
-    $c->stash->{programs} = {
-	'blastn' => 'blastn (nucleotide to nucleotide db)',
-	'blastp' => 'blastp (protein to protein db)', 
-	'blastx' => 'blastx (protein database using a translated nucleotide query)',
-	'tblastn' => 'tblastn (translated nucleotide database using a protein query)', 
-	'tblastx' => 'tblastx (translated nucleotide database using a translated nucleotide query)',
-	};
+    $c->stash->{programs} = [
+	[ 'blastn', 'blastn (nucleotide to nucleotide db)' ],
+	[ 'blastp', 'blastp (protein to protein db)' ], 
+	[ 'blastx', 'blastx (protein database using a translated nucleotide query)'],
+	[ 'tblastn', 'tblastn (translated nucleotide database using a protein query)'], 
+	[ 'tblastx', 'tblastx (translated nucleotide database using a translated nucleotide query)'],
+	];
     $c->stash->{template} = '/tools/blast/index.mas';
 }
 
