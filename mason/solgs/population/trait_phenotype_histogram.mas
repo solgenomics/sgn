@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-population/trait_phenotype_data.mas - displays scatter plot of trait phenotype data
+population/trait_phenotype_histogram.mas - displays histogram plot of trait phenotype data
 
 =AUTHOR
 
@@ -38,10 +38,6 @@ $trait_id
   stroke: white;
 }
 
-.bar text {
-  fill: #fff;
-}
-
 .axis path, .axis line {
   fill: none;
   stroke: #000;
@@ -49,7 +45,7 @@ $trait_id
 }
 
 </style>
-<& /util/import_javascript.mas, classes => [ "solGS.correlation", "d3.d3"] &>
+ <& /util/import_javascript.mas, classes => [ "solGS.correlation", "d3.d3"] &>
 
 <div id="trait_histogram_canvas"></div>
 <div id="trait_histogram_plot"></div>
