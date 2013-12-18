@@ -31,9 +31,7 @@ $trait_combo_pops => ''
 
 
 
-<div id="gebvPlot2"> 
- 
-</div> 
+<div id="gebvPlot2"> </div> 
 
 <button class="button" id="gebvzoom-reset">Reset zoom</button>
 <button  class="button" id="inverse_gebv_plot">Inverse plot</button>
