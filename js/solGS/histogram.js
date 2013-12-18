@@ -10,11 +10,16 @@ function getTraitDetails () {
     var populationId = jQuery("#population_id").val();
     var traitId = jQuery("#trait_id").val();
    
-    if(populationId == 'undifined' ) {       
+    if(populationId == 'undefined' ) {       
         populationId = jQuery("#model_id").val();
 
     }
-    //alert(traitId + ' ' + populationId);
+
+    if(populationId == 'undefined' ) {       
+        populationId = jQuery("#combo_pops_id").val();
+
+    }
+   
     return {'population_id' : populationId, 
             'trait_id' : traitId
             };
