@@ -14,10 +14,16 @@ function run_blast(database_types, input_option_types) {
     var sequence = jQuery('#sequence').val();
     
     if (jQuery.browser.msie) {
-	
+	var serializer = new XMLSerializer;
+	var xmlString = serializer.serialize(document.getElementById('sequence'));
+	alert(xmlString);
+					     
 	sequence = sequence.replace(/\s+/g, "\n");
 	
     }
+
+
+
     var database = jQuery('#database').val();
     var evalue   = jQuery('#evalue').val();
     var matrix   = jQuery('#matrix').val();
