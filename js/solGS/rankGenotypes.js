@@ -96,7 +96,7 @@ function addSelectionPopulations(){
         var row    = selPopsRows[i];
         var popRow = row.innerHTML;
             
-        predictedPop = popRow.match(/\/solgs\/download\/prediction\/model\//g);
+        predictedPop = popRow.match(/\/solgs\/selection\//g);
            
         if (predictedPop) {
             if (predictedPop.length > 1) {
@@ -378,7 +378,7 @@ function listUploadedSelPopulations ()  {
         var row    = selPopsRowsUploaded[i];
         var popRow = row.innerHTML;
             
-        predictedPopUploaded = popRow.match(/\/solgs\/download\/prediction\/model\//g);
+        predictedPopUploaded = popRow.match(/\/solgs\/selection\//g);
       
         if (predictedPopUploaded) {
                 var selPopsInput = row.getElementsByTagName("input")[0];
