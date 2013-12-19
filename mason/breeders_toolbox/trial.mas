@@ -145,6 +145,9 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
 </&>
 
 
+<& /solgs/population/correlation.mas,
+   pop_id => $trial_id
+&>
 
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
