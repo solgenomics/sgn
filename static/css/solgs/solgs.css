@@ -22,15 +22,16 @@
     background-color: #c6e6c6; 
 }
 
-#gebvPlot2  {
-    width: '100%';
+#gebvPlot2, #phenoPlot  {
+    width: 600px;
     height:400px;
 }
 
-#phenoPlot  {
-    width: '100%';
-    height:400px;
+#gebvPlotOverview, #phenoPlotOverview {
+    width:600px;
+    height:50px;
 }
+
 
 #gebvPlot2 div.xAxis div.tickLabel {  
     font-size: 10px;
@@ -54,16 +55,6 @@
     -o-transform:rotate(-90deg); /* Opera */
     /*rotation-point:50% 50%;*/ /* CSS3 */
     /*rotation:270deg;*/ /* CSS3 */  
-}
-
-#gebvPlotOverview {
-    width:100%;
-    height:50px;
-}
-
-#phenoPlotOverview {
-    width:100%;
-    height:50px;
 }
 
 

@@ -15,9 +15,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $pop_id => ''
-$combo_pops_id => ''
 $trait_id
 $descriptive_stat
+$combo_pops_id => ''
 
 </%args>
 
@@ -26,29 +26,57 @@ $descriptive_stat
 
 </%perl>
 
-<div id="phenoPlot">
+ <script>
+   jQuery(function() {
+   jQuery("#tabs_phenotype").tabs({
+   event: "mouseover"
+   });
+   });
 
-</div>
+</script>
 
-<button class="button" id="phenozoom-reset">Reset zoom</button>
-<br/>
-<br/>
-<h3 style="text-align:center">Overview</h3>
-<div id="phenoPlotOverview"> 
-</div>
+
+<div id="tabs_phenotype" style="width:700px;height:100%;border-color:green;">
+  <ul>
+    <li><a href="#tabs_scatter">Scatter plot</a></li>
+    <li><a href="#tabs_histogram">Histogram</a></li> 
+  </ul>
  
-<& /page/columnar_table.mas,
-   headings     => [ '',  ''],
-   data         => $descriptive_stat,
-   __alt_freq   => 2,
-   __alt_width  => 1,
-   __alt_offset => 3,
-   __align      => 'l',
-&>
+  <div id="tabs_scatter">
+    <& trait_phenotype_scatter.mas,
+       pop_id           => $pop_id,
+       combo_pops_id    => $combo_pops_id,
+       trait_id         => $trait_id,
+       descriptive_stat => $descriptive_stat
+  &>
+  </div>
 
-<br/>
+  <div id="tabs_histogram">
+    <& trait_phenotype_histogram.mas,
+       pop_id        => $pop_id,
+       trait_id      => $trait_id,
+       combo_pops_id => $combo_pops_id,
+      &>
+  </div>
+  
+  <br/>
+  
+  <& /page/columnar_table.mas,
+     headings    => [ '',  ''],
+    data         => $descriptive_stat,
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __alt_offset => 3,
+    __align      => 'l',
+    &>
 
-<input type="hidden" id="population_id" value="<% $pop_id %>" /> 
-<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
-<input type="hidden" id="trait_id" value="<% $trait_id %>" />  
+    <br/>
+
+</div>
+
+
+
+
+
+
 

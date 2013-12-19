@@ -101,4 +101,4 @@ $owner=>''
    project_name            => $project_name,
 &>
 
-<input type="hidden"  id="trait_id" value="<% $trait_id %>" />
+
