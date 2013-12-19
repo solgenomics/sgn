@@ -98,7 +98,7 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
     foreach my $stock (@$list)
     {
         push @stocks_names, $stock->[1]; 
-        print STDERR "upload_prediction_genotypes_list stock_name:  $stock->[1]\n";
+      
     }
     
 
@@ -255,14 +255,14 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
     my $path    = $c->req->path;
     $path       =~ s/$base//;
     my $page    = "solgs/model/combined/populations/";
-    
+   
     if ($referer =~ m/$page/)
     {
         my $trait_id = $c->req->param('trait_id');
         my $combo_pops_id = $model_id;
         my $uploaded_prediction = $c->req->param('uploaded_prediction');
         my $list_source = $c->req->param('list_source');
-
+      
         $c->stash->{data_set_type}       = "combined populations"; 
         $c->stash->{combo_pops_id}       = $model_id;
         $c->stash->{model_id}            = $model_id;                          
@@ -384,7 +384,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
            
                      my $exp = "phenotype_data_${model_id}"; 
                      $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
-                
+                    
                      $exp = "genotype_data_${model_id}"; 
                      $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
                  }
@@ -427,16 +427,12 @@ sub user_prediction_population_file {
 
     my $user_id   = $c->user->id; 
     my $upload_dir = $c->stash->{solgs_prediction_upload_dir};
-    
+   
     my ($fh, $tempfile) = tempfile("prediction_population_${pred_pop_id}-XXXXX", 
                                    DIR => $upload_dir
         );
 
-    $c->stash->{prediction_pop_id} = $pred_pop_id;
-    
-    print STDERR "\nuser_prediction_population_file: pred_pop_id - $pred_pop_id\n";
-    
-    my $exp = "genotype_data_${user_id}_${pred_pop_id}";
+    my $exp = "genotype_data_${user_id}_uploaded_${pred_pop_id}";
    # if($c->stash->{'list_source'} eq 'from_db')
    # {
     my  $pred_pop_file = $c->controller("solGS::solGS")->grep_file($upload_dir, $exp);
@@ -492,9 +488,9 @@ sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/lis
   #####
 
 ######
-  #  my $user_id = $c->user->id;
-  #  my $pheno_file = "/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/phenotype_data_${user_id}_${model_id}";
-  #  my $geno_file = "/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/genotype_data_${user_id}_${model_id}"; 
+  #   my $user_id = $c->user->id;
+#     my $pheno_file = "/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/phenotype_data_${user_id}_${model_id}";
+#     my $geno_file = "/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/genotype_data_${user_id}_${model_id}"; 
 #####    
     $self->create_list_population_metadata_file($c);
      
