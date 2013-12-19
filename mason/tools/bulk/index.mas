@@ -43,7 +43,7 @@ if (!exists($modes{$mode})) { $mode = "clone_search"; }
     <li><a href="/tools/bulk/tabs/gene_tab">Genes</a></li>
     <li><a href="/tools/bulk/tabs/feature_tab">Features</a></li>
     <li><a href="/tools/bulk/tabs/converter_tab">Converter</a></li>
-    <li><a href="/tools/bulk/tabs/ftp_tab">FTP site</a></li>
+    <li><a href="/tools/bulk/tabs/ftp_tab">FTP</a></li>
   </ul>
 </div>
 </div>
