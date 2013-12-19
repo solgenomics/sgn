@@ -1122,9 +1122,10 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         my $download_prediction = $c->stash->{download_prediction};
       
         $self->list_of_prediction_pops($c, $combo_pops_id, $download_prediction);
-        $referer = '/' . $referer;
-        $c->res->redirect($referer);
-        
+       # $referer = '/' . $referer;
+       # $c->res->redirect($referer);
+       # print STDERR "\nsolgs/model: referer - combined pops page\n";
+        $c->res->redirect("/solgs/model/combined/populations/$model_id/trait/$trait_id");  
     }
     elsif ($referer =~ /solgs\/trait\//) 
     {
@@ -1168,10 +1169,11 @@ sub prediction_population :Path('/solgs/model') Args(3) {
          my $download_prediction = $c->stash->{download_prediction};
       
          $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
-          
-         $referer = '/' . $referer;
+         
+         # print STDERR "\nsolgs/model: referer - $referer\n";
+#          $referer = '/' . $referer;
         
-         $c->res->redirect($referer); 
+         $c->res->redirect("/solgs/trait/$trait_id/population/$pop_id"); 
            
     }
     else 
