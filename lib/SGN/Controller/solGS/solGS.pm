@@ -1125,7 +1125,8 @@ sub prediction_population :Path('/solgs/model') Args(3) {
        # $referer = '/' . $referer;
        # $c->res->redirect($referer);
        # print STDERR "\nsolgs/model: referer - combined pops page\n";
-        $c->res->redirect("/solgs/model/combined/populations/$model_id/trait/$trait_id");  
+        $c->res->redirect("/solgs/model/combined/populations/$model_id/trait/$trait_id"); 
+        $c->detach();
     }
     elsif ($referer =~ /solgs\/trait\//) 
     {
@@ -1173,12 +1174,14 @@ sub prediction_population :Path('/solgs/model') Args(3) {
          # print STDERR "\nsolgs/model: referer - $referer\n";
 #          $referer = '/' . $referer;
         
-         $c->res->redirect("/solgs/trait/$trait_id/population/$pop_id"); 
+         $c->res->redirect("/solgs/trait/$trait_id/population/$pop_id");
+         $c->detach();
            
     }
     else 
     {
         $c->res->redirect("/solgs/analyze/traits/population/$model_id/$prediction_pop_id");
+        $c->detach();
     }
    
 }
