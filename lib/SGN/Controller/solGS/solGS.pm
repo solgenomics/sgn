@@ -558,7 +558,7 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
         $c->stash->{combined_populations} = 1;
    
     } 
-    elsif ($selection_pop_id =~ /uploaded/)
+    elsif ($model_id =~ /uploaded/)
     {  
         $c->stash->{prediction_pop_id} = $selection_pop_id; 
         $self->uploaded_population_summary($c);

@@ -78,7 +78,7 @@ function plotCorrelation (data) {
     
     var height = 500;
     var width  = 500;
-    var pad    = {left:70, top:5, right:5, bottom: 70}; 
+    var pad    = {left:70, top:5, right:5, bottom: 90}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
 
