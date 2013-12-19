@@ -79,7 +79,7 @@ my $formatted_report_file = format_report_file($raw_report_file);
 
 #warn "got raw report file $raw_report_file, formatting $formatted_report_file\n";
 
-$page->jsan_use( 'jqueryui' );
+####$page->jsan_use( 'jqueryui' );  ### do not re-import jquery (done by header)
 $page->header();
 
 # stuff to support AJAXy disambiguation of site xrefs
