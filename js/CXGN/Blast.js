@@ -14,15 +14,13 @@ function run_blast(database_types, input_option_types) {
     var sequence = jQuery('#sequence').val();
     
     if (jQuery.browser.msie) {
-	var serializer = new XMLSerializer;
-	var xmlString = serializer.serialize(document.getElementById('sequence'));
-	alert(xmlString);
+//	var serializer = new XMLSerializer;
+//	alert('created serializer');
+//	sequence = serializer.serialize(document.getElementById('sequence'));
+//	alert(sequence);
 					     
-	sequence = sequence.replace(/\s+/g, "\n");
-	
+	sequence = sequence.replace(/\s+/g, "\n");	
     }
-
-
 
     var database = jQuery('#database').val();
     var evalue   = jQuery('#evalue').val();
@@ -47,11 +45,11 @@ function run_blast(database_types, input_option_types) {
     
     var jobid ="";
     var seq_count = 0;
-    disable_ui();
+    disable_ui(); 
     jQuery.ajax( { 
 	//async: false,
 	url:     '/tools/blast/run/',
-	beforeSend: function() { disable_ui(); },
+
 	method:  'POST',
 	data:    { 'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 
                    'filterq': filterq, 'database': database, 'program': program, 
@@ -59,6 +57,8 @@ function run_blast(database_types, input_option_types) {
 		 },
 	success: function(response) { 
 	    if (response.error) { 
+		enable_ui();
+		alert(response.error);
 		return;
 	    }
             else{ 
