@@ -26,6 +26,23 @@ sub get_breeding_programs {
 }
 
 
+sub get_breeding_program_by_name {
+  my $self = shift;
+  my $program_name = shift;
+  my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
+  my $rs = $self->schema->resultset('Project::Project')->find( { 'name'=>$program_name, 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
+
+  if (!$rs) {
+    return;
+  }
+
+  return $rs;
+
+}
+
+
+
+
 sub get_trials_by_breeding_program { 
     my $self = shift;
     my $breeding_project_id = shift;
