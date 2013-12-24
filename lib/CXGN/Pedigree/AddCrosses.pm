@@ -66,14 +66,14 @@ sub add_crosses {
     if ($pedigree->has_female_parent()) {
       $female_parent_name = $pedigree->get_female_parent()->get_name();
       $female_parent = $self->_get_accession($female_parent_name);
+      $self->_add_cross($female_parent);
     }
 
     if ($pedigree->has_male_parent()) {
       $male_parent_name = $pedigree->get_male_parent()->get_name();
-      $male_parent = $self->_get_accession($male_parent_name)
+      $male_parent = $self->_get_accession($male_parent_name);
+      $self->_add_cross($male_parent);
     }
-
-
 
   }
 
@@ -84,14 +84,15 @@ sub validate_crosses {
   my $self = shift;
   my $schema = $self->get_schema();
   my $trial_name = $self->get_trial_name();
-  my $program = $self->get_program_name();
+  my $program_name = $self->get_program_name();
   my $location = $self->get_location();
   my @crosses = @{$self->get_crosses()};
   my $invalid_cross_count = 0;
+  my $program;
 
   my $location_lookup;
   my $trial_lookup;
-
+  my $program_lookup;
 
   $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema}, location => $location );
 
@@ -100,15 +101,23 @@ sub validate_crosses {
     return;
   }
 
-  $trial_lookup = CXGN::Trial::TrialLookup->new({ schema => $schema, trial_name => $trial_name} );
-
-  if (!$trial_lookup) {
-    print STDERR "Trial $trial_name not found\n";
+  $program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $schema});
+  $program = $program_lookup->get_breeding_program_by_name($program_name);
+  if (!$program) {
+    print STDERR "Breeding program $program_name not found\n";
     return;
   }
 
+
+ # $trial_lookup = CXGN::Trial::TrialLookup->new({ schema => $schema, trial_name => $trial_name} );
+
+  #if (!$trial_lookup) {
+    #print STDERR "Trial $trial_name not found\n";
+    #return;
+  #}
+
   foreach my $cross (@crosses) {
-    my $validated_cross = $self->_validate_crosses($cross);
+    my $validated_cross = $self->_validate_cross($cross);
 
     if (!$validated_cross) {
       $invalid_cross_count++;
