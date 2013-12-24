@@ -31,7 +31,10 @@ And/or upload list file: <br /><input type="file" name="file" />
 
 </td><td valign="top" bgcolor="#EEEEEE" width="320">
 
-      <input type=hidden name="idType" value="converter" />
+      <input type="hidden" name="idType" value="converter" />
+
+      <input type="radio" name="converter_type" value="unigene_solyc_converter" checked="1" /> Convert unigene ids to tomato genome ids<br />
+      <input type="radio" name="converter_type" value="unigene_version_converter" /> Convert to newest version<br />
 
 <br />
 <br />
