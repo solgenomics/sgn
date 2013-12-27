@@ -113,7 +113,7 @@ function plotGebvScatter() {
                 mode: 'categories',                 
                 ticks: '',
                 tickColor: '#ffffff',
-                axisLabel: 'Genotypes',
+                axisLabel: 'Clones',
                 position: 'bottom',
                 axisLabelPadding: 20,
                 color: '#0066CC',    
