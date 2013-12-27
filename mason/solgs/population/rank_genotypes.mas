@@ -35,7 +35,7 @@ $project_name
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed  => 0, 
-  title      => "Rank Genotypes based on weighted mean GEBV of multiple traits"
+  title      => "Calculate selection index"
   &> 
 
  

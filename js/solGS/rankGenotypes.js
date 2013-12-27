@@ -166,7 +166,7 @@ function  selectionIndexForm(predictedTraits) {
     }
    
     var rankButton =  '<tr><td>'
-        +  '<input style="position:relative;" " class="button" type="submit" value="Rank" name= "rank" id="rank_genotypes"'     
+        +  '<input style="position:relative;" " class="button" type="submit" value="Calculate" name= "rank" id="rank_genotypes"'     
         +  '</td></tr>';
 
     var table = '<table id="selection_index_table" style="align:left;width:90%"><tr>' 
