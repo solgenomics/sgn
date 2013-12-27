@@ -41,8 +41,6 @@ $pop_id = $trial_id if $trial_id;
 
 </style>
 
-<!-- <script src="/js/d3/d3.js" charset="utf-8"></script> -->
-<!-- <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> -->
 
 <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.correlation"] &>
 <&| /page/info_section.mas, 
@@ -50,8 +48,6 @@ $pop_id = $trial_id if $trial_id;
       collapsed   => 0, 
       title       => "Phenotypic correlation analysis output"
 &>
-  &nbsp;    
-</&>
 
 <input type="hidden" id="population_id" value="<% $pop_id %>" />
 <div id="correlation_message"  style="font-weight:bold;text-align:center;text-transform:uppercase;color:#A7C942">
@@ -59,3 +55,4 @@ $pop_id = $trial_id if $trial_id;
 </div>
 <div id="correlation_canvas"> </div>
 
+</&>
