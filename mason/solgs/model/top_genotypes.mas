@@ -17,7 +17,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 0, 
-      title       => "Genotype ranking based on multiple traits performance" 
+      title       => "Genotype ranking based on multiple traits performance (selection index)" 
   &>
 
 <i>Top 10 genotypes</i>:
