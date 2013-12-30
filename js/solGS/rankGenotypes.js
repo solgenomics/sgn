@@ -305,7 +305,7 @@ function selectionIndex ( trainingPopId, predictionPopId )
     var all = rel_form.getElementsByTagName('input');
     var params, validate;
     var allValues = [];
-    var legend = 'Relatives weights:<br/>';
+    var legend = 'Relative weights:<br/>';
 
      for (var i = 0; i < all.length; i++) {         
          var nm = all[i].name;
