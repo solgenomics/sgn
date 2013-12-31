@@ -51,18 +51,26 @@ Search accessions and plots using location, year, trial, and trait data.
 </tr>
 <tr>
 <td>
+<button id="c1_select_all" />select all</button>
+<hr style="margin-top:4px;margin-bottom:4px" />
 <div id="c1_data_count"></div>
 <div id="c1_to_list_menu"></div>
 </td>
 <td>
+<button id="c2_select_all" />select all</button>
+<hr style="margin-top:4px;margin-bottom:4px" />
 <div id="c2_data_count"></div>
 <div id="c2_to_list_menu"></div>
 </td>
 <td>
+<button id="c3_select_all" />select all</button>
+<hr style="margin-top:4px;margin-bottom:4px" />
 <div id="c3_data_count"></div>
 <div id="c3_to_list_menu"></div>
 </td>
 <td>
+<button id="stock_select_all" />select all</button>
+<hr style="margin-top:4px;margin-bottom:4px" />
 <div id="stock_count"></div>
 <div id="add_to_list_menu"></div>
 </td></tr>
@@ -98,7 +106,12 @@ Search accessions and plots using location, year, trial, and trait data.
         }
       );
     }
+
+
+
  });
+
+ 
 
 </script>
 
