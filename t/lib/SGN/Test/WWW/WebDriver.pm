@@ -114,7 +114,13 @@ sub login {
 
 sub logout { 
     my $self = shift;
-    $self->get("/solpeople/login.pl?logout=yes");
+    return $self->get("/solpeople/login.pl?logout=yes");
+}
+
+sub logout_ok { 
+    my $self = shift;
+    my $test_name = shift || "logout test";
+    ok($self->logout(), $test_name);
 }
 
 sub while_logged_in_as {
@@ -161,6 +167,17 @@ sub find_element_ok {
     my $test_name = shift || print STDERR "You can provide a test name parameter for find_element_ok\n";
     ok(my $element = $self->find_element($name, $method), $test_name);
     return $element;
+}
+
+sub accept_alert { 
+    my $self = shift;
+    $self->driver->accept_alert();
+}
+
+sub accept_alert_ok { 
+    my $self = shift;
+    my $test_name = shift;
+    ok($self->accept_alert(), $test_name);
 }
 
 1;
