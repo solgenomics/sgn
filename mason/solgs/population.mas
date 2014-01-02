@@ -24,14 +24,18 @@ $acronym
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
 
+
+<br />
+<br />
+
 <& /page/page_title.mas, 
-   title => "Select any combination of traits from training population \"$project_name\" to build a GS model and predict GEBVs for."
+   title => "Select one or more traits from training population \"$project_name\" to build a GS model and predict GEBVs for."
 &>
 
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => 0, 
-    title       => "Population summary",
+    title       => "Training population summary",
   &>
 
  <& population/summary.mas,
