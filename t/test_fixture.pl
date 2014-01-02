@@ -30,8 +30,8 @@ my @prove_args = @ARGV;
 
 my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
 
-$ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'testing';
-my $conf_file_base = 'sgn_testing.conf';
+$ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'fixture';
+my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
 
 # get some defaults from sgn_local.conf
 #
@@ -41,6 +41,7 @@ my $config = $cfg->[0]->{$conf_file_base};
 my $db_user_password = $config->{dbpass};
 my $dbhost = $config->{dbhost};
 my $db_postgres_password = $config->{DatabaseConnection}->{sgn_test}->{password};
+my $test_dsn = $config->{DatabaseConnection}->{sgn_test}->{dsn};
 my $catalyst_server_port = 3010;
 
 # load the database fixture
@@ -68,9 +69,18 @@ system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbna
 print STDERR "Done.\n";
 
 print STDERR "Creating sgn_fixture.conf file... ";
+$config->{dbname} = $dbname;
+$test_dsn =~ s/dbname=(.*)$/dbname=$dbname/;
+$config->{DatabaseConnection}->{sgn_test}->{dsn} = $test_dsn;
 
-system("grep -v dbname \"$conf_file_base\" > sgn_fixture.conf");
-system("echo \"dbname $dbname\" >> sgn_fixture.conf");
+my $new_conf = hash2config($config);
+
+open(my $NEWCONF, ">", "sgn_fixture.conf") || die "Can't open sgn_fixture.conf for writing";
+print $NEWCONF $new_conf;
+close($NEWCONF);
+
+#system("grep -v dbname \"$conf_file_base\" > sgn_fixture.conf");
+#system("echo \"dbname $dbname\" >> sgn_fixture.conf");
 
 print STDERR "Done.\n";
 
@@ -88,14 +98,14 @@ unless( $server_pid ) {
 
 if (!$verbose) { 
     my $logfile = "logfile.$$.txt";
-    print STDERR "Redirecting server STDERR to file $logfile..\n";
+    print STDERR "[Server logfile at $logfile]\n";
     open (STDERR, ">$logfile") || die "can't open logfile.";
 }
 Catalyst::ScriptRunner->run('SGN', 'Server');
 
 exit;
 }
-print STDERR  "$0: starting web server with PID $server_pid... ";
+print STDERR  "$0: starting web server (PID=$server_pid)... ";
 
 
 # wait for the test server to start
@@ -105,14 +115,17 @@ print STDERR  "$0: starting web server with PID $server_pid... ";
         waitpid $server_pid, 0;
         die "\nTest server failed to start.  Aborting.\n";
     };
-    sleep 1 until !kill(0, $server_pid) || get "http://localhost:$catalyst_server_port";
     print STDERR "Done.\n";
+
+    sleep 1 until !kill(0, $server_pid) || get "http://localhost:$catalyst_server_port";
+
+    
 }
 
 my $prove_pid = fork;
 unless( $prove_pid ) {
     # test harness process
-
+    print STDERR "Starting tests... \n";
 
     # set up env vars for prove and the tests
     $ENV{SGN_TEST_SERVER} = "http://localhost:$catalyst_server_port";
@@ -129,27 +142,76 @@ unless( $prove_pid ) {
         @prove_args
         );
     exit( $app->run ? 0 : 1 );
+
+    
 }
 
-$SIG{CHLD} = 'IGNORE';
+
+
+#$SIG{CHLD} = 'IGNORE';
 $SIG{INT}  = sub { kill 15, $server_pid, $prove_pid };
 $SIG{KILL} = sub { kill 9, $server_pid, $prove_pid };
 
 warn "$0: prove started with PID $prove_pid.\n";
 waitpid $prove_pid, 0;
 warn "$0: prove finished, stopping web server PID $server_pid.\n";
+
 END { kill 15, $server_pid if $server_pid }
 waitpid $server_pid, 0;
+sleep(3);
+
+print STDERR "Removing test database ($dbname)... ";
+system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
+print STDERR "Done.\n";
+
+print STDERR "Test run complete.\n\n";
+
+
+
+sub hash2config { 
+    my $hash = shift;
+
+    #print STDERR Data::Dumper::Dumper($hash);
+    
+    my $s = "";
+    foreach my $k (keys(%$hash)) { 
+	if (ref($hash->{$k}) eq "ARRAY") { 
+	    foreach my $v (@{$hash->{$k}}) { 
+		$s .= "$k $v\n";
+	    }
+	}
+	elsif (ref($hash->{$k}) eq "HASH") { 
+	    foreach my $n (keys(%{$hash->{$k}})) { 
+		if (ref($hash->{$k}->{$n}) eq "HASH") { 
+		    $s .= "<$k $n>\n";
+		    $s .= hash2config($hash->{$k}->{$n});
+		}
+		else { 
+		    $s .= "<$k>\n";
+		    $s .= hash2config($hash->{$k});
+		}
+		$s .= "</$k>\n";
+	    }
+	}
+	else { 
+	    $s .= "$k $hash->{$k}\n";
+	}
+    }
+    #print STDERR "FILE SO FAR: $s\n";
+    return $s;
+}
+    
+
 
 __END__
 
 =head1 NAME
 
-test_all.pl - start a dev server and run tests against it
+test_fixture.pl - start a dev server and run tests against it
 
 =head1 SYNOPSIS
 
-t/test_all.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
+t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
 
 =head1 OPTIONS
 
