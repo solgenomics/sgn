@@ -53,7 +53,6 @@ jQuery(document).ready(function() {
    
      new jQuery.ajax( {
        type: 'POST',
-       async: false,
        url: '/ajax/breeders/location/insert',
        data: { 'description': desc,  'longitude':longitude, 'latitude':latitude, 'altitude': altitude },
        success: function(response) { 
@@ -67,8 +66,33 @@ jQuery(document).ready(function() {
        error: function() { alert('An error occurred. Please try again later.'); }
      });
   }
+
     
 });
+
+
+  function delete_location(location_id) { 
+
+    var yes = confirm('Are you sure you want to delete location with id '+location_id+'? ');
+
+    if (! yes) { return; }
+ 
+    new jQuery.ajax( { 
+      type: 'POST',
+      url: '/ajax/breeders/location/delete/'+location_id,
+      success: function(response) { 
+                  if (response.error) { alert(response.error); }
+                  else { 
+                    alert("The location was deleted.");
+		    location.reload();
+                  }
+               },
+      error: function(response) { 
+                 alert("An error occurred");
+             }
+      });
+   }
+
 
 </script>
 
@@ -81,8 +105,14 @@ jQuery(document).ready(function() {
 
 foreach my $prog (sort keys %$locations) { 
   print "<tr><td colspan=\"2\"><h4>$prog</h4></td></tr>";
-  foreach my $loc (@{$locations->{$prog}}) { 
-     print "<tr><td>".$loc->[1]."</td><td>(<a href=\"\">".$loc->[2]." plots</a>)</td></tr>";
+
+  foreach my $loc (@{$locations->{$prog}}) {
+    my $delete_link = "";
+    if (!$loc->[2] && $user_id) { 
+      $delete_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:delete_location($loc->[0])\"><font style=\"color: red; font-weight: bold\">X</a>";
+    }
+
+     print "<tr><td>".$loc->[1]."</td><td>(<a href=\"\">".$loc->[2]." plots</a>) $delete_link</td></tr>";
    }
 }
 </%perl>
