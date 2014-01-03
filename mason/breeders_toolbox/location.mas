@@ -21,8 +21,15 @@ jQuery(document).ready(function() {
 
   jQuery('#add_location_dialog').dialog( {
      autoOpen: false,
-     buttons:  { "Cancel" : function() { jQuery('#add_location_dialog').dialog("close"); }, 
-                     "Add": function() { save_location_info(); } },
+     buttons:  { "Cancel" : { text: "Cancel",
+                              id: "cancel_new_location_button",
+                              click: function() { jQuery('#add_location_dialog').dialog("close"); }
+                            },
+                     "Add": { text: "Add",
+                              id: "add_new_location_button",
+                              click: function() { save_location_info(); } 
+                             }
+               },
      modal: true,
      width: 500,
      height: 200,
