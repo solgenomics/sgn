@@ -6,6 +6,7 @@ use Moose;
 use URI::FromHash 'uri';
 
 use CXGN::BreedersToolbox::Projects;
+use CXGN::BreedersToolbox::Delete;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -102,6 +103,29 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
     $new_row->insert();
     $c->stash->{rest} = { success => 1, error => '' };
 }
+
+sub delete_location :Path('/ajax/breeders/location/delete') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $location_id = shift;
+
+    my $del = CXGN::BreedersToolbox::Delete->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
+    if ($del->can_delete_location($location_id)) { 
+	my $success = $del->delete_location($location_id);
+
+	if ($success) { 
+	    $c->stash->{rest} = { success => 1 };
+	}
+	else { 
+	    $c->stash->{rest} = { error => "Could not delete location $location_id" };
+	}
+    }
+    else { 
+	$c->stash->{rest} = { error => "This location cannot be deleted because it has associated data." }
+    }
+    
+}
+	
 
 sub get_breeding_programs : Path('/breeders/programs') Args(0) { 
     my $self = shift;
