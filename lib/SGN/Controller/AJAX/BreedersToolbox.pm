@@ -109,10 +109,19 @@ sub delete_location :Path('/ajax/breeders/location/delete') Args(1) {
     my $c = shift;
     my $location_id = shift;
 
+    if (!$c->user) {  # require login
+	$c->stash->{rest} = { error => "You need to be logged in to delete a location." };
+	return;
+    }
+    # require curator or submitter roles
+    if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => "You don't have the privileges to delete a location." };
+	return;
+    }
     my $del = CXGN::BreedersToolbox::Delete->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
     if ($del->can_delete_location($location_id)) { 
 	my $success = $del->delete_location($location_id);
-
+	
 	if ($success) { 
 	    $c->stash->{rest} = { success => 1 };
 	}
