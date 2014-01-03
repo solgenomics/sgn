@@ -51,7 +51,7 @@ my $dbname = join "_", map { $now->$_ } (qw | year month day hour minute |);
 $dbname = 'test_db_'.$dbname;
 $dbname .= $$;
 
-print STDERR "Writing a .pgpass file... ";
+print STDERR "# Writing a .pgpass file... ";
 # hostname:port:database:username:password
 open(my $PGPASS, ">", "$ENV{HOME}/.pgpass") || die "Can't open .pgpass for writing.";
 print $PGPASS "$dbhost:5432:$dbname:web_usr:$db_user_password\n";
@@ -60,7 +60,7 @@ close($PGPASS);
 system("chmod 0600 $ENV{HOME}/.pgpass");
 print "Done.\n";
 
-print STDERR "Loading database fixture... ";
+print STDERR "# Loading database fixture... ";
 my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || '../cxgn_fixture.sql';
 system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
 
@@ -68,7 +68,7 @@ system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbna
 
 print STDERR "Done.\n";
 
-print STDERR "Creating sgn_fixture.conf file... ";
+print STDERR "# Creating sgn_fixture.conf file... ";
 $config->{dbname} = $dbname;
 $test_dsn =~ s/dbname=(.*)$/dbname=$dbname/;
 $config->{DatabaseConnection}->{sgn_test}->{dsn} = $test_dsn;
@@ -98,14 +98,14 @@ unless( $server_pid ) {
 
 if (!$verbose) { 
     my $logfile = "logfile.$$.txt";
-    print STDERR "[Server logfile at $logfile]\n";
+    print STDERR "# [Server logfile at $logfile]\n";
     open (STDERR, ">$logfile") || die "can't open logfile.";
 }
 Catalyst::ScriptRunner->run('SGN', 'Server');
 
 exit;
 }
-print STDERR  "$0: starting web server (PID=$server_pid)... ";
+print STDERR  "# Starting web server (PID=$server_pid)... ";
 
 
 # wait for the test server to start
@@ -125,7 +125,7 @@ print STDERR  "$0: starting web server (PID=$server_pid)... ";
 my $prove_pid = fork;
 unless( $prove_pid ) {
     # test harness process
-    print STDERR "Starting tests... \n";
+    print STDERR "# Starting tests... \n";
 
     # set up env vars for prove and the tests
     $ENV{SGN_TEST_SERVER} = "http://localhost:$catalyst_server_port";
@@ -152,19 +152,20 @@ unless( $prove_pid ) {
 $SIG{INT}  = sub { kill 15, $server_pid, $prove_pid };
 $SIG{KILL} = sub { kill 9, $server_pid, $prove_pid };
 
-warn "$0: prove started with PID $prove_pid.\n";
+print STDERR "# Start prove (PID $prove_pid)... \n";
 waitpid $prove_pid, 0;
-warn "$0: prove finished, stopping web server PID $server_pid.\n";
+print STDERR "# Prove finished, stopping web server PID $server_pid... ";
 
 END { kill 15, $server_pid if $server_pid }
 waitpid $server_pid, 0;
 sleep(3);
+print STDERR "Done.\n";
 
-print STDERR "Removing test database ($dbname)... ";
+print STDERR "# Removing test database ($dbname)... ";
 system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
 print STDERR "Done.\n";
 
-print STDERR "Test run complete.\n\n";
+print STDERR "# Test run complete.\n\n";
 
 
 
@@ -214,6 +215,9 @@ test_fixture.pl - start a dev server and run tests against it
 t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
 
 =head1 OPTIONS
+
+  -v             verbose - the output of the server is not re-directed to file,
+                 but rather output to the screen.
 
   --carpalways   Load Carp::Always in both the server and the test process
                  to force backtraces of all warnings and errors
