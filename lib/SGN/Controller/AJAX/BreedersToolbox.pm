@@ -71,6 +71,10 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
 	return;
     }
 
+    if (! $c->user->check_roles("submitter") && !$c->user->check_roles("curator")) { 
+	$c->stash->{rest} = { error => 'You do not have the necessary privileges to add locations.' };
+	return;
+    }
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
     my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $description } )->count();
