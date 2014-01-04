@@ -55,7 +55,7 @@ foreach my $project_ref (@projects) {
     my $phenotype_file_name = $phenotype_array[0];
     #my $phenotype_file_download = '[<a href="/fieldbook/trait_file_download/'.$trait_array[1].'">Download</a>]';
     #print $phenotype_array[0]."$trait_file_download<br>";
-    print $phenotype_array[0]."</br>";
+    print qq { $phenotype_array[0]  <a href="javascript:remove_phenotype_data($phenotype_array[1])"><b>X</b></a></br> };
   }
   </%perl>
 </&>
@@ -82,3 +82,28 @@ foreach my $project_ref (@projects) {
 </div>
 
 
+<script>
+
+  function remove_phenotype_data(file_id) { 
+    var yes = confirm("Do you really want to remove all data associated with this file (id="+file_id+")");
+    jQuery.ajax( { 
+      beforeSend: function() { jQuery('#working').dialog("open"); },
+      url: '/breeders/trial/delete/file/'+file_id,
+      success: function(response) { 
+         if (response.error) { 
+           alert(response.error);
+           jQuery('#working').dialog("close");
+         }
+         else { 
+           alert("SUCCESS!");
+           jQuery('#working').dialog("close");
+           location.reload();
+         }
+      },
+      error: function(response) { 
+        alert("An error occurred!");
+       jQuery('#working').dialog("close");
+      }
+    });
+  }
+</script>

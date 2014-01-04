@@ -1,6 +1,16 @@
 
 <%doc>
 
+=head1 NAME
+
+/breeders/trial.mas - a mason component to display a trial detail page
+
+=head1 AUTHOR
+
+Jeremy D. Edwards
+
+=cut
+
 </%doc>
 
 <%args>

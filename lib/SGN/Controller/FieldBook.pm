@@ -86,8 +86,8 @@ sub field_book :Path("/fieldbook") Args(0) {
     my $uploaded_md_files = $metadata_schema->resultset("MdFiles")->search({filetype=>'tablet phenotype file'});
     while (my $md_file = $uploaded_md_files->next) {
       my $metadata_id = $md_file->metadata_id->metadata_id;
-      my $file_metadata = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id});
-      if ( $file_metadata->create_person_id() eq $user_id) {
+      my $file_metadata = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id });
+      if ( ($file_metadata->obsolete==0) && ($file_metadata->create_person_id() eq $user_id)) {
 	push @phenotype_files, [$md_file->basename,$md_file->file_id];
       }
     }

@@ -414,8 +414,6 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 
     my $data = $self->get_phenotyping_data($c);
 
-    
-   
     $c->stash->{phenotype_files} = $data->{file_info};
     $c->stash->{deleted_phenotype_files} = $data->{deleted_file_info};
 
@@ -636,12 +634,15 @@ sub get_phenotyping_data : Private {
 
      my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( { create_person_id => $c->user()->get_object->get_sp_person_id(), obsolete => 0 }, { order_by => 'create_date' } );
 
+    print STDERR "RETRIEVED ".$metadata_rs->count()." METADATA ENTRIES...\n";
+
     while (my $md_row = ($metadata_rs->next())) { 
 	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id() } );
 	
 	if (!$md_row->obsolete) { 
 	    while (my $file_row = $file_rs->next()) { 
-		push @$file_info, { basename => $file_row->basename,
+		push @$file_info, { file_id => $file_row->file_id(),		                    
+				    basename => $file_row->basename,
 				    dirname  => $file_row->dirname,
 				    file_type => $file_row->filetype,
 				    md5checksum => $file_row->md5checksum,
@@ -651,7 +652,8 @@ sub get_phenotyping_data : Private {
 	}
 	else { 
 	    while (my $file_row = $file_rs->next()) { 
-		push @$deleted_file_info, { basename => $file_row->basename,
+		push @$deleted_file_info, { file_id => $file_row->file_id(),
+					    basename => $file_row->basename,
 					    dirname => $file_row->dirname,
 					    file_type => $file_row->filetype,
 					    md5checksum => $file_row->md5checksum,

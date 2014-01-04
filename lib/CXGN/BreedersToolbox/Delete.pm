@@ -25,23 +25,27 @@ sub delete_experiments_by_file {
     my $md_file_id = shift;
 
     print STDERR "Get the md_file entry... ";
-    my $srs = $self->metadata_schema -> resultset("MdFiles") -> search( { file_id => $md_file_id } );
+    my $srs = $self->metadata_schema->resultset("MdFiles")->search( { file_id => $md_file_id } );
 
     print STDERR "Retrieved ".$srs->count()." entries.\n";
     if ($srs->count() == 0) { 
 	return "The file specified does not exist."
     }
 
-    print STDERR "Get the associated md_metadata info... ";
-    my $frs = $self->metadata_schema -> resultset("MdMetadata") -> search( { metadata_id => $srs->metadata_id(), create_person_id=>$user_id });
+    my $file_row = $srs->first();
+    my $metadata_id = $file_row->metadata_id()->metadata_id();
+
+    print STDERR "Get the associated md_metadata info... ($metadata_id, $user_id)";
+
+    my $frs = $self->metadata_schema->resultset("MdMetadata")->search( { metadata_id => $metadata_id, create_person_id=>$user_id });
 
     print STDERR "Retrieved ".$frs->count()." entries.\n";
     if ($frs->count()==0) { 
-	return "You don't have the necessary privilege to delete this file";
+	return "You don't have the necessary privileges to delete this file";
     }
     
     print STDERR "Get the entries from the linking table... ";
-    my $prs = $self->phenome_schema -> resultset("MdExperimentMdFiles")->search( { file_id => $md_file_id });
+    my $prs = $self->phenome_schema -> resultset("NdExperimentMdFiles")->search( { file_id => $md_file_id });
 
     print STDERR "Retrieved ".$prs->count()." entries.\n";
     if ($prs->count() == 0) { 
@@ -62,7 +66,7 @@ sub delete_experiments_by_file {
     
     # set md_files and/or metadata to obsolote
     print STDERR "Update the md_file table to obsolete... ";
-    my $mdmd_row = $self->metadata_schema->resultset("MdMetadata")->find( { metadata_id => $frs->metadata_id() } );
+    my $mdmd_row = $self->metadata_schema->resultset("MdMetadata")->find( { metadata_id => $metadata_id } );
     if ($mdmd_row) { 
 	$mdmd_row -> update( { obsolete => 1 });
     }
