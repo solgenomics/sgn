@@ -14,7 +14,7 @@ my $seq = get_legacy_est( $cgi ) || get_legacy_unigene( $cgi ) || get_direct_seq
 
 $c->forward_to_mason_view( '/tools/sixframe_translate_standalone.mas',
                            seq => $seq,
-                           blast_url => '/tools/blast/index.pl'
+                           blast_url => '/tools/blast'
                          );
 
 

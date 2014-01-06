@@ -165,7 +165,7 @@ foreach  my $g  ( @{ $dbxrefs{'DB:GenBank_GI'} } )  {
     my $description = $g->[0]->get_description();
     my $feature_seq = $feature->get_residues;
     my $blast_link = qq |
-      <form style="display: inline" method="post" action="/tools/blast/index.pl"><input type="hidden" name="seq" value=">$gb_accession ($description)\n$feature_seq" /><input style="padding: 1px; line-height: 0.8" type="submit" value="BLAST" /></form>
+      <form style="display: inline" method="post" action="/tools/blast"><input type="hidden" name="seq" value=">$gb_accession ($description)\n$feature_seq" /><input style="padding: 1px; line-height: 0.8" type="submit" value="BLAST" /></form>
         |;
 
     $genbank .=

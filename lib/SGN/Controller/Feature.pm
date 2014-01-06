@@ -63,7 +63,7 @@ sub choose_view :Private {
 sub get_feature : Chained('/') CaptureArgs(1) PathPart('feature') {
     my ($self, $c, $id ) = @_;
 
-    $c->stash->{blast_url} = '/tools/blast/index.pl';
+    $c->stash->{blast_url} = '/tools/blast';
 
     my $identifier_type = $c->stash->{identifier_type}
         || $id =~ /[^-\d]/ ? 'name' : 'feature_id';
