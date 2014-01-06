@@ -85,12 +85,11 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	    data: editableForm.serialize(true) ,
 	    success: function(response) {
                 var x = eval("("+response+")");
-		alert("RESPONSE: "+ response + "   X : "+x);
 		if (x.error) { 
 		    alert(x.error); 
-		} else if (x.refering_page) { alert("REFER TO "+x.refering_page);  window.location = x.refering_page ; } 
-		else if (x.html) { alert("HTML!"); document.getElementById(form.getFormId() ).innerHTML = x.html + form.getFormButtons(); }
-		else { alert("VIEW"); form.printForm("view"); }
+		} else if (x.refering_page) { window.location = x.refering_page ; } 
+		else if (x.html) { document.getElementById(form.getFormId() ).innerHTML = x.html + form.getFormButtons(); }
+		else { form.printForm("view"); }
 	    },
 	    error: function(response) {
 		alert("Action '" + action +"'  failed for storing this " + this.getObjectName() + "!!" ) ;
@@ -114,7 +113,6 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	var form = this; //'this' cannot be used inside the inner onSuccess function
 	if (!action) action = 'view';
         if ( this.getObjectId() == 0 ) action = 'new';
-	alert("ACTION is "+action);
 	if (!action || !this.getObjectName() || !this.getAjaxScript() )  {
 	    alert("Cannot print from without a objectName, action, and ajaxScript name ! ");
 	} else if  (action == 'delete') { 
