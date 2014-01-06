@@ -29,7 +29,7 @@ sub validate {
 	my $io = Bio::SeqIO->new( -fh => $string_fh,
 		       -format => 'fasta');
 	while (my $seq = $io ->next_seq()) { 
-	    if ($seq->seq() !~ /^[ATGCYWN \n\t]+$/i) { 
+	    if ($seq->seq() !~ /^[ATGCYWRSKMBDHV\.\-N \n\t]+$/i) { 
 		die "Nucleotide sequence contains illegal characters: ".($seq->id);
 	    }
 	}
