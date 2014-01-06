@@ -106,7 +106,7 @@ sub _delete_nd_experiments {
     
     # delete the experiments
     #
-    my $delete_rs = $self->bcs_schema()->resultset("MdExperiment")->search({ md_experiment_id => { -in => $ids_str }});
+    my $delete_rs = $self->bcs_schema()->resultset("NdExperiment")->search({ md_experiment_id => { -in => $ids_str }});
     $nd_experiments_deleted = $delete_rs->count();
     $delete_rs->delete_all();
     print STDERR "Done.\n";
