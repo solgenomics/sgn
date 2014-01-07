@@ -160,7 +160,7 @@ sub associate_breeding_program_with_trial : Path('/breeders/program/associate') 
 
     my $message = "";
 
-    if ($c->user() && $c->user()->check_roles('submitter')) { 
+    if ($c->user() && ( $c->user()->check_roles('submitter')  || $c->user()->check_roles('curator'))) { 
 	my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $c->dbic_schema("Bio::Chado::Schema") } );
 	
 	$message = $program->associate_breeding_program_with_trial($breeding_program_id, $trial_id);
