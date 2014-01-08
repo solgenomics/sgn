@@ -50,7 +50,7 @@ $uri => "/ajax/cvterm/autocomplete"
 }
   jQuery(function() {
      jQuery("#trait_ontology_name").autocomplete({
-      source: '<% $uri %>' + '?db_name=' + '<% $trait_ontology_db_name %>
+      source: '<% $uri %>' + '?db_name=' + '<% $trait_ontology_db_name %>'
      });
   });
 
