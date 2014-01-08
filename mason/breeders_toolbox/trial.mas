@@ -156,13 +156,10 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
 
 <&| /page/info_section.mas, title=>"Data Agreement", is_subsection => 0, collapsible=>1, collapsed=>0,  subtitle=> '<a id="add_data_agreement">Add/edit data agreement</a>' &>
   
-
+<& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
   
 
 
-<div id="data_agreement_div">
-
-</div>
 
 </&>
 
@@ -202,16 +199,11 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
   </select>
 <div>
 
-<div id="add_data_agreement_dialog">
-  <textarea cols="40" rows="10" id="data_agreement_text">
-    </textarea>
-</div>
 
 <script defer="defer">
   
 jQuery(document).ready(function () {
 
-  get_data_agreement(<% $trial_id %>, 'data_agreement_div');
 
   jQuery('#change_breeding_program_dialog').dialog( {
      height: 150,
@@ -227,25 +219,6 @@ jQuery(document).ready(function () {
      }
   });
 
-  jQuery('#add_data_agreement_dialog').dialog( { 
-     height: 400,
-     width: 500,
-     title: 'Add Data Agreement',
-     autoOpen: false,
-     buttons: { 
-       'OK': function() { 
-          add_data_agreement();
-          jQuery('#add_data_agreement_dialog').dialog("close");
-        },
-       'Cancel': function() { jQuery('#add_data_agreement_dialog').dialog("close");
-       }
-     }
-  });
-
-  jQuery('#add_data_agreement').click( function() { 
-      get_data_agreement(<% $trial_id %>, 'data_agreement_text');
-     jQuery('#add_data_agreement_dialog').dialog("open");
-  });
 
   function get_breeding_select() { 
     var programs = new Array();
@@ -280,34 +253,6 @@ jQuery(document).ready(function () {
     });
    }
 
-   function add_data_agreement() { 
-     var data_agreement_text = jQuery('#data_agreement_text').val();
-     jQuery.ajax( { 
-        url: '/breeders/trial/add/data_agreement',
-        data: { 'text': data_agreement_text, 'project_id': <% $trial_id %> },
-        success: function(response) { 
-          alert("Successfully added a data agreement to this trial.");
-          get_data_agreement(<% $trial_id %>, 'data_agreement_div');
-        },
-        error: function(response) { 
-          alert("An error occurred storing the data agreement.");
-        }
-      });
-    }
-
-    function get_data_agreement(project_id, div) { 
-      jQuery.ajax( { 
-        async: true,
-        url: '/breeders/trial/data_agreement/get',
-        data: { 'project_id': project_id },
-        success: function(response) { 
-           jQuery('#'+div).html(response.text);
-        },
-        error: function(response) { 
-           alert('An error occurred fetching the data agreement data.');
-        }
-      });
-    }
 
     function open_create_spreadsheet_dialog() {
         var list = new CXGN.List();

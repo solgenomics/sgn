@@ -1,0 +1,78 @@
+
+<%args>
+$trial_id 
+</%args>
+
+<div id="data_agreement_div">
+
+</div>
+
+
+<div id="add_data_agreement_dialog">
+  <textarea cols="40" rows="10" id="data_agreement_text">
+    </textarea>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+  get_data_agreement(<% $trial_id %>, 'data_agreement_div');
+
+  jQuery('#add_data_agreement_dialog').dialog( { 
+     height: 400,
+     width: 500,
+     title: 'Add Data Agreement',
+     autoOpen: false,
+     buttons: { 
+       'OK': { id: 'data_agreement_ok_button',
+               click: function() { 
+                 add_data_agreement();
+                 jQuery('#add_data_agreement_dialog').dialog("close");
+               },
+               text: "OK"
+             },
+       'Cancel': function() { jQuery('#add_data_agreement_dialog').dialog("close");
+       }
+     }
+  });
+
+  jQuery('#add_data_agreement').click( function() { 
+      get_data_agreement(<% $trial_id %>, 'data_agreement_text');
+     jQuery('#add_data_agreement_dialog').dialog("open");
+  });
+
+   function add_data_agreement() { 
+     var data_agreement_text = jQuery('#data_agreement_text').val();
+     jQuery.ajax( { 
+        url: '/breeders/trial/add/data_agreement',
+        data: { 'text': data_agreement_text, 'project_id': <% $trial_id %> },
+        success: function(response) { 
+          alert("Successfully added a data agreement to this trial.");
+          get_data_agreement(<% $trial_id %>, 'data_agreement_div');
+        },
+        error: function(response) { 
+          alert("An error occurred storing the data agreement.");
+        }
+      });
+    }
+
+    function get_data_agreement(project_id, div) { 
+      jQuery.ajax( { 
+        async: true,
+        url: '/breeders/trial/data_agreement/get',
+        data: { 'project_id': project_id },
+        success: function(response) { 
+           jQuery('#'+div).html(response.text);
+        },
+        error: function(response) { 
+           alert('An error occurred fetching the data agreement data.');
+        }
+      });
+    }
+
+
+});
+
+
+</script>
