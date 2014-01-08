@@ -25,15 +25,20 @@ jQuery(document).ready(function () {
      title: 'Add Data Agreement',
      autoOpen: false,
      buttons: { 
-       'OK': { id: 'data_agreement_ok_button',
-               click: function() { 
-                 add_data_agreement();
-                 jQuery('#add_data_agreement_dialog').dialog("close");
-               },
-               text: "OK"
-             },
-       'Cancel': function() { jQuery('#add_data_agreement_dialog').dialog("close");
-       }
+       'OK':    {  id: 'data_agreement_ok_button',
+                   click: function() { 
+                     add_data_agreement();
+                     jQuery('#add_data_agreement_dialog').dialog("close");
+                 },
+                 text: "OK"
+              },
+       'Cancel': { id: 'data_agreement_cancel_button',
+                   click:  function() { 
+                     jQuery('#add_data_agreement_dialog').dialog("close"); 
+                   },
+                   text: "Cancel"
+                 }
+                
      }
   });
 
