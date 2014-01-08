@@ -154,7 +154,7 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
   </&>
 </&>
 
-<&| /page/info_section.mas, title=>"Data Agreement", is_subsection => 0, collapsible=>1, collapsed=>0,  subtitle=> '<a id="add_data_agreement">Add data agreement</a>' &>
+<&| /page/info_section.mas, title=>"Data Agreement", is_subsection => 0, collapsible=>1, collapsed=>0,  subtitle=> '<a id="add_data_agreement">Add/edit data agreement</a>' &>
   
 
   
@@ -211,7 +211,7 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
   
 jQuery(document).ready(function () {
 
-  get_data_agreement(<% $trial_id %>);
+  get_data_agreement(<% $trial_id %>, 'data_agreement_div');
 
   jQuery('#change_breeding_program_dialog').dialog( {
      height: 150,
@@ -243,6 +243,7 @@ jQuery(document).ready(function () {
   });
 
   jQuery('#add_data_agreement').click( function() { 
+      get_data_agreement(<% $trial_id %>, 'data_agreement_text');
      jQuery('#add_data_agreement_dialog').dialog("open");
   });
 
@@ -269,7 +270,7 @@ jQuery(document).ready(function () {
 
   function associate_breeding_program() { 
     var program = jQuery('#change_breeding_program_select').val();				    
-    alert("Program: "+program);
+		     //alert("Program: "+program);
     jQuery.ajax( { 
       url: '/breeders/program/associate/'+program+'/'+ <% $trial_id %>,
       async: false,
@@ -286,6 +287,7 @@ jQuery(document).ready(function () {
         data: { 'text': data_agreement_text, 'project_id': <% $trial_id %> },
         success: function(response) { 
           alert("Successfully added a data agreement to this trial.");
+          get_data_agreement(<% $trial_id %>, 'data_agreement_div');
         },
         error: function(response) { 
           alert("An error occurred storing the data agreement.");
@@ -293,12 +295,13 @@ jQuery(document).ready(function () {
       });
     }
 
-    function get_data_agreement(project_id) { 
+    function get_data_agreement(project_id, div) { 
       jQuery.ajax( { 
+        async: true,
         url: '/breeders/trial/data_agreement/get',
         data: { 'project_id': project_id },
         success: function(response) { 
-           jQuery('#data_agreement_div').html(response.text);
+           jQuery('#'+div).html(response.text);
         },
         error: function(response) { 
            alert('An error occurred fetching the data agreement data.');

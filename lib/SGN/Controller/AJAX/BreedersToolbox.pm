@@ -220,7 +220,14 @@ sub add_data_agreement :Path('/breeders/trial/add/data_agreement') Args(0) {
     my $data_agreement = $c->req->param('text');
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    
+
+    my $data_agreement_cvterm_id_rs = $schema->resultset('Cv::Cvterm')->search( { name => 'data_agreement' });
+
+    my $type_id;
+    if ($data_agreement_cvterm_id_rs->count>0) { 
+	$type_id = $data_agreement_cvterm_id_rs->first()->cvterm_id();
+    }
+
     eval { 
 	my $project_rs = $schema->resultset('Project::Project')->search(
 	    { project_id => $project_id } 
@@ -232,8 +239,18 @@ sub add_data_agreement :Path('/breeders/trial/add/data_agreement') Args(0) {
 	}
 	
 	my $project = $project_rs->first();
-	
-	my $projectprop_year = $project->create_projectprops( { 'data_agreement' => $data_agreement,}, {autocreate=>1}); 
+
+	my $projectprop_rs = $schema->resultset("Project::Projectprop")->search( { 'project_id' => $project_id, 'type_id'=>$type_id });
+
+	my $projectprop;
+	if ($projectprop_rs->count() > 0) { 
+	    $projectprop = $projectprop_rs->first();
+	    $projectprop->value($data_agreement);
+	    $projectprop->update();
+	}
+	else { 
+	    $projectprop = $project->create_projectprops( { 'data_agreement' => $data_agreement,}, {autocreate=>1}); 
+	}
     };
     if ($@) { 
 	$c->stash->{rest} = { error => $@ };
