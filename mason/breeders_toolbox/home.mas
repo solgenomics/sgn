@@ -1,80 +1,39 @@
 
 <%args>
 
-$programs => undef
-$breeding_programs => undef
-@locations => ()
-$locations_by_breeding_program => []
-$crosses => undef
-$user_id => undef
-@stockrelationships => ()
-@cross_populations => ()
-@roles => ()
-$number_of_crosses_added => undef
-$number_of_unique_parents => undef
-$field_designs => undef
-$phenotype_files => undef
-$deleted_phenotype_files => undef
+
 </%args>
 
 <& /page/page_title.mas, title=>'Breeder Tools' &>
 
-<&| /page/info_section.mas, title=>'Search Wizard', collapsible=>1, collapsed=>1 &>
+<dl>
+<dt><a href="/breeders/manage_programs">Breeding Programs</a></dt>
+<dd>Add new breeding program information.</dd>
 
-  <& /breeders_toolbox/breeder_search.mas &>
+<dt><a href="/breeders/accessions">Accessions</a></dt>
+<dd>Manage accessions. Add new accessions using fuzzy matching.</dd>
 
-</&>
+<dt><a href="/breeders/trials">Trials</a></dt>
+<dd>Manage trials. Add new trials and create field layouts.</dd>
 
+<dt><a href="/breeders/locations">Locations</a></dt>
+<dd>Manage locations. Add/remove locations</dd>
 
-<&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>1, subtitle=>'[<a id="add_project_link">Add trial</a>]' &>
-    
-    <& /breeders_toolbox/projects.mas, trials_by_breeding_program=>$programs,breeding_programs=>$breeding_programs,locations=>\@locations&>
+<dt><a href="/breeders/crosses">Crosses</a></dt>
+<dd>Create new crosses.</dd>
 
-</&>
+<dt><a href="/breeders/phenotyping">Phenotyping</a></dt>
+<dd>Upload phenotype information for accessions in the database.</dd>
 
-<&| /page/info_section.mas, title=>'Locations',  collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_location_link">Add location</a>]' &>
+<dt><a href="/fieldbook">Fieldbook</a><dt>
+<dd>Create files for the Android Fieldbook app, upload files from Fieldbook to the database.
 
-<& /breeders_toolbox/location.mas, locations=>$locations_by_breeding_program, user_id=>$user_id &>
+<dt><a href="/barcode">Barcodes</a></dt>
+<dd>Download barcodes for accessions and plots.</dd>
 
-</&>
+<dt><a href="/breeders/download">Download Data</a></dt>
+<dd>Download phenotypic and genotypic data by trial, triat and location.</dd>
 
-<&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_crosses_link" >Upload crosses</a>]    [<a id="add_cross_link" >Add cross</a>]' &>
-
-  <& /breeders_toolbox/new_cross.mas, locations=>\@locations, programs=>$programs,roles=>\@roles &>
-  <& /breeders_toolbox/crosses.mas, cross_populations=>\@cross_populations, user_id=>$user_id &>
-
-</&>
-
-<&| /page/info_section.mas, title=>'Phenotypes' , subtitle=>'[<a id="upload_phenotypes_link" > Upload phenotypes</a>]' &>
-
-%# <&| /page/info_section.mas, title=>'Upload', is_subsection=>1, collapsible=>1, collapsed=>1&>
-
-%# <& /breeders_toolbox/upload_phenotypes.mas, programs=>$programs, locations=>\@locations &>  
-
-%# </&>
-
-<a href="/search/phenotypes/stock">Phenotype search</a><br /><br />
-  <& /breeders_toolbox/upload_phenotypes.mas &>  
-
-
-<&| /page/info_section.mas, title=>'Uploaded Files', is_subsection=>1 &>
-  
-  <& /breeders_toolbox/file_list.mas, files=>$phenotype_files &>  
-
-</&>
-
-<&| /page/info_section.mas, title=>'Removed Files', is_subsection=>1 &>
-
-  <& /breeders_toolbox/file_list.mas, files=>$deleted_phenotype_files &>
-
-</&>
-
-</&>
-
-
-%#<&| /page/info_section.mas, title=>'Accessions & plots' &>
-%#<& /breeders_toolbox/accessions.mas, user_id=>$user_id &>
-%#</&>
 
 
 
