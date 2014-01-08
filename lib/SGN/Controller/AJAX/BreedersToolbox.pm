@@ -16,8 +16,6 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-
-
 sub insert_new_project : Path("/ajax/breeders/project/insert") Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -214,5 +212,68 @@ sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
 }
 	
 	    
+sub add_data_agreement :Path('/breeders/trial/add/data_agreement') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $project_id = $c->req->param('project_id');
+    my $data_agreement = $c->req->param('text');
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    
+    eval { 
+	my $project_rs = $schema->resultset('Project::Project')->search(
+	    { project_id => $project_id } 
+	    );
+	
+	if ($project_rs->count() == 0) { 
+	    $c->stash->{rest} = { error => "No such project $project_id", };
+	    return; 
+	}
+	
+	my $project = $project_rs->first();
+	
+	my $projectprop_year = $project->create_projectprops( { 'data_agreement' => $data_agreement,}, {autocreate=>1}); 
+    };
+    if ($@) { 
+	$c->stash->{rest} = { error => $@ };
+	return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
+
+sub get_data_agreement :Path('/breeders/trial/data_agreement/get') :Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $project_id = $c->req->param('project_id');
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    
+    my $data_agreement_cvterm_id_rs = $schema->resultset('Cv::Cvterm')->search( { name => 'data_agreement' });
+    
+    if ($data_agreement_cvterm_id_rs->count() == 0) { 
+	$c->stash->{rest} = { error => "No data agreements have been added yet." };
+	return;
+    }
+
+    my $type_id = $data_agreement_cvterm_id_rs->first()->cvterm_id();
+
+    print STDERR "PROJECTID: $project_id TYPE_ID: $type_id\n";
+
+    my $projectprop_rs = $schema->resultset('Project::Projectprop')->search(
+	{ project_id => $project_id, type_id=>$type_id } 
+	);
+    
+    if ($projectprop_rs->count() == 0) { 
+	$c->stash->{rest} = { error => "No such project $project_id", };
+	return; 
+    }
+    my $projectprop = $projectprop_rs->first();
+    $c->stash->{rest} = { prop_id => $projectprop->projectprop_id(), text => $projectprop->value() };
+
+}
+
 
 1;
