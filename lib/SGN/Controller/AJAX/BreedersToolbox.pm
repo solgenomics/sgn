@@ -219,6 +219,16 @@ sub add_data_agreement :Path('/breeders/trial/add/data_agreement') Args(0) {
     my $project_id = $c->req->param('project_id');
     my $data_agreement = $c->req->param('text');
 
+    if (!$c->user()) { 
+	$c->stash->{rest} = { error => 'You need to be logged in to add a data agreement' };
+	return;
+    }
+
+    if (!$c->user()->check_roles('curator') || $c->user()->check_roles('submitter')) { 
+	$c->stash->{rest} = { error => 'You do not have the required privileges to add a data agreement to this trial.' };
+	return;
+    }
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
     my $data_agreement_cvterm_id_rs = $schema->resultset('Cv::Cvterm')->search( { name => 'data_agreement' });
