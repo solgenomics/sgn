@@ -154,7 +154,9 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
   </&>
 </&>
 
-<&| /page/info_section.mas, title=>"Data Agreement", is_subsection => 0, collapsible=>1, collapsed=>0,  subtitle=> '<a id="add_data_agreement">Add/edit data agreement</a>' &>
+% my $data_agreement_link = "Add/edit data agreement";
+% if ($user_can_modify) { $data_agreement_link = '<a id="add_data_agreement">Add/edit data agreement</a>'; }
+<&| /page/info_section.mas, title=>"Data Agreement", is_subsection => 0, collapsible=>1, collapsed=>0,  subtitle=> $data_agreement_link  &>
   
 <& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
   
