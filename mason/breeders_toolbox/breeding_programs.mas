@@ -51,8 +51,15 @@ jQuery('#new_breeding_program_dialog').dialog( {
   width: 400,
   height: 200,
   buttons: { 
-    'OK': function() { store_new_breeding_program(); },
-    'Cancel': function() {  jQuery('#new_breeding_program_dialog').dialog("close"); }
+    'OK':     { id: 'new_breeding_program_dialog_ok_button',
+                text: 'OK',
+                click: function() { store_new_breeding_program(); }
+              },
+    'Cancel': { id: 'new_breeding_program_dialog_cancel_button',
+                text: 'Cancel',
+                click: function() {  
+                  jQuery('#new_breeding_program_dialog').dialog("close"); }
+              }
   },
   autoOpen: false
 });
