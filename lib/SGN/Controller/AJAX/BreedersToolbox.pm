@@ -224,7 +224,7 @@ sub add_data_agreement :Path('/breeders/trial/add/data_agreement') Args(0) {
 	return;
     }
 
-    if (!$c->user()->check_roles('curator') || $c->user()->check_roles('submitter')) { 
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
 	$c->stash->{rest} = { error => 'You do not have the required privileges to add a data agreement to this trial.' };
 	return;
     }
@@ -257,17 +257,17 @@ sub add_data_agreement :Path('/breeders/trial/add/data_agreement') Args(0) {
 	    $projectprop = $projectprop_rs->first();
 	    $projectprop->value($data_agreement);
 	    $projectprop->update();
+	    $c->stash->{rest} = { message => 'Updated data agreement.' };
 	}
 	else { 
 	    $projectprop = $project->create_projectprops( { 'data_agreement' => $data_agreement,}, {autocreate=>1}); 
+	    $c->stash->{rest} = { message => 'Inserted new data agreement.'};
 	}
     };
     if ($@) { 
 	$c->stash->{rest} = { error => $@ };
 	return;
     }
-
-    $c->stash->{rest} = { success => 1 };
 }
 
 sub get_data_agreement :Path('/breeders/trial/data_agreement/get') :Args(0) { 

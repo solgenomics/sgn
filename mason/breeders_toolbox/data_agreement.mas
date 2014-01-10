@@ -53,7 +53,12 @@ jQuery(document).ready(function () {
         url: '/breeders/trial/add/data_agreement',
         data: { 'text': data_agreement_text, 'project_id': <% $trial_id %> },
         success: function(response) { 
-          alert("Successfully added a data agreement to this trial.");
+          if (response.error) { alert(response.error); }
+          else 
+          if (response.message) { alert(response.message); }
+          else { 
+            alert("Successfully added a data agreement to this trial.");
+          }
           get_data_agreement(<% $trial_id %>, 'data_agreement_div');
         },
         error: function(response) { 
@@ -69,6 +74,7 @@ jQuery(document).ready(function () {
         data: { 'project_id': project_id },
         success: function(response) { 
            jQuery('#'+div).html(response.text);
+           if (response.message) { alert(response.message); }
         },
         error: function(response) { 
            alert('An error occurred fetching the data agreement data.');
