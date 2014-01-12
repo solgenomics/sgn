@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+
 use strict;
 use warnings;
 
@@ -18,9 +19,12 @@ use lib 'lib';
 use SGN::Devel::MyDevLibs;
 
 my $verbose = 0;
+my $nocleanup;
+
 GetOptions(
     "carpalways" => \( my $carpalways = 0 ),
     "verbose" => \$verbose ,
+    "nocleanup" => \$nocleanup,
     );
 
 require Carp::Always if $carpalways;
@@ -36,7 +40,7 @@ my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf sh
 # get some defaults from sgn_local.conf
 #
 my $cfg = Config::Any->load_files({files=> [$conf_file_base], use_ext=>1 });
-#print STDERR Data::Dumper::Dumper($cfg);
+
 my $config = $cfg->[0]->{$conf_file_base};
 my $db_user_password = $config->{dbpass};
 my $dbhost = $config->{dbhost};
@@ -52,7 +56,7 @@ $dbname = 'test_db_'.$dbname;
 $dbname .= $$;
 
 print STDERR "# Writing a .pgpass file... ";
-# hostname:port:database:username:password
+# format = hostname:port:database:username:password
 open(my $PGPASS, ">", "$ENV{HOME}/.pgpass") || die "Can't open .pgpass for writing.";
 print $PGPASS "$dbhost:5432:$dbname:web_usr:$db_user_password\n";
 print $PGPASS "$dbhost:5432:*:postgres:$db_postgres_password\n";
@@ -63,7 +67,6 @@ print "Done.\n";
 print STDERR "# Loading database fixture... ";
 my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || '../cxgn_fixture.sql';
 system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
-
 system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
 
 print STDERR "Done.\n";
@@ -79,17 +82,17 @@ open(my $NEWCONF, ">", "sgn_fixture.conf") || die "Can't open sgn_fixture.conf f
 print $NEWCONF $new_conf;
 close($NEWCONF);
 
-#system("grep -v dbname \"$conf_file_base\" > sgn_fixture.conf");
-#system("echo \"dbname $dbname\" >> sgn_fixture.conf");
-
 print STDERR "Done.\n";
 
 # start the test web server
 #
 my $server_pid = fork;
+my $logfile;
+
 unless( $server_pid ) {
+
     # web server process
-    
+    #
     $ENV{SGN_TEST_MODE} = 1;
 @ARGV = (
     -p => $catalyst_server_port,
@@ -97,7 +100,7 @@ unless( $server_pid ) {
     );
 
 if (!$verbose) { 
-    my $logfile = "logfile.$$.txt";
+    $logfile = "logfile.$$.txt";
     print STDERR "# [Server logfile at $logfile]\n";
     open (STDERR, ">$logfile") || die "can't open logfile.";
 }
@@ -107,27 +110,27 @@ exit;
 }
 print STDERR  "# Starting web server (PID=$server_pid)... ";
 
-
 # wait for the test server to start
+#
 {
-
     local $SIG{CHLD} = sub {
         waitpid $server_pid, 0;
         die "\nTest server failed to start.  Aborting.\n";
     };
     print STDERR "Done.\n";
 
-    sleep 1 until !kill(0, $server_pid) || get "http://localhost:$catalyst_server_port";
-
-    
+    sleep 1 until !kill(0, $server_pid) || get "http://localhost:$catalyst_server_port";    
 }
 
 my $prove_pid = fork;
 unless( $prove_pid ) {
+
     # test harness process
+    #
     print STDERR "# Starting tests... \n";
 
     # set up env vars for prove and the tests
+    #
     $ENV{SGN_TEST_SERVER} = "http://localhost:$catalyst_server_port";
     if( $parallel ) {
         $ENV{SGN_PARALLEL_TESTING} = 1;
@@ -135,6 +138,7 @@ unless( $prove_pid ) {
     }
 
     # now run the tests against it
+    #
     my $app = App::Prove->new;
     $app->process_args(
         '-lr',
@@ -142,13 +146,9 @@ unless( $prove_pid ) {
         @prove_args
         );
     exit( $app->run ? 0 : 1 );
-
-    
 }
 
-
-
-#$SIG{CHLD} = 'IGNORE';
+#$SIG{CHLD} = 'IGNORE';  # problematic
 $SIG{INT}  = sub { kill 15, $server_pid, $prove_pid };
 $SIG{KILL} = sub { kill 9, $server_pid, $prove_pid };
 
@@ -161,13 +161,19 @@ waitpid $server_pid, 0;
 sleep(3);
 print STDERR "Done.\n";
 
-print STDERR "# Removing test database ($dbname)... ";
-system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
-print STDERR "Done.\n";
+if (!$nocleanup) { 
+    print STDERR "# Removing test database ($dbname)... ";
+    system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
+    print STDERR "Done.\n";
 
+    print STDERR "# Delete server logfile... ";
+    unlink $logfile;
+    print STDERR "Done.\n";
+}
+else { 
+    print STDERR "--nocleanup option: not removing db or files.\n";
+}
 print STDERR "# Test run complete.\n\n";
-
-
 
 sub hash2config { 
     my $hash = shift;
@@ -198,7 +204,6 @@ sub hash2config {
 	    $s .= "$k $hash->{$k}\n";
 	}
     }
-    #print STDERR "FILE SO FAR: $s\n";
     return $s;
 }
     
@@ -222,4 +227,11 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
   --carpalways   Load Carp::Always in both the server and the test process
                  to force backtraces of all warnings and errors
 
+  --nocleanup    Do not clean up database and logfile
+
+=head1 AUTHORS
+
+    Robert Buels (initial script)
+    Lukas Mueller <lam87@cornell.edu> (fixture implementation)
+    
 =cut
