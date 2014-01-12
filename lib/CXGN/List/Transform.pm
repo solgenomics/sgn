@@ -1,9 +1,33 @@
 
+=head1 NAME
+
+CXGN::List::Transform - transform lists from one type to another
+
+=head1 SYNOPSYS
+
+ my $tf = CXGN::List::Transform->new();
+ if (my $transform_name = $tf->can_transform("accessions", "accession_ids")) { 
+   my @$tf->tranform($transform_name, $list_ref);
+ }
+
+
 package CXGN::List::Transform;
 
 use Moose;
 
 use Module::Pluggable require => 1;
+
+=head2 can_transform
+
+ Usage:        my $tf_name = $tf->can_transform("accessions", "accession_ids");
+ Desc:         ask if to types can be transformed. Returns the name of the
+               transform, to be used with the transform() function
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 sub can_transform { 
     my $self = shift;
@@ -18,6 +42,17 @@ sub can_transform {
     return 0;
 }
 
+=head2 transform
+
+ Usage:        $tf->transform($transform_name, $list_ref);
+ Desc:         
+ Ret:
+ Args:         $transform_name (obtain from can_transform())
+               $list_ref of elements to transform
+ Side Effects:
+ Example:
+
+=cut
 
 sub transform { 
     my $self = shift;
