@@ -332,7 +332,8 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 
     my $increment = 1;
     while ($increment < $progeny_number + 1) {
-	my $stock_name = $prefix.$cross_name."-".$increment.$suffix;
+	$increment = sprintf "%03d", $increment;
+	my $stock_name = $prefix.$cross_name."_".$increment.$suffix;
       my $accession_stock = $schema->resultset("Stock::Stock")->create(
             { organism_id => $organism_id,
               name       => $stock_name,
