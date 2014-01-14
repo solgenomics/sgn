@@ -22,7 +22,30 @@ jQuery(document).ready(function ($) {
 
     var list = new CXGN.List();
 
+    function upload_crosses_file() {
+        var uploadFile = $("#crosses_upload_file").val();
+        $('#upload_crosses_form').attr("action", "/ajax/cross/upload_crosses_file");
+        if (uploadFile === '') {
+	    alert("Please select a file");
+	    return;
+        }
+        $("#upload_crosses_form").submit();
+    }
 
+    $( "#upload_crosses_dialog" ).dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+	    Ok: function() {
+                upload_crosses_file();
+		//$( this ).dialog( "close" );
+		//location.reload();
+	    }
+	}
+    });
 
     $('#upload_crosses_form').iframePostForm({
 	json: true,
@@ -203,13 +226,7 @@ jQuery(document).ready(function ($) {
     });
 
 
-    $("#upload_crosses_dialog").dialog( {
-	autoOpen: false,
-	buttons: { "Cancel" :  function() { $("#upload_crosses_dialog").dialog("close"); }, "Submit": function() { read_cross_upload() }  },
-	modal: true,
-	width: 500,
-	height: 390
-    });
+
     
     $("#upload_crosses_link").click( function () { 
 	$("#upload_crosses_dialog" ).dialog("open");
