@@ -6,7 +6,7 @@ CXGN::Pedigree::AddCrosses - a module to add cross experiments.
 
 =head1 USAGE
 
- my $cross_add = CXGN::Stock::AddCrosses->new({ schema => $schema, location => $location_name, program => $program_name, crosses =>  \@array_of_pedigree_objects} );
+ my $cross_add = CXGN::Pedigree::AddCrosses->new({ schema => $schema, location => $location_name, program => $program_name, crosses =>  \@array_of_pedigree_objects} );
  my $validated = $cross_add->validate_crosses(); #is true when all of the crosses are valid and the accessions they point to exist in the database.
  $cross_add->add_crosses();
 
@@ -66,25 +66,34 @@ sub add_crosses {
    		    db     => 'null',
    		    dbxref => 'is a progeny of',
    		  });
-  my $cross_name_cvterm = $schema->resultset("Cv::Cvterm")
-     ->create_with( { name   => 'cross_name',
-   		     cv     => 'local',
-   		     db     => 'null',
-   		     dbxref => 'cross_name',
-   		   });
+  my $cross_name_cvterm = $schema->resultset("Cv::Cvterm")->find(
+      { name   => 'cross_name',
+    });
+
+  if (!$cross_name_cvterm) {
+    $cross_name_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with( { name   => 'cross_name',
+		       cv     => 'local',
+		       db     => 'null',
+		       dbxref => 'cross_name',
+		     });
+  }
   my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")
      ->create_with( { name   => 'cross_type',
    		     cv     => 'local',
    		     db     => 'null',
    		     dbxref => 'cross_type',
    		   });
-  my $cross_experiment_type_cvterm = $schema->resultset('Cv::Cvterm')
-    ->create_with({
-		   name   => 'cross experiment',
-		   cv     => 'experiment type',
-		   db     => 'null',
-		   dbxref => 'cross experiment',
-		  });
+
+    my $cross_experiment_type_cvterm = $schema->resultset('Cv::Cvterm')
+      ->create_with({
+		     name   => 'cross experiment',
+		     cv     => 'experiment type',
+		     db     => 'null',
+		     dbxref => 'cross experiment',
+		    });
+
+
   my $cross_stock_type_cvterm = $schema->resultset("Cv::Cvterm")->find(
       { name   => 'cross',
     });
@@ -104,7 +113,7 @@ sub add_crosses {
     return;
   }
 
-  $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema}, location => $self->get_location );
+  $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema, location_name => $self->get_location });
   $geolocation = $location_lookup->get_geolocation();
 
   @crosses = @{$self->get_crosses()};
@@ -132,7 +141,6 @@ sub add_crosses {
     }
 
     #organism of cross experiment will be the same as the female parent
-    ###not used here?????????
     if ($female_parent) {
       $organism_id = $female_parent->organism_id();
     } else {
@@ -143,7 +151,7 @@ sub add_crosses {
     $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
             {
                 nd_geolocation_id => $geolocation->nd_geolocation_id(),
-                type_id => cross_experiment_type_cvterm->cvterm_id(),
+                type_id => $cross_experiment_type_cvterm->cvterm_id(),
             } );
 
     #store the cross name as an experiment prop
@@ -221,11 +229,11 @@ sub validate_crosses {
   my $program_lookup;
   my $geolocation;
 
-  $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema}, location => $location );
+  $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema, location_name => $location });
   $geolocation = $location_lookup->get_geolocation();
 
   if (!$geolocation) {
-    print STDERR "Location $location not found\n";
+    print STDERR "Location $location 2not found\n";
     return;
   }
 

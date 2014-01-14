@@ -195,7 +195,7 @@ jQuery(document).ready(function ($) {
             url: '/ajax/cross/add_cross',
             dataType: "json",
             type: 'POST',
-            data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&program_id='+program+'&location_id='+location,
+            data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&program='+program+'&location='+location,
             error: function(response) { alert("An error occurred. Please try again later!"+response); },
             parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
             success: function(response) { 

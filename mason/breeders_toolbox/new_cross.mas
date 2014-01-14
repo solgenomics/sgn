@@ -113,7 +113,7 @@
 <tr><td>Breeding Program</td><td><select id="program" name="program">
 <%perl>
 foreach my $program (@programs) {
-	print "<option value=".@$program[0].">".@$program[1]."</option>";
+	print "<option value=".'"'.@$program[1].'"'.">".@$program[1]."</option>";
 }
 </%perl>
 </select></td></tr>
@@ -122,7 +122,7 @@ foreach my $program (@programs) {
 <select id="location" name="location">
 <%perl>
 foreach my $location (@locations) {
-	print "<option value=".@$location[0].">".@$location[1]."</option>";
+	print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
 }
 </%perl>
 </select></td></tr>
