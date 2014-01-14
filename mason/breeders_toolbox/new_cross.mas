@@ -25,39 +25,42 @@
 </style>
 
 <div id="upload_crosses_dialog"  class="ui-widget" title="Upload a list of crosses" >
-<br>
-<form action="/cross/upload_cross"  method="post"  enctype="multipart/form-data" id="upload_form" >
-<table>
-<tr><td><input type="file" name="upload_file" value="Choose file" id="upload_file"/><br /></td></tr>
-<tr><td>
-<input type="radio" name="format_type" value="spreadsheet" checked="checked"/> Spreadsheet<br />
-<input type="radio" name="format_type" value="barcode" /> Barcode format<br />
-</td></tr>
-<tr><td>
-<div style="display: none">
-Data access restrictions
-<select disabled id="visible_to_role" name="visible_to_role">
-<option value = "" >none</option>
-<%perl>
-foreach my $role (@roles) {
-	print "<option value=".$role.">".$role."</option>";
-}
-</%perl>
-</select>
-</div>
-</td></tr>
-</table>
-</form>
-<&| /page/explanation.mas, title=>'Template information' &>
-  <p>
-    <b>File format information</b>
+
+  <&| /page/explanation.mas, title=>'Template information' &>
+    <p>
+      <b>File format information</b>
     </br>
     <a id="cross_upload_spreadsheet_format_info">Spreadsheet format</a>
     </br>
     <a id="cross_upload_barcode_format_info">Barcode format</a>
-  </p>
-</&>
+    </p>
+  </&>
+  
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
+
+    <label for="select_breeding_program" style="display: inline-block; width: 100px;">Breeding Program:</label>
+    <select id="select_breeding_program" name="select_breeding_program">
+      <%perl>
+      foreach my $program (@programs) {
+         print "<option value=".@$program[0].">".@$program[1]."</option>";
+      }
+      </%perl>
+    </select>
+    <br>
+    <label for="add_project_location" style="display: inline-block; width: 100px;">Location:</label>
+    <select id="add_project_location" name="add_project_location">
+      <%perl>foreach my $location (@locations) { print "
+      <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
+      </%perl>
+    </select>
+
+    <br><br>
+    <label for="crosses_upload_file">Upload file:</label>
+    <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
+  </form>
+
 </div>
+
 
 <div id="cross_upload_spreadsheet_info_dialog" title="Format for uploading crosses in a spreadsheet">
 <&| /breeders_toolbox/spreadsheet_upload_format_info.mas &>

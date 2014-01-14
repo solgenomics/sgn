@@ -24,6 +24,31 @@ jQuery(document).ready(function ($) {
 
 
 
+    $('#upload_crosses_form').iframePostForm({
+	json: true,
+	post: function () {
+	    var uploadFile = $("#crosses_upload_file").val();
+	    if (uploadFile === '') {
+		alert("No file selected");
+	    }
+	},
+	complete: function (response) {
+	    if (response.error) {
+		alert(response.error);
+		return;
+	    }
+	    if (response.success) {
+		alert("File uploaded successfully");
+		$( this ).dialog( "close" );
+		location.reload();
+	    }
+	}
+    });
+
+
+
+
+
     $("#cross_upload_spreadsheet_format_info").click( function () { 
 	$("#cross_upload_spreadsheet_info_dialog" ).dialog("open");
     });
