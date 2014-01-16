@@ -285,7 +285,7 @@ sub add_cross_POST :Args(0) {
     if ($progeny_number) {
       while ($increment < $progeny_number + 1) {
 	  $increment = sprintf "%03d", $increment;
-	my $stock_name = $prefix.$cross_name."_".$increment.$suffix;
+	my $stock_name = $prefix.$cross_name."P".$increment.$suffix;
 	my $accession_stock = $schema->resultset("Stock::Stock")->create(
 									 { organism_id => $organism_id,
 									   name       => $stock_name,
