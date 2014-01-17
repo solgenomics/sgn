@@ -5,7 +5,6 @@ use Test::More 'tests'=>8;
 
 use SGN::Test::WWW::WebDriver;
 
-
 my $t = SGN::Test::WWW::WebDriver->new();
 
 $t->while_logged_in_as("submitter", sub { 
@@ -50,8 +49,6 @@ $t->while_logged_in_as("submitter", sub {
     ok($t->driver->get_alert_text() =~ m/new location was saved/i, 'new location was saved test');
     
     $t->driver->accept_alert();
-
-    
     
 		       }
     );
