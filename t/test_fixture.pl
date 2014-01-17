@@ -87,7 +87,7 @@ print STDERR "Done.\n";
 # start the test web server
 #
 my $server_pid = fork;
-my $logfile;
+my $logfile  = "logfile.$$.txt";
 
 unless( $server_pid ) {
 
@@ -100,7 +100,6 @@ unless( $server_pid ) {
     );
 
 if (!$verbose) { 
-    $logfile = "logfile.$$.txt";
     print STDERR "# [Server logfile at $logfile]\n";
     open (STDERR, ">$logfile") || die "can't open logfile.";
 }
