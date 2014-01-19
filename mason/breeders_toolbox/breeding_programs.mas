@@ -15,7 +15,7 @@ $user => undef
 foreach my $bp (@$breeding_programs) { 
 
   print "<b>$bp->[1]</b> ($bp->[2])";
-  if ($delete_flag) { print " <a title=\"delete this breeding program\" id=\"delete_breeding_program_link\" href=\"javascript:delete_breeding_program($bp->[0])\" ><font color=\"red\">X</font></a>"; }
+  if ($delete_flag) { print " <a title=\"delete this breeding program\" id=\"delete_breeding_program_link\_$bp->[0]\" href=\"javascript:delete_breeding_program($bp->[0])\" ><font color=\"red\">X</font></a>"; }
   print "<br />\n";
 }
 
