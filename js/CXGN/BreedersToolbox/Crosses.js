@@ -86,7 +86,16 @@ jQuery(document).ready(function ($) {
 
     $("#create_cross").dialog( {
 	autoOpen: false,
-	buttons: { "Cancel" :  function() { $("#create_cross").dialog("close"); }, "Submit": function() { add_cross(); }  },
+	buttons: { 
+            "Cancel" : { id: "create_cross_cancel_button",
+                         click: function() { 
+			     $("#create_cross").dialog("close"); }, 
+			 text: "Cancel"  },
+
+	    "Submit":  { id: "create_cross_submit_button",
+                         click:  function() { add_cross(); }, 
+                         text: "Submit" }
+	},
 	modal: true,
 	width: 750,
 	autoResize:true,
@@ -218,11 +227,15 @@ jQuery(document).ready(function ($) {
 	autoOpen: false,
 	modal: true,
 	buttons: {
-            Ok: function() {
-		$( this ).dialog( "close" );
-		location.reload();
-            }
-	}
+            Ok: { id: "dismiss_cross_saved_dialog",
+                  click: function() {
+		      $( this ).dialog( "close" );
+		      location.reload();
+                  },
+                  text: "OK"
+                }
+        }
+	
     });
 
 

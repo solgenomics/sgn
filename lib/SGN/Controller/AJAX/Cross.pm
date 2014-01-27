@@ -51,6 +51,7 @@ sub upload_cross_file : Path('/ajax/cross/upload_crosses_file') : ActionClass('R
 sub upload_cross_file_POST : Args(0) {
   my ($self, $c) = @_;
   my $uploader = CXGN::UploadFile->new();
+
   my $parser = CXGN::Phenotypes::ParseUpload->new();
 }
 
@@ -82,6 +83,8 @@ sub add_cross_POST :Args(0) {
       $paternal_parent_not_required = 1;
     }
 
+    print STDERR "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type\n";
+
     if (!$c->user()) { 
 	print STDERR "User not logged in... not adding a cross.\n";
 	$c->stash->{rest} = {error => "You need to be logged in to add a cross." };
@@ -89,10 +92,12 @@ sub add_cross_POST :Args(0) {
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+        print STDERR "User's roles: ".Dumper($c->user()->roles)."\n";
 	print STDERR "User does not have sufficient privileges.\n";
 	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
 	return;
     }
+
 
     #check that progeny number is an integer less than maximum allowed
     my $maximum_progeny_number = 999; #higher numbers break cross name conventionn
@@ -138,6 +143,10 @@ sub add_cross_POST :Args(0) {
       return;
     }
 
+    #my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
+    #       {
+    #            nd_geolocation_id => $location_id,
+    #       } ) ;
 
     my $cross_to_add = Bio::GeneticRelationships::Pedigree->new(name => $cross_name, cross_type => $cross_type);
     my $female_individual = Bio::GeneticRelationships::Individual->new(name => $maternal);
@@ -156,7 +165,16 @@ sub add_cross_POST :Args(0) {
     $cross_add->add_crosses();
 
 
+     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+       { name   => 'accession',
+       cv     => 'stock type',
+       db     => 'null',
+       dbxref => 'accession',
+     });
 
+     #my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
+     #  { name   => 'population',
+     #});
 
    #  my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
    #         {
@@ -173,6 +191,7 @@ sub add_cross_POST :Args(0) {
    # 			     } ) ;
    #  }
 
+#    my $organism_id = $female_parent_stock->organism_id();
 
    #   my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
    #     { name   => 'accession',
@@ -189,6 +208,12 @@ sub add_cross_POST :Args(0) {
    #    { name   => 'cross',
    #  });
 
+  #    my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
+  #  { name   => 'male_parent',
+   #   cv     => 'stock relationship',
+   #   db     => 'null',
+   #   dbxref => 'male_parent',
+   # });
 
    #  my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
    #          { name       => $maternal,
@@ -248,95 +273,66 @@ sub add_cross_POST :Args(0) {
    # 	dbxref => 'number_of_seeds',
    #  });
 
-   # my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+    # if ($number_of_flowers) {
+    #   #set flower number in experimentprop
+    #   $experiment->find_or_create_related('nd_experimentprops' , {
+    # 								  nd_experiment_id => $experiment->nd_experiment_id(),
+    # 								  type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
+    # 								  value  =>  $number_of_flowers,
+    # 								 });
+    # }
+  # my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
    #    { name   => 'cross_type',
    # 	cv     => 'local',
    # 	db     => 'null',
    # 	dbxref => 'cross_type',
    #  });
+    # if ($number_of_seeds) {
+    #   $experiment->find_or_create_related('nd_experimentprops' , {
+    # 								  nd_experiment_id => $experiment->nd_experiment_id(),
+    # 								  type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
+    # 								  value  =>  $number_of_seeds,
+    # 								 });
+    # }
 
 
-   #  my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
-   #          {
-   #              nd_geolocation_id => $geolocation->nd_geolocation_id(),
-   #              type_id => $population_cvterm->cvterm_id(),
-   #          } );
+    # my $increment = 1;
+    # if ($progeny_number) {
+    #   while ($increment < $progeny_number + 1) {
+    # 	  $increment = sprintf "%03d", $increment;
+    # 	my $stock_name = $prefix.$cross_name."_".$increment.$suffix;
+    # 	my $accession_stock = $schema->resultset("Stock::Stock")->create(
+    # 									 { organism_id => $organism_id,
+    # 									   name       => $stock_name,
+    # 									   uniquename => $stock_name,
+    # 									   type_id     => $accession_cvterm->cvterm_id,
+    # 									 } );
+    # 	$accession_stock->find_or_create_related('stock_relationship_objects', {
+    # 										type_id => $female_parent->cvterm_id(),
+    # 										object_id => $accession_stock->stock_id(),
+    # 										subject_id => $female_parent_stock->stock_id(),
+    # 									       } );
+    # 	$accession_stock->find_or_create_related('stock_relationship_objects', {
+    # 										type_id => $male_parent->cvterm_id(),
+    # 										object_id => $accession_stock->stock_id(),
+    # 										subject_id => $male_parent_stock->stock_id(),
+    # 									       } );
+    # 	$accession_stock->find_or_create_related('stock_relationship_objects', {
+    # 										type_id => $population_members->cvterm_id(),
+    # 										object_id => $accession_stock->stock_id(),
+    # 										subject_id => $population_stock->stock_id(),
+    # 									       } );
+    # 	if ($visible_to_role) {
+    # 	  my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
+    # 											    { type_id =>$visible_to_role_cvterm->cvterm_id(),
+    # 											      value => $visible_to_role,
+    # 											      stock_id => $accession_stock->stock_id()
+    # 											    });
+    # 	}
+    # 	$increment++;
 
-   #  if ($project) {
-   # 	#link to the project
-   # 	$experiment->find_or_create_related('nd_experiment_projects', {
-   # 								       project_id => $project->project_id()
-   # 								      } );
-   #  }
-
-   #  #link the experiment to the stock
-   #  $experiment->find_or_create_related('nd_experiment_stocks' , {
-   # 	    stock_id => $population_stock->stock_id(),
-   # 	    type_id  =>  $population_cvterm->cvterm_id(),
-   #                                         });
-
-   #  if ($cross_type) {
-   #    $experiment->find_or_create_related('nd_experimentprops' , {
-   # 								  nd_experiment_id => $experiment->nd_experiment_id(),
-   # 								  type_id  =>  $cross_type_cvterm->cvterm_id(),
-   # 								  value  =>  $cross_type,
-   # 								 });
-   #  }
-
-   #  if ($number_of_flowers) {
-   #    #set flower number in experimentprop
-   #    $experiment->find_or_create_related('nd_experimentprops' , {
-   # 								  nd_experiment_id => $experiment->nd_experiment_id(),
-   # 								  type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
-   # 								  value  =>  $number_of_flowers,
-   # 								 });
-   #  }
-
-   #  if ($number_of_seeds) {
-   #    $experiment->find_or_create_related('nd_experimentprops' , {
-   # 								  nd_experiment_id => $experiment->nd_experiment_id(),
-   # 								  type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
-   # 								  value  =>  $number_of_seeds,
-   # 								 });
-   #  }
-
-   #  my $increment = 1;
-   #  if ($progeny_number) {
-   #    while ($increment < $progeny_number + 1) {
-   # 	  $increment = sprintf "%03d", $increment;
-   # 	my $stock_name = $prefix.$cross_name."_".$increment.$suffix;
-   # 	my $accession_stock = $schema->resultset("Stock::Stock")->create(
-   # 									 { organism_id => $organism_id,
-   # 									   name       => $stock_name,
-   # 									   uniquename => $stock_name,
-   # 									   type_id     => $accession_cvterm->cvterm_id,
-   # 									 } );
-   # 	$accession_stock->find_or_create_related('stock_relationship_objects', {
-   # 										type_id => $female_parent->cvterm_id(),
-   # 										object_id => $accession_stock->stock_id(),
-   # 										subject_id => $female_parent_stock->stock_id(),
-   # 									       } );
-   # 	$accession_stock->find_or_create_related('stock_relationship_objects', {
-   # 										type_id => $male_parent->cvterm_id(),
-   # 										object_id => $accession_stock->stock_id(),
-   # 										subject_id => $male_parent_stock->stock_id(),
-   # 									       } );
-   # 	$accession_stock->find_or_create_related('stock_relationship_objects', {
-   # 										type_id => $population_members->cvterm_id(),
-   # 										object_id => $accession_stock->stock_id(),
-   # 										subject_id => $population_stock->stock_id(),
-   # 									       } );
-   # 	if ($visible_to_role) {
-   # 	  my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
-   # 											    { type_id =>$visible_to_role_cvterm->cvterm_id(),
-   # 											      value => $visible_to_role,
-   # 											      stock_id => $accession_stock->stock_id()
-   # 											    });
-   # 	}
-   # 	$increment++;
-
-   #    }
-   #  }
+    #   }
+    # }
 
 
     if ($@) {
