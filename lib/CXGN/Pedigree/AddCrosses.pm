@@ -48,6 +48,9 @@ sub add_crosses {
   my @crosses;
   my $location_lookup;
   my $geolocation;
+  my $program_name = $self->get_program();
+  my $program;
+  my $program_lookup;
   my $female_parent_cvterm = $schema->resultset("Cv::Cvterm")
     ->create_with( { name   => 'a female parent of',
 		     cv     => 'stock relationship',
@@ -115,6 +118,9 @@ sub add_crosses {
 
   $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema, location_name => $self->get_location });
   $geolocation = $location_lookup->get_geolocation();
+
+  $program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $schema});
+  $program = $program_lookup->get_breeding_program_by_name($program_name);
 
   @crosses = @{$self->get_crosses()};
 
@@ -221,6 +227,10 @@ sub add_crosses {
     $experiment->find_or_create_related('nd_experiment_projects', {
 								   project_id => $project->project_id()
 								  } );
+
+    #link the cross program to the breeding program
+    $program_lookup->associate_breeding_program_with_trial($program->project_id(), $project->project_id());
+
 
   }
 
