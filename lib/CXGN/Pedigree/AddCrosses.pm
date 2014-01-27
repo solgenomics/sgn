@@ -49,22 +49,22 @@ sub add_crosses {
   my $location_lookup;
   my $geolocation;
   my $female_parent_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with( { name   => 'is a female parent of',
+    ->create_with( { name   => 'a female parent of',
 		     cv     => 'stock relationship',
 		     db     => 'null',
-		     dbxref => 'is a female parent of',
+		     dbxref => 'a female parent of',
 		   });
   my $male_parent_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with({ name   => 'is a male parent of',
+    ->create_with({ name   => 'a male parent of',
 		    cv     => 'stock relationship',
 		    db     => 'null',
-		    dbxref => 'is a male parent of',
+		    dbxref => 'a male parent of',
 		  });
    my $progeny_cvterm = $schema->resultset("Cv::Cvterm")
-     ->create_with({ name   => 'is a progeny of',
+     ->create_with({ name   => 'a progeny of',
    		    cv     => 'stock relationship',
    		    db     => 'null',
-   		    dbxref => 'is a progeny of',
+   		    dbxref => 'a progeny of',
    		  });
   my $cross_name_cvterm = $schema->resultset("Cv::Cvterm")->find(
       { name   => 'cross_name',
@@ -127,6 +127,7 @@ sub add_crosses {
     my $female_parent;
     my $male_parent;
     my $population_stock;
+    my $project;
     my $cross_type = $pedigree->get_cross_type();
     my $cross_name = $pedigree->get_name();
 
@@ -146,6 +147,13 @@ sub add_crosses {
     } else {
       $organism_id = $male_parent->organism_id();
     }
+
+    #create cross project
+    $project = $schema->resultset('Project::Project')
+    ->create({
+	      name => $cross_name,
+	      description => $cross_name,
+	     });
 
     #create cross experiment
     $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
@@ -209,6 +217,11 @@ sub add_crosses {
 								  stock_id => $cross_stock->stock_id(),
 								  type_id  =>  $progeny_cvterm->cvterm_id(),
 								 });
+    #link the experiment to the project
+    $experiment->find_or_create_related('nd_experiment_projects', {
+								   project_id => $project->project_id()
+								  } );
+
   }
 
   return 1;
