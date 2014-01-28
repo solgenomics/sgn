@@ -107,8 +107,7 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
 
 <&| /page/info_section.mas, title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $accessions_empty &>
 % foreach my $accession (@accession_names) { 
-%  #print "<a href=\"/stock/$accession_id/view\">$accession</a><br />\n";
-%  #print "$accession <br />\n";
+%  print "$accession<br />\n";
 %}
 </&>
 

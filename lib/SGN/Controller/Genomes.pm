@@ -103,7 +103,7 @@ Public path: /organism/Solanum_lycopersicum/inbred_genomes
 
 =cut
 
-sub view_genome_data : Path('/organism/Solanum_lycopersicum/inbred_genomes') {
+sub view_inbred_genome : Path('/organism/Solanum_lycopersicum/inbred_genomes') {
     my ( $self, $c ) = @_;
 
     $c->stash->{template} = '/genomes/Solanum_lycopersicum/inbreds.mas';
