@@ -21,7 +21,7 @@ $validation_download_url => ''
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Model accuracy tests" 
+  title       => "Model accuracy" 
 &> 
 
 <& /page/columnar_table.mas,

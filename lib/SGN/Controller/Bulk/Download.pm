@@ -66,7 +66,6 @@ sub download : Path('/tools/bulk/download') Args(0) {
 	}
     }
     elsif ( $idType eq "unigene_convert" ) {
-	$bulk = CXGN::Bulk::UnigeneConverter->new($params);
     }
     elsif ( $idType eq "unigene" ) {
 	if ( $params->{unigene_mode} eq "unigene_info" ) {
@@ -78,7 +77,19 @@ sub download : Path('/tools/bulk/download') Args(0) {
     } elsif($idType eq "converter") { 
 	my @files = split /\s+/, $c->config->{solyc_conversion_files};
 	$params->{solyc_conversion_files} = \@files;
-	$bulk = CXGN::Bulk::Converter->new($params);
+	
+	if ($params->{converter_type} eq "unigene_solyc_converter") { 
+	    print STDERR "CREATING UnigeneConverter object\n";
+	    $bulk = CXGN::Bulk::Converter->new($params);
+	}
+	elsif ($params->{converter_type} eq "unigene_version_converter") { 
+	    print STDERR "CREATING Converter object\n";
+	    $bulk = CXGN::Bulk::UnigeneConverter->new($params);
+	    
+	}
+	else { 
+	    die "Don't know about converter type $params->{converter_type}";
+	}
     }
 	else {
 	die "invalid idtype '$idType'";

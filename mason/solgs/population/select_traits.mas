@@ -68,7 +68,7 @@ if ($no_traits_selected eq 'none')
        <td>
          <input class   = "button"
                 type    = "submit"
-                value   = "Run GS"
+                value   = "Build model"
                 name    = "runGS"
                 onclick = "solGS.waitPage()"
                 > 

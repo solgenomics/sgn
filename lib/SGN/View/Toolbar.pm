@@ -275,7 +275,12 @@ sub default_toolbar_data {
                     link => '/organism/Nicotiana_benthamiana/genome',
                     desc => 'Draft sequence for Nicotiana benthamiana, sequenced by labs at the Boyce Thompson Institute',
                 },
-
+		{ name => 'Inbred genomes' },
+                {
+                    name => '<i>Solanum lycopersicum</i> inbreds',
+                    link => '/organism/Solanum_lycopersicum/inbred_genomes',
+                    desc => 'Resequencing projects of tomato inbred lines'
+                },
 
                 {   name => 'Projects', type => 'title'  },
 
@@ -298,12 +303,7 @@ sub default_toolbar_data {
                     desc =>
 'The gene-rich euchromatic portion of the tomato genome is being sequenced by an international consortium. This page gives more information about the progress of the sequencing effort.'
                 },
-                {
-                    name => '<i>Solanum pimpinellifolium</i> Project (CSHL)',
-                    link => '/organism/Solanum_pimpinellifolium/genome',
-                    desc => '',
-                },
-                {
+                 {
                     name => 'U.S. tomato sequencing project',
                     link => '/about/us_tomato_sequencing.pl',
                     desc => 'An overview of the US Tomato Sequencing Project'

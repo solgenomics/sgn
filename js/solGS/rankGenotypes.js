@@ -166,7 +166,7 @@ function  selectionIndexForm(predictedTraits) {
     }
    
     var rankButton =  '<tr><td>'
-        +  '<input style="position:relative;" " class="button" type="submit" value="Rank" name= "rank" id="rank_genotypes"'     
+        +  '<input style="position:relative;" " class="button" type="submit" value="Calculate" name= "rank" id="rank_genotypes"'     
         +  '</td></tr>';
 
     var table = '<table id="selection_index_table" style="align:left;width:90%"><tr>' 
@@ -211,7 +211,7 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
                         var download_link = res.link;
                  
                         table = '<table  style="text-align:left; border:0px; padding: 1px; width:75%;">';
-                        table += '<tr><th>Genotypes</th><th>Weighted Mean</th></tr>';
+                        table += '<tr><th>Genotypes</th><th>Selection indices</th></tr>';
                        
                         var sorted = []; 
                         for (var geno in genos) {
@@ -228,7 +228,7 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
                         }
                         
                         table += '</table>';                    
-                        table += '<br>' + download_link;
+                        table += '<br>[ ' + download_link + ' ]';
                         table += '<br>' + legend + '<br/><br/>';
                     }
                     else {
@@ -251,8 +251,7 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
 }
 
 
-function validateRelativeWts(nm, val)
- {    
+function validateRelativeWts(nm, val) {    
      // alert(val + ' : ' + nm);
      if (isNaN(val) && nm != 'all') {
          alert('the relative weight of trait '+nm+ 
@@ -306,13 +305,13 @@ function selectionIndex ( trainingPopId, predictionPopId )
     var all = rel_form.getElementsByTagName('input');
     var params, validate;
     var allValues = [];
-    var legend = 'Relative Weights:<br/>';
+    var legend = 'Relative weights:<br/>';
 
      for (var i = 0; i < all.length; i++) {         
          var nm = all[i].name;
          var val = all[i].value;
              
-         if (val != 'Rank')  {
+         if (val != 'Calculate')  {
              if (nm != 'prediction_pop_name') {
                  
                  allValues.push(val);

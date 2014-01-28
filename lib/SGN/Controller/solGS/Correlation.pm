@@ -37,7 +37,7 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     {
         my $phenotype_dir = $c->stash->{solgs_cache_dir};
         $phenotype_file   = 'phenotype_data_' . $pop_id;
-        $phenotype_file   = $c->controller('solGS::solGS')->grep_file($phenotype_dir, $phenotype_file);
+        $phenotype_file   = $c->controller('solGS::solGS')->grep_file($phenotype_dir, '\'^' . $phenotype_file . '\'');
     }
 
     if ($phenotype_file) 

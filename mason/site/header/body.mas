@@ -19,12 +19,12 @@
 <div id="list_item_dialog" overflow="auto" >
 </div>
 
-<div id="working" style="text-align : center; cursor : wait;">
+<div id="working" style="text-align : center; cursor : wait; visibility:hidden">
   <img src="/img/wheel.gif" />
 </div>
 
 
-<div id="login_window">
+<div id="login_window" style="visibility: hidden" >
   <table>
     <tr><td>Username</td><td><input type="text" size="20" id="username_field" name="username_field" /></td></tr>
     <tr><td>Password</td><td><input type="password" size="20" id="password_field" name="password_field" /></td></tr>

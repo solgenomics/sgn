@@ -332,7 +332,8 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 
     my $increment = 1;
     while ($increment < $progeny_number + 1) {
-	my $stock_name = $prefix.$cross_name."-".$increment.$suffix;
+	$increment = sprintf "%03d", $increment;
+	my $stock_name = $prefix.$cross_name."_".$increment.$suffix;
       my $accession_stock = $schema->resultset("Stock::Stock")->create(
             { organism_id => $organism_id,
               name       => $stock_name,
@@ -414,8 +415,6 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 
     my $data = $self->get_phenotyping_data($c);
 
-    
-   
     $c->stash->{phenotype_files} = $data->{file_info};
     $c->stash->{deleted_phenotype_files} = $data->{deleted_file_info};
 
@@ -431,80 +430,6 @@ sub breeder_search : Path('/breeders/search/') :Args(0) {
 
 }
 
-sub breeder_download : Path('/breeders/download/') Args(0) { 
-    my $self = shift;
-    my $c = shift;
-
-    if (!$c->user()) { 	
-	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
-	return;
-    }
-    
-    $c->stash->{template} = '/breeders_toolbox/download.mas';
-}
-
-sub download_action : Path('/breeders/download_action') Args(0) { 
-    my $self = shift;
-    my $c = shift;
-    
-    my $accession_list_id = $c->req->param("accession_list_list_select");
-    my $trial_list_id     = $c->req->param("trial_list_list_select");
-    my $trait_list_id     = $c->req->param("trait_list_list_select");
-
-    print STDERR "IDS: $accession_list_id, $trial_list_id, $trait_list_id\n";
-
-    my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-    my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
-    my $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
-
-    my @accession_list = map { $_->[1] } @$accession_data;
-    my @trial_list = map { $_->[1] } @$trial_data;
-    my @trait_list = map { $_->[1] } @$trait_data;
-
-    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
-
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $t = CXGN::List::Transform->new();
-    
-    print STDERR Data::Dumper::Dumper(\@accession_list);
-    print STDERR Data::Dumper::Dumper(\@trial_list);
-    print STDERR Data::Dumper::Dumper(\@trait_list);
-
-    my $acc_t = $t->can_transform("accessions", "accession_ids");
-    my $accession_id_data = $t->transform($schema, $acc_t, \@accession_list);
-
-    my $trial_t = $t->can_transform("trials", "trial_ids");
-    my $trial_id_data = $t->transform($schema, $trial_t, \@trial_list);
-    
-    my $trait_t = $t->can_transform("traits", "trait_ids");
-    my $trait_id_data = $t->transform($schema, $trait_t, \@trait_list);
-
-    my $accession_sql = join ",", map { "\'$_\'" } @{$accession_id_data->{transform}};
-    my $trial_sql = join ",", map { "\'$_\'" } @{$trial_id_data->{transform}};
-    my $trait_sql = join ",", map { "\'$_\'" } @{$trait_id_data->{transform}};
-
-    print STDERR "SQL-READY: $accession_sql | $trial_sql | $trait_sql \n";
-
-    #my $result = $bs->get_intersect([ 'accessions', 'trials', 'traits', 'plots' ], 
-    #{ plots => { accessions => "$accession_sql", trials=> "$trial_sql", traits => "$trait_sql" }  },
-#		       );
-    
-    #print STDERR Data::Dumper::Dumper($result);
-
- #   my @plot_list = map { $_->[1] } @{$result->{results}};
-    my $data = $bs->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
-
-    my $output = "";
-    foreach my $d (@$data) { 
-	$output .= join "\t", @$d;
-	$output .= "\n";
-    }
-    
-    $c->res->content_type("text/plain");
-   $c->res->body($output);
-
-}
 
 sub get_locations : Private { 
     my $self = shift;
@@ -636,12 +561,15 @@ sub get_phenotyping_data : Private {
 
      my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( { create_person_id => $c->user()->get_object->get_sp_person_id(), obsolete => 0 }, { order_by => 'create_date' } );
 
+    print STDERR "RETRIEVED ".$metadata_rs->count()." METADATA ENTRIES...\n";
+
     while (my $md_row = ($metadata_rs->next())) { 
 	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id() } );
 	
 	if (!$md_row->obsolete) { 
 	    while (my $file_row = $file_rs->next()) { 
-		push @$file_info, { basename => $file_row->basename,
+		push @$file_info, { file_id => $file_row->file_id(),		                    
+				    basename => $file_row->basename,
 				    dirname  => $file_row->dirname,
 				    file_type => $file_row->filetype,
 				    md5checksum => $file_row->md5checksum,
@@ -651,7 +579,8 @@ sub get_phenotyping_data : Private {
 	}
 	else { 
 	    while (my $file_row = $file_rs->next()) { 
-		push @$deleted_file_info, { basename => $file_row->basename,
+		push @$deleted_file_info, { file_id => $file_row->file_id(),
+					    basename => $file_row->basename,
 					    dirname => $file_row->dirname,
 					    file_type => $file_row->filetype,
 					    md5checksum => $file_row->md5checksum,

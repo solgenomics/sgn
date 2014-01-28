@@ -29,7 +29,7 @@ $prediction_pop_analyzed_traits => ''
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => 0, 
-    title       => "Click on a selection population to predict GEBVs using the model",
+    title       => "Predict GEBVs of a selection population using the model",
 &>
 
 <div id="selection_populations">

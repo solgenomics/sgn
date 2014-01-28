@@ -28,6 +28,9 @@ use CXGN::Chado::Stock;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use Scalar::Util qw(looks_like_number);
 use Data::Dumper;
+use CXGN::UploadFile;
+use Spreadsheet::WriteExcel;
+use CXGN::Pedigree::AddCrosses;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -39,16 +42,17 @@ __PACKAGE__->config(
 
 
 
-=head2 add_cross
 
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
 
-=cut
+sub upload_cross_file : Path('/ajax/cross/upload_crosses_file') : ActionClass('REST') { }
+
+sub upload_cross_file_POST : Args(0) {
+  my ($self, $c) = @_;
+  my $uploader = CXGN::UploadFile->new();
+
+  my $parser = CXGN::Phenotypes::ParseUpload->new();
+}
+
 
 sub add_cross : Local : ActionClass('REST') { }
 
@@ -280,7 +284,8 @@ sub add_cross_POST :Args(0) {
     my $increment = 1;
     if ($progeny_number) {
       while ($increment < $progeny_number + 1) {
-	my $stock_name = $prefix.$cross_name."-".$increment.$suffix;
+	  $increment = sprintf "%03d", $increment;
+	my $stock_name = $prefix.$cross_name."P".$increment.$suffix;
 	my $accession_stock = $schema->resultset("Stock::Stock")->create(
 									 { organism_id => $organism_id,
 									   name       => $stock_name,

@@ -8,10 +8,8 @@
 *of static/editable forms
 *
 *JSFormPage.js object is instantiated from CXGN::Page::Form::AjaxFormPage.pm
-*/
-
-/**JSAN.use('jquery');
-JSAN.use('Prototype');
+* Depends on jquery. The page that uses this code needs to import
+* those libraries.
 */
 
 if (!CXGN) CXGN = function() {};
@@ -62,7 +60,6 @@ CXGN.Page.Form.JSFormPage.prototype = {
        //render the form here
 	if (!action) action  = "view";
 	if (!this.getObjectId()) action = "new";
-	//	MochiKit.Logging.log("FormId = " + this.formId);
 	this.printForm( action);
     },
 
@@ -80,31 +77,25 @@ CXGN.Page.Form.JSFormPage.prototype = {
     store: function() {
 	//var action = 'store';
 	var form = this;
-	var editableForm = $(this.getEditableFormId());
-	MochiKit.Logging.log("Store function found editableFormId", this.getEditableFormId());
-	new Ajax.Request(this.getAjaxScript(), {
-		method: "get",
-		    parameters: $(editableForm).serialize(true) ,
-		    onSuccess: function(response) {
-		    var json = response.responseText;
-		    //var x = jQuery.parseJSON( json ); 
-		    var x = eval("("+json+")");
-		    //alert("ajax request succeeded: " + x);
+	var editableForm = jQuery('#'+this.getEditableFormId());
 
-		    if (x.error) { 
-			alert(x.error); 
-		    } else if (x.refering_page) {  window.location = x.refering_page ; } 
-		    else if (x.html) { $(form.getFormId() ).innerHTML = x.html + form.getFormButtons(); }
-		    else { form.printForm("view"); }
-		},
-		    onFailure: function(response) {
-		    //alert("Script " + form.getAjaxScript() + " failed!!!" ) ;
-		    alert("Action '" + action +"'  failed for storing this " + this.getObjectName() + "!!" ) ;
-		    var json = response.responseText;
-		    //var x = jQuery.parseJSON( json );
-		    var x = eval("("+json+")");
-		},
-		    });
+	jQuery.ajax( {
+	    method: "get",
+            url: this.getAjaxScript(), 
+	    data: editableForm.serialize(true) ,
+	    success: function(response) {
+                var x = eval("("+response+")");
+		if (x.error) { 
+		    alert(x.error); 
+		} else if (x.refering_page) { window.location = x.refering_page ; } 
+		else if (x.html) { document.getElementById(form.getFormId() ).innerHTML = x.html + form.getFormButtons(); }
+		else { form.printForm("view"); }
+	    },
+	    error: function(response) {
+		alert("Action '" + action +"'  failed for storing this " + this.getObjectName() + "!!" ) ;
+		
+	    }
+	});
     },
     /**
        printForm
@@ -122,41 +113,43 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	var form = this; //'this' cannot be used inside the inner onSuccess function
 	if (!action) action = 'view';
         if ( this.getObjectId() == 0 ) action = 'new';
-	MochiKit.Logging.log("printForm: action = " , action);
 	if (!action || !this.getObjectName() || !this.getAjaxScript() )  {
 	    alert("Cannot print from without a objectName, action, and ajaxScript name ! ");
 	} else if  (action == 'delete') { 
 	    this.printDeleteDialog();
 	}else {
+	    
+                    //var x = jQuery.parseJSON( json ); 
 
-	    new Ajax.Request(this.getAjaxScript(), {
-		    method: "get",
-		    parameters: {  object_id: this.getObjectId() , action: action },
-		    onSuccess: function(response) {
-			var json = response.responseText;
-			var x = eval ("("+json+")");
-			if (x.login) { 	
-			    window.location =  '/solpeople/login.pl' ;
-			    x.error = undef;
-			}
-			if (x.error) { alert("error: " +x.error); }
-			else if (x.reload) { MochiKit.Logging.log("deleted locus...", x.reload); window.location.reload(); } 
-			else {
-			    form.setUserType(x.user_type);
-			    form.setIsOwner(x.is_owner);
-			    form.setEditableFormId(x.editable_form_id);
-			    //alert('Editable form: '+x.editable_form_id);
-			    form.printEditLinks(action);
-			    form.printFormButtons();
-			    MochiKit.Logging.log("this editable_form_id is ... " , form.getEditableFormId() );
+	    jQuery.ajax({
+		url: this.getAjaxScript(),
+		method: "get",
+		data: {  'object_id': this.getObjectId(), 'action': action },
+		success: function(response) {
+                    var x = eval("("+response+")");
+		    if (x.login) { 	
+			window.location =  '/solpeople/login.pl' ;
+			x.error = undef;
+		    }
+		    if (x.error) { alert("error: " + x.error); }
+		    else if (response.reload) {  
+			window.location.reload(); } 
+		    else {
 
-			    $(form.getFormId() ).innerHTML = x.html + form.getFormButtons();
-			}
-		    },
-			onFailure: function(response) {
-			alert("Action '" + action +"'  failed for storing this " + this.getObjectName() + "!!" ) ;
-		    },
-			});
+
+			form.setUserType(x.user_type);
+			form.setIsOwner(x.is_owner);
+			form.setEditableFormId(x.editable_form_id);
+			form.printEditLinks(action);
+			form.printFormButtons();
+			
+			document.getElementById(form.getFormId() ).innerHTML = x.html + form.getFormButtons();
+		    }
+		},
+		error: function(response) {
+		    alert("Action '" + action +"'  failed for storing this " + this.getObjectName() + "!!" ) ;
+		},
+	    });
 	}
     },
 
@@ -170,7 +163,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	'<b>Delete this ' + this.getObjectName() + ' ' +this.getObjectId()  + '?</b> '; 
 	deleteDialog += '<input type =\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.printForm(\'confirm_delete\')\" value=\"Confirm delete\"/><br><br>';
 	this.printEditLinks('delete');
-	$(this.getFormId() ).innerHTML = deleteDialog;
+	document.getElementById(this.getFormId() ).innerHTML = deleteDialog;
 
     },
 
@@ -227,7 +220,6 @@ CXGN.Page.Form.JSFormPage.prototype = {
      */
     printEditLinks: function(action, newButton, editButton, deleteButton) {
 	this.setAction(action);
-	MochiKit.Logging.log("printEditLinks action = " , action );
 
 	buttonHTML = '';
 
@@ -248,7 +240,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 
 	}
 
-        $(this.formId+ "_buttons").innerHTML = buttonHTML;
+        document.getElementById(this.formId+ "_buttons").innerHTML = buttonHTML;
 
 	this.setEditLinks(buttonHTML);
 
@@ -322,7 +314,6 @@ CXGN.Page.Form.JSFormPage.prototype = {
        called when clicking the 'new' button.
      */
     reloadNewPage: function() {
-	MochiKit.Logging.log("reloadNewPage found page: " , this.getPageName());
 	if (this.getPageName()) { 
 	    window.location =  this.getPageName() + "?action=new" ;
 	}

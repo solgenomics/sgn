@@ -30,7 +30,7 @@ use SGN::View::Trial qw/design_layout_view design_info_view/;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
-
+use CXGN::BreedersToolbox::Delete;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -637,5 +637,33 @@ sub _formatted_string_from_error_hash_by_type {
   return $error_string;
 }
 
+sub delete_trial_by_file : Path('/breeders/trial/delete/file') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $file_id = shift;
+    
+    if (!$c->user()) { 
+	$c->stash->{rest} = { error => 'You must be logged in to delete a trial' };
+	return;
+    }
+
+    if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
+    }
+
+    my $del = CXGN::BreedersToolbox::Delete->new( 
+	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
+	);
+	
+    if ($del->delete_experiments_by_file($c->user->get_object()->get_sp_person_id(), $file_id)) { 
+	$c->stash->{rest} = { success => 1 };
+    }
+    else { 
+	$c->stash->{rest} = { error => "The trial information could not be removed from the database." };
+    }    
+}
 
 1;

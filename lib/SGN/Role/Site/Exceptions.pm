@@ -121,7 +121,7 @@ sub throw_404 {
     if( $our_fault ) {
         $throw{is_server_error} = 1;
         $throw{is_client_error} = 0;
-        $throw{notify} = 1;
+        $throw{notify} = 0; # was 1 - but don't send these emails - too voluminous - and the above logic probably does not work correctly under Ambikon
         $throw{developer_message} = "404 error seems to be our fault, referrer is '".$c->req->referer."'";
     } else {
         $throw{public_message}  .= ' If you reached this page from a link on another site, you may wish to inform them that the link is incorrect.';

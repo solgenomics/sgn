@@ -217,8 +217,8 @@ jQuery(document).ready(function () {
 
 	//add lists to the list select and list of checks select dropdowns.  
 	var list = new CXGN.List();
-	jQuery("#select_list").append(list.listSelect("select_list"));
-	jQuery("#list_of_checks_section").append(list.listSelect("list_of_checks_section"));
+	jQuery("#select_list").append(list.listSelect("select_list", [ 'accessions' ] ));
+	jQuery("#list_of_checks_section").append(list.listSelect("list_of_checks_section", [ 'accessions' ]));
 
 	//add a blank line to location select dropdown that dissappears when dropdown is opened 
 	jQuery("#add_project_location").prepend("<option value=''></option>").val('');

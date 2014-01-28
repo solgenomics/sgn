@@ -96,6 +96,19 @@ sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
             ? $template_name : '/genomes/default.mas';
 }
 
+=head2 view_inbred_genomes
+
+Public path: /organism/Solanum_lycopersicum/inbred_genomes
+
+
+=cut
+
+sub view_inbred_genome : Path('/organism/Solanum_lycopersicum/inbred_genomes') {
+    my ( $self, $c ) = @_;
+
+    $c->stash->{template} = '/genomes/Solanum_lycopersicum/inbreds.mas';
+}
+
 ####### helper methods ##########
 
 sub uniq_bs_samples {

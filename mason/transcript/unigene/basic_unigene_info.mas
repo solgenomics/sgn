@@ -114,7 +114,7 @@ if (defined $ARGS{'unigene'}) {
 
    ## It will create some tools links
 
-   my $blast_html = "<a href='/tools/blast/?preload_id=" . $id . "&preload_type=unigene+identifiers'>Blast</a>";
+   my $blast_html = "<a href='/tools/blast/?preload_id=SGN-U". $id . "&preload_type=unigene+identifiers'>Blast</a>";
    my $transl_orf_html = "<a href='/tools/sixframe_translate.pl?unigene_id=" . $id . "'>AA Translation</a>";
 
    ## Create the HTML table

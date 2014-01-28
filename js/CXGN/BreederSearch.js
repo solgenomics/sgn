@@ -141,6 +141,15 @@ window.onload = function initialize() {
 	//enable_ui();	
     });
     
+
+    jQuery('#c1_select_all').click(
+	function() { 
+	    selectAllOptions(document.getElementById('c1_data'));
+            show_list_total_count('#c1_data_count', jQuery('#c1_data').text().split("\n").length-1, jQuery('#c1_data').val().length);
+	}
+    );
+
+
     jQuery('#select2').change(function() { 
  	var select1 = jQuery('#select1').val();
 	var select2 = jQuery('#select2').val();
@@ -237,6 +246,14 @@ window.onload = function initialize() {
 
 	//enable_ui();
     });
+
+    jQuery('#c2_select_all').click(
+	function() { 
+	    selectAllOptions(document.getElementById('c2_data'));
+            show_list_total_count('#c2_data_count', jQuery('#c2_data').text().split("\n").length-1, jQuery('#c2_data').val().length);
+	}
+    );
+    
 
     jQuery('#select3').change( function() {
  	var select1 = jQuery('#select1').val();
@@ -340,6 +357,15 @@ window.onload = function initialize() {
 	//enable_ui();
     });    
 
+
+    jQuery('#c3_select_all').click(
+	function() { 
+	    selectAllOptions(document.getElementById('c3_data'));
+            show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, jQuery('#c3_data').val().length);
+	}
+    );
+
+
     jQuery('#select4').change(function() { 
 	//jQuery('#stock_data').html('');
 	
@@ -400,6 +426,14 @@ window.onload = function initialize() {
 
 	//enable_ui();
     });    
+
+    jQuery('#stock_select_all').click(
+	function() { 
+	    selectAllOptions(document.getElementById('stock_data'));
+            show_list_total_count('#stock_count', jQuery('#stock_data').text().split("\n").length-1, jQuery('#stock_data').val().length);
+	}
+    );
+    
 }
 
 function update_stocks(stocks, message) { 
@@ -474,3 +508,10 @@ function show_list_selected_count(select_div, selected_count_div) {
 
     jQuery(count_div).html('selected: '+selected_count);
 }
+
+  function selectAllOptions(obj) {
+    if (!obj || obj.options.length ==0) { return; }
+    for (var i=0; i<obj.options.length; i++) {
+      obj.options[i].selected = true;
+    }
+  }

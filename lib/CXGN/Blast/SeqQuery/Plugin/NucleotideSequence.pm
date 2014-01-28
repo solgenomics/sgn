@@ -28,7 +28,7 @@ sub validate {
 
     my $valid = "OK";
 
-    if ($sequence !~ /^[ATGCNWY \n\t]+$/i) { 
+    if ($sequence !~ /^[ATGCYWRSKMBDHV\.\-N \n\t]+$/i) { 
 	$valid = "Illegal chars in sequence $sequence";
     }
     return $valid;

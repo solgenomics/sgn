@@ -1,0 +1,52 @@
+
+<%doc>
+
+</%doc>
+
+
+<& /page/page_title.mas, title=>"Genomes of <i>Solanum lycopersicum</i> inbred lines" &>
+
+<div class="page_introduction">
+  The genomes of tomato inbred lines consist mostly of <a href="/organism/1/view/"><i>Solanum lycopersicum</i></a>
+  and carry genome fragments originating from various tomato wild species.
+  Breeders develop inbreds for introducing valuable genetic variation from multiple wild species and/or accessions while maintaining
+  a genetic background of the domesticated species. This is achieved by outcrossing followed by multiple genetrations of backcrossing and selection.
+
+</div>
+
+
+<&| /page/info_section.mas, title => 'Gh13 genome' &>
+  Gh13 is a begomovirus resistant line carrying the <a href="/locus/8216/view"><i>Ty3</i></a> gene.
+  This line was developed in Guatamala <a href="/chado/publication.pl?pub_id=18734">(Mejia et al., 2004)</a>
+  were it has been tested over multiple seasons and consistently shows very good resistance against high begomovirus pressure there. Resistance in Gh13 is reportedly derived from <a href="/organism/938/view"><i>S. habrochaites</i></a>  <a href="/chado/publication.pl?pub_id=18735">(Vidavsky and Czosnek, 1998)</a><br />
+
+  <% info_table_html(
+                     __border   => 0,
+                     __multicol => 2,
+                     'Bulk Datasets (via FTP)' =>
+                     '<a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/inbred_lines/gh13/">Consensus sequence</a>',
+                     BLAST => '<a href="/tools/blast/?db_id=214">Genomic sequence</a>',
+                     'Genome browser' => '<a href="/gbrowse/bin/gbrowse/Tomato_inbreds/">Gbrowse</a>'
+                    )
+  %>
+</&>
+
+
+<&| /page/info_section.mas, title => 'BTI87 genome' &>
+  BTI87 is a begomovirus resistant line carrying the <a href="/locus/8216/view"><i>Ty3</i></a> gene.
+  BTI87 was developed in Guatemala and maintains a high level of resistance derived from the begomovirus-resistant inbred Gc171, which is in turn derived from <a href="/organism/1373/view"><i>S. chilense</i> accession <a href="/stock/28625/view">LA1932</a> <a href="/chado/publication.pl?pub_id=18736">(Scott and Schuster, 2007)</a><br />
+
+    <% info_table_html(
+       __border   => 0,
+    __multicol => 2,
+    'Bulk Datasets (via FTP)' =>
+    '<a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/inbred_lines/bti87/">Consensus sequence</a>',
+    BLAST => '<a href="/tools/blast/?db_id=215">Genomic sequence</a>',
+    'Genome browser' => '<a href="/gbrowse/bin/gbrowse/Tomato_inbreds/">Gbrowse</a>'
+    )
+    %>
+</&>
+
+<%init>
+  use CXGN::Page::FormattingHelpers qw/info_table_html/;
+</%init>

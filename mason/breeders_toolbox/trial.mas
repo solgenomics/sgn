@@ -1,6 +1,16 @@
 
 <%doc>
 
+=head1 NAME
+
+/breeders/trial.mas - a mason component to display a trial detail page
+
+=head1 AUTHOR
+
+Jeremy D. Edwards
+
+=cut
+
 </%doc>
 
 <%args>
@@ -97,7 +107,7 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
 
 <&| /page/info_section.mas, title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $accessions_empty &>
 % foreach my $accession (@accession_names) { 
-%  print "$accession <br />\n";
+%  print "$accession<br />\n";
 %}
 </&>
 
@@ -144,11 +154,17 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
   </&>
 </&>
 
+% my $data_agreement_link = "Add/edit data agreement";
+% if ($user_can_modify) { $data_agreement_link = '<a id="add_data_agreement">Add/edit data agreement</a>'; }
+<&| /page/info_section.mas, title=>"Data Agreement", is_subsection => 0, collapsible=>1, collapsed=>0,  subtitle=> $data_agreement_link  &>
+  
+<& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
+  
+</&>
 
-<& /solgs/population/correlation.mas,
-   trial_id => $trial_id
-&>
-
+%# <& /solgs/population/correlation.mas,
+%#    trial_id => $trial_id
+%#  &>
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 %print $trial_id;
@@ -171,17 +187,15 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
   </div>
 </div>
 
-
 <div id="change_breeding_program_dialog">
   <select id="change_breeding_program_select">
   </select>
 <div>
 
+
 <script defer="defer">
   
 jQuery(document).ready(function () {
-
-
 
   jQuery('#change_breeding_program_dialog').dialog( {
      height: 150,
@@ -196,6 +210,7 @@ jQuery(document).ready(function () {
        'Cancel': function() { jQuery('#change_breeding_program_dialog').dialog("close"); }
      }
   });
+
 
   function get_breeding_select() { 
     var programs = new Array();
@@ -220,7 +235,7 @@ jQuery(document).ready(function () {
 
   function associate_breeding_program() { 
     var program = jQuery('#change_breeding_program_select').val();				    
-    alert("Program: "+program);
+		     //alert("Program: "+program);
     jQuery.ajax( { 
       url: '/breeders/program/associate/'+program+'/'+ <% $trial_id %>,
       async: false,
@@ -231,10 +246,9 @@ jQuery(document).ready(function () {
    }
 
 
-
     function open_create_spreadsheet_dialog() {
         var list = new CXGN.List();
-        jQuery("#trait_list").html(list.listSelect("trait_list"));
+        jQuery("#trait_list").html(list.listSelect("trait_list", [ 'traits' ]));
         jQuery('#create_spreadsheet_dialog').dialog("open");
     }
 

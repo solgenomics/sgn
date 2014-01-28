@@ -212,7 +212,7 @@ if (defined $id) {
         
 	    $ipr_content = qq|<ul style="list-style: none">\n|;
 	    foreach (keys %domain_matches_description){
-		$ipr_content .= qq|<li><a href="http://srs.ebi.ac.uk/srsbin/wgetz?%5Binterpro-AccNumber:$_%5D+-e" target="blank">|;
+		$ipr_content .= qq|<li><a href="http://www.ebi.ac.uk/interpro/entry/$_" target="blank">|;
 		$ipr_content .= qq|$_</a>&nbsp;&nbsp;$domain_matches_description{$_}</li>\n|;
 	    }
 	    $ipr_content .= "</ul>\n";

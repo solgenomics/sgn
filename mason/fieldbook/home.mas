@@ -6,6 +6,7 @@ $user_id => undef
 @layout_files => undef
 @trait_files => undef
 @phenotype_files => undef
+@removed_phenotype_files => undef
 @roles => ()
 </%args>
 
@@ -55,10 +56,24 @@ foreach my $project_ref (@projects) {
     my $phenotype_file_name = $phenotype_array[0];
     #my $phenotype_file_download = '[<a href="/fieldbook/trait_file_download/'.$trait_array[1].'">Download</a>]';
     #print $phenotype_array[0]."$trait_file_download<br>";
-    print $phenotype_array[0]."</br>";
+    print qq { $phenotype_array[0]  <a href="javascript:remove_phenotype_data($phenotype_array[1])"><b>X</b></a></br> };
   }
   </%perl>
 </&>
+
+
+<&| /page/info_section.mas, title=>'Removed Phenotype Files', collapsible=>1, collapsed=>1 &>
+  <%perl>
+  foreach my $phenotype_ref (@removed_phenotype_files) {
+    my @phenotype_array = @{$phenotype_ref};
+    my $phenotype_file_name = $phenotype_array[0];
+    #my $phenotype_file_download = '[<a href="/fieldbook/trait_file_download/'.$trait_array[1].'">Download</a>]';
+    #print $phenotype_array[0]."$trait_file_download<br>";
+    print qq { $phenotype_array[0]  <button disabled="1" id="re-upload" >re-upload</button><br /> };
+  }
+  </%perl>
+</&>
+
 
 
 <div id="create_trait_file_dialog" class="ui-widget" title="Create Trait File">
@@ -82,3 +97,28 @@ foreach my $project_ref (@projects) {
 </div>
 
 
+<script>
+
+  function remove_phenotype_data(file_id) { 
+    var yes = confirm("Do you really want to remove all data associated with this file (id="+file_id+")");
+    jQuery.ajax( { 
+      beforeSend: function() { jQuery('#working').dialog("open"); },
+      url: '/breeders/trial/delete/file/'+file_id,
+      success: function(response) { 
+         if (response.error) { 
+           alert(response.error);
+           jQuery('#working').dialog("close");
+         }
+         else { 
+           alert("SUCCESS!");
+           jQuery('#working').dialog("close");
+           location.reload();
+         }
+      },
+      error: function(response) { 
+        alert("An error occurred!");
+       jQuery('#working').dialog("close");
+      }
+    });
+  }
+</script>

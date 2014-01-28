@@ -34,6 +34,7 @@ sub field_book :Path("/fieldbook") Args(0) {
     my $breeding_programs = $bp->get_breeding_programs();
     my @layout_files = ();
     my @phenotype_files = ();
+    my @removed_phenotype_files = ();
 
     my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')
       ->create_with({
@@ -82,14 +83,17 @@ sub field_book :Path("/fieldbook") Args(0) {
 	push @trait_files, [$md_file->basename,$md_file->file_id];
       }
     }
-
+    
     my $uploaded_md_files = $metadata_schema->resultset("MdFiles")->search({filetype=>'tablet phenotype file'});
     while (my $md_file = $uploaded_md_files->next) {
-      my $metadata_id = $md_file->metadata_id->metadata_id;
-      my $file_metadata = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id});
-      if ( $file_metadata->create_person_id() eq $user_id) {
-	push @phenotype_files, [$md_file->basename,$md_file->file_id];
-      }
+	my $metadata_id = $md_file->metadata_id->metadata_id;
+	my $file_metadata = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id });
+	if ( ($file_metadata->obsolete==0) && ($file_metadata->create_person_id() eq $user_id)) {
+	    push @phenotype_files, [$md_file->basename,$md_file->file_id];
+	}
+	elsif ( ($file_metadata->obsolete==1) && ($file_metadata->create_person_id() eq $user_id)) { 
+	  push @removed_phenotype_files, [$md_file->basename, $md_file->file_id];
+	}
     }
 
     $c->stash->{projects} = \@projects;
@@ -97,6 +101,7 @@ sub field_book :Path("/fieldbook") Args(0) {
     $c->stash->{layout_files} = \@projects;
     $c->stash->{trait_files} = \@trait_files;
     $c->stash->{phenotype_files} = \@phenotype_files;
+    $c->stash->{removed_phenotype_files} = \@removed_phenotype_files;
 
     # get roles
     my @roles = $c->user->roles();
