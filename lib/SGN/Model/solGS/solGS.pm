@@ -46,9 +46,6 @@ sub search_trait {
                              {
                                  'observable.name' => {'iLIKE' => '%' . $trait . '%'}
                              },
-                             {
-                                 columns => [ qw/ cvterm_id name definition / ] 
-                             },    
                              { 
                                  distinct => 1,
                                  page     => $c->req->param('page') || 1,
@@ -58,6 +55,7 @@ sub search_trait {
             );             
     }
 
+    
     return $rs;      
 }
 
@@ -773,16 +771,12 @@ sub project_subject_stocks_rs {
         ->search_related('stock')
         ->search_related('stock_relationship_subjects')
         ->search_related('subject', 
-                         {},
-                         { 
-                             '+select' => [ qw /me.project_id me.name/ ], 
-                             '+as'     => [ qw /project_id project_name/ ] 
-                         },
+                         {},                       
                          {
                              order_by => {-desc => [qw /me.name/ ]} 
                          }
         );
-
+ 
     return $stock_rs;
 }
 
