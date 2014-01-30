@@ -10,7 +10,6 @@
 options(echo = FALSE)
 
 library(plyr)
-#library(R.utils)
 
 allArgs<-commandArgs(trailingOnly=TRUE)
 
@@ -38,8 +37,6 @@ if (is.null(grep("trait_name", allArgs[3])))
 {
   stop("trait name is missing.")
 }
-
-
 
 allTraitsPhenoData <- read.table(allTraitsPhenoFile,
                         header = TRUE,
