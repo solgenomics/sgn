@@ -1625,7 +1625,7 @@ sub convert_to_arrayref {
     my @data;   
     while (<$fh>)
     {
-        push @data,  map { [ split(/\t/) ] } $_;
+        push @data,  map { [ split(/\t/) ]  } $_ if $_;
     }
    
     shift(@data);
