@@ -28,7 +28,6 @@ use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
-#use CXGN::Trial::TrialLookup;
 use CXGN::BreedersToolbox::Projects;
 
 class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
@@ -51,187 +50,205 @@ sub add_crosses {
   my $program_name = $self->get_program();
   my $program;
   my $program_lookup;
-  my $female_parent_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with( { name   => 'female_parent',
-		     cv     => 'stock relationship',
+  my $transaction_error;
+
+  #everything below needs to go into a transaction
+  my $coderef = sub {
+
+    my $female_parent_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with( { name   => 'female_parent',
+		       cv     => 'stock relationship',
+		       db     => 'null',
+		       dbxref => 'female_parent',
+		     });
+    my $male_parent_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with({ name   => 'male_parent',
+		      cv     => 'stock relationship',
+		      db     => 'null',
+		      dbxref => 'male_parent',
+		    });
+    my $progeny_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with({ name   => 'offspring_of',
+		      cv     => 'stock relationship',
+		      db     => 'null',
+		      dbxref => 'offspring_of',
+		    });
+    my $cross_name_cvterm = $schema->resultset("Cv::Cvterm")->find(
+								   { name   => 'cross_name',
+								   });
+
+    if (!$cross_name_cvterm) {
+      $cross_name_cvterm = $schema->resultset("Cv::Cvterm")
+	->create_with( { name   => 'cross_name',
+			 cv     => 'local',
+			 db     => 'null',
+			 dbxref => 'cross_name',
+		       });
+    }
+
+    my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->find(
+								   { name   => 'cross_type',
+								   });
+
+    if (!$cross_type_cvterm) {
+      $cross_type_cvterm = $schema->resultset("Cv::Cvterm")
+	->create_with( { name   => 'cross_type',
+			 cv     => 'local',
+			 db     => 'null',
+			 dbxref => 'cross_type',
+		       });
+    }
+
+    my $cross_experiment_type_cvterm = $schema->resultset('Cv::Cvterm')
+      ->create_with({
+		     name   => 'cross_experiment',
+		     cv     => 'experiment type',
 		     db     => 'null',
-		     dbxref => 'female_parent',
-		   });
-  my $male_parent_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with({ name   => 'male_parent',
-		    cv     => 'stock relationship',
-		    db     => 'null',
-		    dbxref => 'male_parent',
-		  });
-   my $progeny_cvterm = $schema->resultset("Cv::Cvterm")
-     ->create_with({ name   => 'offspring_of',
-   		    cv     => 'stock relationship',
-   		    db     => 'null',
-   		    dbxref => 'offspring_of',
-   		  });
-  my $cross_name_cvterm = $schema->resultset("Cv::Cvterm")->find(
-      { name   => 'cross_name',
-    });
+		     dbxref => 'cross_experiment',
+		    });
 
-  if (!$cross_name_cvterm) {
-    $cross_name_cvterm = $schema->resultset("Cv::Cvterm")
-      ->create_with( { name   => 'cross_name',
-		       cv     => 'local',
-		       db     => 'null',
-		       dbxref => 'cross_name',
-		     });
-  }
+    my $cross_stock_type_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with({
+		     name   => 'cross',
+		     cv     => 'stock type',
+		    });
 
-  my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->find(
-      { name   => 'cross_type',
-    });
-
-  if (!$cross_type_cvterm) {
-    $cross_type_cvterm = $schema->resultset("Cv::Cvterm")
-      ->create_with( { name   => 'cross_type',
-		       cv     => 'local',
-		       db     => 'null',
-		       dbxref => 'cross_type',
-		     });
-  }
-
-  my $cross_experiment_type_cvterm = $schema->resultset('Cv::Cvterm')
-    ->create_with({
-		   name   => 'cross_experiment',
-		   cv     => 'experiment type',
-		   db     => 'null',
-		   dbxref => 'cross_experiment',
-		  });
-
-  my $cross_stock_type_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with({
-		   name   => 'cross',
-		   cv     => 'stock type',
-		  });
-
-  if (!$self->validate_crosses()) {
-    print STDERR "Invalid pedigrees in array.  No crosses will be added\n";
-    return;
-  }
-
-  $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema, location_name => $self->get_location });
-  $geolocation = $location_lookup->get_geolocation();
-
-  $program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $schema});
-  $program = $program_lookup->get_breeding_program_by_name($program_name);
-
-  @crosses = @{$self->get_crosses()};
-
-  foreach my $pedigree (@crosses) {
-    my $experiment;
-    my $cross_stock;
-    my $organism_id;
-    my $female_parent_name;
-    my $male_parent_name;
-    my $female_parent;
-    my $male_parent;
-    my $population_stock;
-    my $project;
-    my $cross_type = $pedigree->get_cross_type();
-    my $cross_name = $pedigree->get_name();
-
-    if ($pedigree->has_female_parent()) {
-      $female_parent_name = $pedigree->get_female_parent()->get_name();
-      $female_parent = $self->_get_accession($female_parent_name);
+    if (!$self->validate_crosses()) {
+      print STDERR "Invalid pedigrees in array.  No crosses will be added\n";
+      return;
     }
 
-    if ($pedigree->has_male_parent()) {
-      $male_parent_name = $pedigree->get_male_parent()->get_name();
-      $male_parent = $self->_get_accession($male_parent_name);
-    }
+    $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema, location_name => $self->get_location });
+    $geolocation = $location_lookup->get_geolocation();
 
-    #organism of cross experiment will be the same as the female parent
-    if ($female_parent) {
-      $organism_id = $female_parent->organism_id();
-    } else {
-      $organism_id = $male_parent->organism_id();
-    }
+    $program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $schema});
+    $program = $program_lookup->get_breeding_program_by_name($program_name);
 
-    #create cross project
-    $project = $schema->resultset('Project::Project')
-    ->create({
-	      name => $cross_name,
-	      description => $cross_name,
-	     });
+    @crosses = @{$self->get_crosses()};
 
-    #add error if cross name exists
+    foreach my $pedigree (@crosses) {
+      my $experiment;
+      my $cross_stock;
+      my $organism_id;
+      my $female_parent_name;
+      my $male_parent_name;
+      my $female_parent;
+      my $male_parent;
+      my $population_stock;
+      my $project;
+      my $cross_type = $pedigree->get_cross_type();
+      my $cross_name = $pedigree->get_name();
 
-    #create cross experiment
-    $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
-            {
-                nd_geolocation_id => $geolocation->nd_geolocation_id(),
-                type_id => $cross_experiment_type_cvterm->cvterm_id(),
-            } );
+      if ($pedigree->has_female_parent()) {
+	$female_parent_name = $pedigree->get_female_parent()->get_name();
+	$female_parent = $self->_get_accession($female_parent_name);
+      }
 
-    #store the cross name as an experiment prop
-    $experiment->find_or_create_related('nd_experimentprops' , {
-								nd_experiment_id => $experiment->nd_experiment_id(),
-								type_id  =>  $cross_name_cvterm->cvterm_id(),
-								value  =>  $cross_name,
-							       });
+      if ($pedigree->has_male_parent()) {
+	$male_parent_name = $pedigree->get_male_parent()->get_name();
+	$male_parent = $self->_get_accession($male_parent_name);
+      }
 
-    #store the cross type as an experiment prop
-    $experiment->find_or_create_related('nd_experimentprops' , {
-								nd_experiment_id => $experiment->nd_experiment_id(),
-								type_id  =>  $cross_type_cvterm->cvterm_id(),
-								value  =>  $cross_type,
-							       });
+      #organism of cross experiment will be the same as the female parent
+      if ($female_parent) {
+	$organism_id = $female_parent->organism_id();
+      } else {
+	$organism_id = $male_parent->organism_id();
+      }
 
-    #link the parents to the experiment
-    if ($female_parent) {
-      $experiment->find_or_create_related('nd_experiment_stocks' , {
-								    stock_id => $female_parent->stock_id(),
-								    type_id  =>  $female_parent_cvterm->cvterm_id(),
-								   });
-    }
-    if ($male_parent) {
-      $experiment->find_or_create_related('nd_experiment_stocks' , {
-								    stock_id => $male_parent->stock_id(),
-								    type_id  =>  $male_parent_cvterm->cvterm_id(),
-								   });
-    }
+      #create cross project
+      $project = $schema->resultset('Project::Project')
+	->create({
+		  name => $cross_name,
+		  description => $cross_name,
+		 });
 
-    #create a stock of type cross
-    $cross_stock = $schema->resultset("Stock::Stock")->find_or_create(
-             { organism_id => $organism_id,
-     	      name       => $cross_name,
-     	      uniquename => $cross_name,
-     	      type_id => $cross_stock_type_cvterm->cvterm_id,
-             } );
+      #add error if cross name exists
 
-    #link parents to the stock of type cross
-    $cross_stock
-      ->find_or_create_related('stock_relationship_objects', {
-							      type_id => $female_parent_cvterm->cvterm_id(),
-							      object_id => $cross_stock->stock_id(),
-							      subject_id => $female_parent->stock_id(),
-							     } );
-    $cross_stock
-      ->find_or_create_related('stock_relationship_objects', {
-							      type_id => $male_parent_cvterm->cvterm_id(),
-							      object_id => $cross_stock->stock_id(),
-							      subject_id => $male_parent->stock_id(),
-							     } );
+      #create cross experiment
+      $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
+										 {
+										  nd_geolocation_id => $geolocation->nd_geolocation_id(),
+										  type_id => $cross_experiment_type_cvterm->cvterm_id(),
+										 } );
 
-    #link the stock of type cross to the experiment
-    $experiment->find_or_create_related('nd_experiment_stocks' , {
-								  stock_id => $cross_stock->stock_id(),
-								  type_id  =>  $progeny_cvterm->cvterm_id(),
+      #store the cross name as an experiment prop
+      $experiment->find_or_create_related('nd_experimentprops' , {
+								  nd_experiment_id => $experiment->nd_experiment_id(),
+								  type_id  =>  $cross_name_cvterm->cvterm_id(),
+								  value  =>  $cross_name,
 								 });
-    #link the experiment to the project
-    $experiment->find_or_create_related('nd_experiment_projects', {
-								   project_id => $project->project_id()
-								  } );
 
-    #link the cross program to the breeding program
-    $program_lookup->associate_breeding_program_with_trial($program->project_id(), $project->project_id());
+      #store the cross type as an experiment prop
+      $experiment->find_or_create_related('nd_experimentprops' , {
+								  nd_experiment_id => $experiment->nd_experiment_id(),
+								  type_id  =>  $cross_type_cvterm->cvterm_id(),
+								  value  =>  $cross_type,
+								 });
+
+      #link the parents to the experiment
+      if ($female_parent) {
+	$experiment->find_or_create_related('nd_experiment_stocks' , {
+								      stock_id => $female_parent->stock_id(),
+								      type_id  =>  $female_parent_cvterm->cvterm_id(),
+								     });
+      }
+      if ($male_parent) {
+	$experiment->find_or_create_related('nd_experiment_stocks' , {
+								      stock_id => $male_parent->stock_id(),
+								      type_id  =>  $male_parent_cvterm->cvterm_id(),
+								     });
+      }
+
+      #create a stock of type cross
+      $cross_stock = $schema->resultset("Stock::Stock")->find_or_create(
+									{ organism_id => $organism_id,
+									  name       => $cross_name,
+									  uniquename => $cross_name,
+									  type_id => $cross_stock_type_cvterm->cvterm_id,
+									} );
+
+      #link parents to the stock of type cross
+      $cross_stock
+	->find_or_create_related('stock_relationship_objects', {
+								type_id => $female_parent_cvterm->cvterm_id(),
+								object_id => $cross_stock->stock_id(),
+								subject_id => $female_parent->stock_id(),
+							       } );
+      $cross_stock
+	->find_or_create_related('stock_relationship_objects', {
+								type_id => $male_parent_cvterm->cvterm_id(),
+								object_id => $cross_stock->stock_id(),
+								subject_id => $male_parent->stock_id(),
+							       } );
+
+      #link the stock of type cross to the experiment
+      $experiment->find_or_create_related('nd_experiment_stocks' , {
+								    stock_id => $cross_stock->stock_id(),
+								    type_id  =>  $progeny_cvterm->cvterm_id(),
+								   });
+      #link the experiment to the project
+      $experiment->find_or_create_related('nd_experiment_projects', {
+								     project_id => $project->project_id()
+								    } );
+
+      #link the cross program to the breeding program
+      $program_lookup->associate_breeding_program_with_trial($program->project_id(), $project->project_id());
+
+    }
+
+  };
 
 
+  try {
+    $schema->txn_do($coderef);
+  } catch {
+    $transaction_error =  $_;
+  };
+
+  if ($transaction_error) {
+    print STDERR "Transaction error creating a cross: $transaction_error\n";
+    return;
   }
 
   return 1;
