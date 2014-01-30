@@ -52,22 +52,22 @@ sub add_crosses {
   my $program;
   my $program_lookup;
   my $female_parent_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with( { name   => 'a female parent of',
+    ->create_with( { name   => 'female_parent',
 		     cv     => 'stock relationship',
 		     db     => 'null',
-		     dbxref => 'a female parent of',
+		     dbxref => 'female_parent',
 		   });
   my $male_parent_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with({ name   => 'a male parent of',
+    ->create_with({ name   => 'male_parent',
 		    cv     => 'stock relationship',
 		    db     => 'null',
-		    dbxref => 'a male parent of',
+		    dbxref => 'male_parent',
 		  });
    my $progeny_cvterm = $schema->resultset("Cv::Cvterm")
-     ->create_with({ name   => 'a progeny of',
+     ->create_with({ name   => 'offspring_of',
    		    cv     => 'stock relationship',
    		    db     => 'null',
-   		    dbxref => 'a progeny of',
+   		    dbxref => 'offspring_of',
    		  });
   my $cross_name_cvterm = $schema->resultset("Cv::Cvterm")->find(
       { name   => 'cross_name',
@@ -81,35 +81,33 @@ sub add_crosses {
 		       dbxref => 'cross_name',
 		     });
   }
-  my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")
-     ->create_with( { name   => 'cross_type',
-   		     cv     => 'local',
-   		     db     => 'null',
-   		     dbxref => 'cross_type',
-   		   });
 
-    my $cross_experiment_type_cvterm = $schema->resultset('Cv::Cvterm')
-      ->create_with({
-		     name   => 'cross experiment',
-		     cv     => 'experiment type',
-		     db     => 'null',
-		     dbxref => 'cross experiment',
-		    });
-
-
-  my $cross_stock_type_cvterm = $schema->resultset("Cv::Cvterm")->find(
-      { name   => 'cross',
+  my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->find(
+      { name   => 'cross_type',
     });
-  if (!$cross_stock_type_cvterm) {
-	my $row = $self->schema->resultset('Cv::Cvterm')
-	  ->create_with({
-			 name => 'cross',
-			 cv   => 'local',
-			 db   => 'local',
-			 dbxref => 'cross',
-			});
-	$cross_stock_type_cvterm = $row;
-      }
+
+  if (!$cross_type_cvterm) {
+    $cross_type_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with( { name   => 'cross_type',
+		       cv     => 'local',
+		       db     => 'null',
+		       dbxref => 'cross_type',
+		     });
+  }
+
+  my $cross_experiment_type_cvterm = $schema->resultset('Cv::Cvterm')
+    ->create_with({
+		   name   => 'cross_experiment',
+		   cv     => 'experiment type',
+		   db     => 'null',
+		   dbxref => 'cross_experiment',
+		  });
+
+  my $cross_stock_type_cvterm = $schema->resultset("Cv::Cvterm")
+    ->create_with({
+		   name   => 'cross',
+		   cv     => 'stock type',
+		  });
 
   if (!$self->validate_crosses()) {
     print STDERR "Invalid pedigrees in array.  No crosses will be added\n";
@@ -160,6 +158,8 @@ sub add_crosses {
 	      name => $cross_name,
 	      description => $cross_name,
 	     });
+
+    #add error if cross name exists
 
     #create cross experiment
     $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
