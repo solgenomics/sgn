@@ -162,9 +162,16 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
   
 </&>
 
-%# <& /solgs/population/correlation.mas,
-%#    trial_id => $trial_id
-%#  &>
+ <& /solgs/population/correlation.mas,
+    trial_id => $trial_id
+  &>
+
+ <!--  plot histogram for a trait phenotype data
+   <& /solgs/population/trait_phenotype_histogram.mas,
+     trial_id => $trial_id,
+     trait_id => 70762
+     &>
+-->
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 %print $trial_id;
