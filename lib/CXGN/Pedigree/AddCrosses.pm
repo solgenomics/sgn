@@ -47,14 +47,14 @@ sub add_crosses {
   my @crosses;
   my $location_lookup;
   my $geolocation;
-  my $program_name = $self->get_program();
   my $program;
   my $program_lookup;
   my $transaction_error;
 
-  #everything below needs to go into a transaction
+  #add all crosses in a single transaction
   my $coderef = sub {
 
+    #get cvterms for parents and offspring
     my $female_parent_cvterm = $schema->resultset("Cv::Cvterm")
       ->create_with( { name   => 'female_parent',
 		       cv     => 'stock relationship',
@@ -73,10 +73,12 @@ sub add_crosses {
 		      db     => 'null',
 		      dbxref => 'offspring_of',
 		    });
-    my $cross_name_cvterm = $schema->resultset("Cv::Cvterm")->find(
-								   { name   => 'cross_name',
-								   });
 
+    #get cvterm for cross_name or create if not found
+    my $cross_name_cvterm = $schema->resultset("Cv::Cvterm")
+      ->find({
+	      name   => 'cross_name',
+	     });
     if (!$cross_name_cvterm) {
       $cross_name_cvterm = $schema->resultset("Cv::Cvterm")
 	->create_with( { name   => 'cross_name',
@@ -86,10 +88,11 @@ sub add_crosses {
 		       });
     }
 
-    my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->find(
-								   { name   => 'cross_type',
-								   });
-
+    #get cvterm for cross_type or create if not found
+    my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")
+      ->find({
+	      name   => 'cross_type',
+	     });
     if (!$cross_type_cvterm) {
       $cross_type_cvterm = $schema->resultset("Cv::Cvterm")
 	->create_with( { name   => 'cross_type',
@@ -99,6 +102,7 @@ sub add_crosses {
 		       });
     }
 
+    #get cvterm for cross_experiment
     my $cross_experiment_type_cvterm = $schema->resultset('Cv::Cvterm')
       ->create_with({
 		     name   => 'cross_experiment',
@@ -107,6 +111,7 @@ sub add_crosses {
 		     dbxref => 'cross_experiment',
 		    });
 
+    #get cvterm for stock type cross
     my $cross_stock_type_cvterm = $schema->resultset("Cv::Cvterm")
       ->create_with({
 		     name   => 'cross',
@@ -118,11 +123,13 @@ sub add_crosses {
       return;
     }
 
+    #lookup location by name
     $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema, location_name => $self->get_location });
     $geolocation = $location_lookup->get_geolocation();
 
+    #lookup program by name
     $program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $schema});
-    $program = $program_lookup->get_breeding_program_by_name($program_name);
+    $program = $program_lookup->get_breeding_program_by_name($self->get_program());
 
     @crosses = @{$self->get_crosses()};
 
@@ -239,7 +246,7 @@ sub add_crosses {
 
   };
 
-
+  #try to add all crosses in a transaction
   try {
     $schema->txn_do($coderef);
   } catch {
@@ -258,27 +265,24 @@ sub add_crosses {
 sub validate_crosses {
   my $self = shift;
   my $schema = $self->get_schema();
-  my $program_name = $self->get_program();
-  my $location = $self->get_location();
   my @crosses = @{$self->get_crosses()};
   my $invalid_cross_count = 0;
   my $program;
-
   my $location_lookup;
   my $trial_lookup;
   my $program_lookup;
   my $geolocation;
 
-  $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema, location_name => $location });
+  $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema, location_name => $self->get_location() });
   $geolocation = $location_lookup->get_geolocation();
 
   if (!$geolocation) {
-    print STDERR "Location $location 2not found\n";
+    print STDERR "Location ".$self->get_location()." not found\n";
     return;
   }
 
   $program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $schema});
-  $program = $program_lookup->get_breeding_program_by_name($program_name);
+  $program = $program_lookup->get_breeding_program_by_name($self->get_program());
   if (!$program) {
     print STDERR "Breeding program $program_name not found\n";
     return;
