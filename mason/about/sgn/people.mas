@@ -3,6 +3,7 @@
 </%init>
 
 <%perl>
+
 sub person_image {
   my ($filebase,$name,$position) = @_;
   $name ||= '';
@@ -54,9 +55,10 @@ print info_section_html( title => 'Lab members',
 					      ['tom', 'Tom York', 'Postdoc' ],
 					      ['aureliano', 'Aureliano Bombarely', 'Postdoc' ],
 					     ],
-					     [					      
+					     [ 'hartmut', 'Hartmut Foerster', 'MetaCyc curator' ],					      
 					      ['suzy', 'Susan Strickler', 'Postdoc'],
-					      ['anuradha', 'Anuradha Pujar', 'Postdoc' ],
+					      ['aimin', 'Aimin Yan', 'Postdoc' ],
+                                              ['surya', 'Surya Saha', 'Postdoc' ],
 ],
 					    ),
 					  )
@@ -76,7 +78,7 @@ print info_section_html( title => 'Emeritus Staff',
 			 contents =>
 			 info_table_html( __multicol => 3, __border => 0,
 					 'Bioinformatics Analysts' =>
-					  ul(
+					  ul('Anuradha Pujar',
                                              'Robert Buels',
 					     'Joseph Gosselin',
 					     'Jonathan Leto',
@@ -95,6 +97,13 @@ print info_section_html( title => 'Emeritus Staff',
 					    ),
 					  'Interns' =>
 					  ul(
+					     'Matthew Crum (2013)',
+					     'Amelia Lovelace (2013)',
+					     'Akhil Saji (2013)',
+					     'Kevin Nguyen (2013)',
+					     'Andrew Dunford (2012)',
+					     'Paul Van Eck (2012)',
+					     'Kristin Blacklock (2012)',
 					     'Jessica Jeffrey (2011)',
 					     'Dil Begum (2011)',
 					     'Samuel Moijueh (2011)',
