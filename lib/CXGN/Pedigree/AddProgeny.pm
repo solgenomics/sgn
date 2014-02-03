@@ -157,20 +157,6 @@ sub add_progeny {
 
   }
 
-
-
-
-
-
-
-
-
-
-  #skip Get cross experiment
-  #skip Get cross project
-  #skip Get cross type
-;
-
   return 1;
 }
 

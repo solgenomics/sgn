@@ -32,6 +32,7 @@ use CXGN::UploadFile;
 use Spreadsheet::WriteExcel;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddProgeny;
+use CXGN::Pedigree::AddCrossInfo;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 
@@ -78,9 +79,24 @@ sub add_cross_POST :Args(0) {
     my $visible_to_role = $c->req->param('visible_to_role');
     my $cross_add;
     my $progeny_add;
+    my @progeny_names;
     my @array_of_pedigree_objects;
-
+    my $progeny_increment = 1;
     my $paternal_parent_not_required;
+    my $number_of_flowers_cvterm;
+    my $number_of_seeds_cvterm;
+
+
+
+    $number_of_seeds_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with({
+		     name   => 'number_of_seeds',
+		     cv     => 'local',
+		     db     => 'null',
+		     dbxref => 'number_of_seeds',
+		    });
+
+
     if ($cross_type eq "open" || $cross_type eq "bulk_open") {
       $paternal_parent_not_required = 1;
     }
@@ -150,6 +166,7 @@ sub add_cross_POST :Args(0) {
     #            nd_geolocation_id => $location_id,
     #       } ) ;
 
+    #objects to store cross information
     my $cross_to_add = Bio::GeneticRelationships::Pedigree->new(name => $cross_name, cross_type => $cross_type);
     my $female_individual = Bio::GeneticRelationships::Individual->new(name => $maternal);
     my $male_individual = Bio::GeneticRelationships::Individual->new(name => $paternal);
@@ -158,21 +175,80 @@ sub add_cross_POST :Args(0) {
     $cross_to_add->set_cross_type($cross_type);
     $cross_to_add->set_name($cross_name);
 
+    #create array of pedigree objects to add, in this case just one pedigree
     @array_of_pedigree_objects = ($cross_to_add);
     $cross_add = CXGN::Pedigree::AddCrosses->new({
 					       schema => $schema,
 					       location => $location,
 					       program => $program,
-					       crosses =>  \@array_of_pedigree_objects} );
+					       crosses =>  \@array_of_pedigree_objects},
+						);
+
+    #set some properties of the cross experiment if specified
+    if ($number_of_seeds) {
+      $cross_add->set_number_of_seeds("$number_of_seeds");
+    }
+    if ($number_of_flowers) {
+      $cross_add->set_number_of_flowers("$number_of_flowers");
+    }
+
+    #add the crosses
     $cross_add->add_crosses();
 
 
-    #$progeny_add = CXGN::Pedigree::AddProgeny->new({
-#						    schema => $schema,
-#						    cross_name => $cross_name,
-#						   });
+    #create progeny if specified
+    if ($progeny_number) {
+
+      #create array of progeny names to add for this cross
+      while ($progeny_increment < $progeny_number + 1) {
+	$progeny_increment = sprintf "%03d", $progeny_increment;
+	my $stock_name = $cross_name.$prefix.$progeny_increment.$suffix;
+	push @progeny_names, $stock_name;
+	$progeny_increment++;
+      }
+
+      #add array of progeny to the cross
+      $progeny_add = CXGN::Pedigree::AddProgeny
+	->new({
+	       schema => $schema,
+	       cross_name => $cross_name,
+	       progeny_names => \@progeny_names,
+	      });
+      $progeny_add->add_progeny();
+
+    }
+
+    if ($number_of_flowers) {
+      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ schema => $schema, cross_name => $cross_name} );
+      $cross_add_info->set_number_of_flowers($number_of_flowers);
+      $cross_add_info->add_info();
+    }
 
 
+    if ($number_of_seeds) {
+      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ schema => $schema, cross_name => $cross_name} );
+      $cross_add_info->set_number_of_seeds($number_of_seeds);
+      $cross_add_info->add_info();
+    }
+      #set flower number in experimentprop
+     # $experiment->find_or_create_related('nd_experimentprops' , {
+    # 								  nd_experiment_id => $experiment->nd_experiment_id(),
+    # 								  type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
+    # 								  value  =>  $number_of_flowers,
+    # 								 });
+    # }
+  # my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+   #    { name   => 'cross_type',
+   # 	cv     => 'local',
+   # 	db     => 'null',
+   # 	dbxref => 'cross_type',
+   #  });
+    # if ($number_of_seeds) {
+    #   $experiment->find_or_create_related('nd_experimentprops' , {
+    # 								  nd_experiment_id => $experiment->nd_experiment_id(),
+    # 								  type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
+    # 								  value  =>  $number_of_seeds,
+    # 								 });
 
 
      # my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
