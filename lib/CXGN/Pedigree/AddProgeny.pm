@@ -105,13 +105,13 @@ sub add_progeny {
     $female_parent = $cross_stock
       ->find_related('stock_relationship_objects', {
 						    type_id => $female_parent_cvterm->cvterm_id(),
-						    subject_id => $cross_stock->stock_id(),
+						    object_id => $cross_stock->stock_id(),
 						   } );
     #get male parent
-    $female_parent = $cross_stock
+    $male_parent = $cross_stock
       ->find_related('stock_relationship_objects', {
 						    type_id => $male_parent_cvterm->cvterm_id(),
-						    subject_id => $cross_stock->stock_id(),
+						    object_id => $cross_stock->stock_id(),
 						   } );
 
     foreach my $progeny_name (@progeny_names) {
