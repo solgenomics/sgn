@@ -128,17 +128,18 @@ sub add_progeny {
       #create relationship to cross population
       $accession_stock
 	->find_or_create_related('stock_relationship_objects', {
+
 								type_id => $member_cvterm->cvterm_id(),
-								object_id => $accession_stock->stock_id(),
-								subject_id => $cross_stock->stock_id(),
+								object_id => $cross_stock->stock_id(),
+								subject_id => $accession_stock->stock_id(),
 							       } );
       #create relationship to female parent
       if ($female_parent) {
 	$accession_stock
 	  ->find_or_create_related('stock_relationship_objects', {
 								  type_id => $female_parent_cvterm->cvterm_id(),
-								  object_id => $female_parent->stock_id(),
-								  subject_id => $accession_stock->stock_id(),
+								  object_id => $accession_stock->stock_id(),
+								  subject_id => $female_parent->stock_id(),
 								 });
       }
 
@@ -147,8 +148,8 @@ sub add_progeny {
 	$accession_stock
 	  ->find_or_create_related('stock_relationship_objects', {
 								  type_id => $male_parent_cvterm->cvterm_id(),
-								  object_id => $male_parent->stock_id(),
-								  subject_id => $accession_stock->stock_id(),
+								  object_id => $accession_stock->stock_id(),
+								  subject_id => $male_parent->stock_id(),
 								 });
       }
 
