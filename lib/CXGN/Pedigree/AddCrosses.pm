@@ -284,7 +284,7 @@ sub validate_crosses {
   $program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $schema});
   $program = $program_lookup->get_breeding_program_by_name($self->get_program());
   if (!$program) {
-    print STDERR "Breeding program $program_name not found\n";
+    print STDERR "Breeding program". $self->get_program() ."not found\n";
     return;
   }
 
