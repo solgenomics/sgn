@@ -47,115 +47,127 @@ sub add_progeny {
   my $female_parent;
   my $male_parent;
   my $organism_id;
-  my $female_parent_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with( { name   => 'female_parent',
-		     cv     => 'stock relationship',
-		     db     => 'null',
-		     dbxref => 'female_parent',
-		   });
-  my $male_parent_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with({ name   => 'male_parent',
-		    cv     => 'stock relationship',
-		    db     => 'null',
-		    dbxref => 'male_parent',
-		  });
-  my $member_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with({ name   => 'member_of',
-		    cv     => 'stock relationship',
-		    db     => 'null',
-		    dbxref => 'member_of',
-		  });
-   # my $progeny_cvterm = $schema->resultset("Cv::Cvterm")
-   #   ->create_with({ name   => 'a progeny of',
-   # 		    cv     => 'stock relationship',
-   # 		    db     => 'null',
-   # 		    dbxref => '',
-   # 		  });
-   my $accession_cvterm = $schema->resultset("Cv::Cvterm")
-     ->create_with({
-		    name   => 'accession',
-		    cv     => 'stock type',
-		    db     => 'null',
-		    dbxref => 'accession',
-		   });
+  my $transaction_error;
 
-  my $cross_name_cvterm = $schema->resultset("Cv::Cvterm")->find(
-      { name   => 'cross_name',
-    });
+  #add all progeny in a single transaction
+  my $coderef = sub {
 
-  if (!$cross_name_cvterm) {
-    $cross_name_cvterm = $schema->resultset("Cv::Cvterm")
-      ->create_with( { name   => 'cross_name',
-		       cv     => 'local',
+    my $female_parent_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with( { name   => 'female_parent',
+		       cv     => 'stock relationship',
 		       db     => 'null',
-		       dbxref => 'cross_name',
+		       dbxref => 'female_parent',
 		     });
-  }
+    my $male_parent_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with({ name   => 'male_parent',
+		      cv     => 'stock relationship',
+		      db     => 'null',
+		      dbxref => 'male_parent',
+		    });
+    my $member_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with({ name   => 'member_of',
+		      cv     => 'stock relationship',
+		      db     => 'null',
+		      dbxref => 'member_of',
+		    });
+    my $accession_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with({
+		     name   => 'accession',
+		     cv     => 'stock type',
+		     db     => 'null',
+		     dbxref => 'accession',
+		    });
 
-  #Get stock of type cross matching cross name
-  $cross_stock = $self->_get_cross($self->get_cross_name());
-  if (!$cross_stock) {
-    print STDERR "Cross could not be found\n";
+    my $cross_name_cvterm = $schema->resultset("Cv::Cvterm")->find(
+								   { name   => 'cross_name',
+								   });
+
+    if (!$cross_name_cvterm) {
+      $cross_name_cvterm = $schema->resultset("Cv::Cvterm")
+	->create_with( { name   => 'cross_name',
+			 cv     => 'local',
+			 db     => 'null',
+			 dbxref => 'cross_name',
+		       });
+    }
+
+    #Get stock of type cross matching cross name
+    $cross_stock = $self->_get_cross($self->get_cross_name());
+    if (!$cross_stock) {
+      print STDERR "Cross could not be found\n";
+      return;
+    }
+
+    #Get organism id from cross
+    $organism_id = $cross_stock->organism_id();
+
+    #get female parent
+    $female_parent = $cross_stock
+      ->find_related('stock_relationship_objects', {
+						    type_id => $female_parent_cvterm->cvterm_id(),
+						    subject_id => $cross_stock->stock_id(),
+						   } );
+    #get male parent
+    $female_parent = $cross_stock
+      ->find_related('stock_relationship_objects', {
+						    type_id => $male_parent_cvterm->cvterm_id(),
+						    subject_id => $cross_stock->stock_id(),
+						   } );
+
+    foreach my $progeny_name (@progeny_names) {
+
+      #create progeny
+      my $accession_stock = $schema->resultset("Stock::Stock")
+	->create({
+		  organism_id => $organism_id,
+		  name       => $progeny_name,
+		  uniquename => $progeny_name,
+		  type_id     => $accession_cvterm->cvterm_id,
+		 } );
+
+      #create relationship to cross population
+      $accession_stock
+	->find_or_create_related('stock_relationship_objects', {
+								type_id => $member_cvterm->cvterm_id(),
+								object_id => $accession_stock->stock_id(),
+								subject_id => $cross_stock->stock_id(),
+							       } );
+      #create relationship to female parent
+      if ($female_parent) {
+	$accession_stock
+	  ->find_or_create_related('stock_relationship_objects', {
+								  type_id => $female_parent_cvterm->cvterm_id(),
+								  object_id => $female_parent->stock_id(),
+								  subject_id => $accession_stock->stock_id(),
+								 });
+      }
+
+      #create relationship to male parent
+      if ($male_parent) {
+	$accession_stock
+	  ->find_or_create_related('stock_relationship_objects', {
+								  type_id => $male_parent_cvterm->cvterm_id(),
+								  object_id => $male_parent->stock_id(),
+								  subject_id => $accession_stock->stock_id(),
+								 });
+      }
+
+    }
+
+  };
+
+  #try to add all crosses in a transaction
+  try {
+    $schema->txn_do($coderef);
+  } catch {
+    $transaction_error =  $_;
+  };
+
+  if ($transaction_error) {
+    print STDERR "Transaction error creating a cross: $transaction_error\n";
     return;
   }
 
-  #Get organism id from cross
-  $organism_id = $cross_stock->organism_id();
-
-  #get female parent
-  $female_parent = $cross_stock
-    ->find_related('stock_relationship_objects', {
-						  type_id => $female_parent_cvterm->cvterm_id(),
-						  subject_id => $cross_stock->stock_id(),
-						 } );
-  #get male parent
-  $female_parent = $cross_stock
-    ->find_related('stock_relationship_objects', {
-						  type_id => $male_parent_cvterm->cvterm_id(),
-						  subject_id => $cross_stock->stock_id(),
-						 } );
-
-  foreach my $progeny_name (@progeny_names) {
-
-    #create progeny
-    my $accession_stock = $schema->resultset("Stock::Stock")
-      ->create({
-		organism_id => $organism_id,
-		name       => $progeny_name,
-		uniquename => $progeny_name,
-		type_id     => $accession_cvterm->cvterm_id,
-	       } );
-
-    #create relationship to cross population
-    $accession_stock
-      ->find_or_create_related('stock_relationship_objects', {
-							      type_id => $member_cvterm->cvterm_id(),
-							      object_id => $accession_stock->stock_id(),
-							      subject_id => $cross_stock->stock_id(),
-							     } );
-    #create relationship to female parent
-    if ($female_parent) {
-      $accession_stock
-	->find_or_create_related('stock_relationship_objects', {
-								type_id => $female_parent_cvterm->cvterm_id(),
-								object_id => $female_parent->stock_id(),
-								subject_id => $accession_stock->stock_id(),
-							       });
-    }
-
-    #create relationship to male parent
-    if ($male_parent) {
-      $accession_stock
-	->find_or_create_related('stock_relationship_objects', {
-								type_id => $male_parent_cvterm->cvterm_id(),
-								object_id => $male_parent->stock_id(),
-								subject_id => $accession_stock->stock_id(),
-							       });
-    }
-
-
-
-  }
 
   return 1;
 }
