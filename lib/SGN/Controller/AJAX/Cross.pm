@@ -31,6 +31,7 @@ use Data::Dumper;
 use CXGN::UploadFile;
 use Spreadsheet::WriteExcel;
 use CXGN::Pedigree::AddCrosses;
+use CXGN::Pedigree::AddProgeny;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 
@@ -76,6 +77,7 @@ sub add_cross_POST :Args(0) {
     my $number_of_seeds = $c->req->param('number_of_seeds');
     my $visible_to_role = $c->req->param('visible_to_role');
     my $cross_add;
+    my $progeny_add;
     my @array_of_pedigree_objects;
 
     my $paternal_parent_not_required;
@@ -100,7 +102,7 @@ sub add_cross_POST :Args(0) {
 
 
     #check that progeny number is an integer less than maximum allowed
-    my $maximum_progeny_number = 999; #higher numbers break cross name conventionn
+    my $maximum_progeny_number = 999; #higher numbers break cross name convention
     if ($progeny_number) {
       if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number) or ($progeny_number < 1)) {
 	$c->stash->{rest} = {error =>  "progeny number exceeds the maximum of $maximum_progeny_number or is invalid." };
@@ -165,12 +167,20 @@ sub add_cross_POST :Args(0) {
     $cross_add->add_crosses();
 
 
-     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-       { name   => 'accession',
-       cv     => 'stock type',
-       db     => 'null',
-       dbxref => 'accession',
-     });
+    #$progeny_add = CXGN::Pedigree::AddProgeny->new({
+#						    schema => $schema,
+#						    cross_name => $cross_name,
+#						   });
+
+
+
+
+     # my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+     #   { name   => 'accession',
+     #   cv     => 'stock type',
+     #   db     => 'null',
+     #   dbxref => 'accession',
+     # });
 
      #my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
      #  { name   => 'population',
