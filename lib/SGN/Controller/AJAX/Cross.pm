@@ -44,10 +44,6 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-
-
-
-
 sub upload_cross_file : Path('/ajax/cross/upload_crosses_file') : ActionClass('REST') { }
 
 sub upload_cross_file_POST : Args(0) {
@@ -65,9 +61,9 @@ sub add_cross_POST :Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
-    $c->stash->{cross_name} = $cross_name;
+    #$c->stash->{cross_name} = $cross_name;
     my $program = $c->req->param('program');
-    $c->stash->{program} = $program;
+    #$c->stash->{program} = $program;
     my $location = $c->req->param('location');
     my $maternal = $c->req->param('maternal_parent');
     my $paternal = $c->req->param('paternal_parent');
@@ -85,16 +81,6 @@ sub add_cross_POST :Args(0) {
     my $paternal_parent_not_required;
     my $number_of_flowers_cvterm;
     my $number_of_seeds_cvterm;
-
-
-
-    $number_of_seeds_cvterm = $schema->resultset("Cv::Cvterm")
-      ->create_with({
-		     name   => 'number_of_seeds',
-		     cv     => 'local',
-		     db     => 'null',
-		     dbxref => 'number_of_seeds',
-		    });
 
 
     if ($cross_type eq "open" || $cross_type eq "bulk_open") {
@@ -115,7 +101,6 @@ sub add_cross_POST :Args(0) {
 	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
 	return;
     }
-
 
     #check that progeny number is an integer less than maximum allowed
     my $maximum_progeny_number = 999; #higher numbers break cross name convention
@@ -161,11 +146,6 @@ sub add_cross_POST :Args(0) {
       return;
     }
 
-    #my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
-    #       {
-    #            nd_geolocation_id => $location_id,
-    #       } ) ;
-
     #objects to store cross information
     my $cross_to_add = Bio::GeneticRelationships::Pedigree->new(name => $cross_name, cross_type => $cross_type);
     my $female_individual = Bio::GeneticRelationships::Individual->new(name => $maternal);
@@ -184,17 +164,8 @@ sub add_cross_POST :Args(0) {
 					       crosses =>  \@array_of_pedigree_objects},
 						);
 
-    #set some properties of the cross experiment if specified
-    if ($number_of_seeds) {
-      $cross_add->set_number_of_seeds("$number_of_seeds");
-    }
-    if ($number_of_flowers) {
-      $cross_add->set_number_of_flowers("$number_of_flowers");
-    }
-
     #add the crosses
     $cross_add->add_crosses();
-
 
     #create progeny if specified
     if ($progeny_number) {
@@ -218,215 +189,27 @@ sub add_cross_POST :Args(0) {
 
     }
 
+    #add number of flowers as an experimentprop if specified
     if ($number_of_flowers) {
       my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ schema => $schema, cross_name => $cross_name} );
       $cross_add_info->set_number_of_flowers($number_of_flowers);
       $cross_add_info->add_info();
     }
 
-
+    #add number of seeds as an experimentprop if specified
     if ($number_of_seeds) {
       my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ schema => $schema, cross_name => $cross_name} );
       $cross_add_info->set_number_of_seeds($number_of_seeds);
       $cross_add_info->add_info();
     }
-      #set flower number in experimentprop
-     # $experiment->find_or_create_related('nd_experimentprops' , {
-    # 								  nd_experiment_id => $experiment->nd_experiment_id(),
-    # 								  type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
-    # 								  value  =>  $number_of_flowers,
-    # 								 });
-    # }
-  # my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-   #    { name   => 'cross_type',
-   # 	cv     => 'local',
-   # 	db     => 'null',
-   # 	dbxref => 'cross_type',
-   #  });
-    # if ($number_of_seeds) {
-    #   $experiment->find_or_create_related('nd_experimentprops' , {
-    # 								  nd_experiment_id => $experiment->nd_experiment_id(),
-    # 								  type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
-    # 								  value  =>  $number_of_seeds,
-    # 								 });
-
-
-     # my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-     #   { name   => 'accession',
-     #   cv     => 'stock type',
-     #   db     => 'null',
-     #   dbxref => 'accession',
-     # });
-
-     #my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
-     #  { name   => 'population',
-     #});
-
-   #  my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
-   #         {
-   #              nd_geolocation_id => $location_id,
-   #         } ) ;
-
-   #  my $project;
-
-   #  if ($program_id && $program_id ne 'null') {
-   # 	$project = $schema->resultset("Project::Project")
-   # 	    ->find_or_create(
-   # 			     {
-   # 			      project_id => $program_id,
-   # 			     } ) ;
-   #  }
-
-#    my $organism_id = $female_parent_stock->organism_id();
-
-   #   my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-   #     { name   => 'accession',
-   #     cv     => 'stock type',
-   #     db     => 'null',
-   #     dbxref => 'accession',
-   #   });
-
-   #   #my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
-   #   #  { name   => 'population',
-   #   #});
-
-   #  my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
-   #    { name   => 'cross',
-   #  });
-
-  #    my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
-  #  { name   => 'male_parent',
-   #   cv     => 'stock relationship',
-   #   db     => 'null',
-   #   dbxref => 'male_parent',
-   # });
-
-   #  my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
-   #          { name       => $maternal,
-   #          } );
-
-   #  my $organism_id = $female_parent_stock->organism_id();
-
-   #  my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
-   #          { name       => $paternal,
-   #          } );
-
-   #  my $population_stock = $schema->resultset("Stock::Stock")->find_or_create(
-   #          { organism_id => $organism_id,
-   # 	      name       => $cross_name,
-   # 	      uniquename => $cross_name,
-   # 	      type_id => $population_cvterm->cvterm_id,
-   #          } );
-
-   #    my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
-   #  { name   => 'female_parent',
-   #    cv     => 'stock relationship',
-   #    db     => 'null',
-   #    dbxref => 'female_parent',
-   #  });
-
-   #    my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
-   #  { name   => 'male_parent',
-   #    cv     => 'stock relationship',
-   #    db     => 'null',
-   #    dbxref => 'male_parent',
-   #  });
-
-   #    my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
-   #  { name   => 'cross_name',
-   #    cv     => 'stock relationship',
-   #    db     => 'null',
-   #    dbxref => 'cross_name',
-   #  });
-
-   #    my $visible_to_role_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-   #  { name   => 'visible_to_role',
-   #    cv => 'local',
-   #    db => 'null',
-   #  });
-
-   # my $number_of_flowers_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-   #    { name   => 'number_of_flowers',
-   # 	cv     => 'local',
-   # 	db     => 'null',
-   # 	dbxref => 'number_of_flowers',
-   #  });
-
-   # my $number_of_seeds_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-   #    { name   => 'number_of_seeds',
-   # 	cv     => 'local',
-   # 	db     => 'null',
-   # 	dbxref => 'number_of_seeds',
-   #  });
-
-    # if ($number_of_flowers) {
-    #   #set flower number in experimentprop
-    #   $experiment->find_or_create_related('nd_experimentprops' , {
-    # 								  nd_experiment_id => $experiment->nd_experiment_id(),
-    # 								  type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
-    # 								  value  =>  $number_of_flowers,
-    # 								 });
-    # }
-  # my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-   #    { name   => 'cross_type',
-   # 	cv     => 'local',
-   # 	db     => 'null',
-   # 	dbxref => 'cross_type',
-   #  });
-    # if ($number_of_seeds) {
-    #   $experiment->find_or_create_related('nd_experimentprops' , {
-    # 								  nd_experiment_id => $experiment->nd_experiment_id(),
-    # 								  type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
-    # 								  value  =>  $number_of_seeds,
-    # 								 });
-    # }
-
-
-    # my $increment = 1;
-    # if ($progeny_number) {
-    #   while ($increment < $progeny_number + 1) {
-    # 	  $increment = sprintf "%03d", $increment;
-    # 	my $stock_name = $prefix.$cross_name."_".$increment.$suffix;
-    # 	my $accession_stock = $schema->resultset("Stock::Stock")->create(
-    # 									 { organism_id => $organism_id,
-    # 									   name       => $stock_name,
-    # 									   uniquename => $stock_name,
-    # 									   type_id     => $accession_cvterm->cvterm_id,
-    # 									 } );
-    # 	$accession_stock->find_or_create_related('stock_relationship_objects', {
-    # 										type_id => $female_parent->cvterm_id(),
-    # 										object_id => $accession_stock->stock_id(),
-    # 										subject_id => $female_parent_stock->stock_id(),
-    # 									       } );
-    # 	$accession_stock->find_or_create_related('stock_relationship_objects', {
-    # 										type_id => $male_parent->cvterm_id(),
-    # 										object_id => $accession_stock->stock_id(),
-    # 										subject_id => $male_parent_stock->stock_id(),
-    # 									       } );
-    # 	$accession_stock->find_or_create_related('stock_relationship_objects', {
-    # 										type_id => $population_members->cvterm_id(),
-    # 										object_id => $accession_stock->stock_id(),
-    # 										subject_id => $population_stock->stock_id(),
-    # 									       } );
-    # 	if ($visible_to_role) {
-    # 	  my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
-    # 											    { type_id =>$visible_to_role_cvterm->cvterm_id(),
-    # 											      value => $visible_to_role,
-    # 											      stock_id => $accession_stock->stock_id()
-    # 											    });
-    # 	}
-    # 	$increment++;
-
-    #   }
-    # }
-
 
     if ($@) {
 	$c->stash->{rest} = { error => "An error occurred: $@"};
     }
 
     $c->stash->{rest} = { error => '', };
-}
+  }
 
-
-1;
+###
+1;#
+###
