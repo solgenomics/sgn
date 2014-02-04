@@ -81,7 +81,6 @@ sub add_progeny {
     my $cross_name_cvterm = $schema->resultset("Cv::Cvterm")->find(
 								   { name   => 'cross_name',
 								   });
-
     if (!$cross_name_cvterm) {
       $cross_name_cvterm = $schema->resultset("Cv::Cvterm")
 	->create_with( { name   => 'cross_name',
@@ -101,18 +100,36 @@ sub add_progeny {
     #Get organism id from cross
     $organism_id = $cross_stock->organism_id();
 
-    #get female parent
-    $female_parent = $cross_stock
-      ->find_related('stock_relationship_objects', {
-						    type_id => $female_parent_cvterm->cvterm_id(),
-						    object_id => $cross_stock->stock_id(),
-						   } );
-    #get male parent
-    $male_parent = $cross_stock
-      ->find_related('stock_relationship_objects', {
-						    type_id => $male_parent_cvterm->cvterm_id(),
-						    object_id => $cross_stock->stock_id(),
-						   } );
+    #get experiment
+    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+      ->find({
+	      'nd_experiment_stocks.stock_id' => $cross_stock->stock_id,
+	     },
+	     {
+	      join => 'nd_experiment_stocks',
+	     });
+    if (!$experiment) {
+      print STDERR "\n\n\nCross experiment could not be found\n";
+      return;
+    }
+
+    $female_parent = $schema->resultset("Stock::Stock")
+      ->find({
+	      'nd_experiment_stocks.nd_experiment_id' => $experiment->nd_experiment_id(),
+	      'nd_experiment_stocks.type_id'  =>  $female_parent_cvterm->cvterm_id(),
+	     },
+	     {
+	      join => 'nd_experiment_stocks',
+	     });
+
+    $male_parent = $schema->resultset("Stock::Stock")
+      ->find({
+	      'nd_experiment_stocks.nd_experiment_id' => $experiment->nd_experiment_id(),
+	      'nd_experiment_stocks.type_id'  =>  $male_parent_cvterm->cvterm_id(),
+	     },
+	     {
+	      join => 'nd_experiment_stocks',
+	     });
 
     foreach my $progeny_name (@progeny_names) {
 
@@ -135,6 +152,7 @@ sub add_progeny {
 							       } );
       #create relationship to female parent
       if ($female_parent) {
+	print STDERR "\n\n\nFound female parent of cross\n\n";
 	$accession_stock
 	  ->find_or_create_related('stock_relationship_objects', {
 								  type_id => $female_parent_cvterm->cvterm_id(),
@@ -145,12 +163,12 @@ sub add_progeny {
 
       #create relationship to male parent
       if ($male_parent) {
-	$accession_stock
-	  ->find_or_create_related('stock_relationship_objects', {
-								  type_id => $male_parent_cvterm->cvterm_id(),
-								  object_id => $accession_stock->stock_id(),
-								  subject_id => $male_parent->stock_id(),
-								 });
+       	$accession_stock
+       	  ->find_or_create_related('stock_relationship_objects', {
+       								  type_id => $male_parent_cvterm->cvterm_id(),
+       								  object_id => $accession_stock->stock_id(),
+       								  subject_id => $male_parent->stock_id(),
+       								 });
       }
 
     }
@@ -165,10 +183,9 @@ sub add_progeny {
   };
 
   if ($transaction_error) {
-    print STDERR "Transaction error creating a cross: $transaction_error\n";
+    print STDERR "Transaction1 error creating a cross: $transaction_error\n";
     return;
   }
-
 
   return 1;
 }
