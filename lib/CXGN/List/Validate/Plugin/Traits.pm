@@ -10,12 +10,10 @@ sub name {
 
 sub validate { 
     my $self = shift;
-    my $c = shift;
+    my $schema = shift;
     my $list = shift;
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-        
-    print STDERR "LIST: ".Data::Dumper::Dumper($list);
+#    print STDERR "LIST: ".Data::Dumper::Dumper($list);
 
     my @missing = ();
     my $rs;

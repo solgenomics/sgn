@@ -470,7 +470,7 @@ sub validate : Path('/list/validate') Args(2) {
     my @flat_list = map { $_->[1] } @$list;
 
     my $lv = CXGN::List::Validate->new();
-    my $data = $lv->validate($c, $type, \@flat_list);
+    my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);
 
     $c->stash->{rest} = $data;
 }

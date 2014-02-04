@@ -42,8 +42,8 @@ sub _verify {
     my %plot_trait_value = %{$plot_trait_value_hashref};
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plot_validator->validate($c,'plots',\@plot_list)->{'missing'}};
-    my @traits_missing = @{$trait_validator->validate($c,'traits',\@trait_list)->{'missing'}};
+    my @plots_missing = @{$plot_validator->validate($c->dbic_schema("Bio::Chado::Schema"),'plots',\@plot_list)->{'missing'}};
+    my @traits_missing = @{$trait_validator->validate($c->dbic_schema("Bio::Chado::Schema"),'traits',\@trait_list)->{'missing'}};
     if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
 	print STDERR "Plots or traits not valid\n";
 	return;
