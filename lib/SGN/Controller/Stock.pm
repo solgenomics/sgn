@@ -848,11 +848,13 @@ sub _stock_has_descendants {
 										 db     => 'null',
 										 dbxref => 'male_parent',
 									       });
+
   my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
   if ($descendant_relationships) {
     while (my $descendant_relationship = $descendant_relationships->next) {
       my $descendant_stock_id = $descendant_relationship->object_id();
-      if ($descendant_stock_id && (($descendant_relationship->type_id() == $cvterm_female_parent->cvterm_id()) || ($descendant_relationship->type_id() == $cvterm_male_parent->cvterm_id()))) {
+      #if ($descendant_stock_id && (($descendant_relationship->type_id() == $cvterm_female_parent->cvterm_id()) || ($descendant_relationship->type_id() == $cvterm_male_parent->cvterm_id()))) {
+      if ($descendant_stock_id) {
 	return 1;
       } else {
 	return 0;
