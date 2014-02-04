@@ -168,9 +168,13 @@ if (!$nocleanup) {
     print STDERR "# Delete server logfile... ";
     unlink $logfile;
     print STDERR "Done.\n";
+
+    print STDERR "# Delete fixture conf file... ";
+    unlink "sgn_fixture.conf";
+    print STDERR "Done.\n";
 }
 else { 
-    print STDERR "--nocleanup option: not removing db or files.\n";
+    print STDERR "# --nocleanup option: not removing db or files.\n";
 }
 print STDERR "# Test run complete.\n\n";
 

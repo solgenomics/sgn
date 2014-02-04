@@ -6,8 +6,30 @@ use warnings;
 our @EXPORT_OK = qw/
     design_layout_view
     design_info_view
+    trial_detail_design_view
 /;
 our @EXPORT = ();
+
+sub trial_detail_design_view {
+  my $design_ref = shift;
+  my %design = %{$design_ref};
+  my $design_result_html;
+
+  $design_result_html .= '<table border="1">';
+  $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Block Number</th><th>Rep Number</th></tr>};
+
+  foreach my $key (sort { $a <=> $b} keys %design) {
+    $design_result_html .= "<tr><td>".$design{$key}->{plot_name} ."</td><td>".$design{$key}->{accession_name} ."</td><td>".$design{$key}->{block_number}."</td>";
+    if ($design{$key}->{rep_number}) {
+      $design_result_html .= "<td>".$design{$key}->{rep_number}."</td>";
+    }
+    $design_result_html .= "</tr>";
+  }
+  $design_result_html .= "</table>";
+  return  "$design_result_html";
+
+}
+
 
 sub design_layout_view {
   my $design_ref = shift;

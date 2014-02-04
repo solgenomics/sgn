@@ -1625,7 +1625,7 @@ sub convert_to_arrayref {
     my @data;   
     while (<$fh>)
     {
-        push @data,  map { [ split(/\t/) ] } $_;
+        push @data,  map { [ split(/\t/) ]  } $_ if $_;
     }
    
     shift(@data);
@@ -3565,7 +3565,7 @@ sub get_solgs_dirs {
     my $solgs_cache     = catdir($solgs_dir, 'cache'); 
     my $solgs_tempfiles = catdir($solgs_dir, 'tempfiles');
     my $solgs_prediction_upload = catdir($solgs_dir, 'tempfiles', 'prediction_upload');
-    my $correlation_dir = catdir($solgs_dir, 'cache', 'correlation');
+    my $correlation_dir = catdir($c->config->{cluster_shared_tempdir}, 'correlation', 'cache');
 
     mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_prediction_upload, $correlation_dir], 0, 0755);
    

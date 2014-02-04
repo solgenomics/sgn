@@ -4,6 +4,7 @@ package SGN::Controller::BreedersToolbox::Trial;
 use Moose;
 use CXGN::Trial::TrialLayout;
 use CXGN::BreedersToolbox::Projects;
+use SGN::View::Trial qw/design_layout_view design_info_view trial_detail_design_view/;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -25,7 +26,10 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     my $control_names_ref = $trial_layout->get_control_names();
     my $block_numbers = $trial_layout->get_block_numbers();
     my $replicate_numbers = $trial_layout->get_replicate_numbers();
+    my %design = %{$trial_layout->get_design()};
+    my %design_info;
 
+    my $design_layout_view_html = trial_detail_design_view(\%design);
 
     my @plot_names;
     if ($plot_names_ref) {
@@ -39,6 +43,8 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     $c->stash->{design_type} = $design_type;
     $c->stash->{trial_description} = $trial_description;
     $c->stash->{trial_id} = $trial_id;
+    $c->stash->{design} = \%design;
+    $c->stash->{design_layout_view} = $design_layout_view_html;
     my $number_of_blocks;
     if ($block_numbers) {
       $number_of_blocks = scalar(@{$block_numbers});

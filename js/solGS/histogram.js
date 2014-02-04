@@ -28,30 +28,27 @@ function getTraitDetails () {
 
 
 jQuery(document).ready( function () { 
-        var trait = getTraitDetails();
-        
-        jQuery.ajax({
-                type: 'POST',
-                    dataType: 'json',
-                    data: {'population_id': trait.population_id, 'trait_id' : trait.trait_id  },
-                    url: '/histogram/phenotype/data/',
-                    success: function(response) { 
-                    //  alert(response.data);
-                   
-                     plotHistogram(response.data);
-                },
-                    error: function(response) {
-                    
-                    alert('there is error in creating the phenotype data set for the histogram.');
-                }
-            });
-
+    
+    var trait = getTraitDetails();
+       
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+        data: {'population_id': trait.population_id, 'trait_id' : trait.trait_id  },
+        url: '/histogram/phenotype/data/',
+        success: function(response) {             
+            plotHistogram(response.data);
+        },
+        error: function(response) {
+            var errorMessage = 'There is error in creating the phenotype data set for the histogram.';
+            jQuery("#trait_histogram_plot").html(errorMessage);                  
+        }
     });
+});
 
 
 function plotHistogram (data) {
-    // alert(data[0][0] + ' ' + data[0][1] );
-     
+    
     var height = 300;
     var width  = 500;
     var pad    = {left:20, top:50, right:40, bottom: 50}; 

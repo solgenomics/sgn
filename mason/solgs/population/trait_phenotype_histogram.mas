@@ -17,10 +17,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
 $pop_id => ''
 $combo_pops_id => ''
 $trait_id
-
+$trial_id => ''
 </%args>
 
 <%perl>
+
+$pop_id = $trial_id if $trial_id;
+
+</%perl>
 
 
 </%perl>

@@ -10,6 +10,7 @@ CXGN::List::Transform - transform lists from one type to another
    my @$tf->tranform($transform_name, $list_ref);
  }
 
+=cut
 
 package CXGN::List::Transform;
 
