@@ -208,7 +208,7 @@ sub _get_cross {
   $stock = $stock_lookup->get_stock_exact();
 
   if (!$stock) {
-    print STDERR "Cross name does not exist\\n";
+    print STDERR "Cross name does not exist\n";
     return;
   }
 
