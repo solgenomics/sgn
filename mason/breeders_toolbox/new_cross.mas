@@ -148,7 +148,9 @@ foreach my $location (@locations) {
 <td id="get_prefix_suffix" style = "display: none">Prefix <input id="prefix" name="prefix" size="5" /> Suffix <input id="suffix" name="suffix" size="5" /></td>
 </tr>
 
-<tr><td>Data access restrictions<input disabled id="data_access_checkbox" type="checkbox"/></td>
+<div style="display: none">
+<tr><td style="display: none">Data access restrictions<input disabled id="data_access_checkbox" type="checkbox" style="display: none"/> </td>
+</div>
 <td id="show_visible_to_role_selection" style="display: none">
 <select id="visible_to_role">
 <option value = "" >none</option>
@@ -160,6 +162,7 @@ foreach my $role (@roles) {
 </select>
 </td>
 </tr>
+
 
 </table>
 </div>
