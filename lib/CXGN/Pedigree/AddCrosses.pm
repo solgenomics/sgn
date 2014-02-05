@@ -118,6 +118,15 @@ sub add_crosses {
 		     cv     => 'stock type',
 		    });
 
+    #get cvterm for type of cross
+    my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with({
+		     name   => 'cross_type',
+		     cv     => 'local',
+		     db     => 'null',
+		     dbxref => 'cross_type',
+		    });
+
     if (!$self->validate_crosses()) {
       print STDERR "Invalid pedigrees in array.  No crosses will be added\n";
       return;
@@ -261,6 +270,14 @@ sub add_crosses {
 
       #link the cross program to the breeding program
       $program_lookup->associate_breeding_program_with_trial($program->project_id(), $project->project_id());
+
+      #add the cross type to the experiment as an experimentprop
+      $experiment
+	->find_or_create_related('nd_experimentprops' , {
+							 nd_experiment_id => $experiment->nd_experiment_id(),
+							 type_id  =>  $cross_type_cvterm->cvterm_id(),
+							 value  =>  $cross_type,
+							});
 
     }
 
