@@ -149,9 +149,13 @@ sub add_cross_POST :Args(0) {
     #objects to store cross information
     my $cross_to_add = Bio::GeneticRelationships::Pedigree->new(name => $cross_name, cross_type => $cross_type);
     my $female_individual = Bio::GeneticRelationships::Individual->new(name => $maternal);
-    my $male_individual = Bio::GeneticRelationships::Individual->new(name => $paternal);
     $cross_to_add->set_female_parent($female_individual);
-    $cross_to_add->set_male_parent($male_individual);
+
+    if (!$paternal_parent_not_required){
+      my $male_individual = Bio::GeneticRelationships::Individual->new(name => $paternal);
+      $cross_to_add->set_male_parent($male_individual);
+    }
+
     $cross_to_add->set_cross_type($cross_type);
     $cross_to_add->set_name($cross_name);
 

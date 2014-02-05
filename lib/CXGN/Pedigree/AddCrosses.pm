@@ -206,6 +206,12 @@ sub add_crosses {
 								      type_id  =>  $male_parent_cvterm->cvterm_id(),
 								     });
       }
+      if ($cross_type eq "self" && $female_parent) {
+	$experiment->find_or_create_related('nd_experiment_stocks' , {
+								      stock_id => $female_parent->stock_id(),
+								      type_id  =>  $male_parent_cvterm->cvterm_id(),
+								     });
+      }
 
       #create a stock of type cross
       $cross_stock = $schema->resultset("Stock::Stock")->find_or_create(
@@ -214,7 +220,6 @@ sub add_crosses {
 									  uniquename => $cross_name,
 									  type_id => $cross_stock_type_cvterm->cvterm_id,
 									} );
-
       #link parents to the stock of type cross
       $cross_stock
 	->find_or_create_related('stock_relationship_objects', {
@@ -336,8 +341,15 @@ sub _validate_cross {
       return;
     }
 
-  }
+  }  elsif ($cross_type eq "open") {
+    $female_parent_name = $pedigree->get_female_parent()->get_name();
+    $female_parent = $self->_get_accession($female_parent_name);
 
+    if (!$female_parent) {
+      print STDERR "Parent $female_parent_name in pedigree is not a stock\n";
+      return;
+    }
+  }
   #add support for other cross types here
 
   else {
