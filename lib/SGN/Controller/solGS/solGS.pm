@@ -313,7 +313,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
     my ($self, $c, $query) = @_;
   
     my @rows;
-    my $result = $c->model('solGS::solGS')->search_trait($c, $query);
+    my $result = $c->model('solGS::solGS')->search_trait($query);
    
     while (my $row = $result->next)
     {
@@ -2932,7 +2932,7 @@ sub abbreviate_term {
 sub all_gs_traits_list {
     my ($self, $c) = @_;
 
-    my $rs = $c->model('solGS::solGS')->all_gs_traits($c);
+    my $rs = $c->model('solGS::solGS')->all_gs_traits();
  
     my @all_traits;
     while (my $row = $rs->next)
