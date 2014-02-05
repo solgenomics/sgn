@@ -9,14 +9,12 @@ sub name {
 
 sub validate { 
     my $self = shift;
-    my $c = shift;
+    my $schema = shift;
     my $list = shift;
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    
     my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"plot" })->first->cvterm_id();
     
-    print STDERR "PLOT TYPE ID $type_id\n";
+    #print STDERR "PLOT TYPE ID $type_id\n";
 
     my @missing = ();
     foreach my $l (@$list) { 

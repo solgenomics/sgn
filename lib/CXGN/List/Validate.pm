@@ -7,7 +7,7 @@ use Module::Pluggable require => 1;
 
 sub validate { 
     my $self = shift;
-    my $c = shift;
+    my $schema = shift;
     my $type = shift;
     my $list = shift;
 
@@ -17,7 +17,7 @@ sub validate {
 
     foreach my $p ($self->plugins()) { 
         if ($type eq $p->name()) { 
-	     $data = $p->validate($c, $list);
+	     $data = $p->validate($schema, $list);
 	}
     }
     return $data;
