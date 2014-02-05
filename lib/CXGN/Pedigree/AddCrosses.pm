@@ -221,18 +221,33 @@ sub add_crosses {
 									  type_id => $cross_stock_type_cvterm->cvterm_id,
 									} );
       #link parents to the stock of type cross
-      $cross_stock
-	->find_or_create_related('stock_relationship_objects', {
-								type_id => $female_parent_cvterm->cvterm_id(),
-								object_id => $cross_stock->stock_id(),
-								subject_id => $female_parent->stock_id(),
-							       } );
-      $cross_stock
-	->find_or_create_related('stock_relationship_objects', {
-								type_id => $male_parent_cvterm->cvterm_id(),
-								object_id => $cross_stock->stock_id(),
-								subject_id => $male_parent->stock_id(),
-							       } );
+      if ($female_parent) {
+	$cross_stock
+	  ->find_or_create_related('stock_relationship_objects', {
+								  type_id => $female_parent_cvterm->cvterm_id(),
+								  object_id => $cross_stock->stock_id(),
+								  subject_id => $female_parent->stock_id(),
+								 } );
+      }
+
+      if ($male_parent) {
+	$cross_stock
+	  ->find_or_create_related('stock_relationship_objects', {
+								  type_id => $male_parent_cvterm->cvterm_id(),
+								  object_id => $cross_stock->stock_id(),
+								  subject_id => $male_parent->stock_id(),
+								 } );
+      }
+
+      if ($cross_type eq "self" && $female_parent) {
+	$cross_stock
+	  ->find_or_create_related('stock_relationship_objects', {
+								  type_id => $male_parent_cvterm->cvterm_id(),
+								  object_id => $cross_stock->stock_id(),
+								  subject_id => $female_parent->stock_id(),
+								 } );
+      }
+
 
       #link the stock of type cross to the experiment
       $experiment->find_or_create_related('nd_experiment_stocks' , {
