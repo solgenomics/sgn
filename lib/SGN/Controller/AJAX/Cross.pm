@@ -129,9 +129,11 @@ sub add_cross_POST :Args(0) {
       return;
     }
 
-    if (! $schema->resultset("Stock::Stock")->find({name=>$paternal,})){
-      $c->stash->{rest} = {error =>  "paternal parent does not exist." };
-      return;
+    if (!$paternal_parent_not_required) {
+      if (! $schema->resultset("Stock::Stock")->find({name=>$paternal,})){
+	$c->stash->{rest} = {error =>  "paternal parent does not exist." };
+	return;
+      }
     }
 
     #check that cross name does not already exist
