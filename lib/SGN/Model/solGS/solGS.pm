@@ -1,6 +1,7 @@
 package SGN::Model::solGS::solGS;
 
-use Moose;
+#use Moose;
+
 use namespace::autoclean;
 use Bio::Chado::Schema;
 use Bio::Chado::NaturalDiversity::Reports;
@@ -10,7 +11,7 @@ use List::MoreUtils qw / uniq /;
 use JSON::Any;
 use Math::Round::Var;
 
-extends 'Catalyst::Model';
+use base 'Catalyst::Model';
 
 =head1 NAME
 
@@ -32,15 +33,31 @@ it under the same terms as Perl itself.
 =cut
 
 
+__PACKAGE__->mk_accessors(qw/context schema/);
+
+ 
+sub ACCEPT_CONTEXT {
+    my ($self, $c ) = @_;
+   
+    $self = bless({ %$self,
+                    context => $c,
+                    schema  => $c->dbic_schema("Bio::Chado::Schema"),     
+                  }, 
+                  ref($self)
+        );
+
+    return $self;
+
+}
 
 
 sub search_trait {
-    my ($self, $c, $trait) = @_;
-    
+    my ($self, $trait) = @_;
+ 
     my $rs;
     if ($trait)
     {       
-        $rs = $self->schema($c)->resultset("Phenotype::Phenotype")
+        $rs = $self->schema->resultset("Phenotype::Phenotype")
             ->search({})
             ->search_related('observable', 
                              {
@@ -48,10 +65,11 @@ sub search_trait {
                              },
                              { 
                                  distinct => 1,
-                                 page     => $c->req->param('page') || 1,
+                                 page     => $self->context->req->param('page') || 1,
                                  rows     => 10,
                                  order_by => 'name'              
-                             },                                                        
+                             },                  
+                             
             );             
     }
 
@@ -61,9 +79,9 @@ sub search_trait {
 
 
 sub all_gs_traits {
-    my ($self, $c) = @_;
+    my $self = @_;
 
-    my $rs = $self->schema($c)->resultset("Phenotype::Phenotype")
+    my $rs = $self->schema->resultset("Phenotype::Phenotype")
         ->search(
         {}, 
         {
@@ -82,7 +100,7 @@ sub all_gs_traits {
 sub search_populations {
     my ($self, $c, $trait_id) = @_;
   
-    my $rs = $self->schema($c)->resultset("Phenotype::Phenotype")
+    my $rs = $self->schema->resultset("Phenotype::Phenotype")
         ->search({'me.observable_id' =>  $trait_id})
         ->search_related('nd_experiment_phenotypes')
         ->search_related('nd_experiment')
@@ -108,7 +126,7 @@ sub search_populations {
 sub project_year {
     my ($self, $c, $pr_id) =  @_;
     
-    return $self->schema($c)->resultset("Project::Projectprop")
+    return $self->schema->resultset("Project::Projectprop")
         ->search(
         {
             'me.project_id' => $pr_id
@@ -120,7 +138,7 @@ sub project_year {
 sub project_location {
     my ($self, $c, $pr_id) = @_;
 
-    return $self->schema($c)->resultset("NaturalDiversity::NdExperimentProject")
+    return $self->schema->resultset("NaturalDiversity::NdExperimentProject")
         ->search({'me.project_id' => $pr_id})
         ->search_related('nd_experiment')
         ->search_related('nd_geolocation');
@@ -131,16 +149,17 @@ sub project_location {
 sub all_projects {
     my ($self, $c) = @_;
 
-    my $rows = $c->stash->{get_selection_populations} ? 40 : 10;
+    my $rows = $self->context->stash->{get_selection_populations} ? 40 : 10;
 
-    my $projects_rs =  $self->schema($c)->resultset("Project::Project")
+    my $projects_rs =  $self->schema->resultset("Project::Project")
         ->search({}, 
                  { 
                      distinct => 1,
-                     page     => $c->req->param('page') || 1,
+                     page     => $self->context->req->param('page') || 1,
                      rows     => $rows,
                      order_by => 'name'              
-                 },                       
+                 },                      
+                 
         );
 
     return $projects_rs;
@@ -150,7 +169,7 @@ sub all_projects {
 sub project_details {
     my ($self, $c, $pr_id) = @_;
     
-    return $self->schema($c)->resultset("Project::Project")
+    return $self->schema->resultset("Project::Project")
         ->search( {'me.project_id' => $pr_id});
 }
 
@@ -158,7 +177,7 @@ sub project_details {
 sub get_population_details {
     my ($self, $c, $pop_id) = @_;
    
-    return $self->schema($c)->resultset("Stock::Stock")
+    return $self->schema->resultset("Stock::Stock")
         ->search(
         {
             'stock_id' => $pop_id
@@ -170,7 +189,7 @@ sub get_population_details {
 sub trait_name {
     my ($self, $c, $trait_id) = @_;
 
-    my $trait_name = $self->schema($c)->resultset('Cv::Cvterm')
+    my $trait_name = $self->schema->resultset('Cv::Cvterm')
         ->search( {cvterm_id => $trait_id})
         ->single
         ->name;
@@ -185,7 +204,7 @@ sub get_trait_id {
 
     if ($trait) 
     {
-        my $trait_id = $self->schema($c)->resultset('Cv::Cvterm')
+        my $trait_id = $self->schema->resultset('Cv::Cvterm')
             ->search( {name => $trait})
             ->single
             ->id;
@@ -198,12 +217,12 @@ sub get_trait_id {
 sub check_stock_type {
     my ($self, $c, $stock_id) = @_;
 
-    my $type_id = $self->schema($c)->resultset("Stock::Stock")
+    my $type_id = $self->schema->resultset("Stock::Stock")
         ->search({'stock_id' => $stock_id})
         ->single
         ->type_id;
 
-    return $self->schema($c)->resultset('Cv::Cvterm')
+    return $self->schema->resultset('Cv::Cvterm')
         ->search({cvterm_id => $type_id})
         ->single
         ->name;
@@ -297,7 +316,7 @@ sub genotype_data {
 sub search_stock {
     my ($self, $c, $stock_name) = @_;
   
-    my $rs = $self->schema($c)->resultset("Stock::Stock")
+    my $rs = $self->schema->resultset("Stock::Stock")
         ->search({'me.name' =>  $stock_name});
    
     return $rs; 
@@ -308,7 +327,7 @@ sub search_stock {
 sub search_stock_using_plot_name {
     my ($self, $c, $plot_name) = @_;
   
-    my $rs = $self->schema($c)->resultset("Stock::Stock")
+    my $rs = $self->schema->resultset("Stock::Stock")
         ->search({'me.uniquename' =>  $plot_name});
          
     return $rs; 
@@ -763,7 +782,7 @@ sub stock_projects_rs {
 sub project_subject_stocks_rs {
     my ($self, $c, $project_id) = @_;
   
-    my $stock_rs =  $self->schema($c)->resultset("Project::Project")
+    my $stock_rs =  $self->schema->resultset("Project::Project")
         ->search({'me.project_id' => $project_id})
         ->search_related('nd_experiment_projects')
         ->search_related('nd_experiment')
@@ -801,7 +820,7 @@ sub stocks_object_rs {
 sub map_subject_to_object {
     my ($self, $c, $stock_id) = @_;
 
-    my $stock_obj_rs = $self->schema($c)->resultset("Stock::Stock")
+    my $stock_obj_rs = $self->schema->resultset("Stock::Stock")
         ->search({'me.stock_id' => $stock_id})
         ->search_related('stock_relationship_subjects')
         ->search_related('object');
@@ -810,10 +829,6 @@ sub map_subject_to_object {
 }
 
 
-sub schema {
-    my ($self, $c) = @_;
-    return  $c->dbic_schema("Bio::Chado::Schema");
-} 
 
 
 
