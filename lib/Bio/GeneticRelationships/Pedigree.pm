@@ -29,7 +29,8 @@ subtype 'CrossType',
   where {
     $_ eq 'biparental' ||
       $_ eq 'self' ||
-	$_ eq 'unknown' };
+	$_ eq 'open' ||
+	  $_ eq 'unknown' };
 has 'name' => (isa => 'Str',is => 'rw', predicate => 'has_name', required => 1,);
 has 'cross_type' => (isa =>'CrossType', is => 'rw', predicate => 'has_cross_type', required => 1,);
 has 'female_parent' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_female_parent');

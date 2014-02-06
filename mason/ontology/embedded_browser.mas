@@ -11,7 +11,6 @@
         'MochiKit.DOM',
         'MochiKit.Visual',
         'MochiKit.Async',
-        'Prototype',
         'MochiKit.Logging',
         'CXGN.Onto.Browser',
         'CXGN.Page.FormattingHelpers',
