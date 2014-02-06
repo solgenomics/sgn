@@ -38,9 +38,14 @@ sub upload_cross_file : Path('/ajax/cross/upload_crosses_file') : ActionClass('R
 
 sub upload_cross_file_POST : Args(0) {
   my ($self, $c) = @_;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $program = $c->req->param('cross_upload_breeding_program');
+  my $location = $c->req->param('cross_upload_location');
+  my $uploaded_file = $c->req->param('crosses_upload_file');
   my $uploader = CXGN::UploadFile->new();
-
   my $parser = CXGN::Phenotypes::ParseUpload->new();
+
+  $c->stash->{rest} = {success => "1",};
 }
 
 
