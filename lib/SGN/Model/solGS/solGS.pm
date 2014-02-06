@@ -301,7 +301,7 @@ sub genotype_data {
             }  
         }
 
-        $self->context->stash->{genotype_data} = $geno_data; 
+     return  $geno_data; 
         
         print STDERR "\n$cnt_clones_diff_markers clones were  genotyped using a 
                         different GBS markers than the ones on the header. 

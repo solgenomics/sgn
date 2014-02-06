@@ -3181,9 +3181,8 @@ sub genotype_file  {
         unless ($geno_file)
         {  
             $geno_file = catfile($c->stash->{solgs_cache_dir}, "genotype_data_" . $pop_id . ".txt");
-            $c->model('solGS::solGS')->genotype_data($pop_id);
-            my $data = $c->stash->{genotype_data};
-
+            my $data = $c->model('solGS::solGS')->genotype_data($pop_id);
+           
             write_file($geno_file, $data);
 
             $file_cache->set($key, $geno_file, '30 days');
