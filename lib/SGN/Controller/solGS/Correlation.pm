@@ -106,7 +106,7 @@ sub get_phenotype_data {
     my ($self, $c) = @_;
     
     my $pop_id = $c->stash->{pop_id};
-    my $pheno_data = $c->model('solGS::solGS')->phenotype_data($c, $pop_id);
+    my $pheno_data = $c->model('solGS::solGS')->phenotype_data($pop_id);
     my $formatted_pheno_data = $c->controller('solGS::solGS')->format_phenotype_dataset($c, $pheno_data);
   
     $c->{correlation_pheno_data} = $formatted_pheno_data;
