@@ -17,7 +17,7 @@ JSAN.use('MochiKit.DOM');
 JSAN.use('MochiKit.Visual');
 JSAN.use('MochiKit.Logging');
 JSAN.use('MochiKit.Async');
-JSAN.use('Prototype');
+//JSAN.use('Prototype');
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Onto.Browser');
 JSAN.use('jquery');
@@ -118,19 +118,20 @@ CXGN.Onto.Browser.prototype = {
 
     fetchRoots: function(rootNodes) {
 
-	new Ajax.Request("/ajax/onto/roots", {
-		parameters:   { nodes: rootNodes },
-		asynchronous: false,
-		method: 'get',
-		on503: function() {
+	jQuery.ajax({ 
+	    url: "/ajax/onto/roots",
+	    data:  { 'nodes' : rootNodes },
+	    async: false,
+	    method: 'get',
+	    error: function() {
 		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
 		},
-		onSuccess: function(request) {
-		    var json = request.responseText;
+	    success: function(response) {
+		  //  var json = request.responseText;
 		    //MochiKit.Logging.log('COMPLETE!');
-		    var x = eval("("+json+")");
+		//var x = eval("("+json+")");
 		    //MochiKit.Logging.log('RESPONSETEXT = ' + x);
-		    if (x.error ) { alert(x.error) ; }
+		    if (response.error ) { alert(response.error) ; }
 		    else {
 			o.rootnode = new Node(o);
 
@@ -140,36 +141,37 @@ CXGN.Onto.Browser.prototype = {
 			o.rootnode.unHide();
 			o.rootnode.setHasChildren(true);
 
-			for (var i=0; i<x.length; i++) {
+			for (var i=0; i<response.length; i++) {
 
 			    var childNode = new Node(o);
 
 			    o.rootnode.addChild(childNode);
-			    childNode.json2node(x[i]);
+			    childNode.json2node(response[i]);
 			}
 		    }
 		}
-	    });
+	});
     },
 
     fetchMenuItems: function() { 
-		new Ajax.Request("/ajax/onto/menu", {
-		parameters:   { },
-		asynchronous: false,
-		method: 'get',
-		on503: function() {
+	jQuery.ajax({ 
+	    url: "/ajax/onto/menu",
+	    data: { },
+	    async: false,
+	    method: 'get',
+	    error: function() {
 		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
-		},
-		onSuccess: function(request) {
-		    var json = request.responseText;
-		    //MochiKit.Logging.log('COMPLETE!');
-		    var x = eval("("+json+")");
-		    //MochiKit.Logging.log('RESPONSETEXT = ' + x);
-		    if (x.error ) { alert(x.error) ; }
-		    o.menu = x;
-
-		}
-	    });
+	    },
+	    success: function(response) {
+		//var json = request.responseText;
+		//MochiKit.Logging.log('COMPLETE!');
+		//var x = eval("("+json+")");
+		//MochiKit.Logging.log('RESPONSETEXT = ' + x);
+		if (response.error ) { alert(response.error) ; }
+		o.menu = response;
+		
+	    }
+	});
     },
 
 
@@ -481,26 +483,27 @@ CXGN.Onto.Browser.prototype = {
 	
 	var parentsList = new Array();
 	var browser = this;
-	new Ajax.Request('/ajax/onto/parents', {
-		parameters: { node: accession }, 
-		    asynchronous: false,
-		    method: 'get',
-		    on503: function() { 
+	jQuery.ajax( {
+	    url: '/ajax/onto/parents',
+	    data: { 'node' : accession }, 
+	    async: false,
+	    method: 'get',
+	    error: function() { 
 		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
 		},
 		    
-		    onSuccess: function(request) {
-		    var json = request.responseText;
-		    var parents = eval("("+json+")");
-		    if ( parents.error ) { alert(parents.error) ; }
-		    else {
-			for (var i=0; i<parents.length; i++) { 
-			    //alert('processing '+parents[i].accession);
-			    parentsList.push(parents[i].accession);
-			}
-			//alert('Now were done!');
+	    success: function(response) {
+		//var json = request.responseText;
+		//var parents = eval("("+json+")");
+		if ( response.error ) { alert(response.error) ; }
+		else {
+		    for (var i=0; i<response.length; i++) { 
+			//alert('processing '+parents[i].accession);
+			parentsList.push(response[i].accession);
 		    }
+		    //alert('Now were done!');
 		}
+	    }
 	});
 	return parentsList;
     },
@@ -508,30 +511,30 @@ CXGN.Onto.Browser.prototype = {
     fetchCachedChildren:function(accession) { 
 	var fetch_response;
 	jQuery.ajax( {
-                url: '/ajax/onto/cache',
-                    async: false,
-                    dataType:"json",
-                    data: 'node='+accession,
-                    success: function(response) {
-                    fetch_response = response;
-                    if (response.error) { alert(response.error) ; }
-                }
-
-                //new Ajax.Request('/ajax/onto/cache', {
-                //parameters: { node: accession }, 
-                //  asynchronous: false,
-                //  method: 'get',
-                //  on503: function() { 
-                //  alert('An error occurred! The database may currently be unavailable. Please check back later.');
-                //},
-                //  onSuccess: function(request) {
-                //  var json = request.responseText;
-                //  cache = eval("("+json+")");
-                //  if ( cache.error ) { alert(cache.error) ; }
-                //  else {
-                //      MochiKit.Logging.log('Cache '+cache.length);
-                //  }
-                //}
+            url: '/ajax/onto/cache',
+            async: false,
+            dataType:"json",
+            data: { 'node' : accession },
+            success: function(response) {
+                fetch_response = response;
+                if (response.error) { alert(response.error) ; }
+            }
+	    
+            //new Ajax.Request('/ajax/onto/cache', {
+            //parameters: { node: accession }, 
+            //  asynchronous: false,
+            //  method: 'get',
+            //  on503: function() { 
+            //  alert('An error occurred! The database may currently be unavailable. Please check back later.');
+            //},
+            //  onSuccess: function(request) {
+            //  var json = request.responseText;
+            //  cache = eval("("+json+")");
+            //  if ( cache.error ) { alert(cache.error) ; }
+            //  else {
+            //      MochiKit.Logging.log('Cache '+cache.length);
+            //  }
+            //}
         });
         return fetch_response;
     },
@@ -545,25 +548,26 @@ CXGN.Onto.Browser.prototype = {
 	    alert('The search text must be longer than 2 characters');
 	}
         else{
-	    new Ajax.Request('/ajax/onto/match', {
-		    parameters: { term_name: search_string, db_name: db_name },
-		    asynchronous: false,
-		    method: 'get',
-		    on503: function() {
-			alert('An error occurred! The database may currently be unavailable. Please check back later.');
-		    },
-		    onSuccess: function(request) {
-			var matchNodes = new Array();
-			var json = request.responseText;
-                        var x = eval("("+json+")");
-			if ( x.error ) { alert(x.error) ; }
-                        else {
-                            var s='';
-			    o.setSearchResponseCount(x.length);
-			    //MochiKit.Logging.log('Matched '+responseArray.length+' terms');
-			    for (var i=0; i<x.length; i++) {
-				matchNodes.push(x.accession); ///
-				s +='<a href=javascript:o.searchTermParentage(\''+x[i].accession+'\')>'+x[i].cv_name+' ('+x[i].accession+') '+x[i].cvterm_name+'</a><br />';
+	    jQuery.ajax({
+		url: '/ajax/onto/match',
+		data: { 'term_name' : search_string, 'db_name' : db_name },
+		async: false,
+		method: 'get',
+		error: function() {
+		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
+		},
+		success: function(response) {
+		    var matchNodes = new Array();
+		    //var json = request.responseText;
+                    //var x = eval("("+json+")");
+		    if ( response.error ) { alert(response.error) ; }
+                    else {
+                        var s='';
+			o.setSearchResponseCount(response.length);
+			//MochiKit.Logging.log('Matched '+responseArray.length+' terms');
+			    for (var i=0; i<response.length; i++) {
+				matchNodes.push(response.accession); ///
+				s +='<a href=javascript:o.searchTermParentage(\''+response[i].accession+'\')>'+response[i].cv_name+' ('+response[i].accession+') '+response[i].cvterm_name+'</a><br />';
 			    }
 			    //		    MochiKit.Logging.log('the search results:' , s) ;
 			    //MochiKit.Logging.log('the search string:' , search_string) ;
@@ -927,7 +931,7 @@ Node.prototype = {
 	}
 
 	var relType=this.getRelType() || '';
-	return relType + ' <span style="'+hiliteStyle+'"><a href="/chado/cvterm.pl?action=view&amp;cvterm_id='+this.getCVtermID()+'">'+this.getAccession() + '</a> ' + this.getName() + ' ' + link +'</span><br />';
+	return relType + ' <span style="'+hiliteStyle+'"><a href="/chado/cvterm?action=view&amp;cvterm_id='+this.getCVtermID()+'">'+this.getAccession() + '</a> ' + this.getName() + ' ' + link +'</span><br />';
     },
 
     setHilite: function(h) { 
@@ -956,61 +960,63 @@ Node.prototype = {
 	    }
 	    return;
 	}
-	new Ajax.Request('/ajax/onto/children', {
-		parameters: { node: accession },
-		asynchronous: false,
-		method: 'get',
-		    on503: function() { 
-		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
-		},
-		    onSuccess: function(request) {
-		    //MochiKit.Logging.log('HELLO WORLD!');
-		    var json = request.responseText;
-		    var x = eval("("+json+")");
-		    if ( x.error ) { alert(x.error) ; }
-		    else {
-			for (var i=0; i<x.length; i++) { 
-			    var childNode = new Node(o);
-			    childNode.json2node(x[i]);
-			    childNode.closeNode();
-			    childNode.unHide();
-			    parentNode.addChild(childNode);
-			}
-			parentNode.browser.render();
+	jQuery.ajax({
+	    url: '/ajax/onto/children',
+	    data: { 'node' : accession },
+	    async: false,
+	    method: 'get',
+	    error: function() { 
+		alert('An error occurred! The database may currently be unavailable. Please check back later.');
+	    },
+	    success: function(response) {
+		//MochiKit.Logging.log('HELLO WORLD!');
+		//var json = request.responseText;
+		//var x = eval("("+json+")");
+		if ( response.error ) { alert(response.error) ; }
+		else {
+		    for (var i=0; i<response.length; i++) { 
+			var childNode = new Node(o);
+			childNode.json2node(response[i]);
+			childNode.closeNode();
+			childNode.unHide();
+			parentNode.addChild(childNode);
 		    }
+		    parentNode.browser.render();
 		}
+	    }
 	});
     },
     fetchParents: function() { 
 	//MochiKit.Logging.log('Fetching children for node '+this.getName());
 	var childNode = this;
-	new Ajax.Request("/ajax/onto/parents", {
-		parameters: { node: childNode.getAccession() }, 
-		    asynchronous: false,
-		    method: 'get',
-		    onSuccess: function(request) {
-		    var json = request.responseText;
-		    var x = eval("("+json+")");
-		    if ( x.error ) { alert(x.error) ; }
-		    else {
-			//MochiKit.Logging.log('Children count ' +  t.length + '<br />');
-			for (var i=0; i<x.length; i++) { 
-
-			    var parent = new Node(o);
-
-			    parent.json2node(x[i]);
-			    parent.closeNode();
-			    parent.unHide();
-			    parentList.push(parent);
-			    //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
-			}
-			//MochiKit.Logging.log('Fetched '+parentList.length + ' parents');
-                        return parentList;
+	jQuery.ajax({
+	    url: "/ajax/onto/parents",
+	    data: { node: childNode.getAccession() }, 
+	    async: false,
+	    method: 'get',
+	    success: function(response) {
+		//var json = request.responseText;
+		//var x = eval("("+json+")");
+		if ( response.error ) { alert(response.error) ; }
+		else {
+		    //MochiKit.Logging.log('Children count ' +  t.length + '<br />');
+		    for (var i=0; i<response.length; i++) { 
+			
+			var parent = new Node(o);
+			
+			parent.json2node(response[i]);
+			parent.closeNode();
+			parent.unHide();
+			parentList.push(parent);
+			//MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
 		    }
-		}
+		    //MochiKit.Logging.log('Fetched '+parentList.length + ' parents');
+                    return parentList;
+		    }
+	    }
 	});
     },
-
+    
     json2node: function(json) { 
 	this.setAccession(json.accession);
 	this.setName(json.cvterm_name);
