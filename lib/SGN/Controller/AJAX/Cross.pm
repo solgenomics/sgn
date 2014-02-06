@@ -2,39 +2,29 @@
 =head1 NAME
 
 SGN::Controller::AJAX::Cross - a REST controller class to provide the
-backend for objects linked with new cross
+functions for adding crosses
 
 =head1 DESCRIPTION
 
-Add submit new cross, etc...
+Add a new cross or upload a file containing crosses to add
 
 =head1 AUTHOR
 
 Jeremy Edwards <jde22@cornell.edu>
 Lukas Mueller <lam87@cornell.edu>
 
-
 =cut
 
 package SGN::Controller::AJAX::Cross;
 
 use Moose;
-
 use List::MoreUtils qw /any /;
-use Try::Tiny;
-use CXGN::Phenome::Schema;
-use CXGN::Phenome::Allele;
-use CXGN::Chado::Stock;
-use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
-use Scalar::Util qw(looks_like_number);
-use Data::Dumper;
+use Bio::GeneticRelationships::Pedigree;
+use Bio::GeneticRelationships::Individual;
 use CXGN::UploadFile;
-use Spreadsheet::WriteExcel;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddProgeny;
 use CXGN::Pedigree::AddCrossInfo;
-use Bio::GeneticRelationships::Pedigree;
-use Bio::GeneticRelationships::Individual;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -61,9 +51,7 @@ sub add_cross_POST :Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
-    #$c->stash->{cross_name} = $cross_name;
     my $program = $c->req->param('program');
-    #$c->stash->{program} = $program;
     my $location = $c->req->param('location');
     my $maternal = $c->req->param('maternal_parent');
     my $paternal = $c->req->param('paternal_parent');
@@ -96,7 +84,6 @@ sub add_cross_POST :Args(0) {
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        print STDERR "User's roles: ".Dumper($c->user()->roles)."\n";
 	print STDERR "User does not have sufficient privileges.\n";
 	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
 	return;
@@ -143,7 +130,7 @@ sub add_cross_POST :Args(0) {
     }
 
     #check that progeny do not already exist
-    if ($schema->resultset("Stock::Stock")->find({name=>$prefix.$cross_name.$suffix."-1",})){
+    if ($schema->resultset("Stock::Stock")->find({name=>$cross_name.$prefix.'001'.$suffix,})){
       $c->stash->{rest} = {error =>  "progeny already exist." };
       return;
     }
