@@ -1,18 +1,3 @@
-package SGN::Model::solGS::solGS;
-
-#use Moose;
-
-use namespace::autoclean;
-use Bio::Chado::Schema;
-use Bio::Chado::NaturalDiversity::Reports;
-use File::Path qw / mkpath /;
-use File::Spec::Functions;
-use List::MoreUtils qw / uniq /;
-use JSON::Any;
-use Math::Round::Var;
-
-use base 'Catalyst::Model';
-
 =head1 NAME
 
 solGS::Model::solGS - Catalyst Model for solGS
@@ -33,20 +18,32 @@ it under the same terms as Perl itself.
 =cut
 
 
+package SGN::Model::solGS::solGS;
+
+use Moose;
+
+use namespace::autoclean;
+use Bio::Chado::Schema;
+use Bio::Chado::NaturalDiversity::Reports;
+use File::Path qw / mkpath /;
+use File::Spec::Functions;
+use List::MoreUtils qw / uniq /;
+use JSON::Any;
+use Math::Round::Var;
+
+extends 'Catalyst::Model';
+
+
 __PACKAGE__->mk_accessors(qw/context schema/);
 
  
 sub ACCEPT_CONTEXT {
     my ($self, $c ) = @_;
-   
-    $self = bless({ %$self,
-                    context => $c,
-                    schema  => $c->dbic_schema("Bio::Chado::Schema"),     
-                  }, 
-                  ref($self)
+    my $new = $self->meta->clone_object($self, context => $c, 
+                                        schema => $c->dbic_schema("Bio::Chado::Schema")
         );
 
-    return $self;
+    return $new;
 
 }
 
