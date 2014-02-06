@@ -11,10 +11,10 @@ o.setUpBrowser();
 
 o.initializeBrowser('<% $db_name %>');
 // hide some unused elements
-$('ontology_browser_input').style.display='none';
-$('ontology_term_input').style.display='none';
-$('hide_link').style.display='none';
-$('search_results').style.display='none';
+document.getElementById('ontology_browser_input').style.display='none';
+document.getElementById('ontology_term_input').style.display='none';
+document.getElementById('hide_link').style.display='none';
+document.getElementById('search_results').style.display='none';
 o.showParentage('<% $accession %>');
 
 -->
