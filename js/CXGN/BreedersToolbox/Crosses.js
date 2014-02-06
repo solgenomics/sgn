@@ -36,7 +36,7 @@ jQuery(document).ready(function ($) {
 	autoOpen: false,
 	modal: true,
 	autoResize:true,
-        width: 500,
+        width: 600,
         position: ['top', 150],
 	buttons: {
 	    Ok: function() {
