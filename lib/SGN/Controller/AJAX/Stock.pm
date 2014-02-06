@@ -341,7 +341,7 @@ sub display_ontologies_GET  {
         $db_accession = $cvterm_id if $db_name eq $trait_db_name;
         my $url = $_->cvterm->dbxref->db->urlprefix . $_->cvterm->dbxref->db->url;
         my $cvterm_link =
-            qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id" target="blank">$cvterm_name</a>|;
+            qq |<a href="/chado/cvterm?cvterm_id=$cvterm_id" target="blank">$cvterm_name</a>|;
         # the stock_cvtermprop objects have all the evidence and metadata for the annotation
         my $props = $_->stock_cvtermprops;
         my ($relationship_id) = $props->search( { type_id =>$rel_cvterm->cvterm_id} )->single ? $props->search( { type_id =>$rel_cvterm->cvterm_id} )->single->value : undef; # should be 1 relationship per annotation
