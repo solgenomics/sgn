@@ -26,7 +26,8 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     my $control_names_ref = $trial_layout->get_control_names();
     my $block_numbers = $trial_layout->get_block_numbers();
     my $replicate_numbers = $trial_layout->get_replicate_numbers();
-    my %design = %{$trial_layout->get_design()};
+    my $design_ref;
+    my %design;
     my %design_info;
 
     my $design_layout_view_html = trial_detail_design_view(\%design);
@@ -34,6 +35,11 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     my @plot_names;
     if ($plot_names_ref) {
       @plot_names = @{$trial_layout->get_plot_names()};
+    }
+
+    $design_ref = $trial_layout->get_design();
+    if ($design_ref) {
+      %design = %{$design_ref};
     }
 
     $c->stash->{design_type} = $design_type;
