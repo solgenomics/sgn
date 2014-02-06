@@ -196,10 +196,13 @@ function plotGebvScatter() {
         };
              
         var zoomHelp = function (lt, tp) {
-            var help_txt = 'To zoom in, select an area on the plot' + 
-            ' and release or just double click at any' +
-            ' point on the plot.';
-                 
+            
+            var help_txt = '<div style="width:140px;height:90px">' +
+                            'To zoom in, select an area ' + 
+                            'on the plot and release or double click at any ' +
+                            'point on the plot.' +
+                           '</div>'; 
+     
             jQuery('<div id="tooltip_zoom">' + help_txt  + '</div>').css({ 
                     position: 'absolute',
                         display: 'none',
