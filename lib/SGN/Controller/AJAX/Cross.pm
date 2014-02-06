@@ -18,6 +18,13 @@ Lukas Mueller <lam87@cornell.edu>
 package SGN::Controller::AJAX::Cross;
 
 use Moose;
+use Try::Tiny;
+use DateTime;
+use File::Basename qw | basename dirname|;
+use File::Copy;
+use File::Slurp;
+use File::Spec::Functions;
+use Digest::MD5;
 use List::MoreUtils qw /any /;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
@@ -41,9 +48,52 @@ sub upload_cross_file_POST : Args(0) {
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $program = $c->req->param('cross_upload_breeding_program');
   my $location = $c->req->param('cross_upload_location');
-  my $uploaded_file = $c->req->param('crosses_upload_file');
+  my $upload = $c->req->upload('crosses_upload_file');
   my $uploader = CXGN::UploadFile->new();
-  my $parser = CXGN::Phenotypes::ParseUpload->new();
+  my $parser = CXGN::Pedigree::ParseUpload->new();
+  my $upload_original_name = $upload->filename();
+  my $upload_tempfile = $upload->tempname;
+  my $subdirectory = "cross_upload";
+  my $archived_filename_with_path;
+  my $md5;
+  my $validate_file;
+  my $parsed_file;
+  my %parsed_data;
+  my %upload_metadata;
+  my $time = DateTime->now();
+  my $timestamp = $time->ymd()."_".$time->hms();
+  my $user_id;
+  my $upload_file_type = "crosses excel";#get from form when more options are added
+
+  if (!$c->user()) { 
+    print STDERR "User not logged in... not adding a crosses.\n";
+    $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
+    return;
+  }
+  $user_id = $c->user()->get_object()->get_sp_person_id();
+
+  ## Store uploaded temporary file in archive
+  $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+  $md5 = $uploader->get_md5($archived_filename_with_path);
+  if (!$archived_filename_with_path) {
+      $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+      return;
+  }
+  unlink $upload_tempfile;
+
+  $upload_metadata{'archived_file'} = $archived_filename_with_path;
+  $upload_metadata{'archived_file_type'}="cross upload file";
+  $upload_metadata{'user_id'}=$user_id;
+  $upload_metadata{'date'}="$timestamp";
+
+
+  ## Validate and parse uploaded file
+  $validate_file = $parser->validate($upload_file_type, $archived_filename_with_path);
+  if (!$validate_file) {
+    $c->stash->{rest} = {error => "File not valid: $upload_original_name",};
+    return;
+  }
+
 
   $c->stash->{rest} = {success => "1",};
 }
