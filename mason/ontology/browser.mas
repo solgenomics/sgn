@@ -43,21 +43,23 @@ Lukas Mueller <lam87@cornell.edu>
 
 % #$root_nodes = 'GO PO SP'; #for testing
 
-<script language="javascript" type="text/javascript"  >
-<!--
-    var o = new CXGN.Onto.Browser('<% $root_nodes %>');
-    o.setUpBrowser();
-    o.initializeBrowser('<% $root_nodes %>');
-    o.renderSearchById();
-    o.renderSearchByName('<% $db_name %>');
-    var rn = o.rootnode.getChildren();
-    
-    var expand = "<% $expand %>";
-    if (expand == 1) {
-      for (var i=0; i<rn.length; i++) {
-         rn[i].openNode(1);
-      }
+<script language="javascript" type="text/javascript" defer="defer" >
+
+jQuery(document).ready( function() { 
+  var o = new CXGN.Onto.Browser('<% $root_nodes %>');
+  o.setUpBrowser();
+  o.initializeBrowser('<% $root_nodes %>');
+  o.renderSearchById();
+       ytgulhjihiuhu;njklmmlko.renderSearchByName('<% $db_name %>');
+  var rn = o.rootnode.getChildren();   
+  var expand = "<% $expand %>";
+  if (expand == 1) {
+    for (var i=0; i<rn.length; i++) {
+      rn[i].openNode(1);
     }
-    o.render();
--->
+  }
+  o.render();
+});
+
+
 </script>

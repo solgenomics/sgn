@@ -3,8 +3,10 @@
   $db_name => undef
 </%args>
 
-<script language="javascript" type="text/javascript"  >
+<script language="javascript" type="text/javascript" >
 <!--
+
+//jQuery('document').ready(function() { 
 var o = new CXGN.Onto.Browser('<% $db_name %>');
 
 o.setUpBrowser();
@@ -16,6 +18,6 @@ document.getElementById('ontology_term_input').style.display='none';
 document.getElementById('hide_link').style.display='none';
 document.getElementById('search_results').style.display='none';
 o.showParentage('<% $accession %>');
-
+//});
 -->
 </script>
