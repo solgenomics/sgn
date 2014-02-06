@@ -317,7 +317,7 @@ sub upload_phenotype_file_for_field_book_POST : Args(0) {
 
   $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
   $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
-  $phenotype_metadata{'operator'}="tester_operator";
+  $phenotype_metadata{'operator'}="tester_operator"; #####Need to get this from uploaded file
   $phenotype_metadata{'date'}="$timestamp";
 
   print STDERR "Validate uploaded file\n";
