@@ -103,7 +103,10 @@ sub add_cross : Local : ActionClass('REST') { }
 
 sub add_cross_POST :Args(0) { 
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $chado_schema = $c->dbic_chado_schema('Bio::Chado::Chado_Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
     my $program = $c->req->param('program');
@@ -166,26 +169,26 @@ sub add_cross_POST :Args(0) {
     }
 
     #check that parents exist in the database
-    if (! $schema->resultset("Stock::Stock")->find({name=>$maternal,})){
+    if (! $chado_schema->resultset("Stock::Stock")->find({name=>$maternal,})){
       $c->stash->{rest} = {error =>  "maternal parent does not exist." };
       return;
     }
 
     if (!$paternal_parent_not_required) {
-      if (! $schema->resultset("Stock::Stock")->find({name=>$paternal,})){
+      if (! $chado_schema->resultset("Stock::Stock")->find({name=>$paternal,})){
 	$c->stash->{rest} = {error =>  "paternal parent does not exist." };
 	return;
       }
     }
 
     #check that cross name does not already exist
-    if ($schema->resultset("Stock::Stock")->find({name=>$cross_name})){
+    if ($chado_schema->resultset("Stock::Stock")->find({name=>$cross_name})){
       $c->stash->{rest} = {error =>  "cross name already exists." };
       return;
     }
 
     #check that progeny do not already exist
-    if ($schema->resultset("Stock::Stock")->find({name=>$cross_name.$prefix.'001'.$suffix,})){
+    if ($chado_schema->resultset("Stock::Stock")->find({name=>$cross_name.$prefix.'001'.$suffix,})){
       $c->stash->{rest} = {error =>  "progeny already exist." };
       return;
     }
@@ -206,7 +209,10 @@ sub add_cross_POST :Args(0) {
     #create array of pedigree objects to add, in this case just one pedigree
     @array_of_pedigree_objects = ($cross_to_add);
     $cross_add = CXGN::Pedigree::AddCrosses->new({
-					       schema => $schema,
+					       chado_schema => $chado_schema,
+					       phenome_schema => $phenome_schema,
+					       metadata_schema => $metadata_schema,
+					       dbh => $dbh,
 					       location => $location,
 					       program => $program,
 					       crosses =>  \@array_of_pedigree_objects},
@@ -229,7 +235,7 @@ sub add_cross_POST :Args(0) {
       #add array of progeny to the cross
       $progeny_add = CXGN::Pedigree::AddProgeny
 	->new({
-	       schema => $schema,
+	       chado_schema => $chado_schema,
 	       cross_name => $cross_name,
 	       progeny_names => \@progeny_names,
 	      });
@@ -239,14 +245,14 @@ sub add_cross_POST :Args(0) {
 
     #add number of flowers as an experimentprop if specified
     if ($number_of_flowers) {
-      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ schema => $schema, cross_name => $cross_name} );
+      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
       $cross_add_info->set_number_of_flowers($number_of_flowers);
       $cross_add_info->add_info();
     }
 
     #add number of seeds as an experimentprop if specified
     if ($number_of_seeds) {
-      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ schema => $schema, cross_name => $cross_name} );
+      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
       $cross_add_info->set_number_of_seeds($number_of_seeds);
       $cross_add_info->add_info();
     }
