@@ -5,8 +5,6 @@ use Moose;
 use GD::Image;
 use Data::Dumper;
 use Bio::SeqIO;
-
-
 use Bio::BLAST::Database;
 
 
@@ -28,7 +26,6 @@ has 'link_url' => (is => 'rw', isa=>'Str');
 sub parse { 
 	my $self = shift;
 	my $mm = shift || 0;
-	# warn("Parsing file ".$self->bwafile()."\n");
 
 	open(my $bt2_fh, "<", $self->bwafile()) || die "Can't open file ".$self->bwafile();
 
@@ -39,8 +36,8 @@ sub parse {
 		my ($seq_id, $code, $subject, $scoord) = (split /\t/, $line);
 		
 		# get perfect matches 
-		# if ($line =~ /NM:i:(\d+)/) { # for Bowtie
-		if ($line =~ /XM:i:(\d+)/) { # for Bowtie2
+		# if ($line =~ /NM:i:(\d+)/) { # edit distance for Bowtie
+		if ($line =~ /XM:i:(\d+)/) { # number of mismatches for Bowtie2
 			my $mm_found = $1;
 
 			if ($mm_found <= $mm) {
@@ -65,26 +62,6 @@ sub parse {
 	$self->matches($matches);
 }
  
-sub matches_in_interval { 
-	my $self = shift;
-	my $start = shift;
-	my $end = shift;
-
-	my $matches = $self->matches();
-	my $interval = {};
-
-	foreach my $s (keys(%$matches)) { 
-		# print  $s."\n";
-		foreach my $m (@{$matches->{$s}}) { 
-			# print STDERR "checking coords $m->[0], $m->[1] (start, end = $start, $end)\n";
-			if ( ($m->start() > $start) && ( $m->start() < $end) || ($m->end() > $start ) && ($m->end() < $end)) { 
-				# print STDERR "Match found for sequence $s: $m->[0], $m->[1] ($start, $end)\n";
-				push @{$interval->{$s}}, $m;
-			}
-		}
-	}
-	return $interval;
-}
 
 # get the score values for each position of the target genes
 sub target_graph { 
@@ -294,41 +271,31 @@ sub subjects_by_match_count {
 	my $fs;
 	my $primseqi;
 	my $desc;
-
+	
 	if ($db) {
-		#print STDERR "db: $db\n";
-
-		$fs = Bio::BLAST::Database->open(full_file_basename => $db,);
+		$fs = Bio::BLAST::Database->open(full_file_basename => "$db",);
 	}
 
 	foreach my $s (keys %$matches) { 
 		if ($db) {
 			$primseqi = $fs->get_sequence($s);
 			$desc = $primseqi->desc();
-
-			push @counts, [ $s, scalar(@{$matches->{$s}}),$desc];
+			
+			if ($desc) {
+				push @counts, [ $s, scalar(@{$matches->{$s}}),$desc];
+			} else {
+				push @counts, [ $s, scalar(@{$matches->{$s}}),""];
+			}
 		} 
 		else {
 			push @counts, [ $s, scalar(@{$matches->{$s}}),"" ];
 		}
 	}
-
-	# print Dumper(\@counts);
 	my @sorted = sort sort_keys @counts;
 
 	return @sorted;
 }
 
-sub uniq_array{
-    my %hash;
-    my $input = shift;
-    for my $e (@{$input}) {
-	$hash{$e}=1;
-    }
-    
-    my (@output) = sort {$a <=> $b} keys %hash;
-    return \@output;
-}
 
 sub get_matches { 
     my $self = shift;
@@ -361,7 +328,6 @@ sub add_expression_values {
     my @expr_msg;
     my @sorted = $self->subjects_by_match_count(0,$self->matches);
 
-# $sorted[$track]->[0]
     for (my $track=0; $track< @sorted; $track++) {
 
 	my $subject_msg = "$sorted[$track]->[0]";
@@ -379,43 +345,39 @@ sub add_expression_values {
 	}
 	push(@expr_msg,[$subject_msg,""]);
     }
-    #print STDERR "msg: $expr_msg[0]\n";
     return @expr_msg;
 }
 
 sub get_img_height { 
-    my $self = shift;
-    my $img_height = 20; #grid on top
-    my $max_row_num = 0;
-    my $row_num = 1;
-    my $prev_end = 0;
+	my $self = shift;
+	my $img_height = 20; #grid on top
+	my $max_row_num = 0;
+	my $row_num = 1;
+	my $prev_end = 0;
 
-    #HoAoH
-    my $matches_h = $self->matches();
-    
-    foreach my $key (keys(%{$matches_h})) {
-	foreach my $h (@{$$matches_h{$key}}) {
-	    if ($$h{'start'} <= $prev_end) {
-		$row_num++;
-	    } else {
-		$row_num = 1;
-	    }
-	    if ($max_row_num < $row_num && $row_num <= $self->fragment_size) {$max_row_num = $row_num;}
-	    if ($max_row_num == $self->fragment_size) {last;}
+	#HoAoH
+	my $matches_h = $self->matches();
 
-#	    print STDERR "start: $$h{'start'}, end: $$h{'end'}\n";
-	    $prev_end = $$h{'end'};
+	foreach my $key (keys(%{$matches_h})) {
+		foreach my $h (@{$$matches_h{$key}}) {
+			if ($$h{'start'} <= $prev_end) {
+				$row_num++;
+			} else {
+				$row_num = 1;
+			}
+			if ($max_row_num < $row_num && $row_num <= $self->fragment_size) {$max_row_num = $row_num;}
+			if ($max_row_num == $self->fragment_size) {last;}
+			
+			$prev_end = $$h{'end'};
+		}
+		$img_height += (($max_row_num*4) + 30); # rectangles height + before and after the block values
+		
+		$max_row_num = 0;
+		$prev_end = 0;
+		$row_num = 0;
 	}
-	$img_height += (($max_row_num*4) + 30); # rectangles height + before and after the block values
-#        print STDERR "max_row_num: $max_row_num\n";
-
-	$max_row_num = 0;
-	$prev_end = 0;
-	$row_num = 0;
-    }
-#    print STDERR "IMAGE HEIGHT: $img_height\n";
-    
-    return $img_height;
+	
+	return $img_height;
 }
 
 

@@ -333,6 +333,9 @@ $(document).ready(function () {
 							desc = ids[i][2].replace(/.+functional_description:/,"");
 							desc = desc.replace(/\"/g,"");
 							gene_name = ids[i][0].replace(/lcl\|/,"");
+						} else {
+							gene_name = ids[i][0];
+							desc = ids[i][2];
 						}
 						t_info += "<tr><td>"+gene_name+"</td><td style='text-align:right;'>"+ids[i][1]+"</td><td>"+desc+"</td></tr>";
 					}
