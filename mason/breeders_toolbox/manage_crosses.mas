@@ -12,7 +12,6 @@ $user_id
 
 <&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_crosses_link" >Upload crosses</a>]    [<a id="add_cross_link" >Add cross</a>]' &>
 
-  <& /breeders_toolbox/new_cross.mas, locations=>$locations, programs=>$programs, roles=>$roles &>
-  <& /breeders_toolbox/crosses.mas, cross_populations=>$cross_populations, user_id=>$user_id &>
+  <& /breeders_toolbox/crosses.mas, cross_populations=>$cross_populations, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles  &>
 
 </&>

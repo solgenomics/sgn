@@ -2,34 +2,27 @@
 package SGN::Controller::VigsTool;
 
 use Moose;
-
-#use CXGN::DB::Connection;
-use CXGN::BlastDB;
-#use CXGN::Page::FormattingHelpers qw| page_title_html info_table_html hierarchical_selectboxes_html |;
-#use CXGN::Page::UserPrefs;
-
+use File::Basename;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
-
+# this function read the database files (Bowtie2) and
+# send the list of databases to the view input.mas
 sub input :Path('/tools/vigs/')  :Args(0) { 
 	my ($self, $c) = @_;
-	#    my $dbh = CXGN::DB::Connection->new;
-	#    our $prefs = CXGN::Page::UserPrefs->new( $dbh );
 
-	# get database ids from a string in the configuration file 
-	my @database_ids = split /\s+/, $c->config->{vigs_tool_blast_datasets};
-
-	print STDERR "DATABASE ID: ".join(",", @database_ids)."\n";
-
-	# check databases ids exists at SGN
+	# get databases path from the configuration file
+	my $db_path = $c->config->{vigs_db_path};
+	
+	# get database names from the files in the path
 	my @databases;
-	foreach my $d (@database_ids) { 
-		my $bdb = CXGN::BlastDB->from_id($d);
-
-		if ($bdb) { push @databases, $bdb; }
+	my @tpm_dbs = glob("$db_path/*.rev.1.bt2");
+	foreach my $full_name (@tpm_dbs) {
+		push(@databases, basename($full_name, ".rev.1.bt2"));
 	}
-
+	# print STDERR "DATABASE ID: ".join(", ", @databases)."\n";
+	
+	# send the database names to the view file input.mas
 	$c->stash->{template} = '/tools/vigs/input.mas';
 	$c->stash->{databases} = \@databases;    
 }
