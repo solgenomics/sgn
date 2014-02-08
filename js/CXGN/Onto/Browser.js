@@ -76,7 +76,7 @@ CXGN.Onto.Browser.prototype = {
 	this.render();
     },
 
-    setUpBrowser: function() {
+/*    setUpBrowser: function() {
 
 	document.write('<table cellpadding="0" summary=""><tr><td><div id="ontology_browser_input" >&nbsp;&nbsp;&nbsp;</div></td>'); // the element for the go id parentage search
 	document.write('<td width="*" align="right">&nbsp;</td></tr></table>');
@@ -87,6 +87,7 @@ CXGN.Onto.Browser.prototype = {
 	document.write('<div id="ontology_browser" style="font-size:12px; line-height:10px; font-face:arial,helvetica" >&nbsp;</div>');  // the element for the browser
 
     },
+*/
 
     initializeBrowser: function(rootNodes) { 
 	this.setSelected();
@@ -130,25 +131,25 @@ CXGN.Onto.Browser.prototype = {
 		//MochiKit.Logging.log('RESPONSETEXT = ' + x);
 		if (response.error ) { alert(response.error) ; }
 		else {
-		    var r = this.r;
-		    r.rootnode = new Node(r);
+		    var o = this.o;
+		    o.rootnode = new Node(o);
 		    
-		    r.rootnode.setName('');
-		    r.rootnode.setAccession('root');
-		    r.rootnode.openNode();
-		    r.rootnode.unHide();
-		    r.rootnode.setHasChildren(true);
+		    o.rootnode.setName('');
+		    o.rootnode.setAccession('root');
+		    o.rootnode.openNode();
+		    o.rootnode.unHide();
+		    o.rootnode.setHasChildren(true);
 
 		    for (var i=0; i<response.length; i++) {
 			
-			var childNode = new Node(r);
+			var childNode = new Node(o);
 			
-			r.rootnode.addChild(childNode);
+			o.rootnode.addChild(childNode);
 			childNode.json2node(response[i]);
 		    }
 		}
 	    },
-	    context: { r : o }
+	    context: { o : this }
 	});
     },
     
@@ -162,16 +163,16 @@ CXGN.Onto.Browser.prototype = {
 		alert('An error occurred! The database may currently be unavailable. Please check back later.');
 	    },
 	    success: function(response) {
-		var r = this.r;
+		var o = this.o;
 		//var json = request.responseText;
 		//MochiKit.Logging.log('COMPLETE!');
 		//var x = eval("("+json+")");
 		//MochiKit.Logging.log('RESPONSETEXT = ' + x);
 		if (response.error ) { alert(response.error) ; }
-		r.menu = response;
+		o.menu = response;
 		
 	    },
-	    context: { r : o }
+	    context: { o : this }
 	});
     },
     
@@ -194,7 +195,7 @@ CXGN.Onto.Browser.prototype = {
 	var e = document.getElementById('ontology_browser_input');
 	//MochiKit.Logging.log('the value of ontology_browser_input is ...',document.getElementById('ontology_browser_input').value);
 	e.innerHTML = s;
-	document.getElementById('ontology_browser_input').value=(o.getSearchTerm());
+	document.getElementById('ontology_browser_input').value=(this.getSearchTerm());
 	this.workingMessage(false);
     },
     
@@ -219,9 +220,9 @@ CXGN.Onto.Browser.prototype = {
             // s += '<option value="SO" ' + o.isSelected("SO") +'>SO (Sequence ontology)</option>';
             // s += '</select>';
 	    
-	    s += o.menu;
+	    s += this.menu;
         } else {
-            o.isSelected(nameSpace);
+            this.isSelected(nameSpace);
         }
         s += '<input id="term_search" type="submit" value="Search"  />';
 	s += '</td></tr></table>';
@@ -229,18 +230,18 @@ CXGN.Onto.Browser.prototype = {
 	
 	var e = document.getElementById('ontology_term_input');
 	e.innerHTML = s;
-	document.getElementById('ontology_term_input').value=(o.getSearchValue());
+	document.getElementById('ontology_term_input').value=(this.getSearchValue());
     },
     
     render: function() {
 	
 	var s = '';
 
-	if (o.searchResults) {
+	if (this.searchResults) {
 	    document.getElementById("hide_link").style.display="inline";
 	}
 
-	o.setSearchButtonText();
+	this.setSearchButtonText();
 
 	document.getElementById("search_results").innerHTML=this.getSearchResults();
 
@@ -399,8 +400,8 @@ CXGN.Onto.Browser.prototype = {
     //this is called when a search term is clicked from the search results list.
     //we explicitly hide the search results.
     searchTermParentage: function(accession) { 
-	o.hideSearchResults();
-	o.showParentage(accession);
+	this.hideSearchResults();
+	this.showParentage(accession);
     },
    
 
@@ -536,7 +537,7 @@ CXGN.Onto.Browser.prototype = {
     //Make an ajax response that finds all the ontology terms with names/definitions/synonyms/accessions like the current value of the ontology input
     getOntologies: function(db_name, search_string) {
 	this.workingMessage(true);
-        o.setSelected(db_name);
+        this.setSelected(db_name);
 	if(search_string.length<3){
 	    alert('The search text must be longer than 2 characters');
 	}
@@ -553,6 +554,7 @@ CXGN.Onto.Browser.prototype = {
 		    var matchNodes = new Array();
 		    //var json = request.responseText;
                     //var x = eval("("+json+")");
+		    var o = this.o;
 		    if ( response.error ) { alert(response.error) ; }
                     else {
                         var s='';
@@ -564,15 +566,17 @@ CXGN.Onto.Browser.prototype = {
 			    }
 			    //		    MochiKit.Logging.log('the search results:' , s) ;
 			    //MochiKit.Logging.log('the search string:' , search_string) ;
-
-			    if (s === '') { s = '(no terms found) '; }
-			    o.setSearchResults('<div class="topicbox">Search term: <b>'+search_string+'</b></div><div class="topicdescbox">'+s+'</div>');
-			    o.showSearchResults();
-			    o.setSearchValue(search_string);
-			    o.render();
-			}
+			
+			if (s === '') { s = '(no terms found) '; }
+			o.setSearchResults('<div class="topicbox">Search term: <b>'+search_string+'</b></div><div class="topicdescbox">'+s+'</div>');
+			o.showSearchResults();
+			o.setSearchValue(search_string);
+			o.render();
 		    }
-		});
+		},
+		context: { o : this }
+		
+	    });
 	}
 	this.workingMessage(false);
     },
@@ -668,7 +672,7 @@ CXGN.Onto.Browser.prototype = {
     },
 
     isSelected: function(db_name) {
-	var selected_db_name=o.getSelected();
+	var selected_db_name=this.getSelected();
 	if (selected_db_name == db_name) {
 	    return 'SELECTED' ;
 	}else { return '' ; }
@@ -940,9 +944,9 @@ Node.prototype = {
 
 	var parentNode = this;
 	var accession = this.getAccession();
-	if (o.hasChildrenCache(accession)) { 
+	if (this.getBrowser().hasChildrenCache(accession)) { 
 	    //MochiKit.Logging.log('retrieving accession from cache '+accession);
-	    var children = o.getChildrenFromCache(accession);
+	    var children = this.getBrowser().getChildrenFromCache(accession);
 	    for(var i=0; i<children.length; i++) { 
 		//MochiKit.Logging.log('adding child node '+children[i].accession);
 		var childNode = new Node(o);
