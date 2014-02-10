@@ -143,7 +143,9 @@ sub search : Path('/solgs/search') Args() {
     $self->gs_traits_index($c);
     my $gs_traits_index = $c->stash->{gs_traits_index};
     
-    my $project_rs = $c->model('solGS::solGS')->all_projects();
+    my $page = $c->req->param('page') || 1;
+    my $project_rs = $c->model('solGS::solGS')->all_projects($page);
+    
     $self->projects_links($c, $project_rs);
     my $projects = $c->stash->{projects_pages};
 
@@ -201,7 +203,8 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     my ($self, $c, $trait_id) = @_;
     
     my $combine = $c->req->param('combine');
-    
+    my $page = $c->req->param('page') || 1;
+
     if ($combine) 
     {
        
@@ -224,7 +227,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     }
     else 
     {
-        my $projects_rs = $c->model('solGS::solGS')->search_populations($trait_id);
+        my $projects_rs = $c->model('solGS::solGS')->search_populations($trait_id, $page);
         my $trait       = $c->model('solGS::solGS')->trait_name($trait_id);
     
         $self->get_projects_details($c, $projects_rs);
@@ -311,10 +314,11 @@ sub get_projects_details {
 
 sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
     my ($self, $c, $query) = @_;
-  
+      
+    my $page = $c->req->param('page') || 1;
+    my $result = $c->model('solGS::solGS')->search_trait($query, $page);
+    
     my @rows;
-    my $result = $c->model('solGS::solGS')->search_trait($query);
-   
     while (my $row = $result->next)
     {
         my $id   = $row->cvterm_id;
@@ -339,7 +343,8 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
         $self->gs_traits_index($c);
         my $gs_traits_index = $c->stash->{gs_traits_index};
         
-        my $project_rs = $c->model('solGS::solGS')->all_projects();
+        my $page = $c->req->param('page') || 1;
+        my $project_rs = $c->model('solGS::solGS')->all_projects($page);
         $self->projects_links($c, $project_rs);
         my $projects = $c->stash->{projects_pages};
        

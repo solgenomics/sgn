@@ -49,7 +49,7 @@ sub ACCEPT_CONTEXT {
 
 
 sub search_trait {
-    my ($self, $trait) = @_;
+    my ($self, $trait, $page) = @_;
  
     my $rs;
     if ($trait)
@@ -62,7 +62,7 @@ sub search_trait {
                              },
                              { 
                                  distinct => 1,
-                                 page     => $self->context->req->param('page') || 1,
+                                 page     => $page,
                                  rows     => 10,
                                  order_by => 'name'              
                              },                  
@@ -95,7 +95,7 @@ sub all_gs_traits {
 
 
 sub search_populations {
-    my ($self, $trait_id) = @_;
+    my ($self, $trait_id, $page) = @_;
   
     my $rs = $self->schema->resultset("Phenotype::Phenotype")
         ->search({'me.observable_id' =>  $trait_id})
@@ -109,7 +109,7 @@ sub search_populations {
     $pr_rs = $pr_rs->search(
         {},                                
         { 
-            page     => $self->context->req->param('page') || 1,
+            page     => $page,
             rows     => 10,
             order_by => 'name',
         }
@@ -144,7 +144,7 @@ sub project_location {
 
 
 sub all_projects {
-    my $self = shift;
+    my ($self, $page) = @_;
 
     my $rows = $self->context->stash->{get_selection_populations} ? 40 : 10;
 
@@ -152,7 +152,7 @@ sub all_projects {
         ->search({}, 
                  { 
                      distinct => 1,
-                     page     => $self->context->req->param('page') || 1,
+                     page     => $page,
                      rows     => $rows,
                      order_by => 'name'              
                  },                      
