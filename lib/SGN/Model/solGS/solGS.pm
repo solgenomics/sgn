@@ -51,6 +51,8 @@ sub ACCEPT_CONTEXT {
 sub search_trait {
     my ($self, $trait, $page) = @_;
  
+    $page = 1 if !$page;
+
     my $rs;
     if ($trait)
     {       
@@ -482,8 +484,7 @@ sub stock_genotype_values {
    
     my $stock_name = $geno_row->get_column('stock_name');
     my $size = scalar(@markers);
-    print STDERR "\n marker count: $stock_name : $ size\n"; 
- 
+   
     my $round =  Math::Round::Var->new(0);
         
     my $geno_values;
@@ -614,9 +615,6 @@ sub phenotype_data {
      if ($pop_id) 
      {
          my $results  = [];   
-         # my $stock_rs = $self->project_subject_stocks_rs($c, $pop_id);
-         # $results     = $self->schema($c)->resultset("Stock::Stock")->recursive_phenotypes_rs($stock_rs, $results);
-         # my $data     = $self->phenotypes_by_trait($c, $results);
          my $stock_rs = $self->project_subject_stocks_rs($pop_id);
  
          while (my $st = $stock_rs->next) 
