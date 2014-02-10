@@ -144,10 +144,11 @@ sub project_location {
 
 
 sub all_projects {
-    my ($self, $page) = @_;
+    my ($self, $page, $rows) = @_;
 
-    my $rows = $self->context->stash->{get_selection_populations} ? 40 : 10;
-
+    $rows =  10 if !$rows;
+    $page = 1 if !$page;
+    
     my $projects_rs =  $self->schema->resultset("Project::Project")
         ->search({}, 
                  { 
@@ -533,7 +534,7 @@ sub prediction_pops {
   my @sample_pred_projects;
   my $cnt = 0;
  
-  my $projects_rs = $self->all_projects();
+  my $projects_rs = $self->all_projects(1, 40);
 
   while (my $row = $projects_rs->next) 
   {
