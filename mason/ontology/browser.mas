@@ -43,10 +43,9 @@ Lukas Mueller <lam87@cornell.edu>
 
 % #$root_nodes = 'GO PO SP'; #for testing
 
-<table cellpadding="0" summary=""><tr><td><div id="ontology_browser_input" >&nbsp;&nbsp;&nbsp;</div></td>
-<td width="*" align="right">&nbsp;</td></tr></table>
-<div id="ontology_term_input" ></div>
-<input id="hide_link" type="button" value="show results" display="none" onClick="MochiKit.Visual.toggle(\'search_results\', \'blind\'); o.toggleSearchResultsVisible(); o.setSearchButtonText();  "><br />
+<table title="ontology browser input form" cellpadding="0" summary="" border="0"><tr><td><div id="ontology_browser_input" >&nbsp;&nbsp;&nbsp;</div></td></tr>
+<tr><td><div id="ontology_term_input" >loading...</div></td></tr></table>
+<input id="hide_link" type="button" value="show results" display="none" onClick="MochiKit.Visual.toggle('search_results', 'blind'); o.toggleSearchResultsVisible(); o.setSearchButtonText();  "><br />
 
 <div id="search_results" ></div>
 <div id="ontology_browser" style="font-size:12px; line-height:10px; font-face:arial,helvetica" >&nbsp;</div>

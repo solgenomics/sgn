@@ -3,21 +3,29 @@
   $db_name => undef
 </%args>
 
+<input id="hide_link" type="button" value="show results" display="none" onClick="MochiKit.Visual.toggle('search_results', 'blind'); o.toggleSearchResultsVisible(); o.setSearchButtonText();  " /><br />
+
+<div id="search_results" >&nbsp;</div>
+<div id="ontology_browser" style="font-size:12px; line-height:10px; font-face:arial,helvetica" >&nbsp;</div>
+
+
 <script language="javascript" type="text/javascript" >
 <!--
 
-//jQuery('document').ready(function() { 
-var o = new CXGN.Onto.Browser('<% $db_name %>');
+var o;
 
-o.setUpBrowser();
+jQuery('document').ready(function() { 
+o = new CXGN.Onto.Browser('<% $db_name %>');
+
+//o.setUpBrowser();
 
 o.initializeBrowser('<% $db_name %>');
 // hide some unused elements
-document.getElementById('ontology_browser_input').style.display='none';
-document.getElementById('ontology_term_input').style.display='none';
-document.getElementById('hide_link').style.display='none';
-document.getElementById('search_results').style.display='none';
+//document.getElementById('ontology_browser_input').style.display='none';
+//document.getElementById('ontology_term_input').style.display='none';
+//document.getElementById('hide_link').style.display='none';
+//document.getElementById('search_results').style.display='none';
 o.showParentage('<% $accession %>');
-//});
+});
 -->
 </script>

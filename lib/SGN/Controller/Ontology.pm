@@ -1,5 +1,5 @@
 
-package SGN::Controller::Cvterm;
+package SGN::Controller::Ontology;
 
 use Moose;
 
@@ -28,6 +28,18 @@ sub cvterm_detail :Path('/chado/cvterm') :Args(0) {
     }
     $c->stash->{template} = '/chado/cvterm.mas';
     $c->stash->{cvterm} = $cvterm;
+}
+
+sub onto_browser : Path('/tools/onto') :Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{root_nodes} = $c->req->param("root_nodes");
+    $c->stash->{db_name} = $c->req->param("db_name");
+    $c->stash->{expand} = $c->req->param("expand");
+
+    $c->stash->{template} = '/ontology/standalone.mas';
+
 }
 
 1;

@@ -81,7 +81,7 @@ CXGN.Onto.Browser.prototype = {
 	document.write('<table cellpadding="0" summary=""><tr><td><div id="ontology_browser_input" >&nbsp;&nbsp;&nbsp;</div></td>'); // the element for the go id parentage search
 	document.write('<td width="*" align="right">&nbsp;</td></tr></table>');
 	document.write('<div id="ontology_term_input" ></div>');     // the element for the search
-	document.write('<input id="hide_link" type="button" value="show results" display="none" onClick="MochiKit.Visual.toggle(\'search_results\', \'blind\'); o.toggleSearchResultsVisible(); o.setSearchButtonText();  "><br />');
+	document.write('<input id="hide_link" type="button" value="show results" display="none" onClick="MochiKit.Visual.toggle('search_results', 'blind\'); o.toggleSearchResultsVisible(); o.setSearchButtonText();  "><br />');
 
 	document.write('<div id="search_results" ></div>');    
 	document.write('<div id="ontology_browser" style="font-size:12px; line-height:10px; font-face:arial,helvetica" >&nbsp;</div>');  // the element for the browser
@@ -206,8 +206,8 @@ CXGN.Onto.Browser.prototype = {
             var s = '<form style="margin-bottom:0" name="SearchByNameForm" onsubmit="javascript:o.getOntologies(\'' + nameSpace + '\', this.ontology_term_input.value); return false;" >';
         }
         s += '<div id="search_by_name"  style="margin-bottom:0" >';
-        s += '<table summary="" cellpadding="5" cellspacing="0"><tr><td align="center" >';
-	s += 'Search for text <input id="ontology_term_input" name="ontology_term_input_name" type="text" size="30"  />';
+        s += '<table summary="" cellpadding="5" cellspacing="0"><tr><td >';
+	s += 'Search for text <input id="ontology_term_input" name="ontology_term_input_name" type="text" size="20"  />';
 	
         //print the select drop-down only if you not rendering a specific cv
 	
