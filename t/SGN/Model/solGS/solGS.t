@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use lib 't/lib';
-use Test::More tests => 25;
+use Test::More tests => 26;
 use SGN::Test::WWW::Mechanize;
 
 BEGIN {use_ok('SGN::Model::solGS::solGS');}
@@ -17,19 +17,21 @@ my $clone_name = 'TMS000203';
 my $project_id = 128;
 my $trait_name = 'cassava mosaic disease severity';
 my $trait_id   = 70762;
-
+my $page       = 1;
 
 my $model = SGN::Model::solGS::solGS->new()->ACCEPT_CONTEXT($test->context);
 
 ok($model, 'created model object...ok');
 
-ok($model->search_trait($trait_name, 1), 'search_trait...ok');
+ok($model->search_trait($trait_name, $page), 'search_trait...ok');
 ok($model->all_gs_traits(), 'all_gs_traits...ok');
 ok($model->search_populations($trait_id, 1), 'search_populations...ok');
+
 ok($model->project_year($project_id), 'project_year...ok');
 ok($model->project_location($project_id), 'project_location...ok');
-
+ok($model->all_projects($page), 'all_projects...ok');
 ok($model->project_details($project_id), 'project_details...ok');
+
 ok($model->get_population_details($project_id), 'get_population_details...ok');
 
 ok($model->trait_name($trait_id), 'trait_name...ok');
@@ -55,7 +57,6 @@ ok($model->search_stock_using_plot_name($plot_name), 'search_stock_using_plot_na
 my $stock_rs = $model->search_stock($clone_name);  
 ok($model->individual_stock_genotypes_rs($stock_rs), 'individual_stock_genotypes_rs...ok');
 
-#ok($model->all_projects(1), 'all_projects...ok');
 #ok($model->format_user_list_genotype_data(), 'format_user_list_genotype_data...ok');
 #stock_genotype_values
 #prediction_pops
