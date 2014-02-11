@@ -241,8 +241,11 @@ sub add_cross_POST :Args(0) {
       $progeny_add = CXGN::Pedigree::AddProgeny
 	->new({
 	       chado_schema => $chado_schema,
+	       phenome_schema => $phenome_schema,
+	       dbh => $dbh,
 	       cross_name => $cross_name,
 	       progeny_names => \@progeny_names,
+	       owner_name => $owner_name,
 	      });
       $progeny_add->add_progeny();
 

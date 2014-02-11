@@ -48,12 +48,14 @@ has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', re
 sub add_progeny {
   my $self = shift;
   my $chado_schema = $self->get_chado_schema();
+  my $phenome_schema = $self->get_phenome_schema();
   my @progeny_names = @{$self->get_progeny_names()};
   my $cross_stock;
   my $female_parent;
   my $male_parent;
   my $organism_id;
   my $transaction_error;
+  my @added_stock_ids;
 
   #lookup user by name
   my $owner_name = $self->get_owner_name();;
@@ -154,6 +156,10 @@ sub add_progeny {
 		  type_id     => $accession_cvterm->cvterm_id,
 		 } );
 
+      #add stock_id of cross to an array so that the owner can be associated in the phenome schema after the transaction on the chado schema completes
+      push (@added_stock_ids,  $accession_stock->stock_id());
+
+
       #create relationship to cross population
       $accession_stock
 	->find_or_create_related('stock_relationship_objects', {
@@ -197,6 +203,15 @@ sub add_progeny {
   if ($transaction_error) {
     print STDERR "Transaction1 error creating a cross: $transaction_error\n";
     return;
+  }
+
+  foreach my $stock_id (@added_stock_ids) {
+    #add the owner for this stock
+    $phenome_schema->resultset("StockOwner")
+      ->find_or_create({
+			stock_id     => $stock_id,
+			sp_person_id =>  $owner_sp_person_id,
+		       });
   }
 
   return 1;
