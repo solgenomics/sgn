@@ -34,19 +34,19 @@ class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 has 'chado_schema' => (
 		 is       => 'rw',
 		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_schema',
+		 predicate => 'has_chado_schema',
 		 required => 1,
 		);
 has 'phenome_schema' => (
 		 is       => 'rw',
 		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_schema',
+		 predicate => 'has_phenome_schema',
 		 required => 1,
 		);
 has 'metadata_schema' => (
 		 is       => 'rw',
 		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_schema',
+		 predicate => 'has_metadata_schema',
 		 required => 0,
 		);
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
