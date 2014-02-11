@@ -213,7 +213,7 @@ sub add_cross_POST :Args(0) {
     $cross_add = CXGN::Pedigree::AddCrosses
       ->new({
 	     chado_schema => $chado_schema,
-	     #phenome_schema => $phenome_schema,
+	     phenome_schema => $phenome_schema,
 	     #metadata_schema => $metadata_schema,
 	     dbh => $dbh,
 	     location => $location,

@@ -41,7 +41,7 @@ has 'phenome_schema' => (
 		 is       => 'rw',
 		 isa      => 'DBIx::Class::Schema',
 		 predicate => 'has_schema',
-		 required => 0,
+		 required => 1,
 		);
 has 'metadata_schema' => (
 		 is       => 'rw',
@@ -58,12 +58,19 @@ has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', re
 sub add_crosses {
   my $self = shift;
   my $chado_schema = $self->get_chado_schema();
+  my $phenome_schema = $self->get_phenome_schema();
   my @crosses;
   my $location_lookup;
   my $geolocation;
   my $program;
   my $program_lookup;
   my $transaction_error;
+  my @added_stock_ids;
+
+  #lookup user by name
+  my $owner_name = $self->get_owner_name();;
+  my $dbh = $self->get_dbh();
+  my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 
   #add all crosses in a single transaction
   my $coderef = sub {
@@ -154,11 +161,6 @@ sub add_crosses {
     $program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
     $program = $program_lookup->get_breeding_program_by_name($self->get_program());
 
-    #lookup user by name
-    my $owner_name = $self->get_owner_name();;
-    my $dbh = $self->get_dbh();
-    my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
-
     @crosses = @{$self->get_crosses()};
 
     foreach my $pedigree (@crosses) {
@@ -248,6 +250,11 @@ sub add_crosses {
 									  uniquename => $cross_name,
 									  type_id => $cross_stock_type_cvterm->cvterm_id,
 									} );
+
+      #add stock_id of cross to an array so that the owner can be associated in the phenome schema after the transaction on the chado schema completes
+      push (@added_stock_ids,  $cross_stock->stock_id());
+
+
       #link parents to the stock of type cross
       if ($female_parent) {
 	$cross_stock
@@ -312,6 +319,15 @@ sub add_crosses {
   if ($transaction_error) {
     print STDERR "Transaction error creating a cross: $transaction_error\n";
     return;
+  }
+
+  foreach my $stock_id (@added_stock_ids) {
+    #add the owner for this stock
+    $phenome_schema->resultset("StockOwner")
+      ->find_or_create({
+			stock_id     => $stock_id,
+			sp_person_id =>  $owner_sp_person_id,
+		       });
   }
 
   return 1;
