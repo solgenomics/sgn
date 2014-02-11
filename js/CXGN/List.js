@@ -62,21 +62,20 @@ CXGN.List.prototype = {
 	
 	jQuery.ajax( { 
 	    url: '/list/contents/'+list_id,
-	    //async: false,
+	    async: false,
 	    success: function(response) { 
 		if (response.error) { 
 		    //document.write(response.error);
 		}
 		else { 
 		    list = response;
-		    return list;
 		}
 	    },
 	    error: function(response) { 
 		alert("An error occurred.");
 	    }
 	});
-
+	return list;
 
     },
 
@@ -89,7 +88,7 @@ CXGN.List.prototype = {
 	
 	jQuery.ajax( { 
 	    url: '/list/data',
-	    //async: false,
+	    async: false,
 	    data: { 'list_id': list_id },
 	    success: function(response) { 
 		if (response.error) { 
@@ -97,12 +96,11 @@ CXGN.List.prototype = {
 		}
 		else { 
 		    list = response;
-		    return list;
 		}
 	    }
 	});
 	
-
+	return list;
     },
 
     getListType: function(list_id) { 
@@ -110,7 +108,7 @@ CXGN.List.prototype = {
 
 	jQuery.ajax( { 
 	    url: '/list/type/'+list_id,
-	    //async: false,
+	    async: false,
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
@@ -122,14 +120,14 @@ CXGN.List.prototype = {
 	    },
 	    error: alert('An error occurred. Cannot determine type. ')
 	});
-
+	return type;
     },
 	    
     setListType: function(list_id, type) { 
 	
 	jQuery.ajax( { 
 	    url: '/list/type/'+list_id+'/'+type,
-	    //async: false,
+	    async: false,
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
@@ -146,17 +144,17 @@ CXGN.List.prototype = {
 	var types;
 	jQuery.ajax( { 
 	    url: '/list/alltypes',
-	   // async: false,
+	    async: false,
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
 		}
 		else { 
 		    types = response;
-		    return types;
 		}
 	    }
 	});
+	return types;
 		     
     },
     
@@ -187,7 +185,7 @@ CXGN.List.prototype = {
 	if (oldListId === null) { 
 	    jQuery.ajax( { 
 		url: '/list/new',
-		//async: false,
+		async: false,
 		data: { 'name': name },
 		success: function(response) { 
 		    if (response.error) { 
@@ -195,11 +193,10 @@ CXGN.List.prototype = {
 		    }
 		    else { 
 			newListId=response.list_id;
-			return newListId;
 		    }
 		}
 	    });
-
+	    return newListId;
 	}
 	else { 
 	    alert('A list with name "'+ name + '" already exists. Please choose another list name.');
@@ -214,20 +211,19 @@ CXGN.List.prototype = {
 	jQuery.ajax( { 
 	    url: '/list/available',
 	    data: { 'type': list_type },
-	    //async: false,
+	    async: false,
 	    success: function(response) { 
 		if (response.error) { 
 		    //alert(response.error);
 		}
 		lists = response;
 		//alert("LISTS OF TYPE "+list_type+": "+lists.join(","));
-		return lists;
 	    },
 	    error: function(response) { 
 		alert("An error occurred");
 	    }
 	});
-
+	return lists;
     },
 
     //return the newly created list_item_id or 0 if nothing was added
@@ -236,7 +232,7 @@ CXGN.List.prototype = {
 	var exists_item_id = this.existsItem(list_id,item);
 	if (exists_item_id ===0 ) { 
 	    jQuery.ajax( { 
-		//async: false,
+		async: false,
 		url: '/list/item/add',
 		data:  { 'list_id': list_id, 'element': item },
 		success: function(response) { 
@@ -244,11 +240,10 @@ CXGN.List.prototype = {
 			alert(response.error); 
 			return 0;
 		    }
-		    var new_list_item_id = this.existsItem(list_id,item);
-		    return new_list_item_id;
-
                 }
 	    });
+	    var new_list_item_id = this.existsItem(list_id,item);
+	    return new_list_item_id;
 	}
 	else { return 0; }
     },
@@ -259,7 +254,7 @@ CXGN.List.prototype = {
 
 	var count;
 	jQuery.ajax( { 
-	    //async: false,
+	    async: false,
 	    method: 'POST',
 	    url: '/list/add/bulk',
 	    data:  { 'list_id': list_id, 'elements': elements },
@@ -272,16 +267,15 @@ CXGN.List.prototype = {
 			alert("The following items are already in the list and were not added: "+response.duplicates.join(", "));
 		    }
 		    count = response.success;
-		    return count;
 		}		
 	    }
 	});
-	
+	return count;
     },
     
     removeItem: function(list_id, item_id) {
 	jQuery.ajax( {
-	    //async: false,
+	    async: false,
 	    url: '/list/item/remove',
 	    data: { 'list_id': list_id, 'item_id': item_id }
 	});
@@ -290,7 +284,7 @@ CXGN.List.prototype = {
     deleteList: function(list_id) { 
 	jQuery.ajax( { 
 	    url: '/list/delete',
-	    //async: false,
+	    async: false,
 	    data: { 'list_id': list_id }
 	});
     },
@@ -397,28 +391,26 @@ CXGN.List.prototype = {
 	var list_id = 0;
 	jQuery.ajax( { 
 	    url: '/list/exists',
-	    //async: false,
+	    async: false,
 	    data: { 'name': name },
 	    success: function(response) { 
 		list_id = response.list_id;
-		return list_id;
 	    }
 	});
-
+	return list_id;
     },
 
     existsItem: function(list_id, name) { 
 	var list_item_id =0;
 	jQuery.ajax( { 
 	    url: '/list/exists_item',
-	    //async: false,
+	    async: false,
 	    data: { 'list_id' : list_id, 'name':name },
 	    success: function(response) { 
 		list_item_id = response.list_item_id;
-		return list_item_id;
 	    }
 	});
-
+	return list_item_id;
     },
     
     addToList: function(list_id, text) { 
@@ -469,7 +461,7 @@ CXGN.List.prototype = {
     updateName: function(list_id, new_name) { 
 	jQuery.ajax( { 
 	    url: '/list/name/update',
-	    //async: false,
+	    async: false,
 	    data: { 'name' : new_name, 'list_id' : list_id },
 	    success: function(response) { 
 		if (response.error) { 
@@ -478,13 +470,11 @@ CXGN.List.prototype = {
 		}
 		else { 
 		    alert("The name of the list was changed to "+new_name);
-		    this.l.renderLists('list_dialog');
 		}
 	    },
-	    error: function(response) { alert("An error occurred."); },
-	    context: { l: this }
+	    error: function(response) { alert("An error occurred."); }
 	});
-	
+	this.renderLists('list_dialog');
     },
 
     validate: function(list_id, type, non_interactive) { 
@@ -492,35 +482,35 @@ CXGN.List.prototype = {
 	var error = 0;
 	jQuery.ajax( { 
 	    url: '/list/validate/'+list_id+'/'+type,
-	    //async: false,
+	    async: false,
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
 		}
 		else { 
 		    missing = response.missing;
-		    if (missing.length==0) { 
-			if (!this.ni) { alert("This list passed validation."); } 
-			return 1;
-		    }
-		    else { 
-			alert("List validation failed. Elements not found: "+ missing.join(","));
-			return 0;
-		    }
-		    
-		    
 		}
 	    },
-	    error: function(response) { alert("An error occurred while validating the list "+list_id); error=1; },
-	    context: { ni : non_interactive }
+	    error: function(response) { alert("An error occurred while validating the list "+list_id); error=1; }
 	});
+
+	if (error === 1 ) { return; }
+
+	if (missing.length==0) { 
+	    if (!non_interactive) { alert("This list passed validation."); } 
+	    return 1;
+	}
+	else { 
+	    alert("List validation failed. Elements not found: "+ missing.join(","));
+	    return 0;
+	}
     },
 
     transform: function(list_id, new_type) { 
 	var transformed = new CXGN.List();
 	jQuery.ajax( { 
 	    url: '/list/transform/'+list_id+'/'+new_type,
-	    //async: false,
+	    async: false,
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
