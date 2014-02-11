@@ -127,7 +127,7 @@ sub add_cross_POST :Args(0) {
     my $paternal_parent_not_required;
     my $number_of_flowers_cvterm;
     my $number_of_seeds_cvterm;
-
+    my $owner_name;
 
     if ($cross_type eq "open" || $cross_type eq "bulk_open") {
       $paternal_parent_not_required = 1;
@@ -140,6 +140,8 @@ sub add_cross_POST :Args(0) {
 	$c->stash->{rest} = {error => "You need to be logged in to add a cross." };
 	return;
     }
+
+    $owner_name = $c->user()->get_object()->get_username();
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
 	print STDERR "User does not have sufficient privileges.\n";
@@ -208,15 +210,18 @@ sub add_cross_POST :Args(0) {
 
     #create array of pedigree objects to add, in this case just one pedigree
     @array_of_pedigree_objects = ($cross_to_add);
-    $cross_add = CXGN::Pedigree::AddCrosses->new({
-					       chado_schema => $chado_schema,
-					       #phenome_schema => $phenome_schema,
-					       #metadata_schema => $metadata_schema,
-					       dbh => $dbh,
-					       location => $location,
-					       program => $program,
-					       crosses =>  \@array_of_pedigree_objects},
-						);
+    $cross_add = CXGN::Pedigree::AddCrosses
+      ->new({
+	     chado_schema => $chado_schema,
+	     #phenome_schema => $phenome_schema,
+	     #metadata_schema => $metadata_schema,
+	     dbh => $dbh,
+	     location => $location,
+	     program => $program,
+	     crosses =>  \@array_of_pedigree_objects,
+	     owner_name => $owner_name,
+	    });
+
 
     #add the crosses
     $cross_add->add_crosses();
