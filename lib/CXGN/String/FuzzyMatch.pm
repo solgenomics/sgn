@@ -38,18 +38,30 @@ sub get_matches {
     my @strings_sorted_length;
     my $query_length = length $query_string;
 
-    @distances = adistr($query_string, @string_array);
+    #no fuzzy search if max distance is 0
+    if ($max_distance == 0) {
+      for my $i (0 .. $#string_array) {
+	my $string_match = $string_array[$i];
+	if ($query_string eq $string_match) {
+	  $string_length_difference_lookup{$string_match} = 0;
+	}
+      }
+    } else {
 
-    for my $i (0 .. $#string_array) {
-      my $distance = $distances[$i];
-      my $string_match = $string_array[$i];
-      if ($distance == 0) {
-	$string_length_difference_lookup{$string_match} = (length $string_match) - $query_length;
+      @distances = adistr($query_string, @string_array);
+
+      for my $i (0 .. $#string_array) {
+	my $distance = $distances[$i];
+	my $string_match = $string_array[$i];
+	if ($distance == 0) {
+	  $string_length_difference_lookup{$string_match} = (length $string_match) - $query_length;
+	} elsif (abs($distance) <= $max_distance) {
+	  $string_distance_lookup{$string_match}=$distance;
+	}
       }
-      elsif (abs($distance) <= $max_distance) {
-	$string_distance_lookup{$string_match}=$distance;
-      }
+
     }
+
 
     #get a list of strings sorted by their difference in length from the query
     @strings_sorted_length = sort { abs($string_length_difference_lookup{$a}) <=> abs($string_length_difference_lookup{$b}) } keys(%string_length_difference_lookup);
