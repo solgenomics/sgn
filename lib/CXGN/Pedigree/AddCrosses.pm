@@ -41,13 +41,13 @@ has 'phenome_schema' => (
 		 is       => 'rw',
 		 isa      => 'DBIx::Class::Schema',
 		 predicate => 'has_schema',
-		 required => 1,
+		 required => 0,
 		);
 has 'metadata_schema' => (
 		 is       => 'rw',
 		 isa      => 'DBIx::Class::Schema',
 		 predicate => 'has_schema',
-		 required => 1,
+		 required => 0,
 		);
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_crosses', required => 1,);
@@ -155,8 +155,8 @@ sub add_crosses {
     $program = $program_lookup->get_breeding_program_by_name($self->get_program());
 
     #lookup user by name
-    my $owner_name = "test";
-    my $dbh = '';
+    my $owner_name = $self->get_owner_name();;
+    my $dbh = $self->get_dbh();
     my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 
     @crosses = @{$self->get_crosses()};

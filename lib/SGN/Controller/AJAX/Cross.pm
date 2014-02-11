@@ -210,8 +210,8 @@ sub add_cross_POST :Args(0) {
     @array_of_pedigree_objects = ($cross_to_add);
     $cross_add = CXGN::Pedigree::AddCrosses->new({
 					       chado_schema => $chado_schema,
-					       phenome_schema => $phenome_schema,
-					       metadata_schema => $metadata_schema,
+					       #phenome_schema => $phenome_schema,
+					       #metadata_schema => $metadata_schema,
 					       dbh => $dbh,
 					       location => $location,
 					       program => $program,
