@@ -135,6 +135,7 @@ jQuery(document).ready(function ($) {
     $("#create_progeny_checkbox").change(function(){
 	$("#create_progeny_number").toggle(this.checked);  // show if it is checked, otherwise hide
 	$("#use_prefix_suffix").toggle(this.checked);  // show if it is checked, otherwise hide
+	$("#get_prefix_suffix").toggle(this.checked);  // show if it is checked, otherwise hide
     });
     
     $("#use_prefix_suffix_checkbox").change(function(){

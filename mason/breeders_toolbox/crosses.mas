@@ -185,7 +185,7 @@ $user_id => undef
   </tr>
 
   <tr id="use_prefix_suffix" style = "display: none">
-    <td>Use prefix and/or suffix<input id="use_prefix_suffix_checkbox" type="checkbox" /></td>
+    <td>Use prefix and/or suffix<input id="use_prefix_suffix_checkbox" type="checkbox" checked/></td>
     <td id="get_prefix_suffix" style = "display: none">Prefix <input id="prefix" name="prefix" value="P" size="5" /> Suffix <input id="suffix" name="suffix" size="5" /></td>
   </tr>
 
