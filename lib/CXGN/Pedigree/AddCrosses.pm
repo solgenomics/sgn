@@ -329,7 +329,7 @@ sub validate_crosses {
   my $program_lookup;
   my $geolocation;
 
-  $location_lookup = CXGN::Location::LocationLookup->new({ chado_schema => $chado_schema, location_name => $self->get_location() });
+  $location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location() });
   $geolocation = $location_lookup->get_geolocation();
 
   if (!$geolocation) {
@@ -337,7 +337,7 @@ sub validate_crosses {
     return;
   }
 
-  $program_lookup = CXGN::BreedersToolbox::Projects->new({ chado_schema => $chado_schema});
+  $program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
   $program = $program_lookup->get_breeding_program_by_name($self->get_program());
   if (!$program) {
     print STDERR "Breeding program". $self->get_program() ."not found\n";
@@ -414,7 +414,7 @@ sub _get_accession {
   my $self = shift;
   my $accession_name = shift;
   my $chado_schema = $self->get_chado_schema();
-  my $stock_lookup = CXGN::Stock::StockLookup->new(chado_schema => $chado_schema);
+  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
   my $stock;
   my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({

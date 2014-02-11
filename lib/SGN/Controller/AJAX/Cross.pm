@@ -103,7 +103,7 @@ sub add_cross : Local : ActionClass('REST') { }
 
 sub add_cross_POST :Args(0) { 
     my ($self, $c) = @_;
-    my $chado_schema = $c->dbic_chado_schema('Bio::Chado::Chado_Schema', 'sgn_chado');
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
