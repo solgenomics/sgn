@@ -5,6 +5,9 @@ use Moose;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
+use URI::FromHash 'uri';
+
+
 sub breeder_download : Path('/breeders/download/') Args(0) { 
     my $self = shift;
     my $c = shift;
