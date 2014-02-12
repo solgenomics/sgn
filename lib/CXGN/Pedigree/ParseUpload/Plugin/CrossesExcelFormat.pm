@@ -80,19 +80,19 @@ sub _validate {
     my $paternal_parent  = $worksheet->get_cell(0,3);
 
 
-    if (!$cross_name) {
+    if (!$cross_name || $cross_name ne 'cross_name' ) {
       push @errors, "cross_name is missing from the header";
     }
 
-    if (!$cross_type) {
+    if (!$cross_type || $cross_type ne 'cross_type') {
       push @errors, "cross_type is missing from the header";
     }
 
-    if (!$maternal_parent) {
+    if (!$maternal_parent || $maternal_parent ne 'maternal_parent') {
       push @errors, "maternal_parent is missing from the header";
     }
 
-    if (!$paternal_parent) {
+    if (!$paternal_parent || $paternal_parent ne 'paternal_parent') {
       push @errors, "paternal_parent is missing from the header";
     }
 
