@@ -32,6 +32,7 @@ use CXGN::UploadFile;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddProgeny;
 use CXGN::Pedigree::AddCrossInfo;
+use CXGN::Pedigree::ParseUpload;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -58,6 +59,8 @@ sub upload_cross_file_POST : Args(0) {
   my $md5;
   my $validate_file;
   my $parsed_file;
+  my $parse_errors;
+  my $return_error = '';
   my %parsed_data;
   my %upload_metadata;
   my $time = DateTime->now();
@@ -90,7 +93,17 @@ sub upload_cross_file_POST : Args(0) {
   ## Validate and parse uploaded file
   $validate_file = $parser->validate($upload_file_type, $archived_filename_with_path);
   if (!$validate_file) {
-    $c->stash->{rest} = {error => "File not valid: $upload_original_name",};
+    $parse_errors = $parser->parse_errors($upload_file_type, $archived_filename_with_path);
+    if (!$parse_errors) {
+      $return_error = "Could not get parsing errors";
+      $c->stash->{rest} = {error_string => $return_error,};
+    }
+    else {
+      foreach my $error_string (@{$parse_errors}){
+	$return_error=$return_error.$error_string."<br>";
+      }
+      $c->stash->{rest} = {error_string => $return_error,};
+    }
     return;
   }
 

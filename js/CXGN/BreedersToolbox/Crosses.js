@@ -56,6 +56,25 @@ jQuery(document).ready(function ($) {
 	    }
 	},
 	complete: function (response) {
+            if (response.error_string) {
+		$("#upload_cross_error_display tbody").html('');
+		$("#upload_cross_error_display tbody").append(response.error_string);
+		$(function () {
+                    $("#upload_cross_error_display").dialog({
+			modal: true,
+			autoResize:true,
+			width: 650,
+			position: ['top', 250],
+			title: "Errors in uploaded cross file",
+			buttons: {
+                            Ok: function () {
+				$(this).dialog("close");
+                            }
+			}
+                    });
+		});
+		return;
+            }
 	    if (response.error) {
 		alert(response.error);
 		return;
@@ -64,6 +83,11 @@ jQuery(document).ready(function ($) {
 		alert("File uploaded successfully");
 		$( this ).dialog( "close" );
 		location.reload();
+
+
+
+
+
 	    }
 	}
     });

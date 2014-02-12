@@ -80,7 +80,11 @@ $user_id => undef
 
 </div>
 
-
+<div id="upload_cross_error_display" class="ui-widget">
+  <table>
+    <tbody></tbody>
+  </table>
+</div>
 
 <div id="cross_upload_spreadsheet_info_dialog" title="Format for uploading crosses in a spreadsheet">
   <&| /breeders_toolbox/spreadsheet_upload_format_info.mas &>

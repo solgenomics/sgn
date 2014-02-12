@@ -18,6 +18,20 @@ sub validate {
     return $validate_result;
 }
 
+sub parse_errors {
+    my $self = shift;
+    my $type = shift;
+    my $filename = shift;
+    my $validate_result;
+
+    foreach my $p ($self->plugins()) {
+        if ($type eq $p->name()) {
+	     $validate_result = $p->parse_errors($filename);
+	}
+    }
+    return $validate_result;
+}
+
 sub parse {
     my $self = shift;
     my $type = shift;

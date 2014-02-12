@@ -1,51 +1,114 @@
 
-package CXGN::Phenotypes::ParseUpload::Plugin::CrossesExcelFormat;
+package CXGN::Pedigree::ParseUpload::Plugin::CrossesExcelFormat;
 
 use Moose;
-use File::Slurp;
+use MooseX::FollowPBP;
+use Moose::Util::TypeConstraints;
+use Spreadsheet::ParseExcel;
 
 sub name {
     return "crosses excel";
 }
 
 sub validate {
+  my $self = shift;
+  my $filename = shift;
+  my $validate_result = $self->_validate($filename);
+  if (!$validate_result) {
+    return;
+  }
+  if (!$validate_result->{valid}) {
+    return;
+  }
+}
+
+sub parse_errors {
+  my $self = shift;
+  my $filename = shift;
+  my $validate_result = $self->_validate($filename);
+  my @errors;
+  if (!$validate_result) {
+    my $error_message = "Error running parse on cross upload file";
+    push (@errors, $error_message);
+    return \@errors;
+  }
+  if (!$validate_result->{valid}) {
+    my $errors_ref = $validate_result->{errors};
+    if (!$errors_ref) {
+      my $error_message = "Error running parse validation on cross upload file";
+      push (@errors, $error_message);
+      return \@errors;
+    }
+    @errors = @{$errors_ref};
+    return \@errors;
+  }
+  return;
+}
+
+sub _validate {
     my $self = shift;
     my $filename = shift;
-    my @file_lines;
-    my $delimiter = ',';
-    my $header;
-    my @header_row;
+    my @errors;
+    my $passed_validation;
+    my %validate_result;
 
-    ## Check that the file could be read
-    @file_lines = read_file($filename);
-    if (!@file_lines) {
-	print STDERR "Could not read file\n";
-	return;
-    }
-    ## Check that the file has at least 2 lines;
-    if (scalar(@file_lines < 2)) {
-	print STDERR "File has less than 2 lines\n";
-	return;
+    my $parser   = Spreadsheet::ParseExcel->new();
+    my $spreadsheet = $parser->parse($filename);
+    if ( !$spreadsheet ) {
+        push @errors,  $parser->error();
+	$validate_result{'valid'} = $passed_validation;
+	$validate_result{'errors'} = \@errors;
+	return \%validate_result;
     }
 
-    $header = shift(@file_lines);
-    chomp($header);
-    @header_row = split($delimiter, $header);
 
-    #  Check header row contents
-    if ($header_row[0] ne "\"plot_id\"" ||
-	$header_row[-1] ne "\"location\"" ||
-	$header_row[-2] ne "\"timestamp\"" ||
-	$header_row[-3] ne "\"person\"" ||
-	$header_row[-4] ne "\"value\"" ||
-	$header_row[-5] ne "\"trait\""
-       ) {
-	print STDERR "File contents incorrect\n";
-	return;
+    my $worksheet = ( $spreadsheet->worksheets() )[0]; #support only one worksheet
+    my ( $row_min, $row_max ) = $worksheet->row_range();
+    my ( $col_min, $col_max ) = $worksheet->col_range();
+    if ($col_max < 2 || $row_max < 4 ) {#must have header and at least one row of crosses
+      push @errors, "Spreadsheet is missing header";
+      $validate_result{'valid'} = $passed_validation;
+      $validate_result{'errors'} = \@errors;
+      return \%validate_result
     }
 
-    return 1;
+    print STDERR "Validating cross file\n\n";
+    #hash for column headers
+    my $cross_name  = $worksheet->get_cell(0,0);
+    my $cross_type  = $worksheet->get_cell(0,1);
+    my $maternal_parent  = $worksheet->get_cell(0,2);
+    my $paternal_parent  = $worksheet->get_cell(0,3);
+
+
+    if (!$cross_name) {
+      push @errors, "cross_name is missing from the header";
+    }
+
+    if (!$cross_type) {
+      push @errors, "cross_type is missing from the header";
+    }
+
+    if (!$maternal_parent) {
+      push @errors, "maternal_parent is missing from the header";
+    }
+
+    if (!$paternal_parent) {
+      push @errors, "paternal_parent is missing from the header";
+    }
+
+    if (scalar(@errors) >= 1) {
+      $validate_result{'valid'} = $passed_validation;
+      $validate_result{'errors'} = \@errors;
+      return \%validate_result
+    }
+
+    $validate_result{'valid'} = $passed_validation;
+    $validate_result{'errors'} = \@errors;
+    return \%validate_result
 }
+
+
+
 
 sub parse {
     my $self = shift;
