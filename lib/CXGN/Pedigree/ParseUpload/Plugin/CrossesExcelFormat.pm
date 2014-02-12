@@ -103,12 +103,12 @@ sub _validate {
       push @errors, "wrong header for number_of_progeny column";
     }
 
-    if ($number_of_progeny && $number_of_progeny ne 'number_of_flowers') {
-      push @errors, "wrong header for number_of_progeny column";
+    if ($number_of_progeny && $number_of_flowers ne 'number_of_flowers') {
+      push @errors, "wrong header for number_of_flowers column";
     }
 
-    if ($number_of_progeny && $number_of_progeny ne 'number_of_seeds') {
-      push @errors, "wrong header for number_of_progeny column";
+    if ($number_of_progeny && $number_of_seeds ne 'number_of_seeds') {
+      push @errors, "wrong header for number_of_seeds column";
     }
 
     for my $row ( 1 .. $row_max ) {
