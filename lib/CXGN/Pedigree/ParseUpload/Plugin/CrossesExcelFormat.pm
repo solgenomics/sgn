@@ -4,7 +4,11 @@ package CXGN::Pedigree::ParseUpload::Plugin::CrossesExcelFormat;
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
+use Try::Tiny;
+use List::MoreUtils qw /any /;
 use Spreadsheet::ParseExcel;
+use Bio::GeneticRelationships::Pedigree;
+use Bio::GeneticRelationships::Individual;
 
 sub name {
     return "crosses excel";
@@ -51,6 +55,7 @@ sub _validate {
     my @errors;
     my $passed_validation;
     my %validate_result;
+    my %valid_cross_types;
 
     my $parser   = Spreadsheet::ParseExcel->new();
     my $spreadsheet = $parser->parse($filename);
@@ -119,8 +124,20 @@ sub _validate {
       my $number_of_progeny =  $worksheet->get_cell($row,4);
       my $number_of_flowers =  $worksheet->get_cell($row,5);
       my $number_of_seeds =  $worksheet->get_cell($row,6);
-    }
 
+      if (!$cross_name || $cross_name eq '') {
+	push @errors, "cross name missing on row $row";
+      }
+
+      if (!$cross_type || $cross_type eq '') {
+	push @errors, "cross type missing on row $row";
+      }
+
+      if (!$maternal_parent || $maternal_parent eq '') {
+	push @errors, "maternal_parent missing on row $row";
+      }
+
+    }
 
 
     if (scalar(@errors) >= 1) {
