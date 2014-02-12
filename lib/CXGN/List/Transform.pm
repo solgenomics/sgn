@@ -47,9 +47,10 @@ sub can_transform {
 
  Usage:        $tf->transform($transform_name, $list_ref);
  Desc:         
- Ret:
  Args:         $transform_name (obtain from can_transform())
                $list_ref of elements to transform
+ Returns:      a hashref with two keys, transform and missing, both
+               of which are arrayrefs of strings.
  Side Effects:
  Example:
 

@@ -1,6 +1,6 @@
 
-<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
-<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+<!-- <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script> -->
 
 <!-- javascript-->
 <!-- <script src="/js/tools/vigs.js" type="text/javascript"></script> -->
@@ -22,7 +22,7 @@
 
 
 
-<& /util/import_javascript.mas, classes => ['Text.Markup', 'sprintf', 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List'] &>
+<& /util/import_javascript.mas, classes => ['Text.Markup', 'sprintf', 'jquery', 'jqueryui', 'CXGN.List'] &>
 
 <& /page/page_title.mas, title=>"Expression Tool" &>
 
@@ -35,7 +35,7 @@
 <br />
 
 <span title="query gene">Select a gene:</span> 
-<input class="input" id="gene" type="input" value="Solyc00g005050.2" name="input_gene" size="15" />&nbsp; &nbsp; &nbsp;
+<input class="input" id="gene" type="input" value="Solyc04g014530.1" name="input_gene" size="15" />&nbsp; &nbsp; &nbsp;
 
 <button class="input" id="run_tool" value="Run Expression Tool">Get Expression</button>
 
@@ -114,9 +114,9 @@
 <style>
 
 #my_stage {
-    border-style:dashed;
+/*    border-style:dashed;
     border-width:1px;
-    height:600px;
+*/    height:550px;
     width:700px;
 }
 .jqplot-title {
@@ -135,14 +135,6 @@
 
 <script defer="defer">
 
-$(document).ajaxStart(function(){
-  $('#status_wheel').show();
-});
-
-$(document).ajaxStop(function(){
-  $('#status_wheel').hide();
-});
-
 jQuery(document).ready(function () {
 
     var data_array_obj;
@@ -152,6 +144,7 @@ jQuery(document).ready(function () {
 
     jQuery('#run_tool').click(function () {
 		//alert("clicking");
+		disable_ui();
 		error_var = 1;
 		query_gene = jQuery('#gene').val();
 
@@ -160,7 +153,9 @@ jQuery(document).ready(function () {
             async: false,
             method: 'POST',
             data: { 'gene': query_gene },
-            success: function(response) { 
+            success: function(response) {
+				enable_ui();
+				
                 if (response.error) { 
                     alert("ERROR: "+response.error);
 		    		error_var = 1;
@@ -176,7 +171,11 @@ jQuery(document).ready(function () {
 		      //alert("hi: "+response.gene_name);
                 }
             },
-            error: function(response) { alert("An error occurred. The service may not be available right now.");error_var = 1;}
+            error: function(response) {
+				alert("An error occurred. The service may not be available right now.");
+				error_var = 1;
+				enable_ui();
+			}
         });
 	
 
@@ -233,15 +232,23 @@ jQuery(document).ready(function () {
 	        jQuery('#exp_info_table').html(experiment_info);
 		}
     });
+	
+	function disable_ui() {
+		$('#working').dialog("open");
+	}
 
-    function hide_ui() {
-	Effects.swapElements('expr_input_offswitch', 'expr_input_onswitch');
-        Effects.hideElement('expr_input_content');
-    }
+	function enable_ui() {
+		$('#working').dialog("close");
+	}
 
-    function show_hiden_divs() {
-       	jQuery("#hide_results").css("display","inline");
-    }
+	function hide_ui() {
+		Effects.swapElements('expr_input_offswitch', 'expr_input_onswitch');
+		Effects.hideElement('expr_input_content');
+	}
+
+	function show_hiden_divs() {
+		jQuery("#hide_results").css("display","inline");
+	}
 
 
 
@@ -310,7 +317,8 @@ jQuery(document).ready(function () {
 					},
 				},
 	        },
-			seriesColors: ['#20608E'],
+			seriesColors: ['#C80000'],
+			// seriesColors: ['#20608E'],
 		    axesDefaults: {
 		           tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
 		       },
@@ -399,12 +407,12 @@ function dump(arr,level) {
 		var stage = new Kinetic.Stage({
 			container: "my_stage",
 			width: 700,
-			height: 600
+			height: 550
 		});
 		var layer = new Kinetic.Layer();
 		var plantObj = new Image();
 		// var fruit_img = new Image();
-		plantObj.src = "/static/documents/img/expression_tool/expression_example.png";
+		plantObj.src = "/static/documents/img/expression_tool/tomato_template.png";
 		// fruit_img.src = "/static/documents/img/expression_tool/tomato_fruit_1.png";
 
 		// tomato plant img
@@ -412,8 +420,8 @@ function dump(arr,level) {
 			image: plantObj,
 			x: 0,
 			y: 0,
-			width: 690,
-			height: 570,
+			width: 700,
+			height: 550,
 		});
 
 		// // tomato fruit img

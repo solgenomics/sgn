@@ -52,7 +52,10 @@ Database <select class="input" id='bt2_db' name="database">
 
 <%perl>
 foreach my $d (@databases) { 
-    print "<option value=\"".$d->id()."\">".$d->title()."</option><br />";
+	my $db_name = $d;
+	$db_name =~ s/_/ /g;
+	
+    print "<option value=\"".$d."\">".$db_name."</option><br />";
 }     
 </%perl>
 </select>
@@ -90,12 +93,13 @@ foreach my $d (@databases) {
     <p>
         <b>Usage:</b><br />
         1. Paste a <b>sequence</b> like in one of the examples:<br />
-        <span style="background-color:#DCDCDC;">&nbsp;&nbsp;>seq1<br />&nbsp;&nbsp;accgatcgatcgatcgta&nbsp;&nbsp;</span><br />
-
-        &nbsp;&nbsp;Or:<br />
-        <span style="background-color:#DCDCDC;">&nbsp;&nbsp;acgtagctagctgatcat&nbsp;&nbsp;</span><br />
+        <span style="background-color:#DCDCDC;">&nbsp;&nbsp;>gene_ID<br />&nbsp;&nbsp;ATGGATCAGTCGGTGTTGGCGATCT&nbsp;&nbsp;<br />&nbsp;&nbsp;ACAGCTTGGCCAACTCCAGAAATTG&nbsp;&nbsp;</span><br />
+        &nbsp;&nbsp;or<br />
+        <span style="background-color:#DCDCDC;">&nbsp;&nbsp;ATGGATCAGTCGGTGTTGGCGATCT&nbsp;&nbsp;</span><br />
+        &nbsp;&nbsp;Or paste the <b>gene ID</b>:<br />
+        <span style="background-color:#DCDCDC;">&nbsp;&nbsp;Solyc10g047140.1.1&nbsp;&nbsp;</span><br />
          
-        2. Choose <b>n-mer size</b>, nucleotide stretch size in bp, used to identify targeted regions (18-30, Default=21)<br />
+        2. Choose <b>n-mer size</b>, nucleotide stretch size in bp, used to identify targeted regions (18-24, Default=21)<br />
         3. Choose <b>Fragment length</b>, desired VIGS fragment length in bp (100-Sequence length, Default=300)<br />
         4. Choose <b>mismatches</b>, number of mismatches allowed in the alignment (0-1, Default=0)<br />
         5. Choose <b>database</b><br />
@@ -108,7 +112,7 @@ foreach my $d (@databases) {
 			<td>p_val ...</td>
 		</tr>
 		<tr>
-			<td>Solyc01g000010.1.1</td>
+			<td>Solyc10g047140.1.1</td>
 			<td>4.56</td>
 			<td>0.0001 ...</td>
 		</tr>

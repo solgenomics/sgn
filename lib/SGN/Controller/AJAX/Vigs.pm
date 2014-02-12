@@ -8,25 +8,10 @@ use File::Slurp;
 use File::Spec;
 
 use Bio::SeqIO;
+use Bio::BLAST::Database;
 use Data::Dumper;
 use File::Temp qw | tempfile |; 
-
-use POSIX;
-use Storable qw | nstore |;
-use Tie::UrlEncoder;
-
-use CXGN::DB::Connection;
-use CXGN::BlastDB;
-
-use CXGN::Page::FormattingHelpers qw| page_title_html info_table_html hierarchical_selectboxes_html |;
-use CXGN::Page::UserPrefs;
-use CXGN::Graphics::BlastGraph;
 use CXGN::Graphics::VigsGraph;
-use CXGN::Tools::List qw/evens distinct/;
-use CXGN::Tools::Run;
-
-## AJAX Communications
-#use JSON -support_by_pp;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -46,15 +31,13 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
     my @errors; 
  
     # get variables from catalyst object
-    # my $seq_filename = $c->req->param("tmp_file_name");
-	
     my $params = $c->req->body_params();
     my $sequence = $c->req->param("sequence");
     my $fragment_size = $c->req->param("fragment_size");
     my $seq_fragment = $c->req->param("seq_fragment");
     my $missmatch = $c->req->param("missmatch");
     my $db_id = $c->req->param("database");
-
+	
     # clean the sequence and check if there are more than one sequence pasted
     if ($sequence =~ tr/>/>/ > 1) {
 		push ( @errors , "Please, paste only one sequence.\n");	
@@ -71,8 +54,36 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		    $id = $1;
 		}
 		$sequence = join("",@seq);
-    }
-    else {
+    } elsif ($sequence =~ tr/acgtACGT/acgtACGT/ < 30) {
+		
+		# save pasted gene name
+		my $pasted_gene_name = $sequence;
+		
+		# get databases path from the configuration file
+		my $db_path = $c->config->{vigs_db_path};
+			
+		# get database names from their path
+		my @tmp_dbs = glob("$db_path/*.rev.1.bt2");
+		
+		# find the pasted gene name in the BLAST dbs and leave the loop when the name is found
+		foreach my $db_path (@tmp_dbs) {
+			$db_path =~ s/\.rev\.1\.bt2//;
+			# print STDERR "DB: $db_path\n";
+			
+			my $fs = Bio::BLAST::Database->open(full_file_basename => "$db_path",);
+			
+			if ($fs->get_sequence($sequence)) {
+				my $seq_obj = $fs->get_sequence($sequence);
+				$sequence = $seq_obj->seq();
+				last;
+			}
+		}
+		
+		if ($sequence =~ tr/acgtACGT/acgtACGT/ < 30) {
+			push ( @errors , "Your input sequence is not valid: $pasted_gene_name\n");
+		}
+		
+    } else {
 		$sequence =~ s/[^ACGT]+//gi;
     }
 
@@ -87,8 +98,8 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		push (@errors, "n-mer size must be lower or equal to sequence length.\n");
     }
 
-    if (!$fragment_size ||$fragment_size < 18 || $fragment_size > 30 ) { 
-		push (@errors, "n-mer size ($fragment_size) value must be between 18-30 bp.\n");
+    if (!$fragment_size ||$fragment_size < 18 || $fragment_size > 24 ) { 
+		push (@errors, "n-mer size ($fragment_size) value must be between 18-24 bp.\n");
     }
     if (!$seq_fragment || $seq_fragment < 100 || $seq_fragment > length($sequence)) {
 		push (@errors, "Wrong fragment size ($seq_fragment), it must be higher than 100 bp and lower than sequence length\n");
@@ -130,14 +141,12 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
     if (! -e $query_file) { die "Query file failed to be created."; }
 
     # get arguments to Run Bowtie2
-    print STDERR "DATABASE SELECTED: $db_id\n";
-    my $bdb = CXGN::BlastDB->from_id($db_id);
+    # print STDERR "DATABASE SELECTED: $db_id\n";
     
-    my $basename = $c->config->{blast_db_path};
-    my $database = $bdb->file_base;
+    my $basename = $c->config->{vigs_db_path};
+    my $database = $db_id;
     my $database_fullpath = File::Spec->catfile($basename, $database);
-    my $database_title = $bdb->title;
-
+    my $database_title = $db_id;
     
     # run bowtie2
     my $bowtie2_path = $c->config->{cluster_shared_bindir};
@@ -148,11 +157,8 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		" --no-head", 
 		" --omit-sec-seq",
 		" --end-to-end",
-		# " --mp 2,1", 
 		" -L ".$fragment_size, 
-		# " --score-min L,-100,-1", 
 		" -N 1", 
-		# " -R 10", 
 		" -a", 
 		" -x ".$database_fullpath,
 		" -f",
@@ -162,9 +168,6 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 
     print STDERR "Bowtie2 COMMAND: ".(join " ",@command)."\n";
     
-	# print STDERR "TEST: $bowtie2_path/bowtie  --all -v 3 --threads 1 --seedlen $fragment_size --sam --sam-nohead $database_fullpath -f $query_file.fragments $query_file.bt2.out\n";
-	
-    # my $err = system("$bowtie2_path/bowtie  --all -v 3 --threads 1 --seedlen $fragment_size --sam --sam-nohead $database_fullpath -f $query_file.fragments $query_file.bt2.out");
     my $err = system(@command);
 
 	if ($err) {
@@ -195,7 +198,7 @@ sub get_expression_hash {
     my @header = split(/\t/,$first_line);
     $expr_values{"header"} = \@header;
 
-#    print "header: ".Dumper(@header)."\n";
+	# print "header: ".Dumper(@header)."\n";
     
     # save gene data
     foreach my $line (@file) {
@@ -224,36 +227,25 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $expr_hash = undef;
     my $status = $c->req->param("status") || 1;
     
-    #print "DB: $db\n";
-
     if (defined($expr_file)) {
-	my $expr_dir = $c->generated_file_uri('expr_files', $expr_file);
-	my $expr_path = $c->path_to($expr_dir);
-#      	print "file name: $expr_path\n";
+		my $expr_dir = $c->generated_file_uri('expr_files', $expr_file);
+		my $expr_path = $c->path_to($expr_dir);
     
-	$expr_hash = get_expression_hash($expr_path);
-   
-	#print STDERR "hash header: ".Dumper($$expr_hash{"header"})."\n";
+		$expr_hash = get_expression_hash($expr_path);
+		# print STDERR "hash header: ".Dumper($$expr_hash{"header"})."\n";
     }
 
     $seq_filename = File::Spec->catfile($c->config->{cluster_shared_tempdir}, $seq_filename);
-    #$c->stash->{rest} = {query_file => $seq_filename};
     $seq_filename =~ s/\%2F/\//g;
     
-#     print STDERR "seq_filename: $seq_filename\n";
-
     my $io = Bio::SeqIO->new(-file=>$seq_filename, -format=>'fasta');
     my $query = $io->next_seq();
-
-    #$c->stash->{rest} = {query => $query};
-    #$c->stash->{rest} = {template => '/tools/vigs/view.mas'};
     
     my %matches;
     my @queries = ();
 
-    my $bdb = CXGN::BlastDB->from_id($db);
-    my $basename = $c->config->{blast_db_path};
-    my $database = $bdb->file_base;
+    my $basename = $c->config->{vigs_db_path};
+    my $database = $db;
     my $bdb_full_name = File::Spec->catfile($basename, $database);
 
     # send variables to VigsGraph
@@ -262,8 +254,6 @@ sub view :Path('/tools/vigs/view') Args(0) {
     $vg->fragment_size($fragment_size);
     $vg->seq_fragment($seq_fragment);
     $vg->query_seq($sequence);
-
-#    $vg->missmatch($missmatch);
 
     if (defined($expr_hash)) {
 	$vg->expr_hash($expr_hash);
@@ -325,7 +315,6 @@ sub view :Path('/tools/vigs/view') Args(0) {
     # return variables
     $c->stash->{rest} = {
 						score => sprintf("%.2f",($regions[1]*100/$seq_fragment)/$coverage),
-						# score => sprintf("%.2f",($regions[1]*100/$fragment_size/$seq_fragment)/$coverage),
 						coverage => $coverage,
 						f_size => $seq_fragment,
 						cbr_start => ($regions[4]+1),
@@ -338,8 +327,6 @@ sub view :Path('/tools/vigs/view') Args(0) {
 						matches_aoa => $matches_AoA,
 						missmatch => $missmatch,
 						img_height => ($img_height+52)};
-						# $c->stash->{rest} = {fragment_size => $fragment_size};
-						# $c->stash->{rest} = {seq_filename => basename($seq_filename)};
 }
 
 sub hash2param {

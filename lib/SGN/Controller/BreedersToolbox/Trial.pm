@@ -26,7 +26,8 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     my $control_names_ref = $trial_layout->get_control_names();
     my $block_numbers = $trial_layout->get_block_numbers();
     my $replicate_numbers = $trial_layout->get_replicate_numbers();
-    my %design = %{$trial_layout->get_design()};
+    my $design_ref;
+    my %design;
     my %design_info;
 
     my $design_layout_view_html = trial_detail_design_view(\%design);
@@ -34,6 +35,11 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     my @plot_names;
     if ($plot_names_ref) {
       @plot_names = @{$trial_layout->get_plot_names()};
+    }
+
+    $design_ref = $trial_layout->get_design();
+    if ($design_ref) {
+      %design = %{$design_ref};
     }
 
     $c->stash->{design_type} = $design_type;
@@ -81,13 +87,13 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 
     $c->stash->{location_data} = \@location_data;
 
-    $h = $dbh->prepare("SELECT distinct(cvterm.name), count(*) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? GROUP BY cvterm.name");
+    $h = $dbh->prepare("SELECT distinct(cvterm.name),  cvterm.cvterm_id, count(*) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? GROUP BY cvterm.name, cvterm.cvterm_id");
 
     $h->execute($trial_id);
 
     my @phenotype_data;
-    while (my ($trait, $count) = $h->fetchrow_array()) { 
-	push @phenotype_data, [$trait, $count];
+    while (my ($trait, $trait_id, $count,) = $h->fetchrow_array()) { 
+	push @phenotype_data, [$trait, $trait_id, $count];
     }
     $c->stash->{phenotype_data} = \@phenotype_data;
 
@@ -110,6 +116,35 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     $c->stash->{trial_id} = $trial_id;
 
     $c->stash->{template} = '/breeders_toolbox/trial.mas';
+}
+
+
+sub trait_info :Path('/breeders_toolbox/trial') Args(3) {
+    my ($self, $c, $trial_id, $trait_txt, $trait_id) = @_;
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+   
+    my $trial_layout = CXGN::Trial::TrialLayout->new(
+        {
+            schema   => $schema,
+            trial_id => $trial_id
+        } 
+        ); 
+
+    my $trial_name =  $trial_layout->get_trial_name();
+    
+    my $trait_name = $schema->resultset("Cv::Cvterm")
+        ->search({'me.cvterm_id' => $trait_id})
+        ->single
+        ->name;
+    
+    $c->stash->{trial_id}   = $trial_id;
+    $c->stash->{trial_name} = $trial_name;
+    
+    $c->stash->{trait_id}   = $trait_id;
+    $c->stash->{trait_name} = $trait_name;
+      
+    $c->stash->{template}   = '/breeders_toolbox/trial_trait.mas';
 }
 
 

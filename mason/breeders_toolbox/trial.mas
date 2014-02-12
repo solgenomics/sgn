@@ -131,8 +131,9 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
 <br /><br />
 
 <&| /page/info_section.mas, title=>"Traits assayed" &>
-% foreach my $trait (@phenotype_data) { 
-%  print "$trait->[0] ($trait->[1] assays)<br />\n";
+% foreach my $trait (@phenotype_data) {
+% my $trait_id = $trait->[1];
+% print "<a href=\"/breeders_toolbox/trial/$trial_id/trait/$trait_id\">$trait->[0]</a> ($trait->[2] assays)<br />\n";
 %}
 
 </&>
@@ -163,16 +164,11 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
   
 </&>
 
- <& /solgs/population/correlation.mas,
+<!-- Phenotypic correlation analysis -->
+  <& /solgs/population/correlation.mas,
     trial_id => $trial_id
-  &>
+    &>
 
- <!--  plot histogram for a trait phenotype data
-   <& /solgs/population/trait_phenotype_histogram.mas,
-     trial_id => $trial_id,
-     trait_id => 70762
-     &>
--->
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
     jQuery('#trial_design_view_layout').dialog({

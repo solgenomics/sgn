@@ -43,21 +43,33 @@ Lukas Mueller <lam87@cornell.edu>
 
 % #$root_nodes = 'GO PO SP'; #for testing
 
-<script language="javascript" type="text/javascript"  >
-<!--
-    var o = new CXGN.Onto.Browser('<% $root_nodes %>');
-    o.setUpBrowser();
-    o.initializeBrowser('<% $root_nodes %>');
-    o.renderSearchById();
-    o.renderSearchByName('<% $db_name %>');
-    var rn = o.rootnode.getChildren();
-    
-    var expand = "<% $expand %>";
-    if (expand == 1) {
-      for (var i=0; i<rn.length; i++) {
-         rn[i].openNode(1);
-      }
+<table title="ontology browser input form" cellpadding="0" summary="" border="0"><tr><td><div id="ontology_browser_input" >&nbsp;&nbsp;&nbsp;</div></td></tr>
+<tr><td><div id="ontology_term_input" >loading...</div></td></tr></table>
+<input id="hide_link" type="button" value="show results" display="none" onClick="MochiKit.Visual.toggle('search_results', 'blind'); o.toggleSearchResultsVisible(); o.setSearchButtonText();  "><br />
+
+<div id="search_results" ></div>
+<div id="ontology_browser" style="font-size:12px; line-height:10px; font-face:arial,helvetica" >&nbsp;</div>
+
+
+<script language="javascript" type="text/javascript" defer="defer" >
+
+var o;
+
+jQuery(document).ready( function() { 
+  o = new CXGN.Onto.Browser('<% $root_nodes %>');
+//  o.setUpBrowser();
+  o.initializeBrowser('<% $root_nodes %>');
+  o.renderSearchById();
+  o.renderSearchByName('<% $db_name %>');
+  var rn = o.rootnode.getChildren();   
+  var expand = "<% $expand %>";
+  if (expand == 1) {
+    for (var i=0; i<rn.length; i++) {
+      rn[i].openNode(1);
     }
-    o.render();
--->
+  }
+  o.render();
+});
+
+
 </script>

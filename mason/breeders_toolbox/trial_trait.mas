@@ -1,0 +1,48 @@
+<%doc>
+
+=head1 NAME
+
+breeders_toolbox/trial_trait.mas - trial specific trait data display
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$trial_id
+$trial_name
+$trait_id
+$trait_name
+
+</%args>
+
+<%perl>
+
+$trait_name = ucfirst($trait_name);
+
+</%perl>
+
+<& /page/page_title.mas, 
+   title => "$trait_name in $trial_name"
+&>
+
+<&| /page/info_section.mas,
+   title => "Trait phenotype data frequency distribution from $trial_name"
+&>
+ 
+  <div id="histogram_message"  style="font-weight:bold;text-align:center;text-transform:uppercase;color:#A7C942">
+    <p>Loading frequency distribution graph...</p>
+  </div>
+
+ 
+  <& /solgs/population/trait_phenotype_histogram.mas,
+     trial_id => $trial_id,
+     trait_id => $trait_id
+    &>
+
+</&>
