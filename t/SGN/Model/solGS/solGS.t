@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use lib 't/lib';
-use Test::More tests => 26;
+use Test::More tests => 27;
 use SGN::Test::WWW::Mechanize;
 
 BEGIN {use_ok('SGN::Model::solGS::solGS');}
@@ -56,6 +56,8 @@ ok($model->search_stock_using_plot_name($plot_name), 'search_stock_using_plot_na
 
 my $stock_rs = $model->search_stock($clone_name);  
 ok($model->individual_stock_genotypes_rs($stock_rs), 'individual_stock_genotypes_rs...ok');
+
+ok($model->genotype_data($project_id), 'genotype_data...ok');
 
 #ok($model->format_user_list_genotype_data(), 'format_user_list_genotype_data...ok');
 #stock_genotype_values
