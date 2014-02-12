@@ -137,6 +137,23 @@ sub _validate {
 	push @errors, "maternal_parent missing on row $row";
       }
 
+      #some values must be positive integers
+
+      if ($number_of_progeny && !($number_of_progeny =~ /^\d+?$/)) {
+	push @errors, "number_of_progeny is not an integer on row $row";
+      }
+
+      if ($number_of_flowers && !($number_of_flowers =~ /^\d+?$/)) {
+	push @errors, "number_of_flowers is not an integer on row $row";
+      }
+
+      if ($number_of_seeds && !($number_of_seeds =~ /^\d+?$/)) {
+	push @errors, "number_of_seeds is not an integer on row $row";
+      }
+
+      #check that cross name does not exist (and project and experiment)
+      #check that parents exist
+
     }
 
 
