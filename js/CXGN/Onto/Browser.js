@@ -928,7 +928,7 @@ Node.prototype = {
 	}
 
 	var relType=this.getRelType() || '';
-	return relType + ' <span style="'+hiliteStyle+'"><a href="/chado/cvterm?action=view&amp;cvterm_id='+this.getCVtermID()+'">'+this.getAccession() + '</a> ' + this.getName() + ' ' + link +'</span><br />';
+	return relType + ' <span style="'+hiliteStyle+'"><a id="cvterm_id_'+this.getCVtermID()+'" href="/chado/cvterm?action=view&amp;cvterm_id='+this.getCVtermID()+'">'+this.getAccession() + '</a> ' + this.getName() + ' ' + link +'</span><br />';
     },
 
     setHilite: function(h) { 
