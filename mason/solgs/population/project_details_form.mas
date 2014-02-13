@@ -15,7 +15,7 @@ $page_links => ''
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations", "jquery.cookie"] &>
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
-
+<div id="homepage_trials_list">
 <& /page/columnar_table.mas,
      headings    => ['', 'Trials', 'Description', 'Location', 'Year' ],
      data        => $result,
@@ -34,7 +34,7 @@ $page_links => ''
 <div id="select_done">
   <input  class="button" type="button" id="done_selecting" name="done_selecting" value="Combine" onclick="selectedPops();"/>
 </div>
-
+</div>
 %}
 
 
