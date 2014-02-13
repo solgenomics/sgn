@@ -40,8 +40,8 @@ Choose a list for each parameter and click "download".
       </div>
     </td>
   </tr>
-  <tr><td colspan="3"><h4>Output</h4><input type="radio" id="output_selection" name="output_selection" value="phenotypes" disabled="1" /> Phenotypes<br />
-                      <input type="radio" id="output_selection" name="output_selection" value="genotypes" disabled="1" /> Genotypes<br /></td></tr>
+  <tr><td colspan="3"><h4>Output</h4><input type="radio" id="output_selection" name="output_selection" value="phenotypes" /> Phenotypes<br />
+                      <input type="radio" id="output_selection" name="output_selection" value="genotypes" /> Genotypes<br /></td></tr>
 </table>
 <br />
 <br />
