@@ -80,7 +80,14 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     }
 
     if ($data_type eq "genotype") { 
+		
+	$data = $bs->get_genotype_info($accession_sql, $trial_sql, $trait_sql);
 	
+	$output = "";
+	foreach my $d (@$data) { 
+	    $output .= join "\t", @$d;
+	    $output .= "\n";
+	}
 
 
     }
