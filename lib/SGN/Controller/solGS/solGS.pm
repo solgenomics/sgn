@@ -187,8 +187,9 @@ sub projects_links {
         my $dummy_desc = $pr_desc =~ /test\w*/ig;
 
         unless ($dummy_name | $dummy_desc ) 
-        {
-            push @projects_pages, [ qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
+        { 
+            my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+            push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
                                $pr_desc, $pr_location, $pr_year
             ];
         }
