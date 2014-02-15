@@ -119,7 +119,7 @@ sub _validate_with_plugin {
       push @errors, "Cell A$row_name: cross name missing";
     } else {
       #cross must not already exist in the database
-      if ($self->_get_cross($paternal_parent)) {
+      if ($self->_get_cross($cross_name)) {
 	push @errors, "Cell A$row_name: cross name already exists: $cross_name";
       }
     }
@@ -141,7 +141,7 @@ sub _validate_with_plugin {
 
     #paternal parent must not be blank if type is biparental
     if (!$paternal_parent || $paternal_parent eq '') {
-      if ($cross_type = 'biparental') {
+      if ($cross_type eq 'biparental') {
 	push @errors, "Cell D$row_name: paternal parent required for biparental cross";
       }
     } else {
@@ -207,7 +207,7 @@ sub _get_accession {
 sub _get_cross {
   my $self = shift;
   my $cross_name = shift;
-  my $chado_schema = $self->chado_schema();
+  my $chado_schema = $self->get_chado_schema();
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
   my $stock;
 
@@ -223,3 +223,4 @@ sub _get_cross {
 
 
 1;
+
