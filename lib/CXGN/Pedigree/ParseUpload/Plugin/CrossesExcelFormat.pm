@@ -8,6 +8,7 @@ use List::MoreUtils qw /any /;
 use Spreadsheet::ParseExcel;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
+use CXGN::Stock::StockLookup;
 
 
 sub _validate_with_plugin {
@@ -32,7 +33,7 @@ sub _validate_with_plugin {
   print STDERR "Worksheet: $worksheet\n\n";
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
-  if ($col_max < 2 || $row_max < 4 ) { #must have header and at least one row of crosses
+  if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of crosses
     push @errors, "Spreadsheet is missing header";
     $self->_set_parse_errors(\@errors);
     return;
@@ -48,34 +49,35 @@ sub _validate_with_plugin {
   my $number_of_seeds  = $worksheet->get_cell(0,6)->value();
 
   if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
-    push @errors, "cross_name is missing from the header";
+    push @errors, "Cell A1: cross_name is missing from the header";
   }
 
   if (!$cross_type_head || $cross_type_head ne 'cross_type') {
-    push @errors, "cross_type is missing from the header";
+    push @errors, "Cell B1: cross_type is missing from the header";
   }
 
   if (!$maternal_parent_head || $maternal_parent_head ne 'maternal_parent') {
-    push @errors, "maternal_parent is missing from the header";
+    push @errors, "Cell C1: maternal_parent is missing from the header";
   }
 
   if (!$paternal_parent_head || $paternal_parent_head ne 'paternal_parent') {
-    push @errors, "paternal_parent is missing from the header";
+    push @errors, "Cell D1: paternal_parent is missing from the header";
   }
 
   if ($number_of_progeny && $number_of_progeny ne 'number_of_progeny') {
-    push @errors, "wrong header for number_of_progeny column";
+    push @errors, "Cell E1: wrong header for number_of_progeny column";
   }
 
   if ($number_of_progeny && $number_of_flowers ne 'number_of_flowers') {
-    push @errors, "wrong header for number_of_flowers column";
+    push @errors, "Cell F1: wrong header for number_of_flowers column";
   }
 
   if ($number_of_progeny && $number_of_seeds ne 'number_of_seeds') {
-    push @errors, "wrong header for number_of_seeds column";
+    push @errors, "Cell G1: wrong header for number_of_seeds column";
   }
 
   for my $row ( 1 .. $row_max ) {
+    my $row_name = $row+1;
     my $cross_name;
     my $cross_type;
     my $maternal_parent;
@@ -107,42 +109,58 @@ sub _validate_with_plugin {
       $number_of_seeds =  $worksheet->get_cell($row,6)->value();
     }
 
-    if (!$cross_name || $cross_name eq '') {
-      push @errors, "cross name missing on row $row";
+    #skip blank lines or lines with no name, type and parent
+    if (!$cross_name && !$cross_type && !$maternal_parent) {
+      next;
     }
 
-     if (!$cross_type || $cross_type eq '') {
-     	push @errors, "cross type missing on row $row";
-     }
+    #cross name must not be blank
+    if (!$cross_name || $cross_name eq '') {
+      push @errors, "Cell A$row_name: cross name missing";
+    } else {
+      #cross must not already exist in the database
+      if ($self->_get_cross($paternal_parent)) {
+	push @errors, "Cell A$row_name: cross name already exists: $cross_name";
+      }
+    }
 
-    # if (!$maternal_parent || $maternal_parent eq '') {
-    # 	push @errors, "maternal_parent missing on row $row";
-    # }
+    #cross type must not be blank
+    if (!$cross_type || $cross_type eq '') {
+      push @errors, "Cell B$row_name: cross type missing";
+    }
 
-    # #some values must be positive integers
+    #maternal parent must not be blank
+    if (!$maternal_parent || $maternal_parent eq '') {
+      push @errors, "Cell C$row_name: maternal parent missing";
+    } else {
+      #maternal parent must exist in the database
+      if (!$self->_get_accession($maternal_parent)) {
+	push @errors, "Cell C$row_name: maternal parent does not exist: $maternal_parent";
+      }
+    }
 
-    # if ($number_of_progeny && !($number_of_progeny =~ /^\d+?$/)) {
-    # 	push @errors, "number_of_progeny is not an integer on row $row";
-    # }
+    #paternal parent must not be blank if type is biparental
+    if (!$paternal_parent || $paternal_parent eq '') {
+      if ($cross_type = 'biparental') {
+	push @errors, "Cell D$row_name: paternal parent required for biparental cross";
+      }
+    } else {
+      #paternal parent must exist in the database
+      if (!$self->_get_accession($paternal_parent)) {
+	push @errors, "Cell D$row_name: paternal parent does not exist: $paternal_parent";
+      }
+    }
 
-    # if ($number_of_flowers && !($number_of_flowers =~ /^\d+?$/)) {
-    # 	push @errors, "number_of_flowers is not an integer on row $row";
-    # }
-
-    # if ($number_of_seeds && !($number_of_seeds =~ /^\d+?$/)) {
-    # 	push @errors, "number_of_seeds is not an integer on row $row";
-    # }
-
-    #$cross_stock = $self->_get_accession($maternal_parent);
-
-    #print STDERR "Cross stock: $cross_stock\n";
-
-    #my $stockname = $cross_stock->uniquename();
-
-    #print STDERR "stockname: $stockname\n";
-
-    #check that cross name does not exist (and project and experiment)
-    #check that parents exist
+    #numbers of progeny, flowers, and seeds must be positive integers
+    if ($number_of_progeny && !($number_of_progeny =~ /^\d+?$/)) {
+      push @errors, "Cell E$row_name: number of progeny is not an integer: $number_of_progeny";
+    }
+    if ($number_of_flowers && !($number_of_flowers =~ /^\d+?$/)) {
+      push @errors, "Cell F$row_name: number of flowers is not an integer: $number_of_flowers";
+    }
+    if ($number_of_seeds && !($number_of_seeds =~ /^\d+?$/)) {
+      push @errors, "Cell G$row_name: number of seeds is not an integer: $number_of_seeds";
+    }
 
   }
 
@@ -156,12 +174,52 @@ sub _validate_with_plugin {
 }
 
 
+sub _get_accession {
+  my $self = shift;
+  my $accession_name = shift;
+  my $chado_schema = $self->get_chado_schema();
+  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+  my $stock;
+  my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
+    ->create_with({
+ 		   name   => 'accession',
+ 		   cv     => 'stock type',
+ 		   db     => 'null',
+ 		   dbxref => 'accession',
+ 		  });
+  $stock_lookup->set_stock_name($accession_name);
+  $stock = $stock_lookup->get_stock_exact();
 
+  if (!$stock) {
+    print STDERR "Name in pedigree is not a stock\n";
+    return;
+  }
 
-sub _parse_with_plugin {
-  return;
+  if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
+    print STDERR "Name in pedigree is not a stock of type accession\n";
+    return;
+   }
+
+  return $stock;
+
 }
 
+sub _get_cross {
+  my $self = shift;
+  my $cross_name = shift;
+  my $chado_schema = $self->chado_schema();
+  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+  my $stock;
+
+  $stock_lookup->set_stock_name($cross_name);
+  $stock = $stock_lookup->get_stock_exact();
+
+  if (!$stock) {
+    return;
+  }
+
+  return $stock;
+}
 
 # sub validate {
 #   my $self = shift;
