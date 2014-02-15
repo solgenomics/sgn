@@ -39,13 +39,13 @@ sub _validate_with_plugin {
   }
 
   #get column headers
-  my $cross_name_head  = $worksheet->get_cell(0,0);
-  my $cross_type_head  = $worksheet->get_cell(0,1);
-  my $maternal_parent_head  = $worksheet->get_cell(0,2);
-  my $paternal_parent_head  = $worksheet->get_cell(0,3);
-  my $number_of_progeny  = $worksheet->get_cell(0,4);
-  my $number_of_flowers  = $worksheet->get_cell(0,5);
-  my $number_of_seeds  = $worksheet->get_cell(0,6);
+  my $cross_name_head  = $worksheet->get_cell(0,0)->value();
+  my $cross_type_head  = $worksheet->get_cell(0,1)->value();
+  my $maternal_parent_head  = $worksheet->get_cell(0,2)->value();
+  my $paternal_parent_head  = $worksheet->get_cell(0,3)->value();
+  my $number_of_progeny  = $worksheet->get_cell(0,4)->value();
+  my $number_of_flowers  = $worksheet->get_cell(0,5)->value();
+  my $number_of_seeds  = $worksheet->get_cell(0,6)->value();
 
   if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
     push @errors, "cross_name is missing from the header";
@@ -111,9 +111,9 @@ sub _validate_with_plugin {
       push @errors, "cross name missing on row $row";
     }
 
-    # if (!$cross_type || $cross_type eq '') {
-    # 	push @errors, "cross type missing on row $row";
-    # }
+     if (!$cross_type || $cross_type eq '') {
+     	push @errors, "cross type missing on row $row";
+     }
 
     # if (!$maternal_parent || $maternal_parent eq '') {
     # 	push @errors, "maternal_parent missing on row $row";
