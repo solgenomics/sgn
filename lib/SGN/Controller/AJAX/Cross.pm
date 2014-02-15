@@ -46,12 +46,13 @@ sub upload_cross_file : Path('/ajax/cross/upload_crosses_file') : ActionClass('R
 
 sub upload_cross_file_POST : Args(0) {
   my ($self, $c) = @_;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $program = $c->req->param('cross_upload_breeding_program');
   my $location = $c->req->param('cross_upload_location');
   my $upload = $c->req->upload('crosses_upload_file');
   my $uploader = CXGN::UploadFile->new();
-  my $parser = CXGN::Pedigree::ParseUpload->new();
+  my $parser;
+  my $parsed_data;
   my $upload_original_name = $upload->filename();
   my $upload_tempfile = $upload->tempname;
   my $subdirectory = "cross_upload";
@@ -60,7 +61,6 @@ sub upload_cross_file_POST : Args(0) {
   my $validate_file;
   my $parsed_file;
   my $parse_errors;
-  my $return_error = '';
   my %parsed_data;
   my %upload_metadata;
   my $time = DateTime->now();
@@ -89,21 +89,27 @@ sub upload_cross_file_POST : Args(0) {
   $upload_metadata{'user_id'}=$user_id;
   $upload_metadata{'date'}="$timestamp";
 
+  #parse uploaded file with appropriate plugin
+  $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+  $parser->load_plugin('CrossesExcelFormat');
+  $parsed_data = $parser->parse();
 
-  ## Validate and parse uploaded file
-  $validate_file = $parser->validate($upload_file_type, $archived_filename_with_path);
-  if (!$validate_file) {
-    $parse_errors = $parser->parse_errors($upload_file_type, $archived_filename_with_path);
-    if (!$parse_errors) {
+  if (!$parsed_data) {
+    my $return_error = '';
+
+    if (! $parser->has_parse_errors() ){
       $return_error = "Could not get parsing errors";
       $c->stash->{rest} = {error_string => $return_error,};
     }
+
     else {
+      $parse_errors = $parser->get_parse_errors();
       foreach my $error_string (@{$parse_errors}){
 	$return_error=$return_error.$error_string."<br>";
       }
-      $c->stash->{rest} = {error_string => $return_error,};
     }
+
+    $c->stash->{rest} = {error_string => $return_error,};
     return;
   }
 
