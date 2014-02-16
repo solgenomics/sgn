@@ -170,7 +170,6 @@ sub add_progeny {
 							       } );
       #create relationship to female parent
       if ($female_parent) {
-	print STDERR "\n\n\nFound female parent of cross\n\n";
 	$accession_stock
 	  ->find_or_create_related('stock_relationship_objects', {
 								  type_id => $female_parent_cvterm->cvterm_id(),
