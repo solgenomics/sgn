@@ -130,13 +130,22 @@ sub upload_cross_file_POST : Args(0) {
 	   crosses =>  $parsed_data->{crosses},
 	   owner_name => $owner_name,
 	  });
+
+  #validate the crosses
+  if (!$cross_add->validate_crosses()){
+    $c->stash->{rest} = {error_string => "Error validating crosses",};
+    return;
+  }
+
   #add the crosses
-  $cross_add->add_crosses();
+  if (!$cross_add->add_crosses()){
+    $c->stash->{rest} = {error_string => "Error adding crosses",};
+    return;
+  } else {
+    $c->stash->{rest} = {success => "1",};
+  }
 
 
-
-
-  $c->stash->{rest} = {success => "1",};
 }
 
 
