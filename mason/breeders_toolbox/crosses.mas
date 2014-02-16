@@ -224,6 +224,11 @@ $user_id => undef
   </p>
 </div>
 
-
+<div id="cross_upload_success_dialog_message" title="Cross file uploaded">
+  <p>
+    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    The cross file was uploaded successfully
+  </p>
+</div>
 
 
