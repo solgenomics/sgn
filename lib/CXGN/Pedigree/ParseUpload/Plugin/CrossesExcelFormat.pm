@@ -36,8 +36,8 @@ sub _validate_with_plugin {
   #get column headers
   my $cross_name_head;
   my $cross_type_head;
-  my $maternal_parent_head;
-  my $paternal_parent_head;
+  my $female_parent_head;
+  my $male_parent_head;
   my $number_of_progeny;
   my $number_of_flowers;
   my $number_of_seeds;
@@ -48,10 +48,10 @@ sub _validate_with_plugin {
     $cross_type_head  = $worksheet->get_cell(0,1)->value();
   }
   if ($worksheet->get_cell(0,2)) {
-    $maternal_parent_head  = $worksheet->get_cell(0,2)->value();
+    $female_parent_head  = $worksheet->get_cell(0,2)->value();
   }
   if ($worksheet->get_cell(0,3)) {
-    $paternal_parent_head  = $worksheet->get_cell(0,3)->value();
+    $male_parent_head  = $worksheet->get_cell(0,3)->value();
   }
   if ($worksheet->get_cell(0,4)) {
     $number_of_progeny  = $worksheet->get_cell(0,4)->value();
@@ -69,11 +69,11 @@ sub _validate_with_plugin {
   if (!$cross_type_head || $cross_type_head ne 'cross_type') {
     push @errors, "Cell B1: cross_type is missing from the header";
   }
-  if (!$maternal_parent_head || $maternal_parent_head ne 'maternal_parent') {
-    push @errors, "Cell C1: maternal_parent is missing from the header";
+  if (!$female_parent_head || $female_parent_head ne 'female_parent') {
+    push @errors, "Cell C1: female_parent is missing from the header";
   }
-  if (!$paternal_parent_head || $paternal_parent_head ne 'paternal_parent') {
-    push @errors, "Cell D1: paternal_parent is missing from the header";
+  if (!$male_parent_head || $male_parent_head ne 'male_parent') {
+    push @errors, "Cell D1: male_parent is missing from the header";
   }
   if ($number_of_progeny && $number_of_progeny ne 'number_of_progeny') {
     push @errors, "Cell E1: wrong header for number_of_progeny column";
@@ -89,8 +89,8 @@ sub _validate_with_plugin {
     my $row_name = $row+1;
     my $cross_name;
     my $cross_type;
-    my $maternal_parent;
-    my $paternal_parent;
+    my $female_parent;
+    my $male_parent;
     my $number_of_progeny;
     my $number_of_flowers;
     my $number_of_seeds;
@@ -103,10 +103,10 @@ sub _validate_with_plugin {
       $cross_type = $worksheet->get_cell($row,1)->value();
     }
     if ($worksheet->get_cell($row,2)) {
-      $maternal_parent =  $worksheet->get_cell($row,2)->value();
+      $female_parent =  $worksheet->get_cell($row,2)->value();
     }
     if ($worksheet->get_cell($row,3)) {
-      $paternal_parent =  $worksheet->get_cell($row,3)->value();
+      $male_parent =  $worksheet->get_cell($row,3)->value();
     }
     if ($worksheet->get_cell($row,4)) {
       $number_of_progeny =  $worksheet->get_cell($row,4)->value();
@@ -119,7 +119,7 @@ sub _validate_with_plugin {
     }
 
     #skip blank lines or lines with no name, type and parent
-    if (!$cross_name && !$cross_type && !$maternal_parent) {
+    if (!$cross_name && !$cross_type && !$female_parent) {
       next;
     }
 
@@ -147,25 +147,25 @@ sub _validate_with_plugin {
       }
     }
 
-    #maternal parent must not be blank
-    if (!$maternal_parent || $maternal_parent eq '') {
-      push @errors, "Cell C$row_name: maternal parent missing";
+    #female parent must not be blank
+    if (!$female_parent || $female_parent eq '') {
+      push @errors, "Cell C$row_name: female parent missing";
     } else {
-      #maternal parent must exist in the database
-      if (!$self->_get_accession($maternal_parent)) {
-	push @errors, "Cell C$row_name: maternal parent does not exist: $maternal_parent";
+      #female parent must exist in the database
+      if (!$self->_get_accession($female_parent)) {
+	push @errors, "Cell C$row_name: female parent does not exist: $female_parent";
       }
     }
 
-    #paternal parent must not be blank if type is biparental
-    if (!$paternal_parent || $paternal_parent eq '') {
+    #male parent must not be blank if type is biparental
+    if (!$male_parent || $male_parent eq '') {
       if ($cross_type eq 'biparental') {
-	push @errors, "Cell D$row_name: paternal parent required for biparental cross";
+	push @errors, "Cell D$row_name: male parent required for biparental cross";
       }
     } else {
-      #paternal parent must exist in the database
-      if (!$self->_get_accession($paternal_parent)) {
-	push @errors, "Cell D$row_name: paternal parent does not exist: $paternal_parent";
+      #male parent must exist in the database
+      if (!$self->_get_accession($male_parent)) {
+	push @errors, "Cell D$row_name: male parent does not exist: $male_parent";
       }
     }
 
@@ -218,8 +218,8 @@ sub _parse_with_plugin {
   for my $row ( 1 .. $row_max ) {
     my $cross_name;
     my $cross_type;
-    my $maternal_parent;
-    my $paternal_parent;
+    my $female_parent;
+    my $male_parent;
     my $number_of_progeny;
     my $number_of_flowers;
     my $number_of_seeds;
@@ -232,10 +232,10 @@ sub _parse_with_plugin {
       $cross_type = $worksheet->get_cell($row,1)->value();
     }
     if ($worksheet->get_cell($row,2)) {
-      $maternal_parent =  $worksheet->get_cell($row,2)->value();
+      $female_parent =  $worksheet->get_cell($row,2)->value();
     }
     if ($worksheet->get_cell($row,3)) {
-      $paternal_parent =  $worksheet->get_cell($row,3)->value();
+      $male_parent =  $worksheet->get_cell($row,3)->value();
     }
     if ($worksheet->get_cell($row,4)) {
       $number_of_progeny =  $worksheet->get_cell($row,4)->value();
@@ -248,17 +248,17 @@ sub _parse_with_plugin {
     }
 
     #skip blank lines or lines with no name, type and parent
-    if (!$cross_name && !$cross_type && !$maternal_parent) {
+    if (!$cross_name && !$cross_type && !$female_parent) {
       next;
     }
 
     my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>$cross_type);
-    if ($maternal_parent) {
-      my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $maternal_parent);
+    if ($female_parent) {
+      my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent);
       $pedigree->set_female_parent($female_parent_individual);
     }
-    if ($paternal_parent) {
-      my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $paternal_parent);
+    if ($male_parent) {
+      my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent);
       $pedigree->set_male_parent($male_parent_individual);
     }
 
