@@ -9,11 +9,16 @@ sub _validate_with_plugin {
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
   my @errors;
-  my %valid_cross_types;
+  my %supported_cross_types;
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
   my $worksheet;
   my %seen_cross_names;
+
+  #currently supported cross types
+  $supported_cross_types{'biparental'} = 1; #both parents required
+  $supported_cross_types{'self'} = 1; #only female parent required
+  $supported_cross_types{'open'} = 1; #only female parent required
 
   #try to open the excel file and report any errors
   $excel_obj = $parser->parse($filename);
@@ -141,7 +146,7 @@ sub _validate_with_plugin {
       push @errors, "Cell B$row_name: cross type missing";
     } else {
       #cross type must be supported
-      if ($cross_type ne "biparental" && $cross_type ne "self" && $cross_type ne "open") {
+      if (!$supported_cross_types{$cross_type}){
 	push @errors, "Cell B$row_name: cross type not supported: $cross_type";
       }
     }
