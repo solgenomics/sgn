@@ -3,6 +3,8 @@ package CXGN::Pedigree::ParseUpload;
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
+use Bio::GeneticRelationships::Pedigree;
+use Bio::GeneticRelationships::Individual;
 
 with 'MooseX::Object::Pluggable';
 
@@ -29,7 +31,7 @@ has 'parse_errors' => (
 
 has '_parsed_data' => (
 		       is => 'ro',
-		       isa => 'ArrayRef[HashRef]',
+		       isa => 'HashRef[HashRef]',
 		       writer => '_set_parsed_data',
 		       predicate => '_has_parsed_data',
 		      );

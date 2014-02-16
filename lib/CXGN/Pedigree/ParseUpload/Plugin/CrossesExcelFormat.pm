@@ -62,7 +62,6 @@ sub _validate_with_plugin {
     $number_of_seeds  = $worksheet->get_cell(0,6)->value();
   }
 
-
   if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
     push @errors, "Cell A1: cross_name is missing from the header";
   }
@@ -196,8 +195,88 @@ sub _parse_with_plugin {
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
   my $worksheet;
+  my @pedigrees;
+  my %progeny;
+  my %flowers;
+  my %seeds;
+  my %parsed_result;
 
-  my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>'abc', cross_type=>'biparental');
+  $excel_obj = $parser->parse($filename);
+  if ( !$excel_obj ) {
+    return;
+  }
+
+  $worksheet = ( $excel_obj->worksheets() )[0];
+  my ( $row_min, $row_max ) = $worksheet->row_range();
+  my ( $col_min, $col_max ) = $worksheet->col_range();
+
+  for my $row ( 1 .. $row_max ) {
+    my $cross_name;
+    my $cross_type;
+    my $maternal_parent;
+    my $paternal_parent;
+    my $number_of_progeny;
+    my $number_of_flowers;
+    my $number_of_seeds;
+    my $cross_stock;
+
+    if ($worksheet->get_cell($row,0)) {
+      $cross_name = $worksheet->get_cell($row,0)->value();
+    }
+    if ($worksheet->get_cell($row,1)) {
+      $cross_type = $worksheet->get_cell($row,1)->value();
+    }
+    if ($worksheet->get_cell($row,2)) {
+      $maternal_parent =  $worksheet->get_cell($row,2)->value();
+    }
+    if ($worksheet->get_cell($row,3)) {
+      $paternal_parent =  $worksheet->get_cell($row,3)->value();
+    }
+    if ($worksheet->get_cell($row,4)) {
+      $number_of_progeny =  $worksheet->get_cell($row,4)->value();
+    }
+    if ($worksheet->get_cell($row,5)) {
+      $number_of_flowers =  $worksheet->get_cell($row,5)->value();
+    }
+    if ($worksheet->get_cell($row,6)) {
+      $number_of_seeds =  $worksheet->get_cell($row,6)->value();
+    }
+
+    #skip blank lines or lines with no name, type and parent
+    if (!$cross_name && !$cross_type && !$maternal_parent) {
+      next;
+    }
+
+    my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>$cross_type);
+    if ($maternal_parent) {
+      $pedigree->set_female_parent($maternal_parent);
+    }
+    if ($paternal_parent) {
+      $pedigree->set_male_parent($paternal_parent);
+    }
+
+    push @pedigrees, $pedigree;
+
+    if ($number_of_progeny) {
+      $progeny{$cross_name} = $number_of_progeny;
+    }
+    if ($number_of_flowers) {
+      $flowers{$cross_name} = $number_of_flowers;
+    }
+    if ($number_of_seeds) {
+      $seeds{$cross_name} = $number_of_seeds;
+    }
+
+  }
+
+  $parsed_result{'pedigrees'} = \@pedigrees;
+  $parsed_result{'progeny'} = \%progeny;
+  $parsed_result{'flowers'} = \%flowers;
+  $parsed_result{'seeds'} = \%seeds;
+
+  $self->_set_parsed_data(\%parsed_result);
+
+  return 1;
 
 }
 
