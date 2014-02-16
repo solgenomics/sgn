@@ -112,7 +112,7 @@ jQuery(document).ready(function ($) {
 	autoOpen: false,
 	buttons: { "OK" :  function() { $("#cross_upload_spreadsheet_info_dialog").dialog("close"); },},
 	modal: true,
-	width: 750,
+	width: 900,
 	autoResize:true,
     });
 
