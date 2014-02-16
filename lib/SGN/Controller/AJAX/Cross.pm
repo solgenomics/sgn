@@ -53,6 +53,8 @@ sub upload_cross_file_POST : Args(0) {
   my $program = $c->req->param('cross_upload_breeding_program');
   my $location = $c->req->param('cross_upload_location');
   my $upload = $c->req->upload('crosses_upload_file');
+  my $prefix = $c->req->param('upload_prefix');
+  my $suffix = $c->req->param('upload_suffix');
   my $uploader = CXGN::UploadFile->new();
   my $parser;
   my $parsed_data;
@@ -141,10 +143,40 @@ sub upload_cross_file_POST : Args(0) {
   if (!$cross_add->add_crosses()){
     $c->stash->{rest} = {error_string => "Error adding crosses",};
     return;
-  } else {
-    $c->stash->{rest} = {success => "1",};
   }
 
+  #add the progeny
+  foreach my $cross_name_key (keys %{$parsed_data->{progeny}}){
+    my $progeny_number = $parsed_data->{progeny}->{$cross_name_key};
+    my $progeny_increment = 1;
+    my @progeny_names;
+
+    #create array of progeny names to add for this cross
+    while ($progeny_increment < $progeny_number + 1) {
+      $progeny_increment = sprintf "%03d", $progeny_increment;
+      my $stock_name = $cross_name_key.$prefix.$progeny_increment.$suffix;
+      push @progeny_names, $stock_name;
+      $progeny_increment++;
+    }
+
+    #add array of progeny to the cross
+    my $progeny_add = CXGN::Pedigree::AddProgeny
+      ->new({
+	     chado_schema => $chado_schema,
+	     phenome_schema => $phenome_schema,
+	     dbh => $dbh,
+	     cross_name => $cross_name_key,
+	     progeny_names => \@progeny_names,
+	     owner_name => $owner_name,
+	    });
+    if (!$progeny_add->add_progeny()){
+      $c->stash->{rest} = {error_string => "Error adding progeny",};
+      #should delete crosses and other progeny if add progeny fails?
+      return;
+    }
+  }
+
+  $c->stash->{rest} = {success => "1",};
 
 }
 
