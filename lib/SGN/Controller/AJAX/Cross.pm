@@ -176,6 +176,22 @@ sub upload_cross_file_POST : Args(0) {
     }
   }
 
+  #add the number of flowers to crosses
+  foreach my $cross_name_key (keys %{$parsed_data->{flowers}}) {
+    my $number_of_flowers = $parsed_data->{flowers}->{$cross_name_key};
+    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key} );
+    $cross_add_info->set_number_of_flowers($number_of_flowers);
+    $cross_add_info->add_info();
+  }
+
+  #add the number of seeds to crosses
+  foreach my $cross_name_key (keys %{$parsed_data->{seeds}}) {
+    my $number_of_seeds = $parsed_data->{seeds}->{$cross_name_key};
+    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key} );
+    $cross_add_info->set_number_of_seeds($number_of_seeds);
+    $cross_add_info->add_info();
+  }
+
   $c->stash->{rest} = {success => "1",};
 
 }
@@ -183,7 +199,7 @@ sub upload_cross_file_POST : Args(0) {
 
 sub add_cross : Local : ActionClass('REST') { }
 
-sub add_cross_POST :Args(0) { 
+sub add_cross_POST :Args(0) {
     my ($self, $c) = @_;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
