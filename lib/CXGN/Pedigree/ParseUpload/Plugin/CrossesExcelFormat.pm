@@ -13,6 +13,7 @@ sub _validate_with_plugin {
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
   my $worksheet;
+  my %seen_cross_names;
 
   #try to open the excel file and report any errors
   $excel_obj = $parser->parse($filename);
@@ -130,6 +131,10 @@ sub _validate_with_plugin {
       if ($self->_get_cross($cross_name)) {
 	push @errors, "Cell A$row_name: cross name already exists: $cross_name";
       }
+      if ($seen_cross_names{$cross_name}) {
+	push @errors, "Cell A$row_name: duplicate cross name at cell A".$seen_cross_names{$cross_name}.": $cross_name";
+      }
+      $seen_cross_names{$cross_name}=$row_name;
     }
 
     #cross type must not be blank
