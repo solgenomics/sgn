@@ -72,6 +72,11 @@ $user_id => undef
       </%perl>
     </select>
     <br><br>
+    Progeny naming:
+    <br>
+    Prefix <input id="upload_prefix" name="upload_prefix" value="P" size="5" /> 
+    Suffix <input id="upload_suffix" name="upload_suffix" size="5" />
+    <br><br>
 
     <label for="crosses_upload_file">Upload file:</label>
     <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
