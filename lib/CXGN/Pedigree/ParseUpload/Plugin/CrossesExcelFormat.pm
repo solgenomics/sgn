@@ -280,7 +280,7 @@ sub _parse_with_plugin {
 
   }
 
-  $parsed_result{'pedigrees'} = \@pedigrees;
+  $parsed_result{'crosses'} = \@pedigrees;
   $parsed_result{'progeny'} = \%progeny;
   $parsed_result{'flowers'} = \%flowers;
   $parsed_result{'seeds'} = \%seeds;

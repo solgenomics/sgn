@@ -56,7 +56,7 @@ $user_id => undef
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
 
     <label for="cross_upload_breeding_program" style="display: inline-block; width: 100px;">Breeding Program:</label>
-    <select id="cross_upload_breeding_program" name="select_breeding_program">
+    <select id="cross_upload_breeding_program" name="cross_upload_breeding_program">
       <%perl>
         foreach my $program (@programs) {
         print "<option value=".@$program[0].">".@$program[1]."</option>";
@@ -66,7 +66,7 @@ $user_id => undef
     <br>
 
     <label for="cross_upload_location" style="display: inline-block; width: 100px;">Location:</label>
-    <select id="cross_upload_location" name="add_project_location">
+    <select id="cross_upload_location" name="cross_upload_location">
       <%perl>foreach my $location (@locations) { print "
         <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
       </%perl>

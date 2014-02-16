@@ -47,6 +47,9 @@ sub upload_cross_file : Path('/ajax/cross/upload_crosses_file') : ActionClass('R
 sub upload_cross_file_POST : Args(0) {
   my ($self, $c) = @_;
   my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+  my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+  my $dbh = $c->dbc->dbh;
   my $program = $c->req->param('cross_upload_breeding_program');
   my $location = $c->req->param('cross_upload_location');
   my $upload = $c->req->upload('crosses_upload_file');
@@ -66,6 +69,7 @@ sub upload_cross_file_POST : Args(0) {
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
   my $user_id;
+  my $owner_name;
   my $upload_file_type = "crosses excel";#get from form when more options are added
 
   if (!$c->user()) { 
@@ -74,6 +78,8 @@ sub upload_cross_file_POST : Args(0) {
     return;
   }
   $user_id = $c->user()->get_object()->get_sp_person_id();
+
+  $owner_name = $c->user()->get_object()->get_username();
 
   ## Store uploaded temporary file in archive
   $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
@@ -112,6 +118,22 @@ sub upload_cross_file_POST : Args(0) {
     $c->stash->{rest} = {error_string => $return_error,};
     return;
   }
+
+  my $cross_add = CXGN::Pedigree::AddCrosses
+    ->new({
+	   chado_schema => $chado_schema,
+	   phenome_schema => $phenome_schema,
+	   metadata_schema => $metadata_schema,
+	   dbh => $dbh,
+	   location => $location,
+	   program => $program,
+	   crosses =>  $parsed_data->{crosses},
+	   owner_name => $owner_name,
+	  });
+  #add the crosses
+  $cross_add->add_crosses();
+
+
 
 
   $c->stash->{rest} = {success => "1",};
