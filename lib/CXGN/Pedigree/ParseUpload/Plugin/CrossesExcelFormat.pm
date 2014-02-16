@@ -1,15 +1,8 @@
 package CXGN::Pedigree::ParseUpload::Plugin::CrossesExcelFormat;
 
 use Moose::Role;
-use MooseX::FollowPBP;
-use Moose::Util::TypeConstraints;
-use Try::Tiny;
-use List::MoreUtils qw /any /;
 use Spreadsheet::ParseExcel;
-use Bio::GeneticRelationships::Pedigree;
-use Bio::GeneticRelationships::Individual;
 use CXGN::Stock::StockLookup;
-
 
 sub _validate_with_plugin {
   my $self = shift;
@@ -40,38 +33,54 @@ sub _validate_with_plugin {
   }
 
   #get column headers
-  my $cross_name_head  = $worksheet->get_cell(0,0)->value();
-  my $cross_type_head  = $worksheet->get_cell(0,1)->value();
-  my $maternal_parent_head  = $worksheet->get_cell(0,2)->value();
-  my $paternal_parent_head  = $worksheet->get_cell(0,3)->value();
-  my $number_of_progeny  = $worksheet->get_cell(0,4)->value();
-  my $number_of_flowers  = $worksheet->get_cell(0,5)->value();
-  my $number_of_seeds  = $worksheet->get_cell(0,6)->value();
+  my $cross_name_head;
+  my $cross_type_head;
+  my $maternal_parent_head;
+  my $paternal_parent_head;
+  my $number_of_progeny;
+  my $number_of_flowers;
+  my $number_of_seeds;
+  if ($worksheet->get_cell(0,0)) {
+    $cross_name_head  = $worksheet->get_cell(0,0)->value();
+  }
+  if ($worksheet->get_cell(0,1)) {
+    $cross_type_head  = $worksheet->get_cell(0,1)->value();
+  }
+  if ($worksheet->get_cell(0,2)) {
+    $maternal_parent_head  = $worksheet->get_cell(0,2)->value();
+  }
+  if ($worksheet->get_cell(0,3)) {
+    $paternal_parent_head  = $worksheet->get_cell(0,3)->value();
+  }
+  if ($worksheet->get_cell(0,4)) {
+    $number_of_progeny  = $worksheet->get_cell(0,4)->value();
+  }
+  if ($worksheet->get_cell(0,5)) {
+    $number_of_flowers  = $worksheet->get_cell(0,5)->value();
+  }
+  if ($worksheet->get_cell(0,6)) {
+    $number_of_seeds  = $worksheet->get_cell(0,6)->value();
+  }
+
 
   if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
     push @errors, "Cell A1: cross_name is missing from the header";
   }
-
   if (!$cross_type_head || $cross_type_head ne 'cross_type') {
     push @errors, "Cell B1: cross_type is missing from the header";
   }
-
   if (!$maternal_parent_head || $maternal_parent_head ne 'maternal_parent') {
     push @errors, "Cell C1: maternal_parent is missing from the header";
   }
-
   if (!$paternal_parent_head || $paternal_parent_head ne 'paternal_parent') {
     push @errors, "Cell D1: paternal_parent is missing from the header";
   }
-
   if ($number_of_progeny && $number_of_progeny ne 'number_of_progeny') {
     push @errors, "Cell E1: wrong header for number_of_progeny column";
   }
-
   if ($number_of_progeny && $number_of_flowers ne 'number_of_flowers') {
     push @errors, "Cell F1: wrong header for number_of_flowers column";
   }
-
   if ($number_of_progeny && $number_of_seeds ne 'number_of_seeds') {
     push @errors, "Cell G1: wrong header for number_of_seeds column";
   }
@@ -127,6 +136,11 @@ sub _validate_with_plugin {
     #cross type must not be blank
     if (!$cross_type || $cross_type eq '') {
       push @errors, "Cell B$row_name: cross type missing";
+    } else {
+      #cross type must be supported
+      if ($cross_type ne "biparental" && $cross_type ne "self" && $cross_type ne "open") {
+	push @errors, "Cell B$row_name: cross type not supported: $cross_type";
+      }
     }
 
     #maternal parent must not be blank
@@ -171,6 +185,19 @@ sub _validate_with_plugin {
   }
 
   return 1; #returns true if validation is passed
+
+}
+
+
+sub _parse_with_plugin {
+  my $self = shift;
+  my $filename = $self->get_filename();
+  my $schema = $self->get_chado_schema();
+  my $parser   = Spreadsheet::ParseExcel->new();
+  my $excel_obj;
+  my $worksheet;
+
+  my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>'abc', cross_type=>'biparental');
 
 }
 
