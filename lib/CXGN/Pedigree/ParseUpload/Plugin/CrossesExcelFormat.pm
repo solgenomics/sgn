@@ -249,10 +249,12 @@ sub _parse_with_plugin {
 
     my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>$cross_type);
     if ($maternal_parent) {
-      $pedigree->set_female_parent($maternal_parent);
+      my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $maternal_parent);
+      $pedigree->set_female_parent($female_parent_individual);
     }
     if ($paternal_parent) {
-      $pedigree->set_male_parent($paternal_parent);
+      my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $paternal_parent);
+      $pedigree->set_male_parent($male_parent_individual);
     }
 
     push @pedigrees, $pedigree;

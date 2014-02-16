@@ -31,7 +31,7 @@ has 'parse_errors' => (
 
 has '_parsed_data' => (
 		       is => 'ro',
-		       isa => 'HashRef[HashRef]',
+		       isa => 'HashRef',
 		       writer => '_set_parsed_data',
 		       predicate => '_has_parsed_data',
 		      );
