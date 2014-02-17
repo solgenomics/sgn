@@ -38,17 +38,17 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
     my $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
 
-    my $tf = CXGN::List::Transform->new();
-    my $unique_transform = $tf->can_transform("accession_synonyms", "accession_names");
     
-    my $unique_list = $tf->transform($c->dbic_schema("Bio::Chado::Schema"), $unique_transform, $accession_data);
-    
-    my $accession_data_unique_names = 
 
     my @accession_list = map { $_->[1] } @$accession_data;
     my @trial_list = map { $_->[1] } @$trial_data;
     my @trait_list = map { $_->[1] } @$trait_data;
 
+        my $tf = CXGN::List::Transform->new();
+    my $unique_transform = $tf->can_transform("accession_synonyms", "accession_names");
+    
+    my $unique_list = $tf->transform($c->dbic_schema("Bio::Chado::Schema"), $unique_transform, \@accession_list);
+    
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
@@ -59,7 +59,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 #    print STDERR Data::Dumper::Dumper(\@trait_list);
 
     my $acc_t = $t->can_transform("accessions", "accession_ids");
-    my $accession_id_data = $t->transform($schema, $acc_t, \@accession_list);
+    my $accession_id_data = $t->transform($schema, $acc_t, $unique_list);
 
     my $trial_t = $t->can_transform("trials", "trial_ids");
     my $trial_id_data = $t->transform($schema, $trial_t, \@trial_list);
