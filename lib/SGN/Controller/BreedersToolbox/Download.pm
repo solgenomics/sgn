@@ -6,7 +6,7 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller'; }
 
 use URI::FromHash 'uri';
-
+use CXGN::List::Transform;
 
 sub breeder_download : Path('/breeders/download/') Args(0) { 
     my $self = shift;
@@ -37,6 +37,13 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
     my $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
+
+    my $tf = CXGN::List::Transform->new();
+    my $unique_transform = $tf->can_transform("accession_synonyms", "accession_names");
+    
+    my $unique_list = $tf->transform($c->dbic_schema("Bio::Chado::Schema"), $unique_transform, $accession_data);
+    
+    my $accession_data_unique_names = 
 
     my @accession_list = map { $_->[1] } @$accession_data;
     my @trial_list = map { $_->[1] } @$trial_data;
