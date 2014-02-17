@@ -143,12 +143,16 @@ sub search : Path('/solgs/search') Args() {
     $self->gs_traits_index($c);
     my $gs_traits_index = $c->stash->{gs_traits_index};
     
-    my $page = $c->req->param('page') || 1;
-    my $project_rs = $c->model('solGS::solGS')->all_projects($page);
+    # my $page = $c->req->param('page') || 1;
+    # my $project_rs = $c->model('solGS::solGS')->all_projects($page);
     
-    $self->projects_links($c, $project_rs);
-    my $projects = $c->stash->{projects_pages};
+    # $self->projects_links($c, $project_rs);
+    # my $projects = $c->stash->{projects_pages};
+    # my $page_links       = sub {uri ( query => {  page => shift } ) };
+    # my $pager            =  $project_rs->pager;
 
+    # print STDERR "\nsearch : $projects->[0][0] : page - $page : pager - $pager - links - $page_links\n";
+    
     my $query;
     if ($form->submitted_and_valid) 
     {
@@ -159,13 +163,72 @@ sub search : Path('/solgs/search') Args() {
     {
         $c->stash(template        => $self->template('/search/solgs.mas'),
                   form            => $form,
-                  message         => $query,
-                  gs_traits_index => $gs_traits_index,
-                  result          => $projects,
-                  pager           => $project_rs->pager,
-                  page_links      => sub {uri ( query => {  page => shift } ) }
+                  message         => $query,                 
+                  gs_traits_index => $gs_traits_index,           
             );
     }
+
+}
+
+
+sub search_trials : Path('/solgs/search/trials') Args() {
+    my ($self, $c) = @_;
+
+    my $page = $c->req->param('page') || 1;
+
+    my $project_rs = $c->model('solGS::solGS')->all_projects($page);
+    
+    $self->projects_links($c, $project_rs);
+    my $projects = $c->stash->{projects_pages};
+  
+    my $page_links =  sub {uri ( query => {  page => shift } ) };
+    my $pager = $project_rs->pager;
+   
+    my $pagination;
+    my $url = '/solgs/search/trials/';
+   
+    if ( $pager->previous_page || $pager->next_page )
+    {
+        $pagination =   '<div class = "paginate_nav">';
+        
+        if( $pager->previous_page ) 
+        {
+            $pagination .=  '<a class="paginate_nav" href="' . $url .  $page_links->($pager->previous_page) . '">&lt;</a>';
+        }
+        
+        for my $c_page ( $pager->first_page .. $pager->last_page ) 
+        {
+            if( $pager->current_page == $c_page ) 
+            {
+                $pagination .=  '<span class="paginate_nav_currpage paginate_nav">' .  $c_page . '</span>';
+            }
+            else 
+            {
+                $pagination .=  '<a class="paginate_nav" href="' . $url.   $page_links->($c_page) . '">' . $c_page . '</a>';
+            }
+        }
+        if( $pager->next_page ) 
+        {
+            $pagination .= '<a class="paginate_nav" href="' . $url . $page_links->($pager->next_page). '">&gt;</a>';
+        }
+        
+        $pagination .= '</div>';
+    }
+
+    my $ret->{status} = 'failed';
+    
+    if ($projects) 
+    {            
+        $ret->{status} = 'success';
+        $ret->{pagination} = $pagination;
+        $ret->{trials}   = $projects;
+    } 
+    
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+    
 
 }
 
