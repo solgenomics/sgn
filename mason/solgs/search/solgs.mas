@@ -76,7 +76,7 @@ $gs_traits_index
 
 <&| /page/info_section.mas, 
     collapsible => 1, 
-    collapsed   => $collapse,
+    collapsed   => 1,
     title       => "Create a training population",
   &>
 
