@@ -16,19 +16,11 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $form
 $message
-$result
-$pager
-$page_links
 $gs_traits_index
 
 </%args>
 
 <%perl>
-
-my $current_page = $pager->current_page();
-my $collapse = 1;
-
-if ($current_page > 1) { $collapse = 0; }
 
 </%perl>
 
@@ -68,16 +60,17 @@ if ($current_page > 1) { $collapse = 0; }
 
 <&| /page/info_section.mas, 
     collapsible => 1, 
-    collapsed   => $collapse,
+    collapsed   => 1,
     title       => "Use a trial as a training population",
   &>
 
-<& /solgs/population/project_details_form.mas,
-   result     => $result,
-   pager      => $pager,
-   page_links => $page_links,
-&>
-   
+
+<& /solgs/population/project_details_form.mas &>
+
+<div id="selected_trials" style="display:none">
+
+</div>   
+
 </&>
 
 
