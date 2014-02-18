@@ -67,9 +67,38 @@ $gs_traits_index
 
 <& /solgs/population/project_details_form.mas &>
 
-<div id="selected_trials" style="display:none">
+<div id="selected_trials" style="display:none;width:100%">
 
-</div>   
+  <hr style="size:10px;color="#5cb85c"/>
+
+<p style="text-align:center"> Trials to combine </p>
+
+<hr style="size:10px;color="green"/>
+
+<table id="selected_trials_table" style="text-align:left;width:100%">
+<tr>
+  <th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th>
+</tr>
+<tr> 
+</tr>
+</table>
+</div>
+
+
+<table id="selected_trials_header" style="text-align:left;width:100%">
+<tr>
+  <td>
+    <div id="combine" style="display:none">
+      <input  class="button" type="button" name="combine" value="Combine" onclick="selectedPops();"/>
+  </div>  
+  </td>
+  <td>
+    <div id="search_again" style="display:none;text-align:right">
+    <input style class="button" type="button" name="search_again" value="Search again" onclick="searchAgain();"/></td>
+  </div>
+</tr>
+</table>
+
 
 </&>
 
