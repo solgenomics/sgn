@@ -4,36 +4,27 @@
 *
 */
 
-JSAN.use("jquery");
+
 JSAN.use("Prototype");
-JSAN.use('jquery.blockUI');
+JSAN.use("jquery.blockUI");
 
 
 var getCookieName =  function (trId) {
-    if(trId) {
-        return 'trait_' + trId + '_populations';
-    } else {
-      return 'combined_trials';   
-
-    }
-
+    
+    return 'trait_' + trId + '_populations';
+  
 };
 
 var getPopIds =  function() {
     
     jQuery("input:checkbox[name='project']").change(function() {
                   
-        var cookieName;
+       
         var cookieArrayData = [];
-    
-        var isHome = jQuery("#homepage_trials_list").doesExist();
-      
-        if (isHome == true) {          
-            cookieName = getCookieName();     
-        } else {
-            var trId = getTraitId(); 
-            cookieName = getCookieName(trId); 
-        }
+          
+        var trId = getTraitId(); 
+        var cookieName = getCookieName(trId); 
+       
         if (jQuery(this).attr('checked')) {
               
             var popId = jQuery(this).val();
@@ -83,12 +74,12 @@ var getPopIds =  function() {
 
 
 var selectedPops = function () {
-    var trId       = getTraitId();
-    var cookieName = getCookieName(trId);
-    var cookieData = jQuery.cookie(cookieName);
+    
+    var trId            = getTraitId();
+    var cookieName      = getCookieName(trId);
+    var cookieData      = jQuery.cookie(cookieName);
     var cookieArrayData = [];
           
-
     if (cookieData) {
         cookieArrayData = cookieData.split(",");
         cookieArrayData = cookieArrayData.unique();
@@ -117,7 +108,7 @@ var selectedPops = function () {
     }
 
     else if( cookieArrayData.length > 1 ) {
-        alert('trials: ' + combinedTrialsIds);
+
         var action = "/solgs/search/result/populations/" + trId;
         var selectedPops = trId + "=" + cookieArrayData + '&' + 'combine=confirm';
         jQuery.ajax({  
@@ -208,8 +199,7 @@ var confirmSelections =  function() {
 };
 
 
-Array.prototype.unique =
-    function() {
+Array.prototype.unique = function() {
     var a = [];
     var l = this.length;
     for(var i=0; i<l; i++) {
