@@ -9,13 +9,14 @@ a general format for projects details presentation.
 </%args>
 
 
-<& /util/import_javascript.mas, classes => ["solGS.searchTrials", "solGS.combinePopulations", "jquery.cookie"] &>
+<& /util/import_javascript.mas, classes => ["solGS.searchTrials", "solGS.combineTrials", "jquery.cookie"] &>
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 <div id="homepage_trials_list">
 </div>
-<div id="select_done">
-  <input  class="button" type="button" id="done_selecting" name="done_selecting" value="Combine" onclick="selectedPops();"/>
+
+<div id="done_selecting">
+  <input  class="button" type="button" name="done_selecting"  value="Done selecting!" onclick="doneSelecting();"/>
 </div>
 
 
