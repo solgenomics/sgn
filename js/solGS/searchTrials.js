@@ -57,13 +57,13 @@ jQuery(document).ready(function(){
 
 function listTrials (trials)  {
     
-    var table = '<table style="width:90%;text-align:left">';
+    var table = '<table style="width:100%;text-align:left">';
     table    += '<tr>';
     table += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th>';
     table += '</tr>';
    
     for (var i=0; i<10; i++) {
-        
+      
         if (trials[i]) {
             table += '<tr>';
             table += '<td>' + trials[i][0] + '</td>' 
