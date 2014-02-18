@@ -7,8 +7,14 @@
 
 
 
-jQuery(document).ready(function(){
-    
+
+jQuery(document).ready(function(){   
+    searchTrials();                        
+});
+
+
+function searchTrials() {
+ 
     jQuery.ajax({  
         type: 'POST',
         dataType: "json",
@@ -21,10 +27,7 @@ jQuery(document).ready(function(){
         error: function() {               
             alert('error fetching first 10 trials');
         }
-                    
     });
-
-
 
     jQuery("#homepage_trials_list").on('click', "div.paginate_nav a", function(e) { 
         var page = jQuery(this).attr('href');
@@ -51,13 +54,13 @@ jQuery(document).ready(function(){
         return false;
     });                
 
-});
+}
 
 
 
 function listTrials (trials)  {
     
-    var table = '<table style="width:100%;text-align:left">';
+    var table = '<table style="text-align:left">';
     table    += '<tr>';
     table += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th>';
     table += '</tr>';
