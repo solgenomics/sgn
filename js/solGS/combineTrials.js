@@ -41,16 +41,22 @@ function doneSelecting() {
 function removeSelectedTrial() {
     
     jQuery("#selected_trials_table tr").on("change", function() {    
+        
         jQuery(this).remove();
+        
+        if( jQuery("#selected_trials_table td").doesExist() == false) {
+            jQuery("#selected_trials").hide();
+            jQuery("#combine").hide();
+            jQuery("#search_again").hide();
+            searchAgain();
+        }
     });
 
 }
 
 function searchAgain () {
-    jQuery("#homepage_trials_list").show();
+    searchTrials();
     jQuery("#done_selecting").show();
-
-
 }
 
 Array.prototype.unique =
