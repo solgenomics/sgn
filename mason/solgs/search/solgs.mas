@@ -69,11 +69,11 @@ $gs_traits_index
 
 <div id="selected_trials" style="display:none;width:100%">
 
-  <hr style="size:10px;color="#5cb85c"/>
+  <hr style="size:10px;color:"#5cb85c"/>
 
-<p style="text-align:center"> Trials to combine </p>
+ <p style="text-align:center"> Trials to combine </p>
 
-<hr style="size:10px;color="green"/>
+ <hr style="size:10px;color:"#5cb85c"/>
 
 <table id="selected_trials_table" style="text-align:left;width:100%">
 <tr>
