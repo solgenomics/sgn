@@ -311,7 +311,7 @@ function getCheckValue(fileName) {
             type: 'POST',
                 url: '/solgs/generate/checkvalue',
                 dataType: 'json',
-                data: {'file_name': fileName},
+                data: {'string': fileName},
 
                 success: function (response) {
                
