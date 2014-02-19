@@ -59,6 +59,70 @@ function searchAgain () {
     jQuery("#done_selecting").show();
 }
 
+
+function downloadData() {
+
+    var trialIds = getSelectedTrials();
+    trialIds = trialIds.join(",");
+   
+    var action = "/solgs/retrieve/populations/data";
+     
+    jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+    jQuery.blockUI({message: 'Please wait..'});
+    
+    jQuery.ajax({  
+        type: 'POST',
+        dataType: "json",
+        url: action,
+        data: {'trials' : trialIds},
+        success: function(res) {                         
+            if (res.not_matching_pops == null) {
+               
+                jQuery.unblockUI();
+                alert('all clones in all trials genotyped using the same RE');               
+                    
+            } else {
+                    
+                if(res.not_matching_pops ) {                        
+                    alert('populations ' + res.not_matching_pops + 
+                          ' were genotyped using different marker sets. ' + 
+                              'Please make new selections to combine.' );
+                }
+
+                if (res.redirect_url) {
+                    window.location.href = res.redirect_url;
+                }
+            } 
+        },
+        error: function(res) {           
+            alert('An error occured retrieving phenotype' +
+                  'and genotype data for trials..');
+        }       
+    });   
+}
+
+
+function getSelectedTrials () {
+    
+    var trialIds = [];
+    var selectedTrialsExist = jQuery("#selected_trials_table").doesExist();
+  
+    if (selectedTrialsExist == true) {      
+        jQuery("#selected_trials_table tr").each(function () {       
+            var trialId = jQuery(this).find("input[type=checkbox]").val();
+              
+            if (trialId) {
+                trialIds.push(trialId);
+            }            
+        });       
+    }
+
+    return trialIds;
+
+}
+
+
+
 Array.prototype.unique =
     function() {
     var a = [];
