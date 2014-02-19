@@ -89,7 +89,7 @@ $gs_traits_index
 <tr>
   <td>
     <div id="combine" style="display:none">
-      <input  class="button" type="button" name="combine" value="Combine" onclick="selectedPops();"/>
+      <input  class="button" type="button" name="combine" value="Combine" onclick="downloadData();"/>
   </div>  
   </td>
   <td>
