@@ -2530,6 +2530,7 @@ sub multi_pops_pheno_files {
             $files .= "\t" unless (@$pop_ids[-1] eq $pop_id);    
         }
         $c->stash->{multi_pops_pheno_files} = $files;
+
     }
     else 
     {
@@ -2537,9 +2538,12 @@ sub multi_pops_pheno_files {
         $files = $self->grep_file($dir, $exp);
     }
 
-    my $name = "trait_${trait_id}_multi_pheno_files";
-    my $tempfile = $self->create_tempfile($c, $name);
-    write_file($tempfile, $files);
+    if ($trait_id)
+    {
+        my $name = "trait_${trait_id}_multi_pheno_files";
+        my $tempfile = $self->create_tempfile($c, $name);
+        write_file($tempfile, $files);
+    }
  
 }
 
@@ -2567,9 +2571,12 @@ sub multi_pops_geno_files {
         $files = $self->grep_file($dir, $exp);
     }
 
-    my $name = "trait_${trait_id}_multi_geno_files";
-    my $tempfile = $self->create_tempfile($c, $name);
-    write_file($tempfile, $files);
+    if($trait_id)
+    {
+        my $name = "trait_${trait_id}_multi_geno_files";
+        my $tempfile = $self->create_tempfile($c, $name);
+        write_file($tempfile, $files);
+    }
     
 }
 
