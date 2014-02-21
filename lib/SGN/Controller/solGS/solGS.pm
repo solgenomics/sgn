@@ -1840,6 +1840,27 @@ sub catalogue_combined_pops {
 }
 
 
+sub get_combined_pops_list {
+    my ($self, $c, $combined_pops_id) = @_;
+
+    $self->combined_pops_catalogue_file($c);
+    my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
+    
+    my @combos = read_file($combo_pops_catalogue_file);
+    
+    foreach (@combos)
+    {
+        if ($_ =~ m/$combo_pops_id/)
+        {
+            my ($combo_pops_id, $pops)  = split(/\t/, $_);
+            $c->stash->{combined_pops_list} = $pops; 
+            $c->stash->{trait_combo_pops} = $pops;
+        }   
+    }     
+
+}
+
+
 sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\d+]+))?') {
     my ($self, $c) = @_; 
    
