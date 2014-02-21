@@ -36,6 +36,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
     my $solgs_controller = $c->controller('solGS::solGS');
     my $not_matching_pops;
     my @g_files;
+    
     if (scalar(@pop_ids) > 1 )
     {  
         $combo_pops_id =  crc(join('', @pop_ids));
@@ -50,6 +51,9 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
         my @all_pheno_files = split(/\t/, $all_pheno_files);
         $self->find_common_traits($c, \@all_pheno_files);
         
+        my $entry = "\n" . $combo_pops_id . "\t" . $ids;
+        $solgs_controller->catalogue_combined_pops($c, $entry);
+
         my $geno_files = $c->stash->{multi_pops_geno_files};
         @g_files = split(/\t/, $geno_files);
 
@@ -58,11 +62,10 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
      
         if (!$not_matching_pops) 
         {
-             print STDERR "\n not_matching_pops: $not_matching_pops - g_files: $g_files[0]\n";
+            $self->save_common_traits_acronyms($c);
         }
         else 
         {
-            print STDERR "\n not_matching_pops: $not_matching_pops - g_files: $g_files[0]\n";
             $ret->{not_matching_pops} = $not_matching_pops;
         }
     }
@@ -72,11 +75,20 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
         $ret->{redirect_url} = "/solgs/population/$pop_id";
     }
    
+    $ret->{combined_pops_id} = $combo_pops_id;
     $ret = to_json($ret);
     
     $c->res->content_type('application/json');
     $c->res->body($ret);
    
+}
+
+
+sub combined_trials_page :Path('/solgs/populations/combined') Args(0) {
+    my ($c, $self) = @_;
+
+    my $combo_pops_id = $c->req->param('combined_pops_id');
+
 }
 
 
@@ -101,8 +113,74 @@ sub find_common_traits {
             @common_traits = @trial_traits;
         }
     }
-    
+   
     $c->stash->{common_traits} = \@common_traits;
+}
+
+
+sub save_common_traits_acronyms {
+    my ($self, $c) = @_;
+    
+    my $combo_pops_id = $c->stash->{combo_pops_id};
+    my $solgs_controller = $c->controller('solGS::solGS');
+    
+    $c->stash->{pop_id} = $combo_pops_id;
+    
+    $self->find_common_traits_acronyms($c);
+    my $acronyms_table = $c->stash->{common_traits_acronyms};
+
+    $solgs_controller->traits_acronym_file($c);
+    my $traits_acronym_file = $c->stash->{traits_acronym_file};
+
+    write_file($traits_acronym_file, $acronyms_table);
+   
+}
+    
+
+sub find_common_traits_acronyms {
+    my ($self, $c) = @_;
+
+    my $combo_pops_id = $c->stash->{combo_pops_id};
+    my $solgs_controller = $c->controller('solGS::solGS');
+    my @common_traits_acronyms;
+    
+    if ($combo_pops_id)
+    {
+        $solgs_controller->get_combined_pops_list($c, $combo_pops_id);
+        my $pops_list = $c->stash->{combined_pops_list};
+      
+        my @pops_list = split(/,/, $pops_list);
+
+        foreach my $pop_id (@pops_list)
+        {
+            $c->stash->{pop_id} = $pop_id;
+          
+            $solgs_controller->traits_acronym_file($c);
+            my $traits_acronym_file = $c->stash->{traits_acronym_file};
+            my @traits_acronyms = read_file($traits_acronym_file);
+
+            if (@common_traits_acronyms)        
+            {
+                @common_traits_acronyms = intersect(@common_traits_acronyms, @traits_acronyms);
+            }
+            else 
+            {    
+                @common_traits_acronyms = @traits_acronyms;
+            }
+
+        }
+        
+        $c->stash->{pop_id} = $combo_pops_id;
+        my $acronym_table = join("", @common_traits_acronyms);
+        $c->stash->{common_traits_acronyms} = $acronym_table;
+
+    }
+    else 
+    {   
+        die "An id for the combined trials is missing.";
+    }
+
+
 }
 
 
