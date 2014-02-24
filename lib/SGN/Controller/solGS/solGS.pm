@@ -1850,7 +1850,7 @@ sub get_combined_pops_list {
     
     foreach (@combos)
     {
-        if ($_ =~ m/$combo_pops_id/)
+        if ($_ =~ m/$combined_pops_id/)
         {
             my ($combo_pops_id, $pops)  = split(/\t/, $_);
             $c->stash->{combined_pops_list} = $pops; 
