@@ -99,7 +99,7 @@ sub _validate_with_plugin {
       $is_a_control =  $worksheet->get_cell($row,4)->value();
     }
 
-    #skip blank lines or lines
+    #skip blank lines
     if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
       next;
     }
@@ -170,11 +170,7 @@ sub _parse_with_plugin {
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
   my $worksheet;
-  my @pedigrees;
-  my %progeny;
-  my %flowers;
-  my %seeds;
-  my %parsed_result;
+  my %design;
 
   $excel_obj = $parser->parse($filename);
   if ( !$excel_obj ) {
@@ -186,72 +182,43 @@ sub _parse_with_plugin {
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
   for my $row ( 1 .. $row_max ) {
-    my $cross_name;
-    my $trial_type;
-    my $female_parent;
-    my $male_parent;
-    my $number_of_progeny;
-    my $number_of_flowers;
-    my $number_of_seeds;
-    my $cross_stock;
+    my $plot_name_head;
+    my $accession_name_head;
+    my $plot_number_head;
+    my $block_number_head;
+    my $is_a_control_head;
 
     if ($worksheet->get_cell($row,0)) {
-      $cross_name = $worksheet->get_cell($row,0)->value();
+      $plot_name = $worksheet->get_cell($row,0)->value();
     }
     if ($worksheet->get_cell($row,1)) {
-      $trial_type = $worksheet->get_cell($row,1)->value();
+      $accession_name = $worksheet->get_cell($row,1)->value();
     }
     if ($worksheet->get_cell($row,2)) {
-      $female_parent =  $worksheet->get_cell($row,2)->value();
+      $plot_number =  $worksheet->get_cell($row,2)->value();
     }
     if ($worksheet->get_cell($row,3)) {
-      $male_parent =  $worksheet->get_cell($row,3)->value();
+      $block_number =  $worksheet->get_cell($row,3)->value();
     }
     if ($worksheet->get_cell($row,4)) {
-      $number_of_progeny =  $worksheet->get_cell($row,4)->value();
-    }
-    if ($worksheet->get_cell($row,5)) {
-      $number_of_flowers =  $worksheet->get_cell($row,5)->value();
-    }
-    if ($worksheet->get_cell($row,6)) {
-      $number_of_seeds =  $worksheet->get_cell($row,6)->value();
+      $is_a_control =  $worksheet->get_cell($row,4)->value();
     }
 
-    #skip blank lines or lines with no name, type and parent
-    if (!$cross_name && !$trial_type && !$female_parent) {
+    #skip blank lines
+    if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
       next;
     }
 
-    my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, trial_type=>$trial_type);
-    if ($female_parent) {
-      my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent);
-      $pedigree->set_female_parent($female_parent_individual);
-    }
-    if ($male_parent) {
-      my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent);
-      $pedigree->set_male_parent($male_parent_individual);
-    }
-
-    push @pedigrees, $pedigree;
-
-    if ($number_of_progeny) {
-      $progeny{$cross_name} = $number_of_progeny;
-    }
-    if ($number_of_flowers) {
-      $flowers{$cross_name} = $number_of_flowers;
-    }
-    if ($number_of_seeds) {
-      $seeds{$cross_name} = $number_of_seeds;
-    }
+    my $key = $row;
+    $design{$key}->{plot_name} = $plot_name;
+    $design{$key}->{stock_name} = $accession_name;
+    $design{$key}->{plot_number} = $plot_number;
+    $design{$key}->{block_number} = $block_number;
+    $design{$key}->{is_a_control} = $is_a_control;
 
   }
 
-  $parsed_result{'crosses'} = \@pedigrees;
-  $parsed_result{'progeny'} = \%progeny;
-  $parsed_result{'flowers'} = \%flowers;
-  $parsed_result{'seeds'} = \%seeds;
-
-  $self->_set_parsed_data(\%parsed_result);
+  $self->_set_parsed_data(\%design);
 
   return 1;
 
