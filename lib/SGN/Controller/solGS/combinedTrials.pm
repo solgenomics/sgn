@@ -84,10 +84,83 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 }
 
 
-sub combined_trials_page :Path('/solgs/populations/combined') Args(0) {
-    my ($c, $self) = @_;
+sub combined_trials_page :Path('/solgs/populations/combined') Args(1) {
+    my ($self, $c, $combo_pops_id) = @_;
 
-    my $combo_pops_id = $c->req->param('combined_pops_id');
+    $c->stash->{combo_pops_id} = $combo_pops_id;
+    $self->combined_trials_desc($c);
+
+    my $solgs_controller = $c->controller('solGS::solGS');
+    $c->stash->{template} = $solgs_controller->template('/population/combined/combined.mas');
+    
+    $c->stash->{pop_id} = $combo_pops_id;
+    
+    $solgs_controller->all_traits_file($c);
+    $solgs_controller->select_traits($c);
+    $solgs_controller->get_acronym_pairs($c);
+
+}
+
+
+sub combined_trials_desc {
+    my ($self, $c) = @_;
+    
+    my $combo_pops_id = $c->stash->{combo_pops_id};
+    
+    my $solgs_controller = $c->controller('solGS::solGS');
+    $solgs_controller->get_combined_pops_list($c, $combo_pops_id);
+    
+    my $pops_list = $c->stash->{combined_pops_list};      
+    my @pops = split(/,/, $pops_list);
+      
+    my $desc = 'This training population is a combination of ';
+    
+    my $projects_owners;
+    my $pop_id;
+    foreach $pop_id (@pops)
+    {  
+        my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
+
+        while (my $row = $pr_rs->next)
+        {
+         
+            my $pr_id   = $row->id;
+            my $pr_name = $row->name;
+            $desc .= qq | <a href="/solgs/population/$pr_id">$pr_name </a>|; 
+            $desc .= $_ == $pops[-1] ? '.' : ' and ';
+        } 
+
+        $solgs_controller->get_project_owners($c, $_);
+        my $project_owners = $c->stash->{project_owners};
+
+        unless (!$project_owners)
+        {
+             $projects_owners.= $projects_owners ? ', ' . $project_owners : $project_owners;
+        }
+    }
+   
+    my $dir = $c->{stash}->{solgs_cache_dir};
+
+    my $geno_exp  = "genotype_data_${pop_id}";
+    my $geno_file = $solgs_controller->grep_file($dir, $geno_exp);  
+   
+    my @geno_lines = read_file($geno_file);
+    my $markers_no = scalar(split ('\t', $geno_lines[0])) - 1;
+
+    my $trait_exp        = "traits_acronym_pop_${combo_pops_id}";
+    my $traits_list_file = $solgs_controller->grep_file($dir, $trait_exp);  
+    
+    my @traits_list = read_file($traits_list_file);
+    my $traits_no   =  scalar(@traits_list) - 1;
+
+    my $training_pop = "Training population $combo_pops_id";
+
+    $c->stash(markers_no   => $markers_no,
+              traits_no    => $traits_no,
+              project_desc => $desc,
+              project_name => $training_pop,
+              owner        => $projects_owners
+        );
 
 }
 
@@ -96,6 +169,7 @@ sub find_common_traits {
     my ($self, $c, $all_pheno_files) = @_;
     
     my @common_traits;    
+    
     foreach my $pheno_file (@$all_pheno_files)
     {     
         open my $ph, "<", $pheno_file or die "$pheno_file:$!\n";
@@ -131,11 +205,43 @@ sub save_common_traits_acronyms {
 
     $solgs_controller->traits_acronym_file($c);
     my $traits_acronym_file = $c->stash->{traits_acronym_file};
-
     write_file($traits_acronym_file, $acronyms_table);
-   
-}
+
+    $solgs_controller->all_traits_file($c);
+    my $common_traits_file = $c->stash->{all_traits_file};
     
+    $self->create_common_traits_data($c);
+    my $common_traits_data = $c->stash->{common_traits_data};
+    write_file($common_traits_file, $common_traits_data);
+      
+}
+
+
+sub create_common_traits_data {
+    my ($self, $c) = @_;   
+       
+    my $acronym_table = $c->stash->{common_traits_acronyms};  
+    my @acronym_pairs =  split (/\n/, $acronym_table);
+    shift(@acronym_pairs);
+
+    my $table = 'trait_id' . "\t" . 'trait_name' . "\t" . 'acronym' . "\n";  
+    
+    for (my $i=0; $i < scalar(@acronym_pairs); $i++)
+    {
+        my $trait_acronym = $acronym_pairs[$i];
+        $trait_acronym =~ s/\n//g;
+
+        my ($acronym, $trait_name) = split (/\t/, $trait_acronym);
+        
+        my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
+        $table .= $trait_id . "\t" . $trait_name . "\t" . $acronym . "\n";
+       
+    }
+
+    $c->stash->{common_traits_data} = $table;
+  
+}    
+
 
 sub find_common_traits_acronyms {
     my ($self, $c) = @_;
