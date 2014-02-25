@@ -78,12 +78,16 @@ function downloadData() {
         success: function(res) {                         
             if (res.not_matching_pops == null) {
                
+                var combinedPopsId = res.combined_pops_id;
                 jQuery.unblockUI();
-                alert('all clones in all trials genotyped using the same RE');               
+               // alert('all clones in all trials genotyped using the same RE'); 
+                
+                goToCombinedTrialsPage(combinedPopsId);              
                     
             } else {
                     
-                if(res.not_matching_pops ) {                        
+                if(res.not_matching_pops ) { 
+                    jQuery.unblockUI();
                     alert('populations ' + res.not_matching_pops + 
                           ' were genotyped using different marker sets. ' + 
                               'Please make new selections to combine.' );
@@ -121,6 +125,16 @@ function getSelectedTrials () {
 
 }
 
+
+function goToCombinedTrialsPage(combinedPopsId) {
+     
+    var action = '/solgs/populations/combined/' + combinedPopsId;
+    
+    if(combinedPopsId) {      
+        window.location.href = action;
+    }
+   
+}
 
 
 Array.prototype.unique =
