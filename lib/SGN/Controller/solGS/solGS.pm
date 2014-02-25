@@ -19,6 +19,7 @@ use Scalar::Util qw /weaken reftype/;
 use Statistics::Descriptive;
 use Math::Round::Var;
 use Algorithm::Combinatorics qw /combinations/;
+use Array::Utils qw(:all);
 #use CXGN::Login;
 #use CXGN::People::Person;
 use CXGN::Tools::Run;
@@ -1835,7 +1836,16 @@ sub catalogue_combined_pops {
     }
     else 
     {
-        write_file($file, {append => 1}, $entry);
+        $entry =~ s/\n//;
+        my @combo = ($entry);
+       
+        my (@entries) = map{ $_ =~ s/\n// ? $_ : undef } read_file($file);
+        my @intersect = intersect(@combo, @entries);
+        unless( @intersect ) 
+        {
+            print STDERR "\n entry 2: $entry $entry\n";
+            write_file($file, {append => 1}, "\n" . "$entry");
+        }
     }
     
 }
