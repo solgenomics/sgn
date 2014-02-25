@@ -525,6 +525,7 @@ sub uploaded_population_summary {
 
 }
 
+
 sub project_description {
     my ($self, $c, $pr_id) = @_;
 
@@ -2826,18 +2827,18 @@ sub get_all_traits {
     $headers =~ s/$filter_header//g;
     $ph->close;
 
-    $self->add_trait_ids($c, $headers);
+    $self->create_trait_data($c, $headers);
        
 }
 
 
-sub add_trait_ids {
+sub create_trait_data {
     my ($self, $c, $list) = @_;   
        
     $list =~ s/\n//;
     my @traits = split (/\t/, $list);
   
-    my $table = 'trait_name' . "\t" . 'trait_id' . "\n"; 
+    my $table = 'trait_id' . "\t" . 'trait_name' . "\t" . 'acronym' . "\n"; 
  
     my $acronym_pairs = $self->get_acronym_pairs($c);
     foreach (@$acronym_pairs)
@@ -2846,7 +2847,7 @@ sub add_trait_ids {
         $trait_name =~ s/\n//g;
         
         my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
-        $table .= $trait_name . "\t" . $trait_id . "\n";
+        $table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";
        
     }
 
@@ -2896,8 +2897,11 @@ sub get_acronym_pairs {
     }
 
     @acronym_pairs = sort {uc $a->[0] cmp uc $b->[0] } @acronym_pairs;
-    return \@acronym_pairs;
 
+    $c->stash->{acronym} = \@acronym_pairs;
+    
+    return \@acronym_pairs;
+    
 }
 
 
