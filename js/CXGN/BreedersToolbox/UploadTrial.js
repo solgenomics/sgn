@@ -32,7 +32,7 @@ jQuery(document).ready(function ($) {
                 $('#upload_trial_dialog').dialog("close");
             },
 	    "Add": function () {
-		alert("adding trial");
+		alert("adding trial not yet supported");
 	    },
 	}
     });
@@ -42,7 +42,6 @@ jQuery(document).ready(function ($) {
     }
 
     $('#upload_trial_link').click(function () {
-	//alert("upload dialog happens");
         open_upload_trial_dialog();
     });
 

@@ -207,7 +207,7 @@ background-color: #ccc;
     <textarea id="trial_upload_description" name="trial_upload_description" form="upload_trial_form" cols="40"></textarea>
     <br>
 
-    <label for="trial_upload_design_method">Design type:</label>
+    <label for="trial_upload_design_method" style="display: inline-block; width: 100px;">Design type:</label>
     <select id="trial_upload_design_method" name="trial_upload_design_method">
       <option value=CRD>Completely Randomized</option>
       <option value=RCBD>Complete Block</option>
@@ -217,7 +217,7 @@ background-color: #ccc;
     <br>
     <br>
 
-    <label for="trial_upload_file">Upload file:</label>
+    <label for="trial_upload_file" style="display: inline-block; width: 100px;">Upload file:</label>
     <input type="file" name="trial_upload_file" id="trial_upload_file" encoding="multipart/form-data" />
 
     </form>
