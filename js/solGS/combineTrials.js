@@ -123,6 +123,8 @@ function getSelectedTrials () {
         });       
     }
 
+    trialIds = trialIds.sort();
+
     return trialIds;
 
 }
