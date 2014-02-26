@@ -175,6 +175,40 @@ background-color: #ccc;
     </p>
   </&>
 
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form">
+
+    <label for="trial_upload_breeding_program" style="display: inline-block; width: 100px;">Breeding Program:</label>
+    <select id="trial_upload_breeding_program" name="trial_upload_breeding_program">
+      <%perl>
+      foreach my $program (@$breeding_programs) {
+         print "<option value=".@$program[0].">".@$program[1]."</option>";
+      }
+      </%perl>
+    </select>
+    <br>
+
+    <label for="trial_upload_location" style="display: inline-block; width: 100px;">Location:</label>
+    <select id="trial_upload_location" name="trial_upload_location">
+      <%perl>foreach my $location (@locations) { print "
+        <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
+      </%perl>
+    </select>
+    <br>
+
+    <label for="trial_upload_name" style="display: inline-block; width: 100px;">Trial name:</label>
+    <input id="trial_upload_name" name="trial_upload_name" />
+    <br>
+
+    <label for="trial_upload_year" style="display: inline-block; width: 100px;">Year(s):</label>
+    <input id="trial_upload_year" name="trial_upload_year" />
+    <br>
+
+    <label for="trial_upload_description" style="display: inline-block; vertical-align:top; width: 100px;">Description:</label>
+    <textarea id="trial_upload_description" name="trial_upload_description" form="upload_trial_form" cols="40"></textarea>
+    <br>
+
+    </form>
+
 </div>
 
 
