@@ -12,7 +12,8 @@ function getPopIds () {
 
     jQuery('#homepage_trials_list tr').filter(':has(:checkbox:checked)')
         .bind('click',  function() {
-    
+     
+            jQuery("#done_selecting input").val('Done selecting');
             var td =  jQuery(this).html();
             //alert(td);
             var selectedTrial = '<tr>' + td + '</tr>';
@@ -27,6 +28,7 @@ function getPopIds () {
         });
   
     jQuery("#selected_trials").show();
+   
     jQuery("#combine").show();
     jQuery("#search_again").show();
    
