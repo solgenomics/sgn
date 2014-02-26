@@ -24,9 +24,121 @@ jQuery(document).ready(function ($) {
 
     var design_json;
 
-    $('#add_project_link').click(function () {
-        open_project_dialog()
-    });
+    function save_project_info(name, year, desc) {
+        alert('data = ' + name + ' ' + year + ' ' + desc);
+        $.ajax({
+            type: 'GET',
+            async: false,
+            url: '/ajax/breeders/project/insert',
+            data: {
+                'project_name': name,
+                'project_description': desc,
+                'year': year
+            },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert('The trial information was saved.');
+                }
+            },
+            error: function () {
+                alert('An error occurred. sorry');
+            }
+        });
+    }
+
+    function verify_stock_list(stock_list) {
+	var return_val = 0;
+	$.ajax({
+            type: 'POST',
+            url: '/ajax/trial/verify_stock_list',
+	    dataType: "json",
+            data: {
+                //'stock_list': stock_list.join(","),
+                'stock_list': stock_list,
+            },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error);
+		    verify_stock_list.return_val = 0;
+                } else {
+		    verify_stock_list.return_val = 1;
+                }
+            },
+            error: function () {
+                alert('An error occurred. sorry');
+	    verify_stock_list.return_val = 0;
+            }
+	});
+	return return_val;
+    }
+
+    function generate_experimental_design() {
+        var name = $('#add_project_name').val();
+        var year = $('#add_project_year').val();
+        var desc = $('#add_project_description').val();
+        var trial_location = $('#add_project_location').val();
+        var block_number = $('#block_number').val();
+        var stock_list_id = $('#select_list_list_select').val();
+        var control_list_id = $('#list_of_checks_section_list_select').val();
+	var stock_list;
+	if (stock_list_id != "") {
+            stock_list = JSON.stringify(list.getList(stock_list_id));
+	}
+	var control_list;
+	if (control_list_id != "") {
+            control_list = JSON.stringify(list.getList(control_list_id));
+	}
+        var design_type = $('#select_design_method').val();
+	var rep_count = $('#rep_count').val();
+	var block_size = $('#block_size').val();
+	var max_block_size = $('#max_block_size').val();
+	var plot_prefix = $('#plot_prefix').val();
+	var start_number = $('#start_number').val();
+	var increment = $('#increment').val();
+	//var stock_verified = verify_stock_list(stock_list);
+        if (desc == '' || year == '') {
+            alert('Year and description are required.');
+            return;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: '/ajax/trial/generate_experimental_design',
+	    dataType: "json",
+            data: {
+                'project_name': name,
+                'project_description': desc,
+                'year': year,
+                'trial_location': trial_location,
+                'stock_list': stock_list,
+		'control_list': control_list,
+		'design_type': design_type,
+		'rep_count': rep_count,
+		'block_number': block_number,
+		'block_size': block_size,
+		'max_block_size': max_block_size,
+		'plot_prefix': plot_prefix,
+		'start_number': start_number,
+		'increment': increment,
+            },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+		    $('#trial_design_information').html(response.design_info_view_html);
+                    $('#trial_design_view_layout').html(response.design_layout_view_html);
+                    $('#trial_design_confirm').dialog("open");
+		    design_json = response.design_json;
+                }
+            },
+            error: function () {
+                alert('An error occurred. sorry');
+            }
+       });
+    }
+
 
     $('#add_project_dialog').dialog({
 	autoOpen: false,
@@ -70,7 +182,6 @@ jQuery(document).ready(function ($) {
         }
     });
 
-
     function open_project_dialog() {
 	$('#add_project_dialog').dialog("open");
 
@@ -80,7 +191,6 @@ jQuery(document).ready(function ($) {
 	$("#list_of_checks_section_list_select").remove();
 
 	//add lists to the list select and list of checks select dropdowns.  
-	var list = new CXGN.List();
 	$("#select_list").append(list.listSelect("select_list", [ 'accessions' ] ));
 	$("#list_of_checks_section").append(list.listSelect("list_of_checks_section", [ 'accessions' ]));
 
@@ -99,7 +209,7 @@ jQuery(document).ready(function ($) {
 	$("#select_list_list_select").focusout(function() {
 	    var stock_list_id = $('#select_list_list_select').val();
 	    var stock_list;
-	    if (! stock_list_id == "") {
+	    if (stock_list_id != "") {
 		stock_list = JSON.stringify(list.getList(stock_list_id));
 	    }
 	    verify_stock_list(stock_list);
@@ -114,7 +224,7 @@ jQuery(document).ready(function ($) {
 	$("#list_of_checks_section_list_select").focusout(function() {
 	    var stock_list_id = $('#list_of_checks_section_list_select').val();
 	    var stock_list;
-	    if (! stock_list_id == "") {
+	    if (stock_list_id != "") {
 		stock_list = JSON.stringify(list.getList(stock_list_id));
 	    }
 	    verify_stock_list(stock_list);
@@ -133,6 +243,12 @@ jQuery(document).ready(function ($) {
 	//reset previous selections
 	$("#select_design_method").change();
     }
+
+
+    $('#add_project_link').click(function () {
+        open_project_dialog();
+    });
+
 
     $("#format_type_radio").change(function () {
         var method_to_use = $('.format_type:checked').val();
@@ -211,7 +327,6 @@ jQuery(document).ready(function ($) {
     });
 
     $("#show_plot_naming_options").click(function () {
-	var current_height = $("#add_project_dialog").dialog("option", "height");
 	if ($('#show_plot_naming_options').is(':checked')) {
 	    $("#plot_naming_options").show();
             $("#add_project_dialog").dialog("option", "height","auto");
@@ -222,72 +337,6 @@ jQuery(document).ready(function ($) {
 	}
     });
 
-    function generate_experimental_design() {
-        var name = $('#add_project_name').val();
-        var year = $('#add_project_year').val();
-        var desc = $('#add_project_description').val();
-        var trial_location = $('#add_project_location').val();
-        var block_number = $('#block_number').val();
-        var stock_list_id = $('#select_list_list_select').val();
-        var control_list_id = $('#list_of_checks_section_list_select').val();
-        var list = new CXGN.List();
-	var stock_list;
-	if (! stock_list_id == "") {
-            stock_list = JSON.stringify(list.getList(stock_list_id));
-	}
-	var control_list;
-	if (! control_list_id == "") {
-            control_list = JSON.stringify(list.getList(control_list_id));
-	}
-        var design_type = $('#select_design_method').val();
-	var rep_count = $('#rep_count').val();
-	var block_size = $('#block_size').val();
-	var max_block_size = $('#max_block_size').val();
-	var plot_prefix = $('#plot_prefix').val();
-	var start_number = $('#start_number').val();
-	var increment = $('#increment').val();
-	var stock_verified = verify_stock_list(stock_list);
-        if (desc == '' || year == '') {
-            alert('Year and description are required.');
-            return;
-        }
-
-        new $.ajax({
-            type: 'POST',
-            url: '/ajax/trial/generate_experimental_design',
-	    dataType: "json",
-            data: {
-                'project_name': name,
-                'project_description': desc,
-                'year': year,
-                'trial_location': trial_location,
-                'stock_list': stock_list,
-		'control_list': control_list,
-		'design_type': design_type,
-		'rep_count': rep_count,
-		'block_number': block_number,
-		'block_size': block_size,
-		'max_block_size': max_block_size,
-		'plot_prefix': plot_prefix,
-		'start_number': start_number,
-		'increment': increment,
-            },
-            success: function (response) {
-                if (response.error) {
-                    alert(response.error);
-                } else {
-		    $('#trial_design_information').html(response.design_info_view_html);
-                    $('#trial_design_view_layout').html(response.design_layout_view_html);
-                    $('#trial_design_confirm').dialog("open");
-		    design_json = response.design_json;
-                }
-            },
-            error: function () {
-                alert('An error occurred. sorry');
-            }
-       });
-    }
-
  function save_experimental_design(design_json) {
      $('#trial_saving_dialog').dialog("open");
         var name = $('#add_project_name').val();
@@ -297,13 +346,12 @@ jQuery(document).ready(function ($) {
         var block_number = $('#block_number').val();
         var stock_list_id = $('#select_list_list_select').val();
         var control_list_id = $('#list_of_checks_section_list_select').val();
-        var list = new CXGN.List();
 	var stock_list;
-	if (! stock_list_id == "") {
+	if (stock_list_id != "") {
             stock_list = JSON.stringify(list.getList(stock_list_id));
 	}
 	var control_list;
-	if (! control_list_id == "") {
+	if (control_list_id != "") {
             control_list = JSON.stringify(list.getList(control_list_id));
 	}
         var design_type = $('#select_design_method').val();
@@ -314,12 +362,12 @@ jQuery(document).ready(function ($) {
 	var start_number = $('#start_number').val();
 	var increment = $('#increment').val();
 	var breeding_program_id = $('#select_breeding_program').val();
-	var stock_verified = verify_stock_list(stock_list);
+	//var stock_verified = verify_stock_list(stock_list);
         if (desc == '' || year == '') {
             alert('Year and description are required.');
             return;
         }
-        new $.ajax({
+        $.ajax({
             type: 'POST',
             url: '/ajax/trial/save_experimental_design',
 	    dataType: "json",
@@ -376,32 +424,6 @@ jQuery(document).ready(function ($) {
 	}
     });
 
-    function verify_stock_list(stock_list) {
-	var return_val;
-	new $.ajax({
-            type: 'POST',
-            url: '/ajax/trial/verify_stock_list',
-	    dataType: "json",
-            data: {
-                //'stock_list': stock_list.join(","),
-                'stock_list': stock_list,
-            },
-            success: function (response) {
-                if (response.error) {
-                    alert(response.error);
-		    verify_stock_list.return_val = 0;
-                } else {
-		    verify_stock_list.return_val = 1;
-                }
-            },
-            error: function () {
-                alert('An error occurred. sorry');
-	    verify_stock_list.return_val = 0;
-            }
-	});
-	return return_val;
-    }
-
     $('#trial_design_confirm').dialog({
 	autoOpen: false,
         height: 400,
@@ -436,51 +458,6 @@ jQuery(document).ready(function ($) {
 	}
       }
     }); 
-
-    function save_project_info(name, year, desc) {
-        alert('data = ' + name + ' ' + year + ' ' + desc);
-        new $.ajax({
-            type: 'GET',
-            async: false,
-            url: '/ajax/breeders/project/insert',
-            data: {
-                'project_name': name,
-                'project_description': desc,
-                'year': year
-            },
-            success: function (response) {
-                if (response.error) {
-                    alert(response.error);
-                } else {
-                    alert('The trial information was saved.');
-                }
-            },
-            error: function () {
-                alert('An error occurred. sorry');
-            }
-        });
-    }
-
-    function create_design() {
-        var name = $('#project_name').val();
-        var year = $('#project_year').val();
-        var desc = $('#project_description').val();
-
-        if (name == '' || year == '') {
-            alert('Name and year are required.');
-            return;
-        }
-        new $.ajax({
-            type: 'GET',
-            url: '/breeders/project/insert',
-            data: {
-                'project_name': name,
-                'project_description': desc,
-                'year': year
-            },
-        }).done(alert("Done saving project info"));
-        $('#add_project_dialog').dialog("close");
-    }
 
     $('#create_new_trial_form').iframePostForm({
 	json: true,
