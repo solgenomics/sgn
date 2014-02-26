@@ -164,6 +164,7 @@ jQuery(document).ready(function ($) {
                     alert('adding a project');
                     save_project_info(name, year, desc);
                 }
+		//removed
                 if (method_to_use == "create_with_upload") {
                     var uploadFile = $("#trial_upload_file").val();
                     $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
@@ -181,68 +182,6 @@ jQuery(document).ready(function ($) {
             }
         }
     });
-
-    function open_project_dialog() {
-	$('#add_project_dialog').dialog("open");
-
-	//removes any old list selects before adding current ones.
-	//his is important so that lists that are added and will appear without page refresh
-	$("#select_list_list_select").remove();
-	$("#list_of_checks_section_list_select").remove();
-
-	//add lists to the list select and list of checks select dropdowns.  
-	$("#select_list").append(list.listSelect("select_list", [ 'accessions' ] ));
-	$("#list_of_checks_section").append(list.listSelect("list_of_checks_section", [ 'accessions' ]));
-
-	//add a blank line to location select dropdown that dissappears when dropdown is opened 
-	$("#add_project_location").prepend("<option value=''></option>").val('');
-	$("#add_project_location").one('mousedown', function () {
-            $("option:first", this).remove();
-	});
-
-	//add a blank line to list select dropdown that dissappears when dropdown is opened 
-	$("#select_list_list_select").prepend("<option value=''></option>").val('');
-	$("#select_list_list_select").one('mousedown', function () {
-            $("option:first", this).remove();
-	});
-
-	$("#select_list_list_select").focusout(function() {
-	    var stock_list_id = $('#select_list_list_select').val();
-	    var stock_list;
-	    if (stock_list_id != "") {
-		stock_list = JSON.stringify(list.getList(stock_list_id));
-	    }
-	    verify_stock_list(stock_list);
-	});
-
-	//add a blank line to list of checks select dropdown that dissappears when dropdown is opened 
-	$("#list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
-	$("#list_of_checks_section_list_select").one('mousedown', function () {
-            $("option:first", this).remove();
-	});
-
-	$("#list_of_checks_section_list_select").focusout(function() {
-	    var stock_list_id = $('#list_of_checks_section_list_select').val();
-	    var stock_list;
-	    if (stock_list_id != "") {
-		stock_list = JSON.stringify(list.getList(stock_list_id));
-	    }
-	    verify_stock_list(stock_list);
-	});
-
-	//add a blank line to design method select dropdown that dissappears when dropdown is opened 
-	$("#select_design_method").prepend("<option value=''></option>").val('');
-	$("#select_design_method").one('mousedown', function () {
-            $("option:first", this).remove();
-            $("#trial_design_more_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-	    //trigger design method change events in case the first one is selected after removal of the first blank select item
-	    $("#select_design_method").change();
-	});
-	
-	//reset previous selections
-	$("#select_design_method").change();
-    }
 
     $("#format_type_radio").change(function () {
         var method_to_use = $('.format_type:checked').val();
@@ -488,6 +427,67 @@ jQuery(document).ready(function ($) {
 	}
     });
 
+    function open_project_dialog() {
+	$('#add_project_dialog').dialog("open");
+
+	//removes any old list selects before adding current ones.
+	//his is important so that lists that are added and will appear without page refresh
+	$("#select_list_list_select").remove();
+	$("#list_of_checks_section_list_select").remove();
+
+	//add lists to the list select and list of checks select dropdowns.  
+	$("#select_list").append(list.listSelect("select_list", [ 'accessions' ] ));
+	$("#list_of_checks_section").append(list.listSelect("list_of_checks_section", [ 'accessions' ]));
+
+	//add a blank line to location select dropdown that dissappears when dropdown is opened 
+	$("#add_project_location").prepend("<option value=''></option>").val('');
+	$("#add_project_location").one('mousedown', function () {
+            $("option:first", this).remove();
+	});
+
+	//add a blank line to list select dropdown that dissappears when dropdown is opened 
+	$("#select_list_list_select").prepend("<option value=''></option>").val('');
+	$("#select_list_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+	});
+
+	$("#select_list_list_select").focusout(function() {
+	    var stock_list_id = $('#select_list_list_select').val();
+	    var stock_list;
+	    if (stock_list_id != "") {
+		stock_list = JSON.stringify(list.getList(stock_list_id));
+	    }
+	    verify_stock_list(stock_list);
+	});
+
+	//add a blank line to list of checks select dropdown that dissappears when dropdown is opened 
+	$("#list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
+	$("#list_of_checks_section_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+	});
+
+	$("#list_of_checks_section_list_select").focusout(function() {
+	    var stock_list_id = $('#list_of_checks_section_list_select').val();
+	    var stock_list;
+	    if (stock_list_id != "") {
+		stock_list = JSON.stringify(list.getList(stock_list_id));
+	    }
+	    verify_stock_list(stock_list);
+	});
+
+	//add a blank line to design method select dropdown that dissappears when dropdown is opened 
+	$("#select_design_method").prepend("<option value=''></option>").val('');
+	$("#select_design_method").one('mousedown', function () {
+            $("option:first", this).remove();
+            $("#trial_design_more_info").show();
+            $("#add_project_dialog").dialog("option", "height","auto");
+	    //trigger design method change events in case the first one is selected after removal of the first blank select item
+	    $("#select_design_method").change();
+	});
+	
+	//reset previous selections
+	$("#select_design_method").change();
+    }
 
     $('#add_project_link').click(function () {
         open_project_dialog();

@@ -30,7 +30,6 @@ jQuery(document).ready(function ($) {
 	$("#trial_upload_design_method").one('mousedown', function () {
             $("option:first", this).remove();
             $("#trial_design_more_info").show();
-            //$("#add_project_dialog").dialog("option", "height","auto");
 	    //trigger design method change events in case the first one is selected after removal of the first blank select item
 	    $("#trial_upload_design_method").change();
 	});
@@ -69,6 +68,44 @@ jQuery(document).ready(function ($) {
 	modal: true,
 	width: 900,
 	autoResize:true,
+    });
+
+    $('#upload_trial_form').iframePostForm({
+	json: true,
+	post: function () {
+            var uploadedTrialLayoutFile = $("#trial_uploaded_file").val();
+            if (uploadedTrialLayoutFile === '') {
+		alert("No file selected");
+            }
+	},
+	complete: function (response) {
+            if (response.error_string) {
+		$("#upload_trial_error_display tbody").html('');
+		$("#upload_trial_error_display tbody").append(response.error_string);
+		$(function () {
+                    $("#upload_trial_error_display").dialog({
+			modal: true,
+			autoResize:true,
+			width: 650,
+			position: ['top', 250],
+			title: "Errors in uploaded file",
+			buttons: {
+                            Ok: function () {
+				$(this).dialog("close");
+                            }
+			}
+                    });
+		});
+		return;
+            }
+            if (response.error) {
+		alert(response.error);
+		return;
+            }
+            if (response.success) {
+		alert("File uploaded successfully");
+            }
+	}
     });
 
 });
