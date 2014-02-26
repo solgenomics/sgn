@@ -8,6 +8,17 @@ $breeding_programs
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial',] &>
 
+<table>
+  <%perl>
+  foreach my $p (sort keys %$trials_by_breeding_project){
+    print "<tr><td colspan=\"3\"><h4>$p</h4></td></tr>\n";
+    foreach my $t (@{$trials_by_breeding_project->{$p}}) { 
+      print "<tr><td><a href=\"/breeders_toolbox/trial/$t->[0]\">$t->[1]</td><td>$t->[2]</td></tr>\n";
+    }
+  }
+  </%perl>
+</table>
+
 <div id="add_project_dialog" class="ui-widget">
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
     <label for="add_project_name" style="display: none; inline-block; width: 100px;">Trial name:</label>
@@ -154,16 +165,20 @@ background-color: #ccc;
   </p>
 </div>
 
+<div id="upload_trial_dialog" title="Upload trial">
 
-<table>
-  <%perl>
+  <&| /page/explanation.mas, title=>'Template information' &>
+    <p>
+      <b>File format information</b>
+      <br>
+      <a id="trial_upload_spreadsheet_format_info">Spreadsheet format</a>
+    </p>
+  </&>
 
-  use Data::Dumper;
-  foreach my $p (sort keys %$trials_by_breeding_project){
-    print "<tr><td colspan=\"3\"><h4>$p</h4></td></tr>\n";
-    foreach my $t (@{$trials_by_breeding_project->{$p}}) { 
-      print "<tr><td><a href=\"/breeders_toolbox/trial/$t->[0]\">$t->[1]</td><td>$t->[2]</td></tr>\n";
-    }
-  }
-  </%perl>
-</table>
+</div>
+
+
+<div id="trial_upload_spreadsheet_info_dialog" title="Format for uploading trials in a spreadsheet">
+  <&| /breeders_toolbox/trial/trial_spreadsheet_upload_format_info.mas &>
+  </&>
+</div>
