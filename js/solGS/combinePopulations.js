@@ -66,6 +66,7 @@ var getPopIds =  function() {
             } 
 
             cookieArrayData = cookieArrayData.unique();
+            cookieArrayData = cookieArrayData.sort();
             jQuery.cookie(cookieName, cookieArrayData, {path: '/'});
                
         }          
