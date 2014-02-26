@@ -102,6 +102,42 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args(1) {
 }
 
 
+sub combine_trait_data {
+    my ($self, $c) = @_;
+
+    my $combo_pops_id = $c->stash->{combo_pops_id};
+    my $trait_id      = $c->stash->{trait_id};
+   
+    my $solgs_controller = $c->controller('solGS::solGS');
+
+    $solgs_controller->get_trait_name($c, $trait_id);
+
+    $solgs_controller->get_combined_pops_list($c, $combo_pops_id);
+    my $pops_list = $c->stash->{combined_pops_list};
+    $c->stash->{trait_combo_pops} = $pops_list; 
+   
+    my @pops_list = split(/,/, $pops_list);
+    $c->stash->{trait_combine_populations} = \@pops_list;
+
+    $solgs_controller->multi_pops_phenotype_data($c, \@pops_list);
+    $solgs_controller->multi_pops_genotype_data($c, \@pops_list);
+
+    $solgs_controller->cache_combined_pops_data($c);
+
+    my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
+    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+             
+    unless (-s $combined_pops_geno_file  && -s $combined_pops_pheno_file ) 
+    {
+        $solgs_controller->r_combine_populations($c);
+                
+        $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
+        $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+    }
+                       
+}
+
+
 sub combined_trials_desc {
     my ($self, $c) = @_;
     
