@@ -21,6 +21,28 @@ var $j = jQuery.noConflict();
 jQuery(document).ready(function ($) {
 
 
+
+
+    function open_upload_trial_dialog() {
+	$('#upload_trial_dialog').dialog("open");
+	//add a blank line to design method select dropdown that dissappears when dropdown is opened 
+	$("#trial_upload_design_method").prepend("<option value=''></option>").val('');
+	$("#trial_upload_design_method").one('mousedown', function () {
+            $("option:first", this).remove();
+            $("#trial_design_more_info").show();
+            //$("#add_project_dialog").dialog("option", "height","auto");
+	    //trigger design method change events in case the first one is selected after removal of the first blank select item
+	    $("#trial_upload_design_method").change();
+	});
+	
+	//reset previous selections
+	$("#trial_upload_design_method").change();
+    }
+
+    $('#upload_trial_link').click(function () {
+        open_upload_trial_dialog();
+    });
+
     $("#upload_trial_dialog").dialog({
 	autoOpen: false,	
 	modal: true,
@@ -31,18 +53,10 @@ jQuery(document).ready(function ($) {
             "Cancel": function () {
                 $('#upload_trial_dialog').dialog("close");
             },
-	    "Add": function () {
+	    "Ok": function () {
 		alert("adding trial not yet supported");
 	    },
 	}
-    });
-
-    function open_upload_trial_dialog() {
-	$('#upload_trial_dialog').dialog("open");
-    }
-
-    $('#upload_trial_link').click(function () {
-        open_upload_trial_dialog();
     });
 
     $("#trial_upload_spreadsheet_format_info").click( function () { 
