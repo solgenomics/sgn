@@ -6,7 +6,7 @@ $trials_by_breeding_project => ()
 $breeding_programs
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Trials'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial',] &>
 
 <div id="add_project_dialog" class="ui-widget">
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">

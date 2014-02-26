@@ -2,9 +2,9 @@
 
 /**
 
-=head1 Trials.js
+=head1 AddTrial.js
 
-Dialogs for adding and uploading trials
+Dialogs for adding trials
 
 
 =head1 AUTHOR
@@ -243,12 +243,6 @@ jQuery(document).ready(function ($) {
 	//reset previous selections
 	$("#select_design_method").change();
     }
-
-
-    $('#add_project_link').click(function () {
-        open_project_dialog();
-    });
-
 
     $("#format_type_radio").change(function () {
         var method_to_use = $('.format_type:checked').val();
@@ -494,5 +488,9 @@ jQuery(document).ready(function ($) {
 	}
     });
 
+
+    $('#add_project_link').click(function () {
+        open_project_dialog();
+    });
 
 });
