@@ -207,6 +207,19 @@ background-color: #ccc;
     <textarea id="trial_upload_description" name="trial_upload_description" form="upload_trial_form" cols="40"></textarea>
     <br>
 
+    <label for="trial_upload_design_method">Design type:</label>
+    <select id="trial_upload_design_method" name="trial_upload_design_method">
+      <option value=CRD>Completely Randomized</option>
+      <option value=RCBD>Complete Block</option>
+      <option value=Alpha>Alpha Lattice</option>
+      <option value=Augmented>Augmented</option>
+    </select>
+    <br>
+    <br>
+
+    <label for="trial_upload_file">Upload file:</label>
+    <input type="file" name="trial_upload_file" id="trial_upload_file" encoding="multipart/form-data" />
+
     </form>
 
 </div>
