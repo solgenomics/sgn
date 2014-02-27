@@ -102,6 +102,30 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args(1) {
 }
 
 
+sub build_model_for_trait :Path('/solgs/model/combined/trials') Args(3) {
+    my ($self, $c, $combo_pops_id, $trait_txt, $trait_id) = @_;
+
+    $c->stash->{combo_pops_id} = $combo_pops_id;
+    $c->stash->{trait_id}      = $trait_id;
+
+    $self->combine_trait_data($c);
+
+    my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
+    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+    
+    
+    if (-s $combined_pops_pheno_file  && -s $combined_pops_geno_file ) 
+    { 
+        $c->stash->{data_set_type} = 'combined populations';                
+        $c->controller('solGS::solGS')->get_rrblup_output($c); 
+     
+        $c->res->redirect("/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id");
+        $c->detach();
+    }           
+
+}
+
+
 sub combine_trait_data {
     my ($self, $c) = @_;
 
@@ -130,9 +154,6 @@ sub combine_trait_data {
     unless (-s $combined_pops_geno_file  && -s $combined_pops_pheno_file ) 
     {
         $solgs_controller->r_combine_populations($c);
-                
-        $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
-        $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
     }
                        
 }
