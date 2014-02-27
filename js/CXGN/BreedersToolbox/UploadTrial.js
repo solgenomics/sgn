@@ -21,7 +21,15 @@ var $j = jQuery.noConflict();
 jQuery(document).ready(function ($) {
 
 
-
+    function upload_trial_file() {
+        var uploadFile = $("#trial_uploaded_file").val();
+        $('#upload_trial_form').attr("action", "/ajax/trial/upload_trial_file");
+        if (uploadFile === '') {
+	    alert("Please select a file");
+	    return;
+        }
+        $("#upload_trial_form").submit();
+    }
 
     function open_upload_trial_dialog() {
 	$('#upload_trial_dialog').dialog("open");
@@ -54,6 +62,7 @@ jQuery(document).ready(function ($) {
             },
 	    "Ok": function () {
 		alert("adding trial not yet supported");
+		upload_trial_file();
 	    },
 	}
     });

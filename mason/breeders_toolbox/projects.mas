@@ -217,8 +217,8 @@ background-color: #ccc;
     <br>
     <br>
 
-    <label for="trial_upload_file" style="display: inline-block; width: 100px;">Upload file:</label>
-    <input type="file" name="trial_upload_file" id="trial_upload_file" encoding="multipart/form-data" />
+    <label for="trial_uploaded_file" style="display: inline-block; width: 100px;">Upload file:</label>
+    <input type="file" name="trial_uploaded_file" id="trial_uploaded_file" encoding="multipart/form-data" />
 
     </form>
 
