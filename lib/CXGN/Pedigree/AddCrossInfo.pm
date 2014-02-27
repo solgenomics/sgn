@@ -27,20 +27,19 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 
-has 'schema' => (
+has 'chado_schema' => (
 		 is       => 'rw',
 		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_schema',
+		 predicate => 'has_chado_schema',
 		 required => 1,
 		);
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
-has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required => 1,);
 has 'number_of_flowers' => (isa =>'Str', is => 'rw', predicate => 'has_number_of_flowers',);
 has 'number_of_seeds' => (isa =>'Str', is => 'rw', predicate => 'has_number_of_seeds',);
 
 sub add_info {
   my $self = shift;
-  my $schema = $self->get_schema();
+  my $schema = $self->get_chado_schema();
   my $transaction_error;
 
   #add all cross info in a single transaction
@@ -58,17 +57,17 @@ sub add_info {
     #get experiment
     my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
       ->find({
-	      'nd_experiment_stock.stock_id' => $cross_stock->stock_id,
+	      'nd_experiment_stocks.stock_id' => $cross_stock->stock_id,
 	     },
 	     {
-	      join => 'nd_experiment_stock',
+	      join => 'nd_experiment_stocks',
 	     });
     if (!$experiment) {
       print STDERR "Cross experiment could not be found\n";
       return;
     }
 
-    if ($self->_has_number_of_seeds()) {
+    if ($self->has_number_of_seeds()) {
       my $number_of_seeds_cvterm = $schema->resultset("Cv::Cvterm")
 	->create_with({
 		       name   => 'number_of_seeds',
@@ -85,7 +84,7 @@ sub add_info {
     }
 
 
-    if ($self->_has_number_of_flowers()) {
+    if ($self->has_number_of_flowers()) {
       my $number_of_flowers_cvterm = $schema->resultset("Cv::Cvterm")
 	->create_with({
 		       name   => 'number_of_flowers',
@@ -123,7 +122,7 @@ sub add_info {
 sub _get_cross {
   my $self = shift;
   my $cross_name = shift;
-  my $schema = $self->get_schema();
+  my $schema = $self->get_chado_schema();
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
   my $stock;
   my $cross_cvterm = $schema->resultset("Cv::Cvterm")

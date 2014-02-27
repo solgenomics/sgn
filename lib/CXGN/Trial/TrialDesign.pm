@@ -130,10 +130,10 @@ sub _get_crd_design {
   $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('crd<-design.crd(trt,rep_vector,number=1,kinds=randomization_method, seed=randomization_seed)');
+    $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=1,kinds=randomization_method, seed=randomization_seed)');
   }
   else {
-    $r_block->add_command('crd<-design.crd(trt,rep_vector,number=1,kinds=randomization_method)');
+    $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=1,kinds=randomization_method)');
   }
   $r_block->add_command('crd<-as.matrix(crd)');
   $r_block->run_block();
@@ -193,10 +193,10 @@ sub _get_rcbd_design {
   $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,number=1,kinds=randomization_method, seed=randomization_seed)');
+    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=1,kinds=randomization_method, seed=randomization_seed)');
   }
   else {
-    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,number=1,kinds=randomization_method)');
+    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=1,kinds=randomization_method)');
   }
   $r_block->add_command('rcbd<-as.matrix(rcbd)');
   $r_block->run_block();
@@ -277,10 +277,10 @@ sub _get_alpha_lattice_design {
   $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,number=1,kinds=randomization_method, seed=randomization_seed)');
+    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,serie=1,kinds=randomization_method, seed=randomization_seed)');
   }
   else {
-    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,number=1,kinds=randomization_method)');
+    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,serie=1,kinds=randomization_method)');
   }
   $r_block->add_command('alpha_book<-alpha$book');
   $r_block->add_command('alpha_book<-as.matrix(alpha_book)');
@@ -376,10 +376,10 @@ sub _get_augmented_design {
   $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,number=1,kinds=randomization_method, seed=randomization_seed)');
+    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method, seed=randomization_seed)');
   }
   else {
-    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,number=1,kinds=randomization_method)');
+    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method)');
   }
   $r_block->add_command('augmented<-as.matrix(augmented)');
 

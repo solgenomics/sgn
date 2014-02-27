@@ -1,10 +1,8 @@
-package CXGN::Pedigree::ParseUpload;
+package CXGN::Trial::ParseUpload;
 
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
-use Bio::GeneticRelationships::Pedigree;
-use Bio::GeneticRelationships::Individual;
 
 with 'MooseX::Object::Pluggable';
 
@@ -40,23 +38,23 @@ sub parse {
   my $self = shift;
 
   if (!$self->_validate_with_plugin()) {
-    print STDERR "\nCould not validate cross file: ".$self->get_filename()."\n";
+    print STDERR "\nCould not validate trial file: ".$self->get_filename()."\n";
     return;
   }
 
   if (!$self->_parse_with_plugin()) {
-    print STDERR "\nCould not parse cross file: ".$self->get_filename()."\n";
+    print STDERR "\nCould not parse trial file: ".$self->get_filename()."\n";
     return;
   }
 
   if (!$self->_has_parsed_data()) {
-    print STDERR "\nNo parsed data for cross file: ".$self->get_filename()."\n";
+    print STDERR "\nNo parsed data for trial file: ".$self->get_filename()."\n";
     return;
   } else {
     return $self->_parsed_data();
   }
 
-  print STDERR "\nError parsing cross file: ".$self->get_filename()."\n";
+  print STDERR "\nError parsing trial file: ".$self->get_filename()."\n";
   return;
 }
 

@@ -1,0 +1,41 @@
+<%args>
+</%args>
+<b>
+Trials may be uploaded in an Excel file (.xls)
+</b>
+<br>
+(.xlsx format not supported)
+<br><br>
+<b>
+  Header:
+</b>
+<br>
+The first row (header) should contain the following:
+<br>
+
+<table cellspacing="1" cellpadding="2" border="1">
+  <tr>
+    <td>header1</td>
+    <td>etc...</td>
+    <td>this is not complete</td>
+  </tr>
+</table>
+
+<br>
+<b>
+  Required fields:
+</b>
+<br>
+header1
+<br>
+etc...
+<br>
+<br>
+
+<b>
+  Optional fields:
+</b>
+<br>
+optional
+<br>
+

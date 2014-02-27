@@ -5,15 +5,8 @@ $locations
 $breeding_programs
 </%args>
 
-<br />
+<br>
 <& /page/page_title.mas, title=>"Manage trials" &>
-
-
-<&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_project_link">Add trial</a>]' &>
-    
+  <&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_trial_link">Upload trial</a>]  [<a id="add_project_link">Add trial</a>]' &>
     <& /breeders_toolbox/projects.mas, trials_by_breeding_project=>$trials_by_breeding_project,locations=>$locations, breeding_programs=>$breeding_programs,&>
-
 </&>
-
-
-

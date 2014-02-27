@@ -72,6 +72,11 @@ sub add_crosses {
   my $dbh = $self->get_dbh();
   my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 
+  if (!$self->validate_crosses()) {
+    print STDERR "Invalid pedigrees in array.  No crosses will be added\n";
+    return;
+  }
+
   #add all crosses in a single transaction
   my $coderef = sub {
 
@@ -148,10 +153,6 @@ sub add_crosses {
     # 		     dbxref => 'cross_type',
     # 		    });
 
-    if (!$self->validate_crosses()) {
-      print STDERR "Invalid pedigrees in array.  No crosses will be added\n";
-      return;
-    }
 
     #lookup location by name
     $location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location });
@@ -356,7 +357,7 @@ sub validate_crosses {
   $program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
   $program = $program_lookup->get_breeding_program_by_name($self->get_program());
   if (!$program) {
-    print STDERR "Breeding program". $self->get_program() ."not found\n";
+    print STDERR "Breeding program ". $self->get_program() ." not found\n";
     return;
   }
 

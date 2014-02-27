@@ -509,7 +509,7 @@ sub get_crosses : Private {
     if ($cross_cvterm) {
 
       my @cross_population_stocks = $schema->resultset("Stock::Stock")->search(
-									       { type_id => $cross_cvterm->cvterm_id,
+									       { type_id => $cross_cvterm->cvterm_id, is_obsolete => 'f'
 									       } );
       foreach my $cross_pop (@cross_population_stocks) {
 	push @cross_populations, [$cross_pop->name,$cross_pop->stock_id];

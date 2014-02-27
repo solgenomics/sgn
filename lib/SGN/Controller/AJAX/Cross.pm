@@ -32,6 +32,7 @@ use CXGN::UploadFile;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddProgeny;
 use CXGN::Pedigree::AddCrossInfo;
+use CXGN::Pedigree::ParseUpload;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -45,12 +46,18 @@ sub upload_cross_file : Path('/ajax/cross/upload_crosses_file') : ActionClass('R
 
 sub upload_cross_file_POST : Args(0) {
   my ($self, $c) = @_;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+  my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+  my $dbh = $c->dbc->dbh;
   my $program = $c->req->param('cross_upload_breeding_program');
   my $location = $c->req->param('cross_upload_location');
   my $upload = $c->req->upload('crosses_upload_file');
+  my $prefix = $c->req->param('upload_prefix');
+  my $suffix = $c->req->param('upload_suffix');
   my $uploader = CXGN::UploadFile->new();
-  my $parser = CXGN::Pedigree::ParseUpload->new();
+  my $parser;
+  my $parsed_data;
   my $upload_original_name = $upload->filename();
   my $upload_tempfile = $upload->tempname;
   my $subdirectory = "cross_upload";
@@ -58,11 +65,13 @@ sub upload_cross_file_POST : Args(0) {
   my $md5;
   my $validate_file;
   my $parsed_file;
+  my $parse_errors;
   my %parsed_data;
   my %upload_metadata;
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
   my $user_id;
+  my $owner_name;
   my $upload_file_type = "crosses excel";#get from form when more options are added
 
   if (!$c->user()) { 
@@ -71,6 +80,8 @@ sub upload_cross_file_POST : Args(0) {
     return;
   }
   $user_id = $c->user()->get_object()->get_sp_person_id();
+
+  $owner_name = $c->user()->get_object()->get_username();
 
   ## Store uploaded temporary file in archive
   $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
@@ -86,22 +97,109 @@ sub upload_cross_file_POST : Args(0) {
   $upload_metadata{'user_id'}=$user_id;
   $upload_metadata{'date'}="$timestamp";
 
+  #parse uploaded file with appropriate plugin
+  $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+  $parser->load_plugin('CrossesExcelFormat');
+  $parsed_data = $parser->parse();
 
-  ## Validate and parse uploaded file
-  $validate_file = $parser->validate($upload_file_type, $archived_filename_with_path);
-  if (!$validate_file) {
-    $c->stash->{rest} = {error => "File not valid: $upload_original_name",};
+  if (!$parsed_data) {
+    my $return_error = '';
+
+    if (! $parser->has_parse_errors() ){
+      $return_error = "Could not get parsing errors";
+      $c->stash->{rest} = {error_string => $return_error,};
+    }
+
+    else {
+      $parse_errors = $parser->get_parse_errors();
+      foreach my $error_string (@{$parse_errors}){
+	$return_error=$return_error.$error_string."<br>";
+      }
+    }
+
+    $c->stash->{rest} = {error_string => $return_error,};
     return;
   }
 
+  my $cross_add = CXGN::Pedigree::AddCrosses
+    ->new({
+	   chado_schema => $chado_schema,
+	   phenome_schema => $phenome_schema,
+	   metadata_schema => $metadata_schema,
+	   dbh => $dbh,
+	   location => $location,
+	   program => $program,
+	   crosses =>  $parsed_data->{crosses},
+	   owner_name => $owner_name,
+	  });
+
+  #validate the crosses
+  if (!$cross_add->validate_crosses()){
+    $c->stash->{rest} = {error_string => "Error validating crosses",};
+    return;
+  }
+
+  #add the crosses
+  if (!$cross_add->add_crosses()){
+    $c->stash->{rest} = {error_string => "Error adding crosses",};
+    return;
+  }
+
+  #add the progeny
+  foreach my $cross_name_key (keys %{$parsed_data->{progeny}}){
+    my $progeny_number = $parsed_data->{progeny}->{$cross_name_key};
+    my $progeny_increment = 1;
+    my @progeny_names;
+
+    #create array of progeny names to add for this cross
+    while ($progeny_increment < $progeny_number + 1) {
+      $progeny_increment = sprintf "%03d", $progeny_increment;
+      my $stock_name = $cross_name_key.$prefix.$progeny_increment.$suffix;
+      push @progeny_names, $stock_name;
+      $progeny_increment++;
+    }
+
+    #add array of progeny to the cross
+    my $progeny_add = CXGN::Pedigree::AddProgeny
+      ->new({
+	     chado_schema => $chado_schema,
+	     phenome_schema => $phenome_schema,
+	     dbh => $dbh,
+	     cross_name => $cross_name_key,
+	     progeny_names => \@progeny_names,
+	     owner_name => $owner_name,
+	    });
+    if (!$progeny_add->add_progeny()){
+      $c->stash->{rest} = {error_string => "Error adding progeny",};
+      #should delete crosses and other progeny if add progeny fails?
+      return;
+    }
+  }
+
+  #add the number of flowers to crosses
+  foreach my $cross_name_key (keys %{$parsed_data->{flowers}}) {
+    my $number_of_flowers = $parsed_data->{flowers}->{$cross_name_key};
+    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key} );
+    $cross_add_info->set_number_of_flowers($number_of_flowers);
+    $cross_add_info->add_info();
+  }
+
+  #add the number of seeds to crosses
+  foreach my $cross_name_key (keys %{$parsed_data->{seeds}}) {
+    my $number_of_seeds = $parsed_data->{seeds}->{$cross_name_key};
+    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key} );
+    $cross_add_info->set_number_of_seeds($number_of_seeds);
+    $cross_add_info->add_info();
+  }
 
   $c->stash->{rest} = {success => "1",};
+
 }
 
 
 sub add_cross : Local : ActionClass('REST') { }
 
-sub add_cross_POST :Args(0) { 
+sub add_cross_POST :Args(0) {
     my ($self, $c) = @_;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
