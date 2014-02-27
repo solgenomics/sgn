@@ -17,11 +17,15 @@ Jeremy Edwards <jde22@cornell.edu>
 package SGN::Controller::AJAX::Trial;
 
 use Moose;
-
-use List::MoreUtils qw /any /;
 use Try::Tiny;
 use Scalar::Util qw(looks_like_number);
+use DateTime;
+use File::Basename qw | basename dirname|;
+use File::Copy;
 use File::Slurp;
+use File::Spec::Functions;
+use Digest::MD5;
+use List::MoreUtils qw /any /;
 use Data::Dumper;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
@@ -31,6 +35,8 @@ use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
 use CXGN::BreedersToolbox::Delete;
+use CXGN::UploadFile;
+use CXGN::Trial::ParseUpload;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -310,6 +316,93 @@ sub _parse_design_from_json {
 
 ###################################################################################
 
+sub upload_trial_file : Path('/ajax/trial/upload_trial_file') : ActionClass('REST') { }
+
+sub upload_trial_file_POST : Args(0) {
+  my ($self, $c) = @_;
+  my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+  my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+  my $dbh = $c->dbc->dbh;
+  my $program = $c->req->param('trial_upload_breeding_program');
+  my $location = $c->req->param('trial_upload_location');
+  my $trial_name = $c->req->param('trial_upload_name');
+  my $trial_year = $c->req->param('trial_upload_year');
+  my $trial_description = $c->req->param('trial_upload_description');
+  my $trial_design_method = $c->req->param('trial_upload_design_method');
+  my $upload = $c->req->upload('trial_uploaded_file');
+  my $uploader = CXGN::UploadFile->new();
+  my $parser;
+  my $parsed_data;
+  my $upload_original_name = $upload->filename();
+  my $upload_tempfile = $upload->tempname;
+  my $subdirectory = "trial_upload";
+  my $archived_filename_with_path;
+  my $md5;
+  my $validate_file;
+  my $parsed_file;
+  my $parse_errors;
+  my %parsed_data;
+  my %upload_metadata;
+  my $time = DateTime->now();
+  my $timestamp = $time->ymd()."_".$time->hms();
+  my $user_id;
+  my $owner_name;
+
+  if (!$c->user()) { 
+    print STDERR "User not logged in... not adding a crosses.\n";
+    $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
+    return;
+  }
+  $user_id = $c->user()->get_object()->get_sp_person_id();
+
+  $owner_name = $c->user()->get_object()->get_username();
+
+  ## Store uploaded temporary file in archive
+  $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+  $md5 = $uploader->get_md5($archived_filename_with_path);
+  if (!$archived_filename_with_path) {
+      $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+      return;
+  }
+  unlink $upload_tempfile;
+
+  $upload_metadata{'archived_file'} = $archived_filename_with_path;
+  $upload_metadata{'archived_file_type'}="trial upload file";
+  $upload_metadata{'user_id'}=$user_id;
+  $upload_metadata{'date'}="$timestamp";
+
+  #parse uploaded file with appropriate plugin
+  $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+  $parser->load_plugin('TrialExcelFormat');
+  $parsed_data = $parser->parse();
+
+  if (!$parsed_data) {
+    my $return_error = '';
+
+    if (! $parser->has_parse_errors() ){
+      $return_error = "Could not get parsing errors";
+      $c->stash->{rest} = {error_string => $return_error,};
+    }
+
+    else {
+      $parse_errors = $parser->get_parse_errors();
+      foreach my $error_string (@{$parse_errors}){
+	$return_error=$return_error.$error_string."<br>";
+      }
+    }
+
+    $c->stash->{rest} = {error_string => $return_error,};
+    return;
+  }
+
+}
+
+
+
+
+###################################################################################
+##remove this soon.  using above instead
 sub upload_trial_layout :  Path('/trial/upload_trial_layout') : ActionClass('REST') { }
 
 sub upload_trial_layout_POST : Args(0) {
