@@ -74,6 +74,7 @@ sub _validate_with_plugin {
   }
   if (!$is_a_control_head || $is_a_control_head ne 'is_a_control') {
     push @errors, "Cell D1: is_a_control is missing from the header";
+  }
 
   for my $row ( 1 .. $row_max ) {
     my $row_name = $row+1;
@@ -114,7 +115,7 @@ sub _validate_with_plugin {
       }
       #file must not contain duplicate plot names
       if ($seen_plot_names{$plot_name}) {
-	push @errors, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$cross_name}.": $plot_name";
+	push @errors, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
       }
       $seen_plot_names{$plot_name}=$row_name;
     }
@@ -182,11 +183,11 @@ sub _parse_with_plugin {
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
   for my $row ( 1 .. $row_max ) {
-    my $plot_name_head;
-    my $accession_name_head;
-    my $plot_number_head;
-    my $block_number_head;
-    my $is_a_control_head;
+    my $plot_name;
+    my $accession_name;
+    my $plot_number;
+    my $block_number;
+    my $is_a_control;
 
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
