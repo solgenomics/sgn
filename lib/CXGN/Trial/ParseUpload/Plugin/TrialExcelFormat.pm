@@ -136,7 +136,7 @@ sub _validate_with_plugin {
     }
     #plot number must be a positive integer
     if (!($plot_number =~ /^\d+?$/)) {
-      push @errors, "Cell C$row_name: plot number is not an integer: $plot_number";
+      push @errors, "Cell C$row_name: plot number is not a positive integer: $plot_number";
     }
     #block number must not be blank
     if (!$block_number || $block_number eq '') {
@@ -144,7 +144,7 @@ sub _validate_with_plugin {
     }
     #block number must be a positive integer
     if (!($block_number =~ /^\d+?$/)) {
-      push @errors, "Cell D$row_name: block number is not an integer: $block_number";
+      push @errors, "Cell D$row_name: block number is not a positive integer: $block_number";
     }
     if ($is_a_control) {
       #is_a_control must be either yes, no 1, 0, or blank

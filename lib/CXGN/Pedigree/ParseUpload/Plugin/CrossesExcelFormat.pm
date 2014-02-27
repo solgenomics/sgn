@@ -175,13 +175,13 @@ sub _validate_with_plugin {
 
     #numbers of progeny, flowers, and seeds must be positive integers
     if ($number_of_progeny && !($number_of_progeny =~ /^\d+?$/)) {
-      push @errors, "Cell E$row_name: number of progeny is not an integer: $number_of_progeny";
+      push @errors, "Cell E$row_name: number of progeny is not a positive integer: $number_of_progeny";
     }
     if ($number_of_flowers && !($number_of_flowers =~ /^\d+?$/)) {
-      push @errors, "Cell F$row_name: number of flowers is not an integer: $number_of_flowers";
+      push @errors, "Cell F$row_name: number of flowers is not a positive integer: $number_of_flowers";
     }
     if ($number_of_seeds && !($number_of_seeds =~ /^\d+?$/)) {
-      push @errors, "Cell G$row_name: number of seeds is not an integer: $number_of_seeds";
+      push @errors, "Cell G$row_name: number of seeds is not a positive integer: $number_of_seeds";
     }
 
   }
