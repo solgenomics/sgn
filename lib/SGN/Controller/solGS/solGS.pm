@@ -143,17 +143,7 @@ sub search : Path('/solgs/search') Args() {
 
     $self->gs_traits_index($c);
     my $gs_traits_index = $c->stash->{gs_traits_index};
-    
-    # my $page = $c->req->param('page') || 1;
-    # my $project_rs = $c->model('solGS::solGS')->all_projects($page);
-    
-    # $self->projects_links($c, $project_rs);
-    # my $projects = $c->stash->{projects_pages};
-    # my $page_links       = sub {uri ( query => {  page => shift } ) };
-    # my $pager            =  $project_rs->pager;
-
-    # print STDERR "\nsearch : $projects->[0][0] : page - $page : pager - $pager - links - $page_links\n";
-    
+        
     my $query;
     if ($form->submitted_and_valid) 
     {
@@ -1843,7 +1833,6 @@ sub catalogue_combined_pops {
         my @intersect = intersect(@combo, @entries);
         unless( @intersect ) 
         {
-            print STDERR "\n entry 2: $entry $entry\n";
             write_file($file, {append => 1}, "\n" . "$entry");
         }
     }
