@@ -28,9 +28,23 @@ use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
 use CXGN::BreedersToolbox::Projects;
 
-has 'schema' => (
+has 'chado_schema' => (
 		 is       => 'rw',
 		 isa      => 'DBIx::Class::Schema',
+		 predicate => 'has_chado_schema',
+		 required => 1,
+		);
+has 'phenome_schema' => (
+		 is       => 'rw',
+		 isa      => 'DBIx::Class::Schema',
+		 predicate => 'has_phenome_schema',
+		 required => 1,
+		);
+has 'metadata_schema' => (
+		 is       => 'rw',
+		 isa      => 'DBIx::Class::Schema',
+		 predicate => 'has_metadata_schema',
+		 required => 0,
 		);
 has 'trial_year' => (isa => 'Str', is => 'rw', predicate => 'has_trial_year', clearer => 'clear_trial_year');
 has 'trial_description' => (isa => 'Str', is => 'rw', predicate => 'has_trial_description', clearer => 'clear_trial_description');

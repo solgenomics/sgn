@@ -121,7 +121,7 @@ sub generate_experimental_design_POST : Args(0) {
   }
 
   my $trial_name;
-  my $trial_create = CXGN::Trial::TrialCreate->new(schema => $schema);
+  my $trial_create = CXGN::Trial::TrialCreate->new(chado_schema => $schema);
   $trial_create->set_trial_year($c->req->param('year'));
   $trial_create->set_trial_location($c->req->param('trial_location'));
   if ($trial_create->trial_name_already_exists()) {
@@ -205,7 +205,7 @@ sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : Ac
 sub save_experimental_design_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my $trial_create = new CXGN::Trial::TrialCreate(schema => $schema);
+  my $trial_create = new CXGN::Trial::TrialCreate(chado_schema => $schema);
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
     return;
@@ -400,7 +400,7 @@ sub upload_trial_file_POST : Args(0) {
 
   my $trial_create = CXGN::Trial::TrialCreate
     ->new({
-	   schema => $chado_schema,
+	   chado_schema => $chado_schema,
 	   trial_year => $trial_year,
 	   trial_description => $trial_description,
 	   trial_location => $trial_location,
