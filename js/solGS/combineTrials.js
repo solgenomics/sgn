@@ -50,6 +50,8 @@ function removeSelectedTrial() {
             jQuery("#selected_trials").hide();
             jQuery("#combine").hide();
             jQuery("#search_again").hide();
+            jQuery("#done_selecting input").val('Combine');
+            
             searchAgain();
         }
     });
