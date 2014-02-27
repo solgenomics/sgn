@@ -32,7 +32,7 @@ sub _validate_with_plugin {
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
   if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
-    push @errors, "Spreadsheet is missing header";
+    push @errors, "Spreadsheet is missing header or contains no rows";
     $self->_set_parse_errors(\@errors);
     return;
   }
@@ -72,8 +72,8 @@ sub _validate_with_plugin {
   if (!$block_number_head || $block_number_head ne 'block_number') {
     push @errors, "Cell D1: block_number is missing from the header";
   }
-  if (!$is_a_control_head || $is_a_control_head ne 'is_a_control') {
-    push @errors, "Cell D1: is_a_control is missing from the header";
+  if ($is_a_control_head && $is_a_control_head ne 'is_a_control') {
+    push @errors, "Cell D1: Column D should contain the header \"is_a_control\"";
   }
 
   for my $row ( 1 .. $row_max ) {
@@ -146,11 +146,12 @@ sub _validate_with_plugin {
     if (!($block_number =~ /^\d+?$/)) {
       push @errors, "Cell D$row_name: block number is not an integer: $block_number";
     }
-    #is_a_control must be either yes, no 1, 0, or blank
-    if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
-      push @errors, "Cell E$row_name: is_a_control is not either yes, no 1, 0, or blank: $is_a_control";
+    if ($is_a_control) {
+      #is_a_control must be either yes, no 1, 0, or blank
+      if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
+	push @errors, "Cell E$row_name: is_a_control is not either yes, no 1, 0, or blank: $is_a_control";
+      }
     }
-
   }
 
   #store any errors found in the parsed file to parse_errors accessor
@@ -215,8 +216,11 @@ sub _parse_with_plugin {
     $design{$key}->{stock_name} = $accession_name;
     $design{$key}->{plot_number} = $plot_number;
     $design{$key}->{block_number} = $block_number;
-    $design{$key}->{is_a_control} = $is_a_control;
-
+    if ($is_a_control) {
+      $design{$key}->{is_a_control} = 1;
+    } else {
+      $design{$key}->{is_a_control} = 0;
+    }
   }
 
   $self->_set_parsed_data(\%design);
