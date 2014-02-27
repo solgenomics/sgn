@@ -31,8 +31,6 @@ use Spreadsheet::WriteExcel;
 use SGN::View::Trial qw/design_layout_view design_info_view/;
 use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
-use CXGN::Trial::TrialCreate;
-use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialLayout;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
