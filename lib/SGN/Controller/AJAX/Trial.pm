@@ -325,7 +325,7 @@ sub upload_trial_file_POST : Args(0) {
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
   my $dbh = $c->dbc->dbh;
   my $program = $c->req->param('trial_upload_breeding_program');
-  my $location = $c->req->param('trial_upload_location');
+  my $trial_location = $c->req->param('trial_upload_location');
   my $trial_name = $c->req->param('trial_upload_name');
   my $trial_year = $c->req->param('trial_upload_year');
   my $trial_description = $c->req->param('trial_upload_description');
@@ -348,6 +348,7 @@ sub upload_trial_file_POST : Args(0) {
   my $timestamp = $time->ymd()."_".$time->hms();
   my $user_id;
   my $owner_name;
+  my $error;
 
   if (!$c->user()) { 
     print STDERR "User not logged in... not adding a crosses.\n";
@@ -395,6 +396,29 @@ sub upload_trial_file_POST : Args(0) {
     $c->stash->{rest} = {error_string => $return_error,};
     return;
   }
+
+
+  my $trial_create = CXGN::Trial::TrialCreate
+    ->new({
+	   schema => $chado_schema,
+	   trial_year => $trial_year,
+	   trial_description => $trial_description,
+	   trial_location => $trial_location,
+	   user => $owner_name, #not implemented
+	   design_type => $trial_design_method,
+	   design => $parsed_data,
+	   breeding_program_id => $program,
+	  });
+
+#  try {
+    $trial_create->save_trial();
+ # } catch {
+#    $c->stash->{rest} = {error => "Error saving trial in the database $_"};
+#    $error = 1;
+#  };
+  if ($error) {return;}
+  $c->stash->{rest} = {success => "1",};
+  return;
 
 }
 

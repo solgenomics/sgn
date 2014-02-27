@@ -31,15 +31,14 @@ use CXGN::BreedersToolbox::Projects;
 has 'schema' => (
 		 is       => 'rw',
 		 isa      => 'DBIx::Class::Schema',
-		 lazy_build => 1,
 		);
 has 'trial_year' => (isa => 'Str', is => 'rw', predicate => 'has_trial_year', clearer => 'clear_trial_year');
 has 'trial_description' => (isa => 'Str', is => 'rw', predicate => 'has_trial_description', clearer => 'clear_trial_description');
 has 'trial_location' => (isa => 'Str', is => 'rw', predicate => 'has_trial_location', clearer => 'clear_trial_location');
-has 'user' => (isa => 'Str', is => 'rw', predicate => 'has_user', clearer => 'clear_user');
+has 'user' => (isa => 'Str', is => 'rw', predicate => 'has_user', clearer => 'clear_user'); #not implemented
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
-has 'stock_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_stock_list', clearer => 'clear_stock_list');
-has 'control_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_control_list', clearer => 'clear_control_list');
+has 'stock_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_stock_list', clearer => 'clear_stock_list'); #remove?
+has 'control_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_control_list', clearer => 'clear_control_list'); #remove?
 has 'design' => (isa => 'HashRef[HashRef[Str]]', is => 'rw', predicate => 'has_design', clearer => 'clear_design');
 has 'breeding_program_id' => (isa => 'Int', is => 'rw', predicate => 'has_breeding_program_id', clearer => 'clear_breeding_program_id');
 
