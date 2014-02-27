@@ -2329,25 +2329,15 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     
     my $pops_ids = $c->req->param('combined_populations');
    
-    if($pops_ids)
+    if ($pops_ids)
     {
         $c->stash->{trait_combo_pops} = $pops_ids;
     }
     else
     {
-        $self->combined_pops_catalogue_file($c);
-        my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
-    
-        my @combos = read_file($combo_pops_catalogue_file);
-    
-        foreach (@combos)
-        {
-            if ($_ =~ m/$combo_pops_id/)
-            {
-                my ($identifier, $pops)  = split(/\t/, $_);
-                $c->stash->{trait_combo_pops} = $pops;        
-            }   
-        }
+        $self->get_combined_pops_list($c, $combo_pops_id);
+        $pops_ids = $c->stash->{combined_pops_list};
+        $c->stash->{trait_combo_pops} = $pops_ids; 
     }
 
     $self->get_trait_name($c, $trait_id);
