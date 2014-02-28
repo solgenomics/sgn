@@ -171,10 +171,11 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
         my $project_desc = $c->stash->{project_desc};
         
         
-        my @model_desc = ([qq | <a href="/solgs/combined/populations/$combo_pops_id">$project_name</a> |, $project_desc, \@traits_pages]);
+        my @model_desc = ([qq | <a href="/solgs/populations/combined/$combo_pops_id">$project_name</a> |, $project_desc, \@traits_pages]);
         $c->stash->{model_data} = \@model_desc;
         $solgs_controller->get_acronym_pairs($c);
     }
+    
 
 }
 
