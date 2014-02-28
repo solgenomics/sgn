@@ -2072,22 +2072,11 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
          my $trait_id   = $c->model('solGS::solGS')->get_trait_id($trait_name);
          my $trait_abbr = $c->stash->{trait_abbr}; 
         
-         my $dir = $c->stash->{solgs_cache_dir};
-         opendir my $dh, $dir or die "can't open $dir: $!\n";
-    
-         my ($validation_file)  = grep { /cross_validation_${trait_abbr}_${pop_id}/ && -f "$dir/$_" } 
-                                readdir($dh);   
-         closedir $dh; 
+         $self->get_model_accuracy_value($c, $pop_id);
+         my $accuracy_value = $c->stash->{accuracy_value};
         
-         my $validation_file = catfile($dir, $validation_file);
-         
-         my @accuracy_value = grep {/Average/} read_file($validation_file);
-         @accuracy_value    = split(/\t/,  $accuracy_value[0]);
-
-         if (-s $validation_file > 1)
-         {
-             push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value[1] ];
-         }
+         push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value ];
+       
      }
   
      $self->project_description($c, $pop_id);
