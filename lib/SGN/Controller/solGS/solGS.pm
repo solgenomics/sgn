@@ -2351,6 +2351,28 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
 }
 
 
+sub get_model_accuracy_value {
+  my ($self, $c, $model_id) = @_;
+
+  my $trait_abbr = $c->stash->{trait_abbr};
+  
+  my $dir = $c->stash->{solgs_cache_dir};
+  opendir my $dh, $dir or die "can't open $dir: $!\n";
+    
+  my ($validation_file)  = grep { /cross_validation_${trait_abbr}_${model_id}/ && -f "$dir/$_" } 
+                                readdir($dh);   
+  closedir $dh; 
+        
+  my $validation_file = catfile($dir, $validation_file);
+         
+  my ($row) = grep {/Average/} read_file($validation_file);
+  my ($text, $accuracy_value)    = split(/\t/,  $row);
+ 
+  $c->stash->{accuracy_value} = $accuracy_value;
+  
+}
+
+
 sub get_project_owners {
     my ($self, $c, $pr_id) = @_;
 
@@ -2944,19 +2966,17 @@ sub analyzed_traits {
     
     my @traits;
     foreach my $trait_file  (@traits_files) 
-    {          
+    {   
+
         my $trait_file_path = catfile($dir, $trait_file);
        
         if (-s $trait_file_path > 1) 
         { 
             my $trait = $trait_file;
             $trait =~ s/gebv_kinship_//;
-            $trait =~ s/$model_id|_//g;
-           
-            unless ($trait =~ /combined/)
-            {  
-                push @traits, $trait;  
-            }
+            $trait =~ s/$model_id|_|combined_pops//g;
+         
+            push @traits, $trait;
         }      
         else 
         {
