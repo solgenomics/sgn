@@ -54,7 +54,7 @@ ROW
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 
- <form action="/solgs/analyze/traits/population/<% $combo_pops_id %>" method="POST">
+ <form action="/solgs/models/combined/trials/<% $combo_pops_id %>" method="POST">
   <table>
    <% $trait_rows %>
      <tr>
