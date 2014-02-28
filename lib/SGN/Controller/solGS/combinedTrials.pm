@@ -123,6 +123,62 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args(3) {
 }
 
 
+sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
+    my ($self, $c, $combo_pops_id) = @_;
+    
+    $c->stash->{combo_pops_id} = $combo_pops_id;
+    $c->stash->{model_id} = $combo_pops_id;
+
+    my @traits_ids = $c->req->param('trait_id');
+    my @traits_pages;
+
+    my $solgs_controller = $c->controller('solGS::solGS');
+
+    if (scalar(@traits_ids) == 1) 
+    {
+        my $trait_id = $traits_ids[0];
+        $c->res->redirect("/solgs/model/combined/trials/$combo_pops_id/trait/$trait_id");
+        $c->detach();
+    }
+    elsif (scalar(@traits_ids) > 1) 
+    {
+        foreach my $trait_id (@traits_ids) 
+        {
+            $c->stash->{trait_id} = $trait_id;
+            $self->build_model_combined_trials_trait($c);
+            $solgs_controller->get_trait_name($c, $trait_id);
+            my $tr_abbr = $c->stash->{trait_abbr};
+
+            $solgs_controller->get_model_accuracy_value($c, $combo_pops_id);
+            my $accuracy_value = $c->stash->{accuracy_value};
+            
+            push @traits_pages, 
+            [ qq | <a href="/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id" onclick="solGS.waitPage()">$tr_abbr</a>|, $accuracy_value ];
+
+        }
+        
+        $solgs_controller->list_of_prediction_pops($c, $combo_pops_id);
+        $solgs_controller->analyzed_traits($c);
+
+        my $analyzed_traits = $c->stash->{analyzed_traits};
+       
+        $c->stash->{trait_pages}  = \@traits_pages;
+        $c->stash->{template}     = $solgs_controller->template('/population/combined/multiple_traits_output.mas');
+       
+        $self->combined_trials_desc($c);
+        
+        my $project_name = $c->stash->{project_name};
+        my $project_desc = $c->stash->{project_desc};
+        
+        
+        my @model_desc = ([qq | <a href="/solgs/combined/populations/$combo_pops_id">$project_name</a> |, $project_desc, \@traits_pages]);
+        $c->stash->{model_data} = \@model_desc;
+        $solgs_controller->get_acronym_pairs($c);
+    }
+
+}
+
+
 sub build_model_combined_trials_trait {
     my ($self, $c) = @_;
     
