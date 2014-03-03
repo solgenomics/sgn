@@ -101,6 +101,7 @@ sub generate_experimental_design_POST : Args(0) {
   my $start_number =  $c->req->param('start_number');
   my $increment =  $c->req->param('increment');
   my $trial_location = $c->req->param('trial_location');
+  my $trial_name = $c->req->param('project_name');
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
 
   if (!$c->user()) {
@@ -120,7 +121,6 @@ sub generate_experimental_design_POST : Args(0) {
     return;
   }
 
-  my $trial_name;
   # my $trial_create = CXGN::Trial::TrialCreate->new(chado_schema => $schema);
   # $trial_create->set_trial_year($c->req->param('year'));
   # $trial_create->set_trial_location($c->req->param('trial_location'));
@@ -128,6 +128,8 @@ sub generate_experimental_design_POST : Args(0) {
   #   $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
   #   return;
   # }
+
+  $trial_design->set_trial_name($trial_name);
 
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
@@ -222,22 +224,24 @@ sub save_experimental_design_POST : Args(0) {
 
   my $user_name = $c->user()->get_object()->get_username();
 
-
+  print STDERR "\nUserName: $user_name\n\n";
   my $error;
+
+  my $design = _parse_design_from_json($c->req->param('design_json'));
 
   my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $chado_schema,
 	   phenome_schema => $phenome_schema,
 	   dbh => $dbh,
+	   user_name => $user_name,
+	   design => $design,
 	   program => $c->req->param('breeding_program_name'),
 	   trial_year => $c->req->param('year'),
 	   trial_description => $c->req->param('project_description'),
 	   trial_location => $c->req->param('trial_location'),
-	   trial_name => $c->req->param('trial_name'),
-	   user_name => $user_name, #not implemented
+	   trial_name => $c->req->param('project_name'),
 	   design_type => $c->req->param('design_type'),
-	   design => _parse_design_from_json($c->req->param('design_json')),
 	  });
 
   #$trial_create->set_user($c->user()->id());

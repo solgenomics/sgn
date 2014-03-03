@@ -21,9 +21,6 @@ $breeding_programs
 
 <div id="add_project_dialog" class="ui-widget">
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
-    <label for="add_project_name" style="display: none; inline-block; width: 100px;">Trial name:</label>
-    <input id="add_project_name" name="add_project_name" style="display: none" />
-    <br>
     <label for="new_trial_name" style="display: inline-block; width: 100px;">Trial name:</label>
     <input id="new_trial_name" name="new_trial_name" />
     <br>

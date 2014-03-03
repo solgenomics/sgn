@@ -75,7 +75,7 @@ jQuery(document).ready(function ($) {
     }
 
     function generate_experimental_design() {
-        var name = $('#add_project_name').val();
+        var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
         var desc = $('#add_project_description').val();
         var trial_location = $('#add_project_location').val();
@@ -98,10 +98,16 @@ jQuery(document).ready(function ($) {
 	var start_number = $('#start_number').val();
 	var increment = $('#increment').val();
 	//var stock_verified = verify_stock_list(stock_list);
+        if (name == '') {
+            alert('Trial name required');
+            return;
+        }
+
         if (desc == '' || year == '') {
             alert('Year and description are required.');
             return;
         }
+
 
         $.ajax({
             type: 'POST',
@@ -152,10 +158,14 @@ jQuery(document).ready(function ($) {
                 $('#add_project_dialog').dialog("close");
             },
             "Add": function () {
-                var name = $('#add_project_name').val();
+                var name = $('#new_trial_name').val();
                 var year = $('#add_project_year').val();
                 var desc = $('textarea#add_project_description').val();
                 var method_to_use = $('.format_type:checked').val();
+		if (name == '') {
+		    alert('Trial name required');
+		    return;
+		}
                 if (year === '' || desc === '') {
                     alert('Year and description are required.');
                     return;
@@ -175,7 +185,8 @@ jQuery(document).ready(function ($) {
                     $("#create_new_trial_form").submit();
                 }
                 if (method_to_use == "create_with_design_tool") {
-		    generate_experimental_design(name,year,desc);
+		    //generate_experimental_design(name,year,desc);
+		    generate_experimental_design();
 		}
                 //$( this).dialog("close"); 
                 //location.reload();
@@ -272,7 +283,7 @@ jQuery(document).ready(function ($) {
 
  function save_experimental_design(design_json) {
      $('#trial_saving_dialog').dialog("open");
-        var name = $('#add_project_name').val();
+        var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
         var desc = $('#add_project_description').val();
         var trial_location = $('#add_project_location').val();
@@ -295,7 +306,7 @@ jQuery(document).ready(function ($) {
 	var start_number = $('#start_number').val();
 	var increment = $('#increment').val();
 	var breeding_program_name = $('#select_breeding_program').val();
-	var trial_name = $('#new_trial_name').val();
+
 	//var stock_verified = verify_stock_list(stock_list);
         if (desc == '' || year == '') {
             alert('Year and description are required.');
@@ -308,7 +319,7 @@ jQuery(document).ready(function ($) {
             data: {
                 'project_name': name,
                 'project_description': desc,
-                'trial_name': trial_name,
+                //'trial_name': trial_name,
                 'year': year,
                 'trial_location': trial_location,
                 'stock_list': stock_list,
