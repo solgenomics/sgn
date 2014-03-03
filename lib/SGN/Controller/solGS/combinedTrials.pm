@@ -131,9 +131,15 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
 
     my @traits_ids = $c->req->param('trait_id');
     my @traits_pages;
-
+  
     my $solgs_controller = $c->controller('solGS::solGS');
 
+    if(!@traits_ids)
+    {
+        $solgs_controller->analyzed_traits($c);
+        @traits_ids = @{ $c->stash->{analyzed_traits_ids} }; 
+    }
+    
     if (scalar(@traits_ids) == 1) 
     {
         my $trait_id = $traits_ids[0];
@@ -145,10 +151,11 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
         foreach my $trait_id (@traits_ids) 
         {
             $c->stash->{trait_id} = $trait_id;
-            $self->build_model_combined_trials_trait($c);
             $solgs_controller->get_trait_name($c, $trait_id);
             my $tr_abbr = $c->stash->{trait_abbr};
 
+            $self->build_model_combined_trials_trait($c);
+           
             $solgs_controller->get_model_accuracy_value($c, $combo_pops_id);
             my $accuracy_value = $c->stash->{accuracy_value};
             
@@ -173,6 +180,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
         
         my @model_desc = ([qq | <a href="/solgs/populations/combined/$combo_pops_id">$project_name</a> |, $project_desc, \@traits_pages]);
         $c->stash->{model_data} = \@model_desc;
+        $c->stash->{pop_id} = $combo_pops_id;
         $solgs_controller->get_acronym_pairs($c);
     }
     
@@ -182,16 +190,25 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
 
 sub build_model_combined_trials_trait {
     my ($self, $c) = @_;
+  
+    my $solgs_controller = $c->controller('solGS::solGS');
+    $c->stash->{data_set_type} = 'combined populations';
     
-    $self->combine_trait_data($c);
+    $solgs_controller->gebv_kinship_file($c);
+    my $gebv_file = $c->stash->{gebv_kinship_file};
 
-    my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
-    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+    unless  ( -s $gebv_file ) 
+    {
+    
+        $self->combine_trait_data($c);
+    
+        my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
+        my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
         
-    if (-s $combined_pops_pheno_file  && -s $combined_pops_geno_file ) 
-    { 
-        $c->stash->{data_set_type} = 'combined populations';                
-        $c->controller('solGS::solGS')->get_rrblup_output($c); 
+        if (-s $combined_pops_pheno_file  && -s $combined_pops_geno_file ) 
+        { 
+            $c->controller('solGS::solGS')->get_rrblup_output($c); 
+        }
     }
 }
 
