@@ -78,6 +78,22 @@ jQuery(document).ready(function ($) {
 	autoResize:true,
     });
 
+    $( "#trial_upload_success_dialog_message" ).dialog({
+	autoOpen: false,
+	modal: true,
+	buttons: {
+            Ok: { id: "dismiss_trial_upload_dialog",
+                  click: function() {
+		      $("#upload_trial_form").dialog("close");
+		      $( this ).dialog( "close" );
+		      location.reload();
+                  },
+                  text: "OK"
+                }
+        }
+	
+    });
+
     $('#upload_trial_form').iframePostForm({
 	json: true,
 	post: function () {
@@ -111,7 +127,8 @@ jQuery(document).ready(function ($) {
 		return;
             }
             if (response.success) {
-		alert("File uploaded successfully");
+		$('#trial_upload_success_dialog_message').dialog("open");
+		//alert("File uploaded successfully");
             }
 	}
     });

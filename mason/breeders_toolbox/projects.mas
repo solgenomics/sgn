@@ -229,3 +229,10 @@ background-color: #ccc;
   <&| /breeders_toolbox/trial/trial_spreadsheet_upload_format_info.mas &>
   </&>
 </div>
+
+<div id="trial_upload_success_dialog_message" title="Trial file uploaded">
+  <p>
+    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    The trial file was uploaded successfully
+  </p>
+</div>
