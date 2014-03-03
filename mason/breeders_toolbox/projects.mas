@@ -24,6 +24,9 @@ $breeding_programs
     <label for="add_project_name" style="display: none; inline-block; width: 100px;">Trial name:</label>
     <input id="add_project_name" name="add_project_name" style="display: none" />
     <br>
+    <label for="new_trial_name" style="display: inline-block; width: 100px;">Trial name:</label>
+    <input id="new_trial_name" name="new_trial_name" />
+    <br>
     <label for="add_project_year" style="display: inline-block; width: 100px;">Year(s):</label>
     <input id="add_project_year" name="add_project_year" />
     <br>
@@ -38,7 +41,7 @@ $breeding_programs
     <select id="select_breeding_program" name="select_breeding_program">
       <%perl>
       foreach my $program (@$breeding_programs) {
-         print "<option value=".@$program[0].">".@$program[1]."</option>";
+         print "<option value=".@$program[1].">".@$program[1]."</option>";
       }
       </%perl>
     </select>
@@ -181,7 +184,7 @@ background-color: #ccc;
     <select id="trial_upload_breeding_program" name="trial_upload_breeding_program">
       <%perl>
       foreach my $program (@$breeding_programs) {
-         print "<option value=".@$program[0].">".@$program[1]."</option>";
+         print "<option value=".@$program[1].">".@$program[1]."</option>";
       }
       </%perl>
     </select>

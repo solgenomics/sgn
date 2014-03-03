@@ -121,13 +121,13 @@ sub generate_experimental_design_POST : Args(0) {
   }
 
   my $trial_name;
-  my $trial_create = CXGN::Trial::TrialCreate->new(chado_schema => $schema);
-  $trial_create->set_trial_year($c->req->param('year'));
-  $trial_create->set_trial_location($c->req->param('trial_location'));
-  if ($trial_create->trial_name_already_exists()) {
-    $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
-    return;
-  }
+  # my $trial_create = CXGN::Trial::TrialCreate->new(chado_schema => $schema);
+  # $trial_create->set_trial_year($c->req->param('year'));
+  # $trial_create->set_trial_location($c->req->param('trial_location'));
+  # if ($trial_create->trial_name_already_exists()) {
+  #   $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
+  #   return;
+  # }
 
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
@@ -204,8 +204,12 @@ sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : Ac
 
 sub save_experimental_design_POST : Args(0) {
   my ($self, $c) = @_;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my $trial_create = new CXGN::Trial::TrialCreate(chado_schema => $schema);
+  #my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+  my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+  my $dbh = $c->dbc->dbh;
+  #my $trial_create = new CXGN::Trial::TrialCreate(chado_schema => $schema);
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
     return;
@@ -214,19 +218,39 @@ sub save_experimental_design_POST : Args(0) {
     $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
     return;
   }
+  my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+  my $user_name = $c->user()->get_object()->get_username();
+
+
   my $error;
 
-  $trial_create->set_user($c->user()->id());
-  $trial_create->set_trial_year($c->req->param('year'));
-  $trial_create->set_trial_location($c->req->param('trial_location'));
-  $trial_create->set_trial_description($c->req->param('project_description'));
-  $trial_create->set_design_type($c->req->param('design_type'));
-  $trial_create->set_breeding_program_id($c->req->param('breeding_program_id'));
-  $trial_create->set_design(_parse_design_from_json($c->req->param('design_json')));
-  $trial_create->set_stock_list(_parse_list_from_json($c->req->param('stock_list')));
-  if ($c->req->param('control_list')) {
-    $trial_create->set_control_list(_parse_list_from_json($c->req->param('control_list')));
-  }
+  my $trial_create = CXGN::Trial::TrialCreate
+    ->new({
+	   chado_schema => $chado_schema,
+	   phenome_schema => $phenome_schema,
+	   dbh => $dbh,
+	   program => $c->req->param('breeding_program_name'),
+	   trial_year => $c->req->param('year'),
+	   trial_description => $c->req->param('project_description'),
+	   trial_location => $c->req->param('trial_location'),
+	   trial_name => $c->req->param('trial_name'),
+	   user_name => $user_name, #not implemented
+	   design_type => $c->req->param('design_type'),
+	   design => _parse_design_from_json($c->req->param('design_json')),
+	  });
+
+  #$trial_create->set_user($c->user()->id());
+  #$trial_create->set_trial_year($c->req->param('year'));
+  #$trial_create->set_trial_location($c->req->param('trial_location'));
+  #$trial_create->set_trial_description($c->req->param('project_description'));
+  #$trial_create->set_design_type($c->req->param('design_type'));
+  #$trial_create->set_breeding_program_id($c->req->param('breeding_program_name'));
+  #$trial_create->set_design(_parse_design_from_json($c->req->param('design_json')));
+  #$trial_create->set_stock_list(_parse_list_from_json($c->req->param('stock_list')));
+  # if ($c->req->param('control_list')) {
+  #   $trial_create->set_control_list(_parse_list_from_json($c->req->param('control_list')));
+  # }
   if ($trial_create->trial_name_already_exists()) {
     $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
     return;
@@ -347,7 +371,7 @@ sub upload_trial_file_POST : Args(0) {
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
   my $user_id;
-  my $owner_name;
+  my $user_name;
   my $error;
 
   if (!$c->user()) { 
@@ -355,9 +379,14 @@ sub upload_trial_file_POST : Args(0) {
     $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
     return;
   }
+  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
+    return;
+  }
+
   $user_id = $c->user()->get_object()->get_sp_person_id();
 
-  $owner_name = $c->user()->get_object()->get_username();
+  $user_name = $c->user()->get_object()->get_username();
 
   ## Store uploaded temporary file in archive
   $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
@@ -401,13 +430,17 @@ sub upload_trial_file_POST : Args(0) {
   my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $chado_schema,
+	   phenome_schema => $phenome_schema,
+	   dbh => $dbh,
 	   trial_year => $trial_year,
 	   trial_description => $trial_description,
 	   trial_location => $trial_location,
-	   user => $owner_name, #not implemented
+	   trial_name => $trial_name,
+	   user_name => $user_name, #not implemented
 	   design_type => $trial_design_method,
 	   design => $parsed_data,
-	   breeding_program_id => $program,
+	   program => $program,
+	   upload_trial_file => $upload,
 	  });
 
 #  try {

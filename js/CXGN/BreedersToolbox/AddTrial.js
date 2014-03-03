@@ -294,7 +294,8 @@ jQuery(document).ready(function ($) {
 	var plot_prefix = $('#plot_prefix').val();
 	var start_number = $('#start_number').val();
 	var increment = $('#increment').val();
-	var breeding_program_id = $('#select_breeding_program').val();
+	var breeding_program_name = $('#select_breeding_program').val();
+	var trial_name = $('#new_trial_name').val();
 	//var stock_verified = verify_stock_list(stock_list);
         if (desc == '' || year == '') {
             alert('Year and description are required.');
@@ -307,6 +308,7 @@ jQuery(document).ready(function ($) {
             data: {
                 'project_name': name,
                 'project_description': desc,
+                'trial_name': trial_name,
                 'year': year,
                 'trial_location': trial_location,
                 'stock_list': stock_list,
@@ -320,7 +322,7 @@ jQuery(document).ready(function ($) {
 		'start_number': start_number,
 		'increment': increment,
 		'design_json': design_json,
-                'breeding_program_id': breeding_program_id,
+                'breeding_program_name': breeding_program_name,
             },
             success: function (response) {
                 if (response.error) {
