@@ -596,9 +596,9 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     
     my $page = $c->req->referer();
 
-    if ($page =~ /solgs\/model\/combined\/populations/ || $model_id =~ 'combined')
+    if ($page =~ /solgs\/model\/combined\/populations/ || $page =~ /solgs\/models\/combined\/trials/  || $model_id =~ /combined/)
     {
-        $model_id =~ s/combined_//;
+        $model_id =~ s/combined_//g;
        
         $c->stash->{pop_id} = $model_id;
         $self->combined_pops_catalogue_file($c);
@@ -1137,10 +1137,10 @@ sub prediction_population :Path('/solgs/model') Args(3) {
     $referer    =~ s/$base//;
     my $path    = $c->req->path;
     $path       =~ s/$base//;
-    my $page    = "solgs/model/combined/populations/";
-    
-    if ($referer =~ m/$page/)
-    {
+    my $page    = 'solgs/model/combined/populations/';
+  
+    if ($referer =~ /$page/)
+    {   
         $model_id =~ s/combined_//;
         my ($combo_pops_id, $trait_id) = $referer =~ m/(\d+)/g;
 
@@ -1190,7 +1190,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
     }
     elsif ($referer =~ /solgs\/trait\//) 
     {
-         my ($trait_id, $pop_id) = $referer =~ m/(\d+)/g;
+        my ($trait_id, $pop_id) = $referer =~ m/(\d+)/g;
 
         $c->stash->{data_set_type}     = "single population"; 
         $c->stash->{pop_id}            = $pop_id;
@@ -1235,12 +1235,59 @@ sub prediction_population :Path('/solgs/model') Args(3) {
          $c->detach();
            
     }
+    elsif ($referer =~ /solgs\/models\/combined\/trials/) 
+    { 
+        my ($model_id, $prediction_pop_id) = $path =~ m/(\d+)/g;
+
+        $c->stash->{data_set_type}     = "combined populations"; 
+        # $c->stash->{pop_id}            = $model_id;
+        $c->stash->{model_id}          = $model_id;  
+        $c->stash->{combo_pops_id}        = $model_id;
+        $c->stash->{prediction_pop_id} = $prediction_pop_id;  
+        
+        $self->analyzed_traits($c);
+        my @traits_ids = @{ $c->stash->{analyzed_traits_ids} };
+
+        foreach my $trait_id (@traits_ids) 
+        {            
+            $self->get_trait_name($c, $trait_id);
+            my $trait_abbr = $c->stash->{trait_abbr};
+
+            my $identifier = $model_id . '_' . $prediction_pop_id;
+            $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+        
+            my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+             
+            if (! -s $prediction_pop_gebvs_file)
+            {
+                my $dir = $c->stash->{solgs_cache_dir};
+                
+                $self->cache_combined_pops_data($c);
+ 
+                my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
+                my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+             
+                $c->stash->{pheno_file} = $combined_pops_pheno_file;
+                $c->stash->{geno_file}  = $combined_pops_geno_file;
+
+                $c->stash->{prediction_pop_id} = $prediction_pop_id;
+                $self->prediction_population_file($c, $prediction_pop_id);
+                
+                $c->forward('get_rrblup_output'); 
+               
+             }
+         }
+         
+   
+        $c->res->redirect("/solgs/models/combined/trials/$model_id");
+        $c->detach();
+    }
     else 
     {
         $c->res->redirect("/solgs/analyze/traits/population/$model_id/$prediction_pop_id");
         $c->detach();
     }
-   
+ 
 }
 
 
@@ -1431,7 +1478,7 @@ sub download_prediction_urls {
 
         if  ($c->stash->{data_set_type} =~ /combined/) 
         {  
-                $training_pop_id = 'combined_' . $training_pop_id;
+            # $training_pop_id = 'combined_' . $training_pop_id;
         }
         
         #qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$prediction_pop_id/$trait_id">$trait_abbr</a> |
@@ -2954,6 +3001,8 @@ sub analyzed_traits {
     my @traits_files = grep {/($model_id)/} @all_files;
     
     my @traits;
+    my @traits_ids;
+
     foreach my $trait_file  (@traits_files) 
     {   
 
@@ -2964,8 +3013,24 @@ sub analyzed_traits {
             my $trait = $trait_file;
             $trait =~ s/gebv_kinship_//;
             $trait =~ s/$model_id|_|combined_pops//g;
-         
+
+            my $acronym_pairs = $self->get_acronym_pairs($c);                   
+            if ($acronym_pairs)
+            {
+                foreach my $r (@$acronym_pairs) 
+                {
+                    if ($r->[0] eq $trait) 
+                    {
+                        my $trait_name =  $r->[1];
+                        $trait_name    =~ s/\n//g;                                
+                        my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
+                        push @traits_ids, $trait_id;
+                    }
+                }
+            }
+
             push @traits, $trait;
+          
         }      
         else 
         {
@@ -2974,6 +3039,7 @@ sub analyzed_traits {
     }
         
     $c->stash->{analyzed_traits} = \@traits;
+    $c->stash->{analyzed_traits_ids} = \@traits_ids;
     $c->stash->{analyzed_traits_files} = \@traits_files;
    
 }
