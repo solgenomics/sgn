@@ -61,7 +61,6 @@ jQuery(document).ready(function ($) {
                 $('#upload_trial_dialog').dialog("close");
             },
 	    "Ok": function () {
-		alert("adding trial not yet supported");
 		upload_trial_file();
 	    },
 	}
