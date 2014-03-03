@@ -49,14 +49,14 @@ sub get_trials_by_breeding_program {
 
     my $dbh = $self->schema->storage->dbh();
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
-        
+    my $cross_cvterm_id = $self->get_cross_cvterm_id();
     my $trials = [];
     my $h;
     if ($breeding_project_id) { 
 	# need to convert to dbix class.... good luck!
-	my $q = "SELECT trial.project_id, trial.name, trial.description FROM project LEFT join project_relationship ON (project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) WHERE project.project_id=?";
+	my $q = "SELECT trial.project_id, trial.name, trial.description FROM project JOIN projectprop USING (project_id) LEFT join project_relationship ON (project_relationship.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) WHERE project.project_id=? AND projectprop.type_id != ?";
 	
-	$h = $dbh->prepare($q);
+	$h = $dbh->prepare($q, $cross_cvterm_id);
 	$h->execute($breeding_project_id);
 	
     }
@@ -300,6 +300,17 @@ sub get_breeding_trial_cvterm_id {
     }
     return $breeding_trial_cvterm_row->cvterm_id();
 }
+
+sub get_cross_cvterm_id { 
+    my $self = shift;
+
+    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'stock type' } )->cv_id();
+
+    my $cross_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'cross', cv_id=> $cv_id });
+    
+    return $cross_cvterm_row->cvterm_id();
+}
+
 
 
 1;
