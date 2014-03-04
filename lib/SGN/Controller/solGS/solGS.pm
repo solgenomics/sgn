@@ -1476,12 +1476,6 @@ sub download_prediction_urls {
             }
         }
 
-        if  ($c->stash->{data_set_type} =~ /combined/) 
-        {  
-            # $training_pop_id = 'combined_' . $training_pop_id;
-        }
-        
-        #qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$prediction_pop_id/$trait_id">$trait_abbr</a> |
         $download_url   .= " | " if $download_url;        
         $download_url   .= qq | <a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> | if $trait_id;
         
