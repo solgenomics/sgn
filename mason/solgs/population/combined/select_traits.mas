@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-population/select_traits.mas - lists traits to select for GS analysis
+/solgs/population/combined/select_traits.mas - lists traits to select for GS analysis
 
 =AUTHOR
 
@@ -16,9 +16,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
 $traits_form
-$pop_id
+$combo_pops_id
 $all_traits_file
-$no_traits_selected
+
 
 </%args>
 
@@ -31,26 +31,21 @@ $no_traits_selected
  while (<FH>)
 {
  my ($id, $trait, $acronym) = split (/\t/);
- my $trait_link   = qq | <a href="/solgs/trait/$id/populaton/$pop_id" onclick="solGS.waitPage()">$trait</a> |;
- my $row          = <<ROW;
- <tr>
-   <td>
-     <input type  = "checkbox"
-       name       = "trait_id"
-       value      = $id > $trait_link
-   </td>
- </tr>
+    my $trait_link   = qq | <a href="/solgs/model/combined/trials/$combo_pops_id/trait/$id" onclick="solGS.waitPage()">$trait</a> |;
+    my $row          = <<ROW;
+     <tr>
+      <td>
+        <input type  = "checkbox"
+               name  = "trait_id"
+               value = $id > $trait_link
+      </td>
+     </tr>
 ROW
 
     $trait_rows .=  $row;
 
-}
+  }
 
-my $message;
-if ($no_traits_selected eq 'none')
-{
-   $message = qq | <p style="color:red">Please select one or more traits to analyze.</p> |;
-}
 
 </%perl>
 
@@ -58,10 +53,8 @@ if ($no_traits_selected eq 'none')
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
- <% $message %>
 
-
- <form action="/solgs/analyze/traits/population/<%$pop_id %>" method="POST">
+ <form action="/solgs/models/combined/trials/<% $combo_pops_id %>" method="POST">
   <table>
    <% $trait_rows %>
      <tr>

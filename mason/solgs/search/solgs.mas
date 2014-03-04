@@ -16,19 +16,11 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $form
 $message
-$result
-$pager
-$page_links
 $gs_traits_index
 
 </%args>
 
 <%perl>
-
-my $current_page = $pager->current_page();
-my $collapse = 1;
-
-if ($current_page > 1) { $collapse = 0; }
 
 </%perl>
 
@@ -68,22 +60,52 @@ if ($current_page > 1) { $collapse = 0; }
 
 <&| /page/info_section.mas, 
     collapsible => 1, 
-    collapsed   => $collapse,
+    collapsed   => 1,
     title       => "Use a trial as a training population",
   &>
 
-<& /solgs/population/project_details_form.mas,
-   result     => $result,
-   pager      => $pager,
-   page_links => $page_links,
-&>
-   
+
+<& /solgs/population/project_details_form.mas &>
+
+<div id="selected_trials" style="display:none;width:100%">
+
+  <hr style="size:10px;color:"#5cb85c"/>
+
+ <p style="text-align:center"> Trials to combine </p>
+
+ <hr style="size:10px;color:"#5cb85c"/>
+
+<table id="selected_trials_table" style="text-align:left;width:100%">
+<tr>
+  <th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th>
+</tr>
+<tr> 
+</tr>
+</table>
+</div>
+
+
+<table id="selected_trials_header" style="text-align:left;width:100%">
+<tr>
+  <td>
+    <div id="combine" style="display:none">
+      <input  class="button" type="button" name="combine" value="Combine" onclick="downloadData();"/>
+  </div>  
+  </td>
+  <td>
+    <div id="search_again" style="display:none;text-align:right">
+    <input style class="button" type="button" name="search_again" value="Search again" onclick="searchAgain();"/></td>
+  </div>
+</tr>
+</table>
+
+
 </&>
 
 
 <&| /page/info_section.mas, 
     collapsible => 1, 
-    collapsed   => $collapse,
+    collapsed   => 1,
     title       => "Create a training population",
   &>
 

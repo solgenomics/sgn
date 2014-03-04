@@ -7,7 +7,6 @@
 
 
 JSAN.use('jquery.blockUI');
-JSAN.use('jquery');
 
 var solGS = {
     
@@ -43,3 +42,6 @@ jQuery.fn.alternateFunctions = function(a, b) {
     });
 };
 //
+
+
+

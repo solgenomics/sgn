@@ -1,0 +1,64 @@
+<%doc>
+
+=head1 NAME 
+
+/solgs/population/combined/sumary.mas - displays combined trials descriptive data.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$project_id
+$project_name
+$project_desc
+$markers_no
+$traits_no
+$owner => ''
+
+</%args>
+
+<%perl>
+
+if (!$owner) {$owner = 'NextGen Cassava Project'; } 
+$traits_no = 1 if !$traits_no;
+
+
+</%perl>
+
+<table>
+  <tr>
+    <td>
+      <& /page/columnar_table.mas,
+         data         => [['Name', $project_name],
+                          ['Description', $project_desc],
+                          ['Owner', $owner],
+                         ],
+         __alt_freq   => 0,
+         __align      => "l",
+         __tableattrs => 'style="padding: 1px 225px 1px 1px"',   
+        &>
+    </td>    
+    <td>
+      <& /page/columnar_table.mas,        
+         data       => [[' ',  ' '],
+                        ['No. of traits', $traits_no],
+                        ['No. of markers', $markers_no],
+                       ],
+        __alt_freq  => 1,
+        __align     => "l",
+       __tableattrs => 'style="padding: 1px"',    
+        &>
+    </td>
+  </tr>
+</table>
+    
+
+ 
+
+
