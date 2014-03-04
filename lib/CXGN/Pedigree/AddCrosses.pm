@@ -143,7 +143,7 @@ sub add_crosses {
 		     name   => 'cross',
 		     cv     => 'stock type',
 		    });
-
+    print STDERR "\n\ncvterm from addcrosses: ".$cross_stock_type_cvterm->cvterm_id()."\n\n";
     # #get cvterm for type of cross
     # my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")
     #   ->create_with({
@@ -202,6 +202,14 @@ sub add_crosses {
 		 });
 
       #add error if cross name exists
+
+      #set projectprop so that projects corresponding to crosses can be identified
+      my $prop_row = $chado_schema->resultset("Project::Projectprop")
+	->create({
+		  type_id => $cross_stock_type_cvterm->cvterm_id,
+		  project_id => $project->project_id(),
+		 });
+      $prop_row->insert();
 
       #create cross experiment
       $experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create(

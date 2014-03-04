@@ -56,11 +56,12 @@ sub get_trials_by_breeding_program {
     my $h;
     if ($breeding_project_id) { 
 	# need to convert to dbix class.... good luck!
-	my $q = "SELECT trial.project_id, trial.name, trial.description FROM project JOIN projectprop USING (project_id) LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) WHERE project.project_id=? AND projectprop.type_id != ?";
-	
+	my $q = "SELECT trial.project_id, trial.name, trial.description FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id=? AND (projectprop.type_id IS NULL OR projectprop.type_id != ?))";
+
 	$h = $dbh->prepare($q);
 	$h->execute($breeding_project_id, $cross_cvterm_id);
-	
+	#$h->execute($breeding_project_id);
+
     }
     else { 
 	# get trials that are not associated with any project
@@ -71,8 +72,8 @@ sub get_trials_by_breeding_program {
     while (my ($id, $name, $desc) = $h->fetchrow_array()) { 
 	push @$trials, [ $id, $name, $desc ];
     }
-    
-    print STDERR "TRIAL DATA: ".Data::Dumper::Dumper($trials);
+
+    #print STDERR "TRIAL DATA: ".Data::Dumper::Dumper($trials);
     return $trials;
 }
 
@@ -311,8 +312,11 @@ sub get_cross_cvterm_id {
     print STDERR "CVID= $cv_id\n\n";
 
     my $cross_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'cross', cv_id=> $cv_id });
-    
+
+    print STDERR "\n\ncvterm from projects: ".$cross_cvterm_row->cvterm_id()."\n\n";    
     return $cross_cvterm_row->cvterm_id();
+
+
 }
 
 
