@@ -271,7 +271,7 @@ sub combined_trials_desc {
             my $pr_id   = $row->id;
             my $pr_name = $row->name;
             $desc .= qq | <a href="/solgs/population/$pr_id">$pr_name </a>|; 
-            $desc .= $_ == $pops[-1] ? '.' : ' and ';
+            $desc .= $pop_id == $pops[-1] ? '.' : ' and ';
         } 
 
         $solgs_controller->get_project_owners($c, $_);
