@@ -6,18 +6,30 @@ $trials_by_breeding_project => ()
 $breeding_programs
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial',] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial'] &>
 
-<table>
+ <style>
+  /* IE has layout issues when sorting (see #5413) */
+  .group { zoom: 1 }
+  </style>
+<div id="trials_accordion">
   <%perl>
   foreach my $p (sort keys %$trials_by_breeding_project){
-    print "<tr><td colspan=\"3\"><h4>$p</h4></td></tr>\n";
+    print '<div class="group">';
+    print '<h3>'.$p.'</h3>'."\n";
+    print '<div>';
+    print '<table>';
+    #print "<tr><td colspan=\"3\"><h4>$p</h4></td></tr>\n";
     foreach my $t (@{$trials_by_breeding_project->{$p}}) { 
-      print "<tr><td><a href=\"/breeders_toolbox/trial/$t->[0]\">$t->[1]</td><td>$t->[2]</td></tr>\n";
+      print "<tr><td colspan=\"3\"><a href=\"/breeders_toolbox/trial/$t->[0]\">$t->[1]</td><td>$t->[2]</td></tr>\n";
     }
+    print '</table>';
+    print '</div>';
+    print '</div>';
   }
   </%perl>
-</table>
+
+</div>
 
 <div id="add_project_dialog" class="ui-widget">
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
