@@ -20,7 +20,7 @@ $breeding_programs
     print '<div>';
     print '<table>';
     #print "<tr><td colspan=\"3\"><h4>$p</h4></td></tr>\n";
-    foreach my $t (@{$trials_by_breeding_project->{$p}}) { 
+    foreach my $t (@{$trials_by_breeding_project->{$p}}) {
       print "<tr><td colspan=\"3\"><a href=\"/breeders_toolbox/trial/$t->[0]\">$t->[1]</td><td>$t->[2]</td></tr>\n";
     }
     print '</table>';
