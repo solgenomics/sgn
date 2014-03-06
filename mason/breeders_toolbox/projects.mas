@@ -43,19 +43,17 @@ $breeding_programs
       </%perl>
     </select>
     <br>
-    <br>
     <label for="add_project_description" style="display: inline-block; vertical-align:top; width: 100px;">Description:</label>
     <textarea id="add_project_description" name="add_project_description" form="create_new_trial_form" cols="40"></textarea>
-    <br><br>
-    <div id="format_type_radio">
+    <div id="format_type_radio" style="display: none">
       <input type="radio" id="format_radio3" name="radio" class="format_type" value="create_with_design_tool" checked="checked" />
       <label for="radio3">Create using trial design tool</label>
       <br>
-      <input type="radio" id="format_radio2" name="radio" class="format_type" value="create_with_upload" />
-      <label for="radio2">Create from uploaded file</label>
+      <input type="radio" id="format_radio2" name="radio" class="format_type" value="create_with_upload" style="display: none"/>
+      <label for="radio2" style="display: none">Create from uploaded file</label>
       <br>
-      <input type="radio" id="format_radio1" name="radio" class="format_type" value="empty" />
-      <label for="radio1">Create empty trial</label>
+      <input type="radio" id="format_radio1" name="radio" class="format_type" value="empty" style="display: none"/>
+      <label for="radio1" style="display: none">Create empty trial</label>
       <br>
     </div>
     <div id="get_file_upload_data" style="display: none">
