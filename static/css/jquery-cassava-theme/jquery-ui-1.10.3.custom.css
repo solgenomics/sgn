@@ -187,6 +187,22 @@
 	border-top: 0;
 	overflow: auto;
 }
+
+.ui-accordion .ui-accordion-content a:link {
+    color:#954A09;
+    text-decoration:none;
+}
+
+.ui-accordion .ui-accordion-content a:visited {
+    color:#CE8E00;
+    text-decoration:none;
+}
+
+.ui-accordion .ui-accordion-content a:hover {
+    color:#CE8E00;
+    text-decoration:underline;
+}
+
 .ui-autocomplete {
 	position: absolute;
 	top: 0;
