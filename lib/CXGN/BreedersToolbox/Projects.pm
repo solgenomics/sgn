@@ -49,28 +49,55 @@ sub get_trials_by_breeding_program {
 
     my $dbh = $self->schema->storage->dbh();
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
-        
+    my $cross_cvterm_id = $self->get_cross_cvterm_id();
+    my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
+
+    print STDERR "CROSSCVTERMID = $cross_cvterm_id\n\n";
     my $trials = [];
     my $h;
     if ($breeding_project_id) { 
 	# need to convert to dbix class.... good luck!
-	my $q = "SELECT trial.project_id, trial.name, trial.description FROM project LEFT join project_relationship ON (project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) WHERE project.project_id=?";
-	
+	#my $q = "SELECT trial.project_id, trial.name, trial.description FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id=? AND (projectprop.type_id IS NULL OR projectprop.type_id != ?))";
+	my $q = "SELECT trial.project_id, trial.name, trial.description, projectprop.type_id, projectprop.value FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id = ?)";
+
 	$h = $dbh->prepare($q);
+	#$h->execute($breeding_project_id, $cross_cvterm_id);
 	$h->execute($breeding_project_id);
-	
+
     }
     else { 
 	# get trials that are not associated with any project
-	my $q = "SELECT project.project_id, project.name, project.description FROM project JOIN projectprop USING(project_id) LEFT JOIN project_relationship ON (subject_project_id=project.project_id) WHERE project_relationship_id IS NULL and projectprop.type_id != ?";
+	my $q = "SELECT project.project_id, project.name, project.description n, projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id) LEFT JOIN project_relationship ON (subject_project_id=project.project_id) WHERE project_relationship_id IS NULL and projectprop.type_id != ?";
 	$h = $dbh->prepare($q);
 	$h->execute($breeding_program_cvterm_id);
     }
-    while (my ($id, $name, $desc) = $h->fetchrow_array()) { 
-	push @$trials, [ $id, $name, $desc ];
+
+    my %projects_that_are_crosses;
+    my %project_year;
+    my %project_name;
+    my %project_description;
+
+    while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) { 
+	#push @$trials, [ $id, $name, $desc ];
+      $project_name{$id} = $name;
+      $project_description{$id} = $desc;
+      if ($prop == $cross_cvterm_id) {
+	$projects_that_are_crosses{$id} = 1;
+      }
+      if ($prop == $project_year_cvterm_id) {
+	$project_year{$id} = $propvalue;
+      }
     }
-    
-    print STDERR "TRIAL DATA: ".Data::Dumper::Dumper($trials);
+
+    my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
+
+    foreach my $id_key (@sorted_by_year_keys) {
+      if (!$projects_that_are_crosses{$id_key}) {
+	push @$trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+      }
+    }
+
+    #print STDERR "TRIAL DATA: ".Data::Dumper::Dumper($trials);
     return $trials;
 }
 
@@ -299,6 +326,19 @@ sub get_breeding_trial_cvterm_id {
 	$breeding_trial_cvterm_row = $row;
     }
     return $breeding_trial_cvterm_row->cvterm_id();
+}
+
+sub get_cross_cvterm_id { 
+    my $self = shift;
+    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'stock type' } )->cv_id();
+    my $cross_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'cross', cv_id=> $cv_id });
+    return $cross_cvterm_row->cvterm_id();
+}
+
+sub get_project_year_cvterm_id { 
+    my $self = shift;
+    my $year_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'project year' });
+    return $year_cvterm_row->cvterm_id();
 }
 
 

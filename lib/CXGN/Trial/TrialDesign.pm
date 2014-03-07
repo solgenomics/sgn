@@ -27,6 +27,7 @@ use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use POSIX;
 
+has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', clearer => 'clear_trial_name');
 has 'stock_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_stock_list', clearer => 'clear_stock_list');
 has 'control_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_control_list', clearer => 'clear_control_list');
 has 'number_of_blocks' => (isa => 'Int', is => 'rw', predicate => 'has_number_of_blocks', clearer => 'clear_number_of_blocks');
@@ -432,6 +433,7 @@ sub _build_plot_names {
   my %design = %{$design_ref};
   my $prefix = '';
   my $suffix = '';
+  my $trial_name = $self->get_trial_name;
   if ($self->has_plot_name_prefix()) {
     $prefix = $self->get_plot_name_prefix();
   }
@@ -439,7 +441,7 @@ sub _build_plot_names {
     $suffix = $self->get_plot_name_suffix();
   }
   foreach my $key (keys %design) {
-    $design{$key}->{plot_name} = $prefix.$key.$suffix;
+    $design{$key}->{plot_name} = $trial_name.$prefix.$key.$suffix;
     $design{$key}->{plot_number} = $key;
   }
   return \%design;

@@ -47,6 +47,24 @@ jQuery(document).ready(function ($) {
 	}
     });
 
+
+    $( "#cross_upload_success_dialog_message" ).dialog({
+	autoOpen: false,
+	modal: true,
+	buttons: {
+            Ok: { id: "dismiss_cross_upload_dialog",
+                  click: function() {
+		      $("#upload_crosses").dialog("close");
+		      $( this ).dialog( "close" );
+		      location.reload();
+                  },
+                  text: "OK"
+                }
+        }
+	
+    });
+
+
     $('#upload_crosses_form').iframePostForm({
 	json: true,
 	post: function () {
@@ -80,20 +98,10 @@ jQuery(document).ready(function ($) {
 		return;
 	    }
 	    if (response.success) {
-		alert("File uploaded successfully");
-		$( this ).dialog( "close" );
-		location.reload();
-
-
-
-
-
+		$('#cross_upload_success_dialog_message').dialog("open");
 	    }
 	}
     });
-
-
-
 
 
     $("#cross_upload_spreadsheet_format_info").click( function () { 
@@ -104,7 +112,7 @@ jQuery(document).ready(function ($) {
 	autoOpen: false,
 	buttons: { "OK" :  function() { $("#cross_upload_spreadsheet_info_dialog").dialog("close"); },},
 	modal: true,
-	width: 750,
+	width: 900,
 	autoResize:true,
     });
 

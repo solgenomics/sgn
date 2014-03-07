@@ -4,30 +4,17 @@ a general format for projects details presentation.
 
 </%doc>
 
-<%args>
 
-$result
-$pager => ''
-$page_links => ''
+<& /util/import_javascript.mas, classes => ["solGS.searchTrials", "solGS.combineTrials", "jquery.cookie"] &>
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
-</%args>
+<div id="homepage_trials_list" style="display:none;width:100%">
+</div>
 
-<& /page/columnar_table.mas,
-     headings    => [ 'Projects', 'Description', 'Location', 'Year' ],
-     data        => $result,
-    __alt_freq   => 2,
-    __alt_width  => 1,
-    __align      => 'llll'
-&>
- 
-%if ($pager)
-%{
-<& /page/pagination_control.mas, 
-     pager      => $pager, 
-     link_maker => $page_links 
-&> 
+<div id="done_selecting">
+  <input  class="button" type="button" name="done_selecting"  value="Combine" onclick="doneSelecting();"/>
+</div>
 
-%}
 
 
 

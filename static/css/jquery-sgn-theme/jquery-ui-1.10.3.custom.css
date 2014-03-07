@@ -164,7 +164,7 @@
 	cursor: pointer;
 	position: relative;
 	margin-top: 2px;
-	padding: .5em .5em .5em .7em;
+	padding: .2em .5em .2em .7em;
 	min-height: 0; /* support: IE7 */
 }
 .ui-accordion .ui-accordion-icons {
@@ -187,6 +187,21 @@
 	border-top: 0;
 	overflow: auto;
 }
+
+.ui-accordion .ui-accordion-content a:link {
+    color:#0000ff;
+    text-decoration:none;
+}
+
+.ui-accordion .ui-accordion-content a:visited {
+    color:#3333ff;
+    text-decoration:none;
+}
+
+.ui-accordion .ui-accordion-content a:hover {
+    text-decoration:underline;
+}
+
 .ui-autocomplete {
 	position: absolute;
 	top: 0;

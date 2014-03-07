@@ -64,7 +64,7 @@ BEGIN { extends 'Catalyst::Controller' }
 sub generate_check_value :Path('/solgs/generate/checkvalue') Args(0) {
     my ($self, $c) = @_;
     
-    my $file_name = $c->req->param('file_name');
+    my $file_name = $c->req->param('string');
     my $check_value = crc($file_name);
 
     my $ret->{status} = 'failed';
