@@ -215,23 +215,61 @@ sub get_genotype_info {
     my $self = shift;
     my $accession_sql = shift;
     my $trial_sql = shift;
-    my $trait_sql = shift;
+   # my $trait_sql = shift;
 
     #my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) JOIN stock ON (object_id=stock.stock_id) JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id) JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN project USING(project_id)  WHERE cvterm.cvterm_id in ($trait_sql) and project.project_id in ($trial_sql) and stock.stock_id in ($accession_sql)";
 
    # my $q ="select genotype_id from genotype where name ilike '$accession_sql' ";
-    my $q ="select value from genotypeprop where genotype_id in (select genotype_id from genotype where name ilike '$accession_sql%'";
+    #my $q ="select genotype_id,value from genotypeprop where genotype_id in (select genotype_id from genotype where name in ($accession_sql)";
 
+   # my $q="select genotype_id,name,uniquename,description,type_id from genotype where name ilike ('WEMA_6x1017_MARS-WEMA_270239%')";
+
+    print "$accession_sql \n";
+
+    #my $q="select genotype_id,name,uniquename,description,type_id from genotype where name in ($accession_sql)";
+
+   #my $q="select stock.stock_id,stock.uniquename from stock where stock.stock_id in ($accession_sql)";
+
+#    my $q="select genotype_id,value from genotypeprop where genotype_id in (select genotype_id from genotype where genotype_id in (select genotype_id from nd_experiment_genotype where nd_experiment_id in (select nd_experiment_id from nd_experiment_stock where stock_id in (select stock_id from stock where stock.stock_id in ($accession_sql)))))";
+
+    #my $q = "SELECT genotype_id FROM genotype join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.stock_id in ($accession_sql)";
+
+    my $q = "SELECT genotype_id,value FROM public.genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.stock_id in ($accession_sql)";
+
+
+    print "QUERY: $q\n\n";
+
+    print "before\n\n";
     print STDERR "QUERY: $q\n\n";
+    print "after\n\n";
+
     my $h = $self->dbh()->prepare($q);
     $h->execute();
 
     my $result = [];
-    while (my ($project_name, $stock_name, $location, $trait, $value) = $h->fetchrow_array()) { 
-	push @$result, [ $project_name, $stock_name, $location, $trait, $value ];
+
+  #  while (my ($genotype_id,$name,$uniquename,$description,$type_id) = $h->fetchrow_array()) { 
+#	push @$result, [ $genotype_id,$name,$uniquename,$description,$type_id ];
+#	
+#    }
+
+
+    while (my ($genotype_id,$value) = $h->fetchrow_array()) { 
+	push @$result, [ $genotype_id,$value ];
 	
     }
+
+
+   
+#    while (my ($genotype_id) = $h->fetchrow_array()) { 
+#	push @$result, [ $genotype_id ];
+#	
+#    }
+
+
     return $result;
+
+
 }
 
 
