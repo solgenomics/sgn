@@ -164,7 +164,7 @@
 	cursor: pointer;
 	position: relative;
 	margin-top: 2px;
-	padding: .5em .5em .5em .7em;
+	padding: .2em .5em .2em .7em;
 	min-height: 0; /* support: IE7 */
 }
 .ui-accordion .ui-accordion-icons {
