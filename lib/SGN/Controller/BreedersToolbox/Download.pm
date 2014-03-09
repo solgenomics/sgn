@@ -355,7 +355,11 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 	}
     }
 
-    system("R --slave --args output_test00.txt qc_output.txt < /home/aiminy/code/code_R/GBS_QC.R");
+    #system("R --slave --args output_test00.txt qc_output.txt < /home/aiminy/code/code_R/GBS_QC.R"); ok
+    #system("R --slave --args output_test00.txt qc_output.txt < ./R/GBS_QC.R"); ok
+     system("R --slave --args output_test00.txt qc_output.txt < R/GBS_QC.R");
+    #system("R --slave --args output_test00.txt qc_output.txt < /R/GBS_QC.R"); path is not ok
+
 
     my $contents = read_file("qc_output.txt");
 
