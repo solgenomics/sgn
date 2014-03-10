@@ -9,6 +9,8 @@ use Data::Dumper;
 use CGI;
 use File::Slurp qw | read_file |;
 
+
+
 print "content-type: text/html \n\n";
 
 use Moose;
@@ -18,6 +20,11 @@ BEGIN { extends 'Catalyst::Controller'; }
 use URI::FromHash 'uri';
 use CXGN::List::Transform;
 
+__PACKAGE__->config(
+    default => 'application/json',
+    stash_key => 'rest',
+    map => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+   );
 
  
 sub breeder_download : Path('/breeders/download/') Args(0) { 
@@ -218,7 +225,16 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 	   @k = keys   %{ $AoH[$i] }
 	}
 
-        open my $fh00, '>', "output_test00.txt" or die "Cannot open output_test00.txt: $!";
+	my $fh000="out_test000.txt";
+
+	$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
+
+
+        print STDERR "Output file is ", $fh000,"\n";
+	
+   #     open my $fh00, '>', "output_test00.txt" or die "Cannot open output_test00.txt: $!";
+
+        open my $fh00, '>', $fh000 or die "Cannot open output_test00.txt: $!";
 
         for my $j (0 .. $#k){
 
@@ -239,7 +255,15 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 
     }
 
-    my $contents = read_file("output_test00.txt");
+
+    
+   # my $contents = read_file("output_test00.txt");
+
+    # print STDERR "Output file is ", $fh00,"\n";
+    # print STDERR "Output file is ", $fh000,"\n";
+
+
+     my $contents = read_file("/data/prod/public/out_test000.txt");
 
 
     $c->res->content_type("text/plain");
@@ -328,6 +352,16 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
 	print STDERR "your array has ", scalar(@AoH)," element \n";
 	
+	my $fh000="out_test000.txt";
+
+	$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
+
+
+        print STDERR "Output file is ", $fh000,"\n";
+	
+   #     open my $fh00, '>', "output_test00.txt" or die "Cannot open output_test00.txt: $!";
+
+        open my $fh00, '>', $fh000 or die "Cannot open output_test00.txt: $!";
 
 
         my @k=();
@@ -335,7 +369,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 	   @k = keys   %{ $AoH[$i] }
 	}
 
-        open my $fh00, '>', "output_test00.txt" or die "Cannot open output_test00.txt: $!";
+#        open my $fh00, '>', "output_test00.txt" or die "Cannot open output_test00.txt: $!";
 
         for my $j (0 .. $#k){
 
@@ -357,11 +391,11 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
     #system("R --slave --args output_test00.txt qc_output.txt < /home/aiminy/code/code_R/GBS_QC.R"); ok
     #system("R --slave --args output_test00.txt qc_output.txt < ./R/GBS_QC.R"); ok
-     system("R --slave --args output_test00.txt qc_output.txt < R/GBS_QC.R");
+     system("R --slave --args /data/prod/public/out_test000.txt /data/prod/public/qc_output.txt < R/GBS_QC.R");
     #system("R --slave --args output_test00.txt qc_output.txt < /R/GBS_QC.R"); path is not ok
 
 
-    my $contents = read_file("qc_output.txt");
+    my $contents = read_file("/data/prod/public/qc_output.txt");
 
     $c->res->content_type("text/plain");
 
