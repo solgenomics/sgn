@@ -344,7 +344,7 @@ CXGN.List.prototype = {
 	html += '<td width="100%" align="right"><font size="1">List ID</td><td><div id="list_id_div" style="font-size:tiny" >'+list_id+'</div></font></td></tr>';
 
 	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input type="button" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr></table>';
-	html += 'Add new elements: <br /><textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="Add" /><br />';
+	html += 'Add new items: <br /><textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="Add" /><br />';
 	html += '<b>List items</b> ('+items.length+')<br />';
 
 	for(var n=0; n<items.length; n++) { 
