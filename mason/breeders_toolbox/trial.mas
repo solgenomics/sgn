@@ -170,18 +170,8 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
     &>
 
 
+
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
-    jQuery('#trial_design_view_layout').dialog({
-	autoOpen: false,
-	height: 500,
-	width: 400,
-        modal: true,
-        buttons: {
-        Close: function() {
-	    jQuery( this ).dialog( "close" );
-	}
-      }
-    }); 
 % print $trial_id;
 </div>
 
@@ -410,6 +400,7 @@ jQuery(document).ready(function () {
     jQuery('#view_layout_link').click(function () {
        	jQuery('#trial_design_view_layout').dialog("open");
     });
+
 
 });
 
