@@ -100,7 +100,7 @@ sub _get_stock_resultset_exact {
   my $stock_name = $self->get_stock_name();
   my $stock_rs = $schema->resultset("Stock::Stock")
     ->search({
-	      uniquename => $stock_name,
+	      'lower(uniquename)' => lc($stock_name),
 	     },
 	     {
 	      join => { 'stockprops' => 'type'} ,

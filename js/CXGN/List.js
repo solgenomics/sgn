@@ -506,10 +506,10 @@ CXGN.List.prototype = {
 	}
     },
 
-    transform: function(list_id, new_type) { 
+    transform: function(list_id, transform_name) { 
 	var transformed = new CXGN.List();
 	jQuery.ajax( { 
-	    url: '/list/transform/'+list_id+'/'+new_type,
+	    url: '/list/transform/'+list_id+'/'+transform_name,
 	    async: false,
 	    success: function(response) { 
 		if (response.error) { 

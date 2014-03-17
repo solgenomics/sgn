@@ -84,8 +84,8 @@ jQuery(document).ready(function ($) {
 	buttons: {
             Ok: { id: "dismiss_trial_upload_dialog",
                   click: function() {
-		      $("#upload_trial_form").dialog("close");
-		      $( this ).dialog( "close" );
+		      //$("#upload_trial_form").dialog("close");
+		      //$( this ).dialog( "close" );
 		      location.reload();
                   },
                   text: "OK"

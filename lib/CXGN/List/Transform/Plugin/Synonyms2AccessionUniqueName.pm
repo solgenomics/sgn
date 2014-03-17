@@ -3,7 +3,7 @@ package CXGN::List::Transform::Plugin::Synonyms2AccessionUniqueName;
 
 use strict;
 
-use CXGN::BreedersToolbox::AccessionsFuzzySearch;
+use Data::Dumper;
 
 sub name { 
     return "synonyms2accession_uniquename";
@@ -29,24 +29,50 @@ sub transform {
     my $schema = shift;
     my $list = shift;
     
+    my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"accession" })->first->cvterm_id();
 
-    my $fs = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema=>$schema});
+    my $local_cv_id = $schema->resultset("Cv::Cv")->search({ name=> "local" })->first()->cv_id();
 
-    my $r = $fs->get_matches($list, 0);
+    my $synonym_type_id = $schema->resultset("Cv::Cvterm")->search({name=>"synonym", cv_id=> $local_cv_id })->first->cvterm_id();
 
-    if (@{$r->{absent}} > 0) { 
-	return { error => "Some accessions could not be found (".join(","), @{$r->{not_found}}.")" };
-    }
-    
+    my %items = ();
     my @transform = ();
-    foreach my $fau (@{$r->{found}}) { 
-	push @transform, $fau->{unique_name};
+
+    # check uniquename
+    #
+    foreach my $item (@$list) { 
+	my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => { ilike =>  $item} });
+	
+	if ($rs->count > 0) { $items{$item}++ }
     }
 
-    return { 
+    print STDERR "synonym type id = $synonym_type_id\n";
+
+    my @missing;
+    
+    foreach my $item (@$list) { 
+	my $rs = $schema->resultset("Stock::Stock")->search( { 'stockprops.value' => { ilike =>  $item }, 'stockprops.type_id' => $synonym_type_id }, { join => { 'stockprops'   } });
+	
+	if ($items{$item} > 0) { # matched the uniquename 
+	    push @transform, $item;
+	}
+	elsif ($rs->count > 0) { 
+	    push @transform, $rs->first->uniquename();
+	}
+	else { 
+	    push @missing, $item;
+	}
+    }
+
+
+
+	my $data =  { 
 	transform => \@transform,
-        missing => $r->{absent}
+        missing => \@missing
     };
+
+    print STDERR Dumper($data);
+    return $data;
 }
 
 1;
