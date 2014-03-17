@@ -1,0 +1,187 @@
+
+<%args>
+$cross_id
+$cross_name => ''
+$breeding_program => undef
+$trial_id => undef
+$trial_name => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie"] &>
+
+% use utf8;
+% $cross_name ||= "Untitled cross";
+
+<& /page/page_title.mas, title => "Detail for cross '$cross_name'" &>
+
+<&| /page/info_section.mas, title => "Cross information" &>
+
+<& /page/form.mas,
+  object_type=>'cross',
+  object_id=> $cross_id,
+  form_name=> 'stock_form',
+  server_side_script => '/phenome/stock/stock_ajax_form.pl',
+  form_div_name=>'stock_details',
+  js_object_name=> 'stockForm',
+  page_url => "/cross/$cross_id" ,
+  alternate_new_button => '',
+  alternate_delete_button => ''
+&>
+
+</&>
+
+<&|  /page/info_section.mas, title => "Parents", collapsible => 1, collapsed => 0  &>
+
+<div id="parents_information_div">
+[loading...]
+</div>
+
+</&>
+
+<&|  /page/info_section.mas, title => "Progeny", collapsible => 1, collapsed => 0, subtitle => '<a id="add_more_progeny_link">add more progeny</a>'  &>
+
+  <div id="progeny_information_div">
+    [loading...]
+    </div>
+
+
+  <div id="add_more_progeny_dialog">
+    Basename: <input type="input" name="basename" /><br />
+    Start number: <input type="input" name="start_number" /><br />
+    Count: <input type="input" name="pedigree_count" /><br />
+  </div>
+
+
+</&>
+
+<&| /page/info_section.mas, title => "Properties" &>
+
+<div id="cross_properties_div" >
+[none]
+</div>
+
+</&>
+
+
+<script>
+
+jQuery(document).ready(function() {
+
+  display_progeny(<% $cross_id %>);
+
+  cross_properties(<% $cross_id %>);
+
+  function display_progeny(cross_id) { 
+
+     jQuery.ajax( { 
+      type: 'POST',
+      url: '/cross/ajax/relationships/'+cross_id,
+      success: function(response) { 
+        if (response.error) { 
+          alert(response.error);
+          return;
+        }
+        var html = "<table>";
+        if (response.progeny) { 
+          for (var i=0; i<response.progeny.length; i++) { 
+            html += '<td><a href="/stock/'+response.progeny[i][1]+'/view">'+response.progeny[i][0]+'</a></td></tr>';
+          }
+        }						 
+        html += "</table>";
+	jQuery('#progeny_information_div').html(html);					   
+
+        var parent_html = "";
+        if (response.maternal_parent) { 
+           parent_html = '&#2640;<img src="http://upload.wikimedia.org/wikipedia/commons/6/66/Venus_symbol.svg" width="20" /> <a href="/stock/'+response.maternal_parent[1] +'/view">'+response.maternal_parent[0]+'</a><br />';
+						   }
+        if (response.paternal_parent) { 						   
+           parent_html += '<img src="http://upload.wikimedia.org/wikipedia/commons/b/b7/Mars_symbol.svg" width="20" /> <a href="/stock/'+response.paternal_parent[1] +'/view">'+response.paternal_parent[0]+'</a><br />';						   }
+        jQuery('#parents_information_div').html(parent_html);
+      },
+      
+      error: function(response, a, b) { 
+	jQuery('#progeny_information_div').html('An error occurred. '+a +' '+ b);
+      }
+    });
+
+  }
+
+  function display_parents(cross_id) { 
+ 
+    jQuery.ajax( { 
+      type: 'POST',
+      url: '/cross/ajax/parents/'+cross_id,
+      success: function(response) { 
+        if (response.error) { 
+          alert(response.error);
+          return;
+        }
+        var html = "<table>";
+        if (response.parents) { 
+          for (var i=0; i<response.parents.length; i++) { 
+            html += '<td><a href="/stock/'+response.parents[i][1]+'/view">'+response.parents[i][0]+'</a></td></tr>';
+          }
+        }
+        html += "</table>";
+	jQuery('#parents_information_div').html(html);					   
+      },
+      error: function(response, a, b) { 
+	jQuery('#parents_information_div').html('An error occurred. '+a +' '+ b);
+      }
+    });
+  }
+
+  function cross_properties(cross_id) { 
+
+    jQuery.ajax( { 
+      type: 'POST',
+      url: '/cross/ajax/properties/'+cross_id,
+      success: function(response) { 
+        if (response.error) { 
+          alert(response.error);
+          return;
+        }
+        var html = ""; //"<table>";
+        if (response.props) { 
+	  alert(response.props);
+          for (var k in response.props.keys) { 
+	     html += '<h3>'+response.props[k]+'</h3>';
+             for (var n=0; n<response.props[k].length; n++) { 
+               html += response.props[k][n]+'<br />';
+             }
+          }
+              jQuery('#cross_properties_div').html(html+' :-)');
+        }
+      },
+      error: function(response) { alert("An error occurred") }
+    } );						 
+   
+
+     					      
+
+  }
+
+  jQuery('#add_more_progeny_link').click( function() { 
+     jQuery('#add_more_progeny_dialog').dialog("open");
+  });
+
+  jQuery('#add_more_progeny_dialog').dialog( { 
+    height: 200,
+    width: 500,
+    buttons: { 'OK': {
+                 id: 'add_more_progeny_dialog_ok_button', 
+		 click: function() { alert("OK") },
+                 text: "OK" 
+                } , 
+               'Cancel': {  id: 'add_more_progeny_dialog_cancel_button',
+                          click:  function() { jQuery('#add_more_progeny_dialog').dialog("close") }, text: "Cancel" } },
+    autoOpen: false,
+    title: 'Add more progeny'
+
+  });
+						   
+
+});
+
+</script>
+

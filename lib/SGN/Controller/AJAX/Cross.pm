@@ -20,6 +20,7 @@ package SGN::Controller::AJAX::Cross;
 use Moose;
 use Try::Tiny;
 use DateTime;
+use Data::Dumper;
 use File::Basename qw | basename dirname|;
 use File::Copy;
 use File::Slurp;
@@ -193,7 +194,6 @@ sub upload_cross_file_POST : Args(0) {
   }
 
   $c->stash->{rest} = {success => "1",};
-
 }
 
 
@@ -369,6 +369,69 @@ sub add_cross_POST :Args(0) {
 
     $c->stash->{rest} = { error => '', };
   }
+
+sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $cross = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
+
+    if ($cross && $cross->type()->name() ne "cross") { 
+	$c->stash->{rest} = { error => 'This entry is not of type cross and cannot be displayed using this page.' };
+	return;
+    }
+
+    my $crs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $cross_id } );
+
+    my $maternal_parent = "";
+    my $paternal_parent = "";
+    my @progeny = ();
+
+    foreach my $child ($crs->all()) { 
+	if ($child->type->name() eq "female_parent") { 
+	    $maternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
+	}
+	if ($child->type->name() eq "male_parent") { 
+	    $paternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
+	}
+	if ($child->type->name() eq "member_of") { 
+	    push @progeny, [ $child->subject->name, $child->subject->stock_id() ];
+	}	
+    }
+
+    $c->stash->{rest} = { maternal_parent => $maternal_parent,
+			  paternal_parent => $paternal_parent,
+			  progeny => \@progeny,
+    };
+}
+
+
+sub get_cross_properties :Path('/cross/ajax/properties') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+    
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    
+    my $rs = $schema->resultset("Stock::Stock")->search( { 'me.stock_id' => $cross_id }, { join => { 'nd_experiment_stocks' => {  'nd_experiment' => { 'nd_experimentprop', '+select' =>  'nd_experimentprop.type_id' ,  '+select'=>  'nd_experimentprop.value' }}}});
+
+    my $props = {};
+
+    print STDERR "PROPS LEN ".$rs->count()."\n";
+
+    while (my $prop = $rs->next()) { 
+	push @{$props->{$prop->type->name()}}, [ $prop->get_column('value'), $prop->get_column('stockprop_id') ];
+    }
+
+    print STDERR Dumper($props);
+
+    $c->stash->{rest} = { props => $props };
+
+
+}
 
 ###
 1;#
