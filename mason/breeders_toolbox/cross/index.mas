@@ -46,9 +46,11 @@ $trial_name => undef
 
 
   <div id="add_more_progeny_dialog">
-    Basename: <input type="input" name="basename" /><br />
-    Start number: <input type="input" name="start_number" /><br />
-    Count: <input type="input" name="pedigree_count" /><br />
+    <table>
+    <tr><td>Basename:</td><td><input type="input" name="basename" /></td></tr>
+    <tr><td>Start number:</td><td><input type="input" name="start_number" /></td></tr>
+    <tr><td>Count:</td><td><input type="input" name="pedigree_count" /></td></tr>
+    </table>
   </div>
 
 
@@ -92,7 +94,7 @@ jQuery(document).ready(function() {
 
         var parent_html = "";
         if (response.maternal_parent) { 
-           parent_html = '&#2640;<img src="http://upload.wikimedia.org/wikipedia/commons/6/66/Venus_symbol.svg" width="20" /> <a href="/stock/'+response.maternal_parent[1] +'/view">'+response.maternal_parent[0]+'</a><br />';
+           parent_html = '<img src="http://upload.wikimedia.org/wikipedia/commons/6/66/Venus_symbol.svg" width="20" /> <a href="/stock/'+response.maternal_parent[1] +'/view">'+response.maternal_parent[0]+'</a><br />';
 						   }
         if (response.paternal_parent) { 						   
            parent_html += '<img src="http://upload.wikimedia.org/wikipedia/commons/b/b7/Mars_symbol.svg" width="20" /> <a href="/stock/'+response.paternal_parent[1] +'/view">'+response.paternal_parent[0]+'</a><br />';						   }
