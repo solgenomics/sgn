@@ -479,17 +479,17 @@ sub transform :Path('/list/transform/') Args(2) {
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
-    my $new_type = shift;
+    my $transform_name = shift;
 
     my $t = CXGN::List::Transform->new();
 
     my $data = $self->get_list_metadata($c, $list_id);
 
-    my $transform_name = $t->can_transform($data->{list_type}, $new_type);
-    if (!$transform_name) {
-	$c->stash->{rest} = { error => "Cannot transform $data->{list_type} into $new_type\n", };
-	return;
-    }
+#    my $transform_name = $t->can_transform($data->{list_type}, $new_type);
+#    if (!$transform_name) {
+#	$c->stash->{rest} = { error => "Cannot transform $data->{list_type} into #$new_type\n", };
+#	return;
+ #   }
     
     my $list_data = $self->retrieve_list($c, $list_id);
 
