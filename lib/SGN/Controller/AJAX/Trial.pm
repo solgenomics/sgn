@@ -87,15 +87,15 @@ sub generate_experimental_design_POST : Args(0) {
   my $design_layout_view_html;
   my $design_info_view_html;
   if ($c->req->param('stock_list')) {
-      my @raw_stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
-       my $data = $self->transform_stock_list($c, \@raw_stock_names);
-    if (exists($data->{missing}) && ref($data->{missing}) && @{$data->{missing}} >0) { 
-	$c->stash->{rest} = { error => "Some stocks were not found. Please edit the list and try again." };
-	return;
-    }
-    if ($data->{transform} && @{$data->{transform}}>0) { 
-	@stock_names = @{$data->{transform}};
-    }
+      my @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
+#       my $data = $self->transform_stock_list($c, \@raw_stock_names);
+#    if (exists($data->{missing}) && ref($data->{missing}) && @{$data->{missing}} >0) { 
+#	$c->stash->{rest} = { error => "Some stocks were not found. Please edit the list and try again." };
+#	return;
+#    }
+#    if ($data->{transform} && @{$data->{transform}}>0) { 
+#	@stock_names = @{$data->{transform}};
+#    }
   }
   my @control_names;
   if ($c->req->param('control_list')) {
@@ -290,15 +290,15 @@ sub verify_stock_list_POST : Args(0) {
   my %errors;
   my $error_alert;
   if ($c->req->param('stock_list')) {
-    my @raw_stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
-    my $data = $self->transform_stock_list($c, \@raw_stock_names);
-    if (exists($data->{missing}) && ref($data->{missing}) && @{$data->{missing}} >0) { 
-	$c->stash->{rest} = { error => "Some stocks were not found. Please edit the list and try again." };
-	return;
-    }
-    if ($data->{transform} && @{$data->{transform}}>0) { 
-	@stock_names = @{$data->{transform}};
-    }
+    @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
+    #my $data = $self->transform_stock_list($c, \@raw_stock_names);
+    #if (exists($data->{missing}) && ref($data->{missing}) && @{$data->{missing}} >0) { 
+#	$c->stash->{rest} = { error => "Some stocks were not found. Please edit the list and try again." };
+#	return;
+ #   }
+  #  if ($data->{transform} && @{$data->{transform}}>0) { 
+#	@stock_names = @{$data->{transform}};
+ #   }
   }
 
   if (!@stock_names) {
@@ -843,19 +843,19 @@ sub delete_trial_by_file : Path('/breeders/trial/delete/file') Args(1) {
 # transform stock list to list containing uniquenames only 
 # (convert synonyms to unique names)
 #
-sub transform_stock_list { 
-    my $self = shift;
-    my $c = shift;
-    my $stock_ref = shift; 
+# sub transform_stock_list { 
+#     my $self = shift;
+#     my $c = shift;
+#     my $stock_ref = shift; 
 
-    my $lt = CXGN::List::Transform->new( );
-    my $transform = $lt ->can_transform('accession_synonyms', 'accession_names');
+#     my $lt = CXGN::List::Transform->new( );
+#     my $transform = $lt ->can_transform('accession_synonyms', 'accession_names');
 
-    my $data = $lt->transform($c->dbic_schema("Bio::Chado::Schema"), $transform, $stock_ref);
+#     my $data = $lt->transform($c->dbic_schema("Bio::Chado::Schema"), $transform, $stock_ref);
 
-    return $data;
+#     return $data;
 
 		   
-}
+# }
 
 1;
