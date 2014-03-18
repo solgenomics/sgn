@@ -645,6 +645,11 @@ sub cross_detail : Path('/cross') Args(1) {
 
     my $cross = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::Stock")->find( { stock_id => $cross_id } );
 
+    my $progeny = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship") -> search( { object_id => $cross_id, 'type.name' => 'member_of'  }, { join =>  'type' } );
+
+    my $progeny_count = $progeny->count();
+    
+
     if (!$cross) { 
 	$c->stash->{template} = '/generic_message.mas';
 	$c->stash->{message} = 'The requested cross does not exist.';
@@ -659,6 +664,7 @@ sub cross_detail : Path('/cross') Args(1) {
     
     $c->stash->{cross_name} = $cross->uniquename();
     $c->stash->{cross_id} = $cross_id;
+    $c->stash->{progeny_count} = $progeny_count;
     $c->stash->{template} = '/breeders_toolbox/cross/index.mas';
     
 }

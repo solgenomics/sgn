@@ -3,6 +3,7 @@
 $cross_id
 $cross_name => ''
 $breeding_program => undef
+$progeny_count => undef
 $trial_id => undef
 $trial_name => undef
 </%args>
@@ -11,6 +12,7 @@ $trial_name => undef
 
 % use utf8;
 % $cross_name ||= "Untitled cross";
+% my $basename = $cross_name."P";
 
 <& /page/page_title.mas, title => "Detail for cross '$cross_name'" &>
 
@@ -38,7 +40,7 @@ $trial_name => undef
 
 </&>
 
-<&|  /page/info_section.mas, title => "Progeny", collapsible => 1, collapsed => 0, subtitle => '<a id="add_more_progeny_link">add more progeny</a>'  &>
+<&|  /page/info_section.mas, title => "Progeny", collapsible => 1, collapsed => 0, subtitle => '<a id="add_more_progeny_link">[add more progeny]</a>'  &>
 
   <div id="progeny_information_div">
     [loading...]
@@ -47,9 +49,9 @@ $trial_name => undef
 
   <div id="add_more_progeny_dialog">
     <table>
-    <tr><td>Basename:</td><td><input type="input" name="basename" /></td></tr>
-    <tr><td>Start number:</td><td><input type="input" name="start_number" /></td></tr>
-    <tr><td>Count:</td><td><input type="input" name="pedigree_count" /></td></tr>
+    <tr><td>Basename</td><td><input type="input" id="basename" name="basename" value="<% $basename %>" /></td></tr>
+    <tr><td>Start number</td><td><input type="input" id="start_number" name="start_number" size="5" value="<% $progeny_count + 1 %>" /></td></tr>
+    <tr><td>How many?</td><td><input type="input" id="progeny_count" name="progeny_count" size="5" /></td></tr>
     </table>
   </div>
 
@@ -90,7 +92,7 @@ jQuery(document).ready(function() {
           }
         }						 
         html += "</table>";
-	jQuery('#progeny_information_div').html(html);					   
+	jQuery('#progeny_information_div').html(html);
 
         var parent_html = "";
         if (response.maternal_parent) { 
@@ -109,7 +111,6 @@ jQuery(document).ready(function() {
   }
 
   function display_parents(cross_id) { 
- 
     jQuery.ajax( { 
       type: 'POST',
       url: '/cross/ajax/parents/'+cross_id,
@@ -143,16 +144,22 @@ jQuery(document).ready(function() {
           alert(response.error);
           return;
         }
-        var html = ""; //"<table>";
+        var html = "<table>";
         if (response.props) { 
-	  alert(response.props);
-          for (var k in response.props.keys) { 
-	     html += '<h3>'+response.props[k]+'</h3>';
-             for (var n=0; n<response.props[k].length; n++) { 
-               html += response.props[k][n]+'<br />';
+          for (var k in response.props) { 
+	     html += '<tr><td>'+k+'</td><td>...</td>';
+	     var edit_link = "";					
+	     for (var n=0; n<response.props[k].length; n++) { 
+	       if (isLoggedIn()) { 
+                 edit_link = '<a id="edit_link_prop_'+response.props[k][n][1]+'">[edit]</a>'; 
+               }
+               html += '<td><b>'+response.props[k][n][0]+'</b></td><td>'+edit_link+'</td></tr>';
              }
+
+
           }
-              jQuery('#cross_properties_div').html(html+' :-)');
+    	  html += '</table>';
+          jQuery('#cross_properties_div').html(html);
         }
       },
       error: function(response) { alert("An error occurred") }
@@ -165,14 +172,18 @@ jQuery(document).ready(function() {
 
   jQuery('#add_more_progeny_link').click( function() { 
      jQuery('#add_more_progeny_dialog').dialog("open");
+     jQuery('#progeny_count').focus();
   });
 
   jQuery('#add_more_progeny_dialog').dialog( { 
-    height: 200,
+    height: 250,
     width: 500,
     buttons: { 'OK': {
                  id: 'add_more_progeny_dialog_ok_button', 
-		 click: function() { alert("OK") },
+		 click: function() { 
+	            add_more_progeny("<% $cross_name %>", jQuery('#basename').val(), jQuery('#start_number').val(), jQuery('#progeny_count').val());
+                    			       
+ },
                  text: "OK" 
                 } , 
                'Cancel': {  id: 'add_more_progeny_dialog_cancel_button',
@@ -181,6 +192,20 @@ jQuery(document).ready(function() {
     title: 'Add more progeny'
 
   });
+
+  function add_more_progeny(cross_name, basename, start_number, progeny_count) { 
+						       
+    jQuery.ajax({ 
+      url: '/cross/progeny/add/'+<% $cross_id %>,
+      data: { 'cross_name': cross_name, 'basename': basename, 'start_number': start_number, 'progeny_count': progeny_count },
+      success: function(response) { 
+	if (response.error) { 
+          alert(response.error); 
+        }
+        else { alert('success'); } },
+      error: function(response, code, error) { alert('error: '+error); }
+    });
+  }
 						   
 
 });

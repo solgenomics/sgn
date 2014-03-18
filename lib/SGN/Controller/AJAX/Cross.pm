@@ -416,21 +416,72 @@ sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
     
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     
-    my $rs = $schema->resultset("Stock::Stock")->search( { 'me.stock_id' => $cross_id }, { join => { 'nd_experiment_stocks' => {  'nd_experiment' => { 'nd_experimentprop', '+select' =>  'nd_experimentprop.type_id' ,  '+select'=>  'nd_experimentprop.value' }}}});
+    my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id }, { join => { 'nd_experiment' => { 'nd_experiment_stocks' }}});
 
     my $props = {};
 
     print STDERR "PROPS LEN ".$rs->count()."\n";
 
     while (my $prop = $rs->next()) { 
-	push @{$props->{$prop->type->name()}}, [ $prop->get_column('value'), $prop->get_column('stockprop_id') ];
+	push @{$props->{$prop->type->name()}}, [ $prop->get_column('value'), $prop->get_column('nd_experimentprop_id') ];
     }
 
     print STDERR Dumper($props);
-
     $c->stash->{rest} = { props => $props };
 
 
+}
+
+sub add_more_progeny :Path('/cross/progeny/add') :Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+
+    if (!$c->user()) { 
+	$c->stash->{rest} = { error => "You must be logged in add progeny." };
+	return;
+    }
+    if (!$c->user()->has_role('submitter') or !$c->user()->has_role('curator')) { 
+	$c->stash->{rest} = { error => "You do not have sufficient privileges to add progeny." };
+	return;
+    }
+    
+    my $basename = $c->req->param("basename");
+    my $start_number = $c->req->param("start_number");
+    my $progeny_count = $c->req->param("progeny_count");
+    my $cross_name = $c->req->param("cross_name");
+
+    my @progeny_names = ();
+    foreach my $n (1..$progeny_count) { 
+	push @progeny_names, $basename. (sprintf "%03d", $n + $start_number -1);
+    }
+
+    print STDERR Dumper(\@progeny_names);
+
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $owner_name = $c->user()->get_object()->get_username();
+    
+    my $progeny_add = CXGN::Pedigree::AddProgeny
+	->new({
+	    chado_schema => $chado_schema,
+	    phenome_schema => $phenome_schema,
+	    dbh => $dbh,
+	    cross_name => $cross_name,
+	    progeny_names => \@progeny_names,
+	    owner_name => $owner_name,
+	      });
+    if (!$progeny_add->add_progeny()){
+      $c->stash->{rest} = {error_string => "Error adding progeny. Please change the input parameters and try again.",};
+      #should delete crosses and other progeny if add progeny fails?
+      return;
+    }
+
+    $c->stash->{rest} = { success => 1};
+    
 }
 
 ###
