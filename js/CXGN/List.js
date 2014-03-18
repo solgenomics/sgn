@@ -370,9 +370,11 @@ CXGN.List.prototype = {
 	
 	jQuery('#dialog_add_list_item_button').click(
 	    function() { 
+                jQuery('#working').dialog("open");
 		addMultipleItemsToList('dialog_add_list_item', list_id);
 		var lo = new CXGN.List();
 		lo.renderItems(div, list_id);
+		jQuery('#working').dialog("close");
 	    }
 	);
 	
@@ -815,18 +817,20 @@ function addMultipleItemsToList(div, list_id) {
 	alert("No items - Please enter items to add to the list.");
 return;
     }
-    var items = content.split("\n");
+//    var items = content.split("\n");
     
-    var duplicates = new Array();
-    for (var n=0; n<items.length; n++) { 
-	var id = lo.addItem(list_id, items[n]);
-	if (id == 0) { 
-	    duplicates.push(items[n]);
-	}
-    }
-    if (duplicates.length >0) { 
-	alert("The following items were not added because they are already in the list: "+ duplicates.join(", "));
-    }
+  //  var duplicates = new Array();
+    var items = content.split("\n");
+    lo.addBulk(list_id, items);
+   // for (var n=0; n<items.length; n++) { 
+//	var id = lo.addItem(list_id, items[n]);
+//	if (id == 0) { 
+//	    duplicates.push(items[n]);
+//	}
+  //  }
+    //if (duplicates.length >0) { 
+//	alert("The following items were not added because they are already in the list: "+ duplicates.join(", "));
+  //  }
 lo.renderLists('list_dialog');
 }
 

@@ -343,12 +343,18 @@ sub add_bulk : Path('/list/add/bulk') Args(0) {
 
     my @duplicates = ();
     my $count = 0;
+    my $iq = "INSERT INTO sgn_people.list_item (list_id, content) VALUES (?, ?)";
+    my $ih = $c->dbc->dbh()->prepare($iq);
+    
+    print STDERR "Adding accessions ";
+    
     foreach my $element (@elements) { 
+	print STDERR ".";
 	if ($self->exists_item($c, $list_id, $element)) { 
 	    push @duplicates, $element;
 	}
 	else { 
-	    $self->insert_element($c, $list_id, $element);
+	    $ih->execute($list_id, $element);	    
 	    $count++;
 	}
     }
