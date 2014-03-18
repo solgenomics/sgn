@@ -37,6 +37,7 @@ jQuery(document).ready(function ($) {
 	    url: '/ajax/accession_list/add',
 	    async: false,
 	    dataType: "json",
+	    timeout: 36000000,
 	    data: {
 		'accession_list': accessionsAsJSON,
 		'species_name': speciesName,
