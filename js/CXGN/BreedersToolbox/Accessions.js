@@ -206,6 +206,7 @@ jQuery(document).ready(function ($) {
 	$.ajax({
 	    type: 'POST',
 	    url: '/ajax/accession_list/verify',
+	    timeout: 36000000,
 	    //async: false,
 	    dataType: "json",
 	    data: {
