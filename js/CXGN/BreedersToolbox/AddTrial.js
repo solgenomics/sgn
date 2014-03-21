@@ -109,6 +109,7 @@ jQuery(document).ready(function ($) {
             return;
         }
 
+	$('#working').dialog("open");
 
         $.ajax({
             type: 'POST',
@@ -137,11 +138,14 @@ jQuery(document).ready(function ($) {
                 } else {
 		    $('#trial_design_information').html(response.design_info_view_html);
                     $('#trial_design_view_layout').html(response.design_layout_view_html);
+
+		    $('#working').dialog("close");
                     $('#trial_design_confirm').dialog("open");
 		    design_json = response.design_json;
                 }
             },
             error: function () {
+		$('#working').dialog("close");
                 alert('An error occurred. sorry');
             }
        });
