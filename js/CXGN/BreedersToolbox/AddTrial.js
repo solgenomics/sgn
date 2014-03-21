@@ -52,6 +52,7 @@ jQuery(document).ready(function ($) {
 	var return_val = 0;
 	$.ajax({
             type: 'POST',
+	    timeout: 3000000,
             url: '/ajax/trial/verify_stock_list',
 	    dataType: "json",
             data: {
@@ -111,6 +112,7 @@ jQuery(document).ready(function ($) {
 
         $.ajax({
             type: 'POST',
+	    timeout: 3000000,
             url: '/ajax/trial/generate_experimental_design',
 	    dataType: "json",
             data: {
@@ -314,6 +316,7 @@ jQuery(document).ready(function ($) {
         }
         $.ajax({
             type: 'POST',
+	    timeout: 3000000,
             url: '/ajax/trial/save_experimental_design',
 	    dataType: "json",
             data: {
