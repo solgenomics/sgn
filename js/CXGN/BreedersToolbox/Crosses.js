@@ -287,23 +287,23 @@ jQuery(document).ready(function ($) {
     }
 
     $("#maternal_parent").autocomplete( { 
-	source: '/ajax/stock/stock_autocomplete'
+	source: '/ajax/stock/accession_autocomplete'
     });
 
     $("#paternal_parent").autocomplete( { 
-	source: '/ajax/stock/stock_autocomplete'
+	source: '/ajax/stock/accession_autocomplete'
     });
 
     $("#selfed_parent").autocomplete( { 
-	source: '/ajax/stock/stock_autocomplete'
+	source: '/ajax/stock/accession_autocomplete'
     });
 
     $("#doubled_haploid_parent").autocomplete( { 
-	source: '/ajax/stock/stock_autocomplete'
+	source: '/ajax/stock/accession_autocomplete'
     });
 
     $("#open_pollinated_maternal_parent").autocomplete( { 
-	source: '/ajax/stock/stock_autocomplete'
+	source: '/ajax/stock/accession_autocomplete'
     });
 
     $("#paternal_population").autocomplete( { 
