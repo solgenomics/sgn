@@ -43,10 +43,10 @@ jQuery(document).ready(function() {
 		
 		var parent_html = "";
 		if (response.maternal_parent) { 
-		    parent_html = '<img src="http://upload.wikimedia.org/wikipedia/commons/6/66/Venus_symbol.svg" width="20" /> <a href="/stock/'+response.maternal_parent[1] +'/view">'+response.maternal_parent[0]+'</a><br />';
+		    parent_html = '<img src="/img/Venus_symbol.svg" width="20" /> <a href="/stock/'+response.maternal_parent[1] +'/view">'+response.maternal_parent[0]+'</a><br />';
 		}
 		if (response.paternal_parent) { 						   
-		    parent_html += '<img src="http://upload.wikimedia.org/wikipedia/commons/b/b7/Mars_symbol.svg" width="20" /> <a href="/stock/'+response.paternal_parent[1] +'/view">'+response.paternal_parent[0]+'</a><br />';						   }
+		    parent_html += '<img src="/img/Mars_symbol.svg" width="20" /> <a href="/stock/'+response.paternal_parent[1] +'/view">'+response.paternal_parent[0]+'</a><br />';						   }
 		jQuery('#parents_information_div').html(parent_html);
 	    },
 	    
@@ -130,9 +130,6 @@ jQuery(document).ready(function() {
 	    click: function() { 
 		jQuery('#working').dialog("open");
 		add_more_progeny(get_cross_id(), get_cross_name(), jQuery('#basename').val(), jQuery('#start_number').val(), jQuery('#progeny_count').val());
-		jQuery('#working').dialog("close");
-                display_progeny(get_cross_id());
-		jQuery('#add_more_progeny_dialog').dialog("close");
                 
 	    },
             text: "OK" 
@@ -153,7 +150,12 @@ jQuery(document).ready(function() {
 		if (response.error) { 
 		    alert(response.error); 
 		}
-		else { alert('success'); } },
+		else { alert('Added '+progeny_count+' new progeny'); 
+		       jQuery('#working').dialog("close");
+                       display_progeny(get_cross_id());
+		       jQuery('#add_more_progeny_dialog').dialog("close");
+		     }
+	    },
 	    error: function(response, code, error) { alert('error: '+error); }
 	});
     }    
