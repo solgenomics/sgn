@@ -33,6 +33,14 @@ has 'schema' => (
 		);
 has 'stocks' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_stocks');
 has 'species' => (isa => 'Str', is => 'rw', predicate => 'has_species');
+has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name',required => 1,);
+has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
+has 'phenome_schema' => (
+		 is       => 'rw',
+		 isa      => 'DBIx::Class::Schema',
+		 predicate => 'has_phenome_schema',
+		 required => 1,
+		);
 
 sub add_accessions {
   my $self = shift;
@@ -56,12 +64,19 @@ sub _add_stocks {
   my $species = $self->get_species();
   my $stocks_rs = $self->get_stocks();
   my @stocks = @$stocks_rs;
+  my @added_stock_ids;
+  my $phenome_schema = $self->get_phenome_schema();
 
   my $organism = $schema->resultset("Organism::Organism")
     ->find({
 	    species => $species,
 	   } );
   my $organism_id = $organism->organism_id();
+
+  #lookup user by name
+  my $owner_name = $self->get_owner_name();;
+  my $dbh = $self->get_dbh();
+  my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 
   my $coderef = sub {
 
@@ -81,6 +96,7 @@ sub _add_stocks {
 		  uniquename => $stock_name,
 		  type_id     => $stock_cvterm->cvterm_id,
 		 } );
+      push (@added_stock_ids,  $stock->stock_id());
     }
   };
 
@@ -94,9 +110,17 @@ sub _add_stocks {
     print STDERR "Transaction error storing stocks: $transaction_error\n";
     return;
   }
-  else {
-    return 1;
+
+  foreach my $stock_id (@added_stock_ids) {
+    #add the owner for this stock
+    $phenome_schema->resultset("StockOwner")
+      ->find_or_create({
+			stock_id     => $stock_id,
+			sp_person_id =>  $owner_sp_person_id,
+		       });
   }
+
+  return 1;
 }
 
 sub validate_stocks {

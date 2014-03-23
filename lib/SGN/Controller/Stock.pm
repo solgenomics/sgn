@@ -434,7 +434,7 @@ sub _make_stock_search_rs {
         $name =~ s/(^\s+|\s+)$//g;
         $name =~ s/\s+/ /g;
 
-        $rs = $rs->search({
+        $rs = $rs->search({ 'me.is_obsolete' => 'false', 
             -or => [
                  'lower(me.name)' => { like => '%'.lc( $name ).'%' } ,
                  'lower(me.uniquename)' => { like => '%'.lc( $name ).'%' },

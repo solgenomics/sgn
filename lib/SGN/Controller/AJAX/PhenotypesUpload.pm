@@ -38,8 +38,77 @@ __PACKAGE__->config(
 
 
 sub upload_phenotype_spreadsheet :  Path('/ajax/phenotype/upload_spreadsheet') : ActionClass('REST') { }
-
 sub upload_phenotype_spreadsheet_POST : Args(0) {
+  my ($self, $c) = @_;
+  my $uploader = CXGN::UploadFile->new();
+  my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
+  my $parser = CXGN::Phenotypes::ParseUpload->new();
+  my $upload = $c->req->upload('upload_phenotype_spreadsheet_file_input');
+  my $upload_original_name = $upload->filename();
+  my $upload_tempfile = $upload->tempname;
+  my $subdirectory = "spreadsheet_phenotype_upload";
+  my $archived_filename_with_path;
+  my $md5;
+  my $validate_file;
+  my $parsed_file;
+  my %parsed_data;
+  my @plots;
+  my @traits;
+  my %phenotype_metadata;
+  my $time = DateTime->now();
+  my $timestamp = $time->ymd()."_".$time->hms();
+
+  $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+  $md5 = $uploader->get_md5($archived_filename_with_path);
+  if (!$archived_filename_with_path) {
+      $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+      return;
+  }
+  unlink $upload_tempfile;
+
+  ## Set metadata
+
+  $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+  $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+  $phenotype_metadata{'operator'}="tester_operator"; #####Need to get this from uploaded file
+  $phenotype_metadata{'date'}="$timestamp";
+
+  ## Validate and parse uploaded file
+  $validate_file = $parser->validate('phenotype spreadsheet', $archived_filename_with_path);
+  if (!$validate_file) {
+      $c->stash->{rest} = {error => "File not valid: $upload_original_name",};
+      return;
+  }
+
+ $parsed_file = $parser->parse('phenotype spreadsheet', $archived_filename_with_path);
+  if (!$parsed_file) {
+      $c->stash->{rest} = {error => "Error parsing file $upload_original_name",};
+      return;
+  }
+  if ($parsed_file->{'error'}) {
+      $c->stash->{rest} = {error => $parsed_file->{'error'},};
+      return;
+  }
+  %parsed_data = %{$parsed_file->{'data'}};
+  @plots = @{$parsed_file->{'plots'}};
+  @traits = @{$parsed_file->{'traits'}};
+
+  print STDERR "store phenotypes from uploaded file\n";
+  $store_phenotypes->store($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+
+  if (!$store_phenotypes) {
+    $c->stash->{rest} = { error => 'Error storing uploaded file', };
+    return;
+  }
+
+  $c->stash->{rest} = {success => "1",};
+
+}
+
+
+#remove following function after above works
+sub upload_phenotype_spreadsheet_old :  Path('/ajax/phenotype/upload_spreadsheet_old') : ActionClass('REST') { }
+sub upload_phenotype_spreadsheet_old_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');

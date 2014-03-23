@@ -80,18 +80,26 @@ sub add_accession_list_POST : Args(0) {
   my $stock_add;
   my $validated;
   my $added;
+  my $dbh = $c->dbc->dbh;
+  my $user_id;
+  my $owner_name;
+  my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
     return;
   }
+
+  $user_id = $c->user()->get_object()->get_sp_person_id();
+  $owner_name = $c->user()->get_object()->get_username();
+
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
     $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
     return;
   }
 
   @accession_list = @{_parse_list_from_json($accession_list_json)};
-  $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name} );
+  $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name, owner_name => $owner_name,phenome_schema => $phenome_schema, dbh => $dbh} );
   $validated = $stock_add->validate_stocks();
   if (!$validated) {
     $c->stash->{rest} = {error =>  "Stocks already exist in the database" };

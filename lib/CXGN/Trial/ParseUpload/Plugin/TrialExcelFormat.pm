@@ -244,7 +244,7 @@ sub _get_accession {
  		   dbxref => 'accession',
  		  });
   $stock_lookup->set_stock_name($accession_name);
-  $stock = $stock_lookup->get_stock_exact();
+  $stock = $stock_lookup->get_stock();
 
   if (!$stock) {
     return;
@@ -267,7 +267,7 @@ sub _get_stock {
   my $stock;
 
   $stock_lookup->set_stock_name($stock_name);
-  $stock = $stock_lookup->get_stock_exact();
+  $stock = $stock_lookup->get_stock();
 
   if (!$stock) {
     return;

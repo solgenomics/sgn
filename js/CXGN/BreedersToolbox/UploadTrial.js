@@ -98,11 +98,14 @@ jQuery(document).ready(function ($) {
 	json: true,
 	post: function () {
             var uploadedTrialLayoutFile = $("#trial_uploaded_file").val();
+	    $('#working').dialog("open");
             if (uploadedTrialLayoutFile === '') {
+		$('#working').dialog("close");
 		alert("No file selected");
             }
 	},
 	complete: function (response) {
+	    $('#working').dialog("close");
             if (response.error_string) {
 		$("#upload_trial_error_display tbody").html('');
 		$("#upload_trial_error_display tbody").append(response.error_string);

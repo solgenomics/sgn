@@ -232,17 +232,20 @@ jQuery(document).ready(function ($) {
 
 	if (!crossName) { alert("A cross name is required"); return; }
 	//alert("Sending AJAX request.. /ajax/cross/add_cross");
-	
+
 	$.ajax({
             url: '/ajax/cross/add_cross',
+            timeout: 3000000,
             dataType: "json",
             type: 'POST',
             data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&program='+program+'&location='+location,
             error: function(response) { alert("An error occurred. Please try again later!"+response); },
             parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
-            success: function(response) { 
+            success: function(response) {
+
 		if (response.error) { alert(response.error); }
 		else {
+                    
 		    $("#create_cross").dialog("close");
 		    //alert("The cross has been added.");
 		    $('#cross_saved_dialog_message').dialog("open");
@@ -287,23 +290,23 @@ jQuery(document).ready(function ($) {
     }
 
     $("#maternal_parent").autocomplete( { 
-	source: '/ajax/stock/stock_autocomplete'
+	source: '/ajax/stock/accession_autocomplete'
     });
 
     $("#paternal_parent").autocomplete( { 
-	source: '/ajax/stock/stock_autocomplete'
+	source: '/ajax/stock/accession_autocomplete'
     });
 
     $("#selfed_parent").autocomplete( { 
-	source: '/ajax/stock/stock_autocomplete'
+	source: '/ajax/stock/accession_autocomplete'
     });
 
     $("#doubled_haploid_parent").autocomplete( { 
-	source: '/ajax/stock/stock_autocomplete'
+	source: '/ajax/stock/accession_autocomplete'
     });
 
     $("#open_pollinated_maternal_parent").autocomplete( { 
-	source: '/ajax/stock/stock_autocomplete'
+	source: '/ajax/stock/accession_autocomplete'
     });
 
     $("#paternal_population").autocomplete( { 
