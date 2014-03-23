@@ -1,10 +1,8 @@
-jQuery(document).ready(function() {
-    
+jQuery(document).ready(function() {    
     
     display_progeny(get_cross_id());
     
     cross_properties(get_cross_id());
-    
     
     function get_cross_id() { 
 	var cross_id = jQuery('#cross_id').html();
@@ -158,5 +156,34 @@ jQuery(document).ready(function() {
 	    },
 	    error: function(response, code, error) { alert('error: '+error); }
 	});
-    }    
+    }
+
+    jQuery('#edit_properties_dialog').dialog( { 
+	height: 250,
+	width: 500,
+	buttons: { 'OK': 
+		   {
+		       id: 'edit_properties_dialog_ok_button', 
+		       click: function() { 
+			   jQuery('#working').dialog("open");
+		           
+		       },
+		       text: "OK" 
+		   } , 
+		   'Cancel': {  
+		       id: 'edit_properties_dialog_cancel_button',
+		       click:  function() { jQuery('#edit_properties_dialog').dialog("close") }, 
+		       text: "Cancel" } },
+	autoOpen: false,
+	title: 'Edit cross properties'
+	
+	
+
+    });
+
+    jQuery('#edit_properties_link').click( function() { 
+	jQuery('#edit_properties_dialog').dialog("open");
+
+    });
+    
 });

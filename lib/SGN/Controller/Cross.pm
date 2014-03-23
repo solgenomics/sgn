@@ -663,6 +663,7 @@ sub cross_detail : Path('/cross') Args(1) {
     }
     
     $c->stash->{cross_name} = $cross->uniquename();
+    $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
     $c->stash->{cross_id} = $cross_id;
     $c->stash->{progeny_count} = $progeny_count;
     $c->stash->{template} = '/breeders_toolbox/cross/index.mas';

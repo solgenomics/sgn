@@ -6,6 +6,7 @@ $breeding_program => undef
 $progeny_count => undef
 $trial_id => undef
 $trial_name => undef
+$user_id => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.BreedersToolbox.CrossDetailPage" ] &>
@@ -48,7 +49,10 @@ $trial_name => undef
 
 </&>
 
-<&|  /page/info_section.mas, title => "Progeny", collapsible => 1, collapsed => 0, subtitle => '<a id="add_more_progeny_link">[add more progeny]</a>'  &>
+% my $add_progeny_link = "[add progeny]";
+% if ($user_id) { $add_progeny_link= '<a id="add_more_progeny_link">[add progeny]</a>'; }
+
+<&|  /page/info_section.mas, title => "Progeny", collapsible => 1, collapsed => 0, subtitle => $add_progeny_link   &>
 
   <div id="progeny_information_div">
     [loading...]
@@ -66,7 +70,10 @@ $trial_name => undef
 
 </&>
 
-<&| /page/info_section.mas, title => "Properties" &>
+% my $edit_link = "[Edit]";
+% if ($user_id) { $edit_link = '<a id="edit_properties_link">[Edit]</a>'; }
+
+<&| /page/info_section.mas, title => "Properties", subtitle=> $edit_link &>
 
 <div id="cross_properties_div" >
 [none]
@@ -74,5 +81,19 @@ $trial_name => undef
 
 </&>
 
+<div id="edit_properties_dialog"> 
 
+  <select id="properties_select">
+    <option value="cross_type">Cross type</option>
+    <option value="time">Time</option>
+    <option value="date">Date</option>
+    <option value="number_of_flowers">Number of flowers</option>
+    <option value="number_of_seeds">Number of seeds</option>
+    <option value="operator">Operator</option>
+</select>
+
+  <input id="property_value" />
+    
+
+</div>
 
