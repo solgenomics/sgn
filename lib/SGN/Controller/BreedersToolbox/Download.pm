@@ -61,10 +61,17 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     print STDERR "IDS: $accession_list_id, $trial_list_id, $trait_list_id\n";
 
-    my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-    my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
-    my $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
+    my $accession_data = [];
+    if ($accession_list_id) { $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id); }
+    my $trial_data = [];
+    if ($trial_list_id) { $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id); } 
+    
+    my $trait_data = [];
+    if ($trait_list_id) { $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id); } 
 
+    print STDERR Dumper($accession_data);
+    print STDERR Dumper($trial_data);
+    print STDERR Dumper($trait_data);
     
 
     my @accession_list = map { $_->[1] } @$accession_data;
@@ -81,18 +88,22 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $t = CXGN::List::Transform->new();
     
-#    print STDERR Data::Dumper::Dumper(\@accession_list);
-#    print STDERR Data::Dumper::Dumper(\@trial_list);
-#    print STDERR Data::Dumper::Dumper(\@trait_list);
+    print STDERR Data::Dumper::Dumper(\@accession_list);
+    print STDERR Data::Dumper::Dumper(\@trial_list);
+    print STDERR Data::Dumper::Dumper(\@trait_list);
 
     my $acc_t = $t->can_transform("accessions", "accession_ids");
-    my $accession_id_data = $t->transform($schema, $acc_t, $unique_list);
+    my $accession_id_data = $t->transform($schema, $acc_t, $unique_list->{transform});
 
     my $trial_t = $t->can_transform("trials", "trial_ids");
     my $trial_id_data = $t->transform($schema, $trial_t, \@trial_list);
     
     my $trait_t = $t->can_transform("traits", "trait_ids");
     my $trait_id_data = $t->transform($schema, $trait_t, \@trait_list);
+
+    print STDERR Dumper($accession_id_data);
+    print STDERR Dumper($trial_id_data);
+    print STDERR Dumper($trait_id_data);
 
     my $accession_sql = join ",", map { "\'$_\'" } @{$accession_id_data->{transform}};
     my $trial_sql = join ",", map { "\'$_\'" } @{$trial_id_data->{transform}};

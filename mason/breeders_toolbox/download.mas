@@ -51,38 +51,31 @@ Choose a list for each parameter and click "download".
 
     var lo = new CXGN.List();
 
-    $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ]));
-    $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ] ));
-    $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ] ));
+    $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
+    $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ], 'select' ));
+    $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], 'select'  ));
 
     $('#phenotype').click(function() {
    
-	$('#working').dialog( { 
-		height: 100,
-		width:  300,
-		modal: true,
-		autoOpen: false,
-		closeOnEscape: false,
-		draggable: true,
-		resizable: true,
-		open: function() { $(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide(); },
-		title: 'Downloading phenotype...'
-		});
-
-	disable_ui()
+      disable_ui();
 
       var accession_list_id = $('#accession_list_list_select').val();
       var trial_list_id = $('#trial_list_list_select').val();
       var trait_list_id = $('#trait_list_list_select').val();
 
-      var accession_validation = lo.validate(accession_list_id, 'accessions', true);
-      var trial_validation = lo.validate(trial_list_id, 'trials', true);
-      var trait_validation = lo.validate(trait_list_id, 'traits', true);
+      var accession_validation = 1;
+      if (accession_list_id) { accession_validation = lo.validate(accession_list_id, 'accessions', true); }
+      
+      var trial_validation = 1; 
+      if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true); }
+  
+      var trait_validation = 1;
+      if (trait_list_id) { trait_validation = lo.validate(trait_list_id, 'traits', true); } 
 
-      if (!accession_list_id || ! trial_list_id || ! trait_list_id) { 
-        alert("You need to select an accession, a trail, and a trait list!");
-        return; 
-      }
+      //if (!accession_list_id || ! trial_list_id || ! trait_list_id) { 
+      //  alert("You need to select an accession, a trail, and a trait list!");
+      //  return; 
+      //}
 
       var problem_lists = new Array();
 
@@ -98,6 +91,7 @@ Choose a list for each parameter and click "download".
 
       if (problem_lists.length > 0) { 
         alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
+        enable_ui();
         return;
     }
 
@@ -159,18 +153,6 @@ Choose a list for each parameter and click "download".
 
       $('#genotype').click(function() {
 
-	$('#working').dialog( { 
-		height: 100,
-		width:  300,
-		modal: true,
-		autoOpen: false,
-		closeOnEscape: true,
-		draggable: true,
-		resizable: true,
-		open: function() { $(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide(); },
-		title: 'Downloading genotype...'
-		});
-
       disable_ui()
 
       var accession_list_id = $('#genotype_accession_list_list_select').val();
@@ -180,7 +162,7 @@ Choose a list for each parameter and click "download".
       var trial_validation = lo.validate(trial_list_id, 'trials', true);
 
       if (!accession_list_id || ! trial_list_id ) { 
-        alert("You need to select an accession and a trail !");
+        alert("You need to select an accession and a trial !");
         return; 
       }
 
