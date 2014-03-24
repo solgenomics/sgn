@@ -21,6 +21,7 @@ jQuery(document).ready(function ($) {
     var list = new CXGN.List();
     var accessionList;
     var doFuzzySearch;
+    var validSpecies;
 
     function disable_ui() { 
 	$('#working').dialog("open");
@@ -55,6 +56,35 @@ jQuery(document).ready(function ($) {
 	});
     }
 
+    function verify_species_name() {
+	var speciesName = $("#species_name_input").val();
+	validSpecies = 0;
+	$.ajax({
+            type: 'POST',
+            url: '/organism/verify_name',
+	    dataType: "json",
+            data: {
+                'species_name': speciesName,
+            },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error);
+		    validSpecies = 0;
+                } else {
+		    validSpecies = 1;
+                }
+            },
+            error: function () {
+                alert('An error occurred verifying species name. sorry');
+		validSpecies = 0;
+            }
+	});
+    }
+
+    $('#species_name_input').change(function () {
+        verify_species_name();
+    });
+
     $("#review_absent_dialog").dialog({
 	autoOpen: false,	
 	modal: true,
@@ -67,6 +97,9 @@ jQuery(document).ready(function ($) {
 		var accessionsToAdd = accessionList;
 		if (!speciesName) {
 		    alert("Species name required");
+		    return;
+		}
+		if (validSpecies == 0){
 		    return;
 		}
 		if (!accessionsToAdd || accessionsToAdd.length == 0) {
