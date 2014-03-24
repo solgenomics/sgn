@@ -442,7 +442,8 @@ sub _peptides_rs {
 sub _peptide_loc {
     my ($rs) = @_;
     $rs->search_related( 'featureloc_features', {
-            srcfeature_id => { -not => undef },
+            #srcfeature_id => { -not => undef },
+	     srcfeature_id => { -not => undef }, locgroup => 0
           },
           { # Don't prefetch srcfeatures, it significantly slows down the query
             # prefetch => 'srcfeature',
@@ -475,7 +476,8 @@ sub _exon_rs {
                prefetch => 'featureloc_features',
            })
         ->search_related( 'featureloc_features', {
-            srcfeature_id => { -not => undef },
+            #srcfeature_id => { -not => undef },
+	     srcfeature_id => { -not => undef }, locgroup => 0
           },
           {
             prefetch => 'srcfeature',
