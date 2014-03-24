@@ -43,7 +43,11 @@ jQuery(document).ready(function ($) {
 		'accession_list': accessionsAsJSON,
 		'species_name': speciesName,
 	    },
+	    beforeSend: function(){
+		disable_ui();
+            },  
 	    success: function (response) {
+		enable_ui();
 		if (response.error) {
 		    alert(response.error);
 		} else {
@@ -249,11 +253,12 @@ jQuery(document).ready(function ($) {
 	    beforeSend: function(){
 		disable_ui();
             },  
-            complete : function(){
-		enable_ui();
-            },  
+            //complete : function(){
+		//enable_ui();
+            //},  
 	    success: function (response) {
 		//enable_ui();
+		enable_ui();
                 if (response.error) {
 		    alert(response.error);
                 } else {
