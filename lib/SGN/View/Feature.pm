@@ -104,18 +104,23 @@ sub location_string {
 }
 
 sub location_list_html {
-    my ($feature, $featurelocs) = @_;
+    my ($feature, $featurelocs) = @_;   
     my @coords = map { location_string_html($_) }
-        ( $featurelocs ? $featurelocs->all
-                       : $feature->featureloc_features->all)
+        (  #$featurelocs ? $featurelocs->all
+          #             : $feature->featureloc_features->all );
+	  $featurelocs ? $featurelocs->search({locgroup => 0,},)->all
+                       : $feature->featureloc_features->search({locgroup => 0,},)->all)
         or return '<span class="ghosted">none</span>';
     return @coords;
 }
 sub location_list {
     my ($feature, $featurelocs) = @_;
+    print STDERR "\n\nLOCATON LIST\n\n";
     return map { ($_->srcfeature ? $_->srcfeature->name : '<span class="ghosted">null</span>') . ':' . ($_->fmin+1) . '..' . $_->fmax }
-        ( $featurelocs ? $featurelocs->all
-                       : $feature->featureloc_features->all );
+        ( #$featurelocs ? $featurelocs->all
+          #             : $feature->featureloc_features->all );
+    $featurelocs ? $featurelocs->search({locgroup => 0,},)->all
+                       : $feature->featureloc_features->search({locgroup => 0,},)->all );
 }
 
 sub related_stats {

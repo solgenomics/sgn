@@ -48,9 +48,7 @@ sub choose_view :Private {
             $c->feature_xrefs( $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax, { exclude => 'featurepages' } )
         }
         #$c->stash->{featurelocs}->all
-	$c->stash->{featurelocs}->search(
-	    {locgroup => 0,},
-	    )->all
+	$c->stash->{featurelocs}->search({locgroup => 0,},)->all
     }
     $c->stash->{xrefs} = \@xrefs;
 
