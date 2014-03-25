@@ -8,7 +8,11 @@
     use SGN::View::Feature 'mrna_cds_protein_sequence';
 </%once>
 <%perl>
-    my $reference   = $featurelocs ? $featurelocs->single->srcfeature : undef ;
+    #my $reference   = $featurelocs ? $featurelocs->single->srcfeature : undef ;
+    #getting only for primary featureloc
+    my $reference   = $featurelocs ? $featurelocs->search(
+       		    {locgroup => 0,},
+      		    )->single->srcfeature : undef ;
     my @mrnas       = grep $_->type->name eq 'mRNA', $feature->child_features;
 </%perl>
 
