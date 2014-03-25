@@ -156,6 +156,7 @@ sub feature_table {
 
         my @locations = $f->search_related('featureloc_features', {
             @ref_condition,
+	    locgroup => 0,
            },
            { order_by => 'feature_id' }
           );
