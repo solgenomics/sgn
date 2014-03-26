@@ -9,10 +9,6 @@ use Data::Dumper;
 use CGI;
 use File::Slurp qw | read_file |;
 
-
-
-print "content-type: text/html \n\n";
-
 use Moose;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -20,13 +16,6 @@ BEGIN { extends 'Catalyst::Controller'; }
 use URI::FromHash 'uri';
 use CXGN::List::Transform;
 
-__PACKAGE__->config(
-    default => 'application/json',
-    stash_key => 'rest',
-    map => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
-   );
-
- 
 sub breeder_download : Path('/breeders/download/') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -191,6 +180,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
     my $data; 
     my $output = "";
 
+    my $fh000="out_test000.txt";
+
     if ($data_type eq "genotype") { 
 		
         print "Download genotype data\n";
@@ -225,7 +216,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 	   @k = keys   %{ $AoH[$i] }
 	}
 
-	my $fh000="out_test000.txt";
+
 
 	$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
 
@@ -249,11 +240,17 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
              
             }
 
-            print $fh00 "\n";
+            print $fh00 "\n"; 
 
 	}
 
     }
+
+    my $x; 
+    if ($a > 100) { 
+	$x = 200;
+    }
+    print $x;
 
 
     
@@ -263,14 +260,16 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
     # print STDERR "Output file is ", $fh000,"\n";
 
 
-     my $contents = read_file("/data/prod/public/out_test000.txt");
+    my $contents = read_file($fh000); #"/data/prod/public/out_test000.txt");
 
 
     $c->res->content_type("text/plain");
 
     $c->res->body($contents);
 
-   system("rm output_test*.txt");
+#  system("rm output_test*.txt");
+    
+    unlink $fh000;
 #  system("rm qc_output.txt");
 
 }
