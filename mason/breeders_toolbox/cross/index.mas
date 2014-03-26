@@ -58,7 +58,6 @@ $user_id => undef
     [loading...]
     </div>
 
-
   <div id="add_more_progeny_dialog">
     <table>
     <tr><td>Basename</td><td><input type="input" id="basename" name="basename" value="<% $basename %>" /></td></tr>
@@ -90,10 +89,12 @@ $user_id => undef
     <option value="number_of_flowers">Number of flowers</option>
     <option value="number_of_seeds">Number of seeds</option>
     <option value="operator">Operator</option>
+    <option value="cross_name">Cross name</option>
 </select>
 
   <input id="property_value" />
-    
+
+  <p><b>Note</b>&nbsp;Changing the parameters can have unpredicatable results in downstream analyses if they are not properly chosen.</p>
 
 </div>
 

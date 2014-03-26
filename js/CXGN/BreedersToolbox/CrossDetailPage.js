@@ -2,7 +2,7 @@ jQuery(document).ready(function() {
     
     display_progeny(get_cross_id());
     
-    cross_properties(get_cross_id());
+    get_properties(get_cross_id(), display_properties);
     
     function get_cross_id() { 
 	var cross_id = jQuery('#cross_id').html();
@@ -72,48 +72,35 @@ jQuery(document).ready(function() {
 		}
 		html += "</table>";
 		jQuery('#parents_information_div').html(html);					   
-      },
-      error: function(response, a, b) { 
+	    },
+	    error: function(response, a, b) { 
 	  jQuery('#parents_information_div').html('An error occurred. '+a +' '+ b);
       }
 	});
     }
     
-    function cross_properties(cross_id) { 
-	
-	jQuery.ajax( { 
-	    type: 'POST',
-	    url: '/cross/ajax/properties/'+cross_id,
-	    success: function(response) { 
-		if (response.error) { 
-		    alert(response.error);
-		    return;
-		}
-		var html = "<table>";
-		if (response.props) { 
-		    for (var k in response.props) { 
-			html += '<tr><td>'+k+'</td><td>...</td>';
-			var edit_link = "";					
-			for (var n=0; n<response.props[k].length; n++) { 
-			    if (isLoggedIn()) { 
-				edit_link = '<a id="edit_link_prop_'+response.props[k][n][1]+'">[edit]</a>'; 
-			    }
-			    html += '<td><b>'+response.props[k][n][0]+'</b></td><td>'+edit_link+'</td></tr>';
-			}
-			
-			
+    function display_properties(result) { 
+	var props = result.props;
+	var html = "";
+	if (props) { 
+	    html = "<table>";
+	    for (var k in props) { 
+		html += '<tr><td>'+k+'</td><td>...</td>';
+		var edit_link = "";					
+		for (var n=0; n<props[k].length; n++) { 
+		    if (isLoggedIn()) { 
+			edit_link = '<a id="edit_link_prop_'+props[k][n][1]+'">[edit]</a>'; 
 		    }
-    		    html += '</table>';
-		    jQuery('#cross_properties_div').html(html);
+		    html += '<td><b>'+props[k][n][0]+'</b></td><td>'+edit_link+'</td></tr>';
 		}
-	    },
-	    error: function(response) { alert("An error occurred") }
-	} );						 
-    
-	
-	
-	
-    }
+	    }
+    	    html += '</table>';
+	    jQuery('#cross_properties_div').html(html);
+	}
+	else { 
+
+	}
+    }					 	
     
     jQuery('#add_more_progeny_link').click( function() { 
 	jQuery('#add_more_progeny_dialog').dialog("open");
@@ -123,20 +110,22 @@ jQuery(document).ready(function() {
     jQuery('#add_more_progeny_dialog').dialog( { 
 	height: 250,
 	width: 500,
-	buttons: { 'OK': {
-            id: 'add_more_progeny_dialog_ok_button', 
-	    click: function() { 
-		jQuery('#working').dialog("open");
-		add_more_progeny(get_cross_id(), get_cross_name(), jQuery('#basename').val(), jQuery('#start_number').val(), jQuery('#progeny_count').val());
-                
-	    },
-            text: "OK" 
-	} , 
-		   'Cancel': {  id: 'add_more_progeny_dialog_cancel_button',
-				click:  function() { jQuery('#add_more_progeny_dialog').dialog("close") }, text: "Cancel" } },
+	buttons: { 'OK': 
+		   {
+		       id: 'add_more_progeny_dialog_ok_button', 
+		       click: function() { 
+			   jQuery('#working').dialog("open");
+			   add_more_progeny(get_cross_id(), get_cross_name(), jQuery('#basename').val(), jQuery('#start_number').val(), jQuery('#progeny_count').val());
+			   
+		       },
+		       text: "OK" 
+		   } , 
+		   'Cancel': {  
+		       id: 'add_more_progeny_dialog_cancel_button',
+		       click:  function() { jQuery('#add_more_progeny_dialog').dialog("close") }, 
+		       text: "Cancel" } },
 	autoOpen: false,
 	title: 'Add more progeny'
-	
     });
     
     function add_more_progeny(cross_id, cross_name, basename, start_number, progeny_count) { 
@@ -166,7 +155,9 @@ jQuery(document).ready(function() {
 		       id: 'edit_properties_dialog_ok_button', 
 		       click: function() { 
 			   jQuery('#working').dialog("open");
-		           
+			   check_property(get_cross_id(), jQuery('#properties_select').val(), jQuery('#property_value').val());
+			   
+			   jQuery('#working').dialog("close");		           
 		       },
 		       text: "OK" 
 		   } , 
@@ -176,14 +167,108 @@ jQuery(document).ready(function() {
 		       text: "Cancel" } },
 	autoOpen: false,
 	title: 'Edit cross properties'
-	
-	
-
     });
 
     jQuery('#edit_properties_link').click( function() { 
-	jQuery('#edit_properties_dialog').dialog("open");
-
+	jQuery('#edit_properties_dialog').dialog("open");	
+	get_properties(get_cross_id(), draw_properties_dialog);
     });
     
+    function draw_properties_dialog(response) { 
+	var type = jQuery('#properties_select').val();
+	var prop = response.props[type];
+	if (prop instanceof Array) { 
+	    for (var n=0; n<prop.length; n++) { 
+		jQuery('#property_value').val(prop[n][0]);
+	    }
+	}
+	else { 
+	    jQuery('#property_value').val('');
+	}
+    }
+
+    jQuery('#properties_select').change( function() { 
+	var value = jQuery('#properties_select').val();
+	get_properties(get_cross_id(), draw_properties_dialog);
+    });
+
+    function set_properties_select(type) { 
+	jQuery('#properties_select').val(type);	
+    }
+
+    function set_property_value(value) { 
+	jQuery('#property_value').val(value);
+    }
+	    
+    function get_properties(cross_id, callback) { 
+
+	return jQuery.ajax( { 
+	    type: 'GET',
+	    url: '/cross/ajax/properties/'+cross_id,
+	    success: callback,
+	    error : error_callback
+	});
+    }
+
+    function error_callback(a, b, c) { 
+	alert("an error occurred "+c);
+    }
+
+    function check_property(cross_id, type, value) { 
+	alert("cross_id : "+cross_id+" type: "+type+" value: "+value);
+	return jQuery.ajax( { 
+	    url: '/cross/property/check/'+cross_id,
+	    data: { 'cross_id' : cross_id, 'type': type, 'value': value }, 
+	}).done( function(response) {
+	    if (response.error) { alert(response.error); }
+	    var yes;
+	    if (response.message) { 
+		yes = confirm(response.message + " Continue? "); 
+		if (yes) { 
+		    alert("Saving it.");
+		    save_property(cross_id, type, value);
+		}
+		else { 
+		    alert("Not saving.");
+		}
+	    }
+	    if (response.success) { 
+		alert(cross_id + ' ' + type + ' ' + value);
+		save_property(cross_id, type, value);
+	    }
+	}).fail( function() { 
+	    alert("The request for checking the parameters failed. Please try again.");
+	});
+    }
+
+    function save_property(cross_id, type, value) { 
+	return jQuery.ajax( { 
+	    url: '/cross/property/save/'+cross_id,
+	    data: { 'cross_id' : cross_id, 'type': type, 'value': value }
+
+	}).done( function(response) { 
+	    alert("Saved!");
+	    save_confirm(response);
+	}).fail( function(response, x, y) { 
+	    alert("An error occurred saving the property. "+y);
+	});
+    }
+    
+    function check_save(response) { 
+	
+    }
+
+    function save_confirm(response) { 
+	if (response.error) { 
+	    alert(response.error);
+	    return;
+	}
+	else { 
+	    alert("The property was successfully saved.");
+	}
+    }
+	
+	
+    
+
 });

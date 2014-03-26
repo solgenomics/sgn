@@ -432,7 +432,81 @@ sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
 
 }
 
-sub add_more_progeny :Path('/cross/progeny/add') :Args(1) { 
+sub save_property_check :Path('/cross/property/check') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+
+    my $type = $c->req->param("type");
+    my $value = $c->req->param("value");
+
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $type_row = $schema->resultset('Cv::Cvterm')->find( { name => $type } );
+    
+    if (! $type_row) { 
+	$c->stash->{rest} = { error => "The type '$type' does not exist in the database" };
+	return;
+    }
+    
+    my $type_id = $type_row->cvterm_id();
+
+    my %suggested_values = (
+	cross_type =>  { 'biparental'=>1, 'self'=>1, 'open pollinated'=>1, 'bulk'=>1, 'bulk selfed'=>1, 'bulk and open pollinated'=>1, 'doubled haplotype'=>1 },
+	number_of_flowers => '\d+',
+	number_of_seeds => '\d+',
+	date => '\d{4}\\/\d{2}\\/\d{2}',
+	time => '\d+\:\d+',
+	);
+
+    if (ref($suggested_values{$type})) { 
+	if (!exists($suggested_values{$type}->{lc($value)})) { 
+	    $c->stash->{rest} =  { message => 'The provided value is not in the suggested list of terms. This could affect downstream data processing.' };
+	    return;
+	}
+    }
+    else { 
+	if ($value !~ m/$suggested_values{$type}/) { 
+	    $c->stash->{rest} = { error => 'The provided value is not of the correct type.' };
+	    return;
+	}
+    }
+    $c->stash->{rest} = { success => 1 };
+}
+
+sub save_property_save :Path('/cross/property/save') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    
+    if (!$c->user()) { 
+	$c->stash->{rest} = { error => "You must be logged in add properties." };
+	return;
+    }
+    if (!$c->user()->has_role('submitter') or !$c->user()->has_role('curator')) { 
+	$c->stash->{rest} = { error => "You do not have sufficient privileges to add properties." };
+	return;
+    }
+
+    my $cross_id = $c->req->param("cross_id");
+    my $type_id  = $c->req->param("type_id");
+    my $value    = $c->req->param("value");
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id, 'me.type_id' => $type_id }, { join => { 'nd_experiment' => { 'nd_experiment_stocks' }}});
+
+    my $row = $rs->first();
+
+    if ($row) { 
+	$row->value($value);
+	$row->update();
+    }
+    
+    $c->stash->{rest} = { success => 1 };
+}
+
+
+sub add_more_progeny :Path('/cross/progeny/add') Args(1) { 
     my $self = shift;
     my $c = shift;
     my $cross_id = shift;
@@ -483,6 +557,8 @@ sub add_more_progeny :Path('/cross/progeny/add') :Args(1) {
     $c->stash->{rest} = { success => 1};
     
 }
+
+
 
 ###
 1;#
