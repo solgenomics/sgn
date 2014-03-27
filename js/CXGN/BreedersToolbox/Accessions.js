@@ -110,7 +110,6 @@ jQuery(document).ready(function ($) {
 		    alert("No accessions to add");
 		    return;
 		}
-		alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
 		add_accessions(accessionsToAdd, speciesName);
 		$(this).dialog( "close" );
 		location.reload();
@@ -176,6 +175,7 @@ jQuery(document).ready(function ($) {
 			alert("No accessions to add");
 			location.reload();
 		    } else {
+			alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
 			$('#review_absent_dialog').dialog('open');
 		    }
 		});
@@ -209,6 +209,7 @@ jQuery(document).ready(function ($) {
 		    alert("No accessions to add");
 		    location.reload();
 		} else {
+		    alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
 		    $('#review_absent_dialog').dialog('open');
 		}
 	    });
