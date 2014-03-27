@@ -18,7 +18,25 @@ sub validate {
 
     my $local_cv_id = $schema->resultset("Cv::Cv")->search({ name=> "local" })->first()->cv_id();
 
-    my $synonym_type_id = $schema->resultset("Cv::Cvterm")->search({name=>"synonym", cv_id=> $local_cv_id })->first->cvterm_id();
+
+    my $synonym_type_rs = $schema->resultset("Cv::Cvterm")->search({name=>"synonym", cv_id=> $local_cv_id });
+
+    my $synonym_rs;
+    my $synonym_type_id;
+    if ($synonym_type_rs->count == 0) { 
+	$synonym_rs = $schema->resultset("Cv::Cvterm")->create_with( 
+	    { name => 'synonym',
+	      cv   => 'local',
+	      db   => 'local',
+	      dbxref => 'synonym'
+	    });
+	$synonym_type_id = $synonym_rs->cvterm_id();
+    }
+    else { 
+	$synonym_type_id = $synonym_type_rs->first->cvterm_id();
+    }
+	
+    
 
     my %items = ();
     
