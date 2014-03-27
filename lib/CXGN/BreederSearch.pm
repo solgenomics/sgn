@@ -184,9 +184,7 @@ sub get_intersect {
 	return { results => \@results };
     }
     else { 
-	
 	return { message => 'Too many items to display ('.(scalar(@results)).')' };
-
     }
 }
 
@@ -196,7 +194,29 @@ sub get_phenotype_info {
     my $trial_sql = shift;
     my $trait_sql = shift;
 
-    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) JOIN stock ON (object_id=stock.stock_id) JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id) JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN project USING(project_id)  WHERE cvterm.cvterm_id in ($trait_sql) and project.project_id in ($trial_sql) and stock.stock_id in ($accession_sql)";
+    print STDERR "$accession_sql - $trial_sql - $trait_sql \n\n";
+
+    my @where_clause = ();
+    if ($accession_sql) { push @where_clause,  "stock.stock_id in ($accession_sql)"; }
+    if ($trial_sql) { push @where_clause, "project.project_id in ($trial_sql)"; }
+    if ($trait_sql) { push @where_clause, "cvterm.cvterm_id in ($trait_sql)"; }
+
+    my $where_clause = "";
+    if (@where_clause>0) { 
+	$where_clause = "where ".(join (" and ", @where_clause));
+    }
+
+    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value 
+             FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) 
+             JOIN stock ON (object_id=stock.stock_id) 
+             JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id) 
+             JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id) 
+             JOIN nd_geolocation USING(nd_geolocation_id) 
+             JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)  
+             JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) 
+             JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) 
+             JOIN project USING(project_id)  
+             $where_clause";
 
     print STDERR "QUERY: $q\n\n";
     my $h = $self->dbh()->prepare($q);

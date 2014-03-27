@@ -433,9 +433,11 @@ CXGN.List.prototype = {
        Parameters: 
          div_name: The div_name where the select should appear
          types: a list of list types that should be listed in the menu
+         add_empty_element: text. if present, add an empty element with the
+           provided text as description
     */
     
-    listSelect: function(div_name, types) { 	
+    listSelect: function(div_name, types, empty_element) { 	
 	var lists = new Array();
 
 	if (types) {
@@ -453,8 +455,11 @@ CXGN.List.prototype = {
 	}
 
 	var html = '<select id="'+div_name+'_list_select" name="'+div_name+'_list_select" >';
+	if (empty_element) { 
+	    html += '<option value="">'+empty_element+'</option>\n';
+        } 
 	for (var n=0; n<lists.length; n++) {
-	    html = html + '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
+	    html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
 	}
 	html = html + '</select>';
 	return html;
