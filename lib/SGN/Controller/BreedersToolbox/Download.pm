@@ -179,6 +179,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 
     my $data; 
     my $output = "";
+    my $fh000="out_test000.txt";
+
+    $fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
 
     my $fh000="out_test000.txt";
 
@@ -220,7 +223,6 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 
 	$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
 
-
         print STDERR "Output file is ", $fh000,"\n";
 	
    #     open my $fh00, '>', "output_test00.txt" or die "Cannot open output_test00.txt: $!";
@@ -246,13 +248,6 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 
     }
 
-    my $x; 
-    if ($a > 100) { 
-	$x = 200;
-    }
-    print $x;
-
-
     
    # my $contents = read_file("output_test00.txt");
 
@@ -261,7 +256,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 
 
     my $contents = read_file($fh000); #"/data/prod/public/out_test000.txt");
-
+     my $contents = read_file($fh000);
 
     $c->res->content_type("text/plain");
 
