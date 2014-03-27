@@ -310,7 +310,7 @@ Verifies that a species name exists in the database.  Returns false if the speci
 
 sub verify_name :Path('/organism/verify_name') :ActionClass('REST') {}
 
-sub verify_name_POST :Args(0) {
+sub verify_name_GET :Args(0) {
   my ( $self, $c ) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $species_name = $c->req->param('species_name');

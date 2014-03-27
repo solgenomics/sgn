@@ -64,7 +64,7 @@ jQuery(document).ready(function ($) {
 	var speciesName = $("#species_name_input").val();
 	validSpecies = 0;
 	$.ajax({
-            type: 'POST',
+            type: 'GET',
             url: '/organism/verify_name',
 	    dataType: "json",
             data: {
@@ -103,9 +103,9 @@ jQuery(document).ready(function ($) {
 		    alert("Species name required");
 		    return;
 		}
-		if (validSpecies == 0){
-		    return;
-		}
+		//if (validSpecies == 0){
+		//    return;
+		//}
 		if (!accessionsToAdd || accessionsToAdd.length == 0) {
 		    alert("No accessions to add");
 		    return;
