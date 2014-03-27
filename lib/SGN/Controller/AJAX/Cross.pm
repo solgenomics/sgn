@@ -416,7 +416,7 @@ sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
     
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     
-    my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id }, { join => { 'nd_experiment' => { 'nd_experiment_stocks' }}});
+    my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id }, { join => { 'nd_experiment' =>  'nd_experiment_stocks' }});
 
     my $props = {};
 
@@ -457,24 +457,35 @@ sub save_property_check :Path('/cross/property/check') Args(1) {
 	number_of_seeds => '\d+',
 	date => '\d{4}\\/\d{2}\\/\d{2}',
 	time => '\d+\:\d+',
+	operator => '.*',
+	cross_name => '.*',
+	);
+
+    my %example_values = ( 
+	date => '2014/03/29',
+	time => '10:00',
+	number_of_flowers => 23,
+	number_of_seeds => 42,
+	operator => 'Alfonso',
+	cross_name => 'nextgen_cross',
 	);
 
     if (ref($suggested_values{$type})) { 
-	if (!exists($suggested_values{$type}->{lc($value)})) { 
+	if (!exists($suggested_values{$type}->{$value})) { # don't make this case insensitive!
 	    $c->stash->{rest} =  { message => 'The provided value is not in the suggested list of terms. This could affect downstream data processing.' };
 	    return;
 	}
     }
     else { 
-	if ($value !~ m/$suggested_values{$type}/) { 
-	    $c->stash->{rest} = { error => 'The provided value is not of the correct type.' };
+	if ($value !~ m/^$suggested_values{$type}$/) { 
+	    $c->stash->{rest} = { error => 'The provided value is not of the correct type. Format example: "'.$example_values{$type}.'"' };
 	    return;
 	}
     }
     $c->stash->{rest} = { success => 1 };
 }
 
-sub save_property_save :Path('/cross/property/save') Args(1) { 
+sub cross_property_save :Path('/cross/property/save') Args(1) { 
     my $self = shift;
     my $c = shift;
     
@@ -488,17 +499,33 @@ sub save_property_save :Path('/cross/property/save') Args(1) {
     }
 
     my $cross_id = $c->req->param("cross_id");
-    my $type_id  = $c->req->param("type_id");
+    my $type  = $c->req->param("type");
     my $value    = $c->req->param("value");
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
+    my $exp_id = $schema->resultset("NaturalDiversity::NdExperiment")->search( { 'nd_experiment_stocks.stock_id' => $cross_id }, { join => 'nd_experiment_stocks' })->first()->get_column('nd_experiment_id');
+    
+    my $type_id;
+    my $type_row = $schema->resultset("Cv::Cvterm")->find( { 'me.name' => $type, 'cv.name' => 'local' }, { join => { 'cv'}});
+    if ($type_row) { 
+	$type_id = $type_row->cvterm_id();
+    }
+    else { 
+	$c->stash->{rest} = { error => 'The type $type does not exist in the database.' };
+	return;
+    }
+    
     my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id, 'me.type_id' => $type_id }, { join => { 'nd_experiment' => { 'nd_experiment_stocks' }}});
 
     my $row = $rs->first();
-
-    if ($row) { 
-	$row->value($value);
+    if (!$row) { 
+	$row = $schema->resultset("NaturalDiversity::NdExperimentprop")->create( { 'nd_experiment_stocks.stock_id' => $cross_id, 'me.type_id' => $type_id, 'me.value'=>$value, 'me.nd_experiment_id' => $exp_id }, { join => {'nd_experiment' => {'nd_experiment_stocks' }}});
+	$row->insert();
+    }
+    else { 
+	
+	$row->set_column( 'value' => $value );
 	$row->update();
     }
     

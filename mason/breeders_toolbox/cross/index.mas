@@ -94,7 +94,9 @@ $user_id => undef
 
   <input id="property_value" />
 
-  <p><b>Note</b>&nbsp;Changing the parameters can have unpredicatable results in downstream analyses if they are not properly chosen.</p>
+  <button id="property_submit" >Save</button>
+
+  <p><b>WARNING!</b>&nbsp;Changing the parameters can have unpredicatable results in downstream analyses if they are inconsistent with other data.</p>
 
 </div>
 

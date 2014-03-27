@@ -85,13 +85,10 @@ jQuery(document).ready(function() {
 	if (props) { 
 	    html = "<table>";
 	    for (var k in props) { 
-		html += '<tr><td>'+k+'</td><td>...</td>';
+		html += '<tr><td>'+k+'</td><td>&nbsp;</td>';
 		var edit_link = "";					
 		for (var n=0; n<props[k].length; n++) { 
-		    if (isLoggedIn()) { 
-			edit_link = '<a id="edit_link_prop_'+props[k][n][1]+'">[edit]</a>'; 
-		    }
-		    html += '<td><b>'+props[k][n][0]+'</b></td><td>'+edit_link+'</td></tr>';
+		    html += '<td><b>'+props[k][n][0]+'</b></td><td>&nbsp;</td></tr>';
 		}
 	    }
     	    html += '</table>';
@@ -150,30 +147,30 @@ jQuery(document).ready(function() {
     jQuery('#edit_properties_dialog').dialog( { 
 	height: 250,
 	width: 500,
-	buttons: { 'OK': 
-		   {
-		       id: 'edit_properties_dialog_ok_button', 
-		       click: function() { 
-			   jQuery('#working').dialog("open");
-			   check_property(get_cross_id(), jQuery('#properties_select').val(), jQuery('#property_value').val());
-			   
-			   jQuery('#working').dialog("close");		           
-		       },
-		       text: "OK" 
-		   } , 
-		   'Cancel': {  
-		       id: 'edit_properties_dialog_cancel_button',
+	buttons: {  
+	    'Done': {  
+		       id: 'edit_properties_dialog_done_button',
 		       click:  function() { jQuery('#edit_properties_dialog').dialog("close") }, 
-		       text: "Cancel" } },
+		       text: "Done" } 
+	},
 	autoOpen: false,
 	title: 'Edit cross properties'
     });
-
+    
     jQuery('#edit_properties_link').click( function() { 
 	jQuery('#edit_properties_dialog').dialog("open");	
 	get_properties(get_cross_id(), draw_properties_dialog);
     });
     
+    
+    jQuery('#property_submit').click( function() { 
+	
+	jQuery('#working').dialog("open");
+	check_property(get_cross_id(), jQuery('#properties_select').val(), jQuery('#property_value').val());
+	jQuery('#working').dialog("close");		           
+    });
+
+
     function draw_properties_dialog(response) { 
 	var type = jQuery('#properties_select').val();
 	var prop = response.props[type];
@@ -215,7 +212,6 @@ jQuery(document).ready(function() {
     }
 
     function check_property(cross_id, type, value) { 
-	alert("cross_id : "+cross_id+" type: "+type+" value: "+value);
 	return jQuery.ajax( { 
 	    url: '/cross/property/check/'+cross_id,
 	    data: { 'cross_id' : cross_id, 'type': type, 'value': value }, 
@@ -233,7 +229,6 @@ jQuery(document).ready(function() {
 		}
 	    }
 	    if (response.success) { 
-		alert(cross_id + ' ' + type + ' ' + value);
 		save_property(cross_id, type, value);
 	    }
 	}).fail( function() { 
@@ -247,8 +242,10 @@ jQuery(document).ready(function() {
 	    data: { 'cross_id' : cross_id, 'type': type, 'value': value }
 
 	}).done( function(response) { 
-	    alert("Saved!");
+	    get_properties(get_cross_id(), display_properties);
 	    save_confirm(response);
+
+	    
 	}).fail( function(response, x, y) { 
 	    alert("An error occurred saving the property. "+y);
 	});
