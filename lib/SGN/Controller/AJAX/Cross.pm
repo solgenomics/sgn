@@ -512,7 +512,7 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
 	$type_id = $type_row->cvterm_id();
     }
     else { 
-	$c->stash->{rest} = { error => 'The type $type does not exist in the database.' };
+	$c->stash->{rest} = { error => "The type $type does not exist in the database." };
 	return;
     }
     
