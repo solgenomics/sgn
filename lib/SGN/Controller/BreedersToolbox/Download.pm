@@ -204,8 +204,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 
 
     #$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
-    $tempfile = File::Spec->catfile($c->config->{gbs_temp_data}, $tempfile);
-
+  #  $tempfile = File::Spec->catfile($c->config->{gbs_temp_data}, $tempfile);
+ $tempfile = File::Spec->catfile($tempfile);
 
     if ($data_type eq "genotype") { 
 		
