@@ -193,7 +193,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
     my $output = "";
 
 
-    my $fh000="out_test000.txt";
+#    my $fh000="out_test000.txt";
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
 
@@ -248,7 +248,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 	
    #     open my $fh00, '>', "output_test00.txt" or die "Cannot open output_test00.txt: $!";
 
-        open my $fh00, '>', $fh000 or die "Cannot open output_test00.txt: $!";
+ #       open my $fh00, '>', $fh000 or die "Cannot open output_test00.txt: $!";
 
         for my $j (0 .. $#k){
 
@@ -345,6 +345,16 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my $data; 
     my $output = "";
 
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
+
+        #$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
+    open my $TEMP, '>', $tempfile or die "Cannot open output_test00.txt: $!";
+
+    #$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
+  #  $tempfile = File::Spec->catfile($c->config->{gbs_temp_data}, $tempfile);
+    $tempfile = File::Spec->catfile($tempfile);
+
+
     if ($data_type eq "genotype") { 
 		
         print "Download genotype data\n";
@@ -372,16 +382,16 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
 	print STDERR "your array has ", scalar(@AoH)," element \n";
 	
-	my $fh000="out_test000.txt";
+#	my $fh000="out_test000.txt";
 
-	$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
+#	$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
 
 
-        print STDERR "Output file is ", $fh000,"\n";
+#        print STDERR "Output file is ", $fh000,"\n";
 	
    #     open my $fh00, '>', "output_test00.txt" or die "Cannot open output_test00.txt: $!";
 
-        open my $fh00, '>', $fh000 or die "Cannot open output_test00.txt: $!";
+#        open my $fh00, '>', $fh000 or die "Cannot open output_test00.txt: $!";
 
 
         my @k=();
@@ -393,36 +403,40 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
         for my $j (0 .. $#k){
 
-	    print $fh00 "$k[$j]\t";
+	    print $TEMP "$k[$j]\t";
 	    for my $i ( 0 .. $#AoH ) {
              
             if($i == $#AoH ){  
-            print $fh00 "$AoH[$i]{$k[$j]}";
+            print $TEMP "$AoH[$i]{$k[$j]}";
             }else{
-	    print $fh00 "$AoH[$i]{$k[$j]}\t";
+	    print $TEMP "$AoH[$i]{$k[$j]}\t";
 	    }
              
             }
 
-            print $fh00 "\n";
+            print $TEMP "\n";
 
 	}
     }
 
+
+    my ($tempfile_out, $uri_out) = $c->tempfile(TEMPLATE => "output_XXXXX", UNLINK=> 0);
+
+
     #system("R --slave --args output_test00.txt qc_output.txt < /home/aiminy/code/code_R/GBS_QC.R"); ok
     #system("R --slave --args output_test00.txt qc_output.txt < ./R/GBS_QC.R"); ok
-     system("R --slave --args /data/prod/public/out_test000.txt /data/prod/public/qc_output.txt < R/GBS_QC.R");
+     system("R --slave --args $tempfile $tempfile_out < R/GBS_QC.R");
     #system("R --slave --args output_test00.txt qc_output.txt < /R/GBS_QC.R"); path is not ok
 
 
-    my $contents = read_file("/data/prod/public/qc_output.txt");
+    my $contents = read_file(tempfile_out);
 
     $c->res->content_type("text/plain");
 
     $c->res->body($contents);
 
-   system("rm output_test*.txt");
-   system("rm qc_output.txt");
+#   system("rm output_test*.txt");
+#   system("rm qc_output.txt");
 
 }
 #=pod
