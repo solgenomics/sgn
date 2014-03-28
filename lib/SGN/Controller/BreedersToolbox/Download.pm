@@ -195,7 +195,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 
     my $fh000="out_test000.txt";
 
-    my ($tempfile, $uri) = $c->tempfile( { TEMPLATE => "download_XXXXX", UNLINK=> 0 } );
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
 
         #$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
     open my $TEMP, '>', $tempfile or die "Cannot open output_test00.txt: $!";
