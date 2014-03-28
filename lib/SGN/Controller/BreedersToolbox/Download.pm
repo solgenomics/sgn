@@ -242,9 +242,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 	}
 
 	
-
-
-        print STDERR "Output file is ", $fh000,"\n";
+  #      print STDERR "Output file is ", $fh000,"\n";
 	
    #     open my $fh00, '>', "output_test00.txt" or die "Cannot open output_test00.txt: $!";
 
@@ -429,7 +427,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     #system("R --slave --args output_test00.txt qc_output.txt < /R/GBS_QC.R"); path is not ok
 
 
-    my $contents = read_file(tempfile_out);
+    my $contents = read_file($tempfile_out);
 
     $c->res->content_type("text/plain");
 
