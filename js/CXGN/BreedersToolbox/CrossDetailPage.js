@@ -251,10 +251,6 @@ jQuery(document).ready(function() {
 	});
     }
     
-    function check_save(response) { 
-	
-    }
-
     function save_confirm(response) { 
 	if (response.error) { 
 	    alert(response.error);
