@@ -191,9 +191,21 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 
     my $data; 
     my $output = "";
+
+
     my $fh000="out_test000.txt";
 
-    $fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
+    my ($tempfile, $uri) = $c->tempfile( { TEMPLATE => "download_XXXXX.txt", UNLINK=> 0 } );
+
+        #$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
+    open my $TEMP, '>', $tempfile or die "Cannot open output_test00.txt: $!";
+
+
+
+
+    #$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
+    $tempfile = File::Spec->catfile($c->config->{gbs_temp_data}, $tempfile);
+
 
     if ($data_type eq "genotype") { 
 		
@@ -240,18 +252,24 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 
         for my $j (0 .. $#k){
 
-	    print $fh00 "$k[$j]\t";
+	    #print $fh00 "$k[$j]\t";
+ print $TEMP "$k[$j]\t";
+
 	    for my $i ( 0 .. $#AoH ) {
              
             if($i == $#AoH ){  
-            print $fh00 "$AoH[$i]{$k[$j]}";
+            #print $fh00 "$AoH[$i]{$k[$j]}";
+print $TEMP "$AoH[$i]{$k[$j]}";
+
             }else{
-	    print $fh00 "$AoH[$i]{$k[$j]}\t";
+	    #print $fh00 "$AoH[$i]{$k[$j]}\t";
+ print $TEMP "$AoH[$i]{$k[$j]}\t";
 	    }
              
             }
 
-            print $fh00 "\n";
+           # print $fh00 "\n";
+ print $TEMP "\n";
 
 	}
 
@@ -265,7 +283,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
     # print STDERR "Output file is ", $fh000,"\n";
 
 
-     my $contents = read_file($fh000);
+     my $contents = read_file($tempfile);
 
 
     $c->res->content_type("text/plain");
