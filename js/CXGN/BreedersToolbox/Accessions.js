@@ -64,7 +64,7 @@ jQuery(document).ready(function ($) {
 	var speciesName = $("#species_name_input").val();
 	validSpecies = 0;
 	$.ajax({
-            type: 'POST',
+            type: 'GET',
             url: '/organism/verify_name',
 	    dataType: "json",
             data: {
@@ -103,14 +103,14 @@ jQuery(document).ready(function ($) {
 		    alert("Species name required");
 		    return;
 		}
-		if (validSpecies == 0){
-		    return;
-		}
+		//if (validSpecies == 0){
+		//    return;
+		//}
 		if (!accessionsToAdd || accessionsToAdd.length == 0) {
 		    alert("No accessions to add");
 		    return;
 		}
-		alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
+		//alert("adding accessionsToAdd.length accessions");
 		add_accessions(accessionsToAdd, speciesName);
 		$(this).dialog( "close" );
 		location.reload();
@@ -152,18 +152,19 @@ jQuery(document).ready(function ($) {
 	var j;
 
 	if (verifyResponse.found) {
-	var found_html = '';
-	for( i=0; i < verifyResponse.found.length; i++){
-	    found_html = found_html 
-		+'<div class="left">'+verifyResponse.found[i].matched_string
-		+'</div>';
-	    if (verifyResponse.found[i].matched_string != verifyResponse.found[i].unique_name){
+	    $('#count_of_found_accessions').html("Total number already in the database("+verifyResponse.found.length+")");
+	    var found_html = '';
+	    for( i=0; i < verifyResponse.found.length; i++){
 		found_html = found_html 
-		    +'<div class="right">'
-		    +verifyResponse.found[i].unique_name
+		    +'<div class="left">'+verifyResponse.found[i].matched_string
 		    +'</div>';
+		if (verifyResponse.found[i].matched_string != verifyResponse.found[i].unique_name){
+		    found_html = found_html 
+			+'<div class="right">'
+			+verifyResponse.found[i].unique_name
+			+'</div>';
+		}
 	    }
-	}
 	    $('#view_found_matches').html(found_html);
 
 	    if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
@@ -176,6 +177,7 @@ jQuery(document).ready(function ($) {
 			alert("No accessions to add");
 			location.reload();
 		    } else {
+			alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
 			$('#review_absent_dialog').dialog('open');
 		    }
 		});
@@ -209,6 +211,7 @@ jQuery(document).ready(function ($) {
 		    alert("No accessions to add");
 		    location.reload();
 		} else {
+		    alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
 		    $('#review_absent_dialog').dialog('open');
 		}
 	    });
@@ -216,6 +219,7 @@ jQuery(document).ready(function ($) {
 	}
 
 	if (verifyResponse.absent) {
+	    $('#count_of_absent_accessions').html("Total number to be added("+verifyResponse.absent.length+")");
 	    var absent_html = '';
 	    $("#species_name_input").autocomplete({
 		source: '/organism/autocomplete'
@@ -254,7 +258,7 @@ jQuery(document).ready(function ($) {
 		disable_ui();
             },  
             //complete : function(){
-		//enable_ui();
+	    //enable_ui();
             //},  
 	    success: function (response) {
 		//enable_ui();
