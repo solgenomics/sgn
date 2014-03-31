@@ -157,8 +157,7 @@ sub create_user_list_genotype_data_file {
     $list_id = $c->stash->{model_id} if !$list_id;
     my $population_type = $c->stash->{population_type};
     # if ($c->stash->{list_source}  eq 'from_db') { $list_id= $c->stash->{list_id} };
-    # if ($c->stash->{list_source}  eq 'from_file') { $list_id= $c->stash->{list_id} };
-   
+    # if ($c->stash->{list_source}  eq 'from_file') { $list_id= $c->stash->{list_id} };  
     my $user_id   = $c->user->id;
     my $geno_data;
     
@@ -338,7 +337,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
 
         my $prediction_pop_gebvs_file;
         foreach my $trait_name (@analyzed_traits) 
-        {            
+        {    
             my $acronym_pairs = $c->controller("solGS::solGS")->get_acronym_pairs($c);
             
             if ($acronym_pairs)
@@ -353,7 +352,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
                  }
              }
 
-             $trait_id =  $c->model("solGS::solGS")->get_trait_id($c, $trait_name);
+             $trait_id =  $c->model("solGS::solGS")->get_trait_id($trait_name);
              $c->controller("solGS::solGS")->get_trait_name($c, $trait_id);
              my $trait_abbr = $c->stash->{trait_abbr};
 
