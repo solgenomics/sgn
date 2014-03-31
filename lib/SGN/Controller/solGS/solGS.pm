@@ -1523,13 +1523,6 @@ sub get_trait_name {
 
     my $trait_name = $c->model('solGS::solGS')->trait_name($trait_id);
   
-    if (!$trait_name) 
-    { 
-        $c->throw(public_message =>"No trait name corresponding to the id was found in the database.", 
-                  is_client_error => 1, 
-            );
-    }
-
     my $abbr = $self->abbreviate_term($c, $trait_name);
    
     $c->stash->{trait_id}   = $trait_id;
