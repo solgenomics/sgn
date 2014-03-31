@@ -158,7 +158,7 @@ sub create_user_list_genotype_data_file {
     my $population_type = $c->stash->{population_type};
     # if ($c->stash->{list_source}  eq 'from_db') { $list_id= $c->stash->{list_id} };
     # if ($c->stash->{list_source}  eq 'from_file') { $list_id= $c->stash->{list_id} };
-
+   
     my $user_id   = $c->user->id;
     my $geno_data;
     
@@ -454,21 +454,24 @@ sub user_prediction_population_file {
 
 sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/list') Args(0) {
     my ($self, $c) = @_;
-    
+ 
     my $model_id   = $c->req->param('model_id');
     my $list_name  = $c->req->param('list_name');   
     my $list       = $c->req->param('list');
 
     my $population_type          = $c->req->param('population_type');
     $c->stash->{population_type} = $population_type;
-
-    $list =~ s/\\//g;
-    $list = from_json($list);
  
+    $list =~ s/\\//g; 
+    my $garbage = substr $list, 0, 1, ''; 
+    $garbage    = substr $list, -1, 1, '';
+
+    $list = from_json($list);
+
     my @plots_names = ();  
     foreach my $plot (@$list)
     {
-        push @plots_names, $plot->[1]; 
+        push @plots_names, $plot->[1];
     }
     
     $c->stash->{reference_population_plot_names} = \@plots_names;
