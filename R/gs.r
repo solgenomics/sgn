@@ -410,7 +410,7 @@ corGEBVs <- cor(genoDataMatrix %*% markerGEBV$u, iGEBV$u)
 
 iGEBVu <- iGEBV$u
 
-heritability <- ((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve)) * 100)
+heritability <- round((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve)) * 100, digits=2)
 
 cat('error variance', iGEBV$Ve, file=varianceComponentsFile, sep="\t", append=TRUE)
 cat("\n", file=varianceComponentsFile,  append=TRUE)
