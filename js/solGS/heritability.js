@@ -62,8 +62,8 @@ function getRegressionData () {
         var traitId      = dataDetails.trait_id;
         var populationId = detaDetails.population_id;
         
-        var breedingValues = [];
-        var phenotypeDeviations = [];
+        var breedingValues  = [];
+        var phenotypeValues = [];
 
         jQuery.ajax({
             type: 'POST',
@@ -71,28 +71,32 @@ function getRegressionData () {
             data: {'population_id': populationId, 'trait_id': traitId },
             url: '/heritabililty/regeression/data/',
             success: function(response) {
-                if(response.exists == true) {
-                    return true;
-                } else {                
-                    return false;
+                if(response.status == 'success') {
+                    breedingValues  = response.gebv_data;
+                    phenotypeValues = response.pheno_data;
+
+                    return {
+                        'breeding_values'  : breedingValues,
+                        'phenotype_values' : phenotypeValues
+                    }
+                } else {
+                    
+                    return;
                 }
             },
             error: function(response) {                    
-                // alert('there is error in checking the dataset for heritability analysis.');
-                return false;
+                // alert('there is porblem getting regressio data.');
+                return;
             }
         });
 
     }
-
-
 }
 
 
 function plotRegressionData(){
-
-    getRegressionData();
-
+   var regressionData =  getRegressionData();
+    
 }
 
 
