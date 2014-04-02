@@ -121,6 +121,13 @@ formattedPhenoDataFile <- grep("formatted_phenotype_data",
                                value = TRUE
                                )
 
+varianceComponentsFile <- grep("variance_components",
+                               outFiles,
+                               ignore.case = TRUE,
+                               fixed = FALSE,
+                               value = TRUE
+                               )
+
 phenoFile <- grep("phenotype_data",
                   inFiles,
                   ignore.case = TRUE,
@@ -402,6 +409,17 @@ iGEBV <- mixed.solve(y = phenoTrait,
 corGEBVs <- cor(genoDataMatrix %*% markerGEBV$u, iGEBV$u)
 
 iGEBVu <- iGEBV$u
+
+heritability <- ((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve)) * 100)
+
+cat('error variance', iGEBV$Ve, file=varianceComponentsFile, sep="\t", append=TRUE)
+cat("\n", file=varianceComponentsFile,  append=TRUE)
+cat('genetic variance',  iGEBV$Vu, file=varianceComponentsFile, sep='\t', append=TRUE)
+cat("\n", file=varianceComponentsFile,  append=TRUE)
+cat('beta', iGEBV$beta,file=varianceComponentsFile, sep='\t', append=TRUE)
+cat("\n", file=varianceComponentsFile,  append=TRUE)
+cat('heritability', heritability, file=varianceComponentsFile, sep='\t', append=TRUE)
+
 
 iGEBV <- data.matrix(iGEBVu)
 
