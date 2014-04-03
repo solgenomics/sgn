@@ -31,25 +31,28 @@ function getDataDetails () {
 function checkDataExists () {
     var dataDetails  = getDataDetails();
     var traitId      = dataDetails.trait_id;
-    var populationId = detaDetails.population_id;
+    var populationId = dataDetails.population_id;
 
+    var dataExists;
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
         data: {'population_id': populationId, 'trait_id': traitId },
-        url: '/heritabililty/check/data/',
+        url: '/heritability/check/data/',
         success: function(response) {
-            if(response.exists == true) {
-                return true;
+            if(response.exists == 'yes') {               
+                dataExists = true;
             } else {                
-                return false;
+                dataExists = false;
             }
         },
         error: function(response) {                    
             // alert('there is error in checking the dataset for heritability analysis.');
-            return false;
+            dataExists = false;
         }
     });
+   
+    return dataExists;
 }
 
 
@@ -57,10 +60,10 @@ function getRegressionData () {
     var dataExists = checkDataExists();
     
     if (dataExists == true) {
-
+     
         var dataDetails  = getDataDetails();
         var traitId      = dataDetails.trait_id;
-        var populationId = detaDetails.population_id;
+        var populationId = dataDetails.population_id;
         
         var breedingValues  = [];
         var phenotypeValues = [];
@@ -69,7 +72,7 @@ function getRegressionData () {
             type: 'POST',
             dataType: 'json',
             data: {'population_id': populationId, 'trait_id': traitId },
-            url: '/heritabililty/regeression/data/',
+            url: '/heritability/regression/data/',
             success: function(response) {
                 if(response.status == 'success') {
                     breedingValues  = response.gebv_data;
@@ -85,7 +88,7 @@ function getRegressionData () {
                 }
             },
             error: function(response) {                    
-                // alert('there is porblem getting regressio data.');
+                // alert('there is porblem getting regression data.');
                 return;
             }
         });
