@@ -1,4 +1,4 @@
-package SGN::Controller::solGS::Correlation;
+package SGN::Controller::solGS::Heritability;
 
 use Moose;
 use namespace::autoclean;
@@ -14,6 +14,8 @@ use File::Basename;
 
 use JSON;
 use Try::Tiny;
+use Statistics::Descriptive;
+use Math::Round::Var;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -31,14 +33,19 @@ sub check_regression_data :Path('/heritability/check/data/') Args(0) {
     
     $self->get_regression_data_files($c);
 
+    my $ret->{exists} = undef;
 
-    if(-s $c->stash->{regression_gebv_file} && -s $c->stash->{regression_pheno_file})
+    my $gebv_file  = $c->stash->{regression_gebv_file};
+    my $pheno_file = $c->stash->{regression_pheno_file};
+
+    
+    if(-s $gebv_file  && -s $pheno_file)
     {
-        $ret->{status} = 'success';             
+        $ret->{exists} = 'yes';             
     }
 
     $ret = to_json($ret);
-       
+    
     $c->res->content_type('application/json');
     $c->res->body($ret);    
 
@@ -89,7 +96,7 @@ sub get_heritability {
 }
 
 
-sub get_regeression_data :Path('/heritability/regression/data/') Args(0) {
+sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0) {
     my ($self, $c) = @_;
     
     my $pop_id   = $c->req->param('population_id');
@@ -104,16 +111,30 @@ sub get_regeression_data :Path('/heritability/regression/data/') Args(0) {
     my $gebv_file  = $c->stash->{regression_gebv_file};
     my $pheno_file = $c->stash->{regression_pheno_file};
 
-    my $gebv_data  = map { [split(/\t/)] } read_file($gebv_file);
-    my $pheno_data = map { [split(/\t/)] } read_file($pheno_file);
+    my @gebv_data  = map { [split(/\t/)] } read_file($gebv_file);
+    my @pheno_data = map { [split(/\t/)] } read_file($pheno_file);
+   
+    my @pheno_values   = map { $_->[1] } @pheno_data;
+    shift(@pheno_values);
+    shift(@gebv_data);
+    shift(@pheno_data);
+   
+    my $stat = Statistics::Descriptive::Full->new();
+    $stat->add_data(@pheno_values);
+    my $pheno_mean = $stat->mean();
+
+    my $round = Math::Round::Var->new(0.01);
+   
+    my @pheno_deviations = map { [$_->[0], $round->round($_->[1] - $pheno_mean)] } @pheno_data;
 
     my $ret->{status} = 'failed';
 
-    if ($gebv_data && $pheno_data)
+    if (@gebv_data && @pheno_data)
     {
-        $ret->{status}     = 'success';
-        $ret->{gebv_data}  = $gebv_data;
-        $ret->{pheno_data} = $pheno_data;
+        $ret->{status}           = 'success';
+        $ret->{gebv_data}        = \@gebv_data;
+        $ret->{pheno_deviations} = \@pheno_deviations;
+        $ret->{pheno_data}       = \@pheno_data;
 
     }
 
