@@ -45,7 +45,11 @@ has 'overwrite' => (
 		    isa => 'Str',
 		    required => 0,
 		   );
-
+has 'is_test_run' => (
+		      is => 'ro',
+		      isa => 'Str',
+		      required => 0,
+		      );
 
 sub _get_cvterms {
   my $self = shift;
@@ -67,10 +71,6 @@ sub _get_cvterms {
 		  });
   $cv->insert;
 
-  print STDERR "CV: ".$cv->cv_id()."\n";
-
-  #$cvterms{'cv'}=$cv;
-
   foreach my $property_name (@trait_property_names) {
 
     $cvterms{$property_name} = $chado_schema->resultset("Cv::Cvterm")
@@ -80,9 +80,6 @@ sub _get_cvterms {
 		     db     => 'null',
 		     dbxref => $property_name,
 		    });
-
-    print STDERR "prop: $property_name\n";
-
   }
 
   return \%cvterms;
@@ -165,7 +162,6 @@ sub validate {
       }
     }
 
-
   }
 
   return 1;
@@ -175,6 +171,7 @@ sub validate {
 sub store {
   my $self = shift;
   my $chado_schema = $self->get_chado_schema();
+  my $test_success;
 
   my $db_rs = $chado_schema->resultset("General::Db")->search( { 'me.name' => $self->get_db_name() });
 
@@ -231,14 +228,6 @@ sub store {
 	      die("A trait with property $prop_name already exists\n");
 	    }
 	  } else {
-	    #create a new trait property
-	    # $trait_cvterm
-	    #   ->find_or_create_related('cvtermprops',{
-	    # 					      'cvterm_id' => $prop_cvterm->cvterm_id(),
-	    # 					      'value' => $trait_prop_value,
-	    # 					      'type_id' => $cvterms->{'cv'}->cv_id(),
-	    # 					     }
-	    # 			       );
 	    $trait_cvterm
 	      ->find_or_create_related('cvtermprops',{
 						      'value' => $trait_prop_value,
@@ -250,6 +239,13 @@ sub store {
 	}
       }
     }
+
+    if ($self->get_is_test_run()) {
+      $test_success = 1;
+      die("\nTest run success.  Rolling back\n\n");
+    }
+
+
   };
 
   my $transaction_error;
@@ -261,7 +257,15 @@ sub store {
   };
 
   if ($transaction_error) {
-    print STDERR "Transaction error storing trait props: $transaction_error\n";
+    if ($self->get_is_test_run()) {
+      if ($test_success) {
+	print STDERR "test success (rolling back)\n";
+      } else {
+	print STDERR "test error\n$transaction_error\n";
+      }
+    } else {
+      print STDERR "\nTransaction error storing trait props: $transaction_error\n";
+    }
     return;
   }
 
