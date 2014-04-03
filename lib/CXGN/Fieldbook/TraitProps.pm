@@ -147,7 +147,7 @@ sub validate {
 	#check for an existing prop of the same name
 	  my $cvtermprop_search = $trait_cvterm
 	    ->search_related('cvtermprops', {
-					     'cvterm_id' => $prop_cvterm->cvterm_id(),
+					     'type_id' => $prop_cvterm->cvterm_id(),
 					    }
 			    );
 
@@ -214,7 +214,7 @@ sub store {
 	  #check for an existing prop of the same name
 	  my $cvtermprop_search = $trait_cvterm
 	    ->search_related('cvtermprops', {
-					     'cvterm_id' => $prop_cvterm->cvterm_id(),
+					     'type_id' => $prop_cvterm->cvterm_id(),
 					    }
 			    );
 
