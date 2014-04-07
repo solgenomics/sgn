@@ -16,9 +16,11 @@ sub input :Path('/tools/vigs/')  :Args(0) {
 	
 	# get database names from the files in the path
 	my @databases;
-	my @tpm_dbs = glob("$db_path/*.rev.1.bt2");
+	my @tpm_dbs = glob("$db_path/*.rev.1.ebwt");
+	# my @tpm_dbs = glob("$db_path/*.rev.1.bt2");
 	foreach my $full_name (@tpm_dbs) {
-		push(@databases, basename($full_name, ".rev.1.bt2"));
+		push(@databases, basename($full_name, ".rev.1.ebwt"));
+		# push(@databases, basename($full_name, ".rev.1.bt2"));
 	}
 	# print STDERR "DATABASE ID: ".join(", ", @databases)."\n";
 	

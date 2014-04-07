@@ -43,7 +43,7 @@ Sequence:
 <span title="desired VIGS fragment length">Fragment length</span> 
 <input class="input" id="f_length" type="input" value="300" name="seq_fragment" size="3" />&nbsp; &nbsp; &nbsp;
 
-<span title="Number of mismatches allowed in BowTie 2 alignment">mismatches</span> 
+<span title="Number of mismatches allowed in BowTie alignment">mismatches</span> 
 <input class="input" id="mm" type="input" value="0" name="mismatch" size="1" />
 <br />
 <br />
@@ -101,7 +101,8 @@ foreach my $d (@databases) {
          
         2. Choose <b>n-mer size</b>, nucleotide stretch size in bp, used to identify targeted regions (18-24, Default=21)<br />
         3. Choose <b>Fragment length</b>, desired VIGS fragment length in bp (100-Sequence length, Default=300)<br />
-        4. Choose <b>mismatches</b>, number of mismatches allowed in the alignment (0-1, Default=0)<br />
+        4. Choose <b>mismatches</b>, number of mismatches allowed in the alignment (0-2, Default=0)<br />
+        <!-- 4. Choose <b>mismatches</b>, number of mismatches allowed in the alignment (0-1, Default=0)<br /> -->
         5. Choose <b>database</b><br />
         6. Upload a <b>expression values file</b> (optional), It must be a tab delimited text file, with gene identifiers in the first column and a header in the first row:
 	</p>
