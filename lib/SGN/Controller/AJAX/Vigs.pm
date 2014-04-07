@@ -58,16 +58,20 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		
 		# save pasted gene name
 		my $pasted_gene_name = $sequence;
+		$sequence =~ s/\.\d//;
+		$sequence =~ s/\.\d//;
 		
 		# get databases path from the configuration file
 		my $db_path = $c->config->{vigs_db_path};
 			
 		# get database names from their path
-		my @tmp_dbs = glob("$db_path/*.rev.1.bt2");
+		# my @tmp_dbs = glob("$db_path/*.rev.1.bt2");
+		my @tmp_dbs = glob("$db_path/*.rev.1.ebwt");
 		
 		# find the pasted gene name in the BLAST dbs and leave the loop when the name is found
 		foreach my $db_path (@tmp_dbs) {
-			$db_path =~ s/\.rev\.1\.bt2//;
+			# $db_path =~ s/\.rev\.1\.bt2//;
+			$db_path =~ s/\.rev\.1\.ebwt//;
 			# print STDERR "DB: $db_path\n";
 			
 			my $fs = Bio::BLAST::Database->open(full_file_basename => "$db_path",);
@@ -104,9 +108,12 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
     if (!$seq_fragment || $seq_fragment < 100 || $seq_fragment > length($sequence)) {
 		push (@errors, "Wrong fragment size ($seq_fragment), it must be higher than 100 bp and lower than sequence length\n");
     }
-    if ($missmatch =~ /[^\d]/ || $missmatch < 0 || $missmatch > 1 ) { 
-		push (@errors, "miss-match value ($missmatch) must be between 0-1\n");
+    if ($missmatch =~ /[^\d]/ || $missmatch < 0 || $missmatch > 2 ) { 
+		push (@errors, "miss-match value ($missmatch) must be between 0-2\n");
     }
+		#     if ($missmatch =~ /[^\d]/ || $missmatch < 0 || $missmatch > 1 ) { 
+		# push (@errors, "miss-match value ($missmatch) must be between 0-1\n");
+		#     }
 
     # Send error message to the web if something is wrong
 	if (scalar (@errors) > 0){
@@ -151,27 +158,31 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
     # run bowtie2
     my $bowtie2_path = $c->config->{cluster_shared_bindir};
     
-	my @command = (File::Spec->catfile($bowtie2_path, "bowtie2"), 
-		" --threads 1", 
-		" --very-fast", 
-		" --no-head", 
-		" --omit-sec-seq",
-		" --end-to-end",
-		" -L ".$fragment_size, 
-		" -N 1", 
-		" -a", 
-		" -x ".$database_fullpath,
-		" -f",
-		" -U ".$query_file.".fragments",
-		" -S ".$query_file.".bt2.out",
-	);
-
-    print STDERR "Bowtie2 COMMAND: ".(join " ",@command)."\n";
-    
-    my $err = system(@command);
+	# bowtie2 command
+	# my @command = (File::Spec->catfile($bowtie2_path, "bowtie2"), 
+	# 	" --threads 1", 
+	# 	" --very-fast", 
+	# 	" --no-head", 
+	# 	" --omit-sec-seq",
+	# 	" --end-to-end",
+	# 	" -L ".$fragment_size, 
+	# 	" -N 1", 
+	# 	" -a", 
+	# 	" -x ".$database_fullpath,
+	# 	" -f",
+	# 	" -U ".$query_file.".fragments",
+	# 	" -S ".$query_file.".bt2.out",
+	# );
+	
+    # print STDERR "Bowtie2 COMMAND: ".(join " ",@command)."\n";
+    # my $err = system(@command);
+	 
+	# bowtie command allowing 2 missmatch
+	my $err = system("$bowtie2_path/bowtie  --all -v 2 --threads 1 --seedlen $fragment_size --sam --sam-nohead $database_fullpath -f $query_file.fragments $query_file.bt2.out");
+   
 
 	if ($err) {
-		$c->stash->{rest} = {error => "Bowtie2 execution failed"};
+		$c->stash->{rest} = {error => "Bowtie execution failed"};
 	} 
 	else {
 		$id = $urlencode{basename($seq_filename)};
@@ -206,6 +217,10 @@ sub get_expression_hash {
 	$line =~ s/\"//g;
 	my @line_cols = split(/\t/, $line);
 	my $gene_id = shift(@line_cols);
+	
+	$gene_id =~ s/\.\d//;
+	$gene_id =~ s/\.\d//;
+	
 	$expr_values{$gene_id} = \@line_cols;
     }
 
@@ -264,29 +279,34 @@ sub view :Path('/tools/vigs/view') Args(0) {
         $vg->parse($missmatch);
     }
 
-    if ($coverage == 0) { 
-	$coverage = $vg->get_best_coverage;
-    }
     
     # get best region and scores
     my @regions = [0,0,0,1,1,1];
     my @best_region = [1,1];
     my $seq_length = length($query->seq());
 	
-	my $counter = 0;
-	while (!$regions[1] || $regions[1] <= 0) {
-		$counter++;
+    if ($coverage == 0) { 
+		$coverage = $vg->get_best_coverage;
+	
+		my $counter = 0;
+		while (!$regions[1] || $regions[1] <= 0) {
+			$counter++;
+			@regions = $vg->longest_vigs_sequence($coverage, $seq_length);
+		
+			print STDERR "score: $regions[1], loop iteration: $counter, coverage: $coverage\n";
+			
+			if ($counter >= 3) {
+				last;
+			}
+			if ($regions[1] <= 0) {
+				$coverage = $coverage + 1;
+			}
+		}
+	} 
+	else {
 		@regions = $vg->longest_vigs_sequence($coverage, $seq_length);
-		
-		print STDERR "score: $regions[1], loop iteration: $counter\n";
-		
-		if ($regions[1] <= 0 || $counter >= 4) {
-			$coverage = $coverage + 1;
-		}
-		if ($counter >= 3) {
-			last;
-		}
 	}
+	
 	
     @best_region = [$regions[4], $regions[5]];
     
