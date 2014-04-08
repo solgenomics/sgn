@@ -3,19 +3,11 @@ package SGN::Controller::solGS::Heritability;
 use Moose;
 use namespace::autoclean;
 
-use Cache::File;
-use CXGN::Tools::Run;
-use File::Temp qw / tempfile tempdir /;
-use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
-use File::Path qw / mkpath  /;
-use File::Copy;
-use File::Basename;
-
 use JSON;
-use Try::Tiny;
-use Statistics::Descriptive;
 use Math::Round::Var;
+use Statistics::Descriptive;
+
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -38,7 +30,6 @@ sub check_regression_data :Path('/heritability/check/data/') Args(0) {
     my $gebv_file  = $c->stash->{regression_gebv_file};
     my $pheno_file = $c->stash->{regression_pheno_file};
 
-    
     if(-s $gebv_file  && -s $pheno_file)
     {
         $ret->{exists} = 'yes';             
@@ -111,9 +102,12 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
     my $gebv_file  = $c->stash->{regression_gebv_file};
     my $pheno_file = $c->stash->{regression_pheno_file};
 
-    my @gebv_data  = map { [split(/\t/)] } read_file($gebv_file);
-    my @pheno_data = map { [split(/\t/)] } read_file($pheno_file);
-   
+    my @gebv_data  = map { $_ =~ s/\n//; $_ }  read_file($gebv_file);
+    my @pheno_data = map { $_ =~ s/\n//; $_ }  read_file($pheno_file);
+    
+    @gebv_data  = map { [ split(/\t/) ] } @gebv_data;
+    @pheno_data = map { [ split(/\t/) ] } @pheno_data;
+ 
     my @pheno_values   = map { $_->[1] } @pheno_data;
     shift(@pheno_values);
     shift(@gebv_data);
@@ -125,7 +119,7 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
 
     my $round = Math::Round::Var->new(0.01);
    
-    my @pheno_deviations = map { [$_->[0], $round->round($_->[1] - $pheno_mean)] } @pheno_data;
+    my @pheno_deviations = map { [$_->[0], $round->round(( $_->[1] - $pheno_mean ))] } @pheno_data;
 
     my $ret->{status} = 'failed';
 
@@ -139,7 +133,7 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
     }
 
     $ret = to_json($ret);
-       
+ 
     $c->res->content_type('application/json');
     $c->res->body($ret);           
     
