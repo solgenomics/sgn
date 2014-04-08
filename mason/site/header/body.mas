@@ -19,7 +19,7 @@
 <div id="list_item_dialog" overflow="auto" >
 </div>
 
-<div id="working" style="text-align : center; cursor : wait; visibility:hidden">
+<div id="working" style="text-align : center;">
   <img src="/img/wheel.gif" />
 </div>
 
