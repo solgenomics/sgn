@@ -493,7 +493,7 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
 	$c->stash->{rest} = { error => "You must be logged in add properties." };
 	return;
     }
-    if (!$c->user()->has_role('submitter') or !$c->user()->has_role('curator')) { 
+    if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) { 
 	$c->stash->{rest} = { error => "You do not have sufficient privileges to add properties." };
 	return;
     }
