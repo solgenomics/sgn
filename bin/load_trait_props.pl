@@ -36,22 +36,98 @@ use warnings;
 use lib 'lib';
 use Getopt::Std;
 use Bio::Chado::Schema;
-use CXGN::Tools::File::Spreadsheet;
+use Spreadsheet::ParseExcel;
 use CXGN::DB::InsertDBH;
 use CXGN::DB::Connection;
 use CXGN::Fieldbook::TraitProps;
 
-our ($opt_H, $opt_D, $opt_I, $opt_o, $opt_w, $opt_t);
 
+our ($opt_H, $opt_D, $opt_I, $opt_o, $opt_w, $opt_t);
 getopts('H:D:I:o:wt');
+
 
 sub print_help {
   print STDERR "A script to load trait properties\nUsage: load_trait_props.pl -D [database name] -H [database host, e.g., localhost] -I [input file] -o [ontology namespace, e.g., CO] -w\n\t-w\toverwrite existing trait properties if they exist (optional)\n\t-t\ttest run.  roll back at the end\n";
 }
 
+
 if (!$opt_D || !$opt_H || !$opt_I || !$opt_o) {
   print_help();
   die("Exiting: options missing\n");
+}
+
+
+#try to open the excel file and report any errors
+my $parser   = Spreadsheet::ParseExcel->new();
+my $excel_obj = $parser->parse($opt_I);
+
+if ( !$excel_obj ) {
+  die "Input file error: ".$parser->error()."\n";
+}
+
+my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
+my ( $row_min, $row_max ) = $worksheet->row_range();
+my ( $col_min, $col_max ) = $worksheet->col_range();
+
+if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of phenotypes
+  die "Input file error: spreadsheet is missing header\n";
+}
+
+my $trait_name_head;
+
+if ($worksheet->get_cell(0,0)) {
+  $trait_name_head  = $worksheet->get_cell(0,0)->value();
+}
+
+if (!$trait_name_head || $trait_name_head ne 'trait_name') {
+  die "Input file error: no \"trait_name\" in header\n";
+}
+
+my @trait_property_names = qw(
+			       trait_format
+			       trait_default_value
+			       trait_minimum
+			       trait_maximum
+			       trait_categories
+			       trait_details
+			    );
+
+#check header for property names
+for (my $column_number = 1; $column_number <= scalar @trait_property_names; $column_number++) {
+  my $property_name = $trait_property_names[$column_number-1];
+  if ( !($worksheet->get_cell(0,$column_number)) || !($worksheet->get_cell(0,$column_number)->value() eq $property_name) ) {
+    die "Input file error: no \"$property_name\" in header\n";
+  }
+}
+
+my @trait_props_data;
+
+
+for my $row ( 1 .. $row_max ) {
+  my %trait_props;
+  my $trait_name;
+  my $current_row = $row+1;
+
+
+  if ($worksheet->get_cell($row,0)) {
+    $trait_name = $worksheet->get_cell($row,0)->value();
+    $trait_props{'trait_name'}=$trait_name;
+  } else {
+    next; #skip blank lines
+  }
+
+  my $prop_column = 1;
+  foreach my $property_name (@trait_property_names) {
+    if ($worksheet->get_cell($row,$prop_column)) {
+      if (($worksheet->get_cell($row,$prop_column)->value()) && ($worksheet->get_cell($row,$prop_column)->value() ne '')) {
+	$trait_props{$property_name}=$worksheet->get_cell($row,$prop_column)->value();
+      }
+    }
+    $prop_column++;
+  }
+
+  push @trait_props_data, \%trait_props;
+
 }
 
 my $dbh = CXGN::DB::InsertDBH
@@ -75,15 +151,6 @@ if ($opt_t){
 }
 
 my $chado_schema = Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
-
-my @trait_props_data;
-
-my %trait_props;
-
-$trait_props{'trait_name'}='dry yield';
-$trait_props{'trait_details'}='Dry weight of harvested roots derived by multiplying fresh storage root yield by dry matter content expressed in tons per hectares.';
-$trait_props{'trait_minimum'}=0;
-push @trait_props_data, \%trait_props;
 
 my $db_name = $opt_o;
 
