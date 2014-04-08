@@ -110,6 +110,7 @@ jQuery(document).ready(function ($) {
 		    alert("No accessions to add");
 		    return;
 		}
+		//alert("adding accessionsToAdd.length accessions");
 		add_accessions(accessionsToAdd, speciesName);
 		$(this).dialog( "close" );
 		location.reload();
@@ -151,18 +152,19 @@ jQuery(document).ready(function ($) {
 	var j;
 
 	if (verifyResponse.found) {
-	var found_html = '';
-	for( i=0; i < verifyResponse.found.length; i++){
-	    found_html = found_html 
-		+'<div class="left">'+verifyResponse.found[i].matched_string
-		+'</div>';
-	    if (verifyResponse.found[i].matched_string != verifyResponse.found[i].unique_name){
+	    $('#count_of_found_accessions').html("Total number already in the database("+verifyResponse.found.length+")");
+	    var found_html = '';
+	    for( i=0; i < verifyResponse.found.length; i++){
 		found_html = found_html 
-		    +'<div class="right">'
-		    +verifyResponse.found[i].unique_name
+		    +'<div class="left">'+verifyResponse.found[i].matched_string
 		    +'</div>';
+		if (verifyResponse.found[i].matched_string != verifyResponse.found[i].unique_name){
+		    found_html = found_html 
+			+'<div class="right">'
+			+verifyResponse.found[i].unique_name
+			+'</div>';
+		}
 	    }
-	}
 	    $('#view_found_matches').html(found_html);
 
 	    if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
@@ -217,6 +219,7 @@ jQuery(document).ready(function ($) {
 	}
 
 	if (verifyResponse.absent) {
+	    $('#count_of_absent_accessions').html("Total number to be added("+verifyResponse.absent.length+")");
 	    var absent_html = '';
 	    $("#species_name_input").autocomplete({
 		source: '/organism/autocomplete'
@@ -255,7 +258,7 @@ jQuery(document).ready(function ($) {
 		disable_ui();
             },  
             //complete : function(){
-		//enable_ui();
+	    //enable_ui();
             //},  
 	    success: function (response) {
 		//enable_ui();

@@ -28,6 +28,7 @@ my $build = SGN::Build->new(
         'Test::WWW::Mechanize::Catalyst' => '0.50',
         'Test::WWW::Selenium'            => 0,
         'Test::MockObject'               => 0,
+	'Module::Build::Tiny'            => 0,
     },
     requires => {
         'perl'                                     => '5.10.0',
