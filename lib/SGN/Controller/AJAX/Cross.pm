@@ -542,7 +542,7 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
 	$c->stash->{rest} = { error => "You must be logged in add progeny." };
 	return;
     }
-    if (!$c->user()->has_role('submitter') or !$c->user()->has_role('curator')) { 
+    if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) { 
 	$c->stash->{rest} = { error => "You do not have sufficient privileges to add progeny." };
 	return;
     }
