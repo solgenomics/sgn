@@ -5,7 +5,7 @@
 *
 */
 
-JSAN.use('statistics.jsStats');
+//JSAN.use('statistics.jsStats');
 
 
 function getDataDetails () {
@@ -72,7 +72,8 @@ function getRegressionData () {
                     var regressionData = {
                         'breeding_values'     : response.gebv_data,
                         'phenotype_values'    : response.pheno_data,
-                        'phenotype_deviations': response.pheno_deviations
+                        'phenotype_deviations': response.pheno_deviations,
+                        'heritability'        : response.heritability  
                     };
                     plotRegressionData(regressionData);
                                    
@@ -93,6 +94,7 @@ function plotRegressionData(regressionData){
   
     var breedingValues      = regressionData.breeding_values;
     var phenotypeDeviations = regressionData.phenotype_deviations;
+    var heritability        = regressionData.heritability;
 
     var phenoXValues = phenotypeDeviations.map( function (d) {
             d = d[1]; 
@@ -105,27 +107,21 @@ function plotRegressionData(regressionData){
         });
 
     var plotData = phenotypeDeviations.map( function (pv) {
-        var combinedData = {};    
+      
         var plotData =[];
         jQuery.each(breedingValues, function(i, gv) {
             
             if ( pv[0] === gv[0] ) {
-            
-                combinedData = jQuery.extend(combinedData, {'clone': pv[0], 'gebv': gv[1], 'pheno' : pv[1]});
+         
                 plotData.push({'name' : gv[0], 'gebv' : gv[1], 'pheno_dev': pv[1]} );
                 return false;
+
             }
             
         });
 
         return plotData;
     });
-
-   // alert('gebv max ' + d3.max(breedingYValues) + ' gebv min ' + d3.min(breedingYValues) );
-   // alert('pheno max ' + d3.max(phenoXValues) + ' pheno min ' + d3.min(phenoXValues) )
-
-
-    //alert('plot data: ' + plotData);
 
     var height = 300;
     var width  = 500;
@@ -140,7 +136,7 @@ function plotRegressionData(regressionData){
 
     var regressionPlot = svg.append("g")
         .attr("id", "#gebv_pheno_regression_plot")
-        .attr("transform", "translate(" + pad.left + "," + pad.top + ")");
+        .attr("transform", "translate(" + (pad.left - 5) + "," + (pad.top - 5) + ")");
 
    
     var phenoMin = d3.min(phenoXValues);
@@ -151,7 +147,7 @@ function plotRegressionData(regressionData){
   
      var xAxisScale = d3.scale.linear()
         .domain([0, xLimits])
-        .range([0, (width/2)]);
+        .range([0, width/2]);
     
     var xAxisLabel = d3.scale.linear()
         .domain([(-1 * xLimits), xLimits])
@@ -167,7 +163,7 @@ function plotRegressionData(regressionData){
         .orient("bottom");
           
     var yAxisLabel = d3.scale.linear()
-        .domain([(-1 * yLimits), yLimits, ])
+        .domain([(-1 * yLimits), yLimits])
         .range([height, 0]);
     
    var yAxis = d3.svg.axis()
@@ -175,18 +171,9 @@ function plotRegressionData(regressionData){
         .tickSize(3)
         .orient("left");
 
-    var it1 = yAxisScale(-0.5);
-    var it2 = yAxisScale(0.5);
-    var it3 = xAxisScale(-0.5);
-    var it4 = xAxisScale(0.5);
-    alert(it1 + " (-.5 : .5) " + it2);
-     alert(it3 + " (-.5 : .5) " + it4);
-   // console.log(plotData);
-    var xAxisMid = 0.5 * (totalH); // pad.left + xAxisScale(d3.min(phenoXValues)); // pad.top + yAxisScale(d3.max(breedingYValues));
-   // alert('xMid ' +  xAxisMid);
-
-    var yAxisMid = 0.5 * (totalW); // pad.top + yAxisScale(d3.max(breedingYValues));
-   // alert('yMid ' +  yAxisMid);
+    var xAxisMid = 0.5 * (totalH); 
+    var yAxisMid = 0.5 * (totalW);
+ 
     regressionPlot.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(" + pad.left + "," + xAxisMid +")")
@@ -209,6 +196,23 @@ function plotRegressionData(regressionData){
         .attr("fill", "green")
         .style("fill", "green");
 
+ regressionPlot.append("g")
+        .attr("id", "x_axis_label")
+        .append("text")
+        .text("Phenotype deviations (X)")
+        .attr("y", (pad.top + (height/2)) + 50)
+        .attr("x", (width - 110))
+        .attr("font-size", 10)
+
+ regressionPlot.append("g")
+        .attr("id", "y_axis_label")
+        .append("text")
+        .text("Breeding values (Y)")
+        .attr("y", (pad.top +  10))
+        .attr("x", ((width/2) - 80))
+        .attr("font-size", 10)
+
+
     regressionPlot.append("g")
         .selectAll("circle")
         .data(plotData)
@@ -218,7 +222,7 @@ function plotRegressionData(regressionData){
         .attr("r", 3)
         .attr("cx", function(d) {
             var xVal = d[0].pheno_dev;
-            console.log(xVal, xAxisScale(xVal),d[0].gebv, yAxisScale(d[0].gebv)); 
+           // console.log(xVal, xAxisScale(xVal),d[0].gebv, yAxisScale(d[0].gebv)); 
             if (xVal >= 0) {
                 return  (pad.left + (width/2)) + xAxisScale(xVal);
             } else {   
@@ -226,7 +230,9 @@ function plotRegressionData(regressionData){
            }
         })
         .attr("cy", function(d) { 
+            
             var yVal = d[0].gebv;
+            
             if (yVal >= 0) {
                 return ( pad.top + (height/2)) - yAxisScale(yVal);
             } else {
@@ -236,20 +242,32 @@ function plotRegressionData(regressionData){
         .on("mouseover", function(d) {
             d3.select(this)
                 .attr("r", 5)
+                .style("fill", "purple")
             regressionPlot.append("text")
                 .attr("id", "dLabel")
-                .style("fill", "green")
-                .text( d[0].name + "(" +d[0].pheno_dev +"," + d[0].gebv + ")") 
+                .style("fill", "purple")
+                .style("font-weight", "bold")
+                .text( d[0].name + "(" +d[0].pheno_dev +"," + d[0].gebv + ")")
+                .attr("x", pad.left + 10)
+                .attr("y", pad.top + 50);
+               
 
         })
         .on("mouseout", function(d) { 
             d3.select(this)
                 .attr("r", 3)
+                .style("fill", "green")
             d3.selectAll("text#dLabel").remove();            
         });
 
-
-    
+     regressionPlot.append("g")
+        .attr("id", "heritability")
+        .append("text")
+        .text("Heritability: " + heritability)
+        .attr("x", 400)
+        .attr("y", 20)
+        .style("fill", "purple")
+        .style("font-weight", "bold");     
 }
 
 
