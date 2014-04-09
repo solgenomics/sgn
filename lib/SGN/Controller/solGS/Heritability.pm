@@ -121,6 +121,9 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
    
     my @pheno_deviations = map { [$_->[0], $round->round(( $_->[1] - $pheno_mean ))] } @pheno_data;
 
+    $self->get_heritability($c);
+    my $heritability = $c->stash->{heritability};
+    
     my $ret->{status} = 'failed';
 
     if (@gebv_data && @pheno_data)
@@ -129,6 +132,7 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
         $ret->{gebv_data}        = \@gebv_data;
         $ret->{pheno_deviations} = \@pheno_deviations;
         $ret->{pheno_data}       = \@pheno_data;
+        $ret->{heritability}     = $heritability;
 
     }
 
