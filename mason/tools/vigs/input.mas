@@ -23,11 +23,38 @@ Sequence:
 <script>
 	var seq = ">Solyc10g047140.1.1 Receptor like kinase, RLK\nATGGATCAGTCGGTGTTGGCGATCTGGGTATTTCTCTGCTTAATTGGTCTGCTTTTCAATTTGTCACCCGTCGCCGGTAACGCTGAAGGTGATGCCTTGAATGCTCTGAAGACAAATTTGGCTGATCCTAATAGTGTTCTACAGAGTTGGGATGCAACCCTTGTTAATCCTTGTACTTGGTTCCATGTGACATGCAACAATGAAAATAGTGTGACTAGAGTTGATCTAGGAAATGCAAATCTATCAGGTCAACTGGTACCACAGCTTGGCCAACTCCAGAAATTGCAGTACTTGGAACTTTATAGTAATAACATAAGCGGAAGAATTCCAAATGAACTGGGAAACTTGACAGAGTTGGTTAGTTTGGATCTTTACCTGAACAACTTAAATGGTCCTATTCCTCCCTCATTGGGCAGGCTTCAGAAGCTACGCTTCCTGAGGCTCAATAATAACAGTTTGAATGAAGGTATTCCCATGTCTCTAACCACCATTGTTGCACTTCAAGTACTTGATCTCTCAAACAACCATTTGACAGGACTAGTTCCAGTCAACGGTTCCTTTTCACTTTTTACTCCTATAAGTTTTGCTAATAATCAGTTGGAAGTTCCTCCAGTTTCTCCACCTCCTCCTCTTCCTCCTACACCCTCATCGTCATCTTCAGTGGGCAACAGCGCAACTGGAGCTATCGCTGGAGGAGTTGCTGCAGGCGCTGCTCTTCTATTTGCAGCTCCTGCAATTTTTCTTGCTTGGTGGCGTCGGAGGAAACCACAAGACCACTTCTTTGATGTTCCTGCTGAGGAGGATCCAGAAGTTCATCTGGGACAACTCAAAAGGTTTTCCTTGCGTGAACTACAAGTTGCGTCGGATAATTTTAGCAACAGAAATATACTCGGTAGAGGTGGATTTGGTAAGGTTTATAAGGGCCGGTTAGCTGATGGCTCTTTAGTTGCAGTGAAAAGACTAAAAGAGGAACGTACTCAAGGTGGAGAGTTACAGTTCCAGACAGAAGTAGAAATGATCAGCATGGCTGTACACCGAAACCTACTTCGTTTACGGGGCTTTTGCATGACACCCACTGAGCGCGTGCTTGTTTATCCTTACATGGAGAATGGAAGTGTTGCATCACGTTTAAGAGAGAGGCCTGAATCAGAGCCCCCACTTGACTGGCCAAAAAGGAAGCGTATTGCACTTGGATCTGCAAGAGGCCTTGCTTACTTGCATGATCATTGTGATCCTAAAATTATTCATCGTGACGTCAAAGCCGCAAATATCTTGTTGGATGAGGAGTTTGAAGCAGTTGTTGGGGATTTTGGGTTAGCTAAACTCATGGACTACAAGGATACTCATGTTACCACTGCTGTACGTGGTACAATTGGGCATATTGCCCCTGAATATTTATCTACTGGTAAATCTTCTGAGAAAACTGATGTCTTTGGCTATGGGGTTATGCTTCTAGAGCTCATAACTGGGCAAAGGGCTTTTGATCTTGCTCGACTTGCGAATGATGATGATGTCATGCTGCTAGATTGGGTGAAGGGACTCCTGAAGGACAAGAAATATGAAACATTAGTTGATGCAGATCTTCAAGGTAATTACAATGAAGAAGAGGTGGAACAACTTATTCAGGTAGCTCTACTTTGCACGCAGAGTACGCCTACGGAACGTCCAAAGATGTCAGAAGTTGTAAGAATGCTTGAAGGTGATGGCCTTGCTGAGAGGTGGGAGGAATGGCAAAAGGAGGAGATGTTCCGGCAAGATTACAACCATGTACACCACCCCCATACTGATTGGATAATAGCTGACTCCACGTCAAATATCCGACCGGATGAGTTGTCAGGGCCAAGATGA\n";
 
-	document.write("(<a href=\"javascript:example()\" >example sequence</a>)");
+	document.write("(<a href=\"javascript:example()\" title=\"Paste an example sequence\" >example sequence</a>)");
 
 	function example() { 
 	    document.getElementById("sequence").value=seq;
-	}	    
+	}
+	
+	
+	//use JQueryIu to define tooltip style
+    $(function() {
+	   $( document ).tooltip({
+		   position: {
+			   my: "center bottom-20",
+			   at: "center top",
+			   using: function( position, feedback ) {
+				   $( this ).css( position );
+				   $( "<div>" )
+				   .addClass( "arrow" )
+				   .addClass( feedback.vertical )
+				   .addClass( feedback.horizontal )
+				   .appendTo( this );
+			   }
+		   }
+	   });
+   });
+	
+	document.getElementByClassName("ui-button").title = "";
+	document.getElementByClassName("ui-widget").title = "";
+	document.getElementByClassName("ui-state-default").title = "";
+	document.getElementByClassName("ui-corner-all").title = "";
+	document.getElementByClassName("ui-button-icon-only").title = "";
+	document.getElementByClassName("ui-dialog-titlebar-close").title = "";
+	
 </script>
 <div id="status_wheel" style="display:none"><img src="/static/documents/img/wheel.gif" /></div>
 <br />
@@ -40,14 +67,14 @@ Sequence:
 <span title="siRNA selected size">n-mer size</span> 
 <input class="input" id="si_rna" type="input" value="21" name="fragment_size" size="2" />&nbsp; &nbsp; &nbsp;
 
-<span title="desired VIGS fragment length">Fragment length</span> 
+<span title="Desired VIGS construct length">Fragment length</span> 
 <input class="input" id="f_length" type="input" value="300" name="seq_fragment" size="3" />&nbsp; &nbsp; &nbsp;
 
-<span title="Number of mismatches allowed in BowTie 2 alignment">mismatches</span> 
+<span title="Number of mismatches allowed in Bowtie alignment">mismatches</span> 
 <input class="input" id="mm" type="input" value="0" name="mismatch" size="1" />
 <br />
 <br />
-Database <select class="input" id='bt2_db' name="database"> 
+Database <select class="input" id='bt2_db' name="database" title="Select plant species to host VIGS experiment">
 <br />
 
 <%perl>
@@ -64,13 +91,13 @@ foreach my $d (@databases) {
 
 
 <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_expression_form" name="upload_expression_form" action="/ajax/upload_expression_file">
-    Upload Expression file: <input type="file" name="expression_file" id="expression_file" encoding="multipart/form-data" />
+    Upload Expression file: <input type="file" name="expression_file" id="expression_file" encoding="multipart/form-data" title="Insert a expression file in a tab-delimited format"/>
 </form>
 
 
 <br />
-<button class="input" id="clear_form" value="clear">Clear</button>&nbsp; &nbsp; &nbsp;
-<button class="input" id="upload_expression_file" value="Run VIGS Analysis">Run VIGS Analysis</button>
+<button class="input" id="clear_form" value="clear" title="Clear form">Clear</button>&nbsp; &nbsp; &nbsp;
+<button class="input" id="upload_expression_file" value="Run VIGS Analysis" title="Start VIGS analysis">Run VIGS Analysis</button>
 
 <br />
 <br />
@@ -101,7 +128,8 @@ foreach my $d (@databases) {
          
         2. Choose <b>n-mer size</b>, nucleotide stretch size in bp, used to identify targeted regions (18-24, Default=21)<br />
         3. Choose <b>Fragment length</b>, desired VIGS fragment length in bp (100-Sequence length, Default=300)<br />
-        4. Choose <b>mismatches</b>, number of mismatches allowed in the alignment (0-1, Default=0)<br />
+        4. Choose <b>mismatches</b>, number of mismatches allowed in the alignment (0-2, Default=0)<br />
+        <!-- 4. Choose <b>mismatches</b>, number of mismatches allowed in the alignment (0-1, Default=0)<br /> -->
         5. Choose <b>database</b><br />
         6. Upload a <b>expression values file</b> (optional), It must be a tab delimited text file, with gene identifiers in the first column and a header in the first row:
 	</p>
@@ -256,6 +284,55 @@ foreach my $d (@databases) {
 #desc_dialog {
      overflow: auto;
      position: relative;
+}
+
+
+
+
+.ui-tooltip, .arrow:after {
+	background: black;
+	border: 2px solid white;
+}
+.ui-tooltip {
+	padding: 10px 20px;
+	color: white;
+	border-radius: 20px;
+	font: bold 14px "Helvetica Neue", Sans-Serif;
+	box-shadow: 0 0 7px black;
+}
+.arrow {
+	width: 70px;
+	height: 16px;
+	overflow: hidden;
+	position: absolute;
+	left: 50%;
+	margin-left: -35px;
+	bottom: -16px;
+}
+.arrow.top {
+	top: -16px;
+	bottom: auto;
+}
+.arrow.left {
+	left: 20%;
+}
+.arrow:after {
+	content: "";
+	position: absolute;
+	left: 20px;
+	top: -20px;
+	width: 25px;
+	height: 25px;
+	box-shadow: 6px 5px 9px -9px black;
+	-webkit-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	-o-transform: rotate(45deg);
+	tranform: rotate(45deg);
+}
+.arrow.top:after {
+	bottom: -20px;
+	top: auto;
 }
 
 </style>

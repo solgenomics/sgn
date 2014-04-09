@@ -7,7 +7,7 @@ use Data::Dumper;
 use Bio::SeqIO;
 use Bio::BLAST::Database;
 
-
+# get all arguments from Vigs.pm (Ajax controllers), subroutine view
 has 'bwafile' => ( is=>'rw' );
 has 'fragment_size' => (is => 'rw', isa=>'Int', default=>21);
 has 'matches' => (is=>'rw', isa=>'Ref');
@@ -36,8 +36,8 @@ sub parse {
 		my ($seq_id, $code, $subject, $scoord) = (split /\t/, $line);
 		
 		# get perfect matches 
-		# if ($line =~ /NM:i:(\d+)/) { # edit distance for Bowtie
-		if ($line =~ /XM:i:(\d+)/) { # number of mismatches for Bowtie2
+		if ($line =~ /NM:i:(\d+)/) { # edit distance for Bowtie
+		# if ($line =~ /XM:i:(\d+)/) { # number of mismatches for Bowtie2
 			my $mm_found = $1;
 
 			if ($mm_found <= $mm) {

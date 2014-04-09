@@ -168,6 +168,13 @@ email_address          = noreply@gmod.org
 
 default source = ITAG2.3_genomic
 
+[ITAG2.4_genomic]
+path          = ITAG2.4_genomic.conf
+description   = ITAG2.4 Release: genomic annotations
+organism      = Solanum lycopersicum
+extended_description = ITAG Release 2.4 (2014-02-23) official annotations on the SL2.50 genome build by the International Tomato Annotation Group (ITAG).
+
+
 [ITAG2.3_genomic]
 path          = ITAG2.3_genomic.conf
 description   = ITAG2.3 Release: genomic annotations

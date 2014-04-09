@@ -47,7 +47,8 @@ sub choose_view :Private {
         @xrefs = map {
             $c->feature_xrefs( $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax, { exclude => 'featurepages' } )
         }
-        $c->stash->{featurelocs}->all
+        #$c->stash->{featurelocs}->all
+	$c->stash->{featurelocs}->search({locgroup => 0,},)->all
     }
     $c->stash->{xrefs} = \@xrefs;
 
@@ -77,7 +78,8 @@ sub get_feature : Chained('/') CaptureArgs(1) PathPart('feature') {
         $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
           ->resultset('Sequence::Feature')
           ->search(
-              { 'me.'.$identifier_type => $id },
+              #{ 'me.'.$identifier_type => $id },
+	    { 'me.'.$identifier_type => $id, 'featureloc_features.locgroup' => 0 },
               { prefetch => [ 'organism', 'type', 'featureloc_features'  ] },
             );
 
