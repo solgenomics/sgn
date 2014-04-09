@@ -48,13 +48,6 @@ Sequence:
 	   });
    });
 	
-	document.getElementByClassName("ui-button").title = "";
-	document.getElementByClassName("ui-widget").title = "";
-	document.getElementByClassName("ui-state-default").title = "";
-	document.getElementByClassName("ui-corner-all").title = "";
-	document.getElementByClassName("ui-button-icon-only").title = "";
-	document.getElementByClassName("ui-dialog-titlebar-close").title = "";
-	
 </script>
 <div id="status_wheel" style="display:none"><img src="/static/documents/img/wheel.gif" /></div>
 <br />
@@ -290,13 +283,13 @@ foreach my $d (@databases) {
 
 
 .ui-tooltip, .arrow:after {
-	background: black;
+	background: #000000;
 	border: 2px solid white;
 }
 .ui-tooltip {
-	padding: 10px 20px;
+	padding: 5px 10px;
 	color: white;
-	border-radius: 20px;
+	border-radius: 10px;
 	font: bold 14px "Helvetica Neue", Sans-Serif;
 	box-shadow: 0 0 7px black;
 }
