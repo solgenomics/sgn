@@ -386,12 +386,7 @@ sub get_cross_cvterm_id {
 
 sub _get_genotyping_trial_cvterm_id {
     my $self = shift;
-    my $schema = $self->schema;
-    my $cv = $schema->resultset("Cv::Cv")
-      ->find_or_create({
-			name => 'trial_type',
-		       });
-    my $cvterm = $self->schema->resultset("Cv::Cvterm")
+     my $cvterm = $self->schema->resultset("Cv::Cvterm")
       ->create_with({
 		     name   => 'genotyping trial',
 		     cv     => 'trial type',
