@@ -450,8 +450,6 @@ sub get_locations : Private {
 	
 	my ($count) = $sh->fetchrow_array();
 	
-	print STDERR "PLOTS: $count\n";
-	
 	#if ($count > 0) { 
 	
 		push @locations,  [ $row->nd_geolocation_id, 
