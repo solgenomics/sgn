@@ -86,14 +86,21 @@ sub get_trials_by_breeding_program {
 
     while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) {
 	#push @$trials, [ $id, $name, $desc ];
-      $project_name{$id} = $name;
-      $project_description{$id} = $desc;
-      if ($prop == $cross_cvterm_id) {
-	$projects_that_are_crosses{$id} = 1;
+      if ($name) {
+	$project_name{$id} = $name;
       }
-      if ($prop == $project_year_cvterm_id) {
-	$project_year{$id} = $propvalue;
+      if ($desc) {
+	$project_description{$id} = $desc;
       }
+      if ($prop) {
+	if ($prop == $cross_cvterm_id) {
+	  $projects_that_are_crosses{$id} = 1;
+	}
+	if ($prop == $project_year_cvterm_id) {
+	  $project_year{$id} = $propvalue;
+	}
+      }
+
     }
 
     my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
@@ -123,17 +130,24 @@ sub get_genotyping_trials_by_breeding_program {
     my %project_description;
 
     while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) {
-      $project_name{$id} = $name;
-      $project_description{$id} = $desc;
-      if ($prop == $cross_cvterm_id) {
-	$projects_that_are_crosses{$id} = 1;
+      if ($name) {
+	$project_name{$id} = $name;
       }
-      if ($prop == $project_year_cvterm_id) {
-	$project_year{$id} = $propvalue;
+      if ($desc) {
+	$project_description{$id} = $desc;
       }
-      if ($prop == $genotyping_trial_cvterm_id) {
-	$projects_that_are_genotyping_trials{$id} = 1;
+      if ($prop) {
+	if ($prop == $cross_cvterm_id) {
+	  $projects_that_are_crosses{$id} = 1;
+	}
+	if ($prop == $project_year_cvterm_id) {
+	  $project_year{$id} = $propvalue;
+	}
+	if ($prop == $genotyping_trial_cvterm_id) {
+	  $projects_that_are_genotyping_trials{$id} = 1;
+	}
       }
+
     }
 
     my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
