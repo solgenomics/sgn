@@ -84,10 +84,10 @@ sub get_trait_info {
 
 
   foreach my $property_name (keys %{$cvterms}) {
-    my $prop_cvterm = $cvterms->{$propert_name};
+    my $prop_cvterm = $cvterms->{$property_name};
     my $prop = $cvtermprops->find({'type_id' => $prop_cvterm->cvterm_id()});
     if ($prop  && $prop->value()) {
-      $trait_props{$propert_name}=$prop->value();
+      $trait_props{$property_name}=$prop->value();
     }
   }
 
