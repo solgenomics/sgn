@@ -154,7 +154,6 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
     my $data_type         = $c->req->param("data_type") || "genotype";
     my $format            = $c->req->param("format");
 
-
     print STDERR "IDS: $accession_list_id, $trial_list_id \n";
 
     my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
@@ -170,8 +169,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $t = CXGN::List::Transform->new();
     
-#    print STDERR Data::Dumper::Dumper(\@accession_list);
-#    print STDERR Data::Dumper::Dumper(\@trial_list);
+     print STDERR Data::Dumper::Dumper(\@accession_list);
+     print STDERR Data::Dumper::Dumper(\@trial_list);
 #    print STDERR Data::Dumper::Dumper(\@trait_list);
 
     my $acc_t = $t->can_transform("accessions", "accession_ids");
@@ -192,94 +191,57 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
     my $data; 
     my $output = "";
 
-
-#    my $fh000="out_test000.txt";
-
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
-
-        #$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
     open my $TEMP, '>', $tempfile or die "Cannot open output_test00.txt: $!";
 
 
+    print $TEMP "Marker\t";
+    for my $i (0 .. $#accession_list){
 
+	print $TEMP "$accession_list[$i]\t";
 
-    #$fh000 = File::Spec->catfile($c->config->{gbs_temp_data}, $fh000);
-  #  $tempfile = File::Spec->catfile($c->config->{gbs_temp_data}, $tempfile);
- $tempfile = File::Spec->catfile($tempfile);
+    }
 
-    if ($data_type eq "genotype") { 
-		
+    print $TEMP "\n";
+
+    if ($data_type eq "genotype") { 		
         print "Download genotype data\n";
 
 	$data = $bs->get_genotype_info($accession_sql, $trial_sql);        
 	$output = "";
 
-#	say "Your list has ", scalar(@$x), " elements" 
-
-       print STDERR "your list has ", scalar(@$data)," element \n";
-      
-       #my @myGBS = ();
-       
-     
+       print STDERR "your list has ", scalar(@$data)," element \n"; 
        my @AoH = ();
 
      for (my $i=0; $i < scalar(@$data) ; $i++) 
-#      for my $i ( 0 .. $#data )
      {
       my $decoded = decode_json($data->[$i][1]);
       push(@AoH, $decoded); 
-      #print "$i\n";
-     }
-      # push(@myGBS, 'Moe'); 
-
+     } 
 	print STDERR "your array has ", scalar(@AoH)," element \n";
 	
-
-
         my @k=();
 	for my $i ( 0 .. $#AoH ){
 	   @k = keys   %{ $AoH[$i] }
 	}
 
-	
-  #      print STDERR "Output file is ", $fh000,"\n";
-	
-   #     open my $fh00, '>', "output_test00.txt" or die "Cannot open output_test00.txt: $!";
-
- #       open my $fh00, '>', $fh000 or die "Cannot open output_test00.txt: $!";
-
         for my $j (0 .. $#k){
-
-	    #print $fh00 "$k[$j]\t";
- print $TEMP "$k[$j]\t";
+	    print $TEMP "$k[$j]\t";
 
 	    for my $i ( 0 .. $#AoH ) {
              
             if($i == $#AoH ){  
-            #print $fh00 "$AoH[$i]{$k[$j]}";
-print $TEMP "$AoH[$i]{$k[$j]}";
+		print $TEMP "$AoH[$i]{$k[$j]}";
 
             }else{
-	    #print $fh00 "$AoH[$i]{$k[$j]}\t";
- print $TEMP "$AoH[$i]{$k[$j]}\t";
+		print $TEMP "$AoH[$i]{$k[$j]}\t";
 	    }
              
             }
-
-           # print $fh00 "\n";
- print $TEMP "\n";
-
+	    print $TEMP "\n";
 	}
 
     }
-
-
-    
-   # my $contents = read_file("output_test00.txt");
-
-    # print STDERR "Output file is ", $fh00,"\n";
-    # print STDERR "Output file is ", $fh000,"\n";
-
 
      my $contents = read_file($tempfile);
 
@@ -287,10 +249,6 @@ print $TEMP "$AoH[$i]{$k[$j]}";
     $c->res->content_type("text/plain");
 
     $c->res->body($contents);
-
-#   system("rm output_test*.txt");
-#  system("rm qc_output.txt");
-
 }
 #=pod
 
