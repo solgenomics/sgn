@@ -5,8 +5,6 @@
 *
 */
 
-//JSAN.use('statistics.jsStats');
-
 
 function getDataDetails () {
 
@@ -36,57 +34,80 @@ function checkDataExists () {
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'population_id': populationId, 'trait_id': traitId },
+        data: {'population_id': populationId, 'trait_id': traitId},
         url: '/heritability/check/data/',
         success: function(response) {
             if(response.exists === 'yes') {
                 getRegressionData();
 
             } else {                
-        
+                calculateVarianceComponents();
             }
         },
         error: function(response) {                    
-            // alert('there is error in checking the dataset for heritability analysis.');
-      
-        }
-   
+            // alert('there is error in checking the dataset for heritability analysis.');     
+        }  
     });
   
 }
 
 
-function getRegressionData () {
-  
-        var dataDetails  = getDataDetails();
-        var traitId      = dataDetails.trait_id;
-        var populationId = dataDetails.population_id;
+function calculateVarianceComponents () {
+    var dataDetails  = getDataDetails();
+    var traitId      = dataDetails.trait_id;
+    var populationId = dataDetails.population_id;
     
-        jQuery.ajax({
-            type: 'POST',
-            dataType: 'json',
-            data: {'population_id': populationId, 'trait_id': traitId },
-            url: '/heritability/regression/data/',
-            success: function(response) {
-                if(response.status === 'success') {
-                    var regressionData = {
-                        'breeding_values'     : response.gebv_data,
-                        'phenotype_values'    : response.pheno_data,
-                        'phenotype_deviations': response.pheno_deviations,
-                        'heritability'        : response.heritability  
-                    };
-                    plotRegressionData(regressionData);
-                                   
-                } else {
-                    
-                    alert('there is problem getting regression data.');
-                }
-            },
-            error: function(response) {                    
-                alert('there is porblem getting regression data.');
-            }
-        });
+    var gebvUrl = '/solgs/trait/' + traitId  + '/population/' + populationId;
+    
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+        data: {'source' : 'heritability'},
+        url: gebvUrl,
+        success: function(response) {
+            if(response.status === 'success') {
+                getRegressionData();
 
+            } else {                        
+                // alert('there is error caculating varince components.');
+            }
+        },
+        error: function(response) {                    
+            // alert('there is error caculating varince components.');      
+        }  
+    });
+}
+
+
+function getRegressionData () { 
+    var dataDetails  = getDataDetails();
+    var traitId      = dataDetails.trait_id;
+    var populationId = dataDetails.population_id;
+    
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+        data: {'population_id': populationId, 'trait_id': traitId},
+        url: '/heritability/regression/data/',
+        success: function(response) {
+            if(response.status === 'success') {
+                var regressionData = {
+                    'breeding_values'     : response.gebv_data,
+                    'phenotype_values'    : response.pheno_data,
+                    'phenotype_deviations': response.pheno_deviations,
+                    'heritability'        : response.heritability  
+                };
+                    
+                jQuery("#heritability_message").empty();
+                plotRegressionData(regressionData);
+            } else {                    
+                alert('there is problem getting regression data.');
+            }
+        },
+        error: function(response) {                    
+          //  alert('there is porblem getting regression data.');
+        }
+    });
 }
 
 
