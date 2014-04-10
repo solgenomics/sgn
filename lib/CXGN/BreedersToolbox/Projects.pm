@@ -43,16 +43,12 @@ sub get_breeding_program_by_name {
 
 
 
-sub get_trials_by_breeding_program { 
+sub _get_all_trials_by_breeding_program { 
     my $self = shift;
     my $breeding_project_id = shift;
-
     my $dbh = $self->schema->storage->dbh();
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
-    my $cross_cvterm_id = $self->get_cross_cvterm_id();
-    my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
 
-    print STDERR "CROSSCVTERMID = $cross_cvterm_id\n\n";
     my $trials = [];
     my $h;
     if ($breeding_project_id) { 
@@ -71,6 +67,17 @@ sub get_trials_by_breeding_program {
 	$h = $dbh->prepare($q);
 	$h->execute($breeding_program_cvterm_id);
     }
+
+    return $h;
+}
+
+sub get_trials_by_breeding_program {
+    my $self = shift;
+    my $breeding_project_id = shift;
+    my $trials;
+    my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
+    my $cross_cvterm_id = $self->get_cross_cvterm_id();
+    my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
 
     my %projects_that_are_crosses;
     my %project_year;
@@ -97,8 +104,49 @@ sub get_trials_by_breeding_program {
       }
     }
 
-    #print STDERR "TRIAL DATA: ".Data::Dumper::Dumper($trials);
     return $trials;
+}
+
+sub get_genotyping_trials_by_breeding_program {
+    my $self = shift;
+    my $breeding_project_id = shift;
+    my $trials;
+    my $h = _get_all_trials_by_breeding_program($breeding_project_id);
+    my $cross_cvterm_id = $self->get_cross_cvterm_id();
+    my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
+    my $genotyping_trial_cvterm_id = $self->get_project_year_cvterm_id();
+
+    my %projects_that_are_crosses;
+    my %projects_that_are_genotyping_trials;
+    my %project_year;
+    my %project_name;
+    my %project_description;
+
+    while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) { 
+	#push @$trials, [ $id, $name, $desc ];
+      $project_name{$id} = $name;
+      $project_description{$id} = $desc;
+      if ($prop == $cross_cvterm_id) {
+	$projects_that_are_crosses{$id} = 1;
+      }
+      if ($prop == $project_year_cvterm_id) {
+	$project_year{$id} = $propvalue;
+      }
+      if ($prop == $genotyping_trial_cvterm_id) {
+	$projects_that_are_genotyping_trials{$id} = 1;
+      }
+    }
+
+    my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
+
+    foreach my $id_key (@sorted_by_year_keys) {
+      if (!$projects_that_are_crosses{$id_key}) {
+	push @$trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+      }
+    }
+
+    return $trials;
+
 }
 
 
@@ -329,6 +377,13 @@ sub get_breeding_trial_cvterm_id {
 }
 
 sub get_cross_cvterm_id { 
+    my $self = shift;
+    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'stock type' } )->cv_id();
+    my $cross_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'cross', cv_id=> $cv_id });
+    return $cross_cvterm_row->cvterm_id();
+}
+
+sub get_genotyping_trial_cvterm_id { 
     my $self = shift;
     my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'stock type' } )->cv_id();
     my $cross_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'cross', cv_id=> $cv_id });
