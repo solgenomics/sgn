@@ -27,8 +27,11 @@ function getTraitDetails () {
 }
 
 
-jQuery(document).ready( function () { 
-    
+jQuery(document).ready( function () {     
+    getHistogramData();
+});
+
+function getHistogramData () {
     var trait = getTraitDetails();
        
     jQuery.ajax({
@@ -45,7 +48,7 @@ jQuery(document).ready( function () {
             jQuery("#histogram_message").html(errorMessage);                  
         }
     });
-});
+}
 
 
 function plotHistogram (data) {
