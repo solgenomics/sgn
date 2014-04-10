@@ -86,7 +86,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
     push @$criteria_list, $output;
     print STDERR "OUTPUT: $output CRITERIA: ", Data::Dumper::Dumper($criteria_list);
-    my $stock_ref = $bs->get_intersect($criteria_list, $stockdataref);
+    $stock_ref = $bs->get_intersect($criteria_list, $stockdataref);
     
     print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
 
