@@ -5,10 +5,13 @@ package CXGN::BreedersToolbox::Projects;
 use Moose;
 use Data::Dumper;
 
-has 'schema' => ( isa => 'Bio::Chado::Schema',
-                  is => 'rw');
+# has 'schema' => ( isa => 'Bio::Chado::Schema',
+#                   is => 'rw');
 
-
+has 'schema' => (
+		 is       => 'rw',
+		 isa      => 'DBIx::Class::Schema',
+		);
 sub get_breeding_programs {
     my $self = shift;
 
@@ -108,10 +111,10 @@ sub get_genotyping_trials_by_breeding_program {
     my $self = shift;
     my $breeding_project_id = shift;
     my $trials;
-    my $h = _get_all_trials_by_breeding_program($breeding_project_id);
+    my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
     my $cross_cvterm_id = $self->get_cross_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
-    my $genotyping_trial_cvterm_id = $self->get_project_year_cvterm_id();
+    my $genotyping_trial_cvterm_id = $self->_get_genotyping_trial_cvterm_id();
 
     my %projects_that_are_crosses;
     my %projects_that_are_genotyping_trials;
@@ -381,20 +384,21 @@ sub get_cross_cvterm_id {
     return $cross_cvterm_row->cvterm_id();
 }
 
-sub get_genotyping_trial_cvterm_id {
+sub _get_genotyping_trial_cvterm_id {
     my $self = shift;
-    my $cv = $self->schema->resultset("Cv::Cv")
+    my $schema = $self->schema;
+    my $cv = $schema->resultset("Cv::Cv")
       ->find_or_create({
-			name => 'trial type',
+			name => 'trial_type',
 		       });
-    my $cvterm_id = $self->schema->resultset("Cv::Cvterm")
+    my $cvterm = $self->schema->resultset("Cv::Cvterm")
       ->create_with({
 		     name   => 'genotyping trial',
 		     cv     => 'trial type',
 		     db     => 'null',
 		     dbxref => 'genotyping trial',
 		    });
-    return $cvterm_id;
+    return $cvterm->cvterm_id();
 }
 
 sub get_project_year_cvterm_id {

@@ -598,6 +598,39 @@ sub get_phenotyping_data : Private {
 
 }
 
+sub manage_genotyping : Path("/breeders/genotyping") Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) { 
+	# redirect to login page
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+	return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
+
+    my $breeding_programs = $projects->get_breeding_programs();
+
+    my %genotyping_trials_by_breeding_project = ();
+
+    foreach my $bp (@$breeding_programs) { 
+	$genotyping_trials_by_breeding_project{$bp->[1]}= $projects->get_genotyping_trials_by_breeding_program($bp->[0]);
+    }
+
+    $genotyping_trials_by_breeding_project{'Other'} = $projects->get_genotyping_trials_by_breeding_program();
+
+    $c->stash->{locations} = $self->get_locations($c);
+
+    $c->stash->{genotyping_trials_by_breeding_project} = \%genotyping_trials_by_breeding_project; #$self->get_projects($c);
+
+    $c->stash->{breeding_programs} = $breeding_programs;
+
+
+    $c->stash->{template} = '/breeders_toolbox/manage_genotyping.mas';
+}
 
 
 1;
