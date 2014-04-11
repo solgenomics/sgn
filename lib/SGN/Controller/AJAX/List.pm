@@ -131,8 +131,9 @@ sub update_list_name_action :Path('/list/name/update') :Args(0) {
 	return;
     }
 
-    my $q = "UPDATE sgn_people.list SET name=? WHERE list_id=?";
-    my $h = $c->dbc->dbh->prepare($q);
+    $q = "UPDATE sgn_people.list SET name=? WHERE list_id=?"; #removed "my"
+    $h = $c->dbc->dbh->prepare($q); #removed "my"
+
 
     eval { 
 	$h->execute($name, $list_id);
