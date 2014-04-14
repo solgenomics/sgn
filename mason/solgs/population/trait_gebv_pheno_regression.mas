@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-population/gebv_pheno_regression.mas - scatter plot gebv vs phenotype deviations 
+population/trait_gebv_pheno_regression.mas - scatter plot gebv vs phenotype deviations 
 
 =AUTHOR
 
@@ -18,6 +18,7 @@ $pop_id => ''
 $combo_pops_id => ''
 $trait_id
 $trial_id => ''
+
 </%args>
 
 <%perl>
@@ -36,7 +37,8 @@ $pop_id = $trial_id if $trial_id;
 }
 
 </style>
- <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.heritability"] &>
+
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.heritability"] &>
 
 <div id="gebv_pheno_regression_canvas"></div>
 <div id="gebv_pheno_regrssion_plot"></div>
