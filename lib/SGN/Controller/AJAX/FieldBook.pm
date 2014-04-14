@@ -260,7 +260,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     #print line with trait info
 
     #print FILE "$db_name:$trait_name,text,,,,,,TRUE,$order\n";
-    print FILE "$db_name:$trait_name,$trait_info_string,TRUE,$order\n";
+    print FILE "\"$db_name:$trait_name\",$trait_info_string,\"TRUE\",\"$order\"\n";
     $order++;
   }
 
