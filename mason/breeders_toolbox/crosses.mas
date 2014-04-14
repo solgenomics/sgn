@@ -16,7 +16,7 @@ $user_id => undef
     }
 
     foreach my $cross_pop (@cross_populations) { 
-      print "<tr><td><a href=/stock/".$cross_pop->[1]."/view>".$cross_pop->[0]."</a></td></tr>";
+      print "<tr><td><a href=\"/cross/".$cross_pop->[1]."\">".$cross_pop->[0]."</a></td></tr>";
     }
   </%perl>
 </table>
