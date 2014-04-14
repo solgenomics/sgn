@@ -47,7 +47,7 @@ sub get_regression_data_files {
     my ($self, $c) = @_;
 
     my $pop_id     = $c->stash->{pop_id};
-    my $trait_abbr = $c->stash->{trait_abbr};     
+    my $trait_abbr = $c->stash->{trait_abbr}; 
     my $cache_dir  = $c->stash->{solgs_cache_dir};
  
     my $solgs_controller = $c->controller('solGS::solGS');
@@ -57,12 +57,9 @@ sub get_regression_data_files {
        
     my $gebv_file = "gebv_kinship_${trait_abbr}_${pop_id}";
     $gebv_file    = $solgs_controller->grep_file($cache_dir,  $gebv_file);
-     
-    if(-s $phenotype_file && -s $gebv_file)
-    {   
-        $c->stash->{regression_gebv_file} = $gebv_file;
-        $c->stash->{regression_pheno_file} = $phenotype_file;
-    }
+   
+    $c->stash->{regression_gebv_file} = $gebv_file;
+    $c->stash->{regression_pheno_file} = $phenotype_file;  
 
 }
 
