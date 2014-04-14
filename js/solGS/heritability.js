@@ -100,6 +100,8 @@ function getRegressionData () {
                     
                 jQuery("#heritability_message").empty();
                 plotRegressionData(regressionData);
+                jQuery("#trait_histogram_canvas").empty();
+                getHistogramData();
             } else {                    
                 alert('there is problem getting regression data.');
             }
@@ -293,7 +295,7 @@ function plotRegressionData(regressionData){
 
 
 jQuery(document).ready( function () { 
-    checkDataExists();
+    checkDataExists();   
  });
 
 
