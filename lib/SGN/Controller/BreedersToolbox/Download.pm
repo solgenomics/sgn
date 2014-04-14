@@ -9,14 +9,17 @@ use Data::Dumper;
 use CGI;
 use File::Slurp qw | read_file |;
 use File::Temp 'tempfile';
-
 use Moose;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
 use URI::FromHash 'uri';
 use CXGN::List::Transform;
- 
+
+#use CatalystX::GlobalContext '$c';
+
+#our $HTML_ROOT_PATH = $c->config->{'basepath'};
+
 sub breeder_download : Path('/breeders/download/') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -243,12 +246,13 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 
     }
 
-     my $contents = read_file($tempfile);
+     print STDERR "download file is", $tempfile,"\n";
 
+      my $contents = $tempfile;
 
-    $c->res->content_type("text/plain");
+      $c->res->content_type("application/text");
+      $c->res->body($contents);
 
-    $c->res->body($contents);
 }
 #=pod
 
@@ -385,7 +389,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     #system("R --slave --args output_test00.txt qc_output.txt < /R/GBS_QC.R"); path is not ok
 
 
-    my $contents = read_file($tempfile_out);
+    my $contents = $tempfile_out;
 
     $c->res->content_type("text/plain");
 
