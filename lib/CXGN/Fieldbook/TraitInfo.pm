@@ -93,10 +93,10 @@ sub get_trait_info {
 
   #build trait_info_string
   #order for trait file is: format,defaultValue,minimum,maximum,details,categories
-  $trait_info_string .= $trait_props{'trait_format'}.',';
-  $trait_info_string .= $trait_props{'trait_default_value'}.',';
-  $trait_info_string .= $trait_props{'trait_minimum'}.',';
-  $trait_info_string .= $trait_props{'trait_maximum'}.',';
+  $trait_info_string .= '"'.$trait_props{'trait_format'}.'",';
+  $trait_info_string .= '"'.$trait_props{'trait_default_value'}.'",';
+  $trait_info_string .= '"'.$trait_props{'trait_minimum'}.'",';
+  $trait_info_string .= '"'.$trait_props{'trait_maximum'}.'",';
   $trait_info_string .= '"'.$trait_props{'trait_details'}.'",';
   $trait_info_string .= '"'.$trait_props{'trait_categories'}.'"';
 
@@ -117,11 +117,11 @@ sub _get_cvterms {
 			     trait_categories
 			  );
 
-  my $cv = $chado_schema->resultset("Cv::Cv")
-    ->find_or_create({
-		   name => 'trait_property',
-		  });
-  $cv->insert;
+  # my $cv = $chado_schema->resultset("Cv::Cv")
+  #   ->find_or_create({
+  # 		   name => 'trait_property',
+  # 		  });
+  # $cv->insert;
 
   foreach my $property_name (@trait_property_names) {
 
