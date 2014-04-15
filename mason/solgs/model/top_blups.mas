@@ -26,7 +26,7 @@ $trait_combo_pops => ''
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Predicted genomc estimated breeding values (GEBVs) - based on kinship" 
+  title       => "Genomic estimated breeding values (GEBVs) - based on kinship" 
 &>
 
 
