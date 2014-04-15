@@ -86,7 +86,7 @@ jQuery(document).ready(function ($) {
     }
 
     $('#species_name_input').change(function () {
-        verify_species_name();
+        //verify_species_name();
     });
 
     $("#review_absent_dialog").dialog({

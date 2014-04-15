@@ -206,8 +206,8 @@ function getUserUploadedSelPop (listId) {
     var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
 
     var uploadedSelPop ='<table id="uploaded_selection_pops_table" style="width:100%;text-align:left"><tr>'
-                                + '<th>Uploaded Selection Population</th>'
-                                + '<th>Prediction output</th>'
+                                + '<th>List-based selection population</th>'
+                                + '<th>Predict GEBVs</th>'
                                 +'</tr>'
                                 + '<tr>'
                                 + '<td>'

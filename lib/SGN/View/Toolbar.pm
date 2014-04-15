@@ -441,7 +441,7 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'FTP Site',
-                    link => '/bulk/input.pl?mode=ftp',
+                    link => '/tools/bulk?mode=ftp',
                     desc =>
 'FTP (File Transfer Protocol) is more efficient than HTTP (HyperText Transfer Protocol) for transferring large files. Many of our larger archive files are accessible here.'
                 },

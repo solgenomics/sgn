@@ -93,7 +93,7 @@ sub validate {
 
   my $db_rs = $chado_schema->resultset("General::Db")->search( { 'me.name' => $self->get_db_name() });
 
-  if (!$db_rs) {
+  if (!$db_rs->first()) {
     print STDERR "Could not find trait ontology database: ".$self->get_db_name()."\n";
     return;
   }

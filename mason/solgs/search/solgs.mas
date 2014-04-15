@@ -106,7 +106,7 @@ $gs_traits_index
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => 1,
-    title       => "Create a training population",
+    title       => "Create/use a list-based training population",
   &>
 
   <& /solgs/population/user_reference_genotypes.mas &>

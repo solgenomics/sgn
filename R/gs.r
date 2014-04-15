@@ -28,12 +28,12 @@ outFile <- grep("output_files",
 outFiles <- scan(outFile,
                  what = "character"
                  )
-print(outFiles)
+
 
 inFiles <- scan(inFile,
                 what = "character"
                 )
-print(inFiles)
+
 
 traitsFile <- grep("traits",
                    inFiles,
@@ -49,7 +49,6 @@ traitFile <- grep("trait_info",
                    value = TRUE
                   )
 
-print(traitFile)
 
 traitInfo <- scan(traitFile,
                what = "character",
@@ -97,7 +96,7 @@ blupFile <- grep(kinshipTrait,
                  fixed = FALSE,
                  value = TRUE
                  )
-print(blupFile)
+
 markerTrait <- paste("marker", trait, sep = "_")
 markerFile  <- grep(markerTrait,
                    outFiles,
@@ -105,7 +104,7 @@ markerFile  <- grep(markerTrait,
                    fixed = FALSE,
                    value = TRUE
                    )
-print(markerFile)
+
 traitPhenoFile <- paste("phenotype_trait", trait, sep = "_")
 traitPhenoFile <- grep(traitPhenoFile,
                        outFiles,
@@ -114,7 +113,6 @@ traitPhenoFile <- grep(traitPhenoFile,
                        value = TRUE
                        )
 
-print(traitPhenoFile)
 
 formattedPhenoDataFile <- grep("formatted_phenotype_data",
                                outFiles,
@@ -123,7 +121,12 @@ formattedPhenoDataFile <- grep("formatted_phenotype_data",
                                value = TRUE
                                )
 
-print(formattedPhenoDataFile)
+varianceComponentsFile <- grep("variance_components",
+                               outFiles,
+                               ignore.case = TRUE,
+                               fixed = FALSE,
+                               value = TRUE
+                               )
 
 phenoFile <- grep("phenotype_data",
                   inFiles,
@@ -219,22 +222,12 @@ if (datasetInfo == 'combined populations')
     
   }
 
-
-
-
 genoFile <- grep("genotype_data",
                  inFiles,
                  ignore.case = TRUE,                
                  fixed = FALSE,
                  value = TRUE
                  )
-
-print(genoFile)
-
-if (trait == 'FHB' || trait == 'DON')
-  {
-    genoFile <- c("~/cxgn/sgn-home/isaak/GS/barley/cap123_geno_training.txt")
-  }
 
 genoData <- read.table(genoFile,
                        header = TRUE,
@@ -245,7 +238,6 @@ genoData <- read.table(genoFile,
                       )
 
 genoData   <- data.matrix(genoData[order(row.names(genoData)), ])
-print(genoData[1:10, 1:4])
 
 predictionTempFile <- grep("prediction_population",
                        inFiles,
@@ -417,7 +409,18 @@ iGEBV <- mixed.solve(y = phenoTrait,
 corGEBVs <- cor(genoDataMatrix %*% markerGEBV$u, iGEBV$u)
 
 iGEBVu <- iGEBV$u
-#iGEBVu<-iGEBVu[order(-ans$u), ]
+
+heritability <- round((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve)) * 100, digits=2)
+
+cat('error variance', iGEBV$Ve, file=varianceComponentsFile, sep="\t", append=TRUE)
+cat("\n", file=varianceComponentsFile,  append=TRUE)
+cat('genetic variance',  iGEBV$Vu, file=varianceComponentsFile, sep='\t', append=TRUE)
+cat("\n", file=varianceComponentsFile,  append=TRUE)
+cat('beta', iGEBV$beta,file=varianceComponentsFile, sep='\t', append=TRUE)
+cat("\n", file=varianceComponentsFile,  append=TRUE)
+cat('heritability', heritability, file=varianceComponentsFile, sep='\t', append=TRUE)
+
+
 iGEBV <- data.matrix(iGEBVu)
 
 ordered.iGEBV <- as.data.frame(iGEBV[order(-iGEBV[, 1]), ] )

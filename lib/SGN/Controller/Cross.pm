@@ -26,6 +26,7 @@ use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
 use CXGN::Chado::Stock;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
+use CXGN::Pedigree::AddProgeny;
 use Scalar::Util qw(looks_like_number);
 use File::Slurp;
 
@@ -637,6 +638,37 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     }
 }
 
+sub cross_detail : Path('/cross') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+
+    my $cross = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::Stock")->find( { stock_id => $cross_id } );
+
+    my $progeny = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship") -> search( { object_id => $cross_id, 'type.name' => 'member_of'  }, { join =>  'type' } );
+
+    my $progeny_count = $progeny->count();
+    
+
+    if (!$cross) { 
+	$c->stash->{template} = '/generic_message.mas';
+	$c->stash->{message} = 'The requested cross does not exist.';
+	return;
+    }
+
+    if ($cross->type()->name() ne "cross") { 
+	$c->stash->{template} = '/generic_message.mas';
+	$c->stash->{message} = 'The requested id does not correspond to a cross and cannot be displayed by this page.';
+	return;
+    }
+    
+    $c->stash->{cross_name} = $cross->uniquename();
+    $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
+    $c->stash->{cross_id} = $cross_id;
+    $c->stash->{progeny_count} = $progeny_count;
+    $c->stash->{template} = '/breeders_toolbox/cross/index.mas';
+    
+}
 
 
 1;

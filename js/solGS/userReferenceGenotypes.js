@@ -170,8 +170,8 @@ function getUserUploadedRefPop (listId) {
     var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
 
     var uploadedSelPop ='<table id="uploaded_reference_pops_table" style="width:100%; text-align:left"><tr>'
-                                + '<th>Uploaded Reference Population</th>'
-                                + '<th>Build Model</th>'
+                                + '<th>List-based training population</th>'
+                                + '<th>Build model</th>'
                                 +'</tr>'
                                 + '<tr>'
                                 + '<td>'
@@ -182,7 +182,7 @@ function getUserUploadedRefPop (listId) {
                                 + '<td id="list_reference_page_' + modelId +  '">'
                                 + '<a href="/solgs/population/' + modelId + '\" onclick="javascript:loadPopulationPage(' + url + ',' 
                                 + listIdArg + ',' + listSource + ')">' 
-                                + '[ Build Model ]'+ '</a>'
+                                + '[ Build model ]'+ '</a>'
                                 + '</td></tr></table>';
 
     return uploadedSelPop;
