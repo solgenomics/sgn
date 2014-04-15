@@ -160,29 +160,21 @@ function plotCorrelation (data) {
         .on("mouseover", function (d) {
                 if(d.value != 100) {
                     d3.select(this)
-                    .attr("stroke", "green")
+                        .attr("stroke", "green")
                     corrplot.append("text")
-                    .attr("id", "corrtext")
-                    .text("[" + data.traits[d.col] 
-                          + " vs. " + data.traits[d.row] 
-                          + ": " + d3.format(".2f")(d.value) 
-                          + "]")
-                    .style("fill", "#34282C")
-                    .attr("x", function(){                       
-                            var mult = -1;
-                            if (d.col < nTraits/2) { mult = +1;}
-                            return  corXscale(d.col) + mult * 30;
-                        })
-                .attr("y", function() {                       
-                        var mult = +1;
-                        if (d.row < nTraits/2) { mult = -1;}
-                        return corYscale(d.row) + (mult + 0.35) * 20;
-                    })
-                    .attr("fill", "black")
-                    .attr("dominant-baseline", "middle")
-                    .attr("text-anchor", "middle")                       
+                        .attr("id", "corrtext")
+                        .text("[" + data.traits[d.row] 
+                              + " vs. " + data.traits[d.col] 
+                              + ": " + d3.format(".2f")(d.value) 
+                              + "]")
+                        .style("fill", "purple")
+                        .attr("x", totalW * 0.5)
+                        .attr("y", totalH - 120)
+                        .attr("font-weight", "bold")
+                        .attr("dominant-baseline", "middle")
+                        .attr("text-anchor", "middle")                       
                 }
-            })                
+        })                
         .on("mouseout", function() {
                 d3.selectAll("text.corrlabel").remove()
                 d3.selectAll("text#corrtext").remove()
