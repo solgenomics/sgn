@@ -2421,7 +2421,7 @@ sub get_model_accuracy_value {
                                 readdir($dh);   
   closedir $dh; 
         
-  my $validation_file = catfile($dir, $validation_file);
+  $validation_file = catfile($dir, $validation_file);
          
   my ($row) = grep {/Average/} read_file($validation_file);
   my ($text, $accuracy_value)    = split(/\t/,  $row);
@@ -2951,6 +2951,8 @@ sub get_acronym_pairs {
     my $dir    = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir 
         or die "can't open $dir: $!\n";
+   
+    no warnings 'uninitialized';
 
     my ($file)   =  grep(/traits_acronym_pop_${pop_id}/, readdir($dh));
     $dh->close;
