@@ -68,15 +68,76 @@ sub get_trait_info {
   }
 
   #get cvtermprops
+  my $cvtermprops = $trait_cvterm->search_related('cvtermprops');
 
-  #get values of type, range, default, and categories from cvtermprops
+  my $cvterms = $self->_get_cvterms();
 
-  #if not cvterprop, set as default
+  my %trait_props;
+  #set default values
+  $trait_props{'trait_format'}='text';
+  $trait_props{'trait_default_value'}='';
+  $trait_props{'trait_minimum'}='';
+  $trait_props{'trait_maximum'}='';
+  $trait_props{'trait_details'}='';
+  $trait_props{'trait_categories'}='';
+
+
+
+  foreach my $property_name (keys %{$cvterms}) {
+    my $prop_cvterm = $cvterms->{$property_name};
+    my $prop = $cvtermprops->find({'type_id' => $prop_cvterm->cvterm_id()});
+    if ($prop  && $prop->value()) {
+      $trait_props{$property_name}=$prop->value();
+    }
+  }
 
   #build trait_info_string
+  #order for trait file is: format,defaultValue,minimum,maximum,details,categories
+  $trait_info_string .= '"'.$trait_props{'trait_format'}.'",';
+  $trait_info_string .= '"'.$trait_props{'trait_default_value'}.'",';
+  $trait_info_string .= '"'.$trait_props{'trait_minimum'}.'",';
+  $trait_info_string .= '"'.$trait_props{'trait_maximum'}.'",';
+  $trait_info_string .= '"'.$trait_props{'trait_details'}.'",';
+  $trait_info_string .= '"'.$trait_props{'trait_categories'}.'"';
 
   return $trait_info_string;
 }
+
+sub _get_cvterms {
+  my $self = shift;
+  my $chado_schema = $self->get_chado_schema();
+  my %cvterms;
+
+  my @trait_property_names = qw(
+			     trait_format
+			     trait_default_value
+			     trait_minimum
+			     trait_maximum
+			     trait_details
+			     trait_categories
+			  );
+
+  # my $cv = $chado_schema->resultset("Cv::Cv")
+  #   ->find_or_create({
+  # 		   name => 'trait_property',
+  # 		  });
+  # $cv->insert;
+
+  foreach my $property_name (@trait_property_names) {
+
+    $cvterms{$property_name} = $chado_schema->resultset("Cv::Cvterm")
+      ->create_with({
+		     name   => $property_name,
+		     cv     => 'trait_property',
+		     db     => 'null',
+		     dbxref => $property_name,
+		    });
+  }
+
+  return \%cvterms;
+
+}
+
 
 #######
 1;

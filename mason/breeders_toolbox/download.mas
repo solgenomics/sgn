@@ -143,6 +143,7 @@ Choose a list for each parameter and click "download".
 </form>
 </center>
 
+
 <script>
   $(document).ready(function() { 
 
@@ -189,8 +190,6 @@ Choose a list for each parameter and click "download".
       jQuery('#download_gbs').submit();
 
       enable_ui()
-
-
     
 
     });

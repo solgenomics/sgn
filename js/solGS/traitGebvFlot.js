@@ -122,7 +122,7 @@ function plotGebvScatter() {
             yaxis: {                                
                 min: null,
                 max: null, 
-                axisLabel: 'Trait GEBVs',
+                axisLabel: 'GEBVs',
                 position: 'left',
                 color: '#0066CC',                    
             },

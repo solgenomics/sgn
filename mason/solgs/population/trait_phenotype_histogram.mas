@@ -18,6 +18,8 @@ $pop_id => ''
 $combo_pops_id => ''
 $trait_id
 $trial_id => ''
+$descriptive_stat=>''
+
 </%args>
 
 <%perl>
@@ -26,8 +28,6 @@ $pop_id = $trial_id if $trial_id;
 
 </%perl>
 
-
-</%perl>
 
 <style>
 
@@ -54,6 +54,20 @@ $pop_id = $trial_id if $trial_id;
 <div id="trait_histogram_canvas"></div>
 <div id="trait_histogram_plot"></div>
 <br/>
+
+% if($descriptive_stat)
+% {
+
+<& /page/columnar_table.mas,
+     headings    => [ '',  ''],
+    data         => $descriptive_stat,
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __alt_offset => 3,
+    __align      => 'l',
+    &>
+
+% }
 
 <input type="hidden" id="population_id" value="<% $pop_id %>" /> 
 <input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 

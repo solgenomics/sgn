@@ -50,7 +50,7 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
 
     my $ret->{status} = 'failed';
 
-    if ($data)
+    if (@$data)
     {
         $ret->{data} = $data;
         $ret->{status} = 'success';             
@@ -69,7 +69,7 @@ sub format_plot_data {
 
    my $file = $c->stash->{histogram_trait_file};
    my $data = $c->controller('solGS::solGS')->convert_to_arrayref($c, $file);
-   
+  
    return $data;
    
 }

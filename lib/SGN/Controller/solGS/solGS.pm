@@ -794,6 +794,7 @@ sub output_files {
     $self->validation_file($c);
     $self->trait_phenodata_file($c);
     $self->formatted_phenodata_file($c);
+    $self->variance_components_file($c);
 
     my $prediction_id = $c->stash->{prediction_pop_id};
     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
@@ -820,6 +821,7 @@ sub output_files {
                           $c->stash->{trait_phenodata_file},
                           $c->stash->{formatted_phenodata_file},
                           $c->stash->{selected_traits_gebv_file},
+                          $c->stash->{variance_components_file},
                           $pred_pop_gebvs_file
         );
                           
@@ -864,6 +866,39 @@ sub gebv_marker_file {
 
     $self->cache_file($c, $cache_data);
 
+}
+
+
+sub variance_components_file {
+    my ($self, $c) = @_;
+   
+    my $pop_id = $c->stash->{pop_id};
+    my $trait  = $c->stash->{trait_abbr};
+    
+    my $data_set_type = $c->stash->{data_set_type};
+    
+    my $cache_data;
+
+    no warnings 'uninitialized';
+
+    if ($data_set_type =~ /combined populations/)
+    {
+        my $combo_identifier = $c->stash->{combo_pops_id}; 
+
+        $cache_data = {key       => 'variance_components_combined_pops_'.  $trait . "_". $combo_identifier,
+                       file      => 'variance_components_'. $trait . '_' . $combo_identifier. '_combined_pops',
+                       stash_key => 'variance_components_file'
+        };
+    }
+    else 
+    {
+        $cache_data = {key       => 'variance_components_' . $pop_id . '_'.  $trait,
+                       file      => 'variance_components_' . $trait . '_' . $pop_id,
+                       stash_key => 'variance_components_file'
+        };
+    }
+
+    $self->cache_file($c, $cache_data);
 }
 
 
@@ -2386,7 +2421,7 @@ sub get_model_accuracy_value {
                                 readdir($dh);   
   closedir $dh; 
         
-  my $validation_file = catfile($dir, $validation_file);
+  $validation_file = catfile($dir, $validation_file);
          
   my ($row) = grep {/Average/} read_file($validation_file);
   my ($text, $accuracy_value)    = split(/\t/,  $row);
@@ -2916,6 +2951,8 @@ sub get_acronym_pairs {
     my $dir    = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir 
         or die "can't open $dir: $!\n";
+   
+    no warnings 'uninitialized';
 
     my ($file)   =  grep(/traits_acronym_pop_${pop_id}/, readdir($dh));
     $dh->close;

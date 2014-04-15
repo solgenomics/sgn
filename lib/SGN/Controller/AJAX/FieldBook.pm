@@ -244,7 +244,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   foreach my $term (@trait_list) {
 
     my ($db_name, $trait_name) = split ":", $term;
-
+    print STDERR "traitname: $term :\n";
 
     #get trait info
 
@@ -259,7 +259,8 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     #return error if not $trait_info_string;
     #print line with trait info
 
-    print FILE "$db_name:$trait_name,text,,,,,,TRUE,$order\n";
+    #print FILE "$db_name:$trait_name,text,,,,,,TRUE,$order\n";
+    print FILE "\"$db_name:$trait_name\",$trait_info_string,\"TRUE\",\"$order\"\n";
     $order++;
   }
 

@@ -136,6 +136,7 @@ sub _get_crd_design {
   else {
     $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=1,kinds=randomization_method)');
   }
+  $r_block->add_command('crd<-crd$book'); #added for agricolae 1.1-8 changes in output
   $r_block->add_command('crd<-as.matrix(crd)');
   $r_block->run_block();
   $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','crd');
@@ -199,6 +200,7 @@ sub _get_rcbd_design {
   else {
     $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=1,kinds=randomization_method)');
   }
+  $r_block->add_command('rcbd<-rcbd$book'); #added for agricolae 1.1-8 changes in output
   $r_block->add_command('rcbd<-as.matrix(rcbd)');
   $r_block->run_block();
   $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','rcbd');
@@ -382,6 +384,7 @@ sub _get_augmented_design {
   else {
     $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method)');
   }
+  $r_block->add_command('augmented<-augmented$book'); #added for agricolae 1.1-8 changes in output
   $r_block->add_command('augmented<-as.matrix(augmented)');
 
   $r_block->run_block();

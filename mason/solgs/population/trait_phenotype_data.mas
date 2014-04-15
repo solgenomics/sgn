@@ -36,10 +36,11 @@ $combo_pops_id => ''
 </script>
 
 
-<div id="tabs_phenotype" style="width:700px;height:100%;border-color:green;">
+<div id="tabs_phenotype" style="width:100%;height:100%;border-color:green;">
   <ul>
-    <li><a href="#tabs_scatter">Scatter plot</a></li>
-    <li><a href="#tabs_histogram">Histogram</a></li> 
+    <li> <a href="#tabs_scatter">Phenotype scatter plot</a> </li>
+    <li> <a href="#tabs_histogram">Phenotype frequency distribution</a> </li> 
+    <li> <a href="#tabs_regression">Heritability...</a> </li> 
   </ul>
  
   <div id="tabs_scatter">
@@ -53,6 +54,15 @@ $combo_pops_id => ''
 
   <div id="tabs_histogram">
     <& trait_phenotype_histogram.mas,
+       pop_id           => $pop_id,
+       trait_id         => $trait_id,
+       combo_pops_id    => $combo_pops_id,
+       descriptive_stat => $descriptive_stat
+    &>
+  </div>
+
+   <div id="tabs_regression">
+    <& trait_gebv_pheno_regression.mas,
        pop_id        => $pop_id,
        trait_id      => $trait_id,
        combo_pops_id => $combo_pops_id,
@@ -61,14 +71,7 @@ $combo_pops_id => ''
   
   <br/>
   
-  <& /page/columnar_table.mas,
-     headings    => [ '',  ''],
-    data         => $descriptive_stat,
-    __alt_freq   => 2,
-    __alt_width  => 1,
-    __alt_offset => 3,
-    __align      => 'l',
-    &>
+  
 
     <br/>
 

@@ -60,7 +60,8 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     print STDERR "JOB ID CREATED: $jobid\n";
 
-    my $seq_count;
+    #my $seq_count;
+    #masks earlier decleration
 
     my $schema = $c->dbic_schema("SGN::Schema");
     
