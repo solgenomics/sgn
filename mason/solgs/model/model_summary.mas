@@ -25,7 +25,7 @@ $model_data
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => 0, 
-    title       => "Genomic selection model output"
+    title       => "Models summary"
 &>     
   
 <table  style="width:95%">
