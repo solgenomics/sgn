@@ -112,7 +112,7 @@ function plotPhenotypeScatter () {
             yaxis: {                                
                 min: null,
                 max: null, 
-                axisLabel: 'Trait phenotype values',
+                axisLabel: 'Phenotype values',
                 position: 'left',
                 color: '#0066CC',                    
             },
