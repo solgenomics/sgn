@@ -2141,10 +2141,12 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
          my $trait_id   = $c->model('solGS::solGS')->get_trait_id($trait_name);
          my $trait_abbr = $c->stash->{trait_abbr}; 
         
-         $self->get_model_accuracy_value($c, $pop_id);
+         $self->get_model_accuracy_value($c, $pop_id);        
          my $accuracy_value = $c->stash->{accuracy_value};
-        
-         push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value ];
+
+         $c->controller("solGS::Heritability")->get_heritability($c);
+         my $heritability = $c->stash->{heritability};
+         push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value, $heritability];
        
      }
   

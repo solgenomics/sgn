@@ -47,7 +47,7 @@ $model_data
     </td>    
     <td>
       <& /page/columnar_table.mas,
-         headings    => ['Trait', 'Model accuracy'],
+         headings    => ['Trait', 'Model accuracy', 'Heritability'],
          data        => $model->[2],
         __alt_freq   => 1,
         __align      => "l",
