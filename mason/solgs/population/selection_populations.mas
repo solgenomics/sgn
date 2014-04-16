@@ -20,6 +20,16 @@ $prediction_pop_analyzed_traits => ''
 
 <%perl>
 
+my $title;
+
+if ($c->req->path =~ /solgs\/traits\/all\/population/) 
+  {
+    $title = 'Predict GEBVs of a selection population using the models';
+  }
+else
+{
+ $title = 'Predict GEBVs of a selection population using the model';
+}
 
 </%perl>
 
@@ -29,7 +39,7 @@ $prediction_pop_analyzed_traits => ''
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => 0, 
-    title       => "Predict GEBVs of a selection population using the model",
+    title       => $title,
 &>
 
 <div id="selection_populations">
