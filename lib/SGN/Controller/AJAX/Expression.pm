@@ -179,7 +179,7 @@ sub get_expression_data {
 	#	print STDERR "one exp:".Dumper(@one_experiment)."\n";
 		my %tmp_hash = %one_exp;
 		push (@all_exp, \%tmp_hash);
-		%one_exp;
+		# %one_exp;
 		
 		
 		# push (@all_exp, %one_exp);
