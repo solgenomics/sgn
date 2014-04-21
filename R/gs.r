@@ -410,16 +410,19 @@ corGEBVs <- cor(genoDataMatrix %*% markerGEBV$u, iGEBV$u)
 
 iGEBVu <- iGEBV$u
 
-heritability <- round((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve)) * 100, digits=2)
-
-cat('error variance', iGEBV$Ve, file=varianceComponentsFile, sep="\t", append=TRUE)
-cat("\n", file=varianceComponentsFile,  append=TRUE)
-cat('genetic variance',  iGEBV$Vu, file=varianceComponentsFile, sep='\t', append=TRUE)
-cat("\n", file=varianceComponentsFile,  append=TRUE)
-cat('beta', iGEBV$beta,file=varianceComponentsFile, sep='\t', append=TRUE)
-cat("\n", file=varianceComponentsFile,  append=TRUE)
-cat('heritability', heritability, file=varianceComponentsFile, sep='\t', append=TRUE)
-
+heritability <- c()
+if ( is.null(predictionFile) == TRUE )
+  {
+    heritability <- round((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve)) * 100, digits=2)
+    cat("\n", file=varianceComponentsFile,  append=TRUE)
+    cat('error variance', iGEBV$Ve, file=varianceComponentsFile, sep="\t", append=TRUE)
+    cat("\n", file=varianceComponentsFile,  append=TRUE)
+    cat('genetic variance',  iGEBV$Vu, file=varianceComponentsFile, sep='\t', append=TRUE)
+    cat("\n", file=varianceComponentsFile,  append=TRUE)
+    cat('beta', iGEBV$beta,file=varianceComponentsFile, sep='\t', append=TRUE)
+    cat("\n", file=varianceComponentsFile,  append=TRUE)
+    cat('heritability', heritability, file=varianceComponentsFile, sep='\t', append=TRUE)
+}
 
 iGEBV <- data.matrix(iGEBVu)
 

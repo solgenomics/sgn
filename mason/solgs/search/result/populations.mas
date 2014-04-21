@@ -21,14 +21,14 @@ $trait_name
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 <& /page/page_title.mas,
-    title => "GS Populations evaluated for $query" ,
+    title => "GS populations evaluated for $query" ,
 &>
   
 % if ($result) 
 % { 
 
 <&| /page/info_section.mas,
-      title => "select one or a combination of training population(s) to calculate GEBVs for $trait_name",
+      title => "Create a training population using individuals from one or more trials to fit a prediction model for $trait_name",
 &>
 
 

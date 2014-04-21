@@ -33,6 +33,11 @@ $acronym
 
 <& /util/import_javascript.mas, classes => ["jqueryfileupload.vendor.ui-widget", "jqueryfileupload.iframe-transport",   "jqueryfileupload.fileupload",   "solGS.userSelectionGenotypes"] &>
 
+<& /page/page_title.mas, 
+   title => "Prediction models from $project_name"
+&>
+
+
 <& /solgs/model/model_summary.mas, 
      model_data => $model_data
 &>
