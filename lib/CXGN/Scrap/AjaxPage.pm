@@ -80,7 +80,7 @@ sub throw {
     print $self->header() unless $self->{doc_header_called};
     print "<error>$message</error>";
     print $self->footer();
-    exit -1;
+    exit(-1);
 }
 
 ####
