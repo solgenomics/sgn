@@ -6,6 +6,8 @@ use namespace::autoclean;
 
 use Carp;
 
+use Class::Load ':all';
+
 requires
     'dbc_profile',
     'ensure_dbh_search_path_is_set',
@@ -29,8 +31,8 @@ sub dbic_schema {
     $class = ref $class if ref $class;
 
     $schema_name or croak "must provide a schema package name to dbic_schema";
-    Class::MOP::load_class( $schema_name );
-
+    #Class::MOP::load_class( $schema_name );
+    load_class( $schema_name );
     state %schema_cache;
     return $schema_cache{$class}{$profile_name || ''}{$schema_name} ||= do {
         my $profile = $class->dbc_profile( $profile_name );
