@@ -48,7 +48,7 @@ phenoData <- read.table(phenoDataFile,
                         header = TRUE,
                         row.names = NULL,
                         sep = "\t",
-                        na.strings = c("NA", " ", "--", "-"),
+                        na.strings = c("NA", " ", "--", "-", "."),
                         dec = "."
                         )
 
