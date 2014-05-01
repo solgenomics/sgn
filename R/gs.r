@@ -142,7 +142,7 @@ phenoData <- read.table(phenoFile,
                         header = TRUE,
                         row.names = NULL,
                         sep = "\t",
-                        na.strings = c("NA", " ", "--", "-"),
+                        na.strings = c("NA", " ", "--", "-", "."),
                         dec = "."
                         )
 
@@ -177,7 +177,7 @@ if (datasetInfo == 'combined populations')
     formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
     formattedPhenoData <-ddply(formattedPhenoData,
                                "object_name",
-                               colwise(mean)
+                                colwise(mean)
                                )
 
     row.names(formattedPhenoData) <- formattedPhenoData[, 1]
@@ -212,6 +212,7 @@ if (datasetInfo == 'combined populations')
     phenoTrait   <- data.frame(phenoTrait)
     print('phenotyped lines before averaging')
     print(length(row.names(phenoTrait)))
+   
     phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
     print('phenotyped lines after averaging')
     print(length(row.names(phenoTrait)))
@@ -219,7 +220,7 @@ if (datasetInfo == 'combined populations')
     #make stock_names row names
     row.names(phenoTrait) <- phenoTrait[, 1]
     phenoTrait[, 1] <- NULL
-    
+   
   }
 
 genoFile <- grep("genotype_data",

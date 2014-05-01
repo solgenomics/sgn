@@ -27,7 +27,7 @@ sub process_parameters {
 sub process_ids { 
     my $self = shift;
     
-    if (!defined(%solyc_conversion_hash)) { 
+    if (!%solyc_conversion_hash) { 
 	$self->get_hash();
     }
     

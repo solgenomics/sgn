@@ -3,10 +3,13 @@ use strict;
 use warnings FATAL => 'all';
 use Class::MOP;
 use Try::Tiny;
+use Class::Load ':all';
+
 our $VERSION = '0.01';
 BEGIN {
     try {
-        Class::MOP::load_class('MyDevLibs');
+      #Class::MOP::load_class('MyDevLibs');
+      load_class('MyDevLibs');
     }
     catch {
         unless ( /Can't locate MyDevLibs\.pm/ ) {

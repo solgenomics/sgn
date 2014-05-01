@@ -100,7 +100,7 @@ for (i in 1:popsPhenoSize)
                             header = TRUE,
                             row.names = 1,
                             sep = "\t",
-                            na.strings = c("NA", " ", "--", "-"),
+                            na.strings = c("NA", " ", "--", "-", "."),
                             dec = "."
                            )
 

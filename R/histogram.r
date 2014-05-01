@@ -42,7 +42,7 @@ allTraitsPhenoData <- read.table(allTraitsPhenoFile,
                         header = TRUE,
                         row.names = NULL,
                         sep = "\t",
-                        na.strings = c("NA", " ", "--", "-"),
+                        na.strings = c("NA", " ", "--", "-", "."),
                         dec = "."
                         )
 
