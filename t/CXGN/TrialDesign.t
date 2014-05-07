@@ -114,3 +114,11 @@ is_deeply($trial_design->get_control_list(),\@control_names, "Get control names 
 ok($trial_design->set_maximum_block_size($maximum_block_size), "Set maximum block size for trial design");
 is_deeply($trial_design->get_maximum_block_size(),$maximum_block_size, "Get maximum block size for trial design");
 ok($trial_design->calculate_design(), "Calculate Augmented trial design");
+
+#tests for MADII design
+ok($trial_design->set_design_type("MADII"), "Set design type to Augmented");
+ok($trial_design->set_control_list(\@control_names), "Set control names for trial design");
+is_deeply($trial_design->get_control_list(),\@control_names, "Get control names for trial design");
+ok($trial_design->set_maximum_block_size($maximum_block_size), "Set maximum block size for trial design");
+is_deeply($trial_design->get_maximum_block_size(),$maximum_block_size, "Get maximum block size for trial design");
+ok($trial_design->calculate_design(), "Calculate Augmented trial design");

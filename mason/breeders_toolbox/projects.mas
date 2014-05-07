@@ -84,8 +84,10 @@ $breeding_programs
         <option value=RCBD>Complete Block</option>
         <option value=Alpha>Alpha Lattice</option>
         <option value=Augmented>Augmented</option>
+	<option value=MADII>MADII</option>
       </select>
       <br><br>
+
       <div id="trial_design_more_info" style="display: none">
 
       <div id="select_list" name="select_list">
@@ -96,6 +98,7 @@ $breeding_programs
       <div id="list_of_checks_section" style="display: none">
 	<label id="select_list_of_checks_label" for="select_list_of_checks_list_select" style="display: inline-block; width: 200px;">List of checks:</label>
       </div>
+
       <br>
       <div id="design_info" name="design_info">
 	<div id="rep_count_section" style="display: none">
@@ -103,11 +106,20 @@ $breeding_programs
 	  <input id="rep_count" name="rep_count" />
 	  <br>
 	</div>
+
         <div id="block_number_section" style="display: none">
 	  <label for="block_number" style="display: inline-block; width: 200px;">Number of blocks:</label>
 	  <input id="block_number" name="block_number" />
 	  <br>
        	</div>
+
+	<div id="row_number_section" style="display: none">
+	  <label for="row_number" style="display: inline-block; width: 200px;">Number of rows:</label>
+	  <input id="row_number" name="row_number" />
+	  <br>
+       	</div>
+
+
         <div id="block_size_section" style="display: none">
 	  <label for="block_size" style="display: inline-block; width: 200px;">Block size:</label>
           <input id="block_size" name="block_size" />
@@ -226,6 +238,7 @@ background-color: #ccc;
       <option value=RCBD>Complete Block</option>
       <option value=Alpha>Alpha Lattice</option>
       <option value=Augmented>Augmented</option>
+      <option value=MADII>MADII</option>
     </select>
     <br>
     <br>

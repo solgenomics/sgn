@@ -79,6 +79,9 @@ sub design_info_view {
     if ($design_info{'design_type'} eq "Augmented") {
       $design_description = "Augmented Incomplete Block Design";
     }
+    if ($design_info{'design_type'} eq "MADII") {
+      $design_description = "Moving Average Design";
+    }
     $design_info_html .= "<dt>Design type</dt><dd>".$design_description."</dd>";
   }
   if ($design_info{'number_of_stocks'}) {
