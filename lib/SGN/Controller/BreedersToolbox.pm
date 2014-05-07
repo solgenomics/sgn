@@ -596,13 +596,13 @@ sub get_phenotyping_data : Private {
 
 }
 
-sub manage_genotyping : Path("/breeders/genotyping") Args(0) { 
+sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if (!$c->user()) { 
+    if (!$c->user()) {
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -614,7 +614,7 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     my %genotyping_trials_by_breeding_project = ();
 
-    foreach my $bp (@$breeding_programs) { 
+    foreach my $bp (@$breeding_programs) {
 	$genotyping_trials_by_breeding_project{$bp->[1]}= $projects->get_genotyping_trials_by_breeding_program($bp->[0]);
     }
 
