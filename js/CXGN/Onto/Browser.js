@@ -125,10 +125,7 @@ CXGN.Onto.Browser.prototype = {
 		alert('An error occurred! The database may currently be unavailable. Please check back later.');
 	    },
 	    success: function(response) {
-		//  var json = request.responseText;
-		//MochiKit.Logging.log('COMPLETE!');
-		//var x = eval("("+json+")");
-		//MochiKit.Logging.log('RESPONSETEXT = ' + x);
+
 		if (response.error ) { alert(response.error) ; }
 		else {
 		    var o = this.o;
@@ -164,10 +161,7 @@ CXGN.Onto.Browser.prototype = {
 	    },
 	    success: function(response) {
 		var o = this.o;
-		//var json = request.responseText;
-		//MochiKit.Logging.log('COMPLETE!');
-		//var x = eval("("+json+")");
-		//MochiKit.Logging.log('RESPONSETEXT = ' + x);
+
 		if (response.error ) { alert(response.error) ; }
 		o.menu = response;
 		
@@ -193,7 +187,7 @@ CXGN.Onto.Browser.prototype = {
 	s +='</div></form>';
 	
 	var e = document.getElementById('ontology_browser_input');
-	//MochiKit.Logging.log('the value of ontology_browser_input is ...',document.getElementById('ontology_browser_input').value);
+
 	e.innerHTML = s;
 	document.getElementById('ontology_browser_input').value=(this.getSearchTerm());
 	this.workingMessage(false);
@@ -255,15 +249,11 @@ CXGN.Onto.Browser.prototype = {
     },
 
     renderLevel: function (s, node, level, last) { 
-	//MochiKit.Logging.log('renderLevel: ' + node.getName() + ', '+level);
-
 	var t = '';
 
 	if ((node == undefined) || (node.isHidden())) { 
-	    //MochiKit.Logging.log('undefined or hidden node!');  
 	}
 	else { 
-	    //MochiKit.Logging.log('level '+level);
             for (var i=0; i<level-1; i++) { 
 		t += '<img src="/documents/img/tree_bar.png" border="0" />';
 	    }
@@ -303,11 +293,8 @@ CXGN.Onto.Browser.prototype = {
 		
 		var c = node.children;
 		
-		//MochiKit.Logging.log('now processing node '+node.name + ', with '+c.length+' children nodes');	    
-		
                 for(var i=0; i<c.length; i++) { 		    
 		    last = (i==c.length-1);
-		    //MochiKit.Logging.log('<p>', c[i].accession, '</p>');
 		    t = t + this.renderLevel(t, c[i], level, last);
 		    
 		}
@@ -316,14 +303,11 @@ CXGN.Onto.Browser.prototype = {
 	    
 	}
 	return t;
-	//MochiKit.Logging.log('renderLevel end'); 
     },
     
     addNode: function(node) { 
-	//MochiKit.Logging.log('addNode: adding node ' + node.getName());
 	var key = this.newNodeKey();
 	node.setNodeKey(key);
-	//MochiKit.Logging.log('generated node key '+key);
 	this.nodelist[key]=node;
     },
     
@@ -339,7 +323,6 @@ CXGN.Onto.Browser.prototype = {
     },
     
     openNode: function(key) { 
-	//MochiKit.Logging.log('opening node ' + key);
 	this.workingMessage(true);
 	var n = this.getNode(key);
 	n.openNode();
@@ -385,9 +368,7 @@ CXGN.Onto.Browser.prototype = {
 	var pL = this.getParentsList(accession);
         if (pL.length > 0) {
             var cache = this.fetchCachedChildren(accession);
-            //MochiKit.Logging.log('Cache length now: '+cache.length);
             this.setCache(cache);
-            //MochiKit.Logging.log('Retrieved parents '+ pL.join(' '));
             var c = this.rootnode.getChildren();
             for (var i=0; i<c.length; i++) { 
                 this.recursiveParentage(c[i], pL, accession);
@@ -425,20 +406,19 @@ CXGN.Onto.Browser.prototype = {
     recursiveParentage: function(currentNode, parentsList, accession) { 
 	
 	if (currentNode.getAccession() == accession) {
-	    //MochiKit.Logging.log('unHiding '+currentNode.getAccession() + ' ' + accession);
+
 	    currentNode.unHide();
 	    currentNode.setHilite(true);
 	}
 	else {
 	    
-	    //MochiKit.Logging.log('node is ' + currentNode.getAccession() + ' accession= ' , accession);
 	    if (this.hasMatch(parentsList, currentNode.getAccession())) { // indexOf does not seem to be implemented widely.
-		//MochiKit.Logging.log('Opening node '+ currentNode.getName());
+
 		currentNode.openNode();
 		currentNode.unHide();
 	    }
 	    else { 
-		//MochiKit.Logging.log('Current node '+currentNode.getAccession()+' does not match parent list ' + parentsList.join(' '));
+
 		currentNode.hide();
 	    }
 	    
@@ -449,7 +429,8 @@ CXGN.Onto.Browser.prototype = {
 	}
     },
 
-    //check if a list contains a certain member
+    // check if a list contains a certain member
+    //
     hasMatch: function(list, value) { 
 	for (var i=0; i<list.length; i++) { 
 	    if (list[i] == value) { 
@@ -459,7 +440,8 @@ CXGN.Onto.Browser.prototype = {
 	return false;
     },
     
-    //clears all hiliting in the tree.
+    // clears all hiliting in the tree.
+    //
     clearHiliting: function() { 
 	this.recursiveHiliteClearing(this.rootnode);
 	this.render();
@@ -474,8 +456,6 @@ CXGN.Onto.Browser.prototype = {
     },
     
     getParentsList: function(accession) { 
-	//MochiKit.Logging.log('Fetching children for node '+this.getName());
-	
 	var parentsList = new Array();
 	var browser = this;
 	jQuery.ajax( {
@@ -488,15 +468,11 @@ CXGN.Onto.Browser.prototype = {
 		},
 		    
 	    success: function(response) {
-		//var json = request.responseText;
-		//var parents = eval("("+json+")");
 		if ( response.error ) { alert(response.error) ; }
 		else {
 		    for (var i=0; i<response.length; i++) { 
-			//alert('processing '+parents[i].accession);
 			parentsList.push(response[i].accession);
 		    }
-		    //alert('Now were done!');
 		}
 	    }
 	});
@@ -513,29 +489,16 @@ CXGN.Onto.Browser.prototype = {
             success: function(response) {
                 fetch_response = response;
                 if (response.error) { alert(response.error) ; }
-            }
-	    
-            //new Ajax.Request('/ajax/onto/cache', {
-            //parameters: { node: accession }, 
-            //  asynchronous: false,
-            //  method: 'get',
-            //  on503: function() { 
-            //  alert('An error occurred! The database may currently be unavailable. Please check back later.');
-            //},
-            //  onSuccess: function(request) {
-            //  var json = request.responseText;
-            //  cache = eval("("+json+")");
-            //  if ( cache.error ) { alert(cache.error) ; }
-            //  else {
-            //      MochiKit.Logging.log('Cache '+cache.length);
-            //  }
-            //}
+            }	    
         });
         return fetch_response;
     },
 
 
-    //Make an ajax response that finds all the ontology terms with names/definitions/synonyms/accessions like the current value of the ontology input
+    // Make an ajax response that finds all the ontology terms with 
+    // names/definitions/synonyms/accessions like the current value 
+    // of the ontology input
+    //
     getOntologies: function(db_name, search_string) {
 	this.workingMessage(true);
         this.setSelected(db_name);
@@ -553,20 +516,16 @@ CXGN.Onto.Browser.prototype = {
 		},
 		success: function(response) {
 		    var matchNodes = new Array();
-		    //var json = request.responseText;
-                    //var x = eval("("+json+")");
 		    var o = this.o;
 		    if ( response.error ) { alert(response.error) ; }
                     else {
                         var s='';
 			o.setSearchResponseCount(response.length);
-			//MochiKit.Logging.log('Matched '+responseArray.length+' terms');
 			    for (var i=0; i<response.length; i++) {
 				matchNodes.push(response.accession); ///
 				s +='<a href=javascript:o.searchTermParentage(\''+response[i].accession+'\')>'+response[i].cv_name+' ('+response[i].accession+') '+response[i].cvterm_name+'</a><br />';
 			    }
-			    //		    MochiKit.Logging.log('the search results:' , s) ;
-			    //MochiKit.Logging.log('the search string:' , search_string) ;
+
 			
 			if (s === '') { s = '(no terms found) '; }
 			o.setSearchResults('<div class="topicbox">Search term: <b>'+search_string+'</b></div><div class="topicdescbox">'+s+'</div>');
@@ -591,10 +550,10 @@ CXGN.Onto.Browser.prototype = {
 	this.searchResults = searchResults;
     },
     
-    //showSearchResults, hideSearchResults
+    // showSearchResults(), hideSearchResults()
     //
-    //hides the result section of the search but keeps the 
-    //the un/hide toggle button visible
+    // hides the result section of the search but keeps the 
+    // the un/hide toggle button visible
     //
     showSearchResults: function() { 
 	this.showResults = true;
@@ -609,9 +568,10 @@ CXGN.Onto.Browser.prototype = {
 	document.getElementById('search_results').style.display='none';
     },
     
-    //accessor setSearchResponseCount, getSearchResponseCount
-    //property defines how many items were found in the search
-    //used to display that number in the un/hide toggle button
+    // accessor setSearchResponseCount(), getSearchResponseCount()
+    // property defines how many items were found in the search
+    // used to display that number in the un/hide toggle button
+    //
     setSearchResponseCount: function(c) { 
 	this.searchCount = c;
     },
@@ -709,9 +669,6 @@ CXGN.Onto.Browser.prototype = {
 	    hash[cache[i].parent].push(cache[i]);
 	}
 	this.childrenCache = hash;
-	
-	//MochiKit.Logging.log('setCache: '+ cache.length + ' entries');
-
     },
 
     getCache: function() { 
@@ -725,39 +682,26 @@ CXGN.Onto.Browser.prototype = {
 	var cache = this.getCache();
 	if (typeof(cache[accession]) != 'undefined') { 
 	    return cache[accession];
-	}
-	
-	
+	}	
     },
     
     hasChildrenCache: function(accession) { 
 	var cache = this.getCache();
-
 	if (typeof cache[accession] != 'undefined') { 
-	    //MochiKit.Logging.log(accession + " has childrenCache");
 	    if (cache[accession].length>0) { 
 		return 1;	
-	    }
-	    
+	    }	    
 	}
 	return 0;
     }    
 };
 
-
-
 Node = function(browser) { 
-    //MochiKit.Logging.log('Node constructor...');
     this.children = new Array();
     this.parents = new Array();
     this.browser = browser;
-    //MochiKit.Logging.log('adding node to the browser...');
-    
     this.browser.addNode(this);
-    //MochiKit.Logging.log('done...');
     this.nodeId=0;
-    
-    //MochiKit.Logging.log('Node constructor: Created node.');
 };
 
 Node.prototype = { 
@@ -858,7 +802,6 @@ Node.prototype = {
     },
     
     addChild: function (child) { 
-	//MochiKit.Logging.log('Adding child '+child.name + ' to '+ this.name);
 	var c = child;
 	var p = this;
 	this.children.push(c);
@@ -936,8 +879,6 @@ Node.prototype = {
     },
 
     fetchChildren: function () { 
-	//MochiKit.Logging.log('Fetching children for node '+this.getName());
-
 	var parentNode = this;
 	var accession = this.getAccession();
 	if (this.getBrowser().hasChildrenCache(accession)) { 
@@ -962,9 +903,6 @@ Node.prototype = {
 		alert('An error occurred! The database may currently be unavailable. Please check back later.');
 	    },
 	    success: function(response) {
-		//MochiKit.Logging.log('HELLO WORLD!');
-		//var json = request.responseText;
-		//var x = eval("("+json+")");
 		if ( response.error ) { alert(response.error) ; }
 		else {
 		    for (var i=0; i<response.length; i++) { 
@@ -980,7 +918,6 @@ Node.prototype = {
 	});
     },
     fetchParents: function() { 
-	//MochiKit.Logging.log('Fetching children for node '+this.getName());
 	var childNode = this;
 	jQuery.ajax({
 	    url: "/ajax/onto/parents",
@@ -988,22 +925,16 @@ Node.prototype = {
 	    async: false,
 	    method: 'get',
 	    success: function(response) {
-		//var json = request.responseText;
-		//var x = eval("("+json+")");
 		if ( response.error ) { alert(response.error) ; }
 		else {
-		    //MochiKit.Logging.log('Children count ' +  t.length + '<br />');
 		    for (var i=0; i<response.length; i++) { 
-			
 			var parent = new Node(o);
 			
 			parent.json2node(response[i]);
 			parent.closeNode();
 			parent.unHide();
 			parentList.push(parent);
-			//MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
 		    }
-		    //MochiKit.Logging.log('Fetched '+parentList.length + ' parents');
                     return parentList;
 		    }
 	    }
@@ -1015,7 +946,7 @@ Node.prototype = {
 	this.setName(json.cvterm_name);
 	this.setCVtermID(json.cvterm_id);
 	this.setRelType(json.relationship);
-	//MochiKit.Logging.log('hasChildren = '+j[2]);
+
 	if (json.has_children == 1) { 
 	    this.setHasChildren(true);
 	}
