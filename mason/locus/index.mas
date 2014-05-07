@@ -281,6 +281,12 @@ function jqueryStuff() {
 
 </&>
 
+<&| /page/info_section.mas, title=>"eFP Browser links" &>
+
+  <& /locus/efp_browser_links.mas, locus => $locus &>
+
+</&>
+
 <&| /page/info_section.mas, title=>"Accessions and images (" .  scalar(@$accessions)  . ")", subtitle => "$stock_subtitle", id=>"locus_accessions", collapsible=>1, collapsed=>1 &>
   <& /phenome/associate_accession_form.mas , locus_id=>$locus_id, person_id=>$person_id &>
     <& /phenome/associated_accessions.mas , accessions=>$accessions, dbh=>$dbh &>
