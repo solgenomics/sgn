@@ -1,0 +1,12 @@
+
+<%args>
+$locus => undef
+</%args>
+
+<a href="http://bar.utoronto.ca/efp_tomato/cgi-bin/efpWeb.cgi?dataSource=M82_S_pennellii_Atlases_Koenig_et_al&modeInput=Absolute&primaryGene=<% $locus %>">Developmental Atlas</a> | 
+
+<a href="http://bar.utoronto.ca/efp_tomato/cgi-bin/efpWeb.cgi?dataSource=Rose_Lab_Atlas&modeInput=Absolute&primaryGene=<% $locus %>">Rose lab atlas</a> | 
+
+<a href="http://bar.utoronto.ca/efp_tomato/cgi-bin/efpWeb.cgi?dataSource=ILs_Leaf_Chitwood_et_al&modeInput=Absolute&primaryGene=<% $locus %>">Seedling view</a>
+
+
