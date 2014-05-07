@@ -1,35 +1,64 @@
 package CXGN::Pedigree::ParseUpload;
 
 use Moose;
+use MooseX::FollowPBP;
+use Moose::Util::TypeConstraints;
+use Bio::GeneticRelationships::Pedigree;
+use Bio::GeneticRelationships::Individual;
 
-use Module::Pluggable require => 1;
+with 'MooseX::Object::Pluggable';
 
-sub validate {
-    my $self = shift;
-    my $type = shift;
-    my $filename = shift;
-    my $validate_result;
 
-    foreach my $p ($self->plugins()) {
-        if ($type eq $p->name()) {
-	     $validate_result = $p->validate($filename);
-	}
-    }
-    return $validate_result;
-}
+has 'chado_schema' => (
+		       is       => 'ro',
+		       isa      => 'DBIx::Class::Schema',
+		       required => 1,
+		      );
+
+has 'filename' => (
+		   is => 'ro',
+		   isa => 'Str',
+		   required => 1,
+		  );
+
+has 'parse_errors' => (
+		       is => 'ro',
+		       isa => 'ArrayRef[Str]',
+		       writer => '_set_parse_errors',
+		       reader => 'get_parse_errors',
+		       predicate => 'has_parse_errors',
+		      );
+
+has '_parsed_data' => (
+		       is => 'ro',
+		       isa => 'HashRef',
+		       writer => '_set_parsed_data',
+		       predicate => '_has_parsed_data',
+		      );
 
 sub parse {
-    my $self = shift;
-    my $type = shift;
-    my $filename = shift;
-    my $parse_result;
+  my $self = shift;
 
-    foreach my $p ($self->plugins()) {
-        if ($type eq $p->name()) {
-	     $parse_result = $p->parse($filename);
-	}
-    }
-    return $parse_result;
+  if (!$self->_validate_with_plugin()) {
+    print STDERR "\nCould not validate cross file: ".$self->get_filename()."\n";
+    return;
+  }
+
+  if (!$self->_parse_with_plugin()) {
+    print STDERR "\nCould not parse cross file: ".$self->get_filename()."\n";
+    return;
+  }
+
+  if (!$self->_has_parsed_data()) {
+    print STDERR "\nNo parsed data for cross file: ".$self->get_filename()."\n";
+    return;
+  } else {
+    return $self->_parsed_data();
+  }
+
+  print STDERR "\nError parsing cross file: ".$self->get_filename()."\n";
+  return;
 }
+
 
 1;

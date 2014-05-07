@@ -31,12 +31,11 @@ use Spreadsheet::WriteExcel;
 use SGN::View::Trial qw/design_layout_view design_info_view/;
 use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
-use CXGN::Trial::TrialCreate;
-use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialLayout;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::UploadFile;
+use CXGN::Fieldbook::TraitInfo;
 #use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -238,14 +237,30 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   }
 
   open FILE, ">$file_destination" or die $!;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   print FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";
   my $order = 1;
 
   foreach my $term (@trait_list) {
 
     my ($db_name, $trait_name) = split ":", $term;
-    print FILE "$db_name:$trait_name,text,,,,,,TRUE,$order\n";
+    print STDERR "traitname: $term :\n";
+
+    #get trait info
+
+    my $trait_info_lookup = CXGN::Fieldbook::TraitInfo
+      ->new({
+	     chado_schema => $chado_schema,
+	     db_name => $db_name,
+	     trait_name => $trait_name,
+	     });
+    my $trait_info_string = $trait_info_lookup->get_trait_info();
+
+    #return error if not $trait_info_string;
+    #print line with trait info
+
+    #print FILE "$db_name:$trait_name,text,,,,,,TRUE,$order\n";
+    print FILE "\"$db_name:$trait_name\",$trait_info_string,\"TRUE\",\"$order\"\n";
     $order++;
   }
 

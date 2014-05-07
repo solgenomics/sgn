@@ -1,7 +1,8 @@
 package CXGN::Phenotypes::ParseUpload;
 
 use Moose;
-
+use MooseX::FollowPBP;
+use Moose::Util::TypeConstraints;
 use Module::Pluggable require => 1;
 
 sub validate {

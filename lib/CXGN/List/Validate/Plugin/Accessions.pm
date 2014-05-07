@@ -4,7 +4,6 @@ package CXGN::List::Validate::Plugin::Accessions;
 use Moose;
 
 use Data::Dumper;
-use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 
 sub name { 
     return "accessions";
@@ -15,19 +14,54 @@ sub validate {
     my $schema = shift;
     my $list = shift;
 
-    #my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"accession" })->first->cvterm_id();
+    my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"accession" })->first->cvterm_id();
 
-    my @missing = ();
+    my $local_cv_id = $schema->resultset("Cv::Cv")->search({ name=> "local" })->first()->cv_id();
+
+
+    my $synonym_type_rs = $schema->resultset("Cv::Cvterm")->search({name=>"synonym", cv_id=> $local_cv_id });
+
+    my $synonym_rs;
+    my $synonym_type_id;
+    if ($synonym_type_rs->count == 0) { 
+	$synonym_rs = $schema->resultset("Cv::Cvterm")->create_with( 
+	    { name => 'synonym',
+	      cv   => 'local',
+	      db   => 'local',
+	      dbxref => 'synonym'
+	    });
+	$synonym_type_id = $synonym_rs->cvterm_id();
+    }
+    else { 
+	$synonym_type_id = $synonym_type_rs->first->cvterm_id();
+    }
+	
     
 
-    my $fs = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema=>$schema});
-    my $r = $fs->get_matches($list, 0);
+    my %items = ();
+    
+    # check uniquename
+    #
+    foreach my $item (@$list) { 
+	my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => { ilike =>  $item} });
+	
+	if ($rs->count > 0) { $items{$item}++ }
+    }
+    
+    foreach my $item (@$list) { 
+	my $rs = $schema->resultset("Stock::Stockprop")->search( { value => { ilike =>  $item }, type_id => $synonym_type_id });
+	if ($rs->count > 0) { $items{$item}++ }
+    }
 
-    print STDERR Dumper($r);
+    my @missing;
 
-    my @non_unique;
+    foreach my $item (@$list) { 
+	if ($items{$item} == 0) { 
+	    push @missing, $item;
+	}
+    }
 
-    return { missing => [ @{$r->{absent}},  map { $_->{name} } @{$r->{fuzzy}} ]  };
+    return { missing => \@missing };
     
 }
 

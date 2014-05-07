@@ -344,7 +344,7 @@ CXGN.List.prototype = {
 	html += '<td width="100%" align="right"><font size="1">List ID</td><td><div id="list_id_div" style="font-size:tiny" >'+list_id+'</div></font></td></tr>';
 
 	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input type="button" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr></table>';
-	html += 'Add new elements: <br /><textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="Add" /><br />';
+	html += 'Add new items: <br /><textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="Add" /><br />';
 	html += '<b>List items</b> ('+items.length+')<br />';
 
 	for(var n=0; n<items.length; n++) { 
@@ -370,9 +370,11 @@ CXGN.List.prototype = {
 	
 	jQuery('#dialog_add_list_item_button').click(
 	    function() { 
+                jQuery('#working').dialog("open");
 		addMultipleItemsToList('dialog_add_list_item', list_id);
 		var lo = new CXGN.List();
 		lo.renderItems(div, list_id);
+		jQuery('#working').dialog("close");
 	    }
 	);
 	
@@ -431,9 +433,11 @@ CXGN.List.prototype = {
        Parameters: 
          div_name: The div_name where the select should appear
          types: a list of list types that should be listed in the menu
+         add_empty_element: text. if present, add an empty element with the
+           provided text as description
     */
     
-    listSelect: function(div_name, types) { 	
+    listSelect: function(div_name, types, empty_element) { 	
 	var lists = new Array();
 
 	if (types) {
@@ -451,8 +455,11 @@ CXGN.List.prototype = {
 	}
 
 	var html = '<select id="'+div_name+'_list_select" name="'+div_name+'_list_select" >';
+	if (empty_element) { 
+	    html += '<option value="">'+empty_element+'</option>\n';
+        } 
 	for (var n=0; n<lists.length; n++) {
-	    html = html + '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
+	    html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
 	}
 	html = html + '</select>';
 	return html;
@@ -506,10 +513,10 @@ CXGN.List.prototype = {
 	}
     },
 
-    transform: function(list_id, new_type) { 
+    transform: function(list_id, transform_name) { 
 	var transformed = new CXGN.List();
 	jQuery.ajax( { 
-	    url: '/list/transform/'+list_id+'/'+new_type,
+	    url: '/list/transform/'+list_id+'/'+transform_name,
 	    async: false,
 	    success: function(response) { 
 		if (response.error) { 
@@ -815,18 +822,20 @@ function addMultipleItemsToList(div, list_id) {
 	alert("No items - Please enter items to add to the list.");
 return;
     }
-    var items = content.split("\n");
+//    var items = content.split("\n");
     
-    var duplicates = new Array();
-    for (var n=0; n<items.length; n++) { 
-	var id = lo.addItem(list_id, items[n]);
-	if (id == 0) { 
-	    duplicates.push(items[n]);
-	}
-    }
-    if (duplicates.length >0) { 
-	alert("The following items were not added because they are already in the list: "+ duplicates.join(", "));
-    }
+  //  var duplicates = new Array();
+    var items = content.split("\n");
+    lo.addBulk(list_id, items);
+   // for (var n=0; n<items.length; n++) { 
+//	var id = lo.addItem(list_id, items[n]);
+//	if (id == 0) { 
+//	    duplicates.push(items[n]);
+//	}
+  //  }
+    //if (duplicates.length >0) { 
+//	alert("The following items were not added because they are already in the list: "+ duplicates.join(", "));
+  //  }
 lo.renderLists('list_dialog');
 }
 

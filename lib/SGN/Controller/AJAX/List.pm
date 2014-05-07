@@ -131,8 +131,9 @@ sub update_list_name_action :Path('/list/name/update') :Args(0) {
 	return;
     }
 
-    my $q = "UPDATE sgn_people.list SET name=? WHERE list_id=?";
-    my $h = $c->dbc->dbh->prepare($q);
+    $q = "UPDATE sgn_people.list SET name=? WHERE list_id=?"; #removed "my"
+    $h = $c->dbc->dbh->prepare($q); #removed "my"
+
 
     eval { 
 	$h->execute($name, $list_id);
@@ -343,12 +344,18 @@ sub add_bulk : Path('/list/add/bulk') Args(0) {
 
     my @duplicates = ();
     my $count = 0;
+    my $iq = "INSERT INTO sgn_people.list_item (list_id, content) VALUES (?, ?)";
+    my $ih = $c->dbc->dbh()->prepare($iq);
+    
+    print STDERR "Adding accessions ";
+    
     foreach my $element (@elements) { 
+	print STDERR ".";
 	if ($self->exists_item($c, $list_id, $element)) { 
 	    push @duplicates, $element;
 	}
 	else { 
-	    $self->insert_element($c, $list_id, $element);
+	    $ih->execute($list_id, $element);	    
 	    $count++;
 	}
     }
@@ -479,17 +486,17 @@ sub transform :Path('/list/transform/') Args(2) {
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
-    my $new_type = shift;
+    my $transform_name = shift;
 
     my $t = CXGN::List::Transform->new();
 
     my $data = $self->get_list_metadata($c, $list_id);
 
-    my $transform_name = $t->can_transform($data->{list_type}, $new_type);
-    if (!$transform_name) {
-	$c->stash->{rest} = { error => "Cannot transform $data->{list_type} into $new_type\n", };
-	return;
-    }
+#    my $transform_name = $t->can_transform($data->{list_type}, $new_type);
+#    if (!$transform_name) {
+#	$c->stash->{rest} = { error => "Cannot transform $data->{list_type} into #$new_type\n", };
+#	return;
+ #   }
     
     my $list_data = $self->retrieve_list($c, $list_id);
 

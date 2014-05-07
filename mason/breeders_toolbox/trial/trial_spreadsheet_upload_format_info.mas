@@ -1,0 +1,45 @@
+<%args>
+</%args>
+<b>
+Trials may be uploaded in an Excel file (.xls)
+</b>
+<br>
+(.xlsx format not supported)
+<br><br>
+<b>
+  Header:
+</b>
+<br>
+The first row (header) should contain the following:
+<br>
+
+<table cellspacing="1" cellpadding="2" border="1">
+  <tr>
+    <td>plot_name</td>
+    <td>accession_name</td>
+    <td>plot_number</td>
+    <td>block_number</td>
+    <td>is_a_control</td>
+  </tr>
+</table>
+
+<br>
+<b>
+  Required fields:
+</b>
+plot_name (must be unique)
+<br>
+accession_name (must exist in the database)
+<br>
+plot_number
+<br>
+block_number
+<br>
+
+<b>
+  Optional fields:
+</b>
+<br>
+is_a_control (type 1 or yes in this field if the plot is a control)
+<br>
+

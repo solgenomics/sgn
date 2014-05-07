@@ -104,18 +104,23 @@ sub location_string {
 }
 
 sub location_list_html {
-    my ($feature, $featurelocs) = @_;
+    my ($feature, $featurelocs) = @_;   
     my @coords = map { location_string_html($_) }
-        ( $featurelocs ? $featurelocs->all
-                       : $feature->featureloc_features->all)
+        (  #$featurelocs ? $featurelocs->all
+          #             : $feature->featureloc_features->all );
+	  $featurelocs ? $featurelocs->search({locgroup => 0,},)->all
+                       : $feature->featureloc_features->search({locgroup => 0,},)->all)
         or return '<span class="ghosted">none</span>';
     return @coords;
 }
 sub location_list {
     my ($feature, $featurelocs) = @_;
+    print STDERR "\n\nLOCATON LIST\n\n";
     return map { ($_->srcfeature ? $_->srcfeature->name : '<span class="ghosted">null</span>') . ':' . ($_->fmin+1) . '..' . $_->fmax }
-        ( $featurelocs ? $featurelocs->all
-                       : $feature->featureloc_features->all );
+        ( #$featurelocs ? $featurelocs->all
+          #             : $feature->featureloc_features->all );
+    $featurelocs ? $featurelocs->search({locgroup => 0,},)->all
+                       : $feature->featureloc_features->search({locgroup => 0,},)->all );
 }
 
 sub related_stats {
@@ -151,6 +156,7 @@ sub feature_table {
 
         my @locations = $f->search_related('featureloc_features', {
             @ref_condition,
+	    locgroup => 0,
            },
            { order_by => 'feature_id' }
           );
@@ -442,7 +448,8 @@ sub _peptides_rs {
 sub _peptide_loc {
     my ($rs) = @_;
     $rs->search_related( 'featureloc_features', {
-            srcfeature_id => { -not => undef },
+            #srcfeature_id => { -not => undef },
+	     srcfeature_id => { -not => undef }, locgroup => 0
           },
           { # Don't prefetch srcfeatures, it significantly slows down the query
             # prefetch => 'srcfeature',
@@ -475,7 +482,8 @@ sub _exon_rs {
                prefetch => 'featureloc_features',
            })
         ->search_related( 'featureloc_features', {
-            srcfeature_id => { -not => undef },
+            #srcfeature_id => { -not => undef },
+	     srcfeature_id => { -not => undef }, locgroup => 0
           },
           {
             prefetch => 'srcfeature',

@@ -1,0 +1,113 @@
+
+<%args>
+$organism_name
+$organism_id
+$taxon => ''
+$common_name
+$description => ''
+$comment => ''
+@synonyms => ()
+$taxonomy => ''
+$accessions => ''
+$solcyc => ''
+$solcyc_link => ''
+$ploidy => ''
+$genome_size => ''
+$chromosome_number => ''
+$maps => ''
+$est_attribution => ''
+@libraries => ()
+$phenotypes => ''
+$onto_count => ''
+$trait_count => ''
+$loci => ''
+$qtl_data => undef
+$user_id => undef
+$privileged_user => undef
+$form => undef;
+$static_data => undef;
+@image_objects => ()
+</%args>
+
+<%perl>
+my $this_page = "/organism/$organism_id/view/";
+my $image_subtitle =
+!$privileged_user ?
+"<span class= \"ghosted\">[Add new image]</span> "
+: " <a href=\"/image/add?type_id=$organism_id&type=organism&action=new&refering_page=$this_page\">[ Add new image]</a>" ;
+</%perl>
+
+<& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
+
+
+<& /page/page_title.mas, title=>"Details for $taxon <i>$organism_name</i>" &>
+
+<&| /page/info_section.mas, title=>'Basic information' &>
+<& /organism/basic_info.mas, name=>$organism_name, common_name=>$common_name, description=>$description, comment=>$comment, synonyms=> \@synonyms &>
+</&>
+
+<& /organism/taxonomy.mas, taxonomy=>$taxonomy &>
+
+<&| /page/info_section.mas, title=>"Images" , subtitle=>$image_subtitle &>
+<& /image/print_images.mas, image_objects => \@image_objects &>
+</&>
+
+
+<& /organism/accessions.mas, accessions => $accessions &>
+
+% if ($taxon ne 'species' && $taxon ne 'subspecies') { return; }
+
+<&| /page/info_section.mas, title=>'Metabolic details' &>
+<% $solcyc_link %>
+</&>
+
+<&| /page/info_section.mas, title=>'Genome data', collapsible=>1 &>
+<& /organism/genomic_details.mas, ploidy => $ploidy, genome_size=>$genome_size, chromosome_number => $chromosome_number, loci=>$loci, maps=>$maps &>
+
+
+</&>
+
+<&| /page/info_section.mas, title=>'Transcript Information', collapsible => 1 &>
+
+% my @links = map { qq|<a href="/content/library_info.pl?library=$_">$_</a>| } @libraries;
+
+<& /page/info_table.mas,
+   data => [
+  'Libraries ('.scalar(@links).')' => (join ", ", (@links)),
+  Attribution => $est_attribution ], border => 0
+ &>
+</&>
+
+
+<&| /page/info_section.mas, title=>'Phenomic Details', collapsible=>1 &>
+
+Number of phenotyped lines : <% $phenotypes %>
+<br />
+Number of traits scored  : <% $trait_count %>
+<br />
+Number of ontology annotations : <% $onto_count %>
+<br /><br />
+
+
+<&| /page/info_section.mas, title=>'QTL data', is_subsection=>1 &>
+
+% if ($qtl_data) {
+  <& /page/columnar_table.mas,
+    data => $qtl_data,
+    headings => [ 'Name', 'Traits' ],
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __alt_offset => 3,
+    __align      => 'l' &>
+%}
+ </&>
+</&>
+
+
+
+<& /organism/project_metadata.mas, organism_id=>$organism_id &>
+
+
+
+<& /page/comments.mas, object_type=>"organism", object_id=>$organism_id, referer=>$this_page &>
+

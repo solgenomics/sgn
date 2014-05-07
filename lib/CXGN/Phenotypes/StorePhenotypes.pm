@@ -138,7 +138,6 @@ sub store {
 
 	    foreach my $trait_name (@trait_list) {
 		print STDERR "trait: $trait_name\n";
-		my $trait_description;
 		my ($db_name, $trait_description) = split (/:/, $trait_name);
 
 		my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });

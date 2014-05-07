@@ -47,11 +47,11 @@ $d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_i
 
 print "Close list content dialog...\n";
 
-$d->accept_alert_ok();
-sleep(1);
+#$d->accept_alert_ok();
+#sleep(1);
 
-$d->accept_alert_ok();
-sleep(1);
+#$d->accept_alert_ok();
+#sleep(1);
 
 my $button = $d->find_element_ok("close_list_item_dialog", "id", "find close_list_item_dialog button test");
 

@@ -58,11 +58,9 @@ function getReferenceGenotypesList(listId) {
     }
 
     var listName = list.listNameById(listId);
-    var listType;// = list.getListType(listId);
-   
+ 
     return {'name'      : listName,
             'list'      : genotypesList.elements,
-            'list_type' : listType,
             };
 }
 
@@ -73,10 +71,9 @@ function loadReferenceGenotypesList(listId) {
     var listName       = genoList.name;
     var list           = genoList.list;
     var modelId        = getModelId(listId);
-    var listType       = genoList.list_type;
+
     var populationType = 'uploaded_reference';
 
-    // alert('list type ' + listType);
     if ( list.length === 0) {       
         alert('The list is empty. Please select a list with content.' );
     }
@@ -84,13 +81,13 @@ function loadReferenceGenotypesList(listId) {
 
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Please wait..'});
-
+       
         list = JSON.stringify(list);
      
         jQuery.ajax({
                 type: 'POST',
                     dataType: 'json',
-                    data: {'model_id': modelId, 'list_name': listName, 'list': list, 'list_type': listType, 'population_type': populationType},
+                    data: {'model_id': modelId, 'list_name': listName, 'list': list, 'population_type': populationType},
                     url: '/solgs/upload/reference/genotypes/list',
                    
                     success: function(response) {
@@ -164,9 +161,7 @@ function getUserUploadedRefPop (listId) {
     var listName       = genoList.name;
     var list           = genoList.list;
     var modelId        = getModelId(listId);
-   
-    // alert('getUserUploadedRefPop : modelId' + modelId);
-    
+  
     var url         =   '\'/solgs/population/'+ modelId + '\'';
     var listIdArg   = '\'' + listId +'\'';
     var listSource  = '\'from_db\'';
@@ -174,9 +169,9 @@ function getUserUploadedRefPop (listId) {
     popIdName       = JSON.stringify(popIdName);
     var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
 
-    var uploadedSelPop ='<table id="uploaded_reference_pops_table" ""style="width:100%; text-align:left"><tr>'
-                                + '<th>Uploaded Reference Population</th>'
-                                + '<th>Build Model</th>'
+    var uploadedSelPop ='<table id="uploaded_reference_pops_table" style="width:100%; text-align:left"><tr>'
+                                + '<th>List-based training population</th>'
+                                + '<th>Build model</th>'
                                 +'</tr>'
                                 + '<tr>'
                                 + '<td>'
@@ -187,7 +182,7 @@ function getUserUploadedRefPop (listId) {
                                 + '<td id="list_reference_page_' + modelId +  '">'
                                 + '<a href="/solgs/population/' + modelId + '\" onclick="javascript:loadPopulationPage(' + url + ',' 
                                 + listIdArg + ',' + listSource + ')">' 
-                                + '[ Build Model ]'+ '</a>'
+                                + '[ Build model ]'+ '</a>'
                                 + '</td></tr></table>';
 
     return uploadedSelPop;

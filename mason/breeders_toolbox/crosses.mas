@@ -16,7 +16,7 @@ $user_id => undef
     }
 
     foreach my $cross_pop (@cross_populations) { 
-      print "<tr><td><a href=/stock/".$cross_pop->[1]."/view>".$cross_pop->[0]."</a></td></tr>";
+      print "<tr><td><a href=\"/cross/".$cross_pop->[1]."\">".$cross_pop->[0]."</a></td></tr>";
     }
   </%perl>
 </table>
@@ -49,28 +49,33 @@ $user_id => undef
       <br>
       <a id="cross_upload_spreadsheet_format_info">Spreadsheet format</a>
       <br>
-      <a id="cross_upload_barcode_format_info">Barcode format (Not currently supported)</a>
+      <a id="cross_upload_barcode_format_info" style = "display: none">Barcode format (Not currently supported)</a>
     </p>
   </&>
 
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
 
     <label for="cross_upload_breeding_program" style="display: inline-block; width: 100px;">Breeding Program:</label>
-    <select id="cross_upload_breeding_program" name="select_breeding_program">
+    <select id="cross_upload_breeding_program" name="cross_upload_breeding_program">
       <%perl>
         foreach my $program (@programs) {
-        print "<option value=".@$program[0].">".@$program[1]."</option>";
+        print "<option value=".@$program[1].">".@$program[1]."</option>";
         }
       </%perl>
     </select>
     <br>
 
     <label for="cross_upload_location" style="display: inline-block; width: 100px;">Location:</label>
-    <select id="cross_upload_location" name="add_project_location">
+    <select id="cross_upload_location" name="cross_upload_location">
       <%perl>foreach my $location (@locations) { print "
         <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
       </%perl>
     </select>
+    <br><br>
+    Progeny naming:
+    <br>
+    Prefix <input id="upload_prefix" name="upload_prefix" value="P" size="5" /> 
+    Suffix <input id="upload_suffix" name="upload_suffix" size="5" />
     <br><br>
 
     <label for="crosses_upload_file">Upload file:</label>
@@ -80,7 +85,11 @@ $user_id => undef
 
 </div>
 
-
+<div id="upload_cross_error_display" class="ui-widget">
+  <table>
+    <tbody></tbody>
+  </table>
+</div>
 
 <div id="cross_upload_spreadsheet_info_dialog" title="Format for uploading crosses in a spreadsheet">
   <&| /breeders_toolbox/spreadsheet_upload_format_info.mas &>
@@ -215,6 +224,11 @@ $user_id => undef
   </p>
 </div>
 
-
+<div id="cross_upload_success_dialog_message" title="Cross file uploaded">
+  <p>
+    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    The cross file was uploaded successfully
+  </p>
+</div>
 
 

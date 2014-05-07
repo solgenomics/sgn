@@ -25,14 +25,14 @@ $model_data
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => 0, 
-    title       => "Genomic selection model output"
+    title       => "Models summary"
 &>     
   
 <table  style="width:95%">
   <tr>
-    <th>Model</th>
-    <th>Training population description</th>
-    <th>Model output</th>
+    <th>Training population</th>
+    <th>Description</th>
+    <th>Models</th>
   </tr>
    
 % foreach my $model (@$model_data)
@@ -47,7 +47,7 @@ $model_data
     </td>    
     <td>
       <& /page/columnar_table.mas,
-         headings    => ['Trait', 'Model accuracy'],
+         headings    => ['Trait', 'Model accuracy', 'Heritability'],
          data        => $model->[2],
         __alt_freq   => 1,
         __align      => "l",

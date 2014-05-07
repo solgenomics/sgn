@@ -30,27 +30,27 @@ $no_traits_selected
 
  while (<FH>)
 {
- my ($trait, $id) = split (/\t/);
-    my $trait_link   = qq | <a href="/solgs/trait/$id/populaton/$pop_id" onclick="solGS.waitPage()">$trait</a> |;
-    my $row          = <<ROW;
-     <tr>
-      <td>
-        <input type  = "checkbox"
-               name  = "trait_id"
-               value = $id > $trait_link
-      </td>
-     </tr>
+ my ($id, $trait, $acronym) = split (/\t/);
+ my $trait_link   = qq | <a href="/solgs/trait/$id/populaton/$pop_id" onclick="solGS.waitPage()">$trait</a> |;
+ my $row          = <<ROW;
+ <tr>
+   <td>
+     <input type  = "checkbox"
+       name       = "trait_id"
+       value      = $id > $trait_link
+   </td>
+ </tr>
 ROW
 
     $trait_rows .=  $row;
 
-  }
+}
 
 my $message;
 if ($no_traits_selected eq 'none')
- {
+{
    $message = qq | <p style="color:red">Please select one or more traits to analyze.</p> |;
- }
+}
 
 </%perl>
 

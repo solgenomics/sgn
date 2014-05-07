@@ -282,14 +282,14 @@ $(document).ready(function () {
 					coverage = response.coverage;
 					ids = response.ids;
 					m_aoa = response.matches_aoa;
+					
+					$("#score_p").html("<b>Best target region score:</b> "+best_score+" &nbsp;&nbsp;(-&infin;&mdash;100)<br />");
+					$("#t_num").val(coverage);
 
-					if (+response.score > 0) {
-						$("#score_p").html("<b>Best target region score:</b> "+best_score+" &nbsp;&nbsp;(-&infin;&mdash;100)<br />");
-						$("#t_num").val(coverage);
-					} else {
+					if (+response.score < 0) {
 						$("#no_results").html("Note: No results found! Try again increasing the number of targets or the n-mer length, or decreasing the mismatches");
 					}
-
+					
 					//show result sections
 					$("#hide1").css("display","inline");
 
@@ -924,8 +924,9 @@ $(document).ready(function () {
 			$("#mm").val(align_mm);
 			$("#coverage_val").val(t_num);
 			
-			if (!align_mm || +align_mm < 0 || +align_mm > 1) {
-				alert("miss-match value ("+align_mm+") must be between 0-1");
+			// if (!align_mm || +align_mm < 0 || +align_mm > 1) {
+			if (!align_mm || +align_mm < 0 || +align_mm > 2) {
+				alert("miss-match value ("+align_mm+") must be between 0-2");
 			} else {
 				disable_ui();
 				getResults(1, bt2_file, n_mer, f_size, align_mm, t_num, db, expr_f);

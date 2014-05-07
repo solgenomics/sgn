@@ -1,7 +1,51 @@
 <%args>
 </%args>
+<b>
+Crosses may be uploaded in an Excel file (.xls)
+</b>
+<br>
+(.xlsx format not supported)
+<br><br>
+<b>
+  Header:
+</b>
+<br>
+The first row (header) should contain the following:
+<br>
 
-Spreadsheet info
+<table cellspacing="1" cellpadding="2" border="1">
+  <tr>
+    <td>cross_name</td>
+    <td>cross_type</td>
+    <td>female_parent</td>
+    <td>male_parent</td>
+    <td>number_of_progeny</td>
+    <td>number_of_flowers</td>
+    <td>number_of_seeds</td>
+  </tr>
+</table>
 
+<br>
+<b>
+  Required fields:
+</b>
+<br>
+cross_name
+<br>
+cross_type (biparental, self, or open)
+<br>
+female_parent
+<br>
+male_parent (header required but cells may be blank for some cross types)
+<br>
+<br>
 
-spreadsheet_upload_format_info
+<b>
+  Optional fields:
+</b>
+<br>
+number_of_progeny
+<br>
+number_of_flowers
+<br>
+number_of_seeds

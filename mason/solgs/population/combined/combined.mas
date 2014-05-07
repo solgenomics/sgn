@@ -1,0 +1,100 @@
+<%doc>
+
+=head1 NAME
+ 
+/solgs/population/combined/combined.mas - displays a list of traits common to the combined trials
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+
+<%args>
+
+$combo_pops_id
+$show_data => 1;
+$traits_form
+$all_traits_file
+$project_name
+$project_desc
+$markers_no
+$traits_no
+$owner=>''
+$acronym
+
+</%args>
+
+<%perl>
+
+</%perl>
+
+<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+
+
+<br />
+<br />
+
+<& /page/page_title.mas, 
+   title => "Select one or more traits from training population \"$project_name\" to build a GS model and predict GEBVs for."
+&>
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 0, 
+    title       => "Training population summary",
+  &>
+
+ <& summary.mas,
+    project_id   => $combo_pops_id,
+    project_name => $project_name,
+    project_desc => $project_desc,
+    markers_no   => $markers_no,
+    traits_no    => $traits_no,
+    owner        => $owner,
+ &>
+
+</&>
+
+% if ($show_data) 
+%{
+ 
+
+<&| /page/info_section.mas, 
+      collapsible => 1, 
+      collapsed   => 0, 
+      title       => "Traits"
+&>
+       
+<& select_traits.mas, 
+     combo_pops_id      => $combo_pops_id,
+     traits_form        => $traits_form,
+     all_traits_file    => $all_traits_file,
+&>
+
+</&>
+
+       
+
+
+<& /solgs/population/acronym.mas,
+   acronym => $acronym,
+&>
+
+%}
+% else
+%{
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 0, 
+    title       => "Data Accessibility",
+  &>
+
+<p>This is private data.</p>
+
+</&>
+%}

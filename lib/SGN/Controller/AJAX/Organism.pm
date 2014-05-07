@@ -300,5 +300,33 @@ sub get_organism_metadata_props {
 
 }
 
+=head2 verify_name
+
+Public Path: /organism/verify_name
+
+Verifies that a species name exists in the database.  Returns false if the species name is not found.
+
+=cut
+
+sub verify_name :Path('/organism/verify_name') :ActionClass('REST') {}
+
+sub verify_name_GET :Args(0) {
+  my ( $self, $c ) = @_;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $species_name = $c->req->param('species_name');
+  my $organism;
+  $organism = $schema->resultset("Organism::Organism")->find({species => $species_name});
+  if (!$organism) {
+     $c->stash->{rest} = {error => "Species name $species_name not found." };
+     return;
+  }
+  else {
+    $c->stash->{rest} = {success => "1",};
+  }
+
+}
+
+
+
 
 1;

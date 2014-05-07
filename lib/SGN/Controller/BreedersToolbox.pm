@@ -450,8 +450,6 @@ sub get_locations : Private {
 	
 	my ($count) = $sh->fetchrow_array();
 	
-	print STDERR "PLOTS: $count\n";
-	
 	#if ($count > 0) { 
 	
 		push @locations,  [ $row->nd_geolocation_id, 
@@ -509,7 +507,7 @@ sub get_crosses : Private {
     if ($cross_cvterm) {
 
       my @cross_population_stocks = $schema->resultset("Stock::Stock")->search(
-									       { type_id => $cross_cvterm->cvterm_id,
+									       { type_id => $cross_cvterm->cvterm_id, is_obsolete => 'f'
 									       } );
       foreach my $cross_pop (@cross_population_stocks) {
 	push @cross_populations, [$cross_pop->name,$cross_pop->stock_id];
@@ -598,6 +596,39 @@ sub get_phenotyping_data : Private {
 
 }
 
+sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+	# redirect to login page
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
+
+    my $breeding_programs = $projects->get_breeding_programs();
+
+    my %genotyping_trials_by_breeding_project = ();
+
+    foreach my $bp (@$breeding_programs) {
+	$genotyping_trials_by_breeding_project{$bp->[1]}= $projects->get_genotyping_trials_by_breeding_program($bp->[0]);
+    }
+
+    $genotyping_trials_by_breeding_project{'Other'} = $projects->get_genotyping_trials_by_breeding_program();
+
+    $c->stash->{locations} = $self->get_locations($c);
+
+    $c->stash->{genotyping_trials_by_breeding_project} = \%genotyping_trials_by_breeding_project; #$self->get_projects($c);
+
+    $c->stash->{breeding_programs} = $breeding_programs;
+
+
+    $c->stash->{template} = '/breeders_toolbox/manage_genotyping.mas';
+}
 
 
 1;

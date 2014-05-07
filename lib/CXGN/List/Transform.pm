@@ -7,7 +7,7 @@ CXGN::List::Transform - transform lists from one type to another
 
  my $tf = CXGN::List::Transform->new();
  if (my $transform_name = $tf->can_transform("accessions", "accession_ids")) { 
-   my @$tf->tranform($transform_name, $list_ref);
+   my $tf_list = @$tf->tranform($schema, $transform_name, $list_ref);
  }
 
 =cut
@@ -45,9 +45,10 @@ sub can_transform {
 
 =head2 transform
 
- Usage:        $tf->transform($transform_name, $list_ref);
+ Usage:        $tf->transform($schema, $transform_name, $list_ref);
  Desc:         
- Args:         $transform_name (obtain from can_transform())
+ Args:         $schema (Bio::Chado::Schema)
+               $transform_name (obtain from can_transform())
                $list_ref of elements to transform
  Returns:      a hashref with two keys, transform and missing, both
                of which are arrayrefs of strings.

@@ -1,0 +1,72 @@
+<%doc>
+
+=head1 NAME
+ 
+/solgs/population/combined/select_traits.mas - lists traits to select for GS analysis
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+
+$traits_form
+$combo_pops_id
+$all_traits_file
+
+
+</%args>
+
+<%perl>
+
+ open FH, "<", $all_traits_file or die "Can't open $all_traits_file: $!\n";
+ my $headers = <FH>;
+ my $trait_rows;
+
+ while (<FH>)
+{
+ my ($id, $trait, $acronym) = split (/\t/);
+    my $trait_link   = qq | <a href="/solgs/model/combined/trials/$combo_pops_id/trait/$id" onclick="solGS.waitPage()">$trait</a> |;
+    my $row          = <<ROW;
+     <tr>
+      <td>
+        <input type  = "checkbox"
+               name  = "trait_id"
+               value = $id > $trait_link
+      </td>
+     </tr>
+ROW
+
+    $trait_rows .=  $row;
+
+  }
+
+
+</%perl>
+
+<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+
+
+ <form action="/solgs/models/combined/trials/<% $combo_pops_id %>" method="POST">
+  <table>
+   <% $trait_rows %>
+     <tr>
+       <td>
+         <input class   = "button"
+                type    = "submit"
+                value   = "Build model"
+                name    = "runGS"
+                onclick = "solGS.waitPage()"
+                > 
+       </td> 
+     </tr>
+   </table> 
+ </form> 
+

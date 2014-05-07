@@ -36,7 +36,7 @@ sub solgs_trait_search_autocomplete_GET :Args(0) {
     $term =~ s/\s+/ /g;
     my @response_list;
 
-    my $rs = $c->model("solGS::solGS")->search_trait($c, $term);
+    my $rs = $c->model("solGS::solGS")->search_trait($term);
 
     while (my $row = $rs->next) {      
         push @response_list, $row->name;

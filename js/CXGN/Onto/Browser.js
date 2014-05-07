@@ -269,18 +269,19 @@ CXGN.Onto.Browser.prototype = {
 	    }
 	    if (node.hasChildren()) { 
 		var key = node.getNodeKey();
+
 		if (node.getOpenNode()) {
-		    t +=  '<a href="javascript:o.closeNode('+key+')"><img src="/documents/img/tree_exp.png" border="0" /></a>';
+		    t +=  '<a id="close_cvterm_'+node.getCVtermID()+'" href="javascript:o.closeNode('+key+')"><img src="/documents/img/tree_exp.png" border="0" /></a>';
 
 		}
 		else { 
 
 		    if (last) { 
-			t += '<a href="javascript:o.openNode('+key+')"><img src="/documents/img/tree_col_end.png" border="0" /></a>';
+			t += '<a id="open_cvterm_'+node.getCVtermID()+'" href="javascript:o.openNode('+key+')"><img src="/documents/img/tree_col_end.png" border="0" /></a>';
 		    }
 		    else { 
 
-			t +=  '<b><a href="javascript:o.openNode('+key+')"><img src="/documents/img/tree_col.png" border="0" /></a></b>';
+			t +=  '<b><a id="open_cvterm_'+node.getCVtermID()+'" href="javascript:o.openNode('+key+')"><img src="/documents/img/tree_col.png" border="0" /></a></b>';
 		    }
 		}
 	    }
@@ -910,11 +911,6 @@ Node.prototype = {
     renderNode: function (level) { 
 	//MochiKit.Logging.log('Rendering node '+this.getName());
 
-	//      if (this.getOpenNode()) { 
-	//create indent
-
-	//write out link
-
 	var hiliteStyle = 'background-color:white';
 	if (this.isHilited()) { 
 	    hiliteStyle = 'background-color:yellow';
@@ -928,7 +924,7 @@ Node.prototype = {
 	}
 
 	var relType=this.getRelType() || '';
-	return relType + ' <span style="'+hiliteStyle+'"><a href="/chado/cvterm?action=view&amp;cvterm_id='+this.getCVtermID()+'">'+this.getAccession() + '</a> ' + this.getName() + ' ' + link +'</span><br />';
+	return relType + ' <span style="'+hiliteStyle+'"><a id="cvterm_id_'+this.getCVtermID()+'" href="/chado/cvterm?action=view&amp;cvterm_id='+this.getCVtermID()+'">'+this.getAccession() + '</a> ' + this.getName() + ' ' + link +'</span><br />';
     },
 
     setHilite: function(h) { 

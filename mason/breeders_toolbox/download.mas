@@ -1,18 +1,16 @@
-
 <%args>
-
-
 
 </%args>
 
 <& /page/page_title.mas, title=>"Download using lists" &>
-
 Choose a list for each parameter and click "download".
 <br /><br />
 
 <center>
 <form id="download_form" action="/breeders/download_action" method="POST" >
 <table cellpadding="10">
+ <tr><td colspan="3"><h4>Download Phenotype</h4>Select parameter:<br />
+
   <tr>
     <th>
       Accessions
@@ -28,8 +26,7 @@ Choose a list for each parameter and click "download".
   <tr>
     <td>
       <div id="accession_list">
-      </div>
-      
+      </div>      
     </td>
     <td>
       <div id="trial_list">
@@ -40,40 +37,45 @@ Choose a list for each parameter and click "download".
       </div>
     </td>
   </tr>
-  <tr><td colspan="3"><h4>Output</h4><input type="radio" id="output_selection" name="output_selection" value="phenotypes" disabled="1" /> Phenotypes<br />
-                      <input type="radio" id="output_selection" name="output_selection" value="genotypes" disabled="1" /> Genotypes<br /></td></tr>
+
+</td></tr>
 </table>
 <br />
-<br />
-<input type="button" id="download_submission" value="Download" />
+<input type="button" id="phenotype" value="Download" />
 </form>
 </center>
 
 
-<script>
-  
-  jQuery(document).ready(function() { 
+<script>  
+  $(document).ready(function() { 
+
     var lo = new CXGN.List();
-    var accession_list_select = lo.listSelect('accession_list', [ 'accessions' ]);
-    //alert(accession_list_select);
-    jQuery('#accession_list').html(accession_list_select);
-    jQuery('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ] ));
-    jQuery('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ] ));
 
-    jQuery('#download_submission').click(function() {
-      var lo = new CXGN.List();
-      var accession_list_id = jQuery('#accession_list_list_select').val();
-      var trial_list_id = jQuery('#trial_list_list_select').val();
-      var trait_list_id = jQuery('#trait_list_list_select').val();
+    $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
+    $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ], 'select' ));
+    $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], 'select'  ));
 
-      var accession_validation = lo.validate(accession_list_id, 'accessions', true);
-      var trial_validation = lo.validate(trial_list_id, 'trials', true);
-      var trait_validation = lo.validate(trait_list_id, 'traits', true);
+    $('#phenotype').click(function() {
+   
+      disable_ui();
 
-      if (!accession_list_id || ! trial_list_id || ! trait_list_id) { 
-        alert("You need to select an accession, a trail, and a trait list!");
-        return; 
-      }
+      var accession_list_id = $('#accession_list_list_select').val();
+      var trial_list_id = $('#trial_list_list_select').val();
+      var trait_list_id = $('#trait_list_list_select').val();
+
+      var accession_validation = 1;
+      if (accession_list_id) { accession_validation = lo.validate(accession_list_id, 'accessions', true); }
+      
+      var trial_validation = 1; 
+      if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true); }
+  
+      var trait_validation = 1;
+      if (trait_list_id) { trait_validation = lo.validate(trait_list_id, 'traits', true); } 
+
+      //if (!accession_list_id || ! trial_list_id || ! trait_list_id) { 
+      //  alert("You need to select an accession, a trail, and a trait list!");
+      //  return; 
+      //}
 
       var problem_lists = new Array();
 
@@ -89,16 +91,224 @@ Choose a list for each parameter and click "download".
 
       if (problem_lists.length > 0) { 
         alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
+        enable_ui();
         return;
-      }
-        
-      jQuery('#download_form').submit();
+    }
+
+        $('#download_form').submit();
+ 	enable_ui()
   
     });
 
+	function disable_ui() {
+	$('#working').dialog("open");
+	}
+
+	function enable_ui() {
+	$('#working').dialog("close");
+	}
+
+});
+</script>
+
+<center>
+<form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
+<table cellpadding="10">
+
+<tr><td colspan="2"><h4>Download GBS genotype </h4>Select parameter:<br />
+  <tr>
+    <th>
+      Trials
+    </th>
+    <th>
+      Accessions
+    </th>
+  </tr>
+
+  <tr>
+    <td>
+      <div id="trial_list2">
+      </div>
+    </td>
+    <td>
+      <div id="accession_list2">
+      </div>      
+    </td>
+  </tr>
+
+</td></tr>
+</table>
+<br />
+<input type="button" id="genotype" value="Download" />
+</form>
+</center>
+
+
+<script>
+  $(document).ready(function() { 
+
+      var lo = new CXGN.List();
+
+      $('#accession_list2').html(lo.listSelect('genotype_accession_list', [ 'accessions' ]));
+      $('#trial_list2').html(lo.listSelect('genotype_trial_list', [ 'trials' ] ));
+
+      $('#genotype').click(function() {
+
+      disable_ui()
+
+      var accession_list_id = $('#genotype_accession_list_list_select').val();
+      var trial_list_id = $('#genotype_trial_list_list_select').val();
+
+      var accession_validation = lo.validate(accession_list_id, 'accessions', true);
+      var trial_validation = lo.validate(trial_list_id, 'trials', true);
+
+      if (!accession_list_id || ! trial_list_id ) { 
+        alert("You need to select an accession and a trial !");
+        return; 
+      }
+
+      var problem_lists = new Array();
+
+      if (accession_validation != 1) { 
+        problem_lists.push('accessions');
+      }
+
+      if (trial_validation != 1) { 
+        problem_lists.push('trials');
+      }
+
+
+      //alert("problem_lists is " + problem_lists);
+
+      console.log(problem_lists);
+
+      if (problem_lists.length > 0) { 
+        alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
+        return;
+      }
+    
+      jQuery('#download_gbs').submit();
+
+      enable_ui()
+    
+
+    });
+
+	function disable_ui() {
+	$('#working').dialog("open");
+	}
+
+	function enable_ui() {
+	$('#working').dialog("close");
+	}
 
   });
+</script>
 
 
-  
+<center>
+<form id="gbs_qc" action="/breeders/gbs_qc_action" method="POST">
+<table cellpadding="10">
+
+<tr><td colspan="2"><h4>GBS genotype QC </h4>Select parameter:<br />
+  <tr>
+    <th>
+      Trials
+    </th>
+    <th>
+      Accessions
+    </th>
+  </tr>
+
+  <tr>
+    <td>
+      <div id="trial_list3">
+      </div>
+    </td>
+    <td>
+      <div id="accession_list3">
+      </div>      
+    </td>
+  </tr>
+
+</td></tr>
+</table>
+<br />
+<input type="button" id="genotype_qc" value="Quality Control" />
+</form>
+</center>
+
+<script>
+  $(document).ready(function() { 
+
+      var lo = new CXGN.List();
+
+      $('#accession_list3').html(lo.listSelect('genotype_accession_list', [ 'accessions' ]));
+      $('#trial_list3').html(lo.listSelect('genotype_trial_list', [ 'trials' ] ));
+
+      $('#genotype_qc').click(function() {
+
+	$('#working').dialog( { 
+		height: 100,
+		width:  300,
+		modal: true,
+		autoOpen: false,
+		closeOnEscape: true,
+		draggable: true,
+		resizable: true,
+		open: function() { $(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide(); },
+		title: 'Downloading genotype...'
+		});
+
+      disable_ui()
+
+      var accession_list_id = $('#genotype_accession_list_list_select').val();
+      var trial_list_id = $('#genotype_trial_list_list_select').val();
+
+      var accession_validation = lo.validate(accession_list_id, 'accessions', true);
+      var trial_validation = lo.validate(trial_list_id, 'trials', true);
+
+      if (!accession_list_id || ! trial_list_id ) { 
+        alert("You need to select an accession and a trail !");
+        return; 
+      }
+
+      var problem_lists = new Array();
+
+      if (accession_validation != 1) { 
+        problem_lists.push('accessions');
+      }
+
+      if (trial_validation != 1) { 
+        problem_lists.push('trials');
+      }
+
+
+      //alert("problem_lists is " + problem_lists);
+
+      console.log(problem_lists);
+
+      if (problem_lists.length > 0) { 
+        alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
+        return;
+      }
+    
+      jQuery('#gbs_qc').submit();
+
+      enable_ui()
+
+
+    
+
+    });
+
+	function disable_ui() {
+	$('#working').dialog("open");
+	}
+
+	function enable_ui() {
+	$('#working').dialog("close");
+	}
+
+  });
 </script>

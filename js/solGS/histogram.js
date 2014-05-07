@@ -27,8 +27,11 @@ function getTraitDetails () {
 }
 
 
-jQuery(document).ready( function () { 
-    
+jQuery(document).ready( function () {     
+    getHistogramData();
+});
+
+function getHistogramData () {
     var trait = getTraitDetails();
        
     jQuery.ajax({
@@ -36,15 +39,19 @@ jQuery(document).ready( function () {
         dataType: 'json',
         data: {'population_id': trait.population_id, 'trait_id' : trait.trait_id  },
         url: '/histogram/phenotype/data/',
-        success: function(response) {             
-            plotHistogram(response.data);
+        success: function(response) {
+            if(response.status == 'success') {
+                plotHistogram(response.data);
+                jQuery("#histogram_message").empty();
+            }
+            
         },
         error: function(response) {
             var errorMessage = 'There is error in creating the phenotype data set for the histogram.';
-            jQuery("#trait_histogram_plot").html(errorMessage);                  
+            jQuery("#histogram_message").html(errorMessage);                  
         }
     });
-});
+}
 
 
 function plotHistogram (data) {

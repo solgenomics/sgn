@@ -46,7 +46,7 @@ $pop_id = $trial_id if $trial_id;
 <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 0, 
-      title       => "Phenotypic correlation analysis output"
+      title       => "Phenotypic correlation analysis"
 &>
 
 <input type="hidden" id="population_id" value="<% $pop_id %>" />

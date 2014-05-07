@@ -39,7 +39,7 @@ sub design_layout_view {
   my $design_result_html;
 
   $design_result_html .= '<table border="1">';
-  $design_result_html .= qq{<tr><th>Plot Name</th><th>Stock Name</th><th>Block Number</th><th>Rep Number</th></tr>};
+  $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Block Number</th><th>Rep Number</th></tr>};
   foreach my $key (sort { $a <=> $b} keys %design) {
     $design_result_html .= "<tr><td>".$design{$key}->{plot_name} ."</td><td>".$design{$key}->{stock_name} ."</td><td>".$design{$key}->{block_number}."</td>";
     if ($design{$key}->{rep_number}) {
@@ -82,7 +82,7 @@ sub design_info_view {
     $design_info_html .= "<dt>Design type</dt><dd>".$design_description."</dd>";
   }
   if ($design_info{'number_of_stocks'}) {
-    $design_info_html .= "<dt>Number of stocks</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
+    $design_info_html .= "<dt>Number of accessions</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
   }
   if ($design_info{'number_of_controls'}) {
     $design_info_html .= "<dt>Number of controls</dt><dd>".$design_info{'number_of_controls'}."</dd>";
@@ -108,9 +108,9 @@ sub design_info_view {
 
   if (%block_hash) {
     $design_info_html .= "<dt>Number of blocks</dt><dd>".scalar(keys %block_hash)."</dd>";
-    $design_info_html .= "<dt>Number of stocks per block</dt><dd>";
+    $design_info_html .= "<dt>Number of accessions per block</dt><dd>";
     foreach my $key (sort { $a <=> $b} keys %block_hash) {
-      $design_info_html .= "Block ".$key.": ".$block_hash{$key}." stocks <br>";
+      $design_info_html .= "Block ".$key.": ".$block_hash{$key}." accessions <br>";
     }
     $design_info_html .= "</dt>";
   }

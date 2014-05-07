@@ -205,9 +205,9 @@ function getUserUploadedSelPop (listId) {
     popIdName       = JSON.stringify(popIdName);
     var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
 
-    var uploadedSelPop ='<table id="uploaded_selection_pops_table" ""style="width:100%; text-align:left"><tr>'
-                                + '<th>Uploaded Selection Population</th>'
-                                + '<th>Prediction output</th>'
+    var uploadedSelPop ='<table id="uploaded_selection_pops_table" style="width:100%;text-align:left"><tr>'
+                                + '<th>List-based selection population</th>'
+                                + '<th>Predict GEBVs</th>'
                                 +'</tr>'
                                 + '<tr>'
                                 + '<td>'
@@ -311,7 +311,7 @@ function getCheckValue(fileName) {
             type: 'POST',
                 url: '/solgs/generate/checkvalue',
                 dataType: 'json',
-                data: {'file_name': fileName},
+                data: {'string': fileName},
 
                 success: function (response) {
                
