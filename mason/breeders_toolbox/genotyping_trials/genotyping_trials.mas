@@ -6,21 +6,21 @@ $trials_by_breeding_project => ()
 $breeding_programs
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.GenotypingTrial'] &>
 
  <style>
   /* IE has layout issues when sorting (see #5413) */
   .group { zoom: 1 }
-  .trial_list_table  {border-spacing:7px;}
+  .genotyping_trial_list_table  {border-spacing:7px;}
   </style>
-<div id="trials_accordion">
+<div id="genotyping_trials_accordion">
   <%perl>
   foreach my $p (sort keys %$trials_by_breeding_project){
     print '<div class="group">';
     print '<h3 class="ui-accordion-header">'.$p.'</h3>'."\n";
     print '<div>';
     print '<p>';
-    print '<table class="trial_list_table">';
+    print '<table class="genotyping_trial_list_table">';
     #print "<tr><td colspan=\"3\"><h4>$p</h4></td></tr>\n";
     foreach my $t (@{$trials_by_breeding_project->{$p}}) {
       print "<tr><td colspan=\"3\"><a href=\"/breeders_toolbox/trial/$t->[0]\">$t->[1]</td><td>$t->[2]</td></tr>\n";
