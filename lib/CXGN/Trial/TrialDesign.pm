@@ -310,7 +310,8 @@ sub _get_alpha_lattice_design {
 }
 
 sub _get_augmented_design {
- 
+  my $self;
+  my %augmented_design;
   my $rbase = R::YapRI::Base->new();
   my @stock_list;
   my @control_list;
