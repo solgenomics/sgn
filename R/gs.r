@@ -8,6 +8,8 @@ library(plyr)
 library(mail)
 library(imputation)
 library(stringr)
+library(nlme)
+
 
 allArgs <- commandArgs()
 
@@ -54,9 +56,9 @@ traitInfo <- scan(traitFile,
                what = "character",
                )
 
-traitInfo<-strsplit(traitInfo, "\t");
-traitId<-traitInfo[[1]]
-trait<-traitInfo[[2]]
+traitInfo <- strsplit(traitInfo, "\t");
+traitId   <- traitInfo[[1]]
+trait     <- traitInfo[[2]]
 
 datasetInfoFile <- grep("dataset_info",
                         inFiles,
@@ -138,6 +140,7 @@ phenoFile <- grep("phenotype_data",
 message("phenotype dataset file: ", phenoFile)
 message("dataset info: ", datasetInfo)
 
+#phenoFile <- c("/data/prod/tmp/solgs/tecle/cache/phenotype_data_176_alpha.txt")
 phenoData <- read.table(phenoFile,
                         header = TRUE,
                         row.names = NULL,
@@ -146,10 +149,10 @@ phenoData <- read.table(phenoFile,
                         dec = "."
                         )
 
-phenoTrait <- c()
+phenoTrait         <- c()
 formattedPhenoData <- c()
-if (datasetInfo == 'combined populations')
-  {  
+
+if (datasetInfo == 'combined populations') {  
     dropColumns <- grep(trait,
                         names(phenoData),
                         ignore.case = TRUE,
@@ -164,12 +167,11 @@ if (datasetInfo == 'combined populations')
     
 
   } else {
-   
+
     dropColumns <- c("uniquename", "stock_name")
     phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
 
-
-    #format all-traits population phenotype dataset
+     #format all-traits population phenotype dataset
     formattedPhenoData <- phenoData
 
     dropColumns <- c("object_id", "stock_id")
@@ -186,14 +188,98 @@ if (datasetInfo == 'combined populations')
     formattedPhenoData <- round(formattedPhenoData,
                                 digits=2
                                 )
-
-    
+ 
     phenoTrait  <- subset(phenoData,
-                          select = c("object_name", "stock_id", trait)
+                          select = c("object_name", "stock_id", "design", "block", "replicate", trait)
                           )
    
-    if (sum(is.na(phenoTrait)) > 0)
-      {
+    experimentalDesign <- phenoTrait[2, 'design']
+
+    if (experimentalDesign == 'augmented') {
+
+      bloLevels  <- length(unique(phenoTrait$blocks))
+      replicates <- unique(phenoTrait$replicates)
+      allGenos   <- phenoTrait$object_name
+      response   <- phenoData[, trait]
+         
+      allGenosFreq   <- data.frame(table(phenoTrait$object_name))
+
+      checkGenos <- subset(allGenosFreq, Freq == bloLevels)
+      unRepGenos <- subset(allGenosFreq, Freq == 1)
+      cG         <- checkGenos[, 1]
+      uRG        <- unRepGenos[, 1]
+    
+      checkGenos <- data.frame(phenoTrait[phenoTrait$object_name %in% cG, ]) 
+      bloMeans   <- data.frame(tapply(checkGenos[, trait], checkGenos[, "block"], mean))
+      checkMeans <- data.frame(tapply(checkGenos[, trait], checkGenos[, "object_name"], mean))
+      checkMeans <- subset(checkMeans, is.na(checkMeans)==FALSE)
+     
+      gBloMean   <- mean(checkGenos[, trait])
+      colnames(bloMeans)   <- c("mean")
+      colnames(checkMeans) <- c("mean")
+      
+      adjMeans <- data.matrix(checkMeans)
+  
+      adjGenoMeans <- function(x) {
+
+        xG <- x[[1]]
+        mr <- c()
+    
+        if(length(grep(xG, cG)) != 1) {
+     
+          bm <- as.numeric(bloMeans[x[[4]], ])       
+          rV <- as.numeric(x[[6]])       
+          m  <-  rV - bm + gBloMean 
+          mr <- data.frame(xG, "mean"=m)
+          rownames(mr) <- mr[, 1]
+          mr[, 1] <- NULL
+          mr <- data.matrix(mr)
+    
+        }
+
+        return (mr)
+        
+      }
+  
+      nr <- nrow(phenoTrait)
+      for (i in 1:nr ) {
+    
+        mr       <- adjGenoMeans(phenoTrait[i, ]) 
+        adjMeans <- rbind(adjMeans, mr)
+           
+       }
+
+      adjMeans <- round(adjMeans, digits=2)
+      
+      phenoTrait <- data.frame(adjMeans)     
+ 
+    } else if (experimentalDesign == 'alpha lattice') {
+      message("design: ", experimentalDesign)
+
+      alphaData <-   subset(phenoTrait,
+                            select = c("stock_id", "object_name","block", "replicate", trait)
+                            )
+      
+      colnames(alphaData)[2] <- "genotypes"
+      colnames(alphaData)[5] <- "trait"
+     
+      ff <- trait ~ 0 + genotypes
+      
+      model <- lme(ff, data=alphaData, random = ~1|replicates/blocks, method="REML")
+   
+      adjMeans <- data.matrix(fixed.effects(model))
+      colnames(adjMeans) <- trait
+      
+      nn <- gsub('genotypes', '', rownames(adjMeans))
+      rownames(adjMeans) <- nn
+      adjMeans <- round(adjMeans, digits = 2)
+
+      phenoTrait <- data.frame(adjMeans)
+  
+    } else {
+
+      if (sum(is.na(phenoTrait)) > 0) {
+
         print("sum of pheno missing values")
         print(sum(is.na(phenoTrait)))
 
@@ -204,24 +290,26 @@ if (datasetInfo == 'combined populations')
                                          ) 
       }
 
-    #calculate mean of reps/plots of the same accession and
-    #create new df with the accession means
-    dropColumns  <- c("stock_id")
-    phenoTrait   <- phenoTrait[,!(names(phenoTrait) %in% dropColumns)]
-    phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
-    phenoTrait   <- data.frame(phenoTrait)
-    print('phenotyped lines before averaging')
-    print(length(row.names(phenoTrait)))
+      #calculate mean of reps/plots of the same accession and
+      #create new df with the accession means    
+      dropColumns  <- c("stock_id")
+      phenoTrait   <- phenoTrait[,!(names(phenoTrait) %in% dropColumns)]
+      phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
+      phenoTrait   <- data.frame(phenoTrait)
+      print('phenotyped lines before averaging')
+      print(length(row.names(phenoTrait)))
    
-    phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
-    print('phenotyped lines after averaging')
-    print(length(row.names(phenoTrait)))
+      phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
+      print('phenotyped lines after averaging')
+      print(length(row.names(phenoTrait)))
 
-    #make stock_names row names
-    row.names(phenoTrait) <- phenoTrait[, 1]
-    phenoTrait[, 1] <- NULL
+                                        #make stock_names row names
+      row.names(phenoTrait) <- phenoTrait[, 1]
+      phenoTrait[, 1] <- NULL
    
+    }
   }
+
 
 genoFile <- grep("genotype_data",
                  inFiles,
@@ -266,10 +354,6 @@ predictionPopGEBVsFile <- grep("prediction_pop_gebvs",
 
 message("prediction gebv file: ",  predictionPopGEBVsFile)
 
-if (trait == 'FHB' || trait == 'DON')
-  {
-    predictionFile <- c("~/cxgn/sgn-home/isaak/GS/barley/cap123_geno_prediction.txt")
-  }
 
 predictionData <- c()
 
@@ -293,8 +377,9 @@ message('genotyped lines: ', length(row.names(genoData)))
 #extract observation lines with both
 #phenotype and genotype data only.
 commonObs <- intersect(row.names(phenoTrait), row.names(genoData))
-commonObs<-data.frame(commonObs)
+commonObs <- data.frame(commonObs)
 rownames(commonObs)<-commonObs[, 1]
+
 message('lines with both genotype and phenotype data: ', length(row.names(commonObs)))
 #include in the genotype dataset only observation lines
 #with phenotype data
