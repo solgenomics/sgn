@@ -89,8 +89,8 @@ foreach my $d (@databases) {
 
 
 <br />
-<button class="input" id="clear_form" value="clear" title="Clear form">Clear</button>&nbsp; &nbsp; &nbsp;
-<button class="input" id="upload_expression_file" value="Run VIGS Analysis" title="Start VIGS analysis">Run VIGS Analysis</button>
+<button class="input" id="clear_form" value="clear">Clear</button>&nbsp; &nbsp; &nbsp;
+<button class="input" id="upload_expression_file" value="Run VIGS Analysis">Run VIGS Analysis</button>
 
 <br />
 <br />
