@@ -61,6 +61,8 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		$sequence =~ s/\.\d//;
 		$sequence =~ s/\.\d//;
 		
+		# print STDERR "seq: $sequence\n";
+		
 		# get databases path from the configuration file
 		my $db_path = $c->config->{vigs_db_path};
 			
@@ -82,6 +84,7 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 				last;
 			}
 		}
+		# print STDERR "seq: $sequence\n";
 		
 		if ($sequence =~ tr/acgtACGT/acgtACGT/ < 30) {
 			push ( @errors , "Your input sequence is not valid: $pasted_gene_name\n");
