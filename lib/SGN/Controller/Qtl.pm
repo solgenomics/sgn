@@ -24,13 +24,13 @@ use CXGN::Phenome::Qtl;
 
 BEGIN { extends 'Catalyst::Controller'}  
 
-sub view : PathPart('qtl/view') Chained Args(1) {
+sub view : Path('/qtl/view') Args(1) {
     my ($self, $c, $id) = @_;
     $c->res->redirect("/qtl/population/$id");
 }
 
 
-sub population : PathPart('qtl/population') Chained Args(1) {
+sub population : Path('/qtl/population') Args(1) {
     my ( $self, $c, $id) = @_;
     
     if ( $id !~ /^\d+$/ ) 
@@ -77,7 +77,7 @@ sub population : PathPart('qtl/population') Chained Args(1) {
     }
 }
 
-sub download_phenotype : PathPart('qtl/download/phenotype') Chained Args(1) {
+sub download_phenotype : Path('/qtl/download/phenotype') Args(1) {
     my ($self, $c, $id) = @_;
     
     $c->throw_404("<strong>$id</strong> is not a valid population id") if  $id =~ m/\D/;
@@ -105,7 +105,7 @@ sub download_phenotype : PathPart('qtl/download/phenotype') Chained Args(1) {
     }       
 }
 
-sub download_genotype : PathPart('qtl/download/genotype') Chained Args(1) {
+sub download_genotype : Path('/qtl/download/genotype') Args(1) {
     my ($self, $c, $id) = @_;
     
     $c->throw_404("<strong>$id</strong> is not a valid population id") if  $id =~ m/\D/;
@@ -133,7 +133,7 @@ sub download_genotype : PathPart('qtl/download/genotype') Chained Args(1) {
     }       
 }
 
-sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) {
+sub download_correlation : Path('/qtl/download/correlation') Args(1) {
     my ($self, $c, $id) = @_;
     
     $c->throw_404("<strong>$id</strong> is not a valid population id") if $id =~ m/\D/;
@@ -169,7 +169,7 @@ sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) 
     }       
 }
 
-sub download_acronym : PathPart('qtl/download/acronym') Chained Args(1) {
+sub download_acronym : Path('/qtl/download/acronym') Args(1) {
     my ($self, $c, $id) = @_;
 
     $c->throw_404("<strong>$id</strong> is not a valid population id") if  $id =~ m/\D/;
@@ -196,7 +196,7 @@ sub _analyze_correlation  {
     my $temp_image_dir  = $c->config->{tempfiles_subdir};
     my $r_qtl_dir       = $c->config->{r_qtl_temp_path};
     my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
-    my $corre_temp_dir  = catfile($r_qtl_dir, "tempfiles");
+    my $corre_temp_dir  = catfile($r_qtl_dir, "cache");
     
     if (-s $pheno_file) 
     {
