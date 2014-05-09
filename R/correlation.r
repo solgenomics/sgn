@@ -15,7 +15,7 @@ library(gplots)
 library(ltm)
 library(plyr)
 library(rjson)
-
+library(nlme)
 
 allargs<-commandArgs()
 
@@ -64,26 +64,118 @@ allTraitNames <- names(phenoData)
 print(allTraitNames)
 print(typeof(allTraitNames))
 
-dropElements <- c("object_name", "object_id", "stock_id")
+dropElements <- c("object_name", "blocks", "replicates", "object_id", "stock_id")
 allTraitNames <- allTraitNames[! allTraitNames %in% dropElements]
 
-for (i in allTraitNames)
-{
+for (i in allTraitNames) {
+  
   message("trait name : ", i)
- 
-  if (sum(is.na(formattedPhenoData[, i])) > 0)
-    {
-     
-      message("number of  pheno missing values for ", i, ": ", sum(is.na(formattedPhenoData[, i])))
+  trait <- i
+  phenoTrait  <- subset(phenoData,
+                        select = c("object_name", "stock_id", "design", "blocks", "replicates", trait)
+                        )
+   
+  experimentalDesign <- phenoTrait[2, 'design']
 
-     #fill in for missing data with mean value
-      formattedPhenoData[, i]  <- replace (formattedPhenoData[, i],
-                                           is.na(formattedPhenoData[, i]),
-                                           mean(formattedPhenoData[, i],
-                                                na.rm =TRUE)
-                                           ) 
+  if (experimentalDesign == 'augmented') {
+
+    bloLevels  <- length(unique(phenoTrait$blocks))
+    replicates <- unique(phenoTrait$replicates)
+    allGenos   <- phenoTrait$object_name
+    response   <- phenoData[, trait]
+         
+    allGenosFreq   <- data.frame(table(phenoTrait$object_name))
+
+    checkGenos <- subset(allGenosFreq, Freq == bloLevels)
+    unRepGenos <- subset(allGenosFreq, Freq == 1)
+    cG         <- checkGenos[, 1]
+    uRG        <- unRepGenos[, 1]
+    
+    checkGenos <- data.frame(phenoTrait[phenoTrait$object_name %in% cG, ]) 
+    bloMeans   <- data.frame(tapply(checkGenos[, trait], checkGenos[, "blocks"], mean))
+    checkMeans <- data.frame(tapply(checkGenos[, trait], checkGenos[, "object_name"], mean))
+    checkMeans <- subset(checkMeans, is.na(checkMeans)==FALSE)
+     
+    gBloMean   <- mean(checkGenos[, trait])
+    colnames(bloMeans)   <- c("mean")
+    colnames(checkMeans) <- c("mean")
+      
+    adjMeans <- data.matrix(checkMeans)
+  
+    adjGenoMeans <- function(x) {
+
+      xG <- x[[1]]
+      mr <- c()
+    
+      if(length(grep(xG, cG)) != 1) {
+     
+        bm <- as.numeric(bloMeans[x[[4]], ])       
+        rV <- as.numeric(x[[6]])       
+        m  <-  rV - bm + gBloMean 
+        mr <- data.frame(xG, "mean"=m)
+        rownames(mr) <- mr[, 1]
+        mr[, 1] <- NULL
+        mr <- data.matrix(mr)
+    
+      }
+
+      return (mr)
+        
+    }
+  
+    nr <- nrow(phenoTrait)
+    for (j in 1:nr ) {
+    
+      mr       <- adjGenoMeans(phenoTrait[j, ]) 
+      adjMeans <- rbind(adjMeans, mr)
+           
     }
 
+    adjMeans <- round(adjMeans, digits=2)
+      
+    phenoTrait <- data.frame(adjMeans)
+    formattedPhenoData[, trait] <- phenoTrait
+ 
+  } else if (experimentalDesign == 'alpha lattice') {
+    message("design: ", experimentalDesign)
+
+    trait <- i
+    alphaData <-   subset(phenoData,
+                          select = c("stock_id", "object_name","blocks", "replicates", trait)
+                          )
+      
+    colnames(alphaData)[2] <- "genotypes"
+    colnames(alphaData)[5] <- "trait"
+     
+    ff <- trait ~ 0 + genotypes
+      
+    model <- lme(ff, data=alphaData, random = ~1|replicates/blocks, method="REML")
+   
+    adjMeans <- data.matrix(fixed.effects(model))
+    colnames(adjMeans) <- trait
+      
+    nn <- gsub('genotypes', '', rownames(adjMeans))
+    rownames(adjMeans) <- nn
+    adjMeans <- round(adjMeans, digits = 2)
+
+    phenoTrait <- data.frame(adjMeans)
+    formattedPhenoData[, i] <- phenoTrait
+  
+  } else {
+ 
+    if (sum(is.na(formattedPhenoData[, i])) > 0)
+      {
+     
+        message("number of  pheno missing values for ", i, ": ", sum(is.na(formattedPhenoData[, i])))
+
+        #fill in for missing data with mean value
+        formattedPhenoData[, i]  <- replace (formattedPhenoData[, i],
+                                               is.na(formattedPhenoData[, i]),
+                                               mean(formattedPhenoData[, i],
+                                                    na.rm =TRUE)
+                                               ) 
+      }
+  }
 }
 
 dropColumns <- c("object_id", "stock_id")
