@@ -693,16 +693,13 @@ sub trait :Path('/solgs/trait') Args(3) {
     my $ajaxredirect = $c->req->param('source');
   
     if ($pop_id && $trait_id)
-    {          
-        $self->get_trait_name($c, $trait_id);
-        $c->stash->{pop_id} = $pop_id;
-        $self->project_description($c, $pop_id);
-                            
+    {    
+        $c->stash->{pop_id} = $pop_id;       
+        $self->get_trait_name($c, $trait_id);       
+        $self->project_description($c, $pop_id);        
         $self->get_rrblup_output($c);
         $self->gs_files($c);
-
-        $self->trait_phenotype_stat($c);
-        
+        $self->trait_phenotype_stat($c);      
         $self->download_prediction_urls($c);     
         my $download_prediction = $c->stash->{download_prediction};
      
@@ -3074,7 +3071,7 @@ sub analyzed_traits {
 sub filter_phenotype_header {
     my ($self, $c) = @_;
     
-    my $meta_headers = "uniquename\t|object_id\t|object_name\t|stock_id\t|stock_name\t";
+    my $meta_headers = "uniquename\t|object_id\t|object_name\t|stock_id\t|stock_name\t|design\t|block\t|replicate\t";
     $c->stash->{filter_phenotype_header} = $meta_headers;
 
 }
@@ -3843,7 +3840,7 @@ sub begin : Private {
 #     # don't try to render a default view if this was handled by a CGI
 #     $c->forward('render') unless $c->req->path =~ /\.pl$/;
 
-#     # enforce a default text/html content type regardless of whether
+#     # enforce a default texest/html content type regardless of whether
 #     # we tried to render a default view
 #     $c->res->content_type('text/html') unless $c->res->content_type;
 
