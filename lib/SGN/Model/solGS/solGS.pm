@@ -125,12 +125,18 @@ sub search_populations {
 sub project_year {
     my ($self, $pr_id) =  @_;
     
-    return $self->schema->resultset("Project::Projectprop")
-        ->search(
-        {
-            'me.project_id' => $pr_id
-        }
-        );
+    return $self->schema->resultset("Cv::Cvterm")
+        ->search({'project_id' => $pr_id, 'me.name' => 'project year' })
+        ->search_related('projectprops');
+}
+
+
+sub experimental_design {
+    my ($self, $pr_id) =  @_;
+    
+    return $self->schema->resultset("Cv::Cvterm")
+        ->search({'project_id' => $pr_id, 'me.name' => 'design' })
+        ->search_related('projectprops');
 }
 
 
@@ -318,6 +324,18 @@ sub search_stock {
   
     my $rs = $self->schema->resultset("Stock::Stock")
         ->search({'me.name' =>  $stock_name});
+   
+    return $rs; 
+
+}
+
+
+sub search_plotprop {
+    my ($self, $plot_id, $type) = @_;
+  
+    my $rs = $self->schema->resultset("Cv::Cvterm")
+        ->search({'stock_id' => $plot_id, 'name'     => $type })
+        ->search_related('stockprops');
    
     return $rs; 
 
@@ -627,6 +645,7 @@ sub phenotype_data {
              
          }
 
+         
          $data     = $self->phenotypes_by_trait($results);
          
          return  $data;               
@@ -661,8 +680,13 @@ sub stock_phenotype_data_rs {
                   }
                 } ,
                 ],
-            select    => [ qw/  me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id observable.definition phenotypeprops.value type.name dbxref.accession db.name  project.description  cv.name cvterm.name   / ],
-            as        => [ qw/ stock_id uniquename value observable observable_id definition method_name type_name  accession db_name project_description cv_name unit_name / ],
+            select    => [ qw/  me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id 
+                                observable.definition phenotypeprops.value type.name dbxref.accession db.name  
+                                project.description  cv.name cvterm.name   / 
+                         ],
+            as        => [ qw/ stock_id uniquename value observable observable_id definition method_name type_name  
+                               accession db_name project_description cv_name unit_name / 
+                         ],
             distinct  => 1,
             order_by  => [ 'project.description' , 'observable.name' ],
         }  );
@@ -723,7 +747,7 @@ sub phenotypes_by_trait {
     }
 
     my @data;
-    my $d = "uniquename\tobject_name\tobject_id\tstock_id\tstock_name";
+    my $d = "uniquename\tobject_name\tobject_id\tstock_id\tstock_name\tdesign\tblock\treplicate";
     foreach my $term_name (sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms )  
     {# sort ontology terms
         my $ontology_id = $cvterms{$term_name};
@@ -744,7 +768,33 @@ sub phenotypes_by_trait {
               
         $d .= $key . "\t" .$object_name . "\t" . $object_id . "\t" . $phen_hashref->{$key}{stock_id} . 
               "\t" . $phen_hashref->{$key}{stock_name};
+
+        my $block     = 'NA';
+        my $replicate = 'NA';
+        my $design    = 'NA';
+        my $trial_id  = $self->context->stash->{pop_id};
+        my $design_rs = $self->experimental_design($trial_id);
+
+        if($design_rs->next)       
+        {
+            $design = $design_rs->single->value();
+        } 
         
+        my $block_rs = $self->search_plotprop($subject_id, 'block');
+        if($block_rs->next)
+        
+        {
+            $block = $block_rs->single->value();
+        } 
+        
+        my $replicate_rs = $self->search_plotprop($subject_id, 'replicate');     
+        if($replicate_rs->next)       
+        {
+            $replicate = $replicate_rs->single->value();
+        }
+
+        $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
+
         foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
         {           
             $d .= "\t" . $phen_hashref->{$key}{$term_name};
