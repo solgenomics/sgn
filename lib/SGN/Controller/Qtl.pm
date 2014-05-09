@@ -52,11 +52,13 @@ sub population : PathPart('qtl/population') Chained Args(1) {
                           referer      => $c->req->path,             
                           userid       => $userid,
                     );
+
                 $self->_link($c);
                 $self->_show_data($c);           
                 $self->_list_traits($c);
                 $self->genetic_map($c);                
                 $self->_correlation_output($c);
+                                  
             } 
             else 
             {
@@ -193,7 +195,7 @@ sub _analyze_correlation  {
     my $base_path       = $c->config->{basepath};
     my $temp_image_dir  = $c->config->{tempfiles_subdir};
     my $r_qtl_dir       = $c->config->{r_qtl_temp_path};
-    my $corre_image_dir = catfile($base_path, $temp_image_dir, "temp_images");
+    my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
     my $corre_temp_dir  = catfile($r_qtl_dir, "tempfiles");
     
     if (-s $pheno_file) 
@@ -278,9 +280,9 @@ sub _analyze_correlation  {
             or die "could not copy $corre_table_file to $corre_image_dir";
 
         $heatmap_file      = fileparse($heatmap_file);
-        $heatmap_file      = $c->generated_file_uri("temp_images",  $heatmap_file);
+        $heatmap_file      = $c->generated_file_uri("correlation",  $heatmap_file);
         $corre_table_file  = fileparse($corre_table_file);
-        $corre_table_file  = $c->generated_file_uri("temp_images", $corre_table_file);
+        $corre_table_file  = $c->generated_file_uri("correlation", $corre_table_file);
         
         print STDERR "\nheatmap tempfile after copying to the apps static dir : $heatmap_file\n";
         print STDERR "\ncorrelation coefficients after copying to the apps static dir: $corre_table_file\n";
@@ -296,10 +298,8 @@ sub _correlation_output {
     my $pop             = $c->{stash}->{pop};
     my $base_path       = $c->config->{basepath};
     my $temp_image_dir  = $c->config->{tempfiles_subdir};   
-    my $corre_image_dir = catfile($base_path, $temp_image_dir, "temp_images");
-    my $cache           = Cache::File->new( cache_root  => $corre_image_dir, 
-                                            cache_umask => 002
-                                          );
+    my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
+    my $cache           = Cache::File->new( cache_root  => $corre_image_dir);
     $cache->purge();
 
     my $key_h           = "heat_" . $pop->get_population_id();
@@ -321,9 +321,9 @@ sub _correlation_output {
         $cache->set($key_t, $corre_table, "30 days");        
     }
 
-    $heatmap     = undef if -z $c->config->{'basepath'} . $heatmap;   
-    $corre_table = undef if -z $c->config->{'basepath'} . $corre_table;
-    
+    $heatmap     = undef if -z $c->config->{basepath} . $heatmap;   
+    $corre_table = undef if -z $c->config->{basepath} . $corre_table;
+       
     $c->stash( heatmap_file     => $heatmap,
                corre_table_file => $corre_table,
              );  
