@@ -75,8 +75,8 @@ function plotCorrelation (data) {
     
     data = JSON.parse(data);
     
-    var height = 350;
-    var width  = 350;
+    var height = 400;
+    var width  = 400;
     var pad    = {left:70, top:5, right:5, bottom: 90}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
