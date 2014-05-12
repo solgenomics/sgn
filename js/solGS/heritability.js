@@ -231,7 +231,7 @@ function plotRegressionData(regressionData){
         .attr("id", "y_axis_label")
         .append("text")
         .text("Breeding values (Y)")
-        .attr("y", (pad.top +  1))
+        .attr("y", (pad.top -  10))
         .attr("x", ((width/2) - 80))
         .attr("font-size", 10)
 
