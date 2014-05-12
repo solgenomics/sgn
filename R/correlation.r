@@ -19,6 +19,15 @@ library(rjson)
 
 allargs<-commandArgs()
 
+refererQtl <- grep("qtl",
+                allargs,
+                ignore.case=TRUE,
+                perl=TRUE,
+                value=TRUE
+                )
+
+message(" referer: ", refererQtl)
+
 phenoDataFile<-grep("phenotype_data",
                allargs,
                ignore.case=TRUE,
@@ -43,15 +52,31 @@ message("correlation table file:", correCoefficientsFile)
 message("pheno data file:", phenoDataFile)
 
 
+phenoData <- c()
 
-phenoData <- read.table(phenoDataFile,
-                        header = TRUE,
-                        row.names = NULL,
-                        sep = "\t",
-                        na.strings = c("NA", " ", "--", "-", "."),
-                        dec = "."
-                        )
+if(length(refererQtl) != 0  ) {
+  message("phenotype data from solQTL", refererQtl)
+  phenoData<-read.csv(phenoDataFile,
+                      header=TRUE,
+                      row.names = NULL,
+                      dec=".",
+                      sep=",",
+                      na.strings=c("NA", "-")
+                      )
 
+  colnames(phenoData)[1] <- c('object_name')
+
+    
+} else {
+  message(" phenotype data from solGS ", refererQtl)
+  phenoData <- read.table(phenoDataFile,
+                          header = TRUE,
+                          row.names = NULL,
+                          sep = "\t",
+                          na.strings = c("NA", " ", "--", "-", "."),
+                          dec = "."
+                          )
+}
 
 ### average out clone phenotype values and impute missing values
 dropColumns <- c("uniquename", "stock_name")
@@ -60,9 +85,6 @@ phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
 #format all-traits population phenotype dataset
 formattedPhenoData <- phenoData
 allTraitNames <- names(phenoData)
-
-print(allTraitNames)
-print(typeof(allTraitNames))
 
 dropElements <- c("object_name", "object_id", "stock_id")
 allTraitNames <- allTraitNames[! allTraitNames %in% dropElements]
@@ -95,6 +117,7 @@ formattedPhenoData <- ddply(formattedPhenoData,
                            colwise(mean)
                            )
 
+
 row.names(formattedPhenoData) <- formattedPhenoData[, 1]
 formattedPhenoData[, 1] <- NULL
 
@@ -102,8 +125,6 @@ formattedPhenoData <- round(formattedPhenoData,
                             digits=2
                             )
 
-
-#running Pearson correlation analysis
 coefpvalues <- rcor.test(formattedPhenoData,
                          method="pearson",
                          use="pairwise"
