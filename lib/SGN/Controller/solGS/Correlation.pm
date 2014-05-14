@@ -11,7 +11,7 @@ use File::Slurp qw /write_file read_file/;
 use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
-
+use CXGN::Phenome::Population;
 use JSON;
 use Try::Tiny;
 
@@ -20,10 +20,11 @@ BEGIN { extends 'Catalyst::Controller' }
 
 sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     my ($self, $c) = @_;
-    
+   
     my $pop_id = $c->req->param('population_id');
     $c->stash->{pop_id} = $pop_id;
-  
+    my $referer = $c->req->referer;
+   
     my $phenotype_file;
     
     if( $pop_id =~ /uploaded/) 
@@ -33,19 +34,24 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
         $phenotype_file   = "phenotype_data_${userid}_${pop_id}";
         $phenotype_file   = $c->controller('solGS::solGS')->grep_file($phenotype_dir, $phenotype_file);
     }
-    else 
+    elsif ($referer =~ /qtl/)
+    {    
+        $self->create_correlation_phenodata_file($c);
+        $phenotype_file =  $c->stash->{phenotype_file};
+    }
+    else
     {
         my $phenotype_dir = $c->stash->{solgs_cache_dir};
         $phenotype_file   = 'phenotype_data_' . $pop_id;
         $phenotype_file   = $c->controller('solGS::solGS')->grep_file($phenotype_dir, '\'^' . $phenotype_file . '\'');
     }
 
-   
     unless ($phenotype_file)
-    {      
+    {     
         $self->create_correlation_phenodata_file($c);
         $phenotype_file =  $c->stash->{phenotype_file};
     }
+
 
     my $ret->{status} = 'failed';
 
@@ -64,9 +70,37 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
 
 sub create_correlation_phenodata_file {
     my ($self, $c)  = @_;
+    my $referer = $c->req->referer;
     
-    $c->controller("solGS::solGS")->phenotype_file($c);
-    
+    if ($referer =~ /qtl/) 
+    {
+        my $pop_id = $c->stash->{pop_id};
+       
+        my $pheno_exp = "phenodata_${pop_id}";
+        my $dir       = catdir($c->config->{r_qtl_temp_path}, 'cache');
+       
+        my $phenotype_file = $c->controller("solGS::solGS")->grep_file($dir, $pheno_exp);
+       
+        unless ($phenotype_file) {
+           
+            my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);
+       
+            $phenotype_file =  $pop->phenotype_file($c);
+        }
+        
+        my $new_file = catfile($c->stash->{correlation_dir}, "phenotype_data_${pop_id}.csv");
+      
+        copy($phenotype_file, $new_file) 
+            or die "could not copy $phenotype_file to $new_file";
+       
+        $c->stash->{phenotype_file} = $new_file;
+       
+    } 
+    else
+    {           
+      $c->controller("solGS::solGS")->phenotype_file($c);  
+    }
+        
 }
 
 
@@ -166,6 +200,8 @@ sub run_correlation_analysis {
     my $corre_table_file = $c->stash->{corre_coefficients_file};
     my $corre_json_file = $c->stash->{corre_coefficients_json_file};
    
+    my $referer = $c->req->referer;
+
     if (-s $pheno_file) 
     {
         CXGN::Tools::Run->temp_base($corre_dir);
@@ -195,7 +231,7 @@ sub run_correlation_analysis {
           my $r_process = CXGN::Tools::Run->run_cluster(
               'R', 'CMD', 'BATCH',
               '--slave',
-              "--args $corre_table_file $corre_json_file $pheno_file",
+              "--args $referer $corre_table_file $corre_json_file $pheno_file",
               $corre_commands_temp,
               $corre_output_temp,
               {

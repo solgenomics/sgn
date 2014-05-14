@@ -1,10 +1,11 @@
 <%doc>
 
 =head1 NAME 
+
 qtl/population/correlation.mas - displays correlation heatmap 
-and trait acronyms legend
 
 =AUTHOR
+
 Isaak Y Tecle (iyt2@cornell.edu)
 
 =cut
@@ -14,53 +15,47 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $pop
-$heatmap_file
-$corre_table_file
-$trait_acronym_pairs
 
 </%args>
 
 <%perl>
 
-my $name        = $pop->get_name();
-my $corre_image = qq | <img src="$heatmap_file"  alt="correlation output for $name"/> |;
+my $pop_id = $pop->get_population_id();
 
 </%perl>
 
-% if (!$heatmap_file) 
-%{
-  <&| /page/info_section.mas, 
-      collapsible =>1, 
-      collapsed   =>1, 
-      title       => "Pearson correlation analysis" &> 
-         <p>There is no correlation output for this population.</p>
-  </&>
-%}
-% else
-%{
-  <&| /page/info_section.mas, 
+
+
+<style>
+/* correlation coefficients plot styling */
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+
+
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.correlation"] &>
+<&| /page/info_section.mas, 
       collapsible => 1, 
-      collapsed   => 1, 
-      title       => "Pearson correlation analysis" 
-  &> 
-  
-    <% $corre_image %> 
+      collapsed   => 0, 
+      title       => "Phenotypic correlation analysis"
+&>
+
+<input type="hidden" id="population_id" value="<% $pop_id %>" />
+<div id="correlation_message"  style="font-weight:bold;text-align:center;text-transform:uppercase;color:#A7C942">
+<p>Loading correlation output...</p>
+</div>
+<div id="correlation_canvas"> </div>
+
+</&>
+
+
  
-  <&| /page/optional_show.mas, 
-      title => "Acronyms key"
-  &>
- 
-  <& /page/columnar_table.mas,
-     headings     => ["Trait name", "Acronym"],
-     data         => $trait_acronym_pairs,
-     __alt_freq   => 2,
-     __alt_width  => 1,
-     __alt_offset => 3,
-     __align      => 'l'
-  &>
-  </&>
-  </&>
-%}
-
-
-

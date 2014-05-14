@@ -75,9 +75,9 @@ function plotCorrelation (data) {
     
     data = JSON.parse(data);
     
-    var height = 350;
-    var width  = 350;
-    var pad    = {left:70, top:5, right:5, bottom: 90}; 
+    var height = 400;
+    var width  = 400;
+    var pad    = {left:70, top:20, right:100, bottom: 70}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
 
@@ -131,18 +131,23 @@ function plotCorrelation (data) {
         .selectAll("text")
         .attr("y", 0)
         .attr("x", -10)
+        .attr("dy", ".1em")  
         .attr("fill", "purple")
         .style("fill", "purple");
           
-   
+  
     var corr = [];
-       
+    var coefs = [];   
     for (var i=0; i<data.coefficients.length; i++) {
         for  (var j=0;  j<data.coefficients[i].length; j++) {
             corr.push({"row":i, "col":j, "value": data.coefficients[i][j]});
+            
+            if(data.coefficients[i][j] != 100) {
+                coefs.push(data.coefficients[i][j]);
+            }
         }
     }
-                                   
+                                 
     var cell = corrplot.selectAll("rect")
         .data(corr)  
         .enter().append("rect")
@@ -169,7 +174,7 @@ function plotCorrelation (data) {
                               + "]")
                         .style("fill", "purple")
                         .attr("x", totalW * 0.5)
-                        .attr("y", totalH - 120)
+                        .attr("y", totalH * 0.5)
                         .attr("font-weight", "bold")
                         .attr("dominant-baseline", "middle")
                         .attr("text-anchor", "middle")                       
@@ -189,4 +194,49 @@ function plotCorrelation (data) {
         .attr("stroke-width", 1)
         .attr("pointer-events", "none");
 
+    var legendValues = [[1,d3.min(coefs)], [2,0], [3,d3.max(coefs)]];
+   
+    var legend = corrplot.append("g")
+        .attr("class", "cell")
+        .attr("transform", "translate(" + (width + 10) + "," +  (height * 0.4) + ")")
+        .attr("height", 100)
+        .attr("width", 100);
+       
+    
+    legend = legend.selectAll("rect")
+        .data(legendValues)  
+        .enter()
+        .append("rect")
+        .attr("x", function (d) { return 1;})
+        .attr("y",  function (d) { return corXscale(d[0])})
+        .attr("width", 20)
+        .attr("height", 20)      
+        .attr("fill", function (d) { 
+            if (d === 100) {return "white"} 
+            else {return corZscale(d[1])}
+        });
+ 
+    var legendTxt = corrplot.append("g")
+        .attr("transform", "translate(" + (width + 40) + "," + ((height * 0.4) + 10) + ")")
+        .attr("id", "legendtext");
+
+    legendTxt.selectAll("text")
+        .data(legendValues)  
+        .enter()
+        .append("text")              
+        .attr("fill", "green")
+        .style("fill", "green")
+        .attr("x", 1)
+        .attr("y", function (d) { return corXscale(d[0])})
+        .text(function(d) { 
+              if (d[1] > 0) { return "Positive";} 
+              else if (d[1] < 0) { return "Negative";} 
+              else { return "Neutral";}
+        })  
+        .attr("dominant-baseline", "middle")
+        .attr("text-anchor", "start");
+
+
 }
+
+

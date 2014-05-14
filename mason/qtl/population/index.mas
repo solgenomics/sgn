@@ -4,8 +4,8 @@ $pop
 $guideline
 $referer
 $userid
-$heatmap_file
-$corre_table_file
+$heatmap_file => ''
+$corre_table_file => ''
 $traits_list
 $trait_acronym_pairs
 $owner_page
@@ -20,16 +20,13 @@ $genetic_map
 
 <%perl>
 
-if (!$corre_table_file || -s $corre_table_file) { $corre_download=undef; }
-if (!-e $pop->phenotype_file($c)) { $phenotype_download=undef; }
-if (!-e $pop->genotype_file($c)) { $genotype_download=undef; }
-if (!$pop->get_cvterm_acronyms($c)) { $acronym_download=undef;}
-
+my $title = $pop->get_name();
 my $submit_new = qq | <a href="/qtl/form">Submit QTL population</a> |;
+
 </%perl>
 
 <& /page/page_title.mas, 
-   title => $pop->get_name 
+   title => $title
 &>
 
 <&| /page/info_section.mas, 
@@ -54,7 +51,7 @@ my $submit_new = qq | <a href="/qtl/form">Submit QTL population</a> |;
     title       => "Set statistical parameters"
   &>   
   <& stat_tools.mas, 
-    pop_id     => $pop->get_population_id, 
+    pop_id     => $pop->get_population_id(), 
     guideline  => $guideline, 
     referer    => $referer, 
     userid     => $userid
@@ -82,6 +79,24 @@ my $submit_new = qq | <a href="/qtl/form">Submit QTL population</a> |;
    corre_download     => $corre_download,
    acronym_download   => $acronym_download,
 &>
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 1, 
+    title       => "Trait acronyms"
+  &>   
+ 
+  <& /page/columnar_table.mas,
+     headings     => ["Trait name", "Acronym"],
+     data         => $trait_acronym_pairs,
+     __alt_freq   => 2,
+     __alt_width  => 1,
+     __alt_offset => 3,
+     __align      => 'l'
+    &>
+
+</&>
+
 %}
 % else
 %{

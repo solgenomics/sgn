@@ -75,6 +75,9 @@ sub calculate_design {
     elsif ($self->get_design_type() eq "Augmented") {
       $design = _get_augmented_design($self);
     }
+    elsif ($self->get_design_type() eq "MADII") {
+      $design = _get_madii_design($self);
+    }
     else {
       die "Trial design" . $self->get_design_type() ." not supported\n";
     }
@@ -307,7 +310,7 @@ sub _get_alpha_lattice_design {
 }
 
 sub _get_augmented_design {
-  my $self = shift;
+  my $self;
   my %augmented_design;
   my $rbase = R::YapRI::Base->new();
   my @stock_list;
@@ -404,6 +407,15 @@ sub _get_augmented_design {
   }
   %augmented_design = %{_build_plot_names($self,\%augmented_design)};
   return \%augmented_design;
+}
+
+sub _get_madii_design {
+ my $self = shift;
+ my %madii_design;
+
+ #call R code and create design data structure
+
+ return \%madii_design;
 }
 
 
