@@ -20,55 +20,47 @@ library(nlme)
 allargs<-commandArgs()
 
 refererQtl <- grep("qtl",
-                allargs,
-                ignore.case=TRUE,
-                perl=TRUE,
-                value=TRUE
-                )
+                   allargs,
+                   ignore.case=TRUE,
+                   perl=TRUE,
+                   value=TRUE
+                   )
 
-message(" referer: ", refererQtl)
+phenoDataFile <- grep("phenotype_data",
+                      allargs,
+                      ignore.case=TRUE,
+                      perl=TRUE,
+                      value=TRUE
+                      )
 
-phenoDataFile<-grep("phenotype_data",
-               allargs,
-               ignore.case=TRUE,
-               perl=TRUE,
-               value=TRUE
-               )
+correCoefficientsFile <- grep("corre_coefficients_table",
+                              allargs,
+                              ignore.case=TRUE,
+                              perl=TRUE,
+                              value=TRUE
+                              )
 
-correCoefficientsFile<-grep("corre_coefficients_table",
-               allargs,
-               ignore.case=TRUE,
-               perl=TRUE,
-               value=TRUE
-               )
-
-correCoefficientsJsonFile<-grep("corre_coefficients_json",
-               allargs,
-               ignore.case=TRUE,
-               perl=TRUE,
-               value=TRUE
-               )
-message("correlation table file:", correCoefficientsFile)
-message("pheno data file:", phenoDataFile)
-
+correCoefficientsJsonFile <- grep("corre_coefficients_json",
+                                  allargs,
+                                  ignore.case=TRUE,
+                                  perl=TRUE,
+                                  value=TRUE
+                                  )
 
 phenoData <- c()
 
 if(length(refererQtl) != 0  ) {
-  message("phenotype data from solQTL", refererQtl)
   phenoData<-read.csv(phenoDataFile,
                       header=TRUE,
                       row.names = NULL,
                       dec=".",
                       sep=",",
-                      na.strings=c("NA", "-")
+                      na.strings=c("NA", "-", " ", ".")
                       )
 
   colnames(phenoData)[1] <- c('object_name')
-
     
-} else {
-  message(" phenotype data from solGS ", refererQtl)
+} else {  
   phenoData <- read.table(phenoDataFile,
                           header = TRUE,
                           row.names = NULL,
@@ -78,29 +70,22 @@ if(length(refererQtl) != 0  ) {
                           )
 }
 
-### average out clone phenotype values and impute missing values
 dropColumns <- c("uniquename", "stock_name")
 phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
 
-#format all-traits population phenotype dataset
 formattedPhenoData <- phenoData
 allTraitNames <- names(phenoData)
-
-
-
-dropElements <- c("object_name", "blocks", "replicates", "object_id", "stock_id")
-
+dropElements  <- c("object_name", "design", "block", "replicate", "object_id", "stock_id")
 allTraitNames <- allTraitNames[! allTraitNames %in% dropElements]
 
 for (i in allTraitNames) {
-  
-  message("trait name : ", i)
   trait <- i
   phenoTrait  <- subset(phenoData,
-                        select = c("object_name", "stock_id", "design", "blocks", "replicates", trait)
+                        select = c("object_name", "stock_id", "design", "block", "replicate", trait)
                         )
    
   experimentalDesign <- phenoTrait[2, 'design']
+  if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
 
   if (experimentalDesign == 'augmented') {
 
@@ -109,7 +94,7 @@ for (i in allTraitNames) {
     allGenos   <- phenoTrait$object_name
     response   <- phenoData[, trait]
          
-    allGenosFreq   <- data.frame(table(phenoTrait$object_name))
+    allGenosFreq <- data.frame(table(phenoTrait$object_name))
 
     checkGenos <- subset(allGenosFreq, Freq == bloLevels)
     unRepGenos <- subset(allGenosFreq, Freq == 1)
@@ -162,11 +147,9 @@ for (i in allTraitNames) {
     formattedPhenoData[, trait] <- phenoTrait
  
   } else if (experimentalDesign == 'alpha lattice') {
-    message("design: ", experimentalDesign)
-
     trait <- i
     alphaData <-   subset(phenoData,
-                          select = c("stock_id", "object_name","blocks", "replicates", trait)
+                          select = c("stock_id", "object_name","block", "replicate", trait)
                           )
       
     colnames(alphaData)[2] <- "genotypes"
@@ -174,7 +157,12 @@ for (i in allTraitNames) {
      
     ff <- trait ~ 0 + genotypes
       
-    model <- lme(ff, data=alphaData, random = ~1|replicates/blocks, method="REML")
+    model <- lme(ff,
+                 data = alphaData,
+                 random = ~1|replicates/blocks,
+                 method = "REML",
+                 na.action = na.omit
+                 )
    
     adjMeans <- data.matrix(fixed.effects(model))
     colnames(adjMeans) <- trait
@@ -190,28 +178,26 @@ for (i in allTraitNames) {
  
     if (sum(is.na(formattedPhenoData[, i])) > 0)
       {
-     
-        message("number of  pheno missing values for ", i, ": ", sum(is.na(formattedPhenoData[, i])))
-
-        #fill in for missing data with mean value
         formattedPhenoData[, i]  <- replace (formattedPhenoData[, i],
-                                               is.na(formattedPhenoData[, i]),
-                                               mean(formattedPhenoData[, i],
-                                                    na.rm =TRUE)
-                                               ) 
+                                             is.na(formattedPhenoData[, i]),
+                                             mean(formattedPhenoData[, i],
+                                                  na.rm =TRUE)
+                                             ) 
       }
   }
 }
 
-dropColumns <- c("object_id", "stock_id")
+dropColumns <- c("object_id", "stock_id", "design",  "block", "replicate")
 
 formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
 
-formattedPhenoData <- ddply(formattedPhenoData,
-                           "object_name",
-                           colwise(mean)
-                           )
+if (experimentalDesign != 'augmented' || experimentalDesign != 'alpha lattice') {
 
+  formattedPhenoData <- ddply(formattedPhenoData,
+                              "object_name",
+                              colwise(mean)
+                              )
+}
 
 row.names(formattedPhenoData) <- formattedPhenoData[, 1]
 formattedPhenoData[, 1] <- NULL
@@ -228,24 +214,22 @@ coefpvalues <- rcor.test(formattedPhenoData,
 
 coefficients <- coefpvalues$cor.mat
 allcordata   <- coefpvalues$cor.mat
-allcordata[lower.tri(allcordata)]<-coefpvalues$p.values[, 3]
-diag(allcordata)<-1.00
+allcordata[lower.tri(allcordata)] <- coefpvalues$p.values[, 3]
+diag(allcordata) <- 1.00
 
+pvalues <- as.matrix(allcordata)
 
-pvalues<-as.matrix(allcordata)
+pvalues <- round(pvalues,
+                 digits=2
+                 )
 
+coefficients <- round(coefficients,
+                      digits=3
+                      )
 
-pvalues<-round(pvalues,
-               digits=2
-               )
-
-coefficients<-round(coefficients,
+allcordata <- round(allcordata,
                     digits=3
-                   )
-
-allcordata<-round(allcordata,
-                  digits=3
-                  )
+                    )
 
 #remove rows and columns that are all "NA"
 if ( apply(coefficients,
@@ -289,12 +273,6 @@ correlationList <- list(
                    )
 
 correlationJson <- paste("{",paste("\"", names(correlationList), "\":", correlationList, collapse=","), "}")
-
-
-#file.create(correlationJsonFile)
-
-message("correlation text file: ", correCoefficientsFile)
-message("correlation json file: ", correCoefficientsJsonFile)
 
 write.table(coefficients,
       file=correCoefficientsFile,
