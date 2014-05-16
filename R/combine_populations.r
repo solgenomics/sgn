@@ -1,6 +1,6 @@
 #formats and combines phenotype (of a single trait)
 #and genotype datasets of multiple
-#training populations
+#populations
 
 options(echo = FALSE)
 
@@ -8,6 +8,8 @@ library(stats)
 library(stringr)
 library(imputation)
 library(plyr)
+library(nlme)
+
 
 allArgs <- commandArgs()
 
@@ -29,6 +31,7 @@ outFiles <- scan(outFile,
                  what = "character"
                  )
 print(outFiles)
+
 combinedGenoFile <- grep("genotype_data",
                          outFiles,
                          ignore.case = TRUE,
@@ -90,13 +93,13 @@ popsGenoSize      <- length(allGenoFiles)
 popIds            <- c()
 combinedPhenoPops <- c()
 
-for (i in 1:popsPhenoSize)
+for (popPhenoNum in 1:popsPhenoSize)
   {
-    popId <- str_extract(allPhenoFiles[[i]], "\\d+")
+    popId <- str_extract(allPhenoFiles[[popPhenoNum]], "\\d+")
     popIds <- append(popIds, popId)
 
     print(popId)
-    phenoData <- read.table(allPhenoFiles[[i]],
+    phenoData <- read.table(allPhenoFiles[[popPhenoNum]],
                             header = TRUE,
                             row.names = 1,
                             sep = "\t",
@@ -106,9 +109,104 @@ for (i in 1:popsPhenoSize)
 
 
     phenoTrait <- subset(phenoData,
-                         select = c("object_name", "stock_id", traitName)
+                         select = c("object_name", "stock_id", "design", "block", "replicate", traitName)
                          )
   
+    experimentalDesign <- phenoTrait[2, 'design']
+    
+    if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
+
+    if (experimentalDesign == 'augmented') {
+
+    bloLevels  <- length(unique(phenoTrait$blocks))
+    replicates <- unique(phenoTrait$replicates)
+    allGenos   <- phenoTrait$object_name
+    response   <- phenoTrait[, traitName]
+         
+    allGenosFreq <- data.frame(table(phenoTrait$object_name))
+
+    checkGenos <- subset(allGenosFreq, Freq == bloLevels)
+    unRepGenos <- subset(allGenosFreq, Freq == 1)
+    cG         <- checkGenos[, 1]
+    uRG        <- unRepGenos[, 1]
+    
+    checkGenos <- data.frame(phenoTrait[phenoTrait$object_name %in% cG, ]) 
+    bloMeans   <- data.frame(tapply(checkGenos[, traitName], checkGenos[, "blocks"], mean))
+    checkMeans <- data.frame(tapply(checkGenos[, traitName], checkGenos[, "object_name"], mean))
+    checkMeans <- subset(checkMeans, is.na(checkMeans)==FALSE)
+     
+    gBloMean   <- mean(checkGenos[, traitName])
+    colnames(bloMeans)   <- c("mean")
+    colnames(checkMeans) <- c("mean")
+      
+    adjMeans <- data.matrix(checkMeans)
+  
+    adjGenoMeans <- function(x) {
+
+      xG <- x[[1]]
+      mr <- c()
+    
+      if(length(grep(xG, cG)) != 1) {
+     
+        bm <- as.numeric(bloMeans[x[[4]], ])       
+        rV <- as.numeric(x[[6]])       
+        m  <-  rV - bm + gBloMean 
+        mr <- data.frame(xG, "mean"=m)
+        rownames(mr) <- mr[, 1]
+        mr[, 1] <- NULL
+        mr <- data.matrix(mr)
+    
+      }
+
+      return (mr)
+        
+    }
+  
+    nr <- nrow(phenoTrait)
+    for (j in 1:nr ) {
+    
+      mr       <- adjGenoMeans(phenoTrait[j, ]) 
+      adjMeans <- rbind(adjMeans, mr)
+           
+    }
+
+    adjMeans <- round(adjMeans, digits=2)
+      
+    phenoTrait <- data.frame(adjMeans)
+    formattedPhenoData[, trait] <- phenoTrait
+ 
+  } else if (experimentalDesign == 'alpha lattice') {
+   # trait <- i
+    alphaData <-  phenoTrait 
+      
+    colnames(alphaData)[2] <- "genotypes"
+    colnames(alphaData)[5] <- "trait"
+     
+    ff <- traitName ~ 0 + genotypes
+      
+    model <- lme(ff,
+                 data = alphaData,
+                 random = ~1|replicates/blocks,
+                 method = "REML",
+                 na.action = na.omit
+                 )
+   
+    adjMeans <- data.matrix(fixed.effects(model))
+    colnames(adjMeans) <- traitName
+      
+    nn <- gsub('genotypes', '', rownames(adjMeans))
+    rownames(adjMeans) <- nn
+    adjMeans <- round(adjMeans, digits = 2)
+
+    phenoTrait <- data.frame(adjMeans)
+    formattedPhenoData[, i] <- phenoTrait
+  
+  } else {
+
+    phenoTrait <- subset(phenoData,
+                         select = c("object_name", "stock_id", traitName)
+                         )
+    
     if (sum(is.na(phenoTrait)) > 0)
       {
         print("sum of pheno missing values")
@@ -157,11 +255,13 @@ for (i in 1:popsPhenoSize)
       phenoTrait <- round(phenoTrait, digits = 2)
 
     }
+  }
 
+    
     newTraitName = paste(traitName, popId, sep = "_")
     colnames(phenoTrait)[1] <- newTraitName
 
-    if (i == 1 )
+    if (popPhenoNum == 1 )
       {
         print('no need to combine, yet')       
         combinedPhenoPops <- phenoTrait
@@ -185,9 +285,8 @@ naIndices <- which(is.na(combinedPhenoPops), arr.ind=TRUE)
 combinedPhenoPops <- as.matrix(combinedPhenoPops)
 combinedPhenoPops[naIndices] <- rowMeans(combinedPhenoPops, na.rm=TRUE)[naIndices[,1]]
 combinedPhenoPops <- as.data.frame(combinedPhenoPops)
+
 message("combined total number of stocks in phenotype dataset (before averaging): ", length(rownames(combinedPhenoPops)))
-#combinedPhenoPops<-ddply(combinedPhenoPops, by=0, colwise(mean))
-#message("combined total number of stocks in phenotype dataset (after averaging): ", length(rownames(combinedPhenoPops)))
 
 combinedPhenoPops$Average<-round(apply(combinedPhenoPops,
                                        1,
@@ -197,17 +296,16 @@ combinedPhenoPops$Average<-round(apply(combinedPhenoPops,
                                  digits = 2
                                  )
 
-print(combinedPhenoPops[1:30, ])
-
-markersList <- c()
+markersList      <- c()
 combinedGenoPops <- c()
-for (i in 1:popsGenoSize)
+
+for (popGenoNum in 1:popsGenoSize)
   {
-    popId <- str_extract(allGenoFiles[[i]], "\\d+")
+    popId <- str_extract(allGenoFiles[[popGenoNum]], "\\d+")
     popIds <- append(popIds, popId)
 
     print(popId)
-    genoData <- read.table(allGenoFiles[[i]],
+    genoData <- read.table(allGenoFiles[[popGenoNum]],
                             header = TRUE,
                             row.names = 1,
                             sep = "\t",
@@ -241,7 +339,7 @@ for (i in 1:popsGenoSize)
         message("total number of stocks for pop ", popId,": ", length(rownames(genoData)))
       }
 
-    if (i == 1 )
+    if (popGenoNum == 1 )
       {
         print('no need to combine, yet')       
         combinedGenoPops <- genoData
