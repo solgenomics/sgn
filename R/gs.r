@@ -194,7 +194,8 @@ if (datasetInfo == 'combined populations') {
                           )
    
     experimentalDesign <- phenoTrait[2, 'design']
-
+    if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
+    
     if (experimentalDesign == 'augmented') {
 
       bloLevels  <- length(unique(phenoTrait$blocks))
@@ -292,7 +293,7 @@ if (datasetInfo == 'combined populations') {
 
       #calculate mean of reps/plots of the same accession and
       #create new df with the accession means    
-      dropColumns  <- c("stock_id")
+      dropColumns  <- c("stock_id", "design",  "block", "replicate")
       phenoTrait   <- phenoTrait[,!(names(phenoTrait) %in% dropColumns)]
       phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
       phenoTrait   <- data.frame(phenoTrait)
@@ -303,13 +304,11 @@ if (datasetInfo == 'combined populations') {
       print('phenotyped lines after averaging')
       print(length(row.names(phenoTrait)))
 
-                                        #make stock_names row names
       row.names(phenoTrait) <- phenoTrait[, 1]
       phenoTrait[, 1] <- NULL
-   
+     
     }
   }
-
 
 genoFile <- grep("genotype_data",
                  inFiles,
