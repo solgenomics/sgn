@@ -84,18 +84,17 @@ function listAllPopulations ()  {
 
        
 function addSelectionPopulations(){
-    
-    var selPopsDiv   = document.getElementById("selection_populations");
-    var selPopsTable = selPopsDiv.getElementsByTagName("table");
-    var selPopsRows  = selPopsTable[0].rows;
+      
+    var selPopsTable = jQuery("#selection_populations table").html(); 
+    var selPopsRows  = jQuery(selPopsTable).find("tr");
+ 
     var predictedPop = [];
-   
-    var  popsList ='';
+    var popsList;
        
     for (var i = 1; i < selPopsRows.length; i++) {
         var row    = selPopsRows[i];
         var popRow = row.innerHTML;
-            
+       
         predictedPop = popRow.match(/\/solgs\/selection\//g);
            
         if (predictedPop) {
