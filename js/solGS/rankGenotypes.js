@@ -89,7 +89,7 @@ function addSelectionPopulations(){
     var selPopsRows  = jQuery(selPopsTable).find("tr");
  
     var predictedPop = [];
-    var popsList;
+    var popsList = '';
        
     for (var i = 1; i < selPopsRows.length; i++) {
         var row    = selPopsRows[i];
@@ -101,11 +101,11 @@ function addSelectionPopulations(){
             if (predictedPop.length > 1) {
                 var selPopsInput = row.getElementsByTagName("input")[0];
                 var idPopName    = selPopsInput.value;
-                        
+             
                 var idPopNameCopy = idPopName;
                 idPopNameCopy     = JSON.parse(idPopNameCopy);
                 var popName       = idPopNameCopy.name;
-                                               
+                        
                 popsList += '<li>'
                     + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
                     + '</li>';
@@ -168,7 +168,7 @@ function  selectionIndexForm(predictedTraits) {
         +  '<input style="position:relative;" " class="button" type="submit" value="Calculate" name= "rank" id="rank_genotypes"'     
         +  '</td></tr>';
 
-    var table = '<br/ ><table id="selection_index_table" style="align:left;width:90%"><tr>' 
+    var table = '<br /> <table id="selection_index_table" style="align:left;width:90%"><tr>' 
         +  row + '</tr>' 
         + rankButton 
         + '</table>';
