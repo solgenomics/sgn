@@ -58,7 +58,7 @@ function plotHistogram (data) {
     
     var height = 300;
     var width  = 500;
-    var pad    = {left:20, top:50, right:20, bottom: 50}; 
+    var pad    = {left:20, top:50, right:40, bottom: 50}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
 
@@ -118,12 +118,12 @@ function plotHistogram (data) {
         .append("g")
         .attr("class", "bar")
         .attr("transform", function(d) {
-                return "translate(" + xAxisScale(d.x)  
+            return "translate(" + xAxisScale(d.x)  
                 + "," + height - yAxisScale(d.y) + ")"; 
             });     
   
     bar.append("rect")
-        .attr("x", function(d) { return xAxisScale(d.x); } )
+        .attr("x", function(d) { return (pad.left + 5) + xAxisScale(d.x); } )
         .attr("y", function(d) {return height - yAxisScale(d.y); }) 
         .attr("width", function(d) {return xAxisScale(d.dx) - 2  ; })
         .attr("height", function(d) { return yAxisScale(d.y); })
@@ -138,7 +138,7 @@ function plotHistogram (data) {
     bar.append("text")
         .text(function(d) { return d.y; })
         .attr("y", function(d) {return height - (yAxisScale(d.y) + 10); } )
-        .attr("x",  function(d) { return (pad.left + xAxisScale(d.x)) + 2; } )      
+        .attr("x",  function(d) { return ((2*pad.left) + xAxisScale(d.x)); } )      
         .attr("dy", ".6em")
         .attr("text-anchor", "end")  
         .attr("font-family", "sans-serif")
