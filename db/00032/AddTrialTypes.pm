@@ -60,7 +60,7 @@ sub patch {
 --do your SQL here
 --
 
-INSERT INTO cv (name, definition) VALUES ('trial type', '');
+-- INSERT INTO cv (name, definition) VALUES ('trial type', '');
 
 EOSQL
     
@@ -73,7 +73,7 @@ EOSQL
 	$self->dbh->do(<<EOSQL);
 INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), '$t');
 
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT currval('cv_cv_id_seq')), '$t', '$t', (SELECT dbxref_id FROM dbxref WHERE accession='$t'));
+INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT cv_id FROM cv where name='trial type' ), '$t', '$t', (SELECT dbxref_id FROM dbxref WHERE accession='$t'));
 
 
 EOSQL
