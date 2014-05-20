@@ -58,7 +58,7 @@ function plotHistogram (data) {
     
     var height = 300;
     var width  = 500;
-    var pad    = {left:20, top:50, right:40, bottom: 50}; 
+    var pad    = {left:20, top:50, right:20, bottom: 50}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
 
@@ -110,7 +110,7 @@ function plotHistogram (data) {
           
     var histogramPlot = svg.append("g")
         .attr("id", "trait_histogram_plot")
-        .attr("transform", "translate(" + pad.left + "," + pad.top + ")");
+        .attr("transform", "translate(" +  pad.left + "," + pad.top + ")");
 
     var bar = histogramPlot.selectAll(".bar")
         .data(histogram)
@@ -148,7 +148,7 @@ function plotHistogram (data) {
                   
     histogramPlot.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(" + pad.left + "," + height +")")
+        .attr("transform", "translate(" + (2*pad.left) + "," + height +")")
         .call(xAxis)
         .selectAll("text")
         .attr("y", 0)
@@ -161,13 +161,28 @@ function plotHistogram (data) {
           
     histogramPlot.append("g")
         .attr("class", "y axis")
-        .attr("transform", "translate(" + pad.left +  "," + 0 + ")")
+        .attr("transform", "translate(" +(2* pad.left) +  "," + 0 + ")")
         .call(yAxis)
         .selectAll("text")
         .attr("y", 0)
         .attr("x", -10)
         .attr("fill", "green")
         .style("fill", "green");
+
+    histogramPlot.append("g")
+        .attr("transform", "translate(" + (totalW * 0.5) + "," + (height + (pad.bottom * 0.8)) + ")")        
+        .append("text")
+        .text("Trait values")            
+        .attr("fill", "teal")
+        .style("fill", "teal");
+
+    histogramPlot.append("g")
+        .attr("transform", "translate(" + 0 + "," + ( totalH*0.5) + ")")        
+        .append("text")
+        .text("Frequency")            
+        .attr("fill", "teal")
+        .style("fill", "teal")
+        .attr("transform", "rotate(-90)");
        
     
 }   
