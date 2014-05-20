@@ -14,11 +14,23 @@ JSAN.use("jquery.blockUI");
 
 
 jQuery(document).ready( function() {
-        var list = new CXGN.List();
-        var listMenu = list.listSelect("prediction_genotypes", ["accessions"]);
-        	
-        if (listMenu.match(/option/) != null) {
+    var list = new CXGN.List();
+    var listMenu = list.listSelect("prediction_genotypes", ["accessions"]);
+    var relevant =[]; 	
+        
+    if (listMenu.match(/option/) != null) {
             
+            //filter by marker match
+            // alert(listMenu);
+            // jQuery(listMenu).find("option").each(function () {
+                
+            //      var v = jQuery(this).val();
+            //      alert(v);
+                
+
+            // });
+
+           
             jQuery("#prediction_genotypes_list").append(listMenu);
 
         } else {
@@ -329,6 +341,29 @@ function getCheckValue(fileName) {
         });
 
 }
+
+
+// function checkRelevance(listId) {
+   
+//     jQuery.ajax({
+//             type: 'POST',
+//                 url: '/solgs/check/list/relevance',
+//                 dataType: 'json',
+//                 data: {'list_id': listId},
+
+//                 success: function (response) {
+               
+//                 if (response.status == 'success') {
+//                     if(res)
+                    
+                   
+          
+//                 } 
+               
+//             }
+//         });
+
+//}
 
 
 function loadListFromFile(fileName, listId) {
