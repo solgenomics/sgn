@@ -85,14 +85,11 @@ sub download_phenotype : Path('/qtl/download/phenotype') Args(1) {
         my $phenotype_file  = $pop->phenotype_file($c);
     
         unless (!-e $phenotype_file || -s $phenotype_file <= 1)
-        {
-            my @pheno_data;
-            foreach ( read_file($phenotype_file) ) 
-            {
-                push @pheno_data, [ split(/,/) ];
-            }
-            $c->stash->{'csv'}={ data => \@pheno_data};
-            $c->forward("SGN::View::Download::CSV");
+        {        
+            my @pheno_data = map {   s/,/\t/g; [ $_ ]; } read_file($phenotype_file);
+            
+            $c->res->content_type("text/plain");
+            $c->res->body(join "",  map{ $_->[0]} @pheno_data);        
         }
     }
     else
@@ -115,13 +112,10 @@ sub download_genotype : Path('/qtl/download/genotype') Args(1) {
        
         unless (!-e $genotype_file || -s $genotype_file <= 1)
         {
-            my @geno_data;
-            foreach ( read_file($genotype_file)) 
-            {
-                push @geno_data, [ split(/,/) ];
-            }
-            $c->stash->{'csv'}={ data => \@geno_data};
-            $c->forward("SGN::View::Download::CSV");
+            my @geno_data = map { s/,/\t/g; [ $_ ]; } read_file($genotype_file);
+            
+            $c->res->content_type("text/plain");
+            $c->res->body(join "",  map{ $_->[0]} @geno_data);   
         }
     }
     else
@@ -148,21 +142,19 @@ sub download_correlation : Path('/qtl/download/correlation') Args(1) {
 
             foreach ( read_file($corr_file) )
             {
-                if ($count==1) {  $_ = "Traits\t" . $_;}
-                
-                $_ =~ s/\s/,/g;
-                $_=~ s/,$/\n/;
-                print STDERR "$_";
-                push @corr_data, [ split (/\n/) ];
+                if ($count==1) {  $_ = "Traits\t" . $_;}             
+                s/NA//g;               
+                push @corr_data, [ $_ ] ;
                 $count++;
             }   
-            $c->stash->{'csv'}={ data => \@corr_data };
-            $c->forward("SGN::View::Download::CSV");
+            $c->res->content_type("text/plain");
+            $c->res->body(join "",  map{ $_->[0] } @corr_data);   
+          
         } 
     }  
     else
     {
-            $c->throw_404("<strong>$id</strong> is not a QTL population id");   
+        $c->throw_404("<strong>$id</strong> is not a QTL population id");   
     }       
 }
 
@@ -175,8 +167,11 @@ sub download_acronym : Path('/qtl/download/acronym') Args(1) {
     if ($c->stash->{is_qtl_pop})
     {
         my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);    
-        $c->stash->{'csv'}={ data => $pop->get_cvterm_acronyms};
-        $c->forward("SGN::View::Download::CSV");
+        my $acronym = $pop->get_cvterm_acronyms;
+       
+        $c->res->content_type("text/plain");
+        $c->res->body(join "\n",  map{ $_->[1] . "\t" . $_->[0] } @$acronym);
+   
     }
     else
     {
