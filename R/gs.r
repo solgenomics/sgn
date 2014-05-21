@@ -68,8 +68,7 @@ datasetInfoFile <- grep("dataset_info",
                         )
 datasetInfo <- c()
 
-if(length(datasetInfoFile) != 0 )
-  {
+if(length(datasetInfoFile) != 0 ) {
     datasetInfo <- scan(datasetInfoFile,
                         what= "character"
                         )
@@ -177,10 +176,10 @@ if (datasetInfo == 'combined populations') {
     dropColumns <- c("object_id", "stock_id")
 
     formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
-    formattedPhenoData <-ddply(formattedPhenoData,
-                               "object_name",
+    formattedPhenoData <- ddply(formattedPhenoData,
+                                "object_name",
                                 colwise(mean)
-                               )
+                                )
 
     row.names(formattedPhenoData) <- formattedPhenoData[, 1]
     formattedPhenoData[, 1] <- NULL
@@ -189,7 +188,7 @@ if (datasetInfo == 'combined populations') {
                                 digits=2
                                 )
  
-    phenoTrait  <- subset(phenoData,
+    phenoTrait <- subset(phenoData,
                           select = c("object_name", "stock_id", "design", "block", "replicate", trait)
                           )
    
@@ -496,8 +495,7 @@ corGEBVs <- cor(genoDataMatrix %*% markerGEBV$u, iGEBV$u)
 iGEBVu <- iGEBV$u
 
 heritability <- c()
-if ( is.null(predictionFile) == TRUE )
-  {
+if ( is.null(predictionFile) == TRUE ) {
     heritability <- round((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve)) * 100, digits=2)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
     cat('error variance', iGEBV$Ve, file=varianceComponentsFile, sep="\t", append=TRUE)
@@ -544,6 +542,7 @@ if (length(combinedGebvsFile) != 0)
                           by = 0,
                           all = TRUE                     
                           )
+
         rownames(allGebvs) <- allGebvs[,1]
         allGebvs[,1] <- NULL
      }
@@ -631,11 +630,8 @@ if (is.null(validationAll) == FALSE)
   }
 
 #predict GEBVs for selection population
-if (length(predictionData) !=0 )
-  {
+if (length(predictionData) !=0 ) {
     predictionData <- data.matrix(round(predictionData, digits = 0 ))
-    print("prediction genotype data")
-    print(predictionData[1:10, 1:20])
   }
 
 predictionPopResult <- c()
@@ -652,12 +648,9 @@ if(length(predictionData) != 0)
 
     predictionPopGEBVs <- round(data.matrix(predictionPopResult$g.pred), digits = 2)
     predictionPopGEBVs <- data.matrix(predictionPopGEBVs[order(-predictionPopGEBVs[, 1]), ])
-
    
     colnames(predictionPopGEBVs) <- c(trait)
-    print("prediction output")
-    print(predictionPopGEBVs[1:10,])
-  
+   
   }
 
 
