@@ -76,12 +76,13 @@ print STDERR "\nFound $count accessions\n";
 
 if ($opt_r) {
   foreach my $stock ($rs->all()) {
+    my $stockid = $stock->stock_id();
     my $uniquename = $stock->uniquename();
     my $newname = $uniquename;
     $newname =~ s/^$opt_f/$opt_r/i;
     print STDERR "new name: $newname\n";
     if ($newname ne $uniquename) {
-      print STDERR "changing name $uniquename to $newname\n";
+      print STDERR "$stockid changing name $uniquename to $newname\n";
       $stock->uniquename($newname);
       $stock->update();
     }
