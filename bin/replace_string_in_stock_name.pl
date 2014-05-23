@@ -81,9 +81,9 @@ if ($opt_r) {
     $newname =~ s/^$opt_f/$opt_r/i;
     print STDERR "new name: $newname\n";
     if ($newname ne $uniquename) {
+      print STDERR "changing name $uniquename to $newname\n";
       $stock->uniquename($newname);
       $stock->update();
-      print STDERR "changing name\n";
     }
   }
 }
