@@ -48,8 +48,8 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     print STDERR "SEQUENCE now : ".$params->{sequence}."\n";
 
-    my $seq_count = $params->{sequence} =~ /^\>/g; 
-
+    my $seq_count = $params->{sequence} =~ tr/\>/\>/;
+    
     my ($seq_fh, $seqfile) = tempfile( 
 	"blast_XXXXXX",
 	DIR=> $c->get_conf('cluster_shared_tempdir'),
@@ -57,15 +57,9 @@ sub run : Path('/tools/blast/run') Args(0) {
     
     my $jobid = basename($seqfile);
 
-
     print STDERR "JOB ID CREATED: $jobid\n";
 
-    #my $seq_count;
-    #masks earlier decleration
-
     my $schema = $c->dbic_schema("SGN::Schema");
-    
-    
 
     my %arg_handlers =
 	(
@@ -101,8 +95,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 		 
 		 try {
 		     while ( my $s = $i->next_seq ) {
-			 $seq_count++ if $s->length;
-			 #$self->validate_seq($c, $s, $params->{program} );
+
 			 $s->length or $c->throw(
 			     message  => 'Sequence '.encode_entities('"'.$s->id.'"').' is empty, this is not allowed by BLAST.',
 			     is_error => 0, 
