@@ -64,7 +64,7 @@ sub ted : Path('/ted') Args(0) {
 
     $c->stash->{page_title} = "Tomato Expression Database";
     $c->stash->{param_string} = join "/", @rest;
-    $c->stash->{server} = 'ted.sgn.cornell.edu';
+    $c->stash->{server} = 'ted.solgenomics.net';
     $c->stash->{port} = "80"; # get this from conf...
     $c->stash->{template} = '/site/iframe.mas';
 }
