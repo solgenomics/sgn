@@ -170,7 +170,7 @@ function plotHistogram (data) {
         .style("fill", "green");
 
     histogramPlot.append("g")
-        .attr("transform", "translate(" + (totalW * 0.5) + "," + (height + (pad.bottom * 0.8)) + ")")        
+        .attr("transform", "translate(" + (totalW * 0.5) + "," + (height + pad.bottom) + ")")        
         .append("text")
         .text("Trait values")            
         .attr("fill", "teal")
