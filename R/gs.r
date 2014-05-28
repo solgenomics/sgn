@@ -170,7 +170,7 @@ if (datasetInfo == 'combined populations') {
     dropColumns <- c("uniquename", "stock_name")
     phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
 
-     #format all-traits population phenotype dataset
+    #format all-traits population phenotype dataset
     formattedPhenoData <- phenoData
 
     dropColumns <- c("object_id", "stock_id")
@@ -253,7 +253,7 @@ if (datasetInfo == 'combined populations') {
       
       phenoTrait <- data.frame(adjMeans)     
  
-    } else if (experimentalDesign == 'alpha lattice') {
+    } else if (experimentalDesign == 'alpha') {
       message("design: ", experimentalDesign)
 
       alphaData <-   subset(phenoTrait,
