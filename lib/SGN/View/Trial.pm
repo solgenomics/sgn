@@ -16,10 +16,10 @@ sub trial_detail_design_view {
   my $design_result_html;
 
   $design_result_html .= '<table border="1">';
-  $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Block Number</th><th>Rep Number</th></tr>};
+  $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
 
   foreach my $key (sort { $a <=> $b} keys %design) {
-    $design_result_html .= "<tr><td>".$design{$key}->{plot_name} ."</td><td>".$design{$key}->{accession_name} ."</td><td>".$design{$key}->{block_number}."</td>";
+    $design_result_html .= "<tr><td>".$design{$key}->{plot_name} ."</td><td>".$design{$key}->{accession_name} ."</td><td>".$design{$key}->{check_name}."</td><td>".$design{$key}->{row_number}."</td><td>".$design{$key}->{col_number}."</td><td>".$design{$key}->{block_number}."</td><td>".$design{$key}->{block_row_number}."</td><td>".$design{$key}->{block_col_number}."</td>";
     if ($design{$key}->{rep_number}) {
       $design_result_html .= "<td>".$design{$key}->{rep_number}."</td>";
     }
@@ -39,9 +39,9 @@ sub design_layout_view {
   my $design_result_html;
 
   $design_result_html .= '<table border="1">';
-  $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Block Number</th><th>Rep Number</th></tr>};
+  $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
   foreach my $key (sort { $a <=> $b} keys %design) {
-    $design_result_html .= "<tr><td>".$design{$key}->{plot_name} ."</td><td>".$design{$key}->{stock_name} ."</td><td>".$design{$key}->{block_number}."</td>";
+    $design_result_html .= "<tr><td>".$design{$key}->{plot_name} ."</td><td>".$design{$key}->{stock_name} ."</td><td>".$design{$key}->{check_name}."</td><td>".$design{$key}->{row_number}."</td><td>".$design{$key}->{col_number}."</td><td>".$design{$key}->{block_number}."</td><td>".$design{$key}->{block_row_number}."</td><td>".$design{$key}->{block_col_number}."</td>";
     if ($design{$key}->{rep_number}) {
       $design_result_html .= "<td>".$design{$key}->{rep_number}."</td>";
     }
@@ -80,7 +80,10 @@ sub design_info_view {
       $design_description = "Augmented Incomplete Block Design";
     }
     if ($design_info{'design_type'} eq "MADII") {
-      $design_description = "Moving Average Design";
+      $design_description = "Modified Augmented Design II";
+    }
+    if ($design_info{'design_type'} eq "MADIII") {
+      $design_description = "Modified Augmented Design III";
     }
     $design_info_html .= "<dt>Design type</dt><dd>".$design_description."</dd>";
   }

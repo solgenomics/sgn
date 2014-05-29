@@ -13,6 +13,7 @@ $breeding_programs
   .group { zoom: 1 }
   .trial_list_table  {border-spacing:7px;}
   </style>
+
 <div id="trials_accordion">
   <%perl>
   foreach my $p (sort keys %$trials_by_breeding_project){
@@ -31,7 +32,6 @@ $breeding_programs
     print '</div>';
   }
   </%perl>
-
 </div>
 
 <div id="add_project_dialog" class="ui-widget">
@@ -58,6 +58,7 @@ $breeding_programs
       </%perl>
     </select>
     <br>
+
     <label for="add_project_description" style="display: inline-block; vertical-align:top; width: 100px;">Description:</label>
     <textarea id="add_project_description" name="add_project_description" form="create_new_trial_form" cols="40"></textarea>
     <div id="format_type_radio" style="display: none">
@@ -76,6 +77,8 @@ $breeding_programs
       <label for="trial_upload_file" style="display: inline-block; width: 100px;">Upload file:</label>
       <input type="file" name="trial_upload_file" id="trial_upload_file" encoding="multipart/form-data" />
     </div>
+
+
     <div id="trial_design_info" style="display: none">
       <hr>
       <label for="select_design_method" style="display: inline-block; width: 200px;">Design type:</label>
@@ -85,8 +88,18 @@ $breeding_programs
         <option value=Alpha>Alpha Lattice</option>
         <option value=Augmented>Augmented</option>
 	<option value=MADII>MADII</option>
+	<option value=MADIII>MADIII</option>
+	<option value=MADIV>MADIV</option>
+	<option value=MADV>MADV</option>
+
+
       </select>
       <br><br>
+
+
+
+       <%doc>
+       </%doc>
 
       <div id="trial_design_more_info" style="display: none">
 
@@ -101,6 +114,7 @@ $breeding_programs
 
       <br>
       <div id="design_info" name="design_info">
+
 	<div id="rep_count_section" style="display: none">
 	  <label for="rep_count" style="display: inline-block; width: 200px;">Number of replicates:</label>
 	  <input id="rep_count" name="rep_count" />
@@ -111,28 +125,48 @@ $breeding_programs
 	  <label for="block_number" style="display: inline-block; width: 200px;">Number of blocks:</label>
 	  <input id="block_number" name="block_number" />
 	  <br>
-       	</div>
+        </div>
+
+        <div id="row_number_per_block_section" style="display:none">  
+	  <label for="row_number_per_block" style="display: inline-block; width: 200px;">Row Number Per Block:</label>
+	  <input id="row_number_per_block" name="row_number_per_block" />
+	  <br>
+         </div>
+
+	 <div id="col_number_per_block_section" style="display:none">
+	  <label for="col_number_per_block" style="display: inline-block; width: 200px;">Col Number Per Block:</label>
+	  <input id="col_number_per_block" name="col_number_per_block" />
+	  <br>
+         </div>
 
 	<div id="row_number_section" style="display: none">
-	  <label for="row_number" style="display: inline-block; width: 200px;">Number of rows:</label>
+	  <label for="row_number" style="display: inline-block; width: 200px;">Number of field rows:</label>
 	  <input id="row_number" name="row_number" />
 	  <br>
        	</div>
 
+	<div id="col_number_section" style="display: none">
+	  <label for="col_number" style="display: inline-block; width: 200px;">Number of field columns:</label>
+	  <input id="col_number" name="col_number" />
+	  <br>
+       	</div>
 
         <div id="block_size_section" style="display: none">
 	  <label for="block_size" style="display: inline-block; width: 200px;">Block size:</label>
           <input id="block_size" name="block_size" />
 	  <br>
         </div>
+
         <div id="max_block_size_section" style="display: none">
 	  <label for="max_block_size" style="display: inline-block; width: 200px;">Maximum block size:</label>
           <input id="max_block_size" name="block_size" />
 	  <br>
 	</div>
+
 	<br>
 	<label for="show_plot_naming_options">Custom plot naming/numbering</label>
         <input type="checkbox" id="show_plot_naming_options">
+
 	<div id="plot_naming_options" style="display: none">
 	  <hr>
 	  <label for="plot_prefix" style="display: inline-block; width: 200px;">Plot name prefix:</label>
@@ -144,11 +178,15 @@ $breeding_programs
 	  <label for="increment" style="display: inline-block; width: 200px;">Plot number increment:</label>
           <input id="increment" name="increment" />
 	  <br>
-      </div>
-      </div>
-      </div>
+       </div>
+
+     </div>
     </div>
+
+    </div>
+
   </form>
+
 </div>
 
 <div id="upload_trial_error_display" class="ui-widget">
@@ -162,7 +200,6 @@ $breeding_programs
   <button id="view_trial_layout_button" class="ui-widget">View trial layout</button> 
   <hr>
   <div id="trial_design_information" class="ui-widget"></div>
-
 </div>
 
 <div id="trial_design_view_layout" title="Trial design layout">
@@ -239,6 +276,9 @@ background-color: #ccc;
       <option value=Alpha>Alpha Lattice</option>
       <option value=Augmented>Augmented</option>
       <option value=MADII>MADII</option>
+      <option value=MADIII>MADIII</option>
+      <option value=MADIV>MADIV</option>
+      <option value=MADV>MADV</option>
     </select>
     <br>
     <br>
