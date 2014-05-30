@@ -109,7 +109,7 @@ for (popPhenoNum in 1:popsPhenoSize)
 
 
     phenoTrait <- subset(phenoData,
-                         select = c("object_name", "stock_id", "design", "block", "replicate", traitName)
+                         select = c("object_name", "object_id", "design", "block", "replicate", traitName)
                          )
   
     experimentalDesign <- phenoTrait[2, 'design']
@@ -118,64 +118,37 @@ for (popPhenoNum in 1:popsPhenoSize)
 
     if (experimentalDesign == 'augmented') {
 
-    bloLevels  <- length(unique(phenoTrait$blocks))
-    replicates <- unique(phenoTrait$replicates)
-    allGenos   <- phenoTrait$object_name
-    response   <- phenoTrait[, traitName]
-         
-    allGenosFreq <- data.frame(table(phenoTrait$object_name))
+      message("experimental design: ", experimentalDesign)
 
-    checkGenos <- subset(allGenosFreq, Freq == bloLevels)
-    unRepGenos <- subset(allGenosFreq, Freq == 1)
-    cG         <- checkGenos[, 1]
-    uRG        <- unRepGenos[, 1]
+      augData <- subset(phenoTrait,
+                        select = c("object_name", "object_id",  "block",  traitName)
+                        )
+
+      colnames(augData)[1] <- "genotypes"
+      colnames(augData)[4] <- "trait"
     
-    checkGenos <- data.frame(phenoTrait[phenoTrait$object_name %in% cG, ]) 
-    bloMeans   <- data.frame(tapply(checkGenos[, traitName], checkGenos[, "blocks"], mean))
-    checkMeans <- data.frame(tapply(checkGenos[, traitName], checkGenos[, "object_name"], mean))
-    checkMeans <- subset(checkMeans, is.na(checkMeans)==FALSE)
+      ff <- traitName ~ 0 + genotypes
+    
+      model <- lme(ff,
+                   data=augData,
+                   random = ~1|block,
+                   method="REML",
+                   na.action = na.omit
+                   )
+   
+      adjMeans <- data.matrix(fixed.effects(model))
      
-    gBloMean   <- mean(checkGenos[, traitName])
-    colnames(bloMeans)   <- c("mean")
-    colnames(checkMeans) <- c("mean")
+      colnames(adjMeans) <- trait
       
-    adjMeans <- data.matrix(checkMeans)
+      nn <- gsub('genotypes', '', rownames(adjMeans))
+      rownames(adjMeans) <- nn
+      adjMeans <- round(adjMeans, digits = 2)
+
+      phenoTrait <- data.frame(adjMeans)
   
-    adjGenoMeans <- function(x) {
-
-      xG <- x[[1]]
-      mr <- c()
-    
-      if(length(grep(xG, cG)) != 1) {
-     
-        bm <- as.numeric(bloMeans[x[[4]], ])       
-        rV <- as.numeric(x[[6]])       
-        m  <-  rV - bm + gBloMean 
-        mr <- data.frame(xG, "mean"=m)
-        rownames(mr) <- mr[, 1]
-        mr[, 1] <- NULL
-        mr <- data.matrix(mr)
-    
-      }
-
-      return (mr)
-        
-    }
-  
-    nr <- nrow(phenoTrait)
-    for (j in 1:nr ) {
-    
-      mr       <- adjGenoMeans(phenoTrait[j, ]) 
-      adjMeans <- rbind(adjMeans, mr)
-           
-    }
-
-    adjMeans <- round(adjMeans, digits=2)
-      
-    phenoTrait <- data.frame(adjMeans)
-    formattedPhenoData[, trait] <- phenoTrait
+      formattedPhenoData[, traitName] <- phenoTrait
  
-  } else if (experimentalDesign == 'alpha lattice') {
+  } else if (experimentalDesign == 'alpha') {
    # trait <- i
     alphaData <-  phenoTrait 
       
@@ -186,7 +159,7 @@ for (popPhenoNum in 1:popsPhenoSize)
       
     model <- lme(ff,
                  data = alphaData,
-                 random = ~1|replicates/blocks,
+                 random = ~1|replicate/block,
                  method = "REML",
                  na.action = na.omit
                  )

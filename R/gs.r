@@ -139,7 +139,8 @@ phenoFile <- grep("phenotype_data",
 message("phenotype dataset file: ", phenoFile)
 message("dataset info: ", datasetInfo)
 
-#phenoFile <- c("/data/prod/tmp/solgs/tecle/cache/phenotype_data_176_alpha.txt")
+#phenoFile <- c("/home/tecle/Desktop/phenotype_data_176_augmented.txt")
+message("phenotype dataset file: ", phenoFile)
 phenoData <- read.table(phenoFile,
                         header = TRUE,
                         row.names = NULL,
@@ -170,94 +171,48 @@ if (datasetInfo == 'combined populations') {
     dropColumns <- c("uniquename", "stock_name")
     phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
 
-    #format all-traits population phenotype dataset
-    formattedPhenoData <- phenoData
-
-    dropColumns <- c("object_id", "stock_id")
-
-    formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
-    formattedPhenoData <- ddply(formattedPhenoData,
-                                "object_name",
-                                colwise(mean)
-                                )
-
-    row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-    formattedPhenoData[, 1] <- NULL
-
-    formattedPhenoData <- round(formattedPhenoData,
-                                digits=2
-                                )
- 
+    
     phenoTrait <- subset(phenoData,
-                          select = c("object_name", "stock_id", "design", "block", "replicate", trait)
+                          select = c("object_name", "object_id", "design", "block", "replicate", trait)
                           )
    
     experimentalDesign <- phenoTrait[2, 'design']
     if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
     
     if (experimentalDesign == 'augmented') {
+      message("experimental design: ", experimentalDesign)
 
-      bloLevels  <- length(unique(phenoTrait$blocks))
-      replicates <- unique(phenoTrait$replicates)
-      allGenos   <- phenoTrait$object_name
-      response   <- phenoData[, trait]
-         
-      allGenosFreq   <- data.frame(table(phenoTrait$object_name))
+      augData <- subset(phenoTrait,
+                        select = c("object_name", "object_id",  "block",  trait)
+                        )
 
-      checkGenos <- subset(allGenosFreq, Freq == bloLevels)
-      unRepGenos <- subset(allGenosFreq, Freq == 1)
-      cG         <- checkGenos[, 1]
-      uRG        <- unRepGenos[, 1]
+      colnames(augData)[1] <- "genotypes"
+      colnames(augData)[4] <- "trait"
     
-      checkGenos <- data.frame(phenoTrait[phenoTrait$object_name %in% cG, ]) 
-      bloMeans   <- data.frame(tapply(checkGenos[, trait], checkGenos[, "block"], mean))
-      checkMeans <- data.frame(tapply(checkGenos[, trait], checkGenos[, "object_name"], mean))
-      checkMeans <- subset(checkMeans, is.na(checkMeans)==FALSE)
+      ff <- trait ~ 0 + genotypes
+    
+      model <- lme(ff,
+                   data=augData,
+                   random = ~1|block,
+                   method="REML",
+                   na.action = na.omit
+                   )
+   
+      adjMeans <- data.matrix(fixed.effects(model))
      
-      gBloMean   <- mean(checkGenos[, trait])
-      colnames(bloMeans)   <- c("mean")
-      colnames(checkMeans) <- c("mean")
+      colnames(adjMeans) <- trait
       
-      adjMeans <- data.matrix(checkMeans)
-  
-      adjGenoMeans <- function(x) {
+      nn <- gsub('genotypes', '', rownames(adjMeans))
+      rownames(adjMeans) <- nn
+      adjMeans <- round(adjMeans, digits = 2)
 
-        xG <- x[[1]]
-        mr <- c()
-    
-        if(length(grep(xG, cG)) != 1) {
-     
-          bm <- as.numeric(bloMeans[x[[4]], ])       
-          rV <- as.numeric(x[[6]])       
-          m  <-  rV - bm + gBloMean 
-          mr <- data.frame(xG, "mean"=m)
-          rownames(mr) <- mr[, 1]
-          mr[, 1] <- NULL
-          mr <- data.matrix(mr)
-    
-        }
-
-        return (mr)
-        
-      }
-  
-      nr <- nrow(phenoTrait)
-      for (i in 1:nr ) {
-    
-        mr       <- adjGenoMeans(phenoTrait[i, ]) 
-        adjMeans <- rbind(adjMeans, mr)
-           
-       }
-
-      adjMeans <- round(adjMeans, digits=2)
+      phenoTrait <- data.frame(adjMeans)
       
-      phenoTrait <- data.frame(adjMeans)     
- 
     } else if (experimentalDesign == 'alpha') {
-      message("design: ", experimentalDesign)
+      message("experimental design: ", experimentalDesign)
 
-      alphaData <-   subset(phenoTrait,
-                            select = c("stock_id", "object_name","block", "replicate", trait)
+      alphaData <-   subset(phenoData,
+                            select = c("object_name", "object_id", "block", "replicate", trait)
                             )
       
       colnames(alphaData)[2] <- "genotypes"
@@ -265,7 +220,12 @@ if (datasetInfo == 'combined populations') {
      
       ff <- trait ~ 0 + genotypes
       
-      model <- lme(ff, data=alphaData, random = ~1|replicates/blocks, method="REML")
+      model <- lme(ff,
+                   data=alphaData,
+                   random = ~1|replicate/block,
+                   method="REML",
+                   na.action = na.omit
+                   )
    
       adjMeans <- data.matrix(fixed.effects(model))
       colnames(adjMeans) <- trait
@@ -275,7 +235,7 @@ if (datasetInfo == 'combined populations') {
       adjMeans <- round(adjMeans, digits = 2)
 
       phenoTrait <- data.frame(adjMeans)
-  
+
     } else {
 
       if (sum(is.na(phenoTrait)) > 0) {
@@ -305,7 +265,25 @@ if (datasetInfo == 'combined populations') {
 
       row.names(phenoTrait) <- phenoTrait[, 1]
       phenoTrait[, 1] <- NULL
-     
+
+
+    #format all-traits population phenotype dataset
+      formattedPhenoData <- phenoData
+
+      dropColumns <- c("object_id", "stock_id")
+
+      formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
+      formattedPhenoData <- ddply(formattedPhenoData,
+                                  "object_name",
+                                  colwise(mean)
+                                  )
+
+      row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+      formattedPhenoData[, 1] <- NULL
+
+      formattedPhenoData <- round(formattedPhenoData,
+                                  digits=2
+                                  )     
     }
   }
 

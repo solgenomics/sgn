@@ -81,7 +81,7 @@ allTraitNames <- allTraitNames[! allTraitNames %in% dropElements]
 for (i in allTraitNames) {
   trait <- i
   phenoTrait  <- subset(phenoData,
-                        select = c("object_name", "stock_id", "design", "block", "replicate", trait)
+                        select = c("object_name", "object_id", "design", "block", "replicate", trait)
                         )
    
   experimentalDesign <- phenoTrait[2, 'design']
@@ -89,67 +89,39 @@ for (i in allTraitNames) {
 
   if (experimentalDesign == 'augmented') {
 
-    bloLevels  <- length(unique(phenoTrait$blocks))
-    replicates <- unique(phenoTrait$replicates)
-    allGenos   <- phenoTrait$object_name
-    response   <- phenoData[, trait]
-         
-    allGenosFreq <- data.frame(table(phenoTrait$object_name))
+    message("experimental design: ", experimentalDesign)
 
-    checkGenos <- subset(allGenosFreq, Freq == bloLevels)
-    unRepGenos <- subset(allGenosFreq, Freq == 1)
-    cG         <- checkGenos[, 1]
-    uRG        <- unRepGenos[, 1]
+    augData <- subset(phenoTrait,
+                        select = c("object_name", "object_id",  "block",  trait)
+                        )
+
+    colnames(augData)[1] <- "genotypes"
+    colnames(augData)[4] <- "trait"
     
-    checkGenos <- data.frame(phenoTrait[phenoTrait$object_name %in% cG, ]) 
-    bloMeans   <- data.frame(tapply(checkGenos[, trait], checkGenos[, "blocks"], mean))
-    checkMeans <- data.frame(tapply(checkGenos[, trait], checkGenos[, "object_name"], mean))
-    checkMeans <- subset(checkMeans, is.na(checkMeans)==FALSE)
+    ff <- trait ~ 0 + genotypes
+    
+    model <- lme(ff,
+                 data=augData,
+                 random = ~1|block,
+                 method="REML",
+                 na.action = na.omit
+                 )
+   
+    adjMeans <- data.matrix(fixed.effects(model))
      
-    gBloMean   <- mean(checkGenos[, trait])
-    colnames(bloMeans)   <- c("mean")
-    colnames(checkMeans) <- c("mean")
+    colnames(adjMeans) <- trait
       
-    adjMeans <- data.matrix(checkMeans)
-  
-    adjGenoMeans <- function(x) {
+    nn <- gsub('genotypes', '', rownames(adjMeans))
+    rownames(adjMeans) <- nn
+    adjMeans <- round(adjMeans, digits = 2)
 
-      xG <- x[[1]]
-      mr <- c()
-    
-      if(length(grep(xG, cG)) != 1) {
-     
-        bm <- as.numeric(bloMeans[x[[4]], ])       
-        rV <- as.numeric(x[[6]])       
-        m  <-  rV - bm + gBloMean 
-        mr <- data.frame(xG, "mean"=m)
-        rownames(mr) <- mr[, 1]
-        mr[, 1] <- NULL
-        mr <- data.matrix(mr)
-    
-      }
-
-      return (mr)
-        
-    }
-  
-    nr <- nrow(phenoTrait)
-    for (j in 1:nr ) {
-    
-      mr       <- adjGenoMeans(phenoTrait[j, ]) 
-      adjMeans <- rbind(adjMeans, mr)
-           
-    }
-
-    adjMeans <- round(adjMeans, digits=2)
-      
     phenoTrait <- data.frame(adjMeans)
     formattedPhenoData[, trait] <- phenoTrait
  
-  } else if (experimentalDesign == 'alpha lattice') {
+  } else if (experimentalDesign == 'alpha') {
     trait <- i
     alphaData <-   subset(phenoData,
-                          select = c("stock_id", "object_name","block", "replicate", trait)
+                          select = c("object_name", "object_id","block", "replicate", trait)
                           )
       
     colnames(alphaData)[2] <- "genotypes"
@@ -191,7 +163,7 @@ dropColumns <- c("object_id", "stock_id", "design",  "block", "replicate")
 
 formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
 
-if (experimentalDesign != 'augmented' || experimentalDesign != 'alpha lattice') {
+if (experimentalDesign != 'augmented' || experimentalDesign != 'alpha') {
 
   formattedPhenoData <- ddply(formattedPhenoData,
                               "object_name",
