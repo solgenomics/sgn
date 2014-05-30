@@ -56,4 +56,17 @@ sub usage_policy : Path('/usage_policy') {
     $c->stash->{template} = '/usage_policy.mas';
 }
 
+sub ted : Path('/ted') Args(0) { 
+    my ($self, $c) = @_;
+    my $uri = $c->request->uri->as_string();
+    
+    my ($protocol, $empty, $server, $ted, @rest) = split "/", $uri;
+
+    $c->stash->{page_title} = "Tomato Expression Database";
+    $c->stash->{param_string} = join "/", @rest;
+    $c->stash->{server} = 'ted.solgenomics.net';
+    $c->stash->{port} = "80"; # get this from conf...
+    $c->stash->{template} = '/site/iframe.mas';
+}
+
 1;

@@ -1,4 +1,4 @@
-package CXGN::Phenotypes::StorePhenotypes;
+package CXGN::Phenotypes::StorePhenotypesX;
 
 =head1 NAME
 
@@ -6,8 +6,11 @@ CXGN::Phenotypes::StorePhenotypes - an object to handle storing phenotypes for S
 
 =head1 USAGE
 
- my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
- $store_phenotypes->store($c,\@plot_list, \@trait_list, \%plot_trait_value, \%phenotype_metadata);
+ #old non moose way
+ #my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
+ #$store_phenotypes->store($c,\@plot_list, \@trait_list, \%plot_trait_value, \%phenotype_metadata);
+
+ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(chado_schema => $chado_schema, phenome_schema => $phenome_schema, metadata_schema=> $metadata_schema);
 
 =head1 DESCRIPTION
 
@@ -22,11 +25,32 @@ CXGN::Phenotypes::StorePhenotypes - an object to handle storing phenotypes for S
 use strict;
 use warnings;
 use Moose;
+use MooseX::FollowPBP;
+use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use Digest::MD5;
 use CXGN::List::Validate;
-use Data::Dumper;
+
+has 'chado_schema' => (
+		 is       => 'rw',
+		 isa      => 'DBIx::Class::Schema',
+		 predicate => 'has_chado_schema',
+		 required => 1,
+		);
+has 'phenome_schema' => (
+		 is       => 'rw',
+		 isa      => 'DBIx::Class::Schema',
+		 predicate => 'has_phenome_schema',
+		 required => 1,
+		);
+has 'metadata_schema' => (
+		 is       => 'rw',
+		 isa      => 'DBIx::Class::Schema',
+		 predicate => 'has_metadata_schema',
+		 required => 0,
+		);
+
 
 sub _verify {
     my $self = shift;

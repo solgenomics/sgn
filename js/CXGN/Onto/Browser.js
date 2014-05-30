@@ -8,16 +8,15 @@
 // Spring 2008
 // Fall 2010: added better caching for the parent view
 /* 
-
-   This browser consists of two objects, Node and Browser. The browsers manages the rendering of the tree and searching. The Node represents a term embedded in a linked DAG data structure. 
-
-
+   This browser consists of two objects, Node and Browser. 
+   The browsers manages the rendering of the tree and searching. 
+   The Node represents a term embedded in a linked DAG data structure. 
  */
-JSAN.use('MochiKit.DOM');
-JSAN.use('MochiKit.Visual');
-JSAN.use('MochiKit.Logging');
-JSAN.use('MochiKit.Async');
-//JSAN.use('Prototype');
+
+//JSAN.use('MochiKit.DOM');
+//JSAN.use('MochiKit.Visual');
+//JSAN.use('MochiKit.Logging');
+//JSAN.use('MochiKit.Async');
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Onto.Browser');
 JSAN.use('jquery');
@@ -33,13 +32,11 @@ CXGN.Onto.Browser = function () {
 CXGN.Onto.Browser.prototype = {
     
     fetchTestRoots: function() { 
-	//MochiKit.Logging.log('creating root node.');
 	this.rootnode = new Node(this);
 	this.rootnode.setName('ROOT');
 	this.rootnode.openNode();
 	var p2;
 	for (var i=0; i<5; i++) { 
-	    //MochiKit.Logging.log('adding child node '+i);
 	    var n = new Node(this);
 
 	    var nodeName = 'node';
@@ -49,14 +46,12 @@ CXGN.Onto.Browser.prototype = {
 		p2=n; 
 		p2.openNode();
 		p2.unHide();
-		//MochiKit.Logging.log('p2 is now ' + p2.getName());
 	    }
 	    this.rootnode.addChild(n);
 	    
 	}
 
 	for (i=0; i<3; i++) { 
-	    //MochiKit.Logging.log('adding second level child nodes...');
 	    n = new Node(this);
 	    nodeName = 'subnode';
 	    n.setName(nodeName);
@@ -67,7 +62,6 @@ CXGN.Onto.Browser.prototype = {
     },		
 
     resetBrowser: function() {
-
 	document.getElementById("ontology_browser_input").value='';
 	document.getElementById("ontology_term_input").value='';
 	
@@ -75,19 +69,6 @@ CXGN.Onto.Browser.prototype = {
 
 	this.render();
     },
-
-/*    setUpBrowser: function() {
-
-	document.write('<table cellpadding="0" summary=""><tr><td><div id="ontology_browser_input" >&nbsp;&nbsp;&nbsp;</div></td>'); // the element for the go id parentage search
-	document.write('<td width="*" align="right">&nbsp;</td></tr></table>');
-	document.write('<div id="ontology_term_input" ></div>');     // the element for the search
-	document.write('<input id="hide_link" type="button" value="show results" display="none" onClick="MochiKit.Visual.toggle('search_results', 'blind\'); o.toggleSearchResultsVisible(); o.setSearchButtonText();  "><br />');
-
-	document.write('<div id="search_results" ></div>');    
-	document.write('<div id="ontology_browser" style="font-size:12px; line-height:10px; font-face:arial,helvetica" >&nbsp;</div>');  // the element for the browser
-
-    },
-*/
 
     initializeBrowser: function(rootNodes) { 
 	this.setSelected();
@@ -125,15 +106,10 @@ CXGN.Onto.Browser.prototype = {
 		alert('An error occurred! The database may currently be unavailable. Please check back later.');
 	    },
 	    success: function(response) {
-		//  var json = request.responseText;
-		//MochiKit.Logging.log('COMPLETE!');
-		//var x = eval("("+json+")");
-		//MochiKit.Logging.log('RESPONSETEXT = ' + x);
 		if (response.error ) { alert(response.error) ; }
 		else {
 		    var o = this.o;
 		    o.rootnode = new Node(o);
-		    
 		    o.rootnode.setName('');
 		    o.rootnode.setAccession('root');
 		    o.rootnode.openNode();
@@ -141,7 +117,6 @@ CXGN.Onto.Browser.prototype = {
 		    o.rootnode.setHasChildren(true);
 
 		    for (var i=0; i<response.length; i++) {
-			
 			var childNode = new Node(o);
 			
 			o.rootnode.addChild(childNode);
@@ -164,18 +139,13 @@ CXGN.Onto.Browser.prototype = {
 	    },
 	    success: function(response) {
 		var o = this.o;
-		//var json = request.responseText;
-		//MochiKit.Logging.log('COMPLETE!');
-		//var x = eval("("+json+")");
-		//MochiKit.Logging.log('RESPONSETEXT = ' + x);
+
 		if (response.error ) { alert(response.error) ; }
-		o.menu = response;
-		
+		o.menu = response;		
 	    },
 	    context: { o : this }
 	});
     },
-    
     
     workingMessage: function(status) {
 	if (status) { jQuery('#working').dialog("open"); }
@@ -183,8 +153,6 @@ CXGN.Onto.Browser.prototype = {
     },
     
     renderSearchById: function() {
-	//MochiKit.Logging.log('the value of ontology_browser_input is ...', (document.getElementById('ontology_browser_input')).value);
-	
 	var s = '<form name="search_id_form" style="margin-bottom:0" onSubmit="javascript:o.showParentage(this.ontology_browser_input.value); return false;" >';
 	s +=       '<div id="search_by_id" style="width:100%; margin-bottom:0" >';
 	s += '<table summary="" cellpadding="5" cellspacing="0" width="100%" ><tr><td>';
@@ -193,7 +161,7 @@ CXGN.Onto.Browser.prototype = {
 	s +='</div></form>';
 	
 	var e = document.getElementById('ontology_browser_input');
-	//MochiKit.Logging.log('the value of ontology_browser_input is ...',document.getElementById('ontology_browser_input').value);
+
 	e.innerHTML = s;
 	document.getElementById('ontology_browser_input').value=(this.getSearchTerm());
 	this.workingMessage(false);
@@ -209,17 +177,9 @@ CXGN.Onto.Browser.prototype = {
         s += '<table summary="" cellpadding="5" cellspacing="0"><tr><td >';
 	s += 'Search for text <input id="ontology_term_input" name="ontology_term_input_name" type="text" size="20"  />';
 	
-        //print the select drop-down only if you not rendering a specific cv
+        // print the select drop-down only if you not rendering a specific cv
 	
         if (!nameSpace) {
-            // s += '<select id="cv_select" >';
-            // s += '<option value="GO" ' + o.isSelected("GO") +'>GO (gene ontology)</option>';
-            // s += '<option value="PO" ' + o.isSelected("PO") +'>PO (plant ontology)</option>';
-            // s += '<option value="SP" ' + o.isSelected("SP") +'>SP (Solanaceae phenotypes)</option>';
-            // s += '<option value="PATO" ' + o.isSelected("PATO") +'>PATO (Phenotype and trait)</option>';
-            // s += '<option value="SO" ' + o.isSelected("SO") +'>SO (Sequence ontology)</option>';
-            // s += '</select>';
-	    
 	    s += this.menu;
         } else {
             this.isSelected(nameSpace);
@@ -234,7 +194,6 @@ CXGN.Onto.Browser.prototype = {
     },
     
     render: function() {
-	
 	var s = '';
 
 	if (this.searchResults) {
@@ -255,15 +214,11 @@ CXGN.Onto.Browser.prototype = {
     },
 
     renderLevel: function (s, node, level, last) { 
-	//MochiKit.Logging.log('renderLevel: ' + node.getName() + ', '+level);
-
 	var t = '';
 
 	if ((node == undefined) || (node.isHidden())) { 
-	    //MochiKit.Logging.log('undefined or hidden node!');  
 	}
 	else { 
-	    //MochiKit.Logging.log('level '+level);
             for (var i=0; i<level-1; i++) { 
 		t += '<img src="/documents/img/tree_bar.png" border="0" />';
 	    }
@@ -294,36 +249,24 @@ CXGN.Onto.Browser.prototype = {
 		}
 	    }
 	    
-	    
 	    t +=  node.renderNode(level);
-	    
 	    level++;
 	    
 	    if (node.getOpenNode()) {
-		
 		var c = node.children;
-		
-		//MochiKit.Logging.log('now processing node '+node.name + ', with '+c.length+' children nodes');	    
 		
                 for(var i=0; i<c.length; i++) { 		    
 		    last = (i==c.length-1);
-		    //MochiKit.Logging.log('<p>', c[i].accession, '</p>');
-		    t = t + this.renderLevel(t, c[i], level, last);
-		    
-		}
-		
-	    }
-	    
+		    t = t + this.renderLevel(t, c[i], level, last);   
+		}	
+	    }	    
 	}
 	return t;
-	//MochiKit.Logging.log('renderLevel end'); 
     },
     
     addNode: function(node) { 
-	//MochiKit.Logging.log('addNode: adding node ' + node.getName());
 	var key = this.newNodeKey();
 	node.setNodeKey(key);
-	//MochiKit.Logging.log('generated node key '+key);
 	this.nodelist[key]=node;
     },
     
@@ -339,7 +282,6 @@ CXGN.Onto.Browser.prototype = {
     },
     
     openNode: function(key) { 
-	//MochiKit.Logging.log('opening node ' + key);
 	this.workingMessage(true);
 	var n = this.getNode(key);
 	n.openNode();
@@ -385,9 +327,7 @@ CXGN.Onto.Browser.prototype = {
 	var pL = this.getParentsList(accession);
         if (pL.length > 0) {
             var cache = this.fetchCachedChildren(accession);
-            //MochiKit.Logging.log('Cache length now: '+cache.length);
             this.setCache(cache);
-            //MochiKit.Logging.log('Retrieved parents '+ pL.join(' '));
             var c = this.rootnode.getChildren();
             for (var i=0; i<c.length; i++) { 
                 this.recursiveParentage(c[i], pL, accession);
@@ -405,7 +345,6 @@ CXGN.Onto.Browser.prototype = {
 	this.showParentage(accession);
     },
    
-
     getSearchTerm: function() { 
 	return this.searchTerm;
     },
@@ -425,20 +364,19 @@ CXGN.Onto.Browser.prototype = {
     recursiveParentage: function(currentNode, parentsList, accession) { 
 	
 	if (currentNode.getAccession() == accession) {
-	    //MochiKit.Logging.log('unHiding '+currentNode.getAccession() + ' ' + accession);
+
 	    currentNode.unHide();
 	    currentNode.setHilite(true);
 	}
 	else {
 	    
-	    //MochiKit.Logging.log('node is ' + currentNode.getAccession() + ' accession= ' , accession);
 	    if (this.hasMatch(parentsList, currentNode.getAccession())) { // indexOf does not seem to be implemented widely.
-		//MochiKit.Logging.log('Opening node '+ currentNode.getName());
+
 		currentNode.openNode();
 		currentNode.unHide();
 	    }
 	    else { 
-		//MochiKit.Logging.log('Current node '+currentNode.getAccession()+' does not match parent list ' + parentsList.join(' '));
+
 		currentNode.hide();
 	    }
 	    
@@ -449,7 +387,8 @@ CXGN.Onto.Browser.prototype = {
 	}
     },
 
-    //check if a list contains a certain member
+    // check if a list contains a certain member
+    //
     hasMatch: function(list, value) { 
 	for (var i=0; i<list.length; i++) { 
 	    if (list[i] == value) { 
@@ -459,7 +398,8 @@ CXGN.Onto.Browser.prototype = {
 	return false;
     },
     
-    //clears all hiliting in the tree.
+    // clears all hiliting in the tree.
+    //
     clearHiliting: function() { 
 	this.recursiveHiliteClearing(this.rootnode);
 	this.render();
@@ -474,8 +414,6 @@ CXGN.Onto.Browser.prototype = {
     },
     
     getParentsList: function(accession) { 
-	//MochiKit.Logging.log('Fetching children for node '+this.getName());
-	
 	var parentsList = new Array();
 	var browser = this;
 	jQuery.ajax( {
@@ -488,15 +426,11 @@ CXGN.Onto.Browser.prototype = {
 		},
 		    
 	    success: function(response) {
-		//var json = request.responseText;
-		//var parents = eval("("+json+")");
 		if ( response.error ) { alert(response.error) ; }
 		else {
 		    for (var i=0; i<response.length; i++) { 
-			//alert('processing '+parents[i].accession);
 			parentsList.push(response[i].accession);
 		    }
-		    //alert('Now were done!');
 		}
 	    }
 	});
@@ -513,29 +447,16 @@ CXGN.Onto.Browser.prototype = {
             success: function(response) {
                 fetch_response = response;
                 if (response.error) { alert(response.error) ; }
-            }
-	    
-            //new Ajax.Request('/ajax/onto/cache', {
-            //parameters: { node: accession }, 
-            //  asynchronous: false,
-            //  method: 'get',
-            //  on503: function() { 
-            //  alert('An error occurred! The database may currently be unavailable. Please check back later.');
-            //},
-            //  onSuccess: function(request) {
-            //  var json = request.responseText;
-            //  cache = eval("("+json+")");
-            //  if ( cache.error ) { alert(cache.error) ; }
-            //  else {
-            //      MochiKit.Logging.log('Cache '+cache.length);
-            //  }
-            //}
+            }	    
         });
         return fetch_response;
     },
 
 
-    //Make an ajax response that finds all the ontology terms with names/definitions/synonyms/accessions like the current value of the ontology input
+    // Make an ajax response that finds all the ontology terms with 
+    // names/definitions/synonyms/accessions like the current value 
+    // of the ontology input
+    //
     getOntologies: function(db_name, search_string) {
 	this.workingMessage(true);
         this.setSelected(db_name);
@@ -553,20 +474,16 @@ CXGN.Onto.Browser.prototype = {
 		},
 		success: function(response) {
 		    var matchNodes = new Array();
-		    //var json = request.responseText;
-                    //var x = eval("("+json+")");
 		    var o = this.o;
 		    if ( response.error ) { alert(response.error) ; }
                     else {
                         var s='';
 			o.setSearchResponseCount(response.length);
-			//MochiKit.Logging.log('Matched '+responseArray.length+' terms');
 			    for (var i=0; i<response.length; i++) {
 				matchNodes.push(response.accession); ///
 				s +='<a href=javascript:o.searchTermParentage(\''+response[i].accession+'\')>'+response[i].cv_name+' ('+response[i].accession+') '+response[i].cvterm_name+'</a><br />';
 			    }
-			    //		    MochiKit.Logging.log('the search results:' , s) ;
-			    //MochiKit.Logging.log('the search string:' , search_string) ;
+
 			
 			if (s === '') { s = '(no terms found) '; }
 			o.setSearchResults('<div class="topicbox">Search term: <b>'+search_string+'</b></div><div class="topicdescbox">'+s+'</div>');
@@ -587,14 +504,13 @@ CXGN.Onto.Browser.prototype = {
     },
     
     setSearchResults: function(searchResults) {
-	//MochiKit.Logging.log('searh results= ',searchResults);
 	this.searchResults = searchResults;
     },
     
-    //showSearchResults, hideSearchResults
+    // showSearchResults(), hideSearchResults()
     //
-    //hides the result section of the search but keeps the 
-    //the un/hide toggle button visible
+    // hides the result section of the search but keeps the 
+    // the un/hide toggle button visible
     //
     showSearchResults: function() { 
 	this.showResults = true;
@@ -609,9 +525,10 @@ CXGN.Onto.Browser.prototype = {
 	document.getElementById('search_results').style.display='none';
     },
     
-    //accessor setSearchResponseCount, getSearchResponseCount
-    //property defines how many items were found in the search
-    //used to display that number in the un/hide toggle button
+    // accessor setSearchResponseCount(), getSearchResponseCount()
+    // property defines how many items were found in the search
+    // used to display that number in the un/hide toggle button
+    //
     setSearchResponseCount: function(c) { 
 	this.searchCount = c;
     },
@@ -709,9 +626,6 @@ CXGN.Onto.Browser.prototype = {
 	    hash[cache[i].parent].push(cache[i]);
 	}
 	this.childrenCache = hash;
-	
-	//MochiKit.Logging.log('setCache: '+ cache.length + ' entries');
-
     },
 
     getCache: function() { 
@@ -725,39 +639,26 @@ CXGN.Onto.Browser.prototype = {
 	var cache = this.getCache();
 	if (typeof(cache[accession]) != 'undefined') { 
 	    return cache[accession];
-	}
-	
-	
+	}	
     },
     
     hasChildrenCache: function(accession) { 
 	var cache = this.getCache();
-
 	if (typeof cache[accession] != 'undefined') { 
-	    //MochiKit.Logging.log(accession + " has childrenCache");
 	    if (cache[accession].length>0) { 
 		return 1;	
-	    }
-	    
+	    }	    
 	}
 	return 0;
     }    
 };
 
-
-
 Node = function(browser) { 
-    //MochiKit.Logging.log('Node constructor...');
     this.children = new Array();
     this.parents = new Array();
     this.browser = browser;
-    //MochiKit.Logging.log('adding node to the browser...');
-    
     this.browser.addNode(this);
-    //MochiKit.Logging.log('done...');
     this.nodeId=0;
-    
-    //MochiKit.Logging.log('Node constructor: Created node.');
 };
 
 Node.prototype = { 
@@ -858,7 +759,6 @@ Node.prototype = {
     },
     
     addChild: function (child) { 
-	//MochiKit.Logging.log('Adding child '+child.name + ' to '+ this.name);
 	var c = child;
 	var p = this;
 	this.children.push(c);
@@ -909,8 +809,6 @@ Node.prototype = {
       renderNode: renders this node to the browser.
     */
     renderNode: function (level) { 
-	//MochiKit.Logging.log('Rendering node '+this.getName());
-
 	var hiliteStyle = 'background-color:white';
 	if (this.isHilited()) { 
 	    hiliteStyle = 'background-color:yellow';
@@ -936,15 +834,11 @@ Node.prototype = {
     },
 
     fetchChildren: function () { 
-	//MochiKit.Logging.log('Fetching children for node '+this.getName());
-
 	var parentNode = this;
 	var accession = this.getAccession();
 	if (this.getBrowser().hasChildrenCache(accession)) { 
-	    //MochiKit.Logging.log('retrieving accession from cache '+accession);
 	    var children = this.getBrowser().getChildrenFromCache(accession);
 	    for(var i=0; i<children.length; i++) { 
-		//MochiKit.Logging.log('adding child node '+children[i].accession);
 		var childNode = new Node(o);
 		childNode.json2node(children[i]);
 		childNode.closeNode();
@@ -962,9 +856,6 @@ Node.prototype = {
 		alert('An error occurred! The database may currently be unavailable. Please check back later.');
 	    },
 	    success: function(response) {
-		//MochiKit.Logging.log('HELLO WORLD!');
-		//var json = request.responseText;
-		//var x = eval("("+json+")");
 		if ( response.error ) { alert(response.error) ; }
 		else {
 		    for (var i=0; i<response.length; i++) { 
@@ -980,7 +871,6 @@ Node.prototype = {
 	});
     },
     fetchParents: function() { 
-	//MochiKit.Logging.log('Fetching children for node '+this.getName());
 	var childNode = this;
 	jQuery.ajax({
 	    url: "/ajax/onto/parents",
@@ -988,22 +878,16 @@ Node.prototype = {
 	    async: false,
 	    method: 'get',
 	    success: function(response) {
-		//var json = request.responseText;
-		//var x = eval("("+json+")");
 		if ( response.error ) { alert(response.error) ; }
 		else {
-		    //MochiKit.Logging.log('Children count ' +  t.length + '<br />');
 		    for (var i=0; i<response.length; i++) { 
-			
 			var parent = new Node(o);
 			
 			parent.json2node(response[i]);
 			parent.closeNode();
 			parent.unHide();
 			parentList.push(parent);
-			//MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
 		    }
-		    //MochiKit.Logging.log('Fetched '+parentList.length + ' parents');
                     return parentList;
 		    }
 	    }
@@ -1015,7 +899,7 @@ Node.prototype = {
 	this.setName(json.cvterm_name);
 	this.setCVtermID(json.cvterm_id);
 	this.setRelType(json.relationship);
-	//MochiKit.Logging.log('hasChildren = '+j[2]);
+
 	if (json.has_children == 1) { 
 	    this.setHasChildren(true);
 	}

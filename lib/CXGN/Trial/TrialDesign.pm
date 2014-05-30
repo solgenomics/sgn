@@ -17,7 +17,7 @@ This module uses the the R CRAN package "Agricolae" to calculate experimental de
 =head1 AUTHORS
 
  Jeremy D. Edwards (jde22@cornell.edu)
-
+ Aimin Yan (ay247@cornell.edu)
 =cut
 
 use Moose;
@@ -47,7 +47,7 @@ TAOCP" || $_ eq  "Knuth-TAOCP-2002"},
 has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', default=> "Mersenne-Twister");
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Augmented" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Augmented" || $_ eq "MADII"},
   message { "The string, $_, was not a valid design type" };
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
 
@@ -73,7 +73,8 @@ sub calculate_design {
       $design = _get_alpha_lattice_design($self);
     }
     elsif ($self->get_design_type() eq "Augmented") {
-      $design = _get_augmented_design($self);
+       $design = _get_augmented_design($self);
+    #  $design = _get_alpha_lattice_design($self);
     }
     elsif ($self->get_design_type() eq "MADII") {
       $design = _get_madii_design($self);
@@ -128,10 +129,12 @@ sub _get_crd_design {
 						      );
   $r_block = $rbase->create_block('r_block');
   $stock_data_matrix->send_rbase($rbase, 'r_block');
+
   $r_block->add_command('library(agricolae)');
   $r_block->add_command('trt <- stock_data_matrix[1,]');
   $r_block->add_command('rep_vector <- rep('.$number_of_reps.',each='.$number_of_stocks.')');
   $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
+
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
     $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=1,kinds=randomization_method, seed=randomization_seed)');
@@ -172,6 +175,7 @@ sub _get_rcbd_design {
   my @stock_names;
   my @block_numbers;
   my @converted_plot_numbers;
+
   if ($self->has_stock_list()) {
     @stock_list = @{$self->get_stock_list()};
   } else {
@@ -182,6 +186,7 @@ sub _get_rcbd_design {
   } else {
     die "Number of blocks not specified\n";
   }
+
   $stock_data_matrix =  R::YapRI::Data::Matrix->new(
 						       {
 							name => 'stock_data_matrix',
@@ -276,6 +281,7 @@ sub _get_alpha_lattice_design {
 						      );
   $r_block = $rbase->create_block('r_block');
   $stock_data_matrix->send_rbase($rbase, 'r_block');
+
   $r_block->add_command('library(agricolae)');
   $r_block->add_command('trt <- stock_data_matrix[1,]');
   $r_block->add_command('block_size <- '.$block_size);
@@ -291,6 +297,7 @@ sub _get_alpha_lattice_design {
   $r_block->add_command('alpha_book<-alpha$book');
   $r_block->add_command('alpha_book<-as.matrix(alpha_book)');
   $r_block->run_block();
+ 
   $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','alpha_book');
   @plot_numbers = $result_matrix->get_column("plots");
   @block_numbers = $result_matrix->get_column("block");
@@ -327,11 +334,13 @@ sub _get_augmented_design {
   my @converted_plot_numbers;
   my %control_names_lookup;
   my $stock_name_iter;
+
   if ($self->has_stock_list()) {
     @stock_list = @{$self->get_stock_list()};
   } else {
     die "No stock list specified\n";
   }
+
   if ($self->has_control_list()) {
     @control_list = @{$self->get_control_list()};
     %control_names_lookup = map { $_ => 1 } @control_list;
@@ -356,6 +365,7 @@ sub _get_augmented_design {
   } else {
     die "No block size specified\n";
   }
+
   $stock_data_matrix =  R::YapRI::Data::Matrix->new(
 						       {
 							name => 'stock_data_matrix',
@@ -364,6 +374,7 @@ sub _get_augmented_design {
 							data => \@stock_list,
 						       }
 						      );
+
   $control_stock_data_matrix =  R::YapRI::Data::Matrix->new(
 						       {
 							name => 'control_stock_data_matrix',
@@ -407,15 +418,409 @@ sub _get_augmented_design {
   }
   %augmented_design = %{_build_plot_names($self,\%augmented_design)};
   return \%augmented_design;
+
 }
 
 sub _get_madii_design {
- my $self = shift;
- my %madii_design;
+    my $self = shift;
+    my %madii_design;
+ 
+    my $rbase = R::YapRI::Base->new();
+  
+    my @stock_list;
+    my @control_list;
+    my $maximum_block_size;
+    my $number_of_blocks;
+    my $number_of_rows;
+    my $stock_data_matrix;
+    my $control_stock_data_matrix;
+    my $r_block;
+    my $result_matrix;
+    my @plot_numbers;
+    my @stock_names;
+    my @block_numbers;
+    my @converted_plot_numbers;
+    my %control_names_lookup;
+    my $stock_name_iter;
+    my @row_numbers;
+    my @check_names;
+    my @col_numbers;
+    my @block_row_numbers;
+    my @block_col_numbers;
+
+
+  if ($self->has_stock_list()) {
+    @stock_list = @{$self->get_stock_list()};
+  } else {
+    die "No stock list specified\n";
+  }
+
+  if ($self->has_control_list()) {
+    @control_list = @{$self->get_control_list()};
+    %control_names_lookup = map { $_ => 1 } @control_list;
+    foreach $stock_name_iter (@stock_names) {
+      if (exists($control_names_lookup{$stock_name_iter})) {
+	die "Names in stock list cannot be used also as controls\n";
+      }
+    }
+  } else {
+    die "No list of control stocks specified.  Required for augmented design.\n";
+  }
+
+
+
+    if ($self->has_number_of_blocks()) {
+    $number_of_blocks = $self->get_number_of_blocks();
+    } else {
+    die "Number of blocks not specified\n";
+    }
+
+
+    #system("R --slave --args $tempfile $tempfile_out < R/MADII_layout_function.R");
+#     system("R --slave < R/MADII_layout_function.R");
+
+
+#    if ($self->has_maximum_row_number()) {
+#    $maximum_row_number = $self->get_maximum_row_number();
+#    if ($maximum_block_size <= scalar(@control_list)) {
+#      die "Maximum block size must be greater the number of control stocks for augmented design\n";
+#    }
+#    if ($maximum_block_size >= scalar(@control_list)+scalar(@stock_list)) {
+#      die "Maximum block size must be less than the number of stocks plus the number of controls for augmented design\n";
+#    }
+#    $number_of_blocks = ceil(scalar(@stock_list)/($maximum_block_size-scalar(@control_list)));
+#
+#  } else {
+#    die "No block size specified\n";
+#  }
+
+
+#  if ($self->has_maximum_block_size()) {
+#    $maximum_block_size = $self->get_maximum_block_size();
+#    if ($maximum_block_size <= scalar(@control_list)) {
+#      die "Maximum block size must be greater the number of control stocks for augmented design\n";
+#    }
+#    if ($maximum_block_size >= scalar(@control_list)+scalar(@stock_list)) {
+#      die "Maximum block size must be less than the number of stocks plus the number of controls for augmented design\n";
+#    }
+#    $number_of_blocks = ceil(scalar(@stock_list)/($maximum_block_size-scalar(@control_list)));
+#  } else {
+#    die "No block size specified\n";
+#  }
+
+#=comment
+
+  print "@stock_list\n";
+
+ 
+  $stock_data_matrix =  R::YapRI::Data::Matrix->new(
+						       {
+							name => 'stock_data_matrix',
+							rown => 1,
+							coln => scalar(@stock_list),
+							data => \@stock_list,
+						       }
+						      );
+  $control_stock_data_matrix =  R::YapRI::Data::Matrix->new(
+						       {
+							name => 'control_stock_data_matrix',
+							rown => 1,
+							coln => scalar(@control_list),
+							data => \@control_list,
+						       }
+						      );
+
+
+  $r_block = $rbase->create_block('r_block');
+  $stock_data_matrix->send_rbase($rbase, 'r_block');
+  $control_stock_data_matrix->send_rbase($rbase, 'r_block');
+
+ #$r_block->add_command('library(agricolae)');
+
+  $r_block->add_command('library(MAD)');
+
+
+  $r_block->add_command('trt <- as.array(stock_data_matrix[1,])');
+  $r_block->add_command('control_trt <- as.array(control_stock_data_matrix[1,])');
+
+#  $r_block->add_command('acc<-c(seq(1,330,1))');
+#  $r_block<-add_command('chk<-c(seq(1,4,1))');
+
+#  $r_block->add_command('trt <- acc');
+#  $r_block->add_command('control_trt <- chk');
+#  $r_block->add_command('number_of_blocks <- '.$number_of_blocks);
+
+# $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
+
+ # if ($self->has_randomization_seed()){
+ #   $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
+ #   $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method, seed=randomization_seed)');
+ # }
+ # else {
+ #   $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method)');
+ # }
+
+ #$r_block->add_command('test.ma<-design.dma(entries=c(seq(1,330,1)),chk.names=c(seq(1,4,1)),num.rows=9, num.cols=NULL, num.sec.chk=3)');
+
+  $r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt,num.rows=9, num.cols=NULL, num.sec.chk=3)');
+# $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method)');
+
+# $r_block->add_command('augmented<-augmented$book'); #added for agricolae 1.1-8 changes in output
+
+  $r_block->add_command('augmented<-test.ma[[2]]'); #added for agricolae 1.1-8 changes in output
+  $r_block->add_command('augmented<-as.matrix(augmented)');
+
+#  $r_block<-add_command('colnames(augmented)[2]<-"plots"');
+#  $r_block<-add_command('colnames(augmented)[3]<-"trt"');
+#  $r_block<-add_command('colnames(augmented)[7]<-"block"');
+
+  $r_block->run_block();
+
+  $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','augmented');
+
+  @plot_numbers = $result_matrix->get_column("Plot");
+  @row_numbers = $result_matrix->get_column("Row");
+  @col_numbers = $result_matrix->get_column("Col");
+  @block_row_numbers=$result_matrix->get_column("Row.Blk");
+  @block_col_numbers=$result_matrix->get_column("Col.Blk");
+  @block_numbers = $result_matrix->get_column("Blk");
+  @stock_names = $result_matrix->get_column("Entry");
+  @check_names=$result_matrix->get_column("Check");
+
+
+#Row.Blk Col.Blk
+
+
+
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+
+  for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
+    my %plot_info;
+
+    $plot_info{'row_number'} =$row_numbers[$i];
+    $plot_info{'col_number'} =$col_numbers[$i];
+    $plot_info{'check_name'} =$check_names[$i];
+    $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'block_number'} = $block_numbers[$i];
+    $plot_info{'block_row_number'}=$block_row_numbers[$i];
+    $plot_info{'block_col_number'}=$block_col_numbers[$i];
+    $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+    $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
+    $madii_design{$converted_plot_numbers[$i]} = \%plot_info;
+  }
+
+  %madii_design = %{_build_plot_names($self,\%madii_design)};
+
+#  return \%augmented_design;
 
  #call R code and create design data structure
 
  return \%madii_design;
+
+#=cut
+
+}
+
+
+sub _get_madiii_design {
+
+    my $self = shift;
+    my %madiii_design;
+ 
+    my $rbase = R::YapRI::Base->new();
+  
+    my @stock_list;
+    my @control_list;
+    my $maximum_block_size;
+    my $number_of_blocks;
+    my $number_of_rows;
+    my $stock_data_matrix;
+    my $control_stock_data_matrix;
+    my $r_block;
+    my $result_matrix;
+    my @plot_numbers;
+    my @stock_names;
+    my @block_numbers;
+    my @converted_plot_numbers;
+    my %control_names_lookup;
+    my $stock_name_iter;
+    my @row_numbers;
+    my @check_names;
+    my @col_numbers;
+    my @block_row_numbers;
+    my @block_col_numbers;
+
+
+  if ($self->has_stock_list()) {
+    @stock_list = @{$self->get_stock_list()};
+  } else {
+    die "No stock list specified\n";
+  }
+
+  if ($self->has_control_list()) {
+    @control_list = @{$self->get_control_list()};
+    %control_names_lookup = map { $_ => 1 } @control_list;
+    foreach $stock_name_iter (@stock_names) {
+      if (exists($control_names_lookup{$stock_name_iter})) {
+	die "Names in stock list cannot be used also as controls\n";
+      }
+    }
+  } else {
+    die "No list of control stocks specified.  Required for augmented design.\n";
+  }
+
+
+
+    if ($self->has_number_of_blocks()) {
+    $number_of_blocks = $self->get_number_of_blocks();
+    } else {
+    die "Number of blocks not specified\n";
+    }
+
+
+    #system("R --slave --args $tempfile $tempfile_out < R/MADII_layout_function.R");
+#     system("R --slave < R/MADII_layout_function.R");
+
+
+#    if ($self->has_maximum_row_number()) {
+#    $maximum_row_number = $self->get_maximum_row_number();
+#    if ($maximum_block_size <= scalar(@control_list)) {
+#      die "Maximum block size must be greater the number of control stocks for augmented design\n";
+#    }
+#    if ($maximum_block_size >= scalar(@control_list)+scalar(@stock_list)) {
+#      die "Maximum block size must be less than the number of stocks plus the number of controls for augmented design\n";
+#    }
+#    $number_of_blocks = ceil(scalar(@stock_list)/($maximum_block_size-scalar(@control_list)));
+#
+#  } else {
+#    die "No block size specified\n";
+#  }
+
+
+#  if ($self->has_maximum_block_size()) {
+#    $maximum_block_size = $self->get_maximum_block_size();
+#    if ($maximum_block_size <= scalar(@control_list)) {
+#      die "Maximum block size must be greater the number of control stocks for augmented design\n";
+#    }
+#    if ($maximum_block_size >= scalar(@control_list)+scalar(@stock_list)) {
+#      die "Maximum block size must be less than the number of stocks plus the number of controls for augmented design\n";
+#    }
+#    $number_of_blocks = ceil(scalar(@stock_list)/($maximum_block_size-scalar(@control_list)));
+#  } else {
+#    die "No block size specified\n";
+#  }
+
+#=comment
+
+  print "@stock_list\n";
+
+ 
+  $stock_data_matrix =  R::YapRI::Data::Matrix->new(
+						       {
+							name => 'stock_data_matrix',
+							rown => 1,
+							coln => scalar(@stock_list),
+							data => \@stock_list,
+						       }
+						      );
+  $control_stock_data_matrix =  R::YapRI::Data::Matrix->new(
+						       {
+							name => 'control_stock_data_matrix',
+							rown => 1,
+							coln => scalar(@control_list),
+							data => \@control_list,
+						       }
+						      );
+
+
+  $r_block = $rbase->create_block('r_block');
+  $stock_data_matrix->send_rbase($rbase, 'r_block');
+  $control_stock_data_matrix->send_rbase($rbase, 'r_block');
+
+ #$r_block->add_command('library(agricolae)');
+
+  $r_block->add_command('library(MAD)');
+
+
+  $r_block->add_command('trt <- as.array(stock_data_matrix[1,])');
+  $r_block->add_command('control_trt <- as.array(control_stock_data_matrix[1,])');
+
+#  $r_block->add_command('acc<-c(seq(1,330,1))');
+#  $r_block<-add_command('chk<-c(seq(1,4,1))');
+
+#  $r_block->add_command('trt <- acc');
+#  $r_block->add_command('control_trt <- chk');
+#  $r_block->add_command('number_of_blocks <- '.$number_of_blocks);
+
+# $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
+
+ # if ($self->has_randomization_seed()){
+ #   $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
+ #   $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method, seed=randomization_seed)');
+ # }
+ # else {
+ #   $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method)');
+ # }
+
+ #$r_block->add_command('test.ma<-design.dma(entries=c(seq(1,330,1)),chk.names=c(seq(1,4,1)),num.rows=9, num.cols=NULL, num.sec.chk=3)');
+
+  $r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt,num.rows=9, num.cols=NULL, num.sec.chk=3)');
+# $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method)');
+
+# $r_block->add_command('augmented<-augmented$book'); #added for agricolae 1.1-8 changes in output
+
+  $r_block->add_command('augmented<-test.ma[[2]]'); #added for agricolae 1.1-8 changes in output
+  $r_block->add_command('augmented<-as.matrix(augmented)');
+
+#  $r_block<-add_command('colnames(augmented)[2]<-"plots"');
+#  $r_block<-add_command('colnames(augmented)[3]<-"trt"');
+#  $r_block<-add_command('colnames(augmented)[7]<-"block"');
+
+  $r_block->run_block();
+
+  $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','augmented');
+
+  @plot_numbers = $result_matrix->get_column("Plot");
+  @row_numbers = $result_matrix->get_column("Row");
+  @col_numbers = $result_matrix->get_column("Col");
+  @block_row_numbers=$result_matrix->get_column("Row.Blk");
+  @block_col_numbers=$result_matrix->get_column("Col.Blk");
+  @block_numbers = $result_matrix->get_column("Blk");
+  @stock_names = $result_matrix->get_column("Entry");
+  @check_names=$result_matrix->get_column("Check");
+
+
+#Row.Blk Col.Blk
+
+
+
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+
+  for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
+    my %plot_info;
+
+    $plot_info{'row_number'} =$row_numbers[$i];
+    $plot_info{'col_number'} =$col_numbers[$i];
+    $plot_info{'check_name'} =$check_names[$i];
+    $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'block_number'} = $block_numbers[$i];
+    $plot_info{'block_row_number'}=$block_row_numbers[$i];
+    $plot_info{'block_col_number'}=$block_col_numbers[$i];
+    $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+    $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
+    $madiii_design{$converted_plot_numbers[$i]} = \%plot_info;
+  }
+
+  %madiii_design = %{_build_plot_names($self,\%madiii_design)};
+
+#  return \%augmented_design;
+
+ #call R code and create design data structure
+
+ return \%madiii_design;
+
+#=cut
+
 }
 
 

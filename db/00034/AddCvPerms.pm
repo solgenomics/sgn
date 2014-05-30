@@ -3,24 +3,23 @@
 
 =head1 NAME
 
- AddTrialTypes.pm
+ AddCvPerms
 
 =head1 SYNOPSIS
 
-mx-run AddTrialTypes [options] -H hostname -D dbname -u username [-F]
+mx-run AddCvPerms [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch adds a cv for trial types.
+Adds insert permission to the cv table
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
-  Jeremy D. Edwards <jde22@cornell.edu>
-  Naama Menda <nm249@cornell.edu>
+ Naama Menda<nm249@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -32,7 +31,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddTrialTypes;
+package AddCvPerms;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
@@ -60,29 +59,14 @@ sub patch {
 --do your SQL here
 --
 
--- INSERT INTO cv (name, definition) VALUES ('trial type', '');
-
-EOSQL
-    
-    print STDERR "INSERTING CV TERMS...\n";
-    
-    my @terms = qw | phenotyping_trial genotyping_trial crossing_trial  | ;
-
-    foreach my $t (@terms) { 
-
-	$self->dbh->do(<<EOSQL);
-INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), '$t');
-
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT cv_id FROM cv where name='trial type' ), '$t', '$t', (SELECT dbxref_id FROM dbxref WHERE accession='$t'));
-
+GRANT select,insert,update ON cv TO web_usr;
+    GRANT usage ON cv_cv_id_seq to web_usr;
 
 EOSQL
 
+print "You're done!\n";
 }
 
-print "Done!\n";
-
-}
 
 ####
 1; #
