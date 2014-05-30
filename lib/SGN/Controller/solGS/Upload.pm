@@ -394,9 +394,9 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
                  $c->stash->{genotype_file}  = $geno_file;
                 
                  $self->user_prediction_population_file($c, $prediction_pop_id);               
-
-                 my $prediction_population_file = $c->stash->{prediction_population_file};
-                 $c->controller("solGS::solGS")->compare_genotyping_platforms($c, [$geno_file, $prediction_population_file]);
+                 my $selection_pop_file = $c->stash->{user_selection_list_genotype_data_file};
+                
+                 $c->controller("solGS::solGS")->compare_genotyping_platforms($c, [$geno_file, $selection_pop_file]);
                  my $no_match = $c->stash->{pops_with_no_genotype_match};
                 
                  if(!$no_match)
