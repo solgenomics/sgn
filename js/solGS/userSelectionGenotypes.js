@@ -147,8 +147,8 @@ function loadGenotypesList(listId) {
                         jQuery.unblockUI();                        
                       
                     } else {
-                                    
-                        alert("Error occured while uploading the list of selection genotypes.");
+                       
+                        alert("Error occured while uploading the list of selection genotypes.");                      
                         jQuery.unblockUI();   
                     }
                      
@@ -276,8 +276,12 @@ function loadPredictionOutput (url, listId, listSource) {
             
                 }
                 else {                
-                    
-                    alert('Error occured calculating GEBVs for the list of selection genotypes.');
+                    if(response.status == 'failed') {
+                        alert("Error occured while uploading the list of selection genotypes.");
+                    } else {
+                        alert(response.status);  
+                    }
+                  
                     jQuery.unblockUI();
                     
                 }
