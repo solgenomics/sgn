@@ -2564,21 +2564,30 @@ sub compare_genotyping_platforms {
             my $pop_id_2 = fileparse($pair->[1]);
           
             map { s/genotype_data_|\.txt//g } $pop_id_1, $pop_id_2;
-                                                           
-            my @pop_names;
-            foreach ($pop_id_1, $pop_id_2)
+           
+            my $list_pop = $c->stash->{uploaded_prediction};
+          
+            if (!$list_pop) 
             {
-                my $pr_rs = $c->model('solGS::solGS')->project_details($_);
-
-                while (my $row = $pr_rs->next)
+                my @pop_names;
+                foreach ($pop_id_1, $pop_id_2)
                 {
-                    push @pop_names,  $row->name;
-                }         
-            }
+                    my $pr_rs = $c->model('solGS::solGS')->project_details($_);
+
+                    while (my $row = $pr_rs->next)
+                    {
+                        push @pop_names,  $row->name;
+                    }         
+                }
             
-            $not_matching_pops .= '[ ' . $pop_names[0]. ' and ' . $pop_names[1] . ' ]'; 
-            $not_matching_pops .= ', ' if $cnt != $cnt_pairs;       
-        }       
+                $not_matching_pops .= '[ ' . $pop_names[0]. ' and ' . $pop_names[1] . ' ]'; 
+                $not_matching_pops .= ', ' if $cnt != $cnt_pairs;       
+            }
+            else 
+            {           
+                $not_matching_pops = 'not_matching';
+            }
+        }           
     }
 
     $c->stash->{pops_with_no_genotype_match} = $not_matching_pops;
