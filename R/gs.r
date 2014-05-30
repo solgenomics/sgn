@@ -170,7 +170,6 @@ if (datasetInfo == 'combined populations') {
 
     dropColumns <- c("uniquename", "stock_name")
     phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
-
     
     phenoTrait <- subset(phenoData,
                           select = c("object_name", "object_id", "design", "block", "replicate", trait)
@@ -182,7 +181,7 @@ if (datasetInfo == 'combined populations') {
     if (experimentalDesign == 'augmented') {
       message("experimental design: ", experimentalDesign)
 
-      augData <- subset(phenoTrait,
+      augData <- subset(phenoData,
                         select = c("object_name", "object_id",  "block",  trait)
                         )
 
@@ -238,6 +237,9 @@ if (datasetInfo == 'combined populations') {
 
     } else {
 
+       phenoTrait <- subset(phenoData,
+                          select = c("object_name", "object_id",  trait)
+                          )
       if (sum(is.na(phenoTrait)) > 0) {
 
         print("sum of pheno missing values")
@@ -252,25 +254,21 @@ if (datasetInfo == 'combined populations') {
 
       #calculate mean of reps/plots of the same accession and
       #create new df with the accession means    
-      dropColumns  <- c("stock_id", "design",  "block", "replicate")
-      phenoTrait   <- phenoTrait[,!(names(phenoTrait) %in% dropColumns)]
+     
       phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
       phenoTrait   <- data.frame(phenoTrait)
-      print('phenotyped lines before averaging')
-      print(length(row.names(phenoTrait)))
+      message('phenotyped lines before averaging: ', length(row.names(phenoTrait)))
    
       phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
-      print('phenotyped lines after averaging')
-      print(length(row.names(phenoTrait)))
-
+      message('phenotyped lines after averaging: ', length(row.names(phenoTrait)))
+     
       row.names(phenoTrait) <- phenoTrait[, 1]
       phenoTrait[, 1] <- NULL
-
 
     #format all-traits population phenotype dataset
       formattedPhenoData <- phenoData
 
-      dropColumns <- c("object_id", "stock_id")
+      dropColumns <- c("object_id", "stock_id", "design", "block", "replicate" )
 
       formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
       formattedPhenoData <- ddply(formattedPhenoData,
@@ -366,18 +364,13 @@ message("genotype lines after filtering for phenotyped only: ", length(row.names
 message("phenotype lines before filtering for genotyped only: ", length(row.names(phenoTrait)))        
 
 phenoTrait <- merge(data.frame(phenoTrait), commonObs, by=0, all=FALSE)
-rownames(phenoTrait) <-phenoTrait[,1]
-phenoTrait[, 1] <- NULL
-phenoTrait[, 2] <- NULL
+rownames(phenoTrait) <-phenoTrait[, 1]
+phenoTrait <- subset(phenoTrait, select=trait)
 
 message("phenotype lines after filtering for genotyped only: ", length(row.names(phenoTrait)))
 
 #a set of only observation lines with genotype data
-traitPhenoData <- as.data.frame(round(phenoTrait, digits=2))
-
-#if (length(genotypesDiff) > 0)
-#  stop("Genotypes in the phenotype and genotype datasets don't match.")
-                
+traitPhenoData <- as.data.frame(round(phenoTrait, digits=2))           
 phenoTrait     <- data.matrix(phenoTrait)
 genoDataMatrix <- data.matrix(genoData)
 
