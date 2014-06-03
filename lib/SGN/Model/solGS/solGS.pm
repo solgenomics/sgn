@@ -172,6 +172,34 @@ sub all_projects {
 }
 
 
+sub has_genotype {
+    my ($self, $pr_id) = @_;
+
+    my $has_genotype;
+    if ($pr_id < 180) 
+    {
+        my $stock_subj_rs = $self->project_subject_stocks_rs($pr_id);
+        my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
+   
+        my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs);
+        while (my $stock = $stock_genotype_rs->next) 
+        {
+            if($stock) 
+            {
+                my $genotype_name = $stock->get_column('stock_name'); 
+                if ($stock->value) 
+                {             
+                    $has_genotype = 'has_genotype';
+                    last;
+                }
+            }  
+        }
+    }
+
+    return $has_genotype;
+
+}
+
 sub project_details {
     my ($self, $pr_id) = @_;
     
@@ -560,7 +588,7 @@ sub prediction_pops {
      
       my $project_id = $row->id; 
        
-      if ($project_id && $training_pop_id != $project_id) 
+      if ($project_id && $training_pop_id != $project_id && $project_id < 180) 
       {
           my $stock_subj_rs = $self->project_subject_stocks_rs($project_id);
           my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
