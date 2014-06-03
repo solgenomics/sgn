@@ -208,11 +208,16 @@ sub search_trials : Path('/solgs/search/trials') Args() {
 
     my $ret->{status} = 'failed';
     
-    if ($projects) 
+    if (@$projects) 
     {            
         $ret->{status} = 'success';
         $ret->{pagination} = $pagination;
         $ret->{trials}   = $projects;
+    } 
+    else 
+    {
+        my $go_next = $pager->current_page + 1;
+        $c->res->redirect("/solgs/search/trials/?page=$go_next");
     } 
     
     $ret = to_json($ret);
@@ -232,20 +237,25 @@ sub projects_links {
     my @projects_pages;
     foreach my $pr_id (keys %$projects) 
     {
-        my $pr_name     = $projects->{$pr_id}{project_name};
-        my $pr_desc     = $projects->{$pr_id}{project_desc};
-        my $pr_year     = $projects->{$pr_id}{project_year};
-        my $pr_location = $projects->{$pr_id}{project_location};
+        my $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);
+  
+        if($has_genotype)
+        {
+            my $pr_name     = $projects->{$pr_id}{project_name};
+            my $pr_desc     = $projects->{$pr_id}{project_desc};
+            my $pr_year     = $projects->{$pr_id}{project_year};
+            my $pr_location = $projects->{$pr_id}{project_location};
                
-        my $dummy_name = $pr_name =~ /test\w*/ig;
-        my $dummy_desc = $pr_desc =~ /test\w*/ig;
+            my $dummy_name = $pr_name =~ /test\w*/ig;
+            my $dummy_desc = $pr_desc =~ /test\w*/ig;
 
-        unless ($dummy_name | $dummy_desc ) 
-        { 
-            my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
-            push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
-                               $pr_desc, $pr_location, $pr_year
-            ];
+            unless ($dummy_name | $dummy_desc ) 
+            { 
+                my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+                push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
+                                       $pr_desc, $pr_location, $pr_year
+                ];
+            }
         }
     }
 
@@ -2551,7 +2561,7 @@ sub compare_genotyping_platforms {
 
         my @first_geno_markers = split(/\t/, $first_markers);
         my @sec_geno_markers = split(/\t/, $sec_markers);
-
+  
         my $f_cnt = scalar(@first_geno_markers);
         my $sec_cnt = scalar(@sec_geno_markers);
         
@@ -3375,7 +3385,6 @@ sub genotype_file  {
 
     unless($geno_file) 
     {
-   
         my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
         $file_cache->purge();
    
