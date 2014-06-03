@@ -172,6 +172,50 @@ sub all_projects {
 }
 
 
+sub has_phenotype {
+     my ($self, $pr_id ) = @_; 
+    
+     my $has_phenotype;
+     if ($pr_id) 
+     {
+         my $stock_rs = $self->project_subject_stocks_rs($pr_id);
+ 
+         if($stock_rs->single) 
+         {      
+             my $cnt;
+           STOCKS:   while (my $st = $stock_rs->next) 
+           {
+               my $plot = $st->get_column('uniquename');
+               if($plot) 
+               {
+                   $cnt++;
+                   my $stock_plot_rs = $self->search_stock_using_plot_name($plot);                
+                   my $stock_pheno_data_rs = $self->stock_phenotype_data_rs($stock_plot_rs);
+             
+                   my $data = $self->phenotypes_by_trait([$stock_pheno_data_rs]);
+                
+                   my ($header, $values) = split(/\n/, $data);
+                   $header =~ s/uniquename|object_id|object_name|stock_id|stock_name|design|block|replicate|\t|\n//g;
+               
+                   unless (!$header) 
+                   {
+                       $has_phenotype = 'has_phenotype'; 
+                       last STOCKS;
+                   }
+               } 
+               else 
+               {
+                   last STOCKS;
+               }               
+               last STOCKS if $cnt == 20;                 
+           }
+         }                 
+     }
+
+     return $has_phenotype;
+}
+
+
 sub has_genotype {
     my ($self, $pr_id) = @_;
 
