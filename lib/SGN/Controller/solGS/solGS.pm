@@ -238,14 +238,15 @@ sub projects_links {
     foreach my $pr_id (keys %$projects) 
     {
         my $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);
-  
-        if($has_genotype)
+        my $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+        
+        if($has_genotype && $has_phenotype)
         {
             my $pr_name     = $projects->{$pr_id}{project_name};
             my $pr_desc     = $projects->{$pr_id}{project_desc};
             my $pr_year     = $projects->{$pr_id}{project_year};
-            my $pr_location = $projects->{$pr_id}{project_location};
-               
+            my $pr_location  =  $projects->{$pr_id}{project_location};
+  
             my $dummy_name = $pr_name =~ /test\w*/ig;
             my $dummy_desc = $pr_desc =~ /test\w*/ig;
 
