@@ -27,8 +27,7 @@ function getPopIds () {
             });
         });
   
-    jQuery("#selected_trials").show();
-   
+    jQuery("#selected_trials").show();  
     jQuery("#combine").show();
     jQuery("#search_again").show();
    
