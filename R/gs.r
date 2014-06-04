@@ -159,12 +159,13 @@ if (datasetInfo == 'combined populations') {
                         value = TRUE,
                         fixed = FALSE
                         )
-    
+
     phenoTrait <- phenoData[,!(names(phenoData) %in% dropColumns)]
    
+    phenoTrait <- as.data.frame(phenoTrait)
     row.names(phenoTrait) <- phenoTrait[, 1]
     phenoTrait[, 1] <- NULL
-    
+    colnames(phenoTrait) <- trait
 
   } else {
 
@@ -267,7 +268,6 @@ if (datasetInfo == 'combined populations') {
 
     #format all-traits population phenotype dataset
       formattedPhenoData <- phenoData
-
       dropColumns <- c("object_id", "stock_id", "design", "block", "replicate" )
 
       formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
