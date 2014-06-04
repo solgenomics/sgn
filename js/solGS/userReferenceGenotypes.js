@@ -11,36 +11,42 @@ JSAN.use("CXGN.List");
 JSAN.use("jquery.blockUI");
 
 
-
-function showListPops() {       
-    var list = new CXGN.List();
-        
-    var listMenu = list.listSelect("reference_genotypes", ['plots']);
+jQuery(document).ready( function() {
        
-    if(listMenu.match(/option/) != null) {
+        var list = new CXGN.List();
+        
+        var listMenu = list.listSelect("reference_genotypes", ['plots']);
+       
+	if(listMenu.match(/option/) != null) {
             
-        jQuery("#reference_genotypes_list").append(listMenu);
+            jQuery("#reference_genotypes_list").append(listMenu);
 
-    } else {
+        } else {
             
-        jQuery("#reference_genotypes_list").append("<select><option>no lists found</option></select>");
-    }
-                 
-    var listId;
-        
-    jQuery("<option>", {value: '', selected: true}).prependTo("#reference_genotypes_list_select");
-        
-    jQuery("#reference_genotypes_list_select").change(function() {        
-        listId = jQuery(this).find("option:selected").val();              
-                                
-        if(listId) {                
-            jQuery("#reference_genotypes_list_upload").click(function() {
-                //alert('get list: ' + listId);
-                loadReferenceGenotypesList(listId);
-            });
+            jQuery("#reference_genotypes_list").append("<select><option>no lists found</option></select>");
         }
-    });       
-}
+               
+    });
+
+
+jQuery(document).ready( function() { 
+       
+        var listId;
+        
+        jQuery("<option>", {value: '', selected: true}).prependTo("#reference_genotypes_list_select");
+        
+        jQuery("#reference_genotypes_list_select").change(function() {        
+                listId = jQuery(this).find("option:selected").val();              
+                                
+                if(listId) {                
+                    jQuery("#reference_genotypes_list_upload").click(function() {
+                            //alert('get list: ' + listId);
+                            loadReferenceGenotypesList(listId);
+                        });
+                }
+            });       
+    });
+
 
 function getReferenceGenotypesList(listId) {   
     
