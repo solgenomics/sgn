@@ -101,9 +101,13 @@ sub generate_experimental_design_POST : Args(0) {
   if ($c->req->param('control_list')) {
     @control_names = @{_parse_list_from_json($c->req->param('control_list'))};
   }
+
   my $design_type =  $c->req->param('design_type');
   my $rep_count =  $c->req->param('rep_count');
   my $block_number =  $c->req->param('block_number');
+
+  my $row_number = $c->req->param('row_number');
+
   my $block_size =  $c->req->param('block_size');
   my $max_block_size =  $c->req->param('max_block_size');
   my $plot_prefix =  $c->req->param('plot_prefix');
@@ -112,6 +116,19 @@ sub generate_experimental_design_POST : Args(0) {
   my $trial_location = $c->req->param('trial_location');
   my $trial_name = $c->req->param('project_name');
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
+
+
+
+   print STDERR join "\n",$design_type;
+   print STDERR "\n";
+   
+   print STDERR join "\n",$block_number;
+   print STDERR "\n";
+
+   print STDERR join "\n",$row_number;
+   print STDERR "\n";
+
+
 
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
@@ -169,6 +186,11 @@ sub generate_experimental_design_POST : Args(0) {
   }
   if ($block_number) {
     $trial_design->set_number_of_blocks($block_number);
+    #$trial_design->set_number_of_blocks(8);
+  }
+  if($row_number){
+      $trial_design->set_number_of_rows($row_number);
+      #$trial_design->set_number_of_rows(9);
   }
   if ($block_size) {
     $trial_design->set_block_size($block_size);
@@ -187,6 +209,13 @@ sub generate_experimental_design_POST : Args(0) {
     $c->stash->{rest} = {error => "Design type not supported." };
     return;
   }
+
+
+
+
+
+
+
   try {
     $trial_design->calculate_design();
   } catch {
