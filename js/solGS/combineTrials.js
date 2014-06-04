@@ -36,6 +36,7 @@ function getPopIds () {
 function doneSelecting() {
     jQuery("#homepage_trials_list").hide();
     jQuery("#done_selecting").hide();
+    jQuery("#homepage_message").hide();
     
 }
 
@@ -49,9 +50,11 @@ function removeSelectedTrial() {
             jQuery("#selected_trials").hide();
             jQuery("#combine").hide();
             jQuery("#search_again").hide();
-            jQuery("#done_selecting input").val('Combine');
-            
+            jQuery("#done_selecting input").val('Combine');            
+            jQuery('#homepage_trials_list').empty();
+           
             searchAgain();
+  
         }
     });
 
@@ -59,6 +62,7 @@ function removeSelectedTrial() {
 
 function searchAgain () {
     searchTrials();
+    jQuery("#homepage_message").show();
     jQuery("#done_selecting").show();
 }
 
