@@ -260,8 +260,9 @@ sub combined_trials_desc {
     my $desc = 'This training population is a combination of ';
     
     my $projects_owners;
-    my $pop_id;
-    foreach $pop_id (@pops)
+    my $s_pop_id;
+
+    foreach my $pop_id (@pops)
     {  
         my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
 
@@ -281,11 +282,12 @@ sub combined_trials_desc {
         {
              $projects_owners.= $projects_owners ? ', ' . $project_owners : $project_owners;
         }
+         $s_pop_id = $pop_id;
     }
    
     my $dir = $c->{stash}->{solgs_cache_dir};
 
-    my $geno_exp  = "genotype_data_${pop_id}.txt";
+    my $geno_exp  = "genotype_data_${s_pop_id}\.txt";
     my $geno_file = $solgs_controller->grep_file($dir, $geno_exp);  
    
     my @geno_lines = read_file($geno_file);
