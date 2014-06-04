@@ -168,7 +168,7 @@ sub search_trials : Path('/solgs/search/trials') Args() {
     my $page = $c->req->param('page') || 1;
 
     my $project_rs = $c->model('solGS::solGS')->all_projects($page);
-    
+   
     $self->projects_links($c, $project_rs);
     my $projects = $c->stash->{projects_pages};
   
@@ -237,26 +237,36 @@ sub projects_links {
     my @projects_pages;
     foreach my $pr_id (keys %$projects) 
     {
-        my $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);
-        my $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
-        
-        if($has_genotype && $has_phenotype)
-        {
-            my $pr_name     = $projects->{$pr_id}{project_name};
-            my $pr_desc     = $projects->{$pr_id}{project_desc};
-            my $pr_year     = $projects->{$pr_id}{project_year};
-            my $pr_location  =  $projects->{$pr_id}{project_location};
-  
-            my $dummy_name = $pr_name =~ /test\w*/ig;
-            my $dummy_desc = $pr_desc =~ /test\w*/ig;
 
-            unless ($dummy_name | $dummy_desc ) 
-            { 
+         my $pr_name     = $projects->{$pr_id}{project_name};
+         my $pr_desc     = $projects->{$pr_id}{project_desc};
+         my $pr_year     = $projects->{$pr_id}{project_year};
+         my $pr_location = $projects->{$pr_id}{project_location};
+  
+         my $dummy_name = $pr_name =~ /test\w*/ig;
+         my $dummy_desc = $pr_desc =~ /test\w*/ig;
+         
+         my ($has_genotype, $has_phenotype);
+        
+         unless ($dummy_name || $dummy_desc || !$pr_name ) 
+         {            
+             $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+         }
+
+         unless (!$has_phenotype) 
+         {
+             $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);   
+         }
+         
+         if($has_genotype && $has_phenotype)
+         {
+           
+                    
                 my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
                 push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
                                        $pr_desc, $pr_location, $pr_year
                 ];
-            }
+            
         }
     }
 
