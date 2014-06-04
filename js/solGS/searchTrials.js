@@ -14,7 +14,7 @@ jQuery(document).ready(function(){
 
 
 function searchTrials() {
-   
+    //jQuery("#combine").hide();
     jQuery.ajax({
         type: 'POST',
         dataType: "json",
@@ -28,9 +28,6 @@ function searchTrials() {
         error: function() {               
             jQuery("#homepage_message").html('Error occured fetching the first set of GS trials.').show();
           
-        },
-        complete: function() {         
-            showListPops();
         }
 
     });
