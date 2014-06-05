@@ -524,24 +524,27 @@ colnames(ordered.iGEBV) <- c(trait)
 #TO-DO:account for minor allele frequency                
                      
 #cross-validation
-
-reps <- round_any(nrow(phenoTrait), 10, f = ceiling) %/% 10
+genoNum <- nrow(phenoTrait)
+if(genoNum < 20 ) {
+  warning(genoNum, " is too small number of genotypes.")
+}
+reps <- round_any(genoNum, 10, f = ceiling) %/% 10
 
 genotypeGroups <-c()
 
-if (nrow(phenoTrait) %% 10 == 0)
+if (genoNum %% 10 == 0)
   {
     genotypeGroups <- rep(1:10, reps)   
   } else {
-    genotypeGroups <- rep(1:10, reps) [- (nrow(phenoTrait) %% 10) ]
+    genotypeGroups <- rep(1:10, reps) [- (genoNum %% 10) ]
   }
 
 set.seed(4567)                                   
-genotypeGroups <- genotypeGroups[ order (runif(nrow(phenoTrait))) ]
+genotypeGroups <- genotypeGroups[ order (runif(genoNum)) ]
 
 validationAll <- c()
 
-for (i in 1:10)
+for (i in 1:reps)
 {
   tr <- paste("trPop", i, sep = ".")
   sl <- paste("slPop", i, sep = ".")
