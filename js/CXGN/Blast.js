@@ -65,6 +65,7 @@ function run_blast(database_types, input_option_types) {
 		
 		jobid = response.jobid; 
 		seq_count = response.seq_count;
+		//alert("SEQ COUNT = "+seq_count);
 		wait_result(jobid, seq_count);
             }
 	   
