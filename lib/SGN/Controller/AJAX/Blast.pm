@@ -48,8 +48,8 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     print STDERR "SEQUENCE now : ".$params->{sequence}."\n";
 
-    my $seq_count = $params->{sequence} =~ tr/\>/\>/;
-    
+    my $seq_count = $params->{sequence} =~ tr/\>/\>/; 
+    print STDERR "SEQ COUNT = $seq_count\n";
     my ($seq_fh, $seqfile) = tempfile( 
 	"blast_XXXXXX",
 	DIR=> $c->get_conf('cluster_shared_tempdir'),
@@ -95,7 +95,6 @@ sub run : Path('/tools/blast/run') Args(0) {
 		 
 		 try {
 		     while ( my $s = $i->next_seq ) {
-
 			 $s->length or $c->throw(
 			     message  => 'Sequence '.encode_entities('"'.$s->id.'"').' is empty, this is not allowed by BLAST.',
 			     is_error => 0, 
