@@ -23,6 +23,7 @@ package SGN::Model::solGS::solGS;
 use Moose;
 
 use namespace::autoclean;
+use Array::Utils qw(:all);
 use Bio::Chado::Schema;
 use Bio::Chado::NaturalDiversity::Reports;
 use File::Path qw / mkpath /;
@@ -178,8 +179,8 @@ sub has_phenotype {
      my $has_phenotype;
      if ($pr_id) 
      {
-         my $stock_rs = $self->project_subject_stocks_rs($pr_id);
- 
+         my $stock_rs = $self->project_subject_stocks_rs($pr_id)->search(undef, {page => 1, rows=> 100});
+          
          if($stock_rs->single) 
          {      
              my $cnt;
@@ -220,24 +221,21 @@ sub has_genotype {
     my ($self, $pr_id) = @_;
 
     my $has_genotype;
-    if ($pr_id < 180) 
-    {
-        my $stock_subj_rs = $self->project_subject_stocks_rs($pr_id);
-        my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
+    my $stock_subj_rs = $self->project_subject_stocks_rs($pr_id);    
+    my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
+    my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs)->search(undef, {page => 1, rows=> 10});
    
-        my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs);
-        while (my $stock = $stock_genotype_rs->next) 
+    while (my $stock = $stock_genotype_rs->next) 
+    {
+        if($stock) 
         {
-            if($stock) 
-            {
-                my $genotype_name = $stock->get_column('stock_name'); 
-                if ($stock->value) 
-                {             
-                    $has_genotype = 'has_genotype';
-                    last;
-                }
-            }  
-        }
+            my $genotype_name = $stock->get_column('stock_name'); 
+            if ($stock->value) 
+            { 
+                  $has_genotype = 'has_genotype';
+                  last;
+            }
+        }      
     }
 
     return $has_genotype;
@@ -343,15 +341,13 @@ sub genotype_data {
     my ($self, $project_id) = @_;
     
     if ($project_id) 
-    {
+    { 
         my $stock_subj_rs = $self->project_subject_stocks_rs($project_id);
         my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
-      
-        my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs);
-   
+        my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs);   
         my $markers   = $self->extract_project_markers($stock_genotype_rs);
-        my $geno_data = "\t" . $markers . "\n";
-    
+
+        my $geno_data = "\t" . $markers . "\n";  
         my $markers_no = scalar(split(/\t/, $markers));
 
         my @stocks = ();
@@ -364,6 +360,7 @@ sub genotype_data {
             unless (grep(/^$stock$/, @stocks)) 
             {
                 my $geno_values = $self->stock_genotype_values($geno);
+              
                 my $geno_values_no = scalar(split(/\t/, $geno_values));
                
                 if($geno_values_no - 1 == $markers_no )
@@ -625,19 +622,19 @@ sub prediction_pops {
   my @sample_pred_projects;
   my $cnt = 0;
  
-  my $projects_rs = $self->all_projects(1, 40);
+  my $projects_rs = $self->all_projects(1, 100);
 
   while (my $row = $projects_rs->next) 
   {
      
       my $project_id = $row->id; 
        
-      if ($project_id && $training_pop_id != $project_id && $project_id < 180) 
+      if ($project_id && $training_pop_id != $project_id) 
       {
           my $stock_subj_rs = $self->project_subject_stocks_rs($project_id);
           my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
       
-          my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs);
+          my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs)->search(undef, {page => 1, rows=> 10});
         
           if ($stock_genotype_rs)
           {
