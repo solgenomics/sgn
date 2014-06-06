@@ -313,16 +313,19 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
    
         foreach my $pr_id (keys %$projects) 
         {
-            my $pr_name     = $projects->{$pr_id}{project_name};
-            my $pr_desc     = $projects->{$pr_id}{project_desc};
-            my $pr_year     = $projects->{$pr_id}{project_year};
-            my $pr_location = $projects->{$pr_id}{project_location};
+            my $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);
+            if($has_genotype) 
+            {
+                my $pr_name     = $projects->{$pr_id}{project_name};
+                my $pr_desc     = $projects->{$pr_id}{project_desc};
+                my $pr_year     = $projects->{$pr_id}{project_year};
+                my $pr_location = $projects->{$pr_id}{project_location};
 
-            my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+                my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 
-            push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
-                               $pr_desc, $pr_location, $pr_year
-            ];
+                push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year
+                ];
+            }
         }
 
         my $form;
