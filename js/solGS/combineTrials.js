@@ -26,7 +26,7 @@ function getPopIds () {
                     .prop('checked', true); 
             });
         });
-  
+   
     jQuery("#selected_trials").show();  
     jQuery("#combine").show();
     jQuery("#search_again").show();
@@ -64,6 +64,8 @@ function searchAgain () {
     searchTrials();  
     jQuery("#homepage_message").show();
     jQuery("#done_selecting").show();
+    jQuery("#combine").show();
+   
 }
 
 
