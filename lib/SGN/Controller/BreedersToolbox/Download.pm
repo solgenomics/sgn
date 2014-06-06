@@ -1,4 +1,3 @@
-#!/usr/bin/perl
 
 package SGN::Controller::BreedersToolbox::Download;
 
