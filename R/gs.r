@@ -419,15 +419,20 @@ if (length(predictionData) != 0) {
 
 }
 
-#change genotype coding to [-1, 0, 1], to use the A.mat )
-genoDataMatrix <- genoDataMatrix - 1
+#change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
+genoTrCode <- grep("2", genoDataMatrix[1, ], fixed=TRUE, value=TRUE)
+if(length(genoTrCode) != 0) {
+  genoDataMatrix <- genoDataMatrix - 1
+}
 
-if (length(predictionData) != 0) {
+if (length(predictionData) != 0 ) {
+  genoSlCode <- grep("2", predictionData[1, ], fixed=TRUE, value=TRUE)
+  if (length(genoSlCode) != 0 ) {
     predictionData <- predictionData - 1
   }
+}
 
 #use REML (default) to calculate variance components
-
 #calculate GEBV using marker effects (as random effects)
 
 markerGEBV <- mixed.solve(y = phenoTrait,
