@@ -81,7 +81,7 @@ $breeding_programs
 
     <div id="trial_design_info" style="display: none">
       <hr>
-      <label for="select_design_method" style="display: inline-block; width: 200px;">Design type:</label>
+      <label for="select_design_method" style="display: inline-block; width: 300px;">Design type:</label>
       <select id="select_design_method" name="select_design_method">
 	<option value=CRD>Completely Randomized</option>
         <option value=RCBD>Complete Block</option>
@@ -91,11 +91,8 @@ $breeding_programs
 	<option value=MADIII>MADIII</option>
 	<option value=MADIV>MADIV</option>
 	<option value=MADV>MADV</option>
-
-
       </select>
       <br><br>
-
 
 
        <%doc>
@@ -104,61 +101,80 @@ $breeding_programs
       <div id="trial_design_more_info" style="display: none">
 
       <div id="select_list" name="select_list">
-	<label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of stocks to include:
+	<label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 300px;">List of stocks to include:<br>
+	(required parameter)
 	</label>
       </div>
 
       <div id="list_of_checks_section" style="display: none">
-	<label id="select_list_of_checks_label" for="select_list_of_checks_list_select" style="display: inline-block; width: 200px;">List of checks:</label>
+	<label id="select_list_of_checks_label" for="select_list_of_checks_list_select" style="display: inline-block; width: 300px;">List of checks:<br>
+	(required parameter) 
+	</label>
       </div>
 
       <br>
       <div id="design_info" name="design_info">
 
 	<div id="rep_count_section" style="display: none">
-	  <label for="rep_count" style="display: inline-block; width: 200px;">Number of replicates:</label>
+	  <label for="rep_count" style="display: inline-block; width: 300px;">Number of replicates:<br>
+	    (required parameter)
+	  </label>
 	  <input id="rep_count" name="rep_count" />
 	  <br>
 	</div>
 
         <div id="block_number_section" style="display: none">
-	  <label for="block_number" style="display: inline-block; width: 200px;">Number of blocks:</label>
+	  <label for="block_number" style="display: inline-block; width: 300px;">Number of blocks:<br>
+	    (required parameter)
+	  </label>
 	  <input id="block_number" name="block_number" />
 	  <br>
         </div>
 
         <div id="row_number_per_block_section" style="display:none">  
-	  <label for="row_number_per_block" style="display: inline-block; width: 200px;">Row Number Per Block:</label>
+	  <label for="row_number_per_block" style="display: inline-block; width: 300px;">Row Number Per Block:<br>
+	    (optional parameter)
+	  </label>
 	  <input id="row_number_per_block" name="row_number_per_block" />
 	  <br>
          </div>
 
 	 <div id="col_number_per_block_section" style="display:none">
-	  <label for="col_number_per_block" style="display: inline-block; width: 200px;">Col Number Per Block:</label>
+	  <label for="col_number_per_block" style="display: inline-block; width: 300px;">Col Number Per Block:<br>
+	    (optional parameter)
+	  </label>
 	  <input id="col_number_per_block" name="col_number_per_block" />
 	  <br>
          </div>
 
 	<div id="row_number_section" style="display: none">
-	  <label for="row_number" style="display: inline-block; width: 200px;">Number of field rows:</label>
+	  <label for="row_number" style="display: inline-block; width: 300px;">Number of field rows:<br>
+	    (required parameter)
+	  </label>
 	  <input id="row_number" name="row_number" />
 	  <br>
        	</div>
 
 	<div id="col_number_section" style="display: none">
-	  <label for="col_number" style="display: inline-block; width: 200px;">Number of field columns:</label>
+	  <label for="col_number" style="display: inline-block; width: 300px;">Number of field columns:<br>
+	  (optional parameter)
+	  </label>
 	  <input id="col_number" name="col_number" />
 	  <br>
        	</div>
 
         <div id="block_size_section" style="display: none">
-	  <label for="block_size" style="display: inline-block; width: 200px;">Block size:</label>
+	  <label for="block_size" style="display: inline-block; width: 300px;">Block size:<br>
+	    (required parameter)
+	  </label>
           <input id="block_size" name="block_size" />
 	  <br>
         </div>
 
         <div id="max_block_size_section" style="display: none">
-	  <label for="max_block_size" style="display: inline-block; width: 200px;">Maximum block size:</label>
+	  <label for="max_block_size" style="display: inline-block; width: 300px;">Maximum block size:<br>
+	    (required parameter)
+	  </label>
           <input id="max_block_size" name="block_size" />
 	  <br>
 	</div>
@@ -169,13 +185,13 @@ $breeding_programs
 
 	<div id="plot_naming_options" style="display: none">
 	  <hr>
-	  <label for="plot_prefix" style="display: inline-block; width: 200px;">Plot name prefix:</label>
+	  <label for="plot_prefix" style="display: inline-block; width: 300px;">Plot name prefix:</label>
 	  <input id="plot_prefix" name="plot_prefix" />
 	  <br>
-	  <label for="start_number" style="display: inline-block; width: 200px;">Plot start number:</label>
+	  <label for="start_number" style="display: inline-block; width: 300px;">Plot start number:</label>
           <input id="start_number" name="start_number" />
 	  <br>
-	  <label for="increment" style="display: inline-block; width: 200px;">Plot number increment:</label>
+	  <label for="increment" style="display: inline-block; width: 300px;">Plot number increment:</label>
           <input id="increment" name="increment" />
 	  <br>
        </div>
