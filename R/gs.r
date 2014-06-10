@@ -243,9 +243,8 @@ if (datasetInfo == 'combined populations') {
                           )
       if (sum(is.na(phenoTrait)) > 0) {
 
-        print("sum of pheno missing values")
-        print(sum(is.na(phenoTrait)))
-
+        message("sum of pheno missing values: ", sum(is.na(phenoTrait)))
+     
         #fill in for missing data with mean value
         phenoTrait[, trait]  <- replace (phenoTrait[, trait],
                                          is.na(phenoTrait[, trait]),
@@ -311,8 +310,7 @@ predictionTempFile <- grep("prediction_population",
 
 predictionFile <- c()
 message('prediction temp genotype file: ', predictionTempFile)
-if (length(predictionTempFile) !=0 )
-  {
+if (length(predictionTempFile) !=0 ) {
     predictionFile <- scan(predictionTempFile,
                        what="character"
                        )
@@ -376,10 +374,8 @@ genoDataMatrix <- data.matrix(genoData)
 
 #impute genotype values for obs with missing values,
 #based on mean of neighbouring 10 (arbitrary) obs
-if (sum(is.na(genoDataMatrix)) > 0)
-  {
-    print("sum of geno missing values")
-    print(sum(is.na(genoDataMatrix)))
+if (sum(is.na(genoDataMatrix)) > 0) {
+    message("sum of geno missing values, ", sum(is.na(genoDataMatrix)) )
     genoDataMatrix <-kNNImpute(genoDataMatrix, 10)
     genoDataMatrix <-as.data.frame(genoDataMatrix)
 
@@ -396,15 +392,11 @@ if (sum(is.na(genoDataMatrix)) > 0)
   }
 
 #impute missing data in prediction data
-if (length(predictionData) != 0)
-  {
+if (length(predictionData) != 0) {
     predictionData <- data.matrix(predictionData)
-    print('before imputation prediction data')
-    print(predictionData[1:10, 1:4])
-    if (sum(is.na(predictionData)) > 0)
-      {
-        print("sum of geno missing values")
-        print(sum(is.na(predictionData)))
+ 
+    if (sum(is.na(predictionData)) > 0) {
+        message("sum of geno missing values in prediction data: ", sum(is.na(predictionData)) )
         predictionData <-kNNImpute(predictionData, 10)
         predictionData <-as.data.frame(predictionData)
 
@@ -425,8 +417,7 @@ if (length(predictionData) != 0)
 #change genotype coding to [-1, 0, 1], to use the A.mat )
 genoDataMatrix <- genoDataMatrix - 1
 
-if (length(predictionData) != 0)
-  {
+if (length(predictionData) != 0) {
     predictionData <- predictionData - 1
   }
 
@@ -524,7 +515,10 @@ colnames(ordered.iGEBV) <- c(trait)
 #TO-DO:account for minor allele frequency                
                      
 #cross-validation
-genoNum <- nrow(phenoTrait)
+validationAll <- c()
+
+if(is.null(predictionFile) == TRUE) {
+  genoNum <- nrow(phenoTrait)
 if(genoNum < 20 ) {
   warning(genoNum, " is too small number of genotypes.")
 }
@@ -532,8 +526,7 @@ reps <- round_any(genoNum, 10, f = ceiling) %/% 10
 
 genotypeGroups <-c()
 
-if (genoNum %% 10 == 0)
-  {
+if (genoNum %% 10 == 0) {
     genotypeGroups <- rep(1:10, reps)   
   } else {
     genotypeGroups <- rep(1:10, reps) [- (genoNum %% 10) ]
@@ -542,7 +535,7 @@ if (genoNum %% 10 == 0)
 set.seed(4567)                                   
 genotypeGroups <- genotypeGroups[ order (runif(genoNum)) ]
 
-validationAll <- c()
+
 
 for (i in 1:reps)
 {
@@ -590,8 +583,7 @@ for (i in 1:reps)
 validationAll <- data.matrix(validationAll)
 validationAll <- data.matrix(validationAll[order(-validationAll[, 1]), ])
      
-if (is.null(validationAll) == FALSE)
-  {
+if (is.null(validationAll) == FALSE) {
     validationMean <- data.matrix(round(colMeans(validationAll),
                                       digits = 2
                                       )
@@ -602,7 +594,7 @@ if (is.null(validationAll) == FALSE)
     validationAll <- rbind(validationAll, validationMean)
     colnames(validationAll) <- c("Correlation")
   }
-
+}
 #predict GEBVs for selection population
 if (length(predictionData) !=0 ) {
     predictionData <- data.matrix(round(predictionData, digits = 0 ))
@@ -611,25 +603,26 @@ if (length(predictionData) !=0 ) {
 predictionPopResult <- c()
 predictionPopGEBVs  <- c()
 
-if(length(predictionData) != 0)
-  {
+if(length(predictionData) != 0) {
+    message("running prediction for selection candidates...", ncol(predictionData),"  ", ncol(genoDataMatrix))
+
     predictionPopResult <- kinship.BLUP(y = phenoTrait,
                                         G.train = genoDataMatrix,
                                         G.pred = predictionData,
                                         mixed.method = "REML",
                                         K.method = "RR"
                                         )
+ message("running prediction for selection candidates...DONE!!")
 
     predictionPopGEBVs <- round(data.matrix(predictionPopResult$g.pred), digits = 2)
     predictionPopGEBVs <- data.matrix(predictionPopGEBVs[order(-predictionPopGEBVs[, 1]), ])
    
     colnames(predictionPopGEBVs) <- c(trait)
-   
-  }
+  
+}
 
 
-if(!is.null(predictionPopGEBVs) & length(predictionPopGEBVsFile) != 0)  
-  {
+if(!is.null(predictionPopGEBVs) & length(predictionPopGEBVsFile) != 0)  {
     write.table(predictionPopGEBVs,
                 file = predictionPopGEBVsFile,
                 sep = "\t",
@@ -637,10 +630,9 @@ if(!is.null(predictionPopGEBVs) & length(predictionPopGEBVsFile) != 0)
                 quote = FALSE,
                 append = FALSE
                 )
-  }
+}
 
-if(is.null(validationAll) == FALSE)
-  {
+if(is.null(validationAll) == FALSE) {
     write.table(validationAll,
                 file = validationFile,
                 sep = "\t",
@@ -648,10 +640,9 @@ if(is.null(validationAll) == FALSE)
                 quote = FALSE,
                 append = FALSE
                 )
-  }
+}
 
-if(is.null(ordered.markerGEBV2) == FALSE)
-  {
+if(is.null(ordered.markerGEBV2) == FALSE) {
     write.table(ordered.markerGEBV2,
                 file = markerFile,
                 sep = "\t",
@@ -659,10 +650,9 @@ if(is.null(ordered.markerGEBV2) == FALSE)
                 quote = FALSE,
                 append = FALSE
                 )
-  }
+}
 
-if(is.null(ordered.iGEBV) == FALSE)
-  {
+if(is.null(ordered.iGEBV) == FALSE) {
     write.table(ordered.iGEBV,
                 file = blupFile,
                 sep = "\t",
@@ -670,20 +660,17 @@ if(is.null(ordered.iGEBV) == FALSE)
                 quote = FALSE,
                 append = FALSE
                 )
-  }
+}
 
-if(length(combinedGebvsFile) != 0 )
-  {
-    if(file.info(combinedGebvsFile)$size == 0)
-      {
+if(length(combinedGebvsFile) != 0 ) {
+    if(file.info(combinedGebvsFile)$size == 0) {
         write.table(ordered.iGEBV,
                     file = combinedGebvsFile,
                     sep = "\t",
                     col.names = NA,
                     quote = FALSE,
                     )
-      }else
-    {
+      } else {
       write.table(allGebvs,
                   file = combinedGebvsFile,
                   sep = "\t",
@@ -691,10 +678,9 @@ if(length(combinedGebvsFile) != 0 )
                   col.names = NA,
                   )
     }
-  }
+}
 
-if(!is.null(traitPhenoData) & length(traitPhenoFile) != 0)  
-  {
+if(!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
     write.table(traitPhenoData,
                 file = traitPhenoFile,
                 sep = "\t",
@@ -702,11 +688,10 @@ if(!is.null(traitPhenoData) & length(traitPhenoFile) != 0)
                 quote = FALSE,
                 append = FALSE
                 )
-  }
+}
 
 
-if(!is.null(formattedPhenoData) & length(formattedPhenoDataFile) != 0)  
-  {
+if(!is.null(formattedPhenoData) & length(formattedPhenoDataFile) != 0) {
     write.table(formattedPhenoData,
                 file = formattedPhenoDataFile,
                 sep = "\t",
@@ -714,7 +699,7 @@ if(!is.null(formattedPhenoData) & length(formattedPhenoDataFile) != 0)
                 quote = FALSE,
                 append = FALSE
                 )
-  }
+}
 
 #should also send notification to analysis owner
 to      <- c("<iyt2@cornell.edu>")
