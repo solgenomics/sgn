@@ -31,7 +31,6 @@ outFiles <- scan(outFile,
                  what = "character"
                  )
 
-
 inFiles <- scan(inFile,
                 what = "character"
                 )
@@ -393,24 +392,30 @@ if (sum(is.na(genoDataMatrix)) > 0) {
 
 #impute missing data in prediction data
 if (length(predictionData) != 0) {
-    predictionData <- data.matrix(predictionData)
+
+  #purge markers unique to both populations
+  commonMarkers  <- intersect(names(data.frame(genoDataMatrix)), names(predictionData))
+  predictionData <- subset(predictionData, select = commonMarkers)
+  genoDataMatrix <- subset(genoDataMatrix, select= commonMarkers)
+  
+  predictionData <- data.matrix(predictionData)
  
-    if (sum(is.na(predictionData)) > 0) {
-        message("sum of geno missing values in prediction data: ", sum(is.na(predictionData)) )
-        predictionData <-kNNImpute(predictionData, 10)
-        predictionData <-as.data.frame(predictionData)
+  if (sum(is.na(predictionData)) > 0) {
+    message("sum of geno missing values in prediction data: ", sum(is.na(predictionData)) )
+    predictionData <-kNNImpute(predictionData, 10)
+    predictionData <-as.data.frame(predictionData)
 
-        #extract columns with imputed values
-        predictionData <- subset(predictionData,
-                                 select = grep("^x", names(predictionData))
-                                 )
+    #extract columns with imputed values
+    predictionData <- subset(predictionData,
+                             select = grep("^x", names(predictionData))
+                             )
 
-        #remove prefix 'x.' from imputed columns
-        names(predictionData) <- sub("x.", "", names(predictionData))
+    #remove prefix 'x.' from imputed columns
+    names(predictionData) <- sub("x.", "", names(predictionData))
 
-        predictionData <- round(predictionData, digits = 0)
-        predictionData <- data.matrix(predictionData)
-      }
+    predictionData <- round(predictionData, digits = 0)
+    predictionData <- data.matrix(predictionData)
+  }
 
 }
 
@@ -604,7 +609,7 @@ predictionPopResult <- c()
 predictionPopGEBVs  <- c()
 
 if(length(predictionData) != 0) {
-    message("running prediction for selection candidates...", ncol(predictionData),"  ", ncol(genoDataMatrix))
+    message("running prediction for selection candidates...marker data", ncol(predictionData), " vs. ", ncol(genoDataMatrix))
 
     predictionPopResult <- kinship.BLUP(y = phenoTrait,
                                         G.train = genoDataMatrix,
@@ -620,7 +625,6 @@ if(length(predictionData) != 0) {
     colnames(predictionPopGEBVs) <- c(trait)
   
 }
-
 
 if(!is.null(predictionPopGEBVs) & length(predictionPopGEBVsFile) != 0)  {
     write.table(predictionPopGEBVs,
