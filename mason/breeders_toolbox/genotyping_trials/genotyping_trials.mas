@@ -3,7 +3,7 @@
 $trials_by_breeding_project => ()
 @locations => ()
 @roles => ()
-$breeding_programs
+@breeding_programs
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.GenotypingTrial'] &>
@@ -35,5 +35,33 @@ $breeding_programs
 </div>
 
 <div id="genotyping_trial_dialog" class="ui-widget">
-  Something
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
+
+    <label for="genotyping_trial_breeding_program" style="display: inline-block; width: 100px;">Breeding Program:</label>
+    <select id="genotyping_trial_breeding_program" name="genotyping_trial_breeding_program">
+      <%perl>
+        foreach my $program (@breeding_programs) {
+          print "<option value=".@$program[1].">".@$program[1]."</option>";
+        }
+      </%perl>
+    </select>
+    <br>
+    
+    <label for="genotyping_trial_location" style="display: inline-block; width: 100px;">Location:</label>
+    <select id="genotyping_trial_location" name="genotyping_trial_locaton_location">
+      <%perl>foreach my $location (@locations) { print "
+        <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
+      </%perl>
+    </select>
+    <br><br>
+    <label for="genotyping_trial_name" style="display: inline-block; width: 100px;">Genotyping Trial name:</label>
+    <input id="genotyping_trial_name" name="genotyping_trial_name" size="30" />
+    <br><br>
+    <label for="genotyping_trial_description" style="display: inline-block; vertical-align:top; width: 100px;">Description:</label>
+    <textarea id="genotyping_trial_description" name="genotyping_trial_description" style="width: 250px" ></textarea>
+    <br><br>
+    <label for="genotyping_trial_upload_file">Upload file:</label>
+    <input type="file" name="genotyping_trial_upload_file" id="genotyping_trial_upload_file" encoding="multipart/form-data" />
+
+  </form>
 </div>
