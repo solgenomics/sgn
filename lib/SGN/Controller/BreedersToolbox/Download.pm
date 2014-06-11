@@ -38,29 +38,32 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $trait_list_id     = $c->req->param("trait_list_list_select");
     my $data_type         = $c->req->param("data_type")|| "phenotype";
 
-   # my $data_type         = $c->req->param("data_type") || "genotype";
-
-    #my $data_type         = "phenotype" || "genotype";
-
-    #my $data_type         = "phenotype" || "genotype";
-
-
     my $format            = $c->req->param("format");
-
 
     print STDERR "IDS: $accession_list_id, $trial_list_id, $trait_list_id\n";
 
-    my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-    my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
-    my $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
-
     
+    my $accession_data;
+    if ($accession_list_id) { 
+	$accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+    }
+
+    my $trial_data;
+    if ($trial_list_id) { 
+	$trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
+    }
+
+    my $trait_data;
+    if ($trait_list_id) { 
+	$trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
+    }
 
     my @accession_list = map { $_->[1] } @$accession_data;
     my @trial_list = map { $_->[1] } @$trial_data;
     my @trait_list = map { $_->[1] } @$trait_data;
 
-        my $tf = CXGN::List::Transform->new();
+    my $tf = CXGN::List::Transform->new();
+    
     my $unique_transform = $tf->can_transform("accession_synonyms", "accession_names");
     
     my $unique_list = $tf->transform($c->dbic_schema("Bio::Chado::Schema"), $unique_transform, \@accession_list);
