@@ -33,15 +33,17 @@ sub transform {
 
     my $type_id = $schema->resultset("Cv::Cvterm")->search( { name=>'accession' })->first()->cvterm_id();
 
-    foreach my $l (@$list) { 
-	#print STDERR "Converting location $l to location_id...\n";
-        my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => $l, 
-							       type_id    => $type_id });
-        if ($rs->count() == 0) { 
-            push @missing, $l;
-        }
-	else { 
-	    push @transform, $rs->first()->stock_id();
+    if (ref($list) eq "ARRAY" ) { 
+	foreach my $l (@$list) { 
+	    #print STDERR "Converting location $l to location_id...\n";
+	    my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => $l, 
+								   type_id    => $type_id });
+	    if ($rs->count() == 0) { 
+		push @missing, $l;
+	    }
+	    else { 
+		push @transform, $rs->first()->stock_id();
+	    }
 	}
     }
     return { transform => \@transform,
