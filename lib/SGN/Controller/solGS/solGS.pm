@@ -1547,7 +1547,7 @@ sub download_prediction_urls {
     else
     {
         
-        $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$prediction_pop_id"  onclick="solGS.waitPage()">[ Predict Now ]</a> |;
+        $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$prediction_pop_id"  onclick="solGS.waitPage()">[ Predict ]</a> |;
 
          $c->stash->{download_prediction} = '' if $c->stash->{uploaded_prediction};
     }
@@ -1834,32 +1834,35 @@ sub list_of_prediction_pops {
             {
                 my $name = $row->name;
                 my $desc = $row->description;
-                
-                my $id_pop_name->{id} = $prediction_pop_id;
-                $id_pop_name->{name}  = $name;
-                $id_pop_name          = to_json($id_pop_name);
+            
+                unless ($name =~ /test/ || $desc =~ /test/)   
+                {
+                    my $id_pop_name->{id} = $prediction_pop_id;
+                    $id_pop_name->{name}  = $name;
+                    $id_pop_name          = to_json($id_pop_name);
 
-                $pred_pop_link = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id" 
+                    $pred_pop_link = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id" 
                                       onclick="solGS.waitPage()"><input type="hidden" value=\'$id_pop_name\'>$name</data> 
                                       </a> 
                                     |;
 
-                my $pr_yr_rs = $c->model('solGS::solGS')->project_year($prediction_pop_id);
-                my $project_yr;
+                    my $pr_yr_rs = $c->model('solGS::solGS')->project_year($prediction_pop_id);
+                    my $project_yr;
 
-                while ( my $yr_r = $pr_yr_rs->next )
-                {
-                    $project_yr = $yr_r->value;
+                    while ( my $yr_r = $pr_yr_rs->next )
+                    {
+                        $project_yr = $yr_r->value;
+                    }
 
-                }
-
-                $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
-                my $download_prediction = $c->stash->{download_prediction};
+                    $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
+                    my $download_prediction = $c->stash->{download_prediction};
                 
-                push @pred_pops,  ['', $pred_pop_link, $desc, 'NA', $project_yr, $download_prediction];
+                    push @pred_pops,  ['', $pred_pop_link, $desc, 'NA', $project_yr, $download_prediction];
+                }
             }
         }
     }
+    
     $c->stash->{list_of_prediction_pops} = \@pred_pops;
 
 }
