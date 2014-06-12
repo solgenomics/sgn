@@ -29,6 +29,25 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
 
+sub download_trial_action : Path('/breeders/trial/download') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
+
+    my $data = $bs->get_phenotype_info("", $trial_id, "");
+
+    my $output = "";
+    foreach my $d (@$data) { 
+	$output .= join ",", @$d;
+	$output .= "\n";
+    }
+    
+    $c->res->content_type("text/plain");
+    $c->res->body($output);
+}
+
 sub download_action : Path('/breeders/download_action') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -95,15 +114,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $data; 
     my $output = "";
     
-    #if($data_type eq ""){
-
-    # print STDERR "Please define data type \n";
-
-    # print "Please define data type \n";
-    #
-    #}
-
-
     if ($data_type eq "phenotype") { 
 	$data = $bs->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
 	
@@ -130,7 +140,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     }
     $c->res->content_type("text/plain");
-   $c->res->body($output);
+    $c->res->body($output);
 
 }
 
