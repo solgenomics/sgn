@@ -155,9 +155,11 @@ sub project_location {
 sub all_projects {
     my ($self, $page, $rows) = @_;
 
-    $rows =  10 if !$rows;
+    $rows = 10 if !$rows;
     $page = 1 if !$page;
-    
+  
+    if ($rows eq 'all') {  $rows = undef; $page = undef;};
+
     my $projects_rs =  $self->schema->resultset("Project::Project")
         ->search({}, 
                  { 
@@ -340,11 +342,23 @@ sub get_stock_owners {
 sub genotype_data {
     my ($self, $project_id) = @_;
     
+    my $stock_genotype_rs;
     if ($project_id) 
-    { 
-        my $stock_subj_rs = $self->project_subject_stocks_rs($project_id);
-        my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
-        my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs);   
+    {
+        my $prediction_id = $self->context->stash->{prediction_pop_id};
+
+        if($prediction_id && $project_id == $prediction_id) 
+        {
+            $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);    
+
+        } 
+        else 
+        {
+            my $stock_subj_rs  = $self->project_subject_stocks_rs($project_id);
+            my $stock_obj_rs   = $self->stocks_object_rs($stock_subj_rs);
+            $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs); 
+        }  
+       
         my $markers   = $self->extract_project_markers($stock_genotype_rs);
 
         my $geno_data = "\t" . $markers . "\n";  
@@ -352,6 +366,7 @@ sub genotype_data {
 
         my @stocks = ();
         my $cnt_clones_diff_markers;
+       
         while (my $geno = $stock_genotype_rs->next)
         {
             my $stock = $geno->get_column('stock_name');
@@ -376,7 +391,7 @@ sub genotype_data {
             }  
         }
 
-     return  $geno_data; 
+        return  $geno_data; 
         
         print STDERR "\n$cnt_clones_diff_markers clones were  genotyped using a 
                         different GBS markers than the ones on the header. 
@@ -538,6 +553,32 @@ sub stock_genotypes_rs {
 }
 
 
+sub prediction_genotypes_rs {
+    my ($self, $pr_id) = @_;
+    
+    my $genotype_rs = $self->schema->resultset("Project::Project")
+        ->search({'me.project_id' => $pr_id})
+        ->search_related('nd_experiment_projects')
+        ->search_related('nd_experiment') 
+        ->search_related('nd_experiment_stocks')
+        ->search_related('stock')
+        ->search_related('nd_experiment_stocks')
+        ->search_related('nd_experiment')
+        ->search_related('nd_experiment_genotypes')
+        ->search_related('genotype')
+        ->search_related('genotypeprops',
+                         {},
+                         { 
+                             '+select' => [ qw / me.project_id me.name stock.stock_id stock.name / ], 
+                             '+as'     => [ qw / project_id project_name stock_id stock_name / ] 
+                         }
+        );
+
+    return $genotype_rs;
+
+}
+
+
 sub extract_project_markers {
     my ($self, $genopropvalue_rs) = @_;
    
@@ -622,7 +663,7 @@ sub prediction_pops {
   my @sample_pred_projects;
   my $cnt = 0;
  
-  my $projects_rs = $self->all_projects(1, 100);
+  my $projects_rs = $self->all_projects(1, 'all');
 
   while (my $row = $projects_rs->next) 
   {
@@ -631,33 +672,33 @@ sub prediction_pops {
        
       if ($project_id && $training_pop_id != $project_id) 
       {
-          my $stock_subj_rs = $self->project_subject_stocks_rs($project_id);
-          my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
-      
-          my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs)->search(undef, {page => 1, rows=> 10});
+        my $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
         
-          if ($stock_genotype_rs)
-          {
-              my $markers   = $self->extract_project_markers($stock_genotype_rs);
+        if ($stock_genotype_rs)
+        {
+            my $markers   = $self->extract_project_markers($stock_genotype_rs);
 
-              if ($markers) 
-              {
-                 my @pred_pop_markers = split(/\t/, $markers);
+            if ($markers) 
+            {
+                my @pred_pop_markers = split(/\t/, $markers);
            
-                 print STDERR "\ncheck if prediction populations are genotyped using the same set of markers as for the training population : " . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
+                print STDERR "\ncheck if prediction populations are genotyped using the same set of markers as for the training population : " . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
 
-                 if (@pred_pop_markers ~~ @tr_pop_markers) 
-                 {
-                  
-                     $cnt++;
-                     push @sample_pred_projects, $project_id; 
+                my $common_markers = scalar(intersect(@pred_pop_markers, @tr_pop_markers));
+                
+                my $similarity = $common_markers / scalar(@tr_pop_markers);
+                      
+                if ($similarity > 0.5 ) 
+                {                  
+                    $cnt++;
+                    push @sample_pred_projects, $project_id; 
        
-                 }
-             }
-          }
+                }
+            }
+        }
       }
        
-          last if $cnt == 3;
+      last if $cnt == 5;
   }
 
   return \@sample_pred_projects;
