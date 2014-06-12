@@ -647,7 +647,6 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     elsif ($model_id =~ /uploaded/)
     {  
         $c->stash->{prediction_pop_id} = $selection_pop_id; 
-        $self->uploaded_population_summary($c);
         $c->stash->{prediction_pop_name} = $c->stash->{project_name};
 
         $c->stash->{model_id} = $model_id; 
@@ -726,12 +725,9 @@ sub trait :Path('/solgs/trait') Args(3) {
         $self->trait_phenotype_stat($c);      
         $self->download_prediction_urls($c);     
         my $download_prediction = $c->stash->{download_prediction};
+      
+        $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
      
-        unless($pop_id =~ /uploaded/) 
-        {
-            $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
-        }
-       
         $self->get_project_owners($c, $pop_id);       
         $c->stash->{owner} = $c->stash->{project_owners};
 
@@ -1247,8 +1243,10 @@ sub prediction_population :Path('/solgs/model') Args(3) {
     }
     elsif ($referer =~ /solgs\/trait\//) 
     {
+        
         my ($trait_id, $pop_id) = $referer =~ m/(\d+)/g;
-
+        if ($model_id =~ /uploaded/) {$pop_id = $model_id;}
+       
         $c->stash->{data_set_type}     = "single population"; 
         $c->stash->{pop_id}            = $pop_id;
         $c->stash->{model_id}          = $model_id;                          
@@ -2108,7 +2106,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
 
      $c->stash->{pop_id} = $pop_id;
 
-     unless ($pop_id =~ /uploaded/)
+     if ($pop_id =~ /uploaded/)
      {
          $self->list_predicted_selection_pops($c, $pop_id);
 
@@ -2196,22 +2194,18 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
      
      $self->download_prediction_urls($c, $pop_id, $pred_pop_id);
      my $download_prediction = $c->stash->{download_prediction};
-    
-     #get prediction populations list..     
- 
-     unless ($pop_id =~ /uploaded/)
-     {
-         $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
+  
+     $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
         
-         $self->list_predicted_selection_pops($c, $pop_id);
+     $self->list_predicted_selection_pops($c, $pop_id);
 
-         my $predicted_selection_pops = $c->stash->{list_of_predicted_selection_pops};
+     my $predicted_selection_pops = $c->stash->{list_of_predicted_selection_pops};
     
-         if(@$predicted_selection_pops)
-         {
-             $self->prediction_pop_analyzed_traits($c, $pop_id, $predicted_selection_pops->[0]);
-         }
+     if(@$predicted_selection_pops)
+     {
+         $self->prediction_pop_analyzed_traits($c, $pop_id, $predicted_selection_pops->[0]);
      }
+ 
 }
 
 
