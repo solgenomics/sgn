@@ -31,6 +31,7 @@ has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', cl
 has 'stock_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_stock_list', clearer => 'clear_stock_list');
 has 'control_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_control_list', clearer => 'clear_control_list');
 has 'number_of_blocks' => (isa => 'Int', is => 'rw', predicate => 'has_number_of_blocks', clearer => 'clear_number_of_blocks');
+has 'number_of_rows' => (isa => 'Int',is => 'rw',predicate => 'has_number_of_rows',clearer => 'clear_number_of_rows');
 has 'number_of_reps' => (isa => 'Int', is => 'rw', predicate => 'has_number_of_reps', clearer => 'clear_number_of_reps');
 has 'block_size' => (isa => 'Int', is => 'rw', predicate => 'has_block_size', clearer => 'clear_block_size');
 has 'maximum_block_size' => (isa => 'Int', is => 'rw', predicate => 'has_maximum_block_size', clearer => 'clear_maximum_block_size');
@@ -39,16 +40,20 @@ has 'plot_name_suffix' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name
 has 'plot_start_number' => (isa => 'Int', is => 'rw', predicate => 'has_plot_start_number', clearer => 'clear_plot_start_number', default => 1);
 has 'plot_number_increment' => (isa => 'Int', is => 'rw', predicate => 'has_plot_number_increment', clearer => 'clear_plot_number_increment', default => 1);
 has 'randomization_seed' => (isa => 'Int', is => 'rw', predicate => 'has_randomization_seed', clearer => 'clear_randomization_seed');
+
 subtype 'RandomizationMethodType',
   as 'Str',
   where { $_ eq "Wichmann-Hill" || $_ eq  "Marsaglia-Multicarry" || $_ eq  "Super-Duper" || $_ eq  "Mersenne-Twister" || $_ eq  "Knuth-
 TAOCP" || $_ eq  "Knuth-TAOCP-2002"},
-  message { "The string, $_, was not a valid randomization method" };
+  message { "The string, $_, was not a valid randomization method"};
+
 has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', default=> "Mersenne-Twister");
+
 subtype 'DesignType',
   as 'Str',
   where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Augmented" || $_ eq "MADII"},
   message { "The string, $_, was not a valid design type" };
+
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
 
 my $design;
@@ -296,6 +301,12 @@ sub _get_alpha_lattice_design {
   }
   $r_block->add_command('alpha_book<-alpha$book');
   $r_block->add_command('alpha_book<-as.matrix(alpha_book)');
+
+ my @commands = $r_block->read_commands();
+    print STDERR join "\n", @commands;
+    print STDERR "\n";
+
+
   $r_block->run_block();
  
   $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','alpha_book');
@@ -445,6 +456,9 @@ sub _get_madii_design {
     my @row_numbers;
     my @check_names;
     my @col_numbers;
+
+    my $block_row_number;
+    my $block_col_number;
     my @block_row_numbers;
     my @block_col_numbers;
 
@@ -467,14 +481,17 @@ sub _get_madii_design {
     die "No list of control stocks specified.  Required for augmented design.\n";
   }
 
+#    if ($self->has_number_of_blocks()) {
+#    $number_of_blocks = $self->get_number_of_blocks();
+#    } else {
+#    die "Number of blocks not specified\n";
+#    }
 
-
-    if ($self->has_number_of_blocks()) {
-    $number_of_blocks = $self->get_number_of_blocks();
+   if ($self->has_number_of_rows()) {
+    $number_of_rows = $self->get_number_of_rows();
     } else {
-    die "Number of blocks not specified\n";
+    die "Number of rows not specified\n";
     }
-
 
     #system("R --slave --args $tempfile $tempfile_out < R/MADII_layout_function.R");
 #     system("R --slave < R/MADII_layout_function.R");
@@ -510,9 +527,10 @@ sub _get_madii_design {
 
 #=comment
 
-  print "@stock_list\n";
+  print STDERR join "\n", "@stock_list\n";
 
- 
+  print STDERR join "\n", "$number_of_rows\n";
+
   $stock_data_matrix =  R::YapRI::Data::Matrix->new(
 						       {
 							name => 'stock_data_matrix',
@@ -543,12 +561,20 @@ sub _get_madii_design {
   $r_block->add_command('trt <- as.array(stock_data_matrix[1,])');
   $r_block->add_command('control_trt <- as.array(control_stock_data_matrix[1,])');
 
+
+#  $r_block->add_command('trt <- stock_data_matrix[1,]');
+#  $r_block->add_command('control_trt <- control_stock_data_matrix[1,]');
+
+
+
 #  $r_block->add_command('acc<-c(seq(1,330,1))');
 #  $r_block<-add_command('chk<-c(seq(1,4,1))');
 
 #  $r_block->add_command('trt <- acc');
 #  $r_block->add_command('control_trt <- chk');
 #  $r_block->add_command('number_of_blocks <- '.$number_of_blocks);
+
+   $r_block->add_command('number_of_rows <- '.$number_of_rows);
 
 # $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
 
@@ -562,17 +588,30 @@ sub _get_madii_design {
 
  #$r_block->add_command('test.ma<-design.dma(entries=c(seq(1,330,1)),chk.names=c(seq(1,4,1)),num.rows=9, num.cols=NULL, num.sec.chk=3)');
 
-  $r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt,num.rows=9, num.cols=NULL, num.sec.chk=3)');
+# $r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt,num.rows=number_of_rows, num.cols=NULL, num.sec.chk=3)');
+ 
+#  $r_block->add_command('test.ma<-design.dma.0(entries=trt,chk.names=control_trt, nFieldRow=number_of_rows)');
+
+   $r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt, nFieldRow=number_of_rows)');
+
+#  design.dma.0(entries=c(seq(1,300,1)),chk.names= c(seq(1,4,1)),nFieldRow=10)
+
 # $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method)');
 
 # $r_block->add_command('augmented<-augmented$book'); #added for agricolae 1.1-8 changes in output
 
   $r_block->add_command('augmented<-test.ma[[2]]'); #added for agricolae 1.1-8 changes in output
+#  $r_block->add_command('print(augmented)'); 
   $r_block->add_command('augmented<-as.matrix(augmented)');
+ # $r_block->add_command('augmented<-as.data.frame(augmented)');
 
-#  $r_block<-add_command('colnames(augmented)[2]<-"plots"');
-#  $r_block<-add_command('colnames(augmented)[3]<-"trt"');
-#  $r_block<-add_command('colnames(augmented)[7]<-"block"');
+ #  $r_block<-add_command('colnames(augmented)[2]<-"plots"');
+ #  $r_block<-add_command('colnames(augmented)[3]<-"trt"');
+ #  $r_block<-add_command('colnames(augmented)[7]<-"block"');
+
+    my @commands = $r_block->read_commands();
+    print STDERR join "\n", @commands;
+    print STDERR "\n";
 
   $r_block->run_block();
 
@@ -587,10 +626,7 @@ sub _get_madii_design {
   @stock_names = $result_matrix->get_column("Entry");
   @check_names=$result_matrix->get_column("Check");
 
-
 #Row.Blk Col.Blk
-
-
 
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
 
@@ -620,7 +656,6 @@ sub _get_madii_design {
 #=cut
 
 }
-
 
 sub _get_madiii_design {
 
@@ -765,6 +800,9 @@ sub _get_madiii_design {
  #$r_block->add_command('test.ma<-design.dma(entries=c(seq(1,330,1)),chk.names=c(seq(1,4,1)),num.rows=9, num.cols=NULL, num.sec.chk=3)');
 
   $r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt,num.rows=9, num.cols=NULL, num.sec.chk=3)');
+
+  #$r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt,num.rows=9, num.cols=NULL, num.sec.chk=3)');
+
 # $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method)');
 
 # $r_block->add_command('augmented<-augmented$book'); #added for agricolae 1.1-8 changes in output

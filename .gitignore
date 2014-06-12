@@ -28,5 +28,6 @@ MANIFEST*
 MYMETA.json
 tags
 .prove
-
+.Rhistory
+sgn_local_zea.conf
 nytprof.out

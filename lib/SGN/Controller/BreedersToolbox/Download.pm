@@ -1,4 +1,3 @@
-#!/usr/bin/perl
 
 package SGN::Controller::BreedersToolbox::Download;
 
@@ -30,6 +29,25 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
 
+sub download_trial_action : Path('/breeders/trial/download') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
+
+    my $data = $bs->get_phenotype_info("", $trial_id, "");
+
+    my $output = "";
+    foreach my $d (@$data) { 
+	$output .= join ",", @$d;
+	$output .= "\n";
+    }
+    
+    $c->res->content_type("text/plain");
+    $c->res->body($output);
+}
+
 sub download_action : Path('/breeders/download_action') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -39,29 +57,32 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $trait_list_id     = $c->req->param("trait_list_list_select");
     my $data_type         = $c->req->param("data_type")|| "phenotype";
 
-   # my $data_type         = $c->req->param("data_type") || "genotype";
-
-    #my $data_type         = "phenotype" || "genotype";
-
-    #my $data_type         = "phenotype" || "genotype";
-
-
     my $format            = $c->req->param("format");
-
 
     print STDERR "IDS: $accession_list_id, $trial_list_id, $trait_list_id\n";
 
-    my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-    my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
-    my $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
-
     
+    my $accession_data;
+    if ($accession_list_id) { 
+	$accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+    }
+
+    my $trial_data;
+    if ($trial_list_id) { 
+	$trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
+    }
+
+    my $trait_data;
+    if ($trait_list_id) { 
+	$trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
+    }
 
     my @accession_list = map { $_->[1] } @$accession_data;
     my @trial_list = map { $_->[1] } @$trial_data;
     my @trait_list = map { $_->[1] } @$trait_data;
 
-        my $tf = CXGN::List::Transform->new();
+    my $tf = CXGN::List::Transform->new();
+    
     my $unique_transform = $tf->can_transform("accession_synonyms", "accession_names");
     
     my $unique_list = $tf->transform($c->dbic_schema("Bio::Chado::Schema"), $unique_transform, \@accession_list);
@@ -93,15 +114,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $data; 
     my $output = "";
     
-    #if($data_type eq ""){
-
-    # print STDERR "Please define data type \n";
-
-    # print "Please define data type \n";
-    #
-    #}
-
-
     if ($data_type eq "phenotype") { 
 	$data = $bs->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
 	
@@ -128,7 +140,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     }
     $c->res->content_type("text/plain");
-   $c->res->body($output);
+    $c->res->body($output);
 
 }
 

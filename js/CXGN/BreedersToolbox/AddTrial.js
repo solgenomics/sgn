@@ -81,6 +81,13 @@ jQuery(document).ready(function ($) {
         var desc = $('#add_project_description').val();
         var trial_location = $('#add_project_location').val();
         var block_number = $('#block_number').val();
+        
+        //alert(block_number);
+ 
+        var row_number= $('#row_number').val();
+
+       // alert(row_number);
+
         var stock_list_id = $('#select_list_list_select').val();
         var control_list_id = $('#list_of_checks_section_list_select').val();
 	var stock_list;
@@ -99,7 +106,10 @@ jQuery(document).ready(function ($) {
 	var start_number = $('#start_number').val();
 	var increment = $('#increment').val();
 	//var stock_verified = verify_stock_list(stock_list);
-        if (name == '') {
+    
+        //alert(design_type);
+
+       if (name == '') {
             alert('Trial name required');
             return;
         }
@@ -126,6 +136,7 @@ jQuery(document).ready(function ($) {
 		'design_type': design_type,
 		'rep_count': rep_count,
 		'block_number': block_number,
+                'row_number': row_number,
 		'block_size': block_size,
 		'max_block_size': max_block_size,
 		'plot_prefix': plot_prefix,
@@ -230,7 +241,8 @@ jQuery(document).ready(function ($) {
 
     $("#select_design_method").change(function () {
 	$("#add_project_dialog").dialog("option", "height","auto");
-        var design_method = $("#select_design_method").val();
+        
+	var design_method = $("#select_design_method").val();
         if (design_method == "CRD") {
             $("#trial_design_more_info").show();
             $("#add_project_dialog").dialog("option", "height","auto");
@@ -297,7 +309,7 @@ jQuery(document).ready(function ($) {
             $("#list_of_checks_section").show();
             $("#rep_count_section").hide();
 	    $("#row_number_section").show();
-            $("#block_number_section").show();
+            $("#block_number_section").hide();
             $("#block_size_section").hide();
             $("#max_block_size_section").hide();
 	    $("#row_number_per_block_section").hide();
@@ -373,6 +385,10 @@ jQuery(document).ready(function ($) {
             control_list = JSON.stringify(list.getList(control_list_id));
 	}
         var design_type = $('#select_design_method').val();
+
+
+        alert(design_type);
+
 	var rep_count = $('#rep_count').val();
 	var block_size = $('#block_size').val();
 	var max_block_size = $('#max_block_size').val();

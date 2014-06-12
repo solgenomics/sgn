@@ -1,4 +1,17 @@
 
+=head1 NAME
+
+CXGN::BreederSearch - class for retrieving breeder information for the breeder search wizard
+
+=head1 AUTHORS
+
+Lukas Mueller <lam87@cornell.edu>
+Aimin Yan <ay247@cornell.edu>
+
+=head1 METHODS
+
+=cut
+
 package CXGN::BreederSearch;
 
 use Moose;
@@ -188,6 +201,16 @@ sub get_intersect {
     }
 }
 
+
+=head2 get_phenotype_info
+
+parameters: comma-separated lists of accession, trial, and trait IDs. May be empty.
+
+returns: an array with phenotype information
+
+=cut
+
+
 sub get_phenotype_info {  
     my $self = shift;
     my $accession_sql = shift;
@@ -229,6 +252,16 @@ sub get_phenotype_info {
     }
     return $result;
 }
+
+
+=head2 get_genotype_info
+
+parameters: comma-separated lists of accession, trial, and trait IDs. May be empty.
+
+returns: an array with phenotype information
+
+
+=cut
 
 sub get_genotype_info {
   
