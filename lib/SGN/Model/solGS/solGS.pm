@@ -636,11 +636,10 @@ sub prediction_pops {
   my ($self, $training_pop_id) = @_;
  
   my @tr_pop_markers;
-  
   $self->context->stash->{get_selection_populations} = 1;
  
-  if ($training_pop_id) 
-  {
+  if ($training_pop_id =~ /^\d+$/) 
+  {  
       my $dir = $self->context->stash->{solgs_cache_dir};
       opendir my $dh, $dir or die "can't open $dir: $!\n";
     
@@ -659,6 +658,28 @@ sub prediction_pops {
       @tr_pop_markers = split(/\t/, $markers);
       shift(@tr_pop_markers);      
   }
+  elsif( $training_pop_id =~ /uploaded/) 
+  {
+      my $user_id = $self->context->user->id;
+      
+      my $dir = $self->context->stash->{solgs_prediction_upload_dir};      
+      opendir my $dh, $dir or die "can't open $dir: $!\n";
+    
+      my ($geno_file) = grep { /genotype_data_${user_id}_${training_pop_id}/ && -f "$dir/$_" }  readdir($dh); 
+      closedir $dh;
+
+      $geno_file = catfile($dir, $geno_file);
+      open my $fh, "<", $geno_file or die "can't open genotype file: $!";
+     
+      my $markers = <$fh>;
+      chomp($markers);
+      
+      $fh->close;
+      
+      @tr_pop_markers = split(/\t/, $markers);
+      shift(@tr_pop_markers);      
+  }
+
  
   my @sample_pred_projects;
   my $cnt = 0;
