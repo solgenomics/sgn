@@ -148,6 +148,7 @@ sub _get_design_from_trial {
     my $plot_number_prop = $plot->stockprops->find( { 'type.name' => 'plot number' }, { join => 'type'} );
     my $block_number_prop = $plot->stockprops->find( { 'type.name' => 'block' }, { join => 'type'} );
     my $replicate_number_prop = $plot->stockprops->find( { 'type.name' => 'replicate' }, { join => 'type'} );
+    my $range_number_prop = $plot->stockprops->find( { 'type.name' => 'range' }, { join => 'type'} );
     my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => $plot_of_cv->cvterm_id()})->object;
     my $accession_name = $accession->uniquename;
@@ -167,6 +168,10 @@ sub _get_design_from_trial {
     if ($replicate_number_prop) {
       $design_info{"rep_number"}=$replicate_number_prop->value();
       print STDERR "rep# value: ".$replicate_number_prop->value()."\n"
+    }
+    if ($range_number_prop) {
+      $design_info{"range_number"}=$replicate_number_prop->value();
+      print STDERR "range# value: ".$range_number_prop->value()."\n"
     }
     if ($is_a_control_prop) {
       $design_info{"is_a_control"}=$is_a_control_prop->value();
