@@ -75,15 +75,19 @@ phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
 
 formattedPhenoData <- phenoData
 allTraitNames <- names(phenoData)
-dropElements  <- c("object_name", "design", "block", "replicate", "object_id", "stock_id")
+dropElements  <- c("object_name", "object_id", "stock_id", "design", "block", "replicate")
 allTraitNames <- allTraitNames[! allTraitNames %in% dropElements]
+message('traits: ', allTraitNames)
 
 for (i in allTraitNames) {
   trait <- i
+  message("trait: ", trait)
+  
   phenoTrait  <- subset(phenoData,
                         select = c("object_name", "object_id", "design", "block", "replicate", trait)
                         )
-   
+  
+  message("phenotrait: \n", phenoTrait)
   experimentalDesign <- phenoTrait[2, 'design']
   if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
 
@@ -147,7 +151,7 @@ for (i in allTraitNames) {
     formattedPhenoData[, i] <- phenoTrait
   
   } else {
- 
+  message("experimental design: ", experimentalDesign)
     if (sum(is.na(formattedPhenoData[, i])) > 0)
       {
         formattedPhenoData[, i]  <- replace (formattedPhenoData[, i],
