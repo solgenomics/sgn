@@ -687,36 +687,37 @@ sub prediction_pops {
   my $projects_rs = $self->all_projects(1, 'all');
 
   while (my $row = $projects_rs->next) 
-  {
-     
+  {     
       my $project_id = $row->id; 
        
       if ($project_id && $training_pop_id != $project_id) 
       {
-        my $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
+          my $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
+          my $geno_count = $stock_genotype_rs->search({})->count;
         
-        if ($stock_genotype_rs)
-        {
-            my $markers   = $self->extract_project_markers($stock_genotype_rs);
+          if ($geno_count > 2)
+          {
+              my $markers   = $self->extract_project_markers($stock_genotype_rs);
 
-            if ($markers) 
-            {
-                my @pred_pop_markers = split(/\t/, $markers);
+              if ($markers) 
+              {
+                  my @pred_pop_markers = split(/\t/, $markers);
            
-                print STDERR "\ncheck if prediction populations are genotyped using the same set of markers as for the training population : " . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
+                  print STDERR "\ncheck if prediction populations are genotyped using the same 
+                                 set of markers as for the training population : " 
+                                 . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
 
-                my $common_markers = scalar(intersect(@pred_pop_markers, @tr_pop_markers));
+                  my $common_markers = scalar(intersect(@pred_pop_markers, @tr_pop_markers));
                 
-                my $similarity = $common_markers / scalar(@tr_pop_markers);
+                  my $similarity = $common_markers / scalar(@tr_pop_markers);
                       
-                if ($similarity > 0.5 ) 
-                {                  
-                    $cnt++;
-                    push @sample_pred_projects, $project_id; 
-       
-                }
-            }
-        }
+                  if ($similarity > 0.5 ) 
+                  {                  
+                      $cnt++;
+                      push @sample_pred_projects, $project_id;     
+                  }
+              }
+          }
       }
        
       last if $cnt == 5;
