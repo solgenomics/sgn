@@ -242,13 +242,9 @@ if (datasetInfo == 'combined populations') {
                           )
       if (sum(is.na(phenoTrait)) > 0) {
 
-        message("sum of pheno missing values: ", sum(is.na(phenoTrait)))
-     
-        #fill in for missing data with mean value
-        phenoTrait[, trait]  <- replace (phenoTrait[, trait],
-                                         is.na(phenoTrait[, trait]),
-                                         mean(phenoTrait[, trait], na.rm =TRUE)
-                                         ) 
+        message("No. of pheno missing values: ", sum(is.na(phenoTrait)))      
+        phenoTrait <- na.omit(phenoTrait)
+ 
       }
 
       #calculate mean of reps/plots of the same accession and

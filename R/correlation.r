@@ -154,11 +154,13 @@ for (i in allTraitNames) {
   message("experimental design: ", experimentalDesign)
     if (sum(is.na(formattedPhenoData[, i])) > 0)
       {
-        formattedPhenoData[, i]  <- replace (formattedPhenoData[, i],
-                                             is.na(formattedPhenoData[, i]),
-                                             mean(formattedPhenoData[, i],
-                                                  na.rm =TRUE)
-                                             ) 
+         
+        formattedPhenoData[, i] <- na.omit(formattedPhenoData[, i])
+        ## formattedPhenoData[, i]  <- replace (formattedPhenoData[, i],
+        ##                                      is.na(formattedPhenoData[, i]),
+        ##                                      mean(formattedPhenoData[, i],
+        ##                                           na.rm =TRUE)
+        ##                                      ) 
       }
   }
 }

@@ -180,36 +180,30 @@ for (popPhenoNum in 1:popsPhenoSize)
                          select = c("object_name", "stock_id", traitName)
                          )
     
-    if (sum(is.na(phenoTrait)) > 0)
-      {
-        print("sum of pheno missing values")
-        print(sum(is.na(phenoTrait)))
-
-        #fill in for missing data with mean value
-        phenoTrait[, traitName]  <- replace (phenoTrait[, traitName],
-                                             is.na(phenoTrait[, traitName]),
-                                             mean(phenoTrait[, traitName], na.rm =TRUE)
-                                            )
-        
-       #calculate mean of reps/plots of the same accession and
-       #create new df with the accession means
-        phenoTrait$stock_id <- NULL
-        phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
+    if (sum(is.na(phenoTrait)) > 0) {
+      message("No. of pheno missing values: ", sum(is.na(phenoTrait))) 
+     
+      phenoTrait[, traitName] <- na.omit(phenoTrait[, traitName])
+       
+      #calculate mean of reps/plots of the same accession and
+      #create new df with the accession means
+      phenoTrait$stock_id <- NULL
+      phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
    
-        print('phenotyped lines before averaging')
-        print(length(row.names(phenoTrait)))
+      print('phenotyped lines before averaging')
+      print(length(row.names(phenoTrait)))
         
-        phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
+      phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
         
-        print('phenotyped lines after averaging')
-        print(length(row.names(phenoTrait)))
+      print('phenotyped lines after averaging')
+      print(length(row.names(phenoTrait)))
    
-        row.names(phenoTrait) <- phenoTrait[, 1]
-        phenoTrait[, 1] <- NULL
+      row.names(phenoTrait) <- phenoTrait[, 1]
+      phenoTrait[, 1] <- NULL
 
-        phenoTrait <- round(phenoTrait, digits = 2)
+      phenoTrait <- round(phenoTrait, digits = 2)
 
-      } else {
+    } else {
       print ('No missing data')
       phenoTrait$stock_id <- NULL
       phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
