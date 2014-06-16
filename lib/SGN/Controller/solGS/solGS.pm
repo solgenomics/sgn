@@ -515,29 +515,39 @@ sub uploaded_population_summary {
     my $user_name = $c->user->id;
     
     my $model_id = $c->stash->{model_id};
-  
     my $selection_pop_id = $c->stash->{prediction_pop_id};
-    my $id = $model_id ? $model_id : $selection_pop_id;    
-    
-    my $metadata_file = catfile ($tmp_dir, "metadata_${user_name}_${id}");
+ 
+    if ($model_id) 
+    {
+        my $metadata_file_tr = catfile($tmp_dir, "metadata_${user_name}_${model_id}");
        
-    my @metadata = read_file($metadata_file);
+        my @metadata_tr = read_file($metadata_file_tr) if $model_id;
        
-    my ($key, $list_name, $desc);
+        my ($key, $list_name, $desc);
      
-    ($desc)        = grep {/description/} @metadata;       
-    ($key, $desc)  = split(/\t/, $desc);
+        ($desc)        = grep {/description/} @metadata_tr;       
+        ($key, $desc)  = split(/\t/, $desc);
       
-    ($list_name)       = grep {/list_name/} @metadata;      
-    ($key, $list_name) = split(/\t/, $list_name); 
+        ($list_name)       = grep {/list_name/} @metadata_tr;      
+        ($key, $list_name) = split(/\t/, $list_name); 
+   
+        $c->stash(project_id          => $model_id,
+                  project_name        => $list_name,
+                  project_desc        => $desc,
+                  owner               => $user_name,
+            );  
+    }
 
-    $c->stash(project_id   => $id,
-              project_name => $list_name,
-              project_desc => $desc,
-              owner        => $user_name
-        );
-
-
+    if ($selection_pop_id) 
+    {
+        my $metadata_file_sl = catfile($tmp_dir, "metadata_${user_name}_${selection_pop_id}");    
+        my @metadata_sl = read_file($metadata_file_sl) if $selection_pop_id;
+      
+        my ($list_name_sl)       = grep {/list_name/} @metadata_sl;      
+        my  ($key_sl, $list_name) = split(/\t/, $list_name_sl); 
+   
+        $c->stash->{prediction_pop_name} = $list_name;
+    }
 }
 
 
@@ -575,9 +585,9 @@ sub project_description {
     $self->trait_phenodata_file($c);
     my $trait_pheno_file  = $c->stash->{trait_phenodata_file};
     my @trait_pheno_lines = read_file($trait_pheno_file) if $trait_pheno_file;
-
+ 
     my $stocks_no = @trait_pheno_lines ? scalar(@trait_pheno_lines) - 1 : scalar(@geno_lines) - 1;
-   
+    
     $self->phenotype_file($c);
     my $pheno_file = $c->stash->{phenotype_file};
     my @phe_lines  = read_file($pheno_file);   
@@ -689,7 +699,13 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
         $c->stash->{owner} = $c->stash->{project_owners};        
     }
 
-    unless ($selection_pop_id =~ /uploaded/) 
+     
+    if ($selection_pop_id =~ /uploaded/) 
+    {
+        $c->stash->{prediction_pop_id} = $selection_pop_id;
+        $self->uploaded_population_summary($c);
+    }
+    else
     {
         my $pop_rs = $c->model("solGS::solGS")->project_details($selection_pop_id);    
         while (my $pop_row = $pop_rs->next) 
@@ -697,7 +713,7 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
             $c->stash->{prediction_pop_name} = $pop_row->name;    
         }
     }
-
+   
     my $identifier    = $model_id . '_' . $selection_pop_id;
  
     $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
