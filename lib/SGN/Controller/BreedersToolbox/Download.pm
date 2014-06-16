@@ -1,20 +1,21 @@
 
 package SGN::Controller::BreedersToolbox::Download;
 
+use Moose;
+
+BEGIN { extends 'Catalyst::Controller'; }
+
 use strict;
 use warnings;
 use JSON qw( decode_json );
 use Data::Dumper;
 use CGI;
+use CXGN::Trial::TrialLayout;
 use File::Slurp qw | read_file |;
 use File::Temp 'tempfile';
-use Moose;
-
-BEGIN { extends 'Catalyst::Controller'; }
-
 use URI::FromHash 'uri';
 use CXGN::List::Transform;
-
+use Spreadsheet::WriteExcel;
 
 sub breeder_download : Path('/breeders/download/') Args(0) { 
     my $self = shift;
@@ -29,20 +30,33 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
 
-sub download_trial_action : Path('/breeders/trial/download') Args(1) { 
+sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(1) { 
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;
 
-    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
+    print STDERR "Retrieving the trial layout...\n";
+    my $trial = CXGN::Trial::TrialLayout -> new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
 
-    my $data = $bs->get_phenotype_info("", $trial_id, "");
+    #print STDERR "Retrieving the design...\n";
+    #print STDERR "DESIGN: ".Dumper($trial->get_design);
 
-    my $output = "";
-    foreach my $d (@$data) { 
-	$output .= join ",", @$d;
-	$output .= "\n";
+    my $design = $trial->get_design();
+
+    my @info = ();
+    foreach my $plot (keys %$design) { 
+	push @info, [ 
+	    $plot->{plot_name},
+	    $plot->{accession_name},
+	    $plot->{plot_number},
+	    $plot->{block_number},
+	    $plot->{is_a_control},
+	];
     }
+	
+    
+
+    my $output = ""; 
     
     $c->res->content_type("text/plain");
     $c->res->body($output);
