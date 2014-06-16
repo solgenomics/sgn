@@ -1804,27 +1804,19 @@ sub list_of_prediction_pops {
     my $pop_ids;
 
     if(!@pred_pops_ids)
-    {
-       
-        my $pred_pops_ids2 = $c->model('solGS::solGS')->prediction_pops($training_pop_id);
-        @pred_pops_ids = @$pred_pops_ids2;
-
-        foreach (@pred_pops_ids)
-        {
-            
-            $pop_ids .= $_ ."\n";
-        }
-        
-        if (!@pred_pops_ids) { $pop_ids = 'none'; }
-        write_file($pred_pops_file, $pop_ids);
+    {      
+        @pred_pops_ids = @{$c->model('solGS::solGS')->prediction_pops($training_pop_id)};
     }
  
     my @pred_pops;
 
-    unless (grep(/none/, @pred_pops_ids)) {
+    if(@pred_pops_ids) {
 
         foreach my $prediction_pop_id (@pred_pops_ids)
         {
+          $pop_ids .= $prediction_pop_id ."\n";        
+          write_file($pred_pops_file, $pop_ids);
+
             my $pred_pop_rs = $c->model('solGS::solGS')->project_details($prediction_pop_id);
             my $pred_pop_link;
 
