@@ -374,10 +374,9 @@ sub genotype_data {
 
             unless (grep(/^$stock$/, @stocks)) 
             {
-                my $geno_values = $self->stock_genotype_values($geno);
-              
+                my $geno_values    = $self->stock_genotype_values($geno);            
                 my $geno_values_no = scalar(split(/\t/, $geno_values));
-               
+              
                 if($geno_values_no - 1 == $markers_no )
                 {
                     $geno_data .=  $geno_values;
@@ -467,6 +466,7 @@ sub format_user_list_genotype_data {
 
     my $geno_data;
     my $header_markers;
+    my @header_markers;
 
     foreach my $genotype (@genotypes) 
     { 
@@ -479,20 +479,22 @@ sub format_user_list_genotype_data {
             {
                 $header_markers   = $self->extract_project_markers($stock_genotype_rs);                
                 $geno_data = "\t" . $header_markers . "\n";
+                @header_markers = split(/\t/, $header_markers);
             }
         }
-
-        my @header_markers = split(/\t/, $header_markers);
-           
+      
         while (my $geno = $stock_genotype_rs->next)
         {  
             my $json_values  = $geno->value;
             my $values       = JSON::Any->decode($json_values);
             my @markers      = keys %$values;
+            
+            my $common_markers = scalar(intersect(@header_markers, @markers));
 
-            if (@header_markers && @markers ~~ @header_markers)
-                
-            { 
+            my $similarity = $common_markers / scalar(@header_markers);
+                  
+            if ($similarity == 1 )     
+            {
                 my $geno_values = $self->stock_genotype_values($geno);               
                 $geno_data .= $geno_values;
             }       
