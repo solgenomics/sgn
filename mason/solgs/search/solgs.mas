@@ -61,7 +61,7 @@ $gs_traits_index
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => 1,
-    title       => "Use a trial as a training population",
+    title       => "Create a training population using one or more trials",
   &>
 
 
