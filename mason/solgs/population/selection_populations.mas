@@ -44,7 +44,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 % if ($list_of_prediction_pops->[0])
 % {
 <& /page/columnar_table.mas,
-     headings    => ['',  'Selection population', 'Description', 'Generation', 'Year', 'Download GEBVs' ],
+     headings    => ['',  'Selection population', 'Description', 'Generation', 'Year', 'Predict GEBVs' ],
      data        => $list_of_prediction_pops,
     __alt_freq   => 2,
     __alt_width  => 1,

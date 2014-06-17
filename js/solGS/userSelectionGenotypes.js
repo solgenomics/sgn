@@ -133,7 +133,7 @@ function loadGenotypesList(listId) {
                                 + '<td id="list_prediction_output_' + listId +  '">'
                                 + '<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
                                 + listIdArg + ',' + listSource + '); return false;">' 
-                                + '[ Predict GEBVs ]'+ '</a>'             
+                                + '[ Predict ]'+ '</a>'             
                                 + '</td><tr>';
 
                             var tdId = '#list_prediction_output_' + listId;
@@ -230,7 +230,7 @@ function getUserUploadedSelPop (listId) {
                                 + '<td id="list_prediction_output_' + listId +  '">'
                                 + '<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
                                 + listIdArg + ',' + listSource + '); return false;">' 
-                                + '[ Predict GEBVs ]'+ '</a>'
+                                + '[ Predict ]'+ '</a>'
                                 + '</td></tr></table>';
 
     return uploadedSelPop;
@@ -406,7 +406,7 @@ function loadListFromFile(fileName, listId) {
                 + '<td id="list_prediction_output_' + listId +  '">'
                 + '<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
                 + listIdArg + ',' + listSource + '); return false;">' 
-                + '[ Predict GEBVs ]'+ '</a>'             
+                + '[ Predict ]'+ '</a>'             
                 + '</td><tr>';
 
             var tdId = '#list_prediction_output_' + listId;
@@ -450,7 +450,7 @@ function getUserUploadedFile (fileName, listId) {
                                 + '<td id="list_prediction_output_' + listId +  '">'
                                 + '<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
                                 + listIdArg + ',' + listSource + '); return false;">' 
-                                + '[ Predict GEBVs ]'+ '</a>'
+                                + '[ Predict ]'+ '</a>'
                                 + '</td></tr></table>';
 
     return uploadedSelPop;
