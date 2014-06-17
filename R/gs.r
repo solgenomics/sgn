@@ -178,7 +178,7 @@ if (datasetInfo == 'combined populations') {
     experimentalDesign <- phenoTrait[2, 'design']
     if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
     
-    if (experimentalDesign == 'augmented') {
+    if (experimentalDesign == 'augmented' || experimentalDesign == 'RCBD') {
       message("experimental design: ", experimentalDesign)
 
       augData <- subset(phenoData,

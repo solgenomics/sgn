@@ -91,7 +91,7 @@ for (i in allTraitNames) {
   experimentalDesign <- phenoTrait[2, 'design']
   if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
 
-  if (experimentalDesign == 'augmented') {
+  if (experimentalDesign == 'augmented' || experimentalDesign == 'RCBD') {
 
     message("experimental design: ", experimentalDesign)
 
@@ -163,7 +163,7 @@ dropColumns <- c("object_id", "stock_id", "design",  "block", "replicate")
 
 formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
 
-if (experimentalDesign != 'augmented' || experimentalDesign != 'alpha') {
+if (experimentalDesign != 'augmented' || experimentalDesign != 'alpha' || experimentalDesign != 'RCBD' ) {
 
   formattedPhenoData <- ddply(formattedPhenoData,
                               "object_name",
