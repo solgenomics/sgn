@@ -107,6 +107,9 @@ sub generate_experimental_design_POST : Args(0) {
   my $block_number =  $c->req->param('block_number');
 
   my $row_number = $c->req->param('row_number');
+  my $block_row_number=$c->req->param('row_number_per_block');
+  my $block_col_number=$c->req->param('col_number_per_block');
+  my $col_number =$c->req->param('col_number'); 
 
   my $block_size =  $c->req->param('block_size');
   my $max_block_size =  $c->req->param('max_block_size');
@@ -192,6 +195,18 @@ sub generate_experimental_design_POST : Args(0) {
       $trial_design->set_number_of_rows($row_number);
       #$trial_design->set_number_of_rows(9);
   }
+ if($block_row_number){
+      $trial_design->set_block_row_numbers($block_row_number);
+      #$trial_design->set_number_of_rows(9);
+  }
+ if($block_col_number){
+      $trial_design->set_block_col_numbers($block_col_number);
+      #$trial_design->set_number_of_rows(9);
+  }
+ if($col_number){
+      $trial_design->set_number_of_cols($col_number);
+      #$trial_design->set_number_of_rows(9);
+  }
   if ($block_size) {
     $trial_design->set_block_size($block_size);
   }
@@ -209,11 +224,6 @@ sub generate_experimental_design_POST : Args(0) {
     $c->stash->{rest} = {error => "Design type not supported." };
     return;
   }
-
-
-
-
-
 
 
   try {

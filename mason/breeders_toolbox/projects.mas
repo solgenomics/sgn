@@ -90,7 +90,7 @@ $breeding_programs
 	<option value=MADII>MADII</option>
 	<option value=MADIII>MADIII</option>
 	<option value=MADIV>MADIV</option>
-	<option value=MADV>MADV</option>
+       <!--	<option value=MADV>MADV</option> -->
       </select>
       <br><br>
 
@@ -130,38 +130,37 @@ $breeding_programs
 	  <input id="block_number" name="block_number" />
 	  <br>
         </div>
-
-        <div id="row_number_per_block_section" style="display:none">  
-	  <label for="row_number_per_block" style="display: inline-block; width: 300px;">Row Number Per Block:<br>
-	    (optional parameter)
-	  </label>
-	  <input id="row_number_per_block" name="row_number_per_block" />
-	  <br>
-         </div>
-
-	 <div id="col_number_per_block_section" style="display:none">
-	  <label for="col_number_per_block" style="display: inline-block; width: 300px;">Col Number Per Block:<br>
-	    (optional parameter)
-	  </label>
-	  <input id="col_number_per_block" name="col_number_per_block" />
-	  <br>
-         </div>
-
+       
 	<div id="row_number_section" style="display: none">
 	  <label for="row_number" style="display: inline-block; width: 300px;">Number of field rows:<br>
 	    (required parameter)
 	  </label>
-	  <input id="row_number" name="row_number" />
-	  <br>
+	  <input id="row_number" name="row_number" />   
        	</div>
+        <br>
 
-	<div id="col_number_section" style="display: none">
-	  <label for="col_number" style="display: inline-block; width: 300px;">Number of field columns:<br>
-	  (optional parameter)
+	<div id="row_number_per_block_section" style="display: none">
+	  <label for="row_number_per_block" style="display: inline-block; width: 300px;">Row Number Per Block:<br>
+	    (Optional parameter)
 	  </label>
+	  <input id="row_number_per_block" name="row_number_per_block" />
+	  <br>
+        </div>
+
+        <div id="other_parameter_section" style="display:none">  
+     	<label for="show_other_parameter_options">Other optional parameters</label>
+        <input type="checkbox" id="show_other_parameter_options">
+ 	<div id="other_parameter_options" style="display:none"> 
+          <hr> 
+     	  <label for="col_number_per_block" style="display: inline-block; width: 300px;">Col Number Per Block:</label>
+	  <input id="col_number_per_block" name="col_number_per_block" />
+	  <br>
+	  <label for="col_number" style="display: inline-block; width: 300px;">Number of field columns:</label>
 	  <input id="col_number" name="col_number" />
 	  <br>
        	</div>
+	</div>
+
 
         <div id="block_size_section" style="display: none">
 	  <label for="block_size" style="display: inline-block; width: 300px;">Block size:<br>
@@ -178,6 +177,7 @@ $breeding_programs
           <input id="max_block_size" name="block_size" />
 	  <br>
 	</div>
+
 
 	<br>
 	<label for="show_plot_naming_options">Custom plot naming/numbering</label>
@@ -294,7 +294,7 @@ background-color: #ccc;
       <option value=MADII>MADII</option>
       <option value=MADIII>MADIII</option>
       <option value=MADIV>MADIV</option>
-      <option value=MADV>MADV</option>
+    <!--  <option value=MADV>MADV</option> -->
     </select>
     <br>
     <br>
