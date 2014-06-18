@@ -61,7 +61,7 @@ $gs_traits_index
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => 1,
-    title       => "Create a training population using one or more trials",
+    title       => "Select a training population or create new using one or more trials",
   &>
 
 
@@ -106,7 +106,7 @@ $gs_traits_index
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => 1,
-    title       => "Create/use a list-based training population",
+    title       => "Select a list-based training population or create new",
   &>
 
   <& /solgs/population/user_reference_genotypes.mas &>
