@@ -183,7 +183,7 @@ for (popPhenoNum in 1:popsPhenoSize)
     if (sum(is.na(phenoTrait)) > 0) {
       message("No. of pheno missing values: ", sum(is.na(phenoTrait))) 
      
-      phenoTrait[, traitName] <- na.omit(phenoTrait[, traitName])
+      phenoTrait <- na.omit(phenoTrait)
        
       #calculate mean of reps/plots of the same accession and
       #create new df with the accession means
