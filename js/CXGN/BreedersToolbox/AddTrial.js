@@ -321,20 +321,22 @@ jQuery(document).ready(function ($) {
 	    $("#row_number_per_block_section").show();
 	    $("#other_parameter_section").hide();
 	    $("#other_parameter_section2").hide();
-        } else if (design_method == "MADII") {
-	    $("#trial_design_more_info").show();
-	    $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").show();
-            $("#rep_count_section").hide();
-	    $("#row_number_section").show();
-            $("#block_number_section").hide();
-            $("#block_size_section").hide();
-            $("#max_block_size_section").hide();
-	    $("#row_number_per_block_section").hide();
-	    $("#col_number_per_block_section").hide();
-	    $("#col_number_section").hide();
-            $("#other_parameter_section").hide();
-	} else if (design_method == "MADIII") {
+        } 
+//	else if (design_method == "MADII") {
+//	    $("#trial_design_more_info").show();
+//	    $("#add_project_dialog").dialog("option", "height","auto");
+//            $("#list_of_checks_section").show();
+//            $("#rep_count_section").hide();
+//	    $("#row_number_section").show();
+//            $("#block_number_section").hide();
+//            $("#block_size_section").hide();
+//            $("#max_block_size_section").hide();
+//	    $("#row_number_per_block_section").hide();
+//	    $("#col_number_per_block_section").hide();
+//	    $("#col_number_section").hide();
+//            $("#other_parameter_section").hide();
+//	} 
+	else if (design_method == "MAD") {
 	    $("#trial_design_more_info").show();
 	    $("#add_project_dialog").dialog("option", "height","auto");
             $("#list_of_checks_section").show();
@@ -360,18 +362,19 @@ jQuery(document).ready(function ($) {
 		 }
 	     });
 
-	} else if (design_method == "MADIV") {
-	    $("#trial_design_more_info").show();
-	    $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").show();
-            $("#rep_count_section").hide();
-	    $("#row_number_section").show();
-            $("#block_number_section").hide();
-            $("#block_size_section").hide();
-            $("#max_block_size_section").hide();	   
-	    $("#other_parameter_section").hide();
-	    $("#row_number_per_block_section").show();
 	} 
+//	else if (design_method == "MADIV") {
+//	    $("#trial_design_more_info").show();
+//	    $("#add_project_dialog").dialog("option", "height","auto");
+//            $("#list_of_checks_section").show();
+//            $("#rep_count_section").hide();
+//	    $("#row_number_section").show();
+//            $("#block_number_section").hide();
+//            $("#block_size_section").hide();
+//            $("#max_block_size_section").hide();	   
+//	    $("#other_parameter_section").hide();
+//	    $("#row_number_per_block_section").show();
+//	} 
 else {
             alert("Unsupported design method");
         }

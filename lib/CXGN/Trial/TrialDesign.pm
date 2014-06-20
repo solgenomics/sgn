@@ -54,7 +54,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Augmented" || $_ eq "MADII" || $_ eq "MADIII" || $_ eq "MADIV"},
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Augmented" || $_ eq "MAD"},
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -84,15 +84,19 @@ sub calculate_design {
        $design = _get_augmented_design($self);
     #  $design = _get_alpha_lattice_design($self);
     }
-    elsif ($self->get_design_type() eq "MADII") {
-      $design = _get_madii_design($self);
-    }
-    elsif($self->get_design_type() eq "MADIII") {
+
+#    elsif ($self->get_design_type() eq "MADII") {
+#      $design = _get_madii_design($self);
+#    }
+
+    elsif($self->get_design_type() eq "MAD") {
 	$design = _get_madiii_design($self);
     }
-    elsif($self->get_design_type() eq "MADIV") {
-        $design = _get_madiv_design($self);
-    }
+
+#    elsif($self->get_design_type() eq "MADIV") {
+#        $design = _get_madiv_design($self);
+#    }
+
     else {
       die "Trial design" . $self->get_design_type() ." not supported\n";
     }

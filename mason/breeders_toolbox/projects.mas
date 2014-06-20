@@ -87,9 +87,10 @@ $breeding_programs
         <option value=RCBD>Complete Block</option>
         <option value=Alpha>Alpha Lattice</option>
         <option value=Augmented>Augmented</option>
-	<option value=MADII>MADII</option>
-	<option value=MADIII>MADIII</option>
-	<option value=MADIV>MADIV</option>
+	<option value=MAD>Modified Augmented Design </option>
+
+	<!-- <option value=MADIII>MADIII</option> -->
+	<!-- <option value=MADIV>MADIV</option>   -->
        <!--	<option value=MADV>MADV</option> -->
       </select>
       <br><br>
@@ -291,9 +292,11 @@ background-color: #ccc;
       <option value=RCBD>Complete Block</option>
       <option value=Alpha>Alpha Lattice</option>
       <option value=Augmented>Augmented</option>
-      <option value=MADII>MADII</option>
-      <option value=MADIII>MADIII</option>
-      <option value=MADIV>MADIV</option>
+      <option value=MAD>Modified Augmented Design</option>
+
+
+    <!--  <option value=MADIII>MADIII</option>   -->
+    <!--  <option value=MADIV>MADIV</option> -->
     <!--  <option value=MADV>MADV</option> -->
     </select>
     <br>
