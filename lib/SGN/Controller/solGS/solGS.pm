@@ -2585,8 +2585,9 @@ sub compare_genotyping_platforms {
         my $sec_cnt = scalar(@sec_geno_markers);
         
         $cnt++;
-
-        unless (@first_geno_markers ~~ @sec_geno_markers)      
+        my $common_markers = scalar(intersect(@first_geno_markers, @sec_geno_markers));
+        my $similarity = $common_markers / scalar(@first_geno_markers);
+        unless ($similarity > 0.5 )      
         {
             no warnings 'uninitialized';
             my $pop_id_1 = fileparse($pair->[0]);
