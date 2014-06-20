@@ -86,6 +86,9 @@ sub design_info_view {
     if ($design_info{'design_type'} eq "MADIII") {
       $design_description = "Modified Augmented Design III";
     }
+    if ($design_info{'design_type'} eq "MADIV") {
+      $design_description = "Modified Augmented Design IV";
+    }
     $design_info_html .= "<dt>Design type</dt><dd>".$design_description."</dd>";
   }
   if ($design_info{'number_of_stocks'}) {
