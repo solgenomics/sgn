@@ -281,29 +281,39 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
       
         if ( ! -s $prediction_pop_gebvs_file )
         {
-            my $dir = $c->stash->{solgs_cache_dir};
+           my $dir = $c->stash->{solgs_cache_dir};
         
-            my $exp = "phenotype_data_${model_id}_${trait_abbr}"; 
-            my $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
+           my $exp = "phenotype_data_${model_id}_${trait_abbr}"; 
+           my $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
 
-            $exp = "genotype_data_${model_id}_${trait_abbr}"; 
-            my $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
+           $exp = "genotype_data_${model_id}_${trait_abbr}"; 
+           my $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
 
-            $c->stash->{trait_combined_pheno_file} = $pheno_file;
-            $c->stash->{trait_combined_geno_file}  = $geno_file;
+           $c->stash->{trait_combined_pheno_file} = $pheno_file;
+           $c->stash->{trait_combined_geno_file}  = $geno_file;
            
-            $self->user_prediction_population_file($c, $prediction_pop_id);
+           $self->user_prediction_population_file($c, $prediction_pop_id);
+           my $selection_pop_file = $c->stash->{user_selection_list_genotype_data_file};
           
-            $c->controller("solGS::solGS")->get_rrblup_output($c); 
+           $c->controller("solGS::solGS")->compare_genotyping_platforms($c, [$geno_file, $selection_pop_file]);
+           my $no_match = $c->stash->{pops_with_no_genotype_match};
+           
+           if(!$no_match)
+           {
+               $c->controller("solGS::solGS")->get_rrblup_output($c); 
+           }
+           else 
+           {
+               $ret->{status} = 'The selection population was genotyped by a set of markers different from the ones used for the training population. Therefore, you can\'t use this prediction model on it.';   
+                     
+           }
+
         }
         
-        $c->controller("solGS::solGS")->gs_files($c);
-   
+        $c->controller("solGS::solGS")->gs_files($c);   
         $c->controller("solGS::solGS")->download_prediction_urls($c, $combo_pops_id,  $prediction_pop_id );
         my $download_prediction = $c->stash->{download_prediction};
-     
-        my $ret->{status} = 'failed';
-    
+        
         if (-s $prediction_pop_gebvs_file) 
         {
             $ret->{status} = 'success';
