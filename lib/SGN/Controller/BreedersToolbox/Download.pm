@@ -13,6 +13,7 @@ use CGI;
 use CXGN::Trial::TrialLayout;
 use File::Slurp qw | read_file |;
 use File::Temp 'tempfile';
+use File::Basename; 
 use URI::FromHash 'uri';
 use CXGN::List::Transform;
 use Spreadsheet::WriteExcel;
@@ -39,26 +40,47 @@ sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(
     my $trial = CXGN::Trial::TrialLayout -> new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
 
     #print STDERR "Retrieving the design...\n";
-    #print STDERR "DESIGN: ".Dumper($trial->get_design);
+    print STDERR "DESIGN: ".Dumper($trial->get_design);
 
     my $design = $trial->get_design();
 
-    my @info = ();
-    foreach my $plot (keys %$design) { 
-	push @info, [ 
-	    $plot->{plot_name},
-	    $plot->{accession_name},
-	    $plot->{plot_number},
-	    $plot->{block_number},
-	    $plot->{is_a_control},
-	];
-    }
-	
+    $c->tempfiles_subdir("data_export"); # make sure the dir exists
+    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_layout_".$trial_id."_XXXXX");
+
+    my $ss = Spreadsheet::WriteExcel->new($fh);
+    
+    my $ws = $ss->add_worksheet();
+
+    $ws->write(0,0,"plot_name");
+    $ws->write(0,1,"accession_name");
+    $ws->write(0,2,"plot_number");
+    $ws->write(0,3,"block_number");
+    $ws->write(0,4,"is_a_control");
+    $ws->write(0,5,"rep_number");
+
+     my $line = 1;
+     foreach my $n (keys(%$design)) { 
+     	print STDERR "plot name ".$ws->write($line, 0, $design->{$n}->{plot_name});
+	print STDERR " accession name ".$ws->write($line, 1, $design->{$n}->{accession_name});
+     	print STDERR " plot number ".$ws->write($line, 2, $design->{$n}->{plot_number});
+     	print STDERR " block number ".$ws->write($line, 3, $design->{$n}->{block_number});
+     	print STDERR " is a control ".$ws->write($line, 4, $design->{$n}->{is_a_control});
+     	print STDERR " rep number ".$ws->write($line, 5, $design->{$n}->{rep_number});
+     	$line++;
+     }
+    
+    $ss->close();
     
 
-    my $output = ""; 
-    
-    $c->res->content_type("text/plain");
+    my $file_name = basename($tempfile);    
+    $c->res->content_type('Application/xls');    
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
+
+
+    my $path = $c->config->{basepath}."/".$tempfile;
+    print STDERR "PATH is $path\n";
+    my $output = read_file($path, binmode=>':raw');
+
     $c->res->body($output);
 }
 
