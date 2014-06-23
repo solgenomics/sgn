@@ -88,26 +88,26 @@ function downloadData() {
             if (res.not_matching_pops == null) {
                
                 var combinedPopsId = res.combined_pops_id;
-                jQuery.unblockUI();
-               // alert('all clones in all trials genotyped using the same RE'); 
-                
-                goToCombinedTrialsPage(combinedPopsId);              
-                    
-            } else {
-                    
-                if(res.not_matching_pops ) { 
+               
+                if(combinedPopsId) {
+                    goToCombinedTrialsPage(combinedPopsId);
                     jQuery.unblockUI();
-                    alert('populations ' + res.not_matching_pops + 
-                          ' were genotyped using different marker sets. ' + 
-                              'Please make new selections to combine.' );
-                }
-
-                if (res.redirect_url) {
-                    window.location.href = res.redirect_url;
-                }
+                }else if (res.redirect_url) {
+                    goToSingleTrialPage(res.redirect_url);
+                    jQuery.unblockUI();
+                } 
+                                     
+            } else if(res.not_matching_pops )  {
+                            
+                jQuery.unblockUI();
+                alert('populations ' + res.not_matching_pops + 
+                      ' were genotyped using different marker sets. ' + 
+                      'Please make new selections to combine.' );
+        
             } 
         },
-        error: function(res) {           
+        error: function(res) { 
+            jQuery.unblockUI();
             alert('An error occured retrieving phenotype' +
                   'and genotype data for trials..');
         }       
@@ -143,8 +143,17 @@ function goToCombinedTrialsPage(combinedPopsId) {
     
     if(combinedPopsId) {      
         window.location.href = action;
+    } else {
+        
+        
     }
    
+}
+function goToSingleTrialPage(url) {
+    
+    if (url) {      
+        window.location.href = url;
+    }    
 }
 
 
