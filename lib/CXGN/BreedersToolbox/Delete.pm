@@ -77,9 +77,46 @@ sub delete_experiments_by_file {
 
 }
 
-sub delete_experiments_by_trial { 
+sub delete_phenotype_data_by_trial { 
     my $self = shift;
-    my $user_id = shift;
+    my $trial_id = shift;
+
+    # first, delete metadata entries
+    #
+    $self->delete_metadata_by_trial($trial_id);
+    
+    # delete phenotype data associated with trial
+    #
+    my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
+
+    my $nd_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( { project_id => $trial_id });
+    my @nd_experiment_ids = map { $_->nd_experiment_id } $nd_experiment_rs->all();
+
+    $self->_delete_nd_experiments(@nd_experiment_ids); # cascading deletes should take care of everything
+}
+    
+sub delete_field_layout_by_trial { 
+    my $self = shift;
+    my $trial_id = shift;
+
+    # first, delete metadata entries
+    #
+    $self->delete_metadata_by_trial($trial_id);
+    
+    # delete phenotype data associated with trial
+    #
+    my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
+
+    my $nd_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( { project_id => $trial_id });
+    my @nd_experiment_ids = map { $_->nd_experiment_id } $nd_experiment_rs->all();
+
+    print STDERR "ND EXPERIMENTS: ".(join ",", @nd_experiment_ids)."\n";
+    
+    $self->_delete_field_layout_data($trial_id); # cascading deletes should take care of everything
+}
+
+sub delete_metadata_by_trial { 
+    my $self = shift;
     my $trial_id = shift;
 
 
@@ -108,21 +145,10 @@ sub delete_experiments_by_trial {
 	    $row->delete();
 	}
     }
-    
-
-    # get some metadata and delete the phenotype and nd_experiment entries
-
-    my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
-
-    my $nd_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( { project_id => $trial_id });
-    my @nd_experiment_ids = map { $_->nd_experiment_id } $nd_experiment_rs->all();
-
-    $self->_delete_nd_experiments(@nd_experiment_ids); # cascading deletes should take care of everything
-    
 }
 
 
-sub _delete_nd_experiments { 
+sub _delete_phenotype_experiments { 
     my $self = shift;
     my @nd_experiment_ids = @_;
 
@@ -154,6 +180,66 @@ sub _delete_nd_experiments {
     };
 }
 
+=head2 _delete_field_layout_experiment
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub _delete_field_layout_experiment { 
+    my $self = shift;
+    my $trial_id = shift;
+
+    # check if there are still associated phenotypes...
+ 
+    if ($self->trial_has_phenotype_data()) { 
+	return { error => "Trial still has associated phenotyping experiment, cannot delete." };
+    }
+
+    my $field_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "field_layout" })->cvterm_id();
+    my $plot_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'plot' })->cvterm_id();
+
+    my $field_layout_experiment_rs = $self->bcs_schema->resultset("NaturalDiversity::NdExperimentPhenotype")->search( { project_id => $trial_id, 'nd_experiment.type_id' => $field_layout_type_id, 'stock.type_id'=> $plot_type_id }, { join => 'stock' });
+    
+    my $plots_deleted = 0;
+    foreach my $plot ($field_layout_experiment_rs->stocks()) { 
+	print STDERR "Deleting associated plot ".$field_layout_experiment_rs->stock->name()." (".$field_layout_experiment_rs->stock->stock_id.")\n";
+	$plots_deleted++;
+	$plot->delete();
+    }
+}
+
+sub trial_has_phenotype_data { 
+    my $self = shift;
+    my $trial_id = shift;
+
+    my $phenotyping_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'phenotyping_experiment' })->cvterm_id();
+    
+    my $phenotype_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( 
+	{ 
+	    project_id => $trial_id, 'nd_experiment.type_id' => $phenotyping_experiment_type_id}, 
+	{ 
+	    join => 'nd_experiment'  
+	}
+	);
+}
+
+sub plot_has_phenotype_data { 
+    my $self = shift;
+    my $plot_id = shift;
+    
+    my $phenotype_rs = $self->bcs_schema->resultset("Stock::Stock")->search( { stock_id => $plot_id }, { join => { 'phenotypes' }});
+    
+    if ($phenotype_rs->count() > 0) { 
+	return 1;
+    }
+    return 0;
+}
 
 sub delete_location { 
     my $self = shift;
