@@ -6,11 +6,13 @@ backend for adding trials and viewing trials
 
 =head1 DESCRIPTION
 
-Creating and viewing trials
+Creating, viewing and deleting trials
 
 =head1 AUTHOR
 
 Jeremy Edwards <jde22@cornell.edu>
+
+Deletion by Lukas
 
 =cut
 
@@ -850,6 +852,18 @@ sub _formatted_string_from_error_hash_by_type {
   return $error_string;
 }
 
+
+=head2 delete_trial_by_file
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub delete_trial_by_file : Path('/breeders/trial/delete/file') Args(1) { 
     my $self = shift;
     my $c = shift;
@@ -879,22 +893,63 @@ sub delete_trial_by_file : Path('/breeders/trial/delete/file') Args(1) {
     }    
 }
 
-# transform stock list to list containing uniquenames only 
-# (convert synonyms to unique names)
-#
-# sub transform_stock_list { 
-#     my $self = shift;
-#     my $c = shift;
-#     my $stock_ref = shift; 
 
-#     my $lt = CXGN::List::Transform->new( );
-#     my $transform = $lt ->can_transform('accession_synonyms', 'accession_names');
+=head2 delete_trial_by_trial_id
 
-#     my $data = $lt->transform($c->dbic_schema("Bio::Chado::Schema"), $transform, $stock_ref);
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
 
-#     return $data;
+=cut
 
-		   
-# }
+sub delete_trial_by_trial_id : Path('/breeders/trial/delete/id') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $trial_id = shift;
+
+    print STDERR "DELETING trial $trial_id\n";
+
+    if (!$c->user()) { 
+	$c->stash->{rest} = { error => 'You must be logged in to delete a trial' };
+	return;
+    }
+    
+    my $user_id = $c->user->get_object()->get_sp_person_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $breeding_program_rs = $schema->resultset("Cv::Cvterm")->search( { name => "breeding_program" });
+
+    my $breeding_program_id = $breeding_program_rs->first()->cvterm_id();
+
+    my $breeding_program_name = $breeding_program_rs->first()->name();
+
+    my $trial_organization_id = $schema->resultset("Project::Projectprop")->search( 
+	{ 
+	    project_id => $trial_id, 
+	    type_id=>$breeding_program_id 
+	});
+
+    if (! ($c->user->check_roles('curator') || ( $c->user->check_roles('submitter') && $c->roles($breeding_program_name) ))) { 
+	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
+    }
+    
+    my $del = CXGN::BreedersToolbox::Delete->new( 
+	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
+	);
+
+    
+
+    $del->delete_experiments_by_trial($user_id, $trial_id);
+
+    $c->stash->{rest} = { success => "1" };
+}
+
 
 1;
