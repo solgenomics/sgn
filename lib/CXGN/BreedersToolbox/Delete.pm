@@ -3,6 +3,8 @@ package CXGN::BreedersToolbox::Delete;
 
 use Moose;
 
+use Data::Dumper;
+
 has bcs_schema => (is => 'rw');
 has metadata_schema => (is=> 'rw');
 has phenome_schema => (is => 'rw');
@@ -81,6 +83,42 @@ sub delete_experiments_by_trial {
     my $trial_id = shift;
 
 
+    # first, deal with entries in the md_metadata table, which may reference nd_experiment (through linking table)
+    my $q = "SELECT distinct(metadata_id) FROM nd_experiment_project JOIN phenome.nd_experiment_md_files using(nd_experiment_id) JOIN metadata.md_files using(file_id) JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    $h->execute($trial_id);
+
+    while (my ($md_id) = $h->fetchrow_array()) { 
+	my $mdmd_row = $self->metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
+	if ($mdmd_row) { 
+	    print STDERR "Update the md_metadata table to obsolete... for $md_id";
+	    $mdmd_row -> update( { obsolete => 1 });
+	}
+    }
+
+    # delete the entries from the linking table...
+    $q = "SELECT distinct(file_id) FROM nd_experiment_project JOIN phenome.nd_experiment_md_files using(nd_experiment_id) JOIN metadata.md_files using(file_id) JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    $h->execute($trial_id);
+    
+    while (my ($file_id) = $h->fetchrow_array()) { 
+	my $ndemdf_rs = $self->phenome_schema->resultset("NdExperimentMdFiles")->search( { file_id=>$file_id });
+	print STDERR "Delete phenome.nd_experiment_md_files row for file_id $file_id...\n";
+	foreach my $row ($ndemdf_rs->all()) { 
+	    $row->delete();
+	}
+    }
+    
+
+    # get some metadata and delete the phenotype and nd_experiment entries
+
+    my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
+
+    my $nd_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( { project_id => $trial_id });
+    my @nd_experiment_ids = map { $_->nd_experiment_id } $nd_experiment_rs->all();
+
+    $self->_delete_nd_experiments(@nd_experiment_ids); # cascading deletes should take care of everything
+    
 }
 
 
@@ -88,7 +126,7 @@ sub _delete_nd_experiments {
     my $self = shift;
     my @nd_experiment_ids = @_;
 
-    my $ids_str = join ",", @nd_experiment_ids;
+
     print STDERR "Deleting the MdExperiment entries... ";
 
     # retrieve the associated phenotype ids (they won't be deleted by the cascade)
@@ -96,9 +134,9 @@ sub _delete_nd_experiments {
     my $phenotypes_deleted = 0;
     my $nd_experiments_deleted = 0;
 
-    my $phenotype_rs = $self->bcs_schema()->resultset("MdExperimentPhenotype")->search( { nd_experiment_id=> { -in => $ids_str }}, { join => 'phenotype' });
+    my $phenotype_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotype")->search( { nd_experiment_id=> { -in => [ @nd_experiment_ids ] }}, { join => 'phenotype' });
     if ($phenotype_rs->count() > 0) { 
-	foreach my $p ($phenotype_rs->rows()) { 
+	foreach my $p ($phenotype_rs->all()) { 
 	    $p->delete();
 	    $phenotypes_deleted++;
 	}
@@ -106,7 +144,7 @@ sub _delete_nd_experiments {
     
     # delete the experiments
     #
-    my $delete_rs = $self->bcs_schema()->resultset("NdExperiment")->search({ md_experiment_id => { -in => $ids_str }});
+    my $delete_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ nd_experiment_id => { -in => [ @nd_experiment_ids] }});
     $nd_experiments_deleted = $delete_rs->count();
     $delete_rs->delete_all();
     print STDERR "Done.\n";
