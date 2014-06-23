@@ -16,7 +16,7 @@ Fetching GS trials..
 
 
 <div id="done_selecting">
-  <input  class="button" type="button" name="done_selecting"  value="Combine" onclick="doneSelecting();"/>
+  <input  class="button" type="button" name="done_selecting"  value="Select" onclick="doneSelecting();"/>
 </div>
 
 
