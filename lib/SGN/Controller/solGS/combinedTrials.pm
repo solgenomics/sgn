@@ -68,14 +68,20 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
         {
             $ret->{not_matching_pops} = $not_matching_pops;
         }
+
+        $ret->{combined_pops_id} = $combo_pops_id;
     }
     else 
     {
         my $pop_id = $pop_ids[0];
+        
+        $c->stash->{pop_id} = $pop_id;
+        $solgs_controller->phenotype_file($c);
+        $solgs_controller->genotype_file($c);
+        
         $ret->{redirect_url} = "/solgs/population/$pop_id";
     }
-   
-    $ret->{combined_pops_id} = $combo_pops_id;
+      
     $ret = to_json($ret);
     
     $c->res->content_type('application/json');
