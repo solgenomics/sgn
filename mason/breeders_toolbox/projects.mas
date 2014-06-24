@@ -93,14 +93,15 @@ $breeding_programs
 	<!-- <option value=MADIV>MADIV</option>   -->
        <!--	<option value=MADV>MADV</option> -->
       </select>
-      <br><br>
+      <br>
+      <br>
+      <br>
 
 
        <%doc>
        </%doc>
 
       <div id="trial_design_more_info" style="display: none">
-
       <div id="select_list" name="select_list">
 	<label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 300px;">List of stocks to include:<br>
 	(required parameter)
@@ -115,7 +116,6 @@ $breeding_programs
 
       <br>
       <div id="design_info" name="design_info">
-
 	<div id="rep_count_section" style="display: none">
 	  <label for="rep_count" style="display: inline-block; width: 300px;">Number of replicates:<br>
 	    (required parameter)
@@ -162,7 +162,6 @@ $breeding_programs
        	</div>
 	</div>
 
-
         <div id="block_size_section" style="display: none">
 	  <label for="block_size" style="display: inline-block; width: 300px;">Block size:<br>
 	    (required parameter)
@@ -199,11 +198,8 @@ $breeding_programs
 
      </div>
     </div>
-
     </div>
-
   </form>
-
 </div>
 
 <div id="upload_trial_error_display" class="ui-widget">
