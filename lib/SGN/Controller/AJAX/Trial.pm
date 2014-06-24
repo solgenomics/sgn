@@ -148,7 +148,7 @@ sub generate_experimental_design_POST : Args(0) {
   my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
   $geolocation_lookup->set_location_name($c->req->param('trial_location'));
   if (!$geolocation_lookup->get_geolocation()){
-    $c->stash->{rest} = {error => "Trial location not found"};
+    $c->stash->{rest} = { error => "Trial location not found" };
     return;
   }
 
@@ -946,9 +946,9 @@ sub delete_trial_by_trial_id : Path('/breeders/trial/delete/id') Args(1) {
 
     
 
-    $del->delete_experiments_by_trial($user_id, $trial_id);
+    my $hash = $del->delete_experiments_by_trial($user_id, $trial_id);
 
-    $c->stash->{rest} = { success => "1" };
+    $c->stash->{rest} = $hash;
 }
 
 
@@ -1002,7 +1002,7 @@ sub delete_phenotype_data_by_trial_id : Path('/breeders/trial/phenotype/delete/i
 	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
 	);
 
-    $del->delete_experiments_by_trial($user_id, $trial_id);
+    $del->delete_phenotype_data_by_trial($user_id, $trial_id);
 
     $c->stash->{rest} = { success => "1" };
 }
@@ -1024,7 +1024,7 @@ sub delete_trial_layout_by_trial_id : Path('/breeders/trial/layout/delete/id') A
 
     my $trial_id = shift;
 
-    print STDERR "DELETING trial $trial_id\n";
+    print STDERR "DELETING trial layout $trial_id\n";
 
     if (!$c->user()) { 
 	$c->stash->{rest} = { error => 'You must be logged in to delete a trial layout' };
@@ -1057,9 +1057,8 @@ sub delete_trial_layout_by_trial_id : Path('/breeders/trial/layout/delete/id') A
 	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
 	);
 
-    $del->delete_field_layout_by_trial($trial_id);
+    $c->stash->{rest} =  $del->delete_field_layout_by_trial($trial_id);
 
-    $c->stash->{rest} = { success => "1" };
 }
 
 
