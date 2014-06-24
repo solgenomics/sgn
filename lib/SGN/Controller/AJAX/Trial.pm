@@ -969,7 +969,7 @@ sub delete_phenotype_data_by_trial_id : Path('/breeders/trial/phenotype/delete/i
 
     my $trial_id = shift;
 
-    print STDERR "DELETING trial $trial_id\n";
+    print STDERR "DELETING phenotypes of trial $trial_id\n";
 
     if (!$c->user()) { 
 	$c->stash->{rest} = { error => 'You must be logged in to delete a trial' };
@@ -1002,7 +1002,7 @@ sub delete_phenotype_data_by_trial_id : Path('/breeders/trial/phenotype/delete/i
 	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
 	);
 
-    $del->delete_phenotype_data_by_trial($user_id, $trial_id);
+    $del->delete_phenotype_data_by_trial($trial_id);
 
     $c->stash->{rest} = { success => "1" };
 }
