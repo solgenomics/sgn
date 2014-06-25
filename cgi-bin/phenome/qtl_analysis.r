@@ -589,7 +589,7 @@ chrno<-chrno + 1;
 
     if (is.null(LodThreshold) == FALSE)
       {
-        if ( max(QtlLods) >= LodScore )
+        if ( max(QtlLods) >= LodThreshold )
           {
             QtlObj<-makeqtl(popdata,
                             QtlChrs,

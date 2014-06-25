@@ -22,12 +22,9 @@ $prediction_pop_analyzed_traits => ''
 
 my $title;
 
-if ($c->req->path =~ /solgs\/traits\/all\/population/) 
-  {
+if ($c->req->path =~ /solgs\/traits\/all\/population/) {
     $title = 'Predict GEBVs of a selection population using the models';
-  }
-else
-{
+  } else {
  $title = 'Predict GEBVs of a selection population using the model';
 }
 
@@ -44,15 +41,22 @@ else
 
 <div id="selection_populations">
 
-% if ($list_of_prediction_pops)
+% if ($list_of_prediction_pops->[0])
 % {
 <& /page/columnar_table.mas,
-     headings    => ['',  'Selection population', 'Description', 'Generation', 'Year', 'Download GEBVs' ],
+     headings    => ['',  'Selection population', 'Description', 'Generation', 'Year', 'Predict GEBVs' ],
      data        => $list_of_prediction_pops,
     __alt_freq   => 2,
     __alt_width  => 1,
     __align      => 'llllll'
 &>
+%} else
+%{
+  <div style="font-weight:bold;text-align:justify;color:#A7C942">
+    <p>There are no relevant selection populations in the database. 
+       If you have or want to make your own set of selection 
+       candidates use the form below.</p>
+  </div>
 %}
 
 <p>&nbsp</p>

@@ -84,7 +84,7 @@ function plotCorrelation (data) {
     var nTraits = data.traits.length;      
     var corXscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([0, width]);
     var corYscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([height, 0]);
-    var corZscale = d3.scale.linear().domain([-1, 0, 1]).range(["#0000A0", "white", "#A52A2A"]);
+    var corZscale = d3.scale.linear().domain([-1, 0, 1]).range(["#A52A2A","white", "#0000A0"]);
 
     var xAxisScale = d3.scale.ordinal()
         .domain(data.traits)

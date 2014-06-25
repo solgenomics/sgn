@@ -60,7 +60,7 @@ if ($no_traits_selected eq 'none')
 
  <% $message %>
 
-
+% if($trait_rows) {
  <form action="/solgs/analyze/traits/population/<%$pop_id %>" method="POST">
   <table>
    <% $trait_rows %>
@@ -76,4 +76,10 @@ if ($no_traits_selected eq 'none')
      </tr>
    </table> 
  </form> 
+%} else {
 
+<div id="traits_list_message"  style="font-weight:bold;text-align:center;text-transform:uppercase;color:#A7C942">
+<p>There are no phenotyped traits for this population.</p>
+</div>
+
+%}

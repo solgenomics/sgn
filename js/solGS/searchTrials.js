@@ -14,26 +14,34 @@ jQuery(document).ready(function(){
 
 
 function searchTrials() {
- 
-    jQuery.ajax({  
+    //jQuery("#combine").hide();
+    jQuery.ajax({
         type: 'POST',
         dataType: "json",
         url: '/solgs/search/trials/',
         success: function(res) {                                                                                
             var trialsList = listTrials(res.trials);
             var pagination = res.pagination;
-            jQuery("#homepage_trials_list").html(trialsList + pagination).show();            
+            jQuery("#homepage_message").hide();
+            jQuery("#homepage_trials_list").html(trialsList + pagination).show();           
         },
         error: function() {               
-            alert('error fetching first 10 trials');
+            jQuery("#homepage_message").html('Error occured fetching the first set of GS trials.').show();
+          
         }
-    });
 
+    });
+    
+  
     jQuery("#homepage_trials_list").on('click', "div.paginate_nav a", function(e) { 
         var page = jQuery(this).attr('href');
-  
+       
+        jQuery("#homepage_trials_list").empty();
+        jQuery("#combine input").hide();
+        jQuery("#homepage_message").html('Fechting more GS trials..').show(); 
+ 
         if (page) {
-            jQuery.ajax({  
+            jQuery.ajax({ 
                 type: 'POST',
                 dataType: "json",
                 url: page,
@@ -41,12 +49,13 @@ function searchTrials() {
                     var trialsList = listTrials(res.trials);
                     var pagination = res.pagination;
                     jQuery("#homepage_trials_list").empty();
+                    jQuery("#homepage_message").hide(); 
                     jQuery("#homepage_trials_list").html(trialsList + pagination).show();
                   
                 },
                 
                 error: function() {
-                    alert('error fetching trials next pages.');
+                    jQuery("#homepage_message").html('Error occured fetching the next set of GS trials.').show();
                 }                    
             });                
         }

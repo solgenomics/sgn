@@ -188,6 +188,7 @@ sub save_trial {
     } else {
       $rep_number = 1;
     }
+
     my $is_a_control = $design{$key}->{is_a_control};
     #my $plot_unique_name = $stock_name."_replicate:".$rep_number."_block:".$block_number."_plot:".$plot_name."_".$self->get_trial_year()."_".$self->get_trial_location;
     my $plot;
@@ -222,6 +223,10 @@ sub save_trial {
 
     if ($is_a_control) {
       $plot->create_stockprops({'is a control' => $is_a_control}, {autocreate => 1} );
+    }
+
+    if ($design{$key}->{'range_number'}) {
+      $plot->create_stockprops({'range' => $key}, {autocreate => 1});
     }
 
     #create the stock_relationship with the accession
