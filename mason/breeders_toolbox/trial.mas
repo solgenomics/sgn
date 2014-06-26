@@ -130,7 +130,7 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
 
 <br /><br />
 
-<&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"<a href=\"/breeders/trial/download/$trial_id\">[Download trial data]</a>" &>
+<&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"<a href=\"/breeders/trial/phenotype/download/$trial_id\">[Download trial data]</a>" &>
 % foreach my $trait (@phenotype_data) {
 % my $trait_id = $trait->[1];
 % print "<a href=\"/breeders_toolbox/trial/$trial_id/trait/$trait_id\">$trait->[0]</a> ($trait->[2] assays)<br />\n";

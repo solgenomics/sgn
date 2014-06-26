@@ -84,6 +84,18 @@ sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(
     $c->res->body($output);
 }
 
+
+sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    
+    my $trial_sql = "\'$trial_id\'";
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
+    my $data = $bs->get_phenotype_info(undef, $trial_sql, undef);
+    print STDERR Dumper($data);
+}
+
 sub download_action : Path('/breeders/download_action') Args(0) { 
     my $self = shift;
     my $c = shift;
