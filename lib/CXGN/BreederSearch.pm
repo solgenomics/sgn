@@ -229,7 +229,7 @@ sub get_phenotype_info {
 	$where_clause = "where ".(join (" and ", @where_clause));
     }
 
-    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value 
+    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, dbxref.accession
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) 
              JOIN stock ON (object_id=stock.stock_id) 
              JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id) 
@@ -237,6 +237,9 @@ sub get_phenotype_info {
              JOIN nd_geolocation USING(nd_geolocation_id) 
              JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)  
              JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) 
+             JOIN cv USING(cv_id)
+             JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
+             JOIN db USING(db_id)
              JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) 
              JOIN project USING(project_id)  
              $where_clause";
@@ -246,20 +249,63 @@ sub get_phenotype_info {
     $h->execute();
 
     my $result = [];
-    while (my ($project_name, $stock_name, $location, $trait, $value) = $h->fetchrow_array()) { 
-	push @$result, [ $project_name, $stock_name, $location, $trait, $value ];
+    while (my ($project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession) = $h->fetchrow_array()) { 
+	push @$result, [ $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession ];
 	
     }
     return $result;
 }
 
+sub get_phenotype_info_matrix { 
+    my $self = shift;
+    my $accession_sql = shift;
+    my $trial_sql = shift;
+    my $trait_sql = shift;
+    
+    my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
+    
+    my %plot_data;
+    my %traits;
+
+
+    foreach my $d (@$data) { 
+	my $cvterm = $d->[6].":".$d->[7];
+	print STDERR "CVTERM:$cvterm \n";
+	my $trait_data = $d->[4];
+	my $plot = $d->[5];
+	print STDERR "Adding $cvterm -> $trait_data TO $plot\n";
+	$plot_data{$plot} = { $cvterm => $trait_data  };
+	$traits{$cvterm}++;
+    }
+    
+    my @info = ();
+    my $line = "";
+
+    # generate header line
+    #
+    my @sorted_traits = sort keys(%traits);
+    foreach my $trait (@sorted_traits) { 
+	$line .= "\t".$trait;  # first header has to be empty (plot name column)
+    }
+    push @info, $line;
+    
+    # dump phenotypic values
+    #
+    foreach my $plot (sort keys (%plot_data)) { 
+	$line = $plot;
+	foreach my $trait (@sorted_traits) { 
+	    $line .= $plot_data{$plot}->{$trait} ? "\t".$plot_data{$plot}->{$trait} : "\t";
+	}
+	push @info, $line;
+    }
+    return @info;
+}
 
 =head2 get_genotype_info
 
 parameters: comma-separated lists of accession, trial, and trait IDs. May be empty.
 
 returns: an array with phenotype information
-
 
 =cut
 

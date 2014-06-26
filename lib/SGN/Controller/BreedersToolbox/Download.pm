@@ -92,8 +92,32 @@ sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download')
     
     my $trial_sql = "\'$trial_id\'";
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
-    my $data = $bs->get_phenotype_info(undef, $trial_sql, undef);
-    print STDERR Dumper($data);
+    my @data = $bs->get_phenotype_info_matrix(undef,$trial_sql, undef);
+      
+    print STDERR "PHENOTYPE DATA MATRIX: ".Dumper(\@data);
+    $c->tempfiles_subdir("data_export"); # make sure the dir exists
+    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_phenotypes_".$trial_id."_XXXXX");
+    my $ss = Spreadsheet::WriteExcel->new($fh);
+    my $ws = $ss->add_worksheet();
+
+    for (my $line =0; $line< @data; $line++) { 
+	my @columns = split /\t/, $data[$line];
+	for(my $col = 0; $col<@columns; $col++) { 
+	    $ws->write($line, $col, $columns[$col]);
+	}
+    }
+    
+    $ss ->close();
+
+    my $file_name = basename($tempfile);    
+    $c->res->content_type('Application/xls');    
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
+
+    my $path = $c->config->{basepath}."/".$tempfile;
+    print STDERR "PATH is $path\n";
+    my $output = read_file($path, binmode=>':raw');
+
+    $c->res->body($output);
 }
 
 sub download_action : Path('/breeders/download_action') Args(0) { 
