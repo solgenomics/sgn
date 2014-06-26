@@ -37,7 +37,7 @@ function searchTrials() {
         var page = jQuery(this).attr('href');
        
         jQuery("#homepage_trials_list").empty();
-        jQuery("#combine input").hide();
+        //jQuery("#combine input").hide();
         jQuery("#homepage_message").html('Fechting more GS trials..').show(); 
  
         if (page) {

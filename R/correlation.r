@@ -87,7 +87,7 @@ for (i in allTraitNames) {
                         select = c("object_name", "object_id", "design", "block", "replicate", trait)
                         )
   
-  message("phenotrait: \n", phenoTrait)
+  
   experimentalDesign <- phenoTrait[2, 'design']
   if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
 
@@ -152,16 +152,16 @@ for (i in allTraitNames) {
   
   } else {
   message("experimental design: ", experimentalDesign)
-    if (sum(is.na(formattedPhenoData[, i])) > 0)
-      {         
-        formattedPhenoData[, i] <- na.omit(formattedPhenoData[, i])
+  
+    if (sum(is.na(formattedPhenoData)) > 0)
+      {
+        dropColumns <- c("object_id", "stock_id", "design",  "block", "replicate")
+
+        formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
+        formattedPhenoData <- na.omit(formattedPhenoData)
       }
   }
 }
-
-dropColumns <- c("object_id", "stock_id", "design",  "block", "replicate")
-
-formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
 
 if (experimentalDesign != 'augmented' || experimentalDesign != 'alpha' || experimentalDesign != 'RCBD' ) {
 
