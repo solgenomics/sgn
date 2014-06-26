@@ -158,18 +158,15 @@ for (i in allTraitNames) {
         dropColumns <- c("object_id", "stock_id", "design",  "block", "replicate")
 
         formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
-        formattedPhenoData <- na.omit(formattedPhenoData)
+      
+        formattedPhenoData <- ddply(formattedPhenoData,
+                                    "object_name",
+                                    colwise(mean, na.rm=TRUE)
+                                    )
       }
   }
 }
 
-if (experimentalDesign != 'augmented' || experimentalDesign != 'alpha' || experimentalDesign != 'RCBD' ) {
-
-  formattedPhenoData <- ddply(formattedPhenoData,
-                              "object_name",
-                              colwise(mean)
-                              )
-}
 
 row.names(formattedPhenoData) <- formattedPhenoData[, 1]
 formattedPhenoData[, 1] <- NULL
@@ -177,6 +174,10 @@ formattedPhenoData[, 1] <- NULL
 formattedPhenoData <- round(formattedPhenoData,
                             digits=2
                             )
+
+uniquelength <- sapply(formattedPhenoData,function(x) length(unique(x)))
+print(uniquelength)
+testData <- subset(formattedPhenoData, select=uniquelength>1)
 
 coefpvalues <- rcor.test(formattedPhenoData,
                          method="pearson",
