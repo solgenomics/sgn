@@ -237,9 +237,10 @@ if (datasetInfo == 'combined populations') {
 
     } else {
 
-       phenoTrait <- subset(phenoData,
-                          select = c("object_name", "object_id",  trait)
-                          )
+      phenoTrait <- subset(phenoData,
+                           select = c("object_name", "object_id",  trait)
+                           )
+       
       if (sum(is.na(phenoTrait)) > 0) {
 
         message("No. of pheno missing values: ", sum(is.na(phenoTrait)))      
@@ -335,7 +336,6 @@ if (length(predictionFile) !=0 )
                       )
   }
 
-#add checks for all input data
 #create phenotype and genotype datasets with
 #common stocks only
 message('phenotyped lines: ', length(row.names(phenoTrait)))
@@ -430,7 +430,6 @@ if (length(predictionData) != 0 ) {
 
 #use REML (default) to calculate variance components
 #calculate GEBV using marker effects (as random effects)
-
 markerGEBV <- mixed.solve(y = phenoTrait,
                           Z = genoDataMatrix
                          )
@@ -517,9 +516,7 @@ if (length(combinedGebvsFile) != 0)
   }
 
 colnames(ordered.iGEBV) <- c(trait)
-          
-#TO-DO:account for minor allele frequency                
-                     
+                  
 #cross-validation
 validationAll <- c()
 
