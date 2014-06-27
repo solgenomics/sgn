@@ -64,8 +64,6 @@ my $submit_new = qq | <a href="/qtl/form">Submit QTL population</a> |;
 
  <& correlation.mas, 
    pop                 => $pop, 
-   heatmap_file        => $heatmap_file, 
-   corre_table_file    => $corre_table_file, 
    trait_acronym_pairs => $trait_acronym_pairs
  &>
 
