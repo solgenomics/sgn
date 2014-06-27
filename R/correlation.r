@@ -81,16 +81,27 @@ message('traits: ', allTraitNames)
 
 for (i in allTraitNames) {
   trait <- i
-  message("trait: ", trait)
+ 
+  phenoTrait         <- c()
+  experimentalDesign <- c()
   
-  phenoTrait  <- subset(phenoData,
-                        select = c("object_name", "object_id", "design", "block", "replicate", trait)
-                        )
-  
-  
-  experimentalDesign <- phenoTrait[2, 'design']
-  if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
+  if ('design' %in% colnames(phenoData)) {
 
+    phenoTrait  <- subset(phenoData,
+                          select = c("object_name", "object_id", "design", "block", "replicate", trait)
+                          )
+    
+    experimentalDesign <- phenoTrait[2, 'design']
+    if (is.na(experimentalDesign) == TRUE) {
+      experimentalDesign <- c('No Design')
+    }
+    
+  } else {
+   
+    experimentalDesign <- c('No Design')
+    
+  }
+  
   if (experimentalDesign == 'augmented' || experimentalDesign == 'RCBD') {
 
     message("experimental design: ", experimentalDesign)
