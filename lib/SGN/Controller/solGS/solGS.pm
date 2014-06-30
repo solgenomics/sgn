@@ -538,7 +538,7 @@ sub uploaded_population_summary {
             );  
     }
 
-    if ($selection_pop_id) 
+    if ($selection_pop_id =~ /uploaded/) 
     {
         my $metadata_file_sl = catfile($tmp_dir, "metadata_${user_name}_${selection_pop_id}");    
         my @metadata_sl = read_file($metadata_file_sl) if $selection_pop_id;
