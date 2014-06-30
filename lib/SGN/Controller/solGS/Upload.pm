@@ -224,19 +224,25 @@ sub create_list_population_metadata {
 sub create_list_population_metadata_file {
     my ($self, $c) = @_;
       
-    my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
-    my $model_id = $c->stash->{model_id};
-    $c->stash->{pop_id} = $model_id;
-
-    my $selection_pop_id = $c->stash->{prediction_pop_id};
-   
-    $self->create_list_population_metadata($c);
-
-    my $user_id    = $c->user->id;
-    my $metadata = $c->stash->{user_list_population_metadata};
+    my $tmp_dir          = $c->stash->{solgs_prediction_upload_dir};
+    my $model_id         = $c->stash->{model_id};
+    $c->stash->{pop_id}  = $model_id;
+    my $selection_pop_id = $c->stash->{prediction_pop_id};   
+    my $user_id          = $c->user->id;
   
-    my $id = $model_id ? $model_id : $selection_pop_id;
-    my $file = catfile ($tmp_dir, "metadata_${user_id}_${id}");
+    $self->create_list_population_metadata($c);
+    my $metadata = $c->stash->{user_list_population_metadata};
+   
+    my $file;
+    if ($model_id) 
+    {              
+        $file = catfile ($tmp_dir, "metadata_${user_id}_${model_id}");
+    }
+
+    if ($selection_pop_id) 
+    { 
+        $file = catfile ($tmp_dir, "metadata_${user_id}_${selection_pop_id}");
+    }
 
     write_file($file, $metadata);
  
@@ -282,7 +288,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
         if ( ! -s $prediction_pop_gebvs_file )
         {
            my $dir = $c->stash->{solgs_cache_dir};
-        
+          
            my $exp = "phenotype_data_${model_id}_${trait_abbr}"; 
            my $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
 
@@ -385,7 +391,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
                      my $exp = "phenotype_data_${user_id}_${model_id}"; 
                      $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
                 
-                     $exp = "genotype_data_${user_id}_{model_id}"; 
+                     $exp = "genotype_data_${user_id}_${model_id}"; 
                      $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);    
 
                  }
@@ -511,12 +517,13 @@ sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/lis
   #####
 
 ######
-  #   my $user_id = $c->user->id;
+#     my $user_id = $c->user->id;
 #     my $pheno_file = "/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/phenotype_data_${user_id}_${model_id}";
 #     my $geno_file = "/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/genotype_data_${user_id}_${model_id}"; 
-#####    
+##### 
+
     $self->create_list_population_metadata_file($c);
-     
+   
     my $ret->{status} = 'failed';
     
     if (-s $geno_file && -s $pheno_file) 
