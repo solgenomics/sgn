@@ -172,6 +172,31 @@ sub associate_breeding_program_with_trial : Path('/breeders/program/associate') 
     
 }
 
+
+sub remove_breeding_program_from_trial : Path('/breeders/program/remove') Args(2) { 
+    my $self = shift;
+    my $c = shift;
+    my $breeding_program_id = shift;
+    my $trial_id = shift;
+
+    my $message = "";
+
+
+    if ($c->user() && ( $c->user()->check_roles('submitter')  || $c->user()->check_roles('curator'))) { 
+	my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $c->dbic_schema("Bio::Chado::Schema") } );
+	
+	$message = $program->remove_breeding_program_from_trial($breeding_program_id, $trial_id);
+	
+	#print STDERR "MESSAGE: $xmessage->{error}\n";
+    }
+    else { 
+	$message = { error => "You need to be logged in and have sufficient privileges to associate trials to programs." };
+    }
+    $c->stash->{rest} = $message;
+    
+
+}
+
 sub new_breeding_program :Path('/breeders/program/new') Args(0) { 
     my $self = shift;
     my $c = shift;

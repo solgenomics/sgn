@@ -15,7 +15,7 @@ Jeremy D. Edwards
 
 <%args>
 $trial_id
-$breeding_program => ()
+$breeding_program
 $trial_name
 @location_data
 @phenotype_data
@@ -363,10 +363,11 @@ jQuery(document).ready(function () {
 
   jQuery('#delete_breeding_program_trial_association_link').click(
      function() { 
+//		     alert("Breeding Program = "+<% $breeding_program->[0] %>);
        var yes = confirm("Do you really want to remove this trial from the breeding program?");
        if (yes) { 
          jQuery.ajax( { 
-           url: '/breeders/program/remove/',
+           url: '/breeders/program/remove/<% $breeding_program->[0]->[0] %>/<% $trial_id %>',
            data: { },
            async: false,
            success: function(response) { 
