@@ -15,7 +15,7 @@ Jeremy D. Edwards
 
 <%args>
 $trial_id
-$breeding_program => ()
+$breeding_program
 $trial_name
 @location_data
 @phenotype_data
@@ -68,17 +68,22 @@ if (!$design_type eq "") {
 }
 my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Download Field Book</a>]';
 
-my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $user_can_modify;
+my $subtitle = qq{[<a id="show_change_breeding_program_link">change</a>] } if $user_can_modify;
 
 </%perl>
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
 <&| /page/info_section.mas, title=>"Breeding program", subtitle=>$subtitle &>
-% foreach my $bp (@$breeding_program) { 
-%   print $bp->[1] . "&nbsp;(".$bp->[2].")"; 
-%   if ($user_can_modify) { print " <a title=\"remove program\" id=\"delete_breeding_program_trial_association_link\"><font color=\"red\"><b>X</b></font></a>"; }
-% }
+% ## foreach my $bp (@$breeding_program) { 
+% ##  print $bp->[1] . "&nbsp;(".$bp->[2].")"; 
+% ##  if ($user_can_modify) { print " <a title=\"remove program\" id=\"delete_breeding_program_trial_association_link\"><font color=\"red\"><b>X</b></font></a>"; }
+% ##}
+
+<div id="breeding_programs">
+[loading...]
+</div>
+
 </&>
 
 <&| /page/info_section.mas, title=>"Year(s)" &>
@@ -98,7 +103,7 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
 </&>
 
 
-<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>'[<a id="view_layout_link">View Layout</a>]'&>
+<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"[<a href=\"/breeders/trial/layout/download/$trial_id\">Download Layout</a>] [<a id=\"delete_layout_data_by_trial_id\">Delete layout</a>]" &>
 
 %print "Design: $design_type <br /><br />";
 %print "Number of blocks: $number_of_blocks <br />";
@@ -130,7 +135,7 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
 
 <br /><br />
 
-<&| /page/info_section.mas, title=>"Traits assayed" &>
+<&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"<a href=\"/breeders/trial/phenotype/download/$trial_id\">[Download trial data]</a> <a id=\"delete_phenotype_data_by_trial\" >[Delete trial data]</a>" &>
 % foreach my $trait (@phenotype_data) {
 % my $trait_id = $trait->[1];
 % print "<a href=\"/breeders_toolbox/trial/$trial_id/trait/$trait_id\">$trait->[0]</a> ($trait->[2] assays)<br />\n";
@@ -206,6 +211,8 @@ my $subtitle = qq{<a id="show_change_breeding_program_link">change</a> } if $use
   
 jQuery(document).ready(function () {
 
+  load_breeding_program_info(<% $trial_id %>);
+
   jQuery('#change_breeding_program_dialog').dialog( {
      height: 150,
      width: 300,
@@ -224,8 +231,8 @@ jQuery(document).ready(function () {
   function get_breeding_select() { 
     var programs = new Array();
     jQuery.ajax( { 
-      url: '/breeders/programs',
-      async: false,
+      url: '/ajax/breeders/all_programs',
+//async: false,
       success: function(response) { 
         programs = response;
       },
@@ -235,16 +242,34 @@ jQuery(document).ready(function () {
     });
     var html = "";
     for (var i=0; i< programs.length; i++) {  
-      	html += '<option value='+programs[i][0]+'>'+programs[i][1]+'</a>';
+      html += '<option value='+programs[i][0]+'>'+programs[i][1]+'</a>';
     }
-    jQuery('#change_breeding_program_select').html(html);
-	
-   }
+    jQuery('#change_breeding_program_select').html(html);	
+  }
 
+  function delete_phenotype_data_by_trial_id(trial_id) { 
+    var yes = confirm("Are you sure you want to delete all phenotypic data associated with trial "+trial_id+" ? This action cannot be undone.");
+    if (yes) { 
+      jQuery.ajax( { 
+         url: '/breeders/trial/phenotype/delete/id/'+trial_id,
+         success: function(response) { 
+           if (response.error) { 
+             alert(response.error);
+           }
+           else { 
+             
+             alert('The phenotypic data has been deleted.'); // to do: give some idea how many items were deleted.
+           }
+         },
+         error: function(response) { 
+           alert("An error occurred.");
+         }
+      });
+    }
+  }
 
   function associate_breeding_program() { 
     var program = jQuery('#change_breeding_program_select').val();				    
-		     //alert("Program: "+program);
     jQuery.ajax( { 
       url: '/breeders/program/associate/'+program+'/'+ <% $trial_id %>,
       async: false,
@@ -252,109 +277,130 @@ jQuery(document).ready(function () {
         alert("Associated program with id "+program + " to trial with id "+<% $trial_id %>);
       }
     });
+  }
+
+		     
+  function load_breeding_program_info(trial_id) { 
+    jQuery.ajax( {
+       url:'/breeders/programs_by_trial/'+trial_id,
+       success: function(response) { 
+         if (response.error) { 
+           alert(response.error);
+         }
+         else { 
+           var programs = response.projects;
+           for (var i=0; i< programs.length; i++) {  
+             var html =  programs[0][1] + ' (' + programs[0][2] + ') ';
+           }
+           jQuery('#breeding_programs').html(html); 
+         }
+       },
+       error: function() { alert("An error occurred."); }
+        
+      
+     });  
    }
 
 
-    function open_create_spreadsheet_dialog() {
-        var list = new CXGN.List();
-        jQuery("#trait_list").html(list.listSelect("trait_list", [ 'traits' ]));
-        jQuery('#create_spreadsheet_dialog').dialog("open");
-    }
-
-    function create_spreadsheet() {
-        var trialID = parseInt(jQuery('#trialIDDiv').text());
-        var list = new CXGN.List();
-        var trait_list_id = jQuery('#trait_list_list_select').val();
-	var trait_list;
-	if (! trait_list_id == "") {
-            trait_list = JSON.stringify(list.getList(trait_list_id));
-	}
-        new jQuery.ajax({
-        type: 'POST',
-        url: '/ajax/phenotype/create_spreadsheet',
-	dataType: "json",
-        data: {
-          'trial_id': trialID,
-          'trait_list': trait_list,
-        },
-        success: function (response) {
-          if (response.error) {
-            alert(response.error);
-            jQuery('#open_create_spreadsheet_dialog').dialog("close");
-          } else {
-            alert('success');
-
-          }
-        },
-        error: function () {
-          alert('An error occurred creating a phenotype file.');
-          jQuery('#open_download_spreadsheet_dialog').dialog("close");
-        }
-      });
-
-    }
+   function open_create_spreadsheet_dialog() {
+     var list = new CXGN.List();
+     jQuery("#trait_list").html(list.listSelect("trait_list", [ 'traits' ]));
+     jQuery('#create_spreadsheet_dialog').dialog("open");
+   }
 
 
-    function open_create_fieldbook_dialog() {
-      var trialID = parseInt(jQuery('#trialIDDiv').text());
-      new jQuery.ajax({
-        type: 'POST',
-        url: '/ajax/fieldbook/create',
-	dataType: "json",
-        data: {
-          'trial_id': trialID,
-        },
-        success: function (response) {
-          if (response.error) {
-            alert(response.error);
-            jQuery('#open_create_fieldbook_dialog').dialog("close");
-          } else {
-            jQuery('#tablet_layout_download_link').attr('href',response.file);
-            jQuery("#tablet_field_layout_saved_dialog_message").dialog("open");
-            //alert(response.file);
-            jQuery('#open_create_fieldbook_dialog').dialog("close");
-          }
-        },
-        error: function () {
-          alert('An error occurred creating the field book.');
-          jQuery('#open_create_fieldbook_dialog').dialog("close");
-        }
-      });
-    }
+   function create_spreadsheet() {
+     var trialID = parseInt(jQuery('#trialIDDiv').text());
+     var list = new CXGN.List();
+     var trait_list_id = jQuery('#trait_list_list_select').val();
+     var trait_list;
+     if (! trait_list_id == "") {
+       trait_list = JSON.stringify(list.getList(trait_list_id));
+     }
+     new jQuery.ajax({
+       type: 'POST',
+       url: '/ajax/phenotype/create_spreadsheet',
+       dataType: "json",
+       data: {
+         'trial_id': trialID,
+         'trait_list': trait_list,
+       },
+       success: function (response) {
+         if (response.error) {
+           alert(response.error);
+           jQuery('#open_create_spreadsheet_dialog').dialog("close");
+         } else {
+           alert('success');
+         }
+       },
+       error: function () {
+         alert('An error occurred creating a phenotype file.');
+         jQuery('#open_download_spreadsheet_dialog').dialog("close");
+       }
+     });
+   }
 
-    jQuery( "#tablet_field_layout_saved_dialog_message" ).dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-            Ok: function() {
-		jQuery( this ).dialog( "close" );
-		location.reload();
-            }
-	}
-    });
 
-    jQuery('#create_spreadsheet_dialog').dialog({
-	autoOpen: false,
-        modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 75],
-        modal: true,
-        buttons: {
-	    Cancel: function() {
-		jQuery( this ).dialog( "close" );
-		return;
-	    },
-	    Create: function() {
-                create_spreadsheet();
+   function open_create_fieldbook_dialog() {
+     var trialID = parseInt(jQuery('#trialIDDiv').text());
+     new jQuery.ajax({
+       type: 'POST',
+       url: '/ajax/fieldbook/create',
+       dataType: "json",
+       data: {
+         'trial_id': trialID,
+       },
+       success: function (response) {
+         if (response.error) {
+           alert(response.error);
+           jQuery('#open_create_fieldbook_dialog').dialog("close");
+         } else {
+           jQuery('#tablet_layout_download_link').attr('href',response.file);
+           jQuery("#tablet_field_layout_saved_dialog_message").dialog("open");
+           //alert(response.file);
+           jQuery('#open_create_fieldbook_dialog').dialog("close");
+         }
+       },
+       error: function () {
+         alert('An error occurred creating the field book.');
+         jQuery('#open_create_fieldbook_dialog').dialog("close");
+       }
+     });
+   }
+
+   jQuery( "#tablet_field_layout_saved_dialog_message" ).dialog({
+     autoOpen: false,
+     modal: true,
+     buttons: {
+       Ok: function() {
+         jQuery( this ).dialog( "close" );
+	 location.reload();
+       }
+     }
+   });
+
+   jQuery('#create_spreadsheet_dialog').dialog({
+     autoOpen: false,
+     modal: true,
+     autoResize:true,
+     width: 500,
+     position: ['top', 75],
+     modal: true,
+     buttons: {
+       Cancel: function() {
+		 jQuery( this ).dialog( "close" );
+	         return;
+	       },
+       Create: function() {
+                 create_spreadsheet();
 		//save_experimental_design(design_json);
 		//jQuery( this ).dialog( "close" );
 		//jQuery('#add_project_dialog').dialog("close");
-	    },
-        },
-    });
+       },
+     },
+   });
 
-  jQuery('#show_change_breeding_program_link').click(
+   jQuery('#show_change_breeding_program_link').click(
      function() {
        jQuery('#change_breeding_program_dialog').dialog("open");
        get_breeding_select();
@@ -366,43 +412,54 @@ jQuery(document).ready(function () {
        var yes = confirm("Do you really want to remove this trial from the breeding program?");
        if (yes) { 
          jQuery.ajax( { 
-           url: '/breeders/program/remove/',
+           url: '/breeders/program/remove/<% $breeding_program->[0]->[0] %>/<% $trial_id %>',
            data: { },
            async: false,
            success: function(response) { 
            }
-	});
+	 });
+       }
+     });
+    
+
+  jQuery('#delete_phenotype_data_by_trial').click(
+     function() { 
+       delete_phenotype_data_by_trial_id(<% $trial_id %>);
+     }
+  );
+
+  jQuery('#delete_layout_data_by_trial').click( 
+    function() { 
+       delete_layout_data_by_trail_id(<% $trial_id %>);
+    });
+
+  jQuery('#create_spreadsheet_link').click(function () {
+    open_create_spreadsheet_dialog();
+  });
+
+  jQuery('#create_fieldbook_link').click(function () {
+    open_create_fieldbook_dialog();
+  });
+
+  jQuery('#trial_design_view_layout').dialog({
+    autoOpen: false,
+    height: 500,
+    width: 800,
+    modal: true,
+      buttons: {
+      Close: function() {
+        jQuery( this ).dialog( "close" );
       }
     }
-
-);
-    jQuery('#create_spreadsheet_link').click(function () {
-        open_create_spreadsheet_dialog();
-    });
-
-    jQuery('#create_fieldbook_link').click(function () {
-        open_create_fieldbook_dialog();
-    });
-
-    jQuery('#trial_design_view_layout').dialog({
-	autoOpen: false,
-	height: 500,
-	width: 800,
-        modal: true,
-        buttons: {
-        Close: function() {
-	    jQuery( this ).dialog( "close" );
-	}
-      }
-    }); 
-
-
-    jQuery('#view_layout_link').click(function () {
-       	jQuery('#trial_design_view_layout').dialog("open");
-    });
-
+  }); 
+    
+  jQuery('#view_layout_link').click(function () {
+    jQuery('#trial_design_view_layout').dialog("open");
+  });
 
 });
+
+
 
 </script>
  

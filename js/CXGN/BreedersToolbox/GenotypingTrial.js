@@ -40,5 +40,29 @@ jQuery(document).ready(function ($) {
 		}
 	    });
     });
+
+  $('#genotyping_trial_dialog').dialog( {
+      autoOpen: false,
+      autoResize:true,
+      width: 600,
+      position: ['top', 150],
+      title: 'Create a genotyping trial',
+      buttons: {
+       'OK': function() {
+	   alert("ok");
+       },
+	  'Cancel': function() { $('#genotyping_trial_dialog').dialog("close"); }
+     }
+  });
+
+    function open_genotyping_trial_dialog () {
+	alert ("will create a genotyping trial");
+	$('#genotyping_trial_dialog').dialog("open");
+    }
+
+    $('#create_genotyping_trial_link').click(function () {
+        open_genotyping_trial_dialog();
+    });
+
 });
 

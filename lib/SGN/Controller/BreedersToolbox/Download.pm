@@ -1,21 +1,22 @@
-#!/usr/bin/perl
 
 package SGN::Controller::BreedersToolbox::Download;
+
+use Moose;
+
+BEGIN { extends 'Catalyst::Controller'; }
 
 use strict;
 use warnings;
 use JSON qw( decode_json );
 use Data::Dumper;
 use CGI;
+use CXGN::Trial::TrialLayout;
 use File::Slurp qw | read_file |;
 use File::Temp 'tempfile';
-use Moose;
-
-BEGIN { extends 'Catalyst::Controller'; }
-
+use File::Basename; 
 use URI::FromHash 'uri';
 use CXGN::List::Transform;
-
+use Spreadsheet::WriteExcel;
 
 sub breeder_download : Path('/breeders/download/') Args(0) { 
     my $self = shift;
@@ -30,6 +31,95 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
 
+sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+
+    print STDERR "Retrieving the trial layout...\n";
+    my $trial = CXGN::Trial::TrialLayout -> new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+
+    #print STDERR "Retrieving the design...\n";
+    print STDERR "DESIGN: ".Dumper($trial->get_design);
+
+    my $design = $trial->get_design();
+
+    $c->tempfiles_subdir("data_export"); # make sure the dir exists
+    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_layout_".$trial_id."_XXXXX");
+
+    my $ss = Spreadsheet::WriteExcel->new($fh);
+    
+    my $ws = $ss->add_worksheet();
+
+    $ws->write(0,0,"plot_name");
+    $ws->write(0,1,"accession_name");
+    $ws->write(0,2,"plot_number");
+    $ws->write(0,3,"block_number");
+    $ws->write(0,4,"is_a_control");
+    $ws->write(0,5,"rep_number");
+
+     my $line = 1;
+     foreach my $n (keys(%$design)) { 
+     	print STDERR "plot name ".$ws->write($line, 0, $design->{$n}->{plot_name});
+	print STDERR " accession name ".$ws->write($line, 1, $design->{$n}->{accession_name});
+     	print STDERR " plot number ".$ws->write($line, 2, $design->{$n}->{plot_number});
+     	print STDERR " block number ".$ws->write($line, 3, $design->{$n}->{block_number});
+     	print STDERR " is a control ".$ws->write($line, 4, $design->{$n}->{is_a_control});
+     	print STDERR " rep number ".$ws->write($line, 5, $design->{$n}->{rep_number});
+     	$line++;
+     }
+    
+    $ss->close();
+    
+
+    my $file_name = basename($tempfile);    
+    $c->res->content_type('Application/xls');    
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
+
+
+    my $path = $c->config->{basepath}."/".$tempfile;
+    print STDERR "PATH is $path\n";
+    my $output = read_file($path, binmode=>':raw');
+
+    $c->res->body($output);
+}
+
+
+sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    
+    my $trial_sql = "\'$trial_id\'";
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
+    my @data = $bs->get_phenotype_info_matrix(undef,$trial_sql, undef);
+      
+    print STDERR "PHENOTYPE DATA MATRIX: ".Dumper(\@data);
+    $c->tempfiles_subdir("data_export"); # make sure the dir exists
+    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_phenotypes_".$trial_id."_XXXXX");
+    my $ss = Spreadsheet::WriteExcel->new($fh);
+    my $ws = $ss->add_worksheet();
+
+    for (my $line =0; $line< @data; $line++) { 
+	my @columns = split /\t/, $data[$line];
+	for(my $col = 0; $col<@columns; $col++) { 
+	    $ws->write($line, $col, $columns[$col]);
+	}
+    }
+    
+    $ss ->close();
+
+    my $file_name = basename($tempfile);    
+    $c->res->content_type('Application/xls');    
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
+
+    my $path = $c->config->{basepath}."/".$tempfile;
+    print STDERR "PATH is $path\n";
+    my $output = read_file($path, binmode=>':raw');
+
+    $c->res->body($output);
+}
+
 sub download_action : Path('/breeders/download_action') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -39,29 +129,32 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $trait_list_id     = $c->req->param("trait_list_list_select");
     my $data_type         = $c->req->param("data_type")|| "phenotype";
 
-   # my $data_type         = $c->req->param("data_type") || "genotype";
-
-    #my $data_type         = "phenotype" || "genotype";
-
-    #my $data_type         = "phenotype" || "genotype";
-
-
     my $format            = $c->req->param("format");
-
 
     print STDERR "IDS: $accession_list_id, $trial_list_id, $trait_list_id\n";
 
-    my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-    my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
-    my $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
-
     
+    my $accession_data;
+    if ($accession_list_id) { 
+	$accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+    }
+
+    my $trial_data;
+    if ($trial_list_id) { 
+	$trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
+    }
+
+    my $trait_data;
+    if ($trait_list_id) { 
+	$trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
+    }
 
     my @accession_list = map { $_->[1] } @$accession_data;
     my @trial_list = map { $_->[1] } @$trial_data;
     my @trait_list = map { $_->[1] } @$trait_data;
 
-        my $tf = CXGN::List::Transform->new();
+    my $tf = CXGN::List::Transform->new();
+    
     my $unique_transform = $tf->can_transform("accession_synonyms", "accession_names");
     
     my $unique_list = $tf->transform($c->dbic_schema("Bio::Chado::Schema"), $unique_transform, \@accession_list);
@@ -93,15 +186,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $data; 
     my $output = "";
     
-    #if($data_type eq ""){
-
-    # print STDERR "Please define data type \n";
-
-    # print "Please define data type \n";
-    #
-    #}
-
-
     if ($data_type eq "phenotype") { 
 	$data = $bs->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
 	
@@ -128,7 +212,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     }
     $c->res->content_type("text/plain");
-   $c->res->body($output);
+    $c->res->body($output);
 
 }
 

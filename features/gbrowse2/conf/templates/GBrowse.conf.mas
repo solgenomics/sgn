@@ -280,11 +280,11 @@ description   = Tomato RNA-seq data
 organism      = S. lycopersicum, S. pimpinellifolium, S. pennellii, S. habrochaites, Introgression Line 4-3.
 extended_description = Analyzed transcriptomic sequence data from various tissues and species, including SNP locations.
 
-[Tomato_inbreds]
-path          = tomato_inbreds.conf
-description   = Resequensed tomato inbred lines
-organism      = Solanum lycopersicum
-extended_description = Inbred Solanum lycopersicum lines assembled using the Heinz reference genome
+#[Tomato_inbreds]
+#path          = tomato_inbreds.conf
+#description   = Resequensed tomato inbred lines
+#organism      = Solanum lycopersicum
+#extended_description = Inbred Solanum lycopersicum lines assembled using the Heinz reference genome
 
 
 # [yeast]

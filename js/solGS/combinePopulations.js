@@ -18,29 +18,35 @@ var getCookieName =  function (trId) {
 var getPopIds =  function() {
     
     jQuery("input:checkbox[name='project']").change(function() {
-                  
-       
+            
         var cookieArrayData = [];
           
         var trId = getTraitId(); 
         var cookieName = getCookieName(trId); 
-       
-        if (jQuery(this).attr('checked')) {
-              
+        var existingPopIds = jQuery.cookie(cookieName);
+        var eP = [];
+         if (existingPopIds) {
+                  eP  = existingPopIds.split(",");                                     
+                }
+        if (eP.length <= 1) {                       
+            jQuery("#select_done input").val('Select');   
+        }   
+        
+        if (jQuery(this).attr('checked')) {            
             var popId = jQuery(this).val();
-             
-            var existingPopIds = jQuery.cookie(cookieName);
-                
-            if (!existingPopIds) {
-                    
+                            
+            if (eP.length == 0) {
+                                    
+                jQuery("#select_done input").val('Select');   
+                       
+               
                 cookieArrayData.push(popId);                 
                 jQuery.cookie(cookieName, cookieArrayData, {path: '/'});
-            }
-            else {                  
+            } else {                  
                 var cookieData = jQuery.cookie(cookieName);
                 
                 if (cookieData) {
-                    cookieArrayData = cookieData.split(","); 
+                    cookieArrayData = cookieData.split(",");                                     
                 }
 
                 var indexPopId = jQuery.inArray(popId, cookieArrayData);
@@ -48,7 +54,13 @@ var getPopIds =  function() {
                       
                     cookieArrayData.push(popId);
                     cookieArrayData =  cookieArrayData.unique();
-                       
+                  
+                   if (cookieArrayData.length === 1) {                       
+                       jQuery("#select_done input").val('Select');   
+                   } else if (cookieArrayData.length > 1 )  {                       
+                        jQuery("#select_done input").val('Combine');  
+                    } 
+  
                     jQuery.cookie(cookieName, cookieArrayData, {path: '/'});
                 }
             }

@@ -20,6 +20,8 @@ The first row (header) should contain the following:
     <td>plot_number</td>
     <td>block_number</td>
     <td>is_a_control</td>
+    <td>rep_number</td>
+    <td>range_number</td>
   </tr>
 </table>
 
@@ -41,5 +43,9 @@ block_number
 </b>
 <br>
 is_a_control (type 1 or yes in this field if the plot is a control)
+<br>
+rep_number (replicate number)
+<br>
+range_number (range number, i.e., row)
 <br>
 

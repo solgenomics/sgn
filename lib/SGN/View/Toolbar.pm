@@ -272,7 +272,7 @@ sub default_toolbar_data {
 
                 {
                     name => '<i>Nicotiana benthamiana</i>',
-                    link => '/organism/Nicotiana_benthamiana/genome',
+                    link => 'http://bti.cornell.edu/nicotiana-benthamiana/',
                     desc => 'Draft sequence for Nicotiana benthamiana, sequenced by labs at the Boyce Thompson Institute',
                 },
 		{ name => 'Inbred genomes' },
@@ -353,11 +353,16 @@ sub default_toolbar_data {
 
                 #Mapping
                 { name => 'Mapping' },
+                {
+                    name => 'NEW Genome Browser (Jbrowse)',
+                    link => '/jbrowse/',
+                    desc => 'browse genomic annotations using the fast Jbrowse browser',
+                },
 
                 {
-                    name => 'Genome Browser',
+                    name => 'Genome Browser (Gbrowse)',
                     link => '/gbrowse/bin/gbrowse/',
-                    desc => 'browse genomic annotations',
+                    desc => 'browse genomic annotations using GBrowse',
                 },
 		{
 		    name => 'Comparative Genome Browser',
@@ -398,12 +403,12 @@ sub default_toolbar_data {
                 #Molecular Biology
                 { name => "Molecular Biology" },
 
-                {
-                    name => 'Signal Peptide Finder',
-                    link => '/tools/sigpep_finder/input.pl',
-                    desc =>
-'This method of searching for signal sequences is designed to complement SignalP, and has similar success rates.'
-                },
+#                {
+#                    name => 'Signal Peptide Finder',
+#                    link => '/tools/sigpep_finder/input.pl',
+#                    desc =>
+#'This method of searching for signal sequences is designed to complement SignalP, and has similar success rates.'
+ #               },
                 {
                     name => 'In Silico PCR',
                     link => '/tools/insilicopcr',
@@ -429,7 +434,12 @@ sub default_toolbar_data {
                     desc => 'Coffee Interactome Data with Cytoscape Web Start viewer.'
                 },
 
-
+		{ name => "Breeder Tools" },
+		{ 
+		    name => 'Breeder Home',
+		    link => '/breeders/home',
+		    desc => 'Manage a breeding program',
+		},
                 #Bulk Query
                 { name => 'Bulk Query' },
 

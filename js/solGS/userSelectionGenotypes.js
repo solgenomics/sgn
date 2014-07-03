@@ -14,11 +14,23 @@ JSAN.use("jquery.blockUI");
 
 
 jQuery(document).ready( function() {
-        var list = new CXGN.List();
-        var listMenu = list.listSelect("prediction_genotypes", ["accessions"]);
-        	
-        if (listMenu.match(/option/) != null) {
+    var list = new CXGN.List();
+    var listMenu = list.listSelect("prediction_genotypes", ["accessions"]);
+    var relevant =[]; 	
+        
+    if (listMenu.match(/option/) != null) {
             
+            //filter by marker match
+            // alert(listMenu);
+            // jQuery(listMenu).find("option").each(function () {
+                
+            //      var v = jQuery(this).val();
+            //      alert(v);
+                
+
+            // });
+
+           
             jQuery("#prediction_genotypes_list").append(listMenu);
 
         } else {
@@ -121,7 +133,7 @@ function loadGenotypesList(listId) {
                                 + '<td id="list_prediction_output_' + listId +  '">'
                                 + '<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
                                 + listIdArg + ',' + listSource + '); return false;">' 
-                                + '[ Predict GEBVs ]'+ '</a>'             
+                                + '[ Predict ]'+ '</a>'             
                                 + '</td><tr>';
 
                             var tdId = '#list_prediction_output_' + listId;
@@ -135,8 +147,8 @@ function loadGenotypesList(listId) {
                         jQuery.unblockUI();                        
                       
                     } else {
-                                    
-                        alert("Error occured while uploading the list of selection genotypes.");
+                       
+                        alert("Error occured while uploading the list of selection genotypes.");                      
                         jQuery.unblockUI();   
                     }
                      
@@ -218,7 +230,7 @@ function getUserUploadedSelPop (listId) {
                                 + '<td id="list_prediction_output_' + listId +  '">'
                                 + '<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
                                 + listIdArg + ',' + listSource + '); return false;">' 
-                                + '[ Predict GEBVs ]'+ '</a>'
+                                + '[ Predict ]'+ '</a>'
                                 + '</td></tr></table>';
 
     return uploadedSelPop;
@@ -264,8 +276,12 @@ function loadPredictionOutput (url, listId, listSource) {
             
                 }
                 else {                
-                    
-                    alert('Error occured calculating GEBVs for the list of selection genotypes.');
+                    if(response.status == 'failed') {
+                        alert("Error occured while uploading the list of selection genotypes.");
+                    } else {
+                        alert(response.status);  
+                    }
+                  
                     jQuery.unblockUI();
                     
                 }
@@ -331,6 +347,29 @@ function getCheckValue(fileName) {
 }
 
 
+// function checkRelevance(listId) {
+   
+//     jQuery.ajax({
+//             type: 'POST',
+//                 url: '/solgs/check/list/relevance',
+//                 dataType: 'json',
+//                 data: {'list_id': listId},
+
+//                 success: function (response) {
+               
+//                 if (response.status == 'success') {
+//                     if(res)
+                    
+                   
+          
+//                 } 
+               
+//             }
+//         });
+
+//}
+
+
 function loadListFromFile(fileName, listId) {
    
     var listName       = fileName;
@@ -367,7 +406,7 @@ function loadListFromFile(fileName, listId) {
                 + '<td id="list_prediction_output_' + listId +  '">'
                 + '<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
                 + listIdArg + ',' + listSource + '); return false;">' 
-                + '[ Predict GEBVs ]'+ '</a>'             
+                + '[ Predict ]'+ '</a>'             
                 + '</td><tr>';
 
             var tdId = '#list_prediction_output_' + listId;
@@ -411,7 +450,7 @@ function getUserUploadedFile (fileName, listId) {
                                 + '<td id="list_prediction_output_' + listId +  '">'
                                 + '<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
                                 + listIdArg + ',' + listSource + '); return false;">' 
-                                + '[ Predict GEBVs ]'+ '</a>'
+                                + '[ Predict ]'+ '</a>'
                                 + '</td></tr></table>';
 
     return uploadedSelPop;

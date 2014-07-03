@@ -47,7 +47,7 @@ $trait_name
 % {
 
 <div id="select_done">
-  <input  class="button" type="button" id="done_selecting" name="done_selecting" value="Combine" onclick="selectedPops();"/>
+  <input  class="button" type="button" value="Select" onclick="selectedPops();"/>
 </div>
 
 %}

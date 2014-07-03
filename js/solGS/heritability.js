@@ -207,7 +207,7 @@ function plotRegressionData(regressionData){
         .attr("dy", ".1em")         
         .attr("transform", "rotate(90)")
         .attr("fill", "purple")
-        .style({"text-anchor":"start", "fill": "green"});
+        .style({"text-anchor":"start", "fill": "purple"});
        
     regressionPlot.append("g")
         .attr("class", "y axis")
@@ -216,8 +216,8 @@ function plotRegressionData(regressionData){
         .selectAll("text")
         .attr("y", 0)
         .attr("x", -10)
-        .attr("fill", "green")
-        .style("fill", "green");
+        .attr("fill", "purple")
+        .style("fill", "purple");
 
  regressionPlot.append("g")
         .attr("id", "x_axis_label")
@@ -231,7 +231,7 @@ function plotRegressionData(regressionData){
         .attr("id", "y_axis_label")
         .append("text")
         .text("Breeding values (Y)")
-        .attr("y", (pad.top +  10))
+        .attr("y", (pad.top -  10))
         .attr("x", ((width/2) - 80))
         .attr("font-size", 10)
 
@@ -287,8 +287,8 @@ function plotRegressionData(regressionData){
         .attr("id", "heritability")
         .append("text")
         .text("Heritability: " + heritability)
-        .attr("x", 400)
-        .attr("y", 20)
+        .attr("x", 20)
+        .attr("y", 10)
         .style("fill", "purple")
         .style("font-weight", "bold");     
 }

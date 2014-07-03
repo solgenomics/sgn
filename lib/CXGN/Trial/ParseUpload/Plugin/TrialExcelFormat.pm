@@ -43,6 +43,8 @@ sub _validate_with_plugin {
   my $plot_number_head;
   my $block_number_head;
   my $is_a_control_head;
+  my $rep_number_head;
+  my $range_number_head;
 
   if ($worksheet->get_cell(0,0)) {
     $plot_name_head  = $worksheet->get_cell(0,0)->value();
@@ -59,6 +61,12 @@ sub _validate_with_plugin {
   if ($worksheet->get_cell(0,4)) {
     $is_a_control_head  = $worksheet->get_cell(0,4)->value();
   }
+  if ($worksheet->get_cell(0,5)) {
+    $rep_number_head  = $worksheet->get_cell(0,5)->value();
+  }
+  if ($worksheet->get_cell(0,6)) {
+    $range_number_head  = $worksheet->get_cell(0,6)->value();
+  }
 
   if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
     push @errors, "Cell A1: plot_name is missing from the header";
@@ -73,7 +81,7 @@ sub _validate_with_plugin {
     push @errors, "Cell D1: block_number is missing from the header";
   }
   if ($is_a_control_head && $is_a_control_head ne 'is_a_control') {
-    push @errors, "Cell D1: Column D should contain the header \"is_a_control\"";
+    push @errors, "Cell E1: Column E should contain the header \"is_a_control\"";
   }
 
   for my $row ( 1 .. $row_max ) {
@@ -83,6 +91,8 @@ sub _validate_with_plugin {
     my $plot_number;
     my $block_number;
     my $is_a_control;
+    my $rep_number;
+    my $range_number;
 
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
@@ -99,7 +109,12 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell($row,4)) {
       $is_a_control =  $worksheet->get_cell($row,4)->value();
     }
-
+    if ($worksheet->get_cell($row,5)) {
+      $rep_number =  $worksheet->get_cell($row,5)->value();
+    }
+    if ($worksheet->get_cell($row,6)) {
+      $range_number =  $worksheet->get_cell($row,6)->value();
+    }
     #skip blank lines
     if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
       next;
@@ -189,6 +204,8 @@ sub _parse_with_plugin {
     my $plot_number;
     my $block_number;
     my $is_a_control;
+    my $rep_number;
+    my $range_number; 
 
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
@@ -205,7 +222,12 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,4)) {
       $is_a_control =  $worksheet->get_cell($row,4)->value();
     }
-
+    if ($worksheet->get_cell($row,5)) {
+      $rep_number =  $worksheet->get_cell($row,5)->value();
+    }
+    if ($worksheet->get_cell($row,6)) {
+      $range_number =  $worksheet->get_cell($row,6)->value();
+    }
     #skip blank lines
     if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
       next;
@@ -220,6 +242,12 @@ sub _parse_with_plugin {
       $design{$key}->{is_a_control} = 1;
     } else {
       $design{$key}->{is_a_control} = 0;
+    }
+    if ($rep_number) {
+      $design{$key}->{rep_number} = $rep_number;
+    }
+    if ($range_number) {
+      $design{$key}->{range_number} = $range_number;
     }
   }
 

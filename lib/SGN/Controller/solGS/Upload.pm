@@ -224,19 +224,25 @@ sub create_list_population_metadata {
 sub create_list_population_metadata_file {
     my ($self, $c) = @_;
       
-    my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
-    my $model_id = $c->stash->{model_id};
-    $c->stash->{pop_id} = $model_id;
-
-    my $selection_pop_id = $c->stash->{prediction_pop_id};
-   
-    $self->create_list_population_metadata($c);
-
-    my $user_id    = $c->user->id;
-    my $metadata = $c->stash->{user_list_population_metadata};
+    my $tmp_dir          = $c->stash->{solgs_prediction_upload_dir};
+    my $model_id         = $c->stash->{model_id};
+    $c->stash->{pop_id}  = $model_id;
+    my $selection_pop_id = $c->stash->{prediction_pop_id};   
+    my $user_id          = $c->user->id;
   
-    my $id = $model_id ? $model_id : $selection_pop_id;
-    my $file = catfile ($tmp_dir, "metadata_${user_id}_${id}");
+    $self->create_list_population_metadata($c);
+    my $metadata = $c->stash->{user_list_population_metadata};
+   
+    my $file;
+    if ($model_id) 
+    {              
+        $file = catfile ($tmp_dir, "metadata_${user_id}_${model_id}");
+    }
+
+    if ($selection_pop_id) 
+    { 
+        $file = catfile ($tmp_dir, "metadata_${user_id}_${selection_pop_id}");
+    }
 
     write_file($file, $metadata);
  
@@ -255,6 +261,8 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
     $path       =~ s/$base//;
     my $page    = "solgs/model/combined/populations/";
    
+    my $ret->{status} = 'failed';
+    
     if ($referer =~ m/$page/)
     {
         my $trait_id = $c->req->param('trait_id');
@@ -279,29 +287,39 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
       
         if ( ! -s $prediction_pop_gebvs_file )
         {
-            my $dir = $c->stash->{solgs_cache_dir};
-        
-            my $exp = "phenotype_data_${model_id}_${trait_abbr}"; 
-            my $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
-
-            $exp = "genotype_data_${model_id}_${trait_abbr}"; 
-            my $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
-
-            $c->stash->{trait_combined_pheno_file} = $pheno_file;
-            $c->stash->{trait_combined_geno_file}  = $geno_file;
-           
-            $self->user_prediction_population_file($c, $prediction_pop_id);
+           my $dir = $c->stash->{solgs_cache_dir};
           
-            $c->controller("solGS::solGS")->get_rrblup_output($c); 
+           my $exp = "phenotype_data_${model_id}_${trait_abbr}"; 
+           my $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
+
+           $exp = "genotype_data_${model_id}_${trait_abbr}"; 
+           my $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
+
+           $c->stash->{trait_combined_pheno_file} = $pheno_file;
+           $c->stash->{trait_combined_geno_file}  = $geno_file;
+           
+           $self->user_prediction_population_file($c, $prediction_pop_id);
+           my $selection_pop_file = $c->stash->{user_selection_list_genotype_data_file};
+          
+           $c->controller("solGS::solGS")->compare_genotyping_platforms($c, [$geno_file, $selection_pop_file]);
+           my $no_match = $c->stash->{pops_with_no_genotype_match};
+           
+           if(!$no_match)
+           {
+               $c->controller("solGS::solGS")->get_rrblup_output($c); 
+           }
+           else 
+           {
+               $ret->{status} = 'The selection population was genotyped by a set of markers different from the ones used for the training population. Therefore, you can\'t use this prediction model on it.';   
+                     
+           }
+
         }
         
-        $c->controller("solGS::solGS")->gs_files($c);
-   
+        $c->controller("solGS::solGS")->gs_files($c);   
         $c->controller("solGS::solGS")->download_prediction_urls($c, $combo_pops_id,  $prediction_pop_id );
         my $download_prediction = $c->stash->{download_prediction};
-     
-        my $ret->{status} = 'failed';
-    
+        
         if (-s $prediction_pop_gebvs_file) 
         {
             $ret->{status} = 'success';
@@ -373,7 +391,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
                      my $exp = "phenotype_data_${user_id}_${model_id}"; 
                      $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
                 
-                     $exp = "genotype_data_${user_id}_{model_id}"; 
+                     $exp = "genotype_data_${user_id}_${model_id}"; 
                      $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);    
 
                  }
@@ -391,10 +409,21 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
                  $c->stash->{phenotype_file} = $pheno_file;
                  $c->stash->{genotype_file}  = $geno_file;
                 
-                 $self->user_prediction_population_file($c, $prediction_pop_id);
-               
-                 $c->controller("solGS::solGS")->get_rrblup_output($c); 
-
+                 $self->user_prediction_population_file($c, $prediction_pop_id);               
+                 my $selection_pop_file = $c->stash->{user_selection_list_genotype_data_file};
+                
+                 $c->controller("solGS::solGS")->compare_genotyping_platforms($c, [$geno_file, $selection_pop_file]);
+                 my $no_match = $c->stash->{pops_with_no_genotype_match};
+                
+                 if(!$no_match)
+                 {
+                     $c->controller("solGS::solGS")->get_rrblup_output($c); 
+                 }
+                 else 
+                 {
+                     $ret->{status} = 'The selection population was genotyped by a set of markers different from the ones used for the training population. Therefore, you can\'t use this prediction model on it.';   
+                     
+                 }
              }
          } 
           
@@ -404,9 +433,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
                
         $c->controller("solGS::solGS")->download_prediction_urls($c, $model_id, $prediction_pop_id );
         my $download_prediction = $c->stash->{download_prediction};
-       
-        my $ret->{status} = 'failed';
-     
+                 
         if (-s $prediction_pop_gebvs_file) 
         {
             $ret->{status} = 'success';
@@ -490,12 +517,13 @@ sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/lis
   #####
 
 ######
-  #   my $user_id = $c->user->id;
+#     my $user_id = $c->user->id;
 #     my $pheno_file = "/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/phenotype_data_${user_id}_${model_id}";
 #     my $geno_file = "/data/prod/tmp/solgs/tecle/tempfiles/prediction_upload/genotype_data_${user_id}_${model_id}"; 
-#####    
+##### 
+
     $self->create_list_population_metadata_file($c);
-     
+   
     my $ret->{status} = 'failed';
     
     if (-s $geno_file && -s $pheno_file) 
