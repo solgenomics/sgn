@@ -897,7 +897,7 @@ sub delete_trial_by_file : Path('/breeders/trial/delete/file') Args(1) {
 =head2 delete_trial_by_trial_id
 
  Usage:
- Desc:
+ Desc:         Deletes plots associated with a phenotyping experiment
  Ret:
  Args:
  Side Effects:
