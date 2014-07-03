@@ -138,7 +138,7 @@ sub delete_location :Path('/ajax/breeders/location/delete') Args(1) {
 }
 	
 
-sub get_breeding_programs : Path('/breeders/programs') Args(0) { 
+sub get_breeding_programs : Path('/ajax/breeders/all_programs') Args(0) { 
     my $self = shift;
     my $c = shift;
 
@@ -235,7 +235,20 @@ sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
 	$c->stash->{rest} = { error => "You don't have sufficient privileges to delete breeding programs." };
     }
 }
-	
+
+
+sub get_breeding_programs :Path('/breeders/programs_by_trial/') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
+
+    my $projects = $p->get_breeding_programs_by_trial($trial_id);
+
+    $c->stash->{rest} =   { projects => $projects };
+    
+}
 	    
 sub add_data_agreement :Path('/breeders/trial/add/data_agreement') Args(0) { 
     my $self = shift;
