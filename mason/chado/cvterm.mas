@@ -123,6 +123,31 @@ if ( @qtl_pops )
 %  }
 
 </&>
+<br />
+
+<h4>Add this term to a list</h4>
+
+<div id="cvterm_id" style="display:none" ><% $db_name %>:<% $accession %></div>
+
+<&| /page/info_section.mas, title=>"Add to list", collapsible=>1, collapsed=>1 &>
+<div id="paste_to_list">
+LOAD...
+</div>
+
+</&>
+<script>
+
+  if (isLoggedIn()) { 
+    addToListMenu('paste_to_list', 'cvterm_id', { listType: 'traits' } );
+  }
+  else { 
+    jQuery('#paste_to_list').html("&nbsp;Please log in to use lists.");
+  }
+  
+</script>
+
+<br />
+
 
 <& /ontology/embedded_browser.mas, cvterm => $cvterm &>
 
