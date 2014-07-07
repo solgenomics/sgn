@@ -66,12 +66,12 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     $trials_by_breeding_project{'Other'} = $projects->get_trials_by_breeding_program();
 
-    $c->stash->{locations} = $self->get_locations($c);
+    # locations are not needed for this page... (slow!!)
+    $c->stash->{locations} = []; # $self->get_locations($c); 
 
     $c->stash->{trials_by_breeding_project} = \%trials_by_breeding_project; #$self->get_projects($c);
 
     $c->stash->{breeding_programs} = $breeding_programs;
-
 
     $c->stash->{template} = '/breeders_toolbox/manage_projects.mas';
 }
