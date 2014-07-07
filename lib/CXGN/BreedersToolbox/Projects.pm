@@ -13,6 +13,19 @@ has 'schema' => (
 		 isa      => 'DBIx::Class::Schema',
 		);
 
+
+sub trial_exists { 
+    my $self = shift;
+    my $trial_id = shift;
+    
+    my $rs = $self->schema->resultset('Project::Project')->search( { project_id => $trial_id });
+    
+    if ($rs->count() == 0) { 
+	return 0;
+    }
+    return 1;
+}
+
 sub get_breeding_programs {
     my $self = shift;
 

@@ -16,6 +16,14 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+
+    if (!$program_object->trial_exists($trial_id)) { 
+	$c->stash->{message} = "The requested trial does not exist or has been deleted.";
+	$c->stash->{template} = 'generic_message.mas';
+	return;
+    }
+	
+
     my $breeding_program = $program_object->get_breeding_program_with_trial($trial_id);
     my $trial_name =  $trial_layout->get_trial_name();
     my $trial_description =  $trial_layout->get_trial_description();
