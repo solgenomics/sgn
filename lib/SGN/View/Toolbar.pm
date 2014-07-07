@@ -272,7 +272,7 @@ sub default_toolbar_data {
 
                 {
                     name => '<i>Nicotiana benthamiana</i>',
-                    link => 'http://bti.cornell.edu/nicotiana-benthamiana/',
+                    link => 'http://bti.cornell.edu/research/projects/nicotiana-benthamiana',
                     desc => 'Draft sequence for Nicotiana benthamiana, sequenced by labs at the Boyce Thompson Institute',
                 },
 		{ name => 'Inbred genomes' },
