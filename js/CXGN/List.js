@@ -655,16 +655,17 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 	if (options.typeSourceDiv) { 
 	    type = getData(options.typeSourceDiv, selectText);
 	    if (type) { 
-		type = type.replace(/(\n|\r)+$/, '');
+		type = sourcetype.replace(/(\n|\r)+$/, '');
 	    }
 	}
-	if (options.types) { 
+	if (options.listType) { 
 	    type = options.listType;
 	}
     }
     html = '<input type="text" id="'+dataDiv+'_new_list_name" size="8" />';
     html += '<input type="hidden" id="'+dataDiv+'_list_type" value="'+type+'" />';
     html += '<input id="'+dataDiv+'_add_to_new_list" type="button" value="add to new list" /><br />';
+
     html += lo.listSelect(dataDiv, [ type ]);
 
     html += '<input id="'+dataDiv+'_button" type="button" value="add to list" />';
