@@ -215,9 +215,16 @@ sub search_trials : Path('/solgs/search/trials') Args() {
         $ret->{trials}   = $projects;
     } 
     else 
-    {
-        my $go_next = $pager->current_page + 1;
-        $c->res->redirect("/solgs/search/trials/?page=$go_next");
+    { 
+        if ($pager->current_page == $pager->last_page) 
+        {
+          $c->res->redirect("/solgs/search/trials/?page=1");  
+        }
+        else 
+        {
+            my $go_next = $pager->current_page + 1;
+            $c->res->redirect("/solgs/search/trials/?page=$go_next");
+        }
     } 
     
     $ret = to_json($ret);
