@@ -267,14 +267,11 @@ sub get_phenotype_info_matrix {
     my %plot_data;
     my %traits;
 
-
     foreach my $d (@$data) { 
 	my $cvterm = $d->[6].":".$d->[7];
-	print STDERR "CVTERM:$cvterm \n";
 	my $trait_data = $d->[4];
 	my $plot = $d->[5];
-	print STDERR "Adding $cvterm -> $trait_data TO $plot\n";
-	$plot_data{$plot} = { $cvterm => $trait_data  };
+	$plot_data{$plot}->{$cvterm} = $trait_data;
 	$traits{$cvterm}++;
     }
     
@@ -291,13 +288,18 @@ sub get_phenotype_info_matrix {
     
     # dump phenotypic values
     #
+    my $count2 = 0;
     foreach my $plot (sort keys (%plot_data)) { 
 	$line = $plot;
+	
 	foreach my $trait (@sorted_traits) { 
-	    $line .= $plot_data{$plot}->{$trait} ? "\t".$plot_data{$plot}->{$trait} : "\t";
+	    my $tab = $plot_data{$plot}->{$trait}; # ? "\t".$plot_data{$plot}->{$trait} : "\t";
+	    $line .= $tab ? "\t".$tab : "\t";
+
 	}
 	push @info, $line;
     }
+
     return @info;
 }
 
