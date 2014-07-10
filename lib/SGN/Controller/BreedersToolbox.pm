@@ -67,7 +67,8 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     $trials_by_breeding_project{'Other'} = $projects->get_trials_by_breeding_program();
 
     # locations are not needed for this page... (slow!!)
-    $c->stash->{locations} = []; # $self->get_locations($c); 
+    $c->stash->{locations} = $self->get_all_locations($c);
+   
 
     $c->stash->{trials_by_breeding_project} = \%trials_by_breeding_project; #$self->get_projects($c);
 
@@ -90,7 +91,7 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
 
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
 
-    my $accessions = $ac->get_all_accessions();
+    my $accessions = $ac->get_all_accessions($c);
 
     $c->stash->{accessions} = $accessions;
 
@@ -460,6 +461,21 @@ sub get_locations : Private {
 				    $count, # number of experiments TBD
 				    
 		];
+    }
+    return \@locations;
+
+}
+
+sub get_all_locations { 
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $rs = $schema -> resultset("NaturalDiversity::NdGeolocation")->search( {} );
+    
+    my @locations = ();
+    foreach my $loc ($rs->all()) { 
+	push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
     }
     return \@locations;
 
