@@ -9,6 +9,7 @@ use Config::Any;
 use Data::Dumper;
 use File::Slurp qw | read_file |;
 use Bio::Chado::Schema;
+use CXGN::Phenome::Schema;
 
 use warnings;
 
@@ -34,7 +35,7 @@ sub BUILD {
 
     $self->bcs_schema(Bio::Chado::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}));
     
-    $self->phenome_schema(Phenome::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}));
+    $self->phenome_schema(CXGN::Phenome::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}));
     
 
 }
@@ -52,7 +53,7 @@ has 'bcs_schema' => (isa => 'Bio::Chado::Schema',
 		     is => 'rw',
     );
 
-has 'phenome_schema' => (isa => 'Phenome::Schema', 
+has 'phenome_schema' => (isa => 'CXGN::Phenome::Schema', 
 			 is => 'rw',
     );
 
