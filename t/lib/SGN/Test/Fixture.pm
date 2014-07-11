@@ -53,7 +53,7 @@ has 'bcs_schema' => (isa => 'Bio::Chado::Schema',
     );
 
 has 'phenome_schema' => (isa => 'Phenome::Schema', 
-			 is ='rw',
+			 is => 'rw',
     );
 
 
