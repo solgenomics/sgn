@@ -1,0 +1,22 @@
+
+<%args>
+@usernames => ()
+$logins => {}
+</%args>
+
+<& /page/page_title.mas, title=>"Site Status" &>
+
+<&| /page/info_section.mas, title=>"Logins" &>
+
+% foreach my $ut (keys %{$logins->{detailed}}) { 
+  <br />
+  <b><% $ut %></b><br />
+  
+%   foreach my $un (keys %{$logins->{detailed}->{$ut}}) { 
+     <% $un %><br />
+%   }
+% }
+
+
+</&>
+

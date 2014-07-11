@@ -506,15 +506,18 @@ sub set_sql {
         stats_aggregate => #send:  session_timeout_in_secs (gets aggregate login data)
 
           "	SELECT  
-				user_type, count(*) 
+				sp_roles.name, count(*) 
 			FROM 
-				sgn_people.sp_person 
+				sgn_people.sp_person
+                        JOIN    sgn_people.sp_person_roles USING(sp_person_id)
+                        JOIN    sgn_people.sp_roles USING(sp_role_id)
+           
 			WHERE 
 				last_access_time IS NOT NULL 
 				AND cookie_string IS NOT NULL 	
 				AND extract(epoch from now()-last_access_time)<? 
 			GROUP BY 	
-				user_type		",
+				sp_roles.name",
 
         stats_private => #send: session_timeout_in_secs (gets all logged-in users)
 
