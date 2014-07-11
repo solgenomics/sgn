@@ -37,7 +37,8 @@ sub BUILD {
     
     $self->phenome_schema(CXGN::Phenome::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}));
     
-
+    $self->sgn_schema(SGN::Schema->connect($dsn, $self->config->{dbuser}, $self->donfig->{dbpass}));
+    
 }
 
 has 'config' => ( isa => "Ref",
@@ -57,5 +58,8 @@ has 'phenome_schema' => (isa => 'CXGN::Phenome::Schema',
 			 is => 'rw',
     );
 
+has 'sgn_schema' => (isa => 'SGN::Schema',
+		     is => 'rw',
+    );
 
 1;
