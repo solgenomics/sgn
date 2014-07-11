@@ -1,4 +1,34 @@
 
+=head1 NAME
+
+SGN::Test::Fixture - use the fixture in unit tests
+
+=head1 SYNOPSIS
+
+my $f = SGN::Test::Fixture;
+
+my $dbh = $f->dbh(); # accesses the fixture db
+
+my $bcs_schema = $f->bcs_schema(); # access DBIx::Class BCS schema
+
+my $phenome_schema = $f->phenome_schema(); # access DBIx::Class phenome schema
+
+my $sgn_schema = $f->sgn_schema(); # access DBIx::Class SGN schema
+
+# run tests...
+
+my $sample_class = CXGN::SampleClass->new( { dbh => $dbh });
+
+is ($sample_class->foo(), 42, "foo test");
+
+# etc...
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
 
 package SGN::Test::Fixture;
 
@@ -10,6 +40,7 @@ use Data::Dumper;
 use File::Slurp qw | read_file |;
 use Bio::Chado::Schema;
 use CXGN::Phenome::Schema;
+use SGN::Schema;
 
 use warnings;
 
@@ -37,7 +68,7 @@ sub BUILD {
     
     $self->phenome_schema(CXGN::Phenome::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}));
     
-    $self->sgn_schema(SGN::Schema->connect($dsn, $self->config->{dbuser}, $self->donfig->{dbpass}));
+    $self->sgn_schema(SGN::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}));
     
 }
 
