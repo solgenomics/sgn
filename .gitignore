@@ -22,6 +22,7 @@ programs/fast_mapping
 sgn_local.conf
 sgn_testing.conf
 t/data/data/prod/tmp/
+t/data/vigstool/vigs*
 *.log
 MANIFEST*
 ./cgi-bin/secretom
