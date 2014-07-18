@@ -26,8 +26,10 @@ sub get_gene :Path('/api/tea') :Args(0) {
     # get variables from catalyst object
     my $gene_name = $c->req->param("gene_name");
 	
+	print STDERR "genes: $gene_name\n";
+	
 	if ($gene_name =~ /\,/) {
-		@gene_array = $gene_name.split(/,/)
+		@gene_array = split(/,/, $gene_name);
 	} else {
 		push(@gene_array, $gene_name);
 	}
@@ -55,6 +57,8 @@ sub get_gene :Path('/api/tea') :Args(0) {
 	# print STDERR "cv: ".$cv->cvterm_id()."\n";
 	# print STDERR "desc: ".$fp->value()."\n";
 	
+	print STDERR "test: $gene_ids{Solyc04g008460}\n";
+	
     # Send error message to the web if something is wrong
 	if (scalar (@errors) > 0){
 		my $user_errors = join("<br />", @errors);
@@ -63,8 +67,8 @@ sub get_gene :Path('/api/tea') :Args(0) {
 	}
 	else {
 		$c->stash->{rest} = {
-			gene_id=>%gene_ids,
-			description=>%descriptions
+			gene_id=>\%gene_ids,
+			description=>\%descriptions
 		};
 		# $c->stash->{rest} = {
 		# 	gene_id=>$feature->feature_id(),
