@@ -29,6 +29,7 @@ use File::Spec::Functions;
 use Digest::MD5;
 use List::MoreUtils qw /any /;
 use Data::Dumper;
+use CXGN::Trial;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use JSON -support_by_pp;
@@ -36,6 +37,7 @@ use SGN::View::Trial qw/design_layout_view design_info_view/;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
+use CXGN::BreedersToolbox::Projects;
 use CXGN::BreedersToolbox::Delete;
 use CXGN::UploadFile;
 use CXGN::Trial::ParseUpload;
@@ -1061,5 +1063,42 @@ sub delete_trial_layout_by_trial_id : Path('/breeders/trial/layout/delete/id') A
 
 }
 
+sub get_trial_description : Path('/ajax/breeders/trial/description/get') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    
+    my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+    
+    print STDERR "TRIAL: ".$trial->get_description()."\n";
+
+    $c->stash->{rest} = { description => $trial->get_description() };
+   
+}
+
+sub save_trial_description : Path('/ajax/breeders/trial/description/save') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    my $description = $c->req->param("description");
+    
+    my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+
+    my $breeding_program = $p->get_breeding_programs_by_trial($trial_id);
+
+    if (! ($c->user() &&  ($c->user->check_roles("curator") || $c->user->check_roles($breeding_program)))) { 
+	$c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the description of a trial." };
+	return;
+    }
+    
+    $trial->set_description($description);
+
+    $c->stash->{rest} = { success => 1 };
+	
+
+
+}
 
 1;
