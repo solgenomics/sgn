@@ -12,7 +12,7 @@ __PACKAGE__->config(
    );
 
 
-# check input data, create Bowtie2 input data and run Bowtie2
+# API to get the functional description for an array of genes
 sub get_gene :Path('/api/tea') :Args(0) { 
     my ($self, $c) = @_;
     
@@ -57,7 +57,7 @@ sub get_gene :Path('/api/tea') :Args(0) {
 	# print STDERR "cv: ".$cv->cvterm_id()."\n";
 	# print STDERR "desc: ".$fp->value()."\n";
 	
-	print STDERR "test: $gene_ids{Solyc04g008460}\n";
+	# print STDERR "test: $gene_ids{Solyc04g008460}\n";
 	
     # Send error message to the web if something is wrong
 	if (scalar (@errors) > 0){
