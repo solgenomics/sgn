@@ -69,7 +69,7 @@ var Ontology = {
     //Make an ajax request for finding the available objects for ontology evidence
     //(relationships, evidence codes, evidence description
     populateEvidence: function(div_id, uri, dummy_option) {
-        jQuery.ajax({ url: uri , method:"POST" ,
+        jQuery.ajax({ url: uri , method:"GET" ,
                     async: false,
                     success: function(response) {
                     var error = response.error;
