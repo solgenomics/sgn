@@ -85,7 +85,7 @@ var Tools = {
                     var json = response;
                     if ( response.error ) { alert(response.error) ; }
                     var responseArray = response.html;
-                    var select = $('organism_select');
+                    var select = document.getElementById('organism_select');
                     select.length = 0;
 		    select.length = responseArray.length + 1;
 		    select[0].text = '--select--';
