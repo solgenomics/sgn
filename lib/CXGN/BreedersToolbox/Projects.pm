@@ -406,7 +406,7 @@ sub get_breeding_program_cvterm_id {
 	    {
 		name => 'breeding_program',
 		cv   => 'local',
-		db   => 'local',
+		db   => 'null',
 		dbxref => 'breeding_program',
 	    });
 
@@ -430,7 +430,7 @@ sub get_breeding_trial_cvterm_id {
 	    {
 		name => 'breeding_program_trial_relationship',
 		cv   => 'local',
-		db   => 'local',
+		db   => 'null',
 		dbxref => 'breeding_program_trial_relationship',
 	    });
 	$breeding_trial_cvterm_row = $row;
