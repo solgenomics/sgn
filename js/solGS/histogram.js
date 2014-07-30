@@ -47,7 +47,7 @@ function getHistogramData () {
             
         },
         error: function(response) {
-            var errorMessage = 'There is error in creating the phenotype data set for the histogram.';
+            var errorMessage = 'There is no phenotype data to plot.';
             jQuery("#histogram_message").html(errorMessage);                  
         }
     });
