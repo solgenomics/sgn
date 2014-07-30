@@ -737,29 +737,46 @@ sub trait :Path('/solgs/trait') Args(3) {
     my ($self, $c, $trait_id, $key, $pop_id) = @_;
    
     my $ajaxredirect = $c->req->param('source');
-  
+    $c->stash->{ajax_request} = $ajaxredirect;
+   
     if ($pop_id && $trait_id)
     {    
         $c->stash->{pop_id} = $pop_id;       
-        $self->get_trait_name($c, $trait_id);       
-        $self->project_description($c, $pop_id);        
+        $self->get_trait_name($c, $trait_id);                  
         $self->get_rrblup_output($c);
-        $self->gs_files($c);
-        $self->trait_phenotype_stat($c);      
-        $self->download_prediction_urls($c);     
-        my $download_prediction = $c->stash->{download_prediction};
-      
-        $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
-     
-        $self->get_project_owners($c, $pop_id);       
-        $c->stash->{owner} = $c->stash->{project_owners};
 
-        $c->stash->{template} = $self->template("/population/trait.mas");
+        $self->gs_files($c);
+
+        unless ($ajaxredirect eq 'heritability') 
+        {
+            $self->project_description($c, $pop_id); 
+            $self->trait_phenotype_stat($c);      
+            $self->download_prediction_urls($c);     
+            my $download_prediction = $c->stash->{download_prediction};
+          
+            $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
+             
+            $self->get_project_owners($c, $pop_id);       
+            $c->stash->{owner} = $c->stash->{project_owners};
+
+            $c->stash->{template} = $self->template("/population/trait.mas");
+        }
     }
-    
+ 
     if ($ajaxredirect) 
     {
-        my $ret->{status} = 'success';
+        my $trait_abbr = $c->stash->{trait_abbr};
+        my $cache_dir = $c->stash->{solgs_cache_dir};
+        my $gebv_file = "gebv_kinship_${trait_abbr}_${pop_id}";       
+        $gebv_file    = $self->grep_file($cache_dir,  $gebv_file);
+
+        my $ret->{status} = 'failed';
+        
+        if (-s $gebv_file) 
+        {
+            $ret->{status} = 'success';
+        }
+        
         $ret = to_json($ret);
         
         $c->res->content_type('application/json');
@@ -3781,13 +3798,15 @@ sub run_r_script {
             $err .= "\n=== R output ===\n".file($r_out_temp)->slurp."\n=== end R output ===\n" 
         };
        
-        
-        $c->throw(is_client_error   => 1,
-                  title             => "$r_script Script Error",
-                  public_message    => "There is a problem running $r_script on this dataset!",	     
-                  notify            => 1, 
-                  developer_message => $err,
-            );
+       unless ($c->stash->{ajax_request}) 
+       { 
+           $c->throw(is_client_error   => 1,
+                     title             => "$r_script Script Error",
+                     public_message    => "There is a problem running $r_script on this dataset!",	     
+                     notify            => 1, 
+                     developer_message => $err,
+               );
+      }
     }
 
 }
