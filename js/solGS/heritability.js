@@ -67,13 +67,12 @@ function calculateVarianceComponents () {
         success: function(response) {
             if(response.status === 'success') {
                 getRegressionData();
-
-            } else {                        
-                // alert('there is error caculating varince components.');
+            } else {
+              jQuery("#heritability_message").html('Error occured estimating breeding values for this trait.');   
             }
         },
-        error: function(response) {                    
-            // alert('there is error caculating varince components.');      
+        error: function(response) { 
+            jQuery("#heritability_message").html('Error occured estimating breeding values for this trait.');            
         }  
     });
 }
@@ -102,12 +101,10 @@ function getRegressionData () {
                 plotRegressionData(regressionData);
                 jQuery("#trait_histogram_canvas").empty();
                 getHistogramData();
-            } else {                    
-                alert('there is problem getting regression data.');
             }
         },
         error: function(response) {                    
-          //  alert('there is porblem getting regression data.');
+          jQuery("#heritability_message").html('Error occured getting regression data.');
         }
     });
 }
@@ -295,6 +292,7 @@ function plotRegressionData(regressionData){
 
 
 jQuery(document).ready( function () { 
+   
     checkDataExists();   
  });
 
