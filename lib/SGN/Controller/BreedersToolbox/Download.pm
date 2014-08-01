@@ -89,8 +89,15 @@ sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download')
 
     my $location = $rs->first()->get_column('description');
     
-    my $bprs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id})->search_related('project_relationship_subject_projects');
-    my $pbr = $schema->resultset("Project::Project")->search( { 'me.project_id'=> $bprs->object_id() } );
+    my $bprs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id})->search_related_rs('project_relationship_subject_projects');
+
+    print STDERR "COUNT: ".$bprs->count()."  ". $bprs->get_column('project_relationship.object_project_id')."\n";
+
+
+
+    my $pbr = $schema->resultset("Project::Project")->search( { 'me.project_id'=> $bprs->get_column('project_relationship_subject_projects.object_project_id')->first() } );
+    
+
     my $program_name = $pbr->first()->name();
     my $year = "";
 
@@ -106,7 +113,7 @@ sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download')
 	    $ws->write($line, $col, $columns[$col]);
 	}
     }
-    $ss->write(0, 0, "$program_name, $location ($year)");
+    $ws->write(0, 0, "$program_name, $location ($year)");
     $ss ->close();
 
     my $file_name = basename($tempfile);    
