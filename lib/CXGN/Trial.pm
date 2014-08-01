@@ -62,7 +62,7 @@ sub get_year {
 
     my $type_id = $self->get_year_type_id();
 
-    my $rs = $self->bcs_schema->resultset('Project::Project')->search( { project_id => $self->get_trial_id() })->search_related('projectprop', { type_id => $type_id } );
+    my $rs = $self->bcs_schema->resultset('Project::Project')->search( { 'me.project_id' => $self->get_trial_id() })->search_related('projectprops', { type_id => $type_id } );
 
     if ($rs->count() == 0) { 
 	return undef;
@@ -133,7 +133,7 @@ sub set_description {
 sub get_year_type_id { 
     my $self = shift;
 
-    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'year' });
+    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'project year' });
 
     return $rs->first()->cvterm_id();
 }
