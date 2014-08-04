@@ -742,7 +742,10 @@ sub trait :Path('/solgs/trait') Args(3) {
     if ($pop_id && $trait_id)
     {    
         $c->stash->{pop_id} = $pop_id;       
-        $self->get_trait_name($c, $trait_id);                  
+       
+        $self->get_trait_name($c, $trait_id);
+        my $trait_name = $c->stash->{trait_name};
+
         $self->get_rrblup_output($c);
 
         $self->gs_files($c);
@@ -758,17 +761,29 @@ sub trait :Path('/solgs/trait') Args(3) {
              
             $self->get_project_owners($c, $pop_id);       
             $c->stash->{owner} = $c->stash->{project_owners};
+           
+            my $script_error = $c->stash->{script_error};
+            if ($script_error) 
+            {
+                $c->stash->{message} = "$script_error can't create a prediction model for <b>$trait_name</b>. 
+                                        There is a problem with the trait dataset.";
 
-            $c->stash->{template} = $self->template("/population/trait.mas");
+                $c->stash->{template} = "/generic_message.mas";   
+
+            } 
+            else 
+            {
+                $c->stash->{template} = $self->template("/population/trait.mas");
+            }
         }
     }
  
     if ($ajaxredirect) 
     {
         my $trait_abbr = $c->stash->{trait_abbr};
-        my $cache_dir = $c->stash->{solgs_cache_dir};
-        my $gebv_file = "gebv_kinship_${trait_abbr}_${pop_id}";       
-        $gebv_file    = $self->grep_file($cache_dir,  $gebv_file);
+        my $cache_dir  = $c->stash->{solgs_cache_dir};
+        my $gebv_file  = "gebv_kinship_${trait_abbr}_${pop_id}";       
+        $gebv_file     = $self->grep_file($cache_dir,  $gebv_file);
 
         my $ret->{status} = 'failed';
         
@@ -3797,16 +3812,8 @@ sub run_r_script {
         { 
             $err .= "\n=== R output ===\n".file($r_out_temp)->slurp."\n=== end R output ===\n" 
         };
-       
-       unless ($c->stash->{ajax_request}) 
-       { 
-           $c->throw(is_client_error   => 1,
-                     title             => "$r_script Script Error",
-                     public_message    => "There is a problem running $r_script on this dataset!",	     
-                     notify            => 1, 
-                     developer_message => $err,
-               );
-      }
+            
+        $c->stash->{script_error} = "$r_script";
     }
 
 }
