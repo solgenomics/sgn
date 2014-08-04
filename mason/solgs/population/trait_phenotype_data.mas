@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-population/trait_phenotype_data.mas - displays scatter plot of trait phenotype data
+population/trait_phenotype_data.mas - displays plots of trait phenotype data.
 
 =AUTHOR
 
@@ -21,20 +21,13 @@ $combo_pops_id => ''
 
 </%args>
 
-<%perl>
-
-
-</%perl>
-
- <script>
+<script>
    jQuery(function() {
    jQuery("#tabs_phenotype").tabs({
    event: "mouseover"
    });
    });
-
 </script>
-
 
 <div id="tabs_phenotype" style="width:100%;height:100%;border-color:green;">
   <ul>
@@ -70,10 +63,7 @@ $combo_pops_id => ''
   </div>
   
   <br/>
-  
-  
-
-    <br/>
+  <br/>
 
 </div>
 
