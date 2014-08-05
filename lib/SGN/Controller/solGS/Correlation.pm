@@ -158,25 +158,22 @@ sub correlation_analysis_output :Path('/correlation/analysis/output') Args(0) {
     $c->stash->{pop_id} = $pop_id;
 
     $self->correlation_output_file($c);
-    my $corre_coefficients_file = $c->stash->{corre_coefficients_file};
-   
-    if (!-s $corre_coefficients_file)
+    my $corre_json_file = $c->stash->{corre_coefficients_json_file};
+    
+    my $ret->{status} = 'failed';
+  
+    if (!-s $corre_json_file)
     {
         $self->run_correlation_analysis($c);  
-        $corre_coefficients_file = $c->stash->{corre_coefficients_file};
-  
+        $corre_json_file = $c->stash->{corre_coefficients_json_file};       
     }
 
-    my $ret->{status} = 'failed';
-
-    if (-s $corre_coefficients_file)
-    {
-        $ret->{status} = 'success';      
-        my $corre_json_file = $c->stash->{corre_coefficients_json_file};       
-        $ret->{data} = read_file($corre_json_file);
-                
-    }
-
+    if (-s $corre_json_file)
+    {               
+        $ret->{status}   = 'success';
+        $ret->{data}     = read_file($corre_json_file);
+    } 
+    
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
