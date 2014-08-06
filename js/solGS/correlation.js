@@ -23,9 +23,22 @@ function getPopulationDetails () {
 
 
 jQuery(document).ready( function () { 
-        var population = getPopulationDetails();
+    var page = document.URL;
+   
+    if (page.match(/solgs\/traits\/all\//) != null) {
+        //genetic correlation
+
+    } else {
+        phenotypicCorrelation();
+    }       
+});
+
+
+function phenotypicCorrelation () {
+ 
+    var population = getPopulationDetails();
         
-        jQuery.ajax({
+    jQuery.ajax({
             type: 'POST',
             dataType: 'json',
             data: {'population_id': population.population_id },
@@ -44,9 +57,9 @@ jQuery(document).ready( function () {
                     .css({"padding-left": '0px'})
                     .html("Error occured preparing the phenotype data for correlation analysis.");
             }
-        });
-
     });
+     
+}
 
 
 function runCorrelationAnalysis () {
