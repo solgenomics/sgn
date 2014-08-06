@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-population/rank_genotypes.mas - displays a form for ranking genotypes based on weighted GEBVs of multiple traits
+population/selection_index.mas - displays a form for calculating selection index of individuals.
 
 =AUTHOR
 
@@ -27,7 +27,7 @@ $project_name
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ "solGS.rankGenotypes"] &>
+<& /util/import_javascript.mas, classes => [ "solGS.selectionIndex"] &>
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 

@@ -1779,8 +1779,7 @@ sub rank_genotypes : Private {
                             $c->stash->{ranked_genotypes_file},
                             $c->stash->{genotypes_mean_gebv_file}
         );
- 
-   
+    
     my $pred_file_suffix;
     $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id;
     
@@ -1795,7 +1794,7 @@ sub rank_genotypes : Private {
     $c->stash->{input_files} = $input_file;
 
     $c->stash->{r_temp_file} = "rank-gebv-genotypes-${pop_id}${pred_file_suffix}";
-    $c->stash->{r_script}    = 'R/rank_genotypes.r';
+    $c->stash->{r_script}    = 'R/selection_index.r';
     
     $self->run_r_script($c);
     $self->download_urls($c);
