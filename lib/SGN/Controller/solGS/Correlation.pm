@@ -164,7 +164,7 @@ sub correlation_analysis_output :Path('/correlation/analysis/output') Args(0) {
   
     if (!-s $corre_json_file)
     {
-        $self->run_correlation_analysis($c);  
+        $self->run_pheno_correlation_analysis($c);  
         $corre_json_file = $c->stash->{corre_coefficients_json_file};       
     }
     
@@ -182,6 +182,27 @@ sub correlation_analysis_output :Path('/correlation/analysis/output') Args(0) {
 }
 
 
+sub run_pheno_correlation_analysis {
+    my ($self, $c) = @_;
+    
+    my $pop_id = $c->stash->{pop_id};
+   
+    $self->create_correlation_phenodata_file($c);
+    $c->stash->{data_input_file} = $c->stash->{phenotype_file};
+    
+    $self->correlation_output_file($c);
+    $c->stash->{corre_table_output_file} = $c->stash->{corre_coefficients_file};
+    $c->stash->{corre_json_output_file}  = $c->stash->{corre_coefficients_json_file};
+      
+    $c->stash->{referer} = $c->req->referer;
+    
+    $c->stash->{correlation_type} = "pheno_correlation_${pop_id}";
+
+    $self->run_correlation_analysis($c);
+
+}
+
+
 sub run_correlation_analysis {
     my ($self, $c) = @_;
     
@@ -190,16 +211,15 @@ sub run_correlation_analysis {
     $self->create_correlation_dir($c);
     my $corre_dir = $c->stash->{correlation_dir};
     
-    $self->create_correlation_phenodata_file($c);
-    my $pheno_file = $c->stash->{phenotype_file};
+    my $data_input_file = $c->stash->{data_input_file};
     
-    $self->correlation_output_file($c);
-    my $corre_table_file = $c->stash->{corre_coefficients_file};
-    my $corre_json_file  = $c->stash->{corre_coefficients_json_file};
+    my $corre_table_file = $c->stash->{corre_table_output_file};
+    my $corre_json_file  = $c->stash->{corre_json_output_file};
+     
+    my $referer        = $c->stash->{referer};
+    my $corre_analysis = $c->stash->{correlation_type};
    
-    my $referer = $c->req->referer;
-
-    if (-s $pheno_file) 
+    if (-s $data_input_file) 
     {
         CXGN::Tools::Run->temp_base($corre_dir);
        
@@ -210,7 +230,7 @@ sub run_correlation_analysis {
                 tempfile(
                     catfile(
                         CXGN::Tools::Run->temp_base(),
-                        "corre_analysis_${pop_id}-$_-XXXXXX",
+                        "$corre_analysis-$_-XXXXXX",
                          ),
                 );
             $filename
@@ -228,7 +248,7 @@ sub run_correlation_analysis {
           my $r_process = CXGN::Tools::Run->run_cluster(
               'R', 'CMD', 'BATCH',
               '--slave',
-              "--args $referer $corre_table_file $corre_json_file $pheno_file",
+              "--args $referer $corre_table_file $corre_json_file $data_input_file",
               $corre_commands_temp,
               $corre_output_temp,
               {
@@ -254,13 +274,8 @@ sub run_correlation_analysis {
             
             $c->stash->{script_error} = "Correlation analysis failed.";
                      
-      };
-       
+      };       
     }
-   
-    $c->stash->{corre_coefficients_file}      = $corre_table_file;
-    $c->stash->{corre_coefficients_json_file} = $corre_json_file; 
-
 }
 
 
