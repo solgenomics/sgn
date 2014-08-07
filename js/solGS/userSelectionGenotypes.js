@@ -268,7 +268,8 @@ function loadPredictionOutput (url, listId, listSource) {
                     
                     if (page.match('/traits/all/population/') != null) {
                    
-                        listAllPopulations();                  
+                        listAllPopulations();
+                        listAllCorrePopulations();
                     
                     }
                     
