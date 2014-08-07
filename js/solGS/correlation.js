@@ -5,6 +5,98 @@
 */
 
 
+
+
+jQuery(document).ready( function () { 
+    var page = document.URL;
+   
+    if (page.match(/solgs\/traits\/all\//) != null) {
+        //genetic correlation
+        listAllCorrePopulations();
+
+    } else {
+        phenotypicCorrelation();
+    }       
+});
+
+
+
+function listAllCorrePopulations ()  {
+    var modelData = getTrainingPopulationData();
+    alert(modelData.name);
+    var trainingPopIdName = JSON.stringify(modelData);
+   
+    var  popsList =  '<dl id="corre_selected_population" class="corre_dropdown">'
+        + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
+        + '<dd>'
+        + '<ul>'
+        + '<li>'
+        + '<a href="#">' + modelData.name + '<span class=value>' + trainingPopIdName + '</span></a>'
+        + '</li>';  
+ 
+    popsList += '</ul></dd></dl>'; 
+   
+    jQuery("#corre_select_a_population_div").empty().append(popsList).show();
+     
+    var dbSelPopsList;
+    if( modelData.id.match(/uploaded/) == null) {
+        dbSelPopsList = addSelectionPopulations();
+    }
+
+    if (dbSelPopsList) {
+            jQuery("#corre_select_a_population_div ul").append(dbSelPopsList); 
+    }
+      
+    var userUploadedSelExists = jQuery("#uploaded_selection_pops_table").doesExist();
+    if( userUploadedSelExists == true) {
+        var userSelPops = listUploadedSelPopulations();
+        if (userSelPops) {
+
+            jQuery("#corre_select_a_population_div ul").append(userSelPops);  
+        }
+    }
+
+    getSelectionPopTraits(modelData.id, modelData.id);
+
+
+   jQuery(".corre_dropdown dt a").click(function() {
+            jQuery(".corre_dropdown dd ul").toggle();
+        });
+                 
+    jQuery(".corre_dropdown dd ul li a").click(function() {
+      
+            var text = jQuery(this).html();
+           
+            jQuery(".corre_dropdown dt a span").html(text);
+            jQuery(".corre_dropdown dd ul").hide();
+                
+            var idPopName = jQuery("#corre_selected_population").find("dt a span.value").html();
+            idPopName     = JSON.parse(idPopName);
+            modelId = jQuery("#model_id").val();
+                   
+            selectedPopId   = idPopName.id;
+            selectedPopName = idPopName.name;
+              
+            jQuery("#corre_selected_population_name").val(selectedPopName);
+            jQuery("#corre_selected_population_id").val(selectedPopId);
+                    
+            getSelectionPopTraits(modelId, selectedPopId);
+                                         
+        });
+                       
+    jQuery(".corre_dropdown").bind('click', function(e) {
+            var clicked = jQuery(e.target);
+                    
+            if (! clicked.parents().hasClass("corre_dropdown"))
+                jQuery(".corre_dropdown dd ul").hide();
+
+            e.preventDefault();
+
+        });           
+
+}
+
+
 function getPopulationDetails () {
 
     var populationId = jQuery("#population_id").val();
@@ -20,18 +112,6 @@ function getPopulationDetails () {
             };
         
 }
-
-
-jQuery(document).ready( function () { 
-    var page = document.URL;
-   
-    if (page.match(/solgs\/traits\/all\//) != null) {
-        //genetic correlation
-
-    } else {
-        phenotypicCorrelation();
-    }       
-});
 
 
 function phenotypicCorrelation () {
