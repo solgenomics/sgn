@@ -27,10 +27,10 @@ $project_name
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ "solGS.selectionIndex"] &>
+<!-- <& /util/import_javascript.mas, classes => [ "solGS.selectionIndex"] &>
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
-
+-->
 
 <&| /page/info_section.mas, 
   collapsible => 1, 
