@@ -117,7 +117,7 @@ sub create_correlation_dir {
 }
 
 
-sub correlation_output_file {
+sub pheno_correlation_output_file {
     my ($self, $c) = @_;
      
     my $pop_id = $c->stash->{pop_id};
@@ -157,7 +157,7 @@ sub correlation_analysis_output :Path('/correlation/analysis/output') Args(0) {
     my $pop_id = $c->req->param('population_id');
     $c->stash->{pop_id} = $pop_id;
 
-    $self->correlation_output_file($c);
+    $self->pheno_correlation_output_file($c);
     my $corre_json_file = $c->stash->{corre_coefficients_json_file};
     
     my $ret->{status} = 'failed';
@@ -197,6 +197,27 @@ sub run_pheno_correlation_analysis {
     $c->stash->{referer} = $c->req->referer;
     
     $c->stash->{correlation_type} = "pheno_correlation_${pop_id}";
+
+    $self->run_correlation_analysis($c);
+
+}
+
+
+sub run_geno_correlation_analysis {
+    my ($self, $c) = @_;
+    
+    my $pop_id = $c->stash->{pop_id};
+   
+    $self->create_correlation_genetic_data_file($c);
+    $c->stash->{data_input_file} = $c->stash->{additive_genetic_file};
+    
+    $self->genetic_correlation_output_file($c);
+    $c->stash->{corre_table_output_file} = $c->stash->{gene_corre_coefficients_file};
+    $c->stash->{corre_json_output_file}  = $c->stash->{gene_corre_coefficients_json_file};
+      
+    $c->stash->{referer} = $c->req->referer;
+    
+    $c->stash->{correlation_type} = "genetic_correlation_${pop_id}";
 
     $self->run_correlation_analysis($c);
 
