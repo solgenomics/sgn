@@ -23,7 +23,7 @@ jQuery(document).ready( function () {
 
 function listAllCorrePopulations ()  {
     var modelData = getTrainingPopulationData();
-    alert(modelData.name);
+   
     var trainingPopIdName = JSON.stringify(modelData);
    
     var  popsList =  '<dl id="corre_selected_population" class="corre_dropdown">'
@@ -49,6 +49,7 @@ function listAllCorrePopulations ()  {
       
     var userUploadedSelExists = jQuery("#uploaded_selection_pops_table").doesExist();
     if( userUploadedSelExists == true) {
+      
         var userSelPops = listUploadedSelPopulations();
         if (userSelPops) {
 
@@ -56,7 +57,7 @@ function listAllCorrePopulations ()  {
         }
     }
 
-    getSelectionPopTraits(modelData.id, modelData.id);
+    //getSelectionPopTraits(modelData.id, modelData.id);
 
 
    jQuery(".corre_dropdown dt a").click(function() {
@@ -80,7 +81,7 @@ function listAllCorrePopulations ()  {
             jQuery("#corre_selected_population_name").val(selectedPopName);
             jQuery("#corre_selected_population_id").val(selectedPopId);
                     
-            getSelectionPopTraits(modelId, selectedPopId);
+         //   getSelectionPopTraits(modelId, selectedPopId);
                                          
         });
                        
@@ -93,7 +94,31 @@ function listAllCorrePopulations ()  {
             e.preventDefault();
 
         });           
+}
 
+
+function formatGenCorInputData (popId) {
+     
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+        data: {'type': type, 'population_id': popId },
+        url: '/correlation/genetic/data/',
+        success: function(response) {
+                if(response.status == 'success') {
+                    runCorrelationAnalysis();
+                } else {
+                    jQuery("#correlation_message")
+                        .css({"padding-left": '0px'})
+                        .html("This population has no additive genetic data.");
+                }
+            },
+            error: function(response) {
+                jQuery("#correlation_message")
+                    .css({"padding-left": '0px'})
+                    .html("Error occured preparing the additive genetic data for correlation analysis.");
+            }
+    });
 }
 
 
