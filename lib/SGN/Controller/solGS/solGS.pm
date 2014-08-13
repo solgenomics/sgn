@@ -1881,9 +1881,10 @@ sub list_of_prediction_pops {
             
                 unless ($name =~ /test/ || $desc =~ /test/)   
                 {
-                    my $id_pop_name->{id} = $prediction_pop_id;
-                    $id_pop_name->{name}  = $name;
-                    $id_pop_name          = to_json($id_pop_name);
+                    my $id_pop_name->{id}    = $prediction_pop_id;
+                    $id_pop_name->{name}     = $name;
+                    $id_pop_name->{pop_type} = 'selection';
+                    $id_pop_name             = to_json($id_pop_name);
 
                     $pred_pop_link = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id" 
                                       onclick="solGS.waitPage()"><input type="hidden" value=\'$id_pop_name\'>$name</data> 
