@@ -7,6 +7,20 @@
 
 JSAN.use('jquery.blockUI');
 
+
+jQuery(document).ready( function () {
+        listAllPopulations();
+});
+
+
+jQuery("#rank_genotypes").live("click", function() {        
+    var modelId          = jQuery("#model_id").val();
+    var selectionPopId   = jQuery("#selected_population_id").val();
+         
+    selectionIndex(modelId, selectionPopId);        
+});
+
+
 function listAllPopulations ()  {
    
     var modelData = getTrainingPopulationData();
@@ -101,7 +115,7 @@ function addSelectionPopulations(){
             if (predictedPop.length > 1) {
                 var selPopsInput = row.getElementsByTagName("input")[0];
                 var idPopName    = selPopsInput.value;
-             
+                alert(idPopName);
                 var idPopNameCopy = idPopName;
                 idPopNameCopy     = JSON.parse(idPopNameCopy);
                 var popName       = idPopNameCopy.name;
@@ -126,12 +140,12 @@ function getSelectionPopTraits (modelId, selectedPopId) {
                 dataType: "json",
                 url: '/solgs/selection/index/form',
                 data: {'pred_pop_id': selectedPopId, 'training_pop_id': modelId},
-                success: function(res){
+                success: function(res) {
                 
                 if (res.status == 'success') {
                     var traits = res.traits;  
                     var table  = selectionIndexForm(traits);
-               
+    
                     var selectionIndex = jQuery('#selection_index_form').empty().append(table);
      
                 }                                               
@@ -347,23 +361,6 @@ function selectionIndex ( trainingPopId, predictionPopId )
  }
 
 
-
-
-
-jQuery("#rank_genotypes").live("click", function() {        
-        var modelId          = jQuery("#model_id").val();
-        var selectionPopId   = jQuery("#selected_population_id").val();
-         
-        selectionIndex(modelId, selectionPopId);        
-    });
-
-
-
-jQuery(document).ready( function () {
-        listAllPopulations();
-    });
-
-
 function listUploadedSelPopulations ()  {
    
     var selPopsDivUploaded   = document.getElementById("uploaded_selection_populations");
@@ -384,7 +381,7 @@ function listUploadedSelPopulations ()  {
                 var idPopNameCopy = idPopName;
                 idPopNameCopy     = JSON.parse(idPopNameCopy);
                 var popName       = idPopNameCopy.name;
-                             
+                     
                 popsList += '<li>'
                          + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
                          + '</li>';
@@ -401,10 +398,11 @@ function listUploadedSelPopulations ()  {
 
 function getTrainingPopulationData () {
 
-    var modelId = jQuery("#model_id").val();
+    var modelId   = jQuery("#model_id").val();
     var modelName = jQuery("#model_name").val();
-   
-    return { 'id' : modelId, 'name' : modelName};
+    var popType   = jQuery("#default_selected_population_type").val();
+
+    return { 'id' : modelId, 'name' : modelName, 'pop_type': popType};
         
 }
 
