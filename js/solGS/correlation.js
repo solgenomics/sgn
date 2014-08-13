@@ -66,34 +66,37 @@ function listAllCorrePopulations ()  {
                  
     jQuery(".corre_dropdown dd ul li a").click(function() {
       
-            var text = jQuery(this).html();
+        var text = jQuery(this).html();
            
-            jQuery(".corre_dropdown dt a span").html(text);
-            jQuery(".corre_dropdown dd ul").hide();
+        jQuery(".corre_dropdown dt a span").html(text);
+        jQuery(".corre_dropdown dd ul").hide();
                 
-            var idPopName = jQuery("#corre_selected_population").find("dt a span.value").html();
-            idPopName     = JSON.parse(idPopName);
-            modelId = jQuery("#model_id").val();
+        var idPopName = jQuery("#corre_selected_population").find("dt a span.value").html();
+        idPopName     = JSON.parse(idPopName);
+        modelId = jQuery("#model_id").val();
                    
-            selectedPopId   = idPopName.id;
-            selectedPopName = idPopName.name;
-              
-            jQuery("#corre_selected_population_name").val(selectedPopName);
-            jQuery("#corre_selected_population_id").val(selectedPopId);
-                    
+        selectedPopId   = idPopName.id;
+        selectedPopName = idPopName.name;
+        selectedPopType = idPopName.pop_type; 
+        //alert('pop_type: ' + selectedPopType);
+       
+        jQuery("#corre_selected_population_name").val(selectedPopName);
+        jQuery("#corre_selected_population_id").val(selectedPopId);
+        jQuery("#corre_selected_population_type").val(selectedPopType);
+      
          //   getSelectionPopTraits(modelId, selectedPopId);
                                          
-        });
+    });
                        
     jQuery(".corre_dropdown").bind('click', function(e) {
-            var clicked = jQuery(e.target);
-                    
-            if (! clicked.parents().hasClass("corre_dropdown"))
-                jQuery(".corre_dropdown dd ul").hide();
+        var clicked = jQuery(e.target);
+               
+        if (! clicked.parents().hasClass("corre_dropdown"))
+            jQuery(".corre_dropdown dd ul").hide();
 
-            e.preventDefault();
+        e.preventDefault();
 
-        });           
+    });           
 }
 
 
