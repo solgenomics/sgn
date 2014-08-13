@@ -20,18 +20,7 @@ jQuery(document).ready( function() {
         
     if (listMenu.match(/option/) != null) {
             
-            //filter by marker match
-            // alert(listMenu);
-            // jQuery(listMenu).find("option").each(function () {
-                
-            //      var v = jQuery(this).val();
-            //      alert(v);
-                
-
-            // });
-
-           
-            jQuery("#prediction_genotypes_list").append(listMenu);
+        jQuery("#prediction_genotypes_list").append(listMenu);
 
         } else {
             
@@ -121,7 +110,7 @@ function loadGenotypesList(listId) {
                             var listIdArg = '\'' + listId +'\'';
                             var listSource = '\'from_db\'';
                        
-                            var popIdName   = {id : 'uploaded_' + listId, name: listName,};
+                            var popIdName   = {id : 'uploaded_' + listId, name: listName, pop_type: 'list_selection'};
                             popIdName       = JSON.stringify(popIdName);
                             var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
                             
@@ -213,7 +202,7 @@ function getUserUploadedSelPop (listId) {
     var url         =   '\'/solgs/model/'+ modelId + '/uploaded/prediction/'+ selectionPopId + '\'' ;
     var listIdArg   = '\'' + listId +'\'';
     var listSource  = '\'from_db\'';
-    var popIdName   = {id : 'uploaded_' + listId, name: listName,};
+    var popIdName   = {id : 'uploaded_' + listId, name: listName, pop_type: 'list_selection'};
     popIdName       = JSON.stringify(popIdName);
     var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
 
