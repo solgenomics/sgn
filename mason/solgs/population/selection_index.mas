@@ -25,6 +25,8 @@ $project_name
 
 <%perl>
 
+ my $pop_type = $pop_id =~ /[A-Za-z]/ ? 'list_training' : 'training';
+
 </%perl>
 
 <!-- <& /util/import_javascript.mas, classes => [ "solGS.selectionIndex"] &>
@@ -43,11 +45,11 @@ $project_name
     <input type="hidden" id="model_id" value="<% $pop_id %>" />
     <input type="hidden" id="model_name" value="<% $project_name %>" />
     <input type="hidden" id="default_selected_population_name" value="<% $project_name %>"/>
-    <input type="hidden" id="default_selected_population_id" value="<% $pop_id %>"/>
-    <input type="hidden" id="default_selected_population_name" value="<% $prediction_pop_name %>"/>
-    <input type="hidden" id="default_selected_population_id" value="<% $prediction_pop_id %>"/>
+    <input type="hidden" id="default_selected_population_type" value="<% $project_name %>"/>
+    <input type="hidden" id="default_selected_population_id" value="<% $pop_type %>"/>
     <input type="hidden" id="selected_population_name" value="" />
     <input type="hidden" id="selected_population_id" value="" />
+    <input type="hidden" id="selected_population_type" value="" />
   </div>
 
   

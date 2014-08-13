@@ -25,6 +25,7 @@ $project_name
 
 <%perl>
 
+ my $pop_type = $pop_id =~ /[A-Za-z]/ ? 'list_training' : 'training';
 
 </%perl>
 
@@ -57,8 +58,10 @@ $project_name
     <input type="hidden" id="population_id" value="<% $pop_id %>" />
     <input type="hidden" id="default_corre_selected_population_name" value="<% $project_name %>"/>
     <input type="hidden" id="default_corre_selected_population_id" value="<% $pop_id %>"/>
+    <input type="hidden" id="default_corre_selected_population_type" value="<% $pop_type %>"/>
     <input type="hidden" id="corre_selected_population_name" value="" />
     <input type="hidden" id="corre_selected_population_id" value="" />
+    <input type="hidden" id="corre_selected_population_type" value="" />
  </div>
 
   
