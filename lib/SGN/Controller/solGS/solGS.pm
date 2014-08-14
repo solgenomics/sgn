@@ -1644,10 +1644,12 @@ sub get_trait_name {
 #creates and writes a list of GEBV files of 
 #traits selected for ranking genotypes.
 sub get_gebv_files_of_traits {
-    my ($self, $c, $traits, $pred_pop_id) = @_;
+    my ($self, $c) = @_;
     
     my $pop_id = $c->stash->{pop_id};
     $c->stash->{model_id} = $pop_id;
+    my $pred_pop_id = $c->stash->{prediction_pop_id};
+   
     my $dir = $c->stash->{solgs_cache_dir};
     
     my $gebv_files; 
@@ -1664,14 +1666,13 @@ sub get_gebv_files_of_traits {
             $gebv_files .= "\t" unless (@$pred_gebv_files[-1] eq $_);
         }     
     } 
-
-    unless ($pred_gebv_files->[0])
+    else
     {
         $self->analyzed_traits($c);
         my @analyzed_traits_files = @{$c->stash->{analyzed_traits_files}};
 
         foreach my $tr_file (@analyzed_traits_files) 
-        { 
+        {
             $gebv_files .= $tr_file;
             $gebv_files .= "\t" unless (@analyzed_traits_files[-1] eq $tr_file);
         }
@@ -2265,10 +2266,9 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
     
     $c->stash->{pop_id} = $model_id;
 
-    if( $pred_pop_id =~ /\d+/)
+    if( $pred_pop_id =~ /\d+/ && $model_id != $pred_pop_id)
     {
-        $c->stash->{prediction_pop_id} = $pred_pop_id;
-        
+        $c->stash->{prediction_pop_id} = $pred_pop_id;       
     }
     else
     {
@@ -2287,7 +2287,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
       
     if (@values) 
     {
-        $self->get_gebv_files_of_traits($c, \@traits, $pred_pop_id);
+        $self->get_gebv_files_of_traits($c);
       
         my $params = $c->req->params;
         $self->gebv_rel_weights($c, $params, $pred_pop_id);
