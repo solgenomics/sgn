@@ -1646,8 +1646,10 @@ sub get_trait_name {
 sub get_gebv_files_of_traits {
     my ($self, $c, $traits, $pred_pop_id) = @_;
     
-    my $pop_id = $c->stash->{pop_id}; 
+    my $pop_id = $c->stash->{pop_id};
+    $c->stash->{model_id} = $pop_id;
     my $dir = $c->stash->{solgs_cache_dir};
+    
     my $gebv_files; 
     my $pred_gebv_files;
 
@@ -1665,11 +1667,13 @@ sub get_gebv_files_of_traits {
 
     unless ($pred_gebv_files->[0])
     {
-        foreach my $tr (@$traits) 
-        {    
-            my $exp = "gebv_kinship_${tr}_${pop_id}"; 
-            $gebv_files .= $self->grep_file($dir, $exp);
-            $gebv_files .= "\t" unless (@$traits[-1] eq $tr);
+        $self->analyzed_traits($c);
+        my @analyzed_traits_files = @{$c->stash->{analyzed_traits_files}};
+
+        foreach my $tr_file (@analyzed_traits_files) 
+        { 
+            $gebv_files .= $tr_file;
+            $gebv_files .= "\t" unless (@analyzed_traits_files[-1] eq $tr_file);
         }
     }
     
@@ -1771,7 +1775,7 @@ sub rank_genotypes : Private {
                            $c->stash->{rel_weights_file},
                            $c->stash->{gebv_files_of_traits}
         );
-
+   
     $self->ranked_genotypes_file($c, $pred_pop_id);
     $self->mean_gebvs_file($c, $pred_pop_id);
 
@@ -3106,21 +3110,21 @@ sub analyzed_traits {
                   readdir($dh); 
     closedir $dh;
    
-    my @traits_files = grep {/($model_id)/} @all_files;
+    my @traits_files = map { catfile($dir, $_)} 
+                       grep {/($model_id)/} 
+                       @all_files;
     
     my @traits;
     my @traits_ids;
 
     foreach my $trait_file  (@traits_files) 
     {   
-
-        my $trait_file_path = catfile($dir, $trait_file);
-       
-        if (-s $trait_file_path > 1) 
+        if (-s $trait_file > 1) 
         { 
             my $trait = $trait_file;
             $trait =~ s/gebv_kinship_//;
             $trait =~ s/$model_id|_|combined_pops//g;
+            $trait =~ s/$dir|\///g;
 
             my $acronym_pairs = $self->get_acronym_pairs($c);                   
             if ($acronym_pairs)
@@ -3754,8 +3758,6 @@ sub r_combine_populations  {
     $c->stash->{r_script}     = 'R/combine_populations.r';
     
     $self->run_r_script($c);
-
-    
 
 }
 
