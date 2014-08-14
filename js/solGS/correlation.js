@@ -20,6 +20,18 @@ jQuery(document).ready( function () {
 });
 
 
+jQuery("#run_genetic_correlation").live("click", function() {        
+    var popId   = jQuery("#corre_selected_population_id").val();
+    var popType = jQuery("#corre_selected_population_type").val();
+  
+    jQuery("#correlation_message")
+        .css({"padding-left": '0px'})
+        .html("Running genetic correlation analysis...");
+    
+    formatGenCorInputData(popId, popType);
+         
+});
+
 
 function listAllCorrePopulations ()  {
     var modelData = getTrainingPopulationData();
@@ -100,7 +112,7 @@ function listAllCorrePopulations ()  {
 }
 
 
-function formatGenCorInputData (popId) {
+function formatGenCorInputData (popId, type) {
      
     jQuery.ajax({
         type: 'POST',
