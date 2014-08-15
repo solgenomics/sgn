@@ -70,7 +70,6 @@ $project_name
  <input style="position:absolute;margin-left:275px" class="button" type="submit" value="Run correlation" id="run_genetic_correlation"/>
 
  <div id="correlation_message"  style="padding-top:70px;clear:both;font-weight:bold;text-align:center;color:#A7C942">
-   <p>Running genetic correlation analysis...</p>
  </div>
  <div id="correlation_canvas" style="clear:both"> </div>
 
