@@ -113,11 +113,12 @@ function listAllCorrePopulations ()  {
 
 
 function formatGenCorInputData (popId, type) {
-     
+    var modelDetail = getPopulationDetails();
+
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'type': type, 'population_id': popId },
+        data: {'model_id': modelDetail.population_id, 'corr_population_id': popId, 'type' : type},
         url: '/correlation/genetic/data/',
         success: function(response) {
                 if(response.status == 'success') {
