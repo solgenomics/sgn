@@ -68,6 +68,58 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
 }
 
 
+sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
+    my ($self, $c) = @_;
+   
+    my $corr_pop_id = $c->req->param('corr_population_id');
+    my $pop_type    = $c->req->param('type');
+    my $model_id    = $c->req->param('model_id');
+    
+    $c->stash->{model_id} = $model_id;
+    $c->stash->{pop_id}   = $model_id;
+
+    $c->stash->{prediction_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
+ 
+    $self->combine_gebvs_of_traits($c);
+    my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
+   
+    my $ret->{status} = 'failed';
+
+    if(-s $combined_gebvs_file)
+    {
+        $ret->{status} = 'success';             
+    }
+
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+sub combine_gebvs_of_traits {
+    my ($self, $c) = @_;
+
+    $c->controller("solGS::solGS")->get_gebv_files_of_traits($c);  
+    my $gebvs_files = $c->stash->{gebv_files_of_traits};
+   
+    my $pred_pop_id = $c->stash->{prediction_pop_id};
+    my $model_id    = $c->stash->{model_id};
+    my $identifier  =  $pred_pop_id ? $model_id . "_" . $pred_pop_id :  $model_id; 
+    
+    my $combined_gebvs_file = $c->controller("solGS::solGS")->create_tempfile($c, "combined_gebvs_${identifier}"); 
+   
+    $c->stash->{input_files}  = $gebvs_files;
+    $c->stash->{output_files} = $combined_gebvs_file;
+    $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
+    $c->stash->{r_script}     = 'R/combine_gebvs_files.r';
+
+    $c->controller("solGS::solGS")->run_r_script($c);
+    $c->stash->{combined_gebvs_file} = $combined_gebvs_file;
+
+}
+
+
 sub create_correlation_phenodata_file {
     my ($self, $c)  = @_;
     my $referer = $c->req->referer;
