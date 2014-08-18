@@ -203,7 +203,7 @@ sub pheno_correlation_output_file {
 }
 
 
-sub correlation_analysis_output :Path('/correlation/analysis/output') Args(0) {
+sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/output') Args(0) {
     my ($self, $c) = @_;
 
     my $pop_id = $c->req->param('population_id');

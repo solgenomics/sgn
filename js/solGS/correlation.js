@@ -190,7 +190,7 @@ function runCorrelationAnalysis () {
         type: 'POST',
         dataType: 'json',
         data: {'population_id': population.population_id },
-        url: '/correlation/analysis/output',
+        url: '/phenotypic/correlation/analysis/output',
         success: function(response) {
             if (response.status == 'success') {
                 plotCorrelation(response.data);
