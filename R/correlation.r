@@ -1,9 +1,7 @@
  #SNOPSIS
 
- #commands for running correlation analyis,
- #outputs the correlation 
- #coefficients (also in json format) and their p-values
-
+ #Commands for running phenotypic correlation analysis.
+ #Correlation coeffiecients are stored in tabular and json formats 
 
  #AUTHOR
  # Isaak Y Tecle (iyt2@cornell.edu)
