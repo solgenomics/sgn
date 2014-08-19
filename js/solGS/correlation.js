@@ -260,11 +260,18 @@ function plotCorrelation (data) {
     var height = 400;
     var width  = 400;
 
+    var nTraits = data.traits.length;
+
+    if (nTraits < 8) {
+        height = height * 0.5;
+        width  = width  * 0.5;
+    }
+
     var pad    = {left:70, top:20, right:100, bottom: 70}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
  
-    var nTraits = data.traits.length;
+   
          
     var corXscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([0, width]);
     var corYscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([height, 0]);
@@ -382,9 +389,9 @@ function plotCorrelation (data) {
    
     var legend = corrplot.append("g")
         .attr("class", "cell")
-        .attr("transform", "translate(" + (width + 10) + "," +  (height * 0.4) + ")")
-        .attr("height", 100)
-        .attr("width", 100);
+        .attr("transform", "translate(" + (width + 10) + "," +  (height * 0.25) + ")")
+        .attr("height", 60)
+        .attr("width", 60);
        
     
     legend = legend.selectAll("rect")
@@ -401,7 +408,7 @@ function plotCorrelation (data) {
         });
  
     var legendTxt = corrplot.append("g")
-        .attr("transform", "translate(" + (width + 40) + "," + ((height * 0.4) + 10) + ")")
+        .attr("transform", "translate(" + (width + 40) + "," + ((height * 0.25) + 10) + ")")
         .attr("id", "legendtext");
 
     legendTxt.selectAll("text")
