@@ -114,7 +114,7 @@ function listAllCorrePopulations ()  {
 
 function formatGenCorInputData (popId, type) {
     var modelDetail = getPopulationDetails();
-
+   
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -122,7 +122,16 @@ function formatGenCorInputData (popId, type) {
         url: '/correlation/genetic/data/',
         success: function(response) {
                 if(response.status == 'success') {
-                    runCorrelationAnalysis();
+                    gebvsFile = response.gebvs_file;
+
+                    var args = {
+                        'model_id': modelDetail.population_id, 
+                        'corr_population_id': popId, 
+                        'type': type, 
+                        'gebvs_file': response.gebvs_file
+                    };
+
+                    runGenCorrelationAnalysis(args);
                 } else {
                     jQuery("#correlation_message")
                         .css({"padding-left": '0px'})
@@ -211,6 +220,33 @@ function runCorrelationAnalysis () {
 }
 
 
+function runGenCorrelationAnalysis (args) {
+   // alert(args.gebvs_file);
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+        data: args,
+        url: '/genetic/correlation/analysis/output',
+        success: function(response) {
+            if (response.status == 'success') {
+                plotCorrelation(response.data);
+                jQuery("#correlation_message").empty();
+            } else {
+                jQuery("#correlation_message")
+                    .css({"padding-left": '0px'})
+                    .html("There is no genetic correlation output for this dataset.");               
+            }
+        },
+        error: function(response) {                          
+            jQuery("#correlation_message")
+                .css({"padding-left": '0px'})
+                .html("Error occured running the genetic correlation analysis.");
+        }                
+    });
+
+}
+
+
 function plotCorrelation (data) {
    
     data = data.replace(/\s/g, '');
@@ -220,14 +256,16 @@ function plotCorrelation (data) {
     data = data.replace(/\"NA\"/g, 100);
     
     data = JSON.parse(data);
-    
+  
     var height = 400;
     var width  = 400;
+
     var pad    = {left:70, top:20, right:100, bottom: 70}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
-
-    var nTraits = data.traits.length;      
+ 
+    var nTraits = data.traits.length;
+         
     var corXscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([0, width]);
     var corYscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([height, 0]);
     var corZscale = d3.scale.linear().domain([-1, 0, 1]).range(["#A52A2A","white", "#0000A0"]);
