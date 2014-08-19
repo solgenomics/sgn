@@ -14,7 +14,7 @@ jQuery(document).ready(function(){
 
 
 function searchTrials() {
-    //jQuery("#combine").hide();
+   
     jQuery.ajax({
         type: 'POST',
         dataType: "json",
@@ -37,7 +37,7 @@ function searchTrials() {
         var page = jQuery(this).attr('href');
        
         jQuery("#homepage_trials_list").empty();
-        //jQuery("#combine input").hide();
+    
         jQuery("#homepage_message").html('Fechting more GS trials..').show(); 
  
         if (page) {
@@ -52,8 +52,7 @@ function searchTrials() {
                     jQuery("#homepage_message").hide(); 
                     jQuery("#homepage_trials_list").html(trialsList + pagination).show();
                   
-                },
-                
+                },               
                 error: function() {
                     jQuery("#homepage_message").html('Error occured fetching the next set of GS trials.').show();
                 }                    
@@ -66,7 +65,6 @@ function searchTrials() {
 }
 
 
-
 function listTrials (trials)  {
     
     var table = '<table style="width:100%;text-align:left">';
@@ -74,7 +72,8 @@ function listTrials (trials)  {
     table += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th>';
     table += '</tr>';
    
-    for (var i=0; i<10; i++) {
+    
+    for (var i=0; i < trials.length; i++) {
       
         if (trials[i]) {
             table += '<tr>';
