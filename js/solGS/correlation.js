@@ -11,9 +11,7 @@ jQuery(document).ready( function () {
     var page = document.URL;
    
     if (page.match(/solgs\/traits\/all\//) != null) {
-        //genetic correlation
         listAllCorrePopulations();
-
     } else {
         phenotypicCorrelation();
     }       
@@ -23,7 +21,9 @@ jQuery(document).ready( function () {
 jQuery("#run_genetic_correlation").live("click", function() {        
     var popId   = jQuery("#corre_selected_population_id").val();
     var popType = jQuery("#corre_selected_population_type").val();
-  
+    
+    jQuery("#correlation_canvas").empty();
+   
     jQuery("#correlation_message")
         .css({"padding-left": '0px'})
         .html("Running genetic correlation analysis...");
@@ -69,9 +69,6 @@ function listAllCorrePopulations ()  {
         }
     }
 
-    //getSelectionPopTraits(modelData.id, modelData.id);
-
-
    jQuery(".corre_dropdown dt a").click(function() {
             jQuery(".corre_dropdown dd ul").toggle();
         });
@@ -90,14 +87,11 @@ function listAllCorrePopulations ()  {
         selectedPopId   = idPopName.id;
         selectedPopName = idPopName.name;
         selectedPopType = idPopName.pop_type; 
-        //alert('pop_type: ' + selectedPopType);
        
         jQuery("#corre_selected_population_name").val(selectedPopName);
         jQuery("#corre_selected_population_id").val(selectedPopId);
         jQuery("#corre_selected_population_type").val(selectedPopType);
-      
-         //   getSelectionPopTraits(modelId, selectedPopId);
-                                         
+                                
     });
                        
     jQuery(".corre_dropdown").bind('click', function(e) {
@@ -175,7 +169,7 @@ function phenotypicCorrelation () {
             url: '/correlation/phenotype/data/',
             success: function(response) {
                 if(response.status == 'success') {
-                    runCorrelationAnalysis();
+                    runPhenoCorrelationAnalysis();
                 } else {
                     jQuery("#correlation_message")
                         .css({"padding-left": '0px'})
@@ -192,7 +186,7 @@ function phenotypicCorrelation () {
 }
 
 
-function runCorrelationAnalysis () {
+function runPhenoCorrelationAnalysis () {
     var population = getPopulationDetails();
     
     jQuery.ajax({
@@ -221,7 +215,7 @@ function runCorrelationAnalysis () {
 
 
 function runGenCorrelationAnalysis (args) {
-   // alert(args.gebvs_file);
+  
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -229,6 +223,7 @@ function runGenCorrelationAnalysis (args) {
         url: '/genetic/correlation/analysis/output',
         success: function(response) {
             if (response.status == 'success') {
+               
                 plotCorrelation(response.data);
                 jQuery("#correlation_message").empty();
             } else {
