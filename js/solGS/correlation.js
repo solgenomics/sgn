@@ -379,8 +379,19 @@ function plotCorrelation (data) {
         .attr("stroke", "purple")
         .attr("stroke-width", 1)
         .attr("pointer-events", "none");
-
-    var legendValues = [[1,d3.min(coefs)], [2,0], [3,d3.max(coefs)]];
+   
+    var legendValues = []; 
+    if (nTraits === 2) {     
+        if (d3.min(coefs) > 0 && d3.max(coefs) > 0 ) {
+            legendValues = [[1, d3.max(coefs)], [2, 0]];
+        } else if (d3.min(coefs) < 0 && d3.max(coefs) < 0 )  {
+           legendValues = [[1, d3.min(coefs)], [2, 0]];              
+        } else {
+           legendValues = [[1, d3.min(coefs)], [2, d3.max(coefs)]];    
+        }
+    } else {
+        legendValues = [[1, d3.min(coefs)], [2, 0], [3, d3.max(coefs)]];
+    }
    
     var legend = corrplot.append("g")
         .attr("class", "cell")
@@ -388,22 +399,25 @@ function plotCorrelation (data) {
         .attr("height", 60)
         .attr("width", 60);
        
-    
+    var recLH = 20;
+    var recLW = 20;
+
     legend = legend.selectAll("rect")
         .data(legendValues)  
         .enter()
         .append("rect")
         .attr("x", function (d) { return 1;})
         .attr("y",  function (d) { return corXscale(d[0])})
-        .attr("width", 20)
-        .attr("height", 20)      
+        .attr("width", recLH)
+        .attr("height", recLW)
+        .style("stroke", "black")
         .attr("fill", function (d) { 
             if (d === 100) {return "white"} 
             else {return corZscale(d[1])}
         });
  
     var legendTxt = corrplot.append("g")
-        .attr("transform", "translate(" + (width + 40) + "," + ((height * 0.25) + 10) + ")")
+        .attr("transform", "translate(" + (width + 40) + "," + ((height * 0.25) + (0.5 * recLW)) + ")")
         .attr("id", "legendtext");
 
     legendTxt.selectAll("text")
@@ -415,9 +429,9 @@ function plotCorrelation (data) {
         .attr("x", 1)
         .attr("y", function (d) { return corXscale(d[0])})
         .text(function(d) { 
-              if (d[1] > 0) { return "Positive";} 
-              else if (d[1] < 0) { return "Negative";} 
-              else { return "Neutral";}
+            if (d[1] > 0) { return "Positive"; } 
+            else if (d[1] < 0) { return "Negative"; } 
+            else if (d[1] === 0) { return "Neutral"; }
         })  
         .attr("dominant-baseline", "middle")
         .attr("text-anchor", "start");
