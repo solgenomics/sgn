@@ -9,7 +9,7 @@ JSAN.use('jquery.blockUI');
 
 
 jQuery(document).ready( function () {
-        listAllPopulations();
+        listSelectionIndexPopulations();
 });
 
 
@@ -22,7 +22,7 @@ jQuery("#rank_genotypes").live("click", function() {
 });
 
 
-function listAllPopulations ()  {
+function listSelectionIndexPopulations ()  {
    
     var modelData = getTrainingPopulationData();
     var trainingPopIdName = JSON.stringify(modelData);
@@ -115,9 +115,8 @@ function addSelectionPopulations(){
            
         if (predictedPop) {
             if (predictedPop.length > 1) {
-                var selPopsInput = row.getElementsByTagName("input")[0];
-                var idPopName    = selPopsInput.value;
-                alert(idPopName);
+                var selPopsInput  = row.getElementsByTagName("input")[0];
+                var idPopName     = selPopsInput.value;
                 var idPopNameCopy = idPopName;
                 idPopNameCopy     = JSON.parse(idPopNameCopy);
                 var popName       = idPopNameCopy.name;
@@ -378,16 +377,16 @@ function listUploadedSelPopulations ()  {
         predictedPopUploaded = popRow.match(/\/solgs\/selection\//g);
       
         if (predictedPopUploaded) {
-                var selPopsInput  = row.getElementsByTagName("input")[0];
-                var idPopName     = selPopsInput.value;     
-                var idPopNameCopy = idPopName;
-                idPopNameCopy     = JSON.parse(idPopNameCopy);
-                var popName       = idPopNameCopy.name;
-               
-                popsList += '<li>'
-                         + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
-                         + '</li>';
-        }else {
+            var selPopsInput  = row.getElementsByTagName("input")[0];
+            var idPopName     = selPopsInput.value;     
+            var idPopNameCopy = idPopName;
+            idPopNameCopy     = JSON.parse(idPopNameCopy);
+            var popName       = idPopNameCopy.name;
+           
+            popsList += '<li>'
+                + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
+                + '</li>';
+        } else {
             popsList = undefined;
         }
     }

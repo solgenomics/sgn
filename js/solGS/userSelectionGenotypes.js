@@ -89,7 +89,7 @@ function loadGenotypesList(listId) {
         jQuery.ajax({
                 type: 'POST',
                     dataType: 'json',
-                    data: {id: 'uploaded_' + listId, 'name': listName, 'list': list},
+                    data: {'id': 'uploaded_' + listId, 'name': listName, 'list': list},
                     url: '/solgs/upload/prediction/genotypes/list',
                    
                     success: function(response) {
@@ -199,10 +199,10 @@ function getUserUploadedSelPop (listId) {
     var url         =   '\'/solgs/model/'+ modelId + '/uploaded/prediction/'+ selectionPopId + '\'' ;
     var listIdArg   = '\'' + listId +'\'';
     var listSource  = '\'from_db\'';
-    var popIdName   = {id : 'uploaded_' + listId, name: listName, pop_type: 'list_selection'};
+    var popIdName   = {'id' : 'uploaded_' + listId, 'name' : listName, 'pop_type': 'list_selection'};
     popIdName       = JSON.stringify(popIdName);
     var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
-
+  
     var uploadedSelPop ='<table id="uploaded_selection_pops_table" style="width:100%;text-align:left"><tr>'
                                 + '<th>List-based selection population</th>'
                                 + '<th>Predict GEBVs</th>'
@@ -253,9 +253,8 @@ function loadPredictionOutput (url, listId, listSource) {
                 var page = document.URL; 
                     
                 if (page.match('/traits/all/population/') != null) {
-                   
                     listSelectionIndexPopulations();
-                    listGenCorrePopulations();                 
+                    listGenCorPopulations();                 
                 }
                     
                 jQuery.unblockUI();        
