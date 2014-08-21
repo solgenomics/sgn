@@ -1875,40 +1875,40 @@ sub list_of_prediction_pops {
           $pop_ids .= $prediction_pop_id ."\n";        
           write_file($pred_pops_file, $pop_ids);
 
-            my $pred_pop_rs = $c->model('solGS::solGS')->project_details($prediction_pop_id);
-            my $pred_pop_link;
+          my $pred_pop_rs = $c->model('solGS::solGS')->project_details($prediction_pop_id);
+          my $pred_pop_link;
 
-            while (my $row = $pred_pop_rs->next)
-            {
-                my $name = $row->name;
-                my $desc = $row->description;
+          while (my $row = $pred_pop_rs->next)
+          {
+              my $name = $row->name;
+              my $desc = $row->description;
             
-                unless ($name =~ /test/ || $desc =~ /test/)   
-                {
-                    my $id_pop_name->{id}    = $prediction_pop_id;
-                    $id_pop_name->{name}     = $name;
-                    $id_pop_name->{pop_type} = 'selection';
-                    $id_pop_name             = to_json($id_pop_name);
+              unless ($name =~ /test/ || $desc =~ /test/)   
+              {
+                  my $id_pop_name->{id}    = $prediction_pop_id;
+                  $id_pop_name->{name}     = $name;
+                  $id_pop_name->{pop_type} = 'selection';
+                  $id_pop_name             = to_json($id_pop_name);
 
-                    $pred_pop_link = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id" 
+                  $pred_pop_link = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id" 
                                       onclick="solGS.waitPage()"><input type="hidden" value=\'$id_pop_name\'>$name</data> 
                                       </a> 
                                     |;
 
-                    my $pr_yr_rs = $c->model('solGS::solGS')->project_year($prediction_pop_id);
-                    my $project_yr;
+                  my $pr_yr_rs = $c->model('solGS::solGS')->project_year($prediction_pop_id);
+                  my $project_yr;
 
-                    while ( my $yr_r = $pr_yr_rs->next )
-                    {
-                        $project_yr = $yr_r->value;
-                    }
+                  while ( my $yr_r = $pr_yr_rs->next )
+                  {
+                      $project_yr = $yr_r->value;
+                  }
 
-                    $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
-                    my $download_prediction = $c->stash->{download_prediction};
+                  $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
+                  my $download_prediction = $c->stash->{download_prediction};
                 
-                    push @pred_pops,  ['', $pred_pop_link, $desc, 'NA', $project_yr, $download_prediction];
-                }
-            }
+                  push @pred_pops,  ['', $pred_pop_link, $desc, 'NA', $project_yr, $download_prediction];
+              }
+          }
         }
     }
     
