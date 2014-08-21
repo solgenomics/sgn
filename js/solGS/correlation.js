@@ -11,7 +11,7 @@ jQuery(document).ready( function () {
     var page = document.URL;
    
     if (page.match(/solgs\/traits\/all\//) != null) {
-        listAllCorrePopulations();
+        listGenCorPopulations();
     } else {
         phenotypicCorrelation();
     }       
@@ -33,7 +33,7 @@ jQuery("#run_genetic_correlation").live("click", function() {
 });
 
 
-function listAllCorrePopulations ()  {
+function listGenCorPopulations ()  {
     var modelData = getTrainingPopulationData();
    
     var trainingPopIdName = JSON.stringify(modelData);
@@ -383,21 +383,21 @@ function plotCorrelation (data) {
     var legendValues = []; 
     if (nTraits === 2) {     
         if (d3.min(coefs) > 0 && d3.max(coefs) > 0 ) {
-            legendValues = [[1, d3.max(coefs)], [2, 0]];
+            legendValues = [[0, d3.max(coefs)], [1, 0]];
         } else if (d3.min(coefs) < 0 && d3.max(coefs) < 0 )  {
-           legendValues = [[1, d3.min(coefs)], [2, 0]];              
+           legendValues = [[0, d3.min(coefs)], [1, 0]];              
         } else {
-           legendValues = [[1, d3.min(coefs)], [2, d3.max(coefs)]];    
+           legendValues = [[0, d3.min(coefs)], [1, d3.max(coefs)]];    
         }
     } else {
-        legendValues = [[1, d3.min(coefs)], [2, 0], [3, d3.max(coefs)]];
+        legendValues = [[0, d3.min(coefs)], [1, 0], [2, d3.max(coefs)]];
     }
    
     var legend = corrplot.append("g")
         .attr("class", "cell")
         .attr("transform", "translate(" + (width + 10) + "," +  (height * 0.25) + ")")
-        .attr("height", 60)
-        .attr("width", 60);
+        .attr("height", 100)
+        .attr("width", 100);
        
     var recLH = 20;
     var recLW = 20;
@@ -407,7 +407,7 @@ function plotCorrelation (data) {
         .enter()
         .append("rect")
         .attr("x", function (d) { return 1;})
-        .attr("y",  function (d) { return corXscale(d[0])})
+        .attr("y",  function (d) {return 1 + (d[0] * recLH) + (d[0] * 5); })   
         .attr("width", recLH)
         .attr("height", recLW)
         .style("stroke", "black")
@@ -427,7 +427,7 @@ function plotCorrelation (data) {
         .attr("fill", "green")
         .style("fill", "green")
         .attr("x", 1)
-        .attr("y", function (d) { return corXscale(d[0])})
+        .attr("y", function (d) { return 1 + (d[0] * recLH) + (d[0] * 5); })
         .text(function(d) { 
             if (d[1] > 0) { return "Positive"; } 
             else if (d[1] < 0) { return "Negative"; } 
@@ -435,7 +435,6 @@ function plotCorrelation (data) {
         })  
         .attr("dominant-baseline", "middle")
         .attr("text-anchor", "start");
-
 
 }
 
