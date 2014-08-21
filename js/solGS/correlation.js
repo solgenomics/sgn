@@ -10,7 +10,8 @@
 jQuery(document).ready( function () { 
     var page = document.URL;
    
-    if (page.match(/solgs\/traits\/all\//) != null) {
+    if (page.match(/solgs\/traits\/all\//) != null || 
+        page.match(/solgs\/models\/combined\/trials\//) != null) {
         listGenCorPopulations();
     } else {
         phenotypicCorrelation();
