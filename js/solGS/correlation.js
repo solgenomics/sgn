@@ -348,7 +348,7 @@ function plotCorrelation (data) {
                 else {return corZscale(d.value)}
             })
         .attr("stroke", "white")
-        .attr("stroke-width", 2)
+        .attr("stroke-width", 1)
         .on("mouseover", function (d) {
                 if(d.value != 100) {
                     d3.select(this)
