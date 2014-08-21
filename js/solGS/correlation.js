@@ -347,7 +347,7 @@ function plotCorrelation (data) {
                 if (d.value === 100) {return "white";} 
                 else {return corZscale(d.value)}
             })
-        .attr("stroke", "none")
+        .attr("stroke", "white")
         .attr("stroke-width", 2)
         .on("mouseover", function (d) {
                 if(d.value != 100) {
@@ -370,7 +370,7 @@ function plotCorrelation (data) {
         .on("mouseout", function() {
                 d3.selectAll("text.corrlabel").remove()
                 d3.selectAll("text#corrtext").remove()
-                d3.select(this).attr("stroke","none")
+                d3.select(this).attr("stroke","white")
             });
             
     corrplot.append("rect")
