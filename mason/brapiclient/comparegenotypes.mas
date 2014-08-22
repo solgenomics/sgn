@@ -1,0 +1,111 @@
+
+<%args>
+
+</%args>
+
+<& /page/page_title.mas, title=>"Compare genotypes using BrAPI" &>
+
+  Server: <input id="server_address" size="40" value="localhost:3000" /><br />
+
+<br />
+
+Genotype 1 name: <input id="genotype1" size="40" value="IITA-TMS-IBA000017" /><br />
+Genotype 2 name: <input id="genotype2" size="40" value="95NA-00063"  /><br />
+
+<button id="submit">Submit</button>
+
+
+
+
+
+<script>
+
+  jQuery('#submit').click( function() { 
+     compare_genotypes();
+  });
+    
+
+  function compare_genotypes() { 
+
+    var genotype1 = jQuery('#genotype1').val();
+    var genotype2 = jQuery('#genotype2').val();
+    var server = jQuery('#server_address').val();
+
+    alert('genotype1 '+genotype1+' genotype2 '+genotype2 +' server '+server);
+
+    var id1;
+    var id2;
+
+    jQuery.ajax( { 
+       url: '/brapi/0.1/germplasm/find',
+       data: { q : genotype1 },
+       async: false,
+       success: function(response) { 
+         alert("RESPONSE 1: "+response[0].germplasmId);
+         id1 = response[0].germplasmId;
+       },
+       error: function(response) { 
+         alert("An error occurred.");
+       }
+     });
+
+     jQuery.ajax( { 
+       url: '/brapi/0.1/germplasm/find',
+       data: { q : genotype2 },
+       async: false,
+       success: function(response) { 
+         alert("RESPONSE 2: "+response[0].germplasmId);
+         id2 = response[0].germplasmId;
+       },
+       error: function(response) { 
+         alert("An error occurred");
+  
+       }
+     });
+
+     alert("Fetch genotype for "+ id1);
+
+     var scores1;
+     var scores2;
+
+     jQuery.ajax( { 
+       url: '/brapi/0.1/genotype/'+id1,
+       async: false,
+       success: function(response) { 
+         alert("RESPONSE for "+id1+": "+Object.keys(response.genotypes[0].genotype).length);
+         scores1 = response.genotypes[0].genotype;
+       },
+       error: function(response) { 
+         alert("An error occurred fetching the genotype of "+id1);
+       }
+     });
+    
+  jQuery.ajax( { 
+       url: '/brapi/0.1/genotype/'+id2,
+       async: false,
+       success: function(response) { 
+         alert("RESPONSE for "+id2+": "+Object.keys(response.genotypes[0].genotype).join(" / "));
+         scores2 = response.genotypes[0].genotype;
+       },
+       error: function(response) { 
+         alert("An error occurred fetching the genotype of "+id1);
+       }
+     });
+     var matches = 0;
+     var total = 0;
+     alert("KEYS: "+Object.keys(scores1).join(">>>"));
+     Object.keys(scores1).forEach( function(k) { 
+
+          if (scores1[k] === scores2[k]) { 
+            matches++;
+          }
+        
+          total++;
+        });
+     alert("Matches: "+matches + " Total: "+total+ " D :" + (matches / total));
+          
+}
+  
+
+
+</script>
