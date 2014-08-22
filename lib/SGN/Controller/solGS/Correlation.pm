@@ -308,7 +308,7 @@ sub run_pheno_correlation_analysis {
     $c->stash->{referer} = $c->req->referer;
     
     $c->stash->{correlation_type} = "pheno_correlation_${pop_id}";
-    $c->stash->{correlation_script} = "R/correlation.r";
+    $c->stash->{correlation_script} = "R/phenotypic_correlation.r";
     
     $self->run_correlation_analysis($c);
 
