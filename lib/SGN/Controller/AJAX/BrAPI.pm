@@ -12,8 +12,6 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-
-
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
@@ -30,10 +28,16 @@ sub genotype : Chained('brapi') PathPart('genotype') CaptureArgs(1) {
     $c->stash->{genotype_id} = $id;
 }
 
-sub germplasm : Chained('brapi') PathPart('germplasm/find') CatpureArgs(0) { 
+sub germplasm : Chained('brapi') PathPart('germplasm') CaptureArgs(0) { 
     my $self = shift;
     my $c = shift;
     
+}
+
+sub germplasm_find : Chained('germplasm') PathPart('find') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
     my $params = $c->req->params();
 
     if (! $params->{q}) { 
@@ -48,8 +52,8 @@ sub germplasm : Chained('brapi') PathPart('germplasm/find') CatpureArgs(0) {
 	->resultset("Stock::Stock")
 	->search( { uniquename => { ilike => $params->{q} } });
     }
-    elsif ($params->{matchMethod} eq "regex") { 
-	$c->stash->{rest} = { error => "matchMethod 'regex' not yet implemented" };
+    elsif ($params->{matchMethod} eq "wildcard") { 
+	$c->stash->{rest} = { error => "matchMethod 'wildcard' not yet implemented" };
 	return;
     }
     else { 
