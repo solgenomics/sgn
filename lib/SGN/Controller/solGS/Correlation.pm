@@ -146,7 +146,7 @@ sub correlation_output_file {
         $file_cache->set($key_json, $corre_coefficients_json_file, '30 days');
     }
 
-    $c->stash->{corre_coefficients_file} = $corre_coefficients_file;
+    $c->stash->{corre_coefficients_file}      = $corre_coefficients_file;
     $c->stash->{corre_coefficients_json_file} = $corre_coefficients_json_file;
 }
 
@@ -158,25 +158,22 @@ sub correlation_analysis_output :Path('/correlation/analysis/output') Args(0) {
     $c->stash->{pop_id} = $pop_id;
 
     $self->correlation_output_file($c);
-    my $corre_coefficients_file = $c->stash->{corre_coefficients_file};
-   
-    if (!-s $corre_coefficients_file)
+    my $corre_json_file = $c->stash->{corre_coefficients_json_file};
+    
+    my $ret->{status} = 'failed';
+  
+    if (!-s $corre_json_file)
     {
         $self->run_correlation_analysis($c);  
-        $corre_coefficients_file = $c->stash->{corre_coefficients_file};
-  
+        $corre_json_file = $c->stash->{corre_coefficients_json_file};       
     }
-
-    my $ret->{status} = 'failed';
-
-    if (-s $corre_coefficients_file)
-    {
-        $ret->{status} = 'success';      
-        my $corre_json_file = $c->stash->{corre_coefficients_json_file};       
-        $ret->{data} = read_file($corre_json_file);
-                
-    }
-
+    
+    if (-s $corre_json_file)
+    { 
+        $ret->{status}   = 'success';
+        $ret->{data}     = read_file($corre_json_file);
+    } 
+    
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
@@ -198,7 +195,7 @@ sub run_correlation_analysis {
     
     $self->correlation_output_file($c);
     my $corre_table_file = $c->stash->{corre_coefficients_file};
-    my $corre_json_file = $c->stash->{corre_coefficients_json_file};
+    my $corre_json_file  = $c->stash->{corre_coefficients_json_file};
    
     my $referer = $c->req->referer;
 
@@ -254,19 +251,15 @@ sub run_correlation_analysis {
             { 
                 $err .= "\n=== R output ===\n".file($corre_output_temp)->slurp."\n=== end R output ===\n" 
             };
+            
+            $c->stash->{script_error} = "Correlation analysis failed.";
                      
-
-            $c->throw(is_client_error   => 1,
-                      title             => "Correlation analysis script error",
-                      public_message    => "There is a problem running the correlation r script  on this dataset!",	     
-                      notify            => 1, 
-                      developer_message => $err,
-            );
       };
-        
-    } 
-
-    $c->stash->{corre_coefficients_file} = $corre_table_file;
+       
+    }
+   
+    $c->stash->{corre_coefficients_file}      = $corre_table_file;
+    $c->stash->{corre_coefficients_json_file} = $corre_json_file; 
 
 }
 

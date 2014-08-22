@@ -26,17 +26,25 @@ jQuery(document).ready( function () {
         var population = getPopulationDetails();
         
         jQuery.ajax({
-                type: 'POST',
-                    dataType: 'json',
-                    data: {'population_id': population.population_id },
-                    url: '/correlation/phenotype/data/',
-                    success: function(response) {         
+            type: 'POST',
+            dataType: 'json',
+            data: {'population_id': population.population_id },
+            url: '/correlation/phenotype/data/',
+            success: function(response) {
+                if(response.status == 'success') {
                     runCorrelationAnalysis();
-                },
-                    error: function(response) {                    
-                   // alert('there is error in creating the phenotype data set for this correlation analysis.');
+                } else {
+                    jQuery("#correlation_message")
+                        .css({"padding-left": '0px'})
+                        .html("This population has no phenotype data.");
                 }
-            });
+            },
+            error: function(response) {
+                jQuery("#correlation_message")
+                    .css({"padding-left": '0px'})
+                    .html("Error occured preparing the phenotype data for correlation analysis.");
+            }
+        });
 
     });
 
@@ -45,22 +53,26 @@ function runCorrelationAnalysis () {
     var population = getPopulationDetails();
     
     jQuery.ajax({
-            type: 'POST',
-                dataType: 'json',
-                data: {'population_id': population.population_id },
-                url: '/correlation/analysis/output',
-                success: function(response) {         
+        type: 'POST',
+        dataType: 'json',
+        data: {'population_id': population.population_id },
+        url: '/correlation/analysis/output',
+        success: function(response) {
+            if (response.status == 'success') {
                 plotCorrelation(response.data);
                 jQuery("#correlation_message").empty();
-            },
-                error: function(response) {           
-               // alert('There is error running correlation analysis.');
+            } else {
                 jQuery("#correlation_message")
                     .css({"padding-left": '0px'})
-                    .html("There is no correlation output for this population.");
+                    .html("There is no correlation output for this dataset.");               
             }
-                
-        });
+        },
+        error: function(response) {                          
+            jQuery("#correlation_message")
+                .css({"padding-left": '0px'})
+                .html("Error occured running the correlation analysis.");
+        }                
+    });
 
 }
 
