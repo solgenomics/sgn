@@ -42,6 +42,8 @@ sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(
 
     my $design = $trial->get_design();
 
+    $self->trial_download_log($c, $trial_id, "trial layout");
+
     $c->tempfiles_subdir("data_export"); # make sure the dir exists
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_layout_".$trial_id."_XXXXX");
 
@@ -88,6 +90,8 @@ sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download')
     my $trial_id = shift;
     
     my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+
+    $self->trial_download_log($c, $trial_id, "trial phenotypes");
 
     my $trial_sql = "\'$trial_id\'";
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
@@ -473,5 +477,22 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 #   system("rm qc_output.txt");
 
 }
+
+sub trial_download_log { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    my $message = shift;
+
+    if ($c->config->{trial_download_logfile}) { 
+	open (my $F, ">>", $c->config->{trial_download_logfile}) || die "Can't open ".$c->config->{trial_download_logfile};
+	print $F $c->user->get_object->get_username()."\t".$trial_id."\t$message\n";
+	close($F);
+    }
+    else { 
+	print STDERR "Note: set config variable trial_download_logfile to obtain a log of downloaded trials.\n";
+    }
+}
+
 #=pod
 1;
