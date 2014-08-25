@@ -2014,12 +2014,13 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
     $c->stash->{prediction_pop_id} = $prediction_id;
   
     my @selected_traits = $c->req->param('trait_id');
-   
+
     my $single_trait_id;
     if (!@selected_traits)
     {
         $c->stash->{model_id} = $pop_id; 
         $self->analyzed_traits($c);
+        
         @selected_traits = @{$c->stash->{analyzed_traits}};       
     }
 
@@ -2128,15 +2129,28 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
     my ($tr_id)    = $referer =~ /(\d+)/;
     my $trait_page = "solgs/trait/$tr_id/population/$pop_id";
    
-    if ($referer =~ m/$trait_page/) 
-    { 
-        $c->res->redirect("/solgs/trait/$tr_id/population/$pop_id");
-        $c->detach(); 
+    my $error = $c->stash->{script_error};
+  
+    if ($error) 
+    {
+        $c->stash->{message} = "$error can't create prediction models for the selected traits. 
+                                 There are problems with the datasets of the traits.
+                                 <p><a href=\"/solgs/population/$pop_id\">[ Go back ]</a></p>";
+
+        $c->stash->{template} = "/generic_message.mas"; 
     }
     else 
     {
-        $c->res->redirect("/solgs/traits/all/population/$pop_id/$prediction_id");
-        $c->detach(); 
+        if ($referer =~ m/$trait_page/) 
+        { 
+            $c->res->redirect("/solgs/trait/$tr_id/population/$pop_id");
+            $c->detach(); 
+        }
+        else 
+        {
+            $c->res->redirect("/solgs/traits/all/population/$pop_id/$prediction_id");
+            $c->detach(); 
+        }
     }
 
 }
@@ -2187,9 +2201,9 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
      $self->analyzed_traits($c);
 
      my @analyzed_traits = @{$c->stash->{analyzed_traits}};
-  
+    
      if (!@analyzed_traits) 
-     {
+     { 
          $c->res->redirect("/solgs/population/$pop_id/selecttraits/");
          $c->detach(); 
      }
