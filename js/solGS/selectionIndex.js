@@ -7,7 +7,22 @@
 
 JSAN.use('jquery.blockUI');
 
-function listAllPopulations ()  {
+
+jQuery(document).ready( function () {
+        listSelectionIndexPopulations();
+});
+
+
+jQuery("#rank_genotypes").live("click", function() {        
+    var modelId        = jQuery("#model_id").val();
+    var selectionPopId = jQuery("#selected_population_id").val();
+    var popType        = jQuery("#selected_population_type").val();
+   
+    selectionIndex(modelId, selectionPopId);        
+});
+
+
+function listSelectionIndexPopulations ()  {
    
     var modelData = getTrainingPopulationData();
     var trainingPopIdName = JSON.stringify(modelData);
@@ -51,34 +66,35 @@ function listAllPopulations ()  {
                  
     jQuery(".si_dropdown dd ul li a").click(function() {
       
-            var text = jQuery(this).html();
-           
-            jQuery(".si_dropdown dt a span").html(text);
-            jQuery(".si_dropdown dd ul").hide();
+        var text = jQuery(this).html();
+        
+        jQuery(".si_dropdown dt a span").html(text);
+        jQuery(".si_dropdown dd ul").hide();
                 
-            var idPopName = jQuery("#selected_population").find("dt a span.value").html();
-            idPopName     = JSON.parse(idPopName);
-            modelId = jQuery("#model_id").val();
+        var idPopName = jQuery("#selected_population").find("dt a span.value").html();
+        idPopName     = JSON.parse(idPopName);
+        modelId = jQuery("#model_id").val();
                    
-            selectedPopId   = idPopName.id;
-            selectedPopName = idPopName.name;
-              
-            jQuery("#selected_population_name").val(selectedPopName);
-            jQuery("#selected_population_id").val(selectedPopId);
-                    
-            getSelectionPopTraits(modelId, selectedPopId);
+        selectedPopId   = idPopName.id;
+        selectedPopName = idPopName.name;
+        selectedPopType = idPopName.pop_type;
+      
+        jQuery("#selected_population_name").val(selectedPopName);
+        jQuery("#selected_population_id").val(selectedPopId);
+        jQuery("#selected_population_type").val(selectedPopType);        
+            
+        getSelectionPopTraits(modelId, selectedPopId);
                                          
-        });
+    });
                        
     jQuery(".si_dropdown").bind('click', function(e) {
-            var clicked = jQuery(e.target);
+        var clicked = jQuery(e.target);
                     
-            if (! clicked.parents().hasClass("si_dropdown"))
-                jQuery(".si_dropdown dd ul").hide();
-
-            e.preventDefault();
-
-        });           
+        if (! clicked.parents().hasClass("si_dropdown"))
+            jQuery(".si_dropdown dd ul").hide();
+        
+        e.preventDefault();
+    });           
 
 }
 
@@ -99,9 +115,8 @@ function addSelectionPopulations(){
            
         if (predictedPop) {
             if (predictedPop.length > 1) {
-                var selPopsInput = row.getElementsByTagName("input")[0];
-                var idPopName    = selPopsInput.value;
-             
+                var selPopsInput  = row.getElementsByTagName("input")[0];
+                var idPopName     = selPopsInput.value;
                 var idPopNameCopy = idPopName;
                 idPopNameCopy     = JSON.parse(idPopNameCopy);
                 var popName       = idPopNameCopy.name;
@@ -126,12 +141,12 @@ function getSelectionPopTraits (modelId, selectedPopId) {
                 dataType: "json",
                 url: '/solgs/selection/index/form',
                 data: {'pred_pop_id': selectedPopId, 'training_pop_id': modelId},
-                success: function(res){
+                success: function(res) {
                 
                 if (res.status == 'success') {
                     var traits = res.traits;  
                     var table  = selectionIndexForm(traits);
-               
+    
                     var selectionIndex = jQuery('#selection_index_form').empty().append(table);
      
                 }                                               
@@ -144,7 +159,7 @@ function  selectionIndexForm(predictedTraits) {
     var cnt = 1;
     var row = '';
     var totalCount = 1;
- 
+   
     for (var i=0; i < predictedTraits.length; i++) { 
         var tdCell  = '<td>' + predictedTraits[i]  + ':</td>';
         var rowTag  = '';
@@ -347,23 +362,6 @@ function selectionIndex ( trainingPopId, predictionPopId )
  }
 
 
-
-
-
-jQuery("#rank_genotypes").live("click", function() {        
-        var modelId          = jQuery("#model_id").val();
-        var selectionPopId   = jQuery("#selected_population_id").val();
-         
-        selectionIndex(modelId, selectionPopId);        
-    });
-
-
-
-jQuery(document).ready( function () {
-        listAllPopulations();
-    });
-
-
 function listUploadedSelPopulations ()  {
    
     var selPopsDivUploaded   = document.getElementById("uploaded_selection_populations");
@@ -379,16 +377,16 @@ function listUploadedSelPopulations ()  {
         predictedPopUploaded = popRow.match(/\/solgs\/selection\//g);
       
         if (predictedPopUploaded) {
-                var selPopsInput = row.getElementsByTagName("input")[0];
-                var idPopName    = selPopsInput.value;     
-                var idPopNameCopy = idPopName;
-                idPopNameCopy     = JSON.parse(idPopNameCopy);
-                var popName       = idPopNameCopy.name;
-                             
-                popsList += '<li>'
-                         + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
-                         + '</li>';
-        }else {
+            var selPopsInput  = row.getElementsByTagName("input")[0];
+            var idPopName     = selPopsInput.value;     
+            var idPopNameCopy = idPopName;
+            idPopNameCopy     = JSON.parse(idPopNameCopy);
+            var popName       = idPopNameCopy.name;
+           
+            popsList += '<li>'
+                + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
+                + '</li>';
+        } else {
             popsList = undefined;
         }
     }
@@ -401,10 +399,11 @@ function listUploadedSelPopulations ()  {
 
 function getTrainingPopulationData () {
 
-    var modelId = jQuery("#model_id").val();
+    var modelId   = jQuery("#model_id").val();
     var modelName = jQuery("#model_name").val();
-   
-    return { 'id' : modelId, 'name' : modelName};
+    var popType   = jQuery("#default_selected_population_type").val();
+
+    return { 'id' : modelId, 'name' : modelName, 'pop_type': popType};
         
 }
 

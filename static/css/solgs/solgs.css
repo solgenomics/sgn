@@ -93,58 +93,62 @@
 }
 
 
-/* SI dropdown */       
-.si_dropdown dd, .si_dropdown dt, .si_dropdown ul {
+/* SI and correlation dropdown */       
+.si_dropdown dd, .si_dropdown dt, 
+.si_dropdown ul, .corre_dropdown dd, 
+.corre_dropdown dt, .corre_dropdown ul {
     margin:0px; 
     padding:0px;
  }
-.si_dropdown dd { 
+.si_dropdown dd, .corre_dropdown dd,  { 
     position:relative; 
 }
-.si_dropdown a, .si_dropdown a:visited { 
+.si_dropdown a, .si_dropdown a:visited, 
+.corre_dropdown a, .corre_dropdown a:visited { 
     color:#816c5b; 
     text-decoration:none; 
     outline:none;
 }
-.si_dropdown a:hover { 
+.si_dropdown a:hover, .corre_dropdown a:hover { 
     color: #5d4617;
 }
-.si_dropdown dt a:hover, .si_dropdown dt a:focus { 
+.si_dropdown dt a:hover, .si_dropdown dt a:focus, 
+.corre_dropdown dt a:hover, .corre_dropdown dt a:focus { 
     color: ##5d4617; 
     border: 1px solid #5d4617;
 }
-.si_dropdown dt a {
+.si_dropdown dt a, .corre_dropdown dt a {
     background:#ccccff url(/static/documents/img/glyphicons_expand.png) no-repeat scroll right center; 
     display:block; 
     padding-right:10px;
     width:250px;
 }
-.si_dropdown dt a span {
+.si_dropdown dt a span, .corre_dropdown dt a span {
     cursor:pointer; 
     display:block; 
     padding:2px;
 }
-.si_dropdown dd ul { 
+.si_dropdown dd ul, .corre_dropdown dd ul { 
     background:#ccccff none repeat scroll 0 0;
     border:1px solid #ccccff; 
     color: #C5C0B0;
     display:none;
     left:0px; 
     padding:2px 0px; 
-    position:absolute; 
+    position:relative; 
     top:2px; 
     width:auto; 
     min-width:250px; 
     list-style:none;
 }
-.si_dropdown span.value { 
+.si_dropdown span.value, .corre_dropdown span.value { 
     display:none;
 }
-.si_dropdown dd ul li a { 
+.si_dropdown dd ul li a, .corre_dropdown dd ul li a { 
     padding:5px; 
     display:block;
 }
-.si_dropdown dd ul li a:hover { 
+.si_dropdown dd ul li a:hover, .corre_dropdown dd ul li a:hover { 
     background-color:#efefef;
 }
         
