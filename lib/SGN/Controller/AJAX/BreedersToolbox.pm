@@ -54,6 +54,18 @@ sub insert_new_project : Path("/ajax/breeders/project/insert") Args(0) {
 }
 
 
+sub get_all_locations :Path("/ajax/breeders/location/all") Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $bp = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+
+    my $all_locations = $bp->get_all_locations();
+
+    $c->stash->{rest} = { locations => $all_locations };
+
+}
+
 sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) { 
     my $self = shift;
     my $c = shift;
