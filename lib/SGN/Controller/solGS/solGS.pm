@@ -167,14 +167,16 @@ sub search_trials : Path('/solgs/search/trials') Args() {
 
     my $page = $c->req->param('page') || 1;
 
-    my $project_rs = $c->model('solGS::solGS')->all_projects($page);
+    my $project_rs = $c->model('solGS::solGS')->all_projects($page, 15);
    
     $self->projects_links($c, $project_rs);
     my $projects = $c->stash->{projects_pages};
-  
+    
     my $page_links =  sub {uri ( query => {  page => shift } ) };
-    my $pager = $project_rs->pager;
-   
+    
+    my $pager = $project_rs->pager; 
+    $pager->change_entries_per_page(15);
+
     my $pagination;
     my $url = '/solgs/search/trials/';
    
@@ -242,9 +244,9 @@ sub projects_links {
     my $projects = $self->get_projects_details($c, $pr_rs);
 
     my @projects_pages;
+   
     foreach my $pr_id (keys %$projects) 
     {
-
          my $pr_name     = $projects->{$pr_id}{project_name};
          my $pr_desc     = $projects->{$pr_id}{project_desc};
          my $pr_year     = $projects->{$pr_id}{project_year};
@@ -252,10 +254,10 @@ sub projects_links {
   
          my $dummy_name = $pr_name =~ /test\w*/ig;
          my $dummy_desc = $pr_desc =~ /test\w*/ig;
-         
+       
          my ($has_genotype, $has_phenotype);
         
-         unless ($dummy_name || $dummy_desc || !$pr_name ) 
+         unless ($dummy_name || $dummy_desc || !$pr_name )
          {            
              $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
          }
@@ -267,18 +269,15 @@ sub projects_links {
          
          if($has_genotype && $has_phenotype)
          {
-           
-                    
-                my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
-                push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
-                                       $pr_desc, $pr_location, $pr_year
-                ];
-            
-        }
+          
+             my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+             push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
+                                    $pr_desc, $pr_location, $pr_year
+             ];            
+         }
     }
 
     $c->stash->{projects_pages} = \@projects_pages;
-
 }
 
 
@@ -737,29 +736,61 @@ sub trait :Path('/solgs/trait') Args(3) {
     my ($self, $c, $trait_id, $key, $pop_id) = @_;
    
     my $ajaxredirect = $c->req->param('source');
-  
+    $c->stash->{ajax_request} = $ajaxredirect;
+   
     if ($pop_id && $trait_id)
     {    
         $c->stash->{pop_id} = $pop_id;       
-        $self->get_trait_name($c, $trait_id);       
-        $self->project_description($c, $pop_id);        
-        $self->get_rrblup_output($c);
-        $self->gs_files($c);
-        $self->trait_phenotype_stat($c);      
-        $self->download_prediction_urls($c);     
-        my $download_prediction = $c->stash->{download_prediction};
-      
-        $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
-     
-        $self->get_project_owners($c, $pop_id);       
-        $c->stash->{owner} = $c->stash->{project_owners};
+       
+        $self->get_trait_name($c, $trait_id);
+        my $trait_name = $c->stash->{trait_name};
 
-        $c->stash->{template} = $self->template("/population/trait.mas");
+        $self->get_rrblup_output($c);
+
+        $self->gs_files($c);
+
+        unless ($ajaxredirect eq 'heritability') 
+        {
+            $self->project_description($c, $pop_id); 
+            $self->trait_phenotype_stat($c);      
+            $self->download_prediction_urls($c);     
+            my $download_prediction = $c->stash->{download_prediction};
+          
+            $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
+             
+            $self->get_project_owners($c, $pop_id);       
+            $c->stash->{owner} = $c->stash->{project_owners};
+           
+            my $script_error = $c->stash->{script_error};
+            if ($script_error) 
+            {
+                $c->stash->{message} = "$script_error can't create a prediction model for <b>$trait_name</b>. 
+                                        There is a problem with the trait dataset.";
+
+                $c->stash->{template} = "/generic_message.mas";   
+
+            } 
+            else 
+            {
+                $c->stash->{template} = $self->template("/population/trait.mas");
+            }
+        }
     }
-    
+ 
     if ($ajaxredirect) 
     {
-        my $ret->{status} = 'success';
+        my $trait_abbr = $c->stash->{trait_abbr};
+        my $cache_dir  = $c->stash->{solgs_cache_dir};
+        my $gebv_file  = "gebv_kinship_${trait_abbr}_${pop_id}";       
+        $gebv_file     = $self->grep_file($cache_dir,  $gebv_file);
+
+        my $ret->{status} = 'failed';
+        
+        if (-s $gebv_file) 
+        {
+            $ret->{status} = 'success';
+        }
+        
         $ret = to_json($ret);
         
         $c->res->content_type('application/json');
@@ -1612,10 +1643,14 @@ sub get_trait_name {
 #creates and writes a list of GEBV files of 
 #traits selected for ranking genotypes.
 sub get_gebv_files_of_traits {
-    my ($self, $c, $traits, $pred_pop_id) = @_;
+    my ($self, $c) = @_;
     
-    my $pop_id = $c->stash->{pop_id}; 
+    my $pop_id = $c->stash->{pop_id};
+    $c->stash->{model_id} = $pop_id;
+    my $pred_pop_id = $c->stash->{prediction_pop_id};
+   
     my $dir = $c->stash->{solgs_cache_dir};
+    
     my $gebv_files; 
     my $pred_gebv_files;
 
@@ -1630,14 +1665,15 @@ sub get_gebv_files_of_traits {
             $gebv_files .= "\t" unless (@$pred_gebv_files[-1] eq $_);
         }     
     } 
-
-    unless ($pred_gebv_files->[0])
+    else
     {
-        foreach my $tr (@$traits) 
-        {    
-            my $exp = "gebv_kinship_${tr}_${pop_id}"; 
-            $gebv_files .= $self->grep_file($dir, $exp);
-            $gebv_files .= "\t" unless (@$traits[-1] eq $tr);
+        $self->analyzed_traits($c);
+        my @analyzed_traits_files = @{$c->stash->{analyzed_traits_files}};
+
+        foreach my $tr_file (@analyzed_traits_files) 
+        {
+            $gebv_files .= $tr_file;
+            $gebv_files .= "\t" unless (@analyzed_traits_files[-1] eq $tr_file);
         }
     }
     
@@ -1739,7 +1775,7 @@ sub rank_genotypes : Private {
                            $c->stash->{rel_weights_file},
                            $c->stash->{gebv_files_of_traits}
         );
-
+   
     $self->ranked_genotypes_file($c, $pred_pop_id);
     $self->mean_gebvs_file($c, $pred_pop_id);
 
@@ -1747,8 +1783,7 @@ sub rank_genotypes : Private {
                             $c->stash->{ranked_genotypes_file},
                             $c->stash->{genotypes_mean_gebv_file}
         );
- 
-   
+    
     my $pred_file_suffix;
     $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id;
     
@@ -1763,7 +1798,7 @@ sub rank_genotypes : Private {
     $c->stash->{input_files} = $input_file;
 
     $c->stash->{r_temp_file} = "rank-gebv-genotypes-${pop_id}${pred_file_suffix}";
-    $c->stash->{r_script}    = 'R/rank_genotypes.r';
+    $c->stash->{r_script}    = 'R/selection_index.r';
     
     $self->run_r_script($c);
     $self->download_urls($c);
@@ -1840,39 +1875,40 @@ sub list_of_prediction_pops {
           $pop_ids .= $prediction_pop_id ."\n";        
           write_file($pred_pops_file, $pop_ids);
 
-            my $pred_pop_rs = $c->model('solGS::solGS')->project_details($prediction_pop_id);
-            my $pred_pop_link;
+          my $pred_pop_rs = $c->model('solGS::solGS')->project_details($prediction_pop_id);
+          my $pred_pop_link;
 
-            while (my $row = $pred_pop_rs->next)
-            {
-                my $name = $row->name;
-                my $desc = $row->description;
+          while (my $row = $pred_pop_rs->next)
+          {
+              my $name = $row->name;
+              my $desc = $row->description;
             
-                unless ($name =~ /test/ || $desc =~ /test/)   
-                {
-                    my $id_pop_name->{id} = $prediction_pop_id;
-                    $id_pop_name->{name}  = $name;
-                    $id_pop_name          = to_json($id_pop_name);
+              unless ($name =~ /test/ || $desc =~ /test/)   
+              {
+                  my $id_pop_name->{id}    = $prediction_pop_id;
+                  $id_pop_name->{name}     = $name;
+                  $id_pop_name->{pop_type} = 'selection';
+                  $id_pop_name             = to_json($id_pop_name);
 
-                    $pred_pop_link = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id" 
+                  $pred_pop_link = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id" 
                                       onclick="solGS.waitPage()"><input type="hidden" value=\'$id_pop_name\'>$name</data> 
                                       </a> 
                                     |;
 
-                    my $pr_yr_rs = $c->model('solGS::solGS')->project_year($prediction_pop_id);
-                    my $project_yr;
+                  my $pr_yr_rs = $c->model('solGS::solGS')->project_year($prediction_pop_id);
+                  my $project_yr;
 
-                    while ( my $yr_r = $pr_yr_rs->next )
-                    {
-                        $project_yr = $yr_r->value;
-                    }
+                  while ( my $yr_r = $pr_yr_rs->next )
+                  {
+                      $project_yr = $yr_r->value;
+                  }
 
-                    $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
-                    my $download_prediction = $c->stash->{download_prediction};
+                  $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
+                  my $download_prediction = $c->stash->{download_prediction};
                 
-                    push @pred_pops,  ['', $pred_pop_link, $desc, 'NA', $project_yr, $download_prediction];
-                }
-            }
+                  push @pred_pops,  ['', $pred_pop_link, $desc, 'NA', $project_yr, $download_prediction];
+              }
+          }
         }
     }
     
@@ -1983,12 +2019,13 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
     $c->stash->{prediction_pop_id} = $prediction_id;
   
     my @selected_traits = $c->req->param('trait_id');
-   
+
     my $single_trait_id;
     if (!@selected_traits)
     {
         $c->stash->{model_id} = $pop_id; 
         $self->analyzed_traits($c);
+        
         @selected_traits = @{$c->stash->{analyzed_traits}};       
     }
 
@@ -2097,15 +2134,28 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
     my ($tr_id)    = $referer =~ /(\d+)/;
     my $trait_page = "solgs/trait/$tr_id/population/$pop_id";
    
-    if ($referer =~ m/$trait_page/) 
-    { 
-        $c->res->redirect("/solgs/trait/$tr_id/population/$pop_id");
-        $c->detach(); 
+    my $error = $c->stash->{script_error};
+  
+    if ($error) 
+    {
+        $c->stash->{message} = "$error can't create prediction models for the selected traits. 
+                                 There are problems with the datasets of the traits.
+                                 <p><a href=\"/solgs/population/$pop_id\">[ Go back ]</a></p>";
+
+        $c->stash->{template} = "/generic_message.mas"; 
     }
     else 
     {
-        $c->res->redirect("/solgs/traits/all/population/$pop_id/$prediction_id");
-        $c->detach(); 
+        if ($referer =~ m/$trait_page/) 
+        { 
+            $c->res->redirect("/solgs/trait/$tr_id/population/$pop_id");
+            $c->detach(); 
+        }
+        else 
+        {
+            $c->res->redirect("/solgs/traits/all/population/$pop_id/$prediction_id");
+            $c->detach(); 
+        }
     }
 
 }
@@ -2156,9 +2206,9 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
      $self->analyzed_traits($c);
 
      my @analyzed_traits = @{$c->stash->{analyzed_traits}};
-  
+    
      if (!@analyzed_traits) 
-     {
+     { 
          $c->res->redirect("/solgs/population/$pop_id/selecttraits/");
          $c->detach(); 
      }
@@ -2229,10 +2279,9 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
     
     $c->stash->{pop_id} = $model_id;
 
-    if( $pred_pop_id =~ /\d+/)
+    if( $pred_pop_id =~ /\d+/ && $model_id != $pred_pop_id)
     {
-        $c->stash->{prediction_pop_id} = $pred_pop_id;
-        
+        $c->stash->{prediction_pop_id} = $pred_pop_id;       
     }
     else
     {
@@ -2251,7 +2300,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
       
     if (@values) 
     {
-        $self->get_gebv_files_of_traits($c, \@traits, $pred_pop_id);
+        $self->get_gebv_files_of_traits($c);
       
         my $params = $c->req->params;
         $self->gebv_rel_weights($c, $params, $pred_pop_id);
@@ -3074,21 +3123,21 @@ sub analyzed_traits {
                   readdir($dh); 
     closedir $dh;
    
-    my @traits_files = grep {/($model_id)/} @all_files;
+    my @traits_files = map { catfile($dir, $_)} 
+                       grep {/($model_id)/} 
+                       @all_files;
     
     my @traits;
     my @traits_ids;
 
     foreach my $trait_file  (@traits_files) 
     {   
-
-        my $trait_file_path = catfile($dir, $trait_file);
-       
-        if (-s $trait_file_path > 1) 
+        if (-s $trait_file > 1) 
         { 
             my $trait = $trait_file;
             $trait =~ s/gebv_kinship_//;
             $trait =~ s/$model_id|_|combined_pops//g;
+            $trait =~ s/$dir|\///g;
 
             my $acronym_pairs = $self->get_acronym_pairs($c);                   
             if ($acronym_pairs)
@@ -3723,8 +3772,6 @@ sub r_combine_populations  {
     
     $self->run_r_script($c);
 
-    
-
 }
 
 
@@ -3780,14 +3827,8 @@ sub run_r_script {
         { 
             $err .= "\n=== R output ===\n".file($r_out_temp)->slurp."\n=== end R output ===\n" 
         };
-       
-        
-        $c->throw(is_client_error   => 1,
-                  title             => "$r_script Script Error",
-                  public_message    => "There is a problem running $r_script on this dataset!",	     
-                  notify            => 1, 
-                  developer_message => $err,
-            );
+            
+        $c->stash->{script_error} = "$r_script";
     }
 
 }

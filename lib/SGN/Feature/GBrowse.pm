@@ -187,19 +187,19 @@ sub render_config_template {
     my ( $self, $template_file, $render_target ) = @_;
 
     # render the template into the target file
-    my $outbuf;
-    my $mason = HTML::Mason::Interp
-        ->new( allow_globals => [qw[ $c $feature ]],
-               autohandler_name => '',
-               comp_root => [['conf_templates', $self->conf_template_dir->stringify ]],
-               out_method => \$outbuf,
-              );
-    $mason->set_global( '$c'       => $self->context );
-    $mason->set_global( '$feature' => $self          );
+    # my $outbuf;
+    # my $mason = HTML::Mason::Interp
+    #     ->new( allow_globals => [qw[ $c $feature ]],
+    #            autohandler_name => '',
+    #            comp_root => [['conf_templates', $self->conf_template_dir->stringify ]],
+    #            out_method => \$outbuf,
+    #           );
+    # $mason->set_global( '$c'       => $self->context );
+    # $mason->set_global( '$feature' => $self          );
 
-    $mason->exec( '/'.$template_file->relative( $self->conf_template_dir) ); #< mason's default search path is current working directory
+    # $mason->exec( '/'.$template_file->relative( $self->conf_template_dir) ); #< mason's default search path is current working directory
 
-    $render_target->openw->print( $outbuf );
+    # $render_target->openw->print( $outbuf );
 }
 
 # # returns a string of apache configuration to be included during

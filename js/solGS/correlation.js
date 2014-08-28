@@ -5,6 +5,143 @@
 */
 
 
+
+
+jQuery(document).ready( function () { 
+    var page = document.URL;
+   
+    if (page.match(/solgs\/traits\/all\//) != null || 
+        page.match(/solgs\/models\/combined\/trials\//) != null) {
+        listGenCorPopulations();
+    } else {
+        phenotypicCorrelation();
+    }       
+});
+
+
+jQuery("#run_genetic_correlation").live("click", function() {        
+    var popId   = jQuery("#corre_selected_population_id").val();
+    var popType = jQuery("#corre_selected_population_type").val();
+    
+    jQuery("#correlation_canvas").empty();
+   
+    jQuery("#correlation_message")
+        .css({"padding-left": '0px'})
+        .html("Running genetic correlation analysis...");
+    
+    formatGenCorInputData(popId, popType);
+         
+});
+
+
+function listGenCorPopulations ()  {
+    var modelData = getTrainingPopulationData();
+   
+    var trainingPopIdName = JSON.stringify(modelData);
+   
+    var  popsList =  '<dl id="corre_selected_population" class="corre_dropdown">'
+        + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
+        + '<dd>'
+        + '<ul>'
+        + '<li>'
+        + '<a href="#">' + modelData.name + '<span class=value>' + trainingPopIdName + '</span></a>'
+        + '</li>';  
+ 
+    popsList += '</ul></dd></dl>'; 
+   
+    jQuery("#corre_select_a_population_div").empty().append(popsList).show();
+     
+    var dbSelPopsList;
+    if( modelData.id.match(/uploaded/) == null) {
+        dbSelPopsList = addSelectionPopulations();
+    }
+
+    if (dbSelPopsList) {
+            jQuery("#corre_select_a_population_div ul").append(dbSelPopsList); 
+    }
+      
+    var userUploadedSelExists = jQuery("#uploaded_selection_pops_table").doesExist();
+    if( userUploadedSelExists == true) {
+      
+        var userSelPops = listUploadedSelPopulations();
+        if (userSelPops) {
+
+            jQuery("#corre_select_a_population_div ul").append(userSelPops);  
+        }
+    }
+
+   jQuery(".corre_dropdown dt a").click(function() {
+            jQuery(".corre_dropdown dd ul").toggle();
+        });
+                 
+    jQuery(".corre_dropdown dd ul li a").click(function() {
+      
+        var text = jQuery(this).html();
+           
+        jQuery(".corre_dropdown dt a span").html(text);
+        jQuery(".corre_dropdown dd ul").hide();
+                
+        var idPopName = jQuery("#corre_selected_population").find("dt a span.value").html();
+        idPopName     = JSON.parse(idPopName);
+        modelId = jQuery("#model_id").val();
+                   
+        selectedPopId   = idPopName.id;
+        selectedPopName = idPopName.name;
+        selectedPopType = idPopName.pop_type; 
+       
+        jQuery("#corre_selected_population_name").val(selectedPopName);
+        jQuery("#corre_selected_population_id").val(selectedPopId);
+        jQuery("#corre_selected_population_type").val(selectedPopType);
+                                
+    });
+                       
+    jQuery(".corre_dropdown").bind('click', function(e) {
+        var clicked = jQuery(e.target);
+               
+        if (! clicked.parents().hasClass("corre_dropdown"))
+            jQuery(".corre_dropdown dd ul").hide();
+
+        e.preventDefault();
+
+    });           
+}
+
+
+function formatGenCorInputData (popId, type) {
+    var modelDetail = getPopulationDetails();
+   
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+        data: {'model_id': modelDetail.population_id, 'corr_population_id': popId, 'type' : type},
+        url: '/correlation/genetic/data/',
+        success: function(response) {
+                if(response.status == 'success') {
+                    gebvsFile = response.gebvs_file;
+
+                    var args = {
+                        'model_id': modelDetail.population_id, 
+                        'corr_population_id': popId, 
+                        'type': type, 
+                        'gebvs_file': response.gebvs_file
+                    };
+
+                    runGenCorrelationAnalysis(args);
+                } else {
+                    jQuery("#correlation_message")
+                        .css({"padding-left": '0px'})
+                        .html("This population has no additive genetic data.");
+                }
+            },
+            error: function(response) {
+                jQuery("#correlation_message")
+                    .css({"padding-left": '0px'})
+                    .html("Error occured preparing the additive genetic data for correlation analysis.");
+            }
+    });
+}
+
+
 function getPopulationDetails () {
 
     var populationId = jQuery("#population_id").val();
@@ -22,45 +159,86 @@ function getPopulationDetails () {
 }
 
 
-jQuery(document).ready( function () { 
-        var population = getPopulationDetails();
+function phenotypicCorrelation () {
+ 
+    var population = getPopulationDetails();
         
-        jQuery.ajax({
-                type: 'POST',
-                    dataType: 'json',
-                    data: {'population_id': population.population_id },
-                    url: '/correlation/phenotype/data/',
-                    success: function(response) {         
-                    runCorrelationAnalysis();
-                },
-                    error: function(response) {                    
-                   // alert('there is error in creating the phenotype data set for this correlation analysis.');
+    jQuery.ajax({
+            type: 'POST',
+            dataType: 'json',
+            data: {'population_id': population.population_id },
+            url: '/correlation/phenotype/data/',
+            success: function(response) {
+                if(response.status == 'success') {
+                    runPhenoCorrelationAnalysis();
+                } else {
+                    jQuery("#correlation_message")
+                        .css({"padding-left": '0px'})
+                        .html("This population has no phenotype data.");
                 }
-            });
-
+            },
+            error: function(response) {
+                jQuery("#correlation_message")
+                    .css({"padding-left": '0px'})
+                    .html("Error occured preparing the phenotype data for correlation analysis.");
+            }
     });
+     
+}
 
 
-function runCorrelationAnalysis () {
+function runPhenoCorrelationAnalysis () {
     var population = getPopulationDetails();
     
     jQuery.ajax({
-            type: 'POST',
-                dataType: 'json',
-                data: {'population_id': population.population_id },
-                url: '/correlation/analysis/output',
-                success: function(response) {         
+        type: 'POST',
+        dataType: 'json',
+        data: {'population_id': population.population_id },
+        url: '/phenotypic/correlation/analysis/output',
+        success: function(response) {
+            if (response.status == 'success') {
                 plotCorrelation(response.data);
                 jQuery("#correlation_message").empty();
-            },
-                error: function(response) {           
-               // alert('There is error running correlation analysis.');
+            } else {
                 jQuery("#correlation_message")
                     .css({"padding-left": '0px'})
-                    .html("There is no correlation output for this population.");
+                    .html("There is no correlation output for this dataset.");               
             }
-                
-        });
+        },
+        error: function(response) {                          
+            jQuery("#correlation_message")
+                .css({"padding-left": '0px'})
+                .html("Error occured running the correlation analysis.");
+        }                
+    });
+
+}
+
+
+function runGenCorrelationAnalysis (args) {
+  
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+        data: args,
+        url: '/genetic/correlation/analysis/output',
+        success: function(response) {
+            if (response.status == 'success') {
+               
+                plotCorrelation(response.data);
+                jQuery("#correlation_message").empty();
+            } else {
+                jQuery("#correlation_message")
+                    .css({"padding-left": '0px'})
+                    .html("There is no genetic correlation output for this dataset.");               
+            }
+        },
+        error: function(response) {                          
+            jQuery("#correlation_message")
+                .css({"padding-left": '0px'})
+                .html("Error occured running the genetic correlation analysis.");
+        }                
+    });
 
 }
 
@@ -74,14 +252,23 @@ function plotCorrelation (data) {
     data = data.replace(/\"NA\"/g, 100);
     
     data = JSON.parse(data);
-    
+  
     var height = 400;
     var width  = 400;
+
+    var nTraits = data.traits.length;
+
+    if (nTraits < 8) {
+        height = height * 0.5;
+        width  = width  * 0.5;
+    }
+
     var pad    = {left:70, top:20, right:100, bottom: 70}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
-
-    var nTraits = data.traits.length;      
+ 
+   
+         
     var corXscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([0, width]);
     var corYscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([height, 0]);
     var corZscale = d3.scale.linear().domain([-1, 0, 1]).range(["#A52A2A","white", "#0000A0"]);
@@ -160,8 +347,8 @@ function plotCorrelation (data) {
                 if (d.value === 100) {return "white";} 
                 else {return corZscale(d.value)}
             })
-        .attr("stroke", "none")
-        .attr("stroke-width", 2)
+        .attr("stroke", "white")
+        .attr("stroke-width", 1)
         .on("mouseover", function (d) {
                 if(d.value != 100) {
                     d3.select(this)
@@ -183,7 +370,7 @@ function plotCorrelation (data) {
         .on("mouseout", function() {
                 d3.selectAll("text.corrlabel").remove()
                 d3.selectAll("text#corrtext").remove()
-                d3.select(this).attr("stroke","none")
+                d3.select(this).attr("stroke","white")
             });
             
     corrplot.append("rect")
@@ -193,31 +380,45 @@ function plotCorrelation (data) {
         .attr("stroke", "purple")
         .attr("stroke-width", 1)
         .attr("pointer-events", "none");
-
-    var legendValues = [[1,d3.min(coefs)], [2,0], [3,d3.max(coefs)]];
+   
+    var legendValues = []; 
+    if (nTraits === 2) {     
+        if (d3.min(coefs) > 0 && d3.max(coefs) > 0 ) {
+            legendValues = [[0, d3.max(coefs)], [1, 0]];
+        } else if (d3.min(coefs) < 0 && d3.max(coefs) < 0 )  {
+           legendValues = [[0, d3.min(coefs)], [1, 0]];              
+        } else {
+           legendValues = [[0, d3.min(coefs)], [1, d3.max(coefs)]];    
+        }
+    } else {
+        legendValues = [[0, d3.min(coefs)], [1, 0], [2, d3.max(coefs)]];
+    }
    
     var legend = corrplot.append("g")
         .attr("class", "cell")
-        .attr("transform", "translate(" + (width + 10) + "," +  (height * 0.4) + ")")
+        .attr("transform", "translate(" + (width + 10) + "," +  (height * 0.25) + ")")
         .attr("height", 100)
         .attr("width", 100);
        
-    
+    var recLH = 20;
+    var recLW = 20;
+
     legend = legend.selectAll("rect")
         .data(legendValues)  
         .enter()
         .append("rect")
         .attr("x", function (d) { return 1;})
-        .attr("y",  function (d) { return corXscale(d[0])})
-        .attr("width", 20)
-        .attr("height", 20)      
+        .attr("y",  function (d) {return 1 + (d[0] * recLH) + (d[0] * 5); })   
+        .attr("width", recLH)
+        .attr("height", recLW)
+        .style("stroke", "black")
         .attr("fill", function (d) { 
             if (d === 100) {return "white"} 
             else {return corZscale(d[1])}
         });
  
     var legendTxt = corrplot.append("g")
-        .attr("transform", "translate(" + (width + 40) + "," + ((height * 0.4) + 10) + ")")
+        .attr("transform", "translate(" + (width + 40) + "," + ((height * 0.25) + (0.5 * recLW)) + ")")
         .attr("id", "legendtext");
 
     legendTxt.selectAll("text")
@@ -227,15 +428,14 @@ function plotCorrelation (data) {
         .attr("fill", "green")
         .style("fill", "green")
         .attr("x", 1)
-        .attr("y", function (d) { return corXscale(d[0])})
+        .attr("y", function (d) { return 1 + (d[0] * recLH) + (d[0] * 5); })
         .text(function(d) { 
-              if (d[1] > 0) { return "Positive";} 
-              else if (d[1] < 0) { return "Negative";} 
-              else { return "Neutral";}
+            if (d[1] > 0) { return "Positive"; } 
+            else if (d[1] < 0) { return "Negative"; } 
+            else if (d[1] === 0) { return "Neutral"; }
         })  
         .attr("dominant-baseline", "middle")
         .attr("text-anchor", "start");
-
 
 }
 

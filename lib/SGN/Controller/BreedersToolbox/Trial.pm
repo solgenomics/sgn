@@ -132,15 +132,13 @@ sub trait_info :Path('/breeders_toolbox/trial') Args(3) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
    
-    my $trial_layout = CXGN::Trial::TrialLayout->new(
-        {
-            schema   => $schema,
-            trial_id => $trial_id
-        } 
-        ); 
+    my $trial_name = $schema->resultset("Project::Project")
+        ->search( {'me.project_id' => $trial_id})
+        ->single
+        ->name;
+  
+    $c->stash->{trial_name} = $trial_name;
 
-    my $trial_name =  $trial_layout->get_trial_name();
-    
     my $trait_name = $schema->resultset("Cv::Cvterm")
         ->search({'me.cvterm_id' => $trait_id})
         ->single

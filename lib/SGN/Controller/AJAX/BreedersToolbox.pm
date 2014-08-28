@@ -237,7 +237,7 @@ sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
 }
 
 
-sub get_breeding_programs :Path('/breeders/programs_by_trial/') Args(1) { 
+sub get_breeding_programs_by_trial :Path('/breeders/programs_by_trial/') Args(1) { 
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;

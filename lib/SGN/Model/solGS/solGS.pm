@@ -161,19 +161,18 @@ sub all_projects {
     if ($rows eq 'all') {  $rows = undef; $page = undef;};
 
     my $projects_rs =  $self->schema->resultset("Project::Project")
-        ->search({}, 
+        ->search({},               
                  { 
                      distinct => 1,
                      page     => $page,
                      rows     => $rows,
-                     order_by => 'name'              
-                 },                      
-                 
+                     order_by => 'CASE WHEN name ~ \'^[0-9]+\' THEN 1 ELSE 0 END, name'         
+                 }
+                  
         );
 
     return $projects_rs;
 }
-
 
 sub has_phenotype {
      my ($self, $pr_id ) = @_; 

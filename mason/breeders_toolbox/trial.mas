@@ -98,10 +98,14 @@ my $subtitle = qq{[<a id="show_change_breeding_program_link">change</a>] } if $u
 
 </&>
 
-<&| /page/info_section.mas, title=>"Description", collapsible=>0, collapsed=>0, hide_if_empty=>1, is_empty=> $description_empty &>
-%  print "$trial_description <br />\n";
+<&| /page/info_section.mas, title=>"Description", collapsible=>0, collapsed=>0, hide_if_empty=>0, is_empty=> $description_empty, subtitle=>"[<a id=\"edit_trial_description\">edit</a>]" &>
+<div id="trial_description">[loading...]</div>
 </&>
 
+<div id="edit_trial_description_dialog">
+   Please enter the description for this trial:<br/>
+   <textarea id="trial_description_input" cols="50" rows="10"></textarea>
+</div>
 
 <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"[<a href=\"/breeders/trial/layout/download/$trial_id\">Download Layout</a>] [<a id=\"delete_layout_data_by_trial_id\">Delete layout</a>]" &>
 
@@ -213,6 +217,8 @@ jQuery(document).ready(function () {
 
   load_breeding_program_info(<% $trial_id %>);
 
+  display_trial_description(<% $trial_id %>);
+
   jQuery('#change_breeding_program_dialog').dialog( {
      height: 150,
      width: 300,
@@ -222,6 +228,7 @@ jQuery(document).ready(function () {
        'OK': function() {
           associate_breeding_program();
           jQuery('#change_breeding_program_dialog').dialog("close"); 
+          load_breeding_program_info(<% $trial_id %>);
        },
        'Cancel': function() { jQuery('#change_breeding_program_dialog').dialog("close"); }
      }
@@ -232,19 +239,19 @@ jQuery(document).ready(function () {
     var programs = new Array();
     jQuery.ajax( { 
       url: '/ajax/breeders/all_programs',
-//async: false,
       success: function(response) { 
         programs = response;
+        var html = "";
+
+        for (var i=0; i< programs.length; i++) {  
+          html += '<option value='+programs[i][0]+'>'+programs[i][1]+'</a>';
+        }
+        jQuery('#change_breeding_program_select').html(html);	
       },
       error: function(response){ 
         alert("An error occurred.");
       }
     });
-    var html = "";
-    for (var i=0; i< programs.length; i++) {  
-      html += '<option value='+programs[i][0]+'>'+programs[i][1]+'</a>';
-    }
-    jQuery('#change_breeding_program_select').html(html);	
   }
 
   function delete_phenotype_data_by_trial_id(trial_id) { 
@@ -275,6 +282,7 @@ jQuery(document).ready(function () {
       async: false,
       success: function(response) { 
         alert("Associated program with id "+program + " to trial with id "+<% $trial_id %>);
+		     
       }
     });
   }
@@ -292,12 +300,11 @@ jQuery(document).ready(function () {
            for (var i=0; i< programs.length; i++) {  
              var html =  programs[0][1] + ' (' + programs[0][2] + ') ';
            }
+           if (programs.length == 0) { html = "(none)"; }		    
            jQuery('#breeding_programs').html(html); 
          }
        },
        error: function() { alert("An error occurred."); }
-        
-      
      });  
    }
 
@@ -456,6 +463,67 @@ jQuery(document).ready(function () {
   jQuery('#view_layout_link').click(function () {
     jQuery('#trial_design_view_layout').dialog("open");
   });
+
+  jQuery('#edit_trial_description').click( function () { 
+    jQuery('#edit_trial_description_dialog').dialog("open");
+
+  })
+
+  jQuery('#edit_trial_description_dialog').dialog( { 
+    autoOpen: false,
+    height: 500,
+    width: 800,
+    modal: true,
+    buttons: {
+      cancel: { text: "Cancel",
+                click: function() { jQuery( this ).dialog("close"); },
+                id: "edit_description_cancel_button"
+              },
+      save:   { text: "Save", 
+                click: function() { save_trial_description(); },
+                id: "edit_description_save_button"
+             }          
+    }
+
+  });
+
+  function display_trial_description(trial_id) { 
+    jQuery.ajax( { 
+      url: '/ajax/breeders/trial/description/get/'+trial_id,
+      success: function(response) { 
+        if (response.error) { alert(response.error); }
+        else { 
+          jQuery('#trial_description').html(response.description);
+          jQuery('#trial_description_input').html(response.description);
+        }
+      },
+      error: function(response) { alert('An error occurred.'); }
+    });
+  }
+
+  function save_trial_description() { 
+    var trial_id = parseInt(jQuery('#trialIDDiv').text());
+    var description = jQuery('#trial_description_input').val();
+    alert('New description = '+description);
+    jQuery.ajax( { 
+      url: '/ajax/breeders/trial/description/save/'+trial_id,
+      data: { 'description': description },
+      success: function(response) { 
+        if (response.error) { 
+          alert(response.error);
+        } 
+        else { 
+          
+          alert("Successfully updated description");
+          jQuery('#edit_trial_description_dialog').dialog("close");
+          display_trial_description(trial_id);
+        }
+      },
+      error: function(response) { 
+        alert("An error occurred updating the trial description");
+      },
+    });
+  }
 
 });
 

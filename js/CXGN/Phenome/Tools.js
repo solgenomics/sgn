@@ -85,7 +85,7 @@ var Tools = {
                     var json = response;
                     if ( response.error ) { alert(response.error) ; }
                     var responseArray = response.html;
-                    var select = $('organism_select');
+                    var select = document.getElementById('organism_select');
                     select.length = 0;
 		    select.length = responseArray.length + 1;
 		    select[0].text = '--select--';
@@ -189,8 +189,8 @@ var Tools = {
 	var content= span + "_content";
 	var onswitch= span + "_onswitch";
 	var offswitch= span + "_offswitch";
-	var form_disp = $(form).style.display;
-	var content_disp = $(content).style.display; 
+	var form_disp = document.getElementById(form).style.display;
+	var content_disp = document.getElementById(content).style.display; 
 	MochiKit.Logging.log('content display =', content_disp);
 	//MochiKit.Logging.log('form display=' , form_disp);
 	Effects.showElement(content);

@@ -1,12 +1,8 @@
 
 package CXGN::BreedersToolbox::Projects;
 
-
 use Moose;
 use Data::Dumper;
-
-# has 'schema' => ( isa => 'Bio::Chado::Schema',
-#                   is => 'rw');
 
 has 'schema' => (
 		 is       => 'rw',
@@ -48,15 +44,19 @@ sub get_breeding_programs_by_trial {
 
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
-    my $trial_row = $self->schema->resultset('Project::ProjectRelationship')->find( { 'subject_project_id' => $trial_id } );
+    my $trial_rs= $self->schema->resultset('Project::ProjectRelationship')->search( { 'subject_project_id' => $trial_id } );
     
-    my $rs = $self->schema->resultset('Project::Project')->search( { 'me.project_id' => $trial_row->object_project_id(), 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
-
+    my $trial_row = $trial_rs -> first();
+    my $rs;
     my @projects;
-    while (my $row = $rs->next()) { 
-	push @projects, [ $row->project_id, $row->name, $row->description ];
-    }
 
+    if ($trial_row) { 
+	$rs = $self->schema->resultset('Project::Project')->search( { 'me.project_id' => $trial_row->object_project_id(), 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
+		
+	while (my $row = $rs->next()) { 
+	    push @projects, [ $row->project_id, $row->name, $row->description ];
+	}	
+    }
     return  \@projects;
 }
 
@@ -323,6 +323,9 @@ sub get_breeding_program_with_trial {
 	    push @$breeding_projects, [ $b->project_id(), $b->name(), $b->description() ];
 	}
     }
+    
+    
+    
     return $breeding_projects;
 }
 
@@ -336,16 +339,26 @@ sub associate_breeding_program_with_trial {
     # to do: check if the two provided IDs are of the proper type
 
     eval {
-	my $breeding_trial_assoc = $self->schema->resultset("Project::ProjectRelationship")->update_or_new(
+	my $breeding_trial_assoc = $self->schema->resultset("Project::ProjectRelationship")->find (
 	    {
-		object_project_id => $breeding_project_id,
 		subject_project_id => $trial_id,
 		type_id => $breeding_trial_cvterm_id,
 	    }
 	    );
 
-	if (! $breeding_trial_assoc->in_storage()) { $breeding_trial_assoc->insert(); }
+	if ($breeding_trial_assoc) { 
 
+	    $breeding_trial_assoc->object_project_id($breeding_project_id);
+	    $breeding_trial_assoc->update();
+	}
+	else {     
+	    $breeding_trial_assoc = $self->schema->resultset("Project::ProjectRelationship")->create({ 
+		object_project_id => $breeding_project_id,
+		subject_project_id => $trial_id,
+		type_id => $breeding_trial_cvterm_id,
+												     });	
+	    $breeding_trial_assoc->insert(); 
+	}	
     };
     if ($@) {
 	print STDERR "ERROR: $@\n";
@@ -393,7 +406,7 @@ sub get_breeding_program_cvterm_id {
 	    {
 		name => 'breeding_program',
 		cv   => 'local',
-		db   => 'local',
+		db   => 'null',
 		dbxref => 'breeding_program',
 	    });
 
@@ -417,7 +430,7 @@ sub get_breeding_trial_cvterm_id {
 	    {
 		name => 'breeding_program_trial_relationship',
 		cv   => 'local',
-		db   => 'local',
+		db   => 'null',
 		dbxref => 'breeding_program_trial_relationship',
 	    });
 	$breeding_trial_cvterm_row = $row;

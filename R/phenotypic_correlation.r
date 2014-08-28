@@ -1,9 +1,7 @@
  #SNOPSIS
 
- #commands for running correlation analyis,
- #outputs the correlation 
- #coefficients (also in json format) and their p-values
-
+ #Commands for running phenotypic correlation analysis.
+ #Correlation coeffiecients are stored in tabular and json formats 
 
  #AUTHOR
  # Isaak Y Tecle (iyt2@cornell.edu)
@@ -73,13 +71,19 @@ if(length(refererQtl) != 0  ) {
 dropColumns <- c("uniquename", "stock_name")
 phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
 
-formattedPhenoData <- phenoData
-allTraitNames <- names(phenoData)
-dropElements  <- c("object_name", "object_id", "stock_id", "design", "block", "replicate")
-allTraitNames <- allTraitNames[! allTraitNames %in% dropElements]
+formattedPhenoData <- c()
+
+allNames      <- names(phenoData)
+nonTraitNames <- c("object_name", "object_id", "stock_id", "design", "block", "replicate")
+allTraitNames <- allNames[! allNames %in% nonTraitNames]
+
 message('traits: ', allTraitNames)
 
+trait <- c()
+cnt   <- 0
+
 for (i in allTraitNames) {
+  cnt <- cnt + 1
   trait <- i
  
   phenoTrait         <- c()
@@ -92,14 +96,13 @@ for (i in allTraitNames) {
                           )
     
     experimentalDesign <- phenoTrait[2, 'design']
+
     if (is.na(experimentalDesign) == TRUE) {
       experimentalDesign <- c('No Design')
     }
     
-  } else {
-   
+  } else {   
     experimentalDesign <- c('No Design')
-    
   }
   
   if (experimentalDesign == 'augmented' || experimentalDesign == 'RCBD') {
@@ -114,28 +117,40 @@ for (i in allTraitNames) {
     colnames(augData)[4] <- "trait"
     
     ff <- trait ~ 0 + genotypes
-    
-    model <- lme(ff,
-                 data=augData,
-                 random = ~1|block,
-                 method="REML",
-                 na.action = na.omit
-                 )
-   
-    adjMeans <- data.matrix(fixed.effects(model))
      
-    colnames(adjMeans) <- trait
-      
-    nn <- gsub('genotypes', '', rownames(adjMeans))
-    rownames(adjMeans) <- nn
-    adjMeans <- round(adjMeans, digits = 2)
+    model <- try(lme(ff,
+                     data=augData,
+                     random = ~1|block,
+                     method="REML",
+                     na.action = na.omit
+                     ))
 
-    phenoTrait <- data.frame(adjMeans)
-    formattedPhenoData[, trait] <- phenoTrait
- 
+    if (class(model) != "try-error") {
+      adjMeans <- data.matrix(fixed.effects(model))
+     
+      colnames(adjMeans) <- trait
+      
+      nn <- gsub('genotypes', '', rownames(adjMeans))
+      rownames(adjMeans) <- nn
+      adjMeans <- round(adjMeans, digits = 2)
+
+      phenoTrait <- data.frame(adjMeans)
+    
+      colnames(phenoTrait) <- trait
+    
+      if(cnt == 1 ) {
+        formattedPhenoData <- data.frame(adjMeans)
+      } else {
+        formattedPhenoData <-  merge(formattedPhenoData, phenoTrait, by=0, all=TRUE)
+        row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+        formattedPhenoData[, 1] <- NULL
+      }
+    }
+   
   } else if (experimentalDesign == 'alpha') {
+
     trait <- i
-    alphaData <-   subset(phenoData,
+    alphaData <- subset(phenoData,
                           select = c("object_name", "object_id","block", "replicate", trait)
                           )
       
@@ -144,43 +159,51 @@ for (i in allTraitNames) {
      
     ff <- trait ~ 0 + genotypes
       
-    model <- lme(ff,
-                 data = alphaData,
-                 random = ~1|replicates/blocks,
-                 method = "REML",
-                 na.action = na.omit
-                 )
-   
-    adjMeans <- data.matrix(fixed.effects(model))
-    colnames(adjMeans) <- trait
-      
-    nn <- gsub('genotypes', '', rownames(adjMeans))
-    rownames(adjMeans) <- nn
-    adjMeans <- round(adjMeans, digits = 2)
+    model <- try(lme(ff,
+                     data = alphaData,
+                     random = ~1|replicate/block,
+                     method = "REML",
+                     na.action = na.omit
+                     ))
 
-    phenoTrait <- data.frame(adjMeans)
-    formattedPhenoData[, i] <- phenoTrait
-  
+    if(class(model) != "try-error") {
+      adjMeans <- data.matrix(fixed.effects(model))
+      colnames(adjMeans) <- trait
+      
+      nn <- gsub('genotypes', '', rownames(adjMeans))
+      rownames(adjMeans) <- nn
+      adjMeans <- round(adjMeans, digits = 2)
+
+      phenoTrait <- data.frame(adjMeans)
+      colnames(phenoTrait) <- trait
+     
+      if(cnt == 1 ) {
+        formattedPhenoData <- data.frame(adjMeans)
+      } else {
+        formattedPhenoData <-  merge(formattedPhenoData, phenoTrait, by=0, all=TRUE)
+        row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+        formattedPhenoData[, 1] <- NULL
+      }
+    }
+
   } else {
-  message("experimental design: ", experimentalDesign)
+    message("experimental design: ", experimentalDesign)
   
-    if (sum(is.na(formattedPhenoData)) > 0)
+    if (sum(is.na(phenoData)) > 0)
       {
         dropColumns <- c("object_id", "stock_id", "design",  "block", "replicate")
 
-        formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
+        formattedPhenoData <- phenoData[, !(names(phenoData) %in% dropColumns)]
       
         formattedPhenoData <- ddply(formattedPhenoData,
                                     "object_name",
                                     colwise(mean, na.rm=TRUE)
                                     )
+        row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+        formattedPhenoData[, 1] <- NULL
       }
-  }
+  } 
 }
-
-
-row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-formattedPhenoData[, 1] <- NULL
 
 formattedPhenoData <- round(formattedPhenoData,
                             digits=2

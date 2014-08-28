@@ -43,11 +43,14 @@ function getHistogramData () {
             if(response.status == 'success') {
                 plotHistogram(response.data);
                 jQuery("#histogram_message").empty();
+            } else {                
+                var errorMessage = "<p>This trait has no phenotype data to plot.</p>";
+                jQuery("#histogram_message").html(errorMessage);  
             }
             
         },
         error: function(response) {
-            var errorMessage = 'There is error in creating the phenotype data set for the histogram.';
+            var errorMessage = "<p>Error occured plotting histogram for this trait dataset.</p>";
             jQuery("#histogram_message").html(errorMessage);                  
         }
     });

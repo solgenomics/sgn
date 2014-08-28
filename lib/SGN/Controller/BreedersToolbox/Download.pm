@@ -10,10 +10,12 @@ use warnings;
 use JSON qw( decode_json );
 use Data::Dumper;
 use CGI;
+use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use File::Slurp qw | read_file |;
 use File::Temp 'tempfile';
 use File::Basename; 
+use File::Copy;
 use URI::FromHash 'uri';
 use CXGN::List::Transform;
 use Spreadsheet::WriteExcel;
@@ -40,10 +42,16 @@ sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(
 
     my $design = $trial->get_design();
 
+    $self->trial_download_log($c, $trial_id, "trial layout");
+
     $c->tempfiles_subdir("data_export"); # make sure the dir exists
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_layout_".$trial_id."_XXXXX");
 
-    my $ss = Spreadsheet::WriteExcel->new($fh);
+    my $file_path = $tempfile.".xls"; # need xls extension to avoid trouble
+
+    move($tempfile, $file_path);
+
+    my $ss = Spreadsheet::WriteExcel->new($c->config->{basepath}."/".$file_path);
     
     my $ws = $ss->add_worksheet();
 
@@ -66,11 +74,11 @@ sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(
     }    
     $ss->close();
     
-    my $file_name = basename($tempfile);    
+    my $file_name = basename($file_path);    
     $c->res->content_type('Application/xls');    
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
 
-    my $path = $c->config->{basepath}."/".$tempfile;
+    my $path = $c->config->{basepath}."/".$file_path;
     my $output = read_file($path, binmode=>':raw');
 
     $c->res->body($output);
@@ -81,6 +89,10 @@ sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download')
     my $c = shift;
     my $trial_id = shift;
     
+    my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+
+    $self->trial_download_log($c, $trial_id, "trial phenotypes");
+
     my $trial_sql = "\'$trial_id\'";
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
     my @data = $bs->get_phenotype_info_matrix(undef,$trial_sql, undef);
@@ -89,15 +101,23 @@ sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download')
 
     my $location = $rs->first()->get_column('description');
     
-    my $bprs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id})->search_related('project_relationship_subject_projects');
-    my $pbr = $schema->resultset("Project::Project")->search( { 'me.project_id'=> $bprs->object_id() } );
+    my $bprs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id})->search_related_rs('project_relationship_subject_projects');
+
+    print STDERR "COUNT: ".$bprs->count()."  ". $bprs->get_column('project_relationship.object_project_id')."\n";
+
+    my $pbr = $schema->resultset("Project::Project")->search( { 'me.project_id'=> $bprs->get_column('project_relationship_subject_projects.object_project_id')->first() } );
+    
     my $program_name = $pbr->first()->name();
-    my $year = "";
+    my $year = $trial->get_year();
+
+    print STDERR "YEAR: $year\n";
 
     #print STDERR "PHENOTYPE DATA MATRIX: ".Dumper(\@data);
     $c->tempfiles_subdir("data_export"); # make sure the dir exists
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$program_name."_phenotypes_".$location."_".$trial_id."_XXXXX");
-    my $ss = Spreadsheet::WriteExcel->new($fh);
+    my $file_path = $tempfile.".xls";
+    move($tempfile, $file_path);
+    my $ss = Spreadsheet::WriteExcel->new($c->config->{basepath}."/".$file_path);
     my $ws = $ss->add_worksheet();
 
     for (my $line =0; $line< @data; $line++) { 
@@ -106,14 +126,14 @@ sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download')
 	    $ws->write($line, $col, $columns[$col]);
 	}
     }
-    $ss->write(0, 0, "$program_name, $location ($year)");
+    $ws->write(0, 0, "$program_name, $location ($year)");
     $ss ->close();
 
-    my $file_name = basename($tempfile);    
+    my $file_name = basename($file_path);    
     $c->res->content_type('Application/xls');    
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
 
-    my $path = $c->config->{basepath}."/".$tempfile;
+    my $path = $c->config->{basepath}."/".$file_path;
 
     my $output = read_file($path, binmode=>':raw');
 
@@ -457,5 +477,22 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 #   system("rm qc_output.txt");
 
 }
+
+sub trial_download_log { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    my $message = shift;
+
+    if ($c->config->{trial_download_logfile}) { 
+	open (my $F, ">>", $c->config->{trial_download_logfile}) || die "Can't open ".$c->config->{trial_download_logfile};
+	print $F $c->user->get_object->get_username()."\t".$trial_id."\t$message\n";
+	close($F);
+    }
+    else { 
+	print STDERR "Note: set config variable trial_download_logfile to obtain a log of downloaded trials.\n";
+    }
+}
+
 #=pod
 1;
