@@ -115,10 +115,10 @@ for (i in 1:traitsTotal)
 sumRelWeights <- apply(relWeights, 2, sum)
 sumRelWeights <- sumRelWeights[[1]]
 
-combinedRelGebvs$mean <- apply(combinedRelGebvs, 1, function (x) sum(x)/sumRelWeights)
+combinedRelGebvs$Index <- apply(combinedRelGebvs, 1, function (x) sum(x)/sumRelWeights)
 
 combinedRelGebvs <- combinedRelGebvs[ with(combinedRelGebvs,
-                                           order(-combinedRelGebvs$mean)
+                                           order(-combinedRelGebvs$Index)
                                            ),
                                      ]
 
@@ -133,7 +133,7 @@ genotypesMeanGebv <-c()
 if (is.null(combinedRelGebvs) == FALSE)
   {
     genotypesMeanGebv <- subset(combinedRelGebvs,
-                                select = 'mean'
+                                select = 'Index'
                                 )
   }
 
