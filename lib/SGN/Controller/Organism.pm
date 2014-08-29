@@ -136,17 +136,22 @@ sub view_sol100 :Path('sol100/view') :Args(0) {
     my ( $self, $c ) = @_;
 
     my ($person_id, $user_type) = CXGN::Login->new( $c->dbc->dbh )->has_session();
-
+    print STDERR "ACTION: ".$self->action_for('organism_tree_image')."\n";
     $c->stash({
         template => "/sequencing/sol100.mas",
 
+
+
         organism_tree => {
             %{ $self->rendered_organism_tree_cache->thaw( 'sol100' ) },
+
+	    
+	    
             image_uri => $c->uri_for( $self->action_for('organism_tree_image'), ['sol100'] ),
         },
 
         show_org_add_form         => ( $user_type && any {$user_type eq $_} qw( curator submitter sequencer ) ),
-        organism_add_uri          => $c->uri_for( '/organism/sol100/add_organism'), #$self->action_for('add_sol100_organism')),
+        organism_add_uri          => '/organism/sol100/add_organism', #$self->action_for('add_sol100_organism')),
         organism_autocomplete_uri => $c->uri_for( 'autocomplete'),#$self->action_for('autocomplete')), #, ['Solanaceae']),
 
     });
