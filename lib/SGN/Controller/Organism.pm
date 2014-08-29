@@ -54,7 +54,7 @@ sub view_all :Path('/organism/all/view') :Args(0) {
     }
 
     # add image_uris to each of the organism tree records
-    $_->{image_uri} = $c->uri_for( $self->action_for('organism_tree_image'), [ $_->{set_name} ] )
+    $_->{image_uri} = $c->uri_for( $self->action_for('organism_tree_image'), [ $_->{set_name} ]).relative()
         for values  %{ $c->stash->{organism_trees} };
 
     $c->stash({
