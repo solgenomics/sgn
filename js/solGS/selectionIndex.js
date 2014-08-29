@@ -1,6 +1,5 @@
 /** 
-* @class rankGenotypes - selection index
-* functions for rankGenotypes
+* selection index form, calculation and presentation
 * @author Isaak Y Tecle <iyt2@cornell.edu>
 *
 */
@@ -95,7 +94,6 @@ function listSelectionIndexPopulations ()  {
         
         e.preventDefault();
     });           
-
 }
 
        
@@ -188,13 +186,12 @@ function  selectionIndexForm(predictedTraits) {
         + '</table>';
         
     return table;
-
 }
 
 
 function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
        
-    if(params) {                      
+    if (params) {                      
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Please wait..'});
             
@@ -265,7 +262,6 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
                     .css({"padding-left": '0px'})
                     .html("Running correlation analysis..."); 
                 
-                jQuery.unblockUI(); 
             },
             error: function(res){
                 alert('error occured calculating selection index.');
@@ -283,37 +279,36 @@ function validateRelativeWts(nm, val) {
                ' must be a number.'
                );            
          return;
-     }else if(!val && nm != 'all') {
+     } else if (!val && nm != 'all') {
          alert('You need to assign a relative weight to trait '+nm+'.' 
                +' If you want to exclude the trait assign 0 to it.'
                );            
          return;
-     }else if(val < 0 && nm != 'all') {
+     } else if (val < 0 && nm != 'all') {
          alert('The relative weight to trait '+nm+
                ' must be a positive number.'
                );            
          return;
-     }else if (nm == 'all' && val == 0) {
+     } else if (nm == 'all' && val == 0) {
          alert('At least two traits must be assigned relative weight.');      
          return; 
-     }else{
+     } else {
          return true;
      }
  }
 
 
 function sumElements (elements) {
-        var sum = 0;
-        for(var i=0; i<elements.length; i++) {            
-            if(!isNaN(elements[i])) {
+    var sum = 0;
+    for (var i=0; i<elements.length; i++) {            
+        if (!isNaN(elements[i])) {
                 sum +=  elements[i];
-            }
         }
-        return sum;
+    }
+    return sum;
 }
 
     
-
 function selectionIndex ( trainingPopId, predictionPopId ) {    
        
     if (!predictionPopId) {
@@ -330,6 +325,7 @@ function selectionIndex ( trainingPopId, predictionPopId ) {
         applySelectionIndex(legendValues.params, legendValues.legend, trainingPopId, predictionPopId);
     }
 }
+
 
 function legendParams () {
     
@@ -421,9 +417,7 @@ function listUploadedSelPopulations ()  {
         }
     }
  
-   return popsList;
-
- 
+   return popsList; 
 }
 
 
@@ -433,7 +427,6 @@ function getTrainingPopulationData () {
     var modelName = jQuery("#model_name").val();
     var popType   = jQuery("#default_selected_population_type").val();
 
-    return { 'id' : modelId, 'name' : modelName, 'pop_type': popType};
-        
+    return {'id' : modelId, 'name' : modelName, 'pop_type': popType};        
 }
 
