@@ -1,9 +1,7 @@
  #SNOPSIS
 
- #commands for running correlation analyis,
- #outputs the correlation 
- #coefficients (also in json format) and their p-values
-
+ #Commands for running phenotypic correlation analysis.
+ #Correlation coeffiecients are stored in tabular and json formats 
 
  #AUTHOR
  # Isaak Y Tecle (iyt2@cornell.edu)
@@ -74,9 +72,11 @@ dropColumns <- c("uniquename", "stock_name")
 phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
 
 formattedPhenoData <- c()
-allTraitNames <- names(phenoData)
-dropElements  <- c("object_name", "object_id", "stock_id", "design", "block", "replicate")
-allTraitNames <- allTraitNames[! allTraitNames %in% dropElements]
+
+allNames      <- names(phenoData)
+nonTraitNames <- c("object_name", "object_id", "stock_id", "design", "block", "replicate")
+allTraitNames <- allNames[! allNames %in% nonTraitNames]
+
 message('traits: ', allTraitNames)
 
 trait <- c()

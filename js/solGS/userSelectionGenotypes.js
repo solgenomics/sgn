@@ -20,18 +20,7 @@ jQuery(document).ready( function() {
         
     if (listMenu.match(/option/) != null) {
             
-            //filter by marker match
-            // alert(listMenu);
-            // jQuery(listMenu).find("option").each(function () {
-                
-            //      var v = jQuery(this).val();
-            //      alert(v);
-                
-
-            // });
-
-           
-            jQuery("#prediction_genotypes_list").append(listMenu);
+        jQuery("#prediction_genotypes_list").append(listMenu);
 
         } else {
             
@@ -100,7 +89,7 @@ function loadGenotypesList(listId) {
         jQuery.ajax({
                 type: 'POST',
                     dataType: 'json',
-                    data: {id: 'uploaded_' + listId, 'name': listName, 'list': list},
+                    data: {'id': 'uploaded_' + listId, 'name': listName, 'list': list},
                     url: '/solgs/upload/prediction/genotypes/list',
                    
                     success: function(response) {
@@ -121,7 +110,7 @@ function loadGenotypesList(listId) {
                             var listIdArg = '\'' + listId +'\'';
                             var listSource = '\'from_db\'';
                        
-                            var popIdName   = {id : 'uploaded_' + listId, name: listName,};
+                            var popIdName   = {id : 'uploaded_' + listId, name: listName, pop_type: 'list_selection'};
                             popIdName       = JSON.stringify(popIdName);
                             var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
                             
@@ -182,7 +171,6 @@ function getModelId () {
     }
   
     return modelId;
-
 }
 
 
@@ -196,7 +184,6 @@ function getTraitId () {
     }
     
     return traitId;
-
 }
 
 
@@ -209,14 +196,13 @@ function getUserUploadedSelPop (listId) {
     var traitId        = getTraitId();
     var selectionPopId = listId;
    
-
     var url         =   '\'/solgs/model/'+ modelId + '/uploaded/prediction/'+ selectionPopId + '\'' ;
     var listIdArg   = '\'' + listId +'\'';
     var listSource  = '\'from_db\'';
-    var popIdName   = {id : 'uploaded_' + listId, name: listName,};
+    var popIdName   = {'id' : 'uploaded_' + listId, 'name' : listName, 'pop_type': 'list_selection'};
     popIdName       = JSON.stringify(popIdName);
     var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
-
+  
     var uploadedSelPop ='<table id="uploaded_selection_pops_table" style="width:100%;text-align:left"><tr>'
                                 + '<th>List-based selection population</th>'
                                 + '<th>Predict GEBVs</th>'
@@ -239,59 +225,56 @@ function getUserUploadedSelPop (listId) {
 
 function loadPredictionOutput (url, listId, listSource) {
    
-    var traitId        = getTraitId();
-    var modelId        = getModelId();
+    var traitId = getTraitId();
+    var modelId = getModelId();
    
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
     jQuery.blockUI({message: 'Please wait..'});
    
     jQuery.ajax({
-            type: 'POST',
-                url: url,
-                dataType: 'json',
-                data: {
-                       'uploaded_prediction': 1, 
-                       'trait_id': traitId, 
-                       'model_id': modelId, 
-                       'prediction_id': listId,
-                       'list_source': listSource,
-                      },
+        type: 'POST',
+        url: url,
+        dataType: 'json',
+        data: {
+            'uploaded_prediction': 1, 
+            'trait_id': traitId, 
+            'model_id': modelId, 
+            'prediction_id': listId,
+            'list_source': listSource,
+        },
                 
-                success: function (response) {
+        success: function (response) {
                   
-                if (response.status == 'success') {
+            if (response.status == 'success') {
                     
-                    var tdId = '#list_prediction_output_' + listId;
-                    jQuery(tdId).html(response.output);
+                var tdId = '#list_prediction_output_' + listId;
+                jQuery(tdId).html(response.output);
                                  
-                    var page = document.URL; 
+                var page = document.URL; 
                     
-                    if (page.match('/traits/all/population/') != null) {
-                   
-                        listAllPopulations();                  
-                    
-                    }
-                    
-                    jQuery.unblockUI();
-            
+                if (page.match('/traits/all/population/') != null) {
+                    listSelectionIndexPopulations();
+                    listGenCorPopulations();                 
                 }
-                else {                
-                    if(response.status == 'failed') {
-                        alert("Error occured while uploading the list of selection genotypes.");
-                    } else {
-                        alert(response.status);  
-                    }
+                    
+                jQuery.unblockUI();        
+            }
+            else {                
+                if(response.status == 'failed') {
+                    alert("Error occured while uploading the list of selection genotypes.");
+                } else {
+                    alert(response.status);  
+                }
                   
-                    jQuery.unblockUI();
-                    
-                }
-            },
+                jQuery.unblockUI();                 
+            }
+        },
                 
-                error: function(response) {
-                alert('error: ' + res.responseText);
+        error: function(response) {
+            alert('error: ' + res.responseText);
 
-            }                       
-        });
+        }                       
+    });
     
 }
 

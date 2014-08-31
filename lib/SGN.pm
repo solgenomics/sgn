@@ -38,6 +38,7 @@ L<SGN::Role::Site::TestMode>
 use Catalyst qw/
      ConfigLoader
      Static::Simple
+     SmartURI
      Authentication
      +SGN::Authentication::Store
      Authorization::Roles

@@ -1,0 +1,76 @@
+<%doc>
+
+=head1 NAME
+ 
+population/genetic_correlation.mas - genetic correlation output section
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id
+$prediction_pop_id => ''
+$analyzed_traits
+$prediction_pop_analyzed_traits => ''
+$prediction_pop_name => ''
+$project_name
+
+</%args>
+
+<%perl>
+
+ my $pop_type = $pop_id =~ /[A-Za-z]/ ? 'list_training' : 'training';
+
+</%perl>
+
+<style>
+/* correlation coefficients plot styling */
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+
+
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.correlation"] &>
+<&| /page/info_section.mas, 
+      collapsible => 1, 
+      collapsed   => 0, 
+      title       => "Genetic correlation analysis"
+&>
+
+ <div id="corre_selected_population_div" style="display:none">    
+    <input type="hidden" id="model_id" value="<% $pop_id %>" />
+    <input type="hidden" id="model_name" value="<% $project_name %>" />
+    <input type="hidden" id="population_id" value="<% $pop_id %>" />
+    <input type="hidden" id="default_corre_selected_population_name" value="<% $project_name %>"/>
+    <input type="hidden" id="default_corre_selected_population_id" value="<% $pop_id %>"/>
+    <input type="hidden" id="default_corre_selected_population_type" value="<% $pop_type %>"/>
+    <input type="hidden" id="corre_selected_population_name" value="" />
+    <input type="hidden" id="corre_selected_population_id" value="" />
+    <input type="hidden" id="corre_selected_population_type" value="" />
+ </div>
+
+  
+ <div id="corre_select_a_population_div" style="float:left; z-index:10; position:absolute;"></div>
+
+ <input style="position:absolute;margin-left:275px" class="button" type="submit" value="Run correlation" id="run_genetic_correlation"/>
+
+ <div id="correlation_message"  style="padding-top:70px;clear:both;font-weight:bold;text-align:center;color:#A7C942">
+ </div>
+ <div id="correlation_canvas" style="clear:both"> </div>
+
+</&>
