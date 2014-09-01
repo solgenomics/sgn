@@ -1,6 +1,7 @@
-#a script for calculating weighted genomic
-#estimated breeding values (GEBVs) mean, across
-#selected traits, and ranking genotypes accordingly
+# a script for calculating selection index
+# and ranking genotypes accordingly
+# Isaak Y Tecle iyt2cornell.edu
+
 
 options(echo = FALSE)
 
@@ -51,7 +52,7 @@ rankedGenotypesFile <- grep("ranked_genotypes",
                             value = TRUE
                             )
 
-genotypesMeanGebvFile <- grep("genotypes_mean_gebv",
+selectionIndexFile <- grep("selection_index",
                               outputFiles,
                               ignore.case = TRUE,
                               perl = TRUE,
@@ -128,13 +129,13 @@ combinedRelGebvs <- round(combinedRelGebvs,
 
 print(combinedRelGebvs[1:10, ])
 
-genotypesMeanGebv <-c()
+selectionIndex <-c()
 
 if (is.null(combinedRelGebvs) == FALSE)
   {
-    genotypesMeanGebv <- subset(combinedRelGebvs,
-                                select = 'Index'
-                                )
+    selectionIndex <- subset(combinedRelGebvs,
+                             select = 'Index'
+                             )
   }
 
 if (length(rankedGenotypesFile) != 0)
@@ -151,12 +152,12 @@ if (length(rankedGenotypesFile) != 0)
       }
   }
 
-if (length(genotypesMeanGebvFile) != 0)
+if (length(selectionIndexFile) != 0)
   {
-    if(is.null(genotypesMeanGebv) == FALSE)
+    if(is.null(selectionIndex) == FALSE)
       {
-        write.table(genotypesMeanGebv,
-                    file = genotypesMeanGebvFile,
+        write.table(selectionIndex,
+                    file = selectionIndexFile,
                     sep = "\t",
                     col.names = NA,
                     quote = FALSE,
