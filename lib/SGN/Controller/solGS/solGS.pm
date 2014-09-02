@@ -1122,7 +1122,7 @@ sub download_urls {
     }
     
     my $trait_id          = $c->stash->{trait_id};
-    my $ranked_genos_file = $c->stash->{genotypes_mean_gebv_file};
+    my $ranked_genos_file = $c->stash->{selection_index_file};
 
     if ($ranked_genos_file) 
     {
@@ -1682,6 +1682,7 @@ sub get_gebv_files_of_traits {
     
     my $name = "gebv_files_of_traits_${pop_id}${pred_file_suffix}";
     my $file = $self->create_tempfile($c, $name);
+    print STDERR "\nanalysed traits files: $gebv_files\n";
     write_file($file, $gebv_files);
    
     $c->stash->{gebv_files_of_traits} = $file;
@@ -1732,7 +1733,7 @@ sub ranked_genotypes_file {
 }
 
 
-sub mean_gebvs_file {
+sub selection_index_file {
     my ($self, $c, $pred_pop_id) = @_;
 
     my $pop_id      = $c->stash->{pop_id};
@@ -1740,9 +1741,9 @@ sub mean_gebvs_file {
     my $pred_file_suffix;
     $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id;
 
-    my $name = "genotypes_mean_gebv_${pop_id}${pred_file_suffix}";
+    my $name = "selection_index_${pop_id}${pred_file_suffix}";
     my $file = $self->create_tempfile($c, $name);
-    $c->stash->{genotypes_mean_gebv_file} = $file;
+    $c->stash->{selection_index_file} = $file;
    
 }
 
@@ -1777,11 +1778,11 @@ sub rank_genotypes : Private {
         );
    
     $self->ranked_genotypes_file($c, $pred_pop_id);
-    $self->mean_gebvs_file($c, $pred_pop_id);
+    $self->selection_index_file($c, $pred_pop_id);
 
     my $output_files = join("\t",
                             $c->stash->{ranked_genotypes_file},
-                            $c->stash->{genotypes_mean_gebv_file}
+                            $c->stash->{selection_index_file}
         );
     
     my $pred_file_suffix;
@@ -1803,14 +1804,13 @@ sub rank_genotypes : Private {
     $self->run_r_script($c);
     $self->download_urls($c);
     $self->top_ranked_genotypes($c);
-  
 }
 
 #based on multiple traits performance
 sub top_ranked_genotypes {
     my ($self, $c) = @_;
     
-    my $genotypes_file = $c->stash->{genotypes_mean_gebv_file};
+    my $genotypes_file = $c->stash->{selection_index_file};
   
     my $genos_data = $self->convert_to_arrayref($c, $genotypes_file);
     my @top_genotypes = @$genos_data[0..9];
@@ -2309,18 +2309,18 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
          
         my $geno = $self->tohtml_genotypes($c);
         
-        my $link = $c->stash->{ranked_genotypes_download_url};
-         
-        
-         my $ranked_genos = $c->stash->{top_ranked_genotypes};
-        
+        my $link         = $c->stash->{ranked_genotypes_download_url};             
+        my $ranked_genos = $c->stash->{top_ranked_genotypes};
+        my $index_file   = $c->stash->{selection_index_file};
+       
         my $ret->{status} = 'No GEBV values to rank.';
 
         if (@$ranked_genos) 
         {
-            $ret->{status} = 'success';
-            $ret->{genotypes} = $geno;
-            $ret->{link} = $link;
+            $ret->{status}     = 'success';
+            $ret->{genotypes}  = $geno;
+            $ret->{link}       = $link;
+            $ret->{index_file} = $index_file;
         }
                
         $ret = to_json($ret);
@@ -2352,8 +2352,7 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
     
     my $pop_rs = $c->model('solGS::solGS')->project_details($pop_id);
     my $pop_details = $self->get_projects_details($c, $pop_rs);
-
-  
+ 
     my $pop_name     = $pop_details->{$pop_id}{project_name};
     my $pop_desc     = $pop_details->{$pop_id}{project_desc};
     my $pop_year     = $pop_details->{$pop_id}{project_year};
