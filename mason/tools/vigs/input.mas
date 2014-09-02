@@ -71,12 +71,20 @@ Database <select class="input" id='bt2_db' name="database" title="Select plant s
 <br />
 
 <%perl>
-foreach my $d (@databases) { 
+
+# print benthamiana first
+my $benth = $databases[3];
+$benth =~ s/_/ /g;
+print "<option value=\"".$benth."\" selected='selected'>".$benth."</option><br />";
+
+foreach my $d (@databases) {
 	my $db_name = $d;
 	$db_name =~ s/_/ /g;
 	
-    print "<option value=\"".$d."\">".$db_name."</option><br />";
-}     
+	if ($db_name !~ /benthamiana/) {
+		print "<option value=\"".$d."\">".$db_name."</option><br />";
+	}
+}
 </%perl>
 </select>
 <br />
