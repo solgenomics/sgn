@@ -56,7 +56,7 @@ sub _build__features {
     my %feature_objects;
     foreach my $class (@feature_classes) {
         my $cfg = $self->config->{feature}{$class} || {};
-        if ( $cfg->{enabled} ) {
+        if (ref($cfg) eq "HASH" && exists($cfg->{enabled}) && defined($cfg->{enabled}) ) {
             try {
                 my $f = $class->new( %$cfg,
                                      'context' => $self,

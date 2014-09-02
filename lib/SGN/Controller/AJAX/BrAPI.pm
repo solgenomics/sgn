@@ -7,9 +7,11 @@ use JSON::Any;
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 __PACKAGE__->config(
-    default   => 'application/json',
+    #default   => 'application/json',
+    default => 'text/javascript',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    #map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map  => { 'text/javascript' => 'JSONP', 'text/html' => 'JSONP' },
    );
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) { 

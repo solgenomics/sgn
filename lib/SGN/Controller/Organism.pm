@@ -54,8 +54,10 @@ sub view_all :Path('/organism/all/view') :Args(0) {
     }
 
     # add image_uris to each of the organism tree records
-    $_->{image_uri} = $c->uri_for( $self->action_for('organism_tree_image'), [ $_->{set_name} ] )
-        for values  %{ $c->stash->{organism_trees} };
+    foreach my $v (values %{ $c->stash->{organism_trees} }) { 
+	$v->{image_uri} = $c->uri_for( $self->action_for('organism_tree_image'), [ $v->{set_name} ])->relative();
+   }
+
 
     $c->stash({
         template => '/content/sgn_data.mas',
@@ -136,18 +138,26 @@ sub view_sol100 :Path('sol100/view') :Args(0) {
     my ( $self, $c ) = @_;
 
     my ($person_id, $user_type) = CXGN::Login->new( $c->dbc->dbh )->has_session();
+    print STDERR "ACTION: ".$self->action_for('organism_tree_image')."\n";
 
+    print STDERR "IMAGE URI: ".$c->uri_for( $self->action_for('organism_tree_image'), ['sol100'] )->relative()."\n";
+    
     $c->stash({
         template => "/sequencing/sol100.mas",
 
+
+
         organism_tree => {
             %{ $self->rendered_organism_tree_cache->thaw( 'sol100' ) },
-            image_uri => $c->uri_for( $self->action_for('organism_tree_image'), ['sol100'] ),
+
+	    
+	    
+            image_uri => $c->uri_for( $self->action_for('organism_tree_image'), ['sol100'] )->relative(),
         },
 
         show_org_add_form         => ( $user_type && any {$user_type eq $_} qw( curator submitter sequencer ) ),
-        organism_add_uri          => $c->uri_for( '/organism/sol100/add_organism'), #$self->action_for('add_sol100_organism')),
-        organism_autocomplete_uri => $c->uri_for( 'autocomplete'),#$self->action_for('autocomplete')), #, ['Solanaceae']),
+        organism_add_uri          => '/organism/sol100/add_organism', #$self->action_for('add_sol100_organism')),
+        organism_autocomplete_uri => $c->uri_for( 'autocomplete'),#$self->action_for('autocomplete')), #, ['Solanaceae'])->relative(),
 
     });
 }
@@ -198,7 +208,7 @@ sub add_sol100_organism :Path('sol100/add_organism') :Args(0) {
        );
 
     $self->rendered_organism_tree_cache->remove( 'sol100' ); #< invalidate the sol100 cached image tree
-    $c->res->redirect( $c->uri_for( $self->action_for('view_sol100')));
+    $c->res->redirect( $c->uri_for( $self->action_for('view_sol100'))->relative());
 }
 
 
