@@ -110,9 +110,6 @@ function listGenCorPopulations ()  {
 function formatGenCorInputData (popId, type, indexFile) {
     var modelDetail = getPopulationDetails();
    
-    //jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-    //jQuery.blockUI({message: 'Please wait..'});
-    
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -143,8 +140,6 @@ function formatGenCorInputData (popId, type, indexFile) {
                     .css({"padding-left": '0px'})
                     .html("This population has no additive genetic data.");
             }
-            
-           // jQuery.unblockUI();
         },
         error: function(response) {
             jQuery("#correlation_message")
@@ -152,8 +147,7 @@ function formatGenCorInputData (popId, type, indexFile) {
                 .html("Error occured preparing the additive genetic data for correlation analysis.");
             
             jQuery.unblockUI();
-        }
-         
+        }         
     });
 }
 
@@ -170,8 +164,7 @@ function getPopulationDetails () {
 
     return {'population_id' : populationId, 
             'population_name' : populationName
-            };
-        
+           };        
 }
 
 
@@ -198,8 +191,7 @@ function phenotypicCorrelation () {
                     .css({"padding-left": '0px'})
                     .html("Error occured preparing the phenotype data for correlation analysis.");
             }
-    });
-     
+    });     
 }
 
 
@@ -227,14 +219,10 @@ function runPhenoCorrelationAnalysis () {
                 .html("Error occured running the correlation analysis.");
         }                
     });
-
 }
 
 
 function runGenCorrelationAnalysis (args) {
-    
-   // jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-   // jQuery.blockUI({message: 'Please wait..'});
     
     jQuery.ajax({
         type: 'POST',
@@ -282,11 +270,8 @@ function runGenCorrelationAnalysis (args) {
                 .html("Error occured running the genetic correlation analysis.");
              
             jQuery.unblockUI();
-        }
-        
-       
+        }       
     });
-
 }
 
 
@@ -431,28 +416,15 @@ function plotCorrelation (data, divPlace) {
         .attr("pointer-events", "none");
    
     var legendValues = []; 
-    if (nTraits === 2) {     
-        if (d3.min(coefs) > 0 && d3.max(coefs) > 0 ) {
-            legendValues = [[0, d3.max(coefs)], [1, 0]];
-        } else if (d3.min(coefs) < 0 && d3.max(coefs) < 0 )  {
-           legendValues = [[0, d3.min(coefs)], [1, 0]];              
-        } else if (d3.min(coefs) > 0 && d3.max(coefs) > 0 ) {
-            legendValues = [[0, d3.max(coefs)], [1, 0]];    
-        } else {
-            legendValues = [[0, d3.min(coefs)], [1, 0], [2, d3.max(coefs)]];
-        }
+    
+    if (d3.min(coefs) > 0 && d3.max(coefs) > 0 ) {
+        legendValues = [[0, 0], [1, d3.max(coefs)]];
+    } else if (d3.min(coefs) < 0 && d3.max(coefs) < 0 )  {
+        legendValues = [[0, d3.min(coefs)], [1, 0]]; 
     } else {
-        if (d3.min(coefs) > 0 && d3.max(coefs) > 0 ) {
-            legendValues = [[0, d3.max(coefs)], [1, 0]];
-        } else if (d3.min(coefs) < 0 && d3.max(coefs) < 0 )  {
-            legendValues = [[0, d3.min(coefs)], [1, 0]];              
-        } else if (d3.min(coefs) > 0 && d3.max(coefs) > 0 ) {
-            legendValues = [[0, d3.max(coefs)], [1, 0]];    
-        } else {
-            legendValues = [[0, d3.min(coefs)], [1, 0], [2, d3.max(coefs)]];
-        }
+        legendValues = [[0, d3.min(coefs)], [1, 0], [2, d3.max(coefs)]];
     }
-   
+ 
     var legend = corrplot.append("g")
         .attr("class", "cell")
         .attr("transform", "translate(" + (width + 10) + "," +  (height * 0.25) + ")")
