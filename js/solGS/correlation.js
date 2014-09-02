@@ -5,9 +5,7 @@
 */
 
 
-
-
-jQuery(document).ready( function () { 
+jQuery(document).ready( function() { 
     var page = document.URL;
    
     if (page.match(/solgs\/traits\/all\//) != null || 
@@ -52,7 +50,7 @@ function listGenCorPopulations ()  {
     jQuery("#corre_select_a_population_div").empty().append(popsList).show();
      
     var dbSelPopsList;
-    if( modelData.id.match(/uploaded/) == null) {
+    if (modelData.id.match(/uploaded/) == null) {
         dbSelPopsList = addSelectionPopulations();
     }
 
@@ -61,7 +59,7 @@ function listGenCorPopulations ()  {
     }
       
     var userUploadedSelExists = jQuery("#uploaded_selection_pops_table").doesExist();
-    if( userUploadedSelExists == true) {
+    if (userUploadedSelExists == true) {
       
         var userSelPops = listUploadedSelPopulations();
         if (userSelPops) {
@@ -83,7 +81,7 @@ function listGenCorPopulations ()  {
                 
         var idPopName = jQuery("#corre_selected_population").find("dt a span.value").html();
         idPopName     = JSON.parse(idPopName);
-        modelId = jQuery("#model_id").val();
+        modelId       = jQuery("#model_id").val();
                    
         selectedPopId   = idPopName.id;
         selectedPopName = idPopName.name;
@@ -157,7 +155,7 @@ function getPopulationDetails () {
     var populationId = jQuery("#population_id").val();
     var populationName = jQuery("#population_name").val();
    
-    if(populationId == 'undefined' ) {       
+    if (populationId == 'undefined') {       
         populationId = jQuery("#model_id").val();
         populationName = jQuery("#model_name").val();
     }
@@ -178,7 +176,7 @@ function phenotypicCorrelation () {
             data: {'population_id': population.population_id },
             url: '/correlation/phenotype/data/',
             success: function(response) {
-                if(response.status == 'success') {
+                if (response.status == 'success') {
                     runPhenoCorrelationAnalysis();
                 } else {
                     jQuery("#correlation_message")
@@ -344,7 +342,6 @@ function plotCorrelation (data, divPlace) {
         .attr("fill", "purple")
         .style({"text-anchor":"start", "fill": "purple"});
           
-
     corrplot.append("g")
         .attr("class", "y axis")
         .attr("transform", "translate(0,0)")
@@ -355,15 +352,14 @@ function plotCorrelation (data, divPlace) {
         .attr("dy", ".1em")  
         .attr("fill", "purple")
         .style("fill", "purple");
-          
-  
-    var corr = [];
+            
+    var corr  = [];
     var coefs = [];   
     for (var i=0; i<data.coefficients.length; i++) {
-        for  (var j=0;  j<data.coefficients[i].length; j++) {
+        for (var j=0;  j<data.coefficients[i].length; j++) {
             corr.push({"row":i, "col":j, "value": data.coefficients[i][j]});
             
-            if(data.coefficients[i][j] != 100) {
+            if (data.coefficients[i][j] != 100) {
                 coefs.push(data.coefficients[i][j]);
             }
         }
@@ -460,7 +456,7 @@ function plotCorrelation (data, divPlace) {
         .style("fill", "green")
         .attr("x", 1)
         .attr("y", function (d) { return 1 + (d[0] * recLH) + (d[0] * 5); })
-        .text(function(d) { 
+        .text(function (d) { 
             if (d[1] > 0) { return "Positive"; } 
             else if (d[1] < 0) { return "Negative"; } 
             else if (d[1] === 0) { return "Neutral"; }
