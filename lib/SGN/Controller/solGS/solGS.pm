@@ -1145,7 +1145,7 @@ sub download_urls {
 sub top_blups {
     my ($self, $c, $blups_file) = @_;
       
-    my $blups = $self->convert_to_arrayref($c, $blups_file);
+    my $blups = $self->convert_to_arrayref_of_arrays($c, $blups_file);
    
     my @top_blups = @$blups[0..9];
  
@@ -1158,7 +1158,7 @@ sub top_markers {
     
     my $markers_file = $c->stash->{gebv_marker_file};
 
-    my $markers = $self->convert_to_arrayref($c, $markers_file);
+    my $markers = $self->convert_to_arrayref_of_arrays($c, $markers_file);
     
     my @top_markers = @$markers[0..9];
 
@@ -1803,25 +1803,23 @@ sub rank_genotypes : Private {
     
     $self->run_r_script($c);
     $self->download_urls($c);
-    $self->top_ranked_genotypes($c);
+    $self->get_top_10_selection_indices($c);
 }
 
-#based on multiple traits performance
-sub top_ranked_genotypes {
+
+sub get_top_10_selection_indices {
     my ($self, $c) = @_;
     
-    my $genotypes_file = $c->stash->{selection_index_file};
+    my $si_file = $c->stash->{selection_index_file};
   
-    my $genos_data = $self->convert_to_arrayref($c, $genotypes_file);
-    my @top_genotypes = @$genos_data[0..9];
+    my $si_data = $self->convert_to_arrayref_of_arrays($c, $si_file);
+    my @top_genotypes = @$si_data[0..9];
     
-    $c->stash->{top_ranked_genotypes} = \@top_genotypes;
+    $c->stash->{top_10_selection_indices} = \@top_genotypes;
 }
 
 
-#converts a tab delimitted > two column data file
-#into an array of array ref
-sub convert_to_arrayref {
+sub convert_to_arrayref_of_arrays {
     my ($self, $c, $file) = @_;
 
     open my $fh, $file or die "couldnot open $file: $!";    
@@ -2310,7 +2308,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
         my $geno = $self->tohtml_genotypes($c);
         
         my $link         = $c->stash->{ranked_genotypes_download_url};             
-        my $ranked_genos = $c->stash->{top_ranked_genotypes};
+        my $ranked_genos = $c->stash->{top_10_selection_indices};
         my $index_file   = $c->stash->{selection_index_file};
        
         my $ret->{status} = 'No GEBV values to rank.';
@@ -2856,7 +2854,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
     $self->trait_phenodata_file($c);
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
-    my $trait_data = $self->convert_to_arrayref($c, $trait_pheno_file);
+    my $trait_data = $self->convert_to_arrayref_of_arrays($c, $trait_pheno_file);
 
     my $ret->{status} = 'failed';
     
@@ -2880,7 +2878,7 @@ sub trait_phenotype_stat {
   
     $self->trait_phenodata_file($c);
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
-    my $trait_data = $self->convert_to_arrayref($c, $trait_pheno_file);
+    my $trait_data = $self->convert_to_arrayref_of_arrays($c, $trait_pheno_file);
 
     my @pheno_data;   
     foreach (@$trait_data) 
@@ -2951,7 +2949,7 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
        
     }
 
-    my $gebv_data = $self->convert_to_arrayref($c, $gebv_file);
+    my $gebv_data = $self->convert_to_arrayref_of_arrays($c, $gebv_file);
 
     my $ret->{status} = 'failed';
     
@@ -2972,7 +2970,7 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
 sub tohtml_genotypes {
     my ($self, $c) = @_;
   
-    my $genotypes = $c->stash->{top_ranked_genotypes};
+    my $genotypes = $c->stash->{top_10_selection_indices};
     my %geno = ();
 
     foreach (@$genotypes)
