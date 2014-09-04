@@ -239,20 +239,29 @@ function runGenCorrelationAnalysis (args) {
                 plotCorrelation(response.data, divPlace);
                 jQuery("#correlation_message").empty();
                 jQuery("#si_correlation_message").empty();
-               
+                
                 if (divPlace === '#si_correlation_canvas') {
-                    var popName   = jQuery("#selected_population_name").val();
-                    var siLegendId = "#si_legend_" + popName.replace(/\s/g, "");
-
-                    var divCorName = "<div id=\"si_correlation_" 
+  
+                    var popName   = jQuery("#selected_population_name").val();                   
+                    var corLegDiv = "<div id=\"si_correlation_" 
                         + popName.replace(/\s/g, "") 
                         + "\"></div>";  
                 
-                    var legendValues = legendParams();
-                
-                    divCorName = jQuery(divCorName).html(legendValues.legend);            
-                    jQuery("#si_correlation_canvas").append(divCorName).show(); 
-                }                         
+                    var legendValues = legendParams();                 
+                    var corLegDivVal = jQuery(corLegDiv).html(legendValues.legend);
+            
+                    jQuery("#si_correlation_canvas").append(corLegDivVal).show();
+  
+                } else {
+                    
+                    var popName = jQuery("#corre_selected_population_name").val(); 
+                    var corLegDiv  = "<div id=\"corre_correlation_" 
+                        + popName.replace(/\s/g, "") 
+                        + "\"></div>";
+                    
+                    var corLegDivVal = jQuery(corLegDiv).html(popName);            
+                    jQuery("#correlation_canvas").append(corLegDivVal).show(); 
+                }                        
                
             } else {
                 jQuery("#correlation_message")
