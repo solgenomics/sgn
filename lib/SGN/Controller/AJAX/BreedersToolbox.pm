@@ -352,5 +352,15 @@ sub get_data_agreement :Path('/breeders/trial/data_agreement/get') :Args(0) {
 
 }
 
+sub get_all_years : Path('/ajax/breeders/trial/all_years' ) Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $bp = CXGN::BreedersToolbox::Projects->new({ schema => $c->dbic_schema("Bio::Chado::Schema") });
+    my @years = $bp->get_all_years();
+
+    $c->stash->{rest} = { years => \@years };
+}
+
 
 1;

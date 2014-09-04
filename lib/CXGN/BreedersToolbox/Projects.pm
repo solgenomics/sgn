@@ -276,7 +276,7 @@ sub get_locations {
 
 sub get_all_years { 
     my $self = shift;
-    my $year_cv_id = get_project_year_cvterm_id();
+    my $year_cv_id = $self->get_project_year_cvterm_id();
     my $rs = $self->schema()->resultset("Project::Projectprop")->search( { type_id=>$year_cv_id } );
     my @years;
     
