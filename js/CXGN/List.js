@@ -653,8 +653,8 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 	    selectText = options.selectText;
 	}
 	if (options.typeSourceDiv) { 
-	    type = getData(options.typeSourceDiv, selectText);
-	    if (type) { 
+	    var sourcetype = getData(options.typeSourceDiv, selectText);
+	    if (sourcetype) { 
 		type = sourcetype.replace(/(\n|\r)+$/, '');
 	    }
 	}
