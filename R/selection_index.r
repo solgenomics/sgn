@@ -96,9 +96,10 @@ for (i in 1:traitsTotal)
 
    
     trait <- colnames(traitGEBV)
+   
     relWeight <- relWeights[trait, ]
-
-    if(relWeight != 0)
+   
+    if(is.na(relWeight) == FALSE && relWeight != 0 )
       {
         weightedTraitGEBV <- apply(traitGEBV, 1,
                                    function(x) x*relWeight
@@ -113,6 +114,7 @@ for (i in 1:traitsTotal)
         combinedRelGebvs[, 1] <- NULL
       }
   }
+
 sumRelWeights <- apply(relWeights, 2, sum)
 sumRelWeights <- sumRelWeights[[1]]
 
@@ -126,8 +128,6 @@ combinedRelGebvs <- combinedRelGebvs[ with(combinedRelGebvs,
 combinedRelGebvs <- round(combinedRelGebvs,
                           digits = 2
                           )
-
-print(combinedRelGebvs[1:10, ])
 
 selectionIndex <-c()
 
