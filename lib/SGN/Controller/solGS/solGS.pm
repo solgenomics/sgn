@@ -1467,37 +1467,6 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
 }
 
 
-sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
-    my ($self, $c) = @_;
-    
-    my $pred_pop_id = $c->req->param('pred_pop_id');
-    my $training_pop_id = $c->req->param('training_pop_id');
-   
-    $c->stash->{model_id} = $training_pop_id;
-    $c->stash->{prediction_pop_id} = $pred_pop_id;
-   
-    my @traits;
-    if( !$pred_pop_id) {
-      
-        $self->analyzed_traits($c);
-        @traits = @{ $c->stash->{analyzed_traits} };
-     
-    }
-    else  
-    {
-        $self->prediction_pop_analyzed_traits($c, $training_pop_id, $pred_pop_id);
-        @traits = @{ $c->stash->{prediction_pop_analyzed_traits} };
-    }
-
-    my $ret->{status} = 'success';
-    $ret->{traits} = \@traits;
-     
-    $ret = to_json($ret);
-        
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-    
-}
 
 
 sub prediction_pop_analyzed_traits {
@@ -1682,7 +1651,7 @@ sub get_gebv_files_of_traits {
     
     my $name = "gebv_files_of_traits_${pop_id}${pred_file_suffix}";
     my $file = $self->create_tempfile($c, $name);
-    print STDERR "\nanalysed traits files: $gebv_files\n";
+   
     write_file($file, $gebv_files);
    
     $c->stash->{gebv_files_of_traits} = $file;
@@ -1791,15 +1760,16 @@ sub rank_genotypes : Private {
     my $name = "output_rank_genotypes_${pop_id}${pred_file_suffix}";
     my $output_file = $self->create_tempfile($c, $name);
     write_file($output_file, $output_files);
-    $c->stash->{output_files} = $output_file;
+    
     
     $name = "input_rank_genotypes_${pop_id}${pred_file_suffix}";
     my $input_file = $self->create_tempfile($c, $name);
     write_file($input_file, $input_files);
-    $c->stash->{input_files} = $input_file;
-
-    $c->stash->{r_temp_file} = "rank-gebv-genotypes-${pop_id}${pred_file_suffix}";
-    $c->stash->{r_script}    = 'R/selection_index.r';
+    
+    $c->stash->{output_files} = $output_file;
+    $c->stash->{input_files}  = $input_file;   
+    $c->stash->{r_temp_file}  = "rank-gebv-genotypes-${pop_id}${pred_file_suffix}";  
+    $c->stash->{r_script}     = 'R/selection_index.r';
     
     $self->run_r_script($c);
     $self->download_urls($c);
@@ -2233,7 +2203,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
          my $trait_id   = $c->model('solGS::solGS')->get_trait_id($trait_name);
          my $trait_abbr = $c->stash->{trait_abbr}; 
         
-         $self->get_model_accuracy_value($c, $pop_id);        
+         $self->get_model_accuracy_value($c, $pop_id, $trait_abbr);        
          my $accuracy_value = $c->stash->{accuracy_value};
 
          $c->controller("solGS::Heritability")->get_heritability($c);
@@ -2269,6 +2239,37 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
          $self->prediction_pop_analyzed_traits($c, $pop_id, $predicted_selection_pops->[0]);
      }
  
+}
+
+
+sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
+    my ($self, $c) = @_;
+    
+    my $pred_pop_id = $c->req->param('pred_pop_id');
+    my $training_pop_id = $c->req->param('training_pop_id');
+   
+    $c->stash->{model_id} = $training_pop_id;
+    $c->stash->{prediction_pop_id} = $pred_pop_id;
+   
+    my @traits;
+    if ( !$pred_pop_id) {    
+        $self->analyzed_traits($c);
+        @traits = @{ $c->stash->{selection_index_traits} };     
+    }
+    else  
+    {
+        $self->prediction_pop_analyzed_traits($c, $training_pop_id, $pred_pop_id);
+        @traits = @{ $c->stash->{prediction_pop_analyzed_traits} };
+    }
+
+    my $ret->{status} = 'success';
+    $ret->{traits} = \@traits;
+     
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+    
 }
 
 
@@ -2498,10 +2499,8 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
 
 
 sub get_model_accuracy_value {
-  my ($self, $c, $model_id) = @_;
-
-  my $trait_abbr = $c->stash->{trait_abbr};
-  
+  my ($self, $c, $model_id, $trait_abbr) = @_;
+ 
   my $dir = $c->stash->{solgs_cache_dir};
   opendir my $dh, $dir or die "can't open $dir: $!\n";
     
@@ -3126,6 +3125,7 @@ sub analyzed_traits {
     
     my @traits;
     my @traits_ids;
+    my @si_traits;
 
     foreach my $trait_file  (@traits_files) 
     {   
@@ -3141,12 +3141,23 @@ sub analyzed_traits {
             {
                 foreach my $r (@$acronym_pairs) 
                 {
+                    
                     if ($r->[0] eq $trait) 
                     {
                         my $trait_name =  $r->[1];
-                        $trait_name    =~ s/\n//g;                                
+                        $trait_name    =~ s/\n//g;                                                       
                         my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
+                       
                         push @traits_ids, $trait_id;
+                       
+                        $self->get_model_accuracy_value($c, $model_id, $trait);
+                        my $av = $c->stash->{accuracy_value};
+                      
+                        if ($av && $av =~ m/\d+/) 
+                        {
+                            push @si_traits, $trait; 
+                        }
+                           
                     }
                 }
             }
@@ -3160,9 +3171,10 @@ sub analyzed_traits {
         }
     }
         
-    $c->stash->{analyzed_traits} = \@traits;
-    $c->stash->{analyzed_traits_ids} = \@traits_ids;
-    $c->stash->{analyzed_traits_files} = \@traits_files;
+    $c->stash->{analyzed_traits}        = \@traits;
+    $c->stash->{analyzed_traits_ids}    = \@traits_ids;
+    $c->stash->{analyzed_traits_files}  = \@traits_files;
+    $c->stash->{selection_index_traits} = \@si_traits;
    
 }
 
@@ -3779,7 +3791,7 @@ sub run_r_script {
     my $input_files  = $c->stash->{input_files};
     my $output_files = $c->stash->{output_files};
     my $r_temp_file  = $c->stash->{r_temp_file};
-  
+    
     CXGN::Tools::Run->temp_base($c->stash->{solgs_tempfiles_dir});
     my ( $r_in_temp, $r_out_temp ) =
         map 
@@ -3801,7 +3813,7 @@ sub run_r_script {
     }
 
     try 
-    {
+    { 
         my $r_process = CXGN::Tools::Run->run_cluster(
             'R', 'CMD', 'BATCH',
             '--slave',
@@ -3813,8 +3825,9 @@ sub run_r_script {
                 max_cluster_jobs => 1_000_000_000,
             },
             );
-
+      
         $r_process->wait; 
+  
     }
     catch 
     {
