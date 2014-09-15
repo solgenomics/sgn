@@ -305,10 +305,10 @@ function plotCorrelation (data, divPlace) {
     var pad    = {left:70, top:20, right:100, bottom: 70}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
-        
+
     var corXscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([0, width]);
     var corYscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([height, 0]);
-    var corZscale = d3.scale.linear().domain([-1, 0, 1]).range(["#A52A2A","white", "#0000A0"]);
+    var corZscale = d3.scale.linear().domain([-1, 0, 1]).range(["#6A0888","white", "#86B404"]);
 
     var xAxisScale = d3.scale.ordinal()
         .domain(data.traits)
@@ -349,7 +349,7 @@ function plotCorrelation (data, divPlace) {
         .attr("dy", ".1em")         
         .attr("transform", "rotate(90)")
         .attr("fill", "purple")
-        .style({"text-anchor":"start", "fill": "purple"});
+        .style({"text-anchor":"start", "fill": "#3306FC"});
           
     corrplot.append("g")
         .attr("class", "y axis")
@@ -359,10 +359,10 @@ function plotCorrelation (data, divPlace) {
         .attr("y", 0)
         .attr("x", -10)
         .attr("dy", ".1em")  
-        .attr("fill", "purple")
-        .style("fill", "purple");
+        .attr("fill", "#523CB5")
+        .style("fill", "#523CB5");
             
-    var corr  = [];
+    var corr = [];
     var coefs = [];   
     for (var i=0; i<data.coefficients.length; i++) {
         for (var j=0;  j<data.coefficients[i].length; j++) {
@@ -416,7 +416,7 @@ function plotCorrelation (data, divPlace) {
         .attr("height", height)
         .attr("width", width)
         .attr("fill", "none")
-        .attr("stroke", "purple")
+        .attr("stroke", "#523CB5")
         .attr("stroke-width", 1)
         .attr("pointer-events", "none");
    
@@ -461,8 +461,8 @@ function plotCorrelation (data, divPlace) {
         .data(legendValues)  
         .enter()
         .append("text")              
-        .attr("fill", "green")
-        .style("fill", "green")
+        .attr("fill", "#523CB5")
+        .style("fill", "#523CB5")
         .attr("x", 1)
         .attr("y", function (d) { return 1 + (d[0] * recLH) + (d[0] * 5); })
         .text(function (d) { 
