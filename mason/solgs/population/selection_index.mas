@@ -54,16 +54,29 @@ $project_name
 
   
   <div id="select_a_population_div" style="float:left; z-index:10; position:absolute;"></div>
- <div id="select_a_population_div_text" style="float:left"><p style="padding-left: 275px"> And assign relative weights to traits.</p></div> 
+  <div id="select_a_population_div_text" style="float:left"><p style="padding-left: 275px"> And assign relative weights to traits.</p></div> 
 
 
   <div id="selection_index_form" style="clear:both"> </div>
 
-  <& /solgs/model/top_genotypes.mas &> 
-
+  
+    <div id="si_correlation_section" style="display:none"> 
+        <& /solgs/model/top_genotypes.mas &> 
    
-
-    </&>
+          <&| /page/info_section.mas, 
+              collapsible => 1, 
+            collapsed  => 0, 
+            title      => "Correlation between selection index and GEBVs of traits"
+            &>
+            
+            <div id="si_correlation_canvas" style="clear:both"> 
+            </div>
+            <div id="si_correlation_message"  style="font-weight:bold;text-align:center;color:#A7C942">    
+            </div>          
+     
+        </&>
+    </div>
+</&>
 
 
 

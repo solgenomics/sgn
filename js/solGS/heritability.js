@@ -6,24 +6,11 @@
 */
 
 
-function getDataDetails () {
-
-    var populationId   = jQuery("#population_id").val();
-    var traitId        = jQuery("#trait_id").val();
+jQuery(document).ready( function() { 
    
-    if(populationId == 'undefined' ) {       
-        populationId = jQuery("#model_id").val();
-    }
-
-    if(populationId == 'undefined') {
-        populationId = jQuery("#combo_pops_id").val();
-    }
-
-    return {'population_id' : populationId, 
-            'trait_id' : traitId
-            };
-        
-}
+    checkDataExists();   
+ 
+});
 
 
 function checkDataExists () {
@@ -49,6 +36,26 @@ function checkDataExists () {
         }  
     });
   
+}
+
+
+function getDataDetails () {
+
+    var populationId   = jQuery("#population_id").val();
+    var traitId        = jQuery("#trait_id").val();
+   
+    if(populationId == 'undefined' ) {       
+        populationId = jQuery("#model_id").val();
+    }
+
+    if(populationId == 'undefined') {
+        populationId = jQuery("#combo_pops_id").val();
+    }
+
+    return {'population_id' : populationId, 
+            'trait_id' : traitId
+            };
+        
 }
 
 
@@ -291,10 +298,7 @@ function plotRegressionData(regressionData){
 }
 
 
-jQuery(document).ready( function () { 
-   
-    checkDataExists();   
- });
+
 
 
 
