@@ -11,6 +11,8 @@
   $trait_db_name              => 'SP'
 </%args>
 
+<& /page/page_title.mas, title => "Search Accessions and Plots" &>
+
 <%once>
   use Number::Format;
   use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;

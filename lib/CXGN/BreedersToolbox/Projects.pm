@@ -232,7 +232,7 @@ sub get_all_locations {
     my $self = shift;
     my $c = shift;
 
-    my $rs = $self->schema() -> resultset("NaturalDiversity::NdGeolocation")->search( {} );
+    my $rs = $self->schema() -> resultset("NaturalDiversity::NdGeolocation")->search( {}, { order_by => 'description' } );
     
     my @locations = ();
     foreach my $loc ($rs->all()) { 
@@ -277,7 +277,7 @@ sub get_locations {
 sub get_all_years { 
     my $self = shift;
     my $year_cv_id = $self->get_project_year_cvterm_id();
-    my $rs = $self->schema()->resultset("Project::Projectprop")->search( { type_id=>$year_cv_id } );
+    my $rs = $self->schema()->resultset("Project::Projectprop")->search( { type_id=>$year_cv_id }, { distinct => 1, +select => 'value', order_by => 'value' } );
     my @years;
     
     foreach my $y ($rs->all()) { 
