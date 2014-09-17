@@ -229,7 +229,7 @@ sub get_phenotype_info {
 	$where_clause = "where ".(join (" and ", @where_clause));
     }
 
-    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, dbxref.accession
+    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, cvterm.name
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) 
              JOIN stock ON (object_id=stock.stock_id) 
              JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id) 
