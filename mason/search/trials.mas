@@ -102,6 +102,8 @@ function search_trials() {
   var page = jQuery('#page_number').val();
   var page_size = jQuery('#page_size').val();
 
+  jQuery('#working').dialog("open");
+
   jQuery.ajax( { 
      url: '/ajax/search/trials',
      data: { trial_name: trial_name, breeding_program: breeding_program, location: location, year : year, page: page, page_size: page_size },
@@ -113,10 +115,12 @@ function search_trials() {
          var headers = new Array('Name', 'Description', 'Program', 'Year');
 	 var html = display_results(headers, response.trials, Math.floor(response.total_count / page_size) + 1, page_size, response.total_count);
          jQuery('#trial_search_results').html(html);
+         jQuery('#working').dialog("close");
        }
      },
      error: function(response) { 
        alert("An error occurred. :-( "+response);
+         jQuery('#working').dialog("hide");
      }
   });
  }

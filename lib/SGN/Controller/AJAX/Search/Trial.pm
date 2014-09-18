@@ -46,11 +46,11 @@ sub search :Path('/ajax/search/trials') Args(0) {
 
     my $count_clause = "SELECT count(distinct(project.project_id)) ";
 
-    my $from_clause = " FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_geolocation using(nd_geolocation_id) JOIN projectprop ON (project.project_id = projectprop.project_id) JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) JOIN project as program ON (project_relationship.object_project_id=program.project_id)";
+    my $from_clause = " FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_geolocation using(nd_geolocation_id) JOIN projectprop ON (project.project_id = projectprop.project_id) JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) JOIN project as program ON (project_relationship.object_project_id=program.project_id) join cvterm on(projectprop.type_id = cvterm.cvterm_id) WHERE cvterm.name ilike '%year%'  ";
 
-    my $where_clause = " WHERE ". join (" AND ", @conditions) if (@conditions);
+    my $where_clause = " AND ". join (" AND ", @conditions) if (@conditions);
 
-    my $order_clause = " ORDER BY projectprop.value, program.name, project.name ";
+    my $order_clause = " ORDER BY projectprop.value desc, program.name, project.name ";
 
     my $q .= $count_clause . $from_clause . $where_clause;
 
