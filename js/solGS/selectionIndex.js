@@ -1,6 +1,5 @@
 /** 
-* @class rankGenotypes - selection index
-* functions for rankGenotypes
+* selection index form, calculation and presentation
 * @author Isaak Y Tecle <iyt2@cornell.edu>
 *
 */
@@ -95,7 +94,6 @@ function listSelectionIndexPopulations ()  {
         
         e.preventDefault();
     });           
-
 }
 
        
@@ -129,7 +127,6 @@ function addSelectionPopulations(){
     }
 
     return popsList;
-
 }
 
 
@@ -189,78 +186,88 @@ function  selectionIndexForm(predictedTraits) {
         + '</table>';
         
     return table;
-
 }
 
 
 function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
        
-    if(params) {                      
+    if (params) {                      
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Please wait..'});
             
         var action;
            
-        if (!predictionPopId) {
-        
-            predictionPopId = 'undef';
-       
+        if (!predictionPopId) {     
+            predictionPopId = 'undef';      
         }
         
         var action = '/solgs/calculate/selection/index/' + trainingPopId +  '/' + predictionPopId;
           
         jQuery.ajax({
-                type: 'POST',
-                    dataType: "json",
-                    url: action,
-                    data: params,
-                    success: function(res){                       
-                    var suc = res.status;
-                    var table;
-                    if (suc == 'success' ) {
+            type: 'POST',
+            dataType: "json",
+            url: action,
+            data: params,
+            success: function(res){                       
+                var suc = res.status;
+                var table;
+                if (suc == 'success' ) {
                        
-                        var genos = new Object();
+                    var genos = new Object();
               
-                        genos = res.genotypes;
-                        var download_link = res.link;
-                 
-                        table = '<table  style="text-align:left; border:0px; padding: 1px; width:75%;">';
-                        table += '<tr><th>Genotypes</th><th>Selection indices</th></tr>';
+                    genos = res.genotypes;
+                    var download_link = res.link;
+                    var indexFile     = res.index_file;
+                        
+                    table = '<table  style="text-align:left; border:0px; padding: 1px; width:75%;">';
+                    table += '<tr><th>Genotypes</th><th>Selection indices</th></tr>';
                        
-                        var sorted = []; 
-                        for (var geno in genos) {
-                            sorted.push([geno, genos[geno]]);
-                            sorted = sorted.sort(function(a, b) {return b[1] - a[1]});
-                        }
+                    var sorted = []; 
+                    for (var geno in genos) {
+                        sorted.push([geno, genos[geno]]);
+                        sorted = sorted.sort(function(a, b) {return b[1] - a[1]});
+                    }
 
-                        for (var i=0; i<sorted.length; i++) {
-                            table += '<tr>';
-                            table += '<td>' 
-                                + sorted[i][0] + '</td>' + '<td>' 
-                                + sorted[i][1] + '</td>';
-                            table += '</tr>';                          
-                        }
-                        
-                        table += '</table>';                    
-                        table += '<br>[ ' + download_link + ' ]';
-                        table += '<br>' + legend + '<br/><br/>';
-                    }
-                    else {
-                        table = res.status + ' Ranking the genotypes failed..Please report the problem.';
+                    for (var i=0; i<sorted.length; i++) {
+                        table += '<tr>';
+                        table += '<td>' 
+                            + sorted[i][0] + '</td>' + '<td>' 
+                            + sorted[i][1] + '</td>';
+                        table += '</tr>';                          
                     }
                         
-                    jQuery('#top_genotypes').append(table).show(); 
-                    jQuery('#selected_pop').val('');
-                    //jQuery("#select_a_population_div").empty();
-                   
-                    jQuery.unblockUI(); 
-                                        
-                },
-                    error: function(res){
-                    alert('error occured calculating selection index.');
-                    jQuery.unblockUI(); 
+                    table += '</table>';                    
+                    table += '<br>[ ' + download_link + ' ]';
+                    table += '<br>' + legend + '<br/><br/>';
+                } else {
+                    table = res.status + ' Ranking the genotypes failed..Please report the problem.';
                 }
-            });
+                        
+                jQuery('#top_genotypes').append(table).show(); 
+                jQuery('#selected_pop').val('');
+                              
+                var popId;
+                var type;
+                if (predictionPopId && predictionPopId !== trainingPopId) {
+                    popId = predictionPopId;
+                    type  = 'selection';                    
+                } else {                    
+                    popId = trainingPopId;
+                    type  = 'training';
+                }
+
+                formatGenCorInputData(popId, type, indexFile);
+                
+                jQuery("#si_correlation_message")
+                    .css({"padding-left": '0px'})
+                    .html("Running correlation analysis..."); 
+                
+            },
+            error: function(res){
+                alert('error occured calculating selection index.');
+                jQuery.unblockUI(); 
+            }
+        });
     }           
 }
 
@@ -272,54 +279,72 @@ function validateRelativeWts(nm, val) {
                ' must be a number.'
                );            
          return;
-     }else if(!val && nm != 'all') {
+     } else if (!val && nm != 'all') {
          alert('You need to assign a relative weight to trait '+nm+'.' 
                +' If you want to exclude the trait assign 0 to it.'
                );            
          return;
-     }else if(val < 0 && nm != 'all') {
+     } else if (val < 0 && nm != 'all') {
          alert('The relative weight to trait '+nm+
                ' must be a positive number.'
                );            
          return;
-     }else if (nm == 'all' && val == 0) {
+     } else if (nm == 'all' && val == 0) {
          alert('At least two traits must be assigned relative weight.');      
          return; 
-     }else{
+     } else {
          return true;
      }
  }
 
 
 function sumElements (elements) {
-        var sum = 0;
-        for(var i=0; i<elements.length; i++) {            
-            if(!isNaN(elements[i])) {
+    var sum = 0;
+    for (var i=0; i<elements.length; i++) {            
+        if (!isNaN(elements[i])) {
                 sum +=  elements[i];
-            }
         }
-        return sum;
+    }
+    return sum;
 }
 
     
+function selectionIndex ( trainingPopId, predictionPopId ) {    
+       
+    if (!predictionPopId) {
+        predictionPopId = jQuery("#default_selected_population_id").val();
+    }
+   
+    var legendValues = legendParams();
+    
+    var legend   = legendValues.legend;
+    var params   = legendValues.params;
+    var validate = legendValues.validate;
 
-function selectionIndex ( trainingPopId, predictionPopId )
-{    
+    if (params && validate) {
+        applySelectionIndex(legendValues.params, legendValues.legend, trainingPopId, predictionPopId);
+    }
+}
+
+
+function legendParams () {
+    
     var predPopName   = jQuery("#selected_population_name").val();
    
     if (!predPopName) {
         predPopName = jQuery("#default_selected_population_name").val();
     }
-    
-    if (!predictionPopId) {
-        predictionPopId = jQuery("#default_selected_population_id").val();
-    }
-   
+
     var rel_form = document.getElementById('selection_index_form');
     var all = rel_form.getElementsByTagName('input');
     var params, validate;
     var allValues = [];
-    var legend = 'Relative weights:<br/>';
+    
+    var legend =  "<div id=\"si_legend_" 
+                    + predPopName.replace(/\s/g, "") 
+                    + "\">";
+
+    legend += '<b>Relative weights</b>:';
 
      for (var i = 0; i < all.length; i++) {         
          var nm = all[i].name;
@@ -353,13 +378,14 @@ function selectionIndex ( trainingPopId, predictionPopId )
      }
         
      if (predPopName) {
-         legend += '<br/><b>Name</b>: ' + predPopName + '<br/>';
-     }   
+         legend += '<br/><b>Name</b>: ' + predPopName + '<br/></div';
+     }      
 
-     if (params && validate) {
-         applySelectionIndex(params, legend, trainingPopId, predictionPopId);
-     }
- }
+    return {'legend' : legend, 
+            'params': params, 
+            'validate' : validate
+           };
+}
 
 
 function listUploadedSelPopulations ()  {
@@ -391,9 +417,7 @@ function listUploadedSelPopulations ()  {
         }
     }
  
-   return popsList;
-
- 
+   return popsList; 
 }
 
 
@@ -403,7 +427,6 @@ function getTrainingPopulationData () {
     var modelName = jQuery("#model_name").val();
     var popType   = jQuery("#default_selected_population_type").val();
 
-    return { 'id' : modelId, 'name' : modelName, 'pop_type': popType};
-        
+    return {'id' : modelId, 'name' : modelName, 'pop_type': popType};        
 }
 

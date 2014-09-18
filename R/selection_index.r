@@ -1,6 +1,7 @@
-#a script for calculating weighted genomic
-#estimated breeding values (GEBVs) mean, across
-#selected traits, and ranking genotypes accordingly
+# a script for calculating selection index
+# and ranking genotypes accordingly
+# Isaak Y Tecle iyt2cornell.edu
+
 
 options(echo = FALSE)
 
@@ -51,7 +52,7 @@ rankedGenotypesFile <- grep("ranked_genotypes",
                             value = TRUE
                             )
 
-genotypesMeanGebvFile <- grep("genotypes_mean_gebv",
+selectionIndexFile <- grep("selection_index",
                               outputFiles,
                               ignore.case = TRUE,
                               perl = TRUE,
@@ -95,9 +96,10 @@ for (i in 1:traitsTotal)
 
    
     trait <- colnames(traitGEBV)
+   
     relWeight <- relWeights[trait, ]
-
-    if(relWeight != 0)
+   
+    if(is.na(relWeight) == FALSE && relWeight != 0 )
       {
         weightedTraitGEBV <- apply(traitGEBV, 1,
                                    function(x) x*relWeight
@@ -112,13 +114,14 @@ for (i in 1:traitsTotal)
         combinedRelGebvs[, 1] <- NULL
       }
   }
+
 sumRelWeights <- apply(relWeights, 2, sum)
 sumRelWeights <- sumRelWeights[[1]]
 
-combinedRelGebvs$mean <- apply(combinedRelGebvs, 1, function (x) sum(x)/sumRelWeights)
+combinedRelGebvs$Index <- apply(combinedRelGebvs, 1, function (x) sum(x)/sumRelWeights)
 
 combinedRelGebvs <- combinedRelGebvs[ with(combinedRelGebvs,
-                                           order(-combinedRelGebvs$mean)
+                                           order(-combinedRelGebvs$Index)
                                            ),
                                      ]
 
@@ -126,15 +129,13 @@ combinedRelGebvs <- round(combinedRelGebvs,
                           digits = 2
                           )
 
-print(combinedRelGebvs[1:10, ])
-
-genotypesMeanGebv <-c()
+selectionIndex <-c()
 
 if (is.null(combinedRelGebvs) == FALSE)
   {
-    genotypesMeanGebv <- subset(combinedRelGebvs,
-                                select = 'mean'
-                                )
+    selectionIndex <- subset(combinedRelGebvs,
+                             select = 'Index'
+                             )
   }
 
 if (length(rankedGenotypesFile) != 0)
@@ -151,12 +152,12 @@ if (length(rankedGenotypesFile) != 0)
       }
   }
 
-if (length(genotypesMeanGebvFile) != 0)
+if (length(selectionIndexFile) != 0)
   {
-    if(is.null(genotypesMeanGebv) == FALSE)
+    if(is.null(selectionIndex) == FALSE)
       {
-        write.table(genotypesMeanGebv,
-                    file = genotypesMeanGebvFile,
+        write.table(selectionIndex,
+                    file = selectionIndexFile,
                     sep = "\t",
                     col.names = NA,
                     quote = FALSE,

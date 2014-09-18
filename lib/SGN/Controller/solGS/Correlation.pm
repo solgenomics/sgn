@@ -74,12 +74,14 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     my $corr_pop_id = $c->req->param('corr_population_id');
     my $pop_type    = $c->req->param('type');
     my $model_id    = $c->req->param('model_id');
-    
+    my $index_file  = $c->req->param('index_file');
+      
     $c->stash->{model_id} = $model_id;
     $c->stash->{pop_id}   = $model_id;
 
     $c->stash->{prediction_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
  
+    $c->stash->{selection_index_file} = $index_file;
     $self->combine_gebvs_of_traits($c);
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
    
@@ -103,7 +105,13 @@ sub combine_gebvs_of_traits {
 
     $c->controller("solGS::solGS")->get_gebv_files_of_traits($c);  
     my $gebvs_files = $c->stash->{gebv_files_of_traits};
-   
+    my $index_file = $c->stash->{selection_index_file};
+    
+    if ($index_file) 
+    {
+        write_file($gebvs_files, {append => 1}, "\t". $index_file )   
+    }
+
     my $pred_pop_id = $c->stash->{prediction_pop_id};
     my $model_id    = $c->stash->{model_id};
     my $identifier  =  $pred_pop_id ? $model_id . "_" . $pred_pop_id :  $model_id; 
