@@ -5,7 +5,7 @@
 
 <& /page/page_title.mas, title=>"Compare genotypes using BrAPI" &>
 
-  Server: <input id="server_address" size="40" value="localhost:3000" /><br />
+  Server: <input id="server_address" size="40" value="" /><br />
 
 <br />
 
@@ -37,9 +37,9 @@ Genotype 2 name: <input id="genotype2" size="40" value="95NA-00063"  /><br />
     var id2;
 
     jQuery.ajax( { 
-       url: '/brapi/0.1/germplasm/find',
+       url: server + '/brapi/0.1/germplasm/find',
        data: { q : genotype1 },
-       dataType: 'jsonp',
+  //dataType: 'jsonp',
        async: false,
        success: function(response) { 
          alert("RESPONSE 1: "+response[0].germplasmId);
@@ -51,9 +51,9 @@ Genotype 2 name: <input id="genotype2" size="40" value="95NA-00063"  /><br />
      });
 
      jQuery.ajax( { 
-       url: '/brapi/0.1/germplasm/find',
+       url: server + '/brapi/0.1/germplasm/find',
        data: { q : genotype2 },
-       dataType: 'jsonp',
+  //dataType: 'jsonp',
        async: false,
        success: function(response) { 
          alert("RESPONSE 2: "+response[0].germplasmId);
@@ -71,8 +71,8 @@ Genotype 2 name: <input id="genotype2" size="40" value="95NA-00063"  /><br />
      var scores2;
 
      jQuery.ajax( { 
-       url: '/brapi/0.1/genotype/'+id1,
-       dataType: 'jsonp',
+       url: server + '/brapi/0.1/genotype/'+id1,
+//       dataType: 'jsonp',
        async: false,
        success: function(response) { 
          alert("RESPONSE for "+id1+": "+Object.keys(response.genotypes[0].genotype).length);
@@ -84,9 +84,9 @@ Genotype 2 name: <input id="genotype2" size="40" value="95NA-00063"  /><br />
      });
     
   jQuery.ajax( { 
-       url: '/brapi/0.1/genotype/'+id2,
+       url: server +  '/brapi/0.1/genotype/'+id2,
        async: false,
-       dataType: 'jsonp',
+//       dataType: 'jsonp',
        success: function(response) { 
          alert("RESPONSE for "+id2+": "+Object.keys(response.genotypes[0].genotype).join(" / "));
          scores2 = response.genotypes[0].genotype;
