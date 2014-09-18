@@ -2252,9 +2252,10 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     $c->stash->{prediction_pop_id} = $pred_pop_id;
    
     my @traits;
-    if ( !$pred_pop_id) {    
+    if ( !$pred_pop_id) 
+    {    
         $self->analyzed_traits($c);
-        @traits = @{ $c->stash->{selection_index_traits} };     
+        @traits = @{ $c->stash->{selection_index_traits} }; 
     }
     else  
     {
@@ -3150,18 +3151,19 @@ sub analyzed_traits {
                        
                         push @traits_ids, $trait_id;
                        
-                        $self->get_model_accuracy_value($c, $model_id, $trait);
-                        my $av = $c->stash->{accuracy_value};
-                      
-                        if ($av && $av =~ m/\d+/) 
-                        {
-                            push @si_traits, $trait; 
-                        }
-                           
+                        
                     }
                 }
             }
-
+            
+            $self->get_model_accuracy_value($c, $model_id, $trait);
+            my $av = $c->stash->{accuracy_value};
+                      
+            if ($av && $av =~ m/\d+/) 
+            { 
+              push @si_traits, $trait; 
+            }
+                           
             push @traits, $trait;
           
         }      

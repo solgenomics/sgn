@@ -437,7 +437,7 @@ markerGEBV <- mixed.solve(y = phenoTrait,
 ordered.markerGEBV2 <- data.matrix(markerGEBV$u)
 ordered.markerGEBV2 <- data.matrix(ordered.markerGEBV2 [order (-ordered.markerGEBV2[, 1]), ])
 ordered.markerGEBV2 <- round(ordered.markerGEBV2,
-                             digits=3
+                             digits=5
                              )
 
 colnames(ordered.markerGEBV2) <- c("Marker Effects")
