@@ -522,9 +522,9 @@ sub set_sql {
         stats_private => #send: session_timeout_in_secs (gets all logged-in users)
 
           "	SELECT 
-				user_type, username, contact_email 
+				sp_roles.name as user_type, username, contact_email 
 			FROM 
-				sgn_people.sp_person 
+				sgn_people.sp_person JOIN sgn_people.sp_person_roles using(sp_person_id) JOIN sgn_people.sp_roles using (sp_role_id)
 			WHERE 
 				last_access_time IS NOT NULL 
 				AND cookie_string IS NOT NULL	
