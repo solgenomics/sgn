@@ -35,7 +35,7 @@ $combo_pops_id => ''
   <& /util/import_javascript.mas, classes => ["solGS.histogram", "solGS.phenotypeDataFlot", "solGS.traitGebvFlot", 
                                               "flot.flot", "flot.categories", 
                                               "flot.tooltip", "flot.selection", "flot.navigate", 
-                                              "flot.axisLabels",
+                                              "flot.axisLabels", "statistics.regression"
                                              ] 
   &>
 
