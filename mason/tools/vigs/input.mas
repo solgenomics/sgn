@@ -3,6 +3,7 @@
 
 @databases
 $sequence => undef
+$default_db => undef
 $f_size => 0
 
 </%args>
@@ -72,16 +73,17 @@ Database <select class="input" id='bt2_db' name="database" title="Select plant s
 
 <%perl>
 
-# print benthamiana first
-my $benth = $databases[3];
-$benth =~ s/_/ /g;
-print "<option value=\"".$benth."\" selected='selected'>".$benth."</option><br />";
-
 foreach my $d (@databases) {
 	my $db_name = $d;
 	$db_name =~ s/_/ /g;
 	
-	if ($db_name !~ /benthamiana/) {
+	if ($default_db) {
+		if ($d eq $default_db) {
+			print "<option value=\"".$d."\" selected='selected'>".$db_name."</option><br />";
+		} else {
+			print "<option value=\"".$d."\">".$db_name."</option><br />";
+		}
+	} else {
 		print "<option value=\"".$d."\">".$db_name."</option><br />";
 	}
 }
