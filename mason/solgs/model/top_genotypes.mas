@@ -12,15 +12,15 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%doc>
 
-<div id="top_genotypes" style="display:none">
+
 <br/> 
 <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 0, 
       title       => "Genotype ranking based on multiple traits performance (selection index)" 
   &>
-
+<div id="top_genotypes" style="display:none">
 <i>Top 10 genotypes</i>:
- 
+</div> 
 </&>
-</div>
+
