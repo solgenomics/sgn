@@ -348,8 +348,8 @@ function plotCorrelation (data, divPlace) {
         .attr("x", 10)
         .attr("dy", ".1em")         
         .attr("transform", "rotate(90)")
-        .attr("fill", "purple")
-        .style({"text-anchor":"start", "fill": "#3306FC"});
+        .attr("fill", "#523CB5")
+        .style({"text-anchor":"start", "fill": "#523CB5"});
           
     corrplot.append("g")
         .attr("class", "y axis")
