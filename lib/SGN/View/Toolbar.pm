@@ -262,6 +262,11 @@ sub default_toolbar_data {
                     link => '/organism/Solanum_tuberosum/genome',
                     desc => '',
                 },
+               {
+                    name => 'Pepper',
+                    link => '/organism/Capsicum_annuum/genome',
+                    desc => '',
+                },
 		{ name => 'Draft genomes' },
                 {
                     name => '<i>Solanum pimpinellifolium</i>',
