@@ -19,7 +19,9 @@ sub search :Path('/ajax/search/trials') Args(0) {
 
     $params->{page_size} = 20 if (! $params->{page_size});
     $params->{page} = 1 if (! $params->{page});
-    
+ 
+    my $project_year_cvterm_id = $self->get_project_year_cvterm_id($c);
+
     my $trial_name_condition;
     
     my @conditions;
@@ -27,7 +29,7 @@ sub search :Path('/ajax/search/trials') Args(0) {
 
     if ($params->{trial_name} && ($params->{trial_name} ne "all")) { 
 	push @conditions, "project.name ilike ?";
-	push @bind_values, $params->{trial_name}."%";
+	push @bind_values, '%'.$params->{trial_name}."%";
     }
     if ($params->{location} && ($params->{location} ne "all")) { 
 	push @conditions, "nd_geolocation.description ilike ?";
@@ -46,7 +48,7 @@ sub search :Path('/ajax/search/trials') Args(0) {
 
     my $count_clause = "SELECT count(distinct(project.project_id)) ";
 
-    my $from_clause = " FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_geolocation using(nd_geolocation_id) JOIN projectprop ON (project.project_id = projectprop.project_id) JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) JOIN project as program ON (project_relationship.object_project_id=program.project_id) join cvterm on(projectprop.type_id = cvterm.cvterm_id) WHERE cvterm.name = 'project year'  ";
+    my $from_clause = " FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_geolocation using(nd_geolocation_id) JOIN projectprop ON (project.project_id = projectprop.project_id) JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) JOIN project as program ON (project_relationship.object_project_id=program.project_id) WHERE projectprop.type_id=$project_year_cvterm_id  ";
 
     my $where_clause = " AND ". join (" AND ", @conditions) if (@conditions);
 
@@ -82,4 +84,15 @@ sub search :Path('/ajax/search/trials') Args(0) {
 	trials => \@result,
 	total_count => $total,
     };
+}
+
+sub get_project_year_cvterm_id { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $row = $schema->resultset("Cv::Cvterm")->find( { name => 'project year' });
+
+    return $row->cvterm_id();
 }
