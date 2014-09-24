@@ -465,13 +465,13 @@ heritability <- c()
 if ( is.null(predictionFile) == TRUE ) {
     heritability <- round((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve)) * 100, digits=2)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
-    cat('error variance', iGEBV$Ve, file=varianceComponentsFile, sep="\t", append=TRUE)
+    cat('Error variance', iGEBV$Ve, file=varianceComponentsFile, sep="\t", append=TRUE)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
-    cat('genetic variance',  iGEBV$Vu, file=varianceComponentsFile, sep='\t', append=TRUE)
+    cat('Additive genetic variance',  iGEBV$Vu, file=varianceComponentsFile, sep='\t', append=TRUE)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
-    cat('beta', iGEBV$beta,file=varianceComponentsFile, sep='\t', append=TRUE)
+    cat('Beta', iGEBV$beta,file=varianceComponentsFile, sep='\t', append=TRUE)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
-    cat('heritability', heritability, file=varianceComponentsFile, sep='\t', append=TRUE)
+    cat('Heritability', heritability, file=varianceComponentsFile, sep='\t', append=TRUE)
 }
 
 iGEBV <- data.matrix(iGEBVu)
@@ -557,7 +557,7 @@ for (i in 1:reps)
                          G.train = genoDataMatrix[trG, ],
                          G.pred = genoDataMatrix[slG, ],                      
                          mixed.method = "REML",
-                         K.method = "RR"
+                         K.method = "RR",
                          )
  
   assign(kblup, result)
