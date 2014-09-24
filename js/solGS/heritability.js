@@ -122,6 +122,7 @@ function plotRegressionData(regressionData){
     var breedingValues      = regressionData.breeding_values;
     var phenotypeDeviations = regressionData.phenotype_deviations;
     var heritability        = regressionData.heritability;
+    var phenotypeValues     = regressionData.phenotype_values;
 
     var phenoXValues = phenotypeDeviations.map( function (d) {
             d = d[1]; 
@@ -290,20 +291,29 @@ function plotRegressionData(regressionData){
                 .style("fill", "#9A2EFE")
             d3.selectAll("text#dLabel").remove();            
         });
-
-     regressionPlot.append("g")
-        .attr("id", "heritability")
-        .append("text")
-        .text("Heritability: " + heritability)
-        .attr("x", 20)
-        .attr("y", 10)
-        .style("fill", "#86B404")
-        .style("font-weight", "bold");  
   
-    var regResult = regression('linear', lsData);
-    var equation  = regResult.string;
-    var points    = regResult.points;
+    var lineParams = ss.linear_regression()
+        .data(lsData)
+     
+    var alpha = lineParams.b();
+    alpha     =  Math.round(alpha*100) / 100;
     
+    var beta  = lineParams.m();
+    beta      = Math.round(beta*100) / 100;
+    
+    var sign; 
+    if (beta > 0) {
+        sign = ' + ';
+    } else {
+        sign = ' - ';
+    };
+
+    var equation = 'y = ' + alpha  + sign  +  beta + 'x'; 
+    
+    var rq = ss.r_squared(lsData, line);
+    rq     = Math.round(rq*100) / 100;
+    rq     = 'R-squared = ' + rq;
+
     var lsLine = d3.svg.line()
         .x(function(d) {
             if (d[0] >= 0) {
@@ -317,9 +327,31 @@ function plotRegressionData(regressionData){
             } else {
                 return  (pad.top + (height/2)) +  (-1 * yAxisScale(d[1]));                  
             }});
-           
+     
+    
+    var line = ss.linear_regression()
+        .data(lsData)
+        .line();
+   
+    var lsPoints = [];          
+    jQuery.each(phenotypeDeviations, function (i, x)  {
+       
+        var  y = line(parseFloat(x[1])); 
+        lsPoints.push([x[1], y]); 
+   
+    });
+   
+    regressionPlot.append("g")
+        .attr("id", "heritability")
+        .append("text")
+        .text("Heritability: " + heritability)
+        .attr("x", 20)
+        .attr("y", 10)
+        .style("fill", "#86B404")
+        .style("font-weight", "bold");  
+    
     regressionPlot.append("svg:path")
-        .attr("d", lsLine(points))
+        .attr("d", lsLine(lsPoints))
         .attr('stroke', '#86B404')
         .attr('stroke-width', 2)
         .attr('fill', 'none');
@@ -330,6 +362,15 @@ function plotRegressionData(regressionData){
         .text(equation)
         .attr("x", 20)
         .attr("y", 30)
+        .style("fill", "#86B404")
+        .style("font-weight", "bold");  
+    
+     regressionPlot.append("g")
+        .attr("id", "rsquare")
+        .append("text")
+        .text(rq)
+        .attr("x", 20)
+        .attr("y", 50)
         .style("fill", "#86B404")
         .style("font-weight", "bold");  
    
