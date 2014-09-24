@@ -54,3 +54,7 @@ href="http://www.nature.com/ng/journal/v46/n3/full/ng.2877.html">Nature Genetics
   <& /genomes/default/annotation_sets.mas, %ARGS &>
 
 </&>
+
+<%init>
+  use CXGN::Page::FormattingHelpers qw/info_table_html/;
+</%init>
