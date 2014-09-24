@@ -810,6 +810,7 @@ sub gs_files {
     $self->blups_file($c);
     $self->download_urls($c);
     $self->top_markers($c);
+    $self->model_parameters($c);
 
 }
 
@@ -1592,6 +1593,21 @@ sub model_accuracy {
     shift(@report); #add condition
 
     $c->stash->{accuracy_report} = \@report;
+ 
+}
+
+
+sub model_parameters {
+    my ($self, $c) = @_;
+
+    $self->variance_components_file($c);
+    my $file = $c->stash->{variance_components_file};
+   
+    my @params =  map  { [ split(/\t/, $_) ]}  read_file($file);
+
+    shift(@params); #add condition
+
+    $c->stash->{model_parameters} = \@params;
    
 }
 
