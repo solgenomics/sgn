@@ -292,14 +292,18 @@ function plotRegressionData(regressionData){
             d3.selectAll("text#dLabel").remove();            
         });
   
+    var line = ss.linear_regression()
+        .data(lsData)
+        .line(); 
+   
     var lineParams = ss.linear_regression()
         .data(lsData)
      
     var alpha = lineParams.b();
-    alpha     =  Math.round(alpha*100) / 100;
+    intercept =  Math.round(alpha*100) / 100;
     
-    var beta  = lineParams.m();
-    beta      = Math.round(beta*100) / 100;
+    var beta = lineParams.m();
+    beta     = Math.round(beta*100) / 100;
     
     var sign; 
     if (beta > 0) {
@@ -309,7 +313,7 @@ function plotRegressionData(regressionData){
     };
 
     var equation = 'y = ' + alpha  + sign  +  beta + 'x'; 
-    
+
     var rq = ss.r_squared(lsData, line);
     rq     = Math.round(rq*100) / 100;
     rq     = 'R-squared = ' + rq;
@@ -329,9 +333,6 @@ function plotRegressionData(regressionData){
             }});
      
     
-    var line = ss.linear_regression()
-        .data(lsData)
-        .line();
    
     var lsPoints = [];          
     jQuery.each(phenotypeDeviations, function (i, x)  {
