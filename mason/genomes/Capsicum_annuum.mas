@@ -21,7 +21,7 @@ href="http://www.nature.com/ng/journal/v46/n3/full/ng.2877.html">Nature Genetics
                      'Bulk Datasets (via FTP)' =>
                      '<a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Genome sequence and Annotation</a>',
                      BLAST => '<a href="/tools/blast/?db_id=219">Genomic sequence</a>',
-                     'Genome browser' => '<a href="solgenomics.net/jbrowse/JBrowse-1.11.4/?data=data/json/Pepper1.55/">Jbrowse</a>'
+                     'Genome browser' => '<a href="/jbrowse/JBrowse-1.11.4/?data=data/json/Pepper1.55/">Jbrowse</a>'
                     )
   %>
 </&>
