@@ -300,7 +300,7 @@ function plotRegressionData(regressionData){
         .data(lsData)
      
     var alpha = lineParams.b();
-    intercept =  Math.round(alpha*100) / 100;
+    alpha     =  Math.round(alpha*100) / 100;
     
     var beta = lineParams.m();
     beta     = Math.round(beta*100) / 100;
@@ -341,16 +341,7 @@ function plotRegressionData(regressionData){
         lsPoints.push([x[1], y]); 
    
     });
-   
-    regressionPlot.append("g")
-        .attr("id", "heritability")
-        .append("text")
-        .text("Heritability: " + heritability)
-        .attr("x", 20)
-        .attr("y", 10)
-        .style("fill", "#86B404")
-        .style("font-weight", "bold");  
-    
+      
     regressionPlot.append("svg:path")
         .attr("d", lsLine(lsPoints))
         .attr('stroke', '#86B404')
