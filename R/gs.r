@@ -471,7 +471,7 @@ if ( is.null(predictionFile) == TRUE ) {
     cat("\n", file=varianceComponentsFile,  append=TRUE)
     cat('Beta', iGEBV$beta,file=varianceComponentsFile, sep='\t', append=TRUE)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
-    cat('Heritability', heritability, file=varianceComponentsFile, sep='\t', append=TRUE)
+    cat('Heritability (h, %)', heritability, file=varianceComponentsFile, sep='\t', append=TRUE)
 }
 
 iGEBV <- data.matrix(iGEBVu)
