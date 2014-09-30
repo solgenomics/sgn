@@ -114,7 +114,7 @@ sub search_populations {
         { 
             page     => $page,
             rows     => 10,
-            order_by => 'name',
+            order_by => 'CASE WHEN project.name ~ \'^[0-9]+\' THEN 1 ELSE 0 END, project.name',
         }
         ); 
 
