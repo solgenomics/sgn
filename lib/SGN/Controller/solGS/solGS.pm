@@ -257,17 +257,17 @@ sub projects_links {
        
          my ($has_genotype, $has_phenotype);
         
-         unless ($dummy_name || $dummy_desc || !$pr_name )
-         {            
-             $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
-         }
+         # unless ($dummy_name || $dummy_desc || !$pr_name )
+         # {            
+         #     $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+         # }
 
-         unless (!$has_phenotype) 
-         {
-             $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);   
-         }
+         # unless (!$has_phenotype) 
+         # {
+         #     $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);   
+         # }
          
-         if($has_genotype && $has_phenotype)
+         unless ($dummy_name || $dummy_desc || !$pr_name)
          {
           
              my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
@@ -319,9 +319,9 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
    
         foreach my $pr_id (keys %$projects) 
         {
-            my $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);
-            if($has_genotype) 
-            {
+           # my $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);
+           # if($has_genotype) 
+           # {
                 my $pr_name     = $projects->{$pr_id}{project_name};
                 my $pr_desc     = $projects->{$pr_id}{project_desc};
                 my $pr_year     = $projects->{$pr_id}{project_year};
@@ -331,7 +331,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
 
                 push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year
                 ];
-            }
+          #  }
         }
 
         my $form;
