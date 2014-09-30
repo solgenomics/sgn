@@ -58,6 +58,7 @@ has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', 
 has 'design' => (isa => 'HashRef[HashRef[Str]]', is => 'rw', predicate => 'has_design', required => 1);
 #has 'breeding_program_id' => (isa => 'Int', is => 'rw', predicate => 'has_breeding_program_id', required => 1);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 0,);
+has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 
 # sub get_trial_name {
 #   my $self = shift;
@@ -153,6 +154,22 @@ sub save_trial {
 		   dbxref => 'plot_of',
 		  });
 
+  my $sample_cvterm = $chado_schema->resultset("Cv::Cvterm")
+    ->create_with({
+		   name   => 'tissue_sample',
+		   cv     => 'stock type',
+		   db     => 'null',
+		   dbxref => 'tissue_sample',
+		  });
+
+  my $sample_of = $chado_schema->resultset("Cv::Cvterm")
+    ->create_with({
+		   name   => 'tissue_sample_of',
+		   cv     => 'stock relationship',
+		   db     => 'null',
+		   dbxref => 'tissue_sample_of',
+		  });
+
   my $project = $chado_schema->resultset('Project::Project')
     ->create({
 	      name => $self->get_trial_name(),
@@ -164,6 +181,29 @@ sub save_trial {
 		nd_geolocation_id => $geolocation->nd_geolocation_id(),
 		type_id => $field_layout_cvterm->cvterm_id(),
 		});
+
+  my $genotyping_layout_cvterm = $chado_schema->resultset('Cv::Cvterm')
+    ->create_with({
+		   name   => 'genotyping layout',
+		   cv     => 'experiment type',
+		   db     => 'null',
+		   dbxref => 'genotyping layout',
+		  });
+
+  my $genotyping_layout_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
+      ->create({
+		nd_geolocation_id => $geolocation->nd_geolocation_id(),
+		type_id => $genotyping_layout_cvterm->cvterm_id(),
+		});
+
+  #modify cvterms used to create the trial when it is a genotyping trial
+  if ($self->is_genotyping()){
+      $field_layout_cvterm = $genotyping_layout_cvterm;
+      $field_layout_experiment = $genotyping_layout_experiment;
+      $plot_cvterm = $sample_cvterm;
+      $plot_of = $sample_of;
+  }
+ 
 
   #link to the project
   $field_layout_experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});
@@ -177,6 +217,9 @@ sub save_trial {
     my $plot_number = $design{$key}->{plot_number};
     my $stock_name = $design{$key}->{stock_name};
     my $block_number;
+    my $well;
+    my $plate;
+
     if ($design{$key}->{block_number}) { #set block number to 1 if no blocks are specified
       $block_number = $design{$key}->{block_number};
     } else {
@@ -187,6 +230,13 @@ sub save_trial {
       $rep_number = $design{$key}->{rep_number};
     } else {
       $rep_number = 1;
+    }
+
+    if ($design{$key}->{well}) {
+	$well = $design{$key}->{well};
+    }
+    if ($design{$key}->{plate}) {
+	$plate = $design{$key}->{plate};
     }
 
     my $is_a_control = $design{$key}->{is_a_control};
@@ -200,14 +250,16 @@ sub save_trial {
       die ("Error while saving trial layout: no stocks found matching $stock_name");
     }
 
+    
     #create the plot
     $plot = $chado_schema->resultset("Stock::Stock")
-      ->find_or_create({
-			organism_id => $parent_stock->organism_id(),
-			name       => $plot_name,
-			uniquename => $plot_name,
-			type_id => $plot_cvterm->cvterm_id,
-		       } );
+	->find_or_create({
+	    organism_id => $parent_stock->organism_id(),
+	    name       => $plot_name,
+	    uniquename => $plot_name,
+	    type_id => $plot_cvterm->cvterm_id,
+			 } );
+
     if ($rep_number) {
       $plot->create_stockprops({'replicate' => $rep_number}, {autocreate => 1} );
     }
@@ -228,6 +280,16 @@ sub save_trial {
     if ($design{$key}->{'range_number'}) {
       $plot->create_stockprops({'range' => $key}, {autocreate => 1});
     }
+
+
+    if ($well) {
+	$plot->create_stockprops({'well' => $well}, {autocreate => 1});
+    }
+
+    if ($plate) {
+	$plot->create_stockprops({'well' => $well}, {autocreate => 1});
+    }
+
 
     #create the stock_relationship with the accession
     $parent_stock
