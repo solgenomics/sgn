@@ -130,6 +130,34 @@ sub set_description {
 
 }
 
+
+sub get_location { 
+    my $self = shift;
+
+    my $row = $self->bcs_schema->resulset('Project::Projectprop')->find( { project_id => $self->get_trial_id() , type_id=> $self->get_location_type_id() });
+
+    return $row->value();
+    
+
+}
+
+
+sub add_location { 
+    my $self = shift;
+
+
+}
+
+
+
+sub get_location_type_id { 
+    my $self = shift;
+    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'project location id' });
+
+    return $rs->first()->cvterm_id();
+
+}
+
 sub get_year_type_id { 
     my $self = shift;
 
@@ -137,7 +165,6 @@ sub get_year_type_id {
 
     return $rs->first()->cvterm_id();
 }
-
 
 
 
