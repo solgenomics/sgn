@@ -97,7 +97,7 @@ sub _get_all_trials_by_breeding_program {
     }
     else { 
 	# get trials that are not associated with any project
-	my $q = "SELECT project.project_id, project.name, project.description n, projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id) LEFT JOIN project_relationship ON (subject_project_id=project.project_id) WHERE project_relationship_id IS NULL and projectprop.type_id != ?";
+	my $q = "SELECT project.project_id, project.name, project.description , projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id) LEFT JOIN project_relationship ON (subject_project_id=project.project_id) WHERE project_relationship_id IS NULL and projectprop.type_id != ?";
 	$h = $dbh->prepare($q);
 	$h->execute($breeding_program_cvterm_id);
     }
