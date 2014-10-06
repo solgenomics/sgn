@@ -8,7 +8,7 @@
 <& /page/page_title.mas, title => "Trial Search" &>
 
 <table>
-<tr><td>Trial name</td><td>Program</td><td>Year</td><td>Location</td><td>&nbsp;</td></tr>
+<tr><td>Trial name</td><td>Program</td><td>Year</td><td><!-- Location --></td><td>&nbsp;</td></tr>
 <tr><td><input type="text" id="trial_name" /></td>
 
 <td><div id="breeding_programs_div">
@@ -24,7 +24,7 @@
   <div id="years_select_div">[loading...]</div>
 </td>
 <td>
-  <div id="location_select_div">[loading...]</div>
+  <div style="visibility:hidden" id="location_select_div">[loading...]</div>
 </td>
 <td><button id="trial_search_submit_button">Search</button></td>
 </tr>
