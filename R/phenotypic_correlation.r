@@ -73,7 +73,10 @@ allTraitNames      <- c()
 
 if (length(refererQtl) != 0) {
 
-  allTraitNames <- colnames(phenoData)
+  allNames      <- names(phenoData)
+  nonTraitNames <- c("ID")
+
+  allTraitNames <- allNames[! allNames %in% nonTraitNames]
   
 } else {
   dropColumns <- c("uniquename", "stock_name")
@@ -85,7 +88,15 @@ if (length(refererQtl) != 0) {
   allTraitNames <- allNames[! allNames %in% nonTraitNames]
  
 }
-  
+
+for (i in allTraitNames) {
+  if (all(is.nan(phenoData$i))) {
+    phenoData[, i] <- sapply(phenoData[, i], function(x) ifelse(is.numeric(x), x, NA))                     
+  }
+}
+
+phenoData <- phenoData[, colSums(is.na(phenoData)) < nrow(phenoData)]
+
 trait <- c()
 cnt   <- 0
  
@@ -209,7 +220,7 @@ if (length(refererQtl) == 0) {
     
     row.names(formattedPhenoData) <- formattedPhenoData[, 1]
     formattedPhenoData[, 1] <- NULL
-   
+   print
   } 
   }
 
@@ -228,10 +239,6 @@ if (length(refererQtl) == 0) {
 formattedPhenoData <- round(formattedPhenoData,
                              digits = 2
                              )
-
-uniquelength <- sapply(formattedPhenoData,function(x) length(unique(x)))
-print(uniquelength)
-testData <- subset(formattedPhenoData, select=uniquelength>1)
 
 coefpvalues <- rcor.test(formattedPhenoData,
                          method="pearson",
