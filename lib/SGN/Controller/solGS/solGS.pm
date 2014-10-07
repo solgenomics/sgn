@@ -267,9 +267,8 @@ sub projects_links {
              $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);   
          }
          
-         if($has_genotype && $has_phenotype)
-         {
-          
+         if ($has_genotype && $has_phenotype)
+         {          
              my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
              push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
                                     $pr_desc, $pr_location, $pr_year

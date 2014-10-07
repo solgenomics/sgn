@@ -287,7 +287,7 @@ $(document).ready(function () {
 					$("#t_num").val(coverage);
 
 					if (+response.score < 0) {
-						$("#no_results").html("Note: No results found! Try again increasing the number of targets or the n-mer length, or decreasing the mismatches");
+						$("#no_results").html("Note: The score value is very low!. Increasing the number of targets or the n-mer length, or decreasing the mismatches the score value will increase");
 					}
 					
 					//show result sections

@@ -246,7 +246,7 @@ sub default_toolbar_data {
         },
         {
             name => 'genomes',
-            link => '/about/tomato_sequencing/',
+            link => '',
             desc => 'Read about sequencing projects.',
             menu => [
                 {  name => 'Reference genomes' },
@@ -260,6 +260,11 @@ sub default_toolbar_data {
                 {
                     name => 'Potato',
                     link => '/organism/Solanum_tuberosum/genome',
+                    desc => '',
+                },
+               {
+                    name => 'Pepper',
+                    link => '/organism/Capsicum_annuum/genome',
                     desc => '',
                 },
 		{ name => 'Draft genomes' },

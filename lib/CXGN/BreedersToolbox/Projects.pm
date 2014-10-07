@@ -97,7 +97,7 @@ sub _get_all_trials_by_breeding_program {
     }
     else { 
 	# get trials that are not associated with any project
-	my $q = "SELECT project.project_id, project.name, project.description n, projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id) LEFT JOIN project_relationship ON (subject_project_id=project.project_id) WHERE project_relationship_id IS NULL and projectprop.type_id != ?";
+	my $q = "SELECT project.project_id, project.name, project.description , projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id) LEFT JOIN project_relationship ON (subject_project_id=project.project_id) WHERE project_relationship_id IS NULL and projectprop.type_id != ?";
 	$h = $dbh->prepare($q);
 	$h->execute($breeding_program_cvterm_id);
     }
@@ -226,6 +226,66 @@ sub get_locations_by_breeding_program {
 	push @locations, [ $id, $name, $plot_count ];
     }
     return \@locations;
+}
+
+sub get_all_locations { 
+    my $self = shift;
+    my $c = shift;
+
+    my $rs = $self->schema() -> resultset("NaturalDiversity::NdGeolocation")->search( {}, { order_by => 'description' } );
+    
+    my @locations = ();
+    foreach my $loc ($rs->all()) { 
+        push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
+    }
+    return \@locations;
+
+}
+
+
+sub get_locations { 
+    my $self = shift;
+
+    my @rows = $self->schema()->resultset('NaturalDiversity::NdGeolocation')->all();
+    
+    my $type_id = $self->schema()->resultset('Cv::Cvterm')->search( { 'name'=>'plot' })->first->cvterm_id;
+
+    
+    my @locations = ();
+    foreach my $row (@rows) { 	    
+	my $plot_count = "SELECT count(*) from stock join cvterm on(type_id=cvterm_id) join nd_experiment_stock using(stock_id) join nd_experiment using(nd_experiment_id)   where cvterm.name='plot' and nd_geolocation_id=?"; # and sp_person_id=?";
+	my $sh = $self->schema()->storage()->dbh->prepare($plot_count);
+	$sh->execute($row->nd_geolocation_id); #, $c->user->get_object->get_sp_person_id);
+	
+	my ($count) = $sh->fetchrow_array();
+	
+	#if ($count > 0) { 
+	
+		push @locations,  [ $row->nd_geolocation_id, 
+				    $row->description,
+				    $row->latitude,
+				    $row->longitude,
+				    $row->altitude,
+				    $count, # number of experiments TBD
+				    
+		];
+    }
+    return \@locations;
+
+}
+
+sub get_all_years { 
+    my $self = shift;
+    my $year_cv_id = $self->get_project_year_cvterm_id();
+    my $rs = $self->schema()->resultset("Project::Projectprop")->search( { type_id=>$year_cv_id }, { distinct => 1, +select => 'value', order_by => 'value' } );
+    my @years;
+    
+    foreach my $y ($rs->all()) { 
+	push @years, $y->value();
+    }
+    return @years;
+
+    
 }
 
 sub get_accessions_by_breeding_program {

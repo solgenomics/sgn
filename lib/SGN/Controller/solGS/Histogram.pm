@@ -33,17 +33,7 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
 
     if (!$trait_pheno_file || -z $trait_pheno_file)
     {
-        my $pop_pheno_file = 'formatted_phenotype_data_' . $pop_id;     
-        $pop_pheno_file    = $c->controller('solGS::solGS')->grep_file($dir, $pop_pheno_file);
-        
-        if (!$pop_pheno_file) 
-        {
-            $self->create_population_phenotype_data($c);       
-        }
-        else 
-        {
-            $c->stash->{phenotype_file} = $pop_pheno_file;  
-        }        
+        $self->create_population_phenotype_data($c);                 
     }
 
     unless (!$c->stash->{phenotype_file} || -s $trait_pheno_file)

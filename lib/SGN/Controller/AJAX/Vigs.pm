@@ -181,7 +181,7 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
     # my $err = system(@command);
 	 
 	# bowtie command allowing 2 missmatch
-	my $err = system("$bowtie2_path/bowtie  --all -v 2 --threads 1 --seedlen $fragment_size --sam --sam-nohead $database_fullpath -f $query_file.fragments $query_file.bt2.out");
+	my $err = system("$bowtie2_path/bowtie  --all -v 2 --threads 2 --seedlen $fragment_size --sam --sam-nohead $database_fullpath -f $query_file.fragments $query_file.bt2.out");
    
 
 	if ($err) {

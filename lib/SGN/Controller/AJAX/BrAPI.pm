@@ -7,11 +7,11 @@ use JSON::Any;
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 __PACKAGE__->config(
-    #default   => 'application/json',
-    default => 'text/javascript',
+    default   => 'application/json',
+    #default => 'text/javascript', # for jsonp
     stash_key => 'rest',
-    #map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
-    map  => { 'text/javascript' => 'JSONP', 'text/html' => 'JSONP' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    #map  => { 'text/javascript' => 'JSONP', 'text/html' => 'JSONP' },
    );
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) { 
@@ -20,6 +20,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     my $version = shift;
     $c->stash->{api_version} = $version;
     $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     print STDERR "PROCESSING /...\n";
 }
 

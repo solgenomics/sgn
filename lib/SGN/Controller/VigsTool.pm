@@ -13,6 +13,7 @@ sub input :Path('/tools/vigs/')  :Args(0) {
 
 	# get databases path from the configuration file
 	my $db_path = $c->config->{vigs_db_path};
+	my $default_db = $c->config->{vigs_default_db};
 	
 	# get database names from the files in the path
 	my @databases;
@@ -26,7 +27,8 @@ sub input :Path('/tools/vigs/')  :Args(0) {
 	
 	# send the database names to the view file input.mas
 	$c->stash->{template} = '/tools/vigs/input.mas';
-	$c->stash->{databases} = \@databases;    
+	$c->stash->{databases} = \@databases;
+	$c->stash->{default_db} = $default_db;
 }
 
 
