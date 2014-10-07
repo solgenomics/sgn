@@ -287,8 +287,8 @@ function plotRegressionData(regressionData){
                 .attr("id", "dLabel")
                 .style("fill", "#86B404")              
                 .text( d[0].name + "(" + d[0].pheno_dev + "," + d[0].gebv + ")")
-                .attr("x", pad.left + 10)
-                .attr("y", pad.top + 50);
+                .attr("x", pad.left + 1)
+                .attr("y", pad.top + 80);
         })
         .on("mouseout", function(d) { 
             d3.select(this)
