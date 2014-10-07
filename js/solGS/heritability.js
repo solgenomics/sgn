@@ -124,6 +124,11 @@ function plotRegressionData(regressionData){
     var heritability        = regressionData.heritability;
     var phenotypeValues     = regressionData.phenotype_values;
 
+     var phenoRawValues = phenotypeValues.map( function (d) {
+            d = d[1]; 
+            return parseFloat(d); 
+        });
+
     var phenoXValues = phenotypeDeviations.map( function (d) {
             d = d[1]; 
             return parseFloat(d); 
