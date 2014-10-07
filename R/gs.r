@@ -469,7 +469,7 @@ if ( is.null(predictionFile) == TRUE ) {
     cat("\n", file=varianceComponentsFile,  append=TRUE)
     cat('Additive genetic variance',  iGEBV$Vu, file=varianceComponentsFile, sep='\t', append=TRUE)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
-    cat('Beta', iGEBV$beta,file=varianceComponentsFile, sep='\t', append=TRUE)
+    cat('&#956;', iGEBV$beta,file=varianceComponentsFile, sep='\t', append=TRUE)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
     cat('Heritability (h, %)', heritability, file=varianceComponentsFile, sep='\t', append=TRUE)
 }
