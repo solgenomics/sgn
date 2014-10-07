@@ -220,7 +220,7 @@ if (length(refererQtl) == 0) {
     
     row.names(formattedPhenoData) <- formattedPhenoData[, 1]
     formattedPhenoData[, 1] <- NULL
-   print
+  
   } 
   }
 
