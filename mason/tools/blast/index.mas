@@ -123,30 +123,31 @@ if ($preload_seq) {
       <table width="100%"><tr>
          <td>
 
-<& /page/info_table.mas, title=>'', data => [ 
-  'Expect (e-value) Threshold' => '<input id="evalue" type="text" size="6" value="1e-10" name="expect" />',
-  'Substitution Matrix' => $substitution_matrix_select,
-  'Max. hits to show' => '<input id="maxhits" type="text" name="maxhits" size="6" value="100" />',
-
-  'Filter' => '<input type="checkbox" name="filterq" checked="1" />',
-  '  ' => '<div style="text-align: right">
-<input id="clear_button" type="button" value="Clear" onclick="clear_input_sequence(); "/> 
-<input id="submit_blast_button" type="submit" name="search" value="Search"  /></div>',
-  __multicol => 2,
-  __border => 0,
-  __tableattrs => 'width="80%"',
-
-]
-
-&>
-
+<div style="text-align: center">
+	<button class="input" id="clear_button" type="button" value="Clear" onclick="clear_input_sequence(); ">Clear</button> 
+	<button class="input" id="submit_blast_button" type="submit" name="search" value="Search">BLAST</button>
+</div>
 <br />
 
+<&| /page/info_section.mas, title=>"Advanced Options", collapsible=>1, collapsed =>1, is_subsection=>"1" &>
 
+	<& /page/info_table.mas, title=>'', data => [ 
+	  'Expect (e-value) Threshold' => '<input id="evalue" type="text" size="6" value="1e-10" name="expect" />',
+	  'Substitution Matrix' => $substitution_matrix_select,
+		'Outout Options' => $parse_options_select,
+	  'Max. hits to show' => '<input id="maxhits" type="text" name="maxhits" size="6" value="20" />',
+	  'Filters' => '<input type="checkbox" name="filterq" checked="1" />Filter Low complexity',
+	  __multicol => 2,
+	  __border => 0,
+	  __tableattrs => 'width="80%"',
 
-<&| /page/info_section.mas, title=>"Output options", is_subsection=>"1" &>
-<% $parse_options_select %>
+	]
+
+	&>
+
 </&>
+
+
          </td>
       </tr>
       </table>
@@ -171,35 +172,123 @@ if ($preload_seq) {
   
 jQuery(document).ready(function() {
 
-swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
+	swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
 
-jQuery('#sequence').attr('spellcheck',false);
+	jQuery('#sequence').attr('spellcheck',false);
 
-jQuery('#dataset_select').change( function() { 
-  var selectedId = jQuery('#dataset_select').find(':selected').attr('value');
-  swap_menu(selectedId);
-});
+	jQuery('#dataset_select').change( function() { 
+	  var selectedId = jQuery('#dataset_select').find(':selected').attr('value');
+	  swap_menu(selectedId);
+	});
 
-var input_examples = eval(<% $input_example_json %>);
-var database_types = eval (<% $database_type_json %>);
-var input_option_types = eval(<% $input_option_json %>);
+	var input_examples = eval(<% $input_example_json %>);
+	var database_types = eval (<% $database_type_json %>);
+	var input_option_types = eval(<% $input_option_json %>);
 
-jQuery('#input_example').click( function() { 
-  jQuery('#sequence').html( input_examples[jQuery('#input_options').val() ] );
-});
+	jQuery('#input_example').click( function() { 
+	  jQuery('#sequence').html( input_examples[jQuery('#input_options').val() ] );
+	});
 
-jQuery('#submit_blast_button').click( function() { 
-  run_blast(database_types, input_option_types);
-});
+	jQuery('#submit_blast_button').click( function() { 
+	  run_blast(database_types, input_option_types);
+	});
 
-function swap_menu(group_id) { 
-  var menu_html = eval( <% JSON::Any->encode($menus) %>);
-    jQuery('#database_select').html(menu_html[group_id]);
-  }
+	function swap_menu(group_id) { 
+	  var menu_html = eval( <% JSON::Any->encode($menus) %>);
+	    jQuery('#database_select').html(menu_html[group_id]);
+	  }
 
+	//use JQueryIu to define tooltip style
+	$(function() {
+		$( document ).tooltip({
+			position: {
+				my: "center bottom-20",
+				at: "center top",
+				using: function( position, feedback ) {
+					$( this ).css( position );
+					$( "<div>" )
+					.addClass( "arrow" )
+					.addClass( feedback.vertical )
+					.addClass( feedback.horizontal )
+					.appendTo( this );
+				}
+			}
+		});
+	});
 });
 
 </script>
 
 
-
+<!-- STYLE -->
+<style>
+.seq_map {
+	color: #777777;
+	width: 700px;
+	position:relative;
+	overflow: auto;
+	align: left;
+}
+.ui-dialog {
+	position:relative;
+}
+#region_square {
+	position:absolute;
+	vertical-align:middle;
+}
+.help_dialog {
+	color:blue;
+}
+#open_descriptions_dialog {
+	color:blue;
+}
+#desc_dialog {
+	overflow: auto;
+	position: relative;
+}
+.ui-tooltip, .arrow:after {
+	background: #000000;
+	border: 2px solid white;
+}
+.ui-tooltip {
+	padding: 5px 10px;
+	color: white;
+	border-radius: 10px;
+	font: bold 14px "Helvetica Neue", Sans-Serif;
+	box-shadow: 0 0 7px black;
+}
+.arrow {
+	width: 70px;
+	height: 16px;
+	overflow: hidden;
+	position: absolute;
+	left: 50%;
+	margin-left: -35px;
+	bottom: -16px;
+}
+.arrow.top {
+	top: -16px;
+	bottom: auto;
+}
+.arrow.left {
+	left: 20%;
+}
+.arrow:after {
+	content: "";
+	position: absolute;
+	left: 20px;
+	top: -20px;
+	width: 25px;
+	height: 25px;
+	box-shadow: 6px 5px 9px -9px black;
+	-webkit-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	-o-transform: rotate(45deg);
+	tranform: rotate(45deg);
+}
+.arrow.top:after {
+	bottom: -20px;
+	top: auto;
+}
+</style>
