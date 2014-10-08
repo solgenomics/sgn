@@ -494,8 +494,8 @@ else {
 		  },
 		  text: "Ok"
 		}
-            }
-	}
+        }
+    
     });
 
     $('#trial_design_confirm').dialog({
