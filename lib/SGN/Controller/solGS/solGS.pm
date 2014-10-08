@@ -3376,7 +3376,7 @@ sub phenotype_file {
  
     }
 
-    unless (-s $pheno_file) 
+    unless ($pheno_file) 
     {
 
         my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
@@ -3385,7 +3385,7 @@ sub phenotype_file {
         my $key        = "phenotype_data_" . $pop_id;
         $pheno_file = $file_cache->get($key);
        
-        unless ($pheno_file)
+        unless ( -s $pheno_file)
         {  
             $pheno_file = catfile($c->stash->{solgs_cache_dir}, "phenotype_data_" . $pop_id . ".txt");
             my $data = $c->model('solGS::solGS')->phenotype_data($pop_id);
@@ -3493,7 +3493,7 @@ sub genotype_file  {
         my $key        = "genotype_data_" . $pop_id;
         $geno_file = $file_cache->get($key);
 
-        unless ($geno_file)
+        unless (-s $geno_file)
         {  
             $geno_file = catfile($c->stash->{solgs_cache_dir}, "genotype_data_" . $pop_id . ".txt");
             my $data = $c->model('solGS::solGS')->genotype_data($pop_id);
