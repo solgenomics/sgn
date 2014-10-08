@@ -420,7 +420,7 @@ else {
         var design_type = $('#select_design_method').val();
 
 
-        alert(design_type);
+     //alert(design_type);
 
 	var rep_count = $('#rep_count').val();
 	var block_size = $('#block_size').val();
@@ -487,9 +487,13 @@ else {
 	autoOpen: false,
 	modal: true,
 	buttons: {
-            Ok: function() {
-		$( this ).dialog( "close" );
-		location.reload();
+            Ok: { id : "trial_saved_dialog_message_ok_button",
+		  click: function() {
+		      $( this ).dialog( "close" );
+		      location.reload();
+		  },
+		  text: "Ok"
+		}
             }
 	}
     });
