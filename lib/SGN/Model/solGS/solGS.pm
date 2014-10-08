@@ -338,67 +338,7 @@ sub get_stock_owners {
 }
 
 
-sub genotype_data {
-    my ($self, $project_id) = @_;
-    
-    my $stock_genotype_rs;
-    if ($project_id) 
-    {
-        my $prediction_id = $self->context->stash->{prediction_pop_id};
 
-        if($prediction_id && $project_id == $prediction_id) 
-        {
-            $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);    
-
-        } 
-        else 
-        {
-            my $stock_subj_rs  = $self->project_subject_stocks_rs($project_id);
-            my $stock_obj_rs   = $self->stocks_object_rs($stock_subj_rs);
-            $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs); 
-        }  
-       
-        my $markers   = $self->extract_project_markers($stock_genotype_rs);
-
-        my $geno_data = "\t" . $markers . "\n";  
-        my $markers_no = scalar(split(/\t/, $markers));
-
-        my @stocks = ();
-        my $cnt_clones_diff_markers;
-       
-        while (my $geno = $stock_genotype_rs->next)
-        {
-            my $stock = $geno->get_column('stock_name');
-            $stock =~s/[\(\)]/-/g;
-
-            unless (grep(/^$stock$/, @stocks)) 
-            {
-                my $geno_values    = $self->stock_genotype_values($geno);            
-                my $geno_values_no = scalar(split(/\t/, $geno_values));
-              
-                if($geno_values_no - 1 == $markers_no )
-                {
-                    $geno_data .=  $geno_values;
-                    push @stocks, $stock;
-                }
-                else 
-                {
-                    $cnt_clones_diff_markers++;                                     
-                }
-               
-            }  
-        }
-
-        return  $geno_data; 
-        
-        print STDERR "\n$cnt_clones_diff_markers clones were  genotyped using a 
-                        different GBS markers than the ones on the header. 
-                        They are excluded from the training set.\n\n";
-    } 
-     
-   
-
-}
 
 
 sub search_stock {
@@ -432,6 +372,91 @@ sub search_stock_using_plot_name {
          
     return $rs; 
 
+}
+
+
+sub genotype_data {
+    my ($self, $project_id) = @_;
+    
+    my $stock_genotype_rs;
+    my @genotypes;
+
+    if ($project_id) 
+    {
+        my $prediction_id = $self->context->stash->{prediction_pop_id};
+
+        if($prediction_id && $project_id == $prediction_id) 
+        {
+            $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);    
+
+        } 
+        else 
+        {
+            my $stock_subj_rs  = $self->project_subject_stocks_rs($project_id);
+            while (my $st = $stock_subj_rs->next) 
+            {
+                 my $plot = $st->get_column('uniquename');
+              
+                 my $stock_plot_rs = $self->search_stock_using_plot_name($plot);
+                 my $stock_id = $stock_plot_rs->single->stock_id;
+                 my $stock_obj_rs = $self->map_subject_to_object($stock_id);
+                 my $genotype = $stock_obj_rs->single->name;
+                 push @genotypes, $genotype;
+            }
+        }  
+        
+        @genotypes = uniq(@genotypes);
+
+        my $geno_data;
+        my $header_markers;
+        my @header_markers;
+        my $cnt_clones_diff_markers;
+
+        foreach my $genotype (@genotypes) 
+        { 
+            my $stock_rs = $self->search_stock($genotype);     
+            my $stock_genotype_rs = $self->individual_stock_genotypes_rs($stock_rs);
+       
+            unless ($header_markers) 
+            {
+                if($stock_genotype_rs->single)
+                {
+                    $header_markers   = $self->extract_project_markers($stock_genotype_rs);                
+                    $geno_data = "\t" . $header_markers . "\n";
+                    @header_markers = split(/\t/, $header_markers);
+                }
+            }
+      
+            while (my $geno = $stock_genotype_rs->next)
+            {  
+                my $json_values  = $geno->value;
+                my $values       = JSON::Any->decode($json_values);
+                my @markers      = keys %$values;
+                
+                my $common_markers = scalar(intersect(@header_markers, @markers));
+
+                my $similarity = $common_markers / scalar(@header_markers);
+                
+                if ($similarity == 1 )     
+                {
+                    my $geno_values = $self->stock_genotype_values($geno);               
+                    $geno_data .= $geno_values;
+                }
+                else 
+                {
+                    $cnt_clones_diff_markers++;                                     
+                }      
+            }       
+        }
+
+        print STDERR "\n$cnt_clones_diff_markers clones were  genotyped using a 
+                        different GBS markers than the ones on the header. 
+                        They are excluded from the training set.\n\n";
+
+        return  $geno_data; 
+        
+       
+    } 
 }
 
 
@@ -618,17 +643,17 @@ sub stock_genotype_values {
         
     my $geno_values;
               
-        $geno_values .= $geno_row->get_column('stock_name') . "\t";
-        foreach my $marker (@markers) 
-        {
-        
-            my $genotype =  $values->{$marker};
-            $geno_values .= $genotype =~ /\d+/g ? $round->round($genotype) : $genotype;       
-            $geno_values .= "\t" unless $marker eq $markers[-1];
-        }
+    $geno_values .= $geno_row->get_column('stock_name') . "\t";
+   
+    foreach my $marker (@markers) 
+    {        
+        my $genotype =  $values->{$marker};
+        $geno_values .= $genotype =~ /\d+/g ? $round->round($genotype) : $genotype;       
+        $geno_values .= "\t" unless $marker eq $markers[-1];
+    }
 
     $geno_values .= "\n";      
-
+    
     return $geno_values;
 }
 
