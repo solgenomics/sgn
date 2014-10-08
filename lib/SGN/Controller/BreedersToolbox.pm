@@ -516,8 +516,10 @@ sub get_crosses : Private {
 
     # get crosses
     #
+    my $stock_type_cv = $schema->resultset("Cv::Cv")->find( {name=>'stock type'});
     my $cross_cvterm = $schema->resultset("Cv::Cvterm")->find(
 	{ name   => 'cross',
+	  cv_id => $stock_type_cv->cv_id(),
 	});
     my @cross_populations = ();
 
