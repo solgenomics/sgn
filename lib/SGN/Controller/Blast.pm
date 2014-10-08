@@ -45,13 +45,19 @@ sub index :Path('/tools/blast/') :Args(0) {
 	$preselected_category = $rs->first()->blast_db_group_id();
     }
     
+	
     foreach my $g ($group_rs->all()) { 
-	my @blast_dbs = $g->blast_dbs();
-	push @$dataset_groups, [ $g->blast_db_group_id, $g->name() ];
-	foreach my $db (@blast_dbs) { 
-	    push @{$databases->{ $g->blast_db_group_id  }},
-    	    [ $db->blast_db_id(), $db->title(), $db->type() ];
-	}
+		my @blast_dbs = $g->blast_dbs();
+		push @$dataset_groups, [ $g->blast_db_group_id, $g->name() ];
+		
+		my @dbs_AoA;
+		
+		foreach my $db (@blast_dbs) {
+			push @dbs_AoA, [ $db->blast_db_id(), $db->title(), $db->type() ];
+		}
+		
+		my @arr = sort {$a->[1] cmp $b->[1]} @dbs_AoA;
+		$databases->{ $g->blast_db_group_id } = \@arr;
     }
 
     my $cbsq = CXGN::Blast::SeqQuery->new();
@@ -85,9 +91,9 @@ sub index :Path('/tools/blast/') :Args(0) {
     $c->stash->{programs} = [
 	[ 'blastn', 'blastn (nucleotide to nucleotide db)' ],
 	[ 'blastp', 'blastp (protein to protein db)' ], 
-	[ 'blastx', 'blastx (protein database using a translated nucleotide query)'],
-	[ 'tblastn', 'tblastn (translated nucleotide database using a protein query)'], 
-	[ 'tblastx', 'tblastx (translated nucleotide database using a translated nucleotide query)'],
+	[ 'blastx', 'blastx (translated nucleotide to protein db)'],
+	[ 'tblastn', 'tblastn (protein to translated nucleotide db)'], 
+	[ 'tblastx', 'tblastx (translated nucleotide to translated nucleotide db)'],
 	];
     $c->stash->{template} = '/tools/blast/index.mas';
 }

@@ -124,7 +124,7 @@ if ($preload_seq) {
          <td>
 
 <div style="text-align: center">
-	<button class="input" id="clear_button" type="button" value="Clear" onclick="clear_input_sequence(); ">Clear</button> 
+	<!-- <button class="input" id="clear_button" type="button" value="Clear" onclick="clear_input_sequence(); ">Clear</button>  -->
 	<button class="input" id="submit_blast_button" type="submit" name="search" value="Search">BLAST</button>
 </div>
 <br />
@@ -195,8 +195,8 @@ jQuery(document).ready(function() {
 
 	function swap_menu(group_id) { 
 	  var menu_html = eval( <% JSON::Any->encode($menus) %>);
-	    jQuery('#database_select').html(menu_html[group_id]);
-	  }
+	  jQuery('#database_select').html(menu_html[group_id]);
+	}
 
 	//use JQueryIu to define tooltip style
 	$(function() {
@@ -291,4 +291,44 @@ jQuery(document).ready(function() {
 	bottom: -20px;
 	top: auto;
 }
+
+
+
+
+#sequence {
+	background-color:#EEEEFE;
+	border-color:#000;
+	border-width:2px;
+	border-style:solid;
+	border-radius:5px;
+}
+
+
+#submit_blast_button {
+background-color:#555555;
+/*background-color:#4387FD;*/
+border:0px;
+border-radius:2px;
+/*color:#fff;*/
+color:#EEEEEE;
+box-shadow: 1px 1px 0px 0px #C6C6C6;
+font-family:Arial;
+font-size:12px;
+height:20px;
+line-height:18px;
+vertical-align: top;
+}
+#submit_blast_button:hover {
+background-color:#444444;
+/*background-color:#5EA1FF;*/
+/*color:#acf;*/
+color:#fff;
+}
+#submit_blast_button:active {
+position:relative;
+top:1px;
+left:1px;
+box-shadow: 0px 0px 0px 0px #fff;
+}
+
 </style>
