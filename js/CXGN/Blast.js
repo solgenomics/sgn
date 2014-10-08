@@ -46,32 +46,34 @@ function run_blast(database_types, input_option_types) {
     var jobid ="";
     var seq_count = 0;
     disable_ui(); 
-    jQuery.ajax( { 
-	//async: false,
-	url:     '/tools/blast/run/',
 
-	method:  'POST',
-	data:    { 'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 
-                   'filterq': filterq, 'database': database, 'program': program, 
-                   'input_options': input_option 
-		 },
-	success: function(response) { 
-	    if (response.error) { 
-		enable_ui();
-		alert(response.error);
-		return;
-	    }
-            else{ 
-		
-		jobid = response.jobid; 
-		seq_count = response.seq_count;
-		//alert("SEQ COUNT = "+seq_count);
-		wait_result(jobid, seq_count);
-            }
-	   
-	},
-	
-	error:   function(response) { alert("An error occurred. The service may not be available right now."); enable_ui(); return; }
+    jQuery.ajax( { 
+		//async: false,
+		url:     '/tools/blast/run/',
+
+		method:  'POST',
+		data:    { 'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 
+			'filterq': filterq, 'database': database, 'program': program, 
+			'input_options': input_option 
+		},
+		success: function(response) { 
+			if (response.error) { 
+				enable_ui();
+				alert(response.error);
+				return;
+			}
+			else{
+				jobid = response.jobid; 
+				seq_count = response.seq_count;
+				//alert("SEQ COUNT = "+seq_count);
+				wait_result(jobid, seq_count);
+			}
+		},
+		error: function(response) {
+			alert("An error occurred. The service may not be available right now.");
+			enable_ui();
+			return;
+		}
     });
 }
 
