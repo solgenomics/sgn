@@ -504,7 +504,7 @@ sub transform :Path('/list/transform/') Args(2) {
 
     my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema"), $transform_name, \@list_items);
 
-    if (scalar(@{$result->{missing}}) > 0) { 
+    if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) { 
 	$c->stash->{rest} = { error => "This lists contains elements that cannot be converted. Not converting list.", };
 	return;
     }
