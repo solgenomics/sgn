@@ -234,9 +234,9 @@ sub run : Path('/tools/blast/run') Args(0) {
 		my $blast_log_path = $c->config->{blast_log};
 		my $blast_log_fh;
 		if (-e $blast_log_path) {
-			open($blast_log_fh, ">>", $blast_log_path) or die "cannot open $blast_log_path";
+			open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path";
 		} else {
-			open($blast_log_fh, ">", $blast_log_path) or die "cannot open $blast_log_path";
+			open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path";
 			print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
 		}
 		print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
