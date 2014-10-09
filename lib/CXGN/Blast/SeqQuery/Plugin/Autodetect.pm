@@ -28,6 +28,8 @@ sub process {
     my $c = shift;
     my $sequence = shift;
 	
+	my $final_seq;
+	
 	if ($sequence =~ />/) {
 	    my @final_sequence;
 		my @lines = split("\n",$sequence);
@@ -40,14 +42,15 @@ sub process {
 				push(@final_sequence, $line);
 			}
 		}
-		$sequence = join("\n",@final_sequence);
+		$final_seq = join("\n",@final_sequence);
 	} else {
 		$sequence=~ s/[\s\d\.\-\_\:\;\(\)\[\]\=\#\,\*]+//g;
+		$final_seq = ">Untitled_sequence\n$sequence\n";
 	}
 	
 	# print STDERR "accessing the autodetect process function\n";
 	
-    return $sequence;
+    return $final_seq;
 }
 
 sub autodetect_seq_type {
