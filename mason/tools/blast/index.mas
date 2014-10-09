@@ -190,7 +190,14 @@ jQuery(document).ready(function() {
 	});
 
 	jQuery('#submit_blast_button').click( function() { 
-	  run_blast(database_types, input_option_types);
+		var pasted_seq = jQuery('#sequence').val();
+		var seq_num = pasted_seq.match(/>/g);
+		
+		if (seq_num.length <= 20) {
+		  run_blast(database_types, input_option_types);
+		} else {
+			alert("Please, do not run more than 20 sequences");
+		}
 	});
 
 	function swap_menu(group_id) { 
@@ -301,6 +308,11 @@ jQuery(document).ready(function() {
 	border-width:2px;
 	border-style:solid;
 	border-radius:5px;
+	width: 700px;
+	min-height: 80px;
+	max-height: 300px;
+	min-width: 700px;
+	max-width: 700px;
 }
 
 
