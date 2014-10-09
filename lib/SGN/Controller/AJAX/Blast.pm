@@ -36,7 +36,44 @@ sub run : Path('/tools/blast/run') Args(0) {
     my $params = $c->req->params();
 
     my $input_query = CXGN::Blast::SeqQuery->new();
+	
+    $params->{sequence} = $input_query->process($c, $params->{input_options}, $params->{sequence});
 
+    # print STDERR "SEQUENCE now : ".$params->{sequence}."\n";
+	
+	if ($params->{input_options} eq 'autodetect') {
+		my $detected_type = $input_query->autodetect_seq_type($c, $params->{input_options}, $params->{sequence});
+		
+		# print STDERR "SGN BLAST detected your sequence is: $detected_type\n";
+		
+		# create a hash with the valid options =1 and check and if result 0 return error
+		my %blast_seq_db_program = (
+			nucleotide => {
+				nucleotide => {
+					blastn => 1,
+					tblastx => 1,
+				},
+				protein => {
+					blastx => 1,
+				},
+			},
+			protein => {
+				protein => {
+					blastp => 1,
+				},
+				nucleotide => {
+					tblastn => 1,
+				},
+			},
+		);
+
+		if (!$blast_seq_db_program{$detected_type}{$params->{db_type}}{$params->{program}}) {
+			$c->stash->{rest} = { error => "the program ".$params->{program}." can not be used with a ".$detected_type." sequence (autodetected) and a ".$params->{db_type}." database.\n\nPlease, use different options and disable the autodetection of the query type if it is wrong." };
+			return;
+		}
+	}
+	
+	
     my $valid = $input_query->validate($c, $params->{input_options}, $params->{sequence});
     
     if ($valid ne "OK") { 
@@ -44,11 +81,10 @@ sub run : Path('/tools/blast/run') Args(0) {
 	return;
     }
     
-    $params->{sequence} = $input_query->process($c, $params->{input_options}, $params->{sequence});
-
-    print STDERR "SEQUENCE now : ".$params->{sequence}."\n";
-
-    my $seq_count = $params->{sequence} =~ tr/\>/\>/; 
+    my $seq_count = 1;
+	if ($params->{sequence} =~ /\>/) {
+		$seq_count= $params->{sequence} =~ tr/\>/\>/;
+	}
     print STDERR "SEQ COUNT = $seq_count\n";
     my ($seq_fh, $seqfile) = tempfile( 
 	"blast_XXXXXX",
@@ -234,9 +270,9 @@ sub run : Path('/tools/blast/run') Args(0) {
 		my $blast_log_path = $c->config->{blast_log};
 		my $blast_log_fh;
 		if (-e $blast_log_path) {
-			open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path";
+			open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
 		} else {
-			open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path";
+			open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
 			print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
 		}
 		print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";

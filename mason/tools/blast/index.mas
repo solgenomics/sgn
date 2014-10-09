@@ -41,7 +41,7 @@ my $show_graphics_select = $m->scomp('/page/html_select.mas',  name => 'output_g
 				 ],
 				 ),
 
-print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
+#print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
 my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', id=>'input_options',
 			      choices => \@input_options, selected=>$preload_type,
 );
@@ -191,12 +191,17 @@ jQuery(document).ready(function() {
 
 	jQuery('#submit_blast_button').click( function() { 
 		var pasted_seq = jQuery('#sequence').val();
-		var seq_num = pasted_seq.match(/>/g);
 		
-		if (seq_num.length <= 20) {
-		  run_blast(database_types, input_option_types);
+		if (pasted_seq.match(/>/)) {
+			var seq_num = pasted_seq.match(/>/g);
+		
+			if (seq_num.length <= 20 ) {
+			  run_blast(database_types, input_option_types);
+			} else {
+				alert("Please, do not run more than 20 sequences");
+			}
 		} else {
-			alert("Please, do not run more than 20 sequences");
+			run_blast(database_types, input_option_types);
 		}
 	});
 
