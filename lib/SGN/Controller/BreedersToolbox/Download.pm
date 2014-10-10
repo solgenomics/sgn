@@ -37,6 +37,7 @@ sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;
+    my $format = $c->req->param("format");
 
     my $trial = CXGN::Trial::TrialLayout -> new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
 
@@ -44,17 +45,77 @@ sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(
 
     $self->trial_download_log($c, $trial_id, "trial layout");
 
+    if ($format eq "csv") { 
+	$self->download_layout_csv($c, $trial_id, $design);
+    }
+    else { 
+	$self->download_layout_excel($c, $trial_id, $design);
+    }
+
+}
+
+
+sub download_layout_csv { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    my $design = shift;
+
     $c->tempfiles_subdir("data_export"); # make sure the dir exists
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_layout_".$trial_id."_XXXXX");
 
-    my $file_path = $tempfile.".xls"; # need xls extension to avoid trouble
+    close($fh);
 
+    my $file_path = $c->config->{basepath}."/".$tempfile.".csv"; # need xls extension to avoid trouble
+    
     move($tempfile, $file_path);
 
+    open(my $F, ">", $file_path) || die "Can't open file $file_path\n";
+
+    my $header = join (",", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number");
+    
+    print $F $header."\n";
+
+    my $line = 1;
+    foreach my $n (keys(%$design)) { 
+     	print $F join ",", 
+	$design->{$n}->{plot_name},
+	$design->{$n}->{accession_name},
+	$design->{$n}->{plot_number},
+	$design->{$n}->{block_number},
+	$design->{$n}->{is_a_control},
+	$design->{$n}->{rep_number};
+	print $F "\n";
+    }
+    close($F);
+
+    my $file_name = basename($file_path);    
+    $c->res->content_type('Application/csv');    
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
+
+    my $output = read_file($file_path);
+
+    $c->res->body($output);
+
+}
+
+sub download_layout_excel { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    my $design = shift;
+
+    $c->tempfiles_subdir("data_export"); # make sure the dir exists
+    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_layout_".$trial_id."_XXXXX");
+    
+    my $file_path = $tempfile.".xls"; # need xls extension to avoid trouble
+    
+    move($tempfile, $file_path);
+    
     my $ss = Spreadsheet::WriteExcel->new($c->config->{basepath}."/".$file_path);
     
     my $ws = $ss->add_worksheet();
-
+    
     $ws->write(0,0,"plot_name");
     $ws->write(0,1,"accession_name");
     $ws->write(0,2,"plot_number");
