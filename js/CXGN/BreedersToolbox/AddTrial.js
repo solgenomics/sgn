@@ -504,17 +504,25 @@ else {
 	width: 450,
         modal: true,
         buttons: {
-	    Confirm: function() {
-		save_experimental_design(design_json);
-		//$( this ).dialog( "close" );
-		//$('#add_project_dialog').dialog("close");
+	    Confirm: {
+		id : "confirm_trial_save_button",
+		click: function() {
+		    save_experimental_design(design_json);
+		    //$( this ).dialog( "close" );
+		    //$('#add_project_dialog').dialog("close");
+		},
+		text: "Confirm"
 	    },
-	    Cancel: function() {
-		//$('#add_project_dialog').dialog("close");
-		$( this ).dialog( "close" );
-		return;
+	    Cancel: { 
+		id : "cancel_trial_save_button",
+		click: function() {
+		    //$('#add_project_dialog').dialog("close");
+		    $( this ).dialog( "close" );
+		    return;
+		},
+		text: "Cancel"
 	    }
-        },
+        }
     });
 
     $('#view_trial_layout_button').click(function () {
