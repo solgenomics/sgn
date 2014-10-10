@@ -12,6 +12,9 @@ BEGIN { extends 'Catalyst::Controller'; }
 sub trial_info : Path('/breeders_toolbox/trial') Args(1) { 
     my $self = shift;
     my $c = shift;
+
+    my $start_time = time();
+
     my $trial_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
@@ -23,7 +26,7 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 	return;
     }
 	
-
+    print STDERR "check 1: ".(time()-$start_time)."\n";
     my $breeding_program = $program_object->get_breeding_program_with_trial($trial_id);
     my $trial_name =  $trial_layout->get_trial_name();
     my $trial_description =  $trial_layout->get_trial_description();
@@ -40,6 +43,8 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 
     my $design_layout_view_html = trial_detail_design_view(\%design);
 
+    print STDERR "check 2: ".(time()-$start_time)."\n";
+
     my @plot_names;
     if ($plot_names_ref) {
       @plot_names = @{$trial_layout->get_plot_names()};
@@ -49,6 +54,8 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     if ($design_ref) {
       %design = %{$design_ref};
     }
+
+    print STDERR "check 3: ".(time()-$start_time)."\n";
 
     $c->stash->{design_type} = $design_type;
     $c->stash->{accession_names} = $accession_names_ref;
@@ -95,6 +102,8 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 
     $c->stash->{location_data} = \@location_data;
 
+    print STDERR "check 4: ".(time()-$start_time)."\n";
+
     $h = $dbh->prepare("SELECT distinct(cvterm.name),  cvterm.cvterm_id, count(*) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? GROUP BY cvterm.name, cvterm.cvterm_id");
 
     $h->execute($trial_id);
@@ -113,6 +122,8 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 	push @years, $year;
     }
     
+    print STDERR "check 5: ".(time()-$start_time)."\n";
+
     $c->stash->{user_can_modify} = ($user->check_roles("submitter") || $user->check_roles("curator")) ;
 
     $c->stash->{breeding_program} = $breeding_program;
@@ -124,6 +135,9 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     $c->stash->{trial_id} = $trial_id;
 
     $c->stash->{template} = '/breeders_toolbox/trial.mas';
+    
+    print STDERR "check 6: ".(time()-$start_time)."\n";
+    
 }
 
 
