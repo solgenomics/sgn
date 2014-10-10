@@ -154,24 +154,24 @@ sub _get_design_from_trial {
     my $accession_name = $accession->uniquename;
     $design_info{"plot_name"}=$plot->uniquename;
     $design_info{"plot_id"}=$plot->stock_id;
-    print STDERR "stock id of plot: ". $plot->stock_id."\n";
-    print STDERR "plotprop: $plot_number_prop\n";
+    #print STDERR "stock id of plot: ". $plot->stock_id."\n";
+    #print STDERR "plotprop: $plot_number_prop\n";
     if ($plot_number_prop) {
       $design_info{"plot_number"}=$plot_number_prop->value();
-      print STDERR "plot# value: ".$plot_number_prop->value()."\n"
+      #print STDERR "plot# value: ".$plot_number_prop->value()."\n"
     }
     else {die "no plot number stockprop found for plot $plot_name";}
     if ($block_number_prop) {
       $design_info{"block_number"}=$block_number_prop->value();
-      print STDERR "block# value: ".$block_number_prop->value()."\n"
+      #print STDERR "block# value: ".$block_number_prop->value()."\n"
     }
     if ($replicate_number_prop) {
       $design_info{"rep_number"}=$replicate_number_prop->value();
-      print STDERR "rep# value: ".$replicate_number_prop->value()."\n"
+      #print STDERR "rep# value: ".$replicate_number_prop->value()."\n"
     }
     if ($range_number_prop) {
       $design_info{"range_number"}=$replicate_number_prop->value();
-      print STDERR "range# value: ".$range_number_prop->value()."\n"
+      #print STDERR "range# value: ".$range_number_prop->value()."\n"
     }
     if ($is_a_control_prop) {
       $design_info{"is_a_control"}=$is_a_control_prop->value();
@@ -179,7 +179,7 @@ sub _get_design_from_trial {
     if ($accession_name) {
       $design_info{"accession_name"}=$accession_name;
     }
-    print STDERR "accession name in plot: $accession_name\n";
+    #print STDERR "accession name in plot: $accession_name\n";
     $design{$plot_number_prop->value}=\%design_info;
   }
   return \%design;
@@ -212,7 +212,7 @@ sub _get_location_from_field_layout_experiment {
     return;
   }
   $location_name = $field_layout_experiment -> nd_geolocation -> description();
-  print STDERR "Location: $location_name\n";
+  #print STDERR "Location: $location_name\n";
   return $location_name;
 }
 
@@ -379,14 +379,14 @@ sub _get_trial_accession_names_and_control_names {
   }
   foreach my $accession_name (sort { lc($a) cmp lc($b)} keys %unique_accessions) {
     push(@accession_names, $accession_name);
-    print STDERR "Accession: $accession_name \n";
+    #print STDERR "Accession: $accession_name \n";
   }
   if (!scalar(@accession_names) >= 1) {
     return;
   }
   foreach my $control_name (sort { lc($a) cmp lc($b)} keys %unique_controls) {
     push(@control_names, $control_name);
-    print STDERR "Control: $control_name \n";
+    #print STDERR "Control: $control_name \n";
   }
   return (\@accession_names, \@control_names);
 }
