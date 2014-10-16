@@ -13,9 +13,9 @@ sub type {
 }
 
 sub example { 
-    return "1 mkiliflimf lamllvtsgn nnlvettckn tpnynlcvkt lsldkrseka gdittlalim
-       61 vdaikskanq aantisklrh snppqawkdp lkncafsykv ilpasmpeal ealtkgdpkf
-      121 aedgmvgssg daqeceeyfk attikyspls klnidvhels dvgraivrnl l";
+    return "  1 aattcggcac cagtaaattt tcccaaaggt ttcaaaaatg aaaattttga ttttcctaat
+       61 aatgtttctt gctatgttgc tagtaacaag tgggaataat aatctagtag agacaacatg
+      121 caagaacaca ccaaattata atttgtgtgt gaaaactttg tctttagaca";
 }
 
 sub validate { 
