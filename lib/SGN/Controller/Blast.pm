@@ -41,9 +41,7 @@ sub index :Path('/tools/blast/') :Args(0) {
     
     if ($db_id) { 
 	my $rs = $schema->resultset("BlastDb")->search( { blast_db_id => $db_id }, { join => 'blast_db_group' });
-	# $preselected_database = $rs->first()->blast_db_id(); # first database of the category
-	# 224 is the database id for tomato cDNA ITAG 2.40
-	$preselected_database = 224;
+	$preselected_database = $rs->first()->blast_db_id(); # first database of the category
 	$preselected_category = $rs->first()->blast_db_group_id();
     }
     
@@ -79,6 +77,12 @@ sub index :Path('/tools/blast/') :Args(0) {
     #print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
     #print STDERR "GROUPS: ".Data::Dumper::Dumper($dataset_groups);
     #print STDERR "DATASETS: ".Data::Dumper::Dumper($databases);
+	
+	# 224 is the database id for tomato cDNA ITAG 2.40
+	$preselected_database = 224;
+	
+	# print STDERR "controller pre-selected db: $preselected_database\n";
+	
     $c->stash->{input_options} = \@input_options;
     $c->stash->{parse_options} = \@parse_options;
     $c->stash->{preselected_database} = $preselected_database;
