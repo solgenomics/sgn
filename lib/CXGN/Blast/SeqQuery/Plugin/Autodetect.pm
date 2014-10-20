@@ -96,6 +96,7 @@ sub autodetect_seq_type {
 	
 	if ($sequence =~ />/) {
 		my @lines = split("\n",$sequence);
+		my $seq_header = shift(@lines);
 		
 		foreach my $line (@lines) {
 			if ($line !~ />/) {
@@ -112,7 +113,7 @@ sub autodetect_seq_type {
 		$seq_type = 'protein';
 	}
 	
-	# print STDERR "accessing the autodetect_seq_type function\n";
+	print STDERR "accessing the autodetect_seq_type function. header: $seq_header, seq_type: $seq_type, valid:  $valid_nt, length: ".length($sequence)."\n";
 	
 	return $seq_type;
 }
