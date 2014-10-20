@@ -93,10 +93,14 @@ sub autodetect_seq_type {
 	
 	my $seq_type = 'nucleotide';
 	my $valid_nt = 0;
+	my $seq_header = '';
 	
 	if ($sequence =~ />/) {
 		my @lines = split("\n",$sequence);
-		my $seq_header = shift(@lines);
+		if ($lines[0] =~ />/) {
+			$seq_header = shift(@lines);
+			$sequence = join "\n", @lines;
+		}
 		
 		foreach my $line (@lines) {
 			if ($line !~ />/) {
