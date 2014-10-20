@@ -37,6 +37,13 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     my $input_query = CXGN::Blast::SeqQuery->new();
 	
+    my $valid = $input_query->validate($c, $params->{input_options}, $params->{sequence});
+    
+    if ($valid ne "OK") { 
+	$c->stash->{rest} = { error => "Your input contains illegal characters. Please verify your input." };
+	return;
+    }
+	
     $params->{sequence} = $input_query->process($c, $params->{input_options}, $params->{sequence});
 
     # print STDERR "SEQUENCE now : ".$params->{sequence}."\n";
@@ -74,13 +81,6 @@ sub run : Path('/tools/blast/run') Args(0) {
 	}
 	
 	
-    my $valid = $input_query->validate($c, $params->{input_options}, $params->{sequence});
-    
-    if ($valid ne "OK") { 
-	$c->stash->{rest} = { error => "Your input contains illegal characters. Please verify your input." };
-	return;
-    }
-    
     my $seq_count = 1;
 	if ($params->{sequence} =~ /\>/) {
 		$seq_count= $params->{sequence} =~ tr/\>/\>/;
