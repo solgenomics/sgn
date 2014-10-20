@@ -22,6 +22,7 @@ my $menus = {};
 foreach my $d (keys(%$databases)) { 
    $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", id=>"database", choices => [ @{$databases->{$d}} ], selected=> $preselected_database );
 }
+# print STDERR "pre selected db: $preselected_database\n";
 
 my $substitution_matrix_select = $m->scomp('/page/html_select.mas', 
    name=>"matrix", 
