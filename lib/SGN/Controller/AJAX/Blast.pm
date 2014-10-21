@@ -179,9 +179,16 @@ sub run : Path('/tools/blast/run') Args(0) {
 	 
 	 maxhits =>
 	 sub {
-	     my $h = $params->{maxhits} || 100;
+	     my $h = $params->{maxhits} || 20;
 	     $h =~ s/\D//g; #only digits allowed
 	     return -b => $h;
+	 },
+	 
+	 hits_list =>
+	 sub {
+	     my $h = $params->{maxhits} || 20;
+	     $h =~ s/\D//g; #only digits allowed
+	     return -v => $h;
 	 },
 	 
 	 filterq =>
