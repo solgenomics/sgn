@@ -385,16 +385,20 @@ sub genotype_data {
     my $header_markers;
     my @header_markers; 
     my $cnt_clones_diff_markers;
-  
+ 
     if ($project_id) 
     {
         my $prediction_id = $self->context->stash->{prediction_pop_id};
-        my $pop_id = $self->context->stash->{pop_id};
+        my $model_id        = $self->context->stash->{model_id};
+       
         if ($prediction_id && $project_id == $prediction_id) 
-        {         
+        {    
+            my $data_set_type = $self->context->stash->{data_set_type};
+            my $trait_abbr    = $self->context->stash->{trait_abbr};
+            
             $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
             my $stock_count = $stock_genotype_rs->count;
-     
+    
             my @stocks;
             
             unless ($header_markers) 
@@ -402,7 +406,10 @@ sub genotype_data {
                 if($stock_count)
                 {
                     my $dir = $self->context->stash->{solgs_cache_dir};
-                    my $file = "genotype_data_${pop_id}.txt";
+                    
+                    my $file = $data_set_type =~ /combined/ 
+                        ? "gentype_data_${model_id}_${trait_abbr}" 
+                        : "genotype_data_${model_id}.txt";
                     
                     my $training_geno_file = $self->context->controller("solGS::solGS")->grep_file($dir, $file);
 
