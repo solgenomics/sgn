@@ -1483,7 +1483,7 @@ sub prediction_pop_analyzed_traits {
   
     $prediction_pop_id = "uploaded_${prediction_pop_id}" if $prediction_is_uploaded;
  
-    my  @files  =  grep { /prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}/ && -f "$dir/$_" } 
+    my  @files  =  grep { /prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}/ && -s "$dir/$_" } 
                  readdir($dh); 
    
     closedir $dh; 
