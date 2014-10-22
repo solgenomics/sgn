@@ -1467,8 +1467,6 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
 }
 
 
-
-
 sub prediction_pop_analyzed_traits {
     my ($self, $c, $training_pop_id, $prediction_pop_id) = @_;
            
@@ -2504,7 +2502,8 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $self->gebv_marker_file($c);
     $self->top_markers($c);
     $self->combined_pops_summary($c);
-    
+    $self->model_parameters($c);
+
     $self->download_prediction_urls($c);
     my $download_prediction = $c->stash->{download_prediction};
 
