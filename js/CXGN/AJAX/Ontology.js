@@ -16,8 +16,7 @@ var Ontology = {
     submitCvtermForm: function(cvterm_add_uri, ontology_url) {
         var onto_html = this.displayOntologies( "ontology" , ontology_url);
         //make an AJAX request with the form params
-        alert("uri = " + cvterm_add_uri + "ontology_url = " + ontology_url ) ;
-	var object_id = jQuery('#object_id').val();
+        var object_id = jQuery('#object_id').val();
         var relationship = jQuery('#relationship_select').val();
         var evidence_code = jQuery('#evidence_code_select').val();
         var evidence_description = jQuery('#evidence_description_select').val();
@@ -28,11 +27,10 @@ var Ontology = {
             url: "/ajax/locus/associate_ontology" ,
             type: 'POST',
             dataType: "json",
-	    timeout: 60000,
-            //async: false,
+	    //timeout: 60000,
+            async: false,
             data: {
-		//'term_name='+jQuery('#term_name').val()+'&object_id='+object_id+'&relationship='+relationship+'&evidence_code='+evidence_code+'&evidence_description='+evidence_description+'&evidence_with='+evidence_with+'&reference='+reference ,
-                'term_name': term_name,
+	        'term_name': term_name,
 		'object_id': object_id,
 		'relationship': relationship,
 		'evidence_code': evidence_code,
@@ -43,16 +41,13 @@ var Ontology = {
 	    success: function(response) {
                 var error = response.error;
                 if (error) { alert(error) ; }
-		Tools.toggleContent('associate_cvterm_form', 'locus_ontology')
-		//jQuery("#ontology").html( this.displayOntologies( "ontology" , ontology_url) );
-
-            },
+	    },
 	    error: function () {
 		alert('Error submitting ontology term');
 	    }
 	} );
-        //Tools.toggleContent('associate_cvterm_form', 'locus_ontology')
-        //jQuery("#ontology").html( this.displayOntologies( "ontology" , ontology_url) );
+        Tools.toggleContent('associate_cvterm_form', 'locus_ontology')
+        jQuery("#ontology").html( this.displayOntologies( "ontology" , ontology_url) );
     },
 
     displayOntologies: function(div_id, url) {
