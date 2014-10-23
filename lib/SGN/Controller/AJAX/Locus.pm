@@ -275,15 +275,14 @@ sub associate_ontology_GET :Args(0) {
 #########################change this to the locus object !! 
 sub associate_ontology_POST :Args(0) {
     my ( $self, $c ) = @_;
-
-    my $dbh = $c->dbc->dbh;
+     my $dbh = $c->dbc->dbh;
      my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $cvterm_rs = $schema->resultset('Cv::Cvterm');
 
     my $locus_id       = $c->req->param('object_id');
     my $ontology_input = $c->req->param('term_name');
-    my $relationship   = $c->req->param('relationship'); # a cvterm_id
+     my $relationship   = $c->req->param('relationship'); # a cvterm_id
     my ($relationship_id) = $cvterm_rs->find( { cvterm_id => $relationship } )->dbxref_id;
     my $evidence_code  = $c->req->param('evidence_code'); # a cvterm_id
     my ($evidence_code_id) = $cvterm_rs->find( {cvterm_id => $evidence_code })->dbxref_id;
@@ -354,9 +353,7 @@ sub associate_ontology_POST :Args(0) {
                 $locus_dbxref_evidence->set_sp_person_id($logged_person_id);
 
                 my $locus_dbxref_evidence_id = $locus_dbxref_evidence->store ;
-
 ##########################################
-                $c->stash->{rest} = ['success'];
             } catch {
                 $c->stash->{rest} = { error => "Failed: $_" };
                 # send an email to sgn bugs
@@ -370,7 +367,8 @@ sub associate_ontology_POST :Args(0) {
                 return;
             };
             # if you reached here this means associate_ontology worked. Now send an email to sgn-db-curation
-            $c->stash->{email} = {
+	    $c->stash->{rest} = { success => "1" };
+	    $c->stash->{email} = {
                 to      => 'sgn-db-curation@sgn.cornell.edu',
                 from    => 'www-data@sgn-vm.sgn.cornell.edu',
                 subject => "New ontology term loaded. Locus $locus_id",
@@ -378,11 +376,12 @@ sub associate_ontology_POST :Args(0) {
             };
             $c->forward( $c->view('Email') );
         } else {
-            $c->stash->{rest} = { error => 'need both valid locus_id and cvterm_id for adding an ontology term to this locus! ' };
+	    $c->stash->{rest} = { error => 'need both valid locus_id and cvterm_id for adding an ontology term to this locus! ' };
         }
     } else {
         $c->stash->{rest} = { error => 'No privileges for adding new ontology terms. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
     }
+    return;
 }
 
 sub references : Chained('/locus/get_locus') :PathPart('references') : ActionClass('REST') { }
