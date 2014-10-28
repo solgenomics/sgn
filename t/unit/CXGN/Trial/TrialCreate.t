@@ -23,17 +23,18 @@ is(ref($fix->config()), "HASH", 'hashref check');
 BEGIN {use_ok('CXGN::Trial::TrialCreate');}
 BEGIN {use_ok('CXGN::Trial::TrialLayout');}
 BEGIN {use_ok('CXGN::Trial::TrialDesign');}
+BEGIN {use_ok('CXGN::Trial::TrialLookup');}
 ok(my $chado_schema = $fix->bcs_schema);
 ok(my $phenome_schema = $fix->phenome_schema);
 ok(my $dbh = $fix->dbh);
 
 # create a location for the trial
 ok(my $trial_location = "test_location_for_trial");
-ok(my $new_row = $chado_schema->resultset('NaturalDiversity::NdGeolocation')
+ok(my $location = $chado_schema->resultset('NaturalDiversity::NdGeolocation')
    ->new({
     description => $trial_location,
 	 }));
-ok($new_row->insert());
+ok($location->insert());
 
 # create stocks for the trial
 ok(my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
@@ -79,13 +80,29 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     phenome_schema => $phenome_schema,
     dbh => $dbh,
-    user_name => "test_user",
+    user_name => "johndoe",
     design => $design,	
-    program => "test_program",
+    program => "test",
     trial_year => "2015",
     trial_description => "test description",
-    trial_location => "test_location",
+    trial_location => "test_location_for_trial",
     trial_name => "test_trial_name",
-    design_type => "test_design_type",
+    design_type => "RCBD",
 						    }));
+ok($trial_create->save_trial());
+
+ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
+    schema => $chado_schema,
+    trial_name => "test_trial_name",
+						    }));
+ok(my $trial = $trial_lookup->get_trial());
+ok(my $trial_id = $trial->project_id());
+ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
+    schema => $chado_schema,
+    trial_id => $trial_id,
+
+						    }));
+ok(my $accession_names = $trial_layout->get_accession_names());
+my %stocks = map { $_ => 1 } @stock_names;
+ok(exists($stocks{@$accession_names[0]}));
 

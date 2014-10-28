@@ -27,6 +27,7 @@ use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
 use CXGN::BreedersToolbox::Projects;
+use CXGN::People::Person;
 
 has 'chado_schema' => (
 		 is       => 'rw',
@@ -99,19 +100,23 @@ sub save_trial {
   my %design = %{$self->get_design()};
 
   if ($self->trial_name_already_exists()) {
-    return;
+      print STDERR "Can't create trial: Trial name already exists\n";
+      return;
   }
 
   if (!$self->get_breeding_program_id()) {
-    return;
+      print STDERR "Can't create trial: Breeding program does not exist\n";
+      return;
   }
 
 
   #lookup user by name
   my $user_name = $self->get_user_name();;
   my $dbh = $self->get_dbh();
-  my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $user_name); #add person id as an option.
+  my $owner_sp_person_id;
+  $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $user_name); #add person id as an option.
   if (!$owner_sp_person_id) {
+      print STDERR "Can't create trial: User/owner not found\n";
     return;
   }
 
@@ -120,6 +125,7 @@ sub save_trial {
   $geolocation_lookup->set_location_name($self->get_trial_location());
   $geolocation = $geolocation_lookup->get_geolocation();
   if (!$geolocation) {
+      print STDERR "Can't create trial: Location not found\n";
     return;
   }
 
@@ -197,7 +203,7 @@ sub save_trial {
 		});
 
   #modify cvterms used to create the trial when it is a genotyping trial
-  if ($self->is_genotyping()){
+  if ($self->get_is_genotyping()){
       $field_layout_cvterm = $genotyping_layout_cvterm;
       $field_layout_experiment = $genotyping_layout_experiment;
       $plot_cvterm = $sample_cvterm;
@@ -211,6 +217,7 @@ sub save_trial {
 
 
   $project->create_projectprops( { 'project year' => $self->get_trial_year(),'design' => $self->get_design_type()}, {autocreate=>1});
+
 
   foreach my $key (sort { $a <=> $b} keys %design) {
     my $plot_name = $design{$key}->{plot_name};
@@ -249,8 +256,7 @@ sub save_trial {
     if (!$parent_stock) {
       die ("Error while saving trial layout: no stocks found matching $stock_name");
     }
-
-    
+   
     #create the plot
     $plot = $chado_schema->resultset("Stock::Stock")
 	->find_or_create({
@@ -263,6 +269,7 @@ sub save_trial {
     if ($rep_number) {
       $plot->create_stockprops({'replicate' => $rep_number}, {autocreate => 1} );
     }
+
     if ($block_number) {
       $plot->create_stockprops({'block' => $block_number}, {autocreate => 1} );
     }
@@ -280,7 +287,6 @@ sub save_trial {
     if ($design{$key}->{'range_number'}) {
       $plot->create_stockprops({'range' => $key}, {autocreate => 1});
     }
-
 
     if ($well) {
 	$plot->create_stockprops({'well' => $well}, {autocreate => 1});
@@ -305,7 +311,6 @@ sub save_trial {
 							 stock_id => $plot->stock_id(),
 							});
   }
-
 
 
   $program->associate_breeding_program_with_trial($self->get_breeding_program_id, $project->project_id);
