@@ -2910,16 +2910,20 @@ sub trait_phenotype_stat {
     my $mean = $stat->mean;
     my $std  = $stat->standard_deviation;
     my $cnt  = $stat->count;
-    
+    my $cv   = ($std / $mean) * 100;
+
     my $round = Math::Round::Var->new(0.01);
     $std  = $round->round($std);
     $mean = $round->round($mean);
+    $cv   = $round->round($cv);
+    $cv   = $cv . '%';
 
     my @desc_stat =  ( [ 'No. of genotypes', $cnt ], 
                        [ 'Minimum', $min ], 
                        [ 'Maximum', $max ],
                        [ 'Mean', $mean ],
-                       [ 'Standard deviation', $std ]
+                       [ 'Standard deviation', $std ],
+                       [ 'Coefficient of variation', $cv ]
         );
    
     $c->stash->{descriptive_stat} = \@desc_stat;
