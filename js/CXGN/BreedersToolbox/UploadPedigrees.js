@@ -34,7 +34,7 @@ jQuery(document).ready(function ($) {
         position: ['top', 75],
 	buttons: {
             "Cancel": function () {
-                $('#upload_pedigrees_dialog').dialog("close");
+                jQuery('#upload_pedigrees_dialog').dialog("close");
             },
 	    "Ok": function () {
 		upload_pedigrees_file();
@@ -85,10 +85,13 @@ jQuery(document).ready(function ($) {
             }
 	},
 	complete: function (response) {
+
 	    $('#working').dialog("close");
             if (response.error_string) {
 		$("#upload_pedigrees_error_display tbody").html('');
 		$("#upload_pedigrees_error_display tbody").append(response.error_string);
+
+
 		$(function () {
                     $("#upload_pedigrees_error_display").dialog({
 			modal: true,

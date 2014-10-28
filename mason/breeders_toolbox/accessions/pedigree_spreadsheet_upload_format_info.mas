@@ -1,0 +1,34 @@
+<%args>
+</%args>
+
+<div id="pedigrees_upload_spreadsheet_info_dialog" >
+<b>
+Pedigrees may be uploaded in an Excel file (.xls)
+</b>
+<br>
+(.xlsx format not supported)
+<br><br>
+<b>
+  Header:
+</b>
+<br>
+The first row (header) should contain the following:
+<br>
+
+<table cellspacing="1" cellpadding="2" border="1">
+  <tr>
+    <td>accession name</td>
+    <td>female parent accession</td>
+    <td>male parent accession</td>
+  </tr>
+</table>
+
+<br>
+<b>
+  Required fields:
+</b>
+female parent accession (must exist in the database)
+<br>
+male parent accession (must exist in the database)
+
+</div>
