@@ -809,6 +809,7 @@ sub gs_files {
     $self->blups_file($c);
     $self->download_urls($c);
     $self->top_markers($c);
+    $self->model_parameters($c);
 
 }
 
@@ -1466,8 +1467,6 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
 }
 
 
-
-
 sub prediction_pop_analyzed_traits {
     my ($self, $c, $training_pop_id, $prediction_pop_id) = @_;
            
@@ -1482,7 +1481,7 @@ sub prediction_pop_analyzed_traits {
   
     $prediction_pop_id = "uploaded_${prediction_pop_id}" if $prediction_is_uploaded;
  
-    my  @files  =  grep { /prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}/ && -f "$dir/$_" } 
+    my  @files  =  grep { /prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}/ && -s "$dir/$_" } 
                  readdir($dh); 
    
     closedir $dh; 
@@ -1591,6 +1590,21 @@ sub model_accuracy {
     shift(@report); #add condition
 
     $c->stash->{accuracy_report} = \@report;
+ 
+}
+
+
+sub model_parameters {
+    my ($self, $c) = @_;
+
+    $self->variance_components_file($c);
+    my $file = $c->stash->{variance_components_file};
+   
+    my @params =  map  { [ split(/\t/, $_) ]}  read_file($file);
+
+    shift(@params); #add condition
+
+    $c->stash->{model_parameters} = \@params;
    
 }
 
@@ -2488,7 +2502,8 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $self->gebv_marker_file($c);
     $self->top_markers($c);
     $self->combined_pops_summary($c);
-    
+    $self->model_parameters($c);
+
     $self->download_prediction_urls($c);
     my $download_prediction = $c->stash->{download_prediction};
 
@@ -3360,7 +3375,7 @@ sub phenotype_file {
  
     }
 
-    unless (-s $pheno_file) 
+    unless ($pheno_file) 
     {
 
         my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
@@ -3369,7 +3384,7 @@ sub phenotype_file {
         my $key        = "phenotype_data_" . $pop_id;
         $pheno_file = $file_cache->get($key);
        
-        unless ($pheno_file)
+        unless ( -s $pheno_file)
         {  
             $pheno_file = catfile($c->stash->{solgs_cache_dir}, "phenotype_data_" . $pop_id . ".txt");
             my $data = $c->model('solGS::solGS')->phenotype_data($pop_id);
@@ -3477,7 +3492,7 @@ sub genotype_file  {
         my $key        = "genotype_data_" . $pop_id;
         $geno_file = $file_cache->get($key);
 
-        unless ($geno_file)
+        unless (-s $geno_file)
         {  
             $geno_file = catfile($c->stash->{solgs_cache_dir}, "genotype_data_" . $pop_id . ".txt");
             my $data = $c->model('solGS::solGS')->genotype_data($pop_id);

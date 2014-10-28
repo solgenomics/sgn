@@ -73,11 +73,11 @@ sub get_heritability {
     my $solgs_controller = $c->controller('solGS::solGS');
     my $cache_dir = $c->stash->{solgs_cache_dir};
 
-    my $var_comp_file = "variance_components_${trait_abbr}_${pop_id}";
-    $var_comp_file = $solgs_controller->grep_file($cache_dir, $var_comp_file);
+    $solgs_controller->variance_components_file($c);
+    my $var_comp_file = $c->stash->{variance_components_file};
 
     my ($txt, $value) = map { split(/\t/)  } 
-                        grep {/heritability/}
+                        grep {/Heritability/}
                         read_file($var_comp_file);
 
     $c->stash->{heritability} = $value;
