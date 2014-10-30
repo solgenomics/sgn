@@ -16,7 +16,7 @@ $page_links => ''
 <%perl>
 
 use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
-my $marker_tip = tooltipped_text("Tip(?)", "You can combine trials sharing the same number (markers used to genotype)");
+my $marker_tip = tooltipped_text("Tip", "You can combine trials sharing the same color.");
 
 </%perl>
 
