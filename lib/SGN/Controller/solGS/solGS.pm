@@ -2365,20 +2365,25 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
     my $pop_links;
     my @selected_pops_details;
 
-    foreach my $pop_id (@pop_ids) {
+    foreach my $pop_id (@pop_ids) 
+    {
     
-    my $pop_rs = $c->model('solGS::solGS')->project_details($pop_id);
-    my $pop_details = $self->get_projects_details($c, $pop_rs);
- 
-    my $pop_name     = $pop_details->{$pop_id}{project_name};
-    my $pop_desc     = $pop_details->{$pop_id}{project_desc};
-    my $pop_year     = $pop_details->{$pop_id}{project_year};
-    my $pop_location = $pop_details->{$pop_id}{project_location};
+        my $markers     = $c->model("solGS::solGS")->get_genotyping_markers($pop_id);                   
+        my @markers     = split(/\t/, $markers);
+        my $markers_num = scalar(@markers);
+       
+        my $pop_rs       = $c->model('solGS::solGS')->project_details($pop_id);
+        my $pop_details  = $self->get_projects_details($c, $pop_rs);
+        my $pop_name     = $pop_details->{$pop_id}{project_name};
+        my $pop_desc     = $pop_details->{$pop_id}{project_desc};
+        my $pop_year     = $pop_details->{$pop_id}{project_year};
+        my $pop_location = $pop_details->{$pop_id}{project_location};
                
-    my $checkbox = qq |<form> <input type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
+        my $checkbox = qq |<form> <input type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
+        
     push @selected_pops_details, [$checkbox,  qq|<a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$pop_name</a>|, 
-                               $pop_desc, $pop_location, $pop_year
-    ];
+                               $pop_desc, $pop_location, $pop_year, $markers_num
+        ];
   
     }
     
