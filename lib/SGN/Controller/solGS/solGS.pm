@@ -326,14 +326,18 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
                 my @markers = split(/\t/, $markers);
                 my $markers_num = scalar(@markers);
 
+                $self->trial_compatibility_table($c, $markers_num);
+                my $match_code = $c->stash->{trial_compatibility_code};
+
                 my $pr_name     = $projects->{$pr_id}{project_name};
                 my $pr_desc     = $projects->{$pr_id}{project_desc};
                 my $pr_year     = $projects->{$pr_id}{project_year};
                 my $pr_location = $projects->{$pr_id}{project_location};
 
-                my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+                my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+                my $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
-                push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $markers_num
+                push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code
                 ];
             }
         }
@@ -357,6 +361,54 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
             $c->res->redirect('/solgs/search');     
         }
     }
+
+}
+
+
+sub trial_compatibility_table {
+    my ($self, $c, $markers) = @_;
+  
+    $self->trial_compatibility_file($c);
+    my $compatibility_file =  $c->stash->{trial_compatibility_file};
+  
+    my $color;
+
+    if (-s $compatibility_file) 
+    {  
+        my @line =  read_file($compatibility_file);     
+        my  ($entry) = grep(/$markers/, @line);
+        chomp($entry);
+       
+        if($entry) 
+        {
+            ($markers, $color) = split(/\t/, $entry);          
+            $c->stash->{trial_compatibility_code} = $color;
+        }
+    }
+ 
+    if (!$color) 
+    {
+        my ($red, $blue, $green) = map { int(rand(255)) } 1..3;       
+        $color = 'rgb' . '(' . "$red,$blue,$green" . ')';
+   
+        my $color_code = $markers . "\t" . $color . "\n";
+        
+        $c->stash->{trial_compatibility_code} = $color;
+        write_file($compatibility_file,{append => 1}, $color_code);
+    }
+
+}
+
+
+sub trial_compatibility_file {
+    my ($self, $c) = @_;
+
+    my $cache_data = {key       => 'trial_compatibility',
+                      file      => 'trial_compatibility_codes',
+                      stash_key => 'trial_compatibility_file'
+    };
+
+    $self->cache_file($c, $cache_data);
 
 }
 
@@ -2372,6 +2424,9 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
         my @markers     = split(/\t/, $markers);
         my $markers_num = scalar(@markers);
        
+        $self->trial_compatibility_table($c, $markers_num);
+        my $match_code = $c->stash->{trial_compatibility_code};
+
         my $pop_rs       = $c->model('solGS::solGS')->project_details($pop_id);
         my $pop_details  = $self->get_projects_details($c, $pop_rs);
         my $pop_name     = $pop_details->{$pop_id}{project_name};
@@ -2379,10 +2434,11 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
         my $pop_year     = $pop_details->{$pop_id}{project_year};
         my $pop_location = $pop_details->{$pop_id}{project_location};
                
-        my $checkbox = qq |<form> <input type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
+        my $checkbox = qq |<form> <input style="background-color: $match_code;" type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
         
+        my $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
     push @selected_pops_details, [$checkbox,  qq|<a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$pop_name</a>|, 
-                               $pop_desc, $pop_location, $pop_year, $markers_num
+                               $pop_desc, $pop_location, $pop_year, $match_code
         ];
   
     }
@@ -2623,7 +2679,6 @@ sub combined_pops_summary {
               project_name => $training_pop,
               owner        => $projects_owners
         );
-
 
 }
 
