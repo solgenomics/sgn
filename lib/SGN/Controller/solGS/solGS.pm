@@ -317,10 +317,15 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
         my @projects_list;
    
         foreach my $pr_id (keys %$projects) 
-        {
-            my $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);
-            if($has_genotype) 
+        { 
+            my $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id);           
+            #  my $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);
+           
+            if($markers) 
             {
+                my @markers = split(/\t/, $markers);
+                my $markers_num = scalar(@markers);
+
                 my $pr_name     = $projects->{$pr_id}{project_name};
                 my $pr_desc     = $projects->{$pr_id}{project_desc};
                 my $pr_year     = $projects->{$pr_id}{project_year};
@@ -328,7 +333,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
 
                 my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 
-                push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year
+                push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $markers_num
                 ];
             }
         }
@@ -363,8 +368,7 @@ sub get_projects_details {
     my %projects_details = ();
 
     while (my $pr = $pr_rs->next) 
-    {
-       
+    {       
         $pr_id   = $pr->project_id;
         $pr_name = $pr->name;
         $pr_desc = $pr->description;
