@@ -233,8 +233,8 @@ sub has_genotype {
             my $genotype_name = $stock->get_column('stock_name'); 
             if ($stock->value) 
             { 
-                  $has_genotype = 'has_genotype';
-                  last;
+                $has_genotype = 'has_genotype';
+                last;
             }
         }      
     }
@@ -1388,6 +1388,17 @@ sub map_subject_to_object {
          
     return $stock_obj_rs;
 }
+
+
+sub get_genotyping_markers {
+    my ($self, $pr_id) = @_;
+
+    my $stock_genotype_rs = $self->project_genotype_data_rs($pr_id);   
+    my $markers           = $self->extract_project_markers($stock_genotype_rs);
+   
+    return $markers;
+}
+
 
 
 __PACKAGE__->meta->make_immutable;
