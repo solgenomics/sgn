@@ -262,16 +262,29 @@ sub projects_links {
              $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
          }
 
+         my ($markers, $match_code);
          unless (!$has_phenotype) 
          {
-             $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);   
+             $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id);           
+          
+             if($markers) 
+             {
+                 my @markers = split(/\t/, $markers);
+                 my $markers_num = scalar(@markers);
+
+                 $self->trial_compatibility_table($c, $markers_num);
+                 $match_code = $c->stash->{trial_compatibility_code};
+             }               
          }
          
-         if ($has_genotype && $has_phenotype)
+         if ($markers && $has_phenotype)
          {          
              my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+
+             my $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+
              push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
-                                    $pr_desc, $pr_location, $pr_year
+                                    $pr_desc, $pr_location, $pr_year, $match_code
              ];            
          }
     }
