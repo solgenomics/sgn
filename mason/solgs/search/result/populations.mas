@@ -40,7 +40,7 @@ $trait_name
 &>
 
 <div id="trait_id">
-<input type="hidden" name="trait_id" value="<% $trait_id %>" />
+  <input type="hidden" name="trait_id" value="<% $trait_id %>" />
 </div>
 
 % if (scalar(@$result) > 1) 
