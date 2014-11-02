@@ -4,6 +4,7 @@ package SGN::Controller::AJAX::Pedigrees;
 use Moose;
 use List::Util qw | any |;
 use File::Slurp qw | read_file |;
+use Data::Dumper;
 use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
@@ -69,10 +70,10 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
     
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="trial upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
+#    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+#    $upload_metadata{'archived_file_type'}="trial upload file";
+#    $upload_metadata{'user_id'}=$user_id;
+#    $upload_metadata{'date'}="$timestamp";
     
     # check if all accessions exist
     #
@@ -101,7 +102,7 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     my %errors = $self->check_stocks($c, \@unique_stocks);
 
     if (%errors) { 
-	$c->stash->{rest} = { error => "The following accessions are not in the database: ".(join ",", keys(%errors)).". Please fix these errors and try again." };
+	$c->stash->{rest} = { error => "The following accessions are not in the database: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
 	return;
     }
     close($F);
@@ -112,30 +113,38 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     my $male_parent;
     my $child;
     my $cross_type;
+    my @pedigrees;
+
     while (<$F>) { 
 	chomp;
 	my @f = split /\t/;
 	
-	if ($f[3] eq "self") { 
+	if ($f[3] eq "self" || $f[1] eq $f[2]) { 
 	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $f[1] });
 	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $f[1] });
-	    $child = Bio::GeneticRelationships::Individual->new( { name => $f[0] });
+	    
 	    $cross_type = "self";
 	}
 	elsif($f[3] eq "biparental" || !$f[3]) { 
 	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $f[1] });
 	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $f[2] });
-	    $child = Bio::GeneticRelationships::Individual->new( { name =>  $f[0] } );
+	    
 	    $cross_type = "biparental";
 	}
 	my $p = Bio::GeneticRelationships::Pedigree->new( { 
 	    cross_type => $cross_type,
 	    female_parent => $female_parent,
 	    male_parent => $male_parent,
-	    name => $child
-							  
-							  });
+	    name => $f[0] });
+
+	push @pedigrees, $p;
     }
+    
+    my $add = CXGN::Pedigree::AddPedigrees->new( { schema=>$c->dbic_schema("Bio::Chado::Schema"), pedigrees=>\@pedigrees });
+    #my $ok = $add->validate_pedigrees();
+    $add->add_pedigrees();
+   
+    
     $c->stash->{rest} = { success => 1 };
 }
 

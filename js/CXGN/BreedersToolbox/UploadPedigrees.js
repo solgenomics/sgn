@@ -38,6 +38,9 @@ jQuery(document).ready(function ($) {
             },
 	    "Ok": function () {
 		upload_pedigrees_file();
+		alert("Pedigree upload finished");
+                jQuery('#upload_pedigrees_dialog').dialog("close");
+		
 	    },
 	}
     });
