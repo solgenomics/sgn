@@ -28,7 +28,6 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     my $self = shift;
     my $c = shift;
    
-    print STDERR "UPLOAD_PEDIGREES...\n";
     if (!$c->user()) { 
 	print STDERR "User not logged in... not uploading pedigrees.\n";
 	$c->stash->{rest} = {error => "You need to be logged in to upload pedigrees." };
@@ -80,70 +79,77 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     open(my $F, "<", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my %stocks;
+    my $cross_type = "";
     while (<$F>) { 
 	chomp;
 	my @acc = split /\t/;
-	if ($acc[3] eq "self") { 
-	    $stocks{$acc[0]}++;
-	    $stocks{$acc[1]}++;
+	foreach my $a (@acc) { 
+	    $stocks{$a}++;
 	}
-	elsif ($acc[3] eq "biparental" || !$acc[3]) { 
-	    $stocks{$acc[0]}++;
-	    $stocks{$acc[1]}++;
-	    $stocks{$acc[2]}++;
-	}
-	else { 
-	    $c->stash->{rest} = { error => "Unknown crosstype $acc[3]. Must be one of self, biparental, or empty (default biparental)" };
-	    return;
-	}
-    }   
-    
+    }    
     my @unique_stocks = keys(%stocks);
     my %errors = $self->check_stocks($c, \@unique_stocks);
-
+    
     if (%errors) { 
 	$c->stash->{rest} = { error => "The following accessions are not in the database: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
 	return;
     }
     close($F);
-
+    
     open($F, "<", $archived_filename_with_path) || die "Can't open file $archived_filename_with_path";
-
+    
     my $female_parent;
     my $male_parent;
     my $child;
     my $cross_type;
     my @pedigrees;
-
+    
     while (<$F>) { 
 	chomp;
-	my @f = split /\t/;
+	my @acc = split /\t/;
 	
-	if ($f[3] eq "self" || $f[1] eq $f[2]) { 
-	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $f[1] });
-	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $f[1] });
-	    
+	if (!$acc[1] && !$acc[2]) { 
+	    print STDERR "No parents specified... skipping.\n";
+	    next;
+	}
+	if (!$acc[0]) { 
+	    print STDERR "No progeny specified... skipping.\n";
+	    next;
+	}
+	
+	if ($acc[1] eq $acc[2]) { 
 	    $cross_type = "self";
 	}
-	elsif($f[3] eq "biparental" || !$f[3]) { 
-	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $f[1] });
-	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $f[2] });
-	    
+	
+	elsif ($acc[1] && !$acc[2]) { 
+	    $cross_type = "open";
+	}
+	
+	else {
 	    $cross_type = "biparental";
+	}
+	
+	if($cross_type eq "self") { 
+	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $acc[1] });
+	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $acc[1] });
+	}
+	elsif($cross_type eq "biparental") { 
+	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $acc[1] });
+	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $acc[2] });
 	}
 	my $p = Bio::GeneticRelationships::Pedigree->new( { 
 	    cross_type => $cross_type,
 	    female_parent => $female_parent,
 	    male_parent => $male_parent,
-	    name => $f[0] });
-
+	    name => $acc[0] 
+							  });
+	
 	push @pedigrees, $p;
     }
     
     my $add = CXGN::Pedigree::AddPedigrees->new( { schema=>$c->dbic_schema("Bio::Chado::Schema"), pedigrees=>\@pedigrees });
     #my $ok = $add->validate_pedigrees();
     $add->add_pedigrees();
-   
     
     $c->stash->{rest} = { success => 1 };
 }
@@ -152,9 +158,9 @@ sub check_stocks {
     my $self = shift;
     my $c = shift;
     my $stock_names = shift;
-
+    
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
+    
     my %errors;
     my $error_alert = "";
     
@@ -172,7 +178,7 @@ sub check_stocks {
 	    $errors{$stock_name} = "No stocks found matching $stock_name\n";
 	}
     }
-
+    
     return %errors;
 }
 

@@ -176,8 +176,8 @@ sub add_pedigrees {
 					   });
 	  }
 	  
-      
-      
+	  
+	  
 	  
       }
       
@@ -201,42 +201,35 @@ sub add_pedigrees {
 }
 
 sub validate_pedigrees {
-  my $self = shift;
+    my $self = shift;
   my $schema = $self->get_schema();
   my @pedigrees;
   my $invalid_pedigree_count = 0;
-
-  if (!$self->has_pedigrees()){
-    print STDERR "No pedigrees to add\n";
-    return;
-  }
-
-  if (!$self->has_pedigrees()) {
-    return;
-  }
-
-  @pedigrees = @{$self->get_pedigrees()};
-
-  foreach my $pedigree (@pedigrees) {
-    my $validated_pedigree = $self->_validate_pedigree($pedigree);
-
-    if (!$validated_pedigree) {
-      $invalid_pedigree_count++;
-    }
-
-  }
-
-  if ($invalid_pedigree_count > 0) {
-    print STDERR "There were $invalid_pedigree_count invalid pedigrees\n";
-    return;
-  }
-
-
-  ########
-
   
-
-
+  if (!$self->has_pedigrees()){
+      print STDERR "No pedigrees to add\n";
+    return;
+  }
+  
+  if (!$self->has_pedigrees()) {
+      return;
+  }
+  
+  @pedigrees = @{$self->get_pedigrees()};
+  
+  foreach my $pedigree (@pedigrees) {
+      my $validated_pedigree = $self->_validate_pedigree($pedigree);
+    
+    if (!$validated_pedigree) {
+	$invalid_pedigree_count++;
+    }
+    
+  }
+  
+  if ($invalid_pedigree_count > 0) {
+      print STDERR "There were $invalid_pedigree_count invalid pedigrees\n";
+    return;
+  }
   return 1;
 }
 
@@ -250,24 +243,17 @@ sub _validate_pedigree {
   my $male_parent_name;
   my $female_parent;
   my $male_parent;
-  #my $accession = $self->_get_accession($name);
-
-#  if (!$accession) {
- #   print STDERR "Accession name is not a stock\n";
- #   return;
- # }
 
   if ($cross_type eq "biparental") {
     $female_parent_name = $pedigree->get_female_parent()->get_name();
-    $male_parent_name = $pedigree->get_male_parent()->get_name();
+    if ($pedigree->has_male_parent()) { $male_parent_name = $pedigree->get_male_parent()->get_name(); }
     $female_parent = $self->_get_accession($female_parent_name);
     $male_parent = $self->_get_accession($male_parent_name);
 
     if (!$female_parent || !$male_parent) {
-      print STDERR "Parent $female_parent_name or $male_parent_name in pedigree is not a stock\n";
+      print STDERR "Parent $female_parent_name or $male_parent in pedigree is not a stock\n";
       return;
     }
-
   } elsif ($cross_type eq "self") {
     $female_parent_name = $pedigree->get_female_parent()->get_name();
     $female_parent = $self->_get_accession($female_parent_name);
@@ -278,8 +264,12 @@ sub _validate_pedigree {
     }
 
   }
-
+  elsif ($cross_type eq "open" || $cross_type eq "unknown") { 
+      $female_parent_name = $pedigree->get_female_parent()->get_name();
+      
+  }
   else {
+      print STDERR "Cross type not detected... Skipping\n";
       return;
   }
   
