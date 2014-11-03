@@ -66,13 +66,9 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
 	return;
     }
+
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
-    
-#    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-#    $upload_metadata{'archived_file_type'}="trial upload file";
-#    $upload_metadata{'user_id'}=$user_id;
-#    $upload_metadata{'date'}="$timestamp";
     
     # check if all accessions exist
     #
@@ -80,6 +76,7 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my %stocks;
     my $cross_type = "";
+    my $header = <$F>; 
     while (<$F>) { 
 	chomp;
 	my @acc = split /\t/;
