@@ -16,26 +16,12 @@ The <i>Nicotiana tabacum</i> genome as well as the <i>N. sylvestris</i> and <i>N
                      __multicol => 2,
   '<i>N. tabacum</i> bulk datasets (via FTP)' =>
   '<a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_tabacum/">Genome sequence and Annotation</a>',
-  '<i>N. tabacum TN90 genome</i> BLAST' => '<a href="/tools/blast/?db_id=227">Genomic sequence</a>',
-  '<i>N. tabacum TN90 CDS</i> BLAST' => '<a href="/tools/blast/?db_id=228">CDS sequences</a>',
-  '<i>N. tabacum TN90 cDNA</i> BLAST' => '<a href="/tools/blast/?db_id=229">cDNA sequences</a>',
-  '<i>N. tabacum TN90 protein</i> BLAST' => '<a href="/tools/blast/?db_id=230">Protein sequences</a>',
+  '<i>N. tabacum TN90</i> BLAST' => '<a href="/tools/blast/?blast_db_id=227">Genomic sequence</a> | <a href="/tools/blast/?blast_db_id=228">CDS sequences</a> | <a href="/tools/blast/?blast_db_id=229">cDNA sequences</a> | <a href="/tools/blast/?blast_db_id=230">Protein sequences</a>',
 
-  '<i>N. tabacum BX</i> genome BLAST' => '<a href="/tools/blast/?db_id=231">Genomic sequence</a>',
-  '<i>N. tabacum BX</i> cDNA BLAST' => '<a href="/tools/blast/?db_id=232">CDS sequences</a>',
-  '<i>N. tabacum BX</i> cDNA BLAST' => '<a href="/tools/blast/?db_id=233">cDNA sequences</a>',
-  '<i>N. tabacum BX</i> protein BLAST' => '<a href="/tools/blast/?db_id=234">protein sequences</a>',
-  '<i>N. tabacum K326</i> genome BLAST' => '<a href="/tools/blast/?db_id=235">genome sequence</a>',
-  '<i>N. tabacum K326</i> CDS BLAST' => '<a href="/tools/blast/?db_id=236">CDS sequences</a>',
-  '<i>N. tabacum K326</i> cDNA BLAST' => '<a href="/tools/blast/?db_id=237">cDNA sequences</a>',
-  '<i>N. tabacum K326</i> protein BLAST' => '<a href="/tools/blast/?db_id=238">protein sequences</a>',
-  '<i>N. sylvestris</i> genome BLAST' => '<a href="/tools/blast/?db_id=239">genome sequence</a>',
-  '<i>N. sylvestris</i> CDS BLAST' => '<a href="/tools/blast/?db_id=240">CDS sequences</a>',
-  '<i>N. sylvestris</i> cDNA BLAST' => '<a href="/tools/blast/?db_id=241">cDNA sequence</a>',
-  '<i>N. sylvestris</i> protein BLAST' => '<a href="/tools/blast/?db_id=242">genome sequence</a>',
-  '<i>N. tomentosiformis</i> genome BLAST' => '<a href="/tools/blast/?db_id=243">genome sequence</a>',
-  '<i>N. sylvestris</i> CDS BLAST' => '<a href="/tools/blast/?db_id=244">CDS sequences</a>',
-'<i>N. sylvestris</i> cDNA BLAST' => '<a href="/tools/blast/?db_id=245">cDNA sequences</a>',
+  '<i>N. tabacum BX</i> BLAST' => '<a href="/tools/blast/?blast_db_id=231">Genomic sequence</a> | <a href="/tools/blast/?blast_db_id=232">CDS sequences</a> | <a href="/tools/blast/?blast_db_id=233">cDNA sequences</a> | <a href="/tools/blast/?blast_db_id=234">protein sequences</a>',
+  '<i>N. tabacum K326</i> BLAST' => '<a href="/tools/blast/?blast_db_id=235">genome sequence</a> | <a href="/tools/blast/?blast_db_id=236">CDS sequences</a> | <a href="/tools/blast/?blast_db_id=237">cDNA sequences</a> | <a href="/tools/blast/?blast_db_id=238">protein sequences</a>',
+  '<i>N. sylvestris</i> BLAST' => '<a href="/tools/blast/?blast_db_id=239">genome sequence</a> | <a href="/tools/blast/?db_id=240">CDS sequences</a> | <a href="/tools/blast/?db_id=241">cDNA sequence</a> | <a href="/tools/blast/?db_id=242">genome sequence</a>',
+  '<i>N. tomentosiformis</i> BLAST' => '<a href="/tools/blast/?db_id=243">genome sequence</a> | <a href="/tools/blast/?db_id=244">CDS sequences</a> | <a href="/tools/blast/?db_id=245">cDNA sequences</a>',
 
   '<i>N. tabacum</i> Genome browser' => '<a href="/jbrowse/JBrowse-1.11.4/?data=data/json/Ntab_TN90/">Jbrowse</a>'
                     )
