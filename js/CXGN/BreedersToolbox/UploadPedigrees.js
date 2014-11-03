@@ -137,9 +137,4 @@ jQuery(document).ready(function ($) {
 	//add a blank line to design method select dropdown that dissappears when dropdown is opened 
 
     }
-
-
-
-    alert("DONE!");
-
 });
