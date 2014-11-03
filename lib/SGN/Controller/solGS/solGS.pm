@@ -2072,23 +2072,9 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
     if (!@selected_traits)
     {
         $c->stash->{model_id} = $pop_id; 
-        $self->analyzed_traits($c);
         
-        @selected_traits = @{$c->stash->{analyzed_traits}};  
-        my @filtered_analyzed_traits;
-
-        foreach my $selected_trait (@selected_traits) 
-        {      
-            $self->get_model_accuracy_value($c, $pop_id, $selected_trait);        
-            my $accuracy_value = $c->stash->{accuracy_value}; 
-                    
-            if ($accuracy_value > 0)
-            { 
-                push @filtered_analyzed_traits, $selected_trait;
-            }     
-        }
-
-        @selected_traits = @filtered_analyzed_traits;
+        $self->traits_with_valid_models($c);
+        @selected_traits = @ {$c->stash->{traits_with_valid_models}};
     }
 
     if (!@selected_traits)
@@ -2349,7 +2335,9 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     if ( !$pred_pop_id) 
     {    
         $self->analyzed_traits($c);
-        @traits = @{ $c->stash->{selection_index_traits} }; 
+        @traits = @{ $c->stash->{selection_index_traits} };
+
+ 
     }
     else  
     {
@@ -2365,6 +2353,32 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     $c->res->content_type('application/json');
     $c->res->body($ret);
     
+}
+
+
+sub traits_with_valid_models {
+    my ($self, $c) = $_;
+
+    my $pop_id = $c->stash->{pop_id};
+    
+    $self->analyzed_traits($c);
+    
+    my @analyzed_traits = @{$c->stash->{analyzed_traits}};  
+    my @filtered_analyzed_traits;
+
+    foreach my $analyzed_trait (@analyzed_traits) 
+    {      
+        $self->get_model_accuracy_value($c, $pop_id, $analyzed_trait);        
+        my $accuracy_value = $c->stash->{accuracy_value}; 
+                    
+        if ($accuracy_value > 0)
+        { 
+            push @filtered_analyzed_traits, $analyzed_trait;
+        }     
+    }
+
+    $c->stash->{traits_with_valid_models} = \@filtered_analyzed_traits;
+
 }
 
 
@@ -3266,7 +3280,7 @@ sub analyzed_traits {
             $self->get_model_accuracy_value($c, $model_id, $trait);
             my $av = $c->stash->{accuracy_value};
                       
-            if ($av && $av =~ m/\d+/) 
+            if ($av && $av =~ m/\d+/ && $av > 0) 
             { 
               push @si_traits, $trait; 
             }
