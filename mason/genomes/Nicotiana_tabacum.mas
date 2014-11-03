@@ -16,11 +16,11 @@ The <i>Nicotiana tabacum</i> genome as well as the <i>N. sylvestris</i> and <i>N
                      __multicol => 2,
   '<i>N. tabacum</i> bulk datasets (via FTP)' =>
   '<a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_tabacum/">Genome sequence and Annotation</a>',
-  '<i>N. tabacum TN90</i> BLAST' => '<a href="/tools/blast/?blast_db_id=227">Genome</a> | <a href="/tools/blast/?blast_db_id=228">CDS</a> | <a href="/tools/blast/?blast_db_id=229">cDNA</a> | <a href="/tools/blast/?blast_db_id=230">Proteins</a>',
+  '<i>N. tabacum TN90</i> BLAST' => '<a href="/tools/blast/?db_id=227">Genome</a> | <a href="/tools/blast/?db_id=228">CDS</a> | <a href="/tools/blast/?db_id=229">cDNA</a> | <a href="/tools/blast/?db_id=230">Proteins</a>',
 
-  '<i>N. tabacum BX</i> BLAST' => '<a href="/tools/blast/?blast_db_id=231">Genome</a> | <a href="/tools/blast/?blast_db_id=232">CDS</a> | <a href="/tools/blast/?blast_db_id=233">cDNA</a> | <a href="/tools/blast/?blast_db_id=234">Proteins</a>',
-  '<i>N. tabacum K326</i> BLAST' => '<a href="/tools/blast/?blast_db_id=235">Genome</a> | <a href="/tools/blast/?blast_db_id=236">CDS</a> | <a href="/tools/blast/?blast_db_id=237">cDNA</a> | <a href="/tools/blast/?blast_db_id=238">Proteins</a>',
-  '<i>N. sylvestris</i> BLAST' => '<a href="/tools/blast/?blast_db_id=239">Genome</a> | <a href="/tools/blast/?db_id=240">CDS</a> | <a href="/tools/blast/?db_id=241">cDNA</a> | <a href="/tools/blast/?db_id=242">Proteins</a>',
+  '<i>N. tabacum BX</i> BLAST' => '<a href="/tools/blast/?db_id=231">Genome</a> | <a href="/tools/blast/?db_id=232">CDS</a> | <a href="/tools/blast/?db_id=233">cDNA</a> | <a href="/tools/blast/?db_id=234">Proteins</a>',
+  '<i>N. tabacum K326</i> BLAST' => '<a href="/tools/blast/?db_id=235">Genome</a> | <a href="/tools/blast/?db_id=236">CDS</a> | <a href="/tools/blast/?db_id=237">cDNA</a> | <a href="/tools/blast/?db_id=238">Proteins</a>',
+  '<i>N. sylvestris</i> BLAST' => '<a href="/tools/blast/?db_id=239">Genome</a> | <a href="/tools/blast/?db_id=240">CDS</a> | <a href="/tools/blast/?db_id=241">cDNA</a> | <a href="/tools/blast/?db_id=242">Proteins</a>',
   '<i>N. tomentosiformis</i> BLAST' => '<a href="/tools/blast/?db_id=243">Genome</a> | <a href="/tools/blast/?db_id=244">CDS</a> | <a href="/tools/blast/?db_id=245">cDNA</a>',
 
   '<i>N. tabacum</i> Genome browser' => '<a href="/jbrowse/JBrowse-1.11.4/?data=data/json/Ntab_TN90/">Jbrowse</a>'
