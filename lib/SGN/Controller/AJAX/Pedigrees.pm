@@ -94,7 +94,7 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     close($F);
     
     open($F, "<", $archived_filename_with_path) || die "Can't open file $archived_filename_with_path";
-    
+    $header = <$F>; 
     my $female_parent;
     my $male_parent;
     my $child;

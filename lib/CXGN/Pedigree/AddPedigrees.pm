@@ -222,6 +222,7 @@ sub validate_pedigrees {
     
     if (!$validated_pedigree) {
 	$invalid_pedigree_count++;
+	print STDERR "Invalid pedigree: ".Dumper($pedigree)."\n";
     }
     
   }
@@ -243,26 +244,26 @@ sub _validate_pedigree {
   my $male_parent_name;
   my $female_parent;
   my $male_parent;
-
+  
   if ($cross_type eq "biparental") {
-    $female_parent_name = $pedigree->get_female_parent()->get_name();
-    if ($pedigree->has_male_parent()) { $male_parent_name = $pedigree->get_male_parent()->get_name(); }
-    $female_parent = $self->_get_accession($female_parent_name);
-    $male_parent = $self->_get_accession($male_parent_name);
-
-    if (!$female_parent || !$male_parent) {
-      print STDERR "Parent $female_parent_name or $male_parent in pedigree is not a stock\n";
-      return;
-    }
+      $female_parent_name = $pedigree->get_female_parent()->get_name();
+      if ($pedigree->has_male_parent()) { $male_parent_name = $pedigree->get_male_parent()->get_name(); }
+      $female_parent = $self->_get_accession($female_parent_name);
+      $male_parent = $self->_get_accession($male_parent_name);
+      
+      if (!$female_parent || !$male_parent) {
+	  print STDERR "Parent $female_parent_name or $male_parent in pedigree is not a stock\n";
+	  return;
+      }
   } elsif ($cross_type eq "self") {
-    $female_parent_name = $pedigree->get_female_parent()->get_name();
-    $female_parent = $self->_get_accession($female_parent_name);
-
-    if (!$female_parent) {
-      print STDERR "Parent $female_parent_name in pedigree is not a stock\n";
-      return;
-    }
-
+      $female_parent_name = $pedigree->get_female_parent()->get_name();
+      $female_parent = $self->_get_accession($female_parent_name);
+      
+      if (!$female_parent) {
+	  print STDERR "Parent $female_parent_name in pedigree is not a stock\n";
+	  return;
+      }
+      
   }
   elsif ($cross_type eq "open" || $cross_type eq "unknown") { 
       $female_parent_name = $pedigree->get_female_parent()->get_name();
