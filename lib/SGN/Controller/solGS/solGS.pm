@@ -772,7 +772,6 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
         $self->get_project_owners($c, $model_id);       
         $c->stash->{owner} = $c->stash->{project_owners};        
     }
-
      
     if ($selection_pop_id =~ /uploaded/) 
     {
@@ -1455,8 +1454,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
                
              }
          }
-         
-   
+            
         $c->res->redirect("/solgs/models/combined/trials/$model_id");
         $c->detach();
     }
@@ -2076,7 +2074,21 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
         $c->stash->{model_id} = $pop_id; 
         $self->analyzed_traits($c);
         
-        @selected_traits = @{$c->stash->{analyzed_traits}};       
+        @selected_traits = @{$c->stash->{analyzed_traits}};  
+        my @filtered_analyzed_traits;
+
+        foreach my $selected_trait (@selected_traits) 
+        {      
+            $self->get_model_accuracy_value($c, $pop_id, $selected_trait);        
+            my $accuracy_value = $c->stash->{accuracy_value}; 
+                    
+            if ($accuracy_value > 0)
+            { 
+                push @filtered_analyzed_traits, $selected_trait;
+            }     
+        }
+
+        @selected_traits = @filtered_analyzed_traits;
     }
 
     if (!@selected_traits)
@@ -2280,8 +2292,8 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
                      $c->stash->{trait_abbr} = $r->[0];
                  }
              }
-
          }
+         
          my $trait_id   = $c->model('solGS::solGS')->get_trait_id($trait_name);
          my $trait_abbr = $c->stash->{trait_abbr}; 
         
