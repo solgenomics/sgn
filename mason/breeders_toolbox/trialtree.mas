@@ -1,0 +1,61 @@
+
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jstree.dist.jstree' ] &>
+
+<!-- script src="/js/jstree/dist/jstree.min.js"></script -->
+
+<div id="trial_list" >[loading...]</div>
+
+
+<script>
+  jQuery(document).ready(function () {  
+    
+    jQuery.ajax( { 
+      url: '/ajax/breeders/get_trials',
+      success: function(response) { 
+        var html = format(response);
+         alert(html);
+        jQuery('#trial_list').html(html);
+        jQuery('#trial_list').jstree();
+
+      },
+      error: function(response) { 
+        alert("An error occurred");
+      }
+  });
+
+  function format(s) { 
+    alert(s['test']);
+    var html = "<ul>";
+    for (var k in s) { 
+      if(s.hasOwnProperty(k)) { 
+        html += "<li>"+ k;
+        if (typeof(s[k]) !== 'undefined') { 
+          html += '<ul>';
+          for (var n=0; n<s[k].length; n++) { 
+       
+            html += "<li>"+s[k][n][1]+"</li>";
+
+          }
+          html += '</li>';
+        }
+        html += '</ul>';
+      }
+    }
+    html += "</ul>";
+     return html;
+
+   }
+
+     $('#jstree').on("changed.jstree", function (e, data) {
+      alert(data);
+    });				      
+
+
+  });
+  
+  
+</script>
