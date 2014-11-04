@@ -168,4 +168,13 @@ sub trait_info :Path('/breeders_toolbox/trial') Args(3) {
 }
 
 
+sub trial_tree : Path('/breeders/trialtree') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    
+    $c->stash->{template} = '/breeders_toolbox/trialtree.mas';
+
+}
+
 1;
