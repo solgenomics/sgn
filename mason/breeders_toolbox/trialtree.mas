@@ -33,17 +33,18 @@
     for (var k in s) { 
       if(s.hasOwnProperty(k)) { 
         html += "<li>"+ k;
-        if (typeof(s[k]) !== 'undefined') { 
+        if (s[k] !== null) { 
           html += '<ul>';
           for (var n=0; n<s[k].length; n++) { 
        
             html += "<li>"+s[k][n][1]+"</li>";
 
           }
-          html += '</li>';
+          html += '</ul>';
         }
-        html += '</ul>';
+
       }
+        html += '</li>';
     }
     html += "</ul>";
      return html;
