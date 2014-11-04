@@ -5,6 +5,8 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jstree.dist.jstree' ] &>
 
+<& /page/page_title.mas, title=>"Manage Trials" &>
+
 <button id="download_button" disabled="disabled" >Download selected</button>
 <br />
 <div id="trial_list" >[loading...]</div>
@@ -17,7 +19,6 @@
       url: '/ajax/breeders/get_trials',
       success: function(response) { 
         var html = format(response);
-         alert(html);
         jQuery('#trial_list').html(html);
         jQuery('#trial_list').jstree();
 
@@ -28,7 +29,6 @@
   });
 
   function format(s) { 
-    alert(s['test']);
     var html = "<ul>";
     for (var k in s) { 
       if(s.hasOwnProperty(k)) { 
