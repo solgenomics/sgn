@@ -5,8 +5,8 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jstree.dist.jstree' ] &>
 
-<!-- script src="/js/jstree/dist/jstree.min.js"></script -->
-
+<button id="download_button" disabled="disabled" >Download selected</button>
+<br />
 <div id="trial_list" >[loading...]</div>
 
 
@@ -37,7 +37,7 @@
           html += '<ul>';
           for (var n=0; n<s[k].length; n++) { 
        
-            html += "<li>"+s[k][n][1]+"</li>";
+            html += '<li id="'+s[k][n][0]+'">'+s[k][n][1]+"</li>";
 
           }
           html += '</ul>';
@@ -51,9 +51,40 @@
 
    }
 
-     $('#jstree').on("changed.jstree", function (e, data) {
-      alert(data);
+     $('#trial_list').on("changed.jstree", function (e, data) {
+       if ($('#trial_list').jstree('is_leaf', data.node)) { 
+         $('#download_button').removeAttr('disabled');
+       }
+       else { 
+         $('#download_button').attr('disabled', 'disabled');
+       }
+	 
+       
+         // }
     });				      
+
+    $('#download_button').on('click', function () {
+        var selected = $('#trial_list').jstree('get_bottom_selected');
+        if (selected.length !== 0) { alert(selected); }
+        else { alert("No leaf nodes selected for download."); }
+       
+    });
+
+//    $('#trial_list').bind("dblclick.jstree", function (event) {
+//       var node = $(event.target).closest("li");
+//        alert(node.data("jstree"));
+//				       
+//       if ($('#trial_list').jstree('is_leaf', node)) { 				       
+//           window.open('/breeders_toolbox/trial/'+data.node.id);				       
+//       }
+
+      $("#trial_list").delegate("li", "dblclick", function(){ 
+	var node = $("#trial_list").jstree("get_node", this); 
+           if ($('#trial_list').jstree('is_leaf', node)) { 				       
+           window.open('/breeders_toolbox/trial/'+node.id);
+        }
+      }); 
+
 
 
   });
