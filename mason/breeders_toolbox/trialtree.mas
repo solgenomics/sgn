@@ -8,7 +8,7 @@
 <& /page/page_title.mas, title=>"Manage Trials" &>
 
 
-<table><tr><td>
+<table><tr><td valign="top">
 <div class="boxbgcolor5">
 Download<br />
 <button id="download_button" disabled="disabled" >Excel</button><br />
