@@ -7,9 +7,21 @@
 
 <& /page/page_title.mas, title=>"Manage Trials" &>
 
-<button id="download_button" disabled="disabled" >Download selected</button>
+
+<table><tr><td>
+<div class="boxbgcolor5">
+Download<br />
+<button id="download_button" disabled="disabled" >Excel</button><br />
+<button id="download_button_csv" disabled="disabled" >CSV</button><br />
+<hr>
+<button id="delete" disabled="disabled" >Delete</button>
+</div>
 <br />
+</td><td>
 <div id="trial_list" >[loading...]</div>
+
+</td>
+</tr></table>
 
 
 <script>
@@ -54,9 +66,11 @@
      $('#trial_list').on("changed.jstree", function (e, data) {
        if ($('#trial_list').jstree('is_leaf', data.node)) { 
          $('#download_button').removeAttr('disabled');
+         $('#download_button_csv').removeAttr('disabled');
        }
        else { 
          $('#download_button').attr('disabled', 'disabled');
+         $('#download_button_csv').attr('disabled', 'disabled');
        }
 	 
        
@@ -71,6 +85,16 @@
         else { alert("No leaf nodes selected for download."); }
        
     });
+
+    $('#download_button_csv').on('click', function () {
+        var selected = $('#trial_list').jstree('get_bottom_selected');
+        if (selected.length !== 0) { 
+	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
+        }
+        else { alert("No leaf nodes selected for download."); }
+       
+    });
+
 
 //    $('#trial_list').bind("dblclick.jstree", function (event) {
 //       var node = $(event.target).closest("li");
