@@ -65,7 +65,9 @@
 
     $('#download_button').on('click', function () {
         var selected = $('#trial_list').jstree('get_bottom_selected');
-        if (selected.length !== 0) { alert(selected); }
+        if (selected.length !== 0) { 
+	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
+        }
         else { alert("No leaf nodes selected for download."); }
        
     });
