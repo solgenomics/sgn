@@ -300,7 +300,7 @@ foreach my $d (@databases) {
 	padding: 5px 10px;
 	color: white;
 	border-radius: 10px;
-	font: bold 14px "Helvetica Neue", Sans-Serif;
+	font: bold 12px "Helvetica Neue", Sans-Serif;
 	box-shadow: 0 0 7px black;
 }
 .arrow {

@@ -22,6 +22,7 @@ my $menus = {};
 foreach my $d (keys(%$databases)) { 
    $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", id=>"database", choices => [ @{$databases->{$d}} ], selected=> $preselected_database );
 }
+# print STDERR "pre selected db: $preselected_database\n";
 
 my $substitution_matrix_select = $m->scomp('/page/html_select.mas', 
    name=>"matrix", 
@@ -41,7 +42,7 @@ my $show_graphics_select = $m->scomp('/page/html_select.mas',  name => 'output_g
 				 ],
 				 ),
 
-print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
+#print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
 my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', id=>'input_options',
 			      choices => \@input_options, selected=>$preload_type,
 );
@@ -101,10 +102,19 @@ if ($preload_seq) {
 <&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a href="/help/tools/blast">Help</a>' &>
   <input type="hidden" name="outformat" value="0" />
   <table border="0" align="center" summary="" cellpadding="0" cellspacing="5">
-    <tr><td width="200"><b>Categories</b></td><td width="400">
+    <tr><td width="100" style="padding-top: 10px;"><b>Categories</b></td><td width="600">
 	<& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select", selected=>"$preselected_category" &>
+
+<!-- images to get direct access to the model plant dbs. db_id is the blast_db_id on the SGN database -->
+<img class="fruit_icon" height="25" src="/documents/img/blast_icons/tomato.png" db_id="28" title="Tomato current DB">
+<img class="fruit_icon" height="18" src="/documents/img/blast_icons/potato.png" db_id="10" title="Potato current DB">
+<img class="fruit_icon" height="25" src="/documents/img/blast_icons/pepper.png" db_id="21" title="Pepper current DB">
+<img class="fruit_icon" height="25" src="/documents/img/blast_icons/eggplant.png" db_id="29" title="Eggplant current DB">
+<img class="fruit_icon" height="25" src="/documents/img/blast_icons/benth.png" db_id="9" title="N.benthamiana current DB">
+
+
 </td><td rowspan="4" align="center"><div id="status_wheel"></div></td></tr>
-    <tr><td><b>Sequence Database</b></td>
+    <tr><td><b>Databases</b></td>
       <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>	
     </td></tr>
     <tr><td><b>Program</b></td>
@@ -169,9 +179,18 @@ if ($preload_seq) {
 <div id="jobid"></div>
 
 <script>
-  
-jQuery(document).ready(function() {
 
+
+jQuery(document).ready(function() {
+	
+	//function to select category and database when click on fruit images
+	jQuery('.fruit_icon').click( function() {
+		var db_id = jQuery(this).attr('db_id');
+
+		jQuery('#dataset_select').val(db_id);
+		swap_menu(db_id);
+	});
+	
 	swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
 
 	jQuery('#sequence').attr('spellcheck',false);
@@ -190,7 +209,19 @@ jQuery(document).ready(function() {
 	});
 
 	jQuery('#submit_blast_button').click( function() { 
-	  run_blast(database_types, input_option_types);
+		var pasted_seq = jQuery('#sequence').val();
+		
+		if (pasted_seq.match(/>/)) {
+			var seq_num = pasted_seq.match(/>/g);
+		
+			if (seq_num.length <= 20 ) {
+			  run_blast(database_types, input_option_types);
+			} else {
+				alert("Please, do not run more than 20 sequences");
+			}
+		} else {
+			run_blast(database_types, input_option_types);
+		}
 	});
 
 	function swap_menu(group_id) { 
@@ -215,6 +246,7 @@ jQuery(document).ready(function() {
 			}
 		});
 	});
+	
 });
 
 </script>
@@ -254,7 +286,7 @@ jQuery(document).ready(function() {
 	padding: 5px 10px;
 	color: white;
 	border-radius: 10px;
-	font: bold 14px "Helvetica Neue", Sans-Serif;
+	font: bold 12px "Helvetica Neue", Sans-Serif;
 	box-shadow: 0 0 7px black;
 }
 .arrow {
@@ -301,6 +333,11 @@ jQuery(document).ready(function() {
 	border-width:2px;
 	border-style:solid;
 	border-radius:5px;
+	width: 700px;
+	min-height: 80px;
+	max-height: 300px;
+	min-width: 700px;
+	max-width: 700px;
 }
 
 

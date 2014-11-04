@@ -348,8 +348,8 @@ function plotCorrelation (data, divPlace) {
         .attr("x", 10)
         .attr("dy", ".1em")         
         .attr("transform", "rotate(90)")
-        .attr("fill", "purple")
-        .style({"text-anchor":"start", "fill": "#3306FC"});
+        .attr("fill", "#523CB5")
+        .style({"text-anchor":"start", "fill": "#523CB5"});
           
     corrplot.append("g")
         .attr("class", "y axis")
@@ -398,7 +398,12 @@ function plotCorrelation (data, divPlace) {
                               + " vs. " + data.traits[d.col] 
                               + ": " + d3.format(".2f")(d.value) 
                               + "]")
-                        .style("fill", "purple")
+                        .style("fill", function () { 
+                            if (d.value > 0) 
+                            { return "#86B404"; } 
+                            else if (d.value < 0) 
+                            { return "#6A0888"; }
+                        })  
                         .attr("x", totalW * 0.5)
                         .attr("y", totalH * 0.5)
                         .attr("font-weight", "bold")
