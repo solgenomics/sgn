@@ -7,7 +7,6 @@
 
 <& /page/page_title.mas, title=>"Manage Trials" &>
 
-
 <table><tr><td valign="top">
 <div class="boxbgcolor5">
 Download<br />
@@ -19,10 +18,8 @@ Download<br />
 <br />
 </td><td>
 <div id="trial_list" >[loading...]</div>
-
 </td>
 </tr></table>
-
 
 <script>
   jQuery(document).ready(function () {  
@@ -95,25 +92,12 @@ Download<br />
        
     });
 
-
-//    $('#trial_list').bind("dblclick.jstree", function (event) {
-//       var node = $(event.target).closest("li");
-//        alert(node.data("jstree"));
-//				       
-//       if ($('#trial_list').jstree('is_leaf', node)) { 				       
-//           window.open('/breeders_toolbox/trial/'+data.node.id);				       
-//       }
-
-      $("#trial_list").delegate("li", "dblclick", function(){ 
-	var node = $("#trial_list").jstree("get_node", this); 
-           if ($('#trial_list').jstree('is_leaf', node)) { 				       
-           window.open('/breeders_toolbox/trial/'+node.id);
-        }
-      }); 
-
-
-
+    $("#trial_list").delegate("li", "dblclick", function(){ 
+      var node = $("#trial_list").jstree("get_node", this); 
+      if ($('#trial_list').jstree('is_leaf', node)) { 				       
+        window.open('/breeders_toolbox/trial/'+node.id);
+      }
+    }); 
   });
-  
   
 </script>
