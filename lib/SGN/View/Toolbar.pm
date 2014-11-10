@@ -246,7 +246,7 @@ sub default_toolbar_data {
         },
         {
             name => 'genomes',
-            link => '',
+            link => '/genomes/',
             desc => 'Read about sequencing projects.',
             menu => [
                 {  name => 'Reference genomes' },
