@@ -127,16 +127,16 @@ function formatGenCorInputData (popId, type, indexFile) {
                     'model_id': modelDetail.population_id, 
                     'corr_population_id': popId, 
                     'type': type, 
-                    'gebvs_file': response.gebvs_file,
+                    'gebvs_file': gebvsFile,
                     'div_place' : divPlace,
                 };
-
+              
                 runGenCorrelationAnalysis(args);
 
             } else {
                 jQuery("#correlation_message")
                     .css({"padding-left": '0px'})
-                    .html("This population has no additive genetic data.");
+                    .html("This population has no valid traits to correlate.");
             }
         },
         error: function(response) {
@@ -221,7 +221,7 @@ function runPhenoCorrelationAnalysis () {
 
 
 function runGenCorrelationAnalysis (args) {
-    
+   
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
