@@ -1,16 +1,14 @@
 <%args>
-    $featureloc
+    $feature
     $data_source => 'SL2.50'
 </%args>
 
 
 <%perl>
+ my $feature_name= $feature->name;
+ my $jbrowse_url = "/jbrowse/current/?data=data/json/$data_source&loc=$feature_name" ;
+
 	
-	my $chr = "ch03";
-	my $fmin = $featureloc->fmin;
-	my $fmax = $featureloc->fmax;
-	my $loc_string = $fmin . '..' . $fmax ; 
-	my $jbrowse_url = "/jbrowse/current/?data=data/json/$data_source&loc=" . $data_source . $chr . ":" . $loc_string;
 </%perl>
 
 <p><a href="<% $jbrowse_url %>">Click here to expand the JBrowse Genome Viewer</a></p>
@@ -18,8 +16,4 @@
 
 
 
-% if( $featureloc ) {
-
-
-% }
 
