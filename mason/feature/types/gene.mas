@@ -31,9 +31,18 @@
   <& /feature/properties.mas,
      feature => $feature,
    &>
-   <& /feature/jbrowse_exact_match.mas, featureloc => $current_loc &>
 
 </&>
+
+<&| /page/info_section.mas,
+   title       => 'Genome Viewer',
+   collapsible => 1,
+&>
+
+	<& /feature/jbrowse_exact_match.mas, featureloc => $current_loc &>
+
+</&>
+
 
 <&| /page/info_section.mas,
    title       => 'Related features',
