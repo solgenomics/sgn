@@ -1700,7 +1700,8 @@ sub get_gebv_files_of_traits {
    
     my $dir = $c->stash->{solgs_cache_dir};
     
-    my $gebv_files; 
+    my $gebv_files;
+    my $valid_gebv_files;
     my $pred_gebv_files;
 
     if ($pred_pop_id) 
@@ -1724,6 +1725,16 @@ sub get_gebv_files_of_traits {
             $gebv_files .= $tr_file;
             $gebv_files .= "\t" unless (@analyzed_traits_files[-1] eq $tr_file);
         }
+        
+        my @analyzed_valid_traits_files = @{$c->stash->{analyzed_valid_traits_files}};
+
+        foreach my $tr_file (@analyzed_valid_traits_files) 
+        {
+            $valid_gebv_files .= $tr_file;
+            $valid_gebv_files .= "\t" unless (@analyzed_valid_traits_files[-1] eq $tr_file);
+        }
+
+
     }
     
     my $pred_file_suffix;
@@ -1735,7 +1746,14 @@ sub get_gebv_files_of_traits {
     write_file($file, $gebv_files);
    
     $c->stash->{gebv_files_of_traits} = $file;
-    
+
+    my $name2 = "gebv_files_of_valid_traits_${pop_id}${pred_file_suffix}";
+    my $file2 = $self->create_tempfile($c, $name2);
+   
+    write_file($file2, $valid_gebv_files);
+   
+    $c->stash->{gebv_files_of_valid_traits} = $file2;
+    print STDERR "\n file name: $name -- name2: $name2\n";
 }
 
 
@@ -3248,7 +3266,8 @@ sub analyzed_traits {
     my @traits;
     my @traits_ids;
     my @si_traits;
-
+    my @valid_traits_files;
+ 
     foreach my $trait_file  (@traits_files) 
     {   
         if (-s $trait_file > 1) 
@@ -3271,8 +3290,7 @@ sub analyzed_traits {
                         my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
                        
                         push @traits_ids, $trait_id;
-                       
-                        
+                                               
                     }
                 }
             }
@@ -3282,7 +3300,8 @@ sub analyzed_traits {
                       
             if ($av && $av =~ m/\d+/ && $av > 0) 
             { 
-              push @si_traits, $trait; 
+              push @si_traits, $trait;
+              push @valid_traits_files, $trait_file;
             }
                            
             push @traits, $trait;
@@ -3298,6 +3317,7 @@ sub analyzed_traits {
     $c->stash->{analyzed_traits_ids}    = \@traits_ids;
     $c->stash->{analyzed_traits_files}  = \@traits_files;
     $c->stash->{selection_index_traits} = \@si_traits;
+    $c->stash->{analyzed_valid_traits_files}  = \@valid_traits_files;
    
 }
 
