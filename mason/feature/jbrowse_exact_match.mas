@@ -5,14 +5,16 @@
 
 
 <%perl>
+	
+	my $chr = "ch03";
 	my $fmin = $featureloc->fmin;
 	my $fmax = $featureloc->fmax;
 	my $loc_string = $fmin . '..' . $fmax ; 
-	my $jbrowse_url = "/jbrowse/JBrowse-1.11.4/?data=data/json/$data_source&loc=SL2.50ch08:2626584..2636165";
+	my $jbrowse_url = "/jbrowse/current/?data=data/json/$data_source&loc=" . $data_source . $chr . ":" . $loc_string;
 </%perl>
 
 <p><a href="<% $jbrowse_url %>">Click here to expand the JBrowse Genome Viewer</a></p>
-<iframe style="border: 1px solid rgb(80, 80, 80);" src="/jbrowse/JBrowse-1.11.4/?data=data/json/<% $data_source %>&loc=SL2.50ch08:2626584..2636165&tracklist=0&nav=1&overview=0&tracks=DNA,gene_models" height="250" width="700"  name="jbrowse_iframe" ></iframe>
+<iframe style="border: 1px solid rgb(80, 80, 80);" src="<% $jbrowse_url %>&tracklist=0&nav=1&overview=0&tracks=DNA,gene_models" height="250" width="700"  name="jbrowse_iframe" ></iframe>
 
 
 
