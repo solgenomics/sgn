@@ -39,7 +39,7 @@
    collapsible => 1,
 &>
 
-	<& /feature/jbrowse_exact_match.mas, feature => $feature &>
+	<& /feature/jbrowse_exact_match.mas, feature => $feature , src_feature => $reference &>
 
 </&>
 
