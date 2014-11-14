@@ -65,6 +65,8 @@ my $is_owner  = $locusref->{is_owner};
 my $owners     = $locusref->{owners};
 my $dbh       = $locusref->{dbh};
 my $xrefs     = $locusref->{xrefs};
+my $feature   =  $locusref->{feature};
+my $src_feature = $locusref->{src_feature}; 
 
 ###check these params
 my $pubs      = $locusref->{pubs};
@@ -342,7 +344,7 @@ function jqueryStuff() {
        collapsed     => 0,
        is_subsection => 1,
     &>
-
+       <& /feature/jbrowse_exact_match.mas, feature=> $feature, src_feature=> $src_feature &>
        <& /locus/locus_gene_model_matches.mas, locus => $locus, xrefs => $xrefs &>
 
    </&>
