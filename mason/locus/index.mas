@@ -345,8 +345,7 @@ function jqueryStuff() {
        is_subsection => 1,
     &>
        <& /feature/jbrowse_exact_match.mas, feature=> $feature, src_feature=> $src_feature &>
-       <& /locus/locus_gene_model_matches.mas, locus => $locus, xrefs => $xrefs &>
-
+       
    </&>
 
 
