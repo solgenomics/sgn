@@ -82,7 +82,6 @@ var Tools = {
                     dataType: "json",
                     async: false,
                     success: function(response) {
-                    var json = response;
                     if ( response.error ) { alert(response.error) ; }
                     var responseArray = response.html;
                     var select = document.getElementById('organism_select');

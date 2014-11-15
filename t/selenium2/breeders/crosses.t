@@ -1,7 +1,9 @@
 
+use strict;
+
 use lib 't/lib';
 
-use Test::More 'tests'=>11;
+use Test::More 'tests'=>12;
 
 use SGN::Test::WWW::WebDriver;
 
@@ -52,10 +54,16 @@ $t->while_logged_in_as(
 	    "create_cross_submit_button","id", "find cross submit button")
 	    ->click();
 	
+	sleep(5);
+
 	$t->find_element_ok(
 	    "dismiss_cross_saved_dialog", "id", "find dismiss message button")
 	    ->click();
 
+	sleep(5);
+
+	$t->get_ok('/breeders/crosses');
+	
 	$t->find_element_ok(
 	    "test_cross_1", "partial_link_text", "find link for test_cross")->click();
 

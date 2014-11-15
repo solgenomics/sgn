@@ -46,32 +46,34 @@ function run_blast(database_types, input_option_types) {
     var jobid ="";
     var seq_count = 0;
     disable_ui(); 
-    jQuery.ajax( { 
-	//async: false,
-	url:     '/tools/blast/run/',
 
-	method:  'POST',
-	data:    { 'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 
-                   'filterq': filterq, 'database': database, 'program': program, 
-                   'input_options': input_option 
-		 },
-	success: function(response) { 
-	    if (response.error) { 
-		enable_ui();
-		alert(response.error);
-		return;
-	    }
-            else{ 
-		
-		jobid = response.jobid; 
-		seq_count = response.seq_count;
-		//alert("SEQ COUNT = "+seq_count);
-		wait_result(jobid, seq_count);
-            }
-	   
-	},
-	
-	error:   function(response) { alert("An error occurred. The service may not be available right now."); enable_ui(); return; }
+    jQuery.ajax( { 
+		//async: false,
+		url:     '/tools/blast/run/',
+
+		method:  'POST',
+		data:    { 'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 
+			'filterq': filterq, 'database': database, 'program': program, 
+			'input_options': input_option, 'db_type': database_types[database]
+		},
+		success: function(response) { 
+			if (response.error) { 
+				enable_ui();
+				alert(response.error);
+				return;
+			}
+			else{
+				jobid = response.jobid; 
+				seq_count = response.seq_count;
+				//alert("SEQ COUNT = "+seq_count);
+				wait_result(jobid, seq_count);
+			}
+		},
+		error: function(response) {
+			alert("An error occurred. The service may not be available right now.");
+			enable_ui();
+			return;
+		}
     });
 }
 
@@ -173,8 +175,9 @@ function blast_program_ok(program, query_type, database_type) {
    var ok = new Array();
    // query database program
    
-   ok = { 'protein': { nucleotide : { tblastn: 1 }, protein : { 'blastp': 1 } }, 
-          'nucleotide' : { nucleotide : { blastn: 1, tblastx: 1}, protein: { blastx: 1 } } };
+   ok = { 'protein': { nucleotide : { tblastn: 1 }, protein : { blastp: 1 } }, 
+          'nucleotide' : { nucleotide : { blastn: 1, tblastx: 1}, protein: { blastx: 1 } },
+          'autodetect' : { nucleotide : { blastn: 1, tblastx: 1, tblastn: 1}, protein: { blastx: 1, blastp: 1 } } };
 
    return ok[query_type][database_type][program];
 }

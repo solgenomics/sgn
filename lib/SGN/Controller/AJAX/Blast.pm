@@ -36,19 +36,55 @@ sub run : Path('/tools/blast/run') Args(0) {
     my $params = $c->req->params();
 
     my $input_query = CXGN::Blast::SeqQuery->new();
-
+	
     my $valid = $input_query->validate($c, $params->{input_options}, $params->{sequence});
     
     if ($valid ne "OK") { 
-	$c->stash->{rest} = { error => "Your input contains illegal characters. Please verify your input. ($valid)" };
+	$c->stash->{rest} = { error => "Your input contains illegal characters. Please verify your input." };
 	return;
     }
-    
+	
     $params->{sequence} = $input_query->process($c, $params->{input_options}, $params->{sequence});
 
-    print STDERR "SEQUENCE now : ".$params->{sequence}."\n";
+    # print STDERR "SEQUENCE now : ".$params->{sequence}."\n";
+	
+	if ($params->{input_options} eq 'autodetect') {
+		my $detected_type = $input_query->autodetect_seq_type($c, $params->{input_options}, $params->{sequence});
+		
+		# print STDERR "SGN BLAST detected your sequence is: $detected_type\n";
+		
+		# create a hash with the valid options =1 and check and if result 0 return error
+		my %blast_seq_db_program = (
+			nucleotide => {
+				nucleotide => {
+					blastn => 1,
+					tblastx => 1,
+				},
+				protein => {
+					blastx => 1,
+				},
+			},
+			protein => {
+				protein => {
+					blastp => 1,
+				},
+				nucleotide => {
+					tblastn => 1,
+				},
+			},
+		);
 
-    my $seq_count = $params->{sequence} =~ tr/\>/\>/; 
+		if (!$blast_seq_db_program{$detected_type}{$params->{db_type}}{$params->{program}}) {
+			$c->stash->{rest} = { error => "the program ".$params->{program}." can not be used with a ".$detected_type." sequence (autodetected) and a ".$params->{db_type}." database.\n\nPlease, use different options and disable the autodetection of the query type if it is wrong." };
+			return;
+		}
+	}
+	
+	
+    my $seq_count = 1;
+	if ($params->{sequence} =~ /\>/) {
+		$seq_count= $params->{sequence} =~ tr/\>/\>/;
+	}
     print STDERR "SEQ COUNT = $seq_count\n";
     my ($seq_fh, $seqfile) = tempfile( 
 	"blast_XXXXXX",
@@ -143,9 +179,16 @@ sub run : Path('/tools/blast/run') Args(0) {
 	 
 	 maxhits =>
 	 sub {
-	     my $h = $params->{maxhits} || 100;
+	     my $h = $params->{maxhits} || 20;
 	     $h =~ s/\D//g; #only digits allowed
 	     return -b => $h;
+	 },
+	 
+	 hits_list =>
+	 sub {
+	     my $h = $params->{maxhits} || 20;
+	     $h =~ s/\D//g; #only digits allowed
+	     return -v => $h;
 	 },
 	 
 	 filterq =>
@@ -180,7 +223,8 @@ sub run : Path('/tools/blast/run') Args(0) {
 	);
 
     print STDERR "BUILDING COMMAND...\n";
-
+	
+	
     # build our command with our arg handlers
     #
     my @command = ('blastall');
@@ -229,10 +273,22 @@ sub run : Path('/tools/blast/run') Args(0) {
 	$c->stash->{rest} = { error => $@ };
     }
     else { 
-	print STDERR "Passing jobid code ".(basename($jobid))."\n";
-	$c->stash->{rest} = { jobid =>  basename($jobid), 
+		# write data in blast.log
+		my $blast_log_path = $c->config->{blast_log};
+		my $blast_log_fh;
+		if (-e $blast_log_path) {
+			open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
+		} else {
+			open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
+			print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
+		}
+		print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
+		
+		
+		print STDERR "Passing jobid code ".(basename($jobid))."\n";
+		$c->stash->{rest} = { jobid =>  basename($jobid), 
 	                      seq_count => $seq_count, 
-	};
+		};
     }
 }
 

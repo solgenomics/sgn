@@ -246,7 +246,7 @@ sub default_toolbar_data {
         },
         {
             name => 'genomes',
-            link => '',
+            link => '/genomes/',
             desc => 'Read about sequencing projects.',
             menu => [
                 {  name => 'Reference genomes' },
@@ -280,6 +280,12 @@ sub default_toolbar_data {
                     link => 'http://bti.cornell.edu/research/projects/nicotiana-benthamiana',
                     desc => 'Draft sequence for Nicotiana benthamiana, sequenced by labs at the Boyce Thompson Institute',
                 },
+                {
+                    name => '<i>Nicotiana tabacum</i> &amp; related',
+                    link => '/organism/Nicotiana_tabacum/genome',
+                    desc => 'Draft sequence for Nicotiana tabacum accessions K326, BX, and TN90. Parental genomes <i>Nicotiana sylvestris</i> and <i>Nicotiana tomentosiformis</i>.',
+                },
+
 		{ name => 'Inbred genomes' },
                 {
                     name => '<i>Solanum lycopersicum</i> inbreds',

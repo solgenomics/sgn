@@ -1,0 +1,40 @@
+<%doc>
+
+=head1 NAME
+ 
+model/model_parameters.mas - displays model parameters
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$model_parameters
+
+</%args>
+
+<%perl>
+
+</%perl>
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 0, 
+    title       => "Model Parameters"
+&>     
+  <& /page/columnar_table.mas,
+     headings   => ["Parameters", "Estimates"], 
+     data        => $model_parameters,
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __alt_offset => 3,
+    __align      => 'll',
+&>
+
+</&>
+

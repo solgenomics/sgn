@@ -14,13 +14,8 @@ sub type {
 sub example { 
     return "Solyc01g005370
 Solyc01g005590
-Solyc01g007150
 Solyc01g016780
 Solyc01g058740
-Solyc01g060220
-Solyc01g073870
-Solyc01g079630
-Solyc01g080060
 Solyc01g080500";
 }
 

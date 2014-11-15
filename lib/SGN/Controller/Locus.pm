@@ -188,9 +188,9 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
             xrefs      => \@locus_xrefs,
 	    trait_db_name => $trait_db_name,
         },
-        locus_add_uri  => $c->uri_for( '/ajax/locus/associate_locus' ),
-        cvterm_add_uri => $c->uri_for( '/ajax/locus/associate_ontology'),
-        assign_owner_uri  => $c->uri_for( '/ajax/locus/assign_owner' ),
+        locus_add_uri  => $c->uri_for( '/ajax/locus/associate_locus' )->relative(),
+        cvterm_add_uri => $c->uri_for( '/ajax/locus/associate_ontology')->relative(),
+        assign_owner_uri  => $c->uri_for( '/ajax/locus/assign_owner' )->relative(),
         );
 }
 

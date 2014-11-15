@@ -68,7 +68,7 @@ sub autocomplete_GET :Args(0) {
             }
         }
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 ###

@@ -94,7 +94,7 @@ sub autocomplete_GET : Args(0) {
             push @results , "$locus_name ($locus_symbol) $allele_data";
         }
     }
-    $c->{stash}->{rest} = \@results;
+    $c->stash->{rest} = \@results;
 }
 
 =head2 genome_autocomplete
@@ -126,7 +126,7 @@ sub genome_autocomplete_GET :Args(0) {
           rows        => 20 ,}
         )->get_column('me.name')->all;
     map ( s/\.\d+$// ,  @feature_names) ;
-    $c->{stash}->{rest} = \@feature_names;
+    $c->stash->{rest} = \@feature_names;
 }
 
 
@@ -956,8 +956,9 @@ sub organisms_GET :Args(0) {
     my ($self, $c) = @_;
     my $response;
     my ($organism_names_ref, $organism_ids_ref)=CXGN::Tools::Organism::get_existing_organisms( $c->dbc->dbh);
+    my $var = join "\n" , @$organism_ids_ref ;
     $response->{html} = $organism_names_ref;
-    $c->{stash}->{rest} = $response;
+    $c->stash->{rest} = $response;
 }
 
 

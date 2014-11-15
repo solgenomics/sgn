@@ -45,19 +45,6 @@ $trait_name = ucfirst($trait_name);
      trait_id => $trait_id
     &>
 
-</&>
 
-<&| /page/info_section.mas,
-   title => "Heritability and breeding values vs phenotype values plot"
-&>
- 
-  <div id="heritability_message"  style="font-weight:bold;text-align:center;color:#A7C942">
-    <p>Loading heritability......</p>
-  </div>
- 
-  <& /solgs/population/trait_gebv_pheno_regression.mas,
-     trial_id => $trial_id,
-     trait_id => $trait_id
-    &>
 
 </&>
