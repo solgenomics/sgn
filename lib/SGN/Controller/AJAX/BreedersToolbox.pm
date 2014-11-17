@@ -362,5 +362,24 @@ sub get_all_years : Path('/ajax/breeders/trial/all_years' ) Args(0) {
     $c->stash->{rest} = { years => \@years };
 }
 
+sub get_trial_location : Path('/ajax/breeders/trial/location') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    
+    my $t = CXGN::Trial->new(
+	{ 
+	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	    trial_id => $trial_id 
+	});
+    
+    if ($t) { 
+	$c->stash->{rest} = { location => $t->get_location() };
+    }
+    else { 
+	$c->stash->{rest} = { error => "The trial with id $trial_id does not exist" };
+	
+    }
+}
 
 1;
