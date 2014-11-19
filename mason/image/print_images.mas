@@ -64,7 +64,7 @@ if ($images && !$image_objects) {
   $image_objects = \@image_object_list;
 }
 
-print qq{  <script src="jquery.colorbox-min.js"></script> };
+###print qq{  <script src="jquery.colorbox-min.js"></script> };
 
 if ($image_objects)  { # don't display anything for empty list of images
   $image_html .= qq|<table cellpadding="5">|;
