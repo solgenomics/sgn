@@ -197,13 +197,13 @@ sub set_project_type {
 
 }
 
-sub get_project_types { 
+sub get_project_type { 
     my $self = shift;
     my $row = $self->bcs_schema->resultset('Cv::Cv')->find( { name => 'project_types' } );
 
     my @types;
     if ($row) { 
-	my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { cv_id => $row->cv_id() });
+	my $rs = $self->bcs_schema->resultset('Project::Projectprop')->search( { project_id => $self->get_trial_id() })->search_related('type', { cv_id => $row->cv_id() });
 	foreach my $r ($rs->next()) { 
 	    push @types, [ $r->cvterm_id(), $r->name() ];
 	}
