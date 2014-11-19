@@ -303,6 +303,59 @@ sub get_phenotype_info_matrix {
     return @info;
 }
 
+sub get_extended_phenotype_info_matrix { 
+    my $self = shift;
+    my $accession_sql = shift;
+    my $trial_sql = shift;
+    my $trait_sql = shift;
+    
+    my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
+    
+    my %plot_data;
+    my %traits;
+
+#    while (my ($project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession) = $h->fetchrow_array()) { 
+
+    foreach my $d (@$data) { 
+	my ($project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession) = @$d;
+	
+	my $cvterm = $d->[6].":".$d->[7];
+	my $trait_data = $d->[4];
+	my $plot = $d->[5];
+	$plot_data{$plot}->{$cvterm} = $trait_data;
+	$traits{$cvterm}++;
+    }
+    
+    my @info = ();
+    my $line = "";
+
+    # generate header line
+    #
+    my @sorted_traits = sort keys(%traits);
+    foreach my $trait (@sorted_traits) { 
+	$line .= "\t".$trait;  # first header has to be empty (plot name column)
+    }
+    push @info, $line;
+    
+    # dump phenotypic values
+    #
+    my $count2 = 0;
+    foreach my $plot (sort keys (%plot_data)) { 
+	$line = $plot;
+	
+	foreach my $trait (@sorted_traits) { 
+	    my $tab = $plot_data{$plot}->{$trait}; # ? "\t".$plot_data{$plot}->{$trait} : "\t";
+	    $line .= $tab ? "\t".$tab : "\t";
+
+	}
+	push @info, $line;
+    }
+
+    return @info;
+}
+
+
+
 =head2 get_genotype_info
 
 parameters: comma-separated lists of accession, trial, and trait IDs. May be empty.
