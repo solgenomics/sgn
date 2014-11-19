@@ -374,7 +374,6 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
             $c->res->redirect('/solgs/search');     
         }
     }
-
 }
 
 
@@ -409,7 +408,6 @@ sub trial_compatibility_table {
         $c->stash->{trial_compatibility_code} = $color;
         write_file($compatibility_file,{append => 1}, $color_code);
     }
-
 }
 
 
