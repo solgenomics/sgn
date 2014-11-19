@@ -1297,8 +1297,7 @@ sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
         $c->res->content_type("text/plain");
         $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @validation);
   
-    }
- 
+    } 
 }
 
  
@@ -1527,8 +1526,7 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
     
         $c->res->content_type("text/plain");
         $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @prediction_gebvs);
-    }
- 
+    } 
 }
 
 
