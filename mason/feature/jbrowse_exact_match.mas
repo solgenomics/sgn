@@ -19,11 +19,13 @@ if ( $feature && $src_feature ) {
 </%perl>
 
 % if ( $jbrowse_url ) { 
-  <p><a href="<% $jbrowse_url %>">Click here to expand the JBrowse Genome Viewer</a></p>
+
   <iframe style="border: 1px solid rgb(80, 80, 80);" src="<% $iframe_url %>" height="250" width="700"  name="jbrowse_iframe"> 
   <p>Your browser does not support iframes.</p> </iframe>
-
+  
 % }
 
-
+<script language="javascript" type="text/javascript">
+  jQuery.noConflict();
+</script>
 

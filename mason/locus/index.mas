@@ -72,7 +72,6 @@ my $src_feature = $locusref->{src_feature};
 my $pubs      = $locusref->{pubs};
 # dbxrefs, unigenes , ontology
 
-#my $this_page = "/phenome/locus_display.pl?locus_id=$locus_id";
 my $this_page = "/locus/$locus_id/view/";
 
 my $locus_xml = $locus_id ? qq |<a href = "/phenome/generic_gene_page.pl?locus_id=$locus_id">Download GMOD XML</a>|
@@ -89,7 +88,7 @@ my $owner_objects= $locus->get_owners(1);
 my $locus_name = $locus->get_locus_name();
 
 my $registry = $locus->get_associated_registry();
-my $registry_subtitle =  $is_owner && $locus_id ?  qq| <a href="javascript:Tools.toggleContent('associateRegistryForm', 'locus_registry')">[Associate a registry name with this locus]</a> |
+my $registry_subtitle =  $is_owner && $locus_id ?   '<a href="javascript:Tools.toggleContent(\'associateRegistryForm\', \'locus_registry\')">[Associate a registry name with this locus]</a> ' 
   : qq|<span class = "ghosted"> [Associate registry name]</span>| ;
 
 my @synonyms = $locus->get_locus_aliases('f','f');
@@ -122,7 +121,7 @@ my $network_sub = $collapsed ?
 my $new_unigene_link =  $curator || $submitter || $sequencer  ?
   '<a href="javascript:Tools.toggleContent(\'associateUnigeneForm\', \'locus_unigenes\' )">[Associate new unigene]</a>' :
     '<span class= "ghosted">[Associate new unigene]</span> ';
-
+my $new_genbank_link = qq | <a href="/chado/add_feature.pl?type=locus;type_id=$locus_id;refering_page=$this_page;action=new">[Associate new genbank sequence]</a> | ;
 my %dbxrefs = $locus->get_all_dbxrefs();
 
 my $tgrc;
@@ -184,7 +183,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => ["jquery.cookie" , "jquery","jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Sunshine.NetworkBrowser" ] &>
+<& /util/import_javascript.mas, classes => ["jquery","jqueryui", "thickbox", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Sunshine.NetworkBrowser"] &>
 
 
 <script language="javascript">
@@ -200,19 +199,20 @@ function jqueryStuff() {
 
 <& /page/page_title.mas, title=> "$common_name locus ".$locus->get_locus_name &>
 
+
 <&| /page/info_section.mas, title=>"Locus details" , subtitle => "$locus_xml | $editor_note | $guide_html" &>
 
 
-  <& /page/form.mas,
-  object_type          => 'locus',
-  object_id            => "$locus_id",
-  form_name            => 'locus_form',
-  server_side_script   => '/jsforms/locus_ajax_form.pl',
-  form_div_name        => 'locus_details',
-  js_object_name       => 'locusForm',
-  page_url             => "/locus/$locus_id/view/",
-  alternate_new_button => '<a href ="/locus/0/new">[New]</a>'
-  &>
+<& /page/form.mas,
+    object_type          => 'locus',
+    object_id            => "$locus_id",
+    form_name            => 'locus_form',	
+    server_side_script   => '/jsforms/locus_ajax_form.pl',
+    form_div_name        => 'locus_details',
+    js_object_name       => 'locusForm',
+    page_url             => "/locus/$locus_id/view/",
+    alternate_new_button => '<a href ="/locus/0/new">[New]</a>'
+    &>
 
 <table><tr><td>
       <table>
@@ -226,154 +226,151 @@ function jqueryStuff() {
 </td></tr>
 <tr><td>
 <& /phenome/display_owners.mas,
-   object_id => $locus_id,
-   object_type => "locus"
+	 object_id => $locus_id,
+	 object_type => "locus"
 &>
 </td></tr>
 <tr><td>
 <& /phenome/assign_owner.mas,
-  object_id     => $locus_id,
-  object_type   => "locus",
-  owner_add_uri => "/ajax/locus/assign_owner",
-  show_form     => $curator
- &>
+   object_id     => $locus_id,
+   object_type   => "locus",
+   owner_add_uri => "/ajax/locus/assign_owner",
+   show_form     => $curator
+&>
 </td></tr>
 <tr><td>
 % if ($locus_id) {
   <a href="/phenome/claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
 % }
-  <& /locus/edits_info.mas, locus=>$locus  &>
+<& /locus/edits_info.mas, locus=>$locus  &>
         </td></tr>
       </table>
     </td>
     <td><table><tr><td>
-<& /locus/map_location.mas, person_id=>"$person_id", locus=>$locus  &>
+ <& /locus/map_location.mas, person_id=>"$person_id", locus=>$locus  &>
   </td></tr></table></td></tr>
 </table>
+
 </&>
 
 
 % if($locus_id) {
 
 <&| /page/info_section.mas,
-  title       => "Registry name: $registry",
-  subtitle    => $registry_subtitle,
-  id          => "locus_registry",
-  collapsible => 1,
-  is_subsection => 1,
-  &>
-    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id", registry => $registry , is_owner => $is_owner &>
+    title       => "Registry name: $registry",
+    subtitle    => $registry_subtitle,
+    id          => "locus_registry",
+    collapsible => 1,
+    is_subsection => 1,
+    &>
+    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id", registry => $registry , is_owner => $is_owner &> 
 </&>
 
 % if($is_owner) {
-    <&| /page/info_section.mas, title=>"Locus history", collapsible=>1, collapsed=>1 &>
-      <& /locus/history.mas, locus=>$locus  &>
+<&| /page/info_section.mas, title=>"Locus history", collapsible=>1, collapsed=>1 &>
+       <& /locus/history.mas, locus=>$locus  &>
 </&>
 
 % }
 % if ( $locus_name && $curator ) {
-<&| /page/info_section.mas, title=>"Curator tools",  collapsible=>1, collapsed=>1 &>
-  <& /locus/merge_locus.mas , locus_id=>"$locus_id" , common_name=>"$common_name" &>
+  <&| /page/info_section.mas, title=>"Curator tools",  collapsible=>1, collapsed=>1 &>
+       <& /locus/merge_locus.mas , locus_id=>"$locus_id" , common_name=>"$common_name" &>
 
-</&>
+  </&>
 % }
 
 <&| /page/info_section.mas, title=>"Notes and figures (" .  scalar(@figures)  . ")", subtitle => "$figure_subtitle", collapsible=>1, collapsed=>1 &>
-  <& /image/print_images.mas , images=>\@figures , dbh=>$dbh &>
+   <& /image/print_images.mas , images=>\@figures , dbh=>$dbh &>
 
 </&>
 
-<&| /page/info_section.mas, title=>"eFP Browser links" &>
+%#<&| /page/info_section.mas, title=>"eFP Browser links" &>
+%#
+%#   <& /locus/efp_browser_links.mas, locus => $locus &>
 
-  <& /locus/efp_browser_links.mas, locus => $locus &>
-
-</&>
+%#</&>
 
 <&| /page/info_section.mas, title=>"Accessions and images (" .  scalar(@$accessions)  . ")", subtitle => "$stock_subtitle", id=>"locus_accessions", collapsible=>1, collapsed=>1 &>
-  <& /phenome/associate_accession_form.mas , locus_id=>$locus_id, person_id=>$person_id &>
-    <& /phenome/associated_accessions.mas , accessions=>$accessions, dbh=>$dbh &>
+   <& /phenome/associate_accession_form.mas , locus_id=>$locus_id, person_id=>$person_id &>
+     <& /phenome/associated_accessions.mas , accessions=>$accessions, dbh=>$dbh &>
  
 </&>
 
 <&| /page/info_section.mas, title=>"Alleles (" .  scalar(@alleles)  . ")", subtitle => "$allele_subtitle", collapsible=>1, collapsed=>1 &>
 
-  <& /phenome/allele.mas, alleles=>\@alleles, user_id=>$person_id, curator=>$curator &>
+   <& /phenome/allele.mas, alleles=>\@alleles, user_id=>$person_id, curator=>$curator &>
 
 </&>
 
 
 <&| /page/info_section.mas,
- title       => "Associated loci (" .  $locus->count_associated_loci() . ")",
- subtitle    => "$al_subtitle",
- id          =>"locus_network",
- collapsible =>1,
- collapsed   =>1 &>
+  title       => "Associated loci (" .  $locus->count_associated_loci() . ")",
+  subtitle    => "$al_subtitle",
+  id          =>"locus_network",
+  collapsible =>1,
+  collapsed   =>1 &>
 
-   <& /locus/associate_locus.mas, locus_id=>$locus_id &>
-    <& /locus/network.mas , locus_id => $locus_id  &>
+    <& /locus/associate_locus.mas, locus_id=>$locus_id &>
+     <& /locus/network.mas , locus_id => $locus_id  &>
 
 </&>
 
 <&| /page/info_section.mas,
-  title       => "Associated loci - graphical view",
-  subtitle    => $network_sub,
-  collapsible => 1,
-  collapsed   => $collapsed,
-  id          => "graphic_locus_network" &>
+   title       => "Associated loci - graphical view",
+   subtitle    => $network_sub,
+   collapsible => 1,
+   collapsed   => $collapsed,
+   id          => "graphic_locus_network" &>
 
-%  print CXGN::Sunshine::Browser::include_on_page( 'locus', $locus_id ) if $network_sub ;
+% print CXGN::Sunshine::Browser::include_on_page( 'locus', $locus_id ) if $network_sub ;
 
 </&>
 
 
 <&| /page/info_section.mas,
-    title       => "SolCyc links",
+  title       => "SolCyc links",
   id          => "solcyc_links",
   collapsible => 1,
   collapsed   => 1,
   &>
 % ## solcyc links are generated from the unigenes function in the ajax/locus controller ##
-  <div id="solcyc" >[loading...]</div>
+   <div id="solcyc" >[loading...]</div>
 </&>
 
 
-<&| /page/info_section.mas, title=>"Sequence annotations" , collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Sequence annotations" , collapsible=>1, collapsed=>0 &>
 
-   <&| /page/info_section.mas, title => "Gene model matches",
-       collapsible   => 1,
-       collapsed     => 0,
-       is_subsection => 1,
+    <&| /page/info_section.mas, title => "Gene model matches",
+        collapsible   => 1,
+        collapsed     => 0,
+        is_subsection => 1,
     &>
        <& /feature/jbrowse_exact_match.mas, feature=> $feature, src_feature=> $src_feature &>
-       
    </&>
-
 
    <&| /page/info_section.mas, title => "SGN Unigenes",
-       id => 'locus_unigenes',
-       subtitle => $new_unigene_link,
-       collapsible => 1,
-       collapsed =>  0 ,
-       is_subsection => 1,
-    &>
+        id => 'locus_unigenes',
+        subtitle => $new_unigene_link,
+        collapsible => 1,
+        collapsed =>  0 ,
+        is_subsection => 1,
+   &>
       <& /locus/associate_unigene.mas,
-        locus_id    => $locus_id,
-        common_name => $common_name,
-        current     => 1
-       &>
-       <& /locus/locus_unigenes.mas, locus_id  => $locus_id  &>
-    </&>
+         locus_id    => $locus_id,
+         common_name => $common_name,
+         current     => 1
+      &>
+      <& /locus/locus_unigenes.mas, locus_id  => $locus_id  &>
+  </&>
 
-    <&| /page/info_section.mas, title => "GenBank accessions",
-             subtitle => <<"",
-<a href="/chado/add_feature.pl?type=locus;type_id=$locus_id;refering_page=$this_page;action=new">[Associate new genbank sequence]</a>
-
-             collapsible => 1,
-             collapsed =>  0 ,
-             is_subsection => 1,
-        &>
-        <% $genbank %>
-   </&>
+  <&| /page/info_section.mas, title => "GenBank accessions",
+              subtitle => $new_genbank_link,
+              collapsible => 1,
+              collapsed =>  0 ,
+              is_subsection => 1,
+  &>
+         <% $genbank %>
+ </&>
 
    <&| /page/info_section.mas,
        title         => "Other genome matches",
@@ -382,7 +379,7 @@ function jqueryStuff() {
        is_subsection => 1,
     &>
 
-       <& /locus/locus_genomic_annotations.mas, locus => $locus &>
+        <& /locus/locus_genomic_annotations.mas, locus => $locus &>
 
    </&>
 
@@ -390,13 +387,13 @@ function jqueryStuff() {
 
 <&| /page/info_section.mas, title=>"Literature annotations ($pub_count)" , subtitle=>$pub_subtitle, id=>"publications" , collapsible=>1, collapsed=>1 &>
 
-% my $pub_count = 0;
-% foreach my $d ( @sorted_pubs ) {
-%  if ( $d->[1] eq '0') { #if the dbxref is not obsolete
-%   my $pub = CXGN::Chado::Publication->new($dbh, $d->[0]->get_publication()->get_pub_id() );
+%  my $pub_count = 0;
+%  foreach my $d ( @sorted_pubs ) {
+%  	   if ( $d->[1] eq '0') { #if the dbxref is not obsolete
+%  	   my $pub = CXGN::Chado::Publication->new($dbh, $d->[0]->get_publication()->get_pub_id() );
   <& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>$d->[0]->get_db_name(), accession=>$d->[0]->get_accession() &>
-    <br >
-%  }
+  <br >
+%	    }
 % }
 
 </&>
@@ -422,7 +419,7 @@ function jqueryStuff() {
 <&| /page/info_section.mas,
      title       => 'Related views',
      collapsible => 1,
- &>
+&>
 
      <& /sitefeatures/mixed/xref_set/link.mas,
         xrefs => [ grep { $_->feature->feature_name ne 'gbrowse2' } @$xrefs ],
