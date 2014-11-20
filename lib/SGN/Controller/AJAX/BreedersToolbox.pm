@@ -386,7 +386,8 @@ sub get_trial_location : Path('/ajax/breeders/trial/location') Args(1) {
 sub get_trial_type : Path('/ajax/breeders/trial/type') Args(1) { 
     my $self = shift;
     my $c = shift;
-    
+    my $trial_id = shift;
+
     my $t = CXGN::Trial->new(
 	{ 
 	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
