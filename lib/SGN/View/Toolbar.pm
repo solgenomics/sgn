@@ -338,7 +338,7 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'VIGS Tool',
-                    link => 'http://vigs.solgenomics.net/vigs/',
+                    link => 'http://vigs.solgenomics.net/',
                     desc =>
 'Determine which genes a probe will silence using VIGS.',
 		    target => '_blank',
