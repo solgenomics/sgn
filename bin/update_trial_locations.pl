@@ -28,7 +28,7 @@ while (my ($project_id, $location_id, $description) = $h->fetchrow_array()) {
     print STDERR "Adding location $description ($location_id) to trial $project_id... ";
 
     my $current_location = $trial->get_location();
-   if ( $current_location->[0] == $location_id) { 
+   if ( $current_location->[0]) { # whatever it is
 	print STDERR " (already associated) ";
 }
     else { 
