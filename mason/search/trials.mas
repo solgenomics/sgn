@@ -8,23 +8,18 @@
 <& /page/page_title.mas, title => "Trial Search" &>
 
 <table>
-<tr><td>Trial name</td><td>Program</td><td>Year</td><td><!-- Location --></td><td>&nbsp;</td></tr>
+<tr><td>Trial name</td><td>Program</td><td>Year</td><td>Location</td><td>&nbsp;</td></tr>
 <tr><td><input type="text" id="trial_name" /></td>
 
-<td><div id="breeding_programs_div">
-    <select id="breeding_program_select" >
-      <option>all</option>
-      <option>IITA</option>
-      <option>NRCRI</option>
-      <option>NaCCRI</option>
-    </select>
-</div></td>
+<td>
+   <div id="breeding_program_select_div">[loading...]</div>
+</td>
 
 <td>
   <div id="years_select_div">[loading...]</div>
 </td>
 <td>
-  <div style="visibility:hidden" id="location_select_div">[loading...]</div>
+  <div id="location_select_div">[loading...]</div>
 </td>
 <td><button id="trial_search_submit_button">Search</button></td>
 </tr>
@@ -55,6 +50,25 @@ jQuery(document).ready(function () {
       alert('An unfortunate error occurred.');
     }
   });
+
+
+ jQuery.ajax( {
+        url: '/ajax/breeders/all_programs',
+        success: function(response) {
+
+            var html = '<select id="breeding_program_select">';
+            html += '<option value="all">all</option>';
+            for (var i=0; i< response.length; i++) {
+                html += '<option value='+response[i][1]+'>'+response[i][1]+'</option>';
+            }
+           html += '</select>';
+           jQuery('#breeding_program_select_div').html(html);
+        },
+        error: function(response){
+            alert("An error occurred.");
+        }
+    });
+
 
   jQuery.ajax( { 
     url: '/ajax/breeders/trial/all_years',
@@ -112,7 +126,7 @@ function search_trials() {
          alert("an error occurred: "+response.error);
        }
        else { 
-         var headers = new Array('Name', 'Description', 'Program', 'Year');
+         var headers = new Array('Name', 'Description', 'Program', 'Year', 'Location');
 	 var html = display_results(headers, response.trials, Math.floor(response.total_count / page_size) + 1, page_size, response.total_count);
          jQuery('#trial_search_results').html(html);
          jQuery('#working').dialog("close");
