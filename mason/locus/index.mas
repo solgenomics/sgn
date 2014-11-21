@@ -279,10 +279,10 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
   </&>
 % }
 
-%# <&| /page/info_section.mas, title=>"Notes and figures (" .  scalar(@figures)  . ")", subtitle => "$figure_subtitle", collapsible=>1, collapsed=>1 &>
-%#    <& /image/print_images.mas , images=>\@figures , dbh=>$dbh &>
+ <&| /page/info_section.mas, title=>"Notes and figures (" .  scalar(@figures)  . ")", subtitle => "$figure_subtitle", collapsible=>1, collapsed=>1 &>
+   <& /image/print_images.mas , images=>\@figures , dbh=>$dbh &>
 
-%# </&>
+</&>
 
 %#<&| /page/info_section.mas, title=>"eFP Browser links" &>
 %#
