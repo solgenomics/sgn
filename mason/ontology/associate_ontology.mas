@@ -96,7 +96,7 @@ $trait_db_name => 'SP'
 </style>
 
 <script language="javascript">
-  jQuery(function() {
+  jQuery(document).ready(function() {
        var db_name = jQuery('#db_name option:selected').attr("value");
        jQuery("#term_name").autocomplete({
              source: '<% $cvterm_autocomplete_uri %>' + "?db_name=" + db_name,
@@ -192,6 +192,8 @@ $trait_db_name => 'SP'
 
 <script language="javascript">
   
-  Ontology.displayOntologies("ontology" , "<% $ontology_url %>");
+  jQuery(document).ready( function() { 
+    Ontology.displayOntologies("ontology" , "<% $ontology_url %>");
+  });
 
 </script>
