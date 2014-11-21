@@ -279,10 +279,10 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
   </&>
 % }
 
-<&| /page/info_section.mas, title=>"Notes and figures (" .  scalar(@figures)  . ")", subtitle => "$figure_subtitle", collapsible=>1, collapsed=>1 &>
-   <& /image/print_images.mas , images=>\@figures , dbh=>$dbh &>
+%# <&| /page/info_section.mas, title=>"Notes and figures (" .  scalar(@figures)  . ")", subtitle => "$figure_subtitle", collapsible=>1, collapsed=>1 &>
+%#    <& /image/print_images.mas , images=>\@figures , dbh=>$dbh &>
 
-</&>
+%# </&>
 
 %#<&| /page/info_section.mas, title=>"eFP Browser links" &>
 %#
@@ -290,11 +290,11 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 %#</&>
 
-<&| /page/info_section.mas, title=>"Accessions and images (" .  scalar(@$accessions)  . ")", subtitle => "$stock_subtitle", id=>"locus_accessions", collapsible=>1, collapsed=>1 &>
-   <& /phenome/associate_accession_form.mas , locus_id=>$locus_id, person_id=>$person_id &>
-     <& /phenome/associated_accessions.mas , accessions=>$accessions, dbh=>$dbh &>
+ <&| /page/info_section.mas, title=>"Accessions and images (" .  scalar(@$accessions)  . ")", subtitle => "$stock_subtitle", id=>"locus_accessions", collapsible=>1, collapsed=>1 &>
+    <& /phenome/associate_accession_form.mas , locus_id=>$locus_id, person_id=>$person_id &>
+      <& /phenome/associated_accessions.mas , accessions=>$accessions, dbh=>$dbh &>
  
-</&>
+ </&>
 
 <&| /page/info_section.mas, title=>"Alleles (" .  scalar(@alleles)  . ")", subtitle => "$allele_subtitle", collapsible=>1, collapsed=>1 &>
 
