@@ -187,13 +187,13 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 
 <script language="javascript">
-function jqueryStuff() {
-   jQuery(function() {
+
+   jQuery(document).ready(function() {
      jQuery("#genome_locus").autocomplete({
         source: '/ajax/locus/genome_autocomplete'
      });
   });
-}
+
 </script>
 
 
