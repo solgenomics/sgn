@@ -219,6 +219,8 @@ sub get_phenotype_info {
 
     print STDERR "$accession_sql - $trial_sql - $trait_sql \n\n";
 
+    my $rep_type_id = $self->get_stockprop_type_id("replicate");
+
     my @where_clause = ();
     if ($accession_sql) { push @where_clause,  "stock.stock_id in ($accession_sql)"; }
     if ($trial_sql) { push @where_clause, "project.project_id in ($trial_sql)"; }
@@ -226,12 +228,13 @@ sub get_phenotype_info {
 
     my $where_clause = "";
     if (@where_clause>0) { 
-	$where_clause = "where ".(join (" and ", @where_clause));
+	$where_clause = "where (stockprop.type_id=$rep_type_id or stockprop.type_id IS NULL) AND  ".(join (" and ", @where_clause));
     }
 
-    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, cvterm.name
+    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, cvterm.name, stockprop.value
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) 
              JOIN stock ON (object_id=stock.stock_id) 
+             LEFT JOIN stockprop ON (stock.stock_id=stockprop.stock_id)
              JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id) 
              JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id) 
              JOIN nd_geolocation USING(nd_geolocation_id) 
@@ -444,6 +447,16 @@ sub get_stock_type_id {
     my $q = "SELECT stock.type_id FROM stock JOIN cvterm on (stock.type_id=cvterm.cvterm_id) WHERE cvterm.name='$term'";
     my $h = $self->dbh->prepare($q);
     $h->execute();
+    my ($type_id) = $h->fetchrow_array();
+    return $type_id;
+}
+
+sub get_stockprop_type_id { 
+    my $self = shift;
+    my $term = shift;
+    my $q = "SELECT stockprop.type_id FROM stockprop JOIN cvterm on (stockprop.type_id=cvterm.cvterm_id) WHERE cvterm.name=?";
+    my $h = $self->dbh->prepare($q);
+    $h->execute($term);
     my ($type_id) = $h->fetchrow_array();
     return $type_id;
 }

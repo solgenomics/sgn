@@ -59,10 +59,6 @@ foreach my $allele_id (@$alleles) {
 
 </%perl>
 
-<script  language="javascript">
-
-</script>
-
 <div id = "$div">
 
 % if(@allele_data) {

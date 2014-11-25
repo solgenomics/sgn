@@ -262,16 +262,29 @@ sub projects_links {
              $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
          }
 
+         my ($markers, $match_code);
          unless (!$has_phenotype) 
          {
-             $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);   
+             $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id);           
+          
+             if($markers) 
+             {
+                 my @markers = split(/\t/, $markers);
+                 my $markers_num = scalar(@markers);
+
+                 $self->trial_compatibility_table($c, $markers_num);
+                 $match_code = $c->stash->{trial_compatibility_code};
+             }               
          }
          
-         if ($has_genotype && $has_phenotype)
+         if ($markers && $has_phenotype)
          {          
              my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+
+             my $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+
              push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
-                                    $pr_desc, $pr_location, $pr_year
+                                    $pr_desc, $pr_location, $pr_year, $match_code
              ];            
          }
     }
@@ -317,18 +330,27 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
         my @projects_list;
    
         foreach my $pr_id (keys %$projects) 
-        {
-            my $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);
-            if($has_genotype) 
+        { 
+            my $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id);           
+            #  my $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);
+           
+            if($markers) 
             {
+                my @markers = split(/\t/, $markers);
+                my $markers_num = scalar(@markers);
+
+                $self->trial_compatibility_table($c, $markers_num);
+                my $match_code = $c->stash->{trial_compatibility_code};
+
                 my $pr_name     = $projects->{$pr_id}{project_name};
                 my $pr_desc     = $projects->{$pr_id}{project_desc};
                 my $pr_year     = $projects->{$pr_id}{project_year};
                 my $pr_location = $projects->{$pr_id}{project_location};
 
-                my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+                my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+                my $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
-                push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year
+                push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code
                 ];
             }
         }
@@ -356,6 +378,54 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
 }
 
 
+sub trial_compatibility_table {
+    my ($self, $c, $markers) = @_;
+  
+    $self->trial_compatibility_file($c);
+    my $compatibility_file =  $c->stash->{trial_compatibility_file};
+  
+    my $color;
+
+    if (-s $compatibility_file) 
+    {  
+        my @line =  read_file($compatibility_file);     
+        my  ($entry) = grep(/$markers/, @line);
+        chomp($entry);
+       
+        if($entry) 
+        {
+            ($markers, $color) = split(/\t/, $entry);          
+            $c->stash->{trial_compatibility_code} = $color;
+        }
+    }
+ 
+    if (!$color) 
+    {
+        my ($red, $blue, $green) = map { int(rand(255)) } 1..3;       
+        $color = 'rgb' . '(' . "$red,$blue,$green" . ')';
+   
+        my $color_code = $markers . "\t" . $color . "\n";
+        
+        $c->stash->{trial_compatibility_code} = $color;
+        write_file($compatibility_file,{append => 1}, $color_code);
+    }
+
+}
+
+
+sub trial_compatibility_file {
+    my ($self, $c) = @_;
+
+    my $cache_data = {key       => 'trial_compatibility',
+                      file      => 'trial_compatibility_codes',
+                      stash_key => 'trial_compatibility_file'
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+
 sub get_projects_details {
     my ($self,$c, $pr_rs) = @_;
  
@@ -363,8 +433,7 @@ sub get_projects_details {
     my %projects_details = ();
 
     while (my $pr = $pr_rs->next) 
-    {
-       
+    {       
         $pr_id   = $pr->project_id;
         $pr_name = $pr->name;
         $pr_desc = $pr->description;
@@ -2361,20 +2430,29 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
     my $pop_links;
     my @selected_pops_details;
 
-    foreach my $pop_id (@pop_ids) {
+    foreach my $pop_id (@pop_ids) 
+    {
     
-    my $pop_rs = $c->model('solGS::solGS')->project_details($pop_id);
-    my $pop_details = $self->get_projects_details($c, $pop_rs);
- 
-    my $pop_name     = $pop_details->{$pop_id}{project_name};
-    my $pop_desc     = $pop_details->{$pop_id}{project_desc};
-    my $pop_year     = $pop_details->{$pop_id}{project_year};
-    my $pop_location = $pop_details->{$pop_id}{project_location};
+        my $markers     = $c->model("solGS::solGS")->get_genotyping_markers($pop_id);                   
+        my @markers     = split(/\t/, $markers);
+        my $markers_num = scalar(@markers);
+       
+        $self->trial_compatibility_table($c, $markers_num);
+        my $match_code = $c->stash->{trial_compatibility_code};
+
+        my $pop_rs       = $c->model('solGS::solGS')->project_details($pop_id);
+        my $pop_details  = $self->get_projects_details($c, $pop_rs);
+        my $pop_name     = $pop_details->{$pop_id}{project_name};
+        my $pop_desc     = $pop_details->{$pop_id}{project_desc};
+        my $pop_year     = $pop_details->{$pop_id}{project_year};
+        my $pop_location = $pop_details->{$pop_id}{project_location};
                
-    my $checkbox = qq |<form> <input type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
+        my $checkbox = qq |<form> <input style="background-color: $match_code;" type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
+        
+        my $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
     push @selected_pops_details, [$checkbox,  qq|<a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$pop_name</a>|, 
-                               $pop_desc, $pop_location, $pop_year
-    ];
+                               $pop_desc, $pop_location, $pop_year, $match_code
+        ];
   
     }
     
@@ -2614,7 +2692,6 @@ sub combined_pops_summary {
               project_name => $training_pop,
               owner        => $projects_owners
         );
-
 
 }
 
