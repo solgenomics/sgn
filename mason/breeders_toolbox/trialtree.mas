@@ -5,18 +5,18 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jstree.dist.jstree' ] &>
 
-<& /page/page_title.mas, title=>"Manage Trials" &>
-
 <table><tr><td valign="top">
 <div class="boxbgcolor5">
 Download<br />
 <button id="download_button" disabled="disabled" >Excel</button><br />
 <button id="download_button_csv" disabled="disabled" >CSV</button><br />
 <hr>
-<button id="delete" disabled="disabled" >Delete</button>
+Double click<br />trial to view
+<!-- hr>
+<button id="delete" disabled="disabled" >Delete</button -->
 </div>
 <br />
-</td><td>
+</td><td valign="top">
 <div id="trial_list" >[loading...]</div>
 </td>
 </tr></table>
