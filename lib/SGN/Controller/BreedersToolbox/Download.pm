@@ -157,7 +157,7 @@ sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download'
     my $trial_sql = join ",", map { "\'$_\'" } @trial_ids;
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
-    my @data = $bs->get_phenotype_info_matrix(undef,$trial_sql, undef);
+    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef);
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     $c->tempfiles_subdir("data_export"); # make sure the dir exists
@@ -170,8 +170,6 @@ sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download'
 	###$self->phenotype_download_excel($c, $trial_id, $program_name, $location, $year, \@data);
 	$self->phenotype_download_excel($c, '', '', '', '', \@data);
     }
-
-
 }
 
 
