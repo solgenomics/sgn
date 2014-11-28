@@ -101,24 +101,28 @@ sub search_populations {
     my ($self, $trait_id, $page) = @_;
   
     my $rs = $self->schema->resultset("Phenotype::Phenotype")
-        ->search({'me.observable_id' =>  $trait_id})
+        ->search({'me.observable_id' =>  $trait_id, 'me.value' => {'!=', undef}})
         ->search_related('nd_experiment_phenotypes')
         ->search_related('nd_experiment')
         ->search_related('nd_experiment_stocks')
-        ->search_related('stock');
+        ->search_related('stock')
+	->search_related('nd_experiment_stocks')
+        ->search_related('nd_experiment')
+        ->search_related('nd_experiment_projects')
+        ->search_related('project',
+			 {},
+			 { 
+			   page     => $page,
+			   rows     => 10,
+			   order_by => 'CASE WHEN project.name ~ \'^[0-9]+\' THEN 1 ELSE 0 END, project.name',
+		                          
+			   'select'   => [ qw / project.project_id project.name project.description / ], 
+			   'as'       => [ qw / project_id name description / ],
+			   distinct => [ qw / project.project_id / ]
+                         },			
+	);
 
-    my $pr_rs = $self->stock_projects_rs($rs);
-
-    $pr_rs = $pr_rs->search(
-        {},                                
-        { 
-            page     => $page,
-            rows     => 10,
-            order_by => 'CASE WHEN project.name ~ \'^[0-9]+\' THEN 1 ELSE 0 END, project.name',
-        }
-        ); 
-
-    return $pr_rs; 
+    return $rs; 
 
 }
  
@@ -180,38 +184,14 @@ sub has_phenotype {
      my $has_phenotype;
      if ($pr_id) 
      {
-         my $stock_rs = $self->project_subject_stocks_rs($pr_id)->search(undef, {page => 1, rows=> 100});
-          
-         if($stock_rs->single) 
-         {      
-             my $cnt;
-           STOCKS:   while (my $st = $stock_rs->next) 
-           {
-               my $plot = $st->get_column('uniquename');
-               if($plot) 
-               {
-                   $cnt++;
-                   my $stock_plot_rs = $self->search_stock_using_plot_name($plot);                
-                   my $stock_pheno_data_rs = $self->stock_phenotype_data_rs($stock_plot_rs);
-             
-                   my $data = $self->phenotypes_by_trait([$stock_pheno_data_rs]);
-                
-                   my ($header, $values) = split(/\n/, $data);
-                   $header =~ s/uniquename|object_id|object_name|stock_id|stock_name|design|block|replicate|\t|\n//g;
+	 my $data = $self->phenotype_data($pr_id);
+	 my ($header, $values) = split(/\n/, $data);
+	 $header =~ s/uniquename|object_id|object_name|stock_id|stock_name|design|block|replicate|\t|\n//g;
                
-                   unless (!$header) 
-                   {
-                       $has_phenotype = 'has_phenotype'; 
-                       last STOCKS;
-                   }
-               } 
-               else 
-               {
-                   last STOCKS;
-               }               
-               last STOCKS if $cnt == 20;                 
-           }
-         }                 
+	 if($header)
+	 {
+	     $has_phenotype = 'has_phenotype';            
+	 }	        
      }
 
      return $has_phenotype;
@@ -297,13 +277,110 @@ sub check_stock_type {
 
     my $type_id = $self->schema->resultset("Stock::Stock")
         ->search({'stock_id' => $stock_id})
-        ->single
+        ->first()
         ->type_id;
 
     return $self->schema->resultset('Cv::Cvterm')
         ->search({cvterm_id => $type_id})
-        ->single
+        ->first()
         ->name;
+}
+
+
+sub set_project_genotypeprop {
+    my ($self, $prop) = @_;
+    
+    
+    my $cv_id= $self->schema->resultset("Cv::Cv")
+	->find_or_create({ 'name' => 'project_property'})->cv_id;
+   
+    my $db_id = $self->schema->resultset("General::Db")
+	->find_or_new({ 'name' => 'null'})->db_id;
+ 
+    my $dbxref_id = $self->schema->resultset("General::Dbxref")
+	->find_or_create({'accession' => 'marker_count', 'db_id' => $db_id})->dbxref_id;
+ 
+    my $cvterm_id = $self->schema->resultset("Cv::Cvterm")->find_or_create(
+	{ name      => 'marker_count',
+	  cv_id     => $cv_id,
+	  dbxref_id => $dbxref_id,
+	})->cvterm_id;
+ 
+    my $project_rs = $self->schema->resultset("Project::Projectprop")
+	->find_or_create({ project_id   => $prop->{'project_id'},
+			   type_id      => $cvterm_id,
+			   value        => $prop->{'marker_count'},
+			 });
+
+}
+
+
+sub get_project_genotypeprop {
+    my ($self, $pr_id) = @_;
+   
+    my $cvterm_rs = $self->schema->resultset("Cv::Cvterm")
+        ->search({'project_id' => $pr_id, 'me.name' => 'marker_count' })
+        ->search_related('projectprops');
+
+    my $marker_count;
+    if($cvterm_rs->next) 
+    {
+	$marker_count = $cvterm_rs->first()->value;
+    }
+   
+    my $genoprop = {'marker_count' => $marker_count};
+
+    return $genoprop;
+}
+
+
+sub set_project_type {
+    my ($self, $prop) = @_;
+   
+    my $cv_id= $self->schema->resultset("Cv::Cv")
+	->find_or_create({ 'name' => 'project_property'})
+	->cv_id;
+  
+    my $db_id = $self->schema->resultset("General::Db")
+	->find_or_new({ 'name' => 'null'})
+	->db_id;
+ 
+    my $dbxref_id = $self->schema->resultset("General::Dbxref")
+	->find_or_create({'accession' => 'genomic selection', 
+			  'db_id'     => $db_id
+			 })
+	->dbxref_id;
+ 
+    my $cvterm_id = $self->schema->resultset("Cv::Cvterm")
+	->find_or_create({ name      => 'genomic selection',
+			   cv_id     => $cv_id,
+			   dbxref_id => $dbxref_id,
+			 })
+	->cvterm_id;
+
+    my $project_rs = $self->schema->resultset("Project::Projectprop")
+	->find_or_create({ project_id   => $prop->{'project_id'},
+			   type_id      => $cvterm_id,
+			   value        => $prop->{'project_type'},
+	});
+
+
+}
+
+sub get_project_type {
+    my ($self, $pr_id) = @_;
+   
+    my $pr_rs = $self->schema->resultset("Cv::Cvterm")
+        ->search({'project_id' => $pr_id, 'me.name' => 'genomic selection' })
+        ->search_related('projectprops');
+
+    my $pr_type;
+    if($pr_rs->next) 
+    {
+	$pr_type = $pr_rs->first()->value;
+    }
+    
+    return $pr_type;
 }
 
 
@@ -717,7 +794,7 @@ sub prediction_genotypes_rs {
 sub extract_project_markers {
     my ($self, $genopropvalue_rs) = @_;
    
-    my $row = $genopropvalue_rs->single;
+    my $row = $genopropvalue_rs->first;
     my $markers;
 
     if (defined $row)    
@@ -1156,20 +1233,20 @@ sub structure_phenotype_data {
 
         if($design_rs->next)       
         {
-            $design = $design_rs->single->value();
+            $design = $design_rs->first->value();
         } 
         
         my $block_rs = $self->search_plotprop($subject_id, 'block');
         if($block_rs->next)
         
         {
-            $block = $block_rs->single->value();
+            $block = $block_rs->first->value();
         } 
         
         my $replicate_rs = $self->search_plotprop($subject_id, 'replicate');     
         if($replicate_rs->next)       
         {
-            $replicate = $replicate_rs->single->value();
+            $replicate = $replicate_rs->first->value();
         }
 
         $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
@@ -1269,20 +1346,20 @@ sub phenotypes_by_trait {
 
         if($design_rs->next)       
         {
-            $design = $design_rs->single->value();
+            $design = $design_rs->first->value();
         } 
         
         my $block_rs = $self->search_plotprop($subject_id, 'block');
         if($block_rs->next)
         
         {
-            $block = $block_rs->single->value();
+            $block = $block_rs->first->value();
         } 
         
         my $replicate_rs = $self->search_plotprop($subject_id, 'replicate');     
         if($replicate_rs->next)       
         {
-            $replicate = $replicate_rs->single->value();
+            $replicate = $replicate_rs->first->value();
         }
 
         $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
