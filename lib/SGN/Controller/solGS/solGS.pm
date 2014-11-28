@@ -255,38 +255,66 @@ sub projects_links {
          my $dummy_name = $pr_name =~ /test\w*/ig;
          my $dummy_desc = $pr_desc =~ /test\w*/ig;
        
-         my ($has_genotype, $has_phenotype);
+         my ($has_genotype, $has_phenotype, $is_gs);
         
          unless ($dummy_name || $dummy_desc || !$pr_name )
-         {            
-             $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+         {   
+	     $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
+	  
+	     if (!$is_gs || $is_gs !~ /genomic selection/)
+	     {
+		 $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+	     }
+	     else 
+	     {
+		 $has_phenotype = 'yes';
+	     }
          }
 
-         my ($markers, $match_code);
-         unless (!$has_phenotype) 
+         my $marker_count;
+         if ($has_phenotype) 
          {
-             $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id);           
-          
-             if($markers) 
-             {
-                 my @markers = split(/\t/, $markers);
-                 my $markers_num = scalar(@markers);
+	     my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
+	     $marker_count = $genotype_prop->{'marker_count'};
+	 }
 
-                 $self->trial_compatibility_table($c, $markers_num);
-                 $match_code = $c->stash->{trial_compatibility_code};
-             }               
-         }
+	 if (!$marker_count && $has_phenotype) 
+	 {
+	     my $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id);
+	     
+	     unless (!$markers) 
+	      {
+		 my @markers = split(/\t/, $markers);
+		 $marker_count = scalar(@markers);
+		  
+		 my $genoprop = {'project_id' => $pr_id, 'marker_count' => $marker_count};
+		 $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);
+	     }	    
+	 }         
          
-         if ($markers && $has_phenotype)
-         {          
+	 my $match_code;
+	 if ($marker_count) 
+	 {
+	     $self->trial_compatibility_table($c, $marker_count);
+	     $match_code = $c->stash->{trial_compatibility_code};
+	 } 
+         
+	 if ($marker_count && $has_phenotype)
+	 {
+	     unless ($is_gs) 
+	     {
+		 my $pr_prop = {'project_id' => $pr_id, 'project_type' => 'genomic selection'};
+		 $c->model("solGS::solGS")->set_project_type($pr_prop); 
+	     }
+	     
              my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 
-             my $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+             $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
              push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
                                     $pr_desc, $pr_location, $pr_year, $match_code
              ];            
-         }
+	 }
     }
 
     $c->stash->{projects_pages} = \@projects_pages;
@@ -323,23 +351,39 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     {
         my $projects_rs = $c->model('solGS::solGS')->search_populations($trait_id, $page);
         my $trait       = $c->model('solGS::solGS')->trait_name($trait_id);
-    
+   
         $self->get_projects_details($c, $projects_rs);
         my $projects = $c->stash->{projects_details};
-        
+      
         my @projects_list;
-   
-        foreach my $pr_id (keys %$projects) 
+	my $marker_count;
+       
+	foreach my $pr_id (keys %$projects) 
         { 
-            my $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id);           
-            #  my $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);
-           
-            if($markers) 
-            {
-                my @markers = split(/\t/, $markers);
-                my $markers_num = scalar(@markers);
 
-                $self->trial_compatibility_table($c, $markers_num);
+	    my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
+	    $marker_count = $genotype_prop->{'marker_count'};
+	
+	    if (!$marker_count) 
+	    {
+		my $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id); 
+		my @markers = split(/\t/, $markers);
+		$marker_count = scalar(@markers);
+
+		my $genoprop = {'project_id' => $pr_id, 'marker_count' => $marker_count};
+		$c->model("solGS::solGS")->set_project_genotypeprop($genoprop);	     
+	    }         
+	    else
+            {
+		my $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
+		
+		unless ($is_gs) 
+		{
+		    my $pr_prop = {'project_id' => $pr_id, 'project_type' => 'genomic selection'};
+		    $c->model("solGS::solGS")->set_project_type($pr_prop); 
+		}
+		
+                $self->trial_compatibility_table($c, $marker_count);
                 my $match_code = $c->stash->{trial_compatibility_code};
 
                 my $pr_name     = $projects->{$pr_id}{project_name};
@@ -348,7 +392,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
                 my $pr_location = $projects->{$pr_id}{project_location};
 
                 my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
-                my $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+                $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
                 push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code
                 ];
@@ -429,26 +473,26 @@ sub get_projects_details {
  
     my ($year, $location, $pr_id, $pr_name, $pr_desc);
     my %projects_details = ();
-
+ 
     while (my $pr = $pr_rs->next) 
-    {       
-        $pr_id   = $pr->project_id;
-        $pr_name = $pr->name;
-        $pr_desc = $pr->description;
-       
+    {  
+        $pr_id   = $pr->get_column('project_id');
+        $pr_name = $pr->get_column('name');
+        $pr_desc = $pr->get_column('description');
+     
         my $pr_yr_rs = $c->model('solGS::solGS')->project_year($pr_id);
-        
+    
         while (my $pr = $pr_yr_rs->next) 
-        {
+	{
             $year = $pr->value;
-        }
+	}
 
         my $pr_loc_rs = $c->model('solGS::solGS')->project_location($pr_id);
-    
+   
         while (my $pr = $pr_loc_rs->next) 
-        {
+	{
             $location = $pr->description;          
-        } 
+	} 
 
         $projects_details{$pr_id}  = { 
                   project_name     => $pr_name, 
@@ -2481,7 +2525,8 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
         my $match_code = $c->stash->{trial_compatibility_code};
 
         my $pop_rs       = $c->model('solGS::solGS')->project_details($pop_id);
-        my $pop_details  = $self->get_projects_details($c, $pop_rs);
+       
+	my $pop_details  = $self->get_projects_details($c, $pop_rs);
         my $pop_name     = $pop_details->{$pop_id}{project_name};
         my $pop_desc     = $pop_details->{$pop_id}{project_desc};
         my $pop_year     = $pop_details->{$pop_id}{project_year};
@@ -2489,7 +2534,7 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
                
         my $checkbox = qq |<form> <input style="background-color: $match_code;" type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
         
-        my $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+        $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
     push @selected_pops_details, [$checkbox,  qq|<a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$pop_name</a>|, 
                                $pop_desc, $pop_location, $pop_year, $match_code
         ];
