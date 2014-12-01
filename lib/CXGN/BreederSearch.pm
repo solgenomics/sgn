@@ -246,7 +246,7 @@ sub get_phenotype_info {
              JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) 
              JOIN project USING(project_id)  
              $where_clause";
-
+    
     print STDERR "QUERY: $q\n\n";
     my $h = $self->dbh()->prepare($q);
     $h->execute();
@@ -256,6 +256,7 @@ sub get_phenotype_info {
 	push @$result, [ $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep ];
 	
     }
+    print STDERR "QUERY returned ".scalar(@$result)." rows.\n";
     return $result;
 }
 
@@ -294,7 +295,7 @@ sub get_phenotype_info_matrix {
     my $count2 = 0;
     foreach my $plot (sort keys (%plot_data)) { 
 	$line = $plot;
-	
+	print STDERR "Adding line for plot $plot\n";
 	foreach my $trait (@sorted_traits) { 
 	    my $tab = $plot_data{$plot}->{$trait}; # ? "\t".$plot_data{$plot}->{$trait} : "\t";
 	    $line .= $tab ? "\t".$tab : "\t";
