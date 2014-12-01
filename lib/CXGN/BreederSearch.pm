@@ -295,7 +295,7 @@ sub get_phenotype_info_matrix {
     my $count2 = 0;
     foreach my $plot (sort keys (%plot_data)) { 
 	$line = $plot;
-	print STDERR "Adding line for plot $plot\n";
+
 	foreach my $trait (@sorted_traits) { 
 	    my $tab = $plot_data{$plot}->{$trait}; # ? "\t".$plot_data{$plot}->{$trait} : "\t";
 	    $line .= $tab ? "\t".$tab : "\t";
@@ -347,8 +347,8 @@ sub get_extended_phenotype_info_matrix {
     my $count2 = 0;
     foreach my $plot (sort keys (%plot_data)) { 
 	$line = $plot;
-	$line = join "\t", map { $traits{$_} } ( "project_name", "location", "accesstion" );
-	
+	$line = join "\t", map { $traits{$_} } ( "project_name", "location", "accession" );
+	print STDERR "Adding line for plot $plot\n";
 	foreach my $trait (@sorted_traits) { 
 	    my $tab = $plot_data{$plot}->{$trait}; 
 	    
