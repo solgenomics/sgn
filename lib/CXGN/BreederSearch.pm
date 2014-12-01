@@ -316,16 +316,17 @@ sub get_extended_phenotype_info_matrix {
     
     my %plot_data;
     my %traits;
-
-#    while (my ($project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession) = $h->fetchrow_array()) { 
-
+    
     foreach my $d (@$data) { 
-	my ($project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession) = @$d;
+	my ($project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep) = @$d;
 	
 	my $cvterm = $d->[6].":".$d->[7];
 	my $trait_data = $d->[4];
 	my $plot = $d->[5];
-	$plot_data{$plot}->{$cvterm} = $trait_data;
+	$plot_data{$plot}->{$rep}->{$cvterm} = $trait_data;
+        $plot_data{$plot}->{accession} = $stock_name;
+	$plot_data{$plot}->{location} = $location;
+	$plot_data{$plot}->{project_name} = $project_name;
 	$traits{$cvterm}++;
     }
     
@@ -336,7 +337,7 @@ sub get_extended_phenotype_info_matrix {
     #
     my @sorted_traits = sort keys(%traits);
     foreach my $trait (@sorted_traits) { 
-	$line .= "\t".$trait;  # first header has to be empty (plot name column)
+    $line .= "\t".$trait;  # first header has to be empty (plot name column)
     }
     push @info, $line;
     
@@ -345,9 +346,11 @@ sub get_extended_phenotype_info_matrix {
     my $count2 = 0;
     foreach my $plot (sort keys (%plot_data)) { 
 	$line = $plot;
+	$line = join "\t", map { $traits{$_} } ( "project_name", "location", "accesstion" );
 	
 	foreach my $trait (@sorted_traits) { 
-	    my $tab = $plot_data{$plot}->{$trait}; # ? "\t".$plot_data{$plot}->{$trait} : "\t";
+	    my $tab = $plot_data{$plot}->{$trait}; 
+	    
 	    $line .= $tab ? "\t".$tab : "\t";
 
 	}
