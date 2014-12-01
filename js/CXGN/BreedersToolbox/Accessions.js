@@ -297,5 +297,10 @@ jQuery(document).ready(function ($) {
 	$("#list_div").html(list.listSelect("accessions"));
     });
 
+
+    $('#upload_pedigrees_link').click( function() { 
+	$('#upload_pedigrees_dialog').dialog("open");
+    });
+
     
 });

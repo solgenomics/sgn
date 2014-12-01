@@ -77,9 +77,10 @@ sub _get_stock_resultset {
   my $schema = $self->get_schema();
   my $stock_name = $self->get_stock_name();
   my $stock_rs = $schema->resultset("Stock::Stock")
-    ->search({
+      ->search({ 'me.is_obsolete' => { '!=' => 't' },
 	      -or => [
 		      'lower(me.uniquename)' => { like => lc($stock_name) },
+
 		      -and => [
 			       'lower(type.name)'       => { like => '%synonym%' },
 			       'lower(stockprops.value)' => { like => lc($stock_name) },
@@ -99,7 +100,7 @@ sub _get_stock_resultset_exact {
   my $schema = $self->get_schema();
   my $stock_name = $self->get_stock_name();
   my $stock_rs = $schema->resultset("Stock::Stock")
-    ->search({
+    ->search({ 'me.is_obsolete' => { '!=' => 't' },
 	      'lower(uniquename)' => lc($stock_name),
 	     },
 	     {

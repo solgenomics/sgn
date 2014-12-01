@@ -67,10 +67,18 @@ function searchTrials() {
 
 function listTrials (trials)  {
     
+    jQuery(function() { 
+        jQuery("#color_tip")
+            .css({display: "inline-block", width: "5em"})
+            .tooltip();
+    });
+
     var table = '<table style="width:100%;text-align:left">';
     table    += '<tr>';
-    table += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th>';
-    table += '</tr>';
+    table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th>'
+              + '<th>Year</th><th id="color_tip" title="You can combine trials sharing the same color.">'
+              + 'Tip(?)</th>';
+    table    += '</tr>';
    
     
     for (var i=0; i < trials.length; i++) {
@@ -81,7 +89,8 @@ function listTrials (trials)  {
                 + '<td>' + trials[i][1] + '</td>'
                 + '<td>' + trials[i][2] + '</td>'
                 + '<td>' + trials[i][3] + '</td>'
-                + '<td>' + trials[i][4] + '</td>';
+                + '<td>' + trials[i][4] + '</td>'
+                + '<td>' + trials[i][5] + '</td>';
             table += '</tr>';
         }
     }

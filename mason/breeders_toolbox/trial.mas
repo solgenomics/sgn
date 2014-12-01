@@ -32,7 +32,7 @@ $design_layout_view
 $user_can_modify => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'CXGN.Trial' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'CXGN.Trial' , 'jstree/dist/jstree' ] &>
 
 <%perl>
 my $start_time = time();
@@ -88,17 +88,21 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
+<table><tr><td width="365">
 <&| /page/info_section.mas, title=>"Year(s)" &>
 <% join ", ", @years %>
 </&>
-
+</td><td width="365" >
 <&| /page/info_section.mas, title=>"Location(s)" &>
 
-% foreach my $loc (@location_data) { 
-%  print "$loc->[1]<br />\n";
-%}
+<div id="trial_location">
+[loading...]
 
 </&>
+
+</div>
+</td></tr></table>
+
 
 <&| /page/info_section.mas, title=>"Description", collapsible=>0, collapsed=>0, hide_if_empty=>0, is_empty=> $description_empty, subtitle=>"[<a id=\"edit_trial_description\">edit</a>]" &>
 <div id="trial_description">[loading...]</div>
@@ -225,6 +229,8 @@ jQuery(document).ready(function () {
   load_breeding_program_info(<% $trial_id %>);
 
   display_trial_description(<% $trial_id %>);
+
+  display_trial_location(<% $trial_id %>);
 
   jQuery('#delete_breeding_program_trial_association_link').click(
      function() { 

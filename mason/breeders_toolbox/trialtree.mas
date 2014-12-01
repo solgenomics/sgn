@@ -1,0 +1,103 @@
+
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jstree.dist.jstree' ] &>
+
+<& /page/page_title.mas, title=>"Manage Trials" &>
+
+<table><tr><td valign="top">
+<div class="boxbgcolor5">
+Download<br />
+<button id="download_button" disabled="disabled" >Excel</button><br />
+<button id="download_button_csv" disabled="disabled" >CSV</button><br />
+<hr>
+<button id="delete" disabled="disabled" >Delete</button>
+</div>
+<br />
+</td><td>
+<div id="trial_list" >[loading...]</div>
+</td>
+</tr></table>
+
+<script>
+  jQuery(document).ready(function () {  
+    
+    jQuery.ajax( { 
+      url: '/ajax/breeders/get_trials',
+      success: function(response) { 
+        var html = format(response);
+        jQuery('#trial_list').html(html);
+        jQuery('#trial_list').jstree();
+
+      },
+      error: function(response) { 
+        alert("An error occurred");
+      }
+  });
+
+  function format(s) { 
+    var html = "<ul>";
+    for (var k in s) { 
+      if(s.hasOwnProperty(k)) { 
+        html += "<li>"+ k;
+        if (s[k] !== null) { 
+          html += '<ul>';
+          for (var n=0; n<s[k].length; n++) { 
+       
+            html += '<li id="'+s[k][n][0]+'">'+s[k][n][1]+"</li>";
+
+          }
+          html += '</ul>';
+        }
+
+      }
+        html += '</li>';
+    }
+    html += "</ul>";
+     return html;
+
+   }
+
+     $('#trial_list').on("changed.jstree", function (e, data) {
+       if ($('#trial_list').jstree('is_leaf', data.node)) { 
+         $('#download_button').removeAttr('disabled');
+         $('#download_button_csv').removeAttr('disabled');
+       }
+       else { 
+         $('#download_button').attr('disabled', 'disabled');
+         $('#download_button_csv').attr('disabled', 'disabled');
+       }
+	 
+       
+         // }
+    });				      
+
+    $('#download_button').on('click', function () {
+        var selected = $('#trial_list').jstree('get_bottom_selected');
+        if (selected.length !== 0) { 
+	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
+        }
+        else { alert("No leaf nodes selected for download."); }
+       
+    });
+
+    $('#download_button_csv').on('click', function () {
+        var selected = $('#trial_list').jstree('get_bottom_selected');
+        if (selected.length !== 0) { 
+	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
+        }
+        else { alert("No leaf nodes selected for download."); }
+       
+    });
+
+    $("#trial_list").delegate("li", "dblclick", function(){ 
+      var node = $("#trial_list").jstree("get_node", this); 
+      if ($('#trial_list').jstree('is_leaf', node)) { 				       
+        window.open('/breeders_toolbox/trial/'+node.id);
+      }
+    }); 
+  });
+  
+</script>

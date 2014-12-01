@@ -319,6 +319,27 @@ function get_all_locations() {
 	},
     });
 }
+
+function display_trial_location(trial_id) { 
+    jQuery.ajax( { 
+	url: '/ajax/breeders/trial/location/'+trial_id,
+	success: function(response) { 
+	    if (response.error) { 
+		alert(response.error);
+	    }
+	    else { 
+		var html = "";
+		if (response.location[1]) { 
+		    html = response.location[1];
+		}
+		jQuery('#trial_location').html(html);
+	    }
+	},
+	error: function(response) { 
+	    alert('An error occurred.');
+	}
+    });
+}
 		
 
 function get_trial_id() { 
