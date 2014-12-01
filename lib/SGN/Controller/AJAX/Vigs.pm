@@ -61,7 +61,7 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		$sequence =~ s/\.\d//;
 		$sequence =~ s/\.\d//;
 		
-		print STDERR "seq: $sequence\n";
+		# print STDERR "seq: $sequence\n";
 		
 		# get databases path from the configuration file
 		my $db_path = $c->config->{vigs_db_path};
@@ -74,7 +74,7 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 		foreach my $db_path (@tmp_dbs) {
 			# $db_path =~ s/\.rev\.1\.bt2//;
 			$db_path =~ s/\.rev\.1\.ebwt//;
-			print STDERR "DB: $db_path\n";
+			# print STDERR "DB: $db_path\n";
 			
 			my $fs = Bio::BLAST::Database->open(full_file_basename => "$db_path",);
 			
@@ -84,7 +84,7 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 				last;
 			}
 		}
-		print STDERR "seq: $sequence\n";
+		# print STDERR "seq: $sequence\n";
 		
 		if ($sequence =~ tr/acgtACGT/acgtACGT/ < 30) {
 			push ( @errors , "Your input sequence is not valid: $pasted_gene_name\n");
