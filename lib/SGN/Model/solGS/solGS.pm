@@ -485,7 +485,7 @@ sub genotype_data {
                     my $dir = $self->context->stash->{solgs_cache_dir};
                     
                     my $file = $data_set_type =~ /combined/ 
-                        ? "gentype_data_${model_id}_${trait_abbr}" 
+                        ? "genotype_data_${model_id}_${trait_abbr}" 
                         : "genotype_data_${model_id}.txt";
                     
                     my $training_geno_file = $self->context->controller("solGS::solGS")->grep_file($dir, $file);
