@@ -321,103 +321,135 @@ sub projects_links {
 }
 
 
+sub search_trials_trait : Path('/solgs/search/trials/trait') Args(1) {
+    my ($self, $c, $trait_id) = @_;
+    
+    my $trait_name = $c->model('solGS::solGS')->trait_name($trait_id);
+    
+    $c->stash->{template}   = $self->template('/search/trials/trait.mas');
+    $c->stash->{trait_id}   = $trait_id;
+    $c->stash->{trait_name} = $trait_name;
+}
+
+
 sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     my ($self, $c, $trait_id) = @_;
     
     my $combine = $c->req->param('combine');
     my $page = $c->req->param('page') || 1;
 
-    if ($combine) 
-    {
-       
-        my $ids = $c->req->param("$trait_id");
-        my @pop_ids = split(/,/, $ids);        
-        if (!@pop_ids) {@pop_ids = $ids;}
-
-        my $ret->{status} = 'failed';
-        if (@pop_ids) 
-        {
-            $ret->{status} = 'success';
-            $ret->{populations} = \@pop_ids;
-        }
-               
-        $ret = to_json($ret);
-        
-        $c->res->content_type('application/json');
-        $c->res->body($ret);
-
-    }
-    else 
-    {
-        my $projects_rs = $c->model('solGS::solGS')->search_populations($trait_id, $page);
-        my $trait       = $c->model('solGS::solGS')->trait_name($trait_id);
+    my $projects_rs = $c->model('solGS::solGS')->search_populations($trait_id, $page);
+    my $trait       = $c->model('solGS::solGS')->trait_name($trait_id);
    
-        $self->get_projects_details($c, $projects_rs);
-        my $projects = $c->stash->{projects_details};
+    $self->get_projects_details($c, $projects_rs);
+    my $projects = $c->stash->{projects_details};
       
-        my @projects_list;
-	my $marker_count;
+    my @projects_list;
+    my $marker_count;
        
-	foreach my $pr_id (keys %$projects) 
-        { 
+    foreach my $pr_id (keys %$projects) 
+    { 
 
-	    my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
-	    $marker_count = $genotype_prop->{'marker_count'};
+	my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
+	$marker_count = $genotype_prop->{'marker_count'};
 	
-	    if (!$marker_count) 
+	if (!$marker_count) 
+	{
+	    my $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id); 
+	    my @markers = split(/\t/, $markers);
+	    $marker_count = scalar(@markers);
+
+	    my $genoprop = {'project_id' => $pr_id, 'marker_count' => $marker_count};
+	    $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);	     
+	}         
+	else
+	{
+	    my $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
+
+	    unless ($is_gs) 
 	    {
-		my $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id); 
-		my @markers = split(/\t/, $markers);
-		$marker_count = scalar(@markers);
-
-		my $genoprop = {'project_id' => $pr_id, 'marker_count' => $marker_count};
-		$c->model("solGS::solGS")->set_project_genotypeprop($genoprop);	     
-	    }         
-	    else
-            {
-		my $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
+		my $pr_prop = {'project_id' => $pr_id, 'project_type' => 'genomic selection'};
+		$c->model("solGS::solGS")->set_project_type($pr_prop); 
+	    }
 		
-		unless ($is_gs) 
-		{
-		    my $pr_prop = {'project_id' => $pr_id, 'project_type' => 'genomic selection'};
-		    $c->model("solGS::solGS")->set_project_type($pr_prop); 
-		}
-		
-                $self->trial_compatibility_table($c, $marker_count);
-                my $match_code = $c->stash->{trial_compatibility_code};
+	    $self->trial_compatibility_table($c, $marker_count);
+	    my $match_code = $c->stash->{trial_compatibility_code};
 
-                my $pr_name     = $projects->{$pr_id}{project_name};
-                my $pr_desc     = $projects->{$pr_id}{project_desc};
-                my $pr_year     = $projects->{$pr_id}{project_year};
-                my $pr_location = $projects->{$pr_id}{project_location};
+	    my $pr_name     = $projects->{$pr_id}{project_name};
+	    my $pr_desc     = $projects->{$pr_id}{project_desc};
+	    my $pr_year     = $projects->{$pr_id}{project_year};
+	    my $pr_location = $projects->{$pr_id}{project_location};
 
-                my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
-                $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+	    my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+	    $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
-                push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code
+	    push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code
                 ];
-            }
-        }
+	}
+   }     
+    
+    my $page_links =  sub {uri ( query => {  page => shift } ) };
+    
+    my $pager = $projects_rs->pager; 
+    $pager->change_entries_per_page(15);
 
-        my $form;
-        if ($projects_rs)
-        {
-            $self->get_trait_name($c, $trait_id);
-       
-            $c->stash(template   => $self->template('/search/result/populations.mas'),
-                      result     => \@projects_list,
-                      form       => $form,
-                      trait_id   => $trait_id,
-                      query      => $trait,
-                      pager      => $projects_rs->pager,
-                      page_links => sub {uri ( query => { trait => $trait, page => shift } ) }
-                );
-        }
-        else
-        {
-            $c->res->redirect('/solgs/search');     
-        }
+    my $pagination;
+    my $url = "/solgs/search/result/populations/$trait_id";
+   
+    if ( $pager->previous_page || $pager->next_page )
+    {
+	$pagination =   '<div class = "paginate_nav">';
+        
+	if( $pager->previous_page ) 
+	{
+	    $pagination .=  '<a class="paginate_nav" href="' . $url .  $page_links->($pager->previous_page) . '">&lt;</a>';
+	}
+        
+	for my $c_page ( $pager->first_page .. $pager->last_page ) 
+	{
+	    if( $pager->current_page == $c_page ) 
+	    {
+		$pagination .=  '<span class="paginate_nav_currpage paginate_nav">' .  $c_page . '</span>';
+	    }
+	    else 
+		{
+		    $pagination .=  '<a class="paginate_nav" href="' . $url.   $page_links->($c_page) . '">' . $c_page . '</a>';
+		}
+	}
+	if( $pager->next_page ) 
+	{
+	    $pagination .= '<a class="paginate_nav" href="' . $url . $page_links->($pager->next_page). '">&gt;</a>';
+	}
+        
+	$pagination .= '</div>';
     }
+
+    my $ret->{status} = 'failed';
+    
+    if (@projects_list) 
+    {            
+	$ret->{status} = 'success';
+	$ret->{pagination} = $pagination;
+	$ret->{trials}   = \@projects_list;
+    } 
+    else 
+    { 
+	if ($pager->current_page == $pager->last_page) 
+	{
+	    $c->res->redirect("/solgs/search/result/populations/$trait_id/?page=1&trait=$trait");  
+	}
+	else 
+	{
+	    my $go_next = $pager->current_page + 1;
+	    $c->res->redirect("/solgs/search/result/populations/$trait_id/?page=$go_next&trait=$trait");
+	}
+    } 
+    
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+   
 }
 
 
@@ -521,7 +553,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
         my $def  = $row->definition;
         #my $checkbox = qq |<form> <input type="checkbox" name="trait" value="$name" onclick="getPopIds()"/> </form> |;
         my $checkbox;
-        push @rows, [ qq |<a href="/solgs/search/result/populations/$id">$name</a>|, $def];      
+        push @rows, [ qq |<a href="/solgs/search/trials/trait/$id">$name</a>|, $def];      
     }
 
     if (@rows)
@@ -1377,10 +1409,10 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         {
             my $dir = $c->stash->{solgs_cache_dir};
         
-            my $exp = "phenotype_data_${model_id}_${trait_abbr}"; 
+            my $exp = "phenotype_data_${model_id}_${trait_abbr}_combined"; 
             my $pheno_file = $self->grep_file($dir, $exp);
 
-            $exp = "genotype_data_${model_id}_${trait_abbr}"; 
+            $exp = "genotype_data_${model_id}_${trait_abbr}_combined"; 
             my $geno_file = $self->grep_file($dir, $exp);
 
             $c->stash->{trait_combined_pheno_file} = $pheno_file;
@@ -1793,7 +1825,7 @@ sub get_gebv_files_of_traits {
     write_file($file2, $valid_gebv_files);
    
     $c->stash->{gebv_files_of_valid_traits} = $file2;
-    print STDERR "\n file name: $name -- name2: $name2\n";
+
 }
 
 
