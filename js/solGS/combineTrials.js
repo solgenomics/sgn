@@ -182,7 +182,7 @@ function getSelectedTrials () {
     if (jQuery("#selected_trials_table").length) {      
         jQuery("#selected_trials_table tr").each(function () {       
             var trialId = jQuery(this).find("input[type=checkbox]").val();
-            alert('got selected trials ' + trialId);  
+           
             if (trialId) {
                 trialIds.push(trialId);
             }            
