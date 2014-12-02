@@ -60,14 +60,73 @@ function removeSelectedTrial() {
 }
 
 function searchAgain () {
+
+    var url = window.location.pathname;
+    
+    if (url.match(/solgs\/search\/trials\/trait\//) != null) {
+	var traitId = jQuery("input[name='trait_id']").val();
+	url = '/solgs/search/result/populations/' + traitId;
+    } else {
+	url = '/solgs/search/trials/';
+    }
+  
     jQuery('#homepage_trials_list').empty();
-    searchTrials();  
+    searchTrials(url);  
     jQuery("#homepage_message").show();
     jQuery("#done_selecting").show();
     jQuery("#done_selecting input").val('Select');
     
-   
 }
+
+
+
+ function combineTraitTrials () {
+     var trId = getTraitId();
+  
+     var trialIds = getSelectedTrials();  
+
+     var action = "/solgs/combine/populations/trait/" + trId;
+     var selectedPops = trId + "=" + trialIds + '&' + 'combine=combine';
+    
+     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+     jQuery.blockUI({message: 'Please wait..'});
+    
+     jQuery.ajax({  
+         type: 'POST',
+         dataType: "json",
+         url: action,
+         data: selectedPops,
+         success: function(res) {                       
+             
+             if (res.status) {
+                  
+                 var comboPopsId = res.combo_pops_id;
+                 var newUrl = '/solgs/model/combined/populations/' + comboPopsId + '/trait/' + trId;
+                    
+		 if (comboPopsId) {
+		     window.location.href = newUrl;
+		     jQuery.unblockUI();
+                 } else if (res.redirect_url) {
+		     goToSingleTrialPage(res.redirect_url);
+		     jQuery.unblockUI();
+                 } 
+                    
+             } else {
+                    
+                 if(res.not_matching_pops ){                        
+                     alert('populations ' + res.not_matching_pops + 
+                           ' were genotyped using different marker sets. ' + 
+                           'Please make new selections to combine.' );
+                     window.location.href =  '/solgs/search/result/populations/' + trId;
+                 }
+
+                 if (res.redirect_url) {
+                     window.location.href = res.redirect_url;
+                 }
+             } 
+	 }
+     });
+ }
 
 
 function downloadData() {
@@ -117,14 +176,13 @@ function downloadData() {
 
 
 function getSelectedTrials () {
-    
+   
     var trialIds = [];
-    var selectedTrialsExist = jQuery("#selected_trials_table").doesExist();
   
-    if (selectedTrialsExist == true) {      
+    if (jQuery("#selected_trials_table").length) {      
         jQuery("#selected_trials_table tr").each(function () {       
             var trialId = jQuery(this).find("input[type=checkbox]").val();
-              
+            alert('got selected trials ' + trialId);  
             if (trialId) {
                 trialIds.push(trialId);
             }            
@@ -145,7 +203,7 @@ function goToCombinedTrialsPage(combinedPopsId) {
     if(combinedPopsId) {      
         window.location.href = action;
     } else {
-        
+  ///      
         
     }
    
@@ -156,6 +214,13 @@ function goToSingleTrialPage(url) {
         window.location.href = url;
     }    
 }
+
+
+var getTraitId = function () {
+   
+    var id = jQuery("input[name='trait_id']").val();   
+    return id;
+};
 
 
 Array.prototype.unique =
