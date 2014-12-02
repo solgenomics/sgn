@@ -255,41 +255,80 @@ sub projects_links {
          my $dummy_name = $pr_name =~ /test\w*/ig;
          my $dummy_desc = $pr_desc =~ /test\w*/ig;
        
-         my ($has_genotype, $has_phenotype);
+         my ($has_genotype, $has_phenotype, $is_gs);
         
          unless ($dummy_name || $dummy_desc || !$pr_name )
-         {            
-             $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+         {   
+	     $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
+	  
+	     if (!$is_gs || $is_gs !~ /genomic selection/)
+	     {
+		 $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+	     }
+	     else 
+	     {
+		 $has_phenotype = 'yes';
+	     }
          }
 
-         my ($markers, $match_code);
-         unless (!$has_phenotype) 
+         my $marker_count;
+         if ($has_phenotype) 
          {
-             $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id);           
-          
-             if($markers) 
-             {
-                 my @markers = split(/\t/, $markers);
-                 my $markers_num = scalar(@markers);
+	     my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
+	     $marker_count = $genotype_prop->{'marker_count'};
+	 }
 
-                 $self->trial_compatibility_table($c, $markers_num);
-                 $match_code = $c->stash->{trial_compatibility_code};
-             }               
-         }
+	 if (!$marker_count && $has_phenotype) 
+	 {
+	     my $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id);
+	     
+	     unless (!$markers) 
+	      {
+		 my @markers = split(/\t/, $markers);
+		 $marker_count = scalar(@markers);
+		  
+		 my $genoprop = {'project_id' => $pr_id, 'marker_count' => $marker_count};
+		 $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);
+	     }	    
+	 }         
          
-         if ($markers && $has_phenotype)
-         {          
+	 my $match_code;
+	 if ($marker_count) 
+	 {
+	     $self->trial_compatibility_table($c, $marker_count);
+	     $match_code = $c->stash->{trial_compatibility_code};
+	 } 
+         
+	 if ($marker_count && $has_phenotype)
+	 {
+	     unless ($is_gs) 
+	     {
+		 my $pr_prop = {'project_id' => $pr_id, 'project_type' => 'genomic selection'};
+		 $c->model("solGS::solGS")->set_project_type($pr_prop); 
+	     }
+	     
              my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 
-             my $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+             $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
              push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
                                     $pr_desc, $pr_location, $pr_year, $match_code
              ];            
-         }
+	 }
     }
 
     $c->stash->{projects_pages} = \@projects_pages;
+}
+
+
+sub search_trials_trait : Path('/solgs/search/trials/trait') Args(1) {
+    my ($self, $c, $trait_id) = @_;
+    
+    my $trait_name = $c->model('solGS::solGS')->trait_name($trait_id);
+    
+    $c->stash->{template}   = $self->template('/search/trials/trait.mas');
+    $c->stash->{trait_id}   = $trait_id;
+    $c->stash->{trait_name} = $trait_name;
 }
 
 
@@ -299,82 +338,118 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     my $combine = $c->req->param('combine');
     my $page = $c->req->param('page') || 1;
 
-    if ($combine) 
-    {
-       
-        my $ids = $c->req->param("$trait_id");
-        my @pop_ids = split(/,/, $ids);        
-        if (!@pop_ids) {@pop_ids = $ids;}
-
-        my $ret->{status} = 'failed';
-        if (@pop_ids) 
-        {
-            $ret->{status} = 'success';
-            $ret->{populations} = \@pop_ids;
-        }
-               
-        $ret = to_json($ret);
-        
-        $c->res->content_type('application/json');
-        $c->res->body($ret);
-
-    }
-    else 
-    {
-        my $projects_rs = $c->model('solGS::solGS')->search_populations($trait_id, $page);
-        my $trait       = $c->model('solGS::solGS')->trait_name($trait_id);
-    
-        $self->get_projects_details($c, $projects_rs);
-        my $projects = $c->stash->{projects_details};
-        
-        my @projects_list;
+    my $projects_rs = $c->model('solGS::solGS')->search_populations($trait_id, $page);
+    my $trait       = $c->model('solGS::solGS')->trait_name($trait_id);
    
-        foreach my $pr_id (keys %$projects) 
-        { 
-            my $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id);           
-            #  my $has_genotype = $c->model("solGS::solGS")->has_genotype($pr_id);
-           
-            if($markers) 
-            {
-                my @markers = split(/\t/, $markers);
-                my $markers_num = scalar(@markers);
-
-                $self->trial_compatibility_table($c, $markers_num);
-                my $match_code = $c->stash->{trial_compatibility_code};
-
-                my $pr_name     = $projects->{$pr_id}{project_name};
-                my $pr_desc     = $projects->{$pr_id}{project_desc};
-                my $pr_year     = $projects->{$pr_id}{project_year};
-                my $pr_location = $projects->{$pr_id}{project_location};
-
-                my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
-                my $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
-
-                push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code
-                ];
-            }
-        }
-
-        my $form;
-        if ($projects_rs)
-        {
-            $self->get_trait_name($c, $trait_id);
+    $self->get_projects_details($c, $projects_rs);
+    my $projects = $c->stash->{projects_details};
+      
+    my @projects_list;
+    my $marker_count;
        
-            $c->stash(template   => $self->template('/search/result/populations.mas'),
-                      result     => \@projects_list,
-                      form       => $form,
-                      trait_id   => $trait_id,
-                      query      => $trait,
-                      pager      => $projects_rs->pager,
-                      page_links => sub {uri ( query => { trait => $trait, page => shift } ) }
-                );
-        }
-        else
-        {
-            $c->res->redirect('/solgs/search');     
-        }
+    foreach my $pr_id (keys %$projects) 
+    { 
+
+	my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
+	$marker_count = $genotype_prop->{'marker_count'};
+	
+	if (!$marker_count) 
+	{
+	    my $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id); 
+	    my @markers = split(/\t/, $markers);
+	    $marker_count = scalar(@markers);
+
+	    my $genoprop = {'project_id' => $pr_id, 'marker_count' => $marker_count};
+	    $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);	     
+	}         
+	else
+	{
+	    my $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
+
+	    unless ($is_gs) 
+	    {
+		my $pr_prop = {'project_id' => $pr_id, 'project_type' => 'genomic selection'};
+		$c->model("solGS::solGS")->set_project_type($pr_prop); 
+	    }
+		
+	    $self->trial_compatibility_table($c, $marker_count);
+	    my $match_code = $c->stash->{trial_compatibility_code};
+
+	    my $pr_name     = $projects->{$pr_id}{project_name};
+	    my $pr_desc     = $projects->{$pr_id}{project_desc};
+	    my $pr_year     = $projects->{$pr_id}{project_year};
+	    my $pr_location = $projects->{$pr_id}{project_location};
+
+	    my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+	    $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+
+	    push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code
+                ];
+	}
+   }     
+    
+    my $page_links =  sub {uri ( query => {  page => shift } ) };
+    
+    my $pager = $projects_rs->pager; 
+    $pager->change_entries_per_page(15);
+
+    my $pagination;
+    my $url = "/solgs/search/result/populations/$trait_id";
+   
+    if ( $pager->previous_page || $pager->next_page )
+    {
+	$pagination =   '<div class = "paginate_nav">';
+        
+	if( $pager->previous_page ) 
+	{
+	    $pagination .=  '<a class="paginate_nav" href="' . $url .  $page_links->($pager->previous_page) . '">&lt;</a>';
+	}
+        
+	for my $c_page ( $pager->first_page .. $pager->last_page ) 
+	{
+	    if( $pager->current_page == $c_page ) 
+	    {
+		$pagination .=  '<span class="paginate_nav_currpage paginate_nav">' .  $c_page . '</span>';
+	    }
+	    else 
+		{
+		    $pagination .=  '<a class="paginate_nav" href="' . $url.   $page_links->($c_page) . '">' . $c_page . '</a>';
+		}
+	}
+	if( $pager->next_page ) 
+	{
+	    $pagination .= '<a class="paginate_nav" href="' . $url . $page_links->($pager->next_page). '">&gt;</a>';
+	}
+        
+	$pagination .= '</div>';
     }
 
+    my $ret->{status} = 'failed';
+    
+    if (@projects_list) 
+    {            
+	$ret->{status} = 'success';
+	$ret->{pagination} = $pagination;
+	$ret->{trials}   = \@projects_list;
+    } 
+    else 
+    { 
+	if ($pager->current_page == $pager->last_page) 
+	{
+	    $c->res->redirect("/solgs/search/result/populations/$trait_id/?page=1&trait=$trait");  
+	}
+	else 
+	{
+	    my $go_next = $pager->current_page + 1;
+	    $c->res->redirect("/solgs/search/result/populations/$trait_id/?page=$go_next&trait=$trait");
+	}
+    } 
+    
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+   
 }
 
 
@@ -409,7 +484,6 @@ sub trial_compatibility_table {
         $c->stash->{trial_compatibility_code} = $color;
         write_file($compatibility_file,{append => 1}, $color_code);
     }
-
 }
 
 
@@ -431,26 +505,26 @@ sub get_projects_details {
  
     my ($year, $location, $pr_id, $pr_name, $pr_desc);
     my %projects_details = ();
-
+ 
     while (my $pr = $pr_rs->next) 
-    {       
-        $pr_id   = $pr->project_id;
-        $pr_name = $pr->name;
-        $pr_desc = $pr->description;
-       
+    {  
+        $pr_id   = $pr->get_column('project_id');
+        $pr_name = $pr->get_column('name');
+        $pr_desc = $pr->get_column('description');
+     
         my $pr_yr_rs = $c->model('solGS::solGS')->project_year($pr_id);
-        
+    
         while (my $pr = $pr_yr_rs->next) 
-        {
+	{
             $year = $pr->value;
-        }
+	}
 
         my $pr_loc_rs = $c->model('solGS::solGS')->project_location($pr_id);
-    
+   
         while (my $pr = $pr_loc_rs->next) 
-        {
+	{
             $location = $pr->description;          
-        } 
+	} 
 
         $projects_details{$pr_id}  = { 
                   project_name     => $pr_name, 
@@ -479,7 +553,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
         my $def  = $row->definition;
         #my $checkbox = qq |<form> <input type="checkbox" name="trait" value="$name" onclick="getPopIds()"/> </form> |;
         my $checkbox;
-        push @rows, [ qq |<a href="/solgs/search/result/populations/$id">$name</a>|, $def];      
+        push @rows, [ qq |<a href="/solgs/search/trials/trait/$id">$name</a>|, $def];      
     }
 
     if (@rows)
@@ -772,7 +846,6 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
         $self->get_project_owners($c, $model_id);       
         $c->stash->{owner} = $c->stash->{project_owners};        
     }
-
      
     if ($selection_pop_id =~ /uploaded/) 
     {
@@ -1300,8 +1373,7 @@ sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
         $c->res->content_type("text/plain");
         $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @validation);
   
-    }
- 
+    } 
 }
 
  
@@ -1337,10 +1409,10 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         {
             my $dir = $c->stash->{solgs_cache_dir};
         
-            my $exp = "phenotype_data_${model_id}_${trait_abbr}"; 
+            my $exp = "phenotype_data_${model_id}_${trait_abbr}_combined"; 
             my $pheno_file = $self->grep_file($dir, $exp);
 
-            $exp = "genotype_data_${model_id}_${trait_abbr}"; 
+            $exp = "genotype_data_${model_id}_${trait_abbr}_combined"; 
             my $geno_file = $self->grep_file($dir, $exp);
 
             $c->stash->{trait_combined_pheno_file} = $pheno_file;
@@ -1455,8 +1527,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
                
              }
          }
-         
-   
+            
         $c->res->redirect("/solgs/models/combined/trials/$model_id");
         $c->detach();
     }
@@ -1531,8 +1602,7 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
     
         $c->res->content_type("text/plain");
         $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @prediction_gebvs);
-    }
- 
+    } 
 }
 
 
@@ -1702,7 +1772,8 @@ sub get_gebv_files_of_traits {
    
     my $dir = $c->stash->{solgs_cache_dir};
     
-    my $gebv_files; 
+    my $gebv_files;
+    my $valid_gebv_files;
     my $pred_gebv_files;
 
     if ($pred_pop_id) 
@@ -1726,6 +1797,16 @@ sub get_gebv_files_of_traits {
             $gebv_files .= $tr_file;
             $gebv_files .= "\t" unless (@analyzed_traits_files[-1] eq $tr_file);
         }
+        
+        my @analyzed_valid_traits_files = @{$c->stash->{analyzed_valid_traits_files}};
+
+        foreach my $tr_file (@analyzed_valid_traits_files) 
+        {
+            $valid_gebv_files .= $tr_file;
+            $valid_gebv_files .= "\t" unless (@analyzed_valid_traits_files[-1] eq $tr_file);
+        }
+
+
     }
     
     my $pred_file_suffix;
@@ -1737,7 +1818,14 @@ sub get_gebv_files_of_traits {
     write_file($file, $gebv_files);
    
     $c->stash->{gebv_files_of_traits} = $file;
-    
+
+    my $name2 = "gebv_files_of_valid_traits_${pop_id}${pred_file_suffix}";
+    my $file2 = $self->create_tempfile($c, $name2);
+   
+    write_file($file2, $valid_gebv_files);
+   
+    $c->stash->{gebv_files_of_valid_traits} = $file2;
+
 }
 
 
@@ -2074,9 +2162,9 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
     if (!@selected_traits)
     {
         $c->stash->{model_id} = $pop_id; 
-        $self->analyzed_traits($c);
         
-        @selected_traits = @{$c->stash->{analyzed_traits}};       
+        $self->traits_with_valid_models($c);
+        @selected_traits = @ {$c->stash->{traits_with_valid_models}};
     }
 
     if (!@selected_traits)
@@ -2280,8 +2368,8 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
                      $c->stash->{trait_abbr} = $r->[0];
                  }
              }
-
          }
+         
          my $trait_id   = $c->model('solGS::solGS')->get_trait_id($trait_name);
          my $trait_abbr = $c->stash->{trait_abbr}; 
         
@@ -2337,7 +2425,9 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     if ( !$pred_pop_id) 
     {    
         $self->analyzed_traits($c);
-        @traits = @{ $c->stash->{selection_index_traits} }; 
+        @traits = @{ $c->stash->{selection_index_traits} };
+
+ 
     }
     else  
     {
@@ -2353,6 +2443,32 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     $c->res->content_type('application/json');
     $c->res->body($ret);
     
+}
+
+
+sub traits_with_valid_models {
+    my ($self, $c) = $_;
+
+    my $pop_id = $c->stash->{pop_id};
+    
+    $self->analyzed_traits($c);
+    
+    my @analyzed_traits = @{$c->stash->{analyzed_traits}};  
+    my @filtered_analyzed_traits;
+
+    foreach my $analyzed_trait (@analyzed_traits) 
+    {      
+        $self->get_model_accuracy_value($c, $pop_id, $analyzed_trait);        
+        my $accuracy_value = $c->stash->{accuracy_value}; 
+                    
+        if ($accuracy_value > 0)
+        { 
+            push @filtered_analyzed_traits, $analyzed_trait;
+        }     
+    }
+
+    $c->stash->{traits_with_valid_models} = \@filtered_analyzed_traits;
+
 }
 
 
@@ -2441,7 +2557,8 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
         my $match_code = $c->stash->{trial_compatibility_code};
 
         my $pop_rs       = $c->model('solGS::solGS')->project_details($pop_id);
-        my $pop_details  = $self->get_projects_details($c, $pop_rs);
+       
+	my $pop_details  = $self->get_projects_details($c, $pop_rs);
         my $pop_name     = $pop_details->{$pop_id}{project_name};
         my $pop_desc     = $pop_details->{$pop_id}{project_desc};
         my $pop_year     = $pop_details->{$pop_id}{project_year};
@@ -2449,7 +2566,7 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
                
         my $checkbox = qq |<form> <input style="background-color: $match_code;" type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
         
-        my $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+        $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
     push @selected_pops_details, [$checkbox,  qq|<a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$pop_name</a>|, 
                                $pop_desc, $pop_location, $pop_year, $match_code
         ];
@@ -3222,7 +3339,8 @@ sub analyzed_traits {
     my @traits;
     my @traits_ids;
     my @si_traits;
-
+    my @valid_traits_files;
+ 
     foreach my $trait_file  (@traits_files) 
     {   
         if (-s $trait_file > 1) 
@@ -3245,8 +3363,7 @@ sub analyzed_traits {
                         my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
                        
                         push @traits_ids, $trait_id;
-                       
-                        
+                                               
                     }
                 }
             }
@@ -3254,9 +3371,10 @@ sub analyzed_traits {
             $self->get_model_accuracy_value($c, $model_id, $trait);
             my $av = $c->stash->{accuracy_value};
                       
-            if ($av && $av =~ m/\d+/) 
+            if ($av && $av =~ m/\d+/ && $av > 0) 
             { 
-              push @si_traits, $trait; 
+              push @si_traits, $trait;
+              push @valid_traits_files, $trait_file;
             }
                            
             push @traits, $trait;
@@ -3272,6 +3390,7 @@ sub analyzed_traits {
     $c->stash->{analyzed_traits_ids}    = \@traits_ids;
     $c->stash->{analyzed_traits_files}  = \@traits_files;
     $c->stash->{selection_index_traits} = \@si_traits;
+    $c->stash->{analyzed_valid_traits_files}  = \@valid_traits_files;
    
 }
 
