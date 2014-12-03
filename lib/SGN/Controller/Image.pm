@@ -129,7 +129,7 @@ sub store :Path('/image/store') {
 
     # go to the image detail page
     # open for editing.....
-    $c->res->redirect( $c->uri_for('view',$image_id ) );
+    $c->res->redirect( $c->uri_for('view',$image_id )->relative() );
 }
 
 sub validate_image_filename :Private {
