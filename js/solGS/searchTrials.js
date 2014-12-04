@@ -8,18 +8,29 @@
 
 
 
-jQuery(document).ready(function(){   
-    searchTrials();                        
+jQuery(document).ready(function(){ 
+ 
+    var url = window.location.pathname;
+    
+    if (url.match(/solgs\/search\/trials\/trait\//) != null) {
+	var traitId = jQuery("input[name='trait_id']").val();
+	url = '/solgs/search/result/populations/' + traitId;
+    } else {
+	url = '/solgs/search/trials/';
+    }
+
+    searchTrials(url);               
 });
 
 
-function searchTrials() {
+function searchTrials(url) {
    
     jQuery.ajax({
         type: 'POST',
         dataType: "json",
-        url: '/solgs/search/trials/',
-        success: function(res) {                                                                                
+        url: url,
+        success: function(res) { 
+ 
             var trialsList = listTrials(res.trials);
             var pagination = res.pagination;
             jQuery("#homepage_message").hide();

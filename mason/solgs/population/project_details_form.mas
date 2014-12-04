@@ -5,7 +5,7 @@ a general format for projects details presentation.
 </%doc>
 
 
-<& /util/import_javascript.mas, classes => ["solGS.searchTrials", "solGS.combineTrials", "jquery.cookie"] &>
+<& /util/import_javascript.mas, classes => [ "solGS.combineTrials"] &>
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 <div id="homepage_trials_list" style="display:none;width:100%">
