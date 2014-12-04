@@ -227,9 +227,12 @@ sub get_phenotype_info {
     if ($trait_sql) { push @where_clause, "cvterm.cvterm_id in ($trait_sql)"; }
 
     my $where_clause = "";
+   
     if (@where_clause>0) { 
 	$where_clause = "where (stockprop.type_id=$rep_type_id or stockprop.type_id IS NULL) AND  ".(join (" and ", @where_clause));
     }
+
+    my $order_clause = " order by project.name, plot.uniquename";
 
     my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, cvterm.name, stockprop.value AS rep
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) 
@@ -245,7 +248,8 @@ sub get_phenotype_info {
              JOIN db USING(db_id)
              JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) 
              JOIN project USING(project_id)  
-             $where_clause";
+             $where_clause
+             $order_clause";
     
     print STDERR "QUERY: $q\n\n";
     my $h = $self->dbh()->prepare($q);
@@ -324,33 +328,41 @@ sub get_extended_phenotype_info_matrix {
 	my $cvterm = $d->[6].":".$d->[7];
 	my $trait_data = $d->[4];
 	my $plot = $d->[5];
-	$plot_data{$plot}->{$rep}->{$cvterm} = $trait_data;
-        $plot_data{$plot}->{accession} = $stock_name;
-	$plot_data{$plot}->{location} = $location;
-	$plot_data{$plot}->{project_name} = $project_name;
+	if (!defined($rep)) { $rep = ""; }
+	$plot_data{$plot}->{$cvterm} = $trait_data;
+	$plot_data{$plot}->{metadata} = {
+	    rep => $rep,
+	    project_name => $project_name,
+	    accession => $stock_name,
+	    location => $location,
+	    plot => $plot, 
+	    rep => $rep, 
+	    cvterm => $cvterm, 
+	    trait_data => $trait_data 
+	};
 	$traits{$cvterm}++;
     }
     
     my @info = ();
-    my $line = "";
+    my $line = join "\t", qw | project_name location accession plot rep |;
 
     # generate header line
     #
     my @sorted_traits = sort keys(%traits);
     foreach my $trait (@sorted_traits) { 
-    $line .= "\t".$trait;  # first header has to be empty (plot name column)
+	$line .= "\t".$trait; 
     }
     push @info, $line;
     
     # dump phenotypic values
     #
     my $count2 = 0;
-    foreach my $plot (sort keys (%plot_data)) { 
-	$line = $plot;
-	$line = join "\t", map { $traits{$_} } ( "project_name", "location", "accession" );
-	print STDERR "Adding line for plot $plot\n";
+    foreach my $d (@$data) { 
+	my $p = $d->[5]; # use the plot from the original sort order as the key
+	$line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "project_name", "location", "accession", "plot", "rep" );
+	print STDERR "Adding line for plot $p\n";
 	foreach my $trait (@sorted_traits) { 
-	    my $tab = $plot_data{$plot}->{$trait}; 
+	    my $tab = $plot_data{$p}->{$trait}; 
 	    
 	    $line .= $tab ? "\t".$tab : "\t";
 
