@@ -146,7 +146,7 @@ sub genotype_fetch : Chained('genotype') PathPart('') Args(0){
     }
     $c->stash->{rest} =  {
 	germplasmId => $c->stash->{genotype_id},
-	genotypes => \@runs,
+	data => \@runs,
     };
 
     if ($params->{page} && $params->{pageSize}) { 
