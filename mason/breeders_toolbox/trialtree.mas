@@ -24,7 +24,10 @@ Double click<br />trial to view
 </tr></table>
 
 <script>
-  jQuery(document).ready(function () {  
+
+  jQuery.noConflict(); 
+
+  jQuery(document).ready(function($) {  
     
     jQuery.ajax( { 
       url: '/ajax/breeders/get_trials',
