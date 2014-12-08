@@ -519,13 +519,8 @@ sub get_projects_details {
             $year = $pr->value;
 	}
 
-        my $pr_loc_rs = $c->model('solGS::solGS')->project_location($pr_id);
-   
-        while (my $pr = $pr_loc_rs->next) 
-	{
-            $location = $pr->description;          
-	} 
-
+	my $location = $c->model('solGS::solGS')->project_location($pr_id);
+ 
         $projects_details{$pr_id}  = { 
                   project_name     => $pr_name, 
                   project_desc     => $pr_desc, 
