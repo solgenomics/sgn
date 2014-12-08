@@ -32,6 +32,9 @@ use List::MoreUtils qw / uniq /;
 use JSON::Any;
 use Math::Round::Var;
 
+use File::Spec::Functions qw / catfile catdir/;
+use File::Slurp qw /write_file read_file :edit prepend_file/;
+
 extends 'Catalyst::Model';
 
 
@@ -147,13 +150,20 @@ sub experimental_design {
 
 sub project_location {
     my ($self, $pr_id) = @_;
+  
+    my $q = "SELECT description FROM projectprop 
+                LEFT JOIN cvterm ON (type_id = cvterm_id) 
+                LEFT JOIN  nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id) 
+                WHERE project_id = ?
+                      AND cvterm.name = 'project location'";
+	   
+    my $sth = $self->context->dbc->dbh()->prepare($q);
+    $sth->execute($pr_id);
+   
+    my $loc = $sth->fetchrow_array;
 
-    return $self->schema->resultset("NaturalDiversity::NdExperimentProject")
-        ->search({'me.project_id' => $pr_id})
-        ->search_related('nd_experiment')
-        ->search_related('nd_geolocation');
-
-}
+    return $loc; 
+}    
 
 
 sub all_projects {
@@ -178,22 +188,50 @@ sub all_projects {
     return $projects_rs;
 }
 
+
 sub has_phenotype {
      my ($self, $pr_id ) = @_; 
     
      my $has_phenotype;
      if ($pr_id) 
      {
-	 my $data = $self->phenotype_data($pr_id);
-	 my ($header, $values) = split(/\n/, $data);
-	 $header =~ s/uniquename|object_id|object_name|stock_id|stock_name|design|block|replicate|\t|\n//g;
-               
-	 if($header)
+	 my $file_cache  = Cache::File->new(cache_root => $self->context->stash->{solgs_cache_dir});
+	 $file_cache->purge();
+   
+	 my $key        = "phenotype_data_" . $pr_id;
+	 my $pheno_file = $file_cache->get($key);
+        
+	 if ( -s $pheno_file)
+	 {  
+	     $has_phenotype = 'has_phenotype';
+	 }
+	 else 
 	 {
-	     $has_phenotype = 'has_phenotype';            
-	 }	        
-     }
+	     if ( !-e $pheno_file)
+	     {
+		 my $data = $self->phenotype_data($pr_id);
+		 my ($header, $values) = split(/\n/, $data);
+		 $header =~ s/uniquename|object_id|object_name|stock_id|stock_name|design|block|replicate|\t|\n//g;
+             
+		 $pheno_file = catfile($self->context->stash->{solgs_cache_dir}, "phenotype_data_" . $pr_id . ".txt");
+	     
+		 if($header) 
+		 {
+		     $data =  $self->context->controller("solGS::solGS")->format_phenotype_dataset($self->context, $data); 
+		     write_file($pheno_file, $data);
 
+		     $file_cache->set($key, $pheno_file, '30 days');
+		     $has_phenotype = 'has_phenotype'; 
+		 }
+		 else 
+		 {
+		     write_file($pheno_file, "");
+		     $file_cache->set($key, $pheno_file, '5 days');
+		 }
+	     }	    
+	 }
+     }
+     
      return $has_phenotype;
 }
 
