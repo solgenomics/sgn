@@ -155,10 +155,10 @@ sub project_location {
                 LEFT JOIN cvterm ON (type_id = cvterm_id) 
                 LEFT JOIN  nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id) 
                 WHERE project_id = ?
-                      AND cvterm.name = 'project location'";
+                      AND cvterm.name ilike ?";
 	   
     my $sth = $self->context->dbc->dbh()->prepare($q);
-    $sth->execute($pr_id);
+    $sth->execute($pr_id, 'project location');
    
     my $loc = $sth->fetchrow_array;
 
