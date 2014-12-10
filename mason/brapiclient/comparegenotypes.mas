@@ -7,6 +7,11 @@
 
   Server: <input id="server_address" size="40" value="" /><br />
 
+  malt.pw.usda.gov/t3/wheatplus
+
+  MOREX
+  BARKEY
+
 <br />
 
 Genotype 1 name: <input id="genotype1" size="40" value="IITA-TMS-IBA000017" /><br />

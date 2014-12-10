@@ -150,7 +150,7 @@ CXGN.Sunshine.NetworkBrowser.prototype = {
 
     renderLegend: function() { 	
 	var s = '';
-	MochiKit.Logging.log('renderLegend...');
+	//MochiKit.Logging.log('renderLegend...');
 	for (var n=0; n<this.relationships.length; n++) { 
 	    var colors = this.relationships[n].color.split(',');
 	    var colorString = '#'+ this.toHex(colors[0]) + this.toHex(colors[1]) +this.toHex(colors[2]);

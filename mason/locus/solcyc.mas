@@ -5,7 +5,9 @@
 <div id="solcyc" >[loading...]</div>
 <script language="javascript" type="text/javascript">
 
+  jQuery(document).ready( function() { 
   Locus.printLocusUnigenes( <% $locus_id %> );
+  });
 
 </script>
 

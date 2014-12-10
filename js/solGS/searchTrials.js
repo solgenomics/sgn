@@ -30,7 +30,7 @@ function searchTrials(url) {
         dataType: "json",
         url: url,
         success: function(res) { 
-            alert(res.trials);
+ 
             var trialsList = listTrials(res.trials);
             var pagination = res.pagination;
             jQuery("#homepage_message").hide();

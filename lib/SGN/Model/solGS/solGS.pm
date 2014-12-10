@@ -155,11 +155,11 @@ sub project_location {
                 LEFT JOIN cvterm ON (type_id = cvterm_id) 
                 LEFT JOIN  nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id) 
                 WHERE project_id = ?
-                      AND cvterm.name = 'project location'";
+                      AND cvterm.name ilike ?";
 	   
     my $sth = $self->context->dbc->dbh()->prepare($q);
-    $sth->execute($pr_id);
-   
+    $sth->execute($pr_id, 'project location');
+
     my $loc = $sth->fetchrow_array;
 
     return $loc; 
@@ -1254,11 +1254,16 @@ sub structure_phenotype_data {
     foreach my $key ( sort keys %$phen_hashref ) 
     {        
         my $subject_id       = $phen_hashref->{$key}{stock_id};
-        my $stock_object_row = $self->map_subject_to_object($subject_id)->single;       
-        my $object_name      = $stock_object_row->name;
-        my $object_id        = $stock_object_row->stock_id;
+        my $stock_object_row = $self->map_subject_to_object($subject_id)->single;
+
+	my ($object_name, $object_id);
+	if ($stock_object_row) 
+	{
+	    $object_name      = $stock_object_row->name;
+	    $object_id        = $stock_object_row->stock_id;
         
-        push @project_genotypes, $object_name;
+	    push @project_genotypes, $object_name;
+	}
 
         $d .= $key . "\t" .$object_name . "\t" . $object_id . "\t" . $phen_hashref->{$key}{stock_id} . 
               "\t" . $phen_hashref->{$key}{stock_name};

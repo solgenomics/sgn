@@ -17,12 +17,12 @@
     <table width="100%" cellspacing="0" cellpadding="0" id="pagefooter">
       <tr><td style="vertical-align: top; width: 370px; font-size:smaller" colspan="2" >
 
-	  SGN is supported by the <a class="footer" href="/about/tomato_project/">NSF (#0116076)</a>,
+	  SGN is supported by the <a class="footer" href="http://www.nsf.gov/awardsearch/showAward?AWD_ID=0820612">NSF (#0820612)</a>,
     <a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at the <a class="footer" href="http://bti.cornell.edu">Boyce Thompson Institute.</a>
     <br />
     Subscribe to the <a class="footer" href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">sgn-announce mailing list</a> for updates. 
     Send comments and feedback to <% $feedback_email %><br />
-Cite SGN using <a class="footer" href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3013765/?tool=pubmed" target="_new"> Bombarely et al, 2011</a> | 
+Cite SGN using <a class="footer" href="http://nar.oxfordjournals.org/content/early/2014/11/26/nar.gku1195.full" target="_new"> Fernandez-Pozo et al, 2014</a> | 
     <a href="/legal.pl">Disclaimer</a></td></tr>
       <tr><td>
                 <a href="http://bti.cornell.edu/" class="footer">

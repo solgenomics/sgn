@@ -272,6 +272,8 @@ sub subjects_by_match_count {
 	my $primseqi;
 	my $desc;
 	
+	# print STDERR "BLAST db: $db\n";
+	
 	if ($db) {
 		$fs = Bio::BLAST::Database->open(full_file_basename => "$db",);
 	}

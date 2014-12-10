@@ -546,9 +546,9 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
         my $id   = $row->cvterm_id;
         my $name = $row->name;
         my $def  = $row->definition;
-        #my $checkbox = qq |<form> <input type="checkbox" name="trait" value="$name" onclick="getPopIds()"/> </form> |;
+       
         my $checkbox;
-        push @rows, [ qq |<a href="/solgs/search/trials/trait/$id">$name</a>|, $def];      
+        push @rows, [ qq |<a href="/solgs/search/trials/trait/$id"  onclick="solGS.waitPage()">$name</a>|, $def];      
     }
 
     if (@rows)

@@ -166,6 +166,7 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
         # 1. list of locus alias objects
         $locus->get_locus_aliases( 'f', 'f' );
     #########
+    my ($feature, $src_feature) = $locus->get_src_feature;
 ################
     $c->stash(
         template => '/locus/index.mas',
@@ -187,10 +188,12 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
             image_ids      => $image_ids,
             xrefs      => \@locus_xrefs,
 	    trait_db_name => $trait_db_name,
+	    feature     => $feature,
+	    src_feature => $src_feature,
         },
-        locus_add_uri  => $c->uri_for( '/ajax/locus/associate_locus' ),
-        cvterm_add_uri => $c->uri_for( '/ajax/locus/associate_ontology'),
-        assign_owner_uri  => $c->uri_for( '/ajax/locus/assign_owner' ),
+        locus_add_uri  => $c->uri_for( '/ajax/locus/associate_locus' )->relative(),
+        cvterm_add_uri => $c->uri_for( '/ajax/locus/associate_ontology')->relative(),
+        assign_owner_uri  => $c->uri_for( '/ajax/locus/assign_owner' )->relative(),
         );
 }
 
@@ -241,4 +244,5 @@ sub get_locus_dbxrefs : Private {
     my $locus_dbxrefs = $locus->get_dbxrefs;
     $c->stash->{locus_dbxrefs} = $locus_dbxrefs;
 }
+
 __PACKAGE__->meta->make_immutable;
