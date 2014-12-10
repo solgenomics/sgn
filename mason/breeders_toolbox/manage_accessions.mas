@@ -63,8 +63,11 @@ $accessions
   </table>
 </div>
 
+<div id="pedigrees_upload_success_dialog_message" class="ui-widget">
+  The pedigree upload finished.
+</div>
 
-<div id="upload_pedigrees_dialog" title="Upload pedigres">
+<div id="upload_pedigrees_dialog" title="Upload pedigrees">
 
   <&| /page/explanation.mas, title=>'Template information' &>
     <p>

@@ -38,7 +38,6 @@ jQuery(document).ready(function ($) {
             },
 	    "Ok": function () {
 		upload_pedigrees_file();
-		alert("Pedigree upload finished");
                 jQuery('#upload_pedigrees_dialog').dialog("close");
 		
 	    },
@@ -88,7 +87,6 @@ jQuery(document).ready(function ($) {
             }
 	},
 	complete: function (response) {
-
 	    $('#working').dialog("close");
             if (response.error_string) {
 		$("#upload_pedigrees_error_display tbody").html('');
