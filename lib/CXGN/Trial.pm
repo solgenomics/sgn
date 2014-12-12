@@ -182,14 +182,14 @@ sub remove_location {
 
 }
 
-sub get_project_type { 
-    my $self = shift;
-    my $row = $self->bcs_schema->resulset('Project::Projectprop')->find( { project_id => $self->get_trial_id() , type_id=> $self->get_location_type_id() });
+# sub get_project_type { 
+#     my $self = shift;
+#     my $row = $self->bcs_schema->resulset('Project::Projectprop')->find( { project_id => $self->get_trial_id() , type_id=> $self->get_location_type_id() });
     
-    return $row->value();
+#     return $row->value();
     
 
-}
+# }
 
 
 sub set_project_type { 
@@ -233,6 +233,18 @@ sub get_year_type_id {
     return $rs->first()->cvterm_id();
 }
 
+sub get_name { 
+    my $self = shift;
+    my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
+    
+    if ($row) { 
+	return $row->name();
+    }
+}
+ 
+sub set_name { 
+
+}   
 
 
 1;

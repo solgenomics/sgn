@@ -3,6 +3,8 @@ package SGN::Controller::AJAX::BrAPI;
 
 use Moose;
 use JSON::Any;
+use CXGN::BreedersToolbox::Projects;
+use CXGN::Trial;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -141,12 +143,12 @@ sub genotype_fetch : Chained('genotype') PathPart('') Args(0){
 		$encoded_genotype{$m} = "NA";
 	    }
 	}
-	push @runs, { genotype => \%encoded_genotype, runId => $row->genotypeprop_id() };
+	push @runs, { data => \%encoded_genotype, runId => $row->genotypeprop_id() };
 	
     }
     $c->stash->{rest} =  {
 	germplasmId => $c->stash->{genotype_id},
-	data => \@runs,
+	genotypes => \@runs,
     };
 
     if ($params->{page} && $params->{pageSize}) { 
@@ -162,6 +164,119 @@ sub genotype_rs {
     my $rs = $c->stash->{schema}->resultset("Stock::Stock")->search( { 'me.stock_id' => $c->stash->{genotype_id} })->search_related('nd_experiment_stocks')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
 
     return $rs;
+}
+
+
+sub study : Chained('brapi') PathPart('study') CaptureArgs(0) {
+    my $self = shift;
+    my $c = shift;
+
+
+}
+
+sub study_list : Chained('study') PathPart('list') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $program = $c->req->param("program");
+
+    my $ps = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+
+    my $programs = $ps -> get_breeding_programs();
+    my $message;
+
+    if ($program) { 
+	my $program_info;
+	foreach my $bp (@$programs) { 
+	    if (uc($bp->[1]) eq uc($program)) { 
+		$program_info = $bp;
+	    }
+	}
+	if (!$program_info) { 
+	    $message = "Program $program does not exist. Ignoring program parameter"; 
+	}
+	else { 
+	    $programs = $program_info;
+	}
+    }
+    
+    my @response;
+    foreach my $bp (@$programs) { 
+	my $trial_data = {};
+	my $t = CXGN::Trial->new( { trial_id => $bp->[0], bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
+	$trial_data->{studyId} = $t->get_trial_id();
+	$trial_data->{studyType} = $t->get_project_type();
+	$trial_data->{name} = $t->get_name();
+	$trial_data->{programName} = $ps->get_breeding_programs_by_trial($t->get_trial_id());
+	$trial_data->{keyContact} = "";
+	$trial_data->{locationName} = $t->get_location();
+	$trial_data->{designType} = ""; # $t->get_design_type();
+	
+	push @response, $trial_data;
+    }
+
+    $c->stash->{rest} =  \@response;
+
+
+    # studyId: "1",
+    # studyType: "NURSERY",
+    # name: "Nursery XYZ",
+    # objective: "Generate more seeds",
+    # programName: "TCAP",
+    # startDate: "2014-08-01",
+    # keyContact: "Mr. Plant Breeder A",
+    # locationName: "Ibadan",
+    # designType: "RCBD"
+
+
+}
+
+
+sub study_detail : Chained('study') PathPart('detail') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $t = CXGN::Trial->new( {bcs_schema => $schema });
+
+ 
+
+    my $data = { studyId => $t->get_trial_id(),
+		 studyType => $t->get_project_type() || "trial",
+		 objective => "",
+		 startDate => "",
+		 keyContact => "",
+		 locationName => $t->get_location(),
+		 designType => "",
+    };
+
+ 
+    $c->stash->{rest} = $data;
+    
+    
+
+
+    # studyId: "1",
+    #  studyType: "trial",
+    #  name: "Fieldbook A",
+    #  objective: "Generate seeds",
+    #  startDate: "2014-08-01",
+    #  keyContact: "Mr. Plant Breeder",
+    #  locationName: "Ibadan",
+    #  designType: "RCBD",
+    #  designDetails: [ 
+    #      { 
+    # 	plotId: "11",
+    # 	blockId: "1",
+    # 	rowId: "20",
+    # 	columnId: "22",
+    # 	replication: "1",
+    # 	checkId: "0",
+    # 	lineId: "143",
+    # 	lineRecordName: "ZIPA_68"
+    #      }, ...
+    #    ]
+
 }
 
 1;
