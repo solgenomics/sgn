@@ -143,12 +143,12 @@ sub genotype_fetch : Chained('genotype') PathPart('') Args(0){
 		$encoded_genotype{$m} = "NA";
 	    }
 	}
-	push @runs, { genotype => \%encoded_genotype, runId => $row->genotypeprop_id() };
+	push @runs, { data => \%encoded_genotype, runId => $row->genotypeprop_id() };
 	
     }
     $c->stash->{rest} =  {
 	germplasmId => $c->stash->{genotype_id},
-	data => \@runs,
+	genotypes => \@runs,
     };
 
     if ($params->{page} && $params->{pageSize}) { 
