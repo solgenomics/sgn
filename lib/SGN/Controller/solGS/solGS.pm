@@ -4078,16 +4078,22 @@ sub get_solgs_dirs {
 
 sub cache_file {
     my ($self, $c, $cache_data) = @_;
-    
-    my $solgs_cache = $c->stash->{solgs_cache_dir};
-    my $file_cache  = Cache::File->new(cache_root => $solgs_cache);
+  
+    my $cache_dir = $c->stash->{cache_dir};
+   
+    unless ($cache_dir) 
+    {
+	$cache_dir = $c->stash->{solgs_cache_dir};
+    }
+   
+    my $file_cache  = Cache::File->new(cache_root => $cache_dir);
     $file_cache->purge();
 
     my $file  = $file_cache->get($cache_data->{key});
 
     unless ($file)
     {      
-        $file = catfile($solgs_cache, $cache_data->{file});
+        $file = catfile($cache_dir, $cache_data->{file});
         write_file($file);
         $file_cache->set($cache_data->{key}, $file, '30 days');
     }
