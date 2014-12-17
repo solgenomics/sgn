@@ -269,6 +269,7 @@ jQuery(document).ready(function() {
 	jQuery('#search_by_desc').click( function() { 
 		var database = jQuery('#database').val();
 		var blast_desc = jQuery('#blast_desc').val();
+		alert("db: "+database+", blast_desc: "+blast_desc);
 		
 		jQuery.ajax( {
 			url: '/tools/blast/desc_search/',

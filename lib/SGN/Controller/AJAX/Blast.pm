@@ -441,6 +441,9 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
     my $schema = $c->dbic_schema("SGN::Schema");
 	my $params = $c->req->body_params();
 	my $input_string = $c->req->param("blast_desc");
+	
+	print STDERR "$input_string\n";
+	
 	my $bdb = $schema->resultset("BlastDb")->find($c->req->param("database")) || die "could not find bdb with file_base ".$c->req->param("database");
 	my $blastdb_path = $bdb->full_file_basename;
 
