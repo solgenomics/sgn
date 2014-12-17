@@ -444,7 +444,8 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
 	
 	print STDERR "$input_string\n";
 	
-	my $bdb = $schema->resultset("BlastDb")->find($c->req->param("database")) || die "could not find bdb with file_base ".$c->req->param("database");
+	# my $bdb = $schema->resultset("BlastDb")->find($c->req->param("database")) || die "could not find bdb with file_base ".$c->req->param("database");
+	 my $bdb = CXGN::BlastDB->from_id($c->req->param("database"));
 	my $blastdb_path = $bdb->full_file_basename;
 
 	# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30.fasta";
