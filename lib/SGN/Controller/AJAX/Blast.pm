@@ -388,13 +388,9 @@ sub search_gene_ids {
 	my @ids = @{$ids_array};
 	my @output_seqs;
 	
-	print STDERR "blastdb_path: $blastdb_path\n";
-	
 	my $fs = Bio::BLAST::Database->open(full_file_basename => "$blastdb_path",);
 	
 	foreach my $input_string (@ids) {
-		
-		print STDERR "$input_string\n";
 		
 		if ($fs->get_sequence($input_string)) {
 			my $seq_obj = $fs->get_sequence($input_string);
@@ -413,70 +409,38 @@ sub search_gene_ids {
 	return join('<br>', @output_seqs);
 }
 
-sub search_gene : Path('/tools/blast/gene_search/') Args(0) { 
-	my $self = shift;
-	my $c = shift;
-	
-	my @ids;
-	my $schema = $c->dbic_schema("SGN::Schema");
-	my $params = $c->req->body_params();
-	my $input_string = $c->req->param("blast_gene_name");
-	
-	print STDERR "$input_string\n";
-	
-	my $bdb = $schema->resultset("BlastDb")->find($c->req->param("database")) || die "could not find bdb with file_base ".$c->req->param("database");
-	
-	# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30";
-	my $blastdb_path = $bdb->full_file_basename;
-	
-	push(@ids, $input_string);
-	my $output_seqs = search_gene_ids(\@ids,$blastdb_path);
-	
-	$c->stash->{rest} = {output_seq => "$output_seqs"};
-}
-
 sub search_desc : Path('/tools/blast/desc_search/') Args(0) { 
 	my $self = shift;
 	my $c = shift;
 	
-	print "hellooo1\n";
-	print STDERR "hellooo2\n";
-	print STDOUT "hellooo3\n";
-	
 	my @ids;
 	my $schema = $c->dbic_schema("SGN::Schema");
-	# my $params = $c->req->body_params();
 	my $params = $c->req->params();
 	my $input_string = $params->{blast_desc};
-	# my $input_string = $c->req->param("blast_desc");
 	my $db_id = $params->{database};
-	# my $db_id = $c->req->param("database");
-	
-	print STDERR "$input_string\n";
-	print STDERR "db_id: $db_id\n";
 	
 	my $bdb = $schema->resultset("BlastDb")->find($db_id) || die "could not find bdb with file_base $db_id";
-	# my $bdb = $schema->resultset("BlastDb")->find($params->{database} ) or die "could not find bdb with file_base '$params->{database}'";
-	# my $bdb = CXGN::BlastDB->from_id($c->req->param("database"));
 	my $blastdb_path = $bdb->full_file_basename;
-
-	print STDERR "$blastdb_path\n";
 
 	# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30.fasta";
 	
 	my $grepcmd = "grep \"$input_string\" $blastdb_path \| sed 's/>//' \| cut -d ' ' -f 1";
 	
-	print STDERR "$grepcmd\n";
+	# print STDERR "$grepcmd\n";
 	my $output_seq = `$grepcmd`;
+	my $output_seqs;
 	
-	print STDERR "$output_seq\n";
+	if ($output_seq) {
+		# print STDERR "$output_seq\n";
 	
-	@ids = split(/\n/, $output_seq);
+		@ids = split(/\n/, $output_seq);
 	
-	# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30";
+		# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30";
 	
-	my $output_seqs = search_gene_ids(\@ids,$blastdb_path);
-	
+		$output_seqs = search_gene_ids(\@ids,$blastdb_path);
+	} else {
+		$output_seqs "There were not results for your search\n";
+	}
 	$c->stash->{rest} = {output_seq => "$output_seqs"};
 }
 

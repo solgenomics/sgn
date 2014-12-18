@@ -117,7 +117,7 @@ if ($preload_seq) {
 
 </td><td rowspan="4" align="center"><div id="status_wheel"></div></td></tr>
     <tr><td><b>Databases</b></td>
-      <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>	
+      <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>
     </td></tr>
     <tr><td><b>Program</b></td>
       <td><& /page/html_select.mas, name=>'program_select', id=>'program_select', choices=>$programs &>
@@ -136,7 +136,6 @@ if ($preload_seq) {
          <td>
 
 <div style="text-align: center">
-	<!-- <button class="input" id="clear_button" type="button" value="Clear" onclick="clear_input_sequence(); ">Clear</button>  -->
 	<button class="submit_blast_button" id="submit_blast_button" type="submit" name="search" value="Search">BLAST</button>
 </div>
 <br />
@@ -155,18 +154,10 @@ if ($preload_seq) {
 	]
 	&>
 	
-	<h1>Search sequences within the BLAST databases</h1>
-	<table border="0">
-		<tr>
-			<td>By gene name </td><td><input class="blast_search_input_box" value="NbS00020151g0019.1" id="blast_gene_name" size="28"/></td><td><button id="search_by_gene" class="submit_blast_button">Seach</button></td>
-		</tr>
-		<tr>
-			<td>By description </td><td><input class="blast_search_input_box" value="ribulose" id="blast_desc" size="28"/></td><td><button id="search_by_desc" class="submit_blast_button">Seach</button></td>
-		</tr>
-	</table>
+	<h1>Extract sequences within the BLAST databases</h1>
+	<input class="blast_search_input_box" value="ribulose" id="blast_desc" size="28"/> <button id="search_by_desc" class="submit_blast_button">Search</button> <span class="help_dialog" style="font-size: 80%" title="paste a gene name or description such as NbS00020151g0019.1, ribulose, putrescine, Solyc07g063040 or Solyc07g063040.2.1">help</span>
 	
 </&>
-
 
          </td>
       </tr>
@@ -234,42 +225,12 @@ jQuery(document).ready(function() {
 		}
 	});
 	
-	//search blastdb by gene id
-	jQuery('#search_by_gene').click( function() { 
-		var database = jQuery('#database').val();
-		var blast_gene_name = jQuery('#blast_gene_name').val();
-		// alert("db: "+database+", gene: "+blast_gene_name);
-		jQuery.ajax( {
-			url: '/tools/blast/gene_search/',
-			method: 'POST',
-			data: {'blast_gene_name':blast_gene_name, 'database': database},
-			success: function(response) {
-				$('#search_output').html(response.output_seq);
-				$('#search_output').dialog({
-				draggable:true,
-				resizable:true,
-				modal: true,
-				width:700,
-				height:500,
-				closeOnEscape:true,
-				title: "Results",
-				open: function(event, ui) { $('.ui-dialog-titlebar-close').blur();},
-				});
-			},
-			error: function(response) {
-				alert("An error occurred. The service may not be available right now.");
-				return;
-			}
-		});
-		
-		
-	});
 	
 	//search blastdb by description
 	jQuery('#search_by_desc').click( function() { 
 		var database = jQuery('#database').val();
 		var blast_desc = jQuery('#blast_desc').val();
-		alert("db: "+database+", blast_desc: "+blast_desc);
+		// alert("db: "+database+", blast_desc: "+blast_desc);
 		
 		jQuery.ajax( {
 			url: '/tools/blast/desc_search/',
@@ -342,9 +303,7 @@ jQuery(document).ready(function() {
 }
 .help_dialog {
 	color:blue;
-}
-#open_descriptions_dialog {
-	color:blue;
+	cursor:pointer
 }
 #desc_dialog {
 	overflow: auto;
@@ -396,9 +355,6 @@ jQuery(document).ready(function() {
 	top: auto;
 }
 
-
-
-
 #sequence {
 	background-color:#EEEEFE;
 	border-color:#000;
@@ -411,7 +367,6 @@ jQuery(document).ready(function() {
 	min-width: 700px;
 	max-width: 700px;
 }
-
 
 .submit_blast_button {
 background-color:#555555;
@@ -448,6 +403,5 @@ border-radius:5px;
 height: 20px;
 padding-left: 5px;
 }
-
 
 </style>
