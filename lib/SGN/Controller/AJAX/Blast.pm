@@ -424,7 +424,7 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
 
 	# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30.fasta";
 	
-	my $grepcmd = "grep \"$input_string\" $blastdb_path \| sed 's/>//' \| cut -d ' ' -f 1";
+	my $grepcmd = "grep -i \"$input_string\" $blastdb_path \| sed 's/>//' \| cut -d ' ' -f 1";
 	
 	# print STDERR "$grepcmd\n";
 	my $output_seq = `$grepcmd`;
