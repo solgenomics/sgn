@@ -154,8 +154,6 @@ if ($preload_seq) {
 	]
 	&>
 	
-	<h1>Extract sequences within the BLAST databases</h1>
-	<input class="blast_search_input_box" value="ribulose" id="blast_desc" size="28"/> <button id="search_by_desc" class="submit_blast_button">Search</button> <span class="help_dialog" style="font-size: 80%" title="paste a gene name or description such as NbS00020151g0019.1, ribulose, putrescine, Solyc07g063040 or Solyc07g063040.2.1">help</span>
 	
 </&>
 
@@ -164,6 +162,17 @@ if ($preload_seq) {
       </table>
     </td></tr>
 </table>
+</&>
+
+<&| /page/info_section.mas, title=>"Extract sequences from BLAST databases", collapsible=>1, collapsed =>1 &>
+<br>
+	<table>
+		<tr>
+			<td><input class="blast_search_input_box" value="ribulose" id="blast_desc" size="28"/></td>
+			<td><button id="search_by_desc" class="submit_blast_button">Search</button></td>
+			<td class="help_box">Paste a gene name or description such as: Solyc07g063040, NbS00020151g0019.1, ribulose or putrescine</td>
+		</tr>
+	</table>
 </&>
 
 <&| /page/info_section.mas, title=>"Status", collapsible=>1, collapsed =>0 &>
@@ -231,12 +240,14 @@ jQuery(document).ready(function() {
 		var database = jQuery('#database').val();
 		var blast_desc = jQuery('#blast_desc').val();
 		// alert("db: "+database+", blast_desc: "+blast_desc);
+		disable_ui();
 		
 		jQuery.ajax( {
 			url: '/tools/blast/desc_search/',
 			method: 'POST',
 			data: {'blast_desc':blast_desc, 'database': database},
 			success: function(response) {
+				enable_ui();
 				$('#search_output').html(response.output_seq);
 				$('#search_output').dialog({
 				draggable:true,
@@ -251,6 +262,7 @@ jQuery(document).ready(function() {
 			},
 			error: function(response) {
 				alert("An error occurred. The service may not be available right now.");
+				enable_ui();
 				return;
 			}
 		});
@@ -308,6 +320,14 @@ jQuery(document).ready(function() {
 #desc_dialog {
 	overflow: auto;
 	position: relative;
+}
+.help_box {
+	background-color:#EEEEFE;
+	border-color:#AAA;
+	border-width:2px;
+	border-style:solid;
+	border-radius:5px;
+	padding-left: 15px;
 }
 .ui-tooltip, .arrow:after {
 	background: #000000;
