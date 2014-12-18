@@ -397,16 +397,16 @@ sub search_gene_ids {
 			my $seq = $seq_obj->seq();
 			my $id = $seq_obj->id();
 			my $desc = $seq_obj->desc();
-			my $new_seq;
+			my $new_seq = "";
 		
 			for (my $i=0; $i<length($seq); $i=$i+60) {
 				$new_seq = $new_seq.substr($seq,$i,60)."<br>"; 
 			}
 		
-			push(@output_seqs, ">$id $desc<br>$new_seq<br>");
+			push(@output_seqs, ">$id $desc<br>$new_seq");
 		}
 	}
-	return join('<br>', @output_seqs);
+	return join('', @output_seqs);
 }
 
 sub search_desc : Path('/tools/blast/desc_search/') Args(0) { 

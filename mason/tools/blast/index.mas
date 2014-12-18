@@ -252,7 +252,6 @@ jQuery(document).ready(function() {
 				$('#search_output').dialog({
 				draggable:true,
 				resizable:true,
-				modal: true,
 				width:700,
 				height:500,
 				closeOnEscape:true,
