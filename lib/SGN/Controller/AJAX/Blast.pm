@@ -439,7 +439,7 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
 	
 		$output_seqs = search_gene_ids(\@ids,$blastdb_path);
 	} else {
-		$output_seqs "There were not results for your search\n";
+		$output_seqs = "There were not results for your search\n";
 	}
 	$c->stash->{rest} = {output_seq => "$output_seqs"};
 }
