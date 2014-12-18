@@ -155,10 +155,10 @@ sub run : Path('/tools/blast/run') Args(0) {
 					       developer_message => Data::Dumper::Dumper({
 						   '$seq_count' => $seq_count,
 						   '$seq_filename' => $seqfile,
-											 }),
-		     );
-		 
-		 return -i => $seqfile;
+							}),
+		);
+		
+		return -i => $seqfile;
 	      }
 	 },
 	 
@@ -422,6 +422,8 @@ sub search_gene : Path('/tools/blast/gene_search/') Args(0) {
 	my $params = $c->req->body_params();
 	my $input_string = $c->req->param("blast_gene_name");
 	
+	print STDERR "$input_string\n";
+	
 	my $bdb = $schema->resultset("BlastDb")->find($c->req->param("database")) || die "could not find bdb with file_base ".$c->req->param("database");
 	
 	# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30";
@@ -439,12 +441,17 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
 	
 	my @ids;
     my $schema = $c->dbic_schema("SGN::Schema");
-	my $params = $c->req->body_params();
-	my $input_string = $c->req->param("blast_desc");
+	# my $params = $c->req->body_params();
+	my $params = $c->req->params();
+	my $input_string = $params->{blast_desc};
+	# my $input_string = $c->req->param("blast_desc");
+	my $db_id = $params->{database};
+	# my $db_id = $c->req->param("database");
 	
 	print STDERR "$input_string\n";
+	print STDERR "db_id: $db_id\n";
 	
-	my $bdb = $schema->resultset("BlastDb")->find($c->req->param("database")) || die "could not find bdb with file_base ".$c->req->param("database");
+	my $bdb = $schema->resultset("BlastDb")->find($db_id) || die "could not find bdb with file_base $db_id";
 	# my $bdb = $schema->resultset("BlastDb")->find($params->{database} ) or die "could not find bdb with file_base '$params->{database}'";
 	# my $bdb = CXGN::BlastDB->from_id($c->req->param("database"));
 	my $blastdb_path = $bdb->full_file_basename;
