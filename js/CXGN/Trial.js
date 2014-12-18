@@ -22,18 +22,23 @@ function get_breeding_select() {
 function delete_phenotype_data_by_trial_id(trial_id) { 
     var yes = confirm("Are you sure you want to delete all phenotypic data associated with trial "+trial_id+" ? This action cannot be undone.");
     if (yes) { 
+	jQuery('#working').dialog("open");
+
 	jQuery.ajax( { 
             url: '/breeders/trial/phenotype/delete/id/'+trial_id,
             success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
+		    jQuery('#working').dialog("close");
+
 		}
 		else { 
-		    
+		    jQuery('#working').dialog("close");
 		    alert('The phenotypic data has been deleted.'); // to do: give some idea how many items were deleted.
 		}
             },
             error: function(response) { 
+		jQuery('#working').dialog("close");
 		alert("An error occurred.");
             }
 	});
@@ -43,18 +48,22 @@ function delete_phenotype_data_by_trial_id(trial_id) {
 function delete_layout_data_by_trial_id(trial_id) { 
     var yes = confirm("Are you sure you want to delete the layout data associated with trial "+trial_id+" ? This action cannot be undone.");
     if (yes) { 
+	jQuery('#working').dialog("open");
+	
 	jQuery.ajax( { 
             url: '/breeders/trial/layout/delete/id/'+trial_id,
             success: function(response) { 
 		if (response.error) { 
+		    jQuery('#working').dialog("close");
 		    alert(response.error);
 		}
 		else { 
-		    
+		    jQuery('#working').dialog("close");
 		    alert('The layout data has been deleted.'); // to do: give some idea how many items were deleted.
 		}
             },
             error: function(response) { 
+		jQuery('#working').dialog("close");
 		alert("An error occurred.");
             }
 	});
