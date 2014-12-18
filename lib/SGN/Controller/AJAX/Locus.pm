@@ -702,7 +702,7 @@ sub locus_unigenes_GET :Args(0) {
                 qq | <input type = "button" onclick="javascript:Locus.obsoleteLocusUnigene(\'$locus_unigene_id\',  \'$locus_id\')" value ="Remove" /> |
                 : qq| <span class="ghosted">[Remove]</span> |;
             #
-            my $blast_link = "<a href='/tools/blast/?preload_id=" . $unigene_id . "&preload_type=15'>[Blast]</a>";
+            my $blast_link = "<a href='/tools/blast/?preload_id=SGN-U" . $unigene_id . "&preload_type=15'>[Blast]</a>";
             $unigenes .=
                 qq|<a href="/search/unigene.pl?unigene_id=$unigene_id">SGN-U$unigene_id</a> $organism_name -- build $build_nr -- $nr_members members $unigene_obsolete_link $blast_link<br />|;
 

@@ -7,6 +7,11 @@
 
   Server: <input id="server_address" size="40" value="" /><br />
 
+  malt.pw.usda.gov/t3/wheatplus
+
+  MOREX
+  BARKEY
+
 <br />
 
 Genotype 1 name: <input id="genotype1" size="40" value="IITA-TMS-IBA000017" /><br />
@@ -14,16 +19,7 @@ Genotype 2 name: <input id="genotype2" size="40" value="95NA-00063"  /><br />
 
 <button id="submit">Submit</button>
 
-<br />
-Note: This sample client is based on the following BrAPI calls:
-<ul>
-<li>/brapi/0.1/germplasm/find?q=name1</li>
-<li>/brapi/0.1/germplasm/find?q=name2</li>
-<li>/brapi/0.1/genotype/id1</li>
-<li>/brapi/0.1/genotype/id2</li>
-</ul>
 
-It then calculates the number of matching sites in the two genotypes.
 
 
 
@@ -45,31 +41,27 @@ It then calculates the number of matching sites in the two genotypes.
     var id1;
     var id2;
 
-     alert(server+"/brapi/0.1/germplasm/find?q="+genotype1);
-
     jQuery.ajax( { 
        url: server + '/brapi/0.1/germplasm/find',
        data: { q : genotype1 },
+  //dataType: 'jsonp',
        async: false,
        success: function(response) { 
-  //alert("RESPONSE 1: "+response[0].germplasmId);
+         alert("RESPONSE 1: "+response[0].germplasmId);
          id1 = response[0].germplasmId;
-         alert(JSON.stringify(response));
-      
        },
        error: function(response) { 
          alert("An error occurred.");
        }
      });
 
-  alert(server+"/brapi/0.1/germplasm/find?q="+genotype2);
      jQuery.ajax( { 
        url: server + '/brapi/0.1/germplasm/find',
        data: { q : genotype2 },
+  //dataType: 'jsonp',
        async: false,
        success: function(response) { 
-  //alert("RESPONSE 2: "+response[0].germplasmId);
-     alert(JSON.stringify(response));
+         alert("RESPONSE 2: "+response[0].germplasmId);
          id2 = response[0].germplasmId;
        },
        error: function(response) { 
@@ -83,14 +75,12 @@ It then calculates the number of matching sites in the two genotypes.
      var scores1;
      var scores2;
 
-     alert(server+'/brapi/0.1/genotype/'+id1);
-  
      jQuery.ajax( { 
        url: server + '/brapi/0.1/genotype/'+id1,
+//       dataType: 'jsonp',
        async: false,
        success: function(response) { 
-//         alert("RESPONSE for "+id1+": "+Object.keys(response.genotypes[0].genotype).length);
-              alert(JSON.stringify(response));
+         alert("RESPONSE for "+id1+": "+Object.keys(response.genotypes[0].genotype).length);
          scores1 = response.genotypes[0].genotype;
        },
        error: function(response) { 
@@ -98,14 +88,12 @@ It then calculates the number of matching sites in the two genotypes.
        }
      });
     
-
-  alert(server+'/brapi/0.1/genotype/'+id1);
   jQuery.ajax( { 
        url: server +  '/brapi/0.1/genotype/'+id2,
        async: false,
+//       dataType: 'jsonp',
        success: function(response) { 
-   //      alert("RESPONSE for "+id2+": "+Object.keys(response.genotypes[0].genotype).length);
-         alert(JSON.stringify(response));
+         alert("RESPONSE for "+id2+": "+Object.keys(response.genotypes[0].genotype).join(" / "));
          scores2 = response.genotypes[0].genotype;
        },
        error: function(response) { 
@@ -116,11 +104,11 @@ It then calculates the number of matching sites in the two genotypes.
      var total = 0;
      alert("KEYS: "+Object.keys(scores1).join(">>>"));
      Object.keys(scores1).forEach( function(k) { 
-       if( (typeof scores1[k] != undefined) && (typeof scores2[k] != undefined) &&  
-          (scores1[k] === scores2[k])) { 
+
+          if (scores1[k] === scores2[k]) { 
             matches++;
           }
-  
+        
           total++;
         });
      alert("Matches: "+matches + " Total: "+total+ " D :" + (matches / total));

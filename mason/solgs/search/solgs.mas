@@ -28,7 +28,7 @@ $gs_traits_index
 
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.ajaxAutocomplete"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTrials", "solGS.ajaxAutocomplete"] &>
 
 <p>&nbsp</p>
 
@@ -77,7 +77,7 @@ $gs_traits_index
 
 <table id="selected_trials_table" style="text-align:left;width:100%">
 <tr>
-  <th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th>
+  <th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th><th>&nbsp</th>
 </tr>
 <tr> 
 </tr>

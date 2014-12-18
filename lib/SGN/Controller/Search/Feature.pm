@@ -253,7 +253,15 @@ sub make_feature_search_rs : Private {
     my $args = $c->stash->{search_args};
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema','sgn_chado');
-    my $rs = $schema->resultset('Sequence::Feature');
+    #my $rs = $schema->resultset('Sequence::Feature');
+    #Get only features that have locations in featureloc
+    my $rs = $schema->resultset('Sequence::Feature')->search(
+	{'featureloc_features.locgroup' => 0},
+	{prefetch => ['featureloc_features']}
+	);
+
+    #debug
+    #$schema->storage->debug(1);
 
     if( my $name = $args->{'name'} ) {
         $rs = $rs->search({ 'me.name' => { ilike => '%'.$name.'%' }});

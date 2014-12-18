@@ -130,6 +130,101 @@ sub set_description {
 
 }
 
+
+sub get_location { 
+    my $self = shift;
+
+    if ($self->get_location_type_id()) { 
+	my $row = $self->bcs_schema->resultset('Project::Projectprop')->find( { project_id => $self->get_trial_id() , type_id=> $self->get_location_type_id() });
+	
+	if ($row) { 
+	    my $loc = $self->bcs_schema->resultset('NaturalDiversity::NdGeolocation')->find( { nd_geolocation_id => $row->value() });
+	    
+	    return [ $row->value(), $loc->description() ];
+	}
+	else { 
+	    return [];
+	}
+    }
+    
+
+}
+
+
+sub add_location { 
+    my $self = shift;
+    my $location_id = shift;
+
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->create( 
+	{ 
+	    project_id => $self->get_trial_id(),
+	    type_id => $self->get_location_type_id(),
+	    value => $location_id,
+	});
+    
+    
+}
+
+sub remove_location { 
+    my $self = shift;
+    my $location_id = shift;
+    
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find( 
+	{ 
+	    project_id => $self->get_trial_id(),
+	    type_id => $self->get_location_type_id(),
+	    value => $location_id,
+	});
+    if ($row) { 
+	print STDERR "Removing location $location_id from trail ".$self->get_trial_id()."\n";
+	$row->delete();
+    }
+
+}
+
+# sub get_project_type { 
+#     my $self = shift;
+#     my $row = $self->bcs_schema->resulset('Project::Projectprop')->find( { project_id => $self->get_trial_id() , type_id=> $self->get_location_type_id() });
+    
+#     return $row->value();
+    
+
+# }
+
+
+sub set_project_type { 
+    
+
+}
+
+sub get_project_type { 
+    my $self = shift;
+    my $row = $self->bcs_schema->resultset('Cv::Cv')->find( { name => 'project_types' } );
+
+    my @types;
+    if ($row) { 
+	my $rs = $self->bcs_schema->resultset('Project::Projectprop')->search( { project_id => $self->get_trial_id() })->search_related('type', { cv_id => $row->cv_id() });
+	foreach my $r ($rs->next()) { 
+	    push @types, [ $r->cvterm_id(), $r->name() ];
+	}
+	
+	return @types;
+    }
+	
+    return ();
+
+}
+
+sub get_location_type_id { 
+    my $self = shift;
+    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'project location' });
+
+    if ($rs->count() > 0) { 
+	return $rs->first()->cvterm_id();
+    }
+
+}
+
 sub get_year_type_id { 
     my $self = shift;
 
@@ -138,7 +233,18 @@ sub get_year_type_id {
     return $rs->first()->cvterm_id();
 }
 
+sub get_name { 
+    my $self = shift;
+    my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
+    
+    if ($row) { 
+	return $row->name();
+    }
+}
+ 
+sub set_name { 
 
+}   
 
 
 1;

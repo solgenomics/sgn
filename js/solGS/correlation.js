@@ -127,16 +127,16 @@ function formatGenCorInputData (popId, type, indexFile) {
                     'model_id': modelDetail.population_id, 
                     'corr_population_id': popId, 
                     'type': type, 
-                    'gebvs_file': response.gebvs_file,
+                    'gebvs_file': gebvsFile,
                     'div_place' : divPlace,
                 };
-
+              
                 runGenCorrelationAnalysis(args);
 
             } else {
                 jQuery("#correlation_message")
                     .css({"padding-left": '0px'})
-                    .html("This population has no additive genetic data.");
+                    .html("This population has no valid traits to correlate.");
             }
         },
         error: function(response) {
@@ -221,7 +221,7 @@ function runPhenoCorrelationAnalysis () {
 
 
 function runGenCorrelationAnalysis (args) {
-    
+   
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -348,8 +348,8 @@ function plotCorrelation (data, divPlace) {
         .attr("x", 10)
         .attr("dy", ".1em")         
         .attr("transform", "rotate(90)")
-        .attr("fill", "purple")
-        .style({"text-anchor":"start", "fill": "#3306FC"});
+        .attr("fill", "#523CB5")
+        .style({"text-anchor":"start", "fill": "#523CB5"});
           
     corrplot.append("g")
         .attr("class", "y axis")
@@ -398,7 +398,12 @@ function plotCorrelation (data, divPlace) {
                               + " vs. " + data.traits[d.col] 
                               + ": " + d3.format(".2f")(d.value) 
                               + "]")
-                        .style("fill", "purple")
+                        .style("fill", function () { 
+                            if (d.value > 0) 
+                            { return "#86B404"; } 
+                            else if (d.value < 0) 
+                            { return "#6A0888"; }
+                        })  
                         .attr("x", totalW * 0.5)
                         .attr("y", totalH * 0.5)
                         .attr("font-weight", "bold")

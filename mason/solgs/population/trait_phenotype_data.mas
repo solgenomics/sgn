@@ -32,8 +32,8 @@ $combo_pops_id => ''
 <div id="tabs_phenotype" style="width:100%;height:100%;border-color:green;">
   <ul>
     <li> <a href="#tabs_scatter">Phenotype scatter plot</a> </li>
-    <li> <a href="#tabs_histogram">Phenotype frequency distribution</a> </li> 
-    <li> <a href="#tabs_regression">Heritability...</a> </li> 
+    <li> <a href="#tabs_histogram">Frequency distribution</a> </li> 
+    <li> <a href="#tabs_regression">GEBVs vs. phenotypes</a> </li> 
   </ul>
  
   <div id="tabs_scatter">
