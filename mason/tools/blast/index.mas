@@ -168,9 +168,9 @@ if ($preload_seq) {
 <br>
 	<table>
 		<tr>
-			<td><input class="blast_search_input_box" value="ribulose" id="blast_desc" size="28"/></td>
+			<td><input class="blast_search_input_box" value="putrescine" id="blast_desc" size="28"/></td>
 			<td><button id="search_by_desc" class="submit_blast_button">Search</button></td>
-			<td class="help_box">Paste a gene name or description such as: Solyc07g063040, NbS00020151g0019.1, ribulose or putrescine</td>
+			<td class="help_box">Select a BLAST database and paste a gene name or description such as: Solyc07g063040 or ribulose</td>
 		</tr>
 	</table>
 </&>
@@ -332,7 +332,8 @@ jQuery(document).ready(function() {
 	border-width:2px;
 	border-style:solid;
 	border-radius:5px;
-	padding-left: 15px;
+	padding-left: 10px;
+	padding-right: 10px;
 }
 .ui-tooltip, .arrow:after {
 	background: #000000;
