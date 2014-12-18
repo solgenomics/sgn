@@ -414,11 +414,11 @@ sub search_gene_ids {
 }
 
 sub search_gene : Path('/tools/blast/gene_search/') Args(0) { 
-    my $self = shift;
-    my $c = shift;
+	my $self = shift;
+	my $c = shift;
 	
 	my @ids;
-    my $schema = $c->dbic_schema("SGN::Schema");
+	my $schema = $c->dbic_schema("SGN::Schema");
 	my $params = $c->req->body_params();
 	my $input_string = $c->req->param("blast_gene_name");
 	
@@ -436,11 +436,15 @@ sub search_gene : Path('/tools/blast/gene_search/') Args(0) {
 }
 
 sub search_desc : Path('/tools/blast/desc_search/') Args(0) { 
-    my $self = shift;
-    my $c = shift;
+	my $self = shift;
+	my $c = shift;
+	
+	print "hellooo1\n";
+	print STDERR "hellooo2\n";
+	print STDOUT "hellooo3\n";
 	
 	my @ids;
-    my $schema = $c->dbic_schema("SGN::Schema");
+	my $schema = $c->dbic_schema("SGN::Schema");
 	# my $params = $c->req->body_params();
 	my $params = $c->req->params();
 	my $input_string = $params->{blast_desc};
