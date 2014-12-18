@@ -40,6 +40,27 @@ function delete_phenotype_data_by_trial_id(trial_id) {
     }
 }
 
+function delete_layout_data_by_trial_id(trial_id) { 
+    var yes = confirm("Are you sure you want to delete the layout data associated with trial "+trial_id+" ? This action cannot be undone.");
+    if (yes) { 
+	jQuery.ajax( { 
+            url: '/breeders/trial/layout/delete/id/'+trial_id,
+            success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    
+		    alert('The layout data has been deleted.'); // to do: give some idea how many items were deleted.
+		}
+            },
+            error: function(response) { 
+		alert("An error occurred.");
+            }
+	});
+    }
+}
+
 function associate_breeding_program() { 
     var program = jQuery('#change_breeding_program_select').val();
     var trial_id = get_trial_id();
@@ -199,17 +220,17 @@ function trial_detail_page_setup_dialogs() {
 	}
     );
     
-    jQuery('#delete_phenotype_data_by_trial').click(
+    jQuery('#delete_phenotype_data_by_trial_id').click(
 	function() { 
 	    var trial_id = get_trial_id();
 	    delete_phenotype_data_by_trial_id(trial_id);
 	}
     );
     
-    jQuery('#delete_layout_data_by_trial').click( 
+    jQuery('#delete_layout_data_by_trial_id').click( 
 	function() { 
 	    var trial_id = get_trial_id();
-	    delete_layout_data_by_trail_id(trial_id);
+	    delete_layout_data_by_trial_id(trial_id);
 	});
     
     jQuery('#create_spreadsheet_link').click(function () {
