@@ -40,6 +40,7 @@ use Data::Dumper;
 use File::Slurp qw | read_file |;
 use Bio::Chado::Schema;
 use CXGN::Phenome::Schema;
+use CXGN::Metadata::Schema;
 use SGN::Schema;
 
 use warnings;
@@ -70,6 +71,8 @@ sub BUILD {
     
     $self->sgn_schema(SGN::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}));
     
+    $self->metadata_schema(CXGN::Metadata::Schema->connect($dsn, $self->config->{dbuser}, $self->{config}->{dbpass}));
+
 }
 
 has 'config' => ( isa => "Ref",
@@ -91,6 +94,10 @@ has 'phenome_schema' => (isa => 'CXGN::Phenome::Schema',
 
 has 'sgn_schema' => (isa => 'SGN::Schema',
 		     is => 'rw',
+    );
+
+has 'metadata_schema' => (isa => 'CXGN::Metadata::Schema', 
+			  is => 'rw',
     );
 
 1;
