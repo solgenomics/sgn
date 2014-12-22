@@ -6,6 +6,7 @@ use namespace::autoclean;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Path qw / mkpath  /;
 use File::Temp qw / tempfile tempdir /;
+use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
 
 
@@ -98,7 +99,7 @@ sub pca_scores_file {
                       stash_key => 'pca_scores_file'
     };
 
-    $self->cache_file($c, $cache_data);
+    $c->controller("solGS::solGS")->cache_file($c, $cache_data);
 
 }
 
@@ -118,7 +119,7 @@ sub pca_loadings_file {
                       stash_key => 'pca_loadings_file'
     };
 
-    $self->cache_file($c, $cache_data);
+    $c->controller("solGS::solGS")->cache_file($c, $cache_data);
 
 }
 
