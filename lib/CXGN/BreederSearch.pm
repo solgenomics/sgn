@@ -321,8 +321,10 @@ sub get_extended_phenotype_info_matrix {
     
     my %plot_data;
     my %traits;
-    
+
+    print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
     foreach my $d (@$data) { 
+
 	my ($project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep) = @$d;
 	
 	my $cvterm = $d->[6].":".$d->[7];
@@ -332,7 +334,7 @@ sub get_extended_phenotype_info_matrix {
 	$plot_data{$plot}->{$cvterm} = $trait_data;
 	$plot_data{$plot}->{metadata} = {
 	    rep => $rep,
-	    project_name => $project_name,
+	    trial_name => $project_name,
 	    accession => $stock_name,
 	    location => $location,
 	    plot => $plot, 
@@ -344,7 +346,7 @@ sub get_extended_phenotype_info_matrix {
     }
     
     my @info = ();
-    my $line = join "\t", qw | project_name location accession plot rep |;
+    my $line = join "\t", qw | trial_name location accession plot rep |;
 
     # generate header line
     #
@@ -357,9 +359,20 @@ sub get_extended_phenotype_info_matrix {
     # dump phenotypic values
     #
     my $count2 = 0;
+
+    my @unique_plot_list = ();
+    my $previous_plot = "";
     foreach my $d (@$data) { 
-	my $p = $d->[5]; # use the plot from the original sort order as the key
-	$line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "project_name", "location", "accession", "plot", "rep" );
+	my $plot = $d->[5];
+	if ($plot ne $previous_plot) { 
+	    push @unique_plot_list, $plot;
+	}
+	$previous_plot = $plot;
+    }
+
+
+    foreach my $p (@unique_plot_list) { 
+	$line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "trial_name", "location", "accession", "plot", "rep" );
 	print STDERR "Adding line for plot $p\n";
 	foreach my $trait (@sorted_traits) { 
 	    my $tab = $plot_data{$p}->{$trait}; 

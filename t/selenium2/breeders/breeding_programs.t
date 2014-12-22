@@ -2,14 +2,14 @@
 
 use lib 't/lib';
 
-use Test::More 'tests'=>8;
+use Test::More;
 
 use SGN::Test::WWW::WebDriver;
 
 
 my $t = SGN::Test::WWW::WebDriver->new();
 
-$t->while_logged_in_as("submitter", sub { 
+$t->while_logged_in_as("curator", sub { 
     $t->get_ok('/breeders/manage_programs');
     
     my $new_bp_link = $t->find_element_ok('new_breeding_program_link', 'id', 'new breeding program link');
@@ -31,25 +31,33 @@ $t->while_logged_in_as("submitter", sub {
 
     print STDERR "\n\nCLICKED OK... so far so good...\n\n";
 
+    $t->driver()->accept_alert();
+
     sleep(2); # wait until page is re-loaded
 
-#    $t->get_ok('/breeders/manage_programs');
+    $t->get_ok('/breeders/manage_programs');
 
-    #ok($t->driver->get_page_source() =~ m/WEBTEST/, "breeding program addition successful");
-    print STDERR "TROUBLE, folks!\n\n";
+    ok($t->driver->get_page_source() =~ m/WEBTEST/, "breeding program addition successful");
+
+#    print STDERR $t->driver->get_page_source();
 
     my $delete_link = $t->find_element_ok('delete_breeding_program_link_WEBTEST', 'id', 'find breeding program delete link');
 
-    print STDERR "Marker 1\n";
+     $delete_link->click();
 
-    $delete_link->click();
-
-    print STDERR "Marker 2\n";
-
-    $t->driver()->accept_alert();
-
-    print STDERR "Marker 3\n";
+    sleep(2);
     
-    ok($t->get->driver->get_page_source() !~ m/TEST/, "breeding program deletion successful");
+    $t->driver()->accept_alert();
+    
+    $t->get_ok('/breeders/manage_programs');
+    
+    
+    print STDERR "Marker 4\n";
+
+#    sleep(2);
+
+#  ok($t->driver->get_page_source() !~ m/WEBTEST/, "breeding program deletion successful");
+
+    done_testing();
 		       
 		       });

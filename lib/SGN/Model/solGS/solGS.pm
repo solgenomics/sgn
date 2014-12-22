@@ -249,7 +249,7 @@ sub has_genotype {
         if($stock) 
         {
             my $genotype_name = $stock->get_column('stock_name'); 
-            if ($stock->value) 
+            if ($stock->get_column('value')) 
             { 
                 $has_genotype = 'has_genotype';
                 last;
@@ -549,7 +549,7 @@ sub genotype_data {
                 {
                     push @stocks, $stock;
                     
-                    my $json_values  = $geno->value;
+                    my $json_values  = $geno->get_column('value');
                     my $values       = JSON::Any->decode($json_values);
                     my @markers      = keys %$values;
                  
@@ -586,7 +586,7 @@ sub genotype_data {
             { 
                 $cnt++;
               
-                my $json_values  = $geno->value;
+                my $json_values  = $geno->get_column('value');
                 my $values       = JSON::Any->decode($json_values);
                 my @markers      = keys %$values;
 
@@ -672,7 +672,7 @@ sub format_user_list_genotype_data {
       
         while (my $geno = $stock_genotype_rs->next)
         {  
-            my $json_values  = $geno->value;
+            my $json_values  = $geno->get_column('value');
             my $values       = JSON::Any->decode($json_values);
             my @markers      = keys %$values;
             
@@ -704,7 +704,9 @@ sub project_genotype_data_rs {
     my ($self, $project_id) = @_;
 
     my $genotype_rs = $self->schema->resultset("Project::Project")
-        ->search({'me.project_id' => $project_id})
+        ->search({'me.project_id' => $project_id, 
+		  'type.name' => {'ilike' => 'snp genotyping'}
+		 })
         ->search_related('nd_experiment_projects')
         ->search_related('nd_experiment') 
         ->search_related('nd_experiment_stocks')       
@@ -715,13 +717,14 @@ sub project_genotype_data_rs {
         ->search_related('nd_experiment') 
         ->search_related('nd_experiment_genotypes')
         ->search_related('genotype')
-        ->search_related('genotypeprops',
-                         {},
+        ->search_related('genotypeprops')
+	->search_related('type',
+			 {},               
                          { 
-                              columns   => [qw / genotypeprops.genotypeprop_id genotypeprops.value/],
-                             '+select' => [ qw / me.project_id me.name object.stock_id object.name / ], 
-                             '+as'     => [ qw / project_id project_name stock_id stock_name / ],
-                             distinct  => [ qw / stock_name /]
+			     select   => [qw / genotypeprops.genotypeprop_id genotypeprops.value 
+                                            me.project_id me.name object.stock_id object.name/ ],
+			     as       => [ qw / genotypeprop_id value project_id project_name stock_id stock_name / ],
+			     distinct => [ qw / stock_name /]
                          }
         );
 
@@ -738,12 +741,12 @@ sub individual_stock_genotypes_rs {
         ->search_related('nd_experiment')
         ->search_related('nd_experiment_genotypes')
         ->search_related('genotype')
-        ->search_related('genotypeprops',
-                         {},
+        ->search_related('genotypeprops')
+	->search_related('type',
+                         {'type.name' => {'ilike' => 'snp genotyping'}},
                          {  
-                             columns   => [ qw / genotypeprops.genotypeprop_id genotypeprops.value / ],
-                             '+select' => [ qw / me.stock_id me.name / ], 
-                             '+as'     => [ qw / stock_id stock_name / ] 
+                             select => [ qw / me.stock_id me.name  genotypeprops.genotypeprop_id genotypeprops.value / ], 
+                             as     => [ qw / stock_id stock_name  genotypeprop_id value/ ] 
                          }
         );
 
@@ -760,12 +763,13 @@ sub stock_genotypes_rs {
         ->search_related('nd_experiment')
         ->search_related('nd_experiment_genotypes')
         ->search_related('genotype')
-        ->search_related('genotypeprops',
-                         {},
+        ->search_related('genotypeprops')
+        ->search_related('type',
+                         {'type.name' =>{'ilike'=> 'snp genotyping'}}, 
                          { 
-                             columns   => [ qw / genotypeprops.genotypeprop_id genotypeprops.value/ ],
-                             '+select' => [ qw / me.project_id me.name object.stock_id object.name / ], 
-                             '+as'     => [ qw / project_id project_name stock_id stock_name / ] 
+                             select => [ qw / me.project_id me.name object.stock_id object.name  
+                                                 genotypeprops.genotypeprop_id genotypeprops.value/ ], 
+                             as     => [ qw / project_id project_name stock_id stock_name genotypeprop_id value / ] 
                          }
         );
 
@@ -778,7 +782,9 @@ sub genotyping_trials_rs {
     my $self = shift;
   
     my $geno_pr_rs = $self->schema->resultset("Project::Project")
-        ->search({"genotypeprops.value" =>  {"!=",  undef}})
+        ->search({"genotypeprops.value" =>  {"!=",  undef}, 
+		  'type.name' =>{'ilike' => 'snp genotyping'}
+		 })
         ->search_related('nd_experiment_projects')
         ->search_related('nd_experiment') 
         ->search_related('nd_experiment_stocks')
@@ -787,8 +793,10 @@ sub genotyping_trials_rs {
         ->search_related('nd_experiment')
         ->search_related('nd_experiment_genotypes')
         ->search_related('genotype')
-        ->search_related('genotypeprops',
-                         {},
+        ->search_related('genotypeprops')
+	->search_related('type',
+                         {}, 
+                       
                          {                              
                              select   => [ qw / me.project_id me.name / ], 
                              as       => [ qw / project_id project_name  / ],
@@ -805,7 +813,9 @@ sub prediction_genotypes_rs {
     my ($self, $pr_id) = @_;
     
     my $genotype_rs = $self->schema->resultset("Project::Project")
-        ->search({'me.project_id' => $pr_id})
+        ->search({'me.project_id' => $pr_id, 
+		  'type.name' => {'ilike' => 'snp genotyping'}
+		 })
         ->search_related('nd_experiment_projects')
         ->search_related('nd_experiment') 
         ->search_related('nd_experiment_stocks')
@@ -814,13 +824,14 @@ sub prediction_genotypes_rs {
         ->search_related('nd_experiment') 
         ->search_related('nd_experiment_genotypes')
         ->search_related('genotype')
-        ->search_related('genotypeprops', 
-                         {},
+        ->search_related('genotypeprops') 
+	->search_related('type',
+			 {}, 
                          { 
-                              columns   => [qw / genotypeprops.genotypeprop_id genotypeprops.value/],
-                             '+select' => [ qw / me.project_id me.name stock.stock_id stock.name / ], 
-                             '+as'     => [ qw / project_id project_name stock_id stock_name / ],
-                             distinct  => [ qw / stock_name /]
+			     select   => [qw / genotypeprops.genotypeprop_id genotypeprops.value 
+                                            me.project_id me.name stock.stock_id stock.name/ ],
+			     as       => [ qw / genotypeprop_id value project_id project_name stock_id stock_name / ],
+			     distinct => [ qw / stock_name /]
                          }
         );
 
@@ -837,7 +848,7 @@ sub extract_project_markers {
 
     if (defined $row)    
     {
-        my $genotype_json = $row->value;
+        my $genotype_json = $row->get_column('value');
         my $genotype_hash = JSON::Any->decode($genotype_json);
 
         my @markers = keys %$genotype_hash;
@@ -856,7 +867,7 @@ sub extract_project_markers {
 sub stock_genotype_values {
     my ($self, $geno_row) = @_;
               
-    my $json_values  = $geno_row->value;
+    my $json_values  = $geno_row->get_column('value');
     my $values       = JSON::Any->decode($json_values);
     my @markers      = keys %$values;
    

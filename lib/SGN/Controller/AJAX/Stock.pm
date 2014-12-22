@@ -810,7 +810,7 @@ sub stock_autocomplete_GET :Args(0) {
     $term =~ s/\s+/ /g;
 
     my @response_list;
-    my $q = "select distinct(uniquename) from stock where uniquename ilike ? ORDER BY stock.uniquename";
+    my $q = "select distinct(uniquename) from stock where uniquename ilike ? ORDER BY stock.uniquename LIMIT 100";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
     while (my ($stock_name) = $sth->fetchrow_array) { 
