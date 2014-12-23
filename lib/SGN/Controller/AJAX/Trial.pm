@@ -998,15 +998,21 @@ sub delete_phenotype_data_by_trial_id : Path('/breeders/trial/phenotype/delete/i
 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
     }
     
+    
     my $del = CXGN::BreedersToolbox::Delete->new( 
 	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
 	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
 	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
 	);
 
-    $del->delete_phenotype_data_by_trial($trial_id);
+    my $error = $del->delete_phenotype_data_by_trial($trial_id);
 
-    $c->stash->{rest} = { success => "1" };
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+    }
+    else { 
+	$c->stash->{rest} = { success => "1" };
+    }
 }
 
 =head2 delete_trial_layout_by_trial_id
@@ -1059,7 +1065,11 @@ sub delete_trial_layout_by_trial_id : Path('/breeders/trial/layout/delete/id') A
 	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
 	);
 
-    $c->stash->{rest} =  $del->delete_field_layout_by_trial($trial_id);
+    my $error =  $del->delete_field_layout_by_trial($trial_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+    }
+    $c->stash->{rest} = { success => 1 };
 
 }
 
