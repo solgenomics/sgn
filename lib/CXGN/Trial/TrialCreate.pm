@@ -27,6 +27,7 @@ use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
 use CXGN::BreedersToolbox::Projects;
+use CXGN::People::Person;
 use CXGN::Trial;
 
 has 'chado_schema' => (
@@ -99,11 +100,11 @@ sub save_trial {
   my %design = %{$self->get_design()};
 
   if ($self->trial_name_already_exists()) {
-    return;
+      return ( error => "trial name already exists" );
   }
 
   if (!$self->get_breeding_program_id()) {
-    return;
+      return ( error => "no breeding program id" );
   }
 
 
@@ -112,7 +113,7 @@ sub save_trial {
   my $dbh = $self->get_dbh();
   my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $user_name); #add person id as an option.
   if (!$owner_sp_person_id) {
-    return;
+      return ( error => "no owner" );
   }
 
   my $geolocation;
@@ -120,7 +121,7 @@ sub save_trial {
   $geolocation_lookup->set_location_name($self->get_trial_location());
   $geolocation = $geolocation_lookup->get_geolocation();
   if (!$geolocation) {
-    return;
+      return ( error => "no geolocation" );
   }
 
   my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $chado_schema } );
