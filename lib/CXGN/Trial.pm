@@ -130,6 +130,17 @@ sub set_description {
 }
 
 
+=head2 get_location()
+
+ Usage:        my $location = $trial->get_location();
+ Desc:
+ Ret:          [ location_id, 'location description' ]
+ Args:
+ Side Effects: 
+ Example:
+
+=cut
+
 sub get_location { 
     my $self = shift;
 
@@ -145,10 +156,18 @@ sub get_location {
 	    return [];
 	}
     }
-    
-
 }
 
+=head2 add_location
+
+ Usage:        $trial->add_location($location_id);
+ Desc:
+ Ret:          nothing
+ Args:
+ Side Effects: database access
+ Example:
+
+=cut
 
 sub add_location { 
     my $self = shift;
@@ -159,10 +178,20 @@ sub add_location {
 	    project_id => $self->get_trial_id(),
 	    type_id => $self->get_location_type_id(),
 	    value => $location_id,
-	});
-    
-    
+	});    
 }
+
+=head2 remove-location
+
+ Usage:        $trial->remove_location($location_id)
+ Desc:         disociates the location with nd_geolocation_id of $location_id
+               from the trial.
+ Ret:
+ Args:
+ Side Effects: database access
+ Example:
+
+=cut
 
 sub remove_location { 
     my $self = shift;
@@ -214,23 +243,6 @@ sub get_project_type {
 
 }
 
-sub get_location_type_id { 
-    my $self = shift;
-    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'project location' });
-
-    if ($rs->count() > 0) { 
-	return $rs->first()->cvterm_id();
-    }
-
-}
-
-sub get_year_type_id { 
-    my $self = shift;
-
-    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'project year' });
-
-    return $rs->first()->cvterm_id();
-}
 
 sub get_name { 
     my $self = shift;
@@ -242,7 +254,13 @@ sub get_name {
 }
  
 sub set_name { 
-
+    my $self = shift;
+    my $name = shift;
+    my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
+    if ($row) { 
+	$row->name($name);
+	$row->update();
+    }
 }   
 
 sub delete_phenotype_data { 
@@ -253,6 +271,7 @@ sub delete_phenotype_data {
     eval { 
 	$self->bcs_schema->txn_do( 
 	    sub { 
+		print STDERR "\n\nDELETING PHENOTYPES...\n\n";
 		# first, delete metadata entries
 		#
 		$self->delete_metadata($trial_id);
@@ -260,16 +279,28 @@ sub delete_phenotype_data {
 		# delete phenotype data associated with trial
 		#
 		my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
+
+		my $q = "SELECT nd_experiment_id FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) WHERE project_id =?";
+	#	my $nd_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( { project_id => $trial_id }, { join => 'nd_experiment_phenotype' });
+
+	#	print STDERR "\n\nexperiment_count: ".$nd_experiment_rs->count()."\n\n";
+
+	#	my @nd_experiment_ids = map { $_->nd_experiment_id } $nd_experiment_rs->all();
+	
 		
-		my $nd_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( { project_id => $trial_id });
-		my @nd_experiment_ids = map { $_->nd_experiment_id } $nd_experiment_rs->all();
-		
+
+		my $h = $self->bcs_schema()->storage()->dbh()->prepare($q);
+
+		$h->execute($trial_id);
+		my @nd_experiment_ids = ();
+		while (my ($id) = $h->fetchrow_array()) { 
+		    push @nd_experiment_ids, $id;
+		}
 		$self->_delete_phenotype_experiments(@nd_experiment_ids); # cascading deletes should take care of everything (IT DOESNT????)
-		
 	    });
     };
-    if ($_) { 
-	return "Error deleting phenotype data for trial $trial_id. $_\n";
+    if ($@) { 
+	return "Error deleting phenotype data for trial $trial_id. $@\n";
     }
     return '';
     
@@ -286,18 +317,20 @@ sub delete_field_layout {
     eval { 
 	$self->bcs_schema()->txn_do( 
 	    sub {
+		print STDERR "DELETING FIELD LAYOUT FOR TRIAL $trial_id...\n";
+
 		my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
 		
 		my $nd_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( { project_id => $trial_id });
 		my @nd_experiment_ids = map { $_->nd_experiment_id } $nd_experiment_rs->all();
 		
-		$self->_delete_field_layout_experiment($trial_id); 
+		$self->_delete_field_layout_experiment(); 
 	    }
 	    );
     };
-    if ($_) { 
-	print STDERR "ERROR $_\n";
-	return "An error occurred: $_\n";
+    if ($@) { 
+	print STDERR "ERROR $@\n";
+	return "An error occurred: $@\n";
     }
     
     return '';
@@ -346,10 +379,10 @@ sub _delete_phenotype_experiments {
     #
     my $phenotypes_deleted = 0;
     my $nd_experiments_deleted = 0;
-
+    
     my $phenotype_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotype")->search( { nd_experiment_id=> { -in => [ @nd_experiment_ids ] }}, { join => 'phenotype' });
     if ($phenotype_rs->count() > 0) { 
-	foreach my $p ($phenotype_rs->all()) { 
+	while (my $p = $phenotype_rs->next()) { 
 	    $p->delete();
 	    $phenotypes_deleted++;
 	}
@@ -358,6 +391,7 @@ sub _delete_phenotype_experiments {
     # delete the experiments
     #
     my $delete_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ nd_experiment_id => { -in => [ @nd_experiment_ids] }});
+
     $nd_experiments_deleted = $delete_rs->count();
     $delete_rs->delete_all();
 
@@ -379,12 +413,16 @@ sub _delete_phenotype_experiments {
 
 sub _delete_field_layout_experiment { 
     my $self = shift;
-    my $trial_id = shift;
+    
+    my $trial_id = $self->get_trial_id();
+
+    print STDERR "_delete_field_layout_experiment...\n";
 
     # check if there are still associated phenotypes...
     #
-    if ($self->trial_has_phenotype_data()) { 
+    if ($self->phenotype_count() > 0) { 
 	print STDERR "Attempt to delete field layout that still has associated phenotype data.\n";
+	die "cannot delete because of associated phenotypes\n";
 	return { error => "Trial still has associated phenotyping experiment, cannot delete." };
     }
 
@@ -401,7 +439,7 @@ sub _delete_field_layout_experiment {
     my $plots_deleted = 0;
     while (my ($plot_id) = $h->fetchrow_array()) { 
 	my $plot = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $plot_id });
-	#print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
+	print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
 	$plots_deleted++;
 	$plot->delete();
     }
@@ -412,33 +450,52 @@ sub _delete_field_layout_experiment {
     
     my ($nd_experiment_id) = $h->fetchrow_array();
     if ($nd_experiment_id) { 
-	#print STDERR "Delete corresponding nd_experiment entry  ($nd_experiment_id)...\n";
+	print STDERR "Delete corresponding nd_experiment entry  ($nd_experiment_id)...\n";
 	my $nde = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->find( { nd_experiment_id => $nd_experiment_id });
 	$nde->delete();
     }
 
 
     #return { success => $plots_deleted };
-    #return { success => 1 };
+    return { success => 1 };
 }
 
-sub trial_has_phenotype_data { 
+sub phenotype_count { 
     my $self = shift;
-    my $trial_id = shift;
 
     my $phenotyping_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'phenotyping experiment' })->cvterm_id();
     
     my $phenotype_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( 
-	{ 
-	    project_id => $trial_id, 'nd_experiment.type_id' => $phenotyping_experiment_type_id}, 
-	{ 
-	    join => 'nd_experiment'  
-	}
-	);
+    	{ 
+    	    project_id => $self->get_trial_id(), 'nd_experiment.type_id' => $phenotyping_experiment_type_id}, 
+    	{ 
+    	    join => 'nd_experiment'  
+    	}
+    	);
     
-    return $phenotype_experiment_rs->count();
+     return $phenotype_experiment_rs->count();
+}
+
+sub get_location_type_id { 
+    my $self = shift;
+    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'project location' });
+
+    if ($rs->count() > 0) { 
+	return $rs->first()->cvterm_id();
+    }
 
 }
+
+sub get_year_type_id { 
+    my $self = shift;
+
+    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'project year' });
+
+    return $rs->first()->cvterm_id();
+}
+
+
+
 
 
 
