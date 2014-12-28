@@ -171,6 +171,15 @@ is_deeply($trial->get_location(), [ 23, 'test_location' ], "set location");
 #
 is($trial->get_project_type(), undef, "get project type");
 
+print STDERR join ",", $trial->get_all_project_types();
+my $error = $trial->associate_project_type("clonal");
+print STDERR "ERROR: $error\n";
+
+is($trial->get_project_type()->[1], "clonal", "associate project type");
+
+my $error = $trial->dissociate_project_type();
+is($trial->get_project_type(), undef, "dissociate project type");
+
 done_testing();
 
 

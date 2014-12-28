@@ -173,7 +173,7 @@ sub add_location {
     my $self = shift;
     my $location_id = shift;
 
-    my $row = $self->bcs_schema->resultset('Project::Projectprop')->create( 
+    my $row = $self->bcs_schema()->resultset('Project::Projectprop')->create( 
 	{ 
 	    project_id => $self->get_trial_id(),
 	    type_id => $self->get_location_type_id(),
@@ -210,39 +210,90 @@ sub remove_location {
 
 }
 
-# sub get_project_type { 
-#     my $self = shift;
-#     my $row = $self->bcs_schema->resulset('Project::Projectprop')->find( { project_id => $self->get_trial_id() , type_id=> $self->get_location_type_id() });
+sub associate_project_type { 
+    my $self = shift;
+    my $type = shift;
     
-#     return $row->value();
+    # check if there is already a type associated with the project
+    #
+    my $cv_id = $self->bcs_schema->resultset('Cv::Cv')->find( { name => 'project_type' } )->cv_id();
+    my @project_type_ids = $self->get_all_project_types();
+    my @ids = map { $_->[0] } @project_type_ids;
+    my $has_project_type_rs = $self->bcs_schema->resultset('Project::Projectprop')->search( 
+	{ 
+	    project_id => $self->get_trial_id(),
+	    type_id => { -in => [ @ids ] }
+	});
+
+    if ($has_project_type_rs->count() > 0) { 
+	return "Project already has an associated project type - bailing out.\n";
+    }
     
+    # get the id for the right cvterm...
+    #
+    my $cvterm_rs = $self->bcs_schema()->resultset('Cv::Cvterm')->search( { name => $type } );
+    if ($cvterm_rs->count() == 0) { 
+	return "No such type $type in the database. Bailing out.\n";
+    }
+    my $type_id = $cvterm_rs->first()->cvterm_id();
 
-# }
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->create( 
+	{ 
+	    value => 1,
+	    type_id => $type_id,
+	    project_id => $self->get_trial_id(),
+	}
+	);
+    $row->insert();
+    return undef;
+}
 
-
-sub set_project_type { 
+sub dissociate_project_type { 
+    my $self = shift;
     
-
+    my @project_type_ids = $self->get_all_project_types();
+    my @ids = map { $_->[0] } @project_type_ids;
+    my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search( { type_id => { -in => [ @ids ] }, project_id => $self->get_trial_id() });
+    if (my $row = $rs->next()) { 
+	$row->delete();
+    }
+    return undef;
 }
 
 sub get_project_type { 
     my $self = shift;
-    my $row = $self->bcs_schema->resultset('Cv::Cv')->find( { name => 'project_types' } );
+    
+    my @project_type_ids = $self->get_all_project_types();
+    my @ids = map { $_->[0] } @project_type_ids;
+    my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search( 
+	{ 
+	    type_id => { -in => [ @ids ] }, 
+	    project_id => $self->get_trial_id() 
+	});
 
-    my @types;
-    if ($row) { 
-	my $rs = $self->bcs_schema->resultset('Project::Projectprop')->search( { project_id => $self->get_trial_id() })->search_related('type', { cv_id => $row->cv_id() });
-	foreach my $r ($rs->next()) { 
-	    push @types, [ $r->cvterm_id(), $r->name() ];
+    if ($rs->count() > 0) { 
+	my $type_id = $rs->first()->type_id();
+	foreach my $pt (@project_type_ids) { 
+	    if ($type_id == $pt->[0]) { 
+		print STDERR "[get_project_type] ".$pt->[0]." ".$pt->[1]."\n";
+		return $pt;
+	    }
 	}
-	
-	return @types;
     }
-	
-    return ();
+    return undef;
 
 }
 
+sub get_all_project_types { 
+    my $self = shift;
+    my $project_type_cv_id = $self->bcs_schema->resultset('Cv::Cv')->find( { name => 'project_type' } )->cv_id();
+    my $rs = $self->bcs_schema()->resultset('Cv::Cvterm')->search( { cv_id=> $project_type_cv_id });
+    my @cvterm_ids;
+    if ($rs->count() > 0) { 
+	@cvterm_ids = map { [ $_->cvterm_id(), $_->name() ] } ($rs->all());
+    }
+    return @cvterm_ids;
+}
 
 sub get_name { 
     my $self = shift;
