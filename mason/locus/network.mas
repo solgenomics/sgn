@@ -11,6 +11,8 @@
 
 <script language="javascript" type="text/javascript">
 
-  Locus.printLocusNetwork( <% $locus_id %> );
+  jQuery(document).ready(function() { 
+    Locus.printLocusNetwork( <% $locus_id %> );
+  });
 
 </script>

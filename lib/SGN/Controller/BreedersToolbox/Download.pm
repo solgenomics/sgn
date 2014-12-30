@@ -145,6 +145,34 @@ sub download_layout_excel {
     $c->res->body($output);
 }
 
+sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_ids = shift;
+    my $format = $c->req->param("format");
+
+    $self->trial_download_log($c, $trial_ids, "trial phenotypes");
+
+    my @trial_ids = split ",", $trial_ids;
+    my $trial_sql = join ",", map { "\'$_\'" } @trial_ids;
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
+    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    $c->tempfiles_subdir("data_export"); # make sure the dir exists
+    
+    if ($format eq "csv") { 
+	###$self->phenotype_download_csv($c, $trial_id, $program_name, $location, $year, \@data);
+	$self->phenotype_download_csv($c, '', '', '', '', \@data);
+    }
+    else { 
+	###$self->phenotype_download_excel($c, $trial_id, $program_name, $location, $year, \@data);
+	$self->phenotype_download_excel($c, '', '', '', '', \@data);
+    }
+}
+
+
 sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download') Args(1) { 
     my $self = shift;
     my $c = shift;

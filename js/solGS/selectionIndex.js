@@ -133,22 +133,31 @@ function addSelectionPopulations(){
 function getSelectionPopTraits (modelId, selectedPopId) {
 
     if (modelId === selectedPopId) {selectedPopId=undefined;}
+   
     jQuery.ajax({
-            type: 'POST',
-                dataType: "json",
-                url: '/solgs/selection/index/form',
-                data: {'pred_pop_id': selectedPopId, 'training_pop_id': modelId},
-                success: function(res) {
+        type: 'POST',
+        dataType: "json",
+        url: '/solgs/selection/index/form',
+        data: {'pred_pop_id': selectedPopId, 'training_pop_id': modelId},
+        success: function(res) {
                 
-                if (res.status == 'success') {
-                    var traits = res.traits;  
-                    var table  = selectionIndexForm(traits);
+            if (res.status == 'success') {
+                var table;
+                var traits = res.traits;
+                
+                if (traits.length > 1) {
+                    table  = selectionIndexForm(traits);
+                } else {
+                    var msg = 'There is only one trait with valid GEBV predictions.';
+                    jQuery("#select_a_population_div").empty(); 
+                    jQuery("#select_a_population_div_text").empty().append(msg);      
+                }
     
-                    var selectionIndex = jQuery('#selection_index_form').empty().append(table);
+                jQuery('#selection_index_form').empty().append(table);
      
-                }                                               
-            }
-        });
+            }                                               
+        }
+    });
 }
 
 

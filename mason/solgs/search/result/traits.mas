@@ -12,6 +12,8 @@ $form => undef;
 
 </%args>
 
+<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+
 <& /page/page_title.mas,
     title => 'Traits with genomic selection data',
 &>

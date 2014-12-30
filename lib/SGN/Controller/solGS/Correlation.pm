@@ -87,7 +87,7 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
    
     my $ret->{status} = 'failed';
 
-    if(-s $combined_gebvs_file)
+    if (-e $combined_gebvs_file && -s $combined_gebvs_file )
     {
         $ret->{status} = 'success'; 
         $ret->{gebvs_file} = $combined_gebvs_file;
@@ -104,28 +104,37 @@ sub combine_gebvs_of_traits {
     my ($self, $c) = @_;
 
     $c->controller("solGS::solGS")->get_gebv_files_of_traits($c);  
-    my $gebvs_files = $c->stash->{gebv_files_of_traits};
-    my $index_file = $c->stash->{selection_index_file};
-    
-    if ($index_file) 
-    {
-        write_file($gebvs_files, {append => 1}, "\t". $index_file )   
-    }
-
-    my $pred_pop_id = $c->stash->{prediction_pop_id};
-    my $model_id    = $c->stash->{model_id};
-    my $identifier  =  $pred_pop_id ? $model_id . "_" . $pred_pop_id :  $model_id; 
-    
-    my $combined_gebvs_file = $c->controller("solGS::solGS")->create_tempfile($c, "combined_gebvs_${identifier}"); 
+    my $gebvs_files = $c->stash->{gebv_files_of_valid_traits};
+    my $index_file  = $c->stash->{selection_index_file};
    
-    $c->stash->{input_files}  = $gebvs_files;
-    $c->stash->{output_files} = $combined_gebvs_file;
-    $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
-    $c->stash->{r_script}     = 'R/combine_gebvs_files.r';
+    my @files_no = map { split(/\t/) } read_file($gebvs_files);
+ 
+    if (scalar(@files_no) > 1 ) 
+    {
+            
+        if ($index_file) 
+        {
+            write_file($gebvs_files, {append => 1}, "\t". $index_file )   
+        }
 
-    $c->controller("solGS::solGS")->run_r_script($c);
-    $c->stash->{combined_gebvs_file} = $combined_gebvs_file;
+        my $pred_pop_id = $c->stash->{prediction_pop_id};
+        my $model_id    = $c->stash->{model_id};
+        my $identifier  =  $pred_pop_id ? $model_id . "_" . $pred_pop_id :  $model_id; 
+    
+        my $combined_gebvs_file = $c->controller("solGS::solGS")->create_tempfile($c, "combined_gebvs_${identifier}"); 
+   
+        $c->stash->{input_files}  = $gebvs_files;
+        $c->stash->{output_files} = $combined_gebvs_file;
+        $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
+        $c->stash->{r_script}     = 'R/combine_gebvs_files.r';
 
+        $c->controller("solGS::solGS")->run_r_script($c);
+        $c->stash->{combined_gebvs_file} = $combined_gebvs_file;
+    }
+    else 
+    {
+        $c->stash->{combined_gebvs_files} = 0;           
+    }
 }
 
 

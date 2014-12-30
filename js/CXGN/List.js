@@ -728,7 +728,7 @@ function getData(id, selectText) {
 		}
 	    }
 	    data = datalist.join("\n");
-	    alert("data:"+data);
+	    //alert("data:"+data);
 	    
 	}
 	else { 

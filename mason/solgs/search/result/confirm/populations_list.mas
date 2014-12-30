@@ -12,12 +12,21 @@ $page_links => ''
 
 </%args>
 
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
+my $marker_tip = tooltipped_text("Tip", "You can combine trials sharing the same color.");
+
+</%perl>
+
+
 <& /page/columnar_table.mas,
-     headings    => ['', 'Projects', 'Description', 'Location', 'Year' ],
+     headings    => ['', 'Projects', 'Description', 'Location', 'Year', $marker_tip ],
      data        => $result,
     __alt_freq   => 2,
     __alt_width  => 1,
-    __align      => 'llll'
+    __align      => 'llllll'
 &>
  
 %if ($pager)

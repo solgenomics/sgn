@@ -23,6 +23,7 @@ our @EXPORT_OK = qw/
     description_featureprop_types
     get_descriptions
     location_list_html
+    location_list
     location_string
     location_string_html
     type_name

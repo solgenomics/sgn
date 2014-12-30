@@ -4,6 +4,7 @@ package SGN::Controller::BreedersToolbox::Trial;
 use Moose;
 use CXGN::Trial::TrialLayout;
 use CXGN::BreedersToolbox::Projects;
+use URI::FromHash 'uri';
 use SGN::View::Trial qw/design_layout_view design_info_view trial_detail_design_view/;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -79,8 +80,9 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 
     my $user = $c->user();
     if (!$user) { 
-	$c->stash->{template} = '/generic_message.mas';
-	$c->stash->{message}  = 'You must be logged in to access this page.';
+	#$c->stash->{template} = '/generic_message.mas';
+	#$c->stash->{message}  = 'You must be logged in to access this page.';	
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
     my $dbh = $c->dbc->dbh();
@@ -167,5 +169,14 @@ sub trait_info :Path('/breeders_toolbox/trial') Args(3) {
     $c->stash->{template}   = '/breeders_toolbox/trial_trait.mas';
 }
 
+
+sub trial_tree : Path('/breeders/trialtree') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    
+    $c->stash->{template} = '/breeders_toolbox/trialtree.mas';
+
+}
 
 1;

@@ -42,7 +42,9 @@ $locus_autocomplete_uri => '/ajax/locus/autocomplete'
 </%args>
 
 <script language="javascript">
-  jQuery(function() {
+
+
+  jQuery(document).ready(function() {
      var common_name = jQuery('#organism_select option:selected').attr("value");
      jQuery("#loci").autocomplete({
 	 source: '<% $locus_autocomplete_uri %>' + "?common_name=" + common_name + "&mode=no_alleles",

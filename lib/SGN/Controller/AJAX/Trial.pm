@@ -263,6 +263,9 @@ sub save_experimental_design_POST : Args(0) {
   my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
   my $dbh = $c->dbc->dbh;
+
+  print STDERR "Saving trial... :-)\n";
+
   #my $trial_create = new CXGN::Trial::TrialCreate(chado_schema => $schema);
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
@@ -316,9 +319,11 @@ sub save_experimental_design_POST : Args(0) {
     $trial_create->save_trial();
   } catch {
     $c->stash->{rest} = {error => "Error saving trial in the database $_"};
+    print STDERR "ERROR SAVING TRIAL!\n";
     $error = 1;
   };
   if ($error) {return;}
+  print STDERR "Trial saved successfully\n";
   $c->stash->{rest} = {success => "1",};
   return;
 }
@@ -940,15 +945,15 @@ sub delete_trial_by_trial_id : Path('/breeders/trial/delete/id') Args(1) {
 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
     }
     
-    my $del = CXGN::BreedersToolbox::Delete->new( 
-	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-	);
+#    my $del = CXGN::BreedersToolbox::Delete->new( 
+#	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+#	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+#	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
+#	);
 
-    
+    my $t = CXGN::Trial->new( { trial_id=> $trial_id, bcs_schema => $c->dbic_schema("Bio::Chado::Schema") });
 
-    my $hash = $del->delete_experiments_by_trial($user_id, $trial_id);
+    my $hash = $t->delete_experiments($user_id, $trial_id);
 
     $c->stash->{rest} = $hash;
 }
@@ -998,15 +1003,23 @@ sub delete_phenotype_data_by_trial_id : Path('/breeders/trial/phenotype/delete/i
 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
     }
     
-    my $del = CXGN::BreedersToolbox::Delete->new( 
-	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-	);
+    
+#    my $del = CXGN::BreedersToolbox::Delete->new( 
+#	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+#	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+#	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
+#	);
 
-    $del->delete_phenotype_data_by_trial($trial_id);
+    my $t = CXGN::Trial->new( { trial_id => $trial_id, bcs_schema => $c->dbic_schema("Bio::Chado::Schema") });
 
-    $c->stash->{rest} = { success => "1" };
+    my $error = $t->delete_phenotype_data($trial_id);
+
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+    }
+    else { 
+	$c->stash->{rest} = { success => "1" };
+    }
 }
 
 =head2 delete_trial_layout_by_trial_id
@@ -1053,13 +1066,20 @@ sub delete_trial_layout_by_trial_id : Path('/breeders/trial/layout/delete/id') A
 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
     }
     
-    my $del = CXGN::BreedersToolbox::Delete->new( 
-	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-	);
+    #my $del = CXGN::BreedersToolbox::Delete->new( 
+#	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+#	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+#	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
+#	);
 
-    $c->stash->{rest} =  $del->delete_field_layout_by_trial($trial_id);
+    my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+    #my $error =  $del->delete_field_layout_by_trial($trial_id);
+
+    my $error = $t->delete_field_layout();
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+    }
+    $c->stash->{rest} = { success => 1 };
 
 }
 

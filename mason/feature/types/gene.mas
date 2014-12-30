@@ -12,6 +12,7 @@
     #getting only for primary featureloc
     my $reference   = $featurelocs ? $featurelocs->search({locgroup => 0,},)->single()->srcfeature() : undef ;
     my @mrnas       = grep $_->type->name eq 'mRNA', $feature->child_features;
+    my $current_loc = $featurelocs ? $featurelocs->search({locgroup => 0,},)->single() : undef ; 
 </%perl>
 
 <& /feature/page_title.mas, feature => $feature &>
@@ -31,9 +32,17 @@
      feature => $feature,
    &>
 
-  <& /feature/gbrowse_exact_match.mas, xrefs => $xrefs, feature => $feature &>
+</&>
+
+<&| /page/info_section.mas,
+   title       => 'Genome Viewer',
+   collapsible => 1,
+&>
+
+	<& /feature/jbrowse_exact_match.mas, feature => $feature , src_feature => $reference &>
 
 </&>
+
 
 <&| /page/info_section.mas,
    title       => 'Related features',
