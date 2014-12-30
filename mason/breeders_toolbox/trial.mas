@@ -76,6 +76,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
+<table><tr><td width="365">
 <&| /page/info_section.mas, title=>"Breeding program", subtitle=>$subtitle &>
 % ## foreach my $bp (@$breeding_program) { 
 % ##  print $bp->[1] . "&nbsp;(".$bp->[2].")"; 
@@ -83,26 +84,33 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % ##}
 
 <div id="breeding_programs">
-[loading...]
+  [loading...]
 </div>
 
 </&>
 
-<table><tr><td width="365">
-<&| /page/info_section.mas, title=>"Year(s)" &>
+</td><td>
+<&| /page/info_section.mas, title=>"Trial type", subtitle=>'[change]' &>
+  <div id="trial_type">
+    [loading...]
+  </div>
+</&>
+
+</td></tr>
+<tr><td>
+
+<&| /page/info_section.mas, title=>"Year(s)", subtitle => '[change]' &>
 <% join ", ", @years %>
 </&>
 </td><td width="365" >
-<&| /page/info_section.mas, title=>"Location(s)" &>
+<&| /page/info_section.mas, title=>"Location(s)", subtitle=>'[change]' &>
 
 <div id="trial_location">
-[loading...]
-
+  [loading...]
 </&>
 
 </div>
 </td></tr></table>
-
 
 <&| /page/info_section.mas, title=>"Description", collapsible=>0, collapsed=>0, hide_if_empty=>0, is_empty=> $description_empty, subtitle=>"[<a id=\"edit_trial_description\">edit</a>]" &>
 <div id="trial_description">[loading...]</div>
@@ -180,7 +188,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   
 </&>
 
-
 % print STDERR "Check 9 (mason) : ".(time() - $start_time)."\n";
 <!-- Phenotypic correlation analysis -->
   <& /solgs/population/correlation.mas,
@@ -232,6 +239,8 @@ jQuery(document).ready(function () {
 
   display_trial_location(<% $trial_id %>);
 
+  display_trial_type(<% $trial_id %>);
+
   jQuery('#delete_breeding_program_trial_association_link').click(
      function() { 
         var trial_id = get_trial_id();
@@ -251,8 +260,6 @@ jQuery(document).ready(function () {
 
 
 });
-
-
 
 </script>
  

@@ -81,7 +81,6 @@ function associate_breeding_program() {
     });
 }
 
-
 function load_breeding_program_info(trial_id) { 
     jQuery.ajax( {
 	url:'/breeders/programs_by_trial/'+trial_id,
@@ -102,13 +101,11 @@ function load_breeding_program_info(trial_id) {
     });  
 }
 
-
 function open_create_spreadsheet_dialog() {
     var list = new CXGN.List();
     jQuery("#trait_list").html(list.listSelect("trait_list", [ 'traits' ]));
     jQuery('#create_spreadsheet_dialog').dialog("open");
 }
-
 
 function create_spreadsheet() {
     var trialID = parseInt(jQuery('#trialIDDiv').text());
@@ -141,7 +138,6 @@ function create_spreadsheet() {
      });
 }
 
-
 function open_create_fieldbook_dialog() {
     var trialID = parseInt(jQuery('#trialIDDiv').text());
     new jQuery.ajax({
@@ -168,7 +164,6 @@ function open_create_fieldbook_dialog() {
 	}
     });
 }
-
 
 function trial_detail_page_setup_dialogs() { 
 
@@ -300,7 +295,7 @@ function display_trial_description(trial_id) {
 		jQuery('#trial_description_input').html(response.description);
             }
 	},
-	error: function(response) { alert('An error occurred.'); }
+	error: function(response) { alert('An error occurred trying to display the description.'); }
     });
 }
 
@@ -329,7 +324,6 @@ function save_trial_description() {
 }
 
 function get_all_locations() { 
-
     jQuery.ajax( { 
 	url: '/ajax/breeders/location/all',
 	success: function(response) { 
@@ -341,7 +335,6 @@ function get_all_locations() {
 		var html = '';
 		for (var n=0; n<locations.length; n++) { 
 		    html += '<option value="'+locations[n][0]+'">'+locations[n][1]+'</option>';
-
 		}
 	    }
 	},
@@ -364,11 +357,33 @@ function display_trial_location(trial_id) {
 	    }
 	},
 	error: function(response) { 
-	    alert('An error occurred.');
+	    alert('An error occurred trying to display the location.');
 	}
     });
 }
+	
+function display_trial_type(trial_id) { 
+    jQuery.ajax( { 
+	url: '/ajax/breeders/trial/type/'+trial_id,
+	success: function(response) { 
+	    if (response.error) { 
+		alert(response.error);
+	    }
+	    else { 
+		var html = "[type not set]";
+		if (response.type) { 
+		    html = response.type;
+		    jQuery('#trial_type').html(html);
+		}
+		jQuery('#trial_type').html(html);
 		
+	    }
+	},
+	error: function(response) { 
+	    alert('An error occurred trying to display the trial type.');
+	}
+    });
+}
 
 function get_trial_id() { 
     var trial_id = parseInt(jQuery('#trialIDDiv').text());

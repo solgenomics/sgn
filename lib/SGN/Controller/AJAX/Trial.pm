@@ -1116,9 +1116,21 @@ sub save_trial_description : Path('/ajax/breeders/trial/description/save') Args(
     $trial->set_description($description);
 
     $c->stash->{rest} = { success => 1 };
-	
-
-
 }
+
+# sub get_trial_type :Path('/ajax/breeders/trial/type') Args(1) { 
+#     my $self = shift;
+#     my $c = shift;
+#     my $trial_id = shift;
+
+#     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id } );
+
+#     $c->stash->{rest} = { type => $t->get_project_type() };
+
+# }
+    
+
+
+
 
 1;

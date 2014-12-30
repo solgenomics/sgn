@@ -394,8 +394,8 @@ sub get_trial_type : Path('/ajax/breeders/trial/type') Args(1) {
 	    trial_id => $trial_id 
 	});
     
-    my $types = $t->get_trial_type();
-    
+    my $type = $t->get_project_type();
+    $c->stash->{rest} = { type => $type };
     
     
 }
