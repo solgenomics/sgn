@@ -106,7 +106,7 @@ sub read_counts {
     my $marker = shift;
 
     my $raw = $self->rawscores->{$marker};
-    ##print STDERR "RAW: $raw\n";
+    print STDERR "RAW: $raw\n";
     my $counts = (split /\:/, $raw)[1];
     
     my ($c1, $c2) = split /\,/, $counts;
@@ -119,7 +119,7 @@ sub good_call {
     my $self = shift;
     my $marker = shift;
     my ($c1, $c2) = $self->read_counts($marker);
-    if ($c1 + $c2 < 2) { 
+    if ( ($c1 + $c2) < 2) { 
 	return 0;
     }
     return 1;

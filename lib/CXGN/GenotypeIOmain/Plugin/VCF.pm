@@ -10,16 +10,33 @@ sub init {
 
     open(my $F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
 
-    my $header = <$F>;
+    my $header = "";
+    while (<$F>) { 
+	chomp();
+
+	if (m/\#CHROM/) { 	
+	    $header = $_;
+	    last();
+	}
+    }
     
-    chomp($header);
- 
-   my @fields = split /\t/, $header;
-    chomp(@fields);
-    return { 
-	count => scalar(@fields) - 9,
-	header => \@fields,
-    };
+    close($F);
+
+    if ($header) { 	
+	my @fields = split /\t/, $header;
+	
+    
+	return { 
+	    count => scalar(@fields) - 9,
+	    header => \@fields,
+	};
+    }
+    else { 
+	return { 
+	    count => 0,
+	    header => '',
+	}
+    }
 }
 
 sub next {
@@ -30,26 +47,35 @@ sub next {
     #print STDERR "VCF NEXT CALLED\n";
     open(my $F, "<", $file) || die "Can't open file $file\n";
 
-    my $header = <$F>;
-    chomp($header);
-    my @header = split /\t/, $header;
+    print STDERR "Zooming to header...\n";
+    while (<$F>) { 
+	chomp;
+	if (m/\#CHROM/) { 
+	    last();
+	}
+    }
 
-    my %genotype;
-    my %rawscores;
+    my @markers = ();;
+    my %rawscores = ();
 
+    print STDERR "Starting genotype parsing...\n";
+    my $lines_parsed = 0;
     while (<$F>) { 
 	chomp;
 	my @fields = split /\t/;
 	
-	my $score = $fields[$current+9];
-	if (defined($score)) { 
-	    $score =~ s/([0-9.]\/[0-9.])\:.*/$1/;
-	    $genotype{ $fields[2] } = $score;
+	#my $score = $fields[$current+9];
+	#if (defined($score)) { 
+	    #$score =~ s/([0-9.]\/[0-9.])\:.*/$1/;
+	    #$genotype{ $fields[2] } = $score;
 	    $rawscores{ $fields[2] } = $fields[$current+9];
-	}
+	#}
+	push @markers, $fields[2];
+	$lines_parsed++;
+	if ($lines_parsed % 500 ==0) { print STDERR "$lines_parsed         \r"; }
     }
     close($F);
-    return \%genotype, \%rawscores;
+    return (\@markers, \%rawscores);
 }
 
 

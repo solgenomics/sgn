@@ -58,15 +58,15 @@ sub BUILD {
 sub next { 
     my $self  =shift;
    
-    my ($data, $rawscores) = $self->plugin()->next($self->file(), $self->current());
-    if (keys(%$data)==0) { return undef; }
+    my ($markers, $rawscores) = $self->plugin()->next($self->file(), $self->current());
+    if (keys(%$rawscores)==0) { return undef; }
     my $gt = CXGN::Genotype->new();
     $gt->name($self->header()->[ $self->current() + 9 ]);
 
-    $gt->markerscores($data);
+    #$gt->markerscores($data);
     $gt->rawscores($rawscores);
-    my @markers = keys(%$data);
-    $gt->markers(\@markers);
+    #my @markers = keys(%$rawscores);
+    $gt->markers($markers);
 
     $self->current( $self->current() + 1 );
 
