@@ -78,4 +78,12 @@ sub close {
     $self->plugin()->close();
 }
 
+sub summary_stats { 
+    my $self = shift;
+    
+    my $stats = $self->plugin()->summary_stats($self->file());
+    return $stats;
+}
+
+
 1;

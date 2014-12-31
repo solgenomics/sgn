@@ -109,7 +109,7 @@ sub next {
 	    
 	    my $accession = $self->accessions()->[$n]."\n";
 	    chomp($accession);
-	    print "ACCESSION: $accession\n";
+	    #print "ACCESSION: $accession\n";
 	    #if ($accession =~ m/Z980139:250090803/) { die "Saw accession Z980139:250090803" }
 	    $snp->accession($accession);
 	    $snp->id($snp_id);

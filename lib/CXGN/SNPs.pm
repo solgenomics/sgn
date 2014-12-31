@@ -152,6 +152,10 @@ sub calculate_allele_frequency_using_counts {
 	$total_c1 += $s->ref_count();
 	$total_c2 += $s->alt_count();
     }
+
+    if ($total_c1 + $total_c2 == 0) { 
+	return undef;
+    }
     
     my $allele_freq = $total_c1 / ($total_c1 + $total_c2);
     

@@ -4,6 +4,8 @@ package CXGN::GenotypeIOmain::Plugin::VCF;
 use Moose::Role;
 use Data::Dumper;
 
+use CXGN::Genotype::SNP;
+
 sub init { 
     my $self = shift;
     my $args = shift;
@@ -82,6 +84,53 @@ sub next {
 sub close { 
     my $self  = shift;
     # not really needed
+}
+
+sub summary_stats { 
+    my $self = shift;
+    my $file = shift;
+
+    open(my $F, "<", $file) || die "Can't open file $file";
+
+    my %stats = ();
+
+    my $header = "";
+    my @accessions = ();
+    
+    while (<$F>) { 
+	chomp;
+	
+        # find header line
+	#
+	if (m/^\#CHROM/) { 
+	    $header = $_;
+	    
+	    my @fields = split /\s+/, $header;
+	    @accessions = @fields[9..$#fields];
+	    
+	    
+	    next;
+	}
+	
+	if (! $header) { 
+	    next; 
+	}
+
+	my @fields = split /\s+/;
+	my @snps = @fields[9..$#fields];
+	
+	print Dumper(\@snps);
+	
+	for(my $n = 0; $n<@snps; $n++) { 
+	    my $snp = CXGN::Genotype::SNP->new( { vcf_string=> $snps[$n] });
+	    
+	    if ($snp->good_call()) { 
+		$stats{$accessions[$n]}++;
+	    }
+	    
+	}
+    }
+    return \%stats;
 }
 
 1;
