@@ -24,27 +24,27 @@ var Ontology = {
         var reference = jQuery('#reference_select').val();
         var term_name =  jQuery('#term_name').val();
 	jQuery.ajax({
-            url: "/ajax/locus/associate_ontology" ,
-            type: 'POST',
-            dataType: "json",
-	    //timeout: 60000,
-            async: false,
+                url: "/ajax/locus/associate_ontology" ,
+                    type: 'POST',
+                    dataType: "json",
+                    async: false,
             data: {
-	        'term_name': term_name,
-		'object_id': object_id,
-		'relationship': relationship,
-		'evidence_code': evidence_code,
-		'evidence_description': evidence_description,
-		'evidence_with': evidence_with,
-		'reference': reference ,
-	    },
-	    success: function(response) {
+                'term_name': term_name,
+                'object_id': object_id,
+                'relationship': relationship,
+                'evidence_code': evidence_code,
+                'evidence_description': evidence_description,
+                'evidence_with': evidence_with,
+                'reference': reference ,
+            },
+            success: function(response) {
                 var error = response.error;
                 if (error) { alert(error) ; }
-	    },
+            },
 	    error: function () {
-		alert('Error submitting ontology term');
-	    }
+                alert('Error submitting ontology term');
+            }
+
 	} );
         Tools.toggleContent('associate_cvterm_form', 'locus_ontology')
         jQuery("#ontology").html( this.displayOntologies( "ontology" , ontology_url) );

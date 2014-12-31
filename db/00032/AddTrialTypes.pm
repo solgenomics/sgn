@@ -60,7 +60,7 @@ sub patch {
 --do your SQL here
 --
 
--- INSERT INTO cv (name, definition) VALUES ('trial type', '');
+INSERT INTO cv (name, definition) VALUES ('trial type', '');
 
 EOSQL
     
