@@ -3,7 +3,6 @@ package CXGN::GenotypeIOmain::Plugin::VCF;
 
 use Moose::Role;
 use Data::Dumper;
-use CXGN::SNP;
 
 sub init { 
     my $self = shift;
