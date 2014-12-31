@@ -119,7 +119,7 @@ sub summary_stats {
 	my @fields = split /\s+/;
 	my @snps = @fields[9..$#fields];
 	
-	print Dumper(\@snps);
+	#print Dumper(\@snps);
 	
 	for(my $n = 0; $n<@snps; $n++) { 
 	    my $snp = CXGN::Genotype::SNP->new( { vcf_string=> $snps[$n] });
