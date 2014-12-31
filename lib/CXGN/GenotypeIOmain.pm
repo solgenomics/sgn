@@ -6,10 +6,11 @@ use Moose;
 with 'MooseX::Object::Pluggable';
 
 sub init { 
+    print STDERR "GenotypeIOmain init CALLED\n";
 }
 
 sub next { 
-    print STDERR "NEXT CALLED\n";
+    print STDERR "GenotypeIOmain NEXT CALLED\n";
 }
 
 

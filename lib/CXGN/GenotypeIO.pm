@@ -42,6 +42,9 @@ sub BUILD {
     if ($args->{format} eq "vcf") { 
 	$plugin->load_plugin("VCF");
     }
+    else { 
+	$plugin->load_plugin("dosage");
+    }
     my $data = $plugin->init($args);    
     
     $self->plugin($plugin);
@@ -55,18 +58,24 @@ sub BUILD {
 sub next { 
     my $self  =shift;
    
-    my $data = $self->plugin()->next($self->file(), $self->current());
-
+    my ($data, $rawscores) = $self->plugin()->next($self->file(), $self->current());
+    if (keys(%$data)==0) { return undef; }
     my $gt = CXGN::Genotype->new();
+    $gt->name($self->header()->[ $self->current() + 9 ]);
 
     $gt->markerscores($data);
+    $gt->rawscores($rawscores);
     my @markers = keys(%$data);
     $gt->markers(\@markers);
 
     $self->current( $self->current() + 1 );
 
     return $gt;
+}
 
+sub close { 
+    my $self = shift;
+    $self->plugin()->close();
 }
 
 1;
