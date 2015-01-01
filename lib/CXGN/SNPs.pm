@@ -1,4 +1,23 @@
 
+=head1 NAME
+
+CXGN::SNPs - deal with collections of SNPs
+
+=head1 SYNOPSYS
+
+ my $snps = CXGN::SNPs->new( { file => $file });
+ my $allele_feq = $snps->allele_freq();
+ my $dosage = $snps->calculate_snp_dosage($snp); # provide a CXGN::Genotype::SNP object
+ # etc
+
+=head1 AUTHOR
+    
+Lukas Mueller <lam87@cornell.edu>
+
+=head1 METHODS
+
+=cut
+
 package CXGN::SNPs;
 
 use Moose;
@@ -6,25 +25,56 @@ use Moose;
 use Data::Dumper;
 use Math::BigInt;
 
+=head2 accessors id()
+
+The id of the SNP.
+
+=cut
+
 has 'id' => ( isa => 'Str',
 	      is => 'rw',
     );
+
+=head2 accessors accessions()
+
+All the accessions parsed in the SNP
+
+=cut
 
 has 'accessions' => ( isa => 'ArrayRef',
 		       is  => 'rw',
     );
 
+=head2 accessors depth()
+
+The total depth of the SNP (usually from VCF file)
+
+=cut
+
 has 'depth' => ( isa => 'Int',
 		 is => 'rw',
     );
+
+=head2 accessors ignore_accessions()
+
+A hashref with accessions that have not passed some quality check and that should be ignored.
+
+=cut
 
 has 'ignore_accessions' => (isa => 'HashRef',
 			    is => 'rw',
     );
 
+=head2 accessors valid_accessions()
+
+A ArrayRef of valid accessions (the complement set to ignore_accessions)
+
+=cut
+
 has 'valid_accessions' => (isa => 'ArrayRef',
 			   is => 'rw',
     );
+
 
 has 'scores'  => ( isa => 'HashRef',
 		       is  => 'rw',
@@ -34,14 +84,32 @@ has 'scores'  => ( isa => 'HashRef',
 #		       is  => 'rw',
  #   );
 
-has 'snps' => ( isa => 'ArrayRef',
+=head2 accessors snps()
+
+An HashRef of CXGN::Genotype::SNP objects that represent the SNP calls, with genotype ids as the hash key.
+
+=cut
+
+has 'snps' => ( isa => 'HashRef',
 		is  => 'rw',
     );
+
+=head2 accessors maf()
+
+The minor allele frequency of the SNP set.
+
+=cut
 
 has 'maf'  => ( isa => 'Num',
 		is  => 'rw',
 		default => sub { 0.999 },
     );
+
+=head2 accessors allele_freq()
+
+The allele frequency of the SNP set.
+
+=cut
 
 has 'allele_freq' => ( isa => 'Num',
 		       is  => 'rw',
@@ -57,14 +125,27 @@ has 'position' => (isa => 'Int',
 		   is => 'rw',
     );
 
+=head2 accessors ref_allele()
+
+reference allele nucleotide
+
+=cut
 
 has 'ref_allele' => ( isa => 'Str',
 		   is  => 'rw',
     );
 
+=head2 accessors alt_allele()
+
+alternative allele nucleotide
+
+=cut 
+
 has 'alt_allele' => ( isa => 'Str',
 		   is  => 'rw',
     );
+
+
 
 has 'qual' => ( isa => 'Str',
 		is  => 'rw',
@@ -79,10 +160,6 @@ has 'info' => ( isa => 'Str',
     );
 
 has 'format' => ( isa => 'Str',
-		  is => 'rw',
-    );
-
-has 'snps'   => ( isa => 'HashRef',
 		  is => 'rw',
     );
 
@@ -181,6 +258,14 @@ sub calculate_allele_frequency_using_counts {
 #     }
 #     #print STDERR Dumper($self->snps());
 # }
+
+=head2 function calculate_snp_dosage()
+
+$snps->calculate_snp_dosage($snp)
+Calculates the SNP dosage of SNP $snp
+$snp is a CXGN::Genotype::SNP object
+
+=cut
  
 sub calculate_snp_dosage { 
     my $self = shift;
@@ -190,7 +275,7 @@ sub calculate_snp_dosage {
     my $c1 = $snp->ref_count();
     my $c2 = $snp->alt_count();
 
-    print STDERR "counts: $c1, $c2\n";
+    #print STDERR "counts: $c1, $c2\n";
     
     my $n = $c1 + $c2;
 
@@ -227,12 +312,23 @@ sub calculate_snp_dosage {
     return $dosage;
 }
 
+=head2 function hardy_weinberg_filter
 
+ $snps->hardy_weinberg_filter();
+ returns a hash with the following keys:
+   monomorphic   - 1 if the SNP is monomorphic
+   allele_freq   - the allele frequency derived from counts
+   chi           - the chi square value for hardy weinberg distribution
+   scored_marker_fraction - the fraction of markers that were successfully scored
+   heterozygote_count - the number of heterozygote SNPs in the set
+
+=cut
+   
 
 sub hardy_weinberg_filter { 
     my $self = shift;
     my $dosages = shift; # ignored clones already removed
-
+    
     my %classes = ( AA => 0, AB => 0, BB => 0, NA => 0);
     
     foreach my $d (@$dosages) { 
