@@ -16,7 +16,6 @@ BEGIN { extends 'Catalyst::Controller' }
 sub pca_result :Path('/pca/result/') Args(1) {
     my ($self, $c, $pop_id) = @_;
     
-    print STDERR "\n called pca_result: $pop_id\n";
     $c->stash->{pop_id}   = $pop_id;
     $c->stash->{model_id} = $pop_id;
 
@@ -25,21 +24,27 @@ sub pca_result :Path('/pca/result/') Args(1) {
 
     my $ret->{status} = 'failed';
 
-    my $pca_scores;
-    if (!-s $geno_file)
-    {
-	$ret->{status} = 'There is no genotype data. Aborted PCA analysis.';                
-    }
-    else 
-    {
-	$self->run_pca($c);
-	$self->format_pca_scores($c);
-	$pca_scores = $c->stash->{pca_scores};	
-    }
+    $self->pca_scores_file($c);
+    my $pca_scores_file = $c->stash->{pca_scores_file};
 
+    unless (-s $pca_scores_file) 
+    {
+	if (!-s $geno_file)
+	{
+	    $ret->{status} = 'There is no genotype data. Aborted PCA analysis.';                
+	}
+	else 
+	{
+	    $self->run_pca($c);
+	
+	}
+    }
+    
+    $self->format_pca_scores($c);
+    my $pca_scores = $c->stash->{pca_scores};
+    
     if ($pca_scores)
     {
-
         $ret->{pca_scores} = $pca_scores;
         $ret->{status} = 'success';             
     }
