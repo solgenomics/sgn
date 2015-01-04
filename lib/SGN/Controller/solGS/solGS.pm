@@ -2420,9 +2420,7 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     if ( !$pred_pop_id) 
     {    
         $self->analyzed_traits($c);
-        @traits = @{ $c->stash->{selection_index_traits} };
-
- 
+        @traits = @{ $c->stash->{selection_index_traits} }; 
     }
     else  
     {
@@ -2442,8 +2440,8 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
 
 
 sub traits_with_valid_models {
-    my ($self, $c) = $_;
-
+    my ($self, $c) = @_;
+   
     my $pop_id = $c->stash->{pop_id};
     
     $self->analyzed_traits($c);

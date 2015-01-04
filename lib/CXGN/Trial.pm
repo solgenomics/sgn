@@ -210,6 +210,7 @@ sub remove_location {
 
 }
 
+
 =head2 associate_project_type
 
  Usage:
@@ -276,7 +277,9 @@ sub associate_project_type {
 sub dissociate_project_type { 
     my $self = shift;
     
+
     my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
+
     my @ids = map { $_->[0] } @project_type_ids;
     my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search( { type_id => { -in => [ @ids ] }, project_id => $self->get_trial_id() });
     if (my $row = $rs->next()) { 
@@ -300,6 +303,7 @@ sub get_project_type {
     my $self = shift;
     
     my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
+
     my @ids = map { $_->[0] } @project_type_ids;
     my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search( 
 	{ 
@@ -317,6 +321,7 @@ sub get_project_type {
 	}
     }
     return undef;
+
 }
 
 # CLASS METHOD!
