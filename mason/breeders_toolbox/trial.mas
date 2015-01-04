@@ -246,7 +246,7 @@ jQuery(document).ready(function () {
 
   var type = get_trial_type(<% $trial_id %>);
 
-  display_trial_type(type[1]);
+  display_trial_type(type);
 
   jQuery('#delete_breeding_program_trial_association_link').click(
      function() { 

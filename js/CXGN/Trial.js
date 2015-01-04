@@ -457,6 +457,7 @@ function get_trial_type(trial_id) {
 		if (response.type) { 
 		    type = response.type[1];
 		}
+		display_trial_type(type);
 		return type;
 	    }
 	},
