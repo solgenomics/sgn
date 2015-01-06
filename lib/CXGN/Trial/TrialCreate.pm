@@ -229,7 +229,11 @@ sub save_trial {
     }
 
     if ($design{$key}->{'range_number'}) {
-      $plot->create_stockprops({'range' => $key}, {autocreate => 1});
+      $plot->create_stockprops({'range' => $desing{$key}->{'range_number'}, {autocreate => 1});
+    }
+
+    if ($design{$key}->{'row_number'}) { 
+	$plot->create_stockprops( { 'row' => $design{$key}->{'row_number'} }, { autocreate => 1});
     }
 
     #create the stock_relationship with the accession
