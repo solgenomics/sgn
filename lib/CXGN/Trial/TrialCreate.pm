@@ -229,7 +229,7 @@ sub save_trial {
     }
 
     if ($design{$key}->{'range_number'}) {
-      $plot->create_stockprops({'range' => $desing{$key}->{'range_number'}, {autocreate => 1});
+      $plot->create_stockprops({'range' => $design{$key}->{'range_number'} }, {autocreate => 1});
     }
 
     if ($design{$key}->{'row_number'}) { 
