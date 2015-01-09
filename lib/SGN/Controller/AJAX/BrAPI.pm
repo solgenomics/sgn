@@ -3,8 +3,10 @@ package SGN::Controller::AJAX::BrAPI;
 
 use Moose;
 use JSON::Any;
+use Data::Dumper;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
+use CXGN::Trial::TrialLayout;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -202,16 +204,25 @@ sub study_list : Chained('study') PathPart('list') Args(0) {
     my @response;
     foreach my $bp (@$programs) { 
 	my $trial_data = {};
-	my $t = CXGN::Trial->new( { trial_id => $bp->[0], bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
-	$trial_data->{studyId} = $t->get_trial_id();
-	$trial_data->{studyType} = $t->get_project_type();
-	$trial_data->{name} = $t->get_name();
-	$trial_data->{programName} = $ps->get_breeding_programs_by_trial($t->get_trial_id());
-	$trial_data->{keyContact} = "";
-	$trial_data->{locationName} = $t->get_location();
-	$trial_data->{designType} = ""; # $t->get_design_type();
-	
-	push @response, $trial_data;
+	my @trials = $ps->get_trials_by_breeding_program($bp->[0]);
+	my @trial_ids = map { $_->[0] } @trials;
+	print STDERR Dumper(\@trial_ids);
+	foreach my $trial_id (@trial_ids) { 
+	    print STDERR "TRIAL ID $trial_id\n";
+	    my $t = CXGN::Trial->new( { trial_id => $trial_id->[0], bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
+	    
+	    my $layout = CXGN::Trial::TrialLayout->new( { schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $bp->[0] });
+	    
+	    $trial_data->{studyId} = $t->get_trial_id();
+	    $trial_data->{studyType} = $t->get_project_type()->[1];
+	    $trial_data->{name} = $t->get_name();
+	    $trial_data->{programName} = $t->get_breeding_program();
+	    $trial_data->{keyContact} = "";
+	    $trial_data->{locationName} = $t->get_location()->[1];
+	    $trial_data->{designType} = $layout->get_design_type();
+	    
+	    push @response, $trial_data;
+	}
     }
 
     $c->stash->{rest} =  \@response;
