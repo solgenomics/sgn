@@ -880,7 +880,6 @@ sub get_breeding_program_cvterm_id {
     my $self = shift;
 
     my $breeding_program_cvterm_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program' });
-
     my $row;
 
     if ($breeding_program_cvterm_rs->count() == 0) {
