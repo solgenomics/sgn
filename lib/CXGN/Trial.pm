@@ -381,6 +381,34 @@ sub get_project_type {
 
 }
 
+sub get_breeding_program { 
+    my $self = shift;
+    my $rs = $self->bcs_schema()->resultset("Project::ProjectRelationship")->search( 
+	{ 
+	    type_id => $self->get_breeding_program_id(),
+	    subject_project_id => $self->get_trial_id(),
+	});
+    
+    if ($rs->count() == 0) { 
+	return undef;
+    }
+
+    my $bp_rs = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $rs->first()->object_project_id() });
+    if ($bp_rs->count > 0) { 
+	return $bp_rs->first()->name();
+    }
+    return undef;
+									      
+}
+
+sub set_breeding_program { 
+
+}
+
+sub remove_breeding_program { 
+
+}
+
 # CLASS METHOD!
 
 =head2 class method get_all_project_types()
@@ -816,6 +844,14 @@ sub get_year_type_id {
 
     my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'project year' });
 
+    return $rs->first()->cvterm_id();
+}
+
+
+sub get_breeding_program_id { 
+    my $self = shift;
+    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program_trial_relationship' });
+    
     return $rs->first()->cvterm_id();
 }
 
