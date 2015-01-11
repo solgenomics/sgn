@@ -15,7 +15,6 @@ pennellii</i></a> is a wild tomato that is relatively distant from the domestica
 
 </div>
 
-</&>
 
 <&| /page/info_section.mas, title => 'Available Data' &>
    <% info_table_html(
