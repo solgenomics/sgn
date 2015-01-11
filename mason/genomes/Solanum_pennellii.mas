@@ -11,7 +11,7 @@
   <a href="/chado/organism.pl?organism_id=770"><i>Solanum
 pennellii</i></a> is a wild tomato that is relatively distant from the domesticated <a href="/chado/organism.pl?organism_id=1"><i>Solanum
   lycopersicum</i></a>.  It was sequenced by a group of scientists at
-  Univeristy of Aachen and collaborators.
+  Univeristy of Aachen and collaborators under the direction of Bjorn Usadel.
 
 </div>
 
@@ -25,6 +25,7 @@ pennellii</i></a> is a wild tomato that is relatively distant from the domestica
          'BLAST WGS Assembly' => '<a href="/tools/blast/?db_id=226">Genomic scaffolds</a>',
 	 'BLAST protein sequences' => '<a href="/tools/blast/?db_id=260">Protein sequences</a>',
 	 'BLAST CDS sequences' => '<a href="/tools/blast/?db_id=261">CDS sequences</a>',
+	 'JBrowse view' => '<a href="http://solgenomics.net/jbrowse/current/?data=data%2Fjson%2Fspenn&loc=Spenn-ch01%3A43733407..65600109&tracks=DNA&highlight=">Browse genome</a>',
 		    
      )
     %>
