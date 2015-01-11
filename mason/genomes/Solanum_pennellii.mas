@@ -21,10 +21,10 @@ pennellii</i></a> is a wild tomato that is relatively distant from the domestica
          __border   => 0,
          __multicol => 2,
          'Bulk Datasets (via FTP)' =>
-           '<a href="ftp://ftp.solgenomics.net/genomes/Solanum_pennellii"</a>',
+           '<a href="ftp://ftp.solgenomics.net/genomes/Solanum_pennellii">FTP</a>',
          'BLAST WGS Assembly' => '<a href="/tools/blast/?db_id=226">Genomic scaffolds</a>',
 	 'BLAST protein sequences' => '<a href="/tools/blast/?db_id=260">Protein sequences</a>',
-	 'BLAST CDS sequences' => '<a hrejf="/tools/blast/?db_id=261">CDS sequences</a>',
+	 'BLAST CDS sequences' => '<a href="/tools/blast/?db_id=261">CDS sequences</a>',
 		    
      )
     %>
