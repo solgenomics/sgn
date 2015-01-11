@@ -24,7 +24,9 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 		      is => 'rw',
     );
 
+
 my $DEFAULT_PAGE_SIZE=500;
+
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) { 
     my $self = shift;
@@ -37,6 +39,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $self->bcs_schema( $c->dbic_schema("Bio::Chado::Schema") );
     $c->stash->{api_version} = $version;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+
 }
 
 
@@ -285,11 +288,11 @@ sub markerprofile_rs {
     my $self = shift;
     my $c = shift;
 
+
 #    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( { 'me.stock_id' => $c->stash->{genotype_id} })->search_related('nd_experiment_stocks')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
     
     my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => $c->stash->{markerprofile_id} });
     
-
     return $rs;
 }
 
@@ -433,7 +436,9 @@ sub study_list : Chained('studies') PathPart('list') Args(0) {
     # designType: "RCBD"
 }
 
+
 sub study_detail : Chained('studies') PathPart('detail') Args(1) { 
+
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;
