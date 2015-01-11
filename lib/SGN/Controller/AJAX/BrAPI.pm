@@ -18,14 +18,18 @@ __PACKAGE__->config(
     #map  => { 'text/javascript' => 'JSONP', 'text/html' => 'JSONP' },
    );
 
+has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
+		      is => 'rw',
+    );
+
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
     my $version = shift;
+    $self->bcs_schema( $c->dbic_schema("Bio::Chado::Schema") );
     $c->stash->{api_version} = $version;
-    $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
-    print STDERR "PROCESSING /...\n";
+    
 }
 
 sub genotype : Chained('brapi') PathPart('genotype') CaptureArgs(1) { 
@@ -55,7 +59,7 @@ sub germplasm_find : Chained('germplasm') PathPart('find') Args(0) {
     my $rs;
 
     if (! $params->{matchMethod} || $params->{matchMethod} eq "exact") { 
-	$rs = $c->dbic_schema("Bio::Chado::Schema")
+	$rs = $self->bcs_schema()
 	->resultset("Stock::Stock")
 	->search( { uniquename => { ilike => $params->{q} } });
     }
@@ -163,7 +167,7 @@ sub genotype_rs {
     my $self = shift;
     my $c = shift;
 
-    my $rs = $c->stash->{schema}->resultset("Stock::Stock")->search( { 'me.stock_id' => $c->stash->{genotype_id} })->search_related('nd_experiment_stocks')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
+    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( { 'me.stock_id' => $c->stash->{genotype_id} })->search_related('nd_experiment_stocks')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
 
     return $rs;
 }
@@ -227,7 +231,6 @@ sub study_list : Chained('study') PathPart('list') Args(0) {
 
     $c->stash->{rest} =  \@response;
 
-
     # studyId: "1",
     # studyType: "NURSERY",
     # name: "Nursery XYZ",
@@ -237,10 +240,7 @@ sub study_list : Chained('study') PathPart('list') Args(0) {
     # keyContact: "Mr. Plant Breeder A",
     # locationName: "Ibadan",
     # designType: "RCBD"
-
-
 }
-
 
 sub study_detail : Chained('study') PathPart('detail') Args(1) { 
     my $self = shift;
@@ -248,24 +248,56 @@ sub study_detail : Chained('study') PathPart('detail') Args(1) {
     my $trial_id = shift;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $t = CXGN::Trial->new( {bcs_schema => $schema });
+    my $t = CXGN::Trial->new( {bcs_schema => $schema, trial_id => $trial_id });
 
- 
+    if (!$t) { 
+	$c->stash->{rest} = { error => "The trial with id $trial_id does not exist" };
+	return;
+    }
+    my $tl = CXGN::Trial::TrialLayout->new( { schema => $schema, trial_id=>$trial_id });
 
+    my $design = $tl->get_design();
+    
+    my $plot_data = [];
+    my $formatted_plot = {};
+    
+    # print STDERR Dumper($design);
+
+    foreach my $plot_number (keys %$design) { 
+	$formatted_plot = { 
+	    plotId => $design->{$plot_number}->{plot_name},
+	    blockId => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : undef,
+	    rowId => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : undef,
+	    columnId => $design->{$plot_number}->{col_number},
+	    replication => $design->{$plot_number}->{replicate} ? 1 : 0,
+	    checkId => $design->{$plot_number}->{is_a_control} ? 1 : 0,
+	    lineId => $design->{$plot_number}->{stock_id},
+	    lineRecord_Name => $design->{$plot_number}->{accession_name},
+	};
+
+	push @$plot_data, $formatted_plot;
+	# plotId: "11",
+	# blockId: "1",
+	# rowId: "20",
+	# columnId: "22",
+	# replication: "1",
+	# checkId: "0",
+	# lineId: "143",
+	# lineRecordName: "ZIPA_68"
+	
+    }
+    
     my $data = { studyId => $t->get_trial_id(),
-		 studyType => $t->get_project_type() || "trial",
+		 studyType => $t->get_project_type() ? $t->get_project_type()->[1] : "trial",
 		 objective => "",
 		 startDate => "",
 		 keyContact => "",
-		 locationName => $t->get_location(),
-		 designType => "",
+		 locationName => $t->get_location() ? $t->get_location()->[1] : undef,
+		 designType => $tl->get_design_type(),
+		 designDetails => $plot_data,
     };
 
- 
     $c->stash->{rest} = $data;
-    
-    
-
 
     # studyId: "1",
     #  studyType: "trial",
@@ -287,6 +319,43 @@ sub study_detail : Chained('study') PathPart('detail') Args(1) {
     # 	lineRecordName: "ZIPA_68"
     #      }, ...
     #    ]
+
+}
+
+sub traits :  Chained('brapi') PathPart('traits') CaptureArgs(0) {
+    my $self = shift;
+    my $c = shift;
+    
+
+
+
+}
+
+sub traits_list : Chained('traits') PathPart('list') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $db_rs = $self->bcs_schema()->resultset("General::Db")->search( { name => $c->config->{trait_ontology_db_name} } );
+    if ($db_rs->count ==0) { return undef; }
+    my $db_id = $db_rs->first()->db_id();
+    
+    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, cvtermprop.value, dbxref.accession FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) WHERE dbxref.db_id=?";
+    my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+    $h->execute($db_id);
+
+    my $traits = [];
+    while (my ($cvterm_id, $name, $description, $scale, $accession) = $h->fetchrow_array()) { 
+	push @$traits, { uid => $cvterm_id, name => $name, method => $description, unit => "", scale => $scale, accession => $accession };
+    }
+
+    $c->stash->{rest} = { traits => $traits };
+}
+
+sub specific_traits_list : Chained('traits') PathPart('') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->res->body("IT WORKS");
 
 }
 
