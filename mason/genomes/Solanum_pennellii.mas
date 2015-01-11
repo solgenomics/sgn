@@ -1,0 +1,37 @@
+
+<%doc>
+
+</%doc>
+
+
+<& /page/page_title.mas, title=>"Genome: <i>Solanum pennellii</i>" &>
+
+<div class="page_introduction">
+
+  <a href="/chado/organism.pl?organism_id=770"><i>Solanum
+pennellii</i></a> is a wild tomato that is relatively distant from the domesticated <a href="/chado/organism.pl?organism_id=1"><i>Solanum
+  lycopersicum</i></a>.  It was sequenced by a group of scientists at
+  Univeristy of Aachen and collaborators.
+
+</div>
+
+</&>
+
+<&| /page/info_section.mas, title => 'Available Data' &>
+   <% info_table_html(
+         __border   => 0,
+         __multicol => 2,
+         'Bulk Datasets (via FTP)' =>
+           '<a href="ftp://ftp.solgenomics.net/genomes/Solanum_pennellii"</a>',
+         'BLAST WGS Assembly' => '<a href="/tools/blast/?db_id=226">Genomic scaffolds</a>',
+	 'BLAST protein sequences' => '<a href="/tools/blast/?db_id=260">Protein sequences</a>',
+	 'BLAST CDS sequences' => '<a hrejf="/tools/blast/?db_id=261">CDS sequences</a>',
+		    
+     )
+    %>
+</&>
+
+
+<%init>
+  use CXGN::Page::FormattingHelpers qw/info_table_html/;
+</%init>
