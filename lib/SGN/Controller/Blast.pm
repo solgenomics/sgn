@@ -44,7 +44,7 @@ sub index :Path('/tools/blast/') :Args(0) {
 		my $rs = $schema->resultset("BlastDb")->search( { blast_db_id => $db_id }, { join => 'blast_db_group' });
     
     if ($rs == 0) {
-      $c->throw( is_error => 0, message => "The sequence could not be found in the blast database with id $db_id.");
+      $c->throw( is_error => 0, message => "The blast database with id $db_id could not be found.");
     }
     
 		$preselected_database = $rs->first()->blast_db_id(); # first database of the category
