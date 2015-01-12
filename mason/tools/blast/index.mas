@@ -186,7 +186,7 @@ if ($preload_seq) {
   </table>
 </&>
 
-<div id="jobid"></div>
+<div id="jobid" style="display:none;"></div>
 
 <script>
 
