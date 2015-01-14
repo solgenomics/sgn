@@ -47,18 +47,17 @@ correCoefficientsJsonFile <- grep("corre_coefficients_json",
 
 phenoData <- c()
 
-if(length(refererQtl) != 0  ) {
-  phenoData<-read.csv(phenoDataFile,
-                      header=TRUE,
-                      row.names = NULL,
-                      dec=".",
-                      sep=",",
-                      na.strings=c("NA", "-", " ", ".")
-                      )
+if ( length(refererQtl) != 0 ) {
 
-  colnames(phenoData)[1] <- c('object_name')
-    
-} else {  
+  phenoData <- read.csv(phenoDataFile,
+                        header=TRUE,
+                        row.names = NULL,
+                        dec=".",
+                        sep=",",
+                        na.strings=c("NA", "-", " ", ".")
+                        )
+ 
+} else {
   phenoData <- read.table(phenoDataFile,
                           header = TRUE,
                           row.names = NULL,
@@ -66,37 +65,57 @@ if(length(refererQtl) != 0  ) {
                           na.strings = c("NA", " ", "--", "-", "."),
                           dec = "."
                           )
+
 }
 
-dropColumns <- c("uniquename", "stock_name")
-phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
-
 formattedPhenoData <- c()
+allTraitNames      <- c()
 
-allNames      <- names(phenoData)
-nonTraitNames <- c("object_name", "object_id", "stock_id", "design", "block", "replicate")
-allTraitNames <- allNames[! allNames %in% nonTraitNames]
+if (length(refererQtl) != 0) {
 
-message('traits: ', allTraitNames)
+  allNames      <- names(phenoData)
+  nonTraitNames <- c("ID")
+
+  allTraitNames <- allNames[! allNames %in% nonTraitNames]
+  
+} else {
+  dropColumns <- c("uniquename", "stock_name")
+  phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
+
+  allNames      <- names(phenoData)
+  nonTraitNames <- c("object_name", "object_id", "stock_id", "design", "block", "replicate")
+
+  allTraitNames <- allNames[! allNames %in% nonTraitNames]
+ 
+}
+
+for (i in allTraitNames) {
+  if (all(is.nan(phenoData$i))) {
+    phenoData[, i] <- sapply(phenoData[, i], function(x) ifelse(is.numeric(x), x, NA))                     
+  }
+}
+
+phenoData <- phenoData[, colSums(is.na(phenoData)) < nrow(phenoData)]
 
 trait <- c()
 cnt   <- 0
-
-for (i in allTraitNames) {
-  cnt <- cnt + 1
-  trait <- i
  
-  phenoTrait         <- c()
-  experimentalDesign <- c()
+if (length(refererQtl) == 0) {
+  for (i in allTraitNames) {
+    cnt   <- cnt + 1
+    trait <- i
   
-  if ('design' %in% colnames(phenoData)) {
+    phenoTrait         <- c()
+    experimentalDesign <- c()
+  
+    if ('design' %in% colnames(phenoData)) {
 
     phenoTrait  <- subset(phenoData,
                           select = c("object_name", "object_id", "design", "block", "replicate", trait)
                           )
     
     experimentalDesign <- phenoTrait[2, 'design']
-
+  
     if (is.na(experimentalDesign) == TRUE) {
       experimentalDesign <- c('No Design')
     }
@@ -166,7 +185,7 @@ for (i in allTraitNames) {
                      na.action = na.omit
                      ))
 
-    if(class(model) != "try-error") {
+    if (class(model) != "try-error") {
       adjMeans <- data.matrix(fixed.effects(model))
       colnames(adjMeans) <- trait
       
@@ -185,33 +204,41 @@ for (i in allTraitNames) {
         formattedPhenoData[, 1] <- NULL
       }
     }
-
+ 
   } else {
     message("experimental design: ", experimentalDesign)
+    message("GS stuff")
+                                      
+    dropColumns <- c("object_id", "stock_id", "design",  "block", "replicate")
+   
+    formattedPhenoData <- phenoData[, !(names(phenoData) %in% dropColumns)]
+     
+    formattedPhenoData <- ddply(formattedPhenoData,
+                                "object_name",
+                                colwise(mean, na.rm=TRUE)
+                                )
+    
+    row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+    formattedPhenoData[, 1] <- NULL
   
-    if (sum(is.na(phenoData)) > 0)
-      {
-        dropColumns <- c("object_id", "stock_id", "design",  "block", "replicate")
-
-        formattedPhenoData <- phenoData[, !(names(phenoData) %in% dropColumns)]
-      
-        formattedPhenoData <- ddply(formattedPhenoData,
-                                    "object_name",
-                                    colwise(mean, na.rm=TRUE)
-                                    )
-        row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-        formattedPhenoData[, 1] <- NULL
-      }
   } 
+  }
+
+} else {
+  message("qtl stuff")
+  formattedPhenoData <- ddply(phenoData,
+                              "ID",
+                              colwise(mean, na.rm=TRUE)
+                              )
+  
+  row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+  formattedPhenoData[, 1] <- NULL
+  
 }
 
 formattedPhenoData <- round(formattedPhenoData,
-                            digits=2
-                            )
-
-uniquelength <- sapply(formattedPhenoData,function(x) length(unique(x)))
-print(uniquelength)
-testData <- subset(formattedPhenoData, select=uniquelength>1)
+                             digits = 2
+                             )
 
 coefpvalues <- rcor.test(formattedPhenoData,
                          method="pearson",

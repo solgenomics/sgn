@@ -21,6 +21,7 @@ sub search :Path('/ajax/search/trials') Args(0) {
     $params->{page} = 1 if (! $params->{page});
  
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id($c);
+    my $project_location_cvterm_id = $self->get_project_location_cvterm_id($c);
 
     my $trial_name_condition;
     
@@ -31,12 +32,15 @@ sub search :Path('/ajax/search/trials') Args(0) {
 	push @conditions, "project.name ilike ?";
 	push @bind_values, '%'.$params->{trial_name}."%";
     }
-    if ($params->{location} && ($params->{location} ne "all")) { 
-	push @conditions, "nd_geolocation.description ilike ?";
-	push @bind_values, $params->{location};
-    }
+   if ($params->{location} && ($params->{location} ne "all")) {
+       my $row = $c->dbic_schema("Bio::Chado::Schema")->resultset("NaturalDiversity::NdGeolocation")->find( { description => $params->{location} } );
+       if ($row) { 
+	   push @conditions, " location.value = ? ";
+	   push @bind_values, $row->nd_geolocation_id();
+       }
+   }
     if ($params->{year} && ($params->{year} ne "all")) { 
-	push @conditions, "projectprop.value ilike ?";
+	push @conditions, "year.value ilike ?";
 	push @bind_values, $params->{year}.'%';
     }
     if ($params->{breeding_program} && ($params->{breeding_program} ne "all")) { 
@@ -44,15 +48,15 @@ sub search :Path('/ajax/search/trials') Args(0) {
 	push @bind_values, $params->{breeding_program};
     }
 
-    my $select_clause = "SELECT distinct(project.project_id), project.name, project.description, program.name, projectprop.value ";
+    my $select_clause = "SELECT distinct(project.project_id), project.name, project.description, program.name, year.value, location.value ";
 
     my $count_clause = "SELECT count(distinct(project.project_id)) ";
 
-    my $from_clause = " FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_geolocation using(nd_geolocation_id) JOIN projectprop ON (project.project_id = projectprop.project_id) JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) JOIN project as program ON (project_relationship.object_project_id=program.project_id) WHERE projectprop.type_id=$project_year_cvterm_id  ";
+    my $from_clause = " FROM project LEFT JOIN projectprop AS year ON (project.project_id = year.project_id) LEFT JOIN projectprop AS location ON (project.project_id = location.project_id) LEFT JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) LEFT JOIN project as program ON (project_relationship.object_project_id=program.project_id) WHERE year.type_id=$project_year_cvterm_id and location.type_id=$project_location_cvterm_id";
 
     my $where_clause = " AND ". join (" AND ", @conditions) if (@conditions);
 
-    my $order_clause = " ORDER BY projectprop.value desc, program.name, project.name ";
+    my $order_clause = " ORDER BY year.value desc, program.name, project.name ";
 
     my $q .= $count_clause . $from_clause . $where_clause;
 
@@ -93,6 +97,17 @@ sub get_project_year_cvterm_id {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $row = $schema->resultset("Cv::Cvterm")->find( { name => 'project year' });
+
+    return $row->cvterm_id();
+}
+
+sub get_project_location_cvterm_id { 
+   my $self = shift;
+    my $c = shift;
+    
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $row = $schema->resultset("Cv::Cvterm")->find( { name => 'project location' });
 
     return $row->cvterm_id();
 }

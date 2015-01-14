@@ -3,23 +3,23 @@
 
 =head1 NAME
 
- AddDeletePriv2NDtables
+ AddProjectTypes.pm
 
 =head1 SYNOPSIS
 
-mx-run AddDeletePriv2NDtables [options] -H hostname -D dbname -u username [-F]
+mx-run AddProjectTypes [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This is a test dummy patch.
+This patch adds a cv for 'project_types'.
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
- Naama Menda<nm249@cornell.edu>
+  Naama Menda <nm249@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -31,7 +31,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddDeletePriv2NDtables;
+package AddProjectTypes;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
@@ -59,18 +59,30 @@ sub patch {
 --do your SQL here
 --
 
-    GRANT select,insert,update,delete ON nd_experiment_phenotype TO web_usr;
-    GRANT select,insert,update,delete ON phenotype TO web_usr;
-    GRANT select,insert,update,delete ON stock TO web_usr;
-    GRANT select,insert,update,delete ON stockprop TO web_usr;
-    GRANT select,insert,update,delete ON stock_relationship TO web_usr;
-    GRANT select,insert,update,delete ON nd_experiment TO web_usr;
+INSERT INTO cv (name, definition) VALUES ('project_type', '');
 
 EOSQL
 
-print "You're done!\n";
+    print STDERR "INSERTING CV TERMS...\n";
+
+    my @terms = qw | clonal seedling  | ;
+
+    foreach my $t (@terms) {
+
+	$self->dbh->do(<<EOSQL);
+
+INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), '$t');
+
+INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT cv_id FROM cv where name='project_type' ), '$t', '$t', (SELECT dbxref_id FROM dbxref WHERE accession='$t'));
+
+
+EOSQL
+
 }
 
+print "Done!\n";
+
+}
 
 ####
 1; #

@@ -101,12 +101,12 @@ sub save_trial {
 
   if ($self->trial_name_already_exists()) {
       print STDERR "Can't create trial: Trial name already exists\n";
-      return;
+      return ( error => "trial name already exists" );
   }
 
   if (!$self->get_breeding_program_id()) {
       print STDERR "Can't create trial: Breeding program does not exist\n";
-      return;
+      return ( error => "no breeding program id" );
   }
 
 
@@ -117,7 +117,7 @@ sub save_trial {
   $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $user_name); #add person id as an option.
   if (!$owner_sp_person_id) {
       print STDERR "Can't create trial: User/owner not found\n";
-    return;
+    return ( error => "no owner" );
   }
 
   my $geolocation;
@@ -126,7 +126,7 @@ sub save_trial {
   $geolocation = $geolocation_lookup->get_geolocation();
   if (!$geolocation) {
       print STDERR "Can't create trial: Location not found\n";
-    return;
+     return ( error => "no geolocation" );
   }
 
   my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $chado_schema } );
@@ -218,7 +218,6 @@ sub save_trial {
 
   $project->create_projectprops( { 'project year' => $self->get_trial_year(),'design' => $self->get_design_type()}, {autocreate=>1});
 
-
   foreach my $key (sort { $a <=> $b} keys %design) {
     my $plot_name = $design{$key}->{plot_name};
     my $plot_number = $design{$key}->{plot_number};
@@ -256,20 +255,18 @@ sub save_trial {
     if (!$parent_stock) {
       die ("Error while saving trial layout: no stocks found matching $stock_name");
     }
-   
+
     #create the plot
     $plot = $chado_schema->resultset("Stock::Stock")
-	->find_or_create({
-	    organism_id => $parent_stock->organism_id(),
-	    name       => $plot_name,
-	    uniquename => $plot_name,
-	    type_id => $plot_cvterm->cvterm_id,
-			 } );
-
+      ->find_or_create({
+			organism_id => $parent_stock->organism_id(),
+			name       => $plot_name,
+			uniquename => $plot_name,
+			type_id => $plot_cvterm->cvterm_id,
+		       } );
     if ($rep_number) {
       $plot->create_stockprops({'replicate' => $rep_number}, {autocreate => 1} );
     }
-
     if ($block_number) {
       $plot->create_stockprops({'block' => $block_number}, {autocreate => 1} );
     }
@@ -311,6 +308,7 @@ sub save_trial {
 							 stock_id => $plot->stock_id(),
 							});
   }
+
 
 
   $program->associate_breeding_program_with_trial($self->get_breeding_program_id, $project->project_id);

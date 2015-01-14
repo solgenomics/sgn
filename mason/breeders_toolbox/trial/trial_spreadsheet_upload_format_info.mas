@@ -3,15 +3,15 @@
 <b>
 Trials may be uploaded in an Excel file (.xls)
 </b>
-<br>
+<br />
 (.xlsx format not supported)
-<br><br>
+<br /><br />
 <b>
   Header:
 </b>
 <br>
 The first row (header) should contain the following:
-<br>
+<br />
 
 <table cellspacing="1" cellpadding="2" border="1">
   <tr>
@@ -22,30 +22,33 @@ The first row (header) should contain the following:
     <td>is_a_control</td>
     <td>rep_number</td>
     <td>range_number</td>
+    <td>row_number</td>
   </tr>
 </table>
 
-<br>
+<br />
 <b>
   Required fields:
 </b>
 plot_name (must be unique)
-<br>
+<br />
 accession_name (must exist in the database)
-<br>
+<br />
 plot_number
-<br>
+<br />
 block_number
-<br>
+<br />
 
 <b>
   Optional fields:
 </b>
-<br>
+<br />
 is_a_control (type 1 or yes in this field if the plot is a control)
-<br>
-rep_number (replicate number)
-<br>
-range_number (range number, i.e., row)
-<br>
+<br />
+rep_number (replicate number, numeric)
+<br />
+range_number (range number, numeric)
+<br />
+row_number (row number, numeric)
+<br />
 

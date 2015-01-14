@@ -39,6 +39,8 @@ $d->find_element_ok("add_list_button", "id", "find add list button test")->click
 
 $d->find_element_ok("view_list_new_test_list", "id", "view list test")->click();
 
+sleep(2);
+
 $d->find_element_ok("dialog_add_list_item", "id", "add test list")->send_keys("element1\nelement2\nelement3\n");
 
 sleep(1);

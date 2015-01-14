@@ -178,43 +178,52 @@ jQuery(document).ready(function ($) {
         position: ['top', 75],
         title: "Add new trial",
         buttons: {
-            "Cancel": function () {
-                $('#add_project_dialog').dialog("close");
+            "Cancel": {
+                id : "cancel_add_trial",
+                click: function () {
+                   $('#add_project_dialog').dialog("close");
+                },
+                text: "Cancel"
             },
-            "Add": function () {
-                var name = $('#new_trial_name').val();
-                var year = $('#add_project_year').val();
-                var desc = $('textarea#add_project_description').val();
-                var method_to_use = $('.format_type:checked').val();
-		if (name == '') {
-		    alert('Trial name required');
-		    return;
-		}
-                if (year === '' || desc === '') {
-                    alert('Year and description are required.');
-                    return;
-                }
-                if (method_to_use == "empty") {
-                    alert('adding a project');
-                    save_project_info(name, year, desc);
-                }
-		//removed
-                if (method_to_use == "create_with_upload") {
-                    var uploadFile = $("#trial_upload_file").val();
-                    $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
-                    if (uploadFile === '') {
-                        alert("Please select a file");
-                        return;
-                    }
-                    $("#create_new_trial_form").submit();
-                }
-                if (method_to_use == "create_with_design_tool") {
-		    //generate_experimental_design(name,year,desc);
-		    generate_experimental_design();
-		}
-                //$( this).dialog("close"); 
-                //location.reload();
-            }
+            "Add": { 
+		id : "add_trial_button",
+		click: 
+                  function () {
+                      var name = $('#new_trial_name').val();
+                      var year = $('#add_project_year').val();
+                      var desc = $('textarea#add_project_description').val();
+                      var method_to_use = $('.format_type:checked').val();
+		      if (name == '') {
+			  alert('Trial name required');
+			  return;
+		      }
+                      if (year === '' || desc === '') {
+			  alert('Year and description are required.');
+			  return;
+                      }
+                      if (method_to_use == "empty") {
+			  alert('adding a project');
+			  save_project_info(name, year, desc);
+                      }
+		      //removed
+                      if (method_to_use == "create_with_upload") {
+			  var uploadFile = $("#trial_upload_file").val();
+			  $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
+			  if (uploadFile === '') {
+                              alert("Please select a file");
+                              return;
+			  }
+			  $("#create_new_trial_form").submit();
+                      }
+                      if (method_to_use == "create_with_design_tool") {
+			  //generate_experimental_design(name,year,desc);
+			  generate_experimental_design();
+		      }
+                      //$( this).dialog("close"); 
+                      //location.reload();
+		  },
+		text: "Add"
+	    }
         }
     });
 
@@ -411,7 +420,7 @@ else {
         var design_type = $('#select_design_method').val();
 
 
-        alert(design_type);
+     //alert(design_type);
 
 	var rep_count = $('#rep_count').val();
 	var block_size = $('#block_size').val();
@@ -478,11 +487,15 @@ else {
 	autoOpen: false,
 	modal: true,
 	buttons: {
-            Ok: function() {
-		$( this ).dialog( "close" );
-		location.reload();
-            }
-	}
+            Ok: { id : "trial_saved_dialog_message_ok_button",
+		  click: function() {
+		      $( this ).dialog( "close" );
+		      location.reload();
+		  },
+		  text: "Ok"
+		}
+        }
+    
     });
 
     $('#trial_design_confirm').dialog({
@@ -491,17 +504,25 @@ else {
 	width: 450,
         modal: true,
         buttons: {
-	    Confirm: function() {
-		save_experimental_design(design_json);
-		//$( this ).dialog( "close" );
-		//$('#add_project_dialog').dialog("close");
+	    Confirm: {
+		id : "confirm_trial_save_button",
+		click: function() {
+		    save_experimental_design(design_json);
+		    //$( this ).dialog( "close" );
+		    //$('#add_project_dialog').dialog("close");
+		},
+		text: "Confirm"
 	    },
-	    Cancel: function() {
-		//$('#add_project_dialog').dialog("close");
-		$( this ).dialog( "close" );
-		return;
+	    Cancel: { 
+		id : "cancel_trial_save_button",
+		click: function() {
+		    //$('#add_project_dialog').dialog("close");
+		    $( this ).dialog( "close" );
+		    return;
+		},
+		text: "Cancel"
 	    }
-        },
+        }
     });
 
     $('#view_trial_layout_button').click(function () {

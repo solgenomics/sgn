@@ -67,7 +67,7 @@ ORDER BY cv.name, cvterm.name limit 30";
     while (my ($cvterm_id, $cv_name, $cvterm_name, $accession) = $sth->fetchrow_array() ) {
         push @response_list, $cv_name . "--" . $accession . "--" . $cvterm_name ;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 sub relationships : Local : ActionClass('REST') { }
@@ -87,7 +87,7 @@ sub relationships_GET :Args(0) {
     while  ( my ($cvterm_id, $cvterm_name) = $relationship_query->fetchrow_array() ) {
         $hashref->{$cvterm_name} = $cvterm_id;
     }
-    $c->{stash}->{rest} = $hashref;
+    $c->stash->{rest} = $hashref;
 }
 
 sub locus_relationships : Local : ActionClass('REST') { }
@@ -107,7 +107,7 @@ sub locus_relationships_GET :Args(0) {
     while  ( my ($cvterm_id, $cvterm_name) = $query->fetchrow_array() ) {
         $hashref->{$cvterm_name} = $cvterm_id;
     }
-    $c->{stash}->{rest} = $hashref;
+    $c->stash->{rest} = $hashref;
 }
 
 =head2
@@ -135,7 +135,7 @@ sub evidence_GET :Args(0) {
     while  ( my ($cvterm_id, $cvterm_name) = $query->fetchrow_array() ) {
         $hashref->{$cvterm_name} = $cvterm_id;
     }
-    $c->{stash}->{rest} = $hashref;
+    $c->stash->{rest} = $hashref;
 }
 
 
@@ -154,7 +154,7 @@ sub evidence_description_GET :Args(0) {
     while  ( my ($cvterm_id, $cvterm_name) = $query->fetchrow_array() ) {
         $hashref->{$cvterm_name} = $cvterm_id;
     }
-    $c->{stash}->{rest} = $hashref;
+    $c->stash->{rest} = $hashref;
 }
 
 sub recursive_stocks : Local : ActionClass('REST') { }

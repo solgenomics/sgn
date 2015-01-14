@@ -99,7 +99,7 @@ foreach my $d (@databases) {
 
 
 <br />
-<button class="input" id="clear_form" value="clear">Clear</button>&nbsp; &nbsp; &nbsp;
+<!-- <button class="input" id="clear_form" value="clear">Clear</button>&nbsp; &nbsp; &nbsp; -->
 <button class="input" id="upload_expression_file" value="Run VIGS Analysis">Run VIGS Analysis</button>
 
 <br />
@@ -300,7 +300,7 @@ foreach my $d (@databases) {
 	padding: 5px 10px;
 	color: white;
 	border-radius: 10px;
-	font: bold 14px "Helvetica Neue", Sans-Serif;
+	font: bold 12px "Helvetica Neue", Sans-Serif;
 	box-shadow: 0 0 7px black;
 }
 .arrow {
@@ -336,6 +336,48 @@ foreach my $d (@databases) {
 .arrow.top:after {
 	bottom: -20px;
 	top: auto;
+}
+
+
+#sequence {
+	background-color:#EEEEFE;
+	border-color:#000;
+	border-width:2px;
+	border-style:solid;
+	border-radius:5px;
+	width: 700px;
+	min-height: 80px;
+	max-height: 300px;
+	min-width: 700px;
+	max-width: 700px;
+}
+
+
+#upload_expression_file {
+background-color:#555555;
+/*background-color:#4387FD;*/
+border:0px;
+border-radius:2px;
+/*color:#fff;*/
+color:#EEEEEE;
+box-shadow: 1px 1px 0px 0px #C6C6C6;
+font-family:Arial;
+font-size:12px;
+height:20px;
+line-height:18px;
+vertical-align: top;
+}
+#upload_expression_file:hover {
+background-color:#444444;
+/*background-color:#5EA1FF;*/
+/*color:#acf;*/
+color:#fff;
+}
+#upload_expression_file:active {
+position:relative;
+top:1px;
+left:1px;
+box-shadow: 0px 0px 0px 0px #fff;
 }
 
 </style>

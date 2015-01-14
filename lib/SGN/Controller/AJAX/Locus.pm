@@ -94,7 +94,7 @@ sub autocomplete_GET : Args(0) {
             push @results , "$locus_name ($locus_symbol) $allele_data";
         }
     }
-    $c->{stash}->{rest} = \@results;
+    $c->stash->{rest} = \@results;
 }
 
 =head2 genome_autocomplete
@@ -126,7 +126,7 @@ sub genome_autocomplete_GET :Args(0) {
           rows        => 20 ,}
         )->get_column('me.name')->all;
     map ( s/\.\d+$// ,  @feature_names) ;
-    $c->{stash}->{rest} = \@feature_names;
+    $c->stash->{rest} = \@feature_names;
 }
 
 
@@ -275,15 +275,14 @@ sub associate_ontology_GET :Args(0) {
 #########################change this to the locus object !! 
 sub associate_ontology_POST :Args(0) {
     my ( $self, $c ) = @_;
-
-    my $dbh = $c->dbc->dbh;
+     my $dbh = $c->dbc->dbh;
      my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $cvterm_rs = $schema->resultset('Cv::Cvterm');
 
     my $locus_id       = $c->req->param('object_id');
     my $ontology_input = $c->req->param('term_name');
-    my $relationship   = $c->req->param('relationship'); # a cvterm_id
+     my $relationship   = $c->req->param('relationship'); # a cvterm_id
     my ($relationship_id) = $cvterm_rs->find( { cvterm_id => $relationship } )->dbxref_id;
     my $evidence_code  = $c->req->param('evidence_code'); # a cvterm_id
     my ($evidence_code_id) = $cvterm_rs->find( {cvterm_id => $evidence_code })->dbxref_id;
@@ -354,9 +353,7 @@ sub associate_ontology_POST :Args(0) {
                 $locus_dbxref_evidence->set_sp_person_id($logged_person_id);
 
                 my $locus_dbxref_evidence_id = $locus_dbxref_evidence->store ;
-
 ##########################################
-                $c->stash->{rest} = ['success'];
             } catch {
                 $c->stash->{rest} = { error => "Failed: $_" };
                 # send an email to sgn bugs
@@ -370,7 +367,8 @@ sub associate_ontology_POST :Args(0) {
                 return;
             };
             # if you reached here this means associate_ontology worked. Now send an email to sgn-db-curation
-            $c->stash->{email} = {
+	    $c->stash->{rest} = { success => "1" };
+	    $c->stash->{email} = {
                 to      => 'sgn-db-curation@sgn.cornell.edu',
                 from    => 'www-data@sgn-vm.sgn.cornell.edu',
                 subject => "New ontology term loaded. Locus $locus_id",
@@ -378,11 +376,12 @@ sub associate_ontology_POST :Args(0) {
             };
             $c->forward( $c->view('Email') );
         } else {
-            $c->stash->{rest} = { error => 'need both valid locus_id and cvterm_id for adding an ontology term to this locus! ' };
+	    $c->stash->{rest} = { error => 'need both valid locus_id and cvterm_id for adding an ontology term to this locus! ' };
         }
     } else {
         $c->stash->{rest} = { error => 'No privileges for adding new ontology terms. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
     }
+    return;
 }
 
 sub references : Chained('/locus/get_locus') :PathPart('references') : ActionClass('REST') { }
@@ -703,7 +702,7 @@ sub locus_unigenes_GET :Args(0) {
                 qq | <input type = "button" onclick="javascript:Locus.obsoleteLocusUnigene(\'$locus_unigene_id\',  \'$locus_id\')" value ="Remove" /> |
                 : qq| <span class="ghosted">[Remove]</span> |;
             #
-            my $blast_link = "<a href='/tools/blast/?preload_id=" . $unigene_id . "&preload_type=15'>[Blast]</a>";
+            my $blast_link = "<a href='/tools/blast/?preload_id=SGN-U" . $unigene_id . "&preload_type=15'>[Blast]</a>";
             $unigenes .=
                 qq|<a href="/search/unigene.pl?unigene_id=$unigene_id">SGN-U$unigene_id</a> $organism_name -- build $build_nr -- $nr_members members $unigene_obsolete_link $blast_link<br />|;
 
@@ -956,8 +955,9 @@ sub organisms_GET :Args(0) {
     my ($self, $c) = @_;
     my $response;
     my ($organism_names_ref, $organism_ids_ref)=CXGN::Tools::Organism::get_existing_organisms( $c->dbc->dbh);
+    my $var = join "\n" , @$organism_ids_ref ;
     $response->{html} = $organism_names_ref;
-    $c->{stash}->{rest} = $response;
+    $c->stash->{rest} = $response;
 }
 
 

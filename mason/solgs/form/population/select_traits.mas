@@ -30,7 +30,7 @@ $all_traits_file
   while (<FH>)
   {
      my ($trait, $id) = split (/\t/);      
-     my $trait_link =  qq | <a href="/trait/$id/populaton/$pop_id">$trait</a> |;
+     my $trait_link =  qq | <a href="/trait/$id/population/$pop_id">$trait</a> |;
      
      my $row = <<ROW;    
      <tr>

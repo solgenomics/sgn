@@ -36,19 +36,55 @@ sub run : Path('/tools/blast/run') Args(0) {
     my $params = $c->req->params();
 
     my $input_query = CXGN::Blast::SeqQuery->new();
-
+	
     my $valid = $input_query->validate($c, $params->{input_options}, $params->{sequence});
     
     if ($valid ne "OK") { 
-	$c->stash->{rest} = { error => "Your input contains illegal characters. Please verify your input. ($valid)" };
+	$c->stash->{rest} = { error => "Your input contains illegal characters. Please verify your input." };
 	return;
     }
-    
+	
     $params->{sequence} = $input_query->process($c, $params->{input_options}, $params->{sequence});
 
-    print STDERR "SEQUENCE now : ".$params->{sequence}."\n";
+    # print STDERR "SEQUENCE now : ".$params->{sequence}."\n";
+	
+	if ($params->{input_options} eq 'autodetect') {
+		my $detected_type = $input_query->autodetect_seq_type($c, $params->{input_options}, $params->{sequence});
+		
+		# print STDERR "SGN BLAST detected your sequence is: $detected_type\n";
+		
+		# create a hash with the valid options =1 and check and if result 0 return error
+		my %blast_seq_db_program = (
+			nucleotide => {
+				nucleotide => {
+					blastn => 1,
+					tblastx => 1,
+				},
+				protein => {
+					blastx => 1,
+				},
+			},
+			protein => {
+				protein => {
+					blastp => 1,
+				},
+				nucleotide => {
+					tblastn => 1,
+				},
+			},
+		);
 
-    my $seq_count = $params->{sequence} =~ tr/\>/\>/; 
+		if (!$blast_seq_db_program{$detected_type}{$params->{db_type}}{$params->{program}}) {
+			$c->stash->{rest} = { error => "the program ".$params->{program}." can not be used with a ".$detected_type." sequence (autodetected) and a ".$params->{db_type}." database.\n\nPlease, use different options and disable the autodetection of the query type if it is wrong." };
+			return;
+		}
+	}
+	
+	
+    my $seq_count = 1;
+	if ($params->{sequence} =~ /\>/) {
+		$seq_count= $params->{sequence} =~ tr/\>/\>/;
+	}
     print STDERR "SEQ COUNT = $seq_count\n";
     my ($seq_fh, $seqfile) = tempfile( 
 	"blast_XXXXXX",
@@ -87,7 +123,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 #		 }
 #	     }
 	     
-		 print STDERR "Paring with bioperl... ";
+		 print STDERR "Parsing with bioperl... ";
 		 my $i = Bio::SeqIO->new(
 		     -format   => 'fasta',
 		     -file       => $seqfile,
@@ -119,10 +155,10 @@ sub run : Path('/tools/blast/run') Args(0) {
 					       developer_message => Data::Dumper::Dumper({
 						   '$seq_count' => $seq_count,
 						   '$seq_filename' => $seqfile,
-											 }),
-		     );
-		 
-		 return -i => $seqfile;
+							}),
+		);
+		
+		return -i => $seqfile;
 	      }
 	 },
 	 
@@ -143,9 +179,16 @@ sub run : Path('/tools/blast/run') Args(0) {
 	 
 	 maxhits =>
 	 sub {
-	     my $h = $params->{maxhits} || 100;
+	     my $h = $params->{maxhits} || 20;
 	     $h =~ s/\D//g; #only digits allowed
 	     return -b => $h;
+	 },
+	 
+	 hits_list =>
+	 sub {
+	     my $h = $params->{maxhits} || 20;
+	     $h =~ s/\D//g; #only digits allowed
+	     return -v => $h;
 	 },
 	 
 	 filterq =>
@@ -180,7 +223,8 @@ sub run : Path('/tools/blast/run') Args(0) {
 	);
 
     print STDERR "BUILDING COMMAND...\n";
-
+	
+	
     # build our command with our arg handlers
     #
     my @command = ('blastall');
@@ -229,10 +273,22 @@ sub run : Path('/tools/blast/run') Args(0) {
 	$c->stash->{rest} = { error => $@ };
     }
     else { 
-	print STDERR "Passing jobid code ".(basename($jobid))."\n";
-	$c->stash->{rest} = { jobid =>  basename($jobid), 
+		# write data in blast.log
+		my $blast_log_path = $c->config->{blast_log};
+		my $blast_log_fh;
+		if (-e $blast_log_path) {
+			open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
+		} else {
+			open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
+			print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
+		}
+		print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
+		
+		
+		print STDERR "Passing jobid code ".(basename($jobid))."\n";
+		$c->stash->{rest} = { jobid =>  basename($jobid), 
 	                      seq_count => $seq_count, 
-	};
+		};
     }
 }
 
@@ -317,90 +373,6 @@ sub get_result : Path('/tools/blast/result') Args(1) {
 
 }
 
-# sub blast_overview_graph : Path('/tools/blast/overview') Args(1) { 
-#     my $self = shift;
-#     my $c = shift;
-#     my $jobid = shift;
-
-
-# }
-
-# sub blast_coverage_graph : Path('/tools/blast/coverage') Args(1) { 
-#     my $self = shift;
-#     my $c = shift;
-#     my $jobid = shift;
-
-
-# }
-    
-
-# # validate the given sequence as input for the given blast program
-# sub validate_seq : Path('/tools/blast/validate') Args(0) {
-#     my $self = shift;
-#     my $c = shift;
-#     my $s = shift;
-#     my $program = shift;
-
-#     my %alphabets = (
-#         ( map { $_ => 'protein' } 'tblastn', 'blastp'            ),
-#         ( map { $_ => 'DNA'     } 'blastn',  'blastx', 'tblastx' ),
-#        );
-
-#     #my $alphabet = $alphabets{$program}
-#     #or $c->throw( message => 'invalid program!',
-#     #                  is_error => 1,
-#     #                  developer_message => "program was '$program'",
-#     #                 );
-#     if (!exists($alphabets{$program})) { 
-# 	$c->stash->{rest} = { 
-# 	    validated => 0, 
-# 	    error => "Invalid program '$program'. Please choose another program.", 
-# 	};
-# 	return;
-#     }
-#     my $alphabet = $alphabets{$program};
-
-#     if (!$s->validate_seq) {  #< bioperl must think it's OK
-# 	$c->stash->{rest} = { 
-# 	    validated => 0, 
-# 	    error => 'Not a legal sequence', 
-# 	};
-# 	return;
-#     }
-
-#     my %not_iupac_pats = ( DNA     => qr/([^ACGTURYKMSWBDHVN]+)/i,
-# 			   protein => qr/([^GAVLIPFYCMHKRWSTDENQBZ\.X\*]+)/i,
-# 			   rna     => qr/([^ACGTURYKMSWBDHVN]+)/i,
-# 			 );
-
-#     my $val_pat = $not_iupac_pats{$alphabet};
-#     if (!$val_pat) { 
-# 	$c->stash->{rest} = { 
-# 	    validated => 0, 
-# 	    error => "Invalid alphabet ($alphabet)",
-# 	};
-# 	return;
-#     }
-#         # or $c->throw( message => 'invalid alphabet!',
-#         #               is_error => 1,
-#         #               developer_message => "alphabet was '$alphabet'",
-#         #              );
-#     if ($s->seq =~ $val_pat) { 
-#         #and $c->throw(
-#         #    message => encode_entities('Sequence "'.$s->id.qq|" contains invalid $alphabet characters "$1"| ),
-#         #    is_error => 0,
-#         #   );
-# 	$c->stash->{rest} = { 
-# 	    validated => 1,
-# 	    error => encode_entities('Sequence "'.$s->id.qq|" contains invalid $alphabet characters "$1"| ),
-# 	};
-# 	return;
-#     }
-#     $c->stash->{rest} = { 
-# 	validated => 1,
-# 	error => '',
-#     };
-# }
 
 sub jobid_to_file { 
     my $self = shift;
@@ -410,6 +382,66 @@ sub jobid_to_file {
     
 }
 
+sub search_gene_ids { 
+	my $ids_array = shift;
+	my $blastdb_path = shift;
+	my @ids = @{$ids_array};
+	my @output_seqs;
+	
+	my $fs = Bio::BLAST::Database->open(full_file_basename => "$blastdb_path",);
+	
+	foreach my $input_string (@ids) {
+		
+		if ($fs->get_sequence($input_string)) {
+			my $seq_obj = $fs->get_sequence($input_string);
+			my $seq = $seq_obj->seq();
+			my $id = $seq_obj->id();
+			my $desc = $seq_obj->desc();
+			my $new_seq = "";
+		
+			for (my $i=0; $i<length($seq); $i=$i+60) {
+				$new_seq = $new_seq.substr($seq,$i,60)."<br>"; 
+			}
+		
+			push(@output_seqs, ">$id $desc<br>$new_seq");
+		}
+	}
+	return join('', @output_seqs);
+}
 
+sub search_desc : Path('/tools/blast/desc_search/') Args(0) { 
+	my $self = shift;
+	my $c = shift;
+	
+	my @ids;
+	my $schema = $c->dbic_schema("SGN::Schema");
+	my $params = $c->req->params();
+	my $input_string = $params->{blast_desc};
+	my $db_id = $params->{database};
+	
+	my $bdb = $schema->resultset("BlastDb")->find($db_id) || die "could not find bdb with file_base $db_id";
+	my $blastdb_path = $bdb->full_file_basename;
+
+	# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30.fasta";
+	
+	my $grepcmd = "grep -i \"$input_string\" $blastdb_path \| sed 's/>//' \| cut -d ' ' -f 1";
+	
+	# print STDERR "$grepcmd\n";
+	my $output_seq = `$grepcmd`;
+	my $output_seqs;
+	
+	if ($output_seq) {
+		# print STDERR "$output_seq\n";
+	
+		@ids = split(/\n/, $output_seq);
+	
+		# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30";
+	
+		$output_seqs = search_gene_ids(\@ids,$blastdb_path);
+	} else {
+		$output_seqs = "There were not results for your search\n";
+	}
+	$c->stash->{rest} = {output_seq => "$output_seqs"};
+}
 
 1;

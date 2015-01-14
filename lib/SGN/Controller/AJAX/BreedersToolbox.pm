@@ -362,5 +362,81 @@ sub get_all_years : Path('/ajax/breeders/trial/all_years' ) Args(0) {
     $c->stash->{rest} = { years => \@years };
 }
 
+sub get_trial_location : Path('/ajax/breeders/trial/location') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    
+    my $t = CXGN::Trial->new(
+	{ 
+	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	    trial_id => $trial_id 
+	});
+    
+    if ($t) { 
+	$c->stash->{rest} = { location => $t->get_location() };
+    }
+    else { 
+	$c->stash->{rest} = { error => "The trial with id $trial_id does not exist" };
+	
+    }
+}
+
+sub get_trial_type : Path('/ajax/breeders/trial/type') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+
+    my $t = CXGN::Trial->new(
+	{ 
+	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	    trial_id => $trial_id 
+	});
+    
+    my $type = $t->get_project_type();
+    $c->stash->{rest} = { type => $type };
+}
+
+sub set_trial_type : Path('/ajax/breeders/trial/settype') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+
+    my $type = $c->req->param("type");
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
+	return;
+    }
+
+    my $t = CXGN::Trial->new( 
+	{ 
+	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	    trial_id => $trial_id 
+	});
+
+    if (!$t) { 
+	$c->stash->{rest} = { error => "The specified trial with id $trial_id does not exist" };
+	return;
+    }
+    # remove previous associations
+    #
+    $t->dissociate_project_type();
+    
+    # set the new trial type
+    #
+    $t->associate_project_type($type);
+    
+    $c->stash->{rest} = { success => 1 };
+}
+
+sub get_all_trial_types : Path('/ajax/breeders/trial/alltypes') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my @types = CXGN::Trial::get_all_project_types($c->dbic_schema("Bio::Chado::Schema"));
+    
+    $c->stash->{rest} = { types => \@types };
+}
 
 1;

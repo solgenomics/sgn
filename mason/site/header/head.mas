@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/css/sgn.css" type="text/css" />
   <link rel="stylesheet" href="/css/jquery-sgn-theme/jquery-ui-1.10.3.custom.css" type="text/css" />
   <link rel="stylesheet" href="/css/colorbox/colorbox.css" type="text/css" />
+  <link rel="stylesheet" href="/css/jstree/themes/default/style.min.css" />
 
   <link rel="search" type="application/opensearchdescription+xml" title="SGN Sol Search" href="/documents/sgn_sol_search.xml" />
 

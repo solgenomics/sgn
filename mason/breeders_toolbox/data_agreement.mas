@@ -73,7 +73,12 @@ jQuery(document).ready(function () {
         url: '/breeders/trial/data_agreement/get',
         data: { 'project_id': project_id },
         success: function(response) { 
-           jQuery('#'+div).html(response.text);
+           if (response.text) { 
+             jQuery('#'+div).html(response.text);
+           }
+           else { 
+             jQuery('#'+div).html('By default, trial data is provided under the Toronto agreement, as explained in the <a href="/usage_policy">data usage policy</a>.');
+           }
            if (response.message) { alert(response.message); }
         },
         error: function(response) { 

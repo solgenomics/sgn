@@ -49,33 +49,30 @@ allTraitsPhenoData <- read.table(allTraitsPhenoFile,
 selectColumns <- c("object_name", "object_id", "stock_id",  trait)
 traitPhenoData  <- allTraitsPhenoData[selectColumns]
                    
-if (sum(is.na(traitPhenoData[, trait])) > 0)
-  {     
-    message("number of  pheno missing values for ",
-            trait, ": ",
-            sum(is.na(traitPhenoData[, trait])))
-    #fill in for missing data with mean value
-    traitPhenoData[, trait]  <- replace(traitPhenoData[, trait],
-                                        is.na(traitPhenoData[, trait]),
-                                        mean(traitPhenoData[, trait],
-                                             na.rm =TRUE)
-                                        ) 
-  }
-
 dropColumns <- c("object_id", "stock_id")
 traitPhenoData <- traitPhenoData[, !(names(traitPhenoData) %in% dropColumns)]
 
-traitPhenoData <- ddply(traitPhenoData,
-                        "object_name",
-                        colwise(mean)
-                        )
+if (all(is.numeric(traitPhenoData[, trait])) == FALSE) {
+  traitPhenoData[, trait] <- sapply(traitPhenoData[, trait], function(x) ifelse(is.numeric(x), x, NA))                     
+}
 
-row.names(traitPhenoData) <- traitPhenoData[, 1]
-traitPhenoData[, 1] <- NULL
+if (all(is.na(traitPhenoData[, trait])) == FALSE) {
+  traitPhenoData <- ddply(traitPhenoData,
+                          "object_name",
+                          colwise(mean, na.rm = TRUE)
+                          )
 
-traitPhenoData <- round(traitPhenoData,
-                            digits=2
-                            )
+
+  row.names(traitPhenoData) <- traitPhenoData[, 1]
+  traitPhenoData[, 1] <- NULL
+
+  traitPhenoData <- round(traitPhenoData,
+                          digits=2
+                          )
+} else {
+  traitPhenoData <- NULL
+}
+
 
 write.table(traitPhenoData,
             file = traitPhenoFile,

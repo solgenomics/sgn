@@ -45,6 +45,9 @@ Naama Menda <nm249@cornell.edu>
 <div id = "<% $owners_div %>" >&nbsp;Loading..</div>
 
 <script language="javascript">
+
+  jQuery(document).ready(function() { 
+
   display_owners("<% $owners_div %>");
 
   function display_owners(owners_div) {
@@ -54,5 +57,7 @@ Naama Menda <nm249@cornell.edu>
       }
   } );
 }
+
+});
 
 </script>
