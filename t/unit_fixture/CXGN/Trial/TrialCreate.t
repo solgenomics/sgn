@@ -106,3 +106,34 @@ ok(my $accession_names = $trial_layout->get_accession_names());
 my %stocks = map { $_ => 1 } @stock_names;
 ok(exists($stocks{@$accession_names[0]}));
 
+ok(my $genotyping_trial_create = CXGN::Trial::TrialCreate->new({
+    chado_schema => $chado_schema,
+    phenome_schema => $phenome_schema,
+    dbh => $dbh,
+    is_genotyping => 1,
+    user_name => "johndoe",
+    design => $design,	
+    program => "test",
+    trial_year => "2015",
+    trial_description => "test description",
+    trial_location => "test_location_for_trial",
+    trial_name => "test_genotyping_trial_name",
+    design_type => "Genotyping",
+							       }));
+
+ok($genotyping_trial_create->save_trial());
+
+ok(my $genotyping_trial_lookup = CXGN::Trial::TrialLookup->new({
+    schema => $chado_schema,
+    trial_name => "test_genotyping_trial_name",
+						    }));
+ok(my $genotyping_trial = $genotyping_trial_lookup->get_trial());
+ok(my $genotyping_trial_id = $genotyping_trial->project_id());
+ok(my $genotyping_trial_layout = CXGN::Trial::TrialLayout->new({
+    schema => $chado_schema,
+    trial_id => $genotyping_trial_id,
+
+						    }));
+ok(my $genotyping_accession_names = $genotyping_trial_layout->get_accession_names());
+my %genotyping_stocks = map { $_ => 1 } @stock_names;
+ok(exists($genotyping_stocks{@$genotyping_accession_names[0]}));
