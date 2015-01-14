@@ -78,9 +78,7 @@ $alternate_ghosted_edit_button => undef
 $alternate_edit_button => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ["CXGN.Page.Form.JSFormPage", "MochiKit.Logging"] &>
-
-
+<& /util/import_javascript.mas, classes => ["CXGN.Page.Form.JSFormPage"] &>
 
 <table><tr><td><div id="<% $form_div_name %>_buttons" >[loading edit links...]</div>
 </td></tr></table>
