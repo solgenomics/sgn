@@ -171,7 +171,7 @@ is_deeply($trial->get_location(), [ 23, 'test_location' ], "set location");
 #
 is($trial->get_project_type(), undef, "get project type");
 
-print STDERR join ",", $trial->get_all_project_types();
+print STDERR join ",", CXGN::Trial::get_all_project_types($f->bcs_schema);
 my $error = $trial->associate_project_type("clonal");
 print STDERR "ERROR: $error\n";
 
