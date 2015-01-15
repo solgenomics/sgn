@@ -28,6 +28,7 @@ use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::People::Person;
+use CXGN::Trial;
 
 has 'chado_schema' => (
 		 is       => 'rw',
@@ -210,6 +211,9 @@ sub save_trial {
       $plot_of = $sample_of;
   }
  
+
+  my $t = CXGN::Trial->new( { bcs_schema => $chado_schema, trial_id => $project->project_id() } );
+  +  $t->add_location($geolocation->nd_geolocation_id()); # set location also as a project prop
 
   #link to the project
   $field_layout_experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});
