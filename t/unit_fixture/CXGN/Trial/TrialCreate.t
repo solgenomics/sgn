@@ -106,6 +106,20 @@ ok(my $accession_names = $trial_layout->get_accession_names());
 my %stocks = map { $_ => 1 } @stock_names;
 ok(exists($stocks{@$accession_names[0]}));
 
+
+  for (my $i = 0; $i < scalar(@accession_names); $i++) {
+    my %plot_info;
+    $plot_info{'stock_name'} = $accession_names[$i];
+    #$plot_info{'block_number'} = $block_numbers[$i];
+    #$plot_info{'plot_name'} = $converted_plot_numbers[$i];
+    $geno_design{$converted_plot_numbers[$i]} = \%plot_info;
+  }
+  my %design = %{_build_plot_names($self,\%geno_design)};
+
+
+
+
+
 ok(my $genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     phenome_schema => $phenome_schema,
@@ -129,11 +143,13 @@ ok(my $genotyping_trial_lookup = CXGN::Trial::TrialLookup->new({
 						    }));
 ok(my $genotyping_trial = $genotyping_trial_lookup->get_trial());
 ok(my $genotyping_trial_id = $genotyping_trial->project_id());
+print STDERR "\n\n\n\nGenotyping trial id:".$genotyping_trial_id.":\n\n";
 ok(my $genotyping_trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $chado_schema,
     trial_id => $genotyping_trial_id,
 
 						    }));
+print STDERR "\n\n\n\nGenotyping trial name:".$genotyping_trial_layout->get_accession_names().":\n\n";
 ok(my $genotyping_accession_names = $genotyping_trial_layout->get_accession_names());
 my %genotyping_stocks = map { $_ => 1 } @stock_names;
 ok(exists($genotyping_stocks{@$genotyping_accession_names[0]}));
