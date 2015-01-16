@@ -26,11 +26,9 @@ sub index :Path('/tools/blast/') :Args(0) {
     my $c = shift;
 
     my $db_id = $c->req->param('db_id');
-
+	
     my $seq = $c->req->param('seq');
-
     my $schema = $c->dbic_schema("SGN::Schema");
-
     my $group_rs = $schema->resultset("BlastDbGroup")->search( undef, { order_by=>'ordinal' });
 
     my $databases = {};
@@ -39,13 +37,20 @@ sub index :Path('/tools/blast/') :Args(0) {
     my $preselected_database = '';
     my $preselected_category = '';
     
-    if ($db_id) { 
-	my $rs = $schema->resultset("BlastDb")->search( { blast_db_id => $db_id }, { join => 'blast_db_group' });
-	$preselected_database = $rs->first()->blast_db_id(); # first database of the category
-	$preselected_category = $rs->first()->blast_db_group_id();
+	# 224 is the database id for tomato cDNA ITAG 2.40
+	$preselected_database = 224;
+	
+	if ($db_id) { 
+		my $rs = $schema->resultset("BlastDb")->search( { blast_db_id => $db_id }, { join => 'blast_db_group' });
+    
+    if ($rs == 0) {
+      $c->throw( is_error => 0, message => "The blast database with id $db_id could not be found.");
     }
     
-	
+		$preselected_database = $rs->first()->blast_db_id(); # first database of the category
+		$preselected_category = $rs->first()->blast_db_group_id();
+	}
+    
     foreach my $g ($group_rs->all()) { 
 		my @blast_dbs = $g->blast_dbs();
 		push @$dataset_groups, [ $g->blast_db_group_id, $g->name() ];
@@ -77,9 +82,6 @@ sub index :Path('/tools/blast/') :Args(0) {
     #print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
     #print STDERR "GROUPS: ".Data::Dumper::Dumper($dataset_groups);
     #print STDERR "DATASETS: ".Data::Dumper::Dumper($databases);
-	
-	# 224 is the database id for tomato cDNA ITAG 2.40
-	$preselected_database = 224;
 	
 	# print STDERR "controller pre-selected db: $preselected_database\n";
 	

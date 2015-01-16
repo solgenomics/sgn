@@ -81,7 +81,6 @@ function associate_breeding_program() {
     });
 }
 
-
 function load_breeding_program_info(trial_id) { 
     jQuery.ajax( {
 	url:'/breeders/programs_by_trial/'+trial_id,
@@ -102,13 +101,11 @@ function load_breeding_program_info(trial_id) {
     });  
 }
 
-
 function open_create_spreadsheet_dialog() {
     var list = new CXGN.List();
     jQuery("#trait_list").html(list.listSelect("trait_list", [ 'traits' ]));
     jQuery('#create_spreadsheet_dialog').dialog("open");
 }
-
 
 function create_spreadsheet() {
     var trialID = parseInt(jQuery('#trialIDDiv').text());
@@ -141,7 +138,6 @@ function create_spreadsheet() {
      });
 }
 
-
 function open_create_fieldbook_dialog() {
     var trialID = parseInt(jQuery('#trialIDDiv').text());
     new jQuery.ajax({
@@ -168,7 +164,6 @@ function open_create_fieldbook_dialog() {
 	}
     });
 }
-
 
 function trial_detail_page_setup_dialogs() { 
 
@@ -269,7 +264,6 @@ function trial_detail_page_setup_dialogs() {
 	
     });
     
-    
     jQuery('#edit_trial_description_dialog').dialog( { 
 	autoOpen: false,
 	height: 500,
@@ -287,6 +281,84 @@ function trial_detail_page_setup_dialogs() {
 	}
 	
     });
+
+    jQuery('#edit_trial_type').click( function () { 
+	jQuery('#edit_trial_type_dialog').dialog("open");
+	jQuery.ajax( { 
+	    url: '/ajax/breeders/trial/alltypes',
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    var html = "";
+		    if (response.types) { 
+			var selected = 'selected="selected"';
+			for(var n=0; n<response.types.length; n++) { 
+			    
+			    html += '<option value="'+response.types[n][1]+'" >'+response.types[n][1]+'</option>';
+			}
+		    }
+		    else { 
+			html = '<option active="false">No trial types available</option>';
+		    }
+		}
+		jQuery('#trial_type_select').html(html);
+	    },
+	    error: function(response) { 
+		alert("An error occurred trying to retrieve trial types.");
+	    }
+	});
+    });
+
+    jQuery('#trial_type_select').change( { 
+	
+    });
+    
+    jQuery('#edit_trial_type_dialog').dialog( { 
+	autoOpen: false,
+	height: 200,
+	width: 300,
+	modal: true,
+	buttons: {
+	    cancel: { text: "Cancel",
+                      click: function() { jQuery( this ).dialog("close"); },
+                      id: "edit_type_cancel_button"
+		    },
+	    save:   { text: "Save", 
+                      click: function() { 
+			  var type = jQuery('#trial_type_select').val();
+			  save_trial_type(type); 
+			  display_trial_type(type);
+			  jQuery('#edit_trial_type_dialog').dialog("close");
+
+		      },
+                      id: "edit_type_save_button"
+		    }          
+	}	
+    });   
+}
+
+function save_trial_type(type) { 
+    var trial_id = get_trial_id();
+    jQuery.ajax( { 
+	url: '/ajax/breeders/trial/settype/'+trial_id,
+	async: false, //async=false because it needs to finish before page is updated again.
+	data: { 'type' : type },
+	success: function(response) { 
+	    if (response.error) { 
+		alert(response.error);
+	    }
+	    else { 
+		alert('New trial type set successfully');
+	    }
+	},
+	error: function(response) { 
+	    alert('An error occurred setting the trial type.');
+	}
+    });
+    
+
 }
 
 
@@ -300,7 +372,7 @@ function display_trial_description(trial_id) {
 		jQuery('#trial_description_input').html(response.description);
             }
 	},
-	error: function(response) { alert('An error occurred.'); }
+	error: function(response) { alert('An error occurred trying to display the description.'); }
     });
 }
 
@@ -326,10 +398,14 @@ function save_trial_description() {
             alert("An error occurred updating the trial description");
 	},
     });
+
+
+
+
+
 }
 
 function get_all_locations() { 
-
     jQuery.ajax( { 
 	url: '/ajax/breeders/location/all',
 	success: function(response) { 
@@ -341,7 +417,6 @@ function get_all_locations() {
 		var html = '';
 		for (var n=0; n<locations.length; n++) { 
 		    html += '<option value="'+locations[n][0]+'">'+locations[n][1]+'</option>';
-
 		}
 	    }
 	},
@@ -364,11 +439,37 @@ function display_trial_location(trial_id) {
 	    }
 	},
 	error: function(response) { 
-	    alert('An error occurred.');
+	    alert('An error occurred trying to display the location.');
 	}
     });
 }
-		
+	
+function get_trial_type(trial_id) {
+    //alert("display type");
+    jQuery.ajax( { 
+	url: '/ajax/breeders/trial/type/'+trial_id,
+	success: function(response) { 
+	    if (response.error) { 
+		alert(response.error);
+	    }
+	    else { 
+		var type = "[type not set]";
+		if (response.type) { 
+		    type = response.type[1];
+		}
+		display_trial_type(type);
+		return type;
+	    }
+	},
+	error: function(response) { 
+	    alert('An error occurred trying to display the trial type.');
+	}
+    });
+}
+
+function display_trial_type(type) { 
+    jQuery('#trial_type').html(type);   
+}
 
 function get_trial_id() { 
     var trial_id = parseInt(jQuery('#trialIDDiv').text());

@@ -45,6 +45,7 @@ sub _validate_with_plugin {
   my $is_a_control_head;
   my $rep_number_head;
   my $range_number_head;
+  my $row_number_head;
 
   if ($worksheet->get_cell(0,0)) {
     $plot_name_head  = $worksheet->get_cell(0,0)->value();
@@ -66,6 +67,9 @@ sub _validate_with_plugin {
   }
   if ($worksheet->get_cell(0,6)) {
     $range_number_head  = $worksheet->get_cell(0,6)->value();
+  }
+  if ($worksheet->get_cell(0,7)) { 
+      $row_number_head  = $worksheet->get_cell(0,7)->value();
   }
 
   if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
@@ -93,6 +97,7 @@ sub _validate_with_plugin {
     my $is_a_control;
     my $rep_number;
     my $range_number;
+    my $row_number;
 
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
@@ -115,6 +120,10 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell($row,6)) {
       $range_number =  $worksheet->get_cell($row,6)->value();
     }
+    if ($worksheet->get_cell($row, 7)) { 
+	$row_number = $worksheet->get_cell($row, 7)->value();
+    }
+
     #skip blank lines
     if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
       next;
@@ -206,6 +215,7 @@ sub _parse_with_plugin {
     my $is_a_control;
     my $rep_number;
     my $range_number; 
+    my $row_number;
 
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
@@ -228,6 +238,10 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,6)) {
       $range_number =  $worksheet->get_cell($row,6)->value();
     }
+    if ($worksheet->get_cell($row,7)) { 
+	$row_number = $worksheet->get_cell($row, 7)->value();
+
+    }
     #skip blank lines
     if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
       next;
@@ -248,6 +262,9 @@ sub _parse_with_plugin {
     }
     if ($range_number) {
       $design{$key}->{range_number} = $range_number;
+    }
+    if ($row_number) { 
+	$design{$key}->{row_number} = $row_number;
     }
   }
 

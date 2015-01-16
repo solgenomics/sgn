@@ -254,8 +254,14 @@ sub default_toolbar_data {
                     name => 'Tomato',
                     link => '/organism/Solanum_lycopersicum/genome',
                     desc =>
-'The gene-rich euchromatic portion of the tomato genome has been sequenced by an international consortium.',
+'The tomato genome has been sequenced by an international consortium.',
                 },
+               {
+                    name => '<i>Solanum pennellii</i>',
+                    link => '/organism/Solanum_pennellii/genome',
+                    desc => 'Wild tomato genome',
+                },
+
 
                 {
                     name => 'Potato',

@@ -181,7 +181,7 @@ sub add_location {
 	});    
 }
 
-=head2 remove-location
+=head2 remove_location
 
  Usage:        $trial->remove_location($location_id)
  Desc:         disociates the location with nd_geolocation_id of $location_id
@@ -210,14 +210,27 @@ sub remove_location {
 
 }
 
+
+=head2 associate_project_type
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub associate_project_type { 
     my $self = shift;
     my $type = shift;
     
+    print STDERR "\n\nAssociate type $type...\n";
     # check if there is already a type associated with the project
     #
     my $cv_id = $self->bcs_schema->resultset('Cv::Cv')->find( { name => 'project_type' } )->cv_id();
-    my @project_type_ids = $self->get_all_project_types();
+    my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
     my @ids = map { $_->[0] } @project_type_ids;
     my $has_project_type_rs = $self->bcs_schema->resultset('Project::Projectprop')->search( 
 	{ 
@@ -226,17 +239,19 @@ sub associate_project_type {
 	});
 
     if ($has_project_type_rs->count() > 0) { 
+	print STDERR "PROJECT ALREADY HAS ASSOCIATED PROJEC TYPE\n";
 	return "Project already has an associated project type - bailing out.\n";
     }
     
     # get the id for the right cvterm...
     #
-    my $cvterm_rs = $self->bcs_schema()->resultset('Cv::Cvterm')->search( { name => $type } );
-    if ($cvterm_rs->count() == 0) { 
-	return "No such type $type in the database. Bailing out.\n";
+    my $type_id = 0;
+    foreach my $pt (@project_type_ids) { 
+	if ($pt->[1] eq $type) { 
+	    $type_id = $pt->[0];
+	}
     }
-    my $type_id = $cvterm_rs->first()->cvterm_id();
-
+	    
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->create( 
 	{ 
 	    value => 1,
@@ -248,10 +263,23 @@ sub associate_project_type {
     return undef;
 }
 
+=head2 function dissociate_project_type()
+
+ Usage:        $t->dissociate_project_type();
+ Desc:         removes the association of the trial with any trial type
+ Ret:          
+ Args:         none
+ Side Effects: modifies the database
+ Example:
+
+=cut
+
 sub dissociate_project_type { 
     my $self = shift;
     
-    my @project_type_ids = $self->get_all_project_types();
+
+    my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
+
     my @ids = map { $_->[0] } @project_type_ids;
     my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search( { type_id => { -in => [ @ids ] }, project_id => $self->get_trial_id() });
     if (my $row = $rs->next()) { 
@@ -260,10 +288,22 @@ sub dissociate_project_type {
     return undef;
 }
 
+=head2 function get_project_type()
+
+ Usage:        [ $project_type_cvterm_id, $project_type_name ] = $t -> get_project_type();
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_project_type { 
     my $self = shift;
     
-    my @project_type_ids = $self->get_all_project_types();
+    my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
+
     my @ids = map { $_->[0] } @project_type_ids;
     my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search( 
 	{ 
@@ -284,10 +324,13 @@ sub get_project_type {
 
 }
 
+# CLASS METHOD!
+
 sub get_all_project_types { 
-    my $self = shift;
-    my $project_type_cv_id = $self->bcs_schema->resultset('Cv::Cv')->find( { name => 'project_type' } )->cv_id();
-    my $rs = $self->bcs_schema()->resultset('Cv::Cvterm')->search( { cv_id=> $project_type_cv_id });
+    ##my $class = shift;
+    my $schema = shift;
+    my $project_type_cv_id = $schema->resultset('Cv::Cv')->find( { name => 'project_type' } )->cv_id();
+    my $rs = $schema->resultset('Cv::Cvterm')->search( { cv_id=> $project_type_cv_id });
     my @cvterm_ids;
     if ($rs->count() > 0) { 
 	@cvterm_ids = map { [ $_->cvterm_id(), $_->name() ] } ($rs->all());
