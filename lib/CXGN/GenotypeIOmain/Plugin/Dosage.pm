@@ -25,7 +25,6 @@ sub next {
     my $file = shift;
     my $current = shift;
 
-    #print STDERR "VCF NEXT CALLED\n";
     open(my $F, "<", $file) || die "Can't open file $file\n";
 
     my $header = <$F>;
