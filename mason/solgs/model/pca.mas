@@ -40,11 +40,12 @@ my $pop_id = $trial_id if $trial_id;
   collapsed   => 0, 
   title       => "Population structure analysis (PCA)" 
 &> 
-
+<div id="pca_canvas"></div>
+<div id="pca_plot"></div>
   <div id="pca_message" style="font-weight:bold;text-align:center;color:#A7C942">
     <p>Running population structure analysis (PCA)...</p>
   </div>
-  <div id="pca_plot"></div>
+
 
 </&>
 
