@@ -26,8 +26,8 @@ foreach my $io (@io) {
     print STDERR "processing file ".$io->plugin->file().".\n";
     while (my $gt= $io->next()) { 
 	my $name = $gt->name();
-	my @markers = $gt->markers();
-	foreach my $m (@markers) { 
+	my $markers = $gt->markers();
+	foreach my $m (@$markers) { 
 	    $all_markers{$m}++;
 	}
 	my $scores = $gt->rawscores();
