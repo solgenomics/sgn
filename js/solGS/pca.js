@@ -83,7 +83,7 @@ function plotPca(scores){
 
     var pcaPlot = svg.append("g")
         .attr("id", "#pca_plot")
-        .attr("transform", "translate(" + (pad.left - 5) + "," + (pad.top - 5) + ")");
+        .attr("transform", "translate(" + (pad.left) + "," + (pad.top) + ")");
 
     var pc1Min = d3.min(pc1);
     var pc1Max = d3.max(pc1); 
@@ -116,13 +116,40 @@ function plotPca(scores){
         .scale(pc2AxisLabel)
         .tickSize(3)
         .orient("left");
-
+   
     var pc1AxisMid = 0.5 * (totalH); 
     var pc2AxisMid = 0.5 * (totalW);
   
+    var yMidLineData = [
+	{"x": pc2AxisMid, "y": pad.top}, 
+	{"x": pc2AxisMid, "y": pad.top + height}
+    ];
+
+    var xMidLineData = [
+	{"x": pad.left, "y": pad.top + height/2}, 
+	{"x": pad.left + width, "y": pad.top + height/2}
+    ];
+
+    var lineFunction = d3.svg.line()
+        .x(function(d) { return d.x; })
+        .y(function(d) { return d.y; })
+        .interpolate("linear");
+
+    pcaPlot.append("path")
+        .attr("d", lineFunction(yMidLineData))
+        .attr("stroke", "green")
+        .attr("stroke-width", 1)
+        .attr("fill", "none");
+
+    pcaPlot.append("path")
+        .attr("d", lineFunction(xMidLineData))
+        .attr("stroke", "green")
+        .attr("stroke-width", 1)
+        .attr("fill", "none");
+
     pcaPlot.append("g")
         .attr("class", "PC1 axis")
-        .attr("transform", "translate(" + pad.left + "," + pc1AxisMid +")")
+        .attr("transform", "translate(" + pad.left + "," + (pad.top + height) +")")
         .call(pc1Axis)
         .selectAll("text")
         .attr("y", 0)
@@ -131,10 +158,10 @@ function plotPca(scores){
         .attr("transform", "rotate(90)")
         .attr("fill", "green")
         .style({"text-anchor":"start", "fill": "#86B404"});
-       
+      
     pcaPlot.append("g")
         .attr("class", "PC2 axis")
-        .attr("transform", "translate(" + pc2AxisMid +  "," + pad.top  + ")")
+        .attr("transform", "translate(" + pad.left +  "," + pad.top  + ")")
         .call(pc2Axis)
         .selectAll("text")
         .attr("y", 0)
@@ -143,25 +170,24 @@ function plotPca(scores){
         .style("fill", "#86B404");
 
     pcaPlot.append("g")
-        .attr("id", "x_axis_label")
+        .attr("id", "pc1_axis_label")
         .append("text")
         .text("PC1 (X)")
-        .attr("y", pad.top + height + 25)
+        .attr("y", pad.top + height + 30)
         .attr("x", width/2)
         .attr("font-size", 10)
-        .style("fill", "#86B404")
+        .style("fill", "#9A2EFE")
 
     pcaPlot.append("g")
-        .attr("id", "y_axis_label")
+        .attr("id", "pc2_axis_label")
         .append("text")
         .text("PC2 (Y)")
-	.attr("transform", "rotate(90)")
-	.attr("transform", "translate(" + pad.left +  "," + pc1AxisMid + ")")
-	.attr("y", 0)
-        .attr("x", -5 )
-        .attr("font-size", 10)
-        .style("fill", "#86B404")
+	.attr("transform", "rotate(-90)")
 
+	.attr("y",  -5)
+        .attr("x",  -((pad.top + height/2) + 10))
+        .attr("font-size", 10)
+        .style("fill", "#9A2EFE")
 
     pcaPlot.append("g")
         .selectAll("circle")
@@ -206,14 +232,13 @@ function plotPca(scores){
         });
 
     pcaPlot.append("rect")
-	.attr("transform", "translate(" + (pad.left) + "," + (pad.top) + ")")
+	.attr("transform", "translate(" + pad.left + "," + pad.top + ")")
         .attr("height", height)
         .attr("width", width)
         .attr("fill", "none")
         .attr("stroke", "#523CB5")
         .attr("stroke-width", 1)
         .attr("pointer-events", "none");
-
       
 }
 
