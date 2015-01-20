@@ -6,48 +6,85 @@ use Data::Dumper;
 
 use CXGN::Genotype::SNP;
 
+has 'file' => ( isa => 'Str',
+		is => 'rw',
+    );
+
+has 'fh' => (isa => 'FileHandle',
+	     is => 'rw',
+    );
+
+has 'current' => (isa => 'Int',
+		  is => 'rw',
+    );
+
+has 'markers' => (isa => 'ArrayRef',
+		  is => 'rw',
+    );
+
+has 'header' => (isa => 'ArrayRef',
+		 is => 'rw',
+    );
+
+has 'accessions' => (isa => 'ArrayRef',
+		     is => 'rw',
+    );
+
 sub init { 
     my $self = shift;
     my $args = shift;
 
+    $self->file($args->{file});
+
+    # open(my $F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
+
+    # # gather accession names (encoded in line starting with #CHROM)
+    # #
+    # my $header = "";
+    # while (<$F>) { 
+    # 	chomp();
+
+    # 	if (m/\#CHROM/) { 	
+    # 	    $header = $_;
+    # 	    last();
+    # 	}
+    # }
+    
+    # close($F);
+
+    # gather marker names
+    #
+    my @markers = ();
+    my @accessions = ();
+    
     open(my $F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
 
-    my $header = "";
-    while (<$F>) { 
-	chomp();
-
-	if (m/\#CHROM/) { 	
-	    $header = $_;
-	    last();
+    my $header_seen = 0;
+    while (<$F>){ 
+	chomp;
+	if ($header_seen) { 
+	    my @fields = split /\t/;
+	    push @markers, $fields[2];
 	}
-    }
-    
-    close($F);
-
-    if ($header) { 	
-	my @fields = split /\t/, $header;
-	
-    
-	return { 
-	    count => scalar(@fields) - 9,
-	    header => \@fields,
-	};
-    }
-    else { 
-	return { 
-	    count => 0,
-	    header => '',
+	if (m/^\#CHROM/) { 
+	    $header_seen=1;
+	    my @fields = split /\t/;
+	    @accessions = @fields[9..$#fields];
 	}
+
     }
+
+    $self->markers(\@markers);
+    $self->accessions(\@accessions);
 }
 
 sub next {
     my $self = shift;
-    my $file = shift;
+    #my $file = shift;
     my $current = shift;
 
     #print STDERR "VCF NEXT CALLED\n";
-    open(my $F, "<", $file) || die "Can't open file $file\n";
+    open(my $F, "<", $self->file) || die "Can't open file $self->file\n";
 
     print STDERR "Zooming to header...\n";
     while (<$F>) { 
@@ -76,8 +113,12 @@ sub next {
 	$lines_parsed++;
 	if ($lines_parsed % 500 ==0) { print STDERR "$lines_parsed         \r"; }
     }
+    
+    my $genotype = $self->accessions()->[$self->current()];
+
     close($F);
-    return (\@markers, \%rawscores);
+    $self->current( $self->current()+1 );
+    return (\@markers, \%rawscores, $genotype);
 }
 
 
@@ -88,9 +129,9 @@ sub close {
 
 sub summary_stats { 
     my $self = shift;
-    my $file = shift;
+#    my $file = shift;
 
-    open(my $F, "<", $file) || die "Can't open file $file";
+    open(my $F, "<", $self->file) || die "Can't open file ".$self->file();
 
     my %stats = ();
 
