@@ -270,8 +270,9 @@ $snp is a CXGN::Genotype::SNP object
 sub calculate_snp_dosage { 
     my $self = shift;
     my $snp = shift;
-    my $error_probability = 0.025;
+    my $strict_dosage_filter = shift;
 
+    my $error_probability = 0.001;
     my $c1 = $snp->ref_count();
     my $c2 = $snp->alt_count();
 
@@ -307,6 +308,15 @@ sub calculate_snp_dosage {
 
     my $dosage = ($pSAB  + 2 * $pSBB) * $x;
 
+    if ($strict_dosage_filter) { 
+	if ( ($dosage > 0.1) && ($dosage < 0.9) ) { 
+	    $dosage = "NA";
+	}
+	if ( ($dosage > 1.1) && ($dosage < 1.9) ) { 
+	    $dosage = "NA";
+	}
+    }
+
     $snp->dosage($dosage);
 
     return $dosage;
@@ -332,7 +342,7 @@ sub hardy_weinberg_filter {
     my %classes = ( AA => 0, AB => 0, BB => 0, NA => 0);
     
     foreach my $d (@$dosages) { 
-	if (! defined($d)) { 
+	if (! defined($d) || $d eq "NA") { 
 	    $classes{NA}++;
 	}
 	elsif ( ($d >= 0) && ($d <= 0.1) ) { 
@@ -362,6 +372,8 @@ sub hardy_weinberg_filter {
 
     my %score = ();
     
+    $score{total} = $total; 
+
     $score{scored_marker_fraction} = $total / (@$dosages);
     
     #print STDERR "AA  $classes{AA}, AB $classes{AB}, BB $classes{BB} Total: $total\n";
@@ -376,7 +388,14 @@ sub hardy_weinberg_filter {
     #print STDERR "TOTAL: $total\n";
     my $x = ($classes{AB} - $expected)**2 / $expected;
 
-    $score{chi} = $x;
+    # only do the chi square test if the number of heterozygotes is larger than expected
+    #
+    if ($classes{AB} > $expected) { 
+	$score{chi} = $x;
+    }
+    else { 
+	$score{chi} = 0;
+    }
 
     return %score;
 }
