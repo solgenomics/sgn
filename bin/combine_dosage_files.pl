@@ -48,7 +48,7 @@ print "\n";
 foreach my $name (sort keys %all_accs) { 
     print $name;
     foreach my $m (sort keys %all_markers) { 
-	print "\t".$all_accs{$name}->{m};
+	print "\t".$all_accs{$name}->{$m};
     }
     print "\n";
 }
