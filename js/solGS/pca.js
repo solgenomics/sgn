@@ -24,9 +24,15 @@ function pcaResult () {
         url: '/pca/result/' + popId,
         success: function(response) {
             if(response.status === 'success') {
-		alert('plotting pca scores..');
-                plotPca(response.pca_scores);
+	
+		var scores = response.pca_scores;
+		var variances = response.pca_variances;
+		var plotData = { 'scores': scores, 'variances': variances };
+
+                plotPca(plotData);
+
 		jQuery("#pca_message").empty();
+
             } else {                
                jQuery("#pca_message").html(response.status); 
             }
@@ -56,8 +62,10 @@ function getPopulationId () {
 }
 
 
-function plotPca(scores){
-  
+function plotPca(plotData){
+    var scores = plotData.scores;
+    var variances = plotData.variances;
+    
     var pc12 = [];
     var pc1  = [];
     var pc2  = []; 
@@ -172,7 +180,7 @@ function plotPca(scores){
     pcaPlot.append("g")
         .attr("id", "pc1_axis_label")
         .append("text")
-        .text("PC1 (X)")
+        .text("PC1, " + variances[0][1] + "%" )
         .attr("y", pad.top + height + 30)
         .attr("x", width/2)
         .attr("font-size", 10)
@@ -181,7 +189,7 @@ function plotPca(scores){
     pcaPlot.append("g")
         .attr("id", "pc2_axis_label")
         .append("text")
-        .text("PC2 (Y)")
+        .text("PC1, " + variances[1][1] + "%" )
 	.attr("transform", "rotate(-90)")
 
 	.attr("y",  -5)
