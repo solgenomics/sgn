@@ -27,6 +27,9 @@ sub pca_result :Path('/pca/result/') Args(1) {
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
 
+    $self->pca_variance_file($c);
+    my $pca_variance_file = $c->stash->{pca_variance_file};
+
     unless (-s $pca_scores_file) 
     {
 	if (!-s $geno_file)
@@ -40,12 +43,13 @@ sub pca_result :Path('/pca/result/') Args(1) {
 	}
     }
     
-    $self->format_pca_scores($c);
-    my $pca_scores = $c->stash->{pca_scores};
-    
+    my $pca_scores = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
+    my $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
+
     if ($pca_scores)
     {
         $ret->{pca_scores} = $pca_scores;
+	$ret->{pca_variances} = $pca_variances;
         $ret->{status} = 'success';             
     }
 
@@ -109,6 +113,26 @@ sub pca_scores_file {
 }
 
 
+sub pca_variance_file {
+    my ($self, $c) = @_;
+    
+    my $pop_id = $c->stash->{pop_id};
+
+    $self->create_pca_dir($c);
+    my $pca_dir = $c->stash->{pca_dir};
+
+    $c->stash->{cache_dir} = $pca_dir;
+
+    my $cache_data = {key       => "pca_variance_${pop_id}",
+                      file      => "pca_variance_${pop_id}",,
+                      stash_key => 'pca_variance_file'
+    };
+
+    $c->controller("solGS::solGS")->cache_file($c, $cache_data);
+
+}
+
+
 sub pca_loadings_file {
     my ($self, $c) = @_;
     
@@ -134,10 +158,12 @@ sub pca_output_files {
      
     $self->pca_scores_file($c);
     $self->pca_loadings_file($c);
+    $self->pca_variance_file($c);
 
     my $file_list = join ("\t",
                           $c->stash->{pca_scores_file},
-                          $c->stash->{pca_loadings_file},                       
+                          $c->stash->{pca_loadings_file},
+			  $c->stash->{pca_variance_file},
 	);
      
     my $pop_id = $c->stash->{pop_id};
