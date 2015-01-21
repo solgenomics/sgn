@@ -145,7 +145,7 @@ function plotPca(plotData){
 
     pcaPlot.append("path")
         .attr("d", lineFunction(yMidLineData))
-        .attr("stroke", "green")
+        .attr("stroke", "red")
         .attr("stroke-width", 1)
         .attr("fill", "none");
 
@@ -192,8 +192,8 @@ function plotPca(plotData){
         .text("PC1, " + variances[1][1] + "%" )
 	.attr("transform", "rotate(-90)")
 
-	.attr("y",  -5)
-        .attr("x",  -((pad.top + height/2) + 10))
+	.attr("y", -5)
+        .attr("x", -((pad.top + height/2) + 10))
         .attr("font-size", 10)
         .style("fill", "#9A2EFE")
 
