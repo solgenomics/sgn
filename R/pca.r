@@ -31,14 +31,13 @@ genoDataFile <- grep("genotype_data",
                    value = TRUE
                    )
 
-
-
 scoresFile <- grep("pca_scores",
                         outFiles,
                         ignore.case = TRUE,
                         fixed = FALSE,
                         value = TRUE
                         )
+
 loadingsFile <- grep("pca_loadings",
                         outFiles,
                         ignore.case = TRUE,
@@ -46,12 +45,18 @@ loadingsFile <- grep("pca_loadings",
                         value = TRUE
                         )
 
+varianceFile <- grep("pca_variance",
+                        outFiles,
+                        ignore.case = TRUE,
+                        fixed = FALSE,
+                        value = TRUE
+                        )
 
 
 message("genotype file: ", genoDataFile)
 message("pca scores file: ", scoresFile)
 message("pca loadings file: ", loadingsFile)
-
+message("pca variance file: ", varianceFile)
 
 if (is.null(genoDataFile))
 {
@@ -102,9 +107,10 @@ loadings <- round(pca$rotation[, 1:10], digits=5)
 
 totalVar <- sum((pca$sdev)^2)
 
-percentVar <- unlist(lapply(pca$sdev, function(x) round((x^2 / totalVar)*100, digits=2)))
+variances <- unlist(lapply(pca$sdev, function(x) round((x^2 / totalVar)*100, digits=2)))
 
-totalperc <- sum(percentVar)
+variances <- as.data.frame(variances)
+colnames(variances)[1] <- "variances"
 
 write.table(scores,
             file = scoresFile,
@@ -116,6 +122,15 @@ write.table(scores,
 
 write.table(loadings,
             file = loadingsFile,
+            sep = "\t",
+            col.names = NA,
+            quote = FALSE,
+            append = FALSE
+            )
+
+
+write.table(variances,
+            file = varianceFile,
             sep = "\t",
             col.names = NA,
             quote = FALSE,
