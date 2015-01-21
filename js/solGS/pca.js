@@ -189,7 +189,7 @@ function plotPca(plotData){
     pcaPlot.append("g")
         .attr("id", "pc2_axis_label")
         .append("text")
-        .text("PC1, " + variances[1][1] + "%" )
+        .text("PC2, " + variances[1][1] + "%" )
 	.attr("transform", "rotate(-90)")
 
 	.attr("y", -5)
