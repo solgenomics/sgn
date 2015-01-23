@@ -4,7 +4,7 @@ package CXGN::SNPsIO;
 use Moose;
 
 use Data::Dumper;
-
+use IO::File;
 use CXGN::Genotype::SNP;
 
 has 'file' => ( isa => 'Str',
