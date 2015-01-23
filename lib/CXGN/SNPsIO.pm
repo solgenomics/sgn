@@ -12,6 +12,10 @@ has 'file' => ( isa => 'Str',
 		required => 1,
     );
 
+has 'fh' => (isa => 'FileHandle',
+	     is => 'rw',
+    );
+
 has 'header' => ( isa => 'Str',
 		  is  => 'rw',
     );
@@ -34,14 +38,13 @@ has 'filter' => ( isa => 'Str',
 
 
 
-our $F;
-
 sub BUILD { 
     my $self = shift;
     my $args = shift;
-    open ($F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
+
+    my $fh = IO::File->new($args->{file});
     
-    while (<$F>) { 
+    while (<$fh>) { 
 	chomp;
 
 	if (m/^\#\#/) { 
@@ -61,14 +64,15 @@ sub BUILD {
 	    last;
 	}
     }
-
+    $self->fh($fh);
 }
 
 sub next_line { 
     my $self = shift;
     
     my $line = "";
-    if ($line = <$F>) { 
+    my $fh = $self->fh();
+    if ($line = <$fh>) { 
 	chomp($line);
 	return $line;
     }
@@ -127,7 +131,7 @@ sub next {
 
 sub close { 
     my $self = shift;
-    close($F);
+    close($self->fh());
 }
 
 sub total_accessions { 
