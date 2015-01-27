@@ -145,7 +145,7 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
     
-    $c->stash->{locations} = $bp->get_locations($c);
+    $c->stash->{locations} = $bp->get_all_locations($c);
 
     #$c->stash->{projects} = $self->get_projects($c);
 
