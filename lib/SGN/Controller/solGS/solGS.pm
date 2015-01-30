@@ -1778,7 +1778,8 @@ sub get_gebv_files_of_traits {
         
         foreach (@$pred_gebv_files)
         {
-            $gebv_files .= catfile($dir, $_);
+	    my$gebv_file = catfile($dir, $_);
+	    $gebv_files .= $gebv_file;
             $gebv_files .= "\t" unless (@$pred_gebv_files[-1] eq $_);
         }     
     } 
@@ -1803,7 +1804,7 @@ sub get_gebv_files_of_traits {
 
 
     }
-    
+   
     my $pred_file_suffix;
     $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id; 
     
@@ -4076,16 +4077,22 @@ sub get_solgs_dirs {
 
 sub cache_file {
     my ($self, $c, $cache_data) = @_;
-    
-    my $solgs_cache = $c->stash->{solgs_cache_dir};
-    my $file_cache  = Cache::File->new(cache_root => $solgs_cache);
+  
+    my $cache_dir = $c->stash->{cache_dir};
+   
+    unless ($cache_dir) 
+    {
+	$cache_dir = $c->stash->{solgs_cache_dir};
+    }
+   
+    my $file_cache  = Cache::File->new(cache_root => $cache_dir);
     $file_cache->purge();
 
     my $file  = $file_cache->get($cache_data->{key});
 
     unless ($file)
     {      
-        $file = catfile($solgs_cache, $cache_data->{file});
+        $file = catfile($cache_dir, $cache_data->{file});
         write_file($file);
         $file_cache->set($cache_data->{key}, $file, '30 days');
     }

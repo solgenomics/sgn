@@ -38,7 +38,7 @@ $pop_id = $trial_id if $trial_id;
 
 </style>
 
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.heritability"] &>
+<& /util/import_javascript.mas, classes => [ "solGS.heritability"] &>
 
 <div id="gebv_pheno_regression_canvas"></div>
 <div id="gebv_pheno_regrssion_plot"></div>

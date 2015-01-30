@@ -10,12 +10,12 @@ function getTraitDetails () {
     var populationId = jQuery("#population_id").val();
     var traitId = jQuery("#trait_id").val();
    
-    if(populationId == 'undefined' ) {       
+    if (populationId == 'undefined' ) {       
         populationId = jQuery("#model_id").val();
 
     }
 
-    if(populationId == 'undefined' ) {       
+    if (populationId == 'undefined' ) {       
         populationId = jQuery("#combo_pops_id").val();
 
     }
@@ -40,9 +40,38 @@ function getHistogramData () {
         data: {'population_id': trait.population_id, 'trait_id' : trait.trait_id  },
         url: '/histogram/phenotype/data/',
         success: function(response) {
-            if(response.status == 'success') {
-                plotHistogram(response.data);
-                jQuery("#histogram_message").empty();
+            if (response.status == 'success') {
+		var traitValues = response.data;
+
+		traitValues = traitValues.map( function (d) {		   
+		    
+		    return  parseFloat(d[1]);
+		});	
+					    	
+		traitValues = traitValues.sort();
+		traitValues = traitValues.filter( function(val) {		   
+		    
+		    return !(val === "" 
+			     || typeof val == "undefined" 
+			     || val === null 
+			     || isNaN(val) == true
+			    );
+		});
+
+		var obs = traitValues.length;
+		var uniqueValues = getUnique(traitValues);
+		
+		if (uniqueValues.length === 1) {
+		    jQuery("#histogram_message").html('<p> All of the valid observations ' 
+						      + '('+ obs +') ' + 'in this dataset have '
+						      + 'a value of ' + uniqueValues[0] 
+						      + '. No frequency distribution plot.</p>'
+						     );
+
+		} else {
+                    plotHistogram(traitValues);
+                    jQuery("#histogram_message").empty();
+		}
             } else {                
                 var errorMessage = "<p>This trait has no phenotype data to plot.</p>";
                 jQuery("#histogram_message").html(errorMessage);  
@@ -57,51 +86,63 @@ function getHistogramData () {
 }
 
 
-function plotHistogram (data) {
+function plotHistogram (traitValues) {
     
     var height = 300;
     var width  = 500;
     var pad    = {left:20, top:50, right:40, bottom: 50}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
-
     
-    traitValues = data.map( function (d) {
-            d = d[1]; 
-            return parseFloat(d); 
-        });
+    uniqueValues = getUnique(traitValues);
+   
+    var binNum;
+    
+    if ( uniqueValues.length > 9) {
+	binNum = 10;
+    } else {
+	binNum = uniqueValues.length;	
+    }
 
-    traitValues = traitValues.sort();
-    // console.log(traitValues);
     var histogram = d3.layout.histogram()
-        .bins(10)
+        .bins(binNum)
         (traitValues);
 
-     // console.log(histogram);
-   
     var xAxisScale = d3.scale.linear()
         .domain([0, d3.max(traitValues)])
         .range([0, width]);
-
-    //alert('end x scale');
 
     var yAxisScale = d3.scale.linear()
         .domain([0, d3.max(histogram, ( function (d) {return d.y;}) )])
         .range([0, height]);
 
-    var xRange =  d3.max(traitValues) -  d3.min(traitValues);
-    
+    var xRange;
+    var xMin;
+    var xMax;
+
+
+    if (binNum == 1) {
+	xRange = traitValues[0];
+	xMin   = 0;
+	xMax   = d3.max(traitValues);
+    } else {
+	xRange = d3.max(traitValues) -  d3.min(traitValues);
+	xMin   = d3.min(traitValues);
+	xMax   = d3.max(traitValues);
+    }
+ 
     var xAxis = d3.svg.axis()
         .scale(xAxisScale)
         .orient("bottom")
-        .tickValues(d3.range(d3.min(traitValues), 
-                             d3.max(traitValues),  
+        .tickValues(d3.range(xMin, 
+                             xMax, 
                              0.1 * xRange)
                     );
  
      var yAxisLabel = d3.scale.linear()
         .domain([0, d3.max(histogram, ( function (d) {return d.y;}) )])
         .range([height, 0]);
+
     var yAxis = d3.svg.axis()
         .scale(yAxisLabel)
         .orient("left");
@@ -190,3 +231,15 @@ function plotHistogram (data) {
     
 }   
 
+
+function getUnique(inputArray) {
+  
+	var outputArray = [];
+	for (var i = 0; i < inputArray.length; i++) {
+	    if ((jQuery.inArray(inputArray[i], outputArray)) == -1) {
+		outputArray.push(inputArray[i]);
+	    }
+	}
+	
+    return outputArray;
+}
