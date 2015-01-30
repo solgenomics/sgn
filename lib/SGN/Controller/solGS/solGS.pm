@@ -1778,7 +1778,8 @@ sub get_gebv_files_of_traits {
         
         foreach (@$pred_gebv_files)
         {
-            $gebv_files .= catfile($dir, $_);
+	    my$gebv_file = catfile($dir, $_);
+	    $gebv_files .= $gebv_file;
             $gebv_files .= "\t" unless (@$pred_gebv_files[-1] eq $_);
         }     
     } 
@@ -1803,7 +1804,7 @@ sub get_gebv_files_of_traits {
 
 
     }
-    
+   
     my $pred_file_suffix;
     $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id; 
     

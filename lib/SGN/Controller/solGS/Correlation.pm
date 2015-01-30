@@ -74,6 +74,7 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     my $corr_pop_id = $c->req->param('corr_population_id');
     my $pop_type    = $c->req->param('type');
     my $model_id    = $c->req->param('model_id');
+    
     my $index_file  = $c->req->param('index_file');
       
     $c->stash->{model_id} = $model_id;
@@ -82,12 +83,12 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     $c->stash->{prediction_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
  
     $c->stash->{selection_index_file} = $index_file;
-    $self->combine_gebvs_of_traits($c);
+    $self->combine_gebvs_of_traits($c);   
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
    
     my $ret->{status} = 'failed';
 
-    if (-e $combined_gebvs_file && -s $combined_gebvs_file )
+    if ( -s $combined_gebvs_file )
     {
         $ret->{status} = 'success'; 
         $ret->{gebvs_file} = $combined_gebvs_file;
@@ -105,6 +106,12 @@ sub combine_gebvs_of_traits {
 
     $c->controller("solGS::solGS")->get_gebv_files_of_traits($c);  
     my $gebvs_files = $c->stash->{gebv_files_of_valid_traits};
+   
+    if (!-s $gebvs_files) 
+    {
+	$gebvs_files = $c->stash->{gebv_files_of_traits};
+    }
+   
     my $index_file  = $c->stash->{selection_index_file};
    
     my @files_no = map { split(/\t/) } read_file($gebvs_files);
