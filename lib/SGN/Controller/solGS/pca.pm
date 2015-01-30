@@ -74,8 +74,22 @@ sub format_pca_scores {
 
 sub create_pca_genotype_data {    
     my ($self, $c) = @_;
-    
-    $c->controller("solGS::solGS")->genotype_file($c);
+    my $page = $c->req->referer;
+
+    if ($page =~ /combined/ ) 
+    {
+	my $model_id = $c->req->param('population_id');
+     
+	my $dir = $c->stash->{solgs_cache_dir};
+	my $exp = "genotype_data_${model_id}_"; 
+	my ($geno_file) = $c->controller("solGS::solGS")->grep_file($dir, $exp);
+	
+	$c->stash->{genotype_file}  = $geno_file;
+    }
+    else 
+    {
+	$c->controller("solGS::solGS")->genotype_file($c);
+    }
 
 }
 
