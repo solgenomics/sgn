@@ -1,19 +1,22 @@
 
 use strict;
+
+use lib 't/lib';
+
 use Test::More;
-use CXGN::DB::Connection;
+use SGN::Test::Fixture;
 use CXGN::BreederSearch;
 
-my $dbh = CXGN::DB::Connection->new();
 
-my $bs = CXGN::BreederSearch->new(dbh=>$dbh);
+my $f = SGN::Test::Fixture->new();
 
+my $bs = CXGN::BreederSearch->new( { dbh=> $f->dbh() });
 
 my $criteria_list = [ 'year', 'location' ];
 
 my $dataref = { location => { year=> "'2006/07'" } };
 
-my $results = $bs->get_intersect($criteria_list, $dataref);
+my $results = $bs->get_intersect($criteria_list, $dataref, "CO");
 
 foreach my $r (@$results) { 
     print join ", ", @$r;
@@ -24,7 +27,7 @@ $criteria_list = [ 'location', 'year' ];
 
 $dataref = { year => { location => 3 } };
 
-$results = $bs->get_intersect($criteria_list, $dataref);
+$results = $bs->get_intersect($criteria_list, $dataref, "CO");
 
 foreach my $r (@$results) { 
     print join ", ", @$r;
@@ -38,7 +41,7 @@ $dataref = { project => { location => 3,
 	     }
 };
 
-$results = $bs ->get_intersect($criteria_list, $dataref);
+$results = $bs ->get_intersect($criteria_list, $dataref, "CO");
 
 foreach my $r (@$results) { 
     print join ", ", @$r;
