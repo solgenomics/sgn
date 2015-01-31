@@ -297,6 +297,8 @@ sub add_item :Path('/list/item/add') Args(0) {
 	return;
     }
 
+    $element =~ s/^\s*(.+?)\s*$/$1/;
+
     if (!$element) { 
 	$c->stash->{rest} = { error => "You must provide an element to add to the list" };
 	return;
@@ -349,7 +351,8 @@ sub add_bulk : Path('/list/add/bulk') Args(0) {
     
     print STDERR "Adding accessions ";
     
-    foreach my $element (@elements) { 
+    foreach my $element (@elements) {
+	$element =~ s/^\s*(.+?)\s*$/$1/; 
 	print STDERR ".";
 	if ($self->exists_item($c, $list_id, $element)) { 
 	    push @duplicates, $element;
