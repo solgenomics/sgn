@@ -194,10 +194,16 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </&>
 
 % print STDERR "Check 9 (mason) : ".(time() - $start_time)."\n";
+
 <!-- Phenotypic correlation analysis -->
-  <& /solgs/population/correlation.mas,
-    trial_id => $trial_id
-    &>
+<& /solgs/population/correlation.mas,
+   trial_id => $trial_id
+&>
+
+  <!-- Population structure analysis -- PCA -->
+<& /solgs/model/pca.mas,
+   trial_id => $trial_id
+ &>
 
 % print STDERR "Check 10 (mason) : ".(time() - $start_time)."\n";
 

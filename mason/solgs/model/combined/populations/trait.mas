@@ -79,6 +79,8 @@ $model_parameters
   validation_download_url => $validation_download_url
 &>
 
+<& /solgs/model/pca.mas &>
+
 <& /solgs/model/model_parameters.mas, 
    model_parameters => $model_parameters,
 &>

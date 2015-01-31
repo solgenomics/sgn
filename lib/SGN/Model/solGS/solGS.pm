@@ -159,7 +159,7 @@ sub project_location {
 	   
     my $sth = $self->context->dbc->dbh()->prepare($q);
     $sth->execute($pr_id, 'project location');
-   
+
     my $loc = $sth->fetchrow_array;
 
     return $loc; 
