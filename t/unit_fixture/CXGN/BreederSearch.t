@@ -12,42 +12,34 @@ my $f = SGN::Test::Fixture->new();
 
 my $bs = CXGN::BreederSearch->new( { dbh=> $f->dbh() });
 
-my $criteria_list = [ 'year', 'location' ];
+my $criteria_list = [ 'years', 'locations' ];
 
-my $dataref = { location => { year=> "'2006/07'" } };
+my $dataref = { locations => { years=> "'2014'" } };
 
 my $results = $bs->get_intersect($criteria_list, $dataref, "CO");
 
-foreach my $r (@$results) { 
-    print join ", ", @$r;
-    print "\n";
-}
+is_deeply($results, { results => [ [ 23, 'test_location' ]] } );
 
-$criteria_list = [ 'location', 'year' ];
+$criteria_list = [ 'locations', 'years' ];
 
-$dataref = { year => { location => 3 } };
+$dataref = { years => { locations => 23 } };
 
 $results = $bs->get_intersect($criteria_list, $dataref, "CO");
 
-foreach my $r (@$results) { 
-    print join ", ", @$r;
-    print "\n";
-}
+is_deeply($results, { results => [ [ 2014, 2014 ]] } );
 
-$criteria_list = [ 'location', 'year', 'project' ];
+$criteria_list = [ 'locations', 'years', 'projects' ];
 $dataref = {};
-$dataref = { project => { location => 3, 
-			year     => "'2006/07'",
+$dataref = { projects => { locations => 23, 
+			years     => "'2014'",
 	     }
 };
 
 $results = $bs ->get_intersect($criteria_list, $dataref, "CO");
 
-foreach my $r (@$results) { 
-    print join ", ", @$r;
-    print "\n";
-}
+is_deeply($results, { results => [ [ 137, 'test_trial' ] ]}, "wizard project query");
 
 
+done_testing();
 
 
