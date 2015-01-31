@@ -55,9 +55,10 @@ sub get_intersect {
     if (!$traits_db_name) { die "Need a db_name for the ontology!"; }
 
     $self->create_materialized_cvterm_view($traits_db_name);
+    $self->create_materialized_cvalue_ids_view();
 
     #print STDERR "CRITERIA LIST: ".(join ",", @$criteria_list)."\n";
-    #print STDERR Data::Dumper::Dumper($dataref);
+    print STDERR Data::Dumper::Dumper($dataref);
 
     my $type_id = $self->get_type_id('project year');
     my $accession_id = $self->get_stock_type_id('accession');
@@ -156,7 +157,7 @@ sub get_intersect {
 	
 	traits  => { 
 
-	    prereq   => "DROP TABLE IF EXISTS cvalue_ids; CREATE TEMP TABLE cvalue_ids AS SELECT distinct(cvalue_id), phenotype_id FROM phenotype",
+	   # prereq   => "DROP TABLE IF EXISTS cvalue_ids; CREATE TEMP TABLE cvalue_ids AS SELECT distinct(cvalue_id), phenotype_id FROM phenotype",
 
 	    locations => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM materialized_traits JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id)  WHERE nd_geolocation.nd_geolocation_id in ($dataref->{traits}->{locations}) ",
 	    
@@ -193,7 +194,7 @@ sub get_intersect {
     }
     my $query = join (" INTERSECT ", @query). $queries{$item}{order_by};
     
-    # print STDERR "QUERY: $query\n";
+    print STDERR "QUERY: $query\n";
     
     my $h = $self->dbh->prepare($query);
     $h->execute();
@@ -502,9 +503,8 @@ sub create_materialized_cvterm_view {
     my $self = shift;
     my $db_name = shift;
 
-    print STDERR "CREATING MATERIALIZED VIEW..\n";
-    
     # change this to materialized view once we use 9.4.
+    #
     eval { 
 	my $q = "CREATE TABLE public.materialized_traits
                AS SELECT cvterm_id,  db.name ||':'|| cvterm.name AS name FROM db JOIN dbxref using(db_id) JOIN cvterm using(dbxref_id) WHERE db.name=?";
@@ -515,10 +515,30 @@ sub create_materialized_cvterm_view {
 	$h->execute();
     };
     if ($@) {
-	print STDERR "Materialized trait view: $@\n";
+	if ($@!~/relation.*already exists/) { 
+	    die "Materialized trait view: $@\n";
+	}
     }
     
 
+}
+
+sub create_materialized_cvalue_ids_view { 
+    my $self = shift;
+    
+    eval { 
+       my $q = "CREATE TABLE public.cvalue_ids 
+              AS SELECT distinct(cvalue_id), phenotype_id FROM phenotype";
+       my $h = $self->dbh->prepare($q);
+       $h->execute();
+       $q = "GRANT ALL ON cvalue_ids TO web_usr";
+       $h->execute();
+    };
+    if ($@) { 
+       if ($@!~/relation.*already exists/) { 
+	    die "Materialized cvalue view $@\n";
+	}
+    }
 }
 
 1;
