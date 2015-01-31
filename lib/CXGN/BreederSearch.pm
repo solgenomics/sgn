@@ -26,7 +26,7 @@ has 'dbh' => (
 
 =head2 get_intersect
 
- Usage:        my %info = $bs->get_intersect($criteria_list, $dataref);
+ Usage:        my %info = $bs->get_intersect($criteria_list, $dataref, $db_name);
  Desc:         
  Ret:          returns a hash with a key called results that contains 
                a listref of listrefs specifying the matching list with ids
@@ -39,7 +39,9 @@ has 'dbh' => (
                is the target of the transformation, and the second is the
                source type of the transformation, containing comma separated
                values of the source type. 
- Side Effects:
+               db_name: the db name of the ontology used
+ Side Effects: will create a materialized view of the ontology corresponding to 
+               $db_name
  Example:
 
 =cut
@@ -48,18 +50,23 @@ sub get_intersect {
     my $self = shift;
     my $criteria_list = shift;
     my $dataref = shift;
-    my $traits_db_name = shift || "CO";
+    my $traits_db_name = shift;
+    
+    if (!$traits_db_name) { die "Need a db_name for the ontology!"; }
 
     $self->create_materialized_cvterm_view($traits_db_name);
 
     #print STDERR "CRITERIA LIST: ".(join ",", @$criteria_list)."\n";
-    print STDERR Data::Dumper::Dumper($dataref);
+    #print STDERR Data::Dumper::Dumper($dataref);
 
     my $type_id = $self->get_type_id('project year');
     my $accession_id = $self->get_stock_type_id('accession');
     my $plot_id = $self->get_stock_type_id('plot');
-
-    my %queries = ( 
+    
+    my %queries;
+    { 
+	no warnings;
+	%queries = ( 
 	accessions => {
 	    location => "SELECT distinct(accession.uniquename), accession.uniquename FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and nd_geolocation.nd_geolocation_id in ($dataref->{accessions}->{locations}) ",
 	    
@@ -168,7 +175,7 @@ sub get_intersect {
 	    
 	},
 	);
-    
+    }
     my @query;
     my $item = $criteria_list->[-1];
     
@@ -186,7 +193,7 @@ sub get_intersect {
     }
     my $query = join (" INTERSECT ", @query). $queries{$item}{order_by};
     
-    print STDERR "QUERY: $query\n";
+    # print STDERR "QUERY: $query\n";
     
     my $h = $self->dbh->prepare($query);
     $h->execute();
@@ -220,7 +227,7 @@ sub get_phenotype_info {
     my $trial_sql = shift;
     my $trait_sql = shift;
 
-    print STDERR "$accession_sql - $trial_sql - $trait_sql \n\n";
+    #print STDERR "$accession_sql - $trial_sql - $trait_sql \n\n";
 
     my $rep_type_id = $self->get_stockprop_type_id("replicate");
 
@@ -331,8 +338,6 @@ sub get_extended_phenotype_info_matrix {
 	my ($project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep) = @$d;
 	
 	my $cvterm = $d->[6].":".$d->[7];
-	my $trait_data = $d->[4];
-	my $plot = $d->[5];
 	if (!defined($rep)) { $rep = ""; }
 	$plot_data{$plot}->{$cvterm} = $trait_data;
 	$plot_data{$plot}->{metadata} = {
@@ -505,7 +510,7 @@ sub create_materialized_cvterm_view {
                AS SELECT cvterm_id,  db.name ||':'|| cvterm.name AS name FROM db JOIN dbxref using(db_id) JOIN cvterm using(dbxref_id) WHERE db.name=?";
 	my $h = $self->dbh()->prepare($q);
 	$h->execute($db_name);
-	$q = "GRANT ALL to web_usr ON public.materialized_traits";
+	$q = "GRANT ALL ON public.materialized_traits TO web_usr";
 	$h = $self->dbh()->prepare($q);
 	$h->execute();
     };
