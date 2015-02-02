@@ -439,4 +439,18 @@ sub get_all_trial_types : Path('/ajax/breeders/trial/alltypes') Args(0) {
     $c->stash->{rest} = { types => \@types };
 }
 
+sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $list_id = $c->req->param("list_id");
+    my $name = $c->req->param("name");
+    my $breeding_program = $c->req->param("breeding_program");
+    my $description = $c->req->param("description");
+    my $location = $c->req->param("location");
+
+    $c->res->body(join ", ", ($list_id, $name, $breeding_program, $description, $location));
+
+}
+
 1;

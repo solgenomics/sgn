@@ -6,7 +6,7 @@ $trials_by_breeding_project => ()
 @breeding_programs
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.GenotypingTrial'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.GenotypingTrial', 'CXGN.List' ] &>
 
  <style>
   /* IE has layout issues when sorting (see #5413) */
@@ -60,8 +60,12 @@ $trials_by_breeding_project => ()
     <label for="genotyping_trial_description" style="display: inline-block; vertical-align:top; width: 100px;">Description:</label>
     <textarea id="genotyping_trial_description" name="genotyping_trial_description" style="width: 250px" ></textarea>
     <br><br>
-    <label for="genotyping_trial_upload_file">Upload file:</label>
-    <input type="file" name="genotyping_trial_upload_file" id="genotyping_trial_upload_file" encoding="multipart/form-data" />
+    <!-- label for="genotyping_trial_upload_file">Upload file:</label>
+    <input type="file" name="genotyping_trial_upload_file" id="genotyping_trial_upload_file" encoding="multipart/form-data" / -->
+    <label for="accession_select_box"  style="display: inline-block; vertical-align:top; width: 100px;">Accession list</label>
+    <span id="accession_select_box_span">[loading...]</span>
 
   </form>
 </div>
+
+
