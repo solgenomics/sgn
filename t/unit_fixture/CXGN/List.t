@@ -47,7 +47,8 @@ my $list2 = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id });
 is($list2->name(), "new_test_name", "list name store test");
 is($list2->description(), "new description", "description store change");
 is($list2->type(), "accessions", "list type store");
-
+is($list2->type_id(), 76451, "list type_id");
+is($list2->owner(), 41, "list owner");
 my $error = $list->add_element("bla");
 ok(!$error, "adding an element to the list");
 
