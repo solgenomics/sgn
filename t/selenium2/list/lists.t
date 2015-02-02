@@ -16,16 +16,16 @@ my $out = $d->find_element_ok("lists_link", "id", "find lists_link")->click();
 
 # delete the list should it already exist
 #
-if ($d->driver->get_page_source() =~ /new_test_list/) { 
-    print "DELETE LIST new_test_list... ";
-    $d->find_element_ok("delete_list_new_test_list", "id", "find delete_list_new_test_list test")->click();
-    $d->driver->accept_alert();
-    sleep(1);
+# if ($d->driver->get_page_source() =~ /new_test_list/) { 
+#     print "DELETE LIST new_test_list... ";
+#     $d->find_element_ok("delete_list_new_test_list", "id", "find delete_list_new_test_list test")->click();
+#     $d->driver->accept_alert();
+#     sleep(1);
 
-    print "Done.\n";
-}
+#     print "Done.\n";
+# }
  
-sleep(1);
+#sleep(1);
 
 print "Adding new list...\n";
 
