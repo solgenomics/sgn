@@ -149,14 +149,15 @@ around 'BUILDARGS' => sub {
     }
     $args->{elements} = \@list;
 
-    $q = "SELECT list.name, list.description, type_id, cvterm.name FROM sgn_people.list LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE list_id=?";
+    $q = "SELECT list.name, list.description, type_id, cvterm.name, owner FROM sgn_people.list LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE list_id=?";
     $h = $args->{dbh}->prepare($q);
     $h->execute($args->{list_id});
-    my ($name, $desc, $type_id, $list_type) = $h->fetchrow_array();
+    my ($name, $desc, $type_id, $list_type, $owner) = $h->fetchrow_array();
 
     $args->{name} = $name || '';
     $args->{description} = $desc || '';
     $args->{type} = $list_type || '';
+    $args->{owner} = $owner;
 
     return $class->$orig($args);
 };
@@ -299,5 +300,31 @@ sub exists_element {
     my ($list_item_id) = $h->fetchrow_array();
     return $list_item_id;
 }
+
+sub type_id { 
+    my $self =shift;
+    
+    my $q = "SELECT type_id FROM sgn_people.list WHERE list_id=?";
+    my $h = $self->dbh()->prepare($q);
+    $h->execute($self->list_id());
+    my ($type_id) = $h->fetchrow_array();
+    return $type_id;
+}
+
+sub retrieve_elements_with_ids { 
+    my $self = shift;
+    my $list_id = shift;
+
+    my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
+
+    my $h = $self->dbh()->prepare($q);
+    $h->execute($list_id);
+    my @list = ();
+    while (my ($id, $content) = $h->fetchrow_array()) { 
+	push @list, [ $id, $content ];
+    }
+    return \@list;
+}
+
 
 1;
