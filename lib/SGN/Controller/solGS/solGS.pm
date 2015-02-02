@@ -586,11 +586,13 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 } 
 
 
-sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?'){
-    my ($self, $c) = @_;
-   
-    my ($pop_id, $action) = @{$c->req->captures};
-   
+sub population : Path('/solgs/population/') Args(1) {
+    my ($self, $c, $pop_id) = @_;
+  
+    #Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?')
+   # my ($pop_id, $action) = @{$c->req->captures};
+
+    my $action;
     my $uploaded_reference = $c->req->param('uploaded_reference');
     $c->stash->{uploaded_reference} = $uploaded_reference;
 
@@ -2374,6 +2376,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
 
          $c->controller("solGS::Heritability")->get_heritability($c);
          my $heritability = $c->stash->{heritability};
+
          push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value, $heritability];
        
      }
@@ -2709,11 +2712,12 @@ sub get_model_accuracy_value {
   opendir my $dh, $dir or die "can't open $dir: $!\n";
     
   my ($validation_file)  = grep { /cross_validation_${trait_abbr}_${model_id}/ && -f "$dir/$_" } 
-                                readdir($dh);   
+  readdir($dh);  
+ 
   closedir $dh; 
         
   $validation_file = catfile($dir, $validation_file);
-         
+       
   my ($row) = grep {/Average/} read_file($validation_file);
   my ($text, $accuracy_value)    = split(/\t/,  $row);
  
@@ -3336,7 +3340,7 @@ sub analyzed_traits {
     my @valid_traits_files;
  
     foreach my $trait_file  (@traits_files) 
-    {   
+    {  
         if (-s $trait_file > 1) 
         { 
             my $trait = $trait_file;
@@ -3372,7 +3376,6 @@ sub analyzed_traits {
             }
                            
             push @traits, $trait;
-          
         }      
         else 
         {
