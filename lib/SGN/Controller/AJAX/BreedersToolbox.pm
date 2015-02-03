@@ -5,6 +5,7 @@ use Moose;
 
 use URI::FromHash 'uri';
 
+use CXGN::List;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::BreedersToolbox::Delete;
 
@@ -449,7 +450,12 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
     my $description = $c->req->param("description");
     my $location = $c->req->param("location");
 
-    $c->res->body(join ", ", ($list_id, $name, $breeding_program, $description, $location));
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh(), list_id => $list_id });
+    my $elements = $list->elements();
+    
+    print STDERR @$elements;
+
+    $c->res->body(join ", ", ($list_id, $name, $breeding_program, $description, $location, join ":", @$elements));
 
 }
 
