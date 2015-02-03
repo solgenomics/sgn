@@ -76,7 +76,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<table><tr><td width="365">
+<table><tr><td width="365" valign="top">
 <&| /page/info_section.mas, title=>"Breeding program", subtitle=>$subtitle &>
 % ## foreach my $bp (@$breeding_program) { 
 % ##  print $bp->[1] . "&nbsp;(".$bp->[2].")"; 
@@ -89,7 +89,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
-</td><td>
+</td><td valign="top" >
 <&| /page/info_section.mas, title=>"Trial type", subtitle=>"[<a id=\"edit_trial_type\" >change</a>]" &>
   <div id="trial_type">
     [loading...]
@@ -194,10 +194,16 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </&>
 
 % print STDERR "Check 9 (mason) : ".(time() - $start_time)."\n";
+
 <!-- Phenotypic correlation analysis -->
-  <& /solgs/population/correlation.mas,
-    trial_id => $trial_id
-    &>
+<& /solgs/population/correlation.mas,
+   trial_id => $trial_id
+&>
+
+  <!-- Population structure analysis -- PCA -->
+<& /solgs/model/pca.mas,
+   trial_id => $trial_id
+ &>
 
 % print STDERR "Check 10 (mason) : ".(time() - $start_time)."\n";
 

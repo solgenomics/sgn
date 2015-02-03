@@ -26,7 +26,7 @@ has 'dbh' => (
 
 =head2 get_intersect
 
- Usage:        my %info = $bs->get_intersect($criteria_list, $dataref);
+ Usage:        my %info = $bs->get_intersect($criteria_list, $dataref, $db_name);
  Desc:         
  Ret:          returns a hash with a key called results that contains 
                a listref of listrefs specifying the matching list with ids
@@ -39,7 +39,9 @@ has 'dbh' => (
                is the target of the transformation, and the second is the
                source type of the transformation, containing comma separated
                values of the source type. 
- Side Effects:
+               db_name: the db name of the ontology used
+ Side Effects: will create a materialized view of the ontology corresponding to 
+               $db_name
  Example:
 
 =cut
@@ -48,15 +50,24 @@ sub get_intersect {
     my $self = shift;
     my $criteria_list = shift;
     my $dataref = shift;
+    my $traits_db_name = shift;
     
+    if (!$traits_db_name) { die "Need a db_name for the ontology!"; }
+
+    $self->create_materialized_cvterm_view($traits_db_name);
+    $self->create_materialized_cvalue_ids_view();
+
     #print STDERR "CRITERIA LIST: ".(join ",", @$criteria_list)."\n";
-    #print STDERR Data::Dumper::Dumper($dataref);
+    print STDERR Data::Dumper::Dumper($dataref);
 
     my $type_id = $self->get_type_id('project year');
     my $accession_id = $self->get_stock_type_id('accession');
     my $plot_id = $self->get_stock_type_id('plot');
-
-    my %queries = ( 
+    
+    my %queries;
+    { 
+	no warnings;
+	%queries = ( 
 	accessions => {
 	    location => "SELECT distinct(accession.uniquename), accession.uniquename FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and nd_geolocation.nd_geolocation_id in ($dataref->{accessions}->{locations}) ",
 	    
@@ -146,26 +157,26 @@ sub get_intersect {
 	
 	traits  => { 
 
-	    prereq   => "DROP TABLE IF EXISTS cvalue_ids; CREATE TEMP TABLE cvalue_ids AS SELECT distinct(cvalue_id), phenotype_id FROM phenotype",
+	   # prereq   => "DROP TABLE IF EXISTS cvalue_ids; CREATE TEMP TABLE cvalue_ids AS SELECT distinct(cvalue_id), phenotype_id FROM phenotype",
 
-	    locations => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE nd_geolocation.nd_geolocation_id in ($dataref->{traits}->{locations}) ",
+	    locations => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM materialized_traits JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id)  WHERE nd_geolocation.nd_geolocation_id in ($dataref->{traits}->{locations}) ",
 	    
-	    years => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN projectprop USING(project_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE projectprop.type_id=$type_id and projectprop.value IN ($dataref->{traits}->{years}) ", 
+	    years => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM materialized_traits JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN projectprop USING(project_id) WHERE projectprop.type_id=$type_id and projectprop.value IN ($dataref->{traits}->{years}) ", 
 	    
-	    projects => "SELECT distinct(cvterm_id), db.name || ':' || cvterm.name FROM cvterm JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING(project_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE project.project_id in ($dataref->{traits}->{projects}) ",
+	    projects => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM materialized_traits JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING(project_id) WHERE project.project_id in ($dataref->{traits}->{projects}) ",
 	    
-	    traits => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM cvalue_ids JOIN  cvterm on (cvalue_id=cvterm_id) JOIN dbxref using(dbxref_id) JOIN db USING(db_id) ",
+	    traits => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM cvalue_ids JOIN  materialized_traits on (cvalue_id=cvterm_id)",
 
-	    plots => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (cvalue_id=cvterm_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE stock_id IN ($dataref->{traits}->{plots}) ",
+	    plots => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN materialized_traits ON (cvalue_id=cvterm_id) WHERE stock_id IN ($dataref->{traits}->{plots}) ",
 
-	    accessions => "SELECT distinct(cvterm_id), db.name ||':'|| cvterm.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (cvalue_id=cvterm_id) JOIN dbxref using(dbxref_id) JOIN db using(db_id) WHERE stock_id IN ($dataref->{traits}->{plots}) ",
+	    accessions => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN materialized_traits ON (cvalue_id=cvterm_id) WHERE stock_id IN ($dataref->{traits}->{plots}) ",
 
 	    order_by => " ORDER BY 2 ",
 	    #genotype => "",
 	    
 	},
 	);
-    
+    }
     my @query;
     my $item = $criteria_list->[-1];
     
@@ -217,7 +228,7 @@ sub get_phenotype_info {
     my $trial_sql = shift;
     my $trait_sql = shift;
 
-    print STDERR "$accession_sql - $trial_sql - $trait_sql \n\n";
+    #print STDERR "$accession_sql - $trial_sql - $trait_sql \n\n";
 
     my $rep_type_id = $self->get_stockprop_type_id("replicate");
 
@@ -328,8 +339,6 @@ sub get_extended_phenotype_info_matrix {
 	my ($project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep) = @$d;
 	
 	my $cvterm = $d->[6].":".$d->[7];
-	my $trait_data = $d->[4];
-	my $plot = $d->[5];
 	if (!defined($rep)) { $rep = ""; }
 	$plot_data{$plot}->{$cvterm} = $trait_data;
 	$plot_data{$plot}->{metadata} = {
@@ -488,6 +497,48 @@ sub get_stockprop_type_id {
     $h->execute($term);
     my ($type_id) = $h->fetchrow_array();
     return $type_id;
+}
+
+sub create_materialized_cvterm_view { 
+    my $self = shift;
+    my $db_name = shift;
+
+    # change this to materialized view once we use 9.4.
+    #
+    eval { 
+	my $q = "CREATE TABLE public.materialized_traits
+               AS SELECT cvterm_id,  db.name ||':'|| cvterm.name AS name FROM db JOIN dbxref using(db_id) JOIN cvterm using(dbxref_id) WHERE db.name=?";
+	my $h = $self->dbh()->prepare($q);
+	$h->execute($db_name);
+	$q = "GRANT ALL ON public.materialized_traits TO web_usr";
+	$h = $self->dbh()->prepare($q);
+	$h->execute();
+    };
+    if ($@) {
+	if ($@!~/relation.*already exists/) { 
+	    die "Materialized trait view: $@\n";
+	}
+    }
+    
+
+}
+
+sub create_materialized_cvalue_ids_view { 
+    my $self = shift;
+    
+    eval { 
+       my $q = "CREATE TABLE public.cvalue_ids 
+              AS SELECT distinct(cvalue_id), phenotype_id FROM phenotype";
+       my $h = $self->dbh->prepare($q);
+       $h->execute();
+       $q = "GRANT ALL ON cvalue_ids TO web_usr";
+       $h->execute();
+    };
+    if ($@) { 
+       if ($@!~/relation.*already exists/) { 
+	    die "Materialized cvalue view $@\n";
+	}
+    }
 }
 
 1;

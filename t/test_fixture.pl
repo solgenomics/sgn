@@ -20,11 +20,13 @@ use SGN::Devel::MyDevLibs;
 
 my $verbose = 0;
 my $nocleanup;
+my $noserver;
 
 GetOptions(
     "carpalways" => \( my $carpalways = 0 ),
     "verbose" => \$verbose ,
     "nocleanup" => \$nocleanup,
+    "noserver" => \$noserver,
     );
 
 require Carp::Always if $carpalways;
@@ -86,28 +88,36 @@ print STDERR "Done.\n";
 
 # start the test web server
 #
-my $server_pid = fork;
-my $logfile  = "logfile.$$.txt";
-
-unless( $server_pid ) {
-
-    # web server process
-    #
-    $ENV{SGN_TEST_MODE} = 1;
-@ARGV = (
-    -p => $catalyst_server_port,
-    ( $parallel ? ('--fork') : () ),
-    );
-
-if (!$verbose) { 
-    print STDERR "# [Server logfile at $logfile]\n";
-    open (STDERR, ">$logfile") || die "can't open logfile.";
+my $server_pid;
+my $logfile;
+if ($noserver) { 
+    print STDERR "# [ --noserver option: not starting web server]\n";
 }
-Catalyst::ScriptRunner->run('SGN', 'Server');
+else { 
+    $server_pid = fork;
+    $logfile  = "logfile.$$.txt";
 
-exit;
+    unless( $server_pid ) {
+    
+	# web server process
+	#
+	$ENV{SGN_TEST_MODE} = 1;
+	@ARGV = (
+	    -p => $catalyst_server_port,
+	    ( $parallel ? ('--fork') : () ),
+	    );
+	
+	if (!$verbose) { 
+	    print STDERR "# [Server logfile at $logfile]\n";
+	    open (STDERR, ">$logfile") || die "can't open logfile.";
+	}
+	Catalyst::ScriptRunner->run('SGN', 'Server');
+	
+	exit;
+    }
+    print STDERR  "# Starting web server (PID=$server_pid)... ";
 }
-print STDERR  "# Starting web server (PID=$server_pid)... ";
+
 
 # wait for the test server to start
 #
@@ -118,7 +128,9 @@ print STDERR  "# Starting web server (PID=$server_pid)... ";
     };
     print STDERR "Done.\n";
 
-    sleep 1 until !kill(0, $server_pid) || get "http://localhost:$catalyst_server_port";    
+    if (!$noserver) { 
+	sleep 1 until !kill(0, $server_pid) || get "http://localhost:$catalyst_server_port";    
+    }
 }
 
 my $prove_pid = fork;
@@ -165,13 +177,19 @@ if (!$nocleanup) {
     system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
     print STDERR "Done.\n";
 
-    print STDERR "# Delete server logfile... ";
-    unlink $logfile;
-    print STDERR "Done.\n";
-
-    print STDERR "# Delete fixture conf file... ";
-    unlink "sgn_fixture.conf";
-    print STDERR "Done.\n";
+    if ($noserver) { 
+	print STDERR "# [ --noserver option: No logfile to remove]\n";
+    }
+    else { 
+	print STDERR "# Delete server logfile... ";
+	close($logfile);
+	unlink $logfile;
+	print STDERR "Done.\n";
+	
+	print STDERR "# Delete fixture conf file... ";
+	unlink "sgn_fixture.conf";
+	print STDERR "Done.\n";
+    }
 }
 else { 
     print STDERR "# --nocleanup option: not removing db or files.\n";
