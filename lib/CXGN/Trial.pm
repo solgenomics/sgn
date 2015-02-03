@@ -474,19 +474,38 @@ sub _delete_phenotype_experiments {
     my $phenotypes_deleted = 0;
     my $nd_experiments_deleted = 0;
     
-    my $phenotype_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotype")->search( { nd_experiment_id=> { -in => [ @nd_experiment_ids ] }}, { join => 'phenotype' });
-    if ($phenotype_rs->count() > 0) { 
-	while (my $p = $phenotype_rs->next()) { 
-	    $p->delete();
+    my $nd_exp_phenotype_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotype")->search( { nd_experiment_id=> { -in => [ @nd_experiment_ids ] }}, { join => 'phenotype' });
+    if ($nd_exp_phenotype_rs->count() > 0) { 
+	while (my $pep = $nd_exp_phenotype_rs->next()) { 
+	    my $phenotype_rs = $self->bcs_schema()->resultset("Phenotype::Phenotype")->search( { phenotype_id => $pep->phenotype_id() } );
+	    print STDERR "DELETING ".$phenotype_rs->count(). " phenotypes\n";
+		
+	    $phenotype_rs->delete_all();
 	    $phenotypes_deleted++;
 	}
+
     }
+    $nd_exp_phenotype_rs->delete_all();
     
     # delete the experiments
     #
     my $delete_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ nd_experiment_id => { -in => [ @nd_experiment_ids] }});
 
     $nd_experiments_deleted = $delete_rs->count();
+    
+    # foreach my $exp ($delete_rs->next()) { 
+    # 	my $nd_exp_phenotype_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotypes'")->search( { 'nd_experiment_id' => $exp->nd_experiment_id() });
+
+    # 	print STDERR "Looping through ".$nd_exp_phenotype_rs->count()." phenotype experiment links...\n";
+	
+    # 	while (my $pep = $nd_exp_phenotype_rs->next()) { 
+	   
+	    
+    # 	    print STDERR "Deleting ".$phenotype_rs->count()." phenotypes associated with experiment ".$exp->nd_experiment_id()."\n";	
+    # 	    $phenotype_rs->delete_all();
+    # 	}
+    # }
+    
     $delete_rs->delete_all();
 
     return { phenotypes_deleted => $phenotypes_deleted, 
@@ -568,6 +587,13 @@ sub phenotype_count {
     	);
     
      return $phenotype_experiment_rs->count();
+}
+
+sub total_phenotypes { 
+    my $self = shift;
+    
+    my $pt_rs = $self->bcs_schema()->resultset("Phenotype::Phenotype")->search( { });
+    return $pt_rs->count();
 }
 
 sub get_location_type_id { 
