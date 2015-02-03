@@ -281,6 +281,26 @@ sub remove_element {
     return 0;
 }
 
+sub remove_element_by_id { 
+    my $self = shift;
+    my $element_id = shift;
+    my $h = $self->dbh()->prepare("SELECT content  FROM sgn_people.list_item where list_id=? and list_item_id=?");
+
+    eval { 
+	$h->execute($self->list_id(), $element_id);
+    };
+    if ($@) { 
+	return "An error occurred while attempting to delete item $element_id";
+    }
+    my ($element) = $h->fetchrow_array();
+    
+    if (my $error = $self->remove_element($element)) { 
+	return $error;
+    }
+    
+    return 0;
+}   
+
 sub list_size { 
     my $self = shift;
 
@@ -315,7 +335,7 @@ sub retrieve_elements_with_ids {
     my $self = shift;
     my $list_id = shift;
 
-    my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
+    my $q = "SELECT list_item_id, content from sgn_people.list_item  WHERE list_id=?";
 
     my $h = $self->dbh()->prepare($q);
     $h->execute($list_id);

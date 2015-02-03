@@ -4,6 +4,7 @@ package SGN::Controller::AJAX::List;
 use Moose;
 
 use List::MoreUtils qw | uniq |;
+use Data::Dumper;
 
 use CXGN::List;
 use CXGN::List::Validate;
@@ -579,8 +580,9 @@ sub retrieve_list : Private {
 
     my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
 
-    my $list_elements_with_ids = $list->retrieve_elements_with_ids();
+    my $list_elements_with_ids = $list->retrieve_elements_with_ids($list_id);
     
+    print STDERR "LIST ELEMENTS WITH IDS: ".Dumper($list_elements_with_ids);
     return $list_elements_with_ids;
 }
 
