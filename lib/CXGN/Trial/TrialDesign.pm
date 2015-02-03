@@ -92,7 +92,9 @@ sub calculate_design {
     elsif($self->get_design_type() eq "MAD") {
 	$design = _get_madiii_design($self);
     }
-
+    elsif ($self->get_design_type() eq "genotyping_plate") { 
+	$design = $self->_get_genotyping_plate();
+    }
 #    elsif($self->get_design_type() eq "MADIV") {
 #        $design = _get_madiv_design($self);
 #    }
@@ -106,6 +108,29 @@ sub calculate_design {
   } else {
     return 0;
   }
+}
+
+sub _get_genotyping_plate { 
+    my $self = shift;
+    my %gt_design;
+    my @stock_list;
+    my $number_of_stocks;
+    if ($self->has_stock_list()) { 
+	@stock_list = @{$self->get_stock_list()};
+	$number_of_stocks = scalar(@stock_list);
+	if ($number_of_stocks > 95) { 
+	    die "Need fewer than 96 stocks per plate (at least one blank!)";
+	}
+    }
+    else { 
+	die "No stock list specified\n";
+    }
+    
+    foreach my $row (1..8) {
+	foreach my $col ("A".."H") {
+	}
+    }
+
 }
 
 sub _get_crd_design {
