@@ -196,11 +196,13 @@ else {
 }
 print STDERR "# Test run complete.\n\n";
 
+
+
 sub hash2config { 
     my $hash = shift;
 
-    #print STDERR Data::Dumper::Dumper($hash);
-    
+    our %replace = ( blast_db_path => $hash->{basepath}."t/data/blast" );
+ 
     my $s = "";
     foreach my $k (keys(%$hash)) { 
 	if (ref($hash->{$k}) eq "ARRAY") { 
@@ -222,7 +224,22 @@ sub hash2config {
 	    }
 	}
 	else { 
-	    $s .= "$k $hash->{$k}\n";
+	    if (exists($replace{$k})) { 
+		$s .= "$k $replace{$k}\n";
+		delete $replace{$k};
+	    }
+	    else { 
+		$s .= "$k $hash->{$k}\n";
+	    }
+	}
+    }
+
+    # if nothing matched the replace keys, add them here
+    #
+    foreach my $k (keys %replace) { 
+	# only do this on the top-level (check for key there)
+	if (exists($hash->{dbname})) { 
+	    $s .= "$k $replace{$k}\n";
 	}
     }
     return $s;
