@@ -21,12 +21,13 @@ use SGN::Devel::MyDevLibs;
 my $verbose = 0;
 my $nocleanup;
 my $noserver;
-
+my $noparallel = 0;
 GetOptions(
     "carpalways" => \( my $carpalways = 0 ),
     "verbose" => \$verbose ,
     "nocleanup" => \$nocleanup,
     "noserver" => \$noserver,
+    "noparallel" => \$noparallel,
     );
 
 require Carp::Always if $carpalways;
@@ -34,7 +35,7 @@ require Carp::Always if $carpalways;
 my @prove_args = @ARGV;
 @prove_args = ( 't' ) unless @prove_args;
 
-my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
+#my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
 
 $ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'fixture';
 my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
@@ -104,7 +105,7 @@ else {
 	$ENV{SGN_TEST_MODE} = 1;
 	@ARGV = (
 	    -p => $catalyst_server_port,
-	    ( $parallel ? ('--fork') : () ),
+	    ( $noparallel ? () : ('--fork') ),
 	    );
 	
 	if (!$verbose) { 
@@ -143,7 +144,7 @@ unless( $prove_pid ) {
     # set up env vars for prove and the tests
     #
     $ENV{SGN_TEST_SERVER} = "http://localhost:$catalyst_server_port";
-    if( $parallel ) {
+    if(! $noparallel ) {
         $ENV{SGN_PARALLEL_TESTING} = 1;
         $ENV{SGN_SKIP_LEAK_TEST}   = 1;
     }
