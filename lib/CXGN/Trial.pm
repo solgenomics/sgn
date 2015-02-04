@@ -357,6 +357,8 @@ sub set_name {
     }
 }   
 
+# note: you may need to delete the metadata before deleting the phenotype data (see function).
+#
 sub delete_phenotype_data { 
     my $self = shift;
 
@@ -366,9 +368,6 @@ sub delete_phenotype_data {
 	$self->bcs_schema->txn_do( 
 	    sub { 
 		print STDERR "\n\nDELETING PHENOTYPES...\n\n";
-		# first, delete metadata entries
-		#
-		$self->delete_metadata($trial_id);
 		
 		# delete phenotype data associated with trial
 		#
@@ -390,10 +389,11 @@ sub delete_phenotype_data {
 		while (my ($id) = $h->fetchrow_array()) { 
 		    push @nd_experiment_ids, $id;
 		}
-		$self->_delete_phenotype_experiments(@nd_experiment_ids); # cascading deletes should take care of everything (IT DOESNT????)
+		$self->_delete_phenotype_experiments(@nd_experiment_ids);
 	    });
     };
     if ($@) { 
+	print STDERR "ERROR DELETING PHENOTYPE DATA $@\n";
 	return "Error deleting phenotype data for trial $trial_id. $@\n";
     }
     return '';
@@ -476,10 +476,10 @@ sub _delete_phenotype_experiments {
     
     my $nd_exp_phenotype_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotype")->search( { nd_experiment_id=> { -in => [ @nd_experiment_ids ] }}, { join => 'phenotype' });
     if ($nd_exp_phenotype_rs->count() > 0) { 
+	print STDERR "Deleting experiments ... \n";
 	while (my $pep = $nd_exp_phenotype_rs->next()) { 
 	    my $phenotype_rs = $self->bcs_schema()->resultset("Phenotype::Phenotype")->search( { phenotype_id => $pep->phenotype_id() } );
 	    print STDERR "DELETING ".$phenotype_rs->count(). " phenotypes\n";
-		
 	    $phenotype_rs->delete_all();
 	    $phenotypes_deleted++;
 	}
