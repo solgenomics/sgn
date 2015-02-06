@@ -13,7 +13,6 @@ Lukas Mueller <lam87@cornell.edu>
 
 package CXGN::Trial;
 
-
 use Moose;
 use Try::Tiny;
 
@@ -358,6 +357,7 @@ sub set_name {
 }   
 
 # note: you may need to delete the metadata before deleting the phenotype data (see function).
+# this function has a test!
 #
 sub delete_phenotype_data { 
     my $self = shift;
@@ -400,6 +400,8 @@ sub delete_phenotype_data {
     
 }
     
+# this function has a test!
+#
 sub delete_field_layout { 
     my $self = shift;
 
@@ -493,19 +495,6 @@ sub _delete_phenotype_experiments {
     my $delete_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ nd_experiment_id => { -in => [ @nd_experiment_ids] }});
 
     $nd_experiments_deleted = $delete_rs->count();
-    
-    # foreach my $exp ($delete_rs->next()) { 
-    # 	my $nd_exp_phenotype_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotypes'")->search( { 'nd_experiment_id' => $exp->nd_experiment_id() });
-
-    # 	print STDERR "Looping through ".$nd_exp_phenotype_rs->count()." phenotype experiment links...\n";
-	
-    # 	while (my $pep = $nd_exp_phenotype_rs->next()) { 
-	   
-	    
-    # 	    print STDERR "Deleting ".$phenotype_rs->count()." phenotypes associated with experiment ".$exp->nd_experiment_id()."\n";	
-    # 	    $phenotype_rs->delete_all();
-    # 	}
-    # }
     
     $delete_rs->delete_all();
 
