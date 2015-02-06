@@ -46,16 +46,14 @@ sub field_book :Path("/fieldbook") Args(0) {
 		    });
 
 #    foreach my $row (@rows) {
-      my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find({
+      my $experiment_rs = $schema->resultset('NaturalDiversity::NdExperiment')->search({
      					               #					   'nd_experiment_projects.project_id' => $row->project_id,
      										   type_id => $field_layout_cvterm->cvterm_id(),
      										  },
      										  {
      										   join => 'nd_experiment_projects',
      										  });
-      if (!$experiment) {
-    	next;
-      }
+    while (my $experiment = $experiment_rs->next()) { 
      my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->search({nd_experiment_id => $experiment->nd_experiment_id(),});
       while (my $experiment_file = $experiment_files->next) {
     	my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $experiment_file->file_id});
@@ -72,6 +70,7 @@ sub field_book :Path("/fieldbook") Args(0) {
     	    }
     	  }
     	}
+      }
     }
    #}
 
