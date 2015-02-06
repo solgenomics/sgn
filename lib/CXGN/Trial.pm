@@ -433,8 +433,9 @@ sub delete_field_layout {
 sub delete_metadata { 
     my $self = shift;
     my $metadata_schema = shift;
+    my $phenome_schema = shift;
 
-    if (!$metadata_schema) { die "Need metadata schema parameter\n"; }
+    if (!$metadata_schema || !$phenome_schema) { die "Need metadata schema parameter\n"; }
 
     my $trial_id = $self->get_trial_id();
 
@@ -444,7 +445,7 @@ sub delete_metadata {
     $h->execute($trial_id);
 
     while (my ($md_id) = $h->fetchrow_array()) { 
-	my $mdmd_row = $self->metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
+	my $mdmd_row = $metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
 	if ($mdmd_row) { 
 	    $mdmd_row -> update( { obsolete => 1 });
 	}
@@ -456,7 +457,7 @@ sub delete_metadata {
     $h->execute($trial_id);
     
     while (my ($file_id) = $h->fetchrow_array()) { 
-	my $ndemdf_rs = $self->phenome_schema->resultset("NdExperimentMdFiles")->search( { file_id=>$file_id });
+	my $ndemdf_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search( { file_id=>$file_id });
 
 	foreach my $row ($ndemdf_rs->all()) { 
 	    $row->delete();

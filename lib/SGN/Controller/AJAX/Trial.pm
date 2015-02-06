@@ -1005,7 +1005,7 @@ sub delete_phenotype_data_by_trial_id : Path('/breeders/trial/phenotype/delete/i
     
     my $t = CXGN::Trial->new( { trial_id => $trial_id, bcs_schema => $c->dbic_schema("Bio::Chado::Schema") });
     
-    my $error = $t->delete_metadata($c->dbic_schema("CXGN::Metadata::Schema"));
+    my $error = $t->delete_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
 
     print STDERR "ERROR DELETING METADATA: $error\n";
     my $error = $t->delete_phenotype_data($trial_id);
