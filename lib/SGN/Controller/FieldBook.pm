@@ -58,7 +58,7 @@ sub field_book :Path("/fieldbook") Args(0) {
       while (my $experiment_file = $experiment_files->next) {
     	my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $experiment_file->file_id});
     	if ($file_row->filetype eq 'tablet field layout xls') {
-    	  my $file_metadata = $file_row->search_related('md_metadata')->find({create_person_id => $user_id,});
+    	  my $file_metadata = $file_row->search('md_metadata')->find({create_person_id => $user_id,});
     	  my $metadata_id = $file_row->metadata_id->metadata_id;
     	  if ($metadata_id) {
     	    my $file_metadata = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id});
