@@ -3,7 +3,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More 'tests'=>12;
+use Test::More;
 
 use SGN::Test::WWW::WebDriver;
 
@@ -20,6 +20,8 @@ $t->while_logged_in_as(
 
 	$add_project_link->click();
 
+	sleep(3);
+
 	$t->find_element_ok('new_trial_name', 'id', "find new trial name input box")->send_keys("Test trial 1");
 
 	$t->find_element_ok('add_project_year', 'id', "find trial year input box")->send_keys("2015");
@@ -35,13 +37,17 @@ $t->while_logged_in_as(
 	$t->find_element_ok('rep_count', 'id', "find replicate count input box")->send_keys("3");
 
 	$t->find_element_ok('add_trial_button', 'id', "find Add button")->click();
+	sleep(5);
 
 	$t->find_element_ok('confirm_trial_save_button', 'id', "find trial design confirm button")->click();
 	
-	sleep(3);
+	sleep(5);
 
 	$t->find_element_ok('trial_saved_dialog_message_ok_button', 'id', "find trial saved dialog")->click();
 
 	
 
     });
+
+
+done_testing();
