@@ -214,10 +214,9 @@ CXGN.List.prototype = {
 	    async: false,
 	    success: function(response) { 
 		if (response.error) { 
-		    //alert(response.error);
+		    alert(response.error);
 		}
 		lists = response;
-		//alert("LISTS OF TYPE "+list_type+": "+lists.join(","));
 	    },
 	    error: function(response) { 
 		alert("An error occurred");
