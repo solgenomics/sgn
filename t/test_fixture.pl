@@ -202,7 +202,11 @@ print STDERR "# Test run complete.\n\n";
 sub hash2config { 
     my $hash = shift;
 
-    our %replace = ( blast_db_path => $hash->{basepath}."t/data/blast" );
+    our %replace = ( 
+	blast_db_path => $hash->{basepath}."t/data/blast" ,
+	cluster_shared_bindir => '/usr/bin',
+	cluster_shared_tempdir => '/tmp',
+	);
  
     my $s = "";
     foreach my $k (keys(%$hash)) { 
@@ -267,6 +271,8 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
                  to force backtraces of all warnings and errors
 
   --nocleanup    Do not clean up database and logfile
+
+  --noserver     Do not start webserver (if running unit_fixture tests only)
 
 =head1 AUTHORS
 
