@@ -373,16 +373,16 @@ sub default_toolbar_data {
                 #Mapping
                 { name => 'Mapping' },
                 {
-                    name => 'NEW Genome Browser (Jbrowse)',
+                    name => 'Genome Browser (Jbrowse)',
                     link => '/jbrowse/',
                     desc => 'browse genomic annotations using the fast Jbrowse browser',
                 },
 
-                {
-                    name => 'Genome Browser (Gbrowse)',
-                    link => '/gbrowse/bin/gbrowse/',
-                    desc => 'browse genomic annotations using GBrowse',
-                },
+                # {
+                #     name => 'Genome Browser (Gbrowse)',
+                #     link => '/gbrowse/bin/gbrowse/',
+                #     desc => 'browse genomic annotations using GBrowse',
+                # },
 		# {
 		#     name => 'Comparative Genome Browser',
 		#     link => 'http://solgenomics.net/gbrowse2/bin/gbrowse_syn/sol2/?search_src=pot;name=ST3.10ch01:1..90000000',
