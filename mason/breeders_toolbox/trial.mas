@@ -162,7 +162,8 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/phenotype/download/$trial_id\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/phenotype/download/$trial_id?format=csv\">csv</a>] | [<a id=\"delete_phenotype_data_by_trial_id\" >Delete trial data</a>]" &>
 % foreach my $trait (@phenotype_data) {
 % my $trait_id = $trait->[1];
-% print "<a href=\"/breeders_toolbox/trial/$trial_id/trait/$trait_id\">$trait->[0]</a> ($trait->[2] assays)<br />\n";
+% my $trait_name = ucfirst($trait->[0]);
+% print "$trait_name" . ' [ ' . "<a href=\"/breeders_toolbox/trial/$trial_id/trait/$trait_id\">view statistics</a>" . ' ] ' . "<br />";
 %}
 
 </&>
