@@ -3085,12 +3085,19 @@ sub trait_phenotype_stat {
     $self->trait_phenodata_file($c);
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
     my $trait_data = $self->convert_to_arrayref_of_arrays($c, $trait_pheno_file);
-
+  
     my @pheno_data;   
     foreach (@$trait_data) 
     {
         unless (!$_->[0]) {
-            push @pheno_data, $_->[1]; 
+	 
+	    my $d = $_->[1];
+	    chomp($d);
+
+	    if ($d =~ /\d+/) 
+	    {
+		push @pheno_data, $d;
+	    } 
         }
     }
 
@@ -3101,8 +3108,11 @@ sub trait_phenotype_stat {
     my $max  = $stat->max; 
     my $mean = $stat->mean;
     my $std  = $stat->standard_deviation;
-    my $cnt  = $stat->count;
+    my $cnt  = scalar(@$trait_data);
     my $cv   = ($std / $mean) * 100;
+    my $na   = scalar(@$trait_data) - scalar(@pheno_data);
+
+    if ($na == 0) { $na = '--'; }
 
     my $round = Math::Round::Var->new(0.01);
     $std  = $round->round($std);
@@ -3110,10 +3120,11 @@ sub trait_phenotype_stat {
     $cv   = $round->round($cv);
     $cv   = $cv . '%';
 
-    my @desc_stat =  ( [ 'No. of genotypes', $cnt ], 
+    my @desc_stat =  ( [ 'Total no. of genotypes', $cnt ],
+		       [ 'Genotypes missing data', $na ],
                        [ 'Minimum', $min ], 
                        [ 'Maximum', $max ],
-                       [ 'Mean', $mean ],
+                       [ 'Arithmetic mean', $mean ],
                        [ 'Standard deviation', $std ],
                        [ 'Coefficient of variation', $cv ]
         );
