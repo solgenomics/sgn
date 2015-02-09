@@ -45,6 +45,5 @@ $trait_name = ucfirst($trait_name);
      trait_id => $trait_id
     &>
 
-
-
 </&>
+
