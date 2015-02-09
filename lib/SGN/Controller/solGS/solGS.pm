@@ -4071,18 +4071,19 @@ sub run_r_script {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
    
-    my $solgs_dir       = $c->config->{solgs_dir};
-    my $solgs_cache     = catdir($solgs_dir, 'cache'); 
-    my $solgs_tempfiles = catdir($solgs_dir, 'tempfiles');
-    my $solgs_prediction_upload = catdir($solgs_dir, 'tempfiles', 'prediction_upload');
-    my $correlation_dir = catdir($c->config->{cluster_shared_tempdir}, 'correlation', 'cache');
-
-    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_prediction_upload, $correlation_dir], 0, 0755);
+    my $tmp_dir         = $c->path_to($c->config->{tempfiles_subdir});
+    my $solgs_dir       = catdir($tmp_dir, "solgs");
+    my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
+    my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
+    my $correlation_dir = catdir($tmp_dir, 'correlation', 'cache');   
+    my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
+    
+    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, $correlation_dir], 0, 0755);
    
     $c->stash(solgs_dir                   => $solgs_dir, 
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
-              solgs_prediction_upload_dir => $solgs_prediction_upload,
+              solgs_prediction_upload_dir => $solgs_upload,
               correlation_dir             => $correlation_dir,
         );
 

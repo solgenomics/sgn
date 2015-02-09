@@ -85,7 +85,7 @@ sub create_population_phenotype_data {
 sub create_histogram_dir {
     my ($self, $c) = @_;
     
-    my $temp_dir        = $c->config->{cluster_shared_tempdir};
+    my $temp_dir        = $c->path_to($c->config->{tempfiles_subdir});;
     my $histogram_dir = catdir($temp_dir, 'histogram', 'cache'); 
   
     mkpath ([$temp_dir, $histogram_dir], 0, 0755);

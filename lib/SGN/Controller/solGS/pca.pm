@@ -97,8 +97,8 @@ sub create_pca_genotype_data {
 sub create_pca_dir {
     my ($self, $c) = @_;
     
-    my $temp_dir        = $c->config->{cluster_shared_tempdir};
-    my $pca_dir = catdir($temp_dir, 'pca', 'cache'); 
+    my $temp_dir = $c->path_to($c->config->{tempfiles_subdir});
+    my $pca_dir  = catdir($temp_dir, 'pca', 'cache'); 
   
     mkpath ([$temp_dir, $pca_dir], 0, 0755);
    
