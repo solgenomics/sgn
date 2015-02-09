@@ -117,13 +117,21 @@ my %metadata = ( operator => 'johndoe', date => '20141223' );
 
 $lp->store($c, $plotlist_ref, $traitlist_ref, \%plot_trait_value, \%metadata);
 
-ok($trial->phenotype_count(), "trial has phenotype data");
+my $total_phenotypes = $trial->total_phenotypes();
+
+print STDERR "TOTAL phenotypes = $total_phenotypes\n";
+
+my $trial_phenotype_count = $trial->phenotype_count();
+
+is($trial_phenotype_count, 10, "trial has phenotype data");
 
 # check trial deletion - first, delete associated phenotypes
 #
 $trial->delete_phenotype_data();
 
 ok($trial->phenotype_count() ==0, "phenotype data deleted");
+
+is($trial->total_phenotypes(), $total_phenotypes - $trial_phenotype_count, "check total phenotypes");
 
 # check trial layout deletion
 #

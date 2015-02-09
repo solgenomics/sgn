@@ -226,7 +226,7 @@ sub available_lists : Path('/list/available') Args(0) {
 	return;
     }
 
-    my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id);
+    my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id, $requested_type);
     
     $c->stash->{rest} = $lists;
 }

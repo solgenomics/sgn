@@ -21,12 +21,13 @@ use SGN::Devel::MyDevLibs;
 my $verbose = 0;
 my $nocleanup;
 my $noserver;
-
+my $noparallel = 0;
 GetOptions(
     "carpalways" => \( my $carpalways = 0 ),
     "verbose" => \$verbose ,
     "nocleanup" => \$nocleanup,
     "noserver" => \$noserver,
+    "noparallel" => \$noparallel,
     );
 
 require Carp::Always if $carpalways;
@@ -34,7 +35,7 @@ require Carp::Always if $carpalways;
 my @prove_args = @ARGV;
 @prove_args = ( 't' ) unless @prove_args;
 
-my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
+#my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
 
 $ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'fixture';
 my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
@@ -104,7 +105,7 @@ else {
 	$ENV{SGN_TEST_MODE} = 1;
 	@ARGV = (
 	    -p => $catalyst_server_port,
-	    ( $parallel ? ('--fork') : () ),
+	    ( $noparallel ? () : ('--fork') ),
 	    );
 	
 	if (!$verbose) { 
@@ -143,7 +144,7 @@ unless( $prove_pid ) {
     # set up env vars for prove and the tests
     #
     $ENV{SGN_TEST_SERVER} = "http://localhost:$catalyst_server_port";
-    if( $parallel ) {
+    if(! $noparallel ) {
         $ENV{SGN_PARALLEL_TESTING} = 1;
         $ENV{SGN_SKIP_LEAK_TEST}   = 1;
     }
@@ -196,11 +197,17 @@ else {
 }
 print STDERR "# Test run complete.\n\n";
 
+
+
 sub hash2config { 
     my $hash = shift;
 
-    #print STDERR Data::Dumper::Dumper($hash);
-    
+    our %replace = ( 
+	blast_db_path => $hash->{basepath}."t/data/blast" ,
+	cluster_shared_bindir => '/usr/bin',
+	cluster_shared_tempdir => '/tmp',
+	);
+ 
     my $s = "";
     foreach my $k (keys(%$hash)) { 
 	if (ref($hash->{$k}) eq "ARRAY") { 
@@ -222,7 +229,22 @@ sub hash2config {
 	    }
 	}
 	else { 
-	    $s .= "$k $hash->{$k}\n";
+	    if (exists($replace{$k})) { 
+		$s .= "$k $replace{$k}\n";
+		delete $replace{$k};
+	    }
+	    else { 
+		$s .= "$k $hash->{$k}\n";
+	    }
+	}
+    }
+
+    # if nothing matched the replace keys, add them here
+    #
+    foreach my $k (keys %replace) { 
+	# only do this on the top-level (check for key there)
+	if (exists($hash->{dbname})) { 
+	    $s .= "$k $replace{$k}\n";
 	}
     }
     return $s;
@@ -249,6 +271,8 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
                  to force backtraces of all warnings and errors
 
   --nocleanup    Do not clean up database and logfile
+
+  --noserver     Do not start webserver (if running unit_fixture tests only)
 
 =head1 AUTHORS
 
