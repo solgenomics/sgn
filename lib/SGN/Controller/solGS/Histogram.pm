@@ -42,12 +42,16 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
     }    
     
     my $data = $self->format_plot_data($c);
+    
+    $c->controller('solGS::solGS')->trait_phenotype_stat($c);
+     my $stat = $c->stash->{descriptive_stat};
 
     my $ret->{status} = 'failed';
 
     if (@$data)
     {
         $ret->{data} = $data;
+	$ret->{stat} = $stat;
         $ret->{status} = 'success';             
     }
 
@@ -55,7 +59,7 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
        
     $c->res->content_type('application/json');
     $c->res->body($ret);    
-
+      
 }
 
 
