@@ -24,6 +24,7 @@ use Array::Utils qw(:all);
 #use CXGN::People::Person;
 use CXGN::Tools::Run;
 use JSON;
+
 #use jQuery::File::Upload;
 
 BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
@@ -586,13 +587,11 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 } 
 
 
-sub population : Path('/solgs/population/') Args(1) {
-    my ($self, $c, $pop_id) = @_;
+sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
+    my ($self, $c) = @_;
   
-    #Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?')
-   # my ($pop_id, $action) = @{$c->req->captures};
+    my ($pop_id, $action) = @{$c->req->captures};
 
-    my $action;
     my $uploaded_reference = $c->req->param('uploaded_reference');
     $c->stash->{uploaded_reference} = $uploaded_reference;
 
