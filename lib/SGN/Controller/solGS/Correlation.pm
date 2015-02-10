@@ -154,7 +154,7 @@ sub create_correlation_phenodata_file {
         my $pop_id = $c->stash->{pop_id};
        
         my $pheno_exp = "phenodata_${pop_id}";
-        my $dir       = catdir($c->config->{r_qtl_temp_path}, 'cache');
+        my $dir       = catdir($c->path_to($c->config->{r_qtl_temp_path}), 'cache');
        
         my $phenotype_file = $c->controller("solGS::solGS")->grep_file($dir, $pheno_exp);
        
@@ -357,6 +357,40 @@ sub run_genetic_correlation_analysis {
     $self->run_correlation_analysis($c);
 
 }
+
+
+sub download_correlation : Path('/download/correlation/population') Args(1) {
+    my ($self, $c, $id) = @_;
+    
+    $self->create_correlation_dir($c);
+    my $corr_dir = $c->stash->{correlation_dir};
+    my $corr_file = catfile($corr_dir,  "corre_coefficients_table_${id}");
+  
+    unless (!-e $corr_file || -s $corr_file <= 1) 
+    {
+	my @corr_data;
+	my $count=1;
+
+	foreach my $row ( read_file($corr_file) )
+	{
+	    if ($count==1) {  $row = 'Traits,' . $row;}             
+	    $row =~ s/NA//g; 
+	    $row = join(",", split(/\s/, $row));
+	    $row .= "\n";
+ 
+	    push @corr_data, [ $row ];
+	    $count++;
+	}
+   
+	$c->res->content_type("text/plain");
+	$c->res->body(join "",  map{ $_->[0] } @corr_data);   
+           
+
+    } 
+ 
+}
+
+
 
 
 sub run_correlation_analysis {
