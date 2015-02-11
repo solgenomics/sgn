@@ -184,10 +184,10 @@ sub create_correlation_phenodata_file {
 sub create_correlation_dir {
     my ($self, $c) = @_;
     
-    my $temp_dir        = $c->path_to($c->config->{tempfiles_subdir});
+    my $temp_dir        = $c->config->{cluster_shared_tempdir}; ;
     my $correlation_dir = catdir($temp_dir, 'correlation', 'cache'); 
   
-    mkpath ([$temp_dir, $correlation_dir], 0, 0755);
+    mkpath ($correlation_dir, 0, 0755);
    
     $c->stash->{correlation_dir} = $correlation_dir;
 

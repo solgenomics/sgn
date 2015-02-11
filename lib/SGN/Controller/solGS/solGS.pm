@@ -4070,7 +4070,7 @@ sub run_r_script {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
    
-    my $tmp_dir         = $c->path_to($c->config->{tempfiles_subdir});
+    my $tmp_dir         = $c->config->{cluster_shared_tempdir};
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
