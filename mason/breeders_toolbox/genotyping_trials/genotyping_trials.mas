@@ -6,7 +6,7 @@ $trials_by_breeding_project => ()
 @breeding_programs
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.GenotypingTrial', 'CXGN.List' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.GenotypingTrial', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
  <style>
   /* IE has layout issues when sorting (see #5413) */
@@ -35,34 +35,44 @@ $trials_by_breeding_project => ()
 </div>
 
 <div id="genotyping_trial_dialog" class="ui-widget">
+
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
 
-    <label for="genotyping_trial_breeding_program" style="display: inline-block; width: 100px;">Breeding Program:</label>
-    <select id="genotyping_trial_breeding_program" name="genotyping_trial_breeding_program">
+    <label for="breeding_program_select_div" style="display: inline-block; width: 150px;">Breeding Program:</label>
+    <!-- select id="genotyping_trial_breeding_program" name="genotyping_trial_breeding_program">
       <%perl>
         foreach my $program (@breeding_programs) {
           print "<option value=".@$program[1].">".@$program[1]."</option>";
         }
       </%perl>
-    </select>
-    <br>
+    </select -->
+    <span id="breeding_program_select_div"></span>
+    <br /><br />
     
-    <label for="genotyping_trial_location" style="display: inline-block; width: 100px;">Location:</label>
-    <select id="genotyping_trial_location" name="genotyping_trial_locaton_location">
+    <label for="location_select_div" style="display: inline-block; width: 150px;">Location:</label>
+    <!-- select id="genotyping_trial_location" name="genotyping_trial_locaton_location">
       <%perl>foreach my $location (@locations) { print "
         <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
       </%perl>
-    </select>
+    </select -->
+    <span id="location_select_div"></span>
     <br><br>
-    <label for="genotyping_trial_name" style="display: inline-block; width: 100px;">Genotyping Trial name:</label>
+    
+    <label for="year_select_div" style="display: inline-block; vertical-align:top; width: 150px;">Year:</label>
+    <span id="year_select_div"></span>
+    <br /><br />
+
+    <label for="genotyping_trial_name" style="display: inline-block; width: 150px;">Genotyping Trial name:</label>
     <input id="genotyping_trial_name" name="genotyping_trial_name" size="30" />
     <br><br>
-    <label for="genotyping_trial_description" style="display: inline-block; vertical-align:top; width: 100px;">Description:</label>
-    <textarea id="genotyping_trial_description" name="genotyping_trial_description" style="width: 250px" ></textarea>
+
+    <label for="genotyping_trial_descripton" style="display: inline-block; vertical-align:top; width: 150px;">Description:</label>
+    <textarea id="genotyping_trial_description" name="genotyping_trial_year" style="width: 250px" ></textarea><br />
+    
     <br><br>
     <!-- label for="genotyping_trial_upload_file">Upload file:</label>
     <input type="file" name="genotyping_trial_upload_file" id="genotyping_trial_upload_file" encoding="multipart/form-data" / -->
-    <label for="accession_select_box"  style="display: inline-block; vertical-align:top; width: 100px;">Accession list</label>
+    <label for="accession_select_box"  style="display: inline-block; vertical-align:top; width: 150px;">Accession list</label>
     <span id="accession_select_box_span">[loading...]</span>
 
   </form>

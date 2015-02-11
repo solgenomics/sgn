@@ -23,6 +23,7 @@ This module uses the the R CRAN package "Agricolae" to calculate experimental de
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
+use Data::Dumper;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use POSIX;
@@ -54,7 +55,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Augmented" || $_ eq "MAD"},
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -126,11 +127,32 @@ sub _get_genotyping_plate {
 	die "No stock list specified\n";
     }
     
-    foreach my $row (1..8) {
-	foreach my $col ("A".."H") {
+    my $random_blank = int(rand() * $number_of_stocks)+1;
+    
+    my $count = 0;
+
+    foreach my $col ("A".."H") {
+	foreach my $row (1..8) {
+	    $count++;
+	    my $well = $col.$row;
+	    
+	    if ($count == $random_blank) { 
+		$gt_design{$well} = { 
+		    plot_name => $self->get_trial_name()."_".$well."_BLANK",
+		    stock_name => "BLANK",
+		};
+	    }
+	    elsif (@stock_list) { 
+		$gt_design{$well} = 
+		{ plot_name => $self->get_trial_name()."_".$well, 
+		  stock_name => shift(@stock_list),
+		};
+	    }
+	    #print STDERR Dumper(\%gt_design);
 	}
     }
-
+    return \%gt_design;
+    
 }
 
 sub _get_crd_design {

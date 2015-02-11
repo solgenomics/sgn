@@ -144,21 +144,22 @@ sub _get_design_from_trial {
   foreach my $plot (@plots) {
     my %design_info;
     my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
+    my $tissue_sample_of_cv = $schema->resultset("Cv::Cvterm")->find({ name=>'tissue_sample_of' });
     my $plot_name = $plot->uniquename;
     my $plot_number_prop = $plot->stockprops->find( { 'type.name' => 'plot number' }, { join => 'type'} );
     my $block_number_prop = $plot->stockprops->find( { 'type.name' => 'block' }, { join => 'type'} );
     my $replicate_number_prop = $plot->stockprops->find( { 'type.name' => 'replicate' }, { join => 'type'} );
     my $range_number_prop = $plot->stockprops->find( { 'type.name' => 'range' }, { join => 'type'} );
     my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
-    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => $plot_of_cv->cvterm_id()})->object;
+    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
     my $accession_name = $accession->uniquename;
     $design_info{"plot_name"}=$plot->uniquename;
     $design_info{"plot_id"}=$plot->stock_id;
-    #print STDERR "stock id of plot: ". $plot->stock_id."\n";
-    #print STDERR "plotprop: $plot_number_prop\n";
+    print STDERR "stock id of plot: ". $plot->stock_id."\n";
+    print STDERR "plotprop: $plot_number_prop\n";
     if ($plot_number_prop) {
       $design_info{"plot_number"}=$plot_number_prop->value();
-      #print STDERR "plot# value: ".$plot_number_prop->value()."\n"
+      print STDERR "plot# value: ".$plot_number_prop->value()."\n"
     }
     else {die "no plot number stockprop found for plot $plot_name";}
     if ($block_number_prop) {
@@ -198,7 +199,7 @@ sub _get_field_layout_experiment_from_project {
   $field_layout_experiment = $project
      ->search_related("nd_experiment_projects")
        ->search_related("nd_experiment")
-   	->find({ 'type.name' => 'field layout'}, {join => 'type' });
+       ->search({ -or => [ 'type.name' => 'field layout', 'type.name' => 'genotyping layout' ] }, {join => 'type' })->first();
   return $field_layout_experiment;
 }
 
@@ -362,8 +363,9 @@ sub _get_trial_accession_names_and_control_names {
   }
   @plots = @{$plots_ref};
   $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
+  my $tissue_sample_of_cv = $schema->resultset("Cv::Cvterm")->find({ name=>'tissue_sample_of' });
   foreach $plot (@plots) {
-    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => $plot_of_cv->cvterm_id()})->object;
+    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => { -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
 
     my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
     my $is_a_control;

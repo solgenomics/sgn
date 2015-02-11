@@ -4,10 +4,13 @@ package SGN::Controller::AJAX::BreedersToolbox;
 use Moose;
 
 use URI::FromHash 'uri';
+use Data::Dumper;
 
 use CXGN::List;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::BreedersToolbox::Delete;
+use CXGN::Trial::TrialDesign;
+use CXGN::Trial::TrialCreate;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -443,20 +446,85 @@ sub get_all_trial_types : Path('/ajax/breeders/trial/alltypes') Args(0) {
 sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) { 
     my $self = shift;
     my $c = shift;
-    
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping trial.' };
+	return;
+    }
+
     my $list_id = $c->req->param("list_id");
     my $name = $c->req->param("name");
-    my $breeding_program = $c->req->param("breeding_program");
+    my $breeding_program_id = $c->req->param("breeding_program");
     my $description = $c->req->param("description");
-    my $location = $c->req->param("location");
+    my $location_id = $c->req->param("location");
+    my $year = $c->req->param("year");
 
     my $list = CXGN::List->new( { dbh => $c->dbc->dbh(), list_id => $list_id });
     my $elements = $list->elements();
+
+    if (!$name || !$list_id || !$breeding_program_id || !$location_id || !$year) { 
+	$c->stash->{rest} = { error => "Please provide all parameters." };
+	return;
+    }
+
+    my $td = CXGN::Trial::TrialDesign->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+
+    $td->set_stock_list($elements);
+
+    $td->set_block_size(96);
+
+    $td->set_design_type("genotyping_plate");
+    $td->set_trial_name($name);
+    my $design;
+
+    if (!$td->calculate_design()) { 
+	$c->stash->{rest} = { error => "Design failed. Sorry." };
+	return;
+    }
+    $design = $td->get_design();
+
+    print STDERR Dumper($design);
     
-    print STDERR @$elements;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $location_id } );
+    if (!$location) { 
+	$c->stash->{rest} = { error => "Unknown location" };
+	return;
+    }
 
-    $c->res->body(join ", ", ($list_id, $name, $breeding_program, $description, $location, join ":", @$elements));
-
+    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
+    if (!$breeding_program) {
+	$c->stash->{rest} = { error => "Unknown breeding program" };
+	return;
+    }
+    
+    
+    my $ct = CXGN::Trial::TrialCreate->new( { 
+     	chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
+     	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
+     	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+     	dbh => $c->dbc->dbh(),
+     	user_name => $c->user()->get_object()->get_username(),
+     	trial_year => $year,
+	trial_location => $location->description(),
+	program => $breeding_program->name(), 
+	trial_description => $description,
+	design_type => 'genotyping_plate',
+	design => $design,
+	trial_name => $name,
+	is_genotyping => 1,
+    });
+    
+    eval { 
+	my %error = $ct->save_trial();
+	if (%error) { 
+	    $c->stash->{rest} = \%error;
+	}
+    };
+    if ($@) { 
+	$c->stash->{rest} = { error => "Error saving the trial. $@" };
+    }
+    $c->stash->{rest} = { message => "Successfully stored the trial." };
 }
 
 1;
