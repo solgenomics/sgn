@@ -213,7 +213,7 @@ sub save_trial {
  
 
   my $t = CXGN::Trial->new( { bcs_schema => $chado_schema, trial_id => $project->project_id() } );
-  +  $t->add_location($geolocation->nd_geolocation_id()); # set location also as a project prop
+  $t->add_location($geolocation->nd_geolocation_id()); # set location also as a project prop
 
   #link to the project
   $field_layout_experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});
