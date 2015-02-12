@@ -304,9 +304,19 @@ sub projects_links {
 	 {
 	     unless ($is_gs) 
 	     {
-		 my $pr_prop = {'project_id' => $pr_id, 'project_type' => 'genomic selection'};
-		 $c->model("solGS::solGS")->set_project_type($pr_prop); 
+		 my $pr_prop = {'project_id' => $pr_id, 
+				'project_type' => 'genomic selection', 
+		 };
+		 
+		 $c->model("solGS::solGS")->set_project_type($pr_prop);		 
+		
 	     }
+
+	     my $pop_prop = {'project_id' => $pr_id, 
+			     'population type' => 'training population', 
+	     };
+	   
+	     $c->model("solGS::solGS")->set_population_type($pop_prop);
 	     
              my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 
@@ -316,6 +326,14 @@ sub projects_links {
                                     $pr_desc, $pr_location, $pr_year, $match_code
              ];            
 	 }
+	 elsif ($marker_count && !$has_phenotype)	 
+	 {
+	     my $pop_prop = {'project_id' => $pr_id, 
+			     'population type' => 'selection population', 
+	     };
+
+	     $c->model("solGS::solGS")->set_population_type($pop_prop);	      
+	 }  
     }
 
     $c->stash->{projects_pages} = \@projects_pages;
@@ -2003,7 +2021,7 @@ sub list_of_prediction_pops {
  
     my @pred_pops;
 
-    if(@pred_pops_ids) {
+    if (@pred_pops_ids) {
 
         foreach my $prediction_pop_id (@pred_pops_ids)
         {
