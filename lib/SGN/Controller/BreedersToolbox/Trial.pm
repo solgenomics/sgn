@@ -10,13 +10,21 @@ use SGN::View::Trial qw/design_layout_view design_info_view trial_detail_design_
 BEGIN { extends 'Catalyst::Controller'; }
 
 
+sub trial_info_short_url : Path('/breeders/trial') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    $self->trial_info($c, $trial_id);
+}
+
 sub trial_info : Path('/breeders_toolbox/trial') Args(1) { 
     my $self = shift;
     my $c = shift;
+    my $trial_id = shift;
+
+    my $format = $c->req->param("format");
 
     my $start_time = time();
-
-    my $trial_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
@@ -136,7 +144,18 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 
     $c->stash->{trial_id} = $trial_id;
 
-    $c->stash->{template} = '/breeders_toolbox/trial.mas';
+    if ($design_type eq "genotyping_plate") { 
+	if ($format eq "as_table") { 
+	    $c->stash->{template} = '/breeders_toolbox/genotyping_trials/format/as_table.mas';
+	}
+	else { 
+	$c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
+	}
+	
+    }
+    else { 
+	$c->stash->{template} = '/breeders_toolbox/trial.mas';
+    }
     
     print STDERR "check 6: ".(time()-$start_time)."\n";
     

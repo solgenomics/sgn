@@ -1,0 +1,17 @@
+
+<%args>
+$design
+</%args>
+
+% use Data::Dumper;
+% ##print Dumper($design);
+<table border='1'>
+% foreach my $col (1..12) { 
+%    foreach my $row ("A".."H") { 
+  <tr><td><% $row.$col %></td>
+    <td><% $design->{$row.$col}->{accession_name} %></td></tr>
+%   }
+    
+% }
+
+</table>

@@ -35,6 +35,7 @@ $user_can_modify => undef
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'CXGN.Trial' , 'jstree/dist/jstree' ] &>
 
 <%perl>
+
 my $start_time = time();
 my $description_empty = 1;
 if ($trial_description) {

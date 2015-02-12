@@ -132,7 +132,7 @@ sub _get_genotyping_plate {
     my $count = 0;
 
     foreach my $col ("A".."H") {
-	foreach my $row (1..8) {
+	foreach my $row (1..12) {
 	    $count++;
 	    my $well = $col.$row;
 	    
