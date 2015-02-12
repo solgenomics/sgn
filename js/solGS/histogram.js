@@ -42,6 +42,7 @@ function getHistogramData () {
         success: function(response) {
             if (response.status == 'success') {
 		var traitValues = response.data;
+		var stat = response.stat;
 
 		traitValues = traitValues.map( function (d) {		   
 		    
@@ -70,7 +71,10 @@ function getHistogramData () {
 
 		} else {
                     plotHistogram(traitValues);
+		  
                     jQuery("#histogram_message").empty();
+		    descriptiveStat(stat);
+		    
 		}
             } else {                
                 var errorMessage = "<p>This trait has no phenotype data to plot.</p>";
@@ -242,4 +246,25 @@ function getUnique(inputArray) {
 	}
 	
     return outputArray;
+}
+
+
+function descriptiveStat (stat)  {
+       
+    var table = '<table style="margin-top: 40px;width:100%;text-align:left">';
+
+    for (var i=0; i < stat.length; i++) {
+      
+        if (stat[i]) {
+            table += '<tr>';
+            table += '<td>' + stat[i][0] + '</td>'  + '<td>' + stat[i][1] + '</td>';
+            table += '</tr>';
+        }
+    }
+    
+    table += '</table>';
+
+    jQuery("#trait_histogram_canvas").append(table);
+ 
+
 }

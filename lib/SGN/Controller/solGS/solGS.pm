@@ -24,6 +24,7 @@ use Array::Utils qw(:all);
 #use CXGN::People::Person;
 use CXGN::Tools::Run;
 use JSON;
+
 #use jQuery::File::Upload;
 
 BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
@@ -303,9 +304,19 @@ sub projects_links {
 	 {
 	     unless ($is_gs) 
 	     {
-		 my $pr_prop = {'project_id' => $pr_id, 'project_type' => 'genomic selection'};
-		 $c->model("solGS::solGS")->set_project_type($pr_prop); 
+		 my $pr_prop = {'project_id' => $pr_id, 
+				'project_type' => 'genomic selection', 
+		 };
+		 
+		 $c->model("solGS::solGS")->set_project_type($pr_prop);		 
+		
 	     }
+
+	     my $pop_prop = {'project_id' => $pr_id, 
+			     'population type' => 'training population', 
+	     };
+	   
+	     $c->model("solGS::solGS")->set_population_type($pop_prop);
 	     
              my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 
@@ -315,6 +326,14 @@ sub projects_links {
                                     $pr_desc, $pr_location, $pr_year, $match_code
              ];            
 	 }
+	 elsif ($marker_count && !$has_phenotype)	 
+	 {
+	     my $pop_prop = {'project_id' => $pr_id, 
+			     'population type' => 'selection population', 
+	     };
+
+	     $c->model("solGS::solGS")->set_population_type($pop_prop);	      
+	 }  
     }
 
     $c->stash->{projects_pages} = \@projects_pages;
@@ -586,13 +605,11 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 } 
 
 
-sub population : Path('/solgs/population/') Args(1) {
-    my ($self, $c, $pop_id) = @_;
+sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
+    my ($self, $c) = @_;
   
-    #Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?')
-   # my ($pop_id, $action) = @{$c->req->captures};
+    my ($pop_id, $action) = @{$c->req->captures};
 
-    my $action;
     my $uploaded_reference = $c->req->param('uploaded_reference');
     $c->stash->{uploaded_reference} = $uploaded_reference;
 
@@ -2004,7 +2021,7 @@ sub list_of_prediction_pops {
  
     my @pred_pops;
 
-    if(@pred_pops_ids) {
+    if (@pred_pops_ids) {
 
         foreach my $prediction_pop_id (@pred_pops_ids)
         {
@@ -3085,12 +3102,19 @@ sub trait_phenotype_stat {
     $self->trait_phenodata_file($c);
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
     my $trait_data = $self->convert_to_arrayref_of_arrays($c, $trait_pheno_file);
-
+  
     my @pheno_data;   
     foreach (@$trait_data) 
     {
         unless (!$_->[0]) {
-            push @pheno_data, $_->[1]; 
+	 
+	    my $d = $_->[1];
+	    chomp($d);
+
+	    if ($d =~ /\d+/) 
+	    {
+		push @pheno_data, $d;
+	    } 
         }
     }
 
@@ -3101,8 +3125,11 @@ sub trait_phenotype_stat {
     my $max  = $stat->max; 
     my $mean = $stat->mean;
     my $std  = $stat->standard_deviation;
-    my $cnt  = $stat->count;
+    my $cnt  = scalar(@$trait_data);
     my $cv   = ($std / $mean) * 100;
+    my $na   = scalar(@$trait_data) - scalar(@pheno_data);
+
+    if ($na == 0) { $na = '--'; }
 
     my $round = Math::Round::Var->new(0.01);
     $std  = $round->round($std);
@@ -3110,10 +3137,11 @@ sub trait_phenotype_stat {
     $cv   = $round->round($cv);
     $cv   = $cv . '%';
 
-    my @desc_stat =  ( [ 'No. of genotypes', $cnt ], 
+    my @desc_stat =  ( [ 'Total no. of genotypes', $cnt ],
+		       [ 'Genotypes missing data', $na ],
                        [ 'Minimum', $min ], 
                        [ 'Maximum', $max ],
-                       [ 'Mean', $mean ],
+                       [ 'Arithmetic mean', $mean ],
                        [ 'Standard deviation', $std ],
                        [ 'Coefficient of variation', $cv ]
         );
@@ -4060,18 +4088,19 @@ sub run_r_script {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
    
-    my $solgs_dir       = $c->config->{solgs_dir};
-    my $solgs_cache     = catdir($solgs_dir, 'cache'); 
-    my $solgs_tempfiles = catdir($solgs_dir, 'tempfiles');
-    my $solgs_prediction_upload = catdir($solgs_dir, 'tempfiles', 'prediction_upload');
-    my $correlation_dir = catdir($c->config->{cluster_shared_tempdir}, 'correlation', 'cache');
-
-    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_prediction_upload, $correlation_dir], 0, 0755);
+    my $tmp_dir         = $c->config->{cluster_shared_tempdir};
+    my $solgs_dir       = catdir($tmp_dir, "solgs");
+    my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
+    my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
+    my $correlation_dir = catdir($tmp_dir, 'correlation', 'cache');   
+    my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
+    
+    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, $correlation_dir], 0, 0755);
    
     $c->stash(solgs_dir                   => $solgs_dir, 
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
-              solgs_prediction_upload_dir => $solgs_prediction_upload,
+              solgs_prediction_upload_dir => $solgs_upload,
               correlation_dir             => $correlation_dir,
         );
 

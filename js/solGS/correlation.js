@@ -195,15 +195,20 @@ function phenotypicCorrelation () {
 
 function runPhenoCorrelationAnalysis () {
     var population = getPopulationDetails();
-    
+    var popId     = population.population_id;
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'population_id': population.population_id },
+        data: {'population_id': popId },
         url: '/phenotypic/correlation/analysis/output',
         success: function(response) {
             if (response.status == 'success') {
                 plotCorrelation(response.data);
+		
+		var corrDownload = "<a href=\"/download/phenotypic/correlation/population/" 
+		                    + popId + "\">Download correlation coefficients</a>";
+
+		jQuery("#correlation_canvas").append("<br />[ " + corrDownload + " ]").show();
                 jQuery("#correlation_message").empty();
             } else {
                 jQuery("#correlation_message")

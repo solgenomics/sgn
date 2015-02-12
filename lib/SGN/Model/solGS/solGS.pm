@@ -401,15 +401,66 @@ sub set_project_type {
 			   type_id      => $cvterm_id,
 			   value        => $prop->{'project_type'},
 	});
-
-
 }
+
+
+
+
 
 sub get_project_type {
     my ($self, $pr_id) = @_;
    
     my $pr_rs = $self->schema->resultset("Cv::Cvterm")
         ->search({'project_id' => $pr_id, 'me.name' => 'genomic selection' })
+        ->search_related('projectprops');
+
+    my $pr_type;
+    if($pr_rs->next) 
+    {
+	$pr_type = $pr_rs->first()->value;
+    }
+    
+    return $pr_type;
+}
+
+
+sub set_population_type {
+    my ($self, $prop) = @_;
+   
+    my $cv_id= $self->schema->resultset("Cv::Cv")
+	->find_or_create({ 'name' => 'project_property'})
+	->cv_id;
+  
+    my $db_id = $self->schema->resultset("General::Db")
+	->find_or_new({ 'name' => 'null'})
+	->db_id;
+ 
+    my $dbxref_id = $self->schema->resultset("General::Dbxref")
+	->find_or_create({'accession' => 'population type', 
+			  'db_id'     => $db_id
+			 })
+	->dbxref_id;
+ 
+    my $cvterm_id = $self->schema->resultset("Cv::Cvterm")
+	->find_or_create({ name      => 'population type',
+			   cv_id     => $cv_id,
+			   dbxref_id => $dbxref_id,
+			 })
+	->cvterm_id;
+
+    my $project_rs = $self->schema->resultset("Project::Projectprop")
+	->find_or_create({ project_id   => $prop->{'project_id'},
+			   type_id      => $cvterm_id,
+			   value        => $prop->{'population type'},
+	});
+}
+
+
+sub get_population_type {
+    my ($self, $pr_id) = @_;
+   
+    my $pr_rs = $self->schema->resultset("Cv::Cvterm")
+        ->search({'project_id' => $pr_id, 'me.name' => 'population type' })
         ->search_related('projectprops');
 
     my $pr_type;
@@ -780,7 +831,7 @@ sub stock_genotypes_rs {
 
 sub genotyping_trials_rs {
     my $self = shift;
-  
+ 
     my $geno_pr_rs = $self->schema->resultset("Project::Project")
         ->search({"genotypeprops.value" =>  {"!=",  undef}, 
 		  'type.name' =>{'ilike' => 'snp genotyping'}
@@ -800,7 +851,9 @@ sub genotyping_trials_rs {
                          {                              
                              select   => [ qw / me.project_id me.name / ], 
                              as       => [ qw / project_id project_name  / ],
-                             distinct => [ qw / me.project_id/ ]
+                             distinct => [ qw / me.project_id/ ],
+			     order_by => 'CASE WHEN me.name ~ \'^[0-9]+\' THEN 1 ELSE 0 END, me.name',
+			     
                          }
         );
 
@@ -950,37 +1003,74 @@ sub prediction_pops {
   {         
       my $project_id = $row->get_column('project_id'); 
       if ($project_id && $training_pop_id != $project_id) 
-      {         
-          my $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
-          my $stocks_count = $stock_genotype_rs->count;         
-          my $first_geno   =  $stock_genotype_rs->single;
-          my $obj_name     = $first_geno->get_column('stock_name');
+      {  
+	  my $pop_type = $self->get_population_type($project_id);
+
+	  if ($pop_type !~ /training population/) 
+	  {
+	      my $pred_marker_cnt =  $self->get_project_genotypeprop($project_id);
+	      $pred_marker_cnt = $pred_marker_cnt->{'marker_count'};
+	     
+	      my $potential_selection;
+	     
+	      if ($pred_marker_cnt)  
+	      {
+	
+		  if ( scalar(@tr_pop_markers) / $pred_marker_cnt  > 0.5  )
+		  {
+		      $potential_selection = 'yes'; 
+		  }
+
+	      }
+	      
+	      if (!$pred_marker_cnt || ($pred_marker_cnt && $potential_selection))
+	      {
+		  my $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
+		  my $stocks_count = $stock_genotype_rs->count;         
+		  my $first_geno   =  $stock_genotype_rs->single;
+		  my $obj_name     = $first_geno->get_column('stock_name');
         
-         if ($stocks_count > 2 &&  $first_geno)             
-         {            
-             my $obj_name = $first_geno->get_column('stock_name');
-             my $stock_rs = $self->search_stock($obj_name);     
-             $stock_genotype_rs = $self->individual_stock_genotypes_rs($stock_rs);
+		  if ($stocks_count > 10 &&  $first_geno)             
+		  {  
+		      my $pop_prop = {'project_id' => $project_id, 
+				  'population type' => 'selection population', 
+		      };
+		  
+		      $self->set_population_type($pop_prop);
+
+		      my $obj_name = $first_geno->get_column('stock_name');
+		      my $stock_rs = $self->search_stock($obj_name);     
+		      $stock_genotype_rs = $self->individual_stock_genotypes_rs($stock_rs);
             
-             my $markers   = $self->extract_project_markers($stock_genotype_rs);
-             if ($markers) 
-             {
-                 my @pred_pop_markers = split(/\t/, $markers);
+		      my $markers   = $self->extract_project_markers($stock_genotype_rs);
+		     
+		      if ($markers) 
+		      {
+			  my @pred_pop_markers = split(/\t/, $markers);
            
-                 print STDERR "\ncheck if prediction populations are genotyped using the same 
+			  unless ($pred_marker_cnt) 
+			  {
+			      my $genoprop = {'project_id' => $project_id, 'marker_count' => scalar(@pred_pop_markers)};
+			      $self->set_project_genotypeprop($genoprop);
+			  }
+
+
+			  print STDERR "\ncheck if prediction populations are genotyped using the same 
                                  set of markers as for the training population : " 
                                  . scalar(@pred_pop_markers) .  ' vs ' . scalar(@tr_pop_markers) . "\n";
 
-                 my $common_markers = scalar(intersect(@pred_pop_markers, @tr_pop_markers));                
-                 my $similarity = $common_markers / scalar(@tr_pop_markers);
+			  my $common_markers = scalar(intersect(@pred_pop_markers, @tr_pop_markers));                
+			  my $similarity = $common_markers / scalar(@tr_pop_markers);
                       
-                  if ($similarity > 0.5 ) 
-                  {                  
-                      $cnt++;
-                      push @sample_pred_projects, $project_id;     
-                  }
-              }
-          }
+			  if ($similarity > 0.5 ) 
+			  {                  
+			      $cnt++;
+			      push @sample_pred_projects, $project_id;     
+			  }
+		      }
+		  }
+	      }
+	  }
       }
        
       last if $cnt == 5;
