@@ -359,7 +359,7 @@ sub run_genetic_correlation_analysis {
 }
 
 
-sub download_correlation : Path('/download/correlation/population') Args(1) {
+sub download_phenotypic_correlation : Path('/download/phenotypic/correlation/population') Args(1) {
     my ($self, $c, $id) = @_;
     
     $self->create_correlation_dir($c);
