@@ -18,6 +18,7 @@ load_genotypes.pl - loading genotypes into cxgn databases, based on the load_cas
  -g population name (e.g., NaCRRI training population) Mandatory option
  -x delete old genotypes for accessions that have new genotypes
  -a add accessions that are not in the database
+ -s sort markers according to custom sort order (see script source)
  -t Test run . Rolling back at the end.
 
 =head1 DESCRIPTION
@@ -46,9 +47,9 @@ use CXGN::DB::InsertDBH;
 use CXGN::Genotype;
 use CXGN::GenotypeIO;
 
-our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_y, $opt_g, $opt_a, $opt_x);
+our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_y, $opt_g, $opt_a, $opt_x, $opt_s);
 
-getopts('H:i:tD:p:y:g:ax');
+getopts('H:i:tD:p:y:g:axs');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
@@ -284,7 +285,36 @@ my $coderef = sub {
 	    }
 	}
 		
-	foreach my $marker_name (@{$gtio->markers()}) {
+	my @sorted_markers = sort $sort @{$gtio->markers()};
+
+	my $sort = sub { 
+	    my $a = shift;
+	    my $b = shift;
+	    
+	    my $a_chr;
+	    my $a_coord;
+	    my $b_chr;
+	    my $b_coord;
+	    
+	    if ($a =~ /[A-Za-z]+(\d+)[_-](\d+)/) {
+		$a_chr = $1;
+		$a_coord = $2;
+	    }
+
+	    if ($b =~ /[A-Za-z]+(\d+)[_-](\d+)/) { 
+		$b_chr = $1;
+		$b_coord = $2;
+	    }
+	    
+	    if ($a_chr == $b_chr) { 
+		return $a_coord <=> $b_coord;
+	    }
+	    else { 
+		return $a_chr <=> $b_chr;
+	    }
+	}
+
+	foreach my $marker_name (@sorted_markers) {
 	    #print STDERR "markername: $marker_name\n";
 	    #print STDERR Dumper($gt->rawscores);
             my $base_calls = $gt->rawscores->{$marker_name}; #($marker_name, $accession_name);
@@ -298,7 +328,7 @@ my $coderef = sub {
         }
 
         my $json_string = $json_obj->encode(\%json);
-	#print STDERR Dumper($json_string);
+	print STDERR Dumper($json_string);
         print "Storing new genotype for stock " . $cassava_stock->name . " \n\n";
         my $genotype = $schema->resultset("Genetic::Genotype")->find_or_create(
             {
