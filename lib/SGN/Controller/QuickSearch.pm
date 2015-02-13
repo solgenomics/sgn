@@ -96,6 +96,8 @@ sub quick_search: Path('/search/quick') {
     # use either 'term' or 'q' as the search term
     my ($term) = grep defined, @{ $c->req->parameters }{'term','q'};
 
+    $term =~ s/^\s*|\s*$//g;
+
     defined $term && length $term
         or $c->throw_client_error( public_message => 'Must provide a search term' );
 
