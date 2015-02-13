@@ -98,12 +98,12 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </&>
 
 </td></tr>
-<tr><td>
+<tr><td valign="top" >
 
 <&| /page/info_section.mas, title=>"Year(s)", subtitle => '[change]' &>
 <% join ", ", @years %>
 </&>
-</td><td width="365" >
+</td><td valign="top" width="365" >
 <&| /page/info_section.mas, title=>"Location(s)", subtitle=>'[change]' &>
 
 <div id="trial_location">
