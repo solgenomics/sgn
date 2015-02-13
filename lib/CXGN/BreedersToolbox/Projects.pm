@@ -112,7 +112,7 @@ sub get_trials_by_breeding_program {
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
     my $cross_cvterm_id = $self->get_cross_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
-    my $genotyping_trial_cvterm_id = $self->_get_genotyping_trial_cvterm_id();
+    my $genotyping_trial_cvterm_id = $self->_get_design_trial_cvterm_id();
 
     my %projects_that_are_crosses;
     my %project_year;
@@ -136,8 +136,8 @@ sub get_trials_by_breeding_program {
 	if ($prop == $project_year_cvterm_id) {
 	  $project_year{$id} = $propvalue;
 	}
-	if ($prop == $genotyping_trial_cvterm_id) { 
-	    print STDERR "$id IS BREEDING TRIAL\n";
+	if ($propvalue eq "genotyping_plate") { 
+	    print STDERR "$id IS GENOTYPING TRIAL\n";
 	    $projects_that_are_genotyping_trials{$id} =1;
 	}
       }
@@ -147,7 +147,8 @@ sub get_trials_by_breeding_program {
     my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
 
     foreach my $id_key (@sorted_by_year_keys) {
-	if (!$projects_that_are_crosses{$id_key} || !$projects_that_are_genotyping_trials{$id_key}) {
+	if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key}) {
+	    print STDERR "$id_key RETAINED.\n";
 	    push @$trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
 	}
     }
@@ -162,7 +163,7 @@ sub get_genotyping_trials_by_breeding_program {
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
     my $cross_cvterm_id = $self->get_cross_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
-    my $genotyping_trial_cvterm_id = $self->_get_genotyping_trial_cvterm_id();
+    my $genotyping_trial_cvterm_id = $self->_get_design_trial_cvterm_id();
 
     my %projects_that_are_crosses;
     my %projects_that_are_genotyping_trials;
@@ -171,7 +172,6 @@ sub get_genotyping_trials_by_breeding_program {
     my %project_description;
 
     while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) {
-	print STDERR "PROP: $prop, $propvalue\n";
 	if ($name) {
 	    $project_name{$id} = $name;
 	}
@@ -186,7 +186,7 @@ sub get_genotyping_trials_by_breeding_program {
 		$project_year{$id} = $propvalue;
 	    }
 	    
-	    if ($prop == $genotyping_trial_cvterm_id) {
+	    if ($propvalue eq "genotyping_plate") {
 		$projects_that_are_genotyping_trials{$id} = 1;
 	    }
 	}
@@ -521,14 +521,12 @@ sub get_cross_cvterm_id {
     return $cross_cvterm->cvterm_id();
 }
 
-sub _get_genotyping_trial_cvterm_id {
+sub _get_design_trial_cvterm_id {
     my $self = shift;
      my $cvterm = $self->schema->resultset("Cv::Cvterm")
-      ->create_with({
-		     name   => 'genotyping layout',
-		     cv     => 'experiment type',
-		     db     => 'null',
-		     dbxref => 'genotyping layout',
+      ->find({
+		     name   => 'design',
+
 		    });
     return $cvterm->cvterm_id();
 }
