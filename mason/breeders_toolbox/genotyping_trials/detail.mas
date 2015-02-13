@@ -1,0 +1,80 @@
+
+<%args>
+$trial_id
+$breeding_program
+$trial_name
+@location_data
+@phenotype_data
+@years
+@plot_data
+@accession_names
+@control_names
+@plot_names
+$design_type
+$number_of_blocks
+$number_of_replicates
+$trial_description
+$design
+$design_layout_view
+$user_can_modify => undef
+</%args>
+
+<& /page/page_title.mas, title=>"Genotyping trial $trial_name" &>
+
+<table><tr><td width="400px" valign="top" >
+
+<&| /page/info_section.mas, title=>"Breeding program" &>
+
+<div id="breeding_programs">
+  [loading...]
+</div>
+
+</&>
+
+</td><td width="400px" valign="top" >
+
+<&| /page/info_section.mas, title=>"Trial type", subtitle=>"[<a id=\"edit_trial_type\" >change</a>]" &>
+  <div id="trial_type">
+    Genotyping trial
+  </div>
+</&>
+
+</td></tr></table>
+
+
+<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1,  subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/layout/download/$trial_id\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/layout/download/$trial_id?format=csv\">csv</a>] | [<a id=\"delete_layout_data_by_trial_id\">Delete layout</a>]" &>
+
+%print "Design: $design_type <br /><br />";
+%print "Number of blocks: $number_of_blocks <br />";
+%print "Number of replicates: $number_of_replicates <br />";
+
+<br /><br />
+
+<&| /page/info_section.mas, title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1  &>
+% foreach my $accession (@accession_names) { 
+%  print "$accession<br />\n";
+%}
+</&>
+
+<&| /page/info_section.mas, title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+% foreach my $control (@control_names) { 
+%  print "$control <br />\n";
+%}
+
+</&>
+
+<&| /page/info_section.mas, title=>"Tissue samples",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+% foreach my $plot (@plot_names) { 
+%  print "$plot <br />\n";
+%}
+
+
+</&>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Plate layout", collapsible=>1 &>
+
+  <& /breeders_toolbox/genotyping_trials/layout.mas, design => $design &>
+
+</&>
