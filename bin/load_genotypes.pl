@@ -47,14 +47,15 @@ use CXGN::DB::InsertDBH;
 use CXGN::Genotype;
 use CXGN::GenotypeIO;
 
-our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_y, $opt_g, $opt_a, $opt_x, $opt_s);
+our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_y, $opt_g, $opt_a, $opt_x, $opt_s, $opt_m);
 
-getopts('H:i:tD:p:y:g:axs');
+getopts('H:i:tD:p:y:g:axsm:');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
 my $file = $opt_i;
 my $population_name = $opt_g;
+my $protocol_name = $opt_m || "GBS ApeKI Cassava genome v5";
 
 print STDERR "Input file: $file\n";
 print STDERR "DB host: $dbhost\n";
@@ -130,6 +131,12 @@ my $geno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
       dbxref => 'genotyping experiment',
     });
 
+my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_create( 
+    { name => $protocol_name,
+      type_id => $geno_cvterm->cvterm_id
+    });
+
+my $protocol_id = $protocol_row->nd_protocol_id();
 
 # find the cvterm for the SNP calling experiment
 my $snp_genotype = $schema->resultset('Cv::Cvterm')->create_with(
@@ -164,6 +171,7 @@ my $organism_id = $organism->organism_id();
 #new spreadsheet,
 #my $spreadsheet=CXGN::Tools::File::Spreadsheet->new($file);
 
+print STDERR "Reading genotype information...\n";
 my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "dosage_transposed" });
 
 #my @rows = $spreadsheet->row_labels();
@@ -174,21 +182,26 @@ my $json_obj = JSON::Any->new;
 my $coderef = sub {
     while (my $gt = $gtio->next())  {
 	my $accession_name = $gt->name();
-	if ($accession_name eq "marker") {next;}
+	
+	my $db_name = $accession_name;
+
+	$db_name =~ s/(.*?)\.(.*)/$1/;
+	
+	if ($accession_name eq "marker" || $accession_name =~ /BLANK/i ) {next;}
 
 	#print Dumper($gt->rawscores);
 
-        print "Looking at accession $accession_name \n";
+        print STDERR "Looking for accession $accession_name ($db_name)\n";
         my %json;
         my $cassava_stock;
         my $stock_name;
         my $stock_rs = $schema->resultset("Stock::Stock")->search(
             {
                 -or => [
-                     'lower(me.uniquename)' => { like => lc($accession_name) },
+                     'lower(me.uniquename)' => { like => lc($db_name) },
                      -and => [
                          'lower(type.name)'       => { like => '%synonym%' },
-                         'lower(stockprops.value)' => { like => lc($accession_name) },
+                         'lower(stockprops.value)' => { like => lc($db_name) },
                      ],
                     ],
             },
@@ -201,26 +214,30 @@ my $coderef = sub {
             while ( my $st = $stock_rs->next) {
                 print STDERR "stock name = " . $st->uniquename . "\n";
             }
-            die ;
+	    next;
+            # die;
         } elsif ($stock_rs->count == 1) {
-            $cassava_stock = $stock_rs->first;
-            $stock_name = $cassava_stock->name;
+	    print STDERR "Accession $db_name found !\n";
+            $cassava_stock = $stock_rs->first;	    
+            $stock_name = $cassava_stock->uniquename;
         } else {
 	    
+	    print STDERR "The accession $db_name was not found in the database. Use option -a to add automatically.\n";
             #store the plant accession in the stock table if $opt_a
 	    #
 	    if ($opt_a) { 
 
 		$cassava_stock = $schema->resultset("Stock::Stock")->create(
 		    { organism_id => $organism_id,
-		      name       => $accession_name,
-		      uniquename => $accession_name,
+		      name       => $db_name,
+		      uniquename => $db_name,
 		      type_id     => $accession_cvterm->cvterm_id,
 		    } );
 		
 	    }
 	    else { 
-		print STDERR "WARNING! Accession $accession_name not found.\n";
+		print STDERR "WARNING! Accession $accession_name (using: $db_name) not found.\n";
+		next();
 	    }
         }
 	my $population_stock = $schema->resultset("Stock::Stock")->find_or_create(
@@ -251,6 +268,15 @@ my $coderef = sub {
                 nd_geolocation_id => $geolocation->nd_geolocation_id(),
                 type_id => $geno_cvterm->cvterm_id(),
             } );
+
+	print STDERR "Linking to protocol...\n";
+	my $nd_experiment_protocol = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->create( 
+	    {
+		nd_experiment_id => $experiment->nd_experiment_id(),
+		nd_protocol_id => $protocol_id,
+	    });
+	
+
         #link to the project
         $experiment->find_or_create_related('nd_experiment_projects', {
             project_id => $project->project_id()
@@ -260,14 +286,12 @@ my $coderef = sub {
             stock_id => $cassava_stock->stock_id(),
             type_id  =>  $geno_cvterm->cvterm_id(),
                                             });
-	
-	print STDERR "OPT_X: $opt_x\n";
 	if ($opt_x) { 
 	    print STDERR "OPTION -x: REMOVING OLD GENOTYPE... \n";
 	    my $has_genotype_rs =  $schema->resultset('NaturalDiversity::NdExperimentStock')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops')->search( { 'me.stock_id' => $cassava_stock->stock_id() }); 
 
 	    while (my $has_genotype = $has_genotype_rs->next()) { 
-		print STDERR "Note: -x option: removing already present genotype for $accession_name.\n";
+		print STDERR "Note: -x option: removing already present genotype for $db_name.\n";
 		my $genotypeprop_rs = $schema->resultset('Genetic::Genotypeprop')->search(  
 		    { genotype_id => $has_genotype->genotype_id() } );
 		while (my $genotypeprop = $genotypeprop_rs->next()) { 
@@ -285,39 +309,12 @@ my $coderef = sub {
 	    }
 	}
 		
-	my @sorted_markers = sort $sort @{$gtio->markers()};
-
-	my $sort = sub { 
-	    my $a = shift;
-	    my $b = shift;
-	    
-	    my $a_chr;
-	    my $a_coord;
-	    my $b_chr;
-	    my $b_coord;
-	    
-	    if ($a =~ /[A-Za-z]+(\d+)[_-](\d+)/) {
-		$a_chr = $1;
-		$a_coord = $2;
-	    }
-
-	    if ($b =~ /[A-Za-z]+(\d+)[_-](\d+)/) { 
-		$b_chr = $1;
-		$b_coord = $2;
-	    }
-	    
-	    if ($a_chr == $b_chr) { 
-		return $a_coord <=> $b_coord;
-	    }
-	    else { 
-		return $a_chr <=> $b_chr;
-	    }
-	}
+	my @sorted_markers = sort bychr @{$gtio->markers()};
 
 	foreach my $marker_name (@sorted_markers) {
 	    #print STDERR "markername: $marker_name\n";
 	    #print STDERR Dumper($gt->rawscores);
-            my $base_calls = $gt->rawscores->{$marker_name}; #($marker_name, $accession_name);
+            my $base_calls = $gt->rawscores->{$marker_name}; #($marker_namefg, $accession_name);
 	    #print STDERR "BASE CALL: $base_calls\n";
 	    $base_calls =~ s/\s+//g;
 	    if ($base_calls !~/[0-9.]+|NA/i) { 
@@ -328,7 +325,7 @@ my $coderef = sub {
         }
 
         my $json_string = $json_obj->encode(\%json);
-	print STDERR Dumper($json_string);
+	#print STDERR Dumper($json_string);
         print "Storing new genotype for stock " . $cassava_stock->name . " \n\n";
         my $genotype = $schema->resultset("Genetic::Genotype")->find_or_create(
             {
@@ -357,3 +354,29 @@ try {
     die "An error occured! Rolling back  and reseting database sequences!" . $_ . "\n";
 };
 
+sub bychr { 
+    my $a = shift;
+    my $b = shift;
+    
+    my $a_chr;
+    my $a_coord;
+    my $b_chr;
+    my $b_coord;
+    
+    if ($a =~ /^[A-Za-z]+(\d+)[_-](\d+)$/) {
+	$a_chr = $1;
+	$a_coord = $2;
+    }
+    
+    if ($b =~ /[A-Za-z]+(\d+)[_-](\d+)/) { 
+	$b_chr = $1;
+	$b_coord = $2;
+    }
+    
+    if ($a_chr eq $b_chr) { 
+	return $a_coord <=> $b_coord;
+    }
+    else { 
+	return $a_chr <=> $b_chr;
+    }
+}
