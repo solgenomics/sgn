@@ -28,6 +28,22 @@ has 'bcs_schema' => ( isa => "Ref",
     );
 
 
+
+sub BUILD { 
+    my $self = shift;
+    
+    my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $self->get_trial_id() });
+    
+    if ($row){ 
+	print STDERR "Found row for ".$self->get_trial_id()." ".$row->name()."\n";
+    }
+
+    if (!$row) { 
+	die "The trial ".$self->get_trial_id()." does not exist";
+    }
+}
+
+
 =head2 trial_id()
 
 accessor for the trial_id. Needs to be set when calling the constructor.
@@ -561,6 +577,28 @@ sub _delete_field_layout_experiment {
 
     #return { success => $plots_deleted };
     return { success => 1 };
+}
+
+sub delete_project_entry { 
+    my $self = shift;
+    
+    if ($self->phenotype_count() > 0) {
+	print STDERR "Cannot delete trial with associated phenotypes.\n";
+	return;
+    }
+    if ($self->get_layout()) { 
+	print STDERR "Cannot delete trial with associated layout\n";
+	return;
+    }
+
+    eval { 
+	my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
+	$row->delete();
+    };
+    if ($@) { 
+	print STDERR "An error occurred during deletion: $@\n";
+	return $@;
+    }
 }
 
 sub phenotype_count { 
