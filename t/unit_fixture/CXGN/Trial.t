@@ -38,8 +38,6 @@ $td->calculate_design();
 
 my $trial_design = $td->get_design();
 
-print STDERR Dumper($trial_design);
-
 my $breeding_program_row = $f->bcs_schema->resultset("Project::Project")->find( { name => 'test' });
 
 my $new_trial = CXGN::Trial::TrialCreate->new(
@@ -59,8 +57,6 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
     });
 
 my $message = $new_trial->save_trial();
-
-print STDERR "Error saving trial: $message\n" if ($message);
 
 my $after_design_creation_count = $stock_count_rs->count();
 
@@ -117,8 +113,6 @@ my %metadata = ( operator => 'johndoe', date => '20141223' );
 $lp->store($c, $plotlist_ref, $traitlist_ref, \%plot_trait_value, \%metadata);
 
 my $total_phenotypes = $trial->total_phenotypes();
-
-print STDERR "TOTAL phenotypes = $total_phenotypes\n";
 
 my $trial_phenotype_count = $trial->phenotype_count();
 
@@ -178,9 +172,7 @@ is_deeply($trial->get_location(), [ 23, 'test_location' ], "set location");
 #
 is($trial->get_project_type(), undef, "get project type");
 
-print STDERR join ",", CXGN::Trial::get_all_project_types($f->bcs_schema);
 my $error = $trial->associate_project_type("clonal");
-print STDERR "ERROR: $error\n";
 
 is($trial->get_project_type()->[1], "clonal", "associate project type");
 
@@ -193,8 +185,6 @@ my $deleted_trial;
 eval { 
      $deleted_trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema, trial_id=>$trial_id });
 };
-
-print STDERR "ERROR AFTER DELETION: $@\n";
 
 ok($@, "deleted trial id");
 
