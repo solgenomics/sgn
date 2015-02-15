@@ -26,7 +26,7 @@ use CXGN::Trial;
 
 our ($opt_H, $opt_D, $opt_i);
 
-getopts('H:i:D');
+getopts('H:i:D:');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
