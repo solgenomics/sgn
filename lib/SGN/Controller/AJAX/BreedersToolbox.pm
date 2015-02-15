@@ -515,16 +515,20 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
 	is_genotyping => 1,
     });
     
+    my %message;
     eval { 
-	my %error = $ct->save_trial();
-	if (%error) { 
-	    $c->stash->{rest} = \%error;
+	%message = $ct->save_trial();
+	if ($message{error}) { 
+	    $c->stash->{rest} = $message{error};
 	}
     };
     if ($@) { 
 	$c->stash->{rest} = { error => "Error saving the trial. $@" };
     }
-    $c->stash->{rest} = { message => "Successfully stored the trial." };
+    $c->stash->{rest} = { 
+	message => "Successfully stored the trial.",
+	trial_id => $message{trial_id},
+    };
 }
 
 1;
