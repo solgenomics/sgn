@@ -317,6 +317,8 @@ sub save_trial {
 
   $program->associate_breeding_program_with_trial($self->get_breeding_program_id, $project->project_id);
 
+  return ( trial_id => $project->project_id );
+
 }
 
 
