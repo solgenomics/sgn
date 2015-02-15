@@ -29,8 +29,7 @@ my $td = CXGN::Trial::TrialDesign->new(
 	number_of_reps => $number_of_reps,
 	block_size => 2,
 	design_type => 'RCBD',
-	number_of_blocks => 3,
-	
+	number_of_blocks => 3,	
     });
 
 my $number_of_plots = $number_of_reps * scalar(@$stock_list);
@@ -61,7 +60,7 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
 
 my $message = $new_trial->save_trial();
 
-print STDERR "Error saving trial: $message->{error}\n" if (exists($message->{error}));
+print STDERR "Error saving trial: $message\n" if ($message);
 
 my $after_design_creation_count = $stock_count_rs->count();
 
@@ -187,6 +186,18 @@ is($trial->get_project_type()->[1], "clonal", "associate project type");
 
 my $error = $trial->dissociate_project_type();
 is($trial->get_project_type(), undef, "dissociate project type");
+
+$trial->delete_project_entry();
+
+my $deleted_trial;
+eval { 
+     $deleted_trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema, trial_id=>$trial_id });
+};
+
+print STDERR "ERROR AFTER DELETION: $@\n";
+
+ok($@, "deleted trial id");
+
 
 done_testing();
 
