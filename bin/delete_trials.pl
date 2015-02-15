@@ -21,6 +21,7 @@ use strict;
 use Getopt::Std;
 use Bio::Chado::Schema;
 use CXGN::Metadata::Schema;
+use CXGN::Phenome::Schema;
 use CXGN::DB::InsertDBH;
 use CXGN::Trial;
 
@@ -35,14 +36,14 @@ my $trial_id = $opt_i;
 my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 				      dbname=>$dbname,
 				      dbargs => {AutoCommit => 1,
-						 RaiseError => 1}
+				      RaiseError => 1}
 				    }
     );
 
 print STDERR "Connecting to database...\n";
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 my $metadata_schema = CXGN::Metadata::Schema->connect( sub { $dbh->get_actual_dbh() });
-
+my $phenome_schema = CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh() });
 print STDERR "Retrieving trial information...\n";
 my $t = CXGN::Trial->new( { bcs_schema => $schema , trial_id => $trial_id } );
 
@@ -50,13 +51,13 @@ print $t->get_name().", ".$t->get_description().". Delete? ";
 my $answer = <>;
 if ($answer =~ m/^y/i) { 
     print STDERR "Delete metadata...\n";
-    
-    print STDERR "Deleting phenotypes...\n";
-    $t->delete_phenotype_data();
-    print STDERR "Deleting layout...\n";
-    $t->delete_field_layout();
-    print STDERR "Delete project entry...\n";
-    $t->delete_project_entry();
+    $t->delete_metadata($metadata_schema, $phenome_schema);
+     print STDERR "Deleting phenotypes...\n";
+     $t->delete_phenotype_data();
+     print STDERR "Deleting layout...\n";
+     $t->delete_field_layout();
+     print STDERR "Delete project entry...\n";
+     $t->delete_project_entry();
 }
 
 print STDERR "Done.\n";
