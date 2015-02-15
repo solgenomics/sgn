@@ -66,7 +66,6 @@ jQuery(document).ready(function ($) {
 	var name = $('#genotyping_trial_name').val();
 	var list_id = $('#accession_select_box_list_select').val();
 	
-	alert("breeding program "+breeding_program+" year: "+year+" location: "+location);
 	if (name == '') { 
 	    alert("A name is required and it should be unique in the database. Please try again.");
 	    return;
@@ -82,7 +81,7 @@ jQuery(document).ready(function ($) {
 		else { 
 		    alert(response.message);
 		    $('#genotyping_trial_dialog').dialog("close");
-		    window.location.href = "";
+		    window.location.href = "/breeders/trial/"+response.trial_id;
 		}
 	    },
 	    error: function(response) { 
@@ -92,15 +91,12 @@ jQuery(document).ready(function ($) {
     }
 
     jQuery('#genotyping_trial_dialog').bind("dialogopen", function displayMenu() { 
-	alert("Opened it!");
 	var l = new CXGN.List();
 	var html = l.listSelect('accession_select_box', [ 'accessions', 'plots' ]);
-	alert(html);
 	$('#accession_select_box_span').html(html);
     });
     
     function open_genotyping_trial_dialog () {
-	alert ("will create a genotyping trial");
 	$('#genotyping_trial_dialog').dialog("open");
     }
 
