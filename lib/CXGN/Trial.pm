@@ -457,17 +457,25 @@ sub delete_metadata {
 
     my $trial_id = $self->get_trial_id();
 
+    print STDERR "Deleting metadata for trial $trial_id...\n";
+
     # first, deal with entries in the md_metadata table, which may reference nd_experiment (through linking table)
+    #
     my $q = "SELECT distinct(metadata_id) FROM nd_experiment_project JOIN phenome.nd_experiment_md_files using(nd_experiment_id) JOIN metadata.md_files using(file_id) JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
     my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($trial_id);
 
     while (my ($md_id) = $h->fetchrow_array()) { 
+	print STDERR "Associated metadata id: $md_id\n";
 	my $mdmd_row = $metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
 	if ($mdmd_row) { 
+	    print STDERR "Obsoleting $md_id...\n";
+
 	    $mdmd_row -> update( { obsolete => 1 });
 	}
     }
+
+    print STDERR "Deleting the entries in the linking table...\n";
 
     # delete the entries from the linking table...
     $q = "SELECT distinct(file_id) FROM nd_experiment_project JOIN phenome.nd_experiment_md_files using(nd_experiment_id) JOIN metadata.md_files using(file_id) JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
@@ -475,9 +483,11 @@ sub delete_metadata {
     $h->execute($trial_id);
     
     while (my ($file_id) = $h->fetchrow_array()) { 
+	print STDERR "trying to delete association for file with id $file_id...\n";
 	my $ndemdf_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search( { file_id=>$file_id });
-
+	print STDERR "Deleting md_files linking table entries...\n";
 	foreach my $row ($ndemdf_rs->all()) { 
+	    print STDERR "DELETING !!!!\n";
 	    $row->delete();
 	}
     }
