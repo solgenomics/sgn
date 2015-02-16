@@ -358,20 +358,20 @@ try {
 };
 
 sub bychr { 
-    my $a = shift;
-    my $b = shift;
+my @a = split "\t", $a;
+    my @b = split "\t", $b;
     
     my $a_chr;
     my $a_coord;
     my $b_chr;
     my $b_coord;
     
-    if ($a =~ /^[A-Za-z]+(\d+)[_-](\d+)$/) {
+    if ($a[1] =~ /^[A-Za-z]+(\d+)[_-](\d+)$/) {
 	$a_chr = $1;
 	$a_coord = $2;
     }
     
-    if ($b =~ /[A-Za-z]+(\d+)[_-](\d+)/) { 
+    if ($b[1] =~ /[A-Za-z]+(\d+)[_-](\d+)/) { 
 	$b_chr = $1;
 	$b_coord = $2;
     }
