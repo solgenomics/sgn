@@ -304,41 +304,61 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
 			#    join => 'type' } );
 		    while (my $prop = $genotypeprop_rs->next) {
 			my $json_text = $prop->value ;
-			print STDERR "Decoding JSON string...\n";
 			my $genotype_values = JSON::Any->decode($json_text);
-			print STDERR "(hash with ".scalar(keys(%$genotype_values))." elements)\n";
 			my $count = 0;
 			my @lines = ();
 			foreach my $marker_name (keys %$genotype_values) {
 			    $count++;
-			    if ($count % 1000 == 0) { print STDERR "Processing $count     \r"; }
+			    #if ($count % 1000 == 0) { print STDERR "Processing $count     \r"; }
 			    my $read = $genotype_values->{$marker_name};
 			    push @lines, (join "\t", ($project, $marker_name, $read))."\n";
-			    #write_file( $filename, { append => 1 } , ($project, "\t" , $marker_name, "\t", $read, "\n") );
 			}
-			write_file($filename, { append=> 1 }, @lines);
-			print STDERR "Done writing file $filename.\n";
+			my @sorted_lines = sort chr_sort @lines;
+			write_file($filename, { append=> 1 }, @sorted_lines);
 		    }
 		}
 	    }
-	    print STDERR "Caching..\n";
             $file_cache->set( $key, $filename, '30 days' );
             $gen_file = $file_cache->get($key);
         }
         my @data;
-	print STDERR "Retrieving data...\n";
+
         foreach ( read_file($filename) ) {
-	    print STDERR $_;
 	    chomp;
             push @data, [ split(/\t/) ];
         }
-	print STDERR "Stashing and forwarding...\n";
         #$c->stash->{'csv'}={ data => \@data};
 	$c->stash->{'csv'} = \@data;
         $c->forward("View::Download::CSV");
     }
 }
 
+sub chr_sort { 
+    my @a = split "\t", $a;
+    my @b = split "\t", $b;
+    
+    my $a_chr;
+    my $a_coord;
+    my $b_chr;
+    my $b_coord;
+    
+    if ($a[1] =~ /^[A-Za-z]+(\d+)[_-](\d+)$/) {
+	$a_chr = $1;
+	$a_coord = $2;
+    }
+    
+    if ($b[1] =~ /[A-Za-z]+(\d+)[_-](\d+)/) { 
+	$b_chr = $1;
+	$b_coord = $2;
+    }
+    
+    if ($a_chr eq $b_chr) { 
+	return $a_coord <=> $b_coord;
+    }
+    else { 
+	return $a_chr <=> $b_chr;
+    }
+}
 
 =head2 get_stock
 
