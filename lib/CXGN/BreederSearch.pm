@@ -231,6 +231,8 @@ sub get_phenotype_info {
     #print STDERR "$accession_sql - $trial_sql - $trait_sql \n\n";
 
     my $rep_type_id = $self->get_stockprop_type_id("replicate");
+    my $block_number_type_id = $self -> get_stockprop_type_id("block");
+
 
     my @where_clause = ();
     if ($accession_sql) { push @where_clause,  "stock.stock_id in ($accession_sql)"; }
@@ -240,15 +242,16 @@ sub get_phenotype_info {
     my $where_clause = "";
    
     if (@where_clause>0) { 
-	$where_clause = "where (stockprop.type_id=$rep_type_id or stockprop.type_id IS NULL) AND  ".(join (" and ", @where_clause));
+	$where_clause = "where (stockprop.type_id=$rep_type_id or stockprop.type_id IS NULL) AND (block_number.type_id=$block_number_type_id or block_number.type_id IS NULL) AND  ".(join (" and ", @where_clause));
     }
 
     my $order_clause = " order by project.name, plot.uniquename";
 
-    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, cvterm.name, stockprop.value AS rep
+    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, cvterm.name, stockprop.value, block_number.value AS rep
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) 
              JOIN stock ON (object_id=stock.stock_id) 
              LEFT JOIN stockprop ON (plot.stock_id=stockprop.stock_id)
+             LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id)
              JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id) 
              JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id) 
              JOIN nd_geolocation USING(nd_geolocation_id) 
@@ -267,8 +270,8 @@ sub get_phenotype_info {
     $h->execute();
 
     my $result = [];
-    while (my ($project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep) = $h->fetchrow_array()) { 
-	push @$result, [ $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep ];
+    while (my ($project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number) = $h->fetchrow_array()) { 
+	push @$result, [ $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number ];
 	
     }
     print STDERR "QUERY returned ".scalar(@$result)." rows.\n";
@@ -336,7 +339,7 @@ sub get_extended_phenotype_info_matrix {
     print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
     foreach my $d (@$data) { 
 
-	my ($project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep) = @$d;
+	my ($project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep, $block_number) = @$d;
 	
 	my $cvterm = $d->[6].":".$d->[7];
 	if (!defined($rep)) { $rep = ""; }
@@ -346,6 +349,7 @@ sub get_extended_phenotype_info_matrix {
 	    trial_name => $project_name,
 	    accession => $stock_name,
 	    location => $location,
+	    block_number => $block_number,
 	    plot => $plot, 
 	    rep => $rep, 
 	    cvterm => $cvterm, 
@@ -355,7 +359,7 @@ sub get_extended_phenotype_info_matrix {
     }
     
     my @info = ();
-    my $line = join "\t", qw | trial_name location accession plot rep |;
+    my $line = join "\t", qw | trial_name location accession plot rep block_number |;
 
     # generate header line
     #
@@ -381,7 +385,7 @@ sub get_extended_phenotype_info_matrix {
 
 
     foreach my $p (@unique_plot_list) { 
-	$line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "trial_name", "location", "accession", "plot", "rep" );
+	$line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "trial_name", "location", "accession", "plot", "rep", "block_number" );
 	print STDERR "Adding line for plot $p\n";
 	foreach my $trait (@sorted_traits) { 
 	    my $tab = $plot_data{$p}->{$trait}; 
