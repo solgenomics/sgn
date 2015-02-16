@@ -281,13 +281,15 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_id = $stock->stock_id;
     my $stock_name = $stock->uniquename;
     if ($stock_id) {
+
+	print STDERR "Exporting genotype file...\n";
         my $tmp_dir = $c->get_conf('basepath') . "/" . $c->get_conf('stock_tempfiles');
         my $file_cache = Cache::File->new( cache_root => $tmp_dir  );
         $file_cache->purge();
         my $key = "stock_" . $stock_id . "_genotype_data";
         my $gen_file = $file_cache->get($key);
         my $filename = $tmp_dir . "/stock_" . $stock_id . "_genotypes.csv";
-        unless ( -e $gen_file) {
+        unless ( $gen_file && -e $gen_file) {
             my $gen_hashref; #hashref of hashes for the phenotype data
             my %cvterms ; #hash for unique cvterms
             ##############
@@ -302,22 +304,37 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
 			#    join => 'type' } );
 		    while (my $prop = $genotypeprop_rs->next) {
 			my $json_text = $prop->value ;
+			print STDERR "Decoding JSON string...\n";
 			my $genotype_values = JSON::Any->decode($json_text);
+			print STDERR "(hash with ".scalar(keys(%$genotype_values))." elements)\n";
+			my $count = 0;
+			my @lines = ();
 			foreach my $marker_name (keys %$genotype_values) {
+			    $count++;
+			    if ($count % 1000 == 0) { print STDERR "Processing $count     \r"; }
 			    my $read = $genotype_values->{$marker_name};
-			    write_file( $filename, { append => 1 } , ($project, "\t" , $marker_name, "\t", $read, "\n") );
+			    push @lines, (join "\t", ($project, $marker_name, $read))."\n";
+			    #write_file( $filename, { append => 1 } , ($project, "\t" , $marker_name, "\t", $read, "\n") );
 			}
+			write_file($filename, { append=> 1 }, @lines);
+			print STDERR "Done writing file $filename.\n";
 		    }
 		}
 	    }
+	    print STDERR "Caching..\n";
             $file_cache->set( $key, $filename, '30 days' );
             $gen_file = $file_cache->get($key);
         }
         my @data;
+	print STDERR "Retrieving data...\n";
         foreach ( read_file($filename) ) {
+	    print STDERR $_;
+	    chomp;
             push @data, [ split(/\t/) ];
         }
-        $c->stash->{'csv'}={ data => \@data};
+	print STDERR "Stashing and forwarding...\n";
+        #$c->stash->{'csv'}={ data => \@data};
+	$c->stash->{'csv'} = \@data;
         $c->forward("View::Download::CSV");
     }
 }
