@@ -308,10 +308,13 @@ my $coderef = sub {
 
 	    }
 	}
-		
-	my @sorted_markers = sort bychr @{$gtio->markers()};
+	
+	my @markers = @{$gtio->markers()};
 
-	foreach my $marker_name (@sorted_markers) {
+	if ($opt_s) { 
+	    @markers = sort bychr @{$gtio->markers()};
+	}
+	foreach my $marker_name (@markers) {
 	    #print STDERR "markername: $marker_name\n";
 	    #print STDERR Dumper($gt->rawscores);
             my $base_calls = $gt->rawscores->{$marker_name}; #($marker_namefg, $accession_name);
