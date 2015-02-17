@@ -304,7 +304,7 @@ sub check : Path('/tools/blast/check') Args(1) {
     my $c = shift;
     my $jobid = shift;
     
-    my $blast_tmp_output = $c->config->{cluster_shared_tempdir}
+    my $blast_tmp_output = $c->config->{cluster_shared_tempdir};
     
     #my $jobid =~ s/\.\.//g; # prevent hacks
     my $job = retrieve($blast_tmp_output."/".$jobid.".job");
@@ -369,7 +369,7 @@ sub get_result : Path('/tools/blast/result') Args(1) {
     my $db_id = $c->req->param('db_id');
     
     my $result_file = $self->jobid_to_file($c, $jobid.".out");
-    my $blast_tmp_output = $c->config->{cluster_shared_tempdir}
+    my $blast_tmp_output = $c->config->{cluster_shared_tempdir};
     
     system("ls $blast_tmp_output 2>&1 >/dev/null");
     # system("ls ".($c->config->{cluster_shared_tempdir})." 2>&1 >/dev/null");
