@@ -18,6 +18,8 @@ $submit->click();
 
 sleep(30);
 
+ok($t->driver->get_page_source()=~m/Query: 1   aattcggcaccagtaaattttcccaaaggtttcaaaaatgaaaatttt/, "find aligned seq");
+
 done_testing();
 
 
