@@ -80,9 +80,9 @@ sub run : Path('/tools/blast/run') Args(0) {
 		}
 	}
 	
-  my $seq_count = 1;
-  my $blast_tmp_output = $c->config->{cluster_shared_tempdir}."/blast";
-
+    my $seq_count = 1;
+    my $blast_tmp_output = $c->config->{cluster_shared_tempdir}."/blast";
+    mkdir $blast_tmp_output if ! -d $blast_tmp_output;
 	if ($params->{sequence} =~ /\>/) {
 		$seq_count= $params->{sequence} =~ tr/\>/\>/;
 	}
@@ -209,7 +209,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 	     my $bdb = $schema->resultset("BlastDb")->find($params->{database} )
 		 or die "could not find bdb with file_base '$params->{database}'";
 	     
-	     my $basename = $bdb->full_file_basename;
+	     my $basename = File::Spec->catfile($c->config->{blast_db_path},$bdb->file_base());
 	     #returns '/data/shared/blast/databases/genbank/nr'
 	     #remember the ID of the blast db the user just blasted with
 	     
