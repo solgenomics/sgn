@@ -81,7 +81,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 	}
 	
   my $seq_count = 1;
-  my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/blast";
+  my $blast_tmp_output = $c->config->{cluster_shared_tempdir}."/blast";
 
 	if ($params->{sequence} =~ /\>/) {
 		$seq_count= $params->{sequence} =~ tr/\>/\>/;
@@ -431,8 +431,8 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
 	my $db_id = $params->{database};
 	
 	my $bdb = $schema->resultset("BlastDb")->find($db_id) || die "could not find bdb with file_base $db_id";
-	my $blastdb_path = $bdb->full_file_basename;
-
+	my $blastdb_path = File::Spec->catfile($c->config("blast_db_path"), $bdb->file_base());#$bdb->full_file_basename;
+	print STDERR "BLASTDB_PATH: $blastdb_path\n";
 	# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30.fasta";
 	
 	my $grepcmd = "grep -i \"$input_string\" $blastdb_path \| sed 's/>//' \| cut -d ' ' -f 1";
