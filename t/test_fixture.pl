@@ -38,18 +38,29 @@ my @prove_args = @ARGV;
 #my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
 
 $ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'fixture';
-my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
-
+#my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
+my $conf_file_base = 'sgn_local.conf'; 
+my $template_file = 'sgn_fixture_template.conf';
 # get some defaults from sgn_local.conf
 #
-my $cfg = Config::Any->load_files({files=> [$conf_file_base], use_ext=>1 });
+my $cfg = Config::Any->load_files({files=> [$conf_file_base, $template_file], use_ext=>1 });
 
 my $config = $cfg->[0]->{$conf_file_base};
+my $template = $cfg->[1]->{$template_file};
+
+#print STDERR Dumper($cfg);
 my $db_user_password = $config->{dbpass};
 my $dbhost = $config->{dbhost};
 my $db_postgres_password = $config->{DatabaseConnection}->{sgn_test}->{password};
 my $test_dsn = $config->{DatabaseConnection}->{sgn_test}->{dsn};
 my $catalyst_server_port = 3010;
+
+# replace the keys in the sgn local file with what's in the template
+#
+foreach my $k (keys %{$template}) { 
+    #print STDERR "Replacing key $k : $config->{$k} with $template->{$k}\n";
+    $config->{$k} = $template->{$k};
+}
 
 # load the database fixture
 #
@@ -79,6 +90,8 @@ $config->{dbname} = $dbname;
 $test_dsn =~ s/dbname=(.*)$/dbname=$dbname/;
 $config->{DatabaseConnection}->{sgn_test}->{dsn} = $test_dsn;
 
+#print STDERR Dumper($config);
+
 my $new_conf = hash2config($config);
 
 open(my $NEWCONF, ">", "sgn_fixture.conf") || die "Can't open sgn_fixture.conf for writing";
@@ -102,7 +115,7 @@ else {
     
 	# web server process
 	#
-	$ENV{SGN_TEST_MODE} = 1;
+	#$ENV{SGN_TEST_MODE} = 1;
 	@ARGV = (
 	    -p => $catalyst_server_port,
 	    ( $noparallel ? () : ('--fork') ),
@@ -202,12 +215,6 @@ print STDERR "# Test run complete.\n\n";
 sub hash2config { 
     my $hash = shift;
 
-    our %replace = ( 
-	blast_db_path => $hash->{basepath}."t/data/blast" ,
-	cluster_shared_bindir => '/usr/bin',
-	cluster_shared_tempdir => '/tmp',
-	);
- 
     my $s = "";
     foreach my $k (keys(%$hash)) { 
 	if (ref($hash->{$k}) eq "ARRAY") { 
@@ -229,24 +236,17 @@ sub hash2config {
 	    }
 	}
 	else { 
-	    if (exists($replace{$k})) { 
-		$s .= "$k $replace{$k}\n";
-		delete $replace{$k};
-	    }
-	    else { 
-		$s .= "$k $hash->{$k}\n";
-	    }
+	    $s .= "$k $hash->{$k}\n";
 	}
     }
 
     # if nothing matched the replace keys, add them here
     #
-    foreach my $k (keys %replace) { 
-	# only do this on the top-level (check for key there)
-	if (exists($hash->{dbname})) { 
-	    $s .= "$k $replace{$k}\n";
-	}
-    }
+    
+#    if (exists($hash->{dbname})) { 
+#	$s .= "dbname $dbname\n";
+ #  }
+    
     return $s;
 }
     
