@@ -74,7 +74,6 @@ jQuery(document).ready(function ($) {
 	    return;
 	}
 
-	alert("LISTID="+list_id);
 	var l = new CXGN.List();
 	if (! l.validate(list_id, 'accessions', true)) { 
 	    alert('The list contains elements that are not accessions.');
