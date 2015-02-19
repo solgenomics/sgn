@@ -65,27 +65,57 @@ jQuery(document).ready(function ($) {
 	var description = $('#genotyping_trial_description').val();
 	var name = $('#genotyping_trial_name').val();
 	var list_id = $('#accession_select_box_list_select').val();
+
+
 	
 	if (name == '') { 
 	    alert("A name is required and it should be unique in the database. Please try again.");
+
 	    return;
 	}
-	
+
+	alert("LISTID="+list_id);
+	var l = new CXGN.List();
+	if (! l.validate(list_id, 'accessions', true)) { 
+	    alert('The list contains elements that are not accessions.');
+
+	    return;
+	}
+
+	var elements = l.getList(list_id);
+	if (typeof elements == 'undefined' ) { 
+	    alert("There are no elements in the list provided.");
+
+	    return;
+	}
+
+	if (elements.length > 95) { 
+	    $('#working').dialog("close");
+	    alert("The list needs to have less than 96 elements (one well is reserved for the BLANK). Please use another list.");
+	    
+	    return;
+	}
+
+	$('#working').dialog("open");
+
 	$.ajax( { 
 	    url: '/ajax/breeders/genotypetrial',
 	    data: { 'location': location, 'breeding_program': breeding_program, 'year': year, 'description': description, 'name': name, 'list_id':list_id },
 	    success : function(response) { 
 		if (response.error) { 
 		    alert(response.error);
+		    $('#working').dialog("close");
 		}
 		else { 
 		    alert(response.message);
 		    $('#genotyping_trial_dialog').dialog("close");
+		    $('#working').dialog("close");
 		    window.location.href = "/breeders/trial/"+response.trial_id;
 		}
 	    },
 	    error: function(response) { 
-		alert('An error occurred');
+		alert('An error occurred trying the create the layout.');
+		$('#working').dialog("close");
 	    }
 	});
     }

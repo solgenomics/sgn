@@ -73,7 +73,7 @@ $user_can_modify => undef
 
 </&>
 
-<&| /page/info_section.mas, title=>"Plate layout", collapsible=>1, subtitle=>'<a href="/">Plate View</a>' &>
+<&| /page/info_section.mas, title=>"Plate layout", collapsible=>1, subtitle=> qq{ <a href="/breeders_toolbox/trial/$trial_id?format=as_table">Plate View</a> } &>
 
   <& /breeders_toolbox/genotyping_trials/layout.mas, design => $design &>
 
