@@ -116,7 +116,7 @@ sub _get_plot_info_fields_from_trial {
   my %design = %{$self->get_design()};
   my @field_values;
   my %unique_field_values;
-  foreach my $key (sort { $a <=> $b} keys %design) {
+  foreach my $key (sort { $a cmp $b} keys %design) {
     my %design_info = %{$design{$key}};
     if (! $unique_field_values{$design_info{$field_name}}) {
       push(@field_values, $design_info{$field_name});
