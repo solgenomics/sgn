@@ -50,12 +50,22 @@ jQuery(document).ready(function ($) {
 	width: 600,
 	position: ['top', 150],
 	title: 'Create a genotyping trial',
-	buttons: {
-	    'OK': function() {
-		submit_genotype_trial();
+	buttons: [
+	    { 
+		text: 'OK', 
+		id: 'genotype_trial_submit_button',
+		click: function() {
+		    submit_genotype_trial();
+		},
 	    },
-	    'Cancel': function() { $('#genotyping_trial_dialog').dialog("close"); }
-	}
+	    {
+		text: 'Cancel',
+		id: 'genotype_trial_cancel_button',
+		click: function() { 
+		    $('#genotyping_trial_dialog').dialog("close"); 
+		}
+	    }
+	]
     });
     
     function submit_genotype_trial() {
