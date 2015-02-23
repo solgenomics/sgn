@@ -3,31 +3,16 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.Page.Result' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.Page.Result', 'jquery', 'jquery.dataTables' ] &>
 
 <& /page/page_title.mas, title => "Trial Search" &>
 
-<table>
-<tr><td>Trial name</td><td>Program</td><td>Year</td><td>Location</td><td>&nbsp;</td></tr>
-<tr><td><input type="text" id="trial_name" /></td>
-
-<td>
-   <div id="breeding_program_select_div">[loading...]</div>
-</td>
-
-<td>
-  <div id="years_select_div">[loading...]</div>
-</td>
-<td>
-  <div id="location_select_div">[loading...]</div>
-</td>
-<td><button id="trial_search_submit_button">Search</button></td>
-</tr>
-<tr><td colspan="5">Page <input id="page_number" size="2" value="1"/>&nbsp;&nbsp;Page size <select id="page_size"><option>20</option><option>50</option><option>100</option></select></tr></table>
 
 <div id="trial_search_results">
 [loading...]
 </div>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <script>
 
@@ -130,6 +115,9 @@ function search_trials() {
 	 var html = display_results(headers, response.trials, Math.floor(response.total_count / page_size) + 1, page_size, response.total_count);
          jQuery('#trial_search_results').html(html);
          jQuery('#working').dialog("close");
+			     alert("formatting datatable");
+         jQuery('#results_table').DataTable();
+			     alert('done');
        }
      },
      error: function(response) { 
@@ -142,17 +130,8 @@ function search_trials() {
 
 
 
+
 });
-
- // jQuery('#location_select').change( function() { 
- //   search_trials();
-
- // });
-
- // jQuery('#year_select').click( function() { 
- //   alert("YEAR!");
- //   search_trials();
- //  });
 
 
   
