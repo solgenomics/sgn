@@ -514,10 +514,13 @@ sub _delete_phenotype_experiments {
 	}
 
     }
+
+    print STDERR "Deleting linking table entries...\n";
     $nd_exp_phenotype_rs->delete_all();
     
     # delete the experiments
     #
+    print STDERR "Deleting experiments...\n";
     my $delete_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ nd_experiment_id => { -in => [ @nd_experiment_ids] }});
 
     $nd_experiments_deleted = $delete_rs->count();
