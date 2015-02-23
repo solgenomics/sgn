@@ -84,10 +84,12 @@ sub search :Path('/ajax/search/trials') Args(0) {
 	push @result, [ "<a href=\"/breeders_toolbox/trial/$project_id\">$project_name</a>", $project_description, $program, $year ];
     }
 
-    $c->stash->{rest} =  { 
-	trials => \@result,
-	total_count => $total,
-    };
+#    $c->stash->{rest} =  { 
+#	trials => \@result,
+#	total_count => $total,
+#    };
+
+    $c->stash->{rest} = { data => \@result };
 }
 
 sub get_project_year_cvterm_id { 

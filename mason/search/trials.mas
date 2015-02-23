@@ -8,126 +8,31 @@
 <& /page/page_title.mas, title => "Trial Search" &>
 
 
-<div id="trial_search_results">
-[loading...]
-</div>
+<table id="search_results" class="display">
+<thead>
+  <tr>
+    <th>Trial name</th>
+    <th>Description</th>
+    <th>Breeding program</th>
+    <th>Year</th>
+</tr>
+</thead>
+
+</table>
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+
 
 <script>
 
 jQuery(document).ready(function () {
 
-  search_trials();
-
-  jQuery.ajax( { 
-    url: '/ajax/breeders/location/all',
-    success: function(response) { 
-       var html = '<select id="location_select">';
-       html += '<option>all</option>';
-       for (var loc in Object.keys(response.locations)) { 
-           html += '<option>'+response.locations[loc][1]+'</option>';
-       }
-       html += '</select>';
-       jQuery('#location_select_div').html(html);
-    },
-    error: function(response) { 
-      alert('An unfortunate error occurred.');
-    }
-  });
-
-
- jQuery.ajax( {
-        url: '/ajax/breeders/all_programs',
-        success: function(response) {
-
-            var html = '<select id="breeding_program_select">';
-            html += '<option value="all">all</option>';
-            for (var i=0; i< response.length; i++) {
-                html += '<option value='+response[i][1]+'>'+response[i][1]+'</option>';
-            }
-           html += '</select>';
-           jQuery('#breeding_program_select_div').html(html);
-        },
-        error: function(response){
-            alert("An error occurred.");
-        }
-    });
-
-
-  jQuery.ajax( { 
-    url: '/ajax/breeders/trial/all_years',
-    success: function(response) { 
-      var html = '<select id="year_select">';
-      html += '<option value="all">all</option>';
-      for (var y in response.years) { 
-        html += '<option>'+response.years[y]+'</option>';
-      }
-      html += '</select>';
-      jQuery('#years_select_div').html(html);
-
-
-    },
-    error: function(response) {
-      alert("An unfortunate error occurred.")
-    }
-  });
-
-  // jQuery('#trial_name').keypress( function() { 
-  //   search_trials();
-  // });
-
-  // jQuery('#breeding_program_select').change( function() { 
-  //   alert("BREEDING PROGRAM");
-  //   search_trials(); 
-  // });
-
-
-
-  jQuery('#trial_search_submit_button').click( function() { 
-    //alert("SEARCH");
-    search_trials();
-  });
-
-
-
-  
-//  jQuery('#trial_search_submit_button').click( function() {
-function search_trials() { 
-  var trial_name = jQuery('#trial_name').val();
-  var breeding_program = jQuery('#breeding_program_select').val();
-  var location = jQuery('#location_select').val();
-  var year = jQuery('#year_select').val();
-  var page = jQuery('#page_number').val();
-  var page_size = jQuery('#page_size').val();
-
-  jQuery('#working').dialog("open");
-
-  jQuery.ajax( { 
-     url: '/ajax/search/trials',
-     data: { trial_name: trial_name, breeding_program: breeding_program, location: location, year : year, page: page, page_size: page_size },
-     success: function(response) { 
-       if (response.error) { 
-         alert("an error occurred: "+response.error);
-       }
-       else { 
-         var headers = new Array('Name', 'Description', 'Program', 'Year', 'Location');
-	 var html = display_results(headers, response.trials, Math.floor(response.total_count / page_size) + 1, page_size, response.total_count);
-         jQuery('#trial_search_results').html(html);
-         jQuery('#working').dialog("close");
-			     alert("formatting datatable");
-         jQuery('#results_table').DataTable();
-			     alert('done');
-       }
-     },
-     error: function(response) { 
-       alert("An error occurred. :-( "+response);
-         jQuery('#working').dialog("hide");
-     }
-  });
- }
-
-
+   jQuery('#search_results').DataTable( { 
+//       "processing": true,
+//       "serverSide": true,
+       'ajax': '/ajax/search/trials' 
+   });
 
 
 
