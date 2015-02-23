@@ -642,7 +642,7 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 	$genotyping_trials_by_breeding_project{$bp->[1]}= $projects->get_genotyping_trials_by_breeding_program($bp->[0]);
     }
 
-    print STDERR "Time elapsed = ".( time() - $start_time())."\n";
+    print STDERR "Time elapsed = ".( time() - $start_time)."\n";
 
     $genotyping_trials_by_breeding_project{'Other'} = $projects->get_genotyping_trials_by_breeding_program();
 
