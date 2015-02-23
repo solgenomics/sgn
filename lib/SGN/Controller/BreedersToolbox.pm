@@ -636,17 +636,13 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     my %genotyping_trials_by_breeding_project = ();
 
-    my $start_time = time();
-
     foreach my $bp (@$breeding_programs) {
 	$genotyping_trials_by_breeding_project{$bp->[1]}= $projects->get_genotyping_trials_by_breeding_program($bp->[0]);
     }
 
-    print STDERR "Time elapsed = ".( time() - $start_time)."\n";
-
     $genotyping_trials_by_breeding_project{'Other'} = $projects->get_genotyping_trials_by_breeding_program();
 
-    $c->stash->{locations} = $projects->get_locations($c);
+    $c->stash->{locations} = $projects->get_all_locations($c);
 
     $c->stash->{genotyping_trials_by_breeding_project} = \%genotyping_trials_by_breeding_project; 
 
