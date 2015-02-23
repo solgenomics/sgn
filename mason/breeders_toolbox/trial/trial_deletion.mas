@@ -1,0 +1,8 @@
+
+<%args>
+$trial_id
+</%args>
+
+<a id="delete_layout_data_by_trial_id">Delete layout</a><br />
+<a id="delete_phenotype_data_by_trial_id">Delete trial data</a><br />
+Delete trial entry<br />
