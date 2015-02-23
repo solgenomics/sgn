@@ -6,6 +6,8 @@ $trials_by_breeding_project => ()
 @breeding_programs
 </%args>
 
+print STDERR "Rendering trials page...\n";
+
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.GenotypingTrial', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
  <style>

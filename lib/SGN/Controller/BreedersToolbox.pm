@@ -69,11 +69,11 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     
     $trials_by_breeding_project{'Other'} = $projects->get_trials_by_breeding_program();
 
-    # locations are not needed for this page... (slow!!)
+    # use get_all_locations, as other calls for locations can be slow
+    #
     $c->stash->{locations} = $projects->get_all_locations();
-   
 
-    $c->stash->{trials_by_breeding_project} = \%trials_by_breeding_project; #$self->get_projects($c);
+    $c->stash->{trials_by_breeding_project} = \%trials_by_breeding_project; 
 
     $c->stash->{breeding_programs} = $breeding_programs;
 
@@ -627,8 +627,8 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
-
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
 
@@ -644,7 +644,7 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     $c->stash->{locations} = $projects->get_locations($c);
 
-    $c->stash->{genotyping_trials_by_breeding_project} = \%genotyping_trials_by_breeding_project; #$self->get_projects($c);
+    $c->stash->{genotyping_trials_by_breeding_project} = \%genotyping_trials_by_breeding_project; 
 
     $c->stash->{breeding_programs} = $breeding_programs;
 
