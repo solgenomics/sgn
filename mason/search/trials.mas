@@ -3,7 +3,7 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.Page.Result', 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
 <& /page/page_title.mas, title => "Trial Search" &>
 
@@ -29,8 +29,6 @@
 jQuery(document).ready(function () {
 
    jQuery('#search_results').DataTable( { 
-//       "processing": true,
-//       "serverSide": true,
        'ajax': '/ajax/search/trials' 
    });
 
