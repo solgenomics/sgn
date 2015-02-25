@@ -60,7 +60,7 @@ sub search :Path('/ajax/search/trials') Args(0) {
 
     my $q .= $count_clause . $from_clause . $where_clause;
 
-    my $offset = " LIMIT ".$params->{page_size}. " OFFSET ".(($params->{page}-1) * $params->{page_size}) ;
+    my $offset = ""; # " LIMIT ".$params->{page_size}. " OFFSET ".(($params->{page}-1) * $params->{page_size}) ;
 
     print STDERR "QUERY: $q\n";
     
