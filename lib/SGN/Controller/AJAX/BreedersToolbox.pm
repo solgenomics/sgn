@@ -477,10 +477,15 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
     $td->set_trial_name($name);
     my $design;
 
-    if (!$td->calculate_design()) { 
-	$c->stash->{rest} = { error => "Design failed. Sorry." };
+    eval { 
+	$td->calculate_design()) { 
+    };
+
+    if ($@) { 
+	$c->stash->{rest} = { error => "Design failed. Error: $@" };
 	return;
     }
+    
     $design = $td->get_design();
     
     if (exists($design->{error})) { 
