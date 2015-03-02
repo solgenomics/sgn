@@ -25,8 +25,15 @@ $design
      my $cell = "";
      my $bgcolor="lightgrey";
      if (exists($design->{$row.$col})) { 
+
+       if ($design->{$row.$col}->{accession_name} eq "BLANK") { 
+	 $bgcolor = "#FFCCBB";
+       }
+       else { 
+	 $bgcolor="#FFFFFF";
+       }
        $cell= '<br />'. $design->{$row.$col}->{accession_name} .'<br /><br />';
-       $bgcolor="FFFFFF";
+
      }
      else {
        $cell = "&nbsp;"
