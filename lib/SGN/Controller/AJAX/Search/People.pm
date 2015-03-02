@@ -70,7 +70,7 @@ sub people_search :Path('/ajax/search/people') Args(0) {
     my $draw = $params->{draw};
     $draw =~ s/\D//g; # cast to int
 
-    my $rows = $params->{length};
+    my $rows = $params->{length} || 10;
     my $start = $params->{start};
 
     my $page = int($start / $rows)+1;
