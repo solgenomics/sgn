@@ -478,7 +478,7 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
     my $design;
 
     eval { 
-	$td->calculate_design()) { 
+	$td->calculate_design();
     };
 
     if ($@) { 
