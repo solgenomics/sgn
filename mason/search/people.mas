@@ -5,6 +5,8 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
+<& /page/page_title.mas, title=>'Search People' &>
+
 <table width="100%">
 <tr><td><label for="first_name">First name</label></td>
 <td><input id="first_name" /><br /></td><td><label for="last_name">Last name</label></td><td><input id="last_name" /><br /></td></tr>
