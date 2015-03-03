@@ -19,6 +19,8 @@ $design_layout_view
 $user_can_modify => undef
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'CXGN.Trial' , 'jstree/dist/jstree' ] &>
+
 <& /page/page_title.mas, title=>"Genotyping trial $trial_name" &>
 
 <table><tr><td width="400px" valign="top" >
@@ -33,7 +35,7 @@ $user_can_modify => undef
 
 </td><td width="400px" valign="top" >
 
-<&| /page/info_section.mas, title=>"Trial type", subtitle=>"[<a id=\"edit_trial_type\" >change</a>]" &>
+<&| /page/info_section.mas, title=>"Trial type" &>
   <div id="trial_type">
     Genotyping trial
   </div>
@@ -80,3 +82,10 @@ $user_can_modify => undef
 </&>
 
 </&>
+
+
+<script>
+
+  load_breeding_program_info(<% $trial_id %>);
+
+</script>
