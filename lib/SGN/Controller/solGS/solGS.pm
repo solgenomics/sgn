@@ -4033,7 +4033,8 @@ sub run_r_script {
     my $output_files = $c->stash->{output_files};
     my $r_temp_file  = $c->stash->{r_temp_file};
     
-    CXGN::Tools::Run->temp_base($c->stash->{solgs_tempfiles_dir});
+
+    CXGN::Tools::Run->temp_base($c->stash->{cluster_shared_tempdir});                           #$c->stash->{solgs_tempfiles_dir});
     my ( $r_in_temp, $r_out_temp ) =
         map 
     {
@@ -4062,7 +4063,7 @@ sub run_r_script {
             $r_in_temp,
             $r_out_temp,
             {
-                working_dir => $c->stash->{solgs_tempfiles_dir},
+                working_dir => $c->stash->{cluster_shared_tempdir}, #$c->stash->{solgs_tempfiles_dir},
                 max_cluster_jobs => 1_000_000_000,
             },
             );
@@ -4088,7 +4089,8 @@ sub run_r_script {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
    
-    my $tmp_dir         = $c->config->{cluster_shared_tempdir};
+    #my $tmp_dir         = $c->config->{cluster_shared_tempdir};a
+    my $tmp_dir         = $c->path_to($c->tempfiles_subdir(''));
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
