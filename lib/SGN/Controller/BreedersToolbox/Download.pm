@@ -647,5 +647,120 @@ sub trial_download_log {
     }
 }
 
+
+sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/spreadsheet') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+
+    my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+    
+    my $layout = $t->get_layout()->get_design();
+
+    $c->tempfiles_subdir("data_export"); # make sure the dir exists
+    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$trial_id."_XXXXX");
+
+    my $file_path = $tempfile.".xls";
+    move($tempfile, $file_path);
+    my $ss = Spreadsheet::WriteExcel->new($c->config->{basepath}."/".$file_path);
+    my $ws = $ss->add_worksheet();
+
+    # write primary headers
+    #
+    $ws->write(0, 0, "Project Details");
+    $ws->write(0, 2, "Sample Details");
+    $ws->write(0, 12, "Organism Details");
+    $ws->write(0, 21, "Origin Details");
+
+    # write secondary headers
+    #
+    my @headers = ( 
+	"Project Name",
+	"Source Lab",
+	"Plate Name",
+	"Well", 
+	"Sample Name", 
+	"Pedigree",
+	"Population Type",
+	"Stock Number",
+	"Sample DNA Concentration",
+	"Sample Volume",
+	"Sample DNA Mass",
+	"Preparer",
+	"Kingdom",
+	"Phylum",
+	"Class",
+	"Order",
+	"Family",
+	"Genus",
+	"Species",
+	"Subspecies",
+	"Variety",
+	"Location",
+	"Name",
+	"Country",
+	"State or Province",
+	"City",
+	"Elevation",
+	"Latitude",
+	"Longitude",
+	);
+
+    for(my $i=0; $i<@headers; $i++) { 
+	$ws->write(1, $i, $headers[$i]);
+    }
+
+    # write plate info
+    #
+    my $line = 0;
+    foreach my $k (sort wellsort (keys %{$layout})) { 
+	$ws->write(2 + $line, 1, "NextGen Cassava");
+	$ws->write(2 + $line, 2, $t->get_breeding_programs());
+	$ws->write(2 + $line, 3, $t->get_name());
+	$ws->write(2 + $line, 4, $k);
+	$ws->write(2 + $line, 5, $layout->{$k}->{accession_name});
+	$ws->write(2 + $line, 17, "Manihot");
+	$ws->write(2 + $line, 18, "esculenta");
+	$ws->write(2 + $line, 21, $t->get_location());
+	$line++;
+    }
+
+    $ss ->close();
+
+    # prepare file for download
+    #
+    my $file_name = basename($file_path);    
+    $c->res->content_type('Application/xls');    
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
+
+    my $path = $c->config->{basepath}."/".$file_path;
+
+    my $output = read_file($path, binmode=>':raw');
+
+    close($fh);
+    $c->res->body($output);
+}
+
+sub wellsort { 
+    my $row_a = substr($a, 0, 1);
+    my $row_b = substr($b, 0, 1);
+
+    my $col_a;
+    my $col_b;
+    if ($a =~ m/(\d+)/) { 
+	$col_a = $1;
+    }
+    if ($b =~ m/(\d+)/) { 
+	$col_b = $1;
+    }
+
+    if ($row_a ne $row_b) { 
+	return $row_a cmp $row_b;
+    }
+    else { 
+	return $col_a <=> $col_b;
+    }
+}
+
 #=pod
 1;
