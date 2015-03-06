@@ -714,14 +714,14 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     #
     my $line = 0;
     foreach my $k (sort wellsort (keys %{$layout})) { 
-	$ws->write(2 + $line, 1, "NextGen Cassava");
-	$ws->write(2 + $line, 2, $t->get_breeding_programs());
-	$ws->write(2 + $line, 3, $t->get_name());
-	$ws->write(2 + $line, 4, $k);
-	$ws->write(2 + $line, 5, $layout->{$k}->{accession_name});
-	$ws->write(2 + $line, 17, "Manihot");
-	$ws->write(2 + $line, 18, "esculenta");
-	$ws->write(2 + $line, 21, $t->get_location());
+	$ws->write(2 + $line, 0, "NextGen Cassava");
+	$ws->write(2 + $line, 1, $t->get_breeding_programs());
+	$ws->write(2 + $line, 2, $t->get_name());
+	$ws->write(2 + $line, 3, $k);
+	$ws->write(2 + $line, 4, $layout->{$k}->{accession_name});
+	$ws->write(2 + $line, 16, "Manihot");
+	$ws->write(2 + $line, 17, "esculenta");
+	$ws->write(2 + $line, 20, $t->get_location());
 	$line++;
     }
 
