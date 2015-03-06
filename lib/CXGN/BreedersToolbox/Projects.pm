@@ -38,6 +38,7 @@ sub get_breeding_programs {
     return \@projects;
 }
 
+# deprecated. Use CXGN::Trial->get_breeding_program instead.
 sub get_breeding_programs_by_trial {
     my $self = shift;
     my $trial_id = shift;

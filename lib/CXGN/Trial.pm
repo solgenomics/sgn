@@ -41,6 +41,10 @@ sub BUILD {
     if (!$row) { 
 	die "The trial ".$self->get_trial_id()." does not exist";
     }
+
+    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->get_trial_id() });
+    $self->set_layout($layout);
+
 }
 
 
@@ -225,6 +229,38 @@ sub remove_location {
 
 }
 
+=head2 get_breeding_program
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_breeding_programs {
+    my $self = shift;
+
+    my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search( { 'subject_project_id' => $self->get_trial_id() } );
+    
+    my $trial_row = $trial_rs -> first();
+    my $rs;
+    my @projects;
+
+    if ($trial_row) { 
+	$rs = $self->bcs_schema->resultset('Project::Project')->search( { 'me.project_id' => $trial_row->object_project_id(), 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
+		
+	while (my $row = $rs->next()) { 
+	    push @projects, [ $row->project_id, $row->name, $row->description ];
+	}	
+    }
+    return  \@projects;
+}
+
 
 =head2 associate_project_type
 
@@ -353,6 +389,17 @@ sub get_all_project_types {
     return @cvterm_ids;
 }
 
+=head2 get_name(), set_name()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_name { 
     my $self = shift;
     my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
@@ -371,6 +418,19 @@ sub set_name {
 	$row->update();
     }
 }   
+
+
+
+=head2 delete_phenotype_data()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 # note: you may need to delete the metadata before deleting the phenotype data (see function).
 # this function has a test!
@@ -416,6 +476,19 @@ sub delete_phenotype_data {
     
 }
     
+
+=head2 delete_field_layout()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+
 # this function has a test!
 #
 sub delete_field_layout { 
@@ -447,6 +520,18 @@ sub delete_field_layout {
     
     return '';
 }
+
+
+=head2 delete_metadata()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 sub delete_metadata { 
     my $self = shift;
@@ -592,6 +677,17 @@ sub _delete_field_layout_experiment {
     return { success => 1 };
 }
 
+=head2 delete_project_entry()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub delete_project_entry { 
     my $self = shift;
     
@@ -613,6 +709,18 @@ sub delete_project_entry {
 	return $@;
     }
 }
+
+=head2 phenotype_count()
+
+ Usage:
+ Desc:         The number of phenotype measurements associated with this trial
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 
 sub phenotype_count { 
     my $self = shift;
@@ -655,9 +763,49 @@ sub get_year_type_id {
     return $rs->first()->cvterm_id();
 }
 
+sub get_breeding_trial_cvterm_id {
+    my $self = shift;
+
+    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'local' } )->cv_id();
+
+    my $breeding_trial_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program_trial_relationship' });
+
+    if (!$breeding_trial_cvterm_row) {
+	my $row = $self->schema->resultset('Cv::Cvterm')->create_with(
+	    {
+		name => 'breeding_program_trial_relationship',
+		cv   => 'local',
+		db   => 'null',
+		dbxref => 'breeding_program_trial_relationship',
+	    });
+	$breeding_trial_cvterm_row = $row;
+    }
+    return $breeding_trial_cvterm_row->cvterm_id();
+}
 
 
+sub get_breeding_program_cvterm_id {
+    my $self = shift;
 
+    my $breeding_program_cvterm_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program' });
 
+    my $row;
+
+    if ($breeding_program_cvterm_rs->count() == 0) {
+	$row = $self->schema->resultset('Cv::Cvterm')->create_with(
+	    {
+		name => 'breeding_program',
+		cv   => 'local',
+		db   => 'null',
+		dbxref => 'breeding_program',
+	    });
+
+    }
+    else {
+	$row = $breeding_program_cvterm_rs->first();
+    }
+
+    return $row->cvterm_id();
+}
 
 1;
