@@ -4087,7 +4087,9 @@ sub run_r_script {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
    
-    my $host            = hostname; 
+    my $host = $c->req->base;
+    $host =~ s/(http)|[:\/\d+]//g;
+   
     my $tmp_dir         = $c->config->{cluster_shared_tempdir};        
     $tmp_dir            = catdir($tmp_dir, $host);
     my $solgs_dir       = catdir($tmp_dir, "solgs");
