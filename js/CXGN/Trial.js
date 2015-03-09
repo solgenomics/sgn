@@ -551,6 +551,7 @@ function save_trial_location(location_id) {
 	type: 'POST',
 	success: function(response) { 
 	    if (response.message) { alert(response.message); }
+	    if (response.error) { alert(response.error); }
 	    else { 
 		alert("Not sure what happened.");
 	    }
