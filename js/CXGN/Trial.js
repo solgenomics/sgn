@@ -1,23 +1,23 @@
+// Depends on CXGN.BreedersToolbox.HTMLSelect
 
-
-function get_breeding_select() { 
-    var programs = new Array();
-    jQuery.ajax( { 
-	url: '/ajax/breeders/all_programs',
-	success: function(response) { 
-            programs = response;
-            var html = "";
+// function get_breeding_select() { 
+//     var programs = new Array();
+//     jQuery.ajax( { 
+// 	url: '/ajax/breeders/all_programs',
+// 	success: function(response) { 
+//             programs = response;
+//             var html = "";
 	    
-            for (var i=0; i< programs.length; i++) {  
-		html += '<option value='+programs[i][0]+'>'+programs[i][1]+'</a>';
-            }
-            jQuery('#change_breeding_program_select').html(html);	
-	},
-	error: function(response){ 
-            alert("An error occurred.");
-	}
-    });
-}
+//             for (var i=0; i< programs.length; i++) {  
+// 		html += '<option value='+programs[i][0]+'>'+programs[i][1]+'</a>';
+//             }
+//             jQuery('#change_breeding_program_select').html(html);	
+// 	},
+// 	error: function(response){ 
+//             alert("An error occurred.");
+// 	}
+//     });
+// }
 
 function delete_phenotype_data_by_trial_id(trial_id) { 
     var yes = confirm("Are you sure you want to delete all phenotypic data associated with trial "+trial_id+" ? This action cannot be undone.");
@@ -69,7 +69,8 @@ function delete_layout_data_by_trial_id(trial_id) {
 }
 
 function associate_breeding_program() { 
-    var program = jQuery('#change_breeding_program_select').val();
+    var program = jQuery('#breeding_program_select').val();
+
     var trial_id = get_trial_id();
     jQuery.ajax( { 
 	url: '/breeders/program/associate/'+program+'/'+ trial_id,
@@ -182,6 +183,21 @@ function trial_detail_page_setup_dialogs() {
 	    'Cancel': function() { jQuery('#change_breeding_program_dialog').dialog("close"); }
 	}
     });
+
+    // jQuery('#change_year_dialog').dialog( { 
+    // 	height: 150,
+    // 	width: 300,
+    // 	title: 'Select start year',
+    // 	autoOpen: false,
+    // 	buttons:  {
+    // 	    'OK': function() {
+    // 		change_year();
+    // 		jQuery('#change_year_dialog').dialog("close"); 
+    // 		save_trial_year();
+    // 	    },
+    // 	    'Cancel': function() { jQuery('#change_breeding_program_dialog').dialog("close"); }
+    // 	}
+    // });
     
     jQuery( "#tablet_field_layout_saved_dialog_message" ).dialog({
 	autoOpen: false,
@@ -218,7 +234,7 @@ function trial_detail_page_setup_dialogs() {
     jQuery('#show_change_breeding_program_link').click(
 	function() {
 	    jQuery('#change_breeding_program_dialog').dialog("open");
-	    get_breeding_select();
+	    get_select_box('breeding_programs', 'change_breeding_program_select_div');
 	}
     );
     
@@ -263,12 +279,47 @@ function trial_detail_page_setup_dialogs() {
 	jQuery('#edit_trial_description_dialog').dialog("open");
 	
     });
+
+    jQuery('#change_trial_year_dialog').dialog( { 
+	autoOpen: false,
+	height: 200,
+	width: 300,
+	modal: true,
+	title: "Change trial year",
+ 	buttons: {
+	    cancel: { text: "Cancel",
+                      click: function() { jQuery( this ).dialog("close"); },
+                      id: "change_trial_year_cancel_button"
+		    },
+	    save:   { text: "Save", 
+                      click: function() { 
+			  save_trial_year(); 
+			  display_trial_year();
+			  jQuery('#change_trial_year_dialog').dialog("close");
+},
+                      id: "change_trial_year_save_button"
+		    }          
+	}
+    });
+
+
+    jQuery('#change_year_link').click( function() { 
+	jQuery('#change_trial_year_dialog').dialog("open");
+	get_select_box('years', 'change_year_select_div', 'year_select');
+    });
     
+    jQuery('#change_trial_location_link').click( function() { 
+	jQuery('#change_trial_location_dialog').dialog("open");
+	get_select_box('locations', 'trial_location_select_div', 'trial_location_select');
+    });
+
+
     jQuery('#edit_trial_description_dialog').dialog( { 
 	autoOpen: false,
 	height: 500,
 	width: 800,
 	modal: true,
+	title: "Change trial description",
 	buttons: {
 	    cancel: { text: "Cancel",
                       click: function() { jQuery( this ).dialog("close"); },
@@ -311,15 +362,16 @@ function trial_detail_page_setup_dialogs() {
 	});
     });
 
-    jQuery('#trial_type_select').change( { 
+//    jQuery('#trial_type_select').change( { 
 	
-    });
+ //   });
     
     jQuery('#edit_trial_type_dialog').dialog( { 
 	autoOpen: false,
 	height: 200,
 	width: 300,
 	modal: true,
+	title: "Change trial type",
 	buttons: {
 	    cancel: { text: "Cancel",
                       click: function() { jQuery( this ).dialog("close"); },
@@ -337,14 +389,39 @@ function trial_detail_page_setup_dialogs() {
 		    }          
 	}	
     });   
+
+    jQuery('#change_trial_location_dialog').dialog( { 
+	autoOpen: false,
+	height: 200,
+	width: 300,
+	model: true,
+	title: "Change trial location",
+	buttons: { 
+	    cancel: { text: "Cancel",
+		      click: function() { jQuery( this ).dialog("close"); },
+		      id: "change_location_cancel_button",
+		    },
+	    save:   { text: "Save",
+		      click: function() { 
+			  var new_location = jQuery('#location_select').val();
+			  save_trial_location(new_location);
+                          display_trial_location(get_trial_id());
+                          jQuery('#change_trial_location_dialog').dialog("close");
+		      }
+		    }
+	}
+    });
+    
+
 }
 
 function save_trial_type(type) { 
     var trial_id = get_trial_id();
     jQuery.ajax( { 
-	url: '/ajax/breeders/trial/settype/'+trial_id,
-	async: false, //async=false because it needs to finish before page is updated again.
-	data: { 'type' : type },
+	url: '/ajax/breeders/trial/'+trial_id+'/type/'+type,
+	type: 'POST',
+	//async: false, //async=false because it needs to finish before page is updated again.
+	//data: { 'type' : type },
 	success: function(response) { 
 	    if (response.error) { 
 		alert(response.error);
@@ -361,10 +438,49 @@ function save_trial_type(type) {
 
 }
 
+function save_trial_year() { 
+    var trial_id = get_trial_id();
+    var year = jQuery('#year_select').val();
+    jQuery.ajax( { 
+	url: '/ajax/breeders/trial/'+trial_id+'/year/'+year,
+	type: 'POST',
+	success: function(response) { 
+	    if(response.error) { 
+		alert(response.error);
+	    }
+	    else { 
+		alert("Successfully changed year.");
+	    }
+	},
+	error: function(response) { 
+	    alert('An error occurred.');
+	}
+    });
+}
+
+function display_trial_year() { 
+    var trial_id = get_trial_id();
+    
+    jQuery.ajax( { 
+	url: '/ajax/breeders/trial/'+trial_id+'/year',
+	type: 'GET',
+	success: function(response) { 
+	    if (response.error) { 
+		alert(response.error); 
+	    }
+	    else { 
+		jQuery('#trial_year').html(response.year);
+	    }
+	},
+	error: function(response) { 
+	    alert('an error occurred');
+	}
+    });
+}
 
 function display_trial_description(trial_id) { 
     jQuery.ajax( { 
-	url: '/ajax/breeders/trial/description/get/'+trial_id,
+	url: '/ajax/breeders/trial/'+trial_id+'/description',
 	success: function(response) { 
             if (response.error) { alert(response.error); }
             else { 
@@ -381,8 +497,8 @@ function save_trial_description() {
     var description = jQuery('#trial_description_input').val();
     alert('New description = '+description);
     jQuery.ajax( { 
-	url: '/ajax/breeders/trial/description/save/'+trial_id,
-	data: { 'description': description },
+	url: '/ajax/breeders/trial/'+trial_id+'/description/'+description,
+        type: 'POST',
 	success: function(response) { 
             if (response.error) { 
 		alert(response.error);
@@ -405,27 +521,10 @@ function save_trial_description() {
 
 }
 
-function get_all_locations() { 
-    jQuery.ajax( { 
-	url: '/ajax/breeders/location/all',
-	success: function(response) { 
-	    if (response.error) { 
-		alert(response.error);
-	    }
-	    else { 
-		var locations = response.locations;
-		var html = '';
-		for (var n=0; n<locations.length; n++) { 
-		    html += '<option value="'+locations[n][0]+'">'+locations[n][1]+'</option>';
-		}
-	    }
-	},
-    });
-}
-
 function display_trial_location(trial_id) { 
     jQuery.ajax( { 
-	url: '/ajax/breeders/trial/location/'+trial_id,
+	url: '/ajax/breeders/trial/'+trial_id+'/location',
+	type: 'GET',
 	success: function(response) { 
 	    if (response.error) { 
 		alert(response.error);
@@ -443,9 +542,28 @@ function display_trial_location(trial_id) {
 	}
     });
 }
+
+function save_trial_location(location_id) { 
+    var trial_id = get_trial_id();
+    jQuery.ajax( { 
+	url: '/ajax/breeders/trial/'+trial_id+'/location/'+location_id,
+	//data: { 'location_id' : location_id },
+	type: 'POST',
+	success: function(response) { 
+	    if (response.message) { alert(response.message); }
+	    else { 
+		alert("Not sure what happened.");
+	    }
+	    
+	},
+	error: function(response) { 
+	    alert("An error occurred.");
+	}
+    });
+}
 	
 function get_trial_type(trial_id) {
-    //alert("display type");
+
     jQuery.ajax( { 
 	url: '/ajax/breeders/trial/type/'+trial_id,
 	success: function(response) { 
