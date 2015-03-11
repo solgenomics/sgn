@@ -24,8 +24,6 @@ use Array::Utils qw(:all);
 #use CXGN::People::Person;
 use CXGN::Tools::Run;
 use JSON;
-use Sys::Hostname;
-#use jQuery::File::Upload;
 
 BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
 
@@ -4087,10 +4085,7 @@ sub run_r_script {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
    
-    my $host = $c->req->base;
-    $host =~ s/(http)|[:\/\d+]//g;
-   
-    my $tmp_dir         = $c->config->{cluster_shared_tempdir};        
+    my $tmp_dir         = $c->site_cluster_shared_dir;       
     $tmp_dir            = catdir($tmp_dir, $host);
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
@@ -4126,7 +4121,9 @@ sub cache_file {
     $file_cache->purge();
 
     my $file  = $file_cache->get($cache_data->{key});
-
+    
+    no warnings 'uninitialized';
+    
     unless (-s $file > 1)
     {      
         $file = catfile($cache_dir, $cache_data->{file});
