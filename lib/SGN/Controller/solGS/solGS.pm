@@ -4086,7 +4086,6 @@ sub get_solgs_dirs {
     my ($self, $c) = @_;
    
     my $tmp_dir         = $c->site_cluster_shared_dir;       
-    $tmp_dir            = catdir($tmp_dir, $host);
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
