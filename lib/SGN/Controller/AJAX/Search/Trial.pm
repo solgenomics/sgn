@@ -70,7 +70,7 @@ sub search :Path('/ajax/search/trials') Args(0) {
 
     my $count_clause = "SELECT count(distinct(project.project_id)) ";
 
-    my $from_clause = " FROM project LEFT JOIN projectprop AS year ON (project.project_id = year.project_id) LEFT JOIN projectprop AS location ON (project.project_id = location.project_id) LEFT JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) LEFT JOIN project as program ON (project_relationship.object_project_id=program.project_id) JOIN projectprop as project_type ON (project.project_id=project_type.project_id) JOIN cvterm ON (project_type.type_id=cvterm.cvterm_id) WHERE year.type_id=$project_year_cvterm_id and location.type_id=$project_location_cvterm_id and cvterm.cv_id=$project_type_cv_id";
+    my $from_clause = " FROM project LEFT JOIN projectprop AS year ON (project.project_id = year.project_id) LEFT JOIN projectprop AS location ON (project.project_id = location.project_id) LEFT JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) LEFT JOIN project as program ON (project_relationship.object_project_id=program.project_id) LEFT JOIN projectprop as project_type ON (project.project_id=project_type.project_id) LEFT JOIN cvterm ON (project_type.type_id=cvterm.cvterm_id) WHERE (year.type_id=$project_year_cvterm_id OR year.type_id IS NULL) and (location.type_id=$project_location_cvterm_id OR location.type_id IS NULL) and (cvterm.cv_id=$project_type_cv_id OR cvterm.cv_id IS NULL)";
 
     my $where_clause = " AND ". join (" AND ", @conditions) if (@conditions);
 
