@@ -477,12 +477,21 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
     $td->set_trial_name($name);
     my $design;
 
-    if (!$td->calculate_design()) { 
-	$c->stash->{rest} = { error => "Design failed. Sorry." };
+    eval { 
+	$td->calculate_design();
+    };
+
+    if ($@) { 
+	$c->stash->{rest} = { error => "Design failed. Error: $@" };
 	return;
     }
+    
     $design = $td->get_design();
-
+    
+    if (exists($design->{error})) { 
+	$c->stash->{rest} = $design;
+	return;
+    }
     print STDERR Dumper($design);
     
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -516,19 +525,22 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
     });
     
     my %message;
+
     eval { 
 	%message = $ct->save_trial();
-	if ($message{error}) { 
-	    $c->stash->{rest} = $message{error};
-	}
     };
-    if ($@) { 
-	$c->stash->{rest} = { error => "Error saving the trial. $@" };
+
+    if ($@ || exists($message{error})) { 
+	$c->stash->{rest} = { 
+	    error => "Error saving the trial. $@ $message{error}" 
+	};
+	return;
     }
     $c->stash->{rest} = { 
 	message => "Successfully stored the trial.",
 	trial_id => $message{trial_id},
     };
+    print STDERR Dumper(%message);
 }
 
 1;

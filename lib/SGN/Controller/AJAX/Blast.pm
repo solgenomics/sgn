@@ -80,15 +80,16 @@ sub run : Path('/tools/blast/run') Args(0) {
 		}
 	}
 	
-	
     my $seq_count = 1;
+    my $blast_tmp_output = $c->config->{cluster_shared_tempdir}."/blast";
+    mkdir $blast_tmp_output if ! -d $blast_tmp_output;
 	if ($params->{sequence} =~ /\>/) {
 		$seq_count= $params->{sequence} =~ tr/\>/\>/;
 	}
     print STDERR "SEQ COUNT = $seq_count\n";
     my ($seq_fh, $seqfile) = tempfile( 
 	"blast_XXXXXX",
-	DIR=> $c->get_conf('cluster_shared_tempdir'),
+	DIR=> $blast_tmp_output,
 	);
     
     my $jobid = basename($seqfile);
@@ -208,7 +209,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 	     my $bdb = $schema->resultset("BlastDb")->find($params->{database} )
 		 or die "could not find bdb with file_base '$params->{database}'";
 	     
-	     my $basename = $bdb->full_file_basename;
+	     my $basename = File::Spec->catfile($c->config->{blast_db_path},$bdb->file_base());
 	     #returns '/data/shared/blast/databases/genbank/nr'
 	     #remember the ID of the blast db the user just blasted with
 	     
@@ -246,18 +247,23 @@ sub run : Path('/tools/blast/run') Args(0) {
     # now run the blast
     #
 
-    my $job;
-    eval { 
-	 $job = CXGN::Tools::Run->run_cluster(
+  my $job;
+  eval { 
+	  $job = CXGN::Tools::Run->run_cluster(
 	    @command,
 	    { 
-		temp_base => $c->config->{'cluster_shared_tempdir'},
-		queue => $c->config->{'web_cluster_queue'},
-		working_dir => $c->config->{'cluster_shared_tempdir'},
-		# don't block and wait if the cluster looks full
-		max_cluster_jobs => 1_000_000_000,
+        temp_base => $blast_tmp_output,
+        queue => $c->config->{'web_cluster_queue'},
+        working_dir => $blast_tmp_output,
+        
+        # temp_base => $c->config->{'cluster_shared_tempdir'},
+        # queue => $c->config->{'web_cluster_queue'},
+        # working_dir => $c->config->{'cluster_shared_tempdir'},
+
+		    # don't block and wait if the cluster looks full
+		    max_cluster_jobs => 1_000_000_000,
 	    }
-	    );
+	  );
 	 
 	 print STDERR "Saving job state to $seqfile.job for id ".$job->job_id()."\n";
 
@@ -297,9 +303,11 @@ sub check : Path('/tools/blast/check') Args(1) {
     my $self = shift;
     my $c = shift;
     my $jobid = shift;
-
+    
+    my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/blast";
+    
     #my $jobid =~ s/\.\.//g; # prevent hacks
-    my $job = retrieve($c->config->{cluster_shared_tempdir}."/".$jobid.".job");
+    my $job = retrieve($blast_tmp_output."/".$jobid.".job");
     
     if ( $job->alive ){
 	sleep(1);
@@ -326,7 +334,8 @@ sub check : Path('/tools/blast/check') Args(1) {
 	# rather than STDOUT from the job.  Use the out_file_override
 	# parameter if this is the case.
 	#my $out_file = $out_file_override || $job->out_file();
-	system("ls $c->{config}->{cluster_shared_tempdir} 2>&1 >/dev/null");
+	system("ls $blast_tmp_output 2>&1 >/dev/null");
+  # system("ls $c->{config}->{cluster_shared_tempdir} 2>&1 >/dev/null");
 	copy($job_out_file, $result_file)
 	    or die "Can't copy result file '$job_out_file' to $result_file ($!)";
 	
@@ -360,8 +369,10 @@ sub get_result : Path('/tools/blast/result') Args(1) {
     my $db_id = $c->req->param('db_id');
     
     my $result_file = $self->jobid_to_file($c, $jobid.".out");
-
-    system("ls ".($c->config->{cluster_shared_tempdir})." 2>&1 >/dev/null");
+    my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/blast";
+    
+    system("ls $blast_tmp_output 2>&1 >/dev/null");
+    # system("ls ".($c->config->{cluster_shared_tempdir})." 2>&1 >/dev/null");
 
     my $schema = $c->dbic_schema("SGN::Schema");
     my $db = $schema->resultset("BlastDb")->find($db_id);
@@ -420,8 +431,8 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
 	my $db_id = $params->{database};
 	
 	my $bdb = $schema->resultset("BlastDb")->find($db_id) || die "could not find bdb with file_base $db_id";
-	my $blastdb_path = $bdb->full_file_basename;
-
+	my $blastdb_path = File::Spec->catfile($c->config("blast_db_path"), $bdb->file_base());#$bdb->full_file_basename;
+	print STDERR "BLASTDB_PATH: $blastdb_path\n";
 	# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30.fasta";
 	
 	my $grepcmd = "grep -i \"$input_string\" $blastdb_path \| sed 's/>//' \| cut -d ' ' -f 1";

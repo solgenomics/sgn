@@ -38,6 +38,7 @@ sub get_breeding_programs {
     return \@projects;
 }
 
+# deprecated. Use CXGN::Trial->get_breeding_program instead.
 sub get_breeding_programs_by_trial {
     my $self = shift;
     my $trial_id = shift;
@@ -286,7 +287,7 @@ sub get_locations {
 sub get_all_years { 
     my $self = shift;
     my $year_cv_id = $self->get_project_year_cvterm_id();
-    my $rs = $self->schema()->resultset("Project::Projectprop")->search( { type_id=>$year_cv_id }, { distinct => 1, +select => 'value', order_by => 'value' } );
+    my $rs = $self->schema()->resultset("Project::Projectprop")->search( { type_id=>$year_cv_id }, { distinct => 1, +select => 'value', order_by => { -desc => 'value' }} );
     my @years;
     
     foreach my $y ($rs->all()) { 

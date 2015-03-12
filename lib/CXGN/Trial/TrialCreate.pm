@@ -222,7 +222,7 @@ sub save_trial {
 
   $project->create_projectprops( { 'project year' => $self->get_trial_year(),'design' => $self->get_design_type()}, {autocreate=>1});
 
-  foreach my $key (sort { $a <=> $b} keys %design) {
+  foreach my $key (sort { $a cmp $b} keys %design) {
     my $plot_name = $design{$key}->{plot_name};
     my $plot_number = $design{$key}->{plot_number};
     my $stock_name = $design{$key}->{stock_name};

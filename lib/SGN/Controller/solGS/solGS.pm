@@ -24,7 +24,7 @@ use Array::Utils qw(:all);
 #use CXGN::People::Person;
 use CXGN::Tools::Run;
 use JSON;
-
+use Sys::Hostname;
 #use jQuery::File::Upload;
 
 BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
@@ -1856,7 +1856,7 @@ sub gebv_rel_weights {
         unless ($tr eq 'rank')
         {
             $rel_wts .= $tr . "\t" . $wt;
-            $rel_wts .= "\n";#unless( (keys %$params)[-1] eq $tr);
+            $rel_wts .= "\n";
         }
     }
   
@@ -4081,27 +4081,32 @@ sub run_r_script {
             
         $c->stash->{script_error} = "$r_script";
     }
-
 }
  
  
 sub get_solgs_dirs {
     my ($self, $c) = @_;
    
-    my $tmp_dir         = $c->config->{cluster_shared_tempdir};
+    my $host = $c->req->base;
+    $host =~ s/(http)|[:\/\d+]//g;
+   
+    my $tmp_dir         = $c->config->{cluster_shared_tempdir};        
+    $tmp_dir            = catdir($tmp_dir, $host);
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
     my $correlation_dir = catdir($tmp_dir, 'correlation', 'cache');   
     my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
-    
-    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, $correlation_dir], 0, 0755);
+    my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');  
+
+    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, $correlation_dir, $pca_dir], 0, 0755);
    
     $c->stash(solgs_dir                   => $solgs_dir, 
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
               solgs_prediction_upload_dir => $solgs_upload,
               correlation_dir             => $correlation_dir,
+	      pca_dir                     => $pca_dir,
         );
 
 }
@@ -4122,7 +4127,7 @@ sub cache_file {
 
     my $file  = $file_cache->get($cache_data->{key});
 
-    unless ($file)
+    unless (-s $file > 1)
     {      
         $file = catfile($cache_dir, $cache_data->{file});
         write_file($file);

@@ -23,10 +23,28 @@ sub search :Path('/ajax/search/trials') Args(0) {
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id($c);
     my $project_location_cvterm_id = $self->get_project_location_cvterm_id($c);
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    
+    my $project_type_cv_id = $schema->resultset("Cv::Cv")->search( { name => 'project_type' })->first()->cv_id();
+
     my $trial_name_condition;
     
     my @conditions;
     my @bind_values;
+
+    # get all locations
+    #
+    my $loc_rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search();
+    my %locations = ();
+    while (my $row = $loc_rs->next()) { 
+	$locations{ $row->nd_geolocation_id() } = $row->description();
+    }
+
+    # my $type_rs = $schema->resultset("Cv::Cvterm")->search( { 'cv.name' => 'project_types' });
+    # my %project_types = ();
+    # while (my $row = $type_rs->next()) { 
+    # 	$project_types{$row->cvterm_id()} = $project_types{$row->name()};
+    # }
 
     if ($params->{trial_name} && ($params->{trial_name} ne "all")) { 
 	push @conditions, "project.name ilike ?";
@@ -48,11 +66,11 @@ sub search :Path('/ajax/search/trials') Args(0) {
 	push @bind_values, $params->{breeding_program};
     }
 
-    my $select_clause = "SELECT distinct(project.project_id), project.name, project.description, program.name, year.value, location.value ";
+    my $select_clause = "SELECT distinct(project.project_id), project.name, project.description, program.name, year.value, location.value, cvterm.name ";
 
     my $count_clause = "SELECT count(distinct(project.project_id)) ";
 
-    my $from_clause = " FROM project LEFT JOIN projectprop AS year ON (project.project_id = year.project_id) LEFT JOIN projectprop AS location ON (project.project_id = location.project_id) LEFT JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) LEFT JOIN project as program ON (project_relationship.object_project_id=program.project_id) WHERE year.type_id=$project_year_cvterm_id and location.type_id=$project_location_cvterm_id";
+    my $from_clause = " FROM project LEFT JOIN projectprop AS year ON (project.project_id = year.project_id) LEFT JOIN projectprop AS location ON (project.project_id = location.project_id) LEFT JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) LEFT JOIN project as program ON (project_relationship.object_project_id=program.project_id) LEFT JOIN projectprop as project_type ON (project.project_id=project_type.project_id) LEFT JOIN cvterm ON (project_type.type_id=cvterm.cvterm_id) WHERE (year.type_id=$project_year_cvterm_id OR year.type_id IS NULL) and (location.type_id=$project_location_cvterm_id OR location.type_id IS NULL) and (cvterm.cv_id=$project_type_cv_id OR cvterm.cv_id IS NULL)";
 
     my $where_clause = " AND ". join (" AND ", @conditions) if (@conditions);
 
@@ -60,7 +78,7 @@ sub search :Path('/ajax/search/trials') Args(0) {
 
     my $q .= $count_clause . $from_clause . $where_clause;
 
-    my $offset = " LIMIT ".$params->{page_size}. " OFFSET ".(($params->{page}-1) * $params->{page_size}) ;
+    my $offset = ""; # " LIMIT ".$params->{page_size}. " OFFSET ".(($params->{page}-1) * $params->{page_size}) ;
 
     print STDERR "QUERY: $q\n";
     
@@ -80,14 +98,16 @@ sub search :Path('/ajax/search/trials') Args(0) {
     $h->execute(@bind_values);
 
     my @result;
-    while (my ($project_id, $project_name, $project_description, $program, $year) = $h->fetchrow_array()) { 
-	push @result, [ "<a href=\"/breeders_toolbox/trial/$project_id\">$project_name</a>", $project_description, $program, $year ];
+    while (my ($project_id, $project_name, $project_description, $program, $year, $location_id, $project_type) = $h->fetchrow_array()) { 
+	push @result, [ "<a href=\"/breeders_toolbox/trial/$project_id\">$project_name</a>", $project_description, $program, $year, $locations{$location_id}, $project_type ];
     }
 
-    $c->stash->{rest} =  { 
-	trials => \@result,
-	total_count => $total,
-    };
+#    $c->stash->{rest} =  { 
+#	trials => \@result,
+#	total_count => $total,
+#    };
+
+    $c->stash->{rest} = { data => \@result };
 }
 
 sub get_project_year_cvterm_id { 

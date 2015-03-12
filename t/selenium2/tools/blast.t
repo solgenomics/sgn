@@ -16,7 +16,9 @@ $example->click();
 my $submit = $t->find_element_ok('submit_blast_button', 'id', 'find blast submit button');
 $submit->click();
 
-sleep(10);
+sleep(30);
+
+ok($t->driver->get_page_source()=~m/Query: 1   aattcggcaccagtaaattttcccaaaggtttcaaaaatgaaaatttt/, "find aligned seq");
 
 done_testing();
 
