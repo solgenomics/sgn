@@ -24,8 +24,6 @@ use Array::Utils qw(:all);
 #use CXGN::People::Person;
 use CXGN::Tools::Run;
 use JSON;
-use Sys::Hostname;
-#use jQuery::File::Upload;
 
 BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
 
@@ -1856,7 +1854,7 @@ sub gebv_rel_weights {
         unless ($tr eq 'rank')
         {
             $rel_wts .= $tr . "\t" . $wt;
-            $rel_wts .= "\n";#unless( (keys %$params)[-1] eq $tr);
+            $rel_wts .= "\n";
         }
     }
   
@@ -4087,11 +4085,7 @@ sub run_r_script {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
    
-    my $host = $c->req->base;
-    $host =~ s/(http)|[:\/\d+]//g;
-   
-    my $tmp_dir         = $c->config->{cluster_shared_tempdir};        
-    $tmp_dir            = catdir($tmp_dir, $host);
+    my $tmp_dir         = $c->site_cluster_shared_dir;       
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
@@ -4126,8 +4120,10 @@ sub cache_file {
     $file_cache->purge();
 
     my $file  = $file_cache->get($cache_data->{key});
-
-    unless ($file)
+    
+    no warnings 'uninitialized';
+    
+    unless (-s $file > 1)
     {      
         $file = catfile($cache_dir, $cache_data->{file});
         write_file($file);

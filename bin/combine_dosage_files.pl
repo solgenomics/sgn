@@ -1,8 +1,6 @@
 
 use strict;
 
-my @files = shift;
-
 use Data::Dumper;
 
 use CXGN::GenotypeIO;
