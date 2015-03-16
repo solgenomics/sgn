@@ -61,6 +61,34 @@ sub pca_result :Path('/pca/result/') Args(1) {
 }
 
 
+sub download_pca_scores : Path('/download/pca/scores/population') Args(1) {
+    my ($self, $c, $id) = @_;
+    
+    $self->create_pca_dir($c);
+    my $pca_dir = $c->stash->{pca_dir};
+    my $pca_file = catfile($pca_dir,  "pca_scores_${id}");
+  
+    unless (!-e $pca_file || -s $pca_file <= 1) 
+    {
+	my @pca_data;
+	my $count=1;
+
+	foreach my $row ( read_file($pca_file) )
+	{
+	    if ($count==1) {  $row = 'Individuals' . $row;}             
+	    $row = join(",", split(/\s/, $row));
+	    $row .= "\n";
+ 
+	    push @pca_data, [ $row ];
+	    $count++;
+	}
+   
+	$c->res->content_type("text/plain");
+	$c->res->body(join "",  map{ $_->[0] } @pca_data);   
+    }  
+}
+
+
 sub format_pca_scores {
    my ($self, $c) = @_;
 
