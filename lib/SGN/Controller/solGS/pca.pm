@@ -108,7 +108,7 @@ sub create_pca_genotype_data {
     my ($self, $c) = @_;
     
     my $page = $c->req->referer;
-    my $data_set_type = 'list'; #$c->stash->{data_set_type};
+    my $data_set_type = $c->stash->{data_set_type};
    
     my $dir = $c->stash->{solgs_cache_dir};
     
@@ -116,7 +116,6 @@ sub create_pca_genotype_data {
     {
 	my $model_id = $c->req->param('population_id');
      
-
 	my $exp = "genotype_data_${model_id}_"; 
 	my ($geno_file) = $c->controller("solGS::solGS")->grep_file($dir, $exp);
 	
