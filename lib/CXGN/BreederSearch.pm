@@ -79,7 +79,7 @@ sub get_intersect {
 		
 		accessions    => "SELECT distinct(stock.uniquename), stock.uniquename FROM stock WHERE stock.type_id=$accession_id ",
 		
-		genotype => "SELECT distinct(uniquename), stock.uniquename FROM stock as plot JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) nd_experiment_stock USING(stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN genotype USING(genotype_id) ",
+		genotypes => "SELECT distinct(accession.uniquename), accession.uniquename FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) JOIN stock as accession ON (object_id=accession.stock_id) JOIN nd_experiment_stock ON (accession.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN genotype USING(genotype_id) ",
 		
 		order_by      => " ORDER BY 2 ",
 	    },
@@ -97,7 +97,7 @@ sub get_intersect {
 		
 		accessions => "SELECT distinct(plot.uniquename), plot.uniquename FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id)  JOIN stock as plot ON (stock_relationship.subject_id=plot.stock_id) WHERE plot.type_id=$plot_id and stock.stock_id in ($dataref->{plots}->{accessions}) ",
 		
-		#genotype => "SELECT distinct(uniquename), stock.uniquename FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN ",
+		genotypes => "SELECT distinct(stock.uniquename), stock.uniquename FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN genotype USING(genotype_id) ",
 		
 		order_by => " ORDER BY 2",
 		
@@ -115,7 +115,8 @@ sub get_intersect {
 		traits    => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment USING (nd_geolocation_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) WHERE cvalue_id in ($dataref->{locations}->{traits}) ",
 		
 		accessions => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment USING (nd_geolocation_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.type_id=$accession_id and stock.stock_id in ($dataref->{locations}->{accessions}) ",
-		#genotype => "",
+
+		genotypes => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment USING(nd_geolocation_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) join nd_experiment_stock as genotype_experiment_stock on(genotype_experiment_stock.stock_id = nd_experiment_stock.stock_id) JOIN nd_experiment_genotype on (genotype_experiment_stock.nd_experiment_id = nd_experiment_genotype.nd_experiment_id) JOIN genotypeprop USING(genotype_id) ",
 		
 		order_by => " ORDER BY 2 ",
 	    },
@@ -132,7 +133,8 @@ sub get_intersect {
 		traits    => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING(phenotype_id) WHERE type_id=$type_id AND cvalue_id IN ($dataref->{years}->{traits}) ",
 		
 		accessions => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) WHERE type_id=$accession_id and stock.stock_id in ($dataref->{years}->{accessions}) ",
-		#genotype => "",
+		
+		genotypes => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING (stock_id) JOIN nd_experiment_stock AS genotype_experiment_stock ON (genotype_experiment_stock.stock_id=stock.stock_id) JOIN nd_experiment_genotype ON (genotype_experiment_stock.nd_experiment_id=nd_experiment_genotype.nd_experiment_id) JOIN genotypeprop ON (nd_experiment_genotype.genotype_id=genotypeprop.genotype_id) ",
 		
 		order_by => " ORDER BY 1 ",
 		
@@ -150,7 +152,7 @@ sub get_intersect {
 		traits    => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) WHERE cvalue_id in ($dataref->{projects}->{traits}) ",
 		
 		accessions => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.type_id=$accession_id and stock.stock_id in ($dataref->{projects}->{accessions}) ",
-		#genotype => "",
+		genotypes => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING (stock_id) JOIN nd_experiment AS genotype_experiment_stock ON (stock.stock_id=genotype_experiment_stock.nd_experiment_id) JOIN nd_experiment_genotype ON (genotype_experiment_stock.nd_experiment_id=nd_experiment_genotype.nd_experiment_id) JOIN genotypeprop USING(genotype_id)",
 		
 		order_by => " ORDER BY 2 ",
 	    },
@@ -171,8 +173,10 @@ sub get_intersect {
 		
 		accessions => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN materialized_traits ON (cvalue_id=cvterm_id) WHERE stock_id IN ($dataref->{traits}->{plots}) ",
 
+		genotypes => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM stock JOIN nd_experiment_stock USING (stock_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN materialized_traits ON (cvalue_id=cvterm_id) JOIN nd_experiment_stock AS genotype_experiment_stock ON (stock.stock_id=genotype_experiment_stock.stock_id) JOIN nd_experiment_genotype ON (genotype_experiment_stock.nd_experiment_id=nd_experiment_genotype.nd_experiment_id) JOIN genotypeprop USING(genotype_id) ",
+
 		order_by => " ORDER BY 2 ",
-	    #genotype => "",
+	   
 		
 	    },
 	    
