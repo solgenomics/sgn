@@ -677,29 +677,31 @@ sub genotype_data {
 sub format_user_list_genotype_data {
     my $self = shift;
 
-    my @genotypes = ();
-
+    my @genotypes = @{$self->context->stash->{genotypes_list}};
     my $population_type = $self->context->stash->{population_type};
-    
-    if($population_type =~ /reference/) 
+
+    if (!@genotypes)
+    { 
+	if($population_type =~ /reference/) 
         
-    {
-       my  @plots_names = @{ $self->context->stash->{reference_population_plot_names} };
+	{
+	    my  @plots_names = @{ $self->context->stash->{reference_population_plot_names} };
          
-        foreach my $plot_name (@plots_names)
-        {
-            my $stock_plot_rs = $self->search_stock_using_plot_name($plot_name);
-            my $stock_id = $stock_plot_rs->single->stock_id;
-            my $stock_obj_rs = $self->map_subject_to_object($stock_id);
-            my $genotype_name = $stock_obj_rs->single->name;
-            push @genotypes, $genotype_name;
-        }
-    }
-    else
-    {
-        @genotypes = @{ $self->context->stash->{selection_genotypes_list_stocks_names} };
-    }    
-              
+	    foreach my $plot_name (@plots_names)
+	    {
+		my $stock_plot_rs = $self->search_stock_using_plot_name($plot_name);
+		my $stock_id = $stock_plot_rs->single->stock_id;
+		my $stock_obj_rs = $self->map_subject_to_object($stock_id);
+		my $genotype_name = $stock_obj_rs->first->name;
+		push @genotypes, $genotype_name;
+	    }
+	}
+	else
+	{
+	    @genotypes = @{ $self->context->stash->{selection_genotypes_list_stocks_names} };
+	}    
+    } 
+            
     @genotypes = uniq(@genotypes);
 
     my $geno_data;
@@ -708,12 +710,12 @@ sub format_user_list_genotype_data {
 
     foreach my $genotype (@genotypes) 
     { 
-        my $stock_rs = $self->search_stock($genotype);     
+	my $stock_rs = $self->search_stock($genotype);     
         my $stock_genotype_rs = $self->individual_stock_genotypes_rs($stock_rs);
        
         unless ($header_markers) 
         {
-            if($stock_genotype_rs->single)
+            if ($stock_genotype_rs->first)
             {
                 $header_markers   = $self->extract_project_markers($stock_genotype_rs);                
                 $geno_data = "\t" . $header_markers . "\n";
@@ -728,9 +730,8 @@ sub format_user_list_genotype_data {
             my @markers      = keys %$values;
             
             my $common_markers = scalar(intersect(@header_markers, @markers));
-
             my $similarity = $common_markers / scalar(@header_markers);
-                  
+              
             if ($similarity == 1 )     
             {
                 my $geno_values = $self->stock_genotype_values($geno);               
@@ -941,7 +942,7 @@ sub stock_genotype_values {
     }
 
     $geno_values .= "\n";      
-    
+
     return $geno_values;
 }
 

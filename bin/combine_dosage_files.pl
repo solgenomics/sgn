@@ -2,16 +2,20 @@
 use strict;
 
 use Data::Dumper;
-
+use Getopt::Std;
 use CXGN::GenotypeIO;
+
+our ($opt_r, $opt_o); # -r: fix r headers -o: outfile
+getopts('ro:');
 
 my @files = @ARGV;
 
 my @io = ();
+open(my $OUT, ">", $opt_o) || die "Can't open outfile $opt_o";
 
 foreach my $f (@files) {
     print STDERR "Opening file $f... ";
-    my $gtio = CXGN::GenotypeIO->new( { file => $f, format=>"dosage_transposed"});
+    my $gtio = CXGN::GenotypeIO->new( { file => $f, format=>"dosage_transposed", fix_r_headers => $opt_r });
     push @io, $gtio;
     
     print STDERR "Done.\n";
@@ -37,18 +41,19 @@ foreach my $io (@io) {
     }
 }
 
+
 foreach my $m (sort keys %all_markers) { 
-    print "\t".$m;
+    print $OUT "\t".$m;
 }
-print "\n";
+print $OUT "\n";
 
 
 foreach my $name (sort keys %all_accs) { 
-    print $name;
+    print $OUT $name;
     foreach my $m (sort keys %all_markers) { 
-	print "\t".$all_accs{$name}->{$m};
+	print $OUT "\t".$all_accs{$name}->{$m};
     }
-    print "\n";
+    print $OUT "\n";
 }
 
 

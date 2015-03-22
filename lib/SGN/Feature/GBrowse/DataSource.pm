@@ -64,8 +64,8 @@ the parsed config of this data source, a Bio::Graphics::FeatureFile
     lazy_build => 1,
    ); sub _build_config {
        Bio::Graphics::FeatureFile->new(
-           -file => shift->path->stringify,
-           -safe => 1,
+#           -file => shift->path->stringify,
+#           -safe => 1,
           );
    }
 
