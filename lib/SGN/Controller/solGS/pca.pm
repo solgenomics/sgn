@@ -72,7 +72,8 @@ sub pca_result :Path('/pca/result/') Args(1) {
     {
         $ret->{pca_scores} = $pca_scores;
 	$ret->{pca_variances} = $pca_variances;
-        $ret->{status} = 'success';             
+        $ret->{status} = 'success';  
+	$ret->{pop_id} = $c->stash->{pop_id} if $list_type eq 'trials';
     }
 
     $ret = to_json($ret);
@@ -194,8 +195,6 @@ sub create_pca_genotype_data {
 	{
 	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
 	    my @trials_list = @{$list->elements};
-	   
-	    print STDERR "\n trial id: $trials_list[0]\n";
 	   
 	    my $trial_id = $c->model("solGS::solGS")
 		->project_details_by_name($trials_list[0])
