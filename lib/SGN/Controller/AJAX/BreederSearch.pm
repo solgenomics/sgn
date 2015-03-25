@@ -49,13 +49,19 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 	}
 	# items need to be quoted in sql
 	#
-	print STDERR "DATA: $data\n";
+	#print STDERR "DATA: $data\n";
 	if ($data) { 
 	    my $qdata = join ",", (map { "\'$_\'"; } (split ",", $data));
 	    $dataref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $qdata;
 	}
     }
-    
+    my $genotypes = $c->req->param("genotypes");
+    #  print STDERR "Genotypes: $genotypes\n";
+    # if ($genotypes){ 
+    # 	$dataref->{$criteria_list->[-1]}->{genotypes}=1;
+ #   }
+
+    print STDERR "DATAREF: ".Dumper($dataref);
     if ($data_tainted) { 
 	$c->stash->{rest} =  { error => "Illegal data.", };
 	return;
@@ -86,7 +92,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
     push @$criteria_list, $output;
     print STDERR "OUTPUT: $output CRITERIA: ", Data::Dumper::Dumper($criteria_list);
-    $stock_ref = $bs->get_intersect($criteria_list, $stockdataref, $c->config->{trait_ontology_db_name});
+    $stock_ref = $bs->get_intersect($criteria_list, $stockdataref, $c->config->{trait_ontology_db_name}, $genotypes);
     
     print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
 
