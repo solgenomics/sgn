@@ -151,23 +151,27 @@
 .si_dropdown dd ul li a:hover, .corre_dropdown dd ul li a:hover { 
     background-color:#efefef;
 }
-        
-        
-/* prediction upload */
+               
+/* list inputs */
 
-
-#prediction_genotypes_list {
+#prediction_genotypes_list, 
+#reference_genotypes_list, 
+#pca_genotypes_list {
     display: inline-block; 
     margin-right: 5px;
 }
 
-#prediction_genotypes_list_upload input {
+#prediction_genotypes_list_upload input, 
+#reference_genotypes_list_upload input,
+#pca_genotypes_list_upload input {
     color: #ffffff;
     border: 1px solid #ffffff;
     background: #5cb85c;
 }
 
-#prediction_genotypes_list_upload input:hover {
+#prediction_genotypes_list_upload input:hover, 
+#reference_genotypes_list_upload input:hover,
+#pca_genotypes_list_upload input:hover {
     background-color: #c6e6c6; 
 }
 
@@ -188,26 +192,6 @@
     
 }
 
-/* user reference population */
-
-#reference_genotypes_list {
-    display: inline-block; 
-    margin-right: 5px;
-}
-
-#reference_genotypes_list_upload { 
- 
-}
-
-#reference_genotypes_list_upload input {
-    color: #ffffff;
-    border: 1px solid #ffffff;
-    background: #5cb85c;
-}
-
-#reference_genotypes_list_upload input:hover {
-    background-color: #c6e6c6; 
-}
 
 
 /*jquery file upload css
@@ -228,7 +212,6 @@
   overflow: hidden;
   float: left;
   margin-right: 5px;
-
   height: 30px;
   color: #ffffff;
   background: #5cb85c;
