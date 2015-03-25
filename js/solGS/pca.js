@@ -74,8 +74,6 @@ function loadPcaGenotypesList(listId) {
     if ( listId.length === 0) {       
         alert('The list is empty. Please select a list with content.' );
     } else {
-
-
 	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Please wait..'});
        
@@ -146,6 +144,7 @@ function pcaResult (listId) {
 		jQuery("#pca_message").html("Running PCA... please wait...");
                 plotPca(plotData);
 
+		if (response.pop_id)  {popId = response.pop_id; }
 		var pcaDownload = "<a href=\"/download/pca/scores/population/" 
 		                    + popId + "\"> [ Download pca scores ]</a>";
 
@@ -196,18 +195,14 @@ jQuery.fn.doesExist = function(){
  };
 
 
-
 function getPcaGenotypesListData(listId) {   
     
     var list = new CXGN.List();
-    var genotypesList;
-    var listName;
-    var listType;
-
+    
     if (! listId == "") {
-	listName = list.listNameById(listId);
-        listType = list.getListType(listId);
-
+	var listName = list.listNameById(listId);
+        var listType = list.getListType(listId);
+	
 	return {'name'     : listName,
 		'listType' : listType,
                };
