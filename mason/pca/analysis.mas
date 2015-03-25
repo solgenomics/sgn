@@ -17,11 +17,20 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%args>
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
-<& /util/import_javascript.mas, classes => ["solGS.pca"] &>
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.pca"] &>
 
+<style>
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+</style>
 
 <br />
 <br />
+
 <&| /page/info_section.mas, 
     collapsible => 0, 
     collapsed   => 0,
@@ -56,3 +65,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </&>
 
+
+<div id="pca_canvas"></div>
+<div id="pca_plot"></div>
+  <div id="pca_message" style="font-weight:bold;text-align:center;color:#A7C942">
+    
+  </div>
