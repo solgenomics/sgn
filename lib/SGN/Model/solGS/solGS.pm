@@ -270,6 +270,14 @@ sub project_details {
 }
 
 
+sub project_details_by_name {
+    my ($self, $pr_name) = @_;
+    
+    return $self->schema->resultset("Project::Project")
+        ->search( {'me.name' => $pr_name});
+}
+
+
 sub get_population_details {
     my ($self, $pop_id) = @_;
    
@@ -278,7 +286,7 @@ sub get_population_details {
         {
             'stock_id' => $pop_id
         }, 
-        );
+	);
 }
 
 
@@ -404,9 +412,6 @@ sub set_project_type {
 }
 
 
-
-
-
 sub get_project_type {
     my ($self, $pr_id) = @_;
    
@@ -503,9 +508,6 @@ sub get_stock_owners {
     return $owners;
 
 }
-
-
-
 
 
 sub search_stock {
