@@ -8,8 +8,8 @@
 <& /page/page_title.mas, title=>'Search People' &>
 
 <table width="100%">
-<tr><td><label for="first_name">First name</label></td>
-<td><input id="first_name" /><br /></td><td><label for="last_name">Last name</label></td><td><input id="last_name" /><br /></td></tr>
+<tr><td><label for="last_name">Last name</label></td>
+<td><input id="last_name" /><br /></td><td><label for="first_name">First name</label></td><td><input id="first_name" /><br /></td></tr>
 <tr><td><label for="organization">Organization</label></td><td><input id="organization" /><br /></td><td><label for="country">Country</label></td><td><input id="country" /><br /></td></tr>
 <tr><td colspan="4" align="right">
 <button id="submit_people_search" />Search</button>
@@ -20,8 +20,8 @@
 <table id="people_search_results" class="display">
 <thead>
   <tr>
-    <th>First name</th>
     <th>Last name</th>
+    <th>First name</th>
     <th>Organization</th>
     <th>Country</th>
 </tr>

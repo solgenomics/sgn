@@ -51,7 +51,7 @@ window.onload = function initialize() {
 	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
-	    data: {'select1':select1, 'select4': select4 },
+	    data: {'select1':select1, 'select4': select4, 'genotypes': get_genotype_checkbox() },
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -64,7 +64,7 @@ window.onload = function initialize() {
 		    return;
 		} 
 		else {
-		    list = response.list;
+		    list = response.list || [];
 		    stocks = response.stocks;
 		    message = response.message;
 		    c1_html = format_options_list(list);
@@ -116,7 +116,7 @@ window.onload = function initialize() {
 	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
-	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select4':select4  },
+	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select4':select4, 'genotypes': get_genotype_checkbox()  },
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -157,7 +157,11 @@ window.onload = function initialize() {
 	var c1_data = jQuery('#c1_data').val() || [];
 	jQuery('#select3').val('please select');
 	jQuery('#c2_data').val('');
-	
+
+	if (select2 == '') { 
+	    jQuery('#c2_data').html("");
+	    return;
+	}
 	var c2_data = '';
 	var stock_data = '';
 
@@ -168,7 +172,7 @@ window.onload = function initialize() {
 	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","), 'select4':select4 },
+	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","), 'select4':select4, 'genotypes': get_genotype_checkbox()  },
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -180,10 +184,11 @@ window.onload = function initialize() {
 		    alert("ERROR: "+response.error);
 		} 
 		else {
-		    c2_html = format_options_list(response.list);
+                    var list = response.list || [];
+		    c2_html = format_options_list(list);
 
 		    jQuery('#c2_data').html(c2_html);
-		    show_list_total_count('#c2_data_count', response.list.length);
+		    show_list_total_count('#c2_data_count', list.length);
 		    update_stocks(response.stocks);
 		    if (isLoggedIn()) { 
 			addToListMenu('c2_to_list_menu', 'c2_data', {
@@ -221,7 +226,7 @@ window.onload = function initialize() {
 	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
-	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select2':select2, 'c2_data':c2_data.join(","), 'select4':select4  },
+	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select2':select2, 'c2_data':c2_data.join(","), 'select4':select4, 'genotypes': get_genotype_checkbox()   },
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -233,7 +238,8 @@ window.onload = function initialize() {
 		    alert(response.error);
 		} 
 		else {
-		    c3_html = format_options_list(response.list);
+                    var list = response.list || [];
+		    c3_html = format_options_list(list);
 		    update_stocks(response.stocks);
 		    show_list_total_count('#c2_data_count', jQuery('#c2_data').text().split("\n").length-1, jQuery('#c2_data').val().length);
 		    show_list_total_count('#c3_data_count', 0, 0);
@@ -265,9 +271,12 @@ window.onload = function initialize() {
 	
 	var stock_data = '';
 
+	if (select3 == '') { 
+	    jQuery('#c3_data').html("");
+	    return;
+	}
+	
 	jQuery('#stock_data').html('');
-
-	//disable_ui();
 
 	var list;
 
@@ -276,7 +285,7 @@ window.onload = function initialize() {
 	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4 },
+	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4, 'genotypes': get_genotype_checkbox()  },
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -288,8 +297,8 @@ window.onload = function initialize() {
 		    alert(response.error);
 		} 
 		else {
-		    c3_html = format_options_list(response.list);
-		    list = response.list;
+		    list = response.list || [];
+		    c3_html = format_options_list(list);
 		    update_stocks(response.stocks);
 		    jQuery('#c3_data').html(c3_html);
 		    show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, 0);
@@ -331,7 +340,7 @@ window.onload = function initialize() {
 	    //async: false,
 	    timeout: 30000,
 	    method: 'POST',
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'c3_data': c3_data.join(","), 'select4' : select4 },
+	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'c3_data': c3_data.join(","), 'select4' : select4, 'genotypes': get_genotype_checkbox()  },
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -396,7 +405,7 @@ window.onload = function initialize() {
 	    //async: false,
 	    timeout: 30000,
 	    method: 'POST',
-	    data: {'select1':select1, 'c1_data': c1_str, 'select2': select2, 'c2_data': c2_str, 'select3':select3, 'c3_data': c3_str, 'select4' : select4 },
+	    data: {'select1':select1, 'c1_data': c1_str, 'select2': select2, 'c2_data': c2_str, 'select3':select3, 'c3_data': c3_str, 'select4' : select4, 'genotypes': get_genotype_checkbox()  },
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -433,7 +442,62 @@ window.onload = function initialize() {
             show_list_total_count('#stock_count', jQuery('#stock_data').text().split("\n").length-1, jQuery('#stock_data').val().length);
 	}
     );
-    
+ 
+    jQuery('#restrict_genotypes').change(
+	function() { 
+	    var select1 = jQuery('#select1').val();
+	    var select2 = jQuery('#select2').val();
+	    var select3 = jQuery('#select3').val();
+	    var select4 = jQuery('#select4').val();
+	    var c1_data = jQuery('#c1_data').val() || [];
+	    var c2_data = jQuery('#c2_data').val() || [];
+	    var c3_data = jQuery('#c3_data').val() || [];
+	
+	    var stock_data;
+	    
+	    if (typeof select3 != 'string') { select3 = ''; }
+	    
+	    var c1_str = '';
+	    var c2_str = '';
+	    var c3_str = '';
+	    var restrict_genotypes = '';
+
+	    if (c1_data.length > 0) { c1_str = c1_data.join(","); }
+	    if (c2_data.length > 0) { c2_str = c2_data.join(","); }
+	    if (c3_data.length > 0) { c3_str = c3_data.join(","); }
+	    restrict_genotypes = 0;
+
+    	    jQuery.ajax( { 
+		url: '/ajax/breeder/search',
+		//async: false,
+		timeout: 30000,
+		method: 'POST',
+		data: {'select1':select1, 'c1_data': c1_str, 'select2': select2, 'c2_data': c2_str, 'select3':select3, 'c3_data': c3_str, 'select4' : select4, 'genotypes': get_genotype_checkbox()  },
+		beforeSend: function(){
+		    disable_ui();
+		},  
+		complete : function(){
+		    enable_ui();
+		},  
+		success: function(response) { 
+		    if (response.error) { 
+			alert(response.error);
+		    } 
+		    else {
+			update_stocks(response.stocks);
+			
+			if (isLoggedIn()) { 
+			    addToListMenu('add_to_list_menu', 'stock_data', {
+			    selectText: true,
+				typeSourceDiv: 'select4' });
+			}
+		    }		
+	    },
+	    error: function(message) { 
+		alert("an error occurred. ("+ message.responseText +")");
+	    }
+	    });
+	});      
 }
 
 function update_stocks(stocks, message) { 
@@ -515,3 +579,14 @@ function show_list_selected_count(select_div, selected_count_div) {
       obj.options[i].selected = true;
     }
   }
+
+
+function get_genotype_checkbox() { 
+    var checkbox = jQuery('#restrict_genotypes').is(':checked')
+
+    if (checkbox == true) { 
+	return 1;
+    }
+    return 0;
+
+}

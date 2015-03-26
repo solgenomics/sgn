@@ -74,7 +74,7 @@ Search accessions and plots using location, year, trial, and trait data.
 <div id="stock_count"></div>
 <div id="add_to_list_menu"></div>
 </td></tr>
-
+<tr><td colspan="4"><input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;only show genotyped accessions</td></tr>
 </table>
 
 
