@@ -181,7 +181,7 @@ sub search_trials : Path('/solgs/search/trials') Args() {
    
     if ( $pager->previous_page || $pager->next_page )
     {
-        $pagination =   '<div class = "paginate_nav">';
+        $pagination =   '<div style="width:690px; overflow: auto;" class = "paginate_nav">';
         
         if( $pager->previous_page ) 
         {
@@ -415,7 +415,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
    
     if ( $pager->previous_page || $pager->next_page )
     {
-	$pagination =   '<div class = "paginate_nav">';
+	$pagination =   '<div  style="width:690px; overflow: auto;" class = "paginate_nav">';
         
 	if( $pager->previous_page ) 
 	{
