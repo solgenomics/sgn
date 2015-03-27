@@ -32,7 +32,7 @@ $design_layout_view
 $user_can_modify => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'CXGN.Trial' , 'jstree/dist/jstree' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
 <%perl>
 
@@ -100,11 +100,14 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </td></tr>
 <tr><td valign="top" >
 
-<&| /page/info_section.mas, title=>"Year(s)", subtitle => '[change]' &>
-<% join ", ", @years %>
+<&| /page/info_section.mas, title=>"Year(s)", subtitle => '[<a id="change_year_link">change</a>]' &>
+  <div id="trial_year">
+    [loading...]
+  </div>
+
 </&>
 </td><td valign="top" width="365" >
-<&| /page/info_section.mas, title=>"Location(s)", subtitle=>'[change]' &>
+<&| /page/info_section.mas, title=>"Location(s)", subtitle=>"[<a id=\"change_trial_location_link\">change</a>]" &>
 
 <div id="trial_location">
   [loading...]
@@ -127,7 +130,13 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   <select id="trial_type_select"></select>
 </div>
 
-<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/layout/download/$trial_id\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/layout/download/$trial_id?format=csv\">csv</a>] | [<a id=\"delete_layout_data_by_trial_id\">Delete layout</a>]" &>
+<div id="change_trial_location_dialog">
+  Please choose the location fro this trial:<br />
+  <div id="trial_location_select_div" /></div>
+
+</div>
+
+<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/layout/download/$trial_id\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/layout/download/$trial_id?format=csv\">csv</a>]"  &>
 
 % print STDERR "Check 8 (mason) : ".(time() - $start_time)."\n";
 %print "Design: $design_type <br /><br />";
@@ -160,7 +169,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <br /><br />
 
-<&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/phenotype/download/$trial_id\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/phenotype/download/$trial_id?format=csv\">csv</a>] | [<a id=\"delete_phenotype_data_by_trial_id\" >Delete trial data</a>]" &>
+<&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/phenotype/download/$trial_id\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/phenotype/download/$trial_id?format=csv\">csv</a>] " &>
 % foreach my $trait (@phenotype_data) {
 % my $trait_id = $trait->[1];
 % my $trait_name = ucfirst($trait->[0]);
@@ -193,6 +202,11 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   
 <& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
   
+</&>
+
+<&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
+  <& /breeders_toolbox/trial/trial_deletion.mas, trial_id => $trial_id  &>
+
 </&>
 
 % print STDERR "Check 9 (mason) : ".(time() - $start_time)."\n";
@@ -231,9 +245,16 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </div>
 
 <div id="change_breeding_program_dialog">
-  <select id="change_breeding_program_select">
-  </select>
-<div>
+  Please select a breeding program for this trial:<br />
+  <div id="change_breeding_program_select_div">
+  </div>
+</div>
+
+<div id="change_trial_year_dialog">
+  Please select a year for this trial:<br />
+  <div id="change_year_select_div">
+  </div>
+</div>
 
 <div id="trial_design_view_layout" title="Trial design layout">
 % print $design_layout_view;
@@ -251,6 +272,8 @@ jQuery(document).ready(function () {
   display_trial_description(<% $trial_id %>);
 
   display_trial_location(<% $trial_id %>);
+
+  display_trial_year();
 
   var type = get_trial_type(<% $trial_id %>);
 

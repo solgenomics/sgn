@@ -19,10 +19,10 @@ package SGN::Controller::AJAX::People;
 
 use Moose;
 
+use Data::Dumper;
 use List::MoreUtils qw /any /;
 use Try::Tiny;
-#use CXGN::Phenome::Schema;
-
+use CXGN::People::Schema;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -66,6 +66,7 @@ sub autocomplete_GET :Args(1) {
     }
     $c->{stash}->{rest} = \@results;
 }
+
 
 
 ###

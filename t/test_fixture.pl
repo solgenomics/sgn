@@ -274,6 +274,8 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
 
   --noserver     Do not start webserver (if running unit_fixture tests only)
 
+  --noparallel   Do not run the server in parallel mode.
+
 =head1 AUTHORS
 
     Robert Buels (initial script)

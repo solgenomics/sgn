@@ -140,6 +140,7 @@ my $build = SGN::Build->new(
         'Storable'                                 => 0,
 	'String::Approx'                           => 0,
 	'String::CRC'                              => 0,
+	'Sys::Hostname'                            => 0,
 	'SVG'                                      => 0,
         'Test::More'                               => 0,
         'Test::Class'                              => 0,

@@ -146,7 +146,7 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 
     if ($design_type eq "genotyping_plate") { 
 	if ($format eq "as_table") { 
-	    $c->stash->{template} = '/breeders_toolbox/genotyping_trials/layout_as_table.mas';
+	    $c->stash->{template} = '/breeders_toolbox/genotyping_trials/format/as_table.mas';
 	}
 	else { 
 	    $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';

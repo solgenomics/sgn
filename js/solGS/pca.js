@@ -31,6 +31,10 @@ function pcaResult () {
 
                 plotPca(plotData);
 
+		var pcaDownload = "<a href=\"/download/pca/scores/population/" 
+		                    + popId + "\"> [ Download pca scores ]</a>";
+
+		jQuery("#pca_canvas").append("<br /><br />" + pcaDownload ).show();
 		jQuery("#pca_message").empty();
 
             } else {                

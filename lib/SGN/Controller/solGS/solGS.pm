@@ -25,8 +25,6 @@ use Array::Utils qw(:all);
 use CXGN::Tools::Run;
 use JSON;
 
-#use jQuery::File::Upload;
-
 BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
 
 #
@@ -183,7 +181,7 @@ sub search_trials : Path('/solgs/search/trials') Args() {
    
     if ( $pager->previous_page || $pager->next_page )
     {
-        $pagination =   '<div class = "paginate_nav">';
+        $pagination =   '<div style="width:690px; overflow: auto;" class = "paginate_nav">';
         
         if( $pager->previous_page ) 
         {
@@ -417,7 +415,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
    
     if ( $pager->previous_page || $pager->next_page )
     {
-	$pagination =   '<div class = "paginate_nav">';
+	$pagination =   '<div  style="width:690px; overflow: auto;" class = "paginate_nav">';
         
 	if( $pager->previous_page ) 
 	{
@@ -1856,7 +1854,7 @@ sub gebv_rel_weights {
         unless ($tr eq 'rank')
         {
             $rel_wts .= $tr . "\t" . $wt;
-            $rel_wts .= "\n";#unless( (keys %$params)[-1] eq $tr);
+            $rel_wts .= "\n";
         }
     }
   
@@ -4081,27 +4079,28 @@ sub run_r_script {
             
         $c->stash->{script_error} = "$r_script";
     }
-
 }
  
  
 sub get_solgs_dirs {
     my ($self, $c) = @_;
    
-    my $tmp_dir         = $c->config->{cluster_shared_tempdir};
+    my $tmp_dir         = $c->site_cluster_shared_dir;       
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
     my $correlation_dir = catdir($tmp_dir, 'correlation', 'cache');   
     my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
-    
-    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, $correlation_dir], 0, 0755);
+    my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');  
+
+    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, $correlation_dir, $pca_dir], 0, 0755);
    
     $c->stash(solgs_dir                   => $solgs_dir, 
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
               solgs_prediction_upload_dir => $solgs_upload,
               correlation_dir             => $correlation_dir,
+	      pca_dir                     => $pca_dir,
         );
 
 }
@@ -4121,8 +4120,10 @@ sub cache_file {
     $file_cache->purge();
 
     my $file  = $file_cache->get($cache_data->{key});
-
-    unless ($file)
+    
+    no warnings 'uninitialized';
+    
+    unless (-s $file > 1)
     {      
         $file = catfile($cache_dir, $cache_data->{file});
         write_file($file);

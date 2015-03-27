@@ -92,7 +92,7 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'People',
-                    link => '/search/directory',
+                    link => '/search/people',
                     desc => 'Search database of researchers who use SGN.'
                 },
                 {

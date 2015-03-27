@@ -9,6 +9,8 @@ use File::Temp qw / tempfile tempdir /;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
 
+use CXGN::List;
+
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -18,6 +20,8 @@ sub pca_result :Path('/pca/result/') Args(1) {
     
     $c->stash->{pop_id}   = $pop_id;
     $c->stash->{model_id} = $pop_id;
+    
+    $c->stash->{data_set_type} = $c->req->param('data_set_type');
 
     $self->create_pca_genotype_data($c);
     my $geno_file = $c->stash->{genotype_file};
@@ -61,6 +65,34 @@ sub pca_result :Path('/pca/result/') Args(1) {
 }
 
 
+sub download_pca_scores : Path('/download/pca/scores/population') Args(1) {
+    my ($self, $c, $id) = @_;
+    
+    $self->create_pca_dir($c);
+    my $pca_dir = $c->stash->{pca_dir};
+    my $pca_file = catfile($pca_dir,  "pca_scores_${id}");
+  
+    unless (!-e $pca_file || -s $pca_file <= 1) 
+    {
+	my @pca_data;
+	my $count=1;
+
+	foreach my $row ( read_file($pca_file) )
+	{
+	    if ($count==1) {  $row = 'Individuals' . $row;}             
+	    $row = join(",", split(/\s/, $row));
+	    $row .= "\n";
+ 
+	    push @pca_data, [ $row ];
+	    $count++;
+	}
+   
+	$c->res->content_type("text/plain");
+	$c->res->body(join "",  map{ $_->[0] } @pca_data);   
+    }  
+}
+
+
 sub format_pca_scores {
    my ($self, $c) = @_;
 
@@ -74,17 +106,38 @@ sub format_pca_scores {
 
 sub create_pca_genotype_data {    
     my ($self, $c) = @_;
+    
     my $page = $c->req->referer;
-
+    my $data_set_type = $c->stash->{data_set_type};
+   
+    my $dir = $c->stash->{solgs_cache_dir};
+    
     if ($page =~ /combined/ ) 
     {
 	my $model_id = $c->req->param('population_id');
      
-	my $dir = $c->stash->{solgs_cache_dir};
 	my $exp = "genotype_data_${model_id}_"; 
 	my ($geno_file) = $c->controller("solGS::solGS")->grep_file($dir, $exp);
 	
 	$c->stash->{genotype_file}  = $geno_file;
+    }
+    elsif ($data_set_type eq 'list') 
+    {
+	my $list_id = $c->stash->{pop_id};
+
+	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+	my @genotypes_list = @{$list->elements};
+
+	$c->stash->{genotypes_list} = \@genotypes_list;
+	$c->model("solGS::solGS")->format_user_list_genotype_data;
+	my $geno_data = $c->stash->{user_selection_list_genotype_data};
+
+	my $file = "genotype_data_${list_id}";     
+        $file = $c->controller("solGS::solGS")->create_tempfile($c, $file);    
+            
+        write_file($file, $geno_data);
+	$c->stash->{genotype_file} = $file; 
+
     }
     else 
     {
@@ -96,13 +149,8 @@ sub create_pca_genotype_data {
 
 sub create_pca_dir {
     my ($self, $c) = @_;
-    
-    my $temp_dir = $c->config->{cluster_shared_tempdir};
-    my $pca_dir  = catdir($temp_dir, 'pca', 'cache'); 
-  
-    mkpath ($pca_dir, 0, 0755);
-   
-    $c->stash->{pca_dir} = $pca_dir;
+     
+    $c->controller("solGS::solGS")->get_solgs_dirs($c);
 
 }
 

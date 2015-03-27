@@ -860,6 +860,23 @@ sub _formatted_string_from_error_hash_by_type {
 }
 
 
+sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+
+    print STDERR "TRIAL ID: $trial_id\n";
+    $c->stash->{trial_id} = $trial_id;
+    $c->stash->{trial} = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+
+    if (!$c->stash->{trial}) { 
+	$c->stash->{rest} = { error => "The specified trial with id $trial_id does not exist" };
+	return;
+    }
+    
+}
+
+
 =head2 delete_trial_by_file
 
  Usage:
@@ -1080,26 +1097,34 @@ sub delete_trial_layout_by_trial_id : Path('/breeders/trial/layout/delete/id') A
 
 }
 
-sub get_trial_description : Path('/ajax/breeders/trial/description/get') Args(1) { 
+
+
+sub trial_description : Local() ActionClass('REST');
+
+sub trial_description_GET : Chained('trial') PathPart('description') Args(0) { 
     my $self = shift;
     my $c = shift;
-    my $trial_id = shift;
     
-    my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
-    
+    my $trial = $c->stash->{trial};
+
     print STDERR "TRIAL: ".$trial->get_description()."\n";
 
     $c->stash->{rest} = { description => $trial->get_description() };
    
 }
 
-sub save_trial_description : Path('/ajax/breeders/trial/description/save') Args(1) { 
+sub trial_description_POST : Chained('trial') PathPart('description') Args(1) {  
     my $self = shift;
     my $c = shift;
-    my $trial_id = shift;
-    my $description = $c->req->param("description");
+    my $description = shift;
     
-    my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
+	return;
+    }
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = $c->stash->{trial};
 
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 
@@ -1127,6 +1152,112 @@ sub save_trial_description : Path('/ajax/breeders/trial/description/save') Args(
 # }
     
 
+sub trial_location : Local() ActionClass('REST');
+
+sub trial_location_GET : Chained('trial') PathPart('location') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $t = $c->stash->{trial};
+
+    $c->stash->{rest} = { location => [ $t->get_location()->[0], $t->get_location()->[1] ] };
+    
+}
+
+sub trial_location_POST : Chained('trial') PathPart('location') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $location_id = shift;
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
+	return;
+    }
+
+    print STDERR "trial location POST!\n";
+
+    #my $location_id = $c->req->param("location_id");
+
+    my $t = $c->stash->{trial};
+    my $trial_id = $c->stash->{trial_id};
+
+    # remove old location
+    #
+    $t->remove_location($t->get_location()->[0]);
+
+    # add new one
+    #
+    $t->add_location($location_id);
+
+    $c->stash->{rest} =  { message => "Successfully stored location for trial $trial_id",
+			   trial_id => $trial_id };
+
+}
+
+sub trial_year : Local()  ActionClass('REST');
+
+sub trial_year_GET : Chained('trial') PathPart('year') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $t = $c->stash->{trial};
+    
+    $c->stash->{rest} = { year => $t->get_year() };
+    
+}
+
+sub trial_year_POST : Chained('trial') PathPart('year') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $year = shift;
+    
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
+	return;
+    }
+    
+    my $t = $c->stash->{trial};
+
+    $t->set_year($year);
+
+    $c->stash->{rest} = { message => "Year set successfully" };
+}
+
+sub trial_type : Local() ActionClass('REST');
+
+sub trial_type_GET : Chained('trial') PathPart('type') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $t = $c->stash->{trial};
+    
+    my $type = $t->get_project_type();
+    $c->stash->{rest} = { type => $type };
+}
+
+sub trial_type_POST : Chained('trial') PathPart('type') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $type = shift;
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
+	return;
+    }
+
+    my $t = $c->stash->{trial};
+    my $trial_id = $c->stash->{trial_id}; 
+
+    # remove previous associations
+    #
+    $t->dissociate_project_type();
+    
+    # set the new trial type
+    #
+    $t->associate_project_type($type);
+    
+    $c->stash->{rest} = { success => 1 };
+}
 
 
 

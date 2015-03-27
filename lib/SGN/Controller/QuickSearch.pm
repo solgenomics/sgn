@@ -9,7 +9,7 @@ use HTML::Entities;
 use List::MoreUtils 'uniq';
 use Time::HiRes 'time';
 use URI::FromHash 'uri';
-
+use Class::Load ':all';
 use CXGN::Marker::Tools;
 use CXGN::Tools::Identifiers qw/ identifier_url identifier_namespace /;
 use CXGN::Tools::Text qw/to_tsquery_string trim/;
@@ -210,7 +210,7 @@ sub do_quick_search {
         my $classname = $args{sf_class}
             or die 'Must provide a class name';
 
-        Class::MOP::load_class( $classname );
+        Class::Load::load_class( $classname );
         $classname->isa( 'CXGN::Search::SearchI' )
             or die "'$classname' is not a CXGN::Search::SearchI-implementing object";
 

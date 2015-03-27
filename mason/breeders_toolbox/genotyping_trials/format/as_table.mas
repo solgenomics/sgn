@@ -1,0 +1,48 @@
+
+<%args>
+$breeding_program
+$trial_name
+$design
+</%args>
+
+% use Data::Dumper;
+% ##print Dumper($design);
+
+<h1>CASSAVABASE GENOTYPING TRIAL</h1>
+<h1>Breeding program: <% $breeding_program->[0]->[1] %></h1>
+<h2>Trial name: <% $trial_name %></h2>
+<table border="1" cellpadding="5">
+<tr>
+<td>&nbsp;</td>
+% foreach my $col (1..12) { 
+  <td align="center" bgcolor="lightblue"><% $col %></td>
+% }
+</tr>
+% foreach my $row ("A".."H") { 
+  <tr><td bgcolor="lightblue"><br /><% $row %><br /><br /></td>
+<%perl>
+   foreach my $col (1..12) { 
+     my $cell = "";
+     my $bgcolor="lightgrey";
+     if (exists($design->{$row.$col})) { 
+
+       if ($design->{$row.$col}->{accession_name} eq "BLANK") { 
+	 $bgcolor = "#FFCCBB";
+       }
+       else { 
+	 $bgcolor="#FFFFFF";
+       }
+       $cell= '<br />'. $design->{$row.$col}->{accession_name} .'<br /><br />';
+
+     }
+     else {
+       $cell = "&nbsp;"
+     }
+</%perl>
+    <td align="center" bgcolor="<% $bgcolor %>" >
+      <% $cell %>
+    </td>
+% }
+ </tr> 
+% }
+</table>

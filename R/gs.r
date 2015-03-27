@@ -137,9 +137,8 @@ phenoFile <- grep("phenotype_data",
 
 message("phenotype dataset file: ", phenoFile)
 message("dataset info: ", datasetInfo)
-
-#phenoFile <- c("/home/tecle/Desktop/phenotype_data_176_augmented.txt")
 message("phenotype dataset file: ", phenoFile)
+
 phenoData <- read.table(phenoFile,
                         header = TRUE,
                         row.names = NULL,
@@ -305,36 +304,37 @@ predictionTempFile <- grep("prediction_population",
                        )
 
 predictionFile <- c()
+
 message('prediction temp genotype file: ', predictionTempFile)
+
 if (length(predictionTempFile) !=0 ) {
-    predictionFile <- scan(predictionTempFile,
-                       what="character"
-                       )
+  predictionFile <- scan(predictionTempFile,
+                         what="character"
+                         )
 }
 
 message('prediction genotype file: ', predictionFile)
+
 predictionPopGEBVsFile <- grep("prediction_pop_gebvs",
-                       outFiles,
-                       ignore.case = TRUE,
-                       fixed = FALSE,
-                       value = TRUE
-                       )
+                               outFiles,
+                               ignore.case = TRUE,
+                               fixed = FALSE,
+                               value = TRUE
+                               )
 
 message("prediction gebv file: ",  predictionPopGEBVsFile)
 
-
 predictionData <- c()
 
-if (length(predictionFile) !=0 )
-  {
-    predictionData <- read.table(predictionFile,
-                       header = TRUE,
-                       row.names = 1,
-                       sep = "\t",
-                       na.strings = c("NA", " ", "--", "-"),
-                       dec = "."
-                      )
-  }
+if (length(predictionFile) !=0 ) {
+  predictionData <- read.table(predictionFile,
+                               header = TRUE,
+                               row.names = 1,
+                               sep = "\t",
+                               na.strings = c("NA", " ", "--", "-"),
+                               dec = "."
+                               )
+}
 
 #create phenotype and genotype datasets with
 #common stocks only
@@ -428,19 +428,25 @@ if (length(predictionData) != 0 ) {
   }
 }
 
-#use REML (default) to calculate variance components
-#calculate GEBV using marker effects (as random effects)
-markerGEBV <- mixed.solve(y = phenoTrait,
-                          Z = genoDataMatrix
-                         )
+ordered.markerEffects <- c()
+if ( length(predictionData) == 0 ) {
+  markerEffects <- mixed.solve(y = phenoTrait,
+                               Z = genoDataMatrix
+                               )
 
-ordered.markerGEBV2 <- data.matrix(markerGEBV$u)
-ordered.markerGEBV2 <- data.matrix(ordered.markerGEBV2 [order (-ordered.markerGEBV2[, 1]), ])
-ordered.markerGEBV2 <- round(ordered.markerGEBV2,
-                             digits=5
-                             )
+  ordered.markerEffects <- data.matrix(markerEffects$u)
+  ordered.markerEffects <- data.matrix(ordered.markerEffects [order (-ordered.markerEffects[, 1]), ])
+  ordered.markerEffects <- round(ordered.markerEffects,
+                               digits=5
+                               )
 
-colnames(ordered.markerGEBV2) <- c("Marker Effects")
+  colnames(ordered.markerEffects) <- c("Marker Effects")
+
+
+#correlation between breeding values based on
+#marker effects and relationship matrix
+#corGEBVs <- cor(genoDataMatrix %*% markerEffects$u, iGEBV$u)
+}
 
 #additive relationship model
 #calculate the inner products for
@@ -455,9 +461,7 @@ iGEBV <- mixed.solve(y = phenoTrait,
                      K = genocrsprd
                      )
  
-#correlation between breeding values based on
-#marker effects and relationship matrix
-corGEBVs <- cor(genoDataMatrix %*% markerGEBV$u, iGEBV$u)
+
 
 iGEBVu <- iGEBV$u
 
@@ -538,10 +542,7 @@ if (genoNum %% 10 == 0) {
 set.seed(4567)                                   
 genotypeGroups <- genotypeGroups[ order (runif(genoNum)) ]
 
-
-
-for (i in 1:reps)
-{
+for (i in 1:reps) {
   tr <- paste("trPop", i, sep = ".")
   sl <- paste("slPop", i, sep = ".")
  
@@ -644,8 +645,8 @@ if(is.null(validationAll) == FALSE) {
                 )
 }
 
-if(is.null(ordered.markerGEBV2) == FALSE) {
-    write.table(ordered.markerGEBV2,
+if(is.null(ordered.markerEffects) == FALSE) {
+    write.table(ordered.markerEffects,
                 file = markerFile,
                 sep = "\t",
                 col.names = NA,
