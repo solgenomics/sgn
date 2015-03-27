@@ -178,7 +178,7 @@ function getPcaPopsList (listId) {
     var listType       = genoList.listType;
    
     var pcaPopsList ='<table id="uploaded_pca_populations_table" style="width:100%; text-align:left"><tr>'
-                                + '<th>List-based population</th>'
+                                + '<th>Population</th>'
                                 + '<th>Run PCA</th>'
                                 +'</tr>'
                                 + '<tr>'
@@ -426,7 +426,7 @@ function plotPca(plotData){
 	id = plotData.list_id;
     }
 
-    var popName;
+    var popName = "";
     if (plotData.list_name) {
 	popName = ' -- ' + plotData.list_name;
     }
