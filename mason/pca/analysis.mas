@@ -34,7 +34,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <&| /page/info_section.mas, 
     collapsible => 0, 
     collapsed   => 0,
-    title       => "Select a list to run pca",
+    title       => "Select a list and analyse its population structure",
   &>
 
  
@@ -51,7 +51,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
     
     <div class="list_upload" style="margin-left:5px">     
       <i class="glyphicon-plus"></i>
-      <a href="/solgs/breeder_search" style="color:#ffffff">Make a new list of dings</a>  
+      <a href="/solgs/breeder_search" style="color:#ffffff">Make a new list of trials or genotypes</a>  
     </div>
 
     <br>
