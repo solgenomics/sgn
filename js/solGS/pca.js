@@ -42,7 +42,6 @@ jQuery(document).ready( function() {
 });
 
 
-
 jQuery(document).ready( function() { 
      
     var url = window.location.pathname;
@@ -139,17 +138,23 @@ function pcaResult (listId) {
 	
 		var scores = response.pca_scores;
 		var variances = response.pca_variances;
-		var plotData = { 'scores': scores, 'variances': variances };
+		
+		if (response.pop_id) {
+		    popId = response.pop_id;
+		}
+		
+		var plotData = { 'scores': scores, 
+				 'variances': variances, 
+				 'pop_id': popId, 
+				 'list_id': listId,
+				 'list_name': listName
+			       };
 	
 		jQuery("#pca_message").html("Running PCA... please wait...");
                 plotPca(plotData);
 
-		if (response.pop_id)  {popId = response.pop_id; }
-		var pcaDownload = "<a href=\"/download/pca/scores/population/" 
-		                    + popId + "\"> [ Download pca scores ]</a>";
-
-		jQuery("#pca_canvas").append("<br /><br />" + pcaDownload ).show();
 		jQuery("#pca_message").empty();
+	
 		jQuery.unblockUI(); 
 
             } else {                
@@ -247,7 +252,7 @@ function plotPca(plotData){
      
     var height = 300;
     var width  = 500;
-    var pad    = {left:20, top:20, right:20, bottom: 50}; 
+    var pad    = {left:20, top:20, right:20, bottom: 100}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
    
@@ -358,7 +363,6 @@ function plotPca(plotData){
         .append("text")
         .text("PC2, " + variances[1][1] + "%" )
 	.attr("transform", "rotate(-90)")
-
 	.attr("y", -5)
         .attr("x", -((pad.top + height/2) + 10))
         .attr("font-size", 10)
@@ -414,6 +418,32 @@ function plotPca(plotData){
         .attr("stroke", "#523CB5")
         .attr("stroke-width", 1)
         .attr("pointer-events", "none");
+    
+    var id;   
+    if ( plotData.pop_id) {
+    	id = plotData.pop_id;
+    } else {
+	id = plotData.list_id;
+    }
+
+    var popName;
+    if (plotData.list_name) {
+	popName = ' -- ' + plotData.list_name;
+    }
+
+    var pcaDownload;
+    if (plotData.pop_id)  {
+	pcaDownload = "/download/pca/scores/population/" + id;
+    }
+
+     pcaPlot.append("a")
+	.attr("xlink:href", pcaDownload)
+	.append("text")
+	.text("[ Download PCA scores ]" + popName)
+	.attr("y", pad.top + height + 60)
+        .attr("x", pad.left)
+        .attr("font-size", 14)
+        .style("fill", "#954A09") 
       
 }
 
