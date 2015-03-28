@@ -35,7 +35,7 @@ sub BUILD {
     my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $self->get_trial_id() });
     
     if ($row){ 
-	print STDERR "Found row for ".$self->get_trial_id()." ".$row->name()."\n";
+	#print STDERR "Found row for ".$self->get_trial_id()." ".$row->name()."\n";
     }
 
     if (!$row) { 
@@ -140,7 +140,7 @@ sub set_description {
     
     my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
 
-    print STDERR "Setting new description $description for trial ".$self->get_trial_id()."\n";
+    #print STDERR "Setting new description $description for trial ".$self->get_trial_id()."\n";
 
     $row->description($description);
 
@@ -223,7 +223,7 @@ sub remove_location {
 	    value => $location_id,
 	});
     if ($row) { 
-	print STDERR "Removing location $location_id from trail ".$self->get_trial_id()."\n";
+	#print STDERR "Removing location $location_id from trail ".$self->get_trial_id()."\n";
 	$row->delete();
     }
 
@@ -277,7 +277,7 @@ sub associate_project_type {
     my $self = shift;
     my $type = shift;
     
-    print STDERR "\n\nAssociate type $type...\n";
+    #print STDERR "\n\nAssociate type $type...\n";
     # check if there is already a type associated with the project
     #
     my $cv_id = $self->bcs_schema->resultset('Cv::Cv')->find( { name => 'project_type' } )->cv_id();
@@ -366,7 +366,7 @@ sub get_project_type {
 	my $type_id = $rs->first()->type_id();
 	foreach my $pt (@project_type_ids) { 
 	    if ($type_id == $pt->[0]) { 
-		print STDERR "[get_project_type] ".$pt->[0]." ".$pt->[1]."\n";
+		#print STDERR "[get_project_type] ".$pt->[0]." ".$pt->[1]."\n";
 		return $pt;
 	    }
 	}
@@ -443,7 +443,7 @@ sub delete_phenotype_data {
     eval { 
 	$self->bcs_schema->txn_do( 
 	    sub { 
-		print STDERR "\n\nDELETING PHENOTYPES...\n\n";
+		#print STDERR "\n\nDELETING PHENOTYPES...\n\n";
 		
 		# delete phenotype data associated with trial
 		#
@@ -468,6 +468,9 @@ sub delete_phenotype_data {
 		$self->_delete_phenotype_experiments(@nd_experiment_ids);
 	    });
     };
+
+
+
     if ($@) { 
 	print STDERR "ERROR DELETING PHENOTYPE DATA $@\n";
 	return "Error deleting phenotype data for trial $trial_id. $@\n";
@@ -502,7 +505,7 @@ sub delete_field_layout {
     eval { 
 	$self->bcs_schema()->txn_do( 
 	    sub {
-		print STDERR "DELETING FIELD LAYOUT FOR TRIAL $trial_id...\n";
+		#print STDERR "DELETING FIELD LAYOUT FOR TRIAL $trial_id...\n";
 
 		my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
 		
@@ -542,7 +545,7 @@ sub delete_metadata {
 
     my $trial_id = $self->get_trial_id();
 
-    print STDERR "Deleting metadata for trial $trial_id...\n";
+    #print STDERR "Deleting metadata for trial $trial_id...\n";
 
     # first, deal with entries in the md_metadata table, which may reference nd_experiment (through linking table)
     #
@@ -551,16 +554,16 @@ sub delete_metadata {
     $h->execute($trial_id);
 
     while (my ($md_id) = $h->fetchrow_array()) { 
-	print STDERR "Associated metadata id: $md_id\n";
+	#print STDERR "Associated metadata id: $md_id\n";
 	my $mdmd_row = $metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
 	if ($mdmd_row) { 
-	    print STDERR "Obsoleting $md_id...\n";
+	    #print STDERR "Obsoleting $md_id...\n";
 
 	    $mdmd_row -> update( { obsolete => 1 });
 	}
     }
 
-    print STDERR "Deleting the entries in the linking table...\n";
+    #print STDERR "Deleting the entries in the linking table...\n";
 
     # delete the entries from the linking table...
     $q = "SELECT distinct(file_id) FROM nd_experiment_project JOIN phenome.nd_experiment_md_files using(nd_experiment_id) JOIN metadata.md_files using(file_id) JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
@@ -568,11 +571,11 @@ sub delete_metadata {
     $h->execute($trial_id);
     
     while (my ($file_id) = $h->fetchrow_array()) { 
-	print STDERR "trying to delete association for file with id $file_id...\n";
+	#print STDERR "trying to delete association for file with id $file_id...\n";
 	my $ndemdf_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search( { file_id=>$file_id });
 	print STDERR "Deleting md_files linking table entries...\n";
 	foreach my $row ($ndemdf_rs->all()) { 
-	    print STDERR "DELETING !!!!\n";
+	    #print STDERR "DELETING !!!!\n";
 	    $row->delete();
 	}
     }
@@ -590,22 +593,22 @@ sub _delete_phenotype_experiments {
     
     my $nd_exp_phenotype_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotype")->search( { nd_experiment_id=> { -in => [ @nd_experiment_ids ] }}, { join => 'phenotype' });
     if ($nd_exp_phenotype_rs->count() > 0) { 
-	print STDERR "Deleting experiments ... \n";
+	#print STDERR "Deleting experiments ... \n";
 	while (my $pep = $nd_exp_phenotype_rs->next()) { 
 	    my $phenotype_rs = $self->bcs_schema()->resultset("Phenotype::Phenotype")->search( { phenotype_id => $pep->phenotype_id() } );
-	    print STDERR "DELETING ".$phenotype_rs->count(). " phenotypes\n";
+	    #print STDERR "DELETING ".$phenotype_rs->count(). " phenotypes\n";
 	    $phenotype_rs->delete_all();
 	    $phenotypes_deleted++;
 	}
 
     }
 
-    print STDERR "Deleting linking table entries...\n";
+    #print STDERR "Deleting linking table entries...\n";
     $nd_exp_phenotype_rs->delete_all();
     
     # delete the experiments
     #
-    print STDERR "Deleting experiments...\n";
+    #print STDERR "Deleting experiments...\n";
     my $delete_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ nd_experiment_id => { -in => [ @nd_experiment_ids] }});
 
     $nd_experiments_deleted = $delete_rs->count();
@@ -656,7 +659,7 @@ sub _delete_field_layout_experiment {
     my $plots_deleted = 0;
     while (my ($plot_id) = $h->fetchrow_array()) { 
 	my $plot = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $plot_id });
-	print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
+	#print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
 	$plots_deleted++;
 	$plot->delete();
     }
@@ -667,7 +670,7 @@ sub _delete_field_layout_experiment {
     
     my ($nd_experiment_id) = $h->fetchrow_array();
     if ($nd_experiment_id) { 
-	print STDERR "Delete corresponding nd_experiment entry  ($nd_experiment_id)...\n";
+	#print STDERR "Delete corresponding nd_experiment entry  ($nd_experiment_id)...\n";
 	my $nde = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->find( { nd_experiment_id => $nd_experiment_id });
 	$nde->delete();
     }
@@ -695,8 +698,8 @@ sub delete_project_entry {
 	print STDERR "Cannot delete trial with associated phenotypes.\n";
 	return;
     }
-    if ($self->get_layout()) { 
-	print STDERR "Cannot delete trial with associated layout\n";
+    if ($self->get_experiment_count()> 0) { 
+	print STDERR "Cannot delete trial with associated experiments\n";
 	return;
     }
 
@@ -744,6 +747,14 @@ sub total_phenotypes {
     my $pt_rs = $self->bcs_schema()->resultset("Phenotype::Phenotype")->search( { });
     return $pt_rs->count();
 }
+
+sub get_experiment_count { 
+    my $self = shift;
+
+    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search( { project_id => $self->get_trial_id() });
+    return $rs->count();
+}
+
 
 sub get_location_type_id { 
     my $self = shift;

@@ -180,6 +180,7 @@ is($trial->get_project_type()->[1], "clonal", "associate project type");
 my $error = $trial->dissociate_project_type();
 is($trial->get_project_type(), undef, "dissociate project type");
 
+print STDERR "ASSOCIATED EXPERIMENTS : ".$trial->get_experiment_count()."\n";
 $trial->delete_project_entry();
 
 my $deleted_trial;
