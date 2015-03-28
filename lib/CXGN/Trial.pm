@@ -591,30 +591,32 @@ sub _delete_phenotype_experiments {
     my $phenotypes_deleted = 0;
     my $nd_experiments_deleted = 0;
     
-    my $nd_exp_phenotype_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotype")->search( { nd_experiment_id=> { -in => [ @nd_experiment_ids ] }}, { join => 'phenotype' });
-    if ($nd_exp_phenotype_rs->count() > 0) { 
-	#print STDERR "Deleting experiments ... \n";
-	while (my $pep = $nd_exp_phenotype_rs->next()) { 
-	    my $phenotype_rs = $self->bcs_schema()->resultset("Phenotype::Phenotype")->search( { phenotype_id => $pep->phenotype_id() } );
-	    #print STDERR "DELETING ".$phenotype_rs->count(). " phenotypes\n";
-	    $phenotype_rs->delete_all();
-	    $phenotypes_deleted++;
+    foreach my $nde_id (@nd_experiment_ids) { 
+	my $nd_exp_phenotype_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotype")->search( { nd_experiment_id => $nde_id }, { join => 'phenotype' });
+	if ($nd_exp_phenotype_rs->count() > 0) { 
+	    #print STDERR "Deleting experiments ... \n";
+	    while (my $pep = $nd_exp_phenotype_rs->next()) { 
+		my $phenotype_rs = $self->bcs_schema()->resultset("Phenotype::Phenotype")->search( { phenotype_id => $pep->phenotype_id() } );
+		#print STDERR "DELETING ".$phenotype_rs->count(). " phenotypes\n";
+		$phenotype_rs->delete_all();
+		$phenotypes_deleted++;
+	    }
 	}
-
+	#print STDERR "Deleting linking table entries...\n";
+	$nd_exp_phenotype_rs->delete_all();
     }
 
-    #print STDERR "Deleting linking table entries...\n";
-    $nd_exp_phenotype_rs->delete_all();
     
     # delete the experiments
     #
     #print STDERR "Deleting experiments...\n";
-    my $delete_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ nd_experiment_id => { -in => [ @nd_experiment_ids] }});
+    foreach my $nde_id (@nd_experiment_ids) { 
+	my $delete_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ nd_experiment_id => $nde_id });
 
-    $nd_experiments_deleted = $delete_rs->count();
+	$nd_experiments_deleted++;
     
-    $delete_rs->delete_all();
-
+	$delete_rs->delete_all();
+    }
     return { phenotypes_deleted => $phenotypes_deleted, 
 	     nd_experiments_deleted => $nd_experiments_deleted
     };
