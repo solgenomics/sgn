@@ -20,9 +20,10 @@ $accessions
 
 
 <div id="add_accessions_dialog" class="ui-widget" title="Add accessions">
+    <p>Choose accession list:</p>
   <div id="list_div">
     <label id="select_list_label" for="list_div_list_select" style="display: inline-block; width: 200px;">List of accessions to add:
-    </label>
+    </label> 
   </div>
   <input type="checkbox" id="fuzzy_check"></input>
   <label for="fuzzy_check">Use fuzzy search</label>
