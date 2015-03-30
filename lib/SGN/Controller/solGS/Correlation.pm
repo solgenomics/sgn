@@ -25,6 +25,7 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     $c->stash->{pop_id} = $pop_id;
     my $referer = $c->req->referer;
    
+
     my $phenotype_file;
     
     if( $pop_id =~ /uploaded/) 
@@ -55,9 +56,12 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
 
     my $ret->{status} = 'failed';
 
-    if($phenotype_file)
+    if (-s $phenotype_file)
     {
         $ret->{status} = 'success';             
+    } else 
+    {
+	$ret->{status} = 'This population set has no phenotype data.';
     }
 
     $ret = to_json($ret);
