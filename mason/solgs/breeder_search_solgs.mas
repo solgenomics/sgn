@@ -1,19 +1,22 @@
 
-<%args>
-$referer => ''
-</%args>
-
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 <& /page/page_title.mas, title=>"Search Wizard" &>
 
 <& /breeders_toolbox/breeder_search.mas &>
 
 <br />
-<br />
 
-<button id="goto_gs_button" name="Go to solGS" >Go to back to solGS</button>
+% my $referer = $c->req->referer;
+% my $back;
+% if ($referer =~ /pca\/analysis/) {
+% $back = 'PCA analysis';
+%} else {
+% $back = 'solGS'
+%}
+<button class="button" id="goback_button" >Go to back to <% $back %> </button>
 
 <script>
-  jQuery('#goto_gs_button').click( function(){
+  jQuery('#goback_button').click( function(){
   window.location.href='<% $referer %>';
   });
 </script>
