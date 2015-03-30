@@ -1983,9 +1983,16 @@ sub convert_to_arrayref_of_arrays {
         push @data,  map { [ split(/\t/) ]  } $_ if $_;
     }
    
-    shift(@data);
+    if (@data) 
+    {
+	shift(@data);
+	return \@data;
+    } else 
+    {
+	return;
+    }
     
-    return \@data;
+   
 
 }
 
@@ -3613,10 +3620,13 @@ sub phenotype_file {
             my $data = $c->model('solGS::solGS')->phenotype_data($pop_id);
            # my $data = $c->stash->{phenotype_data};
         
-            $data = $self->format_phenotype_dataset($c, $data);
-            write_file($pheno_file, $data);
-
-            $file_cache->set($key, $pheno_file, '30 days');
+	    if ($data)
+	    {
+		$data = $self->format_phenotype_dataset($c, $data);
+		write_file($pheno_file, $data);
+	    }
+	    
+            $file_cache->set($key, $pheno_file, '30 days');	    
         }
     }
    
