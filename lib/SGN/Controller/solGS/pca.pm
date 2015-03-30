@@ -51,10 +51,10 @@ sub pca_result :Path('/pca/result/') Args(1) {
     $self->pca_variance_file($c);
     my $pca_variance_file = $c->stash->{pca_variance_file};
  
-    my $ret->{status} = 'failed';
-    unless (-s $pca_scores_file) 
+    my $ret->{status} = 'PCA analysis failed.';
+    if( !-s $pca_scores_file) 
     {
-	if (!-s $geno_file)
+	if (!-s $geno_file )
 	{
 	    $ret->{status} = 'There is no genotype data. Aborted PCA analysis.';                
 	}
