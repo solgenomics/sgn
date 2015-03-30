@@ -121,9 +121,10 @@ function pcaResult (listId) {
 	popId = listId;
     }
 
-    jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-    jQuery.blockUI({message: 'Please wait..'});
-       
+    if (listId) {
+	jQuery("#pca_message").html("Running PCA for " + listName + "... please wait...");
+    }  
+   
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -149,22 +150,16 @@ function pcaResult (listId) {
 				 'list_id': listId,
 				 'list_name': listName
 			       };
-	
-		jQuery("#pca_message").html("Running PCA... please wait...");
+					
                 plotPca(plotData);
-
 		jQuery("#pca_message").empty();
-	
-		jQuery.unblockUI(); 
 
             } else {                
 		jQuery("#pca_message").html(response.status); 
-		jQuery.unblockUI(); 
             }
-        },
+	},
         error: function(response) {                    
             jQuery("#pca_message").html('Error occured running population structure analysis (PCA).');
-	    jQuery.unblockUI(); 
         }  
     });
   
