@@ -34,7 +34,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <&| /page/info_section.mas, 
     collapsible => 0, 
     collapsed   => 0,
-    title       => "Select a list and analyse its population structure",
+    title       => "Select a dataset and analyze its population structure",
   &>
 
  
