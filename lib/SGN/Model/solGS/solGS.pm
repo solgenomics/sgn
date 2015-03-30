@@ -1344,71 +1344,73 @@ sub structure_phenotype_data {
              
     }
 
-    my @data;
-    my $d = "uniquename\tobject_name\tobject_id\tstock_id\tstock_name\tdesign\tblock\treplicate";
-    foreach my $term_name (sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms )  
+    my $d;
+
+    if (keys %cvterms) 
     {
-        $d .=  "\t" . $term_name;
-    }
-
-    $d .= "\n";
-
-    my @project_genotypes;
-
-    foreach my $key ( sort keys %$phen_hashref ) 
-    {        
-        my $subject_id       = $phen_hashref->{$key}{stock_id};
-        my $stock_object_row = $self->map_subject_to_object($subject_id)->single;
-
-	my ($object_name, $object_id);
-	if ($stock_object_row) 
+	$d = "uniquename\tobject_name\tobject_id\tstock_id\tstock_name\tdesign\tblock\treplicate";
+	foreach my $term_name (sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms )  
 	{
-	    $object_name      = $stock_object_row->name;
-	    $object_id        = $stock_object_row->stock_id;
-        
-	    push @project_genotypes, $object_name;
+	    $d .=  "\t" . $term_name;
 	}
 
-        $d .= $key . "\t" .$object_name . "\t" . $object_id . "\t" . $phen_hashref->{$key}{stock_id} . 
+	$d .= "\n";
+
+	my @project_genotypes;
+
+	foreach my $key ( sort keys %$phen_hashref ) 
+	{        
+	    my $subject_id       = $phen_hashref->{$key}{stock_id};
+	    my $stock_object_row = $self->map_subject_to_object($subject_id)->single;
+
+	    my ($object_name, $object_id);
+	    if ($stock_object_row) 
+	    {
+		$object_name      = $stock_object_row->name;
+		$object_id        = $stock_object_row->stock_id;
+        
+		push @project_genotypes, $object_name;
+	    }
+
+	    $d .= $key . "\t" .$object_name . "\t" . $object_id . "\t" . $phen_hashref->{$key}{stock_id} . 
               "\t" . $phen_hashref->{$key}{stock_name};
 
-        my $block     = 'NA';
-        my $replicate = 'NA';
-        my $design    = 'NA';
-        my $trial_id  = $self->context->stash->{pop_id};
-        my $design_rs = $self->experimental_design($trial_id);
+	    my $block     = 'NA';
+	    my $replicate = 'NA';
+	    my $design    = 'NA';
+	    my $trial_id  = $self->context->stash->{pop_id};
+	    my $design_rs = $self->experimental_design($trial_id);
 
-        if($design_rs->next)       
-        {
-            $design = $design_rs->first->value();
-        } 
+	    if ($design_rs->next)       
+	    {
+		$design = $design_rs->first->value();
+	    } 
         
-        my $block_rs = $self->search_plotprop($subject_id, 'block');
-        if($block_rs->next)
+	    my $block_rs = $self->search_plotprop($subject_id, 'block');
+	    if($block_rs->next)      
+	    {
+		$block = $block_rs->first->value();
+	    } 
         
-        {
-            $block = $block_rs->first->value();
-        } 
-        
-        my $replicate_rs = $self->search_plotprop($subject_id, 'replicate');     
-        if($replicate_rs->next)       
-        {
-            $replicate = $replicate_rs->first->value();
-        }
+	    my $replicate_rs = $self->search_plotprop($subject_id, 'replicate');     
+	    if($replicate_rs->next)       
+	    {
+		$replicate = $replicate_rs->first->value();
+	    }
 
-        $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
+	    $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
 
-        foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
-        {           
-            $d .= "\t" . $phen_hashref->{$key}{$term_name};
-        }
+	    foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
+	    {           
+		$d .= "\t" . $phen_hashref->{$key}{$term_name};
+	    }
 
-        $d .= "\n";
-    }
+	    $d .= "\n";
+	}
    
-    @project_genotypes = uniq(@project_genotypes);
-    $self->context->stash->{project_genotypes} = \@project_genotypes;
-
+	@project_genotypes = uniq(@project_genotypes);
+	$self->context->stash->{project_genotypes} = \@project_genotypes;
+    }
     return $d;
 }
 
