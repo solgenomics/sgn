@@ -34,14 +34,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <&| /page/info_section.mas, 
     collapsible => 0, 
     collapsed   => 0,
-    title       => "Select a dataset and analyze its population structure",
+    title       => "Select a dataset and analyze its population structure -- principal component analysis (PCA)",
   &>
 
  
  <div class="fileupload-buttonbar">
    
     <div class="list_upload" id="list_label">
-      <label for="pca_genotypes_list">Select a list </label>
+      <label for="pca_genotypes_list">Select</label>
     </div> 
     <div class="list_upload" id="pca_genotypes_list">      
     </div>
@@ -51,7 +51,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
     
     <div class="list_upload" style="margin-left:5px">     
       <i class="glyphicon-plus"></i>
-      <a href="/solgs/breeder_search" style="color:#ffffff">Make a new list of trials or genotypes</a>  
+      <a href="/solgs/breeder_search" style="color:#ffffff">Create a new dataset</a>  
     </div>
 
     <br>
