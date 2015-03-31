@@ -126,8 +126,7 @@ sub pca_genotypes_list :Path('/pca/genotypes/list') Args(0) {
 
     $c->stash->{data_set_type} = 'list';
     $self->create_pca_genotype_data($c);
-  
-   
+     
     my $ret->{status} = 'failed';
     my $geno_file = $c->stash->{genotype_file};
     if (-s $geno_file ) 
