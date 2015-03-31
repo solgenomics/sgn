@@ -52,7 +52,6 @@ varianceFile <- grep("pca_variance",
                         value = TRUE
                         )
 
-
 message("genotype file: ", genoDataFile)
 message("pca scores file: ", scoresFile)
 message("pca loadings file: ", loadingsFile)
@@ -81,7 +80,6 @@ genoData <- read.table(genoDataFile,
                         dec = "."
                         )
 
-
 if (sum(is.na(genoData)) > 0) {
     message("sum of geno missing values, ", sum(is.na(genoData)) )
     genoData <-kNNImpute(genoData, 10)
@@ -99,15 +97,17 @@ if (sum(is.na(genoData)) > 0) {
     genoData <- data.matrix(genoData)
   }
 
-pca <- prcomp(genoData, retx=TRUE)
-
-scores <- round(pca$x[, 1:10], digits=2)
-
+pca      <- prcomp(genoData, retx=TRUE)
+scores   <- round(pca$x[, 1:10], digits=2)
 loadings <- round(pca$rotation[, 1:10], digits=5)
 
-totalVar <- sum((pca$sdev)^2)
-
-variances <- unlist(lapply(pca$sdev, function(x) round((x^2 / totalVar)*100, digits=2)))
+totalVar  <- sum((pca$sdev)^2)
+variances <- unlist(
+               lapply(pca$sdev,
+                      function(x)
+                      round((x^2 / totalVar)*100, digits=2)
+                      )
+               )
 
 variances <- as.data.frame(variances)
 colnames(variances)[1] <- "variances"
@@ -127,7 +127,6 @@ write.table(loadings,
             quote = FALSE,
             append = FALSE
             )
-
 
 write.table(variances,
             file = varianceFile,
