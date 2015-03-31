@@ -421,38 +421,30 @@ sub search_gene_ids {
 }
 
 sub search_desc : Path('/tools/blast/desc_search/') Args(0) { 
-	my $self = shift;
-	my $c = shift;
-	
-	my @ids;
-	my $schema = $c->dbic_schema("SGN::Schema");
-	my $params = $c->req->params();
-	my $input_string = $params->{blast_desc};
-	my $db_id = $params->{database};
-	
-	my $bdb = $schema->resultset("BlastDb")->find($db_id) || die "could not find bdb with file_base $db_id";
-	my $blastdb_path = File::Spec->catfile($c->config("blast_db_path"), $bdb->file_base());#$bdb->full_file_basename;
-	print STDERR "BLASTDB_PATH: $blastdb_path\n";
-	# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30.fasta";
-	
-	my $grepcmd = "grep -i \"$input_string\" $blastdb_path \| sed 's/>//' \| cut -d ' ' -f 1";
-	
-	# print STDERR "$grepcmd\n";
-	my $output_seq = `$grepcmd`;
-	my $output_seqs;
-	
-	if ($output_seq) {
-		# print STDERR "$output_seq\n";
-	
-		@ids = split(/\n/, $output_seq);
-	
-		# my $blastdb_path = "/home/noe/cxgn/blast_dbs/vigs/Tomato_ITAG_release_2.30";
-	
-		$output_seqs = search_gene_ids(\@ids,$blastdb_path);
-	} else {
-		$output_seqs = "There were not results for your search\n";
-	}
-	$c->stash->{rest} = {output_seq => "$output_seqs"};
+    my $self = shift;
+    my $c = shift;
+    
+    my @ids;
+    my $schema = $c->dbic_schema("SGN::Schema");
+    my $params = $c->req->params();
+    my $input_string = $params->{blast_desc};
+    my $db_id = $params->{database};
+    
+    my $bdb = $schema->resultset("BlastDb")->find($db_id) || die "could not find bdb with file_base $db_id";
+    my $blastdb_path = File::Spec->catfile($c->config->{blast_db_path}, $bdb->file_base());
+    
+    my $grepcmd = "grep -i \"$input_string\" $blastdb_path \| sed 's/>//' \| cut -d ' ' -f 1";	
+    my $output_seq = `$grepcmd`;
+    my $output_seqs;
+    
+    if ($output_seq) {
+	@ids = split(/\n/, $output_seq);	
+	$output_seqs = search_gene_ids(\@ids,$blastdb_path);
+    } 
+    else {
+	$output_seqs = "There were not results for your search\n";
+    }
+    $c->stash->{rest} = {output_seq => "$output_seqs"};
 }
 
 1;

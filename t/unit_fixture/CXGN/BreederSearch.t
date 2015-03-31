@@ -37,7 +37,7 @@ $dataref = { projects => { locations => 23,
 
 $results = $bs ->get_intersect($criteria_list, $dataref, "CO");
 
-is_deeply($results, { results => [ [ 137, 'test_trial' ] ]}, "wizard project query");
+is_deeply($results->{results}->[0], [ 139, 'Kasese solgs trial'  ], "wizard project query");
 
 
 done_testing();
