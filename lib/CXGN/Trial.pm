@@ -21,6 +21,7 @@ package CXGN::Trial;
 
 use Moose;
 use Try::Tiny;
+use CXGN::Trial::TrialLayout;
 
 =head2 accessor bcs_schema()
 
