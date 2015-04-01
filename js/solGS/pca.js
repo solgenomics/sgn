@@ -6,46 +6,209 @@
 */
 
 
+JSAN.use("CXGN.List");
+JSAN.use("jquery.blockUI");
+
+
 jQuery(document).ready( function() { 
-   
-    pcaResult();   
+    var url = window.location.pathname;
+ 
+    if (url.match(/pca\/analysis/) == null) {
+	pcaResult();  
+    } 
  
 });
 
 
-function pcaResult () {
-    var popId = getPopulationId();
+jQuery(document).ready( function() {
+    
+    var url = window.location.pathname;
+    
+    if (url.match(/pca\/analysis/) != null) {
+    
+        var list = new CXGN.List();
+        
+        var listMenu = list.listSelect("pca_genotypes", ['accessions', 'trials']);
+       
+	if(listMenu.match(/option/) != null) {
+            
+            jQuery("#pca_genotypes_list").append(listMenu);
 
-   // alert(popId);
+        } else {            
+            jQuery("#pca_genotypes_list").append("<select><option>no lists found - Log in</option></select>");
+        }
+    }
+               
+});
+
+
+jQuery(document).ready( function() { 
+     
+    var url = window.location.pathname;
+    
+    if (url.match(/pca\/analysis/) != null) {  
+        var listId;
+        
+        jQuery("<option>", {value: '', selected: true}).prependTo("#pca_genotypes_list_select");
+        
+        jQuery("#pca_genotypes_list_select").change(function() {        
+            listId = jQuery(this).find("option:selected").val();              
+                                
+            if (listId) {                
+                jQuery("#pca_genotypes_list_upload").click(function() {
+                    loadPcaGenotypesList(listId);
+                });
+            }
+        }); 
+    }      
+});
+
+
+function loadPcaGenotypesList(listId) {     
+    
+    var genoList       = getPcaGenotypesListData(listId);
+    var listName       = genoList.name;
+    var listType       = genoList.listType;  
+   
+    if ( listId.length === 0) {       
+        alert('The list is empty. Please select a list with content.' );
+    } else {
+	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+        jQuery.blockUI({message: 'Please wait..'});
+       
+        
+        var pcaGenotypes = jQuery("#uploaded_pca_populations_table").doesExist();
+                       
+        if (pcaGenotypes == false) {                              
+            pcaGenotypes = getPcaPopsList(listId);                    
+            jQuery("#uploaded_pca_populations").append(pcaGenotypes).show();                           
+        }
+        else {
+            var addRow = '<tr><td>'
+                + '<a href="#"  onclick="javascript:pcaResult(' + listId  + '); return false;">' 
+                + listName + '</a>'
+                + '</td>'
+                + '<td id="list_pca_page_' + listId +  '">'
+                + '<a href="#" onclick="javascript:pcaResult(' + listId + ');return false;">' 
+                + '[ Run PCA ]' + '</a>'          
+                + '</td><tr>';
+
+            var tdId = '#list_pca_page_' + listId;
+            var addedRow = jQuery(tdId).doesExist();
+
+            if (addedRow == false) {
+                jQuery("#uploaded_pca_populations_table tr:last").after(addRow);
+            }                          
+        }       
+	jQuery.unblockUI();                                
+    }
+}
+
+
+function pcaResult (listId) {
+    var popId = getPopulationId();
+   
+    var listName;
+    var listType;
+    
+    if (listId) {
+    var genoList = getPcaGenotypesListData(listId);
+	listName = genoList.name;
+	listType = genoList.listType;
+    }
+    
+    if ( popId == null) {
+	popId = listId;
+    }
+
+    if (listId) {
+	jQuery("#pca_message").html("Running PCA for " + listName + "... please wait...");
+    }  
+   
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'population_id': popId},
+        data: {'population_id': popId, 
+	       'list_id': listId, 
+	       'list_name': listName, 
+	       'list_type': listType,
+	      },
         url: '/pca/result/' + popId,
         success: function(response) {
-            if(response.status === 'success') {
+            if (response.status === 'success') {
 	
 		var scores = response.pca_scores;
 		var variances = response.pca_variances;
-		var plotData = { 'scores': scores, 'variances': variances };
-
+		
+		if (response.pop_id) {
+		    popId = response.pop_id;
+		}
+		
+		var plotData = { 'scores': scores, 
+				 'variances': variances, 
+				 'pop_id': popId, 
+				 'list_id': listId,
+				 'list_name': listName
+			       };
+					
                 plotPca(plotData);
-
-		var pcaDownload = "<a href=\"/download/pca/scores/population/" 
-		                    + popId + "\"> [ Download pca scores ]</a>";
-
-		jQuery("#pca_canvas").append("<br /><br />" + pcaDownload ).show();
 		jQuery("#pca_message").empty();
 
             } else {                
-               jQuery("#pca_message").html(response.status); 
+		jQuery("#pca_message").html(response.status); 
             }
-        },
+	},
         error: function(response) {                    
-             jQuery("#pca_message").html('Error occured running population structure analysis (PCA).');   
+            jQuery("#pca_message").html('Error occured running population structure analysis (PCA).');
         }  
     });
   
+}
+
+
+function getPcaPopsList (listId) {
+   
+    var genoList       = getPcaGenotypesListData(listId);
+    var listName       = genoList.name;
+    var listType       = genoList.listType;
+   
+    var pcaPopsList ='<table id="uploaded_pca_populations_table" style="width:100%; text-align:left"><tr>'
+                                + '<th>Population</th>'
+                                + '<th>Run PCA</th>'
+                                +'</tr>'
+                                + '<tr>'
+                                + '<td>'
+                                + '<a href="#"  onclick="javascript:pcaResult(' + listId + '); return false;">' 
+                                + listName + '</a>'
+                                + '</td>'
+                                + '<td id="list_pca_page_' + listId +  '">'
+                                + '<a href="#" onclick="javascript:pcaResult(' + listId + ');return false;">' 
+                                + '[ Run PCA ]'+ '</a>'
+                                + '</td></tr></table>';
+
+    return pcaPopsList;
+}
+
+
+jQuery.fn.doesExist = function(){
+        return jQuery(this).length > 0;
+ };
+
+
+function getPcaGenotypesListData(listId) {   
+    
+    var list = new CXGN.List();
+    
+    if (! listId == "") {
+	var listName = list.listNameById(listId);
+        var listType = list.getListType(listId);
+	
+	return {'name'     : listName,
+		'listType' : listType,
+               };
+    } else {
+	return;
+    }   
 }
 
 
@@ -69,7 +232,7 @@ function getPopulationId () {
 function plotPca(plotData){
     var scores = plotData.scores;
     var variances = plotData.variances;
-    
+   
     var pc12 = [];
     var pc1  = [];
     var pc2  = []; 
@@ -84,7 +247,7 @@ function plotPca(plotData){
      
     var height = 300;
     var width  = 500;
-    var pad    = {left:20, top:20, right:20, bottom: 50}; 
+    var pad    = {left:20, top:20, right:20, bottom: 100}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
    
@@ -96,10 +259,10 @@ function plotPca(plotData){
     var pcaPlot = svg.append("g")
         .attr("id", "#pca_plot")
         .attr("transform", "translate(" + (pad.left) + "," + (pad.top) + ")");
-
+   
     var pc1Min = d3.min(pc1);
     var pc1Max = d3.max(pc1); 
-
+   
     var pc1Limits = d3.max([Math.abs(d3.min(pc1)), d3.max(pc1)]);
     var pc2Limits = d3.max([Math.abs(d3.min(pc2)), d3.max(pc2)]);
   
@@ -184,22 +347,21 @@ function plotPca(plotData){
     pcaPlot.append("g")
         .attr("id", "pc1_axis_label")
         .append("text")
-        .text("PC1, " + variances[0][1] + "%" )
+        .text("PC1 -- " + variances[0][1] + "%" )
         .attr("y", pad.top + height + 30)
         .attr("x", width/2)
-        .attr("font-size", 10)
-        .style("fill", "#9A2EFE")
+        .attr("font-size", 12)
+        .style("fill", "green")
 
     pcaPlot.append("g")
         .attr("id", "pc2_axis_label")
         .append("text")
-        .text("PC2, " + variances[1][1] + "%" )
+        .text("PC2 -- " + variances[1][1] + "%" )
 	.attr("transform", "rotate(-90)")
-
 	.attr("y", -5)
         .attr("x", -((pad.top + height/2) + 10))
-        .attr("font-size", 10)
-        .style("fill", "#9A2EFE")
+        .attr("font-size", 12)
+        .style("fill", "red")
 
     pcaPlot.append("g")
         .selectAll("circle")
@@ -251,6 +413,32 @@ function plotPca(plotData){
         .attr("stroke", "#523CB5")
         .attr("stroke-width", 1)
         .attr("pointer-events", "none");
+    
+    var id;   
+    if ( plotData.pop_id) {
+    	id = plotData.pop_id;
+    } else {
+	id = plotData.list_id;
+    }
+
+    var popName = "";
+    if (plotData.list_name) {
+	popName = ' -- ' + plotData.list_name;
+    }
+
+    var pcaDownload;
+    if (plotData.pop_id)  {
+	pcaDownload = "/download/pca/scores/population/" + id;
+    }
+
+     pcaPlot.append("a")
+	.attr("xlink:href", pcaDownload)
+	.append("text")
+	.text("[ Download PCA scores ]" + popName)
+	.attr("y", pad.top + height + 60)
+        .attr("x", pad.left)
+        .attr("font-size", 14)
+        .style("fill", "#954A09") 
       
 }
 
