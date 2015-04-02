@@ -63,6 +63,7 @@ sub get_intersect {
     
     my $type_id = $self->get_type_id('project year');
     my $accession_id = $self->get_stock_type_id('accession');
+    my $breeding_program_type_id = $self->get_stock_type_id('breeding_program_trial_relationship');
     my $plot_id = $self->get_stock_type_id('plot');
     
     my %queries;
@@ -81,6 +82,7 @@ sub get_intersect {
 		accessions    => "SELECT distinct(stock.uniquename), stock.uniquename FROM stock WHERE stock.type_id=$accession_id ",
 		
 		genotypes => "SELECT distinct(accession.uniquename), accession.uniquename FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) JOIN stock as accession ON (object_id=accession.stock_id) JOIN nd_experiment_stock ON (accession.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN genotype USING(genotype_id) ",
+		breeding_programs => "SELECT distinct(accession.uniquename), stock.uniquename FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) JOIN stock as accession (object_id=accession.stock_id) JOIN nd_experiment_stock ON (accession.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_project USING (project_id) JOIN project_relationship ON (nd_experiment_project.project_id=project_relationship.subject_id) WHERE 
 		
 		order_by      => " ORDER BY 2 ",
 	    },

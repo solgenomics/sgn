@@ -4,10 +4,15 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List' ] &>
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
-
+<table><tr><td>
 Search accessions and plots using location, year, trial, and trait data.
+</td><td>
+Breeding program:</td><td> <div id="breeding_program_select">
+[loading...]
+</div>
+</td></tr></table>
   
 <table alt="breeder search" border="0">
 <tr>
@@ -80,6 +85,8 @@ Search accessions and plots using location, year, trial, and trait data.
 
 <script defer="defer">
   jQuery(document).ready(function() { 
+
+    get_select_box('breeding_programs', 'breeding_program_select', 'breeding_program_select');
   
     if (!isLoggedIn()) {
       jQuery('#c1_to_list_menu').html('(log in to use lists)');
@@ -111,7 +118,7 @@ Search accessions and plots using location, year, trial, and trait data.
 
  });
 
- 
+
 
 </script>
 
