@@ -314,7 +314,12 @@ sub projects_links {
 			     'population type' => 'training population', 
 	     };
 	   
-	     $c->model("solGS::solGS")->set_population_type($pop_prop);
+	     my $pop_type =  $c->model("solGS::solGS")->get_population_type($pr_id);
+ 
+	     unless ($pop_type) 
+	     {
+		 $c->model("solGS::solGS")->set_population_type($pop_prop);
+	     }
 	     
              my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 
@@ -326,11 +331,15 @@ sub projects_links {
 	 }
 	 elsif ($marker_count && !$has_phenotype)	 
 	 {
-	     my $pop_prop = {'project_id' => $pr_id, 
-			     'population type' => 'selection population', 
-	     };
-
-	     $c->model("solGS::solGS")->set_population_type($pop_prop);	      
+	     my $pop_type =  $c->model("solGS::solGS")->get_population_type($pr_id);
+	     unless ($pop_type) 
+		 
+	     {
+		 my $pop_prop = {'project_id' => $pr_id, 
+				 'population type' => 'selection population', 
+		 }; 
+		 $c->model("solGS::solGS")->set_population_type($pop_prop);	 
+	     }     
 	 }  
     }
 
