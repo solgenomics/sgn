@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME 
-/mode/pca.mas - displays population structure analysis(PCA) output
+/solgs/model/pca.mas - displays population structure analysis(PCA) output
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)
