@@ -679,12 +679,15 @@ sub genotype_data {
 sub format_user_list_genotype_data {
     my $self = shift;
 
-    my @genotypes = @{$self->context->stash->{genotypes_list}};
+    my $genotypes = $self->context->stash->{genotypes_list};
     my $population_type = $self->context->stash->{population_type};
-
+   
+    my @genotypes = @$genotypes if $genotypes;
+   # if ($genotypes) { @genotypes = @$genotypes;}
+   
     if (!@genotypes)
     { 
-	if($population_type =~ /reference/) 
+	if ($population_type =~ /reference/) 
         
 	{
 	    my  @plots_names = @{ $self->context->stash->{reference_population_plot_names} };
@@ -694,16 +697,17 @@ sub format_user_list_genotype_data {
 		my $stock_plot_rs = $self->search_stock_using_plot_name($plot_name);
 		my $stock_id = $stock_plot_rs->single->stock_id;
 		my $stock_obj_rs = $self->map_subject_to_object($stock_id);
-		my $genotype_name = $stock_obj_rs->first->name;
+		my $genotype_name = $stock_obj_rs->first->uniquename;
 		push @genotypes, $genotype_name;
 	    }
 	}
 	else
 	{
-	    @genotypes = @{ $self->context->stash->{selection_genotypes_list_stocks_names} };
+	    @genotypes = @{$self->context->stash->{selection_genotypes_list_stocks_names}};
+	    
 	}    
-    } 
-            
+    }
+    
     @genotypes = uniq(@genotypes);
 
     my $geno_data;
