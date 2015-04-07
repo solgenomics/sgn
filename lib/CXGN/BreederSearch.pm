@@ -110,6 +110,7 @@ sub get_intersect {
 	    },
 	    
 	    plots => {
+
 		locations => "SELECT distinct(stock.uniquename), stock.uniquename FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) WHERE stock.type_id=$plot_id and nd_geolocation.nd_geolocation_id in ($dataref->{plots}->{locations}) ",
 		
 		years     => "SELECT distinct(stock.uniquename), stock.uniquename FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE  stock.type_id=$plot_id and projectprop.value in ($dataref->{plots}->{years}) ",
@@ -124,6 +125,8 @@ sub get_intersect {
 		
 		genotypes => "SELECT distinct(plot.uniquename), plot.uniquename FROM stock as plot JOIN stock_relationship on (plot.stock_id=stock_relationship.subject_id) JOIN stock as accession on (stock_relationship.object_id=accession.stock_id) JOIN  nd_experiment_stock ON (accession.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN genotype USING(genotype_id) ",
 		
+		breeding_programs => "SELECT distinct(plot.uniquename), plot.uniquename FROM project AS breeding_program JOIN project_relationship ON (breeding_program.project_id=project_relationship.object_project_id) JOIN nd_experiment_project ON (project_relationship.subject_project_id=nd_experiment_project.project_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock AS plot USING(stock_id) WHERE plot.type_id=(SELECT cvterm_id FROM cvterm WHERE name='plot') AND breeding_program.project_id in ($dataref->{plots}->{breeding_programs})",
+
 		order_by => " ORDER BY 2",
 		
 	    },
