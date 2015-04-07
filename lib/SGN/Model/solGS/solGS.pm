@@ -514,7 +514,7 @@ sub search_stock {
     my ($self, $stock_name) = @_;
   
     my $rs = $self->schema->resultset("Stock::Stock")
-        ->search({'me.name' =>  $stock_name});
+        ->search({'me.uniquename' => $stock_name});
    
     return $rs; 
 
@@ -776,7 +776,7 @@ sub project_genotype_data_rs {
 			 {},               
                          { 
 			     select   => [qw / genotypeprops.genotypeprop_id genotypeprops.value 
-                                            me.project_id me.name object.stock_id object.name/ ],
+                                            me.project_id me.name object.stock_id object.uniquename / ],
 			     as       => [ qw / genotypeprop_id value project_id project_name stock_id stock_name / ],
 			     distinct => [ qw / stock_name /]
                          }
@@ -799,7 +799,7 @@ sub individual_stock_genotypes_rs {
 	->search_related('type',
                          {'type.name' => {'ilike' => 'snp genotyping'}},
                          {  
-                             select => [ qw / me.stock_id me.name  genotypeprops.genotypeprop_id genotypeprops.value / ], 
+                             select => [ qw / me.stock_id me.uniquename  genotypeprops.genotypeprop_id genotypeprops.value / ], 
                              as     => [ qw / stock_id stock_name  genotypeprop_id value/ ] 
                          }
         );
@@ -821,7 +821,7 @@ sub stock_genotypes_rs {
         ->search_related('type',
                          {'type.name' =>{'ilike'=> 'snp genotyping'}}, 
                          { 
-                             select => [ qw / me.project_id me.name object.stock_id object.name  
+                             select => [ qw / me.project_id me.name object.stock_id object.uniquename  
                                                  genotypeprops.genotypeprop_id genotypeprops.value/ ], 
                              as     => [ qw / project_id project_name stock_id stock_name genotypeprop_id value / ] 
                          }
@@ -885,7 +885,7 @@ sub prediction_genotypes_rs {
 			 {}, 
                          { 
 			     select   => [qw / genotypeprops.genotypeprop_id genotypeprops.value 
-                                            me.project_id me.name stock.stock_id stock.name/ ],
+                                            me.project_id me.name stock.stock_id stock.uniquename/ ],
 			     as       => [ qw / genotypeprop_id value project_id project_name stock_id stock_name / ],
 			     distinct => [ qw / stock_name /]
                          }
@@ -1366,7 +1366,7 @@ sub structure_phenotype_data {
 	    my ($object_name, $object_id);
 	    if ($stock_object_row) 
 	    {
-		$object_name      = $stock_object_row->name;
+		$object_name      = $stock_object_row->uniquename;
 		$object_id        = $stock_object_row->stock_id;
         
 		push @project_genotypes, $object_name;
@@ -1481,7 +1481,7 @@ sub phenotypes_by_trait {
 
         my $subject_id       = $phen_hashref->{$key}{stock_id};
         my $stock_object_row = $self->map_subject_to_object($subject_id)->single;       
-        my $object_name      = $stock_object_row->name;
+        my $object_name      = $stock_object_row->uniquename;
         my $object_id        = $stock_object_row->stock_id;
             
         $d .= $key . "\t" .$object_name . "\t" . $object_id . "\t" . $phen_hashref->{$key}{stock_id} . 
