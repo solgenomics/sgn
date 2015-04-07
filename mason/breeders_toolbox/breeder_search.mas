@@ -1,5 +1,4 @@
 
-
 <%args>
 
 </%args>
@@ -8,15 +7,10 @@
 
 <table><tr><td>
 Search accessions and plots using location, year, trial, and trait data.
-</td><td>
-Breeding program:</td><td> <div id="breeding_program_select">
-[loading...]
-</div>
 </td></tr></table>
   
 <table alt="breeder search" border="0">
 <tr>
-
 <td width="200">
   <select id="select1">
 </select>
@@ -82,11 +76,8 @@ Breeding program:</td><td> <div id="breeding_program_select">
 <tr><td colspan="4"><input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;only show genotyped accessions</td></tr>
 </table>
 
-
 <script defer="defer">
   jQuery(document).ready(function() { 
-
-    get_select_box('breeding_programs', 'breeding_program_select', 'breeding_program_select');
   
     if (!isLoggedIn()) {
       jQuery('#c1_to_list_menu').html('(log in to use lists)');
