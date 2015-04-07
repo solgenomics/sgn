@@ -97,8 +97,7 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
     my @stocks_names = ();  
     foreach my $stock (@$list)
     {
-        push @stocks_names, $stock->[1]; 
-      
+        push @stocks_names, $stock->[1];
     }
     
 
@@ -108,17 +107,18 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
     $c->stash->{list_name} = $list_name;
     $c->stash->{list_id}   = $list_id;
 
-   # $c->controller("solGS::solGS")->get_solgs_dirs($c);
     $c->model('solGS::solGS')->format_user_list_genotype_data($c);
     
     $self->create_user_list_genotype_data_file($c);
-   # my $genotype_file = $c->stash->{user_selection_list_genotype_data_file};
+   
+    my $genotype_file = $c->stash->{user_selection_list_genotype_data_file};
+
     $c->stash->{prediction_pop_id} = $list_id;
     $self->create_list_population_metadata_file($c);
-    
+
     my $ret->{status} = 'failed';
     
-    if (-s $c->stash->{user_selection_list_genotype_data_file}) 
+    if (-s $genotype_file) 
     {
         $ret->{status} = 'success';
     }
@@ -537,7 +537,6 @@ sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/lis
     $c->res->body($ret);
 
 }
-
 
 
 sub begin : Private {
