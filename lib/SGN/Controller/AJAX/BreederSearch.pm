@@ -73,8 +73,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
      foreach my $select (@$criteria_list) { 
      	print STDERR "Checking $select\n";
      	chomp($select);
-     	if (! any { $select eq $_ } ('accessions', 'projects', 'locations', 'years', 'traits', 'genotypes', undef)) { 
-     	    $error = "Valid keys are projects, years, traits and locations";
+     	if (! any { $select eq $_ } ('breeding_programs', 'accessions', 'projects', 'locations', 'years', 'traits', 'genotypes', undef)) { 
+     	    $error = "Valid keys are breeding_programs, projects, years, traits and locations";
      	    $c->stash->{rest} = { error => $error };
      	    return;
      	}

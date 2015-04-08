@@ -1,17 +1,16 @@
 
-
 <%args>
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List' ] &>
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
-
+<table><tr><td>
 Search accessions and plots using location, year, trial, and trait data.
+</td></tr></table>
   
 <table alt="breeder search" border="0">
 <tr>
-
 <td width="200">
   <select id="select1">
 </select>
@@ -77,7 +76,6 @@ Search accessions and plots using location, year, trial, and trait data.
 <tr><td colspan="4"><input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;only show genotyped accessions</td></tr>
 </table>
 
-
 <script defer="defer">
   jQuery(document).ready(function() { 
   
@@ -111,7 +109,7 @@ Search accessions and plots using location, year, trial, and trait data.
 
  });
 
- 
+
 
 </script>
 
