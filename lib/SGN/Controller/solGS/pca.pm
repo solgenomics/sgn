@@ -212,7 +212,7 @@ sub create_pca_genotype_data {
 	    foreach (@trials_list) 
 	    {
 		my $trial_id = $c->model("solGS::solGS")
-		    ->project_details_by_name($trials_list[0])
+		    ->project_details_by_name($_)
 		    ->first
 		    ->project_id;
 
