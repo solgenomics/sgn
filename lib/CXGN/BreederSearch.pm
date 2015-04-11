@@ -455,7 +455,7 @@ sub get_extended_phenotype_info_matrix {
 
 parameters: comma-separated lists of accession, trial, and trait IDs. May be empty.
 
-returns: an array with phenotype information
+returns: an array with genotype information
 
 =cut
 
@@ -483,8 +483,15 @@ sub get_genotype_info {
 
     #my $q = "SELECT genotype_id FROM genotype join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.stock_id in ($accession_sql)";
 
-    my $q = "SELECT genotype_id,value FROM public.genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.stock_id in ($accession_sql)";
+        my $result = [];
+    if ($accession_sql) { 
+	my $q = "SELECT genotype_id,value FROM public.genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.stock_id in ($accession_sql)";
 
+    #if ($trait_sql) { 
+#	push @qs, "";
+ #   }
+
+  #  my $q = join " INTERSECT ", @qs;
 
     print "QUERY: $q\n\n";
 
@@ -495,7 +502,7 @@ sub get_genotype_info {
     my $h = $self->dbh()->prepare($q);
     $h->execute();
 
-    my $result = [];
+
 
   #  while (my ($genotype_id,$name,$uniquename,$description,$type_id) = $h->fetchrow_array()) { 
 #	push @$result, [ $genotype_id,$name,$uniquename,$description,$type_id ];
@@ -508,7 +515,7 @@ sub get_genotype_info {
 	
     }
 
-
+    }
    
 #    while (my ($genotype_id) = $h->fetchrow_array()) { 
 #	push @$result, [ $genotype_id ];

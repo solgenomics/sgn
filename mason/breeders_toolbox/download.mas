@@ -113,9 +113,9 @@ Choose a list for each parameter and click "download".
 
 <tr><td colspan="3"><h4>Download GBS genotype </h4>Select parameter:<br />
   <tr>
-    <th>
+    <!-- th>
       Trials
-    </th>
+    </th -->
     <th>
       Accessions
     </th>
@@ -125,10 +125,10 @@ Choose a list for each parameter and click "download".
   </tr>
 
   <tr>
-    <td>
+    <!-- td>
       <div id="trial_list2">
       </div>
-    </td>
+    </td -->
     <td>
       <div id="accession_list2">
       </div>      
@@ -155,8 +155,18 @@ Choose a list for each parameter and click "download".
       var accession_list_id = $('#genotype_accession_list_list_select').val();
       var trial_list_id = $('#genotype_trial_list_list_select').val();
 
-      var accession_validation = lo.validate(accession_list_id, 'accessions', true);
-      var trial_validation = lo.validate(trial_list_id, 'trials', true);
+  
+      var accession_validation = 1;
+      if (accession_list_id) { 
+        accession_validation = lo.validate(accession_list_id, 'accessions', true); 
+      }
+
+      //var trial_validation = 1;
+      //if (trial_list_id) { 
+      //  trial_validation = lo.validate(trial_list_id, 'trials', true);
+      //}
+
+      //alert('trial validation = '+trial_validation);
 
       if (!( accession_list_id || trial_list_id) ) { 
         alert("You need to select an accession or a trial !");
@@ -169,9 +179,9 @@ Choose a list for each parameter and click "download".
         problem_lists.push('accessions');
       }
 
-      if (trial_validation != 1) { 
-        problem_lists.push('trials');
-      }
+      //if (trial_validation != 1) { 
+      //  problem_lists.push('trials');
+      //}
 
 
       //alert("problem_lists is " + problem_lists);

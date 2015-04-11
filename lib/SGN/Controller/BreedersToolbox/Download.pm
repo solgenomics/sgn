@@ -382,8 +382,14 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 
     print STDERR "IDS: $accession_list_id, $trial_list_id \n";
 
-    my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-    my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
+    my $accession_data;
+    if ($accession_list_id) { 
+	$accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+    }
+    my $trial_data;
+    if ($trial_list_id) { 
+	$trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
+    }
    # my $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
 
     my @accession_list = map { $_->[1] } @$accession_data;
@@ -407,10 +413,16 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
     
     #my $trait_t = $t->can_transform("traits", "trait_ids");
     #my $trait_id_data = $t->transform($schema, $trait_t, \@trait_list);
+    
+    my $accession_sql = "";
+    if ($accession_id_data) { 
+	$accession_sql = join ",", map { "\'$_\'" } @{$accession_id_data->{transform}};
+    }
 
-    my $accession_sql = join ",", map { "\'$_\'" } @{$accession_id_data->{transform}};
-    my $trial_sql = join ",", map { "\'$_\'" } @{$trial_id_data->{transform}};
-    #my $trait_sql = join ",", map { "\'$_\'" } @{$trait_id_data->{transform}};
+    my $trial_sql = "";
+    if ($trial_id_data) { 
+	$trial_sql = join ",", map { "\'$_\'" } @{$trial_id_data->{transform}};
+    }
 
     print STDERR "SQL-READY: $accession_sql | $trial_sql \n";
 
