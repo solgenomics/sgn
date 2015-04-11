@@ -175,6 +175,10 @@ has 'pBB' => ( isa => 'Num',
 	       is => 'rw',
     );
 
+has 'raw' => ( isa => 'Str',
+	       is => 'rw',
+    );
+
 =head2 get_score
 
  Usage:        $ms->get_score('XYZ');

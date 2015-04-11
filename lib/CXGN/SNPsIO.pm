@@ -93,6 +93,7 @@ sub next {
 	my ($chr, $position, $snp_id, $ref_allele, $alt_allele, $qual, $filter, $info, $format,  @snps) = split /\t/, $line;
 	#print STDERR "Processing $snp_id\n";
 	my $snps = CXGN::SNPs->new();
+	$snps->raw($line);
 	$snps->id($snp_id);
 	$snps->chr($chr);
 	$snps->position($position);
