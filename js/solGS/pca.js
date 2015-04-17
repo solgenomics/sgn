@@ -1,6 +1,6 @@
 /** 
 * Principal component analysis and scores plotting 
-* plotting using d3js
+* using d3js
 * Isaak Y Tecle <iyt2@cornell.edu>
 *
 */
@@ -8,16 +8,6 @@
 
 JSAN.use("CXGN.List");
 JSAN.use("jquery.blockUI");
-
-
-jQuery(document).ready( function() { 
-    var url = window.location.pathname;
- 
-    if (url.match(/pca\/analysis/) == null) {
-	pcaResult();  
-    } 
- 
-});
 
 
 jQuery(document).ready( function() {
@@ -30,7 +20,7 @@ jQuery(document).ready( function() {
         
         var listMenu = list.listSelect("pca_genotypes", ['accessions', 'trials']);
        
-	if(listMenu.match(/option/) != null) {
+	if (listMenu.match(/option/) != null) {
             
             jQuery("#pca_genotypes_list").append(listMenu);
 
@@ -39,6 +29,46 @@ jQuery(document).ready( function() {
         }
     }
                
+});
+
+
+jQuery(document).ready( function() { 
+   
+    var url = window.location.pathname;
+
+    if (url.match(/[solgs\/trait|breeders_toolbox\/trial]/)) {
+       checkPcaResult();  
+    } 
+ 
+});
+
+
+function checkPcaResult () {
+    
+    var popId = getPopulationId();
+ 
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: '/pca/check/result/' + popId,
+        success: function(response) {
+            if (response.result === 'yes') {
+		pcaResult();					
+            } else { 
+		jQuery("#run_pca").show();	
+            }
+	}
+    });
+    
+}
+
+
+jQuery(document).ready( function() { 
+
+    jQuery("#run_pca").click(function() {
+        pcaResult();
+    }); 
+  
 });
 
 
@@ -66,17 +96,16 @@ jQuery(document).ready( function() {
 
 function loadPcaGenotypesList(listId) {     
     
-    var genoList       = getPcaGenotypesListData(listId);
-    var listName       = genoList.name;
-    var listType       = genoList.listType;  
+    var genoList = getPcaGenotypesListData(listId);
+    var listName = genoList.name;
+    var listType = genoList.listType;  
    
     if ( listId.length === 0) {       
         alert('The list is empty. Please select a list with content.' );
     } else {
 	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Please wait..'});
-       
-        
+               
         var pcaGenotypes = jQuery("#uploaded_pca_populations_table").doesExist();
                        
         if (pcaGenotypes == false) {                              
@@ -85,11 +114,11 @@ function loadPcaGenotypesList(listId) {
         }
         else {
             var addRow = '<tr><td>'
-                + '<a href="#"  onclick="javascript:pcaResult(' + listId  + '); return false;">' 
+                + '<a href="#"  onclick="javascript:setListId(' + listId + ');javascript:pcaResult(); return false;">' 
                 + listName + '</a>'
                 + '</td>'
                 + '<td id="list_pca_page_' + listId +  '">'
-                + '<a href="#" onclick="javascript:pcaResult(' + listId + ');return false;">' 
+                + '<a href="#" onclick="setListId(' + listId + ');pcaResult();return false;">' 
                 + '[ Run PCA ]' + '</a>'          
                 + '</td><tr>';
 
@@ -102,12 +131,15 @@ function loadPcaGenotypesList(listId) {
         }       
 	jQuery.unblockUI();                                
     }
+
 }
 
 
-function pcaResult (listId) {
-    var popId = getPopulationId();
-   
+function pcaResult () {
+
+    var popId  = getPopulationId();
+    var listId = getListId();
+    
     var listName;
     var listType;
     
@@ -121,8 +153,8 @@ function pcaResult (listId) {
 	popId = listId;
     }
 
-    if (listId) {
-	jQuery("#pca_message").html("Running PCA for " + listName + "... please wait...");
+    if (listId || popId) {
+	jQuery("#pca_message").html("Running PCA... please wait...");
     }  
    
     jQuery.ajax({
@@ -153,6 +185,7 @@ function pcaResult (listId) {
 					
                 plotPca(plotData);
 		jQuery("#pca_message").empty();
+		jQuery("#run_pca").hide();
 
             } else {                
 		jQuery("#pca_message").html(response.status); 
@@ -178,11 +211,11 @@ function getPcaPopsList (listId) {
                                 +'</tr>'
                                 + '<tr>'
                                 + '<td>'
-                                + '<a href="#"  onclick="javascript:pcaResult(' + listId + '); return false;">' 
+                                + '<a href="#"  onclick="setListId('+ listId +');pcaResult(); return false;">' 
                                 + listName + '</a>'
                                 + '</td>'
                                 + '<td id="list_pca_page_' + listId +  '">'
-                                + '<a href="#" onclick="javascript:pcaResult(' + listId + ');return false;">' 
+        + '<a href="#" onclick="setListId(' + listId + ');pcaResult();return false;">' 
                                 + '[ Run PCA ]'+ '</a>'
                                 + '</td></tr></table>';
 
@@ -191,7 +224,9 @@ function getPcaPopsList (listId) {
 
 
 jQuery.fn.doesExist = function(){
+
         return jQuery(this).length > 0;
+
  };
 
 
@@ -208,7 +243,8 @@ function getPcaGenotypesListData(listId) {
                };
     } else {
 	return;
-    }   
+    }
+   
 }
 
 
@@ -229,7 +265,29 @@ function getPopulationId () {
 }
 
 
+function setListId (listId) {
+     
+    var existingListId = jQuery("#list_id").doesExist();
+    
+    if (existingListId) {
+	jQuery("#list_id").remove();
+    }
+    
+    jQuery("#pca_canvas").append("<input type=\"hidden\" id=\"list_id\" value=\"" + listId + "\"></input>");
+
+}
+
+
+function getListId () {
+
+    var listId = jQuery("#list_id").val();
+    return listId;  
+      
+}
+
+
 function plotPca(plotData){
+
     var scores = plotData.scores;
     var variances = plotData.variances;
    
