@@ -117,6 +117,7 @@ function loadPcaGenotypesList(listId) {
                 + '<a href="#"  onclick="javascript:setListId(' + listId + ');javascript:pcaResult(); return false;">' 
                 + listName + '</a>'
                 + '</td>'
+		+ '<td>' + listType + '</td>'
                 + '<td id="list_pca_page_' + listId +  '">'
                 + '<a href="#" onclick="setListId(' + listId + ');pcaResult();return false;">' 
                 + '[ Run PCA ]' + '</a>'          
@@ -207,6 +208,7 @@ function getPcaPopsList (listId) {
    
     var pcaPopsList ='<table id="uploaded_pca_populations_table" style="width:100%; text-align:left"><tr>'
                                 + '<th>Population</th>'
+                                + '<th>List type</th>'
                                 + '<th>Run PCA</th>'
                                 +'</tr>'
                                 + '<tr>'
@@ -214,8 +216,9 @@ function getPcaPopsList (listId) {
                                 + '<a href="#"  onclick="setListId('+ listId +');pcaResult(); return false;">' 
                                 + listName + '</a>'
                                 + '</td>'
+    	                        + '<td>' + listType + '</td>'
                                 + '<td id="list_pca_page_' + listId +  '">'
-        + '<a href="#" onclick="setListId(' + listId + ');pcaResult();return false;">' 
+                                + '<a href="#" onclick="setListId(' + listId + ');pcaResult();return false;">' 
                                 + '[ Run PCA ]'+ '</a>'
                                 + '</td></tr></table>';
 
