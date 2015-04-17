@@ -10,14 +10,12 @@ function getTraitDetails () {
     var populationId = jQuery("#population_id").val();
     var traitId = jQuery("#trait_id").val();
    
-    if (populationId == 'undefined' ) {       
+    if (!populationId) {       
         populationId = jQuery("#model_id").val();
-
     }
 
-    if (populationId == 'undefined' ) {       
+    if (!populationId) {       
         populationId = jQuery("#combo_pops_id").val();
-
     }
    
     return {'population_id' : populationId, 
@@ -30,6 +28,7 @@ function getTraitDetails () {
 jQuery(document).ready( function () {     
     getHistogramData();
 });
+
 
 function getHistogramData () {
     var trait = getTraitDetails();
