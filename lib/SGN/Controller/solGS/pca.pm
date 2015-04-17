@@ -23,6 +23,29 @@ sub pca_analysis :Path('/pca/analysis/') Args(0) {
 }
 
 
+sub check_result :Path('/pca/check/result/') Args(1) {
+    my ($self, $c, $pop_id) = @_;
+
+    $c->stash->{pop_id} = $pop_id;
+
+    $self->pca_scores_file($c);
+    my $pca_scores_file = $c->stash->{pca_scores_file};
+ 
+    my $ret->{result} ='No';
+   
+    if (-s $pca_scores_file && $pop_id =~ /\d+/) 
+    {
+	$ret->{result} = 'yes';                
+    }    
+
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
 sub pca_result :Path('/pca/result/') Args(1) {
     my ($self, $c, $pop_id) = @_;
     
@@ -55,8 +78,6 @@ sub pca_result :Path('/pca/result/') Args(1) {
     {
 	$geno_file = $c->stash->{genotype_file};
     }
-
-
 
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
