@@ -105,8 +105,7 @@ function loadPcaGenotypesList(listId) {
     } else {
 	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Please wait..'});
-       
-        
+               
         var pcaGenotypes = jQuery("#uploaded_pca_populations_table").doesExist();
                        
         if (pcaGenotypes == false) {                              
