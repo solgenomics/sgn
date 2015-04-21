@@ -23,6 +23,29 @@ sub pca_analysis :Path('/pca/analysis/') Args(0) {
 }
 
 
+sub check_result :Path('/pca/check/result/') Args(1) {
+    my ($self, $c, $pop_id) = @_;
+
+    $c->stash->{pop_id} = $pop_id;
+
+    $self->pca_scores_file($c);
+    my $pca_scores_file = $c->stash->{pca_scores_file};
+ 
+    my $ret->{result} ='No';
+   
+    if (-s $pca_scores_file && $pop_id =~ /\d+/) 
+    {
+	$ret->{result} = 'yes';                
+    }    
+
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
 sub pca_result :Path('/pca/result/') Args(1) {
     my ($self, $c, $pop_id) = @_;
     
@@ -43,7 +66,18 @@ sub pca_result :Path('/pca/result/') Args(1) {
     }
    
     $self->create_pca_genotype_data($c);
-    my $geno_file = $c->stash->{genotype_file};
+    
+    my @genotype_files_list;
+    my $geno_file;
+    if ($c->stash->{genotype_files_list}) 
+    {
+	@genotype_files_list = @{$c->stash->{genotype_files_list}};
+	$geno_file = $genotype_files_list[0] if !$genotype_files_list[1];
+    }
+    else 
+    {
+	$geno_file = $c->stash->{genotype_file};
+    }
 
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
@@ -195,14 +229,20 @@ sub create_pca_genotype_data {
 	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
 	    my @trials_list = @{$list->elements};
 	   
-	    my $trial_id = $c->model("solGS::solGS")
-		->project_details_by_name($trials_list[0])
-		->first
-		->project_id;
+	    my @genotype_files;
+	    foreach (@trials_list) 
+	    {
+		my $trial_id = $c->model("solGS::solGS")
+		    ->project_details_by_name($_)
+		    ->first
+		    ->project_id;
 
-	    $c->stash->{pop_id} = $trial_id; 
+		$c->stash->{pop_id} = $trial_id; 
 	  
-	    $c->controller("solGS::solGS")->genotype_file($c);
+		$c->controller("solGS::solGS")->genotype_file($c);
+		push @genotype_files, $c->stash->{genotype_file};
+	    }
+	    $c->stash->{genotype_files_list} = \@genotype_files;
 	}
     }
     else 
