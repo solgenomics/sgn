@@ -21,7 +21,8 @@ $design
 % foreach my $row ("A".."H") { 
   <tr><td bgcolor="lightblue"><br /><% $row %><br /><br /></td>
 <%perl>
-   foreach my $col (1..12) { 
+   foreach my $col (1..12) {
+     $col = sprintf "%02d", $col;
      my $cell = "";
      my $bgcolor="lightgrey";
      if (exists($design->{$row.$col})) { 
