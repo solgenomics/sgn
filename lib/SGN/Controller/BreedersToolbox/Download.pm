@@ -179,14 +179,14 @@ sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download')
     my $trial_id = shift;
     my $format = $c->req->param("format");
     
-    my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
 
     $self->trial_download_log($c, $trial_id, "trial phenotypes");
 
     my $trial_sql = "\'$trial_id\'";
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
     my @data = $bs->get_phenotype_info_matrix(undef,$trial_sql, undef);
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $rs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_geolocation');
 
     my $location = $rs->first()->get_column('description');
@@ -665,7 +665,8 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     my $c = shift;
     my $trial_id = shift;
 
-    my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     
     my $layout = $t->get_layout()->get_design();
 
@@ -722,15 +723,33 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
 	$ws->write(1, $i, $headers[$i]);
     }
 
+    # replace accession names with igd_synonyms
+    #
+    print STDERR "Converting accession names to igd_synonyms...\n";
+    foreach my $k (sort wellsort (keys %{$layout})) { 
+	my $q = "SELECT value FROM stock JOIN stockprop using(stock_id) JOIN cvterm ON (stockprop.type_id=cvterm.cvterm_id) WHERE cvterm.name='igd_synonym' AND stock.uniquename = ?";
+	my $h = $c->dbc->dbh()->prepare($q);
+	$h->execute($layout->{$k}->{accession_name});
+	my ($igd_synonym) = $h->fetchrow_array();
+	$layout->{$k}->{igd_synonym} = $igd_synonym;
+	if ($layout->{$k}->{accession_name}=~/BLANK/i) { 
+	    $layout->{$k}->{igd_synonym} = "BLANK";
+	}
+    }
     # write plate info
     #
     my $line = 0;
     foreach my $k (sort wellsort (keys %{$layout})) { 
 	$ws->write(2 + $line, 0, "NextGen Cassava");
-	$ws->write(2 + $line, 1, $t->get_breeding_programs());
+	my $breeding_program_data = $t->get_breeding_programs();
+	my $breeding_program_name = "";
+	if ($breeding_program_data->[0]) { 
+	    $breeding_program_name = $breeding_program_data->[0]->[1];
+	}
+	$ws->write(2 + $line, 1, $breeding_program_name);
 	$ws->write(2 + $line, 2, $t->get_name());
 	$ws->write(2 + $line, 3, $k);
-	$ws->write(2 + $line, 4, $layout->{$k}->{accession_name});
+	$ws->write(2 + $line, 4, $layout->{$k}->{igd_synonym});
 	$ws->write(2 + $line, 16, "Manihot");
 	$ws->write(2 + $line, 17, "esculenta");
 	$ws->write(2 + $line, 20, $t->get_location());

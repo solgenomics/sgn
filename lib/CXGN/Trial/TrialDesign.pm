@@ -44,6 +44,7 @@ has 'plot_name_suffix' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name
 has 'plot_start_number' => (isa => 'Int', is => 'rw', predicate => 'has_plot_start_number', clearer => 'clear_plot_start_number', default => 1);
 has 'plot_number_increment' => (isa => 'Int', is => 'rw', predicate => 'has_plot_number_increment', clearer => 'clear_plot_number_increment', default => 1);
 has 'randomization_seed' => (isa => 'Int', is => 'rw', predicate => 'has_randomization_seed', clearer => 'clear_randomization_seed');
+has 'blank' => ( isa => 'Str', is => 'rw', predicate=> 'has_blank' );
 
 subtype 'RandomizationMethodType',
   as 'Str',
@@ -127,16 +128,28 @@ sub _get_genotyping_plate {
 	die "No stock list specified\n";
     }
     
-    my $random_blank = int(rand() * $number_of_stocks)+1;
+    my $blank = "";
+    if ($self->has_blank()) { 
+	$blank = $self->get_blank();
+	print STDERR "Using previously set blank $blank\n";
+    }
+    else { 
+	my $well_no = int(rand() * $number_of_stocks)+1;
+	my $well_row = chr(int(($well_no-1) / 12) + 65);
+	my $well_col = ($well_no -1) % 12 +1;
+	$blank = sprintf "%s%02d", $well_row, $well_col;
+	print STDERR "Using randomly assigned blank $blank\n";
+    }
     
     my $count = 0;
 
-    foreach my $col ("A".."H") {
-	foreach my $row (1..12) {
+    foreach my $row ("A".."H") {
+	foreach my $col (1..12) {
 	    $count++;
-	    my $well = $col.$row;
+	    my $well= sprintf "%s%02d", $row, $col;
+	    #my $well = $row.$col;
 	    
-	    if ($count == $random_blank) { 
+	    if ($well eq $blank) { 
 		$gt_design{$well} = { 
 		    plot_name => $self->get_trial_name()."_".$well."_BLANK",
 		    stock_name => "BLANK",
