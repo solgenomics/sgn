@@ -369,7 +369,9 @@ genoDataMatrix <- data.matrix(genoData)
 
 #impute genotype values for obs with missing values,
 #based on mean of neighbouring 10 (arbitrary) obs
+genoDataMissing <-c()
 if (sum(is.na(genoDataMatrix)) > 0) {
+  genoDataMissing<- c('yes')
     message("sum of geno missing values, ", sum(is.na(genoDataMatrix)) )
     genoDataMatrix <-kNNImpute(genoDataMatrix, 10)
     genoDataMatrix <-as.data.frame(genoDataMatrix)
@@ -387,8 +389,8 @@ if (sum(is.na(genoDataMatrix)) > 0) {
   }
 
 #impute missing data in prediction data
+ predictionDataMissing <- c()
 if (length(predictionData) != 0) {
-
   #purge markers unique to both populations
   commonMarkers  <- intersect(names(data.frame(genoDataMatrix)), names(predictionData))
   predictionData <- subset(predictionData, select = commonMarkers)
@@ -397,6 +399,7 @@ if (length(predictionData) != 0) {
   predictionData <- data.matrix(predictionData)
  
   if (sum(is.na(predictionData)) > 0) {
+    predictionDataMissing <- c('yes')
     message("sum of geno missing values in prediction data: ", sum(is.na(predictionData)) )
     predictionData <-kNNImpute(predictionData, 10)
     predictionData <-as.data.frame(predictionData)
@@ -452,17 +455,15 @@ if ( length(predictionData) == 0 ) {
 #calculate the inner products for
 #genotypes (realized relationship matrix)
 genocrsprd <- tcrossprod(genoDataMatrix)
-
+print(genocrsprd[1:5, 1:5])
 #construct an identity matrix for genotypes
 identityMatrix <- diag(nrow(phenoTrait))
-                  
+print(identityMatrix[1:5, 1:5]);                  
 iGEBV <- mixed.solve(y = phenoTrait,
                      Z = identityMatrix,
                      K = genocrsprd
                      )
  
-
-
 iGEBVu <- iGEBV$u
 
 heritability <- c()
@@ -607,7 +608,7 @@ if (length(predictionData) !=0 ) {
 predictionPopResult <- c()
 predictionPopGEBVs  <- c()
 
-if(length(predictionData) != 0) {
+if (length(predictionData) != 0) {
     message("running prediction for selection candidates...marker data", ncol(predictionData), " vs. ", ncol(genoDataMatrix))
 
     predictionPopResult <- kinship.BLUP(y = phenoTrait,
@@ -625,7 +626,7 @@ if(length(predictionData) != 0) {
   
 }
 
-if(!is.null(predictionPopGEBVs) & length(predictionPopGEBVsFile) != 0)  {
+if (!is.null(predictionPopGEBVs) & length(predictionPopGEBVsFile) != 0)  {
     write.table(predictionPopGEBVs,
                 file = predictionPopGEBVsFile,
                 sep = "\t",
@@ -645,7 +646,7 @@ if(is.null(validationAll) == FALSE) {
                 )
 }
 
-if(is.null(ordered.markerEffects) == FALSE) {
+if (is.null(ordered.markerEffects) == FALSE) {
     write.table(ordered.markerEffects,
                 file = markerFile,
                 sep = "\t",
@@ -655,7 +656,7 @@ if(is.null(ordered.markerEffects) == FALSE) {
                 )
 }
 
-if(is.null(ordered.iGEBV) == FALSE) {
+if (is.null(ordered.iGEBV) == FALSE) {
     write.table(ordered.iGEBV,
                 file = blupFile,
                 sep = "\t",
@@ -665,7 +666,7 @@ if(is.null(ordered.iGEBV) == FALSE) {
                 )
 }
 
-if(length(combinedGebvsFile) != 0 ) {
+if (length(combinedGebvsFile) != 0 ) {
     if(file.info(combinedGebvsFile)$size == 0) {
         write.table(ordered.iGEBV,
                     file = combinedGebvsFile,
@@ -683,26 +684,43 @@ if(length(combinedGebvsFile) != 0 ) {
     }
 }
 
-if(!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
+if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
     write.table(traitPhenoData,
                 file = traitPhenoFile,
                 sep = "\t",
                 col.names = NA,
                 quote = FALSE,
-                append = FALSE
                 )
 }
 
-
-if(!is.null(formattedPhenoData) & length(formattedPhenoDataFile) != 0) {
+if (!is.null(formattedPhenoData) & length(formattedPhenoDataFile) != 0) {
     write.table(formattedPhenoData,
                 file = formattedPhenoDataFile,
                 sep = "\t",
                 col.names = NA,
                 quote = FALSE,
-                append = FALSE
                 )
 }
+
+if (!is.null(genoDataMissing)) {
+  write.table(genoDataMatrix,
+              file = genoFile,
+              sep = "\t",
+              col.names = NA,
+              quote = FALSE,
+            )
+
+}
+
+if (!is.null(predictionDataMissing)) {
+  write.table(predictionData,
+              file = predictionFile,
+              sep = "\t",
+              col.names = NA,
+              quote = FALSE,
+              )
+}
+
 
 #should also send notification to analysis owner
 to      <- c("<iyt2@cornell.edu>")
