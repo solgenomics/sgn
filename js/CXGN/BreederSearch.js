@@ -381,8 +381,8 @@ window.onload = function initialize() {
 	
 	var stock_data;
 
-	alert("Retrieving "+select4);
-	//disable_ui();
+	//alert("Retrieving "+select4);
+	disable_ui();
 
     	jQuery.ajax( { 
 	    url: '/ajax/breeder/search/stocks',
@@ -412,7 +412,7 @@ window.onload = function initialize() {
 	});
 
 
-	//enable_ui();
+	enable_ui();
     });    
 
 
