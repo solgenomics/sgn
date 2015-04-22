@@ -1029,6 +1029,7 @@ sub output_files {
     $self->trait_phenodata_file($c);
     $self->formatted_phenodata_file($c);
     $self->variance_components_file($c);
+    $self->relationship_matrix_file($c);
 
     my $prediction_id = $c->stash->{prediction_pop_id};
     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
@@ -1056,6 +1057,7 @@ sub output_files {
                           $c->stash->{formatted_phenodata_file},
                           $c->stash->{selected_traits_gebv_file},
                           $c->stash->{variance_components_file},
+			  $c->stash->{relationship_matrix_file},
                           $pred_pop_gebvs_file
         );
                           
@@ -1210,6 +1212,39 @@ sub gebv_kinship_file {
         $cache_data = {key       => 'gebv_kinship_' . $pop_id . '_'.  $trait,
                        file      => 'gebv_kinship_' . $trait . '_' . $pop_id,
                        stash_key => 'gebv_kinship_file'
+        };
+    }
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+
+sub relationship_matrix_file {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id};
+    my $data_set_type = $c->stash->{data_set_type};
+        
+    my $cache_data;
+    
+    no warnings 'uninitialized';
+
+    if ($data_set_type =~ /combined populations/)
+    {
+        my $combo_identifier = $c->stash->{combo_pops_id};
+        $cache_data = {key       => 'relationship_matrix_combined_pops_'.  $combo_identifier,
+                       file      => 'relationship_matrix_combined_pops' . $combo_identifier,
+                       stash_key => 'relationship_matrix_file'
+
+        };
+    }
+    else 
+    {
+    
+        $cache_data = {key       => 'relationship_matrix_' . $pop_id,
+                       file      => 'relationship_matrix_' . $pop_id,
+                       stash_key => 'relationship_matrix_file'
         };
     }
 
