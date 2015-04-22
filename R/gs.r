@@ -372,24 +372,24 @@ genoDataMatrix <- data.matrix(genoData)
 genoDataMissing <-c()
 if (sum(is.na(genoDataMatrix)) > 0) {
   genoDataMissing<- c('yes')
-    message("sum of geno missing values, ", sum(is.na(genoDataMatrix)) )
-    genoDataMatrix <-kNNImpute(genoDataMatrix, 10)
-    genoDataMatrix <-as.data.frame(genoDataMatrix)
+  message("sum of geno missing values, ", sum(is.na(genoDataMatrix)) )
+  genoDataMatrix <-kNNImpute(genoDataMatrix, 10)
+  genoDataMatrix <-as.data.frame(genoDataMatrix)
 
-    #extract columns with imputed values
-    genoDataMatrix <- subset(genoDataMatrix,
-                         select = grep("^x", names(genoDataMatrix))
-                )
+  #extract columns with imputed values
+  genoDataMatrix <- subset(genoDataMatrix,
+                           select = grep("^x", names(genoDataMatrix))
+                           )
 
-    #remove prefix 'x.' from imputed columns
-    names(genoDataMatrix) <- sub("x.", "", names(genoDataMatrix))
+  #remove prefix 'x.' from imputed columns
+  names(genoDataMatrix) <- sub("x.", "", names(genoDataMatrix))
 
-    genoDataMatrix <- round(genoDataMatrix, digits = 0)
-    genoDataMatrix <- data.matrix(genoDataMatrix)
+  genoDataMatrix <- round(genoDataMatrix, digits = 0)
+  genoDataMatrix <- data.matrix(genoDataMatrix)
   }
 
 #impute missing data in prediction data
- predictionDataMissing <- c()
+predictionDataMissing <- c()
 if (length(predictionData) != 0) {
   #purge markers unique to both populations
   commonMarkers  <- intersect(names(data.frame(genoDataMatrix)), names(predictionData))
@@ -415,7 +415,34 @@ if (length(predictionData) != 0) {
     predictionData <- round(predictionData, digits = 0)
     predictionData <- data.matrix(predictionData)
   }
+}
 
+
+relationshipMatrixFile <- grep("relationship_matrix",
+                               outFiles,
+                               ignore.case = TRUE,
+                               fixed = FALSE,
+                               value = TRUE
+                               )
+
+message("relationship matrix file: ", relationshipMatrixFile)
+message("relationship matrix file size: ", file.info(relationshipMatrixFile)$size)
+relationshipMatrix <- c()
+
+if (file.info(relationshipMatrixFile)$size > 0 ) {
+  relationshipDf <- read.table(relationshipMatrixFile,
+                                   header = TRUE,
+                                   row.names = 1,
+                                   sep = "\t",
+                                   check.names=FALSE,
+                                   dec = "."
+                                   )
+
+  relationshipMatrix <- data.matrix(relationshipDf)
+}
+
+if (!is.null(relationshipMatrix)) {
+  print(relationshipMatrix[1:5, 1:4])
 }
 
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
@@ -454,20 +481,23 @@ if ( length(predictionData) == 0 ) {
 #additive relationship model
 #calculate the inner products for
 #genotypes (realized relationship matrix)
-genocrsprd <- tcrossprod(genoDataMatrix)
-print(genocrsprd[1:5, 1:5])
+
+if (file.info(relationshipMatrixFile)$size == 0) {
+  relationshipMatrix <- tcrossprod(genoDataMatrix)
+}
+
 #construct an identity matrix for genotypes
 identityMatrix <- diag(nrow(phenoTrait))
-print(identityMatrix[1:5, 1:5]);                  
+                  
 iGEBV <- mixed.solve(y = phenoTrait,
                      Z = identityMatrix,
-                     K = genocrsprd
+                     K = relationshipMatrix
                      )
  
 iGEBVu <- iGEBV$u
 
 heritability <- c()
-if ( is.null(predictionFile) == TRUE ) {
+if ( is.null(predictionFile)) {
     heritability <- round((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve)) * 100, digits=2)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
     cat('Error variance', iGEBV$Ve, file=varianceComponentsFile, sep="\t", append=TRUE)
@@ -525,7 +555,7 @@ colnames(ordered.iGEBV) <- c(trait)
 #cross-validation
 validationAll <- c()
 
-if(is.null(predictionFile) == TRUE) {
+if(is.null(predictionFile)) {
   genoNum <- nrow(phenoTrait)
 if(genoNum < 20 ) {
   warning(genoNum, " is too small number of genotypes.")
@@ -588,7 +618,7 @@ for (i in 1:reps) {
 validationAll <- data.matrix(validationAll)
 validationAll <- data.matrix(validationAll[order(-validationAll[, 1]), ])
      
-if (is.null(validationAll) == FALSE) {
+if (!is.null(validationAll)) {
     validationMean <- data.matrix(round(colMeans(validationAll),
                                       digits = 2
                                       )
@@ -636,7 +666,7 @@ if (!is.null(predictionPopGEBVs) & length(predictionPopGEBVsFile) != 0)  {
                 )
 }
 
-if(is.null(validationAll) == FALSE) {
+if(!is.null(validationAll)) {
     write.table(validationAll,
                 file = validationFile,
                 sep = "\t",
@@ -646,7 +676,7 @@ if(is.null(validationAll) == FALSE) {
                 )
 }
 
-if (is.null(ordered.markerEffects) == FALSE) {
+if (!is.null(ordered.markerEffects)) {
     write.table(ordered.markerEffects,
                 file = markerFile,
                 sep = "\t",
@@ -656,7 +686,7 @@ if (is.null(ordered.markerEffects) == FALSE) {
                 )
 }
 
-if (is.null(ordered.iGEBV) == FALSE) {
+if (!is.null(ordered.iGEBV)) {
     write.table(ordered.iGEBV,
                 file = blupFile,
                 sep = "\t",
@@ -715,6 +745,16 @@ if (!is.null(genoDataMissing)) {
 if (!is.null(predictionDataMissing)) {
   write.table(predictionData,
               file = predictionFile,
+              sep = "\t",
+              col.names = NA,
+              quote = FALSE,
+              )
+}
+
+
+if (file.info(relationshipMatrixFile)$size == 0) {
+  write.table(relationshipMatrix,
+              file = relationshipMatrixFile,
               sep = "\t",
               col.names = NA,
               quote = FALSE,
