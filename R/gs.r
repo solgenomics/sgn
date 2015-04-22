@@ -393,26 +393,6 @@ traitPhenoData <- as.data.frame(round(phenoTrait, digits=2))
 phenoTrait     <- data.matrix(phenoTrait)
 genoDataFiltered <- data.matrix(genoDataFiltered)
 
-## #impute genotype values for obs with missing values,
-## #based on mean of neighbouring 10 (arbitrary) obs
-## genoDataMissing <-c()
-## if (sum(is.na(genoDataMatrix)) > 0) {
-##   genoDataMissing<- c('yes')
-##     message("sum of geno missing values, ", sum(is.na(genoDataMatrix)) )
-##     genoDataMatrix <-kNNImpute(genoDataMatrix, 10)
-##     genoDataMatrix <-as.data.frame(genoDataMatrix)
-
-##     #extract columns with imputed values
-##     genoDataMatrix <- subset(genoDataMatrix,
-##                          select = grep("^x", names(genoDataMatrix))
-##                 )
-
-##     #remove prefix 'x.' from imputed columns
-##     names(genoDataMatrix) <- sub("x.", "", names(genoDataMatrix))
-
-##     genoDataMatrix <- round(genoDataMatrix, digits = 0)
-##     genoDataMatrix <- data.matrix(genoDataMatrix)
-##   }
 
 #impute missing data in prediction data
  predictionDataMissing <- c()
