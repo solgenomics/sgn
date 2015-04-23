@@ -992,6 +992,8 @@ sub input_files {
         $prediction_population_file = $c->stash->{prediction_population_file};
     }
 
+    my $formattedpheno_file  = $c->stash->{formatted_phenotype_file};
+
     my $pheno_file  = $c->stash->{phenotype_file};
     my $geno_file   = $c->stash->{genotype_file};
     my $traits_file = $c->stash->{selected_traits_file};
@@ -1002,6 +1004,7 @@ sub input_files {
 
     my $input_files = join ("\t",
                             $pheno_file,
+			    $formatted_phenotype_file,
                             $geno_file,
                             $traits_file,
                             $trait_file,
@@ -1027,7 +1030,6 @@ sub output_files {
     $self->gebv_kinship_file($c); 
     $self->validation_file($c);
     $self->trait_phenodata_file($c);
-    $self->formatted_phenodata_file($c);
     $self->variance_components_file($c);
     $self->relationship_matrix_file($c);
 
@@ -1053,8 +1055,7 @@ sub output_files {
                           $c->stash->{gebv_kinship_file},
                           $c->stash->{gebv_marker_file},
                           $c->stash->{validation_file},
-                          $c->stash->{trait_phenodata_file},
-                          $c->stash->{formatted_phenodata_file},
+                          $c->stash->{trait_phenodata_file},                         
                           $c->stash->{selected_traits_gebv_file},
                           $c->stash->{variance_components_file},
 			  $c->stash->{relationship_matrix_file},
@@ -1171,7 +1172,7 @@ sub trait_phenodata_file {
 }
 
 
-sub formatted_phenodata_file {
+sub formatted_phenotype_file {
     my ($self, $c) = @_;
    
     my $pop_id = $c->stash->{pop_id};
@@ -1179,7 +1180,7 @@ sub formatted_phenodata_file {
 
     my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id, 
                        file      => 'formatted_phenotype_data_' . $pop_id,
-                       stash_key => 'formatted_phenodata_file'
+                       stash_key => 'formatted_phenotype_file'
     };
     
     $self->cache_file($c, $cache_data);
