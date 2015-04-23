@@ -487,18 +487,20 @@ if ( length(predictionData) == 0 ) {
 #genotypes (realized relationship matrix)
 
 if (file.info(relationshipMatrixFile)$size == 0) {
-  relationshipMatrix <- tcrossprod(genoDataFiltered)
+  relationshipMatrix <- tcrossprod(genoData)
 }
+
+relationshipMatrixFiltered <- relationshipMatrix[(rownames(relationshipMatrix) %in% rownames(commonObs)),]
+relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshipMatrixFiltered) %in% rownames(commonObs))]
 
 #construct an identity matrix for genotypes
 identityMatrix <- diag(nrow(phenoTrait))
-           
-#construct an identity matrix for genotypes
-identityMatrix <- diag(nrow(phenoTrait))
-                 
+
+relationshipMatrixFiltered <- data.matrix(relationshipMatrixFiltered)
+
 iGEBV <- mixed.solve(y = phenoTrait,
                      Z = identityMatrix,
-                     K = relationshipMatrix
+                     K = relationshipMatrixFiltered
                      )
  
 iGEBVu <- iGEBV$u
