@@ -113,20 +113,35 @@ traitPhenoFile <- grep(traitPhenoFile,
                        value = TRUE
                        )
 
-
-formattedPhenoDataFile <- grep("formatted_phenotype_data",
-                               outFiles,
-                               ignore.case = TRUE,
-                               fixed = FALSE,
-                               value = TRUE
-                               )
-
 varianceComponentsFile <- grep("variance_components",
                                outFiles,
                                ignore.case = TRUE,
                                fixed = FALSE,
                                value = TRUE
                                )
+
+formattedPhenoFile <- grep("formatted_phenotype_data",
+                  inFiles,
+                  ignore.case = TRUE,
+                  fixed = FALSE,
+                  value = TRUE
+                  )
+
+formattedPhenoData <- c()
+phenoData <- c()
+
+if (!is.null(formattedPhenoFile)) {
+
+  formattedPhenoData <- read.table(formattedPhenoFile,
+                                   header = TRUE,
+                                   row.names = NULL,
+                                   sep = "\t",
+                                   na.strings = c("NA", " ", "--", "-", "."),
+                                   dec = "."
+                                   )
+
+} else {
+
 
 phenoFile <- grep("phenotype_data",
                   inFiles,
@@ -137,7 +152,6 @@ phenoFile <- grep("phenotype_data",
 
 message("phenotype dataset file: ", phenoFile)
 message("dataset info: ", datasetInfo)
-message("phenotype dataset file: ", phenoFile)
 
 phenoData <- read.table(phenoFile,
                         header = TRUE,
@@ -146,9 +160,9 @@ phenoData <- read.table(phenoFile,
                         na.strings = c("NA", " ", "--", "-", "."),
                         dec = "."
                         )
+}
 
 phenoTrait         <- c()
-formattedPhenoData <- c()
 
 if (datasetInfo == 'combined populations') {  
     dropColumns <- grep(trait,
@@ -732,14 +746,7 @@ if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
                 )
 }
 
-if (!is.null(formattedPhenoData) & length(formattedPhenoDataFile) != 0) {
-    write.table(formattedPhenoData,
-                file = formattedPhenoDataFile,
-                sep = "\t",
-                col.names = NA,
-                quote = FALSE,
-                )
-}
+
 
 if (!is.null(genoDataMissing)) {
   write.table(genoData,
@@ -764,6 +771,16 @@ if (!is.null(predictionDataMissing)) {
 if (file.info(relationshipMatrixFile)$size == 0) {
   write.table(relationshipMatrix,
               file = relationshipMatrixFile,
+              sep = "\t",
+              col.names = NA,
+              quote = FALSE,
+              )
+}
+
+
+if (file.info(formattedPhenoFile)$size == 0 & !is.null(formattedPhenoData) ) {
+  write.table(formattedPhenoData,
+              file = formattedPhenoFile,
               sep = "\t",
               col.names = NA,
               quote = FALSE,
