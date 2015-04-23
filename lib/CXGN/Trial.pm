@@ -655,19 +655,27 @@ sub _delete_field_layout_experiment {
     }
 
     my $field_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "field layout" })->cvterm_id();
+    my $genotyping_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'genotyping layout' }) ->cvterm_id();
+
     #print STDERR "Field layout type id = $field_layout_type_id\n";
 
     my $plot_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'plot' })->cvterm_id();
     #print STDERR "Plot type id = $plot_type_id\n";
+    
+    my $genotype_plot = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'tissue_sample' });
+    my $genotype_plot_id;
+    if ($genotype_plot) { 
+	$genotype_plot_id = $genotype_plot->cvterm_id();
+    }
 
-    my $q = "SELECT stock_id FROM nd_experiment_project JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id) JOIN stock USING(stock_id) WHERE nd_experiment.type_id=? AND project_id=? AND stock.type_id=?";
+    my $q = "SELECT stock_id FROM nd_experiment_project JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id) JOIN stock USING(stock_id) WHERE nd_experiment.type_id in (?, ?) AND project_id=? AND stock.type_id IN (?, ?)";
     my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-    $h->execute($field_layout_type_id, $trial_id, $plot_type_id);
+    $h->execute($field_layout_type_id, $genotyping_layout_type_id, $trial_id, $plot_type_id, $genotype_plot_id);
 
     my $plots_deleted = 0;
     while (my ($plot_id) = $h->fetchrow_array()) { 
 	my $plot = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $plot_id });
-	#print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
+	print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
 	$plots_deleted++;
 	$plot->delete();
     }
