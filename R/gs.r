@@ -520,8 +520,9 @@ iGEBV <- mixed.solve(y = phenoTrait,
 iGEBVu <- iGEBV$u
 
 heritability <- c()
-if ( is.null(predictionFile)) {
-    heritability <- round((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve)) * 100, digits=2)
+
+if ( is.null(predictionFile) == TRUE ) {
+    heritability <- round((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve) * 100), digits=3)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
     cat('Error variance', iGEBV$Ve, file=varianceComponentsFile, sep="\t", append=TRUE)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
@@ -588,7 +589,7 @@ reps <- round_any(genoNum, 10, f = ceiling) %/% 10
 genotypeGroups <-c()
 
 if (genoNum %% 10 == 0) {
-    genotypeGroups <- rep(1:10, reps)   
+    genotypeGroups <- rep(1:10, reps)
   } else {
     genotypeGroups <- rep(1:10, reps) [- (genoNum %% 10) ]
   }
@@ -596,19 +597,19 @@ if (genoNum %% 10 == 0) {
 set.seed(4567)                                   
 genotypeGroups <- genotypeGroups[ order (runif(genoNum)) ]
 
-for (i in 1:reps) {
+for (i in 1:10) {
   tr <- paste("trPop", i, sep = ".")
   sl <- paste("slPop", i, sep = ".")
  
   trG <- which(genotypeGroups != i)
   slG <- which(genotypeGroups == i)
- 
+  
   assign(tr, trG)
   assign(sl, slG)
 
   kblup <- paste("rKblup", i, sep = ".")
   
-  result <- kinship.BLUP(y = phenoTrait[trG],
+  result <- kinship.BLUP(y = phenoTrait[trG, ],
                          G.train = genoDataFiltered[trG, ],
                          G.pred = genoDataFiltered[slG, ],                      
                          mixed.method = "REML",
@@ -616,29 +617,33 @@ for (i in 1:reps) {
                          )
  
   assign(kblup, result)
- 
-#calculate cross-validation accuracy
-  accuracy <- try(cor(result$g.pred, phenoTrait[slG]))
 
+#calculate cross-validation accuracy  
+  valCorData <- merge(phenoTrait[slG, ], result$g.pred, by=0, all=FALSE)
+  rownames(valCorData) <- valCorData[, 1]
+  valCorData[, 1]      <- NULL
+ 
+  accuracy <- try(cor(valCorData))
   validation <- paste("validation", i, sep = ".")
 
-  cvTest <- paste("Test", i, sep = " ")
+  cvTest <- paste("Validation test", i, sep = " ")
 
-  if (class(accuracy) != "try-error")
+  if ( class(accuracy) != "try-error")
     {
-      accuracy <- round(accuracy, digits = 2)
+      accuracy <- round(accuracy[1,2], digits = 3)
       accuracy <- data.matrix(accuracy)
-
+    
       colnames(accuracy) <- c("correlation")
       rownames(accuracy) <- cvTest
-    
-      assign(validation, accuracy)
 
-      validationAll <- rbind(validationAll, accuracy)
+      assign(validation, accuracy)
+      
+      if (!is.na(accuracy[1,1])) {
+        validationAll <- rbind(validationAll, accuracy)
+      }    
     }
 }
 
-validationAll <- data.matrix(validationAll)
 validationAll <- data.matrix(validationAll[order(-validationAll[, 1]), ])
      
 if (!is.null(validationAll)) {
