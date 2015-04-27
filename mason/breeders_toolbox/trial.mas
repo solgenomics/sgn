@@ -18,7 +18,6 @@ $trial_id
 $breeding_program
 $trial_name
 @location_data
-@phenotype_data
 @years
 @plot_data
 @accession_names
@@ -169,14 +168,22 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <br /><br />
 
-<&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/phenotype/download/$trial_id\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/phenotype/download/$trial_id?format=csv\">csv</a>] " &>
-% foreach my $trait (@phenotype_data) {
-% my $trait_id = $trait->[1];
-% my $trait_name = ucfirst($trait->[0]);
-% print "$trait_name" . ' [ ' . "<a href=\"/breeders_toolbox/trial/$trial_id/trait/$trait_id\">view statistics</a>" . ' ] ' . "<br />";
-%}
+%# <&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/phenotype/download/$trial_id\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/phenotype/download/$trial_id?format=csv\">csv</a>] " &>
+%# foreach my $trait (@phenotype_data) {
+%# my $trait_id = $trait->[1];
+%# my $trait_name = ucfirst($trait->[0]);
+%# print "$trait_name" . ' [ ' . "<a href=\"/breeders_toolbox/trial/$trial_id/trait/$trait_id\">view statistics</a>" . ' ] ' . "<br />";
+%# }
+
+%# </&>
+
+<&| /page/info_section.mas, title => "Traits assayed", subtitle => "Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/phenotype/download/$trial_id\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/phenotype/download/$trial_id?format=csv\">csv</a>] " &>
+
+<& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
 
 </&>
+
+
 % print STDERR "Check 8 (mason) : ".(time() - $start_time)."\n";
 % foreach my $p (@plot_data) { 
 %   print $p."<br />\n";
