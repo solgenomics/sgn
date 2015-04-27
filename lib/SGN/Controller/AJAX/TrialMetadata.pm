@@ -3,7 +3,6 @@ package SGN::Controller::AJAX::TrialMetadata;
 
 use Moose;
 
-
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
@@ -218,9 +217,11 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     }
     else { 
 	$c->stash->{rest} = { error => "unknown delete action for $datatype" };
+	return;
     }
     if ($error) { 
 	$c->stash->{rest} = { error => $error };
+	return;
     }
     $c->stash->{rest} = { message => "Successfully deleted trial data.", success => 1 };
 }
