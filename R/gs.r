@@ -129,12 +129,13 @@ formattedPhenoFile <- grep("formatted_phenotype_data",
 
 formattedPhenoData <- c()
 phenoData <- c()
+message("formatted phenotype dataset file: ", formattedPhenoFile)
 
-if (!is.null(formattedPhenoFile)) {
+if (file.info(formattedPhenoFile)$size > 0 ) {
 
   formattedPhenoData <- read.table(formattedPhenoFile,
                                    header = TRUE,
-                                   row.names = NULL,
+                                   row.names = 1,
                                    sep = "\t",
                                    na.strings = c("NA", " ", "--", "-", "."),
                                    dec = "."
@@ -142,12 +143,15 @@ if (!is.null(formattedPhenoFile)) {
 
 } else {
 
+message("formatted phenotype dataset file: ", formattedPhenoFile)
+message("in files: ", inFiles)
 
-phenoFile <- grep("phenotype_data",
+phenoFile <- grep("\\/phenotype_data",
                   inFiles,
                   ignore.case = TRUE,
                   fixed = FALSE,
-                  value = TRUE
+                  value = TRUE,
+                  perl = TRUE,
                   )
 
 message("phenotype dataset file: ", phenoFile)
@@ -181,115 +185,120 @@ if (datasetInfo == 'combined populations') {
 
   } else {
 
-    dropColumns <- c("uniquename", "stock_name")
-    phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
-    
-    phenoTrait <- subset(phenoData,
-                          select = c("object_name", "object_id", "design", "block", "replicate", trait)
-                          )
+    if (!is.null(formattedPhenoData)) {
+      phenoTrait <- subset(formattedPhenoData, select=trait)
+      phenoTrait <- na.omit(phenoTrait)
    
-    experimentalDesign <- phenoTrait[2, 'design']
-    if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
-    
-    if (experimentalDesign == 'augmented' || experimentalDesign == 'RCBD') {
-      message("experimental design: ", experimentalDesign)
-
-      augData <- subset(phenoData,
-                        select = c("object_name", "object_id",  "block",  trait)
-                        )
-
-      colnames(augData)[1] <- "genotypes"
-      colnames(augData)[4] <- "trait"
-    
-      ff <- trait ~ 0 + genotypes
-    
-      model <- lme(ff,
-                   data=augData,
-                   random = ~1|block,
-                   method="REML",
-                   na.action = na.omit
-                   )
-   
-      adjMeans <- data.matrix(fixed.effects(model))
-     
-      colnames(adjMeans) <- trait
-      
-      nn <- gsub('genotypes', '', rownames(adjMeans))
-      rownames(adjMeans) <- nn
-      adjMeans <- round(adjMeans, digits = 2)
-
-      phenoTrait <- data.frame(adjMeans)
-      
-    } else if (experimentalDesign == 'alpha') {
-      message("experimental design: ", experimentalDesign)
-
-      alphaData <-   subset(phenoData,
-                            select = c("object_name", "object_id", "block", "replicate", trait)
-                            )
-      
-      colnames(alphaData)[2] <- "genotypes"
-      colnames(alphaData)[5] <- "trait"
-     
-      ff <- trait ~ 0 + genotypes
-      
-      model <- lme(ff,
-                   data=alphaData,
-                   random = ~1|replicate/block,
-                   method="REML",
-                   na.action = na.omit
-                   )
-   
-      adjMeans <- data.matrix(fixed.effects(model))
-      colnames(adjMeans) <- trait
-      
-      nn <- gsub('genotypes', '', rownames(adjMeans))
-      rownames(adjMeans) <- nn
-      adjMeans <- round(adjMeans, digits = 2)
-
-      phenoTrait <- data.frame(adjMeans)
-
     } else {
-
+    
+      dropColumns <- c("uniquename", "stock_name")
+      phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
+    
       phenoTrait <- subset(phenoData,
-                           select = c("object_name", "object_id",  trait)
+                           select = c("object_name", "object_id", "design", "block", "replicate", trait)
                            )
-       
-      if (sum(is.na(phenoTrait)) > 0) {
-
-        message("No. of pheno missing values: ", sum(is.na(phenoTrait)))      
-        phenoTrait <- na.omit(phenoTrait)
- 
-      }
-
-      #calculate mean of reps/plots of the same accession and
-      #create new df with the accession means    
-     
-      phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
-      phenoTrait   <- data.frame(phenoTrait)
-      message('phenotyped lines before averaging: ', length(row.names(phenoTrait)))
    
-      phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
-      message('phenotyped lines after averaging: ', length(row.names(phenoTrait)))
+      experimentalDesign <- phenoTrait[2, 'design']
+      if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
+    
+      if (experimentalDesign == 'augmented' || experimentalDesign == 'RCBD') {
+        message("experimental design: ", experimentalDesign)
+
+        augData <- subset(phenoData,
+                          select = c("object_name", "object_id",  "block",  trait)
+                          )
+
+        colnames(augData)[1] <- "genotypes"
+        colnames(augData)[4] <- "trait"
+   print(augData) 
+        ff <- trait ~ 0 + genotypes
+    
+        model <- lme(ff,
+                     data=augData,
+                     random = ~1|block,
+                     method="REML",
+                     na.action = na.omit
+                     )
+   
+        adjMeans <- data.matrix(fixed.effects(model))
      
-      row.names(phenoTrait) <- phenoTrait[, 1]
-      phenoTrait[, 1] <- NULL
+        colnames(adjMeans) <- trait
+      
+        nn <- gsub('genotypes', '', rownames(adjMeans))
+        rownames(adjMeans) <- nn
+        adjMeans <- round(adjMeans, digits = 3)
 
-    #format all-traits population phenotype dataset
-      formattedPhenoData <- phenoData
-      dropColumns <- c("object_id", "stock_id", "design", "block", "replicate" )
+        phenoTrait <- data.frame(adjMeans)
+        print(phenoTrait)
+      } else if (experimentalDesign == 'Alpha') {
+        message("experimental design: ", experimentalDesign)
 
-      formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
-      formattedPhenoData <- ddply(formattedPhenoData,
-                                  "object_name",
-                                  colwise(mean)
-                                  )
+        alphaData <-   subset(phenoData,
+                              select = c("object_name", "object_id", "block", "replicate", trait)
+                              )
+  
+        colnames(alphaData)[1] <- "genotypes"
+        colnames(alphaData)[5] <- "trait"
+      
+        ff <- trait ~ 0 + genotypes
+      
+        model <- lme(ff,
+                     data=alphaData,
+                     random = ~1|replicate/block,
+                     method="REML",
+                     na.action = na.omit
+                     )
 
-      row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-      formattedPhenoData[, 1] <- NULL
+        adjMeans <- data.matrix(fixed.effects(model))
+        colnames(adjMeans) <- trait
+     
+        nn <- gsub('genotypes', '', rownames(adjMeans))
+        rownames(adjMeans) <- nn
+        adjMeans <- round(adjMeans, digits = 3)
 
-      formattedPhenoData <- round(formattedPhenoData,
-                                  digits=2
-                                  )     
+        phenoTrait <- data.frame(adjMeans)
+     
+      } else {
+
+        phenoTrait <- subset(phenoData,
+                             select = c("object_name", "object_id",  trait)
+                             )
+       
+        if (sum(is.na(phenoTrait)) > 0) {
+          message("No. of pheno missing values: ", sum(is.na(phenoTrait)))      
+          phenoTrait <- na.omit(phenoTrait)
+        }
+
+        #calculate mean of reps/plots of the same accession and
+        #create new df with the accession means    
+     
+        phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
+        phenoTrait   <- data.frame(phenoTrait)
+        message('phenotyped lines before averaging: ', length(row.names(phenoTrait)))
+   
+        phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
+        message('phenotyped lines after averaging: ', length(row.names(phenoTrait)))
+     
+        row.names(phenoTrait) <- phenoTrait[, 1]
+        phenoTrait[, 1] <- NULL
+
+        #format all-traits population phenotype dataset
+        formattedPhenoData <- phenoData
+        dropColumns <- c("object_id", "stock_id", "design", "block", "replicate" )
+
+        formattedPhenoData <- formattedPhenoData[, !(names(formattedPhenoData) %in% dropColumns)]
+        formattedPhenoData <- ddply(formattedPhenoData,
+                                    "object_name",
+                                    colwise(mean)
+                                    )
+
+        row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+        formattedPhenoData[, 1] <- NULL
+
+        formattedPhenoData <- round(formattedPhenoData,
+                                    digits=3
+                                    )     
+      }
     }
   }
 
@@ -299,6 +308,7 @@ genoFile <- grep("genotype_data",
                  fixed = FALSE,
                  value = TRUE
                  )
+message("genotype dataset file: ", genoFile)
 
 genoData <- read.table(genoFile,
                        header = TRUE,
@@ -677,7 +687,7 @@ if (length(predictionData) != 0) {
                                         )
  message("running prediction for selection candidates...DONE!!")
 
-    predictionPopGEBVs <- round(data.matrix(predictionPopResult$g.pred), digits = 2)
+    predictionPopGEBVs <- round(data.matrix(predictionPopResult$g.pred), digits = 3)
     predictionPopGEBVs <- data.matrix(predictionPopGEBVs[order(-predictionPopGEBVs[, 1]), ])
    
     colnames(predictionPopGEBVs) <- c(trait)
