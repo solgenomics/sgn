@@ -327,7 +327,9 @@ sub run_pheno_correlation_analysis {
     $self->pheno_correlation_output_files($c);
     $c->stash->{corre_table_output_file} = $c->stash->{corre_coefficients_table_file};
     $c->stash->{corre_json_output_file}  = $c->stash->{corre_coefficients_json_file};
-      
+    
+    $c->controller("solGS::solGS")->formatted_phenotype_file($c);
+
     $c->stash->{referer} = $c->req->referer;
     
     $c->stash->{correlation_type} = "pheno_correlation_${pop_id}";
@@ -404,7 +406,9 @@ sub run_correlation_analysis {
     
     my $corre_table_file = $c->stash->{corre_table_output_file};
     my $corre_json_file  = $c->stash->{corre_json_output_file};
-     
+    
+    my $formatted_phenotype_file = $c->stash->{formatted_phenotype_file};
+
     my $referer        = $c->stash->{referer};
     my $corre_analysis = $c->stash->{correlation_type};
     my $corre_script   = $c->stash->{correlation_script};
@@ -438,7 +442,7 @@ sub run_correlation_analysis {
           my $r_process = CXGN::Tools::Run->run_cluster(
               'R', 'CMD', 'BATCH',
               '--slave',
-              "--args $referer $corre_table_file $corre_json_file $data_input_file",
+              "--args $formatted_phenotype_file $referer $corre_table_file $corre_json_file $data_input_file",
               $corre_commands_temp,
               $corre_output_temp,
               {
