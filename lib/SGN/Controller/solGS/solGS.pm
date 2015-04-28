@@ -982,7 +982,8 @@ sub input_files {
     
     $self->genotype_file($c);
     $self->phenotype_file($c);
-   
+    $self->formatted_phenotype_file($c);
+
     my $pred_pop_id = $c->stash->{prediction_pop_id};
     my $prediction_population_file;
 
@@ -992,7 +993,7 @@ sub input_files {
         $prediction_population_file = $c->stash->{prediction_population_file};
     }
 
-    my $formattedpheno_file  = $c->stash->{formatted_phenotype_file};
+    my $formatted_phenotype_file  = $c->stash->{formatted_phenotype_file};
 
     my $pheno_file  = $c->stash->{phenotype_file};
     my $geno_file   = $c->stash->{genotype_file};
