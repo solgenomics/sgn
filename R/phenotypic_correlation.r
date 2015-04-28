@@ -24,7 +24,7 @@ refererQtl <- grep("qtl",
                    value=TRUE
                    )
 
-phenoDataFile <- grep("phenotype_data",
+phenoDataFile <- grep("\\/phenotype_data",
                       allargs,
                       ignore.case=TRUE,
                       perl=TRUE,
@@ -45,6 +45,16 @@ correCoefficientsJsonFile <- grep("corre_coefficients_json",
                                   value=TRUE
                                   )
 
+
+formattedPhenoFile <- grep("formatted_phenotype_data",
+                  allargs,
+                  ignore.case = TRUE,
+                  fixed = FALSE,
+                  value = TRUE
+                  )
+
+message("formatted phenotype dataset file: ", formattedPhenoFile)
+formattedPhenoData <- c()
 phenoData <- c()
 
 if ( length(refererQtl) != 0 ) {
@@ -58,17 +68,31 @@ if ( length(refererQtl) != 0 ) {
                         )
  
 } else {
-  phenoData <- read.table(phenoDataFile,
-                          header = TRUE,
-                          row.names = NULL,
-                          sep = "\t",
-                          na.strings = c("NA", " ", "--", "-", "."),
-                          dec = "."
-                          )
+
+  if (file.info(formattedPhenoFile)$size > 0 ) {
+
+    formattedPhenoData <- read.table(formattedPhenoFile,
+                                     header = TRUE,
+                                     row.names = NULL,
+                                     sep = "\t",
+                                     na.strings = c("NA", " ", "--", "-", "."),
+                                     dec = "."
+                                   )
+
+  } else {
+ 
+    phenoData <- read.table(phenoDataFile,
+                            header = TRUE,
+                            row.names = NULL,
+                            sep = "\t",
+                            na.strings = c("NA", " ", "--", "-", "."),
+                            dec = "."
+                            )
+  }
 
 }
 
-formattedPhenoData <- c()
+#formattedPhenoData <- c()
 allTraitNames      <- c()
 
 if (length(refererQtl) != 0) {
@@ -166,14 +190,14 @@ if (length(refererQtl) == 0) {
       }
     }
    
-  } else if (experimentalDesign == 'alpha') {
+  } else if (experimentalDesign == 'Alpha') {
 
     trait <- i
     alphaData <- subset(phenoData,
                           select = c("object_name", "object_id","block", "replicate", trait)
                           )
       
-    colnames(alphaData)[2] <- "genotypes"
+    colnames(alphaData)[1] <- "genotypes"
     colnames(alphaData)[5] <- "trait"
      
     ff <- trait ~ 0 + genotypes
@@ -321,5 +345,16 @@ write.table(correlationJson,
       col.names=FALSE,
       row.names=FALSE,
       )
+
+
+if (file.info(formattedPhenoFile)$size == 0 & !is.null(formattedPhenoData) ) {
+  write.table(formattedPhenoData,
+              file = formattedPhenoFile,
+              sep = "\t",
+              col.names = NA,
+              quote = FALSE,
+              )
+}
+
 
 q(save = "no", runLast = FALSE)
