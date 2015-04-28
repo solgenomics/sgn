@@ -148,11 +148,11 @@ for (popPhenoNum in 1:popsPhenoSize)
   
       formattedPhenoData[, traitName] <- phenoTrait
  
-  } else if (experimentalDesign == 'alpha') {
+  } else if (experimentalDesign == 'Alpha') {
    # trait <- i
     alphaData <-  phenoTrait 
       
-    colnames(alphaData)[2] <- "genotypes"
+    colnames(alphaData)[1] <- "genotypes"
     colnames(alphaData)[5] <- "trait"
      
     ff <- traitName ~ 0 + genotypes
