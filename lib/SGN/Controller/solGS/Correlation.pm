@@ -18,6 +18,29 @@ use Try::Tiny;
 BEGIN { extends 'Catalyst::Controller' }
 
 
+sub check_pheno_corr_result :Path('/phenotype/correlation/check/result/') Args(1) {
+    my ($self, $c, $pop_id) = @_;
+
+    $c->stash->{pop_id} = $pop_id;
+
+    $self->pheno_correlation_output_files($c);
+    my $corre_output_file = $c->stash->{corre_coefficients_json_file};
+   
+    my $ret->{result} ='No';
+   
+    if (-s $corre_output_file && $pop_id =~ /\d+/) 
+    {
+	$ret->{result} = 'yes';                
+    }    
+
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
 sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     my ($self, $c) = @_;
    
