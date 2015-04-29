@@ -48,7 +48,6 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     $c->stash->{pop_id} = $pop_id;
     my $referer = $c->req->referer;
    
-
     my $phenotype_file;
     
     if( $pop_id =~ /uploaded/) 
@@ -76,13 +75,13 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
         $phenotype_file =  $c->stash->{phenotype_file};
     }
 
-
     my $ret->{status} = 'failed';
 
     if (-s $phenotype_file)
     {
         $ret->{status} = 'success';             
-    } else 
+    } 
+    else 
     {
 	$ret->{status} = 'This population set has no phenotype data.';
     }
@@ -127,6 +126,7 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     $c->res->body($ret);    
 
 }
+
 
 sub combine_gebvs_of_traits {
     my ($self, $c) = @_;
@@ -185,10 +185,9 @@ sub create_correlation_phenodata_file {
        
         my $phenotype_file = $c->controller("solGS::solGS")->grep_file($dir, $pheno_exp);
        
-        unless ($phenotype_file) {
-           
-            my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);
-       
+        unless ($phenotype_file) 
+	{           
+            my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);       
             $phenotype_file =  $pop->phenotype_file($c);
         }
         
@@ -197,8 +196,7 @@ sub create_correlation_phenodata_file {
         copy($phenotype_file, $new_file) 
             or die "could not copy $phenotype_file to $new_file";
        
-        $c->stash->{phenotype_file} = $new_file;
-       
+        $c->stash->{phenotype_file} = $new_file;       
     } 
     else
     {           
@@ -367,9 +365,7 @@ sub run_genetic_correlation_analysis {
     my ($self, $c) = @_;
     
     my $pop_id = $c->stash->{corre_pop_id};
-   
-   # $c->stash->{data_input_file}
-    
+  
     $self->genetic_correlation_output_files($c);
     $c->stash->{corre_table_output_file} = $c->stash->{genetic_corre_table_file};
     $c->stash->{corre_json_output_file}  = $c->stash->{genetic_corre_json_file};
@@ -410,11 +406,8 @@ sub download_phenotypic_correlation : Path('/download/phenotypic/correlation/pop
 	$c->res->body(join "",  map{ $_->[0] } @corr_data);   
            
 
-    } 
- 
+    }  
 }
-
-
 
 
 sub run_correlation_analysis {
