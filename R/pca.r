@@ -124,7 +124,7 @@ if (sum(is.na(genoData)) > 0) {
 
 ######
 genotypes <- rownames(genoData)
-svdOut    <- irlba(scale(genoData, TRUE, FALSE), nu=10, nv=10))
+svdOut    <- irlba(scale(genoData, TRUE, FALSE), nu=10, nv=10)
 scores    <- round(svdOut$u %*% diag(svdOut$d), digits=2)
 loadings  <- round(svdOut$v, digits=5)
 totalVar  <- sum(svdOut$d)
