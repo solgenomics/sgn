@@ -138,7 +138,14 @@ variances <- unlist(
 variances <- data.frame(variances)
 scores    <- data.frame(scores)
 rownames(scores) <- genotypes
- 
+
+headers <- c()
+for (i in 1:10) {
+  headers[i] <- paste("PC", i, sep='')
+}
+
+colnames(scores) <- c(headers)
+
 write.table(scores,
             file = scoresFile,
             sep = "\t",
