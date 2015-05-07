@@ -732,7 +732,7 @@ sub format_user_list_genotype_data {
 	}       
     }
 
-    if($population_type =~ /reference/) 
+    if ($population_type =~ /reference/) 
     {
         $self->context->stash->{user_reference_list_genotype_data} = $geno_data;
     }
@@ -934,15 +934,10 @@ sub stock_genotype_values {
     my $json_values  = $geno_row->get_column('value');
     my $values       = JSON::Any->decode($json_values);
     my @markers      = keys %$values;
-   
-    my $stock_name = $geno_row->get_column('stock_name');
-    my $size = scalar(@markers);
-   
+      
     my $round =  Math::Round::Var->new(0);
-        
-    my $geno_values;
-              
-    $geno_values .= $geno_row->get_column('stock_name') . "\t";
+                      
+    my $geno_values = $geno_row->get_column('stock_name') . "\t";
    
     foreach my $marker (@markers) 
     {        
