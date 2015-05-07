@@ -655,26 +655,38 @@ sub _delete_field_layout_experiment {
     }
 
     my $field_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "field layout" })->cvterm_id();
-    #print STDERR "Field layout type id = $field_layout_type_id\n";
+
+    my $genotyping_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'genotyping layout' }) ->cvterm_id();
+
+    print STDERR "Genotyping layout type id = $field_layout_type_id\n";
 
     my $plot_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'plot' })->cvterm_id();
     #print STDERR "Plot type id = $plot_type_id\n";
+    
+    my $genotype_plot = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'tissue_sample' });
 
-    my $q = "SELECT stock_id FROM nd_experiment_project JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id) JOIN stock USING(stock_id) WHERE nd_experiment.type_id=? AND project_id=? AND stock.type_id=?";
+    my $genotype_plot_id;
+    if ($genotype_plot) { 
+	$genotype_plot_id = $genotype_plot->cvterm_id();
+    }
+
+    print STDERR "Genotype plot id = $genotype_plot_id\n";
+
+    my $q = "SELECT stock_id FROM nd_experiment_project JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id) JOIN stock USING(stock_id) WHERE nd_experiment.type_id in (?, ?) AND project_id=? AND stock.type_id IN (?, ?)";
     my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-    $h->execute($field_layout_type_id, $trial_id, $plot_type_id);
+    $h->execute($field_layout_type_id, $genotyping_layout_type_id, $trial_id, $plot_type_id, $genotype_plot_id);
 
     my $plots_deleted = 0;
     while (my ($plot_id) = $h->fetchrow_array()) { 
 	my $plot = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $plot_id });
-	#print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
+	print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
 	$plots_deleted++;
 	$plot->delete();
     }
 
-    $q = "SELECT nd_experiment_id FROM nd_experiment JOIN nd_experiment_project USING(nd_experiment_id) WHERE nd_experiment.type_id=? AND project_id=?";
+    $q = "SELECT nd_experiment_id FROM nd_experiment JOIN nd_experiment_project USING(nd_experiment_id) WHERE nd_experiment.type_id in (?,?) AND project_id=?";
     $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-    $h->execute($field_layout_type_id, $trial_id);
+    $h->execute($field_layout_type_id, $genotyping_layout_type_id, $trial_id);
     
     my ($nd_experiment_id) = $h->fetchrow_array();
     if ($nd_experiment_id) { 
@@ -708,7 +720,7 @@ sub delete_project_entry {
     }
     if (my $count = $self->get_experiment_count() > 0) { 
 	print STDERR "Cannot delete trial with associated experiments ($count)\n";
-	return;
+	return "Cannot delete entry because of associated experiments";
     }
 
     eval { 

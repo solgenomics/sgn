@@ -41,7 +41,7 @@ my $pop_id = $trial_id if $trial_id;
   title       => "Population structure analysis - PCA" 
 &> 
 
-<input style="display:none" id="run_pca" class="button" type="button" value="Run PCA" /> 
+<input id="run_pca" class="button" type="button" value="Run PCA" /> 
 <div id="pca_canvas"></div>
 <div id="pca_plot"></div> 
 <div id="pca_message" style="font-weight:bold;text-align:center;color:#A7C942"></div>

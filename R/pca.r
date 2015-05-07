@@ -80,22 +80,34 @@ genoData <- read.table(genoDataFile,
                         dec = "."
                         )
 
+
+
+genoDataMissing <- c()
 if (sum(is.na(genoData)) > 0) {
-    message("sum of geno missing values, ", sum(is.na(genoData)) )
-    genoData <-kNNImpute(genoData, 10)
-    genoData <-as.data.frame(genoData)
+  genoDataMissing
+  message("sum of geno missing values, ", sum(is.na(genoData)) )
+  genoData <-kNNImpute(genoData, 10)
+  genoData <-as.data.frame(genoData)
 
-    #extract columns with imputed values
-    genoData <- subset(genoData,
-                       select = grep("^x", names(genoData))
-                       )
+  #extract columns with imputed values
+  genoData <- subset(genoData,
+                     select = grep("^x", names(genoData))
+                     )
 
-    #remove prefix 'x.' from imputed columns
-    names(genoData) <- sub("x.", "", names(genoData))
-
-    genoData <- round(genoData, digits = 0)
-    genoData <- data.matrix(genoData)
+  #remove prefix 'x.' from imputed columns
+  names(genoData) <- sub("x.", "", names(genoData))
+  
+  genoData <- round(genoData, digits = 0)
+  genoData <- data.matrix(genoData)
   }
+
+#additive relationship model
+#calculate the inner products for
+#genotypes (realized relationship matrix)
+#genoData2 <- data.matrix(genoData)
+#print(genoData[1:5, 1:5])
+#relationshipMatrix <- tcrossprod(genoData2)
+#print(relationshipMatrix[1:5, 1:3])
 
 pca      <- prcomp(genoData, retx=TRUE)
 scores   <- round(pca$x[, 1:10], digits=2)
@@ -135,5 +147,16 @@ write.table(variances,
             quote = FALSE,
             append = FALSE
             )
+
+
+if (!is.null(genoDataMissing)) {
+  write.table(genoData,
+              file = genoDataFile,
+              sep = "\t",
+              col.names = NA,
+              quote = FALSE,
+            )
+
+}
 
 q(save = "no", runLast = FALSE)

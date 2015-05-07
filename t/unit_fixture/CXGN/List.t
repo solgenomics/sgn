@@ -12,17 +12,43 @@ my $t = SGN::Test::Fixture->new();
 
 
 my $lists = CXGN::List::available_lists($t->dbh(), 41);
-is_deeply($lists, [
-	  [
+
+my @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
+
+ is_deeply(\@lists_sorted,  [
+	       [
             '3',
             'test_stocks',
             undef,
             '5',
             '76451',
             'accessions'
-          ]
-        ]
-, "check available lists initially");
+          ], 
+          [
+            '5',
+            'accessions_for_solgs_tests',
+            undef,
+            '374',
+            '76451',
+            'accessions'
+          ],
+          [
+            '6',
+            'accessions_for_trial2',
+            undef,
+            '307',
+            '76451',
+            'accessions'
+          ],
+          [
+            '7',
+            'selection_acc',
+            undef,
+            '20',
+            undef,
+            undef
+          ],
+	   ], "check available lists initially");
 
 my $list_id = CXGN::List::create_list($t->dbh(), 'test_list2', 'test_desc', 41);
 
@@ -76,15 +102,10 @@ ok(!$list->exists_element("blabla"), 'exists element after delete');
 
 my $lists = CXGN::List::available_lists($t->dbh(), 41);
 
-is_deeply($lists, [
-          [
-            '5',
-            'new_test_name',
-            'new description',
-            '1',
-            '76451',
-            'accessions',
-          ],
+print STDERR Dumper($lists);
+@lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
+
+is_deeply(\@lists_sorted, [
           [
             '3',
             'test_stocks',
@@ -92,8 +113,42 @@ is_deeply($lists, [
             '5',
             '76451',
             'accessions'
-          ]
-        ], "check available lists after additions");
+          ],
+          [
+            '5',
+            'accessions_for_solgs_tests',
+            undef,
+            '374',
+            '76451',
+            'accessions'
+          ],
+          [
+            '6',
+            'accessions_for_trial2',
+            undef,
+            '307',
+            '76451',
+            'accessions'
+          ],
+          [
+            '7',
+            'selection_acc',
+            undef,
+            '20',
+            undef,
+            undef
+          ],
+          [
+            '8',
+            'new_test_name',
+            'new description',
+            '1',
+            '76451',
+            'accessions'
+          ],
+
+        ],
+        "check available lists after additions");
 
 
 
@@ -101,16 +156,45 @@ $error = CXGN::List::delete_list($t->dbh(), 5);
 
 my $lists = CXGN::List::available_lists($t->dbh(), 41);
 
-is_deeply($lists, [
-          [
-            '3',
-            'test_stocks',
-            undef,
-            '5',
-            '76451',
-            'accessions'
-          ]
-        ], "check available lists after deletion");
+print STDERR Dumper($lists);
+
+@lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
+
+is_deeply(\@lists_sorted, [
+	      [
+	       '3',
+	       'test_stocks',
+	       undef,
+	       '5',
+	       '76451',
+	       'accessions'
+	      ],
+	      [
+	       '6',
+	       'accessions_for_trial2',
+	       undef,
+	       '307',
+	       '76451',
+	       'accessions'
+	      ],
+	      [
+	       '7',
+	       'selection_acc',
+	       undef,
+	       '20',
+	       undef,
+	       undef
+	      ],
+	      [
+	       '8',
+	       'new_test_name',
+	       'new description',
+	       '1',
+	       '76451',
+	       'accessions'
+	      ],
+	  ]
+	  , "check available lists after deletion");
 
 
 
