@@ -363,6 +363,12 @@ function jqueryStuff() {
 % }
 </&>
 
+<&| /page/info_section.mas, title => "Phenotypic data" &>
+  
+  <& /stock/phenotypes.mas, stock_id => $stock_id &>
+
+</&>
+
 <&| /page/info_section.mas, title=>"Genotype data ", subtitle=> $g_download_link, collapsible => 1 , collapsed => 1 &>
 % print $map_html;
 % foreach my $project (keys %$direct_genotypes) {
@@ -375,5 +381,8 @@ function jqueryStuff() {
 % }
 
 </&>
+
+
+
 
 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
