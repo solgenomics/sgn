@@ -39,10 +39,13 @@ jQuery(document).ready( function() {
                 listId = jQuery(this).find("option:selected").val();              
              
                 if(listId) {
+		    var cnt = 1;
                     jQuery("#prediction_genotypes_list_upload").click(function() {
-                            //alert('get list: ' + listId);
+			if(cnt === 1) {		
                             loadGenotypesList(listId);
-                        });
+			}
+			cnt = cnt + 1 ;
+                    });
                 }
             });       
     });
