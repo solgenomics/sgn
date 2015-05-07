@@ -379,11 +379,9 @@ window.onload = function initialize() {
 	var c3_data = jQuery('#c3_data').val() || [];
 	
 	var stock_data;
-
-	alert("Retrieving "+select4);
 	
 	disable_ui();
-
+	
     	jQuery.ajax( { 
 	    url: '/ajax/breeder/search/stocks',
 	    //async: false,
@@ -391,10 +389,10 @@ window.onload = function initialize() {
 	    method: 'POST',
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'c3_data': c3_data.join(","), 'select4' : select4, 'genotypes': get_genotype_checkbox()  },
 	    beforeSend: function(){
-		disable_ui();
+		//disable_ui();
             },  
             complete : function(){
-		enable_ui();
+
             },  
 	    success: function(response) { 
 		if (response.error) { 
@@ -405,6 +403,7 @@ window.onload = function initialize() {
 		    //show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, jQuery('#c3_data').val().length);
 		    enable_ui();
 		}		
+		enable_ui();
 	    },
 	    error: function(response) { 
 		alert("an error occurred. (possible timeout)");
