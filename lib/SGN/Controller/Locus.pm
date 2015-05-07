@@ -25,6 +25,18 @@ has 'schema' => (
     lazy_build => 1,
 );
 
+
+
+sub locus_search : Path('/search/locus') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/search/loci.mas';
+
+
+}
+
+
+
 sub _build_schema {
     shift->_app->dbic_schema( 'CXGN::Phenome::Schema' )
 }
