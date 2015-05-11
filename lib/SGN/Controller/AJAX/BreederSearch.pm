@@ -187,11 +187,11 @@ sub get_stock_data : Path('/ajax/breeder/search/stocks') Args(0) {
     print STDERR "OUTPUT: $output CRITERIA: ", Data::Dumper::Dumper($criteria_list);
     $stock_ref = $bs->get_intersect($criteria_list, $stockdataref, $c->config->{trait_ontology_db_name}, $genotypes);
     
-    print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
+    print STDERR "RESULTS: ".Data::Dumper::Dumper($stock_ref);
 
     if ($stock_ref->{message}) { 
 	$c->stash->{rest} = { 
-	    list => $results_ref->{results},
+	    list => $stock_ref->{results},
 	    message => $stock_ref->{message},
 	};
     }
