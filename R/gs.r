@@ -6,10 +6,9 @@ options(echo = FALSE)
 library(rrBLUP)
 library(plyr)
 library(mail)
-library(imputation)
 library(stringr)
 library(nlme)
-
+library(randomForest)
 
 allArgs <- commandArgs()
 
@@ -294,7 +293,7 @@ genoData <- read.table(genoFile,
                        dec = "."
                       )
 
-genoData   <- data.matrix(genoData[order(row.names(genoData)), ])
+genoData   <- genoData[order(row.names(genoData)), ]
 
 
 #impute genotype values for obs with missing values,
@@ -303,24 +302,9 @@ genoDataMissing <-c()
 
 if (sum(is.na(genoData)) > 0) {
   genoDataMissing<- c('yes')
-    message("sum of geno missing values, ", sum(is.na(genoData)) )
-    genoData <- kNNImpute(genoData, 10)
-    genoData <- data.frame(genoData)
-
-    #extract columns with imputed values
-    genoData <- subset(genoData,
-                       select = grep("^x", names(genoData))
-                       )
-
-    #remove prefix 'x.' from imputed columns
-    names(genoData) <- sub("x.", "", names(genoData))
-
-    genoData <- round(genoData, digits = 0)
-    genoData <- data.matrix(genoData)
-  }
-
-
-
+  message("sum of geno missing values, ", sum(is.na(genoData)) )  
+  genoData <- na.roughfix(genoData)
+}
 
 predictionTempFile <- grep("prediction_population",
                        inFiles,
@@ -391,8 +375,8 @@ message("phenotype lines after filtering for genotyped only: ", length(row.names
 #a set of only observation lines with genotype data
 traitPhenoData <- as.data.frame(round(phenoTrait, digits=2))           
 phenoTrait     <- data.matrix(phenoTrait)
-genoDataFiltered <- data.matrix(genoDataFiltered)
 
+genoDataFiltered <- data.matrix(genoDataFiltered)
 
 #impute missing data in prediction data
  predictionDataMissing <- c()
@@ -406,24 +390,13 @@ if (length(predictionData) != 0) {
  
   if (sum(is.na(predictionData)) > 0) {
     predictionDataMissing <- c('yes')
-    message("sum of geno missing values in prediction data: ", sum(is.na(predictionData)) )
-    predictionData <-kNNImpute(predictionData, 10)
-    predictionData <-as.data.frame(predictionData)
-
-    #extract columns with imputed values
-    predictionData <- subset(predictionData,
-                             select = grep("^x", names(predictionData))
-                             )
-
-    #remove prefix 'x.' from imputed columns
-    names(predictionData) <- sub("x.", "", names(predictionData))
-
-    predictionData <- round(predictionData, digits = 0)
-    predictionData <- data.matrix(predictionData)
+ 
+    predictionDataMissing<- c('yes')
+    message("sum of geno missing values, ", sum(is.na(predictionData)) )  
+    predictionData <- data.matrix(na.roughfix(predictionData))
+    
   }
-
 }
-
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
 genoTrCode <- grep("2", genoDataFiltered[1, ], fixed=TRUE, value=TRUE)
 if(length(genoTrCode) != 0) {
