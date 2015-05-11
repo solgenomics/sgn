@@ -177,7 +177,7 @@ if (datasetInfo == 'combined populations') {
     experimentalDesign <- phenoTrait[2, 'design']
     if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
     
-    if (experimentalDesign == 'augmented' || experimentalDesign == 'RCBD') {
+    if (experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD') {
       message("experimental design: ", experimentalDesign)
 
       augData <- subset(phenoData,
@@ -206,7 +206,7 @@ if (datasetInfo == 'combined populations') {
 
       phenoTrait <- data.frame(adjMeans)
       
-    } else if (experimentalDesign == 'alpha') {
+    } else if (experimentalDesign == 'Alpha') {
       message("experimental design: ", experimentalDesign)
 
       alphaData <-   subset(phenoData,

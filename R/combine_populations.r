@@ -116,7 +116,7 @@ for (popPhenoNum in 1:popsPhenoSize)
     
     if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
 
-    if (experimentalDesign == 'augmented' || experimentalDesign == 'RCBD') {
+    if (experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD') {
 
       message("experimental design: ", experimentalDesign)
 
@@ -148,7 +148,7 @@ for (popPhenoNum in 1:popsPhenoSize)
   
       formattedPhenoData[, traitName] <- phenoTrait
  
-  } else if (experimentalDesign == 'alpha') {
+  } else if (experimentalDesign == 'Alpha') {
    # trait <- i
     alphaData <-  phenoTrait 
       
