@@ -23,17 +23,25 @@ sub _validate_with_plugin {
     my $well_col = 3;
     my $accession_col = 4;
     my $trial_col = 2;
+    my $user_id_col = 1;
+    my $project_name_col = 0;
 
+    my %user_ids;
+    my %project_names;
     my $blank_well = "";
     my %trial_names = ();
+
     for(my $row=2; $row<98; $row++) {  # first two rows are header rows
 	my @fields = split "\t", $lines[$row];
 	if ($fields[$accession_col]=~/blank/i) { 
 	    $blank_well = $fields[$well_col];
 	}
 	$trial_names{$fields[$trial_col]}++;
+	$project_names{$fields[$project_name_col]}++;
+	$user_ids{$fields[$user_id_col]}++;
     }
 
+    
     my $errors =[]; 
     if (!$blank_well) { 
 	push @$errors, "No blank well found in spreadsheet";
@@ -43,7 +51,17 @@ sub _validate_with_plugin {
 	push @$errors, "All trial names in the trial column must be identical";
 
     }
-
+    
+    my $user_id = shift (keys(%user_id));
+    if (keys(%user_ids) > 1) { 
+	print STDERR "Ignoring multiple user_ids provided, will work with $user_id...\n";
+    }
+	
+    my $project_name = shift keys(%project_names);
+    if (keys(%project_names) > 1) { 
+	print STDERR "Ignoring multiple project_names, working with $project_name\n";
+    }
+    
     $self->_set_parse_errors($errors);    
     
     if (@$errors!=0) { 
@@ -52,7 +70,13 @@ sub _validate_with_plugin {
 
     my ($trial_name) = keys(%trial_names);
 
-    $self->_set_parsed_data( { trial_name => $trial_name, blank_well => $blank_well } );
+    $self->_set_parsed_data( 
+	{ 
+	    trial_name   => $trial_name, 
+	    blank_well   => $blank_well,
+	    project_name => $project_name,
+	    user_id      => $user_id,
+	} );
 
     return 1;	
 }
