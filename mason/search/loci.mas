@@ -120,18 +120,26 @@ jQuery(document).ready(function () {
      'serverSide': true,
      'ajax': { 'url':  '/ajax/search/loci',
                'data': function(d) { 
-                  d.organism  = jQuery('#organism').val(); 
                   d.any_name  = jQuery('#any_name').val();
                   d.any_name_matchtype = jQuery('#any_name_matchtype').val();
+                  d.common_name  = jQuery('#common_name').val(); 
+                  d.phenotype  = jQuery('#phenotype').val(); 
+                  d.linkage_group  = jQuery('#locus_linkage_group').val(); 
+                  d.ontology_term  = jQuery('#ontology_term').val(); 
+                  d.locus_editor  = jQuery('#locus_editor').val(); 
+                  d.genbank_accession  = jQuery('#genbank_accession').val();
+                  d.has_sequence  = jQuery('#has_sequence').val();
+                  d.has_marker  = jQuery('#has_marker').val(); 
+                  d.has_annotation  = jQuery('#has_annotation').val(); 
              }
          }
      });
 
 
    jQuery('#submit_loci_search').click( function() { 
-       table.search("").draw();
+          table.search("").draw();
    });
-
+   
 });
 
   
