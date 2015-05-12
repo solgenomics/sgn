@@ -124,7 +124,7 @@ if (length(refererQtl) == 0) {
     experimentalDesign <- c('No Design')
   }
   
-  if (experimentalDesign == 'augmented' || experimentalDesign == 'RCBD') {
+  if (experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD') {
 
     message("experimental design: ", experimentalDesign)
 
@@ -166,7 +166,7 @@ if (length(refererQtl) == 0) {
       }
     }
    
-  } else if (experimentalDesign == 'alpha') {
+  } else if (experimentalDesign == 'Alpha') {
 
     trait <- i
     alphaData <- subset(phenoData,

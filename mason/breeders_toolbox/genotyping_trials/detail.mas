@@ -4,7 +4,7 @@ $trial_id
 $breeding_program
 $trial_name
 @location_data
-@phenotype_data
+##@phenotype_data
 @years
 @plot_data
 @accession_names

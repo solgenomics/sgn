@@ -107,7 +107,7 @@ fields marked with <% '"*"' |h %> are required
 <%perl>
 print info_table_html(
     __border => 0,
-    'Email' => qq|<a href="mailto:$email_address_to_display">$email_address_to_display</a>|,
+    'Email' => qq| Note that the contact email address $email_address_to_display has been deactivated due to extreme levels of spam. Use this contact form instead.</a>|,
 
     'Mailing address' => <<EOH,
 Sol Genomics Network<br />

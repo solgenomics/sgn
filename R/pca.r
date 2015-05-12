@@ -9,9 +9,9 @@
 options(echo = FALSE)
 
 library(imputation)
+library(irlba)
 
 allArgs <- commandArgs()
-
 
 outFile <- grep("output_files",
                 allArgs,
@@ -80,11 +80,9 @@ genoData <- read.table(genoDataFile,
                         dec = "."
                         )
 
-
-
 genoDataMissing <- c()
 if (sum(is.na(genoData)) > 0) {
-  genoDataMissing
+  genoDataMissing <- c('yes')
   message("sum of geno missing values, ", sum(is.na(genoData)) )
   genoData <-kNNImpute(genoData, 10)
   genoData <-as.data.frame(genoData)
@@ -108,21 +106,45 @@ if (sum(is.na(genoData)) > 0) {
 #print(genoData[1:5, 1:5])
 #relationshipMatrix <- tcrossprod(genoData2)
 #print(relationshipMatrix[1:5, 1:3])
+## message("prcomp time")
+## system.time(pca      <- prcomp(genoData, retx=TRUE))
+## scores   <- round(pca$x[, 1:10], digits=2)
+## loadings <- round(pca$rotation[, 1:10], digits=5)
 
-pca      <- prcomp(genoData, retx=TRUE)
-scores   <- round(pca$x[, 1:10], digits=2)
-loadings <- round(pca$rotation[, 1:10], digits=5)
+## totalVar  <- sum((pca$sdev)^2)
+## variances <- unlist(
+##                lapply(pca$sdev,
+##                       function(x)
+##                       round((x^2 / totalVar)*100, digits=2)
+##                       )
+##                )
 
-totalVar  <- sum((pca$sdev)^2)
+## variances <- as.data.frame(variances)
+## colnames(variances)[1] <- "variances"
+
+######
+genotypes <- rownames(genoData)
+svdOut    <- irlba(scale(genoData, TRUE, FALSE), nu=10, nv=10)
+scores    <- round(svdOut$u %*% diag(svdOut$d), digits=2)
+loadings  <- round(svdOut$v, digits=5)
+totalVar  <- sum(svdOut$d)
 variances <- unlist(
-               lapply(pca$sdev,
+               lapply(svdOut$d,
                       function(x)
-                      round((x^2 / totalVar)*100, digits=2)
+                      round((x / totalVar)*100, digits=2)
                       )
                )
 
-variances <- as.data.frame(variances)
-colnames(variances)[1] <- "variances"
+variances <- data.frame(variances)
+scores    <- data.frame(scores)
+rownames(scores) <- genotypes
+
+headers <- c()
+for (i in 1:10) {
+  headers[i] <- paste("PC", i, sep='')
+}
+
+colnames(scores) <- c(headers)
 
 write.table(scores,
             file = scoresFile,
@@ -150,11 +172,11 @@ write.table(variances,
 
 
 if (!is.null(genoDataMissing)) {
-  write.table(genoData,
-              file = genoDataFile,
-              sep = "\t",
-              col.names = NA,
-              quote = FALSE,
+write.table(genoData,
+            file = genoDataFile,
+            sep = "\t",
+            col.names = NA,
+            quote = FALSE,
             )
 
 }

@@ -98,11 +98,12 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
     foreach my $stock (@$list)
     {
         push @stocks_names, $stock->[1];
+	print STDERR "\n uploaded stock: $stock->[1]\n";
     }
     
 
     @stocks_names = uniq(@stocks_names);
-    $c->stash->{selection_genotypes_list_stocks_names} = \@stocks_names;
+    $c->stash->{genotypes_list} = \@stocks_names;
     
     $c->stash->{list_name} = $list_name;
     $c->stash->{list_id}   = $list_id;

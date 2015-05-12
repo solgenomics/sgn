@@ -21,11 +21,11 @@ Search accessions and plots using location, year, trial, and trait data.
 <td>
   <select id="select3" ></select>
 </td>
-<td>Show 
-  <select id="select4">
+<td>
+  <select id="select4"> 
     <option value="plots">plots</option>
     <option value="accessions" selected="selected">accessions</option>
-  </select>
+  </select><button id="retrieve_stocklist_button">retrieve</button>
 </td>
 </tr>
 <tr>
