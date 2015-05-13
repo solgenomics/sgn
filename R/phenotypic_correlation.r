@@ -54,7 +54,7 @@ if ( length(refererQtl) != 0 ) {
                         row.names = NULL,
                         dec=".",
                         sep=",",
-                        na.strings=c("NA", "-", " ", ".")
+                        na.strings=c("NA", "-", " ", ".", "..")
                         )
  
 } else {
@@ -62,7 +62,7 @@ if ( length(refererQtl) != 0 ) {
                           header = TRUE,
                           row.names = NULL,
                           sep = "\t",
-                          na.strings = c("NA", " ", "--", "-", "."),
+                          na.strings = c("NA", " ", "--", "-", ".", ".."),
                           dec = "."
                           )
 
@@ -70,7 +70,7 @@ if ( length(refererQtl) != 0 ) {
 
 formattedPhenoData <- c()
 allTraitNames      <- c()
-
+nonTraitNames      <- c()
 if (length(refererQtl) != 0) {
 
   allNames      <- names(phenoData)
@@ -91,12 +91,16 @@ if (length(refererQtl) != 0) {
 
 for (i in allTraitNames) {
   if (all(is.nan(phenoData$i))) {
-    phenoData[, i] <- sapply(phenoData[, i], function(x) ifelse(is.numeric(x), x, NA))                     
+    if (class(phenoData[, i]) != 'numeric') {       
+      phenoData[,i] <- as.numeric(as.character(phenoData[, i]))   
+    }   
+    phenoData[, i] <- sapply(phenoData[, i], function(x) ifelse(is.numeric(x), x, NA))
   }
 }
 
-phenoData <- phenoData[, colSums(is.na(phenoData)) < nrow(phenoData)]
-
+phenoData     <- phenoData[, colSums(is.na(phenoData)) < nrow(phenoData)]
+allTraitNames <- names(phenoData)[! names(phenoData) %in% nonTraitNames]
+    
 trait <- c()
 cnt   <- 0
  
@@ -109,34 +113,34 @@ if (length(refererQtl) == 0) {
     experimentalDesign <- c()
   
     if ('design' %in% colnames(phenoData)) {
-
-    phenoTrait  <- subset(phenoData,
+     
+      phenoTrait  <- subset(phenoData,
                           select = c("object_name", "object_id", "design", "block", "replicate", trait)
                           )
-    
-    experimentalDesign <- phenoTrait[2, 'design']
+
+      experimentalDesign <- phenoTrait[2, 'design']
   
-    if (is.na(experimentalDesign) == TRUE) {
+      if (is.na(experimentalDesign)) {
+        experimentalDesign <- c('No Design')
+      }
+    
+    } else {   
       experimentalDesign <- c('No Design')
     }
-    
-  } else {   
-    experimentalDesign <- c('No Design')
-  }
   
-  if (experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD') {
+    if (experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD') {
 
     message("experimental design: ", experimentalDesign)
-
+ 
     augData <- subset(phenoTrait,
                         select = c("object_name", "object_id",  "block",  trait)
                         )
 
     colnames(augData)[1] <- "genotypes"
     colnames(augData)[4] <- "trait"
-    
+    print(augData[1:5,])
     ff <- trait ~ 0 + genotypes
-     
+   
     model <- try(lme(ff,
                      data=augData,
                      random = ~1|block,
@@ -148,7 +152,7 @@ if (length(refererQtl) == 0) {
       adjMeans <- data.matrix(fixed.effects(model))
      
       colnames(adjMeans) <- trait
-      
+ 
       nn <- gsub('genotypes', '', rownames(adjMeans))
       rownames(adjMeans) <- nn
       adjMeans <- round(adjMeans, digits = 2)
