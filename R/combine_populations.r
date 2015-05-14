@@ -6,7 +6,7 @@ options(echo = FALSE)
 
 library(stats)
 library(stringr)
-library(imputation)
+library(randomForest)
 library(plyr)
 library(nlme)
 
@@ -61,7 +61,6 @@ traitFile <- grep("trait_",
 trait <- scan(traitFile,
               what = "character",
               )
-print(trait)
 
 traitInfo<-strsplit(trait, "\t");
 traitId<-traitInfo[[1]]
@@ -76,7 +75,7 @@ allPhenoFiles <- grep("phenotype_data",
                   fixed = FALSE,
                   value = TRUE
                   )
-print(allPhenoFiles)
+message("phenotype files: ", allPhenoFiles)
 
 allGenoFiles <- grep("genotype_data",
                   inFiles,
@@ -84,9 +83,6 @@ allGenoFiles <- grep("genotype_data",
                   fixed = FALSE,
                   value = TRUE
                   )
-
-
-print(allGenoFiles)
 
 popsPhenoSize     <- length(allPhenoFiles)
 popsGenoSize      <- length(allGenoFiles)
@@ -98,7 +94,6 @@ for (popPhenoNum in 1:popsPhenoSize)
     popId <- str_extract(allPhenoFiles[[popPhenoNum]], "\\d+")
     popIds <- append(popIds, popId)
 
-    print(popId)
     phenoData <- read.table(allPhenoFiles[[popPhenoNum]],
                             header = TRUE,
                             row.names = 1,
@@ -152,7 +147,7 @@ for (popPhenoNum in 1:popsPhenoSize)
    # trait <- i
     alphaData <-  phenoTrait 
       
-    colnames(alphaData)[2] <- "genotypes"
+    colnames(alphaData)[1] <- "genotypes"
     colnames(alphaData)[5] <- "trait"
      
     ff <- traitName ~ 0 + genotypes
@@ -222,9 +217,7 @@ for (popPhenoNum in 1:popsPhenoSize)
       phenoTrait <- round(phenoTrait, digits = 2)
 
     }
-  }
-
-    
+  }    
     newTraitName = paste(traitName, popId, sep = "_")
     colnames(phenoTrait)[1] <- newTraitName
 
@@ -271,7 +264,6 @@ for (popGenoNum in 1:popsGenoSize)
     popId <- str_extract(allGenoFiles[[popGenoNum]], "\\d+")
     popIds <- append(popIds, popId)
 
-    print(popId)
     genoData <- read.table(allGenoFiles[[popGenoNum]],
                             header = TRUE,
                             row.names = 1,
@@ -286,23 +278,8 @@ for (popGenoNum in 1:popsGenoSize)
   
     if (sum(is.na(genoData)) > 0)
       {
-        print("sum of geno missing values")
-        print(sum(is.na(genoData)))
-
-        #impute missing genotypes
-        genoData <-kNNImpute(genoData, 10)
-        genoData <-as.data.frame(genoData)
-
-        #extract columns with imputed values
-        genoData <- subset(genoData,
-                                select = grep("^x", names(genoData))
-                                )
-
-        #remove prefix 'x.' from imputed columns
-        print(genoData[1:50, 1:4])
-        names(genoData) <- sub("x.", "", names(genoData))
-
-        genoData <- round(genoData, digits = 0)
+        message("sum of geno missing values: ", sum(is.na(genoData))
+        genoData <- na.roughfix(genoData)
         message("total number of stocks for pop ", popId,": ", length(rownames(genoData)))
       }
 
