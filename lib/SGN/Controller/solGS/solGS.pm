@@ -4147,7 +4147,8 @@ sub get_solgs_dirs {
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
     my $correlation_dir = catdir($tmp_dir, 'correlation', 'cache');   
     my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
-    my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');  
+    my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');
+    my $histogram_dir         = catdir($tmp_dir, 'histogram', 'cache');  
 
     mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, $correlation_dir, $pca_dir], 0, 0755);
    
@@ -4157,6 +4158,7 @@ sub get_solgs_dirs {
               solgs_prediction_upload_dir => $solgs_upload,
               correlation_dir             => $correlation_dir,
 	      pca_dir                     => $pca_dir,
+	      histogram_dir               => $histogram_dir,
         );
 
 }
