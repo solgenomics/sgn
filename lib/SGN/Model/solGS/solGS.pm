@@ -31,7 +31,7 @@ use File::Spec::Functions;
 use List::MoreUtils qw / uniq /;
 use JSON::Any;
 use Math::Round::Var;
-
+use Scalar::Util qw(looks_like_number);
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 
@@ -1417,10 +1417,14 @@ sub structure_phenotype_data {
 	    $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
 
 	    foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
-	    {           
-		$d .= "\t" . $phen_hashref->{$key}{$term_name};
+	    {    
+		my $val = $phen_hashref->{$key}{$term_name};
+		unless (looks_like_number($val)) 
+		{ 
+		    $val = "NA";		  
+		}
+		$d .= "\t" . $val;
 	    }
-
 	    $d .= "\n";
 	}
    
@@ -1530,7 +1534,14 @@ sub phenotypes_by_trait {
         $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
 
         foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
-        {           
+        { 
+	    	my $val = $phen_hashref->{$key}{$term_name};
+	
+		unless (looks_like_number($val)) 
+		{ 
+		    $val = "NA";
+		}
+		$d .= "\t" . $val;
             $d .= "\t" . $phen_hashref->{$key}{$term_name};
         }
 
