@@ -5,12 +5,16 @@ $stock_id
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<table id="stock_phenotype_data" class="display">
+<% $stock_id %><br />
+
+<table id="phenotype_summary_data" class="display">
 <thead>
   <tr>
+    <th>Trial</th>
+    <th>Trait code</th>
     <th>Trait</th>
     <th>Value</th>
-</tr>
+  </tr>
 </thead>
 
 </table>
@@ -19,15 +23,12 @@ $stock_id
 
 <script>
 
-jQuery(document).ready(function () {
-
-   jQuery('#phenotype_summary_data').DataTable( { 
-       'ajax': '/ajax/breeders/stock/'+ <% $stock_id %> + '/phenotypes',
-   });
-
-
-
-});
+  jQuery(document).ready(function () {
+  
+    jQuery('#phenotype_summary_data').DataTable( { 
+      'ajax': '/ajax/stock/phenotypes/'+ <% $stock_id %>,
+    });
+  });
 
 
   

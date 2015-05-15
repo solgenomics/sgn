@@ -105,8 +105,12 @@ Chained off of L</get_stock> below.
 
 =cut
 
+our $time;
+
 sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
+
+    $time = time();
 
     if( $c->stash->{stock_row} ) {
         $c->forward('get_stock_extended_info');
@@ -136,6 +140,8 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         $c->throw_404( "No stock/accession exists for that identifier." );
     }
 
+    print STDERR "Checkpoint 2: Elapsed ".(time() - $time)."\n";
+
     my $props = $self->_stockprops($stock);
     # print message if the stock is visible only to certain user roles
     my @logged_user_roles = $logged_user->roles if $logged_user;
@@ -157,6 +163,8 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	$c->stash->{message}  = "You do not have sufficient privileges to view the page of stock with database id $stock_id. You may need to log in to view this page.";
 	return;
     }
+
+    print STDERR "Checkpoint 3: Elapsed ".(time() - $time)."\n";
 
     # print message if the stock is obsolete
     my $obsolete = $stock->get_is_obsolete();
@@ -191,6 +199,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my $barcode_tempuri  = $c->tempfiles_subdir('image');
     my $barcode_tempdir = $c->get_conf('basepath')."/$barcode_tempuri";
 
+    print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 ################
     $c->stash(
         template => '/stock/index.mas',
@@ -417,6 +426,7 @@ sub get_stock_has_descendants : Private {
 sub get_stock_extended_info : Private {
     my ( $self, $c ) = @_;
     $c->forward('get_stock_cvterms');
+    
     $c->forward('get_stock_allele_ids');
     $c->forward('get_stock_owner_ids');
     $c->forward('get_stock_has_pedigree');
@@ -445,7 +455,8 @@ sub get_stock_extended_info : Private {
 
     my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes($self->schema->resultset("Stock::Stock")->search_rs({ stock_id => $c->stash->{stock_row}->stock_id } ) ) : undef;
     $c->stash->{direct_phenotypes} = $direct_phenotypes;
-    my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
+
+    my ($members_phenotypes, $has_members_genotypes)  = (undef, undef); #$stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
     my $direct_genotypes  = $stock ? $self->_stock_project_genotypes( $c->stash->{stock_row} ) : undef;

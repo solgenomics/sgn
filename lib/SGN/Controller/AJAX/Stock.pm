@@ -20,6 +20,7 @@ package SGN::Controller::AJAX::Stock;
 use Moose;
 
 use List::MoreUtils qw /any /;
+use Data::Dumper;
 use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
@@ -1038,6 +1039,83 @@ sub add_phenotype_POST {
         };
     }  else {  $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
+}
+
+sub stock_members_phenotypes :Path('/ajax/stock/phenotypes') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $bcs_stock_rs = $schema->resultset("Stock::Stock")->search( { stock_id => $stock_id });
+
+    if ($bcs_stock_rs->count() != 1) { 
+	$c->stash->{rest} = { error => "The provided stock_id $stock_id does not exist in the database. Cannot retrieve phenotypes" };
+	return;
+    }
+
+    my $bcs_stock = $bcs_stock_rs->first();
+
+    my %phenotypes;
+    my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
+SELECT COUNT( DISTINCT genotype_id )
+  FROM phenome.genotype
+  JOIN stock subj using(stock_id)
+  JOIN stock_relationship sr ON( sr.subject_id = subj.stock_id )
+ WHERE sr.object_id = ?
+
+    # now we have rs of stock_relationship objects. We need to find
+    # the phenotypes of their related subjects
+    #
+    my $subjects = $bcs_stock->search_related('stock_relationship_objects')
+                             ->search_related('subject');
+    my $subject_phenotypes = $self->_stock_project_phenotypes($schema, $subjects );
+
+    #print STDERR Dumper($subject_phenotypes);
+    #print STDERR Dumper($has_members_genotypes);
+
+    # collect the data from the hashref...
+    #
+    my @stock_data;
+
+    foreach my $project (keys (%$subject_phenotypes)) { 
+	foreach my $trait (@{$subject_phenotypes->{$project}}) { 
+	    push @stock_data, [ 
+		$project, 
+		$trait->get_column("db_name").":".$trait->get_column("accession"),
+		$trait->get_column("observable"),
+		$trait->get_column("value"),
+	    ];
+	}
+    }	
+
+    $c->stash->{rest} = { data => \@stock_data,
+                          #has_members_genotypes => $has_members_genotypes 
+    };
+    
+}
+
+
+sub _stock_project_phenotypes {
+    my ($self, $schema, $bcs_stock) = @_;
+    
+    return {} unless $bcs_stock;
+    my $rs =  $schema->resultset("Stock::Stock")->stock_phenotypes_rs($bcs_stock);
+    my %project_hashref;
+    while ( my $r = $rs->next) {
+	my $project_desc = $r->get_column('project_description');
+	push @{ $project_hashref{ $project_desc }}, $r;
+    }
+    return \%project_hashref;
+}
+
+sub get_stock_trials :Path('/ajax/stock/trials') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = shift;
+
+
+
 }
 
 
