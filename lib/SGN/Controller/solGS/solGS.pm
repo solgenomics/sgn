@@ -3175,6 +3175,7 @@ sub trait_phenotype_stat {
     my $min  = $stat->min; 
     my $max  = $stat->max; 
     my $mean = $stat->mean;
+    my $med  = $stat->median;
     my $std  = $stat->standard_deviation;
     my $cnt  = scalar(@$trait_data);
     my $cv   = ($std / $mean) * 100;
@@ -3193,6 +3194,7 @@ sub trait_phenotype_stat {
                        [ 'Minimum', $min ], 
                        [ 'Maximum', $max ],
                        [ 'Arithmetic mean', $mean ],
+		       [ 'Median', $med ],  
                        [ 'Standard deviation', $std ],
                        [ 'Coefficient of variation', $cv ]
         );
