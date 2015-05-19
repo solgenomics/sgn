@@ -40,7 +40,7 @@ my $advanced_search=  info_table_html(
   'Organism'   => $organism,
   'Chromosome / Linkage&nbsp;Group' => $linkage_group_select,
   'Locus editor' =>qq|<input id="locus_editor" size="20"/>|,
-  'Show only genes with' => qq | <input type="checkbox" name="has_sequence" id="has_sequence"  />sequence <br />
+  'Show only genes with' => qq | <input type="checkbox" id="has_sequence"  />sequence <br />
 				<input type="checkbox" id="has_marker" />markers<br />
 				<input type="checkbox" id="has_annotation" />GO/PO annotation<br /> |,
 	
@@ -118,9 +118,9 @@ jQuery(document).ready(function () {
                   d.ontology_term  = jQuery('#ontology_term').val(); 
                   d.locus_editor  = jQuery('#locus_editor').val(); 
                   d.genbank_accession  = jQuery('#genbank_accession').val();
-                  d.has_sequence  = jQuery('#has_sequence').val();
-                  d.has_marker  = jQuery('#has_marker').val(); 
-                  d.has_annotation  = jQuery('#has_annotation').val(); 
+                  d.has_sequence  = jQuery('#has_sequence').is(':checked');
+                  d.has_marker  = jQuery('#has_marker').is(':checked'); 
+                  d.has_annotation  = jQuery('#has_annotation').is(':checked'); 
              }
          }
      });
@@ -133,11 +133,11 @@ jQuery(document).ready(function () {
          var ontology     = jQuery('#ontology_term').val(); 
          var editor       = jQuery('#locus_editor').val(); 
          var genbank      = jQuery('#genbank_accession').val();
-         var sequence     = jQuery('#has_sequence').val();
-         var marker       = jQuery('#has_marker').val(); 
-         var annotation   = jQuery('#has_annotation').val(); 
+         var has_sequence     = jQuery('#has_sequence').is(':checked');
+         var has_marker       = jQuery('#has_marker').is(':checked'); 
+         var has_annotation   = jQuery('#has_annotation').is('checked'); 
        
-         if (  phenotype.trim().length  || common_name.length || ontology.trim().length || editor.trim().length || genbank.trim().length || sequence.checked) {
+         if (  phenotype.trim().length  || common_name.length || ontology.trim().length || editor.trim().length || genbank.trim().length || has_sequence || has_marker || has_annotation ) {
              jQuery('#advanced_search_div').show();
          } else {
              jQuery('#advanced_search_div').hide()
