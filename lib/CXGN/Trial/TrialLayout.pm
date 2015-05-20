@@ -51,6 +51,8 @@ has 'block_numbers' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_block_n
 has 'replicate_numbers' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_replicate_numbers', reader => 'get_replicate_numbers', writer => '_set_replicate_numbers');
 has 'accession_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_accession_names', reader => 'get_accession_names', writer => '_set_accession_names');
 has 'control_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_control_names', reader => 'get_control_names', writer => '_set_control_names');
+has 'row_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_row_numbers', reader => 'get_row_numbers', writer => '_set_row_numbers');
+has 'col_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_col_numbers', reader => 'get_col_numbers', writer => '_set_col_numbers');
 
 
 sub _lookup_trial_id {
@@ -79,6 +81,8 @@ sub _lookup_trial_id {
   $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
   $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
   $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
+  $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
+  $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
   #$self->_set_is_a_control($self->_get_plot_info_fields_from_trial("is_a_control"));
   ($accession_names_ref, $control_names_ref) = $self->_get_trial_accession_names_and_control_names();
   if ($accession_names_ref) {
