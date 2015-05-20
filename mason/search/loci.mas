@@ -1,7 +1,6 @@
 
 <%args>
-$organism_names_ref => undef
-$organism_ids_ref   => undef
+$organism_ref => undef
 $lg_names_ref       => undef
 </%args>
 
@@ -18,19 +17,16 @@ use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html condit
 
 my $any_name_select = conditional_like_input_html("any_name","contains", "", '30');
     
-#add an empty entry to the front of the list
-unshift @$organism_names_ref, '';
-    
+
 my $organism = simple_selectbox_html( 
- choices  => $organism_names_ref,
- id     => "common_name",
+ choices  =>  $organism_ref   ,
+ id       => "common_name",
 );
     
-my @lg_options = ();
-
   
-my $linkage_group_select = simple_selectbox_html( choices  => \@lg_options,
-   id     => "locus_linkage_group",
+my $linkage_group_select = simple_selectbox_html(
+   choices => $lg_names_ref,
+   id      => "locus_linkage_group",
 );
     
        
