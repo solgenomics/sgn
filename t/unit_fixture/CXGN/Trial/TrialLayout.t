@@ -16,7 +16,7 @@ my $tl = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id =>
 
 my $d = $tl->get_design();
 
-print STDERR Dumper($d);
+#print STDERR Dumper($d);
 
 # '35700' => {
 #                        'rep_number' => '1',
