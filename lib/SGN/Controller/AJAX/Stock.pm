@@ -1041,10 +1041,12 @@ sub add_phenotype_POST {
     }
 }
 
-sub stock_members_phenotypes :Path('/ajax/stock/phenotypes') Args(1) {
+sub stock_members_phenotypes :Chained('/stock/get_stock') PathPart('datatables/traits') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $stock_id = shift;
+    #my $trait_id = shift;
+
+    my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $bcs_stock_rs = $schema->resultset("Stock::Stock")->search( { stock_id => $stock_id });
@@ -1109,14 +1111,33 @@ sub _stock_project_phenotypes {
     return \%project_hashref;
 }
 
-sub get_stock_trials :Path('/ajax/stock/trials') Args(1) { 
+sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') Args(0) { 
     my $self = shift;
     my $c = shift;
-    my $stock_id = shift;
+    
+    my @trials = $c->stash->{stock}->get_trials();
 
-
+    $c->stash->{rest} = { data => \@trials };
 
 }
+
+sub get_stock_trait_list :Chained('/stock/get_stock') PathPart('datatables/traitlist') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my @trait_list = $c->stash->{stock}->get_trait_list();
+    
+    my @formatted_list; 
+    foreach my $t (@trait_list) { 
+	push @formatted_list, [ '<a href="/chado/cvterm?cvterm_id='.$t->[0].'">'.$t->[1].'</a>', $t->[2], sprintf("%3.1f", $t->[3]), sprintf("%3.1f", $t->[4]) ];
+    }
+
+    print STDERR Dumper(\@formatted_list);
+
+    $c->stash->{rest} = { data => \@formatted_list };
+
+}
+
 
 
 1;

@@ -363,6 +363,18 @@ function jqueryStuff() {
 % }
 </&>
 
+<&| /page/info_section.mas, title => "Trials" &>
+
+  <& /stock/trials.mas, stock_id => $stock_id &>
+
+</&>
+
+<&| /page/info_section.mas, title => "Traits assayed" &>
+
+  <& /stock/traits.mas, stock_id => $stock_id &>
+
+</&>
+
 <&| /page/info_section.mas, title => "Phenotypic data" &>
   
   <& /stock/phenotypes.mas, stock_id => $stock_id &>
