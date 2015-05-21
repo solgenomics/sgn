@@ -1236,7 +1236,7 @@ sub relationship_matrix_file {
     {
         my $combo_identifier = $c->stash->{combo_pops_id};
         $cache_data = {key       => 'relationship_matrix_combined_pops_'.  $combo_identifier,
-                       file      => 'relationship_matrix_combined_pops' . $combo_identifier,
+                       file      => 'relationship_matrix_combined_pops_' . $combo_identifier,
                        stash_key => 'relationship_matrix_file'
 
         };

@@ -278,7 +278,7 @@ for (popGenoNum in 1:popsGenoSize)
   
     if (sum(is.na(genoData)) > 0)
       {
-        message("sum of geno missing values: ", sum(is.na(genoData))
+        message("sum of geno missing values: ", sum(is.na(genoData)))
         genoData <- na.roughfix(genoData)
         message("total number of stocks for pop ", popId,": ", length(rownames(genoData)))
       }

@@ -130,16 +130,17 @@ formattedPhenoData <- c()
 phenoData <- c()
 message("formatted phenotype dataset file: ", formattedPhenoFile)
 
-if (file.info(formattedPhenoFile)$size > 0 ) {
+if (length(formattedPhenoFile) != 0 ) {
+  if (file.info(formattedPhenoFile)$size > 0 ) {
 
-  formattedPhenoData <- read.table(formattedPhenoFile,
-                                   header = TRUE,
-                                   row.names = 1,
-                                   sep = "\t",
-                                   na.strings = c("NA", " ", "--", "-", "."),
-                                   dec = "."
-                                   )
-
+    formattedPhenoData <- read.table(formattedPhenoFile,
+                                     header = TRUE,
+                                     row.names = 1,
+                                     sep = "\t",
+                                     na.strings = c("NA", " ", "--", "-", "."),
+                                     dec = "."
+                                     )
+  }
 } else {
 
 message("formatted phenotype dataset file: ", formattedPhenoFile)
@@ -425,7 +426,6 @@ if (length(predictionData) != 0) {
   }
 }
 
-
 relationshipMatrixFile <- grep("relationship_matrix",
                                outFiles,
                                ignore.case = TRUE,
@@ -434,9 +434,9 @@ relationshipMatrixFile <- grep("relationship_matrix",
                                )
 
 message("relationship matrix file: ", relationshipMatrixFile)
-message("relationship matrix file size: ", file.info(relationshipMatrixFile)$size)
+#message("relationship matrix file size: ", file.info(relationshipMatrixFile)$size)
 relationshipMatrix <- c()
-
+if (length(relationshipMatrixFile) != 0) {
 if (file.info(relationshipMatrixFile)$size > 0 ) {
   relationshipDf <- read.table(relationshipMatrixFile,
                                    header = TRUE,
@@ -448,7 +448,7 @@ if (file.info(relationshipMatrixFile)$size > 0 ) {
 
   relationshipMatrix <- data.matrix(relationshipDf)
 }
-
+}
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
 genoTrCode <- grep("2", genoDataFiltered[1, ], fixed=TRUE, value=TRUE)
 if(length(genoTrCode) != 0) {
@@ -485,11 +485,11 @@ if ( length(predictionData) == 0 ) {
 #additive relationship model
 #calculate the inner products for
 #genotypes (realized relationship matrix)
-
-if (file.info(relationshipMatrixFile)$size == 0) {
-  relationshipMatrix <- tcrossprod(genoData)
+if (length(relationshipMatrixFile) != 0) {
+  if (file.info(relationshipMatrixFile)$size == 0) {
+    relationshipMatrix <- tcrossprod(data.matrix(genoData))
+  }
 }
-
 relationshipMatrixFiltered <- relationshipMatrix[(rownames(relationshipMatrix) %in% rownames(commonObs)),]
 relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshipMatrixFiltered) %in% rownames(commonObs))]
 
