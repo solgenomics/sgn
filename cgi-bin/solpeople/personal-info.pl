@@ -527,15 +527,15 @@ EOHTML
 
 		if ($locus_id && $symbol) { #deanx jan23 2008
 		  if ($i<$max)  {
-		     $locus_annotations .= qq | <a href="/phenome/locus_display.pl?locus_id=$locus_id&amp;action=view">$symbol</a> | }  
+		     $locus_annotations .= qq | <a href="/locus/$locus_id/view">$symbol</a> | }  
 		  else {
-		    $more_annotations .= qq { <a href="/phenome/locus_display.pl?locus_id=$locus_id&amp;action=view">$symbol</a> };
+		    $more_annotations .= qq { <a href="/locus/$locus_id/view">$symbol</a> };
 		  }
 		}
 	    }
 	    
 	    if ($more) { 
-		$locus_annotations .= qq|<br><b>and <a href="/search/locus_search.pl?w8e4_editor=$person_id">$more more</a></b><br />|; 
+		$locus_annotations .= qq|<br><b>and <a href="/search/locus">$more more</a></b><br />|; 
 		
 		
 	    }

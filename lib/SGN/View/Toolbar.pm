@@ -25,7 +25,7 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'Genes',
-                    link => '/search/loci',
+                    link => '/search/locus',
                     desc => 'Gene search.'
                 },
                 {
