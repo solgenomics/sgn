@@ -1117,7 +1117,12 @@ sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') 
     
     my @trials = $c->stash->{stock}->get_trials();
 
-    $c->stash->{rest} = { data => \@trials };
+    my @formatted_trials;
+    foreach my $t (@trials) { 
+	push @formatted_trials, [ '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>', $t->[3] ];
+    }
+
+    $c->stash->{rest} = { data => \@formatted_trials };
 
 }
 
