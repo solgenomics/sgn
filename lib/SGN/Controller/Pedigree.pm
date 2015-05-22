@@ -154,7 +154,7 @@ sub _get_pedigree {
   my ($self,$bcs_stock) = @_;
   my %pedigree;
   $pedigree{'id'} = $bcs_stock->stock_id();
-  $pedigree{'name'} = $bcs_stock->name();
+  $pedigree{'name'} = $bcs_stock->uniquename();
   $pedigree{'female_parent'} = undef;
   $pedigree{'male_parent'} = undef;
   $pedigree{'link'} = "/stock/$pedigree{'id'}/view";
@@ -201,7 +201,7 @@ sub _get_descendants {
   my %descendants;
   my %progeny;
   $descendants{'id'} = $bcs_stock->stock_id();
-  $descendants{'name'} = $bcs_stock->name();
+  $descendants{'name'} = $bcs_stock->uniquename();
   $descendants{'link'} = "/stock/$descendants{'id'}/view";
   #get cvterms for parent relationships
   my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(

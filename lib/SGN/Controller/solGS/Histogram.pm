@@ -90,13 +90,7 @@ sub create_population_phenotype_data {
 sub create_histogram_dir {
     my ($self, $c) = @_;
     
-    my $temp_dir      =  $c->config->{cluster_shared_tempdir};
-    my $histogram_dir = catdir($temp_dir, 'histogram', 'cache'); 
-  
-    mkpath ($histogram_dir, 0, 0755);
-   
-    $c->stash->{histogram_dir} = $histogram_dir;
-
+    $c->controller("solGS::solGS")->get_solgs_dirs($c);
 }
 
 

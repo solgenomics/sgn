@@ -982,7 +982,8 @@ sub input_files {
     
     $self->genotype_file($c);
     $self->phenotype_file($c);
-   
+    $self->formatted_phenotype_file($c);
+
     my $pred_pop_id = $c->stash->{prediction_pop_id};
     my $prediction_population_file;
 
@@ -991,6 +992,8 @@ sub input_files {
         $self->prediction_population_file($c, $pred_pop_id);
         $prediction_population_file = $c->stash->{prediction_population_file};
     }
+
+    my $formatted_phenotype_file  = $c->stash->{formatted_phenotype_file};
 
     my $pheno_file  = $c->stash->{phenotype_file};
     my $geno_file   = $c->stash->{genotype_file};
@@ -1002,6 +1005,7 @@ sub input_files {
 
     my $input_files = join ("\t",
                             $pheno_file,
+			    $formatted_phenotype_file,
                             $geno_file,
                             $traits_file,
                             $trait_file,
@@ -1027,8 +1031,8 @@ sub output_files {
     $self->gebv_kinship_file($c); 
     $self->validation_file($c);
     $self->trait_phenodata_file($c);
-    $self->formatted_phenodata_file($c);
     $self->variance_components_file($c);
+    $self->relationship_matrix_file($c);
 
     my $prediction_id = $c->stash->{prediction_pop_id};
     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
@@ -1052,10 +1056,10 @@ sub output_files {
                           $c->stash->{gebv_kinship_file},
                           $c->stash->{gebv_marker_file},
                           $c->stash->{validation_file},
-                          $c->stash->{trait_phenodata_file},
-                          $c->stash->{formatted_phenodata_file},
+                          $c->stash->{trait_phenodata_file},                         
                           $c->stash->{selected_traits_gebv_file},
                           $c->stash->{variance_components_file},
+			  $c->stash->{relationship_matrix_file},
                           $pred_pop_gebvs_file
         );
                           
@@ -1169,7 +1173,7 @@ sub trait_phenodata_file {
 }
 
 
-sub formatted_phenodata_file {
+sub formatted_phenotype_file {
     my ($self, $c) = @_;
    
     my $pop_id = $c->stash->{pop_id};
@@ -1177,7 +1181,7 @@ sub formatted_phenodata_file {
 
     my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id, 
                        file      => 'formatted_phenotype_data_' . $pop_id,
-                       stash_key => 'formatted_phenodata_file'
+                       stash_key => 'formatted_phenotype_file'
     };
     
     $self->cache_file($c, $cache_data);
@@ -1210,6 +1214,39 @@ sub gebv_kinship_file {
         $cache_data = {key       => 'gebv_kinship_' . $pop_id . '_'.  $trait,
                        file      => 'gebv_kinship_' . $trait . '_' . $pop_id,
                        stash_key => 'gebv_kinship_file'
+        };
+    }
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+
+sub relationship_matrix_file {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id};
+    my $data_set_type = $c->stash->{data_set_type};
+        
+    my $cache_data;
+    
+    no warnings 'uninitialized';
+
+    if ($data_set_type =~ /combined populations/)
+    {
+        my $combo_identifier = $c->stash->{combo_pops_id};
+        $cache_data = {key       => 'relationship_matrix_combined_pops_'.  $combo_identifier,
+                       file      => 'relationship_matrix_combined_pops_' . $combo_identifier,
+                       stash_key => 'relationship_matrix_file'
+
+        };
+    }
+    else 
+    {
+    
+        $cache_data = {key       => 'relationship_matrix_' . $pop_id,
+                       file      => 'relationship_matrix_' . $pop_id,
+                       stash_key => 'relationship_matrix_file'
         };
     }
 
@@ -3138,6 +3175,7 @@ sub trait_phenotype_stat {
     my $min  = $stat->min; 
     my $max  = $stat->max; 
     my $mean = $stat->mean;
+    my $med  = $stat->median;
     my $std  = $stat->standard_deviation;
     my $cnt  = scalar(@$trait_data);
     my $cv   = ($std / $mean) * 100;
@@ -3156,6 +3194,7 @@ sub trait_phenotype_stat {
                        [ 'Minimum', $min ], 
                        [ 'Maximum', $max ],
                        [ 'Arithmetic mean', $mean ],
+		       [ 'Median', $med ],  
                        [ 'Standard deviation', $std ],
                        [ 'Coefficient of variation', $cv ]
         );
@@ -4110,9 +4149,10 @@ sub get_solgs_dirs {
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
     my $correlation_dir = catdir($tmp_dir, 'correlation', 'cache');   
     my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
-    my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');  
+    my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');
+    my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');  
 
-    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, $correlation_dir, $pca_dir], 0, 0755);
+    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, $correlation_dir, $pca_dir, $histogram_dir], 0, 0755);
    
     $c->stash(solgs_dir                   => $solgs_dir, 
               solgs_cache_dir             => $solgs_cache, 
@@ -4120,6 +4160,7 @@ sub get_solgs_dirs {
               solgs_prediction_upload_dir => $solgs_upload,
               correlation_dir             => $correlation_dir,
 	      pca_dir                     => $pca_dir,
+	      histogram_dir               => $histogram_dir,
         );
 
 }
