@@ -87,8 +87,8 @@ END_HEREDOC
 
 
        $c->stash->{email} = {
-        to      => $c->config->{contactform_email},
-        from    => $c->config->{contactform_email},
+        to      => $c->config->{contact_form_email},
+        from    => $c->config->{contact_form_email},
         subject => "[".$c->config->{name}."][contact] $subject",
         body    => $body,
        };
