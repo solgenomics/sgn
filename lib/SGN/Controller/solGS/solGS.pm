@@ -2054,10 +2054,52 @@ sub trait_phenotype_file {
 
 }
 
+
+sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1) {
+    my ($self, $c, $tr_pop_id) = @_;
+
+    $c->stash->{pop_id} = $tr_pop_id;
+
+    $self->list_of_prediction_pops_file($c, $tr_pop_id);
+    my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
+
+    my $ret->{result} = 0;
+   
+    if (-s $pred_pops_file) 
+    {
+	$ret->{result} = 1;                
+    }    
+
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
+sub selection_pops_list :Path('/solgs/selection/populations/') {
+    my ($self, $c, $tr_pop_id) = @_;
+
+    $self->list_of_prediction_pops($c, $tr_pop_id);
+    my $selection_pops_list = $c->stash->{list_of_prediction_pops};
+
+    $ret->{selection_pops_list} = 0;
+    if ($selection_pops_list) 
+    {
+	$ret->{selection_pops_list} = $selection_pops_list;           
+    }    
+
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+}
+
 #retrieve from db prediction pops relevant to the
 #training population
 sub list_of_prediction_pops {
-    my ($self, $c, $training_pop_id, $download_prediction) = @_;
+    my ($self, $c, $training_pop_id) = @_;
 
     $self->list_of_prediction_pops_file($c, $training_pop_id);
     my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
