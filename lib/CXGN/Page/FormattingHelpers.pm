@@ -1178,8 +1178,8 @@ EOH
          "conditional like", which is a select box with 'starts with','ends with',
          'contains', and 'exactly', followed by a regular text input box
   Ret  : a string of html
-  Args : name of these two elements (select will be called $name.'_matchtype',
-           text input will be called $name),
+  Args : name/id of these two elements (select will be called $name.'_matchtype',
+           text input name and id will be called $name),
          (optional) initial value of the match type select box,
          (optional) initial value of the match string box
   Side Effects: none
@@ -1208,7 +1208,8 @@ EOC
     #make the select box
     my $matchtype_select = simple_selectbox_html(
         name     => $name . '_matchtype',
-        selected => $type_init,
+	id       => $name . '_matchtype',
+	selected => $type_init,
         choices  => [
             'contains', [ 'starts_with', 'starts with' ],
             [ 'ends_with', 'ends with' ], 'exactly',
@@ -1217,7 +1218,7 @@ EOC
     chomp $matchtype_select;   #remove newline, cause some browsers are idiotic.
                                #return the html
     return <<EOHTML;
-$matchtype_select<input name="$name" value="$string_init" size="$size" type="text" />
+$matchtype_select<input name="$name" id="$name" value="$string_init" size="$size" type="text" />
 EOHTML
 }
 
