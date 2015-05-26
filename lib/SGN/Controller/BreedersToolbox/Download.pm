@@ -193,14 +193,14 @@ sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download')
     
     my $bprs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id})->search_related_rs('project_relationship_subject_projects');
 
-    print STDERR "COUNT: ".$bprs->count()."  ". $bprs->get_column('project_relationship.object_project_id')."\n";
+    #print STDERR "COUNT: ".$bprs->count()."  ". $bprs->get_column('project_relationship.object_project_id')."\n";
 
     my $pbr = $schema->resultset("Project::Project")->search( { 'me.project_id'=> $bprs->get_column('project_relationship_subject_projects.object_project_id')->first() } );
     
     my $program_name = $pbr->first()->name();
     my $year = $trial->get_year();
 
-    print STDERR "YEAR: $year\n";
+    #print STDERR "YEAR: $year\n";
 
     #print STDERR "PHENOTYPE DATA MATRIX: ".Dumper(\@data);
     $c->tempfiles_subdir("data_export"); # make sure the dir exists
@@ -380,7 +380,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
     my $data_type         = $c->req->param("data_type") || "genotype";
     my $format            = $c->req->param("format");
 
-    print STDERR "IDS: $accession_list_id, $trial_list_id \n";
+    #print STDERR "IDS: $accession_list_id, $trial_list_id \n";
 
     my $accession_data;
     if ($accession_list_id) { 
@@ -401,8 +401,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $t = CXGN::List::Transform->new();
     
-     print STDERR Data::Dumper::Dumper(\@accession_list);
-     print STDERR Data::Dumper::Dumper(\@trial_list);
+    #print STDERR Data::Dumper::Dumper(\@accession_list);
+     #print STDERR Data::Dumper::Dumper(\@trial_list);
 #    print STDERR Data::Dumper::Dumper(\@trait_list);
 
     my $acc_t = $t->can_transform("accessions", "accession_ids");
@@ -424,7 +424,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 	$trial_sql = join ",", map { "\'$_\'" } @{$trial_id_data->{transform}};
     }
 
-    print STDERR "SQL-READY: $accession_sql | $trial_sql \n";
+    #print STDERR "SQL-READY: $accession_sql | $trial_sql \n";
 
     my $data; 
     my $output = "";
@@ -447,7 +447,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 	$data = $bs->get_genotype_info($accession_sql, $trial_sql);        
 	$output = "";
 
-       print STDERR "your list has ", scalar(@$data)," element \n"; 
+	#print STDERR "your list has ", scalar(@$data)," element \n"; 
        my @AoH = ();
 
      for (my $i=0; $i < scalar(@$data) ; $i++) 
@@ -455,7 +455,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
       my $decoded = decode_json($data->[$i][1]);
       push(@AoH, $decoded); 
      } 
-	print STDERR "your array has ", scalar(@AoH)," element \n";
+	#print STDERR "your array has ", scalar(@AoH)," element \n";
 	
         my @k=();
 	for my $i ( 0 .. $#AoH ){
@@ -483,7 +483,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 
     }
 
-     print STDERR "download file is", $tempfile,"\n";
+    #print STDERR "download file is", $tempfile,"\n";
 
 
       my $contents = $tempfile;
@@ -507,7 +507,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my $format            = $c->req->param("format");
 
 
-    print STDERR "IDS: $accession_list_id, $trial_list_id \n";
+    #print STDERR "IDS: $accession_list_id, $trial_list_id \n";
 
     my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
@@ -539,7 +539,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my $trial_sql = join ",", map { "\'$_\'" } @{$trial_id_data->{transform}};
     #my $trait_sql = join ",", map { "\'$_\'" } @{$trait_id_data->{transform}};
 
-    print STDERR "SQL-READY: $accession_sql | $trial_sql \n";
+    #print STDERR "SQL-READY: $accession_sql | $trial_sql \n";
 
     my $data; 
     my $output = "";
@@ -563,7 +563,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
 #	say "Your list has ", scalar(@$x), " elements" 
 
-       print STDERR "your list has ", scalar(@$data)," element \n";
+	#print STDERR "your list has ", scalar(@$data)," element \n";
       
        #my @myGBS = ();
        
@@ -579,7 +579,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
      }
       # push(@myGBS, 'Moe'); 
 
-	print STDERR "your array has ", scalar(@AoH)," element \n";
+	#print STDERR "your array has ", scalar(@AoH)," element \n";
 	
 #	my $fh000="out_test000.txt";
 
@@ -689,34 +689,23 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     #
     my @headers = ( 
 	"Project Name",
-	"Source Lab",
+	"User ID",
 	"Plate Name",
 	"Well", 
 	"Sample Name", 
 	"Pedigree",
-	"Population Type",
+	"Population",
 	"Stock Number",
-	"Sample DNA Concentration",
-	"Sample Volume",
-	"Sample DNA Mass",
-	"Preparer",
+	"Sample DNA Concentration (ng/ul)",
+	"Sample Volume (ul)",
+	"Sample DNA Mass(ng)",
 	"Kingdom",
-	"Phylum",
-	"Class",
-	"Order",
-	"Family",
 	"Genus",
 	"Species",
+	"Common Name",
 	"Subspecies",
 	"Variety",
-	"Location",
-	"Name",
-	"Country",
-	"State or Province",
-	"City",
-	"Elevation",
-	"Latitude",
-	"Longitude",
+	"Seed Lot"
 	);
 
     for(my $i=0; $i<@headers; $i++) { 
@@ -739,6 +728,7 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     # write plate info
     #
     my $line = 0;
+
     foreach my $k (sort wellsort (keys %{$layout})) { 
 	$ws->write(2 + $line, 0, "NextGen Cassava");
 	my $breeding_program_data = $t->get_breeding_programs();
@@ -746,7 +736,8 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
 	if ($breeding_program_data->[0]) { 
 	    $breeding_program_name = $breeding_program_data->[0]->[1];
 	}
-	$ws->write(2 + $line, 1, $breeding_program_name);
+	$ws->write(2 + $line, 0, $layout->{$k}->{genotyping_project_name});
+	$ws->write(2 + $line, 1, $layout->{$k}->{genotyping_user_id});
 	$ws->write(2 + $line, 2, $t->get_name());
 	$ws->write(2 + $line, 3, $k);
 	$ws->write(2 + $line, 4, $layout->{$k}->{igd_synonym});

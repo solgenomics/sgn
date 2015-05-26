@@ -40,25 +40,24 @@ sub _validate_with_plugin {
 	$project_names{$fields[$project_name_col]}++;
 	$user_ids{$fields[$user_id_col]}++;
     }
-
     
     my $errors =[]; 
     if (!$blank_well) { 
 	push @$errors, "No blank well found in spreadsheet";
     }
     if (keys(%trial_names)>1) {
-	print STDERR join ",", keys(%trial_names);
 	push @$errors, "All trial names in the trial column must be identical";
-
     }
     
-    my $user_id = shift (keys(%user_id));
-    if (keys(%user_ids) > 1) { 
+    my @distinct_users = keys(%user_ids);
+    my $user_id = shift(@distinct_users);
+    if (@distinct_users > 1) { 
 	print STDERR "Ignoring multiple user_ids provided, will work with $user_id...\n";
     }
 	
-    my $project_name = shift keys(%project_names);
-    if (keys(%project_names) > 1) { 
+    my @distinct_project_names = keys(%project_names);
+    my $project_name = shift(@distinct_project_names);
+    if (@distinct_project_names > 1) { 
 	print STDERR "Ignoring multiple project_names, working with $project_name\n";
     }
     

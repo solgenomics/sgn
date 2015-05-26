@@ -61,6 +61,9 @@ has 'design' => (isa => 'HashRef[HashRef[Str]]', is => 'rw', predicate => 'has_d
 #has 'breeding_program_id' => (isa => 'Int', is => 'rw', predicate => 'has_breeding_program_id', required => 1);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 0,);
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
+has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
+
+has 'genotyping_project_name' => (isa => 'Str', is => 'rw');
 
 # sub get_trial_name {
 #   my $self = shift;
@@ -209,9 +212,17 @@ sub save_trial {
       $field_layout_experiment = $genotyping_layout_experiment;
       $plot_cvterm = $sample_cvterm;
       $plot_of = $sample_of;
+
+      print STDERR "Storing user_id and project_name provided by the IGD spreadksheet for later recovery in the spreadsheet download... ".(join ",", ($self->get_genotyping_user_id(), $self->get_genotyping_project_name()))."\n";
+
+      $genotyping_layout_experiment->create_nd_experimentprops( 
+	  { 
+	      'genotyping_user_id' => $self->get_genotyping_user_id(),
+	      'genotyping_project_name' => $self->get_genotyping_project_name(),
+	  },
+	  { autocreate => 1});
   }
  
-
   my $t = CXGN::Trial->new( { bcs_schema => $chado_schema, trial_id => $project->project_id() } );
   $t->add_location($geolocation->nd_geolocation_id()); # set location also as a project prop
 
