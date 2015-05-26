@@ -129,10 +129,13 @@ formattedPhenoFile <- grep("formatted_phenotype_data",
 formattedPhenoData <- c()
 phenoData <- c()
 message("formatted phenotype dataset file: ", formattedPhenoFile)
+message("size: ", length(formattedPhenoFile))
+print(formattedPhenoData[1:5, 1:5])
 
-if (length(formattedPhenoFile) != 0 ) {
-  if (file.info(formattedPhenoFile)$size > 0 ) {
-
+if (length(formattedPhenoFile) != 0 & file.info(formattedPhenoFile)$size > 1 ) {
+    message("there is formatted data file")
+  if (file.info(formattedPhenoFile)$size > 1 ) {
+    message("there is formatted data")
     formattedPhenoData <- read.table(formattedPhenoFile,
                                      header = TRUE,
                                      row.names = 1,
@@ -143,32 +146,33 @@ if (length(formattedPhenoFile) != 0 ) {
   }
 } else {
 
-message("formatted phenotype dataset file: ", formattedPhenoFile)
-message("in files: ", inFiles)
+  message("formatted phenotype dataset file: ", formattedPhenoFile)
+  message("in files: ", inFiles)
 
-phenoFile <- grep("\\/phenotype_data",
-                  inFiles,
-                  ignore.case = TRUE,
-                  fixed = FALSE,
-                  value = TRUE,
-                  perl = TRUE,
-                  )
+  phenoFile <- grep("\\/phenotype_data",
+                    inFiles,
+                    ignore.case = TRUE,
+                    fixed = FALSE,
+                    value = TRUE,
+                    perl = TRUE,
+                    )
 
-message("phenotype dataset file: ", phenoFile)
-message("dataset info: ", datasetInfo)
+  message("phenotype dataset file: ", phenoFile)
+  message("dataset info: ", datasetInfo)
 
-phenoData <- read.table(phenoFile,
-                        header = TRUE,
-                        row.names = NULL,
-                        sep = "\t",
-                        na.strings = c("NA", " ", "--", "-", "."),
-                        dec = "."
-                        )
+  phenoData <- read.table(phenoFile,
+                          header = TRUE,
+                          row.names = NULL,
+                          sep = "\t",
+                          na.strings = c("NA", " ", "--", "-", "."),
+                          dec = "."
+                          )
 }
 
 phenoTrait         <- c()
 
-if (datasetInfo == 'combined populations') {  
+if (datasetInfo == 'combined populations') {
+  message("dataset info: ", datasetInfo)
     dropColumns <- grep(trait,
                         names(phenoData),
                         ignore.case = TRUE,
