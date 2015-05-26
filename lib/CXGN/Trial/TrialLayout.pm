@@ -167,11 +167,11 @@ sub _get_design_from_trial {
     my %design_info;
 
     if ($genotyping_user_id_row) {       
-	$design_info{genotyping_user_id} = $genotyping_user_id_row->get_column("value");
+	$design_info{genotyping_user_id} = $genotyping_user_id_row->get_column("value") || "unknown";
 	print STDERR "RETRIEVED: genotyping_user_id: $design{genotyping_user_id}\n";
     }
     if ($genotyping_project_name_row) { 
-	$design_info{genotyping_project_name} = $genotyping_project_name_row->get_column("value");
+	$design_info{genotyping_project_name} = $genotyping_project_name_row->get_column("value") || "unknown";
 	print STDERR "RETRIEVED: genotyping_project_name: $design{genotyping_project_name}\n";
     }
     
@@ -418,20 +418,21 @@ sub _get_trial_accession_names_and_control_names {
   return (\@accession_names, \@control_names);
 }
 
-sub _get_genotyping_experiment_metadata { 
-    my $self = shift;
+# sub _get_genotyping_experiment_metadata { 
+#     my $self = shift;
 
-    my $project = $self->get_project();
-    if (!$project) {
-	return;
-    }
-    my $metadata = $project
-	->search_related("nd_experiment_projects")
-	->search_related("nd_experiment")
-   	->find({ 'type.name' => ['genotyping_user_id', 'genotyping_project_name']}, {join => 'type' });
-    return $metadata;
+#     my $project = $self->get_project();
+#     if (!$project) {
+# 	return;
+#     }
+#     my $metadata = $project
+# 	->search_related("nd_experiment_projects")
+# 	->search_related("nd_experiment")
+# 	->search_related("nd_experimentprop")
+#    	->search({ 'type.name' => ['genotyping_user_id', 'genotyping_project_name']}, {join => 'type' });
+#     return $metadata_rs;
     
-}
+# }
 
 
 #######
