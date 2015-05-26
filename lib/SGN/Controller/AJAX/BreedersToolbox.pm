@@ -526,7 +526,7 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
 	trial_name => $name,
 	is_genotyping => 1,
     });
-    
+
     my %message;
 
     eval { 
@@ -682,6 +682,8 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
 	design => $design,
 	trial_name => $meta->{trial_name},
 	is_genotyping => 1,
+	genotyping_user_id => $meta->{user_id} || "unknown",
+	genotyping_project_name => $meta->{project_name} || "unknown",
     });
     
     my %message;
