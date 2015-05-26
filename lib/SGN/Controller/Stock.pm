@@ -49,7 +49,6 @@ sub stock_search :Path('/search/stocks') Args(0) {
     my ($self, $c ) = @_;
     $c->stash(
 	template => '/search/stocks.mas',
-	request                    => $c->req,
        
         stock_types => stock_types($self->schema), 
 	organisms   => stock_organisms($self->schema) ,
