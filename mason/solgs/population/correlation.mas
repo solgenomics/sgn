@@ -49,10 +49,11 @@ $pop_id = $trial_id if $trial_id;
       title       => "Phenotypic correlation analysis"
 &>
 
-<input type="hidden" id="population_id" value="<% $pop_id %>" />
-<div id="correlation_message"  style="font-weight:bold;text-align:center;color:#A7C942">
-<p>Running correlation analysis...</p>
+
+<div id="correlation_canvas">
+  <input id="run_pheno_correlation" class="button" type="button" value="Run correlation" /> 
+  <input type="hidden" id="population_id" value="<% $pop_id %>" />
+  <div id="correlation_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
 </div>
-<div id="correlation_canvas"> </div>
 
 </&>

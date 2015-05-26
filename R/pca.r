@@ -8,7 +8,7 @@
 
 options(echo = FALSE)
 
-library(imputation)
+library(randomForest)
 library(irlba)
 
 allArgs <- commandArgs()
@@ -80,24 +80,18 @@ genoData <- read.table(genoDataFile,
                         dec = "."
                         )
 
+#change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
+genoTrCode <- grep("2", genoData[1, ], fixed=TRUE, value=TRUE)
+if(length(genoTrCode) != 0) {
+  genoData <- genoData - 1
+}
+
 genoDataMissing <- c()
 if (sum(is.na(genoData)) > 0) {
   genoDataMissing <- c('yes')
   message("sum of geno missing values, ", sum(is.na(genoData)) )
-  genoData <-kNNImpute(genoData, 10)
-  genoData <-as.data.frame(genoData)
-
-  #extract columns with imputed values
-  genoData <- subset(genoData,
-                     select = grep("^x", names(genoData))
-                     )
-
-  #remove prefix 'x.' from imputed columns
-  names(genoData) <- sub("x.", "", names(genoData))
-  
-  genoData <- round(genoData, digits = 0)
-  genoData <- data.matrix(genoData)
-  }
+  genoData <- na.roughfix(genoData)
+}
 
 #additive relationship model
 #calculate the inner products for

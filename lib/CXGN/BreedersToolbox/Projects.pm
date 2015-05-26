@@ -218,10 +218,13 @@ sub get_locations_by_breeding_program {
     my $type_id = $self->schema->resultset('Cv::Cvterm')->search( { 'name'=>'plot' })->first->cvterm_id;
 
     if ($breeding_program_id) {
-	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, count(distinct(stock.stock_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) JOIN nd_experiment_project ON (trial.project_id=nd_experiment_project.project_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) JOIN stock ON (nd_experiment_stock.stock_id=stock.stock_id) JOIN nd_geolocation USING (nd_geolocation_id) WHERE project.project_id=? and stock.type_id=? GROUP BY nd_geolocation.nd_geolocation_id, nd_experiment.nd_geolocation_id, nd_geolocation.description";
+	#my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, count(distinct(stock.stock_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) JOIN nd_experiment_project ON (trial.project_id=nd_experiment_project.project_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) JOIN stock ON (nd_experiment_stock.stock_id=stock.stock_id) JOIN nd_geolocation USING (nd_geolocation_id) WHERE project.project_id=? and stock.type_id=? GROUP BY nd_geolocation.nd_geolocation_id, nd_experiment.nd_geolocation_id, nd_geolocation.description";
+
+	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, count(distinct(trial.project_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) JOIN projectprop ON (trial.project_id=projectprop.project_id) JOIN nd_geolocation ON (projectprop.value::INT = nd_geolocation.nd_geolocation_id) JOIN cvterm ON (projectprop.type_id=cvterm.cvterm_id) WHERE project.project_id=? AND cvterm.name='project location' GROUP BY nd_geolocation.nd_geolocation_id,  nd_geolocation.description";
+	
 
 	$h = $self->schema()->storage()->dbh()->prepare($q);
-	$h->execute($breeding_program_id, $type_id);
+	$h->execute($breeding_program_id);
 
     }
     else {
