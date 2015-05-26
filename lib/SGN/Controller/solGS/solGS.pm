@@ -2084,7 +2084,7 @@ sub selection_pops_list :Path('/solgs/selection/populations/') {
     $self->list_of_prediction_pops($c, $tr_pop_id);
     my $selection_pops_list = $c->stash->{list_of_prediction_pops};
 
-    $ret->{selection_pops_list} = 0;
+    my $ret->{selection_pops_list} = 0;
     if ($selection_pops_list) 
     {
 	$ret->{selection_pops_list} = $selection_pops_list;           
