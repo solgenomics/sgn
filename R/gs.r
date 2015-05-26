@@ -66,7 +66,7 @@ datasetInfoFile <- grep("dataset_info",
                         )
 datasetInfo <- c()
 
-if(length(datasetInfoFile) != 0 ) {
+if (length(datasetInfoFile) != 0 ) {
     datasetInfo <- scan(datasetInfoFile,
                         what= "character"
                         )
@@ -128,111 +128,108 @@ formattedPhenoFile <- grep("formatted_phenotype_data",
 
 formattedPhenoData <- c()
 phenoData <- c()
-message("formatted phenotype dataset file: ", formattedPhenoFile)
 
-if (length(formattedPhenoFile) != 0 ) {
-  if (file.info(formattedPhenoFile)$size > 0 ) {
-
+if (length(formattedPhenoFile) != 0 & file.info(formattedPhenoFile)$size > 1 ) {
     formattedPhenoData <- read.table(formattedPhenoFile,
                                      header = TRUE,
                                      row.names = 1,
                                      sep = "\t",
                                      na.strings = c("NA", " ", "--", "-", "."),
-                                     dec = "."
-                                     )
-  }
+                                     dec = ".")
+
 } else {
 
-message("formatted phenotype dataset file: ", formattedPhenoFile)
-message("in files: ", inFiles)
+  phenoFile <- grep("\\/phenotype_data",
+                    inFiles,
+                    ignore.case = TRUE,
+                    fixed = FALSE,
+                    value = TRUE,
+                    perl = TRUE,
+                    )
 
-phenoFile <- grep("\\/phenotype_data",
-                  inFiles,
-                  ignore.case = TRUE,
-                  fixed = FALSE,
-                  value = TRUE,
-                  perl = TRUE,
-                  )
-
-message("phenotype dataset file: ", phenoFile)
-message("dataset info: ", datasetInfo)
-
-phenoData <- read.table(phenoFile,
-                        header = TRUE,
-                        row.names = NULL,
-                        sep = "\t",
-                        na.strings = c("NA", " ", "--", "-", "."),
-                        dec = "."
-                        )
+  phenoData <- read.table(phenoFile,
+                          header = TRUE,
+                          row.names = NULL,
+                          sep = "\t",
+                          na.strings = c("NA", " ", "--", "-", "."),
+                          dec = "."
+                          )
 }
 
-phenoTrait         <- c()
+phenoTrait <- c()
 
-if (datasetInfo == 'combined populations') {  
-    dropColumns <- grep(trait,
-                        names(phenoData),
-                        ignore.case = TRUE,
-                        value = TRUE,
-                        fixed = FALSE
-                        )
-
-    phenoTrait <- phenoData[,!(names(phenoData) %in% dropColumns)]
-   
-    phenoTrait <- as.data.frame(phenoTrait)
-    row.names(phenoTrait) <- phenoTrait[, 1]
-    phenoTrait[, 1] <- NULL
-    colnames(phenoTrait) <- trait
-
-  } else {
-
-    if (!is.null(formattedPhenoData)) {
+if (datasetInfo == 'combined populations') {
+  
+   if (!is.null(formattedPhenoData)) {
       phenoTrait <- subset(formattedPhenoData, select=trait)
       phenoTrait <- na.omit(phenoTrait)
    
     } else {
-    
-      dropColumns <- c("uniquename", "stock_name")
-      phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
-    
-      phenoTrait <- subset(phenoData,
-                           select = c("object_name", "object_id", "design", "block", "replicate", trait)
-                           )
-   
-      experimentalDesign <- phenoTrait[2, 'design']
-  
-      if (class(phenoTrait[, trait]) != 'numeric') {
-        phenoTrait[, trait] <- as.numeric(as.character(phenoTrait[, trait]))
-      }
-      
-      if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
-    
-      if (experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD') {
-        message("experimental design: ", experimentalDesign)
+      dropColumns <- grep(trait,
+                          names(phenoData),
+                          ignore.case = TRUE,
+                          value = TRUE,
+                          fixed = FALSE
+                          )
 
-        augData <- subset(phenoData,
+      phenoTrait <- phenoData[,!(names(phenoData) %in% dropColumns)]
+   
+      phenoTrait <- as.data.frame(phenoTrait)
+      row.names(phenoTrait) <- phenoTrait[, 1]
+      phenoTrait[, 1] <- NULL
+      colnames(phenoTrait) <- trait
+    }
+   
+} else {
+
+  if (!is.null(formattedPhenoData)) {
+    phenoTrait <- subset(formattedPhenoData, select=trait)
+    phenoTrait <- na.omit(phenoTrait)
+   
+  } else {
+    
+    dropColumns <- c("uniquename", "stock_name")
+    phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
+    
+    phenoTrait <- subset(phenoData,
+                         select = c("object_name", "object_id", "design", "block", "replicate", trait)
+                         )
+   
+    experimentalDesign <- phenoTrait[2, 'design']
+  
+    if (class(phenoTrait[, trait]) != 'numeric') {
+      phenoTrait[, trait] <- as.numeric(as.character(phenoTrait[, trait]))
+    }
+      
+    if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
+    
+    if (experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD') {
+      message("experimental design: ", experimentalDesign)
+
+      augData <- subset(phenoData,
                           select = c("object_name", "object_id",  "block",  trait)
                           )
 
-        colnames(augData)[1] <- "genotypes"
-        colnames(augData)[4] <- "trait"
+      colnames(augData)[1] <- "genotypes"
+      colnames(augData)[4] <- "trait"
        
-        ff <- trait ~ 0 + genotypes
+      ff <- trait ~ 0 + genotypes
     
-        model <- lme(ff,
-                     data=augData,
-                     random = ~1|block,
-                     method="REML",
-                     na.action = na.omit
-                     )
+      model <- lme(ff,
+                   data=augData,
+                   random = ~1|block,
+                   method="REML",
+                   na.action = na.omit
+                   )
    
-        adjMeans <- data.matrix(fixed.effects(model))
+      adjMeans <- data.matrix(fixed.effects(model))
      
-        nn <- gsub('genotypes', '', rownames(adjMeans))
-        rownames(adjMeans) <- nn
-        adjMeans <- round(adjMeans, digits = 3)
+      nn <- gsub('genotypes', '', rownames(adjMeans))
+      rownames(adjMeans) <- nn
+      adjMeans <- round(adjMeans, digits = 3)
         
-        phenoTrait <- data.frame(adjMeans)
-        colnames(phenoTrait) <- trait
+      phenoTrait <- data.frame(adjMeans)
+      colnames(phenoTrait) <- trait
             
     } else if (experimentalDesign == 'Alpha') {
       message("experimental design: ", experimentalDesign)
@@ -306,7 +303,7 @@ if (datasetInfo == 'combined populations') {
       }
     }
   }
-
+ 
 genoFile <- grep("genotype_data",
                  inFiles,
                  ignore.case = TRUE,                
