@@ -36,7 +36,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $matchtype = $params->{any_name_matchtype};
     my $any_name  = $params->{any_name};
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
     
     my ($or_conditions, $and_conditions);
     if (exists($params->{any_name} ) && $params->{any_name} ) {
@@ -52,7 +52,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	}
 
 	$or_conditions = [ 
-	    { name          => {'ilike', $start.$params->{any_name}.$end} },  
+	    { 'me.name'     => {'ilike', $start.$params->{any_name}.$end} },  
 	    { uniquename    => {'ilike', $start.$params->{any_name}.$end} },  
 	    { description   => {'ilike', $start.$params->{any_name}.$end} } 
 	    ] ; 
@@ -63,7 +63,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     
     ###############
     if (exists($params->{organism} ) && $params->{organism} ) {
-	$and_conditions->{organism_id} = $params->{organism} ;
+	$and_conditions->{'me.organism_id'} = $params->{organism} ;
 	
     }
 
@@ -100,19 +100,24 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		],
 	} ,
 	{ 
-	    page => $page, 
-	    rows => $rows, 
-	    order_by => "name" 
+	    join      => [ 'type' , 'organism' ],
+	    '+select' => [ 'type.name' , 'organism.species' ],
+	    '+as'     => [ 'cvterm_name' , 'species' ],
+	    page      => $page, 
+	    rows      => $rows, 
+	    order_by  => 'me.name' 
 	} 
 	);
 	
 
     my @result;
-    while (my $a     = $rs2->next()) { 
-	my $uniquename = $a->uniquename;
-	my $type     = $a->type_id ;
-	my $organism = $a->organism_id;
-	my $stock_id = $a->stock_id;
+    while (my $a        = $rs2->next()) { 
+	my $uniquename  = $a->uniquename;
+	my $type_id     = $a->type_id ;
+	my $type        = $a->get_column('cvterm_name');
+	my $organism_id = $a->organism_id;
+	my $organism    = $a->get_column('species');
+	my $stock_id    = $a->stock_id;
 	push @result, [  "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism ];
     }
 
