@@ -59,10 +59,8 @@ my $advanced_search=  info_table_html(
     <th>Organism</th>
     <th>Locus name</th>
     <th>Locus symbol</th>
-    <th>Allele name</th>
-    <th>Allele symbol</th>
-    <th>Allele phenoytpe</th>
-</tr>
+    <th>Alleles</th>
+  </tr>
 </thead>
 
 </table>
