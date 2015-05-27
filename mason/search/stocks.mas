@@ -6,7 +6,8 @@
   $onto_autocomplete_uri      => '/ajax/cvterm/autocomplete'
   $trait_db_name              => 'SP'
 
-  $organism_ref       => undef
+  $organisms       => undef
+  $stock_types     => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects' ] &>
