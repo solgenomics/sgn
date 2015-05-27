@@ -22,11 +22,15 @@ use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_select
 
 my $any_name_select = conditional_like_input_html("any_name","contains", "", '30');
 
+my $stock_type_select = simple_selectbox_html(
+  choices   => $stock_types,
+  id        => "stock_type_select",
+);
 
-my $organism; #= simple_selectbox_html(
- #choices  =>  $organism_ref   ,
-# id       => "common_name",
-#);
+my $organism_select = simple_selectbox_html(
+  choices  =>  $organisms   ,
+  id       => "organism_select",
+);
 
 </%perl>
 
@@ -60,8 +64,8 @@ Copy items on this page to list:
     </tr>
   <tr><td><label for="any_name_matchtype">Stock name or description</label></td><td colspan="2"><% $any_name_select %></td>
     </tr>
-  <tr><td><label for="stock_type">Stock type</label></td><td><input id="stock_type"></td>
-    <td><label for="organism">Organism</label></td><td><input id="organism"></td>
+  <tr><td><label for="stock_type_select">Stock type</label></td><td><% $stock_type_select %></td>
+    <td><label for="organism_select">Organism</label></td><td><% $organism_select %></td>
     </tr>
   <tr><td><label for="person">Stock owner</label></td><td><input id="person"></td>
     <td><label for="trait">Trait</label></td><td><input id="trait"></td>
@@ -120,8 +124,8 @@ jQuery(document).ready(function () {
                'data': function(d) { 
                   d.any_name  = jQuery('#any_name').val();
                   d.any_name_matchtype = jQuery('#any_name_matchtype').val();
-                  d.stock_type   = jQuery('#stock_type').val(); 
-                  d.organism     = jQuery('#organism').val(); 
+                  d.stock_type   = jQuery('#stock_type_select').val(); 
+                  d.organism     = jQuery('#organism_select').val(); 
                   d.person       = jQuery('#person').val(); 
                   d.trait        = jQuery('#trait').val(); 
                   d.project      = jQuery('#project').val(); 
