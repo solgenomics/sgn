@@ -1,0 +1,34 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<table id="phenotype_summary_data" class="display">
+<thead>
+  <tr>
+    <th>Trait</th>
+    <th>Count</th>
+</tr>
+</thead>
+
+</table>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<script>
+
+jQuery(document).ready(function () {
+
+   jQuery('#phenotype_summary_data').DataTable( { 
+       'ajax': '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes',
+   });
+
+
+
+});
+
+
+  
+</script>

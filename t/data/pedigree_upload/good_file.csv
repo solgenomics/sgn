@@ -1,2 +1,3 @@
-blabla1	test_accession2	test_accession3
-blabla2	test_accession4	test_accession3
+progeny name	female parent accession	male parent accession
+test_accession1	test_accession2	test_accession3
+test_accession2	test_accession4	test_accession3

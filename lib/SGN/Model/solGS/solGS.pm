@@ -31,7 +31,7 @@ use File::Spec::Functions;
 use List::MoreUtils qw / uniq /;
 use JSON::Any;
 use Math::Round::Var;
-
+use Scalar::Util qw(looks_like_number);
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 
@@ -270,6 +270,14 @@ sub project_details {
 }
 
 
+sub project_details_by_name {
+    my ($self, $pr_name) = @_;
+    
+    return $self->schema->resultset("Project::Project")
+        ->search( {'me.name' => $pr_name});
+}
+
+
 sub get_population_details {
     my ($self, $pop_id) = @_;
    
@@ -278,7 +286,7 @@ sub get_population_details {
         {
             'stock_id' => $pop_id
         }, 
-        );
+	);
 }
 
 
@@ -404,9 +412,6 @@ sub set_project_type {
 }
 
 
-
-
-
 sub get_project_type {
     my ($self, $pr_id) = @_;
    
@@ -505,14 +510,11 @@ sub get_stock_owners {
 }
 
 
-
-
-
 sub search_stock {
     my ($self, $stock_name) = @_;
   
     my $rs = $self->schema->resultset("Stock::Stock")
-        ->search({'me.name' =>  $stock_name});
+        ->search({'me.uniquename' => $stock_name});
    
     return $rs; 
 
@@ -535,7 +537,7 @@ sub search_stock_using_plot_name {
     my ($self, $plot_name) = @_;
   
     my $rs = $self->schema->resultset("Stock::Stock")
-        ->search({'me.uniquename' =>  $plot_name});
+        ->search({'me.uniquename' => {-in =>   $plot_name}});
          
     return $rs; 
 
@@ -624,8 +626,7 @@ sub genotype_data {
                 else 
                 { 
                     print STDERR "\nstocks excluded duplicate:$stock\n";
-                }
-   
+                }   
             } 
         }        
         else 
@@ -677,69 +678,61 @@ sub genotype_data {
 sub format_user_list_genotype_data {
     my $self = shift;
 
-    my @genotypes = ();
-
     my $population_type = $self->context->stash->{population_type};
-    
-    if($population_type =~ /reference/) 
-        
+   
+    my @genotypes;
+
+    if ($population_type =~ /reference/)         
     {
-       my  @plots_names = @{ $self->context->stash->{reference_population_plot_names} };
-         
-        foreach my $plot_name (@plots_names)
-        {
-            my $stock_plot_rs = $self->search_stock_using_plot_name($plot_name);
-            my $stock_id = $stock_plot_rs->single->stock_id;
-            my $stock_obj_rs = $self->map_subject_to_object($stock_id);
-            my $genotype_name = $stock_obj_rs->single->name;
-            push @genotypes, $genotype_name;
-        }
+	my  @plots = @{ $self->context->stash->{reference_population_plot_names} };
+	my $genotypes_rs = $self->get_genotypes_from_plots(\@plots);
+	
+	while (my $genotype = $genotypes_rs->next) {
+	    my $name = $genotype->uniquename;
+	    push @genotypes, $name;
+
+	}
     }
     else
     {
-        @genotypes = @{ $self->context->stash->{selection_genotypes_list_stocks_names} };
+	@genotypes = @{$self->context->stash->{genotypes_list}};
+	    
     }    
-              
+ 
     @genotypes = uniq(@genotypes);
-
+   
     my $geno_data;
     my $header_markers;
     my @header_markers;
 
-    foreach my $genotype (@genotypes) 
-    { 
-        my $stock_rs = $self->search_stock($genotype);     
-        my $stock_genotype_rs = $self->individual_stock_genotypes_rs($stock_rs);
-       
-        unless ($header_markers) 
-        {
-            if($stock_genotype_rs->single)
-            {
-                $header_markers   = $self->extract_project_markers($stock_genotype_rs);                
-                $geno_data = "\t" . $header_markers . "\n";
-                @header_markers = split(/\t/, $header_markers);
-            }
+    my $list_genotypes_rs = $self->accessions_list_genotypes_rs(\@genotypes);
+
+    while (my $stock_genotype = $list_genotypes_rs->next) {
+
+	my $stock_name = $stock_genotype->get_column('stock_name');
+
+	unless ($header_markers) 
+	{
+	    $header_markers   = $self->extract_project_markers($stock_genotype);                
+	    $geno_data = "\t" . $header_markers . "\n";
+	    @header_markers = split(/\t/, $header_markers);
         }
       
-        while (my $geno = $stock_genotype_rs->next)
-        {  
-            my $json_values  = $geno->get_column('value');
-            my $values       = JSON::Any->decode($json_values);
-            my @markers      = keys %$values;
+	my $json_values  = $stock_genotype->get_column('value');
+	my $values       = JSON::Any->decode($json_values);
+	my @markers      = keys %$values;
             
-            my $common_markers = scalar(intersect(@header_markers, @markers));
-
-            my $similarity = $common_markers / scalar(@header_markers);
-                  
-            if ($similarity == 1 )     
-            {
-                my $geno_values = $self->stock_genotype_values($geno);               
-                $geno_data .= $geno_values;
-            }       
-        }       
+	my $common_markers = scalar(intersect(@header_markers, @markers));
+	my $similarity = $common_markers / scalar(@header_markers);
+	
+	if ($similarity == 1 )     
+	{
+	    my $geno_values = $self->stock_genotype_values($stock_genotype);               
+	    $geno_data .= $geno_values;
+	}       
     }
 
-    if($population_type =~ /reference/) 
+    if ($population_type =~ /reference/) 
     {
         $self->context->stash->{user_reference_list_genotype_data} = $geno_data;
     }
@@ -773,7 +766,7 @@ sub project_genotype_data_rs {
 			 {},               
                          { 
 			     select   => [qw / genotypeprops.genotypeprop_id genotypeprops.value 
-                                            me.project_id me.name object.stock_id object.name/ ],
+                                            me.project_id me.name object.stock_id object.uniquename / ],
 			     as       => [ qw / genotypeprop_id value project_id project_name stock_id stock_name / ],
 			     distinct => [ qw / stock_name /]
                          }
@@ -796,7 +789,29 @@ sub individual_stock_genotypes_rs {
 	->search_related('type',
                          {'type.name' => {'ilike' => 'snp genotyping'}},
                          {  
-                             select => [ qw / me.stock_id me.name  genotypeprops.genotypeprop_id genotypeprops.value / ], 
+                             select => [ qw / me.stock_id me.uniquename  genotypeprops.genotypeprop_id genotypeprops.value / ], 
+                             as     => [ qw / stock_id stock_name  genotypeprop_id value/ ] 
+                         }
+        );
+
+    return $genotype_rs;
+
+}
+
+
+sub accessions_list_genotypes_rs {
+    my ($self, $accessions_list) = @_;
+    my $genotype_rs = $self->schema->resultset("Stock::Stock")
+        ->search({ 'me.uniquename' => {-in => $accessions_list} })
+        ->search_related('nd_experiment_stocks')
+        ->search_related('nd_experiment')
+        ->search_related('nd_experiment_genotypes')
+        ->search_related('genotype')
+        ->search_related('genotypeprops')
+	->search_related('type',
+                         {'type.name' => {'ilike' => 'snp genotyping'}},
+                         {  
+                             select => [ qw / me.stock_id me.uniquename  genotypeprops.genotypeprop_id genotypeprops.value / ], 
                              as     => [ qw / stock_id stock_name  genotypeprop_id value/ ] 
                          }
         );
@@ -818,7 +833,7 @@ sub stock_genotypes_rs {
         ->search_related('type',
                          {'type.name' =>{'ilike'=> 'snp genotyping'}}, 
                          { 
-                             select => [ qw / me.project_id me.name object.stock_id object.name  
+                             select => [ qw / me.project_id me.name object.stock_id object.uniquename  
                                                  genotypeprops.genotypeprop_id genotypeprops.value/ ], 
                              as     => [ qw / project_id project_name stock_id stock_name genotypeprop_id value / ] 
                          }
@@ -882,7 +897,7 @@ sub prediction_genotypes_rs {
 			 {}, 
                          { 
 			     select   => [qw / genotypeprops.genotypeprop_id genotypeprops.value 
-                                            me.project_id me.name stock.stock_id stock.name/ ],
+                                            me.project_id me.name stock.stock_id stock.uniquename/ ],
 			     as       => [ qw / genotypeprop_id value project_id project_name stock_id stock_name / ],
 			     distinct => [ qw / stock_name /]
                          }
@@ -894,25 +909,21 @@ sub prediction_genotypes_rs {
 
 
 sub extract_project_markers {
-    my ($self, $genopropvalue_rs) = @_;
-   
-    my $row = $genopropvalue_rs->first;
+    my ($self, $geno_row) = @_;
+ 
     my $markers;
 
-    if (defined $row)    
-    {
-        my $genotype_json = $row->get_column('value');
-        my $genotype_hash = JSON::Any->decode($genotype_json);
+    my $genotype_json =  $geno_row->get_column('value');
+    my $genotype_hash = JSON::Any->decode($genotype_json);
 
-        my @markers = keys %$genotype_hash;
+    my @markers = keys %$genotype_hash;
    
-        foreach my $marker (@markers) 
-        {
-            $markers .= $marker;
-            $markers .= "\t" unless $marker eq $markers[-1];
-        }
+    foreach my $marker (@markers) 
+    {
+	$markers .= $marker;
+	$markers .= "\t" unless $marker eq $markers[-1];
     }
-    
+ 
     return $markers;  
 }
 
@@ -923,15 +934,10 @@ sub stock_genotype_values {
     my $json_values  = $geno_row->get_column('value');
     my $values       = JSON::Any->decode($json_values);
     my @markers      = keys %$values;
-   
-    my $stock_name = $geno_row->get_column('stock_name');
-    my $size = scalar(@markers);
-   
+      
     my $round =  Math::Round::Var->new(0);
-        
-    my $geno_values;
-              
-    $geno_values .= $geno_row->get_column('stock_name') . "\t";
+                      
+    my $geno_values = $geno_row->get_column('stock_name') . "\t";
    
     foreach my $marker (@markers) 
     {        
@@ -941,7 +947,7 @@ sub stock_genotype_values {
     }
 
     $geno_values .= "\n";      
-    
+
     return $geno_values;
 }
 
@@ -1014,13 +1020,11 @@ sub prediction_pops {
 	      my $potential_selection;
 	     
 	      if ($pred_marker_cnt)  
-	      {
-	
+	      {	
 		  if ( scalar(@tr_pop_markers) / $pred_marker_cnt  > 0.5  )
 		  {
 		      $potential_selection = 'yes'; 
 		  }
-
 	      }
 	      
 	      if (!$pred_marker_cnt || ($pred_marker_cnt && $potential_selection))
@@ -1042,7 +1046,7 @@ sub prediction_pops {
 		      my $stock_rs = $self->search_stock($obj_name);     
 		      $stock_genotype_rs = $self->individual_stock_genotypes_rs($stock_rs);
             
-		      my $markers   = $self->extract_project_markers($stock_genotype_rs);
+		      my $markers   = $self->extract_project_markers($stock_genotype_rs->first);
 		     
 		      if ($markers) 
 		      {
@@ -1084,29 +1088,18 @@ sub prediction_pops {
 sub format_user_reference_list_phenotype_data {
     my $self = shift;
 
-    my @plots_names  = ();
+    my @plots_names;
     my $population_type = $self->context->stash->{population_type};
     
-    if($population_type =~ /reference/) 
-        
+    if ($population_type =~ /reference/)         
     {
         @plots_names = @{ $self->context->stash->{reference_population_plot_names} };
     }
 
-    my $results = [];
-    my $data;
-    
-    foreach my $plot_name (@plots_names) {
-        my $stock_rs = $self->search_stock_using_plot_name($plot_name);
-        my $stock_pheno_data_rs = $self->stock_phenotype_data_rs($stock_rs);
-        push @$results, $stock_pheno_data_rs;
-    }
-
-    $data     = $self->phenotypes_by_trait($results);
-    
+    my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs(\@plots_names);
+  
+    my $data = $self->structure_phenotype_data($stock_pheno_data_rs);
     $self->context->stash->{user_reference_list_phenotype_data} = $data;     
-
-
 }
 
 
@@ -1115,19 +1108,20 @@ sub project_traits {
   
   my $rs = $self->schema->resultset("Project::Project")
       ->search({"me.project_id"  => $pr_id })
-       ->search_related("nd_experiment_projects")
-       ->search_related("nd_experiment")
-       ->search_related("nd_experiment_phenotypes")
-       ->search_related("phenotype")
-       ->search_related("observable",
-       {},
-       {
-           distinct => [qw / observable.name / ],
-           order_by => [qw / observable.name / ]
-       }
-       );
+      ->search_related("nd_experiment_projects")
+      ->search_related("nd_experiment")
+      ->search_related("nd_experiment_phenotypes")
+      ->search_related("phenotype")
+      ->search_related("observable",
+		       {},
+		       {
+			   distinct => [qw / observable.name / ],
+			   order_by => [qw / observable.name / ]
+		       }
+      );
 
-       return $rs;
+  return $rs;
+
 }
 
 # sub project_trait_phenotype {
@@ -1216,8 +1210,7 @@ sub get_plot_phenotype_data {
     my $cnt=0;
    
     while (my $pl_r = $plot_pheno_rs->next) 
-    {
-        
+    {        
         my $trait = $pl_r->get_column('cvterm_name');
         my $value = $pl_r->value;
        
@@ -1225,7 +1218,6 @@ sub get_plot_phenotype_data {
         $d  .= "\t" . $value;
        
         $cnt++;
-
     }
    
     return $d, $dh;
@@ -1236,12 +1228,40 @@ sub get_plot_phenotype_data {
 sub project_phenotype_data_rs {
     my ($self, $project_id) = @_;
   
-
     my $rs = $self->schema->resultset("Stock::Stock")->search(
         {
             'observable.name' => { '!=', undef } ,
-            'project.project_id'     => $project_id,
-            
+            'project.project_id'     => $project_id,           
+        }, {
+            join => [
+                { nd_experiment_stocks => {
+                    nd_experiment => {
+                        nd_experiment_phenotypes => {
+                            phenotype => 'observable'                    
+                        },
+                                nd_experiment_projects => 'project',
+                    },
+                  }
+                } ,
+                ],
+            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description / ],
+            as       => [ qw/ stock_id uniquename value observable observable_id project_description / ],
+          
+            order_by => [  'observable.name' ],
+        });
+              
+    return $rs;
+
+}
+     
+              
+sub plots_list_phenotype_data_rs {
+    my ($self, $plots) = @_;
+  
+    my $rs = $self->schema->resultset("Stock::Stock")->search(
+        {
+            'observable.name' => { '!=', undef } ,
+            'me.uniquename'   => { -in => $plots },
         } , {
             join => [
                 { nd_experiment_stocks => {
@@ -1260,11 +1280,10 @@ sub project_phenotype_data_rs {
             order_by => [  'observable.name' ],
         }  );
           
-    
     return $rs;
 }
-     
-              
+
+
 sub stock_phenotype_data_rs {
     my $self = shift;
     my $stock = shift;
@@ -1341,71 +1360,77 @@ sub structure_phenotype_data {
              
     }
 
-    my @data;
-    my $d = "uniquename\tobject_name\tobject_id\tstock_id\tstock_name\tdesign\tblock\treplicate";
-    foreach my $term_name (sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms )  
+    my $d;
+
+    if (keys %cvterms) 
     {
-        $d .=  "\t" . $term_name;
-    }
-
-    $d .= "\n";
-
-    my @project_genotypes;
-
-    foreach my $key ( sort keys %$phen_hashref ) 
-    {        
-        my $subject_id       = $phen_hashref->{$key}{stock_id};
-        my $stock_object_row = $self->map_subject_to_object($subject_id)->single;
-
-	my ($object_name, $object_id);
-	if ($stock_object_row) 
+	$d = "uniquename\tobject_name\tobject_id\tstock_id\tstock_name\tdesign\tblock\treplicate";
+	foreach my $term_name (sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms )  
 	{
-	    $object_name      = $stock_object_row->name;
-	    $object_id        = $stock_object_row->stock_id;
-        
-	    push @project_genotypes, $object_name;
+	    $d .=  "\t" . $term_name;
 	}
 
-        $d .= $key . "\t" .$object_name . "\t" . $object_id . "\t" . $phen_hashref->{$key}{stock_id} . 
+	$d .= "\n";
+
+	my @project_genotypes;
+
+	foreach my $key ( sort keys %$phen_hashref ) 
+	{        
+	    my $subject_id       = $phen_hashref->{$key}{stock_id};
+	    my $stock_object_row = $self->map_subject_to_object($subject_id)->single;
+
+	    my ($object_name, $object_id);
+	    if ($stock_object_row) 
+	    {
+		$object_name      = $stock_object_row->uniquename;
+		$object_id        = $stock_object_row->stock_id;
+        
+		push @project_genotypes, $object_name;
+	    }
+
+	    $d .= $key . "\t" .$object_name . "\t" . $object_id . "\t" . $phen_hashref->{$key}{stock_id} . 
               "\t" . $phen_hashref->{$key}{stock_name};
 
-        my $block     = 'NA';
-        my $replicate = 'NA';
-        my $design    = 'NA';
-        my $trial_id  = $self->context->stash->{pop_id};
-        my $design_rs = $self->experimental_design($trial_id);
+	    my $block     = 'NA';
+	    my $replicate = 'NA';
+	    my $design    = 'NA';
+	    my $trial_id  = $self->context->stash->{pop_id};
+	    my $design_rs = $self->experimental_design($trial_id);
 
-        if($design_rs->next)       
-        {
-            $design = $design_rs->first->value();
-        } 
+	    if ($design_rs->next)       
+	    {
+		$design = $design_rs->first->value();
+	    } 
         
-        my $block_rs = $self->search_plotprop($subject_id, 'block');
-        if($block_rs->next)
+	    my $block_rs = $self->search_plotprop($subject_id, 'block');
+	    if($block_rs->next)      
+	    {
+		$block = $block_rs->first->value();
+	    } 
         
-        {
-            $block = $block_rs->first->value();
-        } 
-        
-        my $replicate_rs = $self->search_plotprop($subject_id, 'replicate');     
-        if($replicate_rs->next)       
-        {
-            $replicate = $replicate_rs->first->value();
-        }
+	    my $replicate_rs = $self->search_plotprop($subject_id, 'replicate');     
+	    if($replicate_rs->next)       
+	    {
+		$replicate = $replicate_rs->first->value();
+	    }
 
-        $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
+	    $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
 
-        foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
-        {           
-            $d .= "\t" . $phen_hashref->{$key}{$term_name};
-        }
-
-        $d .= "\n";
-    }
+	    foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
+	    {    
+		my $val = $phen_hashref->{$key}{$term_name};
+		unless (looks_like_number($val)) 
+		{ 
+		    $val = "NA";		  
+		}
+		$d .= "\t" . $val;
+	    }
+	    $d .= "\n";
+	}
    
-    @project_genotypes = uniq(@project_genotypes);
-    $self->context->stash->{project_genotypes} = \@project_genotypes;
-
+	@project_genotypes = uniq(@project_genotypes);
+	$self->context->stash->{project_genotypes} = \@project_genotypes;
+    }
     return $d;
 }
 
@@ -1476,7 +1501,7 @@ sub phenotypes_by_trait {
 
         my $subject_id       = $phen_hashref->{$key}{stock_id};
         my $stock_object_row = $self->map_subject_to_object($subject_id)->single;       
-        my $object_name      = $stock_object_row->name;
+        my $object_name      = $stock_object_row->uniquename;
         my $object_id        = $stock_object_row->stock_id;
             
         $d .= $key . "\t" .$object_name . "\t" . $object_id . "\t" . $phen_hashref->{$key}{stock_id} . 
@@ -1509,7 +1534,14 @@ sub phenotypes_by_trait {
         $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
 
         foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
-        {           
+        { 
+	    	my $val = $phen_hashref->{$key}{$term_name};
+	
+		unless (looks_like_number($val)) 
+		{ 
+		    $val = "NA";
+		}
+		$d .= "\t" . $val;
             $d .= "\t" . $phen_hashref->{$key}{$term_name};
         }
 
@@ -1611,11 +1643,23 @@ sub map_subject_to_object {
 }
 
 
+sub get_genotypes_from_plots {
+    my ($self, $plots) = @_;
+
+    my $genotypes_rs = $self->schema->resultset("Stock::Stock")
+        ->search({'me.uniquename' =>{-in =>  $plots}})
+        ->search_related('stock_relationship_subjects')
+        ->search_related('object');
+         
+    return $genotypes_rs;
+}
+
+
 sub get_genotyping_markers {
     my ($self, $pr_id) = @_;
 
     my $stock_genotype_rs = $self->project_genotype_data_rs($pr_id);   
-    my $markers           = $self->extract_project_markers($stock_genotype_rs);
+    my $markers           = $self->extract_project_markers($stock_genotype_rs->first);
    
     return $markers;
 }

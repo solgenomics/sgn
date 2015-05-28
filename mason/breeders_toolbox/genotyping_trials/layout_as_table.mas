@@ -15,6 +15,7 @@ $design
 % foreach my $row ("A".."H") { 
   <tr><td><% $row %></td>
 %   foreach my $col (1..12) { 
+%      $col = sprintf "%02d", $col;
     <td>
       <% $design->{$row.$col}->{accession_name} %>
     </td>

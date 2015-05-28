@@ -1,30 +1,11 @@
 // Depends on CXGN.BreedersToolbox.HTMLSelect
 
-// function get_breeding_select() { 
-//     var programs = new Array();
-//     jQuery.ajax( { 
-// 	url: '/ajax/breeders/all_programs',
-// 	success: function(response) { 
-//             programs = response;
-//             var html = "";
-	    
-//             for (var i=0; i< programs.length; i++) {  
-// 		html += '<option value='+programs[i][0]+'>'+programs[i][1]+'</a>';
-//             }
-//             jQuery('#change_breeding_program_select').html(html);	
-// 	},
-// 	error: function(response){ 
-//             alert("An error occurred.");
-// 	}
-//     });
-// }
-
 function delete_phenotype_data_by_trial_id(trial_id) { 
     var yes = confirm("Are you sure you want to delete all phenotypic data associated with trial "+trial_id+" ? This action cannot be undone.");
     if (yes) { 
 	jQuery('#working').dialog("open");
 	jQuery.ajax( { 
-            url: '/breeders/trial/phenotype/delete/id/'+trial_id,
+            url: '/ajax/breeders/trial/'+trial_id+'/delete/phenotypes',
             success: function(response) { 
 		if (response.error) { 
 		    jQuery('#working').dialog("close");
@@ -33,6 +14,7 @@ function delete_phenotype_data_by_trial_id(trial_id) {
 		else { 
 		    jQuery('#working').dialog("close");
 		    alert('The phenotypic data has been deleted.'); // to do: give some idea how many items were deleted.
+		    window.location.href="/breeders/trial/"+trial_id;
 		}
             },
             error: function(response) { 
@@ -49,7 +31,7 @@ function delete_layout_data_by_trial_id(trial_id) {
 	jQuery('#working').dialog("open");
 	
 	jQuery.ajax( { 
-            url: '/breeders/trial/layout/delete/id/'+trial_id,
+            url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
             success: function(response) { 
 		if (response.error) { 
 		    jQuery('#working').dialog("close");
@@ -58,6 +40,7 @@ function delete_layout_data_by_trial_id(trial_id) {
 		else { 
 		    jQuery('#working').dialog("close");
 		    alert('The layout data has been deleted.'); // to do: give some idea how many items were deleted.
+		    window.location.href="/breeders/trial/"+trial_id;
 		}
             },
             error: function(response) { 
@@ -66,6 +49,33 @@ function delete_layout_data_by_trial_id(trial_id) {
             }
 	});
     }
+}
+
+function delete_project_entry_by_trial_id(trial_id) { 
+       var yes = confirm("Are you sure you want to delete the trial entry for trial "+trial_id+" ? This action cannot be undone.");
+    if (yes) { 
+	jQuery('#working').dialog("open");
+	
+	jQuery.ajax( { 
+            url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
+            success: function(response) { 
+		if (response.error) { 
+		    jQuery('#working').dialog("close");
+		    alert(response.error);
+		}
+		else { 
+		    jQuery('#working').dialog("close");
+		    alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
+		    window.location.href="/breeders/trial/"+trial_id;
+		}
+            },
+            error: function(response) { 
+		jQuery('#working').dialog("close");
+		alert("An error occurred.");
+            }
+	});
+    }
+
 }
 
 function associate_breeding_program() { 
@@ -183,21 +193,6 @@ function trial_detail_page_setup_dialogs() {
 	    'Cancel': function() { jQuery('#change_breeding_program_dialog').dialog("close"); }
 	}
     });
-
-    // jQuery('#change_year_dialog').dialog( { 
-    // 	height: 150,
-    // 	width: 300,
-    // 	title: 'Select start year',
-    // 	autoOpen: false,
-    // 	buttons:  {
-    // 	    'OK': function() {
-    // 		change_year();
-    // 		jQuery('#change_year_dialog').dialog("close"); 
-    // 		save_trial_year();
-    // 	    },
-    // 	    'Cancel': function() { jQuery('#change_breeding_program_dialog').dialog("close"); }
-    // 	}
-    // });
     
     jQuery( "#tablet_field_layout_saved_dialog_message" ).dialog({
 	autoOpen: false,
@@ -251,6 +246,13 @@ function trial_detail_page_setup_dialogs() {
 	    delete_layout_data_by_trial_id(trial_id);
 	});
     
+    jQuery('#delete_trial_entry_by_trial_id').click( 
+	function() { 
+	    var trial_id = get_trial_id();
+	    delete_project_entry_by_trial_id(trial_id);
+	});
+
+
     jQuery('#create_spreadsheet_link').click(function () {
 	open_create_spreadsheet_dialog();
     });
@@ -514,11 +516,6 @@ function save_trial_description() {
             alert("An error occurred updating the trial description");
 	},
     });
-
-
-
-
-
 }
 
 function display_trial_location(trial_id) { 

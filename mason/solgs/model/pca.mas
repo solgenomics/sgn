@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME 
-/mode/pca.mas - displays population structure analysis(PCA) output
+/solgs/model/pca.mas - displays population structure analysis(PCA) output
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)
@@ -32,7 +32,7 @@ my $pop_id = $trial_id if $trial_id;
 }
 
 </style>
-
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 <& /util/import_javascript.mas, classes => ["solGS.pca"] &>
 
 <&| /page/info_section.mas, 
@@ -40,15 +40,15 @@ my $pop_id = $trial_id if $trial_id;
   collapsed   => 0, 
   title       => "Population structure analysis - PCA" 
 &> 
-<div id="pca_canvas"></div>
-<div id="pca_plot"></div>
-  <div id="pca_message" style="font-weight:bold;text-align:center;color:#A7C942">
-    <p>Running population structure analysis (PCA)...</p>
-  </div>
 
+<input id="run_pca" class="button" type="button" value="Run PCA" /> 
+<div id="pca_canvas"></div>
+<div id="pca_plot"></div> 
+<div id="pca_message" style="font-weight:bold;text-align:center;color:#A7C942"></div>
+<input type="hidden" id="population_id" value="<% $pop_id %>" /> 
 
 </&>
 
 
 
-<input type="hidden" id="population_id" value="<% $pop_id %>" /> 
+

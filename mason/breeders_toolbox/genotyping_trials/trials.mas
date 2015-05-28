@@ -15,6 +15,16 @@ $trials_by_breeding_project => ()
   .group { zoom: 1 }
   .genotyping_trial_list_table  {border-spacing:7px;}
   </style>
+
+
+<div id="new_submission_process_explanation">
+<b>Instructions:</b><br />Please note the changes to the submission process for the Cornell genotyping facility (all Cassavabase users). 
+<ol><li>Go to <a href=" https://slims.biotech.cornell.edu">slims.biotech.cornell.edu</a> to get a tab delimited spreadsheet file containing information on the genotyping trial name and where to insert the blank.</li>
+<li>Use the "Create IGD Genotyping Trial" link on this page to upload the file, together with a list of accessions.</li>
+<li>Use the link on the trial detail page to create the file to proceed with the submission.</li>
+</ol>
+</div>
+
 <div id="genotyping_trials_accordion">
   <%perl>
   foreach my $p (sort keys %$trials_by_breeding_project){
@@ -38,25 +48,14 @@ $trials_by_breeding_project => ()
 
 <div id="genotyping_trial_dialog" class="ui-widget">
 
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotyping_trials_form" name="upload_genotyping_trials_form">
 
     <label for="breeding_program_select_div" style="display: inline-block; width: 150px;">Breeding Program:</label>
-    <!-- select id="genotyping_trial_breeding_program" name="genotyping_trial_breeding_program">
-      <%perl>
-        foreach my $program (@breeding_programs) {
-          print "<option value=".@$program[1].">".@$program[1]."</option>";
-        }
-      </%perl>
-    </select -->
+
     <span id="breeding_program_select_div"></span>
     <br /><br />
     
     <label for="location_select_div" style="display: inline-block; width: 150px;">Location:</label>
-    <!-- select id="genotyping_trial_location" name="genotyping_trial_locaton_location">
-      <%perl>foreach my $location (@locations) { print "
-        <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
-      </%perl>
-    </select -->
     <span id="location_select_div"></span>
     <br><br>
     
@@ -72,12 +71,48 @@ $trials_by_breeding_project => ()
     <textarea id="genotyping_trial_description" name="genotyping_trial_year" style="width: 250px" ></textarea><br />
     
     <br><br>
-    <!-- label for="genotyping_trial_upload_file">Upload file:</label>
+    <!-- label for="genotyping_trial_upload_file">Upload genotyping Excel sheet from IGD:</label>
     <input type="file" name="genotyping_trial_upload_file" id="genotyping_trial_upload_file" encoding="multipart/form-data" / -->
     <label for="accession_select_box"  style="display: inline-block; vertical-align:top; width: 150px;">Accession list</label>
     <span id="accession_select_box_span">[loading...]</span>
 
   </form>
+</div>
+
+<div id="igd_genotyping_trial_dialog" class="ui-widget">
+
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_igd_genotyping_trials_form" name="upload_igd_genotyping_trials_form" action="/ajax/breeders/igdgenotypetrial" >
+
+    <label for="igd_breeding_program_select_div" style="display: inline-block; width: 150px;">Breeding Program:</label>
+
+    <span id="igd_breeding_program_select_div"></span>
+    <br /><br />
+    
+    <label for="igd_location_select_div" style="display: inline-block; width: 150px;">Location:</label>
+    <span id="igd_location_select_div"></span>
+    <br><br>
+    
+    <label for="igd_year_select_div" style="display: inline-block; vertical-align:top; width: 150px;">Year:</label>
+    <span id="igd_year_select_div"></span>
+    <br /><br />
+
+    <!-- label for="genotyping_trial_name" style="display: inline-block; width: 150px;">Genotyping Trial name:</label>
+    <input id="genotyping_trial_name" name="genotyping_trial_name" size="30" / -->
+    <br><br>
+
+    <label for="igd_genotyping_trial_descripton" style="display: inline-block; vertical-align:top; width: 150px;">Description:</label>
+    <textarea id="igd_genotyping_trial_description" name="genotyping_trial_year" style="width: 250px" ></textarea><br />
+    
+    <br><br>
+    <label for="igd_genotyping_trial_upload_file">Upload genotyping Excel sheet from IGD:</label>
+    <input type="file" name="igd_genotyping_trial_upload_file" id="igd_genotyping_trial_upload_file" encoding="multipart/form-data" />
+    <label for="igd_accession_select_box"  style="display: inline-block; vertical-align:top; width: 150px;">Accession list</label>
+    <span id="igd_accession_select_box_span">[loading...]</span>
+
+  </form>
+</div>
+
+<div id="upload_genotyping_error_display">
 </div>
 
 

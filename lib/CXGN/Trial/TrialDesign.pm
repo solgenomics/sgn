@@ -44,6 +44,7 @@ has 'plot_name_suffix' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name
 has 'plot_start_number' => (isa => 'Int', is => 'rw', predicate => 'has_plot_start_number', clearer => 'clear_plot_start_number', default => 1);
 has 'plot_number_increment' => (isa => 'Int', is => 'rw', predicate => 'has_plot_number_increment', clearer => 'clear_plot_number_increment', default => 1);
 has 'randomization_seed' => (isa => 'Int', is => 'rw', predicate => 'has_randomization_seed', clearer => 'clear_randomization_seed');
+has 'blank' => ( isa => 'Str', is => 'rw', predicate=> 'has_blank' );
 
 subtype 'RandomizationMethodType',
   as 'Str',
@@ -127,16 +128,28 @@ sub _get_genotyping_plate {
 	die "No stock list specified\n";
     }
     
-    my $random_blank = int(rand() * $number_of_stocks)+1;
+    my $blank = "";
+    if ($self->has_blank()) { 
+	$blank = $self->get_blank();
+	print STDERR "Using previously set blank $blank\n";
+    }
+    else { 
+	my $well_no = int(rand() * $number_of_stocks)+1;
+	my $well_row = chr(int(($well_no-1) / 12) + 65);
+	my $well_col = ($well_no -1) % 12 +1;
+	$blank = sprintf "%s%02d", $well_row, $well_col;
+	print STDERR "Using randomly assigned blank $blank\n";
+    }
     
     my $count = 0;
 
-    foreach my $col ("A".."H") {
-	foreach my $row (1..12) {
+    foreach my $row ("A".."H") {
+	foreach my $col (1..12) {
 	    $count++;
-	    my $well = $col.$row;
+	    my $well= sprintf "%s%02d", $row, $col;
+	    #my $well = $row.$col;
 	    
-	    if ($count == $random_blank) { 
+	    if ($well eq $blank) { 
 		$gt_design{$well} = { 
 		    plot_name => $self->get_trial_name()."_".$well."_BLANK",
 		    stock_name => "BLANK",
@@ -315,12 +328,24 @@ sub _get_alpha_lattice_design {
   }
   if ($self->has_block_size()) {
     $block_size = $self->get_block_size();
+    print STDERR "block size = $block_size\n";
     if ($block_size < 3) {
       die "Block size must be greater than 2 for alpha lattice design\n";
     }
+    #	print "stock_list: ".scalar(@stock_list)."block_size: $block_size\n";
     if (scalar(@stock_list) % $block_size != 0) {
-      die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
-    }
+      #die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
+	}
+    else {
+		my $dummy_var = scalar(@stock_list) % $block_size;		  
+		my $stocks_to_add = $block_size - $dummy_var;
+#		print "$stock_list\n";
+		foreach my $stock_list_rep(1..$stocks_to_add) {
+			push(@stock_list, $stock_list[0]);
+		}
+		$self->set_stock_list(\@stock_list);
+	}
+   
     $number_of_blocks = scalar(@stock_list)/$block_size;
     if ($number_of_blocks < $block_size) {
       die "The number of blocks ($number_of_blocks) for alpha lattice design must not be less than the block size ($block_size)\n";
@@ -388,7 +413,7 @@ sub _get_alpha_lattice_design {
 }
 
 sub _get_augmented_design {
-  my $self;
+  my $self = shift;
   my %augmented_design;
   my $rbase = R::YapRI::Base->new();
   my @stock_list;
@@ -1234,6 +1259,7 @@ sub _build_plot_names {
     $suffix = $self->get_plot_name_suffix();
   }
   foreach my $key (keys %design) {
+	$trial_name ||="";
     $design{$key}->{plot_name} = $trial_name.$prefix.$key.$suffix;
     $design{$key}->{plot_number} = $key;
   }

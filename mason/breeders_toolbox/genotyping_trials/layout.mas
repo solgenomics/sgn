@@ -8,8 +8,9 @@ $design
 <table border='1'>
 % foreach my $row ("A".."H") { 
 %    foreach my $col (1..12) { 
-  <tr><td><% $row.$col %></td>
-    <td><% $design->{$row.$col}->{accession_name} %></td></tr>
+%      my $well = sprintf "%s%02d", $row, $col;
+  <tr><td><% $well %></td>
+    <td><% $design->{$well}->{accession_name} %></td></tr>
 %   }
     
 % }

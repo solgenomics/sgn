@@ -102,7 +102,7 @@ CXGN.List.prototype = {
 	
 	return list;
     },
-
+ 
     getListType: function(list_id) { 
 	var type;
 
@@ -118,7 +118,10 @@ CXGN.List.prototype = {
 		    return type;
 		}
 	    },
-	    error: alert('An error occurred. Cannot determine type. ')
+	    error: function () {
+		alert('An error occurred. Cannot determine type. ');
+	    }
+	   
 	});
 	return type;
     },

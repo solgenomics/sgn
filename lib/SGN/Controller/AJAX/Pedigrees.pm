@@ -79,6 +79,7 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     my $header = <$F>; 
     while (<$F>) { 
 	chomp;
+	$_ =~ s/\r//g;
 	my @acc = split /\t/;
 	foreach my $a (@acc) { 
 	    $stocks{$a}++;
@@ -103,6 +104,7 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     
     while (<$F>) { 
 	chomp;
+	$_ =~ s/\r//g;
 	my @acc = split /\t/;
 	
 	if (!$acc[1] && !$acc[2]) { 

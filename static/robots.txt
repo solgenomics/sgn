@@ -1,6 +1,7 @@
 User-agent: *
 Disallow: /tools/
 Disallow: /gbrowse/
+Disallow: /jbrowse/
 Disallow: /documents/tempfiles/
 Disallow: /cview/
 Disallow: /phenome/qtl_analysis.pl

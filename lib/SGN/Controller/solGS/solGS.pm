@@ -24,8 +24,6 @@ use Array::Utils qw(:all);
 #use CXGN::People::Person;
 use CXGN::Tools::Run;
 use JSON;
-use Sys::Hostname;
-#use jQuery::File::Upload;
 
 BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
 
@@ -183,7 +181,7 @@ sub search_trials : Path('/solgs/search/trials') Args() {
    
     if ( $pager->previous_page || $pager->next_page )
     {
-        $pagination =   '<div class = "paginate_nav">';
+        $pagination =   '<div style="width:690px; overflow: auto;" class = "paginate_nav">';
         
         if( $pager->previous_page ) 
         {
@@ -316,7 +314,12 @@ sub projects_links {
 			     'population type' => 'training population', 
 	     };
 	   
-	     $c->model("solGS::solGS")->set_population_type($pop_prop);
+	     my $pop_type =  $c->model("solGS::solGS")->get_population_type($pr_id);
+ 
+	     unless ($pop_type) 
+	     {
+		 $c->model("solGS::solGS")->set_population_type($pop_prop);
+	     }
 	     
              my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 
@@ -328,11 +331,15 @@ sub projects_links {
 	 }
 	 elsif ($marker_count && !$has_phenotype)	 
 	 {
-	     my $pop_prop = {'project_id' => $pr_id, 
-			     'population type' => 'selection population', 
-	     };
-
-	     $c->model("solGS::solGS")->set_population_type($pop_prop);	      
+	     my $pop_type =  $c->model("solGS::solGS")->get_population_type($pr_id);
+	     unless ($pop_type) 
+		 
+	     {
+		 my $pop_prop = {'project_id' => $pr_id, 
+				 'population type' => 'selection population', 
+		 }; 
+		 $c->model("solGS::solGS")->set_population_type($pop_prop);	 
+	     }     
 	 }  
     }
 
@@ -417,7 +424,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
    
     if ( $pager->previous_page || $pager->next_page )
     {
-	$pagination =   '<div class = "paginate_nav">';
+	$pagination =   '<div  style="width:690px; overflow: auto;" class = "paginate_nav">';
         
 	if( $pager->previous_page ) 
 	{
@@ -975,7 +982,8 @@ sub input_files {
     
     $self->genotype_file($c);
     $self->phenotype_file($c);
-   
+    $self->formatted_phenotype_file($c);
+
     my $pred_pop_id = $c->stash->{prediction_pop_id};
     my $prediction_population_file;
 
@@ -984,6 +992,8 @@ sub input_files {
         $self->prediction_population_file($c, $pred_pop_id);
         $prediction_population_file = $c->stash->{prediction_population_file};
     }
+
+    my $formatted_phenotype_file  = $c->stash->{formatted_phenotype_file};
 
     my $pheno_file  = $c->stash->{phenotype_file};
     my $geno_file   = $c->stash->{genotype_file};
@@ -995,6 +1005,7 @@ sub input_files {
 
     my $input_files = join ("\t",
                             $pheno_file,
+			    $formatted_phenotype_file,
                             $geno_file,
                             $traits_file,
                             $trait_file,
@@ -1020,8 +1031,8 @@ sub output_files {
     $self->gebv_kinship_file($c); 
     $self->validation_file($c);
     $self->trait_phenodata_file($c);
-    $self->formatted_phenodata_file($c);
     $self->variance_components_file($c);
+    $self->relationship_matrix_file($c);
 
     my $prediction_id = $c->stash->{prediction_pop_id};
     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
@@ -1045,10 +1056,10 @@ sub output_files {
                           $c->stash->{gebv_kinship_file},
                           $c->stash->{gebv_marker_file},
                           $c->stash->{validation_file},
-                          $c->stash->{trait_phenodata_file},
-                          $c->stash->{formatted_phenodata_file},
+                          $c->stash->{trait_phenodata_file},                         
                           $c->stash->{selected_traits_gebv_file},
                           $c->stash->{variance_components_file},
+			  $c->stash->{relationship_matrix_file},
                           $pred_pop_gebvs_file
         );
                           
@@ -1162,7 +1173,7 @@ sub trait_phenodata_file {
 }
 
 
-sub formatted_phenodata_file {
+sub formatted_phenotype_file {
     my ($self, $c) = @_;
    
     my $pop_id = $c->stash->{pop_id};
@@ -1170,7 +1181,7 @@ sub formatted_phenodata_file {
 
     my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id, 
                        file      => 'formatted_phenotype_data_' . $pop_id,
-                       stash_key => 'formatted_phenodata_file'
+                       stash_key => 'formatted_phenotype_file'
     };
     
     $self->cache_file($c, $cache_data);
@@ -1203,6 +1214,39 @@ sub gebv_kinship_file {
         $cache_data = {key       => 'gebv_kinship_' . $pop_id . '_'.  $trait,
                        file      => 'gebv_kinship_' . $trait . '_' . $pop_id,
                        stash_key => 'gebv_kinship_file'
+        };
+    }
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+
+sub relationship_matrix_file {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id};
+    my $data_set_type = $c->stash->{data_set_type};
+        
+    my $cache_data;
+    
+    no warnings 'uninitialized';
+
+    if ($data_set_type =~ /combined populations/)
+    {
+        my $combo_identifier = $c->stash->{combo_pops_id};
+        $cache_data = {key       => 'relationship_matrix_combined_pops_'.  $combo_identifier,
+                       file      => 'relationship_matrix_combined_pops_' . $combo_identifier,
+                       stash_key => 'relationship_matrix_file'
+
+        };
+    }
+    else 
+    {
+    
+        $cache_data = {key       => 'relationship_matrix_' . $pop_id,
+                       file      => 'relationship_matrix_' . $pop_id,
+                       stash_key => 'relationship_matrix_file'
         };
     }
 
@@ -1985,9 +2029,16 @@ sub convert_to_arrayref_of_arrays {
         push @data,  map { [ split(/\t/) ]  } $_ if $_;
     }
    
-    shift(@data);
+    if (@data) 
+    {
+	shift(@data);
+	return \@data;
+    } else 
+    {
+	return;
+    }
     
-    return \@data;
+   
 
 }
 
@@ -3124,6 +3175,7 @@ sub trait_phenotype_stat {
     my $min  = $stat->min; 
     my $max  = $stat->max; 
     my $mean = $stat->mean;
+    my $med  = $stat->median;
     my $std  = $stat->standard_deviation;
     my $cnt  = scalar(@$trait_data);
     my $cv   = ($std / $mean) * 100;
@@ -3142,6 +3194,7 @@ sub trait_phenotype_stat {
                        [ 'Minimum', $min ], 
                        [ 'Maximum', $max ],
                        [ 'Arithmetic mean', $mean ],
+		       [ 'Median', $med ],  
                        [ 'Standard deviation', $std ],
                        [ 'Coefficient of variation', $cv ]
         );
@@ -3615,10 +3668,13 @@ sub phenotype_file {
             my $data = $c->model('solGS::solGS')->phenotype_data($pop_id);
            # my $data = $c->stash->{phenotype_data};
         
-            $data = $self->format_phenotype_dataset($c, $data);
-            write_file($pheno_file, $data);
-
-            $file_cache->set($key, $pheno_file, '30 days');
+	    if ($data)
+	    {
+		$data = $self->format_phenotype_dataset($c, $data);
+		write_file($pheno_file, $data);
+	    }
+	    
+            $file_cache->set($key, $pheno_file, '30 days');	    
         }
     }
    
@@ -4087,19 +4143,16 @@ sub run_r_script {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
    
-    my $host = $c->req->base;
-    $host =~ s/(http)|[:\/\d+]//g;
-   
-    my $tmp_dir         = $c->config->{cluster_shared_tempdir};        
-    $tmp_dir            = catdir($tmp_dir, $host);
+    my $tmp_dir         = $c->site_cluster_shared_dir;       
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
     my $correlation_dir = catdir($tmp_dir, 'correlation', 'cache');   
     my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
-    my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');  
+    my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');
+    my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');  
 
-    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, $correlation_dir, $pca_dir], 0, 0755);
+    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, $correlation_dir, $pca_dir, $histogram_dir], 0, 0755);
    
     $c->stash(solgs_dir                   => $solgs_dir, 
               solgs_cache_dir             => $solgs_cache, 
@@ -4107,6 +4160,7 @@ sub get_solgs_dirs {
               solgs_prediction_upload_dir => $solgs_upload,
               correlation_dir             => $correlation_dir,
 	      pca_dir                     => $pca_dir,
+	      histogram_dir               => $histogram_dir,
         );
 
 }
@@ -4126,7 +4180,9 @@ sub cache_file {
     $file_cache->purge();
 
     my $file  = $file_cache->get($cache_data->{key});
-
+    
+    no warnings 'uninitialized';
+    
     unless (-s $file > 1)
     {      
         $file = catfile($cache_dir, $cache_data->{file});

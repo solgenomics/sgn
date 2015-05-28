@@ -8,7 +8,7 @@ package SGN::Feature::GBrowse2;
 use Moose;
 use namespace::autoclean;
 extends 'SGN::Feature::GBrowse';
-
+use Class::Load ':all';
 use Bio::Graphics::FeatureFile;
 
 has '_data_sources' => (
@@ -29,7 +29,7 @@ has '_data_sources' => (
        }
 
        my $ds_class =  __PACKAGE__.'::DataSource';
-       Class::MOP::load_class( $ds_class );
+       Class::Load::load_class( $ds_class );
 
        my %sources;
        foreach my $type ( $self->config_master->configured_types ) {

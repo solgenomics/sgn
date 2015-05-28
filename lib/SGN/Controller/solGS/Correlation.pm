@@ -18,6 +18,29 @@ use Try::Tiny;
 BEGIN { extends 'Catalyst::Controller' }
 
 
+sub check_pheno_corr_result :Path('/phenotype/correlation/check/result/') Args(1) {
+    my ($self, $c, $pop_id) = @_;
+
+    $c->stash->{pop_id} = $pop_id;
+
+    $self->pheno_correlation_output_files($c);
+    my $corre_output_file = $c->stash->{corre_coefficients_json_file};
+   
+    my $ret->{result} ='No';
+   
+    if (-s $corre_output_file && $pop_id =~ /\d+/) 
+    {
+	$ret->{result} = 'yes';                
+    }    
+
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
 sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     my ($self, $c) = @_;
    
@@ -52,12 +75,15 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
         $phenotype_file =  $c->stash->{phenotype_file};
     }
 
-
     my $ret->{status} = 'failed';
 
-    if($phenotype_file)
+    if (-s $phenotype_file)
     {
         $ret->{status} = 'success';             
+    } 
+    else 
+    {
+	$ret->{status} = 'This population set has no phenotype data.';
     }
 
     $ret = to_json($ret);
@@ -100,6 +126,7 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     $c->res->body($ret);    
 
 }
+
 
 sub combine_gebvs_of_traits {
     my ($self, $c) = @_;
@@ -158,10 +185,9 @@ sub create_correlation_phenodata_file {
        
         my $phenotype_file = $c->controller("solGS::solGS")->grep_file($dir, $pheno_exp);
        
-        unless ($phenotype_file) {
-           
-            my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);
-       
+        unless ($phenotype_file) 
+	{           
+            my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);       
             $phenotype_file =  $pop->phenotype_file($c);
         }
         
@@ -170,8 +196,7 @@ sub create_correlation_phenodata_file {
         copy($phenotype_file, $new_file) 
             or die "could not copy $phenotype_file to $new_file";
        
-        $c->stash->{phenotype_file} = $new_file;
-       
+        $c->stash->{phenotype_file} = $new_file;       
     } 
     else
     {           
@@ -323,7 +348,9 @@ sub run_pheno_correlation_analysis {
     $self->pheno_correlation_output_files($c);
     $c->stash->{corre_table_output_file} = $c->stash->{corre_coefficients_table_file};
     $c->stash->{corre_json_output_file}  = $c->stash->{corre_coefficients_json_file};
-      
+    
+    $c->controller("solGS::solGS")->formatted_phenotype_file($c);
+
     $c->stash->{referer} = $c->req->referer;
     
     $c->stash->{correlation_type} = "pheno_correlation_${pop_id}";
@@ -338,9 +365,7 @@ sub run_genetic_correlation_analysis {
     my ($self, $c) = @_;
     
     my $pop_id = $c->stash->{corre_pop_id};
-   
-   # $c->stash->{data_input_file}
-    
+  
     $self->genetic_correlation_output_files($c);
     $c->stash->{corre_table_output_file} = $c->stash->{genetic_corre_table_file};
     $c->stash->{corre_json_output_file}  = $c->stash->{genetic_corre_json_file};
@@ -381,11 +406,8 @@ sub download_phenotypic_correlation : Path('/download/phenotypic/correlation/pop
 	$c->res->body(join "",  map{ $_->[0] } @corr_data);   
            
 
-    } 
- 
+    }  
 }
-
-
 
 
 sub run_correlation_analysis {
@@ -400,7 +422,9 @@ sub run_correlation_analysis {
     
     my $corre_table_file = $c->stash->{corre_table_output_file};
     my $corre_json_file  = $c->stash->{corre_json_output_file};
-     
+    
+    my $formatted_phenotype_file = $c->stash->{formatted_phenotype_file};
+
     my $referer        = $c->stash->{referer};
     my $corre_analysis = $c->stash->{correlation_type};
     my $corre_script   = $c->stash->{correlation_script};
@@ -434,7 +458,7 @@ sub run_correlation_analysis {
           my $r_process = CXGN::Tools::Run->run_cluster(
               'R', 'CMD', 'BATCH',
               '--slave',
-              "--args $referer $corre_table_file $corre_json_file $data_input_file",
+              "--args $formatted_phenotype_file $referer $corre_table_file $corre_json_file $data_input_file",
               $corre_commands_temp,
               $corre_output_temp,
               {

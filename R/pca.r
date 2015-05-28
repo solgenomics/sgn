@@ -8,10 +8,10 @@
 
 options(echo = FALSE)
 
-library(imputation)
+library(randomForest)
+library(irlba)
 
 allArgs <- commandArgs()
-
 
 outFile <- grep("output_files",
                 allArgs,
@@ -52,7 +52,6 @@ varianceFile <- grep("pca_variance",
                         value = TRUE
                         )
 
-
 message("genotype file: ", genoDataFile)
 message("pca scores file: ", scoresFile)
 message("pca loadings file: ", loadingsFile)
@@ -81,36 +80,65 @@ genoData <- read.table(genoDataFile,
                         dec = "."
                         )
 
+#change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
+genoTrCode <- grep("2", genoData[1, ], fixed=TRUE, value=TRUE)
+if(length(genoTrCode) != 0) {
+  genoData <- genoData - 1
+}
 
+genoDataMissing <- c()
 if (sum(is.na(genoData)) > 0) {
-    message("sum of geno missing values, ", sum(is.na(genoData)) )
-    genoData <-kNNImpute(genoData, 10)
-    genoData <-as.data.frame(genoData)
+  genoDataMissing <- c('yes')
+  message("sum of geno missing values, ", sum(is.na(genoData)) )
+  genoData <- na.roughfix(genoData)
+}
 
-    #extract columns with imputed values
-    genoData <- subset(genoData,
-                       select = grep("^x", names(genoData))
-                       )
+#additive relationship model
+#calculate the inner products for
+#genotypes (realized relationship matrix)
+#genoData2 <- data.matrix(genoData)
+#print(genoData[1:5, 1:5])
+#relationshipMatrix <- tcrossprod(genoData2)
+#print(relationshipMatrix[1:5, 1:3])
+## message("prcomp time")
+## system.time(pca      <- prcomp(genoData, retx=TRUE))
+## scores   <- round(pca$x[, 1:10], digits=2)
+## loadings <- round(pca$rotation[, 1:10], digits=5)
 
-    #remove prefix 'x.' from imputed columns
-    names(genoData) <- sub("x.", "", names(genoData))
+## totalVar  <- sum((pca$sdev)^2)
+## variances <- unlist(
+##                lapply(pca$sdev,
+##                       function(x)
+##                       round((x^2 / totalVar)*100, digits=2)
+##                       )
+##                )
 
-    genoData <- round(genoData, digits = 0)
-    genoData <- data.matrix(genoData)
-  }
+## variances <- as.data.frame(variances)
+## colnames(variances)[1] <- "variances"
 
-pca <- prcomp(genoData, retx=TRUE)
+######
+genotypes <- rownames(genoData)
+svdOut    <- irlba(scale(genoData, TRUE, FALSE), nu=10, nv=10)
+scores    <- round(svdOut$u %*% diag(svdOut$d), digits=2)
+loadings  <- round(svdOut$v, digits=5)
+totalVar  <- sum(svdOut$d)
+variances <- unlist(
+               lapply(svdOut$d,
+                      function(x)
+                      round((x / totalVar)*100, digits=2)
+                      )
+               )
 
-scores <- round(pca$x[, 1:10], digits=2)
+variances <- data.frame(variances)
+scores    <- data.frame(scores)
+rownames(scores) <- genotypes
 
-loadings <- round(pca$rotation[, 1:10], digits=5)
+headers <- c()
+for (i in 1:10) {
+  headers[i] <- paste("PC", i, sep='')
+}
 
-totalVar <- sum((pca$sdev)^2)
-
-variances <- unlist(lapply(pca$sdev, function(x) round((x^2 / totalVar)*100, digits=2)))
-
-variances <- as.data.frame(variances)
-colnames(variances)[1] <- "variances"
+colnames(scores) <- c(headers)
 
 write.table(scores,
             file = scoresFile,
@@ -128,7 +156,6 @@ write.table(loadings,
             append = FALSE
             )
 
-
 write.table(variances,
             file = varianceFile,
             sep = "\t",
@@ -136,5 +163,16 @@ write.table(variances,
             quote = FALSE,
             append = FALSE
             )
+
+
+if (!is.null(genoDataMissing)) {
+write.table(genoData,
+            file = genoDataFile,
+            sep = "\t",
+            col.names = NA,
+            quote = FALSE,
+            )
+
+}
 
 q(save = "no", runLast = FALSE)

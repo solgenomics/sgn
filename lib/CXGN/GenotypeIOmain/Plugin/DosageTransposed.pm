@@ -39,13 +39,17 @@ sub init {
     my $F;
     open($F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
 
-
-
     my $header = <$F>;
     chomp($header);
     #print STDERR "HEADER = $header\n";
     my @markers = split /\t/, $header;
-    shift(@markers); # remove first column header (for accession column)
+
+    if ($args->{fix_r_headers} && $header !~/^\t/) {  # the file from R has no empty first cell, don't shift!
+	print STDERR "R headers: Fixing missing offset.\n";
+    }
+    else { 
+	shift(@markers); # remove first column header (for accession column)
+    }
 
     my @accessions;
     while (<$F>) { 

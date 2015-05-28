@@ -19,16 +19,21 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
     
     my $pop_id   = $c->req->param('population_id');
     my $trait_id = $c->req->param('trait_id');
+    my $referer  = $c->req->referer;
    
+    if ($referer =~ /combined/) 
+    {    
+	$c->stash->{data_set_type} = 'combined populations';
+	$c->stash->{combo_pops_id} = $pop_id;
+    }
+
     $c->stash->{pop_id} = $pop_id;
 
     $c->controller('solGS::solGS')->get_trait_name($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
     
-    my $trait_pheno_file = "phenotype_trait_${trait_abbr}_${pop_id}";
-    my $dir = $c->stash->{solgs_cache_dir};
-
-    $trait_pheno_file = $c->controller('solGS::solGS')->grep_file($dir, $trait_pheno_file);
+    my $trait_pheno_file = $c->controller('solGS::solGS')->trait_phenodata_file($c);
+ 
     $c->stash->{histogram_trait_file} = $trait_pheno_file;
 
     if (!$trait_pheno_file || -z $trait_pheno_file)
@@ -44,7 +49,7 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
     my $data = $self->format_plot_data($c);
     
     $c->controller('solGS::solGS')->trait_phenotype_stat($c);
-     my $stat = $c->stash->{descriptive_stat};
+    my $stat = $c->stash->{descriptive_stat};
 
     my $ret->{status} = 'failed';
 
@@ -85,13 +90,7 @@ sub create_population_phenotype_data {
 sub create_histogram_dir {
     my ($self, $c) = @_;
     
-    my $temp_dir      =  $c->config->{cluster_shared_tempdir};
-    my $histogram_dir = catdir($temp_dir, 'histogram', 'cache'); 
-  
-    mkpath ($histogram_dir, 0, 0755);
-   
-    $c->stash->{histogram_dir} = $histogram_dir;
-
+    $c->controller("solGS::solGS")->get_solgs_dirs($c);
 }
 
 
@@ -124,37 +123,34 @@ sub create_trait_phenodata {
             $filename
         } qw / in out /;
     
-    {
-        my $histogram_commands_file = $c->path_to('/R/histogram.r');
-        copy( $histogram_commands_file, $histogram_commands_temp )
+	{
+	    my $histogram_commands_file = $c->path_to('/R/histogram.r');
+	    copy( $histogram_commands_file, $histogram_commands_temp )
             or die "could not copy '$histogram_commands_file' to '$histogram_commands_temp'";
-    }
+	}
+	try 
+	{
+	    print STDERR "\nsubmitting histogram job to the cluster..\n";
+	    my $r_process = CXGN::Tools::Run->run_cluster(
+		'R', 'CMD', 'BATCH',
+		'--slave',
+		"--args  input_file=$pheno_file trait_name=$trait_abbr output_file=$trait_file",
+		$histogram_commands_temp,
+		$histogram_output_temp,
+		{
+		    working_dir => $histogram_dir,
+		    max_cluster_jobs => 1_000_000_000,
+		},
+		);
 
-      try 
-      {
-          print STDERR "\nsubmitting histogram job to the cluster..\n";
-          my $r_process = CXGN::Tools::Run->run_cluster(
-              'R', 'CMD', 'BATCH',
-              '--slave',
-              "--args  input_file=$pheno_file trait_name=$trait_abbr output_file=$trait_file",
-              $histogram_commands_temp,
-              $histogram_output_temp,
-              {
-                  working_dir => $histogram_dir,
-                  max_cluster_jobs => 1_000_000_000,
-              },
-              );
-
-          $r_process->wait;
-          print STDERR "\ndone with histogram analysis..\n";
-      }
-      catch 
-      {  
-            
-            my $err = $_;
+	    $r_process->wait;
+	    print STDERR "\ndone with histogram analysis..\n";
+	}
+	catch 
+	{  
+	    my $err = $_;
             $err =~ s/\n at .+//s; #< remove any additional backtrace
-            #     # try to append the R output
-           
+            #     # try to append the R output         
             try
             { 
                 $err .= "\n=== R output ===\n".file($histogram_output_temp)->slurp."\n=== end R output ===\n" 
@@ -162,7 +158,7 @@ sub create_trait_phenodata {
                      
             $c->stash->{script_error} =  "There is a problem running the histogram r script on this dataset.";	     
     
-      };
+	};
      
         $c->stash->{histogram_trait_file} = $trait_file;
     }

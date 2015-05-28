@@ -9,6 +9,7 @@ use SimulateC;
 use Data::Dumper;
 
 use CXGN::Trial;
+use CXGN::Trial::TrialLayout;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use CXGN::Phenotypes::StorePhenotypes;

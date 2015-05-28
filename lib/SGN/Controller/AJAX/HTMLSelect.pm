@@ -61,6 +61,8 @@ sub get_breeding_program_select : Path('/ajax/html/select/breeding_programs') Ar
     my $empty = $c->req->param("empty") || "";
 
     my $breeding_programs = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_breeding_programs();
+
+    push @$breeding_programs, [ "", "please select" ];
     
     my $html = simple_selectbox_html(
 	name => $name,

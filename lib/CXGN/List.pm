@@ -1,4 +1,34 @@
 
+=head1 NAME
+
+CXGN::List - class that deals with website lists
+
+=head1 SYNOPSYS
+
+ my $list = CXGN::List->new( { dbh => $dbh, list_id => 34 } );
+
+ my $name = $list->name();
+ my $elements = $list->elements();
+ my $owner_id = $list->owner();
+ my $type = $list->type();
+ $list->remove_element('blabla');
+ $list->add_element('blabla');
+
+
+Class function (without instantiation):
+
+ my $new_list_id = CXGN::List::create_list($dbh, $name, $desc, $owner);
+ my $lists = CXGN::List::available_lists($dbh);
+ my $list_id = CXGN::List::exists_list($dbh, $name, $owner);
+ CXGN::List::delete_list($dbh, $list_id);
+
+=head1 AUTHOR
+
+ Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+
 package CXGN::List;
 
 use Moose;
