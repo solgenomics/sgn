@@ -43,12 +43,16 @@ function searchSelectionPopulations () {
         dataType: 'json',
         url: '/solgs/search/selection/populations/' + popId,
         success: function(res) {
-            if (res.selection_pops_list) {
-		jQuery("#selection_populations").show();
-		displaySelectionPopulations(res.selection_pops_list);
-		jQuery("#search_selection_pops").hide();
+            if (res.data) {
+		jQuery('#selection_populations').show();
+		displaySelectionPopulations(res.data);
+		jQuery('#search_selection_pops').hide();
+		jQuery('#selection_pops_message').hide();
             } else { 
-		jQuery("#selection_pops_message").html("<p>There are no relevant selection populations in the database. If you have or want to make your own set of selection candidates use the form below.</p>");	
+		jQuery('#selection_pops_message').html(
+		    '<p>There are no relevant selection populations in the database.' 
+                    + 'If you have or want to make your own set of selection candidates' 
+                    + 'use the form below.</p>');	
             }
 	}
     });
