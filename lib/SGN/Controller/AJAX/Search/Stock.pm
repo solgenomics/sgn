@@ -64,10 +64,11 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     ###############
     if (exists($params->{organism} ) && $params->{organism} ) {
 	$and_conditions->{'me.organism_id'} = $params->{organism} ;
-	
     }
 
-    
+    if (exists($params->{stock_type} ) && $params->{stock_type} ) {
+	$and_conditions->{'me.type_id'} = $params->{stock_type} ;
+    }
 ###############
 
     my $draw = $params->{draw};
