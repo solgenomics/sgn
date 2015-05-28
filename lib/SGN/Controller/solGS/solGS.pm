@@ -915,11 +915,7 @@ sub trait :Path('/solgs/trait') Args(3) {
         {
             $self->project_description($c, $pop_id); 
             $self->trait_phenotype_stat($c);      
-            $self->download_prediction_urls($c);     
-            my $download_prediction = $c->stash->{download_prediction};
           
-            $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
-             
             $self->get_project_owners($c, $pop_id);       
             $c->stash->{owner} = $c->stash->{project_owners};
            
@@ -1429,9 +1425,9 @@ sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
         my @validation =  map { [ split(/\t/) ] }  read_file($validation_file);
     
         $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @validation);
-  
+        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @validation);  
     } 
+
 }
 
  
@@ -1486,11 +1482,6 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         
         $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
 
-        $self->download_prediction_urls($c, $combo_pops_id, $prediction_pop_id );
-        my $download_prediction = $c->stash->{download_prediction};
-      
-        $self->list_of_prediction_pops($c, $combo_pops_id, $download_prediction);
-      
         $c->res->redirect("/solgs/model/combined/populations/$model_id/trait/$trait_id"); 
         $c->detach();
     }
@@ -1534,11 +1525,6 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         
          $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
 
-         $self->download_prediction_urls($c, $pop_id, $prediction_pop_id );
-         my $download_prediction = $c->stash->{download_prediction};
-      
-         $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
- 
          $c->res->redirect("/solgs/trait/$trait_id/population/$pop_id");
          $c->detach();
            
@@ -1660,7 +1646,8 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
     
         $c->res->content_type("text/plain");
         $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @prediction_gebvs);
-    } 
+    }
+ 
 }
 
 
@@ -2036,10 +2023,7 @@ sub convert_to_arrayref_of_arrays {
     } else 
     {
 	return;
-    }
-    
-   
-
+    }    
 }
 
 
@@ -2058,16 +2042,17 @@ sub trait_phenotype_file {
 sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1) {
     my ($self, $c, $tr_pop_id) = @_;
 
-    $c->stash->{pop_id} = $tr_pop_id;
+    $c->stash->{training_pop_id} = $tr_pop_id;
 
     $self->list_of_prediction_pops_file($c, $tr_pop_id);
     my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
-
+   
     my $ret->{result} = 0;
    
     if (-s $pred_pops_file) 
-    {
-	$ret->{result} = 1;                
+    {  
+	$self->list_of_prediction_pops($c, $tr_pop_id);
+	$ret->{data} =  $c->stash->{list_of_prediction_pops};                
     }    
 
     $ret = to_json($ret);
@@ -2078,22 +2063,25 @@ sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1
 }
 
 
-sub selection_pops_list :Path('/solgs/selection/populations/') {
+sub search_selection_pops :Path('/solgs/search/selection/populations/') {
     my ($self, $c, $tr_pop_id) = @_;
-
+    
+    $c->stash->{training_pop_id} = $tr_pop_id;
+    
     $self->list_of_prediction_pops($c, $tr_pop_id);
     my $selection_pops_list = $c->stash->{list_of_prediction_pops};
 
     my $ret->{selection_pops_list} = 0;
     if ($selection_pops_list) 
     {
-	$ret->{selection_pops_list} = $selection_pops_list;           
+	$ret->{data} = $selection_pops_list;           
     }    
 
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
-    $c->res->body($ret);    
+    $c->res->body($ret); 
+   
 }
 
 #retrieve from db prediction pops relevant to the
@@ -2110,17 +2098,32 @@ sub list_of_prediction_pops {
     if(!@pred_pops_ids)
     {      
         @pred_pops_ids = @{$c->model('solGS::solGS')->prediction_pops($training_pop_id)};
+
+	foreach my $prediction_pop_id (@pred_pops_ids)
+        {
+          $pop_ids .= $prediction_pop_id ."\n";        
+          write_file($pred_pops_file, $pop_ids);
+	}
     }
  
-    my @pred_pops;
+    $self->format_selection_pops($c, \@pred_pops_ids); 
+
+    $c->stash->{list_of_prediction_pops} = $c->stash->{selection_pops_list};
+
+}
+
+sub format_selection_pops {
+    my ($self, $c, $pred_pops_ids) = @_;
+    
+    my $training_pop_id = $c->stash->{training_pop_id};
+  
+    my @pred_pops_ids = @{$pred_pops_ids};    
+    my @data;
 
     if (@pred_pops_ids) {
 
         foreach my $prediction_pop_id (@pred_pops_ids)
         {
-          $pop_ids .= $prediction_pop_id ."\n";        
-          write_file($pred_pops_file, $pop_ids);
-
           my $pred_pop_rs = $c->model('solGS::solGS')->project_details($prediction_pop_id);
           my $pred_pop_link;
 
@@ -2151,14 +2154,14 @@ sub list_of_prediction_pops {
 
                   $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
                   my $download_prediction = $c->stash->{download_prediction};
-                
-                  push @pred_pops,  ['', $pred_pop_link, $desc, 'NA', $project_yr, $download_prediction];
+                  push @data,  [$pred_pop_link, $desc, 'NA', $project_yr, $download_prediction];
               }
           }
         }
     }
-    
-    $c->stash->{list_of_prediction_pops} = \@pred_pops;
+
+    $c->stash->{selection_pops_list} = \@data;
+
 
 }
 
@@ -2504,10 +2507,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
      my $acronym = $self->get_acronym_pairs($c);
      $c->stash->{acronym} = $acronym;
      
-     $self->download_prediction_urls($c, $pop_id, $pred_pop_id);
-     my $download_prediction = $c->stash->{download_prediction};
-  
-     $self->list_of_prediction_pops($c, $pop_id, $download_prediction);
+     $self->list_of_prediction_pops($c, $pop_id);
         
      $self->list_predicted_selection_pops($c, $pop_id);
 
@@ -2745,12 +2745,9 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
                 $ret->{pop_ids}       = $ids;
                 $ret->{combo_pops_id} = $combo_pops_id; 
                 $ret->{status}        = $analysis_result;
-
-                $self->list_of_prediction_pops($c, $combo_pops_id);
-
+	  
                 my $entry = "\n" . $combo_pops_id . "\t" . $ids;
                 $self->catalogue_combined_pops($c, $entry);
-
               }           
         }
         else 
@@ -2775,7 +2772,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
 
 sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Args(3){
     my ($self, $c,  $combo_pops_id, $trait_key,  $trait_id,) = @_;
-    
+
     $c->stash->{data_set_type} = 'combined populations';
     $c->stash->{combo_pops_id} = $combo_pops_id;
     
@@ -2793,9 +2790,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     }
 
     $self->get_trait_name($c, $trait_id);
-
-    $self->trait_phenotype_stat($c);
-    
+    $self->trait_phenotype_stat($c);    
     $self->validation_file($c);
     $self->model_accuracy($c);
     $self->gebv_kinship_file($c);
@@ -2805,12 +2800,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $self->top_markers($c);
     $self->combined_pops_summary($c);
     $self->model_parameters($c);
-
-    $self->download_prediction_urls($c);
-    my $download_prediction = $c->stash->{download_prediction};
-
-    $self->list_of_prediction_pops($c, $combo_pops_id, $download_prediction);
-
+    
     $c->stash->{template} = $self->template('/model/combined/populations/trait.mas');
 }
 
