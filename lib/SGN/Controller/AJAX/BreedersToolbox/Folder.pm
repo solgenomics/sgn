@@ -26,4 +26,14 @@ sub create_folder :Path('/ajax/folder/create/') Args(2) {
     
 }
 
+sub associate_folder :Path('/ajax/folder/associate/') Args(2) { 
+    my $self = shift;
+    my $c = shift;
+    my $parent_folder_id = shift;
+    my $child_folder_id = shift;
+
+
+}
+
+
 1;
