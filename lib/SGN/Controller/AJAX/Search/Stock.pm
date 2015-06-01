@@ -24,14 +24,6 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 
     my %query;
 
-     #             d.stock_type
-     #             d.organism  
-     #             d.person    
-     #             d.trait     
-     #             d.project   
-     #             d.location  
-     #             d.year      
-     #             d.organization
 
     my $matchtype = $params->{any_name_matchtype};
     my $any_name  = $params->{any_name};
@@ -68,6 +60,32 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 
     if (exists($params->{stock_type} ) && $params->{stock_type} ) {
 	$and_conditions->{'me.type_id'} = $params->{stock_type} ;
+    }
+
+    if (exists($params->{person} ) && $params->{person} ) {
+	my $editor = $params->{person};
+	my ($first_name, $last_name ) = split ',' , $editor;
+        $first_name =~ s/\s+//g;
+        $last_name =~ s/\s+//g;
+
+	my $p_rs = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->search(  
+	    {
+		first_name => { 'ilike' , '%'.$first_name.'%' } ,
+		last_name  => { 'ilike' , '%'.$last_name.'%' }
+	    }
+	    );
+
+	my $stock_owner_rs = $c->dbic_schema("CXGN::Phenome::Schema")->resultset("StockOwner")->search(
+	    { 
+		sp_person_id => { -in  => $p_rs->get_column('sp_person_id')->as_query },
+	    });
+	my @stock_ids;
+	while ( my $o = $stock_owner_rs->next ) {
+	    my $stock_id = $o->stock_id;
+	    push @stock_ids, $stock_id ;
+	}
+	my $stock_ids = $stock_owner_rs->get_column('stock_id');
+	$and_conditions->{'me.stock_id'} = { '-in' => \@stock_ids } ;
     }
 ###############
 
