@@ -105,7 +105,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     }
 
     if (exists($params->{organization} ) && $params->{organization} ) {
-
+	$and_conditions->{ 'project_relationship_subject_projects.object_project_id' } = $params->{organization} ;
 
     }
 
@@ -127,7 +127,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		],
 	},
 	{
-	    join => ['type', 'organism' , { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}}, { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => 'projectprops' }  } } }, { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
+	    join => ['type', 'organism' , { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}}, { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects'] }  } } }, { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
 	}
     );
 
@@ -143,7 +143,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		],
 	} ,
 	{ 
-	    join => ['type', 'organism', { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}} ,  { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => 'projectprops' } } } } , 	{ nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
+	    join => ['type', 'organism', { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}} ,  { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects'] } } } } , { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
 
 	    '+select' => [ 'type.name' , 'organism.species' ],
 	    '+as'     => [ 'cvterm_name' , 'species' ],
