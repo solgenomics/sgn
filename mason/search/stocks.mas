@@ -8,6 +8,7 @@
 
   $organisms       => undef
   $stock_types     => undef
+  $breeding_programs => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects' ] &>
@@ -31,6 +32,12 @@ my $organism_select = simple_selectbox_html(
   choices  =>  $organisms   ,
   id       => "organism_select",
 );
+
+my $breeding_programs_select = simple_selectbox_html(
+    choices => $breeding_programs,
+    id      => "organization" ,
+);
+
 
 </%perl>
 
@@ -74,7 +81,7 @@ Copy items on this page to list:
     <td><label for="location">Project location</label></td><td><input id="location"></td>
   </tr>
   <tr><td><label for="year">Project year</label></td><td><input id="year"></td>
-    <td><label for="organization">Organization</label></td><td><input id="organization"></td>
+    <td><label for="organization">Organization</label></td><td><% $breeding_programs_select %></td>
   </tr>
   
   <tr><td colspan="4" align="right"><button id="submit_stock_search" />Search</button></td>
