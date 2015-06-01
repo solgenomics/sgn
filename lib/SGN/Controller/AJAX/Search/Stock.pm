@@ -44,12 +44,12 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	}
 
 	$or_conditions = [ 
-	    { 'me.name'     => {'ilike', $start.$params->{any_name}.$end} },  
-	    { uniquename    => {'ilike', $start.$params->{any_name}.$end} },  
-	    { description   => {'ilike', $start.$params->{any_name}.$end} } 
+	    { 'me.name'          => {'ilike', $start.$params->{any_name}.$end} },  
+	    { 'me.uniquename'    => {'ilike', $start.$params->{any_name}.$end} },  
+	    { 'me.description'   => {'ilike', $start.$params->{any_name}.$end} } 
 	    ] ; 
     } else { 
-	$or_conditions = [ { uniquename => { '!=', undef } } ];
+	$or_conditions = [ { 'me.uniquename' => { '!=', undef } } ];
     }
     
     
@@ -88,6 +88,28 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	$and_conditions->{'me.stock_id'} = { '-in' => \@stock_ids } ;
     }
 ###############
+    if (exists($params->{trait} ) && $params->{trait} ) {
+	$and_conditions->{ 'observable.name' }  = $params->{trait} ;
+    }
+	
+
+    
+    if (exists($params->{project} ) && $params->{project} ) {
+
+
+    }
+    if (exists($params->{location} ) && $params->{location} ) {
+
+
+    }
+    if (exists($params->{year} ) && $params->{year} ) {
+	 
+
+    }
+    if (exists($params->{organization} ) && $params->{organization} ) {
+
+
+    }
 
     my $draw = $params->{draw};
     $draw =~ s/\D//g; # cast to int
@@ -106,7 +128,11 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		 $and_conditions
 		],
 	},
-	);
+	{
+	    join => ['type', 'organism' , { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}} ],
+
+	}
+    );
 
     my $records_total = $rs->count();
     
@@ -119,7 +145,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		],
 	} ,
 	{ 
-	    join      => [ 'type' , 'organism' ],
+	    join => ['type', 'organism', { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}} ],
+
 	    '+select' => [ 'type.name' , 'organism.species' ],
 	    '+as'     => [ 'cvterm_name' , 'species' ],
 	    page      => $page, 
