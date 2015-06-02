@@ -51,6 +51,8 @@ has 'block_numbers' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_block_n
 has 'replicate_numbers' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_replicate_numbers', reader => 'get_replicate_numbers', writer => '_set_replicate_numbers');
 has 'accession_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_accession_names', reader => 'get_accession_names', writer => '_set_accession_names');
 has 'control_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_control_names', reader => 'get_control_names', writer => '_set_control_names');
+has 'row_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_row_numbers', reader => 'get_row_numbers', writer => '_set_row_numbers');
+has 'col_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_col_numbers', reader => 'get_col_numbers', writer => '_set_col_numbers');
 
 
 sub _lookup_trial_id {
@@ -79,6 +81,8 @@ sub _lookup_trial_id {
   $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
   $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
   $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
+  $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
+  $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
   #$self->_set_is_a_control($self->_get_plot_info_fields_from_trial("is_a_control"));
   ($accession_names_ref, $control_names_ref) = $self->_get_trial_accession_names_and_control_names();
   if ($accession_names_ref) {
@@ -137,13 +141,40 @@ sub _get_design_from_trial {
   my $plots_ref;
   my @plots;
   my %design;
+
   $plots_ref = $self->_get_plots();
   if (!$plots_ref) {
-    return;
+      print STDERR "_get_design_from_trial: not plots provided... returning.\n";
+      return;
   }
+
+  my $project = $self->get_project();
+
+  my $genotyping_user_id_row = $project
+      ->search_related("nd_experiment_projects")
+      ->search_related("nd_experiment")
+      ->search_related("nd_experimentprops")
+      ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
+
+  my $genotyping_project_name_row = $project
+      ->search_related("nd_experiment_projects")
+      ->search_related("nd_experiment")
+      ->search_related("nd_experimentprops")
+      ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
+
   @plots = @{$plots_ref};
   foreach my $plot (@plots) {
     my %design_info;
+
+    if ($genotyping_user_id_row) {       
+	$design_info{genotyping_user_id} = $genotyping_user_id_row->get_column("value") || "unknown";
+	print STDERR "RETRIEVED: genotyping_user_id: $design{genotyping_user_id}\n";
+    }
+    if ($genotyping_project_name_row) { 
+	$design_info{genotyping_project_name} = $genotyping_project_name_row->get_column("value") || "unknown";
+	print STDERR "RETRIEVED: genotyping_project_name: $design{genotyping_project_name}\n";
+    }
+    
     my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
     my $tissue_sample_of_cv = $schema->resultset("Cv::Cvterm")->find({ name=>'tissue_sample_of' });
     my $plot_name = $plot->uniquename;
@@ -156,24 +187,19 @@ sub _get_design_from_trial {
     my $accession_name = $accession->uniquename;
     $design_info{"plot_name"}=$plot->uniquename;
     $design_info{"plot_id"}=$plot->stock_id;
-    #print STDERR "stock id of plot: ". $plot->stock_id."\n";
-    #print STDERR "plotprop: $plot_number_prop\n";
+
     if ($plot_number_prop) {
       $design_info{"plot_number"}=$plot_number_prop->value();
-      #print STDERR "plot# value: ".$plot_number_prop->value()."\n"
     }
     else {die "no plot number stockprop found for plot $plot_name";}
     if ($block_number_prop) {
       $design_info{"block_number"}=$block_number_prop->value();
-      #print STDERR "block# value: ".$block_number_prop->value()."\n"
     }
     if ($replicate_number_prop) {
       $design_info{"rep_number"}=$replicate_number_prop->value();
-      #print STDERR "rep# value: ".$replicate_number_prop->value()."\n"
     }
     if ($range_number_prop) {
       $design_info{"range_number"}=$replicate_number_prop->value();
-      #print STDERR "range# value: ".$range_number_prop->value()."\n"
     }
     if ($is_a_control_prop) {
       $design_info{"is_a_control"}=$is_a_control_prop->value();
@@ -181,13 +207,11 @@ sub _get_design_from_trial {
     if ($accession_name) {
       $design_info{"accession_name"}=$accession_name;
     }
-    #print STDERR "accession name in plot: $accession_name\n";
     $design{$plot_number_prop->value}=\%design_info;
   }
+
   return \%design;
-
 }
-
 
 sub _get_field_layout_experiment_from_project {
   my $self = shift;
@@ -393,6 +417,22 @@ sub _get_trial_accession_names_and_control_names {
   }
   return (\@accession_names, \@control_names);
 }
+
+# sub _get_genotyping_experiment_metadata { 
+#     my $self = shift;
+
+#     my $project = $self->get_project();
+#     if (!$project) {
+# 	return;
+#     }
+#     my $metadata = $project
+# 	->search_related("nd_experiment_projects")
+# 	->search_related("nd_experiment")
+# 	->search_related("nd_experimentprop")
+#    	->search({ 'type.name' => ['genotyping_user_id', 'genotyping_project_name']}, {join => 'type' });
+#     return $metadata_rs;
+    
+# }
 
 
 #######

@@ -3,10 +3,10 @@
 $trial_id
 $breeding_program
 $trial_name
-@location_data
-@phenotype_data
-@years
-@plot_data
+##@location_data
+##@phenotype_data
+##@years
+##@plot_data
 @accession_names
 @control_names
 @plot_names
@@ -19,7 +19,9 @@ $design_layout_view
 $user_can_modify => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'CXGN.Trial' , 'jstree/dist/jstree' ] &>
+<div id="trialIDDiv" class="trialIDDivClass" style="display:none;"><% $trial_id %></div>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' , 'jquery.iframe-post-form', 'CXGN.Trial', 'CXGN.BreedersToolbox.GenotypingTrial', 'CXGN.BreedersToolbox.HTMLSelect', 'jstree/dist/jstree' ] &>
 
 <& /page/page_title.mas, title=>"Genotyping trial $trial_name" &>
 
@@ -45,7 +47,7 @@ $user_can_modify => undef
 
 <center><div class="boxbgcolor5" style="width:70%"><a href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br /></div>
 
-<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1,  subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/layout/download/$trial_id\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/layout/download/$trial_id?format=csv\">csv</a>] | [<a id=\"delete_layout_data_by_trial_id\">Delete layout</a>]" &>
+<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1,  subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/layout/download/$trial_id\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/layout/download/$trial_id?format=csv\">csv</a>]" &>
 
 %print "Design: $design_type <br /><br />";
 %print "Number of blocks: $number_of_blocks <br />";
@@ -79,6 +81,15 @@ $user_can_modify => undef
 <&| /page/info_section.mas, title=>"Plate layout", collapsible=>1, is_subsection=>1,subtitle=> qq{ [<a href="/breeders_toolbox/trial/$trial_id?format=as_table">Plate View</a>] } &>
 
   <& /breeders_toolbox/genotyping_trials/layout.mas, design => $design &>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Delete", collapsible=>1, subtitle=>"<font color=\"red\">Deletion cannot be undonw</font>" &>
+
+<div class="boxbgcolor5">Note: Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
+<br />
+<br />
+<a id="delete_layout_data_by_trial_id">Delete this genotyping experiment</a>
 
 </&>
 

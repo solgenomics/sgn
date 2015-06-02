@@ -112,17 +112,15 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
 
     $c->stash->{location_data} = \@location_data;
 
-    print STDERR "check 4: ".(time()-$start_time)."\n";
+    # $h = $dbh->prepare("SELECT distinct(cvterm.name),  cvterm.cvterm_id, count(*) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? GROUP BY cvterm.name, cvterm.cvterm_id");
 
-    $h = $dbh->prepare("SELECT distinct(cvterm.name),  cvterm.cvterm_id, count(*) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? GROUP BY cvterm.name, cvterm.cvterm_id");
+    # $h->execute($trial_id);
 
-    $h->execute($trial_id);
-
-    my @phenotype_data;
-    while (my ($trait, $trait_id, $count,) = $h->fetchrow_array()) { 
-	push @phenotype_data, [$trait, $trait_id, $count];
-    }
-    $c->stash->{phenotype_data} = \@phenotype_data;
+    # my @phenotype_data;
+    # while (my ($trait, $trait_id, $count,) = $h->fetchrow_array()) { 
+    # 	push @phenotype_data, [$trait, $trait_id, $count];
+    # }
+    # $c->stash->{phenotype_data} = \@phenotype_data;
 
     $h = $dbh->prepare("SELECT distinct(projectprop.value) FROM projectprop WHERE project_id=? AND type_id=(SELECT cvterm_id FROM cvterm WHERE name='project year')");
     $h->execute($trial_id);

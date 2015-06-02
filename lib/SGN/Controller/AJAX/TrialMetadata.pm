@@ -3,7 +3,6 @@ package SGN::Controller::AJAX::TrialMetadata;
 
 use Moose;
 
-
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
@@ -24,7 +23,6 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $c = shift;
     my $trial_id = shift;
 
-    print STDERR "TRIAL ID: $trial_id\n";
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{trial} = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
 
@@ -34,7 +32,6 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     }
     
 }
-
 
 =head2 delete_trial_by_file
 
@@ -46,150 +43,6 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
  Example:
 
 =cut
-
-sub delete_trial_by_file { 
-    my $self = shift;
-    
-    my $file_id = shift;
-    
-#    if (!$c->user()) { 
-#	$c->stash->{rest} = { error => 'You must be logged in to delete a trial'# };
-#	return;
-#    }
-
- #   if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) { 
-#	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
- #   }
-
-#    my $del = CXGN::BreedersToolbox::Delete->new( 
-#	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-#	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-#	);
-	
-#    if ($del->delete_experiments_by_file($c->user->get_object()->get_sp_person_id(), $file_id)) { 
-#	$c->stash->{rest} = { success => 1 };
-#    }
-#    else { 
-#	$c->stash->{rest} = { error => "The trial information could not be removed from the database." };
-#    }    
-}
-
-
-
-
-# =head2 delete_phenotype_data_by_trial_id
-
-#  Usage:
-#  Desc:
-#  Ret:
-#  Args:
-#  Side Effects:
-#  Example:
-
-# =cut
-
-# sub delete_phenotype_data_by_trial_id : Path('/breeders/trial/phenotype/delete/id') Args(1) { 
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $trial_id = shift;
-
-#     print STDERR "DELETING phenotypes of trial $trial_id\n";
-
-
-#     if (!$c->user()) { 
-# 	$c->stash->{rest} = { error => 'You must be logged in to delete a trial' };
-# 	return;
-#     }
-    
-#     my $user_id = $c->user->get_object()->get_sp_person_id();
-
-#     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-#     my $breeding_program_rs = $schema->resultset("Cv::Cvterm")->search( { name => "breeding_program" });
-
-#     my $breeding_program_id = $breeding_program_rs->first()->cvterm_id();
-
-#     my $breeding_program_name = $breeding_program_rs->first()->name();
-
-#     my $trial_organization_id = $schema->resultset("Project::Projectprop")->search( 
-# 	{ 
-# 	    project_id => $trial_id, 
-# 	    type_id=>$breeding_program_id 
-# 	});
-
-#     if (! ($c->user->check_roles('curator') || ( $c->user->check_roles('submitter') && $c->roles($breeding_program_name) ))) { 
-# 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
-#     }
-    
-#     my $t = CXGN::Trial->new( { trial_id => $trial_id, bcs_schema => $c->dbic_schema("Bio::Chado::Schema") });
-    
-#     my $error = $t->delete_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
-
-#     print STDERR "ERROR DELETING METADATA: $error\n";
-#     my $error = $t->delete_phenotype_data($trial_id);
-
-#     print STDERR "ERROR DELETING PHENOTYPES: $error\n";
-#     if ($error) { 
-# 	$c->stash->{rest} = { error => $error };
-#     }
-#     else { 
-# 	$c->stash->{rest} = { success => "1" };
-#     }
-# }
-
-# =head2 delete_trial_layout_by_trial_id
-
-#  Usage:
-#  Desc:
-#  Ret:
-#  Args:
-#  Side Effects:
-#  Example:
-
-# =cut
-
-# sub delete_layout { 
-#     my $self = shift;
-    
-#     my $user_id = $c->user->get_object()->get_sp_person_id();
-
-#     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-#     my $breeding_program_rs = $schema->resultset("Cv::Cvterm")->search( { name => "breeding_program" });
-
-#     my $breeding_program_id = $breeding_program_rs->first()->cvterm_id();
-
-#     my $breeding_program_name = $breeding_program_rs->first()->name();
-
-#     my $trial_organization_id = $schema->resultset("Project::Projectprop")->search( 
-# 	{ 
-# 	    project_id => $trial_id, 
-# 	    type_id=>$breeding_program_id 
-# 	});
-
-#     if (! ($c->user->check_roles('curator') || ( $c->user->check_roles('submitter') && $c->roles($breeding_program_name) ))) { 
-# 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
-#     }
-    
-#     #my $del = CXGN::BreedersToolbox::Delete->new( 
-# #	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-# #	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-# #	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-# #	);
-
-#     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
-#     #my $error =  $del->delete_field_layout_by_trial($trial_id);
-
-#     my $error = $t->delete_field_layout();
-#     if ($error) { 
-# 	$c->stash->{rest} = { error => $error };
-#     }
-#     $c->stash->{rest} = { success => 1 };
-
-# }
-
 
 sub delete_trial_data : Local() ActionClass('REST');
 
@@ -218,9 +71,11 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     }
     else { 
 	$c->stash->{rest} = { error => "unknown delete action for $datatype" };
+	return;
     }
     if ($error) { 
 	$c->stash->{rest} = { error => $error };
+	return;
     }
     $c->stash->{rest} = { message => "Successfully deleted trial data.", success => 1 };
 }
@@ -232,8 +87,6 @@ sub trial_description_GET : Chained('trial') PathPart('description') Args(0) {
     my $c = shift;
     
     my $trial = $c->stash->{trial};
-
-    print STDERR "TRIAL: ".$trial->get_description()."\n";
 
     $c->stash->{rest} = { description => $trial->get_description() };
    
@@ -299,10 +152,6 @@ sub trial_location_POST : Chained('trial') PathPart('location') Args(1) {
 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
 	return;
     }
-
-    print STDERR "trial location POST!\n";
-
-    #my $location_id = $c->req->param("location_id");
 
     my $t = $c->stash->{trial};
     my $trial_id = $c->stash->{trial_id};
@@ -391,6 +240,25 @@ sub trial_type_POST : Chained('trial') PathPart('type') Args(1) {
     $c->stash->{rest} = { success => 1 };
 }
 
+sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    
+    my $dbh = $c->dbc->dbh();
+    my $trial_id = $c->stash->{trial_id};
+
+    my $h = $dbh->prepare("SELECT distinct(cvterm.name),  cvterm.cvterm_id, count(*) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? GROUP BY cvterm.name, cvterm.cvterm_id");
+
+    $h->execute($c->stash->{trial_id});
+
+    my @phenotype_data;
+    while (my ($trait, $trait_id, $count,) = $h->fetchrow_array()) { 
+	push @phenotype_data, [ qq { <a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a> },  qq{ <a href="/breeders_toolbox/trial/$trial_id/trait/$trait_id">$count [more stats]</a> } ];
+    }
+
+    $c->stash->{rest} = { data => \@phenotype_data };
+}
+
 sub delete_privileges_denied { 
     my $self = shift;
     my $c = shift;
@@ -411,6 +279,7 @@ sub delete_privileges_denied {
     }
     return "You have insufficient privileges to delete a trial.";
 }
+
 
 
 1;

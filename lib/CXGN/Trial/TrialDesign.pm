@@ -328,12 +328,24 @@ sub _get_alpha_lattice_design {
   }
   if ($self->has_block_size()) {
     $block_size = $self->get_block_size();
+    print STDERR "block size = $block_size\n";
     if ($block_size < 3) {
       die "Block size must be greater than 2 for alpha lattice design\n";
     }
+    #	print "stock_list: ".scalar(@stock_list)."block_size: $block_size\n";
     if (scalar(@stock_list) % $block_size != 0) {
-      die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
-    }
+      #die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
+	}
+    else {
+		my $dummy_var = scalar(@stock_list) % $block_size;		  
+		my $stocks_to_add = $block_size - $dummy_var;
+#		print "$stock_list\n";
+		foreach my $stock_list_rep(1..$stocks_to_add) {
+			push(@stock_list, $stock_list[0]);
+		}
+		$self->set_stock_list(\@stock_list);
+	}
+   
     $number_of_blocks = scalar(@stock_list)/$block_size;
     if ($number_of_blocks < $block_size) {
       die "The number of blocks ($number_of_blocks) for alpha lattice design must not be less than the block size ($block_size)\n";
@@ -401,7 +413,7 @@ sub _get_alpha_lattice_design {
 }
 
 sub _get_augmented_design {
-  my $self;
+  my $self = shift;
   my %augmented_design;
   my $rbase = R::YapRI::Base->new();
   my @stock_list;
@@ -1247,6 +1259,7 @@ sub _build_plot_names {
     $suffix = $self->get_plot_name_suffix();
   }
   foreach my $key (keys %design) {
+	$trial_name ||="";
     $design{$key}->{plot_name} = $trial_name.$prefix.$key.$suffix;
     $design{$key}->{plot_number} = $key;
   }
