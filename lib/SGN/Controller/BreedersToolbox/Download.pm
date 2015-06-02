@@ -198,117 +198,8 @@ sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download')
     my $output = read_file($file_path);
 
     $c->res->body($output);
-
-    # my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    # my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-
-    # $self->trial_download_log($c, $trial_id, "trial phenotypes");
-
-    # my $trial_sql = "\'$trial_id\'";
-    # my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
-    # my @data = $bs->get_phenotype_info_matrix(undef,$trial_sql, undef);
-    # my $rs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_geolocation');
-
-    # my $location = $rs->first()->get_column('description');
-    
-    # my $bprs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id})->search_related_rs('project_relationship_subject_projects');
-
-    # #print STDERR "COUNT: ".$bprs->count()."  ". $bprs->get_column('project_relationship.object_project_id')."\n";
-
-    # my $pbr = $schema->resultset("Project::Project")->search( { 'me.project_id'=> $bprs->get_column('project_relationship_subject_projects.object_project_id')->first() } );
-    
-    # my $program_name = $pbr->first()->name();
-    # my $year = $trial->get_year();
-
-    # #print STDERR "YEAR: $year\n";
-
-    # #print STDERR "PHENOTYPE DATA MATRIX: ".Dumper(\@data);
-    # $c->tempfiles_subdir("data_export"); # make sure the dir exists
-    
-    # if ($format eq "csv") { 
-    # 	$self->phenotype_download_csv($c, $trial_id, $program_name, $location, $year, \@data);
-    # }
-    # else { 
-    # 	$self->phenotype_download_excel($c, $trial_id, $program_name, $location, $year, \@data);
-    # }
 }
 	
-
-# sub phenotype_download_csv { 
-#     my $self = shift;
-#     my $c = shift;
-#     my $trial_id = shift;
-#     my $program_name = shift;
-#     my $location = shift;
-#     my $year = shift;
-#     my $dataref = shift;
-#     my @data = @$dataref;
-
-#     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$program_name."_phenotypes_".$location."_".$trial_id."_XXXXX");
-
-#     close($fh);
-#     my $file_path = $c->config->{basepath}."/".$tempfile.".csv";
-#     move($tempfile, $file_path);
-
-#     open(my $F, ">", $file_path) || die "Can't open file $file_path\n";
-#     for (my $line =0; $line< @data; $line++) { 
-# 	my @columns = split /\t/, $data[$line];
-	
-# 	print $F join(",", @columns);
-# 	print $F "\n";
-#     }
-
-#     my $path = $file_path;
-#     my $output = read_file($path);
-
-#     my $file_name = basename($file_path);    
-#     $c->res->content_type('Application/csv');    
-#     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
-
-
-
-#     close($F);
-#     $c->res->body($output);
-# }
-
-# sub phenotype_download_excel { 
-#     my $self = shift;
-#     my $c = shift;
-#     my $trial_id = shift;
-#     my $program_name = shift;
-#     my $location = shift;
-#     my $year = shift;
-#     my $dataref = shift;
-#     my @data = @$dataref;
-
-#     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$program_name."_phenotypes_".$location."_".$trial_id."_XXXXX");
-
-#     my $file_path = $tempfile.".xls";
-#     move($tempfile, $file_path);
-#     my $ss = Spreadsheet::WriteExcel->new($c->config->{basepath}."/".$file_path);
-#     my $ws = $ss->add_worksheet();
-
-#     for (my $line =0; $line< @data; $line++) { 
-# 	my @columns = split /\t/, $data[$line];
-# 	for(my $col = 0; $col<@columns; $col++) { 
-# 	    $ws->write($line, $col, $columns[$col]);
-# 	}
-#     }
-#     $ws->write(0, 0, "$program_name, $location ($year)");
-#     $ss ->close();
-
-#     my $file_name = basename($file_path);    
-#     $c->res->content_type('Application/xls');    
-#     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
-
-#     my $path = $c->config->{basepath}."/".$file_path;
-
-#     my $output = read_file($path, binmode=>':raw');
-
-#     close($fh);
-#     $c->res->body($output);
-# }
-
 sub download_action : Path('/breeders/download_action') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -688,86 +579,100 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     
-    my $layout = $t->get_layout()->get_design();
+    #my $layout = $t->get_layout()->get_design();
 
     $c->tempfiles_subdir("data_export"); # make sure the dir exists
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$trial_id."_XXXXX");
 
     my $file_path = $tempfile.".xls";
     move($tempfile, $file_path);
-    my $ss = Spreadsheet::WriteExcel->new($c->config->{basepath}."/".$file_path);
-    my $ws = $ss->add_worksheet();
 
-    # write primary headers
-    #
-    $ws->write(0, 0, "Project Details");
-    $ws->write(0, 2, "Sample Details");
-    $ws->write(0, 12, "Organism Details");
-    $ws->write(0, 21, "Origin Details");
-
-    # write secondary headers
-    #
-    my @headers = ( 
-	"Project Name",
-	"User ID",
-	"Plate Name",
-	"Well", 
-	"Sample Name", 
-	"Pedigree",
-	"Population",
-	"Stock Number",
-	"Sample DNA Concentration (ng/ul)",
-	"Sample Volume (ul)",
-	"Sample DNA Mass(ng)",
-	"Kingdom",
-	"Genus",
-	"Species",
-	"Common Name",
-	"Subspecies",
-	"Variety",
-	"Seed Lot"
-	);
-
-    for(my $i=0; $i<@headers; $i++) { 
-	$ws->write(1, $i, $headers[$i]);
+    my $td = CXGN::Trial::Download->new( { 
+	bcs_schema => $schema,
+	trial_id => $trial_id,
+	format => "IGDFacilitySpreadsheet",
+        filename => $file_path,
+	user_id => $c->user->get_object()->get_sp_person_id(),
+	trial_download_logfile => $c->config->{trial_download_logfile},
     }
+    );
 
-    # replace accession names with igd_synonyms
-    #
-    print STDERR "Converting accession names to igd_synonyms...\n";
-    foreach my $k (sort wellsort (keys %{$layout})) { 
-	my $q = "SELECT value FROM stock JOIN stockprop using(stock_id) JOIN cvterm ON (stockprop.type_id=cvterm.cvterm_id) WHERE cvterm.name='igd_synonym' AND stock.uniquename = ?";
-	my $h = $c->dbc->dbh()->prepare($q);
-	$h->execute($layout->{$k}->{accession_name});
-	my ($igd_synonym) = $h->fetchrow_array();
-	$layout->{$k}->{igd_synonym} = $igd_synonym;
-	if ($layout->{$k}->{accession_name}=~/BLANK/i) { 
-	    $layout->{$k}->{igd_synonym} = "BLANK";
-	}
-    }
-    # write plate info
-    #
-    my $line = 0;
+    $td->download();
 
-    foreach my $k (sort wellsort (keys %{$layout})) { 
-	$ws->write(2 + $line, 0, "NextGen Cassava");
-	my $breeding_program_data = $t->get_breeding_programs();
-	my $breeding_program_name = "";
-	if ($breeding_program_data->[0]) { 
-	    $breeding_program_name = $breeding_program_data->[0]->[1];
-	}
-	$ws->write(2 + $line, 0, $layout->{$k}->{genotyping_project_name});
-	$ws->write(2 + $line, 1, $layout->{$k}->{genotyping_user_id});
-	$ws->write(2 + $line, 2, $t->get_name());
-	$ws->write(2 + $line, 3, $k);
-	$ws->write(2 + $line, 4, $layout->{$k}->{igd_synonym});
-	$ws->write(2 + $line, 16, "Manihot");
-	$ws->write(2 + $line, 17, "esculenta");
-	$ws->write(2 + $line, 20, $t->get_location());
-	$line++;
-    }
 
-    $ss ->close();
+    # my $ss = Spreadsheet::WriteExcel->new($c->config->{basepath}."/".$file_path);
+    # my $ws = $ss->add_worksheet();
+
+    # # write primary headers
+    # #
+    # $ws->write(0, 0, "Project Details");
+    # $ws->write(0, 2, "Sample Details");
+    # $ws->write(0, 12, "Organism Details");
+    # $ws->write(0, 21, "Origin Details");
+
+    # # write secondary headers
+    # #
+    # my @headers = ( 
+    # 	"Project Name",
+    # 	"User ID",
+    # 	"Plate Name",
+    # 	"Well", 
+    # 	"Sample Name", 
+    # 	"Pedigree",
+    # 	"Population",
+    # 	"Stock Number",
+    # 	"Sample DNA Concentration (ng/ul)",
+    # 	"Sample Volume (ul)",
+    # 	"Sample DNA Mass(ng)",
+    # 	"Kingdom",
+    # 	"Genus",
+    # 	"Species",
+    # 	"Common Name",
+    # 	"Subspecies",
+    # 	"Variety",
+    # 	"Seed Lot"
+    # 	);
+
+    # for(my $i=0; $i<@headers; $i++) { 
+    # 	$ws->write(1, $i, $headers[$i]);
+    # }
+
+    # # replace accession names with igd_synonyms
+    # #
+    # print STDERR "Converting accession names to igd_synonyms...\n";
+    # foreach my $k (sort wellsort (keys %{$layout})) { 
+    # 	my $q = "SELECT value FROM stock JOIN stockprop using(stock_id) JOIN cvterm ON (stockprop.type_id=cvterm.cvterm_id) WHERE cvterm.name='igd_synonym' AND stock.uniquename = ?";
+    # 	my $h = $c->dbc->dbh()->prepare($q);
+    # 	$h->execute($layout->{$k}->{accession_name});
+    # 	my ($igd_synonym) = $h->fetchrow_array();
+    # 	$layout->{$k}->{igd_synonym} = $igd_synonym;
+    # 	if ($layout->{$k}->{accession_name}=~/BLANK/i) { 
+    # 	    $layout->{$k}->{igd_synonym} = "BLANK";
+    # 	}
+    # }
+    # # write plate info
+    # #
+    # my $line = 0;
+
+    # foreach my $k (sort wellsort (keys %{$layout})) { 
+    # 	$ws->write(2 + $line, 0, "NextGen Cassava");
+    # 	my $breeding_program_data = $t->get_breeding_programs();
+    # 	my $breeding_program_name = "";
+    # 	if ($breeding_program_data->[0]) { 
+    # 	    $breeding_program_name = $breeding_program_data->[0]->[1];
+    # 	}
+    # 	$ws->write(2 + $line, 0, $layout->{$k}->{genotyping_project_name});
+    # 	$ws->write(2 + $line, 1, $layout->{$k}->{genotyping_user_id});
+    # 	$ws->write(2 + $line, 2, $t->get_name());
+    # 	$ws->write(2 + $line, 3, $k);
+    # 	$ws->write(2 + $line, 4, $layout->{$k}->{igd_synonym});
+    # 	$ws->write(2 + $line, 16, "Manihot");
+    # 	$ws->write(2 + $line, 17, "esculenta");
+    # 	$ws->write(2 + $line, 20, $t->get_location());
+    # 	$line++;
+    # }
+
+    # $ss ->close();
 
     # prepare file for download
     #
