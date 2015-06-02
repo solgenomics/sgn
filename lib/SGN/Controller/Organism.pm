@@ -383,13 +383,13 @@ sub phenotype_data {
     my $trait_count = $schema->resultset("NaturalDiversity::NdExperimentPhenotype")->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', { organism_id => $organism_id } )->count;
 
     my $pheno_list =
-        qq|<a href= "/stock/search?organism=$organism_id&search_submitted=1&submit=Search">$pheno_count</a>|;
+        qq|<a href= "/search/stocks?organism=$organism_id">$pheno_count</a>|;
     $c->stash->{phenotypes}  = $pheno_list;
     my $onto_list =
-        qq|<a href= "/stock/search?organism=$organism_id&search_submitted=1&submit=Search">$onto_count</a>|;
+        qq|<a href= "/search/stocks?organism=$organism_id">$onto_count</a>|;
     $c->stash->{onto_count}  = $onto_list;
     my $trait_list =
-        qq|<a href= "/stock/search?organism=$organism_id&search_submitted=1&submit=Search">$trait_count</a>|;
+        qq|<a href= "/search/stocks?organism=$organism_id">$trait_count</a>|;
     $c->stash->{trait_count} = $trait_list;
 
 }

@@ -18,7 +18,7 @@ use File::Slurp;
 use JSON::Any;
 
 use CXGN::Chado::Stock;
-use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
+use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs /;
 use Bio::Chado::NaturalDiversity::Reports;
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -56,13 +56,13 @@ sub stock_search :Path('/search/stocks') Args(0) {
         trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
         onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
 	trait_db_name              => $c->get_conf('trait_ontology_db_name'),
-	breeding_programs          => _breeding_programs($self),
+	breeding_programs          => breeding_programs($self->schema),
 	);
 	
 }
 
 
-=head2 search
+=head2 search DEPRECATED
 
 Public path: /stock/search
 
@@ -928,26 +928,6 @@ sub _validate_pair {
         if ($key =~ m/_id$/ and $value !~ m/\d+/);
 }
 
-
-sub _breeding_programs {
-    my  $self = shift;
-    my $schema = $self->schema;
-
-    return [
-        [ 0, '' ],
-        map [ $_->project_id, $_->name ],
-        $schema
-             ->resultset('Project::Project')->search(
-	    { 'type.name' => 'breeding_program',
-	    }, 
-	    {
-		join      => { 'projectprops' => 'type' },
-		select   => [qw[ me.project_id me.name ]],
-		distinct => 1,
-		order_by => 'me.name',
-	    })
-	];
-}
 
 
 

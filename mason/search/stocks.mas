@@ -42,28 +42,6 @@ my $breeding_programs_select = simple_selectbox_html(
 </%perl>
 
 
-<div style="text-align:right">
-Copy items on this page to list: 
-<span id="item_list_menu">
-</span>
-
-<div id="item_list">
-</div>	
-</div>
-
-
-<table id="stock_search_results" class="display">
-<thead>
-  <tr>
-    <th>Stock Name</th>
-    <th>Stock Type</th>
-    <th>Organism</th>
-</tr>
-</thead>
-
-</table>
-
-<br /><br />
 
 <div id="stock_search_form">
   <table>
@@ -90,8 +68,31 @@ Copy items on this page to list:
 
 </div>
 
+<br />
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+
+<div style="text-align:right">
+Copy items on this page to list: 
+<span id="item_list_menu">
+</span>
+
+<div id="item_list">
+</div>	
+</div>
+
+
+<table id="stock_search_results" class="display">
+<thead>
+  <tr>
+    <th>Stock Name</th>
+    <th>Stock Type</th>
+    <th>Organism</th>
+</tr>
+</thead>
+
+</table>
 
 
 

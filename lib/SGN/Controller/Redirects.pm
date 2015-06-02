@@ -20,8 +20,8 @@ my %paths = (
         /search/qtl                            /search/phenotypes/qtl
         /trait/search                          /search/phenotypes/traits
         /search/trait                          /search/phenotypes/traits
-        /search/phenotype                      /search/phenotypes/stock
-        /search/phenotype_qtl_trait            /search/phenotypes/stock
+        /search/phenotype                      /search/stocks
+        /search/phenotype_qtl_trait            /search/stocks
 
         /search/unigene                        /search/transcripts/unigene
         /search/unigenes                       /search/transcripts/unigene
