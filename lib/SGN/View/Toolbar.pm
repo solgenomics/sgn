@@ -35,7 +35,7 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'Phenotypes',
-                    link => '/search/phenotypes/stock',
+                    link => '/search/stocks',
                     desc => 'Search for mutants, accessions, and traits.'
                 },
                 {
