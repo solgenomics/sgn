@@ -200,6 +200,82 @@ sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download')
     $c->res->body($output);
 }
 	
+sub phenotype_download_csv { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    my $program_name = shift;
+    my $location = shift;
+    my $year = shift;
+    my $dataref = shift;
+    my @data = @$dataref;
+
+    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$program_name."_phenotypes_".$location."_".$trial_id."_XXXXX");
+
+    close($fh);
+    my $file_path = $c->config->{basepath}."/".$tempfile.".csv";
+    move($tempfile, $file_path);
+
+    open(my $F, ">", $file_path) || die "Can't open file $file_path\n";
+    for (my $line =0; $line< @data; $line++) { 
+	my @columns = split /\t/, $data[$line];
+	
+	print $F join(",", @columns);
+	print $F "\n";
+    }
+
+    my $path = $file_path;
+    my $output = read_file($path);
+
+    my $file_name = basename($file_path);    
+    $c->res->content_type('Application/csv');    
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
+
+
+
+    close($F);
+    $c->res->body($output);
+}
+
+sub phenotype_download_excel { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    my $program_name = shift;
+    my $location = shift;
+    my $year = shift;
+    my $dataref = shift;
+    my @data = @$dataref;
+
+    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$program_name."_phenotypes_".$location."_".$trial_id."_XXXXX");
+
+    my $file_path = $tempfile.".xls";
+    move($tempfile, $file_path);
+    my $ss = Spreadsheet::WriteExcel->new($c->config->{basepath}."/".$file_path);
+    my $ws = $ss->add_worksheet();
+
+    for (my $line =0; $line< @data; $line++) { 
+	my @columns = split /\t/, $data[$line];
+	for(my $col = 0; $col<@columns; $col++) { 
+	    $ws->write($line, $col, $columns[$col]);
+	}
+    }
+    $ws->write(0, 0, "$program_name, $location ($year)");
+    $ss ->close();
+
+    my $file_name = basename($file_path);    
+    $c->res->content_type('Application/xls');    
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
+
+    my $path = $c->config->{basepath}."/".$file_path;
+
+    my $output = read_file($path, binmode=>':raw');
+
+    close($fh);
+    $c->res->body($output);
+}
+
+
 sub download_action : Path('/breeders/download_action') Args(0) { 
     my $self = shift;
     my $c = shift;
