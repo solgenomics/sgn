@@ -2154,7 +2154,7 @@ sub format_selection_pops {
 
                   $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
                   my $download_prediction = $c->stash->{download_prediction};
-                  push @data,  [$pred_pop_link, $desc, 'NA', $project_yr, $download_prediction];
+                  push @data,  [$pred_pop_link, $desc, $project_yr, $download_prediction];
               }
           }
         }
