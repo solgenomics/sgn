@@ -81,7 +81,7 @@ sub store {
     }
     $publication->set_accession($accession);
     $publication->add_dbxref("PMID:$accession");
-
+    
     #dbxref object...
     my $dbxref= CXGN::Chado::Dbxref->new($self->get_dbh(), $dbxref_id);
 
@@ -112,7 +112,10 @@ sub store {
     }
     #fetch the publication from pubmed:
     my $pubmed= CXGN::Tools::Pubmed->new($publication); 
-
+    $e_id = $publication->get_eid;
+    if ($e_id) {
+	$publication->add_dbxref("DOI:$e_id");
+    }
     $self->SUPER::store(1); #this gives the publication a  dbxref id, and stores it in pub, pub_dbxref pubabstract(change to pubprop!!), and pub_author
 
     #instantiate a new dbxref object 
@@ -472,7 +475,7 @@ sub print_confirm_form {
   
     my $pubmed= CXGN::Tools::Pubmed->new($publication); 
     my $pub_title=$publication->get_title();
-    
+   
     #check if NCBI server is down (See CXGN::Tools::Pubmed for set_message($message)
     if ($publication->get_message() ) { $self->get_page->message_page( $publication->get_message() ); }
     #add pubmed verification step	
