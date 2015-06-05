@@ -303,68 +303,78 @@ sub add_cross_POST :Args(0) {
       $cross_to_add->set_male_parent($male_individual);
     }
 
+    
     $cross_to_add->set_cross_type($cross_type);
     $cross_to_add->set_name($cross_name);
 
-    #create array of pedigree objects to add, in this case just one pedigree
-    @array_of_pedigree_objects = ($cross_to_add);
-    $cross_add = CXGN::Pedigree::AddCrosses
-      ->new({
-	     chado_schema => $chado_schema,
-	     phenome_schema => $phenome_schema,
-	     #metadata_schema => $metadata_schema,
-	     dbh => $dbh,
-	     location => $location,
-	     program => $program,
-	     crosses =>  \@array_of_pedigree_objects,
-	     owner_name => $owner_name,
-	    });
-
-
-    #add the crosses
-    $cross_add->add_crosses();
-
-    #create progeny if specified
-    if ($progeny_number) {
-
-      #create array of progeny names to add for this cross
-      while ($progeny_increment < $progeny_number + 1) {
-	$progeny_increment = sprintf "%03d", $progeny_increment;
-	my $stock_name = $cross_name.$prefix.$progeny_increment.$suffix;
-	push @progeny_names, $stock_name;
-	$progeny_increment++;
-      }
-
-      #add array of progeny to the cross
-      $progeny_add = CXGN::Pedigree::AddProgeny
-	->new({
-	       chado_schema => $chado_schema,
-	       phenome_schema => $phenome_schema,
-	       dbh => $dbh,
-	       cross_name => $cross_name,
-	       progeny_names => \@progeny_names,
-	       owner_name => $owner_name,
-	      });
-      $progeny_add->add_progeny();
-
+    eval { 
+	#create array of pedigree objects to add, in this case just one pedigree
+	@array_of_pedigree_objects = ($cross_to_add);
+	$cross_add = CXGN::Pedigree::AddCrosses
+	    ->new({
+		chado_schema => $chado_schema,
+		phenome_schema => $phenome_schema,
+		#metadata_schema => $metadata_schema,
+		dbh => $dbh,
+		location => $location,
+		program => $program,
+		crosses =>  \@array_of_pedigree_objects,
+		owner_name => $owner_name,
+		  });
+	
+	
+	#add the crosses
+	$cross_add->add_crosses();
+    };
+    if ($@) { 
+	$c->stash->{error => "Error creating the cross: $@" };
+	return;
     }
-
-    #add number of flowers as an experimentprop if specified
-    if ($number_of_flowers) {
-      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
-      $cross_add_info->set_number_of_flowers($number_of_flowers);
-      $cross_add_info->add_info();
-    }
-
-    #add number of seeds as an experimentprop if specified
-    if ($number_of_seeds) {
-      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
-      $cross_add_info->set_number_of_seeds($number_of_seeds);
-      $cross_add_info->add_info();
-    }
-
+    
+    eval {
+	#create progeny if specified
+	if ($progeny_number) {
+	    
+	    #create array of progeny names to add for this cross
+	    while ($progeny_increment < $progeny_number + 1) {
+		$progeny_increment = sprintf "%03d", $progeny_increment;
+		my $stock_name = $cross_name.$prefix.$progeny_increment.$suffix;
+		push @progeny_names, $stock_name;
+		$progeny_increment++;
+	    }
+	    
+	    #add array of progeny to the cross
+	    $progeny_add = CXGN::Pedigree::AddProgeny
+		->new({
+		    chado_schema => $chado_schema,
+		    phenome_schema => $phenome_schema,
+		    dbh => $dbh,
+		    cross_name => $cross_name,
+		    progeny_names => \@progeny_names,
+		    owner_name => $owner_name,
+		      });
+	    $progeny_add->add_progeny();
+	    
+	}
+	
+	#add number of flowers as an experimentprop if specified
+	if ($number_of_flowers) {
+	    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
+	    $cross_add_info->set_number_of_flowers($number_of_flowers);
+	    $cross_add_info->add_info();
+	}
+	
+	#add number of seeds as an experimentprop if specified
+	if ($number_of_seeds) {
+	    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
+	    $cross_add_info->set_number_of_seeds($number_of_seeds);
+	    $cross_add_info->add_info();
+	}
+	
+    };
     if ($@) {
 	$c->stash->{rest} = { error => "An error occurred: $@"};
+	return;
     }
 
     $c->stash->{rest} = { error => '', };
