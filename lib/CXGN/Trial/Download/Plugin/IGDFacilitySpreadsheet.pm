@@ -2,6 +2,7 @@
 package CXGN::Trial::Download::Plugin::IGDFacilitySpreadsheet;
 
 use Moose::Role;
+use Spreadsheet::WriteExcel;
 
 sub verify {
     1;
@@ -15,7 +16,7 @@ sub download {
     my $t = CXGN::Trial->new( { bcs_schema => $self->bcs_schema(), trial_id => $trial_id });
     
     my $layout = $t->get_layout()->get_design();
-
+    print STDERR "FILENAME: ".$self->filename()."\n";
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
 
@@ -91,5 +92,27 @@ sub download {
     $ss ->close();
     return "";
 }
+
+sub wellsort { 
+    my $row_a = substr($a, 0, 1);
+    my $row_b = substr($b, 0, 1);
+
+    my $col_a;
+    my $col_b;
+    if ($a =~ m/(\d+)/) { 
+	$col_a = $1;
+    }
+    if ($b =~ m/(\d+)/) { 
+	$col_b = $1;
+    }
+
+    if ($row_a ne $row_b) { 
+	return $row_a cmp $row_b;
+    }
+    else { 
+	return $col_a <=> $col_b;
+    }
+}
+
 
 1;
