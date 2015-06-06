@@ -67,29 +67,29 @@ sub BUILD {
     $self->load_plugin($self->format());
 }
 
-sub verify {
-    my $self = shift;
+# sub verify {
+#     my $self = shift;
     
-    $self->load_plugin($self->format());
+#     $self->load_plugin($self->format());
 
-    return $self->plugin_verify();
-}
+#     return $self->plugin_verify();
+# }
 
-sub download { 
-    my $self = shift;
+# sub download { 
+#     my $self = shift;
 
-    print STDERR "Format: ".$self->format()."\n";
-    eval { 
-	$self->load_plugin($self->format());
-    };
-    if ($@) { 
-	die "The plugin specified (".$self->format().") for the download does not exist";
-    }
+#     print STDERR "Format: ".$self->format()."\n";
+#     eval { 
+# 	$self->load_plugin($self->format());
+#     };
+#     if ($@) { 
+# 	die "The plugin specified (".$self->format().") for the download does not exist";
+#     }
     
-    my $error = $self->plugin_download();
+#     my $error = $self->plugin_download();
 
-    return $error;
-}
+#     return $error;
+# }
 
 sub trial_download_log { 
     my $self = shift;
