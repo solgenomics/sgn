@@ -20,15 +20,11 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     my $c = shift;
     my $trial_id = shift;
 
-    my $user = $c->user();
-    if (!$user) { 
-	#$c->stash->{template} = '/generic_message.mas';
-	#$c->stash->{message}  = 'You must be logged in to access this page.';	
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
-	return;
-    }
+    print STDERR "TRIAL INIT...\n";
+
 
     $c->stash->{trial_id} = $trial_id;
+    print STDERR "TRIAL ID = $trial_id\n";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     $c->stash->{schema} = $schema;
     my $trial;
@@ -41,8 +37,7 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
 	return;
     }
     $c->stash->{trial} = $trial;    
-    $c->stash->{user_can_modify} = ($user->check_roles("submitter") || $user->check_roles("curator")) ;
-
+    
 
 }
 
@@ -59,6 +54,14 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     my $format = $c->req->param("format");
 
+    my $user = $c->user();
+    if (!$user) { 
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    $c->stash->{user_can_modify} = ($user->check_roles("submitter") || $user->check_roles("curator")) ;
+    
     my $start_time = time();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id} });
@@ -225,6 +228,12 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
+
+    my $user = $c->user();
+    if (!$user) { 
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
 
     my $format = $c->req->param("format") || "xls";
     my $trait_list = $c->req->param("trait_list") || "";
