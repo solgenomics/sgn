@@ -45,7 +45,7 @@ $user_can_modify => undef
 
 </td></tr></table>
 
-<center><div class="boxbgcolor5" style="width:70%"><a href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br /></div>
+<center><div class="boxbgcolor5" style="width:70%"><a id="genotyping_trial_spreadsheet_link" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br /></div>
 
 <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1,  subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/layout/download/$trial_id\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/layout/download/$trial_id?format=csv\">csv</a>]" &>
 

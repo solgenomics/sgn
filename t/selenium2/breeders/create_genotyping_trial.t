@@ -5,6 +5,7 @@ use lib 't/lib';
 
 use Test::More;
 
+use Data::Dumper;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 
@@ -57,6 +58,8 @@ $t->while_logged_in_as(
 	sleep(10);
 
 	ok($t->driver->get_page_source()=~m/A1/, "detail page");
+
+	$t->download_linked_file("genotyping_trial_spreadsheet_link");
 	
     });
 
