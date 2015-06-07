@@ -279,7 +279,7 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
 
     @{$c->stash->{synonyms}} = $organism->get_synonyms();
 
-    $c->stash->{loci} = "<a href=\"/search/locus_search.pl?&w8e4_common_name=$common_name\">".$organism->get_loci_count().'</a>';
+    $c->stash->{loci} = "<a href=\"/search/locus\">".$organism->get_loci_count().'</a>';
 
     $c->stash->{taxonomy} = join ", ", reverse(get_parentage($organism));
 

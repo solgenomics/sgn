@@ -71,11 +71,9 @@ sub search_trait {
                                  page     => $page,
                                  rows     => 10,
                                  order_by => 'name'              
-                             },                  
-                             
+                             },                                               
             );             
     }
-
     
     return $rs;      
 }
@@ -1568,31 +1566,6 @@ sub stock_projects_rs {
     return $project_rs;
 
 }
-
-
-# sub project_object_stocks_rs {
-#    my ($self, $project_id) = @_;
-  
-#     my $stock_rs =  $self->schema->resultset("Project::Project")
-#         ->search({'me.project_id' => $project_id})
-#         ->search_related('nd_experiment_projects')
-#         ->search_related('nd_experiment')
-#         ->search_related('nd_experiment_stocks')
-#         ->search_related('stock')
-#         ->search_related('stock_relationship_subjects')
-#         ->search_related('object', 
-#                          {},                       
-#                          {
-#                              columns   => [qw /object.stock_id object.name/],
-#                              '+select' => [qw /me.project_id me.name/ ],
-#                               '+as'    => [qw /project_id project_name/ ],
-#                              distinct  => 1,
-#                              order_by  => {-desc => [qw /object.name/ ]} 
-#                          }
-#         );
- 
-#     return $stock_rs;
-# }
 
 
 sub project_subject_stocks_rs {

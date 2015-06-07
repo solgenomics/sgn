@@ -129,7 +129,7 @@ formattedPhenoFile <- grep("formatted_phenotype_data",
 formattedPhenoData <- c()
 phenoData <- c()
 
-if (length(formattedPhenoFile) != 0 & file.info(formattedPhenoFile)$size > 1 ) {
+if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) {
     formattedPhenoData <- read.table(formattedPhenoFile,
                                      header = TRUE,
                                      row.names = 1,
@@ -138,7 +138,6 @@ if (length(formattedPhenoFile) != 0 & file.info(formattedPhenoFile)$size > 1 ) {
                                      dec = ".")
 
 } else {
-
   phenoFile <- grep("\\/phenotype_data",
                     inFiles,
                     ignore.case = TRUE,
@@ -187,7 +186,6 @@ if (datasetInfo == 'combined populations') {
     phenoTrait <- na.omit(phenoTrait)
    
   } else {
-    
     dropColumns <- c("uniquename", "stock_name")
     phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
     
@@ -310,7 +308,6 @@ genoFile <- grep("genotype_data",
                  fixed = FALSE,
                  value = TRUE
                  )
-message("genotype dataset file: ", genoFile)
 
 genoData <- read.table(genoFile,
                        header = TRUE,

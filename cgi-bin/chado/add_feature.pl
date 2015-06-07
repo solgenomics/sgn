@@ -492,7 +492,7 @@ sub print_confirm_form {
        
     my $organism = CXGN::Chado::Organism->new_with_taxon_id($self->get_dbh(), $feature->get_organism_taxon_id() );
     
-    if( !$organism->get_organism_id() ){
+    if( !$organism ) { 
 	my $organism_name = $feature->get_organism_name();
 	print  qq |<h3> The requested sequence ($GBaccession) corresponds to an unsubmittable organism: $organism_name. If you think this organism should be submittable please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">sgn-feedback\@sgn.cornell.edu</a></h3>  |;
 	print qq |<a href="$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new">Go back</a><br />|;

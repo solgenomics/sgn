@@ -14,6 +14,8 @@ use URI::FromHash 'uri';
 
 use CXGN::Phenome::Locus;
 use CXGN::Phenome::Schema;
+use CXGN::Tools::Organism;
+use CXGN::Phenome::Locus::LinkageGroup;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -24,6 +26,31 @@ has 'schema' => (
     isa      => 'DBIx::Class::Schema',
     lazy_build => 1,
 );
+
+
+
+sub locus_search : Path('/search/locus') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my ($organism_names_ref, $organism_ids_ref)=CXGN::Tools::Organism::get_existing_organisms( $c->dbc->dbh);
+    
+    unshift @$organism_names_ref, '';
+    unshift @$organism_ids_ref, '';
+    my @organism_ref;
+    my $index;
+    for my $id ( @$organism_ids_ref ) {
+	push( @organism_ref, [$id, $organism_names_ref->[$index]] );
+	$index++;
+    }
+    my $lg_names_ref =  CXGN::Phenome::Locus::LinkageGroup::get_all_lgs( $c->dbc->dbh );
+    $c->stash(
+	template       => '/search/loci.mas',
+	organism_ref   => \@organism_ref,
+	lg_names_ref   => $lg_names_ref,
+	);
+}
+
+
 
 sub _build_schema {
     shift->_app->dbic_schema( 'CXGN::Phenome::Schema' )
