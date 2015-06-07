@@ -251,7 +251,7 @@ sub phenotype_download_excel {
 
     my $file_path = $tempfile.".xls";
     move($tempfile, $file_path);
-    my $ss = Spreadsheet::WriteExcel->new($c->config->{basepath}."/".$file_path);
+    my $ss = Spreadsheet::WriteExcel->new($file_path);
     my $ws = $ss->add_worksheet();
 
     for (my $line =0; $line< @data; $line++) { 
@@ -267,9 +267,7 @@ sub phenotype_download_excel {
     $c->res->content_type('Application/xls');    
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
 
-    my $path = $c->config->{basepath}."/".$file_path;
-
-    my $output = read_file($path, binmode=>':raw');
+    my $output = read_file($file_path, binmode=>':raw');
 
     close($fh);
     $c->res->body($output);
@@ -660,7 +658,7 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     $c->tempfiles_subdir("data_export"); # make sure the dir exists
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$trial_id."_XXXXX");
 
-    my $file_path = $tempfile.".xls";
+    my $file_path = $c->config->{basepath}."/".$tempfile.".xls";
     move($tempfile, $file_path);
 
     my $td = CXGN::Trial::Download->new( { 
@@ -756,9 +754,9 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
     $c->res->content_type('Application/xls');    
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
 
-    my $path = $c->config->{basepath}."/".$file_path;
+    
 
-    my $output = read_file($path, binmode=>':raw');
+    my $output = read_file($file_path, binmode=>':raw');
 
     close($fh);
     $c->res->body($output);
