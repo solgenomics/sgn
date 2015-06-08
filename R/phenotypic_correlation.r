@@ -13,7 +13,9 @@ library(gplots)
 library(ltm)
 library(plyr)
 library(rjson)
-library(nlme)
+
+#library(rbenchmark)
+
 
 allargs<-commandArgs()
 
@@ -138,17 +140,18 @@ if (!is.null(phenoData)) {
 phenoData     <- phenoData[, colSums(is.na(phenoData)) < nrow(phenoData)]
 allTraitNames <- names(phenoData)[! names(phenoData) %in% nonTraitNames]
     
-
 trait <- c()
 cnt   <- 0
- 
+phenoTrait <- c()
+
+###############################
 if (length(refererQtl) == 0  ) {
   if (file.info(formattedPhenoFile)$size == 0) {
     for (i in allTraitNames) {
+
       cnt   <- cnt + 1
       trait <- i
   
-      phenoTrait         <- c()
       experimentalDesign <- c()
       
       if ('design' %in% colnames(phenoData)) {
@@ -159,16 +162,15 @@ if (length(refererQtl) == 0  ) {
     
         experimentalDesign <- phenoTrait[2, 'design']
   
-      if (is.na(experimentalDesign)) {
+        if (is.na(experimentalDesign)) {
+          experimentalDesign <- c('No Design')
+        }
+    
+      } else {   
         experimentalDesign <- c('No Design')
       }
-    
-    } else {   
-      experimentalDesign <- c('No Design')
-    }
 
-    if (experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD') {
-
+      if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  unique(phenoTrait$block) > 1) {
 
       message("GS experimental design: ", experimentalDesign)
 
@@ -176,76 +178,71 @@ if (length(refererQtl) == 0  ) {
                         select = c("object_name", "object_id",  "block",  trait)
                         )
 
-
       colnames(augData)[1] <- "genotypes"
       colnames(augData)[4] <- "trait"
-      
-      ff <- trait ~ 0 + genotypes
-     
-      model <- try(lme(ff,
-                     data=augData,
-                     random = ~1|block,
-                     method="REML",
-                     na.action = na.omit
-                     ))
+
+      model <- try(lmer(trait ~ 0 + genotypes + (1|block),
+                        augData,
+                        na.action = na.omit
+                        ))
+      genoEffects <- c()
 
       if (class(model) != "try-error") {
-        adjMeans <- data.matrix(fixed.effects(model))
+        genoEffects <- data.frame(fixef(model))
+        
+        colnames(genoEffects) <- trait
 
-        colnames(adjMeans) <- trait
- 
-        nn <- gsub('genotypes', '', rownames(adjMeans))
-        rownames(adjMeans) <- nn
-        adjMeans <- round(adjMeans, digits = 2)
+        nn <- gsub('genotypes', '', rownames(genoEffects))  
+        rownames(genoEffects) <- nn
       
-        phenoTrait <- data.frame(adjMeans)  
-        colnames(phenoTrait) <- trait
-      
-        if (cnt == 1 ) {
-          formattedPhenoData <- data.frame(adjMeans)
-        } else {
-          formattedPhenoData <-  merge(formattedPhenoData, phenoTrait, by=0, all=TRUE)
-          row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-          formattedPhenoData[, 1] <- NULL
-        }
+        genoEffects <- round(genoEffects, digits = 2)
       }
+  
+      if (cnt == 1 ) {
+        formattedPhenoData <- data.frame(genoEffects)
+      } else {
+        formattedPhenoData <-  merge(formattedPhenoData, genoEffects, by=0, all=TRUE)
+        row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+        formattedPhenoData[, 1] <- NULL
+      }
+      
     } else if (experimentalDesign == 'Alpha') {
       trait <- i
+      
+      message("Experimental desgin: ", experimentalDesign)
+      
       alphaData <- subset(phenoData,
                             select = c("object_name", "object_id","block", "replicate", trait)
                             )
       
       colnames(alphaData)[1] <- "genotypes"
       colnames(alphaData)[5] <- "trait"
-     
-      ff <- trait ~ 0 + genotypes
-      
-      model <- try(lme(ff,
-                       data = alphaData,
-                       random = ~1|replicate/block,
-                       method = "REML",
-                       na.action = na.omit
-                       ))
-
+         
+      model <- try(lmer(trait ~ 0 + genotypes + (1|replicate/block),
+                        alphaData,
+                        na.action = na.omit
+                        ))
+        
       if (class(model) != "try-error") {
-        adjMeans <- data.matrix(fixed.effects(model))
-        colnames(adjMeans) <- trait
+        genoEffects <- data.frame(fixef(model))
       
-        nn <- gsub('genotypes', '', rownames(adjMeans))
-        rownames(adjMeans) <- nn
-        adjMeans <- round(adjMeans, digits = 2)
+        colnames(genoEffects) <- trait
 
-        phenoTrait <- data.frame(adjMeans)
-        colnames(phenoTrait) <- trait
-     
-        if(cnt == 1 ) {
-          formattedPhenoData <- data.frame(adjMeans)
-        } else {
-          formattedPhenoData <-  merge(formattedPhenoData, phenoTrait, by=0, all=TRUE)
-          row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-          formattedPhenoData[, 1] <- NULL
-        }
+        nn <- gsub('genotypes', '', rownames(genoEffects))     
+        rownames(genoEffects) <- nn
+      
+        genoEffects <- round(genoEffects, digits = 2)
+        
       }
+         
+      if(cnt == 1 ) {
+        formattedPhenoData <- genoEffects
+      } else {
+        formattedPhenoData <-  merge(formattedPhenoData, genoEffects, by=0, all=TRUE)
+        row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+        formattedPhenoData[, 1] <- NULL
+      }
+
     } else {
       message("GS experimental design: ", experimentalDesign)
                                  
@@ -273,16 +270,14 @@ if (length(refererQtl) == 0  ) {
   
   row.names(formattedPhenoData) <- formattedPhenoData[, 1]
   formattedPhenoData[, 1] <- NULL
-  
-}
 
-formattedPhenoData <- round(formattedPhenoData, digits = 2)
+  formattedPhenoData <- round(formattedPhenoData, digits = 2)
+}
 
 coefpvalues <- rcor.test(formattedPhenoData,
                          method="pearson",
                          use="pairwise"
                          )
-
 
 coefficients <- coefpvalues$cor.mat
 allcordata   <- coefpvalues$cor.mat

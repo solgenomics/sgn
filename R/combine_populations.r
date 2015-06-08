@@ -8,7 +8,7 @@ library(stats)
 library(stringr)
 library(randomForest)
 library(plyr)
-library(nlme)
+library(lme4)
 
 
 allArgs <- commandArgs()
@@ -30,7 +30,6 @@ outFile <- grep("output_files",
 outFiles <- scan(outFile,
                  what = "character"
                  )
-print(outFiles)
 
 combinedGenoFile <- grep("genotype_data",
                          outFiles,
@@ -111,7 +110,7 @@ for (popPhenoNum in 1:popsPhenoSize)
     
     if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
 
-    if (experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD') {
+    if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  unique(phenoTrait$block) > 1) { 
 
       message("experimental design: ", experimentalDesign)
 
@@ -121,54 +120,50 @@ for (popPhenoNum in 1:popsPhenoSize)
 
       colnames(augData)[1] <- "genotypes"
       colnames(augData)[4] <- "trait"
-    
-      ff <- traitName ~ 0 + genotypes
-    
-      model <- lme(ff,
-                   data=augData,
-                   random = ~1|block,
-                   method="REML",
-                   na.action = na.omit
-                   )
-   
-      adjMeans <- data.matrix(fixed.effects(model))
-     
-      colnames(adjMeans) <- trait
-      
-      nn <- gsub('genotypes', '', rownames(adjMeans))
-      rownames(adjMeans) <- nn
-      adjMeans <- round(adjMeans, digits = 2)
 
-      phenoTrait <- data.frame(adjMeans)
-  
-      formattedPhenoData[, traitName] <- phenoTrait
- 
-  } else if (experimentalDesign == 'Alpha') {
-   # trait <- i
-    alphaData <-  phenoTrait 
-      
-    colnames(alphaData)[1] <- "genotypes"
-    colnames(alphaData)[5] <- "trait"
+      model <- try(lmer(trait ~ 0 + genotypes + (1|block),
+                        augData,
+                        na.action = na.omit
+                        ))
      
-    ff <- traitName ~ 0 + genotypes
-      
-    model <- lme(ff,
-                 data = alphaData,
-                 random = ~1|replicate/block,
-                 method = "REML",
-                 na.action = na.omit
-                 )
-   
-    adjMeans <- data.matrix(fixed.effects(model))
-    colnames(adjMeans) <- traitName
-      
-    nn <- gsub('genotypes', '', rownames(adjMeans))
-    rownames(adjMeans) <- nn
-    adjMeans <- round(adjMeans, digits = 2)
+      if (class(model) != "try-error") {
+        phenoTrait <- data.frame(fixef(model))
+        
+        colnames(phenoTrait) <- traitName
 
-    phenoTrait <- data.frame(adjMeans)
-    formattedPhenoData[, i] <- phenoTrait
+        nn <- gsub('genotypes', '', rownames(phenoTrait))  
+        rownames(phenoTrait) <- nn
+      
+        phenoTrait <- round(phenoTrait, digits = 2)
   
+        formattedPhenoData[, traitName] <- phenoTrait
+      }
+      
+    } else if (experimentalDesign == 'Alpha') {
+
+      alphaData <-  phenoTrait 
+
+      colnames(alphaData)[1] <- "genotypes"
+      colnames(alphaData)[5] <- "trait"
+         
+      model <- try(lmer(trait ~ 0 + genotypes + (1|replicate/block),
+                        alphaData,
+                        na.action = na.omit
+                        ))
+        
+      if (class(model) != "try-error") {
+        phenoTrait <- data.frame(fixef(model))
+      
+        colnames(phenoTrait) <- traitName
+
+        nn <- gsub('genotypes', '', rownames(phenotrait))     
+        rownames(phenoTrait) <- nn
+      
+        phenoTrait <- round(phenoTrait, digits = 2)
+
+        formattedPhenoData[, i] <- phenoTrait
+      }
+      
   } else {
 
     phenoTrait <- subset(phenoData,
