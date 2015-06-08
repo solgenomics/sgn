@@ -3,6 +3,8 @@ package CXGN::Trait;
 
 use Moose;
 
+## to do: add concept of trait short name; provide alternate constructors for term, shortname, and synonyms etc.
+
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 		  is => 'rw',
 		  required => 1,
@@ -26,6 +28,68 @@ has 'name' => ( isa => 'Str',
 		},
 
     );
+
+has 'display_name' => (isa => 'Str',
+		       is => 'ro',
+		       lazy => 1,
+		       default => sub { 
+			   my $self = shift;
+			   my $db = $self->db();
+			   my $name = $self->name();
+			   if ($db && $name) { 
+			       return $db.":".$name;
+			   }
+			   return "";
+		       }
+    );
+
+has 'accession' => (isa => 'Str',
+		    is => 'ro',
+		    lazy => 1,
+		    default => sub { 
+			my $self = shift;
+			my $rs = $self->bcs_schema()->resultset("Cv::Cvterm")
+			    -> search( { cvterm_id => $self->cvterm_id() }) 
+			    -> search_related("dbxref");
+			if ($rs->count() ==1) { 
+			    my $accession = $rs->first()->get_column("accession");
+			    return $accession;
+			}
+			return "";
+		    }
+
+    );
+
+has 'term' => (isa => 'Str',
+	       is => 'ro',
+	       lazy => 1,
+	       default => sub { 
+		   my $self = shift;
+		   my $accession = $self->accession();
+		   my $db = $self->db();
+		   if ($accession && $db) { 
+		       return "$db:$accession";
+		   }
+		   return "";
+	       }
+    );
+
+has 'db'   => ( isa => 'Str',
+		is => 'ro',
+		lazy => 1,
+		default => sub { 
+		    my $self = shift;
+		    my $rs = $self->bcs_schema()->resultset("Cv::Cvterm")->search( { cvterm_id => $self->cvterm_id()})->search_related("dbxref")->search_related("db");
+		    if ($rs->count() == 1) { 
+			my $db_name =  $rs->first()->get_column("name");
+			print STDERR "DBNAME = $db_name\n";
+			return $db_name;
+		    }
+		    return "";
+			
+		}
+    );
+			
 
 has 'definition' => (isa => 'Str',
 		     is => 'ro',
@@ -80,15 +144,5 @@ sub BUILD {
     $self->cvterm($cvterm);
 }
 
-sub _build_definition { 
-}
-
-sub _build_cvterm_id { 
-    my $self = shift;
-    $self->cvterm->cvterm_id(); 
-}
-
-sub _build_name { 
-}
 
 1;

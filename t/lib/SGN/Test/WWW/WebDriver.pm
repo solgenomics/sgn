@@ -180,6 +180,29 @@ sub accept_alert_ok {
     ok($self->accept_alert(), $test_name);
 }
 
+sub download_linked_file {
+    my $self = shift;
+    my $link_id = shift;
+
+    my $download_link = $self->find_element($link_id, "id");
+    
+    my $href = $download_link->get_attribute("href");
+    
+    my $cookies = $self->driver()->get_all_cookies();
+    
+    my $token = "";
+    foreach my $cookie (@$cookies) { 
+	if ($cookie->{name} eq "sgn_session_id") { 
+	    $token = $cookie->{value};
+	}
+    }
+    #my $url = $self->host()."/".$href;
+    #print STDERR "Fetching URL $url\n"; 
+    system("wget --header \"Cookie: sgn_session_id=$token\" --directory-prefix=/tmp $href");
+
+
+}    
+
 1;
    
     

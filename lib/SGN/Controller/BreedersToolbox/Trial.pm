@@ -2,41 +2,79 @@
 package SGN::Controller::BreedersToolbox::Trial;
 
 use Moose;
+
+use File::Basename;
+use File::Slurp qw | read_file |;
+use URI::FromHash 'uri';
+
 use CXGN::Trial::TrialLayout;
 use CXGN::BreedersToolbox::Projects;
-use URI::FromHash 'uri';
 use SGN::View::Trial qw/design_layout_view design_info_view trial_detail_design_view/;
+use CXGN::Trial::Download;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
 
-sub trial_info_short_url : Path('/breeders/trial') Args(1) { 
+sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;
-    $self->trial_info($c, $trial_id);
+
+    print STDERR "TRIAL INIT...\n";
+
+
+    $c->stash->{trial_id} = $trial_id;
+    print STDERR "TRIAL ID = $trial_id\n";
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    $c->stash->{schema} = $schema;
+    my $trial;
+    eval { 
+	$trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+    };
+    if ($@) { 
+	$c->stash->{template} = 'system_message.txt';
+	$c->stash->{message} = "The requested trial ($trial_id) does not exist";
+	return;
+    }
+    $c->stash->{trial} = $trial;    
+    
+
 }
 
-sub trial_info : Path('/breeders_toolbox/trial') Args(1) { 
+sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) { 
     my $self = shift;
     my $c = shift;
-    my $trial_id = shift;
+    my @args = @_;
+    $c->res->redirect('/breeders/trial/'.$args[0]);
+}
+
+sub trial_info : Chained('trial_init') PathPart('') Args(0) { 
+    my $self = shift;
+    my $c = shift;
 
     my $format = $c->req->param("format");
 
+    my $user = $c->user();
+    if (!$user) { 
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    $c->stash->{user_can_modify} = ($user->check_roles("submitter") || $user->check_roles("curator")) ;
+    
     my $start_time = time();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id} });
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
 
-    if (!$program_object->trial_exists($trial_id)) { 
+    if (!$program_object->trial_exists($c->stash->{trial_id})) { 
 	$c->stash->{message} = "The requested trial does not exist or has been deleted.";
 	$c->stash->{template} = 'generic_message.mas';
 	return;
     }
 	
     print STDERR "check 1: ".(time()-$start_time)."\n";
-    my $breeding_program = $program_object->get_breeding_program_with_trial($trial_id);
+    my $breeding_program = $program_object->get_breeding_program_with_trial($c->stash->{trial_id});
     my $trial_name =  $trial_layout->get_trial_name();
     my $trial_description =  $trial_layout->get_trial_description();
     my $trial_year =  $trial_layout->get_trial_year();
@@ -72,7 +110,6 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     $c->stash->{plot_names} = $plot_names_ref;
     $c->stash->{design_type} = $design_type;
     $c->stash->{trial_description} = $trial_description;
-    $c->stash->{trial_id} = $trial_id;
     $c->stash->{design} = \%design;
     $c->stash->{design_layout_view} = $design_layout_view_html;
     my $number_of_blocks;
@@ -86,24 +123,17 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     }
     $c->stash->{number_of_replicates} = $number_of_replicates;
 
-    my $user = $c->user();
-    if (!$user) { 
-	#$c->stash->{template} = '/generic_message.mas';
-	#$c->stash->{message}  = 'You must be logged in to access this page.';	
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
-	return;
-    }
     my $dbh = $c->dbc->dbh();
     
     my $h = $dbh->prepare("SELECT project.name FROM project WHERE project_id=?");
-    $h->execute($trial_id);
+    $h->execute($c->stash->{trial_id});
 
     my ($name) = $h->fetchrow_array();
 
     $c->stash->{trial_name} = $name;
 
     $h = $dbh->prepare("SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description, count(*) FROM nd_geolocation JOIN nd_experiment USING(nd_geolocation_id) JOIN nd_experiment_project USING (nd_experiment_id) JOIN project USING (project_id) WHERE project_id=? GROUP BY nd_geolocation_id, nd_geolocation.description");
-    $h->execute($trial_id);
+    $h->execute($c->stash->{trial_id});
 
     my @location_data = ();
     while (my ($id, $desc, $count) = $h->fetchrow_array()) { 
@@ -117,13 +147,13 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     # $h->execute($trial_id);
 
     # my @phenotype_data;
-    # while (my ($trait, $trait_id, $count,) = $h->fetchrow_array()) { 
+						     # while (my ($trait, $trait_id, $count,) = $h->fetchrow_array()) { 
     # 	push @phenotype_data, [$trait, $trait_id, $count];
     # }
     # $c->stash->{phenotype_data} = \@phenotype_data;
 
     $h = $dbh->prepare("SELECT distinct(projectprop.value) FROM projectprop WHERE project_id=? AND type_id=(SELECT cvterm_id FROM cvterm WHERE name='project year')");
-    $h->execute($trial_id);
+    $h->execute($c->stash->{trial_id});
 
     my @years;
     while (my ($year) = $h->fetchrow_array()) { 
@@ -132,15 +162,13 @@ sub trial_info : Path('/breeders_toolbox/trial') Args(1) {
     
     print STDERR "check 5: ".(time()-$start_time)."\n";
 
-    $c->stash->{user_can_modify} = ($user->check_roles("submitter") || $user->check_roles("curator")) ;
-
     $c->stash->{breeding_program} = $breeding_program;
 
     $c->stash->{years} = \@years;
 
-    $c->stash->{plot_data} = [];
+						     $c->stash->{plot_data} = [];
 
-    $c->stash->{trial_id} = $trial_id;
+						     $c->stash->{trial_id} = $c->stash->{trial_id};
 
     if ($design_type eq "genotyping_plate") { 
 	if ($format eq "as_table") { 
@@ -195,5 +223,83 @@ sub trial_tree : Path('/breeders/trialtree') Args(0) {
     $c->stash->{template} = '/breeders_toolbox/trialtree.mas';
 
 }
+
+sub trial_download : Chained('trial_init') PathPart('download') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $what = shift;
+
+    my $user = $c->user();
+    if (!$user) { 
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    my $format = $c->req->param("format") || "xls";
+    my $trait_list = $c->req->param("trait_list") || "";
+
+    my @trait_list;
+    if ($trait_list) { 
+	@trait_list = @{_parse_list_from_json($trait_list)};
+    }
+    
+    my $plugin = "";
+    if ( ($format eq "xls") && ($what eq "layout")) { 
+	$plugin = "TrialLayoutExcel";
+    }
+    if (($format eq "csv") && ($what eq "layout")) { 
+	$plugin = "TrialLayoutCSV";
+    }
+    if (($format eq "xls") && ($what =~ /phenotype/)) { 
+	$plugin = "TrialPhenotypeExcel";
+    }
+    if (($format eq "csv") && ($what =~ /phenotype/)) { 
+	$plugin = "TrialPhenotoypeCSV";
+    }
+    if (($format eq "xls") && ($what eq "basic_trial_excel")) { 
+	$plugin = "BasicExcel";
+    }
+
+    my $dir = $c->tempfiles_subdir('download');
+    my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
+
+    print STDERR "TEMPFILE : $tempfile\n";
+
+    my $download = CXGN::Trial::Download->new( 
+	{ 
+	    bcs_schema => $c->stash->{schema},
+	    trial_id => $c->stash->{trial_id},
+	    trait_list => \@trait_list,
+	    filename => $tempfile,
+	    format => $plugin,
+      });
+
+      my $error = $download->download();
+
+      my $file_name = basename($tempfile);    
+     $c->res->content_type('Application/'.$format);    
+     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
+
+    my $output = read_file($tempfile);
+
+    $c->res->body($output);
+
+}
+
+sub _parse_list_from_json {
+    my $list_json = shift;
+    my $json = new JSON;
+    if ($list_json) {
+	my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+	#my $decoded_list = decode_json($list_json);
+	my @array_of_list_items = @{$decoded_list};
+	return \@array_of_list_items;
+    }
+    else {
+	return;
+    }
+}
+
 
 1;

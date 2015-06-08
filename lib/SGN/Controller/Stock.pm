@@ -18,7 +18,7 @@ use File::Slurp;
 use JSON::Any;
 
 use CXGN::Chado::Stock;
-use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
+use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs /;
 use Bio::Chado::NaturalDiversity::Reports;
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -40,7 +40,29 @@ has 'default_page_size' => (
 
 =head1 PUBLIC ACTIONS
 
-=head2 search
+
+=head2 stock search using jQuery data tables
+
+=cut
+
+sub stock_search :Path('/search/stocks') Args(0) {
+    my ($self, $c ) = @_;
+    $c->stash(
+	template => '/search/stocks.mas',
+       
+        stock_types => stock_types($self->schema), 
+	organisms   => stock_organisms($self->schema) ,
+	sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
+        trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
+        onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
+	trait_db_name              => $c->get_conf('trait_ontology_db_name'),
+	breeding_programs          => breeding_programs($self->schema),
+	);
+	
+}
+
+
+=head2 search DEPRECATED
 
 Public path: /stock/search
 
@@ -50,24 +72,34 @@ Display a stock search form, or handle stock searching.
 
 sub search :Path('/stock/search') Args(0) {
     my ( $self, $c ) = @_;
-
-    my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
-    my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
-    my $trait_db_name = $c->get_conf('trait_ontology_db_name');
     $c->stash(
-        template                   => '/search/phenotypes/stock.mas',
-        request                    => $c->req,
-        form                       => $form,
-        form_opts                  => { stock_types => stock_types($self->schema), organisms => stock_organisms($self->schema)} ,
-        results                    => $results,
-        sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
+	template => '/search/stocks.mas',
+	
+        stock_types => stock_types($self->schema), 
+	organisms   => stock_organisms($self->schema) ,
+	sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
         trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
         onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
-	trait_db_name              => $trait_db_name,
-        pagination_link_maker      => sub {
-            return uri( query => { %{$c->req->params} , page => shift } );
-        },
-        );
+	trait_db_name              => $c->get_conf('trait_ontology_db_name'),
+	breeding_programs          => breeding_programs($self->schema),
+	);
+    #my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
+    #my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
+    #my $trait_db_name = $c->get_conf('trait_ontology_db_name');
+    #$c->stash(
+    #    template                   => '/search/phenotypes/stock.mas',
+    #    request                    => $c->req,
+    #    form                       => $form,
+    #    form_opts                  => { stock_types => stock_types($self->schema), organisms => stock_organisms($self->schema)} ,
+    #    results                    => $results,
+    #    sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
+    #    trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
+    #    onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
+	#trait_db_name              => $trait_db_name,
+        #pagination_link_maker      => sub {
+        #    return uri( query => { %{$c->req->params} , page => shift } );
+        #},
+        #);
 }
 
 =head2 new_stock
