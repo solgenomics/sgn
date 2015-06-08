@@ -369,6 +369,8 @@ function trial_detail_page_setup_dialogs() {
 		alert("An error occurred trying to retrieve trial types.");
 	    }
 	});
+
+	
     });
 
 //    jQuery('#trial_type_select').change( { 
@@ -421,6 +423,27 @@ function trial_detail_page_setup_dialogs() {
 	}
     });
     
+    jQuery('#set_folder_dialog').dialog( { 
+	autoOpen: false,
+	buttons: { 
+	    cancel: { text: "Cancel",
+		      click: function() { jQuery( this ).dialog("close"); },
+		      id: "folder_dialog_cancel_button",
+		    },
+	    save:   { text: "Set",
+		      click: function() { 
+			  set_trial_folder();
+			  jQuery(this).dialog("close");
+		      }
+		    }
+	}
+	
+    });
+
+    jQuery('#open_folder_dialog_link').click( function() { 
+	jQuery('#set_folder_dialog').dialog("open");
+	get_select_box('folders', 'trial_folder_select_div', 'trial_folder_select');
+    });
 
 }
 
@@ -594,7 +617,32 @@ function display_trial_type(type) {
     jQuery('#trial_type').html(type);   
 }
 
+function display_trial_folder() { 
+    var trial_id = get_trial_id();
+    jQuery.ajax( { 
+	url: '/ajax/breeders/trial/'+trial_id+'/folder',
+	success: function(response) { 
+	    jQuery('#trial_folder_div').html(response.folder[1]);
+	},
+	error: function(response) { 
+	    alert("An error occurred fetching the folder information.");
+	}
+    });
+   
+}
+
+function trial_folder_dialog() { 
+    jQuery('#set_folder_dialog').dialog("open");
+
+}
+
+function set_trial_folder() { 
+    var folder_id = jQuery('#folder_select').val();
+    alert("folder "+folder_id);
+}
+
 function get_trial_id() { 
     var trial_id = parseInt(jQuery('#trialIDDiv').text());
     return trial_id;
 }
+

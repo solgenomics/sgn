@@ -60,7 +60,7 @@ sub BUILD {
     $self->folder_type_id($folder_cvterm->cvterm_id());
 }
     
-# class method
+# class methods
 
 sub create { 
     my $class = shift;
@@ -74,30 +74,66 @@ sub create {
 	die "The name ".$args->{name}." cannot be used for a folder because it already exists.";
     }
     
-    my $folder_cvterm = $args->{bcs_schema}->resultset('Cv::Cvterm')->create_with(
-	{ 
-	    name   => 'folder',
-	    cv     => 'local',
-	    db     => 'local',
-	    dbxref => 'folder',
-	});
-    
+    my $folder_type_id = CXGN::Trial::Folder->folder_cvterm_id( $args );
+        
     my $project_row = $args->{bcs_schema}->resultset('Project::Project')->create(
 	{ 
 	    name =>  $args->{name},
-	    description => $args->{description},
+	    description => $args->{description} || "",
 	});
     
-    $project_row->create_projectprops( 
-	{ 
-	    folder => 1,
-	},
-	{ 
-	    cv_name => 'local'
-	});
+    my $project_id = $project_row->project_id();
 
+    my $folder_projectprop_row = $args->{bcs_schema}->resultset('Project::Projectprop')->create( 
+	{ 
+	    project_id => $project_id,
+	    type_id => $folder_type_id }
+	);
+	
     return $project_row;
 }
+
+
+sub list { 
+    my $class = shift;
+    my $args = shift;
+    
+    my $folder_type_id = CXGN::Trial::Folder->folder_cvterm_id( $args );
+
+    my $breeding_program_type_id = $args->{bcs_schema}->resultset("Cv::Cvterm")->find( { name => 'breeding_program' })->cvterm_id();
+    
+    my $search_params = { type_id => { -in => $folder_type_id }};
+
+    if ($args->{breeding_program_id}) { 
+	push @{$search_params->{type_id}->{'-in'}}, $breeding_program_type_id;
+    }
+
+    my $rs = $args->{bcs_schema}->resultset("Project::Projectprop")->search($search_params)->search_related("project");
+    
+    my @folders;
+    while (my $row = $rs->next()) { 
+	push @folders, [ $row->project_id(), $row->get_column('name') ];
+    }
+
+    return @folders;								}
+
+
+sub folder_cvterm_id { 
+    my $class = shift;
+    my $args = shift;
+    
+    my $folder_cvterm = $args->{bcs_schema}->resultset('Cv::Cvterm')->create_with(
+	{ 
+	    name   => 'trial_folder',
+	    cv     => 'local',
+	    db     => 'local',
+	    dbxref => 'trial_folder',
+	});
+    
+    return $folder_cvterm->cvterm_id();
+}
+
+### OBJECT METHODS
 
 # returns a project row representing the parent, or undef.
 #
@@ -187,6 +223,8 @@ sub remove_child {
 
 
 }
+
+
 
 __PACKAGE__->meta->make_immutable();
 

@@ -24,6 +24,7 @@ use Moose;
 use Data::Dumper;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
+use CXGN::Trial::Folder;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -88,6 +89,33 @@ sub get_year_select : Path('/ajax/html/select/years') Args(0) {
 	choices => \@years,
 	);
     $c->stash->{rest} = { select => $html };
+}
+
+sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $breeding_program_id = $c->req->param("breeding_program_id");
+
+    my $id = $c->req->param("id") || "folder_select";
+    my $name = $c->req->param("name") || "folder_select";
+    my $empty = $c->req->param("empty") || "";
+
+
+    my @folders = CXGN::Trial::Folder->list( 
+	{ 
+	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	    breeding_program_id => $breeding_program_id
+	});
+
+    my $html = simple_selectbox_html(
+	name => $name,
+	id => $id,
+	choices => \@folders,
+	);
+    
+    $c->stash->{rest} = { select => $html };
+
 }
 
 1;

@@ -864,4 +864,18 @@ sub get_breeding_program_cvterm_id {
     return $row->cvterm_id();
 }
 
+sub get_folder { 
+    my $self = shift;
+    
+    my $rs = $self->bcs_schema()->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() })->search_related('project_relationship_subject_projects')->search_related('object_project');
+    if ($rs->count() > 0) { 
+	return [ $rs->first()->project_id(), $rs->first()->name() ];
+    }
+    else { 
+	return [];
+    }
+
+
+}
+
 1;

@@ -280,6 +280,16 @@ sub delete_privileges_denied {
     return "You have insufficient privileges to delete a trial.";
 }
 
+sub phenotype_summary : Chained('trial') PathPart('folder') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    
+    my $folder_info = $c->stash->{trial}->get_folder();
+
+    $c->stash->{rest} = { folder => $folder_info };
+    
+    
+}
 
 
 1;
