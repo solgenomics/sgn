@@ -36,7 +36,7 @@ $io = CXGN::SNPsIO->new( { file => 't/data/cassava_test.vcf' }); #cassava_test.v
 my @lines = ();
 
 while (my $line = $io->next_line()) { 
-    my $snps = CXGN::SNPs->new( { lines => $io->lines() });
+    my $snps = CXGN::SNPs->new( { accessions => $io->lines() });
     $snps->from_vcf_line($line);
     my $af = $snps->calculate_allele_frequency();
     

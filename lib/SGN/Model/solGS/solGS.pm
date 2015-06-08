@@ -31,7 +31,7 @@ use File::Spec::Functions;
 use List::MoreUtils qw / uniq /;
 use JSON::Any;
 use Math::Round::Var;
-
+use Scalar::Util qw(looks_like_number);
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 
@@ -71,11 +71,9 @@ sub search_trait {
                                  page     => $page,
                                  rows     => 10,
                                  order_by => 'name'              
-                             },                  
-                             
+                             },                                               
             );             
     }
-
     
     return $rs;      
 }
@@ -732,7 +730,7 @@ sub format_user_list_genotype_data {
 	}       
     }
 
-    if($population_type =~ /reference/) 
+    if ($population_type =~ /reference/) 
     {
         $self->context->stash->{user_reference_list_genotype_data} = $geno_data;
     }
@@ -934,15 +932,10 @@ sub stock_genotype_values {
     my $json_values  = $geno_row->get_column('value');
     my $values       = JSON::Any->decode($json_values);
     my @markers      = keys %$values;
-   
-    my $stock_name = $geno_row->get_column('stock_name');
-    my $size = scalar(@markers);
-   
+      
     my $round =  Math::Round::Var->new(0);
-        
-    my $geno_values;
-              
-    $geno_values .= $geno_row->get_column('stock_name') . "\t";
+                      
+    my $geno_values = $geno_row->get_column('stock_name') . "\t";
    
     foreach my $marker (@markers) 
     {        
@@ -1422,10 +1415,14 @@ sub structure_phenotype_data {
 	    $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
 
 	    foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
-	    {           
-		$d .= "\t" . $phen_hashref->{$key}{$term_name};
+	    {    
+		my $val = $phen_hashref->{$key}{$term_name};
+		unless (looks_like_number($val)) 
+		{ 
+		    $val = "NA";		  
+		}
+		$d .= "\t" . $val;
 	    }
-
 	    $d .= "\n";
 	}
    
@@ -1535,7 +1532,14 @@ sub phenotypes_by_trait {
         $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
 
         foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
-        {           
+        { 
+	    	my $val = $phen_hashref->{$key}{$term_name};
+	
+		unless (looks_like_number($val)) 
+		{ 
+		    $val = "NA";
+		}
+		$d .= "\t" . $val;
             $d .= "\t" . $phen_hashref->{$key}{$term_name};
         }
 
@@ -1562,31 +1566,6 @@ sub stock_projects_rs {
     return $project_rs;
 
 }
-
-
-# sub project_object_stocks_rs {
-#    my ($self, $project_id) = @_;
-  
-#     my $stock_rs =  $self->schema->resultset("Project::Project")
-#         ->search({'me.project_id' => $project_id})
-#         ->search_related('nd_experiment_projects')
-#         ->search_related('nd_experiment')
-#         ->search_related('nd_experiment_stocks')
-#         ->search_related('stock')
-#         ->search_related('stock_relationship_subjects')
-#         ->search_related('object', 
-#                          {},                       
-#                          {
-#                              columns   => [qw /object.stock_id object.name/],
-#                              '+select' => [qw /me.project_id me.name/ ],
-#                               '+as'    => [qw /project_id project_name/ ],
-#                              distinct  => 1,
-#                              order_by  => {-desc => [qw /object.name/ ]} 
-#                          }
-#         );
- 
-#     return $stock_rs;
-# }
 
 
 sub project_subject_stocks_rs {

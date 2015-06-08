@@ -213,7 +213,7 @@ qq { <a href="/phenome/locus_display.pl?locus_id=$locus_id&amp;action=view">$sym
     }
     if ($more) {
         $locus_editor_info .=
-qq|<br><b>and <a href="/search/locus_search.pl?w8e4_editor=$sp_person_id">$more more</a></b><br />|;
+qq|<br><b>and <a href="/search/locus/>$more more</a></b><br />|;
     }
 
     print info_section_html(
@@ -240,11 +240,11 @@ qq|<br><b>and <a href="/search/locus_search.pl?w8e4_editor=$sp_person_id">$more 
 
         if ( $i < $max ) {
             $locus_annotations .=
-qq | <a href="/phenome/locus_display.pl?locus_id=$locus_id&amp;action=view">$symbol</a> |;
+qq | <a href="/locus/$locus_id/view">$symbol</a> |;
         }
         else {
             $more_annotations .=
-qq { <a href="/phenome/locus_display.pl?locus_id=$locus_id&amp;action=view">$symbol</a> };
+qq { <a href="/locus/$locus_id/view">$symbol</a> };
         }
     }
 

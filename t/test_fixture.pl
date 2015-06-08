@@ -76,7 +76,7 @@ print $PGPASS "$dbhost:5432:$dbname:web_usr:$db_user_password\n";
 print $PGPASS "$dbhost:5432:*:postgres:$db_postgres_password\n";
 close($PGPASS);
 system("chmod 0600 $ENV{HOME}/.pgpass");
-print "Done.\n";
+print STDERR "Done.\n";
 
 print STDERR "# Loading database fixture... ";
 my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || '../cxgn_fixture.sql';
