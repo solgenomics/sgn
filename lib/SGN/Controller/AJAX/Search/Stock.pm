@@ -128,6 +128,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	},
 	{
 	    join => ['type', 'organism' , { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}}, { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects'] }  } } }, { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
+	    distinct => 1,
 	}
     );
 
@@ -149,7 +150,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	    '+as'     => [ 'cvterm_name' , 'species' ],
 	    page      => $page, 
 	    rows      => $rows, 
-	    order_by  => 'me.name' 
+	    order_by  => 'me.name',
+	    distinct  => 1,
 	} 
 	);
 	
