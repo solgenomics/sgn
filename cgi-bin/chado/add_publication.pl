@@ -112,7 +112,7 @@ sub store {
     }
     #fetch the publication from pubmed:
     my $pubmed= CXGN::Tools::Pubmed->new($publication); 
-    $e_id = $publication->get_eid;
+    my $e_id = $publication->get_eid;
     if ($e_id) {
 	$publication->add_dbxref("DOI:$e_id");
     }
