@@ -13,7 +13,7 @@ library(gplots)
 library(ltm)
 library(plyr)
 library(rjson)
-
+library(lme4)
 #library(rbenchmark)
 
 
