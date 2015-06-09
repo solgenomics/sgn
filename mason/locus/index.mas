@@ -391,7 +391,14 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 %  foreach my $d ( @sorted_pubs ) {
 %  	   if ( $d->[1] eq '0') { #if the dbxref is not obsolete
 %  	   my $pub = CXGN::Chado::Publication->new($dbh, $d->[0]->get_publication()->get_pub_id() );
-  <& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>$d->[0]->get_db_name(), accession=>$d->[0]->get_accession() &>
+%	   my $doi_dbxref_id = $pub->get_dbxref_id_by_db("DOI");
+%	   my $doi;
+%	   if ( $doi_dbxref_id) {
+%	      my $dbxref = CXGN::Chado::Dbxref->new($dbh, $doi_dbxref_id);
+%	      my $doi_accession =  $dbxref->get_accession;
+% 	      $doi = "<a href= \"http://doi.org/$doi_accession\">DOI:$doi_accession </a> ";	
+%	  }	    
+  <& /chado/publication.mas, pub=>$pub, doi=>$doi, db=>$d->[0]->get_db_name(), accession=>$d->[0]->get_accession() &>
   <br >
 %	    }
 % }
