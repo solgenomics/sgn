@@ -259,6 +259,41 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
+
+sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
+    
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    
+    my $layout = CXGN::Trial::TrialLayout->new(
+	{ 
+	    schema => $schema,
+	    trial_id =>$c->stash->{trial_id}
+	});
+    
+    my $design = $layout-> get_design();
+    
+        
+    my @result;
+    foreach my $plot_id (keys %{$design}) {
+	push @result, { plot_id => $plot_id,
+			row_number => $design->{$plot_id}->{row_number},
+			col_number => $design->{$plot_id}->{col_number}, 
+			block_number=> $design->{$plot_id}-> {block_number},
+			rep_number =>  $design->{$plot_id}-> {rep},
+			plot_name => $design->{$plot_id}-> {plot_name},
+			accession_names => $design->{$plot_id}-> {accession_name},
+	};
+	
+	$c->stash->{rest} = \@result;
+	    
+	
+    } 
+    
+}
+
+
 sub delete_privileges_denied { 
     my $self = shift;
     my $c = shift;
