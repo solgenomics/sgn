@@ -70,6 +70,7 @@ if ( length(refererQtl) != 0 ) {
                         )
  
 } else {
+
   phenoData <- read.table(phenoDataFile,
                           header = TRUE,
                           row.names = NULL,
@@ -77,8 +78,6 @@ if ( length(refererQtl) != 0 ) {
                           na.strings = c("NA", " ", "--", "-", ".", ".."),
                           dec = "."
                           )
-
-
 } 
 
 if (file.info(formattedPhenoFile)$size > 0 ) {
@@ -90,7 +89,6 @@ if (file.info(formattedPhenoFile)$size > 0 ) {
                                    na.strings = c("NA", " ", "--", "-", "."),
                                    dec = "."
                                    )
-
   } else {
  
     phenoData <- read.table(phenoDataFile,
@@ -103,8 +101,9 @@ if (file.info(formattedPhenoFile)$size > 0 ) {
   }
 
 
-allTraitNames      <- c()
-nonTraitNames      <- c()
+allTraitNames <- c()
+nonTraitNames <- c()
+
 if (length(refererQtl) != 0) {
 
   allNames      <- names(phenoData)
@@ -137,16 +136,18 @@ if (!is.null(phenoData)) {
   }
 }
 
+
 phenoData     <- phenoData[, colSums(is.na(phenoData)) < nrow(phenoData)]
 allTraitNames <- names(phenoData)[! names(phenoData) %in% nonTraitNames]
     
-trait <- c()
-cnt   <- 0
-phenoTrait <- c()
+
 
 ###############################
 if (length(refererQtl) == 0  ) {
   if (file.info(formattedPhenoFile)$size == 0) {
+    
+    cnt   <- 0
+ 
     for (i in allTraitNames) {
 
       cnt   <- cnt + 1
@@ -156,11 +157,7 @@ if (length(refererQtl) == 0  ) {
       
       if ('design' %in% colnames(phenoData)) {
 
-        phenoTrait  <- subset(phenoData,
-                              select = c("object_name", "object_id", "design", "block", "replicate", trait)
-                              )
-    
-        experimentalDesign <- phenoTrait[2, 'design']
+        experimentalDesign <- phenoData[2, 'design']
   
         if (is.na(experimentalDesign)) {
           experimentalDesign <- c('No Design')
@@ -170,11 +167,11 @@ if (length(refererQtl) == 0  ) {
         experimentalDesign <- c('No Design')
       }
 
-      if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  unique(phenoTrait$block) > 1) {
+      if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  unique(phenoData$block) > 1) {
 
       message("GS experimental design: ", experimentalDesign)
 
-      augData <- subset(phenoTrait,
+      augData <- subset(phenoData,
                         select = c("object_name", "object_id",  "block",  trait)
                         )
 
