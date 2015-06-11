@@ -2,6 +2,7 @@
 package SGN::Controller::AJAX::TrialMetadata;
 
 use Moose;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -274,6 +275,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     
     my $design = $layout-> get_design();
     
+    print STDERR Dumper($design);
         
     my @result;
     foreach my $plot_id (keys %{$design}) {
@@ -281,14 +283,12 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 			row_number => $design->{$plot_id}->{row_number},
 			col_number => $design->{$plot_id}->{col_number}, 
 			block_number=> $design->{$plot_id}-> {block_number},
-			rep_number =>  $design->{$plot_id}-> {rep},
+			rep_number =>  $design->{$plot_id}-> {replicate},
 			plot_name => $design->{$plot_id}-> {plot_name},
-			accession_names => $design->{$plot_id}-> {accession_name},
+			accession_name => $design->{$plot_id}-> {accession_name},
 	};
-	
-	$c->stash->{rest} = \@result;
-	    
-	
+
+	$c->stash->{rest} = \@result;	
     } 
     
 }
