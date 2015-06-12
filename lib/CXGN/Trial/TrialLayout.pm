@@ -185,6 +185,10 @@ sub _get_design_from_trial {
     my $replicate_number_prop = $plot->stockprops->find( { 'type.name' => 'replicate' }, { join => 'type'} );
     my $range_number_prop = $plot->stockprops->find( { 'type.name' => 'range' }, { join => 'type'} );
     my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
+        my $row_number_prop = $plot->stockprops->find( { 'type.name' => 'row_number' }, { join => 'type'} );
+    my $col_number_prop = $plot->stockprops->find( { 'type.name' => 'col_number' }, { join => 'type'} );
+
+
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
     my $accession_name = $accession->uniquename;
     $design_info{"plot_name"}=$plot->uniquename;
@@ -194,6 +198,13 @@ sub _get_design_from_trial {
       $design_info{"plot_number"}=$plot_number_prop->value();
     }
     else {die "no plot number stockprop found for plot $plot_name";}
+    if ($row_number_prop) { 
+	$design_info{"row_number"} = $row_number_prop->value();
+    }
+    if ($col_number_prop) { 
+	$design_info{"col_number"} = $col_number_prop->value();
+    }
+
     if ($block_number_prop) {
       $design_info{"block_number"}=$block_number_prop->value();
     }

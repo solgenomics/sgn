@@ -644,7 +644,10 @@ sub store_publications {
 	    CXGN::Tools::Pubmed->new($publication);
 	    my $existing_publication = $publication->get_pub_by_accession($self->get_dbh(),$pubmed_id);
 	    if(!($existing_publication->get_pub_id)) { #publication does not exist in our database
-		
+		my $e_id = $publication->get_eid;
+		if (!$e_id) {
+		    $publication->add_dbxref("DOI:$e_id");
+		}
 		print STDERR "storing publication now. pubmed id = $pubmed_id";
 		my $pub_id = $publication->store();
 		my $publication_dbxref_id = $publication->get_dbxref_id_by_db('PMID');

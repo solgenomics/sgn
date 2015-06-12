@@ -1,8 +1,8 @@
 package SGN::Controller::Search::Phenome;
 use Moose;
 use namespace::autoclean;
+use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs /;
 
-use HTML::FormFu;
 use YAML::Any qw/LoadFile/;
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -11,16 +11,17 @@ sub auto : Private {
     $_[1]->stash->{template} = '/search/phenotypes/stub.mas';
 }
 
-sub stock_search : Path('/search/phenotypes/stock') Args(0) {
+sub stock_search : Path('/search/stocks') Args(0) {
     my ( $self, $c ) = @_;
-    my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
     my $db_name = $c->config->{trait_ontology_db_name} || 'SP'; 
+    my $schema  = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     $c->stash(
-        template => '/search/phenotypes/stock.mas',
-        form     => $form,
-        schema   => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
-	trait_db_name => $db_name,
-    );
+	template          => '/search/stocks.mas',
+        stock_types       => stock_types($schema), 
+	organisms         => stock_organisms($schema) ,
+	trait_db_name     => $db_name,
+	breeding_programs => breeding_programs($schema),
+	);
 }
 
 sub qtl_search : Path('/search/phenotypes/qtl') Path('/search/phenotypes') Args(0) {

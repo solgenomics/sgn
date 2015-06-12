@@ -10,15 +10,23 @@
 
 Parameters:
 
-=over 2
+=over 4
 
 =item pub
 
 CXGN::Chado::Publication object
 
-=item count
+=item db
 
-numeric value for the div_id of the optional_html abstract view
+db name for linking the publication to an xref (usually PubMed)
+
+=item accession
+
+the accession of the dbxref
+
+=item doi
+
+the DOI of the publication, if one exists
 
 =back
 
@@ -31,7 +39,7 @@ Naama Menda <nm249@cornell.edu>
 </%doc>
 <%args>
   $pub
-  $count
+  $doi => undef
   $db => undef
   $accession => undef
 </%args>
@@ -41,7 +49,8 @@ Naama Menda <nm249@cornell.edu>
   <a href="/chado/publication.pl?pub_id=<% $pub->get_pub_id |h%>">
     <% $db |h%>:<% $accession |h%>
   </a>
-  <span class="title"> <% $pub->get_title |h%> (<% $pub->get_pyear |h%>) </span>
+  <span class="title"> <% $pub->get_title |h%> (<% $pub->get_pyear |h%>) <% $doi %></span>
+  <br />
   <a class="toggle_abstract" href="#">Show / hide abstract</a>
   <div class="detail">
     <div class="abstract">

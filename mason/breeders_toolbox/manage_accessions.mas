@@ -12,7 +12,7 @@ $accessions
   <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
     <div>
       </br>
-      <a href="/search/phenotypes/stock">Search Accessions</a>
+      <a href="/search/stocks">Search Accessions</a>
     </div>
 </&>
 
