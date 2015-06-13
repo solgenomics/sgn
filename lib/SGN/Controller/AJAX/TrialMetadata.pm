@@ -24,7 +24,8 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $trial_id = shift;
 
     $c->stash->{trial_id} = $trial_id;
-    $c->stash->{trial} = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+    $c->stash->{schema} =  $c->dbic_schema("Bio::Chado::Schema");
+    $c->stash->{trial} = CXGN::Trial->new( { bcs_schema => $c->stash->{schema}, trial_id => $trial_id });
 
     if (!$c->stash->{trial}) { 
 	$c->stash->{rest} = { error => "The specified trial with id $trial_id does not exist" };
@@ -59,7 +60,7 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     my $error = "";
 
     if ($datatype eq 'phenotypes') { 
-	$error = $c->stash->{trial}->delete_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
+	$error = $c->stash->{trial}->delete_metadata($c->stash->{schema}, $c->dbic_schema("CXGN::Phenome::Schema"));
 	$error .= $c->stash->{trial}->delete_phenotype_data();
     }
 
@@ -105,7 +106,7 @@ sub trial_description_POST : Chained('trial') PathPart('description') Args(1) {
     my $trial_id = $c->stash->{trial_id};
     my $trial = $c->stash->{trial};
 
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->stash->{schema} });
 
     my $breeding_program = $p->get_breeding_programs_by_trial($trial_id);
 
@@ -259,6 +260,23 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
+sub get_trial_folder :Chained('trial') PathPart('folder') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
+	return;
+    }
+    
+    my ($parent_folder_id, $parent_folder_name);
+    ($parent_folder_id, $parent_folder_name) = @{$c->stash->{trial}->get_folder()};
+
+    $c->stash->{rest} = { folder => [ $parent_folder_id, $parent_folder_name ] };
+
+}
+
+
 sub delete_privileges_denied { 
     my $self = shift;
     my $c = shift;
@@ -278,17 +296,6 @@ sub delete_privileges_denied {
 	return 0;
     }
     return "You have insufficient privileges to delete a trial.";
-}
-
-sub phenotype_summary : Chained('trial') PathPart('folder') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    
-    my $folder_info = $c->stash->{trial}->get_folder();
-
-    $c->stash->{rest} = { folder => $folder_info };
-    
-    
 }
 
 

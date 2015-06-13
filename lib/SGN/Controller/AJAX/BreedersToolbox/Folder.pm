@@ -11,6 +11,16 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
+sub get_folder : Chained('/') PathPart('ajax/folder') CaptureArgs(1) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $folder_id = shift;
+    $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
+    $c->stash->{folder_id} = $folder_id;
+
+}
+
 sub create_folder :Path('/ajax/folder/create') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -27,21 +37,35 @@ sub create_folder :Path('/ajax/folder/create') Args(0) {
     $c->stash->{rest} = { success => 1 };
 }
 
-sub associate_folder :Path('/ajax/folder/associate') Args(0) { 
-    my $self = shift;
-    my $c = shift;
-    my $parent_folder_id = $c->req->param("parent_folder_id");
-    my $child_folder_id = $c->req->param("child_folder_id");
-
-
-}
-
-sub list_folders : Path('/ajax/folder/list') Args(0) { 
+sub associate_child_folder :Chained('get_folder') PathPart('associate/child') Args(1) { 
     my $self = shift;
     my $c = shift;
     
+    my $child_id = shift;
+    
+    my $folder = CXGN::Trial::Folder->new( { bcs_schema => $c->stash->{schema}, folder_id => $c->stash->{folder_id} });
+
+    $folder->associate_child($child_id);
+    
+    $c->stash->{rest} = { success => 1 };
 
 }
+
+sub associate_parent_folder : Chained('get_folder') PathPart('associate/parent') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $parent_id = shift;
+
+    my $folder = CXGN::Trial::Folder->new( { bcs_schema => $c->stash->{schema}, folder_id => $c->stash->{folder_id} });
+
+    $folder->associate_parent($c->stash->{folder_id});
+    
+    $c->stash->{rest} = { success => 1 };
+
+}
+
+
+
 
 
 1;

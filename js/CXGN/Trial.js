@@ -639,6 +639,21 @@ function trial_folder_dialog() {
 function set_trial_folder() { 
     var folder_id = jQuery('#folder_select').val();
     alert("folder "+folder_id);
+    var trial_id = get_trial_id();
+    jQuery.ajax( { 
+	url: '/ajax/folder/'+trial_id+'/associate/parent/'+folder_id,
+	success: function(response) { 
+	    if (response.error) { 
+		alert(response.error);
+	    }
+	    else { 
+		alert("Successfully associated folder");
+	    }
+	},
+	error: function(response) { 
+	    alert('An error occurred trying to associate a folder to the trial.');
+	}
+    });
 }
 
 function get_trial_id() { 

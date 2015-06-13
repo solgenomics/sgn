@@ -33,22 +33,18 @@ sub BUILD {
     my $row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=>$self->folder_id() });
     
     if (!$row) { 
-	die "The specified folder does not exist!";
+	die "The specified folder with id ".$self->folder_id()." does not exist!";
     }
-    my $folder_cvterm = $self->bcs_schema()->resultset('Cv::Cvterm')->create_with(
-	{ name   => 'folder',
-	  cv     => 'local',
-	  db     => 'local',
-	  dbxref => 'folder',
-	});
     
     my $prop = $self->bcs_schema()->resultset('Project::Projectprop')->find( { 
 	project_id => $self->folder_id() });
     
-    if ($prop->type->name() ne "folder") { 
-	die "The folder you are trying to instantiate is not actually a folder";
-    }
-    
+    #if ($prop->type->name() ne "trial_folder") { 
+#	die "The folder you are trying to instantiate is not actually a folder";
+ #   }
+   
+    my $folder_cvterm_id = CXGN::Trial::Folder->folder_cvterm_id( { bcs_schema => $self->bcs_schema });
+ 
     my $parent_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( { subject_project_id => $row->project_id() });
 
     my $parent_id;
@@ -57,7 +53,7 @@ sub BUILD {
 	$self->parent_folder_id( $parent_id );    
     }
     $self->project($row);
-    $self->folder_type_id($folder_cvterm->cvterm_id());
+    $self->folder_type_id($folder_cvterm_id);
 }
     
 # class methods
@@ -205,7 +201,7 @@ sub associate_child {
     my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create( 
 	{ 
 	    subject_project_id => $child_id,
-	    subject_project_id => $self->project()->project_id(),
+	    object_project_id => $self->project()->project_id(),
 	    type_id => $self->folder_type_id(),
 	});
 

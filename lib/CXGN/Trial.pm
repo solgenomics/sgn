@@ -867,9 +867,30 @@ sub get_breeding_program_cvterm_id {
 sub get_folder { 
     my $self = shift;
     
-    my $rs = $self->bcs_schema()->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() })->search_related('project_relationship_subject_projects')->search_related('object_project');
-    if ($rs->count() > 0) { 
-	return [ $rs->first()->project_id(), $rs->first()->name() ];
+    my $folder_type_id = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { name => "trial_folder" })->cvterm_id();
+    print STDERR "Folder cvterm_id = $folder_type_id\n";
+
+    $ENV{DBIC_TRACE} = 1;
+    my $rs = $self->bcs_schema()->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() })->search_related('project_relationship_subject_projects')->search_related('object_project')->search_related('projectprops', 'projectprops.type_id' => $folder_type_id);
+
+
+    $ENV{DBIC_TRACE} = 0;
+
+    my $folder_id = $rs->first()->project_id();
+    
+    my $folder_row = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $folder_id });
+
+
+    if ($rs->count() == 1) { 
+	return [ $folder_row->project_id(), $folder_row->name() ];
+    }
+    elsif($rs->count() > 1) { 
+	print STDERR "More than one parent folder found...\n";
+	my $folder_id = $rs->first()->project_id();
+	
+	my $folder_row = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $folder_id });
+
+	return [ $folder_row->project_id(), $folder_row->name() ];
     }
     else { 
 	return [];
