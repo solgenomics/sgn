@@ -5,7 +5,7 @@ use Scalar::Util qw/ blessed /;
 use Text::ParseWords;
 use Path::Class ();
 use URI::Escape;
-
+use Class::Load ':all';
 use Bio::Range;
 
 extends 'SGN::Feature::GBrowse::DataSource';
@@ -38,7 +38,7 @@ sub _build__databases {
                 or confess "no db adaptor for [$_] in ".$self->path->basename;
             my @args = shellwords( $conf->setting( $dbname => 'db_args' ));
             my $conn = eval {
-                Class::MOP::load_class( $adaptor );
+                Class::Load::load_class( $adaptor );
                 local $SIG{__WARN__} = sub { warn @_ if $self->debug };
                 $adaptor->new( @args );
             };

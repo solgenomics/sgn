@@ -101,6 +101,10 @@ END_HTML
 		$pub->add_dbxref("PMID:$pubmed");
 		CXGN::Tools::Pubmed->new($pub); #call eutils and populates the publication object with all necessary fields
 		my $pub_ref=$pub->print_pub_ref();
+		my $e_id = $pub->get_eid;
+		if ($e_id) {
+		    $pub->add_dbxref("DOI:$e_id");
+		}
 		$pub->store();
 
 		unless ($pub->is_curated() ) {

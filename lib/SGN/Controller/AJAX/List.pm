@@ -4,6 +4,9 @@ package SGN::Controller::AJAX::List;
 use Moose;
 
 use List::MoreUtils qw | uniq |;
+use Data::Dumper;
+
+use CXGN::List;
 use CXGN::List::Validate;
 use CXGN::List::Transform;
 
@@ -70,29 +73,24 @@ sub retrieve_contents :Path('/list/contents') Args(1) {
 	return;
     }
 
-    my $q = "SELECT  content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id });
 
-    my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($list_id);
-    my @list = ();
-    while (my ($content) = $h->fetchrow_array()) { 
-	push @list, $content;
-    }
-    $c->stash->{rest} =  \@list;
+    my $elements = $list->elements();
+
+    $c->stash->{rest} = $elements;
 }
 
 sub get_list_metadata { 
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
-    my $q = "SELECT list.name, list.description, type_id, cvterm.name FROM sgn_people.list JOIN cvterm ON (type_id=cvterm_id) WHERE list_id=?";
-    my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($list_id);
-    my ($name, $desc, $type_id, $list_type) = $h->fetchrow_array();
-    return { name => $name,
-	     description => $desc,
-	     type_id => $type_id,
-	     list_type => $list_type
+
+    my $list = CXGN::List->new( { dbh=> $c->dbc->dbh(), list_id=>$list_id });
+    
+    return { name => $list->name(),
+	     description => $list->description(),
+	     type_id => $list->type_id(),
+	     list_type => $list->type(),
     };
 }
 
@@ -122,30 +120,16 @@ sub update_list_name_action :Path('/list/name/update') :Args(0) {
 	return;
     }
 
-    my $q = "SELECT list_id FROM sgn_people.list where name=? and owner=?";
-    my $h = $c->dbc->dbh->prepare($q);
-    $h->execute($name, $user_id);
-    my ($old_list) = $h->fetchrow_array();
-    if ($old_list) { 
-	$c->stash->{rest} = { error => "The list name $name already exists. Please choose another name." };
-	return;
-    }
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id });
+ 
+    $error = $list->name($name);
 
-    $q = "UPDATE sgn_people.list SET name=? WHERE list_id=?"; #removed "my"
-    $h = $c->dbc->dbh->prepare($q); #removed "my"
-
-
-    eval { 
-	$h->execute($name, $list_id);
-    };
-    
-    if ($@) { 
-	$c->stash->{rest} = { error => 'An error occurred when trying to update the name of the list.' };
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
 	return;
     }
 
     $c->stash->{rest} = { success => 1 };
-
 }
 
 sub set_type :Path('/list/type') Args(2) { 
@@ -162,37 +146,21 @@ sub set_type :Path('/list/type') Args(2) {
 	return;
     }
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $rs = $schema->resultset("Cv::Cvterm")->search({ 'me.name' => $type }, { join => "cv" });
-    if ($rs->count ==0) { 
-	$c->stash->{rest}= { error => "The type specified does not exist" };
-	return;
-    }
-    my $type_id = $rs->first->cvterm_id();
+    my $list = CXGN::List->new( { dbh=> $c->dbc->dbh(), list_id => $list_id });
 
-    my $q = "SELECT owner FROM sgn_people.list WHERE list_id=?";
-    my $h = $c->dbc->dbh->prepare($q);
-    $h->execute($list_id);
-
-    my ($list_owner) = $h->fetchrow_array();
-
-    if ($list_owner != $user_id) { 
+    if ($list->owner() != $user_id) { 
 	$c->stash->{rest} = { error => "Only the list owner can change the type of a list" };
 	return;
     }
 
-    eval { 
-	$q = "UPDATE sgn_people.list SET type_id=? WHERE list_id=?";
-	$h = $c->dbc->dbh->prepare($q);
-	$h->execute($type_id, $list_id);
-    };
-    if ($@) { 
-	$c->stash->{rest} = { error => "An error occurred. $@" };
+    $error = $list->type($type);
+    
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
 	return;
     }
-    
+
     $c->stash->{rest} = { success => 1 };
-    
 }
 
 sub new_list_action :Path('/list/new') Args(0) { 
@@ -227,15 +195,9 @@ sub all_types : Path('/list/alltypes') :Args(0) {
     my $self = shift;
     my $c = shift;
     
-    my $q = "SELECT cvterm_id, cvterm.name FROM cvterm JOIN cv USING(cv_id) WHERE cv.name = 'list_types' ";
-    my $h = $c->dbc->dbh->prepare($q);
-    $h->execute();
-    my @all_types = ();
-    while (my ($id, $name) = $h->fetchrow_array()) { 
-	push @all_types, [ $id, $name ];
-    }
-    $c->stash->{rest} = \@all_types;
-
+    my $all_types = CXGN::List::all_types($c->dbc->dbh());
+    
+    $c->stash->{rest} = $all_types;
 }
 
 =head2 available_lists()
@@ -264,22 +226,9 @@ sub available_lists : Path('/list/available') Args(0) {
 	return;
     }
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name ORDER BY list.name";
-    my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($user_id);
-
-    my @lists = ();
-    while (my ($id, $name, $desc, $item_count, $type_id, $type) = $h->fetchrow_array()) { 
-	if ($requested_type) { 
-	    if ($type && ($type eq $requested_type)) { 
-		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
-	    }
-	}
-	else { 
-	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
-	}
-    }
-    $c->stash->{rest} = \@lists;
+    my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id, $requested_type);
+    
+    $c->stash->{rest} = $lists;
 }
 
 sub add_item :Path('/list/item/add') Args(0) { 
@@ -296,6 +245,8 @@ sub add_item :Path('/list/item/add') Args(0) {
 	$c->stash->{rest} = { error => $error };
 	return;
     }
+
+    $element =~ s/^\s*(.+?)\s*$/$1/;
 
     if (!$element) { 
 	$c->stash->{rest} = { error => "You must provide an element to add to the list" };
@@ -340,22 +291,20 @@ sub add_bulk : Path('/list/add/bulk') Args(0) {
 
     my @elements = split "\t", $elements;
 
-    #print STDERR "ADDING ELEMENTS: ".join(", ", @elements)."\n";
-
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
+    
     my @duplicates = ();
     my $count = 0;
-    my $iq = "INSERT INTO sgn_people.list_item (list_id, content) VALUES (?, ?)";
-    my $ih = $c->dbc->dbh()->prepare($iq);
-    
-    print STDERR "Adding accessions ";
-    
-    foreach my $element (@elements) { 
-	print STDERR ".";
-	if ($self->exists_item($c, $list_id, $element)) { 
+
+    foreach my $element (@elements) {
+	$element =~ s/^\s*(.+?)\s*$/$1/; 
+
+	if ($list->exists_element($element)) { 
 	    push @duplicates, $element;
 	}
 	else { 
-	    $ih->execute($list_id, $element);	    
+	    #$ih->execute($list_id, $element);	    
+	    $list->add_element($element);
 	    $count++;
 	}
     }
@@ -371,10 +320,10 @@ sub insert_element : Private {
     my $c = shift;
     my $list_id = shift;
     my $element = shift;
-
-    my $iq = "INSERT INTO sgn_people.list_item (list_id, content) VALUES (?, ?)";
-    my $ih = $c->dbc->dbh()->prepare($iq);
-    $ih->execute($list_id, $element);
+    
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
+    
+    $list->add_element($element);
 }
 
 sub delete_list_action :Path('/list/delete') Args(0) { 
@@ -389,15 +338,10 @@ sub delete_list_action :Path('/list/delete') Args(0) {
 	return;
     }
     
-    my $q = "DELETE FROM sgn_people.list WHERE list_id=?";
-    
-    eval { 
-	my $h = $c->dbc->dbh()->prepare($q);
-	$h->execute($list_id);
-    };
-    if ($@) { 
-	$c->stash->{rest} = { error => "An error occurred while deleting list with id $list_id: $@" };
-	return;
+    my $error = CXGN::List::delete_list($c->dbc->dbh(), $list_id);
+
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
     }
     else { 
 	$c->stash->{rest} =  [ 1 ];
@@ -414,10 +358,8 @@ sub exists_list_action : Path('/list/exists') Args(0) {
     if (!$user_id) { 
 	$c->stash->{rest} = { error => 'You need to be logged in to use lists.' };
     }
-    my $q = "SELECT list_id FROM sgn_people.list where name = ? and owner=?";
-    my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($name, $user_id);
-    my ($list_id) = $h->fetchrow_array();
+
+    my $list_id = CXGN::List::exists_list($c->dbc->dbh(), $name, $user_id);
 
     if ($list_id) { 
 	$c->stash->{rest} = { list_id => $list_id };
@@ -460,9 +402,10 @@ sub list_size : Path('/list/size') Args(0) {
     my $self = shift;
     my $c = shift;
     my $list_id = $c->req->param("list_id"); 
-    my $h = $c->dbc->dbh->prepare("SELECT count(*) from sgn_people.list_item WHERE list_id=?");
-    $h->execute($list_id);
-    my ($count) = $h->fetchrow_array();
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my $count = $list->list_size();
+
     $c->stash->{rest} = { count => $count };
 }    
     
@@ -492,12 +435,6 @@ sub transform :Path('/list/transform/') Args(2) {
 
     my $data = $self->get_list_metadata($c, $list_id);
 
-#    my $transform_name = $t->can_transform($data->{list_type}, $new_type);
-#    if (!$transform_name) {
-#	$c->stash->{rest} = { error => "Cannot transform $data->{list_type} into #$new_type\n", };
-#	return;
- #   }
-    
     my $list_data = $self->retrieve_list($c, $list_id);
 
     my @list_items = map { $_->[1] } @$list_data;
@@ -519,8 +456,6 @@ sub replace_elements :Path('/list/item/replace') Args(2) {
 
     my $list_id = shift;
     my $new_list = shift; # tab delimited new list elements
-
-    
 
 }
 
@@ -608,15 +543,8 @@ sub new_list : Private {
 
     my $user_id = $self->get_user($c);
 
-    my $q = "INSERT INTO sgn_people.list (name, description, owner) VALUES (?, ?, ?)";
-    my $h = $c->dbc->dbh->prepare($q);
-    $h->execute($name, $desc, $user_id);
-    
-    $q = "SELECT currval('sgn_people.list_list_id_seq')";
-    $h = $c->dbc->dbh->prepare($q);
-    $h->execute();
-    my ($new_list_id) = $h->fetchrow_array();
-    
+    my $new_list_id = CXGN::List::create_list($c->dbc->dbh(), $name, $desc, $owner);
+   
     return $new_list_id;
     
 }
@@ -650,15 +578,12 @@ sub retrieve_list : Private {
 	return;
     }
 
-    my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
 
-    my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($list_id);
-    my @list = ();
-    while (my ($id, $content) = $h->fetchrow_array()) { 
-	push @list, [ $id, $content ];
-    }
-    return \@list;
+    my $list_elements_with_ids = $list->retrieve_elements_with_ids($list_id);
+    
+    print STDERR "LIST ELEMENTS WITH IDS: ".Dumper($list_elements_with_ids);
+    return $list_elements_with_ids;
 }
 
 
@@ -668,13 +593,11 @@ sub remove_element : Private {
     my $list_id = shift;
     my $item_id = shift;
 
-    my $h = $c->dbc->dbh()->prepare("DELETE FROM sgn_people.list_item where list_id=? and list_item_id=?");
 
-    eval { 
-	$h->execute($list_id, $item_id);
-    };
-    if ($@) { 
-	
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });  
+    my $error = $list->remove_element_by_id($item_id);
+    
+    if ($error) { 	
 	return { error => "An error occurred while attempting to delete item $item_id" };
     }
     else { 
@@ -689,11 +612,8 @@ sub exists_item : Private {
     my $list_id = shift;
     my $item = shift;
 
-    my $q = "SELECT list_item_id FROM sgn_people.list join sgn_people.list_item using(list_id) where list.list_id =? and content = ?";
-    my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($list_id, $item);
-    my ($list_item_id) = $h->fetchrow_array();
-
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my $list_item_id = $list->exists_element($item);
     return $list_item_id;
 }
 
@@ -702,11 +622,10 @@ sub get_list_owner : Private {
     my $c = shift;
     my $list_id = shift;
 
-    my $q = "SELECT owner FROM sgn_people.list WHERE list_id=?";
-    my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($list_id);
-    my ($owner_id) = $h->fetchrow_array();
-    return $owner_id;
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my $owner = $list->owner();
+    
+    return $owner;
 }
     
 sub get_user : Private { 

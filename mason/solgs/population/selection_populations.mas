@@ -7,7 +7,7 @@ displays list of prediction populations and their GS output.
 <%args>
 
 $result => ''
-$download_prediction
+$download_prediction =>''
 $analyzed_traits
 $pop_id
 $project_name
@@ -31,7 +31,8 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS","jquery.dataTables",  "solGS.selectionPopulations" ] &>
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <&| /page/info_section.mas, 
     collapsible => 1, 
@@ -39,30 +40,26 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
     title       => $title,
 &>
 
-<div id="selection_populations">
+<input id="search_selection_pops" style="display:none;" class="button" type="button" value="Search relevant selection populations " /> 
+<div id="selection_pops_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
 
-% if ($list_of_prediction_pops->[0])
-% {
-<& /page/columnar_table.mas,
-     headings    => ['',  'Selection population', 'Description', 'Generation', 'Year', 'Predict GEBVs' ],
-     data        => $list_of_prediction_pops,
-    __alt_freq   => 2,
-    __alt_width  => 1,
-    __align      => 'llllll'
-&>
-%} else
-%{
-  <div style="font-weight:bold;text-align:justify;color:#A7C942">
-    <p>There are no relevant selection populations in the database. 
-       If you have or want to make your own set of selection 
-       candidates use the form below.</p>
-  </div>
-%}
+<div id="selection_populations" style="display:none">
+  <table id="selection_pops_list" style="text-align: left;"> 
+    <thead>
+      <tr>
+	<th>Selection population</th>
+	<th>Description</th>
+	<th>Year</th>
+	<th>Predict GEBVs</th>
+      </tr>
+    </thead>
+  </table>
+</div>
 
-<p>&nbsp</p>
+<br />
 
 <& user_selection_genotypes.mas &>
 
-</div>
-
 </&>
+
+

@@ -199,7 +199,7 @@ function  selectionIndexForm(predictedTraits) {
 
 
 function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
-       
+   
     if (params) {                      
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Please wait..'});
@@ -282,7 +282,7 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
 
 
 function validateRelativeWts(nm, val) {    
-     // alert(val + ' : ' + nm);
+    
      if (isNaN(val) && nm != 'all') {
          alert('the relative weight of trait '+nm+ 
                ' must be a number.'
@@ -293,11 +293,11 @@ function validateRelativeWts(nm, val) {
                +' If you want to exclude the trait assign 0 to it.'
                );            
          return;
-     } else if (val < 0 && nm != 'all') {
-         alert('The relative weight to trait '+nm+
-               ' must be a positive number.'
-               );            
-         return;
+    // }// else if (val < 0 && nm != 'all') {
+      //   alert('The relative weight to trait '+nm+
+      //         ' must be a positive number.'
+      //         );            
+     //    return;
      } else if (nm == 'all' && val == 0) {
          alert('At least two traits must be assigned relative weight.');      
          return; 
@@ -311,7 +311,7 @@ function sumElements (elements) {
     var sum = 0;
     for (var i=0; i<elements.length; i++) {            
         if (!isNaN(elements[i])) {
-                sum +=  elements[i];
+            sum = parseFloat(sum) +  parseFloat(elements[i]);
         }
     }
     return sum;
@@ -329,7 +329,7 @@ function selectionIndex ( trainingPopId, predictionPopId ) {
     var legend   = legendValues.legend;
     var params   = legendValues.params;
     var validate = legendValues.validate;
-
+  
     if (params && validate) {
         applySelectionIndex(legendValues.params, legendValues.legend, trainingPopId, predictionPopId);
     }
@@ -358,7 +358,7 @@ function legendParams () {
      for (var i = 0; i < all.length; i++) {         
          var nm = all[i].name;
          var val = all[i].value;
-             
+
          if (val != 'Calculate')  {
              if (nm != 'prediction_pop_name') {
                  
@@ -376,12 +376,13 @@ function legendParams () {
              }
          }            
      } 
-   
+  
      var sum = sumElements(allValues);
      validate = validateRelativeWts('all', sum);
         
      for (var i=0;  i<allValues.length; i++)  {
-         if (isNaN(allValues[i]) || allValues[i] < 0) { 
+	// (isNaN(allValues[i]) || allValues[i] < 0) 
+         if (isNaN(allValues[i])) { 
              params = undefined;
          }
      }

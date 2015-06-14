@@ -346,8 +346,14 @@ sub mrna_cds_protein_sequence {
     if( $trim_from_left || $trim_from_right ) {
         $cds_seq = $cds_seq->trunc( 1+$trim_from_left, $mrna_seq->length - $trim_from_right );
     }
-
-    my $protein_seq = $cds_seq->translate;
+    ##my $protein_seq = $cds_seq->translate;
+    ##Get the protein sequence from the peptide object (stored in the database in the residues field of the feature table)
+    ## No need to try to translade the CDS
+    my $protein_seq  = Bio::PrimarySeq->new(
+        -id   => $mrna_seq->display_name,
+        -desc => $description,
+        -seq  => $peptide->residues,
+     );
 
     return [ $mrna_seq, $cds_seq, $protein_seq ];
 }

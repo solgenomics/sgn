@@ -53,6 +53,8 @@
         font-family: arial, helvetica, serif;  
         background-image: url("/documents/img/rice/ricebackground.jpg"); 
         background-repeat: no-repeat;
+	width: 800px;
+	height: 500px;
  
 }
 

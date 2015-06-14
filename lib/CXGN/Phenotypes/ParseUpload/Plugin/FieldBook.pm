@@ -77,7 +77,7 @@ sub parse {
 
     ## Get column numbers (indexed from 1) of the plot_id, trait, and value.
     foreach my $header_cell (@header_row) {
-	$header_cell = substr($header_cell,1,-1);  #remove double quotes
+	$header_cell =~ s/\"//g; #substr($header_cell,1,-1);  #remove double quotes
 	if ($header_cell eq "plot_id") {
 	    $header_column_info{'plot_id'} = $header_column_number;
 	}
@@ -98,9 +98,15 @@ sub parse {
     foreach my $line (@file_lines) {
 	chomp($line);
      	my @row =  split($delimiter, $line);
-	my $plot_id = substr($row[$header_column_info{'plot_id'}],1,-1);
-	my $trait = substr($row[$header_column_info{'trait'}],1,-1);
-	my $value = substr($row[$header_column_info{'value'}],1,-1);
+	my $plot_id = $row[$header_column_info{plot_id}];
+	$plot_id =~ s/\"//g;
+#substr($row[$header_column_info{'plot_id'}],1,-1);
+	my $trait = $row[$header_column_info{'trait'}];
+	$trait =~ s/\"//g;
+#substr($row[$header_column_info{'trait'}],1,-1);
+	my $value = $row[$header_column_info{'value'}];
+	$value =~ s/\"//g;
+#substr($row[$header_column_info{'value'}],1,-1);
 	if (!defined($plot_id) || !defined($trait) || !defined($value)) {
 	    $parse_result{'error'} = "error getting value from file";
 	    print STDERR "value: $value\n";

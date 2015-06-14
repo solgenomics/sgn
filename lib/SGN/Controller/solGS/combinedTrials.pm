@@ -116,10 +116,9 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args(3) {
  
     $self->build_model_combined_trials_trait($c);
     
-    $c->controller('solGS::solGS')->gebv_kinship_file($c);
-    
+    $c->controller('solGS::solGS')->gebv_kinship_file($c);    
     my $gebv_file = $c->stash->{gebv_kinship_file};
-
+   
     if ( -s $gebv_file ) 
     {
         $c->res->redirect("/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id");
@@ -131,22 +130,54 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args(3) {
 
 sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
     my ($self, $c, $combo_pops_id) = @_;
-    
+  
     $c->stash->{combo_pops_id} = $combo_pops_id;
     $c->stash->{model_id} = $combo_pops_id;
-
+    $c->stash->{pop_id} = $combo_pops_id;
+    $c->stash->{data_set_type} = 'combined populations';
+    
     my @traits_ids = $c->req->param('trait_id');
     my @traits_pages;
   
     my $solgs_controller = $c->controller('solGS::solGS');
 
-    if(!@traits_ids)
-    {
-        $solgs_controller->analyzed_traits($c);
-        @traits_ids = @{ $c->stash->{analyzed_traits_ids} }; 
-    }
+    if (!@traits_ids) {
     
-    if (scalar(@traits_ids) == 1) 
+        $solgs_controller->analyzed_traits($c);
+	my @analyzed_traits  = @{ $c->stash->{analyzed_traits} };
+
+	foreach my $tr (@analyzed_traits)
+	{	 
+	    my $acronym_pairs = $solgs_controller->get_acronym_pairs($c);
+	    my $trait_name;
+	    if ($acronym_pairs)
+	    {
+		foreach my $r (@$acronym_pairs) 
+		{
+		    if ($r->[0] eq $tr) 
+		    {
+			$trait_name = $r->[1];
+			$trait_name =~ s/\n//g;
+			$c->stash->{trait_name} = $trait_name;
+			$c->stash->{trait_abbr} = $r->[0];   
+		    }
+		}
+	    }
+         
+	    my $trait_id   = $c->model('solGS::solGS')->get_trait_id($trait_name);
+	    my $trait_abbr = $c->stash->{trait_abbr}; 
+
+	    $solgs_controller->get_model_accuracy_value($c, $combo_pops_id, $trait_abbr);
+	    my $accuracy_value = $c->stash->{accuracy_value};
+	
+	    $c->controller("solGS::Heritability")->get_heritability($c);
+	    my $heritability = $c->stash->{heritability};
+	    
+	    push @traits_pages, 
+	    [ qq | <a href="/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value, $heritability];
+	}
+    }  
+    elsif (scalar(@traits_ids) == 1) 
     {
         my $trait_id = $traits_ids[0];
         $c->res->redirect("/solgs/model/combined/trials/$combo_pops_id/trait/$trait_id");
@@ -161,35 +192,36 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
             my $tr_abbr = $c->stash->{trait_abbr};
 
             $self->build_model_combined_trials_trait($c);
-           
-            $solgs_controller->get_model_accuracy_value($c, $combo_pops_id);
+          
+            $solgs_controller->get_model_accuracy_value($c, $combo_pops_id, $tr_abbr);
             my $accuracy_value = $c->stash->{accuracy_value};
-            
+     
+	    $c->controller("solGS::Heritability")->get_heritability($c);
+	    my $heritability = $c->stash->{heritability};
+
             push @traits_pages, 
-            [ qq | <a href="/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id" onclick="solGS.waitPage()">$tr_abbr</a>|, $accuracy_value ];
-
+            [ qq | <a href="/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id" onclick="solGS.waitPage()">$tr_abbr</a>|, $accuracy_value, $heritability];
+	    
         }
-        
-        $solgs_controller->list_of_prediction_pops($c, $combo_pops_id);
-        $solgs_controller->analyzed_traits($c);
-
-        my $analyzed_traits = $c->stash->{analyzed_traits};
-       
-        $c->stash->{trait_pages}  = \@traits_pages;
-        $c->stash->{template}     = $solgs_controller->template('/population/combined/multiple_traits_output.mas');
-       
-        $self->combined_trials_desc($c);
-        
-        my $project_name = $c->stash->{project_name};
-        my $project_desc = $c->stash->{project_desc};
-        
-        
-        my @model_desc = ([qq | <a href="/solgs/populations/combined/$combo_pops_id">$project_name</a> |, $project_desc, \@traits_pages]);
-        $c->stash->{model_data} = \@model_desc;
-        $c->stash->{pop_id} = $combo_pops_id;
-        $solgs_controller->get_acronym_pairs($c);
-    }
+    }  
     
+    $solgs_controller->list_of_prediction_pops($c, $combo_pops_id);
+
+    $solgs_controller->analyzed_traits($c);
+    my $analyzed_traits = $c->stash->{analyzed_traits};
+   
+    $c->stash->{trait_pages}  = \@traits_pages;
+    $c->stash->{template}     = $solgs_controller->template('/population/combined/multiple_traits_output.mas');
+       
+    $self->combined_trials_desc($c);
+        
+    my $project_name = $c->stash->{project_name};
+    my $project_desc = $c->stash->{project_desc};
+        
+    my @model_desc = ([qq | <a href="/solgs/populations/combined/$combo_pops_id">$project_name</a> |, $project_desc, \@traits_pages]);
+    $c->stash->{model_data} = \@model_desc;
+    $c->stash->{pop_id} = $combo_pops_id;
+    $solgs_controller->get_acronym_pairs($c);  
 
 }
 
@@ -204,16 +236,14 @@ sub build_model_combined_trials_trait {
     my $gebv_file = $c->stash->{gebv_kinship_file};
 
     unless  ( -s $gebv_file ) 
-    {
-    
-        $self->combine_trait_data($c);
-    
+    {   
+        $self->combine_trait_data($c);    
         my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
         my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
         
         if (-s $combined_pops_pheno_file  && -s $combined_pops_geno_file ) 
-        { 
-            $c->controller('solGS::solGS')->get_rrblup_output($c); 
+        {  
+            $c->controller('solGS::solGS')->get_rrblup_output($c);
         }
     }
 }
@@ -437,7 +467,6 @@ sub find_common_traits_acronyms {
     {   
         die "An id for the combined trials is missing.";
     }
-
 
 }
 

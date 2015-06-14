@@ -324,7 +324,24 @@ sub uri_for_file {
     return URI->new($abs);
 }
 
+=head2 site_cluster_shared_dir
 
+ Usage:        my $dir = $c->site_cluster_shared_dir();
+ Desc:         returns the site-specific subdir that is cluster shareable.
+ Ret:          ditto
+ Args:         none
+ Side Effects: none
+ Example:       
 
+=cut
+
+sub site_cluster_shared_dir { 
+    my $self = shift;
+
+    my $host = $self->req->base;
+    $host =~ s/(http)|[:\/\d+]//g;
+    
+    return File::Spec->catdir($self->config->{cluster_shared_tempdir}, $host);
+}
 
 1;

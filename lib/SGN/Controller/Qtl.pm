@@ -133,7 +133,7 @@ sub download_correlation : Path('/qtl/download/correlation') Args(1) {
     if ($c->stash->{is_qtl_pop})
     {
     
-        my $corr_file = catfile( $c->config->{cluster_shared_tempdir}, 'correlation', 'cache',  "corre_coefficients_table_${id}");
+        my $corr_file = catfile($c->path_to($c->config->{cluster_shared_tempdir}), 'correlation', 'cache',  "corre_coefficients_table_${id}");
        
         unless (!-e $corr_file || -s $corr_file <= 1) 
         {
@@ -412,7 +412,7 @@ sub _link {
                    guideline          => qq |<a href="/qtl/submission/guide">Guideline</a> |,
                    phenotype_download => qq |<a href="/qtl/download/phenotype/$pop_id">Phenotype data</a> |,
                    genotype_download  => qq |<a href="/qtl/download/genotype/$pop_id">Genotype data</a> |,
-                   corre_download     => qq |<a href="/qtl/download/correlation/$pop_id">Correlation data</a> |,
+                   corre_download     => qq |<a href="/download/phenotypic/correlation/population/$pop_id">Correlation data</a> |,
                    acronym_download   => qq |<a href="/qtl/download/acronym/$pop_id">Trait-acronym key</a> |,
                    qtl_analysis_page  => qq |<a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage()">$graph_icon</a> |,
             );

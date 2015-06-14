@@ -29,7 +29,20 @@ has 'schema' => (
 		 isa      => 'DBIx::Class::Schema',
 		 lazy_build => 1,
 		);
+
+=head2 predicate has_stock_name(), clearer clear_stock_name(), accessors stock_name()
+
+functions to test, clear, set or get the stock name.
+
+=cut
+
 has 'stock_name' => (isa => 'Str', is => 'rw', predicate => 'has_stock_name', clearer => 'clear_stock_name');
+
+=head2 function get_stock()
+
+retrieves a stock row
+
+=cut
 
 sub get_stock {
   my $self = shift;
@@ -43,6 +56,12 @@ sub get_stock {
   return $stock;
 }
 
+=head2 function get_stock_exact()
+
+retrieves the stock row with an exact match to the stock name or synonym
+
+=cut
+
 sub get_stock_exact {
   my $self = shift;
   my $stock_rs = $self->_get_stock_resultset_exact();
@@ -54,6 +73,12 @@ sub get_stock_exact {
   }
   return $stock;
 }
+
+=head2 function get_matching_stock_count()
+
+retrieves the number of stocks that match the name (or synonym)
+
+=cut
 
 sub get_matching_stock_count {
   my $self = shift;

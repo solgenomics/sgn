@@ -1,3 +1,4 @@
+progeny name	female parent accession	male parent accession
 test_accession4	test_accession2	test_accession3
 test_accessionX	test_accession4	test_accession3
 

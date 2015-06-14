@@ -25,7 +25,7 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'Genes',
-                    link => '/search/loci',
+                    link => '/search/locus',
                     desc => 'Gene search.'
                 },
                 {
@@ -35,7 +35,7 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'Phenotypes',
-                    link => '/search/phenotypes/stock',
+                    link => '/search/stocks',
                     desc => 'Search for mutants, accessions, and traits.'
                 },
                 {
@@ -92,7 +92,7 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'People',
-                    link => '/search/directory',
+                    link => '/search/people',
                     desc => 'Search database of researchers who use SGN.'
                 },
                 {
@@ -254,8 +254,14 @@ sub default_toolbar_data {
                     name => 'Tomato',
                     link => '/organism/Solanum_lycopersicum/genome',
                     desc =>
-'The gene-rich euchromatic portion of the tomato genome has been sequenced by an international consortium.',
+'The tomato genome has been sequenced by an international consortium.',
                 },
+               {
+                    name => '<i>Solanum pennellii</i>',
+                    link => '/organism/Solanum_pennellii/genome',
+                    desc => 'Wild tomato genome',
+                },
+
 
                 {
                     name => 'Potato',
@@ -367,16 +373,16 @@ sub default_toolbar_data {
                 #Mapping
                 { name => 'Mapping' },
                 {
-                    name => 'NEW Genome Browser (Jbrowse)',
+                    name => 'Genome Browser (Jbrowse)',
                     link => '/jbrowse/',
                     desc => 'browse genomic annotations using the fast Jbrowse browser',
                 },
 
-                {
-                    name => 'Genome Browser (Gbrowse)',
-                    link => '/gbrowse/bin/gbrowse/',
-                    desc => 'browse genomic annotations using GBrowse',
-                },
+                # {
+                #     name => 'Genome Browser (Gbrowse)',
+                #     link => '/gbrowse/bin/gbrowse/',
+                #     desc => 'browse genomic annotations using GBrowse',
+                # },
 		# {
 		#     name => 'Comparative Genome Browser',
 		#     link => 'http://solgenomics.net/gbrowse2/bin/gbrowse_syn/sol2/?search_src=pot;name=ST3.10ch01:1..90000000',

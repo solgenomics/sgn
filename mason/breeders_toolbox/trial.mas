@@ -18,7 +18,6 @@ $trial_id
 $breeding_program
 $trial_name
 @location_data
-@phenotype_data
 @years
 @plot_data
 @accession_names
@@ -32,9 +31,10 @@ $design_layout_view
 $user_can_modify => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'CXGN.Trial' , 'jstree/dist/jstree' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
 <%perl>
+
 my $start_time = time();
 my $description_empty = 1;
 if ($trial_description) {
@@ -76,7 +76,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<table><tr><td width="365">
+<table><tr><td width="365" valign="top">
 <&| /page/info_section.mas, title=>"Breeding program", subtitle=>$subtitle &>
 % ## foreach my $bp (@$breeding_program) { 
 % ##  print $bp->[1] . "&nbsp;(".$bp->[2].")"; 
@@ -89,7 +89,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
-</td><td>
+</td><td valign="top" >
 <&| /page/info_section.mas, title=>"Trial type", subtitle=>"[<a id=\"edit_trial_type\" >change</a>]" &>
   <div id="trial_type">
     [loading...]
@@ -97,13 +97,16 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </&>
 
 </td></tr>
-<tr><td>
+<tr><td valign="top" >
 
-<&| /page/info_section.mas, title=>"Year(s)", subtitle => '[change]' &>
-<% join ", ", @years %>
+<&| /page/info_section.mas, title=>"Year(s)", subtitle => '[<a id="change_year_link">change</a>]' &>
+  <div id="trial_year">
+    [loading...]
+  </div>
+
 </&>
-</td><td width="365" >
-<&| /page/info_section.mas, title=>"Location(s)", subtitle=>'[change]' &>
+</td><td valign="top" width="365" >
+<&| /page/info_section.mas, title=>"Location(s)", subtitle=>"[<a id=\"change_trial_location_link\">change</a>]" &>
 
 <div id="trial_location">
   [loading...]
@@ -126,7 +129,13 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   <select id="trial_type_select"></select>
 </div>
 
-<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/layout/download/$trial_id\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/layout/download/$trial_id?format=csv\">csv</a>] | [<a id=\"delete_layout_data_by_trial_id\">Delete layout</a>]" &>
+<div id="change_trial_location_dialog">
+  Please choose the location fro this trial:<br />
+  <div id="trial_location_select_div" /></div>
+
+</div>
+
+<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
 
 % print STDERR "Check 8 (mason) : ".(time() - $start_time)."\n";
 %print "Design: $design_type <br /><br />";
@@ -159,13 +168,22 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <br /><br />
 
-<&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/phenotype/download/$trial_id\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/phenotype/download/$trial_id?format=csv\">csv</a>] | [<a id=\"delete_phenotype_data_by_trial_id\" >Delete trial data</a>]" &>
-% foreach my $trait (@phenotype_data) {
-% my $trait_id = $trait->[1];
-% print "<a href=\"/breeders_toolbox/trial/$trial_id/trait/$trait_id\">$trait->[0]</a> ($trait->[2] assays)<br />\n";
-%}
+%# <&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
+%# foreach my $trait (@phenotype_data) {
+%# my $trait_id = $trait->[1];
+%# my $trait_name = ucfirst($trait->[0]);
+%# print "$trait_name" . ' [ ' . "<a href=\"/breeders_toolbox/trial/$trial_id/trait/$trait_id\">view statistics</a>" . ' ] ' . "<br />";
+%# }
+
+%# </&>
+
+<&| /page/info_section.mas, title => "Traits assayed", subtitle => "Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
+
+<& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
 
 </&>
+
+
 % print STDERR "Check 8 (mason) : ".(time() - $start_time)."\n";
 % foreach my $p (@plot_data) { 
 %   print $p."<br />\n";
@@ -193,11 +211,22 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   
 </&>
 
+<&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
+  <& /breeders_toolbox/trial/trial_deletion.mas, trial_id => $trial_id  &>
+
+</&>
+
 % print STDERR "Check 9 (mason) : ".(time() - $start_time)."\n";
+
 <!-- Phenotypic correlation analysis -->
-  <& /solgs/population/correlation.mas,
-    trial_id => $trial_id
-    &>
+<& /solgs/population/correlation.mas,
+   trial_id => $trial_id
+&>
+
+  <!-- Population structure analysis -- PCA -->
+<& /solgs/model/pca.mas,
+   trial_id => $trial_id
+ &>
 
 % print STDERR "Check 10 (mason) : ".(time() - $start_time)."\n";
 
@@ -223,9 +252,16 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </div>
 
 <div id="change_breeding_program_dialog">
-  <select id="change_breeding_program_select">
-  </select>
-<div>
+  Please select a breeding program for this trial:<br />
+  <div id="change_breeding_program_select_div">
+  </div>
+</div>
+
+<div id="change_trial_year_dialog">
+  Please select a year for this trial:<br />
+  <div id="change_year_select_div">
+  </div>
+</div>
 
 <div id="trial_design_view_layout" title="Trial design layout">
 % print $design_layout_view;
@@ -243,6 +279,8 @@ jQuery(document).ready(function () {
   display_trial_description(<% $trial_id %>);
 
   display_trial_location(<% $trial_id %>);
+
+  display_trial_year();
 
   var type = get_trial_type(<% $trial_id %>);
 

@@ -20,11 +20,14 @@ use SGN::Devel::MyDevLibs;
 
 my $verbose = 0;
 my $nocleanup;
-
+my $noserver;
+my $noparallel = 0;
 GetOptions(
     "carpalways" => \( my $carpalways = 0 ),
     "verbose" => \$verbose ,
     "nocleanup" => \$nocleanup,
+    "noserver" => \$noserver,
+    "noparallel" => \$noparallel,
     );
 
 require Carp::Always if $carpalways;
@@ -32,21 +35,32 @@ require Carp::Always if $carpalways;
 my @prove_args = @ARGV;
 @prove_args = ( 't' ) unless @prove_args;
 
-my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
+#my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
 
 $ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'fixture';
-my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
-
+#my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
+my $conf_file_base = 'sgn_local.conf'; 
+my $template_file = 'sgn_fixture_template.conf';
 # get some defaults from sgn_local.conf
 #
-my $cfg = Config::Any->load_files({files=> [$conf_file_base], use_ext=>1 });
+my $cfg = Config::Any->load_files({files=> [$conf_file_base, $template_file], use_ext=>1 });
 
 my $config = $cfg->[0]->{$conf_file_base};
+my $template = $cfg->[1]->{$template_file};
+
+#print STDERR Dumper($cfg);
 my $db_user_password = $config->{dbpass};
 my $dbhost = $config->{dbhost};
 my $db_postgres_password = $config->{DatabaseConnection}->{sgn_test}->{password};
 my $test_dsn = $config->{DatabaseConnection}->{sgn_test}->{dsn};
 my $catalyst_server_port = 3010;
+
+# replace the keys in the sgn local file with what's in the template
+#
+foreach my $k (keys %{$template}) { 
+    #print STDERR "Replacing key $k : $config->{$k} with $template->{$k}\n";
+    $config->{$k} = $template->{$k};
+}
 
 # load the database fixture
 #
@@ -62,7 +76,7 @@ print $PGPASS "$dbhost:5432:$dbname:web_usr:$db_user_password\n";
 print $PGPASS "$dbhost:5432:*:postgres:$db_postgres_password\n";
 close($PGPASS);
 system("chmod 0600 $ENV{HOME}/.pgpass");
-print "Done.\n";
+print STDERR "Done.\n";
 
 print STDERR "# Loading database fixture... ";
 my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || '../cxgn_fixture.sql';
@@ -76,6 +90,8 @@ $config->{dbname} = $dbname;
 $test_dsn =~ s/dbname=(.*)$/dbname=$dbname/;
 $config->{DatabaseConnection}->{sgn_test}->{dsn} = $test_dsn;
 
+#print STDERR Dumper($config);
+
 my $new_conf = hash2config($config);
 
 open(my $NEWCONF, ">", "sgn_fixture.conf") || die "Can't open sgn_fixture.conf for writing";
@@ -86,28 +102,36 @@ print STDERR "Done.\n";
 
 # start the test web server
 #
-my $server_pid = fork;
-my $logfile  = "logfile.$$.txt";
-
-unless( $server_pid ) {
-
-    # web server process
-    #
-    $ENV{SGN_TEST_MODE} = 1;
-@ARGV = (
-    -p => $catalyst_server_port,
-    ( $parallel ? ('--fork') : () ),
-    );
-
-if (!$verbose) { 
-    print STDERR "# [Server logfile at $logfile]\n";
-    open (STDERR, ">$logfile") || die "can't open logfile.";
+my $server_pid;
+my $logfile;
+if ($noserver) { 
+    print STDERR "# [ --noserver option: not starting web server]\n";
 }
-Catalyst::ScriptRunner->run('SGN', 'Server');
+else { 
+    $server_pid = fork;
+    $logfile  = "logfile.$$.txt";
 
-exit;
+    unless( $server_pid ) {
+    
+	# web server process
+	#
+	#$ENV{SGN_TEST_MODE} = 1;
+	@ARGV = (
+	    -p => $catalyst_server_port,
+	    ( $noparallel ? () : ('--fork') ),
+	    );
+	
+	if (!$verbose) { 
+	    print STDERR "# [Server logfile at $logfile]\n";
+	    open (STDERR, ">$logfile") || die "can't open logfile.";
+	}
+	Catalyst::ScriptRunner->run('SGN', 'Server');
+	
+	exit;
+    }
+    print STDERR  "# Starting web server (PID=$server_pid)... ";
 }
-print STDERR  "# Starting web server (PID=$server_pid)... ";
+
 
 # wait for the test server to start
 #
@@ -118,7 +142,9 @@ print STDERR  "# Starting web server (PID=$server_pid)... ";
     };
     print STDERR "Done.\n";
 
-    sleep 1 until !kill(0, $server_pid) || get "http://localhost:$catalyst_server_port";    
+    if (!$noserver) { 
+	sleep 1 until !kill(0, $server_pid) || get "http://localhost:$catalyst_server_port";    
+    }
 }
 
 my $prove_pid = fork;
@@ -131,7 +157,7 @@ unless( $prove_pid ) {
     # set up env vars for prove and the tests
     #
     $ENV{SGN_TEST_SERVER} = "http://localhost:$catalyst_server_port";
-    if( $parallel ) {
+    if(! $noparallel ) {
         $ENV{SGN_PARALLEL_TESTING} = 1;
         $ENV{SGN_SKIP_LEAK_TEST}   = 1;
     }
@@ -165,24 +191,30 @@ if (!$nocleanup) {
     system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
     print STDERR "Done.\n";
 
-    print STDERR "# Delete server logfile... ";
-    unlink $logfile;
-    print STDERR "Done.\n";
-
-    print STDERR "# Delete fixture conf file... ";
-    unlink "sgn_fixture.conf";
-    print STDERR "Done.\n";
+    if ($noserver) { 
+	print STDERR "# [ --noserver option: No logfile to remove]\n";
+    }
+    else { 
+	print STDERR "# Delete server logfile... ";
+	close($logfile);
+	unlink $logfile;
+	print STDERR "Done.\n";
+	
+	print STDERR "# Delete fixture conf file... ";
+	unlink "sgn_fixture.conf";
+	print STDERR "Done.\n";
+    }
 }
 else { 
     print STDERR "# --nocleanup option: not removing db or files.\n";
 }
 print STDERR "# Test run complete.\n\n";
 
+
+
 sub hash2config { 
     my $hash = shift;
 
-    #print STDERR Data::Dumper::Dumper($hash);
-    
     my $s = "";
     foreach my $k (keys(%$hash)) { 
 	if (ref($hash->{$k}) eq "ARRAY") { 
@@ -207,6 +239,14 @@ sub hash2config {
 	    $s .= "$k $hash->{$k}\n";
 	}
     }
+
+    # if nothing matched the replace keys, add them here
+    #
+    
+#    if (exists($hash->{dbname})) { 
+#	$s .= "dbname $dbname\n";
+ #  }
+    
     return $s;
 }
     
@@ -231,6 +271,10 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
                  to force backtraces of all warnings and errors
 
   --nocleanup    Do not clean up database and logfile
+
+  --noserver     Do not start webserver (if running unit_fixture tests only)
+
+  --noparallel   Do not run the server in parallel mode.
 
 =head1 AUTHORS
 

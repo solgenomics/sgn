@@ -9,6 +9,7 @@ use SimulateC;
 use Data::Dumper;
 
 use CXGN::Trial;
+use CXGN::Trial::TrialLayout;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use CXGN::Phenotypes::StorePhenotypes;
@@ -29,8 +30,7 @@ my $td = CXGN::Trial::TrialDesign->new(
 	number_of_reps => $number_of_reps,
 	block_size => 2,
 	design_type => 'RCBD',
-	number_of_blocks => 3,
-	
+	number_of_blocks => 3,	
     });
 
 my $number_of_plots = $number_of_reps * scalar(@$stock_list);
@@ -38,8 +38,6 @@ my $number_of_plots = $number_of_reps * scalar(@$stock_list);
 $td->calculate_design();
 
 my $trial_design = $td->get_design();
-
-print STDERR Dumper($trial_design);
 
 my $breeding_program_row = $f->bcs_schema->resultset("Project::Project")->find( { name => 'test' });
 
@@ -60,8 +58,6 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
     });
 
 my $message = $new_trial->save_trial();
-
-print STDERR "Error saving trial: $message->{error}\n" if (exists($message->{error}));
 
 my $after_design_creation_count = $stock_count_rs->count();
 
@@ -117,13 +113,19 @@ my %metadata = ( operator => 'johndoe', date => '20141223' );
 
 $lp->store($c, $plotlist_ref, $traitlist_ref, \%plot_trait_value, \%metadata);
 
-ok($trial->phenotype_count(), "trial has phenotype data");
+my $total_phenotypes = $trial->total_phenotypes();
+
+my $trial_phenotype_count = $trial->phenotype_count();
+
+is($trial_phenotype_count, 10, "trial has phenotype data");
 
 # check trial deletion - first, delete associated phenotypes
 #
 $trial->delete_phenotype_data();
 
 ok($trial->phenotype_count() ==0, "phenotype data deleted");
+
+is($trial->total_phenotypes(), $total_phenotypes - $trial_phenotype_count, "check total phenotypes");
 
 # check trial layout deletion
 #
@@ -171,14 +173,22 @@ is_deeply($trial->get_location(), [ 23, 'test_location' ], "set location");
 #
 is($trial->get_project_type(), undef, "get project type");
 
-print STDERR join ",", $trial->get_all_project_types();
 my $error = $trial->associate_project_type("clonal");
-print STDERR "ERROR: $error\n";
 
 is($trial->get_project_type()->[1], "clonal", "associate project type");
 
 my $error = $trial->dissociate_project_type();
 is($trial->get_project_type(), undef, "dissociate project type");
+
+$trial->delete_project_entry();
+
+my $deleted_trial;
+eval { 
+     $deleted_trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema, trial_id=>$trial_id });
+};
+
+ok($@, "deleted trial id");
+
 
 done_testing();
 

@@ -42,7 +42,7 @@ allTraitsPhenoData <- read.table(allTraitsPhenoFile,
                         header = TRUE,
                         row.names = NULL,
                         sep = "\t",
-                        na.strings = c("NA", " ", "--", "-", "."),
+                        na.strings = c("NA", " ", "--", "-", ".", ".."),
                         dec = "."
                         )
 
@@ -52,11 +52,15 @@ traitPhenoData  <- allTraitsPhenoData[selectColumns]
 dropColumns <- c("object_id", "stock_id")
 traitPhenoData <- traitPhenoData[, !(names(traitPhenoData) %in% dropColumns)]
 
-if (all(is.numeric(traitPhenoData[, trait])) == FALSE) {
+if (class(traitPhenoData[, trait]) != 'numeric') {
+  traitPhenoData[, trait] <- as.numeric(as.character(phenoData[, trait]))
+}
+
+if (!all(is.numeric(traitPhenoData[, trait]))) {
   traitPhenoData[, trait] <- sapply(traitPhenoData[, trait], function(x) ifelse(is.numeric(x), x, NA))                     
 }
 
-if (all(is.na(traitPhenoData[, trait])) == FALSE) {
+if (!all(is.na(traitPhenoData[, trait]))) {
   traitPhenoData <- ddply(traitPhenoData,
                           "object_name",
                           colwise(mean, na.rm = TRUE)
@@ -72,7 +76,6 @@ if (all(is.na(traitPhenoData[, trait])) == FALSE) {
 } else {
   traitPhenoData <- NULL
 }
-
 
 write.table(traitPhenoData,
             file = traitPhenoFile,

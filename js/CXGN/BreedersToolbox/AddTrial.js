@@ -153,6 +153,7 @@ jQuery(document).ready(function ($) {
             success: function (response) {
                 if (response.error) {
                     alert(response.error);
+		    $('#working').dialog("close");
                 } else {
 		    $('#trial_design_information').html(response.design_info_view_html);
                     $('#trial_design_view_layout').html(response.design_layout_view_html);

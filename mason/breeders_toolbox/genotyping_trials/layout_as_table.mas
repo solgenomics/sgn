@@ -1,0 +1,25 @@
+
+<%args>
+$design
+</%args>
+
+% use Data::Dumper;
+% ##print Dumper($design);
+<table border='1'>
+<tr>
+<td>&nbsp;</td>
+% foreach my $col (1..12) { 
+  <td><% $col %></td>
+% }
+</tr>
+% foreach my $row ("A".."H") { 
+  <tr><td><% $row %></td>
+%   foreach my $col (1..12) { 
+%      $col = sprintf "%02d", $col;
+    <td>
+      <% $design->{$row.$col}->{accession_name} %>
+    </td>
+%   }
+   </td>
+% }
+</table>

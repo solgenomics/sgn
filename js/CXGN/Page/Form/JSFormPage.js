@@ -84,10 +84,18 @@ CXGN.Page.Form.JSFormPage.prototype = {
             url: this.getAjaxScript(), 
 	    data: editableForm.serialize(true) ,
 	    success: function(response) {
-                var x = eval("("+response+")");
+		var x;
+		if ( (typeof response=='string')) { // && (response.charAt(0)=="{") ) { 
+		     x = eval("("+response+")");
+		}
+		 else { 
+		     x = response; //x = eval("("+response+")");
+		 }
+
 		if (x.error) { 
 		    alert(x.error); 
-		} else if (x.refering_page) { window.location = x.refering_page ; } 
+		} 
+		else if (x.refering_page) { window.location = x.refering_page ; } 
 		else if (x.html) { document.getElementById(form.getFormId() ).innerHTML = x.html + form.getFormButtons(); }
 		else { form.printForm("view"); }
 	    },
@@ -117,16 +125,22 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	    alert("Cannot print from without a objectName, action, and ajaxScript name ! ");
 	} else if  (action == 'delete') { 
 	    this.printDeleteDialog();
-	}else {
-	    
-                    //var x = jQuery.parseJSON( json ); 
-
+	}
+	else {    
 	    jQuery.ajax({
 		url: this.getAjaxScript(),
 		method: "get",
 		data: {  'object_id': this.getObjectId(), 'action': action },
 		success: function(response) {
-                    var x = eval("("+response+")");
+		    var x;
+		    
+		     if ( (typeof response=='string')) { // && (response.charAt(0)=="(") ) { 
+		     	x = eval("("+response+")");
+		     }
+		    if (( typeof response=='object')) { 
+		     	x = eval(response);
+		     }
+
 		    if (x.login) { 	
 			window.location =  '/solpeople/login.pl' ;
 			x.error = undef;

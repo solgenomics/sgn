@@ -6,9 +6,9 @@ options(echo = FALSE)
 
 library(stats)
 library(stringr)
-library(imputation)
+library(randomForest)
 library(plyr)
-library(nlme)
+library(lme4)
 
 
 allArgs <- commandArgs()
@@ -30,7 +30,6 @@ outFile <- grep("output_files",
 outFiles <- scan(outFile,
                  what = "character"
                  )
-print(outFiles)
 
 combinedGenoFile <- grep("genotype_data",
                          outFiles,
@@ -61,7 +60,6 @@ traitFile <- grep("trait_",
 trait <- scan(traitFile,
               what = "character",
               )
-print(trait)
 
 traitInfo<-strsplit(trait, "\t");
 traitId<-traitInfo[[1]]
@@ -76,7 +74,7 @@ allPhenoFiles <- grep("phenotype_data",
                   fixed = FALSE,
                   value = TRUE
                   )
-print(allPhenoFiles)
+message("phenotype files: ", allPhenoFiles)
 
 allGenoFiles <- grep("genotype_data",
                   inFiles,
@@ -84,9 +82,6 @@ allGenoFiles <- grep("genotype_data",
                   fixed = FALSE,
                   value = TRUE
                   )
-
-
-print(allGenoFiles)
 
 popsPhenoSize     <- length(allPhenoFiles)
 popsGenoSize      <- length(allGenoFiles)
@@ -98,7 +93,6 @@ for (popPhenoNum in 1:popsPhenoSize)
     popId <- str_extract(allPhenoFiles[[popPhenoNum]], "\\d+")
     popIds <- append(popIds, popId)
 
-    print(popId)
     phenoData <- read.table(allPhenoFiles[[popPhenoNum]],
                             header = TRUE,
                             row.names = 1,
@@ -116,7 +110,7 @@ for (popPhenoNum in 1:popsPhenoSize)
     
     if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
 
-    if (experimentalDesign == 'augmented' || experimentalDesign == 'RCBD') {
+    if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  unique(phenoTrait$block) > 1) { 
 
       message("experimental design: ", experimentalDesign)
 
@@ -126,54 +120,50 @@ for (popPhenoNum in 1:popsPhenoSize)
 
       colnames(augData)[1] <- "genotypes"
       colnames(augData)[4] <- "trait"
-    
-      ff <- traitName ~ 0 + genotypes
-    
-      model <- lme(ff,
-                   data=augData,
-                   random = ~1|block,
-                   method="REML",
-                   na.action = na.omit
-                   )
-   
-      adjMeans <- data.matrix(fixed.effects(model))
-     
-      colnames(adjMeans) <- trait
-      
-      nn <- gsub('genotypes', '', rownames(adjMeans))
-      rownames(adjMeans) <- nn
-      adjMeans <- round(adjMeans, digits = 2)
 
-      phenoTrait <- data.frame(adjMeans)
-  
-      formattedPhenoData[, traitName] <- phenoTrait
- 
-  } else if (experimentalDesign == 'alpha') {
-   # trait <- i
-    alphaData <-  phenoTrait 
-      
-    colnames(alphaData)[2] <- "genotypes"
-    colnames(alphaData)[5] <- "trait"
+      model <- try(lmer(trait ~ 0 + genotypes + (1|block),
+                        augData,
+                        na.action = na.omit
+                        ))
      
-    ff <- traitName ~ 0 + genotypes
-      
-    model <- lme(ff,
-                 data = alphaData,
-                 random = ~1|replicate/block,
-                 method = "REML",
-                 na.action = na.omit
-                 )
-   
-    adjMeans <- data.matrix(fixed.effects(model))
-    colnames(adjMeans) <- traitName
-      
-    nn <- gsub('genotypes', '', rownames(adjMeans))
-    rownames(adjMeans) <- nn
-    adjMeans <- round(adjMeans, digits = 2)
+      if (class(model) != "try-error") {
+        phenoTrait <- data.frame(fixef(model))
+        
+        colnames(phenoTrait) <- traitName
 
-    phenoTrait <- data.frame(adjMeans)
-    formattedPhenoData[, i] <- phenoTrait
+        nn <- gsub('genotypes', '', rownames(phenoTrait))  
+        rownames(phenoTrait) <- nn
+      
+        phenoTrait <- round(phenoTrait, digits = 2)
   
+        formattedPhenoData[, traitName] <- phenoTrait
+      }
+      
+    } else if (experimentalDesign == 'Alpha') {
+
+      alphaData <-  phenoTrait 
+
+      colnames(alphaData)[1] <- "genotypes"
+      colnames(alphaData)[5] <- "trait"
+         
+      model <- try(lmer(trait ~ 0 + genotypes + (1|replicate/block),
+                        alphaData,
+                        na.action = na.omit
+                        ))
+        
+      if (class(model) != "try-error") {
+        phenoTrait <- data.frame(fixef(model))
+      
+        colnames(phenoTrait) <- traitName
+
+        nn <- gsub('genotypes', '', rownames(phenotrait))     
+        rownames(phenoTrait) <- nn
+      
+        phenoTrait <- round(phenoTrait, digits = 2)
+
+        formattedPhenoData[, i] <- phenoTrait
+      }
+      
   } else {
 
     phenoTrait <- subset(phenoData,
@@ -222,9 +212,7 @@ for (popPhenoNum in 1:popsPhenoSize)
       phenoTrait <- round(phenoTrait, digits = 2)
 
     }
-  }
-
-    
+  }    
     newTraitName = paste(traitName, popId, sep = "_")
     colnames(phenoTrait)[1] <- newTraitName
 
@@ -271,7 +259,6 @@ for (popGenoNum in 1:popsGenoSize)
     popId <- str_extract(allGenoFiles[[popGenoNum]], "\\d+")
     popIds <- append(popIds, popId)
 
-    print(popId)
     genoData <- read.table(allGenoFiles[[popGenoNum]],
                             header = TRUE,
                             row.names = 1,
@@ -286,23 +273,8 @@ for (popGenoNum in 1:popsGenoSize)
   
     if (sum(is.na(genoData)) > 0)
       {
-        print("sum of geno missing values")
-        print(sum(is.na(genoData)))
-
-        #impute missing genotypes
-        genoData <-kNNImpute(genoData, 10)
-        genoData <-as.data.frame(genoData)
-
-        #extract columns with imputed values
-        genoData <- subset(genoData,
-                                select = grep("^x", names(genoData))
-                                )
-
-        #remove prefix 'x.' from imputed columns
-        print(genoData[1:50, 1:4])
-        names(genoData) <- sub("x.", "", names(genoData))
-
-        genoData <- round(genoData, digits = 0)
+        message("sum of geno missing values: ", sum(is.na(genoData)))
+        genoData <- na.roughfix(genoData)
         message("total number of stocks for pop ", popId,": ", length(rownames(genoData)))
       }
 

@@ -13,6 +13,7 @@ table.myTable td, table.myTable th { border:1px solid black;padding:5px; }
 <tr><td>Institution</td><td>Researchers</td><td>Data</td></tr>
 <tr><td>IITA</td><td>Peter Kulakow, Ismail Rabbi</td><td>IITA cassava phenotypic data</td></tr>
 <tr><td>NRCRI</td><td>Chiedozie Egesi</td><td>NRCRI cassava phenotypic and genotypic data.</td></tr>
+<tr><td>NaCRRI</td><td>Robert Kawuki</td><td>NaCRRI cassava phenotypic and genotypic data.</td></tr>
 </table>
 
 
