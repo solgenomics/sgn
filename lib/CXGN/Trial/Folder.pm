@@ -178,17 +178,37 @@ sub associate_parent {
     my $self = shift;
     my $parent_id = shift;
 
-    # to do: check if parent is of type folder or breeding program
-        
-    my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create( 
-	{ 
-	    object_project_id => $parent_id,
-	    subject_project_id => $self->project()->project_id(),
-	    type_id => $self->folder_type_id(),
+    my $parent_row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $parent_id });
+
+    if (!$parent_row) { 
+	return "The folder specified as parent does not exist";
+    }
+    
+    my $parentprop_row = $self->bcs_schema()->resultset("Project::Projectprop")->find( { project_id => $parent_id, type_id => $self->folder_cvterm_id() });
+
+    if (!$parentprop_row) { 
+	return "The specified parent folder is not of type folder";
+    }
+
+    $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( 
+	{ object_project_id => $parent_id, 
+	  subject_project_id => $self->folder_id() 
 	});
 
-    $project_rel_row->insert();
-
+    if (! $project_rel_row) { 
+	$project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create( 
+	    { 
+		object_project_id => $parent_id,
+		subject_project_id => $self->project()->project_id(),
+		type_id => $self->folder_type_id(),
+	    });
+	
+	$project_rel_row->insert();
+    }
+    else { 
+	$project_rel_row->object_project_id($parent_id);
+	$project_rel_row->update();
+    }
 
 }
 

@@ -445,6 +445,31 @@ function trial_detail_page_setup_dialogs() {
 	get_select_box('folders', 'trial_folder_select_div', 'trial_folder_select');
     });
 
+
+    jQuery('#new_folder_dialog_link').click( function() { 
+	jQuery('#new_folder_dialog').dialog("open");
+	get_select_box('folders', 'new_folder_parent_folder_select_div', 'new_folder_parent_folder_id');
+    });
+
+    jQuery('#new_folder_dialog').dialog( { 
+	autoOpen: false,
+	buttons: { 
+	    cancel: { text: "Cancel",
+		      click: function() { jQuery( this ).dialog("close"); },
+		      id: "new_folder_dialog_cancel_button",
+		    },
+	    save:   { text: "Set",
+		      id: "new_folder_dialog_save_button",
+		      click: function() { 
+			  new_trial_folder();
+			  
+		      }
+		    }
+	}
+	
+    });
+
+
 }
 
 function save_trial_type(type) { 
@@ -634,6 +659,31 @@ function display_trial_folder() {
 function trial_folder_dialog() { 
     jQuery('#set_folder_dialog').dialog("open");
 
+}
+
+function new_folder_dialog() { 
+    jQuery('#new_folder_dialog').dialog("open");
+}
+
+function new_trial_folder() { 
+    var parent_id = jQuery('#new_folder_parent_folder_id').val();
+    var folder_name = jQuery('#new_folder_name').val();
+    jQuery.ajax( { 
+	'url': '/ajax/folder/new',
+	'data': { 'parent_folder_id' : parent_id, 'folder_name' :  folder_name },
+	'success': function(response) { 
+	    if (response.error){ 
+		alert(response.error);
+	    }
+	    else { 
+		alert("Successfully created new folder.");
+		jQuery(this).dialog("close");
+	    }
+	},
+	error: function(response) { 
+	    alert('an error occurred');
+	}
+    });
 }
 
 function set_trial_folder() { 

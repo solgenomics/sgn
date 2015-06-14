@@ -136,7 +136,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </div>
 
 <&| /page/info_section.mas, title=>"Folder", collaspible=>1, collapsed=>0, 
-  subtitle => '[<a id="open_folder_dialog_link">change</a>]' &>
+  subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">change</a>]' &>
 <span id="trial_folder_div">[None]</span>
 </&>
 
@@ -144,6 +144,12 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   Choose parent folder for this trial: <br /><div id="trial_folder_select_div"></div>
 </div>
   
+<div id="new_folder_dialog">
+  Create a new folder<br />
+  <input name="new_folder_name" id="new_folder_name" /><br />
+  Parent folder <span id="new_folder_parent_folder_select_div"></span>
+</div>
+
 <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
 
 % print STDERR "Check 8 (mason) : ".(time() - $start_time)."\n";

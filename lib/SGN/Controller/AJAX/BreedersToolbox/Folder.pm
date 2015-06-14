@@ -21,15 +21,22 @@ sub get_folder : Chained('/') PathPart('ajax/folder') CaptureArgs(1) {
 
 }
 
-sub create_folder :Path('/ajax/folder/create') Args(0) { 
+sub create_folder :Path('/ajax/folder/new') Args(0) { 
     my $self = shift;
     my $c = shift;
     my $parent_folder_id = $c->req->param("parent_folder_id");
     my $folder_name = $c->req->param("folder_name");
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $existing = $schema->resultset("Project::Project")->find( { name => $folder_name });
+
+    if ($existing) { 
+	$c->stash->{rest} = { error => "An folder or trial with that name already exists in the database. Please select another name." };
+	return;
+    }
     my $folder = CXGN::Trial::Folder->create(
 	{
-	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	    bcs_schema => $schema,
 	    parent_folder_id => $parent_folder_id,
 	    name => $folder_name,
 	});
@@ -43,22 +50,30 @@ sub associate_child_folder :Chained('get_folder') PathPart('associate/child') Ar
     
     my $child_id = shift;
     
-    my $folder = CXGN::Trial::Folder->new( { bcs_schema => $c->stash->{schema}, folder_id => $c->stash->{folder_id} });
+    my $folder = CXGN::Trial::Folder->new( 
+	{ 
+	    bcs_schema => $c->stash->{schema}, 
+	    folder_id => $c->stash->{folder_id} 
+	});
 
     $folder->associate_child($child_id);
     
     $c->stash->{rest} = { success => 1 };
-
 }
 
-sub associate_parent_folder : Chained('get_folder') PathPart('associate/parent') Args(1) { 
+sub associate_parent_folder : Chained('get_folder') 
+    PathPart('associate/parent') Args(1) { 
     my $self = shift;
     my $c = shift;
     my $parent_id = shift;
 
-    my $folder = CXGN::Trial::Folder->new( { bcs_schema => $c->stash->{schema}, folder_id => $c->stash->{folder_id} });
+    my $folder = CXGN::Trial::Folder->new( 
+	{ 
+	    bcs_schema => $c->stash->{schema}, 
+	    folder_id => $c->stash->{folder_id} 
+	});
 
-    $folder->associate_parent($c->stash->{folder_id});
+    $folder->associate_parent($parent_id);
     
     $c->stash->{rest} = { success => 1 };
 
