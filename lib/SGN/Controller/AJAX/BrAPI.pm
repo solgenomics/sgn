@@ -219,6 +219,20 @@ sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){
 
 }
 
+
+sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
+    my @response;
+    while (my $row = $rs->next()) { 
+	push @response, [ $row->nd_protocol_id(), $row->name() ];
+    }
+    $c->stash->{rest} = \@response;
+
+}
+
 sub genosort { 
     my ($a_chr, $a_pos, $b_chr, $b_pos);
     if ($a =~ m/S(\d+)\_(.*)/) { 
@@ -277,7 +291,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     my $c = shift;
 
     my $markerprofile_ids = $c->req->param("markerprofileIds");
-    my $page_size = $c->req->param("pageSize") || 1000;
+    my $page_size = $c->req->param("pageSize") || 10;
     my $current_page = $c->req->param("currentPage") || 1;
 
     my @profile_ids = split ",", $markerprofile_ids;
@@ -320,7 +334,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 
     my %markers_by_line;
 
-    for (my $n = $page_size * $current_page; $n< ($page_size * ($current_page+1)); $n++) {
+    for (my $n = $page_size * ($current_page-1); $n< ($page_size * ($current_page)); $n++) {
 	my $m = $ordered_refmarkers[$n];
 	foreach my $line (keys %scores) { 
 	    push @{$markers_by_line{$m}}, $scores{$line}->{$m};
