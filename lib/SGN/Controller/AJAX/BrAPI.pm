@@ -11,7 +11,6 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Chado::Stock;
 
-
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 __PACKAGE__->config(
@@ -143,8 +142,6 @@ sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) {
     my $c = shift;
     my $method = $c->req->param("methodId");
 
-    
-    
     my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( {} );
     my @genotypes;
     while (my $gt = $rs->next()) { 
@@ -195,6 +192,9 @@ sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){
 
     my $params = $c->req->params();
 
+    my $page_size = $params->{pageSize} || 500;
+    my $page = $params->{page} || 1;
+
     my @runs = ();
     my $count = 0;
     foreach my $row ($rs->all()) { 
@@ -210,6 +210,7 @@ sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){
 		    next;
 		}
 	    }
+
 	    $encoded_genotype{$m} = $self->convert_dosage_to_genotype($genotype->{$m});
 	}
 	push @runs, { data => \%encoded_genotype, runId => $row->genotypeprop_id() };
@@ -217,6 +218,7 @@ sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){
     my $total_pages;
     my $total_count;
     $c->stash->{rest} =  {
+
 	pagination => { 
 	    page => $c->stash->{current_page},
 	    pageSize => $c->stash->{page_size},
@@ -228,7 +230,6 @@ sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){
     };
 
 }
-
 
 sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods') Args(0) { 
     my $self = shift;
@@ -242,6 +243,7 @@ sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods')
     $c->stash->{rest} = \@response;
 
 }
+
 
 sub genosort { 
     my ($a_chr, $a_pos, $b_chr, $b_pos);
@@ -287,7 +289,6 @@ sub convert_dosage_to_genotype {
 sub markerprofile_rs { 
     my $self = shift;
     my $c = shift;
-
 
 #    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( { 'me.stock_id' => $c->stash->{genotype_id} })->search_related('nd_experiment_stocks')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
     
