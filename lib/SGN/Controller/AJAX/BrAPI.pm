@@ -23,7 +23,6 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 		      is => 'rw',
     );
 
-
 my $DEFAULT_PAGE_SIZE=500;
 
 
@@ -142,6 +141,8 @@ sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) {
     my $c = shift;
     my $method = $c->req->param("methodId");
 
+    
+    
     my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( {} );
     my @genotypes;
     while (my $gt = $rs->next()) { 
@@ -191,9 +192,6 @@ sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){
     my $rs = $self->markerprofile_rs($c);
 
     my $params = $c->req->params();
-
-    my $page_size = $params->{pageSize} || 500;
-    my $page = $params->{page} || 1;
 
     my @runs = ();
     my $count = 0;
@@ -342,7 +340,6 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     }
 
     my %markers_by_line;
-
 
     for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
 
