@@ -4,9 +4,11 @@ package SGN::Controller::AJAX::BrAPI;
 use Moose;
 use JSON::Any;
 use Data::Dumper;
+use POSIX;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
+use CXGN::Chado::Stock;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -32,17 +34,61 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     
 }
 
-sub genotype : Chained('brapi') PathPart('genotype') CaptureArgs(1) { 
-    my $self = shift;
-    my $c = shift;
-    my $id = shift;
-    $c->stash->{genotype_id} = $id;
-}
 
-sub germplasm : Chained('brapi') PathPart('germplasm') CaptureArgs(0) { 
+sub germplasm_all : Chained('brapi') PathPart('germplasm') Args(0) { 
     my $self = shift;
     my $c = shift;
     
+    my $type_id = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
+    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( { type_id => $type_id });
+
+    my @result;
+    
+    while (my $stock = $rs->next()) { 
+	# to do: needs to be expanded according to api...
+	push @result, { germplasmId => $stock->stock_id(), germplasmName => $stock->uniquename() };
+    }
+    
+    $c->stash->{rest} = \@result;
+}
+
+=head2 brapi/v1/germplasm/{id}
+
+ Usage:
+ Desc:
+ Return JSON example:
+    {
+"germplasmId": 382, "germplasmName": "MOREX", "synonyms": [ "M25", "CIHO15773" ], "taxonId": 3,
+"breedingProgramId": 18
+}
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub germplasm : Chained('brapi') PathPart('germplasm') CaptureArgs(1) { 
+    my $self = shift;
+    my $c = shift;    
+    my $stock_id = shift;
+
+    $c->stash->{stock_id} = $stock_id;
+    my $g = CXGN::Chado::Stock->new($self->bcs_schema(), $stock_id);
+    $c->stash->{stock} = $g;
+}
+
+sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    # need to implement get_synonyms... ####my @synonyms = $c->stash->{stock}->get_synonyms();
+    my $stock_data = { 
+	germplasmId => $c->stash->{stock}->get_stock_id(),
+	germplasmName => $c->stash->{stock}->get_uniquename(),
+	#synonyms => \@synonyms,
+    };
+
+    $c->stash->{rest} = $stock_data;
 }
 
 sub germplasm_find : Chained('germplasm') PathPart('find') Args(0) { 
@@ -84,14 +130,32 @@ sub germplasm_find : Chained('germplasm') PathPart('find') Args(0) {
     $c->stash->{rest} = \@results;
 }
 
+sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $method = $c->req->param("methodId");
 
+    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( {} );
+    my @genotypes;
+    while (my $gt = $rs->next()) { 
+	push @genotypes, { markerprofileId => $gt->genotypeprop_id };
+    }
+    $c->stash->{rest} = \@genotypes;
+}
 
-sub genotype_count : Chained('genotype') PathPart('count') Args(0) {
+sub markerprofiles : Chained('brapi') PathPart('markerprofiles') CaptureArgs(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $id = shift;
+    $c->stash->{markerprofile_id} = $id; # this is genotypeprop_id
+}
+
+sub markerprofile_count : Chained('markerprofiles') PathPart('count') Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR "PROCESSING genotype/count...\n";
 
-    my $rs = $self->genotype_rs($c);
+    my $rs = $self->markerprofile_rs($c);
 
     my @runs;
     foreach my $row ($rs->all()) { 
@@ -105,20 +169,24 @@ sub genotype_count : Chained('genotype') PathPart('count') Args(0) {
 	};
     }
     my $response = {
-	id => $c->stash->{genotype_id},
+	id => $c->stash->{markerprofile_id},
 	markerCounts => \@runs
     };
     
     $c->stash->{rest} = $response;	
 }
 
-sub genotype_fetch : Chained('genotype') PathPart('') Args(0){ 
+sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){ 
     my $self = shift;
     my $c = shift;
 
-    my $rs = $self->genotype_rs($c);
+    print STDERR "Markerprofile_fetch\n";
+    my $rs = $self->markerprofile_rs($c);
 
     my $params = $c->req->params();
+
+    my $page_size = $params->{pageSize} || 500;
+    my $page = $params->{page} || 1;
 
     my @runs = ();
     my $count = 0;
@@ -126,7 +194,7 @@ sub genotype_fetch : Chained('genotype') PathPart('') Args(0){
 	my $genotype_json = $row->value();
 	my $genotype = JSON::Any->decode($genotype_json);
 	my %encoded_genotype = ();
-	foreach my $m (sort keys %$genotype) { 
+	foreach my $m (sort genosort keys %$genotype) { 
 	    $count++;
 
 	    if ($params->{page} && $params->{pageSize}) { 
@@ -135,41 +203,145 @@ sub genotype_fetch : Chained('genotype') PathPart('') Args(0){
 		    next;
 		}
 	    }
-	    
-	    if ($genotype->{$m} == 1) { 
-		$encoded_genotype{$m} = "AA";
-	    }
-	    elsif ($genotype->{$m} == 0) { 
-		$encoded_genotype{$m} = "BB";
-	    }
-	    elsif ($genotype->{$m} == 2) { 
-		$encoded_genotype{$m} = "AB";
-	    }
-	    else { 
-		$encoded_genotype{$m} = "NA";
-	    }
+	 
+	    $encoded_genotype{$m} = $self->convert_dosage_to_genotype($genotype->{$m});
 	}
 	push @runs, { data => \%encoded_genotype, runId => $row->genotypeprop_id() };
 	
     }
+    my $total_pages;
+    my $total_count;
     $c->stash->{rest} =  {
-	germplasmId => $c->stash->{genotype_id},
+	pagination => { page => $page, pageSize => $page_size, totalPages => $total_pages, totalCount => $total_count },
+	germplasmId => $c->stash->{markerprofile_id},
 	genotypes => \@runs,
     };
 
-    if ($params->{page} && $params->{pageSize}) { 
-	$c->stash->{rest}->{page} = $params->{page};
-	$c->stash->{rest}->{pageSize} = $params->{pageSize};
+}
+
+sub genosort { 
+    my ($a_chr, $a_pos, $b_chr, $b_pos);
+    if ($a =~ m/S(\d+)\_(.*)/) { 
+	$a_chr = $1;
+	$a_pos = $2;
+    }
+    if ($b =~ m/S(\d+)\_(.*)/) { 
+	$b_chr = $1;
+	$b_pos = $2;
+    }
+    
+    if ($a_chr == $b_chr) { 
+	return $a_pos <=> $b_pos;
+    }
+    return $a_chr <=> $b_chr;
+}
+    
+
+sub convert_dosage_to_genotype { 
+    my $self = shift;
+    my $dosage = shift;
+
+    my $genotype;
+    if ($dosage eq "NA") { 
+	return "NA";
+    }
+    if ($dosage == 1) { 
+	return "AA";
+    }
+    elsif ($dosage == 0) { 
+	return "BB";
+    }
+    elsif ($dosage == 2) { 
+	return "AB";
+    }
+    else { 
+	return "NA";
     }
 }
 
-sub genotype_rs { 
+
+sub markerprofile_rs { 
     my $self = shift;
     my $c = shift;
 
-    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( { 'me.stock_id' => $c->stash->{genotype_id} })->search_related('nd_experiment_stocks')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
+#    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( { 'me.stock_id' => $c->stash->{genotype_id} })->search_related('nd_experiment_stocks')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
+    
+    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => $c->stash->{markerprofile_id} });
+    
 
     return $rs;
+}
+
+sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $markerprofile_ids = $c->req->param("markerprofileIds");
+    my $page_size = $c->req->param("pageSize") || 1000;
+    my $current_page = $c->req->param("currentPage") || 1;
+
+    my @profile_ids = split ",", $markerprofile_ids;
+
+    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
+    
+    my %scores;
+    my $total_pages;
+    my $total_count;
+    my @marker_score_lines;
+    my @ordered_refmarkers;
+
+    if ($rs->count() > 0) { 
+	my $profile_json = $rs->first()->value();
+	my $refmarkers = JSON::Any->decode($profile_json);
+
+	print STDERR Dumper($refmarkers);
+	
+	@ordered_refmarkers = sort genosort keys(%$refmarkers);
+
+	print Dumper(\@ordered_refmarkers);
+
+	$total_count = scalar(@ordered_refmarkers);
+	$total_pages = ceil($total_count / $page_size);
+
+	while (my $profile = $rs->next()) { 
+	    foreach my $m (@ordered_refmarkers) { 
+		my $markers_json = $profile->value();
+		my $markers = JSON::Any->decode($markers_json);
+
+		$scores{$profile->genotypeprop_id()}->{$m} = 
+		    $self->convert_dosage_to_genotype($markers->{$m});
+	    }   
+	}
+    }
+    my @lines;
+    foreach my $line (keys %scores) { 
+	push @lines, $line;
+    }
+
+    my %markers_by_line;
+
+    for (my $n = $page_size * $current_page; $n< ($page_size * ($current_page+1)); $n++) {
+	my $m = $ordered_refmarkers[$n];
+	foreach my $line (keys %scores) { 
+	    push @{$markers_by_line{$m}}, $scores{$line}->{$m};
+	    push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
+	}
+    }
+    
+    $c->stash->{rest} = { 
+	metadata => { 
+	    pagination => { 
+		pageSize => $page_size, 
+		currentPage => $current_page, 
+		totalPages => $total_pages, 
+		totalCount => $total_count 
+	    },
+		    status => {},
+	},
+		    markerprofileIds => \@lines,
+		    scores => \@marker_score_lines,
+    };
+    
 }
 
 
