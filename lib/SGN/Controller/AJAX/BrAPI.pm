@@ -343,7 +343,9 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 
     my %markers_by_line;
 
+
     for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
+
 	my $m = $ordered_refmarkers[$n];
 	foreach my $line (keys %scores) { 
 	    push @{$markers_by_line{$m}}, $scores{$line}->{$m};
