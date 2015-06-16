@@ -24,14 +24,19 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 		      is => 'rw',
     );
 
+my $DEFAULT_PAGE_SIZE=500;
+
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
     my $version = shift;
+
+    $c->stash->{current_page} = $c->req->param("page") || 1;
+    $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
+
     $self->bcs_schema( $c->dbic_schema("Bio::Chado::Schema") );
     $c->stash->{api_version} = $version;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
-    
 }
 
 
@@ -135,6 +140,8 @@ sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) {
     my $c = shift;
     my $method = $c->req->param("methodId");
 
+    
+    
     my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( {} );
     my @genotypes;
     while (my $gt = $rs->next()) { 
@@ -185,9 +192,6 @@ sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){
 
     my $params = $c->req->params();
 
-    my $page_size = $params->{pageSize} || 500;
-    my $page = $params->{page} || 1;
-
     my @runs = ();
     my $count = 0;
     foreach my $row ($rs->all()) { 
@@ -203,16 +207,19 @@ sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){
 		    next;
 		}
 	    }
-	 
 	    $encoded_genotype{$m} = $self->convert_dosage_to_genotype($genotype->{$m});
 	}
 	push @runs, { data => \%encoded_genotype, runId => $row->genotypeprop_id() };
-	
     }
     my $total_pages;
     my $total_count;
     $c->stash->{rest} =  {
-	pagination => { page => $page, pageSize => $page_size, totalPages => $total_pages, totalCount => $total_count },
+	pagination => { 
+	    page => $c->stash->{current_page},
+	    pageSize => $c->stash->{page_size},
+	    totalPages => $total_pages, 
+	    totalCount => $total_count 
+	},
 	germplasmId => $c->stash->{markerprofile_id},
 	genotypes => \@runs,
     };
@@ -291,8 +298,6 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     my $c = shift;
 
     my $markerprofile_ids = $c->req->param("markerprofileIds");
-    my $page_size = $c->req->param("pageSize") || 10;
-    my $current_page = $c->req->param("currentPage") || 1;
 
     my @profile_ids = split ",", $markerprofile_ids;
 
@@ -315,7 +320,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 	print Dumper(\@ordered_refmarkers);
 
 	$total_count = scalar(@ordered_refmarkers);
-	$total_pages = ceil($total_count / $page_size);
+	$total_pages = ceil($total_count / $c->stash->{page_size});
 
 	while (my $profile = $rs->next()) { 
 	    foreach my $m (@ordered_refmarkers) { 
@@ -334,7 +339,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 
     my %markers_by_line;
 
-    for (my $n = $page_size * ($current_page-1); $n< ($page_size * ($current_page)); $n++) {
+    for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
 	my $m = $ordered_refmarkers[$n];
 	foreach my $line (keys %scores) { 
 	    push @{$markers_by_line{$m}}, $scores{$line}->{$m};
@@ -345,8 +350,8 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     $c->stash->{rest} = { 
 	metadata => { 
 	    pagination => { 
-		pageSize => $page_size, 
-		currentPage => $current_page, 
+		pageSize => $c->stash->{page_size},
+		currentPage => $c->stash->{current_page},
 		totalPages => $total_pages, 
 		totalCount => $total_count 
 	    },
