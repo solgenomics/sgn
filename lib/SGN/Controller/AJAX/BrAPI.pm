@@ -14,10 +14,8 @@ BEGIN { extends 'Catalyst::Controller::REST' };
 
 __PACKAGE__->config(
     default   => 'application/json',
-    #default => 'text/javascript', # for jsonp
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
-    #map  => { 'text/javascript' => 'JSONP', 'text/html' => 'JSONP' },
    );
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
@@ -364,14 +362,14 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 }
 
 
-sub study : Chained('brapi') PathPart('study') CaptureArgs(0) {
+sub studies : Chained('brapi') PathPart('studies') CaptureArgs(0) {
     my $self = shift;
     my $c = shift;
 
 
 }
 
-sub study_list : Chained('study') PathPart('list') Args(0) { 
+sub study_list : Chained('studies') PathPart('list') Args(0) { 
     my $self = shift;
     my $c = shift;
     my $program = $c->req->param("program");
@@ -433,7 +431,7 @@ sub study_list : Chained('study') PathPart('list') Args(0) {
     # designType: "RCBD"
 }
 
-sub study_detail : Chained('study') PathPart('detail') Args(1) { 
+sub study_detail : Chained('studies') PathPart('detail') Args(1) { 
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;
