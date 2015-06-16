@@ -103,7 +103,7 @@ sub view_by_name : Path('/locus/view/') Args(0) {
     if (defined($locus->get_locus_id())) { 
 	my $locus_id = $locus->get_locus_id();
 	$c->stash->{locus} = $locus;
-	$c->detach("/locus/view_locus", [ $locus_id] );    #("/locus/$locus_id/view");    
+	$c->detach("/locus/view/", [ $locus_id] );    #("/locus/$locus_id/view");    
     }
     else { 
 	$c->stash->{template} = 'generic_message.mas';
@@ -237,9 +237,35 @@ Path part: /locus/<locus_id>
 
 sub get_locus : Chained('/')  PathPart('locus')  CaptureArgs(1) {
     my ($self, $c, $locus_id) = @_;
+    
+    my $identifier_type = $c->stash->{identifier_type}
+        || $locus_id =~ /[^-\d]/ ? 'locus' : 'locus_id';
+    
+    if( $identifier_type eq 'locus_id' ) {
+        $locus_id > 0
+            or $c->throw_client_error( public_message => 'Locus ID must be a positive integer.' );
+    }
 
-    $c->stash->{locus}     = CXGN::Phenome::Locus->new($c->dbc->dbh, $locus_id);
+    my $matching_loci = $self->schema->resultset('Locus')->search(
+	{
+	    $identifier_type => $locus_id,
+	    obsolete         => 'f'
+	} );
+    
+    if( $matching_loci->count > 1 ) {
+        $c->throw_client_error( public_message => 'Multiple matching loci' );
+    }    
+    
+    my ( $locus ) = $matching_loci->all
+	or $c->throw_404( "Locus not found" );
+    my $found_locus_id = $locus->locus_id;
+    
+    $c->stash->{locus}     = CXGN::Phenome::Locus->new($c->dbc->dbh, $found_locus_id);
+
+
+    return 1;
 }
+
 
 
 
