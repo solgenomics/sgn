@@ -409,7 +409,11 @@ sub study_list : Chained('studies') PathPart('list') Args(0) {
 	    print STDERR "TRIAL ID $trial_id\n";
 	    my $t = CXGN::Trial->new( { trial_id => $trial_id->[0], bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
 	    
-	    my $layout = CXGN::Trial::TrialLayout->new( { schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $bp->[0] });
+	    my $layout = CXGN::Trial::TrialLayout->new( 
+		{ 
+		    schema => $c->dbic_schema("Bio::Chado::Schema"), 
+		    trial_id => $bp->[0] 
+		});
 	    
 	    $trial_data->{studyId} = $t->get_trial_id();
 	    $trial_data->{studyType} = $t->get_project_type()->[1];
@@ -423,7 +427,7 @@ sub study_list : Chained('studies') PathPart('list') Args(0) {
 	}
     }
 
-    $c->stash->{rest} =  \@response;
+    $c->stash->{rest} = \@response;
 
     # studyId: "1",
     # studyType: "NURSERY",
@@ -554,5 +558,104 @@ sub specific_traits_list : Chained('traits') PathPart('') Args(1) {
     $c->res->body("IT WORKS");
 
 }
+
+sub maps : Chained('brapi') PathPart('maps') CaptureArgs(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $map_id = shift;
+
+    $c->stash->{map_id} = $map_id;
+}
+
+sub maps_detail : Chained('maps') PathPart('') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
+    my %map_info;
+    while (my $row = $rs->next()) { 
+	print STDERR "Retrieving map info for ".$row->name()."\n";
+	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $c->stash->{map_id}  })->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
+	
+	my $lg_row = $lg_rs->first();
+
+	print STDERR "LG RS COUNT = ".$lg_rs->count()."\n";
+
+	if (!$lg_row) { 
+	    die "This was never supposed to happen :-(";
+	}
+
+	my $scores;
+	if ($lg_row) { 
+	    $scores = JSON::Any->decode($lg_row->value());
+	}
+	my %chrs;
+
+	foreach my $m (sort genosort (keys %$scores)) { 
+	    my ($chr, $pos) = split "_", $m;
+	    print STDERR "CHR: $chr. POS: $pos\n";
+	    $chrs{$chr} = $pos;
+	}
+
+	%map_info = (
+	    mapId =>  $row->nd_protocol_id(), 
+	    name => $row->name(), 
+	    type => "physical", 
+	    unit => "bp",
+	    linkageGroupCount => scalar(keys %chrs),
+	    publishedDate => undef,
+	    comments => "",
+	    linkageGroups => \%chrs,
+	    );
+    }
+    $c->stash->{rest} = \%map_info;
+
+    
+}
+
+sub maps_overview : Chained('brapi') PathPart('maps') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    # maps are just marker lists associated with specific protocols
+    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
+    my %map_info;
+    while (my $row = $rs->next()) { 
+	print STDERR "Retrieving map info for ".$row->name()."\n";
+	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { nd_protocol_id => $row->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
+	
+	my $lg_row = $lg_rs->first();
+
+	print STDERR "LG RS COUNT = ".$lg_rs->count()."\n";
+
+	if (!$lg_row) { 
+	    die "This was never supposed to happen :-(";
+	}
+
+	my $scores;
+	if ($lg_row) { 
+	    $scores = JSON::Any->decode($lg_row->value());
+	}
+	my %chrs;
+
+	foreach my $m (sort genosort (keys %$scores)) { 
+	    my ($chr, $pos) = split "_", $m;
+	    print STDERR "CHR: $chr. POS: $pos\n";
+	    $chrs{$chr} = $pos;
+	}
+
+	%map_info = (
+	    mapId =>  $row->nd_protocol_id(), 
+	    name => $row->name(), 
+	    type => "physical", 
+	    unit => "bp",
+	    linkageGroupCount => scalar(keys %chrs),
+	    publishedDate => undef,
+	    comments => "",
+	    );
+    }
+    $c->stash->{rest} = \%map_info;
+}
+
 
 1;
