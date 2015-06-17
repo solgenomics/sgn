@@ -137,6 +137,7 @@ sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) {
     my $self = shift;
     my $c = shift;
     my $method = $c->req->param("methodId");
+<<<<<<< HEAD
 
     
     
@@ -148,6 +149,19 @@ sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) {
     $c->stash->{rest} = \@genotypes;
 }
 
+=======
+
+    
+    
+    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( {} );
+    my @genotypes;
+    while (my $gt = $rs->next()) { 
+	push @genotypes, { markerprofileId => $gt->genotypeprop_id };
+    }
+    $c->stash->{rest} = \@genotypes;
+}
+
+>>>>>>> master
 sub markerprofiles : Chained('brapi') PathPart('markerprofiles') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
@@ -294,6 +308,7 @@ sub markerprofile_rs {
 sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) { 
     my $self = shift;
     my $c = shift;
+<<<<<<< HEAD
 
     my $markerprofile_ids = $c->req->param("markerprofileIds");
 
@@ -320,6 +335,34 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 	$total_count = scalar(@ordered_refmarkers);
 	$total_pages = ceil($total_count / $c->stash->{page_size});
 
+=======
+
+    my $markerprofile_ids = $c->req->param("markerprofileIds");
+
+    my @profile_ids = split ",", $markerprofile_ids;
+
+    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
+    
+    my %scores;
+    my $total_pages;
+    my $total_count;
+    my @marker_score_lines;
+    my @ordered_refmarkers;
+
+    if ($rs->count() > 0) { 
+	my $profile_json = $rs->first()->value();
+	my $refmarkers = JSON::Any->decode($profile_json);
+
+	print STDERR Dumper($refmarkers);
+	
+	@ordered_refmarkers = sort genosort keys(%$refmarkers);
+
+	print Dumper(\@ordered_refmarkers);
+
+	$total_count = scalar(@ordered_refmarkers);
+	$total_pages = ceil($total_count / $c->stash->{page_size});
+
+>>>>>>> master
 	while (my $profile = $rs->next()) { 
 	    foreach my $m (@ordered_refmarkers) { 
 		my $markers_json = $profile->value();
@@ -404,11 +447,15 @@ sub study_list : Chained('studies') PathPart('list') Args(0) {
 	    print STDERR "TRIAL ID $trial_id\n";
 	    my $t = CXGN::Trial->new( { trial_id => $trial_id->[0], bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
 	    
+<<<<<<< HEAD
 	    my $layout = CXGN::Trial::TrialLayout->new( 
 		{ 
 		    schema => $c->dbic_schema("Bio::Chado::Schema"), 
 		    trial_id => $bp->[0] 
 		});
+=======
+	    my $layout = CXGN::Trial::TrialLayout->new( { schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $bp->[0] });
+>>>>>>> master
 	    
 	    $trial_data->{studyId} = $t->get_trial_id();
 	    $trial_data->{studyType} = $t->get_project_type()->[1];
@@ -422,7 +469,11 @@ sub study_list : Chained('studies') PathPart('list') Args(0) {
 	}
     }
 
+<<<<<<< HEAD
     $c->stash->{rest} = \@response;
+=======
+    $c->stash->{rest} =  \@response;
+>>>>>>> master
 
     # studyId: "1",
     # studyType: "NURSERY",
@@ -552,6 +603,7 @@ sub specific_traits_list : Chained('traits') PathPart('') Args(1) {
 
 }
 
+<<<<<<< HEAD
 sub maps : Chained('brapi') PathPart('maps') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
@@ -651,4 +703,6 @@ sub maps_overview : Chained('brapi') PathPart('maps') Args(0) {
 }
 
 
+=======
+>>>>>>> master
 1;

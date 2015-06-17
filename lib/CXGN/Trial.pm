@@ -847,6 +847,14 @@ sub get_year_type_id {
     return $rs->first()->cvterm_id();
 }
 
+
+sub get_breeding_program_id { 
+    my $self = shift;
+    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program_trial_relationship' });
+    
+    return $rs->first()->cvterm_id();
+}
+
 sub get_breeding_trial_cvterm_id {
     my $self = shift;
 
