@@ -192,18 +192,19 @@ pages.
         -->
 	</li>
     
-    <li class="GenomesSequences"><a href="/genomes"><img src="/img/soliconmenu/GenomesSequences.png" alt="Genomes and Sequences" title="Genomes and Sequences" /></a>
-      <ul>
-            <div class="submenu GenomesSequencesSubMenu">
-            	<li><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome Project</a></li>
-                <li><a href="/organism/Solanum_lycopersicum/genome">Search/browse tomato genome</a></li>
-                <li><a href="/organism/Solanum_pimpinellifolium/genome">Solanum pimpinellifolium genome</a></li>
-		<li><a href=""></a>&nbsp;<li>
-		<li><a href="/sequencing/sol100.pl">SOL100 genomes</a></li>
-            </div>
-        </ul>
-
-	</li>
+  <li class="GenomesSequences"><a href="/genomes"><img src="/img/soliconmenu/GenomesSequences.png" alt="Genomes and Sequences" title="Genomes and Sequences" /></a>
+    <ul>
+      <div class="submenu GenomesSequencesSubMenu">
+        <li><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome Project</a></li>
+        <!-- <li><a href="/organism/Solanum_lycopersicum/genome">Search/browse tomato genome</a></li> -->
+        <li><a href="/organism/Solanum_pimpinellifolium/genome"><i>Solanum pimpinellifolium</i> genome</a></li>
+        <li><a href="/organism/Nicotiana_benthamiana/genome"><i>Nicotiana benthamiana</i> genome</a></li>
+        
+        <li><a href=""></a>&nbsp;<li>
+        <li><a href="/sequencing/sol100.pl">SOL100 genomes</a></li>
+      </div>
+    </ul>
+  </li>
     
     <li class="Pathways"><a href="http://solcyc.solgenomics.net/"><img src="/img/soliconmenu/Pathways.png" alt="Pathways" title="Click to access SolCyc" /></a>
     	<!--
