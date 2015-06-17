@@ -140,8 +140,6 @@ sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) {
     my $self = shift;
     my $c = shift;
     my $method = $c->req->param("methodId");
-
-    
     
     my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( {} );
     my @genotypes;
@@ -414,7 +412,7 @@ sub study_list : Chained('studies') PathPart('list') Args(0) {
 		    schema => $c->dbic_schema("Bio::Chado::Schema"), 
 		    trial_id => $bp->[0] 
 		});
-	    
+
 	    $trial_data->{studyId} = $t->get_trial_id();
 	    $trial_data->{studyType} = $t->get_project_type()->[1];
 	    $trial_data->{name} = $t->get_name();
@@ -426,6 +424,7 @@ sub study_list : Chained('studies') PathPart('list') Args(0) {
 	    push @response, $trial_data;
 	}
     }
+
 
     $c->stash->{rest} = \@response;
 
