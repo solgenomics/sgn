@@ -572,10 +572,11 @@ sub maps_detail : Chained('brapi') PathPart('maps') Args(0) {
     my $c = shift;
     
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
+
     my %map_info;
     while (my $row = $rs->next()) { 
 	print STDERR "Retrieving map info for ".$row->name()."\n";
-	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $c->stash->{map_id}  })->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
+	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { })->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
 	
 	my $lg_row = $lg_rs->first();
 
