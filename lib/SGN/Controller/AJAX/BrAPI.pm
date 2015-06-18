@@ -613,6 +613,45 @@ sub maps_detail : Chained('brapi') PathPart('maps') Args(0) {
     
 }
 
+sub maps_marker_detail : Chained('maps') PathPart('positions') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { nd_protocol_id => $c->stash->{map_id} } );
+
+    my @markers;
+    while (my $row = $rs->next()) { 
+	print STDERR "Retrieving map info for ".$row->name()."\n";
+	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $c->stash->{map_id}  })->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
+	
+	my $lg_row = $lg_rs->first();
+	
+	print STDERR "LG RS COUNT = ".$lg_rs->count()."\n";
+	
+	if (!$lg_row) { 
+	    die "This was never supposed to happen :-(";
+	}
+	
+	my $scores;
+	if ($lg_row) { 
+	    $scores = JSON::Any->decode($lg_row->value());
+	}
+	my %chrs;
+
+	foreach my $m (sort genosort (keys %$scores)) { 
+	    my ($chr, $pos) = split "_", $m;
+	    print STDERR "CHR: $chr. POS: $pos\n";
+	    $chrs{$chr} = $pos;
+	# "markerId": 1,
+	#"markerName": "marker1",
+        #        "location": "1000",
+        #        "linkageGroup": "1A"
+	    push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+	}
+    }
+    $c->stash->{rest} = { markers => \@markers };	
+}
+
 sub maps_overview : Chained('brapi') PathPart('maps') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -656,5 +695,25 @@ sub maps_overview : Chained('brapi') PathPart('maps') Args(0) {
     }
     $c->stash->{rest} = \%map_info;
 }
+
+sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    $c->res->redirect("https://accounts.google.com/o/oauth2/auth?scope=profile&response_type=code&client_id=1068256137120-62dvk8sncnbglglrmiroms0f5d7lg111.apps.googleusercontent.com&redirect_uri=https://cassavabase.org/oauth2callback");
+
+    $c->stash->{rest} = { success => 1 };
+
+
+}
+
+sub token : Chained('brapi') PathPart('token') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    
+
+}
+    
 
 1;
