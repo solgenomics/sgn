@@ -725,6 +725,4 @@ sub token : Chained('brapi') PathPart('token') Args(0) {
 
 }
     
->>>>>>> topic/breeding_api
-
 1;
