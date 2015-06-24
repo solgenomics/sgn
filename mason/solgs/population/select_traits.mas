@@ -31,7 +31,7 @@ $no_traits_selected
  while (<FH>)
 {
  my ($id, $trait, $acronym) = split (/\t/);
- my $trait_link   = qq | <a href="/solgs/trait/$id/population/$pop_id" onclick="solGS.waitPage()">$trait</a> |;
+ my $trait_link   = qq | <a href="/solgs/trait/$id/population/$pop_id" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
  my $row          = <<ROW;
  <tr>
    <td>
@@ -70,7 +70,7 @@ if ($no_traits_selected eq 'none')
                 type    = "submit"
                 value   = "Build model"
                 name    = "runGS"
-                onclick = "solGS.waitPage()"
+                onclick = "solGS.waitPage();"
                 > 
        </td> 
      </tr>
