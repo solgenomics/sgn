@@ -2489,8 +2489,8 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
 
          $c->controller("solGS::Heritability")->get_heritability($c);
          my $heritability = $c->stash->{heritability};
-
-         push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value, $heritability];
+#onclick="solGS.waitPage();
+         push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" ">$trait_abbr</a>|, $accuracy_value, $heritability];
        
      }
   
@@ -4182,9 +4182,16 @@ sub get_solgs_dirs {
     my $correlation_dir = catdir($tmp_dir, 'correlation', 'cache');   
     my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
     my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');
-    my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');  
+    my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
+    my $profiles_dir    = catdir($tmp_dir, 'profiles', 'cache');
 
-    mkpath ([$solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, $correlation_dir, $pca_dir, $histogram_dir], 0, 0755);
+    mkpath (
+	[
+	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, 
+	 $correlation_dir, $pca_dir, $histogram_dir, $profiles_dir
+	], 
+	0, 0755
+	);
    
     $c->stash(solgs_dir                   => $solgs_dir, 
               solgs_cache_dir             => $solgs_cache, 
@@ -4193,6 +4200,7 @@ sub get_solgs_dirs {
               correlation_dir             => $correlation_dir,
 	      pca_dir                     => $pca_dir,
 	      histogram_dir               => $histogram_dir,
+	      profiles_dir                => $profiles_dir
         );
 
 }
