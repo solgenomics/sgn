@@ -253,7 +253,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     my @phenotype_data;
     while (my ($trait, $trait_id, $count,) = $h->fetchrow_array()) { 
-	push @phenotype_data, [ qq { <a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a> },  qq{ <a href="/breeders_toolbox/trial/$trial_id/trait/$trait_id">$count [more stats]</a> } ];
+	push @phenotype_data, [ qq { <a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a> },  qq{ <a href="/breeders/trial/$trial_id/trait/$trait_id">$count [more stats]</a> } ];
     }
 
     $c->stash->{rest} = { data => \@phenotype_data };
