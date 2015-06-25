@@ -129,7 +129,7 @@ for my $pub (@pubs) {
 <tr>
   <td><a style="color:black" 
   target="_blank" 
-  href="/chado/publication.pl?pub_id=<% $pub->pub_id %>">
+  href="/publication/<% $pub->pub_id %>/view">
   <b><% $pub->title | h %></b>
   </a>
   </td>
