@@ -1349,8 +1349,8 @@ sub structure_phenotype_data {
            
         my $project = $r->get_column('project_description') ;
 
-        my $hash_key = $project . "|" . $r->get_column('uniquename');
-            
+	my $hash_key = $r->get_column('uniquename');
+
         $phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
         $phen_hashref->{$hash_key}{stock_id} = $r->get_column('stock_id');
         $phen_hashref->{$hash_key}{stock_name} = $r->get_column('uniquename');
@@ -1470,8 +1470,8 @@ sub phenotypes_by_trait {
              # my $db_name = $r->get_column('db_name');
              my $project = $r->get_column('project_description') ;
 
-             my $hash_key = $project . "|" . $r->get_column('uniquename');
-            
+	     my $hash_key = $r->get_column('uniquename');
+ 
              # $phen_hashref->{$hash_key}{accession} = $db_name . ":" . $accession ;
              $phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
              $phen_hashref->{$hash_key}{stock_id} = $r->get_column('stock_id');
