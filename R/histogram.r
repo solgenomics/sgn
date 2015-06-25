@@ -53,7 +53,7 @@ dropColumns <- c("object_id", "stock_id")
 traitPhenoData <- traitPhenoData[, !(names(traitPhenoData) %in% dropColumns)]
 
 if (class(traitPhenoData[, trait]) != 'numeric') {
-  traitPhenoData[, trait] <- as.numeric(as.character(phenoData[, trait]))
+  traitPhenoData[, trait] <- as.numeric(as.character(traitPhenoData[, trait]))
 }
 
 if (!all(is.numeric(traitPhenoData[, trait]))) {
