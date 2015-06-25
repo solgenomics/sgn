@@ -74,7 +74,7 @@ sub store {
     $pub->set_pages($args{pages});
     $pub->set_abstract($args{abstract});
     $pub->set_author_string($args{authors});
-
+    $pub->set_cvterm_name($args{cvterm_name});
 
 #########
 
@@ -148,15 +148,32 @@ sub generate_form {
     my $type = $args{type};
     my $type_id = $args{type_id};
     my $refering_page= $args{refering_page};
+
+    my @types = qw |journal book curator |;
+
     #########
     my $author_example = tooltipped_text('Authors', 'Author names should be entered in the order of  last name, followed by "," then first name followed by ".". e.g Darwin, Charles. van Rijn, Henk. Giorgio,AB'); 
 
+    if ($self->get_action =~ /new|edit/ ) { 
+	$form->add_select(
+            display_name       => "Publication type",
+            field_name         => "cvterm_name",
+            contents           => $pub->get_cvterm_name(),
+            length             => 20,
+            object             => $pub,
+            getter             => "get_cvterm_name",
+            setter             => "set_cvterm_name",
+	    select_list_ref    => \@types,
+            select_id_list_ref => \@types,
+            );
+    }
     $form->add_textarea(
 	display_name => "Title",
 	field_name   => "title",
 	object       => $pub,
 	getter       => "get_title",
 	setter       => "set_title",
+	validate      => 'string',
 	columns      => 80,
 	rows         => 1,
 	);
@@ -166,6 +183,7 @@ sub generate_form {
 	object             => $pub,
 	getter             => "get_series_name",
 	setter             => "set_series_name",
+	validate           => 'string',
 	);
     
     $form->add_field(
@@ -196,6 +214,7 @@ sub generate_form {
 	object             => $pub,
 	getter             => "get_pages",
 	setter             => "set_pages",
+	validate           => 'string',
 	);
     $form->add_field(
 	display_name       => $author_example,
@@ -207,7 +226,7 @@ sub generate_form {
 	rows               => 1,
 	);
 
-    $form->add_field(
+    $form->add_textarea(
 	display_name       => "Abstract",
 	field_name         => "abstract",
 	object             => $pub,
@@ -241,7 +260,8 @@ sub generate_form {
         field_name => "action",
         contents   => "store",
 	);
-
+    
+   
     if ( $self->get_action() =~ /view|edit/ ) {
         $form->from_database();
     }

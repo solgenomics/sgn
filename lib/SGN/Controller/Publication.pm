@@ -172,7 +172,11 @@ sub get_pub : Chained('/')  PathPart('publication')  CaptureArgs(1) {
         || $pub_id =~ /[^-\d]/ ? 'accession' : 'pub_id';
     
     if( $identifier_type eq 'pub_id' ) {
-        $pub_id > 0
+        if ( $pub_id == 0 ) {
+	    $c->stash->{pub} = CXGN::Chado::Publication->new($c->dbc->dbh);
+	    return 1;
+	}
+	$pub_id > 0
             or $c->throw_client_error( public_message => 'Publication ID must be a positive integer.' );
     }
     my $matching_pubs;

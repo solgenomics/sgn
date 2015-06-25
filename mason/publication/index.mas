@@ -75,14 +75,13 @@ my $this_page = "/publication/$pub_id/view/";
 my $pub_title = $pub->get_title;
 
 
-
 </%perl>
 
 
 <& /util/import_javascript.mas, classes => ["jquery","jqueryui", "CXGN.Phenome.Tools" ] &>
 
 
-<& /page/page_title.mas, title=> "Publication $pub_title" &>
+<& /page/page_title.mas, title=> $pub_title  || 'New publication' &>
 
 
 <&| /page/info_section.mas, title=>"Publication details"  &>
