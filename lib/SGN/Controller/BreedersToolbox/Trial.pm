@@ -188,7 +188,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 }
 
 
-sub trait_info :Path('/breeders_toolbox/trial') Args(3) {
+sub trait_info :Path('/breeders/trial') Args(3) {
     my ($self, $c, $trial_id, $trait_txt, $trait_id) = @_;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
