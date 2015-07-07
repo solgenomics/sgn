@@ -135,6 +135,10 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </div>
 
+<&| /page/info_section.mas, title=>"Physical Trial Layout" &>
+  <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
+</&>
+
 <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
 
 % print STDERR "Check 8 (mason) : ".(time() - $start_time)."\n";

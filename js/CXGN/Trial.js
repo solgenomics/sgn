@@ -25,6 +25,7 @@ function delete_phenotype_data_by_trial_id(trial_id) {
     }
 }
 
+
 function delete_layout_data_by_trial_id(trial_id) { 
     var yes = confirm("Are you sure you want to delete the layout data associated with trial "+trial_id+" ? This action cannot be undone.");
     if (yes) { 

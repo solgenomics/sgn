@@ -3,6 +3,7 @@ package SGN::Controller::AJAX::TrialMetadata;
 
 use Moose;
 use Data::Dumper;
+use List::Util 'max';
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -276,21 +277,69 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     my $design = $layout-> get_design();
     
     print STDERR Dumper($design);
-        
-    my @result;
+         
+    my @layout_info;
     foreach my $plot_id (keys %{$design}) {
-	push @result, { plot_id => $plot_id,
+	push @layout_info, { plot_id => $plot_id,
 			row_number => $design->{$plot_id}->{row_number},
 			col_number => $design->{$plot_id}->{col_number}, 
 			block_number=> $design->{$plot_id}-> {block_number},
-			rep_number =>  $design->{$plot_id}-> {replicate},
+			rep_number =>  $design->{$plot_id}-> {rep_number},
 			plot_name => $design->{$plot_id}-> {plot_name},
 			accession_name => $design->{$plot_id}-> {accession_name},
 	};
 
-	$c->stash->{rest} = \@result;	
     } 
-    
+	
+	my @row_numbers;
+	my @col_numbers;
+	my @rep_numbers;
+	my @block_numbers;
+	my @accession_name;
+	my @plot_name;
+	my @plot_id;
+	my @array_msg;
+	my $my_hash;
+	my $plot_id;
+	foreach $my_hash (@layout_info) {
+		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\naccession_name: ".$my_hash->{'accession_name'};
+		#print "row: ".$my_hash->{'row_number'}.", col: ".$my_hash->{'col_number'}."\n";
+	}
+
+
+ # Looping through the hash and printing out all the hash elements.
+
+	foreach $my_hash (@layout_info) {
+	push @col_numbers, $my_hash->{'col_number'};
+	push @row_numbers, $my_hash->{'row_number'};
+	push @plot_id, $my_hash->{'plot_id'};
+	push @rep_numbers, $my_hash->{'rep_number'};
+	push @block_numbers, $my_hash->{'block_number'};
+	push @accession_name, $my_hash->{'accession_name'};
+	push @plot_name, $my_hash->{'plot_name'};
+	
+	}
+
+	#print "@col_numbers\n";
+	my $max_col = max( @col_numbers );
+	print "$max_col\n";
+	my $max_row = max( @row_numbers );
+	print "$max_row\n";
+	
+
+	$c->stash->{rest} = { coord_row =>  \@row_numbers, 
+			      coords =>  \@layout_info, 
+			      coord_col =>  \@col_numbers,
+			      max_row => $max_row,
+			      max_col => $max_col,
+			      plot_msg => \@array_msg,
+			      rep => \@rep_numbers,
+			      block => \@block_numbers,
+			      accessions => \@accession_name,
+			      plot_name => \@plot_name,
+			      plot_id => \@plot_id
+          		   };
+	
 }
 
 
