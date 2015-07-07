@@ -300,10 +300,10 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	my @plot_id;
 	my @array_msg;
 	my $my_hash;
-	my $plot_id;
+	
 	foreach $my_hash (@layout_info) {
-		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\naccession_name: ".$my_hash->{'accession_name'};
-		#print "row: ".$my_hash->{'row_number'}.", col: ".$my_hash->{'col_number'}."\n";
+		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'};
+		
 	}
 
 
@@ -320,7 +320,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	
 	}
 
-	#print "@col_numbers\n";
+	
 	my $max_col = max( @col_numbers );
 	print "$max_col\n";
 	my $max_row = max( @row_numbers );
