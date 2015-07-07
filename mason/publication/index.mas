@@ -49,7 +49,7 @@ my $person_id = $pubref->{person_id};
 my $curator   = $pubref->{curator};
 my $submitter = $pubref->{submitter};
 my $sequencer = $pubref->{sequencer};
-
+my $doi       = $pubref->{doi};
 
 my $dbh       = $pubref->{dbh};
 my @xrefs     = $pub->get_dbxrefs;
@@ -72,6 +72,7 @@ foreach my $locus(@loci)  {
     }
 
 my $this_page = "/publication/$pub_id/view/";
+if ($doi) { $this_page = "/doi/pub/$doi/"; }
 my $pub_title = $pub->get_title;
 
 
@@ -94,7 +95,7 @@ my $pub_title = $pub->get_title;
     server_side_script   => '/jsforms/pub_ajax_form.pl',
     form_div_name        => 'pub_details',
     js_object_name       => 'pubForm',
-    page_url             => "/publication/$pub_id/view/",
+    page_url             => "$this_page",
     alternate_new_button => '<a href ="/publication/0/new">[New]</a>'
     &>
 

@@ -66,6 +66,16 @@ sub new_pub : Chained('get_pub') PathPart('new') Args(0) {
         );
 }
 
+=head2 view_by_doi
+
+Public path: /doi/pub/
+
+View publication by doi.
+
+Since DOIs can have "/" in them this path captures 3 args and then concatenates to recreate the DOI (hopefully no DOI has more than 3 slashes! ) 
+
+=cut
+
 
 sub view_by_doi : Path('/doi/pub/') CaptureArgs(3) {
     my ($self, $c , @doi_parts) = @_;
@@ -84,9 +94,31 @@ sub view_by_doi : Path('/doi/pub/') CaptureArgs(3) {
     my ( $publication ) = $matching_pubs->all
 	or $c->throw_404( "publication $doi  not found" );
     my $found_pub_id = $publication->pub_id;
-        
-    $c->res->redirect("/publication/$found_pub_id/view",301);
+    my $pub =  CXGN::Chado::Publication->new($c->dbc->dbh, $found_pub_id);
+    $c->{stash}->{pub} = $pub;
 
+    my $logged_user = $c->user;
+    my $person_id   = $logged_user->get_object->get_sp_person_id if $logged_user;
+    my $curator     = $logged_user->check_roles('curator') if $logged_user;
+    my $submitter   = $logged_user->check_roles('submitter') if $logged_user;
+    my $sequencer   = $logged_user->check_roles('sequencer') if $logged_user;
+    my $dbh = $c->dbc->dbh;
+    my $dbxrefs = $pub->get_dbxrefs;
+  
+     $c->stash(
+        template => '/publication/index.mas',
+        pubref => {
+	    pub_id    => $found_pub_id ,
+            curator   => $curator,
+            submitter => $submitter,
+            sequencer => $sequencer,
+            person_id => $person_id,
+	    pub       => $pub,
+            dbh       => $dbh,
+            dbxrefs   => $dbxrefs,
+	    doi       => $doi,
+	 },
+	 );
 }
     
 
@@ -201,5 +233,34 @@ sub get_pub : Chained('/')  PathPart('publication')  CaptureArgs(1) {
 }
 
 
+=head2 doi_banner
+
+Public path: /doibanner/
+
+Return SGN logo if DOI exists, or a 1x1 empty pixel if does not exist.
+Used by Elsevier for banner linking publications to solgenomics publication page /pub/doi/<doi>
+
+=cut
+
+
+sub doi_banner : Path('/doibanner/') CaptureArgs(3) {
+    my ($self, $c , @doi_parts) = @_;
+    my $doi = join '/' , @doi_parts;
+    my $matching_pubs = $self->schema->resultset('Pub::Pub')->search(
+	    {
+		'dbxref.accession' => $doi,
+	    }, {
+		join => { 'pub_dbxrefs' => 'dbxref' },
+	    } );
+    my $pub_count = $matching_pubs->count;
+    if( $matching_pubs->count > 1 ) {
+        $c->throw_client_error( public_message => 'Multiple matching publications' );
+    }    
+    
+    $c->stash(
+        template => '/publication/banners/doi_banner.mas',
+	count    => $pub_count,
+	);
+}
 
 __PACKAGE__->meta->make_immutable;
