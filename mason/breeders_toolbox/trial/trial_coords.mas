@@ -1,0 +1,136 @@
+
+<%args>
+$trial_id 
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'kinetics.kinetic.js' ] &>
+
+
+    <style>
+      body {
+        margin: 10px;
+        padding: 10px;
+      }
+	#container {
+		border:2px dashed #000;
+		height: 700px;
+		width: 700px;
+		overflow: scroll;
+	}
+    </style>
+
+ <div id="container" ></div>
+
+  
+ <script defer="defer">
+var trial_id = <% $trial_id %>;
+//alert("trial_id: "+trial_id)
+   jQuery(document).ready( function() { 
+	
+	jQuery.ajax( { 
+	     url: '/ajax/breeders/trial/'+trial_id+'/coords',
+	     success: function(response) { 
+		alert("plot_id: "+response.plot_id);
+		var width = 65;
+		var plot_counter = 0;
+	     	var max_row = response.max_row;
+	    	var max_col = response.max_col;
+		var stage = new Kinetic.Stage({
+        	container: 'container',
+        	width: 2000,
+        	height: 2000,
+	
+     		});
+
+     		var plot_layer = new Kinetic.Layer();
+      		var popup_layer = new Kinetic.Layer();	
+      		
+		for  (y = 0; y < max_row; y = y + 1) {
+			for ( x = 0; x < max_col; x = x + 1){
+				plot_counter++;
+				draw_rect(stage, plot_layer, popup_layer, response.plot_msg[y][x], x, y, response.coord_col[x], response.coord_row[y], plot_counter, response.plot_id[plot_counter]);
+			}
+		}
+		stage.add(plot_layer);
+		stage.add(popup_layer);
+
+	    },
+             error: function(reponse) { 
+               alert('an error occurred');
+             }
+        });
+
+    function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, col_number, row_number, plot_counter, plot_id){
+	var width = 65;
+	var popup_x = width;
+        var popup_width = 200;
+	x = x * width;
+	y = y * width;
+	if (x + width > col_number * width / 2){
+		popup_x = -1 * popup_width;
+	}	
+	var myRectangle = new Kinetic.Rect({
+	x:x,
+	y:y,
+	width:width,
+	height:width,
+	fill:'#C0C0C0',
+	stroke:'black',
+	strokeWidth:3,
+      });
+	
+	var plot_txt_info = new Kinetic.Text({
+        x:x +10,
+        y:y + width/2,
+        text: plot_counter,
+        fontSize: 20, 
+        fontFamily: 'Arial',
+        fill: "white"
+      });
+	
+	
+      myRectangle.on('mouseover', function() {
+	var plot_txt = new Kinetic.Text({
+        x: x+popup_x+5+10,
+        y: y+14,
+        text: plot_msg,
+        fontSize: 14, 
+        fontFamily: 'Arial',
+        fill: "white"
+      });
+
+         var plot_popup = new Kinetic.Rect({
+         x: x+popup_x+10,
+         y: y+8,
+         fill: '#000',
+      	     opacity: 0.6,
+         width: popup_width,
+         height: 80,
+         cornerRadius: 10
+      });
+    
+      popup_layer.add(plot_popup);
+      popup_layer.add(plot_txt);
+      popup_layer.draw();
+
+      });
+
+      myRectangle.on('mouseout', function() {
+       	popup_layer.removeChildren();
+	popup_layer.draw();
+
+      });
+
+       myRectangle.on('mousedown', function() {
+       	//window.location.href = 'http://cassavabase.org/stock/'+plot_counter+'/view';
+	window.location.href = 'http://cassavabase.org/stock/'+plot_id+'/view';
+      });
+
+      plot_layer.add(myRectangle);
+      plot_layer.add(plot_txt_info);
+
+ }
+     
+});
+
+</script>

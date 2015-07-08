@@ -279,14 +279,17 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     print STDERR Dumper($design);
          
     my @layout_info;
-    foreach my $plot_id (keys %{$design}) {
-	push @layout_info, { plot_id => $plot_id,
-			row_number => $design->{$plot_id}->{row_number},
-			col_number => $design->{$plot_id}->{col_number}, 
-			block_number=> $design->{$plot_id}-> {block_number},
-			rep_number =>  $design->{$plot_id}-> {rep_number},
-			plot_name => $design->{$plot_id}-> {plot_name},
-			accession_name => $design->{$plot_id}-> {accession_name},
+    foreach my $plot_number (keys %{$design}) {
+	push @layout_info, { 
+			plot_id => $design->{$plot_number}->{plot_id},
+			plot_number => $plot_number,
+			row_number => $design->{$plot_number}->{row_number},
+			col_number => $design->{$plot_number}->{col_number}, 
+			block_number=> $design->{$plot_number}-> {block_number},
+			rep_number =>  $design->{$plot_number}-> {rep_number},
+			plot_name => $design->{$plot_number}-> {plot_name},
+			accession_name => $design->{$plot_number}-> {accession_name},
+	         
 	};
 
     } 
@@ -302,7 +305,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	my $my_hash;
 	
 	foreach $my_hash (@layout_info) {
-		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'};
+		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nplot_id: ".$my_hash->{'plot_id'};
 		
 	}
 
