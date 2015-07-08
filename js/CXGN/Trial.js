@@ -490,7 +490,9 @@ function display_trial_description(trial_id) {
 		jQuery('#trial_description_input').html(response.description);
             }
 	},
-	error: function(response) { alert('An error occurred trying to display the description.'); }
+	error: function(response) { 
+	    jQuery('#trial_description').html('An error occurred trying to display the description.'); 
+	}
     });
 }
 

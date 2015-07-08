@@ -1041,40 +1041,25 @@ sub add_phenotype_POST {
     }
 }
 
+=head2 action stock_members_phenotypes()
+
+ Usage:        /stock/<stock_id>/datatables/traits
+ Desc:         get all the phenotypic scores associated with the stock $stock_id
+ Ret:          json of the form
+               { data => [  { db_name : 'A', observable: 'B', value : 'C' }, { ... }, ] }
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub stock_members_phenotypes :Chained('/stock/get_stock') PathPart('datatables/traits') Args(0) {
     my $self = shift;
     my $c = shift;
     #my $trait_id = shift;
 
-    my $stock_id = $c->stash->{stock_row}->stock_id();
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $bcs_stock_rs = $schema->resultset("Stock::Stock")->search( { stock_id => $stock_id });
-
-    if ($bcs_stock_rs->count() != 1) { 
-	$c->stash->{rest} = { error => "The provided stock_id $stock_id does not exist in the database. Cannot retrieve phenotypes" };
-	return;
-    }
-
-    my $bcs_stock = $bcs_stock_rs->first();
-
-    my %phenotypes;
-    my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
-SELECT COUNT( DISTINCT genotype_id )
-  FROM phenome.genotype
-  JOIN stock subj using(stock_id)
-  JOIN stock_relationship sr ON( sr.subject_id = subj.stock_id )
- WHERE sr.object_id = ?
-
-    # now we have rs of stock_relationship objects. We need to find
-    # the phenotypes of their related subjects
-    #
-    my $subjects = $bcs_stock->search_related('stock_relationship_objects')
-                             ->search_related('subject');
-    my $subject_phenotypes = $self->_stock_project_phenotypes($schema, $subjects );
-
-    #print STDERR Dumper($subject_phenotypes);
-    #print STDERR Dumper($has_members_genotypes);
+    my $subject_phenotypes = $self->get_phenotypes($c);
 
     # collect the data from the hashref...
     #
@@ -1097,7 +1082,6 @@ SELECT COUNT( DISTINCT genotype_id )
     
 }
 
-
 sub _stock_project_phenotypes {
     my ($self, $schema, $bcs_stock) = @_;
     
@@ -1111,6 +1095,17 @@ sub _stock_project_phenotypes {
     return \%project_hashref;
 }
 
+=head2 action get_stock_trials()
+
+ Usage:        /stock/<stock_id>/datatables/trials
+ Desc:         retrieves trials associated with the stock
+ Ret:          a table in json suitable for datatables
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -1119,12 +1114,21 @@ sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') 
 
     my @formatted_trials;
     foreach my $t (@trials) { 
-	push @formatted_trials, [ '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>', $t->[3] ];
+	push @formatted_trials, [ '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>', $t->[3], '<a href="javascript:show_stock_trial_detail('.$c->stash->{stock}->get_stock_id().', \''.$c->stash->{stock}->get_name().'\' ,'.$t->[0].',\''.$t->[1].'\')">Details</a>' ];
     }
-
     $c->stash->{rest} = { data => \@formatted_trials };
-
 }
+
+=head2 action get_stock_trait_list()
+
+ Usage:        /stock/<stock_id>/datatables/traitlist
+ Desc:         retrieves the list of traits assayed on the stock
+ Ret:          json in a table format, suitable for datatables
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 sub get_stock_trait_list :Chained('/stock/get_stock') PathPart('datatables/traitlist') Args(0) { 
     my $self = shift;
@@ -1136,13 +1140,58 @@ sub get_stock_trait_list :Chained('/stock/get_stock') PathPart('datatables/trait
     foreach my $t (@trait_list) { 
 	push @formatted_list, [ '<a href="/chado/cvterm?cvterm_id='.$t->[0].'">'.$t->[1].'</a>', $t->[2], sprintf("%3.1f", $t->[3]), sprintf("%3.1f", $t->[4]) ];
     }
-
     print STDERR Dumper(\@formatted_list);
 
     $c->stash->{rest} = { data => \@formatted_list };
-
 }
 
+sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('datatables/trial') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
 
+    my $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL)   FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id) JOIN  nd_experiment_stock ON (nd_experiment_stock.stock_id=stock_relationship.subject_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
+
+    my $h = $c->dbc->dbh->prepare($q);
+    $h->execute($trial_id, $c->stash->{stock}->get_stock_id());
+    
+    my @phenotypes;
+    while (my ($stock_id, $stock_name, $cvterm_id, $cvterm_name, $avg, $stddev) = $h->fetchrow_array()) { 
+	push @phenotypes, [ "<a href=\"/chado/cvterm?action=view&cvterm_id=$cvterm_id\">$cvterm_name</a>", sprintf("%.2f", $avg), sprintf("%.2f", $stddev) ];
+    }
+    
+    $c->stash->{rest} = { data => \@phenotypes };      
+}
+
+sub get_phenotypes { 
+    my $self = shift;
+    my $c = shift;
+    my $trait_id = shift;
+
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $bcs_stock_rs = $schema->resultset("Stock::Stock")->search( { stock_id => $stock_id });
+
+    if (! $bcs_stock_rs) { die "The stock $stock_id does not exist in the database"; }
+    
+    my $bcs_stock = $bcs_stock_rs->first();
+
+# #    my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
+# SELECT COUNT( DISTINCT genotype_id )
+#   FROM phenome.genotype
+#   JOIN stock subj using(stock_id)
+#   JOIN stock_relationship sr ON( sr.subject_id = subj.stock_id )
+#  WHERE sr.object_id = ?
+
+    # now we have rs of stock_relationship objects. We need to find
+    # the phenotypes of their related subjects
+    #
+    my $subjects = $bcs_stock->search_related('stock_relationship_objects')
+                             ->search_related('subject');
+    my $subject_phenotypes = $self->_stock_project_phenotypes($schema, $subjects );
+
+    return $subject_phenotypes;
+}
 
 1;
