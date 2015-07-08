@@ -1,0 +1,126 @@
+<%doc>
+
+=head1 NAME
+
+/publication/index.mas - a page for displaying SGN publication details
+
+=head1 DESCRIPTION
+
+parameters:
+
+=over 1
+
+=item $pubref
+
+a hashref with all the parameters needed for printing the publication page!
+
+ $pubref->{pub_id}
+ $pubref->{pub}
+ $pubref->{schema}
+
+ $pubref->{curator}  (boolean)
+ $pubref->{submitter} (boolean)
+ $pubref->{is_owner} (boolean)
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+</%doc>
+
+
+<%args>
+  $pubref => undef
+  
+</%args>
+
+
+<%perl>
+
+my $pub       = $pubref->{pub};
+my $pub_id    = $pubref->{pub_id};
+my $action    = $pubref->{action} || 'view';
+my $person_id = $pubref->{person_id};
+my $curator   = $pubref->{curator};
+my $submitter = $pubref->{submitter};
+my $sequencer = $pubref->{sequencer};
+my $doi       = $pubref->{doi};
+
+my $dbh       = $pubref->{dbh};
+my @xrefs     = $pub->get_dbxrefs;
+my $dbxrefs_html;
+foreach my $d(@xrefs) {
+	my $db = $d->get_db_name();
+	if ($db  ne 'SGN_ref') { 
+	    my $url = $d->get_urlprefix() . $d->get_url() . $d->get_accession();
+	    $dbxrefs_html .=  qq| <a href= "$url" >| . "$db:" . $d->get_accession() . "</a>";
+	}
+    }
+
+my @loci = $pub->get_loci;
+my $loci_link;
+foreach my $locus(@loci)  {
+	my $locus_id = $locus->get_locus_id();
+	my $locus_symbol= $locus->get_locus_symbol();
+	my $cname=$locus->get_common_name();
+	$loci_link .= qq|<a href="/locus/$locus_id/view">$cname '$locus_symbol'</a><br />| if $locus->get_obsolete() eq 'f';
+    }
+
+my $this_page = "/publication/$pub_id/view/";
+if ($doi) { $this_page = "/doi/pub/$doi/"; }
+my $pub_title = $pub->get_title;
+
+
+</%perl>
+
+
+<& /util/import_javascript.mas, classes => ["jquery","jqueryui", "CXGN.Phenome.Tools" ] &>
+
+
+<& /page/page_title.mas, title=> $pub_title  || 'New publication' &>
+
+
+<&| /page/info_section.mas, title=>"Publication details"  &>
+
+
+<& /page/form.mas,
+    object_type          => 'publication',
+    object_id            => "$pub_id",
+    form_name            => 'pub_form',	
+    server_side_script   => '/jsforms/pub_ajax_form.pl',
+    form_div_name        => 'pub_details',
+    js_object_name       => 'pubForm',
+    page_url             => "$this_page",
+    alternate_new_button => '<a href ="/publication/0/new">[New]</a>'
+    &>
+
+
+</&>
+
+
+% if ($pub_id) {
+
+<&| /page/info_section.mas, title=>"External resources", 
+  collapsible=>1, collapsed=>1 
+  &>
+  <% $dbxrefs_html %>
+  
+</&>
+
+<&| /page/info_section.mas, title=>"Associated loci (" .  scalar(@loci)  . ")", collapsible=>1, collapsed=>1 &>
+  <% $loci_link %>
+
+</&>
+
+
+
+
+<& /page/comments.mas, object_type=>'publication', object_id=>$pub_id, referer=>$this_page &>
+
+
+% }
