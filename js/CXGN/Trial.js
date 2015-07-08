@@ -113,12 +113,15 @@ function load_breeding_program_info(trial_id) {
 }
 
 function open_create_spreadsheet_dialog() {
+    jQuery('#working').dialog("open");
     var list = new CXGN.List();
     jQuery("#trait_list").html(list.listSelect("trait_list", [ 'traits' ]));
+    jQuery('#working').dialog("close");
     jQuery('#create_spreadsheet_dialog').dialog("open");
 }
 
 function create_spreadsheet() {
+    jQuery('#working').dialog("open");
     var trialID = parseInt(jQuery('#trialIDDiv').text());
     var list = new CXGN.List();
     var trait_list_id = jQuery('#trait_list_list_select').val();
@@ -135,14 +138,18 @@ function create_spreadsheet() {
              'trait_list': trait_list,
 	 },
 	 success: function (response) {
+	     jQuery('#working').dialog("close");
              if (response.error) {
 		 alert(response.error);
 		 jQuery('#open_create_spreadsheet_dialog').dialog("close");
              } else {
-		 alert('success');
+		 alert(response.filename);
+		 jQuery('#open_create_spreadsheet_dialog').dialog("close");
+		 window.location.href = "/download/"+response.filename;
              }
 	 },
 	 error: function () {
+	     jQuery('#working').dialog("close");
              alert('An error occurred creating a phenotype file.');
              jQuery('#open_download_spreadsheet_dialog').dialog("close");
 	 }

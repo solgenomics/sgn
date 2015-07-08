@@ -25,7 +25,7 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'Genes',
-                    link => '/search/loci',
+                    link => '/search/locus',
                     desc => 'Gene search.'
                 },
                 {
@@ -35,7 +35,7 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'Phenotypes',
-                    link => '/search/phenotypes/stock',
+                    link => '/search/stocks',
                     desc => 'Search for mutants, accessions, and traits.'
                 },
                 {
@@ -277,13 +277,11 @@ sub default_toolbar_data {
                 {
                     name => '<i>Solanum pimpinellifolium</i>',
                     link => '/organism/Solanum_pimpinellifolium/genome',
-                    desc =>
-'Draft genome sequence of tomato\'s closest wild relative.',
+                    desc => 'Draft genome sequence of tomato\'s closest wild relative.',
                 },
-
                 {
                     name => '<i>Nicotiana benthamiana</i>',
-                    link => 'http://bti.cornell.edu/research/projects/nicotiana-benthamiana',
+                    link => '/organism/Nicotiana_benthamiana/genome',
                     desc => 'Draft sequence for Nicotiana benthamiana, sequenced by labs at the Boyce Thompson Institute',
                 },
                 {
@@ -324,6 +322,11 @@ sub default_toolbar_data {
                     name => 'U.S. tomato sequencing project',
                     link => '/about/us_tomato_sequencing.pl',
                     desc => 'An overview of the US Tomato Sequencing Project'
+                },
+                {
+                    name => '<i>Nicotiana benthamiana</i> BTI site',
+                    link => 'http://bti.cornell.edu/research/projects/nicotiana-benthamiana',
+                    desc => 'BTI project for the Nicotiana benthamiana Draft sequence',
                 },
 
             ]

@@ -8,20 +8,11 @@ use SGN::Test::WWW::WebDriver;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 
-$d->get_ok('/search/phenotypes/stock');
 
-my $stock_name_input = $d->find_element_ok('stock_name', 'id', 'find stock name input');
-
-$stock_name_input->send_keys('test_accession1');
-
-$stock_name_input->submit();
-
-my $link = $d->find_element_ok('test_accession1', 'link_text', 'result overview page');
-
-$link->click();
-
-my $detail_page = $d->driver->get_page_source();
-ok($detail_page =~ m/Accession\: test_accession1/, "detail page 1");
-ok($detail_page =~ m/test_accession1_synonym/, "detail page 2");
+$d->get_ok('/search/stocks');
+ok($d->driver()->get_page_source() =~ /Search Accessions/, "Search page title presence");
+ok($d->driver()->get_page_source() =~ /Project location/, "Search options present");
+ok($d->driver()->get_page_source() =~ /KASESE/, "KASESE stock present in search results");
 
 done_testing();
+

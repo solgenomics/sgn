@@ -116,10 +116,9 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args(3) {
  
     $self->build_model_combined_trials_trait($c);
     
-    $c->controller('solGS::solGS')->gebv_kinship_file($c);
-    
+    $c->controller('solGS::solGS')->gebv_kinship_file($c);    
     my $gebv_file = $c->stash->{gebv_kinship_file};
-
+   
     if ( -s $gebv_file ) 
     {
         $c->res->redirect("/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id");
@@ -237,16 +236,14 @@ sub build_model_combined_trials_trait {
     my $gebv_file = $c->stash->{gebv_kinship_file};
 
     unless  ( -s $gebv_file ) 
-    {
-    
-        $self->combine_trait_data($c);
-    
+    {   
+        $self->combine_trait_data($c);    
         my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
         my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
         
         if (-s $combined_pops_pheno_file  && -s $combined_pops_geno_file ) 
-        { 
-            $c->controller('solGS::solGS')->get_rrblup_output($c); 
+        {  
+            $c->controller('solGS::solGS')->get_rrblup_output($c);
         }
     }
 }
@@ -470,7 +467,6 @@ sub find_common_traits_acronyms {
     {   
         die "An id for the combined trials is missing.";
     }
-
 
 }
 

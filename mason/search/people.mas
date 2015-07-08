@@ -7,13 +7,16 @@
 
 <& /page/page_title.mas, title=>'Search People' &>
 
+<div id="people_search_form">
 <table width="100%">
 <tr><td><label for="last_name">Last name</label></td>
 <td><input id="last_name" /><br /></td><td><label for="first_name">First name</label></td><td><input id="first_name" /><br /></td></tr>
 <tr><td><label for="organization">Organization</label></td><td><input id="organization" /><br /></td><td><label for="country">Country</label></td><td><input id="country" /><br /></td></tr>
 <tr><td colspan="4" align="right">
-<button id="submit_people_search" />Search</button>
+<button id="submit_people_search" >Search</button>
 </td></tr></table>
+</div>
+
 
 <br /><br />
 
@@ -58,7 +61,18 @@ jQuery(document).ready(function () {
        table.search("").draw();
    });
 
+
+
+   jQuery('#people_search_form').keypress( function( e ) {
+     var code = e.keyCode || e.which;
+
+     if( code === 13 ) {
+         jQuery('#submit_people_search').click();   
+     }
+   });
 });
+
+
 
   
 </script>

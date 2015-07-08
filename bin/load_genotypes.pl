@@ -6,7 +6,7 @@ load_genotypes.pl - loading genotypes into cxgn databases, based on the load_cas
 
 =head1 SYNOPSIS
 
-    load_genotypes.pl -H [dbhost] -D [dbname] [-t]
+    load_genotypes.pl -H [dbhost] -D [dbname] -g [population name] [-t]
 
 =head1 COMMAND-LINE OPTIONS
 
@@ -16,6 +16,7 @@ load_genotypes.pl - loading genotypes into cxgn databases, based on the load_cas
  -p project name (e.g. SNP genotyping 2012 Cornell Biotech)
  -y project year [2012]
  -g population name (e.g., NaCRRI training population) Mandatory option
+ -m specify protocol name or defaults to GBS ApeKI Cassava genome v5
  -x delete old genotypes for accessions that have new genotypes
  -a add accessions that are not in the database
  -s sort markers according to custom sort order (see script source)

@@ -3,10 +3,10 @@
 $trial_id
 $breeding_program
 $trial_name
-@location_data
+##@location_data
 ##@phenotype_data
-@years
-@plot_data
+##@years
+##@plot_data
 @accession_names
 @control_names
 @plot_names
@@ -45,7 +45,7 @@ $user_can_modify => undef
 
 </td></tr></table>
 
-<center><div class="boxbgcolor5" style="width:70%"><a href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br /></div>
+<center><div class="boxbgcolor5" style="width:70%"><a id="genotyping_trial_spreadsheet_link" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br /></div>
 
 <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1,  subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/layout/download/$trial_id\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/layout/download/$trial_id?format=csv\">csv</a>]" &>
 
@@ -89,7 +89,7 @@ $user_can_modify => undef
 <div class="boxbgcolor5">Note: Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
 <br />
 <br />
-<a id="delete_layout_data_by_trial_id">Delete layout</a>
+<a id="delete_layout_data_by_trial_id">Delete this genotyping experiment</a>
 
 </&>
 

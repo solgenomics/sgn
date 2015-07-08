@@ -10,7 +10,7 @@ my $d = SGN::Test::WWW::WebDriver->new();
 
 $d->get_ok('/search/trials');
 
-ok($d->driver->get_page_source()=~/test_trial/, "find trial search result content");
+ok($d->driver->get_page_source()=~/Kasese/, "find trial search result content");
 
 ok($d->driver->get_page_source()=~/2014/, "find trial year in trial search results");
 

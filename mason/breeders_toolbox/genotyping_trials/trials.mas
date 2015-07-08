@@ -46,38 +46,6 @@ $trials_by_breeding_project => ()
 
 </div>
 
-<div id="genotyping_trial_dialog" class="ui-widget">
-
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotyping_trials_form" name="upload_genotyping_trials_form">
-
-    <label for="breeding_program_select_div" style="display: inline-block; width: 150px;">Breeding Program:</label>
-
-    <span id="breeding_program_select_div"></span>
-    <br /><br />
-    
-    <label for="location_select_div" style="display: inline-block; width: 150px;">Location:</label>
-    <span id="location_select_div"></span>
-    <br><br>
-    
-    <label for="year_select_div" style="display: inline-block; vertical-align:top; width: 150px;">Year:</label>
-    <span id="year_select_div"></span>
-    <br /><br />
-
-    <label for="genotyping_trial_name" style="display: inline-block; width: 150px;">Genotyping Trial name:</label>
-    <input id="genotyping_trial_name" name="genotyping_trial_name" size="30" />
-    <br><br>
-
-    <label for="genotyping_trial_descripton" style="display: inline-block; vertical-align:top; width: 150px;">Description:</label>
-    <textarea id="genotyping_trial_description" name="genotyping_trial_year" style="width: 250px" ></textarea><br />
-    
-    <br><br>
-    <!-- label for="genotyping_trial_upload_file">Upload genotyping Excel sheet from IGD:</label>
-    <input type="file" name="genotyping_trial_upload_file" id="genotyping_trial_upload_file" encoding="multipart/form-data" / -->
-    <label for="accession_select_box"  style="display: inline-block; vertical-align:top; width: 150px;">Accession list</label>
-    <span id="accession_select_box_span">[loading...]</span>
-
-  </form>
-</div>
 
 <div id="igd_genotyping_trial_dialog" class="ui-widget">
 

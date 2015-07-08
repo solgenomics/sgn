@@ -58,10 +58,10 @@ my %searches = (
                     result_desc => 'cDNA libraries',
                     search_path => '/search/library_search.pl',
                 },
-    bac        => { sf_class       => 'CXGN::Genomic::Search::Clone',
-                    result_desc => 'BAC identifiers',
-                    search_path => '/maps/physical/clone_search.pl',
-                },
+    #bac        => { sf_class       => 'CXGN::Genomic::Search::Clone',
+   #                 result_desc => 'BAC identifiers',
+    #                search_path => '/maps/physical/clone_search.pl',
+     #           },
     unigene    => { sf_class       => 'CXGN::Unigene::Search',
                     result_desc => 'unigene identifiers',
                     search_path => '/search/ug-ad2.pl',
@@ -344,7 +344,7 @@ sub quick_phenotype_search {
     my $count = sql_query_count( $db , $q , "\%$term\%","\%$term\%","\%$term\%", "\%synonym\%" );
     my $pheno_link = [ undef , "0 phenotype identifiers"];
     if ($count>0) {
-        $pheno_link = ["/stock/search?stock_name=$term&search_submitted=1" ,
+        $pheno_link = ["/search/stocks?any_name=$term" ,
                        "$count phenotype identifiers" ];
     }
     return $pheno_link;

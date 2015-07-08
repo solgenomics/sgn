@@ -23,7 +23,6 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $c = shift;
     my $trial_id = shift;
 
-    print STDERR "TRIAL ID: $trial_id\n";
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{trial} = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
 
@@ -89,8 +88,6 @@ sub trial_description_GET : Chained('trial') PathPart('description') Args(0) {
     
     my $trial = $c->stash->{trial};
 
-    print STDERR "TRIAL: ".$trial->get_description()."\n";
-
     $c->stash->{rest} = { description => $trial->get_description() };
    
 }
@@ -155,10 +152,6 @@ sub trial_location_POST : Chained('trial') PathPart('location') Args(1) {
 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
 	return;
     }
-
-    print STDERR "trial location POST!\n";
-
-    #my $location_id = $c->req->param("location_id");
 
     my $t = $c->stash->{trial};
     my $trial_id = $c->stash->{trial_id};
@@ -260,7 +253,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     my @phenotype_data;
     while (my ($trait, $trait_id, $count,) = $h->fetchrow_array()) { 
-	push @phenotype_data, [ qq { <a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a> },  qq{ <a href="/breeders_toolbox/trial/$trial_id/trait/$trait_id">$count [more stats]</a> } ];
+	push @phenotype_data, [ qq { <a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a> },  qq{ <a href="/breeders/trial/$trial_id/trait/$trait_id">$count [more stats]</a> } ];
     }
 
     $c->stash->{rest} = { data => \@phenotype_data };

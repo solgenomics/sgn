@@ -12,9 +12,47 @@ jQuery(document).ready( function() {
         page.match(/solgs\/models\/combined\/trials\//) != null) {
         listGenCorPopulations();
     } else {
-        phenotypicCorrelation();
-    }       
+
+	var url = window.location.pathname;
+
+	if (url.match(/[solgs\/population|breeders_toolbox\/trial]/)) {
+	    checkPhenoCorreResult();  
+	} 
+    }
+          
 });
+
+
+function checkPhenoCorreResult () {
+    
+    var popDetails = getPopulationDetails();
+    var popId      = popDetails.population_id;
+   
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: '/phenotype/correlation/check/result/' + popId,
+        success: function(response) {
+            if (response.result === 'yes') {
+		phenotypicCorrelation();					
+            } else { 
+		jQuery("#run_pheno_correlation").show();	
+            }
+	}
+    });
+    
+}
+
+
+jQuery(document).ready( function() { 
+
+    jQuery("#run_pheno_correlation").click(function() {
+        phenotypicCorrelation();
+    }); 
+  
+});
+
+
 
 
 jQuery("#run_genetic_correlation").live("click", function() {        
@@ -169,7 +207,9 @@ function getPopulationDetails () {
 function phenotypicCorrelation () {
  
     var population = getPopulationDetails();
-        
+    
+    jQuery("#correlation_message").html("Running correlation... please wait...");
+         
     jQuery.ajax({
             type: 'POST',
             dataType: 'json',
@@ -196,6 +236,7 @@ function phenotypicCorrelation () {
 function runPhenoCorrelationAnalysis () {
     var population = getPopulationDetails();
     var popId     = population.population_id;
+   
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -210,6 +251,7 @@ function runPhenoCorrelationAnalysis () {
 
 		jQuery("#correlation_canvas").append("<br />[ " + corrDownload + " ]").show();
                 jQuery("#correlation_message").empty();
+		jQuery("#run_pheno_correlation").hide();
             } else {
                 jQuery("#correlation_message")
                     .css({"padding-left": '0px'})

@@ -81,7 +81,7 @@ sub store {
     }
     $publication->set_accession($accession);
     $publication->add_dbxref("PMID:$accession");
-
+    
     #dbxref object...
     my $dbxref= CXGN::Chado::Dbxref->new($self->get_dbh(), $dbxref_id);
 
@@ -105,14 +105,17 @@ sub store {
         }
 	$self->send_publication_email();
 	if (!$type && !$type_id) {
-	    $self->get_page()->client_redirect("/chado/publication.pl?pub_id=$pub_id"); 
+	    $self->get_page()->client_redirect("/publication/$pub_id/view"); 
 	} else {
 	    $self->get_page()->client_redirect("$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new");
 	}
     }
     #fetch the publication from pubmed:
     my $pubmed= CXGN::Tools::Pubmed->new($publication); 
-
+    my $e_id = $publication->get_eid;
+    if ($e_id) {
+	$publication->add_dbxref("DOI:$e_id");
+    }
     $self->SUPER::store(1); #this gives the publication a  dbxref id, and stores it in pub, pub_dbxref pubabstract(change to pubprop!!), and pub_author
 
     #instantiate a new dbxref object 
@@ -129,7 +132,7 @@ sub store {
 	$self->get_page()->client_redirect("$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new"); 
     }else { 
 	my $pub_id  = $publication->get_pub_id();
-	$self->get_page()->client_redirect("/chado/publication.pl?pub_id=$pub_id"); 
+	$self->get_page()->client_redirect("/publication/$pub_id/view"); 
     } 
 }
 
@@ -318,7 +321,7 @@ sub display_page {
                 my $accession = $pub->pub_dbxrefs->first->dbxref->accession;
                 my $author_string = $self->author_string($pub);
                 my $object_pub_id = $stock->get_object_row->search_related('stock_pubs', pub_id => $pub_id)->first->stock_pub_id if $stock;
-                print "<a href= /chado/publication.pl?pub_id=$pub_id>$db_name:$accession</a> " . $pub->title() . " (" . $pub->pyear() . ") <b>" . $author_string . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_pub_id=$object_pub_id&amp;action=confirm_delete&amp;refering_page=$args{refering_page}">[Remove]</a> <br /><br />\n };
+                print "<a href= /publication/$pub_id/view>$db_name:$accession</a> " . $pub->title() . " (" . $pub->pyear() . ") <b>" . $author_string . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_pub_id=$object_pub_id&amp;action=confirm_delete&amp;refering_page=$args{refering_page}">[Remove]</a> <br /><br />\n };
             }
         }
     }
@@ -340,7 +343,7 @@ sub display_page {
         }
 	if ($db_name eq 'SGN_ref') { $accession= $pub_id; }
 	if ($obsolete eq 'f') {
-	    if ($pub_id && $object_dbxref_id) {print "<a href= /chado/publication.pl?pub_id=$pub_id>$db_name:$accession</a>" . $pub->get_title() . " (" . $pub->get_pyear() . ") <b>" . $pub->get_authors_as_string() . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_dbxref_id=$object_dbxref_id&amp;action=confirm_delete&amp;refering_page=$args{refering_page}">[Remove]</a> <br /><br />\n }; } 
+	    if ($pub_id && $object_dbxref_id) {print "<a href= /publication/$pub_id/view>$db_name:$accession</a>" . $pub->get_title() . " (" . $pub->get_pyear() . ") <b>" . $pub->get_authors_as_string() . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_dbxref_id=$object_dbxref_id&amp;action=confirm_delete&amp;refering_page=$args{refering_page}">[Remove]</a> <br /><br />\n }; } 
 	}elsif($pub_id)  {
 	    push @obsoleted, [$pub, $object_dbxref_id] ; #an array of obsoletes pub objects
 	}
@@ -353,7 +356,7 @@ sub display_page {
     $self->get_form()->as_table();
     print qq { </center> };
 
-    print qq {<br /> <br /><b> For publications not in Pubmed <a href="../chado/publication.pl?&action=new&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;refering_page=$args{refering_page}">click here</a> <br /> };
+    print qq {<br /> <br /><b> For publications not in Pubmed <a href="/publication/0/new">click here</a> <br /> };
 
     if ($args{refering_page}) { print "<a href=\"$args{refering_page}\">[Go back]</a><br /><br />\n"; }
 
@@ -374,7 +377,7 @@ sub print_obsoleted {
 	my $uniquename= $pub->get_uniquename();
 	my ($accession, $title)= split ':', $uniquename;
 	#if ($db_name eq 'SGN_ref') { $accession= $pub_id;}
-	my $url="/chado/publication.pl?pub_id=$pub_id";
+	my $url="/publication/$pub_id/view";
 	$obsoleted_pubs .=  qq |<a href= $url target=blank>$db_name:$accession</a> $uniquename | . $self->unobsolete_pub($type, $ref->[1])."<br />";
     }
     my $print_obsoleted= 
@@ -437,7 +440,7 @@ sub confirm_store {
 	}
 	else { #the publication isn't associated with this object
 	    if (!$type && !$type_id) {
-		$self->get_page()->client_redirect("/chado/publication.pl?pub_id=$pub_id"); 
+		$self->get_page()->client_redirect("/publication/$pub_id/view"); 
 	    } else {
 		$self->get_page()->header();
 		$self->print_confirm_form();
@@ -472,7 +475,7 @@ sub print_confirm_form {
   
     my $pubmed= CXGN::Tools::Pubmed->new($publication); 
     my $pub_title=$publication->get_title();
-    
+   
     #check if NCBI server is down (See CXGN::Tools::Pubmed for set_message($message)
     if ($publication->get_message() ) { $self->get_page->message_page( $publication->get_message() ); }
     #add pubmed verification step	

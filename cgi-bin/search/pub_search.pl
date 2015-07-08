@@ -112,7 +112,7 @@ qq|<select id="pub_curator_select" onchange="Publication.updatePubCuratorAssigne
         push @results,
           [
             map { $_ } (
-                qq|<a href="/chado/publication.pl?pub_id=$pub_id">$pub_ref</a>|,
+                qq|<a href="/publication/$pub_id/view">$pub_ref</a>|,
                 $stats, $curators, $stored_on
             )
           ];

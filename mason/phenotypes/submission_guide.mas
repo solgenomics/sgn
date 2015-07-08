@@ -15,7 +15,7 @@ Naama Menda (nm249@cornell.edu)
 <p>For submitting phenotyping experiments to SGN you will be asked to fill in a few steps.
 Phenotypes are linked with plant accessions.
 If the accession is already in the database, you will have to make sure the accession in your file has exactly the same name.
-Search the <a href="/search/phenotypes/stock/">phenotype database</a> for existing accessions.
+Search the <a href="/search/stocks/">phenotype database</a> for existing accessions.
 Since phenotypes are scored on single plants in the field or a greenhouse, or on plots of several plants,
 you will need to assign in each experiment unique identifiers for each one of your experimental units (a single plant or a plot).
 </p>

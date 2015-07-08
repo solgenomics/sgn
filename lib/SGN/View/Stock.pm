@@ -6,7 +6,7 @@ use warnings;
 our @EXPORT_OK = qw/
     stock_link organism_link cvterm_link
     stock_table related_stats
-    stock_organisms stock_types
+    stock_organisms stock_types breeding_programs
 /;
 our @EXPORT = ();
 
@@ -65,6 +65,24 @@ sub related_stats {
         push @$data, [ $total, "<b>Total</b>" ];
     }
     return $data;
+}
+
+sub breeding_programs {
+    my ($schema) = @_;
+    return [
+        [ 0, '' ],
+        map [ $_->project_id, $_->name ],
+        $schema
+             ->resultset('Project::Project')->search(
+	    { 'type.name' => 'breeding_program',
+	    }, 
+	    {
+		join      => { 'projectprops' => 'type' },
+		select   => [qw[ me.project_id me.name ]],
+		distinct => 1,
+		order_by => 'me.name',
+	    })
+	];
 }
 
 

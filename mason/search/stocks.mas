@@ -1,0 +1,162 @@
+
+<%args>
+
+  $sp_person_autocomplete_uri => '/ajax/people/autocomplete'
+  $trait_autocomplete_uri     => '/ajax/stock/trait_autocomplete'
+  $onto_autocomplete_uri      => '/ajax/cvterm/autocomplete'
+  $trait_db_name              => 'SP'
+
+  $organisms       => undef
+  $stock_types     => undef
+  $breeding_programs => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects' ] &>
+
+<& /page/page_title.mas, title=>'Search Accessions and Plots' &>
+
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_selectbox_html/;
+
+
+my $any_name_select = conditional_like_input_html("any_name","contains", "", '30');
+
+my $stock_type_select = simple_selectbox_html(
+  choices   => $stock_types,
+  id        => "stock_type_select",
+);
+
+my $organism_select = simple_selectbox_html(
+  choices  =>  $organisms   ,
+  id       => "organism_select",
+);
+
+my $breeding_programs_select = simple_selectbox_html(
+    choices => $breeding_programs,
+    id      => "organization" ,
+);
+
+
+</%perl>
+
+
+
+<div id="stock_search_form">
+  <table>
+  <tr><td colspan="4" align="right"><a href="/stock/0/new/">[Submit new stock]</a></td>
+    </tr>
+  <tr><td><label for="any_name_matchtype">Stock name or description</label></td><td colspan="2"><% $any_name_select %></td>
+    </tr>
+  <tr><td><label for="stock_type_select">Stock type</label></td><td><% $stock_type_select %></td>
+    <td><label for="organism_select">Organism</label></td><td><% $organism_select %></td>
+    </tr>
+  <tr><td><label for="person">Stock owner</label></td><td><input id="person"></td>
+    <td><label for="trait">Trait</label></td><td><input id="trait"></td>
+  </tr>
+  <tr><td><label for="project">Project name</label></td><td><input id="project"></td>
+    <td><label for="location">Project location</label></td><td><input id="location"></td>
+  </tr>
+  <tr><td><label for="year">Project year</label></td><td><input id="year"></td>
+    <td><label for="organization">Organization</label></td><td><% $breeding_programs_select %></td>
+  </tr>
+  
+  <tr><td colspan="4" align="right"><button id="submit_stock_search" />Search</button></td>
+</tr></table>
+<br />
+
+</div>
+
+<br />
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+
+<div style="text-align:right">
+Copy items on this page to list: 
+<span id="item_list_menu">
+</span>
+
+<div id="item_list">
+</div>	
+</div>
+
+
+<table id="stock_search_results" class="display">
+<thead>
+  <tr>
+    <th>Stock Name</th>
+    <th>Stock Type</th>
+    <th>Organism</th>
+</tr>
+</thead>
+
+</table>
+
+
+
+<script>
+
+jQuery(document).ready(function () {
+     
+     jQuery("#person").autocomplete({
+        source: '<% $sp_person_autocomplete_uri %>'
+     });
+     jQuery("#trait").autocomplete({
+        source: '<% $trait_autocomplete_uri %>'
+     });
+     jQuery("#onto").autocomplete({
+        source: '<% $onto_autocomplete_uri %>' + "?db_name=" + '<% $trait_db_name %>'
+     });
+     jQuery("#stock_name").autocomplete({
+        source: '/ajax/stock/stock_autocomplete',
+     });
+     jQuery("#project").autocomplete({
+        source: '/ajax/stock/project_autocomplete',
+     });
+     jQuery("#location").autocomplete({
+        source: '/ajax/stock/geolocation_autocomplete',
+     });
+     jQuery("#year").autocomplete({
+        source: '/ajax/stock/project_year_autocomplete',
+     });
+
+   var table = jQuery('#stock_search_results').DataTable( { 
+   
+     'searching' : false,
+     'ordering'  : false,
+     'processing': true,
+     'serverSide': true,
+     'ajax': { 'url':  '/ajax/search/stocks',
+               'data': function(d) { 
+                  d.any_name  = jQuery('#any_name').val();
+                  d.any_name_matchtype = jQuery('#any_name_matchtype').val();
+                  d.stock_type   = jQuery('#stock_type_select').val(); 
+                  d.organism     = jQuery('#organism_select').val(); 
+                  d.person       = jQuery('#person').val(); 
+                  d.trait        = jQuery('#trait').val(); 
+                  d.project      = jQuery('#project').val(); 
+                  d.location     = jQuery('#location').val();
+                  d.year         = jQuery('#year').val();
+                  d.organization = jQuery('#organization').val(); 
+             }
+         }
+     });
+
+
+   jQuery('#submit_stock_search').click( function() { 
+        table.search("stock_search_results").draw();
+   });
+  
+   jQuery('#stock_search_form').keypress( function( e ) {
+           var code = e.keyCode || e.which;
+           if( code == 13 ) {
+                jQuery('#submit_stock_search').click();
+           }
+    } );
+
+});
+  
+</script>
+
