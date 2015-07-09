@@ -30,7 +30,7 @@ var trial_id = <% $trial_id %>;
 	jQuery.ajax( { 
 	     url: '/ajax/breeders/trial/'+trial_id+'/coords',
 	     success: function(response) { 
-		alert("plot_id: "+response.plot_id);
+		//alert("plot_id: "+response.plot_id);
 		var width = 65;
 		var plot_counter = 0;
 	     	var max_row = response.max_row;
