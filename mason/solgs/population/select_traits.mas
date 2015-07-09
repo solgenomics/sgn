@@ -30,7 +30,9 @@ $no_traits_selected
 
  while (<FH>)
 {
+
  my ($id, $trait, $acronym) = split (/\t/);
+#onclick="solGS.waitPage(this.href); return false;"
  my $trait_link   = qq | <a href="/solgs/trait/$id/population/$pop_id" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
  my $row          = <<ROW;
  <tr>
