@@ -24,6 +24,8 @@ use Array::Utils qw(:all);
 #use CXGN::People::Person;
 use CXGN::Tools::Run;
 use JSON;
+use solGS::AnalysisProfile;
+use Async;
 
 BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
 
@@ -914,7 +916,13 @@ sub trait :Path('/solgs/trait') Args(3) {
         unless ($ajaxredirect eq 'heritability') 
         {
             $self->project_description($c, $pop_id); 
-            $self->trait_phenotype_stat($c);      
+	     #  $self->run_r_script($c);
+    print STDERR "\n solgs/trait... calling trait_phenotype_stat\n";
+  
+  
+
+            $self->trait_phenotype_stat($c);  
+ print STDERR "\n DONE solgs/trait... calling trait_phenotype_stat\n";    
           
             $self->get_project_owners($c, $pop_id);       
             $c->stash->{owner} = $c->stash->{project_owners};
@@ -1849,7 +1857,7 @@ sub get_gebv_files_of_traits {
         foreach my $tr_file (@analyzed_valid_traits_files) 
         {
             $valid_gebv_files .= $tr_file;
-            $valid_gebv_files .= "\t" unless (@analyzed_valid_traits_files[-1] eq $tr_file);
+            $valid_gebv_files .= "\t" unless ($analyzed_valid_traits_files[-1] eq $tr_file);
         }
 
 
@@ -2490,7 +2498,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
          $c->controller("solGS::Heritability")->get_heritability($c);
          my $heritability = $c->stash->{heritability};
 #onclick="solGS.waitPage();
-         push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" ">$trait_abbr</a>|, $accuracy_value, $heritability];
+         push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id">$trait_abbr</a>|, $accuracy_value, $heritability];
        
      }
   
@@ -3180,8 +3188,8 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 
 #generates descriptive stat for a trait phenotype data
 sub trait_phenotype_stat {
-    my ($self, $c) = @_;
-  
+    my ($self, $c) = @_; 
+    
     $self->trait_phenodata_file($c);
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
     my $trait_data = $self->convert_to_arrayref_of_arrays($c, $trait_pheno_file);
@@ -3971,8 +3979,7 @@ sub run_rrblup_trait {
             {  
                 $c->stash->{input_files} = $input_file;
                 $self->output_files($c);
-                $self->run_rrblup($c); 
-       
+                $self->run_rrblup($c);        
             }
         }        
     }
@@ -4059,7 +4066,12 @@ sub run_rrblup  {
     }
    
     $c->stash->{r_script}    = 'R/gs.r';
-    $self->run_r_script($c);
+   $self->run_r_script($c);
+
+    print STDERR "\n\n running r script async...\n\n";
+  #  $self->run_r_script_async($c);
+    print STDERR "\n\n DONE running r script async in the background...\n\n";
+
 }
 
 
@@ -4109,7 +4121,95 @@ sub r_combine_populations  {
     $c->stash->{r_script}     = 'R/combine_populations.r';
     
     $self->run_r_script($c);
+  
+}
 
+
+sub create_cluster_acccesible_tmp_files {
+    my ($self, $c) = @_;
+
+    my $temp_file_template = $c->stash->{r_temp_file};
+
+    CXGN::Tools::Run->temp_base($c->stash->{solgs_tempfiles_dir});
+    my ( $in_file_temp, $out_file_temp, $err_file_temp ) =
+        map 
+    {
+        my ( undef, $filename ) =
+            tempfile(
+                catfile(
+                    CXGN::Tools::Run->temp_base(),
+                    "${temp_file_template}-$_-XXXXXX",
+                ),
+            );
+        $filename
+    } 
+    qw / in out err/;
+
+    $c->stash( 
+	in_file_temp  => $in_file_temp,
+	out_file_temp => $out_file_temp,
+	err_file_temp => $err_file_temp
+	);
+
+}
+
+
+sub run_r_script_async {
+    my ($self, $c) = @_;
+    
+    my $r_script      = $c->stash->{r_script};
+    my $input_files   = $c->stash->{input_files};
+    my $output_files  = $c->stash->{output_files};
+ 
+    $self->create_cluster_acccesible_tmp_files($c);
+    my $in_file_temp =  $c->stash->{in_file_temp};
+
+
+    my $on_completion = sub {
+	print STDERR "\n\n on completion.... subroutine\n\n";
+	solGS::AnalysisProfile->check_analysis_progress;   
+    };
+
+
+    {
+        my $r_cmd_file = $c->path_to($r_script);
+        copy($r_cmd_file,  $in_file_temp)
+            or die "could not copy $r_cmd_file to $in_file_temp";
+    }
+
+    try 
+    {	
+        my $r_process = CXGN::Tools::Run->run_async(
+            'R', 'CMD', 'BATCH',
+            '--slave',
+            "--args $input_files $output_files", 
+	    $c->stash->{in_file_temp}, 
+	    $c->stash->{out_file_temp}, 
+	    $c->stash->{err_file_temp},
+            {
+                working_dir => $c->stash->{solgs_tempfiles_dir},
+		max_cluster_jobs => 1_000_000_000,
+		on_completion => $on_completion,
+	
+            },
+            );
+         
+	sleep(1);
+
+    }
+    catch 
+    {
+        my $err = $_;
+        $err =~ s/\n at .+//s; 
+        try
+        { 
+            $err .= "\n=== R output ===\n"
+		.file($c->stash->{out_file_temp})->slurp
+		."\n=== end R output ===\n" ;
+        };
+    
+        $c->stash->{script_error} = "$r_script";
+    }
 }
 
 
@@ -4119,56 +4219,88 @@ sub run_r_script {
     my $r_script     = $c->stash->{r_script};
     my $input_files  = $c->stash->{input_files};
     my $output_files = $c->stash->{output_files};
-    my $r_temp_file  = $c->stash->{r_temp_file};
-    
-    CXGN::Tools::Run->temp_base($c->stash->{solgs_tempfiles_dir});
-    my ( $r_in_temp, $r_out_temp ) =
-        map 
-    {
-        my ( undef, $filename ) =
-            tempfile(
-                catfile(
-                    CXGN::Tools::Run->temp_base(),
-                    "${r_temp_file}-$_-XXXXXX",
-                ),
-            );
-        $filename
-    } 
-    qw / in out /;
+    my $blup_file    = $c->stash->{gebv_kinship_file};
+  
+    print STDERR "\n\n $blup_file\n\n";
+    $self->create_cluster_acccesible_tmp_files($c);
+    my $in_file_temp  =  $c->stash->{in_file_temp};
+    my $out_file_temp =  $c->stash->{out_file_temp};
+ 
     {
         my $r_cmd_file = $c->path_to($r_script);
-        copy($r_cmd_file, $r_in_temp)
-            or die "could not copy '$r_cmd_file' to '$r_in_temp'";
+        copy($r_cmd_file, $in_file_temp)
+            or die "could not copy '$r_cmd_file' to '$in_file_temp'";
     }
 
+    
     try 
     { 
         my $r_process = CXGN::Tools::Run->run_cluster(
             'R', 'CMD', 'BATCH',
             '--slave',
             "--args $input_files $output_files",
-            $r_in_temp,
-            $r_out_temp,
+            $in_file_temp,
+            $out_file_temp,
             {
                 working_dir => $c->stash->{solgs_tempfiles_dir},
                 max_cluster_jobs => 1_000_000_000,
+
             },
             );
-      
-        $r_process->wait; 
-  
+
+
+
     }
     catch 
     {
         my $err = $_;
         $err =~ s/\n at .+//s; 
-        try
+        
+	try
         { 
-            $err .= "\n=== R output ===\n".file($r_out_temp)->slurp."\n=== end R output ===\n" 
+            $err .= "\n=== R output ===\n"
+		.file($out_file_temp)->slurp
+		."\n=== end R output ===\n"; 
         };
             
         $c->stash->{script_error} = "$r_script";
     }
+
+
+#	&$on_completion;
+  
+    	# my $pid = $r_process->pid;
+
+	# print STDERR "\n parent id: $pid\n";
+	# my $child = fork();
+
+	# die ("failed to fork\n") unless (defined $child);
+	# print STDERR "\n child id: $child -- pid: $pid\n";
+	# if ($child) {
+	#      print STDERR "\n defined $child process\n";
+	#     while (1) {
+	# 	  print STDERR "\n checking  $child process\n";
+	# 	sleep 1;
+	# 	my $status = kill 0 => $child;
+	# 	  print STDERR "\n status: $status\n";
+		 
+
+	# 	if (!$status) {
+		    
+	# 	    print STDERR "\n child id: $child process over\n";
+	# 	    solGS::AnalysisProfile::check_analysis_progress();
+	# 	   exit 0;
+	# 	}
+	# 	else 
+	# 	{
+	# 	   print STDERR "\n child id: $child process still running\n";   
+	# 	}
+	
+
+	#     }
+	# }
+
+  	
 }
  
  
