@@ -302,13 +302,16 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	my @plot_name;
 	my @plot_id;
 	my @array_msg;
+	my @plot_number;
 	my $my_hash;
 	
 	foreach $my_hash (@layout_info) {
 		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'};
-
-	$plot_id[$my_hash->{'plot_number'}] = $my_hash->{'plot_id'};
-		
+	
+	$plot_id[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_id'};
+	#$plot_id[$my_hash->{'plot_number'}] = $my_hash->{'plot_id'};
+	$plot_number[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_number'};
+	#$plot_number[$my_hash->{'plot_number'}] = $my_hash->{'plot_number'};	
 	}
 
 
@@ -318,6 +321,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	push @col_numbers, $my_hash->{'col_number'};
 	push @row_numbers, $my_hash->{'row_number'};
 	#push @plot_id, $my_hash->{'plot_id'};
+	#push @plot_number, $my_hash->{'plot_number'};
 	push @rep_numbers, $my_hash->{'rep_number'};
 	push @block_numbers, $my_hash->{'block_number'};
 	push @accession_name, $my_hash->{'accession_name'};
@@ -342,7 +346,8 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 			      block => \@block_numbers,
 			      accessions => \@accession_name,
 			      plot_name => \@plot_name,
-			      plot_id => \@plot_id
+			      plot_id => \@plot_id,
+			      plot_number => \@plot_number
           		   };
 	
 }
