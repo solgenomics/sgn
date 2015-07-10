@@ -190,7 +190,7 @@ sub associate_parent {
 	return "The specified parent folder is not of type folder";
     }
 
-    $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( 
+    my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( 
 	{ object_project_id => $parent_id, 
 	  subject_project_id => $self->folder_id() 
 	});
