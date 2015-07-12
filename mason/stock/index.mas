@@ -251,20 +251,28 @@ function jqueryStuff() {
 
 % }
 
-% my $collapsible = 0; 
-% if ($has_pedigree==1) {
-%  $collapsible = 1;
-% }
-% my $add_parent_link = "Add parent";
-% if ($person_id && $submitter) { $add_parent_link = qq | <a id="add_parent_link" >Add parent</a> |; }
+<%perl>
+ my $collapsible = 0; 
+ if ($has_pedigree==1) {
+  $collapsible = 1;
+ }
+ my $add_parent_link = "Add parent";
+ if ($person_id && $submitter) { $add_parent_link = qq | <a id="add_parent_link" >Add parent</a> |; }
 
-<&| /page/info_section.mas, title=>"Pedigree" , collapsible=> $collapsible, collapsed=>0, subtitle=>"[$add_parent_link]" &>
+my $remove_parent_link = "Remove parent";
+if ($person_id && $submitter) { $remove_parent_link = qq | <a id="remove_parent_link">Remove parent</a> |; }
+
+</%perl>
+
+<div id="remove_parent_dialog">
+Remove a parent (this will only remove the link to the parent, not the parent accession itself).<br /><br />
+  <div id="remove_parent_list">[loading parent list...]</div>
+</div>
+
+
+<&| /page/info_section.mas, title=>"Pedigree" , collapsible=> $collapsible, collapsed=>0, subtitle=>"[$add_parent_link] [$remove_parent_link]" &>
   <& /pedigree/stock_pedigree.mas, stock_id => $stock_id, has_pedigree => $has_pedigree &>
 </&>
-
-
-
-
 
 % if ($has_descendants==1) {
 
@@ -414,5 +422,12 @@ function jqueryStuff() {
 <script>
   jQuery(document).ready(function() { 
     stock_detail_page_init_dialogs();
+
+    jQuery('#remove_parent_link').click( function() { 
+      jQuery('#remove_parent_dialog').dialog("open");
+      get_remove_parents_list(<% $stock_id %>);
+    });
+
+
   });
 </script>
