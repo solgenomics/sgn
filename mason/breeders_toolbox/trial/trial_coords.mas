@@ -13,10 +13,11 @@ $trial_id
       }
 	#container {
 		//border:2px dashed #000;
-		height: 500px;
+		height: 490px;
 		width: 700px;
-		//overflow: scroll;
 		overflow: auto;
+		//overflow: scroll;
+		display: none;
 	}
     </style>
 
@@ -31,6 +32,10 @@ var trial_id = <% $trial_id %>;
 	jQuery.ajax( { 
 	     url: '/ajax/breeders/trial/'+trial_id+'/coords',
 	     success: function(response) { 
+		if (response.coord_col && response.coord_row){
+			$("#container").css({"display": "inline-block", "overflow": "auto"});
+			//$("#container").css("display","inline-block"); 
+		} 
 		//alert("plot_id: "+response.plot_id);
 		//alert("plot_number: "+response.plot_number);
 		var width = 65;
@@ -41,8 +46,8 @@ var trial_id = <% $trial_id %>;
         	container: 'container',
         	//width: 2000,
         	//height: 2000,
-		width: max_col * width + 100,
-        	height: max_row * width + 100,
+		width: max_col * width + 65,
+        	height: max_row * width + 65,
 	
      		});
 
@@ -57,7 +62,7 @@ var trial_id = <% $trial_id %>;
 				} else { 
 					response.plot_number[y][x] = ''; 
 					}				
-				draw_rect(stage, plot_layer, popup_layer, response.plot_msg[y][x], x, y, response.coord_col[x], response.coord_row[y], plot_counter, response.plot_id[y][x], response.plot_number[y][x]);
+				draw_rect(stage, plot_layer, popup_layer, response.plot_msg[y][x], x, y, max_col, response.coord_col[x], response.coord_row[y], plot_counter, response.plot_id[y][x], response.plot_number[y][x]);
 			}
 		}
 		stage.add(plot_layer);
@@ -69,13 +74,13 @@ var trial_id = <% $trial_id %>;
              }
         });
 
-    function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, col_number, row_number, plot_counter, plot_id, plot_number){
+    function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, max_col, col_number, row_number, plot_counter, plot_id, plot_number){
 	var width = 65;
 	var popup_x = width;
         var popup_width = 200;
 	x = x * width;
 	y = y * width;
-	if (x + width > col_number * width / 2){
+	if (x + width > max_col * width / 2){
 		popup_x = -1 * popup_width;
 	}	
 	var myRectangle = new Kinetic.Rect({

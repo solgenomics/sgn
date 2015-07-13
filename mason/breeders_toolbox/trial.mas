@@ -135,7 +135,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </div>
 
-<&| /page/info_section.mas, title=>"Physical Trial Layout" &>
+<&| /page/info_section.mas, title=>"Physical Trial Layout", subtitle=>'[<a id="upload_trial_coordinates_link">Upload trial coordinates</a>]' &>
   <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
 </&>
 
