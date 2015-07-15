@@ -57,7 +57,7 @@ Parent is<br />
     });
 
     jQuery("#stock_autocomplete").autocomplete({
-      source: '/ajax/stock/stock_autocomplete'
+      source: '/ajax/stock/accession_autocomplete'
     });
 
     jQuery("#parent_type").buttonset();
