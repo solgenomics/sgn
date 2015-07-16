@@ -70,7 +70,7 @@ var trial_id = <% $trial_id %>;
 
 	    },
              error: function(reponse) { 
-               alert('an error occurred');
+              // alert('an error occurred');
              }
         });
 
@@ -105,6 +105,10 @@ var trial_id = <% $trial_id %>;
 	
 	
       myRectangle.on('mouseover', function() {
+	
+	this.setFill('#ddd');
+	plot_layer.draw();
+
 	var plot_txt = new Kinetic.Text({
         x: x+popup_x+5+10,
         y: y+14,
@@ -123,7 +127,8 @@ var trial_id = <% $trial_id %>;
          height: 80,
          cornerRadius: 10
       });
-    
+
+      
       popup_layer.add(plot_popup);
       popup_layer.add(plot_txt);
       popup_layer.draw();
@@ -131,6 +136,10 @@ var trial_id = <% $trial_id %>;
       });
 
       myRectangle.on('mouseout', function() {
+
+	this.setFill('#C0C0C0');
+	plot_layer.draw();
+
        	popup_layer.removeChildren();
 	popup_layer.draw();
 
@@ -138,6 +147,7 @@ var trial_id = <% $trial_id %>;
 
        myRectangle.on('mousedown', function() {
 	window.location.href = 'http://cassavabase.org/stock/'+plot_id+'/view';
+	
       });
 
       plot_layer.add(myRectangle);
