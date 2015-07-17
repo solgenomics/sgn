@@ -124,8 +124,8 @@ function finish_blast(jobid, seq_count) {
   var prereqs = new Array();
 
   if (seq_count > 1) { 
-    format = [ "Basic" ];
-    alert("Multiple sequences were detected. The output will be shown in the basic format");
+    format = [ "Table", "Basic" ];
+    alert("Multiple sequences were detected. The output will be shown in the tabular and basic format");
   }
 
   var database = jQuery('#database').val();
