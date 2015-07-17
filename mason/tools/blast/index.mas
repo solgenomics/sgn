@@ -35,30 +35,25 @@ my $substitution_matrix_select = $m->scomp('/page/html_select.mas',
 		 'PAM70',
               ]);
 
-my $show_graphics_select = $m->scomp('/page/html_select.mas',  name => 'output_graphs', id=>'output_graphs',
-        	      choices => [ [ 'bioperl_histogram', 'all' ],
-	                	   'none',
-			           [ 'bioperl_only', 'alignment summary only' ],
-				   [ 'histogram_only', 'conservedness histogram only' ],
-				 ],
-				 ),
 
 #print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
 my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', id=>'input_options',
 			      choices => \@input_options, selected=>$preload_type,
 );
 
+# array with the preselected output formats
 my @parse_options_selected = ();
 foreach my $po (@parse_options) { 
-  if ($po->[0] ne "Basic") { 
+  if (($po->[0] ne "Basic") && ($po->[0] ne "Table")) { 
     push @parse_options_selected, $po;
   }
 }
 
+# output formats alphabetically sorted
+my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>'size = 5', choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
 
-my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', choices => [ map { $_->[0] } @parse_options ], multiple=>1, selected=> [ sort (map { $_->[0] } @parse_options_selected) ] );
-
-print STDERR "SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n\n\n";
+# print STDERR "OUTPUT OPTIONS: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n";
+# print STDERR "OUTPUT SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options_selected) ))."\n";
 
 
 my $db_type = {};
@@ -147,7 +142,7 @@ if ($preload_seq) {
 	<& /page/info_table.mas, title=>'', data => [ 
 	  'Expect (e-value) Threshold' => '<input id="evalue" class="blast_search_input_box" type="text" size="6" value="1e-10" name="expect" />',
 	  'Substitution Matrix' => $substitution_matrix_select,
-		'Outout Options' => $parse_options_select,
+		'Output Options' => $parse_options_select,
 	  'Max. hits to show' => '<input id="maxhits" class="blast_search_input_box" type="text" name="maxhits" size="6" value="20" />',
 	  'Filters' => '<input type="checkbox" name="filterq" checked="1" />Filter Low complexity',
 	  __multicol => 2,
@@ -181,7 +176,7 @@ if ($preload_seq) {
   <div id="blast_status">Please select your input parameters.</div>
 </&>
 
-<&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a href="javascript:download();">Download</a>' &>
+<&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a class="download_tag" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>&nbsp;&nbsp;<a class="download_tag" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>' &>
 <table>
 <tr><td><div id="prereqs"></div></td></tr>
 <tr><td><div id="blast_report"></div></td></tr>
@@ -430,6 +425,10 @@ border-style:solid;
 border-radius:5px;
 height: 20px;
 padding-left: 5px;
+}
+
+.download_tag {
+  display:none;
 }
 
 </style>

@@ -25,10 +25,12 @@ function run_blast(database_types, input_option_types) {
     var database = jQuery('#database').val();
     var evalue   = jQuery('#evalue').val();
     var matrix   = jQuery('#matrix').val();
-    var graphics = jQuery('#graphics').val();
+    // var graphics = jQuery('#graphics').val();
     var maxhits  = jQuery('#maxhits').val();
     var filterq  = jQuery('#filterq').val();
     var input_option = jQuery('#input_options').val();
+    //input option is the format of the pasted sequenced
+    //graphics?
     
     if (sequence === '') { 
 	alert("Please enter a sequence :-)"); 
@@ -112,51 +114,51 @@ function wait_result(jobid, seq_count) {
 
 function finish_blast(jobid, seq_count) { 	
 
-    update_status('Run complete.<br />');
+  update_status('Run complete.<br />');
+  
+  var format   =  jQuery('#parse_options').val() || [ 'Basic' ];
+  
+  //alert("FORMAT IS: "+format + " seqcount ="+ seq_count + "jobid = "+jobid);
+
+  var blast_reports = new Array();
+  var prereqs = new Array();
+
+  if (seq_count > 1) { 
+    format = [ "Basic" ];
+    alert("Multiple sequences were detected. The output will be shown in the basic format");
+  }
+
+  var database = jQuery('#database').val();
+
+  for (var n in format) { 
+    update_status('Formatting output ('+format[n]+')<br />');
+
+    jQuery.ajax( { 
+      url: '/tools/blast/result/'+jobid,
+      data: { 'format': format[n], 'db_id': database },
     
-    var format   =  jQuery('#parse_options').val() || [ 'Basic' ];
-    
-    //alert("FORMAT IS: "+format + " seqcount ="+ seq_count + "jobid = "+jobid);
+      success: function(response) { 
+        if (response.blast_report) { 
+            blast_reports.push(response.blast_report);
+            //alert("BLAST report: "+response.blast_report);
+        }
+        if (response.prereqs) { 
+            prereqs.push(response.prereqs);
+            jQuery('#prereqs').html(prereqs.join("\n\n<br />\n\n"));
+        }
+        jQuery('#blast_report').html(blast_reports.join("<hr />\n"));
 
-    var blast_reports = new Array();
-    var prereqs = new Array();
+        jQuery('#jobid').html(jobid);
 
-    if (seq_count > 1) { 
-	format = [ "Basic" ];
-	alert("Multiple sequences were detected. The output will be shown in the basic format");
-    }
+        Effects.swapElements('input_parameter_section_offswitch', 'input_parameter_section_onswitch'); 
+        Effects.hideElement('input_parameter_section_content');
+        jQuery('.download_tag').css("display", "inline");
+        enable_ui();
 
-    var database = jQuery('#database').val();
-
-    for (var n in format) { 
-	update_status('Formatting output ('+format[n]+')<br />');
-
-	jQuery.ajax( { 
-	    url: '/tools/blast/result/'+jobid,
-	    data: { 'format': format[n], 'db_id': database },
-	    
-	    success: function(response) { 
-		if (response.blast_report) { 
-		    blast_reports.push(response.blast_report);
-		    //alert("BLAST report: "+response.blast_report);
-		}
-		if (response.prereqs) { 
-		    prereqs.push(response.prereqs);
-		    jQuery('#prereqs').html(prereqs.join("\n\n<br />\n\n"));
-		}
-		jQuery('#blast_report').html(blast_reports.join("<hr />\n"));
-		
-		jQuery('#jobid').html(jobid);
-		
-		Effects.swapElements('input_parameter_section_offswitch', 'input_parameter_section_onswitch'); 
-		Effects.hideElement('input_parameter_section_content');
-		
-		enable_ui();
-		
-	    },
-	    error: function(response) { alert("Parse BLAST: An error occurred. "+response.error); }
-	});
-    }
+      },
+      error: function(response) { alert("Parse BLAST: An error occurred. "+response.error); }
+    });
+  }
 }
 
 function disable_ui() { 
@@ -184,11 +186,14 @@ function blast_program_ok(program, query_type, database_type) {
 
 function download() { 
    var jobid = jQuery('#jobid').html();
-
-   if (jobid === '') { alert("No BLAST has been run yet. Please run BLAST before downloading."); return; }
-
+   // if (jobid === '') { alert("No BLAST has been run yet. Please run BLAST before downloading."); return; }
    window.location.href= '/documents/tempfiles/blast/'+jobid+'.out';
+}
 
+function download_table() { 
+   var jobid = jQuery('#jobid').html();
+   // if (jobid === '') { alert("No BLAST has been run yet. Please run BLAST before downloading."); return; }
+   window.location.href= '/documents/tempfiles/blast/'+jobid+'.out_table.txt';
 }
 
 function update_status(message) { 
