@@ -122,6 +122,8 @@ sub parse {
   }
   print $table_fh "$query\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
   
+  close ($table_fh);
+  
   return "<pre>".read_file($blast_table_file)."</pre>";
 }
 

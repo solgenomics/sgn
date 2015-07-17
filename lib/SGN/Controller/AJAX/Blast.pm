@@ -380,10 +380,7 @@ sub get_result : Path('/tools/blast/result') Args(1) {
     my $parser = CXGN::Blast::Parse->new();
     my $parsed_data = $parser->parse($c, $format, $result_file, $db);
     
-    print STDERR "result_file: $result_file\nblast_tmp_output: $blast_tmp_output\nparsed data: $parsed_data\n";
-    
     $c->stash->{rest} = $parsed_data; # { blast_report => '<pre>'.(join("\n", read_file($parsed_file))).'</pre>', };
-
 }
 
 
