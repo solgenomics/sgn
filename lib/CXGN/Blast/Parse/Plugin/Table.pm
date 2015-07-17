@@ -46,8 +46,8 @@ sub parse {
   open (my $table_fh, ">", $blast_table_file);
   open (my $table_html_fh, ">", $blast_table_html);
   
-  print $table_html_fh "<style>.td_blast_table {padding-left: 5px;}</style>\n";
-  print $table_html_fh "<table border=\"0\" style=\"text-align:right;\"><tr>\n";
+  print $table_html_fh "<style>\n#blast_table_div {\nwidth: 750px;\noverflow: scroll;\nborder:solid #ccf 1px;\n}\n#blast_table {\ntext-align:right;\nwhite-space: nowrap;\npadding:5px\n}\n#blast_table td {\npadding-left: 5px;\n}\n</style>\n";
+  print $table_html_fh "<div id=\"blast_table_div\">\n<table id=\"blast_table\" border=\"0\"><tr>\n";
   
   while (my $line = <$blast_fh>) {
     chomp($line);
@@ -60,7 +60,7 @@ sub parse {
   
       if ($subject) {
         print $table_fh "$query\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
-        print $table_html_fh "<tr><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend\">$query</a></td><td class=\"td_blast_table\">$subject</td><td class=\"td_blast_table\">$id</td><td class=\"td_blast_table\">$aln</td><td class=\"td_blast_table\">$mm</td><td class=\"td_blast_table\">$gaps</td><td class=\"td_blast_table\">$qstart</td><td class=\"td_blast_table\">$qend</td><td class=\"td_blast_table\">$sstart</td><td class=\"td_blast_table\">$send</td><td class=\"td_blast_table\">$evalue</td><td class=\"td_blast_table\">$score</td><td class=\"td_blast_table\">$desc</td></tr>\n";
+        print $table_html_fh "<tr><td>$query</td><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\">$subject</a></td><td>$id</td><td>$aln</td><td>$mm</td><td>$gaps</td><td>$qstart</td><td>$qend</td><td>$sstart</td><td>$send</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>\n";
       }
       $subject = "";
       $id = 0.0;
@@ -84,7 +84,7 @@ sub parse {
 
     if ($line =~ /Score\s*=/ && $one_hsp == 1) {
       print $table_fh "$query\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
-      print $table_html_fh "<tr><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend\">$query</a></td><td class=\"td_blast_table\">$subject</td><td class=\"td_blast_table\">$id</td><td class=\"td_blast_table\">$aln</td><td class=\"td_blast_table\">$mm</td><td class=\"td_blast_table\">$gaps</td><td class=\"td_blast_table\">$qstart</td><td class=\"td_blast_table\">$qend</td><td class=\"td_blast_table\">$sstart</td><td class=\"td_blast_table\">$send</td><td class=\"td_blast_table\">$evalue</td><td class=\"td_blast_table\">$score</td><td class=\"td_blast_table\">$desc</td></tr>\n";
+      print $table_html_fh "<tr><td>$query</td><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\">$subject</a></td><td>$id</td><td>$aln</td><td>$mm</td><td>$gaps</td><td>$qstart</td><td>$qend</td><td>$sstart</td><td>$send</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>\n";
       
       $id = 0.0;
       $aln = 0;
@@ -131,8 +131,8 @@ sub parse {
 
   }
   print $table_fh "$query\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
-  print $table_html_fh "<tr><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend\">$query</a></td><td class=\"td_blast_table\">$subject</td><td class=\"td_blast_table\">$id</td><td class=\"td_blast_table\">$aln</td><td class=\"td_blast_table\">$mm</td><td class=\"td_blast_table\">$gaps</td><td class=\"td_blast_table\">$qstart</td><td class=\"td_blast_table\">$qend</td><td class=\"td_blast_table\">$sstart</td><td class=\"td_blast_table\">$send</td><td class=\"td_blast_table\">$evalue</td><td class=\"td_blast_table\">$score</td><td class=\"td_blast_table\">$desc</td></tr>\n";
-  print $table_html_fh "</tr></table>\n";
+  print $table_html_fh "<tr><td>$query</td><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\">$subject</a></td><td>$id</td><td>$aln</td><td>$mm</td><td>$gaps</td><td>$qstart</td><td>$qend</td><td>$sstart</td><td>$send</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>\n";
+  print $table_html_fh "</tr></table>\n</div>\n";
   
   close ($table_fh);
   close ($table_html_fh);
