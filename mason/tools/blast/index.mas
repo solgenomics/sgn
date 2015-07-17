@@ -428,7 +428,7 @@ padding-left: 5px;
 }
 
 #blast_report {
-  width: 700px;
+  width: 750px;
   overflow: auto;
 }
 

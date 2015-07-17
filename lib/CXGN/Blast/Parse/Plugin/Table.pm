@@ -131,7 +131,7 @@ sub parse {
   
   close ($table_fh);
   
-  return "<pre>".read_file($blast_table_file)."</pre>";
+  return "<pre>".read_file($blast_table_html)."</pre>";
 }
 
 1;
