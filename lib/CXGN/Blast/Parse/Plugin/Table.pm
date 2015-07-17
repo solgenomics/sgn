@@ -83,7 +83,7 @@ sub parse {
 
     if ($line =~ /Score\s*=/ && $one_hsp == 1) {
       print $table_fh "$query\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
-      print $table_html_fh "<a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend\">$query</a>\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
+      print $table_html_fh "<td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend\">$query</a></td><td>$subject</td><td>$id</td><td>$aln</td><td>$mm</td><td>$gaps</td><td>$qstart</td><td>$qend</td><td>$sstart</td><td>$send</td><td>$evalue</td><td>$score</td><td>$desc</td>\n";
       
       $id = 0.0;
       $aln = 0;
@@ -130,6 +130,7 @@ sub parse {
 
   }
   print $table_fh "$query\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
+  print $table_html_fh "<td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend\">$query</a></td><td>$subject</td><td>$id</td><td>$aln</td><td>$mm</td><td>$gaps</td><td>$qstart</td><td>$qend</td><td>$sstart</td><td>$send</td><td>$evalue</td><td>$score</td><td>$desc</td>\n";
   print $table_html_fh "</tr></table>\n";
   
   close ($table_fh);
