@@ -140,7 +140,7 @@ function finish_blast(jobid, seq_count) {
       success: function(response) { 
         if (response.blast_report) { 
             blast_reports.push(response.blast_report);
-            //alert("BLAST report: "+response.blast_report);
+            alert("BLAST report: "+response.blast_report);
         }
         if (response.prereqs) { 
             prereqs.push(response.prereqs);
