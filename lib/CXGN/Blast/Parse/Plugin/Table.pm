@@ -19,6 +19,9 @@ sub parse {
   my $self = shift;
   my $c = shift;
   my $file = shift;
+  my $bdb = shift;
+  
+  my $db_id = $bdb->blast_db_id();
   
   my $query = "";
   my $subject = "";
@@ -37,9 +40,11 @@ sub parse {
   my $one_hsp = 0;
   
   my $blast_table_file = $file."_tabular.txt";
+  my $blast_table_html = $file."_tabular.html";
   
   open (my $blast_fh, "<", $file);
   open (my $table_fh, ">", $blast_table_file);
+  open (my $table_html_fh, ">", $blast_table_html);
 
   while (my $line = <$blast_fh>) {
     chomp($line);
@@ -52,6 +57,7 @@ sub parse {
   
       if ($subject) {
         print $table_fh "$query\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
+        print $table_html_fh "<a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend>$query</a>\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
       }
       $subject = "";
       $id = 0.0;
@@ -75,7 +81,8 @@ sub parse {
 
     if ($line =~ /Score\s*=/ && $one_hsp == 1) {
       print $table_fh "$query\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
-  
+      print $table_html_fh "<a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend>$query</a>\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
+      
       $id = 0.0;
       $aln = 0;
       $mm = 0;

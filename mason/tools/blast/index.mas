@@ -427,6 +427,11 @@ height: 20px;
 padding-left: 5px;
 }
 
+#blast_report {
+  width: 700px;
+  overflow: auto;
+}
+
 .download_tag {
   display:none;
 }
