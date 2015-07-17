@@ -49,7 +49,7 @@ sub get_calendar_events_GET {
 	push(@results, {title=>$project_name.' '.$project_prop, start=>$project_date});
     }
 
-    #Add some dummy test values. The dates are not formatted like YYYY-MM-DD 
+    #Add some dummy test values. The dates retrieved from database are not formatted like YYYY-MM-DD, which the FullCalendar requires
     push(@results, {title=>"Populate Test 1", start=>"2015-07-16", url=>"http://www.google.com"});
     push(@results, {title=>"Populate Test 2", start=>"2015-07-10", url=>"http://www.google.com"});
     $c->stash->{rest} = \@results;
