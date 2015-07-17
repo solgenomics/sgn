@@ -46,7 +46,8 @@ sub parse {
   open (my $table_fh, ">", $blast_table_file);
   open (my $table_html_fh, ">", $blast_table_html);
   
-  print $table_html_fh "<table border=\"0\"><tr>\n";
+  print $table_html_fh "<style>.td_blast_table {padding-left: 5px;}</style>\n";
+  print $table_html_fh "<table border=\"0\" style=\"text-align:right;\"><tr>\n";
   
   while (my $line = <$blast_fh>) {
     chomp($line);
@@ -59,7 +60,7 @@ sub parse {
   
       if ($subject) {
         print $table_fh "$query\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
-        print $table_html_fh "<tr><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend\">$query</a></td><td>$subject</td><td>$id</td><td>$aln</td><td>$mm</td><td>$gaps</td><td>$qstart</td><td>$qend</td><td>$sstart</td><td>$send</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>\n";
+        print $table_html_fh "<tr><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend\">$query</a></td><td class=\"td_blast_table\">$subject</td><td class=\"td_blast_table\">$id</td><td class=\"td_blast_table\">$aln</td><td class=\"td_blast_table\">$mm</td><td class=\"td_blast_table\">$gaps</td><td class=\"td_blast_table\">$qstart</td><td class=\"td_blast_table\">$qend</td><td class=\"td_blast_table\">$sstart</td><td class=\"td_blast_table\">$send</td><td class=\"td_blast_table\">$evalue</td><td class=\"td_blast_table\">$score</td><td class=\"td_blast_table\">$desc</td></tr>\n";
       }
       $subject = "";
       $id = 0.0;
@@ -83,7 +84,7 @@ sub parse {
 
     if ($line =~ /Score\s*=/ && $one_hsp == 1) {
       print $table_fh "$query\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
-      print $table_html_fh "<tr><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend\">$query</a></td><td>$subject</td><td>$id</td><td>$aln</td><td>$mm</td><td>$gaps</td><td>$qstart</td><td>$qend</td><td>$sstart</td><td>$send</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>\n";
+      print $table_html_fh "<tr><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend\">$query</a></td><td class=\"td_blast_table\">$subject</td><td class=\"td_blast_table\">$id</td><td class=\"td_blast_table\">$aln</td><td class=\"td_blast_table\">$mm</td><td class=\"td_blast_table\">$gaps</td><td class=\"td_blast_table\">$qstart</td><td class=\"td_blast_table\">$qend</td><td class=\"td_blast_table\">$sstart</td><td class=\"td_blast_table\">$send</td><td class=\"td_blast_table\">$evalue</td><td class=\"td_blast_table\">$score</td><td class=\"td_blast_table\">$desc</td></tr>\n";
       
       $id = 0.0;
       $aln = 0;
@@ -130,13 +131,14 @@ sub parse {
 
   }
   print $table_fh "$query\t$subject\t$id\t$aln\t$mm\t$gaps\t$qstart\t$qend\t$sstart\t$send\t$evalue\t$score\t$desc\n";
-  print $table_html_fh "<tr><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend\">$query</a></td><td>$subject</td><td>$id</td><td>$aln</td><td>$mm</td><td>$gaps</td><td>$qstart</td><td>$qend</td><td>$sstart</td><td>$send</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>\n";
+  print $table_html_fh "<tr><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$query;hilite_coords=$qstart-$qend\">$query</a></td><td class=\"td_blast_table\">$subject</td><td class=\"td_blast_table\">$id</td><td class=\"td_blast_table\">$aln</td><td class=\"td_blast_table\">$mm</td><td class=\"td_blast_table\">$gaps</td><td class=\"td_blast_table\">$qstart</td><td class=\"td_blast_table\">$qend</td><td class=\"td_blast_table\">$sstart</td><td class=\"td_blast_table\">$send</td><td class=\"td_blast_table\">$evalue</td><td class=\"td_blast_table\">$score</td><td class=\"td_blast_table\">$desc</td></tr>\n";
   print $table_html_fh "</tr></table>\n";
   
   close ($table_fh);
-  close ($blast_table_html);
+  close ($table_html_fh);
   
-  return "<pre>".read_file($blast_table_html)."</pre>";
+  # return "<pre>".read_file($blast_table_file)."</pre>";
+  return read_file($blast_table_html);
 }
 
 1;
