@@ -7,6 +7,8 @@ SGN::Controller::Calendar - a controller class to handle calendar related method
 
 For display and processing of calendar. AJAX calendar requests are located in SGN::Controller::AJAX::Calendar
 
+Currently maps to Cassbase mason files
+
 =head1 AUTHOR
 
 Nicolas Morales <nm529@cornell.edu>

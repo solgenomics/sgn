@@ -48,8 +48,10 @@ sub get_calendar_events_GET {
     while (my ($project_name, $project_date, $project_prop) = $sth->fetchrow_array ) {
 	push(@results, {title=>$project_name.' '.$project_prop, start=>$project_date});
     }
-    push(@results, {title=>"Test Event", start=>"2015-07-16"});
-    push(@results, {title=>"Test 2", start=>"2015-07-10"});
+
+    #Add some dummy test values. The dates are not formatted like YYYY-MM-DD 
+    push(@results, {title=>"Populate Test 1", start=>"2015-07-16", url=>"http://www.google.com"});
+    push(@results, {title=>"Populate Test 2", start=>"2015-07-10", url=>"http://www.google.com"});
     $c->stash->{rest} = \@results;
 
 }
