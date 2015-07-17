@@ -1,4 +1,4 @@
 use Modern::Perl;
 use CGI ();
-print CGI->new->redirect( -uri => '/stock/search' , -status => 301 );
+print CGI->new->redirect( -uri => '/search/stocks' , -status => 301 );
 

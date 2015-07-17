@@ -33,7 +33,7 @@ arrayref of BCS publication rows to render
            my $id = $pub->pub_id;
 
            [ encode_entities($pub->pyear),
-             qq|<a href="/chado/publication.pl?pub_id=$id">|.encode_entities($pub->title).'</a>',
+             qq|<a href="/publication/$id/view">|.encode_entities($pub->title).'</a>',
              encode_entities( $pub->series_name ),
            ]
          } @pub_objects

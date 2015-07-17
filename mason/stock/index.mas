@@ -176,7 +176,7 @@ my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a href="j
 
 my $edit_privs = $curator || $submitter || $sequencer;
 </%perl>
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie"] &>
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock"] &>
 
 
 <script language="javascript">
@@ -191,7 +191,7 @@ function jqueryStuff() {
 <& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || 'Create a new stock' &>
 
 
-<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/phenome/qtl_form.pl>New QTL population</a> | <a href=/stock/search/>Back to stock search</a>"  &>
+<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/phenome/qtl_form.pl>New QTL population</a> | <a href=/search/stocks/>Back to stock search</a>"  &>
 
 <table><tr><td width="400">
   <& /page/form.mas,
@@ -251,20 +251,28 @@ function jqueryStuff() {
 
 % }
 
-% my $collapsible = 0; 
-% if ($has_pedigree==1) {
-%  $collapsible = 1;
-% }
-% my $add_parent_link = "Add parent";
-% if ($person_id && $submitter) { $add_parent_link = qq | <a id="add_parent_link" >Add parent</a> |; }
+<%perl>
+ my $collapsible = 0; 
+ if ($has_pedigree==1) {
+  $collapsible = 1;
+ }
+ my $add_parent_link = "Add parent";
+ if ($person_id && $submitter) { $add_parent_link = qq | <a id="add_parent_link" >Add parent</a> |; }
 
-<&| /page/info_section.mas, title=>"Pedigree" , collapsible=> $collapsible, collapsed=>0, subtitle=>"[$add_parent_link]" &>
+my $remove_parent_link = "Remove parent";
+if ($person_id && $submitter) { $remove_parent_link = qq | <a id="remove_parent_link">Remove parent</a> |; }
+
+</%perl>
+
+<div id="remove_parent_dialog">
+Remove a parent (this will only remove the link to the parent, not the parent accession itself).<br /><br />
+  <div id="remove_parent_list">[loading parent list...]</div>
+</div>
+
+
+<&| /page/info_section.mas, title=>"Pedigree" , collapsible=> $collapsible, collapsed=>0, subtitle=>"[$add_parent_link] [$remove_parent_link]" &>
   <& /pedigree/stock_pedigree.mas, stock_id => $stock_id, has_pedigree => $has_pedigree &>
 </&>
-
-
-
-
 
 % if ($has_descendants==1) {
 
@@ -363,6 +371,35 @@ function jqueryStuff() {
 % }
 </&>
 
+<div id="stock_trials_info_popup">
+  <table id="stock_trials_info_table" >
+    <thead>
+    <tr><th>Trait</th><th>Average</th><th>Std dev</th></tr>
+    </thead>
+  </table>
+</div>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+
+<&| /page/info_section.mas, title => "Trials" &>
+
+  <& /stock/trials.mas, stock_id => $stock_id &>
+
+</&>
+
+<&| /page/info_section.mas, title => "Traits assayed" &>
+
+  <& /stock/traits.mas, stock_id => $stock_id &>
+
+</&>
+
+%#<&| /page/info_section.mas, title => "Phenotypic data" &>
+  
+%#  <& /stock/phenotypes.mas, stock_id => $stock_id &>
+
+%#</&>
+
 <&| /page/info_section.mas, title=>"Genotype data ", subtitle=> $g_download_link, collapsible => 1 , collapsed => 1 &>
 % print $map_html;
 % foreach my $project (keys %$direct_genotypes) {
@@ -376,4 +413,21 @@ function jqueryStuff() {
 
 </&>
 
+
+
+
 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
+
+
+<script>
+  jQuery(document).ready(function() { 
+    stock_detail_page_init_dialogs();
+
+    jQuery('#remove_parent_link').click( function() { 
+      jQuery('#remove_parent_dialog').dialog("open");
+      get_remove_parents_list(<% $stock_id %>);
+    });
+
+
+  });
+</script>

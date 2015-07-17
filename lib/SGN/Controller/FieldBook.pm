@@ -30,6 +30,7 @@ sub field_book :Path("/fieldbook") Args(0) {
     my @rows = $schema->resultset('Project::Project')->all();
     #limit to owner 
     my @projects = ();
+    my @file_metadata = ();
     my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
     my $breeding_programs = $bp->get_breeding_programs();
     my @layout_files = ();
@@ -44,34 +45,41 @@ sub field_book :Path("/fieldbook") Args(0) {
 		     dbxref => 'field layout',
 		    });
 
-    # foreach my $row (@rows) {
-    #   my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find({
-    # 										   'nd_experiment_projects.project_id' => $row->project_id,
-    # 										   type_id => $field_layout_cvterm->cvterm_id(),
-    # 										  },
-    # 										  {
-    # 										   join => 'nd_experiment_projects',
-    # 										  });
-    #   if (!$experiment) {
-    # 	next;
-    #   }
-    #   my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->search({nd_experiment_id => $experiment->nd_experiment_id(),});
-    #   while (my $experiment_file = $experiment_files->next) {
-    # 	my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $experiment_file->file_id});
-    # 	if ($file_row->filetype eq 'tablet field layout xls') {
-    # 	  #my $file_metadata = $file_row->search_related('md_metadata')->find({create_person_id => $user_id,});
-    # 	  my $metadata_id = $file_row->metadata_id->metadata_id;
-    # 	  if ($metadata_id) {
-    # 	    my $file_metadata = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id});
-    # 	    if ( $file_metadata->create_person_id() eq $user_id) {
-    # 	      my $file_destination =  catfile($file_row->dirname, $file_row->basename);
-    # 	      push @projects, [ $row->project_id, $row->name, $row->description, $file_row->dirname,$file_row->basename, $file_row->file_id];
-    # 	      push @layout_files, $file_destination;
-    # 	    }
-    # 	  }
-    # 	}
-    #   }
-    # }
+#    foreach my $row (@rows) {
+    #   my $experiment_rs = $schema->resultset('NaturalDiversity::NdExperiment')->search({
+    #  					               #					   'nd_experiment_projects.project_id' => $row->project_id,
+    #  										   type_id => $field_layout_cvterm->cvterm_id(),
+    #  										  },
+    #  										  {
+    #  										   join => 'nd_experiment_projects',
+    #  										  });
+    # while (my $experiment = $experiment_rs->next()) { 
+    #  my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->search({nd_experiment_id => $experiment->nd_experiment_id(),});
+
+    my $q = "SELECT md_files.file_id, metadata.md_files.basename, metadata.md_files.dirname, metadata.md_files.filetype, metadata.md_files.comment, md_metadata.metadata_id FROM nd_experiment_project JOIN nd_experiment USING(nd_experiment_id)  JOIN  phenome.nd_experiment_md_files ON (nd_experiment.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) JOIN metadata.md_files USING (file_id) LEFT JOIN metadata.md_metadata USING(metadata_id) WHERE nd_experiment.type_id=".$field_layout_cvterm->cvterm_id()." and metadata.md_metadata.create_person_id=$user_id and filetype = 'tablet field layout xls'";
+    my $h = $c->dbc->dbh->prepare($q);
+    $h->execute();
+#      while (my $experiment_file = $experiment_files->next) {
+    while (my ($file_id, $basename, $dirname, $filetype, $comment, $metadata_id) = $h->fetchrow_array()) { 
+    	#my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $experiment_file->file_id});
+    	#if ($filetype eq 'tablet field layout xls') {
+
+#    	  my $metadata_id = $file_row->metadata_id->metadata_id;
+   	  if ($metadata_id) {
+	    
+    	 #   my $file_metadata = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id});
+    	  #  if ( $file_metadata->create_person_id() eq $user_id) {
+		#my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+		my $file_destination =  catfile($dirname, $basename);
+    	      #push @projects, [ $row->project_id, $row->name, $row->description, $file_row->dirname,$file_row->basename, $file_row->file_id];
+	      push @file_metadata, [ $dirname, $basename, $file_id, $comment ] ;
+    	      push @layout_files, $file_destination;
+    	  #  }
+    	  #}
+    	}
+    }
+   # }
+   #}
 
     my @trait_files = ();
     #limit to those owned by user
@@ -97,6 +105,7 @@ sub field_book :Path("/fieldbook") Args(0) {
     }
 
     $c->stash->{projects} = \@projects;
+    $c->stash->{file_metadata} = \@file_metadata;
     $c->stash->{programs} = $breeding_programs;
     $c->stash->{layout_files} = \@projects;
     $c->stash->{trait_files} = \@trait_files;

@@ -161,7 +161,7 @@ sub _run_R_check {
     $self->_check_R_version
         or return 0;
 
-    my $no_manual = $self->_R_version_current ge version->new('2.10.0') ? '--no-manual' : '';
+    my $no_manual = $self->_R_version_current ge version->new('3.2.0') ? '--no-manual' : '';
 
     my $ret = system "R CMD check $no_manual --no-codoc --no-vignettes -o _build R_files";
     if ( $ret || $? ) {

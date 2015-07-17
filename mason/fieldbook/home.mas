@@ -2,6 +2,7 @@
 <%args>
 @projects => undef
 $programs => undef
+@file_metadata => ()
 $user_id => undef
 @layout_files => undef
 @trait_files => undef
@@ -27,12 +28,12 @@ my @breeding_programs = @{$programs};
 foreach my $prog (@breeding_programs) {
   print @$prog[0].@$prog[1]."</br>";
 }
-foreach my $project_ref (@projects) {
-   my @trial_array = @{$project_ref};
-   my $file_name = $trial_array[4];
-   my $trial_layout_download = '[<a href="/fieldbook/trial_download/'.$trial_array[5].'">Download</a>]';
-   print $trial_array[4]."$trial_layout_download<br>";
-   #print $trial_array[4]."</br>";
+foreach my $file (@file_metadata) {
+   my @trial_array = @{$file};
+   my $file_name = $trial_array[1];
+   my $trial_layout_download = '[<a href="/fieldbook/trial_download/'.$trial_array[2].'">Download</a>]';
+   print $trial_array[1]."$trial_layout_download<br>";
+   #print $trial_array[2]."</br>";
 }
 </%perl>
 </&>
@@ -78,11 +79,12 @@ foreach my $project_ref (@projects) {
 
 <div id="create_trait_file_dialog" class="ui-widget" title="Create Trait File">
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_trait_file_form" name="create_trait_file_form">
-    <label for="trait_file_name" style="inline-block; width: 100px;">Trait file name:</label>
+    <label for="trait_file_name" style="display: inline-block; width: 200px;">Trait file name:</label>
     <input id="trait_file_name" name="trait_file_name" />
-    <div id="select_list" name="select_list" id="select_list">
+    <div id="select_list_container" name="select_list">
       <label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of traits to include:
       </label>
+      <span id="select_list_div"></span>
     </div>
   </form>
 </div>

@@ -492,7 +492,7 @@ sub print_confirm_form {
        
     my $organism = CXGN::Chado::Organism->new_with_taxon_id($self->get_dbh(), $feature->get_organism_taxon_id() );
     
-    if( !$organism->get_organism_id() ){
+    if( !$organism ) { 
 	my $organism_name = $feature->get_organism_name();
 	print  qq |<h3> The requested sequence ($GBaccession) corresponds to an unsubmittable organism: $organism_name. If you think this organism should be submittable please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">sgn-feedback\@sgn.cornell.edu</a></h3>  |;
 	print qq |<a href="$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new">Go back</a><br />|;
@@ -644,7 +644,10 @@ sub store_publications {
 	    CXGN::Tools::Pubmed->new($publication);
 	    my $existing_publication = $publication->get_pub_by_accession($self->get_dbh(),$pubmed_id);
 	    if(!($existing_publication->get_pub_id)) { #publication does not exist in our database
-		
+		my $e_id = $publication->get_eid;
+		if (!$e_id) {
+		    $publication->add_dbxref("DOI:$e_id");
+		}
 		print STDERR "storing publication now. pubmed id = $pubmed_id";
 		my $pub_id = $publication->store();
 		my $publication_dbxref_id = $publication->get_dbxref_id_by_db('PMID');

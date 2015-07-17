@@ -1,0 +1,164 @@
+
+<%args>
+$organism_ref => undef
+$lg_names_ref       => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title=>'Search Loci' &>
+
+
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html conditional_like_input_html simple_selectbox_html/;
+
+
+my $any_name_select = conditional_like_input_html("any_name","contains", "", '30');
+    
+
+my $organism = simple_selectbox_html( 
+ choices  =>  $organism_ref   ,
+ id       => "common_name",
+);
+    
+  
+my $linkage_group_select = simple_selectbox_html(
+   choices => $lg_names_ref,
+   id      => "locus_linkage_group",
+);
+    
+       
+no warnings 'uninitialized';
+
+my $advanced_search=  info_table_html(
+  'Organism'   => $organism,
+  'Chromosome / Linkage&nbsp;Group' => $linkage_group_select,
+  'Locus editor' =>qq|<input id="locus_editor" size="20"/>|,
+  'Show only genes with' => qq | <input type="checkbox" id="has_sequence"  />sequence <br />
+				<input type="checkbox" id="has_marker" />markers<br />
+				<input type="checkbox" id="has_annotation" />GO/PO annotation<br /> |,
+	
+      'Phenotype'  => qq|<input id="phenotype" size="30" /><a href="/search/phenotypes"> [Advanced SGN phenotype search]</a>|,
+      'Ontology term' => qq|<input id="ontology_term" />
+             <br /><span class="ghosted">(Term name or ID: e.g. 'carotenoid' or 'PO:0007010')</span>|,
+      'Genbank ID' =>qq|<input id="genbank_accession" />
+             <br /><span class="ghosted">(Accession or GI: e.g. 'EF091820' or '118185006')</span>|,   
+      __border   =>1,
+      __multicol =>2,
+      __tableattrs => 'width="100%"',
+      );
+
+</%perl>
+
+
+<table id="locus_search_results" class="display">
+<thead>
+  <tr>
+    <th>Organism</th>
+    <th>Locus name</th>
+    <th>Locus symbol</th>
+    <th>Alleles</th>
+  </tr>
+</thead>
+
+</table>
+
+<br /><br />
+
+<div id="locus_search_form">
+<table>
+  <tr>
+    <td colspan="2"><b>Search for any locus or allele</b>  (<a href="../help/gene_search_help.pl">gene search help page</a>)</td></tr>
+  <tr><td><% $any_name_select %></td>
+    <td><div align="center"><button id="submit_locus_search" />Search</button></div></td>
+   <tr><td><a href="/locus/0/view/">[Submit new locus]</a></td></tr>
+</tr></table>
+<br />
+<input type="button" value="Advanced search options" id="show_advanced_search" />
+<div id="advanced_search_div" style="display: none;">
+  <% $advanced_search %>
+</div>
+
+
+</div>
+
+
+
+
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+   var table = jQuery('#locus_search_results').DataTable( { 
+   
+     'searching' : false,
+     'ordering'  : false,
+     'processing': true,
+     'serverSide': true,
+     'ajax': { 'url':  '/ajax/search/loci',
+               'data': function(d) { 
+                  d.any_name  = jQuery('#any_name').val();
+                  d.any_name_matchtype = jQuery('#any_name_matchtype').val();
+                  d.common_name  = jQuery('#common_name').val(); 
+                  d.phenotype  = jQuery('#phenotype').val(); 
+                  d.linkage_group  = jQuery('#locus_linkage_group').val(); 
+                  d.ontology_term  = jQuery('#ontology_term').val(); 
+                  d.locus_editor  = jQuery('#locus_editor').val(); 
+                  d.genbank_accession  = jQuery('#genbank_accession').val();
+                  d.has_sequence  = jQuery('#has_sequence').is(':checked');
+                  d.has_marker  = jQuery('#has_marker').is(':checked'); 
+                  d.has_annotation  = jQuery('#has_annotation').is(':checked'); 
+             }
+         }
+     });
+
+
+   jQuery('#submit_locus_search').click( function() { 
+         var common_name  = jQuery('#common_name').val(); 
+         var phenotype    = jQuery('#phenotype').val(); 
+         var linkage      = jQuery('#locus_linkage_group').val(); 
+         var ontology     = jQuery('#ontology_term').val(); 
+         var editor       = jQuery('#locus_editor').val(); 
+         var genbank      = jQuery('#genbank_accession').val();
+         var has_sequence     = jQuery('#has_sequence').is(':checked');
+         var has_marker       = jQuery('#has_marker').is(':checked'); 
+         var has_annotation   = jQuery('#has_annotation').is(':checked'); 
+       
+         if (  phenotype.trim().length  || common_name.length || ontology.trim().length || editor.trim().length || genbank.trim().length || has_sequence || has_marker || has_annotation ) {
+             jQuery('#advanced_search_div').show();
+         } else {
+             jQuery('#advanced_search_div').hide()
+         }
+         table.search("locus_search_results").draw();
+   });
+  
+   jQuery('#locus_search_form').keypress( function( e ) {
+           var code = e.keyCode || e.which;
+           if( code == 13 ) {
+                jQuery('#submit_locus_search').click();
+           }
+    } );
+
+
+   jQuery('#show_advanced_search').click( function() {
+        if (false == jQuery('#advanced_search_div').is(':visible')) {
+             jQuery('#advanced_search_div').show();
+        }
+        else {
+             jQuery('#advanced_search_div').hide();
+       }
+   } );
+ 
+  
+    
+});
+  
+</script>
+

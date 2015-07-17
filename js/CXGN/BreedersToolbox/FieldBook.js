@@ -25,7 +25,13 @@ jQuery(document).ready(function ($) {
     function generate_trait_file() {
 	var trait_list_id = $('#select_list_list_select').val();
 	var trait_list = JSON.stringify(list.getList(trait_list_id));
+
 	var trait_file_name = $('#trait_file_name').val();
+
+	if (trait_file_name == '')  { 
+	    alert("A trait file name is required.");
+	    return;
+	}
 
 	$.ajax({
 	    type: 'POST',
@@ -59,7 +65,11 @@ jQuery(document).ready(function ($) {
         $("#upload_fieldbook_form").submit();
     }
 
-    $("#select_list").append(list.listSelect("select_list"));
+    //$("#select_list").append(list.listSelect("select_list"));
+    var list = new CXGN.List();
+    var html = list.listSelect('select_list', [ 'traits' ]);
+
+    $('#select_list_div').html(html);
 
     $("#create_trait_file_dialog").dialog({
 	autoOpen: false,
@@ -70,6 +80,9 @@ jQuery(document).ready(function ($) {
 	buttons: {
 	    Ok: function() {
                 generate_trait_file();
+	    },
+	    Cancel: function() { 
+		$("#create_trait_file_dialog").dialog("close");
 	    }
 	}
     });

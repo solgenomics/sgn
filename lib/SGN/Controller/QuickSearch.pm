@@ -9,7 +9,7 @@ use HTML::Entities;
 use List::MoreUtils 'uniq';
 use Time::HiRes 'time';
 use URI::FromHash 'uri';
-
+use Class::Load ':all';
 use CXGN::Marker::Tools;
 use CXGN::Tools::Identifiers qw/ identifier_url identifier_namespace /;
 use CXGN::Tools::Text qw/to_tsquery_string trim/;
@@ -58,10 +58,10 @@ my %searches = (
                     result_desc => 'cDNA libraries',
                     search_path => '/search/library_search.pl',
                 },
-    bac        => { sf_class       => 'CXGN::Genomic::Search::Clone',
-                    result_desc => 'BAC identifiers',
-                    search_path => '/maps/physical/clone_search.pl',
-                },
+    #bac        => { sf_class       => 'CXGN::Genomic::Search::Clone',
+   #                 result_desc => 'BAC identifiers',
+    #                search_path => '/maps/physical/clone_search.pl',
+     #           },
     unigene    => { sf_class       => 'CXGN::Unigene::Search',
                     result_desc => 'unigene identifiers',
                     search_path => '/search/ug-ad2.pl',
@@ -95,6 +95,8 @@ sub quick_search: Path('/search/quick') {
 
     # use either 'term' or 'q' as the search term
     my ($term) = grep defined, @{ $c->req->parameters }{'term','q'};
+
+    $term =~ s/^\s*|\s*$//g;
 
     defined $term && length $term
         or $c->throw_client_error( public_message => 'Must provide a search term' );
@@ -208,7 +210,7 @@ sub do_quick_search {
         my $classname = $args{sf_class}
             or die 'Must provide a class name';
 
-        Class::MOP::load_class( $classname );
+        Class::Load::load_class( $classname );
         $classname->isa( 'CXGN::Search::SearchI' )
             or die "'$classname' is not a CXGN::Search::SearchI-implementing object";
 
@@ -342,7 +344,7 @@ sub quick_phenotype_search {
     my $count = sql_query_count( $db , $q , "\%$term\%","\%$term\%","\%$term\%", "\%synonym\%" );
     my $pheno_link = [ undef , "0 phenotype identifiers"];
     if ($count>0) {
-        $pheno_link = ["/stock/search?stock_name=$term&search_submitted=1" ,
+        $pheno_link = ["/search/stocks?any_name=$term" ,
                        "$count phenotype identifiers" ];
     }
     return $pheno_link;

@@ -156,9 +156,9 @@ sub directory_search : Path('/search/directory') Args(0) {
     $_[1]->stash->{content} = CXGN::Search::CannedForms->people_search_form();
 }
 
-sub gene_search : Path('/search/loci') Args(0) {
-    $_[1]->stash->{content} = CXGN::Search::CannedForms->gene_search_form();
-}
+#sub gene_search : Path('/search/loci') Args(0) {
+#    $_[1]->stash->{content} = CXGN::Search::CannedForms->gene_search_form();
+#}
 
 sub images_search : Path('/search/images') Args(0) {
     $_[1]->stash->{content} = CXGN::Search::CannedForms->image_search_form();

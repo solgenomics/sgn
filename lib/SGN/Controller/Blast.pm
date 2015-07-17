@@ -29,6 +29,8 @@ sub index :Path('/tools/blast/') :Args(0) {
 	
     my $seq = $c->req->param('seq');
     my $schema = $c->dbic_schema("SGN::Schema");
+    
+    my $blast_db_icons = $c->config->{blast_db_icons};
     my $group_rs = $schema->resultset("BlastDbGroup")->search( undef, { order_by=>'ordinal' });
 
     my $databases = {};
@@ -92,6 +94,8 @@ sub index :Path('/tools/blast/') :Args(0) {
     $c->stash->{seq} = $seq;
     $c->stash->{preload_id} = $c->req->param('preload_id');
     $c->stash->{preload_type} = $c->req->param('preload_type');
+    
+    $c->stash->{blast_db_icons} = $blast_db_icons;
     
     $c->stash->{databases} = $databases;
     $c->stash->{dataset_groups} = $dataset_groups;

@@ -14,6 +14,8 @@ use URI::FromHash 'uri';
 
 use CXGN::Phenome::Locus;
 use CXGN::Phenome::Schema;
+use CXGN::Tools::Organism;
+use CXGN::Phenome::Locus::LinkageGroup;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -24,6 +26,31 @@ has 'schema' => (
     isa      => 'DBIx::Class::Schema',
     lazy_build => 1,
 );
+
+
+
+sub locus_search : Path('/search/locus') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my ($organism_names_ref, $organism_ids_ref)=CXGN::Tools::Organism::get_existing_organisms( $c->dbc->dbh);
+    
+    unshift @$organism_names_ref, '';
+    unshift @$organism_ids_ref, '';
+    my @organism_ref;
+    my $index;
+    for my $id ( @$organism_ids_ref ) {
+	push( @organism_ref, [$id, $organism_names_ref->[$index]] );
+	$index++;
+    }
+    my $lg_names_ref =  CXGN::Phenome::Locus::LinkageGroup::get_all_lgs( $c->dbc->dbh );
+    $c->stash(
+	template       => '/search/loci.mas',
+	organism_ref   => \@organism_ref,
+	lg_names_ref   => $lg_names_ref,
+	);
+}
+
+
 
 sub _build_schema {
     shift->_app->dbic_schema( 'CXGN::Phenome::Schema' )
@@ -76,7 +103,7 @@ sub view_by_name : Path('/locus/view/') Args(0) {
     if (defined($locus->get_locus_id())) { 
 	my $locus_id = $locus->get_locus_id();
 	$c->stash->{locus} = $locus;
-	$c->detach("/locus/view_locus", [ $locus_id] );    #("/locus/$locus_id/view");    
+	$c->detach("/locus/view/", [ $locus_id] );    #("/locus/$locus_id/view");    
     }
     else { 
 	$c->stash->{template} = 'generic_message.mas';
@@ -210,9 +237,35 @@ Path part: /locus/<locus_id>
 
 sub get_locus : Chained('/')  PathPart('locus')  CaptureArgs(1) {
     my ($self, $c, $locus_id) = @_;
+    
+    my $identifier_type = $c->stash->{identifier_type}
+        || $locus_id =~ /[^-\d]/ ? 'locus' : 'locus_id';
+    
+    if( $identifier_type eq 'locus_id' ) {
+        $locus_id > 0
+            or $c->throw_client_error( public_message => 'Locus ID must be a positive integer.' );
+    }
 
-    $c->stash->{locus}     = CXGN::Phenome::Locus->new($c->dbc->dbh, $locus_id);
+    my $matching_loci = $self->schema->resultset('Locus')->search(
+	{
+	    $identifier_type => $locus_id,
+	    obsolete         => 'f'
+	} );
+    
+    if( $matching_loci->count > 1 ) {
+        $c->throw_client_error( public_message => 'Multiple matching loci' );
+    }    
+    
+    my ( $locus ) = $matching_loci->all
+	or $c->throw_404( "Locus not found" );
+    my $found_locus_id = $locus->locus_id;
+    
+    $c->stash->{locus}     = CXGN::Phenome::Locus->new($c->dbc->dbh, $found_locus_id);
+
+
+    return 1;
 }
+
 
 
 

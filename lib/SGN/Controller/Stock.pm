@@ -18,7 +18,7 @@ use File::Slurp;
 use JSON::Any;
 
 use CXGN::Chado::Stock;
-use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
+use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs /;
 use Bio::Chado::NaturalDiversity::Reports;
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -40,7 +40,29 @@ has 'default_page_size' => (
 
 =head1 PUBLIC ACTIONS
 
-=head2 search
+
+=head2 stock search using jQuery data tables
+
+=cut
+
+sub stock_search :Path('/search/stocks') Args(0) {
+    my ($self, $c ) = @_;
+    $c->stash(
+	template => '/search/stocks.mas',
+       
+        stock_types => stock_types($self->schema), 
+	organisms   => stock_organisms($self->schema) ,
+	sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
+        trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
+        onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
+	trait_db_name              => $c->get_conf('trait_ontology_db_name'),
+	breeding_programs          => breeding_programs($self->schema),
+	);
+	
+}
+
+
+=head2 search DEPRECATED
 
 Public path: /stock/search
 
@@ -50,24 +72,34 @@ Display a stock search form, or handle stock searching.
 
 sub search :Path('/stock/search') Args(0) {
     my ( $self, $c ) = @_;
-
-    my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
-    my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
-    my $trait_db_name = $c->get_conf('trait_ontology_db_name');
     $c->stash(
-        template                   => '/search/phenotypes/stock.mas',
-        request                    => $c->req,
-        form                       => $form,
-        form_opts                  => { stock_types => stock_types($self->schema), organisms => stock_organisms($self->schema)} ,
-        results                    => $results,
-        sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
+	template => '/search/stocks.mas',
+	
+        stock_types => stock_types($self->schema), 
+	organisms   => stock_organisms($self->schema) ,
+	sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
         trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
         onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
-	trait_db_name              => $trait_db_name,
-        pagination_link_maker      => sub {
-            return uri( query => { %{$c->req->params} , page => shift } );
-        },
-        );
+	trait_db_name              => $c->get_conf('trait_ontology_db_name'),
+	breeding_programs          => breeding_programs($self->schema),
+	);
+    #my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
+    #my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
+    #my $trait_db_name = $c->get_conf('trait_ontology_db_name');
+    #$c->stash(
+    #    template                   => '/search/phenotypes/stock.mas',
+    #    request                    => $c->req,
+    #    form                       => $form,
+    #    form_opts                  => { stock_types => stock_types($self->schema), organisms => stock_organisms($self->schema)} ,
+    #    results                    => $results,
+    #    sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
+    #    trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
+    #    onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
+	#trait_db_name              => $trait_db_name,
+        #pagination_link_maker      => sub {
+        #    return uri( query => { %{$c->req->params} , page => shift } );
+        #},
+        #);
 }
 
 =head2 new_stock
@@ -105,8 +137,12 @@ Chained off of L</get_stock> below.
 
 =cut
 
+our $time;
+
 sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
+
+    $time = time();
 
     if( $c->stash->{stock_row} ) {
         $c->forward('get_stock_extended_info');
@@ -136,6 +172,8 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         $c->throw_404( "No stock/accession exists for that identifier." );
     }
 
+    print STDERR "Checkpoint 2: Elapsed ".(time() - $time)."\n";
+
     my $props = $self->_stockprops($stock);
     # print message if the stock is visible only to certain user roles
     my @logged_user_roles = $logged_user->roles if $logged_user;
@@ -157,6 +195,8 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	$c->stash->{message}  = "You do not have sufficient privileges to view the page of stock with database id $stock_id. You may need to log in to view this page.";
 	return;
     }
+
+    print STDERR "Checkpoint 3: Elapsed ".(time() - $time)."\n";
 
     # print message if the stock is obsolete
     my $obsolete = $stock->get_is_obsolete();
@@ -191,6 +231,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my $barcode_tempuri  = $c->tempfiles_subdir('image');
     my $barcode_tempdir = $c->get_conf('basepath')."/$barcode_tempuri";
 
+    print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 ################
     $c->stash(
         template => '/stock/index.mas',
@@ -281,13 +322,15 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_id = $stock->stock_id;
     my $stock_name = $stock->uniquename;
     if ($stock_id) {
+
+	print STDERR "Exporting genotype file...\n";
         my $tmp_dir = $c->get_conf('basepath') . "/" . $c->get_conf('stock_tempfiles');
         my $file_cache = Cache::File->new( cache_root => $tmp_dir  );
         $file_cache->purge();
         my $key = "stock_" . $stock_id . "_genotype_data";
         my $gen_file = $file_cache->get($key);
         my $filename = $tmp_dir . "/stock_" . $stock_id . "_genotypes.csv";
-        unless ( -e $gen_file) {
+        unless ( $gen_file && -e $gen_file) {
             my $gen_hashref; #hashref of hashes for the phenotype data
             my %cvterms ; #hash for unique cvterms
             ##############
@@ -303,10 +346,16 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
 		    while (my $prop = $genotypeprop_rs->next) {
 			my $json_text = $prop->value ;
 			my $genotype_values = JSON::Any->decode($json_text);
+			my $count = 0;
+			my @lines = ();
 			foreach my $marker_name (keys %$genotype_values) {
+			    $count++;
+			    #if ($count % 1000 == 0) { print STDERR "Processing $count     \r"; }
 			    my $read = $genotype_values->{$marker_name};
-			    write_file( $filename, { append => 1 } , ($project, "\t" , $marker_name, "\t", $read, "\n") );
+			    push @lines, (join "\t", ($project, $marker_name, $read))."\n";
 			}
+			my @sorted_lines = sort chr_sort @lines;
+			write_file($filename, { append=> 1 }, @sorted_lines);
 		    }
 		}
 	    }
@@ -314,14 +363,43 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             $gen_file = $file_cache->get($key);
         }
         my @data;
+
         foreach ( read_file($filename) ) {
+	    chomp;
             push @data, [ split(/\t/) ];
         }
-        $c->stash->{'csv'}={ data => \@data};
+        #$c->stash->{'csv'}={ data => \@data};
+	$c->stash->{'csv'} = \@data;
         $c->forward("View::Download::CSV");
     }
 }
 
+sub chr_sort { 
+    my @a = split "\t", $a;
+    my @b = split "\t", $b;
+    
+    my $a_chr;
+    my $a_coord;
+    my $b_chr;
+    my $b_coord;
+    
+    if ($a[1] =~ /^[A-Za-z]+(\d+)[_-](\d+)$/) {
+	$a_chr = $1;
+	$a_coord = $2;
+    }
+    
+    if ($b[1] =~ /[A-Za-z]+(\d+)[_-](\d+)/) { 
+	$b_chr = $1;
+	$b_coord = $2;
+    }
+    
+    if ($a_chr eq $b_chr) { 
+	return $a_coord <=> $b_coord;
+    }
+    else { 
+	return $a_chr <=> $b_chr;
+    }
+}
 
 =head2 get_stock
 
@@ -380,6 +458,7 @@ sub get_stock_has_descendants : Private {
 sub get_stock_extended_info : Private {
     my ( $self, $c ) = @_;
     $c->forward('get_stock_cvterms');
+    
     $c->forward('get_stock_allele_ids');
     $c->forward('get_stock_owner_ids');
     $c->forward('get_stock_has_pedigree');
@@ -408,7 +487,8 @@ sub get_stock_extended_info : Private {
 
     my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes($self->schema->resultset("Stock::Stock")->search_rs({ stock_id => $c->stash->{stock_row}->stock_id } ) ) : undef;
     $c->stash->{direct_phenotypes} = $direct_phenotypes;
-    my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
+
+    my ($members_phenotypes, $has_members_genotypes)  = (undef, undef); #$stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
     my $direct_genotypes  = $stock ? $self->_stock_project_genotypes( $c->stash->{stock_row} ) : undef;

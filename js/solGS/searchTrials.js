@@ -49,7 +49,7 @@ function searchTrials(url) {
        
         jQuery("#homepage_trials_list").empty();
     
-        jQuery("#homepage_message").html('Fechting more GS trials..').show(); 
+        jQuery("#homepage_message").html('Searching for more GS trials..').show(); 
  
         if (page) {
             jQuery.ajax({ 

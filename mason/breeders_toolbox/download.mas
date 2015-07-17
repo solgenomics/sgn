@@ -6,10 +6,9 @@
 Choose a list for each parameter and click "download".
 <br /><br />
 
-<center>
 <form id="download_form" action="/breeders/download_action" method="POST" >
-<table cellpadding="10">
- <tr><td colspan="3"><h4>Download Phenotype</h4>Select parameter:<br />
+<table cellpadding="10" border="0" >
+ <tr><td colspan="4"><h4>Download Phenotype</h4>Select parameter:<br />
 
   <tr>
     <th>
@@ -21,6 +20,9 @@ Choose a list for each parameter and click "download".
     <th>
       Traits
     </th>
+    <th>
+      &nbsp;
+      </th>
   </tr>
 
   <tr>
@@ -36,15 +38,10 @@ Choose a list for each parameter and click "download".
       <div id="trait_list">
       </div>
     </td>
-  </tr>
-
-</td></tr>
-</table>
-<br />
-<input type="button" id="phenotype" value="Download" />
+    <td>
+      <input type="button" id="phenotype" value="Download" />
+    </td></tr></table>
 </form>
-</center>
-
 
 <script>  
   $(document).ready(function() { 
@@ -111,46 +108,45 @@ Choose a list for each parameter and click "download".
 });
 </script>
 
-<center>
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
 <table cellpadding="10">
 
-<tr><td colspan="2"><h4>Download GBS genotype </h4>Select parameter:<br />
+<tr><td colspan="3"><h4>Download GBS genotype </h4>Select parameter:<br />
   <tr>
-    <th>
+    <!-- th>
       Trials
-    </th>
+    </th -->
     <th>
       Accessions
+    </th>
+    <th>
+      &nbsp;
     </th>
   </tr>
 
   <tr>
-    <td>
+    <!-- td>
       <div id="trial_list2">
       </div>
-    </td>
+    </td -->
     <td>
       <div id="accession_list2">
       </div>      
     </td>
-  </tr>
 
-</td></tr>
-</table>
-<br />
-<input type="button" id="genotype" value="Download" />
+    <td>
+      <input type="button" id="genotype" value="Download" />
+    </td></tr>
+  </table>
 </form>
-</center>
-
 
 <script>
   $(document).ready(function() { 
 
       var lo = new CXGN.List();
 
-      $('#accession_list2').html(lo.listSelect('genotype_accession_list', [ 'accessions' ]));
-      $('#trial_list2').html(lo.listSelect('genotype_trial_list', [ 'trials' ] ));
+      $('#accession_list2').html(lo.listSelect('genotype_accession_list', [ 'accessions' ], 'select'));
+      $('#trial_list2').html(lo.listSelect('genotype_trial_list', [ 'trials' ], 'select' ));
 
       $('#genotype').click(function() {
 
@@ -159,11 +155,21 @@ Choose a list for each parameter and click "download".
       var accession_list_id = $('#genotype_accession_list_list_select').val();
       var trial_list_id = $('#genotype_trial_list_list_select').val();
 
-      var accession_validation = lo.validate(accession_list_id, 'accessions', true);
-      var trial_validation = lo.validate(trial_list_id, 'trials', true);
+  
+      var accession_validation = 1;
+      if (accession_list_id) { 
+        accession_validation = lo.validate(accession_list_id, 'accessions', true); 
+      }
 
-      if (!accession_list_id || ! trial_list_id ) { 
-        alert("You need to select an accession and a trial !");
+      //var trial_validation = 1;
+      //if (trial_list_id) { 
+      //  trial_validation = lo.validate(trial_list_id, 'trials', true);
+      //}
+
+      //alert('trial validation = '+trial_validation);
+
+      if (!( accession_list_id || trial_list_id) ) { 
+        alert("You need to select an accession or a trial !");
         return; 
       }
 
@@ -173,9 +179,9 @@ Choose a list for each parameter and click "download".
         problem_lists.push('accessions');
       }
 
-      if (trial_validation != 1) { 
-        problem_lists.push('trials');
-      }
+      //if (trial_validation != 1) { 
+      //  problem_lists.push('trials');
+      //}
 
 
       //alert("problem_lists is " + problem_lists);
@@ -205,18 +211,19 @@ Choose a list for each parameter and click "download".
   });
 </script>
 
-
-<center>
 <form id="gbs_qc" action="/breeders/gbs_qc_action" method="POST">
 <table cellpadding="10">
 
-<tr><td colspan="2"><h4>GBS genotype QC </h4>Select parameter:<br />
+<tr><td colspan="3"><h4>GBS genotype QC </h4>Select parameter:<br />
   <tr>
     <th>
       Trials
     </th>
     <th>
       Accessions
+    </th>
+    <th>
+      &nbsp;
     </th>
   </tr>
 
@@ -229,22 +236,18 @@ Choose a list for each parameter and click "download".
       <div id="accession_list3">
       </div>      
     </td>
-  </tr>
-
-</td></tr>
-</table>
-<br />
+<td>
 <input type="button" id="genotype_qc" value="Quality Control" />
+</td></tr></table>
 </form>
-</center>
 
 <script>
   $(document).ready(function() { 
 
       var lo = new CXGN.List();
 
-      $('#accession_list3').html(lo.listSelect('genotype_accession_list', [ 'accessions' ]));
-      $('#trial_list3').html(lo.listSelect('genotype_trial_list', [ 'trials' ] ));
+      $('#accession_list3').html(lo.listSelect('genotype_accession_list', [ 'accessions' ], 'select'));
+      $('#trial_list3').html(lo.listSelect('genotype_trial_list', [ 'trials' ], 'select' ));
 
       $('#genotype_qc').click(function() {
 
@@ -268,8 +271,8 @@ Choose a list for each parameter and click "download".
       var accession_validation = lo.validate(accession_list_id, 'accessions', true);
       var trial_validation = lo.validate(trial_list_id, 'trials', true);
 
-      if (!accession_list_id || ! trial_list_id ) { 
-        alert("You need to select an accession and a trail !");
+      if (! (accession_list_id || trial_list_id) ) { 
+        alert("You need to select an accession or a trail !");
         return; 
       }
 
