@@ -193,7 +193,7 @@ function download() {
 function download_table() { 
    var jobid = jQuery('#jobid').html();
    // if (jobid === '') { alert("No BLAST has been run yet. Please run BLAST before downloading."); return; }
-   window.location.href= '/documents/tempfiles/blast/'+jobid+'.out_table.txt';
+   window.location.href= '/documents/tempfiles/blast/'+jobid+'.out_tabular.txt';
 }
 
 function update_status(message) { 
