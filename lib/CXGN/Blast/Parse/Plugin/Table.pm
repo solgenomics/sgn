@@ -48,6 +48,7 @@ sub parse {
   
   print $table_html_fh "<style>\n#blast_table_div {\nwidth: 750px;\noverflow: scroll;\nborder:solid #ccf 1px;\n}\n#blast_table {\ntext-align:right;\nwhite-space: nowrap;\npadding:5px\n}\n#blast_table td {\npadding-left: 5px;\n}\n</style>\n";
   print $table_html_fh "<div id=\"blast_table_div\">\n<table id=\"blast_table\" border=\"0\"><tr>\n";
+  print $table_html_fh "<tr><th>QueryId</th><th>SubjectId</th><th>id%</th><th>Aln</th><th>Mm</th><th>Gaps</th><th>qstart</th><th>qend</th><th>sstart</th><th>send</th><th>e-value</th><th>Score</th><th>Description</th></tr>\n";
   
   while (my $line = <$blast_fh>) {
     chomp($line);
