@@ -290,11 +290,21 @@ sub default_toolbar_data {
                     desc => 'Draft sequence for Nicotiana tabacum accessions K326, BX, and TN90. Parental genomes <i>Nicotiana sylvestris</i> and <i>Nicotiana tomentosiformis</i>.',
                 },
 
-		{ name => 'Inbred genomes' },
+		{ name => 'Resequencing projects' },
                 {
                     name => '<i>Solanum lycopersicum</i> inbreds',
                     link => '/organism/Solanum_lycopersicum/inbred_genomes',
                     desc => 'Resequencing projects of tomato inbred lines'
+                },
+		 {
+                    name => '150 Tomato Genome Resequencing Project',
+                    link => '/organism/Solanum_lycopersicum/tomato_150',
+                    desc => 'Resequencing project by the University of Wageningen'
+                },
+		{
+                    name => 'BGI Tomato 360 genomes',
+                    link => '/organism/Solanum_lycopersicum/tomato_360',
+                    desc => 'Resequencing project of 360 tomato varieties by BGI'
                 },
 
                 {   name => 'Projects', type => 'title'  },
