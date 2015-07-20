@@ -21,6 +21,8 @@ package SGN::Controller::AJAX::Calendar;
 use strict;
 use Moose;
 use JSON;
+use Time::ParseDate;
+use Time::CTime;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -40,20 +42,41 @@ sub get_calendar_events_GET {
 
     #cvterm names of interest:  "project year", "project fertilizer date", "project planting date"
 
-    my $q = "SELECT c.name, a.value, b.name FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE b.name='project planting date'";
+    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE b.name='project planting date'";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute();
 
     my @results;
-    while (my ($project_name, $project_date, $project_prop) = $sth->fetchrow_array ) {
-	push(@results, {title=>$project_name, property=>$project_prop, start=>$project_date});
+    while (my ($projectprop_id, $project_name, $project_date, $project_prop) = $sth->fetchrow_array ) {
+	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date});
     }
 
-    #Add some dummy test values. The dates retrieved from database are not formatted like YYYY-MM-DD, which the FullCalendar requires
-    push(@results, {title=>"Populate Test 1", property=>"Test Date", start=>"2015-07-16"});
-    push(@results, {title=>"Populate Test 2", property=>"Test Date", start=>"2015-07-10"});
+    #Add some dummy test values
+    push(@results, {projectprop_id=>'9000', title=>"Populate Test 1", property=>"Test Date", start=>"2015-07-16"});
+    push(@results, {projectprop_id=>'9001', title=>"Populate Test 2", property=>"Test Date", start=>"2015-07-10"});
+    push(@results, {projectprop_id=>'9002', title=>"Populate Test 3", property=>"Test Date", start=>"2015-08-02"});
     $c->stash->{rest} = \@results;
 
+}
+
+sub drag_events : Path('/ajax/calendar/drag') : ActionClass('REST') { }
+
+sub drag_events_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $start = $c->req->param("start");
+    my $projectprop_id = $c->req->param("projectprop_id");
+    my $delta = $c->req->param("delta");
+    
+    #my $days = $delta.asDays();
+    #my $time = parsedate($start);
+    #my $newtime = $time + ($days * 24 * 60 * 60);
+    #my $newdate = strftime("%Y-%m-%d", localtime($newtime));
+    my $q = "UPDATE projectprop SET value = '2015-08-01' WHERE projectprop_id = ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute($projectprop_id);
+    
+    $c->stash->{rest} = {success => "1",};
 }
 
 1;
