@@ -1,0 +1,36 @@
+
+<%doc>
+
+</%doc>
+
+
+<& /page/page_title.mas, title=>"BGI Tomato 360 Resequencing Project" &>
+
+<div class="page_introduction">
+  Genomic analysis of 360 tomato accessions by the Beijing Genomics Institute
+</div>
+
+
+<&| /page/info_section.mas, title => '360 Tomato Genomes' &>
+  Genomic analyses provide insights into the history of tomato breeding <a href="http://www.nature.com/ng/journal/v46/n11/full/ng.3117.html">Lin et al. Nature Genetics, 2014</a><br />
+  
+  See more info about the project on the <a href="http://bti.cornell.edu/news/new-genomics-study-mines-360-tomato-varieties-to-trace-history-find-room-for-improvement/">BTI web site</a>  
+
+<br />
+
+  <% info_table_html(
+                     __border   => 0,
+                     __multicol => 2,
+                     'Bulk Datasets (via FTP)' =>
+                     '<a href="ftp://ftp.solgenomics.net/genomes/tomato_360/">VCF files</a>',
+		     'Genome browser' => '<a href="/jbrowse/current/?data=data/json/tomato_variants_2.5">JBrowse</a>'
+                    )
+  %>
+</&>
+
+
+
+
+<%init>
+  use CXGN::Page::FormattingHelpers qw/info_table_html/;
+</%init>
