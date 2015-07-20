@@ -46,12 +46,12 @@ sub get_calendar_events_GET {
 
     my @results;
     while (my ($project_name, $project_date, $project_prop) = $sth->fetchrow_array ) {
-	push(@results, {title=>$project_name.' '.$project_prop, start=>$project_date});
+	push(@results, {title=>$project_name, property=>$project_prop, start=>$project_date});
     }
 
     #Add some dummy test values. The dates retrieved from database are not formatted like YYYY-MM-DD, which the FullCalendar requires
-    push(@results, {title=>"Populate Test 1", start=>"2015-07-16", url=>"http://www.google.com"});
-    push(@results, {title=>"Populate Test 2", start=>"2015-07-10", url=>"http://www.google.com"});
+    push(@results, {title=>"Populate Test 1", property=>"Test Date", start=>"2015-07-16"});
+    push(@results, {title=>"Populate Test 2", property=>"Test Date", start=>"2015-07-10"});
     $c->stash->{rest} = \@results;
 
 }
