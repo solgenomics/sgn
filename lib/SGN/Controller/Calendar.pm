@@ -33,7 +33,7 @@ sub test_page :Path('/calendar/test_page/') :Args(0) {
 
     my @results;
     while (my ($projectprop_id, $project_name, $project_date, $project_prop) = $sth->fetchrow_array ) {
-	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date});
+	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date, save=>$project_date});
     }
 
     #Add some dummy test values

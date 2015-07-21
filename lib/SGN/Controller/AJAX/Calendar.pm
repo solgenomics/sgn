@@ -21,8 +21,8 @@ package SGN::Controller::AJAX::Calendar;
 use strict;
 use Moose;
 use JSON;
-use Time::ParseDate;
-use Time::CTime;
+use Time::Piece ();
+use Time::Seconds;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -48,7 +48,7 @@ sub get_calendar_events_GET {
 
     my @results;
     while (my ($projectprop_id, $project_name, $project_date, $project_prop) = $sth->fetchrow_array ) {
-	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date});
+	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date, save=>$project_date});
     }
 
     #Add some dummy test values
@@ -64,17 +64,16 @@ sub drag_events : Path('/ajax/calendar/drag') : ActionClass('REST') { }
 sub drag_events_POST { 
     my $self = shift;
     my $c = shift;
-    my $start = $c->req->param("start");
+    my $start = $c->req->param("save");
     my $projectprop_id = $c->req->param("projectprop_id");
     my $delta = $c->req->param("delta");
+    my $dt = Time::Piece->strptime($start, '%Y-%b-%d');
+    $dt += ONE_DAY * $delta;
+    my $newdate = $dt->strftime('%Y-%b-%d');
     
-    #my $days = $delta.asDays();
-    #my $time = parsedate($start);
-    #my $newtime = $time + ($days * 24 * 60 * 60);
-    #my $newdate = strftime("%Y-%m-%d", localtime($newtime));
-    my $q = "UPDATE projectprop SET value = '2015-08-01' WHERE projectprop_id = ?";
+    my $q = "UPDATE projectprop SET value = ? WHERE projectprop_id = ?";
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute($projectprop_id);
+    $sth->execute($newdate, $projectprop_id);
     
     $c->stash->{rest} = {success => "1",};
 }
