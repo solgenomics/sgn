@@ -33,7 +33,8 @@ var trial_id = <% $trial_id %>;
 	     url: '/ajax/breeders/trial/'+trial_id+'/coords',
 	     success: function(response) { 
 		if (response.coord_col && response.coord_row){
-			$("#container").css({"display": "inline-block", "overflow": "auto"});
+			jQuery("#container").css({"display": "inline-block", "overflow": "auto"});
+			//$("#container").css({"display": "inline-block", "overflow": "auto"});
 			//$("#container").css("display","inline-block"); 
 		} 
 		//alert("plot_id: "+response.plot_id);

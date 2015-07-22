@@ -4,6 +4,9 @@ package SGN::Controller::AJAX::TrialMetadata;
 use Moose;
 use Data::Dumper;
 use List::Util 'max';
+use Bio::Chado::Schema;
+use List::Util qw | any |;
+
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -374,6 +377,81 @@ sub delete_privileges_denied {
     return "You have insufficient privileges to delete a trial.";
 }
 
+# loading field coordinates
+
+sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0) {
+
+    my $self = shift;
+    my $c = shift;
+   
+    if (!$c->user()) { 
+	print STDERR "User not logged in... not uploading coordinates.\n";
+	$c->stash->{rest} = {error => "You need to be logged in to upload coordinates." };
+	return;
+    }
+    
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+	$c->stash->{rest} = {error =>  "You have insufficient privileges to add coordinates." };
+	return;
+    }
+
+    my $time = DateTime->now();
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $subdirectory = 'trial_coords_upload';
+
+    my $upload = $c->req->upload('trial_coordinates_uploaded_file');
+    my $upload_tempfile  = $upload->tempname;
+
+    my $upload_original_name  = $upload->filename();
+    my $md5;
+
+    my $uploader = CXGN::UploadFile->new();
+
+    my %upload_metadata;
+
+
+    # Store uploaded temporary file in archive
+    print STDERR "TEMP FILE: $upload_tempfile\n";
+    my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+
+    if (!$archived_filename_with_path) {
+	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+	return;
+    }
+
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    unlink $upload_tempfile;
+
+   # open file and remove return of line
+
+     open(my $F, "<", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $header = <$F>; 
+    while (<$F>) { 
+	chomp;
+	$_ =~ s/\r//g;
+	my ($plot,$row,$col) = split /\t/ ;
+
+	my $rs = $schema->resultset("Stock::Stock")->search({uniquename=> $plot });
+
+	if ($rs->count()== 1) { 
+	my $r =  $rs->first();	
+	print STDERR "The plots $plot was found.\n Loading row $row col $col\n";
+	$r->create_stockprops({row_number => $row, col_number => $col}, {autocreate => 1});
+    }
+
+    else {
+
+	print STDERR "WARNING! $plot was not found in the database.\n";
+
+    }
+
+   }
+
+	
+}    
 
 
 1;
