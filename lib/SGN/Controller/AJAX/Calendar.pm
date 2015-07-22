@@ -9,6 +9,8 @@ backend for displaying events on the calendar
 The FullCalendar Event call sends a GET request with a start, end, and _ value. These values can be used to query specific date ranges. 
 Using REST, json values for FullCalendar Event Object properties can be sent to be displayed, simply by stash->{rest}
 
+Currently maps to Cassbase Mason jquery calls
+
 =head1 AUTHOR
 
 Nicolas Morales <nm529@cornell.edu>
@@ -45,7 +47,6 @@ sub get_calendar_events_GET {
     my $q = "SELECT a.projectprop_id, c.name, a.value, b.name FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE b.name='project planting date'";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute();
-
     my @results;
     while (my ($projectprop_id, $project_name, $project_date, $project_prop) = $sth->fetchrow_array ) {
 	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date, save=>$project_date});
@@ -73,13 +74,30 @@ sub drag_events_POST {
     }
     $dt += ONE_DAY * $delta;
     my $newdate = $dt->strftime('%Y-%b-%d');
-    
     my $q = "UPDATE projectprop SET value = ? WHERE projectprop_id = ?";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute($newdate, $projectprop_id);
-    
     $c->stash->{rest} = {success => "1",};
 }
 
+sub add_event : Path('/ajax/calendar/add_event') : ActionClass('REST') { }
 
+sub add_event_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $project_id = $c->req->param("event_project");
+    my $cvterm_id = $c->req->param("event_type");
+    my $date = $c->req->param("event_start");
+
+    #Check if the projectprop unique (project_id, type_id, rank) constraint will cause the insert to fail.
+    my $count = $c->dbc->dbh->selectrow_array("SELECT count(projectprop_id) FROM projectprop WHERE project_id='$project_id' and type_id='$cvterm_id' and rank='0'");
+    if ($count == 0) {
+      my $q = "INSERT INTO projectprop (project_id, type_id, value) VALUES (?, ?, ?)";
+      my $sth = $c->dbc->dbh->prepare($q);
+      $sth->execute($project_id, $cvterm_id, $date);
+      $c->stash->{rest} = {status => 1,};
+    } else {
+      $c->stash->{rest} = {status => 0,};
+    }
+}
 1;
