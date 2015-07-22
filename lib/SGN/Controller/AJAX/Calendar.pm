@@ -36,6 +36,7 @@ __PACKAGE__->config(
 
 sub get_calendar_events : Path('/ajax/calendar/populate') : ActionClass('REST') { }
 
+#when the calendar controls (such as next month or year) are used, this function is called to get date data
 sub get_calendar_events_GET { 
     my $self = shift;
     my $c = shift;
@@ -43,8 +44,7 @@ sub get_calendar_events_GET {
     my $end = $c->req->param("end");
 
     #cvterm names of interest:  "project year", "project fertilizer date", "project planting date"
-
-    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE b.name='project planting date'";
+    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE b.name='project planting date' or b.name='project fertilizer date'";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute();
     my @results;
@@ -56,6 +56,7 @@ sub get_calendar_events_GET {
 
 sub drag_events : Path('/ajax/calendar/drag') : ActionClass('REST') { }
 
+#when an event is dragged to a new data, this function is called to save the new date in the databae.
 sub drag_events_POST { 
     my $self = shift;
     my $c = shift;
@@ -63,6 +64,8 @@ sub drag_events_POST {
     my $projectprop_id = $c->req->param("projectprop_id");
     my $delta = $c->req->param("delta");
     my $dt;
+
+    # regular expressions are used to try to decipher the date format
     if ($start =~ /^\d{4}-\d\d-\d\d$/) {
 	$dt = Time::Piece->strptime($start, '%Y-%m-%d');
     }
@@ -82,6 +85,7 @@ sub drag_events_POST {
 
 sub add_event : Path('/ajax/calendar/add_event') : ActionClass('REST') { }
 
+#when an event is added using the day_dialog_add_event_form, this function is called to save it to the database.
 sub add_event_POST { 
     my $self = shift;
     my $c = shift;
