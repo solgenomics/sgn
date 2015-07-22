@@ -36,7 +36,7 @@ __PACKAGE__->config(
 
 sub get_calendar_events : Path('/ajax/calendar/populate') : ActionClass('REST') { }
 
-#when the calendar controls (such as next month or year) are used, this function is called to get date data
+#when the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data
 sub get_calendar_events_GET { 
     my $self = shift;
     my $c = shift;
