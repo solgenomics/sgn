@@ -104,4 +104,21 @@ sub add_event_POST {
       $c->stash->{rest} = {status => 0,};
     }
 }
+
+sub delete_event : Path('/ajax/calendar/delete_event') : ActionClass('REST') { }
+
+#when an event is added using the day_dialog_add_event_form, this function is called to save it to the database.
+sub delete_event_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $projectprop_id = $c->req->param("event_projectprop_id");
+    my $q = "DELETE FROM projectprop WHERE projectprop_id=?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    if ($sth->execute($projectprop_id)) {
+	$c->stash->{rest} = {status => 1,};
+    } else {
+	$c->stash->{rest} = {status => 0,};
+    }
+}
+
 1;
