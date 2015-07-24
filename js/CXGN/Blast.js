@@ -139,8 +139,9 @@ function finish_blast(jobid, seq_count) {
     
       success: function(response) { 
         if (response.blast_report) {
-          alert("id: "+response.blast_format+"_output");
-          jQuery('#'+response.blast_format+"_output").html(response.blast_report+"<hr />\n");
+          // alert("id: "+response.blast_format+"_output");
+          var out_id = response.blast_report.replace(" graph", "")+"_output";
+          jQuery('#'+out_id).html(response.blast_report+"<hr />\n");
             // blast_reports.push(response.blast_report);
             // alert("BLAST report: "+response.blast_report);
         }
