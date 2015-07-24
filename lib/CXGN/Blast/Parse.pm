@@ -39,7 +39,7 @@ sub parse {
     if (! $done) { 
 	die "BLAST parse method '$method' is currently not supported - plugin not available!\n";
     }
-    return { prereqs => $prereqs, blast_report => $parsed_html };
+    return { prereqs => $prereqs, blast_report => $parsed_html, blast_format => $method};
 }
 
 1;
