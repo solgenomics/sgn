@@ -138,15 +138,16 @@ function finish_blast(jobid, seq_count) {
       data: { 'format': format[n], 'db_id': database },
     
       success: function(response) { 
-        if (response.blast_report) { 
-            blast_reports.push(response.blast_report);
+        if (response.blast_report) {
+          jQuery('#format[n]'+"_output").html(response.blast_report+"<hr />\n");
+            // blast_reports.push(response.blast_report);
             // alert("BLAST report: "+response.blast_report);
         }
         if (response.prereqs) { 
             prereqs.push(response.prereqs);
             jQuery('#prereqs').html(prereqs.join("\n\n<br />\n\n"));
         }
-        jQuery('#blast_report').html(blast_reports.join("<hr />\n"));
+        // jQuery('#blast_report').html(blast_reports.join("<hr />\n"));
 
         jQuery('#jobid').html(jobid);
 
