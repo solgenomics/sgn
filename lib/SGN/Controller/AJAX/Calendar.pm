@@ -25,6 +25,7 @@ use Moose;
 use JSON;
 use Time::Piece ();
 use Time::Seconds;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -44,12 +45,12 @@ sub get_calendar_events_GET {
     my $end = $c->req->param("end");
 
     #cvterm names of interest:  "project year", "project fertilizer date", "project planting date"
-    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE b.name='project planting date' or b.name='project fertilizer date'";
+    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name, c.project_id FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE b.name='project planting date' or b.name='project fertilizer date'";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute();
     my @results;
-    while (my ($projectprop_id, $project_name, $project_date, $project_prop) = $sth->fetchrow_array ) {
-	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date, save=>$project_date});
+    while (my ($projectprop_id, $project_name, $project_date, $project_prop, $project_id) = $sth->fetchrow_array ) {
+	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date, save=>$project_date, project_id=>$project_id});
     }
     $c->stash->{rest} = \@results;
 }
@@ -125,6 +126,27 @@ sub delete_event_POST {
     } else {
 	$c->stash->{rest} = {status => 0,};
     }
+}
+
+sub event_more_info : Path('/ajax/calendar/more_info') : ActionClass('REST') { }
+
+#when the event_dialog_more_info_form is submitted, this function is called to retrieve all other projectprops for that project and also to display the project_relationships.
+sub event_more_info_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $project_id = $c->req->param("event_project_id");
+    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name, c.project_id FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE a.project_id='$project_id'";
+    my $sth = $c->dbc->dbh->prepare($q);
+    if ($sth->execute()) {
+      my @project_properties;
+      while (my ($projectprop_id, $project_name, $prop_value, $project_prop, $project_id) = $sth->fetchrow_array ) {
+	  push(@project_properties, [$project_prop, $prop_value]);
+      }
+      #print STDERR Dumper(encode_json({data=>\@project_properties}));
+      $c->stash->{rest} = {data=>\@project_properties};
+    } else {
+    }
+    
 }
 
 1;

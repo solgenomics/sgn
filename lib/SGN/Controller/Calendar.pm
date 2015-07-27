@@ -77,12 +77,12 @@ sub get_distinct_projectprop {
 
 sub get_project_relationships {
     my $c = shift;
-    my $q = "SELECT b.name, c.name, d.name FROM (((project_relationship as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.subject_project_id=c.project_id)) INNER JOIN project as d on (a.object_project_id=d.project_id))";
+    my $q = "SELECT b.name, a.subject_project_id, a.object_project_id, c.name, d.name FROM (((project_relationship as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.subject_project_id=c.project_id)) INNER JOIN project as d on (a.object_project_id=d.project_id))";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute();
     my @project_relationships;
-    while (my ($cvterm_name, $subject_project, $object_project) = $sth->fetchrow_array ) {
-	push(@project_relationships, {relationship_type=>$cvterm_name, subject_project=>$subject_project, object_project=>$object_project});
+    while (my ($cvterm_name, $subject_project_id, $object_project_id, $subject_project, $object_project) = $sth->fetchrow_array ) {
+	push(@project_relationships, {relationship_type=>$cvterm_name, subject_project_id=>$subject_project_id, object_project_id=>$object_project_id, subject_project=>$subject_project, object_project=>$object_project});
     }
     return \@project_relationships;
 }
