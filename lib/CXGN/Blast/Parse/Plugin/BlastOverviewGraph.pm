@@ -53,7 +53,8 @@ sub parse {
 	return "<b>No overview graph available</b> ($@)";
     }
 
-    my $html = "<center><img src=\"$image_url\" border=\"0\" /></center>". read_file($raw_report_file.".blast_graph.html")."</center>";
+    # my $html = "<center><img src=\"$image_url\" border=\"0\" /></center>". read_file($raw_report_file.".blast_graph.html")."</center>";
+    my $html = "<center>". read_file($raw_report_file.".blast_graph.html")."</center>";
     
     return $html;
 }
