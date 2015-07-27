@@ -172,7 +172,7 @@ if ($preload_seq) {
 	</table>
 </&>
 
-<&| /page/info_section.mas, title=>"Status", collapsible=>1, collapsed =>0 &>
+<&| /page/info_section.mas, id=>"blast_status_section", title=>"Status", collapsible=>1, collapsed =>0 &>
   <div id="blast_status">Please select your input parameters.</div>
 </&>
 
