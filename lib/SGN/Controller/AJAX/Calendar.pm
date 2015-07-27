@@ -76,11 +76,14 @@ sub drag_events_POST {
 	$dt = Time::Piece->strptime($start, '%Y-%b-%d');
     }
     $dt += ONE_DAY * $delta;
-    my $newdate = $dt->strftime('%Y-%b-%d');
+    my $newdate = $dt->strftime('%Y-%b-%d'); #2015-Jul-01
     my $q = "UPDATE projectprop SET value = ? WHERE projectprop_id = ?";
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute($newdate, $projectprop_id);
-    $c->stash->{rest} = {success => "1",};
+    if ($sth->execute($newdate, $projectprop_id)) {
+	$c->stash->{rest} = {success => "1",};
+    } else {
+	$c->stash->{rest} = {error => "1",};
+    }
 }
 
 sub add_event : Path('/ajax/calendar/add_event') : ActionClass('REST') { }
