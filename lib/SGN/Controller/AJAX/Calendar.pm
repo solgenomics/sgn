@@ -128,7 +128,7 @@ sub delete_event_POST {
     }
 }
 
-sub event_more_info : Path('/ajax/calendar/more_info') : ActionClass('REST') { }
+sub event_more_info : Path('/ajax/calendar/more_info_properties') : ActionClass('REST') { }
 
 #when the event_dialog_more_info_form is submitted, this function is called to retrieve all other projectprops for that project and also to display the project_relationships.
 sub event_more_info_POST { 
@@ -146,7 +146,23 @@ sub event_more_info_POST {
       $c->stash->{rest} = {data=>\@project_properties};
     } else {
     }
-    
+}
+
+sub event_more_info_relationships : Path('/ajax/calendar/more_info_relationships') : ActionClass('REST') { }
+
+#when the event_dialog_more_info_form is submitted, this function is called to retrieve all relationships for that project.
+sub event_more_info_relationships_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $project_id = $c->req->param("event_project_id");
+    my $q = "SELECT b.name, a.object_project_id, d.name FROM (((project_relationship as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.subject_project_id=c.project_id)) INNER JOIN project as d on (a.object_project_id=d.project_id)) WHERE subject_project_id='$project_id'";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute();
+    my @project_relationships;
+    while (my ($cvterm_name, $object_project_id, $object_project) = $sth->fetchrow_array ) {
+	push(@project_relationships, [$object_project, $cvterm_name]);
+    }
+    $c->stash->{rest} = {data=>\@project_relationships};
 }
 
 1;
