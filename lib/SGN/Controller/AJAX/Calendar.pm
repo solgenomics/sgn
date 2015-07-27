@@ -98,8 +98,11 @@ sub add_event_POST {
     if ($count == 0) {
       my $q = "INSERT INTO projectprop (project_id, type_id, value) VALUES (?, ?, ?)";
       my $sth = $c->dbc->dbh->prepare($q);
-      $sth->execute($project_id, $cvterm_id, $date);
-      $c->stash->{rest} = {status => 1,};
+      if ($sth->execute($project_id, $cvterm_id, $date)) {
+	  $c->stash->{rest} = {status => 1,};
+      } else {
+	  $c->stash->{rest} = {status => 2,};
+      }
     } else {
       $c->stash->{rest} = {status => 0,};
     }
