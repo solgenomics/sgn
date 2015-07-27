@@ -35,13 +35,12 @@ sub index :Path('/tools/blast/') :Args(0) {
 
   my $databases = {};
   my $dataset_groups = [];
-
-  # my $preselected_database = $c->config->{preselected_blast_db};
-  my $preselected_database = '';
+  
+  my $preselected_database = $c->config->{preselected_blastdb};
   my $preselected_category = '';
   
-  # 224 is the database id for tomato cDNA ITAG 2.40
-  $preselected_database = 224;
+  # 224 is the database id for tomato cDNA ITAG 2.40 on production
+  # $preselected_database = 224;
   
   if ($db_id) { 
     my $rs = $schema->resultset("BlastDb")->search( { blast_db_id => $db_id }, { join => 'blast_db_group' });
