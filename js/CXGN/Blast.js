@@ -143,7 +143,7 @@ function finish_blast(jobid, seq_count) {
           var out_id = "#"+response.blast_format.replace(" graph", "")+"_output";
           // alert("id: "+out_id);
           
-          jQuery(out_id).html(response.blast_report+"<hr />\n");
+          jQuery(out_id).html(response.blast_report+"<br><br>\n");
             // blast_reports.push(response.blast_report);
             // alert("BLAST report: "+response.blast_report);
         }
