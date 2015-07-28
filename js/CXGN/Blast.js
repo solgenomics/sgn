@@ -159,7 +159,11 @@ function finish_blast(jobid, seq_count) {
         Effects.hideElement('input_parameter_section_content');
         Effects.swapElements('blast_status_section_offswitch', 'blast_status_section_onswitch'); 
         Effects.hideElement('blast_status_section_content');
-        jQuery('.download_tag').css("display", "inline");
+        jQuery('#download_basic').css("display", "inline");
+        
+        if (response.blast_format == "Table") {
+          jQuery('#download_table').css("display", "inline");
+        }
         jQuery('#notes').css("width","75%")
         enable_ui();
 
