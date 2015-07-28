@@ -30,8 +30,8 @@ sub test_page :Path('/calendar/test_page/') :Args(0) {
 
     $c->stash->{projects} = get_projects($c);
     $c->stash->{projectprop_types} = get_distinct_projectprop($c);
-    $c->stash->{project_dates_data} = get_projectprop_data($c);
-    $c->stash->{project_relationships_data} = get_project_relationships($c);
+    #$c->stash->{project_dates_data} = get_projectprop_data($c);
+    #$c->stash->{project_relationships_data} = get_project_relationships($c);
     $c->stash->{template} = '/calendar/test_page.mas';
     $c->stash->{static_content_path} = $c->config->{static_content_path};
 }

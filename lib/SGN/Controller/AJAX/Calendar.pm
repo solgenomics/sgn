@@ -96,13 +96,20 @@ sub add_event_POST {
     my $project_id = $c->req->param("event_project");
     my $cvterm_id = $c->req->param("event_type");
     my $date = $c->req->param("event_start");
+    my $check_date;
+
+    # regular expressions are used to try to decipher the date format
+    if ($date =~ /^\d{4}-\d\d-\d\d$/) {
+	$check_date = Time::Piece->strptime($date, '%Y-%m-%d');
+    }
+    my $format_date = $check_date->strftime('%Y-%b-%d'); #2015-Jul-01
 
     #Check if the projectprop unique (project_id, type_id, rank) constraint will cause the insert to fail.
     my $count = $c->dbc->dbh->selectrow_array("SELECT count(projectprop_id) FROM projectprop WHERE project_id='$project_id' and type_id='$cvterm_id' and rank='0'");
     if ($count == 0) {
       my $q = "INSERT INTO projectprop (project_id, type_id, value) VALUES (?, ?, ?)";
       my $sth = $c->dbc->dbh->prepare($q);
-      if ($sth->execute($project_id, $cvterm_id, $date)) {
+      if ($sth->execute($project_id, $cvterm_id, $format_date)) {
 	  $c->stash->{rest} = {status => 1,};
       } else {
 	  $c->stash->{rest} = {status => 2,};
@@ -137,15 +144,15 @@ sub event_more_info_POST {
     my $project_id = $c->req->param("event_project_id");
     my $q = "SELECT a.projectprop_id, c.name, a.value, b.name, c.project_id FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE a.project_id='$project_id'";
     my $sth = $c->dbc->dbh->prepare($q);
+    my @project_properties;
     if ($sth->execute()) {
-      my @project_properties;
       while (my ($projectprop_id, $project_name, $prop_value, $project_prop, $project_id) = $sth->fetchrow_array ) {
 	  push(@project_properties, [$project_prop, $prop_value]);
       }
       #print STDERR Dumper(encode_json({data=>\@project_properties}));
-      $c->stash->{rest} = {data=>\@project_properties};
     } else {
     }
+    $c->stash->{rest} = {data=>\@project_properties};
 }
 
 sub event_more_info_relationships : Path('/ajax/calendar/more_info_relationships') : ActionClass('REST') { }
@@ -157,10 +164,12 @@ sub event_more_info_relationships_POST {
     my $project_id = $c->req->param("event_project_id");
     my $q = "SELECT b.name, a.object_project_id, d.name FROM (((project_relationship as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.subject_project_id=c.project_id)) INNER JOIN project as d on (a.object_project_id=d.project_id)) WHERE subject_project_id='$project_id'";
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute();
     my @project_relationships;
-    while (my ($cvterm_name, $object_project_id, $object_project) = $sth->fetchrow_array ) {
-	push(@project_relationships, [$object_project, $cvterm_name]);
+    if ($sth->execute()) {
+      while (my ($cvterm_name, $object_project_id, $object_project) = $sth->fetchrow_array ) {
+  	  push(@project_relationships, [$object_project, $cvterm_name]);
+      }
+    } else {
     }
     $c->stash->{rest} = {data=>\@project_relationships};
 }
