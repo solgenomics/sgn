@@ -143,7 +143,7 @@ function finish_blast(jobid, seq_count) {
           var out_id = "#"+response.blast_format.replace(" graph", "")+"_output";
           // alert("id: "+out_id);
           
-          jQuery(out_id).html(response.blast_report+"<hr />\n");
+          jQuery(out_id).html(response.blast_report+"<br><br>\n");
             // blast_reports.push(response.blast_report);
             // alert("BLAST report: "+response.blast_report);
         }
@@ -159,7 +159,11 @@ function finish_blast(jobid, seq_count) {
         Effects.hideElement('input_parameter_section_content');
         Effects.swapElements('blast_status_section_offswitch', 'blast_status_section_onswitch'); 
         Effects.hideElement('blast_status_section_content');
-        jQuery('.download_tag').css("display", "inline");
+        jQuery('#download_basic').css("display", "inline");
+        
+        if (response.blast_format == "Table") {
+          jQuery('#download_table').css("display", "inline");
+        }
         jQuery('#notes').css("width","75%")
         enable_ui();
 
