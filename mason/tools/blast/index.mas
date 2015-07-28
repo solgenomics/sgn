@@ -177,7 +177,7 @@ if ($preload_seq) {
 </&>
 
 <&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
-<table>
+<table style="width:700px;">
   <tr><td><div id="prereqs"></div></td></tr>
   <tr><td><div id="Overview_output"></div></td></tr>
   <tr><td><div id="Coverage_output"></div></td></tr>
