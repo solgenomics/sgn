@@ -112,7 +112,7 @@ if ($preload_seq) {
 <img class="fruit_icon" height="25" src="/documents/img/blast_icons/benth.png" db_id="9" title="N.benthamiana current DB">
 % }
 
-</td><td rowspan="4" align="center"><div id="status_wheel"></div></td></tr>
+</td><td rowspan="4" align="center"><div id="status_wheel"><div id="blast_status"></div></div></td></tr>
     <tr><td><b>Databases</b></td>
       <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>
     </td></tr>
@@ -172,9 +172,9 @@ if ($preload_seq) {
 	</table>
 </&>
 
-<&| /page/info_section.mas, id=>"blast_status_section", title=>"Status", collapsible=>1, collapsed =>0 &>
+<!-- <&| /page/info_section.mas, id=>"blast_status_section", title=>"Status", collapsible=>1, collapsed =>0 &>
   <div id="blast_status">Please select your input parameters.</div>
-</&>
+</&> -->
 
 <&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
 <table style="width:700px;">

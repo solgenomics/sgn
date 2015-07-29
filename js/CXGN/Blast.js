@@ -209,9 +209,10 @@ function download_table() {
 }
 
 function update_status(message) { 
-    var status = jQuery('#blast_status').html();
-    status += message;
-    jQuery('#blast_status').html(status);
+    // var status = jQuery('#blast_status').html();
+    // status += message;
+    // jQuery('#blast_status').html(status);
+    jQuery('#blast_status').html(message);
 }
 
 function clear_status() { 
