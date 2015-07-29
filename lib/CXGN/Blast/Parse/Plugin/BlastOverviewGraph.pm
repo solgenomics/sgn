@@ -38,9 +38,9 @@ sub parse {
 
     eval { 
 	my $graph = Bio::GMOD::Blast::Graph->new(-outputfile => $raw_report_file,
-						 -dstDir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir},
+						 -dstDir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir}."/",
 						 -format => 'blast',
-						 -dstURL => $c->config->{tempfiles_subdir},
+						 -dstURL => $c->config->{tempfiles_subdir}."/",
 						 -imgName=> $filename.".blast_graph.png",
 						 -fh     => $fh
 	    );
