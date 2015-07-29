@@ -3,89 +3,89 @@
 </%doc>
 
 <%args>
-$preselected_database => ''
-$preselected_category => ''
-$dataset_groups => []
-$databases => {}
-$programs
-@input_options => ()
-@parse_options => ()
-$preload_seq => ''
-$preload_id => ''
-$preload_type => ''
-$blast_db_icons
+  $preselected_database => ''
+  $preselected_category => ''
+  $dataset_groups => []
+  $databases => {}
+  $programs
+  @input_options => ()
+  @parse_options => ()
+  $preload_seq => ''
+  $preload_id => ''
+  $preload_type => ''
+  $blast_db_icons
 </%args>
 
 <%perl>
-use JSON::Any;
+  use JSON::Any;
 
-my $menus = {};
-foreach my $d (keys(%$databases)) { 
-   $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", id=>"database", choices => [ @{$databases->{$d}} ], selected=> $preselected_database );
-}
-# print STDERR "pre selected db: $preselected_database\n";
-
-my $substitution_matrix_select = $m->scomp('/page/html_select.mas', 
-   name=>"matrix", 
-   id=>"matrix", 
-   choices => [  [ 'BLOSUM62', 'BLOSUM62 (default)' ],
-                 [ 'BLOSUM80', 'BLOSUM80 (recent divergence)' ],
-		 [ 'BLOSUM45', 'BLOSUM45 (ancient divergence)' ],
-		 'PAM30',
-		 'PAM70',
-              ]);
-
-
-#print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
-my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', id=>'input_options',
-			      choices => \@input_options, selected=>$preload_type,
-);
-
-# array with the preselected output formats
-my @parse_options_selected = ();
-foreach my $po (@parse_options) { 
-  if (($po->[0] ne "Basic") && ($po->[0] ne "Table")) { 
-    push @parse_options_selected, $po;
+  my $menus = {};
+  foreach my $d (keys(%$databases)) { 
+     $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", id=>"database", choices => [ @{$databases->{$d}} ], selected=> $preselected_database );
   }
-}
 
-# output formats alphabetically sorted
-my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>'size = 5', choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
+  my $substitution_matrix_select = $m->scomp('/page/html_select.mas', 
+     name=>"matrix", 
+     id=>"matrix", 
+     choices => [  [ 'BLOSUM62', 'BLOSUM62 (default)' ],
+                   [ 'BLOSUM80', 'BLOSUM80 (recent divergence)' ],
+  		 [ 'BLOSUM45', 'BLOSUM45 (ancient divergence)' ],
+  		 'PAM30',
+  		 'PAM70',
+  ]);
 
-# print STDERR "OUTPUT OPTIONS: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n";
-# print STDERR "OUTPUT SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options_selected) ))."\n";
+  #print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
+  my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', id=>'input_options',
+    choices => \@input_options, selected=>$preload_type,
+  );
 
-
-my $db_type = {};
-foreach my $g (keys %$databases) {
-  foreach my $d (@{$databases->{$g}}) {  
-     $db_type->{$d->[0]} = $d->[2];
+  # array with the preselected output formats
+  my @parse_options_selected = ();
+  foreach my $po (@parse_options) { 
+    if (($po->[0] ne "Basic") && ($po->[0] ne "Table")) { 
+      push @parse_options_selected, $po;
+    }
   }
-}
-my $database_type_json = JSON::Any->encode($db_type);
 
-#print STDERR Data::Dumper::Dumper($database_type_json);
+  # output formats alphabetically sorted
+  my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>'size = 5', choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
 
-my $q_type = {};
-my $q_example = {};
-foreach my $t (@input_options) {
-  $q_type->{$t->[1]} = $t->[2];
-  $q_example->{$t->[1]} = $t->[3];
-}
-#print STDERR Data::Dumper::Dumper($q_type);
-my $input_option_json = JSON::Any->encode($q_type);
-my $input_example_json = JSON::Any->encode($q_example);
+  # print STDERR "OUTPUT OPTIONS: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n";
+  # print STDERR "OUTPUT SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options_selected) ))."\n";
 
-my $preload = "";
-if ($preload_id && $preload_type) { 
-  $preload = $preload_id;
-}
-if ($preload_seq) { 
-  $preload = $preload_seq;
-}
+  my $db_type = {};
+  
+  foreach my $g (keys %$databases) {
+    foreach my $d (@{$databases->{$g}}) {  
+       $db_type->{$d->[0]} = $d->[2];
+    }
+  }
+  my $database_type_json = JSON::Any->encode($db_type);
 
+  #print STDERR Data::Dumper::Dumper($database_type_json);
 
-#print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
+  my $q_type = {};
+  my $q_example = {};
+  
+  foreach my $t (@input_options) {
+    $q_type->{$t->[1]} = $t->[2];
+    $q_example->{$t->[1]} = $t->[3];
+  }
+  
+  #print STDERR Data::Dumper::Dumper($q_type);
+  my $input_option_json = JSON::Any->encode($q_type);
+  my $input_example_json = JSON::Any->encode($q_example);
+
+  my $preload = "";
+  if ($preload_id && $preload_type) { 
+    $preload = $preload_id;
+  }
+  
+  if ($preload_seq) { 
+    $preload = $preload_seq;
+  }
+
+  #print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
 </%perl>
 
@@ -93,15 +93,13 @@ if ($preload_seq) {
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
-<!-- <div class="boxbgcolor5">This is the new BLAST interface. The old interface is still available <a href="/tools/blast/index.pl">here</a>. Please <a href="mailto:sgn-feedback@solgenomics.net">let us know</a> how you like the new interface.</div><br /> -->
-
 <div id="search_output" style="display:none;font-family:Lucida,monospace"></div>
 
 <&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a href="/help/tools/blast">Help</a>' &>
   <input type="hidden" name="outformat" value="0" />
   <table border="0" align="center" summary="" cellpadding="0" cellspacing="5">
     <tr><td width="100" style="padding-top: 10px;"><b>Categories</b></td><td width="600">
-	<& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select", selected=>"$preselected_category" &>
+    <& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select", selected=>"$preselected_category" &>
 
 % if ($blast_db_icons) {
 <!-- images to get direct access to the model plant dbs. db_id is the blast_db_id on the SGN database -->
@@ -112,30 +110,21 @@ if ($preload_seq) {
 <img class="fruit_icon" height="25" src="/documents/img/blast_icons/benth.png" db_id="9" title="N.benthamiana current DB">
 % }
 
-</td><td rowspan="4" align="center"></td></tr>
-    <tr><td><b>Databases</b></td>
-      <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>
-    </td></tr>
-    <tr><td><b>Program</b></td>
-      <td><& /page/html_select.mas, name=>'program_select', id=>'program_select', choices=>$programs &>
-    </td></tr>
-
-<tr><td><b>Query</b></td><td>
-  <% $input_options_select %>
-  <a id="input_example" style="font-size: 80%">Show example</a>
-	</td></tr>
-<tr><td colspan="3">
-
-<!-- div style="font-size: 80%">single sequence only, use Advanced for multiple</div -->
-<textarea name="sequence" id="sequence" rows="8" cols="80"><% $preload %></textarea></td></tr>
+    </td><td rowspan="4" align="center"></td></tr>
+    <tr><td><b>Databases</b></td><td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a></td></tr>
+    <tr><td><b>Program</b></td><td><& /page/html_select.mas, name=>'program_select', id=>'program_select', choices=>$programs &></td></tr>
+    <tr><td><b>Query</b></td><td><% $input_options_select %><a id="input_example" style="font-size: 80%">Show example</a></td></tr>
     <tr><td colspan="3">
-      <table width="100%"><tr>
-         <td>
+      <!-- div style="font-size: 80%">single sequence only, use Advanced for multiple</div -->
+      <textarea name="sequence" id="sequence" rows="8" cols="80"><% $preload %></textarea></td></tr>
+    <tr><td colspan="3">
 
-<div style="text-align: center">
-	<button class="submit_blast_button" id="submit_blast_button" type="submit" name="search" value="Search">BLAST</button>
-</div>
-<br />
+      <table width="100%">
+        <tr><td>
+          <div style="text-align: center">
+            <button class="submit_blast_button" id="submit_blast_button" type="submit" name="search" value="Search">BLAST</button>
+          </div>
+          <br />
 
 <&| /page/info_section.mas, title=>"Advanced Options", collapsible=>1, collapsed =>1, is_subsection=>"1" &>
 
@@ -151,14 +140,12 @@ if ($preload_seq) {
 	]
 	&>
 	
-	
 </&>
 
-         </td>
-      </tr>
+         </td></tr>
       </table>
     </td></tr>
-</table>
+  </table>
 </&>
 
 <&| /page/info_section.mas, title=>"Extract sequences from BLAST databases", collapsible=>1, collapsed =>1 &>
@@ -171,10 +158,6 @@ if ($preload_seq) {
 		</tr>
 	</table>
 </&>
-
-<!-- <&| /page/info_section.mas, id=>"blast_status_section", title=>"Status", collapsible=>1, collapsed =>0 &>
-  <div id="blast_status">Please select your input parameters.</div>
-</&> -->
 
 <&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
 <table style="width:700px;">
@@ -234,7 +217,6 @@ jQuery(document).ready(function() {
 			run_blast(database_types, input_option_types);
 		}
 	});
-	
 	
 	//search blastdb by description
 	jQuery('#search_by_desc').click( function() { 
