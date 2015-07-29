@@ -157,8 +157,8 @@ function finish_blast(jobid, seq_count) {
 
         Effects.swapElements('input_parameter_section_offswitch', 'input_parameter_section_onswitch'); 
         Effects.hideElement('input_parameter_section_content');
-        Effects.swapElements('blast_status_section_offswitch', 'blast_status_section_onswitch'); 
-        Effects.hideElement('blast_status_section_content');
+        // Effects.swapElements('blast_status_section_offswitch', 'blast_status_section_onswitch');
+        // Effects.hideElement('blast_status_section_content');
         jQuery('#download_basic').css("display", "inline");
         
         if (response.blast_format == "Table") {
@@ -179,6 +179,7 @@ function disable_ui() {
 
 function enable_ui() { 
     jQuery('#working').dialog("close");
+    clear_status();
 }
 
 function clear_input_sequence() { 
@@ -209,9 +210,10 @@ function download_table() {
 }
 
 function update_status(message) { 
-    var status = jQuery('#blast_status').html();
-    status += message;
-    jQuery('#blast_status').html(status);
+    // var status = jQuery('#blast_status').html();
+    // status += message;
+    // jQuery('#blast_status').html(status);
+    jQuery('#working_msg').html(message);
 }
 
 function clear_status() { 

@@ -34,13 +34,13 @@ sub parse {
     open(my $fh, ">", $raw_report_file.".blast_graph.html") || die "Can't open $raw_report_file .blast_graph.html";
 
     my $filename = basename($raw_report_file);
-    my $image_url = $c->config->{tempfiles_subdir}."/blast/$filename".".blast_graph.png";
+    # my $image_url = $c->config->{tempfiles_subdir}."/blast/$filename".".blast_graph.png";
 
     eval { 
 	my $graph = Bio::GMOD::Blast::Graph->new(-outputfile => $raw_report_file,
-						 -dstDir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir}."/blast",
+						 -dstDir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir}."/",
 						 -format => 'blast',
-						 -dstURL => $c->config->{tempfiles_subdir}."/blast",
+						 -dstURL => $c->config->{tempfiles_subdir}."/",
 						 -imgName=> $filename.".blast_graph.png",
 						 -fh     => $fh
 	    );
@@ -52,9 +52,10 @@ sub parse {
     if ($@) { 
 	return "<b>No overview graph available</b> ($@)";
     }
-
-    my $html = "<center><img src=\"$image_url\" border=\"0\" usemap=\"#imap\"/></center>". read_file($raw_report_file.".blast_graph.html")."</center>";
-    # my $html = "<center>". read_file($raw_report_file.".blast_graph.html")."</center>";
+    
+    
+    # my $html = "<center><img src=\"$image_url\" border=\"0\" usemap=\"#imap\"/></center>". read_file($raw_report_file.".blast_graph.html")."</center>";
+    my $html = "<center>". read_file($raw_report_file.".blast_graph.html")."</center>";
     
     return $html;
 }
