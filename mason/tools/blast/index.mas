@@ -112,7 +112,7 @@ if ($preload_seq) {
 <img class="fruit_icon" height="25" src="/documents/img/blast_icons/benth.png" db_id="9" title="N.benthamiana current DB">
 % }
 
-</td><td rowspan="4" align="center"><div id="status_wheel"><div id="blast_status"></div></div></td></tr>
+</td><td rowspan="4" align="center"></td></tr>
     <tr><td><b>Databases</b></td>
       <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>
     </td></tr>

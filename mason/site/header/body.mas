@@ -21,6 +21,7 @@
 
 <div id="working" style="text-align : center;">
   <img src="/img/wheel.gif" />
+  <div id="working_msg"></div>
 </div>
 
 

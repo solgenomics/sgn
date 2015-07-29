@@ -179,6 +179,7 @@ function disable_ui() {
 
 function enable_ui() { 
     jQuery('#working').dialog("close");
+    clear_status();
 }
 
 function clear_input_sequence() { 
@@ -212,7 +213,7 @@ function update_status(message) {
     // var status = jQuery('#blast_status').html();
     // status += message;
     // jQuery('#blast_status').html(status);
-    jQuery('#blast_status').html(message);
+    jQuery('#working_msg').html(message);
 }
 
 function clear_status() { 
