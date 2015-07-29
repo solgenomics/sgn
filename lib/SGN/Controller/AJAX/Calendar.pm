@@ -50,7 +50,7 @@ sub get_calendar_events_GET {
     $sth->execute();
     my @results;
     while (my ($projectprop_id, $project_name, $project_date, $project_prop, $project_id) = $sth->fetchrow_array ) {
-	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date, save=>$project_date, project_id=>$project_id});
+	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date, save=>$project_date, project_id=>$project_id, project_url=>'/breeders_toolbox/trial/'.$project_id.'/'});
     }
     $c->stash->{rest} = \@results;
 }
