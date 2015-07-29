@@ -174,4 +174,40 @@ sub event_more_info_relationships_POST {
     $c->stash->{rest} = {data=>\@project_relationships};
 }
 
+sub datatables_project_properties : Path('/ajax/calendar/datatables_project_properties') : ActionClass('REST') { }
+
+#this fills the datatable #project_dates_data at the bottom of the test_page.
+sub datatables_project_properties_GET { 
+    my $self = shift;
+    my $c = shift;
+    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name, c.project_id FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id))";
+    my $sth = $c->dbc->dbh->prepare($q);
+    my @project_properties;
+    if ($sth->execute()) {
+      while (my ($projectprop_id, $project_name, $project_date, $project_prop, $project_id) = $sth->fetchrow_array ) {
+	push(@project_properties, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date, save=>$project_date, project_id=>$project_id, project_url=>'/breeders_toolbox/trial/'.$project_id.'/'});
+      }
+    } else {
+    }
+    $c->stash->{rest} = {aaData=>\@project_properties};
+}
+
+sub datatables_project_relationships : Path('/ajax/calendar/datatables_project_relationships') : ActionClass('REST') { }
+
+#this fills the datatable #project_relationships_data at thebottom of the test_page.
+sub datatables_project_relationships_GET { 
+    my $self = shift;
+    my $c = shift;
+    my $q = "SELECT b.name, a.subject_project_id, a.object_project_id, c.name, d.name FROM (((project_relationship as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.subject_project_id=c.project_id)) INNER JOIN project as d on (a.object_project_id=d.project_id))";
+    my $sth = $c->dbc->dbh->prepare($q);
+    my @project_relationships;
+    if ($sth->execute()) {
+      while (my ($cvterm_name, $subject_project_id, $object_project_id, $subject_project, $object_project) = $sth->fetchrow_array ) {
+	push(@project_relationships, {relationship_type=>$cvterm_name, subject_project_id=>$subject_project_id, object_project_id=>$object_project_id, subject_project=>$subject_project, object_project=>$object_project, subject_project_url=>'/breeders_toolbox/trial/'.$subject_project_id.'/', object_project_url=>'/breeders_toolbox/trial/'.$object_project_id.'/'});
+      }
+    } else {
+    }
+    $c->stash->{rest} = {aaData=>\@project_relationships};
+}
+
 1;
