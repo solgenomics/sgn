@@ -45,12 +45,12 @@ sub get_calendar_events_GET {
     my $end = $c->req->param("end");
 
     #cvterm names of interest:  "project year", "project fertilizer date", "project planting date"
-    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name, c.project_id FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE b.name='project planting date' or b.name='project fertilizer date'";
+    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name, c.project_id, b.cvterm_id FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE b.name='project planting date' or b.name='project fertilizer date'";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute();
     my @results;
-    while (my ($projectprop_id, $project_name, $project_date, $project_prop, $project_id) = $sth->fetchrow_array ) {
-	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date, save=>$project_date, project_id=>$project_id, project_url=>'/breeders_toolbox/trial/'.$project_id.'/'});
+    while (my ($projectprop_id, $project_name, $project_date, $project_prop, $project_id, $cvterm_id) = $sth->fetchrow_array ) {
+	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date, save=>$project_date, project_id=>$project_id, project_url=>'/breeders_toolbox/trial/'.$project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$cvterm_id});
     }
     $c->stash->{rest} = \@results;
 }
@@ -142,12 +142,12 @@ sub event_more_info_POST {
     my $self = shift;
     my $c = shift;
     my $project_id = $c->req->param("event_project_id");
-    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name, c.project_id FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE a.project_id='$project_id'";
+    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name, c.project_id, b.cvterm_id FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE a.project_id='$project_id'";
     my $sth = $c->dbc->dbh->prepare($q);
     my @project_properties;
     if ($sth->execute()) {
-      while (my ($projectprop_id, $project_name, $prop_value, $project_prop, $project_id) = $sth->fetchrow_array ) {
-	  push(@project_properties, [$project_prop, $prop_value]);
+      while (my ($projectprop_id, $project_name, $prop_value, $project_prop, $project_id, $cvterm_id) = $sth->fetchrow_array ) {
+	  push(@project_properties, {property=>$project_prop, value=>$prop_value, cvterm_url=>'/chado/cvterm?cvterm_id='.$cvterm_id});
       }
       #print STDERR Dumper(encode_json({data=>\@project_properties}));
     } else {
@@ -162,12 +162,12 @@ sub event_more_info_relationships_POST {
     my $self = shift;
     my $c = shift;
     my $project_id = $c->req->param("event_project_id");
-    my $q = "SELECT b.name, a.object_project_id, d.name FROM (((project_relationship as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.subject_project_id=c.project_id)) INNER JOIN project as d on (a.object_project_id=d.project_id)) WHERE subject_project_id='$project_id'";
+    my $q = "SELECT b.name, a.object_project_id, d.name, b.cvterm_id FROM (((project_relationship as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.subject_project_id=c.project_id)) INNER JOIN project as d on (a.object_project_id=d.project_id)) WHERE subject_project_id='$project_id'";
     my $sth = $c->dbc->dbh->prepare($q);
     my @project_relationships;
     if ($sth->execute()) {
-      while (my ($cvterm_name, $object_project_id, $object_project) = $sth->fetchrow_array ) {
-  	  push(@project_relationships, [$object_project, $cvterm_name]);
+      while (my ($cvterm_name, $object_project_id, $object_project, $cvterm_id) = $sth->fetchrow_array ) {
+  	  push(@project_relationships, {object_project=>$object_project, cvterm=>$cvterm_name, cvterm_url=>'/chado/cvterm?cvterm_id='.$cvterm_id});
       }
     } else {
     }
@@ -180,12 +180,12 @@ sub datatables_project_properties : Path('/ajax/calendar/datatables_project_prop
 sub datatables_project_properties_GET { 
     my $self = shift;
     my $c = shift;
-    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name, c.project_id FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id))";
+    my $q = "SELECT c.name, a.value, b.name, c.project_id, b.cvterm_id FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id))";
     my $sth = $c->dbc->dbh->prepare($q);
     my @project_properties;
     if ($sth->execute()) {
-      while (my ($projectprop_id, $project_name, $project_date, $project_prop, $project_id) = $sth->fetchrow_array ) {
-	push(@project_properties, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date, save=>$project_date, project_id=>$project_id, project_url=>'/breeders_toolbox/trial/'.$project_id.'/'});
+      while (my ($project_name, $value, $project_prop, $project_id, $cvterm_id) = $sth->fetchrow_array ) {
+	push(@project_properties, {title=>$project_name, property=>$project_prop, value=>$value, project_url=>'/breeders_toolbox/trial/'.$project_id.'/', cvterm_url=>"/chado/cvterm?cvterm_id=".$cvterm_id});
       }
     } else {
     }
@@ -198,12 +198,12 @@ sub datatables_project_relationships : Path('/ajax/calendar/datatables_project_r
 sub datatables_project_relationships_GET { 
     my $self = shift;
     my $c = shift;
-    my $q = "SELECT b.name, a.subject_project_id, a.object_project_id, c.name, d.name FROM (((project_relationship as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.subject_project_id=c.project_id)) INNER JOIN project as d on (a.object_project_id=d.project_id))";
+    my $q = "SELECT b.name, a.subject_project_id, a.object_project_id, c.name, d.name, b.cvterm_id FROM (((project_relationship as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.subject_project_id=c.project_id)) INNER JOIN project as d on (a.object_project_id=d.project_id))";
     my $sth = $c->dbc->dbh->prepare($q);
     my @project_relationships;
     if ($sth->execute()) {
-      while (my ($cvterm_name, $subject_project_id, $object_project_id, $subject_project, $object_project) = $sth->fetchrow_array ) {
-	push(@project_relationships, {relationship_type=>$cvterm_name, subject_project_id=>$subject_project_id, object_project_id=>$object_project_id, subject_project=>$subject_project, object_project=>$object_project, subject_project_url=>'/breeders_toolbox/trial/'.$subject_project_id.'/', object_project_url=>'/breeders_toolbox/trial/'.$object_project_id.'/'});
+      while (my ($cvterm_name, $subject_project_id, $object_project_id, $subject_project, $object_project, $cvterm_id) = $sth->fetchrow_array ) {
+	push(@project_relationships, {relationship_type=>$cvterm_name, subject_project=>$subject_project, object_project=>$object_project, subject_project_url=>'/breeders_toolbox/trial/'.$subject_project_id.'/', object_project_url=>'/breeders_toolbox/trial/'.$object_project_id.'/', cvterm_url=>"/chado/cvterm?cvterm_id=".$cvterm_id});
       }
     } else {
     }
