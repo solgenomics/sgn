@@ -221,11 +221,25 @@ function jqueryStuff() {
 % my $div_name = join("_", @$resources);
 % my $subtitle = $edit_privs ? "[<a href=\"javascript:synonyms_addPropDialog()\">Add...</a>]" : "[Add]";
    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
-      <& /stock/stockprops.mas, stock_id=> $stock_id, props=> $stockprops , div_name=>'synonyms', subset=>$resources, editable=> [ 'synonym' ], edit_privs => $edit_privs   &>
+      <& /stock/stockprops.mas,
+       stock_id=> $stock_id,
+	props=> $stockprops ,
+	div_name=>'synonyms',
+	subset=>$resources,
+	editable=> [ 'synonym' ],
+	edit_privs => $edit_privs   &>
 </&>
 %  $div_name = join("_", @$metadata);
-    <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1 &>
-      <& /stock/stockprops.mas, stock_id=>$stock_id, props=> $stockprops, subset=> $metadata  &>
+% my $props_subtitle = $edit_privs ? "[<a href=\"javascript:stockprops_addPropDialog()\">Add...</a>]" : "[Add]";
+
+    <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
+      <& /stock/stockprops.mas,
+	 stock_id=>$stock_id,
+	props=> $stockprops,
+        div_name => 'stockprops',
+	subset=>  $metadata ,
+	edit_privs => $edit_privs,
+	editable=> [ ]  &>
 </&>
 
 
