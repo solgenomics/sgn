@@ -45,14 +45,20 @@ sub get_calendar_events_GET {
     my $end = $c->req->param("end");
 
     #cvterm names of interest:  "project year", "project fertilizer date", "project planting date"
-    my $q = "SELECT a.projectprop_id, c.name, a.value, b.name, c.project_id, b.cvterm_id FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id)) WHERE b.name='project planting date' or b.name='project fertilizer date'";
-    my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute();
-    my @results;
-    while (my ($projectprop_id, $project_name, $project_date, $project_prop, $project_id, $cvterm_id) = $sth->fetchrow_array ) {
-	push(@results, {projectprop_id=>$projectprop_id, title=>$project_name, property=>$project_prop, start=>$project_date, save=>$project_date, project_id=>$project_id, project_url=>'/breeders_toolbox/trial/'.$project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$cvterm_id});
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $search_rs = $schema->resultset('Cv::Cvterm')->search(
+	[{'me.name'=>'project planting date'}, {'me.name'=>'project fertilizer date'}],
+	{join=>{'projectprops'=>'project'},
+	'+select'=> ['projectprops.projectprop_id', 'project.name', 'projectprops.value', 'project.project_id'],
+	'+as'=> ['pp_id', 'p_name', 'pp_value', 'p_id'],
+	}
+    );
+    my @events;
+    while (my $result = $search_rs->next) {
+	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$result->get_column('p_name'), property=>$result->name, start=>$result->get_column('pp_value'), save=>$result->get_column('pp_value'), project_id=>$result->get_column('p_id'), project_url=>'/breeders_toolbox/trial/'.$result->get_column('p_id').'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->cvterm_id});
     }
-    $c->stash->{rest} = \@results;
+    $c->stash->{rest} = \@events;
 }
 
 sub drag_events : Path('/ajax/calendar/drag') : ActionClass('REST') { }
