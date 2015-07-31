@@ -86,8 +86,7 @@ sub drag_events_POST {
     my $newdate = $dt->strftime('%Y-%b-%d'); #2015-Jul-01
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id}, columns=>['value']);
-    if ($update_rs->update({value=>$newdate})) {
+    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id}, columns=>['value'])->update({value=>$newdate})) {
 	$c->stash->{rest} = {success => "1", save=> $newdate};
     } else {
 	$c->stash->{rest} = {error => "1",};
@@ -112,11 +111,10 @@ sub add_event_POST {
     my $format_date = $check_date->strftime('%Y-%b-%d'); #2015-Jul-01
 
     #Check if the projectprop unique (project_id, type_id, rank) constraint will cause the insert to fail.
-    my $count = $c->dbc->dbh->selectrow_array("SELECT count(projectprop_id) FROM projectprop WHERE project_id='$project_id' and type_id='$cvterm_id' and rank='0'");
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $count = $schema->resultset('Project::Projectprop')->search({project_id=>$project_id, type_id=>$cvterm_id, rank=>0})->count;
     if ($count == 0) {
-      my $q = "INSERT INTO projectprop (project_id, type_id, value) VALUES (?, ?, ?)";
-      my $sth = $c->dbc->dbh->prepare($q);
-      if ($sth->execute($project_id, $cvterm_id, $format_date)) {
+      if (my $insert = $schema->resultset('Project::Projectprop')->create({project_id=>$project_id, type_id=>$cvterm_id, value=>$format_date})) {
 	  $c->stash->{rest} = {status => 1,};
       } else {
 	  $c->stash->{rest} = {status => 2,};
