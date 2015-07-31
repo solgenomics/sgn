@@ -1,8 +1,6 @@
 
 <div id="outercontainer">
   <a name="top"></a>
-
-  <& /system_message.mas &>
   
   <!-- Lists dialog -->
   <div id="list_dialog" overflow="auto" >
@@ -21,8 +19,7 @@
   </div>
 
   <& /site/toolbar.mas &>
-
-
+  <& /system_message.mas &>
 
 
 <script defer="defer">
