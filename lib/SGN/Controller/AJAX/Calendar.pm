@@ -81,7 +81,7 @@ sub drag_events_POST {
     my $q = "UPDATE projectprop SET value = ? WHERE projectprop_id = ?";
     my $sth = $c->dbc->dbh->prepare($q);
     if ($sth->execute($newdate, $projectprop_id)) {
-	$c->stash->{rest} = {success => "1",};
+	$c->stash->{rest} = {success => "1", save=> $newdate};
     } else {
 	$c->stash->{rest} = {error => "1",};
     }
