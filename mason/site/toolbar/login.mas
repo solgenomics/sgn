@@ -1,0 +1,32 @@
+<!-- <li><a href="#"><span class="glyphicon glyphicon-user"></span> New User</a></li> -->
+
+
+% # if the site is a mirror, gray out the login/logout links
+% if( $c->config->{'is_mirror'} ) {
+    <a style="line-height: 1.2; text-decoration: underline; background: none" href="<% $c->config->{main_production_site_url} %>" title="log in on main site">main site</a>
+% } elsif ( $c->config->{disable_login} ) {
+    <span style="visibility: hidden">site login disabled</span>
+% } elsif ( $c->user_exists ) {
+  <li><span style="color:#fff;font-size:16px;line-height:50px;"><% $c->user->get_object->get_first_name || $c->user->get_object->get_last_name  || '' %></span></li>
+  <li><a href="/solpeople/login.pl?logout=yes"><span style="font-size:1.2em;" class="glyphicon glyphicon-log-out"></span></a></li>
+  
+  <li><a href="/solpeople/top-level.pl">My SGN</a></li>
+  <li><a id="lists_link" style="text-decoration: none";>lists</a></li>
+% } else {
+  <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#"><span  style="font-size:1.2em;" class="glyphicon glyphicon-log-in"></span> Login</a>
+    <ul class="dropdown-menu">
+      <li><a href="/solpeople/login.pl">Log In</a></li>
+      <li><a href="/solpeople/new-account.pl">New User</a></li>
+    </ul>
+  </li>
+% }
+
+
+
+
+<div id="login_window" style="visibility: hidden" >
+  <table>
+    <tr><td>Username</td><td><input type="text" size="20" id="username_field" name="username_field" /></td></tr>
+    <tr><td>Password</td><td><input type="password" size="20" id="password_field" name="password_field" /></td></tr>
+  </table>  
+</div>  

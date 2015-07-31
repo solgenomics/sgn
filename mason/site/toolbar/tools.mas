@@ -1,0 +1,37 @@
+<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools</a>
+<!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools<span class="caret"></span></a> -->
+  <ul class="dropdown-menu">
+    <li class="dropdown-header">Sequence Analysis</li>
+    <li><a href="/tools/blast/">BLAST</a></li>
+    <li><a href="http://vigs.solgenomics.net/">VIGS Tool</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Mapping</li>
+    <li><a href="/jbrowse/">Genome Browser (Jbrowse)</a></li>
+    <li><a href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Map Viewer</a></li>
+    <li><a href="/search/phenotypes/qtl">solQTL: QTL Mapping</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Molecular Biology</li>
+    <li><a href="/ted">Tomato Expression Database (TED)</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Systems Biology</li>
+    <li><a href="/tools/solcyc/">SolCyc Biochemical Pathways</a></li>
+    <li><a href="/tools/interactomics">Coffee Interactomic Data</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Breeder Tools</li>
+    <li><a href="/breeders/home">Breeder Home</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Bulk Query</li>
+    <li><a href="/tools/bulk">Unigene and BAC information</a></li>
+    <li><a href="/tools/bulk?mode=ftp">FTP Site</a></li>
+    <li><a href="/tools/convert/input.pl">ID Converter (SGN <=> TIGR)</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Other</li>
+    <li><a href="/tools/onto/">SGN Ontology Browser</a></li>
+  </ul>
+</li>

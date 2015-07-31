@@ -1,0 +1,36 @@
+<li>
+  <form class="navbar-form navbar-left" role="search" action="/search/quick_search.pl">
+  <a><span id="quick_search_icon" style="font-size:1.2em;line-height:30px;" class="glyphicon glyphicon-search" aria-hidden="true"></span></a>
+    <div class="form-group">
+      <input id="quick_search_input" style="width:0;display:none" type="text" name="term" class="form-control" placeholder="">
+    </div>
+  </form>
+</li>
+
+<script defer="defer">
+  jQuery(document).ready(function() {
+    
+    jQuery('#quick_search_icon').click(function () {
+      if (jQuery('#quick_search_input').attr("placeholder") == "") {
+        jQuery('#quick_search_input').attr("placeholder","Search");
+        jQuery('#quick_search_input').css("display","inline");
+        
+        jQuery('#quick_search_input').animate({
+          width: '200px'
+        }, 400, function(){
+          // callback function
+        });
+      }
+      else {
+        jQuery('#quick_search_input').animate({
+          width: '0px'
+        }, 400, function(){
+          // callback function
+          jQuery('#quick_search_input').attr("placeholder","");
+          jQuery('#quick_search_input').css("display","none");
+        });
+      }
+    });
+    
+  });
+</script>
