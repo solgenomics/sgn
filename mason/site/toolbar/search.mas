@@ -1,3 +1,6 @@
+<li id="advanced_search_li" style="display:none">
+  <a href="/search">Advanced Search</a>
+</li>
 <li>
   <form class="navbar-form navbar-left" role="search" action="/search/quick_search.pl">
   <a><span id="quick_search_icon" style="font-size:1.2em;line-height:30px;" class="glyphicon glyphicon-search" aria-hidden="true"></span></a>
@@ -14,6 +17,7 @@
       if (jQuery('#quick_search_input').attr("placeholder") == "") {
         jQuery('#quick_search_input').attr("placeholder","Search");
         jQuery('#quick_search_input').css("display","inline");
+        jQuery('#advanced_search_li').css("display","inline");
         
         jQuery('#quick_search_input').animate({
           width: '200px'
@@ -28,6 +32,7 @@
           // callback function
           jQuery('#quick_search_input').attr("placeholder","");
           jQuery('#quick_search_input').css("display","none");
+          // jQuery('#advanced_search_li').css("display","none");
         });
       }
     });
