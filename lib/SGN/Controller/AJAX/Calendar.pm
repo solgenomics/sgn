@@ -131,9 +131,9 @@ sub delete_event_POST {
     my $self = shift;
     my $c = shift;
     my $projectprop_id = $c->req->param("event_projectprop_id");
-    my $q = "DELETE FROM projectprop WHERE projectprop_id=?";
-    my $sth = $c->dbc->dbh->prepare($q);
-    if ($sth->execute($projectprop_id)) {
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    if (my $delete = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id})->delete) {
 	$c->stash->{rest} = {status => 1,};
     } else {
 	$c->stash->{rest} = {status => 0,};
