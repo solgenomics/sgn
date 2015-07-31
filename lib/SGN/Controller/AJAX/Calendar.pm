@@ -84,9 +84,10 @@ sub drag_events_POST {
     }
     $dt += ONE_DAY * $delta;
     my $newdate = $dt->strftime('%Y-%b-%d'); #2015-Jul-01
-    my $q = "UPDATE projectprop SET value = ? WHERE projectprop_id = ?";
-    my $sth = $c->dbc->dbh->prepare($q);
-    if ($sth->execute($newdate, $projectprop_id)) {
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id}, columns=>['value']);
+    if ($update_rs->update({value=>$newdate})) {
 	$c->stash->{rest} = {success => "1", save=> $newdate};
     } else {
 	$c->stash->{rest} = {error => "1",};
