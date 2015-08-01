@@ -1,0 +1,96 @@
+<style>
+.slider-size {
+height: 400px; /* This is your slider height */
+}
+.carousel {
+width:100%; 
+margin:0 auto; /* center your carousel if other than 100% */ 
+}
+</style>
+
+<script type="text/javascript">
+
+jQuery(document).bind('keyup', function(e) {
+
+  if(e.keyCode==39){
+  jQuery('a.carousel-control.right').trigger('click');
+  }   
+
+  else if(e.keyCode==37){
+  jQuery('a.carousel-control.left').trigger('click');
+  }
+
+});
+
+</script>
+
+
+  <div id="myCarousel" class="carousel slide" data-ride="carousel">
+    <!-- Indicators -->
+    <ol class="carousel-indicators">
+      <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+      <li data-target="#myCarousel" data-slide-to="1"></li>
+      <li data-target="#myCarousel" data-slide-to="2"></li>
+      <li data-target="#myCarousel" data-slide-to="3"></li>
+      <li data-target="#myCarousel" data-slide-to="4"></li>
+    </ol>
+
+    <!-- Wrapper for slides -->
+    <div class="carousel-inner" role="listbox">
+      <div class="item active">
+        <div style="background:url(/documents/img/homepage_carousel/1.jpg) center center; background-size:cover;" class="slider-size">
+          <div class="carousel-caption">
+            <h3><img src="/documents/img/sgn_transparent_logo.png" width="40"> SOL 2015</h3>
+            <p>The 12th Solanaceae Conference. October 25-29, Bordeaux, France</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/2.jpg) center center; background-size:cover;" class="slider-size">
+          <div class="carousel-caption">
+            <h3>Eggplant Genome</h3>
+            <p>Was published on 2013</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/3.jpg) center center; background-size:cover;" class="slider-size">
+        <div class="carousel-caption">
+          <h3>Pepper Genome</h3>
+          <p>Was published on 2013</p>
+        </div>
+        </div>
+      </div>
+
+      <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/4.jpg) center center; background-size:cover;" class="slider-size">
+        <div class="carousel-caption">
+          <h3>Potato Genome</h3>
+          <p>Was published on 2013</p>
+        </div>
+        </div>
+      </div>
+
+      <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/5.jpg) center center; background-size:cover;" class="slider-size">
+        <div class="carousel-caption">
+          <h3>Tomato Genome</h3>
+          <p>Was published on 2013</p>
+        </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Left and right controls -->
+    <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+      <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+      <span class="sr-only">Previous</span>
+    </a>
+    <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+      <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+      <span class="sr-only">Next</span>
+    </a>
+  </div>
