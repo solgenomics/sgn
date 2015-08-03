@@ -210,14 +210,16 @@ sub datatables_project_relationships : Path('/ajax/calendar/datatables_project_r
 sub datatables_project_relationships_GET { 
     my $self = shift;
     my $c = shift;
-    my $q = "SELECT b.name, a.subject_project_id, a.object_project_id, c.name, d.name, b.cvterm_id FROM (((project_relationship as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.subject_project_id=c.project_id)) INNER JOIN project as d on (a.object_project_id=d.project_id))";
-    my $sth = $c->dbc->dbh->prepare($q);
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $search_rs = $schema->resultset('Project::ProjectRelationship')->search(undef,
+	{join=>['type','object_project','subject_project'],
+	'+select'=> ['type.name', 'type.cvterm_id', 'object_project.name', 'subject_project.name'],
+	'+as'=> ['cv_name', 'cv_id', 'op_name', 'sp_name'],
+	}
+    );
     my @project_relationships;
-    if ($sth->execute()) {
-      while (my ($cvterm_name, $subject_project_id, $object_project_id, $subject_project, $object_project, $cvterm_id) = $sth->fetchrow_array ) {
-	push(@project_relationships, {relationship_type=>$cvterm_name, subject_project=>$subject_project, object_project=>$object_project, subject_project_url=>'/breeders_toolbox/trial/'.$subject_project_id.'/', object_project_url=>'/breeders_toolbox/trial/'.$object_project_id.'/', cvterm_url=>"/chado/cvterm?cvterm_id=".$cvterm_id});
-      }
-    } else {
+    while (my $result = $search_rs->next) {
+      push(@project_relationships, {relationship_type=>$result->get_column('cv_name'), subject_project=>$result->get_column('sp_name'), object_project=>$result->get_column('op_name'), subject_project_url=>'/breeders_toolbox/trial/'.$result->subject_project_id.'/', object_project_url=>'/breeders_toolbox/trial/'.$result->object_project_id.'/', cvterm_url=>"/chado/cvterm?cvterm_id=".$result->get_column('cv_id')});
     }
     $c->stash->{rest} = {aaData=>\@project_relationships};
 }
