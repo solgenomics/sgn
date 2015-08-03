@@ -167,14 +167,19 @@ sub event_more_info_relationships_POST {
     my $self = shift;
     my $c = shift;
     my $project_id = $c->req->param("event_project_id");
-    my $q = "SELECT b.name, a.object_project_id, d.name, b.cvterm_id FROM (((project_relationship as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.subject_project_id=c.project_id)) INNER JOIN project as d on (a.object_project_id=d.project_id)) WHERE subject_project_id='$project_id'";
-    my $sth = $c->dbc->dbh->prepare($q);
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $search_rs = $schema->resultset('Project::ProjectRelationship')->search(
+	{'me.subject_project_id'=>$project_id},
+	{join=>['type','object_project'],
+	'+select'=> ['type.name', 'type.cvterm_id', 'object_project.name'],
+	'+as'=> ['cv_name', 'cv_id', 'op_name'],
+	}
+    );
+    #my $q = "SELECT b.name, a.object_project_id, d.name, b.cvterm_id FROM (((project_relationship as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.subject_project_id=c.project_id)) INNER JOIN project as d on (a.object_project_id=d.project_id)) WHERE subject_project_id='$project_id'";
     my @project_relationships;
-    if ($sth->execute()) {
-      while (my ($cvterm_name, $object_project_id, $object_project, $cvterm_id) = $sth->fetchrow_array ) {
-  	  push(@project_relationships, {object_project=>$object_project, cvterm=>$cvterm_name, cvterm_url=>'/chado/cvterm?cvterm_id='.$cvterm_id});
-      }
-    } else {
+    while (my $result = $search_rs->next) {
+  	push(@project_relationships, {object_project=>$result->get_column('op_name'), cvterm=>$result->get_column('cv_name'), cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id')});
     }
     $c->stash->{rest} = {data=>\@project_relationships};
 }
