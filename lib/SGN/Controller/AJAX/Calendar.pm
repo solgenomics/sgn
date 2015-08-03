@@ -23,7 +23,7 @@ package SGN::Controller::AJAX::Calendar;
 use strict;
 use Moose;
 use JSON;
-use Time::Piece ();
+use Time::Piece;
 use Time::Seconds;
 use Data::Dumper;
 
@@ -48,7 +48,8 @@ sub get_calendar_events_GET {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $search_rs = $schema->resultset('Project::Project')->search(
-	[{'type.name'=>'project planting date'}, {'type.name'=>'project fertilizer date'}],
+	#[{'type.name'=>'project planting date'}, {'type.name'=>'project fertilizer date'}],
+	{'type.name'=>'project fertilizer date'},
 	{join=>{'projectprops'=>'type'},
 	'+select'=> ['projectprops.projectprop_id', 'type.name', 'projectprops.value', 'type.cvterm_id'],
 	'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cv_id'],
@@ -56,7 +57,8 @@ sub get_calendar_events_GET {
     );
     my @events;
     while (my $result = $search_rs->next) {
-	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$result->name, property=>$result->get_column('cv_name'), start=>$result->get_column('pp_value'), save=>$result->get_column('pp_value'), project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id')});
+	my $formatted_datetime = format_time($result->get_column('pp_value'))->datetime;
+	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$result->name, property=>$result->get_column('cv_name'), start=>$formatted_datetime, save=>$formatted_datetime, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id'), allDay=>'true'});
     }
     $c->stash->{rest} = \@events;
 }
@@ -70,21 +72,10 @@ sub drag_events_POST {
     my $start = $c->req->param("save");
     my $projectprop_id = $c->req->param("projectprop_id");
     my $delta = $c->req->param("delta");
-    my $dt;
-
-    # regular expressions are used to try to decipher the date format
-    if ($start =~ /^\d{4}-\d\d-\d\d$/) {
-	$dt = Time::Piece->strptime($start, '%Y-%m-%d');
-    }
-    if ($start =~ /^(3[0-1]|2[0-9]|1[0-9]|0[1-9])[\s{1}|\/|-](Jan|JAN|Feb|FEB|Mar|MAR|Apr|APR|May|MAY|Jun|JUN|Jul|JUL|Aug|AUG|Sep|SEP|Oct|OCT|Nov|NOV|Dec|DEC)[\s{1}|\/|-]\d{4}$/) {
-	$dt = Time::Piece->strptime($start, '%d-%b-%Y');
-    }
-    if ($start =~ /^\d{4}[\s{1}|\/|-](Jan|JAN|Feb|FEB|Mar|MAR|Apr|APR|May|MAY|Jun|JUN|Jul|JUL|Aug|AUG|Sep|SEP|Oct|OCT|Nov|NOV|Dec|DEC)[\s{1}|\/|-](3[0-1]|2[0-9]|1[0-9]|0[1-9])$/) {
-	$dt = Time::Piece->strptime($start, '%Y-%b-%d');
-    }
-    $dt += ONE_DAY * $delta;
-    my $newdate = $dt->strftime('%Y-%b-%d'); #2015-Jul-01
-
+    my $formatted_datetime = format_time($start)->epoch;
+    print STDERR "formatteddatetime".$formatted_datetime;
+    $formatted_datetime += $delta;
+    my $newdate = Time::Piece->strptime($formatted_datetime, '%s')->datetime;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id}, columns=>['value'])->update({value=>$newdate})) {
 	$c->stash->{rest} = {success => "1", save=> $newdate};
@@ -222,6 +213,30 @@ sub datatables_project_relationships_GET {
       push(@project_relationships, {relationship_type=>$result->get_column('cv_name'), subject_project=>$result->get_column('sp_name'), object_project=>$result->get_column('op_name'), subject_project_url=>'/breeders_toolbox/trial/'.$result->subject_project_id.'/', object_project_url=>'/breeders_toolbox/trial/'.$result->object_project_id.'/', cvterm_url=>"/chado/cvterm?cvterm_id=".$result->get_column('cv_id')});
     }
     $c->stash->{rest} = {aaData=>\@project_relationships};
+}
+
+#This function is used to return a Time::Piece object, which is useful for format consistensy. This function can take a variety of input formats.
+sub format_time {
+    my $input_time = shift;
+    my $formatted_time;
+    print STDERR $input_time;
+    #if ($input_time =~ /^\d{4}-\d\d-\d\d$/) {
+	#$formatted_time = Time::Piece->strptime($input_time, '%Y-%m-%d');
+    #}
+    #if ($input_time =~ /^(3[0-1]|2[0-9]|1[0-9]|0[1-9])[\s{1}|\/|-](Jan|JAN|January|Feb|FEB|February|Mar|MAR|March|Apr|APR|April|May|MAY|Jun|JUN|June|Jul|JUL|July|Aug|AUG|August|Sep|SEP|Sept|September|Oct|OCT|October|Nov|NOV|November|Dec|DEC|December)[\s{1}|\/|-]\d{4}$/) {
+	#$formatted_time = Time::Piece->strptime($input_time, '%d-%b-%Y');
+    #}
+    if ($input_time =~ /^\d{4}[\s{1}|\/|-](January|February|March|April|May|June|July|August|September|October|November|December)[\s{1}|\/|-](3[0-1]|2[0-9]|1[0-9]|0[1-9])$/) {
+	$formatted_time = Time::Piece->strptime($input_time, '%Y-%B-%d');
+    }
+    if ($input_time =~ /^\d{4}[\s{1}|\/|-](Jan|JAN|Feb|FEB|Mar|MAR|Apr|APR|May|MAY|Jun|JUN|Jul|JUL|Aug|AUG|Sep|SEP|Oct|OCT|Nov|NOV|Dec|DEC)[\s{1}|\/|-](3[0-1]|2[0-9]|1[0-9]|0[1-9])$/) {
+	$formatted_time = Time::Piece->strptime($input_time, '%Y-%b-%d');
+    }
+    if ($input_time =~ /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/) {
+	$formatted_time = Time::Piece->strptime($input_time, '%Y-%m-%dT%H:%M:%S');
+    }
+    print STDERR $formatted_time.'TT';
+    return $formatted_time;
 }
 
 1;
