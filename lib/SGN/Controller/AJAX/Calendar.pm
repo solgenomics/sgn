@@ -47,16 +47,16 @@ sub get_calendar_events_GET {
     #cvterm names of interest:  "project year", "project fertilizer date", "project planting date"
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $search_rs = $schema->resultset('Cv::Cvterm')->search(
-	[{'me.name'=>'project planting date'}, {'me.name'=>'project fertilizer date'}],
-	{join=>{'projectprops'=>'project'},
-	'+select'=> ['projectprops.projectprop_id', 'project.name', 'projectprops.value', 'project.project_id'],
-	'+as'=> ['pp_id', 'p_name', 'pp_value', 'p_id'],
+    my $search_rs = $schema->resultset('Project::Project')->search(
+	[{'type.name'=>'project planting date'}, {'type.name'=>'project fertilizer date'}],
+	{join=>{'projectprops'=>'type'},
+	'+select'=> ['projectprops.projectprop_id', 'type.name', 'projectprops.value', 'type.cvterm_id'],
+	'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cv_id'],
 	}
     );
     my @events;
     while (my $result = $search_rs->next) {
-	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$result->get_column('p_name'), property=>$result->name, start=>$result->get_column('pp_value'), save=>$result->get_column('pp_value'), project_id=>$result->get_column('p_id'), project_url=>'/breeders_toolbox/trial/'.$result->get_column('p_id').'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->cvterm_id});
+	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$result->name, property=>$result->get_column('cv_name'), start=>$result->get_column('pp_value'), save=>$result->get_column('pp_value'), project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id')});
     }
     $c->stash->{rest} = \@events;
 }
@@ -111,10 +111,10 @@ sub add_event_POST {
     my $format_date = $check_date->strftime('%Y-%b-%d'); #2015-Jul-01
 
     #Check if the projectprop unique (project_id, type_id, rank) constraint will cause the insert to fail.
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $count = $schema->resultset('Project::Projectprop')->search({project_id=>$project_id, type_id=>$cvterm_id, rank=>0})->count;
+    my $result_set = $c->dbic_schema('Bio::Chado::Schema')->resultset('Project::Projectprop');
+    my $count = $result_set->search({project_id=>$project_id, type_id=>$cvterm_id, rank=>0})->count;
     if ($count == 0) {
-      if (my $insert = $schema->resultset('Project::Projectprop')->create({project_id=>$project_id, type_id=>$cvterm_id, value=>$format_date})) {
+      if (my $insert = $result_set->create({project_id=>$project_id, type_id=>$cvterm_id, value=>$format_date})) {
 	  $c->stash->{rest} = {status => 1,};
       } else {
 	  $c->stash->{rest} = {status => 2,};
@@ -185,14 +185,16 @@ sub datatables_project_properties : Path('/ajax/calendar/datatables_project_prop
 sub datatables_project_properties_GET { 
     my $self = shift;
     my $c = shift;
-    my $q = "SELECT c.name, a.value, b.name, c.project_id, b.cvterm_id FROM ((projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id)) INNER JOIN project as c on (a.project_id=c.project_id))";
-    my $sth = $c->dbc->dbh->prepare($q);
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $search_rs = $schema->resultset('Project::Project')->search(undef,
+	{join=>{'projectprops'=>'type'},
+	'+select'=> ['projectprops.projectprop_id', 'type.name', 'projectprops.value', 'type.cvterm_id'],
+	'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cv_id'],
+	}
+    );
     my @project_properties;
-    if ($sth->execute()) {
-      while (my ($project_name, $value, $project_prop, $project_id, $cvterm_id) = $sth->fetchrow_array ) {
-	push(@project_properties, {title=>$project_name, property=>$project_prop, value=>$value, project_url=>'/breeders_toolbox/trial/'.$project_id.'/', cvterm_url=>"/chado/cvterm?cvterm_id=".$cvterm_id});
-      }
-    } else {
+    while (my $result = $search_rs->next) {
+	push(@project_properties, {title=>$result->name, property=>$result->get_column('cv_name'), value=>$result->get_column('pp_value'), project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id')});
     }
     $c->stash->{rest} = {aaData=>\@project_properties};
 }
