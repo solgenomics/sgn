@@ -48,17 +48,26 @@ sub get_calendar_events_GET {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $search_rs = $schema->resultset('Project::Project')->search(
-	#[{'type.name'=>'project planting date'}, {'type.name'=>'project fertilizer date'}],
-	{'type.name'=>'project fertilizer date'},
+	[{'type.name'=>'project planting date'}, {'type.name'=>'project fertilizer date'}],
 	{join=>{'projectprops'=>'type'},
 	'+select'=> ['projectprops.projectprop_id', 'type.name', 'projectprops.value', 'type.cvterm_id'],
 	'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cv_id'],
 	}
     );
     my @events;
+    my $display_date;
+    my $allday;
     while (my $result = $search_rs->next) {
-	my $formatted_datetime = format_time($result->get_column('pp_value'))->datetime;
-	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$result->name, property=>$result->get_column('cv_name'), start=>$formatted_datetime, save=>$formatted_datetime, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id'), allDay=>'true'});
+	my $formatted_time = format_time($result->get_column('pp_value'));
+	my $save_time = $formatted_time->datetime;
+	if ($formatted_time->hms('') == '000000') {
+	    $display_date = $formatted_time->strftime("%Y-%m-%d");
+	    $allday = 1;
+	} else {
+	    $display_date = $formatted_time->strftime("%Y-%m-%d %H:%M:%S");
+	    $allday = 0;
+	}
+	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$result->name, property=>$result->get_column('cv_name'), start=>$save_time, save=>$save_time, display_date=>$display_date, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id'), allDay=>$allday});
     }
     $c->stash->{rest} = \@events;
 }
@@ -73,14 +82,13 @@ sub drag_events_POST {
     my $projectprop_id = $c->req->param("projectprop_id");
     my $delta = $c->req->param("delta");
     my $formatted_datetime = format_time($start)->epoch;
-    print STDERR "formatteddatetime".$formatted_datetime;
     $formatted_datetime += $delta;
     my $newdate = Time::Piece->strptime($formatted_datetime, '%s')->datetime;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id}, columns=>['value'])->update({value=>$newdate})) {
-	$c->stash->{rest} = {success => "1", save=> $newdate};
+	$c->stash->{rest} = {success => 1, save=> $newdate};
     } else {
-	$c->stash->{rest} = {error => "1",};
+	$c->stash->{rest} = {error => 1,};
     }
 }
 
@@ -93,13 +101,7 @@ sub add_event_POST {
     my $project_id = $c->req->param("event_project");
     my $cvterm_id = $c->req->param("event_type");
     my $date = $c->req->param("event_start");
-    my $check_date;
-
-    # regular expressions are used to try to decipher the date format
-    if ($date =~ /^\d{4}-\d\d-\d\d$/) {
-	$check_date = Time::Piece->strptime($date, '%Y-%m-%d');
-    }
-    my $format_date = $check_date->strftime('%Y-%b-%d'); #2015-Jul-01
+    my $format_date = format_time($date)->datetime;
 
     #Check if the projectprop unique (project_id, type_id, rank) constraint will cause the insert to fail.
     my $result_set = $c->dbic_schema('Bio::Chado::Schema')->resultset('Project::Projectprop');
@@ -117,12 +119,11 @@ sub add_event_POST {
 
 sub delete_event : Path('/ajax/calendar/delete_event') : ActionClass('REST') { }
 
-#when an event is added using the day_dialog_add_event_form, this function is called to save it to the database.
+#when an event is deleted using the day_dialog_delete_event_form, this function is called to delete it from the database.
 sub delete_event_POST { 
     my $self = shift;
     my $c = shift;
     my $projectprop_id = $c->req->param("event_projectprop_id");
-
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     if (my $delete = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id})->delete) {
 	$c->stash->{rest} = {status => 1,};
@@ -215,27 +216,19 @@ sub datatables_project_relationships_GET {
     $c->stash->{rest} = {aaData=>\@project_relationships};
 }
 
-#This function is used to return a Time::Piece object, which is useful for format consistensy. This function can take a variety of input formats.
+#This function is used to return a Time::Piece object, which is useful for format consistensy.
+#Reformat all dates in projectprop table to datetime ISO8601 format.
+#Update projectprop set value='2007-09-21T00:00:00' where project_id='149' and type_id='76773'; Update projectprop set value='2007-08-10T00:00:00' where project_id='149' and type_id='76772'; Update projectprop set value='2008-06-04T00:00:00' where project_id='150' and type_id='76773'; Update projectprop set value='2008-04-23T00:00:00' where project_id='150' and type_id='76772'; Update projectprop set value='2010-08-12T00:00:00' where project_id='159' and type_id='76772'; Update projectprop set value='2011-08-04T00:00:00' where project_id='160' and type_id='76772'; Update projectprop set value='2010-08-11T00:00:00' where project_id='156' and type_id='76772'; Update projectprop set value='2012-04-28T00:00:00' where project_id='143' and type_id='76772'; Update projectprop set value='2008-05-15T00:00:00' where project_id='152' and type_id='76772'; Update projectprop set value='2008-06-25T00:00:00' where project_id='152' and type_id='76773'; Update projectprop set value='2006-02-01T00:00:00' where project_id='146' and type_id='76772'; Update projectprop set value='2006-12-08T00:00:00' where project_id='148' and type_id='76772'; Update projectprop set value='2007-01-20T00:00:00' where project_id='148' and type_id='76773'; Update projectprop set value='2006-05-02T00:00:00' where project_id='147' and type_id='76772'; Update projectprop set value='2006-07-02T00:00:00' where project_id='147' and type_id='76773'; Update projectprop set value='2008-04-29T00:00:00' where project_id='151' and type_id='76772'; Update projectprop set value='2008-06-10T00:00:00' where project_id='151' and type_id='76773'; Update projectprop set value='2011-08-08T00:00:00' where project_id='155' and type_id='76772'; Update projectprop set value='2011-10-21T00:00:00' where project_id='155' and type_id='76773'; Update projectprop set value='2011-09-28T00:00:00' where project_id='133' and type_id='76772'; Update projectprop set value='2011-06-24T00:00:00' where project_id='133' and type_id='76773'; Update projectprop set value='2011-06-01T00:00:00' where project_id='145' and type_id='76772'; Update projectprop set value='2011-08-10T00:00:00' where project_id='145' and type_id='76773'; Update projectprop set value='2010-08-12T00:00:00' where project_id='158' and type_id='76772'; Update projectprop set value='2010-05-07T00:00:00' where project_id='132' and type_id='76772'; Update projectprop set value='2010-06-06T00:00:00' where project_id='136' and type_id='76772'; Update projectprop set value='2010-05-18T00:00:00' where project_id='135' and type_id='76772'; Update projectprop set value='2010-07-28T00:00:00' where project_id='135' and type_id='76773';
 sub format_time {
     my $input_time = shift;
     my $formatted_time;
-    print STDERR $input_time;
-    #if ($input_time =~ /^\d{4}-\d\d-\d\d$/) {
-	#$formatted_time = Time::Piece->strptime($input_time, '%Y-%m-%d');
-    #}
-    #if ($input_time =~ /^(3[0-1]|2[0-9]|1[0-9]|0[1-9])[\s{1}|\/|-](Jan|JAN|January|Feb|FEB|February|Mar|MAR|March|Apr|APR|April|May|MAY|Jun|JUN|June|Jul|JUL|July|Aug|AUG|August|Sep|SEP|Sept|September|Oct|OCT|October|Nov|NOV|November|Dec|DEC|December)[\s{1}|\/|-]\d{4}$/) {
-	#$formatted_time = Time::Piece->strptime($input_time, '%d-%b-%Y');
-    #}
-    if ($input_time =~ /^\d{4}[\s{1}|\/|-](January|February|March|April|May|June|July|August|September|October|November|December)[\s{1}|\/|-](3[0-1]|2[0-9]|1[0-9]|0[1-9])$/) {
-	$formatted_time = Time::Piece->strptime($input_time, '%Y-%B-%d');
-    }
-    if ($input_time =~ /^\d{4}[\s{1}|\/|-](Jan|JAN|Feb|FEB|Mar|MAR|Apr|APR|May|MAY|Jun|JUN|Jul|JUL|Aug|AUG|Sep|SEP|Oct|OCT|Nov|NOV|Dec|DEC)[\s{1}|\/|-](3[0-1]|2[0-9]|1[0-9]|0[1-9])$/) {
-	$formatted_time = Time::Piece->strptime($input_time, '%Y-%b-%d');
+    #print STDERR $input_time;
+    if ($input_time =~ /^\d{4}-\d\d-\d\d$/) {
+	$formatted_time = Time::Piece->strptime($input_time, '%Y-%m-%d');
     }
     if ($input_time =~ /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/) {
 	$formatted_time = Time::Piece->strptime($input_time, '%Y-%m-%dT%H:%M:%S');
     }
-    print STDERR $formatted_time.'TT';
     return $formatted_time;
 }
 
