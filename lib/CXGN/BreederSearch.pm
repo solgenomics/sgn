@@ -289,6 +289,8 @@ sub get_phenotype_info {
     if ($trial_sql) { push @where_clause, "project.project_id in ($trial_sql)"; }
     if ($trait_sql) { push @where_clause, "cvterm.cvterm_id in ($trait_sql)"; }
 
+    print STDERR "rep_type_id: $rep_type_id \n\n";
+
     my $where_clause = "";
    
     if (@where_clause>0) {
@@ -296,7 +298,6 @@ sub get_phenotype_info {
 	$where_clause .= $block_number_type_id  ? "AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)" : "AND block_number.type_id IS NULL";
 	$where_clause .= " AND " . (join (" AND " , @where_clause));
 
-	#$where_clause = "where (stockprop.type_id=$rep_type_id or stockprop.type_id IS NULL) AND (block_number.type_id=$block_number_type_id or block_number.type_id IS NULL) AND  ".(join (" and ", @where_clause));
     }
 
     my $order_clause = " order by project.name, plot.uniquename";
