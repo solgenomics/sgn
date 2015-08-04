@@ -551,11 +551,12 @@ sub genotype_data {
     my $header_markers;
     my @header_markers; 
     my $cnt_clones_diff_markers;
- 
+    my @stocks;
+
     if ($project_id) 
     {
         my $prediction_id = $self->context->stash->{prediction_pop_id};
-        my $model_id        = $self->context->stash->{model_id};
+        my $model_id      = $self->context->stash->{model_id};
        
         if ($prediction_id && $project_id == $prediction_id) 
         {    
@@ -564,12 +565,10 @@ sub genotype_data {
             
             $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
             my $stock_count = $stock_genotype_rs->count;
-    
-            my @stocks;
-            
+                
             unless ($header_markers) 
             {
-                if($stock_count)
+                if ($stock_count)
                 {
                     my $dir = $self->context->stash->{solgs_cache_dir};
                     
@@ -593,8 +592,14 @@ sub genotype_data {
             while (my $geno = $stock_genotype_rs->next)
             {  
                 $cnt++;
-                 my $stock = $geno->get_column('stock_name');
-                my ($duplicate_stock) = grep(/$stock/, @stocks);
+		my $stock = $geno->get_column('stock_name');
+		
+		my $duplicate_stock;
+
+		if ($cnt > 1)
+		{
+		    ($duplicate_stock) = grep(/$stock/, @stocks);
+		}
                  
                 if ( $cnt == 1  || ($cnt > 1 && !$duplicate_stock) )
                 {
@@ -610,16 +615,13 @@ sub genotype_data {
                     if ($similarity == 1)     
                     {
                         my $geno_values = $self->stock_genotype_values($geno);               
-                        $geno_data     .= $geno_values;
-                       
+                        $geno_data     .= $geno_values;                       
                     }
                     else 
-                    {
-                       
+                    {                       
                         $cnt_clones_diff_markers++; 
                         print STDERR "\nstocks excluded:$stock  different markers $cnt_clones_diff_markers\n";
-                    }
-                    
+                    }                    
                 } 
                 else 
                 { 
@@ -635,31 +637,43 @@ sub genotype_data {
             while (my $geno = $stock_genotype_rs->next)
             { 
                 $cnt++;
-              
-                my $json_values  = $geno->get_column('value');
-                my $values       = JSON::Any->decode($json_values);
-                my @markers      = keys %$values;
+              	
+		my $stock = $geno->get_column('stock_name');
+		
+		my $duplicate_stock;
 
-                if ($cnt == 1) 
+		if ($cnt > 1)
+		{
+		    ($duplicate_stock) = grep(/$stock/, @stocks);
+		}
+                 
+                if ( $cnt == 1  || ($cnt > 1 && !$duplicate_stock) )
                 {
-                    @header_markers   = @markers;   
-                    $header_markers   = join("\t", @header_markers);
-                    $geno_data        = "\t" . $header_markers . "\n";
-                }
-              
-                my $common_markers = scalar(intersect(@header_markers, @markers));
+		    my $json_values = $geno->get_column('value');
+		    my $values      = JSON::Any->decode($json_values);
+		    my @markers     = keys %$values;
 
-                my $similarity = $common_markers / scalar(@header_markers);
+		    if ($cnt == 1) 
+		    {
+			@header_markers = @markers;   
+			$header_markers = join("\t", @header_markers);
+			$geno_data      = "\t" . $header_markers . "\n";
+		    }
+              
+		    my $common_markers = scalar(intersect(@header_markers, @markers));
+
+		    my $similarity = $common_markers / scalar(@header_markers);
                 
-                if ($similarity == 1)     
-                {
-                    my $geno_values = $self->stock_genotype_values($geno);             
-                    $geno_data     .= $geno_values;
-                }
-                else 
-                {
-                    $cnt_clones_diff_markers++;                                     
-                }      
+		    if ($similarity == 1)     
+		    {
+			my $geno_values = $self->stock_genotype_values($geno);             
+			$geno_data     .= $geno_values;
+		    }
+		    else 
+		    {
+			$cnt_clones_diff_markers++;                                     
+		    }
+		}
             }       
         }
         
