@@ -120,10 +120,10 @@ sub get_calendar_events_GET {
     $c->stash->{rest} = \@events;
 }
 
-sub drag_events : Path('/ajax/calendar/drag') : ActionClass('REST') { }
+sub drag_or_resize_event : Path('/ajax/calendar/drag_or_resize') : ActionClass('REST') { }
 
-#When an event is dragged to a new date, this function is called to save the new date in the database.
-sub drag_events_POST { 
+#When an event is dragged to a new date a value of drag = 1 is passed to the function. When an event is simply resized a value of drag =0 is passed to the function. This function saves the new start and end date to the db.
+sub drag_or_resize_event_POST { 
     my $self = shift;
     my $c = shift;
 
@@ -132,14 +132,22 @@ sub drag_events_POST {
     my $end = $c->req->param("end_drag");
     my $projectprop_id = $c->req->param("projectprop_id");
     my $delta = $c->req->param("delta");
+    my $drag = $c->req->param("drag");
 
     #First we process the start datetime.
     #A time::piece object is returned from format_time(). Delta is the number of seconds that the date was changed. Calling ->epoch on the time::piece object returns a string representing number of sec since epoch.
     my $formatted_start = format_time($start)->epoch;
-    $formatted_start += $delta;
+    
+    #If the event is being dragged to a new start, then the delta is added to the start here. When resizing, the start is not changed, only the end is changed.
+    if ($drag == 1) {
+	$formatted_start += $delta;
 
-    #The string representing the new number of sec since epoch is parsed into a time::piece object.
-    $formatted_start = Time::Piece->strptime($formatted_start, '%s');
+	#The string representing the new number of sec since epoch is parsed into a time::piece object.
+	$formatted_start = Time::Piece->strptime($formatted_start, '%s');
+    } elsif ($drag == 0) {
+	#The string representing the new number of sec since epoch is parsed into a time::piece object.
+	$formatted_start = Time::Piece->strptime($formatted_start, '%s');
+    }
 
     #Calling ->datetime on a time::piece object returns a string ISO8601 datetime. new_start is what is saved in db.
     my $new_start = $formatted_start->datetime;
@@ -158,33 +166,38 @@ sub drag_events_POST {
     my $new_end_time;
     my $new_end_display;
     
-    #If the event has '' as the end datetime, then the end will remain as ''.
-    if ($end eq '') {
+    #The end depends on $drag and if an end has been set. The 4 possibilities are: 1) drag + no end : end = ''. 2) drag + end : end = end + delta. 3) resize + no end : end = start + delta. 4) resize + end : end = end + delta
+    #If no end has been set and the event in being dragged, then the end will remain as ''. This condition is different from the others in that no new end date is being formatted.
+    if ($drag == 1 && $end eq '') {
 	$new_end = '';
 	$new_end_time = '';
 	$new_end_display = '';
     } else {
 
-	#If there is an end for the event, a time::piece object is returned by format_time() and then, using ->epoch, turned into a string representing number of sec since epoch. 
-	$formatted_end = format_time($end)->epoch;
-	$formatted_end += $delta;
+	#If the event is being resized and no end has been set on the event, then the end will be start+delta. If the event is being resized or dragged and an end has been set, then the end will be end + delta. 
+	if ($drag == 0 && $end eq '') {
+	    $formatted_start = format_time($start)->epoch;
+	    $formatted_start += $delta;
+	    $formatted_end = Time::Piece->strptime($formatted_start, '%s');
+	} elsif ($end ne '') {
+	    $formatted_end = format_time($end)->epoch;
+	    $formatted_end += $delta;
+	    $formatted_end = Time::Piece->strptime($formatted_end, '%s');
+	}
 
-	#formatted_end now represents the new number of sec since epoch. We parse this string into a time:piece object.
-	$formatted_end = Time::Piece->strptime($formatted_end, '%s');
-	
 	#Calling ->datetime on the time::piece object returns an ISO8601 datetime string. This is what is saved in db. 
 	$new_end = $formatted_end->datetime;
 
 	#Displaying 00:00:00 time on mouseover and mouseclick is ugly, so new_end_display is used to determine date display format. FullCalendar's end datetime in exclusive, so for a datetime with 00:00:00, a full day must be added so that it is displayed correctly on the calendar. If the end datetime has an actual time, Fullcalendar handles it correctly.
 	if ($formatted_end->hms('') == '000000') {
-		$new_end_time = $formatted_end->epoch;
-		$new_end_time += ONE_DAY;
-		$new_end_time = Time::Piece->strptime($new_end_time, '%s')->datetime;
-		$new_end_display = $formatted_end->strftime("%Y-%m-%d");
-	    } else {
-		$new_end_time = $formatted_end->datetime;
-		$new_end_display = $formatted_end->strftime("%Y-%m-%d %H:%M:%S");
-	    }
+	    $new_end_time = $formatted_end->epoch;
+	    $new_end_time += ONE_DAY;
+	    $new_end_time = Time::Piece->strptime($new_end_time, '%s')->datetime;
+	    $new_end_display = $formatted_end->strftime("%Y-%m-%d");
+	} else {
+	    $new_end_time = $formatted_end->datetime;
+	    $new_end_display = $formatted_end->strftime("%Y-%m-%d %H:%M:%S");
+	}
     }
 
     #The new start and end datetimes are saved to the DB using DBIx class.
