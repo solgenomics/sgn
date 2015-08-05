@@ -70,7 +70,7 @@ sub get_calendar_events_GET {
     my @time_array;
     while (my $result = $search_rs->next) {
 
-	#In the database, the start/end datetime info is stored as a string like: {"2015-08-12T00:00:00","2015-08-15T00:00:00"} or {"2015-08-18T00:00:00",""}. The string is then transcribed and split into an array.
+	#In the database, the start/end datetime info is stored as a string like: {"2015-08-12T00:00:00","2015-08-15T00:00:00"}. The string is then transcribed and split into an array.
 	$raw_value = $result->get_column('pp_value'); 
 	$raw_value =~ tr/{}"//d;
 	@time_array = split(/,/, $raw_value);
@@ -89,30 +89,22 @@ sub get_calendar_events_GET {
 	    $allday = 0;
 	}
 
-	#If there is only a single element in the time_array, then there is no end datetime specified. Event end variables are set as '' to indicated there is no end specified.
-	if (scalar @time_array == '1') {
-	    $end_time = '';
-	    $end_display = '';
-	    $end_drag = '';
-	} elsif (scalar @time_array == '2') {
+	#Then we process the end datetime, which is the second element in the time_array.
+	$formatted_time = format_time($time_array[1]);
 
-	    #If there are two elements in the time_array, then there is a datetime specified.
-	    $formatted_time = format_time($time_array[1]);
-
-	    #Displaying 00:00:00 time on mouseover and mouseclick is ugly, so end_display is used to determine date display format. FullCalendar's end datetime in exclusive, so for a datetime with 00:00:00, a full day must be added so that it is displayed correctly on the calendar. If the end datetime has an actual time, Fullcalendar handles it correctly.
-	    if ($formatted_time->hms('') == '000000') {
-		$end_time = $formatted_time->epoch;
-		$end_time += ONE_DAY;
-		$end_time = Time::Piece->strptime($end_time, '%s')->datetime;
-		$end_display = $formatted_time->strftime("%Y-%m-%d");
-	    } else {
-		$end_time = $formatted_time->datetime;
-		$end_display = $formatted_time->strftime("%Y-%m-%d %H:%M:%S");
-	    }
-
-	    #Because FullCallendar's end date is exclusive, an end datetime with 00:00:00 will be displayed as one day short on the calendar, and so corrections to the event's end must be made. To facilitate event dragging, an event.end_drag property is used. 
-	    $end_drag = $formatted_time->datetime;
+	#Displaying 00:00:00 time on mouseover and mouseclick is ugly, so end_display is used to determine date display format. FullCalendar's end datetime in exclusive, so for a datetime with 00:00:00, a full day must be added so that it is displayed correctly on the calendar. If the end datetime has an actual time, Fullcalendar handles it correctly.
+	if ($formatted_time->hms('') == '000000') {
+	    $end_time = $formatted_time->epoch;
+	    $end_time += ONE_DAY;
+	    $end_time = Time::Piece->strptime($end_time, '%s')->datetime;
+	    $end_display = $formatted_time->strftime("%Y-%m-%d");
+	} else {
+	    $end_time = $formatted_time->datetime;
+	    $end_display = $formatted_time->strftime("%Y-%m-%d %H:%M:%S");
 	}
+
+	#Because FullCallendar's end date is exclusive, an end datetime with 00:00:00 will be displayed as one day short on the calendar, and so corrections to the event's end must be made. To facilitate event dragging, an event.end_drag property is used. 
+	$end_drag = $formatted_time->datetime;
 
 	#Variables are pushed into the event array and will become properties of Fullcalendar events, like event.start, event.cvterm_url, etc.
 	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$result->name, property=>$result->get_column('cv_name'), start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id'), allDay=>$allday});
@@ -161,43 +153,25 @@ sub drag_or_resize_event_POST {
     }
     
     #Next we process the end datetime.
-    my $formatted_end;
-    my $new_end;
     my $new_end_time;
     my $new_end_display;
-    
-    #The end depends on $drag and if an end has been set. The 4 possibilities are: 1) drag + no end : end = ''. 2) drag + end : end = end + delta. 3) resize + no end : end = start + delta. 4) resize + end : end = end + delta
-    #If no end has been set and the event in being dragged, then the end will remain as ''. This condition is different from the others in that no new end date is being formatted.
-    if ($drag == 1 && $end eq '') {
-	$new_end = '';
-	$new_end_time = '';
-	$new_end_display = '';
+
+    my $formatted_end = format_time($end)->epoch;
+    $formatted_end += $delta;
+    $formatted_end = Time::Piece->strptime($formatted_end, '%s');
+
+    #Calling ->datetime on the time::piece object returns an ISO8601 datetime string. This is what is saved in db. 
+    my $new_end = $formatted_end->datetime;
+
+    #Displaying 00:00:00 time on mouseover and mouseclick is ugly, so new_end_display is used to determine date display format. FullCalendar's end datetime in exclusive, so for a datetime with 00:00:00, a full day must be added so that it is displayed correctly on the calendar. If the end datetime has an actual time, Fullcalendar handles it correctly.
+    if ($formatted_end->hms('') == '000000') {
+	$new_end_time = $formatted_end->epoch;
+	$new_end_time += ONE_DAY;
+	$new_end_time = Time::Piece->strptime($new_end_time, '%s')->datetime;
+	$new_end_display = $formatted_end->strftime("%Y-%m-%d");
     } else {
-
-	#If the event is being resized and no end has been set on the event, then the end will be start+delta. If the event is being resized or dragged and an end has been set, then the end will be end + delta. 
-	if ($drag == 0 && $end eq '') {
-	    $formatted_start = format_time($start)->epoch;
-	    $formatted_start += $delta;
-	    $formatted_end = Time::Piece->strptime($formatted_start, '%s');
-	} elsif ($end ne '') {
-	    $formatted_end = format_time($end)->epoch;
-	    $formatted_end += $delta;
-	    $formatted_end = Time::Piece->strptime($formatted_end, '%s');
-	}
-
-	#Calling ->datetime on the time::piece object returns an ISO8601 datetime string. This is what is saved in db. 
-	$new_end = $formatted_end->datetime;
-
-	#Displaying 00:00:00 time on mouseover and mouseclick is ugly, so new_end_display is used to determine date display format. FullCalendar's end datetime in exclusive, so for a datetime with 00:00:00, a full day must be added so that it is displayed correctly on the calendar. If the end datetime has an actual time, Fullcalendar handles it correctly.
-	if ($formatted_end->hms('') == '000000') {
-	    $new_end_time = $formatted_end->epoch;
-	    $new_end_time += ONE_DAY;
-	    $new_end_time = Time::Piece->strptime($new_end_time, '%s')->datetime;
-	    $new_end_display = $formatted_end->strftime("%Y-%m-%d");
-	} else {
-	    $new_end_time = $formatted_end->datetime;
-	    $new_end_display = $formatted_end->strftime("%Y-%m-%d %H:%M:%S");
-	}
+        $new_end_time = $formatted_end->datetime;
+	$new_end_display = $formatted_end->strftime("%Y-%m-%d %H:%M:%S");
     }
 
     #The new start and end datetimes are saved to the DB using DBIx class.
@@ -229,7 +203,7 @@ sub add_event_POST {
     
     #If an event end is given, then it is converted to an ISO8601 datetime string to be saved. If none is given then '' will be saved.
     my $format_end;
-    if ($end eq '') {$format_end = '';} else {$format_end = format_time($end)->datetime;}
+    if ($end eq '') {$format_end = $format_start;} else {$format_end = format_time($end)->datetime;}
     
     #Check if the projectprop unique (project_id, type_id, rank) constraint will cause the insert to fail.
     my $result_set = $c->dbic_schema('Bio::Chado::Schema')->resultset('Project::Projectprop');
@@ -348,7 +322,7 @@ sub datatables_project_relationships_GET {
 
 #This function is used to return a Time::Piece object, which is useful for format consistensy.
 #Reformat all dates in projectprop table to datetime ISO8601 format, with start and end datetimes.
-#Update projectprop set value='{"2007-09-21T00:00:00",""}' where project_id='149' and type_id='76773'; Update projectprop set value='{"2007-08-10T00:00:00",""}' where project_id='149' and type_id='76772'; Update projectprop set value='{"2008-06-04T00:00:00",""}' where project_id='150' and type_id='76773'; Update projectprop set value='{"2008-04-23T00:00:00",""}' where project_id='150' and type_id='76772'; Update projectprop set value='{"2010-08-12T00:00:00",""}' where project_id='159' and type_id='76772'; Update projectprop set value='{"2011-08-04T00:00:00",""}' where project_id='160' and type_id='76772'; Update projectprop set value='{"2010-08-11T00:00:00",""}' where project_id='156' and type_id='76772'; Update projectprop set value='{"2012-04-28T00:00:00",""}' where project_id='143' and type_id='76772'; Update projectprop set value='{"2008-05-15T00:00:00",""}' where project_id='152' and type_id='76772'; Update projectprop set value='{"2008-06-25T00:00:00",""}' where project_id='152' and type_id='76773'; Update projectprop set value='{"2006-02-01T00:00:00",""}' where project_id='146' and type_id='76772'; Update projectprop set value='{"2006-12-08T00:00:00",""}' where project_id='148' and type_id='76772'; Update projectprop set value='{"2007-01-20T00:00:00",""}' where project_id='148' and type_id='76773'; Update projectprop set value='{"2006-05-02T00:00:00",""}' where project_id='147' and type_id='76772'; Update projectprop set value='{"2006-07-02T00:00:00",""}' where project_id='147' and type_id='76773'; Update projectprop set value='{"2008-04-29T00:00:00",""}' where project_id='151' and type_id='76772'; Update projectprop set value='{"2008-06-10T00:00:00",""}' where project_id='151' and type_id='76773'; Update projectprop set value='{"2011-08-08T00:00:00",""}' where project_id='155' and type_id='76772'; Update projectprop set value='{"2011-10-21T00:00:00",""}' where project_id='155' and type_id='76773'; Update projectprop set value='{"2011-09-28T00:00:00",""}' where project_id='133' and type_id='76772'; Update projectprop set value='{"2011-06-24T00:00:00",""}' where project_id='133' and type_id='76773'; Update projectprop set value='{"2011-06-01T00:00:00",""}' where project_id='145' and type_id='76772'; Update projectprop set value='{"2011-08-10T00:00:00",""}' where project_id='145' and type_id='76773'; Update projectprop set value='{"2010-08-12T00:00:00",""}' where project_id='158' and type_id='76772'; Update projectprop set value='{"2010-05-07T00:00:00",""}' where project_id='132' and type_id='76772'; Update projectprop set value='{"2010-06-06T00:00:00",""}' where project_id='136' and type_id='76772'; Update projectprop set value='{"2010-05-18T00:00:00",""}' where project_id='135' and type_id='76772'; Update projectprop set value='{"2010-07-28T00:00:00",""}' where project_id='135' and type_id='76773'; Update projectprop set value='{"2010-05-18T00:00:00",""}' where project_id='135' and type_id='76772'; Update projectprop set value='{"2015-08-12T00:00:00","2015-08-15T00:00:00"}' where project_id='134' and type_id='76773'; Update projectprop set value='{"2015-08-28T00:00:00",""}' where project_id='153' and type_id='76773'; Update projectprop set value='{"2015-08-23T00:00:00",""}' where project_id='134' and type_id='76772'; Update projectprop set value='{"2015-08-07T00:00:00",""}' where project_id='153' and type_id='76772'; Update projectprop set value='{"2015-08-06T00:00:00",""}' where project_id='154' and type_id='76773'; Update projectprop set value='{"2015-08-20T00:00:00",""}' where project_id='154' and type_id='76772';
+#Update projectprop set value='{"2007-09-21T00:00:00","2007-09-21T00:00:00"}' where project_id='149' and type_id='76773'; Update projectprop set value='{"2007-08-10T00:00:00","2007-08-10T00:00:00"}' where project_id='149' and type_id='76772'; Update projectprop set value='{"2008-06-04T00:00:00","2008-06-04T00:00:00"}' where project_id='150' and type_id='76773'; Update projectprop set value='{"2008-04-23T00:00:00","2008-04-23T00:00:00"}' where project_id='150' and type_id='76772'; Update projectprop set value='{"2010-08-12T00:00:00","2010-08-12T00:00:00"}' where project_id='159' and type_id='76772'; Update projectprop set value='{"2011-08-04T00:00:00","2011-08-04T00:00:00"}' where project_id='160' and type_id='76772'; Update projectprop set value='{"2010-08-11T00:00:00","2010-08-11T00:00:00"}' where project_id='156' and type_id='76772'; Update projectprop set value='{"2012-04-28T00:00:00","2012-04-28T00:00:00"}' where project_id='143' and type_id='76772'; Update projectprop set value='{"2008-05-15T00:00:00","2008-05-15T00:00:00"}' where project_id='152' and type_id='76772'; Update projectprop set value='{"2008-06-25T00:00:00","2008-06-25T00:00:00"}' where project_id='152' and type_id='76773'; Update projectprop set value='{"2006-02-01T00:00:00","2006-02-01T00:00:00"}' where project_id='146' and type_id='76772'; Update projectprop set value='{"2006-12-08T00:00:00","2006-12-08T00:00:00"}' where project_id='148' and type_id='76772'; Update projectprop set value='{"2007-01-20T00:00:00","2007-01-20T00:00:00"}' where project_id='148' and type_id='76773'; Update projectprop set value='{"2006-05-02T00:00:00","2006-05-02T00:00:00"}' where project_id='147' and type_id='76772'; Update projectprop set value='{"2006-07-02T00:00:00","2006-07-02T00:00:00"}' where project_id='147' and type_id='76773'; Update projectprop set value='{"2008-04-29T00:00:00","2008-04-29T00:00:00"}' where project_id='151' and type_id='76772'; Update projectprop set value='{"2008-06-10T00:00:00","2008-06-10T00:00:00"}' where project_id='151' and type_id='76773'; Update projectprop set value='{"2011-08-08T00:00:00","2011-08-08T00:00:00"}' where project_id='155' and type_id='76772'; Update projectprop set value='{"2011-10-21T00:00:00","2011-10-21T00:00:00"}' where project_id='155' and type_id='76773'; Update projectprop set value='{"2011-09-28T00:00:00","2011-09-28T00:00:00"}' where project_id='133' and type_id='76772'; Update projectprop set value='{"2011-06-24T00:00:00","2011-06-24T00:00:00"}' where project_id='133' and type_id='76773'; Update projectprop set value='{"2011-06-01T00:00:00","2011-06-01T00:00:00"}' where project_id='145' and type_id='76772'; Update projectprop set value='{"2011-08-10T00:00:00","2011-08-10T00:00:00"}' where project_id='145' and type_id='76773'; Update projectprop set value='{"2010-08-12T00:00:00","2010-08-12T00:00:00"}' where project_id='158' and type_id='76772'; Update projectprop set value='{"2010-05-07T00:00:00","2010-05-07T00:00:00"}' where project_id='132' and type_id='76772'; Update projectprop set value='{"2010-06-06T00:00:00","2010-06-06T00:00:00"}' where project_id='136' and type_id='76772'; Update projectprop set value='{"2010-05-18T00:00:00","2010-05-18T00:00:00"}' where project_id='135' and type_id='76772'; Update projectprop set value='{"2010-07-28T00:00:00","2010-07-28T00:00:00"}' where project_id='135' and type_id='76773'; Update projectprop set value='{"2010-05-18T00:00:00","2010-05-18T00:00:00"}' where project_id='135' and type_id='76772'; Update projectprop set value='{"2015-08-12T00:00:00","2015-08-15T00:00:00"}' where project_id='134' and type_id='76773'; Update projectprop set value='{"2015-08-28T00:00:00","2015-08-28T00:00:00"}' where project_id='153' and type_id='76773'; Update projectprop set value='{"2015-08-23T00:00:00","2015-08-23T00:00:00"}' where project_id='134' and type_id='76772'; Update projectprop set value='{"2015-08-07T00:00:00","2015-08-07T00:00:00"}' where project_id='153' and type_id='76772'; Update projectprop set value='{"2015-08-06T00:00:00","2015-08-06T00:00:00"}' where project_id='154' and type_id='76773'; Update projectprop set value='{"2015-08-20T00:00:00","2015-08-20T00:00:00"}' where project_id='154' and type_id='76772';
 sub format_time {
     my $input_time = shift;
     my $formatted_time;
