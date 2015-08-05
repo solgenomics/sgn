@@ -292,10 +292,10 @@ sub login_allowed {
         and !$self->{conf_object}->get_conf('is_mirror')
 
 #we haven't decided whether it's a good idea to comment this next line by default -- Evan
-        #and !(
-        #        $self->{conf_object}->get_conf('dbname') =~ /sandbox/
-        #    and $self->{conf_object}->get_conf('production_server')
-        #)
+        and !(
+                $self->{conf_object}->get_conf('dbname') =~ /sandbox/
+            and $self->{conf_object}->get_conf('production_server')
+        )
       )
     {
         return 1;
