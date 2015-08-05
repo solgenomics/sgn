@@ -58,6 +58,7 @@ sub get_calendar_events_GET {
     );
 
     my @events;
+    my $allday;
     my $start_time;
     my $start_drag;
     my $start_display;
@@ -82,8 +83,10 @@ sub get_calendar_events_GET {
 	#Displaying 00:00:00 time on mouseover and mouseclick is ugly, so start_display is used to determine date display format.
 	if ($formatted_time->hms('') == '000000') {
 	    $start_display = $formatted_time->strftime("%Y-%m-%d");
+	    $allday = 1;
 	} else {
 	    $start_display = $formatted_time->strftime("%Y-%m-%d %H:%M:%S");
+	    $allday = 0;
 	}
 
 	#If there is only a single element in the time_array, then there is no end datetime specified. Event end variables are set as '' to indicated there is no end specified.
@@ -112,7 +115,7 @@ sub get_calendar_events_GET {
 	}
 
 	#Variables are pushed into the event array and will become properties of Fullcalendar events, like event.start, event.cvterm_url, etc.
-	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$result->name, property=>$result->get_column('cv_name'), start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id')});
+	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$result->name, property=>$result->get_column('cv_name'), start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id'), allDay=>$allday});
     }
     $c->stash->{rest} = \@events;
 }
