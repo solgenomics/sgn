@@ -6,7 +6,6 @@ backend for displaying, adding, deleting, dragging, modifying, and requesting mo
 
 =head1 DESCRIPTION
 
-The FullCalendar Event call sends a GET request with a start, end, and _ value. These values can be used to query specific date ranges. 
 Using REST, json values for FullCalendar Event Object properties can be sent to be displayed, simply by stash->{rest}
 
 Currently maps to Cassbase Mason jquery calls
@@ -35,19 +34,32 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-sub get_calendar_events : Path('/ajax/calendar/populate') : ActionClass('REST') { }
+sub calendar_events_month  : Path('/ajax/calendar/populate/month') : ActionClass('REST') { }
 
-#When the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
-sub get_calendar_events_GET { 
+#When the month view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
+sub calendar_events_month_GET { 
     my $self = shift;
     my $c = shift;
-    
-    #Fullcalendar sends start and end dates for the current view on the calendar. These values currently not used in query. 
-    my $start = $c->req->param("start");
-    my $end = $c->req->param("end");
+    my $search_rs = get_calendar_events($c);
+    my $view = 'month';
+    $c->stash->{rest} = populate_calendar_events($search_rs, $view);
+}
 
+sub calendar_events_agendaWeek  : Path('/ajax/calendar/populate/agendaWeek') : ActionClass('REST') { }
+
+#When the agendaWeek view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
+sub calendar_events_agendaWeek_GET { 
+    my $self = shift;
+    my $c = shift;
+    my $search_rs = get_calendar_events($c);
+    my $view = 'agendaWeek';
+    $c->stash->{rest} = populate_calendar_events($search_rs, $view);
+}
+
+sub get_calendar_events {
     #cvterm names of interest:  "project year", "project fertilizer date", "project planting date"
     #Calendar event info is retrieved using DBIx class.
+    my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $search_rs = $schema->resultset('Project::Project')->search(
 	[{'type.name'=>'project planting date'}, {'type.name'=>'project fertilizer date'}],
@@ -56,7 +68,12 @@ sub get_calendar_events_GET {
 	'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cv_id'],
 	}
     );
+    return $search_rs;
+}
 
+sub populate_calendar_events {
+    my $search_rs = shift;
+    my $view = shift;
     my @events;
     my $allday;
     my $start_time;
@@ -66,50 +83,80 @@ sub get_calendar_events_GET {
     my $end_drag;
     my $end_display;
     my $formatted_time;
-    my $raw_value;
     my @time_array;
     while (my $result = $search_rs->next) {
+	@time_array = parse_time_array($result->get_column('pp_value'));
 
-	#In the database, the start/end datetime info is stored as a string like: {"2015-08-12T00:00:00","2015-08-15T00:00:00"}. The string is then transcribed and split into an array.
-	$raw_value = $result->get_column('pp_value'); 
-	$raw_value =~ tr/{}"//d;
-	@time_array = split(/,/, $raw_value);
-
-	#We start with the start datetime, or the first element in the time_array.
+	#We begin with the start datetime, or the first element in the time_array.
 	#A time::piece object is returned from format_date(). Calling ->datetime on this object returns an ISO8601 datetime string. This string is what is used as the calendar event's start. 
 	$formatted_time = format_time($time_array[0]);
 	$start_time = $formatted_time->datetime;
-
-	#Displaying 00:00:00 time on mouseover and mouseclick is ugly, so start_display is used to determine date display format.
-	if ($formatted_time->hms('') == '000000') {
-	    $start_display = $formatted_time->strftime("%Y-%m-%d");
+	$start_display = format_display_date($formatted_time);
+	
+	#Because fullcalendar does not allow event resizing of allDay=true events in the month view, the allDay parameter must be set depending on the view. The allDay parameter for the agendaWeek view is important and is set using determine_allday().
+	if ($view eq 'month') {
 	    $allday = 1;
-	} else {
-	    $start_display = $formatted_time->strftime("%Y-%m-%d %H:%M:%S");
-	    $allday = 0;
+	} elsif ($view eq 'agendaWeek') {
+	    $allday = determine_allday($formatted_time);
 	}
 
 	#Then we process the end datetime, which is the second element in the time_array.
 	$formatted_time = format_time($time_array[1]);
-
-	#Displaying 00:00:00 time on mouseover and mouseclick is ugly, so end_display is used to determine date display format. FullCalendar's end datetime in exclusive, so for a datetime with 00:00:00, a full day must be added so that it is displayed correctly on the calendar. If the end datetime has an actual time, Fullcalendar handles it correctly.
-	if ($formatted_time->hms('') == '000000') {
-	    $end_time = $formatted_time->epoch;
-	    $end_time += ONE_DAY;
-	    $end_time = Time::Piece->strptime($end_time, '%s')->datetime;
-	    $end_display = $formatted_time->strftime("%Y-%m-%d");
-	} else {
-	    $end_time = $formatted_time->datetime;
-	    $end_display = $formatted_time->strftime("%Y-%m-%d %H:%M:%S");
-	}
+	$end_time = calendar_end_display($formatted_time, $view);
+	$end_display = format_display_date($formatted_time);
 
 	#Because FullCallendar's end date is exclusive, an end datetime with 00:00:00 will be displayed as one day short on the calendar, and so corrections to the event's end must be made. To facilitate event dragging, an event.end_drag property is used. 
 	$end_drag = $formatted_time->datetime;
 
-	#Variables are pushed into the event array and will become properties of Fullcalendar events, like event.start, event.cvterm_url, etc.
+	#Variables are pushed into the event array and will become properties of Fullcalendar events, like event.start, event.cvterm_url, etc. For the month view, the events are all shown as allDay=true. This is because fullcalendar restricts resizing events on the month view if they are not allDay.
 	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$result->name, property=>$result->get_column('cv_name'), start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id'), allDay=>$allday});
     }
-    $c->stash->{rest} = \@events;
+    return \@events;
+}
+
+sub parse_time_array {
+    #In the database, the start/end datetime info is stored as a string like: {"2015-08-12T00:00:00","2015-08-15T00:00:00"}. The string is then transcribed and split into an array.
+    my $raw_value = shift;
+    $raw_value =~ tr/{}"//d;
+    my @time_array = split(/,/, $raw_value);
+    return @time_array;
+}
+
+sub format_display_date {
+    #Displaying 00:00:00 time on mouseover and mouseclick is ugly, so start_display is used to determine date display format.
+    my $date_display;
+    my $formatted_time = shift;
+    if ($formatted_time->hms('') == '000000') {
+	$date_display = $formatted_time->strftime("%Y-%m-%d");
+    } else {
+	$date_display = $formatted_time->strftime("%Y-%m-%d %H:%M:%S");
+    }
+    return $date_display;
+}
+
+sub calendar_end_display {
+    #FullCalendar's end datetime in exclusive in the month view, so for a datetime with 00:00:00, a full day must be added so that it is displayed correctly on the calendar. The agendaWeek view handles it correctly. 
+    my $formatted_time = shift;
+    my $view = shift;
+    my $end_time;
+    $end_time = $formatted_time->epoch;
+    if ($view eq 'month') {
+	$end_time += ONE_DAY;
+    }
+    $end_time = Time::Piece->strptime($end_time, '%s')->datetime;
+    return $end_time;
+}
+
+sub determine_allday {
+    #On the agendaWeek view, events with start dates with 00:00:00 time are displayed as allDay=true.
+    my $allday;
+    my $formatted_time = shift;
+    if ($formatted_time->hms('') == '000000') {
+	$allday = 1;
+    } else {
+	$allday = 0;
+    }
+    return $allday;
 }
 
 sub drag_or_resize_event : Path('/ajax/calendar/drag_or_resize') : ActionClass('REST') { }
@@ -125,6 +172,8 @@ sub drag_or_resize_event_POST {
     my $projectprop_id = $c->req->param("projectprop_id");
     my $delta = $c->req->param("delta");
     my $drag = $c->req->param("drag");
+    my $view = $c->req->param("view");
+    print STDERR $view;
 
     #First we process the start datetime.
     #A time::piece object is returned from format_time(). Delta is the number of seconds that the date was changed. Calling ->epoch on the time::piece object returns a string representing number of sec since epoch.
@@ -143,36 +192,17 @@ sub drag_or_resize_event_POST {
 
     #Calling ->datetime on a time::piece object returns a string ISO8601 datetime. new_start is what is saved in db.
     my $new_start = $formatted_start->datetime;
+    my $new_start_display = format_display_date($formatted_start);
     
-    #Displaying 00:00:00 time on mouseover and mouseclick is ugly, so new_start_display is used to determine date display format.
-    my $new_start_display;
-    if ($formatted_start->hms('') == '000000') {
-        $new_start_display = $formatted_start->strftime("%Y-%m-%d");
-    } else {
-	$new_start_display = $formatted_start->strftime("%Y-%m-%d %H:%M:%S");
-    }
-    
-    #Next we process the end datetime.
-    my $new_end_time;
-    my $new_end_display;
-
+    #Next we process the end datetime. Whether the event is being dragged or resized, the end = end + delta.
     my $formatted_end = format_time($end)->epoch;
     $formatted_end += $delta;
     $formatted_end = Time::Piece->strptime($formatted_end, '%s');
 
     #Calling ->datetime on the time::piece object returns an ISO8601 datetime string. This is what is saved in db. 
     my $new_end = $formatted_end->datetime;
-
-    #Displaying 00:00:00 time on mouseover and mouseclick is ugly, so new_end_display is used to determine date display format. FullCalendar's end datetime in exclusive, so for a datetime with 00:00:00, a full day must be added so that it is displayed correctly on the calendar. If the end datetime has an actual time, Fullcalendar handles it correctly.
-    if ($formatted_end->hms('') == '000000') {
-	$new_end_time = $formatted_end->epoch;
-	$new_end_time += ONE_DAY;
-	$new_end_time = Time::Piece->strptime($new_end_time, '%s')->datetime;
-	$new_end_display = $formatted_end->strftime("%Y-%m-%d");
-    } else {
-        $new_end_time = $formatted_end->datetime;
-	$new_end_display = $formatted_end->strftime("%Y-%m-%d %H:%M:%S");
-    }
+    my $new_end_time = calendar_end_display($formatted_end, $view);
+    my $new_end_display = format_display_date($formatted_end);
 
     #The new start and end datetimes are saved to the DB using DBIx class.
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
@@ -201,7 +231,7 @@ sub add_event_POST {
     #A time::piece object is returned from format_time(). Calling ->datetime on this object return an ISO8601 datetime string. This is what is saved in the db.
     my $format_start = format_time($start)->datetime;
     
-    #If an event end is given, then it is converted to an ISO8601 datetime string to be saved. If none is given then '' will be saved.
+    #If an event end is given, then it is converted to an ISO8601 datetime string to be saved. If none is given then the end will be the same as the start.
     my $format_end;
     if ($end eq '') {$format_end = $format_start;} else {$format_end = format_time($end)->datetime;}
     
