@@ -10,6 +10,7 @@ margin:0 auto; /* center your carousel if other than 100% */
 
 <script type="text/javascript">
 
+//code to enable key control for carousel
 jQuery(document).bind('keyup', function(e) {
 
   if(e.keyCode==39){
@@ -37,13 +38,16 @@ jQuery(document).bind('keyup', function(e) {
 
     <!-- Wrapper for slides -->
     <div class="carousel-inner" role="listbox">
+      
       <div class="item active">
-        <div style="background:url(/documents/img/homepage_carousel/1.jpg) center center; background-size:cover;" class="slider-size">
-          <div class="carousel-caption">
-            <h3><img src="/documents/img/sgn_transparent_logo.png" width="40"> SOL 2015</h3>
-            <p>The 12th Solanaceae Conference. October 25-29, Bordeaux, France</p>
+        <a href="https://colloque.inra.fr/sol2015" target="_blank">
+          <div style="background:url(/documents/img/homepage_carousel/1.jpg) center center; background-size:cover;" class="slider-size">
+            <div class="carousel-caption">
+              <h3><img src="/documents/img/sgn_transparent_logo.png" width="40"> SOL 2015</h3>
+              <p>The 12th Solanaceae Conference. October 25-29, Bordeaux, France</p>
+            </div>
           </div>
-        </div>
+        </a>
       </div>
 
       <div class="item">
@@ -85,12 +89,12 @@ jQuery(document).bind('keyup', function(e) {
     </div>
 
     <!-- Left and right controls -->
-    <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+    <!-- <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
       <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
       <span class="sr-only">Previous</span>
     </a>
     <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
       <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
       <span class="sr-only">Next</span>
-    </a>
+    </a> -->
   </div>
