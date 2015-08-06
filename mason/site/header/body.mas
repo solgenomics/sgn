@@ -20,7 +20,7 @@
 
   <& /site/toolbar.mas &>
   <& /system_message.mas &>
-  <br>
+  
 
 <script defer="defer">
 jQuery(document).ready( function() { 
