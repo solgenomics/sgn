@@ -102,7 +102,7 @@ sub populate_calendar_events {
 
 	#Then we process the end datetime, which is the second element in the time_array.
 	$formatted_time = format_time($time_array[1]);
-	$end_time = calendar_end_display($formatted_time, $view);
+	$end_time = calendar_end_display($formatted_time, $view, $allday);
 	$end_display = format_display_date($formatted_time);
 
 	#Because FullCallendar's end date is exclusive, an end datetime with 00:00:00 will be displayed as one day short on the calendar, and so corrections to the event's end must be made. To facilitate event dragging, an event.end_drag property is used. 
@@ -138,9 +138,10 @@ sub calendar_end_display {
     #FullCalendar's end datetime in exclusive in the month view, so for a datetime with 00:00:00, a full day must be added so that it is displayed correctly on the calendar. The agendaWeek view handles it correctly. 
     my $formatted_time = shift;
     my $view = shift;
+    my $allday = shift;
     my $end_time;
     $end_time = $formatted_time->epoch;
-    if ($view eq 'month') {
+    if ($view eq 'month' || ($view eq 'agendaWeek' && $allday == 1)) {
 	$end_time += ONE_DAY;
     }
     $end_time = Time::Piece->strptime($end_time, '%s')->datetime;
@@ -173,7 +174,7 @@ sub drag_or_resize_event_POST {
     my $delta = $c->req->param("delta");
     my $drag = $c->req->param("drag");
     my $view = $c->req->param("view");
-    print STDERR $view;
+    my $allday = $c->req->param("allday");
 
     #First we process the start datetime.
     #A time::piece object is returned from format_time(). Delta is the number of seconds that the date was changed. Calling ->epoch on the time::piece object returns a string representing number of sec since epoch.
@@ -182,13 +183,10 @@ sub drag_or_resize_event_POST {
     #If the event is being dragged to a new start, then the delta is added to the start here. When resizing, the start is not changed, only the end is changed.
     if ($drag == 1) {
 	$formatted_start += $delta;
-
-	#The string representing the new number of sec since epoch is parsed into a time::piece object.
-	$formatted_start = Time::Piece->strptime($formatted_start, '%s');
-    } elsif ($drag == 0) {
-	#The string representing the new number of sec since epoch is parsed into a time::piece object.
-	$formatted_start = Time::Piece->strptime($formatted_start, '%s');
     }
+
+    #The string representing the new number of sec since epoch is parsed into a time::piece object.
+    $formatted_start = Time::Piece->strptime($formatted_start, '%s');
 
     #Calling ->datetime on a time::piece object returns a string ISO8601 datetime. new_start is what is saved in db.
     my $new_start = $formatted_start->datetime;
@@ -201,7 +199,7 @@ sub drag_or_resize_event_POST {
 
     #Calling ->datetime on the time::piece object returns an ISO8601 datetime string. This is what is saved in db. 
     my $new_end = $formatted_end->datetime;
-    my $new_end_time = calendar_end_display($formatted_end, $view);
+    my $new_end_time = calendar_end_display($formatted_end, $view, $allday);
     my $new_end_display = format_display_date($formatted_end);
 
     #The new start and end datetimes are saved to the DB using DBIx class.
@@ -215,6 +213,29 @@ sub drag_or_resize_event_POST {
     }
 }
 
+sub day_click : Path('/ajax/calendar/dayclick') : ActionClass('REST') { }
+
+#When an event is deleted using the day_dialog_delete_event_form, this function is called to delete it from the database.
+sub day_click_GET { 
+    my $self = shift;
+    my $c = shift;
+    my $q = "SELECT DISTINCT project_id, name FROM project";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute();
+    my @projects;
+    while (my ($project_id, $project_name) = $sth->fetchrow_array ) {
+	push(@projects, {project_id=>$project_id, project_name=>$project_name});
+    }
+    $q = "SELECT DISTINCT b.cvterm_id, b.name FROM (projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id))";
+    $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute();
+    my @projectprop_types;
+    while (my ($cvterm_id, $cvterm_name) = $sth->fetchrow_array ) {
+	push(@projectprop_types, {cvterm_id=>$cvterm_id, cvterm_name=>$cvterm_name});
+    }
+    $c->stash->{rest} = {project_list => \@projects, projectprop_list => \@projectprop_types};
+}
+
 sub add_event : Path('/ajax/calendar/add_event') : ActionClass('REST') { }
 
 #When an event is added using the day_dialog_add_event_form, this function is called to save it to the database.
@@ -223,8 +244,8 @@ sub add_event_POST {
     my $c = shift;
 
     #Variables sent from AJAX are requested.
-    my $project_id = $c->req->param("event_project");
-    my $cvterm_id = $c->req->param("event_type");
+    my $project_id = $c->req->param("event_project_select");
+    my $cvterm_id = $c->req->param("event_type_select");
     my $start = $c->req->param("event_start");
     my $end = $c->req->param("event_end");
 
@@ -273,6 +294,11 @@ sub event_more_info_POST {
     my $self = shift;
     my $c = shift;
     my $project_id = $c->req->param("event_project_id");
+    my @time_array;
+    my $formatted_time;
+    my $start_display;
+    my $end_display;
+    my $value;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $search_rs = $schema->resultset('Project::Projectprop')->search(
 	{'me.project_id'=>$project_id},
@@ -283,7 +309,23 @@ sub event_more_info_POST {
     );
     my @project_properties;
     while (my $result = $search_rs->next) {
-	push(@project_properties, {property=>$result->get_column('cv_name'), value=>$result->value, cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id')});
+
+	#To make the date display nicely, we first check if the property value is a date, and then apply formatting.
+	if (index($result->value, '{"') != -1){
+	    @time_array = parse_time_array($result->value);
+
+	    #We begin with the start datetime, or the first element in the time_array.
+	    #A time::piece object is returned from format_date(). Calling format_display_date on this object returns a nice date which is what is displayed as the event's start in the more info dialog box. The same is done for the end date.
+	    $formatted_time = format_time($time_array[0]);
+	    $start_display = format_display_date($formatted_time);
+	    $formatted_time = format_time($time_array[1]);
+	    $end_display = format_display_date($formatted_time);
+	    $value = 'Start: '.$start_display.' | End: '.$end_display;
+	} else {
+	    $value = $result->value;
+	}
+
+	push(@project_properties, {property=>$result->get_column('cv_name'), value=>$value, cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id')});
     }
     $c->stash->{rest} = {data=>\@project_properties};
 }
@@ -356,14 +398,12 @@ sub datatables_project_relationships_GET {
 sub format_time {
     my $input_time = shift;
     my $formatted_time;
-    #print STDERR $input_time;
     if ($input_time =~ /^\d{4}-\d\d-\d\d$/) {
 	$formatted_time = Time::Piece->strptime($input_time, '%Y-%m-%d');
     }
     if ($input_time =~ /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/) {
 	$formatted_time = Time::Piece->strptime($input_time, '%Y-%m-%dT%H:%M:%S');
     }
-    #print STDERR $formatted_time;
     return $formatted_time;
 }
 
