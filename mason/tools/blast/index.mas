@@ -183,7 +183,6 @@
 			<a href="http://support.apple.com/en-us/HT6104"><img src="http://km.support.apple.com/kb/image.jsp?productid=PL165" height="20"> Safari</a><br/>
 			<br/>
 			<a href="http://windows.microsoft.com/en-us/internet-explorer/download-ie"><img src="http://c.s-microsoft.com/en-us/CMSImages/ie_symbol_clr_56x56.png?version=73aa5bf1-0743-11e7-8f71-718675c983bf" height="20"> MS Internet Explorer 11</a><br/>
-			<br/>
 		</p>
 	</div>
 
@@ -289,9 +288,14 @@ jQuery(document).ready(function() {
   	jQuery(document).ready(function ($) {
   		if(ie) {
   			$('#nav_dialog').dialog({
-  			modal: true,
-  			closeOnEscape:true,
-  			title: "Web Browser Compatibility",
+    			modal: true,
+    			closeOnEscape:true,
+    			title: "Web Browser Compatibility",
+          buttons: {
+            close: function() {
+              $( this ).dialog( "close" );
+            }
+          }
   			});
   		}
   	});
