@@ -7,7 +7,8 @@ use File::Basename qw | basename |;
 use File::Slurp qw | read_file |;
 
 sub name { 
-  return "Overview graph";
+  return "Overview";
+  # return "Overview graph";
 }
 
 # at what point to display it... preferably on the top
