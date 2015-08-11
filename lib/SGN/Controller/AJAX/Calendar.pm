@@ -327,13 +327,18 @@ sub add_event_type_POST {
     my $definition = $c->req->param("event_type_definition");
     
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    
+    #The cv_id for 'project_property' cvterms is found.
     my $cv_id = $schema->resultset('Cv::Cv')->find({name=>'project_property'})->cv_id;
+
+    #A dbxref entry is added if there is not already an accession with that name, using db_id = 2, which is a NULL entry.
+    my $dbxref_id = $schema->resultset('General::Dbxref')->find_or_create({db_id=>'2', accession=>$name})->dbxref_id;
 
     #Check if the cvterm unique name constraint will cause the insert to fail.
     my $result_set = $schema->resultset('Cv::Cvterm');
     my $count = $result_set->search({name=>$name})->count;
     if ($count == 0) {
-	if (my $insert = $result_set->create({cv_id=>$cv_id, name=>$name, definition=>$definition})) {
+	if (my $insert = $result_set->create({cv_id=>$cv_id, dbxref_id=>$dbxref_id, name=>$name, definition=>$definition})) {
 	    $c->stash->{rest} = {status => 1};
 	} else {
 	    $c->stash->{rest} = {error => 1};
