@@ -121,7 +121,7 @@ sub populate_calendar_events {
 
 	#To display the project name and project properties nicely in the mouseover and more info, we capitalize the first letter of each word.
 	$title = $result->name;
-	$title =~ s/([\w']+)/\u\L$1/g;
+	#$title =~ s/([\w']+)/\u\L$1/g;
 	$property = $result->get_column('cv_name');
 	$property =~ s/([\w']+)/\u\L$1/g;
 
@@ -225,13 +225,20 @@ sub drag_or_resize_event_POST {
     my $new_end_time = calendar_end_display($formatted_end, $view, $allday);
     my $new_end_display = format_display_date($formatted_end);
 
-    #The new start and end datetimes are saved to the DB using DBIx class.
+    #The new start and end datetimes are saved to the DB using DBIx class. A transaction wraps the update.
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    $schema->storage->txn_begin;
     if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id}, columns=>['value'])->update({value=>[$new_start, $new_end]})) {
+	
+	#The transaction changes are commited.
+	$schema->storage->txn_commit;
 
 	#If the update was successfull, data is passed back to AJAX so that the event can be properly updated.
 	$c->stash->{rest} = {success => 1, start=>$new_start, start_drag=>$new_start, start_display=>$new_start_display, end=>$new_end_time, end_drag=>$new_end, end_display=>$new_end_display};
     } else {
+
+	#The transaction is rolled back.
+	$schema->storage->txn_rollback;
 	$c->stash->{rest} = {error => 1,};
     }
 }
@@ -285,16 +292,25 @@ sub add_event_POST {
     if ($end eq '') {$format_end = $format_start;} else {$format_end = format_time($end)->datetime;}
     
     #Check if the projectprop unique (project_id, type_id, rank) constraint will cause the insert to fail.
-    my $result_set = $c->dbic_schema('Bio::Chado::Schema')->resultset('Project::Projectprop');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $result_set = $schema->resultset('Project::Projectprop');
     my $count = $result_set->search({project_id=>$project_id, type_id=>$cvterm_id, rank=>0})->count;
     if ($count == 0) {
 
-      #If there is no record already in the database, then it is created using DBIx class.
-      if (my $insert = $result_set->create({project_id=>$project_id, type_id=>$cvterm_id, value=>[$format_start, $format_end]})) {
-	  $c->stash->{rest} = {status => 1,};
-      } else {
-	  $c->stash->{rest} = {status => 2,};
-      }
+        #If there is no record already in the database, then it is created using DBIx class. The insert is wrapped in a transaction.
+        $schema->storage->txn_begin;
+
+        if (my $insert = $result_set->create({project_id=>$project_id, type_id=>$cvterm_id, value=>[$format_start, $format_end]})) {
+	    
+	    #The transaction is commited.
+	    $schema->storage->txn_commit;
+	    $c->stash->{rest} = {status => 1,};
+        } else {
+
+	    #The transaction is rolled back.
+	    $schema->storage->txn_rollback;
+	    $c->stash->{rest} = {status => 2,};
+        }
     } else {
       $c->stash->{rest} = {status => 0,};
     }
@@ -308,9 +324,18 @@ sub delete_event_POST {
     my $c = shift;
     my $projectprop_id = $c->req->param("event_projectprop_id");
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
+
+    #The delete is wrapped in a transaction.
+    $schema->storage->txn_begin;
     if (my $delete = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id})->delete) {
+
+	#The transaction is committed.
+	$schema->storage->txn_commit;
 	$c->stash->{rest} = {status => 1,};
     } else {
+
+	#The transaction is rolled back.
+	$schema->storage->txn_rollback;
 	$c->stash->{rest} = {status => 0,};
     }
 }
@@ -322,28 +347,40 @@ sub add_event_type_POST {
     my $self = shift;
     my $c = shift;
 
-    #Variables sent from AJAX are requested.
-    my $name = $c->req->param("event_type_name");
+    #Variables sent from AJAX are requested. $name is made lowercase, to avoid an uppercase and lowercase version of the same name being saved in the db. Only lowercase versions are saved in the db.
+    my $name = lc $c->req->param("event_type_name");
     my $definition = $c->req->param("event_type_definition");
     
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    
-    #The cv_id for 'project_property' cvterms is found.
-    my $cv_id = $schema->resultset('Cv::Cv')->find({name=>'project_property'})->cv_id;
-
-    #A dbxref entry is added if there is not already an accession with that name, using db_id = 2, which is a NULL entry.
-    my $dbxref_id = $schema->resultset('General::Dbxref')->find_or_create({db_id=>'2', accession=>$name})->dbxref_id;
 
     #Check if the cvterm unique name constraint will cause the insert to fail.
     my $result_set = $schema->resultset('Cv::Cvterm');
     my $count = $result_set->search({name=>$name})->count;
     if ($count == 0) {
+
+	#Begin transaction.
+	$schema->storage->txn_begin;
+	
+	#The cv_id for 'project_property' cvterms is found.
+	my $cv_id = $schema->resultset('Cv::Cv')->find({name=>'project_property'})->cv_id;
+
+	#A dbxref entry is added if there is not already an accession with that name, using db_id = 2, which is a NULL entry. The dbxref_id is then returned.
+	my $dbxref_id = $schema->resultset('General::Dbxref')->find_or_create({db_id=>'2', accession=>$name})->dbxref_id;
+
 	if (my $insert = $result_set->create({cv_id=>$cv_id, dbxref_id=>$dbxref_id, name=>$name, definition=>$definition})) {
+	    
+	    #Commit transaction.
+	    $schema->storage->txn_commit;
 	    $c->stash->{rest} = {status => 1};
 	} else {
+
+	    #Rollback transaction.
+	    $schema->storage->txn_rollback;
 	    $c->stash->{rest} = {error => 1};
 	}
     } else {
+
+	#The $name was found in the cvterm table already.
 	$c->stash->{rest} = {status => 0};
     }
 }
