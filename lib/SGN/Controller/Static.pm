@@ -28,7 +28,13 @@ sub test_page :Path('/calendar/test_page/') :Args(0) {
     my $self = shift;
     my $c = shift;
     $c->stash->{template} = '/calendar/test_page.mas';
-    $c->stash->{static_content_path} = $c->config->{static_content_path};
+}
+
+#this function maps the url /calender/test_datatables/ to test_datatables.mas
+sub test_datatables :Path('/calendar/test_datatables/') :Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/calendar/test_datatables.mas';
 }
 
 sub solanaceae_project_afri :Path('/solanaceae-project/afri-sol/') { 

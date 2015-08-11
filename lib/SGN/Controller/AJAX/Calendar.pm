@@ -61,13 +61,16 @@ sub get_calendar_events {
     #Calendar event info is retrieved using DBIx class.
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
+
+    #Project properties with a cv group name of 'project_property' are retrieved.
     my $search_rs = $schema->resultset('Project::Project')->search(
-	[{'type.name'=>'project planting date'}, {'type.name'=>'project fertilizer date'}],
-	{join=>{'projectprops'=>'type'},
+	{'cv.name'=>'project_property'},
+	{join=>{'projectprops'=>{'type'=>'cv'}},
 	'+select'=> ['projectprops.projectprop_id', 'type.name', 'projectprops.value', 'type.cvterm_id'],
 	'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cv_id'],
 	}
     );
+    #$schema->storage->debug(1);
     return $search_rs;
 }
 
@@ -84,23 +87,31 @@ sub populate_calendar_events {
     my $end_display;
     my $formatted_time;
     my @time_array;
+    my $title;
+    my $property;
     while (my $result = $search_rs->next) {
+
+	#Check if project property value is a date, and if it is not, then skip to next result.
+	if (check_value_format($result->get_column('pp_value')) == -1) {
+	    next;
+	}
+
 	@time_array = parse_time_array($result->get_column('pp_value'));
 
 	#We begin with the start datetime, or the first element in the time_array.
-	#A time::piece object is returned from format_date(). Calling ->datetime on this object returns an ISO8601 datetime string. This string is what is used as the calendar event's start. 
+	#A time::piece object is returned from format_date(). Calling ->datetime on this object returns an ISO8601 datetime string. This string is what is used as the calendar event's start. Using format_display_date(), a nice date to display on mouse over is returned.
 	$formatted_time = format_time($time_array[0]);
 	$start_time = $formatted_time->datetime;
 	$start_display = format_display_date($formatted_time);
 	
-	#Because fullcalendar does not allow event resizing of allDay=true events in the month view, the allDay parameter must be set depending on the view. The allDay parameter for the agendaWeek view is important and is set using determine_allday().
+	#Because fullcalendar does not allow event resizing of allDay=false events in the month view, the allDay parameter must be set depending on the view. The allDay parameter for the agendaWeek view is important and is set using determine_allday().
 	if ($view eq 'month') {
 	    $allday = 1;
 	} elsif ($view eq 'agendaWeek') {
 	    $allday = determine_allday($formatted_time);
 	}
 
-	#Then we process the end datetime, which is the second element in the time_array.
+	#Then we process the end datetime, which is the second element in the time_array. calendar_end_display determines what the calendar should display as the end, and format_display_date() returns a nice date to display on mouseover.
 	$formatted_time = format_time($time_array[1]);
 	$end_time = calendar_end_display($formatted_time, $view, $allday);
 	$end_display = format_display_date($formatted_time);
@@ -108,10 +119,22 @@ sub populate_calendar_events {
 	#Because FullCallendar's end date is exclusive, an end datetime with 00:00:00 will be displayed as one day short on the calendar, and so corrections to the event's end must be made. To facilitate event dragging, an event.end_drag property is used. 
 	$end_drag = $formatted_time->datetime;
 
+	#To display the project name and project properties nicely in the mouseover and more info, we capitalize the first letter of each word.
+	$title = $result->name;
+	$title =~ s/([\w']+)/\u\L$1/g;
+	$property = $result->get_column('cv_name');
+	$property =~ s/([\w']+)/\u\L$1/g;
+
 	#Variables are pushed into the event array and will become properties of Fullcalendar events, like event.start, event.cvterm_url, etc. For the month view, the events are all shown as allDay=true. This is because fullcalendar restricts resizing events on the month view if they are not allDay.
-	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$result->name, property=>$result->get_column('cv_name'), start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id'), allDay=>$allday});
+	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$title, property=>$property, start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id'), allDay=>$allday, p_description=>$result->description});
     }
     return \@events;
+}
+
+sub check_value_format {
+    #Check if value is in the {"2015-08-01T00:00:00","2015-08-01T00:00:00"} format.
+    my $value = shift;
+    return index($value, '{"')
 }
 
 sub parse_time_array {
@@ -123,7 +146,7 @@ sub parse_time_array {
 }
 
 sub format_display_date {
-    #Displaying 00:00:00 time on mouseover and mouseclick is ugly, so start_display is used to determine date display format.
+    #Displaying 00:00:00 time on mouseover and mouseclick is ugly, so this sub is used to determine date display format.
     my $date_display;
     my $formatted_time = shift;
     if ($formatted_time->hms('') == '000000') {
@@ -135,7 +158,7 @@ sub format_display_date {
 }
 
 sub calendar_end_display {
-    #FullCalendar's end datetime in exclusive in the month view, so for a datetime with 00:00:00, a full day must be added so that it is displayed correctly on the calendar. The agendaWeek view handles it correctly. 
+    #FullCalendar's end datetime is exclusive for allday events in the month view. Since all events in the month view are allday = 1, a full day must be added so that it is displayed correctly on the calendar. In the agendaWeek view, not all events are allday = 1, so the end is only modified for allday events.
     my $formatted_time = shift;
     my $view = shift;
     my $allday = shift;
@@ -162,7 +185,7 @@ sub determine_allday {
 
 sub drag_or_resize_event : Path('/ajax/calendar/drag_or_resize') : ActionClass('REST') { }
 
-#When an event is dragged to a new date a value of drag = 1 is passed to the function. When an event is simply resized a value of drag =0 is passed to the function. This function saves the new start and end date to the db.
+#When an event is dragged to a new date a value of drag = 1 is passed to the function. When an event is simply resized a value of drag =0 is passed to the function. This function saves the new start and end date to the db and updates the calendar display and mouseover.
 sub drag_or_resize_event_POST { 
     my $self = shift;
     my $c = shift;
@@ -188,7 +211,7 @@ sub drag_or_resize_event_POST {
     #The string representing the new number of sec since epoch is parsed into a time::piece object.
     $formatted_start = Time::Piece->strptime($formatted_start, '%s');
 
-    #Calling ->datetime on a time::piece object returns a string ISO8601 datetime. new_start is what is saved in db.
+    #Calling ->datetime on a time::piece object returns a string ISO8601 datetime. new_start is what is saved in db. $new_start_display is what is displayed on mouseover.
     my $new_start = $formatted_start->datetime;
     my $new_start_display = format_display_date($formatted_start);
     
@@ -215,10 +238,12 @@ sub drag_or_resize_event_POST {
 
 sub day_click : Path('/ajax/calendar/dayclick') : ActionClass('REST') { }
 
-#When an event is deleted using the day_dialog_delete_event_form, this function is called to delete it from the database.
+#When a day is clicked, this function is called to populate the add_event project name and property type dropdowns.
 sub day_click_GET { 
     my $self = shift;
     my $c = shift;
+
+    #The available project names and their ids are pushed into an array. This array is passed back to the dayClick AJAX success, to then render the dropdown.
     my $q = "SELECT DISTINCT project_id, name FROM project";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute();
@@ -226,11 +251,14 @@ sub day_click_GET {
     while (my ($project_id, $project_name) = $sth->fetchrow_array ) {
 	push(@projects, {project_id=>$project_id, project_name=>$project_name});
     }
-    $q = "SELECT DISTINCT b.cvterm_id, b.name FROM (projectprop as a INNER JOIN cvterm as b on (a.type_id=b.cvterm_id))";
+
+    #The available cvterms that belong to the project_property cv group are pushed into an array. This array is passed back to the dayClick AJAX success to then be rendered as the dropdown.
+    $q = "SELECT DISTINCT a.cvterm_id, a.name FROM (cvterm as a INNER JOIN cv as b on (a.cv_id=b.cv_id)) WHERE b.name = 'project_property'";
     $sth = $c->dbc->dbh->prepare($q);
     $sth->execute();
     my @projectprop_types;
     while (my ($cvterm_id, $cvterm_name) = $sth->fetchrow_array ) {
+	$cvterm_name =~ s/([\w']+)/\u\L$1/g;
 	push(@projectprop_types, {cvterm_id=>$cvterm_id, cvterm_name=>$cvterm_name});
     }
     $c->stash->{rest} = {project_list => \@projects, projectprop_list => \@projectprop_types};
@@ -274,7 +302,7 @@ sub add_event_POST {
 
 sub delete_event : Path('/ajax/calendar/delete_event') : ActionClass('REST') { }
 
-#When an event is deleted using the day_dialog_delete_event_form, this function is called to delete it from the database.
+#When an event is deleted using the day_dialog_delete_event_form, this function is called to delete it from the database using DBIx class.
 sub delete_event_POST { 
     my $self = shift;
     my $c = shift;
@@ -287,9 +315,37 @@ sub delete_event_POST {
     }
 }
 
+sub add_event_type : Path('/ajax/calendar/add_event_type') : ActionClass('REST') { }
+
+#When an event type is added using the add_event_type_form, this function is called to save it to the database.
+sub add_event_type_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    #Variables sent from AJAX are requested.
+    my $name = $c->req->param("event_type_name");
+    my $definition = $c->req->param("event_type_definition");
+    
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $cv_id = $schema->resultset('Cv::Cv')->find({name=>'project_property'})->cv_id;
+
+    #Check if the cvterm unique name constraint will cause the insert to fail.
+    my $result_set = $schema->resultset('Cv::Cvterm');
+    my $count = $result_set->search({name=>$name})->count;
+    if ($count == 0) {
+	if (my $insert = $result_set->create({cv_id=>$cv_id, name=>$name, definition=>$definition})) {
+	    $c->stash->{rest} = {status => 1};
+	} else {
+	    $c->stash->{rest} = {error => 1};
+	}
+    } else {
+	$c->stash->{rest} = {status => 0};
+    }
+}
+    
 sub event_more_info : Path('/ajax/calendar/more_info_properties') : ActionClass('REST') { }
 
-#when the event_dialog_more_info_form is submitted, this function is called to retrieve all other projectprops for that project and also to display the project_relationships.
+#When the event_dialog_more_info_form is submitted, this function is called to retrieve all other projectprops for that project and also to display the project_relationships.
 sub event_more_info_POST { 
     my $self = shift;
     my $c = shift;
@@ -311,7 +367,7 @@ sub event_more_info_POST {
     while (my $result = $search_rs->next) {
 
 	#To make the date display nicely, we first check if the property value is a date, and then apply formatting.
-	if (index($result->value, '{"') != -1){
+	if (check_value_format($result->value) != -1){
 	    @time_array = parse_time_array($result->value);
 
 	    #We begin with the start datetime, or the first element in the time_array.
@@ -393,8 +449,6 @@ sub datatables_project_relationships_GET {
 }
 
 #This function is used to return a Time::Piece object, which is useful for format consistensy.
-#Reformat all dates in projectprop table to datetime ISO8601 format, with start and end datetimes.
-#Update projectprop set value='{"2007-09-21T00:00:00","2007-09-21T00:00:00"}' where project_id='149' and type_id='76773'; Update projectprop set value='{"2007-08-10T00:00:00","2007-08-10T00:00:00"}' where project_id='149' and type_id='76772'; Update projectprop set value='{"2008-06-04T00:00:00","2008-06-04T00:00:00"}' where project_id='150' and type_id='76773'; Update projectprop set value='{"2008-04-23T00:00:00","2008-04-23T00:00:00"}' where project_id='150' and type_id='76772'; Update projectprop set value='{"2010-08-12T00:00:00","2010-08-12T00:00:00"}' where project_id='159' and type_id='76772'; Update projectprop set value='{"2011-08-04T00:00:00","2011-08-04T00:00:00"}' where project_id='160' and type_id='76772'; Update projectprop set value='{"2010-08-11T00:00:00","2010-08-11T00:00:00"}' where project_id='156' and type_id='76772'; Update projectprop set value='{"2012-04-28T00:00:00","2012-04-28T00:00:00"}' where project_id='143' and type_id='76772'; Update projectprop set value='{"2008-05-15T00:00:00","2008-05-15T00:00:00"}' where project_id='152' and type_id='76772'; Update projectprop set value='{"2008-06-25T00:00:00","2008-06-25T00:00:00"}' where project_id='152' and type_id='76773'; Update projectprop set value='{"2006-02-01T00:00:00","2006-02-01T00:00:00"}' where project_id='146' and type_id='76772'; Update projectprop set value='{"2006-12-08T00:00:00","2006-12-08T00:00:00"}' where project_id='148' and type_id='76772'; Update projectprop set value='{"2007-01-20T00:00:00","2007-01-20T00:00:00"}' where project_id='148' and type_id='76773'; Update projectprop set value='{"2006-05-02T00:00:00","2006-05-02T00:00:00"}' where project_id='147' and type_id='76772'; Update projectprop set value='{"2006-07-02T00:00:00","2006-07-02T00:00:00"}' where project_id='147' and type_id='76773'; Update projectprop set value='{"2008-04-29T00:00:00","2008-04-29T00:00:00"}' where project_id='151' and type_id='76772'; Update projectprop set value='{"2008-06-10T00:00:00","2008-06-10T00:00:00"}' where project_id='151' and type_id='76773'; Update projectprop set value='{"2011-08-08T00:00:00","2011-08-08T00:00:00"}' where project_id='155' and type_id='76772'; Update projectprop set value='{"2011-10-21T00:00:00","2011-10-21T00:00:00"}' where project_id='155' and type_id='76773'; Update projectprop set value='{"2011-09-28T00:00:00","2011-09-28T00:00:00"}' where project_id='133' and type_id='76772'; Update projectprop set value='{"2011-06-24T00:00:00","2011-06-24T00:00:00"}' where project_id='133' and type_id='76773'; Update projectprop set value='{"2011-06-01T00:00:00","2011-06-01T00:00:00"}' where project_id='145' and type_id='76772'; Update projectprop set value='{"2011-08-10T00:00:00","2011-08-10T00:00:00"}' where project_id='145' and type_id='76773'; Update projectprop set value='{"2010-08-12T00:00:00","2010-08-12T00:00:00"}' where project_id='158' and type_id='76772'; Update projectprop set value='{"2010-05-07T00:00:00","2010-05-07T00:00:00"}' where project_id='132' and type_id='76772'; Update projectprop set value='{"2010-06-06T00:00:00","2010-06-06T00:00:00"}' where project_id='136' and type_id='76772'; Update projectprop set value='{"2010-05-18T00:00:00","2010-05-18T00:00:00"}' where project_id='135' and type_id='76772'; Update projectprop set value='{"2010-07-28T00:00:00","2010-07-28T00:00:00"}' where project_id='135' and type_id='76773'; Update projectprop set value='{"2010-05-18T00:00:00","2010-05-18T00:00:00"}' where project_id='135' and type_id='76772'; Update projectprop set value='{"2015-08-12T00:00:00","2015-08-15T00:00:00"}' where project_id='134' and type_id='76773'; Update projectprop set value='{"2015-08-28T00:00:00","2015-08-28T00:00:00"}' where project_id='153' and type_id='76773'; Update projectprop set value='{"2015-08-23T00:00:00","2015-08-23T00:00:00"}' where project_id='134' and type_id='76772'; Update projectprop set value='{"2015-08-07T00:00:00","2015-08-07T00:00:00"}' where project_id='153' and type_id='76772'; Update projectprop set value='{"2015-08-06T00:00:00","2015-08-06T00:00:00"}' where project_id='154' and type_id='76773'; Update projectprop set value='{"2015-08-20T00:00:00","2015-08-20T00:00:00"}' where project_id='154' and type_id='76772';
 sub format_time {
     my $input_time = shift;
     my $formatted_time;
@@ -406,5 +460,8 @@ sub format_time {
     }
     return $formatted_time;
 }
+
+#Reformat all dates in projectprop table to datetime ISO8601 format, with start and end datetimes.
+#Update projectprop set value='{"2007-09-21T00:00:00","2007-09-21T00:00:00"}' where project_id='149' and type_id='76773'; Update projectprop set value='{"2007-08-10T00:00:00","2007-08-10T00:00:00"}' where project_id='149' and type_id='76772'; Update projectprop set value='{"2008-06-04T00:00:00","2008-06-04T00:00:00"}' where project_id='150' and type_id='76773'; Update projectprop set value='{"2008-04-23T00:00:00","2008-04-23T00:00:00"}' where project_id='150' and type_id='76772'; Update projectprop set value='{"2010-08-12T00:00:00","2010-08-12T00:00:00"}' where project_id='159' and type_id='76772'; Update projectprop set value='{"2011-08-04T00:00:00","2011-08-04T00:00:00"}' where project_id='160' and type_id='76772'; Update projectprop set value='{"2010-08-11T00:00:00","2010-08-11T00:00:00"}' where project_id='156' and type_id='76772'; Update projectprop set value='{"2012-04-28T00:00:00","2012-04-28T00:00:00"}' where project_id='143' and type_id='76772'; Update projectprop set value='{"2008-05-15T00:00:00","2008-05-15T00:00:00"}' where project_id='152' and type_id='76772'; Update projectprop set value='{"2008-06-25T00:00:00","2008-06-25T00:00:00"}' where project_id='152' and type_id='76773'; Update projectprop set value='{"2006-02-01T00:00:00","2006-02-01T00:00:00"}' where project_id='146' and type_id='76772'; Update projectprop set value='{"2006-12-08T00:00:00","2006-12-08T00:00:00"}' where project_id='148' and type_id='76772'; Update projectprop set value='{"2007-01-20T00:00:00","2007-01-20T00:00:00"}' where project_id='148' and type_id='76773'; Update projectprop set value='{"2006-05-02T00:00:00","2006-05-02T00:00:00"}' where project_id='147' and type_id='76772'; Update projectprop set value='{"2006-07-02T00:00:00","2006-07-02T00:00:00"}' where project_id='147' and type_id='76773'; Update projectprop set value='{"2008-04-29T00:00:00","2008-04-29T00:00:00"}' where project_id='151' and type_id='76772'; Update projectprop set value='{"2008-06-10T00:00:00","2008-06-10T00:00:00"}' where project_id='151' and type_id='76773'; Update projectprop set value='{"2011-08-08T00:00:00","2011-08-08T00:00:00"}' where project_id='155' and type_id='76772'; Update projectprop set value='{"2011-10-21T00:00:00","2011-10-21T00:00:00"}' where project_id='155' and type_id='76773'; Update projectprop set value='{"2011-09-28T00:00:00","2011-09-28T00:00:00"}' where project_id='133' and type_id='76772'; Update projectprop set value='{"2011-06-24T00:00:00","2011-06-24T00:00:00"}' where project_id='133' and type_id='76773'; Update projectprop set value='{"2011-06-01T00:00:00","2011-06-01T00:00:00"}' where project_id='145' and type_id='76772'; Update projectprop set value='{"2011-08-10T00:00:00","2011-08-10T00:00:00"}' where project_id='145' and type_id='76773'; Update projectprop set value='{"2010-08-12T00:00:00","2010-08-12T00:00:00"}' where project_id='158' and type_id='76772'; Update projectprop set value='{"2010-05-07T00:00:00","2010-05-07T00:00:00"}' where project_id='132' and type_id='76772'; Update projectprop set value='{"2010-06-06T00:00:00","2010-06-06T00:00:00"}' where project_id='136' and type_id='76772'; Update projectprop set value='{"2010-05-18T00:00:00","2010-05-18T00:00:00"}' where project_id='135' and type_id='76772'; Update projectprop set value='{"2010-07-28T00:00:00","2010-07-28T00:00:00"}' where project_id='135' and type_id='76773'; Update projectprop set value='{"2010-05-18T00:00:00","2010-05-18T00:00:00"}' where project_id='135' and type_id='76772'; Update projectprop set value='{"2015-08-12T00:00:00","2015-08-15T00:00:00"}' where project_id='134' and type_id='76773'; Update projectprop set value='{"2015-08-28T00:00:00","2015-08-28T00:00:00"}' where project_id='153' and type_id='76773'; Update projectprop set value='{"2015-08-23T00:00:00","2015-08-23T00:00:00"}' where project_id='134' and type_id='76772'; Update projectprop set value='{"2015-08-07T00:00:00","2015-08-07T00:00:00"}' where project_id='153' and type_id='76772'; Update projectprop set value='{"2015-08-06T00:00:00","2015-08-06T00:00:00"}' where project_id='154' and type_id='76773'; Update projectprop set value='{"2015-08-20T00:00:00","2015-08-20T00:00:00"}' where project_id='154' and type_id='76772';
 
 1;
