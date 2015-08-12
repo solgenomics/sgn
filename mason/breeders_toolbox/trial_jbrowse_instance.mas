@@ -1,0 +1,48 @@
+
+<%args>
+$trial_id
+@accession_names 
+</%args>
+
+<%perl>
+my $does_exist;
+my $accession_list = join(',',@accession_names); 
+my $jbrowse_url;
+my $iframe_url;
+if ( $trial_id && @accession_names ) {
+    $jbrowse_url = "jbrowse_cassavabase/JBrowse-1.11.6/?data=data/json/trials/"; 
+    $iframe_url = $jbrowse_url . $trial_id . "&tracks=DNA,RepeatMasker," . $accession_list . "&tracklist=0&nav=1&overview=0";
+    print STDERR "JB.MAS\njbrowse_url = $jbrowse_url\niframe_url = $iframe_url \n\n";
+ }
+</%perl>
+
+<script>
+
+jQuery(document).ready(function () {
+	urlExists(<% $iframe_url %>, function(exists)){
+		     <% $does_exist %> = exists
+		 }			
+
+function urlExists (url, callback) {
+  JQuery.ajax({
+    type: 'HEAD',
+    url: url,
+    success: function(){
+      callback(true);
+    },
+    error: function() {
+      callback(false);
+    }
+  });
+}
+
+</script>
+
+%if ($does_exist) {
+    <iframe style="border: 1px solid rgb(80, 80, 80);" src="<% $iframe_url %>" height="250" width="700"  name="jbrowse_iframe">
+    <p>Your browser does not support iframes.</p> </iframe>
+%} else {
+    <p> No Jbrowse instance exists for this trial </p>
+%}
+
+
