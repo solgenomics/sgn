@@ -13,6 +13,8 @@ Currently maps to Cassbase Mason jquery calls
 =head1 AUTHOR
 
 Nicolas Morales <nm529@cornell.edu>
+Created: 08/01/2015
+Modified: 08/13/2015
 
 =cut
 
