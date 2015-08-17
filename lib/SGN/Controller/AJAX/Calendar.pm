@@ -128,7 +128,7 @@ sub populate_calendar_events {
 	$property =~ s/([\w']+)/\u\L$1/g;
 
 	#Variables are pushed into the event array and will become properties of Fullcalendar events, like event.start, event.cvterm_url, etc.
-	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$title, property=>$property, start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id'), allDay=>$allday, p_description=>$result->description, event_description=>$time_array[2], event_url=>$time_array[3]});
+	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$title, property=>$property, start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_id=>$result->get_column('cv_id'), cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id'), allDay=>$allday, p_description=>$result->description, event_description=>$time_array[2], event_url=>$time_array[3]});
     }
     return \@events;
 }
@@ -350,6 +350,48 @@ sub delete_event_POST {
 
 	#The transaction is rolled back.
 	$schema->storage->txn_rollback;
+	$c->stash->{rest} = {status => 0,};
+    }
+}
+
+sub edit_event : Path('/ajax/calendar/edit_event') : ActionClass('REST') { }
+
+#When an event is added using the day_dialog_add_event_form, this function is called to save it to the database.
+sub edit_event_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    #Variables sent from AJAX are requested.
+    my $projectprop_id = $c->req->param("edit_event_projectprop_id");
+    my $project_id = $c->req->param("edit_event_project_select");
+    my $cvterm_id = $c->req->param("edit_event_type_select");
+    my $start = $c->req->param("edit_event_start");
+    my $end = $c->req->param("edit_event_end");
+    my $description = $c->req->param("edit_event_description");
+    my $url = $c->req->param("edit_event_url");
+
+    #If no description or URL given, then default values will be given.
+    if ($description eq '') {$description = 'N/A';}
+    if ($url eq '') {$url = '#';} elsif ($url eq '#') {$url = '#';} else {$url = 'http://www.'.$url;}
+
+    #Check if the projectprop unique (project_id, type_id, rank) constraint will cause the insert to fail.
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $result_set = $schema->resultset('Project::Projectprop');
+    my $count = $result_set->search({project_id=>$project_id, type_id=>$cvterm_id, rank=>0})->count;
+    if ($count == 0) {
+	$schema->storage->txn_begin;
+	if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id}, columns=>['project_id', 'type_id', 'value'])->update({project_id=>$project_id, type_id=>$cvterm_id, value=>[$start, $end, $description, $url]})) {
+	
+	    #The transaction changes are commited.
+	    $schema->storage->txn_commit;
+	    $c->stash->{rest} = {status => 1,};
+	} else {
+
+	    #The transaction is rolled back.
+	    $schema->storage->txn_rollback;
+	    $c->stash->{rest} = {error => 1,};
+	}
+    } else {
 	$c->stash->{rest} = {status => 0,};
     }
 }
