@@ -13,21 +13,8 @@ sub check_analysis_status {
    
     my ($self, $output_files, $analysis_profile) = @_;
  
-    #my $output_file = $output_files->{output_file};
-
-   # sleep 10;
     my $size = $self->check_output_file_size($output_files);
     
-   # my $died_file;
-    
-    # if (!$size) 
-    # {
-    # 	my $job_tempdir = $output_files->{job_tempdir};    
-    # 	$died_file  = $self->get_file($job_tempdir, 'died');
-    # }
-    
-   # my $died = $self->check_died_file($died_file);
-
     $self->report_status($size, $analysis_profile);
  
 }
