@@ -5,7 +5,7 @@
 $breeding_programs
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree' ] &>
 
 <table><tr><td valign="top">
 <div class="boxbgcolor5">
@@ -297,7 +297,7 @@ Double click<br />trial to view
 <div id="trial_saving_dialog" title="Saving">
   <p>
     Saving trial<br>
-    <span style="float: center;"><img src="../img/wheel.gif"/></span>
+    <span style="float: center;"><img src="/img/wheel.gif"/></span>
   </p>
 </div>
 

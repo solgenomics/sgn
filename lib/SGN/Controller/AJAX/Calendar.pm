@@ -14,7 +14,7 @@ Currently maps to Cassbase Mason jquery calls
 
 Nicolas Morales <nm529@cornell.edu>
 Created: 08/01/2015
-Modified: 08/13/2015
+Modified: 08/17/2015
 
 =cut
 
@@ -301,7 +301,7 @@ sub add_event_POST {
     my $format_end;
     if ($end eq '') {$format_end = $format_start;} else {$format_end = format_time($end)->datetime;}
 
-    #If no description or URL given, then 'N/A' will be given.
+    #If no description or URL given, then default values will be given.
     if ($description eq '') {$description = 'N/A';}
     if ($url eq '') {$url = '#';} else {$url = 'http://www.'.$url;}
     
