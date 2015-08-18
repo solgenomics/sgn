@@ -17,46 +17,24 @@ solGS.waitPage = function (page) {
 //run analysis.
 //email to the user the link to the analysis output page 
 //if no, block page and run analysis as usual..
- 
-    //alert(page)
 
-      askUser(page);
-
-
-
-
-                 
-        //jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-        // jQuery.blockUI({message: 'Please wait..'});
-         
-        // jQuery(window).unload(function()  {
-        //         jQuery.unblockUI();            
-        //     });
-
-//
-   }
-
-
-
-solGS.analysisUpdate = function () {
-    
-
-
-
+    if (page.match(/solgs\/trait\//) != null) {
+    	askUser(page);
+    } else {
+    	blockPage(page);
+    }
+   
 }
 
 
 function  askUser(page) {
-     
-    //count to 5 sec and then ask...
-
-   
+       
     var t = '<p>This analysis may take longer than 20 min. ' 
 	+ 'Would you like to be emailed when it is done?</p>';
     
     jQuery('<div />')
 	.html(t)
-	.dialog( {
+	.dialog({
 	    height : 200,
 	    width  : 400,
 	    modal  : true,
@@ -72,7 +50,8 @@ function  askUser(page) {
 		Yes: { text: "Yes", 
                        click: function() {
 			   jQuery(this).dialog("close");			  
-			   getProfileDialog(page);
+			 
+			   checkUserLogin(page);
 		       },
 		     }          
 	    }
@@ -81,22 +60,80 @@ function  askUser(page) {
 }
 
 
+function checkUserLogin (page) {
+    
+    jQuery.ajax({
+	type    : 'POST',
+	dataType: 'json',
+	url     : '/solgs/check/user/login/',
+	success : function(response) {
+            if (response.loggedin) {
+//include in response user data
+		
+		getProfileDialog(page);
+            } else {
+		loginAlert();
+	    }
+	}
+	});
+
+}
+
+
+function loginAlert () {
+    
+    jQuery('<div />')
+	.html('To use this feature, you need to log in and start over the process.')
+	.dialog({
+	    height : 200,
+	    width  : 250,
+	    modal  : true,
+	    title  : 'Login Alert',
+	    buttons: {
+		OK: function () {
+		    jQuery(this).dialog('close');
+		
+		    loginUser();
+		}
+	    }			
+	});	    
+
+}
+
+
+function loginUser () {
+    
+    window.location = '/solpeople/login.pl?goto_url=' + window.location.pathname;
+  
+}
+
+
 function displayAnalysisNow (page) {
-   // alert(page);
-    window.location = page;
-    jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-    jQuery.blockUI({message: 'Please wait..'});
-         
-    jQuery(window).unload(function()  {
-            jQuery.unblockUI();            
-    });
+
+    blockPage(page);
 
  }
 
 
+function blockPage (page) {
+    alert('blocking...');
+    alert('page: ' + page);
+
+    if (page !== undefined) {
+	window.location = page;
+    }
+
+    jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+    jQuery.blockUI({message: 'Please wait..'});
+         
+    jQuery(window).unload(function()  {
+        jQuery.unblockUI();            
+    }); 
+ 
+}
 
 function getProfileForm () {
-  
+  //remove user name; ask for email depending on whether there is one in the db or not.
     var emailForm = '<p>Please fill in your email.</p>'
 	+'<table>'
 	+ '<tr>'
@@ -116,22 +153,6 @@ function getProfileForm () {
     return emailForm;
 }
  
-
-function clearUserEmail() {
-    document.getElementById('#user_email').reset();
-
-}
-
-function clearUserName() {
-    document.getElementById('#user_name').reset();
-
-}
-
-function clearAnalysisName() {
-    alert('analysis name before reset: ' + jQuery('#analysis_name').val());
-    document.getElementById('#analysis_name').reset();
-    alert('analysis name after reset:' + jQuery('#analysis_name').val());
-}
 
 function getProfileDialog (page) {
     var form = getProfileForm();
@@ -155,25 +176,10 @@ function getProfileDialog (page) {
 			'analysis_name': analysisName,
 			'analysis_page': page
 		    }
-		    
-		   // jQuery('#user_name').val('');
-		   // jQuery('#user_email').val('');
-		   // jQuery('#analysis_name').val('');
-		   // window.location = window.location.href;
-
-
-		   
 
 		    jQuery(this).dialog('close');
 		     
 		    saveAnalysisProfile(analysisProfile);
- // alert('clearing..analysis name');
- // 		    clearAnalysisName();
- // 		    alert('clearing..user name');
- // 		  clearUserName();
- // 		     alert('clearing..user email');
- // 		    clearUserEmail();
-		    
 		},
 		Cancel:  function() {
 		    jQuery(this).dialog('close');
@@ -223,14 +229,6 @@ function saveAnalysisProfile (profile) {
             if (response.result) {
 		runAnalysis(profile);
 		confirmRequest();
-		
-		//jQuery(document).ready( function () {
-		  //  alert('calling run analysis... ' + profile.user_name);
-	
-		//    runAnalysis(profile);
-		    
-	//	});
-		
 	
             } else { 
 		jQuery('<div />', {id: 'error-message'})
@@ -271,8 +269,7 @@ function saveAnalysisProfile (profile) {
 
 
 function runAnalysis (profile) {
-    alert('called runAnalysis...' + profile.analysis_name);
-    
+   
     jQuery.ajax({
 	async: true,
 	type: 'POST',
@@ -280,8 +277,6 @@ function runAnalysis (profile) {
 	data: profile,
 	url: '/solgs/run/saved/analysis/',
 	 success: function () {
-	//     alert(res.empty_response); 
-	//     window.location.reload(true);   
 	 },	
     });
  
@@ -289,43 +284,10 @@ function runAnalysis (profile) {
 
 
 function confirmRequest () {
-    alert('confirming request');
-    // jQuery.ajax({
-    // 	type: 'POST',
-    // 	dataType: 'json',
-    // 	url: '/solgs/confirm/request/',
-    // 	// success: function (res) {
-    // 	//     alert(res.empty_response); 
-    // 	//     window.location.reload(true);   
-    // 	// },
-
-	
-    // });
-
-    window.location.href ='/solgs/confirm/request/';
+    
+    blockPage('/solgs/confirm/request');
  
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function(a, b) {
