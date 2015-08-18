@@ -63,6 +63,7 @@ sub solgs : Path('/solgs'){
     $c->forward('search');
 }
 
+
 sub solgs_breeder_search :Path('/solgs/breeder_search') Args(0) { 
     my ($self, $c) = @_;
     $c->stash->{referer}  = $c->req->referer();
@@ -235,7 +236,6 @@ sub search_trials : Path('/solgs/search/trials') Args() {
     $c->res->content_type('application/json');
     $c->res->body($ret);
     
-
 }
 
 
@@ -411,7 +411,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
 	    my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 	    $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
-	    push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code
+	    push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage();">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code
                 ];
 	}
    }     
@@ -473,10 +473,10 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
 	}
     } 
     
-    $ret = to_json($ret);
+    # $ret = to_json($ret);
         
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
+    # $c->res->content_type('application/json');
+    # $c->res->body($ret);
    
 }
 
@@ -663,19 +663,19 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
  
     my $pheno_data_file = $c->stash->{phenotype_file};
     
-        if($uploaded_reference) 
-        {
-            my $ret->{status} = 'failed';
-            if( !-s $pheno_data_file )
-            {
-                $ret->{status} = 'failed';
+    if($uploaded_reference) 
+    {
+	my $ret->{status} = 'failed';
+	if( !-s $pheno_data_file )
+	{
+	    $ret->{status} = 'failed';
             
-                $ret = to_json($ret);
+	    $ret = to_json($ret);
                 
-                $c->res->content_type('application/json');
-                $c->res->body($ret); 
-            }
-        }
+	    $c->res->content_type('application/json');
+	    $c->res->body($ret); 
+	}
+    }
 } 
 
 
@@ -910,37 +910,32 @@ sub trait :Path('/solgs/trait') Args(3) {
         my $trait_name = $c->stash->{trait_name};
 
         $self->get_rrblup_output($c);
-
+ 
         $self->gs_files($c);
 
         unless ($ajaxredirect eq 'heritability') 
-        {
-            $self->project_description($c, $pop_id); 
-	     #  $self->run_r_script($c);
-    print STDERR "\n solgs/trait... calling trait_phenotype_stat\n";
-  
-  
-
-            $self->trait_phenotype_stat($c);  
- print STDERR "\n DONE solgs/trait... calling trait_phenotype_stat\n";    
-          
-            $self->get_project_owners($c, $pop_id);       
-            $c->stash->{owner} = $c->stash->{project_owners};
-           
+        {	    
             my $script_error = $c->stash->{script_error};
+	   
             if ($script_error) 
             {
                 $c->stash->{message} = "$script_error can't create a prediction model for <b>$trait_name</b>. 
                                         There is a problem with the trait dataset.";
 
                 $c->stash->{template} = "/generic_message.mas";   
-
             } 
             else 
-            {
-                $c->stash->{template} = $self->template("/population/trait.mas");
-            }
-        }
+	    {            
+		$self->project_description($c, $pop_id); 
+
+		$self->trait_phenotype_stat($c);  
+ 
+		$self->get_project_owners($c, $pop_id);       
+		$c->stash->{owner} = $c->stash->{project_owners};
+                
+		$c->stash->{template} = $self->template("/population/trait.mas");
+	    }	  
+	}
     }
  
     if ($ajaxredirect) 
@@ -2663,7 +2658,6 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
 
     foreach my $pop_id (@pop_ids) 
     {
-    
         my $markers     = $c->model("solGS::solGS")->get_genotyping_markers($pop_id);                   
         my @markers     = split(/\t/, $markers);
         my $markers_num = scalar(@markers);
@@ -3191,7 +3185,9 @@ sub trait_phenotype_stat {
     my ($self, $c) = @_; 
     
     $self->trait_phenodata_file($c);
+
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
+
     my $trait_data = $self->convert_to_arrayref_of_arrays($c, $trait_pheno_file);
   
     my @pheno_data;   
@@ -3787,12 +3783,12 @@ sub genotype_file  {
     
     die "Population id must be provided to get the genotype data set." if !$pop_id;
   
-    if ($c->stash->{uploaded_reference}) {
+    if ($c->stash->{uploaded_reference}) 
+    {
         my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};     
         my $user_id = $c->user->id;
 
-        $geno_file = catfile ($tmp_dir, "genotype_data_${user_id}_${pop_id}");
- 
+        $geno_file = catfile ($tmp_dir, "genotype_data_${user_id}_${pop_id}"); 
     }
 
     if ($pop_id =~ /uploaded/) 
@@ -3898,7 +3894,7 @@ sub get_rrblup_output :Private{
 
     no warnings 'uninitialized';
  
-    if($data_set_type !~ /combined populations/) 
+    if ($data_set_type !~ /combined populations/) 
     {
         if (scalar(@traits) == 1) 
         {
@@ -4066,11 +4062,7 @@ sub run_rrblup  {
     }
    
     $c->stash->{r_script}    = 'R/gs.r';
-   $self->run_r_script($c);
-
-    print STDERR "\n\n running r script async...\n\n";
-  #  $self->run_r_script_async($c);
-    print STDERR "\n\n DONE running r script async in the background...\n\n";
+    $self->run_r_script($c);
 
 }
 
@@ -4154,84 +4146,22 @@ sub create_cluster_acccesible_tmp_files {
 }
 
 
-sub run_r_script_async {
-    my ($self, $c) = @_;
-    
-    my $r_script      = $c->stash->{r_script};
-    my $input_files   = $c->stash->{input_files};
-    my $output_files  = $c->stash->{output_files};
- 
-    $self->create_cluster_acccesible_tmp_files($c);
-    my $in_file_temp =  $c->stash->{in_file_temp};
-
-
-    my $on_completion = sub {
-	print STDERR "\n\n on completion.... subroutine\n\n";
-	solGS::AnalysisProfile->check_analysis_progress;   
-    };
-
-
-    {
-        my $r_cmd_file = $c->path_to($r_script);
-        copy($r_cmd_file,  $in_file_temp)
-            or die "could not copy $r_cmd_file to $in_file_temp";
-    }
-
-    try 
-    {	
-        my $r_process = CXGN::Tools::Run->run_async(
-            'R', 'CMD', 'BATCH',
-            '--slave',
-            "--args $input_files $output_files", 
-	    $c->stash->{in_file_temp}, 
-	    $c->stash->{out_file_temp}, 
-	    $c->stash->{err_file_temp},
-            {
-                working_dir => $c->stash->{solgs_tempfiles_dir},
-		max_cluster_jobs => 1_000_000_000,
-		on_completion => $on_completion,
-	
-            },
-            );
-         
-	sleep(1);
-
-    }
-    catch 
-    {
-        my $err = $_;
-        $err =~ s/\n at .+//s; 
-        try
-        { 
-            $err .= "\n=== R output ===\n"
-		.file($c->stash->{out_file_temp})->slurp
-		."\n=== end R output ===\n" ;
-        };
-    
-        $c->stash->{script_error} = "$r_script";
-    }
-}
-
-
 sub run_r_script {
     my ($self, $c) = @_;
     
     my $r_script     = $c->stash->{r_script};
     my $input_files  = $c->stash->{input_files};
     my $output_files = $c->stash->{output_files};
-    my $blup_file    = $c->stash->{gebv_kinship_file};
   
-    print STDERR "\n\n $blup_file\n\n";
     $self->create_cluster_acccesible_tmp_files($c);
-    my $in_file_temp  =  $c->stash->{in_file_temp};
-    my $out_file_temp =  $c->stash->{out_file_temp};
- 
+    my $in_file_temp  = $c->stash->{in_file_temp};
+    my $out_file_temp = $c->stash->{out_file_temp};
+
     {
         my $r_cmd_file = $c->path_to($r_script);
         copy($r_cmd_file, $in_file_temp)
             or die "could not copy '$r_cmd_file' to '$in_file_temp'";
     }
-
     
     try 
     { 
@@ -4244,12 +4174,15 @@ sub run_r_script {
             {
                 working_dir => $c->stash->{solgs_tempfiles_dir},
                 max_cluster_jobs => 1_000_000_000,
-
             },
             );
 
+	$c->stash->{job_tempdir} = $r_process->tempdir();
 
-
+	unless ($c->stash->{background_job})
+	{
+	    $r_process->wait;
+	}
     }
     catch 
     {
@@ -4266,41 +4199,6 @@ sub run_r_script {
         $c->stash->{script_error} = "$r_script";
     }
 
-
-#	&$on_completion;
-  
-    	# my $pid = $r_process->pid;
-
-	# print STDERR "\n parent id: $pid\n";
-	# my $child = fork();
-
-	# die ("failed to fork\n") unless (defined $child);
-	# print STDERR "\n child id: $child -- pid: $pid\n";
-	# if ($child) {
-	#      print STDERR "\n defined $child process\n";
-	#     while (1) {
-	# 	  print STDERR "\n checking  $child process\n";
-	# 	sleep 1;
-	# 	my $status = kill 0 => $child;
-	# 	  print STDERR "\n status: $status\n";
-		 
-
-	# 	if (!$status) {
-		    
-	# 	    print STDERR "\n child id: $child process over\n";
-	# 	    solGS::AnalysisProfile::check_analysis_progress();
-	# 	   exit 0;
-	# 	}
-	# 	else 
-	# 	{
-	# 	   print STDERR "\n child id: $child process still running\n";   
-	# 	}
-	
-
-	#     }
-	# }
-
-  	
 }
  
  
