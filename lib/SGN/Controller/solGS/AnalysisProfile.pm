@@ -7,7 +7,7 @@ use File::Spec::Functions qw / catfile catdir/;
 use File::Temp qw / tempfile tempdir /;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
-use solGS::AnalysisReport;
+
 use CXGN::Tools::Run;
 use Try::Tiny;
 
@@ -15,9 +15,42 @@ use Try::Tiny;
 BEGIN { extends 'Catalyst::Controller' }
 
 
+sub login_user :Path('/solgs/check/user/login') Args(0) {
+  my ($self, $c) = @_;
+
+  my $user = $c->user();
+  my $ret->{loggedin} = 0;
+
+  if ($user) 
+  { 
+      my $salutation = $user->get_salutation();
+      my $first_name = $user->get_first_name();
+      my $last_name  = $user->get_last_name();
+          
+      my $private_email = $user->get_private_email();
+      my $public_email  = $user->get_contact_email();
+     
+      my $email = $public_email 
+	  ? $public_email 
+	  : $private_email;
+
+
+      $ret->{loggedin} = 1;
+      my $user_profile = { 'name' => $first_name, 'email' => $email};
+      $ret->{user_profile} = $user_profile;
+  }
+   
+  $ret = to_json($ret);
+       
+  $c->res->content_type('application/json');
+  $c->res->body($ret);  
+  
+}
+
+
 sub save_analysis_profile :Path('/solgs/save/analysis/profile') Args(0) {
     my ($self, $c) = @_;
-    
+   
     my $analysis_profile = $c->req->params;
     $c->stash->{analysis_profile} = $analysis_profile;
    
@@ -119,15 +152,18 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     $self->run_analysis($c);
     
     my $output_file = $c->stash->{gebv_kinship_file};
-
-    print STDERR "\nanalysis output file: $output_file\n";
+    my $job_tempdir = $c->stash->{job_tempdir};
+    
+    my $output_files = { 
+	'output_file' => $output_file, 
+	'job_tempdir' => $job_tempdir
+    };
 
     $c->stash->{r_temp_file} = 'analysis-status';
     $c->controller('solGS::solGS')->create_cluster_acccesible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
-
-    print STDERR "\n error file: $err_temp_file\n\n";
+   
     $self->create_profiles_dir($c);
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
 
@@ -136,16 +172,15 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
         my $r_process = CXGN::Tools::Run->run_cluster_perl({
            
             method        => ["solGS::AnalysisReport" => "check_analysis_status"],
-    	    args          => [$output_file],
-    	    load_packages => ['solGS::AnalysisReport' ],
+    	    args          => [$output_files, $analysis_profile],
+    	    load_packages => ['solGS::AnalysisReport'],
     	    run_opts      => {
     		              out_file    => $out_temp_file,
 			      err_file    => $err_temp_file,
     		              working_dir => $temp_dir,
 			      max_cluster_jobs => 1_000_000_000,
 	    },
-	   });
-
+         });
     }
     catch 
     {
@@ -159,11 +194,6 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     		."\n=== end R output ===\n"; 
 	};            
     };
- 
-   # $self->update_analysis_progress($c);
-   # $self->notify_user($c);
-  #  my $status_check = solGS::AnalysisProfile->new();
- #   $status_check->check_process_status($file);
 } 
 
 
@@ -178,7 +208,8 @@ sub run_analysis {
     $analysis_page =~ s/$base/\//;
   
     $self->create_profiles_dir($c);
-  
+    $c->stash->{background_job} = 1;
+    
     $c->req->path($analysis_page);
     $c->prepare_action;
     $c->action ? $c->forward( $c->action ) : $c->dispatch;
@@ -218,21 +249,6 @@ sub update_analysis_progress {
 }
 
 
-sub notify_user {
-  my ($self, $c) = @_;
-
-  $c->stash->{email} = {
-      to => 'user@email.com',
-      cc => 'sgn-db-curation@sgn.cornell.edu',
-      subject => 'solGS: analysis status update',
-      body => 'links to output page'
-  };
-
-  $c->forward( $c->view('Email') );
-  #email analysis completion/or error.
-}
-
-
 sub analysis_profile_file {
     my ($self, $c) = @_;
 
@@ -252,20 +268,11 @@ sub analysis_profile_file {
 }
 
 
-sub analysis_result_file {
-    my ($self, $analysis_page) = @_;
-
-    
-
-
-
-}
-
 sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     my ($self, $c) = @_;
     
     my $referer = $c->req->referer;
-
+    
     $c->stash->{message} = "<p>Your analysis is running.</p>
                             <p>You will receive an email when it is completed.
                              </p><p><a href=\"$referer\">[ Go back ]</a></p>";
