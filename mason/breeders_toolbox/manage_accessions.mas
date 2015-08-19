@@ -3,10 +3,9 @@
 $accessions
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
 
-<br />
-<& /page/page_title.mas, title=>"Manage accessions" &>
+<& /page/page_title.mas, title=>"Manage Accessions" &>
 
 <&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add</a>] [<a id="upload_pedigrees_link">Upload pedigrees</a>]' &>
   <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
