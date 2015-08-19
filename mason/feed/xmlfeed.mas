@@ -18,7 +18,7 @@ foreach my $e ($feed->entries) {
   my $dt = $e->issued();
   my $title = $e->title;
   $title =~ s/[^\x00-\x7E]//g;
-  print  "<p><a  href=\"".$e->link()."\">$title</a> [".$dt->year."/".$dt->month."/".$dt->day."]";
+  print  "<p><a  href=\"".$e->link()."\">$title</a> [".$dt->year."/".$dt->month."/".$dt->day."]</p>";
 }
 </%perl>
 

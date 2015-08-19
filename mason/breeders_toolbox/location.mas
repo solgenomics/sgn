@@ -96,24 +96,35 @@ jQuery(document).ready(function() {
 
 </script>
 
-<table>
 <%perl>
 
   if (!$locations) { 
     print "<tr><td>No locations have been added yet.</td></tr>";
   }
 
+print "<table class=\"table table-striped table-hover table-condensed\">";
+
 foreach my $prog (sort keys %$locations) { 
-  print "<tr><td colspan=\"2\"><h4>$prog</h4></td></tr>";
+
+  print "<thead><tr class=\"success\"><td colspan=\"2\"><h4>$prog</h4></td></tr>
+  	 <tr><th>Location</th><th>Count</th></tr>
+  	 </thead>
+	 <tbody>";
 
   foreach my $loc (@{$locations->{$prog}}) {
+
     my $delete_link = "";
     if (!$loc->[2] && $user_id) { 
       $delete_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:delete_location($loc->[0])\"><font style=\"color: red; font-weight: bold\">X</a>";
     }
 
-     print "<tr><td>".$loc->[1]."</td><td>(<a href=\"\">".$loc->[2]." trials</a>) $delete_link</td></tr>";
+    print "<tr><td>".$loc->[1]."</td><td>(<a href=\"\">".$loc->[2]." trials</a>) $delete_link</td></tr>";
    }
+
+   print "</tbody><thead><tr style=\"height:30px\"><td colspan=\"2\"></td></tr></thead>";
 }
+
+print "</table>";
+
 </%perl>
-  </table>
+

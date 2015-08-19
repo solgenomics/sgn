@@ -105,6 +105,13 @@ Lukas Mueller, based on the Perl code from Rob Buels.
 
 <%perl>
 
+    print "
+	<div class='container-fluid'>
+      	  <div class='row'>
+            <div class='col-sm-1 col-md-2 col-lg-3'>
+            </div>
+            <div class='col-sm-10 col-md-8 col-lg-6'>";
+
     $contents ||= $m->content || '';
 
     #if we have been given content, and we aren't told that this section
@@ -131,7 +138,7 @@ EOC
         }
         $subtitle ||= '';
         my $title_bar = <<EOHTML;
-<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead" summary=""><tr><td class="${sub}infosectiontitle">$title</td><td class="${sub}infosectionsubtitle">$subtitle&nbsp;</td></tr></table>
+<table cellspacing="0" cellpadding="0" class="table table-hover" summary=""><tr class="active"><td>$title</td><td align="right">$subtitle&nbsp;</td></tr></table>
 EOHTML
         print "$title_bar\n$contents\n";
     }
@@ -147,9 +154,16 @@ EOHTML
           ? qq|<td class="${sub}infosectionsubtitle_empty" align="right">$subtitle&nbsp;</td>|
           : '';
         print <<EOT;
-<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead_empty" summary=""><tr><td class="${sub}infosectiontitle_empty">$title</td><td class="${sub}infosection_emptymessage">$empty_message</td>$maybe_subtitle</tr></table>
+<table cellspacing="0" cellpadding="0" class="table table-hover" summary=""><tr class="active"><td>$title</td><td>$empty_message</td>$maybe_subtitle</tr></table>
 EOT
     }
+
+    print "</div>
+    	   <div class='col-sm-1 col-md-2 col-lg-3'>
+    	   </div>
+          </div>
+        </div>";
+
 </%perl>
 
 <%once>
