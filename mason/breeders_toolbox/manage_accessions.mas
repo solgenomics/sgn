@@ -5,28 +5,64 @@ $accessions
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
 
-<& /page/page_title.mas, title=>"Manage Accessions" &>
 
-<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add</a>] [<a id="upload_pedigrees_link">Upload pedigrees</a>]' &>
-  <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
-    <div>
+<div class='container-fluid'>
+  <div class='row'>
+    <div class='col-sm-1 col-md-2 col-lg-3'>
+    </div>
+    <div class='col-sm-10 col-md-8 col-lg-6'>
+
+      <& /page/page_title.mas, title=>"Manage Accessions" &>
+
+      <&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add</a>] [<a id="upload_pedigrees_link">Upload pedigrees</a>]' &>
+      <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
+    
+      <div>
       </br>
       <a href="/search/stocks">Search Accessions</a>
+      </div>
     </div>
+    <div class='col-sm-1 col-md-2 col-lg-3'>
+    </div>
+  </div>
+</div>
 </&>
 
 <& /breeders_toolbox/accessions/pedigree_spreadsheet_upload_format_info.mas &>
 
 
-<div id="add_accessions_dialog" class="ui-widget" title="Add accessions">
-    <p>Choose accession list:</p>
-  <div id="list_div">
-    <label id="select_list_label" for="list_div_list_select" style="display: inline-block; width: 200px;">List of accessions to add:
-    </label> 
+<div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addAccessionsDialog">Add Accessions</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <form class="form-horizontal" role="form" name="new_accessions_form" id="new_accessions_form">
+	    <div class="form-group">
+      	      <label class="col-sm-6 control-label">Choose Accession List: </label>
+      	      <div class="col-sm-6" id="list_div" name="list_div">
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-6 control-label">Use Fuzzy Search: </label>
+      	      <div class="col-sm-6">
+	        <input type="checkbox" id="fuzzy_check" name="fuzzy_check"></input>
+              </div>
+	    </div>
+	  </form>      
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="new_accessions_submit" id="new_accessions_submit">Add Accessions</button>
+      </div>
+    </div>
   </div>
-  <input type="checkbox" id="fuzzy_check"></input>
-  <label for="fuzzy_check">Use fuzzy search</label>
 </div>
+
 
 <div id="review_fuzzy_matches_dialog" class="ui-widget" title="Fuzzy matches">
   <b>Accessions were found with similar names.</b>

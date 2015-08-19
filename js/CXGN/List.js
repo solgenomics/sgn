@@ -163,7 +163,7 @@ CXGN.List.prototype = {
     
     typesHtmlSelect: function(list_id, html_select_id, selected) { 
 	var types = this.allListTypes();
-	var html = '<select id="'+html_select_id+'" onchange="javascript:changeListType(\''+html_select_id+'\', '+list_id+');" >';
+	var html = '<select class="form-control" id="'+html_select_id+'" onchange="javascript:changeListType(\''+html_select_id+'\', '+list_id+');" >';
 	html += '<option name="null">(none)</option>';
 	for (var i=0; i<types.length; i++) { 
 	    var selected_html = '';
@@ -294,15 +294,15 @@ CXGN.List.prototype = {
     renderLists: function(div) { 
 	var lists = this.availableLists();
 	var html = '';
-	html = html + '<input id="add_list_input" type="text" /><input id="add_list_button" type="button" value="new list" /><br />';
+	html = html + '<div class="input-group"><input id="add_list_input" type="text" class="form-control" placeholder="Create New List" /><span class="input-group-btn"><button class="btn btn-default" type="button" id="add_list_button" value="new list">New List</button></span></div><br/>';
 	
 	if (lists.length===0) { 
 	    html = html + "None";
 	    jQuery('#'+div).html(html);
 	}
 
-	html += '<table border="0" cellpadding="2" title="Available lists">';
-	html += '<tr><td><i>list name</i></td><td><i>#</i></td><td><i>type</i></td><td colspan="3"><i>actions</i></td></tr>\n'; 
+	html += '<table class="table table-hover table-condensed">';
+	html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th colspan="3">Actions</th></tr></thead><tbody>'; 
 	for (var i = 0; i < lists.length; i++) { 
 	    html += '<tr><td><b>'+lists[i][1]+'</b></td>';
 	    html += '<td>'+lists[i][3]+'</td>';
@@ -311,9 +311,9 @@ CXGN.List.prototype = {
 	    html += '<td><a id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')">delete</a></td><td>|</td>';
 	    html += '<td><a id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>\n';
 	}
-	html = html + '</table>';
+	html = html + '</tbody></table>';
 
-	jQuery('#'+div).html(html);
+	jQuery('#list_populating_js').html(html);
 
 	jQuery('#add_list_button').click(function() { 
 	    var lo = new CXGN.List();
@@ -339,21 +339,20 @@ CXGN.List.prototype = {
 	var list_name = this.listNameById(list_id);
 	
 	var html = '';
-	html += '<table><tr width="100"><td>List name ';
-	
-	html += '</td><td><input type="text" id="updateNameField" size="10" value="'+list_name+'" /></td>';
-        html += '<td><input type="button" id="updateNameButton" value="update"  /></td>';
-	html += '<td width="100%" align="right"><font size="1">List ID</td><td><div id="list_id_div" style="font-size:tiny" >'+list_id+'</div></font></td></tr>';
+	html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td><td></td></tr>';
+	html += '<tr><td>List name</td>';
+	html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td>';
+        html += '<td><input type="button" class="btn btn-info" id="updateNameButton" value="update"  /></td></tr>';
 
-	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input type="button" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr></table>';
-	html += 'Add new items: <br /><textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="Add" /><br />';
-	html += '<b>List items</b> ('+items.length+')<br />';
+	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input type="button" class="btn btn-info" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr>';
+	html += '<tr><td>Add New Items</td><td colspan="2"><div class="input-group"><input id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /><span class="input-group-btn"><button class="btn btn-primary" type="button" id="dialog_add_list_item_button" value="Add">Add</button></span></div></td></tr></table>';
+	html += '<p><b>List items</b> ('+items.length+')</p>';
 
 	for(var n=0; n<items.length; n++) { 
-	    html = html + items[n][1] + '   <input id="'+items[n][0]+'" type="button" value="remove" /><br />';   
+	    html = html +'<p>'+ items[n][1] + '&nbsp;&nbsp;&nbsp;&nbsp;<input id="'+items[n][0]+'" type="button" class="btn btn-warning btn-xs" value="remove" /></p>';   
 	}
 	
-	jQuery('#'+div).html(html);
+	jQuery('#list_item_populating_js').html(html);
 
 	for (var n=0; n<items.length; n++) { 
 	    var list_item_id = items[n][0];
@@ -555,35 +554,35 @@ CXGN.List.prototype = {
 };
 
 function setUpLists() { 
-    jQuery('#list_dialog').dialog( {
-	height: 300,
-	width: 500,
-	autoOpen: false,
-	title: 'Available lists',
-	buttons: [ { text: "Done",
-		   click: function() { 
-		       jQuery('#list_dialog').dialog("close"); 
-		   },
-		   id: 'close_list_dialog_button'
-		 }],
-	
-	modal: true 
-    });
+//    jQuery('#list_dialog').dialog( {
+//	height: 300,
+//	width: 500,
+//	autoOpen: false,
+//	title: 'Available lists',
+//	buttons: [ { text: "Done",
+//		   click: function() { 
+//		       jQuery('#list_dialog').dialog("close"); 
+//		   },
+//		   id: 'close_list_dialog_button'
+//		 }],
+//	
+//	modal: true 
+//    });
        
-    jQuery('#list_item_dialog').dialog( { 
-	height: 400,
-	width: 400,
-	autoOpen: false,
-	buttons: [{ 
-	    text: "Done",
-	    click: function() { 
-		jQuery('#list_item_dialog').dialog("close"); 
-	    },
-	    id: 'close_list_item_dialog'
-	}],
-	modal: true,
-      title: 'List contents'
-    });
+    //jQuery('#list_item_dialog').dialog( { 
+//	height: 400,
+//	width: 400,
+//	autoOpen: false,
+//	buttons: [{ 
+//	    text: "Done",
+//	    click: function() { 
+//		jQuery('#list_item_dialog').dialog("close"); 
+//	    },
+//	    id: 'close_list_item_dialog'
+//	}],
+//	modal: true,
+//      title: 'List contents'
+//    });
     
     jQuery('#lists_link').click(
 	function() { show_lists(); }
@@ -592,7 +591,7 @@ function setUpLists() {
 
 
 function show_lists() {     
-    jQuery('#list_dialog').dialog("open");
+    jQuery('#list_dialog_bootstrap').modal("show");
     
     var l = new CXGN.List();
     l.renderLists('list_dialog');
@@ -875,7 +874,7 @@ function deleteItemLink(list_item_id) {
 	
 function showListItems(div, list_id) { 
     var l = new CXGN.List();
-    jQuery('#'+div).dialog("open");
+    jQuery('#list_item_dialog_bootstrap').modal("show");
     l.renderItems('list_item_dialog', list_id);
 }
 

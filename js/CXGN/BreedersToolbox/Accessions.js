@@ -276,24 +276,24 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    $( "#add_accessions_dialog" ).dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 150],
-	buttons: {
-	    Ok: function() {
-		//disable_ui();
-		verify_accession_list();
-		$(this).dialog( "close" );
-		//location.reload();
-	    }
-	}
-    });
+    //$( "#add_accessions_dialog" ).dialog({
+//	autoOpen: false,
+//	modal: true,
+//	autoResize:true,
+//        width: 500,
+//        position: ['top', 150],
+//	buttons: {
+//	    Ok: function() {
+//		//disable_ui();
+//		verify_accession_list();
+//		$(this).dialog( "close" );
+//		//location.reload();
+//	    }
+//	}
+//    });
 
     $('#add_accessions_link').click(function () {
-        $('#add_accessions_dialog').dialog("open");
+        $('#add_accessions_dialog').modal("show");
 	$("#list_div").html(list.listSelect("accessions"));
     });
 
