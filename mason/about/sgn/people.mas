@@ -62,9 +62,9 @@ print info_section_html( title => 'Lab members',
                   # ['aureliano', 'Aureliano Bombarely', 'Postdoc' ],
 					     ],
                [
-                 ['bryan', 'Bryan Ellerbrock', '-' ],
-                 ['nick', 'Nicolas Morales', '-' ],
-                 ['alex', 'Alex Agbonna', '-' ],
+                 ['bryan', 'Bryan Ellerbrock', '' ],
+                 ['nick', 'Nicolas Morales', '' ],
+                 ['alex', 'Alex Agbonna', '' ],
                ]
 					    ),
 					  )
