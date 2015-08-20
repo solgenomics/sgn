@@ -294,7 +294,7 @@ CXGN.List.prototype = {
     renderLists: function(div) { 
 	var lists = this.availableLists();
 	var html = '';
-	html = html + '<div class="input-group"><input id="add_list_input" type="text" class="form-control" placeholder="Create New List" /><span class="input-group-btn"><button class="btn btn-default" type="button" id="add_list_button" value="new list">New List</button></span></div><br/>';
+	html = html + '<div class="input-group"><input id="add_list_input" type="text" class="form-control" placeholder="Create New List" /><span class="input-group-btn"><button class="btn btn-primary" type="button" id="add_list_button" value="new list">New List</button></span></div><br/>';
 	
 	if (lists.length===0) { 
 	    html = html + "None";
@@ -307,9 +307,9 @@ CXGN.List.prototype = {
 	    html += '<tr><td><b>'+lists[i][1]+'</b></td>';
 	    html += '<td>'+lists[i][3]+'</td>';
 	    html += '<td>'+lists[i][5]+'</td>';
-	    html += '<td><a id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')">view</a></td><td>|</td>';
-	    html += '<td><a id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')">delete</a></td><td>|</td>';
-	    html += '<td><a id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>\n';
+	    html += '<td><a id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')">view</a></td>';
+	    html += '<td><a id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')">delete</a></td>';
+	    html += '<td><a id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>';
 	}
 	html = html + '</tbody></table>';
 
@@ -455,7 +455,7 @@ CXGN.List.prototype = {
 	    lists = this.availableLists();
 	}
 
-	var html = '<select id="'+div_name+'_list_select" name="'+div_name+'_list_select" >';
+	var html = '<select class="form-control" id="'+div_name+'_list_select" name="'+div_name+'_list_select" >';
 	if (empty_element) { 
 	    html += '<option value="">'+empty_element+'</option>\n';
         } 
@@ -584,7 +584,7 @@ function setUpLists() {
 //      title: 'List contents'
 //    });
     
-    jQuery('#lists_link').click(
+    jQuery("button[name='lists_link']").click(
 	function() { show_lists(); }
     );
 }
@@ -592,6 +592,7 @@ function setUpLists() {
 
 function show_lists() {     
     jQuery('#list_dialog_bootstrap').modal("show");
+    jQuery('#add_accessions_dialog').modal("hide");
     
     var l = new CXGN.List();
     l.renderLists('list_dialog');
