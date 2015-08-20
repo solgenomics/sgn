@@ -11,47 +11,42 @@ if ($user && $user->check_roles("curator")) {
 }
 </%perl>
 
-<div class="container-fluid">
-  <& /page/page_title.mas, title=>"Manage Breeding Programs" &>
-  <hr>
-  <div class="row">
-    <div class="col-sm-1 col-md-2 col-lg-3">
-    </div>
-    <div class="col-sm-10 col-md-8 col-lg-6">
-      <table class="table table-condensed table-striped table-hover">
-        <thead>
-    	  <tr>
-	    <%perl>
-	    if ($delete_flag) { print "<th>Name</th><th>Info</th><th>Delete</th>"; }
-	    else { print "<th>Name</th><th>Info</th>"; }
-	    </%perl>
-    	  </tr>
-  	</thead>
-  	<tbody>
+<& /page/page_title.mas, title=>"Manage Breeding Programs" &>
+<hr>
 
-	<%perl>
-	  foreach my $bp (@$breeding_programs) { 
+<table class="table table-condensed table-striped table-hover">
+  <thead>
+    <tr>
 
-  	    print "<tr><td><b>$bp->[1]</b></td><td>$bp->[2]</td>";
+    <%perl>
+      if ($delete_flag) { print "<th>Name</th><th>Info</th><th>Delete</th>"; }
+        else { print "<th>Name</th><th>Info</th>"; }
+    </%perl>
+    	  
+    </tr>
+  </thead>
+  <tbody>
 
-  	    if ($delete_flag) { 
-	      print "<td><a title=\"delete this breeding program\" id=\"delete_breeding_program_link\_".$bp->[1]."\" href=\"javascript:delete_breeding_program($bp->[0])\" ><font color=\"red\">X</font></a></td></tr>";
-	    } else { 
-	      print "</tr>"; 
-	    }
-	  }
-	</%perl>	
-	</tbody>
-      </table>
-      <br/>
-       <button type="button" class="btn btn-primary" name="new_breeding_program_link" id="new_breeding_program_link">Add New Program</button>
-    </div>
-    <div class="col-sm-1 col-md-2 col-lg-3">
-    </div>
-  </div>
-</div>
+    <%perl>
+      foreach my $bp (@$breeding_programs) { 
 
-<br />
+        print "<tr><td><b>$bp->[1]</b></td><td>$bp->[2]</td>";
+
+  	if ($delete_flag) { 
+	  print "<td><a title=\"delete this breeding program\" id=\"delete_breeding_program_link\_".$bp->[1]."\" href=\"javascript:delete_breeding_program($bp->[0])\" ><font color=\"red\">X</font></a></td></tr>";
+	} else { 
+	  print "</tr>"; 
+	}
+      }
+    </%perl>	
+	
+  </tbody>
+</table>
+
+<br/>
+<button type="button" class="btn btn-primary" name="new_breeding_program_link" id="new_breeding_program_link">Add New Program</button>
+
+<!-- Modal Dialogs Below Here -->
 
 <div class="modal fade" id="new_breeding_program_dialog" name="new_breeding_program_dialog" tabindex="-1" role="dialog" aria-labelledby="addBreedingProgramDialog">
   <div class="modal-dialog" role="document">

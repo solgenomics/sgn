@@ -4,22 +4,10 @@ $locations
 $user_id => undef
 </%args>
 
-<div class='container-fluid'>
-  <div class='row'>
-    <div class='col-sm-1 col-md-2 col-lg-3'>
-    </div>
-    <div class='col-sm-10 col-md-8 col-lg-6'>
+<& /page/page_title.mas, title=>"Manage Locations" &>
 
-      <& /page/page_title.mas, title=>"Manage Locations" &>
+<&| /page/info_section.mas, title=>'Locations',  collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_location_link">Add Location</a>]' &>
 
-      <&| /page/info_section.mas, title=>'Locations',  collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_location_link">Add Location</a>]' &>
-
-      <& /breeders_toolbox/location.mas, locations=>$locations, user_id=>$user_id &>
-
-    </div>
-    <div class='col-sm-1 col-md-2 col-lg-3'>
-    </div>
-  </div>
-</div>
+<& /breeders_toolbox/location.mas, locations=>$locations, user_id=>$user_id &>
 
 </&>

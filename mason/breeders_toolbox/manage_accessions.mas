@@ -5,31 +5,22 @@ $accessions
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
 
+<& /page/page_title.mas, title=>"Manage Accessions" &>
 
-<div class='container-fluid'>
-  <div class='row'>
-    <div class='col-sm-1 col-md-2 col-lg-3'>
-    </div>
-    <div class='col-sm-10 col-md-8 col-lg-6'>
+<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add Pedigree</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
 
-      <& /page/page_title.mas, title=>"Manage Accessions" &>
-
-      <&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add</a>] [<a id="upload_pedigrees_link">Upload pedigrees</a>]' &>
-      <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
+<& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
     
-      <div>
-      </br>
-      <a href="/search/stocks">Search Accessions</a>
-      </div>
-    </div>
-    <div class='col-sm-1 col-md-2 col-lg-3'>
-    </div>
-  </div>
+<div>
+  </br>
+  <a href="/search/stocks">Search Accessions</a>
 </div>
+
 </&>
 
 <& /breeders_toolbox/accessions/pedigree_spreadsheet_upload_format_info.mas &>
 
+<!-- Modal Dialogs Below Here -->
 
 <div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog">
   <div class="modal-dialog" role="document">
@@ -241,12 +232,12 @@ $accessions
     	  <p>
       	  <b>File format information</b>
       	  <br>
-      	  <a id="pedigrees_upload_spreadsheet_format_info">Spreadsheet format</a>
+      	  <a id="pedigrees_upload_spreadsheet_format_info">Spreadsheet Format</a>
     	  </p>
   	  </&>
 
   	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_pedigrees_form" name="upload_pedigrees_form">
-    	    <label for="pedigrees_uploaded_file" style="display: inline-block; width: 100px;">Upload pedigree file:</label>
+    	    <label for="pedigrees_uploaded_file" style="display: inline-block; width: 100px;">Upload Pedigree File:</label>
     	    <input type="file" name="pedigrees_uploaded_file" id="pedigrees_uploaded_file" encoding="multipart/form-data" />
     	  </form>
         </div>
