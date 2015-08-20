@@ -4,6 +4,22 @@ $schema
 
 <& homepage/carousel.mas &>
 
+<br>
 <center>
+  <div style="width:450px">
+    <table style="width:100%">
+      <tr>
+        <td><a href="/organism/Solanum_lycopersicum/genome"><img class="fruit_icon" height="45" src="/documents/img/blast_icons/tomato.png"></a></td>
+        <td style="vertical-align:middle"><a href="/organism/Solanum_tuberosum/genome"><img class="fruit_icon" height="30" src="/documents/img/blast_icons/potato.png"></a></td>
+        <td><a href="/organism/Capsicum_annuum/genome"><img class="fruit_icon" height="50" src="/documents/img/blast_icons/pepper.png"></a></td>
+        <td><a href="#"><img class="fruit_icon" height="50" src="/documents/img/blast_icons/eggplant.png"></a></td>
+        <td><a href="/organism/Nicotiana_benthamiana/genome"><img class="fruit_icon" height="50" src="/documents/img/blast_icons/benth.png"></a></td>
+      </tr>
+    </table>
+  </div>
 </center>
-
+<br>
+<br>
+<br>
+<br>
+<br>
