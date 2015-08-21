@@ -4,22 +4,61 @@ $schema
 
 <& homepage/carousel.mas &>
 
-<br>
-<center>
-  <div style="width:450px">
-    <table style="width:100%">
-      <tr>
-        <td><a href="/organism/Solanum_lycopersicum/genome"><img class="fruit_icon" height="45" src="/documents/img/blast_icons/tomato.png"></a></td>
-        <td style="vertical-align:middle"><a href="/organism/Solanum_tuberosum/genome"><img class="fruit_icon" height="30" src="/documents/img/blast_icons/potato.png"></a></td>
-        <td><a href="/organism/Capsicum_annuum/genome"><img class="fruit_icon" height="50" src="/documents/img/blast_icons/pepper.png"></a></td>
-        <td><a href="#"><img class="fruit_icon" height="50" src="/documents/img/blast_icons/eggplant.png"></a></td>
-        <td><a href="/organism/Nicotiana_benthamiana/genome"><img class="fruit_icon" height="50" src="/documents/img/blast_icons/benth.png"></a></td>
-      </tr>
-    </table>
+<br/>
+<div class="container-fluid" style="width:1130px">
+  <div class="row">
+    <div class="col-sm-6 col-md-6 col-lg-6">
+      
+      <div class="panel panel-default">
+        <div class="panel-heading">News</div>
+        <div class="panel-body">
+          <& homepage/news.mas &>
+        </div>
+      </div>
+      
+        <div class="panel panel-default">
+          <div class="panel-heading">Popular Species</div>
+          <div class="panel-body">
+            <& homepage/popular_species.mas &>
+          </div>
+        </div>
+      
+        <div class="panel panel-default">
+          <div class="panel-heading">SGN Featured</div>
+          <div class="panel-body">
+            <& homepage/publication_of_the_week.mas &>
+            <& homepage/image_of_the_week.mas &>
+            <& homepage/locus_of_the_week.mas &>
+            <& homepage/labs.mas &>
+          </div>
+        </div>
+      
+    </div>
+      
+      <div class="col-sm-6 col-md-6 col-lg-6">
+        
+        <div class="panel panel-default">
+          <div class="panel-heading">Events</div>
+          <div class="panel-body">
+            <& homepage/events.mas &>
+          </div>
+        </div>
+        
+        <div class="panel panel-default">
+          <div class="panel-heading">Affiliated Sites</div>
+          <div class="panel-body">
+            <& homepage/affiliated_sites.mas &>
+          </div>
+        </div>
+        
+        <div class="panel panel-default">
+          <div class="panel-heading">Links</div>
+          <div class="panel-body">
+            <& homepage/other_links.mas &>
+          </div>
+        </div>
+        
+      </div>
+      
   </div>
-</center>
-<br>
-<br>
-<br>
-<br>
-<br>
+</div>
