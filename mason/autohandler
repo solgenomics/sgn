@@ -1,5 +1,7 @@
 <& /site/header.mas &>
 
+<div id="sgn_container">
 % $m->call_next;
+</div>
 
 <& /site/footer.mas &>
