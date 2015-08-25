@@ -9,7 +9,9 @@ function run_blast(database_types, input_option_types) {
   var program  = jQuery('#program_select').val();
   var sequence = jQuery('#sequence').val();
   
-  if (jQuery.browser.msie) {
+  var msie = window.navigator.userAgent.indexOf("MSIE ");
+
+  if (msie) {
     sequence = sequence.replace(/\s+/g, "\n");
   }
 
@@ -149,10 +151,12 @@ function finish_blast(jobid, seq_count) {
 }
 
 function disable_ui() { 
+  // jQuery('#myModal').modal('show');
     jQuery('#working').dialog("open");
 }
 
 function enable_ui() { 
+  // jQuery('#myModal').modal({ show: false})
     jQuery('#working').dialog("close");
     clear_status();
 }
@@ -187,5 +191,5 @@ function update_status(message) {
 }
 
 function clear_status() { 
-  jQuery('#blast_status').html('');
+  jQuery('#working_msg').html('');
 }
