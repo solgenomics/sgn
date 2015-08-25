@@ -3,9 +3,9 @@
 $show_link=>1
 </%args>
 
-<div class="boxbgcolor1">
+<!-- <div class="boxbgcolor1">
 <div class="boxheading">Popular species</div>
-<div class="boxcontent">
+<div class="boxcontent"> -->
 <table>
 <tr><td><b>Tomato</b></td><td><a href="/organism/1/view/"><i>Solanum lycopersicum</i></a>, <a href="/organism/770/view"><i>S.&nbsp;pimpinellifolium</i></a></td></tr>
 <tr><td><b>Potato</b></td><td><a href="/organism/12/view"><i>Solanum tuberosum</i></a>, <a href="/organism/20850/view"><i>S.&nbsp;phureja</i></a></td></tr>
@@ -17,5 +17,5 @@ $show_link=>1
 % if ($show_link) { 
 <a href="/search/organisms">Search other species...</a>
 %}
-</div>
-</div>
+<!-- </div>
+</div> -->

@@ -7,41 +7,40 @@
 <!-- BEGIN FOOTER-->
 
 
-  <div id="page_report_a_problem">
+  <!-- <div id="page_report_a_problem">
     Something wrong? <a href="/contact/form?subject=<% 'Problem with page '.$c->req->uri |u %>&body=<% "Hello SGN,\n\nI noticed a problem with the page at ".$c->req->uri.".\n\n<please fill in details here>\n" |u%>">Report a problem</a>
-  </div>
+  </div> -->
 
-</td></tr>
-<tr><td  id="pagecontent_footer">
-
-    <table width="100%" cellspacing="0" cellpadding="0" id="pagefooter">
-      <tr><td style="vertical-align: top; width: 370px; font-size:smaller" colspan="2" >
-
-	  SGN is supported by the <a class="footer" href="http://www.nsf.gov/awardsearch/showAward?AWD_ID=0820612">NSF (#0820612)</a>,
-    <a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at the <a class="footer" href="http://bti.cornell.edu">Boyce Thompson Institute.</a>
-    <br />
-    Subscribe to the <a class="footer" href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">sgn-announce mailing list</a> for updates. 
-    Send comments using the <a href="/contact/form">feedback form</a><br />
-Cite SGN using <a class="footer" href="http://nar.oxfordjournals.org/content/early/2014/11/26/nar.gku1195.full" target="_new"> Fernandez-Pozo et al, 2014</a> | 
-    <a href="/legal.pl">Disclaimer</a></td></tr>
-      <tr><td>
-                <a href="http://bti.cornell.edu/" class="footer">
-                  <img width="91" alt="Boyce Thompson Institute" src="/documents/img/bti_logo_bw.png" title="Boyce Thompson Institute" height="70" border="0" style="position:relative; top:10px; left:0px; " /></a>
-
-                <a href="http://www.nsf.gov/" class="footer">
-                  <img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo.png" title="National Science Foundation" height="76" border="0" style="position:relative;top:10px;left:20px; " /></a>
-
-		<a href="http://www.nifa.usda.gov/" class="footer">
-                  <img width="250" alt="USDA NIFA" src="/documents/img/usda_nifa_h_2.jpg" title="USDA NIFA" height="44" border="0" style="position: relative; top:-5px; left:50px"  /></a>
-
-                  <a href="http://www.gmod.org/" class="footer">
-                    <img width="150" alt="Powered by GMOD" src="/documents/img/powered_by_gmod_150x71.png" title="Powered by GMOD" height="71" border="0" style="position:relative; top:0px; left:120px" /></a>
-                
-            </td></tr>
-    </table>
 </td></tr>
 </table>
 </div>
+
+<div id="pagefooter">
+  <center>
+    SGN is supported by the <a class="footer" href="http://www.nsf.gov/awardsearch/showAward?AWD_ID=0820612">NSF (#0820612)</a>,
+    <a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at the <a class="footer" href="http://bti.cornell.edu">Boyce Thompson Institute</a>
+    | <a href="/legal.pl">Disclaimer</a>
+
+<!-- Subscribe to the <a class="footer" href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">sgn-announce mailing list</a> for updates.  -->
+<!-- Send comments using the <a href="/contact/form">feedback form</a><br /> -->
+<!-- Cite SGN using <a class="footer" href="http://nar.oxfordjournals.org/content/early/2014/11/26/nar.gku1195.full" target="_new"> Fernandez-Pozo et al, 2014</a> |  -->
+<br>
+<br>
+    <div style="width:650px">
+      <table style="width:100%;vertical-align:middle">
+        <tr>
+          <td style="vertical-align:middle"><a href="http://bti.cornell.edu/" class="footer"><img width="100" alt="Boyce Thompson Institute" src="/documents/img/bti_logo2.gif" title="Boyce Thompson Institute" border="0"/></a></td>
+          <td style="vertical-align:middle"><a href="http://www.nsf.gov/" class="footer"><img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo2.png" title="National Science Foundation" border="0"/></a></td>
+          <td style="vertical-align:middle"><a href="http://www.gmod.org/" class="footer"><img width="100" alt="Powered by GMOD" src="/documents/img/powered_by_gmod_150x71.png" title="Powered by GMOD" border="0" /></a></td>
+          <td style="vertical-align:middle"><a href="http://www.nifa.usda.gov/" class="footer"><img width="80" alt="USDA NIFA" src="/documents/img/usda_logo2.png" title="USDA NIFA" border="0" /></a></td>
+        </tr>
+        <tr><td>&nbsp;</td></tr>
+      </table>
+    </div>
+  </center>
+</div>
+
+
 
 % if( eval{ $c->get_conf('production_server') } ) {
    <!-- Google Analytics Code -->
@@ -56,3 +55,19 @@ Cite SGN using <a class="footer" href="http://nar.oxfordjournals.org/content/ear
    </script>
 % }
 
+<style>
+#pagefooter {
+/*  height:65px;*/
+  line-height: 1.5;
+  border-top: 1px solid #c0c0c0;
+  
+  padding-top: 2px;
+  margin: 0px 0px 0px 0px;
+  position:absolute;
+  
+/*  bottom:0;*/
+  left:0;
+  width:100%;
+  background:#eee;
+}
+</style>

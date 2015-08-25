@@ -3,13 +3,14 @@
 % my $t = $m->request_args->{'page_title'};
   <title><% $t ? "$t - " : '' %>Sol Genomics Network</title>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="stylesheet" href="/css/sgn.css" type="text/css" />
-  <link rel="stylesheet" href="/css/jquery-sgn-theme/jquery-ui-1.10.3.custom.css" type="text/css" />
-  <link rel="stylesheet" href="/css/colorbox/colorbox.css" type="text/css" />
-  <link rel="stylesheet" href="/css/jstree/themes/default/style.min.css" />
-
+  <!-- <link rel="stylesheet" href="/css/sgn.css" type="text/css" /> -->
+  <link rel="stylesheet" href="/css/new_sgn.css" type="text/css" />
   <link rel="search" type="application/opensearchdescription+xml" title="SGN Sol Search" href="/documents/sgn_sol_search.xml" />
+
+
+
 
   <script language="javascript" type="text/javascript">
      JSAN = {};
@@ -17,6 +18,12 @@
      MochiKit = {__export__: false};
   </script>
 
-  <& /util/import_javascript.mas, classes => [qw[ sgn jquery.simpletooltip CXGN.Effects CXGN.Page.FormattingHelpers CXGN.UserPrefs CXGN.Page.Toolbar CXGN.List jquery.cookie CXGN.Login ]] &>
+  <& /util/import_javascript.mas, classes => [qw[ sgn jquery jquery.simpletooltip CXGN.Effects CXGN.Page.FormattingHelpers CXGN.UserPrefs CXGN.Page.Toolbar CXGN.List jquery.cookie CXGN.Login]] &>
+
+<!-- Bootstrap libraries and css -->
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="/js/jquery.js"></script>
+  <script src="/js/bootstrap-3.3.5-dist/js/bootstrap.js"></script>
+  <!-- // <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script> -->
 
   <!-- INSERT_HEAD_POST_HTML -->
