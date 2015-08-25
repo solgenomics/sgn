@@ -90,7 +90,7 @@
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ 'jqueryui', 'CXGN.Blast' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.Blast' , 'jqueryui'] &>
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
@@ -173,6 +173,7 @@
 </&>
 
 <div id="jobid" style="display:none;"></div>
+
 
 <script>
 
