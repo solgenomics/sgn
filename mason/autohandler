@@ -1,7 +1,38 @@
+<div id="wrapper">
 <& /site/header.mas &>
 
-<div id="sgn_container">
+<br>
+
+<div class="container-fluid" style="padding-bottom:120px;">
+  <div class="row">
+    <div class="col-sm-1 col-md-2 col-lg-2">
+    </div>
+    <div class="col-sm-10 col-md-8 col-lg-8">
+
 % $m->call_next;
+
+    </div>
+    <div class="col-sm-1 col-md-2 col-lg-2">
+    </div>
+  </div>
 </div>
 
 <& /site/footer.mas &>
+</div>
+
+<style>
+#pagefooter {
+  height:120px;
+  line-height: 1.5;
+  border-top: 1px solid #c0c0c0;
+  
+  padding-top: 2px;
+  margin: 0px 0px 0px 0px;
+  position:absolute;
+  
+  bottom:0;
+  left:0;
+  width:100%;
+  background:#eee;
+}
+</style>
