@@ -4,6 +4,13 @@
 	                                  : '<span style="font-weight: bold; color: red">[email not set]</b>';
 </%init>
 
+<!-- END CONTENT WRAPPER -->
+    </div>
+    <div class="col-sm-1 col-md-1 col-lg-2">
+    </div>
+  </div>
+</div>
+
 <!-- BEGIN FOOTER-->
 
 <div id="pagefooter">
