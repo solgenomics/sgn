@@ -160,7 +160,7 @@ function disable_ui() {
 }
 
 function enable_ui() { 
-  jQuery('#myModal').modal({ show: false})
+  jQuery('#myModal').modal('hide');
     // jQuery('#working').dialog("close");
     clear_status();
 }
