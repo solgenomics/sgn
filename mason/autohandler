@@ -1,5 +1,18 @@
+
 <& /site/header.mas &>
 
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-1 col-md-2 col-lg-2">
+    </div>
+    <div class="col-sm-10 col-md-8 col-lg-8">
+
 % $m->call_next;
+
+    </div>
+    <div class="col-sm-1 col-md-2 col-lg-2">
+    </div>
+  </div>
+</div>
 
 <& /site/footer.mas &>

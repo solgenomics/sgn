@@ -34,6 +34,34 @@ $breeding_programs
   </%perl>
 </div>
 
+<div class="modal fade" id="add_project_dialog" name="add_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addProjectDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addProjectDialog">Add New Trial</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Name: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="location_description" id="location_description" type="text" />
+              </div>
+	    </div>
+	  </form>      
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="new_trial_submit" id="new_trial_submit">Add Trial</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
 <div id="add_project_dialog" class="ui-widget">
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
     <label for="new_trial_name" style="display: inline-block; width: 100px;">Trial name:</label>
@@ -201,6 +229,7 @@ $breeding_programs
     </div>
   </form>
 </div>
+-->
 
 <div id="upload_trial_error_display" class="ui-widget">
   <table>
