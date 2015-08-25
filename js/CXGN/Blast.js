@@ -151,13 +151,17 @@ function finish_blast(jobid, seq_count) {
 }
 
 function disable_ui() { 
-  // jQuery('#myModal').modal('show');
-    jQuery('#working').dialog("open");
+  jQuery('#myModal').modal({
+    show: true,
+    keyboard: false,
+    backdrop: 'static'
+  })
+    // jQuery('#working').dialog("open");
 }
 
 function enable_ui() { 
-  // jQuery('#myModal').modal({ show: false})
-    jQuery('#working').dialog("close");
+  jQuery('#myModal').modal({ show: false})
+    // jQuery('#working').dialog("close");
     clear_status();
 }
 
@@ -187,9 +191,9 @@ function download_table() {
 }
 
 function update_status(message) { 
-  jQuery('#working_msg').html(message);
+  jQuery('#bs_working_msg').html(message);
 }
 
 function clear_status() { 
-  jQuery('#working_msg').html('');
+  jQuery('#bs_working_msg').html('');
 }

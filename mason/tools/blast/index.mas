@@ -175,6 +175,25 @@
 <div id="jobid" style="display:none;"></div>
 
 
+<div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog modal-sm">
+    
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">BLAST status</h4>
+        </div>
+        <div class="modal-body">
+          <center>
+            <img src="/img/wheel.gif" />
+            <p id="bs_working_msg"></p>
+          </center>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
 <script>
 
 
@@ -272,6 +291,11 @@ jQuery(document).ready(function() {
 
 <!-- STYLE -->
 <style>
+
+h1 {
+  display:none;
+}
+
 .seq_map {
 	color: #777777;
 	width: 700px;
