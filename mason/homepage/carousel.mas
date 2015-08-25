@@ -3,19 +3,11 @@
   height: 400px; /* This is your slider height */
 }
 .carousel {
-  max-width:1100px; 
+/*  max-width:970px;*/
   /*width:100%;*/
   margin:0 auto; /* center your carousel if other than 100% */ 
 }
 
-.carousel-inner > .item {
-/*    position: relative;*/
-/*    display: none;*/
-  -webkit-transition: 10.1s ease-in-out left;
-  -moz-transition: 10.1s ease-in-out left;
-  -o-transition: 10.1s ease-in-out left;
-  transition: 10.1s ease-in-out left;
-}
 </style>
 
 
