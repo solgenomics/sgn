@@ -28,7 +28,6 @@
 	position:relative;
 }
 
-
 #xtratbl {
 background-color:#CCCCFF;
 border: 1px solid #C0C0C0;
@@ -127,11 +126,20 @@ a[href ^="mailto:"]  {
 	background: url(/documents/img/mail_icon.gif) center right no-repeat;
 	padding-right: 16px;
 }
-#pagefooter { 
+
+#pagefooter {
+  height:200px;
   line-height: 1.5;
-  border-top: 3px solid #c0c0c0;
-  padding-top: 12px;
-  margin-top: 15px;
+  border-top: 1px solid #c0c0c0;
+  
+  padding-top: 2px;
+  margin: 0px 0px 0px 0px;
+  position:absolute;
+  
+  bottom:0;
+  left:0;
+  width:100%;
+  background:#eee;
 }
 
 #pagefooter a, #pagefooter a:active, #pagefooter a:link, #pagefooter a:visited { 

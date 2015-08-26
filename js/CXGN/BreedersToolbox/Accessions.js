@@ -24,11 +24,13 @@ jQuery(document).ready(function ($) {
     var validSpecies;
 
     function disable_ui() { 
-	$('#working').dialog("open");
+	//$('#working').dialog("open");
+	$('#working_modal').modal("show");
     }
 
     function enable_ui() { 
-	$('#working').dialog("close");
+	//$('#working').dialog("close");
+	$('#working_modal').modal("hide");
     }
 
     function add_accessions(accessionsToAdd, speciesName) {

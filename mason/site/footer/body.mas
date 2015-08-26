@@ -14,17 +14,28 @@
 <!-- BEGIN FOOTER-->
 
 <div id="pagefooter">
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-1 col-md-1 col-lg-2">
+      </div>
+      <div class="col-sm-10 col-md-10 col-lg-8">
+      </div>
+      <div class="col-sm-1 col-md-1 col-lg-2">
+      </div>
+    </div>
+  </div>
   
   <div class="pull-right" style="margin-right:10px">
     <a href="http://twitter.com/solgenomics" class="twitter-follow-button">@solgenomics</a>
     <div class="fb-like" data-href="https://www.facebook.com/solgenomics" data-layout="button_count" data-action="like" data-show-faces="false" data-share="false"></div>
   </div>
 
-    <!-- <p class="center-block" style="width:800px">
+     <p class="center-block" style="width:800px">
       SGN is supported by the <a class="footer" href="http://www.nsf.gov/awardsearch/showAward?AWD_ID=0820612">NSF (#0820612)</a>,
       <a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at the <a class="footer" href="http://bti.cornell.edu">Boyce Thompson Institute</a>
       | <a href="/legal.pl">Disclaimer</a>
-    </p> -->
+    </p> 
 <br>
     <div style="width:650px" class="center-block">
       <table style="width:100%;vertical-align:middle">
