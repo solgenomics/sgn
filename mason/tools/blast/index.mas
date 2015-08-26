@@ -174,25 +174,44 @@
 
 <div id="jobid" style="display:none;"></div>
 
-
 <div class="modal fade" id="myModal" role="dialog">
-    <div class="modal-dialog modal-sm">
-    
-      <!-- Modal content-->
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">BLAST status</h4>
-        </div>
-        <div class="modal-body">
-          <center>
-            <img src="/img/wheel.gif" />
-            <p id="bs_working_msg"></p>
-          </center>
-        </div>
+  <div class="modal-dialog modal-sm">
+  
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">BLAST status</h4>
       </div>
-      
+      <div class="modal-body">
+        <center>
+          <img src="/img/wheel.gif" />
+          <p id="bs_working_msg"></p>
+        </center>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<div class="modal fade" id="search_modal" role="dialog">
+  <div class="modal-dialog modal-lg">
+  
+    <!-- Modal content-->
+  <div class="modal-content">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">Search Result</h4>
+    </div>
+    <div class="modal-body">
+      <p id="search_output"></p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
     </div>
   </div>
+    
+  </div>
+</div>
 
 <script>
 
@@ -245,30 +264,18 @@ jQuery(document).ready(function() {
 		var database = jQuery('#database').val();
 		var blast_desc = jQuery('#blast_desc').val();
 		// alert("db: "+database+", blast_desc: "+blast_desc);
-		disable_ui();
+    disable_ui();
 		
 		jQuery.ajax( {
 			url: '/tools/blast/desc_search/',
 			method: 'POST',
 			data: {'blast_desc':blast_desc, 'database': database},
 			success: function(response) {
-				enable_ui();
+        enable_ui();
 				$('#search_output').html(response.output_seq);
-				$('#search_output').dialog({
-				draggable:true,
-				resizable:true,
-				modal: true,
-				buttons: {
-					Ok: function() {
-						$( this ).dialog( "close" );
-					}
-				},
-				width:700,
-				height:500,
-				closeOnEscape:true,
-				title: "Results",
-				open: function(event, ui) { $('.ui-dialog-titlebar-close').blur();},
-				});
+        $('#search_modal').modal({
+                  show: true
+                });
 			},
 			error: function(response) {
 				alert("An error occurred. The service may not be available right now.");
