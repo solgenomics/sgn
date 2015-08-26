@@ -94,8 +94,6 @@
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
-<div id="search_output" style="display:none;font-family:Lucida,monospace"></div>
-
 <&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a href="/help/tools/blast">Help</a>' &>
   <input type="hidden" name="outformat" value="0" />
   
@@ -202,9 +200,11 @@
       <button type="button" class="close" data-dismiss="modal">&times;</button>
       <h4 class="modal-title">Search Result</h4>
     </div>
+    
     <div class="modal-body">
-      <p id="search_output"></p>
+      <p id="search_output" style="max-height:300px;overflow:scroll;"></p>
     </div>
+    
     <div class="modal-footer">
       <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
     </div>
@@ -272,10 +272,9 @@ jQuery(document).ready(function() {
 			data: {'blast_desc':blast_desc, 'database': database},
 			success: function(response) {
         enable_ui();
-				$('#search_output').html(response.output_seq);
-        $('#search_modal').modal({
-                  show: true
-                });
+        $('#search_output').html(response.output_seq);
+        $('#search_modal').modal("show");
+        
 			},
 			error: function(response) {
 				alert("An error occurred. The service may not be available right now.");
