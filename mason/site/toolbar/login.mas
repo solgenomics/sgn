@@ -4,7 +4,7 @@
 % if( $c->config->{'is_mirror'} ) {
     <a style="line-height: 1.2; text-decoration: underline; background: none" href="<% $c->config->{main_production_site_url} %>" title="log in on main site">main site</a>
 % } elsif ( $c->config->{disable_login} ) {
-    <span style="visibility: hidden">site login disabled</span>
+    <span style="visibility: hidden">Site Login Disabled</span>
 % } elsif ( $c->user_exists ) {
 
   <li>
@@ -13,14 +13,14 @@
     <a href='/solpeople/top-level.pl'><% $c->user->get_object->get_first_name.' '.$c->user->get_object->get_last_name  || '' %></a>
     </span>
     -->
-    <div class="btn-group" role="group" aria-label="..." style="margin: 1px 0px 0px 0px">
+    
+    <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
       <button id="navbar_profile" class="btn btn-success" type="button" onclick="location.href='/solpeople/top-level.pl';" style="margin: 7px 0px 0px 0px"><% $c->user->get_object->get_username || '' %></button>
       <button name="lists_link" class="btn btn-info glyphicon glyphicon-list-alt" style="margin:6px 0px 0px 0px" type="button" ></button>
       <button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="location.href='/solpeople/login.pl?logout=yes';" ></button>
-
     </div>
+
   </li>
-  <li>&nbsp;&nbsp;&nbsp;</li>
 
   <!--
   <li><a id="lists_link" style="text-decoration: none";>lists</a></li>
@@ -30,7 +30,7 @@
 
   <li class="dropdown">
     
-    <div class="btn-group dropdown-toggle" role="group" aria-label="..." style="margin: 1px 0px 0px 0px" data-toggle="dropdown" href="#">
+    <div class="btn-group dropdown-toggle" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" data-toggle="dropdown" href="#">
       <button class="btn btn-success" type="button" style="margin: 7px 7px 0px 0px">Login</button>
       <button class="btn btn-success glyphicon glyphicon-log-in" style="margin:6px 6px 0px -7px" type="button"></button>
     </div>
