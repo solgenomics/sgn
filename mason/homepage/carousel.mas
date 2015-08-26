@@ -3,10 +3,11 @@
   height: 400px; /* This is your slider height */
 }
 .carousel {
-/*  max-width:970px;*/
+  max-width:98%;
   /*width:100%;*/
   margin:0 auto; /* center your carousel if other than 100% */ 
 }
+
 
 </style>
 
