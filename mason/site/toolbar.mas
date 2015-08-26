@@ -13,6 +13,7 @@
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
         <!-- <li class="active"><a href="/">Home</a></li> -->
+        <& toolbar/maps.mas &>
         <& toolbar/genomes.mas &>
         <& toolbar/tools.mas &>
         <& toolbar/about_us.mas &>
