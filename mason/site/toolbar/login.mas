@@ -9,14 +9,14 @@
 % } elsif ( $c->user_exists ) {
   
   <li class="navbar-form navbar-left" style="padding-left: 2px;">
-    <button class="btn" type="button" onclick="location.href='/solpeople/top-level.pl';" style="color:#9d9d9d;background-color:#333;border-color:#666">
+    <button class="btn" type="button" onclick="location.href='/solpeople/top-level.pl';">
       My SGN
     </button>
-    <button id="lists_link" class="btn" type="button" style="color:#9d9d9d;background-color:#333;border-color:#666">
+    <button id="lists_link" class="btn" type="button">
       Lists
     </button>
     <div class="input-group">
-      <button class="btn" type="button"  onclick="location.href='/solpeople/login.pl?logout=yes';" style="color:#ddd;background-color:#333;border-color:#666">
+      <button class="btn" type="button"  onclick="location.href='/solpeople/login.pl?logout=yes';">
         <% $c->user->get_object->get_first_name || $c->user->get_object->get_last_name  || '' %>
         <span style="font-size:1.2em;" class="glyphicon glyphicon-log-out"></span>
       </button>
@@ -25,7 +25,7 @@
   
 % } else {
 <li class="dropdown" style="padding: 8px 15px 8px 0px;">
-  <button type="button" class="btn dropdown-toggle" data-toggle="dropdown" style="color:#9d9d9d;background-color:#333;border-color:#666">
+  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
     <span class="glyphicon glyphicon-log-in"></span> Login</a>
   </button>
   <ul class="dropdown-menu">
