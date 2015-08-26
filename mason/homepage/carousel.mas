@@ -10,38 +10,39 @@
 
 .carousel-sgn-caption { 
   position:relative;
-  float: right;
-  min-width:50%;
+  float: left;
+  max-width:50%;
+  min-width:35%;
   padding: 0px 10px 0px 10px;
-  margin-top:60px;
+  margin-top:20px;
 
-  color: #fff;
+  color: #000;
   font-size: 16px;
   text-decoration: none;
-  background-color: #000;
-  opacity: 0.65;
-  filter: alpha(opacity=65); /* For IE8 and earlier */
-  border-top-left-radius:12px;
-  border-bottom-left-radius:12px;
+  background-color: #fff;
+  opacity: 0.80;
+  filter: alpha(opacity=80); /* For IE8 and earlier */
+  border-top-right-radius:12px;
+  border-bottom-right-radius:12px;
 }
 
 .carousel-sgn-caption a { 
-  color: #fff;
+  color: #000;
   text-decoration: none;
 }
 
 .carousel-sgn-links {
   position:absolute;
   min-width:35%;
-  margin-top:170px;
+  margin-top:20px;
   right:0px;
 
   color: #000;
   font-size: 16px;
   text-decoration: none;
   background-color: #fff;
-  opacity: 0.75;
-  filter: alpha(opacity=75); /* For IE8 and earlier */
+  opacity: 0.85;
+  filter: alpha(opacity=85); /* For IE8 and earlier */
   border-top-left-radius:12px;
   border-bottom-left-radius:12px;
 }
@@ -61,8 +62,8 @@
 <script>
   jQuery(document).ready(function() {
     $('.carousel').carousel({
-      interval: 12000,
-      wrap:true
+      interval: 20000,
+      // wrap:true
     })
   });
 </script>
@@ -85,11 +86,11 @@
             <div class="carousel-sgn-caption">
               <a href="https://colloque.inra.fr/sol2015" target="_blank">
                 <h3><img src="/documents/img/sgn_transparent_logo.png" width="40"> SOL 2015</h3>
-                <p>The 12th Solanaceae Conference. October 25-29, Bordeaux, France</p>
+                <p>The 12th Solanaceae Conference</p>
               </a>
             </div>
             
-            <div class="carousel-sgn-links pull-right">
+            <div class="carousel-sgn-links">
               <ul>
                 <li><a href="https://colloque.inra.fr/sol2015/Registration">Registration</a></li>
                 <li><a href="https://colloque.inra.fr/sol2015/Abstract-submission">Abstract Submission</a></li>
@@ -108,7 +109,7 @@
           <h3>Potato Genome</h3>
           <p>Was published on 2013</p>
         </div>
-        <div class="carousel-sgn-links pull-right">
+        <div class="carousel-sgn-links">
           <ul>
             <li><a href="/jbrowse">Browse the tomato genome</a></li>
             <li><a href="/tools/blast">Find sequences by similarity</a></li>
@@ -127,7 +128,7 @@
           <p>Was published on 2013</p>
         </div>
         
-        <div class="carousel-sgn-links pull-right">
+        <div class="carousel-sgn-links">
           <ul>
             <li><a href="/jbrowse">Browse the tomato genome</a></li>
             <li><a href="/tools/blast">Find sequences by similarity</a></li>
@@ -164,7 +165,7 @@
             <p>Was published on 2013</p>
           </div>
           
-          <div class="carousel-sgn-links pull-right">
+          <div class="carousel-sgn-links">
             <ul>
               <li><a href="/jbrowse">Browse the tomato genome</a></li>
               <li><a href="/tools/blast">Find sequences by similarity</a></li>
