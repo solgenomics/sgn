@@ -2,9 +2,9 @@
 <li style="height:100%">
   <form class="navbar-form navbar-left" role="search" action="http://solgenomics.net/search/quick_search.pl" style="padding-right: 2px;height:100%">
       <div class="input-group">
-        <span id="advanced_search_li" class="btn btn-default input-group-addon" style="display:none;color:#9d9d9d;background-color:#333;border-color:#666" onclick="location.href='/search';">Advanced</span>
+        <span id="advanced_search_li" class="btn btn-default input-group-addon" style="display:none" onclick="location.href='http://solgenomics.net/search';">Advanced</span>
         <input id="quick_search_input" style="display:none;" type="text" name="term" class="form-control" placeholder="">
-        <span id="quick_search_icon" class="btn btn-default" style="font-size:20px;color:#9d9d9d;background-color:#333;border-color:#666"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></span>
+        <span id="quick_search_icon" class="btn btn-default" style="height:34px; font-size:16; padding-top:8px;"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></span>
       </div>
   </form>
 </li>

@@ -4,10 +4,16 @@
     <li><a href="/about">About us</a></li>
     <li><a href="/contact/form">Contact</a></li>
     <li><a href="/help/index.pl">Cite SGN</a></li>
+    
+    <li role="separator" class="divider"></li>
+    
     <li><a href="/help/index.pl">Help</a></li>
     <li><a href="/help/faq.pl">FAQ</a></li>
     <li><a href="/phenome">Become SGN Editor</a></li>
     <li><a href="/forum/topics.pl">Forum</a></li>
+    
+    <li role="separator" class="divider"></li>
+    
     <li><a href="https://twitter.com/solgenomics">Twitter</a></li>
     <li><a href="https://www.facebook.com/solgenomics">Facebook</a></li>
   </ul>

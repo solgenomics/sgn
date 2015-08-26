@@ -9,7 +9,9 @@ function run_blast(database_types, input_option_types) {
   var program  = jQuery('#program_select').val();
   var sequence = jQuery('#sequence').val();
   
-  if (jQuery.browser.msie) {
+  var msie = window.navigator.userAgent.indexOf("MSIE ");
+
+  if (msie) {
     sequence = sequence.replace(/\s+/g, "\n");
   }
 
@@ -150,11 +152,17 @@ function finish_blast(jobid, seq_count) {
 }
 
 function disable_ui() { 
-    jQuery('#working').dialog("open");
+  jQuery('#myModal').modal({
+    show: true,
+    keyboard: false,
+    backdrop: 'static'
+  })
+    // jQuery('#working').dialog("open");
 }
 
 function enable_ui() { 
-    jQuery('#working').dialog("close");
+  jQuery('#myModal').modal('hide');
+    // jQuery('#working').dialog("close");
     clear_status();
 }
 
@@ -184,9 +192,9 @@ function download_table() {
 }
 
 function update_status(message) { 
-  jQuery('#working_msg').html(message);
+  jQuery('#bs_working_msg').html(message);
 }
 
 function clear_status() { 
-  jQuery('#blast_status').html('');
+  jQuery('#bs_working_msg').html('');
 }
