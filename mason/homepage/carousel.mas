@@ -31,6 +31,11 @@
   text-decoration: none;
 }
 
+.carousel-sgn-caption a:hover { 
+  color: #666;
+  text-decoration: none;
+}
+
 .carousel-sgn-links {
   position:absolute;
   min-width:35%;
@@ -54,6 +59,11 @@
 
 .carousel-sgn-links a { 
   color: #000;
+  text-decoration: none;
+}
+
+.carousel-sgn-links a:hover { 
+  color: #666;
   text-decoration: none;
 }
 
@@ -106,15 +116,17 @@
       <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/4.jpg) center center; background-size:cover;" class="slider-size">
         <div class="carousel-sgn-caption">
-          <h3>Potato Genome</h3>
-          <p>Was published on 2013</p>
+          <a href="/organism/Solanum_tuberosum/genome">
+            <h3>Potato Genome</h3>
+            <p>Was published on 2013</p>
+          </a>
         </div>
         <div class="carousel-sgn-links">
           <ul>
-            <li><a href="/jbrowse">Browse the tomato genome</a></li>
+            <li><a href="/jbrowse">Browse the potato genome</a></li>
             <li><a href="/tools/blast">Find sequences by similarity</a></li>
-            <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/">Download the annotations</a></li>
-            <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/">Download the Genome Sequence</a></li>
+            <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/annotation/">Download the annotations</a></li>
+            <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/assembly/PGSC_DM_v4.03/">Download the Genome Sequence</a></li>
           </ul>
         </div>
         
@@ -124,16 +136,18 @@
       <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/3.jpg) center center; background-size:cover;" class="slider-size">
         <div class="carousel-sgn-caption">
-          <h3>Pepper Genome</h3>
-          <p>Was published on 2013</p>
+          <a href="/organism/Capsicum_annuum/genome">
+            <h3>Pepper Genome</h3>
+            <p>Was published on 2013</p>
+          </a>
         </div>
         
         <div class="carousel-sgn-links">
           <ul>
-            <li><a href="/jbrowse">Browse the tomato genome</a></li>
+            <li><a href="/jbrowse">Browse the pepper genome</a></li>
             <li><a href="/tools/blast">Find sequences by similarity</a></li>
-            <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/">Download the annotations</a></li>
-            <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/">Download the Genome Sequence</a></li>
+            <li><a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Download the annotations</a></li>
+            <li><a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Download the Genome Sequence</a></li>
           </ul>
         </div>
         
@@ -161,16 +175,18 @@
       <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/2.jpg) center center; background-size:cover;" class="slider-size">
           <div class="carousel-sgn-caption">
-            <h3>Eggplant Genome</h3>
-            <p>Was published on 2013</p>
+            <a href="/organism/Solanum_melongena/genome">
+              <h3>Eggplant Genome</h3>
+              <p>Was published on 2013</p>
+            </a>
           </div>
           
           <div class="carousel-sgn-links">
             <ul>
-              <li><a href="/jbrowse">Browse the tomato genome</a></li>
+              <li><a href="/jbrowse">Browse the eggplant genome</a></li>
               <li><a href="/tools/blast">Find sequences by similarity</a></li>
-              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/">Download the annotations</a></li>
-              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/">Download the Genome Sequence</a></li>
+              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/">Download the annotations</a></li>
+              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/">Download the Genome Sequence</a></li>
             </ul>
           </div>
           
