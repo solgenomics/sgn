@@ -6,10 +6,6 @@ $captcha_public_key
 <& "/page/page_title.mas", title => "Contact $website_name" &>
 
 <div class="container-fluid">
-  <div class="row">
-    <div class=" col-lg-2">
-    </div>
-    <div class="col-lg-8">
     <div class="well">
 
 % #The form
@@ -122,8 +118,6 @@ Either you are not human - or you are not very good at math! ;-)<br /></font>
     </tbody>
   </table>
 
-  </div>
-  <div class="col-lg-2">
   </div>   
 </div>
 
