@@ -131,7 +131,7 @@ EOC
         }
         $subtitle ||= '';
         my $title_bar = <<EOHTML;
-<table cellspacing="0" cellpadding="0" class="table table-hover" summary=""><tr class="active"><td>$title</td><td align="right">$subtitle&nbsp;</td></tr></table>
+<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead" summary=""><tr><td class="${sub}infosectiontitle">$title</td><td class="${sub}infosectionsubtitle">$subtitle&nbsp;</td></tr></table>
 EOHTML
         print "$title_bar\n$contents\n";
     }
@@ -147,7 +147,7 @@ EOHTML
           ? qq|<td class="${sub}infosectionsubtitle_empty" align="right">$subtitle&nbsp;</td>|
           : '';
         print <<EOT;
-<table cellspacing="0" cellpadding="0" class="table table-hover" summary=""><tr class="active"><td>$title</td><td>$empty_message</td>$maybe_subtitle</tr></table>
+<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead_empty" summary=""><tr><td class="${sub}infosectiontitle_empty">$title</td><td class="${sub}infosection_emptymessage">$empty_message</td>$maybe_subtitle</tr></table>
 EOT
     }
 

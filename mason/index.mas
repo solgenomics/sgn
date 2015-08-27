@@ -16,14 +16,14 @@ $schema
         </div>
       </div>
       
-        <div class="panel panel-success">
+        <div class="panel panel-info">
           <div class="panel-heading">Popular Species</div>
           <div class="panel-body">
             <& homepage/popular_species.mas &>
           </div>
         </div>
       
-        <div class="panel panel-warning">
+        <div class="panel panel-info">
           <div class="panel-heading">SGN Featured</div>
           <div class="panel-body">
             <& homepage/publication_of_the_week.mas &>
@@ -37,7 +37,7 @@ $schema
       
       <div class="col-sm-6 col-md-6 col-lg-6">
         
-        <div class="panel panel-danger">
+        <div class="panel panel-info">
           <div class="panel-heading">Events</div>
           <div class="panel-body">
             <& homepage/events.mas &>
@@ -51,7 +51,7 @@ $schema
           </div>
         </div>
         
-        <div class="panel panel-default">
+        <div class="panel panel-info">
           <div class="panel-heading">Links</div>
           <div class="panel-body">
             <& homepage/other_links.mas &>
