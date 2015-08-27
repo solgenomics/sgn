@@ -7,18 +7,14 @@
 
 
 JSAN.use('jquery.blockUI');
+JSAN.use('jquery.form');
+
 
 function solGS () {};
 
 solGS.waitPage = function (page) {
 
-//ask user if they want to be notified when analysis is complete.
-//if yes, call server side method to store user and analysis details
-//run analysis.
-//email to the user the link to the analysis output page 
-//if no, block page and run analysis as usual..
-
-    if (page.match(/solgs\/trait\//) != null) {
+    if ( page.match(/solgs\/trait\//)) {
     	askUser(page);
     } else {
     	blockPage(page);
@@ -43,6 +39,7 @@ function  askUser(page) {
 		No: { text: "No, I will wait...",
                       click: function() { 
 			  jQuery(this).dialog("close");
+			  
 			  displayAnalysisNow(page);
 		      },
 		    },
@@ -68,7 +65,7 @@ function checkUserLogin (page) {
 	url     : '/solgs/check/user/login/',
 	success : function(response) {
             if (response.loggedin) {
-//include in response user data
+		//include in response user data
 		
 		getProfileDialog(page);
             } else {
@@ -99,12 +96,12 @@ function loginAlert () {
 	});	    
 
 }
-
+	
 
 function loginUser () {
-    
-    window.location = '/solpeople/login.pl?goto_url=' + window.location.pathname;
-  
+
+   window.location = '/solpeople/login.pl?goto_url=' + window.location.pathname;
+   
 }
 
 
@@ -116,18 +113,14 @@ function displayAnalysisNow (page) {
 
 
 function blockPage (page) {
-    alert('blocking...');
-    alert('page: ' + page);
-
-    if (page !== undefined) {
-	window.location = page;
-    }
+  
+    goToPage(page);
 
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
     jQuery.blockUI({message: 'Please wait..'});
          
     jQuery(window).unload(function()  {
-        jQuery.unblockUI();            
+	jQuery.unblockUI();            
     }); 
  
 }
@@ -190,27 +183,160 @@ function getProfileDialog (page) {
 }
 
 
-// function confirmRequest () {
-//    var m = 'You will receive an email when the analysis is complete.'; 
+jQuery(document).ready(function (){
+   
+     jQuery('#runGS').on('click',  function() {
+	 
+	 var popId = jQuery('#population_id').val(); 
+	 var page = '/solgs/analyze/traits/population/' + popId;
+
+	 askUser(page);
+
+     });
     
-//     jQuery('<div />', {id: 'confirmation-message'})
-// 	.html(m)
-// 	.dialog({	
-// 	    height: 200,
-// 	    width:  250,
-// 	    modal: true,
-// 	    title: 'Request confirmation',
-//  	    buttons: {
-// 		OK: function() {
-// 		    jQuery(this).dialog('close');
-	
-	 	   
+});
+
+
+function submitTraitSelections () {
+    
+    var popId  = jQuery('#population_id').val();
+    var formId = ' id="traits_selection_form"';
+    var action = ' action="/solgs/analyze/traits/population/' + popId + '"';
+    var method = ' method="POST"';
+    
+    var traitsForm = '<form'
+	+ formId
+	+ action
+	+ method
+	+ '>' 
+	+ '</form>';
+
+    jQuery('#population_traits_list').wrap(traitsForm);
+   
+    var value = jQuery("#traits_selection_form :checkbox").fieldValue();
+    alert('selected traits: ' + value);
+   
+    jQuery('#traits_selection_form').ajaxSubmit();
+    
+    window.location = '/solgs/analyze/traits/population/' + popId;
+  
+}
+
+
+function goToPage (page) {
+    
+    if (page.match(/solgs\/trait\//)) {
+	window.location = page;
+    } else if (page.match(/solgs\/analyze\/traits\/population\//)) {
+
+	submitTraitSelections();
+    }
+	    
+}
+
+// jQuery(document).ready(function() {
+
+//     var traits = [];
+//     var selectedTraits = [];
+
+//     jQuery('#population_traits_list tr').on('click',  function() {
+     
+//         var traitId =  jQuery(this).find(".trait_id").val();
+        
+//        	if (selectedTraits !== undefined) {
+// 		if (jQuery.inArray(traitId, selectedTraits) == -1 ) {
+		   
+// 		    selectedTraits.push(traitId);
+		 
+// 		} else {
+		   
+// 		    selectedTraits = jQuery.grep(selectedTraits, function(value) {
+// 			return value != traitId;
+// 		    });
 // 		}
+
+// 	}  else {
+	   
+// 	    selectedTraits = traitId;
+// 	}  	
+//     });
+
+//     jQuery("#runGS").on('click', function(){
+// 	var popId = jQuery('#population_id').val();
+// 	alert('pop id: ' + popId);
+// 	if (selectedTraits[-1] == ',') {
+// 	    alert('pop to clean selectedTraits: ' + selectedTraits);
+// 	    selectedTraits.pop();
+// 	     alert('pop cleaned selectedTraits: ' + selectedTraits);
+// 	} else if (selectedTraits[0] == ',') {
+	    
+// 	    alert('shift to clean selectedTraits: ' + selectedTraits);
+// 	    selectedTraits.shift();
+// 	     alert('shift cleaned selectedTraits: ' + selectedTraits);
+// 	}
+
+// 	if (selectedTraits) {
+// 	    alert('selected traits: ' + selectedTraits);
+// 	  //  askUser(page);
+// 	    if (selectedTraits.length == 1) {
+// 		var traitId = selectedTraits[0];
+// 		runSingleModel(popId, traitId);
+// 		selectedTraits = [];
+// 	    } else {
+// 		runMultipleModels(popId, selectedTraits);
+// 	    	selectedTraits = [];
 // 	    }
-// 	});
+// 	} else {
+	    
+// 	    alert('Select Traits first.');
+// 	}
+    
+
+//     });
+
+
+
+//  });
+
+
+function runSingleModel(popId, traitId) {
+    
+    if (traitId !== undefined) {
+	var page = '/solgs/trait/' + traitId + '/population/' + popId;
+	askUser(page);
+    } else {
 	
-//    //  
-// }
+	window.location = window.location.href;
+    }
+}
+
+
+function runMultipleModels (popId, traitIds) {
+
+    if (traitIds !== undefined) {
+	var page = '/solgs/analyze/traits/population/' + popId; 
+	var args = {'traitIds': traitIds};
+	askUser(page);
+    } else {
+	window.location = window.location.href;	
+
+    }
+   // window.location = {}
+    // jQuery.Ajax({
+    // 	typee: 'POST',
+    // 	dataType: 'json',
+    // 	data: {'trait_id': traitIds},
+    // 	url: '/solgs/analyze/traits/population' + popId,
+    // 	success: function(response){
+	    
+
+    // 	},
+
+
+    // });
+
+
+}
 
 
 function saveAnalysisProfile (profile) {
@@ -222,7 +348,6 @@ function saveAnalysisProfile (profile) {
     jQuery.ajax({
 	type    : 'POST',
 	dataType: 'json',
-	cache   : false,
 	data    : profile,
 	url     : '/solgs/save/analysis/profile/',
 	success : function(response) {
@@ -289,6 +414,28 @@ function confirmRequest () {
  
 }
 
+
+// function confirmRequest () {
+//    var m = 'You will receive an email when the analysis is complete.'; 
+    
+//     jQuery('<div />', {id: 'confirmation-message'})
+// 	.html(m)
+// 	.dialog({	
+// 	    height: 200,
+// 	    width:  250,
+// 	    modal: true,
+// 	    title: 'Request confirmation',
+//  	    buttons: {
+// 		OK: function() {
+// 		    jQuery(this).dialog('close');
+	
+	 	   
+// 		}
+// 	    }
+// 	});
+	
+//    //  
+// }
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function(a, b) {
     return this.each(function() {
