@@ -13,7 +13,8 @@
 
 <!-- BEGIN FOOTER -->
 
-<div id="pagefooter" class="navbar navbar-inverse">
+<br/>
+<div id="pagefooter" class="navbar navbar-default">
    
   <br/>
   <div class="container-fluid">
@@ -31,7 +32,7 @@
 		      <td>
 		        <a href="http://facebook.com/solgenomics" class="footer"><img width="20" alt="Facebook" src="/documents/img/facebook_icon.png" title="SGN Facebook" border="0" /></a>
 			<a href="http://twitter.com/solgenomics" class="footer"><img width="20" alt="Twitter" src="/documents/img/twitter_icon.png" title="SGN Twitter" border="0"/></a>
-			<a href="http:/linkedin.com/solgenomics" class="footer"><img width="20" alt="LinkedIn" src="/documents/img/linkedin_icon.png" title="SGN LinkedIn" border="0"/></a>
+			<a href="http://linkedin.com/solgenomics" class="footer"><img width="20" alt="LinkedIn" src="/documents/img/linkedin_icon.png" title="SGN LinkedIn" border="0"/></a>
 			<a href="http://googleplus.com/solgenomics" class="footer"><img width="20" alt="GooglePlus" src="/documents/img/googleplus_icon.png" title="SGN Google Plus" border="0"/></a>
 		      </td>
 		    </tr>
