@@ -21,7 +21,7 @@ my $defaultVal = {"name" => $name, "email" => $email, "subject" => $subject};
 
 % foreach my $info_category (@$infoNeeded) {
     <div class="form-group">
-      <label class="col-sm-3 control-label"><% ucfirst $info_category %>* : 
+      <label class="col-sm-2 control-label"><% ucfirst $info_category %>* : 
 
 % # If user did not fill out a field and submitted the form, then it will 
 % # show in red letters above the field this field is needed above it. 
@@ -30,25 +30,25 @@ my $defaultVal = {"name" => $name, "email" => $email, "subject" => $subject};
       <p style = "color:red; font-size: 10px;"><% ucfirst $info_category %> is required.</p> 
 % }
       </label>
-      <div class="col-sm-9">
+      <div class="col-sm-10">
         <input type="text" class="form-control" value="<% $$defaultVal{$info_category} |h%>" name="<% $info_category %>"></input>
       </div>
     </div>
 % }
 
     <div class="form-group">
-      <label class="col-sm-3 control-label">Body* : 
+      <label class="col-sm-2 control-label">Body* : 
 
 % unless ($filled{body}) {
       <p style = "color:red; font-size: 10px;">Message body is required.</p>
 % }
       </label>
-      <div class="col-sm-9">
+      <div class="col-sm-10">
         <textarea rows="12" class="form-control" name="body"><% $body |h%></textarea>
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">What is <% $contact_form_human_question %>?* : 
+      <label class="col-sm-2 control-label">What is <% $contact_form_human_question %>?* : 
 
 % if (!$contact_form_human_answer_correct) { 
 <font style = "color:red; font-size: 10px;" ><br/>
@@ -59,7 +59,7 @@ Either you are not human - or you are not very good at math! ;-)<br /></font>
 %    }
 % }
       </label>
-      <div class="col-sm-9">
+      <div class="col-sm-10">
         <input type="text" class="form-control" value="" name="contact_form_human_answer"></input>
       </div>
     </div>
@@ -70,8 +70,8 @@ Either you are not human - or you are not very good at math! ;-)<br /></font>
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label"></label>
-      <div class="col-sm-9">
+      <label class="col-sm-2 control-label"></label>
+      <div class="col-sm-10">
         <script type="text/javascript"
      	  src="https://www.google.com/recaptcha/api/challenge?k=<% $captcha_public_key %>">
         </script>

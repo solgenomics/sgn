@@ -24,31 +24,6 @@
       <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
         <div class="container-fluid">
     	  <div class="row">
-	    <div class="col-sm-3 col-md-3 col-lg-3" >
-	      <div class="panel panel-info">
-		<table class="table">
-		  <tbody>
-		    <tr>
-		      <td>
-		        <a href="http://facebook.com/solgenomics" class="footer"><img width="20" alt="Facebook" src="/documents/img/facebook_icon.png" title="SGN Facebook" border="0" /></a>
-			<a href="http://twitter.com/solgenomics" class="footer"><img width="20" alt="Twitter" src="/documents/img/twitter_icon.png" title="SGN Twitter" border="0"/></a>
-			<a href="http://linkedin.com/solgenomics" class="footer"><img width="20" alt="LinkedIn" src="/documents/img/linkedin_icon.png" title="SGN LinkedIn" border="0"/></a>
-			<a href="http://googleplus.com/solgenomics" class="footer"><img width="20" alt="GooglePlus" src="/documents/img/googleplus_icon.png" title="SGN Google Plus" border="0"/></a>
-		      </td>
-		    </tr>
-		    <tr>
-		      <td><a href="/about/index.pl">About Us</a></td>
-		    <tr>
-		    <tr>
-		      <td><a href="/contact/form/">Contact Us</a></td>
-		    <tr>
-		    <tr>
-		      <td><a href="/legal.pl">Disclaimer</a></td>
-		    <tr>
-		  </tbody>
-		</table>
-	      </div>
-	    </div>
 
 	    <!--
 	    <div class="col-sm-2 col-md-2 col-lg-2" style="margin-right:-30px;">
@@ -73,7 +48,7 @@
 
       	    <div class="col-sm-9 col-md-9 col-lg-9">
 	      <div class="panel panel-success">
-	        <div class="panel-heading">Supported By</div>
+	        <div class="panel-heading">Partners With</div>
 	        <table class="table" >
 	    	  <tbody>
             	    <tr>
@@ -94,10 +69,49 @@
           	</table>
 	      </div>
 	    </div>
+
+	    <div class="col-sm-3 col-md-3 col-lg-3" >
+	      <div class="panel panel-info">
+		<table class="table table-hover">
+		  <tbody>
+		    <tr>
+		      <td>
+		        <a href="http://facebook.com/solgenomics" class="footer"><img width="20" alt="Facebook" src="/documents/img/facebook_icon.png" title="SGN Facebook" border="0" /></a>
+			<a href="http://twitter.com/solgenomics" class="footer"><img width="20" alt="Twitter" src="/documents/img/twitter_icon.png" title="SGN Twitter" border="0"/></a>
+			<a href="http://linkedin.com/solgenomics" class="footer"><img width="20" alt="LinkedIn" src="/documents/img/linkedin_icon.png" title="SGN LinkedIn" border="0"/></a>
+			<a href="http://googleplus.com/solgenomics" class="footer"><img width="20" alt="GooglePlus" src="/documents/img/googleplus_icon.png" title="SGN Google Plus" border="0"/></a>
+		      </td>
+		    </tr>
+		    <tr>
+		      <td><a href="/about/index.pl">About Us</a></td>
+		    <tr>
+		    <tr>
+		      <td><a href="/contact/form/">Contact Us</a></td>
+		    <tr>
+		    <tr>
+		      <td><a href="/help/index.pl">Help</a></td>
+		    <tr>
+		  </tbody>
+		</table>
+	      </div>
+	    </div>
+
 	  </div>
 	</div>
 
+	<div class="container-fluid">
+          <div class="row">
+      	    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+	      <div class="well">
+	        <p><small>SGN is supported by the <a class="footer" href="http://www.nsf.gov/awardsearch/showAward?AWD_ID=0820612">NSF (#0820612)</a>, <a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at the <a class="footer" href="http://bti.cornell.edu">Boyce Thompson Institute.</a>
+    		<br />
+    		Cite SGN using <a class="footer" href="http://nar.oxfordjournals.org/content/early/2014/11/26/nar.gku1195.full" target="_new"> Fernandez-Pozo et al, 2014</a> | <a href="/legal.pl">Disclaimer</a></small></p>
+              </div>
+            </div>
+	  </div>
+	</div>
       </div>
+
       <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
       </div>
     </div>
