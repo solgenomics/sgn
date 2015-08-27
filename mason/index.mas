@@ -1,0 +1,64 @@
+<%args>
+$schema
+</%args>
+
+<& homepage/carousel.mas &>
+
+<br/>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-6 col-md-6 col-lg-6">
+      
+      <div class="panel panel-info">
+        <div class="panel-heading">News</div>
+        <div class="panel-body">
+          <& homepage/news.mas &>
+        </div>
+      </div>
+      
+        <div class="panel panel-info">
+          <div class="panel-heading">Popular Species</div>
+          <div class="panel-body">
+            <& homepage/popular_species.mas &>
+          </div>
+        </div>
+      
+        <div class="panel panel-info">
+          <div class="panel-heading">SGN Featured</div>
+          <div class="panel-body">
+            <& homepage/publication_of_the_week.mas &>
+            <& homepage/image_of_the_week.mas &>
+            <& homepage/locus_of_the_week.mas &>
+            <& homepage/labs.mas &>
+          </div>
+        </div>
+      
+    </div>
+      
+      <div class="col-sm-6 col-md-6 col-lg-6">
+        
+        <div class="panel panel-info">
+          <div class="panel-heading">Events</div>
+          <div class="panel-body">
+            <& homepage/events.mas &>
+          </div>
+        </div>
+        
+        <div class="panel panel-info">
+          <div class="panel-heading">Affiliated Sites</div>
+          <div class="panel-body">
+            <& homepage/affiliated_sites.mas &>
+          </div>
+        </div>
+        
+        <div class="panel panel-info">
+          <div class="panel-heading">Links</div>
+          <div class="panel-body">
+            <& homepage/other_links.mas &>
+          </div>
+        </div>
+        
+      </div>
+      
+  </div>
+</div>
