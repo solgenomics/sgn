@@ -31,8 +31,8 @@
   <li class="dropdown">
     
     <div class="btn-group dropdown-toggle" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" data-toggle="dropdown" href="#">
-      <button class="btn btn-success" type="button" style="margin: 7px 7px 0px 0px">Login</button>
-      <button class="btn btn-success glyphicon glyphicon-log-in" style="margin:6px 6px 0px -7px" type="button"></button>
+      <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px">Login</button>
+      <button class="btn btn-primary glyphicon glyphicon-log-in" style="margin:6px 6px 0px -7px" type="button"></button>
     </div>
  
     <ul class="dropdown-menu">
