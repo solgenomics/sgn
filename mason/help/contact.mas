@@ -10,6 +10,7 @@ $captcha_public_key
     <div class=" col-lg-2">
     </div>
     <div class="col-lg-8">
+    <div class="well">
 
 % #The form
 <% $ENV{REMOTE_ADDR} %>
@@ -86,38 +87,46 @@ Either you are not human - or you are not very good at math! ;-)<br /></font>
       </div>
     </div>
     <hr>
-    <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+    <button style="float:right" type="submit" class="btn btn-primary btn-lg">Submit</button>
+    <br/><br/>
 
   </form>
+  </div>
+  
+  <br/>
+  <h2>Contact Us</h2>
+  <br/>
+  <table class="table table-hover table-bordered">
+     <tbody>
+      <tr>
+        <td><b>Email</b></td>
+	<td>Note that the contact email address <% $email_address_to_display %> has been deactivated due to extreme levels of spam. <br/>Use this contact form instead.</td>
+      </tr>
+      <tr>
+        <td><b>Mailing Address</b></td>
+	<td>Sol Genomics Network<br />
+	Boyce Thompson Institute for Plant Research<br />
+	Room 221<br />
+	Tower Road<br />
+	Ithaca, NY 14853<br />
+	USA<br /></td>
+      </tr>
+      <tr>
+        <td><b>Phone</b></td>
+        <td>(607) 255-6557</td>
+      </tr>
+      <tr>
+        <td><b>Mailing List</b></td>
+        <td>To stay informed of developments at SGN you can subscribe to our <a href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">mailing list</a>. <br/>This is a low-volume list (usually no more than 2 messages per month).</td>
+      </tr>
+    </tbody>
+  </table>
+
   </div>
   <div class="col-lg-2">
   </div>   
 </div>
 
-<hr />
-<%perl>
-print info_table_html(
-    __border => 0,
-    'Email' => qq| Note that the contact email address $email_address_to_display has been deactivated due to extreme levels of spam. Use this contact form instead.</a>|,
-
-    'Mailing address' => <<EOH,
-Sol Genomics Network<br />
-Boyce Thompson Institute for Plant Research<br />
-Room 221<br />
-Tower Road<br />
-Ithaca, NY 14853<br />
-USA<br />
-Phone: (607) 255-6557<br />
-EOH
-
-    'Mailing list' => <<EOH,
-  <p>
-  To stay informed of developments at SGN you can subscribe to our <a href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">mailing list</a>. This is a low-volume list (usually no more than 2 messages per month).
-  </p>
-EOH
-
-);
-</%perl>
 
 <%args>
   $name                     => ''
