@@ -1,4 +1,2 @@
 
-<b><a href="/help">HELP</a></b><br />
-
 % $m->call_next();

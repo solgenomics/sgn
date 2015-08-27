@@ -2,16 +2,36 @@
 <div id="outercontainer">
   <a name="top"></a>
   
-  <!-- Lists dialog -->
-  <div id="list_dialog" overflow="auto" >
-  </div>
+  <& /site/list.mas &>
 
-  <div id="list_item_dialog" overflow="auto" >
-  </div>
-
+  <!--
   <div id="working" style="text-align : center;">
     <img src="/img/wheel.gif" />
     <div id="working_msg"></div>
+  </div>
+  -->
+
+  <div class="modal fade" id="working_modal" name="working_modal" tabindex="-1" role="dialog" aria-labelledby="workingModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+	  <center>
+          <h4 class="modal-title" id="workingModalDialog">Working</h4>
+	  </center>
+        </div>
+        <div class="modal-body">
+          <div class="container-fluid">
+	    <center>
+	    <img src="/img/wheel.gif" />
+    	    <div id="working_msg"></div>
+	    </center>
+          </div>
+        </div>
+        <div class="modal-footer">
+
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="clone_shoppingcart" style="display: none">
@@ -20,7 +40,16 @@
 
   <& /site/toolbar.mas &>
   <& /system_message.mas &>
-  
+
+  <!-- START CONTENT WRAPPER -->
+  <br/>
+
+  <div class="container-fluid" style="padding-bottom:310px;">
+    <div class="row">
+      <div class="col-sm-1 col-md-1 col-lg-1">
+      </div>
+      <div class="col-sm-10 col-md-10 col-lg-10">
+
 
 <script defer="defer">
 jQuery(document).ready( function() { 
@@ -28,23 +57,21 @@ jQuery(document).ready( function() {
   setUpLogin();
   setUpLists();
 
-    jQuery('#working').dialog( { 
-      height: 120,
-      width:  100,
-      modal: true,
-      autoOpen: false,
-      closeOnEscape: false,
+//    jQuery('#working').dialog( { 
+//      height: 120,
+//      width:  100,
+//      modal: true,
+//      autoOpen: false,
+//      closeOnEscape: false,
       // open: function() {jQuery(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide(); },
-      open: function(event, ui) { jQuery(".ui-dialog-titlebar-close", ui.dialog).hide(); jQuery('.ui-dialog-titlebar-close').blur();},
-	  
-      title: 'Working...'
-    });
+//      open: function(event, ui) { jQuery(".ui-dialog-titlebar-close", ui.dialog).hide(); jQuery('.ui-dialog-titlebar-close').blur();},
+//	  
+//      title: 'Working...'
+//    });
+
 });
 
 </script>
 
-
-  <!-- <table id="pagecontent_t" summary="" width="740" cellpadding="0" cellspacing="0" border="0">
-  <tr><td id="pagecontent_td"> -->
 
 <!-- END HEADER -->

@@ -8,10 +8,13 @@
   <!-- <link rel="stylesheet" href="/css/sgn.css" type="text/css" /> -->
   <link rel="stylesheet" href="/css/new_sgn.css" type="text/css" />
   <link rel="search" type="application/opensearchdescription+xml" title="SGN Sol Search" href="/documents/sgn_sol_search.xml" />
-
+  <link rel="stylesheet" href="/css/jstree/themes/default/style.min.css">
+  <link rel="stylesheet" href="/css/fullcalendar.css" />
+  <!--
+  <link rel="stylesheet" href="/css/datepicker.css" />
+  -->
+  <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
   <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-
-
 
   <script language="javascript" type="text/javascript">
      JSAN = {};
@@ -19,7 +22,7 @@
      MochiKit = {__export__: false};
   </script>
 
-  <& /util/import_javascript.mas, classes => [qw[ sgn jquery jquery.simpletooltip CXGN.Effects CXGN.Page.FormattingHelpers CXGN.UserPrefs CXGN.Page.Toolbar CXGN.List jquery.cookie CXGN.Login bootstrap]] &>
+  <& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "jquerymigrate", "CXGN.Effects", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min" ] &>
 
 
   <!-- INSERT_HEAD_POST_HTML -->

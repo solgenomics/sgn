@@ -4,39 +4,119 @@
 	                                  : '<span style="font-weight: bold; color: red">[email not set]</b>';
 </%init>
 
-<!-- BEGIN FOOTER-->
-
-<div id="pagefooter">
-  
-  <div class="pull-right" style="margin-right:10px">
-    <a href="http://twitter.com/solgenomics" class="twitter-follow-button">@solgenomics</a>
-    <div class="fb-like" data-href="https://www.facebook.com/solgenomics" data-layout="button_count" data-action="like" data-show-faces="false" data-share="false"></div>
-  </div>
-
-    <!-- <p class="center-block" style="width:800px">
-      SGN is supported by the <a class="footer" href="http://www.nsf.gov/awardsearch/showAward?AWD_ID=0820612">NSF (#0820612)</a>,
-      <a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at the <a class="footer" href="http://bti.cornell.edu">Boyce Thompson Institute</a>
-      | <a href="/legal.pl">Disclaimer</a>
-    </p> -->
-<br>
-    <div style="width:650px" class="center-block">
-      <table style="width:100%;vertical-align:middle">
-        <tr>
-          <td style="vertical-align:middle">
-            <a href="http://bti.cornell.edu/" class="footer"><img width="100" alt="Boyce Thompson Institute" src="/documents/img/bti_logo2.gif" title="Boyce Thompson Institute" border="0"/></a>
-          </td>
-          <td style="vertical-align:middle">
-            <a href="http://www.nsf.gov/" class="footer"><img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo2.png" title="National Science Foundation" border="0"/></a>
-          </td>
-          <td style="vertical-align:middle">
-            <a href="http://www.gmod.org/" class="footer"><img width="100" alt="Powered by GMOD" src="/documents/img/powered_by_gmod_150x71.png" title="Powered by GMOD" border="0" /></a>
-          </td>
-          <td style="vertical-align:middle">
-            <a href="http://www.nifa.usda.gov/" class="footer"><img width="80" alt="USDA NIFA" src="/documents/img/usda_logo2.png" title="USDA NIFA" border="0" /></a>
-          </td>
-        </tr>
-      </table>
+<!-- END CONTENT WRAPPER -->
     </div>
+    <div class="col-sm-1 col-md-1 col-lg-1">
+    </div>
+  </div>
+</div>
+
+<!-- BEGIN FOOTER -->
+
+<br/>
+<div id="pagefooter" class="navbar navbar-default">
+   
+  <br/>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
+      </div>
+      <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
+        <div class="container-fluid">
+    	  <div class="row">
+
+	    <!--
+	    <div class="col-sm-2 col-md-2 col-lg-2" style="margin-right:-30px;">
+	      <div class="panel panel-info">
+	        <div class="panel-heading">Supported By</div>
+		<table class="" style="height: 167;">
+		  <tbody>
+		    <tr>
+		      <td><a class="footer" href="http://www.nsf.gov/awardsearch/showAward?AWD_ID=0820612">NSF (#0820612)</a></td>
+		    </tr>
+		    <tr>
+		      <td><a class="footer" href="http://www.usda.gov">USDA CSREES</a></td>
+		    </tr>
+		    <tr>
+		      <td><a class="footer" href="http://bti.cornell.edu">BTI</a></td>
+		    </tr>
+		  </tbody>	
+		</table>
+	      </div>
+      	    </div>
+	    -->
+
+      	    <div class="col-sm-9 col-md-9 col-lg-9">
+	      <div class="panel panel-success">
+	        <div class="panel-heading">Partners With</div>
+	        <table class="table" >
+	    	  <tbody>
+            	    <tr>
+              	      <td>
+                	<a href="http://bti.cornell.edu/" class="footer"><img width="100" alt="Boyce Thompson Institute" src="/documents/img/bti_logo2.gif" title="Boyce Thompson Institute" border="0" style="padding-bottom:2px"/></a>
+              	      </td>
+              	      <td>
+            		<a href="http://www.nsf.gov/" class="footer"><img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo2.png" title="National Science Foundation" border="0"/></a>
+              	      </td>
+              	      <td>
+                	<a href="http://www.gmod.org/" class="footer"><img width="100" alt="Powered by GMOD" src="/documents/img/powered_by_gmod_150x71.png" title="Powered by GMOD" border="0" style="padding-top:15px"/></a>
+              	      </td>
+              	      <td>
+                	<a href="http://www.nifa.usda.gov/" class="footer"><img width="80" alt="USDA NIFA" src="/documents/img/usda_logo2.png" title="USDA NIFA" border="0" style="padding-top:15px"/></a>
+              	      </td>
+            	    </tr>
+	    	  </tbody>
+          	</table>
+	      </div>
+	    </div>
+
+	    <div class="col-sm-3 col-md-3 col-lg-3" >
+	      <div class="panel panel-info">
+		<table class="table table-hover">
+		  <tbody>
+		    <tr>
+		      <td>
+		        <a href="http://facebook.com/solgenomics" class="footer"><img width="20" alt="Facebook" src="/documents/img/facebook_icon.png" title="SGN Facebook" border="0" /></a>
+			<a href="http://twitter.com/solgenomics" class="footer"><img width="20" alt="Twitter" src="/documents/img/twitter_icon.png" title="SGN Twitter" border="0"/></a>
+			<a href="http://linkedin.com/solgenomics" class="footer"><img width="20" alt="LinkedIn" src="/documents/img/linkedin_icon.png" title="SGN LinkedIn" border="0"/></a>
+			<a href="http://googleplus.com/solgenomics" class="footer"><img width="20" alt="GooglePlus" src="/documents/img/googleplus_icon.png" title="SGN Google Plus" border="0"/></a>
+		      </td>
+		    </tr>
+		    <tr>
+		      <td><a href="/about/index.pl">About Us</a></td>
+		    <tr>
+		    <tr>
+		      <td><a href="/contact/form/">Contact Us</a></td>
+		    <tr>
+		    <tr>
+		      <td><a href="/help/index.pl">Help</a></td>
+		    <tr>
+		  </tbody>
+		</table>
+	      </div>
+	    </div>
+
+	  </div>
+	</div>
+
+	<div class="container-fluid">
+          <div class="row">
+      	    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+	      <div class="well">
+	        <p><small>SGN is supported by the <a class="footer" href="http://www.nsf.gov/awardsearch/showAward?AWD_ID=0820612">NSF (#0820612)</a>, <a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at the <a class="footer" href="http://bti.cornell.edu">Boyce Thompson Institute.</a>
+    		<br />
+    		Cite SGN using <a class="footer" href="http://nar.oxfordjournals.org/content/early/2014/11/26/nar.gku1195.full" target="_new"> Fernandez-Pozo et al, 2014</a> | <a href="/legal.pl">Disclaimer</a></small></p>
+              </div>
+            </div>
+	  </div>
+	</div>
+      </div>
+
+      <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
+      </div>
+    </div>
+  </div>
+  <br/>
 
 </div>
 
@@ -56,7 +136,6 @@
 % }
 
 
-<div id="fb-root"></div>
 <script>
 (function(d, s, id) {
   var js, fjs = d.getElementsByTagName(s)[0];

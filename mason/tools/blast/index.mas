@@ -110,9 +110,11 @@
 <img class="fruit_icon" height="25" src="/documents/img/blast_icons/eggplant.png" db_id="29" title="Eggplant current DB">
 <img class="fruit_icon" height="25" src="/documents/img/blast_icons/benth.png" db_id="9" title="N.benthamiana current DB">
 % }
+
 <br>
 
     <label class="blast_select_label" for="database_select">Database &nbsp; </label>
+
     <span id='database_select' ></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>
     <br>
     
@@ -366,6 +368,7 @@ font-size:12px;
 height:20px;
 line-height:18px;
 vertical-align: top;
+cursor:pointer;
 }
 .submit_blast_button:hover {
 background-color:#444444;

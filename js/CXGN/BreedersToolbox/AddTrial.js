@@ -171,99 +171,99 @@ jQuery(document).ready(function ($) {
     }
 
 
-    $('#add_project_dialog').dialog({
-	autoOpen: false,
-        modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 75],
-        title: "Add new trial",
-        buttons: {
-            "Cancel": {
-                id : "cancel_add_trial",
-                click: function () {
-                   $('#add_project_dialog').dialog("close");
-                },
-                text: "Cancel"
-            },
-            "Add": { 
-		id : "add_trial_button",
-		click: 
-                  function () {
-                      var name = $('#new_trial_name').val();
-                      var year = $('#add_project_year').val();
-                      var desc = $('textarea#add_project_description').val();
-                      var method_to_use = $('.format_type:checked').val();
-		      if (name == '') {
-			  alert('Trial name required');
-			  return;
-		      }
-                      if (year === '' || desc === '') {
-			  alert('Year and description are required.');
-			  return;
-                      }
-                      if (method_to_use == "empty") {
-			  alert('adding a project');
-			  save_project_info(name, year, desc);
-                      }
-		      //removed
-                      if (method_to_use == "create_with_upload") {
-			  var uploadFile = $("#trial_upload_file").val();
-			  $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
-			  if (uploadFile === '') {
-                              alert("Please select a file");
-                              return;
-			  }
-			  $("#create_new_trial_form").submit();
-                      }
-                      if (method_to_use == "create_with_design_tool") {
-			  //generate_experimental_design(name,year,desc);
-			  generate_experimental_design();
-		      }
-                      //$( this).dialog("close"); 
-                      //location.reload();
-		  },
-		text: "Add"
-	    }
-        }
-    });
+//    $('#add_project_dialog').dialog({
+//	autoOpen: false,
+//        modal: true,
+//	autoResize:true,
+//        width: 500,
+//        position: ['top', 75],
+//        title: "Add new trial",
+//        buttons: {
+//            "Cancel": {
+//                id : "cancel_add_trial",
+//                click: function () {
+//                   $('#add_project_dialog').dialog("close");
+//                },
+//                text: "Cancel"
+//            },
+//            "Add": { 
+//		id : "add_trial_button",
+//		click: 
+//                  function () {
+//                      var name = $('#new_trial_name').val();
+//                      var year = $('#add_project_year').val();
+//                      var desc = $('textarea#add_project_description').val();
+//                      var method_to_use = $('.format_type:checked').val();
+//		      if (name == '') {
+//			  alert('Trial name required');
+//			  return;
+//		      }
+//                      if (year === '' || desc === '') {
+//			  alert('Year and description are required.');
+//			  return;
+//                      }
+//                      if (method_to_use == "empty") {
+//			  alert('adding a project');
+//			  save_project_info(name, year, desc);
+//                      }
+//		      //removed
+//                      if (method_to_use == "create_with_upload") {
+//			  var uploadFile = $("#trial_upload_file").val();
+//			  $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
+//			  if (uploadFile === '') {
+//                              alert("Please select a file");
+//                              return;
+//			  }
+//			  $("#create_new_trial_form").submit();
+//                      }
+//                      if (method_to_use == "create_with_design_tool") {
+//			  //generate_experimental_design(name,year,desc);
+//			  generate_experimental_design();
+//		      }
+//                      //$( this).dialog("close"); 
+//                      //location.reload();
+//		  },
+//		text: "Add"
+//	    }
+//        }
+//    });
 
-    $("#format_type_radio").change(function () {
-        var method_to_use = $('.format_type:checked').val();
-        if (method_to_use == "empty") {
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#trial_design_info").hide();
-            $("#trial_design_more_info").hide();
-            $("#get_file_upload_data").hide();
-        }
-        if (method_to_use == "create_with_upload") {
-            $("#get_file_upload_data").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#trial_design_info").hide();
-            $("#trial_design_more_info").hide();
-        } else {
-            $("#get_file_upload_data").hide();
-        }
-        if (method_to_use == "create_with_design_tool") {
-            $("#trial_design_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-	    $("#select_design_method").change();
-        } else {
-            $("trial_design_info").hide();
-        }
-    });
+//    $("#format_type_radio").change(function () {
+//        var method_to_use = $('.format_type:checked').val();
+//        if (method_to_use == "empty") {
+//            //$("#add_project_dialog").dialog("option", "height","auto");
+//            $("#trial_design_info").hide();
+//            $("#trial_design_more_info").hide();
+//            $("#get_file_upload_data").hide();
+//        }
+//        if (method_to_use == "create_with_upload") {
+//            $("#get_file_upload_data").show();
+//            //$("#add_project_dialog").dialog("option", "height","auto");
+//            $("#trial_design_info").hide();
+//            $("#trial_design_more_info").hide();
+//        } else {
+//            $("#get_file_upload_data").hide();
+//        }
+//        if (method_to_use == "create_with_design_tool") {
+//            $("#trial_design_info").collapse('show');
+//            //$("#add_project_dialog").dialog("option", "height","auto");
+//	    $("#select_design_method").change();
+//        } else {
+//            $("trial_design_info").hide();
+//        }
+//    });
 
     $("#format_type_radio").change();
 
 
     $("#select_design_method").change(function () {
-	$("#add_project_dialog").dialog("option", "height","auto");
+	//$("#add_project_dialog").dialog("option", "height","auto");
         
 	var design_method = $("#select_design_method").val();
         if (design_method == "CRD") {
             $("#trial_design_more_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").hide();
+            //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#show_list_of_checks_section").hide();
             $("#rep_count_section").show();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -276,8 +276,8 @@ jQuery(document).ready(function ($) {
 	    $("#other_parameter_section").hide();
         } else if (design_method == "RCBD") {
             $("#trial_design_more_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").hide();
+            //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").show();
             $("#block_size_section").hide();
@@ -290,8 +290,8 @@ jQuery(document).ready(function ($) {
 	    $("#other_parameter_section").hide();
         } else if (design_method == "Alpha") {
             $("#trial_design_more_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").hide();
+            //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#show_list_of_checks_section").hide();
             $("#rep_count_section").show();
             $("#block_number_section").hide();
             $("#block_size_section").show();
@@ -304,8 +304,8 @@ jQuery(document).ready(function ($) {
 	    $("#other_parameter_section").hide();
         } else if (design_method == "Augmented") {
             $("#trial_design_more_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").show();
+            //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#show_list_of_checks_section").show();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -317,8 +317,8 @@ jQuery(document).ready(function ($) {
 	    $("#row_number_per_block_section").hide();
 	    $("#other_parameter_section").hide();
         } else if (design_method == "") {
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").hide();
+            //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#show_list_of_checks_section").hide();
             $("#trial_design_more_info").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
@@ -348,8 +348,8 @@ jQuery(document).ready(function ($) {
 //	} 
 	else if (design_method == "MAD") {
 	    $("#trial_design_more_info").show();
-	    $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").show();
+	    //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#show_list_of_checks_section").show();
             $("#rep_count_section").hide();
 	    $("#row_number_section").show();
             $("#block_number_section").hide();
@@ -364,11 +364,11 @@ jQuery(document).ready(function ($) {
              $("#show_other_parameter_options").click(function () {
 		 if ($('#show_other_parameter_options').is(':checked')) {
 		     $("#other_parameter_options").show();
-		     $("#add_project_dialog").dialog("option", "height","auto");
+		     //$("#add_project_dialog").dialog("option", "height","auto");
 		 }
 		 else {
 		     $("#other_parameter_options").hide();
-		     $("#add_project_dialog").dialog("option", "height","auto");
+		     //$("#add_project_dialog").dialog("option", "height","auto");
 		 }
 	     });
 
@@ -393,11 +393,11 @@ else {
     $("#show_plot_naming_options").click(function () {
 	if ($('#show_plot_naming_options').is(':checked')) {
 	    $("#plot_naming_options").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
+            //$("#add_project_dialog").dialog("option", "height","auto");
 	}
 	else {
 	    $("#plot_naming_options").hide();
-            $("#add_project_dialog").dialog("option", "height","auto");
+            //$("#add_project_dialog").dialog("option", "height","auto");
 	}
     });
 
@@ -578,7 +578,7 @@ else {
     });
 
     function open_project_dialog() {
-	$('#add_project_dialog').dialog("open");
+	$('#add_project_dialog').modal("show");
 
 	//removes any old list selects before adding current ones.
 	//his is important so that lists that are added and will appear without page refresh
@@ -630,13 +630,33 @@ else {
 	$("#select_design_method").one('mousedown', function () {
             $("option:first", this).remove();
             $("#trial_design_more_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
+            //$("#add_project_dialog").dialog("option", "height","auto");
 	    //trigger design method change events in case the first one is selected after removal of the first blank select item
 	    $("#select_design_method").change();
 	});
 	
 	//reset previous selections
 	$("#select_design_method").change();
+
+	var method_to_use = $('.format_type:checked').val();
+        if (method_to_use == "empty") {
+            $("#trial_design_info").hide();
+            $("#trial_design_more_info").hide();
+            $("#get_file_upload_data").hide();
+        }
+        if (method_to_use == "create_with_upload") {
+            $("#get_file_upload_data").show();
+            $("#trial_design_info").hide();
+            $("#trial_design_more_info").hide();
+        } else {
+            $("#get_file_upload_data").hide();
+        }
+        if (method_to_use == "create_with_design_tool") {
+            $("#trial_design_info").show();
+	    $("#select_design_method").change();
+        } else {
+            $("trial_design_info").hide();
+        }
     }
 
     $('#add_project_link').click(function () {

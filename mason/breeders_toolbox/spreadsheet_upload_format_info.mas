@@ -13,7 +13,8 @@ Crosses may be uploaded in an Excel file (.xls)
 The first row (header) should contain the following:
 <br>
 
-<table cellspacing="1" cellpadding="2" border="1">
+<table class="table table-bordered table-hover">
+  <tbody>
   <tr>
     <td>cross_name</td>
     <td>cross_type</td>
@@ -23,9 +24,9 @@ The first row (header) should contain the following:
     <td>number_of_flowers</td>
     <td>number_of_seeds</td>
   </tr>
+  </tbody>
 </table>
 
-<br>
 <b>
   Required fields:
 </b>

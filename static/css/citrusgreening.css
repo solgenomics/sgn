@@ -1,65 +1,15 @@
 /* NOTE: SGN blue is #ccccff */
 /********************     GENERAL SITE STYLES     **********************/
-/*body {
-  color: black;
-  background-color: white;
-  font-family: verdana, arial, helvetica, sans-serif;
-  font-size: 12px;
-  line-height: 1.25;
-}
-*/
-
-/*#sgn_container {
-  max-width:1000px;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 0px;
-}
-*/
-
-/*#pagecontent_t {
-  margin: auto;
-  width: 730px;
-}
-*/
-
-#wrapper {
-	min-height:100%;
-	position:relative;
-}
-
-#xtratbl {
-background-color:#CCCCFF;
-border: 1px solid #C0C0C0;
-}
-#org_content{
-border:1px solid #C0C0C0;
-}
-table {
-  font-family: verdana, arial, helvetica, sans-serif;
-  font-size: 12px;
-  text-align: left;
-  padding: 0;
-  border: 0;
-  border-collapse: separate;
-}
-input, select, textarea {
-  background: #EEEEFF;
-  font-size: 12px;
-}
-li { 
-  margin-bottom: 0.25em;
-}
-td {
-  vertical-align: top;
-}
-
 /*various places on the site use various headline size tags, so let's try to make them all the same*/
-h1,h2,h3,h4,h5,h6 {
-  font-family: verdana, arial, helvetica, sans-serif;
-  font-size: 14px;
-  line-height: 16px;
-}
+@charset "UTF-8";
+
+body {
+	background-color: white;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 13px;
+	line-height: 17px;
+	margin: 0;
+} 
 dt { 
   font-weight: bold;
   margin-bottom: 0.1em;
@@ -98,12 +48,12 @@ a.toplink:link, a.toplink:visited, a.toplink:active {
   padding: 0;
   text-decoration: none;
   line-height: 1.1;
-  font-family: "Bitstream Vera Sans",Arial,Helvetica,sans-serif;
 }
 a.toplink:hover {
   padding: 0px 0px 0px 0px;
   text-decoration: underline;
 }
+
 a.mytools, a.mytools:link, a.mytools:visited { 
   font-weight: bold;
   text-decoration: underline;
@@ -126,16 +76,11 @@ a[href ^="mailto:"]  {
 	background: url(/documents/img/mail_icon.gif) center right no-repeat;
 	padding-right: 16px;
 }
-
-#pagefooter {
-  height:310px;
-  padding: 2px 0px;
-  margin: 0px;
-  position:absolute;
-  bottom:0;
-  left:0;
-  width:100%;
-
+#pagefooter { 
+  line-height: 1.5;
+  border-top: 3px solid #c0c0c0;
+  padding-top: 12px;
+  margin-top: 15px;
 }
 
 #pagefooter a, #pagefooter a:active, #pagefooter a:link, #pagefooter a:visited { 
@@ -230,34 +175,35 @@ a.search_form_random:after {
 /*                                                                                                      */
 
 a:link  {
-  color:#0000ff;
+  color:#954A09;
   text-decoration:none;
 }
 a:active  {
-  color:#0000ff;
+  color:#954A09;
   text-decoration:none;
 }
 a:visited  {
-  color:#3333ff;
+  color:#CE8E00;
   text-decoration:none;
 }
 a:hover { 
+    color:#CE8E00;
   text-decoration:underline;
 }
 a.hidevisited:link  {
-  color:#0000ff;
+  color:#954A09;
   text-decoration:none;
 }
 a.hidevisited:active {
-  color:#0000ff;
+  color:#954A09;
   text-decoration:none;
 }
 a.hidevisited:visited  {
-  color:#0000ff;
+  color:#954A09;
   text-decoration:none;
 }
 a.hidevisited:hover {
-  color:#0000ff;
+  color:#954A09;
   text-decoration:underline;
 }
 a.quicksearch_hit { 
@@ -268,7 +214,7 @@ a.quicksearch_hit {
 
 /*makes a submit button that looks more like a link*/
 input.linkstyle { 
-  color:#0000ff;
+  color:#954A09;
   text-decoration:none;
   background:#ffffff;
   border:0;
@@ -276,7 +222,7 @@ input.linkstyle {
 }
 /*makes a submit button that looks more like a link*/
 input.linkstyle:hover { 
-  color:#0000ff;
+  color:#954A09;
   text-decoration:underline;
   background:#ffffff;
   border:0;
@@ -412,7 +358,7 @@ span.bgcolorselected a {
 }
 /*use class="sgnblue" instead of bgcolor="sgnblue"*/
 .sgnblue {
-	background-color: #ccccff;
+	background-color: #ccffcc;
 }
 /*important warning*/
 .alert { 
@@ -469,13 +415,6 @@ span.toolbar_help {
 }
 
 /*****************************     INFO SECTIONS     *******************************************************/
-
-/* plus and minus image in collapsible sections */
-.collapser_img {
-  height: 15px;
-  margin-bottom: 5px;
-}
-
 /*
    You will probably not need these, because you can 
    just call the info_section_html() function that uses them
@@ -490,25 +429,22 @@ span.toolbar_help {
 .sub_infosectionhead,
 .sub_infosectionhead_empty
 {
-  width: 96%;
-  /*background: #ccccff;*/  /* this is "SGN blue" */
+  width: 99%;
+  background: #e3e3cc; /* NOT SGN-blue! -- cassava blue! */
   text-align:left;
-  margin-bottom: 10px;
-/*  margin-left: 5px;*/
-  padding-left: 10px;
+  margin-bottom: 6px;
+  margin-left: 5px;
+  padding: 1px 0px 3px 2px;
 /*         margin-right: 1em; */
-  border-bottom-style: solid;
-  border-width: 1px;
-  border-color: #ccc;}
-  
+  border: 1px solid #9f9fc7;
+}
 /* sub-infosections have a gray heading */
 .sub_infosectionhead,
 .sub_infosectionhead_empty
 { 
-  width: 94%;
-  border-bottom-style: solid;
+  background: #efefef;
+  border-color: #c2c2c2;
   border-width: 1px;
-  border-color: #ccc;}
 }
 
 /* empty infosections don't have such a big bottom margin */
@@ -750,7 +686,7 @@ div.multilevel_modesel_active {
 
 div.multilevel_modesel_level_1 {
   border: 1px solid black;
-  background-color: #c2c2ff;
+  background-color: #c2c2ff; 
   z-index: 1;
 }
 div.multilevel_modesel_level_2 {
@@ -834,6 +770,7 @@ a.stealth {
 .boxheading
 { 
 	font-size:14px;
+	color: #A2AD00;
         line-height:16px;
 	font-weight:bolder;
 	border-style:solid;
@@ -1354,3 +1291,134 @@ div.xref_rich_gbrowse2 img {
     color: #666;
 }
 
+
+
+/* cassavabase additions */
+
+
+/* CSS Document */
+
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 10px 0;
+  font-family: 'Lato', sans-serif;
+  font-weight: bold;
+  color: #A2AD00;
+  text-rendering: optimizelegibility;
+}
+
+h1 {font-size: 22px; line-height: 32px; margin: 0;}			
+h2 {font-size: 18px; line-height: 28px; }		
+h3 {font-size: 16px; line-height: 26px; }
+h4,
+h5,
+h6 {line-height: 18px; }
+h4 {font-size: 14px; }		
+h5 {font-size: 12px; }		
+h6 {font-size: 11px; color: #999999; text-transform: uppercase; }
+
+a.btn {
+  background: none;
+  display: inline-block;
+  *display: inline;
+  padding: 4px 10px 4px;
+  margin-bottom: 0;
+  *margin-left: .3em;
+  font-size: 13px;
+  line-height: 18px;
+  *line-height: 20px;
+  color: #fff;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  background-color: #9E75BF;
+  *background-color: #9E75BF;
+  border: 1px solid #cccccc;
+  *border: 0;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+  border-color: #e6e6e6 #e6e6e6 #bfbfbf;
+  border-bottom-color: #b3b3b3;
+  *zoom: 1;
+
+
+
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+	 -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+		  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -webkit-transition: background-color .3s ease;
+
+}
+
+a.btn:hover {
+  color: #333333;
+  background: none;
+  text-decoration: none;
+  background-color: #e6e6e6;
+  *background-color: #d9d9d9;
+  /* Buttons in IE7 don't get borders, so darken on hover */
+
+  background-position: 0 -15px;
+  -webkit-transition: background-position 0.1s linear;
+	 -moz-transition: background-position 0.1s linear;
+	  -ms-transition: background-position 0.1s linear;
+	   -o-transition: background-position 0.1s linear;
+		  transition: background-position 0.1s linear;
+}
+
+a {color: #954A09; text-decoration: none; background: none;}		
+a:hover {color: #CE8E00; text-decoration: underline; }
+
+hr {
+  margin: 18px 0;
+  border: 0;
+  border-top: 1px solid #eeeeee;
+  border-bottom: 1px solid #ffffff;
+}
+
+
+		
+#header {width:100%; background-color:#FFFFFF; color:#fff; height:45px;}
+#footer {width:960px; min-height:60px; margin:0px auto; }		
+
+#footer.white {background-color:#fff;}
+
+#footer.earth {background-color:#472A2B; width:100%;}
+#footer.earth p {color:#e6e4d1;}
+#footer.earth a {color:#f2f2f2;}
+#footer.earth a:hover {color:#fff;}	
+			
+
+#footer .block {margin-left:30px; float:left;}
+#footer .first {margin-left:0 !important;}
+#footer .wide {width:460px;}
+#footer .small {width:220px;}
+
+#footer ul {padding:0;}
+#footer ul li {list-style: none outside none;margin: 0 0 6px 0; padding: 0;}		
+
+.container { width:960px; margin:0px auto; }	
+
+.well {
+	background-color: #F5F5F5;
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	border-radius: 4px 4px 4px 4px;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05) inset;
+	margin: 20px 0;
+	min-height: 600px;
+	padding: 19px;
+}	
+.is-padded {padding: 20px 10px; }
+
+.photo {margin:20px;}
+
+.pull-right {float: right;}
+.pull-left {float: left;}
+
+.divider { 
+    background: url("/static/img/cross-pattern.png") repeat; color: #333333;
+}

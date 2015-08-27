@@ -24,11 +24,13 @@ jQuery(document).ready(function ($) {
     var validSpecies;
 
     function disable_ui() { 
-	$('#working').dialog("open");
+	//$('#working').dialog("open");
+	$('#working_modal').modal("show");
     }
 
     function enable_ui() { 
-	$('#working').dialog("close");
+	//$('#working').dialog("close");
+	$('#working_modal').modal("hide");
     }
 
     function add_accessions(accessionsToAdd, speciesName) {
@@ -89,63 +91,79 @@ jQuery(document).ready(function ($) {
         //verify_species_name();
     });
 
-    $("#review_absent_dialog").dialog({
-	autoOpen: false,	
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 150],
-	buttons: {
-	    Add: function() {
-		var speciesName = $("#species_name_input").val();
-		var accessionsToAdd = accessionList;
-		if (!speciesName) {
-		    alert("Species name required");
-		    return;
-		}
-		//if (validSpecies == 0){
-		//    return;
-		//}
-		if (!accessionsToAdd || accessionsToAdd.length == 0) {
-		    alert("No accessions to add");
-		    return;
-		}
-		//alert("adding accessionsToAdd.length accessions");
-		add_accessions(accessionsToAdd, speciesName);
-		$(this).dialog( "close" );
-		location.reload();
-	    },
-	    Close: function() {
-		$(this).dialog( "close" );
-	    },
+    $('#review_absent_accessions_submit').click(function () {
+	var speciesName = $("#species_name_input").val();
+	var accessionsToAdd = accessionList;
+	if (!speciesName) {
+	    alert("Species name required");
+	    return;
 	}
+	if (!accessionsToAdd || accessionsToAdd.length == 0) {
+	    alert("No accessions to add");
+	    return;
+	}
+	add_accessions(accessionsToAdd, speciesName);
+        $('#review_absent_dialog').modal("hide");
+	location.reload();
     });
 
-    $("#review_found_matches_dialog").dialog({
-	autoOpen: false,	
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 150],
-	buttons: {
-	    Ok: function() {
-		$(this).dialog( "close" );
-	    },
-	}
-    });
+//    $("#review_absent_dialog").dialog({
+//	autoOpen: false,	
+//	modal: true,
+//	autoResize:true,
+//        width: 500,
+ //       position: ['top', 150],
+//	buttons: {
+//	    Add: function() {
+//		var speciesName = $("#species_name_input").val();
+//		var accessionsToAdd = accessionList;
+//		if (!speciesName) {
+//		    alert("Species name required");
+//		    return;
+//		}
+//		//if (validSpecies == 0){
+//		//    return;
+//		//}
+//		if (!accessionsToAdd || accessionsToAdd.length == 0) {
+//		    alert("No accessions to add");
+//		    return;
+//		}
+//		//alert("adding accessionsToAdd.length accessions");
+//		add_accessions(accessionsToAdd, speciesName);
+//		$(this).dialog( "close" );
+//		location.reload();
+//	    },
+//	    Close: function() {
+//		$(this).dialog( "close" );
+//	    },
+//	}
+//    });
 
-    $("#review_fuzzy_matches_dialog").dialog({
-	autoOpen: false,	
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 150],
-	buttons: {
-	    Ok: function() {
-		$(this).dialog( "close" );
-	    },
-	}
-    });
+    //$("#review_found_matches_dialog").dialog({
+//	autoOpen: false,	
+//	modal: true,
+//	autoResize:true,
+//        width: 500,
+//        position: ['top', 150],
+//	buttons: {
+//	    Ok: function() {
+//		$(this).dialog( "close" );
+//	    },
+//	}
+//    });
+
+//    $("#review_fuzzy_matches_dialog").dialog({
+//	autoOpen: false,	
+//	modal: true,
+//	autoResize:true,
+//        width: 500,
+//        position: ['top', 150],
+//	buttons: {
+//	    Ok: function() {
+//		$(this).dialog( "close" );
+//	    },
+//	}
+//    });
 
     function review_verification_results(verifyResponse){
 	var i;
@@ -168,29 +186,30 @@ jQuery(document).ready(function ($) {
 	    $('#view_found_matches').html(found_html);
 
 	    if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
-		$('#review_found_matches_dialog').bind('dialogclose', function() {
-		    $('#review_fuzzy_matches_dialog').dialog('open');
+		$('#review_found_matches_dialog').on('hidden.bs.modal', function () {
+		    $('#review_fuzzy_matches_dialog').modal('show');
 		});
+		
 	    } else {
-		$('#review_found_matches_dialog').bind('dialogclose', function() {
+		$('#review_found_matches_dialog').on('hidden.bs.modal', function() {
 		    if (!accessionList || accessionList.length == 0) {
 			alert("No accessions to add");
 			location.reload();
 		    } else {
 			alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
-			$('#review_absent_dialog').dialog('open');
+			$('#review_absent_dialog').modal('show');
 		    }
 		});
 	    }
 
-	    $('#review_found_matches_dialog').dialog('open');
+	    $('#review_found_matches_dialog').modal('show');
 	}
 
 	if (verifyResponse.fuzzy) {
 	    var fuzzy_html = '';
 	    for( i=0; i < verifyResponse.fuzzy.length; i++) {
 		fuzzy_html = fuzzy_html + '<div class="left">'+ verifyResponse.fuzzy[i].name + '</div>';
-		fuzzy_html = fuzzy_html + '<div class="right"><select id ="fuzzyselect'+i+'">';
+		fuzzy_html = fuzzy_html + '<div class="right"><select class="form-control" id ="fuzzyselect'+i+'">';
 		for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
 		    fuzzy_html = fuzzy_html + '<option value="">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
 		}
@@ -212,7 +231,7 @@ jQuery(document).ready(function ($) {
 		    location.reload();
 		} else {
 		    alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
-		    $('#review_absent_dialog').dialog('open');
+		    $('#review_absent_dialog').modal('show');
 		}
 	    });
 
@@ -276,31 +295,30 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    $( "#add_accessions_dialog" ).dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 150],
-	buttons: {
-	    Ok: function() {
-		//disable_ui();
-		verify_accession_list();
-		$(this).dialog( "close" );
-		//location.reload();
-	    }
-	}
+    //$( "#add_accessions_dialog" ).dialog({
+//	autoOpen: false,
+//	modal: true,
+//	autoResize:true,
+//        width: 500,
+//        position: ['top', 150],
+//	buttons: {
+//	    Ok: function() {
+//		//disable_ui();
+//		verify_accession_list();
+//		$(this).dialog( "close" );
+//		//location.reload();
+//	    }
+//	}
+//    });
+
+    $('#new_accessions_submit').click(function () {
+	verify_accession_list();
+        $('#add_accessions_dialog').modal("hide");
     });
 
     $('#add_accessions_link').click(function () {
-        $('#add_accessions_dialog').dialog("open");
+        $('#add_accessions_dialog').modal("show");
 	$("#list_div").html(list.listSelect("accessions"));
     });
-
-
-    $('#upload_pedigrees_link').click( function() { 
-	$('#upload_pedigrees_dialog').dialog("open");
-    });
-
     
 });

@@ -124,7 +124,8 @@ function finish_blast(jobid, seq_count) {
     
       success: function(response) { 
         if (response.blast_report) {
-          var out_id = "#"+response.blast_format.replace(" graph", "")+"_output";
+          var out_id = "#"+response.blast_format+"_output";
+          // var out_id = "#"+response.blast_format.replace(" graph", "")+"_output";
           
           jQuery(out_id).html(response.blast_report+"<br><br>\n");
         }
