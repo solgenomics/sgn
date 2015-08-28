@@ -11,21 +11,21 @@ $schema
       
       <div class="panel panel-info">
         <div class="panel-heading">News</div>
-        <div class="panel-body">
+        <div class="panel-body" style="overflow:hidden">
           <& homepage/news.mas &>
         </div>
       </div>
       
         <div class="panel panel-info">
           <div class="panel-heading">Popular Species</div>
-          <div class="panel-body">
+          <div class="panel-body" style="overflow:hidden">
             <& homepage/popular_species.mas &>
           </div>
         </div>
       
         <div class="panel panel-info">
           <div class="panel-heading">SGN Featured</div>
-          <div class="panel-body">
+          <div class="panel-body" style="overflow:hidden">
             <& homepage/publication_of_the_week.mas &>
             <& homepage/image_of_the_week.mas &>
             <& homepage/locus_of_the_week.mas &>
@@ -39,21 +39,21 @@ $schema
         
         <div class="panel panel-info">
           <div class="panel-heading">Events</div>
-          <div class="panel-body">
+          <div class="panel-body" style="overflow:hidden">
             <& homepage/events.mas &>
           </div>
         </div>
         
         <div class="panel panel-info">
           <div class="panel-heading">Affiliated Sites</div>
-          <div class="panel-body">
+          <div class="panel-body" style="overflow:hidden">
             <& homepage/affiliated_sites.mas &>
           </div>
         </div>
         
         <div class="panel panel-info">
           <div class="panel-heading">Links</div>
-          <div class="panel-body">
+          <div class="panel-body" style="overflow:hidden">
             <& homepage/other_links.mas &>
           </div>
         </div>

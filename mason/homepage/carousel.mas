@@ -92,11 +92,11 @@
       bottom:0px;
       margin-bottom:5px;
     }
+    
 }
 
 
 </style>
-
 <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 <script>
   jQuery(document).ready(function() {
@@ -111,6 +111,9 @@
        $("#myCarousel").swipeleft(function() {  
           $("#myCarousel").carousel('next');  
        });  
+       
+       $(".ui-loading").css("display","none");
+       $(".ui-loader").css("display","none");
   });
 </script>
 
