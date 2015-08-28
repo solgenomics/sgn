@@ -1,11 +1,13 @@
 <style>
+
 .slider-size {
   height: 400px; /* This is your slider height */
 }
 .carousel {
   max-width:98%;
   /*width:100%;*/
-  margin:0 auto; /* center your carousel if other than 100% */ 
+  margin:0 auto; /* center your carousel if other than 100% */
+  margin-bottom:0px;
 }
 
 .carousel-sgn-caption { 
@@ -39,6 +41,7 @@
 .carousel-sgn-links {
   position:absolute;
   min-width:35%;
+  max-width:50%;
   margin-top:20px;
   right:0px;
 
@@ -66,6 +69,31 @@
   color: #666;
   text-decoration: none;
 }
+
+@media (min-width: 0px) and (max-width: 500px) {
+
+    .carousel-sgn-caption {
+      margin-top:0px;
+      width: 100%;
+      max-width: 100%;
+      border-radius:0px;
+      float: none;
+      margin-bottom:0px;
+    }
+
+    .carousel-sgn-links {
+      max-width: 100%;
+      width: 100%;
+      border-radius:0px;
+      bottom:30px;
+    }
+    
+    .carousel-indicators {
+      bottom:0px;
+      margin-bottom:5px;
+    }
+}
+
 
 </style>
 
