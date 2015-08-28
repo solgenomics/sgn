@@ -97,12 +97,20 @@
 
 </style>
 
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 <script>
   jQuery(document).ready(function() {
     $('.carousel').carousel({
       interval: 20000,
       // wrap:true
     })
+    
+    $("#myCarousel").swiperight(function() {  
+          $("#myCarousel").carousel('prev');  
+        });  
+       $("#myCarousel").swipeleft(function() {  
+          $("#myCarousel").carousel('next');  
+       });  
   });
 </script>
 
