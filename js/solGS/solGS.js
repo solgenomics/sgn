@@ -218,18 +218,21 @@ function submitTraitSelections () {
    
     jQuery('#traits_selection_form').ajaxSubmit();
     
-    window.location = '/solgs/analyze/traits/population/' + popId;
-  
 }
 
 
 function goToPage (page) {
+     
     
+
     if (page.match(/solgs\/trait\//)) {
 	window.location = page;
     } else if (page.match(/solgs\/analyze\/traits\/population\//)) {
-
+	
 	submitTraitSelections();
+	
+	var popId  = jQuery('#population_id').val();
+	window.location = '/solgs/analyze/traits/population/' + popId;
     }
 	    
 }
