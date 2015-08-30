@@ -13,10 +13,18 @@ eval {
 };
 </%perl>
 
+<!--
 <div class="boxbgcolor1" style="margin:0px; ">
 <div class="boxheading">Locus of the week</div>
 <div class="boxcontent"><% $loci %>
 <a href="oldloci.pl">See previous 'loci of the week'...</a><br /><br />
 <a href="/search/direct_search.pl?search=loci">Search other loci...</a>
 </div>
+</div>
+-->
+
+<div class="container-fluid">
+<h4>Locus of the Week</h4>
+<% $loci %>
+<button class="btn btn-info btn-sm" onclick=location.href="/oldloci.pl">See all publications...</button>    <button class="btn btn-primary btn-sm" onclick=location.href="/search/direct_search.pl?search=loci">Search other loci...</button>
 </div>

@@ -25,12 +25,15 @@ $schema
       
         <div class="panel panel-info">
           <div class="panel-heading">SGN Featured</div>
-          <div class="panel-body" style="overflow:hidden">
-            <& homepage/publication_of_the_week.mas &>
-            <& homepage/image_of_the_week.mas &>
-            <& homepage/locus_of_the_week.mas &>
-            <& homepage/labs.mas &>
-          </div>
+	  <table class="table table-hover">
+	    <tbody>
+	      <tr><td><& homepage/publication_of_the_week.mas &></td></tr>
+	      <tr><td><& homepage/image_of_the_week.mas &></td></tr>
+	      <tr><td><& homepage/locus_of_the_week.mas &></td></tr>
+	      <tr><td><& homepage/labs.mas &></td></tr>
+	    </tbody>
+	  </table>
+
         </div>
       
     </div>
