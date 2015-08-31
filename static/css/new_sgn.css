@@ -499,7 +499,7 @@ span.toolbar_help {
 .sub_infosectionhead,
 .sub_infosectionhead_empty
 {
-  width: 96%;
+  width: 100%;
   /*background: #ccccff;*/  /* this is "SGN blue" */
   text-align:left;
   margin-bottom: 10px;
@@ -514,7 +514,7 @@ span.toolbar_help {
 .sub_infosectionhead,
 .sub_infosectionhead_empty
 { 
-  width: 94%;
+  width: 100%;
   border-bottom-style: solid;
   border-width: 1px;
   border-color: #ccc;}

@@ -494,11 +494,34 @@ $breeding_programs
 </div>
 -->
 
+<div class="modal fade" id="upload_trial_error_display" name="upload_trial_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadTrialErrorDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialErrorDialog">Errors In Uploaded File</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <table>
+    	  <tbody></tbody>
+  	  </table>
+	</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
 <div id="upload_trial_error_display" class="ui-widget">
   <table>
     <tbody></tbody>
   </table>
 </div>
+-->
 
 <div id="trial_design_confirm" title="Confirm trial design">
   <p><span class="ui-icon ui-icon-check"></span>Trial is valid<br>The following trial will be added</p>  
@@ -532,6 +555,98 @@ background-color: #ccc;
   </p>
 </div>
 
+<div class="modal fade" id="upload_trial_dialog" name="upload_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialDialog">
+  <div class="modal-dialog " role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialDialog">Upload Trial</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <&| /page/explanation.mas, title=>'Template information' &>
+    	    <p>
+      	    <b>File format information</b>
+      	    <br>
+      	    <a id="trial_upload_spreadsheet_format_info">Spreadsheet format</a>
+    	    </p>
+  	  </&>
+
+	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form">
+	    <div class="form-group">
+      	      <label class="col-sm-3 control-label">Breeding Program: </label>
+      	      <div class="col-sm-9">
+		<select class="form-control" id="trial_upload_breeding_program" name="trial_upload_breeding_program">
+      		<%perl>
+      		  foreach my $program (@$breeding_programs) {
+         	    print "<option value=".@$program[1].">".@$program[1]."</option>";
+      		  }
+      		</%perl>
+    		</select>
+              </div>
+	    </div>
+	    <div class="form-group form-group-sm">
+      	      <label class="col-sm-3 control-label">Location: </label>
+      	      <div class="col-sm-9" >
+		<select class="form-control" id="trial_upload_location" name="trial_upload_location">
+      		<%perl>foreach my $location (@locations) { print "
+        	  <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
+      		</%perl>
+    		</select>
+              </div>
+	    </div>
+	    <div class="form-group form-group-sm">
+      	      <label class="col-sm-3 control-label">Trial Name: </label>
+      	      <div class="col-sm-9" >
+		<input type="text" class="form-control" id="trial_upload_name" name="trial_upload_name" />
+              </div>
+	    </div>
+	    <div class="form-group form-group-sm">
+      	      <label class="col-sm-3 control-label">Year(s): </label>
+      	      <div class="col-sm-9" >
+		<input type="text" class="form-control" id="trial_upload_year" name="trial_upload_year" />
+              </div>
+	    </div>
+	    <div class="form-group form-group-sm">
+      	      <label class="col-sm-3 control-label">Description: </label>
+      	      <div class="col-sm-9" >
+		<textarea class="form-control" id="trial_upload_description" name="trial_upload_description" form="upload_trial_form" ></textarea>
+              </div>
+	    </div>
+	    <div class="form-group form-group-sm">
+      	      <label class="col-sm-3 control-label">Design Type: </label>
+      	      <div class="col-sm-9" >
+		<select class="form-control" id="trial_upload_design_method" name="trial_upload_design_method">
+      		  <option value=CRD>Completely Randomized</option>
+      		  <option value=RCBD>Complete Block</option>
+      		  <option value=Alpha>Alpha Lattice</option>
+      		  <option value=Augmented>Augmented</option>
+      		  <option value=MAD>Modified Augmented Design</option>
+
+    		  <!--  <option value=MADIII>MADIII</option>   -->
+    		  <!--  <option value=MADIV>MADIV</option> -->
+    		  <!--  <option value=MADV>MADV</option> -->
+    		</select>
+              </div>
+	    </div>
+	    <div class="form-group form-group-sm">
+      	      <label class="col-sm-3 control-label">Upload File: </label>
+      	      <div class="col-sm-9" >
+		<input type="file" name="trial_uploaded_file" id="trial_uploaded_file" encoding="multipart/form-data" />
+              </div>
+	    </div>
+	  </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="upload_trial_submit" id="upload_trial_submit">Upload Trial</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
 <div id="upload_trial_dialog" title="Upload trial">
 
   <&| /page/explanation.mas, title=>'Template information' &>
@@ -583,9 +698,9 @@ background-color: #ccc;
       <option value=MAD>Modified Augmented Design</option>
 
 
-    <!--  <option value=MADIII>MADIII</option>   -->
-    <!--  <option value=MADIV>MADIV</option> -->
-    <!--  <option value=MADV>MADV</option> -->
+    <option value=MADIII>MADIII</option> 
+    <option value=MADIV>MADIV</option> 
+    <option value=MADV>MADV</option> 
     </select>
     <br>
     <br>
@@ -596,16 +711,62 @@ background-color: #ccc;
     </form>
 
 </div>
+-->
 
+<div class="modal fade" id="trial_upload_spreadsheet_info_dialog" name="trial_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialInfoDialog">Upload Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <&| /breeders_toolbox/trial/trial_spreadsheet_upload_format_info.mas &>
+  	  </&>
+	</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
+<!--
 <div id="trial_upload_spreadsheet_info_dialog" title="Format for uploading trials in a spreadsheet">
   <&| /breeders_toolbox/trial/trial_spreadsheet_upload_format_info.mas &>
   </&>
 </div>
+-->
 
+<div class="modal fade" id="trial_upload_success_dialog_message" name="trial_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadTrialSuccessDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialSuccessDialog">Upload Successful</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <p>
+    	  <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    	  The trial file was uploaded successfully
+  	  </p>
+	</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
 <div id="trial_upload_success_dialog_message" title="Trial file uploaded">
   <p>
     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
     The trial file was uploaded successfully
   </p>
 </div>
+-->
