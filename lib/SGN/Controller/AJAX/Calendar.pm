@@ -2,13 +2,15 @@
 =head1 NAME
 
 SGN::Controller::AJAX::Calendar - a REST controller class to provide the
-backend for displaying, adding, deleting, dragging, modifying, and requesting more info about events.
+backend for displaying, adding, deleting, dragging, modifying, and requesting more info about events. All calendar related functions are here.
 
 =head1 DESCRIPTION
 
-Using REST, json values for FullCalendar Event Object properties can be sent to be displayed, simply by stash->{rest}
+Calendar events are saved in the projectprop table value field as a tuple of the format {"2007-09-21T00:00:00","2007-09-21T00:00:00","N/A","#"} which correspond to the start datetime, end datetime, description, and web url, respectively. Because no values were previously saved in this format, no events will be displayed on the calendar unless they are reformatted.
 
-Currently maps to Cassbase Mason jquery calls
+The projectprop type_id is currently restricted to be displayed, selected, and/or added as a 'project_property' cv term. It may be advisable to change this to something like 'calendar_properties", to isolate cvterms that are added by users.
+
+Currently the calendar displays all events that have a projectprop type_id of 'project_property', which means the events are not grouped by other things, such as which project they belong to. If the calendar is to be placed on the trial page, then only events for that project would be displayed. 
 
 =head1 AUTHOR
 
