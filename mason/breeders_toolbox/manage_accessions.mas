@@ -40,7 +40,7 @@ $accessions
 	    <div class="form-group">
       	      <label class="col-sm-6 control-label"></label>
       	      <div class="col-sm-6">
-	        <button name="lists_link" class="btn btn-info" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button>
+	        <button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button>
               </div>
 	    </div>
 	    <div class="form-group">

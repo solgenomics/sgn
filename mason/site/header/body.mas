@@ -1,38 +1,6 @@
 
 <div id="outercontainer">
   <a name="top"></a>
-  
-  <& /site/list.mas &>
-
-  <!--
-  <div id="working" style="text-align : center;">
-    <img src="/img/wheel.gif" />
-    <div id="working_msg"></div>
-  </div>
-  -->
-
-  <div class="modal fade" id="working_modal" name="working_modal" tabindex="-1" role="dialog" aria-labelledby="workingModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
-    <div class="modal-dialog modal-sm" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-	  <center>
-          <h4 class="modal-title" id="workingModalDialog">Working</h4>
-	  </center>
-        </div>
-        <div class="modal-body">
-          <div class="container-fluid">
-	    <center>
-	    <img src="/img/wheel.gif" />
-    	    <div id="working_msg"></div>
-	    </center>
-          </div>
-        </div>
-        <div class="modal-footer">
-
-        </div>
-      </div>
-    </div>
-  </div>
 
   <div id="clone_shoppingcart" style="display: none">
     <span id="clone_cart_count"></span> clone(s) in cart (<a class="toplink" style="text-decoration: underline" href="/search/clone-order.pl">order</a>)

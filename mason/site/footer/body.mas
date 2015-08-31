@@ -11,6 +11,40 @@
     </div>
   </div>
 
+
+<!-- LOAD WORKING MODAL AND LIST MODAL AT END SO THAT THEY ALWAYS APPEAR ON TOP -->
+<& /site/list.mas &>
+
+<!--
+<div id="working" style="text-align : center;">
+  <img src="/img/wheel.gif" />
+  <div id="working_msg"></div>
+</div>
+-->
+
+<div class="modal fade" id="working_modal" name="working_modal" tabindex="-1" role="dialog" aria-labelledby="workingModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+	<center>
+        <h4 class="modal-title" id="workingModalDialog">Working</h4>
+	</center>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <center>
+	  <img src="/img/wheel.gif" />
+    	  <div id="working_msg"></div>
+	  </center>
+        </div>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- BEGIN FOOTER -->
 
 <br/>

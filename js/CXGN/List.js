@@ -592,7 +592,6 @@ function setUpLists() {
 
 function show_lists() {     
     jQuery('#list_dialog_bootstrap').modal("show");
-    jQuery('#add_accessions_dialog').modal("hide");
     
     var l = new CXGN.List();
     l.renderLists('list_dialog');
