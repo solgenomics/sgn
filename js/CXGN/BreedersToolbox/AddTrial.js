@@ -123,7 +123,7 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-	$('#working').dialog("open");
+	$('#working_modal').modal("show");
 
         $.ajax({
             type: 'POST',
@@ -153,23 +153,56 @@ jQuery(document).ready(function ($) {
             success: function (response) {
                 if (response.error) {
                     alert(response.error);
-		    $('#working').dialog("close");
+		    $('#working_modal').modal("hide");
                 } else {
 		    $('#trial_design_information').html(response.design_info_view_html);
-                    $('#trial_design_view_layout').html(response.design_layout_view_html);
+                    $('#trial_design_view_layout_return').html(response.design_layout_view_html);
 
-		    $('#working').dialog("close");
-                    $('#trial_design_confirm').dialog("open");
+		    $('#working_modal').modal("hide");
+                    $('#trial_design_confirm').modal("show");
 		    design_json = response.design_json;
                 }
             },
             error: function () {
-		$('#working').dialog("close");
+		$('#working_modal').modal("hide");
                 alert('An error occurred. sorry. test');
             }
        });
     }
 
+    $('#new_trial_submit').click(function () {
+          var name = $('#new_trial_name').val();
+          var year = $('#add_project_year').val();
+          var desc = $('textarea#add_project_description').val();
+          var method_to_use = $('.format_type:checked').val();
+	  if (name == '') {
+	    alert('Trial name required');
+	    return;
+	  }
+          if (year === '' || desc === '') {
+	    alert('Year and description are required.');
+	    return;
+          }
+          if (method_to_use == "empty") {
+	    alert('adding a project');
+	    save_project_info(name, year, desc);
+          }
+          if (method_to_use == "create_with_upload") {
+	    var uploadFile = $("#trial_upload_file").val();
+	    $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
+	    if (uploadFile === '') {
+              alert("Please select a file");
+              return;
+	    }
+	    $("#create_new_trial_form").submit();
+          }
+          if (method_to_use == "create_with_design_tool") {
+	    //generate_experimental_design(name,year,desc);
+	    generate_experimental_design();
+	  }
+          //$( this).dialog("close"); 
+          //location.reload();
+    });
 
 //    $('#add_project_dialog').dialog({
 //	autoOpen: false,
@@ -206,7 +239,6 @@ jQuery(document).ready(function ($) {
 //			  alert('adding a project');
 //			  save_project_info(name, year, desc);
 //                      }
-//		      //removed
 //                      if (method_to_use == "create_with_upload") {
 //			  var uploadFile = $("#trial_upload_file").val();
 //			  $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
@@ -402,7 +434,7 @@ else {
     });
 
  function save_experimental_design(design_json) {
-     $('#trial_saving_dialog').dialog("open");
+     $('#working_modal').modal("show");
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
         var desc = $('#add_project_description').val();
@@ -462,13 +494,13 @@ else {
             },
             success: function (response) {
                 if (response.error) {
-		    $('#trial_saving_dialog').dialog("close");
+		    $('#working_modal').modal("hide");
                     alert(response.error);
-                    $('#trial_design_confirm').dialog("close");
+                    $('#trial_design_confirm').modal("hide");
                 } else {
 		    //alert('Trial design saved');
-		    $('#trial_saving_dialog').dialog("close");
-		    $('#trial_saved_dialog_message').dialog("open");
+		    $('#working_modal').modal("hide");
+		    $('#trial_saved_dialog_message').modal("show");
                 }
             },
             error: function () {
@@ -479,68 +511,71 @@ else {
        });
     }
 
-    $( "#trial_saving_dialog" ).dialog({
-	autoOpen: false,
-	modal: true,
+//    $( "#trial_saving_dialog" ).dialog({
+//	autoOpen: false,
+//	modal: true,
+//    });
+
+//    $( "#trial_saved_dialog_message" ).dialog({
+//	autoOpen: false,
+//	modal: true,
+//	buttons: {
+//            Ok: { id : "trial_saved_dialog_message_ok_button",
+//		  click: function() {
+//		      $( this ).dialog( "close" );
+//		      location.reload();
+//		  },
+//		  text: "Ok"
+//		}
+//        }
+//    });
+
+    $('#new_trial_confirm_submit').click(function () {
+	save_experimental_design(design_json);
     });
 
-    $( "#trial_saved_dialog_message" ).dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-            Ok: { id : "trial_saved_dialog_message_ok_button",
-		  click: function() {
-		      $( this ).dialog( "close" );
-		      location.reload();
-		  },
-		  text: "Ok"
-		}
-        }
-    
-    });
-
-    $('#trial_design_confirm').dialog({
-	autoOpen: false,
-        height: 400,
-	width: 450,
-        modal: true,
-        buttons: {
-	    Confirm: {
-		id : "confirm_trial_save_button",
-		click: function() {
-		    save_experimental_design(design_json);
-		    //$( this ).dialog( "close" );
-		    //$('#add_project_dialog').dialog("close");
-		},
-		text: "Confirm"
-	    },
-	    Cancel: { 
-		id : "cancel_trial_save_button",
-		click: function() {
-		    //$('#add_project_dialog').dialog("close");
-		    $( this ).dialog( "close" );
-		    return;
-		},
-		text: "Cancel"
-	    }
-        }
-    });
+//    $('#trial_design_confirm').dialog({
+//	autoOpen: false,
+//        height: 400,
+//	width: 450,
+//        modal: true,
+//        buttons: {
+//	    Confirm: {
+//		id : "confirm_trial_save_button",
+//		click: function() {
+//		    save_experimental_design(design_json);
+//		    //$( this ).dialog( "close" );
+//		    //$('#add_project_dialog').dialog("close");
+//		},
+//		text: "Confirm"
+//	    },
+//	    Cancel: { 
+//		id : "cancel_trial_save_button",
+//		click: function() {
+//		    //$('#add_project_dialog').dialog("close");
+//		    $( this ).dialog( "close" );
+//		    return;
+//		},
+//		text: "Cancel"
+//	    }
+//        }
+//    });
 
     $('#view_trial_layout_button').click(function () {
-	$('#trial_design_view_layout').dialog("open");
+	$('#trial_design_view_layout').modal("show");
     });
 
-    $('#trial_design_view_layout').dialog({
-	autoOpen: false,
-	height: 500,
-	width: 400,
-        modal: true,
-        buttons: {
-        Close: function() {
-	    $( this ).dialog( "close" );
-	}
-      }
-    }); 
+//    $('#trial_design_view_layout').dialog({
+//	autoOpen: false,
+//	height: 500,
+//	width: 400,
+//        modal: true,
+//        buttons: {
+//        Close: function() {
+//	    $( this ).dialog( "close" );
+//	}
+//      }
+//    }); 
 
     $('#create_new_trial_form').iframePostForm({
 	json: true,
@@ -554,17 +589,18 @@ else {
             if (response.error_string) {
 		$("#upload_trial_error_display tbody").html('');
 		$("#upload_trial_error_display tbody").append(response.error_string);
-		$(function () {
-                    $("#upload_trial_error_display").dialog({
-			modal: true,
-			title: "Errors in uploaded file",
-			buttons: {
-                            Ok: function () {
-				$(this).dialog("close");
-                            }
-			}
-                    });
-		});
+		$("#upload_trial_error_display").modal("show");
+		//$(function () {
+                //    $("#upload_trial_error_display").dialog({
+		//	modal: true,
+		//	title: "Errors in uploaded file",
+		//	buttons: {
+                //            Ok: function () {
+		//		$(this).dialog("close");
+                //           }
+		//	}
+                //    });
+		//});
 		return;
             }
             if (response.error) {
