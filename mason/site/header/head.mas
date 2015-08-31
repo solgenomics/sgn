@@ -24,5 +24,10 @@
 
   <& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "jquerymigrate", "CXGN.Effects", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min" ] &>
 
+<!--[if !IE 7]>
+  <style type="text/css">
+    #wrapper {display:table;height:100%}
+  </style>
+<![endif]-->
 
   <!-- INSERT_HEAD_POST_HTML -->

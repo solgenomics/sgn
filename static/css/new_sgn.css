@@ -24,8 +24,21 @@
 */
 
 #wrapper {
-	min-height:100%;
-	position:relative;
+    min-height:100%;
+}
+
+#main_row {
+    overflow:auto;
+    padding-bottom:275px;
+}
+
+/*Opera Fix Footer at bottom*/
+body:before {
+  content:"";
+  height:100%;
+  float:left;
+  width:0;
+  margin-top:-32767px;
 }
 
 #xtratbl {
@@ -128,14 +141,10 @@ a[href ^="mailto:"]  {
 }
 
 #pagefooter {
+  margin: -275px 0px 0px 0px;
+  position:relative;
   height:275px;
-  padding: 2px 0px;
-  margin: 0px;
-  position:absolute;
-  bottom:0;
-  left:0;
-  width:100%;
-
+  clear:both;
 }
 
 #pagefooter a, #pagefooter a:active, #pagefooter a:link, #pagefooter a:visited { 
