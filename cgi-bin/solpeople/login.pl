@@ -130,9 +130,9 @@ print <<END_HTML;
 
 <div class="container-fluid">
   <div class="row">
-    <div class="col-sm-4 col-md-4 col-lg-4">
+    <div class="col-sm-2 col-md-3 col-lg-4">
     </div>
-    <div class="col-sm-4 col-md-4 col-lg-4" align="center">
+    <div class="col-sm-8 col-md-6 col-lg-4" align="center">
 <form class="form-horizontal" role="form" name="login" method="post" action="/solpeople/login.pl">
   <div class="form-group">
     <label class="col-sm-3 control-label">Username: </label>
@@ -149,7 +149,7 @@ print <<END_HTML;
   <button class="btn btn-primary" type="submit" name="login" value="Login" >Login</button>
 </form>    
     </div>
-    <div class="col-sm-4 col-md-4 col-lg-4">
+    <div class="col-sm-2 col-md-3 col-lg-4">
     </div>
   </div>
 </div>
