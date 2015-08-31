@@ -56,6 +56,10 @@
         margin-top:0px;
         padding-top:0px;
     }
+    .sgn_brand_name {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
   }
   
 </style>
