@@ -1,48 +1,47 @@
 
 <%args>
 $trial_id
-@accession_names 
 </%args>
 
+<p id="message"></p>
+
 <%perl>
-my $does_exist;
-my $accession_list = join(',',@accession_names); 
-my $jbrowse_url;
+my $test_url;
 my $iframe_url;
-if ( $trial_id && @accession_names ) {
-    $jbrowse_url = "jbrowse_cassavabase/JBrowse-1.11.6/?data=data/json/trials/"; 
-    $iframe_url = $jbrowse_url . $trial_id . "&tracks=DNA,RepeatMasker," . $accession_list . "&tracklist=0&nav=1&overview=0";
-    print STDERR "JB.MAS\njbrowse_url = $jbrowse_url\niframe_url = $iframe_url \n\n";
+if ( $trial_id ) {   #construct iframe url, as well as a test url that will return 404 if trial jbrowse instance doesn't exist 
+    $iframe_url = "/jbrowse_cassavabase/JBrowse-1.11.6"; 
+    $test_url = $iframe_url . "/data/json/trials/" . $trial_id . "/trackList.json";
+    $iframe_url = $iframe_url . "/?data=data/json/trials/" . $trial_id . "&tracks=DNA,RepeatMasker," . "&tracklist=0&nav=1&overview=0";
+    print STDERR "JB.MAS\ntest_url = $test_url\niframe_url = $iframe_url \n\n";
  }
 </%perl>
 
-<script>
-
+<script type="text/javascript" defer="defer">
 jQuery(document).ready(function () {
-	urlExists(<% $iframe_url %>, function(exists)){
-		     <% $does_exist %> = exists
-		 }			
+	prepareJbrowse();
 
-function urlExists (url, callback) {
-  JQuery.ajax({
-    type: 'HEAD',
-    url: url,
-    success: function(){
-      callback(true);
-    },
-    error: function() {
-      callback(false);
-    }
+function prepareJbrowse () { //ajax function to test for existence of given jbrowse trial url
+  jQuery.ajax({
+    type: 'GET',
+    url: "<% $test_url %>",
+    statusCode: {
+        200: function () {  // if page exists, create and display jbrowse iframe
+		jQuery("#message").before('<iframe id="jbrowse"></iframe>');
+	     	jQuery('#jbrowse').attr({
+			"style" : "border: 1px solid rgb(80, 80, 80)",
+			"src" : "<%$ iframe_url %>",
+			"height" : "250",
+			"width" : "700",
+			"name" : "jbrowse_iframe"
+      		});
+      		jQuery('#message').attr("display", "none");
+      		jQuery('#jbrowse').html(" <p>Your browser does not support iframes.</p>");
+	},
+	404: function () { // if page is not found, display message that jbrowse instance does not exist
+		jQuery('#message').html(" <b>No Jbrowse instance exists for this trial</b>.");
+     		}
+	}
   });
 }
-
+});
 </script>
-
-%if ($does_exist) {
-    <iframe style="border: 1px solid rgb(80, 80, 80);" src="<% $iframe_url %>" height="250" width="700"  name="jbrowse_iframe">
-    <p>Your browser does not support iframes.</p> </iframe>
-%} else {
-    <p> No Jbrowse instance exists for this trial </p>
-%}
-
-

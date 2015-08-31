@@ -244,7 +244,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
    collapsible => 1,
 &>
 
-	<& /breeders_toolbox/trial_jbrowse_instance.mas, trial_id => $trial_id , accession_names => @accession_names &>
+	<& /breeders_toolbox/trial_jbrowse_instance.mas, trial_id => $trial_id &>
 
 </&>
 
