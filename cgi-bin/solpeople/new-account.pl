@@ -151,11 +151,7 @@ END_HEREDOC
       <li><b>All fields are required.</b></li>
       </div>
   -->
-  <div class="container-fluid bg-warning">
-    
-  </div>
       
-<br/>
 <div class="container-fluid">
   <div class="row">
     <div class="col-sm-2 col-md-2 col-lg-2">
