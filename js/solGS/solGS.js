@@ -124,25 +124,66 @@ function blockPage (page, args) {
  
 }
 
-function getProfileForm () {
-  //remove user name; ask for email depending on whether there is one in the db or not.
-    var emailForm = '<p>Please fill in your email.</p>'
-	+'<table>'
-	+ '<tr>'
-	+  '<td>Your name:</td>'
-	+  '<td><input  type="text" name="user_name" id="user_name"></td>'
-	+ '</tr>'
-	+ '<tr>'
-	+  '<td>Your analysis name:</td>'
-	+  '<td><input  type="text" name="analysis_name" id="analysis_name"></td>'
-	+  '</tr>'
-	+ '<tr>'
-	+  '<td>Email:</td>'
-	+  '<td><input type="text" name="user_email" id="user_email"></td>' 
-	+ '</tr>'
-	+'</table>';
-   
-    return emailForm;
+
+function goToPage (page, args) {    
+
+    alert('gotopage: ' + page)
+    if (page.match(/solgs\/confirm\/request/)) {
+
+	window.location = page;
+	
+    } else if (page.match(/solgs\/analyze\/traits\/population\//)) {
+	
+	
+	submitTraitSelections();
+		
+	if (args.analysis_name == null) {
+	    
+	    var popId  = jQuery('#population_id').val();
+	    
+	    if (page.match(/solgs\/trait\//)) {
+		alert('going to: ' + page)
+		window.location = page;
+	    } else {
+	   
+		window.location = '/solgs/analyze/traits/population/' + popId;
+	    }
+	} 
+    } else if (page.match(/solgs\/trait\//)) {
+	
+		alert('going to: ' + page)
+		window.location = page;
+	    
+    }
+	    
+}
+
+
+function submitTraitSelections () {
+    
+    wrapTraitsForm();
+    jQuery('#traits_selection_form').ajaxSubmit();
+    
+}
+
+
+function wrapTraitsForm () {
+    
+    var popId  = jQuery('#population_id').val();
+    var formId = ' id="traits_selection_form"';
+    var action = ' action="/solgs/analyze/traits/population/' + popId + '"';
+    var method = ' method="POST"';
+    
+    var traitsForm = '<form'
+	+ formId
+	+ action
+	+ method
+	+ '>' 
+	+ '</form>';
+
+    jQuery('#population_traits_list').wrap(traitsForm);
+
+
 }
  
 
@@ -187,18 +228,48 @@ function getProfileDialog (page, args) {
 }
 
 
+function getProfileForm () {
+  //remove user name; ask for email depending on whether there is one in the db or not.
+    var emailForm = '<p>Please fill in your email.</p>'
+	+'<table>'
+	+ '<tr>'
+	+  '<td>Your name:</td>'
+	+  '<td><input  type="text" name="user_name" id="user_name"></td>'
+	+ '</tr>'
+	+ '<tr>'
+	+  '<td>Your analysis name:</td>'
+	+  '<td><input  type="text" name="analysis_name" id="analysis_name"></td>'
+	+  '</tr>'
+	+ '<tr>'
+	+  '<td>Email:</td>'
+	+  '<td><input type="text" name="user_email" id="user_email"></td>' 
+	+ '</tr>'
+	+'</table>';
+   
+    return emailForm;
+}
+
+
 jQuery(document).ready(function (){
  
      jQuery('#runGS').on('click',  function() {
 	 
 	 var popId = jQuery('#population_id').val(); 
 	 
-	 var page = window.location.protocol 
-	     + '//' +window.location.host 
-	     + '/solgs/analyze/traits/population/' + popId;
-
+	 var hostName = window.location.protocol 
+	     + '//' 
+	     + window.location.host;
+	
+	 var page;
+	 
 	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
     
+	 if (traitIds.length == 1) {
+	     page = hostName + '/solgs/trait/' + traitIds[0] + '/population/' + popId;
+	 } else {
+	     page = hostName + '/solgs/analyze/traits/population/' + popId;
+	 }
+	 
 	 var args = {'trait_id' :  traitIds};
 
 	 askUser(page, args);
@@ -206,57 +277,6 @@ jQuery(document).ready(function (){
      });
     
 });
-
-
-function wrapTraitsForm () {
-    
-    var popId  = jQuery('#population_id').val();
-    var formId = ' id="traits_selection_form"';
-    var action = ' action="/solgs/analyze/traits/population/' + popId + '"';
-    var method = ' method="POST"';
-    
-    var traitsForm = '<form'
-	+ formId
-	+ action
-	+ method
-	+ '>' 
-	+ '</form>';
-
-    jQuery('#population_traits_list').wrap(traitsForm);
-
-
-}
-
-
-function submitTraitSelections () {
-    
-    wrapTraitsForm();
-    jQuery('#traits_selection_form').ajaxSubmit();
-    
-}
-
-
-function goToPage (page, args) {    
-
-    if (page.match(/solgs\/confirm\/request/)) {
-
-	window.location = page;
-	
-    } else if (page.match(/solgs\/analyze\/traits\/population\//)) {
-	
-	submitTraitSelections();
-		
-	if (args.analysis_name == null) {
-	    
-	    var popId  = jQuery('#population_id').val();
-	    window.location = '/solgs/analyze/traits/population/' + popId;
-
-	}
-    }
-	    
-}
-
-
 
 
 function saveAnalysisProfile (profile) {
