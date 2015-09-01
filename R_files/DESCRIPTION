@@ -1,10 +1,10 @@
 Package: sgn
-Title: The SGN website
+Title: The SGN websites
 Version: 0.1
 Date: 2010-10-12
 Author: Robert Buels <rmb32@cornell.edu>
-Maintainer: Robert Buels <rmb32@cornell.edu>
-Description: The code behind the Sol Genomics Network (sgn.cornell.edu)
-        website.
-Depends: R (>= 2.14.0), qtl (>= 1.24-9), gplots (>= 2.10.1), ltm (>= 0.9-7), RColorBrewer (>= 1.0.5), rrBLUP (>= 3.8), plyr (>= 1.7.1), mail(>= 1.0), stats(>= 2.14.0), rjson(>= 0.2.12), agricolae (>= 1.2-1),  gtools (>= 2.6.2), gdata (>= 2.8.2), bitops (>= 1.0-4.1), caTools (>= 1.13), KernSmooth (>= 2.23-7), msm (>= 1.1.1), mvtnorm (>= 0.9.9992), polycor (>= 0.7-8), sfsmisc (>= 1.0-24), nlme (>= 3.1-103), irlba (>= 1.0.3), lme4 (>= 1.1-7), randomForest (>= 4.6-10) 
+Maintainer: Robert Buels <rmb32@cornell.edu>, Isaak Y Tecle <iyt2@cornell.edu> 
+Description: The R code behind the SGN websites 
+
+Depends: R (>= 3.2.0), qtl (>= 1.24-9), gplots (>= 2.10.1), ltm (>= 0.9-7), RColorBrewer (>= 1.0.5), rrBLUP (>= 3.8), plyr (>= 1.7.1), mail(>= 1.0), stats(>= 2.14.0), rjson(>= 0.2.12), agricolae (>= 1.2-1),  gtools (>= 2.6.2), gdata (>= 2.8.2), bitops (>= 1.0-4.1), caTools (>= 1.13), KernSmooth (>= 2.23-7), msm (>= 1.1.1), mvtnorm (>= 0.9.9992), polycor (>= 0.7-8), sfsmisc (>= 1.0-24), nlme (>= 3.1-103), irlba (>= 1.0.3), lme4 (>= 1.1-7), randomForest (>= 4.6-10) 
 License: Artistic-3
