@@ -23,7 +23,7 @@ solGS.waitPage = function (page) {
 }
 
 
-function  askUser(page) {
+function  askUser(page, args) {
        
     var t = '<p>This analysis may take longer than 20 min. ' 
 	+ 'Would you like to be emailed when it is done?</p>';
@@ -40,7 +40,7 @@ function  askUser(page) {
                       click: function() { 
 			  jQuery(this).dialog("close");
 			  
-			  displayAnalysisNow(page);
+			  displayAnalysisNow(page, args);
 		      },
 		    },
 
@@ -48,7 +48,7 @@ function  askUser(page) {
                        click: function() {
 			   jQuery(this).dialog("close");			  
 			 
-			   checkUserLogin(page);
+			   checkUserLogin(page, args);
 		       },
 		     }          
 	    }
@@ -57,7 +57,7 @@ function  askUser(page) {
 }
 
 
-function checkUserLogin (page) {
+function checkUserLogin (page, args) {
     
     jQuery.ajax({
 	type    : 'POST',
@@ -65,14 +65,13 @@ function checkUserLogin (page) {
 	url     : '/solgs/check/user/login/',
 	success : function(response) {
             if (response.loggedin) {
-		//include in response user data
-		
-		getProfileDialog(page);
+		//include in response user data		
+		getProfileDialog(page, args);
             } else {
 		loginAlert();
 	    }
 	}
-	});
+    });
 
 }
 
@@ -105,16 +104,16 @@ function loginUser () {
 }
 
 
-function displayAnalysisNow (page) {
+function displayAnalysisNow (page, args) {
 
-    blockPage(page);
+    blockPage(page, args);
 
  }
 
 
-function blockPage (page) {
-  
-    goToPage(page);
+function blockPage (page, args) {
+
+    goToPage(page, args);
 
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
     jQuery.blockUI({message: 'Please wait..'});
@@ -147,9 +146,13 @@ function getProfileForm () {
 }
  
 
-function getProfileDialog (page) {
+function getProfileDialog (page, args) {
     var form = getProfileForm();
-    
+   
+    if (args) {
+	args = JSON.stringify(args);
+    }
+
     jQuery('<div />', {id: 'email-form'})
 	.html(form)
 	.dialog({	
@@ -167,7 +170,8 @@ function getProfileDialog (page) {
 			'user_name'    : userName, 
 			'user_email'   : userEmail,
 			'analysis_name': analysisName,
-			'analysis_page': page
+			'analysis_page': page,
+			'arguments'    : args,
 		    }
 
 		    jQuery(this).dialog('close');
@@ -184,20 +188,27 @@ function getProfileDialog (page) {
 
 
 jQuery(document).ready(function (){
-   
+ 
      jQuery('#runGS').on('click',  function() {
 	 
 	 var popId = jQuery('#population_id').val(); 
-	 var page = '/solgs/analyze/traits/population/' + popId;
+	 
+	 var page = window.location.protocol 
+	     + '//' +window.location.host 
+	     + '/solgs/analyze/traits/population/' + popId;
 
-	 askUser(page);
+	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
+    
+	 var args = {'trait_id' :  traitIds};
+
+	 askUser(page, args);
 
      });
     
 });
 
 
-function submitTraitSelections () {
+function wrapTraitsForm () {
     
     var popId  = jQuery('#population_id').val();
     var formId = ' id="traits_selection_form"';
@@ -212,134 +223,40 @@ function submitTraitSelections () {
 	+ '</form>';
 
     jQuery('#population_traits_list').wrap(traitsForm);
-   
-    var value = jQuery("#traits_selection_form :checkbox").fieldValue();
-    alert('selected traits: ' + value);
-   
+
+
+}
+
+
+function submitTraitSelections () {
+    
+    wrapTraitsForm();
     jQuery('#traits_selection_form').ajaxSubmit();
     
 }
 
 
-function goToPage (page) {
-     
-    
+function goToPage (page, args) {    
 
-    if (page.match(/solgs\/trait\//)) {
+    if (page.match(/solgs\/confirm\/request/)) {
+
 	window.location = page;
+	
     } else if (page.match(/solgs\/analyze\/traits\/population\//)) {
 	
 	submitTraitSelections();
-	
-	var popId  = jQuery('#population_id').val();
-	window.location = '/solgs/analyze/traits/population/' + popId;
+		
+	if (args.analysis_name == null) {
+	    
+	    var popId  = jQuery('#population_id').val();
+	    window.location = '/solgs/analyze/traits/population/' + popId;
+
+	}
     }
 	    
 }
 
-// jQuery(document).ready(function() {
 
-//     var traits = [];
-//     var selectedTraits = [];
-
-//     jQuery('#population_traits_list tr').on('click',  function() {
-     
-//         var traitId =  jQuery(this).find(".trait_id").val();
-        
-//        	if (selectedTraits !== undefined) {
-// 		if (jQuery.inArray(traitId, selectedTraits) == -1 ) {
-		   
-// 		    selectedTraits.push(traitId);
-		 
-// 		} else {
-		   
-// 		    selectedTraits = jQuery.grep(selectedTraits, function(value) {
-// 			return value != traitId;
-// 		    });
-// 		}
-
-// 	}  else {
-	   
-// 	    selectedTraits = traitId;
-// 	}  	
-//     });
-
-//     jQuery("#runGS").on('click', function(){
-// 	var popId = jQuery('#population_id').val();
-// 	alert('pop id: ' + popId);
-// 	if (selectedTraits[-1] == ',') {
-// 	    alert('pop to clean selectedTraits: ' + selectedTraits);
-// 	    selectedTraits.pop();
-// 	     alert('pop cleaned selectedTraits: ' + selectedTraits);
-// 	} else if (selectedTraits[0] == ',') {
-	    
-// 	    alert('shift to clean selectedTraits: ' + selectedTraits);
-// 	    selectedTraits.shift();
-// 	     alert('shift cleaned selectedTraits: ' + selectedTraits);
-// 	}
-
-// 	if (selectedTraits) {
-// 	    alert('selected traits: ' + selectedTraits);
-// 	  //  askUser(page);
-// 	    if (selectedTraits.length == 1) {
-// 		var traitId = selectedTraits[0];
-// 		runSingleModel(popId, traitId);
-// 		selectedTraits = [];
-// 	    } else {
-// 		runMultipleModels(popId, selectedTraits);
-// 	    	selectedTraits = [];
-// 	    }
-// 	} else {
-	    
-// 	    alert('Select Traits first.');
-// 	}
-    
-
-//     });
-
-
-
-//  });
-
-
-function runSingleModel(popId, traitId) {
-    
-    if (traitId !== undefined) {
-	var page = '/solgs/trait/' + traitId + '/population/' + popId;
-	askUser(page);
-    } else {
-	
-	window.location = window.location.href;
-    }
-}
-
-
-function runMultipleModels (popId, traitIds) {
-
-    if (traitIds !== undefined) {
-	var page = '/solgs/analyze/traits/population/' + popId; 
-	var args = {'traitIds': traitIds};
-	askUser(page);
-    } else {
-	window.location = window.location.href;	
-
-    }
-   // window.location = {}
-    // jQuery.Ajax({
-    // 	typee: 'POST',
-    // 	dataType: 'json',
-    // 	data: {'trait_id': traitIds},
-    // 	url: '/solgs/analyze/traits/population' + popId,
-    // 	success: function(response){
-	    
-
-    // 	},
-
-
-    // });
-
-
-}
 
 
 function saveAnalysisProfile (profile) {
@@ -347,7 +264,7 @@ function saveAnalysisProfile (profile) {
     //make an ajax request
     //save analysis details in a file
     //run analysis, when complete, retrieve analysis owner and send an email
-
+   
     jQuery.ajax({
 	type    : 'POST',
 	dataType: 'json',
@@ -397,15 +314,10 @@ function saveAnalysisProfile (profile) {
 
 
 function runAnalysis (profile) {
-   
+
     jQuery.ajax({
-	async: true,
-	type: 'POST',
-	dataType: 'json',
-	data: profile,
+ 	data: profile,
 	url: '/solgs/run/saved/analysis/',
-	 success: function () {
-	 },	
     });
  
 }
@@ -418,27 +330,6 @@ function confirmRequest () {
 }
 
 
-// function confirmRequest () {
-//    var m = 'You will receive an email when the analysis is complete.'; 
-    
-//     jQuery('<div />', {id: 'confirmation-message'})
-// 	.html(m)
-// 	.dialog({	
-// 	    height: 200,
-// 	    width:  250,
-// 	    modal: true,
-// 	    title: 'Request confirmation',
-//  	    buttons: {
-// 		OK: function() {
-// 		    jQuery(this).dialog('close');
-	
-	 	   
-// 		}
-// 	    }
-// 	});
-	
-//    //  
-// }
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function(a, b) {
     return this.each(function() {
