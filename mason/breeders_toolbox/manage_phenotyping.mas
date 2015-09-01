@@ -5,15 +5,14 @@ $deleted_phenotype_files => undef
 $locations => undef
 </%args>
 
-<br />
-<& /page/page_title.mas, title=>"Manage phenotypic data" &>
+<& /page/page_title.mas, title=>"Manage Phenotypic Data" &>
 
-<a href="/search/stocks">Phenotype search</a><br /><br />
+<a href="/search/stocks">Phenotype Search</a><br /><br />
 
   <& /breeders_toolbox/upload_phenotypes.mas &>  
 
 
-<&| /page/info_section.mas, title=>'Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_phenotypes_link" > Upload phenotypes</a>]' &>
+<&| /page/info_section.mas, title=>'Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_phenotypes_link" >Upload Phenotypes</a>]' &>
   
   <& /breeders_toolbox/file_list.mas, files=>$phenotype_files &>  
 
