@@ -34,7 +34,6 @@ sub login_user :Path('/solgs/check/user/login') Args(0) {
 	  ? $public_email 
 	  : $private_email;
 
-
       $ret->{loggedin} = 1;
       my $user_profile = { 'name' => $first_name, 'email' => $email};
       $ret->{user_profile} = $user_profile;
@@ -112,6 +111,7 @@ sub add_headers {
 	  "\t" . 'User email' . 
 	  "\t" . 'Analysis name' . 
 	  "\t" . "Analysis page" . 
+	  "\t" . "Arguments" .
 	  "\t" . "Status" .
 	  "\n";
 
@@ -131,6 +131,7 @@ sub format_profile_entry {
 		      $profile->{user_email}, 
 		      $profile->{analysis_name}, 
 		      $profile->{analysis_page}, 
+		      $profile->{arguments}, 
 		      'running')
 	);
 
@@ -146,9 +147,6 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     my $analysis_profile = $c->req->params;
     $c->stash->{analysis_profile} = $analysis_profile;
 
-    my $analysis_page = $analysis_profile->{analysis_page};
-    $c->stash->{analysis_page} = $analysis_page;
-   
     $self->run_analysis($c);
     
     my $output_file = $c->stash->{gebv_kinship_file};
@@ -202,8 +200,10 @@ sub run_analysis {
  
     #test if analysis completed?
     # test on combining populations..
-    my $analysis_page = $c->stash->{analysis_page};
- 
+
+    my $analysis_profile = $c->stash->{analysis_profile};
+    my $analysis_page    = $analysis_profile->{analysis_page};
+
     my $base =   $c->req->base;
     $analysis_page =~ s/$base/\//;
   
@@ -303,12 +303,14 @@ sub create_profiles_dir {
 
 
 
+
+
+
+
+
+
+
 __PACKAGE__->meta->make_immutable;
-
-
-
-
-
 
 
 ####
