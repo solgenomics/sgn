@@ -549,11 +549,11 @@ sub get_projects_details {
 
 	my $location = $c->model('solGS::solGS')->project_location($pr_id);
  
-        $projects_details{$pr_id}  = { 
-                  project_name     => $pr_name, 
-                  project_desc     => $pr_desc, 
-                  project_year     => $year, 
-                  project_location => $location,
+        $projects_details{$pr_id} = { 
+	    project_name     => $pr_name, 
+	    project_desc     => $pr_desc, 
+	    project_year     => $year, 
+	    project_location => $location,
         };
     }
         
@@ -663,7 +663,7 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
  
     my $pheno_data_file = $c->stash->{phenotype_file};
     
-    if($uploaded_reference) 
+    if ($uploaded_reference) 
     {
 	my $ret->{status} = 'failed';
 	if( !-s $pheno_data_file )
@@ -1844,7 +1844,7 @@ sub get_gebv_files_of_traits {
         foreach my $tr_file (@analyzed_traits_files) 
         {
             $gebv_files .= $tr_file;
-            $gebv_files .= "\t" unless (@analyzed_traits_files[-1] eq $tr_file);
+            $gebv_files .= "\t" unless ($analyzed_traits_files[-1] eq $tr_file);
         }
         
         my @analyzed_valid_traits_files = @{$c->stash->{analyzed_valid_traits_files}};
@@ -2165,7 +2165,6 @@ sub format_selection_pops {
 
     $c->stash->{selection_pops_list} = \@data;
 
-
 }
 
 
@@ -2269,8 +2268,27 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
    
     $c->stash->{pop_id} = $pop_id;
     $c->stash->{prediction_pop_id} = $prediction_id;
-  
-    my @selected_traits = $c->req->param('trait_id');
+   
+    my $params = $c->req->params;
+   
+    my $trait_ids = %{$params}->{arguments};
+   
+    my @selected_traits;
+    my $args;
+
+    if ($trait_ids) 
+    {
+	    my $json = JSON->new();
+	    $args = $json->decode($trait_ids);
+      
+	    my $args_type = (keys %{$args})[0];
+	    @selected_traits = @{$args->{$args_type}};
+	    
+    } 
+    else 
+    {
+	@selected_traits = $c->req->param('trait_id');
+    }
 
     my $single_trait_id;
     if (!@selected_traits)
@@ -2289,11 +2307,11 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
     elsif (scalar(@selected_traits) == 1)
     {
         $single_trait_id = $selected_traits[0];
-        
+  
         if (!$prediction_id)
         { 
-              $c->res->redirect("/solgs/trait/$single_trait_id/population/$pop_id");
-              $c->detach();              
+	    $c->res->redirect("/solgs/trait/$single_trait_id/population/$pop_id");
+	    $c->detach();              
         } 
         else
         {
@@ -2420,7 +2438,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
 
      my @traits = $c->req->param; 
      @traits    = grep {$_ ne 'rank'} @traits;
-
+     $c->stash->{training_pop_id} = $pop_id;
      $c->stash->{pop_id} = $pop_id;
 
      if ($pop_id =~ /uploaded/)
@@ -2483,8 +2501,8 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
                  }
              }
          }
-         
-         my $trait_id   = $c->model('solGS::solGS')->get_trait_id($trait_name);
+                 
+	 my $trait_id   = $c->model('solGS::solGS')->get_trait_id($trait_name);
          my $trait_abbr = $c->stash->{trait_abbr}; 
         
          $self->get_model_accuracy_value($c, $pop_id, $trait_abbr);        
@@ -2723,7 +2741,6 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
      
         if (!$not_matching_pops) 
         {
-
             $self->cache_combined_pops_data($c);
 
             my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
@@ -2759,7 +2776,6 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
     }
     else 
     {
-        #run gs model based on a single population
         my $pop_id = $pop_ids[0];
         $ret->{redirect_url} = "/solgs/trait/$trait_id/population/$pop_id";
     }
@@ -4035,7 +4051,7 @@ sub run_rrblup  {
     my $input_files   = $c->stash->{input_files};
     my $output_files  = $c->stash->{output_files};
     my $data_set_type = $c->stash->{data_set_type};
-
+    
     if ($data_set_type !~ /combined populations/)
     {
         die "\nCan't run rrblup without a population id." if !$pop_id;   
@@ -4179,9 +4195,9 @@ sub run_r_script {
 
 	$c->stash->{job_tempdir} = $r_process->tempdir();
 
-	unless ($c->stash->{background_job})
+	unless ( defined $c->stash->{background_job})
 	{
-	    $r_process->wait;
+	    $r_process->wait();
 	}
     }
     catch 
