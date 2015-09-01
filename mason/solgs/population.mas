@@ -94,3 +94,6 @@ $acronym
 
 </&>
 %}
+
+
+ <input type="hidden" id="population_id" value="<% $pop_id %>" />
