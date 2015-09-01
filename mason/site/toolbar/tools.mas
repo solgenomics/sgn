@@ -27,7 +27,7 @@
 
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Breeder Tools</li>
-    <li><a href="/breeders">Breeders Toolbox</a></li>
+    <li><a href="/breeders/home">Breeders Toolbox</a></li>
 
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Bulk Query</li>

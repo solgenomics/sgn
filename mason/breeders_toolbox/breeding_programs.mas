@@ -12,6 +12,8 @@ if ($user && $user->check_roles("curator")) {
 </%perl>
 
 <& /page/page_title.mas, title=>"Manage Breeding Programs" &>
+
+<div class="container-fluid">
 <hr>
 
 <table class="table table-condensed table-striped table-hover">
@@ -45,6 +47,8 @@ if ($user && $user->check_roles("curator")) {
 
 <br/>
 <button type="button" class="btn btn-primary" name="new_breeding_program_link" id="new_breeding_program_link">Add New Program</button>
+
+</div>
 
 <!-- Modal Dialogs Below Here -->
 

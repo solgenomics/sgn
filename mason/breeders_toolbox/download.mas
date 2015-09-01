@@ -3,12 +3,16 @@
 </%args>
 
 <& /page/page_title.mas, title=>"Download Using Lists" &>
+
+<div class="container-fluid">
+
 <div class="well">
 Choose a list for each parameter and click "Download".
 </div>
 
+<div class="well well-sm">
 <form id="download_form" action="/breeders/download_action" method="POST" >
-<table class="table table-bordered" cellpadding="10" border="0" >
+<table class="table" cellpadding="10" border="0" >
   <thead>
   <tr><td colspan="4"><h4>Download Phenotype</h4><p>Select parameter:</p></tr>
   <tr>
@@ -47,6 +51,7 @@ Choose a list for each parameter and click "Download".
   </tbody>
   </table>
 </form>
+</div>
 
 <script>  
   $(document).ready(function() { 
@@ -113,8 +118,9 @@ Choose a list for each parameter and click "Download".
 });
 </script>
 
+<div class="well well-sm">
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
-<table class="table table-bordered"  cellpadding="10">
+<table class="table"  cellpadding="10">
   <thead>
   <tr><td colspan="2"><h4>Download GBS Genotype </h4><p>Select parameter:</p></tr>
   <tr>
@@ -146,6 +152,7 @@ Choose a list for each parameter and click "Download".
   </tbody>
   </table>
 </form>
+</div>
 
 <script>
   $(document).ready(function() { 
@@ -218,8 +225,9 @@ Choose a list for each parameter and click "Download".
   });
 </script>
 
+<div class="well well-sm">
 <form id="gbs_qc" action="/breeders/gbs_qc_action" method="POST">
-<table class="table table-bordered" cellpadding="10">
+<table class="table" cellpadding="10">
   <thead>
   <tr><td colspan="3"><h4>GBS Genotype QC</h4><p>Select parameter:</p></tr>
   <tr>
@@ -251,6 +259,9 @@ Choose a list for each parameter and click "Download".
   </tbody>
   </table>
 </form>
+</div>
+
+</div>
 
 <script>
   $(document).ready(function() { 

@@ -121,8 +121,8 @@ $trials_by_breeding_project => ()
     <span id="igd_year_select_div"></span>
     <br /><br />
 
-    <!-- label for="genotyping_trial_name" style="display: inline-block; width: 150px;">Genotyping Trial name:</label>
-    <input id="genotyping_trial_name" name="genotyping_trial_name" size="30" / -->
+    label for="genotyping_trial_name" style="display: inline-block; width: 150px;">Genotyping Trial name:</label>
+    <input id="genotyping_trial_name" name="genotyping_trial_name" size="30" / 
     <br><br>
 
     <label for="igd_genotyping_trial_descripton" style="display: inline-block; vertical-align:top; width: 150px;">Description:</label>

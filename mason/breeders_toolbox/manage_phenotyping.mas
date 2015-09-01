@@ -7,7 +7,9 @@ $locations => undef
 
 <& /page/page_title.mas, title=>"Manage Phenotypic Data" &>
 
-<a href="/search/stocks">Phenotype Search</a><br /><br />
+<div class="container-fluid">
+
+<button class="btn btn-info" onclick=location.href="/search/stocks">Phenotype Search</button><br /><br />
 
   <& /breeders_toolbox/upload_phenotypes.mas &>  
 
@@ -24,6 +26,6 @@ $locations => undef
 
 </&>
 
-
+</div>
 
 

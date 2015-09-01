@@ -5,12 +5,12 @@
 </%init>
 
 <!-- END CONTENT WRAPPER -->
+
       </div>
       <div class="col-sm-1 col-md-1 col-lg-1">
       </div>
     </div>
   </div>
-
 
 <!-- LOAD WORKING MODAL AND LIST MODAL AT END SO THAT THEY ALWAYS APPEAR ON TOP -->
 <& /site/list.mas &>
@@ -127,7 +127,7 @@
   <br/>
 
 </div>
-
+</div>
 
 
 % if( eval{ $c->get_conf('production_server') } ) {
