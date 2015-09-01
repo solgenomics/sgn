@@ -36,14 +36,18 @@ END_HEREDOC
 
         CXGN::Contact::send_email($subject,$body,$email_address);
      
-        $page->header();
+        $page->header('Sol Genomics Network', 'Forgot Password');
     
         print <<END_HEREDOC;
+
+	<div align="center">
     
         <p>Password mailed to $email_address.</p>
     
         <p>[<a href=/solpeople/login.pl>Login Page</a>]</p>
         <br />
+
+	</div>
 END_HEREDOC
 
          $page->footer();
@@ -52,13 +56,17 @@ END_HEREDOC
     else 
     {
     
-        $page->header();
+        $page->header('Sol Genomics Network', 'Forgot Password');
     
         print <<END_HEREDOC;
+
+	<div align="center">
     
         <p>Email address for username \"$username\" was not found. Please check the username and try again, or contact SGN at sgn-feedback\@sgn.cornell.edu for assistance.</p>
     
         <p>[<a href=/solpeople/login.pl>Login Page</a>]
+
+	</div>
     
 END_HEREDOC
 
@@ -68,20 +76,44 @@ END_HEREDOC
 else 
 {
 
-    $page->header();
+    $page->header('Sol Genomics Network', 'Forgot Password');
 
     print <<END_HEREDOC;
 
+<div align="center">Your password will be emailed to the email address you used to register your account. <br/>Please type your username below.</div><br/>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-2 col-md-3 col-lg-4">
+    </div>
+    <div class="col-sm-8 col-md-6 col-lg-4" align="center">
+<form class="form-horizontal" role="form" method="post" action="/solpeople/send-password.pl">
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Username: </label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" name="username" value="" />
+    </div>
+  </div>
+  <button class="btn btn-primary" type="submit" name="send" value="Send password" >Send Password</button>
+</form>    
+    </div>
+    <div class="col-sm-2 col-md-3 col-lg-4">
+    </div>
+  </div>
+</div>
+
+<!--
     <form method="post" action="/solpeople/send-password.pl">
     <table summary="" width="70%" align="center" cellspacing="2" cellpadding="2">
-    <tr><td align="center">Your password will be emailed the email address you used to register your account. Please type your username below.</td></tr>
+    <tr><td align="center">Your password will be emailed to the email address you used to register your account. Please type your username below.</td></tr>
     <tr><td>
-    <table summary="" align="center" cellspacing="2" cellpadding="2">
-    <tr><td>Username</td><td><input type="text" name="username" value="" /></td></tr>
-    <tr><td colspan="2" align="center"><input type="submit" name="send" value="Send password" /></td></tr>
+    <table class="table" summary="" align="center" cellspacing="2" cellpadding="2">
+    <tr><td>Username</td><td><input class="form-control" type="text" name="username" value="" /></td></tr>
+    <tr><td colspan="2" align="center"><input class="btn btn-primary" type="submit" name="send" value="Send password" /></td></tr>
     </table></td></tr>
     </table>
     </form>
+-->
 
 END_HEREDOC
 

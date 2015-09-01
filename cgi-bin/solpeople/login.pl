@@ -137,13 +137,13 @@ print <<END_HTML;
   <div class="form-group">
     <label class="col-sm-3 control-label">Username: </label>
     <div class="col-sm-9">
-      <input class="form-control" id="unamefield" type="text" name="username" size="30" value="" />
+      <input class="form-control" id="unamefield" type="text" name="username" value="" />
     </div>
   </div>
   <div class="form-group">
     <label class="col-sm-3 control-label">Password: </label>
     <div class="col-sm-9">
-      <input class="form-control" type="password" name="pd" size="30" value="" /><input type="hidden" name="goto_url" value="$goto_url" />
+      <input class="form-control" type="password" name="pd" value="" /><input type="hidden" name="goto_url" value="$goto_url" />
     </div>
   </div>
   <button class="btn btn-primary" type="submit" name="login" value="Login" >Login</button>
