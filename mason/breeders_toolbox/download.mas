@@ -2,14 +2,15 @@
 
 </%args>
 
-<& /page/page_title.mas, title=>"Download using lists" &>
-Choose a list for each parameter and click "download".
-<br /><br />
+<& /page/page_title.mas, title=>"Download Using Lists" &>
+<div class="well">
+Choose a list for each parameter and click "Download".
+</div>
 
 <form id="download_form" action="/breeders/download_action" method="POST" >
-<table cellpadding="10" border="0" >
- <tr><td colspan="4"><h4>Download Phenotype</h4>Select parameter:<br />
-
+<table class="table table-bordered" cellpadding="10" border="0" >
+  <thead>
+  <tr><td colspan="4"><h4>Download Phenotype</h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
@@ -21,10 +22,11 @@ Choose a list for each parameter and click "download".
       Traits
     </th>
     <th>
-      &nbsp;
-      </th>
+      Action
+    </th>
   </tr>
-
+  </thead>
+  <tbody>
   <tr>
     <td>
       <div id="accession_list">
@@ -39,8 +41,11 @@ Choose a list for each parameter and click "download".
       </div>
     </td>
     <td>
-      <input type="button" id="phenotype" value="Download" />
-    </td></tr></table>
+      <input class="btn btn-primary" type="button" id="phenotype" value="Download" />
+    </td>
+  </tr>
+  </tbody>
+  </table>
 </form>
 
 <script>  
@@ -98,20 +103,20 @@ Choose a list for each parameter and click "download".
     });
 
 	function disable_ui() {
-	$('#working').dialog("open");
+	$('#working_modal').modal("show");
 	}
 
 	function enable_ui() {
-	$('#working').dialog("close");
+	$('#working_modal').modal("hide");
 	}
 
 });
 </script>
 
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
-<table cellpadding="10">
-
-<tr><td colspan="3"><h4>Download GBS genotype </h4>Select parameter:<br />
+<table class="table table-bordered"  cellpadding="10">
+  <thead>
+  <tr><td colspan="2"><h4>Download GBS Genotype </h4><p>Select parameter:</p></tr>
   <tr>
     <!-- th>
       Trials
@@ -120,10 +125,11 @@ Choose a list for each parameter and click "download".
       Accessions
     </th>
     <th>
-      &nbsp;
+      Action
     </th>
   </tr>
-
+  </thead>
+  <tbody>
   <tr>
     <!-- td>
       <div id="trial_list2">
@@ -133,10 +139,11 @@ Choose a list for each parameter and click "download".
       <div id="accession_list2">
       </div>      
     </td>
-
     <td>
-      <input type="button" id="genotype" value="Download" />
-    </td></tr>
+      <input class="btn btn-primary" type="button" id="genotype" value="Download" />
+    </td>
+  </tr>
+  </tbody>
   </table>
 </form>
 
@@ -201,20 +208,20 @@ Choose a list for each parameter and click "download".
     });
 
 	function disable_ui() {
-	$('#working').dialog("open");
+	$('#working_modal').modal("show");
 	}
 
 	function enable_ui() {
-	$('#working').dialog("close");
+	$('#working_modal').modal("hide");
 	}
 
   });
 </script>
 
 <form id="gbs_qc" action="/breeders/gbs_qc_action" method="POST">
-<table cellpadding="10">
-
-<tr><td colspan="3"><h4>GBS genotype QC </h4>Select parameter:<br />
+<table class="table table-bordered" cellpadding="10">
+  <thead>
+  <tr><td colspan="3"><h4>GBS Genotype QC</h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Trials
@@ -223,10 +230,11 @@ Choose a list for each parameter and click "download".
       Accessions
     </th>
     <th>
-      &nbsp;
+      Action
     </th>
   </tr>
-
+  </thead>
+  <tbody>
   <tr>
     <td>
       <div id="trial_list3">
@@ -236,9 +244,12 @@ Choose a list for each parameter and click "download".
       <div id="accession_list3">
       </div>      
     </td>
-<td>
-<input type="button" id="genotype_qc" value="Quality Control" />
-</td></tr></table>
+    <td>
+      <input class="btn btn-primary" type="button" id="genotype_qc" value="Quality Control" />
+    </td>
+  </tr>
+  </tbody>
+  </table>
 </form>
 
 <script>
@@ -306,11 +317,11 @@ Choose a list for each parameter and click "download".
     });
 
 	function disable_ui() {
-	$('#working').dialog("open");
+	$('#working_modal').modal("show");
 	}
 
 	function enable_ui() {
-	$('#working').dialog("close");
+	$('#working_modal').modal("hide");
 	}
 
   });
