@@ -23,6 +23,7 @@
 }
 */
 
+/*
 #wrapper {
     min-height:100%;
 }
@@ -33,13 +34,15 @@
 }
 
 /*Opera Fix Footer at bottom*/
-body:before {
+/*body:before {
   content:"";
   height:100%;
   float:left;
   width:0;
   margin-top:-32767px;
 }
+*/
+
 
 #xtratbl {
 background-color:#CCCCFF;
@@ -140,12 +143,14 @@ a[href ^="mailto:"]  {
 	padding-right: 16px;
 }
 
+/*
 #pagefooter {
   margin: -275px 0px 0px 0px;
   position:relative;
   height:275px;
   clear:both;
 }
+*/
 
 #pagefooter a, #pagefooter a:active, #pagefooter a:link, #pagefooter a:visited { 
   color: #666666;
