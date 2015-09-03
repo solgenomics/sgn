@@ -3,10 +3,9 @@
 
 </%args>
 
+<div class="panel panel-info">
+<div class="panel-heading">Printer Settings</div>
 <table class="table table-condensed">
-  <thead>
-    <tr><th colspan=4>Printer Settings</th></tr>
-  </thead>
   <tbody>
     <tr>
       <td>Number of Label Rows:</td>
@@ -21,7 +20,7 @@
   	  <option value="A4">A4</option>
 	  </select>
       </td>
-      <td></td>
+      <td></td><td></td>
     </tr>
     <tr>
       <td>Top Margin (mm):</td>
@@ -37,6 +36,7 @@
     </tr>
   </tbody>
 </table>
+</div>
 
 <!--
 <table>
