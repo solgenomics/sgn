@@ -133,37 +133,30 @@ function goToPage (page, args) {
 	window.location = page;
 	
     } else if (page.match(/solgs\/analyze\/traits\/population\//)) {
-	
-	
-	submitTraitSelections();
-		
-	if (args.analysis_name == null) {
-	    
-	    var popId  = jQuery('#population_id').val();
-	    
-	    if (page.match(/solgs\/trait\//)) {
-		alert('going to: ' + page)
-		window.location = page;
-	    } else {
-	   
-		window.location = '/solgs/analyze/traits/population/' + popId;
-	    }
-	} 
+
+	submitTraitSelections(page, args);	
+
     } else if (page.match(/solgs\/trait\//)) {
 	
-		alert('going to: ' + page)
-		window.location = page;
+	window.location = page;
 	    
     }
 	    
 }
 
 
-function submitTraitSelections () {
+function submitTraitSelections (page, args) {
     
     wrapTraitsForm();
-    jQuery('#traits_selection_form').ajaxSubmit();
     
+    if ( typeof args.analysis_name == 'undefined') {
+	document.getElementById('traits_selection_form').submit(); 
+	document.getElementById('traits_selection_form').reset(); 
+    } else {
+   
+	jQuery('#traits_selection_form').ajaxSubmit();
+	jQuery('#traits_selection_form').resetForm();
+    }
 }
 
 
@@ -254,6 +247,7 @@ jQuery(document).ready(function (){
  
      jQuery('#runGS').on('click',  function() {
 	 
+	 
 	 var popId = jQuery('#population_id').val(); 
 	 
 	 var hostName = window.location.protocol 
@@ -261,16 +255,19 @@ jQuery(document).ready(function (){
 	     + window.location.host;
 	
 	 var page;
-	 
+	 var analysisType;
+
 	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
     
 	 if (traitIds.length == 1) {
 	     page = hostName + '/solgs/trait/' + traitIds[0] + '/population/' + popId;
+	     analysisType = 'single model';
 	 } else {
 	     page = hostName + '/solgs/analyze/traits/population/' + popId;
+	     analysisType = 'multiple models';
 	 }
 	 
-	 var args = {'trait_id' :  traitIds};
+	 var args = {'trait_id' :  traitIds, 'population_id' :  [ popId ], 'analysis_type' : [analysisType] };
 
 	 askUser(page, args);
 
