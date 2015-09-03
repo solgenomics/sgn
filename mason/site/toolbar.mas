@@ -7,12 +7,11 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="/" style="padding:8px 8px"><img src="/documents/img/sgn_transparent_logo.png" width="40"></a>
-      <a class="navbar-brand sgn_brand_name" href="/">Sol Genomics Network</a>
+      <& toolbar/logo_and_name.mas &>
     </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        <!-- <li class="active"><a href="/">Home</a></li> -->
+        <& toolbar/search_menu.mas &>
         <& toolbar/maps.mas &>
         <& toolbar/genomes.mas &>
         <& toolbar/tools.mas &>
@@ -26,8 +25,6 @@
   </div>
 </nav>
 <br>
-<!-- <br> -->
-<!-- <br> -->
 
 <style>
   li {
