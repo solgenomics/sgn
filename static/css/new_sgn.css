@@ -624,11 +624,29 @@ a.modesel, a.modesel:visited, a.modesel_hi, a.modesel_hi:visited {
 /*   position: absolute; */
   z-index: 30;
 }
+
+button.modesel_hi {
+  color: #ffffff;  background-color: #337ab7;  border-color: #2e6da4;
+}
+
+button.modesel_hi:hover {
+  color: #333333;  background-color: #e6e6e6;  border-color: #adadad;
+}
+
 a.modesel:hover, a.modesel_hi:hover { 
   text-decoration: none;
 }
-a.modesel_hi { 
+
+/*a.modesel_hi { 
   color: black;
+}*/
+
+button.modesel {
+  color: #ffffff; background-color: #5bc0de; border-color: #46b8da;
+}
+
+button.modesel:hover {
+  color: #ffffff;  background-color: #31b0d5;  border-color: #269abc;
 }
 
 td.modesel_tl, td.modesel_tl_hi { 
