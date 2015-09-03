@@ -608,7 +608,7 @@ function pasteListMenu (div_name, menu_div, button_name) {
     }
 
     html = lo.listSelect(div_name);
-    html = html + '<input type="button" value="'+button_name+'" onclick="javascript:pasteList(\''+div_name+'\')" /><br />';
+    html = html + '<button class="btn btn-info btn-sm" type="button" value="'+button_name+'" onclick="javascript:pasteList(\''+div_name+'\')" >'+button_name+'</button>';
     
     jQuery('#'+menu_div).html(html);
 }
