@@ -62,7 +62,7 @@
       	    <div class="col-sm-9 col-md-9 col-lg-9">
 
 	      <div class="panel panel-success">
-	        <div class="panel-heading">Partners With</div>
+	        <div class="panel-heading"></div>
 
 		  <table class="center table hidden-xs" style="margin-bottom:-4px">
 	    	  <tbody>
@@ -120,7 +120,7 @@
 		      </td>
 		    </tr>
 		    <tr>
-		      <td><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/about/index.pl">About Us</a></td>
+		      <td><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/about/index.pl">About</a></td>
 		    <tr>
 		    <tr>
 		      <td><span class="glyphicon glyphicon-envelope"></span>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/contact/form/">Contact Us</a></td>

@@ -15,7 +15,7 @@
         <& toolbar/maps.mas &>
         <& toolbar/genomes.mas &>
         <& toolbar/tools.mas &>
-        <& toolbar/about_us.mas &>
+        <& toolbar/about.mas &>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <& toolbar/search.mas &>
