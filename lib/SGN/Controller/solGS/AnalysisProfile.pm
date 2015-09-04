@@ -15,7 +15,7 @@ use Try::Tiny;
 BEGIN { extends 'Catalyst::Controller' }
 
 
-sub login_user :Path('/solgs/check/user/login') Args(0) {
+sub check_user_login :Path('/solgs/check/user/login') Args(0) {
   my ($self, $c) = @_;
 
   my $user = $c->user();
@@ -88,12 +88,8 @@ sub save_profile {
 
     my @contents = read_file($profile_file);
  
-    my $exists = map{ $contents[$_] =~ /$analysis_page/  } 0..$#contents; 
-    
-    if (!$exists)
-    {
-	write_file($profile_file, {append => 1}, $formatted_profile);
-    }   
+    write_file($profile_file, {append => 1}, $formatted_profile);
+   
 }
 
 
@@ -147,13 +143,17 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     my $analysis_profile = $c->req->params;
     $c->stash->{analysis_profile} = $analysis_profile;
 
-    $self->run_analysis($c);
+    $self->parse_arguments($c);
     
-    my $output_file = $c->stash->{gebv_kinship_file};
+    $self->run_analysis($c);  
+    
+    $self->find_output_files($c); 
+    my $gebv_files = $c->stash->{output_files};
+    
     my $job_tempdir = $c->stash->{job_tempdir};
     
     my $output_files = { 
-	'output_file' => $output_file, 
+	'gebv_files'  => $gebv_files, 
 	'job_tempdir' => $job_tempdir
     };
 
@@ -162,7 +162,6 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
    
-    $self->create_profiles_dir($c);
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
 
     try 
@@ -195,6 +194,86 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
 } 
 
 
+
+sub parse_arguments {
+  my ($self, $c) = @_;
+ 
+  my $analysis_data =  $c->stash->{analysis_profile};
+  my $arguments = $analysis_data->{arguments};
+
+  if ($arguments) 
+  {
+      my $json = JSON->new();
+      $arguments = $json->decode($arguments);
+      
+      foreach my $k ( keys %{$arguments} ) 
+      {
+	  if ($k eq 'trait_id') 
+	  {
+	      my @selected_traits = @{ $arguments->{$k} };
+	      $c->stash->{selected_traits} = \@selected_traits;
+	  } 
+	  
+	  if ($k eq 'population_id') 
+	  {
+	      my @pop_ids = @{ $arguments->{$k} };
+	      $c->stash->{pop_ids} = \@pop_ids;
+	      
+	      if (scalar(@pop_ids) == 1) 
+	      {
+		  $c->stash->{pop_id}  = $pop_ids[0];
+	      }
+	  }
+
+	  if ($k eq 'analysis_type') 
+	  {
+	      my @analysis_type = @{ $arguments->{$k} };
+	      $c->stash->{analysis_type} = \@analysis_type;
+	  }
+      }
+  }
+	    
+}
+
+
+sub find_output_files {
+    my ($self, $c) = @_;
+
+    my $analysis_data =  $c->stash->{analysis_profile};
+    my $arguments = $analysis_data->{arguments};
+ 
+    $self->parse_arguments($c);
+    my @traits_ids = @{ $c->stash->{selected_traits}};
+    my @pop_ids     = @{ $c->stash->{pop_ids} };
+    $c->stash->{pop_id} = $pop_ids[0];
+    
+    my $solgs_controller = $c->controller('solGS::solGS');
+     
+    my @output_files;
+   # my %output_pages;
+    my $analysis_page = $analysis_data->{analysis_page};
+    
+    if ($analysis_page =~ /solgs\/analyze\/traits\//) 
+    {
+	foreach my $trait_id (@traits_ids)
+	{
+	    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
+
+	    $solgs_controller->get_trait_name($c, $trait_id);
+	    $solgs_controller->gebv_kinship_file($c);
+	    push @output_files, $c->stash->{gebv_kinship_file};
+	}
+    }
+    elsif ($analysis_page =~ /solgs\/trait\//) 
+    {
+	$output_files[0] = $c->stash->{gebv_kinship_file};
+	
+    }
+ 
+   $c->stash->{output_files} = \@output_files;
+}
+
+
 sub run_analysis {
     my ($self, $c) = @_;
  
@@ -206,13 +285,20 @@ sub run_analysis {
 
     my $base =   $c->req->base;
     $analysis_page =~ s/$base/\//;
-  
-    $self->create_profiles_dir($c);
+
     $c->stash->{background_job} = 1;
-    
-    $c->req->path($analysis_page);
-    $c->prepare_action;
-    $c->action ? $c->forward( $c->action ) : $c->dispatch;
+     
+    if ($analysis_page =~ /solgs\/analyze\/traits\//) 
+    {   
+	$c->controller('solGS::solGS')->build_multiple_traits_models($c);	
+    } 
+    else 
+    {
+	$c->req->path($analysis_page);
+	$c->prepare_action;
+	$c->action ? $c->forward( $c->action ) : $c->dispatch;
+    }
+
     my @error = @{$c->error};
     
     if ($error[0]) 
@@ -224,6 +310,8 @@ sub run_analysis {
 	$c->stash->{status} = 'OK';
     }
  
+    $self->update_analysis_progress($c);
+ 
 }
 
 
@@ -231,16 +319,16 @@ sub update_analysis_progress {
     my ($self, $c) = @_;
      
     #read entry for the analysis, grep it and replace status with analysis outcome
-    my $analysis_page= $c->stash->{analysis_page};
+    my $analysis_data =  $c->stash->{analysis_profile};
+    my $analysis_name= $analysis_data->{analysis_name};
     my $status = $c->stash->{status};
+    
     $self->analysis_profile_file($c);
     my $profile_file = $c->stash->{analysis_profile_file};
   
-    print STDERR "\n updating  analysis progress....status: $status\n";
-    
     my @contents = read_file($profile_file);
    
-    map{ $contents[$_] =~ /$analysis_page/ 
+    map{ $contents[$_] =~ /$analysis_name/ 
 	     ? $contents[$_] =~ s/error|running/$status/ig 
 	     : $contents[$_] } 0..$#contents; 
    
@@ -302,10 +390,12 @@ sub create_profiles_dir {
 }
 
 
+sub begin : Private {
+    my ($self, $c) = @_;
 
-
-
-
+    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+  
+}
 
 
 
