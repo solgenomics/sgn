@@ -384,34 +384,36 @@ sub modesel {
 
         my $tablecell = sub {
             my ( $leaf, $content ) = @_;
-qq|    <td id="${bid}_${leaf}" class="modesel_$leaf$sel">$content</td>\n|;
+	    #qq|    <td id="${bid}_${leaf}" class="modesel_$leaf$sel">$content</td>\n|;
+	    qq|    <td id="${bid}_${leaf}">$content</td>\n|;
         };
 
         $button->{contents} = [
-            $tablecell->(
-                'tl', qq|<img src="/img/modesel_tl$sel.gif" alt="" />|
-              )
-              . $tablecell->( 't', qq|| )
-              . $tablecell->(
-                'tr', qq|<img src="/img/modesel_tr$sel.gif" alt="" />|
-              ),
-            $tablecell->(
-                'l', qq|<img src="/img/modesel_l$sel.gif" alt="" />|
-              )
-              . $tablecell->(
+           # $tablecell->(
+           #     'tl', qq|<img src="/img/modesel_tl$sel.gif" alt="" />|
+           #   )
+           #   . $tablecell->( 't', qq|| )
+           #   . $tablecell->(
+           #     'tr', qq|<img src="/img/modesel_tr$sel.gif" alt="" />|
+           #   ),
+           # $tablecell->(
+           #     'l', qq|<img src="/img/modesel_l$sel.gif" alt="" />|
+           #   )
+              $tablecell->(
                 'c',
-qq|<a class="modesel$sel" onclick="CXGN.Page.FormattingHelpers.modesel_switch_highlight('$highlighted_id','$bid'); $button->{onclick}" href="$button->{url}">$button->{contents}</a>|
+#qq|<a class="modesel$sel" onclick="CXGN.Page.FormattingHelpers.modesel_switch_highlight('$highlighted_id','$bid'); $button->{onclick}" href="$button->{url}">$button->{contents}</a>|
+		qq|<button class="btn btn-sm modesel$sel" onclick="location.href='$button->{url}';">$button->{contents}</button>|
               )
-              . $tablecell->(
-                'r', qq|<img src="/img/modesel_r$sel.gif" alt="" />|
-              ),
-            $tablecell->(
-                'bl', qq|<img src="/img/modesel_bl$sel.gif" alt="" />|
-              )
-              . $tablecell->( 'b', qq|| )
-              . $tablecell->(
-                'br', qq|<img src="/img/modesel_br$sel.gif" alt="" />|
-              ),
+           #   . $tablecell->(
+           #     'r', qq|<img src="/img/modesel_r$sel.gif" alt="" />|
+           #   ),
+           # $tablecell->(
+           #     'bl', qq|<img src="/img/modesel_bl$sel.gif" alt="" />|
+           #   )
+           #   . $tablecell->( 'b', qq|| )
+           #   . $tablecell->(
+           #     'br', qq|<img src="/img/modesel_br$sel.gif" alt="" />|
+           #   ),
         ];
     }
 
