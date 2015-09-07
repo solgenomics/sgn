@@ -37,19 +37,20 @@ while (<$F>) {
 
     print STDERR "Processing $stock\n";
 
-    my $stock_row = $bcs_schema->resultset("Stock::Stock")->find( { name => $stock });
+    my $stock_row = $bcs_schema->resultset("Stock::Stock")->find( { uniquename => $stock });
     
     if (!$stock_row) { 
 	print STDERR "Could not find stock $stock. Skipping...\n";
 	next;
     }
 
+
     my $parent_rs = $bcs_schema->resultset("Stock::StockRelationship")->search( { object_id => $stock_row->stock_id(), type_id => { -in => [ $female_parent_id, $male_parent_id] } });
 
     print STDERR "Found ".$parent_rs->count()." parents for stock $stock\n";
 
     while (my $p = $parent_rs->next()) { 
-	print STDERR "Removing parent with id ".$p->object_id()."...\n";
+	print STDERR "Removing parent with id ".$p->subject_id()."...\n";
 	#$p->delete();
     }
 }
