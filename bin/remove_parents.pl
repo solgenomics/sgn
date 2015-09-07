@@ -21,6 +21,10 @@ my $dbh = DBI->connect($dsn, "postgres", $pw);
 print STDERR "Connecting to DBI schema...\n";
 my $bcs_schema = Bio::Chado::Schema->connect($dsn, "postgres", $pw);
     
+my $female_parent_type_id = $bcs_schema->resultset("Cv::Cvterm")->find( { name => "female_parent" })->cvterm_id();
+
+my $male_parent_id = $bcs_schema->resultset("Cv::Cvterm")->find( { name=> "male_parent" })->cvterm_id();
+
 open(my $F, "<", $file) || die " Can't open file $file\n";
 while (<$F>) { 
     chomp;
@@ -40,7 +44,7 @@ while (<$F>) {
 	next;
     }
 
-    my $parent_rs = $bcs_schema->resultset("Stock::StockRelationship")->search( { subject_id => $stock_row->stock_id() });
+    my $parent_rs = $bcs_schema->resultset("Stock::StockRelationship")->search( { object_id => $stock_row->stock_id(), type_id => { -in => [ $female_parent_id, $male_parent_id] } });
 
     print STDERR "Found ".$parent_rs->count()." parents for stock $stock\n";
 
