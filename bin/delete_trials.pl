@@ -52,6 +52,7 @@ my @trial_names = split ",", $trial_names;
 
 foreach my $name (@trial_names) { 
     my $trial = $schema->resultset("Project::Project")->find( { name => $name });
+    if (!$trial) { print STDERR "Trial $name not found. Skipping...\n"; next; }
     push @trial_ids, $trial->project_id();
 }
 
@@ -67,7 +68,7 @@ foreach my $trial_id (@trial_ids) {
     }
     if ($non_interactive || $answer =~ m/^y/i) { 
 	eval { 
-	    delete_trial($phenome_schema, $metadata_schema, $t);
+	    delete_trial($metadata_schema, $phenome_schema, $t);
 	};
 	if ($@) { 
 	    print STDERR "An error occurred trying to delete trial ".$t->get_name()." ($@)\n";
@@ -82,6 +83,7 @@ foreach my $trial_id (@trial_ids) {
 
 }
 
+$dbh->disconnect();
 print STDERR "Done with everything.\n";
 
 sub delete_trial { 
