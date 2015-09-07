@@ -2261,34 +2261,44 @@ sub get_combined_pops_list {
 }
 
 
-sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\d+]+))?') {
-    my ($self, $c) = @_; 
-   
-    my ($pop_id, $prediction_id) = @{$c->req->captures};
-   
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{prediction_pop_id} = $prediction_id;
-   
-    my $params = $c->req->params;
-   
-    my $trait_ids = %{$params}->{arguments};
-   
-    my @selected_traits;
-    my $args;
+sub build_multiple_traits_models {
+    my ($self, $c) = @_;
 
-    if ($trait_ids) 
-    {
+    my $pop_id = $c->stash->{pop_id};
+    my $prediction_id = $c->stash->{prediction_pop_id};
+   
+    my @selected_traits = $c->req->param('trait_id');
+
+   
+    if (!@selected_traits) 
+    { 
+	my $params = $c->stash->{analysis_profile};
+	my $args = %{$params}->{arguments};
+
+	if ($args) 
+	{
 	    my $json = JSON->new();
-	    $args = $json->decode($trait_ids);
+	    $args = $json->decode($args);
       
-	    my $args_type = (keys %{$args})[0];
-	    @selected_traits = @{$args->{$args_type}};
-	    
-    } 
-    else 
-    {
-	@selected_traits = $c->req->param('trait_id');
+	    foreach my $k ( keys %{$args} ) 
+	    {
+		if ($k eq 'trait_id') 
+		{
+		    @selected_traits = @{ $args->{$k} };
+		} 
+
+		if (!$pop_id) 
+		{
+		    if ($k eq 'population_id') 
+		    {
+			my @pop_ids = @{ $args->{$k} };
+			$c->stash->{pop_id} = $pop_ids[0];
+		    }
+		}
+	    }	    
+	} 
     }
+       
 
     my $single_trait_id;
     if (!@selected_traits)
@@ -2336,7 +2346,7 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
                 }
             }
               
-            $c->forward('get_rrblup_output');     
+	     $self->get_rrblup_output($c); 
         }
     }
     elsif (scalar(@selected_traits) > 1) 
@@ -2344,9 +2354,9 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
         my ($traits, $trait_ids);    
         
         for (my $i = 0; $i <= $#selected_traits; $i++)
-        {           
+        {  
             if ($selected_traits[$i] =~ /\D/)
-            {               
+            {    
                 my $acronym_pairs = $self->get_acronym_pairs($c);                   
                 if ($acronym_pairs)
                 {
@@ -2355,9 +2365,9 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
                         if ($r->[0] eq $selected_traits[$i]) 
                         {
                             my $trait_name =  $r->[1];
-                            $trait_name    =~ s/\n//g;                                
+                            $trait_name    =~ s/\n//g; 
                             my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
-
+			
                             $traits    .= $r->[0];
                             $traits    .= "\t" unless ($i == $#selected_traits);
                             $trait_ids .= $trait_id;                                                        
@@ -2368,7 +2378,6 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
             else 
             {
                 my $tr = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
-   
                 my $abbr = $self->abbreviate_term($c, $tr);
                 $traits .= $abbr;
                 $traits .= "\t" unless ($i == $#selected_traits); 
@@ -2376,27 +2385,39 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
                     
                 foreach (@selected_traits)
                 {
-                    $trait_ids .= $_; #$c->model('solGS')->get_trait_id($c, $_);
+                    $trait_ids .= $_;
                 }
             }                 
         } 
-
+    
         my $identifier = crc($trait_ids);
-
         $self->combined_gebvs_file($c, $identifier);
         
         my $name = "selected_traits_pop_${pop_id}";
         my $file = $self->create_tempfile($c, $name);
-        write_file($file, $traits);
+        
+	write_file($file, $traits);
         $c->stash->{selected_traits_file} = $file;
 
-        $name = "trait_info_${single_trait_id}_pop_${pop_id}";
+        $name     = "trait_info_${single_trait_id}_pop_${pop_id}";
         my $file2 = $self->create_tempfile($c, $name);
        
         $c->stash->{trait_file} = $file2;
-        $c->forward('get_rrblup_output');
-  
+	$self->get_rrblup_output($c); 
     }
+
+}
+
+
+sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\d+]+))?') {
+    my ($self, $c) = @_; 
+   
+    my ($pop_id, $prediction_id) = @{$c->req->captures};
+   
+    $c->stash->{pop_id} = $pop_id;
+    $c->stash->{prediction_pop_id} = $prediction_id;
+   
+    $self->build_multiple_traits_models($c);
  
     my $referer    = $c->req->referer;   
     my $base       = $c->req->base;
@@ -3854,7 +3875,7 @@ sub get_rrblup_output :Private{
     my $pop_id      = $c->stash->{pop_id};
     my $trait_abbr  = $c->stash->{trait_abbr};
     my $trait_name  = $c->stash->{trait_name};
-    
+   
     my $data_set_type = $c->stash->{data_set_type};
 
     my ($traits_file, @traits, @trait_pages);
