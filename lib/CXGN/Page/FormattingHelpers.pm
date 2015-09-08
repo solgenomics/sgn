@@ -385,7 +385,7 @@ sub modesel {
         my $tablecell = sub {
             my ( $leaf, $content ) = @_;
 	    #qq|    <td id="${bid}_${leaf}" class="modesel_$leaf$sel">$content</td>\n|;
-	    qq|    <td id="${bid}_${leaf}">$content</td>\n|;
+	    qq|<li style="margin:2px -4px" id="${bid}_${leaf}">$content</li>|;
         };
 
         $button->{contents} = [
@@ -402,7 +402,7 @@ sub modesel {
               $tablecell->(
                 'c',
 #qq|<a class="modesel$sel" onclick="CXGN.Page.FormattingHelpers.modesel_switch_highlight('$highlighted_id','$bid'); $button->{onclick}" href="$button->{url}">$button->{contents}</a>|
-		qq|<button class="btn btn-sm modesel$sel" onclick="location.href='$button->{url}';">$button->{contents}</button>|
+		qq|<button class="btn btn-xs modesel$sel" onclick="location.href='$button->{url}';">$button->{contents}</button>|
               )
            #   . $tablecell->(
            #     'r', qq|<img src="/img/modesel_r$sel.gif" alt="" />|
@@ -417,11 +417,12 @@ sub modesel {
         ];
     }
 
-    my $spacer    = qq{    <td class="modesel_spacer"></td>\n};
+    #my $spacer    = qq{    <td class="modesel_spacer"></td>\n};
+    my $spacer    = qq{};
     my $tabs_html = join(
         "\n",
         (
-            map { "  <tr>\n$_  </tr>" } (
+            map { "  $_  " } (
                 join( $spacer, ( map { $_->{contents}[0] } @buttons ) ),
                 join( $spacer, ( map { $_->{contents}[1] } @buttons ) ),
                 join( $spacer, ( map { $_->{contents}[2] } @buttons ) ),
@@ -430,9 +431,11 @@ sub modesel {
     );
     return <<EOH;
 <center>
-<table class="modesel" summary="" cellspacing="0">
+<!--<table class="modesel" summary="" cellspacing="0">-->
+<ul class="list-inline">
 $tabs_html
-</table>
+</ul>
+<!--</table>-->
 </center>
 <hr class="modesel" />
 EOH

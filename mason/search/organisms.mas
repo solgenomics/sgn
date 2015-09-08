@@ -31,7 +31,7 @@ results and returns the appropriate URL for going to that page of results
   $pagination_link_maker
 </%args>
 
-<& /page/page_title.mas, title => 'Organism/Taxon search' &>
+<& /page/page_title.mas, title => 'Organism/Taxon Search' &>
 
 <style>
 #organism_search_form .checkboxgroup span span {
@@ -82,13 +82,22 @@ div.paginate_nav {
   <& /page/pagination_control.mas, pager => $pager, link_maker => $pagination_link_maker &>
 % }
 
-<&| /page/info_section.mas, title => 'Search' &>
+<&| /page/info_section.mas, title    => 'Search' &>
+
+<div class="well">
   <% $form->render %>
+</div>
+
 </&>
 
 <center>
-<div style="width:400px;text-align:left">
-<& /homepage/popular_species.mas, show_link => 0 &>
+<div style="width:400px">
+  <div class="panel panel-info">
+    <div class="panel-heading">Popular Species</div>
+    <div class="panel-body" style="overflow:hidden">
+      <& /homepage/popular_species.mas, show_link => 0 &>
+    </div>
+  </div>
 </div>
 </center>
 
