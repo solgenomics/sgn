@@ -496,7 +496,7 @@ sub simple_selectbox_html {
     $params{params} ||= '';
     $params{name}   ||= '';
     $retstring =
-      qq!<select class="form-control" $id $params{multiple} $params{params} name="$params{name}">\n!;
+      qq!<select class="form-control" $id $params{multiple} $params{params} name="$params{name}" >!;
     $retstring =~ s/ +/ /;    #collapse spaces
     my $in_group = 0;
     foreach ( @{ $params{choices} } ) {
@@ -527,7 +527,7 @@ sub simple_selectbox_html {
 		    last();
 		}
 	    }
-	    $retstring .= qq{<option value="$name"$selected>$text</option>\n};
+	    $retstring .= qq{<option value="$name"$selected>$text</option>};
 	}
     }
     $retstring .= qq{</optgroup>} if $in_group;
@@ -650,7 +650,8 @@ sub info_table_html {
     join(
         "\n",
         (
-qq/<table summary="" class="${sub}info_table$noborder" $tableattrs>/,
+#qq/<table summary="" class="${sub}info_table$noborder" $tableattrs>/,
+qq/<table summary="" $tableattrs>/,
 
             $tabledata{__caption}
             ? (
@@ -835,9 +836,11 @@ sub columnar_table_html {
     my $html;
 
     #table beginning
-    $params{__tableattrs} ||= qq{summary="" cellspacing="0" width="100%"};
+    #$params{__tableattrs} ||= qq{summary="" cellspacing="0" width="100%"};
+    $params{__tableattrs} ||= qq{};
     $html .=
-      qq|<table class="columnar_table$noborder" $params{__tableattrs}>\n|;
+      #qq|<table class="columnar_table$noborder" $params{__tableattrs}>\n|;
+      qq|<table class="table table-hover table-condensed" $params{__tableattrs}>\n|;
 
     if( defined $params{__caption} ) {
         $html .= "<caption class=\"columnar_table\">$params{__caption}</caption>\n";
@@ -1223,7 +1226,7 @@ EOC
     chomp $matchtype_select;   #remove newline, cause some browsers are idiotic.
                                #return the html
     return <<EOHTML;
-$matchtype_select<input name="$name" id="$name" value="$string_init" size="$size" type="text" />
+<div class="form-group"><div class="input-group"><span class="input-group-btn" width="20%">$matchtype_select</span><div class="input-group-btn"><input class="form-control" name="$name" id="$name" value="$string_init" size="$size" type="text" placeholder="Type search here..."/></span></div></div>
 EOHTML
 }
 
