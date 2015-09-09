@@ -69,54 +69,85 @@ if (!$design_type eq "") {
 }
 my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Download Field Book</a>]';
 
-my $subtitle = qq{[<a id="show_change_breeding_program_link">change</a>] } if $user_can_modify;
+my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link">change</a>] } if $user_can_modify;
 
 print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </%perl>
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<table><tr><td width="365" valign="top">
-<&| /page/info_section.mas, title=>"Breeding program", subtitle=>$subtitle &>
-% ## foreach my $bp (@$breeding_program) { 
-% ##  print $bp->[1] . "&nbsp;(".$bp->[2].")"; 
-% ##  if ($user_can_modify) { print " <a title=\"remove program\" id=\"delete_breeding_program_trial_association_link\"><font color=\"red\"><b>X</b></font></a>"; }
-% ##}
 
-<div id="breeding_programs">
+<&| /page/info_section.mas, title=>"Trial details" &>
+
+<table cellspacing="5" ><tr><td valign="top">
+
+<b>Breeding Program </b></td><td valign="top">
+<span id="breeding_programs">
   [loading...]
-</div>
-
-</&>
-
-</td><td valign="top" >
-<&| /page/info_section.mas, title=>"Trial type", subtitle=>"[<a id=\"edit_trial_type\" >change</a>]" &>
+</span>
+</td>
+<td>
+ <% $change_breeding_program_link %>
+</td>
+</tr>
+<tr>
+<td valign="top" >
+  
+  <b>Trial Type</b>
+</td><td>
   <div id="trial_type">
     [loading...]
   </div>
-</&>
-
+</td><td>
+  [<a id="edit_trial_type" >change</a>]
 </td></tr>
-<tr><td valign="top" >
 
-<&| /page/info_section.mas, title=>"Year(s)", subtitle => '[<a id="change_year_link">change</a>]' &>
+<tr><td valign="top" >
+    <b>Year</b>
+</td><td>
   <div id="trial_year">
     [loading...]
   </div>
-
-</&>
-</td><td valign="top" width="365" >
-<&| /page/info_section.mas, title=>"Location(s)", subtitle=>"[<a id=\"change_trial_location_link\">change</a>]" &>
-
+</td><td>
+[<a id="change_year_link">change</a>]
+</td></tr>
+<tr><td valign="top" >
+<b>Trial Location</b>
+</td><td>
 <div id="trial_location">
   [loading...]
-</&>
+ </div>
 
-</div>
+</td><td>
+[<a id="change_trial_location_link">change</a>]
+</td></tr>
+
+<tr><td>
+<b>Planting Date</b>
+</td><td>
+    <div id="planting_date">[loading...]</div>
+    </td><td>
+    [<a id="change_planting_date_link">change</a>]
+    </td></tr>
+
+<tr><td>
+<b>Harvest Date</b>
+</td><td>
+    <div id="harvest_date">[loading...]</div>
+    </td><td>
+    [<a id="change_harvest_date_link">change</a>]
+    </td></tr>
+
+<tr><td>
+
+<b>Description</b>
+</td><td>
+<div id="trial_description">[loading...]</div>
+</td><td>
+[<a id="edit_trial_description">edit</a>]
 </td></tr></table>
 
-<&| /page/info_section.mas, title=>"Description", collapsible=>0, collapsed=>0, hide_if_empty=>0, is_empty=> $description_empty, subtitle=>"[<a id=\"edit_trial_description\">edit</a>]" &>
-<div id="trial_description">[loading...]</div>
+
 </&>
 
 <div id="edit_trial_description_dialog">
@@ -132,10 +163,22 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <div id="change_trial_location_dialog">
   Please choose the location fro this trial:<br />
   <div id="trial_location_select_div" /></div>
-
 </div>
 
-<&| /page/info_section.mas, title=>"Physical Trial Layout", subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
+<div id="change_planting_date_dialog">
+  Please enter a planting date:<br />
+  <input id="planting_date_picker"></input>
+</select>
+    
+</div>
+
+<div id="change_harvest_date_dialog">
+  Please enter a harvest date:<br />
+  <input id="harvest_date"></input>
+</div>
+
+
+<&| /page/info_section.mas, title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
   <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
 </&>
 

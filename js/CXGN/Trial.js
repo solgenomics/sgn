@@ -323,6 +323,57 @@ function trial_detail_page_setup_dialogs() {
 	get_select_box('locations', 'trial_location_select_div', 'trial_location_select');
     });
 
+    jQuery('#change_planting_date_dialog').dialog( { 
+	autoOpen: false,
+	height: 200,
+	width: 300,
+	modal: true,
+	title: 'Change planting date',
+	buttons: { 
+	    cancel: { text: "Cancel",
+		      click: function() { jQuery( this ).dialog("close"); },
+		      id: "change_planting_date_button"
+		    },
+	    save:   { text: "Save",
+		      click: function() { 
+			  alert("Would save now...");
+		      },
+		      id: "change_planting_date_button"
+		    }
+	}
+    });
+
+    jQuery('#change_planting_date_link').click( function() { 
+	jQuery('#change_planting_date_dialog').dialog("open");
+	jQuery('#planting_date_picker').datepicker();
+
+    });
+
+    jQuery('#change_harvest_date_dialog').dialog( { 
+	autoOpen: false,
+	height: 200,
+	width: 300,
+	modal: true,
+	title: 'Change harvest date',
+	buttons: { 
+	    cancel: { text: "Cancel",
+		      click: function() { jQuery( this ).dialog("close"); },
+		      id: "change_harvest_date_button"
+		    },
+	    save:   { text: "Save",
+		      click: function() { 
+			  alert("Would save now...");
+		      },
+		      id: "change_harvest_date_button"
+		    }
+	}
+    });
+
+    jQuery('#change_harvest_date_link').click( function() { 
+	jQuery('#change_harvest_date_dialog').dialog("open");
+
+    });
+
 
     jQuery('#edit_trial_description_dialog').dialog( { 
 	autoOpen: false,
