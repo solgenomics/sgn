@@ -16,25 +16,31 @@ $schema
         </div>
       </div>
       
-        <div class="panel panel-info">
-          <div class="panel-heading">Popular Species</div>
-          <div class="panel-body" style="overflow:hidden">
-            <& homepage/popular_species.mas &>
-          </div>
+      <div class="panel panel-info">
+        <div class="panel-heading">Popular Species</div>
+        <div class="panel-body" style="overflow:hidden">
+          <& homepage/popular_species.mas &>
         </div>
+      </div>
       
-        <div class="panel panel-info">
-          <div class="panel-heading">SGN Featured</div>
-	  <table class="table table-hover table-striped">
-	    <tbody>
-	      <tr><td><& homepage/publication_of_the_week.mas &></td></tr>
-	      <tr><td><& homepage/image_of_the_week.mas &></td></tr>
-	      <tr><td><& homepage/locus_of_the_week.mas &></td></tr>
-	      <tr><td><& homepage/labs.mas &></td></tr>
-	    </tbody>
-	  </table>
-
+      <div class="panel panel-info">
+        <div class="panel-heading">SGN Featured</div>
+    	  <table class="table table-hover table-striped">
+    	    <tbody>
+    	      <tr><td><& homepage/publication_of_the_week.mas &></td></tr>
+    	      <tr><td><& homepage/image_of_the_week.mas &></td></tr>
+    	      <tr><td><& homepage/locus_of_the_week.mas &></td></tr>
+    	      <tr><td><& homepage/labs.mas &></td></tr>
+    	    </tbody>
+    	  </table>
+      </div>
+      
+      <div class="panel panel-info">
+        <div class="panel-heading">SOL Newsletters</div>
+        <div class="panel-body">
+          All SOL newsletters, edited by Joyce van Eck, are available on the <a href="/solanaceae-project/#sol_newsletters">Solanaceae Project page</a>
         </div>
+      </div>
       
     </div>
       

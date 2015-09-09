@@ -1,7 +1,7 @@
-<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">About Us</a>
+<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">About</a>
 <!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">About Us<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
-    <li><a href="/about">About us</a></li>
+    <li><a href="/about">About</a></li>
     <li><a href="/contact/form">Contact</a></li>
     <li><a href="/help/index.pl">Cite SGN</a></li>
     
