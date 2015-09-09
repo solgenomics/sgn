@@ -31,6 +31,8 @@ results and returns the appropriate URL for going to that page of results
   $pagination_link_maker
 </%args>
 
+<div class="container-fluid">
+
 <& /page/page_title.mas, title => 'Organism/Taxon Search' &>
 
 <style>
@@ -87,7 +89,7 @@ div.paginate_nav {
   </div>
 % }
 
-<&| /page/info_section.mas, title    => 'Search' &>
+<&| /page/info_section.mas, title    => 'Search', collapsible=>1, collapsed=>0 &>
 
 <div class="well">
   <% $form->render %>
@@ -95,6 +97,7 @@ div.paginate_nav {
 
 </&>
 
+<br/>
 <center>
 <div style="width:400px">
   <div class="panel panel-info">
@@ -105,6 +108,8 @@ div.paginate_nav {
   </div>
 </div>
 </center>
+
+</div>
 
 <%init>
   use Number::Format;

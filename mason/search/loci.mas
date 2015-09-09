@@ -6,9 +6,9 @@ $lg_names_ref       => undef
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
+<div class="container-fluid">
+
 <& /page/page_title.mas, title=>'Search Loci' &>
-
-
 
 <%perl>
 
@@ -52,7 +52,7 @@ my $advanced_search=  info_table_html(
 
 </%perl>
 
-<&| /page/info_section.mas, title    => 'Search Results' &>
+<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
 
 
 <div class="well">
@@ -70,22 +70,24 @@ my $advanced_search=  info_table_html(
 
 </&>
 
-<&| /page/info_section.mas, title    => 'Search' &>
+<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0, subtitle=>'[<a href="../help/gene_search_help.pl">Gene Search Help</a>]' &>
 
 <div class="well" id="locus_search_form">
 
   <div class="form-horizontal" >
     <div class="form-group">
-      <label class="col-sm-4 control-label">Search for any locus or allele: <br/><a href="../help/gene_search_help.pl">Gene Search Help Page</a></label>
-      <div class="col-sm-8" >
+      <label class="col-sm-3 control-label">Search for any locus or allele:</label>
+      <div class="col-sm-9" >
         <% $any_name_select %>
-	<br/>
-	<button class="btn btn-primary" id="submit_locus_search" />Search</button>
-	&nbsp;&nbsp;&nbsp;&nbsp;
-	<a class="btn btn-info" href="/locus/0/view/" style="color:#fff" >Submit New Locus</a>
-	&nbsp;&nbsp;&nbsp;&nbsp;
-	<input class="btn btn-default" type="button" value="Advanced Search Options" id="show_advanced_search" />
       </div>
+    </div>
+    <div class="container-fluid" align="center">
+      <br/>
+      <ul class="list-inline" >
+        <li style="padding-bottom:5px"><button class="btn btn-primary" id="submit_locus_search" />Search</button></li>
+	<li style="padding-bottom:5px"><a class="btn btn-info" href="/locus/0/view/" style="color:#fff" >Submit New Locus</a></li>
+	<li style="padding-bottom:5px"><input class="btn btn-default" type="button" value="Advanced Search Options" id="show_advanced_search" /></li>
+      </ul>
     </div>
   </div>
 
@@ -110,7 +112,7 @@ my $advanced_search=  info_table_html(
 
 </&>
 
-
+</div>
 
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
