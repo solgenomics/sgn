@@ -160,15 +160,13 @@
       <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/4.jpg) center center; background-size:cover;" class="slider-size">
         <div class="carousel-sgn-caption">
-          <a href="/organism/Solanum_tuberosum/genome">
-            <h3>Potato Genome</h3>
-            <p>Was published on 2013</p>
-          </a>
+            <h3><a href="/organism/Solanum_tuberosum/genome">Potato Genome</a></h3>
+            <p><a href="http://www.nature.com/nature/journal/v475/n7355/full/nature10158.html" target="_blank">Genome sequence and analysis of the tuber crop potato</a></p>
         </div>
         <div class="carousel-sgn-links">
           <ul>
-            <li><a href="/jbrowse">Browse the potato genome</a></li>
-            <li><a href="/tools/blast">Find sequences by similarity</a></li>
+            <li><a href="/jbrowse/current/?data=data%2Fjson%2FPGSC_DM_v4.03">Browse the potato genome (JBrowse)</a></li>
+            <li><a href="/tools/blast?db_id=262">Find sequences by similarity (BLAST)</a></li>
             <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/annotation/">Download the annotations</a></li>
             <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/assembly/PGSC_DM_v4.03/">Download the Genome Sequence</a></li>
           </ul>
@@ -180,16 +178,14 @@
       <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/3.jpg) center center; background-size:cover;" class="slider-size">
         <div class="carousel-sgn-caption">
-          <a href="/organism/Capsicum_annuum/genome">
-            <h3>Pepper Genome</h3>
-            <p>Was published on 2013</p>
-          </a>
+            <h3><a href="/organism/Capsicum_annuum/genome">Pepper Genome</a></h3>
+            <p><a href="http://www.nature.com/ng/journal/v46/n3/full/ng.2877.html" target="_blank">Genome sequence of the hot pepper provides insights into the evolution of pungency in Capsicum species</a></p>
         </div>
         
         <div class="carousel-sgn-links">
           <ul>
-            <li><a href="/jbrowse">Browse the pepper genome</a></li>
-            <li><a href="/tools/blast">Find sequences by similarity</a></li>
+            <li><a href="/jbrowse/current/?data=data%2Fjson%2FPepper.v.1.55">Browse the pepper genome (JBrowse)</a></li>
+            <li><a href="/tools/blast?db_id=217">Find sequences by similarity (BLAST)</a></li>
             <li><a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Download the annotations</a></li>
             <li><a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Download the Genome Sequence</a></li>
           </ul>
@@ -199,16 +195,16 @@
       </div>
 
       <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/5.jpg) center center; background-size:cover;" class="slider-size">
+        <div style="background:url(/documents/img/homepage_carousel/tomato_carousel.jpg) center center; background-size:cover;" class="slider-size">
           <div class="carousel-sgn-caption">
             <h3><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome</a></h3>
-            <p>Was published on 2013</p>
+            <p><a href="http://www.nature.com/nature/journal/v485/n7400/full/nature11119.html" target="_blank">The tomato genome sequence provides insights into fleshy fruit evolution</a></p>
           </div>
         
           <div class="carousel-sgn-links">
             <ul>
-              <li><a href="/jbrowse">Browse the tomato genome</a></li>
-              <li><a href="/tools/blast">Find sequences by similarity</a></li>
+              <li><a href="/jbrowse">Browse the tomato genome (JBrowse)</a></li>
+              <li><a href="/tools/blast?db_id=224">Find sequences by similarity (BLAST)</a></li>
               <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/">Download the annotations</a></li>
               <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/">Download the Genome Sequence</a></li>
             </ul>
@@ -219,16 +215,13 @@
       <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/2.jpg) center center; background-size:cover;" class="slider-size">
           <div class="carousel-sgn-caption">
-            <a href="/organism/Solanum_melongena/genome">
-              <h3>Eggplant Genome</h3>
-              <p>Was published on 2013</p>
-            </a>
+              <h3><a href="/organism/Solanum_melongena/genome">Eggplant Genome</a></h3>
+              <p><a href="http://dnaresearch.oxfordjournals.org/content/21/6/649" target="_blank">Draft Genome Sequence of Eggplant (Solanum melongena L.): the Representative Solanum Species Indigenous to the Old World</a></p>
           </div>
           
           <div class="carousel-sgn-links">
             <ul>
-              <li><a href="/jbrowse">Browse the eggplant genome</a></li>
-              <li><a href="/tools/blast">Find sequences by similarity</a></li>
+              <li><a href="/tools/blast?db_id=248">Find sequences by similarity (BLAST)</a></li>
               <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/">Download the annotations</a></li>
               <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/">Download the Genome Sequence</a></li>
             </ul>
