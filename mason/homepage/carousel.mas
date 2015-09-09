@@ -158,6 +158,24 @@
       </div>
       
       <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/tomato_carousel.jpg) center center; background-size:cover;" class="slider-size">
+          <div class="carousel-sgn-caption">
+            <h3><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome</a></h3>
+            <p><a href="http://www.nature.com/nature/journal/v485/n7400/full/nature11119.html" target="_blank">The tomato genome sequence provides insights into fleshy fruit evolution</a></p>
+          </div>
+        
+          <div class="carousel-sgn-links">
+            <ul>
+              <li><a href="/jbrowse">Browse the tomato genome (JBrowse)</a></li>
+              <li><a href="/tools/blast?db_id=224">Find sequences by similarity (BLAST)</a></li>
+              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/">Download the annotations</a></li>
+              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/">Download the Genome Sequence</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/4.jpg) center center; background-size:cover;" class="slider-size">
         <div class="carousel-sgn-caption">
             <h3><a href="/organism/Solanum_tuberosum/genome">Potato Genome</a></h3>
@@ -191,24 +209,6 @@
           </ul>
         </div>
         
-        </div>
-      </div>
-
-      <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/tomato_carousel.jpg) center center; background-size:cover;" class="slider-size">
-          <div class="carousel-sgn-caption">
-            <h3><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome</a></h3>
-            <p><a href="http://www.nature.com/nature/journal/v485/n7400/full/nature11119.html" target="_blank">The tomato genome sequence provides insights into fleshy fruit evolution</a></p>
-          </div>
-        
-          <div class="carousel-sgn-links">
-            <ul>
-              <li><a href="/jbrowse">Browse the tomato genome (JBrowse)</a></li>
-              <li><a href="/tools/blast?db_id=224">Find sequences by similarity (BLAST)</a></li>
-              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/">Download the annotations</a></li>
-              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/">Download the Genome Sequence</a></li>
-            </ul>
-          </div>
         </div>
       </div>
 
