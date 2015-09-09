@@ -13,7 +13,7 @@
 .carousel-sgn-caption { 
   position:relative;
   float: left;
-  max-width:50%;
+  max-width:49%;
   min-width:35%;
   padding: 0px 10px 0px 10px;
   margin-top:20px;
@@ -41,7 +41,7 @@
 .carousel-sgn-links {
   position:absolute;
   min-width:35%;
-  max-width:50%;
+  max-width:49%;
   margin-top:20px;
   right:0px;
 
@@ -166,8 +166,8 @@
         
           <div class="carousel-sgn-links">
             <ul>
-              <li><a href="/jbrowse">Browse the tomato genome (JBrowse)</a></li>
-              <li><a href="/tools/blast?db_id=224">Find sequences by similarity (BLAST)</a></li>
+              <li><a href="/jbrowse">Browse the tomato genome</a></li>
+              <li><a href="/tools/blast?db_id=224">Find sequences by similarity</a></li>
               <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/">Download the annotations</a></li>
               <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/">Download the Genome Sequence</a></li>
             </ul>
@@ -183,8 +183,8 @@
         </div>
         <div class="carousel-sgn-links">
           <ul>
-            <li><a href="/jbrowse/current/?data=data%2Fjson%2FPGSC_DM_v4.03">Browse the potato genome (JBrowse)</a></li>
-            <li><a href="/tools/blast?db_id=262">Find sequences by similarity (BLAST)</a></li>
+            <li><a href="/jbrowse/current/?data=data%2Fjson%2FPGSC_DM_v4.03">Browse the potato genome</a></li>
+            <li><a href="/tools/blast?db_id=262">Find sequences by similarity</a></li>
             <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/annotation/">Download the annotations</a></li>
             <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/assembly/PGSC_DM_v4.03/">Download the Genome Sequence</a></li>
           </ul>
@@ -202,8 +202,8 @@
         
         <div class="carousel-sgn-links">
           <ul>
-            <li><a href="/jbrowse/current/?data=data%2Fjson%2FPepper.v.1.55">Browse the pepper genome (JBrowse)</a></li>
-            <li><a href="/tools/blast?db_id=217">Find sequences by similarity (BLAST)</a></li>
+            <li><a href="/jbrowse/current/?data=data%2Fjson%2FPepper.v.1.55">Browse the pepper genome</a></li>
+            <li><a href="/tools/blast?db_id=217">Find sequences by similarity</a></li>
             <li><a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Download the annotations</a></li>
             <li><a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Download the Genome Sequence</a></li>
           </ul>
@@ -216,12 +216,12 @@
         <div style="background:url(/documents/img/homepage_carousel/2.jpg) center center; background-size:cover;" class="slider-size">
           <div class="carousel-sgn-caption">
               <h3><a href="/organism/Solanum_melongena/genome">Eggplant Genome</a></h3>
-              <p><a href="http://dnaresearch.oxfordjournals.org/content/21/6/649" target="_blank">Draft Genome Sequence of Eggplant (Solanum melongena L.): the Representative Solanum Species Indigenous to the Old World</a></p>
+              <p><a href="http://dnaresearch.oxfordjournals.org/content/21/6/649" target="_blank">Draft Genome Sequence of Eggplant (<i>Solanum melongena L.</i>)</a></p>
           </div>
           
           <div class="carousel-sgn-links">
             <ul>
-              <li><a href="/tools/blast?db_id=248">Find sequences by similarity (BLAST)</a></li>
+              <li><a href="/tools/blast?db_id=248">Find sequences by similarity</a></li>
               <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/">Download the annotations</a></li>
               <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/">Download the Genome Sequence</a></li>
             </ul>
