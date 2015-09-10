@@ -127,7 +127,6 @@ function blockPage (page, args) {
 
 function goToPage (page, args) {    
 
-    alert('gotopage: ' + page)
     if (page.match(/solgs\/confirm\/request/)) {
 
 	window.location = page;
@@ -152,8 +151,7 @@ function submitTraitSelections (page, args) {
     if ( typeof args.analysis_name == 'undefined') {
 	document.getElementById('traits_selection_form').submit(); 
 	document.getElementById('traits_selection_form').reset(); 
-    } else {
-   
+    } else {  
 	jQuery('#traits_selection_form').ajaxSubmit();
 	jQuery('#traits_selection_form').resetForm();
     }
@@ -176,14 +174,16 @@ function wrapTraitsForm () {
 
     jQuery('#population_traits_list').wrap(traitsForm);
 
-
 }
  
 
 function getProfileDialog (page, args) {
+    
     var form = getProfileForm();
-   
+    var analysisType;
+    
     if (args) {
+	analysisType = args.analysis_type;
 	args = JSON.stringify(args);
     }
 
@@ -205,6 +205,7 @@ function getProfileDialog (page, args) {
 			'user_email'   : userEmail,
 			'analysis_name': analysisName,
 			'analysis_page': page,
+			'analysis_type': analysisType,
 			'arguments'    : args,
 		    }
 
@@ -246,10 +247,9 @@ function getProfileForm () {
 jQuery(document).ready(function (){
  
      jQuery('#runGS').on('click',  function() {
-	 
-	 
+	 	 
 	 var popId = jQuery('#population_id').val(); 
-	 
+
 	 var hostName = window.location.protocol 
 	     + '//' 
 	     + window.location.host;
@@ -267,7 +267,7 @@ jQuery(document).ready(function (){
 	     analysisType = 'multiple models';
 	 }
 	 
-	 var args = {'trait_id' :  traitIds, 'population_id' :  [ popId ], 'analysis_type' : [analysisType] };
+	 var args = {'trait_id' :  traitIds, 'population_id' :  [ popId ], 'analysis_type' : analysisType };
 
 	 askUser(page, args);
 
@@ -331,8 +331,10 @@ function saveAnalysisProfile (profile) {
 
 
 function runAnalysis (profile) {
-
+   
     jQuery.ajax({
+	dataType: 'json',
+	type: 'POST',
  	data: profile,
 	url: '/solgs/run/saved/analysis/',
     });
