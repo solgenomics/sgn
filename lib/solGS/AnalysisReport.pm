@@ -1,4 +1,4 @@
-package solGS::AnalysisReport;
+tpackage solGS::AnalysisReport;
 
 use Moose;
 use namespace::autoclean;
@@ -11,29 +11,12 @@ use File::Spec::Functions qw /catfile catdir/;
 
 sub check_analysis_status {
    
-    my ($self, $output_files, $analysis_profile) = @_;
+    my ($self, $output_details) = @_;
  
-    my $size = $self->check_output_file_size($output_files);
+    my $output_success = $self->check_success($output_details);
     
-    $self->report_status($size, $analysis_profile);
+    $self->report_status($output_success);
  
-}
-
-
-sub check_died_file {
-    my ($self, $died_file)  = @_;
-
-    
-    if (-e $died_file) 
-    {
-	return 1;
-    } 
-    else 
-    {	
-	return;
-    }
-
-
 }
 
 
@@ -55,67 +38,166 @@ sub get_file {
 }
 
 
-sub check_output_file_size {
-    my ($self, $output_files) = @_;
+sub check_success {
+    my ($self, $output_details) = @_;
   
-    my $result_file = $output_files->{output_file};
-    my $job_tempdir = $output_files->{job_tempdir};
-    
-    if (-e $result_file) 
+    my $job_tempdir = $output_details->{r_job_tempdir};
+          
+    foreach my $k (keys %{$output_details})
     {
-	my $result_size;
-	my $died_file;
-	
-	while (1) 
+	my $gebv_file;
+	if (ref $output_details->{$k} eq 'HASH') 
 	{
-	    sleep 5;
-	    $result_size = -s $result_file;
-	    if (! $result_size)
+	   $gebv_file = $output_details->{$k}->{gebv_file}; 
+	} 
+	
+	if ($gebv_file) 
+	{
+	    my $gebv_size;
+	    my $died_file;
+	
+	    while (1) 
 	    {
-		$died_file = $self->get_file($job_tempdir, 'died');
-	    }
+		sleep 5;
+		$gebv_size = -s $gebv_file;
 
-	    if ($result_size || $died_file) 
-	    {
-		last;		
+		if ($gebv_size) 
+		{
+		    $output_details->{$k}->{success} = 1;
+		    last;		
+		}
+		else
+		{
+		    if ($job_tempdir) 
+		    {
+			$died_file = $self->get_file($job_tempdir, 'died');
+			if ($died_file) 
+			{
+			    $output_details->{$k}->{success} = 0;
+			    last;
+			}
+		    }
+		}
+	    
+	    }	   
+	    
+	}
+	else 
+	{  
+	    if (ref $output_details->{$k} eq 'HASH')	
+	    {   	    
+		$output_details->{$k}->{success} = 0;
 	    }
-	}	   
-	return $result_size ;
+	}  
     }
-    else 
-    {	    	    
-	return;
-    }  
+
+    return $output_details;
+}
+
+
+sub multi_modeling_message {
+    my ($self, $output_details) = @_;
+    
+    my $message;
+    my $cnt = 0;
+
+    foreach my $k (keys %{$output_details}) 
+    {
+	my $all_success;
+	
+	if (ref $output_details->{$k} eq 'HASH')
+	{
+	    if ($output_details->{$k}->{trait_id})
+	    {	  
+		if ($output_details->{$k}->{success})
+		{
+		    $cnt++;
+		    $all_success = 1;
+		    my $trait_name = uc($output_details->{$k}->{trait_name});
+		    my $trait_page = $output_details->{$k}->{trait_page};
+		    $message .= "The analysis for $trait_name is done."
+			." You can view the output here:\n"
+			."$trait_page."
+			."\n\n";
+		}
+		else 
+		{  
+		    $all_success = 0; 
+		    my $trait_name = uc($output_details->{$k}->{trait_name});
+		    $message .= "The analysis for $trait_name failed.\n\n";	 
+		}		
+	    }
+	}
+    }
+    if ($cnt > 1 ) 
+    {
+	$message .= "You can also view the summary of all the analyses in the page below."
+	    ." \nAdditionally, you may find the analytical features in the page useful.\n"
+	    . $output_details->{analysis_profile}->{analysis_page};
+    }
+
+    return  $message;
+}
+
+
+sub single_modeling_message {
+    my ($self, $output_details) = @_;
+    
+    my $message;
+    foreach my $k (keys %{$output_details}) 
+    {
+	if (ref $output_details->{$k} eq 'HASH')
+	{
+	    if ($output_details->{$k}->{trait_id})
+	    {
+		my $trait_name = uc($output_details->{$k}->{trait_name});
+		my $trait_page = $output_details->{$k}->{trait_page};
+		if ($output_details->{$k}->{success})		
+		{		
+		    $message = "The analysis for $trait_name is done."
+			." You can view the output here:\n"
+			."$trait_page.";
+		}
+		else 
+		{  
+		    $message = "The analysis for $trait_name failed."
+			."\n\nWe are troubleshooting the cause. " 
+			. "We will contact you when we find out more.";	 
+		}		
+	    }
+	}
+    }
+
+    return  $message;
+
 }
 
 
 sub report_status {
-    my ($self, $result_file, $analysis_profile) = @_;
+    my ($self, $output_details) = @_;
 
+    my $analysis_profile = $output_details->{analysis_profile};
     my $user_email = $analysis_profile->{user_email};
     my $user_name  = $analysis_profile->{user_name};
 
     my $analysis_page = $analysis_profile->{analysis_page};
     my $analysis_name = $analysis_profile->{analysis_name};
-        
-    my $analysis_result;
-
-    if ($result_file) 
-    {
-	$analysis_result = "Your analysis, $analysis_name, is done. " 
-	    . "You can view the analysis result here:"  
-	    . "\n\n$analysis_page";
-    }
-    else 
-    {
-	$analysis_result = "The $analysis_name analysis failed. "
-	    . "\n\nWe are troubleshooting the cause. " 
-	    . "We will contact you when we find out more.";
-    }
+    my $analysis_type = $analysis_profile->{analysis_type};    
     
-    my $closing = "Please email us to sgn-feedback\@sgn.cornell.edu, " 
-	. "if you have any remarks."
-	. "\n\nThanks and regards,\nWebmaster";
+    my $analysis_result;
+  
+    if ($analysis_type =~ /multiple models/) 
+    {
+	$analysis_result = $self->multi_modeling_message($output_details);
+    }
+    elsif ($analysis_type =~ /single model/) 
+    {
+    	$analysis_result = $self->single_modeling_message($output_details);
+    }
+   
+    my $closing = "If you have any remarks, please contact us:\n"
+	. $output_details->{contact_page}
+	."\n\nThanks and regards,\nWebmaster";
 
     my $body = "Dear $user_name,"
 	. "\n\n$analysis_result" 
