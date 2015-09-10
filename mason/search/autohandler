@@ -27,7 +27,7 @@ Lukas Mueller &st;lam87@cornell.edu&gt;. Based on Perl code by Rob Buels.
     ['/search/organisms', 'Organisms'],
     ['/search/locus','Genes'],
     ['/search/features','Genome Features'],
-    ['/search/phenotypes/qtl','QTLs &amp; Phenotypes'],
+    ['/search/phenotypes','QTLs &amp; Phenotypes'],
     ['/search/transcripts','Transcripts'],
     ['/search/family', 'Unigene Families' ],
     ['/search/markers','Markers'],

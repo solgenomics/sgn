@@ -52,7 +52,6 @@ my $breeding_programs_select = simple_selectbox_html(
       	  <label class="col-sm-3 control-label">Stock Name or Description: </label>
           <div class="col-sm-9" >
             <% $any_name_select %>
-            </div>
           </div>
         </div>
       </div>
