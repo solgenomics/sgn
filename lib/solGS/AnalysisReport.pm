@@ -1,4 +1,4 @@
-tpackage solGS::AnalysisReport;
+package solGS::AnalysisReport;
 
 use Moose;
 use namespace::autoclean;
@@ -9,32 +9,12 @@ use Email::Simple::Creator;
 use File::Spec::Functions qw /catfile catdir/;
 
 
-sub check_analysis_status {
-   
+sub check_analysis_status {   
     my ($self, $output_details) = @_;
  
     my $output_success = $self->check_success($output_details);
     
-    $self->report_status($output_success);
- 
-}
-
-
-sub get_file {
-    my ($self, $dir, $exp) = @_;
-
-    opendir my $dh, $dir 
-        or die "can't open $dir: $!\n";
-
-    my ($file)  = grep { /$exp/ && -f "$dir/$_" }  readdir($dh);
-    close $dh;
-   
-    if ($file)    
-    {
-        $file = catfile($dir, $file);
-    }
-
-    return $file;
+    $self->report_status($output_success); 
 }
 
 
@@ -91,7 +71,70 @@ sub check_success {
 	}  
     }
 
-    return $output_details;
+   return $output_details;
+  
+}
+
+
+sub get_file {
+    my ($self, $dir, $exp) = @_;
+
+    opendir my $dh, $dir 
+        or die "can't open $dir: $!\n";
+
+    my ($file)  = grep { /$exp/ && -f "$dir/$_" }  readdir($dh);
+    close $dh;
+   
+    if ($file)    
+    {
+        $file = catfile($dir, $file);
+    }
+
+    return $file;
+}
+
+
+sub report_status {
+    my ($self, $output_details) = @_;
+
+    my $analysis_profile = $output_details->{analysis_profile};
+    my $user_email = $analysis_profile->{user_email};
+    my $user_name  = $analysis_profile->{user_name};
+
+    my $analysis_page = $analysis_profile->{analysis_page};
+    my $analysis_name = $analysis_profile->{analysis_name};
+    my $analysis_type = $analysis_profile->{analysis_type};    
+    
+    my $analysis_result;
+  
+    if ($analysis_type =~ /multiple models/) 
+    {
+	$analysis_result = $self->multi_modeling_message($output_details);
+    }
+    elsif ($analysis_type =~ /single model/) 
+    {
+    	$analysis_result = $self->single_modeling_message($output_details);
+    }
+   
+    my $closing = "If you have any remarks, please contact us:\n"
+	. $output_details->{contact_page}
+	."\n\nThanks and regards,\nWebmaster";
+
+    my $body = "Dear $user_name,"
+	. "\n\n$analysis_result" 
+	. "\n\n$closing";
+   
+    my $email = Email::Simple->create(
+	header => [
+	    To      => '"Isaak" <isaak@localhost.localdomain>',
+	    From    => '"Isaak Tecle" <isaak@localhost.localdomain',
+	    Subject => "Analysis result of $analysis_name",
+	],
+	body => $body,
+	);
+
+    sendmail($email); 
+
 }
 
 
@@ -173,48 +216,7 @@ sub single_modeling_message {
 }
 
 
-sub report_status {
-    my ($self, $output_details) = @_;
 
-    my $analysis_profile = $output_details->{analysis_profile};
-    my $user_email = $analysis_profile->{user_email};
-    my $user_name  = $analysis_profile->{user_name};
-
-    my $analysis_page = $analysis_profile->{analysis_page};
-    my $analysis_name = $analysis_profile->{analysis_name};
-    my $analysis_type = $analysis_profile->{analysis_type};    
-    
-    my $analysis_result;
-  
-    if ($analysis_type =~ /multiple models/) 
-    {
-	$analysis_result = $self->multi_modeling_message($output_details);
-    }
-    elsif ($analysis_type =~ /single model/) 
-    {
-    	$analysis_result = $self->single_modeling_message($output_details);
-    }
-   
-    my $closing = "If you have any remarks, please contact us:\n"
-	. $output_details->{contact_page}
-	."\n\nThanks and regards,\nWebmaster";
-
-    my $body = "Dear $user_name,"
-	. "\n\n$analysis_result" 
-	. "\n\n$closing";
-   
-    my $email = Email::Simple->create(
-	header => [
-	    To      => '"Isaak" <isaak@localhost.localdomain>',
-	    From    => '"Isaak Tecle" <isaak@localhost.localdomain',
-	    Subject => "Analysis result of $analysis_name",
-	],
-	body => $body,
-	);
-
-    sendmail($email); 
-
-}
 
 
 
