@@ -152,7 +152,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
 								     basename => basename($file_destination),
 								     dirname => dirname($file_destination),
 								     filetype => 'tablet field layout xls',
-								     md5checksum => $md5->digest(),
+								     md5checksum => $md5->hexdigest(),
 								     metadata_id => $md_row->metadata_id(),
 								    });
   $file_row->insert();
@@ -283,7 +283,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 								     basename => basename($file_destination),
 								     dirname => dirname($file_destination),
 								     filetype => 'tablet trait file',
-								     md5checksum => $md5->digest(),
+								     md5checksum => $md5->hexdigest(),
 								     metadata_id => $md_row->metadata_id(),
 								    });
   $file_row->insert();

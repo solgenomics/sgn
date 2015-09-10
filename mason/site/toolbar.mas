@@ -34,14 +34,24 @@
     padding-top: 30px;
   }
   
-  @media (min-width: 768px) {
+  @media (min-width: 0px) and (max-width: 650px) {
+    body {
+      padding-top: 0px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .sgn_brand_name {
+      padding-left: 0px;
+      padding-right: 0px;
+    }
     .sgn_brand_name {
       padding-left: 0px;
       padding-right: 0px;
     }
   }
   
-  @media (min-width: 770px) {
+  @media (min-width: 768px) {
     .dropdown:hover .dropdown-menu {
       display: block;
       margin-top: 0;
@@ -52,10 +62,6 @@
         font-size: 14px;
         margin-top:0px;
         padding-top:0px;
-    }
-    .sgn_brand_name {
-      padding-left: 20px;
-      padding-right: 20px;
     }
   }
   
