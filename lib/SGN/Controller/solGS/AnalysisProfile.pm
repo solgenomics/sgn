@@ -55,7 +55,7 @@ sub save_analysis_profile :Path('/solgs/save/analysis/profile') Args(0) {
    
     my $analysis_page = $analysis_profile->{analysis_page};
     $c->stash->{analysis_page} = $analysis_page;
-
+   
     my $ret->{result} = 0;
    
     $self->save_profile($c);
@@ -146,17 +146,14 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     $self->parse_arguments($c);
     
     $self->run_analysis($c);  
+     
+    $self->structure_output_details($c); 
     
-    $self->find_output_files($c); 
-    my $gebv_files = $c->stash->{output_files};
+    my $output_details = $c->stash->{bg_job_output_details};
     
-    my $job_tempdir = $c->stash->{job_tempdir};
-    
-    my $output_files = { 
-	'gebv_files'  => $gebv_files, 
-	'job_tempdir' => $job_tempdir
-    };
-
+    my $job_tempdir = $c->stash->{r_job_tempdir};   
+    $output_details->{r_job_tempdir} = $job_tempdir;
+      
     $c->stash->{r_temp_file} = 'analysis-status';
     $c->controller('solGS::solGS')->create_cluster_acccesible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
@@ -166,10 +163,10 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
 
     try 
     { 
-        my $r_process = CXGN::Tools::Run->run_cluster_perl({
+        my $job = CXGN::Tools::Run->run_cluster_perl({
            
             method        => ["solGS::AnalysisReport" => "check_analysis_status"],
-    	    args          => [$output_files, $analysis_profile],
+    	    args          => [$output_details],
     	    load_packages => ['solGS::AnalysisReport'],
     	    run_opts      => {
     		              out_file    => $out_temp_file,
@@ -191,8 +188,8 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     		."\n=== end R output ===\n"; 
 	};            
     };
-} 
 
+} 
 
 
 sub parse_arguments {
@@ -208,12 +205,7 @@ sub parse_arguments {
       
       foreach my $k ( keys %{$arguments} ) 
       {
-	  if ($k eq 'trait_id') 
-	  {
-	      my @selected_traits = @{ $arguments->{$k} };
-	      $c->stash->{selected_traits} = \@selected_traits;
-	  } 
-	  
+	  my $pop_id;
 	  if ($k eq 'population_id') 
 	  {
 	      my @pop_ids = @{ $arguments->{$k} };
@@ -221,56 +213,74 @@ sub parse_arguments {
 	      
 	      if (scalar(@pop_ids) == 1) 
 	      {
-		  $c->stash->{pop_id}  = $pop_ids[0];
+		  $pop_id =  $pop_ids[0];
+		  $c->stash->{pop_id}  = $pop_id;
 	      }
 	  }
 
+	  if ($k eq 'trait_id') 
+	  {
+	      my @selected_traits = @{ $arguments->{$k} };
+	      $c->stash->{selected_traits} = \@selected_traits;
+	  } 
+	  
 	  if ($k eq 'analysis_type') 
 	  {
-	      my @analysis_type = @{ $arguments->{$k} };
-	      $c->stash->{analysis_type} = \@analysis_type;
-	  }
+	      my $analysis_type = $arguments->{$k};
+	      $c->stash->{analysis_type} = $analysis_type;
+	  }	 
       }
   }
 	    
 }
 
 
-sub find_output_files {
+sub structure_output_details {
     my ($self, $c) = @_;
 
     my $analysis_data =  $c->stash->{analysis_profile};
     my $arguments = $analysis_data->{arguments};
  
     $self->parse_arguments($c);
-    my @traits_ids = @{ $c->stash->{selected_traits}};
-    my @pop_ids     = @{ $c->stash->{pop_ids} };
-    $c->stash->{pop_id} = $pop_ids[0];
     
-    my $solgs_controller = $c->controller('solGS::solGS');
-     
-    my @output_files;
-   # my %output_pages;
+    my @traits_ids = @{ $c->stash->{selected_traits}};
+   
+    my $pop_id =  $c->stash->{pop_id}; 
+
+    my %output_details = (); 
+    my $base = $c->req->base;
+
     my $analysis_page = $analysis_data->{analysis_page};
     
-    if ($analysis_page =~ /solgs\/analyze\/traits\//) 
+    if ($analysis_page =~ m/[(solgs\/analyze\/traits\/) | (solgs\/trait\/)]/) 
     {
 	foreach my $trait_id (@traits_ids)
 	{
+	    my $solgs_controller = $c->controller('solGS::solGS');
+	    
 	    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
 
-	    $solgs_controller->get_trait_name($c, $trait_id);
+	    $solgs_controller->get_trait_name($c, $trait_id);	    
 	    $solgs_controller->gebv_kinship_file($c);
-	    push @output_files, $c->stash->{gebv_kinship_file};
+	 	  
+	    my$trait_abbr = $c->stash->{trait_abbr};
+	  
+	    $output_details{$trait_abbr} = {
+		'trait_id'   => $trait_id, 
+		'trait_name' => $c->stash->{trait_name}, 
+		'trait_page' => $base . "solgs/trait/$trait_id/population/$pop_id",
+		'gebv_file'  => $c->stash->{gebv_kinship_file},
+		'pop_id'     => $pop_id  
+	    }
 	}
     }
-    elsif ($analysis_page =~ /solgs\/trait\//) 
-    {
-	$output_files[0] = $c->stash->{gebv_kinship_file};
-	
-    }
+
+    $output_details{analysis_profile} = $analysis_data;
+    $output_details{r_job_tempdir}    = $c->stash->{r_job_tempdir};
+    $output_details{contact_page}     = $base . 'contact/form';
  
-   $c->stash->{output_files} = \@output_files;
+    $c->stash->{bg_job_output_details} = \%output_details;
+   
 }
 
 
