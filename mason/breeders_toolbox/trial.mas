@@ -173,8 +173,8 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </div>
 
 <div id="change_harvest_date_dialog">
-  Please enter a harvest date:<br />
-  <input id="harvest_date"></input>
+  Please enter a harvest date [MM/DD/YYYY]:<br />
+  <input id="harvest_date_picker"></input>
 </div>
 
 
@@ -374,6 +374,8 @@ jQuery(document).ready(function () {
   display_trial_location(<% $trial_id %>);
 
   display_trial_year();
+
+  display_harvest_date();
 
   var type = get_trial_type(<% $trial_id %>);
 

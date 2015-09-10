@@ -343,10 +343,10 @@ function trial_detail_page_setup_dialogs() {
 	}
     });
 
+    jQuery('#planting_date_picker').datepicker();
+
     jQuery('#change_planting_date_link').click( function() { 
 	jQuery('#change_planting_date_dialog').dialog("open");
-	jQuery('#planting_date_picker').datepicker();
-
     });
 
     jQuery('#change_harvest_date_dialog').dialog( { 
@@ -362,18 +362,18 @@ function trial_detail_page_setup_dialogs() {
 		    },
 	    save:   { text: "Save",
 		      click: function() { 
-			  alert("Would save now...");
+			  save_harvest_date();
 		      },
 		      id: "change_harvest_date_button"
 		    }
 	}
     });
 
+    jQuery('#harvest_date_picker').datepicker();
+
     jQuery('#change_harvest_date_link').click( function() { 
 	jQuery('#change_harvest_date_dialog').dialog("open");
-
     });
-
 
     jQuery('#edit_trial_description_dialog').dialog( { 
 	autoOpen: false,
@@ -518,6 +518,62 @@ function save_trial_year() {
 	}
     });
 }
+
+function save_harvest_date() { 
+    var trial_id = get_trial_id();
+    var harvest_date = jQuery('#harvest_date_picker').val();    
+    var checked_date = check_date(harvest_date);
+
+    if (checked_date) {
+	jQuery.ajax( {
+	    url : '/ajax/breeders/trial/'+trial_id+'/harvest_date',
+	    data: { 'harvest_date' : checked_date },
+	    type: 'POST',
+	    success: function(response){ 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    alert("Successfully stored harvest date.");
+		    display_harvest_date();
+		    jQuery('#change_harvest_date_dialog').dialog("close");
+		}
+	    },
+	    error: function(response) { 
+		alert('An error occurred.');
+	    }
+	});
+
+    }
+}
+
+function display_harvest_date() { 
+    var trial_id = get_trial_id();
+    jQuery.ajax( { 
+	url : '/ajax/breeders/trial/'+trial_id+'/harvest_date',
+	type: 'GET',
+	success: function(response) { 
+	    jQuery('#harvest_date').html(response.harvest_date);
+	},
+	error: function(response) { 
+	}
+    });
+}
+
+
+function check_date(d) { 
+    var regex = new RegExp("^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$");
+    
+    var match = regex.exec(d);
+    if (match === null || match[1] > 12 || match[1] < 1 || match[2] >31 || match[2] < 1 || match[3]>2030 || match[3] < 1950) {
+	alert("This is not a valid date!");
+	return 0;
+    }
+    // save as year/month/day plus time 
+    return match[3]+'/'+match[1]+'/'+match[2]+" 00:00:00";
+    
+}
+
 
 function display_trial_year() { 
     var trial_id = get_trial_id();
