@@ -187,8 +187,8 @@ function open_create_fieldbook_dialog() {
 function trial_detail_page_setup_dialogs() { 
 
     jQuery('#change_breeding_program_dialog').dialog( {
-	height: 150,
-	width: 300,
+	height: 200,
+	width: 400,
 	title: 'Select Breeding Program',
 	autoOpen: false,
 	buttons: {
