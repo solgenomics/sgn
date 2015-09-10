@@ -4214,7 +4214,7 @@ sub run_r_script {
             },
             );
 
-	$c->stash->{job_tempdir} = $r_process->tempdir();
+	$c->stash->{r_job_tempdir} = $r_process->tempdir();
 
 	unless ( defined $c->stash->{background_job})
 	{
