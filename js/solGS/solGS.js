@@ -175,9 +175,15 @@ function wrapTraitsForm () {
     jQuery('#population_traits_list').wrap(traitsForm);
 
 }
- 
+
 
 function getProfileDialog (page, args) {
+  
+    if (!args) {
+	if (page.match(/solgs\/trait\//)) {
+	    args = getArgsFromUrl(page);
+	}
+    }
     
     var form = getProfileForm();
     var analysisType;
@@ -222,6 +228,25 @@ function getProfileDialog (page, args) {
 }
 
 
+function getArgsFromUrl (url) {
+ 
+    var args;
+    
+    if (url.match(/solgs\/trait\//)) {
+	var urlStr = url.split(/\/+/);
+   
+	args = {
+	    'trait_id'      : [ urlStr[4] ], 
+	    'population_id' : [ urlStr[6] ], 
+	    'analysis_type' : 'single model',
+	};
+    }
+    
+    return args;
+
+}
+
+
 function getProfileForm () {
   //remove user name; ask for email depending on whether there is one in the db or not.
     var emailForm = '<p>Please fill in your email.</p>'
@@ -260,14 +285,26 @@ jQuery(document).ready(function (){
 	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
     
 	 if (traitIds.length == 1) {
-	     page = hostName + '/solgs/trait/' + traitIds[0] + '/population/' + popId;
+	     page = hostName 
+		 + '/solgs/trait/' 
+		 + traitIds[0] 
+		 + '/population/' 
+		 + popId;
+
 	     analysisType = 'single model';
 	 } else {
-	     page = hostName + '/solgs/analyze/traits/population/' + popId;
+	     page = hostName 
+		 + '/solgs/analyze/traits/population/' 
+		 + popId;
+
 	     analysisType = 'multiple models';
 	 }
 	 
-	 var args = {'trait_id' :  traitIds, 'population_id' :  [ popId ], 'analysis_type' : analysisType };
+	 var args = {
+	     'trait_id'      :  traitIds, 
+	     'population_id' :  [ popId ], 
+	     'analysis_type' : analysisType 
+	 };
 
 	 askUser(page, args);
 
@@ -334,9 +371,9 @@ function runAnalysis (profile) {
    
     jQuery.ajax({
 	dataType: 'json',
-	type: 'POST',
- 	data: profile,
-	url: '/solgs/run/saved/analysis/',
+	type    : 'POST',
+ 	data    : profile,
+	url     : '/solgs/run/saved/analysis/',
     });
  
 }
