@@ -4,7 +4,6 @@ use Moose;
 use namespace::autoclean;
 use File::Path qw / mkpath  /;
 use File::Spec::Functions qw / catfile catdir/;
-use File::Temp qw / tempfile tempdir /;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
 
