@@ -241,8 +241,13 @@ sub structure_output_details {
     my $arguments = $analysis_data->{arguments};
  
     $self->parse_arguments($c);
+   
+    my @traits_ids;
     
-    my @traits_ids = @{ $c->stash->{selected_traits}};
+    if ($c->stash->{selected_traits}) 
+    {
+	@traits_ids = @{ $c->stash->{selected_traits}};
+    }
    
     my $pop_id =  $c->stash->{pop_id}; 
 
