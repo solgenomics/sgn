@@ -19,4 +19,11 @@ sub annotation_index :Path('/annotation/index') Args(0) {
     $c->stash->{template} = '/annotation/index.mas';
 }
 
+sub annotation_updates :Path('/annotation/updates') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    $c->stash->{template} = '/annotation/updates.mas';
+}
+
 1;
