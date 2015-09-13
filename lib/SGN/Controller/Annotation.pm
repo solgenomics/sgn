@@ -6,7 +6,7 @@ BEGIN { extends 'Catalyst::Controller'; }
 
 =head1 NAME
 
-SGN::Controller::Annotation - show annotation pages. add subroutines for other pages in annotation menu
+SGN::Controller::Annotation - show annotation pages for CG.org. add subroutines for other pages in annotation menu
 
 
 =cut
