@@ -65,7 +65,7 @@ sub expr_template_search_form {
 
     return <<EOH
   <table class="search_form_title"><tr><td>
-    <span class="search_form_title">Expression search by template</span>
+    <span class="search_form_title">Expression Search By Template</span>
   </td>
   </tr>
   </table>
@@ -95,7 +95,7 @@ sub expr_experiment_search_form {
 
     return <<EOH
   <table class="search_form_title"><tr><td>
-    <span class="search_form_title">Expression search by experiment</span>
+    <span class="search_form_title">Expression Search By Experiment</span>
   </td>
   </tr>
   </table>
@@ -125,7 +125,7 @@ sub expr_platform_search_form {
 
     return <<EOH
   <table class="search_form_title"><tr><td>
-    <span class="search_form_title">Expression search by platform</span>
+    <span class="search_form_title">Expression Search By Platform</span>
   </td>
   </tr>
   </table>
@@ -156,7 +156,7 @@ sub image_search_form {
 
     return <<EOH
   <table class="search_form_title"><tr><td>
-    <span class="search_form_title">Image search</span>
+    <span class="search_form_title">Image Search</span>
   </td>
   </tr>
   </table>
@@ -370,7 +370,7 @@ sub clone_search_form {
 
     return <<EOH
   <table class="search_form_title" summary=""><tr><td>
-    <span class="search_form_title">Genomic clone search</span>
+    <span class="search_form_title">Genomic Clone Search</span>
   </td><td align="right">
     <a class="search_form_random" href="/maps/physical/clone_info.pl?random=yes">
     Select a genomic clone at random
