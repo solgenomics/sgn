@@ -11,6 +11,8 @@
 
 <body>
 
+<& header/body.mas &>
+
 <!-- START CONTENT WRAPPER -->
   <br/>
 
@@ -20,5 +22,4 @@
       </div>
       <div class="col-sm-10 col-md-10 col-lg-10">
 
- <& header/body.mas &>
 
