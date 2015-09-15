@@ -4,6 +4,7 @@
     
     <li><a href="/cview/index.pl">All Maps</a></li>
     <li><a href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Viewer</a></li>
+    <li><a href="/cview/help/map_submission">Submit a map</a></li>
     <li role="separator" class="divider"></li>
     
     <li class="dropdown-header">Tomato</li>
@@ -33,10 +34,5 @@
     <li><a href="/cview/map.pl?map_id=15">Tobacco SSR 2007</a></li>
     <li><a href="/cview/map.pl?map_id=7&amp;show_offsets=1&amp;show_ruler=1">Arabidopsis COSII</a></li>
     
-    
-    
-    
-    
-
   </ul>
 </li>
