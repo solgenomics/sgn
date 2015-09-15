@@ -48,7 +48,7 @@
 <!-- BEGIN FOOTER -->
 
 <br/>
-<div id="pagefooter" class="navbar navbar-default" >
+<div id="pagefooter" class="navbar navbar-default" style="margin-bottom:0px;">
    
   <br/>
   <div class="container-fluid">
@@ -61,7 +61,7 @@
 
       	    <div class="col-sm-9 col-md-9 col-lg-9">
 
-	      <div class="panel panel-success">
+	      <div class="panel panel-success" style="margin-bottom:11px; padding-bottom:5px;">
 	        <div class="panel-heading"></div>
 
 		  <table class="center table hidden-xs" style="margin-bottom:-4px">
@@ -100,7 +100,7 @@
 
 	      </div>
 
-	      <div class="well well-sm" style="margin-top:-3px">
+	      <div class="well" >
 	        <small>SGN is supported by <a class="footer" href="http://www.nsf.gov/awardsearch/showAward?AWD_ID=0820612">NSF (#0820612)</a>, <a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at <a class="footer" href="http://bti.cornell.edu">BTI.</a>
     		<br />
     		Cite SGN using <a class="footer" href="http://nar.oxfordjournals.org/content/early/2014/11/26/nar.gku1195.full" target="_new"> Fernandez-Pozo et al, 2014</a> | <a href="/legal.pl">Disclaimer</a></small>
@@ -115,25 +115,25 @@
 		      <td>
 		        <a href="http://facebook.com/solgenomics" class="footer"><img width="20" alt="Facebook" src="/documents/img/facebook_icon.png" title="SGN Facebook" border="0" /></a>
 			<a href="http://twitter.com/solgenomics" class="footer"><img width="20" alt="Twitter" src="/documents/img/twitter_icon.png" title="SGN Twitter" border="0"/></a>
-			<a href="http://linkedin.com/solgenomics" class="footer"><img width="20" alt="LinkedIn" src="/documents/img/linkedin_icon.png" title="SGN LinkedIn" border="0"/></a>
-			<a href="http://googleplus.com/solgenomics" class="footer"><img width="20" alt="GooglePlus" src="/documents/img/googleplus_icon.png" title="SGN Google Plus" border="0"/></a>
+			<!--<a href="http://linkedin.com/solgenomics" class="footer"><img width="20" alt="LinkedIn" src="/documents/img/linkedin_icon.png" title="SGN LinkedIn" border="0"/></a>
+			<a href="http://googleplus.com/solgenomics" class="footer"><img width="20" alt="GooglePlus" src="/documents/img/googleplus_icon.png" title="SGN Google Plus" border="0"/></a>-->
 		      </td>
 		    </tr>
 		    <tr>
-		      <td><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/about/index.pl">About</a></td>
+		      <td><a href="/about/index.pl"><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;About</a></td>
+		    </tr>
 		    <tr>
+		      <td><a href="/contact/form/"><span class="glyphicon glyphicon-envelope"></span>&nbsp;&nbsp;&nbsp;&nbsp;Contact Us</a></td>
+		    </tr>
 		    <tr>
-		      <td><span class="glyphicon glyphicon-envelope"></span>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/contact/form/">Contact Us</a></td>
+		      <td><a href="/help/index.pl"><span class="glyphicon glyphicon-blackboard"></span>&nbsp;&nbsp;&nbsp;&nbsp;Help</a></td>
+		    </tr>
 		    <tr>
+		      <td><a href="/help/faq.pl"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;FAQ</a></td>
+		    </tr>
 		    <tr>
-		      <td><span class="glyphicon glyphicon-blackboard"></span>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/help/index.pl">Help</a></td>
-		    <tr>
-		    <tr>
-		      <td><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/help/faq.pl">FAQ</a></td>
-		    <tr>
-		    <tr>
-		      <td><span class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/forum/topics.pl">Forum</a></td>
-		    <tr>
+		      <td><a href="/forum/topics.pl"><span class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;&nbsp;&nbsp;Forum</a></td>
+		    </tr>
 		  </tbody>
 		</table>
 	      </div>
