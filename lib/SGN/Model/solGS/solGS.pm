@@ -333,28 +333,48 @@ sub check_stock_type {
 
 sub set_project_genotypeprop {
     my ($self, $prop) = @_;
-    
-    
+        
     my $cv_id= $self->schema->resultset("Cv::Cv")
-	->find_or_create({ 'name' => 'project_property'})->cv_id;
+	->find_or_create({ 'name' => 'project_property'})
+	->cv_id;
    
     my $db_id = $self->schema->resultset("General::Db")
-	->find_or_new({ 'name' => 'null'})->db_id;
+	->find_or_new({ 'name' => 'null'})
+	->db_id;
  
     my $dbxref_id = $self->schema->resultset("General::Dbxref")
-	->find_or_create({'accession' => 'marker_count', 'db_id' => $db_id})->dbxref_id;
+	->find_or_create({'accession' => 'marker_count', 'db_id' => $db_id})
+	->dbxref_id;
  
-    my $cvterm_id = $self->schema->resultset("Cv::Cvterm")->find_or_create(
-	{ name      => 'marker_count',
-	  cv_id     => $cv_id,
-	  dbxref_id => $dbxref_id,
-	})->cvterm_id;
- 
-    my $project_rs = $self->schema->resultset("Project::Projectprop")
-	->find_or_create({ project_id   => $prop->{'project_id'},
-			   type_id      => $cvterm_id,
-			   value        => $prop->{'marker_count'},
-			 });
+    my $cvterm_id = $self->schema->resultset("Cv::Cvterm")
+	->find_or_create({ name => 'marker_count', cv_id => $cv_id, dbxref_id => $dbxref_id,})
+	->cvterm_id;
+   
+    my $marker_rs = $self->schema->resultset("Project::Projectprop")
+	->search({project_id => $prop->{'project_id'}, type_id => $cvterm_id});
+
+    my $marker;
+   
+    while (my $row = $marker_rs->next) 
+    {
+	$marker = $row->value;
+    }
+  
+    if ($marker) 
+    {
+	my $project_rs = $self->schema->resultset("Project::Projectprop")
+	    ->search({ project_id => $prop->{'project_id'}, type_id => $cvterm_id})
+	    ->update({ value => $prop->{'marker_count'} });
+    } 
+    else 
+    {
+	my $project_rs = $self->schema->resultset("Project::Projectprop")
+	    ->create({ 
+		project_id => $prop->{'project_id'}, 
+		type_id => $cvterm_id, 
+		value => $prop->{'marker_count'} 
+	    });
+    }
 
 }
 
@@ -551,11 +571,12 @@ sub genotype_data {
     my $header_markers;
     my @header_markers; 
     my $cnt_clones_diff_markers;
- 
+    my @stocks;
+
     if ($project_id) 
     {
         my $prediction_id = $self->context->stash->{prediction_pop_id};
-        my $model_id        = $self->context->stash->{model_id};
+        my $model_id      = $self->context->stash->{model_id};
        
         if ($prediction_id && $project_id == $prediction_id) 
         {    
@@ -564,12 +585,10 @@ sub genotype_data {
             
             $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
             my $stock_count = $stock_genotype_rs->count;
-    
-            my @stocks;
-            
+                
             unless ($header_markers) 
             {
-                if($stock_count)
+                if ($stock_count)
                 {
                     my $dir = $self->context->stash->{solgs_cache_dir};
                     
@@ -593,8 +612,14 @@ sub genotype_data {
             while (my $geno = $stock_genotype_rs->next)
             {  
                 $cnt++;
-                 my $stock = $geno->get_column('stock_name');
-                my ($duplicate_stock) = grep(/$stock/, @stocks);
+		my $stock = $geno->get_column('stock_name');
+		
+		my $duplicate_stock;
+
+		if ($cnt > 1)
+		{
+		    ($duplicate_stock) = grep(/$stock/, @stocks);
+		}
                  
                 if ( $cnt == 1  || ($cnt > 1 && !$duplicate_stock) )
                 {
@@ -610,16 +635,13 @@ sub genotype_data {
                     if ($similarity == 1)     
                     {
                         my $geno_values = $self->stock_genotype_values($geno);               
-                        $geno_data     .= $geno_values;
-                       
+                        $geno_data     .= $geno_values;                       
                     }
                     else 
-                    {
-                       
+                    {                       
                         $cnt_clones_diff_markers++; 
                         print STDERR "\nstocks excluded:$stock  different markers $cnt_clones_diff_markers\n";
-                    }
-                    
+                    }                    
                 } 
                 else 
                 { 
@@ -635,31 +657,43 @@ sub genotype_data {
             while (my $geno = $stock_genotype_rs->next)
             { 
                 $cnt++;
-              
-                my $json_values  = $geno->get_column('value');
-                my $values       = JSON::Any->decode($json_values);
-                my @markers      = keys %$values;
+              	
+		my $stock = $geno->get_column('stock_name');
+		
+		my $duplicate_stock;
 
-                if ($cnt == 1) 
+		if ($cnt > 1)
+		{
+		    ($duplicate_stock) = grep(/$stock/, @stocks);
+		}
+                 
+                if ( $cnt == 1  || ($cnt > 1 && !$duplicate_stock) )
                 {
-                    @header_markers   = @markers;   
-                    $header_markers   = join("\t", @header_markers);
-                    $geno_data        = "\t" . $header_markers . "\n";
-                }
-              
-                my $common_markers = scalar(intersect(@header_markers, @markers));
+		    my $json_values = $geno->get_column('value');
+		    my $values      = JSON::Any->decode($json_values);
+		    my @markers     = keys %$values;
 
-                my $similarity = $common_markers / scalar(@header_markers);
+		    if ($cnt == 1) 
+		    {
+			@header_markers = @markers;   
+			$header_markers = join("\t", @header_markers);
+			$geno_data      = "\t" . $header_markers . "\n";
+		    }
+              
+		    my $common_markers = scalar(intersect(@header_markers, @markers));
+
+		    my $similarity = $common_markers / scalar(@header_markers);
                 
-                if ($similarity == 1)     
-                {
-                    my $geno_values = $self->stock_genotype_values($geno);             
-                    $geno_data     .= $geno_values;
-                }
-                else 
-                {
-                    $cnt_clones_diff_markers++;                                     
-                }      
+		    if ($similarity == 1)     
+		    {
+			my $geno_values = $self->stock_genotype_values($geno);             
+			$geno_data     .= $geno_values;
+		    }
+		    else 
+		    {
+			$cnt_clones_diff_markers++;                                     
+		    }
+		}
             }       
         }
         
@@ -1349,8 +1383,8 @@ sub structure_phenotype_data {
            
         my $project = $r->get_column('project_description') ;
 
-        my $hash_key = $project . "|" . $r->get_column('uniquename');
-            
+	my $hash_key = $r->get_column('uniquename');
+
         $phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
         $phen_hashref->{$hash_key}{stock_id} = $r->get_column('stock_id');
         $phen_hashref->{$hash_key}{stock_name} = $r->get_column('uniquename');
@@ -1470,8 +1504,8 @@ sub phenotypes_by_trait {
              # my $db_name = $r->get_column('db_name');
              my $project = $r->get_column('project_description') ;
 
-             my $hash_key = $project . "|" . $r->get_column('uniquename');
-            
+	     my $hash_key = $r->get_column('uniquename');
+ 
              # $phen_hashref->{$hash_key}{accession} = $db_name . ":" . $accession ;
              $phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
              $phen_hashref->{$hash_key}{stock_id} = $r->get_column('stock_id');

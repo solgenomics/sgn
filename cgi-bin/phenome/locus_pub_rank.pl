@@ -79,9 +79,9 @@ foreach(sort  { $locus_pub_ranks->{$b} <=>  $locus_pub_ranks->{$a} } keys %$locu
 	|;
     }
     my $associated= $publication->is_associated_publication('locus', $locus_id);
-    my $pub_link= tooltipped_text("$authors ($pyear)",$abstract) . qq| <a href="/chado/publication.pl?pub_id=$pub_id">$title.</a> $series. $volume($issue):$pages <b> Match score = $score </b> | . $val_form;
+    my $pub_link= tooltipped_text("$authors ($pyear)",$abstract) . qq| <a href="/publication/$pub_id/view">$title.</a> $series. $volume($issue):$pages <b> Match score = $score </b> | . $val_form;
     if ($validated eq 'no') {
-	$rej_pubs .= $pub_link; #qq|<a href="/chado/publication.pl?pub_id=$pub_id">$title</a> ($pyear) $val_form |;
+	$rej_pubs .= $pub_link; 
     }elsif ($validated eq 'yes') {
 	$val_pubs .= $pub_link;
     }elsif ($validated eq 'maybe') {

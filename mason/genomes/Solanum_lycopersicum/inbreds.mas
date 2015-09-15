@@ -17,8 +17,8 @@
 
 <&| /page/info_section.mas, title => 'Gh13 genome' &>
   Gh13 is a begomovirus resistant line carrying the <a href="/locus/8216/view"><i>Ty3</i></a> gene.
-  This line was developed in Guatamala <a href="/chado/publication.pl?pub_id=18734">(Mejia et al., 2004)</a>
-  were it has been tested over multiple seasons and consistently shows very good resistance against high begomovirus pressure there. Resistance in Gh13 is reportedly derived from <a href="/organism/938/view"><i>S. habrochaites</i></a>  <a href="/chado/publication.pl?pub_id=18735">(Vidavsky and Czosnek, 1998)</a><br />
+  This line was developed in Guatamala <a href="/publication/18734/view">(Mejia et al., 2004)</a>
+  were it has been tested over multiple seasons and consistently shows very good resistance against high begomovirus pressure there. Resistance in Gh13 is reportedly derived from <a href="/organism/938/view"><i>S. habrochaites</i></a>  <a href="/publication/18735/view">(Vidavsky and Czosnek, 1998)</a><br />
 
   <% info_table_html(
                      __border   => 0,
@@ -34,7 +34,7 @@
 
 <&| /page/info_section.mas, title => 'BTI87 genome' &>
   BTI87 is a begomovirus resistant line carrying the <a href="/locus/8216/view"><i>Ty3</i></a> gene.
-  BTI87 was developed in Guatemala and maintains a high level of resistance derived from the begomovirus-resistant inbred Gc171, which is in turn derived from <a href="/organism/1373/view"><i>S. chilense</i> accession <a href="/stock/28625/view">LA1932</a> <a href="/chado/publication.pl?pub_id=18736">(Scott and Schuster, 2007)</a><br />
+  BTI87 was developed in Guatemala and maintains a high level of resistance derived from the begomovirus-resistant inbred Gc171, which is in turn derived from <a href="/organism/1373/view"><i>S. chilense</i> accession <a href="/stock/28625/view">LA1932</a> <a href="/publication/18736/view">(Scott and Schuster, 2007)</a><br />
 
     <% info_table_html(
        __border   => 0,

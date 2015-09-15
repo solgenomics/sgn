@@ -1,231 +1,245 @@
-
-
-
-
-<%doc>
-
-</%doc>
-
-<%args>
-
-
-</%args>
-
-
-
-
-
-</style>
-
-
-<& /page/page_title.mas, title=>"Release of a draft genome sequence for <i>Nicotiana benthamiana</i>" &>
-
-<p>Scientists at the Boyce Thompson Institute for Plant Research (BTI) have released a draft sequence of the <i>Nicotiana benthamiana</i> genome which is accessible through the SGN BLAST tool and can be downloaded from an ftp site (see: http://solgenomics.net/). The project was funded by BTI and National Science Foundation grants IOS-1025642 and IOS-0343327.</p>
-
-<p><i>N. benthamiana</i> is a widely used model for plant-microbe biology and other research applications. It is particularly useful because it is related to tomato and potato and is amenable to virus-induced gene silencing (VIGS) which facilitates the efficient functional study of plant genes.</p>
-
-<p>The draft sequence of <i>N. benthamiana</i> will allow better design of constructs for virus-induced gene-silencing (VIGS) in order to reduce the possibility of 'off-target' gene silencing [1]. The sequence will also be useful for identifying orthologs of tomato and potato genes, for comparative genomics with other Solanaceae species, and for the retrieval of promoter sequences.</p>
-
-<p><i>N. benthamiana</i> has a very complex genome consisting of n=19 chromosomes that is estimated at over 3.5GB in size. Taxonomically, it is an old allotetraploid of the section Suaveolentes that formed from diploid parents from the section Sylvestres and the section Noctiflorae. It is native to Australia [2, 3].</p>
 <br />
+<& /page/page_title.mas, title=>"<i>Nicotiana benthamiana</i> draft genome sequence v1.0.1" &>
 
-<style type="text/css">
+<p>
+  A new draft sequence of the <i>Nicotiana benthamiana</i> genome has been released by researchers from the <a href="http://bti.cornell.edu" target="_blank">Boyce Thompson Institute for Plant Research (BTI)</a>.
+  It is accessible through the SGN BLAST tool and JBrowse, and can be downloaded from the SGN ftp site.
+  More information about this project can be found at the <a href="http://bti.cornell.edu/research/projects/nicotiana-benthamiana/" target="_blank">BTI <i>Nicotiana benthamiana</i> Project site</a>
+</p>
 
+<p>
+  <i>N. benthamiana</i> has a very complex genome consisting of n=19 chromosomes that is estimated at over 3.5GB in size. 
+  Taxonomically, it is an old allotetraploid of the section Suaveolentes that was formed from diploid parents from the section Sylvestres and
+  the section Noctiflorae. It is native to Australia [2, 3].
+</p>
 
-.bigbutton {
+<p>
+  <i>N. benthamiana</i> is a widely used model for plant-microbe biology and other research applications.
+  It is particularly useful because it is related to tomato and potato and is amenable to virus-induced gene silencing (VIGS)
+  which facilitates the efficient functional study of plant genes.
+</p>
 
-background-color: #3333DD;
-font-color: white;
-border: 1px solid gray;
-filter: alpha(opacity=90); /* IE */
-opacity: 0.9; /* standard */	
-width: 20em;
-padding: 10px;
-font-size: 12px;
-font-weight: bold;
-line-height: 16px; 
-white-space: nowrap;
-z-index: 1;
-}
-
-.blastbutton { 
-    position: ;
-    top: 10px;
-    left: 100px;
-    bottom: 100px;
-    right: 200px;
-    font-size: 18px;
-}
+<p>
+  The draft sequence of <i>N. benthamiana</i> will allow better design of constructs for virus-induced gene-silencing (VIGS) 
+  in order to reduce the possibility of 'off-target' gene silencing [1]. The sequence will be also useful to identify tomato and potato orthologs
+  for comparative genomics with other Solanaceae species and, to retrieve promoter sequences.
+</p>
 
 
-.a { 
-color: white;
-text-decoration: none;
-}
+<center>
+    <a id="blue_button" href="/tools/blast/?db_id=266" target="_blank">BLAST</a>&nbsp;&nbsp;
+    <a id="blue_button" href="ftp://ftp.solgenomics.net/genomes/Nicotiana_benthamiana" target="_blank">FTP Site</a>&nbsp;&nbsp;
+    <a id="blue_button" href="http://solgenomics.net/jbrowse/current/?data=data%2Fjson%2FNiben1.0.1&loc=Niben101Scf00005" target="_blank" style="background-image:none;">JBrowse</a>&nbsp;&nbsp;
+    <a id="blue_button" href="http://vigs.solgenomics.net" target="_blank" style="background-image:none;">VIGS Tool</a>
+</center>
 
-.a:link { 
-color: white;
-text-decoration: none;
-}
-.a:hover {
-font-color: blue;
-text-decoration: none;
-background-color: green;
-}
+<h4>Data Agreement</h4>
 
-.a:visited {
-text-decoration: none;
-color: white;
+<p>
+  Accessing to the <i>Nicotiana benthamiana</i> genome data,
+  you agree not to publish any article containing any analysis of the whole gene space or whole genome scale
+  prior to the publication by the Benthamiana Sequencing and Annotation Consortium (BSAC).
+  These analysis include the identification of complete (whole genome) sets of genomic features such as
+  genes, gene families, regulatory elements, repeat structures, GC content, or any other genome feature, and
+  whole-genome- or chromosome- scale comparisons with other species.
+  Scientific users are free to publish analysis based in a single gene (or group of genes).
+</p>
 
-}
-
-</style>
-
-<center><a class="bigbutton a" href="/tools/blast/index.pl?db_id=196">BLAST <i>N. benthamiana</i> genome</a>&nbsp;&nbsp;<a class="bigbutton a" href="ftp://ftp.solgenomics.net/genomes/Nicotiana_benthamiana">FTP Site</a></center>
-<br />
-<h4>Sequencing approach</h4>
-
-Seedlings were grown in the greenhouse and nuclear DNA was extracted from etiolated leaves. From the DNA, three distinct libraries were synthesized for use in a Illumina HiSeq-2000 sequencer:  1) a paired end library with an insert size of approximately 500 bp insert size; 2) a mate-pair type library with an insert size of 2kb; and 3) a mate pair with an insert size of 5kb.  Sequencing was performed using a full run with 4 lanes of the paired end library and 1 lane each of the mate pair libraries.
-
-<h4>Accession sequenced</h4>
-
-The accession sequenced is referred to as "Nb-1". Seeds can be obtained by contacting Gregory Martin at <a href="mailto:gbm7@cornell.edu">gbm7@cornell.edu</a>.
+<p>
+If you have any questions, please contact Professor <a href="mailto:gbm7@cornell.edu">Gregory Martin</a> or Professor <a href="mailto:aurebg@vt.edu">Aureliano Bombarely</a>.
+</p>
 
 <h4>Assembly Statistics</h4>
 
-<i>N. benthamiana</i> Genome v0.42 Contigs<br /><br />
+<i>N. benthamiana</i> Genome v1.0.1. Statistics from file <a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_benthamiana/assemblies/" target="_blank">Niben.genome.v1.0.1.scaffolds.nrcontigs.fasta</a>
 <br />
+<br />
+
+<table id="assembly_stats_table">
+  <tr>
+    <th>Sequences</th><td>56,094</td>
+  </tr>
+  <tr>
+    <th>Total Length (bp)</th><td>2,969,810,994</td>
+  </tr>
+  <tr>
+    <th>Average length (bp)</th><td>52,943</td>
+  </tr>
+  <tr>
+    <th>Longest sequence (bp)</th><td>2,838,176</td><td>ID = Niben101Scf02793</td>
+  </tr>
+  <tr>
+    <th>Shortest sequence (bp)</th><td>500</td><td>ID = Niben101Ctg00001</td>
+  </tr>
+  <tr>
+    <th>N95 length (bp)</th><td>77,805</td>
+  </tr>
+  <tr>
+    <th>N90 length (bp)</th><td>140,694</td>
+  </tr>
+  <tr>
+    <th>N75 length (bp)</th><td>282,465</td>
+  </tr>
+  <tr>
+    <th>N50 length (bp)</th><td>520,105</td>
+  </tr>
+  <tr>
+    <th>N25 length (bp)</th><td>859,098</td>
+  </tr>
+  <tr>
+    <th>N95 index</th><td>7,206</td>
+  </tr>
+  <tr>
+    <th>N90 index</th><td>5,835</td>
+  </tr>
+  <tr>
+    <th>N75 index</th><td>3,671</td>
+  </tr>
+  <tr>
+    <th>N50 index</th><td>1,738</td>
+  </tr>
+  <tr>
+    <th>N25 index</th><td>612</td>
+  </tr>
+</table>
+
+<!-- <br />
 <font face="courier">
 ==========================================================<br />
-= REPORT: Niben.genome.v0.4.2.scaffolds.nrcontigs.fasta  =<br />
+= REPORT: Niben.genome.v1.0.1.scaffolds.nrcontigs.fasta  =<br />
 ==========================================================<br />
-Sequence Count: 141339 sequences<br />
-Total Length:   2630346647 bp<br />
-Longest sequence:       615591 bp       (ID = Niben.v0.4.1.Scf588)<br />
-Shortest sequence:      201 bp          (ID = Niben.v0.4.1.Ctg23127767)<br />
-Average length: 18610.1970935128 bp<br />
-N95 length:     12828 bp<br />
-N95 index:      37713 sequences<br />
-N90 length:     23201 bp<br />
-N90 index:      30261 sequences<br />
-N75 length:     48209 bp<br />
-N75 index:      18834 sequences<br />
-N50 length:     89778 bp<br />
-N50 index:      8897 sequences<br />
-N25 length:     148847 bp<br />
-N25 index:      3141 sequences<br />
+Sequence Count:  56094 sequences<br />
+Total Length:  2969810994 bp<br />
+Longest sequence:  2838176 bp  (ID = Niben101Scf02793)<br />
+Shortest sequence:  500 bp    (ID = Niben101Ctg00001)<br />
+Average length:  52943.4697828645 bp<br />
+N95 length:  77805 bp<br />
+N95 index:  7206 sequences<br />
+N90 length:  140694 bp<br />
+N90 index:  5835 sequences<br />
+N75 length:  282465 bp<br />
+N75 index:  3671 sequences<br />
+N50 length:  520105 bp<br />
+N50 index:  1738 sequences<br />
+N25 length:  859098 bp<br />
+N25 index:  612 sequences<br />
 ==========================================================<br />
-<br />
+<br /> -->
+<!-- ==========================================================<br />
+= REPORT: Niben.genome.v1.0.1.contigs.fasta              =<br />
 ==========================================================<br />
-= REPORT: Niben.genome.v0.4.2.contigs.fasta              =<br />
+Sequence Count:    288736 sequences<br />
+Total Length:    2489231992 bp<br />
+Longest sequence:    187663 bp    (ID = Niben101Scf01519Ctg029)<br />
+Shortest sequence:    73 bp        (ID = Niben101Scf09989Ctg006)<br />
+Average length:    8621.13484982822 bp<br />
+N95 length:    2947 bp<br />
+N95 index:    157401 sequences<br />
+N90 length:    5315 bp<br />
+N90 index:    126713 sequences<br />
+N75 length:    10798 bp<br />
+N75 index:    79037 sequences<br />
+N50 length:    20126 bp<br />
+N50 index:    37001 sequences<br />
+N25 length:    34140 bp<br />
+N25 index:    12906 sequences<br />
 ==========================================================<br />
-Sequence Count: 461463 sequences<br />
-Total Length:   2462490758 bp<br />
-Longest sequence:       208210 bp       (ID = Niben.v0.4.1.Scf14070.Ctg1)<br />
-Shortest sequence:      201 bp          (ID = Niben.v0.4.1.Ctg23128323)<br />
-Average length: 5336.26912233483 bp<br />
-N95 length:     1564 bp<br />
-N95 index:      215459 sequences<br />
-N90 length:     3403 bp<br />
-N90 index:      163811 sequences<br />
-N75 length:     8068 bp<br />
-N75 index:      96046 sequences<br />
-N50 length:     16480 bp<br />
-N50 index:      42984 sequences<br />
-N25 length:     29264 bp<br />
-N25 index:      14540 sequences<br />
-==========================================================<br />
-<br />
-</font>
+<br /> -->
 
-<!-- i>N. benthamiana</i> Genome v0.3 Contigs<br /><br />
+<h4>Sequencing approach</h4>
 
-<font face="courier">
-Contigs for Nicotiana benthamiana draft genome assembly version 0.3.
-This assembly was made with the run 1: 5 lanes of PE-500bp, 1 lane of MP-2Kb and 1 lane of MP-5Kb, using SOAPdeNovo as assembler (Kmer 63).
-<br />
-Statistics:<br />
-==========================================================<br />
-= REPORT: Niben.genome.v0.3.contigs                      =<br />
-==========================================================<br />
-Sequence Count:	3010735 sequences<br />
-Total Length:	2899410662 bp<br />
-Longest sequence:	103554 bp	(ID = Niben.v0.3.Ctg25014514)<br />
-Shortest sequence:	201 bp		(ID = Niben.v0.3.Ctg6458060)<br />
-Average length:	963.024199074312 bp<br />
-N95 length:	233 bp<br />
-N95 index:	2338365 sequences<br />
-N90 length:	274 bp<br />
-N90 index:	1763126 sequences<br />
-N75 length:	619 bp<br />
-N75 index:	606395 sequences<br />
-N50 length:	4140 bp<br />
-N50 index:	156329 sequences<br />
-N25 length:	10316 bp<br />
-N25 index:	43823 sequences<br />
-==========================================================<br />
-<br />
-N. benthamiana Genome v0.3 Scaffolds + NrContigs<br />
-<br />
-Scaffolds and contigs that are not contained in any scaffold for Nicotiana benthamiana draft genome assembly version 0.3<br />
-<br />
-==========================================================<br />
-= REPORT: Niben.genome.v0.3.scaffolds.nrcontigs          =<br />
-==========================================================<br />
-Sequence Count:	2770496 sequences<br />
-Total Length:	2951043762 bp<br />
-Longest sequence:	104967 bp	(ID = Niben.v0.3.Scf25287388)<br />
-Shortest sequence:	201 bp		(ID = Niben.v0.3.Ctg6458060)<br />
-Average length:	1065.16802839636 bp<br />
-N95 length:	233 bp<br />
-N95 index:	2087056 sequences<br />
-N90 length:	276 bp<br />
-N90 index:	1504209 sequences<br />
-N75 length:	667 bp<br />
-N75 index:	349603 sequences<br />
-N50 length:	9243 bp<br />
-N50 index:	94013 sequences<br />
-N25 length:	15951 bp<br />
-N25 index:	32376 sequences<br />
-==========================================================<br />
-<br />
-</font -->
+<p>
+  Seedlings were grown in the greenhouse and nuclear DNA was extracted from etiolated leaves. 
+  From the DNA, three distinct libraries were synthesized for use in a Illumina HiSeq-2000 sequencer:
+  1) a paired end library with an insert size of approximately 500 bp insert size; 
+  2) a mate-pair type library with an insert size of 2kb; and 
+  3) a mate pair with an insert size of 5kb.
+  Sequencing was performed using a full run with 4 lanes of the paired end library and 1 lane each of the mate pair libraries.
+</p>
 
-<h4>Tools</h4>
+<h4>Accession sequenced</h4>
 
-The draft assembly can be analyzed using the <a href="/tools/blast.pl?id=194">SGN BLAST</a> tool. There are no restrictions on the use of these data except that full genome analyses cannot be published.
+<p>
+  The accession sequenced is referred to as "Nb-1".
+  Seeds can be obtained by contacting Professor <a href="mailto:gbm7@cornell.edu">Gregory Martin</a>.
+</p>
 
+<h4>Links</h4>
+
+<ul>
+  <li>
+    More information about this project at the <a href="http://bti.cornell.edu/research/projects/nicotiana-benthamiana/" target="_blank">BTI <i>Nicotiana benthamiana</i> Project site</a>
+  </li>
+  <li>
+    <a href="http://sydney.edu.au/science/molecular_bioscience/sites/benthamiana/" target="_blank">Austrialia/New Zealand <i>Nicotiana benthamiana</i> sequencing project</a>
+  </li>
+  <li>
+    <a href="http://www.jove.com/video/1292/virus-induced-gene-silencing-vigs-in-nicotiana-benthamiana-and-tomato" target="_blank">On-line tutorial for VIGS procedure</a>
+  </li>
+</ul>
 
 <h4>References</h4>
 
 <ol>
-<li>Bombarely, A., H. G. Rosli, J. Vrebalov, P. Moffett, L. A. Mueller, and G. B. Martin (2012).  A draft genome sequence of Nicotiana benthamiana to enhance molecular plant-microbe biology research. Molecular Plant-Microbe Interactions 25:1523-1530.</li>
-
-<li>Knapp, S. M. W. Chase and J. J. Clarkson (2004).  Nomenclatural changes and a new sectional classification in Nicotiana (Solanaceae). Taxon 53:73-82.</li>
-
-<li>Goodin, M. M., D. Zaitlin, R. A. Naidu, and S. A. Lommel (2008).  Nicotiana benthamiana: Its history and future as a model for plant-pathogen interactions.  Molecular Plant-Microbe Interactions 21:1026.</li>
+  <li>
+    Bombarely, A., H. G. Rosli, J. Vrebalov, P. Moffett, L. A. Mueller, and G. B. Martin (2012).
+    A draft genome sequence of Nicotiana benthamiana to enhance molecular plant-microbe biology research.
+    <a href="http://apsjournals.apsnet.org/doi/abs/10.1094/MPMI-06-12-0148-TA" target="_blank">Molecular Plant-Microbe Interactions 25:1523-1530.</a>
+  </li>
+  <li>
+    Knapp, S. M. W. Chase and J. J. Clarkson (2004).
+    Nomenclatural changes and a new sectional classification in Nicotiana (Solanaceae).
+    <a href="http://www.jstor.org/stable/4135490?seq=1#page_scan_tab_contents" target="_blank">Taxon 53:73-82.</a>
+  </li>
+  <li>
+    Goodin, M. M., D. Zaitlin, R. A. Naidu, and S. A. Lommel (2008).
+    Nicotiana benthamiana: Its history and future as a model for plant-pathogen interactions. 
+    <a href="http://apsjournals.apsnet.org/doi/abs/10.1094/MPMI-21-8-1015" target="_blank">Molecular Plant-Microbe Interactions 21:1026.</a>
+  </li>
 </ol>
-
-<h4>Data Agreement</h4>
-
-By downloading the Nicotiana benthamiana genome information in this directory you 
-accept the following terms: The sequence information can be used freely 
-with the only restriction that a full genome analysis cannot be published based on 
-this data before publication by the sequencing collaborators. 
-<br /><br />
-Please contact Greg Martin (gbm7@cornell.edu) if you have any questions.
-
 
 <h4>Acknowledgments</h4>
 
-Sequencing of the N. benthamiana genome was supported by funds from the Boyce Thompson Institute for Plant Research and National Science Foundation grants IOS-1025642 (A. Collmer and G. Martin), and IOS-0343327 (P. Moffett).
+<p>
+Sequencing of the <i>N. benthamiana</i> genome was supported by funds from the Boyce Thompson Institute for Plant Research and
+ National Science Foundation grants IOS-1025642 (A. Collmer and G. Martin), and IOS-0343327 (P. Moffett).
+</p>
 
-<h4>Online tutorial</h4>
+<br />
+<br />
 
-An on-line tutorial of the VIGS procedure is available on the <a href="http://www.jove.com/video/1292/virus-induced-gene-silencing-vigs-in-nicotiana-benthamiana-and-tomato">JOVE site</a>.
 
+<style>
 
-<h4>Links</h4>
+#assembly_stats_table td {
+  text-align: right;
+  padding-left: 25px;
+}
 
-The Nicotiana benthamiana sequencing project in Austrialia/New Zealand can be accessed throught their <a href="http://sydney.edu.au/science/molecular_bioscience/sites/benthamiana/">website</a>.
-<br /><br />
+#blue_button{
+  background-color:#4387FD;
+  border:0px;
+  border-radius:4px;
+  color:#FFFFFF;
+  font-family:Arial;
+  font-size:16px;
+  height:40px;
+  line-height:38px;
+  vertical-align: top;
+  padding: 5px;
+  text-decoration: none;
+}
+
+#blue_button:hover {
+  box-shadow: 0px 1px 0px 0px #C6C6C6;
+  background-color:#5EA1FF;
+  color:#0000CC;
+  text-decoration: none;
+}
+
+#blue_button:active {
+  position:relative;
+  top:1px;
+}
+
+</style>

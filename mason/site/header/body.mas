@@ -21,6 +21,7 @@
 
 <div id="working" style="text-align : center;">
   <img src="/img/wheel.gif" />
+  <div id="working_msg"></div>
 </div>
 
 
@@ -90,8 +91,8 @@ jQuery(document).ready( function() {
   setUpLists();
 
     jQuery('#working').dialog( { 
-      height: 100,
-      width:  50,
+      height: 120,
+      width:  100,
       modal: true,
       autoOpen: false,
       closeOnEscape: false,

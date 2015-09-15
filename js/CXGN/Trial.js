@@ -25,6 +25,7 @@ function delete_phenotype_data_by_trial_id(trial_id) {
     }
 }
 
+
 function delete_layout_data_by_trial_id(trial_id) { 
     var yes = confirm("Are you sure you want to delete the layout data associated with trial "+trial_id+" ? This action cannot be undone.");
     if (yes) { 
@@ -421,8 +422,8 @@ function trial_detail_page_setup_dialogs() {
 	}
     });
     
-
 }
+
 
 function save_trial_type(type) { 
     var trial_id = get_trial_id();
@@ -497,7 +498,9 @@ function display_trial_description(trial_id) {
 		jQuery('#trial_description_input').html(response.description);
             }
 	},
-	error: function(response) { alert('An error occurred trying to display the description.'); }
+	error: function(response) { 
+	    jQuery('#trial_description').html('An error occurred trying to display the description.'); 
+	}
     });
 }
 
@@ -598,3 +601,126 @@ function get_trial_id() {
     var trial_id = parseInt(jQuery('#trialIDDiv').text());
     return trial_id;
 }
+
+
+
+var $j = jQuery.noConflict();
+
+jQuery(document).ready(function ($) {
+
+
+    $('#upload_trial_coords_link').click(function () {
+        open_upload_trial_coord_dialog();
+    });
+
+    jQuery("#upload_trial_coord_dialog").dialog({
+	autoOpen: false,	
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 75],
+	buttons: {
+            "Cancel": function () {
+                jQuery('#upload_trial_coord_dialog').dialog("close");
+            },
+	    "Ok": function () {
+		upload_trial_coord_file();
+                jQuery('#upload_trial_coord_dialog').dialog("close");
+		
+	    }
+	}
+    });
+
+    
+    $("#trial_coord_upload_spreadsheet_info_dialog").dialog( {
+	autoOpen: false,
+	buttons: { "OK" :  function() { $("#trial_coord_upload_spreadsheet_info_dialog").dialog("close"); },},
+	modal: true,
+	position: ['top', 75],
+	width: 900,
+	autoResize:true
+    });
+
+     $("#trial_coordinates_upload_spreadsheet_format_info").click( function () { 
+	$("#trial_coord_upload_spreadsheet_info_dialog" ).dialog("open");
+	
+    });
+
+    $("#trial_coord_upload_success_dialog_message").dialog({
+	autoOpen: false,
+	modal: true,
+	buttons: {
+            Ok: { id: "dismiss_trial_coord_upload_dialog",
+                  click: function() {
+		      //$("#upload_trial_form").dialog("close");
+		      //$( this ).dialog( "close" );
+		      location.reload();
+                  },
+                  text: "OK"
+                }
+        }
+	
+    });
+ 
+
+     $('#upload_trial_coordinates_form').iframePostForm({
+	json: true,
+	post: function () {
+            var uploadedtrialcoordFile = $("#trial_coordinates_uploaded_file").val();
+	    $('#working').dialog("open");
+            if (uploadedtrialcoordFile === '') {
+		$('#working').dialog("close");
+		alert("No file selected");
+            }
+	},
+	complete: function (response) {
+	    $('#working').dialog("close");
+            if (response.error_string) {
+		$("#upload_trial_coord_error_display tbody").html('');
+		$("#upload_trial_coord_error_display tbody").append(response.error_string);
+
+
+		$(function () {
+                    $("#upload_trial_coord_error_display").dialog({
+			modal: true,
+			autoResize:true,
+			width: 650,
+			position: ['top', 250],
+			title: "Errors in uploaded file",
+			buttons: {
+                            Ok: function () {
+				$(this).dialog("close");
+                            }
+			}
+                    });
+		});
+		return;
+            }
+            if (response.error) {
+		alert(response.error);
+		return;
+            }
+            if (response.success) {
+		$('#trial_coord_upload_success_dialog_message').dialog("open");
+		//alert("File uploaded successfully");
+            }
+	}
+    });
+
+	function upload_trial_coord_file() {
+        var uploadFile = $("#trial_coordinates_uploaded_file").val();
+        $('#upload_trial_coordinates_form').attr("action", "/ajax/breeders/trial/coordsupload");
+        if (uploadFile === '') {
+	    alert("Please select a file");
+	    return;
+        }
+        $("#upload_trial_coordinates_form").submit();
+    }
+
+    function open_upload_trial_coord_dialog() {
+	$('#upload_trial_coord_dialog').dialog("open");
+	//add a blank line to design method select dropdown that dissappears when dropdown is opened 
+
+    }
+
+});

@@ -245,7 +245,8 @@ sub projects_links {
     my $projects = $self->get_projects_details($c, $pr_rs);
 
     my @projects_pages;
-   
+    my $update_marker_count;
+
     foreach my $pr_id (keys %$projects) 
     {
          my $pr_name     = $projects->{$pr_id}{project_name};
@@ -275,8 +276,27 @@ sub projects_links {
          my $marker_count;
          if ($has_phenotype) 
          {
-	     my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
-	     $marker_count = $genotype_prop->{'marker_count'};
+	     my $trial_compatibility_file = $self->trial_compatibility_file($c);
+	     my $size = -s $trial_compatibility_file;
+	   
+	     if (-s $trial_compatibility_file && !$update_marker_count) 
+	     {
+		 my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
+		 $marker_count = $genotype_prop->{'marker_count'};
+
+	     } 
+	     else 
+	     {
+		 $update_marker_count = 1;
+		 my $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id); 
+		 my @markers = split(/\t/, $markers);
+		 $marker_count = scalar(@markers);
+	
+		 my $genoprop = {'project_id' => $pr_id, 'marker_count' => $marker_count};
+		 $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);  
+
+	     }
+
 	 }
 
 	 if (!$marker_count && $has_phenotype) 
@@ -374,23 +394,31 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
       
     my @projects_list;
     my $marker_count;
-       
+    my $update_marker_count;  
+
     foreach my $pr_id (keys %$projects) 
     { 
+	my $trial_compatibility_file = $self->trial_compatibility_file($c);
 
-	my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
-	$marker_count = $genotype_prop->{'marker_count'};
-	
-	if (!$marker_count) 
+
+
+	if (-s $trial_compatibility_file && !$update_marker_count) 
 	{
+	    my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
+	    $marker_count = $genotype_prop->{'marker_count'};
+	} 
+	else 
+	{
+	    $update_marker_count = 1;
 	    my $markers = $c->model("solGS::solGS")->get_genotyping_markers($pr_id); 
 	    my @markers = split(/\t/, $markers);
 	    $marker_count = scalar(@markers);
 
 	    my $genoprop = {'project_id' => $pr_id, 'marker_count' => $marker_count};
-	    $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);	     
-	}         
-	else
+	    $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);   
+	}
+
+	if ($marker_count)
 	{
 	    my $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
 
@@ -3142,7 +3170,7 @@ sub grep_file {
     {
         $file = catfile($dir, $file);
     }
-
+ 
     return $file;
 }
 
@@ -4111,7 +4139,7 @@ sub r_combine_populations  {
     my $trait_id     = $c->stash->{trait_id};
     my $trait_abbr   = $c->stash->{trait_abbr};
     my $trait_info   = $trait_id . "\t" . $trait_abbr;
-    
+
     my $trait_file  = $self->create_tempfile($c, "trait_info_${trait_id}");
     write_file($trait_file, $trait_info);
 

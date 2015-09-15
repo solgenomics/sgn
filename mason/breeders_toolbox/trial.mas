@@ -31,7 +31,7 @@ $design_layout_view
 $user_can_modify => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
 <%perl>
 
@@ -134,6 +134,56 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   <div id="trial_location_select_div" /></div>
 
 </div>
+
+<&| /page/info_section.mas, title=>"Physical Trial Layout", subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
+  <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
+</&>
+
+<& /breeders_toolbox/trial/trial_coords_spreadsheet_upload_format_info.mas &>
+
+<div id="upload_trial_coord_error_display" class="ui-widget">
+  <table>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div id="trial_coord_upload_success_dialog_message" class="ui-widget">
+  The trial coord upload finished.
+</div>
+
+<div id="upload_trial_coord_dialog" title="Upload trial coordinates">
+
+  <&| /page/explanation.mas, title=>'Template information' &>
+    <p>
+      <b>File format information</b>
+      <br>
+      <a id="trial_coordinates_upload_spreadsheet_format_info">Spreadsheet format</a>
+    </p>
+  </&>
+
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_coordinates_form" name="upload_trial_coordinates_form">
+
+    <label for="trial_coordinates_uploaded_file" style="display: inline-block; width: 100px;">Upload trial coordinates file:</label>
+    <input type="file" name="trial_coordinates_uploaded_file" id="trial_coordinates_uploaded_file" encoding="multipart/form-data" />
+
+    </form>
+
+</div> 
+
+<!--<style>
+  div.left {
+    float: left;
+    clear: both;
+  }
+.ui-autocomplete {
+  max-height: 100px;
+  overflow-y: auto;
+  /* prevent horizontal scrollbar */
+  overflow-x: hidden;
+}
+  
+</style> -->
+
 
 <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
 

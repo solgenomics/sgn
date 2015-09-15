@@ -1,0 +1,160 @@
+
+<%args>
+$trial_id 
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'kinetics.kinetic.js' ] &>
+
+
+    <style>
+      body {
+        margin: 10px;
+        padding: 10px;
+      }
+	#container {
+		//border:2px dashed #000;
+		height: 490px;
+		width: 700px;
+		overflow: auto;
+		//overflow: scroll;
+		display: none;
+	}
+    </style>
+
+ <div id="container" ></div>
+
+  
+ <script defer="defer">
+var trial_id = <% $trial_id %>;
+//alert("trial_id: "+trial_id)
+   jQuery(document).ready( function() { 
+	
+	jQuery.ajax( { 
+	     url: '/ajax/breeders/trial/'+trial_id+'/coords',
+	     success: function(response) { 
+		if (response.coord_col && response.coord_row){
+			jQuery("#container").css({"display": "inline-block", "overflow": "auto"});
+			//$("#container").css({"display": "inline-block", "overflow": "auto"});
+			//$("#container").css("display","inline-block"); 
+		} 
+		//alert("plot_id: "+response.plot_id);
+		//alert("plot_number: "+response.plot_number);
+		var width = 65;
+		var plot_counter = 0;
+	     	var max_row = response.max_row;
+	    	var max_col = response.max_col;
+		var stage = new Kinetic.Stage({
+        	container: 'container',
+        	//width: 2000,
+        	//height: 2000,
+		width: max_col * width + 65,
+        	height: max_row * width + 65,
+	
+     		});
+
+     		var plot_layer = new Kinetic.Layer();
+      		var popup_layer = new Kinetic.Layer();	
+      		
+		for  (y = 0; y < max_row; y = y + 1) {
+			for ( x = 0; x < max_col; x = x + 1){
+				plot_counter++;
+				if (response.plot_number[y][x]){ 
+					
+				} else { 
+					response.plot_number[y][x] = ''; 
+					}				
+				draw_rect(stage, plot_layer, popup_layer, response.plot_msg[y][x], x, y, max_col, response.coord_col[x], response.coord_row[y], plot_counter, response.plot_id[y][x], response.plot_number[y][x]);
+			}
+		}
+		stage.add(plot_layer);
+		stage.add(popup_layer);
+
+	    },
+             error: function(reponse) { 
+              // alert('an error occurred');
+             }
+        });
+
+    function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, max_col, col_number, row_number, plot_counter, plot_id, plot_number){
+	var width = 65;
+	var popup_x = width;
+        var popup_width = 200;
+	x = x * width;
+	y = y * width;
+	if (x + width > max_col * width / 2){
+		popup_x = -1 * popup_width;
+	}	
+	var myRectangle = new Kinetic.Rect({
+	x:x,
+	y:y,
+	width:width,
+	height:width,
+	fill:'#C0C0C0',
+	stroke:'black',
+	strokeWidth:3,
+      });
+	
+	var plot_txt_info = new Kinetic.Text({
+        x:x +10,
+        y:y + width/2,
+        //text: plot_counter,
+	text: plot_number,
+        fontSize: 20, 
+        fontFamily: 'Arial',
+        fill: "white"
+      });
+	
+	
+      myRectangle.on('mouseover', function() {
+	
+	this.setFill('#ddd');
+	plot_layer.draw();
+
+	var plot_txt = new Kinetic.Text({
+        x: x+popup_x+5+10,
+        y: y+14,
+        text: plot_msg,
+        fontSize: 14, 
+        fontFamily: 'Arial',
+        fill: "white"
+      });
+
+         var plot_popup = new Kinetic.Rect({
+         x: x+popup_x+10,
+         y: y+8,
+         fill: '#000',
+      	     opacity: 0.6,
+         width: popup_width,
+         height: 80,
+         cornerRadius: 10
+      });
+
+      
+      popup_layer.add(plot_popup);
+      popup_layer.add(plot_txt);
+      popup_layer.draw();
+
+      });
+
+      myRectangle.on('mouseout', function() {
+
+	this.setFill('#C0C0C0');
+	plot_layer.draw();
+
+       	popup_layer.removeChildren();
+	popup_layer.draw();
+
+      });
+
+       myRectangle.on('mousedown', function() {
+       	window.location.href = '/stock/'+plot_id+'/view';	
+      });
+
+      plot_layer.add(myRectangle);
+      plot_layer.add(plot_txt_info);
+
+ }
+     
+});
+
+</script>

@@ -187,6 +187,9 @@ sub locus_search :Path('/ajax/search/loci') Args(0) {
     while (my $l = $rs2->next()) { 
 	my $common_name_id = $l->common_name_id;
 	my $locus_id = $l->get_column("locus_id") ;
+	my $dbh = $c->dbc->dbh() ;
+	my $locus = CXGN::Phenome::Locus->new($dbh, $locus_id);
+	my $common_name = $locus->get_common_name;
 	my $locus_name = $l->locus_name;
 	my $locus = $l->locus;
 	my $locus_symbol = $l->locus_symbol;
@@ -196,7 +199,7 @@ sub locus_search :Path('/ajax/search/loci') Args(0) {
 	    $allele_string .= $a->allele_symbol . ", ";
 	}
 	$allele_string = substr($allele_string, 0, -2) ;
-	push @result, [ $common_name_id, "<a href=\"/locus/$locus_id/view\">$locus_name</a>", $locus_symbol, $allele_string ];
+	push @result, [ $common_name, "<a href=\"/locus/$locus_id/view\">$locus_name</a>", $locus_symbol, $allele_string ];
     }
 
     $c->stash->{rest} = { data => [ @result ], draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total };

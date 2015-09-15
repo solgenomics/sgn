@@ -52,7 +52,7 @@ my @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
 
 my $list_id = CXGN::List::create_list($t->dbh(), 'test_list2', 'test_desc', 41);
 
-print STDERR "CREATED LIST WITH ID $list_id\n";
+#print STDERR "CREATED LIST WITH ID $list_id\n";
 
 my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
 
@@ -102,7 +102,7 @@ ok(!$list->exists_element("blabla"), 'exists element after delete');
 
 my $lists = CXGN::List::available_lists($t->dbh(), 41);
 
-print STDERR Dumper($lists);
+#print STDERR Dumper($lists);
 @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
 
 is_deeply(\@lists_sorted, [
@@ -156,7 +156,7 @@ $error = CXGN::List::delete_list($t->dbh(), 5);
 
 my $lists = CXGN::List::available_lists($t->dbh(), 41);
 
-print STDERR Dumper($lists);
+#print STDERR Dumper($lists);
 
 @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
 
