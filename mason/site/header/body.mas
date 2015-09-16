@@ -1,4 +1,3 @@
-
 <div id="outercontainer">
   <a name="top"></a>
 
@@ -6,31 +5,19 @@
     <span id="clone_cart_count"></span> clone(s) in cart (<a class="toplink" style="text-decoration: underline" href="/search/clone-order.pl">order</a>)
   </div>
 
+  <& /site/header/browser_alert.mas &>
   <& /site/toolbar.mas &>
   <& /system_message.mas &>
 
-
 <script defer="defer">
+
 jQuery(document).ready( function() { 
 
   setUpLogin();
   setUpLists();
 
-//    jQuery('#working').dialog( { 
-//      height: 120,
-//      width:  100,
-//      modal: true,
-//      autoOpen: false,
-//      closeOnEscape: false,
-      // open: function() {jQuery(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide(); },
-//      open: function(event, ui) { jQuery(".ui-dialog-titlebar-close", ui.dialog).hide(); jQuery('.ui-dialog-titlebar-close').blur();},
-//	  
-//      title: 'Working...'
-//    });
-
 });
 
 </script>
-
 
 <!-- END HEADER -->
