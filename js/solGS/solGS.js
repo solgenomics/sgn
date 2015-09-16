@@ -58,17 +58,27 @@ function  askUser(page, args) {
 
 
 function checkUserLogin (page, args) {
-    
+   
+    if (args === undefined) {	
+	args = {};
+    }
     jQuery.ajax({
 	type    : 'POST',
 	dataType: 'json',
 	url     : '/solgs/check/user/login/',
 	success : function(response) {
             if (response.loggedin) {
-		//include in response user data		
+		var contact = response.contact;
+		
+		args['user_name']  = contact.name;
+		args['user_email'] = contact.email;
+
 		getProfileDialog(page, args);
+
             } else {
+
 		loginAlert();
+
 	    }
 	}
     });
@@ -179,33 +189,31 @@ function wrapTraitsForm () {
 
 function getProfileDialog (page, args) {
   
-    if (!args) {
-	if (page.match(/solgs\/trait\//)) {
-	    args = getArgsFromUrl(page);
-	}
+    if (page.match(/solgs\/trait\//)) {
+	args = getArgsFromUrl(page, args);
     }
-    
-    var form = getProfileForm();
-    var analysisType;
-    
-    if (args) {
-	analysisType = args.analysis_type;
-	args = JSON.stringify(args);
-    }
-
+      
+    var form = getProfileForm(args);
+   
     jQuery('<div />', {id: 'email-form'})
 	.html(form)
 	.dialog({	
 	    height : 300,
 	    width  : 300,
 	    modal  : true,
-	    title  : 'Submit your email',
+	    title  : 'Name your analysis.',
  	    buttons: {
 		Submit: function() { 
-		    var userName     = jQuery('#user_name').val();
-		    var userEmail    = jQuery('#user_email').val();
+  
+		    var userName  = jQuery("#user_name").val();		
+		    var userEmail = jQuery("#user_email").val();
+	
 		    var analysisName = jQuery('#analysis_name').val();
-		     //validate input
+		    var analysisType = args.analysis_type;
+		 
+		    args['user_email'] = userEmail;
+		    args = JSON.stringify(args);
+
 		    var analysisProfile = {
 			'user_name'    : userName, 
 			'user_email'   : userEmail,
@@ -228,18 +236,25 @@ function getProfileDialog (page, args) {
 }
 
 
-function getArgsFromUrl (url) {
- 
-    var args;
-    
+function getArgsFromUrl (url, args) {
+     
     if (url.match(/solgs\/trait\//)) {
 	var urlStr = url.split(/\/+/);
-   
-	args = {
-	    'trait_id'      : [ urlStr[4] ], 
-	    'population_id' : [ urlStr[6] ], 
-	    'analysis_type' : 'single model',
-	};
+	
+	if (!args) {
+	    args = {
+		'trait_id'      : [ urlStr[4] ], 
+		'population_id' : [ urlStr[6] ], 
+		'analysis_type' : 'single model',
+	    };
+	}
+	else {
+
+	    args['trait_id']      = [ urlStr[4]  ];
+	    args['population_id'] = [  urlStr[6] ] ;
+	    args['analysis_type'] = 'single model';
+	
+	}
     }
     
     return args;
@@ -247,22 +262,44 @@ function getArgsFromUrl (url) {
 }
 
 
-function getProfileForm () {
-  //remove user name; ask for email depending on whether there is one in the db or not.
-    var emailForm = '<p>Please fill in your email.</p>'
+function getProfileForm (args) {
+
+    var emailTr = '';
+    if(!args.user_email) {
+	
+	emailTr = '<tr>'
+	    +  '<td>Email:</td>'
+	    +  '<td><input type="text" name="user_email" id="user_email"></td>' 
+	    + '</tr>';
+
+    } else {
+	
+	  emailTr = "<input type=\"hidden\" name=\"user_email\" id=\"user_email\" value=\"" + args.user_email + "\"/>"; 	
+    }
+
+    var userNameTr = '';
+     
+    if(!args.user_name) {
+
+	userNameTr = '<tr>'
+	     +  '<td>Your name:</td>'
+	     +  '<td><input  type="text" name="user_name" id="user_name"></td>'
+	     + '</tr>';
+
+    } else {
+	
+	userNameTr =  "<input type=\"hidden\" name=\"user_name\" id=\"user_name\" value=\"" + args.user_name + "\"/>";
+
+    }
+    
+    var emailForm = '<p>Please fill in.</p>'
 	+'<table>'
-	+ '<tr>'
-	+  '<td>Your name:</td>'
-	+  '<td><input  type="text" name="user_name" id="user_name"></td>'
-	+ '</tr>'
+	+ userNameTr
 	+ '<tr>'
 	+  '<td>Your analysis name:</td>'
 	+  '<td><input  type="text" name="analysis_name" id="analysis_name"></td>'
 	+  '</tr>'
-	+ '<tr>'
-	+  '<td>Email:</td>'
-	+  '<td><input type="text" name="user_email" id="user_email"></td>' 
-	+ '</tr>'
+        +  emailTr
 	+'</table>';
    
     return emailForm;
