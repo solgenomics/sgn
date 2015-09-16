@@ -34,8 +34,9 @@ sub check_user_login :Path('/solgs/check/user/login') Args(0) {
 	  : $private_email;
 
       $ret->{loggedin} = 1;
-      my $user_profile = { 'name' => $first_name, 'email' => $email};
-      $ret->{user_profile} = $user_profile;
+      my $contact = { 'name' => $first_name, 'email' => $email};
+     
+      $ret->{contact} = $contact;
   }
    
   $ret = to_json($ret);
