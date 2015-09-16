@@ -455,7 +455,7 @@ CXGN.List.prototype = {
 	    lists = this.availableLists();
 	}
 
-	var html = '<select class="form-control" id="'+div_name+'_list_select" name="'+div_name+'_list_select" >';
+	var html = '<select class="form-control input-sm" id="'+div_name+'_list_select" name="'+div_name+'_list_select" >';
 	if (empty_element) { 
 	    html += '<option value="">'+empty_element+'</option>\n';
         } 
@@ -663,13 +663,13 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 	    type = options.listType;
 	}
     }
-    html = '<input type="text" id="'+dataDiv+'_new_list_name" size="8" />';
-    html += '<input type="hidden" id="'+dataDiv+'_list_type" value="'+type+'" />';
-    html += '<input id="'+dataDiv+'_add_to_new_list" type="button" value="add to new list" /><br />';
+    html = '<div class="row"><div class="col-sm-6" style="margin-right:0px; padding-right:0px;"><input class="form-control input-sm" type="text" id="'+dataDiv+'_new_list_name" placeholder="New list..." />';
+    html += '</div><div class="col-sm-6" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;"><input type="hidden" id="'+dataDiv+'_list_type" value="'+type+'" />';
+    html += '<input class="btn btn-primary btn-sm" id="'+dataDiv+'_add_to_new_list" type="button" value="add to new list" /></div></div><br />';
 
-    html += lo.listSelect(dataDiv, [ type ]);
+    html += '<div class="row"><div class="col-sm-6" style="margin-right:0px; padding-right:0px;">'+lo.listSelect(dataDiv, [ type ]);
 
-    html += '<input id="'+dataDiv+'_button" type="button" value="add to list" />';
+    html += '</div><div class="col-sm-6" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;"><input class="btn btn-primary btn-sm" id="'+dataDiv+'_button" type="button" value="add to list" /></div></div>';
    
     jQuery('#'+listMenuDiv).html(html);
 
