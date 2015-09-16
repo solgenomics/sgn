@@ -16,18 +16,6 @@ jQuery(document).ready( function() {
   setUpLogin();
   setUpLists();
 
-//    jQuery('#working').dialog( { 
-//      height: 120,
-//      width:  100,
-//      modal: true,
-//      autoOpen: false,
-//      closeOnEscape: false,
-      // open: function() {jQuery(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide(); },
-//      open: function(event, ui) { jQuery(".ui-dialog-titlebar-close", ui.dialog).hide(); jQuery('.ui-dialog-titlebar-close').blur();},
-//	  
-//      title: 'Working...'
-//    });
-
 });
 
 </script>
