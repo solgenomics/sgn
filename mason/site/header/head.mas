@@ -1,6 +1,6 @@
-  <!-- INSERT_HEAD_PRE_HTML -->
+<!-- INSERT_HEAD_PRE_HTML -->
 
-  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <!-- <link rel="stylesheet" href="/css/sgn.css" type="text/css" /> -->
@@ -17,16 +17,16 @@
   <!-- <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"> -->
   <link rel="stylesheet" href="/css/bootstrap.min.css">
 
-  <script language="javascript" type="text/javascript">
-     JSAN = {};
-     JSAN.use = function() {};
-     MochiKit = {__export__: false};
-  </script>
+<script language="javascript" type="text/javascript">
+   JSAN = {};
+   JSAN.use = function() {};
+   MochiKit = {__export__: false};
+</script>
 
-  <& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "jquerymigrate", "CXGN.Effects", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min" ] &>
+<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "jquerymigrate", "CXGN.Effects", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min" ] &>
 
-  <& /site/header/local_head.mas &>
-  <& /site/header/analytics.mas &>
+<& /site/header/local_head.mas &>
+<& /site/header/analytics.mas &>
 
 
-  <!-- INSERT_HEAD_POST_HTML -->
+<!-- INSERT_HEAD_POST_HTML -->

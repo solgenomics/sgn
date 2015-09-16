@@ -128,11 +128,12 @@ a.mytools, a.mytools:link, a.mytools:visited {
   line-height: 1.38;
   margin-left: 1em;
 }
-a.external, a[href ^="http:"] { 
-	background: url(/documents/img/external.png) center right no-repeat;
-	padding-right: 13px;
-}
 
+/*a.external, a[href ^="http:"] {
+  background: url(/documents/img/external.png) center right no-repeat;
+  padding-right: 13px;
+}
+*/
 a.footer {
 	background: none;
 	padding-right: 2px;
