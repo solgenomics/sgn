@@ -7,7 +7,7 @@
 
 <& /page/page_title.mas, title=>'Search People' &>
 
-<div class="row" people_search_form>
+<div class="row" id="people_search_form" >
   <div class="col-sm-1">
   </div>
   <div class="col-sm-10 well">
