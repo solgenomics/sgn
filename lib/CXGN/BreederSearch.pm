@@ -291,17 +291,22 @@ sub get_phenotype_info {
 
     print STDERR "rep_type_id: $rep_type_id \n\n";
 
+    print STDERR "trial_sql: $trial_sql \n\n";
+
+
+
     my $where_clause = "";
    
     if (@where_clause>0) {
 	$where_clause .= $rep_type_id ? "WHERE (stockprop.type_id = $rep_type_id OR stockprop.type_id IS NULL) " : "WHERE stockprop.type_id IS NULL";
-	$where_clause .= $block_number_type_id  ? "AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)" : "AND block_number.type_id IS NULL";
+	$where_clause .= $block_number_type_id  ? " AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)" : " AND block_number.type_id IS NULL";
 	$where_clause .= " AND " . (join (" AND " , @where_clause));
 
     }
 
     my $order_clause = " order by project.name, plot.uniquename";
 
+=test_query
     my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, cvterm.name, stockprop.value, block_number.value AS rep
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) 
              JOIN stock ON (object_id=stock.stock_id) 
@@ -319,7 +324,47 @@ sub get_phenotype_info {
              JOIN project USING(project_id)  
              $where_clause
              $order_clause";
-    
+
+
+#    my $q="SELECT project.project_id,project.name,project.description FROM project WHERE project.project_id in ($trial_sql) order by project.name";
+
+    my $q="SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, cvterm.name, stockprop.value, block_number.value AS rep
+       FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
+       JOIN stock ON (object_id=stock.stock_id)
+       LEFT JOIN stockprop ON (plot.stock_id=stockprop.stock_id)
+       LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id)
+       JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id)
+       JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
+       JOIN nd_geolocation USING(nd_geolocation_id)
+       JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
+       JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
+       JOIN cv USING(cv_id)
+       JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
+       JOIN db USING(db_id)
+       JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
+       JOIN project USING(project_id)
+       WHERE stockprop.type_id IS NULL OR block_number.type_id IS NULL OR project.project_id in ($trial_sql)
+       order by project.name, plot.uniquename";
+=cut
+
+    my $q="SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, cvterm.name, stockprop.value, block_number.value AS rep                                                                                                                                                                                   
+       FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)                                                                                                         
+       JOIN stock ON (object_id=stock.stock_id)                                                                                                                                         
+       LEFT JOIN stockprop ON (plot.stock_id=stockprop.stock_id)                                                                                                                        
+       LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id)                                                                                                     
+       JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id)                                                                                                          
+       JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)                                                                                      
+       JOIN nd_geolocation USING(nd_geolocation_id)                                                                                                                                     
+       JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)                                                                        
+       JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)                                                                                         
+       JOIN cv USING(cv_id)                                                                                                                                                             
+       JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)                                                                                                                             
+       JOIN db USING(db_id)                                                                                                                                                             
+       JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)                                                                            
+       JOIN project USING(project_id)                                                                                                                                                   
+       WHERE project.project_id in ($trial_sql)                                                                         
+       order by project.name, plot.uniquename";
+
     print STDERR "QUERY: $q\n\n";
     my $h = $self->dbh()->prepare($q);
     $h->execute();
