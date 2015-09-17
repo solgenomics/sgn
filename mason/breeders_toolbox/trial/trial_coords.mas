@@ -147,6 +147,7 @@ var trial_id = <% $trial_id %>;
       });
 
        myRectangle.on('mousedown', function() {
+
        	window.location.href = '/stock/'+plot_id+'/view';	
       });
 
