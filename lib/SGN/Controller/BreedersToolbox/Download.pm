@@ -249,7 +249,7 @@ sub phenotype_download_excel {
 
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$program_name."_phenotypes_".$location."_".$trial_id."_XXXXX");
 
-    my $file_path = $tempfile.".xls";
+    my $file_path = $c->config->{basepath}."/".$tempfile.".xls";
     move($tempfile, $file_path);
     my $ss = Spreadsheet::WriteExcel->new($file_path);
     my $ws = $ss->add_worksheet();
