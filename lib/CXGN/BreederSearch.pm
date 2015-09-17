@@ -291,6 +291,10 @@ sub get_phenotype_info {
 
     print STDERR "rep_type_id: $rep_type_id \n\n";
 
+    print STDERR "trial_sql: $trial_sql \n\n";
+
+
+
     my $where_clause = "";
    
     if (@where_clause>0) {
