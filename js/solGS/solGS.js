@@ -201,7 +201,7 @@ function getProfileDialog (page, args) {
 	    height : 300,
 	    width  : 300,
 	    modal  : true,
-	    title  : 'Name your analysis.',
+	    title  : 'Info about your analysis.',
  	    buttons: {
 		Submit: function() { 
   
@@ -264,42 +264,30 @@ function getArgsFromUrl (url, args) {
 
 function getProfileForm (args) {
 
-    var emailTr = '';
-    if(!args.user_email) {
-	
-	emailTr = '<tr>'
-	    +  '<td>Email:</td>'
-	    +  '<td><input type="text" name="user_email" id="user_email"></td>' 
-	    + '</tr>';
-
-    } else {
-	
-	  emailTr = "<input type=\"hidden\" name=\"user_email\" id=\"user_email\" value=\"" + args.user_email + "\"/>"; 	
-    }
-
-    var userNameTr = '';
-     
-    if(!args.user_name) {
-
-	userNameTr = '<tr>'
-	     +  '<td>Your name:</td>'
-	     +  '<td><input  type="text" name="user_name" id="user_name"></td>'
-	     + '</tr>';
-
-    } else {
-	
-	userNameTr =  "<input type=\"hidden\" name=\"user_name\" id=\"user_name\" value=\"" + args.user_name + "\"/>";
-
+    var email = '';
+    if (args.user_email) {
+	email = args.user_email;
     }
     
-    var emailForm = '<p>Please fill in.</p>'
+    var userName = '';
+    if (args.user_name) {
+	userName = args.user_name;
+    }
+    
+    var emailForm = '<p>Please fill in your:</p>'
 	+'<table>'
-	+ userNameTr
-	+ '<tr>'
-	+  '<td>Your analysis name:</td>'
+	+  '<tr>'
+     	+  '<td>name:</td>'
+     	+  '<td><input type="text" name="user_email" id="user_email" value=\"' + userName + '\"/></td>' 
+     	+  '</tr>'
+	+  '<tr>'
+	+  '<td>analysis name:</td>'
 	+  '<td><input  type="text" name="analysis_name" id="analysis_name"></td>'
 	+  '</tr>'
-        +  emailTr
+        +  '<tr>'
+     	+  '<td>email:</td>'
+     	+  '<td><input type="text" name="user_email" id="user_email" value=\"' + email + '\"/></td>' 
+     	+  '</tr>'
 	+'</table>';
    
     return emailForm;
