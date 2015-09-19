@@ -34,39 +34,112 @@ __PACKAGE__->config(
 
 sub verify_accession_list : Path('/ajax/accession_list/verify') : ActionClass('REST') { }
 
+sub verify_accession_list_GET : Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    $self->verify_accession_list_POST($c);
+}
+
 sub verify_accession_list_POST : Args(0) {
   my ($self, $c) = @_;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
   my $accession_list_json = $c->req->param('accession_list');
+  my @accession_list = @{_parse_list_from_json($accession_list_json)};
+
   my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
-  my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
-  my $fuzzy_search_result;
-  my $max_distance = 0.2;
-  my @accession_list;
-  my @found_accessions;
-  my @fuzzy_accessions;
-  my @absent_accessions;
 
-
-  if (!$c->user()) {
-    $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
-    return;
+  if ($do_fuzzy_search) { 
+      $self->do_fuzzy_search($c, \@accession_list);
   }
-  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
-    return;
+  else { 
+      $self->do_exact_search($c, \@accession_list);
   }
 
-  @accession_list = @{_parse_list_from_json($accession_list_json)};
+}
 
-  $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
-  print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
+sub do_fuzzy_search { 
+    my $self = shift;
+    my $c = shift;
+    my $accession_list = shift;
+    
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
+    my $fuzzy_search_result;
+    my $max_distance = 0.2;
+    my @accession_list = @$accession_list;
+    my @found_accessions;
+    my @fuzzy_accessions;
+    my @absent_accessions;
+    
+    if (!$c->user()) {
+	$c->stash->{rest} = {error => "You need to be logged in to add accessions." };
+	return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+	$c->stash->{rest} = {error =>  "You have insufficient privileges to add accessions." };
+	return;
+    }
+   
+    $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
+    print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
+    
+    @found_accessions = $fuzzy_search_result->{'found'};
+    @fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+    @absent_accessions = $fuzzy_search_result->{'absent'};
 
-  @found_accessions = $fuzzy_search_result->{'found'};
-  @fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
-  @absent_accessions = $fuzzy_search_result->{'absent'};
-  $c->stash->{rest} = {success => "1", absent => @absent_accessions, fuzzy => @fuzzy_accessions, found => @found_accessions};
-  return;
+    $c->stash->{rest} = {
+	success => "1", 
+	absent => @absent_accessions, 
+	fuzzy => @fuzzy_accessions, 
+	found => @found_accessions
+    };
+    return;
+}
+
+sub do_exact_search { 
+    my $self = shift;
+    my $c = shift;
+    my $accession_list = shift;
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    
+    my @found_accessions;
+    my @absent_accessions;
+    my @fuzzy_accessions;
+
+    foreach my $a (@$accession_list) { 
+	print STDERR "CHECKING $a...\n";
+	my $exact_search_rs = $schema->resultset("Stock::Stock")->search( { -or => { name => { -ilike => $a}, uniquename => { -ilike => $a }}});
+	if ($exact_search_rs->count() > 0) { 
+	    push @found_accessions, { unique_name => $a, matched_string => $a };
+	}
+	else { 
+	    my $exact_synonym_rs = $schema->resultset("Stock::Stockprop")->search( 
+		{ value => 
+		  { 
+		      -ilike => $a }, 
+		  'lower(type.name)' => { like => '%synonym%' }, 
+		},
+		{join => 'type' }
+		);
+	    if ($exact_synonym_rs ->count() > 0) { 
+		push @found_accessions, { unique_name => $a,  matched_string => $a};
+		push @fuzzy_accessions, { unique_name => $a,  matched_string => $a};
+	    }
+	    else { 
+		push @absent_accessions, $a;
+	    }
+	}
+    }
+
+    my $rest = {
+	success => "1", 
+	absent => \@absent_accessions, 
+	found => \@found_accessions, 
+	fuzzy => \@fuzzy_accessions 
+    };
+    print STDERR Dumper($rest);
+    $c->stash->{rest} = $rest;
 }
 
 sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') { }
