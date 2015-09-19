@@ -24,6 +24,10 @@ use String::Approx 'adistr';
 use Moose;
 use Data::Dumper;
 
+has 'case_insensitive' => ( isa => 'Bool',
+			    is => 'rw',
+    );
+
 sub get_matches {
     my $self = shift;
     my $query_string = shift;
@@ -37,6 +41,11 @@ sub get_matches {
     my @strings_sorted_distance;
     my @strings_sorted_length;
     my $query_length = length $query_string;
+
+    if ($self->case_insensitive()) { 
+	$query_string = uc($query_string);
+	@string_array = map { uc($_) } @string_array;
+    }
 
     #no fuzzy search if max distance is 0
     if ($max_distance == 0) {
