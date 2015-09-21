@@ -23,7 +23,9 @@ my $bcs_schema = Bio::Chado::Schema->connect($dsn, "postgres", $pw);
     
 my $female_parent_type_id = $bcs_schema->resultset("Cv::Cvterm")->find( { name => "female_parent" })->cvterm_id();
 
-my $male_parent_id = $bcs_schema->resultset("Cv::Cvterm")->find( { name=> "male_parent" })->cvterm_id();
+my $male_parent_type_id = $bcs_schema->resultset("Cv::Cvterm")->find( { name=> "male_parent" })->cvterm_id();
+
+my $total_count = 0;
 
 open(my $F, "<", $file) || die " Can't open file $file\n";
 while (<$F>) { 
@@ -45,15 +47,18 @@ while (<$F>) {
     }
 
 
-    my $parent_rs = $bcs_schema->resultset("Stock::StockRelationship")->search( { object_id => $stock_row->stock_id(), type_id => { -in => [ $female_parent_id, $male_parent_id] } });
+    my $parent_rs = $bcs_schema->resultset("Stock::StockRelationship")->search( { object_id => $stock_row->stock_id(), type_id => { -in => [ $female_parent_type_id, $male_parent_type_id] } });
 
     print STDERR "Found ".$parent_rs->count()." parents for stock $stock\n";
 
     while (my $p = $parent_rs->next()) { 
 	print STDERR "Removing parent with id ".$p->subject_id()."...\n";
-	#$p->delete();
+	$p->delete();
+	$total_count++;
     }
 }
+
+print STDERR "Done. Total relationships deleted: $total_count.\n";
 	
     
 

@@ -13,11 +13,13 @@
 % }
 
 <script defer="defer">
-  
-  jQuery(document).ready( function() { 
-    setUpLogin();
-    setUpLists();
-  });
+
+jQuery(document).ready( function() { 
+
+  setUpLogin();
+  setUpLists();
+
+});
 
 </script>
 

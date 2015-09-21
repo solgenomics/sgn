@@ -333,28 +333,48 @@ sub check_stock_type {
 
 sub set_project_genotypeprop {
     my ($self, $prop) = @_;
-    
-    
+        
     my $cv_id= $self->schema->resultset("Cv::Cv")
-	->find_or_create({ 'name' => 'project_property'})->cv_id;
+	->find_or_create({ 'name' => 'project_property'})
+	->cv_id;
    
     my $db_id = $self->schema->resultset("General::Db")
-	->find_or_new({ 'name' => 'null'})->db_id;
+	->find_or_new({ 'name' => 'null'})
+	->db_id;
  
     my $dbxref_id = $self->schema->resultset("General::Dbxref")
-	->find_or_create({'accession' => 'marker_count', 'db_id' => $db_id})->dbxref_id;
+	->find_or_create({'accession' => 'marker_count', 'db_id' => $db_id})
+	->dbxref_id;
  
-    my $cvterm_id = $self->schema->resultset("Cv::Cvterm")->find_or_create(
-	{ name      => 'marker_count',
-	  cv_id     => $cv_id,
-	  dbxref_id => $dbxref_id,
-	})->cvterm_id;
- 
-    my $project_rs = $self->schema->resultset("Project::Projectprop")
-	->find_or_create({ project_id   => $prop->{'project_id'},
-			   type_id      => $cvterm_id,
-			   value        => $prop->{'marker_count'},
-			 });
+    my $cvterm_id = $self->schema->resultset("Cv::Cvterm")
+	->find_or_create({ name => 'marker_count', cv_id => $cv_id, dbxref_id => $dbxref_id,})
+	->cvterm_id;
+   
+    my $marker_rs = $self->schema->resultset("Project::Projectprop")
+	->search({project_id => $prop->{'project_id'}, type_id => $cvterm_id});
+
+    my $marker;
+   
+    while (my $row = $marker_rs->next) 
+    {
+	$marker = $row->value;
+    }
+  
+    if ($marker) 
+    {
+	my $project_rs = $self->schema->resultset("Project::Projectprop")
+	    ->search({ project_id => $prop->{'project_id'}, type_id => $cvterm_id})
+	    ->update({ value => $prop->{'marker_count'} });
+    } 
+    else 
+    {
+	my $project_rs = $self->schema->resultset("Project::Projectprop")
+	    ->create({ 
+		project_id => $prop->{'project_id'}, 
+		type_id => $cvterm_id, 
+		value => $prop->{'marker_count'} 
+	    });
+    }
 
 }
 
