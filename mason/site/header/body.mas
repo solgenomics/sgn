@@ -8,6 +8,9 @@
   <& /site/header/browser_alert.mas &>
   <& /site/toolbar.mas &>
   <& /system_message.mas &>
+% if ( $c->req->uri->path_query =~ "logout=yes") {  
+  <& /logout_message.mas &>
+% }
 
 <script defer="defer">
   

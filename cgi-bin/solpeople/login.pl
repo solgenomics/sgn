@@ -51,8 +51,7 @@ else {
 if ( $logout && $logout eq "yes" )              #if we are in the process of logging out
 {
     $login_controller->logout_user();
-    $page->message_page(
-        "You have successfully logged out. Thanks for using ".$context->get_conf("project_name"));
+
 }
 
 
