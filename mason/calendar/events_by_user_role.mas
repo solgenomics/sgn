@@ -186,11 +186,8 @@
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Web URL: </label>
       	      <div class="col-sm-10">
-	        <div class="input-group">
-		  <input type="hidden" id="edit_event_projectprop_id" name="edit_event_projectprop_id" />
-		  <span class="input-group-addon" id="basic-addon2">http://www.</span>
-  		  <input type="text" name="edit_event_url" id="edit_event_url" class="form-control" placeholder="example.com" aria-describedby="basic-addon2">
-  		</div>
+		<input type="hidden" id="edit_event_projectprop_id" name="edit_event_projectprop_id" />
+  		<input type="text" name="edit_event_url" id="edit_event_url" class="form-control" placeholder="example.com">
               </div>
 	    </div>
           </form>      
@@ -215,14 +212,14 @@ $(document).ready(function() {
     var fcSources = {
          month_view: {
 	     url: '/ajax/calendar/populate/month/role',
-	     error: function() {alert('There was an error fetching month view events!');},
+	     error: function() {window.location.replace('/solpeople/login.pl');},
 	     className: 'bg-info',
 	     textColor: '#000',
 	     borderColor: '#FFF',
 	 },
 	 agendaWeek_view: {
 	     url: '/ajax/calendar/populate/agendaWeek/role',
-	     error: function() {alert('There was an error fetching agendaWeek view events!');},
+	     error: function() {window.location.replace('/solpeople/login.pl');},
 	     className: 'bg-info',
 	     textColor: '#000',
 	     borderColor: '#FFF',
@@ -245,7 +242,7 @@ $(document).ready(function() {
     $('#calendar').fullCalendar({
 	editable: true,
 	eventLimit: true,
-	lazyFetching: false,
+	lazyFetching: true,
 	header: {
    	   left:   'title',
            right:  'prevYear,prev,today,next,nextYear'

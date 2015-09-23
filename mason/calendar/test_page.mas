@@ -1,9 +1,7 @@
 
-
+<br/>
 <center>
 <div style="width:60%">
-<h1>Calendar</h1>
-<hr>
 <& events_by_user_role.mas &>
 </div>
 </center>

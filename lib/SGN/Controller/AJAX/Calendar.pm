@@ -40,33 +40,35 @@ __PACKAGE__->config(
    );
 
 sub calendar_events_month  : Path('/ajax/calendar/populate/month') : ActionClass('REST') { }
-
 #When the month view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
 sub calendar_events_month_GET { 
     my $self = shift;
     my $c = shift;
+    if (!$c->user()) {die;}
     my $search_rs = get_calendar_events($c);
     my $view = 'month';
     $c->stash->{rest} = populate_calendar_events($search_rs, $view);
 }
 
-sub calendar_events_agendaWeek  : Path('/ajax/calendar/populate/agendaWeek') : ActionClass('REST') { }
 
+sub calendar_events_agendaWeek  : Path('/ajax/calendar/populate/agendaWeek') : ActionClass('REST') { }
 #When the agendaWeek view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
 sub calendar_events_agendaWeek_GET { 
     my $self = shift;
     my $c = shift;
+    if (!$c->user()) {die;}
     my $search_rs = get_calendar_events($c);
     my $view = 'agendaWeek';
     $c->stash->{rest} = populate_calendar_events($search_rs, $view);
 }
 
-sub calendar_events_month_role  : Path('/ajax/calendar/populate/month/role') : ActionClass('REST') { }
 
+sub calendar_events_month_role  : Path('/ajax/calendar/populate/month/role') : ActionClass('REST') { }
 #When the month view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
 sub calendar_events_month_role_GET { 
     my $self = shift;
     my $c = shift;
+    if (!$c->user()) {die;}
     my $search_rs = get_calendar_events_role($c);
     my $view = 'month';
     $c->stash->{rest} = populate_calendar_events($search_rs, $view);
@@ -92,7 +94,8 @@ sub get_calendar_events {
 
 sub get_calendar_events_role {
     my $c = shift;
-    my $person_id = CXGN::Login->new($c->dbc->dbh)->verify_session();
+
+    my $person_id = $c->user->get_object->get_sp_person_id;
 
     my @roles;
     my $q = "SELECT sgn_people.sp_roles.name FROM sgn_people.sp_person JOIN sgn_people.sp_person_roles using(sp_person_id) join sgn_people.sp_roles using(sp_role_id) WHERE sp_person_id=?";
@@ -123,8 +126,6 @@ sub get_calendar_events_role {
 		    push(@search_project_ids, $trial);
 		}
 	    }
-	    
-	    print STDERR @search_project_ids;
 	}
     }
 
@@ -133,7 +134,6 @@ sub get_calendar_events_role {
 
     #Calendar event info is retrieved using DBIx class.
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
     my $search_rs = $schema->resultset('Project::Project')->search(
 	undef,
 	{join=>{'projectprops'=>{'type'=>'cv'}},
@@ -141,7 +141,6 @@ sub get_calendar_events_role {
 	'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cv_id'],
 	}
     );
-
     $search_rs = $search_rs->search([$search_projects]);
 
     $schema->storage->debug(1);
@@ -449,7 +448,7 @@ sub edit_event_POST {
 
     #If no description or URL given, then default values will be given.
     if ($description eq '') {$description = 'N/A';}
-    if ($url eq '') {$url = '#';} elsif ($url eq '#') {$url = '#';} else {$url = 'http://www.'.$url;}
+    if ($url eq '') {$url = '#';} elsif ($url eq '#') {$url = '#';} else {$url = $url;}
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     $schema->storage->txn_begin;
