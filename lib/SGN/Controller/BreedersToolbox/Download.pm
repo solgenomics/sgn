@@ -249,7 +249,7 @@ sub phenotype_download_excel {
 
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$program_name."_phenotypes_".$location."_".$trial_id."_XXXXX");
 
-    my $file_path = $tempfile.".xls";
+    my $file_path = $c->config->{basepath}."/".$tempfile.".xls";
     move($tempfile, $file_path);
     my $ss = Spreadsheet::WriteExcel->new($file_path);
     my $ws = $ss->add_worksheet();
@@ -310,13 +310,17 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     
     my $unique_list = $tf->transform($c->dbic_schema("Bio::Chado::Schema"), $unique_transform, \@accession_list);
     
+    # get array ref out of hash ref so Transform/Plugins can use it
+    my %unique_hash = %$unique_list;
+    my $unique_accessions = $unique_hash{transform};
+
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $t = CXGN::List::Transform->new();
     
     my $acc_t = $t->can_transform("accessions", "accession_ids");
-    my $accession_id_data = $t->transform($schema, $acc_t, $unique_list);
+    my $accession_id_data = $t->transform($schema, $acc_t, $unique_accessions);
 
     my $trial_t = $t->can_transform("trials", "trial_ids");
     my $trial_id_data = $t->transform($schema, $trial_t, \@trial_list);

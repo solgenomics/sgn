@@ -37,7 +37,7 @@ $accessions
         <div class="container-fluid">
 	  <form class="form-horizontal" role="form" name="new_accessions_form" id="new_accessions_form">
 	    <div class="form-group">
-      	      <label class="col-sm-6 control-label">Choose Accession List: </label>
+      	      <label class="col-sm-6 control-label">Choose a List of Accessions to Add: </label>
       	      <div class="col-sm-6" id="list_div" name="list_div">
               </div>
 	    </div>
@@ -51,6 +51,8 @@ $accessions
       	      <label class="col-sm-6 control-label">Use Fuzzy Search: </label>
       	      <div class="col-sm-6">
 	        <input type="checkbox" id="fuzzy_check" name="fuzzy_check"></input>
+		<br/>
+		<small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search.</small>
               </div>
 	    </div>
 	  </form>      
