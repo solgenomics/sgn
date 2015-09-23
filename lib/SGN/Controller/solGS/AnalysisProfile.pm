@@ -61,7 +61,8 @@ sub save_analysis_profile :Path('/solgs/save/analysis/profile') Args(0) {
     $self->save_profile($c);
     my $error_saving = $c->stash->{error};
     
-    if (!$error_saving) {
+    if (!$error_saving) 
+    {
 	$ret->{result} = 1;	
     }
 
@@ -215,6 +216,7 @@ sub parse_arguments {
 	      {
 		  $pop_id =  $pop_ids[0];
 		  $c->stash->{pop_id}  = $pop_id;
+		  print STDERR "\n pop id: $pop_id\n";
 	      }
 	  }
 
@@ -226,8 +228,12 @@ sub parse_arguments {
 	  
 	  if ($k eq 'analysis_type') 
 	  {
-	      my $analysis_type = $arguments->{$k};
-	      $c->stash->{analysis_type} = $analysis_type;
+	      $c->stash->{analysis_type} = $arguments->{$k};
+	  }	 
+
+	  if ($k eq 'data_set_type') 
+	  {
+	      $c->stash->{data_set_type} =  $arguments->{$k};
 	  }	 
       }
   }
@@ -257,7 +263,10 @@ sub structure_output_details {
 
     my $analysis_page = $analysis_data->{analysis_page};
     
-    if ($analysis_page =~ m/[(solgs\/analyze\/traits\/) | (solgs\/trait\/)]/) 
+    my $geno_file;
+    my $pheno_file;
+    
+    if ($analysis_page =~ m/[(solgs\/analyze\/traits\/) | (solgs\/trait\/) | (solgs\/model\/combined\/trials\/)]/) 
     {
 	foreach my $trait_id (@traits_ids)
 	{
@@ -270,12 +279,34 @@ sub structure_output_details {
 	 	  
 	    my$trait_abbr = $c->stash->{trait_abbr};
 	  
+	    my $trait_page;
+
+	    if ( $analysis_page =~ m/solgs\/trait\// ) 
+	    {
+		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
+	    }
+	    
+	    if ( $analysis_page =~ m/solgs\/model\/combined\/trials\// ) 
+	    {
+		$trait_page = $base . "solgs/model/combined/trials/$pop_id/trait/$trait_id";
+
+		$c->stash->{combo_pops_id} = $pop_id;
+
+		$solgs_controller->cache_combined_pops_data($c);
+
+		$pheno_file = $c->stash->{trait_combined_pheno_file};
+		$geno_file  = $c->stash->{trait_combined_geno_file};  
+		
+	    }
+	    
 	    $output_details{$trait_abbr} = {
 		'trait_id'   => $trait_id, 
 		'trait_name' => $c->stash->{trait_name}, 
-		'trait_page' => $base . "solgs/trait/$trait_id/population/$pop_id",
+		'trait_page' => $trait_page,
 		'gebv_file'  => $c->stash->{gebv_kinship_file},
-		'pop_id'     => $pop_id  
+		'pop_id'     => $pop_id,
+		'pheno_file' => $pheno_file,
+		'geno_file'  => $geno_file,
 	    }
 	}
     }
@@ -298,17 +329,30 @@ sub run_analysis {
     my $analysis_profile = $c->stash->{analysis_profile};
     my $analysis_page    = $analysis_profile->{analysis_page};
 
+    print STDERR "\n analysis_page: $analysis_page\n";
     my $base =   $c->req->base;
     $analysis_page =~ s/$base/\//;
 
     $c->stash->{background_job} = 1;
-     
+  
+
     if ($analysis_page =~ /solgs\/analyze\/traits\//) 
     {   
 	$c->controller('solGS::solGS')->build_multiple_traits_models($c);	
     } 
+    elsif ($analysis_page =~ /solgs\/model\/combined\/trials\// )	  
+    {
+	my $trait_id = $c->stash->{selected_traits}->[0];
+	my $pop_id   = $c->stash->{pop_id};
+	$c->stash->{combo_pops_id} = $pop_id;
+	print STDERR "\n trait id: $trait_id --- pop id: $pop_id\n";
+	$c->controller('solGS::solGS')->get_trait_name($c, $trait_id);
+
+	$c->controller('solGS::combinedTrials')->build_model_combined_trials_trait($c);
+    }
     else 
     {
+	print STDERR "\n CALLLING: $analysis_page \n";
 	$c->req->path($analysis_page);
 	$c->prepare_action;
 	$c->action ? $c->forward( $c->action ) : $c->dispatch;
@@ -327,6 +371,52 @@ sub run_analysis {
  
     $self->update_analysis_progress($c);
  
+}
+
+sub run_data_combination {
+    my ($self, $c) = @_;
+ 
+    
+ #    $c->controller('solGS::solGS')->cache_combined_pops_data($c);
+
+#     my $combined_pheno_file = $c->stash->{trait_combined_pheno_file};
+#     my $combined_geno_file  = $c->stash->{trait_combined_geno_file};  
+    
+#     my $combined_files = {
+# 	combined_pheno_file => $combined_pheno_file, 
+# 	combined_geno_file  => $combined_geno_file
+#     }
+
+#     $c->controller('solGS::combineTrials')->combine_trait_data($c);
+
+#     $c->stash->{background_job} = 1;
+#     try 
+#     { 
+#         my $job = CXGN::Tools::Run->run_cluster_perl({
+           
+#             method        => ["solGS::AnalysisReport" => "check_pops_data_combination"],
+#     	    args          => [$combined_files],
+#     	    load_packages => ['solGS::AnalysisReport'],
+#     	    run_opts      => {
+#     		              out_file    => $out_temp_file,
+# 			      err_file    => $err_temp_file,
+#     		              working_dir => $temp_dir,
+# 			      max_cluster_jobs => 1_000_000_000,
+# 	    },
+#          });
+       
+	
+#     }
+#     catch 
+#     {
+
+# #error report
+        
+      
+#     };
+
+
+
 }
 
 

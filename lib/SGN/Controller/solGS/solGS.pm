@@ -501,6 +501,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
 	}
     } 
     
+    
     # $ret = to_json($ret);
         
     # $c->res->content_type('application/json');
@@ -3892,9 +3893,9 @@ sub get_rrblup_output :Private{
     my $pop_id      = $c->stash->{pop_id};
     my $trait_abbr  = $c->stash->{trait_abbr};
     my $trait_name  = $c->stash->{trait_name};
-   
+    print STDERR "\nCALLING get_rrblup_output..pop_id: $pop_id trait_abbr: $trait_abbr -- trait_name: $trait_name \n";
     my $data_set_type = $c->stash->{data_set_type};
-
+ print STDERR "\n IN get_rrblup_output..data set type: $data_set_type -- pop_id: $pop_id trait_abbr: $trait_abbr -- trait_name: $trait_name \n";
     my ($traits_file, @traits, @trait_pages);
     my $prediction_id = $c->stash->{prediction_pop_id};
    

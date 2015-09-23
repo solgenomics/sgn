@@ -21,6 +21,67 @@ sub check_analysis_status {
 sub check_success {
     my ($self, $output_details) = @_;
   
+    # if ($output_details->{data_set_type} =~ m/combined populations/) 
+    # {
+	
+    # 	$output_details = $self->check_combined_pops_modeling($output_details);
+    # 	#if data combination success, then start modeling
+	
+    # } 
+    # else 
+    # {
+	
+	$output_details = $self->single_pop_modeling($output_details);
+
+   # }
+
+   return $output_details;
+  
+}
+
+
+sub check_combined_pops_modeling {
+    my ($self, $combined_files) = @_;
+
+
+    #my $job_tempdir = $output_details->{r_job_tempdir};
+             
+    my $pheno_file = $combined_files->{pheno_file}; 
+    my $geno_file  = $combined_files->{geno_file}; 
+	
+    if ($pheno_file && $geno_file) 
+    {
+	my $pheno_size;
+	my $geno_size;
+
+	while (1) 
+	{
+	    sleep 5;
+	    $geno_size  = -s $geno_file;
+	    $pheno_size = -s $pheno_file;
+
+	    if ($pheno_size && $geno_size) 
+	    {
+		$combined_files->{success} = 1;
+		last;		
+	    }	    
+	}	   	    
+    }
+    else 
+    {  
+	    $combined_files->{success} = 0;
+	    $combined_files->{combined_pheno_file} = 0;
+	    $combined_files->{combined_geno_file} = 0;
+    }  
+  
+   return $combined_files;
+
+}
+
+
+sub check_single_pop_modeling {
+    my ($self, $output_details) = @_;
+
     my $job_tempdir = $output_details->{r_job_tempdir};
           
     foreach my $k (keys %{$output_details})
@@ -71,7 +132,84 @@ sub check_success {
 	}  
     }
 
-   return $output_details;
+    return $output_details;
+
+
+}
+
+
+
+sub check_pops_data_combination {
+    my ($self, $output_details) = @_;
+  
+    my $job_tempdir = $output_details->{r_job_tempdir};
+    
+    foreach my $k (keys %{$output_details})
+    {
+	my $pheno_file;
+	my $geno_file;
+	
+	if (ref $output_details->{$k} eq 'HASH') 
+	{
+	   $pheno_file = $output_details->{$k}->{pheno_file}; 
+	   $geno_file  = $output_details->{$k}->{geno_file}; 
+	} 
+	
+	if ($geno_file || $pheno_file) 
+	{
+	    my $pheno_size;
+	    my $geno_size;
+	    my $died_file;
+	
+	    while (1) 
+	    {
+		sleep 5;
+		$pheno_size = -s $pheno_file;
+		$geno_size  = -s $geno_file;
+	
+		if ($pheno_size) 
+		{
+		    $output_details->{$k}->{pheno_success} = 1;
+		   		
+		}
+
+		if ($geno_size) 
+		{
+		    $output_details->{$k}->{geno_success} = 1;
+		   		
+		}
+
+		if ($pheno_size && $geno_size) 
+		{
+		    
+		    last;
+		}
+		else
+		{
+		    if ($job_tempdir) 
+		    {
+			$died_file = $self->get_file($job_tempdir, 'died');
+			if ($died_file) 
+			{
+			    $output_details->{$k}->{combined_pheno_success} = 0;
+			    $output_details->{$k}->{combined_geno_success} = 0;
+			    last;
+			}
+		    }
+		}	    
+	    }	   	    
+	}
+	else 
+	{  
+	    if (ref $output_details->{$k} eq 'HASH')	
+	    {   	    
+		$output_details->{$k}->{combined_pheno_success} = 0;
+		$output_details->{$k}->{combined_geno_success} = 0;
+	    }
+	}  
+    }
+
+    return $output_details;
   
 }
 

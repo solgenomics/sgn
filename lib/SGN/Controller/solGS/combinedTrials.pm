@@ -232,19 +232,23 @@ sub build_model_combined_trials_trait {
   
     my $solgs_controller = $c->controller('solGS::solGS');
     $c->stash->{data_set_type} = 'combined populations';
-    
+     print STDERR "\nCALLING GEBV kinship file \n";
     $solgs_controller->gebv_kinship_file($c);
     my $gebv_file = $c->stash->{gebv_kinship_file};
-
+ print STDERR "\nCALLED GEBV kinship file : $gebv_file\n";
     unless  ( -s $gebv_file ) 
-    {   
+    {    print STDERR "\nCALLing combine trait data\n";
         $self->combine_trait_data($c);    
         my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
         my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-        
+         print STDERR "\nCALLEDcombine trait data -- $combined_pops_pheno_file   $combined_pops_geno_file\n";
         if (-s $combined_pops_pheno_file  && -s $combined_pops_geno_file ) 
         {  
+	    my $pop_id = $c->stash->{combo_pops_id};
+	     my $pop_id2 = $c->stash->{pop_id};
+	    print STDERR "\nCALLING get_rrblup_output.. pop id $pop_id -- $pop_id2 \n";
             $c->controller('solGS::solGS')->get_rrblup_output($c);
+	     print STDERR "\nCALLED get_rrblup_output.. pop id  $pop_id  -- $pop_id2\n";
         }
     }
 }
@@ -263,7 +267,7 @@ sub combine_trait_data {
 
     my $pops_list = $c->stash->{combined_pops_list};
     $c->stash->{trait_combo_pops} = $pops_list; 
-  
+    print STDERR "\n pops_list: $pops_list \n";
     my @pops_list = split(/,/, $pops_list);
     $c->stash->{trait_combine_populations} = \@pops_list;
 

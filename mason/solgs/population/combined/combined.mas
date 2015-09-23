@@ -98,3 +98,6 @@ $acronym
 
 </&>
 %}
+
+ <input type="hidden" id="population_id" value="<% $combo_pops_id %>" />
+ 

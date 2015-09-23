@@ -13,7 +13,7 @@ JSAN.use('jquery.form');
 function solGS () {};
 
 solGS.waitPage = function (page) {
-
+    alert(page)
     if ( page.match(/solgs\/trait\//)) {
     	askUser(page);
     } else {
@@ -188,7 +188,7 @@ function wrapTraitsForm () {
 
 
 function getProfileDialog (page, args) {
-  
+    alert('getprofiledialog ' + page)
     if (page.match(/solgs\/trait\//)) {
 	args = getArgsFromUrl(page, args);
     }
@@ -297,27 +297,53 @@ function getProfileForm (args) {
 jQuery(document).ready(function (){
  
      jQuery('#runGS').on('click',  function() {
-	 	 
-	 var popId = jQuery('#population_id').val(); 
-
+	 		 
 	 var hostName = window.location.protocol 
 	     + '//' 
 	     + window.location.host;
 	
+	 var referer = window.location.href;
+	 
+	 if ( referer.match(/solgs\/populations\/combined\//) ) {
+		  
+	     dataSetType = 'combined populations';		 		 
+	 }
+
+	 if ( referer.match(/solgs\/population\//) ) {
+		  
+	     dataSetType = 'single population';		 		 
+	 }
+	 
+	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
+	 var popId = jQuery('#population_id').val(); 
+	 alert('popid ' + popId)
 	 var page;
 	 var analysisType;
-
-	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
-    
-	 if (traitIds.length == 1) {
-	     page = hostName 
-		 + '/solgs/trait/' 
-		 + traitIds[0] 
-		 + '/population/' 
-		 + popId;
-
+	 var dataSetType;
+	 
+	 if (traitIds.length == 1 ) {	   
+	     alert('referer ' + referer)
 	     analysisType = 'single model';
+	     
+	     if ( referer.match(/solgs\/populations\/combined\//) ) {
+		  
+		 page = hostName 
+		     + '/solgs/model/combined/trials/' 
+		     + popId 
+		     + '/trait/' 
+		     + traitIds[0];		 
+		 		 
+	     } else if ( referer.match(/solgs\/population\//)) {
+		
+		 page = hostName 
+		     + '/solgs/trait/' 
+		     + traitIds[0] 
+		     + '/population/' 
+		     + popId;		 
+	     }
+			 
 	 } else {
+	     
 	     page = hostName 
 		 + '/solgs/analyze/traits/population/' 
 		 + popId;
@@ -326,9 +352,10 @@ jQuery(document).ready(function (){
 	 }
 	 
 	 var args = {
-	     'trait_id'      :  traitIds, 
-	     'population_id' :  [ popId ], 
-	     'analysis_type' : analysisType 
+	     'trait_id'      : traitIds, 
+	     'population_id' : [ popId ], 
+	     'analysis_type' : analysisType,
+	     'data_set_type' : dataSetType,
 	 };
 
 	 askUser(page, args);
