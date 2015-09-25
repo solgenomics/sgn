@@ -25,7 +25,7 @@ function prepareJbrowse () { //ajax function to test for existence of given jbro
     type: 'GET',
     url: "<% $test_url %>",
     statusCode: {
-        200: function () {  // if page exists, create and display jbrowse iframe
+        200: function () {  // if page is found, create and display jbrowse iframe
 		jQuery("#message").before('<iframe id="jbrowse"></iframe>');
 	     	jQuery('#jbrowse').attr({
 			"style" : "border: 1px solid rgb(80, 80, 80)",
@@ -37,8 +37,8 @@ function prepareJbrowse () { //ajax function to test for existence of given jbro
       		jQuery('#message').attr("display", "none");
       		jQuery('#jbrowse').html(" <p>Your browser does not support iframes.</p>");
 	},
-	404: function () { // if page is not found, display message that jbrowse instance does not exist
-		jQuery('#message').html(" <b>No Jbrowse instance exists for this trial</b>.");
+	404: function () { // if page not found, display message that jbrowse instance wasn't found
+		jQuery('#message').html(" <i>No Jbrowse instance found for this trial</i>.");
      		}
 	}
   });
