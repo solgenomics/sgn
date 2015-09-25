@@ -54,9 +54,13 @@ sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
     my $cookie = '';
 
     if ( $login_controller->login_allowed() ) {
-	my $login_info = $login_controller->login_user( $username, $password );
-	$cookie = $login_info->{cookie_string};
-	push(@status, 'OK');
+	if ($grant_type eq 'password') {
+	    my $login_info = $login_controller->login_user( $username, $password );
+	    $cookie = $login_info->{cookie_string};
+	    push(@status, 'OK');
+	} else {
+	    push(@status, 'Grant Type Not Supported');
+	}
     } else {
 	push(@status, 'Login Not Allowed');
     }
@@ -69,8 +73,6 @@ sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
 sub germplasm_all : Chained('brapi') PathPart('germplasm') Args(0) { 
     my $self = shift;
     my $c = shift;
-
-    print STDERR "test";
     
     my $type_id = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( { type_id => $type_id });
