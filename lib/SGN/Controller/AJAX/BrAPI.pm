@@ -56,8 +56,22 @@ sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
     if ( $login_controller->login_allowed() ) {
 	if ($grant_type eq 'password') {
 	    my $login_info = $login_controller->login_user( $username, $password );
-	    $cookie = $login_info->{cookie_string};
-	    push(@status, 'OK');
+	    if ($login_info->{account_disabled}) {
+		push(@status, 'Account Disabled');
+	    }
+	    if ($login_info->{incorrect_password}) {
+		push(@status, 'Incorrect Password');
+	    }
+	    if ($login_info->{duplicate_cookie_string}) {
+		push(@status, 'Duplicate Cookie String');
+	    }
+	    if ($login_info->{logins_disabled}) {
+		push(@status, 'Logins Disabled');
+	    }
+	    if ($login_info->{person_id}) {
+		$cookie = $login_info->{cookie_string};
+		push(@status, 'OK');
+	    }
 	} else {
 	    push(@status, 'Grant Type Not Supported');
 	}
