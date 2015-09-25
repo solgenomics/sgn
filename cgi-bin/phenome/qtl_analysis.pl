@@ -285,7 +285,7 @@ EOS
 
             $accession = $dbxref_obj->get_accession();
             my $pub_info =
-qq|<a href="/chado/publication.pl?pub_id=$pub_id" >PMID:$accession</a> |;
+qq|<a href="/publication/$pub_id/view" >PMID:$accession</a> |;
             my @authors;
             my $authors;
 

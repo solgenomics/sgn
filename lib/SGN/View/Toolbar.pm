@@ -290,11 +290,21 @@ sub default_toolbar_data {
                     desc => 'Draft sequence for Nicotiana tabacum accessions K326, BX, and TN90. Parental genomes <i>Nicotiana sylvestris</i> and <i>Nicotiana tomentosiformis</i>.',
                 },
 
-		{ name => 'Inbred genomes' },
+		{ name => 'Resequencing projects' },
                 {
                     name => '<i>Solanum lycopersicum</i> inbreds',
                     link => '/organism/Solanum_lycopersicum/inbred_genomes',
                     desc => 'Resequencing projects of tomato inbred lines'
+                },
+		 {
+                    name => '150 Tomato Genome Resequencing Project',
+                    link => '/organism/Solanum_lycopersicum/tomato_150',
+                    desc => 'Resequencing project by the University of Wageningen'
+                },
+		{
+                    name => 'BGI Tomato 360 genomes',
+                    link => '/organism/Solanum_lycopersicum/tomato_360',
+                    desc => 'Resequencing project of 360 tomato varieties by BGI'
                 },
 
                 {   name => 'Projects', type => 'title'  },
@@ -366,12 +376,12 @@ sub default_toolbar_data {
                     desc =>
 'Visualize and manipulate phylogenetic trees from a newick-formatted string.'
                 },
-                {
-                    name => 'Intron Finder',
-                    link => '/tools/intron_detection/find_introns.pl',
-                    desc =>
-'The SGN Intron Finder works by doing a BLAST search for <em>Arabidopsis thaliana</em> proteins that are similar to the translated protein sequence of the DNA input.'
-                },
+#                 {
+#                     name => 'Intron Finder',
+#                     link => '/tools/intron_detection/find_introns.pl',
+#                     desc =>
+# 'The SGN Intron Finder works by doing a BLAST search for <em>Arabidopsis thaliana</em> proteins that are similar to the translated protein sequence of the DNA input.'
+#                 },
 
                 #Mapping
                 { name => 'Mapping' },
@@ -455,6 +465,11 @@ sub default_toolbar_data {
                     link => '/tools/interactomics',
                     desc => 'Coffee Interactome Data with Cytoscape Web Start viewer.'
                 },
+                {
+                    name => 'SGN Ontology Browser',
+                    link => '/tools/onto/',
+                    desc => 'AJAX ontology browser.'
+                },
 
 		{ name => "Breeder Tools" },
 		{ 
@@ -466,36 +481,41 @@ sub default_toolbar_data {
                 { name => 'Bulk Query' },
 
                 {
-                    name => 'Unigene and BAC information',
-                    link => '/tools/bulk',
-                    desc =>
-'Rather than sifting through SGN page by page, here you can download large quantities of information in a single step.'
-                },
-                {
                     name => 'FTP Site',
                     link => '/tools/bulk?mode=ftp',
                     desc =>
 'FTP (File Transfer Protocol) is more efficient than HTTP (HyperText Transfer Protocol) for transferring large files. Many of our larger archive files are accessible here.'
                 },
                 {
-                    name => 'ID Converter (SGN <=> TIGR)',
-                    link => '/tools/convert/input.pl',
-                    desc =>
-'The Institute for Genomic Research and SGN maintain independent unigene databases, entries in which tend to have common member ESTs (Expressed Sequence Tags), although they tend not to correspond completely. This tool uses common members to convert back and forth between the two identifier sets.'
+                    name => 'Download Gene Sequences',
+                    link => '/tools/bulk?mode=genes',
+                    desc => 'Download nucleotide or protein sequences for a list of genes'
                 },
+                {
+                    name => 'Clones, Arrays, Unigenes and BACs',
+                    link => '/tools/bulk',
+                    desc =>
+'Rather than sifting through SGN page by page, here you can download large quantities of information in a single step.'
+                },
+                {
+                    name => 'Unigene Converter',
+                    link => '/tools/bulk?mode=converter',
+                    desc => 'get the last version of unigenes and tomato gene ids from a list of unigenes.'
+                },
+#                 {
+#                     name => 'ID Converter (SGN <=> TIGR)',
+#                     link => '/tools/convert/input.pl',
+#                     desc =>
+# 'The Institute for Genomic Research and SGN maintain independent unigene databases, entries in which tend to have common member ESTs (Expressed Sequence Tags), although they tend not to correspond completely. This tool uses common members to convert back and forth between the two identifier sets.'
+#                 },
 
                 #Other
-                { name => "Other" },
-                {
-                    name => 'SGN Ontology Browser',
-                    link => '/tools/onto/',
-                    desc => 'AJAX ontology browser.'
-                },
-                {
-                    name => 'Primer 3',
-                    link => '/primer3/',
-                    desc => 'Pick primers for PCR reactions'
-                },
+                # { name => "Other" },
+                # {
+                #     name => 'Primer 3',
+                #     link => '/primer3/',
+                #     desc => 'Pick primers for PCR reactions'
+                # },
             ]
         }
     ];

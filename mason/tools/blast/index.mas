@@ -3,94 +3,89 @@
 </%doc>
 
 <%args>
-$preselected_database => ''
-$preselected_category => ''
-$dataset_groups => []
-$databases => {}
-$programs
-@input_options => ()
-@parse_options => ()
-$preload_seq => ''
-$preload_id => ''
-$preload_type => ''
-$blast_db_icons
+  $preselected_database => ''
+  $preselected_category => ''
+  $dataset_groups => []
+  $databases => {}
+  $programs
+  @input_options => ()
+  @parse_options => ()
+  $preload_seq => ''
+  $preload_id => ''
+  $preload_type => ''
+  $blast_db_icons
 </%args>
 
 <%perl>
-use JSON::Any;
+  use JSON::Any;
 
-my $menus = {};
-foreach my $d (keys(%$databases)) { 
-   $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", id=>"database", choices => [ @{$databases->{$d}} ], selected=> $preselected_database );
-}
-# print STDERR "pre selected db: $preselected_database\n";
-
-my $substitution_matrix_select = $m->scomp('/page/html_select.mas', 
-   name=>"matrix", 
-   id=>"matrix", 
-   choices => [  [ 'BLOSUM62', 'BLOSUM62 (default)' ],
-                 [ 'BLOSUM80', 'BLOSUM80 (recent divergence)' ],
-		 [ 'BLOSUM45', 'BLOSUM45 (ancient divergence)' ],
-		 'PAM30',
-		 'PAM70',
-              ]);
-
-my $show_graphics_select = $m->scomp('/page/html_select.mas',  name => 'output_graphs', id=>'output_graphs',
-        	      choices => [ [ 'bioperl_histogram', 'all' ],
-	                	   'none',
-			           [ 'bioperl_only', 'alignment summary only' ],
-				   [ 'histogram_only', 'conservedness histogram only' ],
-				 ],
-				 ),
-
-#print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
-my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', id=>'input_options',
-			      choices => \@input_options, selected=>$preload_type,
-);
-
-my @parse_options_selected = ();
-foreach my $po (@parse_options) { 
-  if ($po->[0] ne "Basic") { 
-    push @parse_options_selected, $po;
+  my $menus = {};
+  foreach my $d (keys(%$databases)) { 
+     $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", id=>"database", choices => [ @{$databases->{$d}} ], selected=> $preselected_database );
   }
-}
 
+  my $substitution_matrix_select = $m->scomp('/page/html_select.mas', 
+     name=>"matrix", 
+     id=>"matrix", 
+     choices => [  [ 'BLOSUM62', 'BLOSUM62 (default)' ],
+                   [ 'BLOSUM80', 'BLOSUM80 (recent divergence)' ],
+  		 [ 'BLOSUM45', 'BLOSUM45 (ancient divergence)' ],
+  		 'PAM30',
+  		 'PAM70',
+  ]);
 
-my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', choices => [ map { $_->[0] } @parse_options ], multiple=>1, selected=> [ sort (map { $_->[0] } @parse_options_selected) ] );
+  #print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
+  my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', id=>'input_options',
+    choices => \@input_options, selected=>$preload_type,
+  );
 
-print STDERR "SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n\n\n";
-
-
-my $db_type = {};
-foreach my $g (keys %$databases) {
-  foreach my $d (@{$databases->{$g}}) {  
-     $db_type->{$d->[0]} = $d->[2];
+  # array with the preselected output formats
+  my @parse_options_selected = ();
+  foreach my $po (@parse_options) { 
+    if (($po->[0] ne "Basic") && ($po->[0] ne "Table")) { 
+      push @parse_options_selected, $po;
+    }
   }
-}
-my $database_type_json = JSON::Any->encode($db_type);
 
-#print STDERR Data::Dumper::Dumper($database_type_json);
+  # output formats alphabetically sorted
+  my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>'size = 5', choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
 
-my $q_type = {};
-my $q_example = {};
-foreach my $t (@input_options) {
-  $q_type->{$t->[1]} = $t->[2];
-  $q_example->{$t->[1]} = $t->[3];
-}
-#print STDERR Data::Dumper::Dumper($q_type);
-my $input_option_json = JSON::Any->encode($q_type);
-my $input_example_json = JSON::Any->encode($q_example);
+  # print STDERR "OUTPUT OPTIONS: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n";
+  # print STDERR "OUTPUT SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options_selected) ))."\n";
 
-my $preload = "";
-if ($preload_id && $preload_type) { 
-  $preload = $preload_id;
-}
-if ($preload_seq) { 
-  $preload = $preload_seq;
-}
+  my $db_type = {};
+  
+  foreach my $g (keys %$databases) {
+    foreach my $d (@{$databases->{$g}}) {  
+       $db_type->{$d->[0]} = $d->[2];
+    }
+  }
+  my $database_type_json = JSON::Any->encode($db_type);
 
+  #print STDERR Data::Dumper::Dumper($database_type_json);
 
-#print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
+  my $q_type = {};
+  my $q_example = {};
+  
+  foreach my $t (@input_options) {
+    $q_type->{$t->[1]} = $t->[2];
+    $q_example->{$t->[1]} = $t->[3];
+  }
+  
+  #print STDERR Data::Dumper::Dumper($q_type);
+  my $input_option_json = JSON::Any->encode($q_type);
+  my $input_example_json = JSON::Any->encode($q_example);
+
+  my $preload = "";
+  if ($preload_id && $preload_type) { 
+    $preload = $preload_id;
+  }
+  
+  if ($preload_seq) { 
+    $preload = $preload_seq;
+  }
+
+  #print STDERR "MENUS: ".Data::Dumper::Dumper($menus);
 
 </%perl>
 
@@ -98,15 +93,13 @@ if ($preload_seq) {
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
-<!-- <div class="boxbgcolor5">This is the new BLAST interface. The old interface is still available <a href="/tools/blast/index.pl">here</a>. Please <a href="mailto:sgn-feedback@solgenomics.net">let us know</a> how you like the new interface.</div><br /> -->
-
 <div id="search_output" style="display:none;font-family:Lucida,monospace"></div>
 
 <&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a href="/help/tools/blast">Help</a>' &>
   <input type="hidden" name="outformat" value="0" />
   <table border="0" align="center" summary="" cellpadding="0" cellspacing="5">
     <tr><td width="100" style="padding-top: 10px;"><b>Categories</b></td><td width="600">
-	<& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select", selected=>"$preselected_category" &>
+    <& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select", selected=>"$preselected_category" &>
 
 % if ($blast_db_icons) {
 <!-- images to get direct access to the model plant dbs. db_id is the blast_db_id on the SGN database -->
@@ -117,37 +110,28 @@ if ($preload_seq) {
 <img class="fruit_icon" height="25" src="/documents/img/blast_icons/benth.png" db_id="9" title="N.benthamiana current DB">
 % }
 
-</td><td rowspan="4" align="center"><div id="status_wheel"></div></td></tr>
-    <tr><td><b>Databases</b></td>
-      <td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>
-    </td></tr>
-    <tr><td><b>Program</b></td>
-      <td><& /page/html_select.mas, name=>'program_select', id=>'program_select', choices=>$programs &>
-    </td></tr>
-
-<tr><td><b>Query</b></td><td>
-  <% $input_options_select %>
-  <a id="input_example" style="font-size: 80%">Show example</a>
-	</td></tr>
-<tr><td colspan="3">
-
-<!-- div style="font-size: 80%">single sequence only, use Advanced for multiple</div -->
-<textarea name="sequence" id="sequence" rows="8" cols="80"><% $preload %></textarea></td></tr>
+    </td><td rowspan="4" align="center"></td></tr>
+    <tr><td><b>Databases</b></td><td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a></td></tr>
+    <tr><td><b>Program</b></td><td><& /page/html_select.mas, name=>'program_select', id=>'program_select', choices=>$programs &></td></tr>
+    <tr><td><b>Query</b></td><td><% $input_options_select %><a id="input_example" style="font-size: 80%" href="#">Show example</a></td></tr>
     <tr><td colspan="3">
-      <table width="100%"><tr>
-         <td>
+      <!-- div style="font-size: 80%">single sequence only, use Advanced for multiple</div -->
+      <textarea name="sequence" id="sequence" rows="8" cols="80"><% $preload %></textarea></td></tr>
+    <tr><td colspan="3">
 
-<div style="text-align: center">
-	<button class="submit_blast_button" id="submit_blast_button" type="submit" name="search" value="Search">BLAST</button>
-</div>
-<br />
+      <table width="100%">
+        <tr><td>
+          <div style="text-align: center">
+            <button class="submit_blast_button" id="submit_blast_button" type="submit" name="search" value="Search">BLAST</button>
+          </div>
+          <br />
 
 <&| /page/info_section.mas, title=>"Advanced Options", collapsible=>1, collapsed =>1, is_subsection=>"1" &>
 
 	<& /page/info_table.mas, title=>'', data => [ 
 	  'Expect (e-value) Threshold' => '<input id="evalue" class="blast_search_input_box" type="text" size="6" value="1e-10" name="expect" />',
 	  'Substitution Matrix' => $substitution_matrix_select,
-		'Outout Options' => $parse_options_select,
+		'Output Options' => $parse_options_select,
 	  'Max. hits to show' => '<input id="maxhits" class="blast_search_input_box" type="text" name="maxhits" size="6" value="20" />',
 	  'Filters' => '<input type="checkbox" name="filterq" checked="1" />Filter Low complexity',
 	  __multicol => 2,
@@ -156,14 +140,12 @@ if ($preload_seq) {
 	]
 	&>
 	
-	
 </&>
 
-         </td>
-      </tr>
+         </td></tr>
       </table>
     </td></tr>
-</table>
+  </table>
 </&>
 
 <&| /page/info_section.mas, title=>"Extract sequences from BLAST databases", collapsible=>1, collapsed =>1 &>
@@ -177,18 +159,33 @@ if ($preload_seq) {
 	</table>
 </&>
 
-<&| /page/info_section.mas, title=>"Status", collapsible=>1, collapsed =>0 &>
-  <div id="blast_status">Please select your input parameters.</div>
-</&>
-
-<&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a href="javascript:download();">Download</a>' &>
-<table>
-<tr><td><div id="prereqs"></div></td></tr>
-<tr><td><div id="blast_report"></div></td></tr>
-  </table>
+<&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+<table style="width:700px;">
+  <tr><td><div id="prereqs"></div></td></tr>
+  <tr><td><div id="Overview_output"></div></td></tr>
+  <tr><td><div id="Coverage_output"></div></td></tr>
+  <tr><td><div id="Table_output"></div></td></tr>
+  <tr><td><div id="Bioperl_output"></div></td></tr>
+  <tr><td><div id="Basic_output"></div></td></tr>
+</table>
 </&>
 
 <div id="jobid" style="display:none;"></div>
+
+<div id="nav_dialog" style="display:none;">
+		<p width="100">
+			This Tool was optimized for:<br/>
+			<br/>
+			<a href="https://www.google.com/chrome/browser/"><img src="https://lh3.ggpht.com/O0aW5qsyCkR2i7Bu-jUU1b5BWA_NygJ6ui4MgaAvL7gfqvVWqkOBscDaq4pn-vkwByUx=w300" height="20"> Google Chrome</a><br/>
+			<br/>
+			<a href="https://www.mozilla.org/en-US/firefox/new/"><img src="https://mozorg.cdn.mozilla.net/media/img/firefox/desktop/index/animations/firefox-logo.png" height="20"> Mozilla Firefox</a><br/>
+			<br/>
+			<a href="http://support.apple.com/en-us/HT6104"><img src="http://km.support.apple.com/kb/image.jsp?productid=PL165" height="20"> Safari</a><br/>
+			<br/>
+			<a href="http://windows.microsoft.com/en-us/internet-explorer/download-ie"><img src="http://c.s-microsoft.com/en-us/CMSImages/ie_symbol_clr_56x56.png?version=73aa5bf1-0743-11e7-8f71-718675c983bf" height="20"> MS Internet Explorer 11</a><br/>
+		</p>
+	</div>
+
 
 <script>
 
@@ -236,7 +233,6 @@ jQuery(document).ready(function() {
 		}
 	});
 	
-	
 	//search blastdb by description
 	jQuery('#search_by_desc').click( function() { 
 		var database = jQuery('#database').val();
@@ -281,24 +277,30 @@ jQuery(document).ready(function() {
 	  jQuery('#database_select').html(menu_html[group_id]);
 	}
 	
-	//use JQueryIu to define tooltip style
-	$(function() {
-		$( document ).tooltip({
-			position: {
-				my: "center bottom-20",
-				at: "center top",
-				using: function( position, feedback ) {
-					$( this ).css( position );
-					$( "<div>" )
-					.addClass( "arrow" )
-					.addClass( feedback.vertical )
-					.addClass( feedback.horizontal )
-					.appendTo( this );
-				}
-			}
-		});
-	});
-	
+  
+  
+  
+  var str = navigator.userAgent;
+  	var ie = /MSIE/.test(str);
+  	// alert(navigator.userAgent);
+
+  	var $j = jQuery.noConflict();
+  	jQuery(document).ready(function ($) {
+  		if(ie) {
+  			$('#nav_dialog').dialog({
+    			modal: true,
+    			closeOnEscape:true,
+    			title: "Web Browser Compatibility",
+          buttons: {
+            close: function() {
+              $( this ).dialog( "close" );
+            }
+          }
+  			});
+  		}
+  	});
+  
+  
 });
 
 </script>
@@ -306,6 +308,7 @@ jQuery(document).ready(function() {
 
 <!-- STYLE -->
 <style>
+
 .seq_map {
 	color: #777777;
 	width: 700px;
@@ -337,50 +340,9 @@ jQuery(document).ready(function() {
 	padding-left: 10px;
 	padding-right: 10px;
 }
-.ui-tooltip, .arrow:after {
-	background: #000000;
-	border: 2px solid white;
-}
-.ui-tooltip {
-	padding: 5px 10px;
-	color: white;
-	border-radius: 10px;
-	font: bold 12px "Helvetica Neue", Sans-Serif;
-	box-shadow: 0 0 7px black;
-}
-.arrow {
-	width: 70px;
-	height: 16px;
-	overflow: hidden;
-	position: absolute;
-	left: 50%;
-	margin-left: -35px;
-	bottom: -16px;
-}
-.arrow.top {
-	top: -16px;
-	bottom: auto;
-}
-.arrow.left {
-	left: 20%;
-}
-.arrow:after {
-	content: "";
-	position: absolute;
-	left: 20px;
-	top: -20px;
-	width: 25px;
-	height: 25px;
-	box-shadow: 6px 5px 9px -9px black;
-	-webkit-transform: rotate(45deg);
-	-moz-transform: rotate(45deg);
-	-ms-transform: rotate(45deg);
-	-o-transform: rotate(45deg);
-	tranform: rotate(45deg);
-}
-.arrow.top:after {
-	bottom: -20px;
-	top: auto;
+
+.fruit_icon {
+  cursor:pointer;
 }
 
 #sequence {
@@ -409,6 +371,7 @@ font-size:12px;
 height:20px;
 line-height:18px;
 vertical-align: top;
+cursor:pointer;
 }
 .submit_blast_button:hover {
 background-color:#444444;
@@ -430,6 +393,10 @@ border-style:solid;
 border-radius:5px;
 height: 20px;
 padding-left: 5px;
+}
+
+.download_tag {
+  display:none;
 }
 
 </style>

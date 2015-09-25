@@ -18,15 +18,16 @@ $accessions
 
 <& /breeders_toolbox/accessions/pedigree_spreadsheet_upload_format_info.mas &>
 
-
 <div id="add_accessions_dialog" class="ui-widget" title="Add accessions">
-    <p>Choose accession list:</p>
+    <p>Choose a list with accessions to add:</p>
   <div id="list_div">
     <label id="select_list_label" for="list_div_list_select" style="display: inline-block; width: 200px;">List of accessions to add:
     </label> 
-  </div>
+  </div>  <br />
+
   <input type="checkbox" id="fuzzy_check"></input>
-  <label for="fuzzy_check">Use fuzzy search</label>
+  <label for="fuzzy_check">Use fuzzy search</label><br /><br />
+  <div>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search.</div>
 </div>
 
 <div id="review_fuzzy_matches_dialog" class="ui-widget" title="Fuzzy matches">

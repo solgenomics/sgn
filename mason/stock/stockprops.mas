@@ -94,6 +94,7 @@ function <% $div_name %>_getProps() {
   });
 }
 
+
 function <% $div_name %>_renderProps(props) { 
    var subset = eval(<% $subset_json %>);
 
@@ -107,10 +108,12 @@ function <% $div_name %>_renderProps(props) {
        }
    }
     
-   var lines = new Array();
+   
    var html = '';
+   var prop_string;
    var edit_privs = <% $edit_privs %>;
    for (var n in filteredSet) {
+      var lines = new Array();
       for(var i=0; i<props.length; i++) {
         if (n ===  props[i]['type_name']) { 
           var lineStr = props[i]['value'];
@@ -119,10 +122,13 @@ function <% $div_name %>_renderProps(props) {
           }
 	  lines.push(lineStr);
         }
-      } 
+          
+      }
       html = html + '<b>'+n+'</b>&nbsp;&nbsp;'; 
+      //html  = html + lineStr;
       html = html + lines.join(", ");
       html = html + '<br />\n';
+      
    }
    jQuery('#<% $div_name %>_content').html(html);
 		
@@ -132,6 +138,7 @@ function <% $div_name %>_addPropDialog(prop, typeId) {
   jQuery('#<% $div_name %>_add_dialog').dialog("open");
 
 }
+
 
 
 function <% $div_name %>_addProp() { 

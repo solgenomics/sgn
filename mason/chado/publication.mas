@@ -46,7 +46,7 @@ Naama Menda <nm249@cornell.edu>
 
 <& /util/import_javascript.mas, classes => 'CXGN.Phenome.Publication' &>
 <div class="publication_embedded">
-  <a href="/chado/publication.pl?pub_id=<% $pub->get_pub_id |h%>">
+  <a href="/publication/<% $pub->get_pub_id |h%>/view">
     <% $db |h%>:<% $accession |h%>
   </a>
   <span class="title"> <% $pub->get_title |h%> (<% $pub->get_pyear |h%>) <% $doi %></span>

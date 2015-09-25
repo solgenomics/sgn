@@ -46,7 +46,7 @@ sub get_matches {
   my %synonym_uniquename_lookup;
   my @stock_names;
   my @synonym_names;
-  my $fuzzy_string_search = CXGN::String::FuzzyMatch->new();
+  my $fuzzy_string_search = CXGN::String::FuzzyMatch->new( { case_insensitive => 1} );
   my @fuzzy_accessions;
   my @absent_accessions;
   my @found_accessions;

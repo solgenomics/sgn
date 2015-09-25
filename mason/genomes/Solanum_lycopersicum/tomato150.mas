@@ -1,0 +1,38 @@
+
+<%doc>
+
+</%doc>
+
+
+<& /page/page_title.mas, title=>"Wageningen UR 150 Tomato Genome Resequencing Project" &>
+
+<div class="page_introduction">
+</div>
+
+
+<&| /page/info_section.mas, title => '150 Tomato Genomes' &>
+  Resequencing of <a href="https://www.ebi.ac.uk/ena/data/view/ERP004618">84 tomato accessions</a><br />
+  <a href="https://www.ebi.ac.uk/ena/data/view/ERP004607"><i>Solanum arcanum</i> LA2157</a><br />
+  <a href="https://www.ebi.ac.uk/ena/data/view/ERP004608"><i>Solanum habrochaites</i> LYC4</a><br />
+  <a href="https://www.ebi.ac.uk/ena/data/view/ERP004609"><i>Solanum pennellii</i> LA716</a><br />
+
+  For more info see project's <a href="http://www.tomatogenome.net/index.html">web site</a>  
+
+<br />
+
+  <% info_table_html(
+                     __border   => 0,
+                     __multicol => 2,
+                     'Bulk Datasets (via FTP)' =>
+                     '<a href="ftp://ftp.solgenomics.net/genomes/tomato_150/">VCF files</a>',
+		     'Genome browser' => '<a href="/jbrowse/current/?data=data/json/tomato_150_variants_2.5">JBrowse</a>'
+                    )
+  %>
+</&>
+
+
+
+
+<%init>
+  use CXGN::Page::FormattingHelpers qw/info_table_html/;
+</%init>

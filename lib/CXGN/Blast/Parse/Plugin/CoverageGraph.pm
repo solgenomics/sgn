@@ -6,7 +6,8 @@ use File::Basename;
 use File::Slurp;
 
 sub name { 
-    return "Coverage graph";
+    return "Coverage";
+    # return "Coverage graph";
 }
 
 sub prereqs { 
@@ -47,10 +48,12 @@ sub parse {
 but counts <i>only the domains BLAST finds</i>, meaning this is really more a function of region than of individual base.
 Within the graph, green shows exact base matches within conserved regions; blue shows non-matching bases within conserved regions. Gaps introduced into the query by BLAST are ignored; gaps introduced into target sequences are not.</p>
 EOH
+      qq|<center>|,
       $graph2->get_map_html(), #code for map element (should have the name used below in the image)
       qq|<div align="center" style="color: #777777">|,
       qq|<img src="$graph_img_fileurl" border="2" usemap="#graph2map" alt="" />|,
-      qq|</div>\n\n|,
+      qq|</div>|,
+      qq|</center>|,
     );
 
 }

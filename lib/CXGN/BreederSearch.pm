@@ -291,8 +291,12 @@ sub get_phenotype_info {
 
     my $where_clause = "";
    
-    if (@where_clause>0) { 
-	$where_clause = "where (stockprop.type_id=$rep_type_id or stockprop.type_id IS NULL) AND (block_number.type_id=$block_number_type_id or block_number.type_id IS NULL) AND  ".(join (" and ", @where_clause));
+    if (@where_clause>0) {
+	$where_clause .= $rep_type_id ? "WHERE (stockprop.type_id = $rep_type_id OR stockprop.type_id IS NULL) " : "WHERE stockprop.type_id IS NULL";
+	$where_clause .= $block_number_type_id  ? "AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)" : "AND block_number.type_id IS NULL";
+	$where_clause .= " AND " . (join (" AND " , @where_clause));
+
+	#$where_clause = "where (stockprop.type_id=$rep_type_id or stockprop.type_id IS NULL) AND (block_number.type_id=$block_number_type_id or block_number.type_id IS NULL) AND  ".(join (" and ", @where_clause));
     }
 
     my $order_clause = " order by project.name, plot.uniquename";
