@@ -9,6 +9,7 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Chado::Stock;
+use CXGN::Login;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -37,10 +38,39 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
 }
 
+sub authenticate_token : Chained('brapi') PathPart('token') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $dbh = $c->dbc->dbh;
+    my $login_controller = CXGN::Login->new($dbh);
+    
+    my $grant_type = $c->req->param("grant_type");
+    my $username = $c->req->param("username");
+    my $password = $c->req->param("password");
+    my $client_id = $c->req->param("client_id");
+
+    my @status;
+    my $cookie = '';
+
+    if ( $login_controller->login_allowed() ) {
+	my $login_info = $login_controller->login_user( $username, $password );
+	$cookie = $login_info->{cookie_string};
+	push(@status, 'OK');
+    } else {
+	push(@status, 'Login Not Allowed');
+    }
+    
+    my %result = (status=>\@status, session_token=>$cookie);
+    
+    $c->stash->{rest} = \%result;
+}
 
 sub germplasm_all : Chained('brapi') PathPart('germplasm') Args(0) { 
     my $self = shift;
     my $c = shift;
+
+    print STDERR "test";
     
     my $type_id = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( { type_id => $type_id });
