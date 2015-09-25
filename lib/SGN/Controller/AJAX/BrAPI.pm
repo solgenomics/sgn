@@ -740,13 +740,6 @@ sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
 
 }
 
-sub token : Chained('brapi') PathPart('token') Args(0) { 
-    my $self = shift;
-    my $c = shift;
-
-    
-
-}
-    
+   
 
 1;
