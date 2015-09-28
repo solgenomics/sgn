@@ -3,6 +3,6 @@
 $trial_id
 </%args>
 
-<a id="delete_phenotype_data_by_trial_id">Delete trait data</a><br />
-<a id="delete_layout_data_by_trial_id">Delete layout data</a><br />
-<a id="delete_trial_entry_by_trial_id">Delete trial entry</a><br />
+<a id="delete_phenotype_data_by_trial_id" role="button">Delete trait data</a><br />
+<a id="delete_layout_data_by_trial_id" role="button">Delete layout data</a><br />
+<a id="delete_trial_entry_by_trial_id" role="button" >Delete trial entry</a><br />
