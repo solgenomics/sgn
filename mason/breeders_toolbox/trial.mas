@@ -76,44 +76,40 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<table><tr><td width="365" valign="top">
-<&| /page/info_section.mas, title=>"Breeding program", subtitle=>$subtitle &>
-% ## foreach my $bp (@$breeding_program) { 
-% ##  print $bp->[1] . "&nbsp;(".$bp->[2].")"; 
-% ##  if ($user_can_modify) { print " <a title=\"remove program\" id=\"delete_breeding_program_trial_association_link\"><font color=\"red\"><b>X</b></font></a>"; }
-% ##}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-6 col-md-6 col-lg-6">
 
-<div id="breeding_programs">
-  [loading...]
+
+	 <&| /page/info_section.mas, title=>"Breeding program", subtitle=>$subtitle &>
+	     <div id="breeding_programs">
+	     [loading...]	
+	     </div>
+	 </&>
+
+	 <&| /page/info_section.mas, title=>"Year(s)", subtitle => '[<a id="change_year_link">change</a>]' &>
+	     <div id="trial_year">
+    	      [loading...]
+  	      </div>
+	 </&>
+	 
+	 </div>	 
+	 <div class="col-sm-6 col-md-6 col-lg-6">
+
+	<&| /page/info_section.mas, title=>"Trial type", subtitle=>"[<a id=\"edit_trial_type\" >change</a>]" &>
+	    <div id="trial_type">
+	    	 [loading...]
+		</div>
+	</&>
+	
+	<&| /page/info_section.mas, title=>"Location(s)", subtitle=>"[<a id=\"change_trial_location_link\">change</a>]" &>
+	    <div id="trial_location">
+  	    [loading...]
+	    </div>
+	</&>
+	</div>
+	</div>
 </div>
-
-</&>
-
-</td><td valign="top" >
-<&| /page/info_section.mas, title=>"Trial type", subtitle=>"[<a id=\"edit_trial_type\" >change</a>]" &>
-  <div id="trial_type">
-    [loading...]
-  </div>
-</&>
-
-</td></tr>
-<tr><td valign="top" >
-
-<&| /page/info_section.mas, title=>"Year(s)", subtitle => '[<a id="change_year_link">change</a>]' &>
-  <div id="trial_year">
-    [loading...]
-  </div>
-
-</&>
-</td><td valign="top" width="365" >
-<&| /page/info_section.mas, title=>"Location(s)", subtitle=>"[<a id=\"change_trial_location_link\">change</a>]" &>
-
-<div id="trial_location">
-  [loading...]
-</&>
-
-</div>
-</td></tr></table>
 
 <&| /page/info_section.mas, title=>"Description", collapsible=>0, collapsed=>0, hide_if_empty=>0, is_empty=> $description_empty, subtitle=>"[<a id=\"edit_trial_description\">edit</a>]" &>
 <div id="trial_description">[loading...]</div>
@@ -135,7 +131,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </div>
 
-<&| /page/info_section.mas, title=>"Physical Trial Layout", subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
+<&| /page/info_section.mas, title=>"Physical Trial Layout", subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]', collapsible=>1 &>
   <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
 </&>
 
@@ -261,7 +257,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   
 </&>
 
-<&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
+<&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
   <& /breeders_toolbox/trial/trial_deletion.mas, trial_id => $trial_id  &>
 
 </&>
