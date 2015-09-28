@@ -1,39 +1,17 @@
 
-<li style="height:100%">
-  <form class="navbar-form navbar-left form-inline" role="search" action="/search/quick_search.pl" style="padding-right: 2px;height:100%">
-    <div class="input-group">
-      <span id="advanced_search_li" class="btn btn-default input-group-addon" style="display:none" onclick="location.href='/search';">Advanced</span>
-      <input id="quick_search_input" style="display:none;" type="text" name="term" class="form-control" placeholder="">
-      <span id="quick_search_icon" class="input-group-addon" style="height:34px; font-size:16; border: 1px solid #ccc; border-radius: 4px;"><img src="/documents/img/sol_search_button.gif" /></span>
-    </div>
-  </form>
-</li>
+<li class="dropdown">
 
-<script defer="defer">
-  jQuery(document).ready(function() {
-    
-    jQuery('#quick_search_icon').click(function () {
-      if (jQuery('#quick_search_input').attr("placeholder") == "") {
-        jQuery('#quick_search_input').attr("placeholder","Search");
-        jQuery('#advanced_search_li').css("display","table-cell");
-        jQuery('#quick_search_input').css("display","table-cell");
-	jQuery('#quick_search_input').css("width","0px");
-        jQuery('#quick_search_input').animate({
-          width: '150px'
-        }, 400);
-	
-      }
-      else {
-        jQuery('#quick_search_input').animate({
-          width: '0px'
-        }, 400, function(){
-          // callback function
-          jQuery('#quick_search_input').attr("placeholder","");
-          jQuery('#quick_search_input').css("display","none");
-          jQuery('#advanced_search_li').css("display","none");
-        });
-      }
-    });
-    
-  });
-</script>
+  <a class="menu_click_dropdown dropdown-toggle" href="/search/" data-toggle="dropdown"><img src="/documents/img/sol_search_button.gif" width="75px"/></a>
+  <div class="dropdown-menu" style="padding:10px;">
+    <form class="form" role="search" action="/search/quick_search.pl">
+      <div class="input-group">
+	<input id="quick_search_input" type="text" name="term" class="form-control" placeholder="Search..." />
+	<span class="input-group-btn"><button type="submit" class="btn btn-primary" >Go</button></span>
+      </div>
+    </form>
+    <br/>
+
+    <button class="btn btn-default" onclick="location.href='/search';">Advanced</button>
+  </div>
+
+</li>
