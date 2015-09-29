@@ -1,7 +1,7 @@
 
 <li class="dropdown">
 
-  <a class="menu_click_dropdown dropdown-toggle" href="/search/" data-toggle="dropdown"><img src="/documents/img/sol_search_button.gif" width="75px"/></a>
+  <a class="menu_click_dropdown dropdown-toggle" href="/search/" data-toggle="dropdown"><span class="glyphicon glyphicon-search"></span></a>
   <div class="dropdown-menu" style="padding:10px;">
     <form class="form" role="search" action="/search/quick_search.pl">
       <div class="input-group">
@@ -11,7 +11,6 @@
     </form>
     <br/>
 
-    <button class="btn btn-default" onclick="location.href='/search';">Advanced</button>
   </div>
 
 </li>
