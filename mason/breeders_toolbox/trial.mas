@@ -23,6 +23,9 @@ $trial_name
 @accession_names
 @control_names
 @plot_names
+$plot_length => ''
+$plot_width => ''
+$plant_per_plot => ''
 $design_type
 $number_of_blocks
 $number_of_replicates
@@ -187,10 +190,13 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
 
-% print STDERR "Check 8 (mason) : ".(time() - $start_time)."\n";
+%print STDERR "Check 8 (mason) : ".(time() - $start_time)."\n";
 %print "Design: $design_type <br /><br />";
 %print "Number of blocks: $number_of_blocks <br />";
 %print "Number of replicates: $number_of_replicates <br />";
+%print "plot_length: $plot_length <br />";
+%print "plot_width: $plot_width <br />";
+%print "plant_per_plot: $plant_per_plot <br />";
 
 <br /><br />
 
@@ -352,9 +358,6 @@ jQuery(document).ready(function () {
 	}
     });
 
-
-
 });
 
 </script>
- 
