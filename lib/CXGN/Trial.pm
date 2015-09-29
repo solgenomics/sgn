@@ -520,7 +520,6 @@ sub set_plot_dimensions {
 }   
 
 
-
 =head2 function delete_phenotype_data()
 
  Usage:
@@ -953,5 +952,33 @@ sub get_breeding_program_cvterm_id {
 
     return $row->cvterm_id();
 }
+
+sub get_harvest_date_cvterm_id { 
+    my $self = shift;
+
+    my $harvest_date_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'harvest_date' });
+    my $row;
+
+    if ($harvest_date_rs->count() == 0) {
+	$row = $self->bcs_schema->resultset('Cv::Cvterm')->create_with(
+	    {
+		name => 'harvest_date',
+		cv   => 'local',
+		db   => 'null',
+		dbxref => 'harvest_date',
+	    });
+
+    }
+    else {
+	$row = $harvest_date_rs->first();
+    }
+
+    return $row->cvterm_id();
+}
+
+
+
+
+
 
 1;
