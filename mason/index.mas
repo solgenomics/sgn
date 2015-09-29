@@ -27,10 +27,10 @@ $schema
         <div class="panel-heading">SGN Featured</div>
     	  <table class="table table-hover table-striped">
     	    <tbody>
-    	      <tr><td><& homepage/publication_of_the_week.mas &></td></tr>
-    	      <tr><td><& homepage/image_of_the_week.mas &></td></tr>
-    	      <tr><td><& homepage/locus_of_the_week.mas &></td></tr>
-    	      <tr><td><& homepage/labs.mas &></td></tr>
+    	      <tr><td><div class="container-fluid"><& homepage/publication_of_the_week.mas &></div></td></tr>
+    	      <tr><td><div class="container-fluid"><& homepage/image_of_the_week.mas &></div></td></tr>
+    	      <tr><td><div class="container-fluid"><& homepage/locus_of_the_week.mas &></div></td></tr>
+    	      <tr><td><div class="container-fluid"><& homepage/labs.mas &></div></td></tr>
     	    </tbody>
     	  </table>
       </div>

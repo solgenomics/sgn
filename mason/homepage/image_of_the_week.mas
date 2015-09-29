@@ -21,7 +21,5 @@ eval {
 </div>
 -->
 
-<div class="container-fluid">
 <h4>Image of the Week</h4>
 <% $IOTW %>
-</div>

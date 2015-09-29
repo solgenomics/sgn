@@ -39,8 +39,6 @@ eval {
 <a href="oldpublications.pl">See all publications...</a></div>
 -->
 
-<div class="container-fluid">
 <h4>Featured Publication</h4>
 <% $publications %>
 <button class="btn btn-info btn-sm" onclick=location.href="/oldpublications.pl">See all publications...</button>
-</div>
