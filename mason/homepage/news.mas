@@ -23,7 +23,7 @@ eval {
   <% $contents %>
 <!-- </div> -->
 
-<button class="btn btn-info btn-sm" onclick=location.href="/oldhighlights.pl">See all news...</button>
+<button class="btn btn-info btn-sm" onclick='location.href="/oldhighlights.pl"'>See all news...</button>
 
 <!--
 <a href="oldhighlights.pl">See all news...</a>
