@@ -6,7 +6,6 @@ use File::Path qw / mkpath  /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
-
 use CXGN::Tools::Run;
 use Try::Tiny;
 
@@ -151,9 +150,6 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     $self->structure_output_details($c); 
     
     my $output_details = $c->stash->{bg_job_output_details};
-    
-    my $job_tempdir = $c->stash->{r_job_tempdir};   
-    $output_details->{r_job_tempdir} = $job_tempdir;
       
     $c->stash->{r_temp_file} = 'analysis-status';
     $c->controller('solGS::solGS')->create_cluster_acccesible_tmp_files($c);
@@ -175,13 +171,15 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     		              working_dir => $temp_dir,
 			      max_cluster_jobs => 1_000_000_000,
 	    },
+	    
          });
+	
     }
     catch 
     {
 	my $err = $_;
 	$err =~ s/\n at .+//s; 
-        
+        print STDERR "\n ERROR: $err \n";
       	try
         {  
             $err .= "\n=== R output ===\n"
@@ -259,8 +257,10 @@ sub structure_output_details {
     my $pop_id =  $c->stash->{pop_id}; 
 
     my %output_details = (); 
-    my $base = $c->req->base;
-
+    
+    my $base    = $c->req->base;
+    my $referer = $c->req->referer;
+    
     my $analysis_page = $analysis_data->{analysis_page};
     
     my $geno_file;
@@ -281,11 +281,18 @@ sub structure_output_details {
 	  
 	    my $trait_page;
 
-	    if ( $analysis_page =~ m/solgs\/trait\// ) 
+	    if ( $referer =~ m/solgs\/population\// ) 
 	    {
 		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
 	    }
 	    
+	    if ( $referer =~ m/solgs\/populations\/combined\// ) 
+	    {
+		$trait_page = $base . "solgs/model/combined/trials/$pop_id/trait/$trait_id";
+	    }
+
+	    print STDERR "\n structure output  analysis_page: $analysis_page\n referer: $referer\n ";
+
 	    if ( $analysis_page =~ m/solgs\/model\/combined\/trials\// ) 
 	    {
 		$trait_page = $base . "solgs/model/combined/trials/$pop_id/trait/$trait_id";
@@ -300,13 +307,14 @@ sub structure_output_details {
 	    }
 	    
 	    $output_details{$trait_abbr} = {
-		'trait_id'   => $trait_id, 
-		'trait_name' => $c->stash->{trait_name}, 
-		'trait_page' => $trait_page,
-		'gebv_file'  => $c->stash->{gebv_kinship_file},
-		'pop_id'     => $pop_id,
-		'pheno_file' => $pheno_file,
-		'geno_file'  => $geno_file,
+		'trait_id'      => $trait_id, 
+		'trait_name'    => $c->stash->{trait_name}, 
+		'trait_page'    => $trait_page,
+		'gebv_file'     => $c->stash->{gebv_kinship_file},
+		'pop_id'        => $pop_id,
+		'pheno_file'    => $pheno_file,
+		'geno_file'     => $geno_file,
+		'data_set_type' => $c->stash->{data_set_type},
 	    }
 	}
     }
@@ -314,7 +322,8 @@ sub structure_output_details {
     $output_details{analysis_profile} = $analysis_data;
     $output_details{r_job_tempdir}    = $c->stash->{r_job_tempdir};
     $output_details{contact_page}     = $base . 'contact/form';
- 
+    $output_details{data_set_type}    = $c->stash->{data_set_type};
+    
     $c->stash->{bg_job_output_details} = \%output_details;
    
 }
@@ -323,36 +332,44 @@ sub structure_output_details {
 sub run_analysis {
     my ($self, $c) = @_;
  
-    #test if analysis completed?
-    # test on combining populations..
-
     my $analysis_profile = $c->stash->{analysis_profile};
     my $analysis_page    = $analysis_profile->{analysis_page};
 
-    print STDERR "\n analysis_page: $analysis_page\n";
     my $base =   $c->req->base;
     $analysis_page =~ s/$base/\//;
 
     $c->stash->{background_job} = 1;
   
-
+    my @selected_traits = @{$c->stash->{selected_traits}};
+    
     if ($analysis_page =~ /solgs\/analyze\/traits\//) 
     {   
-	$c->controller('solGS::solGS')->build_multiple_traits_models($c);	
+	if ($c->stash->{data_set_type} =~ /combined populations/)
+	{
+	    $c->stash->{combo_pops_id} = $c->stash->{pop_id};
+	   
+	    foreach my $trait_id (@selected_traits)		
+	    {		
+		$c->controller('solGS::solGS')->get_trait_name($c, $trait_id);   	
+		$c->controller('solGS::combinedTrials')->combine_data_build_model($c);
+	    }
+	}
+	else 
+	{
+	    $c->controller('solGS::solGS')->build_multiple_traits_models($c);
+	}	
     } 
     elsif ($analysis_page =~ /solgs\/model\/combined\/trials\// )	  
     {
-	my $trait_id = $c->stash->{selected_traits}->[0];
-	my $pop_id   = $c->stash->{pop_id};
-	$c->stash->{combo_pops_id} = $pop_id;
-	print STDERR "\n trait id: $trait_id --- pop id: $pop_id\n";
+	$c->stash->{combo_pops_id} = $c->stash->{pop_id};
+	my $trait_id = $c->stash->{selected_traits}->[0];		
+	
 	$c->controller('solGS::solGS')->get_trait_name($c, $trait_id);
-
-	$c->controller('solGS::combinedTrials')->build_model_combined_trials_trait($c);
+	$c->controller('solGS::combinedTrials')->combine_data_build_model($c);
+       
     }
     else 
     {
-	print STDERR "\n CALLLING: $analysis_page \n";
 	$c->req->path($analysis_page);
 	$c->prepare_action;
 	$c->action ? $c->forward( $c->action ) : $c->dispatch;
@@ -373,57 +390,13 @@ sub run_analysis {
  
 }
 
-sub run_data_combination {
-    my ($self, $c) = @_;
- 
-    
- #    $c->controller('solGS::solGS')->cache_combined_pops_data($c);
-
-#     my $combined_pheno_file = $c->stash->{trait_combined_pheno_file};
-#     my $combined_geno_file  = $c->stash->{trait_combined_geno_file};  
-    
-#     my $combined_files = {
-# 	combined_pheno_file => $combined_pheno_file, 
-# 	combined_geno_file  => $combined_geno_file
-#     }
-
-#     $c->controller('solGS::combineTrials')->combine_trait_data($c);
-
-#     $c->stash->{background_job} = 1;
-#     try 
-#     { 
-#         my $job = CXGN::Tools::Run->run_cluster_perl({
-           
-#             method        => ["solGS::AnalysisReport" => "check_pops_data_combination"],
-#     	    args          => [$combined_files],
-#     	    load_packages => ['solGS::AnalysisReport'],
-#     	    run_opts      => {
-#     		              out_file    => $out_temp_file,
-# 			      err_file    => $err_temp_file,
-#     		              working_dir => $temp_dir,
-# 			      max_cluster_jobs => 1_000_000_000,
-# 	    },
-#          });
-       
-	
-#     }
-#     catch 
-#     {
-
-# #error report
-        
-      
-#     };
 
 
-
-}
 
 
 sub update_analysis_progress {
     my ($self, $c) = @_;
      
-    #read entry for the analysis, grep it and replace status with analysis outcome
     my $analysis_data =  $c->stash->{analysis_profile};
     my $analysis_name= $analysis_data->{analysis_name};
     my $status = $c->stash->{status};
