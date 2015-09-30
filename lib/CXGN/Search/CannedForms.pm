@@ -583,7 +583,7 @@ sub to_html {
 
 <div class="container-fluid">
 
-  <div class="row">
+  <div class="row well">
     <div class="col-sm-2">
     </div>
     <div class="col-sm-8">
@@ -592,10 +592,10 @@ sub to_html {
           <label class="col-sm-3 control-label">Marker Name or SGN-M \#: </label>
           <div class="col-sm-9" >
             <div class="row">
-              <div class="col-sm-3">
+              <div class="col-sm-5">
 	        $nametype{asdf}
               </div>
-	      <div class="col-sm-9">
+	      <div class="col-sm-7">
 	        $textbox{marker_name}
               </div>
             </div>
@@ -688,7 +688,7 @@ EOHTML
 	<div class="form-group">
       	  <label class="col-sm-6 control-label"><span class="help" title="Maps that have been made with MapMaker have confidence values associated with their positions. Leave this setting at &quot;uncalculated&quot; to see all markers on all maps.">Confidence at least: </span></label>
       	  <div class="col-sm-6" >
-	     $textbox{'pos_start',3} cM and $textbox{'pos_end',3} cM
+	     $confs{yeah}
           </div>
 	</div>
 	<div class="form-group">
