@@ -244,6 +244,8 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
     </&>
     <&| /page/info_section.mas, title=>"Android Field Book Layout", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_fieldbook_link">Create Field Book</a>]' &>
     </&>
+    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
+    </&>
   </&>
   <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
     <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_phenotyping_spreadsheet_link">Upload</a>]'&>
@@ -297,6 +299,13 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <div id="create_spreadsheet_dialog" title="Create Phenotyping Spreadsheet" style="display:none;">
   <div id="trait_list" name="trait_list">
     <label id="trait_list_label" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
+    </label>
+  </div>
+</div>
+
+<div id="create_DataCollector_dialog" title="Create Data Collector Spreadsheet" style="display:none;">
+  <div id="trait_list_dc" name="trait_list">
+    <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
     </label>
   </div>
 </div>
