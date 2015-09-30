@@ -69,12 +69,12 @@ if ($post_id) {
 	    $page->header();
 	    
 	    print <<HTML;
-	    
+	    <div class="container-fluid">
 	    <h4>Confirm user comment delete</h4>
 		Comment \# $post_id from user <b>$post_person_first_name $post_person_last_name</b><br /><br />
 	      Are you sure you want to delete this post? <br /><br />
 
-	      <div class="boxbgcolor2">$post_text</div>
+	      <div class="panel panel-primary"><div class="panel-body">$post_text</div></div>
 	      
 	      <br />
 	      <form action="forum_post_delete.pl">
@@ -82,10 +82,10 @@ if ($post_id) {
 	      <input type="hidden" name="post_id" value="$post_id" />
 	      <input type="hidden" name="refering_page" value="$refering_page" />
 	      <input type="hidden" name="topic_id" value="$topic_id" />
-	      <input type="submit" value="Delete" /><br /><br />
+	      <input class="btn btn-primary" type="submit" value="Delete" /><br /><br />
 	      <a href="$refering_page">Go back</a>
 	      </form>
-	      
+	     </div> 
 HTML
 
 ;	      
