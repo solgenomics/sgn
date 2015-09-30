@@ -50,8 +50,8 @@ print page_title_html("Forum Topics");
 
 my $login_string="";
 
-if ($name) { $login_string = qq { <div class="row"><div class="panel panel-primary"><div class="panel-body">You are logged in as <b>$name</b>. <button class="btn btn-primary" onclick='location.href="add_topic.pl?action=new";'>Add topic</button>.</div></div></div> }; }
-else { $login_string="<div class=\"row\"><div class=\"panel panel-primary\"><div class=\"panel-body\"><b>Note:</b> <ul><li>You are not logged in.</li><li>You have to be logged in to add new topics and posts. </li><li>You don't need to be logged in for browsing.</li></ul><br /> <button class=\"btn btn-primary\" onclick='location.href=\"/solpeople/login.pl?goto_url=/forum/topics.pl\";'>Login</button><br /></div></div></div>"; }
+if ($name) { $login_string = qq { <div class="row"><div class="panel panel-primary"><div class="panel-body"><div class="row"><div class="col-sm-10">You are logged in as <b>$name</b>.</div><div class="col-sm-2"><button class="btn btn-primary" onclick='location.href="add_topic.pl?action=new";'>Add topic</button>.</div></div></div></div></div> }; }
+else { $login_string="<div class=\"row\"><div class=\"panel panel-primary\"><div class=\"panel-body\"><div class=\"row\"><div class=\"col-sm-10\"><b>Note:</b> <ul><li>You are not logged in.</li><li>You have to be logged in to add new topics and posts. </li><li>You don't need to be logged in for browsing.</li></ul></div><div class=\"col-sm-2\"><button class=\"btn btn-primary\" onclick='location.href=\"/solpeople/login.pl?goto_url=/forum/topics.pl\";'>Login</button></div></div></div></div></div>"; }
 
 print $login_string;
 
@@ -93,7 +93,7 @@ sub topics_list {
 	    || $user->get_user_type() eq "curator"
 	    ) {   
 	    $append = qq {
-		<hr><a href="add_topic.pl?action=edit&amp;topic_id=$topic_id">Edit</a> | 
+		<a href="add_topic.pl?action=edit&amp;topic_id=$topic_id">Edit</a> | 
 		    <a href="add_topic.pl?action=delete&amp;topic_id=$topic_id">Delete</a> 
 		    
 		}
@@ -117,13 +117,14 @@ sub topics_list {
                     </div>
                     <div class="col-sm-2">
                       $most_recent_post_date
+                      <br/>
+                      $append
                     </div>
                   </div>
                 </div>
                 <div class="panel-body">
                   $display_topic_desc
-                  <br/>
-                  $append
+                  
                 </div>
               </div>
             </div>
