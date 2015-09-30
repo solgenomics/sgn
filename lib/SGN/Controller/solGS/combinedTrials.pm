@@ -114,7 +114,8 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args(3) {
 
     $c->stash->{combo_pops_id} = $combo_pops_id;
     $c->stash->{trait_id}      = $trait_id;
- 
+    
+    $self->combine_trait_data($c); 
     $self->build_model_combined_trials_trait($c);
     
     $c->controller('solGS::solGS')->gebv_kinship_file($c);    
@@ -191,7 +192,8 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
             $c->stash->{trait_id} = $trait_id;
             $solgs_controller->get_trait_name($c, $trait_id);
             my $tr_abbr = $c->stash->{trait_abbr};
-
+	    
+	    $self->combine_trait_data($c);  
             $self->build_model_combined_trials_trait($c);
           
             $solgs_controller->get_model_accuracy_value($c, $combo_pops_id, $tr_abbr);
@@ -232,24 +234,21 @@ sub build_model_combined_trials_trait {
   
     my $solgs_controller = $c->controller('solGS::solGS');
     $c->stash->{data_set_type} = 'combined populations';
-     print STDERR "\nCALLING GEBV kinship file \n";
+  
     $solgs_controller->gebv_kinship_file($c);
     my $gebv_file = $c->stash->{gebv_kinship_file};
- print STDERR "\nCALLED GEBV kinship file : $gebv_file\n";
+
     unless  ( -s $gebv_file ) 
-    {    print STDERR "\nCALLing combine trait data\n";
-        $self->combine_trait_data($c);    
+    {   
         my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
         my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-         print STDERR "\nCALLEDcombine trait data -- $combined_pops_pheno_file   $combined_pops_geno_file\n";
-        if (-s $combined_pops_pheno_file  && -s $combined_pops_geno_file ) 
-        {  
-	    my $pop_id = $c->stash->{combo_pops_id};
-	     my $pop_id2 = $c->stash->{pop_id};
-	    print STDERR "\nCALLING get_rrblup_output.. pop id $pop_id -- $pop_id2 \n";
-            $c->controller('solGS::solGS')->get_rrblup_output($c);
-	     print STDERR "\nCALLED get_rrblup_output.. pop id  $pop_id  -- $pop_id2\n";
-        }
+        
+	# if (-s $combined_pops_pheno_file  && -s $combined_pops_geno_file ) 
+	# {  	 
+	     $c->stash->{pop_id} = $c->stash->{combo_pops_id};	    
+	     $c->controller('solGS::solGS')->get_rrblup_output($c);
+
+	# }
     }
 }
 
@@ -263,17 +262,6 @@ sub combine_trait_data {
     my $solgs_controller = $c->controller('solGS::solGS');
     $solgs_controller->get_trait_name($c, $trait_id);
  
-    $solgs_controller->get_combined_pops_list($c, $combo_pops_id);
-
-    my $pops_list = $c->stash->{combined_pops_list};
-    $c->stash->{trait_combo_pops} = $pops_list; 
-    print STDERR "\n pops_list: $pops_list \n";
-    my @pops_list = split(/,/, $pops_list);
-    $c->stash->{trait_combine_populations} = \@pops_list;
-
-    $solgs_controller->multi_pops_phenotype_data($c, \@pops_list);
-    $solgs_controller->multi_pops_genotype_data($c, \@pops_list);
-
     $solgs_controller->cache_combined_pops_data($c);
 
     my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
@@ -281,9 +269,40 @@ sub combine_trait_data {
              
     unless (-s $combined_pops_geno_file  && -s $combined_pops_pheno_file ) 
     { 
-       $solgs_controller->r_combine_populations($c);     
+	$solgs_controller->get_combined_pops_list($c, $combo_pops_id);
+
+	my $pops_list = $c->stash->{combined_pops_list};
+	$c->stash->{trait_combo_pops} = $pops_list; 
+
+	my @pops_list = split(/,/, $pops_list);
+	$c->stash->{trait_combine_populations} = \@pops_list;
+
+	$solgs_controller->multi_pops_phenotype_data($c, \@pops_list);
+	$solgs_controller->multi_pops_genotype_data($c, \@pops_list);
+    
+	$solgs_controller->r_combine_populations($c);         
     }
                        
+}
+
+
+sub combine_data_build_model {
+    my ($self, $c) = @_;
+
+    my $trait_id = $c->stash->{trait_id};
+    $c->controller('solGS::solGS')->get_trait_name($c, $trait_id);
+	
+    $self->combine_trait_data($c); 
+  
+    my $combine_job_id = $c->stash->{r_job_id};
+   
+    if ($combine_job_id) 
+    {
+	$c->stash->{dependency} = 'depend=afterok:' . $combine_job_id;
+    }
+
+    $self->build_model_combined_trials_trait($c);
+	
 }
 
 
