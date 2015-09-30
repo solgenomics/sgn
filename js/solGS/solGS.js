@@ -14,7 +14,7 @@ function solGS () {};
 
 solGS.waitPage = function (page) {
     alert(page)
-    if ( page.match(/solgs\/trait\//)) {
+    if ( page.match(/solgs\/trait\//) || page.match(/solgs\/model\/combined\/trials\//)) {
     	askUser(page);
     } else {
     	blockPage(page);
@@ -149,6 +149,10 @@ function goToPage (page, args) {
 	
 	window.location = page;
 	    
+    } else if (page.match(/solgs\/model\/combined\/trials\//)) {
+	
+	window.location = page;
+	    
     }
 	    
 }
@@ -188,8 +192,8 @@ function wrapTraitsForm () {
 
 
 function getProfileDialog (page, args) {
-    alert('getprofiledialog ' + page)
-    if (page.match(/solgs\/trait\//)) {
+  
+    if (page.match(/solgs\/trait\//) || page.match(/solgs\/model\/combined\/trials\//)) {
 	args = getArgsFromUrl(page, args);
     }
       
@@ -210,16 +214,19 @@ function getProfileDialog (page, args) {
 	
 		    var analysisName = jQuery('#analysis_name').val();
 		    var analysisType = args.analysis_type;
-		 
+		    
+		    var dataSetType = args.data_set_type;
+		    
 		    args['user_email'] = userEmail;
 		    args = JSON.stringify(args);
-
+	
 		    var analysisProfile = {
 			'user_name'    : userName, 
 			'user_email'   : userEmail,
 			'analysis_name': analysisName,
 			'analysis_page': page,
 			'analysis_type': analysisType,
+			'data_set_type': dataSetType,
 			'arguments'    : args,
 		    }
 
@@ -237,25 +244,50 @@ function getProfileDialog (page, args) {
 
 
 function getArgsFromUrl (url, args) {
-     
+    
     if (url.match(/solgs\/trait\//)) {
-	var urlStr = url.split(/\/+/);
 	
+	var urlStr = url.split(/\/+/);
+
 	if (!args) {
-	    args = {
-		'trait_id'      : [ urlStr[4] ], 
-		'population_id' : [ urlStr[6] ], 
-		'analysis_type' : 'single model',
-	    };
+	    
+	    args = {'trait_id'      : [ urlStr[4] ], 
+		    'population_id' : [ urlStr[6] ], 
+		    'analysis_type' : 'single model',
+		    'data_set_type' : 'single population',
+		   };
 	}
 	else {
 
 	    args['trait_id']      = [ urlStr[4]  ];
 	    args['population_id'] = [  urlStr[6] ] ;
 	    args['analysis_type'] = 'single model';
+	    args['data_set_type'] = 'single population';
 	
 	}
-    }
+    } 
+ 
+    if (url.match(/solgs\/model\/combined\/trials\//)) {
+	
+	var urlStr = url.split(/\/+/);
+
+	if (!args) {
+	    
+	    args = {'trait_id'      : [ urlStr[8] ], 
+		    'population_id' : [ urlStr[6] ], 
+		    'analysis_type' : 'single model',
+		    'data_set_type' : 'combined populations',
+		   };
+	}
+	else {
+
+	    args['trait_id']      = [ urlStr[8]  ];
+	    args['population_id'] = [  urlStr[6] ] ;
+	    args['analysis_type'] = 'single model';
+	    args['data_set_type'] = 'combined populations';
+	
+	}
+    } 
     
     return args;
 
@@ -316,13 +348,13 @@ jQuery(document).ready(function (){
 	 
 	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
 	 var popId = jQuery('#population_id').val(); 
-	 alert('popid ' + popId)
+
 	 var page;
 	 var analysisType;
 	 var dataSetType;
 	 
 	 if (traitIds.length == 1 ) {	   
-	     alert('referer ' + referer)
+
 	     analysisType = 'single model';
 	     
 	     if ( referer.match(/solgs\/populations\/combined\//) ) {
@@ -351,12 +383,11 @@ jQuery(document).ready(function (){
 	     analysisType = 'multiple models';
 	 }
 	 
-	 var args = {
-	     'trait_id'      : traitIds, 
-	     'population_id' : [ popId ], 
-	     'analysis_type' : analysisType,
-	     'data_set_type' : dataSetType,
-	 };
+	 var args = {'trait_id'      : traitIds, 
+		     'population_id' : [ popId ], 
+		     'analysis_type' : analysisType,
+		     'data_set_type' : dataSetType,
+		    };
 
 	 askUser(page, args);
 
