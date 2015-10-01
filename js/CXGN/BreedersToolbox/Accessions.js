@@ -190,7 +190,7 @@ jQuery(document).ready(function ($) {
 		    $('#review_fuzzy_matches_dialog').modal('show');
 		});
 		
-	    } else {
+	    }
 		$('#review_found_matches_dialog').on('hidden.bs.modal', function() {
 		    if (!accessionList || accessionList.length == 0) {
 			alert("No accessions to add");
@@ -225,7 +225,7 @@ jQuery(document).ready(function ($) {
 	    }
 	    accessionList = verifyResponse.absent;
 
-	    $('#review_fuzzy_matches_dialog').bind('dialogclose', function() {
+	    $('#review_fuzzy_matches_dialog').on('hidden.bs.modal', function() {
 		if (!accessionList || accessionList.length == 0) {
 		    alert("No accessions to add");
 		    location.reload();
