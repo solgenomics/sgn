@@ -23,9 +23,9 @@ $trial_name
 @accession_names
 @control_names
 @plot_names
-$plot_length => ''
-$plot_width => ''
-$plant_per_plot => ''
+$plot_length => 'unknown'
+$plot_width => 'unknown'
+$plant_per_plot => 'unknown'
 $design_type
 $number_of_blocks
 $number_of_replicates
@@ -237,9 +237,9 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 %print "Design: $design_type <br /><br />";
 %print "Number of blocks: $number_of_blocks <br />";
 %print "Number of replicates: $number_of_replicates <br />";
-%print "plot_length: $plot_length <br />";
-%print "plot_width: $plot_width <br />";
-%print "plant_per_plot: $plant_per_plot <br />";
+%print "Plot length: $plot_length <br />";
+%print "Plot width: $plot_width <br />";
+%print "Plants per plot: $plant_per_plot <br />";
 
 <br /><br />
 

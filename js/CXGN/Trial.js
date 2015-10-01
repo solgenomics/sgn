@@ -336,7 +336,7 @@ function trial_detail_page_setup_dialogs() {
 		    },
 	    save:   { text: "Save",
 		      click: function() { 
-			  alert("Would save now...");
+			  save_planting_date();
 		      },
 		      id: "change_planting_date_button"
 		    }
@@ -560,6 +560,46 @@ function display_harvest_date() {
     });
 }
 
+function save_planting_date() { 
+    var trial_id = get_trial_id();
+    var planting_date = jQuery('#planting_date_picker').val();    
+    var checked_date = check_date(planting_date);
+
+    if (checked_date) {
+	jQuery.ajax( {
+	    url : '/ajax/breeders/trial/'+trial_id+'/planting_date',
+	    data: { 'planting_date' : checked_date },
+	    type: 'POST',
+	    success: function(response){ 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    alert("Successfully stored planting date.");
+		    display_planting_date();
+		    jQuery('#change_planting_date_dialog').dialog("close");
+		}
+	    },
+	    error: function(response) { 
+		alert('An error occurred.');
+	    }
+	});
+
+    }
+}
+
+function display_planting_date() { 
+    var trial_id = get_trial_id();
+    jQuery.ajax( { 
+	url : '/ajax/breeders/trial/'+trial_id+'/planting_date',
+	type: 'GET',
+	success: function(response) { 
+	    jQuery('#planting_date').html(response.planting_date);
+	},
+	error: function(response) { 
+	}
+    });
+}
 
 function check_date(d) { 
     var regex = new RegExp("^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$");
