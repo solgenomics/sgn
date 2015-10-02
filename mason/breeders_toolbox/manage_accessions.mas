@@ -9,7 +9,7 @@ $accessions
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add Pedigree</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
+<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
 
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
     
@@ -78,13 +78,13 @@ $accessions
     	  <b>The following accessions already exist and cannot be added:</b>
   	  <div id="count_of_found_accessions"></div>
   	  <br>
-  	  <div class="left"> <b>Searched name</b></div>
-  	  <div class="right"> <b>Unique name for synonym</b></div>
+  	  <div class="left"><b>Searched name</b></div>
+  	  <div class="right"><b>Unique name for synonym</b></div>
   	  <div id="view_found_matches"></div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
       </div>
     </div>
   </div>
@@ -105,7 +105,7 @@ $accessions
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
       </div>
     </div>
   </div>
