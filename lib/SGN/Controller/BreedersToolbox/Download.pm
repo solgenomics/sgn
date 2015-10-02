@@ -125,6 +125,41 @@ sub download_layout_excel {
 
 
 
+#sub download_datacollector_excel {
+#    my $self = shift;
+#    my $c = shift;
+#    my $trial_id = shift;
+
+#    $c->tempfiles_subdir("downloads"); # make sure the dir exists
+#    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"downloads/DataCollector_".$trial_id."_XXXXX");
+
+#    close($fh);
+
+#    my $file_path = $c->config->{basepath}."/".$tempfile.".xls"; # need xls extension to avoid trouble
+    
+#    move($tempfile, $file_path);
+
+#    my $td = CXGN::Trial::Download->new( 
+#	{ 
+#	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), 
+#	    trial_id => $trial_id,
+#	    filename => $file_path,
+#	    format => "DataCollectorExcel",
+#	},
+#	);
+
+#    $td->download();
+#      my $file_name = basename($file_path);    
+#     $c->res->content_type('Application/xls');    
+#     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
+
+#    my $output = read_file($file_path);
+
+#    $c->res->body($output);
+
+#}
+
+
 
 sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download') Args(1) { 
     my $self = shift;
