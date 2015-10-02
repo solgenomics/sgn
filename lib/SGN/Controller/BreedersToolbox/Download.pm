@@ -22,6 +22,7 @@ use URI::FromHash 'uri';
 use CXGN::List::Transform;
 use Spreadsheet::WriteExcel;
 use CXGN::Trial::Download;
+use POSIX qw(strftime);
 
 sub breeder_download : Path('/breeders/download/') Args(0) { 
     my $self = shift;
@@ -282,7 +283,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $trial_list_id     = $c->req->param("trial_list_list_select");
     my $trait_list_id     = $c->req->param("trait_list_list_select");
     my $data_type         = $c->req->param("data_type")|| "phenotype";
-
     my $format            = $c->req->param("format");
 
     my $accession_data;
@@ -332,30 +332,75 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $trial_sql = join ",", map { "\'$_\'" } @{$trial_id_data->{transform}};
     my $trait_sql = join ",", map { "\'$_\'" } @{$trait_id_data->{transform}};
 
-    my $data; 
+    my $result; 
     my $output = "";
-    
+        
     if ($data_type eq "phenotype") { 
-	$data = $bs->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
-	
-	$output = "";
-	foreach my $d (@$data) { 
-	    $output .= join ",", @$d;
-	    $output .= "\n";
+	my $result = $bs->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
+	my @data = @$result;
+
+	if ($format eq "html") {
+	    $output = "";
+	    foreach my $d (@data) { 
+		$output .= join ",", @$d;
+		$output .= "\n";
+	    }
+	    $c->res->content_type("text/plain");
+	    $c->res->body($output);
+	} elsif ($format eq ".csv") {
+	    #handle csvs here
+
+	} else {
+	    # create tempfile name and place to save it
+	    my $what = "phenotype_download";
+	    my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+	    my $dir = $c->tempfiles_subdir('download');
+	    my $temp_file_name = $time_stamp . "$what" . "XXXX";
+	    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+	    my $tempfile = $c->config->{basepath}."/".$rel_file;
+	    
+	    print STDERR "TEMPFILE : $tempfile\n";
+	    
+	    #build excel file; include column names
+	    my $ss = Spreadsheet::WriteExcel->new($tempfile);
+	    my $ws = $ss->add_worksheet();
+	    
+	    my @col_names = qw/project_name stock_name location trait value plot_name cv_name cvterm_accession rep block_number/;
+	    
+	    for (my $column =0; $column< 10; $column++) {
+		$ws->write(0, $column, $col_names[$column]);
+	    }
+	    for (my $line =0; $line < @data; $line++) {
+		print STDERR "dataline = $data[$line]\n";
+		my @columns = @{$data[$line]};
+		print STDERR "columns = @columns\n";
+		for(my $col = 0; $col<@columns; $col++) { 
+		    $ws->write(($line+1), $col, $columns[$col]);
+		}
+	    }
+	    $ss ->close();
+	    
+	    #Using tempfile and new filename,send file to client 
+	    my $file_name = $time_stamp . "$what" . "$format";
+	    $c->res->content_type('Application/'.$format);
+	    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+	    $output = read_file($tempfile);
+	    $c->res->body($output);   
 	}
     }
 
     if ($data_type eq "genotype") { 
-	$data = $bs->get_genotype_info($accession_sql, $trial_sql);
-	
-	$output = "";
-	foreach my $d (@$data) { 
+	$result = $bs->get_genotype_info($accession_sql, $trial_sql);
+	my @data = @$result;
+
+	my $output = "";
+	foreach my $d (@data) { 
 	    $output .= join "\t", @$d;
 	    $output .= "\n";
 	}
+	$c->res->content_type("text/plain");
+	$c->res->body($output);
     }
-    $c->res->content_type("text/plain");
-    $c->res->body($output);
 }
 
 #=pod
