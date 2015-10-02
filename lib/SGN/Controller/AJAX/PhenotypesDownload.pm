@@ -69,15 +69,15 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
 	  format => $format,
       });
 
-      my $error = $create_spreadsheet->download();
+     $create_spreadsheet->download();
 
     print STDERR "DOWNLOAD FILENAME = ".$create_spreadsheet->filename()."\n";
     print STDERR "RELATIVE  = $rel_file\n";
 
-if ($error) { 
-$c->stash->{rest} = { error => $error };
-return;
-}
+#if ($error) { 
+#$c->stash->{rest} = { error => $error };
+#return;
+#}
     $c->stash->{rest} = { filename => $urlencode{$rel_file} };
 
 }
