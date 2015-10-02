@@ -144,7 +144,7 @@ function create_spreadsheet() {
 		 alert(response.error);
 		 jQuery('#open_create_spreadsheet_dialog').dialog("close");
              } else {
-		 alert(response.filename);
+		 //alert(response.filename);
 		 jQuery('#open_create_spreadsheet_dialog').dialog("close");
 		 window.location.href = "/download/"+response.filename;
              }
@@ -173,7 +173,7 @@ function open_create_fieldbook_dialog() {
             } else {
 		jQuery('#tablet_layout_download_link').attr('href',response.file);
 		jQuery("#tablet_field_layout_saved_dialog_message").dialog("open");
-		//alert(response.file);
+		alert(response.file);
 		jQuery('#open_create_fieldbook_dialog').dialog("close");
             }
 	},
@@ -191,6 +191,7 @@ function open_create_DataCollector_dialog() {
     jQuery('#working').dialog("close");
     jQuery('#create_DataCollector_dialog').dialog("open");
 }
+
 
 function create_DataCollector() {
     jQuery('#working').dialog("open");
@@ -211,18 +212,22 @@ function create_DataCollector() {
 	 },
 	 success: function (response) {
 	     jQuery('#working').dialog("close");
+		//alert("hello");
+		
              if (response.error) {
-		 alert(response.error);
+		 //alert("error: "+response.error);
 		 jQuery('#open_create_DataCollector_dialog').dialog("close");
              } else {
-		 alert(response.filename);
+		 //alert("success: "+response.filename);
+   		 //jQuery('#data_collector_download_link').attr('href',response.filename);
+		 //jQuery("#data_collector_saved_dialog_message").dialog("open");
 		 jQuery('#open_create_DataCollector_dialog').dialog("close");
 		 window.location.href = "/download/"+response.filename;
              }
 	 },
 	 error: function () {
 	     jQuery('#working').dialog("close");
-             alert('An error occurred creating a phenotype file.');
+             alert('An error occurred creating a DataCollector file.');
              jQuery('#open_download_DataCollector_dialog').dialog("close");
 	 }
      });
@@ -257,6 +262,17 @@ function trial_detail_page_setup_dialogs() {
 	    }
 	}
     });
+
+    jQuery( "#data_collector_saved_dialog_message" ).dialog({
+	autoOpen: false,
+	modal: true,
+	buttons: {
+	    Ok: function() {
+		jQuery( this ).dialog( "close" );
+		location.reload();
+	    }
+	}
+    });
     
     jQuery('#create_spreadsheet_dialog').dialog({
 	autoOpen: false,
@@ -273,7 +289,7 @@ function trial_detail_page_setup_dialogs() {
 	    Create: function() {
 		create_spreadsheet();
 		//save_experimental_design(design_json);
-		//jQuery( this ).dialog( "close" );
+		jQuery( this ).dialog( "close" );
 		//jQuery('#add_project_dialog').dialog("close");
 	    },
 	},
@@ -293,8 +309,10 @@ function trial_detail_page_setup_dialogs() {
 	    },
 	    Create: function() {
 		create_DataCollector();
+		//jQuery('#data_collector_download_link').attr('href',response.filename);
+		//jQuery("#data_collector_saved_dialog_message").dialog("open");
 		//save_experimental_design(design_json);
-		//jQuery( this ).dialog( "close" );
+		jQuery( this ).dialog( "close" );
 		//jQuery('#add_project_dialog').dialog("close");
 	    },
 	},

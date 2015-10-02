@@ -137,6 +137,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <&| /page/info_section.mas, title=>"Physical Trial Layout", subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
   <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
+ 
 </&>
 
 <& /breeders_toolbox/trial/trial_coords_spreadsheet_upload_format_info.mas &>
@@ -308,6 +309,16 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
     <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
     </label>
   </div>
+</div>
+
+<div id="data_collector_saved_dialog_message" title="Data collector spreadsheet" style="display:none;">
+  <p>
+    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    The data collector spreadsheet file was saved successfully
+  </p>
+  <p>
+    <a id="data_collector_download_link">Download File</a>
+  </p>
 </div>
 
 <div id="change_breeding_program_dialog">
