@@ -20,7 +20,7 @@ $trial_id
 		display: none;
 	}
          #trial_coords {display: inline; }
-         #trial_no_coordsMSG {display: none; color: red;}
+         #trial_no_coordsMSG {display: none; }
     </style>
 
  <div id="container" ></div>
