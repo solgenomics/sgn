@@ -6,7 +6,7 @@ use strict;
 use File::Spec;
 use CXGN::Tools::File;
 
-my $file = File::Spec->catfile($c->get_conf("basepath"), 'documents', 'labs.txt');
+my $file = File::Spec->catfile($c->get_conf("basepath"), 'documents', 'yam_labs.txt');
 
 my $contents = CXGN::Tools::File::get_sections($file);
 
@@ -21,7 +21,11 @@ my $contents = CXGN::Tools::File::get_sections($file);
 -->
 
 <h4>Featured Lab</h4>
+
 <% $contents %>
+
 <button class="btn btn-info btn-sm" onclick='location.href="/community/feature/index.pl"'>See all featured labs...</button>
+
+</div>
 
 
