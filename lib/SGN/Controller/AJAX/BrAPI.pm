@@ -10,6 +10,7 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Chado::Stock;
+use CXGN::Login;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -40,6 +41,51 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 
 }
 
+sub authenticate_token : Chained('brapi') PathPart('token') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $dbh = $c->dbc->dbh;
+    my $login_controller = CXGN::Login->new($dbh);
+    
+    my $grant_type = $c->req->param("grant_type");
+    my $username = $c->req->param("username");
+    my $password = $c->req->param("password");
+    my $client_id = $c->req->param("client_id");
+
+    my @status;
+    my $cookie = '';
+
+    if ( $login_controller->login_allowed() ) {
+	if ($grant_type eq 'password') {
+	    my $login_info = $login_controller->login_user( $username, $password );
+	    if ($login_info->{account_disabled}) {
+		push(@status, 'Account Disabled');
+	    }
+	    if ($login_info->{incorrect_password}) {
+		push(@status, 'Incorrect Password');
+	    }
+	    if ($login_info->{duplicate_cookie_string}) {
+		push(@status, 'Duplicate Cookie String');
+	    }
+	    if ($login_info->{logins_disabled}) {
+		push(@status, 'Logins Disabled');
+	    }
+	    if ($login_info->{person_id}) {
+		$cookie = $login_info->{cookie_string};
+		push(@status, 'OK');
+	    }
+	} else {
+	    push(@status, 'Grant Type Not Supported');
+	}
+    } else {
+	push(@status, 'Login Not Allowed');
+    }
+    
+    my %result = (status=>\@status, session_token=>$cookie);
+    
+    $c->stash->{rest} = \%result;
+}
 
 sub germplasm_all : Chained('brapi') PathPart('germplasm') Args(0) { 
     my $self = shift;
@@ -721,12 +767,5 @@ sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
 
 }
 
-sub token : Chained('brapi') PathPart('token') Args(0) { 
-    my $self = shift;
-    my $c = shift;
 
-    
-
-}
-    
 1;
