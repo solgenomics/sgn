@@ -1267,10 +1267,10 @@ sub get_phenotypes {
 sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0) { 
     my $self = shift;
     my $c = shift;
-
+    my $level = $c->req->param("level");
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $s = CXGN::Chado::Stock->new($schema, $c->stash->{stock}->get_stock_id());
-    my $pedigree_string = $s->get_parents_string(1);
+    my $pedigree_string = $s->get_parents_string($level);
 
     $c->stash->{rest} = { pedigree_string => $pedigree_string };
 }
