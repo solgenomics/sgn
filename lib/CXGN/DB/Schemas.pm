@@ -72,7 +72,7 @@ sub BUILD {
     print STDERR "Connecting to the schemas...\n";
     $self->bcs_schema(Bio::Chado::Schema->connect( sub { $self->dbh(); }));
     
-    $self->phenome_schema(CXGN::Phenome::Schema->connect( sub { $self->dbh() });
+    $self->phenome_schema(CXGN::Phenome::Schema->connect( sub { $self->dbh() }));
                 
     
     $self->sgn_schema(SGN::Schema->connect( sub { $self->dbh(); }));
