@@ -5,7 +5,10 @@ use CXGN::Tools::File;
 
 my $documents_folder = $c->get_conf('homepage_files_dir');
 
-my $OTHER_LINKS = "Other links are currently not available.";
+#my $OTHER_LINKS = "test Other links are currently not available.";
+
+my $OTHER_LINKS = "<a href=http://www.shanyao.com/> Shan Yao network(A network about yam in Chinese) </a>";
+
 
 eval { 
   $OTHER_LINKS=CXGN::Tools::File::read_commented_file("$documents_folder/other_links.txt");
