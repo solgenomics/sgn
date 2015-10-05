@@ -66,13 +66,18 @@ sub BUILD {
 	$self->dbh(DBI->connect($dsn, $self->dbuser(), $self->dbpass()));
     }
 
-    $self->bcs_schema(Bio::Chado::Schema->connect( sub { $self->dbh->get_actual_dbh() }));
+    print STDERR "Setting the search path...\n";
+    $self->dbh()->do("SET search_path TO phenome, metadata, sgn_people, public, sgn");
+
+    print STDERR "Connecting to the schemas...\n";
+    $self->bcs_schema(Bio::Chado::Schema->connect( sub { $self->dbh(); }));
     
-    $self->phenome_schema(CXGN::Phenome::Schema->connect( sub { $self->dbh->get_actual_dbh() }));
+    $self->phenome_schema(CXGN::Phenome::Schema->connect( sub { $self->dbh() }));
+                
     
-    $self->sgn_schema(SGN::Schema->connect( sub { $self->dbh->get_actual_dbh() }));
+    $self->sgn_schema(SGN::Schema->connect( sub { $self->dbh(); }));
     
-    $self->metadata_schema(CXGN::Metadata::Schema->connect( sub { $self->dbh->get_actual_dbh() }));
+    $self->metadata_schema(CXGN::Metadata::Schema->connect( sub { $self->dbh(); }));
 
 }
 

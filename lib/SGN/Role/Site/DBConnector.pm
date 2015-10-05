@@ -106,6 +106,7 @@ sub _build_compatibility_profiles {
                                 ->get_connection_parameters;
 
         $conn{attributes}{AutoCommit} = 1;
+	$conn{attributes}{pg_enable_utf8} = 1;
 
 	$conn{search_path} = $self->config->{'dbsearchpath'} || ['public'];
 	\%conn

@@ -14,7 +14,7 @@ Jeremy Edwards <jde22@cornell.edu>
 
 =cut
 
-package SGN::Controller::AJAX::PhenotypesDownload;
+package SGN::Controller::AJAX::DataCollectorDownload;
 
 use Moose;
 use Try::Tiny;
@@ -26,7 +26,7 @@ use List::MoreUtils qw /any /;
 use SGN::View::ArrayElements qw/array_elements_simple_view/;
 use CXGN::Stock::StockTemplate;
 use JSON -support_by_pp;
-use CXGN::Phenotypes::CreateSpreadsheet;
+use CXGN::Phenotypes::DataCollectorSpreadsheet;
 use CXGN::Trial::Download;
 use Tie::UrlEncoder; our(%urlencode);
 
@@ -39,27 +39,27 @@ __PACKAGE__->config(
    );
 
 
-sub create_phenotype_spreadsheet :  Path('/ajax/phenotype/create_spreadsheet') : ActionClass('REST') { }
+sub create_DataCollector_spreadsheet :  Path('/ajax/phenotype/create_DataCollector') : ActionClass('REST') { }
 
-sub create_phenotype_spreadsheet_GET : Args(0) { 
+sub create_DataCollector_spreadsheet_GET : Args(0) { 
     my $self = shift;
     my $c = shift;
-    $c->forward('create_phenotype_spreadsheet_POST');
+    $c->forward('create_DataCollector_spreadsheet_POST');
 }
 
-sub create_phenotype_spreadsheet_POST : Args(0) {
+sub create_DataCollector_spreadsheet_POST : Args(0) {
   print STDERR "phenotype download controller\n";
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_id = $c->req->param('trial_id');
   my $trait_list_ref = $c->req->param('trait_list');
-  my $format = $c->req->param('format') || "ExcelBasic";
+  my $format = $c->req->param('format') || "DataCollectorExcel";
 
   my @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
   my $dir = $c->tempfiles_subdir('/download');
   my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
   my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
-
+ 
   my $create_spreadsheet = CXGN::Trial::Download->new( 
       { 
 	  bcs_schema => $schema,
@@ -69,7 +69,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
 	  format => $format,
       });
 
-     $create_spreadsheet->download();
+      $create_spreadsheet->download();
 
     print STDERR "DOWNLOAD FILENAME = ".$create_spreadsheet->filename()."\n";
     print STDERR "RELATIVE  = $rel_file\n";
