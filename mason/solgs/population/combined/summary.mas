@@ -31,7 +31,7 @@ $traits_no = 1 if !$traits_no;
 
 </%perl>
 
-<table>
+<table class="table">
   <tr>
     <td>
       <& /page/columnar_table.mas,
@@ -41,7 +41,6 @@ $traits_no = 1 if !$traits_no;
                          ],
          __alt_freq   => 0,
          __align      => "l",
-         __tableattrs => 'style="padding: 1px 225px 1px 1px"',   
         &>
     </td>    
     <td>
@@ -52,7 +51,6 @@ $traits_no = 1 if !$traits_no;
                        ],
         __alt_freq  => 1,
         __align     => "l",
-       __tableattrs => 'style="padding: 1px"',    
         &>
     </td>
   </tr>
