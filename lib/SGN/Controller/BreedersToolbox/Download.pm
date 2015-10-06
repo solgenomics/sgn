@@ -320,8 +320,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $data_type         = $c->req->param("data_type")|| "phenotype";
     my $format            = $c->req->param("format");
 
-    print STDERR "my format = $format \n";
-
     my $accession_data;
     if ($accession_list_id) { 
 	$accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
@@ -384,61 +382,60 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 	    }
 	    $c->res->content_type("text/plain");
 	    $c->res->body($output);
-	}
-	
-	# if xls or csv, create tempfile name and place to save it
-	my $what = "phenotype_download";
-	my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
-	my $dir = $c->tempfiles_subdir('download');
-	my $temp_file_name = $time_stamp . "$what" . "XXXX";
-	my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
-	my $tempfile = $c->config->{basepath}."/".$rel_file;
-	my @col_names = qw/project_name stock_name location trait value plot_name cv_name cvterm_accession rep block_number/;
-
-	print STDERR "TEMPFILE : $tempfile\n";
-
-	if ($format eq ".csv") {
-
-	    #build csv with column names
-	    open(CSV, ">", $tempfile) || die "Can't open file $tempfile\n";
-	    print CSV join(",", @col_names);
-	    print CSV "\n"; 
-	    for (my $line =0; $line< @data; $line++) { 
-		my @columns = @{$data[$line]};
-		print CSV join(",", @columns);
-		print CSV "\n";
-	    }
-	    close CSV;
-
 	} else {
-
-	    #build excel file; include column names
-	    my $ss = Spreadsheet::WriteExcel->new($tempfile);
-	    my $ws = $ss->add_worksheet();
+	    # if xls or csv, create tempfile name and place to save it
+	    my $what = "phenotype_download";
+	    my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+	    my $dir = $c->tempfiles_subdir('download');
+	    my $temp_file_name = $time_stamp . "$what" . "XXXX";
+	    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+	    my $tempfile = $c->config->{basepath}."/".$rel_file;
+	    my @col_names = qw/project_name stock_name location trait value plot_name cv_name cvterm_accession rep block_number/;
 	    
-	    for (my $column =0; $column< 10; $column++) {
-		$ws->write(0, $column, $col_names[$column]);
-	    }
-	    for (my $line =0; $line < @data; $line++) {
-		print STDERR "dataline = $data[$line]\n";
-		my @columns = @{$data[$line]};
-		print STDERR "columns = @columns\n";
-		for(my $col = 0; $col<@columns; $col++) { 
-		    $ws->write(($line+1), $col, $columns[$col]);
+	    print STDERR "TEMPFILE : $tempfile\n";
+	    
+	    if ($format eq ".csv") {
+		
+		#build csv with column names
+		open(CSV, ">", $tempfile) || die "Can't open file $tempfile\n";
+		print CSV join(",", @col_names);
+		print CSV "\n"; 
+		for (my $line =0; $line< @data; $line++) { 
+		    my @columns = @{$data[$line]};
+		    print CSV join(",", @columns);
+		    print CSV "\n";
 		}
+		close CSV;
+		
+	    } else {
+		
+		#build excel file; include column names
+		my $ss = Spreadsheet::WriteExcel->new($tempfile);
+		my $ws = $ss->add_worksheet();
+		
+		for (my $column =0; $column< 10; $column++) {
+		    $ws->write(0, $column, $col_names[$column]);
+		}
+		for (my $line =0; $line < @data; $line++) {
+		    print STDERR "dataline = $data[$line]\n";
+		    my @columns = @{$data[$line]};
+		    print STDERR "columns = @columns\n";
+		    for(my $col = 0; $col<@columns; $col++) { 
+			$ws->write(($line+1), $col, $columns[$col]);
+		    }
+		}
+		$ss ->close();
+		$format = ".xls";
 	    }
-	    $ss ->close();
-	    $format = ".xls";
+	    
+	    #Using tempfile and new filename,send file to client
+	    my $file_name = $time_stamp . "$what" . "$format";
+	    $c->res->content_type('Application/'.$format);
+	    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+	    $output = read_file($tempfile);
+	    $c->res->body($output);   
 	}
-
-	#Using tempfile and new filename,send file to client
-	my $file_name = $time_stamp . "$what" . "$format";
-	$c->res->content_type('Application/'.$format);
-	$c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-	$output = read_file($tempfile);
-	$c->res->body($output);   
     }
-
     if ($data_type eq "genotype") { 
 	$result = $bs->get_genotype_info($accession_sql, $trial_sql);
 	my @data = @$result;
