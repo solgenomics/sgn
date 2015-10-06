@@ -40,11 +40,11 @@ while (<$F>) {
 	next();
     }
 
-    my $good_stock = CXGN::Chado::Stock->new($schema, $stock_id);
-    my $merge_stock = CXGN::Chado::STock->new($schema, $merge_id);
+    my $good_stock = CXGN::Chado::Stock->new($schema, $stock_row->stock_id);
+    my $merge_stock = CXGN::Chado::Stock->new($schema, $merge_row->stock_id);
 
     print STDERR "Merging stock $merge_stock_name into $good_stock_name... ";
-    $good_stock->merge($merge_stock);
+    $good_stock->merge($merge_stock->get_stock_id());
     print STDERR "Done.\n";
 }
     
