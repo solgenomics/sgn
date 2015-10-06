@@ -339,7 +339,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 	my $result = $bs->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
 	my @data = @$result;
 
-	if ($format eq "html") {
+	if ($format eq "html") { #dump html in browser
 	    $output = "";
 	    foreach my $d (@data) { 
 		$output .= join ",", @$d;
@@ -347,25 +347,37 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 	    }
 	    $c->res->content_type("text/plain");
 	    $c->res->body($output);
-	} elsif ($format eq ".csv") {
-	    #handle csvs here
+	}
+	
+	# if xls or csv, create tempfile name and place to save it
+	my $what = "phenotype_download";
+	my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+	my $dir = $c->tempfiles_subdir('download');
+	my $temp_file_name = $time_stamp . "$what" . "XXXX";
+	my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+	my $tempfile = $c->config->{basepath}."/".$rel_file;
+	my @col_names = qw/project_name stock_name location trait value plot_name cv_name cvterm_accession rep block_number/;
+
+	print STDERR "TEMPFILE : $tempfile\n";
+
+	if ($format eq ".csv") {
+
+	    #build csv with column names
+	    open(CSV, ">", $tempfile) || die "Can't open file $tempfile\n";
+	    print CSV join(",", @col_names);
+	    print CSV "\n"; 
+	    for (my $line =0; $line< @data; $line++) { 
+		my @columns = @{$data[$line]};
+		print CSV join(",", @columns);
+		print CSV "\n";
+	    }
+	    close CSV;
 
 	} else {
-	    # create tempfile name and place to save it
-	    my $what = "phenotype_download";
-	    my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
-	    my $dir = $c->tempfiles_subdir('download');
-	    my $temp_file_name = $time_stamp . "$what" . "XXXX";
-	    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
-	    my $tempfile = $c->config->{basepath}."/".$rel_file;
-	    
-	    print STDERR "TEMPFILE : $tempfile\n";
-	    
+
 	    #build excel file; include column names
 	    my $ss = Spreadsheet::WriteExcel->new($tempfile);
 	    my $ws = $ss->add_worksheet();
-	    
-	    my @col_names = qw/project_name stock_name location trait value plot_name cv_name cvterm_accession rep block_number/;
 	    
 	    for (my $column =0; $column< 10; $column++) {
 		$ws->write(0, $column, $col_names[$column]);
@@ -379,14 +391,15 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 		}
 	    }
 	    $ss ->close();
-	    
-	    #Using tempfile and new filename,send file to client 
-	    my $file_name = $time_stamp . "$what" . "$format";
-	    $c->res->content_type('Application/'.$format);
-	    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-	    $output = read_file($tempfile);
-	    $c->res->body($output);   
+	    $format = ".xls";
 	}
+
+	#Using tempfile and new filename,send file to client
+	my $file_name = $time_stamp . "$what" . "$format";
+	$c->res->content_type('Application/'.$format);
+	$c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+	$output = read_file($tempfile);
+	$c->res->body($output);   
     }
 
     if ($data_type eq "genotype") { 
