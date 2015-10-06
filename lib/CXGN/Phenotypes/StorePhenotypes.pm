@@ -140,14 +140,25 @@ sub store {
 
 	    foreach my $trait_name (@trait_list) {
 		print STDERR "trait: $trait_name\n";
-		my ($db_name, $trait_description) = split (/:/, $trait_name);
+		#fieldbook trait string should be "CO:$trait_name:$trait_accession" e.g. CO:plant height:0000123
+		my ($db_name, $cvterm_name, $accession) = split (/:/, $trait_name);
+		my $cvterm_name_or_accession = $cvterm_name;
+
+		#check if the trait name string does have  
+		$accession =~ s/\s+$//;
+		$accession =~ s/^\s+//;
+		my $name_or_accession = 'name';
+		if ($accession =~ m/^0\d{6}/ ) { 
+		    $name_or_accession = 'dbxref.accession';
+		    $cvterm_name_or_accession = $accession;
+		}
 
 		my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
 
 		my $trait_cvterm = $schema->resultset("Cv::Cvterm")
 		  ->find( {
-			     'dbxref.db_id' => $db_rs->first()->db_id(),
-			     'name'=>$trait_description 
+			     'dbxref.db_id'     => $db_rs->first()->db_id(),
+			     $name_or_accession =>$cvterm_name_or_accession 
 			    },
 			    {
 			     'join' => 'dbxref'
