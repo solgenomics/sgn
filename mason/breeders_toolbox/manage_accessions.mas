@@ -3,7 +3,7 @@
 $accessions
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables' ] &>
 
 <& /page/page_title.mas, title=>"Manage Accessions" &>
 
@@ -66,51 +66,6 @@ $accessions
   </div>
 </div>
 
-<div class="modal fade" id="review_found_matches_dialog" name="review_found_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFoundDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewFoundDialog">Found Accessions</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-    	  <b>The following accessions already exist and cannot be added:</b>
-  	  <div id="count_of_found_accessions"></div>
-  	  <br>
-  	  <div class="left"><b>Searched name</b></div>
-  	  <div class="right"><b>Unique name for synonym</b></div>
-  	  <div id="view_found_matches"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="review_fuzzy_matches_dialog" name="review_fuzzy_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFuzzyDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewFuzzyDialog">Fuzzy Matches</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-    	  <b>Accessions were found with similar names.</b>
-  	  <br><br>
-  	  <div id="view_fuzzy_matches"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div class="modal fade" id="review_absent_dialog" name="review_absent_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewAbsentDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -132,6 +87,49 @@ $accessions
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 	<button type="button" class="btn btn-primary" name="review_absent_accessions_submit" id="review_absent_accessions_submit">Add Accessions</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="review_fuzzy_matches_dialog" name="review_fuzzy_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFuzzyDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewFuzzyDialog">Fuzzy Matches</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+    	  <b>Accessions were found with similar names.</b>
+  	  <br/><br/>
+  	  <div id="view_fuzzy_matches"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="review_found_matches_dialog" name="review_found_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFoundDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewFoundDialog">Found Accessions</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+    	  <b>The following accessions already exist and cannot be added:</b>
+  	  <div id="count_of_found_accessions"></div>
+  	  <br/>
+  	  <div id="view_found_matches"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
       </div>
     </div>
   </div>
@@ -295,3 +293,4 @@ $accessions
   height: 100px;
 }
 </style>
+
