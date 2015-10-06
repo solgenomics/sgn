@@ -320,6 +320,8 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $data_type         = $c->req->param("data_type")|| "phenotype";
     my $format            = $c->req->param("format");
 
+    print STDERR "my format = $format \n";
+
     my $accession_data;
     if ($accession_list_id) { 
 	$accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
