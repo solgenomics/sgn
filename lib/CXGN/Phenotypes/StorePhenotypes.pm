@@ -140,8 +140,10 @@ sub store {
 
 	    foreach my $trait_name (@trait_list) {
 		print STDERR "trait: $trait_name\n";
-		#fieldbook trait string should be "CO:$trait_name:$trait_accession" e.g. CO:plant height:0000123
-		my ($db_name, $cvterm_name, $accession) = split (/:/, $trait_name);
+		#fieldbook trait string should be "CO:$trait_name|$trait_accession" e.g. CO:plant height|0000123
+		my ($db_name, $full_cvterm_name) = split (/:/, $trait_name);
+		my ( $cvterm_name , $accession ) = split (/\|/ , $full_cvterm_name);
+
 		my $cvterm_name_or_accession = $cvterm_name;
 
 		#check if the trait name string does have  
