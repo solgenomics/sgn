@@ -379,9 +379,8 @@ sub get_result : Path('/tools/blast/result') Args(1) {
     if (!$db) { die "Can't find database with id $db_id"; }
     my $parser = CXGN::Blast::Parse->new();
     my $parsed_data = $parser->parse($c, $format, $result_file, $db);
-
+    
     $c->stash->{rest} = $parsed_data; # { blast_report => '<pre>'.(join("\n", read_file($parsed_file))).'</pre>', };
-
 }
 
 

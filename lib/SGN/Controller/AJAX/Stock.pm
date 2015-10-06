@@ -857,6 +857,72 @@ sub accession_autocomplete_GET :Args(0) {
     $c->{stash}->{rest} = \@response_list;
 }
 
+sub parents : Local : ActionClass('REST') {}
+
+sub parents_GET : Path('/ajax/stock/parents') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $stock_id = $c->req->param("stock_id");
+    
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $female_parent_type_id = $schema->resultset("Cv::Cvterm")->find( { name=> "female_parent" } )->cvterm_id();
+
+    my $male_parent_type_id = $schema->resultset("Cv::Cvterm")->find( { name=> "male_parent" } )->cvterm_id();
+    
+    my %parent_types;
+    $parent_types{$female_parent_type_id} = "female";
+    $parent_types{$male_parent_type_id} = "male";
+
+    my $parent_rs = $schema->resultset("Stock::StockRelationship")->search( { 'me.type_id' => { -in => [ $female_parent_type_id, $male_parent_type_id] }, object_id => $stock_id })->search_related("subject");
+
+    my @parents;
+    while (my $p = $parent_rs->next()) { 
+	push @parents, [ 
+	    $p->get_column("stock_id"), 
+	    $p->get_column("uniquename"), 
+	];
+	
+    }
+    $c->stash->{rest} = { 
+	stock_id => $stock_id,
+	parents => \@parents,
+    };
+}
+
+sub remove_stock_parent : Local : ActionClass('REST') { }
+
+sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) { 
+    my ($self, $c) = @_;
+
+    my $stock_id = $c->req->param("stock_id");
+    my $parent_id = $c->req->param("parent_id");
+
+    if (!$stock_id || ! $parent_id) { 
+	$c->stash->{rest} = { error => "No stock and parent specified" };
+	return;	
+    }
+    
+    if (! ($c->user && ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))))  {
+	$c->stash->{rest} = { error => "Log in is required, or insufficent privileges, for removing parents" };
+	return;
+    }
+
+    my $q = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship")->find( { object_id => $stock_id, subject_id=> $parent_id });
+
+    eval { 
+	$q->delete();
+    };
+    if ($@) { 
+	$c->stash->{rest} = { error => $@ };
+	return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
+
+
 
 =head2 add_stock_parent
 
@@ -873,7 +939,6 @@ sub add_stock_parent : Local : ActionClass('REST') { }
 
 sub add_stock_parent_GET :Args(0) { 
     my ($self, $c) = @_;
-
 
     print STDERR "Add_stock_parent function...\n";
     if (!$c->user()) { 
@@ -893,7 +958,6 @@ sub add_stock_parent_GET :Args(0) {
     my $parent_type = $c->req->param('parent_type');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-
 
     my $cvterm_name = "";
     if ($parent_type eq "male") { 
@@ -916,8 +980,6 @@ sub add_stock_parent_GET :Args(0) {
 	return;
     }
 
-
-
     my $cvterm_id;
     if ($type_id_row) { 
 	$cvterm_id = $type_id_row->cvterm_id;
@@ -928,16 +990,22 @@ sub add_stock_parent_GET :Args(0) {
     my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id });
     my $parent = $schema->resultset("Stock::Stock")->find( { name => $parent_name } );
 
-    if (!$stock) { $c->stash->{rest} = { error => "Stock with $stock_id is not found in the database!"}; return; }
-    if (!$parent) { $c->stash->{rest} = { error => "Stock with name $parent_name is not in the database!"}; return; }
-   
+    if (!$stock) { 
+	$c->stash->{rest} = { error => "Stock with $stock_id is not found in the database!"}; 
+	return; 
+    }
+    if (!$parent) { 
+	$c->stash->{rest} = { error => "Stock with name $parent_name is not in the database!"}; 
+	return; 
+    }
 
-		  
+    my $new_row = $schema->resultset("Stock::StockRelationship")->new( 
+	{ 
+	    subject_id => $parent->stock_id,
+	    object_id  => $stock->stock_id,
+	    type_id    => $cvterm_id,
+	});
 
-    my $new_row = $schema->resultset("Stock::StockRelationship")->new( { subject_id => $parent->stock_id,
-									object_id  => $stock->stock_id,
-									type_id    => $cvterm_id,
-								      });
     eval { 
 	$new_row->insert();
     };
@@ -945,10 +1013,12 @@ sub add_stock_parent_GET :Args(0) {
     if ($@) { 
 	$c->stash->{rest} = { error => "An error occurred: $@"};
     }
-
-    $c->stash->{rest} = { error => '', };
-									
+    else { 
+	$c->stash->{rest} = { error => '', };
+    }
 }
+
+
 
 sub generate_genotype_matrix : Path('/phenome/genotype/matrix/generate') :Args(1) { 
     my $self = shift;

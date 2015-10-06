@@ -29,7 +29,7 @@
 <center>
     <a id="blue_button" href="/tools/blast/?db_id=266" target="_blank">BLAST</a>&nbsp;&nbsp;
     <a id="blue_button" href="ftp://ftp.solgenomics.net/genomes/Nicotiana_benthamiana" target="_blank">FTP Site</a>&nbsp;&nbsp;
-    <a id="blue_button" href="jbrowse/current/?data=data%2Fjson%2FNiben1.0.1&loc=Niben101Scf00005%3A1..274325&tracks=DNA&highlight=" target="_blank">JBrowse</a>&nbsp;&nbsp;
+    <a id="blue_button" href="http://solgenomics.net/jbrowse/current/?data=data%2Fjson%2FNiben1.0.1&loc=Niben101Scf00005" target="_blank" style="background-image:none;">JBrowse</a>&nbsp;&nbsp;
     <a id="blue_button" href="http://vigs.solgenomics.net" target="_blank" style="background-image:none;">VIGS Tool</a>
 </center>
 

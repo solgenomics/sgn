@@ -2,6 +2,11 @@
 package SGN::Controller::AJAX::TrialMetadata;
 
 use Moose;
+use Data::Dumper;
+use List::Util 'max';
+use Bio::Chado::Schema;
+use List::Util qw | any |;
+
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -260,6 +265,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
+
 sub get_trial_folder :Chained('trial') PathPart('folder') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -274,6 +280,96 @@ sub get_trial_folder :Chained('trial') PathPart('folder') Args(0) {
 
     $c->stash->{rest} = { folder => [ $parent_folder_id, $parent_folder_name ] };
 
+
+
+sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
+    
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    
+    my $layout = CXGN::Trial::TrialLayout->new(
+	{ 
+	    schema => $schema,
+	    trial_id =>$c->stash->{trial_id}
+	});
+    
+    my $design = $layout-> get_design();
+    
+    print STDERR Dumper($design);
+         
+    my @layout_info;
+    foreach my $plot_number (keys %{$design}) {
+	push @layout_info, { 
+			plot_id => $design->{$plot_number}->{plot_id},
+			plot_number => $plot_number,
+			row_number => $design->{$plot_number}->{row_number},
+			col_number => $design->{$plot_number}->{col_number}, 
+			block_number=> $design->{$plot_number}-> {block_number},
+			rep_number =>  $design->{$plot_number}-> {rep_number},
+			plot_name => $design->{$plot_number}-> {plot_name},
+			accession_name => $design->{$plot_number}-> {accession_name},
+	         
+	};
+
+    } 
+	
+	my @row_numbers;
+	my @col_numbers;
+	my @rep_numbers;
+	my @block_numbers;
+	my @accession_name;
+	my @plot_name;
+	my @plot_id;
+	my @array_msg;
+	my @plot_number;
+	my $my_hash;
+	
+	foreach $my_hash (@layout_info) {
+		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'};
+	
+	$plot_id[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_id'};
+	#$plot_id[$my_hash->{'plot_number'}] = $my_hash->{'plot_id'};
+	$plot_number[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_number'};
+	#$plot_number[$my_hash->{'plot_number'}] = $my_hash->{'plot_number'};	
+	}
+
+
+ # Looping through the hash and printing out all the hash elements.
+
+	foreach $my_hash (@layout_info) {
+	push @col_numbers, $my_hash->{'col_number'};
+	push @row_numbers, $my_hash->{'row_number'};
+	#push @plot_id, $my_hash->{'plot_id'};
+	#push @plot_number, $my_hash->{'plot_number'};
+	push @rep_numbers, $my_hash->{'rep_number'};
+	push @block_numbers, $my_hash->{'block_number'};
+	push @accession_name, $my_hash->{'accession_name'};
+	push @plot_name, $my_hash->{'plot_name'};
+	
+	}
+
+	
+	my $max_col = max( @col_numbers );
+	print "$max_col\n";
+	my $max_row = max( @row_numbers );
+	print "$max_row\n";
+	
+
+	$c->stash->{rest} = { coord_row =>  \@row_numbers, 
+			      coords =>  \@layout_info, 
+			      coord_col =>  \@col_numbers,
+			      max_row => $max_row,
+			      max_col => $max_col,
+			      plot_msg => \@array_msg,
+			      rep => \@rep_numbers,
+			      block => \@block_numbers,
+			      accessions => \@accession_name,
+			      plot_name => \@plot_name,
+			      plot_id => \@plot_id,
+			      plot_number => \@plot_number
+          		   };
+	
 }
 
 
@@ -298,5 +394,80 @@ sub delete_privileges_denied {
     return "You have insufficient privileges to delete a trial.";
 }
 
+# loading field coordinates
+
+sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0) {
+
+    my $self = shift;
+    my $c = shift;
+   
+    if (!$c->user()) { 
+	print STDERR "User not logged in... not uploading coordinates.\n";
+	$c->stash->{rest} = {error => "You need to be logged in to upload coordinates." };
+	return;
+    }
+    
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+	$c->stash->{rest} = {error =>  "You have insufficient privileges to add coordinates." };
+	return;
+    }
+
+    my $time = DateTime->now();
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $subdirectory = 'trial_coords_upload';
+
+    my $upload = $c->req->upload('trial_coordinates_uploaded_file');
+    my $upload_tempfile  = $upload->tempname;
+
+    my $upload_original_name  = $upload->filename();
+    my $md5;
+
+    my $uploader = CXGN::UploadFile->new();
+
+    my %upload_metadata;
+
+
+    # Store uploaded temporary file in archive
+    print STDERR "TEMP FILE: $upload_tempfile\n";
+    my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+
+    if (!$archived_filename_with_path) {
+	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+	return;
+    }
+
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    unlink $upload_tempfile;
+
+   # open file and remove return of line
+
+     open(my $F, "<", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $header = <$F>; 
+    while (<$F>) { 
+	chomp;
+	$_ =~ s/\r//g;
+	my ($plot,$row,$col) = split /\t/ ;
+
+	my $rs = $schema->resultset("Stock::Stock")->search({uniquename=> $plot });
+
+	if ($rs->count()== 1) { 
+	my $r =  $rs->first();	
+	print STDERR "The plots $plot was found.\n Loading row $row col $col\n";
+	$r->create_stockprops({row_number => $row, col_number => $col}, {autocreate => 1});
+    }
+
+    else {
+
+	print STDERR "WARNING! $plot was not found in the database.\n";
+
+    }
+
+   }
+
+	
+}    
 
 1;

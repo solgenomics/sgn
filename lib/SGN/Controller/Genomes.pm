@@ -109,6 +109,32 @@ sub view_inbred_genome : Path('/organism/Solanum_lycopersicum/inbred_genomes') {
     $c->stash->{template} = '/genomes/Solanum_lycopersicum/inbreds.mas';
 }
 
+=head2 view_tomato_150
+
+Public path: /organism/Solanum_lycopersicum/tomato_150
+
+
+=cut
+
+sub view_tomato_150 : Path('/organism/Solanum_lycopersicum/tomato_150') {
+    my ( $self, $c ) = @_;
+
+    $c->stash->{template} = '/genomes/Solanum_lycopersicum/tomato150.mas';
+}
+
+=head2 view_tomato_360
+
+Public path: /organism/Solanum_lycopersicum/tomato_360
+
+
+=cut
+
+sub view_tomato_360 : Path('/organism/Solanum_lycopersicum/tomato_360') {
+    my ( $self, $c ) = @_;
+
+    $c->stash->{template} = '/genomes/Solanum_lycopersicum/tomato360.mas';
+}
+
 ####### helper methods ##########
 
 sub uniq_bs_samples {

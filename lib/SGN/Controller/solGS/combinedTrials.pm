@@ -93,18 +93,19 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 sub combined_trials_page :Path('/solgs/populations/combined') Args(1) {
     my ($self, $c, $combo_pops_id) = @_;
 
-    $c->stash->{combo_pops_id} = $combo_pops_id;
-    $self->combined_trials_desc($c);
-
-    my $solgs_controller = $c->controller('solGS::solGS');
-    $c->stash->{template} = $solgs_controller->template('/population/combined/combined.mas');
-    
     $c->stash->{pop_id} = $combo_pops_id;
+     
+    my $solgs_controller = $c->controller('solGS::solGS');
     
     $solgs_controller->all_traits_file($c);
     $solgs_controller->select_traits($c);
     $solgs_controller->get_acronym_pairs($c);
 
+    $c->stash->{combo_pops_id} = $combo_pops_id;
+    $self->combined_trials_desc($c);
+  
+    $c->stash->{template} = $solgs_controller->template('/population/combined/combined.mas');
+    
 }
 
 
@@ -256,13 +257,13 @@ sub combine_trait_data {
     my $trait_id      = $c->stash->{trait_id};
    
     my $solgs_controller = $c->controller('solGS::solGS');
-
     $solgs_controller->get_trait_name($c, $trait_id);
-
+ 
     $solgs_controller->get_combined_pops_list($c, $combo_pops_id);
+
     my $pops_list = $c->stash->{combined_pops_list};
     $c->stash->{trait_combo_pops} = $pops_list; 
-   
+  
     my @pops_list = split(/,/, $pops_list);
     $c->stash->{trait_combine_populations} = \@pops_list;
 
@@ -275,8 +276,8 @@ sub combine_trait_data {
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
              
     unless (-s $combined_pops_geno_file  && -s $combined_pops_pheno_file ) 
-    {
-        $solgs_controller->r_combine_populations($c);
+    { 
+       $solgs_controller->r_combine_populations($c);     
     }
                        
 }
@@ -318,12 +319,14 @@ sub combined_trials_desc {
         {
              $projects_owners.= $projects_owners ? ', ' . $project_owners : $project_owners;
         }
-         $s_pop_id = $pop_id;
+	
+	$s_pop_id = $pop_id;
+	$s_pop_id  =~ s/\s+//;
     }
    
     my $dir = $c->{stash}->{solgs_cache_dir};
 
-    my $geno_exp  = "genotype_data_${s_pop_id}\.txt";
+    my $geno_exp  = "genotype_data_${s_pop_id}.txt"; 
     my $geno_file = $solgs_controller->grep_file($dir, $geno_exp);  
    
     my @geno_lines = read_file($geno_file);
@@ -331,7 +334,7 @@ sub combined_trials_desc {
 
     my $trait_exp        = "traits_acronym_pop_${combo_pops_id}";
     my $traits_list_file = $solgs_controller->grep_file($dir, $trait_exp);  
-    
+
     my @traits_list = read_file($traits_list_file);
     my $traits_no   =  scalar(@traits_list) - 1;
 
@@ -445,6 +448,7 @@ sub find_common_traits_acronyms {
           
             $solgs_controller->traits_acronym_file($c);
             my $traits_acronym_file = $c->stash->{traits_acronym_file};
+
             my @traits_acronyms = read_file($traits_acronym_file);
 
             if (@common_traits_acronyms)        

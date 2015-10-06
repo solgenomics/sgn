@@ -22,92 +22,92 @@ sub AUTO {
 }
 
 sub index :Path('/tools/blast/') :Args(0) { 
-    my $self = shift;
-    my $c = shift;
+  my $self = shift;
+  my $c = shift;
 
-    my $db_id = $c->req->param('db_id');
-	
-    my $seq = $c->req->param('seq');
-    my $schema = $c->dbic_schema("SGN::Schema");
-    
-    my $blast_db_icons = $c->config->{blast_db_icons};
-    my $group_rs = $schema->resultset("BlastDbGroup")->search( undef, { order_by=>'ordinal' });
+  my $db_id = $c->req->param('db_id');
 
-    my $databases = {};
-    my $dataset_groups = [];
+  my $seq = $c->req->param('seq');
+  my $schema = $c->dbic_schema("SGN::Schema");
+  
+  my $blast_db_icons = $c->config->{blast_db_icons};
+  my $group_rs = $schema->resultset("BlastDbGroup")->search( undef, { order_by=>'ordinal' });
 
-    my $preselected_database = '';
-    my $preselected_category = '';
-    
-	# 224 is the database id for tomato cDNA ITAG 2.40
-	$preselected_database = 224;
-	
-	if ($db_id) { 
-		my $rs = $schema->resultset("BlastDb")->search( { blast_db_id => $db_id }, { join => 'blast_db_group' });
+  my $databases = {};
+  my $dataset_groups = [];
+  
+  my $preselected_database = $c->config->{preselected_blastdb};
+  my $preselected_category = '';
+  
+  # 224 is the database id for tomato cDNA ITAG 2.40 on production
+  # $preselected_database = 224;
+  
+  if ($db_id) { 
+    my $rs = $schema->resultset("BlastDb")->search( { blast_db_id => $db_id }, { join => 'blast_db_group' });
     
     if ($rs == 0) {
       $c->throw( is_error => 0, message => "The blast database with id $db_id could not be found.");
     }
     
-		$preselected_database = $rs->first()->blast_db_id(); # first database of the category
-		$preselected_category = $rs->first()->blast_db_group_id();
-	}
+    $preselected_database = $rs->first()->blast_db_id(); # first database of the category
+    $preselected_category = $rs->first()->blast_db_group_id();
+  }
     
-    foreach my $g ($group_rs->all()) { 
-		my @blast_dbs = $g->blast_dbs();
-		push @$dataset_groups, [ $g->blast_db_group_id, $g->name() ];
-		
-		my @dbs_AoA;
-		
-		foreach my $db (@blast_dbs) {
-			push @dbs_AoA, [ $db->blast_db_id(), $db->title(), $db->type() ];
-		}
-		
-		my @arr = sort {$a->[1] cmp $b->[1]} @dbs_AoA;
-		$databases->{ $g->blast_db_group_id } = \@arr;
+  foreach my $g ($group_rs->all()) { 
+    my @blast_dbs = $g->blast_dbs();
+    push @$dataset_groups, [ $g->blast_db_group_id, $g->name() ];
+
+    my @dbs_AoA;
+
+    foreach my $db (@blast_dbs) {
+      push @dbs_AoA, [ $db->blast_db_id(), $db->title(), $db->type() ];
     }
 
-    my $cbsq = CXGN::Blast::SeqQuery->new();
-    my @input_options = sort {$a->[0] cmp $b->[0]} ( map { [ $_->name(), $_->name(), $_->type(), $_->example() ] } $cbsq->plugins() );
-    
-    my $cbp = CXGN::Blast::Parse->new();
-    my @parse_options = sort { $b->[0] cmp $a->[0] } ( map { [ $_->name(), $_->name() ] } $cbp->plugins() );
+    my @arr = sort {$a->[1] cmp $b->[1]} @dbs_AoA;
+    $databases->{ $g->blast_db_group_id } = \@arr;
+  }
 
-    # # remove the Basic option from the list (it will still be the default if nothing is selected)
-    # #
-    # for (my $i=0; $i<@parse_options; $i++) { 
-    # 	if ($parse_options[$i]->[0] eq 'Basic') { 
-    # 	    delete($parse_options[$i]);
-    # 	}
-    # }
+  my $cbsq = CXGN::Blast::SeqQuery->new();
+  my @input_options = sort {$a->[0] cmp $b->[0]} ( map { [ $_->name(), $_->name(), $_->type(), $_->example() ] } $cbsq->plugins() );
+  
+  my $cbp = CXGN::Blast::Parse->new();
+  my @parse_options = sort { $b->[0] cmp $a->[0] } ( map { [ $_->name(), $_->name() ] } $cbp->plugins() );
 
-    #print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
-    #print STDERR "GROUPS: ".Data::Dumper::Dumper($dataset_groups);
-    #print STDERR "DATASETS: ".Data::Dumper::Dumper($databases);
-	
-	# print STDERR "controller pre-selected db: $preselected_database\n";
-	
-    $c->stash->{input_options} = \@input_options;
-    $c->stash->{parse_options} = \@parse_options;
-    $c->stash->{preselected_database} = $preselected_database;
-    $c->stash->{preselected_category} = $preselected_category;
-    $c->stash->{seq} = $seq;
-    $c->stash->{preload_id} = $c->req->param('preload_id');
-    $c->stash->{preload_type} = $c->req->param('preload_type');
-    
-    $c->stash->{blast_db_icons} = $blast_db_icons;
-    
-    $c->stash->{databases} = $databases;
-    $c->stash->{dataset_groups} = $dataset_groups;
-    $c->stash->{preload_seq} = $seq;
-    $c->stash->{programs} = [
-	[ 'blastn', 'blastn (nucleotide to nucleotide db)' ],
-	[ 'blastp', 'blastp (protein to protein db)' ], 
-	[ 'blastx', 'blastx (translated nucleotide to protein db)'],
-	[ 'tblastn', 'tblastn (protein to translated nucleotide db)'], 
-	[ 'tblastx', 'tblastx (translated nucleotide to translated nucleotide db)'],
-	];
-    $c->stash->{template} = '/tools/blast/index.mas';
+  # # remove the Basic option from the list (it will still be the default if nothing is selected)
+  # #
+  # for (my $i=0; $i<@parse_options; $i++) { 
+  # 	if ($parse_options[$i]->[0] eq 'Basic') { 
+  # 	    delete($parse_options[$i]);
+  # 	}
+  # }
+
+  #print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
+  #print STDERR "GROUPS: ".Data::Dumper::Dumper($dataset_groups);
+  #print STDERR "DATASETS: ".Data::Dumper::Dumper($databases);
+
+  # print STDERR "controller pre-selected db: $preselected_database\n";
+
+  $c->stash->{input_options} = \@input_options;
+  $c->stash->{parse_options} = \@parse_options;
+  $c->stash->{preselected_database} = $preselected_database;
+  $c->stash->{preselected_category} = $preselected_category;
+  $c->stash->{seq} = $seq;
+  $c->stash->{preload_id} = $c->req->param('preload_id');
+  $c->stash->{preload_type} = $c->req->param('preload_type');
+
+  $c->stash->{blast_db_icons} = $blast_db_icons;
+
+  $c->stash->{databases} = $databases;
+  $c->stash->{dataset_groups} = $dataset_groups;
+  $c->stash->{preload_seq} = $seq;
+  $c->stash->{programs} = [
+    [ 'blastn', 'blastn (nucleotide to nucleotide db)' ],
+    [ 'blastp', 'blastp (protein to protein db)' ], 
+    [ 'blastx', 'blastx (translated nucleotide to protein db)'],
+    [ 'tblastn', 'tblastn (protein to translated nucleotide db)'], 
+    [ 'tblastx', 'tblastx (translated nucleotide to translated nucleotide db)'],
+  ];
+  $c->stash->{template} = '/tools/blast/index.mas';
 }
 
 sub dbinfo : Path('/tools/blast/dbinfo') Args(0) { 

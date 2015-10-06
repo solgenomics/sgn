@@ -252,7 +252,7 @@ jQuery(document).ready(function ($) {
 	    dataType: "json",
 	    data: {
                 'accession_list': accession_list,
-		//'do_fuzzy_search': doFuzzySearch,
+		'do_fuzzy_search': doFuzzySearch,
 	    },
 	    beforeSend: function(){
 		disable_ui();

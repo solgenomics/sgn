@@ -39,24 +39,33 @@ print info_section_html( title => 'Lab members',
 			 info_section_html( title => 'Staff',
 					    is_subsection => 1,
 					    contents => person_set 
-					    ([
-					      ['lukas','Lukas Mueller','Director'],
-					      ['jeremy', 'Jeremy Edwards', 'Assistant Director'],
-					     ],
-					     [
-					      ['naama','Naama Menda','Postdoc'],
-					      ['isaak', 'Isaak Y Tecle', 'Bioinformatics Consultant' ],
-					     ],
-					     [
+              ([
+                ['white','',''],
+                ['lukas','Lukas Mueller','Director'],
+                ['white','',''],
+               ],
+              [
+                ['naama','Naama Menda','Postdoc'],
+                ['isaak', 'Isaak Y Tecle', 'Bioinformatics Consultant' ],
 					      ['tom', 'Tom York', 'Postdoc' ],
-					      ['aureliano', 'Aureliano Bombarely', 'Postdoc' ],
+                # ['jeremy', 'Jeremy Edwards', 'Assistant Director'],
+               ],
+					     [
+				        ['suzy', 'Susan Strickler', 'Postdoc'],
+                ['noe', 'Noe Fernandez-Pozo', 'Postdoc' ],
+                [ 'hartmut', 'Hartmut Foerster', 'MetaCyc curator' ],
 					     ],
-                                             [
-					      [ 'hartmut', 'Hartmut Foerster', 'MetaCyc curator' ],
-					      ['suzy', 'Susan Strickler', 'Postdoc'],
-					      ['aimin', 'Aimin Yan', 'Postdoc' ],
-                                              ['surya', 'Surya Saha', 'Postdoc' ],
-                                             ]
+					     [
+                 ['surya', 'Surya Saha', 'Postdoc' ],
+                 ['aimin', 'Aimin Yan', 'Postdoc' ],
+                 ['guillaume', 'Guillaume Bauchet', 'Postdoc' ],
+                  # ['aureliano', 'Aureliano Bombarely', 'Postdoc' ],
+					     ],
+               [
+                 ['bryan', 'Bryan Ellerbrock', '' ],
+                 ['nick', 'Nicolas Morales', '' ],
+                 ['alex', 'Alex Agbonna', '' ],
+               ]
 					    ),
 					  )
 			 
