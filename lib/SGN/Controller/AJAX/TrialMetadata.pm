@@ -279,7 +279,8 @@ sub get_trial_folder :Chained('trial') PathPart('folder') Args(0) {
     ($parent_folder_id, $parent_folder_name) = @{$c->stash->{trial}->get_folder()};
 
     $c->stash->{rest} = { folder => [ $parent_folder_id, $parent_folder_name ] };
-
+    
+}
 
 
 sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
@@ -368,8 +369,8 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 			      plot_name => \@plot_name,
 			      plot_id => \@plot_id,
 			      plot_number => \@plot_number
-          		   };
-	
+	};
+    
 }
 
 
