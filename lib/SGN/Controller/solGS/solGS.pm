@@ -15,13 +15,10 @@ use Cache::File;
 use Try::Tiny;
 use List::MoreUtils qw /uniq/;
 use Scalar::Util qw /weaken reftype/;
-#use CatalystX::GlobalContext ();
 use Statistics::Descriptive;
 use Math::Round::Var;
 use Algorithm::Combinatorics qw /combinations/;
 use Array::Utils qw(:all);
-#use CXGN::Login;
-#use CXGN::People::Person;
 use CXGN::Tools::Run;
 use JSON;
 use solGS::AnalysisProfile;
@@ -502,10 +499,10 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     } 
     
     
-    # $ret = to_json($ret);
+    $ret = to_json($ret);
         
-    # $c->res->content_type('application/json');
-    # $c->res->body($ret);
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
    
 }
 
@@ -3134,9 +3131,12 @@ sub multi_pops_geno_files {
 
 
 sub create_tempfile {
-    my ($self, $c, $name) = @_;
-
-    my ($fh, $file) = tempfile("$name-XXXXX", 
+    my ($self, $c, $name, $ext) = @_;
+    
+    $ext = '.' . $ext if $ext;
+    
+    my ($fh, $file) = tempfile($name . "-XXXXX", 
+			       SUFFIX => $ext,
                                DIR => $c->stash->{solgs_tempfiles_dir}
         );
     
@@ -3887,22 +3887,22 @@ sub genotype_file  {
 }
 
 
-sub get_rrblup_output :Private{
+sub get_rrblup_output {
     my ($self, $c) = @_;
+       
+    $c->stash->{pop_id} = $c->stash->{combo_pops_id} if $c->stash->{combo_pops_id};
     
-    my $pop_id      = $c->stash->{pop_id};
-    my $trait_abbr  = $c->stash->{trait_abbr};
-    my $trait_name  = $c->stash->{trait_name};
-    print STDERR "\nCALLING get_rrblup_output..pop_id: $pop_id trait_abbr: $trait_abbr -- trait_name: $trait_name \n";
-    my $data_set_type = $c->stash->{data_set_type};
- print STDERR "\n IN get_rrblup_output..data set type: $data_set_type -- pop_id: $pop_id trait_abbr: $trait_abbr -- trait_name: $trait_name \n";
-    my ($traits_file, @traits, @trait_pages);
+    my $pop_id        = $c->stash->{pop_id};
+    my $trait_abbr    = $c->stash->{trait_abbr};
+    my $trait_name    = $c->stash->{trait_name};
+    my $data_set_type = $c->stash->{data_set_type};  
     my $prediction_id = $c->stash->{prediction_pop_id};
-   
+  
+    my ($traits_file, @traits, @trait_pages);  
+
     if ($trait_abbr)     
     {
         $self->run_rrblup_trait($c, $trait_abbr);
-
     }
     else 
     {    
@@ -4178,7 +4178,7 @@ sub create_cluster_acccesible_tmp_files {
     my $temp_file_template = $c->stash->{r_temp_file};
 
     CXGN::Tools::Run->temp_base($c->stash->{solgs_tempfiles_dir});
-    my ( $in_file_temp, $out_file_temp, $err_file_temp ) =
+    my ( $in_file_temp, $out_file_temp, $err_file_temp) =
         map 
     {
         my ( undef, $filename ) =
@@ -4190,12 +4190,12 @@ sub create_cluster_acccesible_tmp_files {
             );
         $filename
     } 
-    qw / in out err/;
+    qw / in out err /;
 
     $c->stash( 
 	in_file_temp  => $in_file_temp,
 	out_file_temp => $out_file_temp,
-	err_file_temp => $err_file_temp
+	err_file_temp => $err_file_temp,
 	);
 
 }
@@ -4209,19 +4209,46 @@ sub run_r_script {
     my $output_files = $c->stash->{output_files};
   
     $self->create_cluster_acccesible_tmp_files($c);
-    my $in_file_temp  = $c->stash->{in_file_temp};
-    my $out_file_temp = $c->stash->{out_file_temp};
-
+    my $in_file_temp   = $c->stash->{in_file_temp};
+    my $out_file_temp  = $c->stash->{out_file_temp};
+    
+    my $dependency     = $c->stash->{dependency};
+    my $background_job = $c->stash->{background_job};
+    
     {
         my $r_cmd_file = $c->path_to($r_script);
         copy($r_cmd_file, $in_file_temp)
             or die "could not copy '$r_cmd_file' to '$in_file_temp'";
     }
-    
-    try 
-    { 
-        my $r_process = CXGN::Tools::Run->run_cluster(
-            'R', 'CMD', 'BATCH',
+        
+    my $r_job;  
+    if ($dependency && $background_job) 
+    {
+	my $dependent_job_script  = $self->create_tempfile($c, "dependent_r_job", "pl");
+
+	my $cmd = '#!/usr/bin/env perl;' . "\n";
+	$cmd   .= 'use strict;' . "\n";
+	$cmd   .= 'use warnings;' . "\n\n\n";
+	$cmd   .= 'system("Rscript --slave ' 
+	    . $in_file_temp 
+	    . ' --args ' . $input_files . ' ' . $output_files 
+	    . ' | qsub -W ' .  $dependency . '");';
+
+	write_file($dependent_job_script, $cmd);
+	chmod 0755, $dependent_job_script;
+	
+	$r_job = CXGN::Tools::Run->run_cluster('perl', 
+            $dependent_job_script,
+            $out_file_temp,
+            {
+                working_dir => $c->stash->{solgs_tempfiles_dir},
+                max_cluster_jobs => 1_000_000_000,
+            },
+            );
+    } 
+    else 
+    {      
+	$r_job = CXGN::Tools::Run->run_cluster('R', 'CMD', 'BATCH',
             '--slave',
             "--args $input_files $output_files",
             $in_file_temp,
@@ -4231,12 +4258,18 @@ sub run_r_script {
                 max_cluster_jobs => 1_000_000_000,
             },
             );
+    }
+   
+    try 
+    { 
+	$r_job;
 
-	$c->stash->{r_job_tempdir} = $r_process->tempdir();
+	$c->stash->{r_job_tempdir} = $r_job->tempdir();
+	$c->stash->{r_job_id} = $r_job->job_id();
 
-	unless ( defined $c->stash->{background_job})
+	unless ($background_job)
 	{
-	    $r_process->wait();
+	    $r_job->wait();
 	}
     }
     catch 
