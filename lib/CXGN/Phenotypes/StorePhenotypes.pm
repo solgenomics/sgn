@@ -44,11 +44,20 @@ sub _verify {
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($c->dbic_schema("Bio::Chado::Schema"),'plots',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($c->dbic_schema("Bio::Chado::Schema"),'traits',\@trait_list)->{'missing'}};
+    my $response;
     if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
 	print STDERR "Plots or traits not valid\n";
-	print STDERR "Invalid plots: ".join(", ", map { "'$_'" } @plots_missing)."\n" if (@plots_missing);
-	print STDERR "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" if (@traits_missing);
-	return;
+	if (@plots_missing) {
+	    my $message =  "Invalid plots: ".join(", ", map { "'$_'" } @plots_missing)."\n" ;
+	    print STDERR $message;
+	    $response->{error} = $message;
+	}
+	if (@traits_missing) {
+	    my $message = "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" ;
+	    print STDERR $message;
+	    $response->{error} = $message;
+	}
+	return $response;
     }
     foreach my $plot_name (@plot_list) {
 	foreach my $trait_name (@trait_list) {
@@ -61,19 +70,25 @@ sub _verify {
     ## Verify metadata
     if ($phenotype_metadata{'archived_file'} && (!$phenotype_metadata{'archived_file_type'} ||
 						 $phenotype_metadata{'archived_file_type'} eq "")) {
-	print STDERR "No file type provided for archived file\n";
-	return;
+	my $message =  "No file type provided for archived file\n";
+	print STDERR $message;
+	$response->{error} = $message;
+	return $response;
     }
     if (!$phenotype_metadata{'operator'} || $phenotype_metadata{'operator'} eq "") {
-	print STDERR "No operaror provided in file upload metadata\n";
-	return;
+	my $message =  "No operaror provided in file upload metadata\n";
+	print STDERR $message;
+	$response->{error} = $message;
+	return $response;
     }
     if (!$phenotype_metadata{'date'} || $phenotype_metadata{'date'} eq "") {
-	print STDERR "No date provided in file upload metadata\n";
-	return;
+	my $message = "No date provided in file upload metadata\n";
+	print STDERR $message;
+	$response->{error} = $message;
+	return $response;
     }
 
-    return 1;
+    return ;
 }
 
 
@@ -140,15 +155,18 @@ sub store {
 
 	    foreach my $trait_name (@trait_list) {
 		print STDERR "trait: $trait_name\n";
-		#fieldbook trait string should be "CO:$trait_name|$trait_accession" e.g. CO:plant height|0000123
-		my ($db_name, $full_cvterm_name) = split (/:/, $trait_name);
-		my ( $cvterm_name , $accession ) = split (/\|/ , $full_cvterm_name);
+		#fieldbook trait string should be "$trait_name|CO:$trait_accession" e.g. plant height|CO:0000123
+		my ($cvterm_name_string, $full_cvterm_accession) = split (/\|/, $trait_name);
+		my ( $db_name , $accession ) = split (/:/ , $full_cvterm_accession);
 
-		my $cvterm_name_or_accession = $cvterm_name;
+		my $cvterm_name_or_accession = $cvterm_name_string;
 
 		#check if the trait name string does have  
 		$accession =~ s/\s+$//;
 		$accession =~ s/^\s+//;
+		$db_name =~ s/\s+$//;
+		$db_name =~ s/^\s+//;
+
 		my $name_or_accession = 'name';
 		if ($accession =~ m/^0\d{6}/ ) { 
 		    $name_or_accession = 'dbxref.accession';
@@ -233,8 +251,9 @@ sub store {
     };
 
     ## Verify phenotype data
-    if (!$self->_verify($c, $plot_list_ref, $trait_list_ref, $plot_trait_value_hashref, $phenotype_metadata)) {
-	return;
+    my $verify = $self->_verify($c, $plot_list_ref, $trait_list_ref, $plot_trait_value_hashref, $phenotype_metadata) ;
+    if ( $verify->{error} ) {  
+	return $verify->{error};
     }
 
     try {
@@ -244,8 +263,9 @@ sub store {
     };
 
     if ($transaction_error) {
-	print STDERR "Transaction error storing phenotypes: $transaction_error\n";
-	return;
+	my $error =  "Transaction error storing phenotypes: $transaction_error\n";
+	print STDERR $error;
+	return $error;
     }
 
     if ($archived_file) {
@@ -281,7 +301,7 @@ sub store {
 	}
     }
 
-    return 1;
+    return;
 }
 
 

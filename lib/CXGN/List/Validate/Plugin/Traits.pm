@@ -18,9 +18,24 @@ sub validate {
     my @missing = ();
     my $rs;
     foreach my $term (@$list) { 
+	print STDERR "TERM = $term\n\n";
+	my ($cvterm_name_string, $full_cvterm_accession) = split (/\|/, $term);
+	my ( $db_name , $accession ) = split (/:/ , $full_cvterm_accession);
+	
+	my $cvterm_name_or_accession = $cvterm_name_string;
+	
+	#check if the trait name string does have                                                                                     
+	$accession =~ s/\s+$//;
+	$accession =~ s/^\s+//;
+	$db_name =~ s/\s+$//;
+        $db_name =~ s/^\s+//;
 
-	my ($db_name, $name) = split ":", $term;
-
+	my $name_or_accession = 'name';
+	if ($accession =~ m/^0\d{6}/ ) {
+	    $name_or_accession = 'dbxref.accession';
+	    $cvterm_name_or_accession = $accession;
+	}
+	print STDERR "cvterm_name_string = $cvterm_name_string, full_cvterm_accession = $full_cvterm_accession, \ndb_name =$db_name\naccession =$accession\nname_or_accession= $name_or_accession, cvterm_name_or_accession=$cvterm_name_or_accession\n\n";
 	my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
 	if ($db_rs->count() == 0) {  
 	    push @missing, $term;
@@ -28,7 +43,7 @@ sub validate {
 	else { 
 	    $rs = $schema->resultset("Cv::Cvterm")->search( { 
 		'dbxref.db_id' => $db_rs->first()->db_id(),
-		'name'=>$name }, {
+		$name_or_accession => $cvterm_name_or_accession }, {
 		    'join' => 'dbxref' }
 		);
 	    
