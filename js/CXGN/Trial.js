@@ -581,12 +581,13 @@ function save_planting_date() {
 		}
 	    },
 	    error: function(response) { 
-		alert('An error occurred.');
+		alert('An error test.');
 	    }
 	});
 
     }
 }
+
 
 function display_planting_date() { 
     var trial_id = get_trial_id();

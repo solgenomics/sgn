@@ -164,6 +164,47 @@ sub harvest_date_GET {
     $c->stash->{rest} = { harvest_date => $harvest_date };
 }
 
+
+sub planting_date  : Chained('trial') PathPart('planting_date') Args(0) ActionClass('REST') {};
+
+
+sub planting_date_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $planting_date = $c->req->param("planting_date");
+    
+    print STDERR "PLANTING DATE POST with $planting_date\n";
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the planting date of this trial.' };
+	return;
+    }
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = $c->stash->{trial};
+
+    eval { 
+	
+	$c->stash->{trial}->set_planting_date($planting_date);
+    };
+    if ($@) { 
+	$c->stash->{rest} = { error => "An error occurred setting the planting date $planting_date $@" };
+    }
+    else { 
+	$c->stash->{rest} = { success => 1 };
+    }
+}
+
+
+sub planting_date_GET { 
+    my $self = shift;
+    my $c = shift;
+
+    print STDERR "PLANTING DATE GET\n";
+    my $planting_date = $c->stash->{trial}->get_planting_date();
+
+    $c->stash->{rest} = { planting_date => $planting_date };
+}
+
 # sub get_trial_type :Path('/ajax/breeders/trial/type') Args(1) { 
 #     my $self = shift;
 #     my $c = shift;
