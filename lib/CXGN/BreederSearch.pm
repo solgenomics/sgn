@@ -589,7 +589,6 @@ sub create_materialized_cvterm_view {
 	$h = $self->dbh()->prepare($q);
 	$h->execute();
     };
-    print STDERR "*****************created cvterm materialized view ********\n\n\n";
     if ($@) {
 	if ($@!~/relation.*already exists/) { 
 	    die "Materialized trait view: $@\n";
