@@ -582,13 +582,14 @@ sub create_materialized_cvterm_view {
     #
     eval { 
 	my $q = "CREATE TABLE public.materialized_traits
-               AS SELECT cvterm_id,  db.name ||':'|| cvterm.name AS name FROM db JOIN dbxref using(db_id) JOIN cvterm using(dbxref_id) WHERE db.name=?";
+               AS SELECT cvterm_id, cvterm.name || '|' || db.name || ':' || dbxref.accession AS name FROM db JOIN dbxref using(db_id) JOIN cvterm using(dbxref_id) WHERE db.name=?";
 	my $h = $self->dbh()->prepare($q);
 	$h->execute($db_name);
 	$q = "GRANT ALL ON public.materialized_traits TO web_usr";
 	$h = $self->dbh()->prepare($q);
 	$h->execute();
     };
+    print STDERR "*****************created cvterm materialized view ********\n\n\n";
     if ($@) {
 	if ($@!~/relation.*already exists/) { 
 	    die "Materialized trait view: $@\n";
