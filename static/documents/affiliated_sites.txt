@@ -1,25 +1,12 @@
 <div id="affiliated_sites">
-
-  </div>
-  <div class="boxcontent">
-    <ul>
-      <li><a href="http://www.pfaf.org/user/plant.aspx?LatinName=Dioscorea+batatas"> Dioscorea batatas</a></li>
-    </ul>
-  </div>
-  </div>
-
-
-<!--
   <div class="boxheading">
   Projects
   </div>
-
   <div class="boxcontent">
   <dl>
-  <dt><a href="/organism/sol100/view"><font style="font-weight:bold;font-size:18px">&nbsp;SOL-100 Project</font></a></dt> 
-  <dd><a href="/organism/sol100/view">register</a> your Solanaceae genomes!</dd> 
+  <dt><a href="/organism/sol100/view"><font style="font-weight:bold;font-size:18px">&nbsp;SOL-100 Project</font></a></dt>
+  <dd><a href="/organism/sol100/view">register</a> your Solanaceae genomes!</dd>
   <dt><a href="/secretom" alt="secretom"><img src="/documents/img/secretom/secretom_logo_smaller.jpg" width="80%" border="1" /></a></dt>
-
   <dd>Secreted proteins project</dd>
   </dl>
   </div>
@@ -31,7 +18,6 @@
       <li><a href="http://solgenomics.wur.nl">http://solgenomics.wur.nl</a></li>
     </ul>
   </div>
-  
   <div class="boxheading">
     Affiliated Sites
   </div>
@@ -40,12 +26,11 @@
       <li><a class="creativitylinks" href="http://solcap.msu.edu">SolCAP Project</a><br />
           <a href="http://solcap.msu.edu" class="footer" target="_new"><img src="/documents/img/solcap_logo_with_text_small.png" border="0" /></a>
       </li>
-      < li><a class="creativitylinks" href="http://pgn.cornell.edu" target="_new">Plant Genome Network</a></li> 
+      <!-- li><a class="creativitylinks" href="http://pgn.cornell.edu" target="_new">Plant Genome Network</a></li -->
       <li><a class="creativitylinks" href="http://ted.bti.cornell.edu/" target="_new">Tomato Functional Genomics Database</a></li>
-      <li><a class="creativitylinks" href="http://zamir.sgn.cornell.edu/mutants/" target="_new">Genes that make tomatoes</a></li>  
+      <li><a class="creativitylinks" href="http://zamir.sgn.cornell.edu/mutants/" target="_new">Genes that make tomatoes</a></li>
       <li><a class="creativitylinks" href="http://zamir.sgn.cornell.edu/Qtl/Html/home.htm" target="_new">Realtime quantitative trait loci</a></li>
-      <li><a class="creativitylinks" href="http://tgrc.ucdavis.edu" target="_new">Tomato Genetics Resource Center</a></li> 
+      <li><a class="creativitylinks" href="http://tgrc.ucdavis.edu" target="_new">Tomato Genetics Resource Center</a></li>
     </ul>
   </div>
 </div>
--->
