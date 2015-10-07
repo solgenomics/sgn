@@ -85,6 +85,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $block_numbers = $trial_layout->get_block_numbers();
     my $replicate_numbers = $trial_layout->get_replicate_numbers();
     my $design_ref;
+    my $plot_dimensions = $trial_layout->get_plot_dimensions();
     my %design;
     my %design_info;
 
@@ -112,6 +113,10 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{trial_description} = $trial_description;
     $c->stash->{design} = \%design;
     $c->stash->{design_layout_view} = $design_layout_view_html;
+    $c->stash->{plot_length} = $plot_dimensions->[0];
+    $c->stash->{plot_width} = $plot_dimensions->[1];
+    $c->stash->{plant_per_plot} = $plot_dimensions->[2];
+
     my $number_of_blocks;
     if ($block_numbers) {
       $number_of_blocks = scalar(@{$block_numbers});

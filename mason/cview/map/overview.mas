@@ -103,7 +103,7 @@ $larger_size = 10 if $larger_size > 10;
 
 </%perl>
 
-<div class="well" style="overflow:hidden">
+<div class="well" style="overflow:scroll">
   <center>
     <% $message_html %>
     <% $overview_image %>

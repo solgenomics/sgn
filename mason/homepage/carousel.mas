@@ -136,7 +136,7 @@
     <div class="carousel-inner" role="listbox">
 
       <div class="item active">
-          <div style="background:url(/documents/img/homepage_carousel/1.jpg) center center; background-size:cover;" class="slider-size">
+          <div style="background:url(/documents/img/homepage_carousel/bordeaux.jpg) center center; background-size:cover;" class="slider-size">
             <div class="carousel-sgn-caption">
               <a href="https://colloque.inra.fr/sol2015" target="_blank">
                 <h3><img src="/documents/img/sgn_transparent_logo.png" width="40"> SOL 2015</h3>
