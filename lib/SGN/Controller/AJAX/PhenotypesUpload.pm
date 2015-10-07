@@ -57,7 +57,7 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   my %phenotype_metadata;
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
-  my $stored_phenotype_error;
+  my $stored_phenotype_success;
 
   $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
   $md5 = $uploader->get_md5($archived_filename_with_path);
@@ -95,10 +95,10 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   @traits = @{$parsed_file->{'traits'}};
 
   print STDERR "store phenotypes from uploaded file\n";
-  $stored_phenotype_error = $store_phenotypes->store($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+  $stored_phenotype_success = $store_phenotypes->store($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
 
-  if ($stored_phenotype_error) {
-    $c->stash->{rest} = { error => "Error storing uploaded file\n $stored_phenotype_error \n", };
+  if (!$stored_phenotype_success) {
+    $c->stash->{rest} = { error => 'Error storing uploaded file', };
     return;
   }
 
