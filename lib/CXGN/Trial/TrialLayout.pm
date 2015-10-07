@@ -269,9 +269,25 @@ sub _get_plot_dimensions_from_trial {
     return;
   }
   my $schema = $self->get_schema();
-  my $plot_width_type_id = $schema->resultset("Cv::Cvterm")->find({name => 'plot_width'})->cvterm_id;
-  my $plot_length_type_id = $schema->resultset("Cv::Cvterm")->find({name => 'plot_length'})->cvterm_id;
-  my $plant_per_plot_type_id = $schema->resultset("Cv::Cvterm")->find({name => 'plants_per_plot'})->cvterm_id;
+
+  my $plot_width_cvterm_id = $schema->resultset("Cv::Cvterm")->find({name => 'plot_width'});
+  my $plot_width_type_id = '';
+  if ($plot_width_cvterm_id) {
+	  $plot_width_type_id = $plot_width_cvterm_id->cvterm_id;
+  }
+  
+  my $plot_length_cvterm_id = $schema->resultset("Cv::Cvterm")->find({name => 'plot_length'});
+  my $plot_length_type_id = '';
+  if ($plot_length_cvterm_id) {
+	  $plot_length_type_id = $plot_length_cvterm_id->cvterm_id;
+  }
+  
+  my $plant_per_plot_cvterm_id = $schema->resultset("Cv::Cvterm")->find({name => 'plants_per_plot'});
+  my $plant_per_plot_type_id = '';
+  if ($plant_per_plot_cvterm_id) {
+	  $plant_per_plot_type_id = $plant_per_plot_cvterm_id->cvterm_id;
+  }
+  
   my $plot_width_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plot_width_type_id});
   my $plot_length_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plot_length_type_id});
   my $plant_per_plot_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plant_per_plot_type_id});
