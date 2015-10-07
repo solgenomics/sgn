@@ -1,5 +1,4 @@
 <!-- COUNT	1 -->
-
 <div class="subheading"><a href="/community/feature/201204.pl">The Maloof Lab, Dept of Plant Biology, UC Davis</a></div><br />
 
 <div class="subheading"><a href="/community/feature/200911.pl">The Rose Lab, Department of Plant Biology, Cornell University</a></div><br />
