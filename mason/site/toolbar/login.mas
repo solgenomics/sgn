@@ -8,15 +8,12 @@
 
   <li class="dropdown">
 
-    <div class="btn-group dropdown-toggle" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" data-toggle="dropdown" href="#">
-      <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px">Login</button>
-      <button class="btn btn-primary glyphicon glyphicon-log-in" style="margin:6px 6px 0px -7px" type="button"></button>
+    <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
+      <a href="/solpeople/login.pl">
+        <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px">Login</button>
+      </a>
     </div>
 
-    <ul class="dropdown-menu">
-      <li><a href="/solpeople/login.pl">Log In</a></li>
-      <li><a href="/solpeople/new-account.pl">New User</a></li>
-    </ul>
   </li>
 
 % } elsif ( $c->user_exists ) {
@@ -35,15 +32,12 @@
 
   <li class="dropdown">
     
-    <div class="btn-group dropdown-toggle" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" data-toggle="dropdown" href="#">
-      <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px">Login</button>
-      <button class="btn btn-primary glyphicon glyphicon-log-in" style="margin:6px 6px 0px -7px" type="button"></button>
+    <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
+      <a href="/solpeople/login.pl">
+        <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px">Login</button>
+      </a>
     </div>
  
-    <ul class="dropdown-menu">
-      <li><a href="/solpeople/login.pl">Log In</a></li>
-      <li><a href="/solpeople/new-account.pl">New User</a></li>
-    </ul>
   </li>
 % }
 
