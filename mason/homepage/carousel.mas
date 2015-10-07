@@ -158,7 +158,7 @@
       </div>
       
       <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/tomato_carousel.jpg) center center; background-size:cover;" class="slider-size">
+        <div style="background:url(/documents/img/homepage_carousel/carousel_tomato.jpg) center center; background-size:cover;" class="slider-size">
           <div class="carousel-sgn-caption">
             <h3><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome</a></h3>
             <p><a href="http://www.nature.com/nature/journal/v485/n7400/full/nature11119.html" target="_blank">The tomato genome sequence provides insights into fleshy fruit evolution</a></p>
@@ -176,7 +176,7 @@
       </div>
 
       <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/4.jpg) center center; background-size:cover;" class="slider-size">
+        <div style="background:url(/documents/img/homepage_carousel/carousel_potato.jpg) center center; background-size:cover;" class="slider-size">
         <div class="carousel-sgn-caption">
             <h3><a href="/organism/Solanum_tuberosum/genome">Potato Genome</a></h3>
             <p><a href="http://www.nature.com/nature/journal/v475/n7355/full/nature10158.html" target="_blank">Genome sequence and analysis of the tuber crop potato</a></p>
@@ -213,7 +213,7 @@
       </div>
 
       <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/2.jpg) center center; background-size:cover;" class="slider-size">
+        <div style="background:url(/documents/img/homepage_carousel/carousel_eggplant.jpg) center center; background-size:cover;" class="slider-size">
           <div class="carousel-sgn-caption">
               <h3><a href="/organism/Solanum_melongena/genome">Eggplant Genome</a></h3>
               <p><a href="http://dnaresearch.oxfordjournals.org/content/21/6/649" target="_blank">Draft Genome Sequence of Eggplant (<i>Solanum melongena L.</i>)</a></p>
