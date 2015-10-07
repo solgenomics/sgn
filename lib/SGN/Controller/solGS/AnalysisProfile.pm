@@ -188,6 +188,15 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
 	};            
     };
 
+
+   
+    my $ret->{result} = 'running';	
+
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);  
+
 } 
 
 
@@ -368,11 +377,15 @@ sub run_analysis {
 	$c->controller('solGS::combinedTrials')->combine_data_build_model($c);
        
     }
+    elsif ($analysis_page =~ /solgs\/trait\//) 
+    {
+	$c->stash->{trait_id} = $selected_traits[0];
+	$c->controller('solGS::solGS')->build_single_trait_model($c);
+    }
     else 
     {
-	$c->req->path($analysis_page);
-	$c->prepare_action;
-	$c->action ? $c->forward( $c->action ) : $c->dispatch;
+	$c->stash->{status} = 'Error';
+	print STDERR "\n I don't know what to analyze\n";
     }
 
     my @error = @{$c->error};
