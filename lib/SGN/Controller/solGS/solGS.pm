@@ -922,6 +922,17 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
 } 
 
 
+sub build_single_trait_model {
+    my ($self, $c)  = @_;
+
+    my $trait_id =  $c->stash->{trait_id};    
+    $self->get_trait_name($c, $trait_id);
+ 
+    $self->get_rrblup_output($c);
+ 
+}
+
+
 sub trait :Path('/solgs/trait') Args(3) {
     my ($self, $c, $trait_id, $key, $pop_id) = @_;
    
@@ -930,21 +941,22 @@ sub trait :Path('/solgs/trait') Args(3) {
    
     if ($pop_id && $trait_id)
     {    
-        $c->stash->{pop_id} = $pop_id;       
-       
-        $self->get_trait_name($c, $trait_id);
-        my $trait_name = $c->stash->{trait_name};
+        $c->stash->{pop_id}   = $pop_id;       
+	$c->stash->{trait_id} = $trait_id;
+     
+	$self->build_single_trait_model($c);
 
-        $self->get_rrblup_output($c);
- 
-        $self->gs_files($c);
+
+	
+	$self->gs_files($c);
 
         unless ($ajaxredirect eq 'heritability') 
         {	    
             my $script_error = $c->stash->{script_error};
-	   
-            if ($script_error) 
+	             
+	    if ($script_error) 
             {
+		my $trait_name   = $c->stash->{trait_name};
                 $c->stash->{message} = "$script_error can't create a prediction model for <b>$trait_name</b>. 
                                         There is a problem with the trait dataset.";
 
@@ -3244,54 +3256,74 @@ sub trait_phenotype_stat {
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
 
     my $trait_data = $self->convert_to_arrayref_of_arrays($c, $trait_pheno_file);
-  
-    my @pheno_data;   
-    foreach (@$trait_data) 
-    {
-        unless (!$_->[0]) {
-	 
-	    my $d = $_->[1];
-	    chomp($d);
-
-	    if ($d =~ /\d+/) 
-	    {
-		push @pheno_data, $d;
-	    } 
-        }
-    }
-
-    my $stat = Statistics::Descriptive::Full->new();
-    $stat->add_data(@pheno_data);
     
-    my $min  = $stat->min; 
-    my $max  = $stat->max; 
-    my $mean = $stat->mean;
-    my $med  = $stat->median;
-    my $std  = $stat->standard_deviation;
-    my $cnt  = scalar(@$trait_data);
-    my $cv   = ($std / $mean) * 100;
-    my $na   = scalar(@$trait_data) - scalar(@pheno_data);
-
-    if ($na == 0) { $na = '--'; }
-
-    my $round = Math::Round::Var->new(0.01);
-    $std  = $round->round($std);
-    $mean = $round->round($mean);
-    $cv   = $round->round($cv);
-    $cv   = $cv . '%';
-
-    my @desc_stat =  ( [ 'Total no. of genotypes', $cnt ],
-		       [ 'Genotypes missing data', $na ],
-                       [ 'Minimum', $min ], 
-                       [ 'Maximum', $max ],
-                       [ 'Arithmetic mean', $mean ],
-		       [ 'Median', $med ],  
-                       [ 'Standard deviation', $std ],
-                       [ 'Coefficient of variation', $cv ]
-        );
+    my @desc_stat;
+    my $background_job = $c->stash->{background_job};
    
-    $c->stash->{descriptive_stat} = \@desc_stat;
+    if ($trait_data && !$background_job)
+    {
+	my @pheno_data;   
+	foreach (@$trait_data) 
+	{
+	    unless (!$_->[0]) 
+	    {	 
+		my $d = $_->[1];
+		chomp($d);
+
+		if ($d =~ /\d+/) 
+		{
+		    push @pheno_data, $d;
+		} 
+	    }
+	}
+
+	my $stat = Statistics::Descriptive::Full->new();
+	$stat->add_data(@pheno_data);
     
+	my $min  = $stat->min; 
+	my $max  = $stat->max; 
+	my $mean = $stat->mean;
+	my $med  = $stat->median;
+	my $std  = $stat->standard_deviation;
+	my $cnt  = scalar(@$trait_data);
+	my $cv   = ($std / $mean) * 100;
+	my $na   = scalar(@$trait_data) - scalar(@pheno_data);
+
+	if ($na == 0) { $na = '--'; }
+
+	my $round = Math::Round::Var->new(0.01);
+	$std  = $round->round($std);
+	$mean = $round->round($mean);
+	$cv   = $round->round($cv);
+	$cv   = $cv . '%';
+
+	@desc_stat =  ( [ 'Total no. of genotypes', $cnt ],
+			[ 'Genotypes missing data', $na ],
+			[ 'Minimum', $min ], 
+			[ 'Maximum', $max ],
+			[ 'Arithmetic mean', $mean ],
+			[ 'Median', $med ],  
+			[ 'Standard deviation', $std ],
+			[ 'Coefficient of variation', $cv ]
+	    );
+   
+     
+    }
+    else
+    {
+	@desc_stat =  ( [ 'Total no. of genotypes', 'None' ],
+			[ 'Genotypes missing data', 'None' ],
+			[ 'Minimum', 'None' ], 
+			[ 'Maximum', 'None' ],
+			[ 'Arithmetic mean', 'None' ],
+			[ 'Median', 'None'],  
+			[ 'Standard deviation', 'None' ],
+			[ 'Coefficient of variation', 'None' ]
+	    );
+
+    }
+     
+    $c->stash->{descriptive_stat} = \@desc_stat;
 }
 
 #sends an array of trait gebv data to an ajax request
