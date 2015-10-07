@@ -21,9 +21,9 @@
   <li>
     
     <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
-      <button id="navbar_profile" class="btn btn-primary " type="button" onclick="location.href='/solpeople/top-level.pl';" style="margin: 7px 0px 0px 0px"><% $c->user->get_object->get_username || '' %></button>
-      <button name="lists_link" class="btn btn-info glyphicon glyphicon-list-alt" style="margin:6px 0px 0px 0px" type="button" ></button>
-      <button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="location.href='/solpeople/login.pl?logout=yes';" ></button>
+      <button id="navbar_profile" class="btn btn-primary " type="button" onclick="location.href='/solpeople/top-level.pl';" style="margin: 7px 0px 0px 0px" data-toggle="tooltip" data-placement="bottom" data-original-title="My Profile"><% $c->user->get_object->get_username || '' %></button>
+      <button id="navbar_lists" name="lists_link" class="btn btn-info glyphicon glyphicon-list-alt" style="margin:6px 0px 0px 0px" type="button" data-toggle="tooltip" data-placement="bottom" data-original-title="Lists"></button>
+      <button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="location.href='/solpeople/login.pl?logout=yes';" data-toggle="tooltip" data-placement="bottom" data-original-title="Logout"></button>
     </div>
 
   </li>
@@ -40,4 +40,13 @@
  
   </li>
 % }
+
+<script type="text/javascript">
+
+$(document).ready(function(){
+	$('[data-toggle="tooltip"]').tooltip();   
+});
+
+</script>
+
 
