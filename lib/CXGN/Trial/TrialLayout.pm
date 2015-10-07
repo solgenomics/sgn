@@ -45,6 +45,7 @@ has 'trial_year' => (isa => 'Str', is => 'ro', predicate => 'has_trial_year', re
 has 'trial_name' => (isa => 'Str', is => 'ro', predicate => 'has_trial_name', reader => 'get_trial_name', writer => '_set_trial_name');
 has 'trial_description' => (isa => 'Str', is => 'ro', predicate => 'has_trial_description', reader => 'get_trial_description', writer => '_set_trial_description');
 has 'trial_location' => (isa => 'Str', is => 'ro', predicate => 'has_trial_location', reader => 'get_trial_location', writer => '_set_trial_location');
+has 'plot_dimensions' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_plot_dimensions', reader => 'get_plot_dimensions', writer => '_set_plot_dimensions');
 has 'design' => (isa => 'HashRef[HashRef[Str]]', is => 'ro', predicate => 'has_design', reader => 'get_design', writer => '_set_design');
 has 'plot_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_plot_names', reader => 'get_plot_names', writer => '_set_plot_names', default => sub { [] } );
 has 'block_numbers' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_block_numbers', reader => 'get_block_numbers', writer => '_set_block_numbers');
@@ -69,6 +70,8 @@ sub _lookup_trial_id {
   $self->_set_trial_year($self->_get_trial_year_from_project());
   $self->_set_trial_name($self->get_project->name());
   $self->_set_trial_description($self->get_project->description());
+  
+  
   $design_type_from_project =  $self->_get_design_type_from_project();
   if (! $design_type_from_project) {
     return;
@@ -76,6 +79,7 @@ sub _lookup_trial_id {
   if (!$self->_get_location_from_field_layout_experiment()) {return;}
   $self->_set_trial_location($self->_get_location_from_field_layout_experiment());
   if (!$self->has_trial_location) {return;}
+  $self->_set_plot_dimensions($self->_get_plot_dimensions_from_trial());
   $self->_set_design_type($self->_get_design_type_from_project());
   $self->_set_design($self->_get_design_from_trial());
   $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
@@ -185,7 +189,7 @@ sub _get_design_from_trial {
     my $replicate_number_prop = $plot->stockprops->find( { 'type.name' => 'replicate' }, { join => 'type'} );
     my $range_number_prop = $plot->stockprops->find( { 'type.name' => 'range' }, { join => 'type'} );
     my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
-        my $row_number_prop = $plot->stockprops->find( { 'type.name' => 'row_number' }, { join => 'type'} );
+    my $row_number_prop = $plot->stockprops->find( { 'type.name' => 'row_number' }, { join => 'type'} );
     my $col_number_prop = $plot->stockprops->find( { 'type.name' => 'col_number' }, { join => 'type'} );
 
 
@@ -255,8 +259,37 @@ sub _get_location_from_field_layout_experiment {
   return $location_name;
 }
 
+sub _get_plot_dimensions_from_trial {
+  my $self = shift;
+  if (!$self->has_trial_id()) {
+    return;
+  }
+  my $project = $self->get_project();
+  if (!$project) {
+    return;
+  }
+  my $schema = $self->get_schema();
+  my $plot_width_type_id = $schema->resultset("Cv::Cvterm")->find({name => 'plot_width'})->cvterm_id;
+  my $plot_length_type_id = $schema->resultset("Cv::Cvterm")->find({name => 'plot_length'})->cvterm_id;
+  my $plant_per_plot_type_id = $schema->resultset("Cv::Cvterm")->find({name => 'plants_per_plot'})->cvterm_id;
+  my $plot_width_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plot_width_type_id});
+  my $plot_length_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plot_length_type_id});
+  my $plant_per_plot_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plant_per_plot_type_id});
 
-
+  my $plot_width = '';
+  if ($plot_width_row) {
+	  $plot_width = $plot_width_row->value();
+  }
+  my $plot_length = '';
+  if ($plot_length_row) {
+	  $plot_length = $plot_length_row->value();
+  }
+   my $plants_per_plot = '';
+  if ($plot_width_row) {
+	  $plants_per_plot = $plant_per_plot_row->value();
+  }
+  return [$plot_length, $plot_width, $plants_per_plot];
+}
 
 sub _set_project_from_id {
   my $self = shift;
@@ -298,6 +331,8 @@ sub _get_design_type_from_project {
   }
   return $design_type;
 }
+
+
 
 sub _get_trial_year_from_project {
   my $self = shift;
@@ -430,6 +465,7 @@ sub _get_trial_accession_names_and_control_names {
   }
   return (\@accession_names, \@control_names);
 }
+
 
 # sub _get_genotyping_experiment_metadata { 
 #     my $self = shift;

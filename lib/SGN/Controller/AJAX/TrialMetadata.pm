@@ -85,9 +85,9 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     $c->stash->{rest} = { message => "Successfully deleted trial data.", success => 1 };
 }
 
-sub trial_description : Local() ActionClass('REST');
+sub trial_description : Chained('trial') PathPart('description') Args(0) ActionClass('REST') {};
 
-sub trial_description_GET : Chained('trial') PathPart('description') Args(0) { 
+sub trial_description_GET   { 
     my $self = shift;
     my $c = shift;
     
@@ -97,7 +97,7 @@ sub trial_description_GET : Chained('trial') PathPart('description') Args(0) {
    
 }
 
-sub trial_description_POST : Chained('trial') PathPart('description') Args(1) {  
+sub trial_description_POST  {  
     my $self = shift;
     my $c = shift;
     my $description = shift;
@@ -122,6 +122,87 @@ sub trial_description_POST : Chained('trial') PathPart('description') Args(1) {
     $trial->set_description($description);
 
     $c->stash->{rest} = { success => 1 };
+}
+
+sub harvest_date  : Chained('trial') PathPart('harvest_date') Args(0) ActionClass('REST') {};
+
+
+sub harvest_date_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $harvest_date = $c->req->param("harvest_date");
+    
+    print STDERR "HARVEST DATE POST with $harvest_date\n";
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the harvest date of this trial.' };
+	return;
+    }
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = $c->stash->{trial};
+
+    eval { 
+	
+	$c->stash->{trial}->set_harvest_date($harvest_date);
+    };
+    if ($@) { 
+	$c->stash->{rest} = { error => "An error occurred setting the harvest date $harvest_date $@" };
+    }
+    else { 
+	$c->stash->{rest} = { success => 1 };
+    }
+}
+
+
+sub harvest_date_GET { 
+    my $self = shift;
+    my $c = shift;
+
+    print STDERR "HARVEST DATE GET\n";
+    my $harvest_date = $c->stash->{trial}->get_harvest_date();
+
+    $c->stash->{rest} = { harvest_date => $harvest_date };
+}
+
+
+sub planting_date  : Chained('trial') PathPart('planting_date') Args(0) ActionClass('REST') {};
+
+
+sub planting_date_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $planting_date = $c->req->param("planting_date");
+    
+    print STDERR "PLANTING DATE POST with $planting_date\n";
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the planting date of this trial.' };
+	return;
+    }
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = $c->stash->{trial};
+
+    eval { 
+	
+	$c->stash->{trial}->set_planting_date($planting_date);
+    };
+    if ($@) { 
+	$c->stash->{rest} = { error => "An error occurred setting the planting date $planting_date $@" };
+    }
+    else { 
+	$c->stash->{rest} = { success => 1 };
+    }
+}
+
+
+sub planting_date_GET { 
+    my $self = shift;
+    my $c = shift;
+
+    print STDERR "PLANTING DATE GET\n";
+    my $planting_date = $c->stash->{trial}->get_planting_date();
+
+    $c->stash->{rest} = { planting_date => $planting_date };
 }
 
 # sub get_trial_type :Path('/ajax/breeders/trial/type') Args(1) { 
