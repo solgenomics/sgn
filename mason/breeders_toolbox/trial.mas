@@ -77,42 +77,56 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </%perl>
 
+<br/>
+
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm-6 col-md-6 col-lg-6">
+<&| /page/info_section.mas, title=>"Trial details" &>
 
 
-	 <&| /page/info_section.mas, title=>"Breeding program", subtitle=>$subtitle &>
-	     <div id="breeding_programs">
-	     [loading...]	
-	     </div>
-	 </&>
 
-	 <&| /page/info_section.mas, title=>"Year(s)", subtitle => '[<a id="change_year_link">change</a>]' &>
-	     <div id="trial_year">
-    	      [loading...]
-  	      </div>
-	 </&>
-	 
-	 </div>	 
-	 <div class="col-sm-6 col-md-6 col-lg-6">
+<table class="table" ><tr><td valign="top">
+<b>Breeding Program </b></td><td valign="top">
+<span id="breeding_programs">
+  [loading...]
+</span>
+</td>
+<td>
+ <% $change_breeding_program_link %>
+</td>
+</tr>
+<tr>
+<td valign="top" >
+  
+  <b>Trial Type</b>
+</td><td>
+  <div id="trial_type">
+    [loading...]
+  </div>
+</td><td>
+  [<a id="edit_trial_type" >change</a>]
+</td></tr>
 
-	<&| /page/info_section.mas, title=>"Trial type", subtitle=>"[<a id=\"edit_trial_type\" >change</a>]" &>
-	    <div id="trial_type">
-	    	 [loading...]
-		</div>
-	</&>
-	
-	<&| /page/info_section.mas, title=>"Location(s)", subtitle=>"[<a id=\"change_trial_location_link\">change</a>]" &>
-	    <div id="trial_location">
-  	    [loading...]
-	    </div>
-	</&>
-	</div>
-	</div>
-</div>
+<tr><td valign="top" >
+    <b>Year</b>
+</td><td>
+  <div id="trial_year">
+    [loading...]
+  </div>
+</td><td>
+[<a id="change_year_link">change</a>]
+</td></tr>
+<tr><td valign="top" >
+<b>Trial Location</b>
+</td><td>
+<div id="trial_location">
+  [loading...]
+ </div>
+
+</td><td>
+[<a id="change_trial_location_link">change</a>]
+</td></tr>
+
 
 <tr><td>
 <b>Planting Date</b>
@@ -138,7 +152,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </td><td>
 [<a id="edit_trial_description">edit</a>]
 </td></tr></table>
-
 
 </&>
 
