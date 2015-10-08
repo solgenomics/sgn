@@ -157,6 +157,7 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     my $err_temp_file = $c->stash->{err_file_temp};
    
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $status;
 
     try 
     { 
@@ -177,20 +178,16 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     }
     catch 
     {
-	my $err = $_;
-	$err =~ s/\n at .+//s; 
-        print STDERR "\n ERROR: $err \n";
-      	try
-        {  
-            $err .= "\n=== R output ===\n"
-    		.file($out_temp_file)->slurp
-    		."\n=== end R output ===\n"; 
-	};            
+	$status = $_;
+	$status =~ s/\n at .+//s;           
     };
 
-
+    if (!$status) 
+    { 
+	$status = $c->stash->{status}; 
+    }
    
-    my $ret->{result} = 'running';	
+    my $ret->{result} = $status;	
 
     $ret = to_json($ret);
        
@@ -213,17 +210,14 @@ sub parse_arguments {
       
       foreach my $k ( keys %{$arguments} ) 
       {
-	  my $pop_id;
 	  if ($k eq 'population_id') 
 	  {
 	      my @pop_ids = @{ $arguments->{$k} };
 	      $c->stash->{pop_ids} = \@pop_ids;
 	      
 	      if (scalar(@pop_ids) == 1) 
-	      {
-		  $pop_id =  $pop_ids[0];
-		  $c->stash->{pop_id}  = $pop_id;
-		  print STDERR "\n pop id: $pop_id\n";
+	      {		  
+		  $c->stash->{pop_id}  = $pop_ids[0];
 	      }
 	  }
 
@@ -299,8 +293,6 @@ sub structure_output_details {
 	    {
 		$trait_page = $base . "solgs/model/combined/trials/$pop_id/trait/$trait_id";
 	    }
-
-	    print STDERR "\n structure output  analysis_page: $analysis_page\n referer: $referer\n ";
 
 	    if ( $analysis_page =~ m/solgs\/model\/combined\/trials\// ) 
 	    {

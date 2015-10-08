@@ -303,16 +303,12 @@ sub single_modeling_message {
 	    {
 		my $trait_name = uc($output_details->{$k}->{trait_name});
 		my $trait_page = $output_details->{$k}->{trait_page};
-		my $combined_pops = $output_details->{$k}->{data_set_type};
-		my $success = $output_details->{$k}->{pheno_success};
-		my $pheno = $output_details->{$k}->{pheno_file};
-		my $geno = $output_details->{$k}->{geno_file};
-		my $gebv = $output_details->{$k}->{gebv_file};
+		
 		if ($output_details->{$k}->{success})		
 		{		
 		    $message = "The analysis for $trait_name is done."
 			." You can view the output here:\n"
-			."$trait_page. \n $combined_pops \n $success \n $pheno \n$geno \n $gebv";
+			."$trait_page.\n";
 		}
 		else 
 		{  
