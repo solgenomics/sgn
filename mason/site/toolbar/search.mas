@@ -12,7 +12,7 @@
 <script defer="defer">
   jQuery(document).ready(function() {
     
-    $('[data-toggle="tooltip"]').tooltip();
+    jQuery('[data-toggle="tooltip"]').tooltip();
 
     jQuery('#quick_search_icon').click(function () {
       if (jQuery('#quick_search_input').attr("placeholder") == "") {
