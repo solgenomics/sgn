@@ -1,0 +1,45 @@
+
+<li style="height:100%">
+  <form class="navbar-form navbar-left form-inline" role="search" action="/search/quick_search.pl" style="padding-right: 2px;height:100%">
+    <div class="input-group">
+      <span id="advanced_search_li" class="btn btn-default input-group-addon" style="display:none" onclick="location.href='/search';">Advanced</span>
+      <input id="quick_search_input" style="display:none;" type="text" name="term" class="form-control" placeholder="">
+      <span id="quick_search_icon" class="btn btn-default" style="height:34px; font-size:16; padding-top:8px;" data-toggle="tooltip" data-placement="bottom" data-original-title="Search"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></span>
+    </div>
+  </form>
+</li>
+
+<script defer="defer">
+  jQuery(document).ready(function() {
+    
+    jQuery('[data-toggle="tooltip"]').tooltip();
+
+    jQuery('#quick_search_icon').click(function () {
+      if (jQuery('#quick_search_input').attr("placeholder") == "") {
+        jQuery('#quick_search_input').attr("placeholder","Search");
+        
+        jQuery('#quick_search_icon').addClass("input-group-addon");
+        
+        jQuery('#advanced_search_li').css("display","table-cell");
+        jQuery('#quick_search_input').css("display","table-cell");
+        jQuery('#quick_search_input').css("width","0px");
+        jQuery('#quick_search_input').animate({
+          width: '150px'
+        }, 400);
+
+      }
+      else {
+        jQuery('#quick_search_input').animate({
+          width: '0px'
+        }, 400, function(){
+          // callback function
+          jQuery('#quick_search_input').attr("placeholder","");
+          jQuery('#quick_search_input').css("display","none");
+          jQuery('#advanced_search_li').css("display","none");
+          jQuery('#quick_search_icon').removeClass("input-group-addon");
+        });
+      }
+    });
+    
+  });
+</script>

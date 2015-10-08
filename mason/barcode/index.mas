@@ -19,19 +19,34 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 <&| /page/info_section.mas, title=>"Barcode Tools", collapsible=>1, collapsed=>0 &>
 
+<div class="well well-sm">
+<div class="row">
+  <div class="col-md-1 col-lg-1">
+  </div>
+  <div class="col-md-10 col-lg-10">
 <& /barcode/tool/list.mas, tools_def=>\@tools_def &>
-
-<br /><br />
+  </div>
+  <div class="col-md-1 col-lg-1">
+  </div>
+</div>
+</div>
 
 </&>
 
-<&| /page/info_section.mas, title=>"Procedural tools", collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Procedural Tools", collapsible=>1, collapsed=>1 &>
 
-<a href="/barcode/tool/cross">Cross tool</a><br />
-
-<a href="/barcode/tool/dna">DNA extraction tool</a><br />
-
-<br /><br />
+<div class="well well-sm">
+<div class="row">
+  <div class="col-md-1 col-lg-1">
+  </div>
+  <div class="col-md-10 col-lg-10">
+<a href="/barcode/tool/cross"><p>Cross Tool</p></a>
+<a href="/barcode/tool/dna"><p>DNA Extraction Tool</p></a>
+  </div>
+  <div class="col-md-1 col-lg-1">
+  </div>
+</div>
+</div>
 
 </&>
 
@@ -58,14 +73,34 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 <&| /page/info_section.mas, title=>'Excel Sheet Download',  collapsible=>1, collapsed=>0 &>
 
+<div class="well well-sm">
+<div class="row">
+  <div class="col-md-1 col-lg-1">
+  </div>
+  <div class="col-md-10 col-lg-10">
 <& /barcode/excel_download.mas, locations=>\@locations, projects=>\@projects, available_cvterms => \@tools_def  &>
+  </div>
+  <div class="col-md-1 col-lg-1">
+  </div>
+</div>
+</div>
 
 </&>
 
 
-<&| /page/info_section.mas, title=>'Metadata &amp; Multibarcode tool', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>'Metadata &amp; Multibarcode Tool', collapsible=>1, collapsed=>0 &>
 
+<div class="well well-sm">
+<div class="row">
+  <div class="col-md-1 col-lg-1">
+  </div>
+  <div class="col-md-10 col-lg-10">
   <& /barcode/multi_tool_input.mas, locations=>\@locations, projects=>\@projects, available_cvterms => \@tools_def &>
+  </div>
+  <div class="col-md-1 col-lg-1">
+  </div>
+</div>
+</div>
 
 </&>
 
@@ -89,43 +124,99 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 <&| /page/info_section.mas, title=>'Generate Barcode', collapsible=>1, collapsed=>1 &>
 
-<form action="/barcode/generate" >
-  Barcode text <input name="text" /><br />
+<div class="well well-sm">
+<div class="row">
+  <div class="col-md-1 col-lg-1">
+  </div>
+  <div class="col-md-10 col-lg-10">
 
-  <input type="radio" name="size" value="small" checked="1" /> small<br />
-  <input type="radio" name="size" value="large" /> large<br />
+<form class="form-horizontal" role="form" action="/barcode/generate">
+  <div class="form-group form-group-sm">
+    <label class="col-sm-2 control-label">Barcode Text: </label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" name="text" />
+    </div>
+  </div>
+  <div class="form-group form-group-sm">
+    <label class="col-sm-2 control-label">Small: </label>
+    <div class="col-sm-10">
+      <input type="radio" name="size" value="small" checked="1" />
+    </div>
+  </div>
+  <div class="form-group form-group-sm">
+    <label class="col-sm-2 control-label">Large: </label>
+    <div class="col-sm-10">
+      <input type="radio" name="size" value="large" />
+    </div>
+  </div>
 
-  <input type="submit" value="Generate barcode" />
-  </form>
+  <button style="float:right" type="submit" class="btn btn-info btn-sm" type="submit" value="Generate barcode">Generate Barcode</button>
+</form>
+
+<br/>
+
+  </div>
+  <div class="col-md-1 col-lg-1">
+  </div>
+</div>
+</div>
 
 </&>
   
 <&| /page/info_section.mas, title=>'Download Stock Barcodes', collapsible=>1, collapsed=>0 &>
 
-<form action="/barcode/stock/download/pdf" method="post" enctype="multipart/form-data" />
+<div class="well well-sm">
+<div class="row">
+  <div class="col-md-1 col-lg-1">
+  </div>
+  <div class="col-md-10 col-lg-10">
 
-Enter a list of stock names<br />
-<textarea id="stock_names" name="stock_names" rows="10" cols="30"></textarea>
-<div id="list_menu_location_1"></div>
+<form class="form-horizontal" role="form" method="GET" action="/barcode/excel_download">
+  <div class="form-group form-group-sm">
+    <label class="col-sm-4 control-label">Enter a List of Stock Names: </label>
+    <div class="col-sm-8">
+      <textarea class="form-control" id="stock_names" name="stock_names" ></textarea>
+    </div>
+  </div>
+  <div class="form-group form-group-sm">
+    <label class="col-sm-4 control-label">Or Paste From a List: </label>
+    <div class="col-sm-8">
+      <div id="list_menu_location_1"></div>
 <script defer="defer">
-
   jQuery(document).ready(function() {
       pasteListMenu('stock_names', 'list_menu_location_1');
   });
 </script>
+    </div>
+  </div>
+  <div class="form-group form-group-sm">
+    <label class="col-sm-4 control-label">Or Upload File With Stock Names: </label>
+    <div class="col-sm-8">
+      <input type="file" name="stock_names_file" />
+    </div>
+  </div>
+  <div class="form-group form-group-sm">
+    <label class="col-sm-4 control-label">Print Duplicate Labels Per Row: </label>
+    <div class="col-sm-8">
+      <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" />
+    </div>
+  </div>
 
-
-<br /><br />
- 
-<& /barcode/printer_settings.mas &>
-
-<input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" /> print duplicate labels per row<br /><br />
-
-Upload file with stock names:<br />
-<input type="file" name="stock_names_file" /><br /><br />
-<input type="reset" />&nbsp;&nbsp;
-<input type="submit" value="Download Barcodes" />
+  <& /barcode/printer_settings.mas &>
+  
+  <button style="float:right" type="submit" class="btn btn-info btn-sm" type="submit" value="Download Barcodes">Download Barcodes</button>
+  <button style="float:right" class="btn btn-default btn-sm" type="reset" >Clear</button>
 </form>
+
+<br/>
+
+  </div>
+  <div class="col-md-1 col-lg-1">
+  </div>
+</div>
+</div>
+
+<br/>
 
 </&>
 

@@ -1,4 +1,5 @@
 
+
 <%once>
 use utf8;
 </%once>
@@ -7,4 +8,5 @@ use utf8;
 
 % $m->call_next;
 
-<& /site/footer.mas &>
+  <& /site/footer.mas &>
+

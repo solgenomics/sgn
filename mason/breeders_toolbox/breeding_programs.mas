@@ -4,99 +4,189 @@ $breeding_programs
 $user => undef
 </%args>
 
-<br />
-<& /page/page_title.mas, title=>"Manage breeding programs" &>
 <%perl>
-  my $delete_flag = 0;
-  if ($user && $user->check_roles("curator")) {
+my $delete_flag = 0;
+if ($user && $user->check_roles("curator")) {
     $delete_flag = 1;
-  }
-  
-foreach my $bp (@$breeding_programs) { 
-
-  print "<b>$bp->[1]</b> ($bp->[2])";
-  if ($delete_flag) { print " <a title=\"delete this breeding program\" id=\"delete_breeding_program_link\_".$bp->[1]."\" href=\"javascript:delete_breeding_program($bp->[0])\" ><font color=\"red\">X</font></a>"; }
-  print "<br />\n";
 }
-
 </%perl>
 
-<br />
-<br />
-<a id="new_breeding_program_link">Add new breeding program</a>
+<& /page/page_title.mas, title=>"Manage Breeding Programs" &>
 
+<div class="container-fluid">
+<hr>
+
+<table class="table table-condensed table-striped table-hover">
+  <thead>
+    <tr>
+
+    <%perl>
+      if ($delete_flag) { print "<th>Name</th><th>Info</th><th>Delete</th>"; }
+        else { print "<th>Name</th><th>Info</th>"; }
+    </%perl>
+    	  
+    </tr>
+  </thead>
+  <tbody>
+
+    <%perl>
+      foreach my $bp (@$breeding_programs) { 
+
+        print "<tr><td><b>$bp->[1]</b></td><td>$bp->[2]</td>";
+
+  	if ($delete_flag) { 
+	  print "<td><a title=\"delete this breeding program\" id=\"delete_breeding_program_link\_".$bp->[1]."\" href=\"javascript:delete_breeding_program($bp->[0])\" ><font color=\"red\">X</font></a></td></tr>";
+	} else { 
+	  print "</tr>"; 
+	}
+      }
+    </%perl>	
+	
+  </tbody>
+</table>
+
+<br/>
+<button type="button" class="btn btn-primary" name="new_breeding_program_link" id="new_breeding_program_link">Add New Program</button>
+
+</div>
+
+<!-- Modal Dialogs Below Here -->
+
+<div class="modal fade" id="new_breeding_program_dialog" name="new_breeding_program_dialog" tabindex="-1" role="dialog" aria-labelledby="addBreedingProgramDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addBreedingProgramDialog">Add New Breeding Program</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <form class="form-horizontal" role="form" name="new_breeding_program_form" id="new_breeding_program_form">
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Name: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="new_breeding_program_name" id="new_breeding_program_name" type="text" />
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Description: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="new_breeding_program_desc" id="new_breeding_program_desc" type="text" />
+              </div>
+	    </div>
+	  </form>      
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="new_breeding_program_submit" id="new_breeding_program_submit">Add Breeding Program</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
 <div id="new_breeding_program_dialog">
 <table>
 <tr><td>Name</td><td><input type="text" id="new_breeding_program_name" size="15" /></td></tr>
 <tr><td>Description</td><td><input type="text" id="new_breeding_program_desc" size="30" /></td></tr>
 </table>
 </div>
+-->
+
 
 <script>
 
-  
-
 jQuery(document).ready(function() { 
   
-  jQuery('#new_breeding_program_link').click(
-    function() { 
-      jQuery('#new_breeding_program_dialog').dialog("open");
+  $("button#new_breeding_program_link").click( function(event) { 
+      event.preventDefault();
+      $("#new_breeding_program_dialog").modal("show");
   });
 
-
-});
-
-jQuery('#new_breeding_program_dialog').dialog( { 
-  title: "Add new breeding program",
-  width: 400,
-  height: 200,
-  buttons: { 
-    'OK':     { id: 'new_breeding_program_dialog_ok_button',
-                text: 'OK',
-                click: function() { store_new_breeding_program(); }
-              },
-    'Cancel': { id: 'new_breeding_program_dialog_cancel_button',
-                text: 'Cancel',
-                click: function() {  
-                  jQuery('#new_breeding_program_dialog').dialog("close"); }
-              }
-  },
-  autoOpen: false
-});
-
-function store_new_breeding_program() { 
-   var name = jQuery('#new_breeding_program_name').val();
-   var desc = jQuery('#new_breeding_program_desc').val();
-   if ( (name === '') || (desc === '')) { 
-     alert("Please enter a name and a description.");
-     return;
-   }
-   jQuery.ajax( { 
-     url: '/breeders/program/new',
-     data: { 'name': name, 'desc': desc },
-//async: false,
-     beforeSend: function()  { jQuery('#working').dialog("open") },
-     error: function(response) { 
-        alert("An error occurred."+ response.responseText);
-       jQuery('#working').dialog("close");
-     },
-
-     success: function(response) { 
-       if (response.error) { 
-         alert(response.error);
+  $('button#new_breeding_program_submit').click( function(event) {
+      event.preventDefault();
+      var name = jQuery('#new_breeding_program_name').val();
+      var desc = jQuery('#new_breeding_program_desc').val();
+      if ( (name === '') || (desc === '')) { 
+          alert("Please enter a name and a description.");
+     	  return;
+      }
+      $.ajax({
+	  url: '/breeders/program/new',
+     	  data: { 'name': name, 'desc': desc },
+     	  beforeSend: function()  { jQuery('#working').dialog("open") },
+     	  error: function(response) { 
+              alert("An error occurred."+ response.responseText);
+      	      jQuery('#working').dialog("close");
+          },
+     	  success: function(response) { 
+       	      if (response.error) { 
+                  alert(response.error);
        
-       }
-       else { 
-         alert("The new breeding program "+name+" was created");
-       }
-       jQuery('#working').dialog("close");
-       location.reload();
-     }
-
+              }
+       	      else { 
+              	  alert("The new breeding program "+name+" was created");
+       	      }
+       	      jQuery('#working').dialog("close");
+       	      location.reload();
+      	  }
+      });
+      $("#new_breeding_program_dialog").modal("hide");
    });
-   jQuery('#new_breeding_program_dialog').dialog("close");
+});
 
-}
+//jQuery('#new_breeding_program_dialog').dialog( { 
+//  title: "Add new breeding program",
+//  width: 400,
+//  height: 200,
+//  buttons: { 
+//    'OK':     { id: 'new_breeding_program_dialog_ok_button',
+//                text: 'OK',
+//                click: function() { store_new_breeding_program(); }
+//              },
+//    'Cancel': { id: 'new_breeding_program_dialog_cancel_button',
+//                text: 'Cancel',
+//                click: function() {  
+//                  jQuery('#new_breeding_program_dialog').dialog("close"); }
+//              }
+//  },
+//  autoOpen: false
+//});
+
+//function store_new_breeding_program() { 
+//   var name = jQuery('#new_breeding_program_name').val();
+//   var desc = jQuery('#new_breeding_program_desc').val();
+//   if ( (name === '') || (desc === '')) { 
+//     alert("Please enter a name and a description.");
+//     return;
+//   }
+//   jQuery.ajax( { 
+//     url: '/breeders/program/new',
+//     data: { 'name': name, 'desc': desc },
+//async: false,
+//     beforeSend: function()  { jQuery('#working').dialog("open") },
+//     error: function(response) { 
+//        alert("An error occurred."+ response.responseText);
+//       jQuery('#working').dialog("close");
+//     },
+//
+//     success: function(response) { 
+//       if (response.error) { 
+//         alert(response.error);
+//       
+//       }
+//       else { 
+//         alert("The new breeding program "+name+" was created");
+//       }
+//       jQuery('#working').dialog("close");
+//       location.reload();
+//     }
+//
+//   });
+//   jQuery('#new_breeding_program_dialog').dialog("close");
+//
+//}
 
 function delete_breeding_program(program_id) { 
    if (confirm("Delete breeding program? The associated trials will not be deleted, but be listed under 'Other'")) { 
@@ -116,7 +206,5 @@ function delete_breeding_program(program_id) {
     });
   }
 }
-
-
 
 </script>

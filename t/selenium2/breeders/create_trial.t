@@ -36,16 +36,14 @@ $t->while_logged_in_as(
 
 	$t->find_element_ok('rep_count', 'id', "find replicate count input box")->send_keys("3");
 
-	$t->find_element_ok('add_trial_button', 'id', "find Add button")->click();
-	sleep(5);
+	$t->find_element_ok('new_trial_submit', 'id', "find Add button")->click();
+	sleep(10);
 
-	$t->find_element_ok('confirm_trial_save_button', 'id', "find trial design confirm button")->click();
+	$t->find_element_ok('new_trial_confirm_submit', 'id', "find trial design confirm button")->click();
 	
-	sleep(5);
+	sleep(10);
 
 	$t->find_element_ok('trial_saved_dialog_message_ok_button', 'id', "find trial saved dialog")->click();
-
-	
 
     });
 

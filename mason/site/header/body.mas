@@ -1,112 +1,26 @@
-
 <div id="outercontainer">
   <a name="top"></a>
 
-  <& /system_message.mas &>
-  
-  <!-- top links and quick search -->
-<table id="siteheader" cellpadding="0" cellspacing="0">
-<tr>
-  <td rowspan="3" width="10" class="sunlogo">
-    <a href="/"><img src="/documents/img/sgn_logo_icon.png" width="70" height="70" border="0" alt="SGN Home" title="Sol Genomics Network Home" id="sgnlogo" /></a>
-  </td>
-  <td style="vertical-align: bottom">
+  <div id="clone_shoppingcart" style="display: none">
+    <span id="clone_cart_count"></span> clone(s) in cart (<a class="toplink" style="text-decoration: underline" href="/search/clone-order.pl">order</a>)
+  </div>
 
-<!-- Lists dialog -->
-<div id="list_dialog" overflow="auto" >
-</div>
-
-<div id="list_item_dialog" overflow="auto" >
-</div>
-
-<div id="working" style="text-align : center;">
-  <img src="/img/wheel.gif" />
-  <div id="working_msg"></div>
-</div>
-
-
-<div id="login_window" style="visibility: hidden" >
-  <table>
-    <tr><td>Username</td><td><input type="text" size="20" id="username_field" name="username_field" /></td></tr>
-    <tr><td>Password</td><td><input type="password" size="20" id="password_field" name="password_field" /></td></tr>
-  </table>  
-</div>  
-
-  
-    <a href="/"><img id="sgntext" src="/documents/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="Sol Genomics Network Home" /></a>
-
-  </td>
-  <td width="50%" class="clonecart">
-     <div id="clone_shoppingcart" style="display: none">
-         <span id="clone_cart_count"></span> clone(s) in cart (<a class="toplink" style="text-decoration: underline" href="/search/clone-order.pl">order</a>)
-     </div>
-  </td>
-  <td class="toplink" width="50%">
-
-          <a class="toplink" href="/">home</a>
-        | <a class="toplink" href="/forum/topics.pl">forum</a>
-        | <a class="toplink" href="/contact/form">contact</a>
-        | <a class="toplink" href="/help/index.pl">help</a>
-        | <a class="toplink" href="/help/faq.pl">faq</a>
-		<span id="open_developer_toolbar" style="display:none">
-
-		| <a class="toplink" href="#" onclick="openDeveloperToolbar(); return false">devbar</a>
-		</span>
-  </td>
-</tr>
-<tr>
-  <td colspan="3">
-
+  <& /site/header/browser_alert.mas &>
   <& /site/toolbar.mas &>
-
-  </td>
-</tr>
-<tr>
-
-  <td class="toplink" colspan="3" style="text-align: right">
-
-% # if the site is a mirror, gray out the login/logout links
-% if( $c->config->{'is_mirror'} ) {
-    <a class="toplink" style="line-height: 1.2; text-decoration: underline; background: none" href="<% $c->config->{main_production_site_url} %>" title="log in on main site">main site</a>
-% } elsif ( $c->config->{disable_login} ) {
-    <span style="visibility: hidden">site login disabled</span>
-% } elsif ( $c->user_exists ) {
-  <b><% $c->user->get_object->get_first_name || '' %> <% $c->user->get_object->get_last_name  || '' %></b>
-  <a class="mytools" id="lists_link">lists</a> 
-  (<a class="toplink" style="text-decoration: underline" href="/solpeople/login.pl?logout=yes">log out</a>)
-  <a class="mytools" href="/solpeople/top-level.pl">My SGN</a>
-% } else {
-    <a class="toplink" style="text-decoration: underline" href="/solpeople/login.pl"      >log in</a>
-  | <a class="toplink" style="text-decoration: underline" href="/solpeople/new-account.pl">new user</a>
+  <& /system_message.mas &>
+% if ( $c->req->uri->path_query =~ "logout=yes") {  
+  <& /logout_message.mas &>
 % }
 
-  </td>
-</tr>
-</table>
-
 <script defer="defer">
+
 jQuery(document).ready( function() { 
 
   setUpLogin();
   setUpLists();
 
-    jQuery('#working').dialog( { 
-      height: 120,
-      width:  100,
-      modal: true,
-      autoOpen: false,
-      closeOnEscape: false,
-      // open: function() {jQuery(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide(); },
-      open: function(event, ui) { jQuery(".ui-dialog-titlebar-close", ui.dialog).hide(); jQuery('.ui-dialog-titlebar-close').blur();},
-	  
-      title: 'Working...'
-    });
 });
 
 </script>
-
-
-  <table id="pagecontent_t" summary="" width="740" cellpadding="0" cellspacing="0" border="0">
-  <tr><td id="pagecontent_td">
 
 <!-- END HEADER -->

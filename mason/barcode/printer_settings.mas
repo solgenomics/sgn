@@ -3,10 +3,46 @@
 
 </%args>
 
+<div class="panel panel-info">
+<div class="panel-heading">Printer Settings</div>
+<table class="table table-condensed">
+  <tbody>
+    <tr>
+      <td>Number of Label Rows:</td>
+      <td><input type="text" class="form-control" name="label_rows" value="10" /></td>
+      <td>Number of Label Columns Per Page:</td>
+      <td><input type="text" class="form-control" name="label_cols" value="3" /></td>
+    </tr>
+    <tr>
+      <td>Page Format:</td>
+      <td><select class="form-control" name="page_format">
+          <option value="letter" selected="1">Letter</option>
+  	  <option value="A4">A4</option>
+	  </select>
+      </td>
+      <td></td><td></td>
+    </tr>
+    <tr>
+      <td>Top Margin (mm):</td>
+      <td><input type="text" class="form-control" name="top_margin" value="12" /></td>
+      <td>Left Margin (mm):</td>
+      <td><input type="text" class="form-control" name="left_margin" value="70" /></td>
+    </tr>
+    <tr>
+      <td>Bottom Margin (mm):</td>
+      <td><input type="text" class="form-control" name="bottom_margin" value="12" /></td>
+      <td>Right Margin (mm):</td>
+      <td><input type="text" class="form-control" name="right_margin" value="20" /></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!--
 <table>
-<!-- tr><td>Pages </td><td><input name="label_pages" size="3" /></td>
+<tr><td>Pages </td><td><input name="label_pages" size="3" /></td>
 <td></td><td></td>
-</tr -->
+</tr>
 
 <tr>
 <td>Number of label rows </td><td><input name="label_rows" size="3" value="10" ></td>
@@ -32,3 +68,4 @@
 <td>Right margin [mm]</td><td><input name="right_margin" size="3" value="20" /></td>
 </tr>
 </table>
+-->

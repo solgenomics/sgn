@@ -150,14 +150,14 @@ if ($action eq "review") {
     print page_title_html("Review your post");
     
     print <<HTML;
-
+    <div class="container-fluid">
     Enter post -> <b>Review post</b> -> Store post<br /><br />
     This is how the text of your post will appear. Please use the 'store post' button for permanently adding the post
     or the 'modify post' button to go back and revise the post. To cancel, click on 'back to posts'.<br /><br />
  
     $truncated_warning
 
-    <div class=\"boxbgcolor2\">$formatted_post_text<br /><br /></div>
+    <div class="panel panel-primary"><div class="panel-body">$formatted_post_text</div></div>
 
     <br /><br />
 
@@ -169,7 +169,7 @@ if ($action eq "review") {
     <input type="hidden" name="refering_page" value="$refering_page" />
     <input type="hidden" name="action" value="input" />
     <input type="hidden" name="topic_id" value="$topic_id" />
-    <input type="submit" value="modify post" />
+    <input class="btn btn-info" type="submit" value="modify post" />
     </form>
     <td><td>
     $link
@@ -181,10 +181,10 @@ if ($action eq "review") {
     <input type="hidden" name="refering_page" value="$refering_page" />
     <input type="hidden" name="action" value="save" />
     <input type="hidden" name="topic_id" value="$topic_id" />
-    <input type="submit" value="store post" />
+    <input class="btn btn-primary" type="submit" value="store post" />
     </form>
     </td></tr></table>
-
+    </div>
 HTML
 
     $page -> footer();
@@ -221,7 +221,7 @@ elsif ($action eq "save") {
 
     my $display_post_text = $post->format_post_text($post_text);
     #print "submitter: $sp_person_id topic: $topic_id, $page_type, $page_object_id. text:<br /><br />";
-    print "<div class=\"boxbgcolor2\" width=\"700\">$display_post_text<br /><br /></div><br/><br />";
+    print "<div class=\"panel panel-primary\" ><div class=\"panel-body\">$display_post_text</div></div>";
     print "<br /><br /><br />\n";
     
  
@@ -262,13 +262,13 @@ else {
 	$subject_input
 
 	Post Text:<br />
-	<textarea rows="12" cols="80" name="post_text">$post_text</textarea>
+	<textarea class="form-control" rows="12" cols="80" name="post_text">$post_text</textarea>
 	<br /><br />
 
 	<table width="100%"><tr><td align="left">
 	$link 
 	</td><td align="right">
-	<input type=submit value="Review post" />
+	<input class="btn btn-primary" type=submit value="Review post" />
 	</form>
 	</td></tr></table>
 

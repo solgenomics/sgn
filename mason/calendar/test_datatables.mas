@@ -1,0 +1,90 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes=>[ "jquery.dataTables" ] &>
+
+<br/><br/>
+<h1>Available Project Properties</h1>
+<hr>
+<table id="project_dates_data" class="display">
+  <thead>
+    <tr>
+      <th>Project Name</th>
+      <th>Property</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+</table>
+
+<br/><br/>
+<h1>Available Project Relationships</h1>
+<hr>
+<table id="project_relationships_data" class="display">
+  <thead>
+    <tr>
+      <th>Subject Project Name</th>
+      <th>Object Project Name</th>
+      <th>Type</th>
+    </tr>
+  </thead>
+</table>
+<br/><br/>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<script>
+
+$(document).ready(function() {
+
+    $('#project_dates_data').dataTable({
+        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+	"ajax": {
+		"url": "/ajax/calendar/datatables_project_properties",
+    	   	"type": "GET",
+	    	"dataType": "json",
+		},
+	"aoColumns": [
+        	     { "mData": "title",
+          	       "mRender": function (data, type, full) {
+              	       		  return '<a href="' + full.project_url + '">' + full.title + '</a>';
+          			  }
+		     },
+        	     { "mData": "property",
+		       "mRender": function (data, type, full) {
+              	       		  return '<a href="' + full.cvterm_url + '">' + full.property + '</a>';
+          			  }
+		      },
+		     { "mData": "value"},
+    		     ],
+	"deferRender": true
+    });
+
+    $('#project_relationships_data').dataTable({
+        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+	"ajax": {
+		"url": "/ajax/calendar/datatables_project_relationships",
+    	   	"type": "GET",
+	    	"dataType": "json",
+		},
+	"aoColumns": [
+        	     { "mData": "subject_project",
+		       "mRender": function (data, type, full) {
+              	       		  return '<a href="' + full.subject_project_url + '">' + full.subject_project + '</a>';
+          			  }
+		     },
+        	     { "mData": "object_project",
+		       "mRender": function (data, type, full) {
+              	       		  return '<a href="' + full.object_project_url + '">' + full.object_project + '</a>';
+          			  }
+		     },
+		     { "mData": "relationship_type",
+		       "mRender": function (data, type, full) {
+              	       		  return '<a href="' + full.cvterm_url + '">' + full.relationship_type + '</a>';
+          			  }
+		     },
+    		     ],
+	"deferRender": true
+    });
+
+});
+</script>

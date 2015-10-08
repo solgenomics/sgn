@@ -1,4 +1,4 @@
-JSAN.use('jquery');
+//JSAN.use('jquery');
 
 /**
 *

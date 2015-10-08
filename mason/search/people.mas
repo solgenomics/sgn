@@ -7,6 +7,55 @@
 
 <& /page/page_title.mas, title=>'Search People' &>
 
+<div class="row" id="people_search_form" >
+  <div class="col-sm-1">
+  </div>
+  <div class="col-sm-10 well">
+    <div class="row">
+
+  <div class="col-sm-6">
+    <div class="form-horizontal">
+      <div class="form-group">
+        <label class="col-sm-6 control-label">Last Name: </label>
+        <div class="col-sm-6" >
+          <input type="text" class="form-control" id="last_name" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-6 control-label">First Name: </label>
+        <div class="col-sm-6" >
+          <input type="text" class="form-control" id="first_name" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6">
+    <div class="form-horizontal">
+      <div class="form-group">
+        <label class="col-sm-6 control-label">Organization: </label>
+        <div class="col-sm-6" >
+          <input type="text" class="form-control" id="organization" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-6 control-label">Country: </label>
+        <div class="col-sm-6" >
+          <input type="text" class="form-control" id="country" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <center>
+    <button class="btn btn-primary" id="submit_people_search" >Search</button>
+  </center>
+
+    </div>
+  </div>
+  <div class="col-sm-1">
+  </div>
+</div>
+
+<!--
 <div id="people_search_form">
 <table width="100%">
 <tr><td><label for="last_name">Last name</label></td>
@@ -16,7 +65,7 @@
 <button id="submit_people_search" >Search</button>
 </td></tr></table>
 </div>
-
+-->
 
 <br /><br />
 

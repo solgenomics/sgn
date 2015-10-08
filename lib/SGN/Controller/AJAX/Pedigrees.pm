@@ -89,7 +89,7 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     my %errors = $self->check_stocks($c, \@unique_stocks);
     
     if (%errors) { 
-	$c->stash->{rest} = { error => "The following accessions are not in the database: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
+	$c->stash->{rest} = { error => "There were problems loading the pedigree for the following accessions: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
 	return;
     }
     close($F);

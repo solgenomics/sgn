@@ -84,13 +84,12 @@ my $forum_toolbar = forum_toolbar($topic_id, $sp_person_id);
 if (!$topic_description) { $topic_description = "(topic description not available)"; }
 
 
-print qq { <div class="indentedcontent">$forum_toolbar</div>\n  };
-print qq { <center><table width="710" cellpadding="5" class="topicbox"><tr><td><b>$topic_name</b><br /><br />$topic_description<br />$topic_started_by</td></tr></table> }; 
+print qq { <div class="container-fluid"><div class="row">$forum_toolbar<br/><br/>  };
+print qq { <div class="panel panel-primary"><div class="panel-body"><b>$topic_name</b><br /><br />$topic_description<br />$topic_started_by</div></div> }; 
 #print blue_section_html("Topic Description", $topic_description." ".$topic_started_by);
 print $s;
 
-print qq { </center>\n };
-print "<div class=\"indentedcontent\">$forum_toolbar</div>\n";
+print "<br/>$forum_toolbar</div></div>\n";
 
 $page->footer();
 
@@ -103,10 +102,10 @@ sub posts_list {
     my @posts = $topic -> get_all_posts($topic_id);
     
     my $s = "";
-    $s .= qq { <table cellpadding="5" cellspacing="0" width="720" border="0" > };
+    $s .= qq { };
     
     if (!@posts) { 
-	$s .= "<tr><td>No user comments. <br /></td></tr>\n";
+	$s .= "<br/>No user comments.<br/>";
     }
     
     foreach my $p (@posts) { 
@@ -134,10 +133,10 @@ sub posts_list {
 	    $remove_link = "<a href=\"forum_post_delete.pl?post_id=".($p->get_forum_post_id())."&amp;refering_page=$encoded_url\">Delete</a>\n"; 
 	}
 	
-	$s .= qq { <tr><td><div class="topicbox"><table cellspacing="0" cellpadding="5" border="0" width="100%"><tr><td>Posted by <b><a href="/solpeople/personal-info.pl?sp_person_id=$post_sp_person_id">$post_name</a>$user_type</b> on $post_date  </td><td class="right">$remove_link&nbsp;</td></tr></table></div> };
-	$s .= qq { <table cellpadding="5" width="100%" class="topicdescbox"><tr><td>$post_text</td></tr></table> };
+	$s .= qq { <div class="panel panel-default"><div class="panel-heading"><div class="row"><div class="col-sm-10">Posted by <b><a href="/solpeople/personal-info.pl?sp_person_id=$post_sp_person_id">$post_name</a>$user_type</b> on $post_date </div><div class="col-sm-2">$remove_link</div></div></div> };
+	$s .= qq { <div class="panel-body">$post_text</div></div> };
     }
-    $s .= "</table>";
+    $s .= "";
 }
 
 sub old_posts_list {

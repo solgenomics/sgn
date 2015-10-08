@@ -8,7 +8,7 @@
 
 <&| /page/info_section.mas,
     title       => 'Search and browse tree of traits',
-    collapsible => 0,
+    collapsible=>1, collapsed=>0
 &>
   <&| /page/explanation.mas &>
      Browse trait terms using the expandable tree below, or use the

@@ -158,6 +158,7 @@ var trial_id = <% $trial_id %>;
       });
 
        myRectangle.on('mousedown', function() {
+
 	window.location.href = '/stock/'+plot_id+'/view';
 	//window.location.href = 'http://cassavabase.org/stock/'+plot_id+'/view';
 	

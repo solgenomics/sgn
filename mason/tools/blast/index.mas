@@ -21,11 +21,12 @@
 
   my $menus = {};
   foreach my $d (keys(%$databases)) { 
-     $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", id=>"database", choices => [ @{$databases->{$d}} ], selected=> $preselected_database );
+     $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", params=>"class\=\"form-control input-sm blast_select_box\"", id=>"database", choices => [ @{$databases->{$d}} ], selected=> $preselected_database );
   }
 
   my $substitution_matrix_select = $m->scomp('/page/html_select.mas', 
      name=>"matrix", 
+     params=>"class\=\"form-control input-sm blast_select_box\"",
      id=>"matrix", 
      choices => [  [ 'BLOSUM62', 'BLOSUM62 (default)' ],
                    [ 'BLOSUM80', 'BLOSUM80 (recent divergence)' ],
@@ -35,7 +36,7 @@
   ]);
 
   #print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
-  my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', id=>'input_options',
+  my $input_options_select = $m->scomp('/page/html_select.mas', name=>'input_options', params=>"class\=\"form-control input-sm blast_select_box\"", id=>'input_options',
     choices => \@input_options, selected=>$preload_type,
   );
 
@@ -48,7 +49,7 @@
   }
 
   # output formats alphabetically sorted
-  my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>'size = 5', choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
+  my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>"size = \"5\" class\=\"form-control input-sm blast_select_box\"", choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
 
   # print STDERR "OUTPUT OPTIONS: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n";
   # print STDERR "OUTPUT SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options_selected) ))."\n";
@@ -89,17 +90,17 @@
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ 'jqueryui', 'CXGN.Blast' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.Blast' , 'jqueryui'] &>
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
-<div id="search_output" style="display:none;font-family:Lucida,monospace"></div>
-
 <&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a href="/help/tools/blast">Help</a>' &>
   <input type="hidden" name="outformat" value="0" />
-  <table border="0" align="center" summary="" cellpadding="0" cellspacing="5">
-    <tr><td width="100" style="padding-top: 10px;"><b>Categories</b></td><td width="600">
-    <& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select", selected=>"$preselected_category" &>
+  
+  <div class="form-group form-inline">
+        <label class="blast_select_label" for="dataset_select">Categories &nbsp; </label>
+  
+    <& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select", params=>"class\=\"form-control input-sm blast_select_box\"", selected=>"$preselected_category" &>
 
 % if ($blast_db_icons) {
 <!-- images to get direct access to the model plant dbs. db_id is the blast_db_id on the SGN database -->
@@ -110,30 +111,37 @@
 <img class="fruit_icon" height="25" src="/documents/img/blast_icons/benth.png" db_id="9" title="N.benthamiana current DB">
 % }
 
-    </td><td rowspan="4" align="center"></td></tr>
-    <tr><td><b>Databases</b></td><td><span id="database_select"></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a></td></tr>
-    <tr><td><b>Program</b></td><td><& /page/html_select.mas, name=>'program_select', id=>'program_select', choices=>$programs &></td></tr>
-    <tr><td><b>Query</b></td><td><% $input_options_select %><a id="input_example" style="font-size: 80%" href="#">Show example</a></td></tr>
-    <tr><td colspan="3">
-      <!-- div style="font-size: 80%">single sequence only, use Advanced for multiple</div -->
-      <textarea name="sequence" id="sequence" rows="8" cols="80"><% $preload %></textarea></td></tr>
-    <tr><td colspan="3">
+<br>
 
-      <table width="100%">
-        <tr><td>
-          <div style="text-align: center">
-            <button class="submit_blast_button" id="submit_blast_button" type="submit" name="search" value="Search">BLAST</button>
-          </div>
-          <br />
+    <label class="blast_select_label" for="database_select">Database &nbsp; </label>
+
+    <span id='database_select' ></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>
+    <br>
+    
+    <label class="blast_select_label" for="program_select">Program &nbsp; </label>
+    <& /page/html_select.mas, name=>'program_select', id=>'program_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>$programs &>
+    <br>
+    
+    <label class="blast_select_label" for="input_example">Query &nbsp; </label>
+    <% $input_options_select %><a id="input_example" style="font-size: 80%">Show example</a>
+  </div>
+
+    <textarea name="sequence" id="sequence" class="form-control" rows="8" cols="80"><% $preload %></textarea></td></tr>
+    <br>
+  
+        <div style="text-align: center">
+          <button class="btn btn-primary" id="submit_blast_button" type="submit" name="search" value="Search">BLAST</button>
+        </div>
+        <br />
 
 <&| /page/info_section.mas, title=>"Advanced Options", collapsible=>1, collapsed =>1, is_subsection=>"1" &>
 
 	<& /page/info_table.mas, title=>'', data => [ 
-	  'Expect (e-value) Threshold' => '<input id="evalue" class="blast_search_input_box" type="text" size="6" value="1e-10" name="expect" />',
+	  'Expect (e-value) Threshold' => '<input id="evalue" class="blast_select_box form-control" type="text" size="6" value="1e-10" name="expect" />',
 	  'Substitution Matrix' => $substitution_matrix_select,
 		'Output Options' => $parse_options_select,
-	  'Max. hits to show' => '<input id="maxhits" class="blast_search_input_box" type="text" name="maxhits" size="6" value="20" />',
-	  'Filters' => '<input type="checkbox" name="filterq" checked="1" />Filter Low complexity',
+	  'Max. hits to show' => '<input id="maxhits" class="blast_select_box form-control" type="text" name="maxhits" size="6" value="20" />',
+	  'Filters' => '<div class="checkbox"><label><input type="checkbox" name="filterq" checked="1" /> Filter Low complexity</label>',
 	  __multicol => 2,
 	  __border => 0,
 	  __tableattrs => 'width="80%"',
@@ -142,21 +150,15 @@
 	
 </&>
 
-         </td></tr>
-      </table>
-    </td></tr>
-  </table>
 </&>
 
 <&| /page/info_section.mas, title=>"Extract sequences from BLAST databases", collapsible=>1, collapsed =>1 &>
 <br>
-	<table>
-		<tr>
-			<td><input class="blast_search_input_box" value="putrescine" id="blast_desc" size="28"/></td>
-			<td><button id="search_by_desc" class="submit_blast_button">Search</button></td>
-			<td class="help_box">Select a BLAST database and paste a gene name or description such as: Solyc07g063040 or ribulose</td>
-		</tr>
-	</table>
+<div class="form-inline form-group" style="width:100%">
+  <input class="form-control" value="putrescine" id="blast_desc"/>
+  <button id="search_by_desc" class="btn btn-primary">Search</button>
+  </div>
+  <div class="well well-sm">Select a BLAST database and paste a gene name or description. Eg: Solyc07g063040 or ribulose</div>
 </&>
 
 <&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
@@ -172,19 +174,47 @@
 
 <div id="jobid" style="display:none;"></div>
 
-<div id="nav_dialog" style="display:none;">
-		<p width="100">
-			This Tool was optimized for:<br/>
-			<br/>
-			<a href="https://www.google.com/chrome/browser/"><img src="https://lh3.ggpht.com/O0aW5qsyCkR2i7Bu-jUU1b5BWA_NygJ6ui4MgaAvL7gfqvVWqkOBscDaq4pn-vkwByUx=w300" height="20"> Google Chrome</a><br/>
-			<br/>
-			<a href="https://www.mozilla.org/en-US/firefox/new/"><img src="https://mozorg.cdn.mozilla.net/media/img/firefox/desktop/index/animations/firefox-logo.png" height="20"> Mozilla Firefox</a><br/>
-			<br/>
-			<a href="http://support.apple.com/en-us/HT6104"><img src="http://km.support.apple.com/kb/image.jsp?productid=PL165" height="20"> Safari</a><br/>
-			<br/>
-			<a href="http://windows.microsoft.com/en-us/internet-explorer/download-ie"><img src="http://c.s-microsoft.com/en-us/CMSImages/ie_symbol_clr_56x56.png?version=73aa5bf1-0743-11e7-8f71-718675c983bf" height="20"> MS Internet Explorer 11</a><br/>
-		</p>
-	</div>
+<div class="modal fade" id="myModal" role="dialog">
+  <div class="modal-dialog modal-sm">
+  
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">BLAST status</h4>
+      </div>
+      <div class="modal-body">
+        <center>
+          <img src="/img/wheel.gif" />
+          <p id="bs_working_msg"></p>
+        </center>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<div class="modal fade" id="search_modal" role="dialog">
+  <div class="modal-dialog modal-lg">
+  
+    <!-- Modal content-->
+  <div class="modal-content">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">Search Result</h4>
+    </div>
+    
+    <div class="modal-body">
+      <p id="search_output" style="max-height:300px;overflow:scroll;"></p>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+  </div>
+    
+  </div>
+</div>
+
 
 
 <script>
@@ -238,30 +268,17 @@ jQuery(document).ready(function() {
 		var database = jQuery('#database').val();
 		var blast_desc = jQuery('#blast_desc').val();
 		// alert("db: "+database+", blast_desc: "+blast_desc);
-		disable_ui();
+    disable_ui();
 		
 		jQuery.ajax( {
 			url: '/tools/blast/desc_search/',
 			method: 'POST',
 			data: {'blast_desc':blast_desc, 'database': database},
 			success: function(response) {
-				enable_ui();
-				$('#search_output').html(response.output_seq);
-				$('#search_output').dialog({
-				draggable:true,
-				resizable:true,
-				modal: true,
-				buttons: {
-					Ok: function() {
-						$( this ).dialog( "close" );
-					}
-				},
-				width:700,
-				height:500,
-				closeOnEscape:true,
-				title: "Results",
-				open: function(event, ui) { $('.ui-dialog-titlebar-close').blur();},
-				});
+        enable_ui();
+        $('#search_output').html(response.output_seq);
+        $('#search_modal').modal("show");
+        
 			},
 			error: function(response) {
 				alert("An error occurred. The service may not be available right now.");
@@ -277,30 +294,6 @@ jQuery(document).ready(function() {
 	  jQuery('#database_select').html(menu_html[group_id]);
 	}
 	
-  
-  
-  
-  var str = navigator.userAgent;
-  	var ie = /MSIE/.test(str);
-  	// alert(navigator.userAgent);
-
-  	var $j = jQuery.noConflict();
-  	jQuery(document).ready(function ($) {
-  		if(ie) {
-  			$('#nav_dialog').dialog({
-    			modal: true,
-    			closeOnEscape:true,
-    			title: "Web Browser Compatibility",
-          buttons: {
-            close: function() {
-              $( this ).dialog( "close" );
-            }
-          }
-  			});
-  		}
-  	});
-  
-  
 });
 
 </script>
@@ -309,6 +302,10 @@ jQuery(document).ready(function() {
 <!-- STYLE -->
 <style>
 
+h1 {
+  display:none;
+}
+
 .seq_map {
 	color: #777777;
 	width: 700px;
@@ -316,6 +313,18 @@ jQuery(document).ready(function() {
 	overflow: auto;
 	align: left;
 }
+
+.blast_select_box {
+  width:300px;
+  margin-right:10px;
+}
+
+.blast_select_label {
+  width:100px;
+  margin-right:10px;
+  line-height: 32px;
+}
+
 .ui-dialog {
 	position:relative;
 }
@@ -341,21 +350,11 @@ jQuery(document).ready(function() {
 	padding-right: 10px;
 }
 
-.fruit_icon {
-  cursor:pointer;
-}
-
 #sequence {
-	background-color:#EEEEFE;
-	border-color:#000;
-	border-width:2px;
-	border-style:solid;
-	border-radius:5px;
-	width: 700px;
-	min-height: 80px;
-	max-height: 300px;
-	min-width: 700px;
-	max-width: 700px;
+  min-height: 80px;
+  max-height: 300px;
+/*  min-width: 700px;*/
+  max-width: 98%;
 }
 
 .submit_blast_button {
@@ -386,7 +385,7 @@ left:1px;
 box-shadow: 0px 0px 0px 0px #fff;
 }
 
-.blast_search_input_box {
+/*.blast_search_input_box {
 border-color:#AAA;
 border-width:1px;
 border-style:solid;
@@ -394,7 +393,7 @@ border-radius:5px;
 height: 20px;
 padding-left: 5px;
 }
-
+*/
 .download_tag {
   display:none;
 }
