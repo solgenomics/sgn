@@ -64,21 +64,21 @@ jQuery(document).ready(function ($) {
 	$("#pedigrees_upload_spreadsheet_info_dialog" ).modal("show");	
     });
 
-    $("#pedigrees_upload_success_dialog_message").dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-            Ok: { id: "dismiss_pedigrees_upload_dialog",
-                  click: function() {
-		      //$("#upload_trial_form").dialog("close");
-		      //$( this ).dialog( "close" );
-		      location.reload();
-                  },
-                  text: "OK"
-                }
-        }
-	
-    });
+//    $("#pedigrees_upload_success_dialog_message").dialog({
+//	autoOpen: false,
+//	modal: true,
+//	buttons: {
+//            Ok: { id: "dismiss_pedigrees_upload_dialog",
+//                  click: function() {
+//		      //$("#upload_trial_form").dialog("close");
+//		      //$( this ).dialog( "close" );
+//		      location.reload();
+//                  },
+//                  text: "OK"
+//                }
+//        }
+//	
+//    });
 
     $('#upload_pedigrees_form').iframePostForm({
 	json: true,
