@@ -191,7 +191,7 @@ sub locus_search :Path('/ajax/search/loci') Args(0) {
 	my $locus = CXGN::Phenome::Locus->new($dbh, $locus_id);
 	my $common_name = $locus->get_common_name;
 	my $locus_name = $l->locus_name;
-	my $locus = $l->locus;
+	$locus = $l->locus;
 	my $locus_symbol = $l->locus_symbol;
 	my $allele_string;
 	my $alleles = $l->alleles;

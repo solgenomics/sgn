@@ -256,7 +256,7 @@ sub genetic_correlation_output_files {
     my $type         = $c->stash->{type};
  
     my $pred_pop_id = $c->stash->{prediction_pop_id};
-    my $model_id    = $c->stash->{model_id};
+    $model_id    = $c->stash->{model_id};
     my $identifier  =  $type =~ /selection/ ? $model_id . "_" . $corre_pop_id :  $corre_pop_id; 
 
     my $solgs_controller = $c->controller("solGS::solGS");

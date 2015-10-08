@@ -99,7 +99,6 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     my $female_parent;
     my $male_parent;
     my $child;
-    my $cross_type;
     my @pedigrees;
     
     while (<$F>) { 
