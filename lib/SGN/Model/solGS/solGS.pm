@@ -154,9 +154,29 @@ sub project_location {
                 LEFT JOIN  nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id) 
                 WHERE project_id = ?
                       AND cvterm.name ilike ?";
+
+
+   # my $q = "SELECT description FROM projectprop 
+   #             LEFT JOIN cvterm ON (type_id = cvterm_id) 
+   #             LEFT JOIN  nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id) 
+   #             WHERE project_id = ?";
+
+    print STDERR "\nckeck query :$q\n";
 	   
     my $sth = $self->context->dbc->dbh()->prepare($q);
-    $sth->execute($pr_id, 'project location');
+
+    print STDERR "\nckeck query :$sth\n";
+
+    if ( $pr_id eq '' ) { 
+        $pr_id = undef;
+    }
+
+    print STDERR "\nproject id  :$pr_id\n";
+
+    $sth->execute($pr_id,'project location');
+    
+   # $sth->execute(699, 'project location');
+   # $sth->execute($pr_id);
 
     my $loc = $sth->fetchrow_array;
 
@@ -946,6 +966,7 @@ sub extract_project_markers {
     my $markers;
 
     my $genotype_json =  $geno_row->get_column('value');
+
     my $genotype_hash = JSON::Any->decode($genotype_json);
 
     my @markers = keys %$genotype_hash;

@@ -464,6 +464,95 @@ sub set_name {
     }
 }   
 
+sub get_harvest_date { 
+    my $self = shift;
+
+    my $harvest_date_cvterm_id = $self->get_harvest_date_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find( 
+	{ 
+	    project_id => $self->get_trial_id(), 
+	    type_id => $harvest_date_cvterm_id,
+	});
+
+    if ($row) { return $row->value();}    
+}
+
+sub set_harvest_date { 
+    my $self = shift;
+    my $harvest_date = shift;
+
+    if ($harvest_date =~ m|^(\d{4})/(\d{2})/(\d{2})|) { 
+	if ($1 > 2100 || $1 < 1950 || $2 > 12 || $2 < 1 || $3 > 31 || $3 < 1) { 
+	    die "Harvest date of $harvest_date is not of the format YYYY/MM/DD. Not storing.\n";
+	}
+	else { 
+
+	    my $harvest_date_cvterm_id = $self->get_harvest_date_cvterm_id();
+	    
+	    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create( 
+		{ 
+		    project_id => $self->get_trial_id(), 
+		    type_id => $harvest_date_cvterm_id,
+		});
+	    $row->value($harvest_date);
+	    $row->update();
+	}
+    }
+}
+
+sub get_planting_date { 
+    my $self = shift;
+
+    my $planting_date_cvterm_id = $self->get_planting_date_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find( 
+	{ 
+	    project_id => $self->get_trial_id(), 
+	    type_id => $planting_date_cvterm_id,
+	});
+
+    if ($row) { return $row->value();}    
+}
+
+sub set_planting_date { 
+    my $self = shift;
+    my $planting_date = shift;
+
+    if ($planting_date =~ m|^(\d{4})/(\d{2})/(\d{2})|) { 
+	if ($1 > 2100 || $1 < 1950 || $2 > 12 || $2 < 1 || $3 > 31 || $3 < 1) { 
+	    die "Planting date of $planting_date is not of the format YYYY/MM/DD. Not storing.\n";
+	}
+	else { 
+
+	    my $planting_date_cvterm_id = $self->get_planting_date_cvterm_id();
+	    
+	    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create( 
+		{ 
+		    project_id => $self->get_trial_id(), 
+		    type_id => $planting_date_cvterm_id,
+		});
+	    $row->value($planting_date);
+	    $row->update();
+	}
+    }
+}
+sub get_plot_dimensions { 
+    my $self = shift;
+    my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
+    
+    if ($row) { 
+	return $row->name();
+    }
+}
+ 
+sub set_plot_dimensions { 
+    my $self = shift;
+    my $name = shift;
+    my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
+    if ($row) { 
+	$row->name($name);
+	$row->update();
+    }
+}   
 
 
 =head2 function delete_phenotype_data()
@@ -898,5 +987,55 @@ sub get_breeding_program_cvterm_id {
 
     return $row->cvterm_id();
 }
+
+sub get_harvest_date_cvterm_id { 
+    my $self = shift;
+
+    my $harvest_date_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'harvest_date' });
+    my $row;
+
+    if ($harvest_date_rs->count() == 0) {
+	$row = $self->bcs_schema->resultset('Cv::Cvterm')->create_with(
+	    {
+		name => 'harvest_date',
+		cv   => 'local',
+		db   => 'null',
+		dbxref => 'harvest_date',
+	    });
+
+    }
+    else {
+	$row = $harvest_date_rs->first();
+    }
+
+    return $row->cvterm_id();
+}
+
+sub get_planting_date_cvterm_id { 
+    my $self = shift;
+
+    my $planting_date_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'planting_date' });
+    my $row;
+
+    if ($planting_date_rs->count() == 0) {
+	$row = $self->bcs_schema->resultset('Cv::Cvterm')->create_with(
+	    {
+		name => 'planting_date',
+		cv   => 'local',
+		db   => 'null',
+		dbxref => 'planting_date',
+	    });
+
+    }
+    else {
+	$row = $planting_date_rs->first();
+    }
+
+    return $row->cvterm_id();
+}
+
+
+
+
 
 1;

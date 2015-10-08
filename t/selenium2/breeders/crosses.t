@@ -51,10 +51,10 @@ $t->while_logged_in_as(
 	    ->send_keys("20");
 
 	$t->find_element_ok(
-	    "create_cross_submit_button","id", "find cross submit button")
+	    "create_cross_submit","id", "find cross submit button")
 	    ->click();
 	
-	sleep(5);
+	sleep(10);
 
 	$t->find_element_ok(
 	    "dismiss_cross_saved_dialog", "id", "find dismiss message button")

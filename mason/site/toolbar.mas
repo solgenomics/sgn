@@ -40,7 +40,7 @@
     }
   }
 
-  @media (min-width: 768px) and (max-width: 856px) {
+  @media (min-width: 768px) and (max-width: 880px) {
     body {
       padding-top: 90px;
     }
@@ -75,11 +75,13 @@
 
 <script>
 
+( function($) {
 $( document ).ready(function() {
   if ($( document ).width() > 768) {
     $(".menu_click_dropdown").removeClass("dropdown-toggle");
     $(".menu_click_dropdown").removeAttr("data-toggle");
   }
 });
+} ) ( jQuery );
 
 </script>

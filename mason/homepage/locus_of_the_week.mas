@@ -23,8 +23,6 @@ eval {
 </div>
 -->
 
-<div class="container-fluid">
 <h4>Locus of the Week</h4>
 <% $loci %>
-<button class="btn btn-info btn-sm" onclick=location.href="/oldloci.pl">See previous...</button>    <button class="btn btn-primary btn-sm" onclick=location.href="/search/direct_search.pl?search=loci">Search other loci...</button>
-</div>
+<button class="btn btn-info btn-sm" onclick='location.href="/oldloci.pl"'>See previous...</button>    <button class="btn btn-primary btn-sm" onclick=location.href="/search/direct_search.pl?search=loci">Search other loci...</button>

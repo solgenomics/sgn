@@ -31,10 +31,16 @@ sub test_page :Path('/calendar/test_page/') :Args(0) {
 }
 
 #this function maps the url /calender/test_datatables/ to test_datatables.mas
-sub test_datatables :Path('/calendar/test_datatables/') :Args(0) { 
+#sub test_datatables :Path('/calendar/test_datatables/') :Args(0) { 
+#    my $self = shift;
+#    my $c = shift;
+#    $c->stash->{template} = '/calendar/test_datatables.mas';
+#}
+
+sub test_authentication :Path('/test_authentication/') :Args(0) { 
     my $self = shift;
     my $c = shift;
-    $c->stash->{template} = '/calendar/test_datatables.mas';
+    $c->stash->{template} = '/test/test_authenticate.mas';
 }
 
 sub solanaceae_project_afri :Path('/solanaceae-project/afri-sol/') { 

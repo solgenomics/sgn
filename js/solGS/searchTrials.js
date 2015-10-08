@@ -84,7 +84,7 @@ function listTrials (trials)  {
             .tooltip();
     });
 
-    var table = '<table style="width:100%;text-align:left">';
+    var table = '<table class="table" style="width:100%;text-align:left">';
     table    += '<tr>';
     table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th>'
               + '<th>Year</th><th id="color_tip" title="You can combine trials sharing the same color.">'

@@ -19,11 +19,14 @@ $trial_id
 		//overflow: scroll;
 		display: none;
 	}
+         #trial_coords {display: inline; }
+         #trial_no_coordsMSG {display: none; }
     </style>
 
  <div id="container" ></div>
+ <div id="trial_coords" >loading...</div> 
+ <div id="trial_no_coordsMSG" >Upload physical field coordinates for this trial</div>  
 
-  
  <script defer="defer">
 var trial_id = <% $trial_id %>;
 //alert("trial_id: "+trial_id)
@@ -32,11 +35,19 @@ var trial_id = <% $trial_id %>;
 	jQuery.ajax( { 
 	     url: '/ajax/breeders/trial/'+trial_id+'/coords',
 	     success: function(response) { 
-		if (response.coord_col && response.coord_row){
+			//alert("coordfile: "+response.coord_row);
+		if (response.coord_col[0] && response.coord_row[0]){
 			jQuery("#container").css({"display": "inline-block", "overflow": "auto"});
 			//$("#container").css({"display": "inline-block", "overflow": "auto"});
-			//$("#container").css("display","inline-block"); 
+			//$("#container").css("display","inline-block");
+           		jQuery("#trial_coords").css("display", "none"); 
 		} 
+		
+		else  { 
+			jQuery("#trial_coords").css("display", "none");
+   			//jQuery("#trial_coords").html('Upload physical field coordinates');
+			jQuery("#trial_no_coordsMSG").css("display", "inline-block");
+		}
 		//alert("plot_id: "+response.plot_id);
 		//alert("plot_number: "+response.plot_number);
 		var width = 65;
@@ -147,6 +158,7 @@ var trial_id = <% $trial_id %>;
       });
 
        myRectangle.on('mousedown', function() {
+
 	window.location.href = '/stock/'+plot_id+'/view';
 	//window.location.href = 'http://cassavabase.org/stock/'+plot_id+'/view';
 	

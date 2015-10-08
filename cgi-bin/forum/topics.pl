@@ -50,14 +50,14 @@ print page_title_html("Forum Topics");
 
 my $login_string="";
 
+if ($name) { $login_string = qq { <div class="row"><div class="panel panel-primary"><div class="panel-body"><div class="row"><div class="col-sm-10">You are logged in as <b>$name</b>.</div><div class="col-sm-2"><button class="btn btn-primary" onclick='location.href="add_topic.pl?action=new";'>Add topic</button>.</div></div></div></div></div> }; }
+else { $login_string="<div class=\"row\"><div class=\"panel panel-primary\"><div class=\"panel-body\"><div class=\"row\"><div class=\"col-sm-10\"><b>Note:</b> <ul><li>You are not logged in.</li><li>You have to be logged in to add new topics and posts. </li><li>You don't need to be logged in for browsing.</li></ul></div><div class=\"col-sm-2\"><button class=\"btn btn-primary\" onclick='location.href=\"/solpeople/login.pl?goto_url=/forum/topics.pl\";'>Login</button></div></div></div></div></div>"; }
+
+print $login_string;
+
 my $s = "";
 $s = topics_list($dbh, $name, $user);
 print $s;
-
-if ($name) { $login_string = qq { You are logged in as <b>$name</b>. <a href="add_topic.pl?action=new"><b>Add topic</b></a>.<br /><br /> }; }
-else { $login_string="<b>Note:</b> <ul><li>You are not logged in.</li><li>You have to be logged in to add new topics and posts. </li><li>You don't need to be logged in for browsing.</li></ul><br /> [<a href=\"/solpeople/login.pl?goto_url=/forum/topics.pl\">Login</a>] <br /><br />\n"; }
-
-print $login_string;
 
 $page -> footer();
 
@@ -93,30 +93,42 @@ sub topics_list {
 	    || $user->get_user_type() eq "curator"
 	    ) {   
 	    $append = qq {
-		<a href="add_topic.pl?action=edit&amp;topic_id=$topic_id">edit</a> | 
-		    <a href="add_topic.pl?action=delete&amp;topic_id=$topic_id">delete</a> 
+		<a href="add_topic.pl?action=edit&amp;topic_id=$topic_id">Edit</a> | 
+		    <a href="add_topic.pl?action=delete&amp;topic_id=$topic_id">Delete</a> 
 		    
 		}
 	}
 	else { 
 	    $append = "&nbsp;";
 	}
-	$s .= qq { 
-	    <table summary="" border="0" class="topicbox">
-		<tr>
-		<td width="250"><a href="posts.pl?topic_id=$topic_id"><b>$topic_name</b></a></td>
-		<td width="250">started by <b><a href="/solpeople/personal-info.pl?sp_person_id=$submitter_id">$submitter_name</a></b></td>
-		<td width="80" align="center"><a href="posts.pl?topic_id=$topic_id"><b>$post_count</b> posts</a></td>
-		<td align="right" width="140">$most_recent_post_date</td>
-		</tr>
-	    </table>
-	    <table summary="" border="0" class="topicdescbox">
-	    <tr>
-	       <td width="640">$display_topic_desc</td><td width="88" align="right">$append</td>
-	       
-	       </tr>
-	    </table>
-	    <table summary=""><tr><td></td></tr></table>
+	$s .= qq {
+            <div class="row">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <a href="posts.pl?topic_id=$topic_id"><b>$topic_name</b></a>
+                    </div>
+                    <div class="col-sm-2">
+                      Started by:<br/><b><a href="/solpeople/personal-info.pl?sp_person_id=$submitter_id">$submitter_name</a></b>
+                    </div>
+                    <div class="col-sm-2">
+                      <a href="posts.pl?topic_id=$topic_id"><b>$post_count</b> Posts</a>
+                    </div>
+                    <div class="col-sm-2">
+                      $most_recent_post_date
+                      <br/>
+                      $append
+                    </div>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  $display_topic_desc
+                  
+                </div>
+              </div>
+            </div>
+
 	    }
 
     }	

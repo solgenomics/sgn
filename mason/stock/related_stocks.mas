@@ -28,6 +28,6 @@ a Bio::Chado::Schema::Stock::Stock object
     /chado/relations.mas,
     principle         => $stock,
     relationship_name => 'stock_relationship',
-    object_type_text  => 'Accessions',
+    object_type_text  => 'Stock',
     list_component => '/stock/stock_table.mas',
 &>

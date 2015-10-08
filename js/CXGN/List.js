@@ -345,7 +345,7 @@ CXGN.List.prototype = {
         html += '<td><input type="button" class="btn btn-info" id="updateNameButton" value="update"  /></td></tr>';
 
 	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input type="button" class="btn btn-info" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr>';
-	html += '<tr><td>Add New Items</td><td colspan="2"><div class="input-group"><input id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /><span class="input-group-btn"><button class="btn btn-primary" type="button" id="dialog_add_list_item_button" value="Add">Add</button></span></div></td></tr></table>';
+	html += '<tr><td>Add New Items</td><td colspan="2"><div class="input-group"><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea><span class="input-group-btn"><button class="btn btn-primary" type="button" id="dialog_add_list_item_button" value="Add">Add</button></span></div></td></tr></table>';
 	html += '<p><b>List items</b> ('+items.length+')</p>';
 
 	for(var n=0; n<items.length; n++) { 
