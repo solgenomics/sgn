@@ -251,7 +251,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
       $db_name =~ s/\s+$//;
       $db_name =~ s/^\s+//;
 
-      print STDERR "traitname: $term : accession: $accession \n";
+      print STDERR "traitname: $term | accession: $accession \n";
 
       #get trait info
 
@@ -266,7 +266,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
       #return error if not $trait_info_string;
       #print line with trait info
       #print FILE "$trait_name:$db_name:$accession,text,,,,,,TRUE,$order\n";
-      print FILE "\"$trait_name:$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
+      print FILE "\"$trait_name|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
       $order++;
   }
 

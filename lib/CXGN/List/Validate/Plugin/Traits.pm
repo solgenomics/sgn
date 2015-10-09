@@ -18,8 +18,9 @@ sub validate {
     my @missing = ();
     my $rs;
     foreach my $term (@$list) { 
-
-	my ($db_name, $name) = split ":", $term;
+	
+	my ($trait_name, $full_accession) = split (/\|/, $term);
+	my ($db_name, $accession) = split ":", $full_accession;
 
 	my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
 	if ($db_rs->count() == 0) {  
@@ -28,7 +29,7 @@ sub validate {
 	else { 
 	    $rs = $schema->resultset("Cv::Cvterm")->search( { 
 		'dbxref.db_id' => $db_rs->first()->db_id(),
-		'name'=>$name }, {
+		'dbxref.accession'=>$accession }, {
 		    'join' => 'dbxref' }
 		);
 	    
