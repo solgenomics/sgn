@@ -114,15 +114,18 @@ function load_breeding_program_info(trial_id) {
 }
 
 function open_create_spreadsheet_dialog() {
-    jQuery('#working').dialog("open");
+    //jQuery('#working').dialog("open");
+    jQuery('#working_modal').modal("show");
     var list = new CXGN.List();
     jQuery("#trait_list").html(list.listSelect("trait_list", [ 'traits' ]));
-    jQuery('#working').dialog("close");
+    //jQuery('#working').dialog("close");
+    jQuery('#working_modal').modal("hide");
     jQuery('#create_spreadsheet_dialog').dialog("open");
 }
 
 function create_spreadsheet() {
-    jQuery('#working').dialog("open");
+    //jQuery('#working').dialog("open");
+    jQuery('#working_modal').modal("show");
     var trialID = parseInt(jQuery('#trialIDDiv').text());
     var list = new CXGN.List();
     var trait_list_id = jQuery('#trait_list_list_select').val();
@@ -139,18 +142,21 @@ function create_spreadsheet() {
              'trait_list': trait_list,
 	 },
 	 success: function (response) {
-	     jQuery('#working').dialog("close");
+	    // jQuery('#working').dialog("close");
+	     jQuery('#working_modal').modal("hide");
              if (response.error) {
 		 alert(response.error);
 		 jQuery('#open_create_spreadsheet_dialog').dialog("close");
              } else {
 		 //alert(response.filename);
 		 jQuery('#open_create_spreadsheet_dialog').dialog("close");
+		 jQuery('#working_modal').modal("hide");
 		 window.location.href = "/download/"+response.filename;
              }
 	 },
 	 error: function () {
-	     jQuery('#working').dialog("close");
+	     //jQuery('#working').dialog("close");
+	     jQuery('#working_modal').modal("hide");
              alert('An error occurred creating a phenotype file.');
              jQuery('#open_download_spreadsheet_dialog').dialog("close");
 	 }
@@ -185,16 +191,19 @@ function open_create_fieldbook_dialog() {
 }
 
 function open_create_DataCollector_dialog() {
-    jQuery('#working').dialog("open");
+    //jQuery('#working').dialog("open");
+    jQuery('#working_modal').modal("show");
     var list = new CXGN.List();
     jQuery("#trait_list_dc").html(list.listSelect("trait_list", [ 'traits' ]));
-    jQuery('#working').dialog("close");
+    //jQuery('#working').dialog("close");
+    jQuery('#working_modal').modal("hide");
     jQuery('#create_DataCollector_dialog').dialog("open");
 }
 
 
 function create_DataCollector() {
-    jQuery('#working').dialog("open");
+    //jQuery('#working').dialog("open");
+    jQuery('#working_modal').modal("show");
     var trialID = parseInt(jQuery('#trialIDDiv').text());
     var list = new CXGN.List();
     var trait_list_id = jQuery('#trait_list_list_select').val();
@@ -211,7 +220,8 @@ function create_DataCollector() {
              'trait_list': trait_list,
 	 },
 	 success: function (response) {
-	     jQuery('#working').dialog("close");
+	     //jQuery('#working').dialog("close");
+	     jQuery('#working_modal').modal("hide");
 		//alert("hello");
 		
              if (response.error) {
@@ -219,14 +229,14 @@ function create_DataCollector() {
 		 jQuery('#open_create_DataCollector_dialog').dialog("close");
              } else {
 		 //alert("success: "+response.filename);
-   		 //jQuery('#data_collector_download_link').attr('href',response.filename);
-		 //jQuery("#data_collector_saved_dialog_message").dialog("open");
 		 jQuery('#open_create_DataCollector_dialog').dialog("close");
+		 jQuery('#working_modal').modal("hide");
 		 window.location.href = "/download/"+response.filename;
              }
 	 },
 	 error: function () {
-	     jQuery('#working').dialog("close");
+	     //jQuery('#working').dialog("close");
+	     jQuery('#working_modal').modal("hide");
              alert('An error occurred creating a DataCollector file.');
              jQuery('#open_download_DataCollector_dialog').dialog("close");
 	 }
@@ -309,10 +319,8 @@ function trial_detail_page_setup_dialogs() {
 	    },
 	    Create: function() {
 		create_DataCollector();
-		//jQuery('#data_collector_download_link').attr('href',response.filename);
-		//jQuery("#data_collector_saved_dialog_message").dialog("open");
 		//save_experimental_design(design_json);
-		jQuery( this ).dialog( "close" );
+		jQuery( this ).dialog( "close" );		
 		//jQuery('#add_project_dialog').dialog("close");
 	    },
 	},
