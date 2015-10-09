@@ -23,9 +23,9 @@ $trial_name
 @accession_names
 @control_names
 @plot_names
-$plot_length => 'unknown'
-$plot_width => 'unknown'
-$plant_per_plot => 'unknown'
+$plot_length => "unknown"
+$plot_width => "unknown"
+$plant_per_plot => "unknown"
 $design_type
 $number_of_blocks
 $number_of_replicates

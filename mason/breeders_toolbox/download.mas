@@ -26,6 +26,9 @@ Choose a list for each parameter and click "Download".
       Traits
     </th>
     <th>
+      Format
+    </th>
+    <th>
       Action
     </th>
   </tr>
@@ -43,6 +46,17 @@ Choose a list for each parameter and click "Download".
     <td>
       <div id="trait_list">
       </div>
+   </td>
+   <td>
+ <div class="checkbox">
+  <label><input type="checkbox" id="format" name="format" value=".xls">.xls (default)</label>
+</div>
+<div class="checkbox">
+  <label><input type="checkbox" id="format" name="format" value=".csv">.csv</label>
+</div>
+<div class="checkbox">
+  <label><input type="checkbox" id="format" name="format" value="html">html</label>
+</div>
     </td>
     <td>
       <input class="btn btn-primary" type="button" id="phenotype" value="Download" />
@@ -61,7 +75,7 @@ Choose a list for each parameter and click "Download".
     $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
     $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ], 'select' ));
     $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], 'select'  ));
-
+ 
     $('#phenotype').click(function() {
    
       disable_ui();
@@ -79,7 +93,7 @@ Choose a list for each parameter and click "Download".
       var trait_validation = 1;
       if (trait_list_id) { trait_validation = lo.validate(trait_list_id, 'traits', true); } 
 
-      //if (!accession_list_id || ! trial_list_id || ! trait_list_id) { 
+      //if (!accession_list_id || ! trial_list_id || ! trait_list_id || ! _list_id) { 
       //  alert("You need to select an accession, a trail, and a trait list!");
       //  return; 
       //}
