@@ -186,7 +186,7 @@ sub _analyze_correlation  {
     my $pheno_file      = $c->stash->{pop}->phenotype_file($c);
     my $base_path       = $c->config->{basepath};
     my $temp_image_dir  = $c->config->{tempfiles_subdir};
-    my $r_qtl_dir       = $c->config->{r_qtl_temp_path};
+    my $r_qtl_dir       = $c->config->{solqtl};
     my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
     my $corre_temp_dir  = catfile($r_qtl_dir, "cache");
     
