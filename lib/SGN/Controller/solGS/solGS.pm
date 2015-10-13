@@ -2499,19 +2499,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
      @traits    = grep {$_ ne 'rank'} @traits;
      $c->stash->{training_pop_id} = $pop_id;
      $c->stash->{pop_id} = $pop_id;
-
-     if ($pop_id =~ /uploaded/)
-     {
-         $self->list_predicted_selection_pops($c, $pop_id);
-
-         my $predicted_selection_pops = $c->stash->{list_of_predicted_selection_pops};
-     
-         if (!$pred_pop_id)  
-         {
-             $pred_pop_id = $predicted_selection_pops->[0];
-         }
-     }                                      
-     
+          
      if ($pred_pop_id)
      {
          $c->stash->{prediction_pop_id} = $pred_pop_id;
