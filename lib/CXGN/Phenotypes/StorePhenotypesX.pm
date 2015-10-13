@@ -164,6 +164,12 @@ sub store {
 		print STDERR "trait: $trait_name\n";
 		my ($trait_name_string, $full_accession) = split (/\|/, $trait_name);
 		my ($db_name, $accession ) = split (/:/, $full_accession);
+		
+		$accession =~ s/\s+$//;
+		$accession =~ s/^\s+//;
+		$db_name  =~ s/\s+$//;
+                $db_name  =~ s/^\s+//;
+
 		my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
 
 		my $trait_cvterm = $schema->resultset("Cv::Cvterm")

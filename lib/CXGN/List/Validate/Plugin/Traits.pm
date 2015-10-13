@@ -21,6 +21,10 @@ sub validate {
 	
 	my ($trait_name, $full_accession) = split (/\|/, $term);
 	my ($db_name, $accession) = split ":", $full_accession;
+	$accession =~ s/\s+$//;
+	$accession =~ s/^\s+//;
+	$db_name  =~ s/\s+$//;
+	$db_name  =~ s/^\s+//;
 
 	my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
 	if ($db_rs->count() == 0) {  
