@@ -37,7 +37,7 @@ Naama Menda <nm249@cornell.edu>
 my $img_src = "/documents/img/white_pixel.png";
 
 if ($count == 1 ) {
-   $img_src = "/documents/img/sgn_logo.png";
+   $img_src = "/documents/img/sgn_logo_26x60.png";
 }
    
 </%perl>
