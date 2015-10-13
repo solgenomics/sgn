@@ -10,9 +10,6 @@
   <!-- <link rel="stylesheet" href="/documents/inc/colorbox/colorbox.css" type="text/css" /> -->
   <link rel="stylesheet" href="/css/jstree/themes/default/style.min.css">
   <link rel="stylesheet" href="/css/fullcalendar.css" />
-  <!--
-  <link rel="stylesheet" href="/css/datepicker.css" />
-  -->
   <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
   <!-- <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"> -->
   <link rel="stylesheet" href="/css/bootstrap.min.css">

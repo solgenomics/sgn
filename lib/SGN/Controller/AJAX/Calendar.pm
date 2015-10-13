@@ -39,73 +39,52 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-sub calendar_events_month  : Path('/ajax/calendar/populate/month') : ActionClass('REST') { }
+
+sub calendar_events_month_personal  : Path('/ajax/calendar/populate/month/personal') : ActionClass('REST') { }
 #When the month view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
-sub calendar_events_month_GET { 
+sub calendar_events_month_personal_GET { 
     my $self = shift;
     my $c = shift;
     if (!$c->user()) {die;}
-    my $search_rs = get_calendar_events($c);
+    my $search_rs = get_calendar_events_personal($c);
     my $view = 'month';
     $c->stash->{rest} = populate_calendar_events($search_rs, $view);
 }
 
 
-sub calendar_events_agendaWeek  : Path('/ajax/calendar/populate/agendaWeek') : ActionClass('REST') { }
-#When the agendaWeek view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
-sub calendar_events_agendaWeek_GET { 
-    my $self = shift;
+sub get_user_roles {
     my $c = shift;
-    if (!$c->user()) {die;}
-    my $search_rs = get_calendar_events($c);
-    my $view = 'agendaWeek';
-    $c->stash->{rest} = populate_calendar_events($search_rs, $view);
-}
-
-
-sub calendar_events_month_role  : Path('/ajax/calendar/populate/month/role') : ActionClass('REST') { }
-#When the month view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
-sub calendar_events_month_role_GET { 
-    my $self = shift;
-    my $c = shift;
-    if (!$c->user()) {die;}
-    my $search_rs = get_calendar_events_role($c);
-    my $view = 'month';
-    $c->stash->{rest} = populate_calendar_events($search_rs, $view);
-}
-
-
-sub get_calendar_events {
-    #Calendar event info is retrieved using DBIx class.
-    my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
-    #Project properties with a cv group name of 'project_property' are retrieved.
-    my $search_rs = $schema->resultset('Project::Project')->search(
-	{'cv.name'=>'project_property'},
-	{join=>{'projectprops'=>{'type'=>'cv'}},
-	'+select'=> ['projectprops.projectprop_id', 'type.name', 'projectprops.value', 'type.cvterm_id'],
-	'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cv_id'],
-	}
-    );
-    #$schema->storage->debug(1);
-    return $search_rs;
-}
-
-sub get_calendar_events_role {
-    my $c = shift;
-
-    my $person_id = $c->user->get_object->get_sp_person_id;
-
+    my $person_id = shift;
     my @roles;
+
     my $q = "SELECT sgn_people.sp_roles.name FROM sgn_people.sp_person JOIN sgn_people.sp_person_roles using(sp_person_id) join sgn_people.sp_roles using(sp_role_id) WHERE sp_person_id=?";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute($person_id);
     while (my ($role) = $sth->fetchrow_array ) {
 	push(@roles, $role);
     }
+    return @roles;
+}
 
-    my @allowed_roles = ('IITA','NRCRI','NaCRRI','ARI Tanzania','NaCRRI Germplasm Collection','CIAT','CARI','Rayong','KU','CSIR','TestBootstrap2');
+sub get_allowed_roles {
+    my $c = shift;
+    my @allowed_roles;
+    my $q = "SELECT DISTINCT name FROM sgn_people.sp_roles ";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute();
+    while (my ($name) = $sth->fetchrow_array ) {
+	push(@allowed_roles, $name);
+    }
+    return @allowed_roles;
+}
+
+sub get_calendar_events_personal {
+    my $c = shift;
+
+    my $person_id = $c->user->get_object->get_sp_person_id;
+
+    my @roles = get_user_roles($c, $person_id);
+    my @allowed_roles = get_allowed_roles($c);
     my %allowed_roles_hash = map { $_ => 1 } @allowed_roles;
 
     my @search_project_ids = '-1';
@@ -129,7 +108,7 @@ sub get_calendar_events_role {
 	}
     }
 
-    my @search_project_ids = map{$_='me.project_id='.$_; $_} @search_project_ids;
+    @search_project_ids = map{$_='me.project_id='.$_; $_} @search_project_ids;
     my $search_projects = join(" OR ", @search_project_ids);
 
     #Calendar event info is retrieved using DBIx class.
@@ -143,7 +122,7 @@ sub get_calendar_events_role {
     );
     $search_rs = $search_rs->search([$search_projects]);
 
-    $schema->storage->debug(1);
+    #$schema->storage->debug(1);
     return $search_rs;
 }
 
@@ -327,31 +306,58 @@ sub drag_or_resize_event_POST {
     }
 }
 
-sub day_click : Path('/ajax/calendar/dayclick') : ActionClass('REST') { }
+sub day_click_personal : Path('/ajax/calendar/dayclick/personal') : ActionClass('REST') { }
 
 #When a day is clicked, this function is called to populate the add_event project name and property type dropdowns.
-sub day_click_GET { 
+sub day_click_personal_GET { 
     my $self = shift;
     my $c = shift;
 
-    #The available project names and their ids are pushed into an array. This array is passed back to the dayClick AJAX success, to then render the dropdown.
-    my $q = "SELECT DISTINCT project_id, name FROM project";
-    my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute();
+    my $person_id = $c->user->get_object->get_sp_person_id;
+
+    my @roles = get_user_roles($c, $person_id);
+    my @allowed_roles = get_allowed_roles($c);
+    my %allowed_roles_hash = map { $_ => 1 } @allowed_roles;
+
     my @projects;
-    while (my ($project_id, $project_name) = $sth->fetchrow_array ) {
-	push(@projects, {project_id=>$project_id, project_name=>$project_name});
+    foreach (@roles) {
+	if(exists($allowed_roles_hash{$_})) {
+	    
+	    my $q="SELECT project_id, name FROM project WHERE name=?";
+	    my $sth = $c->dbc->dbh->prepare($q);
+	    $sth->execute($_);
+	    while (my ($project_id, $name) = $sth->fetchrow_array ) {
+
+		push(@projects, {project_id=>$project_id, project_name=>$name});
+
+		my $q="SELECT subject_project_id, project.name FROM project_relationship JOIN cvterm ON (type_id=cvterm_id) JOIN project ON (subject_project_id=project_id) WHERE object_project_id=? and cvterm.name='breeding_program_trial_relationship'";
+		my $sth = $c->dbc->dbh->prepare($q);
+		$sth->execute($project_id);
+		while (my ($trial_id, $trial_name) = $sth->fetchrow_array ) {
+		    push(@projects, {project_id=>$trial_id, project_name=>$trial_name});
+		}
+	    }
+	}
     }
 
-    #The available cvterms that belong to the project_property cv group are pushed into an array. This array is passed back to the dayClick AJAX success to then be rendered as the dropdown.
-    $q = "SELECT DISTINCT a.cvterm_id, a.name FROM (cvterm as a INNER JOIN cv as b on (a.cv_id=b.cv_id)) WHERE b.name = 'project_property'";
-    $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute();
+    my @projectprop_names = ('Planting Event', 'Harvest Event', 'Fertilizer Event', 'Meeting Event', 'Planning Event', 'Presentation Event', 'Phenotyping Event', 'Genotyping Event');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my @projectprop_types;
-    while (my ($cvterm_id, $cvterm_name) = $sth->fetchrow_array ) {
-	$cvterm_name =~ s/([\w']+)/\u\L$1/g;
-	push(@projectprop_types, {cvterm_id=>$cvterm_id, cvterm_name=>$cvterm_name});
+
+    foreach (@projectprop_names) {
+	my $q="SELECT cvterm_id, name FROM cvterm WHERE name=?";
+	my $sth = $c->dbc->dbh->prepare($q);
+	$sth->execute($_);
+	if ($sth->rows == 0) {
+	    my %add_term = $schema->resultset('Cv::Cvterm')->create_with({name=>$_, cv=>'calendar', db=>'local', dbxref=>$_});
+	    push(@projectprop_types, {cvterm_id=>$add_term{'cvterm_id'}, cvterm_name=>$add_term{'name'}});
+	} else {
+	    while ( my ($cvterm_id, $cvterm_name ) = $sth->fetchrow_array ) {
+		push(@projectprop_types, {cvterm_id=>$cvterm_id, cvterm_name=>$cvterm_name});
+	    }
+	}
     }
+ 
     $c->stash->{rest} = {project_list => \@projects, projectprop_list => \@projectprop_types};
 }
 

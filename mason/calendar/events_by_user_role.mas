@@ -1,6 +1,6 @@
-<& /util/import_javascript.mas, classes => [ "moment_min", "fullcalendar", "jquery.dataTables", "fullcalendar_gcal" ] &>
+<& /util/import_javascript.mas, classes => [ "moment_min", "fullcalendar", "jquery.dataTables", "fullcalendar_gcal", "bootstrap_datepicker" ] &>
 
-<!--"bootstrap_datepicker"-->
+<link rel="stylesheet" href="/css/datepicker.css" />
 
 <style>
 .fc-center h2 {
@@ -10,6 +10,7 @@
 .fc-day-header {
     font-size: 0.9em;
 }
+.datepicker{z-index:1151 !important;}
 </style>
 
 <div id='calendar' style="width:100%"></div>
@@ -41,13 +42,23 @@
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Start: </label>
       	      <div class="col-sm-10">
-		<input class="form-control" name="event_start" id="event_start" type="text" placeholder="Formats: 2015-01-30 or 2015-01-30T14:30:00">
+	        <div class="input-group date">
+    		  <input type="text" class="form-control datepicker" name="event_start" id="event_start">
+    		  <div class="input-group-addon">
+        	    <span class="glyphicon glyphicon-th"></span>
+    		  </div>
+		</div>
               </div>
 	    </div>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">End: </label>
       	      <div class="col-sm-10">
-		<input class="form-control" name="event_end" id="event_end" type="text" placeholder="Formats: 2015-01-30 or 2015-01-30T14:30:00">
+	        <div class="input-group date">
+    		  <input type="text" class="form-control datepicker" name="event_end" id="event_end" placeholder="Leave Blank if Not Applicable">
+    		  <div class="input-group-addon">
+        	    <span class="glyphicon glyphicon-th"></span>
+    		  </div>
+		</div>
               </div>
 	    </div>
 	    <div class="form-group">
@@ -168,13 +179,23 @@
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Start: </label>
       	      <div class="col-sm-10">
-		<input class="form-control" name="edit_event_start" id="edit_event_start" type="text" >
+	        <div class="input-group date">
+    		  <input type="text" class="form-control datepicker" name="edit_event_start" id="edit_event_start">
+    		  <div class="input-group-addon">
+        	    <span class="glyphicon glyphicon-th"></span>
+    		  </div>
+		</div>
               </div>
 	    </div>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">End: </label>
       	      <div class="col-sm-10">
-		<input class="form-control" name="edit_event_end" id="edit_event_end" type="text" >
+	        <div class="input-group date">
+    		  <input type="text" class="form-control datepicker" name="edit_event_end" id="edit_event_end" placeholder="Leave Blank if Not Applicable">
+    		  <div class="input-group-addon">
+        	    <span class="glyphicon glyphicon-th"></span>
+    		  </div>
+		</div>
               </div>
 	    </div>
 	    <div class="form-group">
@@ -207,18 +228,11 @@
 
 $(document).ready(function() {
 
-    //$('#event_start').datepicker()
+    $('.datepicker').datepicker({format: 'yyyy-mm-dd'});
 
     var fcSources = {
          month_view: {
-	     url: '/ajax/calendar/populate/month/role',
-	     error: function() {window.location.replace('/solpeople/login.pl');},
-	     className: 'bg-info',
-	     textColor: '#000',
-	     borderColor: '#FFF',
-	 },
-	 agendaWeek_view: {
-	     url: '/ajax/calendar/populate/agendaWeek/role',
+	     url: '/ajax/calendar/populate/month/personal',
 	     error: function() {window.location.replace('/solpeople/login.pl');},
 	     className: 'bg-info',
 	     textColor: '#000',
@@ -248,25 +262,7 @@ $(document).ready(function() {
            right:  'prevYear,prev,today,next,nextYear'
 	},
 	googleCalendarApiKey: 'AIzaSyDHH6NGHEYJcYRcxr5mHBWKcqNlKyu-L-Q',
-        eventSources: [fcSources.month_view, fcSources.agendaWeek_view, fcSources.gcal_cassbase, fcSources.gcal_holidays],
-	viewRender: function(view) {
-	    if (view.name == 'month' && lastView == 'from_month') {
-	       $('#calendar').fullCalendar( 'removeEventSource', fcSources.agendaWeek_view );
-	       $('#calendar').fullCalendar( 'addEventSource', fcSources.month_view );
-	       lastView = 'from_agendaWeek';
-	    } else if (view.name == 'agendaWeek' && lastView == 'from_agendaWeek') {
-	       $('#calendar').fullCalendar( 'removeEventSource', fcSources.month_view );
-	       $('#calendar').fullCalendar( 'addEventSource', fcSources.agendaWeek_view );
-	       lastView = 'from_month';
-	    } else if (view.name == 'agendaWeek' && lastView == 'initial') {
-	       $('#calendar').fullCalendar( 'removeEventSource', fcSources.month_view );
-	       $('#calendar').fullCalendar( 'addEventSource', fcSources.agendaWeek_view );
-	       lastView = 'from_month';
-	    } else if (view.name == 'month') {
-	       $('#calendar').fullCalendar( 'removeEventSource', fcSources.agendaWeek_view );
-	       lastView = 'initial';
-	    }
-	},
+        eventSources: [fcSources.month_view, fcSources.gcal_cassbase, fcSources.gcal_holidays],
 	eventRender: function(event, element, view) {
 	  if (!event.url) {
     	    element.find('.fc-title').html(event.title + ": " + event.property ); 
@@ -274,7 +270,7 @@ $(document).ready(function() {
 	},
 	dayClick: function(date, jsEvent, view) {
 	   $.ajax({
-	      url: "/ajax/calendar/dayclick",
+	      url: "/ajax/calendar/dayclick/personal",
     	      type: "GET",
 	      dataType: "json",
     	      success: function(data) {
@@ -457,7 +453,7 @@ $(document).ready(function() {
     $('button#event_edit_display').click( function(event) {
         event.preventDefault();
 	$.ajax({
-	   url: "/ajax/calendar/dayclick",
+	   url: "/ajax/calendar/dayclick/personal",
     	   type: "GET",
 	   dataType: "json",
     	   success: function(data) {
