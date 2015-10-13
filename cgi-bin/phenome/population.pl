@@ -591,10 +591,9 @@ sub analyze_correlation
     my $pop_id = $self->get_object_id();
 
     my $pheno_file      = $pop->phenotype_file($c);
-    my $base_path       = $c->get_conf("basepath");
-    my $temp_image_dir  = $c->get_conf("tempfiles_subdir");
-    my $pheno_dir       = $c->get_conf("r_qtl_temp_path");
-    my $corre_image_dir = File::Spec->catfile($base_path, $temp_image_dir, "correlation");
+    my $pheno_dir       = $c->config->{solqtl};
+    my $temp_image_dir  = File::Spec->catfile($pheno_dir, "temp_images");
+    my $corre_image_dir = File::Spec->catfile($temp_image_dir, "correlation");
     my $corre_temp_dir  = File::Spec->catfile($pheno_dir, "tempfiles");
     my $pheno_file_dir  = File::Spec->catfile($pheno_dir, "cache");
    

@@ -319,6 +319,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $trait_list_id     = $c->req->param("trait_list_list_select");
     my $data_type         = $c->req->param("data_type")|| "phenotype";
     my $format            = $c->req->param("format");
+    my $cookie_value      = $c->req->param("download_token_value"); 
 
     my $accession_data;
     if ($accession_list_id) { 
@@ -392,8 +393,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 	    my $tempfile = $c->config->{basepath}."/".$rel_file;
 	    my @col_names = qw/project_name stock_name location trait value plot_name cv_name cvterm_accession rep block_number/;
 	    
-	    print STDERR "TEMPFILE : $tempfile\n";
-	    
 	    if ($format eq ".csv") {
 		
 		#build csv with column names
@@ -417,9 +416,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 		    $ws->write(0, $column, $col_names[$column]);
 		}
 		for (my $line =0; $line < @data; $line++) {
-		    print STDERR "dataline = $data[$line]\n";
 		    my @columns = @{$data[$line]};
-		    print STDERR "columns = @columns\n";
 		    for(my $col = 0; $col<@columns; $col++) { 
 			$ws->write(($line+1), $col, $columns[$col]);
 		    }
@@ -431,6 +428,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 	    #Using tempfile and new filename,send file to client
 	    my $file_name = $time_stamp . "$what" . "$format";
 	    $c->res->content_type('Application/'.$format);
+	    $c->res->cookies->{fileDownloadToken} = { value => $cookie_value};
 	    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 	    $output = read_file($tempfile);
 	    $c->res->body($output);   
