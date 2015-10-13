@@ -14,7 +14,7 @@ function solGS () {};
 
 solGS.waitPage = function (page) {
  
-    if ( page.match(/solgs\/trait\//) || page.match(/solgs\/model\/combined\/trials\//)) {
+    if ( page.match(/[solgs\/trait\/ | solgs\/model\/combined\/trials\/]/)) {
     	askUser(page);
     } else {
     	blockPage(page);
