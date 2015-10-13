@@ -360,7 +360,7 @@ sub run_analysis {
 	    $c->controller('solGS::solGS')->build_multiple_traits_models($c);
 	}	
     } 
-    elsif ($analysis_page =~ /solgs\/model\/combined\/trials\// )	  
+    elsif ($analysis_page =~ /solgs\/models\/combined\/trials\// )	  
     {
 	$c->stash->{combo_pops_id} = $c->stash->{pop_id};
 	my $trait_id = $c->stash->{selected_traits}->[0];		
