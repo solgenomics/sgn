@@ -207,9 +207,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
 	    
         }
     }  
-    
-    $solgs_controller->list_of_prediction_pops($c, $combo_pops_id);
-
+  
     $solgs_controller->analyzed_traits($c);
     my $analyzed_traits = $c->stash->{analyzed_traits};
    
