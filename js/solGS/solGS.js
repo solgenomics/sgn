@@ -152,7 +152,7 @@ function goToPage (page, args) {
 	    
     } else if (page.match(/solgs\/models\/combined\/trials\//)) {
 	
-	window.location = page;
+	submitTraitSelections(page, args);	
 	    
     }
 	    
