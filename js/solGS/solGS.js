@@ -13,7 +13,7 @@ JSAN.use('jquery.form');
 function solGS () {};
 
 solGS.waitPage = function (page) {
-    alert(page)
+ 
     if ( page.match(/solgs\/trait\//) || page.match(/solgs\/model\/combined\/trials\//)) {
     	askUser(page);
     } else {
@@ -62,6 +62,7 @@ function checkUserLogin (page, args) {
     if (args === undefined) {	
 	args = {};
     }
+
     jQuery.ajax({
 	type    : 'POST',
 	dataType: 'json',
@@ -115,7 +116,7 @@ function loginUser () {
 
 
 function displayAnalysisNow (page, args) {
-
+  
     blockPage(page, args);
 
  }
@@ -136,7 +137,7 @@ function blockPage (page, args) {
 
 
 function goToPage (page, args) {    
-
+   
     if (page.match(/solgs\/confirm\/request/)) {
 
 	window.location = page;
@@ -149,7 +150,7 @@ function goToPage (page, args) {
 	
 	window.location = page;
 	    
-    } else if (page.match(/solgs\/model\/combined\/trials\//)) {
+    } else if (page.match(/solgs\/models\/combined\/trials\//)) {
 	
 	window.location = page;
 	    
@@ -159,7 +160,7 @@ function goToPage (page, args) {
 
 
 function submitTraitSelections (page, args) {
-    
+   
     wrapTraitsForm();
     
     if ( typeof args.analysis_name == 'undefined') {
@@ -173,10 +174,21 @@ function submitTraitSelections (page, args) {
 
 
 function wrapTraitsForm () {
-    
+ 
     var popId  = jQuery('#population_id').val();
     var formId = ' id="traits_selection_form"';
-    var action = ' action="/solgs/analyze/traits/population/' + popId + '"';
+    
+    var action;   
+    var referer = window.location.href;
+	 
+    if ( referer.match(/solgs\/populations\/combined\//) ) {
+	action = ' action="/solgs/models/combined/trials/' + popId + '"';		 		 
+    }
+
+    if ( referer.match(/solgs\/population\//) ) {
+	action = ' action="/solgs/analyze/traits/population/' + popId + '"';		  	 		 
+    }
+    
     var method = ' method="POST"';
     
     var traitsForm = '<form'
@@ -192,7 +204,7 @@ function wrapTraitsForm () {
 
 
 function getProfileDialog (page, args) {
-  
+   
     if (page.match(/solgs\/trait\//) || page.match(/solgs\/model\/combined\/trials\//)) {
 	args = getArgsFromUrl(page, args);
     }
@@ -376,11 +388,19 @@ jQuery(document).ready(function (){
 			 
 	 } else {
 	     
-	     page = hostName 
-		 + '/solgs/analyze/traits/population/' 
-		 + popId;
-
-	     analysisType = 'multiple models';
+	      analysisType = 'multiple models';
+	    
+	     if ( referer.match(/solgs\/populations\/combined\//) ) {
+		 page = hostName 
+		     + '/solgs/models/combined/trials/' 
+		     + popId;
+	    
+	     } else {
+		 
+		 page = hostName 
+		     + '/solgs/analyze/traits/population/' 
+		     + popId;
+	     }	    
 	 }
 	 
 	 var args = {'trait_id'      : traitIds, 
