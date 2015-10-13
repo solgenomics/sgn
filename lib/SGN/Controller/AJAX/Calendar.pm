@@ -6,11 +6,10 @@ backend for displaying, adding, deleting, dragging, modifying, and requesting mo
 
 =head1 DESCRIPTION
 
-Calendar events are saved in the projectprop table value field as a tuple of the format {"2007-09-21T00:00:00","2007-09-21T00:00:00","N/A","#"} which correspond to the start datetime, end datetime, description, and web url, respectively. Because no values were previously saved in this format, no events will be displayed on the calendar unless they are reformatted.
+Calendar events are saved in the projectprop table value field as a tuple of the format {"2007-09-21T00:00:00","2007-09-21T00:00:00","N/A","#"} which correspond to the start datetime, end datetime, description, and web url, respectively. 
 
-The projectprop type_id is currently restricted to be displayed, selected, and/or added as a 'project_property' cv term. It may be advisable to change this to something like 'calendar_properties", to isolate cvterms that are added by users.
+The calendar can display events for projects (breeding programs and their trials) which a user has a role for in the sp_person_roles table. 
 
-Currently the calendar displays all events that have a projectprop type_id of 'project_property', which means the events are not grouped by other things, such as which project they belong to. If the calendar is to be placed on the trial page, then only events for that project would be displayed. 
 
 =head1 AUTHOR
 
@@ -51,6 +50,16 @@ sub calendar_events_month_personal_GET {
     $c->stash->{rest} = populate_calendar_events($search_rs, $view);
 }
 
+sub calendar_events_agendaWeek_personal  : Path('/ajax/calendar/populate/agendaWeek/personal') : ActionClass('REST') { }
+#When the month view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
+sub calendar_events_agendaWeek_personal_GET { 
+    my $self = shift;
+    my $c = shift;
+    if (!$c->user()) {die;}
+    my $search_rs = get_calendar_events_personal($c);
+    my $view = 'agendaWeek';
+    $c->stash->{rest} = populate_calendar_events($search_rs, $view);
+}
 
 sub get_user_roles {
     my $c = shift;
