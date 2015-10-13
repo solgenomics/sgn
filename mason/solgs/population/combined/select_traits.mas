@@ -37,6 +37,7 @@ $all_traits_file
       <td>
         <input type  = "checkbox"
                name  = "trait_id"
+	       class = "trait_id"
                value = $id > $trait_link
       </td>
      </tr>
