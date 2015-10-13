@@ -138,22 +138,18 @@ function blockPage (page, args) {
 
 function goToPage (page, args) {    
    
-    if (page.match(/solgs\/confirm\/request/)) {
+    if (page.match(/[solgs\/confirm\/request\/ | solgs\/trait\/]/)) {
 
 	window.location = page;
 	
-    } else if (page.match(/solgs\/analyze\/traits\/population\//)) {
+    } else if (page.match(/[solgs\/analyze\/traits\/population\/ | solgs\/models\/combined\/trials\/]/)) {
 
-	submitTraitSelections(page, args);	
+	submitTraitSelections(page, args);
+		    
+    } else {
+	
+	window.location = window.location.href;
 
-    } else if (page.match(/solgs\/trait\//)) {
-	
-	window.location = page;
-	    
-    } else if (page.match(/solgs\/models\/combined\/trials\//)) {
-	
-	submitTraitSelections(page, args);	
-	    
     }
 	    
 }
