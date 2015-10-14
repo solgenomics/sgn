@@ -273,30 +273,30 @@ sub download {
     #
     
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-    $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
-    $ws->write(0, 2, 'Spreadsheet format'); $ws->write(0, 3, "BasicExcel");
-    $ws->write(1, 0, 'Trial name'); $ws->write(1, 1, $trial->get_name(), $bold);
-    $ws->write(2, 0, 'Description'); $ws->write(2, 1, $trial->get_description(), $bold);
-    $ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
-    $ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
-    $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
+#    $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
+#    $ws->write(0, 2, 'Spreadsheet format'); $ws->write(0, 3, "BasicExcel");
+#    $ws->write(1, 0, 'Trial name'); $ws->write(1, 1, $trial->get_name(), $bold);
+#    $ws->write(2, 0, 'Description'); $ws->write(2, 1, $trial->get_description(), $bold);
+#    $ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
+#    $ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
+#    $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
     #$ws->data_validation(2,3, { validate => "date" });
     
 
     my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
     for(my $n=0; $n<@column_headers; $n++) { 
-	$ws->write(5, $n, $column_headers[$n]);
+	$ws->write(0, $n, $column_headers[$n]);
     }
     my @ordered_plots = sort { $a <=> $b} keys(%design);
     for(my $n=0; $n<@ordered_plots; $n++) { 
 	my %design_info = %{$design{$ordered_plots[$n]}};
 	    
-	$ws->write($n+6, 0, $design_info{plot_name});
-	$ws->write($n+6, 1, $design_info{accession_name});
-	$ws->write($n+6, 2, $design_info{plot_number});
-	$ws->write($n+6, 3, $design_info{block_number});
-	$ws->write($n+6, 4, $design_info{is_a_control});
-	$ws->write($n+6, 5, $design_info{rep_number});
+	$ws->write($n+1, 0, $design_info{plot_name});
+	$ws->write($n+1, 1, $design_info{accession_name});
+	$ws->write($n+1, 2, $design_info{plot_number});
+	$ws->write($n+1, 3, $design_info{block_number});
+	$ws->write($n+1, 4, $design_info{is_a_control});
+	$ws->write($n+1, 5, $design_info{rep_number});
     }
 
     # write traits and format trait columns
@@ -318,7 +318,7 @@ sub download {
 									       
     for (my $i = 0; $i < @trait_list; $i++) { 
 	if (exists($cvinfo{$trait_list[$i]})) { 
-	    $ws->write(5, $i+6, $cvinfo{$trait_list[$i]}->display_name());
+	    $ws->write(0, $i+6, $cvinfo{$trait_list[$i]}->display_name());
 	}
 	else { 
 	    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
@@ -329,10 +329,10 @@ sub download {
 	for (my $n = 0; $n < $plot_count; $n++) { 
 	    my $format = $cvinfo{$trait_list[$i]}->format();
 	    if ($format eq "numeric") { 
-		$ws->data_validation($n+6, $i+6, { validate => "any" });
+		$ws->data_validation($n+1, $i+1, { validate => "any" });
 	    }
 	    elsif ($format =~ /\,/) {  # is a list
-		$ws->data_validation($n+6, $i+6, 
+		$ws->data_validation($n+1, $i+1, 
 				     { 
 					 validate => 'list',
 					 value    => [ split ",", $format ]
