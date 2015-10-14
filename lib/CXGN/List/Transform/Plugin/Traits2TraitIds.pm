@@ -33,7 +33,8 @@ sub transform {
     foreach my $term (@$list) { 
 	my $missing_flag = 0;
 	my $rs; 
-	my ($db, $name) = split ":", $term;
+	my ($trait_name, $full_accession) = split (/\|/ , $term);
+	my ($db, $accession) = split ":", $full_accession;
 	
 	my $db_rs = $schema->resultset("General::Db")->search( 
 	    { 
@@ -47,7 +48,7 @@ sub transform {
 	    my $db_id = $db_rs->first()->db_id();
 	    $rs = $schema->resultset("Cv::Cvterm")->search(
 		{ 
-		    name => $name, db_id => $db_id
+		    'dbxref.accession' => $accession, db_id => $db_id
 		},
 		{
 		    join => 'dbxref'
