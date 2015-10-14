@@ -301,7 +301,7 @@ sub get_phenotype_info {
 
     my $order_clause = " order by project.name, plot.uniquename";
 
-    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, cvterm.name, stockprop.value, block_number.value AS rep
+    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, dbxref.accession, stockprop.value, block_number.value AS rep
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) 
              JOIN stock ON (object_id=stock.stock_id) 
              LEFT JOIN stockprop ON (plot.stock_id=stockprop.stock_id)
