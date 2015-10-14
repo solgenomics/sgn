@@ -1,0 +1,38 @@
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" href="/cview/">Maps</a>
+<!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools<span class="caret"></span></a> -->
+  <ul class="dropdown-menu">
+    
+    <li><a href="/cview/index.pl">All Maps</a></li>
+    <li><a href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Viewer</a></li>
+    <li><a href="/cview/help/map_submission">Submit a map</a></li>
+    <li role="separator" class="divider"></li>
+    
+    <li class="dropdown-header">Tomato</li>
+    <li><a href="/cview/map.pl?map_id=9&amp;show_offsets=1&amp;show_ruler=1">Tomato-EXPEN 2000</a></li>
+    <li><a href="/cview/map.pl?map_id=31&amp;show_offsets=1&amp;show_ruler=1">Tomato-Kazusa/SolCAP</a></li>
+    <li><a href="/cview/map.pl?map_id=34&amp;show_offsets=1&amp;show_ruler=1">Tomato QTLs</a></li>
+    <li><a href="/cview/map.pl?map_id=p9&amp;show_offsets=1&amp;show_ruler=1">Tomato physical map</a></li>
+    <li><a href="/cview/map.pl?map_id=c9&amp;show_offsets=1&amp;show_ruler=1">Tomato FPC contig map</a></li>
+    <li><a href="/cview/map.pl?map_id=il6&amp;show_offsets=1&amp;show_ruler=1">Tomato IL map</a></li>
+    <li><a href="/cview/map.pl?map_id=13">Tomato FISH map</a></li>
+    <li><a href="/cview/map.pl?map_id=agp">Tomato AGP map</a></li>
+    <li role="separator" class="divider"></li>
+    
+    <li class="dropdown-header">Pepper</li>
+    <li><a href="/cview/map.pl?map_version_id=58">Pepper COSII map</a></li>
+    <li><a href="/cview/map.pl?map_id=11">Pepper-AC99</a></li>
+    <li><a href="/cview/map.pl?map_id=10">Pepper-FA03</a></li>
+    <li role="separator" class="divider"></li>
+    
+    <li class="dropdown-header">Eggplant</li>
+    <li><a href="/cview/map.pl?map_version_id=63">Eggplant COSII map</a></li>
+    <li><a href="/cview/map.pl?map_id=6">Eggplant-LXM 2002</a></li>
+    <li role="separator" class="divider"></li>
+    
+    <li class="dropdown-header">More Maps</li>
+    <li><a href="/cview/map.pl?map_id=3">Potato-TXB 1992</a></li>
+    <li><a href="/cview/map.pl?map_id=15">Tobacco SSR 2007</a></li>
+    <li><a href="/cview/map.pl?map_id=7&amp;show_offsets=1&amp;show_ruler=1">Arabidopsis COSII</a></li>
+    
+  </ul>
+</li>

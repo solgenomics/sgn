@@ -23,6 +23,9 @@ $trial_name
 @accession_names
 @control_names
 @plot_names
+$plot_length => "unknown"
+$plot_width => "unknown"
+$plant_per_plot => "unknown"
 $design_type
 $number_of_blocks
 $number_of_replicates
@@ -31,7 +34,7 @@ $design_layout_view
 $user_can_modify => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
 <%perl>
 
@@ -69,54 +72,87 @@ if (!$design_type eq "") {
 }
 my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Download Field Book</a>]';
 
-my $subtitle = qq{[<a id="show_change_breeding_program_link">change</a>] } if $user_can_modify;
+my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link">change</a>] } if $user_can_modify;
 
 print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </%perl>
 
+<br/>
+
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<table><tr><td width="365" valign="top">
-<&| /page/info_section.mas, title=>"Breeding program", subtitle=>$subtitle &>
-% ## foreach my $bp (@$breeding_program) { 
-% ##  print $bp->[1] . "&nbsp;(".$bp->[2].")"; 
-% ##  if ($user_can_modify) { print " <a title=\"remove program\" id=\"delete_breeding_program_trial_association_link\"><font color=\"red\"><b>X</b></font></a>"; }
-% ##}
+<&| /page/info_section.mas, title=>"Trial details" &>
 
-<div id="breeding_programs">
+
+
+<table class="table" ><tr><td valign="top">
+<b>Breeding Program </b></td><td valign="top">
+<span id="breeding_programs">
   [loading...]
-</div>
-
-</&>
-
-</td><td valign="top" >
-<&| /page/info_section.mas, title=>"Trial type", subtitle=>"[<a id=\"edit_trial_type\" >change</a>]" &>
+</span>
+</td>
+<td>
+ <% $change_breeding_program_link %>
+</td>
+</tr>
+<tr>
+<td valign="top" >
+  
+  <b>Trial Type</b>
+</td><td>
   <div id="trial_type">
     [loading...]
   </div>
-</&>
-
+</td><td>
+  [<a id="edit_trial_type" >change</a>]
 </td></tr>
-<tr><td valign="top" >
 
-<&| /page/info_section.mas, title=>"Year(s)", subtitle => '[<a id="change_year_link">change</a>]' &>
+<tr><td valign="top" >
+    <b>Year</b>
+</td><td>
   <div id="trial_year">
     [loading...]
   </div>
-
-</&>
-</td><td valign="top" width="365" >
-<&| /page/info_section.mas, title=>"Location(s)", subtitle=>"[<a id=\"change_trial_location_link\">change</a>]" &>
-
+</td><td>
+[<a id="change_year_link">change</a>]
+</td></tr>
+<tr><td valign="top" >
+<b>Trial Location</b>
+</td><td>
 <div id="trial_location">
   [loading...]
-</&>
+ </div>
 
-</div>
+</td><td>
+[<a id="change_trial_location_link">change</a>]
+</td></tr>
+
+
+<tr><td>
+<b>Planting Date</b>
+</td><td>
+    <div id="planting_date">[loading...]</div>
+    </td><td>
+    [<a id="change_planting_date_link">change</a>]
+    </td></tr>
+
+<tr><td>
+<b>Harvest Date</b>
+</td><td>
+    <div id="harvest_date">[loading...]</div>
+    </td><td>
+    [<a id="change_harvest_date_link">change</a>]
+    </td></tr>
+
+<tr><td>
+
+<b>Description</b>
+</td><td>
+<div id="trial_description">[loading...]</div>
+</td><td>
+[<a id="edit_trial_description">edit</a>]
 </td></tr></table>
 
-<&| /page/info_section.mas, title=>"Description", collapsible=>0, collapsed=>0, hide_if_empty=>0, is_empty=> $description_empty, subtitle=>"[<a id=\"edit_trial_description\">edit</a>]" &>
-<div id="trial_description">[loading...]</div>
 </&>
 
 <div id="edit_trial_description_dialog">
@@ -132,11 +168,25 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <div id="change_trial_location_dialog">
   Please choose the location fro this trial:<br />
   <div id="trial_location_select_div" /></div>
-
 </div>
 
-<&| /page/info_section.mas, title=>"Physical Trial Layout", subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
+<div id="change_planting_date_dialog">
+  Please enter a planting date:<br />
+  <input id="planting_date_picker"></input>
+</select>
+    
+</div>
+
+<div id="change_harvest_date_dialog">
+  Please enter a harvest date [MM/DD/YYYY]:<br />
+  <input id="harvest_date_picker"></input>
+</div>
+
+
+<&| /page/info_section.mas, title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
+
   <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
+ 
 </&>
 
 <& /breeders_toolbox/trial/trial_coords_spreadsheet_upload_format_info.mas &>
@@ -187,10 +237,13 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
 
-% print STDERR "Check 8 (mason) : ".(time() - $start_time)."\n";
+%print STDERR "Check 8 (mason) : ".(time() - $start_time)."\n";
 %print "Design: $design_type <br /><br />";
 %print "Number of blocks: $number_of_blocks <br />";
 %print "Number of replicates: $number_of_replicates <br />";
+%print "Plot length: $plot_length <br />";
+%print "Plot width: $plot_width <br />";
+%print "Plants per plot: $plant_per_plot <br />";
 
 <br /><br />
 
@@ -244,6 +297,8 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
     </&>
     <&| /page/info_section.mas, title=>"Android Field Book Layout", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_fieldbook_link">Create Field Book</a>]' &>
     </&>
+    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
+    </&>
   </&>
   <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
     <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_phenotyping_spreadsheet_link">Upload</a>]'&>
@@ -261,7 +316,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   
 </&>
 
-<&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
+<&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
   <& /breeders_toolbox/trial/trial_deletion.mas, trial_id => $trial_id  &>
 
 </&>
@@ -301,6 +356,23 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   </div>
 </div>
 
+<div id="create_DataCollector_dialog" title="Create Data Collector Spreadsheet" style="display:none;">
+  <div id="trait_list_dc" name="trait_list">
+    <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
+    </label>
+  </div>
+</div>
+
+<div id="data_collector_saved_dialog_message" title="Data collector spreadsheet" style="display:none;">
+  <p>
+    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    The data collector spreadsheet file was saved successfully
+  </p>
+  <p>
+    <a id="data_collector_download_link">Download File</a>
+  </p>
+</div>
+
 <div id="change_breeding_program_dialog">
   Please select a breeding program for this trial:<br />
   <div id="change_breeding_program_select_div">
@@ -332,6 +404,8 @@ jQuery(document).ready(function () {
 
   display_trial_year();
 
+  display_harvest_date();
+
   var type = get_trial_type(<% $trial_id %>);
 
   display_trial_type(type);
@@ -352,9 +426,6 @@ jQuery(document).ready(function () {
 	}
     });
 
-
-
 });
 
 </script>
- 

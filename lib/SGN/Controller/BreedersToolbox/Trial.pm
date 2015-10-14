@@ -85,6 +85,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $block_numbers = $trial_layout->get_block_numbers();
     my $replicate_numbers = $trial_layout->get_replicate_numbers();
     my $design_ref;
+    my $plot_dimensions = $trial_layout->get_plot_dimensions();
     my %design;
     my %design_info;
 
@@ -112,6 +113,10 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{trial_description} = $trial_description;
     $c->stash->{design} = \%design;
     $c->stash->{design_layout_view} = $design_layout_view_html;
+    $c->stash->{plot_length} = $plot_dimensions->[0];
+    $c->stash->{plot_width} = $plot_dimensions->[1];
+    $c->stash->{plant_per_plot} = $plot_dimensions->[2];
+
     my $number_of_blocks;
     if ($block_numbers) {
       $number_of_blocks = scalar(@{$block_numbers});
@@ -254,14 +259,20 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 	$plugin = "TrialPhenotypeExcel";
     }
     if (($format eq "csv") && ($what =~ /phenotype/)) { 
-	$plugin = "TrialPhenotoypeCSV";
+	$plugin = "TrialPhenotypeCSV";
     }
     if (($format eq "xls") && ($what eq "basic_trial_excel")) { 
 	$plugin = "BasicExcel";
     }
+    
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $trial_name = $trial_layout->get_trial_name();
 
     my $dir = $c->tempfiles_subdir('download');
-    my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
+    my $temp_file_name = $trial_name . "_" . "$what" . "XXXX";
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
     print STDERR "TEMPFILE : $tempfile\n";
@@ -277,7 +288,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
       my $error = $download->download();
 
-      my $file_name = basename($tempfile);    
+      my $file_name = $trial_name . "_" . "$what" . ".$format";
      $c->res->content_type('Application/'.$format);    
      $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
 

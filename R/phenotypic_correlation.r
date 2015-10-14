@@ -59,27 +59,6 @@ formattedPhenoFile <- grep("formatted_phenotype_data",
 formattedPhenoData <- c()
 phenoData <- c()
 
-if ( length(refererQtl) != 0 ) {
-
-  phenoData <- read.csv(phenoDataFile,
-                        header=TRUE,
-                        row.names = NULL,
-                        dec=".",
-                        sep=",",
-                        na.strings=c("NA", "-", " ", ".", "..")
-                        )
- 
-} else {
-
-  phenoData <- read.table(phenoDataFile,
-                          header = TRUE,
-                          row.names = NULL,
-                          sep = "\t",
-                          na.strings = c("NA", " ", "--", "-", ".", ".."),
-                          dec = "."
-                          )
-} 
-
 if (file.info(formattedPhenoFile)$size > 0 ) {
 
   formattedPhenoData <- read.table(formattedPhenoFile,
@@ -89,17 +68,28 @@ if (file.info(formattedPhenoFile)$size > 0 ) {
                                    na.strings = c("NA", " ", "--", "-", "."),
                                    dec = "."
                                    )
-  } else {
+} else {
+
+  if ( length(refererQtl) != 0 ) {
+    
+    phenoData <- read.csv(phenoDataFile,
+                          header=TRUE,
+                          dec=".",
+                          sep=",",
+                          na.strings=c("NA", "-", " ", ".", "..")
+                          )
  
+  } else {
+
     phenoData <- read.table(phenoDataFile,
                             header = TRUE,
                             row.names = NULL,
                             sep = "\t",
-                            na.strings = c("NA", " ", "--", "-", "."),
+                            na.strings = c("NA", " ", "--", "-", ".", ".."),
                             dec = "."
                             )
-  }
-
+  } 
+}
 
 allTraitNames <- c()
 nonTraitNames <- c()
@@ -110,8 +100,9 @@ if (length(refererQtl) != 0) {
   nonTraitNames <- c("ID")
 
   allTraitNames <- allNames[! allNames %in% nonTraitNames]
-  
-} else if (file.info(formattedPhenoFile)$size == 0) {
+
+} else if (file.info(formattedPhenoFile)$size == 0 && length(refererQtl) == 0) {
+
   dropColumns <- c("uniquename", "stock_name")
   phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
 
@@ -122,8 +113,8 @@ if (length(refererQtl) != 0) {
  
 }
 
-
-if (!is.null(phenoData)) {
+if (!is.null(phenoData) && length(refererQtl) == 0) {
+  
   for (i in allTraitNames) {
 
     if (class(phenoData[, i]) != 'numeric') {
@@ -136,11 +127,8 @@ if (!is.null(phenoData)) {
   }
 }
 
-
 phenoData     <- phenoData[, colSums(is.na(phenoData)) < nrow(phenoData)]
 allTraitNames <- names(phenoData)[! names(phenoData) %in% nonTraitNames]
-    
-
 
 ###############################
 if (length(refererQtl) == 0  ) {
@@ -264,7 +252,7 @@ if (length(refererQtl) == 0  ) {
                               "ID",
                               colwise(mean, na.rm=TRUE)
                               )
-  
+
   row.names(formattedPhenoData) <- formattedPhenoData[, 1]
   formattedPhenoData[, 1] <- NULL
 

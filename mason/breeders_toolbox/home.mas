@@ -6,6 +6,8 @@
 
 <& /page/page_title.mas, title=>'Breeder Tools' &>
 
+<div class="container-fluid">
+
 <dl>
 <dt><a href="/breeders/manage_programs">Breeding Programs</a></dt>
 <dd>Add new breeding program information.</dd>
@@ -13,8 +15,11 @@
 <dt><a href="/breeders/accessions">Accessions</a></dt>
 <dd>Manage accessions. Add new accessions using fuzzy matching.</dd>
 
-<dt><a href="/breeders/trials">Trials</a></dt>
+<dt><a href="/breeders/trials">Field Trials</a></dt>
 <dd>Manage trials. Add new trials and create field layouts.</dd>
+
+<dt><a href="/breeders/genotyping">Genotyping Trials</a></dt>
+<dd>Upload and manage IGD genotyping trials.</dd>
 
 <dt><a href="/breeders/locations">Locations</a></dt>
 <dd>Manage locations. Add/remove locations</dd>
@@ -34,7 +39,7 @@
 <dt><a href="/breeders/download">Download Data</a></dt>
 <dd>Download phenotypic and genotypic data by trial, triat and location.</dd>
 
-
+</div>
 
 
 

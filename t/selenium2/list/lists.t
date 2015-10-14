@@ -12,7 +12,7 @@ $d->login_as("submitter");
 
 $d->get_ok("/", "get root url test");
 
-my $out = $d->find_element_ok("lists_link", "id", "find lists_link")->click();
+my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
 
 # delete the list should it already exist
 #
@@ -59,6 +59,7 @@ my $button = $d->find_element_ok("close_list_item_dialog", "id", "find close_lis
 
 $button->click();
 
+sleep(1);
 print "Delete test list...\n";
 
 $d->find_element_ok("delete_list_new_test_list", "id", "find delete test list button")->click();

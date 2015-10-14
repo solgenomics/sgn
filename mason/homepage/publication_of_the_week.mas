@@ -32,9 +32,13 @@ eval {
 
 </%perl>
 
+<!--
 <div class="boxbgcolor1" style="margin:0px;">
 <div class="boxheading">Featured publication</div>
 <div class="boxcontent"><% $publications %>
 <a href="oldpublications.pl">See all publications...</a></div>
+-->
 
-</div>
+<h4>Featured Publication</h4>
+<% $publications %>
+<button class="btn btn-info btn-sm" onclick='location.href="/oldpublications.pl"'>See all publications...</button>

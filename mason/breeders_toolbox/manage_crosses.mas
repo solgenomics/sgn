@@ -8,10 +8,14 @@ $user_id
 </%args>
 
 <br />
-<& /page/page_title.mas, title => "Manage crosses" &>
+<& /page/page_title.mas, title => "Manage Crosses" &>
 
-<&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_crosses_link" >Upload crosses</a>]    [<a id="add_cross_link" >Add cross</a>]' &>
+<div class="container-fluid">
 
-  <& /breeders_toolbox/crosses.mas, cross_populations=>$cross_populations, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles  &>
+<&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_cross_link" >Add Cross</a>]    [<a id="upload_crosses_link" >Upload Crosses File</a>]' &>
+
+<& /breeders_toolbox/crosses.mas, cross_populations=>$cross_populations, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles  &>
 
 </&>
+
+</div>

@@ -338,7 +338,7 @@ sub delete_list_action :Path('/list/delete') Args(0) {
 	return;
     }
     
-    my $error = CXGN::List::delete_list($c->dbc->dbh(), $list_id);
+    $error = CXGN::List::delete_list($c->dbc->dbh(), $list_id);
 
     if ($error) { 
 	$c->stash->{rest} = { error => $error };

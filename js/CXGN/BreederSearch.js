@@ -597,11 +597,11 @@ function copy_hash(hash) {
 }
 
 function disable_ui() { 
-    jQuery('#working').dialog("open");
+    jQuery('#working_modal').modal("show");
 }
 
 function enable_ui() { 
-     jQuery('#working').dialog("close");
+     jQuery('#working_modal').modal("hide");
 }
 
 function show_list_total_count(count_div, total_count, selected) { 

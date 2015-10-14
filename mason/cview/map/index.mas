@@ -147,6 +147,8 @@ $parent2_stock_name => '(unknown)'
 
 <& /page/page_title.mas, title=> $short_name &>
 
+<div class="container-fluid">
+
 <div id="pagetitle2"><center><h3><%$long_name%></h3></center></div>
 
 % if ($private) {
@@ -191,33 +193,38 @@ $parent2_stock_name => '(unknown)'
 % my ($stock1_link, $stock2_link) = ("", "");
 % $parent1_stock_id ?  $stock1_link='' : $stock1_link = "/stock/$parent1_stock_id/view";
 % $parent2_stock_id ?  $stock2_link='' : $stock2_link = "/stock/$parent2_stock_id/view";
-<&| /page/info_section.mas, title=>"Parents of mapping population" &>
-Parent 1 <a href="<% $stock1_link %>"><% $parent1_stock_name %></a><br />
-Parent 2 <a href="<% $stock2_link %>"><% $parent2_stock_name %></a><br />
+<&| /page/info_section.mas, collapsible => 1, title=>"Parents of Mapping Population" &>
+<p>Parent 1 <a href="<% $stock1_link %>"><% $parent1_stock_name %></a></p>
+<p>Parent 2 <a href="<% $stock2_link %>"><% $parent2_stock_name %></a></p>
 </&>
 
 
 % my $total = 0; 
-% my $html = '<table><tr><td></td><td width="30">&nbsp;</td><td>markers</td></tr>';
-% foreach (@$chromosome_stats) { $html .= "<tr><td>$_->[0]&nbsp;</td><td></td><td>$_->[1]</td></tr>"; $total += $_->[2];  }
-% $html .= '<tr><td colspan="3"></td></tr>';
-% $html .= '<tr><td><b>Total:</b></td><td></td><td>'.$total.'</td></tr>';
+% my $html = '<table class="table table-hover table-condensed table-bordered"><thead><tr class="info"><th>Chromosome</th><th>Markers</th></tr></thead><tbody>';
+% foreach (@$chromosome_stats) { $html .= "<tr><td>$_->[0]</td><td>$_->[1]</td></tr>"; $total += $_->[2];  }
+% $html .= '<tr><td><b>Total:</b></td><td>'.$total.'</td></tr></tbody>';
 % $html .= '</table>';
 <&| /page/info_section.mas, 
-  title => 'Map statistics',
+  title => 'Map Statistics',
   collapsible => 1,
   collapsed => 0,
  &>
-<table><tr>
-<td>
-<% $html %>
 
-</td>
-<td width="40">&nbsp;</td>
-<td><% $marker_stats %></td>
-</tr></table>
+<div class="row">
+  <div class="col-sm-6 col-md-6 col-lg-6">
+    <% $html %>
+  </div>
+  <div class="col-sm-6 col-md-6 col-lg-6">
+    <div class="panel panel-info">
+      <div class="panel-heading">Overview</div>
+      <div class="panel-body">
+        <% $marker_stats %>
+      </div>
+    </div>
+  </div>
+</div>
 </&>
 
 <& /page/comments.mas, object_type=>"map", object_id => $map_version_id,  referer => $referer &>
 
-
+</div>

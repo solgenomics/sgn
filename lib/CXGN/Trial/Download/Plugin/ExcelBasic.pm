@@ -1,4 +1,3 @@
-
 package CXGN::Trial::Download::Plugin::ExcelBasic;
 
 use Moose::Role;
@@ -29,7 +28,7 @@ sub download {
 
     my $workbook = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $workbook->add_worksheet();
-
+	
     # generate worksheet headers
     #
     my $bold = $workbook->add_format();
@@ -43,7 +42,8 @@ sub download {
     $ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
     $ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
     $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
-    $ws->data_validation(2,3, { validate => "date" }); 
+    $ws->data_validation(2,3, { validate => "date" });
+    
 
     my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
     for(my $n=0; $n<@column_headers; $n++) { 

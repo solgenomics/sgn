@@ -162,7 +162,8 @@ eval {
     my @markers = $ss->row_labels(); # row labels are the marker names
     my @columns = $ss->column_labels(); # column labels are the headings for the data columns
     # make sure the spreadsheet is how we expect it to be
-    @columns = qw | MARKER MARKER_ID LINKAGE_GROUP POSITION CONFIDENCE PROTOCOL | # modify columns as necessary
+    @columns = qw | MARKER LINKAGE_GROUP POSITION CONFIDENCE PROTOCOL | # modify columns as necessary
+    # @columns = qw | MARKER MARKER_ID LINKAGE_GROUP POSITION CONFIDENCE PROTOCOL | # modify columns as necessary
 	or die"Column headings are not as expected";
 
     # for all the (uncleaned) marker names in the spreadsheet

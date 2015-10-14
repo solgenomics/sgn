@@ -137,6 +137,8 @@ sub save_topic {
 
     $page->header();
 
+    print page_title_html("Store your topic");
+
     print <<HTML;
 
     Steps: Configure topic</b> -\> Review topic -\> <b>Store topic</b><br /><br /> 
@@ -160,15 +162,16 @@ sub delete_topic {
 
     $page->header();
 
+    print page_title_html("Delete your topic");
+
     print <<HTML;
-        
+    <div class="container-fluid">
     <b>SGN Forum:</b> Delete the following topic, including <b>$topic_post_count</b> posts?</b><br /><br />\n
 
-	<table width="100%" class ="boxbgcolor2"><tr><td>
+	<div class="panel panel-default"><div class="panel-body">
 	<b>$topic_name</b><br /><br />
 	$topic_desc
-	<br /><br />
-	</td></tr></table>
+	</div></div>
 	
 	<br />
 	
@@ -179,10 +182,11 @@ sub delete_topic {
 	
     <input type="hidden" name="action" value="confirm_delete" />
 	<input type="hidden" name="topic_id" value="$topic_id" />
-	<input type="submit" value="delete topic" />\n
+	<input class="btn btn-primary"type="submit" value="delete topic" />\n
 	</form><br />\n
 	</td></tr></table>
 	<br /><br /><br />
+    </div>
 
 HTML
 
@@ -196,6 +200,8 @@ sub confirm_delete_topic {
     my $delete_count = ( $topic->delete() - 1 );
 
     $page->header();
+
+    print page_title_html("Topic deleted");
     print <<HTML;
 
     <b>SOL Forum</b>: Topic deleted.<br /><br />
@@ -226,17 +232,20 @@ sub review_topic {
         $sort_order_message = "Latest post shown at the top.";
     }
 
-    print $page->header();
+    $page->header();
+
+    print page_title_html("Review your topic");
+
     print <<HTML;
-    
-    Steps: Configure topic</b> -\> <b>Review topic</b> -\> Store topic<br /><br /> 
+    <div class="container-fluid">
+    Steps: Configure topic -\> <b>Review topic</b> -\> Store topic<br /><br /> 
     Please verify the following topic submission: <br /><br />
 
-    <table class="boxbgcolor2" width="100%"><tr><td>
+    <div class="panel panel-primary"><div class="panel-body">
     <b>Topic name</b>: $topic_name<br /><br />
     <b>Topic Description</b>:<br />$display_topic_desc<br /><br />\n
     <b>Other configurations</b>: $sort_order_message<br /><br />\n
-    </td></tr></table>
+    </div></div>
     <br />
     
     <table width="100%"><tr><td align="left">
@@ -246,7 +255,7 @@ sub review_topic {
 	<input type="hidden" name="subject" value="$topic_name" />
 	<input type="hidden" name="topic_description" value="$topic_desc" />
 	<input type="hidden" name="sort_order" value="$sort_order" />
-	<input type="submit" value="Edit Topic" />
+	<input class="btn btn-info" type="submit" value="Edit Topic" />
 	
 	</form>
 	</td><td align="center">
@@ -258,13 +267,14 @@ sub review_topic {
 	<input type="hidden" name="topic_id" value="$topic_id" />
 	<input type="hidden" name="subject" value="$topic_name" />
 	<input type="hidden" name="topic_description" value="$topic_desc" />
-	<input type="submit" value="store topic"  />
+	<input class="btn btn-primary" type="submit" value="store topic"  />
 	
 	</form>
 	</td></tr></table>
+     </div>
 HTML
 
-    print $page->footer();
+    $page->footer();
 
 }
 
@@ -309,14 +319,14 @@ sub show_form {
 	<input type="radio" name="sort_order" value="asc"  />Latest entry at the top<br />
 	<input type="radio" name="sort_order" value="desc" checked="1" />Latest entry at the bottom<br />
 	<br />
-	Topic subject: <input name="subject" value="$subject"><br /><br />
+	Topic subject: <input class="form-control" name="subject" value="$subject"><br /><br />
 	Post Text:<br />
-	<textarea rows="5" cols="80" name="topic_description">$topic_description</textarea>
+	<textarea class="form-control" rows="5" cols="80" name="topic_description">$topic_description</textarea>
 	<br /><br />
 
 	<table width="100%" summary="">
 	<tr><td><a href="topics.pl">Back to forum</a></td>
-	<td align="right"><input type=submit value="Review topic" /></td>
+	<td align="right"><input class="btn btn-primary" type=submit value="Review topic" /></td>
 	</tr></table>
 	</form>
 

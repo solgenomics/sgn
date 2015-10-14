@@ -1128,7 +1128,7 @@ sub cache_temp_path
     my $tempimages_path =
       File::Spec->catfile( $basepath, $tempfile_dir, "temp_images" );
 
-    my $prod_rqtl_path  = $c->get_conf('r_qtl_temp_path');  
+    my $prod_rqtl_path  = $c->config->{solqtl};  
     my $rqtl_cache_path = "$prod_rqtl_path/cache"; 
     my $rqtl_temp_path  = "$prod_rqtl_path/tempfiles";
   
