@@ -181,7 +181,7 @@ sub create_correlation_phenodata_file {
         my $pop_id = $c->stash->{pop_id};
        
         my $pheno_exp = "phenodata_${pop_id}";
-        my $dir       = catdir($c->path_to($c->config->{r_qtl_temp_path}), 'cache');
+        my $dir       = catdir($c->config->{solqtl}, 'cache');
        
         my $phenotype_file = $c->controller("solGS::solGS")->grep_file($dir, $pheno_exp);
        

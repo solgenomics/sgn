@@ -69,7 +69,7 @@ sub _verify {
     my @plots_missing = @{$plot_validator->validate($c->dbic_schema("Bio::Chado::Schema"),'plots',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($c->dbic_schema("Bio::Chado::Schema"),'traits',\@trait_list)->{'missing'}};
     if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
-	print STDERR "Plots or traits not valid\n";
+	print STDERR "StorePhenotypeX: Plots or traits not valid\n";
 	return;
     }
     foreach my $plot_name (@plot_list) {
@@ -78,7 +78,7 @@ sub _verify {
 	    #check that trait value is valid for trait name
 	}
     }
-    print STDERR "Plots and traits are valid\n";
+    print STDERR "StorePhenotypesX: Plots and traits are valid\n";
 
     ## Verify metadata
     if ($phenotype_metadata{'archived_file'} && (!$phenotype_metadata{'archived_file_type'} ||
@@ -162,14 +162,20 @@ sub store {
 
 	    foreach my $trait_name (@trait_list) {
 		print STDERR "trait: $trait_name\n";
-		my ($db_name, $trait_description) = split (/:/, $trait_name);
+		my ($trait_name_string, $full_accession) = split (/\|/, $trait_name);
+		my ($db_name, $accession ) = split (/:/, $full_accession);
+		
+		$accession =~ s/\s+$//;
+		$accession =~ s/^\s+//;
+		$db_name  =~ s/\s+$//;
+                $db_name  =~ s/^\s+//;
 
 		my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
 
 		my $trait_cvterm = $schema->resultset("Cv::Cvterm")
 		  ->find( {
 			     'dbxref.db_id' => $db_rs->first()->db_id(),
-			     'name'=>$trait_description 
+			     'dbxref.name'=>$accession 
 			    },
 			    {
 			     'join' => 'dbxref'
