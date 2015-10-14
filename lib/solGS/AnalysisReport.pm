@@ -234,7 +234,7 @@ sub report_status {
    
     my $email = Email::Simple->create(
 	header => [
-	    To      => '"Isaak" <isaak@localhost.localdomain>',
+	    To      => "$user_name <isaak@localhost.localdomain>",
 	    From    => '"Isaak Tecle" <isaak@localhost.localdomain',
 	    Subject => "Analysis result of $analysis_name",
 	],

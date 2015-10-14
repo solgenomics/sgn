@@ -21,8 +21,6 @@ use Algorithm::Combinatorics qw /combinations/;
 use Array::Utils qw(:all);
 use CXGN::Tools::Run;
 use JSON;
-use solGS::AnalysisProfile;
-use Async;
 
 BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
 
