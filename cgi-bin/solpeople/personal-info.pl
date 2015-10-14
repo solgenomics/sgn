@@ -464,7 +464,7 @@ sub display_page
 	print "</td><td>";
 
 	
-	print qq { <a href="http://gravatar.com/" class="footer" ><img src="http://gravatar.com/avatar/}. md5_hex(lc($person->get_contact_email())). qq {?d=mm" /></a>};
+	print qq { <a href="https://gravatar.com/" class="footer" ><img src="http://gravatar.com/avatar/}. md5_hex(lc($person->get_contact_email())). qq {?d=mm" /></a>};
 	print "</td></tr></table>";
 
 
