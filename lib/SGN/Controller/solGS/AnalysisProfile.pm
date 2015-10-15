@@ -262,6 +262,12 @@ sub structure_output_details {
     my %output_details = (); 
     
     my $base    = $c->req->base;
+    
+    if ( $base !~ /localhost/)
+    {
+	$base =~ s/:\d+//;    
+    } 
+    
     my $referer = $c->req->referer;
     
     my $analysis_page = $analysis_data->{analysis_page};
@@ -338,12 +344,12 @@ sub run_analysis {
 
     my $base =   $c->req->base;
     $analysis_page =~ s/$base/\//;
-
+   
     $c->stash->{background_job} = 1;
   
     my @selected_traits = @{$c->stash->{selected_traits}};
     
-    if ($analysis_page =~ /solgs\/analyze\/traits\//) 
+    if ($analysis_page =~ m/[(solgs\/analyze\/traits\/) | (solgs\/models\/combined\/trials\/)]/) 
     {   
 	if ($c->stash->{data_set_type} =~ /combined populations/)
 	{
@@ -360,7 +366,7 @@ sub run_analysis {
 	    $c->controller('solGS::solGS')->build_multiple_traits_models($c);
 	}	
     } 
-    elsif ($analysis_page =~ /solgs\/models\/combined\/trials\// )	  
+    elsif ($analysis_page =~ /solgs\/model\/combined\/trials\// )	  
     {
 	$c->stash->{combo_pops_id} = $c->stash->{pop_id};
 	my $trait_id = $c->stash->{selected_traits}->[0];		
