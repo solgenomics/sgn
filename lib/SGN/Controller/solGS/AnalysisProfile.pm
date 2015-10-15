@@ -157,7 +157,8 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     my $err_temp_file = $c->stash->{err_file_temp};
    
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    
+    my $status;
+   
     try 
     { 
         my $job = CXGN::Tools::Run->run_cluster_perl({
