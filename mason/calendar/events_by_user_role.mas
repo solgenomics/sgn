@@ -1,4 +1,4 @@
-<& /util/import_javascript.mas, classes => [ "moment_min", "fullcalendar", "jquery.dataTables", "fullcalendar_gcal", "bootstrap_datepicker" ] &>
+<& /util/import_javascript.mas, classes => [ "moment_min", "fullcalendar_min", "jquery.dataTables", "fullcalendar_gcal", "bootstrap_datepicker" ] &>
 
 <link rel="stylesheet" href="/css/datepicker.css" />
 
