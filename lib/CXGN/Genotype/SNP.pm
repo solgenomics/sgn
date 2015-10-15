@@ -58,6 +58,9 @@ sub from_vcf_string {
     $self->alt_allele($a2);
 
     my ($c1, $c2) = split /\,/, $counts;
+
+    if ($c1 eq ".") { $c1 = 0; }
+    if ($c2 eq ".") { $c2 = 0; }
     
     $self->ref_count($c1);
     $self->alt_count($c2);
