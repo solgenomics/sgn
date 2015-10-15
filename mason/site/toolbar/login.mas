@@ -3,7 +3,14 @@
 % if( $c->config->{'is_mirror'} ) {
     <a style="line-height: 1.2; text-decoration: underline; background: none" href="<% $c->config->{main_production_site_url} %>" title="log in on main site">main site</a>
 % } elsif ( $c->config->{disable_login} ) {
-    <span style="visibility: hidden">Site Login Disabled</span>
+
+  <li class="dropdown">
+    <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
+       <button class="btn btn-primary disabled" type="button" style="margin: 7px 7px 0px 0px">Login</button>
+    </div>
+
+  </li>
+
 % } elsif ( $c->req->uri->path_query =~ "logout=yes") {
 
   <li class="dropdown">

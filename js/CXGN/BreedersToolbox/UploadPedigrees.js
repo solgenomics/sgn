@@ -84,14 +84,14 @@ jQuery(document).ready(function ($) {
 	json: true,
 	post: function () {
             var uploadedPedigreesFile = $("#pedigrees_uploaded_file").val();
-	    $('#working').dialog("open");
+	    $('#working_modal').modal("show");
             if (uploadedPedigreesFile === '') {
-		$('#working').dialog("close");
+		$('#working_modal').modal("hide");
 		alert("No file selected");
             }
 	},
 	complete: function (response) {
-	    $('#working').dialog("close");
+	    $('#working_modal').modal("hide");
             if (response.error_string) {
 		$("#upload_pedigrees_error_display tbody").html('');
 		$("#upload_pedigrees_error_display tbody").append(response.error_string);
@@ -126,7 +126,7 @@ jQuery(document).ready(function ($) {
     });
 
         function upload_pedigrees_file() {
-        var uploadFile = $("#pedigrees_upload_file").val();
+        var uploadFile = $("#pedigrees_uploaded_file").val();
         $('#upload_pedigrees_form').attr("action", "/ajax/pedigrees/upload");
         if (uploadFile === '') {
 	    alert("Please select a file");
