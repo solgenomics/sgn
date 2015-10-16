@@ -59,8 +59,8 @@ sub from_vcf_string {
 
     my ($c1, $c2) = split /\,/, $counts;
 
-    if ($c1 eq ".") { $c1 = 0; }
-    if ($c2 eq ".") { $c2 = 0; }
+    if (! $c1 || $c1 eq ".") { $c1 = 0; }
+    if (! $c2 || $c2 eq ".") { $c2 = 0; }
     
     $self->ref_count($c1);
     $self->alt_count($c2);
