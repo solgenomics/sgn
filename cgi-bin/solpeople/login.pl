@@ -51,8 +51,7 @@ else {
 if ( $logout && $logout eq "yes" )              #if we are in the process of logging out
 {
     $login_controller->logout_user();
-    $page->message_page(
-        "You have successfully logged out. Thanks for using ".$context->get_conf("project_name"));
+
 }
 
 
@@ -126,17 +125,47 @@ else          #else we not trying to log in yet
 $page->header( 'Sol Genomics Network', 'Login' );
 print <<END_HTML;
 <div align="center">$message</div>
-<div align="center">Your browser must accept cookies for this interface to work correctly.</div>
+<div align="center">Your browser must accept cookies for this interface to work correctly.</div><br/>
 
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-2 col-md-3 col-lg-3">
+    </div>
+    <div class="col-sm-8 col-md-6 col-lg-6" align="center">
+<form class="form-horizontal" role="form" name="login" method="post" action="/solpeople/login.pl">
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Username: </label>
+    <div class="col-sm-9">
+      <input class="form-control" id="unamefield" type="text" name="username" value="" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Password: </label>
+    <div class="col-sm-9">
+      <input class="form-control" type="password" name="pd" value="" /><input type="hidden" name="goto_url" value="$goto_url" />
+    </div>
+  </div>
+  <button class="btn btn-primary" type="submit" name="login" value="Login" >Login</button>
+</form>    
+    </div>
+    <div class="col-sm-2 col-md-3 col-lg-3">
+    </div>
+  </div>
+</div>
+<br/>
+
+<!--
 <form name="login" method="post" action="/solpeople/login.pl">
   <table style="padding: 2em" summary="" cellpadding="2" cellspacing="0" border="0" align="center">
-  <tr><td>Username</td><td><input id="unamefield" type="text" name="username" size="30" value="" /></td></tr>
+  <tr><td>Username</td><td><input class="form-control" id="unamefield" type="text" name="username" size="30" value="" /></td></tr>
   <tr><td colspan="2"></td></tr>
-  <tr><td>Password</td><td><input type="password" name="pd" size="30" value="" /></td></tr>
-  <tr><td colspan="2" align="center"><br /><input type="submit" name="login" value="Login" /></td></tr>
+  <tr><td>Password</td><td><input class="form-control" type="password" name="pd" size="30" value="" /></td></tr>
+  <tr><td colspan="2" align="center"><br /><button class="btn btn-primary" type="submit" name="login" value="Login" >Login</button></td></tr>
   </table>
 <input type="hidden" name="goto_url" value="$goto_url" />
 </form>
+-->
+
 <div align="center">New user? <a href="/solpeople/new-account.pl">Sign up for an account</a>.<br />
 Forgot your password? <a href="/solpeople/send-password.pl">Get it here</a>.</div>
 <script language="JavaScript" type="text/javascript">

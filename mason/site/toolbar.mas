@@ -1,12 +1,87 @@
-<% $c->view('Toolbar')->as_html %>
+  
+<nav class="navbar navbar-default navbar-fixed-top">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <& toolbar/logo_and_name.mas &>
+    </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
+        <& toolbar/search_menu.mas &>
+        <& toolbar/maps.mas &>
+        <& toolbar/genomes.mas &>
+        <& toolbar/tools.mas &>
+        <& toolbar/about.mas &>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <& toolbar/search.mas &>
+        <& toolbar/login.mas &>
+      </ul>
+    </div>
+  </div>
+</nav>
+<br>
 
-<& /util/import_javascript.mas, classes => ['CXGN.Page.Toolbar','jquery', 'jquerymigrate'] &>
-<script language="JavaScript" type="text/javascript">
-jQuery( function() {
-  CXGN.Page.Toolbar.addmenu('search');
-  CXGN.Page.Toolbar.addmenu('maps');
-  CXGN.Page.Toolbar.addmenu('genomes');
-  CXGN.Page.Toolbar.addmenu('tools');
-  CXGN.Page.Toolbar.hideall();
+<style>
+  li {
+    margin-bottom:0;
+  }
+  body {
+    padding-top: 30px;
+  }
+  
+  @media (min-width: 0px) and (max-width: 768px) {
+    body {
+      padding-top: 30px;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 880px) {
+    body {
+      padding-top: 90px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .sgn_brand_name {
+      padding-left: 0px;
+      padding-right: 0px;
+    }
+    .sgn_brand_name {
+      padding-left: 0px;
+      padding-right: 0px;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .dropdown:hover .dropdown-menu {
+      display: block;
+      margin-top: 0;
+      padding-bottom: 10px;
+    }
+    .dropdown-menu > li > a {
+        line-height: 14px;
+        font-size: 14px;
+        margin-top:0px;
+        padding-top:0px;
+    }
+  }
+  
+</style>
+
+<script>
+
+( function($) {
+$( document ).ready(function() {
+  if ($( document ).width() > 768) {
+    $(".menu_click_dropdown").removeClass("dropdown-toggle");
+    $(".menu_click_dropdown").removeAttr("data-toggle");
+  }
 });
+} ) ( jQuery );
+
 </script>

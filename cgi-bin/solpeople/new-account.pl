@@ -117,7 +117,7 @@ END_HEREDOC
 
   $page->header();
 
-  print page_title_html("Create new account");
+  print page_title_html("Create New Account");
 
   print <<END_HEREDOC;
 
@@ -135,12 +135,12 @@ END_HEREDOC
   $page->header();
 
 
-  print page_title_html("Create new account");
+  print page_title_html("Create New Account");
 
   print <<END_HEREDOC;
 
 
-
+  <!--
   <div class='boxbgcolor5'><b>Please note:</b></a><br />
 
 
@@ -150,7 +150,80 @@ END_HEREDOC
       <li>A link will be emailed to you. Please click on it to activate the account.</li>
       <li><b>All fields are required.</b></li>
       </div>
+  -->
+      
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-2 col-md-2 col-lg-2">
+    </div>
+    <div class="col-sm-8 col-md-8 col-lg-8" >
+      <div class="panel panel-danger">
+        <div class="panel-heading">Notice</div>
+	<div class="panel-body">
+          <ul>
+	    <li><b>Before</b> creating a new account, please check if you <b>already have an account</b> using the <a href="/search/direct_search.pl?search=directory">directory search</a>. </li>
+	    <li>A link will be emailed to you. Please click on it to activate the account.</li>
+	    <li><b>All fields are required.</b></li>
+	  </ul>
+	</div>
+      </div>
 
+<form class="form-horizontal" role="form" name="submit_userdata" method="post" action="new-account.pl">
+  <div class="form-group">
+    <label class="col-sm-3 control-label">First Name: </label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" name="first_name" value="" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Last Name: </label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" name="last_name" value="" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Organization: </label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" name="organization" value="" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Username: </label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" name="username" value="" /><br/>Username must be at least 7 characters long.
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Password: </label>
+    <div class="col-sm-9">
+      <input class="form-control" type="password" name="password" value="" /><br/>Password must be at least 7 characters long and different from your username.
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Confirm Password: </label>
+    <div class="col-sm-9">
+      <input class="form-control" type="password" name="confirm_password" value="" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Email Address: </label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" name="email_address" value="" /><br/>An email will be sent to this address requiring you to confirm its receipt to activate your account.<br/>
+    </div>
+  </div>
+  <div align="right">
+    <button class="btn btn-default" type="reset" >Reset</button>
+    <button class="btn btn-primary" type="submit" name="create_account" value="Create Account" >Create Account</button>
+  </div>
+</form>    
+    </div>
+    <div class="col-sm-2 col-md-2 col-lg-2">
+    </div>
+  </div>
+</div>
+<br/>
+
+<!--
   <form name="submit_userdata" method="post" action="new-account.pl">
   <table summary="" cellpadding="2" cellspacing="2" width="80%" align="center">
 
@@ -170,8 +243,7 @@ END_HEREDOC
   <tr><td><input type="reset" /></td><td align="right"><input type="submit" name="create_account" value="Create Account" /></td></tr>
   </table>
   </form>
-  <br />
-  <br />
+-->
 
 END_HEREDOC
 

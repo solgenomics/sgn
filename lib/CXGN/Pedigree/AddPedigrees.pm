@@ -163,6 +163,7 @@ sub add_pedigrees {
 		      type_id => $female_parent_cvterm->cvterm_id(),
 		      object_id => $progeny_accession->stock_id(),
 		      subject_id => $female_parent->stock_id(),
+		      value => $cross_type,
 					   });
 	  }
 	  

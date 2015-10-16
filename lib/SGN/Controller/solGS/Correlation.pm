@@ -181,7 +181,7 @@ sub create_correlation_phenodata_file {
         my $pop_id = $c->stash->{pop_id};
        
         my $pheno_exp = "phenodata_${pop_id}";
-        my $dir       = catdir($c->path_to($c->config->{r_qtl_temp_path}), 'cache');
+        my $dir       = catdir($c->config->{solqtl}, 'cache');
        
         my $phenotype_file = $c->controller("solGS::solGS")->grep_file($dir, $pheno_exp);
        
@@ -256,7 +256,7 @@ sub genetic_correlation_output_files {
     my $type         = $c->stash->{type};
  
     my $pred_pop_id = $c->stash->{prediction_pop_id};
-    my $model_id    = $c->stash->{model_id};
+    $model_id    = $c->stash->{model_id};
     my $identifier  =  $type =~ /selection/ ? $model_id . "_" . $corre_pop_id :  $corre_pop_id; 
 
     my $solgs_controller = $c->controller("solGS::solGS");

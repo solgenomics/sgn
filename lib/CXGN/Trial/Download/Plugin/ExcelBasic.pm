@@ -1,4 +1,3 @@
-
 package CXGN::Trial::Download::Plugin::ExcelBasic;
 
 use Moose::Role;
@@ -29,7 +28,7 @@ sub download {
 
     my $workbook = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $workbook->add_worksheet();
-
+	
     # generate worksheet headers
     #
     my $bold = $workbook->add_format();
@@ -43,7 +42,8 @@ sub download {
     $ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
     $ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
     $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
-    $ws->data_validation(2,3, { validate => "date" }); 
+    $ws->data_validation(2,3, { validate => "date" });
+    
 
     my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
     for(my $n=0; $n<@column_headers; $n++) { 
@@ -68,14 +68,15 @@ sub download {
     my $transform = $lt->transform($schema, "traits_2_trait_ids", \@trait_list);
 
     if (@{$transform->{missing}}>0) { 
-	print STDERR "Warning: Some traits could not be found. ".join(",",@{$transform->{missing}})."\n";
+    	print STDERR "Warning: Some traits could not be found. ".join(",",@{$transform->{missing}})."\n";
     }
     my @trait_ids = @{$transform->{transform}};
-    
+
     my %cvinfo = ();
     foreach my $t (@trait_ids) { 
 	my $trait = CXGN::Trait->new( { bcs_schema=> $schema, cvterm_id => $t });
 	$cvinfo{$trait->display_name()} = $trait;
+	print STDERR "**** Trait = " . $trait->display_name . "\n\n";
     }
 									       
     for (my $i = 0; $i < @trait_list; $i++) { 
@@ -84,6 +85,7 @@ sub download {
 	}
 	else { 
 	    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
+	    next;
 	}
     
 	my $plot_count = scalar(keys(%design));

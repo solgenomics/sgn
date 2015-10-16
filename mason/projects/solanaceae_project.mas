@@ -1,19 +1,19 @@
-<& /page/page_title.mas,  title=>'International Solanaceae Genomics Project (SOL)<br />Systems Approach to Diversity and Adaptation' &>
+<& /page/page_title.mas,  title=>'Africayam data web-portal and bioinformatics platform' &>
 
+<!--
 <div class="indentedcontent">
 <table summary="">
 <tr><td style="vertical-align: middle">
-Over the coming decade the International Solanaceae Genome Project
-(SOL) will create a coordinated network of knowledge about the
-Solanaceae family aimed at answering two of the most important
-questions about life and agriculture:
+Africayam project will create a coordinated network of managing different data resoure and supplying a bioinformatics platform for enhancing yam breeding
 <ul>
+
 <li>How can a common set of genes/proteins give rise to such a wide
 range of morphologically and ecologically distinct organisms that
 occupy our planet?</li>
 <li>How can a deeper understanding of the genetic basis of
 diversity be harnessed to better meet the needs of society in an
 environmentally-friendly way?</li>
+
 </ul>
 On this page, you will find more information about the strategy
 used to answer these questions. A
@@ -67,6 +67,7 @@ framework. All texts and images can be used freely.</td>
 
 -->
 
+<!--
 </&>
 
 <a name="sol_newsletters">
@@ -123,6 +124,7 @@ framework. All texts and images can be used freely.</td>
 -->
 
 
+<!--
 <&| /page/info_section.mas, title=>'SOL White Paper' &>
 
 <dl>
@@ -151,10 +153,10 @@ parts:
     <td>Part IV &ndash; Tomato Sequencing Strategy</td>
     <td></td>
   </tr><tr>
-    <td><!-- a  href="/static_content/solanaceae-project/docs/tomato-standards.pdf" -->
+    <td><a  href="/static_content/solanaceae-project/docs/tomato-standards.pdf"
     <a href="http://docs.google.com/View?docid=dggs4r6k_1dd5p56">[Google doc]</a></td>
     <td>Part V &ndash; Bioinformatics Standards and Guidelines
-<!-- table><tr><td class="boxbgcolor4">Available as a Google document. <br />You can request edit privileges by <a href="mailto:sgn-feedback\@sgn.cornell.edu">contacting us</a>.</td></tr></table --><br />
+     table><tr><td class="boxbgcolor4">Available as a Google document. <br />You can request edit privileges by <a href="mailto:sgn-feedback\@sgn.cornell.edu">contacting us</a>.</td></tr></table <br />
     </td>
     <td></td>
   </tr><tr>
@@ -170,7 +172,7 @@ parts:
 
 
 
-<!-- 
+
 <dt><a name="callforbacs" id="callforbacs">Call for BACs -
 Sequencing your favorite BACs as part of SOL [March 11,
 2004]</a></dt>
@@ -181,7 +183,6 @@ part of the SOL tomato genome project, please submit it using
 are anchored to a genetic map are considered with high
 priority.</dd>
 
--->
 <&| /page/info_section.mas, title=>"International Solanaceae Meeting, Nov 15, 2003" &>
 
 Location: Washington, D.C. (Holiday Inn Dulles International)<br />
@@ -221,3 +222,4 @@ Refer to the <a href="sol-bioinformatics/index.pl">SOL bioinformatics pages</a> 
 
 </&>
 
+-->

@@ -12,10 +12,14 @@ eval {
 
 </%perl>
 
+<!--
 <div class="boxbgcolor1" style="margin:0px;">
 <div class="boxheading">Image of the week</div><br />
 <div class="center">
   <span class="tinytype"><% $IOTW %></span>
 </div>
 </div>
+-->
 
+<h4>Image of the Week</h4>
+<% $IOTW %>

@@ -20,6 +20,6 @@ eval {
 
 </%perl>
 
-<& /page/page_title.mas, title=>"All publications" &>
+<& /page/page_title.mas, title=>"All Publications" &>
 <% $publications %>
 

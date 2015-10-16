@@ -5,128 +5,122 @@ $captcha_public_key
 
 <& "/page/page_title.mas", title => "Contact $website_name" &>
 
+<div class="container-fluid">
+    <div class="well">
+
 % #The form
 <% $ENV{REMOTE_ADDR} %>
 <% ##$captcha_public_key %>
-<form method="POST" action= "/contact/submit" name = "contactForm">
-<div style="margin-left: 30px">
-<table summary="" border="0" cellpadding="5" cellspacing="5">
+  <form class="form-horizontal" role="form" method="POST" action="/contact/submit" name="contactForm">
 
 % #Uses Perl to print out the fields with similar HTML tags
 <%perl>
 my $infoNeeded = ["name", "email", "subject", ];
-my $defaultVal = {"name" => $name, 
-                      "email" => $email,
-                         "subject" => $subject};
+my $defaultVal = {"name" => $name, "email" => $email, "subject" => $subject};
 </%perl>
+
 % foreach my $info_category (@$infoNeeded) {
-<tr><td align="left" valign="top">
-<strong><% ucfirst $info_category %>*</strong>
-</td>
+    <div class="form-group">
+      <label class="col-sm-2 control-label"><% ucfirst $info_category %>* : 
+
 % # If user did not fill out a field and submitted the form, then it will 
 % # show in red letters above the field this field is needed above it. 
 % # Otherwise, the form is filled out normally.
 % unless ($filled{$info_category}) {
-</td>
-<td style = "color:red; font-size: 10px;" align = "left" valign = "top">     
-<% ucfirst $info_category %> is required 
-<br />
-% } else {
-<td align = "left" valign = "top"> 
-%}
-<input type="text" size="50" value="<% $$defaultVal{$info_category} |h%>"
-				name="<% $info_category %>" />
-</td></tr>
-% }     
-
-
-
-% # Body uses a text_area so it is hardcoded.
-% # Like the other inputs, it will display a red message above saying 
-% # "Message needed."
-<tr><td align="left" valign="top">
-<strong>Body*</strong>
-</td>
-% unless ($filled{body}) {
-<td style = "color:red; font-size: 10px;" align = "left" valign = "top">
-Message body is required
-<br />
-% } else {
-<td align = "left" valign = "top">
+      <p style = "color:red; font-size: 10px;"><% ucfirst $info_category %> is required.</p> 
 % }
-<textarea cols="77" rows="12" name="body"><% $body |h%></textarea>
-</td></tr>
+      </label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" value="<% $$defaultVal{$info_category} |h%>" name="<% $info_category %>"></input>
+      </div>
+    </div>
+% }
 
+    <div class="form-group">
+      <label class="col-sm-2 control-label">Body* : 
 
-<tr><td><strong>Are you human?*</strong><br />What is <% $contact_form_human_question %>?</td>
+% unless ($filled{body}) {
+      <p style = "color:red; font-size: 10px;">Message body is required.</p>
+% }
+      </label>
+      <div class="col-sm-10">
+        <textarea rows="12" class="form-control" name="body"><% $body |h%></textarea>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-2 control-label">What is <br/><% $contact_form_human_question %>?* : 
 
-<td>
 % if (!$contact_form_human_answer_correct) { 
-<font style = "color:red; font-size: 10px;" align = "left" valign = "top">     
+<font style = "color:red; font-size: 10px;" ><br/>
 % if (!$contact_form_human_answer) { 
-Prove that you are a human being is required<br /></font>
+Proving that you are a human being is required.<br /></font>
 % } else { 
-Either you are not human - or you are not very good at math! ;-)</font>
-<br />
+Either you are not human - or you are not very good at math! ;-)<br /></font>
 %    }
 % }
-  <input type="text" value="" name="contact_form_human_answer" size="4" />
+      </label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" value="" name="contact_form_human_answer"></input>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-2 control-label"></label>
+      <div class="col-sm-10">
+        <h5 valign="middle" style="color:red; font-size:90%; font-style:italic;">Fields Marked With <% '"*"' |h %> Are Required.</h5>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-2 control-label"></label>
+      <div class="col-sm-10">
+        <script type="text/javascript"
+     	  src="https://www.google.com/recaptcha/api/challenge?k=<% $captcha_public_key %>">
+        </script>
+  	<noscript>
+     	  <iframe src="https://www.google.com/recaptcha/api/noscript?k=<% $captcha_public_key %>" height="300" width="500" frameborder="0"></iframe><br>
+     	  <textarea name="recaptcha_challenge_field" rows="3" cols="40"></textarea>
+     	  <input type="hidden" name="recaptcha_response_field" value="manual_challenge">
+  	</noscript>
+      </div>
+    </div>
+    <hr>
+    <button style="float:right" type="submit" class="btn btn-primary btn-lg">Submit</button>
+    <br/><br/>
 
-</td></tr>
+  </form>
+  </div>
+  
+  <br/>
+  <h2>Contact Us</h2>
+  <br/>
+  <table class="table table-hover table-bordered">
+     <tbody>
+      <tr>
+        <td><b>Email</b></td>
+	<td>Note that the contact email address <% $email_address_to_display %> has been deactivated due to extreme levels of spam. <br/>Use this contact form instead.</td>
+      </tr>
+      <tr>
+        <td><b>Mailing Address</b></td>
+	<td>Sol Genomics Network<br />
+	Boyce Thompson Institute for Plant Research<br />
+	Room 221<br />
+	Tower Road<br />
+	Ithaca, NY 14853<br />
+	USA<br /></td>
+      </tr>
+      <tr>
+        <td><b>Phone</b></td>
+        <td>(607) 255-6557</td>
+      </tr>
+      <tr>
+        <td><b>Mailing List</b></td>
+        <td>To stay informed of developments at SGN you can subscribe to our <a href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">mailing list</a>. <br/>This is a low-volume list (usually no more than 2 messages per month).</td>
+      </tr>
+    </tbody>
+  </table>
 
-
-
-<tr><td colspan="2" align="center" valign="middle" style = "color:red; font-size: 90%; font-style:italic;">
-fields marked with <% '"*"' |h %> are required
-</td></tr>
-
-
-
-
-<tr><td>&nbsp;</td><td>
-<script type="text/javascript"
-     src="https://www.google.com/recaptcha/api/challenge?k=<% $captcha_public_key %>">
-  </script>
-  <noscript>
-     <iframe src="https://www.google.com/recaptcha/api/noscript?k=<% $captcha_public_key %>"
-         height="300" width="500" frameborder="0"></iframe><br>
-     <textarea name="recaptcha_challenge_field" rows="3" cols="40">
-     </textarea>
-     <input type="hidden" name="recaptcha_response_field"
-         value="manual_challenge">
-  </noscript>
-</td></tr>
-<tr><td colspan="2" align="center" valign="middle">
-<input type="submit" value="Submit" />
-</td></tr>
-</table>
+  </div>   
 </div>
-</form>
 
-<hr />
-<%perl>
-print info_table_html(
-    __border => 0,
-    'Email' => qq| Note that the contact email address $email_address_to_display has been deactivated due to extreme levels of spam. Use this contact form instead.</a>|,
-
-    'Mailing address' => <<EOH,
-Sol Genomics Network<br />
-Boyce Thompson Institute for Plant Research<br />
-Room 221<br />
-Tower Road<br />
-Ithaca, NY 14853<br />
-USA<br />
-Phone: (607) 255-6557<br />
-EOH
-
-    'Mailing list' => <<EOH,
-  <p>
-  To stay informed of developments at SGN you can subscribe to our <a href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">mailing list</a>. This is a low-volume list (usually no more than 2 messages per month).
-  </p>
-EOH
-
-);
-</%perl>
 
 <%args>
   $name                     => ''

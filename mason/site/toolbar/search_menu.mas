@@ -1,0 +1,29 @@
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" href="/search/">Search</a>
+  <ul class="dropdown-menu">
+    <li><a href="/search/organisms">Organisms</a></li>
+    <li><a href="/search/locus">Genes</a></li>
+    <li><a href="/search/features">Genome features</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li><a href="/search/expression">Expression</a></li>
+    <li><a href="/search/stocks">Phenotypes</a></li>
+    <li><a href="/search/phenotypes/qtl">QTLs</a></li>
+    <li><a href="/search/markers">Markers</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li><a href="/search/genomic/clones">BACs</a></li>
+    <li><a href="/search/transcripts/unigene">Unigenes</a></li>
+    <li><a href="/search/transcripts/est">ESTs and libraries</a></li>
+    <li><a href="/search/family">Gene Families</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li><a href="/insitu/">Insitu database</a></li>
+    <li><a href="/search/images">Images</a></li>
+    <li><a href="/search/people">People</a></li>
+    <li><a href="/help/faq.pl">FAQ</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li><a href="/search">Advanced Search</a></li>
+
+  </ul>
+</li>

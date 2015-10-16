@@ -34,7 +34,7 @@ $t->while_logged_in_as("submitter", sub {
 	"find latitude input test");
     $latitude->send_keys("blabla");
     my $submit_button = $t->find_element_ok(
-	"add_new_location_button",
+	"new_location_submit",
 	"id",
 	"find add_new_location_button test");
     $submit_button->click();

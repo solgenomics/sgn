@@ -1,0 +1,39 @@
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" href="/tools/">Tools</a>
+<!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools<span class="caret"></span></a> -->
+  <ul class="dropdown-menu">
+    <li class="dropdown-header">Sequence Analysis</li>
+    <li><a href="/tools/blast/">BLAST</a></li>
+    <li><a href="http://vigs.solgenomics.net/">VIGS Tool</a></li>
+    <li><a href="/tools/align_viewer/">Alignment Analyzer</a></li>
+    <li><a href="/tools/tree_browser/">Tree Browser</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Mapping</li>
+    <li><a href="/jbrowse/">Genome Browser (Jbrowse)</a></li>
+    <li><a href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Map Viewer</a></li>
+    <li><a href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></li>
+    <li><a href="/search/phenotypes/qtl">solQTL: QTL Mapping</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Molecular Biology</li>
+    <li><a href="/tools/insilicopcr">In Silico PCR</a></li>
+    <li><a href="/ted">Tomato Expression Database (TED)</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Systems Biology</li>
+    <li><a href="/tools/solcyc/">SolCyc Biochemical Pathways</a></li>
+    <li><a href="/tools/interactomics">Coffee Interactomic Data</a></li>
+    <li><a href="/tools/onto/">SGN Ontology Browser</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Breeder Tools</li>
+    <li><a href="/breeders/home">Breeders Toolbox</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Bulk Query</li>
+    <li><a href="/tools/bulk?mode=ftp">FTP Site</a></li>
+    <li><a href="/tools/bulk?mode=genes">Download Gene Sequences</a></li>
+    <li><a href="/tools/bulk">Clones, Arrays, Unigenes and BACs</a></li>
+    <li><a href="/tools/bulk?mode=converter">Unigene Converter</a></li>
+  </ul>
+</li>

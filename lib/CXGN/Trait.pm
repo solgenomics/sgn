@@ -36,8 +36,9 @@ has 'display_name' => (isa => 'Str',
 			   my $self = shift;
 			   my $db = $self->db();
 			   my $name = $self->name();
-			   if ($db && $name) { 
-			       return $db.":".$name;
+			   my $accession = $self->accession();
+			   if ($db && $name && $accession ) { 
+			       return $name ."|".$db.":".$accession;
 			   }
 			   return "";
 		       }

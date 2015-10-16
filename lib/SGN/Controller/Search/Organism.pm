@@ -49,35 +49,69 @@ sub build_form : Private {
       attributes:
         name: organism_search_form
         id: organism_search_form
+        class: form-horizontal
+      add_attributes:
+        role: form
       elements:
-          - type: Text
-            name: species
-            label: Species
-            size: 30
+          - type: Block
+            attributes: 
+              class: form-group
+            elements:
+              - type: Label
+                label_attributes: 
+                  class: col-sm-2 control-label
+                label: "Species:"
+              - type: Text
+                container_attributes:
+                  class: col-sm-10
+                name: species
+                attributes:
+                  class: form-control
 
-        # hidden form values for page and page size
-          - type: Hidden
-            name: page
-            value: 1
-          - type: Hidden
-            name: page_size
-            default: 20
+              # hidden form values for page and page size
+              - type: Hidden
+                name: page
+                value: 1
+              - type: Hidden
+                name: page_size
+                default: 20
 
-          - type: Text
-            name: common_name
-            label: Common Name
-            size: 30
+          - type: Block
+            attributes:
+              class: form-group
+            elements: 
+              - type: Label
+                label_attributes: 
+                  class: col-sm-2 control-label
+                label: "Common Name:"
+              - type: Text
+                container_attributes:
+                  class: col-sm-10
+                name: common_name
+                attributes:
+                  class: form-control
 
-          - type: Checkboxgroup
-            name: taxa
-            label: Taxa
+          - type: Block
+            attributes:
+              class: form-group
+            elements: 
+              - type: Label
+                label_attributes: 
+                  class: col-sm-2 control-label
+                label: "Taxa:"
+              - type: Checkboxgroup
+                container_attributes:
+                  class: col-sm-10
+                name: taxa
 
           - type: Submit
             name: submit
+            attributes:
+              class: btn btn-primary
 EOY
 
     # set the taxa multi-select choices from the db
-    $form->get_element({ name => 'taxa'})
+    $form->get_all_element({ name => 'taxa'})
          ->options( $c->stash->{taxa_choices} );
 
     return $form;
@@ -132,7 +166,7 @@ sub get_taxa_choices : Private {
     my ( $self, $c ) = @_;
 
     $c->stash->{taxa_choices} = [
-        map [$_->cvterm_id,$_->name],
+        map [$_->cvterm_id,ucfirst($_->name)],
         $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
              ->resultset('Organism::Organism')
              ->search_related('phylonode_organisms')

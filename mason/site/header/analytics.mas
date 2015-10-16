@@ -1,0 +1,13 @@
+
+% if( eval{ $c->get_conf('production_server') } ) {
+   <!-- Google Analytics Code -->
+   <script src="https://www.google-analytics.com/urchin.js" type="text/javascript"></script>
+
+   <script type="text/javascript">
+   _uacct = "UA-2460904-1";
+   //prevent js error on remote script load failure
+   if(typeof(urchinTracker) == "function"){
+   	urchinTracker();
+    }
+   </script>
+% }

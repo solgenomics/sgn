@@ -32,37 +32,42 @@ jQuery(document).ready(function ($) {
         $("#upload_crosses_form").submit();
     }
 
-    $( "#upload_crosses_dialog" ).dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-        width: 600,
-        position: ['top', 150],
-	buttons: {
-	    Ok: function() {
-                upload_crosses_file();
-		//$( this ).dialog( "close" );
-		//location.reload();
-	    }
-	}
+    $("#upload_crosses_submit").click( function () { 
+	$("#upload_crosses_dialog" ).modal("hide");
+	upload_crosses_file();
     });
 
+//    $( "#upload_crosses_dialog" ).dialog({
+//	autoOpen: false,
+//	modal: true,
+//	autoResize:true,
+//        width: 600,
+//        position: ['top', 150],
+//	buttons: {
+//	    Ok: function() {
+//                upload_crosses_file();
+//		//$( this ).dialog( "close" );
+//		//location.reload();
+//	    }
+//	}
+//    });
 
-    $( "#cross_upload_success_dialog_message" ).dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-            Ok: { id: "dismiss_cross_upload_dialog",
-                  click: function() {
-		      $("#upload_crosses").dialog("close");
-		      $( this ).dialog( "close" );
-		      location.reload();
-                  },
-                  text: "OK"
-                }
-        }
-	
-    });
+
+//    $( "#cross_upload_success_dialog_message" ).dialog({
+//	autoOpen: false,
+//	modal: true,
+//	buttons: {
+//            Ok: { id: "dismiss_cross_upload_dialog",
+//                  click: function() {
+//		      $("#upload_crosses").dialog("close");
+//		      $( this ).dialog( "close" );
+//		      location.reload();
+//                  },
+//                  text: "OK"
+//                }
+//        }
+//	
+//    });
 
 
     $('#upload_crosses_form').iframePostForm({
@@ -77,20 +82,21 @@ jQuery(document).ready(function ($) {
             if (response.error_string) {
 		$("#upload_cross_error_display tbody").html('');
 		$("#upload_cross_error_display tbody").append(response.error_string);
-		$(function () {
-                    $("#upload_cross_error_display").dialog({
-			modal: true,
-			autoResize:true,
-			width: 650,
-			position: ['top', 250],
-			title: "Errors in uploaded cross file",
-			buttons: {
-                            Ok: function () {
-				$(this).dialog("close");
-                            }
-			}
-                    });
-		});
+		$("#upload_cross_error_display").modal("show");
+		//$(function () {
+                //    $("#upload_cross_error_display").dialog({
+		//	modal: true,
+		//	autoResize:true,
+		//	width: 650,
+		//	position: ['top', 250],
+		//	title: "Errors in uploaded cross file",
+		//	buttons: {
+                //            Ok: function () {
+		//		$(this).dialog("close");
+                //            }
+		//	}
+                //    });
+		//});
 		return;
             }
 	    if (response.error) {
@@ -98,39 +104,44 @@ jQuery(document).ready(function ($) {
 		return;
 	    }
 	    if (response.success) {
-		$('#cross_upload_success_dialog_message').dialog("open");
+		$('#cross_upload_success_dialog_message').modal("show");
 	    }
 	}
     });
 
 
     $("#cross_upload_spreadsheet_format_info").click( function () { 
-	$("#cross_upload_spreadsheet_info_dialog" ).dialog("open");
+	$("#upload_crosses_dialog" ).modal("hide");
+	$("#cross_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
-    $("#cross_upload_spreadsheet_info_dialog").dialog( {
-	autoOpen: false,
-	buttons: { "OK" :  function() { $("#cross_upload_spreadsheet_info_dialog").dialog("close"); },},
-	modal: true,
-	width: 900,
-	autoResize:true,
-    });
+//    $("#cross_upload_spreadsheet_info_dialog").dialog( {
+//	autoOpen: false,
+//	buttons: { "OK" :  function() { $("#cross_upload_spreadsheet_info_dialog").dialog("close"); },},
+//	modal: true,
+//	width: 900,
+//	autoResize:true,
+//    });
 
-    $("#create_cross").dialog( {
-	autoOpen: false,
-	buttons: { 
-            "Cancel" : { id: "create_cross_cancel_button",
-                         click: function() { 
-			     $("#create_cross").dialog("close"); }, 
-			 text: "Cancel"  },
+//    $("#create_cross").dialog( {
+//	autoOpen: false,
+//	buttons: { 
+//            "Cancel" : { id: "create_cross_cancel_button",
+//                         click: function() { 
+//			     $("#create_cross").dialog("close"); }, 
+//			 text: "Cancel"  },
+//
+//	    "Submit":  { id: "create_cross_submit_button",
+//                         click:  function() { add_cross(); }, 
+//                         text: "Submit" }
+//	},
+//	modal: true,
+//	width: 750,
+//	autoResize:true,
+//    });
 
-	    "Submit":  { id: "create_cross_submit_button",
-                         click:  function() { add_cross(); }, 
-                         text: "Submit" }
-	},
-	modal: true,
-	width: 750,
-	autoResize:true,
+    $('#create_cross_submit').click(function () {
+	add_cross();
     });
 
     $("#cross_type").change(function(){
@@ -179,7 +190,7 @@ jQuery(document).ready(function ($) {
     });
 
     $("#add_cross_link").click( function () { 
-	$("#create_cross" ).dialog("open");
+	$("#create_cross" ).modal("show");
     });
 
     function add_cross() { 
@@ -246,9 +257,9 @@ jQuery(document).ready(function ($) {
 		if (response.error) { alert(response.error); }
 		else {
                     
-		    $("#create_cross").dialog("close");
+		    $("#create_cross").modal("hide");
 		    //alert("The cross has been added.");
-		    $('#cross_saved_dialog_message').dialog("open");
+		    $('#cross_saved_dialog_message').modal("show");
 		    location.reload();
 		}
             }, 
@@ -259,26 +270,26 @@ jQuery(document).ready(function ($) {
     }
 
 
-    $( "#cross_saved_dialog_message" ).dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-            Ok: { id: "dismiss_cross_saved_dialog",
-                  click: function() {
-		      $( this ).dialog( "close" );
-		      location.reload();
-                  },
-                  text: "OK"
-                }
-        }
-	
-    });
+//    $( "#cross_saved_dialog_message" ).dialog({
+//	autoOpen: false,
+//	modal: true,
+//	buttons: {
+//            Ok: { id: "dismiss_cross_saved_dialog",
+//                  click: function() {
+//		      $( this ).dialog( "close" );
+//		      location.reload();
+//                  },
+//                  text: "OK"
+//                }
+//        }
+//	
+//    });
 
 
 
     
     $("#upload_crosses_link").click( function () { 
-	$("#upload_crosses_dialog" ).dialog("open");
+	$("#upload_crosses_dialog" ).modal("show");
     });
     
     function read_cross_upload() { 

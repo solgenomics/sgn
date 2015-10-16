@@ -26,7 +26,7 @@ $owner=>''
 
 % if (!$owner) {$owner = 'NextGen Cassava Project'; } 
 
-<table>
+<table class="table">
   <tr>
     <td>
       <& /page/columnar_table.mas,
@@ -35,8 +35,7 @@ $owner=>''
                           ['Owner', $owner],
                          ],
          __alt_freq   => 0,
-         __align      => "l",
-         __tableattrs => 'style="padding: 1px 225px 1px 1px"',   
+         __align      => "l",  
         &>
     </td>    
     <td>
@@ -46,7 +45,6 @@ $owner=>''
                        ],
         __alt_freq  => 1,
         __align     => "l",
-       __tableattrs => 'style="padding: 1px"',    
         &>
     </td>
   </tr>

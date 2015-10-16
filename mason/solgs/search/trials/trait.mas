@@ -53,7 +53,7 @@ $trait_name
 
  <hr style="size:10px;color:"#5cb85c"/>
 
-<table id="selected_trials_table" style="text-align:left;width:100%">
+<table class ="table" id="selected_trials_table" style="text-align:left;width:100%">
 <tr>
   <th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th><th>&nbsp</th>
 </tr>
@@ -63,7 +63,7 @@ $trait_name
 </div>
 
 
-<table id="selected_trials_header" style="text-align:left;width:100%">
+<table class="table" id="selected_trials_header" style="text-align:left;width:100%">
 <tr>
   <td>
     <div id="combine" style="display:none">

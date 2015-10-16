@@ -41,13 +41,8 @@ $default_map_id => 9
 
 </%args>
 
-<table summary="" width="100%" border="0">
-<tr>
-    <td width="3%"><br /></td>
-    <td width="92%" valign="top">
-    <!-- TYPE="text/javascript" -->
-    <table summary="" width="100%" border="0" align="center">
-    <tr><td>
+<& /page/page_title.mas, title=>"Available Maps" &>
+<div class="container-fluid">
 
 <%perl>
 # Show a blue section html with the system maps
@@ -64,13 +59,14 @@ my $submit = qq | <b>[<a href="/cview/help/map_submission">Submit New Map</a>]</
 
 </%perl>
 
-<&| /page/info_section.mas, title=>"Interactive maps", subtitle=>$submit &>
+<&| /page/info_section.mas, collapsible=>1, collapsed=>0, title=>"Interactive Maps", subtitle=>$submit &>
+<br/>
 <% $d %>
 </&>
 
 <!-- Comparative maps -->
 
-<&| /page/info_section.mas, title=>"Comparative maps" &>
+<&| /page/info_section.mas, collapsible=>1, collapsed=>0, title=>"Comparative Maps" &>
 
 <br />
 <a href="<% $chr_url %>"><b>Interactive comparative map viewer</b></a>:
@@ -96,7 +92,8 @@ For more on the comparative map viewer, read the <a href="/help/cview">help page
 
 <!--  Static maps -->
 
-<&| /page/info_section.mas, title=>'Static maps' &>
+<&| /page/info_section.mas, collapsible=>1, collapsed=>0, title=>'Static Maps' &>
+<br/>
 <p>
 <b>Tomato maps</b><br />
 <i>L. esculentum x L. pennellii</i> maps:<br />
@@ -114,6 +111,5 @@ function commercial(Page)\n{
    var new_win = open(Page, 'EXTRA', \"scrollbars=yes,resizable=yes,height=500,width=720\")
 }\n// -->
 </script>
-</td></tr></table>
-</td></tr></table>
 
+</div>

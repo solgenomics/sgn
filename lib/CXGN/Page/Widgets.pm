@@ -113,13 +113,13 @@ sub collapser {
 		Effects.hideElement('${id}_content');
 		$hide_save_js	
 		return false;"
-		id="${id}_offswitch"><img src="/documents/img/collapser_minus.png" />$linktext</a>
+		id="${id}_offswitch"><img class="collapser_img" src="/documents/img/collapser_minus.png" />$linktext</a>
 	<a class="collapser collapser_show" target="$alt_target" href="$alt_href" style="$linkstyle;$off_display" onclick="
 		Effects.swapElements('${id}_onswitch', '${id}_offswitch'); 
 		Effects.showElement('${id}_content');
 		$show_save_js	
 		return false;"
-		id="${id}_onswitch"><img src="/documents/img/collapser_plus.png" />$hide_state_linktext</a>
+		id="${id}_onswitch"><img class="collapser_img" src="/documents/img/collapser_plus.png" />$hide_state_linktext</a>
 HTML
 	
 	my $wrapped_content = qq|<span id="${id}_content" style="$on_display">$content</span>|;
