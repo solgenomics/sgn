@@ -30,27 +30,31 @@ function  askUser(page, args) {
     
     jQuery('<div />')
 	.html(t)
-	.dialog({
+	.dialog({	    
 	    height : 200,
 	    width  : 400,
 	    modal  : true,
 	    title  : "Analysis update message",
- 	    buttons: {
-		No: { text: "No, I will wait...",
-                      click: function() { 
-			  jQuery(this).dialog("close");
-			  
-			  displayAnalysisNow(page, args);
-		      },
-		    },
-
-		Yes: { text: "Yes", 
-                       click: function() {
-			   jQuery(this).dialog("close");			  
+ 	    buttons: {	
+		Yes: {
+		    text: 'Yes',
+		    class: 'btn btn-success',
+		    click: function() {
+			jQuery(this).dialog("close");			  
 			 
-			   checkUserLogin(page, args);
-		       },
-		     }          
+			checkUserLogin(page, args);
+		    },
+		}, 
+		
+		No: { 
+		    text: 'No, I will wait...',
+		    class: 'btn btn-primary',
+		    click: function() { 
+			jQuery(this).dialog("close");
+			  
+			displayAnalysisNow(page, args);
+		    },
+		},
 	    }
 	});
   
@@ -97,10 +101,23 @@ function loginAlert () {
 	    modal  : true,
 	    title  : 'Login Alert',
 	    buttons: {
-		OK: function () {
+		OK: {
+		    click: function () {
 		    jQuery(this).dialog('close');
 		
 		    loginUser();
+		    },
+		    class: 'btn btn-success',
+		    text: 'OK',
+		},
+
+		Cancel: {
+		    click: function () {
+		    jQuery(this).dialog('close');
+		
+		    },
+		    class: 'btn btn-primary',
+		    text: 'Cancel'
 		}
 	    }			
 	});	    
@@ -201,7 +218,7 @@ function wrapTraitsForm () {
 
 function getProfileDialog (page, args) {
    
-    if (page.match(/solgs\/trait\//) || page.match(/solgs\/model\/combined\/trials\//)) {
+    if (page.match(/[solgs\/trait\/ | solgs\/model\/combined\/trials\/]/) ) {
 	args = getArgsFromUrl(page, args);
     }
       
@@ -210,41 +227,50 @@ function getProfileDialog (page, args) {
     jQuery('<div />', {id: 'email-form'})
 	.html(form)
 	.dialog({	
-	    height : 300,
-	    width  : 300,
+	    height : 350,
+	    width  : 400,
 	    modal  : true,
 	    title  : 'Info about your analysis.',
  	    buttons: {
-		Submit: function() { 
+		Submit: {
+		    click: function() { 
   
-		    var userName  = jQuery("#user_name").val();		
-		    var userEmail = jQuery("#user_email").val();
+			var userName  = jQuery("#user_name").val();		
+			var userEmail = jQuery("#user_email").val();
 	
-		    var analysisName = jQuery('#analysis_name').val();
-		    var analysisType = args.analysis_type;
+			var analysisName = jQuery('#analysis_name').val();
+			var analysisType = args.analysis_type;
 		    
-		    var dataSetType = args.data_set_type;
+			var dataSetType = args.data_set_type;
 		    
-		    args['user_email'] = userEmail;
-		    args = JSON.stringify(args);
+			args['user_email'] = userEmail;
+			args = JSON.stringify(args);
 	
-		    var analysisProfile = {
-			'user_name'    : userName, 
-			'user_email'   : userEmail,
-			'analysis_name': analysisName,
-			'analysis_page': page,
-			'analysis_type': analysisType,
-			'data_set_type': dataSetType,
-			'arguments'    : args,
-		    }
-
-		    jQuery(this).dialog('close');
+			var analysisProfile = {
+			    'user_name'    : userName, 
+			    'user_email'   : userEmail,
+			    'analysis_name': analysisName,
+			    'analysis_page': page,
+			    'analysis_type': analysisType,
+			    'data_set_type': dataSetType,
+			    'arguments'    : args,
+			};
+		   
+			jQuery(this).dialog('close');
 		     
-		    saveAnalysisProfile(analysisProfile);
+			saveAnalysisProfile(analysisProfile);
+		    },
+		    class: 'btn btn-success',
+		    text: 'Submit'
 		},
-		Cancel:  function() {
-		    jQuery(this).dialog('close');
-		},    
+
+		Cancel:  {
+		    click: function() {
+			jQuery(this).dialog('close');
+		    },
+		    class: 'btn btn-primary',
+		    text: 'Cancel',
+		}		 
 	    }
 	});
 
@@ -315,20 +341,22 @@ function getProfileForm (args) {
     }
     
     var emailForm = '<p>Please fill in your:</p>'
-	+'<table>'
+        +'<div class="form-group">'
+	+'<table class="table">'
 	+  '<tr>'
-     	+  '<td>name:</td>'
-     	+  '<td><input type="text" name="user_name" id="user_name" value=\"' + userName + '\"/></td>' 
+     	+  '<td>Name:</td>'
+     	+  '<td><input type="text" class="form-control" name="user_name" id="user_name" value=\"' + userName + '\"/></td>' 
      	+  '</tr>'
 	+  '<tr>'
-	+  '<td>analysis name:</td>'
-	+  '<td><input  type="text" name="analysis_name" id="analysis_name"></td>'
+	+  '<td>Analysis name:</td>'
+	+  '<td><input  type="text"  class="form-control" name="analysis_name" id="analysis_name"></td>'
 	+  '</tr>'
         +  '<tr>'
-     	+  '<td>email:</td>'
-     	+  '<td><input type="text" name="user_email" id="user_email" value=\"' + email + '\"/></td>' 
+     	+  '<td>Email:</td>'
+     	+  '<td><input type="text" class="form-control" name="user_email" id="user_email" value=\"' + email + '\"/></td>' 
      	+  '</tr>'
-	+'</table>';
+	+'</table>'
+	+ '<div>';
    
     return emailForm;
 }
