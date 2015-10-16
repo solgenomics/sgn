@@ -243,25 +243,31 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 
   foreach my $term (@trait_list) {
 
-    my ($db_name, $trait_name) = split ":", $term;
-    print STDERR "traitname: $term :\n";
+      my ($trait_name, $full_cvterm_accession) = split (/\|/, $term);
+      my ( $db_name , $accession ) = split (/:/ , $full_cvterm_accession);
 
-    #get trait info
+      $accession =~ s/\s+$//;
+      $accession =~ s/^\s+//;
+      $db_name =~ s/\s+$//;
+      $db_name =~ s/^\s+//;
 
-    my $trait_info_lookup = CXGN::Fieldbook::TraitInfo
-      ->new({
-	     chado_schema => $chado_schema,
-	     db_name => $db_name,
-	     trait_name => $trait_name,
-	     });
-    my $trait_info_string = $trait_info_lookup->get_trait_info();
+      print STDERR "traitname: $term | accession: $accession \n";
 
-    #return error if not $trait_info_string;
-    #print line with trait info
+      #get trait info
 
-    #print FILE "$db_name:$trait_name,text,,,,,,TRUE,$order\n";
-    print FILE "\"$db_name:$trait_name\",$trait_info_string,\"TRUE\",\"$order\"\n";
-    $order++;
+      my $trait_info_lookup = CXGN::Fieldbook::TraitInfo
+	  ->new({
+	      chado_schema    => $chado_schema,
+	      db_name         => $db_name,
+	      trait_accession => $accession,
+		});
+      my $trait_info_string = $trait_info_lookup->get_trait_info();
+
+      #return error if not $trait_info_string;
+      #print line with trait info
+      #print FILE "$trait_name:$db_name:$accession,text,,,,,,TRUE,$order\n";
+      print FILE "\"$trait_name|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
+      $order++;
   }
 
   close FILE;

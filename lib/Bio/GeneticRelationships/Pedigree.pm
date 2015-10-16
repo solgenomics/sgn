@@ -26,11 +26,14 @@ This class stores an individual's pedigree.
 
 subtype 'CrossType',
   as 'Str',
-  where {
-    $_ eq 'biparental' ||
+    where {
+      $_ eq 'biparental' ||
       $_ eq 'self' ||
-	$_ eq 'open' ||
-	  $_ eq 'unknown' };
+      $_ eq 'open' ||
+      $_ eq 'bulk' || 
+      $_ eq 'genetic_transformation' || 
+      $_ eq 'unknown' };
+
 has 'name' => (isa => 'Str',is => 'rw', predicate => 'has_name', required => 1,);
 has 'cross_type' => (isa =>'CrossType', is => 'rw', predicate => 'has_cross_type', required => 1,);
 has 'female_parent' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_female_parent');
@@ -44,14 +47,14 @@ has 'selection_name' => (isa => 'Str',is => 'rw', predicate => 'has_selection_na
 
 =pod
 
-  =back
+=back
 
-  =head1 LICENSE
+=head1 LICENSE
 
   Same as Perl.
 
-  =head1 AUTHORS
+=head1 AUTHORS
 
   Jeremy D. Edwards <jde22@cornell.edu>
 
-  =cut
+=cut

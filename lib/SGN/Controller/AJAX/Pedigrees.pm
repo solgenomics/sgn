@@ -75,7 +75,7 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     open(my $F, "<", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my %stocks;
-    my $cross_type = "";
+
     my $header = <$F>; 
     while (<$F>) { 
 	chomp;
@@ -99,6 +99,9 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     my $female_parent;
     my $male_parent;
     my $child;
+
+    my $cross_type = "";
+
     my @pedigrees;
     
     while (<$F>) { 

@@ -271,6 +271,7 @@ sub add_crosses {
 								  type_id => $female_parent_cvterm->cvterm_id(),
 								  object_id => $cross_stock->stock_id(),
 								  subject_id => $female_parent->stock_id(),
+								  value => $cross_type,
 								 } );
       }
 
