@@ -20,7 +20,7 @@ $t->while_logged_in_as(
 
 	$add_project_link->click();
 
-	sleep(3);
+	sleep(1);
 
 	$t->find_element_ok('new_trial_name', 'id', "find new trial name input box")->send_keys("Test trial 1");
 
@@ -44,6 +44,8 @@ $t->while_logged_in_as(
 	sleep(10);
 
 	$t->find_element_ok('trial_saved_dialog_message_ok_button', 'id', "find trial saved dialog")->click();
+
+	sleep(1);
 
     });
 

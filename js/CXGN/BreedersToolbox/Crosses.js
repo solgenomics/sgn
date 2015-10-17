@@ -33,6 +33,7 @@ jQuery(document).ready(function ($) {
     }
 
     $("#upload_crosses_submit").click( function () { 
+	$("#upload_crosses_dialog" ).modal("hide");
 	upload_crosses_file();
     });
 

@@ -1,0 +1,2 @@
+progeny name	female parent accession	male parent accession
+test_accession1	test_accession4	test_accession5

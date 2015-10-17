@@ -345,13 +345,13 @@ CXGN.List.prototype = {
         html += '<td><input type="button" class="btn btn-info" id="updateNameButton" value="update"  /></td></tr>';
 
 	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input type="button" class="btn btn-info" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr>';
-	html += '<tr><td>Add New Items</td><td colspan="2"><div class="input-group"><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea><span class="input-group-btn"><button class="btn btn-primary" type="button" id="dialog_add_list_item_button" value="Add">Add</button></span></div></td></tr></table>';
-	html += '<p><b>List items</b> ('+items.length+')</p>';
+	html += '<tr><td>Add New Items</td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td><td colspan="2"><button class="btn btn-primary" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td></tr></table>';
+	html += '<table class="table table-condensed table-hover"><thead><th colspan="2"><b>List items</b> ('+items.length+')</th></tr></thead><tbody>';
 
 	for(var n=0; n<items.length; n++) { 
-	    html = html +'<p>'+ items[n][1] + '&nbsp;&nbsp;&nbsp;&nbsp;<input id="'+items[n][0]+'" type="button" class="btn btn-warning btn-xs" value="remove" /></p>';   
+	    html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-warning btn-xs" value="remove" /></td></tr>';   
 	}
-	
+	html += '</tbody></table>';
 	jQuery('#list_item_populating_js').html(html);
 
 	for (var n=0; n<items.length; n++) { 

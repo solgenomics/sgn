@@ -64,34 +64,34 @@ jQuery(document).ready(function ($) {
 	$("#pedigrees_upload_spreadsheet_info_dialog" ).modal("show");	
     });
 
-    $("#pedigrees_upload_success_dialog_message").dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-            Ok: { id: "dismiss_pedigrees_upload_dialog",
-                  click: function() {
-		      //$("#upload_trial_form").dialog("close");
-		      //$( this ).dialog( "close" );
-		      location.reload();
-                  },
-                  text: "OK"
-                }
-        }
-	
-    });
+//    $("#pedigrees_upload_success_dialog_message").dialog({
+//	autoOpen: false,
+//	modal: true,
+//	buttons: {
+//            Ok: { id: "dismiss_pedigrees_upload_dialog",
+//                  click: function() {
+//		      //$("#upload_trial_form").dialog("close");
+//		      //$( this ).dialog( "close" );
+//		      location.reload();
+//                  },
+//                  text: "OK"
+//                }
+//        }
+//	
+//    });
 
     $('#upload_pedigrees_form').iframePostForm({
 	json: true,
 	post: function () {
             var uploadedPedigreesFile = $("#pedigrees_uploaded_file").val();
-	    $('#working').dialog("open");
+	    $('#working_modal').modal("show");
             if (uploadedPedigreesFile === '') {
-		$('#working').dialog("close");
+		$('#working_modal').modal("hide");
 		alert("No file selected");
             }
 	},
 	complete: function (response) {
-	    $('#working').dialog("close");
+	    $('#working_modal').modal("hide");
             if (response.error_string) {
 		$("#upload_pedigrees_error_display tbody").html('');
 		$("#upload_pedigrees_error_display tbody").append(response.error_string);
@@ -126,7 +126,7 @@ jQuery(document).ready(function ($) {
     });
 
         function upload_pedigrees_file() {
-        var uploadFile = $("#pedigrees_upload_file").val();
+        var uploadFile = $("#pedigrees_uploaded_file").val();
         $('#upload_pedigrees_form').attr("action", "/ajax/pedigrees/upload");
         if (uploadFile === '') {
 	    alert("Please select a file");
