@@ -26,6 +26,14 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 
 my $DEFAULT_PAGE_SIZE=500;
 
+sub verify_session {
+    my $c = shift;
+    my $person_id=CXGN::Login->new($c->dbc->dbh)->has_session();
+    if (!$person_id) {
+	$c->res->redirect("/solpeople/login.pl");
+    }
+    return;
+}
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) { 
     my $self = shift;
@@ -90,6 +98,7 @@ sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
 sub germplasm_all : Chained('brapi') PathPart('germplasm') Args(0) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
     
     my $type_id = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( { type_id => $type_id });
@@ -121,7 +130,8 @@ sub germplasm_all : Chained('brapi') PathPart('germplasm') Args(0) {
 
 sub germplasm : Chained('brapi') PathPart('germplasm') CaptureArgs(1) { 
     my $self = shift;
-    my $c = shift;    
+    my $c = shift;
+    verify_session($c);
     my $stock_id = shift;
 
     $c->stash->{stock_id} = $stock_id;
@@ -132,6 +142,7 @@ sub germplasm : Chained('brapi') PathPart('germplasm') CaptureArgs(1) {
 sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
     
     # need to implement get_synonyms... ####my @synonyms = $c->stash->{stock}->get_synonyms();
     my $stock_data = { 
@@ -146,7 +157,7 @@ sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) {
 sub germplasm_find : Chained('germplasm') PathPart('find') Args(0) { 
     my $self = shift;
     my $c = shift;
-
+    verify_session($c);
     my $params = $c->req->params();
 
     if (! $params->{q}) { 
@@ -185,6 +196,7 @@ sub germplasm_find : Chained('germplasm') PathPart('find') Args(0) {
 sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
     my $method = $c->req->param("methodId");
     
     my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( {} );
@@ -198,6 +210,7 @@ sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) {
 sub markerprofiles : Chained('brapi') PathPart('markerprofiles') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
     my $id = shift;
     $c->stash->{markerprofile_id} = $id; # this is genotypeprop_id
 }
@@ -205,6 +218,7 @@ sub markerprofiles : Chained('brapi') PathPart('markerprofiles') CaptureArgs(1) 
 sub markerprofile_count : Chained('markerprofiles') PathPart('count') Args(0) {
     my $self = shift;
     my $c = shift;
+    verify_session($c);
     print STDERR "PROCESSING genotype/count...\n";
 
     my $rs = $self->markerprofile_rs($c);
@@ -231,6 +245,7 @@ sub markerprofile_count : Chained('markerprofiles') PathPart('count') Args(0) {
 sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){ 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
 
     print STDERR "Markerprofile_fetch\n";
     my $rs = $self->markerprofile_rs($c);
@@ -276,6 +291,7 @@ sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){
 sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods') Args(0) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
 
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
     my @response;
@@ -342,6 +358,7 @@ sub markerprofile_rs {
 sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
 
     my $markerprofile_ids = $c->req->param("markerprofileIds");
 
@@ -421,13 +438,14 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 sub studies : Chained('brapi') PathPart('studies') CaptureArgs(0) {
     my $self = shift;
     my $c = shift;
-
+    verify_session($c);
 
 }
 
 sub study_list : Chained('studies') PathPart('list') Args(0) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
     my $program = $c->req->param("program");
 
     my $ps = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
@@ -497,6 +515,7 @@ sub study_detail : Chained('studies') PathPart('detail') Args(1) {
 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
     my $trial_id = shift;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -577,7 +596,7 @@ sub study_detail : Chained('studies') PathPart('detail') Args(1) {
 sub traits :  Chained('brapi') PathPart('traits') CaptureArgs(0) {
     my $self = shift;
     my $c = shift;
-    
+    verify_session($c);
 
 
 
@@ -586,6 +605,7 @@ sub traits :  Chained('brapi') PathPart('traits') CaptureArgs(0) {
 sub traits_list : Chained('traits') PathPart('list') Args(0) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
     
     my $db_rs = $self->bcs_schema()->resultset("General::Db")->search( { name => $c->config->{trait_ontology_db_name} } );
     if ($db_rs->count ==0) { return undef; }
@@ -606,6 +626,7 @@ sub traits_list : Chained('traits') PathPart('list') Args(0) {
 sub specific_traits_list : Chained('traits') PathPart('') Args(1) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
 
     $c->res->body("IT WORKS");
 
@@ -614,6 +635,7 @@ sub specific_traits_list : Chained('traits') PathPart('') Args(1) {
 sub maps : Chained('brapi') PathPart('maps') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
     my $map_id = shift;
 
     $c->stash->{map_id} = $map_id;
@@ -622,6 +644,7 @@ sub maps : Chained('brapi') PathPart('maps') CaptureArgs(1) {
 sub maps_detail : Chained('maps') PathPart('') Args(0) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
 
     # maps are just marker lists associated with specific protocols
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
@@ -668,6 +691,7 @@ sub maps_detail : Chained('maps') PathPart('') Args(0) {
 sub maps_summary : Chained('brapi') PathPart('maps') Args(0) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
     
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
 
@@ -720,6 +744,7 @@ sub maps_summary : Chained('brapi') PathPart('maps') Args(0) {
 sub maps_marker_detail : Chained('maps') PathPart('positions') Args(0) { 
     my $self = shift;
     my $c = shift;
+    verify_session($c);
     
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { nd_protocol_id => $c->stash->{map_id} } );
 
