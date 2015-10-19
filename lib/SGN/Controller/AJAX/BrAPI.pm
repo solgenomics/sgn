@@ -49,7 +49,6 @@ sub pagination_request {
 }
 
 sub pagination_response {
-    my $c = shift;
     my $data_count = shift;
     my $page_size = shift;
     my $page = shift;
@@ -72,6 +71,24 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
 
 }
+
+=head2 /brapi/v1/token?grant_type=password&username=USERNAME&password=PASSWORD&client_id=CLIENT_ID
+
+ Usage: For logging a user in through the API http://docs.brapi.apiary.io/#authentication
+ Desc:
+ Return JSON example:
+{
+    "metadata": {
+        "pagination" : {},
+        "status" : []
+        },
+    "session_token": "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4"
+} 
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 sub authenticate_token : Chained('brapi') PathPart('token') Args(0) { 
     my $self = shift;
@@ -132,6 +149,52 @@ sub germplasm_data_response {
     return \@data;
 }
 
+=head2 brapi/v1/germplasm?name=*Mo?re%&matchMethod=wildcard&include=&pageSize=1000&page=10
+
+ Usage: For searching a germplasm by name. Allows for exact and wildcard match methods. http://docs.brapi.apiary.io/#germplasm
+ Desc:
+ Return JSON example:
+{    
+    "metadata": {
+        "pagination": {
+            "pageSize": 1000,
+            "currentPage": 10,
+            "totalCount": 27338,
+            "totalPages": 28
+        },
+        "status": []
+    },
+    "result" : { 
+        "data": [
+            { 
+                "germplasmDbId": "382",
+                "defaultDisplayName": "Pahang",
+                "germplasmName": "Pahang",
+                "accessionNumber": "ITC0609",
+                "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084609",
+                "pedigree": "TOBA97/SW90.1057",
+                "seedSource": "",
+                "synonyms": ["01BEL084609"],
+            },
+            {
+                "germplasmDbId": "394",
+                "defaultDisplayName": "Pahang",
+                "germplasmName": "Pahang",
+                "accessionNumber": "ITC0727",
+                "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084727",
+                "pedigree": "TOBA97/SW90.1057",
+                "seedSource": "",
+                "synonyms": [ "01BEL084727"],
+            }
+        ]
+    }
+}    
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -174,19 +237,31 @@ sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) {
 	} 
     }
 
-    my %metadata = (pagination=> pagination_response($c, $total_count, $page_size, $page), status=>\@status);
+    my %metadata = (pagination=> pagination_response($total_count, $page_size, $page), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
 
 =head2 brapi/v1/germplasm/{id}
 
- Usage:
+ Usage: To retrieve details for a single germplasm
  Desc:
  Return JSON example:
-    {
-"germplasmId": 382, "germplasmName": "MOREX", "synonyms": [ "M25", "CIHO15773" ], "taxonId": 3,
-"breedingProgramId": 18
+{
+    "metadata": {
+        "status": [],
+        "pagination": {}
+    },
+    "result": {
+        "germplasmDbId": "01BEL084609",
+        "defaultDisplayName": "Pahang",
+        "germplasmName": "Pahang",
+        "accessionNumber": "ITC0609",
+        "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084609",
+        "pedigree": "TOBA97/SW90.1057",
+        "seedSource": "Female GID:4/Male GID:4",
+        "synonyms": ["Pahanga","Pahange"],
+    }
 }
  Args:
  Side Effects:
@@ -201,8 +276,9 @@ sub germplasm : Chained('brapi') PathPart('germplasm') CaptureArgs(1) {
     my $stock_id = shift;
 
     $c->stash->{stock_id} = $stock_id;
-    my $g = CXGN::Chado::Stock->new($self->bcs_schema(), $stock_id);
-    $c->stash->{stock} = $g;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $rs = $schema->resultset("Stock::Stock")->search( {stock_id=>$stock_id} );
+    $c->stash->{stock} = $rs;
 }
 
 sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) { 
@@ -210,53 +286,13 @@ sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) {
     my $c = shift;
     verify_session($c);
     
-    # need to implement get_synonyms... ####my @synonyms = $c->stash->{stock}->get_synonyms();
-    my $stock_data = { 
-	germplasmId => $c->stash->{stock}->get_stock_id(),
-	germplasmName => $c->stash->{stock}->get_uniquename(),
-	#synonyms => \@synonyms,
-    };
-
-    $c->stash->{rest} = $stock_data;
-}
-
-sub germplasm_find : Chained('germplasm') PathPart('find') Args(0) { 
-    my $self = shift;
-    my $c = shift;
-    verify_session($c);
-    my $params = $c->req->params();
-
-    if (! $params->{q}) { 
-	$c->stash->{rest} = { error => "No query provided" };
-	return;
-    }
-
-    my $rs;
-
-    if (! $params->{matchMethod} || $params->{matchMethod} eq "exact") { 
-	$rs = $self->bcs_schema()
-	->resultset("Stock::Stock")
-	->search( { uniquename => { ilike => $params->{q} } });
-    }
-    elsif ($params->{matchMethod} eq "wildcard") { 
-	$c->stash->{rest} = { error => "matchMethod 'wildcard' not yet implemented" };
-	return;
-    }
-    else { 
-	$c->stash->{rest} = { error => "matchMethod '$params->{matchMethod}' not recognized" };
-	return;
-    }
-
-    my @results;
-
-    foreach my $stock ($rs->all()) { 
-	push @results, { queryName => $params->{q},
-			 uniqueName => $stock->uniquename(),
-			 germplasmId => $stock->stock_id(),
-	};
-    }
-
-    $c->stash->{rest} = \@results;
+    my $rs = $c->stash->{stock};
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my @status;
+    my %pagination;
+    my %metadata = (pagination=>\%pagination, status=>\@status);
+    my %response = (metadata=>\%metadata, result=>germplasm_data_response($schema, $rs));
+    $c->stash->{rest} = \%response;
 }
 
 sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) { 
