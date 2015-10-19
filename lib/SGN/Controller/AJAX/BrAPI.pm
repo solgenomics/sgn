@@ -35,6 +35,30 @@ sub verify_session {
     return;
 }
 
+sub pagination_request {
+    my $c = shift;
+    my $page_size = $c->req->param("pageSize");
+    if (!$page_size) {
+	$page_size = $DEFAULT_PAGE_SIZE;
+    }
+    my $page = $c->req->param("page");
+    if (!$page) {
+	$page = '1';
+    }
+    return ($page_size, $page);
+}
+
+sub pagination_response {
+    my $c = shift;
+    my $data_count = shift;
+    my $page_size = shift;
+    my $page = shift;
+    my $total_pages_decimal = $data_count/$page_size;
+    my $total_pages = ($total_pages_decimal == int $total_pages_decimal) ? $total_pages_decimal : int($total_pages_decimal + 1);
+    my %pagination = (pageSize=>$page_size, currentPage=>$page, totalCount=>$data_count, totalPages=>$total_pages);
+    return \%pagination;
+}
+
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
@@ -52,21 +76,15 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 sub authenticate_token : Chained('brapi') PathPart('token') Args(0) { 
     my $self = shift;
     my $c = shift;
-
-    my $dbh = $c->dbc->dbh;
-    my $login_controller = CXGN::Login->new($dbh);
-    
-    my $grant_type = $c->req->param("grant_type");
-    my $username = $c->req->param("username");
-    my $password = $c->req->param("password");
-    my $client_id = $c->req->param("client_id");
+    my $login_controller = CXGN::Login->new($c->dbc->dbh);
+    my $params = $c->req->params();
 
     my @status;
     my $cookie = '';
 
     if ( $login_controller->login_allowed() ) {
-	if ($grant_type eq 'password') {
-	    my $login_info = $login_controller->login_user( $username, $password );
+	if ($params->{grant_type} eq 'password') {
+	    my $login_info = $login_controller->login_user( $params->{username}, $params->{password} );
 	    if ($login_info->{account_disabled}) {
 		push(@status, 'Account Disabled');
 	    }
@@ -89,28 +107,76 @@ sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
     } else {
 	push(@status, 'Login Not Allowed');
     }
-    
-    my %result = (status=>\@status, session_token=>$cookie);
+    my %pagination = ();
+    my %metadata = (pagination=>\%pagination, status=>\@status);
+    my %result = (metadata=>\%metadata, session_token=>$cookie);
     
     $c->stash->{rest} = \%result;
 }
 
-sub germplasm_all : Chained('brapi') PathPart('germplasm') Args(0) { 
+sub germplasm_data_response {
+    my $schema = shift;
+    my $rs_slice = shift;
+    my @synonyms;
+    my $rsp;
+    my @data;
+    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
+    while (my $stock = $rs_slice->next()) { 
+	@synonyms = ();
+	$rsp = $schema->resultset("Stock::Stockprop")->search({type_id => $synonym_id, stock_id=>$stock->stock_id() });
+	while (my $stockprop = $rsp->next()) { 
+	    push( @synonyms, $stockprop->value() );
+	}
+	push @data, { germplasmDbId=>$stock->stock_id(), defaultDisplayName=>$stock->uniquename(), germplasmName=>$stock->uniquename(), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>\@synonyms };
+    }
+    return \@data;
+}
+
+sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) { 
     my $self = shift;
     my $c = shift;
     verify_session($c);
+    my ($page_size, $page) = pagination_request($c);
+    my $params = $c->req->params();
     
-    my $type_id = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
-    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( { type_id => $type_id });
+    my @data;
+    my @status;
+    my $total_count = 0;
+    my %result;
 
-    my @result;
-    
-    while (my $stock = $rs->next()) { 
-	# to do: needs to be expanded according to api...
-	push @result, { germplasmId => $stock->stock_id(), germplasmName => $stock->uniquename() };
+    if ($params->{include}) {
+	push (@status, 'include not implemented');
     }
-    
-    $c->stash->{rest} = \@result;
+    if (!$params->{name}) {
+	push(@status, 'name parameter required');
+    } else {
+
+	my $rs;
+	my $rs_slice;
+	my $schema = $c->dbic_schema('Bio::Chado::Schema');
+	my $type_id = $schema->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
+
+	if (!$params->{matchMethod} || $params->{matchMethod} eq "exact") { 
+	    $rs = $schema->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>$params->{name} }, { order_by=>{ -asc=>'stock_id' } } );
+	    $total_count = $rs->count();
+	    $rs_slice = $rs->slice($page_size*($page-1), $page_size*$page-1);
+	    %result = (data => germplasm_data_response($schema, $rs_slice));
+	}
+	elsif ($params->{matchMethod} eq "wildcard") { 
+	    $params->{name} =~ tr/*?/%_/;
+	    $rs = $schema->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>{ ilike => $params->{name} } }, { order_by=>{ -asc=>'stock_id' } } );
+	    $total_count = $rs->count();
+	    $rs_slice = $rs->slice($page_size*($page-1), $page_size*$page-1);
+	    %result = (data => germplasm_data_response($schema, $rs_slice));
+	}
+	else { 
+	    push(@status, "matchMethod '$params->{matchMethod}' not recognized");
+	} 
+    }
+
+    my %metadata = (pagination=> pagination_response($c, $total_count, $page_size, $page), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
 }
 
 =head2 brapi/v1/germplasm/{id}
