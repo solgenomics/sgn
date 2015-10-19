@@ -62,7 +62,7 @@ sub from_vcf_string {
     }
     if (!@ids) { 
 	# usual order... but this is just guesswork
-	print STDERR "(Guessing the format order...)\n";
+	#print STDERR "(Guessing the format order...)\n";
 	@ids = ( 'GT', 'AD', 'DP', 'GQ', 'PL' );
     }
     
@@ -70,31 +70,35 @@ sub from_vcf_string {
     
     my %fields;
     for(my $i=0; $i<@ids; $i++) { 
-	$fields{$ids[$i]} = $values[$i];
-    }
+	 $fields{$ids[$i]} = $values[$i];
+     }
 
-    #my ($allele, $counts) = split /\:/, $raw;
-    my ($a1, $a2) = ("", "");
-    if (!exists($fields{GT})) { 
-	print STDERR "No allele calls found for snp ".$self->id()."\n";
-    }
-    else { 
-	($a1, $a2) = split /\//, $fields{GT};
-    }
-    $self->ref_allele($a1);
-    $self->alt_allele($a2);
+     #my ($allele, $counts) = split /\:/, $raw;
+     my ($a1, $a2) = ("", "");
+     if (!exists($fields{GT})) { 
+	 print STDERR "No allele calls found for snp ".$self->id()."\n";
+     }
+     else { 
+	 ($a1, $a2) = split /\//, $fields{GT};
+     }
+     $self->ref_allele($a1);
+     $self->alt_allele($a2);
 
-    my @counts = split /\,/, $fields{AD};
-    #print STDERR "FIELDS: $fields{AD}\n";
-    if (@counts > 2) { 
-	print STDERR "Multiple alleles found for SNP ".$self->id()."\n";
-    }
-    my ($c1, $c2) = @counts;
-    if (! $c1 || $c1 eq ".") { $c1 = 0; }
-    if (! $c2 || $c2 eq ".") { $c2 = 0; }
-    
-    $self->ref_count($c1);
-    $self->alt_count($c2);
+     my ($c1, $c2);
+     if (!exists($fields{AD}) || !defined($fields{AD})) { 
+	 $c1 = 0;
+	 $c2 = 0;
+     }
+     else { 
+	 my @counts = split /\,/, $fields{AD};
+	 #print STDERR "FIELDS: $fields{AD}\n";
+	 if (@counts > 2) { 
+	     print STDERR "Multiple alleles found for SNP ".$self->id()."\n";
+	 }
+	 ($c1, $c2) = @counts;
+     }    
+     $self->ref_count($c1);
+     $self->alt_count($c2);
 
     # debug
     #if ($self->id() eq "1002:250060174") { 
