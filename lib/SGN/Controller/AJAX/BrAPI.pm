@@ -26,45 +26,19 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 
 my $DEFAULT_PAGE_SIZE=500;
 
-sub verify_session {
-    my $c = shift;
-    my $person_id=CXGN::Login->new($c->dbc->dbh)->has_session();
-    if (!$person_id) {
-	$c->res->redirect("/solpeople/login.pl");
-    }
-    return;
-}
-
-sub pagination_request {
-    my $c = shift;
-    my $page_size = $c->req->param("pageSize");
-    if (!$page_size) {
-	$page_size = $DEFAULT_PAGE_SIZE;
-    }
-    my $page = $c->req->param("page");
-    if (!$page) {
-	$page = '1';
-    }
-    return ($page_size, $page);
-}
-
-sub pagination_response {
-    my $data_count = shift;
-    my $page_size = shift;
-    my $page = shift;
-    my $total_pages_decimal = $data_count/$page_size;
-    my $total_pages = ($total_pages_decimal == int $total_pages_decimal) ? $total_pages_decimal : int($total_pages_decimal + 1);
-    my %pagination = (pageSize=>$page_size, currentPage=>$page, totalCount=>$data_count, totalPages=>$total_pages);
-    return \%pagination;
-}
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
     my $version = shift;
+    
+    my $person_id=CXGN::Login->new($c->dbc->dbh)->has_session();
+    if (!$person_id) {
+	$c->res->redirect("/solpeople/login.pl");
+    }
 
     $c->stash->{current_page} = $c->req->param("page") || 1;
-    $c->stash->{page_size} = $c->req->param("pageSize");
+    $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
 
     $self->bcs_schema( $c->dbic_schema("Bio::Chado::Schema") );
     $c->stash->{api_version} = $version;
@@ -129,6 +103,16 @@ sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
     my %result = (metadata=>\%metadata, session_token=>$cookie);
     
     $c->stash->{rest} = \%result;
+}
+
+sub pagination_response {
+    my $data_count = shift;
+    my $page_size = shift;
+    my $page = shift;
+    my $total_pages_decimal = $data_count/$page_size;
+    my $total_pages = ($total_pages_decimal == int $total_pages_decimal) ? $total_pages_decimal : int($total_pages_decimal + 1);
+    my %pagination = (pageSize=>$page_size, currentPage=>$page, totalCount=>$data_count, totalPages=>$total_pages);
+    return \%pagination;
 }
 
 sub germplasm_data_response {
@@ -198,8 +182,9 @@ sub germplasm_data_response {
 sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
-    my ($page_size, $page) = pagination_request($c);
+    my $schema = $self->bcs_schema();
+    my $page_size = $c->stash->{page_size};
+    my $page = $c->stash->{current_page};
     my $params = $c->req->params();
     
     my @data;
@@ -216,7 +201,6 @@ sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) {
 
 	my $rs;
 	my $rs_slice;
-	my $schema = $c->dbic_schema('Bio::Chado::Schema');
 	my $type_id = $schema->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
 
 	if (!$params->{matchMethod} || $params->{matchMethod} eq "exact") { 
@@ -272,33 +256,28 @@ sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) {
 sub germplasm : Chained('brapi') PathPart('germplasm') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
     my $stock_id = shift;
 
     $c->stash->{stock_id} = $stock_id;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $rs = $schema->resultset("Stock::Stock")->search( {stock_id=>$stock_id} );
+    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {stock_id=>$stock_id} );
     $c->stash->{stock} = $rs;
 }
 
 sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
-    
     my $rs = $c->stash->{stock};
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+
     my @status;
     my %pagination;
     my %metadata = (pagination=>\%pagination, status=>\@status);
-    my %response = (metadata=>\%metadata, result=>germplasm_data_response($schema, $rs));
+    my %response = (metadata=>\%metadata, result=>germplasm_data_response($self->bcs_schema(), $rs));
     $c->stash->{rest} = \%response;
 }
 
 sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
     my $method = $c->req->param("methodId");
     
     my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( {} );
@@ -312,7 +291,6 @@ sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) {
 sub markerprofiles : Chained('brapi') PathPart('markerprofiles') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
     my $id = shift;
     $c->stash->{markerprofile_id} = $id; # this is genotypeprop_id
 }
@@ -320,7 +298,6 @@ sub markerprofiles : Chained('brapi') PathPart('markerprofiles') CaptureArgs(1) 
 sub markerprofile_count : Chained('markerprofiles') PathPart('count') Args(0) {
     my $self = shift;
     my $c = shift;
-    verify_session($c);
     print STDERR "PROCESSING genotype/count...\n";
 
     my $rs = $self->markerprofile_rs($c);
@@ -347,7 +324,6 @@ sub markerprofile_count : Chained('markerprofiles') PathPart('count') Args(0) {
 sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){ 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
 
     print STDERR "Markerprofile_fetch\n";
     my $rs = $self->markerprofile_rs($c);
@@ -393,7 +369,6 @@ sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){
 sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods') Args(0) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
 
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
     my @response;
@@ -460,8 +435,7 @@ sub markerprofile_rs {
 sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
-
+ 
     my $markerprofile_ids = $c->req->param("markerprofileIds");
 
     my @profile_ids = split ",", $markerprofile_ids;
@@ -540,14 +514,12 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 sub studies : Chained('brapi') PathPart('studies') CaptureArgs(0) {
     my $self = shift;
     my $c = shift;
-    verify_session($c);
 
 }
 
 sub study_list : Chained('studies') PathPart('list') Args(0) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
     my $program = $c->req->param("program");
 
     my $ps = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
@@ -617,7 +589,6 @@ sub study_detail : Chained('studies') PathPart('detail') Args(1) {
 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
     my $trial_id = shift;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -698,8 +669,6 @@ sub study_detail : Chained('studies') PathPart('detail') Args(1) {
 sub traits :  Chained('brapi') PathPart('traits') CaptureArgs(0) {
     my $self = shift;
     my $c = shift;
-    verify_session($c);
-
 
 
 }
@@ -707,7 +676,6 @@ sub traits :  Chained('brapi') PathPart('traits') CaptureArgs(0) {
 sub traits_list : Chained('traits') PathPart('list') Args(0) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
     
     my $db_rs = $self->bcs_schema()->resultset("General::Db")->search( { name => $c->config->{trait_ontology_db_name} } );
     if ($db_rs->count ==0) { return undef; }
@@ -728,7 +696,6 @@ sub traits_list : Chained('traits') PathPart('list') Args(0) {
 sub specific_traits_list : Chained('traits') PathPart('') Args(1) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
 
     $c->res->body("IT WORKS");
 
@@ -737,7 +704,6 @@ sub specific_traits_list : Chained('traits') PathPart('') Args(1) {
 sub maps : Chained('brapi') PathPart('maps') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
     my $map_id = shift;
 
     $c->stash->{map_id} = $map_id;
@@ -746,7 +712,6 @@ sub maps : Chained('brapi') PathPart('maps') CaptureArgs(1) {
 sub maps_detail : Chained('maps') PathPart('') Args(0) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
 
     # maps are just marker lists associated with specific protocols
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
@@ -793,7 +758,6 @@ sub maps_detail : Chained('maps') PathPart('') Args(0) {
 sub maps_summary : Chained('brapi') PathPart('maps') Args(0) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
     
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
 
@@ -846,7 +810,6 @@ sub maps_summary : Chained('brapi') PathPart('maps') Args(0) {
 sub maps_marker_detail : Chained('maps') PathPart('positions') Args(0) { 
     my $self = shift;
     my $c = shift;
-    verify_session($c);
     
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { nd_protocol_id => $c->stash->{map_id} } );
 
