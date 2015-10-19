@@ -74,7 +74,7 @@ sub from_vcf_string {
      }
 
      #my ($allele, $counts) = split /\:/, $raw;
-     my ($a1, $a2) = ("", "");
+     my ($a1, $a2) = ("","");
      if (!exists($fields{GT})) { 
 	 print STDERR "No allele calls found for snp ".$self->id()."\n";
      }
@@ -85,21 +85,25 @@ sub from_vcf_string {
      $self->alt_allele($a2);
 
      my ($c1, $c2);
-     if (!exists($fields{AD}) || !defined($fields{AD})) { 
+     if (!exists($fields{AD})) { 
 	 $c1 = 0;
+	 #print STDERR "C1: $c1\n";
 	 $c2 = 0;
+	 #print STDERR "C2: $c2\n";
      }
      else { 
 	 my @counts = split /\,/, $fields{AD};
-	 #print STDERR "FIELDS: $fields{AD}\n";
+	 # print STDERR "FIELDS: $fields{AD}\n"; 
 	 if (@counts > 2) { 
 	     print STDERR "Multiple alleles found for SNP ".$self->id()."\n";
 	 }
 	 ($c1, $c2) = @counts;
-     }    
+     }
+    if (!defined($c1)) { $c1=0; }
+    if (!defined($c2)) { $c2=0; }
      $self->ref_count($c1);
      $self->alt_count($c2);
-
+     
     # debug
     #if ($self->id() eq "1002:250060174") { 
 	#print STDERR $self->id().": ".$fields{GT}.", ".$fields{AD}."\n";
