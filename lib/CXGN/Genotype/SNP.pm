@@ -95,7 +95,7 @@ sub from_vcf_string {
 	 my @counts = split /\,/, $fields{AD};
 	 # print STDERR "FIELDS: $fields{AD}\n"; 
 	 if (@counts > 2) { 
-	     print STDERR "Multiple alleles found for SNP ".$self->id()."\n";
+	     #print STDERR "Multiple alleles found for SNP ".$self->id()."\n";
 	 }
 	 ($c1, $c2) = @counts;
      }
