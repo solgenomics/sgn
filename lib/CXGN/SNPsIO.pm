@@ -113,6 +113,7 @@ sub next {
 	$snps->filter($filter);
 	my $depth = $info;
 	$depth =~ s/DP=(\d+)/$1/i;
+	if ($depth eq ".") { $depth=0; }
 	$snps->depth($depth);
 	$snps->info($info);
 	$snps->format($format);
