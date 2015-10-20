@@ -14,7 +14,7 @@ function solGS () {};
 
 solGS.waitPage = function (page) {
  
-    if ( page.match(/[solgs\/trait\/ | solgs\/model\/combined\/trials\/]/)) {
+    if ( page.match(/solgs\/trait\/|solgs\/model\/combined\/trials\//)) {
     	askUser(page);
     } else {
     	blockPage(page);
@@ -154,17 +154,16 @@ function blockPage (page, args) {
 
 
 function goToPage (page, args) {    
-   
-    if (page.match(/[solgs\/confirm\/request\/ | solgs\/trait\/]/)) {
+    if (page.match(/solgs\/confirm\/request\/|solgs\/trait\/|solgs\/model\/combined\/trials\//)) {
 
 	window.location = page;
 	
-    } else if (page.match(/[solgs\/analyze\/traits\/population\/ | solgs\/models\/combined\/trials\/]/)) {
+    } else if (page.match(/solgs\/analyze\/traits\/population\/|solgs\/models\/combined\/trials\//)) {
 
 	submitTraitSelections(page, args);
 		    
     } else {
-	
+
 	window.location = window.location.href;
 
     }
@@ -199,7 +198,7 @@ function wrapTraitsForm () {
     }
 
     if ( referer.match(/solgs\/population\//) ) {
-	action = ' action="/solgs/analyze/traits/population/' + popId + '"';		  	 		 
+	action = ' action="/solgs/analyze/traits/population/' + popId + '"';
     }
     
     var method = ' method="POST"';
@@ -218,7 +217,7 @@ function wrapTraitsForm () {
 
 function getProfileDialog (page, args) {
    
-    if (page.match(/[solgs\/trait\/ | solgs\/model\/combined\/trials\/]/) ) {
+    if (page.match(/solgs\/trait\/|solgs\/model\/combined\/trials\//) ) {
 	args = getArgsFromUrl(page, args);
     }
       
