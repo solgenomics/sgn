@@ -147,7 +147,7 @@
 	<button type="button" class="btn btn-primary" name="event_edit_display" id="event_edit_display">Edit Event</button>
 	<button type="button" class="btn btn-danger" name="delete_event_submit" id="delete_event_submit">Delete Event</button>
 	<button type="button" class="btn btn-info" name="export_event_display" id="export_event_display">Export Event</button>
-	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	<button type="button" class="btn btn-default" data-dismiss="modal" id="event_dialog_dismiss">Close</button>
       </div>
     </div>
   </div>

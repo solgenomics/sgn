@@ -103,13 +103,35 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("http://www.testedit.com", "partial_link_text", "find event url in editted event details");
 
+    $t->find_element_ok("event_dialog_dismiss", "id", "dismiss event dialog")->click();
+
     sleep(2);
 
     my $cal_editted_event_location = $cal_editted_event->get_element_location();
 
     $cal_editted_event->drag($cal_editted_event_location{'x'}+30, $cal_editted_event_location{'y'});
 
-    sleep(4);
+    sleep(2);
+
+    $t->find_element_ok("fc-next-button", "class", "click next month arrow")->click();
+
+    sleep(1);
+
+    $t->find_element_ok("fc-nextYear-button", "class", "click next year arrow")->click();
+
+    sleep(1);
+
+    $t->find_element_ok("fc-prev-button", "class", "click prev month arrow")->click();
+
+    sleep(1);
+
+    $t->find_element_ok("fc-prevYear-button", "class", "click prev year arrow")->click();
+
+    sleep(1);
+
+    $t->find_element_ok("fc-today-button", "class", "click today button")->click();
+
+    sleep(1);
 
     }
 
