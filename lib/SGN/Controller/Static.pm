@@ -23,19 +23,12 @@ use Moose;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
-#this function maps the url /calender/personal/ to test_page.mas
+
 sub personal_calendar :Path('/calendar/personal/') :Args(0) { 
     my $self = shift;
     my $c = shift;
     $c->stash->{template} = '/calendar/personal.mas';
 }
-
-#this function maps the url /calender/test_datatables/ to test_datatables.mas
-#sub test_datatables :Path('/calendar/test_datatables/') :Args(0) { 
-#    my $self = shift;
-#    my $c = shift;
-#    $c->stash->{template} = '/calendar/test_datatables.mas';
-#}
 
 sub test_authentication :Path('/test_authentication/') :Args(0) { 
     my $self = shift;
