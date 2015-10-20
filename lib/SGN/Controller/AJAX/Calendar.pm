@@ -38,9 +38,8 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-
-sub calendar_events_month_personal  : Path('/ajax/calendar/populate/month/personal') : ActionClass('REST') { }
 #When the month view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
+sub calendar_events_month_personal  : Path('/ajax/calendar/populate/month/personal') : ActionClass('REST') { }
 sub calendar_events_month_personal_GET { 
     my $self = shift;
     my $c = shift;
@@ -50,8 +49,8 @@ sub calendar_events_month_personal_GET {
     $c->stash->{rest} = populate_calendar_events($search_rs, $view);
 }
 
+#When the agendaWeek view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
 sub calendar_events_agendaWeek_personal  : Path('/ajax/calendar/populate/agendaWeek/personal') : ActionClass('REST') { }
-#When the month view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
 sub calendar_events_agendaWeek_personal_GET { 
     my $self = shift;
     my $c = shift;
@@ -89,9 +88,7 @@ sub get_allowed_roles {
 
 sub get_calendar_events_personal {
     my $c = shift;
-
     my $person_id = $c->user->get_object->get_sp_person_id;
-
     my @roles = get_user_roles($c, $person_id);
     my @allowed_roles = get_allowed_roles($c);
     my %allowed_roles_hash = map { $_ => 1 } @allowed_roles;
@@ -193,14 +190,9 @@ sub populate_calendar_events {
 sub check_value_format {
     #Check if value is in the {"2015-08-01T00:00:00","2015-08-01T00:00:00","description","url"} format.
     my $value = shift;
-    if ($value) {
-	if ($value =~ /^{"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d","\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d","/) {
-	    return 1;
-	} else {
-	    return -1;
-	}
-    }
-    else {
+    if ($value and $value =~ /^{"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d","\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d","/) {
+	return 1;
+    } else {
 	return -1;
     }
 }
@@ -251,9 +243,8 @@ sub determine_allday {
     return $allday;
 }
 
-sub drag_or_resize_event : Path('/ajax/calendar/drag_or_resize') : ActionClass('REST') { }
-
 #When an event is dragged to a new date a value of drag = 1 is passed to the function. When an event is simply resized a value of drag = 0 is passed to the function. This function saves the new start and end date to the db and updates the calendar display and mouseover.
+sub drag_or_resize_event : Path('/ajax/calendar/drag_or_resize') : ActionClass('REST') { }
 sub drag_or_resize_event_POST { 
     my $self = shift;
     my $c = shift;
@@ -303,9 +294,8 @@ sub drag_or_resize_event_POST {
     }
 }
 
-sub day_click_personal : Path('/ajax/calendar/dayclick/personal') : ActionClass('REST') { }
-
 #When a day is clicked, this function is called to populate the add_event project name and property type dropdowns.
+sub day_click_personal : Path('/ajax/calendar/dayclick/personal') : ActionClass('REST') { }
 sub day_click_personal_GET { 
     my $self = shift;
     my $c = shift;
@@ -358,9 +348,8 @@ sub day_click_personal_GET {
     $c->stash->{rest} = {project_list => \@projects, projectprop_list => \@projectprop_types};
 }
 
-sub add_event : Path('/ajax/calendar/add_event') : ActionClass('REST') { }
-
 #When an event is added using the day_dialog_add_event_form, this function is called to save it to the database.
+sub add_event : Path('/ajax/calendar/add_event') : ActionClass('REST') { }
 sub add_event_POST { 
     my $self = shift;
     my $c = shift;
@@ -397,9 +386,8 @@ sub add_event_POST {
     }
 }
 
-sub delete_event : Path('/ajax/calendar/delete_event') : ActionClass('REST') { }
-
 #When an event is deleted using the day_dialog_delete_event_form, this function is called to delete it from the database using DBIx class.
+sub delete_event : Path('/ajax/calendar/delete_event') : ActionClass('REST') { }
 sub delete_event_POST { 
     my $self = shift;
     my $c = shift;
@@ -421,9 +409,8 @@ sub delete_event_POST {
     }
 }
 
+#When an event is editted using the edit_event_form, this function is called to save it to the database.
 sub edit_event : Path('/ajax/calendar/edit_event') : ActionClass('REST') { }
-
-#When an event is added using the day_dialog_add_event_form, this function is called to save it to the database.
 sub edit_event_POST { 
     my $self = shift;
     my $c = shift;
