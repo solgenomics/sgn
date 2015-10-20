@@ -419,8 +419,6 @@ $(document).ready(function() {
        		    alert("Event Successfully Added!");
 		    $('#day_dialog').modal('hide');
 		    $('#calendar').fullCalendar('refetchEvents');
-    		}else if(data.status == 0){
-        	    alert("Event Already Added! Did Not Save New Event!");
     		}else if(data.status == 2){
 		    alert("Error! Event Not Added! E.002");
 		}

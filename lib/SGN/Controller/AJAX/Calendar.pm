@@ -152,7 +152,7 @@ sub populate_calendar_events {
     my $property;
     while (my $result = $search_rs->next) {
 
-	#Check if project property value is a date, and if it is not, then skip to next result.
+	#Check if project property value is an event, and if it is not, then skip to next result.
 	if (check_value_format($result->get_column('pp_value')) == -1) {
 	    next;
 	}
@@ -255,29 +255,19 @@ sub determine_allday {
 
 sub drag_or_resize_event : Path('/ajax/calendar/drag_or_resize') : ActionClass('REST') { }
 
-#When an event is dragged to a new date a value of drag = 1 is passed to the function. When an event is simply resized a value of drag =0 is passed to the function. This function saves the new start and end date to the db and updates the calendar display and mouseover.
+#When an event is dragged to a new date a value of drag = 1 is passed to the function. When an event is simply resized a value of drag = 0 is passed to the function. This function saves the new start and end date to the db and updates the calendar display and mouseover.
 sub drag_or_resize_event_POST { 
     my $self = shift;
     my $c = shift;
-
-    #variables from javascript AJAX are requested
-    my $start = $c->req->param("start_drag");
-    my $end = $c->req->param("end_drag");
-    my $description = $c->req->param("description");
-    my $url = $c->req->param("url");
-    my $projectprop_id = $c->req->param("projectprop_id");
-    my $delta = $c->req->param("delta");
-    my $drag = $c->req->param("drag");
-    my $view = $c->req->param("view");
-    my $allday = $c->req->param("allday");
+    my $params = $c->req->params();
 
     #First we process the start datetime.
     #A time::piece object is returned from format_time(). Delta is the number of seconds that the date was changed. Calling ->epoch on the time::piece object returns a string representing number of sec since epoch.
-    my $formatted_start = format_time($start)->epoch;
+    my $formatted_start = format_time($params->{start_drag} )->epoch;
     
     #If the event is being dragged to a new start, then the delta is added to the start here. When resizing, the start is not changed, only the end is changed.
-    if ($drag == 1) {
-	$formatted_start += $delta;
+    if ($params->{drag} == 1) {
+	$formatted_start += $params->{delta};
     }
 
     #The string representing the new number of sec since epoch is parsed into a time::piece object.
@@ -288,19 +278,19 @@ sub drag_or_resize_event_POST {
     my $new_start_display = format_display_date($formatted_start);
     
     #Next we process the end datetime. Whether the event is being dragged or resized, the end = end + delta.
-    my $formatted_end = format_time($end)->epoch;
-    $formatted_end += $delta;
+    my $formatted_end = format_time($params->{end_drag} )->epoch;
+    $formatted_end += $params->{delta};
     $formatted_end = Time::Piece->strptime($formatted_end, '%s');
 
     #Calling ->datetime on the time::piece object returns an ISO8601 datetime string. This is what is saved in db. 
     my $new_end = $formatted_end->datetime;
-    my $new_end_time = calendar_end_display($formatted_end, $view, $allday);
+    my $new_end_time = calendar_end_display($formatted_end, $params->{view}, $params->{allday} );
     my $new_end_display = format_display_date($formatted_end);
 
     #The new start and end datetimes are saved to the DB using DBIx class. A transaction wraps the update.
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     $schema->storage->txn_begin;
-    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id}, columns=>['value'])->update({value=>[$new_start, $new_end, $description, $url]})) {
+    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{projectprop_id} }, columns=>['value'])->update({value=>[$new_start, $new_end, $params->{description}, $params->{url}] })) {
 	
 	#The transaction changes are commited.
 	$schema->storage->txn_commit;
@@ -376,48 +366,36 @@ sub add_event : Path('/ajax/calendar/add_event') : ActionClass('REST') { }
 sub add_event_POST { 
     my $self = shift;
     my $c = shift;
-
-    #Variables sent from AJAX are requested.
-    my $project_id = $c->req->param("event_project_select");
-    my $cvterm_id = $c->req->param("event_type_select");
-    my $start = $c->req->param("event_start");
-    my $end = $c->req->param("event_end");
-    my $description = $c->req->param("event_description");
-    my $url = $c->req->param("event_url");
+    my $params = $c->req->params();
 
     #A time::piece object is returned from format_time(). Calling ->datetime on this object return an ISO8601 datetime string. This is what is saved in the db.
-    my $format_start = format_time($start)->datetime;
+    my $format_start = format_time($params->{event_start})->datetime;
     
     #If an event end is given, then it is converted to an ISO8601 datetime string to be saved. If none is given then the end will be the same as the start.
     my $format_end;
-    if ($end eq '') {$format_end = $format_start;} else {$format_end = format_time($end)->datetime;}
+    if ($params->{event_end} eq '') {$format_end = $format_start;} else {$format_end = format_time($params->{event_end})->datetime;}
 
     #If no description or URL given, then default values will be given.
-    if ($description eq '') {$description = 'N/A';}
-    if ($url eq '') {$url = '#';} else {$url = 'http://www.'.$url;}
+    if ($params->{event_description} eq '') {$params->{event_description} = 'N/A';}
+    if ($params->{event_url} eq '') {$params->{event_url} = '#';} else {$params->{event_url} = 'http://www.'.$params->{event_url};}
     
-    #Check if the projectprop unique (project_id, type_id, rank) constraint will cause the insert to fail.
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $result_set = $schema->resultset('Project::Projectprop');
-    my $count = $result_set->search({project_id=>$project_id, type_id=>$cvterm_id, rank=>0})->count;
-    if ($count == 0) {
+    my $rs = $schema->resultset('Project::Projectprop');
+    my $count = $rs->search({ project_id=>$params->{event_project_select}, type_id=>$params->{event_type_select} })->count;
 
-        #If there is no record already in the database, then it is created using DBIx class. The insert is wrapped in a transaction.
-        $schema->storage->txn_begin;
+    #The insert is wrapped in a transaction.
+    $schema->storage->txn_begin;
 
-        if (my $insert = $result_set->create({project_id=>$project_id, type_id=>$cvterm_id, value=>[$format_start, $format_end, $description, $url]})) {
+    if (my $insert = $rs->create({project_id=>$params->{event_project_select}, type_id=>$params->{event_type_select}, rank=>$count, value=>[$format_start, $format_end, $params->{event_description}, $params->{event_url}] })) {
 	    
-	    #The transaction is commited.
-	    $schema->storage->txn_commit;
-	    $c->stash->{rest} = {status => 1,};
-        } else {
-
-	    #The transaction is rolled back.
-	    $schema->storage->txn_rollback;
-	    $c->stash->{rest} = {status => 2,};
-        }
+	#The transaction is commited.
+	$schema->storage->txn_commit;
+	$c->stash->{rest} = {status => 1,};
     } else {
-      $c->stash->{rest} = {status => 0,};
+
+	#The transaction is rolled back.
+	$schema->storage->txn_rollback;
+	$c->stash->{rest} = {status => 2,};
     }
 }
 
@@ -451,23 +429,16 @@ sub edit_event : Path('/ajax/calendar/edit_event') : ActionClass('REST') { }
 sub edit_event_POST { 
     my $self = shift;
     my $c = shift;
+    my $params = $c->req->params();
 
-    #Variables sent from AJAX are requested.
-    my $projectprop_id = $c->req->param("edit_event_projectprop_id");
-    my $project_id = $c->req->param("edit_event_project_select");
-    my $cvterm_id = $c->req->param("edit_event_type_select");
-    my $start = $c->req->param("edit_event_start");
-    my $end = $c->req->param("edit_event_end");
-    my $description = $c->req->param("edit_event_description");
-    my $url = $c->req->param("edit_event_url");
-
-    #If no description or URL given, then default values will be given.
-    if ($description eq '') {$description = 'N/A';}
-    if ($url eq '') {$url = '#';} elsif ($url eq '#') {$url = '#';} else {$url = $url;}
+    #If no description or URL given or end date given, then default values will be given.
+    if ($params->{edit_event_description} eq '') {$params->{edit_event_description} = 'N/A';}
+    if ($params->{edit_event_url} eq '') {$params->{edit_event_url} = '#';}
+    if ($params->{edit_event_end} eq '') {$params->{edit_event_end} = $params->{edit_event_start}; }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     $schema->storage->txn_begin;
-    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id}, columns=>['project_id', 'type_id', 'value'])->update({project_id=>$project_id, type_id=>$cvterm_id, value=>[$start, $end, $description, $url]})) {
+    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{edit_event_projectprop_id} }, columns=>['project_id', 'type_id', 'value'])->update({project_id=>$params->{edit_event_project_select}, type_id=>$params->{edit_event_type_select}, value=>[$params->{edit_event_start}, $params->{edit_event_end}, $params->{edit_event_description}, $params->{edit_event_url}] })) {
 	
 	#The transaction changes are commited.
 	$schema->storage->txn_commit;
@@ -479,170 +450,7 @@ sub edit_event_POST {
 	$c->stash->{rest} = {error => 1,};
     }
 }
-
-sub add_event_type : Path('/ajax/calendar/add_event_type') : ActionClass('REST') { }
-
-#When an event type is added using the add_event_type_form, this function is called to save it to the database.
-sub add_event_type_POST { 
-    my $self = shift;
-    my $c = shift;
-
-    #Variables sent from AJAX are requested. $name is made lowercase, to avoid an uppercase and lowercase version of the same name being saved in the db. Only lowercase versions are saved in the db.
-    my $name = lc $c->req->param("event_type_name");
-    my $definition = $c->req->param("event_type_definition");
     
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
-    #Check if the cvterm unique name constraint will cause the insert to fail.
-    my $result_set = $schema->resultset('Cv::Cvterm');
-    my $count = $result_set->search({name=>$name})->count;
-    if ($count == 0) {
-
-	#Begin transaction.
-	$schema->storage->txn_begin;
-	
-	#The cv_id for 'project_property' cvterms is found.
-	my $cv_id = $schema->resultset('Cv::Cv')->find({name=>'project_property'})->cv_id;
-
-	#A dbxref entry is added if there is not already an accession with that name, using db_id = 2, which is a NULL entry. The dbxref_id is then returned.
-	my $dbxref_id = $schema->resultset('General::Dbxref')->find_or_create({db_id=>'2', accession=>$name})->dbxref_id;
-
-	if (my $insert = $result_set->create({cv_id=>$cv_id, dbxref_id=>$dbxref_id, name=>$name, definition=>$definition})) {
-	    
-	    #Commit transaction.
-	    $schema->storage->txn_commit;
-	    $c->stash->{rest} = {status => 1};
-	} else {
-
-	    #Rollback transaction.
-	    $schema->storage->txn_rollback;
-	    $c->stash->{rest} = {error => 1};
-	}
-    } else {
-
-	#The $name was found in the cvterm table already.
-	$c->stash->{rest} = {status => 0};
-    }
-}
-    
-sub event_more_info : Path('/ajax/calendar/more_info_properties') : ActionClass('REST') { }
-
-#When the event_dialog_more_info_form is submitted, this function is called to retrieve all other projectprops for that project and also to display the project_relationships.
-sub event_more_info_POST { 
-    my $self = shift;
-    my $c = shift;
-    my $project_id = $c->req->param("event_project_id");
-    my @time_array;
-    my $formatted_time;
-    my $start_display;
-    my $end_display;
-    my $value;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
-    #Project properties with a cv group name of 'project_property' for the given project_id are retrieved.
-    my $search_rs = $schema->resultset('Project::Project')->search(
-	{'cv.name'=>'project_property', 'me.project_id'=>$project_id},
-	{join=>{'projectprops'=>{'type'=>'cv'}},
-	'+select'=> ['projectprops.value', 'type.name', 'type.cvterm_id'],
-	'+as'=> ['pp_value', 'cv_name', 'cv_id'],
-	}
-    );
-    my @project_properties;
-    my $property;
-    while (my $result = $search_rs->next) {
-
-	#To make the date display nicely, we first check if the property value is a date, and then apply formatting.
-	if (check_value_format($result->get_column('pp_value')) != -1){
-	    @time_array = parse_time_array($result->get_column('pp_value'));
-
-	    #We begin with the start datetime, or the first element in the time_array.
-	    #A time::piece object is returned from format_date(). Calling format_display_date on this object returns a nice date which is what is displayed as the event's start in the more info dialog box. The same is done for the end date.
-	    $formatted_time = format_time($time_array[0]);
-	    $start_display = format_display_date($formatted_time);
-	    $formatted_time = format_time($time_array[1]);
-	    $end_display = format_display_date($formatted_time);
-	    $value = 'Start: '.$start_display.' | End: '.$end_display;
-	} else {
-	    $value = $result->get_column('pp_value');
-	}
-
-	#Property words are capitalized to make it display more nicely.
-	$property = $result->get_column('cv_name');
-	$property =~ s/([\w']+)/\u\L$1/g;
-
-	push(@project_properties, {property=>$property, value=>$value, cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id')});
-    }
-    $c->stash->{rest} = {data=>\@project_properties};
-}
-
-sub event_more_info_relationships : Path('/ajax/calendar/more_info_relationships') : ActionClass('REST') { }
-
-#when the event_dialog_more_info_form is submitted, this function is called to retrieve all relationships for that project.
-sub event_more_info_relationships_POST { 
-    my $self = shift;
-    my $c = shift;
-    my $project_id = $c->req->param("event_project_id");
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $search_rs = $schema->resultset('Project::ProjectRelationship')->search(
-	{'me.subject_project_id'=>$project_id},
-	{join=>['type','object_project'],
-	'+select'=> ['type.name', 'type.cvterm_id', 'object_project.name'],
-	'+as'=> ['cv_name', 'cv_id', 'op_name'],
-	}
-    );
-    my @project_relationships;
-    my $relationship;
-    while (my $result = $search_rs->next) {
-
-	#Property words are capitalized to make it display more nicely.
-	$relationship = $result->get_column('cv_name');
-	$relationship =~ s/([\w']+)/\u\L$1/g;
-
-  	push(@project_relationships, {object_project=>$result->get_column('op_name'), cvterm=>$relationship, cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id')});
-    }
-    $c->stash->{rest} = {data=>\@project_relationships};
-}
-
-sub datatables_project_properties : Path('/ajax/calendar/datatables_project_properties') : ActionClass('REST') { }
-
-#this fills the datatable #project_dates_data at the bottom of the test_page.
-sub datatables_project_properties_GET { 
-    my $self = shift;
-    my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $search_rs = $schema->resultset('Project::Project')->search(undef,
-	{join=>{'projectprops'=>'type'},
-	'+select'=> ['projectprops.projectprop_id', 'type.name', 'projectprops.value', 'type.cvterm_id'],
-	'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cv_id'],
-	}
-    );
-    my @project_properties;
-    while (my $result = $search_rs->next) {
-	push(@project_properties, {title=>$result->name, property=>$result->get_column('cv_name'), value=>$result->get_column('pp_value'), project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id')});
-    }
-    $c->stash->{rest} = {aaData=>\@project_properties};
-}
-
-sub datatables_project_relationships : Path('/ajax/calendar/datatables_project_relationships') : ActionClass('REST') { }
-
-#this fills the datatable #project_relationships_data at thebottom of the test_page.
-sub datatables_project_relationships_GET { 
-    my $self = shift;
-    my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $search_rs = $schema->resultset('Project::ProjectRelationship')->search(undef,
-	{join=>['type','object_project','subject_project'],
-	'+select'=> ['type.name', 'type.cvterm_id', 'object_project.name', 'subject_project.name'],
-	'+as'=> ['cv_name', 'cv_id', 'op_name', 'sp_name'],
-	}
-    );
-    my @project_relationships;
-    while (my $result = $search_rs->next) {
-      push(@project_relationships, {relationship_type=>$result->get_column('cv_name'), subject_project=>$result->get_column('sp_name'), object_project=>$result->get_column('op_name'), subject_project_url=>'/breeders_toolbox/trial/'.$result->subject_project_id.'/', object_project_url=>'/breeders_toolbox/trial/'.$result->object_project_id.'/', cvterm_url=>"/chado/cvterm?cvterm_id=".$result->get_column('cv_id')});
-    }
-    $c->stash->{rest} = {aaData=>\@project_relationships};
-}
-
 #This function is used to return a Time::Piece object, which is useful for format consistensy.
 sub format_time {
     my $input_time = shift;

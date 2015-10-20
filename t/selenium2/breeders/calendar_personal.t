@@ -133,6 +133,46 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
+    $t->find_element_ok("fc-day", "class", "find day")->click();
+
+    my $event_project_select = $t->find_element_ok("event_project_select", "id", "find event project select");
+
+    $event_project_select->send_keys('test_trial');
+    
+    my $event_type_select = $t->find_element_ok("event_type_select", "id", "find event type select");
+
+    $event_type_select->send_keys('Harvest Event');
+    
+    $t->find_element_ok("event_start", "id", "find event start")->click();
+
+    my $event_start_calendar = $t->find_element_ok(".day.active", "css", "find active day on calendar select");
+
+    $event_start_calendar->click();
+
+    sleep(1);
+
+    my $event_desc = $t->find_element_ok("event_description", "id", "find event description input");
+
+    $event_desc->click();
+
+    $event_desc->send_keys('test repeat event type description');
+
+    my $event_url = $t->find_element_ok("event_url", "id", "find event url input");
+
+    $event_url->send_keys('test.com');
+
+    $t->find_element_ok("add_event_submit", "id", "submit event")->click();
+    
+    sleep(1);
+
+    $t->driver->accept_alert();
+
+    sleep(1);
+
+    $t->get_ok('/calendar/personal');
+
+    sleep(4);
+
     }
 
 );
