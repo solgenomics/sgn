@@ -12,8 +12,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/brapi/v1/germplasm/38843');
     ok($d->driver->get_page_source()=~/test_accession4/, "germplasm detail call");
 
-    $d->get_ok('/brapi/v1/germplasm');
-    ok($d->driver->get_page_source()=~/test_accession3/, "germplasm summary call");
+    $d->get_ok('/brapi/v1/germplasm?name=test*&matchMethod=wildcard');
+    ok($d->driver->get_page_source()=~/test_accession3/, "germplasm search call");
 
     $d->get_ok('/brapi/v1/markerprofiles');
     ok($d->driver->get_page_source()=~/1622/, "markerprofile summary call");
