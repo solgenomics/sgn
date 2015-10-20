@@ -171,7 +171,19 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->get_ok('/calendar/personal');
 
-    sleep(4);
+    sleep(2);
+
+    $t->find_element_ok("test", "partial_link_text", "find test event")->click();
+
+    sleep(1);
+
+    $t->find_element_ok("delete_event_submit", "id", "delete event")->click();
+
+    sleep(1);
+
+    $t->driver->accept_alert();
+
+    sleep(1);
 
     }
 
