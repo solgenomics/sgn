@@ -130,8 +130,6 @@ sub get_calendar_events_personal {
 	}
     );
     $search_rs = $search_rs->search([$search_projects]);
-
-    #$schema->storage->debug(1);
     return $search_rs;
 }
 
@@ -431,14 +429,20 @@ sub edit_event_POST {
     my $c = shift;
     my $params = $c->req->params();
 
+    #A time::piece object is returned from format_time(). Calling ->datetime on this object return an ISO8601 datetime string. This is what is saved in the db.
+    my $format_start = format_time($params->{edit_event_start})->datetime;
+    
+    #If an event end is given, then it is converted to an ISO8601 datetime string to be saved. If none is given then the end will be the same as the start.
+    my $format_end;
+    if ($params->{edit_event_end} eq '') {$format_end = $format_start;} else {$format_end = format_time($params->{edit_event_end})->datetime;}
+
     #If no description or URL given or end date given, then default values will be given.
     if ($params->{edit_event_description} eq '') {$params->{edit_event_description} = 'N/A';}
     if ($params->{edit_event_url} eq '') {$params->{edit_event_url} = '#';}
-    if ($params->{edit_event_end} eq '') {$params->{edit_event_end} = $params->{edit_event_start}; }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     $schema->storage->txn_begin;
-    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{edit_event_projectprop_id} }, columns=>['project_id', 'type_id', 'value'])->update({project_id=>$params->{edit_event_project_select}, type_id=>$params->{edit_event_type_select}, value=>[$params->{edit_event_start}, $params->{edit_event_end}, $params->{edit_event_description}, $params->{edit_event_url}] })) {
+    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{edit_event_projectprop_id} }, columns=>['project_id', 'type_id', 'value'])->update({project_id=>$params->{edit_event_project_select}, type_id=>$params->{edit_event_type_select}, value=>[$format_start, $format_end, $params->{edit_event_description}, $params->{edit_event_url}] })) {
 	
 	#The transaction changes are commited.
 	$schema->storage->txn_commit;
