@@ -52,23 +52,6 @@ my $advanced_search=  info_table_html(
 
 </%perl>
 
-<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
-
-
-<div class="well">
-<table id="locus_search_results" class="display">
-<thead>
-  <tr>
-    <th>Organism</th>
-    <th>Locus Name</th>
-    <th>Locus Symbol</th>
-    <th>Alleles</th>
-  </tr>
-</thead>
-</table>
-</div>
-
-</&>
 
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0, subtitle=>'[<a href="../help/gene_search_help.pl">Gene Search Help</a>]' &>
 
@@ -113,6 +96,25 @@ my $advanced_search=  info_table_html(
 </&>
 
 </div>
+
+
+<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
+
+
+<div class="well">
+<table id="locus_search_results" class="display">
+<thead>
+  <tr>
+    <th>Organism</th>
+    <th>Locus Name</th>
+    <th>Locus Symbol</th>
+    <th>Alleles</th>
+  </tr>
+</thead>
+</table>
+</div>
+
+</&>
 
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
