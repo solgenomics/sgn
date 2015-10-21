@@ -39,7 +39,7 @@ $d->find_element_ok("add_list_button", "id", "find add list button test")->click
 
 $d->find_element_ok("view_list_new_test_list", "id", "view list test")->click();
 
-sleep(2);
+sleep(1);
 
 $d->find_element_ok("dialog_add_list_item", "id", "add test list")->send_keys("element1\nelement2\nelement3\n");
 
@@ -64,90 +64,51 @@ sleep(1);
 
 $d->find_element_ok("close_list_item_dialog", "id", "find close_list_item_dialog button test")->click();
 
-sleep(2);
-
-$d->find_element_ok("view_list_update_list_name", "id", "view list dialog test");
-
 sleep(1);
 
-$d->find_element_ok("add_list_input", "id", "find add list input");
+my %test_lists = ('accessions'=>"test_accession1\ntest_accession2\ntest_accession3\n", 'plots'=>"test_trial1\ntest_trial21\ntest_trial22\n", 'locations'=>"test_location\nCornell Biotech\n", 'trials'=>"test\ntest_trial\ntest_genotyping_project\n");
 
-my $add_list_input = $d->find_element_ok("add_list_input", "id", "find add list input test");
-   
-$add_list_input->send_keys("test_accession_list");
-
-$d->find_element_ok("add_list_button", "id", "find add accession list button test")->click();
-
-$d->find_element_ok("view_list_test_accession_list", "id", "view accession list test")->click();
-
-sleep(2);
-
-$d->find_element_ok("dialog_add_list_item", "id", "add accession list items")->send_keys("test_accession1\ntest_accession2\ntest_accession3\n");
-
-sleep(1);
-
-$d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_item_button test")->click();
-
-$d->find_element_ok("type_select", "id", "validate accession list select")->send_keys("accessions");
-
-my $accession_validate = $d->find_element_ok("list_item_dialog_validate", "id", "submit accession list validate");
-
-$accession_validate->click();
-
-sleep(2);
-$d->accept_alert_ok();
-sleep(3);
-$d->accept_alert_ok();
-
-$d->find_element_ok("close_list_item_dialog", "id", "find close list dialog button")->click();
-
-sleep(1);
-
-$d->find_element_ok("view_list_test_accession_list", "id", "view accession list dialog test");
-
-sleep(1);
+foreach my $list_type ( keys %test_lists ) {
 
 
+    $d->find_element_ok("view_list_update_list_name", "id", "view list dialog test");
 
+    sleep(1);
 
-$d->find_element_ok("add_list_input", "id", "find add list input");
+    $d->find_element_ok("add_list_input", "id", "find add list input");
 
-my $add_list_input = $d->find_element_ok("add_list_input", "id", "find add list input test");
-   
-$add_list_input->send_keys("test_plot_list");
+    $d->find_element_ok("add_list_input", "id", "find add list input test")->send_keys($list_type);
 
-$d->find_element_ok("add_list_button", "id", "find add accession list button test")->click();
+    $d->find_element_ok("add_list_button", "id", "find add list button test")->click();
 
-$d->find_element_ok("view_list_test_plot_list", "id", "view accession list test")->click();
+    $d->find_element_ok("view_list_".$list_type, "id", "view list dialog test")->click();
 
-sleep(2);
+    sleep(1);
 
-$d->find_element_ok("dialog_add_list_item", "id", "add accession list items")->send_keys("test_trial1\ntest_trial21\ntest_trial22\n");
+    $d->find_element_ok("dialog_add_list_item", "id", "add list items")->send_keys($test_lists{$list_type});
 
-sleep(1);
+    sleep(1);
 
-$d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_item_button test")->click();
+    $d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_item_button test")->click();
 
-$d->find_element_ok("type_select", "id", "validate accession list select")->send_keys("plots");
+    $d->find_element_ok("type_select", "id", "validate list select")->send_keys($list_type);
 
-my $plot_validate = $d->find_element_ok("list_item_dialog_validate", "id", "submit accession list validate");
+    $d->find_element_ok("list_item_dialog_validate", "id", "submit list validate")->click();
 
-$plot_validate->click();
+    sleep(3);
+    $d->accept_alert_ok();
+    sleep(3);
+    $d->accept_alert_ok();
 
-sleep(2);
-$d->accept_alert_ok();
-sleep(3);
-$d->accept_alert_ok();
+    $d->find_element_ok("close_list_item_dialog", "id", "find close list dialog button")->click();
 
-$d->find_element_ok("close_list_item_dialog", "id", "find close list dialog button")->click();
+    sleep(1);
 
-sleep(1);
+    $d->find_element_ok("view_list_".$list_type, "id", "view accession list dialog test");
 
-$d->find_element_ok("view_list_test_accession_list", "id", "view accession list dialog test");
+    sleep(1);
 
-sleep(1);
-
-
+}
 
 print "Delete test list...\n";
 
