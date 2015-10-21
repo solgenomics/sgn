@@ -38,27 +38,17 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-#When the month view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
-sub calendar_events_month_personal  : Path('/ajax/calendar/populate/month/personal') : ActionClass('REST') { }
-sub calendar_events_month_personal_GET { 
+#When the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data. Arguments are the calendar viewsm which are either month or agendaWeek.
+sub calendar_events_personal  : Path('/ajax/calendar/populate/personal') : ActionClass('REST') { }
+sub calendar_events_personal_GET : Args(1) { 
     my $self = shift;
     my $c = shift;
+    my $view = shift;
     if (!$c->user()) {die;}
     my $search_rs = get_calendar_events_personal($c);
-    my $view = 'month';
     $c->stash->{rest} = populate_calendar_events($search_rs, $view);
 }
 
-#When the agendaWeek view of the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data.
-sub calendar_events_agendaWeek_personal  : Path('/ajax/calendar/populate/agendaWeek/personal') : ActionClass('REST') { }
-sub calendar_events_agendaWeek_personal_GET { 
-    my $self = shift;
-    my $c = shift;
-    if (!$c->user()) {die;}
-    my $search_rs = get_calendar_events_personal($c);
-    my $view = 'agendaWeek';
-    $c->stash->{rest} = populate_calendar_events($search_rs, $view);
-}
 
 sub get_user_roles {
     my $c = shift;
@@ -74,42 +64,24 @@ sub get_user_roles {
     return @roles;
 }
 
-sub get_allowed_roles {
-    my $c = shift;
-    my @allowed_roles;
-    my $q = "SELECT DISTINCT name FROM sgn_people.sp_roles ";
-    my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute();
-    while (my ($name) = $sth->fetchrow_array ) {
-	push(@allowed_roles, $name);
-    }
-    return @allowed_roles;
-}
 
 sub get_calendar_events_personal {
     my $c = shift;
     my $person_id = $c->user->get_object->get_sp_person_id;
     my @roles = get_user_roles($c, $person_id);
-    my @allowed_roles = get_allowed_roles($c);
-    my %allowed_roles_hash = map { $_ => 1 } @allowed_roles;
-
     my @search_project_ids = '-1';
     foreach (@roles) {
-	if(exists($allowed_roles_hash{$_})) {
-	    
-	    my $q="SELECT project_id FROM project WHERE name=?";
+	my $q="SELECT project_id FROM project WHERE name=?";
+	my $sth = $c->dbc->dbh->prepare($q);
+	$sth->execute($_);
+        while (my ($project_id) = $sth->fetchrow_array ) {
+	    push(@search_project_ids, $project_id);
+
+	    my $q="SELECT subject_project_id FROM project_relationship JOIN cvterm ON (type_id=cvterm_id) WHERE object_project_id=? and cvterm.name='breeding_program_trial_relationship'";
 	    my $sth = $c->dbc->dbh->prepare($q);
-	    $sth->execute($_);
-	    while (my ($project_id) = $sth->fetchrow_array ) {
-
-		push(@search_project_ids, $project_id);
-
-		my $q="SELECT subject_project_id FROM project_relationship JOIN cvterm ON (type_id=cvterm_id) WHERE object_project_id=? and cvterm.name='breeding_program_trial_relationship'";
-		my $sth = $c->dbc->dbh->prepare($q);
-		$sth->execute($project_id);
-		while (my ($trial) = $sth->fetchrow_array ) {
-		    push(@search_project_ids, $trial);
-		}
+	    $sth->execute($project_id);
+	    while (my ($trial) = $sth->fetchrow_array ) {
+		push(@search_project_ids, $trial);
 	    }
 	}
     }
@@ -303,26 +275,19 @@ sub day_click_personal_GET {
     my $person_id = $c->user->get_object->get_sp_person_id;
 
     my @roles = get_user_roles($c, $person_id);
-    my @allowed_roles = get_allowed_roles($c);
-    my %allowed_roles_hash = map { $_ => 1 } @allowed_roles;
-
     my @projects;
     foreach (@roles) {
-	if(exists($allowed_roles_hash{$_})) {
-	    
-	    my $q="SELECT project_id, name FROM project WHERE name=?";
+	my $q="SELECT project_id, name FROM project WHERE name=?";
+	my $sth = $c->dbc->dbh->prepare($q);
+	$sth->execute($_);
+	while (my ($project_id, $name) = $sth->fetchrow_array ) {
+	    push(@projects, {project_id=>$project_id, project_name=>$name});
+
+	    my $q="SELECT subject_project_id, project.name FROM project_relationship JOIN cvterm ON (type_id=cvterm_id) JOIN project ON (subject_project_id=project_id) WHERE object_project_id=? and cvterm.name='breeding_program_trial_relationship'";
 	    my $sth = $c->dbc->dbh->prepare($q);
-	    $sth->execute($_);
-	    while (my ($project_id, $name) = $sth->fetchrow_array ) {
-
-		push(@projects, {project_id=>$project_id, project_name=>$name});
-
-		my $q="SELECT subject_project_id, project.name FROM project_relationship JOIN cvterm ON (type_id=cvterm_id) JOIN project ON (subject_project_id=project_id) WHERE object_project_id=? and cvterm.name='breeding_program_trial_relationship'";
-		my $sth = $c->dbc->dbh->prepare($q);
-		$sth->execute($project_id);
-		while (my ($trial_id, $trial_name) = $sth->fetchrow_array ) {
-		    push(@projects, {project_id=>$trial_id, project_name=>$trial_name});
-		}
+	    $sth->execute($project_id);
+	    while (my ($trial_id, $trial_name) = $sth->fetchrow_array ) {
+		push(@projects, {project_id=>$trial_id, project_name=>$trial_name});
 	    }
 	}
     }
