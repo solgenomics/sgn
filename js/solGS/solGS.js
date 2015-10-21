@@ -14,7 +14,7 @@ function solGS () {};
 
 solGS.waitPage = function (page) {
  
-    if ( page.match(/solgs\/trait\/|solgs\/model\/combined\/trials\//)) {
+    if ( page.match(/solgs\/population\/|solgs\/trait\/|solgs\/model\/combined\/trials\//)) {
     	askUser(page);
     } else {
     	blockPage(page);
@@ -154,7 +154,8 @@ function blockPage (page, args) {
 
 
 function goToPage (page, args) {    
-    if (page.match(/solgs\/confirm\/request\/|solgs\/trait\/|solgs\/model\/combined\/trials\//)) {
+
+    if (page.match( /solgs\/population\/|solgs\/confirm\/request\/|solgs\/trait\/|solgs\/model\/combined\/trials\//)) {
 
 	window.location = page;
 	
@@ -162,8 +163,8 @@ function goToPage (page, args) {
 
 	submitTraitSelections(page, args);
 		    
-    } else {
-
+    }  else {
+	
 	window.location = window.location.href;
 
     }
@@ -217,10 +218,11 @@ function wrapTraitsForm () {
 
 function getProfileDialog (page, args) {
    
-    if (page.match(/solgs\/trait\/|solgs\/model\/combined\/trials\//) ) {
+    if (page.match(/solgs\/population\/|solgs\/trait\/|solgs\/model\/combined\/trials\//) ) {
+
 	args = getArgsFromUrl(page, args);
     }
-      
+   
     var form = getProfileForm(args);
    
     jQuery('<div />', {id: 'email-form'})
@@ -241,10 +243,10 @@ function getProfileDialog (page, args) {
 			var analysisType = args.analysis_type;
 		    
 			var dataSetType = args.data_set_type;
-		    
+
 			args['user_email'] = userEmail;
 			args = JSON.stringify(args);
-	
+			alert('args ' + args)
 			var analysisProfile = {
 			    'user_name'    : userName, 
 			    'user_email'   : userEmail,
@@ -293,7 +295,7 @@ function getArgsFromUrl (url, args) {
 	else {
 
 	    args['trait_id']      = [ urlStr[4]  ];
-	    args['population_id'] = [  urlStr[6] ] ;
+	    args['population_id'] = [  urlStr[6] ];
 	    args['analysis_type'] = 'single model';
 	    args['data_set_type'] = 'single population';
 	
@@ -311,17 +313,36 @@ function getArgsFromUrl (url, args) {
 		    'analysis_type' : 'single model',
 		    'data_set_type' : 'combined populations',
 		   };
-	}
-	else {
+	} else {
 
 	    args['trait_id']      = [ urlStr[8]  ];
-	    args['population_id'] = [  urlStr[6] ] ;
+	    args['population_id'] = [  urlStr[6] ];
 	    args['analysis_type'] = 'single model';
 	    args['data_set_type'] = 'combined populations';
 	
 	}
     } 
-    
+
+    if (url.match(/solgs\/population\//)) {
+	
+	var urlStr = url.split(/\/+/);
+//	alert( ' ' +  urlStr[3] + ' ' + urlStr[4])
+	if (!args) {
+	    
+	    args = { 
+		'population_id' : [ urlStr[4] ], 
+		'analysis_type' : 'population download',
+		'data_set_type' : 'single population',
+	    };
+	}
+	else {
+	    args['population_id'] = [ urlStr[4] ];
+	    args['analysis_type'] = 'population download';
+	    args['data_set_type'] = 'single population';
+	
+	}
+    } 
+    alert(args.population_id)
     return args;
 
 }
