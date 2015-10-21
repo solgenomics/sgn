@@ -15,7 +15,7 @@ The calendar can display events for projects (breeding programs and their trials
 
 Nicolas Morales <nm529@cornell.edu>
 Created: 08/01/2015
-Modified: 08/17/2015
+Modified: 10/21/2015
 
 =cut
 
@@ -38,7 +38,18 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-#When the calendar is loaded and when controls (such as next month or year) are used, this function is called to get date data. Arguments are the calendar viewsm which are either month or agendaWeek.
+=head2 /ajax/calendar/populate/personal/{view}
+
+ Usage: When the calendar is loaded and when controls (such as next month or year) are used, this function is called to get event data. Arguments are the calendar views which are either month or agendaWeek.
+ Desc:
+ Return JSON example:
+[{"event_description":"N/A","end_drag":"2015-10-28T00:00:00","event_url":"#","allDay":1,"end_display":"2015-10-28","project_id":89,"property":"Planting Event","p_description":"Plants assayed at Zaria in 2002/03","cvterm_url":"/chado/cvterm?cvterm_id=76941","start_drag":"2015-10-28T00:00:00","end":"2015-10-29T00:00:00","start_display":"2015-10-28","projectprop_id":2735,"cvterm_id":76941,"title":"Cassava Zaria 2002/03","project_url":"/breeders_toolbox/trial/89/","start":"2015-10-28T00:00:00"},{"event_description":"N/A","end_drag":"2015-10-23T00:00:00","event_url":"#","allDay":1,"end_display":"2015-10-23","project_id":599,"property":"Presentation Event","p_description":"Test Bootstrap2","cvterm_url":"/chado/cvterm?cvterm_id=76946","start_drag":"2015-10-22T00:00:00","end":"2015-10-24T00:00:00","start_display":"2015-10-22","projectprop_id":2729,"cvterm_id":76946,"title":"TestBootstrap2","project_url":"/breeders_toolbox/trial/599/","start":"2015-10-22T00:00:00"}]
+ Args: The calendar view being displayed, either month or agendaWeek
+ Side Effects:
+ Example:
+
+=cut
+
 sub calendar_events_personal  : Path('/ajax/calendar/populate/personal') : ActionClass('REST') { }
 sub calendar_events_personal_GET : Args(1) { 
     my $self = shift;
@@ -49,6 +60,169 @@ sub calendar_events_personal_GET : Args(1) {
     $c->stash->{rest} = populate_calendar_events($search_rs, $view);
 }
 
+=head2 /ajax/calendar/drag_or_resize
+
+ Usage: When an event is added using the day_dialog_add_event_form, this function is called to save it to the database.
+ Desc:
+ Return JSON example:
+ Args: event_start, event_end, event_description, event_url, event_project_select, event_type_select
+ Side Effects:
+ Example:
+
+=cut
+
+sub add_event : Path('/ajax/calendar/add_event') : ActionClass('REST') { }
+sub add_event_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $params = $c->req->params();
+
+    #A time::piece object is returned from format_time(). Calling ->datetime on this object return an ISO8601 datetime string. This is what is saved in the db.
+    my $format_start = format_time($params->{event_start})->datetime;
+    
+    #If an event end is given, then it is converted to an ISO8601 datetime string to be saved. If none is given then the end will be the same as the start.
+    my $format_end;
+    if ($params->{event_end} eq '') {$format_end = $format_start;} else {$format_end = format_time($params->{event_end})->datetime;}
+
+    #If no description or URL given, then default values will be given.
+    if ($params->{event_description} eq '') {$params->{event_description} = 'N/A';}
+    if ($params->{event_url} eq '') {$params->{event_url} = '#';} else {$params->{event_url} = 'http://www.'.$params->{event_url};}
+    
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $rs = $schema->resultset('Project::Projectprop');
+    my $count = $rs->search({ project_id=>$params->{event_project_select}, type_id=>$params->{event_type_select} })->count;
+
+    $schema->storage->txn_begin;
+    if (my $insert = $rs->create({project_id=>$params->{event_project_select}, type_id=>$params->{event_type_select}, rank=>$count, value=>[$format_start, $format_end, $params->{event_description}, $params->{event_url}] })) {
+	$schema->storage->txn_commit;
+	$c->stash->{rest} = {status => 1,};
+    } else {
+	$schema->storage->txn_rollback;
+	$c->stash->{rest} = {status => 2,};
+    }
+}
+
+=head2 /ajax/calendar/delete_event
+
+ Usage: To delete an event
+ Desc:
+ Return JSON example:
+ Args: event_projectprop_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub delete_event : Path('/ajax/calendar/delete_event') : ActionClass('REST') { }
+sub delete_event_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $projectprop_id = $c->req->param("event_projectprop_id");
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    $schema->storage->txn_begin;
+    if (my $delete = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id})->delete) {
+	$schema->storage->txn_commit;
+	$c->stash->{rest} = {status => 1,};
+    } else {
+	$schema->storage->txn_rollback;
+	$c->stash->{rest} = {status => 0,};
+    }
+}
+
+=head2 /ajax/calendar/drag_or_resize
+
+ Usage: When an event is dragged to a new date a value of drag = 1 is passed to the function. When an event is simply resized a value of drag = 0 is passed to the function. This function saves the new start and end date to the db and updates the calendar display and mouseover.
+ Desc:
+ Return JSON example:
+ Args: start_drag, delta, end_drag, drag, view, allday, projectprop_id, description, url
+ Side Effects:
+ Example:
+
+=cut
+
+sub drag_or_resize_event : Path('/ajax/calendar/drag_or_resize') : ActionClass('REST') { }
+sub drag_or_resize_event_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $params = $c->req->params();
+
+    #First we process the start datetime.
+    #A time::piece object is returned from format_time(). Delta is the number of seconds that the date was changed. Calling ->epoch on the time::piece object returns a string representing number of sec since epoch.
+    my $formatted_start = format_time($params->{start_drag} )->epoch;
+    
+    #If the event is being dragged to a new start, then the delta is added to the start here. When resizing, the start is not changed, only the end is changed.
+    if ($params->{drag} == 1) {
+	$formatted_start += $params->{delta};
+    }
+
+    #The string representing the new number of sec since epoch is parsed into a time::piece object.
+    $formatted_start = Time::Piece->strptime($formatted_start, '%s');
+
+    # $new_start is what is saved to db. $new_start_display is what is displayed on mouseover.
+    my $new_start = $formatted_start->datetime;
+    my $new_start_display = format_display_date($formatted_start);
+    
+    #Next we process the end datetime. Whether the event is being dragged or resized, the end = end + delta.
+    my $formatted_end = format_time($params->{end_drag} )->epoch;
+    $formatted_end += $params->{delta};
+    $formatted_end = Time::Piece->strptime($formatted_end, '%s');
+
+    # $new_end is what is saved in db. 
+    my $new_end = $formatted_end->datetime;
+    my $new_end_time = calendar_end_display($formatted_end, $params->{view}, $params->{allday} );
+    my $new_end_display = format_display_date($formatted_end);
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    $schema->storage->txn_begin;
+    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{projectprop_id} }, columns=>['value'])->update({value=>[$new_start, $new_end, $params->{description}, $params->{url}] })) {
+	$schema->storage->txn_commit;
+
+	#If the update was successfull, data is passed back to AJAX so that the event can be properly updated in display.
+	$c->stash->{rest} = {success => 1, start=>$new_start, start_drag=>$new_start, start_display=>$new_start_display, end=>$new_end_time, end_drag=>$new_end, end_display=>$new_end_display};
+    } else {
+	$schema->storage->txn_rollback;
+	$c->stash->{rest} = {error => 1,};
+    }
+}
+
+=head2 /ajax/calendar/edit_event
+
+ Usage: When an event is editted using the edit_event_form
+ Desc:
+ Return JSON example:
+ Args: edit_event_start, edit_event_end, edit_event_description, edit_event_url, edit_event_projectprop_id, edit_event_project_select, edit_event_type_select
+ Side Effects:
+ Example:
+
+=cut
+
+sub edit_event : Path('/ajax/calendar/edit_event') : ActionClass('REST') { }
+sub edit_event_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $params = $c->req->params();
+
+    #A time::piece object is returned from format_time(). Calling ->datetime on this object return an ISO8601 datetime string. This is what is saved in the db.
+    my $format_start = format_time($params->{edit_event_start})->datetime;
+    
+    #If an event end is given, then it is converted to an ISO8601 datetime string to be saved. If none is given then the end will be the same as the start.
+    my $format_end;
+    if ($params->{edit_event_end} eq '') {$format_end = $format_start;} else {$format_end = format_time($params->{edit_event_end})->datetime;}
+
+    #If no description or URL given or end date given, then default values will be given.
+    if ($params->{edit_event_description} eq '') {$params->{edit_event_description} = 'N/A';}
+    if ($params->{edit_event_url} eq '') {$params->{edit_event_url} = '#';}
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    $schema->storage->txn_begin;
+    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{edit_event_projectprop_id} }, columns=>['project_id', 'type_id', 'value'])->update({project_id=>$params->{edit_event_project_select}, type_id=>$params->{edit_event_type_select}, value=>[$format_start, $format_end, $params->{edit_event_description}, $params->{edit_event_url}] })) {
+	$schema->storage->txn_commit;
+	$c->stash->{rest} = {status => 1,};
+    } else {
+	$schema->storage->txn_rollback;
+	$c->stash->{rest} = {error => 1,};
+    }
+}
 
 sub get_user_roles {
     my $c = shift;
@@ -88,8 +262,6 @@ sub get_calendar_events_personal {
 
     @search_project_ids = map{$_='me.project_id='.$_; $_} @search_project_ids;
     my $search_projects = join(" OR ", @search_project_ids);
-
-    #Calendar event info is retrieved using DBIx class.
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $search_rs = $schema->resultset('Project::Project')->search(
 	undef,
@@ -160,7 +332,6 @@ sub populate_calendar_events {
 }
 
 sub check_value_format {
-    #Check if value is in the {"2015-08-01T00:00:00","2015-08-01T00:00:00","description","url"} format.
     my $value = shift;
     if ($value and $value =~ /^{"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d","\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d","/) {
 	return 1;
@@ -170,7 +341,6 @@ sub check_value_format {
 }
 
 sub parse_time_array {
-    #In the database, the start/end datetime info is stored as a text string like: {"2015-08-12T00:00:00","2015-08-15T00:00:00"}. The string is then transcribed and split into an array.
     my $raw_value = shift;
     $raw_value =~ tr/{}"//d;
     my @time_array = split(/,/, $raw_value);
@@ -215,58 +385,7 @@ sub determine_allday {
     return $allday;
 }
 
-#When an event is dragged to a new date a value of drag = 1 is passed to the function. When an event is simply resized a value of drag = 0 is passed to the function. This function saves the new start and end date to the db and updates the calendar display and mouseover.
-sub drag_or_resize_event : Path('/ajax/calendar/drag_or_resize') : ActionClass('REST') { }
-sub drag_or_resize_event_POST { 
-    my $self = shift;
-    my $c = shift;
-    my $params = $c->req->params();
-
-    #First we process the start datetime.
-    #A time::piece object is returned from format_time(). Delta is the number of seconds that the date was changed. Calling ->epoch on the time::piece object returns a string representing number of sec since epoch.
-    my $formatted_start = format_time($params->{start_drag} )->epoch;
-    
-    #If the event is being dragged to a new start, then the delta is added to the start here. When resizing, the start is not changed, only the end is changed.
-    if ($params->{drag} == 1) {
-	$formatted_start += $params->{delta};
-    }
-
-    #The string representing the new number of sec since epoch is parsed into a time::piece object.
-    $formatted_start = Time::Piece->strptime($formatted_start, '%s');
-
-    #Calling ->datetime on a time::piece object returns a string ISO8601 datetime. new_start is what is saved in db. $new_start_display is what is displayed on mouseover.
-    my $new_start = $formatted_start->datetime;
-    my $new_start_display = format_display_date($formatted_start);
-    
-    #Next we process the end datetime. Whether the event is being dragged or resized, the end = end + delta.
-    my $formatted_end = format_time($params->{end_drag} )->epoch;
-    $formatted_end += $params->{delta};
-    $formatted_end = Time::Piece->strptime($formatted_end, '%s');
-
-    #Calling ->datetime on the time::piece object returns an ISO8601 datetime string. This is what is saved in db. 
-    my $new_end = $formatted_end->datetime;
-    my $new_end_time = calendar_end_display($formatted_end, $params->{view}, $params->{allday} );
-    my $new_end_display = format_display_date($formatted_end);
-
-    #The new start and end datetimes are saved to the DB using DBIx class. A transaction wraps the update.
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    $schema->storage->txn_begin;
-    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{projectprop_id} }, columns=>['value'])->update({value=>[$new_start, $new_end, $params->{description}, $params->{url}] })) {
-	
-	#The transaction changes are commited.
-	$schema->storage->txn_commit;
-
-	#If the update was successfull, data is passed back to AJAX so that the event can be properly updated.
-	$c->stash->{rest} = {success => 1, start=>$new_start, start_drag=>$new_start, start_display=>$new_start_display, end=>$new_end_time, end_drag=>$new_end, end_display=>$new_end_display};
-    } else {
-
-	#The transaction is rolled back.
-	$schema->storage->txn_rollback;
-	$c->stash->{rest} = {error => 1,};
-    }
-}
-
-#When a day is clicked, this function is called to populate the add_event project name and property type dropdowns.
+#When a day is clicked or when an event is being editted, this function is called to populate the add_event project name and property type dropdowns.
 sub day_click_personal : Path('/ajax/calendar/dayclick/personal') : ActionClass('REST') { }
 sub day_click_personal_GET { 
     my $self = shift;
@@ -295,7 +414,6 @@ sub day_click_personal_GET {
     my @projectprop_names = ('Planting Event', 'Harvest Event', 'Fertilizer Event', 'Meeting Event', 'Planning Event', 'Presentation Event', 'Phenotyping Event', 'Genotyping Event');
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my @projectprop_types;
-
     foreach (@projectprop_names) {
 	my $q="SELECT cvterm_id, name FROM cvterm WHERE name=?";
 	my $sth = $c->dbc->dbh->prepare($q);
@@ -311,100 +429,6 @@ sub day_click_personal_GET {
     }
  
     $c->stash->{rest} = {project_list => \@projects, projectprop_list => \@projectprop_types};
-}
-
-#When an event is added using the day_dialog_add_event_form, this function is called to save it to the database.
-sub add_event : Path('/ajax/calendar/add_event') : ActionClass('REST') { }
-sub add_event_POST { 
-    my $self = shift;
-    my $c = shift;
-    my $params = $c->req->params();
-
-    #A time::piece object is returned from format_time(). Calling ->datetime on this object return an ISO8601 datetime string. This is what is saved in the db.
-    my $format_start = format_time($params->{event_start})->datetime;
-    
-    #If an event end is given, then it is converted to an ISO8601 datetime string to be saved. If none is given then the end will be the same as the start.
-    my $format_end;
-    if ($params->{event_end} eq '') {$format_end = $format_start;} else {$format_end = format_time($params->{event_end})->datetime;}
-
-    #If no description or URL given, then default values will be given.
-    if ($params->{event_description} eq '') {$params->{event_description} = 'N/A';}
-    if ($params->{event_url} eq '') {$params->{event_url} = '#';} else {$params->{event_url} = 'http://www.'.$params->{event_url};}
-    
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $rs = $schema->resultset('Project::Projectprop');
-    my $count = $rs->search({ project_id=>$params->{event_project_select}, type_id=>$params->{event_type_select} })->count;
-
-    #The insert is wrapped in a transaction.
-    $schema->storage->txn_begin;
-
-    if (my $insert = $rs->create({project_id=>$params->{event_project_select}, type_id=>$params->{event_type_select}, rank=>$count, value=>[$format_start, $format_end, $params->{event_description}, $params->{event_url}] })) {
-	    
-	#The transaction is commited.
-	$schema->storage->txn_commit;
-	$c->stash->{rest} = {status => 1,};
-    } else {
-
-	#The transaction is rolled back.
-	$schema->storage->txn_rollback;
-	$c->stash->{rest} = {status => 2,};
-    }
-}
-
-#When an event is deleted using the day_dialog_delete_event_form, this function is called to delete it from the database using DBIx class.
-sub delete_event : Path('/ajax/calendar/delete_event') : ActionClass('REST') { }
-sub delete_event_POST { 
-    my $self = shift;
-    my $c = shift;
-    my $projectprop_id = $c->req->param("event_projectprop_id");
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
-    #The delete is wrapped in a transaction.
-    $schema->storage->txn_begin;
-    if (my $delete = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id})->delete) {
-
-	#The transaction is committed.
-	$schema->storage->txn_commit;
-	$c->stash->{rest} = {status => 1,};
-    } else {
-
-	#The transaction is rolled back.
-	$schema->storage->txn_rollback;
-	$c->stash->{rest} = {status => 0,};
-    }
-}
-
-#When an event is editted using the edit_event_form, this function is called to save it to the database.
-sub edit_event : Path('/ajax/calendar/edit_event') : ActionClass('REST') { }
-sub edit_event_POST { 
-    my $self = shift;
-    my $c = shift;
-    my $params = $c->req->params();
-
-    #A time::piece object is returned from format_time(). Calling ->datetime on this object return an ISO8601 datetime string. This is what is saved in the db.
-    my $format_start = format_time($params->{edit_event_start})->datetime;
-    
-    #If an event end is given, then it is converted to an ISO8601 datetime string to be saved. If none is given then the end will be the same as the start.
-    my $format_end;
-    if ($params->{edit_event_end} eq '') {$format_end = $format_start;} else {$format_end = format_time($params->{edit_event_end})->datetime;}
-
-    #If no description or URL given or end date given, then default values will be given.
-    if ($params->{edit_event_description} eq '') {$params->{edit_event_description} = 'N/A';}
-    if ($params->{edit_event_url} eq '') {$params->{edit_event_url} = '#';}
-
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    $schema->storage->txn_begin;
-    if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{edit_event_projectprop_id} }, columns=>['project_id', 'type_id', 'value'])->update({project_id=>$params->{edit_event_project_select}, type_id=>$params->{edit_event_type_select}, value=>[$format_start, $format_end, $params->{edit_event_description}, $params->{edit_event_url}] })) {
-	
-	#The transaction changes are commited.
-	$schema->storage->txn_commit;
-	$c->stash->{rest} = {status => 1,};
-    } else {
-
-	#The transaction is rolled back.
-	$schema->storage->txn_rollback;
-	$c->stash->{rest} = {error => 1,};
-    }
 }
     
 #This function is used to return a Time::Piece object, which is useful for format consistensy.
