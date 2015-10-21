@@ -25,9 +25,19 @@ use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_select
 
 my $any_name_select = conditional_like_input_html("any_name","contains", "", '30');
 
+my $accession_cvterm_id;
+
+for (my $i=0; $i<= scalar(@$stock_types); $i++) {
+     if ( $stock_types->[$i][1] eq "accession" ) {
+     	$accession_cvterm_id = $stock_types->[$i][0];
+	last();
+     }
+}
+
 my $stock_type_select = simple_selectbox_html(
   choices   => $stock_types,
   id        => "stock_type_select",
+  selected  => $accession_cvterm_id,
 );
 
 my $organism_select = simple_selectbox_html(
