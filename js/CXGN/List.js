@@ -344,7 +344,7 @@ CXGN.List.prototype = {
 	html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td>';
         html += '<td><input type="button" class="btn btn-info" id="updateNameButton" value="update"  /></td></tr>';
 
-	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input type="button" class="btn btn-info" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr>';
+	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input id="list_item_dialog_validate" type="button" class="btn btn-info" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr>';
 	html += '<tr><td>Add New Items</td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td><td colspan="2"><button class="btn btn-primary" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td></tr></table>';
 	html += '<table class="table table-condensed table-hover"><thead><th colspan="2"><b>List items</b> ('+items.length+')</th></tr></thead><tbody>';
 
