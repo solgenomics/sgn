@@ -7,13 +7,12 @@ use SGN::Test::WWW::WebDriver;
 my $t = SGN::Test::WWW::WebDriver->new();
 
 $t->while_logged_in_as("submitter", sub { 
-    $t->get_ok('/calendar/personal');
-
-    $t->find_element_ok("fc-day", "class", "find day")->click();
 
     $t->get_ok('/calendar/personal');
 
     $t->find_element_ok("fc-day", "class", "find day")->click();
+
+    sleep(3);
 
     my $event_project_select = $t->find_element_ok("event_project_select", "id", "find event project select");
 
