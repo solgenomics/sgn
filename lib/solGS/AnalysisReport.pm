@@ -20,17 +20,25 @@ sub check_analysis_status {
 
 sub check_success {
     my ($self, $output_details) = @_;
-  
-    if ($output_details->{data_set_type} =~ /combined populations/) 
+    
+    my $analysis_profile = $output_details->{analysis_profile};
+    
+    if ( $analysis_profile->{analysis_type} =~ /population download/ ) 
     {	
-	$output_details = $self->check_combined_pops_modeling($output_details);
+	$self->check_population_download($output_details);
     }
-    else 
+    elsif ( $analysis_profile->{analysis_type} =~ /(single|multiple) model/ )
     {
-	$output_details = $self->check_trait_modeling($output_details);
-
+	if ($output_details->{data_set_type} =~ /combined populations/) 
+	{	
+	    $output_details = $self->check_combined_pops_modeling($output_details);
+	}
+	elsif ($output_details->{data_set_type} =~ /single population/)
+	{
+	    $output_details = $self->check_trait_modeling($output_details);
+	}
     }
-
+    
     return $output_details;
   
 }
@@ -59,8 +67,8 @@ sub check_pops_data_combination {
 	
 	if (ref $output_details->{$k} eq 'HASH') 
 	{
-	   $pheno_file = $output_details->{$k}->{pheno_file}; 
-	   $geno_file  = $output_details->{$k}->{geno_file}; 
+	   $pheno_file = $output_details->{$k}->{phenotype_file}; 
+	   $geno_file  = $output_details->{$k}->{genotype_file}; 
 	} 
 	
 	if ($geno_file || $pheno_file) 
@@ -181,6 +189,79 @@ sub check_trait_modeling {
 }
 
 
+sub check_population_download {
+    my ($self, $output_details) = @_;
+
+    my $job_tempdir = $output_details->{r_job_tempdir};
+          
+    foreach my $k (keys %{$output_details})
+    {
+	my $pheno_file;
+	my $geno_file;
+	if (ref $output_details->{$k} eq 'HASH') 
+	{
+	   $pheno_file = $output_details->{$k}->{phenotype_file}; 
+	   $geno_file  = $output_details->{$k}->{genotype_file}; 
+	} 
+	
+	if ($pheno_file && $geno_file) 
+	{
+	    my $pheno_size;
+	    my $geno_size;
+	    my $died_file;
+	
+	    while (1) 
+	    {
+		sleep 5;
+		$pheno_size = -s $pheno_file;
+		$geno_size  = -s $geno_file;
+		
+		if ($pheno_size) 
+		{
+		    $output_details->{$k}->{pheno_success} = 1;		
+		}
+
+		if ($geno_size) 
+		{
+		    $output_details->{$k}->{geno_success} = 1;		
+		}
+
+		if ($pheno_size && $geno_size) 
+		{		    
+		   $output_details->{$k}->{success} = 1;
+		   last;
+		}
+		
+		else
+		{
+		    if ($job_tempdir) 
+		    {
+			$died_file = $self->get_file($job_tempdir, 'died');
+			if ($died_file) 
+			{
+			    $output_details->{$k}->{pheno_success}   = 0;
+			    $output_details->{$k}->{geno_success}    = 0;
+			    $output_details->{$k}->{success} = 0;
+			    last;
+			}
+		    }
+		}	    
+	    }	   	    
+	}
+	else 
+	{  
+	    if (ref $output_details->{$k} eq 'HASH')	
+	    {   
+		$output_details->{$k}->{pheno_success}   = 0;
+		$output_details->{$k}->{geno_success}    = 0;
+		$output_details->{$k}->{success} = 0;
+	    }
+	}  
+    }
+
+    return $output_details;
+
+}
 
 
 
@@ -222,6 +303,10 @@ sub report_status {
     elsif ($analysis_type =~ /single model/) 
     {
     	$analysis_result = $self->single_modeling_message($output_details);
+    }
+    elsif ($analysis_type =~ /population download/  ) 
+    {
+    	$analysis_result = $self->population_download_message($output_details);
     }
    
     my $closing = "If you have any remarks, please contact us:\n"
@@ -268,14 +353,13 @@ sub multi_modeling_message {
 		    my $trait_page = $output_details->{$k}->{trait_page};
 		    $message .= "The analysis for $trait_name is done."
 			." You can view the output here:\n"
-			."$trait_page."
-			."\n\n";
+			."$trait_page.\n";
 		}
 		else 
 		{  
 		    $all_success = 0; 
 		    my $trait_name = uc($output_details->{$k}->{trait_name});
-		    $message .= "The analysis for $trait_name failed.\n\n";	 
+		    $message .= "The analysis for $trait_name failed.\n";	 
 		}		
 	    }
 	}
@@ -313,7 +397,7 @@ sub single_modeling_message {
 		else 
 		{  
 		    $message = "The analysis for $trait_name failed."
-			."\n\nWe are troubleshooting the cause. " 
+			."\nWe are troubleshooting the cause. " 
 			. "We will contact you when we find out more.";	 
 		}		
 	    }
@@ -325,7 +409,35 @@ sub single_modeling_message {
 }
 
 
+sub population_download_message {
+    my ($self, $output_details) = @_;
+    
+    my $message;
+    foreach my $k (keys %{$output_details}) 
+    {
+	if (ref $output_details->{$k} eq 'HASH')
+	{
+		my $pop_name = uc($output_details->{$k}->{population_name});
+		my $pop_page = $output_details->{$k}->{population_page};
+		
+		if ($output_details->{$k}->{success})		
+		{		
+		    $message = "The phenotype and genotype data for $pop_name is ready for analysis."
+			."\nYou can view population page here:\n"
+			."\n$pop_page.\n";
+		}
+		else 
+		{  
+		    $message = "Downloading phenotype and genotype data for $pop_name failed."
+			."\nWe are troubleshooting the cause. " 
+			. "We will contact you when we find out more.";	 
+		}		
+	}
+    }
 
+    return  $message;
+
+}
 
 
 
