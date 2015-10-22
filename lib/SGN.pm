@@ -98,7 +98,7 @@ __PACKAGE__->config(
                 genefamily_dir
                 homepage_files_dir
                 intron_finder_database
-                r_qtl_temp_path
+                solqtl
                 static_content_path
                 static_datasets_path
                 trace_path

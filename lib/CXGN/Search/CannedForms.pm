@@ -65,7 +65,7 @@ sub expr_template_search_form {
 
     return <<EOH
   <table class="search_form_title"><tr><td>
-    <span class="search_form_title">Expression search by template</span>
+    <span class="search_form_title">Expression Search By Template</span>
   </td>
   </tr>
   </table>
@@ -95,7 +95,7 @@ sub expr_experiment_search_form {
 
     return <<EOH
   <table class="search_form_title"><tr><td>
-    <span class="search_form_title">Expression search by experiment</span>
+    <span class="search_form_title">Expression Search By Experiment</span>
   </td>
   </tr>
   </table>
@@ -125,7 +125,7 @@ sub expr_platform_search_form {
 
     return <<EOH
   <table class="search_form_title"><tr><td>
-    <span class="search_form_title">Expression search by platform</span>
+    <span class="search_form_title">Expression Search By Platform</span>
   </td>
   </tr>
   </table>
@@ -156,7 +156,7 @@ sub image_search_form {
 
     return <<EOH
   <table class="search_form_title"><tr><td>
-    <span class="search_form_title">Image search</span>
+    <span class="search_form_title">Image Search</span>
   </td>
   </tr>
   </table>
@@ -271,11 +271,14 @@ sub est_search_form {
 #  $q ||=  CXGN::Search::EST->new()->new_query();
 
     return <<EOH
-  <table class="search_form_title"><tr><td>
-    <span class="search_form_title">EST search</span>
-  </td>
-  </tr>
-  </table>
+
+  <table class="search_form_title" summary=""><tr><td>
+    <span class="search_form_title">EST Search</span>
+  </td><td align="right">
+    <a class="search_form_random" href="/search/est.pl?random=yes">
+    Select an EST sequence at random
+    </a>
+  </td></tr></table>
 
 <form action="/search/est.pl" method="get">
   <div class="indentedcontent">
@@ -287,17 +290,15 @@ EOH
   <table summary="" align="center" width="75%" cellspacing="1" cellpadding="1" border="0">
   <tr>
     <td colspan="3" align="right">
-      <a style="font-size: 75%" href="/search/est.pl?random=yes">
-          [Select an EST sequence at random]
-      </a>
+
       <table summary="" cellpadding="0" cellspacing="0"><tr>
-        <td>EST identifier</td>
-        <td><input name="request_id" type="text" style="background: #EEEEFF;" size="20" /></td>
+        <td>EST Identifier</td>
+        <td><input class="form-control" name="request_id" type="text" style="background: #EEEEFF;" size="20" /></td>
 	<td style="padding: 1em">Enter your sequence identifier and select the identifier type, or 'automatic'.</td>
       </tr></table>
     </td>
   </tr>
-  <tr><td colspan="2"><i>Identifier type</i></td><td><i>Example</i></td></tr>
+  <tr><td colspan="2"><i>Identifier Type</i></td><td><i>Example</i></td></tr>
 <!--
   <tr>
 Automatic guessing of the input's intensional type didn't work too well.
@@ -340,7 +341,7 @@ Automatic guessing of the input's intensional type didn't work too well.
     <td colspan="3">&nbsp;</td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><input type="submit" value="Search" name="search" /></td>
+    <td colspan="2" align="center"><input class="btn btn-primary" type="submit" value="Search" name="search" /></td>
     <td>&nbsp;</td>
   </tr>
   </table>
@@ -369,7 +370,7 @@ sub clone_search_form {
 
     return <<EOH
   <table class="search_form_title" summary=""><tr><td>
-    <span class="search_form_title">Genomic clone search</span>
+    <span class="search_form_title">Genomic Clone Search</span>
   </td><td align="right">
     <a class="search_form_random" href="/maps/physical/clone_info.pl?random=yes">
     Select a genomic clone at random
@@ -411,7 +412,7 @@ sub unigene_search_form {
 
     return <<EOH
   <table class="search_form_title" summary=""><tr><td>
-    <span class="search_form_title">Unigene search</span>
+    <span class="search_form_title">Unigene Search</span>
   </td><td align="right">
     <a class="search_form_random" href="/search/unigene.pl?random=yes">
     Select a unigene at random
@@ -580,97 +581,131 @@ sub to_html {
 
     my $retstring = <<EOHTML;
 
-<br /><table summary="">
-<tr><td> Marker name<br />or SGN-M \#: </td>
-<td>
-$nametype{asdf}</td>
-<td>
-$textbox{marker_name}
-<input type="submit" name="$uniq{submit}" value="Search" />
-&nbsp;&nbsp;&nbsp;
-$checkbox{'mapped','checked'}
-<!-- <input type="checkbox" checked="checked" name="mapped" /> -->
-<span class="help" onmouseover="return escape('Unmapped markers include candidate markers that have not yet been mapped, and polymorphism surveys.')">Find only markers that are mapped</span>
-</td></tr>
-</table>
+<div class="container-fluid">
 
+  <div class="row well">
+    <div class="col-sm-2">
+    </div>
+    <div class="col-sm-8">
+      <div class="form-horizontal" >
+        <div class="form-group">
+          <label class="col-sm-3 control-label">Marker Name or SGN-M \#: </label>
+          <div class="col-sm-9" >
+            <div class="row">
+              <div class="col-sm-5">
+	        $nametype{asdf}
+              </div>
+	      <div class="col-sm-7">
+	        $textbox{marker_name}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-3 control-label"></label>
+	  <div class="col-sm-9" >
+	    <input class="btn btn-primary" type="submit" name="$uniq{submit}" value="Search" />&nbsp;&nbsp;&nbsp;&nbsp;
+            $checkbox{'mapped','checked'}
+            <span class="help" title="Unmapped markers include candidate markers that have not yet been mapped, and polymorphism surveys.">Find only markers that are mapped</span>
+	  </div>
+	</div>
+      </div>
+    </div>
+    <div class="col-sm-2">
+    </div>
+  </div>
 
-<h3 style="margin-bottom: 0; padding-bottom: 0;margin-top: 30px;">Advanced search options</h3>
-<div ><small>(Questions? See the <a href="/help/marker_search_help.pl">help page</a>)</small></div>
-<div align="right">   
-<a style="font-size: 75%" href="/search/markers/markersearch.pl?random=yes">  
-[Select a marker at random]</a>  
-</div>
-
-<table summary="" style="overflow:hidden;width:700px">
-<tr><td width="50%">
-
+  <h3 style="margin-bottom: 0; padding-bottom: 0;margin-top: 30px;">Advanced Search Options</h3>
+  <div ><small>(Questions? See the <a href="/help/marker_search_help.pl">help page</a>)</small></div>
+  <br/>
+  <div class="row well">
+    <div class="col-sm-6">
 
 EOHTML
 
-    $retstring .= blue_section_html( 'Marker options', <<EOFOO);
+    $retstring .= blue_section_html( 'Marker Options', '<a style="font-size: 75%" href="/search/markers/markersearch.pl?random=yes">  
+    [Select a marker at random]</a>', <<EOFOO);
 
-$checkbox{bac_assoc}
-Show only markers with BAC associations<br />
-<div style="margin-left: 20px;">
-$checkbox{overgo_assoc}
-<span class="help" onmouseover="return escape('The overgo process associates BACs with certain markers from SGN tomato maps.')">Overgo associations<small> <a href="/maps/physical/overgo_process_explained.pl">[About the overgo process]</a></small></span><br />
+    $checkbox{bac_assoc}
+    Show only markers with BAC associations<br />
+      <div style="margin-left: 20px;">
+        $checkbox{overgo_assoc}
+        <span class="help" title="The overgo process associates BACs with certain markers from SGN tomato maps.">Overgo associations<small> <a href="/maps/physical/overgo_process_explained.pl">[About the overgo process]</a></small></span><br />
 
-$checkbox{manual_assoc}
-<span class="help" onmouseover="return escape('Some markers have been manually associated with BACs.')">Manual associations</span><br />
+	$checkbox{manual_assoc}
+        <span class="help" title="Some markers have been manually associated with BACs.">Manual associations</span><br />
 
-$checkbox{comp_assoc}
-<span class="help" onmouseover="return escape('Some markers have been BLASTed against our collection of BACs.')">Computational associations</span><br />
+	$checkbox{comp_assoc}
+        <span class="help" title="Some markers have been BLASTed against our collection of BACs.">Computational associations</span><br />
 
-</div>
-<br />
+      </div>
+      <br />
 
-<table summary=""><tr><td>Show markers mapped in species </td><td>
-$species{yeah}
-</td></tr></table>
-<br /><br />
-
-<table summary=""><tr><td><span class="help" onmouseover="return escape('<b>Protocol definitions:</b><br />AFLP - Amplified Fragment Length Polymorphisms<br />CAPS - Cleaved Amplified Polymorphisms<br />PCR - any unspecified PCR-based method<br />RFLP - Restriction Fragment Length Polymorphism<br />SSR - Short Sequence Repeats (microsatellites)')">Show markers mapped by</span></td><td>
-$protocols{'yeah'}
-</td></tr></table>
-
-<table summary=""><tr><td><span class="help" onmouseover="return escape('<b>Collections:</b><br>COS - Conserved Ortholog Sequences (tomato and Arabidopsis)<br>COSII - Conserved Ortholog Sequences II (several Asterid species)<br>KFG - Known Function Genes')">Show markers in group</span></td><td>
-$colls{'yeah'}
-</td></tr></table>
+      <div class="form-horizontal" >
+	<div class="form-group">
+      	  <label class="col-sm-6 control-label">Show markers mapped in species: </label>
+      	  <div class="col-sm-6" >
+	    $species{yeah}
+          </div>
+	</div>
+	<div class="form-group">
+      	  <label class="col-sm-6 control-label"><span class="help" title="Protocol definitions: AFLP - Amplified Fragment Length Polymorphisms. CAPS - Cleaved Amplified Polymorphisms. PCR - any unspecified PCR-based method. RFLP - Restriction Fragment Length Polymorphism. SSR - Short Sequence Repeats (microsatellites)">Show markers mapped by: </span></label>
+      	  <div class="col-sm-6" >
+	    $protocols{'yeah'}
+          </div>
+	</div>
+	<div class="form-group">
+      	  <label class="col-sm-6 control-label"><span class="help" title="Collections: COS - Conserved Ortholog Sequences (tomato and Arabidopsis). COSII - Conserved Ortholog Sequences II (several Asterid species). KFG - Known Function Genes')">Show markers in group: </span></label>
+      	  <div class="col-sm-6" >
+	    $colls{'yeah'}
+          </div>
+	</div>
+      </div>
+    </div>
 
 EOFOO
 
-    $retstring .= "</td><td>";
+    $retstring .= <<EOHTML;
+    <div class="col-sm-6">
 
-    $retstring .= blue_section_html( 'Map locations', <<EOHTML);
+EOHTML
 
-<table summary=""><tr><td>Show only markers on chromosomes</td><td>
-$chromos{yeah}
-</td></tr></table>
+    $retstring .= blue_section_html( 'Map Locations', <<EOHTML);
 
-<br /><br />
-Position between $textbox{'pos_start',3} cM and $textbox{'pos_end',3} cM
-
-<br /><br />
-
-<table summary=""><tr><td><span class="help" onmouseover="return escape('Maps that have been made with MapMaker have confidence values associated with their positions. Leave this setting at &quot;uncalculated&quot; to see all markers on all maps.')">Confidence at least</span></td><td>
-$confs{yeah}
-</td></tr></table>
-
-<br /><br />
-
-<table summary=""><tr><td>On maps</td><td>
-$maps{yeah}
-</td></tr></table>
-
-
+      <div class="form-horizontal" >
+	<div class="form-group">
+      	  <label class="col-sm-6 control-label">Show only markers on chromosomes: </label>
+      	  <div class="col-sm-6" >
+	    $chromos{yeah}
+          </div>
+	</div>
+	<div class="form-group">
+      	  <label class="col-sm-6 control-label">Position between: </label>
+      	  <div class="col-sm-6" >
+	     $textbox{'pos_start',3} cM and $textbox{'pos_end',3} cM
+          </div>
+	</div>
+	<div class="form-group">
+      	  <label class="col-sm-6 control-label"><span class="help" title="Maps that have been made with MapMaker have confidence values associated with their positions. Leave this setting at &quot;uncalculated&quot; to see all markers on all maps.">Confidence at least: </span></label>
+      	  <div class="col-sm-6" >
+	     $confs{yeah}
+          </div>
+	</div>
+	<div class="form-group">
+      	  <label class="col-sm-6 control-label">On maps: </label>
+      	  <div class="col-sm-6" >
+	     $maps{yeah}
+          </div>
+	</div>
+      </div>
 
 EOHTML
 
     $retstring .= <<EOHTML;
-</td></tr>
-</table>
-<center><input type="submit" name="$uniq{submit}" value="Search" /></center>
+    </div>
+    <center><input class="btn btn-primary" type="submit" name="$uniq{submit}" value="Search" /></center>
+  </div>
+</div>
 EOHTML
 
     return $retstring;
@@ -703,7 +738,7 @@ sub textbox {
     my $val  = $self->data($what)         || '';
 
     my $sizeparam = ( defined($size) && $size > 0 ) ? qq{size="$size"} : '';
-    return qq{<input type="text" $sizeparam name="$name" value="$val" />};
+    return qq{<input class="form-control" type="text" $sizeparam name="$name" value="$val" />};
 
 }
 
@@ -740,13 +775,13 @@ sub selectbox {
 
     if ($mult) {
 
-        $retstring = '<select multiple="multiple" size="3" name="'
+        $retstring = '<select multiple="multiple" size="3" class="form-control"  name="'
           . $self->uniqify_name($fieldname) . '" >';
         $retstring .= qq{<option $anysel>Any</option>};
 
     }
     else {
-        $retstring = '<select name="' . $self->uniqify_name($fieldname) . '" >';
+        $retstring = '<select class="form-control" name="' . $self->uniqify_name($fieldname) . '" >';
 
     }
 

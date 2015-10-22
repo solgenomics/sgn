@@ -327,7 +327,7 @@ sub add_cross_POST :Args(0) {
 	$cross_add->add_crosses();
     };
     if ($@) { 
-	$c->stash->{error => "Error creating the cross: $@" };
+	$c->stash->{rest} = { error => "Error creating the cross: $@" };
 	return;
     }
     

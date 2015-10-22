@@ -123,7 +123,7 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-	$('#working').dialog("open");
+	$('#working_modal').modal("show");
 
         $.ajax({
             type: 'POST',
@@ -153,117 +153,149 @@ jQuery(document).ready(function ($) {
             success: function (response) {
                 if (response.error) {
                     alert(response.error);
-		    $('#working').dialog("close");
+		    $('#working_modal').modal("hide");
                 } else {
 		    $('#trial_design_information').html(response.design_info_view_html);
-                    $('#trial_design_view_layout').html(response.design_layout_view_html);
+                    $('#trial_design_view_layout_return').html(response.design_layout_view_html);
 
-		    $('#working').dialog("close");
-                    $('#trial_design_confirm').dialog("open");
+		    $('#working_modal').modal("hide");
+                    $('#trial_design_confirm').modal("show");
 		    design_json = response.design_json;
                 }
             },
             error: function () {
-		$('#working').dialog("close");
+		$('#working_modal').modal("hide");
                 alert('An error occurred. sorry. test');
             }
        });
     }
 
-
-    $('#add_project_dialog').dialog({
-	autoOpen: false,
-        modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 75],
-        title: "Add new trial",
-        buttons: {
-            "Cancel": {
-                id : "cancel_add_trial",
-                click: function () {
-                   $('#add_project_dialog').dialog("close");
-                },
-                text: "Cancel"
-            },
-            "Add": { 
-		id : "add_trial_button",
-		click: 
-                  function () {
-                      var name = $('#new_trial_name').val();
-                      var year = $('#add_project_year').val();
-                      var desc = $('textarea#add_project_description').val();
-                      var method_to_use = $('.format_type:checked').val();
-		      if (name == '') {
-			  alert('Trial name required');
-			  return;
-		      }
-                      if (year === '' || desc === '') {
-			  alert('Year and description are required.');
-			  return;
-                      }
-                      if (method_to_use == "empty") {
-			  alert('adding a project');
-			  save_project_info(name, year, desc);
-                      }
-		      //removed
-                      if (method_to_use == "create_with_upload") {
-			  var uploadFile = $("#trial_upload_file").val();
-			  $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
-			  if (uploadFile === '') {
-                              alert("Please select a file");
-                              return;
-			  }
-			  $("#create_new_trial_form").submit();
-                      }
-                      if (method_to_use == "create_with_design_tool") {
-			  //generate_experimental_design(name,year,desc);
-			  generate_experimental_design();
-		      }
-                      //$( this).dialog("close"); 
-                      //location.reload();
-		  },
-		text: "Add"
+    $('#new_trial_submit').click(function () {
+          var name = $('#new_trial_name').val();
+          var year = $('#add_project_year').val();
+          var desc = $('textarea#add_project_description').val();
+          var method_to_use = $('.format_type:checked').val();
+	  if (name == '') {
+	    alert('Trial name required');
+	    return;
+	  }
+          if (year === '' || desc === '') {
+	    alert('Year and description are required.');
+	    return;
+          }
+          if (method_to_use == "empty") {
+	    alert('adding a project');
+	    save_project_info(name, year, desc);
+          }
+          if (method_to_use == "create_with_upload") {
+	    var uploadFile = $("#trial_upload_file").val();
+	    $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
+	    if (uploadFile === '') {
+              alert("Please select a file");
+              return;
 	    }
-        }
+	    $("#create_new_trial_form").submit();
+          }
+          if (method_to_use == "create_with_design_tool") {
+	    //generate_experimental_design(name,year,desc);
+	    generate_experimental_design();
+	  }
+          //$( this).dialog("close"); 
+          //location.reload();
     });
 
-    $("#format_type_radio").change(function () {
-        var method_to_use = $('.format_type:checked').val();
-        if (method_to_use == "empty") {
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#trial_design_info").hide();
-            $("#trial_design_more_info").hide();
-            $("#get_file_upload_data").hide();
-        }
-        if (method_to_use == "create_with_upload") {
-            $("#get_file_upload_data").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#trial_design_info").hide();
-            $("#trial_design_more_info").hide();
-        } else {
-            $("#get_file_upload_data").hide();
-        }
-        if (method_to_use == "create_with_design_tool") {
-            $("#trial_design_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-	    $("#select_design_method").change();
-        } else {
-            $("trial_design_info").hide();
-        }
-    });
+//    $('#add_project_dialog').dialog({
+//	autoOpen: false,
+//        modal: true,
+//	autoResize:true,
+//        width: 500,
+//        position: ['top', 75],
+//        title: "Add new trial",
+//        buttons: {
+//            "Cancel": {
+//                id : "cancel_add_trial",
+//                click: function () {
+//                   $('#add_project_dialog').dialog("close");
+//                },
+//                text: "Cancel"
+//            },
+//            "Add": { 
+//		id : "add_trial_button",
+//		click: 
+//                  function () {
+//                      var name = $('#new_trial_name').val();
+//                      var year = $('#add_project_year').val();
+//                      var desc = $('textarea#add_project_description').val();
+//                      var method_to_use = $('.format_type:checked').val();
+//		      if (name == '') {
+//			  alert('Trial name required');
+//			  return;
+//		      }
+//                      if (year === '' || desc === '') {
+//			  alert('Year and description are required.');
+//			  return;
+//                      }
+//                      if (method_to_use == "empty") {
+//			  alert('adding a project');
+//			  save_project_info(name, year, desc);
+//                      }
+//                      if (method_to_use == "create_with_upload") {
+//			  var uploadFile = $("#trial_upload_file").val();
+//			  $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
+//			  if (uploadFile === '') {
+//                              alert("Please select a file");
+//                              return;
+//			  }
+//			  $("#create_new_trial_form").submit();
+//                      }
+//                      if (method_to_use == "create_with_design_tool") {
+//			  //generate_experimental_design(name,year,desc);
+//			  generate_experimental_design();
+//		      }
+//                      //$( this).dialog("close"); 
+//                      //location.reload();
+//		  },
+//		text: "Add"
+//	    }
+//        }
+//    });
+
+//    $("#format_type_radio").change(function () {
+//        var method_to_use = $('.format_type:checked').val();
+//        if (method_to_use == "empty") {
+//            //$("#add_project_dialog").dialog("option", "height","auto");
+//            $("#trial_design_info").hide();
+//            $("#trial_design_more_info").hide();
+//            $("#get_file_upload_data").hide();
+//        }
+//        if (method_to_use == "create_with_upload") {
+//            $("#get_file_upload_data").show();
+//            //$("#add_project_dialog").dialog("option", "height","auto");
+//            $("#trial_design_info").hide();
+//            $("#trial_design_more_info").hide();
+//        } else {
+//            $("#get_file_upload_data").hide();
+//        }
+//        if (method_to_use == "create_with_design_tool") {
+//            $("#trial_design_info").collapse('show');
+//            //$("#add_project_dialog").dialog("option", "height","auto");
+//	    $("#select_design_method").change();
+//        } else {
+//            $("trial_design_info").hide();
+//        }
+//    });
 
     $("#format_type_radio").change();
 
 
     $("#select_design_method").change(function () {
-	$("#add_project_dialog").dialog("option", "height","auto");
+	//$("#add_project_dialog").dialog("option", "height","auto");
         
 	var design_method = $("#select_design_method").val();
         if (design_method == "CRD") {
             $("#trial_design_more_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").hide();
+            //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#show_list_of_checks_section").hide();
             $("#rep_count_section").show();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -276,8 +308,8 @@ jQuery(document).ready(function ($) {
 	    $("#other_parameter_section").hide();
         } else if (design_method == "RCBD") {
             $("#trial_design_more_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").hide();
+            //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").show();
             $("#block_size_section").hide();
@@ -290,8 +322,8 @@ jQuery(document).ready(function ($) {
 	    $("#other_parameter_section").hide();
         } else if (design_method == "Alpha") {
             $("#trial_design_more_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").hide();
+            //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#show_list_of_checks_section").hide();
             $("#rep_count_section").show();
             $("#block_number_section").hide();
             $("#block_size_section").show();
@@ -304,8 +336,8 @@ jQuery(document).ready(function ($) {
 	    $("#other_parameter_section").hide();
         } else if (design_method == "Augmented") {
             $("#trial_design_more_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").show();
+            //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#show_list_of_checks_section").show();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -317,8 +349,8 @@ jQuery(document).ready(function ($) {
 	    $("#row_number_per_block_section").hide();
 	    $("#other_parameter_section").hide();
         } else if (design_method == "") {
-            $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").hide();
+            //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#show_list_of_checks_section").hide();
             $("#trial_design_more_info").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
@@ -348,8 +380,8 @@ jQuery(document).ready(function ($) {
 //	} 
 	else if (design_method == "MAD") {
 	    $("#trial_design_more_info").show();
-	    $("#add_project_dialog").dialog("option", "height","auto");
-            $("#list_of_checks_section").show();
+	    //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#show_list_of_checks_section").show();
             $("#rep_count_section").hide();
 	    $("#row_number_section").show();
             $("#block_number_section").hide();
@@ -364,11 +396,11 @@ jQuery(document).ready(function ($) {
              $("#show_other_parameter_options").click(function () {
 		 if ($('#show_other_parameter_options').is(':checked')) {
 		     $("#other_parameter_options").show();
-		     $("#add_project_dialog").dialog("option", "height","auto");
+		     //$("#add_project_dialog").dialog("option", "height","auto");
 		 }
 		 else {
 		     $("#other_parameter_options").hide();
-		     $("#add_project_dialog").dialog("option", "height","auto");
+		     //$("#add_project_dialog").dialog("option", "height","auto");
 		 }
 	     });
 
@@ -393,16 +425,16 @@ else {
     $("#show_plot_naming_options").click(function () {
 	if ($('#show_plot_naming_options').is(':checked')) {
 	    $("#plot_naming_options").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
+            //$("#add_project_dialog").dialog("option", "height","auto");
 	}
 	else {
 	    $("#plot_naming_options").hide();
-            $("#add_project_dialog").dialog("option", "height","auto");
+            //$("#add_project_dialog").dialog("option", "height","auto");
 	}
     });
 
  function save_experimental_design(design_json) {
-     $('#trial_saving_dialog').dialog("open");
+     $('#working_modal').modal("show");
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
         var desc = $('#add_project_description').val();
@@ -462,13 +494,13 @@ else {
             },
             success: function (response) {
                 if (response.error) {
-		    $('#trial_saving_dialog').dialog("close");
+		    $('#working_modal').modal("hide");
                     alert(response.error);
-                    $('#trial_design_confirm').dialog("close");
+                    $('#trial_design_confirm').modal("hide");
                 } else {
 		    //alert('Trial design saved');
-		    $('#trial_saving_dialog').dialog("close");
-		    $('#trial_saved_dialog_message').dialog("open");
+		    $('#working_modal').modal("hide");
+		    $('#trial_saved_dialog_message').modal("show");
                 }
             },
             error: function () {
@@ -479,68 +511,71 @@ else {
        });
     }
 
-    $( "#trial_saving_dialog" ).dialog({
-	autoOpen: false,
-	modal: true,
+//    $( "#trial_saving_dialog" ).dialog({
+//	autoOpen: false,
+//	modal: true,
+//    });
+
+//    $( "#trial_saved_dialog_message" ).dialog({
+//	autoOpen: false,
+//	modal: true,
+//	buttons: {
+//            Ok: { id : "trial_saved_dialog_message_ok_button",
+//		  click: function() {
+//		      $( this ).dialog( "close" );
+//		      location.reload();
+//		  },
+//		  text: "Ok"
+//		}
+//        }
+//    });
+
+    $('#new_trial_confirm_submit').click(function () {
+	save_experimental_design(design_json);
     });
 
-    $( "#trial_saved_dialog_message" ).dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-            Ok: { id : "trial_saved_dialog_message_ok_button",
-		  click: function() {
-		      $( this ).dialog( "close" );
-		      location.reload();
-		  },
-		  text: "Ok"
-		}
-        }
-    
-    });
-
-    $('#trial_design_confirm').dialog({
-	autoOpen: false,
-        height: 400,
-	width: 450,
-        modal: true,
-        buttons: {
-	    Confirm: {
-		id : "confirm_trial_save_button",
-		click: function() {
-		    save_experimental_design(design_json);
-		    //$( this ).dialog( "close" );
-		    //$('#add_project_dialog').dialog("close");
-		},
-		text: "Confirm"
-	    },
-	    Cancel: { 
-		id : "cancel_trial_save_button",
-		click: function() {
-		    //$('#add_project_dialog').dialog("close");
-		    $( this ).dialog( "close" );
-		    return;
-		},
-		text: "Cancel"
-	    }
-        }
-    });
+//    $('#trial_design_confirm').dialog({
+//	autoOpen: false,
+//        height: 400,
+//	width: 450,
+//        modal: true,
+//        buttons: {
+//	    Confirm: {
+//		id : "confirm_trial_save_button",
+//		click: function() {
+//		    save_experimental_design(design_json);
+//		    //$( this ).dialog( "close" );
+//		    //$('#add_project_dialog').dialog("close");
+//		},
+//		text: "Confirm"
+//	    },
+//	    Cancel: { 
+//		id : "cancel_trial_save_button",
+//		click: function() {
+//		    //$('#add_project_dialog').dialog("close");
+//		    $( this ).dialog( "close" );
+//		    return;
+//		},
+//		text: "Cancel"
+//	    }
+//        }
+//    });
 
     $('#view_trial_layout_button').click(function () {
-	$('#trial_design_view_layout').dialog("open");
+	$('#trial_design_view_layout').modal("show");
     });
 
-    $('#trial_design_view_layout').dialog({
-	autoOpen: false,
-	height: 500,
-	width: 400,
-        modal: true,
-        buttons: {
-        Close: function() {
-	    $( this ).dialog( "close" );
-	}
-      }
-    }); 
+//    $('#trial_design_view_layout').dialog({
+//	autoOpen: false,
+//	height: 500,
+//	width: 400,
+//        modal: true,
+//        buttons: {
+//        Close: function() {
+//	    $( this ).dialog( "close" );
+//	}
+//      }
+//    }); 
 
     $('#create_new_trial_form').iframePostForm({
 	json: true,
@@ -554,17 +589,18 @@ else {
             if (response.error_string) {
 		$("#upload_trial_error_display tbody").html('');
 		$("#upload_trial_error_display tbody").append(response.error_string);
-		$(function () {
-                    $("#upload_trial_error_display").dialog({
-			modal: true,
-			title: "Errors in uploaded file",
-			buttons: {
-                            Ok: function () {
-				$(this).dialog("close");
-                            }
-			}
-                    });
-		});
+		$("#upload_trial_error_display").modal("show");
+		//$(function () {
+                //    $("#upload_trial_error_display").dialog({
+		//	modal: true,
+		//	title: "Errors in uploaded file",
+		//	buttons: {
+                //            Ok: function () {
+		//		$(this).dialog("close");
+                //           }
+		//	}
+                //    });
+		//});
 		return;
             }
             if (response.error) {
@@ -578,7 +614,7 @@ else {
     });
 
     function open_project_dialog() {
-	$('#add_project_dialog').dialog("open");
+	$('#add_project_dialog').modal("show");
 
 	//removes any old list selects before adding current ones.
 	//his is important so that lists that are added and will appear without page refresh
@@ -630,13 +666,33 @@ else {
 	$("#select_design_method").one('mousedown', function () {
             $("option:first", this).remove();
             $("#trial_design_more_info").show();
-            $("#add_project_dialog").dialog("option", "height","auto");
+            //$("#add_project_dialog").dialog("option", "height","auto");
 	    //trigger design method change events in case the first one is selected after removal of the first blank select item
 	    $("#select_design_method").change();
 	});
 	
 	//reset previous selections
 	$("#select_design_method").change();
+
+	var method_to_use = $('.format_type:checked').val();
+        if (method_to_use == "empty") {
+            $("#trial_design_info").hide();
+            $("#trial_design_more_info").hide();
+            $("#get_file_upload_data").hide();
+        }
+        if (method_to_use == "create_with_upload") {
+            $("#get_file_upload_data").show();
+            $("#trial_design_info").hide();
+            $("#trial_design_more_info").hide();
+        } else {
+            $("#get_file_upload_data").hide();
+        }
+        if (method_to_use == "create_with_design_tool") {
+            $("#trial_design_info").show();
+	    $("#select_design_method").change();
+        } else {
+            $("trial_design_info").hide();
+        }
     }
 
     $('#add_project_link').click(function () {

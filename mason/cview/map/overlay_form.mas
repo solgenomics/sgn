@@ -41,17 +41,17 @@ my $collapsed = !!defined $map_items;
 
 </%perl>
 
-<&| /page/info_section.mas, title=>'Overlay custom data', collapsible=>1, collapsed=>$collapsed &>
+<&| /page/info_section.mas, title=>'Overlay Custom Data', collapsible=>1, collapsed=>$collapsed &>
       <table><tr><td width="50">&nbsp;</td><td>
       <form style="width: 60%" action="<% $map_url %>" name="overlay_form" >
         <p>To add labels to the diagram above, enter chromosome numbers, offsets (in the map's units), and names in the box below (<a href="javascript:overlay_show_example()">example</a>):</p>
-	<textarea id="map_items" name="map_items" cols="50" rows="5"><% $map_items %></textarea>
+	<textarea class="form-control" id="map_items" name="map_items" cols="50" rows="5"><% $map_items %></textarea>
 	<input type="hidden" name="map_version_id" value="<% $map_version_id%>" />
 	<input type="hidden" name="size" value="<% $size %>" />
 	<input type="hidden" name="hilite" value="<% $hilite %>" />
 	<input type="hidden" name="force" value="1" /><br />
-	<input type="submit" value="overlay information" />
-	<input type="button" value="clear" onclick="overlay_clear_map_items(); return false" />
+	<button class="btn btn-primary" type="submit" value="overlay information" >Overlay Information</button>
+	<button class="btn btn-default" type="button" value="clear" onclick="overlay_clear_map_items(); return false" >Clear</button>
       </form>
       </td></tr></table>
 

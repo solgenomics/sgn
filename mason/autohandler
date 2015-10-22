@@ -1,5 +1,12 @@
+
+
+<%once>
+use utf8;
+</%once>
+
 <& /site/header.mas &>
 
 % $m->call_next;
 
-<& /site/footer.mas &>
+  <& /site/footer.mas &>
+

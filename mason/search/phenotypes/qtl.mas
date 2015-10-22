@@ -27,47 +27,39 @@ foreach my $qtl_pop (@qtl_pops)
   
 </%perl>
 
-<p align="right">
-  [ 
-    <a href="/qtl/form">Submit QTL data</a> | 
-    <a href="/qtl/submission/guide">Submission guide</a> | 
-    <a href="/qtl/search/help">Search help</a>
-  ]
-</p>
+<div class="container-fluid">
+
+<&| /page/info_section.mas, title => 'Search QTLs', collapsible=>1, collapsed=>0, subtitle=>'[<a href="/qtl/form">Submit QTL Data</a>]   [<a href="/qtl/submission/guide">Submission Guide</a>]   [<a href="/qtl/search/help">Search Help</a>]' &>
 
 <form  action= "/qtl/search/results" method="post">
   <table align=center cellpadding=20px>
     <tr>
       <td>
-        <b>Browse traits with QTLs: <% $links %></b>
+        <h4>Browse Traits With QTLs: <% $links %></h4>
       </td>
     </tr>
   </table>
-  <table>
-  <tr>
-      <td>&nbsp;
-      </td>
+  <br/>
+  <div class="well">
+  <table align=center>
+    <tr>
+      <td><h5>Search QTLs With Trait Name:</h5></td>
     </tr>
     <tr>
-      <td>Search QTLs with trait name:
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <input type="text" name="trait" size=24>
-        <input type="submit" value="Search">  
-      </td>
-    </tr>
-     <tr>
-      <td>&nbsp;
-      </td>
+      <td><input class="form-control" type="text" name="trait" >
+      <br/><input class="btn btn-primary" type="submit" value="Search"></td>
     </tr>
   </table>
+  </div>
   <table align=center cellpadding=20px>
     <tr>
       <td>
-        <b>Browse QTL populations:</b><br/><% $pop_links %>
+        <h4>Browse QTL Populations:</h4><br/><% $pop_links %>
       </td>
     </tr>
   </table>
 </form>
+
+</&>
+
+</div>

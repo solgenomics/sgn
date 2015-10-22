@@ -14,8 +14,10 @@ eval {
 
 </%perl>
 
-<div class="boxbgcolor1" style="border:0px; ">
-  <div class="boxheading">Events</div>
-  <div class="boxcontent"><% $contents %></div>
-  <a href="oldevents.pl">See all events...</a>
+
+<div>
+<% $contents %>
+<a href="oldevents.pl">See all events...</a>
 </div>
+
+

@@ -13,6 +13,8 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects' ] &>
 
+<div class="container-fluid">
+
 <& /page/page_title.mas, title=>'Search Accessions and Plots' &>
 
 
@@ -23,9 +25,19 @@ use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_select
 
 my $any_name_select = conditional_like_input_html("any_name","contains", "", '30');
 
+my $accession_cvterm_id;
+
+for (my $i=0; $i<= scalar(@$stock_types); $i++) {
+     if ( $stock_types->[$i][1] eq "accession" ) {
+     	$accession_cvterm_id = $stock_types->[$i][0];
+	last();
+     }
+}
+
 my $stock_type_select = simple_selectbox_html(
   choices   => $stock_types,
   id        => "stock_type_select",
+  selected  => $accession_cvterm_id,
 );
 
 my $organism_select = simple_selectbox_html(
@@ -41,8 +53,97 @@ my $breeding_programs_select = simple_selectbox_html(
 
 </%perl>
 
+<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0, subtitle=>'[<a href="/stock/0/new/">Submit New Stock</a>]' &>
 
+  <div id="stock_search_form" class="form-horizontal well">
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+      	  <label class="col-sm-3 control-label">Stock Name or Description: </label>
+          <div class="col-sm-9" >
+            <% $any_name_select %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Stock Type: </label>
+          <div class="col-sm-9" >
+            <% $stock_type_select %>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Organism: </label>
+          <div class="col-sm-9" >
+            <% $organism_select %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Stock Owner: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="person" />
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Trait: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="trait" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Project Name: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="project" />
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Project Location: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="location" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Project Year: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="year" />
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Organization: </label>
+          <div class="col-sm-9" >
+            <% $breeding_programs_select %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button style="float:right" class="btn btn-primary" id="submit_stock_search" />Search</button>
+    <br/><br/>
+  </div>
+</&>
 
+<!--
 <div id="stock_search_form">
   <table>
   <tr><td colspan="4" align="right"><a href="/stock/0/new/">[Submit new stock]</a></td>
@@ -67,8 +168,11 @@ my $breeding_programs_select = simple_selectbox_html(
 <br />
 
 </div>
+-->
 
 <br />
+
+<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
@@ -94,7 +198,9 @@ Copy items on this page to list:
 
 </table>
 
+</&>
 
+</div>
 
 <script>
 

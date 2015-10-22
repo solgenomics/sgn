@@ -3,9 +3,21 @@ use Path::Class;
 </%init>
 % my $message = eval { file( $c->get_conf('system_message_file') || '' )->slurp };
 % if( $message && $message =~ /\S/ ) {
-<div class="devbar">
+<!-- <div class="devbar"> -->
+<div class="devbar_tmp">
    <span style="color: #922; font-weight: bold">Notice: </span>
    <!-- system message active -->
    <% $message %>
 </div>
 % }
+
+  <style>
+    .devbar_tmp {
+      width: 100%;
+      padding: 5px;
+      margin: 0px 0 0px 0px;
+      text-align: center;
+      background-color: #eef;
+      border-bottom: 2px solid #905;
+    }
+  </style>

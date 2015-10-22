@@ -301,7 +301,7 @@ sub get_phenotype_info {
 
     my $order_clause = " order by project.name, plot.uniquename";
 
-    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, cvterm.name, stockprop.value, block_number.value AS rep
+    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, db.name ||  ':' || dbxref.accession AS accession, stockprop.value, block_number.value AS rep
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) 
              JOIN stock ON (object_id=stock.stock_id) 
              LEFT JOIN stockprop ON (plot.stock_id=stockprop.stock_id)
@@ -582,7 +582,7 @@ sub create_materialized_cvterm_view {
     #
     eval { 
 	my $q = "CREATE TABLE public.materialized_traits
-               AS SELECT cvterm_id,  db.name ||':'|| cvterm.name AS name FROM db JOIN dbxref using(db_id) JOIN cvterm using(dbxref_id) WHERE db.name=?";
+               AS SELECT cvterm_id, cvterm.name || '|' || db.name || ':' || dbxref.accession AS name FROM db JOIN dbxref using(db_id) JOIN cvterm using(dbxref_id) WHERE db.name=?";
 	my $h = $self->dbh()->prepare($q);
 	$h->execute($db_name);
 	$q = "GRANT ALL ON public.materialized_traits TO web_usr";

@@ -1,4 +1,14 @@
 
+=head NAME
+
+CXGN::SNPsIO;
+
+=head DESCRIPTION
+
+=head AUTHOR
+
+=cut
+
 package CXGN::SNPsIO;
 
 use Moose;
@@ -60,7 +70,7 @@ sub BUILD {
 	    chomp(@fields);
 	    my @accessions = @fields[9..$#fields];
 	    $self->accessions(\@accessions);
-	    
+	    print STDERR "ACCESSIONS: ".join("|", @accessions)."\n";
 	    last;
 	}
     }
@@ -92,7 +102,7 @@ sub next {
 	
 	my ($chr, $position, $snp_id, $ref_allele, $alt_allele, $qual, $filter, $info, $format,  @snps) = split /\t/, $line;
 	#print STDERR "Processing $snp_id\n";
-	my $snps = CXGN::SNPs->new();
+	my $snps = CXGN::SNPs->new( );
 	$snps->raw($line);
 	$snps->id($snp_id);
 	$snps->chr($chr);
@@ -103,21 +113,22 @@ sub next {
 	$snps->filter($filter);
 	my $depth = $info;
 	$depth =~ s/DP=(\d+)/$1/i;
+	if ($depth eq ".") { $depth=0; }
 	$snps->depth($depth);
 	$snps->info($info);
 	$snps->format($format);
 	$snps->accessions($self->accessions());
-	###print STDERR "ACCESSIONS: ".(join ",", @{$self->{accessions}})."\n";
+	$snps->valid_accessions($self->accessions());
+	#print STDERR "ACCESSIONS: ".(join ",", @{$self->{accessions}})."\n";
 	my %snp_objects = ();
 	for(my $n=0; $n<@snps; $n++) { 
-	    my $snp = CXGN::Genotype::SNP->new( { vcf_string => $snps[$n] } );
+	    my $snp = CXGN::Genotype::SNP->new( { id=>$snp_id, format => $format, vcf_string => $snps[$n] } );
 	    
 	    my $accession = $self->accessions()->[$n]."\n";
 	    chomp($accession);
 	    #print "ACCESSION: $accession\n";
-	    #if ($accession =~ m/Z980139:250090803/) { die "Saw accession Z980139:250090803" }
+	    #if ($accession =~ m/1002:250060174/) { print STDERR "Saw accession 1002:250060174" }
 	    $snp->accession($accession);
-	    $snp->id($snp_id);
 	    $snp_objects{$accession} = $snp;
 	}
 	#print STDERR Dumper(\%snp_objects);

@@ -56,7 +56,7 @@ sub _verify {
 	    #check that trait value is valid for trait name
 	}
     }
-    print STDERR "Plots and traits are valid\n";
+    print STDERR "StorePhenotypes: Plots and traits are valid\n";
 
     ## Verify metadata
     if ($phenotype_metadata{'archived_file'} && (!$phenotype_metadata{'archived_file_type'} ||
@@ -140,14 +140,23 @@ sub store {
 
 	    foreach my $trait_name (@trait_list) {
 		print STDERR "trait: $trait_name\n";
-		my ($db_name, $trait_description) = split (/:/, $trait_name);
+		#fieldbook trait string should be "CO:$trait_name|$trait_accession" e.g. CO:plant height|0000123
+		my ( $full_cvterm_name, $full_accession) = split (/\|/, $trait_name);
+		my ( $db_name , $accession ) = split (/:/ , $full_accession);
+
+
+		#check if the trait name string does have  
+		$accession =~ s/\s+$//;
+		$accession =~ s/^\s+//;
+		$db_name  =~ s/\s+$//;
+		$db_name  =~ s/^\s+//;
 
 		my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
 
 		my $trait_cvterm = $schema->resultset("Cv::Cvterm")
 		  ->find( {
-			     'dbxref.db_id' => $db_rs->first()->db_id(),
-			     'name'=>$trait_description 
+			     'dbxref.db_id'     => $db_rs->first()->db_id(),
+			     'dbxref.accession' => $accession 
 			    },
 			    {
 			     'join' => 'dbxref'

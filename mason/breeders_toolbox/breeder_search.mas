@@ -9,72 +9,87 @@
 Search accessions and plots using location, year, trial, and trait data.
 </td></tr></table>
   
-<table alt="breeder search" border="0">
+<table class="table borderless" alt="breeder search" border="0" >
 <tr>
 <td width="200">
-  <select id="select1">
+  <select class="form-control input-sm" id="select1">
 </select>
 </td>
 <td>
- <select id="select2"></select>
+  <select class="form-control input-sm" id="select2"></select>
 </td>
 <td>
-  <select id="select3" ></select>
+  <select class="form-control input-sm" id="select3" ></select>
 </td>
 <td>
-  <select id="select4"> 
-    <option value="plots">plots</option>
-    <option value="accessions" selected="selected">accessions</option>
-  </select><button id="retrieve_stocklist_button">retrieve</button>
+  <div class="row" >
+    <div class="col-sm-7" style="margin-right:0px; padding-right:0px;">
+      <select class="form-control input-sm" id="select4"> 
+        <option value="plots">plots</option>
+    	<option value="accessions" selected="selected">accessions</option>
+      </select>
+    </div>
+    <div class="col-sm-5" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;">
+      <button class="btn btn-primary btn-sm" id="retrieve_stocklist_button">Retrieve</button>
+    </div>
+  </div>
 </td>
 </tr>
 <tr>
 <td >
 <div id="c1_div" >
-<select multiple id="c1_data" size="10" style="width:200px; overflow:auto;" >> </select>
+  <select multiple class="form-control" id="c1_data" size="10" style="width:200px; overflow:auto;"></select>
 </div>
 </td>
 
 <td width="200">
-  <select multiple id="c2_data" size="10"  style="width:200px; overflow:auto;"></select>
+  <select multiple class="form-control" id="c2_data" size="10"  style="width:200px; overflow:auto;"></select>
 </td>
 
 <td width="200">
-  <select multiple id="c3_data" size="10" style="width:200px; overflow:auto;"></select>
+  <select multiple class="form-control" id="c3_data" size="10" style="width:200px; overflow:auto;"></select>
 </td>
 
 <td width="200">
-  <select multiple id="stock_data" size="10" style="width:200px; overflow:auto;>"</select>	  
+  <select multiple class="form-control" id="stock_data" size="10" style="width:200px; overflow:auto;"></select>	  
 </td>
 
 </tr>
 <tr>
 <td>
-<button id="c1_select_all" />select all</button>
+<button class="btn btn-default btn-sm" id="c1_select_all" />Select All</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
 <div id="c1_data_count"></div>
 <div id="c1_to_list_menu"></div>
 </td>
 <td>
-<button id="c2_select_all" />select all</button>
+<button class="btn btn-default btn-sm" id="c2_select_all" />select all</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
 <div id="c2_data_count"></div>
 <div id="c2_to_list_menu"></div>
 </td>
 <td>
-<button id="c3_select_all" />select all</button>
+<button class="btn btn-default btn-sm" id="c3_select_all" />select all</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
 <div id="c3_data_count"></div>
 <div id="c3_to_list_menu"></div>
 </td>
 <td>
-<button id="stock_select_all" />select all</button>
+<button class="btn btn-default btn-sm" id="stock_select_all" />select all</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
 <div id="stock_count"></div>
 <div id="add_to_list_menu"></div>
 </td></tr>
-<tr><td colspan="4"><input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;only show genotyped accessions</td></tr>
+<tr><td colspan="4"><input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;Only show genotyped accessions</td></tr>
 </table>
+
+
+<style>
+.borderless tbody tr td, .borderless tbody tr th, .borderless thead tr th {
+    border: none;
+}
+</style>
+
 
 <script defer="defer">
   jQuery(document).ready(function() { 
@@ -108,8 +123,6 @@ Search accessions and plots using location, year, trial, and trait data.
 
 
  });
-
-
 
 </script>
 

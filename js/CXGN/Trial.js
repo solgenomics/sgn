@@ -114,15 +114,18 @@ function load_breeding_program_info(trial_id) {
 }
 
 function open_create_spreadsheet_dialog() {
-    jQuery('#working').dialog("open");
+    //jQuery('#working').dialog("open");
+    jQuery('#working_modal').modal("show");
     var list = new CXGN.List();
     jQuery("#trait_list").html(list.listSelect("trait_list", [ 'traits' ]));
-    jQuery('#working').dialog("close");
+    //jQuery('#working').dialog("close");
+    jQuery('#working_modal').modal("hide");
     jQuery('#create_spreadsheet_dialog').dialog("open");
 }
 
 function create_spreadsheet() {
-    jQuery('#working').dialog("open");
+    //jQuery('#working').dialog("open");
+    jQuery('#working_modal').modal("show");
     var trialID = parseInt(jQuery('#trialIDDiv').text());
     var list = new CXGN.List();
     var trait_list_id = jQuery('#trait_list_list_select').val();
@@ -139,18 +142,21 @@ function create_spreadsheet() {
              'trait_list': trait_list,
 	 },
 	 success: function (response) {
-	     jQuery('#working').dialog("close");
+	    // jQuery('#working').dialog("close");
+	     jQuery('#working_modal').modal("hide");
              if (response.error) {
 		 alert(response.error);
 		 jQuery('#open_create_spreadsheet_dialog').dialog("close");
              } else {
-		 alert(response.filename);
+		 //alert(response.filename);
 		 jQuery('#open_create_spreadsheet_dialog').dialog("close");
+		 jQuery('#working_modal').modal("hide");
 		 window.location.href = "/download/"+response.filename;
              }
 	 },
 	 error: function () {
-	     jQuery('#working').dialog("close");
+	     //jQuery('#working').dialog("close");
+	     jQuery('#working_modal').modal("hide");
              alert('An error occurred creating a phenotype file.');
              jQuery('#open_download_spreadsheet_dialog').dialog("close");
 	 }
@@ -173,7 +179,7 @@ function open_create_fieldbook_dialog() {
             } else {
 		jQuery('#tablet_layout_download_link').attr('href',response.file);
 		jQuery("#tablet_field_layout_saved_dialog_message").dialog("open");
-		//alert(response.file);
+		alert(response.file);
 		jQuery('#open_create_fieldbook_dialog').dialog("close");
             }
 	},
@@ -184,11 +190,65 @@ function open_create_fieldbook_dialog() {
     });
 }
 
+function open_create_DataCollector_dialog() {
+    //jQuery('#working').dialog("open");
+    jQuery('#working_modal').modal("show");
+    var list = new CXGN.List();
+    jQuery("#trait_list_dc").html(list.listSelect("trait_list", [ 'traits' ]));
+    //jQuery('#working').dialog("close");
+    jQuery('#working_modal').modal("hide");
+    jQuery('#create_DataCollector_dialog').dialog("open");
+}
+
+
+function create_DataCollector() {
+    //jQuery('#working').dialog("open");
+    jQuery('#working_modal').modal("show");
+    var trialID = parseInt(jQuery('#trialIDDiv').text());
+    var list = new CXGN.List();
+    var trait_list_id = jQuery('#trait_list_list_select').val();
+    var trait_list;
+    if (! trait_list_id == "") {
+	trait_list = JSON.stringify(list.getList(trait_list_id));
+    }
+     new jQuery.ajax({
+	 type: 'POST',
+	 url: '/ajax/phenotype/create_DataCollector',
+	 dataType: "json",
+	 data: {
+             'trial_id': trialID,
+             'trait_list': trait_list,
+	 },
+	 success: function (response) {
+	     //jQuery('#working').dialog("close");
+	     jQuery('#working_modal').modal("hide");
+		//alert("hello");
+		
+             if (response.error) {
+		 //alert("error: "+response.error);
+		 jQuery('#open_create_DataCollector_dialog').dialog("close");
+             } else {
+		 //alert("success: "+response.filename);
+		 jQuery('#open_create_DataCollector_dialog').dialog("close");
+		 jQuery('#working_modal').modal("hide");
+		 window.location.href = "/download/"+response.filename;
+             }
+	 },
+	 error: function () {
+	     //jQuery('#working').dialog("close");
+	     jQuery('#working_modal').modal("hide");
+             alert('An error occurred creating a DataCollector file.');
+             jQuery('#open_download_DataCollector_dialog').dialog("close");
+	 }
+     });
+}
+
+
 function trial_detail_page_setup_dialogs() { 
 
     jQuery('#change_breeding_program_dialog').dialog( {
-	height: 150,
-	width: 300,
+	height: 200,
+	width: 400,
 	title: 'Select Breeding Program',
 	autoOpen: false,
 	buttons: {
@@ -203,6 +263,17 @@ function trial_detail_page_setup_dialogs() {
     });
     
     jQuery( "#tablet_field_layout_saved_dialog_message" ).dialog({
+	autoOpen: false,
+	modal: true,
+	buttons: {
+	    Ok: function() {
+		jQuery( this ).dialog( "close" );
+		location.reload();
+	    }
+	}
+    });
+
+    jQuery( "#data_collector_saved_dialog_message" ).dialog({
 	autoOpen: false,
 	modal: true,
 	buttons: {
@@ -228,12 +299,33 @@ function trial_detail_page_setup_dialogs() {
 	    Create: function() {
 		create_spreadsheet();
 		//save_experimental_design(design_json);
-		//jQuery( this ).dialog( "close" );
+		jQuery( this ).dialog( "close" );
 		//jQuery('#add_project_dialog').dialog("close");
 	    },
 	},
     });
     
+    jQuery('#create_DataCollector_dialog').dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+	width: 500,
+	position: ['top', 75],
+	modal: true,
+	buttons: {
+	    Cancel: function() {
+		jQuery( this ).dialog( "close" );
+		return;
+	    },
+	    Create: function() {
+		create_DataCollector();
+		//save_experimental_design(design_json);
+		jQuery( this ).dialog( "close" );		
+		//jQuery('#add_project_dialog').dialog("close");
+	    },
+	},
+    });	
+
     jQuery('#show_change_breeding_program_link').click(
 	function() {
 	    jQuery('#change_breeding_program_dialog').dialog("open");
@@ -267,6 +359,10 @@ function trial_detail_page_setup_dialogs() {
     
     jQuery('#create_fieldbook_link').click(function () {
 	open_create_fieldbook_dialog();
+    });
+
+    jQuery('#create_DataCollector_link').click(function () {
+	open_create_DataCollector_dialog();
     });
     
     jQuery('#trial_design_view_layout').dialog({
@@ -323,6 +419,57 @@ function trial_detail_page_setup_dialogs() {
 	get_select_box('locations', 'trial_location_select_div', 'trial_location_select');
     });
 
+    jQuery('#change_planting_date_dialog').dialog( { 
+	autoOpen: false,
+	height: 200,
+	width: 300,
+	modal: true,
+	title: 'Change planting date',
+	buttons: { 
+	    cancel: { text: "Cancel",
+		      click: function() { jQuery( this ).dialog("close"); },
+		      id: "change_planting_date_button"
+		    },
+	    save:   { text: "Save",
+		      click: function() { 
+			  save_planting_date();
+		      },
+		      id: "change_planting_date_button"
+		    }
+	}
+    });
+
+    jQuery('#planting_date_picker').datepicker();
+
+    jQuery('#change_planting_date_link').click( function() { 
+	jQuery('#change_planting_date_dialog').dialog("open");
+    });
+
+    jQuery('#change_harvest_date_dialog').dialog( { 
+	autoOpen: false,
+	height: 200,
+	width: 300,
+	modal: true,
+	title: 'Change harvest date',
+	buttons: { 
+	    cancel: { text: "Cancel",
+		      click: function() { jQuery( this ).dialog("close"); },
+		      id: "change_harvest_date_button"
+		    },
+	    save:   { text: "Save",
+		      click: function() { 
+			  save_harvest_date();
+		      },
+		      id: "change_harvest_date_button"
+		    }
+	}
+    });
+
+    jQuery('#harvest_date_picker').datepicker();
+
+    jQuery('#change_harvest_date_link').click( function() { 
+	jQuery('#change_harvest_date_dialog').dialog("open");
+    });
 
     jQuery('#edit_trial_description_dialog').dialog( { 
 	autoOpen: false,
@@ -467,6 +614,103 @@ function save_trial_year() {
 	}
     });
 }
+
+function save_harvest_date() { 
+    var trial_id = get_trial_id();
+    var harvest_date = jQuery('#harvest_date_picker').val();    
+    var checked_date = check_date(harvest_date);
+
+    if (checked_date) {
+	jQuery.ajax( {
+	    url : '/ajax/breeders/trial/'+trial_id+'/harvest_date',
+	    data: { 'harvest_date' : checked_date },
+	    type: 'POST',
+	    success: function(response){ 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    alert("Successfully stored harvest date.");
+		    display_harvest_date();
+		    jQuery('#change_harvest_date_dialog').dialog("close");
+		}
+	    },
+	    error: function(response) { 
+		alert('An error occurred.');
+	    }
+	});
+
+    }
+}
+
+function display_harvest_date() { 
+    var trial_id = get_trial_id();
+    jQuery.ajax( { 
+	url : '/ajax/breeders/trial/'+trial_id+'/harvest_date',
+	type: 'GET',
+	success: function(response) { 
+	    jQuery('#harvest_date').html(response.harvest_date);
+	},
+	error: function(response) { 
+	}
+    });
+}
+
+function save_planting_date() { 
+    var trial_id = get_trial_id();
+    var planting_date = jQuery('#planting_date_picker').val();    
+    var checked_date = check_date(planting_date);
+
+    if (checked_date) {
+	jQuery.ajax( {
+	    url : '/ajax/breeders/trial/'+trial_id+'/planting_date',
+	    data: { 'planting_date' : checked_date },
+	    type: 'POST',
+	    success: function(response){ 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    alert("Successfully stored planting date.");
+		    display_planting_date();
+		    jQuery('#change_planting_date_dialog').dialog("close");
+		}
+	    },
+	    error: function(response) { 
+		alert('An error test.');
+	    }
+	});
+
+    }
+}
+
+
+function display_planting_date() { 
+    var trial_id = get_trial_id();
+    jQuery.ajax( { 
+	url : '/ajax/breeders/trial/'+trial_id+'/planting_date',
+	type: 'GET',
+	success: function(response) { 
+	    jQuery('#planting_date').html(response.planting_date);
+	},
+	error: function(response) { 
+	}
+    });
+}
+
+function check_date(d) { 
+    var regex = new RegExp("^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$");
+    
+    var match = regex.exec(d);
+    if (match === null || match[1] > 12 || match[1] < 1 || match[2] >31 || match[2] < 1 || match[3]>2030 || match[3] < 1950) {
+	alert("This is not a valid date!");
+	return 0;
+    }
+    // save as year/month/day plus time 
+    return match[3]+'/'+match[1]+'/'+match[2]+" 00:00:00";
+    
+}
+
 
 function display_trial_year() { 
     var trial_id = get_trial_id();

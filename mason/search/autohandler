@@ -25,7 +25,7 @@ Lukas Mueller &st;lam87@cornell.edu&gt;. Based on Perl code by Rob Buels.
 <& /page/mode_buttons.mas, buttons => [
 
     ['/search/organisms', 'Organisms'],
-    ['/search/loci','Genes'],
+    ['/search/locus','Genes'],
     ['/search/features','Genome Features'],
     ['/search/phenotypes','QTLs &amp; Phenotypes'],
     ['/search/transcripts','Transcripts'],

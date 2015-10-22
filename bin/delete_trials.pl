@@ -25,18 +25,19 @@ use CXGN::Phenome::Schema;
 use CXGN::DB::InsertDBH;
 use CXGN::Trial;
 
-our ($opt_H, $opt_D, $opt_i, $opt_n);
+our ($opt_H, $opt_D, $opt_i, $opt_n, $opt_t);
 
-getopts('H:i:D:n');
+getopts('H:D:i:t:n');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
 my $trial_ids = $opt_i;
+my $trial_names = $opt_t;
 my $non_interactive = $opt_n;
 
 my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 				      dbname=>$dbname,
-				      dbargs => {AutoCommit => 1,
+				      dbargs => {AutoCommit => 0,
 				      RaiseError => 1}
 				    }
     );
@@ -47,6 +48,13 @@ my $metadata_schema = CXGN::Metadata::Schema->connect( sub { $dbh->get_actual_db
 my $phenome_schema = CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh() });
 
 my @trial_ids = split ",", $trial_ids;
+my @trial_names = split ",", $trial_names;
+
+foreach my $name (@trial_names) { 
+    my $trial = $schema->resultset("Project::Project")->find( { name => $name });
+    if (!$trial) { print STDERR "Trial $name not found. Skipping...\n"; next; }
+    push @trial_ids, $trial->project_id();
+}
 
 foreach my $trial_id (@trial_ids) { 
     print STDERR "Retrieving trial information for trial $trial_id...\n";
@@ -59,17 +67,38 @@ foreach my $trial_id (@trial_ids) {
 	$answer = <>;
     }
     if ($non_interactive || $answer =~ m/^y/i) { 
-	print STDERR "Delete metadata...\n";
-	$t->delete_metadata($metadata_schema, $phenome_schema);
-	print STDERR "Deleting phenotypes...\n";
-	$t->delete_phenotype_data();
-	print STDERR "Deleting layout...\n";
-	$t->delete_field_layout();
-	print STDERR "Delete project entry...\n";
-	$t->delete_project_entry();
+	eval { 
+	    delete_trial($metadata_schema, $phenome_schema, $t);
+	};
+	if ($@) { 
+	    print STDERR "An error occurred trying to delete trial ".$t->get_name()." ($@)\n";
+	    $dbh->rollback();
+	}
+	else { 
+	    $dbh->commit();
+	    print STDERR "Trial ".$t->get_name()." successfully deleted\n";
+	}
+
     }
-    
-    print STDERR "Done with trial $trial_id.\n";
+
 }
 
+$dbh->disconnect();
 print STDERR "Done with everything.\n";
+
+sub delete_trial { 
+    my $metadata_schema = shift;
+    my $phenome_schema = shift;
+    my $t = shift;
+
+    print STDERR "Deleting trial ".$t->get_name()."\n";
+    print STDERR "Delete metadata...\n";
+    $t->delete_metadata($metadata_schema, $phenome_schema);
+    print STDERR "Deleting phenotypes...\n";
+    $t->delete_phenotype_data();
+    print STDERR "Deleting layout...\n";
+    $t->delete_field_layout();
+    print STDERR "Delete project entry...\n";
+    $t->delete_project_entry();
+}
+    

@@ -1,0 +1,248 @@
+<style>
+
+.slider-size {
+  height: 400px; /* This is your slider height */
+}
+.carousel {
+  max-width:98%;
+  /*width:100%;*/
+  margin:0 auto; /* center your carousel if other than 100% */
+  margin-bottom:0px;
+}
+
+.carousel-sgn-caption { 
+  position:relative;
+  float: left;
+  max-width:49%;
+  min-width:35%;
+  padding: 0px 10px 0px 10px;
+  margin-top:20px;
+
+  color: #000;
+  font-size: 16px;
+  text-decoration: none;
+  background-color: #fff;
+  opacity: 0.80;
+  filter: alpha(opacity=80); /* For IE8 and earlier */
+  border-top-right-radius:12px;
+  border-bottom-right-radius:12px;
+}
+
+.carousel-sgn-caption a { 
+  color: #000;
+  text-decoration: none;
+}
+
+.carousel-sgn-caption a:hover { 
+  color: #666;
+  text-decoration: none;
+}
+
+.carousel-sgn-links {
+  position:absolute;
+  min-width:35%;
+  max-width:49%;
+  margin-top:20px;
+  right:0px;
+
+  color: #000;
+  font-size: 16px;
+  text-decoration: none;
+  background-color: #fff;
+  opacity: 0.85;
+  filter: alpha(opacity=85); /* For IE8 and earlier */
+  border-top-left-radius:12px;
+  border-bottom-left-radius:12px;
+}
+
+.carousel-sgn-links ul { 
+  padding: 10px 30px 0px 15px;
+  list-style-type: none;
+}
+
+.carousel-sgn-links a { 
+  color: #000;
+  text-decoration: none;
+}
+
+.carousel-sgn-links a:hover { 
+  color: #666;
+  text-decoration: none;
+}
+
+@media (min-width: 0px) and (max-width: 650px) {
+
+    .carousel-sgn-caption {
+      margin-top:0px;
+      width: 100%;
+      max-width: 100%;
+      border-radius:0px;
+      float: none;
+      margin-bottom:0px;
+    }
+
+    .carousel-sgn-links {
+      max-width: 100%;
+      width: 100%;
+      border-radius:0px;
+      bottom:30px;
+    }
+    
+    .carousel-indicators {
+      bottom:0px;
+      margin-bottom:5px;
+    }
+
+}
+
+
+</style>
+
+<!--
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+-->
+
+<script>
+
+  jQuery(document).ready(function() {
+    $('.carousel').carousel({
+      interval: 20000,
+      // wrap:true
+    })
+    
+    //$("#myCarousel").swiperight(function() {  
+    //      $("#myCarousel").carousel('prev');  
+    //    });  
+    //   $("#myCarousel").swipeleft(function() {  
+    //      $("#myCarousel").carousel('next');  
+    //   });  
+       
+       $(".ui-loading").css("display","none");
+       $(".ui-loader").css("display","none");
+  });
+</script>
+
+  <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="false">
+    <!-- Indicators -->
+    <ol class="carousel-indicators">
+      <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+      <li data-target="#myCarousel" data-slide-to="1"></li>
+      <li data-target="#myCarousel" data-slide-to="2"></li>
+      <li data-target="#myCarousel" data-slide-to="3"></li>
+      <li data-target="#myCarousel" data-slide-to="4"></li>
+    </ol>
+
+    <!-- Wrapper for slides -->
+    <div class="carousel-inner" role="listbox">
+
+      <div class="item active">
+          <div style="background:url(/documents/img/homepage_carousel/bordeaux.jpg) center center; background-size:cover;" class="slider-size">
+            <div class="carousel-sgn-caption">
+              <a href="https://colloque.inra.fr/sol2015" target="_blank">
+                <h3><img src="/documents/img/sgn_transparent_logo.png" width="40"> SOL 2015</h3>
+                <p>The 12th Solanaceae Conference</p>
+              </a>
+            </div>
+            
+            <div class="carousel-sgn-links">
+              <ul>
+                <li><a href="https://colloque.inra.fr/sol2015/Registration">Registration</a></li>
+                <li><a href="https://colloque.inra.fr/sol2015/Abstract-submission">Abstract Submission</a></li>
+                <li><a href="https://colloque.inra.fr/sol2015/Program">Conference Program</a></li>
+                <li><a href="https://colloque.inra.fr/sol2015/Venue-accommodation">Venue & Accomodation</a></li>
+              </ul>
+            </div>
+            
+          </div>
+        </a>
+      </div>
+      
+      <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/carousel_tomato.jpg) center center; background-size:cover;" class="slider-size">
+          <div class="carousel-sgn-caption">
+            <h3><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome</a></h3>
+            <p><a href="http://www.nature.com/nature/journal/v485/n7400/full/nature11119.html" target="_blank">The tomato genome sequence provides insights into fleshy fruit evolution</a></p>
+          </div>
+        
+          <div class="carousel-sgn-links">
+            <ul>
+              <li><a href="/jbrowse">Browse the tomato genome</a></li>
+              <li><a href="/tools/blast?db_id=224">Find sequences by similarity</a></li>
+              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/">Download the annotations</a></li>
+              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/">Download the Genome Sequence</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/carousel_potato.jpg) center center; background-size:cover;" class="slider-size">
+        <div class="carousel-sgn-caption">
+            <h3><a href="/organism/Solanum_tuberosum/genome">Potato Genome</a></h3>
+            <p><a href="http://www.nature.com/nature/journal/v475/n7355/full/nature10158.html" target="_blank">Genome sequence and analysis of the tuber crop potato</a></p>
+        </div>
+        <div class="carousel-sgn-links">
+          <ul>
+            <li><a href="/jbrowse/current/?data=data%2Fjson%2FPGSC_DM_v4.03">Browse the potato genome</a></li>
+            <li><a href="/tools/blast?db_id=262">Find sequences by similarity</a></li>
+            <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/annotation/">Download the annotations</a></li>
+            <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/assembly/PGSC_DM_v4.03/">Download the Genome Sequence</a></li>
+          </ul>
+        </div>
+        
+        </div>
+      </div>
+
+      <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/3.jpg) center center; background-size:cover;" class="slider-size">
+        <div class="carousel-sgn-caption">
+            <h3><a href="/organism/Capsicum_annuum/genome">Pepper Genome</a></h3>
+            <p><a href="http://www.nature.com/ng/journal/v46/n3/full/ng.2877.html" target="_blank">Genome sequence of the hot pepper provides insights into the evolution of pungency in Capsicum species</a></p>
+        </div>
+        
+        <div class="carousel-sgn-links">
+          <ul>
+            <li><a href="/jbrowse/current/?data=data%2Fjson%2FPepper.v.1.55">Browse the pepper genome</a></li>
+            <li><a href="/tools/blast?db_id=217">Find sequences by similarity</a></li>
+            <li><a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Download the annotations</a></li>
+            <li><a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Download the Genome Sequence</a></li>
+          </ul>
+        </div>
+        
+        </div>
+      </div>
+
+      <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/carousel_eggplant.jpg) center center; background-size:cover;" class="slider-size">
+          <div class="carousel-sgn-caption">
+              <h3><a href="/organism/Solanum_melongena/genome">Eggplant Genome</a></h3>
+              <p><a href="http://dnaresearch.oxfordjournals.org/content/21/6/649" target="_blank">Draft Genome Sequence of Eggplant (<i>Solanum melongena L.</i>)</a></p>
+          </div>
+          
+          <div class="carousel-sgn-links">
+            <ul>
+              <li><a href="/tools/blast?db_id=248">Find sequences by similarity</a></li>
+              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/">Download the annotations</a></li>
+              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/">Download the Genome Sequence</a></li>
+            </ul>
+          </div>
+          
+        </div>
+      </div>
+
+
+
+    </div>
+
+    <!-- Left and right controls -->
+    <!-- <a id="prev_slide" class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+      <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+      <span class="sr-only">Previous</span>
+    </a>
+    <a  id="next_slide" class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+      <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+      <span class="sr-only">Next</span>
+    </a> -->
+  </div>
+
+

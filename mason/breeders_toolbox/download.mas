@@ -2,14 +2,19 @@
 
 </%args>
 
-<& /page/page_title.mas, title=>"Download using lists" &>
-Choose a list for each parameter and click "download".
-<br /><br />
+<& /page/page_title.mas, title=>"Download Using Lists" &>
 
+<div class="container-fluid">
+
+<div class="well">
+Choose a list for each parameter and click "Download".
+</div>
+
+<div class="well well-sm">
 <form id="download_form" action="/breeders/download_action" method="POST" >
-<table cellpadding="10" border="0" >
- <tr><td colspan="4"><h4>Download Phenotype</h4>Select parameter:<br />
-
+<table class="table" cellpadding="10" border="0" >
+  <thead>
+  <tr><td colspan="4"><h4>Download Phenotype</h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
@@ -21,10 +26,14 @@ Choose a list for each parameter and click "download".
       Traits
     </th>
     <th>
-      &nbsp;
-      </th>
+      Format
+    </th>
+    <th>
+      Action
+    </th>
   </tr>
-
+  </thead>
+  <tbody>
   <tr>
     <td>
       <div id="accession_list">
@@ -37,25 +46,41 @@ Choose a list for each parameter and click "download".
     <td>
       <div id="trait_list">
       </div>
+   </td>
+   <td>
+ <div class="checkbox">
+  <label><input type="checkbox" id="format" name="format" value=".xls">.xls (default)</label>
+</div>
+<div class="checkbox">
+  <label><input type="checkbox" id="format" name="format" value=".csv">.csv</label>
+</div>
+<div class="checkbox">
+  <label><input type="checkbox" id="format" name="format" value="html">html</label>
+</div>
     </td>
     <td>
-      <input type="button" id="phenotype" value="Download" />
-    </td></tr></table>
+      <input class="btn btn-primary" type="button" id="phenotype" value="Download" />
+      <input type="hidden" id="download_token_value" name="download_token_value"/>
+    </td>
+  </tr>
+  </tbody>
+  </table>
 </form>
+</div>
 
 <script>  
-  $(document).ready(function() { 
+$(document).ready(function() { 
 
     var lo = new CXGN.List();
 
     $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
     $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ], 'select' ));
     $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], 'select'  ));
-
+ 
     $('#phenotype').click(function() {
-   
-      disable_ui();
 
+    disable_ui();
+   
       var accession_list_id = $('#accession_list_list_select').val();
       var trial_list_id = $('#trial_list_list_select').val();
       var trait_list_id = $('#trait_list_list_select').val();
@@ -69,10 +94,11 @@ Choose a list for each parameter and click "download".
       var trait_validation = 1;
       if (trait_list_id) { trait_validation = lo.validate(trait_list_id, 'traits', true); } 
 
-      //if (!accession_list_id || ! trial_list_id || ! trait_list_id) { 
-      //  alert("You need to select an accession, a trail, and a trait list!");
-      //  return; 
-      //}
+      if (!accession_list_id || !trial_list_id || !trait_list_id) {
+      	 enable_ui();
+      	 alert("You need to select an accession, a trial, and a trait list!");
+	 return; 
+      }
 
       var problem_lists = new Array();
 
@@ -86,32 +112,44 @@ Choose a list for each parameter and click "download".
         problem_lists.push('trials');
       }
 
-      if (problem_lists.length > 0) { 
-        alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
-        enable_ui();
-        return;
-    }
+      if (problem_lists.length > 0) {
+      	 enable_ui();
+      	 alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
+	 return;
+      }
 
-        $('#download_form').submit();
- 	enable_ui()
-  
-    });
+      var token = new Date().getTime(); //use the current timestamp as the token value
+      $('#download_token_value').val(token);
+      
+      $('#download_form').submit();
+      
+      var fileDownloadCheckTimer;
+      fileDownloadCheckTimer = window.setInterval(function () { //checks for response cookie to keep working modal enabled until file is ready for download
+      			     var cookieValue = $.cookie('fileDownloadToken');
+			     if (cookieValue == token) {
+			     	window.clearInterval(fileDownloadCheckTimer);
+				jQuery.removeCookie('fileDownloadToken'); //clears this cookie value
+				enable_ui();
+				}
+			}, 1000);
+	});
 
 	function disable_ui() {
-	$('#working').dialog("open");
+	$('#working_modal').modal("show");
 	}
 
 	function enable_ui() {
-	$('#working').dialog("close");
+	$('#working_modal').modal("hide");
 	}
-
 });
+
 </script>
 
+<div class="well well-sm">
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
-<table cellpadding="10">
-
-<tr><td colspan="3"><h4>Download GBS genotype </h4>Select parameter:<br />
+<table class="table"  cellpadding="10">
+  <thead>
+  <tr><td colspan="2"><h4>Download GBS Genotype </h4><p>Select parameter:</p></tr>
   <tr>
     <!-- th>
       Trials
@@ -120,10 +158,11 @@ Choose a list for each parameter and click "download".
       Accessions
     </th>
     <th>
-      &nbsp;
+      Action
     </th>
   </tr>
-
+  </thead>
+  <tbody>
   <tr>
     <!-- td>
       <div id="trial_list2">
@@ -133,12 +172,14 @@ Choose a list for each parameter and click "download".
       <div id="accession_list2">
       </div>      
     </td>
-
     <td>
-      <input type="button" id="genotype" value="Download" />
-    </td></tr>
+      <input class="btn btn-primary" type="button" id="genotype" value="Download" />
+    </td>
+  </tr>
+  </tbody>
   </table>
 </form>
+</div>
 
 <script>
   $(document).ready(function() { 
@@ -201,20 +242,21 @@ Choose a list for each parameter and click "download".
     });
 
 	function disable_ui() {
-	$('#working').dialog("open");
+	$('#working_modal').modal("show");
 	}
 
 	function enable_ui() {
-	$('#working').dialog("close");
+	$('#working_modal').modal("hide");
 	}
 
   });
 </script>
 
+<div class="well well-sm">
 <form id="gbs_qc" action="/breeders/gbs_qc_action" method="POST">
-<table cellpadding="10">
-
-<tr><td colspan="3"><h4>GBS genotype QC </h4>Select parameter:<br />
+<table class="table" cellpadding="10">
+  <thead>
+  <tr><td colspan="3"><h4>GBS Genotype QC</h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Trials
@@ -223,10 +265,11 @@ Choose a list for each parameter and click "download".
       Accessions
     </th>
     <th>
-      &nbsp;
+      Action
     </th>
   </tr>
-
+  </thead>
+  <tbody>
   <tr>
     <td>
       <div id="trial_list3">
@@ -236,10 +279,16 @@ Choose a list for each parameter and click "download".
       <div id="accession_list3">
       </div>      
     </td>
-<td>
-<input type="button" id="genotype_qc" value="Quality Control" />
-</td></tr></table>
+    <td>
+      <input class="btn btn-primary" type="button" id="genotype_qc" value="Quality Control" />
+    </td>
+  </tr>
+  </tbody>
+  </table>
 </form>
+</div>
+
+</div>
 
 <script>
   $(document).ready(function() { 
@@ -306,11 +355,11 @@ Choose a list for each parameter and click "download".
     });
 
 	function disable_ui() {
-	$('#working').dialog("open");
+	$('#working_modal').modal("show");
 	}
 
 	function enable_ui() {
-	$('#working').dialog("close");
+	$('#working_modal').modal("hide");
 	}
 
   });

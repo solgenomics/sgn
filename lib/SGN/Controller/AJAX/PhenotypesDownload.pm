@@ -58,7 +58,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
   my @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
   my $dir = $c->tempfiles_subdir('/download');
   my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
-  my $tempfile = $c->config->{basepath}."/".$rel_file;
+  my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
 
   my $create_spreadsheet = CXGN::Trial::Download->new( 
       { 
@@ -69,16 +69,16 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
 	  format => $format,
       });
 
-      my $error = $create_spreadsheet->download();
+     $create_spreadsheet->download();
 
     print STDERR "DOWNLOAD FILENAME = ".$create_spreadsheet->filename()."\n";
     print STDERR "RELATIVE  = $rel_file\n";
 
-if ($error) { 
-$c->stash->{rest} = { error => $error };
-return;
-}
-    $c->stash->{rest} = { filename => $urlencode{$rel_file} };
+#if ($error) { 
+#$c->stash->{rest} = { error => $error };
+#return;
+#}
+    $c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
 
 }
 

@@ -1,0 +1,30 @@
+/* Old code from SGN and nextgen-cassava. Make new file with only extra styles and CSS from IRSC */
+
+/* NOTE: SGN blue is #ccccff */
+/********************     GENERAL SITE STYLES     **********************/
+/*various places on the site use various headline size tags, so let's try to make them all the same*/
+@charset "UTF-8";
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 10px 0;
+  font-family: 'Lato', sans-serif;
+  font-weight: bold;
+  color: #A2AD00;
+  text-rendering: optimizelegibility;
+}
+
+h1 {font-size: 22px; line-height: 32px; margin: 0;}			
+h2 {font-size: 18px; line-height: 28px; }		
+h3 {font-size: 16px; line-height: 26px; }
+h4,
+h5,
+h6 {line-height: 18px; }
+h4 {font-size: 14px; }		
+h5 {font-size: 12px; }		
+h6 {font-size: 11px; color: #999999; text-transform: uppercase; }
+

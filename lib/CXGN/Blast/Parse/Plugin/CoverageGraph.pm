@@ -6,7 +6,8 @@ use File::Basename;
 use File::Slurp;
 
 sub name { 
-    return "Coverage graph";
+    return "Coverage";
+    # return "Coverage graph";
 }
 
 sub prereqs { 

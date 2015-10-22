@@ -24,7 +24,7 @@ $t->while_logged_in_as("curator", sub {
 
     $breeding_program_desc_input->send_keys('Test description.');
 
-    my $ok_button = $t->find_element_ok('new_breeding_program_dialog_ok_button', 'id', 'find add breeding program button');
+    my $ok_button = $t->find_element_ok('new_breeding_program_submit', 'id', 'find add breeding program button');
 
 
     $ok_button->click();
@@ -42,6 +42,8 @@ $t->while_logged_in_as("curator", sub {
 #    print STDERR $t->driver->get_page_source();
 
     my $delete_link = $t->find_element_ok('delete_breeding_program_link_WEBTEST', 'id', 'find breeding program delete link');
+
+    sleep(2); 
 
      $delete_link->click();
 

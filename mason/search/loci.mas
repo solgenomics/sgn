@@ -6,9 +6,9 @@ $lg_names_ref       => undef
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title=>'Search Loci' &>
+<div class="container-fluid">
 
-
+<& /page/page_title.mas, title=>'Search Genes and Loci' &>
 
 <%perl>
 
@@ -35,16 +35,16 @@ no warnings 'uninitialized';
 my $advanced_search=  info_table_html(
   'Organism'   => $organism,
   'Chromosome / Linkage&nbsp;Group' => $linkage_group_select,
-  'Locus editor' =>qq|<input id="locus_editor" size="20"/>|,
+  'Locus editor' =>qq|<input class="form-control" type="text" id="locus_editor" size="20"/>|,
   'Show only genes with' => qq | <input type="checkbox" id="has_sequence"  />sequence <br />
 				<input type="checkbox" id="has_marker" />markers<br />
 				<input type="checkbox" id="has_annotation" />GO/PO annotation<br /> |,
 	
-      'Phenotype'  => qq|<input id="phenotype" size="30" /><a href="/search/phenotypes"> [Advanced SGN phenotype search]</a>|,
-      'Ontology term' => qq|<input id="ontology_term" />
-             <br /><span class="ghosted">(Term name or ID: e.g. 'carotenoid' or 'PO:0007010')</span>|,
-      'Genbank ID' =>qq|<input id="genbank_accession" />
-             <br /><span class="ghosted">(Accession or GI: e.g. 'EF091820' or '118185006')</span>|,   
+      'Phenotype'  => qq|<input class="form-control" type="text" id="phenotype" size="30" /><a href="/search/phenotypes"> [Advanced SGN phenotype search]</a>|,
+      'Ontology term' => qq|<input class="form-control" type="text" id="ontology_term" placeholder="Term name or ID: e.g. 'carotenoid' or 'PO:0007010'"/>
+             <!--<br /><span class="ghosted">(Term name or ID: e.g. 'carotenoid' or 'PO:0007010')</span>-->|,
+      'Genbank ID' =>qq|<input class="form-control" type="text" id="genbank_accession" placeholder="Accession or GI: e.g. 'EF091820' or '118185006'"/>
+             <!--<br /><span class="ghosted">(Accession or GI: e.g. 'EF091820' or '118185006')</span>-->|,   
       __border   =>1,
       __multicol =>2,
       __tableattrs => 'width="100%"',
@@ -53,39 +53,68 @@ my $advanced_search=  info_table_html(
 </%perl>
 
 
+<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0, subtitle=>'[<a href="../help/gene_search_help.pl">Gene Search Help</a>]' &>
+
+<div class="well" id="locus_search_form">
+
+  <div class="form-horizontal" >
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Search for any gene, locus, or allele:</label>
+      <div class="col-sm-9" >
+        <% $any_name_select %>
+      </div>
+    </div>
+    <div class="container-fluid" align="center">
+      <br/>
+      <ul class="list-inline" >
+        <li style="padding-bottom:5px"><button class="btn btn-primary" id="submit_locus_search" />Search</button></li>
+	<li style="padding-bottom:5px"><a class="btn btn-info" href="/locus/0/new/" style="color:#fff" >Submit New Locus</a></li>
+	<li style="padding-bottom:5px"><input class="btn btn-default" type="button" value="Advanced Search Options" id="show_advanced_search" /></li>
+      </ul>
+    </div>
+  </div>
+
+<!--
+<table>
+  <tr>
+    <td colspan="2"><b>Search for any gene, locus, or allele</b>  (<a href="../help/gene_search_help.pl">gene search help page</a>)</td></tr>
+  <tr><td><% $any_name_select %></td>
+    <td><div align="center"><button id="submit_locus_search" />Search</button></div></td>
+   <tr><td><a href="/locus/0/new/">[Submit new locus]</a></td></tr>
+</tr></table>
+<br />
+-->
+
+<div id="advanced_search_div" style="display:none;">
+   <&| /page/info_section.mas, title    => 'Advanced Options' &>
+     <% $advanced_search %>
+   </&>
+</div>
+
+</div>
+
+</&>
+
+</div>
+
+
+<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
+
+
+<div class="well">
 <table id="locus_search_results" class="display">
 <thead>
   <tr>
     <th>Organism</th>
-    <th>Locus name</th>
-    <th>Locus symbol</th>
+    <th>Locus Name</th>
+    <th>Locus Symbol</th>
     <th>Alleles</th>
   </tr>
 </thead>
-
 </table>
-
-<br /><br />
-
-<div id="locus_search_form">
-<table>
-  <tr>
-    <td colspan="2"><b>Search for any locus or allele</b>  (<a href="../help/gene_search_help.pl">gene search help page</a>)</td></tr>
-  <tr><td><% $any_name_select %></td>
-    <td><div align="center"><button id="submit_locus_search" />Search</button></div></td>
-   <tr><td><a href="/locus/0/view/">[Submit new locus]</a></td></tr>
-</tr></table>
-<br />
-<input type="button" value="Advanced search options" id="show_advanced_search" />
-<div id="advanced_search_div" style="display: none;">
-  <% $advanced_search %>
 </div>
 
-
-</div>
-
-
-
+</&>
 
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">

@@ -7,9 +7,15 @@ $user_id => undef
 @roles => ()
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form',,'CXGN.BreedersToolbox.Crosses' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form',,'CXGN.BreedersToolbox.Crosses' ] &>
 
-<table>
+<table class="table table-bordered table-striped table-hover table-condensed">
+  <thead>
+    <tr>
+      <th>Cross Name</th>
+    </tr>
+  </thead>
+  <tbody>
   <%perl>
     if (!@cross_populations) { 
       print "<tr><td>No crosses available for your account.</td></tr>";
@@ -19,9 +25,8 @@ $user_id => undef
       print "<tr><td><a href=\"/cross/".$cross_pop->[1]."\">".$cross_pop->[0]."</a></td></tr>";
     }
   </%perl>
+  </tbody>
 </table>
-
-
 
 <style>
   .ui-autocomplete {
@@ -39,8 +44,241 @@ $user_id => undef
   }
 </style>
 
+<!-- Modal Dialogs Below Here -->
+
+<div class="modal fade" id="create_cross" name="create_cross" tabindex="-1" role="dialog" aria-labelledby="addCrossDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addCrossDialog">Add New Cross</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <form class="form-horizontal" role="form" name="create_cross_form" id="create_cross_form">
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Cross Name: </label>
+      	      <div class="col-sm-10">
+	        <input class="form-control" type="text" id="cross_name" name="cross_name"/>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Cross Type: </label>
+      	      <div class="col-sm-10">
+	        <select class="form-control" id="cross_type">
+	  	  <option value = "biparental" title="An individual plant pollinated by another individual plant">biparental</option>
+	  	  <option value = "self" title="A self pollinated individual plant">self</option>
+	  	  <option value = "open" title="An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members)">open pollinated</option>
+	  	  <option value = "bulk" title="A group of plants (usually a related family) pollinated by an individual plant">bulk</option>
+	  	  <option value = "bulk_self" title="A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen)">bulk selfed</option>
+	  	  <option value = "bulk_open" title="A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members)">bulk and open pollinated</option>
+	  	  <option value = "doubled_haploid" title="Plants derived from doubling the chromosome number of haploid tissue">doubled haplotype</option>
+		</select>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Maternal Parent: </label>
+      	      <div class="col-sm-10">
+	        <input class="form-control" id="maternal_parent" type="text" name="maternal" />
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Paternal Parent: </label>
+      	      <div class="col-sm-10">
+	        <input class="form-control" id="paternal_parent" type="text" name="paternal" />
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Breeding Program: </label>
+      	      <div class="col-sm-10">
+	        <select class="form-control" id="program" name="program">
+	  	<%perl>
+	    	  foreach my $program (@programs) {
+	    	    print "<option value=".'"'.@$program[1].'"'.">".@$program[1]."</option>";
+	    	  }
+          	</%perl>
+       		</select>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Location: </label>
+      	      <div class="col-sm-10">
+	        <select class="form-control" id="location" name="location">
+	  	<%perl>
+	    	  foreach my $location (@locations) {
+	      	    print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+	    	  }
+         	</%perl>
+      		</select>
+              </div>
+	    </div>
+	    <table>
+	      <tr>
+	        <td>
+	    	  <div class="form-group">
+      	      	    <label class="col-sm-9 control-label">Specify Number of Flowers: </label>
+      	      	    <div class="col-sm-3">
+	              <input id= "flower_number_checkbox" type="checkbox" />
+              	    </div>
+	    	  </div>
+	    	</td>
+	    	<td>
+	    	  <div class="form-group" id="get_flower_number" style="display: none">
+      	      	    <label class="col-sm-6 control-label">Number of Flowers: </label>
+      	      	    <div class="col-sm-6">
+	              <input class="form-control" type="text" id="flower_number" />
+              	    </div>
+	    	  </div>
+	    	</td>
+	      </tr>
+	      <tr>
+	        <td>
+	    	  <div class="form-group">
+      	      	    <label class="col-sm-9 control-label">Specify Number of Seeds: </label>
+      	      	    <div class="col-sm-3">
+	              <input id= "seed_number_checkbox" type="checkbox" />
+              	    </div>
+	    	  </div>
+	    	</td>
+	    	<td>
+	    	  <div class="form-group" id="get_seed_number" style="display: none">
+      	      	    <label class="col-sm-6 control-label">Number of Seeds: </label>
+      	      	    <div class="col-sm-6">
+	              <input class="form-control" type="text" id="seed_number" />
+              	    </div>
+	    	  </div>
+	    	</td>
+	      </tr>
+	      <tr>
+	        <td>
+	    	  <div class="form-group">
+      	      	    <label title="You may choose to create accessions for the progeny of the cross at this time." class="col-sm-9 control-label">Create Accessions for Progeny: </label>
+      	      	    <div class="col-sm-3">
+	              <input id="create_progeny_checkbox" type="checkbox"/>
+              	    </div>
+	    	  </div>
+	    	</td>
+	    	<td>
+	    	  <div class="form-group" id="create_progeny_number" style="display: none">
+      	      	    <label class="col-sm-6 control-label">Number of progeny: </label>
+      	      	    <div class="col-sm-6">
+	              <input class="form-control" type="text" id="progeny_number" />
+              	    </div>
+	    	  </div>
+	    	</td>
+	      </tr>
+	      <tr id="use_prefix_suffix" style = "display: none">
+	        <td>
+	    	  <div class="form-group">
+      	      	    <label class="col-sm-9 control-label">Use Prefix and/or Suffix: </label>
+      	      	    <div class="col-sm-3">
+	              <input id="use_prefix_suffix_checkbox" type="checkbox" checked/>
+              	    </div>
+	    	  </div>
+	    	</td>
+	    	<td id="get_prefix_suffix" style="display: none">
+	    	  <div class="form-group" >
+      	      	    <label class="col-sm-6 control-label">Prefix: </label>
+      	      	    <div class="col-sm-6">
+	              <input class="form-control" id="prefix" name="prefix" value="P" size="5" />
+              	    </div>
+	    	  </div>
+		  <div class="form-group" >
+      	      	    <label class="col-sm-6 control-label">Suffix: </label>
+      	      	    <div class="col-sm-6">
+	              <input class="form-control" id="suffix" name="suffix" size="5" />
+              	    </div>
+	    	  </div>
+	    	</td>
+	      </tr>
+	    </table>
+	  </form>      
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="create_cross_submit" id="create_cross_submit">Add Cross</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
+<div class="modal fade" id="upload_crosses_dialog" name="upload_crosses_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadCrossesDialog">Upload Crosses</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <&| /page/explanation.mas, title=>'Template Information' &>
+    	    <p>
+      	    <b>File Format Information</b>
+      	    <br>
+      	    <a id="cross_upload_spreadsheet_format_info">Spreadsheet Format</a>
+      	    <br>
+      	    <a id="cross_upload_barcode_format_info" style = "display: none">Barcode format (Not currently supported)</a>
+    	    </p>
+  	  </&>
+	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Breeding Program: </label>
+      	      <div class="col-sm-10">
+	        <select class="form-control" id="cross_upload_breeding_program" name="cross_upload_breeding_program">
+      		<%perl>
+        	  foreach my $program (@programs) {
+        	    print "<option value=".@$program[1].">".@$program[1]."</option>";
+        	  }
+      		</%perl>
+    		</select>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Location: </label>
+      	      <div class="col-sm-10">
+	        <select class="form-control" id="cross_upload_location" name="cross_upload_location">
+      		<%perl>
+		  foreach my $location (@locations) { 
+		    print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; 
+		  }
+      		</%perl>
+    		</select>
+              </div>
+	    </div>
+	    <hr>
+	    <h4>Progeny Naming: </h4>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Prefix: </label>
+      	      <div class="col-sm-10">
+	        <input class="form-control" id="upload_prefix" name="upload_prefix" value="P" /> 
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Suffix: </label>
+      	      <div class="col-sm-10">
+	        <input class="form-control" id="upload_suffix" name="upload_suffix" />
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Upload File: </label>
+      	      <div class="col-sm-10">
+	        <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
+              </div>
+	    </div>
+    	  </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	<button type="button" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
 <div id="upload_crosses_dialog"  class="ui-widget" title="Upload a list of crosses" >
 
   <&| /page/explanation.mas, title=>'Template information' &>
@@ -84,20 +322,65 @@ $user_id => undef
   </form>
 
 </div>
+-->
 
+<div class="modal fade" id="upload_cross_error_display" name="upload_cross_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesErrorDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadCrossesErrorDialog">Upload Crosses File Error</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <table>
+    	  <tbody></tbody>
+  	  </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
 <div id="upload_cross_error_display" class="ui-widget">
   <table>
     <tbody></tbody>
   </table>
 </div>
+-->
 
+<div class="modal fade" id="cross_upload_spreadsheet_info_dialog" name="cross_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadCrossesInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <&| /breeders_toolbox/spreadsheet_upload_format_info.mas &>
+  	  </&>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
 <div id="cross_upload_spreadsheet_info_dialog" title="Format for uploading crosses in a spreadsheet">
   <&| /breeders_toolbox/spreadsheet_upload_format_info.mas &>
   </&>
 </div>
+-->
 
-
-
+<!--
 <div id="create_cross" title="Add cross" >
   <table cellspacing="0" cellpadding="1" >
 
@@ -215,20 +498,67 @@ $user_id => undef
 
 </table>
 </div>
+-->
 
+<div class="modal fade" id="cross_saved_dialog_message" name="cross_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="crossSavedDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="crossSavedDialog">Success</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <p>
+    	  <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    	  The cross was saved successfully
+  	  </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="dismiss_cross_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
+<!--
 <div id="cross_saved_dialog_message" title="Cross saved">
   <p>
     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
     The cross was saved successfully
   </p>
 </div>
+-->
 
+<div class="modal fade" id="cross_upload_success_dialog_message" name="cross_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadCrossSavedDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadCrossSavedDialog">Success</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <p>
+    	  <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    	  The crosses from your file were saved successfully.
+  	  </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cross_upload_success_dismiss" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
 <div id="cross_upload_success_dialog_message" title="Cross file uploaded">
   <p>
     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
     The cross file was uploaded successfully
   </p>
 </div>
-
+-->
 

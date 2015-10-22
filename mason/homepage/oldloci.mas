@@ -28,7 +28,7 @@ eval {
 
 </%perl>
 
-<& /page/page_title.mas, title=>'All loci of the week' &>
+<& /page/page_title.mas, title=>'All Loci of the Week' &>
 
 <% $loci %>
 

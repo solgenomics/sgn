@@ -145,30 +145,34 @@ jQuery(document).ready(function ($) {
         open_genotyping_trial_dialog();
     });
 
-////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
 
-    $('#igd_genotyping_trial_dialog').dialog( {
-	autoOpen: false,
-	autoResize:true,
-	width: 600,
-	position: ['top', 150],
-	title: 'Create an IGD genotyping trial',
-	buttons: [
-	    { 
-		text: 'OK', 
-		id: 'genotype_trial_submit_button',
-		click: function() {
-		    submit_igd_genotype_trial();
-		},
-	    },
-	    {
-		text: 'Cancel',
-		id: 'genotype_trial_cancel_button',
-		click: function() { 
-		    $('#igd_genotyping_trial_dialog').dialog("close"); 
-		}
-	    }
-	]
+//    $('#igd_genotyping_trial_dialog').dialog( {
+//	autoOpen: false,
+//	autoResize:true,
+//	width: 600,
+//	position: ['top', 150],
+//	title: 'Create an IGD genotyping trial',
+//	buttons: [
+//	    { 
+//		text: 'OK', 
+//		id: 'genotype_trial_submit_button',
+//		click: function() {
+//		    submit_igd_genotype_trial();
+//		},
+//	    },
+//	    {
+//		text: 'Cancel',
+//		id: 'genotype_trial_cancel_button',
+//		click: function() { 
+//		    $('#igd_genotyping_trial_dialog').dialog("close"); 
+//		}
+//	    }
+//	]
+//    });
+
+    $('#add_igd_geno_trial_submit').click(function () {
+        submit_igd_genotype_trial();
     });
 
     function submit_igd_genotype_trial() {
@@ -198,13 +202,13 @@ jQuery(document).ready(function ($) {
 	}
 
 	if (elements.length > 95) { 
-	    $('#working').dialog("close");
+	    $('#working_modal').modal("show");
 	    alert("The list needs to have less than 96 elements (one well is reserved for the BLANK). Please use another list.");
 	    
 	    return;
 	}
 
-	$('#working').dialog("open");
+	$('#working_modal').modal("show");
 
 	$('#upload_igd_genotyping_trials_form').append('<input type="hidden" name="list_id" value="'+list_id+'">');
 	$('#upload_igd_genotyping_trials_form').append('<input type="hidden" name="year" value="'+year+'">');
@@ -241,21 +245,20 @@ jQuery(document).ready(function ($) {
 	json: true,
 	post: function () {
 	    var uploadedGenotypingFile = $("#igd_genotyping_trial_upload_file").val();
-	    $('#working').dialog("open");
+	    $('#working_modal').modal("show");
 	    if (uploadedGenotypingFile === '') {
-		$('#working').dialog("close");
+		$('#working_modal').modal("hide");
 		alert("Please select a file to upload.");
 		return;
 	    }
-	    
 	},
 	complete: function (response) {
 	    //var response_json = JSON.stringify(response);
 	    //alert(response_json);
-	    $('#working').dialog("close");
+	    $('#working_modal').modal("hide");
 	    if (response.error) { 
 		var error = response.error;
-		$('#working').dialog("close");
+		$('#working_modal').modal("hide");
 		// if (response.error) {
 		// 	$("#upload_genotyping_error_display tbody").html('');
 		// 	$("#upload_genotyping_error_display tbody").append(response.error_string);
@@ -291,15 +294,22 @@ jQuery(document).ready(function ($) {
 
 	}
     });
-    
-    jQuery('#igd_genotyping_trial_dialog').bind("dialogopen", function displayMenu() { 
+
+    $('#igd_genotyping_trial_dialog').on('show.bs.modal', function (e) {
 	var l = new CXGN.List();
 	var html = l.listSelect('igd_accession_select_box', [ 'accessions', 'plots' ]);
 	$('#igd_accession_select_box_span').html(html);
-    });
+    })
+    
+//    jQuery('#igd_genotyping_trial_dialog').bind("dialogopen", function displayMenu() { 
+//	var l = new CXGN.List();
+//	var html = l.listSelect('igd_accession_select_box', [ 'accessions', 'plots' ]);
+//	$('#igd_accession_select_box_span').html(html);
+//    });
+
     
     function open_igd_genotyping_trial_dialog () {
-	$('#igd_genotyping_trial_dialog').dialog("open");
+	$('#igd_genotyping_trial_dialog').modal("show");
     }
 
     $('#create_igd_genotyping_trial_link').click(function() {
@@ -310,16 +320,15 @@ jQuery(document).ready(function ($) {
 	var trial_id = get_trial_id();
 	var yes = confirm("Are you sure you want to delete this experiment with id "+trial_id+" ? This action cannot be undone.");
 	if (yes) { 
-	    jQuery('#working').dialog( { width: 300, height:150 });
-	    jQuery('#working').dialog("open");
-	    var html = jQuery('#working').html();
-	    jQuery('#working').html(html+"Deleting genotyping experiment...<br />");
+	    jQuery('#working_modal').modal("show");
+	    var html = jQuery('#working_msg').html();
+	    jQuery('#working_msg').html(html+"Deleting genotyping experiment...<br />");
 	    jQuery.ajax( { 
 		async: false,
 		url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
 		success: function(response) { 
 		    if (response.error) { 
-			jQuery('#working').dialog("close");
+			jQuery('#working_modal').modal("hide");
 			alert(response.error);
 		    }
 		    else { 
@@ -327,28 +336,28 @@ jQuery(document).ready(function ($) {
 		    }
 		},
 		error: function(response) { 
-		    jQuery('#working').dialog("close");
+		    jQuery('#working_modal').modal("hide");
 		    alert("An error occurred.");
 		}
 	    });
-	    html = jQuery('#working').html();
-	    jQuery('#working').html(html+"Removing the project entry...");
+	    html = jQuery('#working_msg').html();
+	    jQuery('#working_msg').html(html+"Removing the project entry...");
 	    jQuery.ajax( { 
 		async: false,
 		url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
 		success: function(response) { 
                     if (response.error) { 
-			jQuery('#working').dialog("close");
+			jQuery('#working_modal').modal("hide");
 			alert(response.error);
                     }
                     else { 
-			jQuery('#working').dialog("close");
+			jQuery('#working_modal').modal("hide");
 			alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
 			window.location.href="/breeders/trial/"+trial_id;
                     }
 		},
 		error: function(response) { 
-                    jQuery('#working').dialog("close");
+                    jQuery('#working_modal').modal("hide");
                     alert("An error occurred.");
 		}
             });

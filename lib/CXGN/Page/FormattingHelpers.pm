@@ -384,42 +384,45 @@ sub modesel {
 
         my $tablecell = sub {
             my ( $leaf, $content ) = @_;
-qq|    <td id="${bid}_${leaf}" class="modesel_$leaf$sel">$content</td>\n|;
+	    #qq|    <td id="${bid}_${leaf}" class="modesel_$leaf$sel">$content</td>\n|;
+	    qq|<li style="margin:2px -4px" id="${bid}_${leaf}">$content</li>|;
         };
 
         $button->{contents} = [
-            $tablecell->(
-                'tl', qq|<img src="/img/modesel_tl$sel.gif" alt="" />|
-              )
-              . $tablecell->( 't', qq|| )
-              . $tablecell->(
-                'tr', qq|<img src="/img/modesel_tr$sel.gif" alt="" />|
-              ),
-            $tablecell->(
-                'l', qq|<img src="/img/modesel_l$sel.gif" alt="" />|
-              )
-              . $tablecell->(
+           # $tablecell->(
+           #     'tl', qq|<img src="/img/modesel_tl$sel.gif" alt="" />|
+           #   )
+           #   . $tablecell->( 't', qq|| )
+           #   . $tablecell->(
+           #     'tr', qq|<img src="/img/modesel_tr$sel.gif" alt="" />|
+           #   ),
+           # $tablecell->(
+           #     'l', qq|<img src="/img/modesel_l$sel.gif" alt="" />|
+           #   )
+              $tablecell->(
                 'c',
-qq|<a class="modesel$sel" onclick="CXGN.Page.FormattingHelpers.modesel_switch_highlight('$highlighted_id','$bid'); $button->{onclick}" href="$button->{url}">$button->{contents}</a>|
+#qq|<a class="modesel$sel" onclick="CXGN.Page.FormattingHelpers.modesel_switch_highlight('$highlighted_id','$bid'); $button->{onclick}" href="$button->{url}">$button->{contents}</a>|
+		qq|<button class="btn btn-xs modesel$sel" onclick="location.href='$button->{url}';">$button->{contents}</button>|
               )
-              . $tablecell->(
-                'r', qq|<img src="/img/modesel_r$sel.gif" alt="" />|
-              ),
-            $tablecell->(
-                'bl', qq|<img src="/img/modesel_bl$sel.gif" alt="" />|
-              )
-              . $tablecell->( 'b', qq|| )
-              . $tablecell->(
-                'br', qq|<img src="/img/modesel_br$sel.gif" alt="" />|
-              ),
+           #   . $tablecell->(
+           #     'r', qq|<img src="/img/modesel_r$sel.gif" alt="" />|
+           #   ),
+           # $tablecell->(
+           #     'bl', qq|<img src="/img/modesel_bl$sel.gif" alt="" />|
+           #   )
+           #   . $tablecell->( 'b', qq|| )
+           #   . $tablecell->(
+           #     'br', qq|<img src="/img/modesel_br$sel.gif" alt="" />|
+           #   ),
         ];
     }
 
-    my $spacer    = qq{    <td class="modesel_spacer"></td>\n};
+    #my $spacer    = qq{    <td class="modesel_spacer"></td>\n};
+    my $spacer    = qq{};
     my $tabs_html = join(
         "\n",
         (
-            map { "  <tr>\n$_  </tr>" } (
+            map { "  $_  " } (
                 join( $spacer, ( map { $_->{contents}[0] } @buttons ) ),
                 join( $spacer, ( map { $_->{contents}[1] } @buttons ) ),
                 join( $spacer, ( map { $_->{contents}[2] } @buttons ) ),
@@ -428,9 +431,11 @@ qq|<a class="modesel$sel" onclick="CXGN.Page.FormattingHelpers.modesel_switch_hi
     );
     return <<EOH;
 <center>
-<table class="modesel" summary="" cellspacing="0">
+<!--<table class="modesel" summary="" cellspacing="0">-->
+<ul class="list-inline">
 $tabs_html
-</table>
+</ul>
+<!--</table>-->
 </center>
 <hr class="modesel" />
 EOH
@@ -491,7 +496,7 @@ sub simple_selectbox_html {
     $params{params} ||= '';
     $params{name}   ||= '';
     $retstring =
-      qq!<select $id $params{multiple} $params{params} name="$params{name}">\n!;
+      qq!<select class="form-control" $id $params{multiple} $params{params} name="$params{name}" >!;
     $retstring =~ s/ +/ /;    #collapse spaces
     my $in_group = 0;
     foreach ( @{ $params{choices} } ) {
@@ -522,7 +527,7 @@ sub simple_selectbox_html {
 		    last();
 		}
 	    }
-	    $retstring .= qq{<option value="$name"$selected>$text</option>\n};
+	    $retstring .= qq{<option value="$name"$selected>$text</option>};
 	}
     }
     $retstring .= qq{</optgroup>} if $in_group;
@@ -645,7 +650,8 @@ sub info_table_html {
     join(
         "\n",
         (
-qq/<table summary="" class="${sub}info_table$noborder" $tableattrs>/,
+#qq/<table summary="" class="${sub}info_table$noborder" $tableattrs>/,
+qq/<table summary="" $tableattrs>/,
 
             $tabledata{__caption}
             ? (
@@ -830,9 +836,11 @@ sub columnar_table_html {
     my $html;
 
     #table beginning
-    $params{__tableattrs} ||= qq{summary="" cellspacing="0" width="100%"};
+    #$params{__tableattrs} ||= qq{summary="" cellspacing="0" width="100%"};
+    $params{__tableattrs} ||= qq{};
     $html .=
-      qq|<table class="columnar_table$noborder" $params{__tableattrs}>\n|;
+      #qq|<table class="columnar_table$noborder" $params{__tableattrs}>\n|;
+      qq|<table class="table table-hover table-condensed" $params{__tableattrs}>\n|;
 
     if( defined $params{__caption} ) {
         $html .= "<caption class=\"columnar_table\">$params{__caption}</caption>\n";
@@ -1163,7 +1171,9 @@ qq|onchange="CXGN.Page.FormattingHelpers.update_numerical_range_input('$id','$pa
     $params{value2}[1] = '' unless defined( $params{value2}[1] );
 
     return <<EOH;
-$compare_select&nbsp;<input type="text" size="8" name="$params{value1}[0]" value="$params{value1}[1]" />&nbsp;<span id="${id}_m">and</span>&nbsp;<span id="${id}_2" ><input size="8" type="text" name="$params{value2}[0]" value="$params{value2}[1]" />&nbsp;</span><span id="${id}_e">$params{units}</span>
+<div class="form-group"><div class="input-group col-sm-6"><span class="input-group-btn ">$compare_select</span><span class="input-group-btn"><input class="form-control" type="text" size="8" name="$params{value1}[0]" value="$params{value1}[1]" /></span></div>&nbsp;<span id="${id}_m">and</span>&nbsp;<span id="${id}_2" ><input size="8" type="text" name="$params{value2}[0]" value="$params{value2}[1]" />&nbsp;</span><span id="${id}_e">$params{units}</span></div>
+
+<!--$compare_select&nbsp;<input type="text" size="8" name="$params{value1}[0]" value="$params{value1}[1]" />&nbsp;<span id="${id}_m">and</span>&nbsp;<span id="${id}_2" ><input size="8" type="text" name="$params{value2}[0]" value="$params{value2}[1]" />&nbsp;</span><span id="${id}_e">$params{units}</span>-->
 <script language="JavaScript" type="text/javascript">
   CXGN.Page.FormattingHelpers.update_numerical_range_input('$id','$params{units}');
 </script>
@@ -1218,7 +1228,7 @@ EOC
     chomp $matchtype_select;   #remove newline, cause some browsers are idiotic.
                                #return the html
     return <<EOHTML;
-$matchtype_select<input name="$name" id="$name" value="$string_init" size="$size" type="text" />
+<div class="form-group"><div class="input-group"><span class="input-group-btn" width="20%">$matchtype_select</span><span class="input-group-btn"><input class="form-control" name="$name" id="$name" value="$string_init" size="$size" type="text" placeholder="Type search here..."/></span></div></div>
 EOHTML
 }
 

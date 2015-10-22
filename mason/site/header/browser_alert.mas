@@ -1,0 +1,59 @@
+<div class="modal fade" id="nav_dialog" role="dialog">
+  <div class="modal-dialog modal-sm">
+  
+    <!-- Modal content-->
+  <div class="modal-content">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">Old browser version detected</h4>
+      <!-- <h4 class="modal-title">This site is best viewed with:</h4> -->
+    </div>
+    
+    <div class="modal-body">
+    	<p>
+        This site is optimized for modern web browsers<br>
+        <center>
+        <a href="http://browsehappy.com" target="_blank" class="footer">
+          Please upgrade your browser<br>
+          <img src="https://lh3.ggpht.com/O0aW5qsyCkR2i7Bu-jUU1b5BWA_NygJ6ui4MgaAvL7gfqvVWqkOBscDaq4pn-vkwByUx=w300" width="25">
+          <img src="https://mozorg.cdn.mozilla.net/media/img/firefox/desktop/index/animations/firefox-logo.png" width="25">
+          <img src="https://km.support.apple.com/kb/image.jsp?productid=PL165" width="25">
+          <img src="/documents/img/o-logo.jpg" width="25">
+          <img src="https://c.s-microsoft.com/en-us/CMSImages/ie_symbol_clr_56x56.png?version=73aa5bf1-0743-11e7-8f71-718675c983bf" width="25">
+        </a>
+        </center>
+      </p>
+        Sorry!, some features may not work in outdated browsers
+      
+        <!-- <a href="http://www.google.com/chrome" target="_blank"><img src="https://lh3.ggpht.com/O0aW5qsyCkR2i7Bu-jUU1b5BWA_NygJ6ui4MgaAvL7gfqvVWqkOBscDaq4pn-vkwByUx=w300" width="25">&nbsp; Google Chrome</a><br/>
+        <br/>
+        <a href="http://www.firefox.com/" target="_blank"><img src="https://mozorg.cdn.mozilla.net/media/img/firefox/desktop/index/animations/firefox-logo.png" width="25">&nbsp; Mozilla Firefox</a><br/>
+        <br/>
+        <a href="http://www.apple.com/safari/" target="_blank"><img src="http://km.support.apple.com/kb/image.jsp?productid=PL165" width="25">&nbsp; Safari</a><br/>
+        <br/>
+        <a href="http://www.opera.com/" target="_blank"><img src="http://www-static.opera.com/static-heap/b4/b43d0a4442ae0b771bf45f3ed519e5f4272b63d2/o-logo.jpg" width="25">&nbsp; Opera</a><br/>
+        <br/>
+        <a href="http://windows.microsoft.com/ie" target="_blank"><img src="http://c.s-microsoft.com/en-us/CMSImages/ie_symbol_clr_56x56.png?version=73aa5bf1-0743-11e7-8f71-718675c983bf" width="25">&nbsp; MS Internet Explorer</a><br/> -->
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+  </div>
+    
+  </div>
+</div>
+
+<script>
+
+  var str = navigator.userAgent;
+  var ie = /MSIE/.test(str);
+  // alert(navigator.userAgent);
+
+  jQuery(document).ready(function ($) {
+    if(ie) {
+      $('#nav_dialog').modal("show");
+    }
+  });
+
+</script>

@@ -5,7 +5,7 @@
 *
 */
 
-JSAN.use("jquery");
+//JSAN.use("jquery");
 
 var CXGN;
 if(!CXGN) CXGN = {};

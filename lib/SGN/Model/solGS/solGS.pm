@@ -154,9 +154,29 @@ sub project_location {
                 LEFT JOIN  nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id) 
                 WHERE project_id = ?
                       AND cvterm.name ilike ?";
+
+
+   # my $q = "SELECT description FROM projectprop 
+   #             LEFT JOIN cvterm ON (type_id = cvterm_id) 
+   #             LEFT JOIN  nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id) 
+   #             WHERE project_id = ?";
+
+    print STDERR "\nckeck query :$q\n";
 	   
     my $sth = $self->context->dbc->dbh()->prepare($q);
-    $sth->execute($pr_id, 'project location');
+
+    print STDERR "\nckeck query :$sth\n";
+
+    if ( $pr_id eq '' ) { 
+        $pr_id = undef;
+    }
+
+    print STDERR "\nproject id  :$pr_id\n";
+
+    $sth->execute($pr_id,'project location');
+    
+   # $sth->execute(699, 'project location');
+   # $sth->execute($pr_id);
 
     my $loc = $sth->fetchrow_array;
 
@@ -333,28 +353,48 @@ sub check_stock_type {
 
 sub set_project_genotypeprop {
     my ($self, $prop) = @_;
-    
-    
+        
     my $cv_id= $self->schema->resultset("Cv::Cv")
-	->find_or_create({ 'name' => 'project_property'})->cv_id;
+	->find_or_create({ 'name' => 'project_property'})
+	->cv_id;
    
     my $db_id = $self->schema->resultset("General::Db")
-	->find_or_new({ 'name' => 'null'})->db_id;
+	->find_or_new({ 'name' => 'null'})
+	->db_id;
  
     my $dbxref_id = $self->schema->resultset("General::Dbxref")
-	->find_or_create({'accession' => 'marker_count', 'db_id' => $db_id})->dbxref_id;
+	->find_or_create({'accession' => 'marker_count', 'db_id' => $db_id})
+	->dbxref_id;
  
-    my $cvterm_id = $self->schema->resultset("Cv::Cvterm")->find_or_create(
-	{ name      => 'marker_count',
-	  cv_id     => $cv_id,
-	  dbxref_id => $dbxref_id,
-	})->cvterm_id;
- 
-    my $project_rs = $self->schema->resultset("Project::Projectprop")
-	->find_or_create({ project_id   => $prop->{'project_id'},
-			   type_id      => $cvterm_id,
-			   value        => $prop->{'marker_count'},
-			 });
+    my $cvterm_id = $self->schema->resultset("Cv::Cvterm")
+	->find_or_create({ name => 'marker_count', cv_id => $cv_id, dbxref_id => $dbxref_id,})
+	->cvterm_id;
+   
+    my $marker_rs = $self->schema->resultset("Project::Projectprop")
+	->search({project_id => $prop->{'project_id'}, type_id => $cvterm_id});
+
+    my $marker;
+   
+    while (my $row = $marker_rs->next) 
+    {
+	$marker = $row->value;
+    }
+  
+    if ($marker) 
+    {
+	my $project_rs = $self->schema->resultset("Project::Projectprop")
+	    ->search({ project_id => $prop->{'project_id'}, type_id => $cvterm_id})
+	    ->update({ value => $prop->{'marker_count'} });
+    } 
+    else 
+    {
+	my $project_rs = $self->schema->resultset("Project::Projectprop")
+	    ->create({ 
+		project_id => $prop->{'project_id'}, 
+		type_id => $cvterm_id, 
+		value => $prop->{'marker_count'} 
+	    });
+    }
 
 }
 
@@ -926,6 +966,7 @@ sub extract_project_markers {
     my $markers;
 
     my $genotype_json =  $geno_row->get_column('value');
+
     my $genotype_hash = JSON::Any->decode($genotype_json);
 
     my @markers = keys %$genotype_hash;

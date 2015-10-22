@@ -1120,15 +1120,10 @@ sub outfile_list
 
 =cut
 
-sub cache_temp_path
-{
-    my $basepath     = $c->get_conf("basepath");
-    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
-
-    my $tempimages_path =
-      File::Spec->catfile( $basepath, $tempfile_dir, "temp_images" );
-
-    my $prod_rqtl_path  = $c->get_conf('r_qtl_temp_path');  
+sub cache_temp_path {
+    
+    my $prod_rqtl_path  = $c->config->{solqtl};
+    my $tempimages_path = File::Spec->catfile($prod_rqtl_path, "temp_images" );
     my $rqtl_cache_path = "$prod_rqtl_path/cache"; 
     my $rqtl_temp_path  = "$prod_rqtl_path/tempfiles";
   
