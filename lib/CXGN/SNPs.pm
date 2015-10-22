@@ -179,6 +179,11 @@ has 'raw' => ( isa => 'Str',
 	       is => 'rw',
     );
 
+has 'error_probability' => ( isa => 'Num',
+			     is => 'rw',
+			     default => 0.001,
+    );
+
 =head2 get_score
 
  Usage:        $ms->get_score('XYZ');
@@ -209,10 +214,11 @@ sub snp_stats {
     my $good_snps = 0;
     my $invalid_snps = 0;
     
-    print STDERR Dumper($self->snps());
+    #print STDERR Dumper($self->snps());
     foreach my $a (@{$self->valid_accessions}) { 
 	my $snp = $self->snps()->{$a};
-	if ($snp->good_call()) { 
+	if (!$snp) { print  "Warning! No snp found for accession $a!!!!\n"; }
+	if ($snp && $snp->good_call()) { 
 	    $good_snps++;
 	}
 	else { 
@@ -228,8 +234,14 @@ sub calculate_allele_frequency_using_counts {
     my $total_c1 = 0;
     my $total_c2 = 0;
     
+    my $missing = 0;
     foreach my $k (@{$self->valid_accessions()}) {
 	my $s = $self->snps->{$k};
+	if (!$s) { 
+	    print STDERR "Accession $k has no valid SNPs associated with it. Skipping.\n";
+	    $missing++;
+	    next();
+	}
 	$total_c1 += $s->ref_count();
 	$total_c2 += $s->alt_count();
     }
@@ -248,20 +260,21 @@ sub calculate_allele_frequency_using_counts {
     $self->pAA($pAA);
     $self->pAB($pAB);
     $self->pBB($pBB);
-    
+    #print STDERR "$missing accessions had no valid snps associated with them for snp ".$self->id()."\n";
     return $allele_freq;
 }
 
-# sub calculate_dosages { 
-#     my $self = shift;
+ sub calculate_dosages { 
+     my $self = shift;
     
-#     foreach my $k (keys %{$self->snps()}) { 
-# 	my $s = $self->snps()->{$k};
-# 	$s->calculate_snp_dosage($s, $self->error_probability());
-
-#     }
-#     #print STDERR Dumper($self->snps());
-# }
+     foreach my $k (keys %{$self->snps()}) { 
+ 	my $s = $self->snps()->{$k};
+ 	$self->calculate_snp_dosage($s);
+	my $dosage = $s->dosage() || "no dosage";
+	#print STDERR "Dosage for SNP ".$s->id()."=$dosage for accession ".$s->accession()."\n";
+     }
+     #print STDERR Dumper($self->snps());
+ }
 
 =head2 function calculate_snp_dosage()
 
@@ -274,9 +287,11 @@ $snp is a CXGN::Genotype::SNP object
 sub calculate_snp_dosage { 
     my $self = shift;
     my $snp = shift;
-    my $strict_dosage_filter = shift;
+    my $strict_dosage_filter = shift || 0;
 
-    my $error_probability = 0.001;
+    my $error_probability = $self->error_probability();
+
+    #print STDERR "Working with strict dosage filter ($strict_dosage_filter) and error probability $error_probability\n";
     my $c1 = $snp->ref_count();
     my $c2 = $snp->alt_count();
 
@@ -298,11 +313,11 @@ sub calculate_snp_dosage {
     my $pDAB = $Nbnokc1 * (0.5 ** $c1) * (0.5 ** $c2);
     my $pDBB = $Nbnokc2 * ((1-$error_probability) ** $c2) * ($error_probability ** $c1);
 
- #   print STDERR "pDAA: $pDAA pDAB $pDAB, pDBB $pDBB\n";
+#   print STDERR "pDAA: $pDAA pDAB $pDAB, pDBB $pDBB\n";
 
-    my $pSAA = $pDAA * $self->pAA;
-    my $pSAB = $pDAB * $self->pAB;
-    my $pSBB = $pDBB * $self->pBB;
+    my $pSAA = $pDAA * ($self->pAA || 0);
+    my $pSAB = $pDAB * ($self->pAB || 0);
+    my $pSBB = $pDBB * ($self->pBB || 0);
 
     if ($pSAA + $pSAB + $pSBB == 0) { 
 	return "NA";
