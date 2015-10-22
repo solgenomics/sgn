@@ -1,19 +1,17 @@
-
 <%args>
-$trial_id
+$trial_name
 </%args>
 
-<p id="message"></p>
+<p id="trial_jbrowse_check">[loading...]</p>
 
 <%perl>
-my $test_url;
-my $iframe_url;
-if ( $trial_id ) {   #construct iframe url, as well as a test url that will return 404 if trial jbrowse instance doesn't exist 
-    $iframe_url = "/jbrowse_cassavabase/JBrowse-1.11.6"; 
-    $test_url = $iframe_url . "/data/json/trials/" . $trial_id . "/trackList.json";
-    $iframe_url = $iframe_url . "/?data=data/json/trials/" . $trial_id . "&tracks=DNA,RepeatMasker," . "&tracklist=0&nav=1&overview=0";
-    print STDERR "JB.MAS\ntest_url = $test_url\niframe_url = $iframe_url \n\n";
- }
+
+my $project_name = lc($c->config->{project_name});
+my $test_url = "/jbrowse_$project_name/current/data/json/trials/" . $trial_name . "/trackList.json";
+my $jbrowse_url = "/jbrowse/?data=data%2Fjson%2Ftrials%2F" . $trial_name;
+
+print STDERR "\n\n\n\n\n\n\n\n\n\n test_url = $test_url \n\n\n\n\n\n\n\n\n\n";
+
 </%perl>
 
 <script type="text/javascript" defer="defer">
@@ -25,20 +23,11 @@ function prepareJbrowse () { //ajax function to test for existence of given jbro
     type: 'GET',
     url: "<% $test_url %>",
     statusCode: {
-        200: function () {  // if page is found, create and display jbrowse iframe
-		jQuery("#message").before('<iframe id="jbrowse"></iframe>');
-	     	jQuery('#jbrowse').attr({
-			"style" : "border: 1px solid rgb(80, 80, 80)",
-			"src" : "<%$ iframe_url %>",
-			"height" : "250",
-			"width" : "700",
-			"name" : "jbrowse_iframe"
-      		});
-      		jQuery('#message').attr("display", "none");
-      		jQuery('#jbrowse').html(" <p>Your browser does not support iframes.</p>");
-	},
+        200: function () {  // if page is found, create and display link
+		jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the vcf tracks for <% $trial_name %> in JBrowse</a>');
+		},
 	404: function () { // if page not found, display message that jbrowse instance wasn't found
-		jQuery('#message').html(" <i>No Jbrowse instance found for this trial</i>.");
+		jQuery('#trial_jbrowse_check').html(" <i>No Jbrowse instance found for this trial</i>.");
      		}
 	}
   });
