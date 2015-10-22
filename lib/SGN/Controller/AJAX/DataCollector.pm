@@ -1,8 +1,8 @@
 
 =head1 NAME
 
-SGN::Controller::AJAX::FieldBook - a REST controller class to provide the
-backend for field book operations
+SGN::Controller::AJAX::DataCollector - a REST controller class to provide the
+backend for Data Collector Spreadsheet operations
 
 =head1 DESCRIPTION
 
@@ -10,7 +10,7 @@ Creating and viewing trials
 
 =head1 AUTHOR
 
-Jeremy Edwards <jde22@cornell.edu>
+Jeremy Edwards <jde22@cornell.edu> 
 
 =cut
 
@@ -37,6 +37,7 @@ use CXGN::Stock::StockLookup;
 use CXGN::UploadFile;
 use CXGN::Fieldbook::TraitInfo;
 use Data::Dumper;
+use Spreadsheet::ParseExcel;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -57,7 +58,7 @@ sub upload_phenotype_file_for_data_collector_POST : Args(0) {
   my $upload = $c->req->upload('DataCollector_upload_file');
   my $upload_original_name = $upload->filename();
   my $upload_tempfile = $upload->tempname;
-  my $subdirectory = "tablet_phenotype_upload";
+  my $subdirectory = "data_collector_phenotype_upload";
   my $archived_filename_with_path;
   my $md5;
   my $validate_file;
@@ -69,7 +70,7 @@ sub upload_phenotype_file_for_data_collector_POST : Args(0) {
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
 
-  print STDERR "Move uploaded file to archive\n";
+  print STDERR "Move uploaded file to archive: $uploader\n";
 
   print STDERR "\n\nTimestamp: $timestamp\n";
 
@@ -85,14 +86,14 @@ sub upload_phenotype_file_for_data_collector_POST : Args(0) {
   ## Set metadata
 
   $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
-  $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
+  $phenotype_metadata{'archived_file_type'}="data collector phenotype file";
   $phenotype_metadata{'operator'}="tester_operator"; #####Need to get this from uploaded file
   $phenotype_metadata{'date'}="$timestamp";
 
   print STDERR "Validate uploaded file\n";
 
   ## Validate and parse uploaded file
-  $validate_file = $parser->validate('field book', $archived_filename_with_path);
+  $validate_file = $parser->validate('datacollector spreadsheet', $archived_filename_with_path);
   if (!$validate_file) {
       $c->stash->{rest} = {error => "File not valid: $upload_original_name",};
       return;
@@ -100,7 +101,7 @@ sub upload_phenotype_file_for_data_collector_POST : Args(0) {
 
   print STDERR "Parse uploaded file\n";
 
-  $parsed_file = $parser->parse('field book', $archived_filename_with_path);
+  $parsed_file = $parser->parse('datacollector spreadsheet', $archived_filename_with_path);
   if (!$parsed_file) {
       $c->stash->{rest} = {error => "Error parsing file $upload_original_name",};
       return;

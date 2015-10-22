@@ -273,14 +273,14 @@ sub download {
     #
     
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-#    $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
-#    $ws->write(0, 2, 'Spreadsheet format'); $ws->write(0, 3, "BasicExcel");
-#    $ws->write(1, 0, 'Trial name'); $ws->write(1, 1, $trial->get_name(), $bold);
-#    $ws->write(2, 0, 'Description'); $ws->write(2, 1, $trial->get_description(), $bold);
-#    $ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
-#    $ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
-#    $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
-    #$ws->data_validation(2,3, { validate => "date" });
+   #$ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
+   #$ws->write(0, 2, 'Spreadsheet format'); $ws->write(0, 3, "BasicExcel");
+   #$ws->write(1, 0, 'Trial name'); $ws->write(1, 1, $trial->get_name(), $bold);
+   #$ws->write(2, 0, 'Description'); $ws->write(2, 1, $trial->get_description(), $bold);
+   #$ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
+   #$ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
+   #$ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
+   #$ws->data_validation(2,3, { validate => "date" });
     
 
     my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
@@ -315,7 +315,7 @@ sub download {
 	my $trait = CXGN::Trait->new( { bcs_schema=> $schema, cvterm_id => $t });
 	$cvinfo{$trait->display_name()} = $trait;
     }
-									       
+								       
     for (my $i = 0; $i < @trait_list; $i++) { 
 	if (exists($cvinfo{$trait_list[$i]})) { 
 	    $ws->write(0, $i+6, $cvinfo{$trait_list[$i]}->display_name());
@@ -326,7 +326,7 @@ sub download {
     
 	my $plot_count = scalar(keys(%design));
 
-	for (my $n = 0; $n < $plot_count; $n++) { 
+	for (my $n = 0; $n < $plot_count; $n++) {
 	    my $format = $cvinfo{$trait_list[$i]}->format();
 	    if ($format eq "numeric") { 
 		$ws->data_validation($n+1, $i+1, { validate => "any" });

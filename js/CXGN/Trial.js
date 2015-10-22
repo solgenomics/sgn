@@ -197,7 +197,7 @@ function open_create_DataCollector_dialog() {
     jQuery("#trait_list_dc").html(list.listSelect("trait_list", [ 'traits' ]));
     //jQuery('#working').dialog("close");
     jQuery('#working_modal').modal("hide");
-    jQuery('#create_DataCollector_dialog').dialog("open");
+    jQuery('#create_DataCollector_dialog').dialog("open"); 
 }
 
 
@@ -209,7 +209,7 @@ function create_DataCollector() {
     var trait_list_id = jQuery('#trait_list_list_select').val();
     var trait_list;
     if (! trait_list_id == "") {
-	trait_list = JSON.stringify(list.getList(trait_list_id));
+	trait_list = JSON.stringify(list.getList(trait_list_id)); 
     }
      new jQuery.ajax({
 	 type: 'POST',
@@ -219,10 +219,10 @@ function create_DataCollector() {
              'trial_id': trialID,
              'trait_list': trait_list,
 	 },
+		
 	 success: function (response) {
 	     //jQuery('#working').dialog("close");
 	     jQuery('#working_modal').modal("hide");
-		//alert("hello");
 		
              if (response.error) {
 		 //alert("error: "+response.error);
@@ -969,7 +969,6 @@ jQuery(document).ready(function ($) {
 
 
    $('#upload_data_collector_link').click(function () {
-		//alert("hello");
         	$('#upload_DataCollector_spreadsheet_dialog').dialog("open");
 	
     });
@@ -986,14 +985,14 @@ jQuery(document).ready(function ($) {
             },
 	    "Ok": function() {
                 upload_DataCollector_spreadsheet_file();
-		//$( this ).dialog( "close" );
+		$( this ).dialog( "close" );
 		
 	    }
 	}
     });
 
    function upload_DataCollector_spreadsheet_file() {
-	//jQuery('#working_modal').modal("show");
+	jQuery('#working_modal').modal("show");
         var uploadFile = $("#DataCollector_upload_file").val();
         $('#upload_DataCollector_form').attr("action", "/ajax/datacollector/upload_dc_sheet");
         if (uploadFile === '') {
@@ -1007,7 +1006,7 @@ jQuery(document).ready(function ($) {
 	json: true,
 	post: function () {
 	    var uploadFile = $("#DataCollector_upload_file").val();
-		alert("UPLOADED FILE: "+uploadFile);
+		//alert("UPLOADED FILE: "+uploadFile);
 	    if (uploadFile === '') {
 		alert("No file selected");
 	    }
@@ -1018,7 +1017,7 @@ jQuery(document).ready(function ($) {
 		return;
 	    }
 	    if (response.success) {
-		alert("hello");
+		jQuery('#working_modal').modal("hide");
 		alert("File uploaded successfully");
 		$( this ).dialog( "close" );
 		location.reload();
