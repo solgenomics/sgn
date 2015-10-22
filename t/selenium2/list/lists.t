@@ -88,9 +88,9 @@ foreach my $list_type ( keys %test_lists ) {
     $d->find_element_ok("dialog_add_list_item", "id", "add list items")->send_keys($test_lists{$list_type});
 
     my @list_items = split /\n/, $test_lists{$list_type};
-    //foreach (@list_items) {
-    //   
-    //}
+    #foreach (@list_items) {
+    #   
+    #}
 
     $d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_item_button test")->click();
 
