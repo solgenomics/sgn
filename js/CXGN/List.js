@@ -136,7 +136,7 @@ CXGN.List.prototype = {
 		    alert(response.error);
 		}
 		else { 
-		    alert('Type of list '+list_id+' set to '+type);
+		    //alert('Type of list '+list_id+' set to '+type);
 		}
 	    } 
 	});
