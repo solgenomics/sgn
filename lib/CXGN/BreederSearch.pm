@@ -396,7 +396,7 @@ sub get_extended_phenotype_info_matrix {
 
 	my ($project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep, $block_number) = @$d;
 	
-	my $trait_string_cvterm = $d->[3]."|".$d->[7];
+	my $cvterm = $d->[3]."|".$d->[7];
 	if (!defined($rep)) { $rep = ""; }
 	$plot_data{$plot}->{$cvterm} = $trait_data;
 	$plot_data{$plot}->{metadata} = {
@@ -407,7 +407,7 @@ sub get_extended_phenotype_info_matrix {
 	    block_number => $block_number,
 	    plot => $plot, 
 	    rep => $rep, 
-	    cvterm => $trait_string_cvterm, 
+	    cvterm => $cvterm, 
 	    trait_data => $trait_data 
 	};
 	$traits{$cvterm}++;
