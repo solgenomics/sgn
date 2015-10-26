@@ -6,12 +6,13 @@ gen_accession_jbrowse.pl - creates jbrowse instances that include base tracks an
 
 =head1 SYNOPSIS
 
-    gen_accession_jbrowse.pl -v [absolute path through base instance to dir containing vcfs] -n [list of accession names]
+    gen_accession_jbrowse.pl -v [absolute path through base instance to dir containing vcfs] -d [name of database to search for trials] -h [db host]
 
 =head1 COMMAND-LINE OPTIONS
  
  -v absolute path through base instance to dir containing vcfs
- -n list of accession names 
+ -h database hostname
+ -d database name
 
 =head1 DESCRIPTION
 
@@ -25,33 +26,60 @@ Bryan Ellerbrock (bje24@cornell.edu) - Oct 2015
 use strict;
 use File::Slurp;
 use Getopt::Std;
+use Bio::Chado::Schema;
+use CXGN::DB::InsertDBH;
 
-our ($opt_v, $opt_n);
+our ($opt_v, $opt_h, $opt_d);
 
 #-----------------------------------------------------------------------
 # define paths & array of vcf_file names. Open file handles to read accession lists and append datasets to jbrowse.conf 
 #-----------------------------------------------------------------------
 
-getopts('v:n:');
+getopts('v:h:d:');
 
 my $vcf_dir_path = $opt_v;
+my $dbhost = $opt_h;
+my $dbname = $opt_d;
 my $link_path = $vcf_dir_path;
     $link_path =~ s:(.+)/.+/.+:$1:;
 my $url_path = $vcf_dir_path;
 $url_path =~ s:.+(/.+/.+/.+/.+/.+/.+/.+$):$1:;
-my $names = $opt_n;
-my ($mod_file, $out, $header,$track_1,$track_2,$track_3, $filt_test, $imp_test);
+
+my ($mod_file, $out, $header,$track_1,$track_2,$track_3,$filt_test,$imp_test,$h,$q,$dbh);
 my @files = ` dir -GD -1 --hide *.tbi $vcf_dir_path ` ; 
 
 open (CONF, ">>", "../../../jbrowse.conf") || die "Can't open conf file jbrowse.conf!\n";
-open (NAMES, "<", $names) || die "Can't open names file $names! \n";
+
+#-----------------------------------------------------------------------                                                                                             
+# connect to database and extract unique acccesion names                                                                                                            
+#-----------------------------------------------------------------------                                                                                             
+
+#my $schema= Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh() });
+
+$dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
+                                      dbname=>$dbname,
+				   dbargs => {AutoCommit => 0,
+					      RaiseError => 1}
+				 }
+    );
+
+$q = "SELECT distinct(stock.uniquename) from stock where type_id = 76392 limit 1000";
+
+$h=$dbh->prepare($q);
+
+$h->execute();
 
 #-----------------------------------------------------------------------
 # for each accession name, locate matching indiv vcf files and construct necessary text for tracks.conf
 #-----------------------------------------------------------------------
 
-while (<NAMES>) {
-    chomp (my $name = $_);
+#print STDERR "fetchrow array = $h->fetchrow_array \n";
+
+while (my @names = $h->fetchrow_array) {
+    print STDERR "names = @names \n";
+    my $name = $names[0];
+    chomp ($name);
+    print STDERR "name = $name \n";
     $out = "$name/tracks.conf";
     $header = "[general]\ndataset_id = $name\n";
 
