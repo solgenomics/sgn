@@ -11,7 +11,8 @@ gen_trial_jbrowse.pl - creates jbrowse instances that include base tracks and ac
 =head1 COMMAND-LINE OPTIONS
  
  -v absolute path through base instance to dir containing vcfs
- -n list of trial names 
+ -h database hostname                                                                                                                                                
+ -d database name   
 
 =head1 DESCRIPTION
 
@@ -48,8 +49,8 @@ $url_path =~ s:.+(/.+/.+/.+/.+/.+/.+/.+$):$1:;
 my $accessions_found;
 my ($mod_file, $out, $header,$track_1,$track_2,$track_3, $filt_test, $imp_test,$h,$q,$dbh);
 my @files = ` dir -GD -1 --hide *.tbi $vcf_dir_path ` ; 
-my $trial_name;
-my $trial_id;
+#my $trial_name;
+#my $trial_id;
 my $accession_name;
 my @accession_names;
 my @conf_info;
@@ -74,7 +75,7 @@ $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 
 # prepare and execute sql to extract trial names and ids
 
-$q = "SELECT distinct(project.project_id), project.name FROM project LEFT JOIN projectprop AS year ON (project.project_id = year.project_id) LEFT JOIN projectprop AS location ON (project.project_id = location.project_id) LEFT JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) LEFT JOIN project as program ON (project_relationship.object_project_id=program.project_id) LEFT JOIN projectprop as project_type ON (project.project_id=project_type.project_id) LEFT JOIN cvterm AS type_cvterm ON (project_type.type_id = type_cvterm.cvterm_id) WHERE (year.type_id=76395 OR year.type_id IS NULL) and (location.type_id=76920 OR location.type_id IS NULL) and (project_type.type_id in (76919,76918) OR project_type.type_id IS NULL)  ORDER BY project.name";
+$q = "SELECT distinct(project.project_id), project.name FROM project LEFT JOIN projectprop AS year ON (project.project_id = year.project_id) LEFT JOIN projectprop AS location ON (project.project_id = location.project_id) LEFT JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) LEFT JOIN project as program ON (project_relationship.object_project_id=program.project_id) LEFT JOIN projectprop as project_type ON (project.project_id=project_type.project_id) LEFT JOIN cvterm AS type_cvterm ON (project_type.type_id = type_cvterm.cvterm_id) WHERE (year.type_id=76395 OR year.type_id IS NULL) and (location.type_id=76920 OR location.type_id IS NULL) and (project_type.type_id in (76919,76918) OR project_type.type_id IS NULL)";
 
 $h=$dbh->prepare($q);
 
@@ -84,7 +85,7 @@ $h->execute();
 # for each trial name, prepare conf file output
 #-----------------------------------------------------------------------
 
-while ($trial_id, $trial_name= $h->fetchrow_array) {
+while (my ($trial_id, $trial_name) = $h->fetchrow_array) {
    
     chomp $trial_name;
     print STDERR "trial name = $trial_name \n";
@@ -103,13 +104,15 @@ my $accession_names_ref = $trial_layout->get_accession_names();
 my $control_names_ref = $trial_layout->get_control_names();
 
     for my $accession (@$accession_names_ref) {
-	print STDERR " Trial $trial_name contains accession $accession \n";
+#	print STDERR " Trial $trial_name contains accession $accession \n";
 	push (@accession_names, $accession);
     }
     for my $control (@$control_names_ref) {
-	print STDERR " Trial $trial_name contains control $control \n";
+#	print STDERR " Trial $trial_name contains control $control \n";
 	push (@accession_names, $control);
     }
+    print STDERR " Trial $trial_name contains accessions @$accession_names_ref \n";
+    print STDERR " Trial $trial_name contains controls @$control_names_ref \n";
 
 #-----------------------------------------------------------------------
 # for each accession, locate matching indiv vcf files and construct necessary text for tracks.conf
