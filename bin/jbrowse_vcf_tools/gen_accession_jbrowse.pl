@@ -63,7 +63,8 @@ $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 				 }
     );
 
-$q = "SELECT distinct(stock.uniquename) from stock where type_id = 76392 limit 1000";
+
+$q = "SELECT distinct(stock.stock_id), stock.uniquename from stock where type_id = 76392 order by stock.uniquename";
 
 $h=$dbh->prepare($q);
 
@@ -75,13 +76,15 @@ $h->execute();
 
 #print STDERR "fetchrow array = $h->fetchrow_array \n";
 
-while (my @names = $h->fetchrow_array) {
+while (my @accession_data = $h->fetchrow_array) {
     #print STDERR "names = @names \n";
-    my $name = $names[0];
-    chomp ($name);
-    #print STDERR "name = $name \n";
-    $out = "$name/tracks.conf";
-    $header = "[general]\ndataset_id = $name\n";
+    my $id = $accession_data[0];
+    my $name = $accession_data[1];
+    chomp $id;
+    chomp $name;
+    #print STDERR "id = $id and name = $name \n";
+    $out = "$id/tracks.conf";
+    $header = "[general]\ndataset_id = $id\n";
 
     for my $file (@files) {
 	chomp $file;
@@ -182,20 +185,20 @@ next if !$track_2;
 # unless it already exisits, create dir for new jbrowse instance and create symlinks to files in base jbrowse instance
 #-----------------------------------------------------------------------
 
-unless (-d $name) {
-    `sudo mkdir -p $name`;
-    `sudo ln -sf $link_path/data_files $name/data_files`;
-    `sudo ln -sf $link_path/seq $name/seq`;
-    `sudo ln -sf $link_path/tracks $name/tracks`;
-    `sudo ln -sf $link_path/trackList.json $name/trackList.json`;
-    `sudo ln -sf $link_path/readme $name/readme`;
-    `sudo touch $name/tracks.conf && sudo chmod a+wrx $name/tracks.conf`;
+unless (-d $id) {
+    `sudo mkdir -p $id`;
+    `sudo ln -sf $link_path/data_files $id/data_files`;
+    `sudo ln -sf $link_path/seq $id/seq`;
+    `sudo ln -sf $link_path/tracks $id/tracks`;
+    `sudo ln -sf $link_path/trackList.json $id/trackList.json`;
+    `sudo ln -sf $link_path/readme $id/readme`;
+    `sudo touch $id/tracks.conf && sudo chmod a+wrx $id/tracks.conf`;
 
 #-----------------------------------------------------------------------
 # also append dataset info to jbrowse.conf, and create and populate accession specific tracks.conf file
 #-----------------------------------------------------------------------
 
-my $dataset = "[datasets.$name]\n" . "url  = ?data=data/json/accessions/$name\n" . "name = $name\n\n";
+my $dataset = "[datasets.$id]\n" . "url  = ?data=data/json/accessions/$id\n" . "name = $name\n\n";
 print CONF $dataset;
 open (OUT, ">", $out) || die "Can't open out file $out! \n";
 print OUT $header;
