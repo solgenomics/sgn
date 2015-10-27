@@ -67,6 +67,34 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("c1_data_add_to_new_list", "id", "add bp to list")->click();
 
+    sleep(1);
+
+    $t->driver->accept_alert();
+
+    $t->find_element_ok("c2_data_new_list_name", "id", "new list")->send_keys('trial_list');
+
+    $t->find_element_ok("c2_data_add_to_new_list", "id", "add trials to list")->click();
+
+    sleep(1);
+
+    $t->driver->accept_alert();
+
+    $t->find_element_ok("c3_data_new_list_name", "id", "new list")->send_keys('year_list');
+
+    $t->find_element_ok("c3_data_add_to_new_list", "id", "add trials to list")->click();
+
+    sleep(1);
+
+    $t->driver->accept_alert();
+
+    $t->find_element_ok("stock_data_new_list_name", "id", "new list")->send_keys('acc_list');
+
+    $t->find_element_ok("stock_data_add_to_new_list", "id", "add accs to list")->click();
+
+    sleep(1);
+
+    $t->driver->accept_alert();
+
     }
 
 );
