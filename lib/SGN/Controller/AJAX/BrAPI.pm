@@ -275,6 +275,107 @@ sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) {
     $c->stash->{rest} = \%response;
 }
 
+# Need to determine how to implement /brapi/v1/germplasm?trialDbId=123&pageSize=20&page=1 when /brapi/v1/germplasm?name={name}&matchMethod={matchMethod}&include={synonyms}&pageSize={pageSize}&page={page} uses /brapi/v1/germplasm 
+
+
+=head2 brapi/v1/germplasm/{id}/pedigree?notation=purdy
+
+ Usage: To retrieve pedigree information for a single germplasm
+ Desc:
+ Return JSON example:
+{
+    "metadata": {
+        "status": [],
+        "pagination": {}
+    },
+    "result": {
+        "germplasmDbId": "382",
+        "pedigree": "TOBA97/SW90.1057",
+        "parent1Id": "23",
+        "parent2Id": "55"
+    }
+}
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub germplasm_pedigree : Chained('germplasm') PathPart('pedigree') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $schema = $self->bcs_schema();
+    my %result;
+    my @status;
+    if ($c->req->param('notation')) {
+	push @status, 'notation not implemented';
+	if ($c->req->param('notation') ne 'purdy') {
+	    push @status, {code=>'ERR-1', message=>'Unsupported notation code.'};
+	}
+    }
+    
+    # Need to fill in this result hash with actual results
+    %result = (germplasmDbId=>$c->stash->{stock_id}, pedigree=>'', parent1Id=>'', parent2Id=>'');
+    
+    my %pagination;
+    my %metadata = (pagination=>\%pagination, status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+=head2 brapi/v1/germplasm/{id}/pedigree?notation=purdy
+
+ Usage: To retrieve markerprofile ids for a single germplasm
+ Desc:
+ Return JSON example:
+{
+    "metadata": {
+        "status": [],
+        "pagination": {}
+    },
+    "result": {
+        "germplasmDbId": "382",
+        "markerProfiles": [
+	    "123",
+	    "456"
+	]
+    }
+}
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub germplasm_markerprofile : Chained('germplasm') PathPart('markerprofiles') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $schema = $self->bcs_schema();
+    my %result;
+    my @status;
+    my @marker_profiles;
+
+    my $rs = $self->bcs_schema()->resultset("Stock::StockGenotype")->search( {stock_id=>$c->stash->{stock_id} } );
+    my $mp;
+    while (my $gt = $rs->next()) {
+	$mp = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( {genotype_id=>$gt->genotype_id} );
+	while (my $gp = $mp->next()) {
+	    push @marker_profiles, $gp->genotypeprop_id;
+	}
+    }
+    %result = (germplasmDbId=>$c->stash->{stock_id}, markerProfiles=>\@marker_profiles);
+    
+    my %pagination;
+    my %metadata = (pagination=>\%pagination, status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+#
+# Need to implement Germplasm Attributes
+#
+
+
 sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) { 
     my $self = shift;
     my $c = shift;
