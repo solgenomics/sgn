@@ -1,5 +1,5 @@
 <%args>
-$trial_name
+$trial_id
 </%args>
 
 <p id="trial_jbrowse_check">[loading...]</p>
@@ -7,8 +7,8 @@ $trial_name
 <%perl>
 
 my $project_name = lc($c->config->{project_name});
-my $test_url = "/jbrowse_$project_name/current/data/json/trials/" . $trial_name . "/trackList.json";
-my $jbrowse_url = "/jbrowse/?data=data%2Fjson%2Ftrials%2F" . $trial_name;
+my $test_url = "/jbrowse_$project_name/current/data/json/trials/" . $trial_id . "/trackList.json";
+my $jbrowse_url = "/jbrowse/?data=data%2Fjson%2Ftrials%2F" . $trial_id;
 
 print STDERR "\n\n\n\n\n\n\n\n\n\n test_url = $test_url \n\n\n\n\n\n\n\n\n\n";
 
@@ -24,7 +24,7 @@ function prepareJbrowse () { //ajax function to test for existence of given jbro
     url: "<% $test_url %>",
     statusCode: {
         200: function () {  // if page is found, create and display link
-		jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the vcf tracks for <% $trial_name %> in JBrowse</a>');
+		jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the vcf tracks for this trial in JBrowse</a>');
 		},
 	404: function () { // if page not found, display message that jbrowse instance wasn't found
 		jQuery('#trial_jbrowse_check').html(" <i>No Jbrowse instance found for this trial</i>.");
