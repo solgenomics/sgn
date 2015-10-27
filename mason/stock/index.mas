@@ -177,8 +177,8 @@ my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a href="j
 my $edit_privs = $curator || $submitter || $sequencer;
 
 my $project_name = lc($c->config->{project_name});
-my $test_url = "/jbrowse_$project_name/current/data/json/accessions/" . $uniquename . "/trackList.json";
-my $jbrowse_url = "/jbrowse/?data=data%2Fjson%2Faccessions%2F" . $uniquename;
+my $test_url = "/jbrowse_$project_name/current/data/json/accessions/" . $stock_id . "/trackList.json";
+my $jbrowse_url = "/jbrowse/?data=data%2Fjson%2Faccessions%2F" . $stock_id;
 
 print STDERR "\n\n\n\n\n\n\n\n\n\n test_url = $test_url \n\n\n\n\n\n\n\n\n\n";
 
