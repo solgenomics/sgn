@@ -1,7 +1,7 @@
 
 <!-- Lists dialog -->
 
- <div class="modal fade" id="list_dialog_bootstrap" name="list_dialog_bootstrap" tabindex="-1" role="dialog" aria-labelledby="listDialog">
+ <div class="modal fade" id="list_dialog" name="list_dialog" tabindex="-1" role="dialog" aria-labelledby="listDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -10,7 +10,7 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <div id="list_populating_js">
+	  <div id="list_dialog_div">
 	  </div>      
         </div>
       </div>
@@ -26,8 +26,8 @@
   </div>
   -->
 
- <div class="modal fade" id="list_item_dialog_bootstrap" name="list_item_dialog_bootstrap" tabindex="-1" role="dialog" aria-labelledby="listItemDialog">
-  <div class="modal-dialog" role="document">
+ <div class="modal fade" id="list_item_dialog" name="list_item_dialog" tabindex="-1" role="dialog" aria-labelledby="listItemDialog">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -35,7 +35,7 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <div id="list_item_populating_js">
+	  <div id="list_item_dialog_div">
 	  </div>      
         </div>
       </div>
