@@ -45,10 +45,12 @@ my $link_path = $vcf_dir_path;
 my $url_path = $vcf_dir_path;
 $url_path =~ s:.+(/.+/.+/.+/.+/.+/.+/.+$):$1:;
 
-my ($file_type, $out, $header,$track_1,$track_2,$track_3,$filt_test,$imp_test,$h,$q,$dbh);
+my ($file_type,$out,$header,@tracks,$imp_track,$filt_track,$h,$q,$dbh);
 my @files = ` dir -GD -1 --hide *.tbi $vcf_dir_path ` ; 
 
 open (CONF, ">>", "../../../jbrowse.conf") || die "Can't open conf file jbrowse.conf!\n";
+
+open (LOG, ">>", "gen_accession.log") || die "Can't open log file!\n";
 
 #-----------------------------------------------------------------------                                                                                             
 # connect to database and extract unique acccesion names                                                                                                            
@@ -76,37 +78,33 @@ $h->execute();
 
 #print STDERR "fetchrow array = $h->fetchrow_array \n";
 
-while (my @accession_data = $h->fetchrow_array) {
-    #print STDERR "names = @names \n";
-    my $id = $accession_data[0];
-    my $name = $accession_data[1];
+while (my ($id, $name) = $h->fetchrow_array) {
     chomp $id;
     chomp $name;
-    #print STDERR "id = $id and name = $name \n";
+    print LOG "id = $id and name = $name \n";
     $out = "$id/tracks.conf";
-    $header = "[general]\ndataset_id = $id\n";
+    $header = "[general]\ndataset_id = Accession_$id\n";
 
     for my $file (@files) {
 	chomp $file;
 	$_ = $file;
         next if !m/filtered/ && !m/imputed/;
 	$_ =~ s/([^.]+)_2015_V6.*/$1/s;
-	#print STDERR "processed filename = $_ \n";
         next if ($_ ne $name);
 	print STDERR "Matched vcf file basename $_ to accession name $name !\n";
+	print LOG "Matched vcf file basename $_ to accession name $name !\n";
 	$file_type = $file;
 	$file_type =~ s/.+_([imputedflr]+).vcf.gz/$1/s;
-	print STDERR "filetype = $file_type \n";
-	$filt_test = "filtered";
-	$imp_test = "imputed";
-	if ($file_type eq $filt_test) {                            #Handle filtered vcf files
+	print LOG "filetype = $file_type \n";
+	if ($file_type eq 'filtered') {                            #Handle filtered vcf files
+	    print LOG "Working on filtered file $file \n" ;
 	    print STDERR "Working on filtered file $file \n" ;
 	    my $path = $url_path . "/" . $file ; 
 	    my $key = $file;
 	    $key =~ s/(.+).vcf.gz/$1/s;
-      	    #print STDERR "Key = $key \n";
+      	    print LOG "Key = $key \n";
 	    
-	    $track_2 = '
+	    $filt_track = '
 [ tracks . ' . $key . ' ]
     hooks.modify = function( track, feature, div ) { div.style.backgroundColor = track.config.variantIsHeterozygous(feature);}
 variantIsHeterozygous = function( feature ) {
@@ -129,14 +127,18 @@ type = JBrowse/View/Track/HTMLVariants
 metadata.Description = Homozygous reference: Green	Heterozygous: Red		Homozygous alternate: Blue	Filtered to remove SNPs with a depth of 0 and SNPs with 2 or more alt alleles.
 label = ' . $key  . '
 ' ;
-	} elsif ($file_type eq $imp_test) {                        #Handle imputed vcf files
+push @tracks, $filt_track;
+
+	} elsif ($file_type eq 'imputed') {                        #Handle imputed vcf files
+
 	    print STDERR "Working on imputed file $file \n" ;
+            print LOG "Working on imputed file $file \n" ;
 	    my $path = $url_path . "/" . $file ; 
 	    my $key = $file;
             $key =~ s/(.+).vcf.gz/$1/s;
-      	    #print STDERR "Key = $key \n";
+      	    print LOG "Key = $key \n";
 	    
-	    $track_3 = '
+	    $imp_track = '
 [ tracks . ' . $key . ' ]
 hooks.modify = function( track, feature, div ) { div.style.backgroundColor = track.config.variantIsHeterozygous(feature);  div.style.opacity = track.config.variantIsImputed(feature) ? \'0.33\' : \'1.0\'; }
 variantIsHeterozygous = function( feature ) {
@@ -170,16 +172,20 @@ type = JBrowse/View/Track/HTMLVariants
 metadata.Description = Homozygous reference: Green	Heterozygous: Red		Homozygous alternate: Blue	Values imputed with GLMNET are shown at 1/3 opacity.
 label = ' . $key  . '
 ' ;
+push @tracks, $imp_track
+
 	} else {
+
 	next;    
+
 	}
 }
 
 #-----------------------------------------------------------------------
-# if matching vcf files not found, skip to next accession name
+# if matching vcf files were not found, skip to next accession name
 #-----------------------------------------------------------------------
 
-next if !$track_2;    
+next unless (@tracks);    
 
 #-----------------------------------------------------------------------
 # unless it already exisits, create dir for new jbrowse instance and create symlinks to files in base jbrowse instance
@@ -198,13 +204,12 @@ unless (-d $id) {
 # also append dataset info to jbrowse.conf, and create and populate accession specific tracks.conf file
 #-----------------------------------------------------------------------
 
-my $dataset = "[datasets.$id]\n" . "url  = ?data=data/json/accessions/$id\n" . "name = $name\n\n";
+my $dataset = "[datasets.Accession_$id]\n" . "url  = ?data=data/json/accessions/$id\n" . "name = $name\n\n";
 print CONF $dataset;
 open (OUT, ">", $out) || die "Can't open out file $out! \n";
 print OUT $header;
-my $json = $track_2 . $track_3;
-print OUT $json;   
-
+print OUT join ("\n", @tracks), "\n";   
+undef @tracks;
 }
 
 #-----------------------------------------------------------------------                                                                                            
@@ -212,8 +217,7 @@ print OUT $json;
 #-----------------------------------------------------------------------   
 
 open (OUT, ">>", $out) || die "Can't open out file $out! \n";
-my $json = $track_2 . $track_3;
-print OUT $json;
-
+print OUT join ("\n", @tracks), "\n";
+undef @tracks;
 }
 

@@ -46,15 +46,12 @@ my $link_path = $vcf_dir_path;
     $link_path =~ s:(.+)/.+/.+:$1:;
 my $url_path = $vcf_dir_path;
 $url_path =~ s:.+(/.+/.+/.+/.+/.+/.+/.+$):$1:;
-my $accessions_found;
-my ($mod_file, $out, $header,$track_1,$track_2,$track_3, $filt_test, $imp_test,$h,$q,$dbh);
+my $accessions_found = 0;
+my ($file_type, $out, $header,@tracks,$imp_track,$filt_track,$h,$q,$dbh);
 my @files = ` dir -GD -1 --hide *.tbi $vcf_dir_path ` ; 
-#my $trial_name;
-#my $trial_id;
 my $accession_name;
 my @accession_names;
 my @conf_info;
-#my $schema= "Bio::Chado::Schema";
 my $schema= Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh() });
 
 open (CONF, ">>", "../../../jbrowse.conf") || die "Can't open conf file jbrowse.conf!\n";
@@ -92,8 +89,8 @@ while (my ($trial_id, $trial_name) = $h->fetchrow_array) {
     chomp $trial_id;
     print STDERR "trial id = $trial_id \n";
 
-    $out = "$trial_name/tracks.conf";
-    $header = "[general]\ndataset_id = $trial_name\n";
+    $out = "$trial_id/tracks.conf";
+    $header = "[general]\ndataset_id = Trial_$trial_id\n";
 
 #-----------------------------------------------------------------------
 # extract list of accessions associated with trial from database
@@ -123,21 +120,20 @@ my $control_names_ref = $trial_layout->get_control_names();
 
     for my $file (@files) {
 	chomp $file;
-	$_ = $file;
-	$_ =~ s/([^.]+)_2015_V6.*/$1/s;
-	#print STDERR "processed filename = $_ \n";
-        #next if !m/$accession_name/;
-	$filt_test = $accession_name . "_filtered";
-	$imp_test = $accession_name . "_imputed";
-	if ($_ eq $filt_test) {                            #Handle filtered vcf files
-	    print STDERR "File = $file \n" ;
-	    my $path = $url_path . "/" . $file ; 
-	    $mod_file = $file;
-	    $mod_file =~ s/([^.]+)_.+_.+_.+.*/$1/s;
-	    my $key = $mod_file . "_2015_filtered_SNPs" ; 
-	    #print STDERR "Key = $key \n";
-	    
-	    $track_2 = '
+       	$_ = $file;
+	next if !m/filtered/ && !m/imputed/;
+        $_ =~ s/([^.]+)_2015_V6.*/$1/s;
+        next if ($_ ne $accession_name);
+        print STDERR "Matched vcf file basename $_ to accession name $accession_name !\n";
+	$file_type = $file;
+        $file_type =~ s/.+_([imputedflr]+).vcf.gz/$1/s;
+        if ($file_type eq 'filtered') {                            #Handle filtered vcf files                                                                  
+	    print STDERR "Working on filtered file $file \n" ;
+	    my $path = $url_path . "/" . $file ;
+	    my $key = $file;
+            $key =~ s/(.+).vcf.gz/$1/s;
+
+	    $filt_track = '
 [ tracks . ' . $key . ' ]
     hooks.modify = function( track, feature, div ) { div.style.backgroundColor = track.config.variantIsHeterozygous(feature);}
 variantIsHeterozygous = function( feature ) {
@@ -160,15 +156,15 @@ type = JBrowse/View/Track/HTMLVariants
 metadata.Description = Homozygous reference: Green	Heterozygous: Red		Homozygous alternate: Blue	Filtered to remove SNPs with a depth of 0 and SNPs with 2 or more alt alleles.
 label = ' . $key  . '
 ' ;
-	} elsif ($_ eq $imp_test) {                        #Handle imputed vcf files
-	    print STDERR "File = $file \n" ;
-	    my $path = $url_path . "/" . $file ; 
-	    $mod_file = $file;
-            $mod_file =~ s/([^.]+)_.+_.+_.+.*/$1/s;
-	    my $key = $mod_file . "_2015_imputed_SNPs" ; 
-	    #print STDERR "Key = $key \n";
+push @tracks, $filt_track;
+
+	} elsif ($file_type eq 'imputed') {                        #Handle imputed vcf files
+            print STDERR "Working on imputed file $file \n" ;
+            my $path = $url_path . "/" . $file ;
+            my $key = $file;
+            $key =~ s/(.+).vcf.gz/$1/s;
 	    
-	    $track_3 = '
+	    $imp_track = '
 [ tracks . ' . $key . ' ]
 hooks.modify = function( track, feature, div ) { div.style.backgroundColor = track.config.variantIsHeterozygous(feature);  div.style.opacity = track.config.variantIsImputed(feature) ? \'0.33\' : \'1.0\'; }
 variantIsHeterozygous = function( feature ) {
@@ -202,52 +198,83 @@ type = JBrowse/View/Track/HTMLVariants
 metadata.Description = Homozygous reference: Green	Heterozygous: Red		Homozygous alternate: Blue	Values imputed with GLMNET are shown at 1/3 opacity.
 label = ' . $key  . '
 ' ;
+push @tracks, $imp_track;
+
 	} else {
+
 	next;    
+
 	}
 }
 
 #-----------------------------------------------------------------------
-# if matching vcf files not found, skip to next trial name
+# if matching vcf files were not found, skip to next trial name
 #-----------------------------------------------------------------------
 
-next if !$track_2;
-$accessions_found++;    
-my $track_info = $track_2 . $track_3;
-push (@conf_info, $track_info);
-print STDERR "Pushed accession $accession_name track info @conf_info, moving onto next accession. Current accessions found = $accessions_found\n";
-}
+next unless (@tracks);
+
 #-----------------------------------------------------------------------
-# create dir for new jbrowse instance; create symlinks to files in base jbrowse instance
+# otherwise increment count, save the new tracks, and move on to next accession
+#----------------------------------------------------------------------- 
+
+$accessions_found++;    
+foreach my $value (@tracks) {
+push (@conf_info, $value);
+}
+undef @tracks;
+print STDERR "Saved accession $accession_name track info, moving onto next accession. Current accessions found = $accessions_found\n";
+}
+
+#-----------------------------------------------------------------------
+# once all accessions have been searched, check count and only proceed if we've found at least 2
 #-----------------------------------------------------------------------
 if ($accessions_found < 2) {
 print STDERR "$accessions_found accessions in this trial have vcf files. Skipping it and moving onto next trial \n";
-@conf_info='';
-@accession_names='';
+undef @conf_info;
+undef @accession_names;
 $accessions_found = 0;
 next;
 }
-    `sudo rm -r $trial_name; sudo mkdir $trial_name`;
-    `sudo ln -sf $link_path/data_files $trial_name/data_files`;
-    `sudo ln -sf $link_path/seq $trial_name/seq`;
-    `sudo ln -sf $link_path/tracks $trial_name/tracks`;
-    `sudo ln -sf $link_path/trackList.json $trial_name/trackList.json`;
-    `sudo ln -sf $link_path/readme $trial_name/readme`;
+
+#-----------------------------------------------------------------------         
+# if 2 or more have been found, set up jbrowse instance, unless it already exisits
+#-----------------------------------------------------------------------   
+
+print STDERR "Woo! $accessions_found accessions in this trial have vcf files. Setting up jbrowse instance, then moving onto next trial \n";
+
+unless (-d $trial_id) {
+
+    `sudo mkdir -p $trial_id`;
+    `sudo ln -sf $link_path/data_files $trial_id/data_files`;
+    `sudo ln -sf $link_path/seq $trial_id/seq`;
+    `sudo ln -sf $link_path/tracks $trial_id/tracks`;
+    `sudo ln -sf $link_path/trackList.json $trial_id/trackList.json`;
+    `sudo ln -sf $link_path/readme $trial_id/readme`;
+    `sudo touch $trial_id/tracks.conf && sudo chmod a+wrx $trial_id/tracks.conf`;
 
 #-----------------------------------------------------------------------
-# append dataset info to jbrowse.conf, and create and populate trial specific tracks.conf file
+# then append dataset info to jbrowse.conf, and create and populate trial specific tracks.conf file
 #-----------------------------------------------------------------------
 
-my $dataset = "[datasets.$trial_name]\n" . "url  = ?data=data/json/trials/$trial_name\n" . "name = $trial_name\n\n";
+my $dataset = "[datasets.Trial_$trial_id]\n" . "url  = ?data=data/json/trials/$trial_id\n" . "name = $trial_name\n\n";
 print CONF $dataset;
-    open (OUT, ">", $out) || die "Can't open out file $out! \n";
-    print OUT $header;
-print STDERR "Yes!! $accessions_found accessions in this trial have vcf files. Printing track info to tracks.conf and moving onto next trial \n";
-for my $accession_tracks (@conf_info) {
-print OUT $accession_tracks
+open (OUT, ">", $out) || die "Can't open out file $out! \n";
+print OUT $header;
+print OUT join ("\n", @conf_info), "\n";
+undef @conf_info;                     # reset arrays to be used for next trial
+undef @accession_names;
+$accessions_found = 0;
+next;
 }
-@conf_info='';
-@accession_names='';
+
+#-----------------------------------------------------------------------       
+# if instance already exists, just append tracks to tracks.conf                      
+#----------------------------------------------------------------------- 
+
+open (OUT, ">>", $out) || die "Can't open out file $out! \n";
+print OUT join ("\n", @conf_info), "\n";
+undef @conf_info;                   # reset arrays to be used for next trial                                                                                        
+undef @accession_names;
 $accessions_found = 0;
 next;
 }
