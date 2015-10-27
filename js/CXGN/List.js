@@ -136,7 +136,7 @@ CXGN.List.prototype = {
 		    alert(response.error);
 		}
 		else { 
-		    alert('Type of list '+list_id+' set to '+type);
+		    //alert('Type of list '+list_id+' set to '+type);
 		}
 	    } 
 	});
@@ -298,7 +298,7 @@ CXGN.List.prototype = {
 	
 	if (lists.length===0) { 
 	    html = html + "None";
-	    jQuery('#'+div).html(html);
+	    jQuery('#'+div+'_div').html(html);
 	}
 
 	html += '<table class="table table-hover table-condensed">';
@@ -313,7 +313,7 @@ CXGN.List.prototype = {
 	}
 	html = html + '</tbody></table>';
 
-	jQuery('#list_populating_js').html(html);
+	jQuery('#'+div+'_div').html(html);
 
 	jQuery('#add_list_button').click(function() { 
 	    var lo = new CXGN.List();
@@ -344,7 +344,7 @@ CXGN.List.prototype = {
 	html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td>';
         html += '<td><input type="button" class="btn btn-info" id="updateNameButton" value="update"  /></td></tr>';
 
-	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input type="button" class="btn btn-info" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr>';
+	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input id="list_item_dialog_validate" type="button" class="btn btn-info" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr>';
 	html += '<tr><td>Add New Items</td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td><td colspan="2"><button class="btn btn-primary" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td></tr></table>';
 	html += '<table class="table table-condensed table-hover"><thead><th colspan="2"><b>List items</b> ('+items.length+')</th></tr></thead><tbody>';
 
@@ -352,7 +352,7 @@ CXGN.List.prototype = {
 	    html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-warning btn-xs" value="remove" /></td></tr>';   
 	}
 	html += '</tbody></table>';
-	jQuery('#list_item_populating_js').html(html);
+	jQuery('#'+div+'_div').html(html);
 
 	for (var n=0; n<items.length; n++) { 
 	    var list_item_id = items[n][0];
@@ -371,11 +371,11 @@ CXGN.List.prototype = {
 	
 	jQuery('#dialog_add_list_item_button').click(
 	    function() { 
-                jQuery('#working').dialog("open");
+                jQuery('#working_modal').modal("show");
 		addMultipleItemsToList('dialog_add_list_item', list_id);
 		var lo = new CXGN.List();
 		lo.renderItems(div, list_id);
-		jQuery('#working').dialog("close");
+		jQuery('#working_modal').modal("hide");
 	    }
 	);
 	
@@ -591,7 +591,7 @@ function setUpLists() {
 
 
 function show_lists() {     
-    jQuery('#list_dialog_bootstrap').modal("show");
+    jQuery('#list_dialog').modal("show");
     
     var l = new CXGN.List();
     l.renderLists('list_dialog');
@@ -874,8 +874,8 @@ function deleteItemLink(list_item_id) {
 	
 function showListItems(div, list_id) { 
     var l = new CXGN.List();
-    jQuery('#list_item_dialog_bootstrap').modal("show");
-    l.renderItems('list_item_dialog', list_id);
+    jQuery('#'+div).modal("show");
+    l.renderItems(div, list_id);
 }
 
 function addNewList(div_id) { 
