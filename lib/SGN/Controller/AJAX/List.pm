@@ -155,8 +155,8 @@ sub set_type :Path('/list/type') Args(2) {
 
     $error = $list->type($type);
     
-    if ($error) { 
-	$c->stash->{rest} = { error => $error };
+    if (!$error) { 
+	$c->stash->{rest} = { error => "List type not found: ".$type };
 	return;
     }
 
