@@ -342,7 +342,7 @@ sub projects_links {
 
              $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
-             push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
+             push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, 
                                     $pr_desc, $pr_location, $pr_year, $match_code
              ];            
 	 }
@@ -642,7 +642,7 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
     my ($self, $c) = @_;
   
     my ($pop_id, $action) = @{$c->req->captures};
-
+    print STDERR "pop page: $pop_id\n";
     my $uploaded_reference = $c->req->param('uploaded_reference');
     $c->stash->{uploaded_reference} = $uploaded_reference;
 
@@ -746,6 +746,22 @@ sub uploaded_population_summary {
 }
 
 
+sub get_project_details {
+    my ($self, $c, $pr_id) = @_;
+    print STDERR "get_project_details: $pr_id\n";
+    my $pr_rs = $c->model('solGS::solGS')->project_details($pr_id);
+
+    while (my $row = $pr_rs->next)
+    {
+	$c->stash(project_id   => $row->id,
+		  project_name => $row->name,
+		  project_desc => $row->description
+	    );
+    }
+
+}
+
+
 sub project_description {
     my ($self, $c, $pr_id) = @_;
 
@@ -791,7 +807,7 @@ sub project_description {
     $self->filter_phenotype_header($c);
     my $filter_header = $c->stash->{filter_phenotype_header};
    
-    $traits       =~ s/$filter_header//g;
+    $traits       =~ s/($filter_header\t)//g;
 
     my @traits    =  split (/\t/, $traits);    
     my $traits_no = scalar(@traits);
@@ -876,7 +892,7 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
         $self->filter_phenotype_header($c);
         my $filter_header = $c->stash->{filter_phenotype_header};
    
-        $traits       =~ s/$filter_header//g;
+        $traits       =~ s/($filter_header\t)//g;
 
         my @traits    =  split (/\t/, $traits);    
         my $traits_no = scalar(@traits);
@@ -885,7 +901,6 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
                   traits_no  => $traits_no,
                   stocks_no  => $stocks_no,
             );
-
     } 
     else
     {
@@ -1837,7 +1852,7 @@ sub get_trait_name {
 
     my $trait_name = $c->model('solGS::solGS')->trait_name($trait_id);
   
-    my $abbr = $self->abbreviate_term($c, $trait_name);
+    my $abbr = $self->abbreviate_term($trait_name);
    
     $c->stash->{trait_id}   = $trait_id;
     $c->stash->{trait_name} = $trait_name;
@@ -2414,7 +2429,7 @@ sub build_multiple_traits_models {
             else 
             {
                 my $tr = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
-                my $abbr = $self->abbreviate_term($c, $tr);
+                my $abbr = $self->abbreviate_term($tr);
                 $traits .= $abbr;
                 $traits .= "\t" unless ($i == $#selected_traits); 
 
@@ -3384,43 +3399,49 @@ sub tohtml_genotypes {
 sub get_all_traits {
     my ($self, $c) = @_;
     
-    my $pheno_file = $c->stash->{phenotype_file};
-    
-    $self->filter_phenotype_header($c);
-    my $filter_header = $c->stash->{filter_phenotype_header};
-    
-    open my $ph, "<", $pheno_file or die "$pheno_file:$!\n";
-    my $headers = <$ph>;
-    $headers =~ s/$filter_header//g;
-    $ph->close;
+    $self->traits_list_file($c);
+    my $traits_file = $c->stash->{traits_list_file};
+    my $traits = read_file($traits_file);
+ 
+    $self->traits_acronym_file($c);
+    my $acronym_file = $c->stash->{traits_acronym_file};
 
-    $self->create_trait_data($c, $headers);
-       
+    unless (-s $acronym_file)
+    {
+	    my @filtered_traits = split(/\t/, $traits);
+	    my $count = scalar(@filtered_traits);
+
+	    my $acronymized_traits = $self->acronymize_traits(\@filtered_traits);    
+	    my $acronym_table = $acronymized_traits->{acronym_table};
+	    my @trs = keys %$acronym_table;
+	  
+	    $self->traits_acronym_table($c, $acronym_table);
+    }
+	
+	$self->create_trait_data($c);       
 }
 
 
 sub create_trait_data {
-    my ($self, $c, $list) = @_;   
+    my ($self, $c) = @_;   
        
-    $list =~ s/\n//;
-    my @traits = split (/\t/, $list);
-  
     my $table = 'trait_id' . "\t" . 'trait_name' . "\t" . 'acronym' . "\n"; 
  
     my $acronym_pairs = $self->get_acronym_pairs($c);
+    
     foreach (@$acronym_pairs)
     {
         my $trait_name = $_->[1];
-        $trait_name =~ s/\n//g;
+        $trait_name    =~ s/\n//g;
         
-        my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
-        $table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";
+	my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
        
+	$table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";  	
     }
 
     $self->all_traits_file($c);
     my $traits_file =  $c->stash->{all_traits_file};
-  
+
     write_file($traits_file, $table);
 
 }
@@ -3434,6 +3455,21 @@ sub all_traits_file {
     my $cache_data = {key       => 'all_traits_pop' . $pop_id,
                       file      => 'all_traits_pop_' . $pop_id,
                       stash_key => 'all_traits_file'
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+
+sub traits_list_file {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id};
+
+    my $cache_data = {key       => 'traits_list_pop' . $pop_id,
+                      file      => 'traits_list_pop_' . $pop_id,
+                      stash_key => 'traits_list_file'
     };
 
     $self->cache_file($c, $cache_data);
@@ -3584,15 +3620,23 @@ sub analyzed_traits {
 
 sub filter_phenotype_header {
     my ($self, $c) = @_;
-    
-    my $meta_headers = "uniquename\t|object_id\t|object_name\t|stock_id\t|stock_name\t|design\t|block\t|replicate\t";
-    $c->stash->{filter_phenotype_header} = $meta_headers;
+       
+    my $meta_headers = "uniquename\tobject_name\tobject_id\tstock_id\tstock_name\tdesign\tblock\treplicate";
+
+    if($c) 
+    {
+	$c->stash->{filter_phenotype_header} = $meta_headers;
+    }
+    else 
+    {    	
+	return $meta_headers;
+    }
 
 }
 
 
 sub abbreviate_term {
-    my ($self, $c, $term) = @_;
+    my ($self, $term) = @_;
   
     my @words = split(/\s/, $term);
     
@@ -3606,7 +3650,7 @@ sub abbreviate_term {
     {
 	foreach my $word (@words) 
         {
-	    if ($word=~/^\D/)
+	    if ($word =~ /^\D/)
             {
 		my $l = substr($word,0,1,q{}); 
 		$acronym .= $l;
@@ -3621,7 +3665,7 @@ sub abbreviate_term {
 	    $acronym = $1; 
 	}	   
     }
-    
+  
     return $acronym;
 
 }
@@ -3662,8 +3706,7 @@ sub gs_traits_index {
         {
             if ($trait =~ /^$index/i) 
             {
-                push @index_traits, $trait; 
-		   
+                push @index_traits, $trait; 		   
             }		
         }
         if (@index_traits) 
@@ -3745,6 +3788,84 @@ sub gs_traits : Path('/solgs/traits') Args(1) {
 }
 
 
+sub run_phenotype_file_cluster {
+    my ($self, $c, $args) = @_;
+
+    $c->stash->{r_temp_file} = 'phenotype-data-query';
+    $self->create_cluster_acccesible_tmp_files($c);
+    my $out_temp_file = $c->stash->{out_file_temp};
+    my $err_temp_file = $c->stash->{err_file_temp};
+   
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $background_job = $c->stash->{background_job};
+
+    my $status;
+ 
+    my $pheno_file  = $args->{phenotype_file};
+    my $pop_id      = $args->{population_id};
+    my $traits_file = $args->{traits_list_file};
+    my $cache_dir   = $args->{cache_dir};
+    
+    try 
+    { 
+        my $pheno_job = CXGN::Tools::Run->run_cluster_perl({
+           
+            method        => ["SGN::Controller::solGS::solGS" => "prep_phenotype_file"],
+    	    args          => [$args],
+    	    load_packages => ['SGN::Controller::solGS::solGS', 'SGN::Context', 'SGN::Model::solGS::solGS'],
+    	    run_opts      => {
+    		              out_file    => $out_temp_file,
+			      err_file    => $err_temp_file,
+    		              working_dir => $temp_dir,
+			      max_cluster_jobs => 1_000_000_000,
+	    },
+	    
+         });
+
+	$c->stash->{r_job_tempdir} = $pheno_job->tempdir();
+	$c->stash->{r_job_id} = $pheno_job->job_id();
+
+	unless ($background_job)
+	{ 
+	    $pheno_job->wait();
+	}
+	
+    }
+    catch 
+    {
+	$status = $_;
+	$status =~ s/\n at .+//s;           
+    }; 
+
+}
+
+
+sub prep_phenotype_file {
+    my ($self,$args) = @_;
+    
+    my $pheno_file  = $args->{phenotype_file};
+    my $pop_id      = $args->{population_id};
+    my $traits_file = $args->{traits_list_file};
+    my $cache_dir   = $args->{cache_dir};
+  
+    my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
+					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
+   
+    my $pheno_data = $model->phenotype_data($pop_id);
+
+    if ($pheno_data)
+    {
+	$pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $traits_file);
+	write_file($pheno_file, $pheno_data);
+    }
+
+    my $file_cache  = Cache::File->new(cache_root => $cache_dir);
+
+    $file_cache->set('phenotype_data_' . $pop_id, $pheno_file, '30 days');
+    
+}
+
+
 sub phenotype_file {
     my ($self, $c) = @_;
     my $pop_id     = $c->stash->{pop_id};
@@ -3764,26 +3885,28 @@ sub phenotype_file {
 
     unless ($pheno_file) 
     {
-
-        my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
+	my $dir = $c->stash->{solgs_cache_dir};
+        my $file_cache  = Cache::File->new(cache_root => $dir);
         $file_cache->purge();
    
         my $key        = "phenotype_data_" . $pop_id;
         $pheno_file = $file_cache->get($key);
-       
+
         unless ( -s $pheno_file)
-        {  
-            $pheno_file = catfile($c->stash->{solgs_cache_dir}, "phenotype_data_" . $pop_id . ".txt");
-            my $data = $c->model('solGS::solGS')->phenotype_data($pop_id);
-           # my $data = $c->stash->{phenotype_data};
-        
-	    if ($data)
-	    {
-		$data = $self->format_phenotype_dataset($c, $data);
-		write_file($pheno_file, $data);
-	    }
+        {  	   
+            $pheno_file = catfile($dir, "phenotype_data_" . $pop_id . ".txt");
+	   
+	    $self->traits_list_file($c);
+	    my $traits_file =  $c->stash->{traits_list_file};
 	    
-            $file_cache->set($key, $pheno_file, '30 days');	    
+	    my $args = {
+		'population_id'    => $pop_id,
+		'phenotype_file'   => $pheno_file,
+		'traits_list_file' => $traits_file,
+		'cache_dir'        => $dir,
+	    };
+
+	    $self->run_phenotype_file_cluster($c, $args);	    
         }
     }
    
@@ -3793,51 +3916,88 @@ sub phenotype_file {
 
 
 sub format_phenotype_dataset {
-    my ($self, $c, $data) = @_;
+    my ($self, $data, $traits_file) = @_;
     
     my @rows = split (/\n/, $data);
-    
-    $rows[0] =~ s/SP:\d+\|//g;  
-    $rows[0] =~ s/\w+:\w+\|//g;
-   
-
-    my @headers = split(/\t/, $rows[0]);
-    
-    my $header;   
-    my %acronym_table;
-
-    $self->filter_phenotype_header($c);
-    my $filter_header = $c->stash->{filter_phenotype_header};
-    $filter_header =~ s/\t//g;
-
-    my $cnt = 0;
-    foreach my $trait_name (@headers)
-    {
-        $cnt++;
         
-        my $abbr = $self->abbreviate_term($c, $trait_name);
-        $header .= $abbr;
-     
-        unless ($cnt == scalar(@headers))
-        {
-            $header .= "\t";
-        }
-        
-        $abbr =~ s/$filter_header//g;
-        $acronym_table{$abbr} = $trait_name if $abbr;
-    }
+    my $formatted_headers = $self->format_phenotype_dataset_headers($rows[0], $traits_file);   
+    $rows[0] = $formatted_headers;
+
+    my $formatted_dataset = $self->format_phenotype_dataset_rows(\@rows);   
+
+    return $formatted_dataset;
+}
+
+
+sub format_phenotype_dataset_rows {
+    my ($self, $data_rows) = @_;
     
-    $rows[0] = $header;
-    
-    foreach (@rows)
+    foreach (@$data_rows)
     {
         $_ =~ s/\s+plot//g;
         $_ .= "\n";
     }
     
-    $self->traits_acronym_table($c, \%acronym_table);
+    return $data_rows;
+    
+}
 
-    return \@rows;
+
+sub format_phenotype_dataset_headers {
+    my ($self, $raw_headers, $traits_file) = @_;
+
+    $raw_headers =~ s/SP:\d+\|//g;  
+    $raw_headers =~ s/\w+:\w+\|//g;  
+    $raw_headers =~ s/\n//g;  
+
+    my $meta_headers=  $self->filter_phenotype_header();
+   
+    $raw_headers =~ s/($meta_headers\t)//g;
+    write_file($traits_file, $raw_headers) if $traits_file;   
+    my @filtered_traits = split(/\t/, $raw_headers);
+    
+    my $acronymized_traits = $self->acronymize_traits(\@filtered_traits);
+    my $formatted_headers = $acronymized_traits->{formatted_headers}; 
+   
+    return $formatted_headers;
+    
+}
+
+
+sub acronymize_traits {
+    my ($self, $traits) = @_;
+  
+    my $formatted_traits;
+    my $acronym_table = {};
+   
+    my $cnt=0;
+    foreach my $trait_name (@$traits)
+    {
+	$cnt++;
+        my $abbr = $self->abbreviate_term($trait_name);
+	my $ex_abbr = $acronym_table->{$abbr};
+
+	if ($cnt > 1 && $acronym_table->{$abbr}) 
+	{
+	    $abbr = $abbr . '.2';  
+	 }
+
+        $formatted_traits .= $abbr;
+	$formatted_traits .= "\t" unless $cnt == scalar(@$traits);
+	
+        $acronym_table->{$abbr} = $trait_name if $abbr;
+	my $tr_h = $acronym_table->{$abbr};
+    }
+ 
+    my $meta_headers = $self->filter_phenotype_header();
+    my $formatted_headers = $meta_headers ."\t". $formatted_traits;
+ 
+    my $acronymized_traits = {
+	'formatted_headers' => $formatted_headers,
+	'acronym_table'     => $acronym_table
+    };
+
+    return $acronymized_traits;
 }
 
 
