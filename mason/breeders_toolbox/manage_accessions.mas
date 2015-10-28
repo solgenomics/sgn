@@ -20,6 +20,12 @@ $accessions
 
 </&>
 
+<&| /page/info_section.mas, title=>'Find Trials', collapsible=>1, collapsed=>0 &>
+
+<& /breeders_toolbox/accessions/find_trials_by_accessions.mas &>
+
+</&>
+
 </div>
 
 <& /breeders_toolbox/accessions/pedigree_spreadsheet_upload_format_info.mas &>

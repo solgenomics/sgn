@@ -1,0 +1,82 @@
+<%args>
+
+</%args>
+
+<form id="accession_list_selector">
+<table class="table" cellpadding="10" border="0" >
+  <thead>
+  <tr><td colspan="4"><h4>Find Trials by accessions they contain</h4><p>Select accession list:</p></tr>
+  <tr>
+    <th>
+      Accessions
+    </th>
+    <th>
+      Action
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td>
+      <div id="accession_list">
+      </div>      
+    </td>
+    <td>
+      <input class="btn btn-primary" type="button" id="find_trials" value="Find Trials" />
+    </td>
+  </tr>
+  </tbody>
+  </table>
+</form>
+
+<table id="trial_summary_data" class="display">
+<thead>
+  <tr>
+    <th>Trial name</th>
+    <th>Location</th>
+    <th>Details</th>
+  </tr>
+</thead>
+
+</table>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<script>
+$(document).ready(function() { 
+
+    var lo = new CXGN.List();
+
+    $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
+ 
+    $('#find_trials').click(function() {
+
+    disable_ui();
+   
+      var accession_list_id = $('#accession_list_list_select').val();
+
+      var accession_validation = 1;
+      if (accession_list_id) { accession_validation = lo.validate(accession_list_id, 'accessions', true); }
+      
+      if (!accession_list_id) {
+      	 enable_ui();
+      	 alert("You need to select an accession list!");
+	 return; 
+      }
+
+      if (accession_validation != 1) { 
+      	 enable_ui();
+      	 alert("Accession list did not pass validation. Please correct the list and try again");
+	 return;
+      }
+
+      var stock_id ='';
+
+      // use accession list to get stock ids, for each stock_id retrieve array of datatables formatted trials, use javascript to find intersection of arrays and display with data tables 
+  
+    jQuery('#trial_summary_data').DataTable( { 
+      'ajax': '/stock/'+ stock_id + '/datatables/trials',
+    });
+  });
+});
+</script>
