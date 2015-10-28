@@ -40,6 +40,8 @@ extends 'Catalyst::Model';
 
 __PACKAGE__->mk_accessors(qw/context schema/);
 
+
+
  
 sub ACCEPT_CONTEXT {
     my ($self, $c ) = @_;
@@ -1280,7 +1282,7 @@ sub get_plot_phenotype_data {
 
 sub project_phenotype_data_rs {
     my ($self, $project_id) = @_;
-  
+   print STDERR "\n model: project pheno data project id  $project_id ---\n"; 
     my $rs = $self->schema->resultset("Stock::Stock")->search(
         {
             'observable.name' => { '!=', undef } ,
@@ -1297,8 +1299,8 @@ sub project_phenotype_data_rs {
                   }
                 } ,
                 ],
-            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description / ],
-            as       => [ qw/ stock_id uniquename value observable observable_id project_description / ],
+            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description project.project_id / ],
+            as       => [ qw/ stock_id uniquename value observable observable_id project_description project_id / ],
           
             order_by => [  'observable.name' ],
         });
@@ -1358,8 +1360,8 @@ sub stock_phenotype_data_rs {
                   }
                 } ,
                 ],
-            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description / ],
-            as       => [ qw/ stock_id uniquename value observable observable_id project_description / ],
+            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description project.project_id/ ],
+            as       => [ qw/ stock_id uniquename value observable observable_id project_description project_id / ],
           
             order_by => [  'observable.name' ],
         }  );
@@ -1374,10 +1376,10 @@ sub phenotype_data {
      my $data;
      if ($pop_id) 
      {
-         my  $phenotypes = $self->project_phenotype_data_rs($pop_id);
-         $data           = $self->structure_phenotype_data($phenotypes);                   
-    }
-            
+	 my  $phenotypes = $self->project_phenotype_data_rs($pop_id);
+	 $data           = $self->structure_phenotype_data($phenotypes);                   
+     }
+     
      return  $data; 
 }
 
@@ -1394,6 +1396,8 @@ sub structure_phenotype_data {
    
     no warnings 'uninitialized';
 
+    my $trial_id;
+
     while ( my $r =  $phenotypes->next )  
     {
         my $observable = $r->get_column('observable');
@@ -1403,7 +1407,8 @@ sub structure_phenotype_data {
         $cvterm_name = $observable;
            
         my $project = $r->get_column('project_description') ;
-
+	$trial_id   = $r->get_column('project_id') if $replicate == 1;
+	
 	my $hash_key = $r->get_column('uniquename');
 
         $phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
@@ -1418,6 +1423,7 @@ sub structure_phenotype_data {
     if (keys %cvterms) 
     {
 	$d = "uniquename\tobject_name\tobject_id\tstock_id\tstock_name\tdesign\tblock\treplicate";
+
 	foreach my $term_name (sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms )  
 	{
 	    $d .=  "\t" . $term_name;
@@ -1447,7 +1453,7 @@ sub structure_phenotype_data {
 	    my $block     = 'NA';
 	    my $replicate = 'NA';
 	    my $design    = 'NA';
-	    my $trial_id  = $self->context->stash->{pop_id};
+	 
 	    my $design_rs = $self->experimental_design($trial_id);
 
 	    if ($design_rs->next)       
@@ -1481,9 +1487,10 @@ sub structure_phenotype_data {
 	    $d .= "\n";
 	}
    
-	@project_genotypes = uniq(@project_genotypes);
-	$self->context->stash->{project_genotypes} = \@project_genotypes;
+	#@project_genotypes = uniq(@project_genotypes);
+	#$self->context->stash->{project_genotypes} = \@project_genotypes;
     }
+ 
     return $d;
 }
 
@@ -1509,6 +1516,8 @@ sub phenotypes_by_trait {
     my $replicate = 1;
     my $cvterm_name;
     my $cnt = 0;
+    my $trial_id;
+
     no warnings 'uninitialized';
 
     foreach my $rs (@$phenotypes) 
@@ -1521,10 +1530,9 @@ sub phenotypes_by_trait {
 
              if ($cvterm_name eq $observable) { $replicate ++ ; } else { $replicate = 1 ; }
              $cvterm_name = $observable;
-             # my $accession = $r->get_column('accession');
-             # my $db_name = $r->get_column('db_name');
-             my $project = $r->get_column('project_description') ;
-
+           
+             my $project  = $r->get_column('project_description') ;
+	     $trial_id    = $r->get_column('project_id') if $replicate == 1;
 	     my $hash_key = $r->get_column('uniquename');
  
              # $phen_hashref->{$hash_key}{accession} = $db_name . ":" . $accession ;
@@ -1563,7 +1571,7 @@ sub phenotypes_by_trait {
         my $block     = 'NA';
         my $replicate = 'NA';
         my $design    = 'NA';
-        my $trial_id  = $self->context->stash->{pop_id};
+       
         my $design_rs = $self->experimental_design($trial_id);
 
         if($design_rs->next)       
