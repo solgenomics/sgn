@@ -55,7 +55,7 @@ sub calendar_events_personal_GET : Args(1) {
     my $self = shift;
     my $c = shift;
     my $view = shift;
-    if (!$c->user()) {die;}
+    if (!$c->user()) {$c->detach();}
     my $search_rs = get_calendar_events_personal($c);
     $c->stash->{rest} = populate_calendar_events($search_rs, $view);
 }
