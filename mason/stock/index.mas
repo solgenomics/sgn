@@ -180,8 +180,6 @@ my $project_name = lc($c->config->{project_name});
 my $test_url = "/jbrowse_$project_name/current/data/json/accessions/" . $stock_id . "/trackList.json";
 my $jbrowse_url = "/jbrowse/?data=data%2Fjson%2Faccessions%2F" . $stock_id;
 
-print STDERR "\n\n\n\n\n\n\n\n\n\n test_url = $test_url \n\n\n\n\n\n\n\n\n\n";
-
 </%perl>
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock"] &>
 
@@ -434,7 +432,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 </&>
 
 
-<&| /page/info_section.mas, title=>"Jbrowse link", collapsible => 1 , collapsed => 0 &>
+<&| /page/info_section.mas, title=>"Accession JBrowse", collapsible => 1 , collapsed => 0 &>
 <p id="jbrowse_check">[loading...]</p>
 </&>
 
@@ -458,7 +456,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
     url: "<% $test_url %>",
     statusCode: {
         200: function () {  // if page is found, create and display link
-		jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the vcf track for <% $uniquename %> in JBrowse</a>');
+		jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View vcf tracks for <% $uniquename %> in JBrowse</a>');
 	},
 	404: function () { // if page not found, display message that jbrowse instance wasn't found
 		jQuery('#jbrowse_check').html(" <i>No Jbrowse instance found for this accession</i>.");
