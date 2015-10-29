@@ -36,7 +36,7 @@ sub render {
     my $rows = $self->get_rows();
     my $columns = $self->get_columns();
 
-    return qq { <textarea id="$id" name="$name" rows="$rows" cols="$columns">$contents</textarea>\n };
+    return qq { <textarea class="form-control" id="$id" name="$name" rows="$rows" cols="$columns">$contents</textarea>\n };
 
 }
 
