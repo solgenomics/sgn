@@ -82,8 +82,8 @@ $alternate_edit_button => undef
 
 <table><tr><td><div id="<% $form_div_name %>_buttons" >[loading edit links...]</div>
 </td></tr></table>
-<table><tr><td><div id="<% $form_div_name %>" >[loading...]</div>
-</td></tr></table>
+<div id="<% $form_div_name %>" >[loading...]</div>
+
 <script language="javascript" type="text/javascript">
 
   var <% $js_object_name %> = new CXGN.Page.Form.JSFormPage( '<% $object_id %>' , '<% $object_type %>', '<% $server_side_script %>', '<% $form_div_name %>', '<% $js_object_name %>','<% $page_url %>');

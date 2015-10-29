@@ -175,7 +175,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
     printDeleteDialog: function() {
 	var deleteDialog =  
 	'<b>Delete this ' + this.getObjectName() + ' ' +this.getObjectId()  + '?</b> '; 
-	deleteDialog += '<input type =\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.printForm(\'confirm_delete\')\" value=\"Confirm delete\"/><br><br>';
+	deleteDialog += '<input id=\"'+this.getJsObjectName()+'_delete_button\" class=\"btn btn-primary btn-sm\" type =\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.printForm(\'confirm_delete\')\" value=\"Confirm delete\"/><br><br>';
 	this.printEditLinks('delete');
 	document.getElementById(this.getFormId() ).innerHTML = deleteDialog;
 
@@ -216,8 +216,8 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	var buttons='';
 	//if ((this.getUserType() == "curator") || this.getIsOwner() == 1 ) {
 	if (action == 'edit' ||  action == 'new' ) { 
-	    buttons = '<input type=\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.store()\" value=\"Store\"/>';
-	    buttons +='<input type=\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.render( \'edit\' )\" value=\"Reset form\"/>';
+	    buttons = '<input id=\"'+this.getJsObjectName()+'_submit_button\" class=\"btn btn-primary btn-sm\" type=\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.store()\" value=\"Store\"/>&nbsp;&nbsp;&nbsp;';
+	    buttons +='<input id=\"'+this.getJsObjectName()+'_reset_button\"class=\"btn btn-default btn-sm\" type=\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.render( \'edit\' )\" value=\"Reset form\"/><br/><br/>';
 
 	    //}
 	}

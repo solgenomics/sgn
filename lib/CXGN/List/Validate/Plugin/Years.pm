@@ -18,7 +18,7 @@ sub validate {
     my @missing = ();
     foreach my $term (@$list) { 
 
-	my $rs = $schema->resultset("General::Projectprop")->search( { value => $term } );
+	my $rs = $schema->resultset("Project::Projectprop")->search( { value => $term } );
 
 	if ($rs->count == 0) { 
 	    push @missing, $term;
