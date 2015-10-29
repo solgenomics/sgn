@@ -317,11 +317,12 @@ function trial_detail_page_setup_dialogs() {
 		jQuery( this ).dialog( "close" );
 		return;
 	    },
-	    Create: function() {
+	    Create: {text: "Create", id:"create_DataCollector_submit_button", click:function() {
 		create_DataCollector();
 		//save_experimental_design(design_json);
 		jQuery( this ).dialog( "close" );		
 		//jQuery('#add_project_dialog').dialog("close");
+		}
 	    },
 	},
     });	
