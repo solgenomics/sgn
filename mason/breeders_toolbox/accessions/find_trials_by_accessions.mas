@@ -5,7 +5,7 @@
 <form id="accession_list_selector">
 <table class="table" cellpadding="10" border="0" >
   <thead>
-  <tr><td colspan="4"><h4>Find Trials by accessions they contain</h4><p>Select accession list:</p></tr>
+  <tr><td colspan="4"><p>Select accession list:</p></tr>
   <tr>
     <th>
       Accessions
@@ -43,17 +43,17 @@
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <script>
-$(document).ready(function() { 
+jQuery(document).ready(function() { 
 
     var lo = new CXGN.List();
 
-    $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
+    jQuery('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
  
-    $('#find_trials').click(function() {
+    jQuery('#find_trials').click(function() {
 
     disable_ui();
    
-      var accession_list_id = $('#accession_list_list_select').val();
+      var accession_list_id = jQuery('#accession_list_list_select').val();
 
       var accession_validation = 1;
       if (accession_list_id) { accession_validation = lo.validate(accession_list_id, 'accessions', true); }
@@ -72,11 +72,20 @@ $(document).ready(function() {
 
       var stock_id ='';
 
-      // use accession list to get stock ids, for each stock_id retrieve array of datatables formatted trials, use javascript to find intersection of arrays and display with data tables 
+      // use accession list to get stock ids, for each stock_id retrieve array of datatables formatted trials, use javascript to find intersection of arrays, and display with data tables 
   
     jQuery('#trial_summary_data').DataTable( { 
       'ajax': '/stock/'+ stock_id + '/datatables/trials',
     });
   });
+
+  function disable_ui() {
+  jQuery('#working_modal').modal("show");
+  }
+
+  function enable_ui() {
+  jQuery('#working_modal').modal("hide");
+  }
+
 });
 </script>
