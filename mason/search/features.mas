@@ -1,5 +1,6 @@
 <%args>
-  $maximum_export_size
+ $organisms         => undef
+ $feature_types     => undef
 </%args>
 
 <& /util/import_extjs.mas &>
@@ -14,7 +15,17 @@
 
 <%perl>
 
+use CXGN::Page::FormattingHelpers qw / simple_selectbox_html/;
 
+my $f_type_select = simple_selectbox_html(
+  choices   => $feature_types,
+  id        => "feature_type_select",
+);
+
+my $organism_select = simple_selectbox_html(
+  choices  =>  $organisms   ,
+  id       => "organism_select",
+);
 
 </%perl>
 
@@ -25,7 +36,7 @@
 	<div class="form-group form-group-sm">
 	  <label class="col-sm-3 control-label">Organism: </label>
 	  <div class="col-sm-9" >
-            <input type="text" class="form-control" id="organism" />
+            <% $organism_select %>
 	  </div>
 	</div>
       </div>
@@ -33,7 +44,7 @@
 	<div class="form-group form-group-sm">
 	  <label class="col-sm-3 control-label">Type: </label>
 	  <div class="col-sm-9" >
-            <input type="text" class="form-control" id="type" />
+            <% $f_type_select %>
 	  </div>
 	</div>
       </div>

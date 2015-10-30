@@ -27,7 +27,47 @@ our @EXPORT_OK = qw/
     location_string
     location_string_html
     type_name
+    feature_types
+    feature_organisms
 /;
+
+
+
+sub feature_organisms {
+    my ($schema) = @_;
+    return [
+        [ 0, '' ],
+        map [ $_->organism_id, $_->species ],
+        $schema
+             ->resultset('Sequence::Feature')
+             ->search_related('organism' , {}, {
+                 select   => [qw[ organism.organism_id species ]],
+                 distinct => 1,
+                 order_by => 'species',
+               })
+    ];
+}
+
+sub feature_types {
+    my ($schema) = @_;
+
+    my $ref = [
+        map [$_->cvterm_id,$_->name],
+        $schema
+    ->resultset('Sequence::Feature')
+    ->search_related(
+        'type',
+        {},
+        { select => [qw[ cvterm_id type.name ]],
+          group_by => [qw[ cvterm_id type.name ]],
+          order_by => 'type.name',
+        },
+    )
+    ];
+    # add an empty option 
+    unshift @$ref , ['0', ''];
+    return $ref;
+}
 
 sub type_name {
     cvterm_name( shift->type, @_ );
