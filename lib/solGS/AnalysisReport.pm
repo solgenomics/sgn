@@ -39,8 +39,7 @@ sub check_success {
 	}
     }
     
-    return $output_details;
-  
+    return $output_details;  
 }
 
 
@@ -51,7 +50,6 @@ sub check_combined_pops_modeling {
     $output_details = $self->check_trait_modeling($output_details);
      
     return $output_details;
-
 }
 
 
@@ -127,8 +125,7 @@ sub check_pops_data_combination {
 	}  
     }
 
-    return $output_details;
-  
+    return $output_details;  
 }
 
 
@@ -184,8 +181,6 @@ sub check_trait_modeling {
     }
 
     return $output_details;
-
-
 }
 
 
@@ -260,7 +255,6 @@ sub check_population_download {
     }
 
     return $output_details;
-
 }
 
 
@@ -327,7 +321,6 @@ sub report_status {
 	);
 
     sendmail($email); 
-
 }
 
 
@@ -405,7 +398,6 @@ sub single_modeling_message {
     }
 
     return  $message;
-
 }
 
 
@@ -436,7 +428,6 @@ sub population_download_message {
     }
 
     return  $message;
-
 }
 
 

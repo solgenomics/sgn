@@ -1282,7 +1282,7 @@ sub get_plot_phenotype_data {
 
 sub project_phenotype_data_rs {
     my ($self, $project_id) = @_;
-   print STDERR "\n model: project pheno data project id  $project_id ---\n"; 
+  
     my $rs = $self->schema->resultset("Stock::Stock")->search(
         {
             'observable.name' => { '!=', undef } ,

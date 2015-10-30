@@ -3975,12 +3975,8 @@ sub acronymize_traits {
     {
 	$cnt++;
         my $abbr = $self->abbreviate_term($trait_name);
-	my $ex_abbr = $acronym_table->{$abbr};
 
-	if ($cnt > 1 && $acronym_table->{$abbr}) 
-	{
-	    $abbr = $abbr . '.2';  
-	 }
+	$abbr = $abbr . '.2' if $cnt > 1 && $acronym_table->{$abbr};  
 
         $formatted_traits .= $abbr;
 	$formatted_traits .= "\t" unless $cnt == scalar(@$traits);
