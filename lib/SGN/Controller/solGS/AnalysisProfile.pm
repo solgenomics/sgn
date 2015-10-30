@@ -258,38 +258,34 @@ sub structure_output_details {
     }
    
     my $pop_id =  $c->stash->{pop_id}; 
-
-    my %output_details = (); 
     
-    my $base    = $c->req->base;
-    
+    my $base    = $c->req->base;    
     if ( $base !~ /localhost/)
     {
 	$base =~ s/:\d+//;    
     } 
-    
-    my $referer = $c->req->referer;
-    
-    my $analysis_page = $analysis_data->{analysis_page};
-    
+           
     my $geno_file;
     my $pheno_file;
-    
-    if ($analysis_page =~ m/[(solgs\/analyze\/traits\/) | (solgs\/trait\/) | (solgs\/model\/combined\/trials\/)]/) 
-    {
+    my %output_details = ();
+    my $solgs_controller = $c->controller('solGS::solGS');
+    my $analysis_page = $analysis_data->{analysis_page};
+
+    $analysis_page =~ s/$base/\//;
+
+    if ($analysis_page =~ m/(solgs\/analyze\/traits\/|solgs\/trait\/|solgs\/model\/combined\/trials\/)/) 
+    {	
 	foreach my $trait_id (@traits_ids)
-	{
-	    my $solgs_controller = $c->controller('solGS::solGS');
-	    
+	{	    
 	    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
 
 	    $solgs_controller->get_trait_name($c, $trait_id);	    
 	    $solgs_controller->gebv_kinship_file($c);
 	 	  
-	    my$trait_abbr = $c->stash->{trait_abbr};
-	  
+	    my$trait_abbr = $c->stash->{trait_abbr};	  
 	    my $trait_page;
-
+	    my $referer = $c->req->referer;   
+	    
 	    if ( $referer =~ m/solgs\/population\// ) 
 	    {
 		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
@@ -309,21 +305,45 @@ sub structure_output_details {
 		$solgs_controller->cache_combined_pops_data($c);
 
 		$pheno_file = $c->stash->{trait_combined_pheno_file};
-		$geno_file  = $c->stash->{trait_combined_geno_file};  
-		
+		$geno_file  = $c->stash->{trait_combined_geno_file};  		
 	    }
 	    
 	    $output_details{$trait_abbr} = {
-		'trait_id'      => $trait_id, 
-		'trait_name'    => $c->stash->{trait_name}, 
-		'trait_page'    => $trait_page,
-		'gebv_file'     => $c->stash->{gebv_kinship_file},
-		'pop_id'        => $pop_id,
-		'pheno_file'    => $pheno_file,
-		'geno_file'     => $geno_file,
-		'data_set_type' => $c->stash->{data_set_type},
-	    }
+		'trait_id'       => $trait_id, 
+		'trait_name'     => $c->stash->{trait_name}, 
+		'trait_page'     => $trait_page,
+		'gebv_file'      => $c->stash->{gebv_kinship_file},
+		'pop_id'         => $pop_id,
+		'phenotype_file' => $pheno_file,
+		'genotype_file'  => $geno_file,
+		'data_set_type'  => $c->stash->{data_set_type},
+	    };
 	}
+
+    }
+    elsif ( $analysis_page =~ m/solgs\/population\// ) 
+    {
+	my $population_page = $base . "solgs/population/$pop_id";
+
+	$c->stash->{pop_id} = $pop_id;
+
+	$solgs_controller->phenotype_file($c);
+#	$solgs_controller->genotype_file($c);
+	$pheno_file = $c->stash->{phenotype_file};
+#	$geno_file  = $c->stash->{genotype_file};  
+
+	$solgs_controller->get_project_details($c, $pop_id);
+	my $pr_name = $c->stash->{project_name};
+
+	$output_details{$pop_id} = {
+		'population_page' => $population_page,
+		'population_id'   => $pop_id,
+		'population_name' => $c->stash->{project_name},
+		'phenotype_file'  => $pheno_file,
+		'genotype_file'   => $geno_file,
+		'data_set_type'   => $c->stash->{data_set_type},
+	};
+		
     }
 
     $output_details{analysis_profile} = $analysis_data;
@@ -346,8 +366,8 @@ sub run_analysis {
     $analysis_page =~ s/$base/\//;
    
     $c->stash->{background_job} = 1;
-  
-    my @selected_traits = @{$c->stash->{selected_traits}};
+    
+    my @selected_traits = @{$c->stash->{selected_traits}} if $c->stash->{selected_traits};
  
     if ($analysis_page =~ /solgs\/analyze\/traits\//) 
     {  	
@@ -379,6 +399,14 @@ sub run_analysis {
     {
 	$c->stash->{trait_id} = $selected_traits[0];
 	$c->controller('solGS::solGS')->build_single_trait_model($c);
+    }
+    elsif ($analysis_page =~ /solgs\/population\//)
+    {
+	my $pop_id = $c->stash->{pop_id};
+
+	$c->controller('solGS::solGS')->phenotype_file($c);
+#	$c->controller('solGS::solGS')->genotype_file($c);
+
     }
     else 
     {
