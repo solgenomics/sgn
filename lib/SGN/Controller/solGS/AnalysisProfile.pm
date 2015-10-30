@@ -333,7 +333,6 @@ sub structure_output_details {
 #	$geno_file  = $c->stash->{genotype_file};  
 
 	$solgs_controller->get_project_details($c, $pop_id);
-	my $pr_name = $c->stash->{project_name};
 
 	$output_details{$pop_id} = {
 		'population_page' => $population_page,
@@ -428,9 +427,6 @@ sub run_analysis {
     $self->update_analysis_progress($c);
  
 }
-
-
-
 
 
 sub update_analysis_progress {
