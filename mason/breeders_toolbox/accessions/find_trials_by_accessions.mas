@@ -4,19 +4,8 @@
 
 <form id="accession_list_selector">
 <table class="table" cellpadding="10" border="0" >
-  <thead>
-  <tr><td colspan="4"><p>Select accession list:</p></tr>
-  <tr>
-    <th>
-      Accessions
-    </th>
-    <th>
-      Action
-    </th>
-  </tr>
-  </thead>
   <tbody>
-  <tr>
+  <p>Select accession list:</p>
     <td>
       <div id="accession_list">
       </div>      
@@ -24,7 +13,6 @@
     <td>
       <input class="btn btn-primary" type="button" id="find_trials" value="Find Trials" />
     </td>
-  </tr>
   </tbody>
   </table>
 </form>
@@ -50,33 +38,52 @@ jQuery(document).ready(function() {
     jQuery('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
  
     jQuery('#find_trials').click(function() {
-
-    disable_ui();
-   
-      var accession_list_id = jQuery('#accession_list_list_select').val();
-
-      var accession_validation = 1;
-      if (accession_list_id) { accession_validation = lo.validate(accession_list_id, 'accessions', true); }
       
-      if (!accession_list_id) {
-      	 enable_ui();
-      	 alert("You need to select an accession list!");
-	 return; 
-      }
+	disable_ui();
+   
+	var accession_list_id = jQuery('#accession_list_list_select').val();
 
-      if (accession_validation != 1) { 
-      	 enable_ui();
-      	 alert("Accession list did not pass validation. Please correct the list and try again");
-	 return;
-      }
+      	var accession_validation = 1;
+      	if (accession_list_id) { accession_validation = lo.validate(accession_list_id, 'accessions', true); }
+      
+	if (!accession_list_id) {
+      	    enable_ui();
+      	    alert("You need to select an accession list!");
+	    return; 
+      	    }
 
-      var stock_id ='';
+      	if (accession_validation != 1) { 
+      	    enable_ui();
+      	    alert("Accession list did not pass validation. Please correct the list and try again");
+	    return;
+      	    }
+      
+	var transform_name = 'accessions_2_accession_ids';
+	var stock_ids = [];
 
-      // use accession list to get stock ids, for each stock_id retrieve array of datatables formatted trials, use javascript to find intersection of arrays, and display with data tables 
-  
-    jQuery('#trial_summary_data').DataTable( { 
-      'ajax': '/stock/'+ stock_id + '/datatables/trials',
-    });
+      	jQuery.ajax( {   //convert accession names to ids
+	    url: '/list/transform/'+accession_list_id+'/'+transform_name,
+	    async: false,
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		    }
+		else { 
+		    stock_ids = response.transform;
+		    }
+	    	    },
+	    error: function(response) { alert("An error occurred while transforming the list "+list_id); }
+	    });      
+
+	jQuery('#trial_summary_data').DataTable( {  // get shared trials using accession ids
+		ajax: {
+		      async: false,
+		      url: '/stock/get_shared_trials',
+		      data: {stock_ids: stock_ids},
+		      }
+	});
+	enable_ui();	
+
   });
 
   function disable_ui() {

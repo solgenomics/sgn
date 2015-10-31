@@ -20,7 +20,7 @@ $accessions
 
 </&>
 
-<&| /page/info_section.mas, title=>'Find Trials', collapsible=>1, collapsed=>0, subtitle=>'<i>Find trials that contain all the accessions in a given list</i>'&>
+<&| /page/info_section.mas, title=>'Find Trials in Common', collapsible=>1, collapsed=>0, subtitle=>'<i>Use a list of accessions to search for trials that contain them all</i>'&>
 
 <& /breeders_toolbox/accessions/find_trials_by_accessions.mas &>
 

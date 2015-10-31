@@ -1189,6 +1189,58 @@ sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') 
     $c->stash->{rest} = { data => \@formatted_trials };
 }
 
+
+=head2 action get_shared_trials()
+
+ Usage:        /datatables/sharedtrials
+ Desc:         retrieves trials associated with multiple stocks
+ Ret:          a table in json suitable for datatables
+ Args:         array of stock uniquenames
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_shared_trials :Path('/stock/get_shared_trials') : ActionClass('REST'){
+
+sub get_shared_trials_POST :Args(1) {
+    my ($self, $c) = @_;
+    $c->stash->{rest} = { error => "Nothing here, it's a POST.." } ;
+}
+sub get_shared_trials_GET :Args(1) { 
+
+    my $self = shift;
+    my $c = shift;
+    my @stock_ids = $c->request->param( 'stock_ids[]' );
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    
+    my $initial_stock = CXGN::Chado::Stock->new($schema, $stock_ids[0]);
+    my @shared_trials= $initial_stock->get_trials();
+    
+    foreach my $stock_id (@stock_ids) {
+	my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+	my @current_trials = $stock->get_trials();
+	my @intersection = ();
+	my @difference = ();
+	my %count = ();
+	my %arrays = ();
+
+	foreach my $trial_id (@current_trials, @shared_trials) { $count{@$trial_id[0]}++ }
+	foreach my $array (@current_trials, @shared_trials) { $arrays{@$array[0]} = $array }
+
+	foreach my $key (keys %count) {
+	    push @{ $count{$key} > 1 ? \@intersection : \@difference}, $arrays{$key};
+	}
+	@shared_trials = @intersection;
+    }
+
+    my @formatted_trials;
+    foreach my $t (@shared_trials) { 
+	push @formatted_trials, [ '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>', $t->[3]];
+    }
+    $c->stash->{rest} = { data => \@formatted_trials };
+}
+}
 =head2 action get_stock_trait_list()
 
  Usage:        /stock/<stock_id>/datatables/traitlist
@@ -1236,6 +1288,7 @@ sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('dat
 sub get_phenotypes { 
     my $self = shift;
     my $c = shift;
+    shift;
     my $trait_id = shift;
 
     my $stock_id = $c->stash->{stock_row}->stock_id();
