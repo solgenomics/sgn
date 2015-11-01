@@ -304,6 +304,8 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 
 % }
 
+<& /pedigree/stock_pedigree_string.mas, stock_id => $stock_id &>
+
 
 % if ($type) {
 <&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>

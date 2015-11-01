@@ -1270,7 +1270,8 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0
     my $level = $c->req->param("level");
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $s = CXGN::Chado::Stock->new($schema, $c->stash->{stock}->get_stock_id());
-    my $pedigree_string = $s->get_parents_string($level);
+    my $pedigree_root = $s->get_parents($level);
+    my $pedigree_string = $pedigree_root->get_pedigree_string($level);
 
     $c->stash->{rest} = { pedigree_string => $pedigree_string };
 }
