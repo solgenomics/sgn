@@ -307,9 +307,10 @@ CXGN.List.prototype = {
 	    html += '<tr><td><b>'+lists[i][1]+'</b></td>';
 	    html += '<td>'+lists[i][3]+'</td>';
 	    html += '<td>'+lists[i][5]+'</td>';
-	    html += '<td><a id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')">view</a></td>';
-	    html += '<td><a id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')">delete</a></td>';
-	    html += '<td><a id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>';
+	    html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
+	    html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
+	    html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-floppy-save"></span></a></td>';
+	    html += '<td><a title="Share" id="share_list_'+lists[i][1]+'" href="/list/share?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-share-alt"></span></a></td></tr>';
 	}
 	html = html + '</tbody></table>';
 

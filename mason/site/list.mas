@@ -50,3 +50,10 @@
   <div id="list_item_dialog" overflow="auto" >
   </div>
 -->
+
+<script>
+
+$("#list_item_dialog").draggable();
+$("#list_dialog").draggable();
+
+</script>
