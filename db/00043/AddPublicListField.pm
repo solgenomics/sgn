@@ -50,8 +50,9 @@ sub patch {
     say  "Executing the SQL commands.\n";
 
     my $sql = <<SQL;
-ALTER TABLE sgn_people.list ADD COLUMN "is_public" BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE sgn_people.list ADD COLUMN "is_public" BOOLEAN DEFAULT FALSE;
 UPDATE sgn_people.list SET is_public = 'f';
+ALTER TABLE sgn_people.list ALTER COLUMN is_public SET NOT NULL;
 SQL
 
     $self->dbh->do($sql);
