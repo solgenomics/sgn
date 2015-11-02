@@ -193,7 +193,9 @@ function jqueryStuff() {
 
 <&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/phenome/qtl_form.pl>New QTL population</a> | <a href=/search/stocks/>Back to stock search</a>"  &>
 
-<table><tr><td width="400">
+<div class="row">
+  <div class="col-sm-6">
+
   <& /page/form.mas,
   object_type=>'stock',
   object_id=>"$stock_id",
@@ -204,13 +206,14 @@ function jqueryStuff() {
   page_url => "/stock/$stock_id/view/" ,
   alternate_new_button => '<a href ="/stock/0/new">[New]</a>'
   &>
-</td><td>
 
+  </div>
+  <div class="col-sm-6">
 <& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
 % #<& /util/barcode.mas, identifier => "http://solgenomics.net/stock/$stock_id/view", text=>"SGN stock $stock_id ($uniquename)", format=>"qrcode" &>
 
-
-</td></tr></table>
+  </div>
+</div>
 
 <div><b>Stock editors: </b> <% $editor_link %></div>
 <br />
@@ -219,7 +222,7 @@ function jqueryStuff() {
 %}
 <br />
 % my $div_name = join("_", @$resources);
-% my $subtitle = $edit_privs ? "[<a href=\"javascript:synonyms_addPropDialog()\">Add...</a>]" : "[Add]";
+% my $subtitle = $edit_privs ? "[<a id=\"stock_add_synonym\" href=\"javascript:synonyms_addPropDialog()\">Add...</a>]" : "[Add]";
    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
       <& /stock/stockprops.mas,
        stock_id=> $stock_id,
@@ -230,7 +233,7 @@ function jqueryStuff() {
 	edit_privs => $edit_privs   &>
 </&>
 %  $div_name = join("_", @$metadata);
-% my $props_subtitle = $edit_privs ? "[<a href=\"javascript:stockprops_addPropDialog()\">Add...</a>]" : "[Add]";
+% my $props_subtitle = $edit_privs ? "[<a id=\"stock_add_props\" href=\"javascript:stockprops_addPropDialog()\">Add...</a>]" : "[Add]";
 
     <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
       <& /stock/stockprops.mas,
