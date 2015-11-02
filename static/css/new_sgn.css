@@ -45,6 +45,10 @@
 
 #list_dialog, #list_item_dialog { overflow-y:scroll }
 
+table.borderless td,table.borderless th{
+     border: none !important;
+}
+
 #xtratbl {
 background-color:#CCCCFF;
 border: 1px solid #C0C0C0;

@@ -52,7 +52,7 @@ sub new
 sub render
 {
 	my $self = shift;
-	my $html = "<select id=\"" . $self->get_id() . "\" name=\"" . $self->get_field_name() . "\" multiple=\"multiple\">";
+	my $html = "<select class=\"form-control\" id=\"" . $self->get_id() . "\" name=\"" . $self->get_field_name() . "\" multiple=\"multiple\">";
 	for(my $i = 0; $i < scalar($self->get_choice_array()); $i++)
 	{
 		if($self->is_selected($i))

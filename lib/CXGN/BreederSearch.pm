@@ -278,7 +278,7 @@ sub get_phenotype_info {
     my $trial_sql = shift;
     my $trait_sql = shift;
 
-    #print STDERR "$accession_sql - $trial_sql - $trait_sql \n\n";
+    print STDERR "GET_PHENOTYPE_INFO: $accession_sql - $trial_sql - $trait_sql \n\n";
 
     my $rep_type_id = $self->get_stockprop_type_id("replicate");
     my $block_number_type_id = $self -> get_stockprop_type_id("block");
@@ -344,7 +344,8 @@ sub get_phenotype_info_matrix {
     my %traits;
 
     foreach my $d (@$data) { 
-	my $cvterm = $d->[6].":".$d->[7];
+	print STDERR "PRINTING TRAIT DATA FOR TERM " . $d->[3] . "\n\n";
+	my $cvterm = $d->[3]."|".$d->[7];
 	my $trait_data = $d->[4];
 	my $plot = $d->[5];
 	$plot_data{$plot}->{$cvterm} = $trait_data;
@@ -384,7 +385,7 @@ sub get_extended_phenotype_info_matrix {
     my $accession_sql = shift;
     my $trial_sql = shift;
     my $trait_sql = shift;
-    
+
     my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
     
     my %plot_data;
@@ -395,7 +396,7 @@ sub get_extended_phenotype_info_matrix {
 
 	my ($project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep, $block_number) = @$d;
 	
-	my $cvterm = $d->[6].":".$d->[7];
+	my $cvterm = $d->[3]."|".$d->[7];
 	if (!defined($rep)) { $rep = ""; }
 	$plot_data{$plot}->{$cvterm} = $trait_data;
 	$plot_data{$plot}->{metadata} = {

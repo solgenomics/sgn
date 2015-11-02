@@ -8,7 +8,7 @@ $lg_names_ref       => undef
 
 <div class="container-fluid">
 
-<& /page/page_title.mas, title=>'Search Loci' &>
+<& /page/page_title.mas, title=>'Search Genes and Loci' &>
 
 <%perl>
 
@@ -52,23 +52,6 @@ my $advanced_search=  info_table_html(
 
 </%perl>
 
-<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
-
-
-<div class="well">
-<table id="locus_search_results" class="display">
-<thead>
-  <tr>
-    <th>Organism</th>
-    <th>Locus Name</th>
-    <th>Locus Symbol</th>
-    <th>Alleles</th>
-  </tr>
-</thead>
-</table>
-</div>
-
-</&>
 
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0, subtitle=>'[<a href="../help/gene_search_help.pl">Gene Search Help</a>]' &>
 
@@ -76,7 +59,7 @@ my $advanced_search=  info_table_html(
 
   <div class="form-horizontal" >
     <div class="form-group">
-      <label class="col-sm-3 control-label">Search for any locus or allele:</label>
+      <label class="col-sm-3 control-label">Search for any gene, locus, or allele:</label>
       <div class="col-sm-9" >
         <% $any_name_select %>
       </div>
@@ -94,7 +77,7 @@ my $advanced_search=  info_table_html(
 <!--
 <table>
   <tr>
-    <td colspan="2"><b>Search for any locus or allele</b>  (<a href="../help/gene_search_help.pl">gene search help page</a>)</td></tr>
+    <td colspan="2"><b>Search for any gene, locus, or allele</b>  (<a href="../help/gene_search_help.pl">gene search help page</a>)</td></tr>
   <tr><td><% $any_name_select %></td>
     <td><div align="center"><button id="submit_locus_search" />Search</button></div></td>
    <tr><td><a href="/locus/0/new/">[Submit new locus]</a></td></tr>
@@ -113,6 +96,25 @@ my $advanced_search=  info_table_html(
 </&>
 
 </div>
+
+
+<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
+
+
+<div class="well">
+<table id="locus_search_results" class="display">
+<thead>
+  <tr>
+    <th>Organism</th>
+    <th>Locus Name</th>
+    <th>Locus Symbol</th>
+    <th>Alleles</th>
+  </tr>
+</thead>
+</table>
+</div>
+
+</&>
 
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
