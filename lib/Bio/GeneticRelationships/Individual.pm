@@ -81,9 +81,11 @@ sub recursive_parent_levels {
     }
     
     $levels[0] = { female_parent => $p->get_female_parent()->get_name(), 
-		    male_parent =>  $p->get_male_parent()->get_name(),
-		    level => $current_level, 
-		    cross_type => $cross_type,
+		   male_parent =>  $p->get_male_parent()->get_name(),
+		   level => $current_level, 
+		   cross_type => $cross_type,
+		   parent_string => $p->get_female_parent()->get_name().
+		       "/".$p->get_male_parent()->get_name(),
     };
 
     if ($p->get_female_parent()) { 
@@ -113,7 +115,7 @@ sub get_pedigree_string {
 
     if ($level == 1) {
 	print STDERR "Creating pedigree string of level 1...\n";
-	$s = $levels[0]->{female_parent}.'/'.$levels[0]->{male_parent};
+	$s = $levels[0]->{parent_string};
     }
 
     if ($level == 2) {
@@ -132,8 +134,8 @@ sub get_pedigree_string {
 
 	if (@appropriate_levels == 2) { 
 	    print STDERR "--- level 2\n";
-	    $s = $appropriate_levels[0]->{female_parent}.'/'.$appropriate_levels[0]->{male_parent}.'//'.
-		$appropriate_levels[1]->{female_parent}.'/'.$appropriate_levels[1]->{male_parent};
+	    $s = $appropriate_levels[0]->{parent_string}.'//'.
+		$appropriate_levels[1]->{parent_string};
 	}
     }
 
