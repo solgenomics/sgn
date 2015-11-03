@@ -309,8 +309,12 @@ CXGN.List.prototype = {
 	    html += '<td>'+lists[i][5]+'</td>';
 	    html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
 	    html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
-	    html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-floppy-save"></span></a></td>';
-	    html += '<td><a title="Share" id="share_list_'+lists[i][1]+'" href="/list/share?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-share-alt"></span></a></td></tr>';
+	    html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
+	    if (lists[i][6] == 0){
+		html += '<td><a title="Share" id="share_list_'+lists[i][1]+'" href="javascript:publicList('+lists[i][0]+')"><span class="glyphicon glyphicon-share-alt"></span></a></td></tr>';
+	    } else if (lists[i][6] == 1){
+		html += '<td><a title="Share" id="share_list_'+lists[i][1]+'" href="javascript:publicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td></tr>';
+	    }
 	}
 	html = html + '</tbody></table>';
 
@@ -865,6 +869,30 @@ function deleteList(list_id) {
 	lo.renderLists('list_dialog');
 	alert('Deleted list '+list_name);
     }
+}
+
+function publicList(list_id) { 
+    $.ajax({
+	"url": "/list/public/",
+	"type": "POST",
+	"data": {'list_id': list_id},
+	success: function(r) {
+	    if (r.error) {
+		alert(r.error);
+	    } else if (r.r == 1) {
+		var lo = new CXGN.List();
+		lo.renderLists('list_dialog');
+		alert("List set to not public");
+	    } else if (r.r == 0) {
+		var lo = new CXGN.List();
+		lo.renderLists('list_dialog');
+		alert("List set to public");
+	    }
+	},
+	error: function() {
+	    alert("Error Setting List to Public! List May Not Exist.");
+	}
+    });
 }
 	
 function deleteItemLink(list_item_id) { 

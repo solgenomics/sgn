@@ -270,6 +270,26 @@ sub add_item :Path('/list/item/add') Args(0) {
     }
 }
 
+sub list_public : Path('/list/public') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id"); 
+
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return; 
+    }
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my ($public, $rows_affected) = $list->list_public();
+    if ($rows_affected == 1) {
+	$c->stash->{rest} = { r => $public };
+    } else {
+	die;
+    }
+}    
+
 sub add_bulk : Path('/list/add/bulk') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -651,7 +671,7 @@ sub check_user : Private {
     my $error = "";
 
     if (!$user_id) { 
-	$error = "You must be logged in to delete a list";
+	$error = "You must be logged in to manipulate this list.";
 
     }
 
