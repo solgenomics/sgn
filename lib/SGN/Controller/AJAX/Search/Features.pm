@@ -22,10 +22,8 @@ sub feature_search :Path('/ajax/search/features') Args(0) {
     
     my $params = $c->req->params() || {};
 
-    #print STDERR "PARAMS: ".Dumper($params);
+#    print STDERR "PARAMS: ".Dumper($params);
     
-    my %query;
-
 # params 
 # organism
 # type
@@ -41,66 +39,59 @@ sub feature_search :Path('/ajax/search/features') Args(0) {
 # feature_id
 # seqlen
 # locations
-  
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema','sgn_chado');
+    my ($and_conditions, $or_conditions) ;
+    $and_conditions->{'me.feature_id'} =  { '>' => 0 };
+    $or_conditions->{'me.feature_id'} =  { '>' => 0 }  ;
 
-    my $rs = $schema->resultset('Sequence::Feature')->search(
-	{'featureloc_features.locgroup' => 0},
-	{prefetch => ['featureloc_features']}
-	);
+    if (exists($params->{organism} ) && $params->{organism} ) {
+	$and_conditions->{'me.organism_id'} = $params->{organism} ;
+    }
 
-    if( my $name = $params->{'name'} ) {
-        $rs = $rs->search({ 'me.name' => { ilike => '%'.$name.'%' }});
+    if (exists($params->{type_id} ) && $params->{type_id} ) {
+	$and_conditions->{'me.type_id'} = $params->{type_id} ;
+    }
+    if (exists($params->{name} ) && $params->{name} ) {
+	$and_conditions->{'me.name'} = { ilike => '%' . lc( $params->{name} ) . '%' } ;
     }
 
 
+    #my $rs = $schema->resultset('Sequence::Feature')->search(
+#	{'featureloc_features.locgroup' => 0},
+#	{prefetch => ['featureloc_features']}
+#	);
 
 
-    if( my $type = $params->{'type'} ) {
-        my $type_rs = $schema->resultset('Cv::Cvterm')
-                             ->search({ 'lower(name)' => lc $type });
-        $rs = $rs->search({ 'me.type_id' => { -in => $type_rs->get_column('cvterm_id')->as_query }});
-    }
+    #my $featureloc_prefetch = { prefetch => { 'featureloc_features' => 'srcfeature' }};
+    #if( my $srcfeature_id = $params->{'srcfeature_id'} ) {
+    #   $rs = $rs->search({ 'featureloc_features.srcfeature_id' => $srcfeature_id }, $featureloc_prefetch );
+    #}
 
-    if( my $type_id = $params->{'type_id'} ) {
-        $rs = $rs->search({ 'me.type_id' => $type_id });
-    }
+    #if( my $start = $params->{'srcfeature_start'} ) {
+    #    $rs = $rs->search({ 'featureloc_features.fmax' => { '>=' => $start } }, $featureloc_prefetch );
+    #}
 
-    if( my $organism = $params->{'organism'} ) {
-        my $organism_rs = $schema->resultset('Organism::Organism')
-                                 ->search({ species => { -ilike => '%'.$organism.'%' }});
-        $rs = $rs->search({ 'me.organism_id' => { -in => $organism_rs->get_column('organism_id')->as_query } });
-    }
+    #if( my $end = $params->{'srcfeature_end'} ) {
+    #    $rs = $rs->search({ 'featureloc_features.fmin' => { '<=' => $end+1 } }, $featureloc_prefetch );
+    #}
 
-    my $featureloc_prefetch = { prefetch => { 'featureloc_features' => 'srcfeature' }};
-    if( my $srcfeature_id = $params->{'srcfeature_id'} ) {
-        $rs = $rs->search({ 'featureloc_features.srcfeature_id' => $srcfeature_id }, $featureloc_prefetch );
-    }
+    #if( my $proptype_id = $params->{'proptype_id'} ) {
+    #    $rs = $rs->search({ 'featureprops.type_id' => $proptype_id },{ prefetch => 'featureprops' });
+    #}
 
-    if( my $start = $params->{'srcfeature_start'} ) {
-        $rs = $rs->search({ 'featureloc_features.fmax' => { '>=' => $start } }, $featureloc_prefetch );
-    }
+    #if( my $prop_value = $params->{'prop_value'} ) {
+    #    $rs = $rs->search({ 'featureprops.value' => { -ilike => '%'.$prop_value.'%' }},{ prefetch => 'featureprops' });
+    #}
 
-    if( my $end = $params->{'srcfeature_end'} ) {
-        $rs = $rs->search({ 'featureloc_features.fmin' => { '<=' => $end+1 } }, $featureloc_prefetch );
-    }
-
-    if( my $proptype_id = $params->{'proptype_id'} ) {
-        $rs = $rs->search({ 'featureprops.type_id' => $proptype_id },{ prefetch => 'featureprops' });
-    }
-
-    if( my $prop_value = $params->{'prop_value'} ) {
-        $rs = $rs->search({ 'featureprops.value' => { -ilike => '%'.$prop_value.'%' }},{ prefetch => 'featureprops' });
-    }
-
-    if( my $desc = $params->{'description'} ) {
-        $rs = $rs->search({
-            'featureprops.value'   => { -ilike => '%'.$desc.'%' },
-            'featureprops.type_id' => { -in => [description_featureprop_types( $rs )->get_column('cvterm_id')->all] },
-            },{
-                prefetch => 'featureprops'
-            });
-    }
+    #if( my $desc = $params->{'description'} ) {
+    #    $rs = $rs->search({
+    #        'featureprops.value'   => { -ilike => '%'.$desc.'%' },
+    #        'featureprops.type_id' => { -in => [description_featureprop_types( $rs )->get_column('cvterm_id')->all] },
+    #        },{
+    #            prefetch => 'featureprops'
+    #        });
+    #}
 
 
 
@@ -115,24 +106,57 @@ sub feature_search :Path('/ajax/search/features') Args(0) {
     my $start = $params->{start};
 
     my $page = int($start / $rows)+1;
-
-
-    # get the count first
-
-    my $records_total = $rs->count();
     
-    #print STDERR "RECORDS TOTAL: $records_total\n";
+    #find all matching features without pagination for counting number of rows
+    my $count_rs = $schema->resultset("Sequence::Feature")->search(
+	{
+          -and => [
+               $or_conditions,
+               $and_conditions
+              ],
+	} ,
+        {
+            join => ['type', 'organism' ],
+	    #prefetch => 
+        }
+        );
+
+    # get the count first                                                                                                                              
+
+    my $records_total = $count_rs->count();
+
+    my $rs = $schema->resultset("Sequence::Feature")->search(   
+      {
+	  -and => [
+	       $or_conditions,
+	       $and_conditions  
+	      ],
+      } ,
+	{ 
+	    join => ['type', 'organism' ],
+	    
+	    '+select' => [ 'type.name' , 'organism.species' ],
+	    '+as'     => [ 'cvterm_name' , 'species' ],
+	    page      => $page, 
+	    rows      => $rows, 
+	    order_by  => 'me.name',
+	    distinct  => 1,
+	} 
+	);
+    
+    print STDERR "RECORDS TOTAL: $records_total\n";
     ## then get the data
     #
     #organism type name description location(s) 
     my @result;
     while (my $f = $rs->next()) { 
-	my $organism = $f->organism;
-	my $type = $f->type;
+	my $organism = $f->get_column('species');
 	my $name = $f->name;
+	my $type = $f->get_column('cvterm_name');
+	
 	my $feature_id = $f->feature_id;
 	my $description = $f->description;
-	my $location = $f->location;
+	my $location; # = $f->location;
 
 
 	push @result, [ $organism, $type, "<a href=\"/feature/$feature_id/details\">$name</a>", $description, $location ];

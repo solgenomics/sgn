@@ -105,8 +105,8 @@ jQuery(document).ready(function () {
      'serverSide': true,
      'ajax': { 'url':  '/ajax/search/features',
                'data': function(d) { 
-                  d.organism    = jQuery('#organism').val();
-                  d.type        = jQuery('#type').val();
+                  d.organism    = jQuery('#organism_select').val();
+                  d.type_id     = jQuery('#feature_type_select').val();
                   d.name        = jQuery('#name').val(); 
                   d.description = jQuery('#description').val(); 
                   
@@ -116,8 +116,8 @@ jQuery(document).ready(function () {
 
 
    jQuery('#submit_feature_search').click( function() { 
-        var organism    = jQuery('#organism').val();
-        var type        = jQuery('#type').val();
+        var organism    = jQuery('#organism_select').val();
+        var type_id     = jQuery('#feature_type_select').val();
         var name        = jQuery('#name').val(); 
         var description = jQuery('#description').val(); 
        
