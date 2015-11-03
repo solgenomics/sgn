@@ -389,20 +389,26 @@ CXGN.List.prototype = {
 	var list_name = this.listNameById(list_id);
 	
 	var html = '';
-	html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td><td></td></tr>';
-	html += '<tr><td>List name</td>';
-	html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td>';
-        html += '<td><input type="button" class="btn btn-info" id="updateNameButton" value="update"  /></td></tr>';
+	html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>';
+	html += '<tr><td>List name:<br/><input type="button" class="btn btn-primary btn-xs" id="updateNameButton" value="Update" /></td>';
+	html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
+	html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" /></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
+	html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td></tr></table>';
 
-	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input id="list_item_dialog_validate" type="button" class="btn btn-info" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr>';
-	html += '<tr><td>Add New Items</td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td><td colspan="2"><button class="btn btn-primary" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td></tr></table>';
-	html += '<table class="table table-condensed table-hover"><thead><th colspan="2"><b>List items</b> ('+items.length+')</th></tr></thead><tbody>';
+	html += '<table id="list_item_dialog_datatable" class="table table-condensed table-hover data_table"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
 
 	for(var n=0; n<items.length; n++) { 
-	    html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-warning btn-xs" value="remove" /></td></tr>';   
+	    html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
 	}
 	html += '</tbody></table>';
+	
 	jQuery('#'+div+'_div').html(html);
+
+	jQuery('.data_table').DataTable({
+	    scrollY:        '30vh',
+            scrollCollapse: true,
+            paging:         false,
+	});
 
 	for (var n=0; n<items.length; n++) { 
 	    var list_item_id = items[n][0];
@@ -968,6 +974,7 @@ function showListItems(div, list_id) {
     var l = new CXGN.List();
     jQuery('#'+div).modal("show");
     l.renderItems(div, list_id);
+    jQuery('.data_table').DataTable().columns.adjust().draw();
 }
 
 function addNewList(div_id) { 
