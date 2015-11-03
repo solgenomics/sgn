@@ -228,6 +228,25 @@ CXGN.List.prototype = {
 	return lists;
     },
 
+    publicLists: function(list_type) { 
+	var lists = [];
+	jQuery.ajax( { 
+	    url: '/list/available_public',
+	    data: { 'type': list_type },
+	    async: false,
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		lists = response;
+	    },
+	    error: function(response) { 
+		alert("An error occurred");
+	    }
+	});
+	return lists;
+    },
+
     //return the newly created list_item_id or 0 if nothing was added
     //(due to duplicates)
     addItem: function(list_id, item) { 
@@ -311,9 +330,9 @@ CXGN.List.prototype = {
 	    html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
 	    html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
 	    if (lists[i][6] == 0){
-		html += '<td><a title="Share" id="share_list_'+lists[i][1]+'" href="javascript:publicList('+lists[i][0]+')"><span class="glyphicon glyphicon-share-alt"></span></a></td></tr>';
+		html += '<td><a title="Make Public" id="share_list_'+lists[i][1]+'" href="javascript:publicList('+lists[i][0]+')"><span class="glyphicon glyphicon-share-alt"></span></a></td></tr>';
 	    } else if (lists[i][6] == 1){
-		html += '<td><a title="Share" id="share_list_'+lists[i][1]+'" href="javascript:publicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td></tr>';
+		html += '<td><a title="Make Private" id="share_list_'+lists[i][1]+'" href="javascript:publicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td></tr>';
 	    }
 	}
 	html = html + '</tbody></table>';
@@ -328,6 +347,32 @@ CXGN.List.prototype = {
 	    lo.newList(name);
 	    lo.renderLists(div);
 	});
+
+	jQuery('#view_public_lists_button').click(function() { 
+	    jQuery('#public_list_dialog').modal('show');
+	    var lo = new CXGN.List();
+	    lo.renderPublicLists('public_list_dialog_div');
+	});
+
+    },
+
+    renderPublicLists: function(div) {
+	var lists = this.publicLists();
+	var html = '';
+
+	html += '<table class="table table-hover table-condensed">';
+	html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th colspan="3">Actions</th></tr></thead><tbody>'; 
+	for (var i = 0; i < lists.length; i++) { 
+	    html += '<tr><td><b>'+lists[i][1]+'</b></td>';
+	    html += '<td>'+lists[i][3]+'</td>';
+	    html += '<td>'+lists[i][5]+'</td>';
+	    html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
+	    html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
+	    html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
+	}
+	html = html + '</tbody></table>';
+
+	jQuery('#'+div).html(html);
     },
     
     listNameById: function(list_id) { 
@@ -880,20 +925,20 @@ function publicList(list_id) {
 	    if (r.error) {
 		alert(r.error);
 	    } else if (r.r == 1) {
-		var lo = new CXGN.List();
-		lo.renderLists('list_dialog');
-		alert("List set to not public");
+		alert("List set to Private");
 	    } else if (r.r == 0) {
-		var lo = new CXGN.List();
-		lo.renderLists('list_dialog');
-		alert("List set to public");
+		alert("List set to Public");
 	    }
 	},
 	error: function() {
 	    alert("Error Setting List to Public! List May Not Exist.");
 	}
     });
+    var lo = new CXGN.List();
+    lo.renderLists('list_dialog');
 }
+
+
 	
 function deleteItemLink(list_item_id) { 
     var lo = new CXGN.List();

@@ -130,6 +130,29 @@ sub available_lists {
     return \@lists;
 }
 
+sub available_public_lists { 
+    my $dbh = shift;
+    my $requested_type = shift;
+
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name ORDER BY list.name";
+    my $h = $dbh->prepare($q);
+    $h->execute();
+
+    my @lists = ();
+    while (my ($id, $name, $desc, $item_count, $type_id, $type) = $h->fetchrow_array()) { 
+	if ($requested_type) {
+	    if ($type && ($type eq $requested_type)) { 
+		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
+	    }
+	}
+	else { 
+	    
+	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
+	}
+    }
+    return \@lists;
+}
+
 sub delete_list { 
     my $dbh = shift;
     my $list_id = shift;
