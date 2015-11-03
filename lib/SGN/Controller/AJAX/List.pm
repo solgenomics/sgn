@@ -305,7 +305,27 @@ sub list_public : Path('/list/public') Args(0) {
     } else {
 	die;
     }
-}    
+}
+
+sub copy_public : Path('/list/public/copy') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id"); 
+
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return; 
+    }
+    my $user_id = $self->get_user($c);
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id, owner=>$user_id });
+    my $copied = $list->copy_public();
+    if ($copied) {
+	$c->stash->{rest} = { success => 'true' };
+    } else {
+	die;
+    }
+}
 
 sub add_bulk : Path('/list/add/bulk') Args(0) { 
     my $self = shift;

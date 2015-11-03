@@ -383,6 +383,19 @@ sub list_public {
     return ($public, $rows_affected);
 }    
 
+sub copy_public { 
+    my $self = shift;
+
+    my $h = $self->dbh->prepare("INSERT INTO sgn_people.list (name, description, owner, type_id) SELECT name, description, ?, type_id FROM sgn_people.list WHERE list_id=? RETURNING list_id");
+    $h->execute($self->owner(), $self->list_id());
+    my $list_id = $h->fetchrow_array();
+
+    $h = $self->dbh->prepare("INSERT INTO sgn_people.list_item (content, list_id) SELECT content, ? FROM sgn_people.list_item WHERE list_id=?");
+    $h->execute($list_id, $self->list_id());
+    
+    return $list_id;
+}    
+
 sub exists_element {
     my $self =shift;
     my $item = shift;

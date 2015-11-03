@@ -366,9 +366,9 @@ CXGN.List.prototype = {
 	    html += '<tr><td><b>'+lists[i][1]+'</b></td>';
 	    html += '<td>'+lists[i][3]+'</td>';
 	    html += '<td>'+lists[i][5]+'</td>';
-	    html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
-	    html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
-	    html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
+	    html += '<td><a title="View" id="view_public_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
+	    html += '<td><a target="_blank" title="Download" id="download_public_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
+	    html += '<td><a title="Copy to Your Lists" id="copy_public_list_'+lists[i][1]+'" href="javascript:copyPublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-plus"></span></a></td>';
 	}
 	html = html + '</tbody></table>';
 
@@ -938,7 +938,25 @@ function publicList(list_id) {
     lo.renderLists('list_dialog');
 }
 
-
+function copyPublicList(list_id) { 
+    $.ajax({
+	"url": "/list/public/copy",
+	"type": "POST",
+	"data": {'list_id': list_id},
+	success: function(r) {
+	    if (r.error) {
+		alert(r.error);
+	    } else if (r.success == 'true') {
+		alert("Public List Copied to Your Lists.");
+	    }
+	},
+	error: function() {
+	    alert("Error Copying Public List! List May Not Exist.");
+	}
+    });
+    var lo = new CXGN.List();
+    lo.renderLists('list_dialog');
+}
 	
 function deleteItemLink(list_item_id) { 
     var lo = new CXGN.List();
