@@ -56,13 +56,11 @@ sub feature_search :Path('/ajax/search/features') Args(0) {
 	$and_conditions->{'me.name'} = { ilike => '%' . lc( $params->{name} ) . '%' } ;
     }
 
-
-    #my $rs = $schema->resultset('Sequence::Feature')->search(
-#	{'featureloc_features.locgroup' => 0},
-#	{prefetch => ['featureloc_features']}
-#	);
-
-
+    if (exists($params->{description} ) && $params->{description} ) {
+	#searching props is too slow. need to find another solution. Maybe a view?
+	#$and_conditions->{'featureprops.value'} = { -ilike => '%'.$params->{description}.'%' } ; 
+    }
+    
     #my $featureloc_prefetch = { prefetch => { 'featureloc_features' => 'srcfeature' }};
     #if( my $srcfeature_id = $params->{'srcfeature_id'} ) {
     #   $rs = $rs->search({ 'featureloc_features.srcfeature_id' => $srcfeature_id }, $featureloc_prefetch );
@@ -110,37 +108,39 @@ sub feature_search :Path('/ajax/search/features') Args(0) {
     #find all matching features without pagination for counting number of rows
     my $count_rs = $schema->resultset("Sequence::Feature")->search(
 	{
-          -and => [
-               $or_conditions,
-               $and_conditions
-              ],
+	    'featureloc_features.locgroup' => 0,                       
+	    -and => [
+		$or_conditions,
+		$and_conditions
+		],
 	} ,
         {
-            join => ['type', 'organism' ],
-	    #prefetch => 
+            join => ['type', 'organism', 'featureloc_features' ],
+	    distinct => 1,
         }
         );
-
+    
     # get the count first                                                                                                                              
 
     my $records_total = $count_rs->count();
 
     my $rs = $schema->resultset("Sequence::Feature")->search(   
       {
+	  'featureloc_features.locgroup' => 0,
 	  -and => [
-	       $or_conditions,
-	       $and_conditions  
+	      $or_conditions,
+	      $and_conditions  
 	      ],
       } ,
 	{ 
-	    join => ['type', 'organism' ],
-	    
+	    join => ['type', 'organism', 'featureloc_features' ],
+
 	    '+select' => [ 'type.name' , 'organism.species' ],
 	    '+as'     => [ 'cvterm_name' , 'species' ],
 	    page      => $page, 
 	    rows      => $rows, 
 	    order_by  => 'me.name',
-	    distinct  => 1,
+	    distinct => 1,
 	} 
 	);
     
