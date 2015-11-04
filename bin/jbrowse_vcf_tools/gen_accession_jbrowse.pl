@@ -6,11 +6,13 @@ gen_accession_jbrowse.pl - creates jbrowse instances that include base tracks an
 
 =head1 SYNOPSIS
 
-    gen_accession_jbrowse.pl -v [absolute path through base instance to dir containing vcfs] -d [name of database to search for trials] -h [db host]
+    gen_accession_jbrowse.pl -v [absolute path through base instance to dir containing vcfs] -b [absolute path to base instance] -u [path from base jbrowse dir to dir containing vcfs] -d [name of database to search for trials] -h [db host]
 
 =head1 COMMAND-LINE OPTIONS
  
  -v absolute path through base instance to dir containing vcfs
+ -b absolute path to base instance
+ -u path from base jbrowse dir to dir containing vcfs
  -h database hostname
  -d database name
 
@@ -29,21 +31,19 @@ use Getopt::Std;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 
-our ($opt_v, $opt_h, $opt_d);
+our ($opt_v, $opt_b, $opt_u, $opt_h, $opt_d);
 
 #-----------------------------------------------------------------------
 # define paths & array of vcf_file names. Open file handles to read accession lists and append datasets to jbrowse.conf 
 #-----------------------------------------------------------------------
 
-getopts('v:h:d:');
+getopts('v:b:u:h:d:');
 
 my $vcf_dir_path = $opt_v;
 my $dbhost = $opt_h;
 my $dbname = $opt_d;
-my $link_path = $vcf_dir_path;
-    $link_path =~ s:(.+)/.+/.+:$1:;
-my $url_path = $vcf_dir_path;
-$url_path =~ s:.+(/.+/.+/.+/.+/.+/.+/.+$):$1:;
+my $link_path = $opt_b;
+my $url_path = $opt_u;
 
 my ($file_type,$out,$header,@tracks,$imp_track,$filt_track,$h,$q,$dbh);
 my @files = ` dir -GD -1 --hide *.tbi $vcf_dir_path ` ; 
