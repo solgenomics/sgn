@@ -1,0 +1,215 @@
+<%args>
+  $preselected_database => ''
+  $preselected_category => ''
+  $dataset_groups => []
+  $databases => {}
+  @input_options => ()
+  $preload_id => ''
+  $preload_type => ''
+</%args>
+
+<%perl>
+  use JSON::Any;
+
+  my $menus = {};
+  foreach my $d (keys(%$databases)) { 
+     $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", params=>"class\=\"form-control input-sm blast_select_box\"", id=>"database", choices => [ @{$databases->{$d}} ], selected=> $preselected_database );
+  }
+  
+  my $preload = "";
+  if ($preload_id && $preload_type) { 
+    $preload = $preload_id;
+  }
+  
+</%perl>
+
+
+<& /page/page_title.mas, title=>"In Silico PCR" &>
+
+<form id="PCRform" method="post" action="/tools/pcr_results/" enctype="multipart/form-data">
+<&| /page/info_section.mas, id=>"pcr_parameter_section", title=>"PCR Primers", collapsible=>1, collapsed=>0, subtitle=>'<button type="button" class="btn btn-link pull-right" data-toggle="modal" data-target="#pcr_help" style="padding:0px">Help <span class="glyphicon glyphicon-question-sign"></span></button>' &>
+  <table>
+  	<tr>
+  		<td>
+      <label class="blast_select_label" for="fprimer">Forward Primer </label>
+      	</td>
+      	<td>
+      		<input id="sequence" name="sequence" style="display:none"/>
+      		<input id="fprimer" class="form-control" size="65" value="" name="fprimer" />
+      	</td>
+      </tr>
+  	<tr>
+  		<td></td>
+      <td>
+  			<input id="frevcom" type="checkbox" name="frevcom"/> <label class="blast_select_label" for="frevcom">Reverse Complement </label>
+      </td>
+    </tr>
+  	<tr>
+  		<td>
+        <label class="blast_select_label" for="rprimer">Reverse Primer </label>
+    	</td>
+    	<td>
+    		<input id="rprimer" class="form-control" size="65" value="" name="rprimer" />
+    	</td>
+    </tr>
+  	<tr>
+  		<td>
+      </td>
+      <td>
+  			<input id="rrevcom" type="checkbox" name="rrevcom" /> <label class="blast_select_label" for="rrevcom">Reverse Complement </label>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label class="blast_select_label" for="productLength">Product Maximum Length </label>
+      </td>
+      <td>
+        <input class="blast_select_box form-control" size="5" value="5000" name="productLength" />
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label class="blast_select_label" for="allowedMismatches">Allowed Mismatches</label>
+      </td>
+      <td>
+        <input class="blast_select_box form-control" size="5" value="0" name="allowedMismatches" />
+      </td>
+    </tr>
+  </table>
+</&>
+
+
+<&| /page/info_section.mas, id=>"blast_parameter_section", title=>"BLAST parameters", collapsible=>1, collapsed=>0, subtitle=>'<button type="button" class="btn btn-link pull-right" data-toggle="modal" data-target="#blast_help" style="padding:0px">Help <span class="glyphicon glyphicon-question-sign"></span></button>' &>
+  <input type="hidden" name="outformat" value="0" />
+  
+  <div class="form-group form-inline">
+    <table>
+      <tr style="display:none">
+        <td>
+        </td>
+        <td>  
+          <& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select", params=>"class\=\"form-control input-sm blast_select_box\"", selected=>"$preselected_category" &>
+          <br>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label class="blast_select_label" for="database_select">Database </label>
+        </td>
+        <td>
+          <span id='database_select' ></span>
+          <br>
+        </td>
+      </tr>
+      <tr>
+      	<td>
+          <label class="blast_select_label" for="matrix">Substitution Matrix</label>
+      	</td>
+          <td >
+              <select name="matrix" class="form-control input-sm blast_select_box">
+              <option value="BLOSUM62">BLOSUM62 (default)</option>
+              <option value="BLOSUM80">BLOSUM80 (recent divergence)</option>
+              <option value="BLOSUM45">BLOSUM45 (ancient divergence)</option>
+              <option value="PAM30">PAM30</option>
+              <option value="PAM70">PAM70</option>
+              </select>
+          </td>
+      </tr>
+      <tr>
+      	<td>
+        <label class="blast_select_label" for="expect">e value</label>
+      	</td>
+          <td >
+          	<input class="blast_select_box form-control" type="text" size="10" value="10" name="expect" />
+          </td>
+      </tr>
+      <tr>
+        <td>
+          <label class="blast_select_label" for="filterq">Filter low complexity</label>
+        
+        </td>
+          <td><input type="checkbox" checked="checked" name="filterq" /></td>
+      </tr>
+    </table>
+  </div>
+        
+</&>
+</form>
+    <center>
+      <button id="run_blast" class="btn btn-primary" type="submit" form="PCRform" formaction="/tools/pcr_results" formmethod="post" formenctype="multipart/form-data">Run</button>
+    </center>
+
+
+
+<div class="modal fade" id="pcr_help" role="dialog">
+  <div class="modal-dialog">
+  
+    <!-- Modal content-->
+  <div class="modal-content">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">PCR Parameters Help</h4>
+    </div>
+    
+    <div class="modal-body">
+      <p></p>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+  </div>
+    
+  </div>
+</div>
+
+<div class="modal fade" id="blast_help" role="dialog">
+  <div class="modal-dialog">
+  
+    <!-- Modal content-->
+  <div class="modal-content">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">BLAST Parameters Help</h4>
+    </div>
+    
+    <div class="modal-body">
+      <p></p>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+  </div>
+    
+  </div>
+</div>
+
+
+
+<script>
+
+  jQuery(document).ready(function() {
+    swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
+    
+    function swap_menu(group_id) { 
+      var menu_html = eval( <% JSON::Any->encode($menus) %>);
+      jQuery('#database_select').html(menu_html[group_id]);
+    }
+    
+  });
+
+</script>
+  
+<style>
+.blast_select_box {
+  width:200px;
+  margin-right:10px;
+}
+
+.blast_select_label {
+  width:200px;
+  margin-right:10px;
+  line-height: 32px;
+}
+</style>
