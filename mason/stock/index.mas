@@ -175,6 +175,11 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a href="javascript:Tools.toggleContent('add_phenotype_form', 'stock_phenotype')" >[Add phenotype]</a> | :   qq |<span class = "ghosted"> [Add phenotype]</span> |;
 
 my $edit_privs = $curator || $submitter || $sequencer;
+
+my $project_name = lc($c->config->{project_name});
+my $test_url = "/jbrowse_$project_name/current/data/json/accessions/" . $stock_id . "/trackList.json";
+my $jbrowse_url = "/jbrowse/?data=data%2Fjson%2Faccessions%2F" . $stock_id;
+
 </%perl>
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock"] &>
 
@@ -429,10 +434,12 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 % }       
   </&>
 % }
-
 </&>
 
 
+<&| /page/info_section.mas, title=>"Accession JBrowse", collapsible => 1 , collapsed => 0 &>
+<p id="jbrowse_check">[loading...]</p>
+</&>
 
 
 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
@@ -441,12 +448,27 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 <script>
   jQuery(document).ready(function() { 
     stock_detail_page_init_dialogs();
+    prepareJbrowse();
 
     jQuery('#remove_parent_link').click( function() { 
       jQuery('#remove_parent_dialog').dialog("open");
       get_remove_parents_list(<% $stock_id %>);
     });
 
-
+    function prepareJbrowse () { //ajax function to test for existence of given jbrowse trial url
+    jQuery.ajax({
+    type: 'GET',
+    url: "<% $test_url %>",
+    statusCode: {
+        200: function () {  // if page is found, create and display link
+		jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View vcf tracks for <% $uniquename %> in JBrowse</a>');
+	},
+	404: function () { // if page not found, display message that jbrowse instance wasn't found
+		jQuery('#jbrowse_check').html(" <i>No Jbrowse instance found for this accession</i>.");
+     		}
+	}
   });
+  }
+
+});
 </script>
