@@ -114,6 +114,64 @@ foreach my $list_type ( keys %test_lists ) {
 
 }
 
+$d->find_element_ok("view_public_lists_button", "id", "find public list button")->click();
+
+sleep(1);
+
+$d->find_element_ok("view_public_list_johndoe_1_public", "id", "view johndoe1public list")->click();
+
+sleep(1);
+
+$d->find_element_ok("close_list_item_dialog", "id", "close public list item dialog")->click();
+
+sleep(1);
+
+$d->find_element_ok("copy_public_list_johndoe_1_public", "id", "copy johndoe public list")->click();
+
+sleep(1);
+
+$d->accept_alert_ok();
+
+sleep(1);
+
+$d->find_element_ok("copy_public_list_janedoe_1_public", "id", "copy janedoe public list")->click();
+
+sleep(1);
+
+$d->accept_alert_ok();
+
+sleep(1);
+
+$d->find_element_ok("close_public_list_item_dialog", "id", "close public list dialog")->click();
+
+sleep(1);
+
+$d->find_element_ok("share_list_johndoe_1_private", "id", "make private list public")->click();
+
+sleep(1);
+
+$d->accept_alert_ok();
+
+sleep(1);
+
+$d->find_element_ok("view_public_lists_button", "id", "view public lists")->click();
+
+sleep(1);
+
+$d->find_element_ok("view_public_list_johndoe_1_private", "id", "view new public list")->click();
+
+sleep(1);
+
+$d->find_element_ok("close_list_item_dialog", "id", "close new public list item dialog")->click();
+
+sleep(1);
+
+$d->find_element_ok("close_public_list_item_dialog", "id", "close new public list dialog")->click();
+
+sleep(1);
+
+
+
 print "Delete test list...\n";
 
 $d->find_element_ok("delete_list_update_list_name", "id", "find delete test list button")->click();
