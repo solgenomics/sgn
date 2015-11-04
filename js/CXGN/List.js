@@ -470,9 +470,9 @@ CXGN.List.prototype = {
 	html += '<td>'+list_name+'</td></tr>';
 	html += '<tr><td>Type:</td><td>'+list_type+'</td></tr>';
 	html += '</table>';
-	html += '<table id="public_list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
+	html += '<table id="public_list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th></tr></thead><tbody>';
 	for(var n=0; n<items.length; n++) { 
-	    html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
+	    html = html +'<tr><td>'+ items[n][1] + '</td></tr>';
 	}
 	html += '</tbody></table>';
 	
