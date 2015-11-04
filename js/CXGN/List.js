@@ -387,6 +387,13 @@ CXGN.List.prototype = {
 	}
     },
 
+    publicListNameById: function(list_id) { 
+	lists = this.publicLists();
+	for (var n=0; n<lists.length; n++) { 
+	    if (lists[n][0] == list_id) { return lists[n][1]; }
+	}
+    },
+
     renderItems: function(div, list_id) { 
 	var list_data = this.getListData(list_id);
 	var items = list_data.elements;
@@ -455,9 +462,14 @@ CXGN.List.prototype = {
 	var list_data = this.getListData(list_id);
 	var items = list_data.elements;
 	var list_type = list_data.type_name;
-	var list_name = this.listNameById(list_id);
+	var list_name = this.publicListNameById(list_id);
 	
 	var html = '';
+	html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>';
+	html += '<tr><td>List name:</td>';
+	html += '<td>'+list_name+'</td></tr>';
+	html += '<tr><td>Type:</td><td>'+list_type+'</td></tr>';
+	html += '</table>';
 	html += '<table id="public_list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
 	for(var n=0; n<items.length; n++) { 
 	    html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
