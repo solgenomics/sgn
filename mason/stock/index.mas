@@ -279,10 +279,10 @@ function jqueryStuff() {
   $collapsible = 1;
  }
  my $add_parent_link = "Add parent";
- if ($person_id && $submitter) { $add_parent_link = qq | <a id="add_parent_link" >Add parent</a> |; }
+ if ($person_id && ($submitter || $curator || $sequencer)) { $add_parent_link = qq | <a id="add_parent_link" >Add parent</a> |; }
 
 my $remove_parent_link = "Remove parent";
-if ($person_id && $submitter) { $remove_parent_link = qq | <a id="remove_parent_link">Remove parent</a> |; }
+if ($person_id && ($submitter || $curator || $sequencer)) { $remove_parent_link = qq | <a id="remove_parent_link">Remove parent</a> |; }
 
 </%perl>
 
