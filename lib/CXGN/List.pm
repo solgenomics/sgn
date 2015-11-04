@@ -363,7 +363,7 @@ sub list_size {
     return $count;
 }    
 
-sub list_public { 
+sub toggle_public { 
     my $self = shift;
 
     my $h = $self->dbh->prepare("SELECT is_public FROM sgn_people.list WHERE list_id=?");

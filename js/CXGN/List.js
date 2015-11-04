@@ -330,9 +330,9 @@ CXGN.List.prototype = {
 	    html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
 	    html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
 	    if (lists[i][6] == 0){
-		html += '<td><a title="Make Public" id="share_list_'+lists[i][1]+'" href="javascript:publicList('+lists[i][0]+')"><span class="glyphicon glyphicon-share-alt"></span></a></td></tr>';
+		html += '<td><a title="Make Public" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-share-alt"></span></a></td></tr>';
 	    } else if (lists[i][6] == 1){
-		html += '<td><a title="Make Private" id="share_list_'+lists[i][1]+'" href="javascript:publicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td></tr>';
+		html += '<td><a title="Make Private" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td></tr>';
 	    }
 	}
 	html = html + '</tbody></table>';
@@ -928,9 +928,9 @@ function deleteList(list_id) {
     }
 }
 
-function publicList(list_id) { 
+function togglePublicList(list_id) { 
     $.ajax({
-	"url": "/list/public/",
+	"url": "/list/public/toggle",
 	"type": "POST",
 	"data": {'list_id': list_id},
 	success: function(r) {

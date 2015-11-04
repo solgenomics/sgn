@@ -311,7 +311,7 @@ sub add_item :Path('/list/item/add') Args(0) {
     }
 }
 
-sub list_public : Path('/list/public') Args(0) { 
+sub toggle_public_list : Path('/list/public/toggle') Args(0) { 
     my $self = shift;
     my $c = shift;
     my $list_id = $c->req->param("list_id"); 
@@ -323,7 +323,7 @@ sub list_public : Path('/list/public') Args(0) {
     }
 
     my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
-    my ($public, $rows_affected) = $list->list_public();
+    my ($public, $rows_affected) = $list->toggle_public();
     if ($rows_affected == 1) {
 	$c->stash->{rest} = { r => $public };
     } else {
@@ -331,18 +331,19 @@ sub list_public : Path('/list/public') Args(0) {
     }
 }
 
-sub copy_public : Path('/list/public/copy') Args(0) { 
+sub copy_public_list : Path('/list/public/copy') Args(0) { 
     my $self = shift;
     my $c = shift;
-    my $list_id = $c->req->param("list_id"); 
+    my $list_id = $c->req->param("list_id");
 
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my $public = $list->check_if_public();
     my $user_id = $self->get_user($c);
-    if (!$user_id) { 
-	$c->stash->{rest} = { error => 'You must be logged in to use lists' };
+    if (!$user_id || $public == 0) { 
+	$c->stash->{rest} = { error => 'You must be logged in to use lists and list must be public!' };
 	return; 
     }
 
-    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
     my $copied = $list->copy_public($user_id);
     if ($copied) {
 	$c->stash->{rest} = { success => 'true' };
