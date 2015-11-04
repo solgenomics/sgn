@@ -6,7 +6,7 @@ CXGN::Fieldbook::TraitInfo - a module to get information from a trait to build t
 
 =head1 USAGE
 
- my $trait_info_lookup = CXGN::Fieldbook::TraitInfo->new({ chado_schema => $chado_schema, db_name => $db_name, trait_name => $trait_name });
+ my $trait_info_lookup = CXGN::Fieldbook::TraitInfo->new({ chado_schema => $chado_schema, db_name => $db_name, trait_accession => $trait_accession });
  my $trait_info = $trait_info_lookup->get_trait_info();  #returns a string to use for the fieldbook trait file or returns false if not found
 
 =head1 DESCRIPTION
@@ -16,6 +16,7 @@ Looks up a trait and builds a string to use in the fieldbook trait file.
 =head1 AUTHORS
 
  Jeremy D. Edwards (jde22@cornell.edu)
+ Naama Menda (nm249@cornell.edu)
 
 =cut
 
@@ -33,7 +34,7 @@ has 'db_name' => (
 		  isa => 'Str',
 		  required => 1,
 		 );
-has 'trait_name' => (
+has 'trait_accession' => (
 		  is => 'ro',
 		  isa => 'Str',
 		  required => 1,
@@ -53,8 +54,8 @@ sub get_trait_info {
 
   my $trait_cvterm = $chado_schema->resultset("Cv::Cvterm")
     ->find( {
-	     'dbxref.db_id' => $db_rs->first()->db_id(),
-	     'name'=> $self->get_trait_name(),
+	     'dbxref.db_id'     => $db_rs->first()->db_id(),
+	     'dbxref.accession' => $self->get_trait_accession(),
 	    },
 	    {
 	     'join' => 'dbxref'

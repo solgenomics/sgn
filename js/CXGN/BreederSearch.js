@@ -104,6 +104,8 @@ window.onload = function initialize() {
 	var select4 = jQuery('#select4').val();
 	var c1_data = jQuery('#c1_data').val() || [];
 
+	show_list_total_count('#c1_data_count', jQuery('#c1_data').text().split("\n").length-1, c1_data.length);
+
 	// as soon as a data item is selected, show the next menu select
 	//
 	var second_choices = copy_hash(choices);
@@ -146,6 +148,12 @@ window.onload = function initialize() {
 	function() { 
 	    selectAllOptions(document.getElementById('c1_data'));
             show_list_total_count('#c1_data_count', jQuery('#c1_data').text().split("\n").length-1, jQuery('#c1_data').val().length);
+
+	    var select1 = jQuery('#select1').val();
+	    var second_choices = copy_hash(choices);
+	    delete second_choices[select1];
+	    var html = format_options(second_choices);
+	    jQuery('#select2').html(html);
 	}
     );
 
@@ -214,6 +222,8 @@ window.onload = function initialize() {
 	var c1_data = jQuery('#c1_data').val() || [];
 	var c2_data = jQuery('#c2_data').val() || [];
 
+	show_list_total_count('#c2_data_count', jQuery('#c2_data').text().split("\n").length-1, c2_data.length);
+
 	var third_choices = copy_hash(choices);
 	delete third_choices[select1];
 	delete third_choices[select2];
@@ -257,6 +267,14 @@ window.onload = function initialize() {
 	function() { 
 	    selectAllOptions(document.getElementById('c2_data'));
             show_list_total_count('#c2_data_count', jQuery('#c2_data').text().split("\n").length-1, jQuery('#c2_data').val().length);
+
+	    var select1 = jQuery('#select1').val();
+	    var select2 = jQuery('#select2').val();
+	    var third_choices = copy_hash(choices);
+	    delete third_choices[select1];
+	    delete third_choices[select2];
+	    var html = format_options(third_choices);
+	    jQuery('#select3').html(html);
 	}
     );
     
@@ -330,6 +348,8 @@ window.onload = function initialize() {
 	var c1_data = jQuery('#c1_data').val() || [];
 	var c2_data = jQuery('#c2_data').val() || [];
 	var c3_data = jQuery('#c3_data').val() || [];
+
+	show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, c3_data.length);
 	
 	var stock_data;
 
@@ -480,6 +500,13 @@ window.onload = function initialize() {
 
 	//enable_ui();
 //    });    
+
+    jQuery('#stock_data').change(function() { 
+	var stock_data = jQuery('#stock_data').val() || [];
+
+	show_list_total_count('#stock_count', jQuery('#stock_data').text().split("\n").length-1, stock_data.length);
+
+    });
 
     jQuery('#stock_select_all').click(
 	function() { 

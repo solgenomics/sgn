@@ -68,14 +68,15 @@ sub download {
     my $transform = $lt->transform($schema, "traits_2_trait_ids", \@trait_list);
 
     if (@{$transform->{missing}}>0) { 
-	print STDERR "Warning: Some traits could not be found. ".join(",",@{$transform->{missing}})."\n";
+    	print STDERR "Warning: Some traits could not be found. ".join(",",@{$transform->{missing}})."\n";
     }
     my @trait_ids = @{$transform->{transform}};
-    
+
     my %cvinfo = ();
     foreach my $t (@trait_ids) { 
 	my $trait = CXGN::Trait->new( { bcs_schema=> $schema, cvterm_id => $t });
 	$cvinfo{$trait->display_name()} = $trait;
+	print STDERR "**** Trait = " . $trait->display_name . "\n\n";
     }
 									       
     for (my $i = 0; $i < @trait_list; $i++) { 
@@ -84,6 +85,7 @@ sub download {
 	}
 	else { 
 	    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
+	    next;
 	}
     
 	my $plot_count = scalar(keys(%design));
