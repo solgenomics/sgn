@@ -170,7 +170,17 @@ $d->find_element_ok("close_public_list_item_dialog", "id", "close new public lis
 
 sleep(1);
 
+$d->find_element_ok("view_list_janedoe_1_public", "id", "view new public list")->click();
 
+sleep(1);
+
+$d->find_element_ok("747", "id", "delete item from list")->click();
+
+sleep(1);
+
+$d->find_element_ok("close_list_item_dialog", "id", "close new public list item dialog")->click();
+
+sleep(1);
 
 print "Delete test list...\n";
 
