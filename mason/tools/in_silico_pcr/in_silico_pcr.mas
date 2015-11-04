@@ -34,8 +34,8 @@
       <label class="blast_select_label" for="fprimer">Forward Primer </label>
       	</td>
       	<td>
-      		<input id="sequence" name="sequence" style="display:none"/>
       		<input id="fprimer" class="form-control" size="65" value="" name="fprimer" />
+          <p id="fwd_primer_alert" class="text-danger"></p>
       	</td>
       </tr>
   	<tr>
@@ -136,7 +136,8 @@
 </&>
 </form>
     <center>
-      <button id="run_blast" class="btn btn-primary" type="submit" form="PCRform" formaction="/tools/pcr_results" formmethod="post" formenctype="multipart/form-data">Run</button>
+      <button id="run_blast" class="btn btn-primary">Run</button>
+      <!-- <button id="run_blast" class="btn btn-primary" type="submit" form="PCRform" formaction="/tools/pcr_results" formmethod="post" formenctype="multipart/form-data">Run</button> -->
     </center>
 
 
@@ -192,6 +193,16 @@
   jQuery(document).ready(function() {
     swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
     
+    alert($("#fprimer").val());
+    
+    $("#run_blast").click(function(){
+      
+      if ($("#fprimer").val().length < 15) {
+        $('#fprimer').addClass("alert-danger");
+        $('#fwd_primer_alert').html("Primer must be 15 nt long at least");
+      }
+    });
+      
     function swap_menu(group_id) { 
       var menu_html = eval( <% JSON::Any->encode($menus) %>);
       jQuery('#database_select').html(menu_html[group_id]);
@@ -202,6 +213,7 @@
 </script>
   
 <style>
+
 .blast_select_box {
   width:200px;
   margin-right:10px;
