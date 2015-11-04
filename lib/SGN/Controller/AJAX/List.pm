@@ -41,15 +41,17 @@ sub get_list_data_action :Path('/list/data') Args(0) {
 
     my $list_id = $c->req->param("list_id");
 
-    my $type_id = ""; # fIX this
-    my $list_type = ""; #fix this
-    my $error = $self->check_user($c, $list_id);
-    if ($error) { 
-	$c->stash->{rest} = { error => $error };
-	return; 
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my $public = $list->check_if_public();
+    if ($public == 0) {
+	my $error = $self->check_user($c, $list_id);
+	if ($error) { 
+	    $c->stash->{rest} = { error => $error };
+	    return; 
+	}
     }
 
-    my $list = $self->retrieve_list($c, $list_id);
+    $list = $self->retrieve_list($c, $list_id);
 
     my $metadata = $self->get_list_metadata($c, $list_id);
 
@@ -200,6 +202,28 @@ sub all_types : Path('/list/alltypes') :Args(0) {
     $c->stash->{rest} = $all_types;
 }
 
+sub download_list :Path('/list/download') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id");
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my $public = $list->check_if_public();
+    if ($public == 0) {
+	my $error = $self->check_user($c, $list_id);
+	if ($error) { 
+	    $c->res->content_type("text/plain");
+	    $c->res->body($error);
+	    return; 
+	}
+    }
+
+    $list = $self->retrieve_list($c, $list_id);
+    
+    $c->res->content_type("text/plain");
+    $c->res->body(join "\n", map { $_->[1] }  @$list);
+}
+
 =head2 available_lists()
 
  Usage:
@@ -312,14 +336,14 @@ sub copy_public : Path('/list/public/copy') Args(0) {
     my $c = shift;
     my $list_id = $c->req->param("list_id"); 
 
-    my $error = $self->check_user($c, $list_id);
-    if ($error) { 
-	$c->stash->{rest} = { error => $error };
+    my $user_id = $self->get_user($c);
+    if (!$user_id) { 
+	$c->stash->{rest} = { error => 'You must be logged in to use lists' };
 	return; 
     }
-    my $user_id = $self->get_user($c);
-    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id, owner=>$user_id });
-    my $copied = $list->copy_public();
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my $copied = $list->copy_public($user_id);
     if ($copied) {
 	$c->stash->{rest} = { success => 'true' };
     } else {
@@ -628,18 +652,19 @@ sub retrieve_list : Private {
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
-    
-    my $error = $self->check_user($c, $list_id);
-    if ($error) { 
-	$c->stash->{rest} = { error => $error };
-	return;
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my $public = $list->check_if_public();
+    if ($public == 0) {
+	my $error = $self->check_user($c, $list_id);
+	if ($error) { 
+	    $c->stash->{rest} = { error => $error };
+	    return;
+	}
     }
-
-    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-
     my $list_elements_with_ids = $list->retrieve_elements_with_ids($list_id);
     
-    print STDERR "LIST ELEMENTS WITH IDS: ".Dumper($list_elements_with_ids);
+    #print STDERR "LIST ELEMENTS WITH IDS: ".Dumper($list_elements_with_ids);
     return $list_elements_with_ids;
 }
 
@@ -709,15 +734,12 @@ sub check_user : Private {
 
     if (!$user_id) { 
 	$error = "You must be logged in to manipulate this list.";
-
     }
 
-    if ($self->get_list_owner($c, $list_id) != $user_id) { 
+    elsif ($self->get_list_owner($c, $list_id) != $user_id) { 
 	$error = "You have insufficient privileges to manipulate this list.";
-	
     }
     return $error;
-
 }
 
 
