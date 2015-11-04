@@ -73,7 +73,7 @@ my %searches = (
                 },
     locus_allele      => { sf_class    => 'CXGN::Phenome',
                            result_desc => 'locus or allele identifiers',
-                           search_path => '/search/locus_search.pl',
+                           search_path => '/search/locus',
                        },
 
     # note that there is also another method of searching using site feature xrefs

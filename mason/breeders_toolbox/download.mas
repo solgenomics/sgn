@@ -94,9 +94,9 @@ $(document).ready(function() {
       var trait_validation = 1;
       if (trait_list_id) { trait_validation = lo.validate(trait_list_id, 'traits', true); } 
 
-      if (!accession_list_id || ! trial_list_id || ! trait_list_id) {
+      if (!accession_list_id || !trial_list_id || !trait_list_id) {
       	 enable_ui();
-      	 alert("You need to select an accession, a trail, and a trait list!");
+      	 alert("You need to select an accession, a trial, and a trait list!");
 	 return; 
       }
 
@@ -124,7 +124,7 @@ $(document).ready(function() {
       $('#download_form').submit();
       
       var fileDownloadCheckTimer;
-      fileDownloadCheckTimer = window.setInterval(function () {
+      fileDownloadCheckTimer = window.setInterval(function () { //checks for response cookie to keep working modal enabled until file is ready for download
       			     var cookieValue = $.cookie('fileDownloadToken');
 			     if (cookieValue == token) {
 			     	window.clearInterval(fileDownloadCheckTimer);

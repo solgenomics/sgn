@@ -31,7 +31,7 @@ sub render {
     my $self        = shift;
     my $select_id   = $self->get_id();
     my $select_name = $self->get_field_name();
-    my $box         = qq { <select id="$select_id" name="$select_name"> };
+    my $box         = qq { <select id="$select_id" class=\"form-control\" name="$select_name"> };
     foreach my $s ( $self->get_selections() ) {
         my $yes = "";
 
