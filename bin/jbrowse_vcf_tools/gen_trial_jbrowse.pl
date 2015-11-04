@@ -56,6 +56,8 @@ my $schema= Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh() });
 
 open (CONF, ">>", "../../../jbrowse.conf") || die "Can't open conf file jbrowse.conf!\n";
 
+open (LOG, ">>", "gen_trial.log") || die "Can't open log file!\n";
+
 #-----------------------------------------------------------------------
 # connect to database and extract trial names and ids
 #-----------------------------------------------------------------------
@@ -116,7 +118,8 @@ my $control_names_ref = $trial_layout->get_control_names();
 #-----------------------------------------------------------------------
 
     for my $accession_name (@accession_names) {
-	print "Working on trial $trial_name and accession $accession_name! \n";
+	print STDERR "Working on trial $trial_name and accession $accession_name! \n";
+	print LOG "Working on trial $trial_name and accession $accession_name! \n";
 
     for my $file (@files) {
 	chomp $file;
@@ -125,6 +128,7 @@ my $control_names_ref = $trial_layout->get_control_names();
         $_ =~ s/([^.]+)_2015_V6.*/$1/s;
         next if ($_ ne $accession_name);
         print STDERR "Matched vcf file basename $_ to accession name $accession_name !\n";
+	print LOG "Matched vcf file basename $_ to accession name $accession_name !\n";
 	$file_type = $file;
         $file_type =~ s/.+_([imputedflr]+).vcf.gz/$1/s;
         if ($file_type eq 'filtered') {                            #Handle filtered vcf files                                                                  
@@ -223,6 +227,8 @@ push (@conf_info, $value);
 }
 undef @tracks;
 print STDERR "Saved accession $accession_name track info, moving onto next accession. Current accessions found = $accessions_found\n";
+print LOG "Saved accession $accession_name track info, moving onto next accession. Current accessions found = $accessions_found\n";
+
 }
 
 #-----------------------------------------------------------------------
@@ -241,6 +247,8 @@ next;
 #-----------------------------------------------------------------------   
 
 print STDERR "Woo! $accessions_found accessions in this trial have vcf files. Setting up jbrowse instance, then moving onto next trial \n";
+print LOG "Woo! $accessions_found accessions in this trial have vcf files. Setting up jbrowse instance, then moving onto next trial \n";
+
 
 unless (-d $trial_id) {
 
