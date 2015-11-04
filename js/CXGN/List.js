@@ -366,7 +366,7 @@ CXGN.List.prototype = {
 	    html += '<tr><td><b>'+lists[i][1]+'</b></td>';
 	    html += '<td>'+lists[i][3]+'</td>';
 	    html += '<td>'+lists[i][5]+'</td>';
-	    html += '<td><a title="View" id="view_public_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
+	    html += '<td><a title="View" id="view_public_list_'+lists[i][1]+'" href="javascript:showPublicListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
 	    html += '<td><a target="_blank" title="Download" id="download_public_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
 	    html += '<td><a title="Copy to Your Lists" id="copy_public_list_'+lists[i][1]+'" href="javascript:copyPublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-plus"></span></a></td>';
 	}
@@ -400,7 +400,7 @@ CXGN.List.prototype = {
 	html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" /></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
 	html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td></tr></table>';
 
-	html += '<table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered data_table"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
+	html += '<table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
 
 	for(var n=0; n<items.length; n++) { 
 	    html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
@@ -409,7 +409,7 @@ CXGN.List.prototype = {
 	
 	jQuery('#'+div+'_div').html(html);
 
-	jQuery('.data_table').DataTable({
+	jQuery('#list_item_dialog_datatable').DataTable({
 	    destroy: true,
 	    scrollY:        '30vh',
             scrollCollapse: true,
@@ -429,7 +429,6 @@ CXGN.List.prototype = {
 		    lo.renderLists('list_dialog');
 		});
 	}
-    
 	
 	jQuery('#dialog_add_list_item_button').click(
 	    function() { 
@@ -452,6 +451,29 @@ CXGN.List.prototype = {
 	);
     },
     
+    renderPublicItems: function(div, list_id) { 
+	var list_data = this.getListData(list_id);
+	var items = list_data.elements;
+	var list_type = list_data.type_name;
+	var list_name = this.listNameById(list_id);
+	
+	var html = '';
+	html += '<table id="public_list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
+	for(var n=0; n<items.length; n++) { 
+	    html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
+	}
+	html += '</tbody></table>';
+	
+	jQuery('#'+div+'_div').html(html);
+
+	jQuery('#public_list_item_dialog_datatable').DataTable({
+	    destroy: true,
+	    scrollY:        '30vh',
+            scrollCollapse: true,
+            paging:         false,
+	});
+    },
+
     existsList: function(name) { 
 	var list_id = 0;
 	jQuery.ajax( { 
@@ -980,6 +1002,12 @@ function showListItems(div, list_id) {
     var l = new CXGN.List();
     jQuery('#'+div).modal("show");
     l.renderItems(div, list_id);
+}
+
+function showPublicListItems(div, list_id) { 
+    var l = new CXGN.List();
+    jQuery('#'+div).modal("show");
+    l.renderPublicItems(div, list_id);
 }
 
 function addNewList(div_id) { 
