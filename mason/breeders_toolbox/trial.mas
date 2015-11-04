@@ -306,6 +306,16 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % foreach my $p (@plot_data) { 
 %   print $p."<br />\n";
 % }
+
+<&| /page/info_section.mas,
+   title       => 'Trial JBrowse',
+   collapsible => 1,
+&>
+
+	<& /breeders_toolbox/trial_jbrowse_instance.mas, trial_id => $trial_id &>
+
+</&>
+
 <&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
   <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
     <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_spreadsheet_link">Create Spreadsheet</a>]' &>
