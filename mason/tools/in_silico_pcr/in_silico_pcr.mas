@@ -193,7 +193,7 @@
   jQuery(document).ready(function() {
     swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
     
-    alert($("#fprimer").val());
+    // alert($("#fprimer").val());
     
     $("#run_blast").click(function(){
       

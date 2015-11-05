@@ -24,7 +24,7 @@ sub index :Path('/tools/in_silico_pcr/') :Args(0) {
   my $seq = $c->req->param('seq');
   my $schema = $c->dbic_schema("SGN::Schema");
   
-  my $group_rs = $schema->resultset("BlastDbGroup")->search( name => "Genome Sequences", { order_by=>'ordinal' });
+  my $group_rs = $schema->resultset("BlastDbGroup")->search( name => "Genome Sequences");
   # my $group_rs = $schema->resultset("BlastDbGroup")->search( undef, { order_by=>'ordinal' });
 
   my $databases = {};
