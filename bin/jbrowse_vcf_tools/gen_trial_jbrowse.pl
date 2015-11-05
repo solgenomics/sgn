@@ -6,14 +6,14 @@ gen_trial_jbrowse.pl - creates jbrowse instances that include base tracks and ac
 
 =head1 SYNOPSIS
 
-    gen_trial_jbrowse.pl -v [absolute path through base instance to dir containing vcfs] -b [absolute path to base instance] -u [path from base jbrowse dir to dir containing vcfs] -d [name of database to search for trials] -h [db host]
+    gen_trial_jbrowse.pl -v [absolute path through base instance to dir containing vcfs] -b [absolute path to base instance] -d [name of database to search for trials] -h [db host]
 
 =head1 COMMAND-LINE OPTIONS
  
  -v absolute path through base instance to dir containing vcfs
- -b absolute path to base instance                                                         
- -u path from base jbrowse dir to dir containing vcfs
- -h database hostname                                                                       -d database name   
+ -b absolute path to base instance                                                        
+ -h database hostname                                                                     
+ -d database name   
 
 =head1 DESCRIPTION
 
@@ -32,21 +32,24 @@ use CXGN::DB::InsertDBH;
 use CXGN::Trial::TrialLayout;
 use Data::Dumper;
 
-our ($opt_v, $opt_b, $opt_u, $opt_h, $opt_d);
+our ($opt_v, $opt_b, $opt_h, $opt_d);
 
 #-----------------------------------------------------------------------
 # define paths & array of vcf_file names. Open file handles to read trial lists and append datasets to jbrowse.conf 
 #-----------------------------------------------------------------------
 
-getopts('v:b:u:h:d:');
+getopts('v:b:h:d:');
 
 my $vcf_dir_path = $opt_v;
 my $dbhost = $opt_h;
 my $dbname = $opt_d;
 my $link_path = $opt_b;
-my $url_path = $opt_u;
+my $url_path = $opt_v;
+$url_path =~ s:$link_path/(.+):$1:;
+print STDERR "url path = $url_path \n";
+
 my $accessions_found = 0;
-my ($file_type, $out, $header,@tracks,$imp_track,$filt_track,$h,$q,$dbh);
+my ($file_type, $out, $header,@tracks,$imp_track,$filt_track,$h,$q,$dbh,%accession,%control);
 my @files = ` dir -GD -1 --hide *.tbi $vcf_dir_path ` ; 
 my $accession_name;
 my @accession_names;
@@ -102,12 +105,16 @@ my $accession_names_ref = $trial_layout->get_accession_names();
 my $control_names_ref = $trial_layout->get_control_names();
 
     for my $accession (@$accession_names_ref) {
-#	print STDERR " Trial $trial_name contains accession $accession \n";
-	push (@accession_names, $accession);
+#	print STDERR "Trial $trial_name contains accession";
+	print Dumper($accession);
+	my %accession_hash = %$accession;
+	push (@accession_names, $accession_hash{'accession_name'});
     }
     for my $control (@$control_names_ref) {
-#	print STDERR " Trial $trial_name contains control $control \n";
-	push (@accession_names, $control);
+#	print STDERR " Trial $trial_name contains control";
+	print Dumper($control);
+	my %control_hash = %$control;
+	push (@accession_names, $control_hash{'accession_name'});
     }
     print STDERR " Trial $trial_name contains accessions @$accession_names_ref \n";
     print STDERR " Trial $trial_name contains controls @$control_names_ref \n";
@@ -154,9 +161,13 @@ variantIsHeterozygous = function( feature ) {
 key = ' . $key  .'
 storeClass = JBrowse/Store/SeqFeature/VCFTabix
 urlTemplate = ' . $path .'
-category = VCF
+category = Diversity/NEXTGEN/Unimputed
 type = JBrowse/View/Track/HTMLVariants
 metadata.Description = Homozygous reference: Green	Heterozygous: Red		Homozygous alternate: Blue	Filtered to remove SNPs with a depth of 0 and SNPs with 2 or more alt alleles.
+metadata.Link = <a href=ftp://cassavabase.org/jbrowse/diversity/igdBuildWithV6_\
+hapmap_20150404_vcfs/' . $file . '>Download VCF File</a>                                
+metadata.Provider = NEXTGEN Cassava project                                     
+metadata.Accession = ' . $accession_name . '
 label = ' . $key  . '
 ' ;
 push @tracks, $filt_track;
@@ -196,9 +207,13 @@ variantIsImputed = function( feature ) {
 key = ' . $key  .'
 storeClass = JBrowse/Store/SeqFeature/VCFTabix
 urlTemplate = ' . $path .'
-category = VCF
+category = Diversity/NEXTGEN/Imputed
 type = JBrowse/View/Track/HTMLVariants
 metadata.Description = Homozygous reference: Green	Heterozygous: Red		Homozygous alternate: Blue	Values imputed with GLMNET are shown at 1/3 opacity.
+metadata.Link = <a href=ftp://cassavabase.org/jbrowse/diversity/igdBuildWithV6_\
+hapmap_20150404_vcfs/' . $file . '>Download VCF File</a>                                
+metadata.Provider = NEXTGEN Cassava project                                     
+metadata.Accession = ' . $accession_name .'
 label = ' . $key  . '
 ' ;
 push @tracks, $imp_track;
