@@ -163,7 +163,7 @@ sub summary_stats {
 	#print Dumper(\@snps);
 	
 	for(my $n = 0; $n<@snps; $n++) { 
-	    my $snp = CXGN::Genotype::SNP->new( { vcf_string=> $snps[$n] });
+	    my $snp = CXGN::Genotype::SNP->new( { id=>$fields[2], format=>$fields[8], vcf_string=> $snps[$n] });
 	    
 	    if ($snp->good_call()) { 
 		$stats{$accessions[$n]}++;

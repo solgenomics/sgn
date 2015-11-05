@@ -462,21 +462,21 @@ sub _get_trial_accession_names_and_control_names {
       $is_a_control = $is_a_control_prop->value();
     }
     if ($is_a_control) {
-      $unique_controls{$accession->uniquename}=1;
+      $unique_controls{$accession->uniquename}=$accession->stock_id;
     }
     else {
-      $unique_accessions{$accession->uniquename}=1;
+      $unique_accessions{$accession->uniquename}=$accession->stock_id;
     }
   }
   foreach my $accession_name (sort { lc($a) cmp lc($b)} keys %unique_accessions) {
-    push(@accession_names, $accession_name);
+    push(@accession_names, {accession_name=>$accession_name, stock_id=>$unique_accessions{$accession_name} } );
     #print STDERR "Accession: $accession_name \n";
   }
   if (!scalar(@accession_names) >= 1) {
     return;
   }
   foreach my $control_name (sort { lc($a) cmp lc($b)} keys %unique_controls) {
-    push(@control_names, $control_name);
+    push(@control_names, {accession_name=>$control_name, stock_id=>$unique_controls{$control_name} } );
     #print STDERR "Control: $control_name \n";
   }
   return (\@accession_names, \@control_names);

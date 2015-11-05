@@ -4,7 +4,7 @@
     <div class="input-group">
       <span id="advanced_search_li" class="btn btn-default input-group-addon" style="display:none" onclick="location.href='/search';">Advanced</span>
       <input id="quick_search_input" style="display:none;" type="text" name="term" class="form-control" placeholder="">
-      <span id="quick_search_icon" class="btn btn-default" style="height:34px; font-size:16; padding-top:8px;" data-toggle="tooltip" data-placement="bottom" data-original-title="Search"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></span>
+      <span id="quick_search_icon" class="btn btn-default" style="height:34px; font-size:16; padding-top:8px;" title="Search"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></span>
     </div>
   </form>
 </li>
@@ -12,8 +12,6 @@
 <script defer="defer">
   jQuery(document).ready(function() {
     
-    jQuery('[data-toggle="tooltip"]').tooltip();
-
     jQuery('#quick_search_icon').click(function () {
       if (jQuery('#quick_search_input').attr("placeholder") == "") {
         jQuery('#quick_search_input').attr("placeholder","Search");
