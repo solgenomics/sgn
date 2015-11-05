@@ -193,6 +193,30 @@
   </div>
 </div>
 
+<div class="modal fade" id="xref_modal" role="dialog">
+  <div class="modal-dialog">
+  
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Match Information</h4>
+      </div>
+      <div class="modal-body">
+        Hit region <span class="region_string"></span>
+        <div style="margin: 0.5em 0"><a class="match_details" href="">View matched sequence</a></div>
+        <div class="hit_region_xrefs"></div>
+        Subject sequence <span class="sequence_name"></span>
+        <div class="subject_sequence_xrefs"></div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+    
+  </div>
+</div>
+
 <div class="modal fade" id="search_modal" role="dialog">
   <div class="modal-dialog modal-lg">
   
@@ -328,6 +352,7 @@ h1 {
 .ui-dialog {
 	position:relative;
 }
+
 #region_square {
 	position:absolute;
 	vertical-align:middle;
@@ -357,43 +382,7 @@ h1 {
   max-width: 98%;
 }
 
-.submit_blast_button {
-background-color:#555555;
-/*background-color:#4387FD;*/
-border:0px;
-border-radius:2px;
-/*color:#fff;*/
-color:#EEEEEE;
-box-shadow: 1px 1px 0px 0px #C6C6C6;
-font-family:Arial;
-font-size:12px;
-height:20px;
-line-height:18px;
-vertical-align: top;
-cursor:pointer;
-}
-.submit_blast_button:hover {
-background-color:#444444;
-/*background-color:#5EA1FF;*/
-/*color:#acf;*/
-color:#fff;
-}
-.submit_blast_button:active {
-position:relative;
-top:1px;
-left:1px;
-box-shadow: 0px 0px 0px 0px #fff;
-}
 
-/*.blast_search_input_box {
-border-color:#AAA;
-border-width:1px;
-border-style:solid;
-border-radius:5px;
-height: 20px;
-padding-left: 5px;
-}
-*/
 .download_tag {
   display:none;
 }
