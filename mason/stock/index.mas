@@ -178,7 +178,7 @@ my $edit_privs = $curator || $submitter || $sequencer;
 
 my $project_name = lc($c->config->{project_name});
 my $test_url = "/jbrowse_$project_name/current/data/json/accessions/" . $stock_id . "/trackList.json";
-my $jbrowse_url = "/jbrowse/?data=data%2Fjson%2Faccessions%2F" . $stock_id;
+my $jbrowse_url = "/jbrowse/?data=data%2Fjson%2Faccessions%2F" . $stock_id . "&tracks=DNA%2CGene%20exons%2C" . $uniquename . "_2015_V6_imputed&highlight=";
 
 </%perl>
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock"] &>
