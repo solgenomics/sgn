@@ -60,7 +60,6 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 } 
  Args:
  Side Effects:
- Example:
 
 =cut
 
@@ -74,7 +73,7 @@ sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
     my $cookie = '';
 
     if ( $login_controller->login_allowed() ) {
-	if ($params->{grant_type} eq 'password') {
+	if ($params->{grant_type} eq 'password' || !$params->{grant_type}) {
 	    my $login_info = $login_controller->login_user( $params->{username}, $params->{password} );
 	    if ($login_info->{account_disabled}) {
 		push(@status, 'Account Disabled');
@@ -90,7 +89,6 @@ sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
 	    }
 	    if ($login_info->{person_id}) {
 		$cookie = $login_info->{cookie_string};
-		push(@status, 'OK');
 	    }
 	} else {
 	    push(@status, 'Grant Type Not Supported');
@@ -127,6 +125,9 @@ sub germplasm_data_response {
 	$rsp = $schema->resultset("Stock::Stockprop")->search({type_id => $synonym_id, stock_id=>$stock->stock_id() });
 	while (my $stockprop = $rsp->next()) { 
 	    push( @synonyms, $stockprop->value() );
+	}
+	if ($rs_slice->count() == 1) {
+	    return { germplasmDbId=>$stock->stock_id(), defaultDisplayName=>$stock->uniquename(), germplasmName=>$stock->uniquename(), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>\@synonyms };
 	}
 	push @data, { germplasmDbId=>$stock->stock_id(), defaultDisplayName=>$stock->uniquename(), germplasmName=>$stock->uniquename(), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>\@synonyms };
     }
@@ -175,7 +176,6 @@ sub germplasm_data_response {
 }    
  Args:
  Side Effects:
- Example:
 
 =cut
 
@@ -187,38 +187,35 @@ sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) {
     my $page = $c->stash->{current_page};
     my $params = $c->req->params();
     
-    my @data;
     my @status;
-    my $total_count = 0;
-    my %result;
-
+ 
     if ($params->{include}) {
 	push (@status, 'include not implemented');
     }
+
+    my $rs;
+    my $total_count = 0;
+    my %result;
+    my $type_id = $schema->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
+
     if (!$params->{name}) {
-	push(@status, 'name parameter required');
+	$rs = $schema->resultset("Stock::Stock")->search( {type_id=>$type_id} );
     } else {
-
-	my $rs;
-	my $rs_slice;
-	my $type_id = $schema->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
-
 	if (!$params->{matchMethod} || $params->{matchMethod} eq "exact") { 
 	    $rs = $schema->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>$params->{name} }, { order_by=>{ -asc=>'stock_id' } } );
-	    $total_count = $rs->count();
-	    $rs_slice = $rs->slice($page_size*($page-1), $page_size*$page-1);
-	    %result = (data => germplasm_data_response($schema, $rs_slice));
 	}
 	elsif ($params->{matchMethod} eq "wildcard") { 
 	    $params->{name} =~ tr/*?/%_/;
 	    $rs = $schema->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>{ ilike => $params->{name} } }, { order_by=>{ -asc=>'stock_id' } } );
-	    $total_count = $rs->count();
-	    $rs_slice = $rs->slice($page_size*($page-1), $page_size*$page-1);
-	    %result = (data => germplasm_data_response($schema, $rs_slice));
 	}
 	else { 
 	    push(@status, "matchMethod '$params->{matchMethod}' not recognized");
 	} 
+    }
+    if ($rs) {
+	$total_count = $rs->count();
+	my $rs_slice = $rs->slice($page_size*($page-1), $page_size*$page-1);
+	%result = (data => germplasm_data_response($schema, $rs_slice));
     }
 
     my %metadata = (pagination=> pagination_response($total_count, $page_size, $page), status=>\@status);
@@ -249,7 +246,6 @@ sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) {
 }
  Args:
  Side Effects:
- Example:
 
 =cut
 
@@ -275,7 +271,79 @@ sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) {
     $c->stash->{rest} = \%response;
 }
 
-# Need to determine how to implement /brapi/v1/germplasm?trialDbId=123&pageSize=20&page=1 when /brapi/v1/germplasm?name={name}&matchMethod={matchMethod}&include={synonyms}&pageSize={pageSize}&page={page} uses /brapi/v1/germplasm 
+=head2 brapi/v1/studies/{studyId}/germplasm?pageSize=20&page=1 
+
+ Usage: To retrieve all germplasm used in a study
+ Desc: 
+ Return JSON example:
+{
+    "metadata": {
+        "status": [],
+        "pagination": {
+            "pageSize": 1000,
+            "currentPage": 1,
+            "totalCount": 1,
+            "totalPages": 1
+        }
+    },
+    "result": {
+        "studyDbId": 123,
+        "trialName": "myBestTrial",
+        "data": [
+            { 
+                "germplasmDbId": "382",
+                "trialEntryNumberId": "1",
+                "defaultDisplayName": "Pahang",
+                "germplasmName": "Pahang",
+                "accessionNumber": "ITC0609",
+                "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084609",
+                "pedigree": "TOBA97/SW90.1057",
+                "seedSource": "",
+                "synonyms": ["01BEL084609"],
+            },
+            {
+                "germplasmDbId": "394",
+                "trialEntryNumberId": "2",
+                "defaultDisplayName": "Pahang",
+                "germplasmName": "Pahang",
+                "accessionNumber": "ITC0727",
+                "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084727",
+                "pedigree": "TOBA97/SW90.1057",
+                "seedSource": "",
+                "synonyms": [ "01BEL084727"],
+            }
+        ]
+    }
+}
+ Args: 
+ Side Effects: 
+
+=cut
+
+sub germplasm : Chained('brapi') PathPart('study') CaptureArgs(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $study_id = shift;
+
+    $c->stash->{study_id} = $study_id;
+    my $rs = $self->bcs_schema()->resultset("Project::Project")->search( {project_id=>$study_id} );
+    $c->stash->{study} = $rs;
+}
+
+sub study_germplasm : Chained('study') PathPart('germplasm') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $schema = $self->bcs_schema();
+    my %result;
+    my @status;
+
+    
+
+    my %pagination;
+    my %metadata = (pagination=>\%pagination, status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
 
 
 =head2 brapi/v1/germplasm/{id}/pedigree?notation=purdy
@@ -297,7 +365,6 @@ sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) {
 }
  Args:
  Side Effects:
- Example:
 
 =cut
 
@@ -307,6 +374,7 @@ sub germplasm_pedigree : Chained('germplasm') PathPart('pedigree') Args(0) {
     my $schema = $self->bcs_schema();
     my %result;
     my @status;
+
     if ($c->req->param('notation')) {
 	push @status, 'notation not implemented';
 	if ($c->req->param('notation') ne 'purdy') {
@@ -323,7 +391,7 @@ sub germplasm_pedigree : Chained('germplasm') PathPart('pedigree') Args(0) {
     $c->stash->{rest} = \%response;
 }
 
-=head2 brapi/v1/germplasm/{id}/pedigree?notation=purdy
+=head2 brapi/v1/germplasm/{id}/markerprofiles
 
  Usage: To retrieve markerprofile ids for a single germplasm
  Desc:
@@ -343,7 +411,6 @@ sub germplasm_pedigree : Chained('germplasm') PathPart('pedigree') Args(0) {
 }
  Args:
  Side Effects:
- Example:
 
 =cut
 
