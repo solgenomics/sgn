@@ -22,18 +22,34 @@ sub prereqs {
 
     # stuff to support AJAXy disambiguation of site xrefs
 return <<EOJS;
-<div id="xref_menu_popup" title="Match information">
-  <dl>
-    <dt>Hit region <span class="region_string"></span></dt>
-      <dd>
-        <div style="margin: 0.5em 0"><a class="match_details" href="">View matched sequence</a></div>
-        <div class="hit_region_xrefs"></div>
-      </dd>
-    <dt>Subject sequence <span class="sequence_name"></span></dt>
-      <dd class="subject_sequence_xrefs">
-      </dd>
-  </dl>
+
+<div class="modal fade" id="xref_menu_popup" role="dialog">
+  <div class="modal-dialog">
+  
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Match Information</h4>
+      </div>
+      <div class="modal-body">
+        <dl>
+          <dt>Hit region <span class="region_string"></span></dt>
+            <dd>
+              <div style="margin: 0.5em 0"><a class="match_details" href="" target="_blank">View matched sequence</a></div>
+              <div class="hit_region_xrefs"></div>
+            </dd>
+          <dt>Subject sequence <span class="sequence_name"></span></dt>
+            <dd class="subject_sequence_xrefs">
+            </dd>
+        </dl>
+      </div>
+    </div>
+    
+  </div>
 </div>
+
+
 <script>
 
   function resolve_blast_ident( id, id_region, match_detail_url, identifier_url ) {
@@ -43,7 +59,7 @@ return <<EOJS;
     if( identifier_url == null ) {
        sequence_name.html( id );
     } else {
-       sequence_name.html( '<a href="' + identifier_url + '">' + id + '</a>' );
+       sequence_name.html( '<a href="' + identifier_url + '" target="_blank">' + id + '</a>' );
     }
 
     popup.find('.region_string').html( id_region );
@@ -60,20 +76,10 @@ return <<EOJS;
     region.html( '<img src="/img/throbber.gif" /> searching ...' );
     region.load( '/api/v1/feature_xrefs?q='+id_region );
 
-    popup.dialog( 'open' );
-    jQuery( "body .ui-widget-overlay").click( function() { popup.dialog( "close" ); } );
-
-    popup.find('a').blur();
+    popup.modal("show");
 
     return false;
   }
-
-  jQuery( "#xref_menu_popup" ).dialog({
-          autoOpen: false,
-          height: 400,
-          width: 680,
-          modal: true
-  });
 
 </script>
 
