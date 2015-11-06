@@ -332,51 +332,7 @@ sub save_trial {
 
 }
 
-sub create_plant_entries { 
-    my $self = shift;
-    my %design = %{$self->get_design()};
-    my $chado_schema = $self->get_chado_schema();
-    
-    my $p
-    
-    foreach my $plot (keys %design) { 
-	my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $plot });
 
-	my $plant_cvterm = $chado_schema->resultset("Cv::Cvterm")
-	    ->create_with({
-		name   => 'plant',
-		cv     => 'stock type',
-		db     => 'null',
-		dbxref => 'plant',
-			  });
-	
-	# create a separate experiment
-	
-	### TO DO
-
-	if (! $plot_row) { 
-	    return "The plot $plot is not yet in the database. Cannot create plant entries. Check carefully what you are doing... maybe you are too tired?";
-	}
-	
-	my $parent_plot = $plot_row->stock_id();
-
-	foreach my $number (1..$design{plants_per_plot}) { 
-	    my $plant_name = $plot_row->uniquename()."_plant_$number";
-	    # create new plant row
-	    $plant = $chado_schema->resultset("Stock::Stock")
-		->find_or_create({
-		    organism_id => $parent_plot->organism_id(),
-		    name       => $plant_name,
-		    uniquename => $plant_name,
-		    type_id => $plant_cvterm->cvterm_id,
-				 } );
-	}
-	
-	
-    }
-    
-
-}
 
 
 

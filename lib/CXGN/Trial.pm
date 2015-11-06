@@ -1034,6 +1034,77 @@ sub get_planting_date_cvterm_id {
     return $row->cvterm_id();
 }
 
+=head2 create_plant_entries
+
+ Usage:        $trial->create_plant_entries($plants_per_plot);
+ Desc:         Some trials require plant-level data. This function will
+               add an additional layer of plant entries for each plot.
+ Ret:          
+ Args:         the number of plants per plot to add.
+ Side Effects:
+ Example:
+
+=cut
+
+sub create_plant_entities { 
+    my $self = shift;
+    my $plants_per_plot = shift;
+
+    my %design = CXGN::Trial::TrialDesign->new( { });
+    my $chado_schema = $self->bcs_schema();
+    
+    my $plant_trial_name = $self->get_name()."_plants";
+    my $breeding_program = $self->get_breeding_program();
+
+    my $project = $self->bcs_schema()->resultset("Project::Project")->create( 
+	{ 
+	    name => $plant_trial_name,
+	});
+
+    # create a new experiment
+    my $nd_experiment_id = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->create()->nd_experiment_id();
+
+    my $nd_experiment_project = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->create( { 
+	nd_experiment_id => $nd_experiment_id,
+	project_id => $project->project_id(),
+													 });
+
+    foreach my $plot (keys %design) { 
+	my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $plot });
+	
+	my $plant_cvterm = $chado_schema->resultset("Cv::Cvterm")
+	    ->create_with({
+		name   => 'plant',
+		cv     => 'stock type',
+		db     => 'null',
+		dbxref => 'plant',
+			  });
+	
+
+	if (! $plot_row) { 
+	    return "The plot $plot is not yet in the database. Cannot create plant entries. Check carefully what you are doing... maybe you are too tired?";
+	}
+	
+	my $parent_plot = $plot_row->stock_id();
+
+	foreach my $number (1..$plants_per_plot) { 
+	    my $plant_name = $plot_row->uniquename()."_plant_$number";
+	    # create new plant row
+	    my $plant = $chado_schema->resultset("Stock::Stock")
+		->find_or_create({
+		    organism_id => $parent_plot->organism_id(),
+		    name       => $plant_name,
+		    uniquename => $plant_name,
+		    type_id => $plant_cvterm->cvterm_id,
+				 } );
+	    my $nd_experiment_link = $self->bcs_schema()->resulset("NaturalDiversity::NdExperimentStock")->find_or_create({ 
+		nd_experiment_id => $nd_experiment_id,
+		stock_id => $plant->stock_id(),
+														       });
+	}
+	
+    }
+}
 
 
 

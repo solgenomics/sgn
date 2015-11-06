@@ -6,7 +6,7 @@ use Data::Dumper;
 use List::Util 'max';
 use Bio::Chado::Schema;
 use List::Util qw | any |;
-
+use CXGN::Trial;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -443,6 +443,26 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	
 }
 
+sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
+
+    if (my $error = $self->delete_privileges_denied($c)) { 
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
+
+    if (!$plants_per_plot || $plants_per_plot > 20) { 
+	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 20." };
+	return;
+    }
+
+    my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
+    
+    $t->create_plant_entities($plants_per_plot);
+}
+
 
 sub delete_privileges_denied { 
     my $self = shift;
@@ -462,7 +482,7 @@ sub delete_privileges_denied {
     if ( ($c->user->check_roles('submitter')) && ( $c->user->check_roles($breeding_programs->[0]->[1]))) { 
 	return 0;
     }
-    return "You have insufficient privileges to delete a trial.";
+    return "You have insufficient privileges to modify or delete this trial.";
 }
 
 # loading field coordinates
@@ -540,6 +560,8 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
 	
 }    
+
+
 
 
 1;
