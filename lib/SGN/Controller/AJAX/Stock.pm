@@ -1257,9 +1257,10 @@ sub get_stock_trait_list :Chained('/stock/get_stock') PathPart('datatables/trait
     my $c = shift;
 
     my @trait_list = $c->stash->{stock}->get_trait_list();
-    
+
     my @formatted_list; 
     foreach my $t (@trait_list) { 
+	print STDERR Dumper($t);
 	push @formatted_list, [ '<a href="/chado/cvterm?cvterm_id='.$t->[0].'">'.$t->[1].'</a>', $t->[2], sprintf("%3.1f", $t->[3]), sprintf("%3.1f", $t->[4]) ];
     }
     print STDERR Dumper(\@formatted_list);
