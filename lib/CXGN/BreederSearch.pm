@@ -278,7 +278,7 @@ sub get_phenotype_info {
     my $trial_sql = shift;
     my $trait_sql = shift;
 
-    #print STDERR "$accession_sql - $trial_sql - $trait_sql \n\n";
+    print STDERR "GET_PHENOTYPE_INFO: $accession_sql - $trial_sql - $trait_sql \n\n";
 
     my $rep_type_id = $self->get_stockprop_type_id("replicate");
     my $block_number_type_id = $self -> get_stockprop_type_id("block");
@@ -301,7 +301,7 @@ sub get_phenotype_info {
 
     my $order_clause = " order by project.name, plot.uniquename";
 
-    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, cvterm.name, stockprop.value, block_number.value AS rep
+    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, db.name ||  ':' || dbxref.accession AS accession, stockprop.value, block_number.value AS rep
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) 
              JOIN stock ON (object_id=stock.stock_id) 
              LEFT JOIN stockprop ON (plot.stock_id=stockprop.stock_id)
@@ -344,7 +344,8 @@ sub get_phenotype_info_matrix {
     my %traits;
 
     foreach my $d (@$data) { 
-	my $cvterm = $d->[6].":".$d->[7];
+	print STDERR "PRINTING TRAIT DATA FOR TERM " . $d->[3] . "\n\n";
+	my $cvterm = $d->[3]."|".$d->[7];
 	my $trait_data = $d->[4];
 	my $plot = $d->[5];
 	$plot_data{$plot}->{$cvterm} = $trait_data;
@@ -384,7 +385,7 @@ sub get_extended_phenotype_info_matrix {
     my $accession_sql = shift;
     my $trial_sql = shift;
     my $trait_sql = shift;
-    
+
     my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
     
     my %plot_data;
@@ -395,7 +396,7 @@ sub get_extended_phenotype_info_matrix {
 
 	my ($project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep, $block_number) = @$d;
 	
-	my $cvterm = $d->[6].":".$d->[7];
+	my $cvterm = $d->[3]."|".$d->[7];
 	if (!defined($rep)) { $rep = ""; }
 	$plot_data{$plot}->{$cvterm} = $trait_data;
 	$plot_data{$plot}->{metadata} = {
@@ -582,7 +583,7 @@ sub create_materialized_cvterm_view {
     #
     eval { 
 	my $q = "CREATE TABLE public.materialized_traits
-               AS SELECT cvterm_id,  db.name ||':'|| cvterm.name AS name FROM db JOIN dbxref using(db_id) JOIN cvterm using(dbxref_id) WHERE db.name=?";
+               AS SELECT cvterm_id, cvterm.name || '|' || db.name || ':' || dbxref.accession AS name FROM db JOIN dbxref using(db_id) JOIN cvterm using(dbxref_id) WHERE db.name=?";
 	my $h = $self->dbh()->prepare($q);
 	$h->execute($db_name);
 	$q = "GRANT ALL ON public.materialized_traits TO web_usr";

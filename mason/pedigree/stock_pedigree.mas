@@ -48,7 +48,7 @@ Parent is<br />
   
     jQuery("#add_parent_dialog").dialog( {
       autoOpen: false,
-      buttons: { "Cancel" :  function() { jQuery("#add_parent_dialog").dialog("close"); }, "Submit": function() { associate_parent() }  },
+      buttons: { "Cancel" :  function() { jQuery("#add_parent_dialog").dialog("close"); }, "Submit": { text:'Submit', id:'add_parent_dialog_submit_button', click: function() { associate_parent() } }  },
       modal: true 
     });
     

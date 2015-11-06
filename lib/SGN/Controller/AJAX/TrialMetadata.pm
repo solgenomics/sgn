@@ -378,15 +378,15 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
     } 
 	
-	my @row_numbers;
-	my @col_numbers;
-	my @rep_numbers;
-	my @block_numbers;
-	my @accession_name;
-	my @plot_name;
-	my @plot_id;
-	my @array_msg;
-	my @plot_number;
+	my @row_numbers = ();
+	my @col_numbers = ();
+	my @rep_numbers = ();
+	my @block_numbers = ();
+	my @accession_name = ();
+	my @plot_name = ();
+	my @plot_id = ();
+	my @array_msg = ();
+	my @plot_number = ();
 	my $my_hash;
 	
 	foreach $my_hash (@layout_info) {
@@ -406,7 +406,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	}
  # Looping through the hash and printing out all the hash elements.
 
-	foreach $my_hash (@layout_info) {
+    foreach $my_hash (@layout_info) {
 	push @col_numbers, $my_hash->{'col_number'};
 	push @row_numbers, $my_hash->{'row_number'};
 	#push @plot_id, $my_hash->{'plot_id'};
@@ -416,13 +416,15 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	push @accession_name, $my_hash->{'accession_name'};
 	push @plot_name, $my_hash->{'plot_name'};
 	
-	}
+    }
 
 	
-	my $max_col = max( @col_numbers );
-	print "$max_col\n";
-	my $max_row = max( @row_numbers );
-	print "$max_row\n";
+    my $max_col = 0;
+    $max_col = max( @col_numbers ) if (@col_numbers);
+    print "$max_col\n";
+    my $max_row = 0;
+    $max_row = max( @row_numbers ) if (@row_numbers);
+    print "$max_row\n";
 	
 
 	$c->stash->{rest} = { coord_row =>  \@row_numbers, 

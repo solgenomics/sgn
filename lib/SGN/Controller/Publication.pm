@@ -9,6 +9,7 @@ SGN::Controller::Publication - Catalyst controller for the SGN publication page
 
 use Moose;
 use namespace::autoclean;
+use File::Slurp;
 
 use URI::FromHash 'uri';
 
@@ -255,12 +256,19 @@ sub doi_banner : Path('/doibanner/') CaptureArgs(3) {
     my $pub_count = $matching_pubs->count;
     if( $matching_pubs->count > 1 ) {
         $c->throw_client_error( public_message => 'Multiple matching publications' );
-    }    
+    }
+
+    my $image = $c->path_to('/documents/img/white_pixel.png');
+
+    if ($pub_count == 1 ) {
+	$image = $c->path_to( '/documents/img/sgn_logo_26x60.png') ;
+    }
+      
+    my $image_file = read_file($image , { binmode => ':raw' } );
     
-    $c->stash(
-        template => '/publication/banners/doi_banner.mas',
-	count    => $pub_count,
-	);
+    $c->response->content_type('image/png');
+    $c->response->body($image_file);
+
 }
 
 __PACKAGE__->meta->make_immutable;

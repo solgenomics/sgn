@@ -30,7 +30,7 @@ sub new {
 sub render { 
     my $self = shift;
     
-    return " <input type=\"password\" id=\"" . $self->get_id() . "\" name=\"".$self->get_field_name()."\" value=\"".$self->get_contents()."\" size=\"".$self->get_length()."\" />\n";
+    return " <input type=\"password\" class=\"form-control\" id=\"" . $self->get_id() . "\" name=\"".$self->get_field_name()."\" value=\"".$self->get_contents()."\" size=\"".$self->get_length()."\" />\n";
 }
 
 

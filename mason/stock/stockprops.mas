@@ -73,7 +73,7 @@ jQuery(document).ready(function() {
 
   jQuery('#<% $div_name %>_add_dialog').dialog( {
      title: 'Add property',
-     buttons: { 'Cancel': function() { jQuery('#<% $div_name %>_add_dialog').dialog("close"); }, 'Add': function() { <% $div_name %>_addProp() } },
+     buttons: { 'Cancel': function() { jQuery('#<% $div_name %>_add_dialog').dialog("close"); }, 'Add': {text: 'Add', id: '<% $div_name %>_addProp_submit', click: function() { <% $div_name %>_addProp() } } },
      autoOpen: false,
      modal: true
   });
