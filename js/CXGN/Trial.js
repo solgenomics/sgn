@@ -197,7 +197,7 @@ function open_create_DataCollector_dialog() {
     jQuery("#trait_list_dc").html(list.listSelect("trait_list", [ 'traits' ]));
     //jQuery('#working').dialog("close");
     jQuery('#working_modal').modal("hide");
-    jQuery('#create_DataCollector_dialog').dialog("open");
+    jQuery('#create_DataCollector_dialog').dialog("open"); 
 }
 
 
@@ -209,7 +209,7 @@ function create_DataCollector() {
     var trait_list_id = jQuery('#trait_list_list_select').val();
     var trait_list;
     if (! trait_list_id == "") {
-	trait_list = JSON.stringify(list.getList(trait_list_id));
+	trait_list = JSON.stringify(list.getList(trait_list_id)); 
     }
      new jQuery.ajax({
 	 type: 'POST',
@@ -219,10 +219,10 @@ function create_DataCollector() {
              'trial_id': trialID,
              'trait_list': trait_list,
 	 },
+		
 	 success: function (response) {
 	     //jQuery('#working').dialog("close");
 	     jQuery('#working_modal').modal("hide");
-		//alert("hello");
 		
              if (response.error) {
 		 //alert("error: "+response.error);
@@ -968,4 +968,66 @@ jQuery(document).ready(function ($) {
 
     }
 
+
+   $('#upload_data_collector_link').click(function () {
+        	$('#upload_DataCollector_spreadsheet_dialog').dialog("open");
+	
+    });
+
+	$( "#upload_DataCollector_spreadsheet_dialog" ).dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+	    "Cancel": function () {
+                jQuery('#upload_DataCollector_spreadsheet_dialog').dialog("close");
+            },
+	    "Ok": function() {
+                upload_DataCollector_spreadsheet_file();
+		$( this ).dialog( "close" );
+		
+	    }
+	}
+    });
+
+   function upload_DataCollector_spreadsheet_file() {
+	jQuery('#working_modal').modal("show");
+        var uploadFile = $("#DataCollector_upload_file").val();
+        $('#upload_DataCollector_form').attr("action", "/ajax/datacollector/upload_dc_sheet");
+        if (uploadFile === '') {
+	    alert("Please select a file");
+	    return;
+        }
+        $("#upload_DataCollector_form").submit();
+    }
+
+   $('#upload_DataCollector_form').iframePostForm({
+	json: true,
+	post: function () {
+	    var uploadFile = $("#DataCollector_upload_file").val();
+		//alert("UPLOADED FILE: "+uploadFile);
+	    if (uploadFile === '') {
+		alert("No file selected");
+	    }
+	},
+	complete: function (response) {
+	    if (response.error) {
+		alert(response.error);
+		return;
+	    }
+	    if (response.success) {
+		jQuery('#working_modal').modal("hide");
+		alert("File uploaded successfully");
+		$( this ).dialog( "close" );
+		location.reload();
+	    }
+	}
+    });
+
+
 });
+
+
+	
