@@ -31,6 +31,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
     
     my ($or_conditions, $and_conditions);
+    $or_conditions->{'me.stock_id'} =  { '>' => 0 };
+    $and_conditions->{'me.stock_id'} = { '>' => 0 }; 
     if (exists($params->{any_name} ) && $params->{any_name} ) {
 	my $start = '%';
 	my $end = '%';
