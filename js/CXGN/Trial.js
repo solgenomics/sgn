@@ -984,10 +984,10 @@ jQuery(document).ready(function ($) {
 	    "Cancel": function () {
                 jQuery('#upload_DataCollector_spreadsheet_dialog').dialog("close");
             },
-	    "Ok": function() {
+	    "Ok": {text: "Ok", id:"upload_DataCollector_ok_button", click:function() {
                 upload_DataCollector_spreadsheet_file();
 		$( this ).dialog( "close" );
-		
+	      }		
 	    }
 	}
     });
