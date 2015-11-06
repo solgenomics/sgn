@@ -136,20 +136,20 @@
     <div class="carousel-inner" role="listbox">
 
       <div class="item active">
-          <div style="background:url(/documents/img/homepage_carousel/bordeaux.jpg) center center; background-size:cover;" class="slider-size">
+          <div style="background:url(/documents/img/homepage_carousel/pag_24.jpg) center center; background-size:cover;" class="slider-size">
             <div class="carousel-sgn-caption">
-              <a href="https://colloque.inra.fr/sol2015" target="_blank">
-                <h3><img src="/documents/img/sgn_transparent_logo.png" width="40"> SOL 2015</h3>
-                <p>The 12th Solanaceae Conference</p>
+              <a href="http://www.intlpag.org" target="_blank">
+                <h3>PAG XXIV</h3>
+                <p>International Plant & Animal Genome. Jan 9-13, 2016</p>
               </a>
             </div>
             
             <div class="carousel-sgn-links">
               <ul>
-                <li><a href="https://colloque.inra.fr/sol2015/Registration">Registration</a></li>
-                <li><a href="https://colloque.inra.fr/sol2015/Abstract-submission">Abstract Submission</a></li>
-                <li><a href="https://colloque.inra.fr/sol2015/Program">Conference Program</a></li>
-                <li><a href="https://colloque.inra.fr/sol2015/Venue-accommodation">Venue & Accomodation</a></li>
+                <li><a href="https://pag.confex.com/pag/xxiv/webprogram/Session3164.html" target="_blank"><b>SGN Workshop</b> <img src="/documents/img/sgn_transparent_logo.png" width="20"></a></li>
+                <li><a href="http://www.intlpag.org/2016/program/program-overview-xxiv" target="_blank">Conference Program</a></li>
+                <li><a href="https://pag.confex.com/pag/xxiv/registration/index.cgi" target="_blank">Registration</a></li>
+                <li><a href="http://www.intlpag.org/2016/venue/conference-location" target="_blank">Venue & Accomodation</a></li>
               </ul>
             </div>
             

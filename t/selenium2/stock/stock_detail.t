@@ -11,7 +11,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("[Edit]", "partial_link_text", "find edit link")->click();
 
-    sleep(1);
+    sleep(2);
 
     $t->find_element_ok("[Cancel]", "partial_link_text", "find cancel edit link")->click();
 
@@ -67,6 +67,41 @@ $t->while_logged_in_as("submitter", sub {
     $t->driver->accept_alert();
     sleep(1);
 
+    $t->get_ok('stock/38879/view');
+
+    sleep(2);
+
+    $t->find_element_ok("Additional information", "partial_link_text", "find additional info link")->click();
+
+    $t->find_element_ok("Associated loci", "partial_link_text", "find associated loci link")->click();
+
+    $t->find_element_ok("Experimental data", "partial_link_text", "find experimental data link")->click();
+
+    $t->find_element_ok("add_parent_link", "id", "find add parent link")->click();
+
+    sleep(1);
+
+    my $stock_name = $t->find_element_ok("stock_autocomplete", "id", "add parent input");
+    $stock_name->send_keys('test_wrong_stock_name');
+
+    $t->find_element_ok("male", "id", "find male input")->click();
+    $t->find_element_ok("female", "id", "find female input")->click();
+    
+    $t->find_element_ok("add_parent_dialog_submit_button", "id", "submit add parent")->click();
+
+    sleep(1);
+    $t->driver->accept_alert();
+    sleep(1);
+
+    $stock_name->clear();
+    $stock_name->send_keys('test_accession1');
+  
+    $t->find_element_ok("add_parent_dialog_submit_button", "id", "submit add parent")->click();
+
+    sleep(1);
+    $t->driver->accept_alert();
+    sleep(2);
+
     $t->find_element_ok("[New]", "partial_link_text", "find new stock link")->click();
 
     sleep(3);
@@ -87,7 +122,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("stockForm_submit_button", "id", "find submit edit button")->click();
 
-    sleep(1);
+    sleep(2);
 
     $t->find_element_ok("[Delete]", "partial_link_text", "find delete link")->click();
 
@@ -95,7 +130,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("[Cancel Delete]", "partial_link_text", "find cancel edit link")->click();
 
-    sleep(1);
+    sleep(2);
 
     $t->find_element_ok("[Delete]", "partial_link_text", "find delete link")->click();
 
