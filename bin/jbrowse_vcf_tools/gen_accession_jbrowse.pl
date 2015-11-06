@@ -6,19 +6,19 @@ gen_accession_jbrowse.pl - creates jbrowse instances that include base tracks an
 
 =head1 SYNOPSIS
 
-    gen_accession_jbrowse.pl -v [absolute path through base instance to dir containing vcfs] -b [absolute path to base instance] -u [path from base jbrowse dir to dir containing vcfs] -d [name of database to search for trials] -h [db host]
+    gen_accession_jbrowse.pl -v [absolute path through base instance to dir containing vcfs] -b [absolute path to base instance] -d [name of database to search for trials] -h [db host]
 
 =head1 COMMAND-LINE OPTIONS
  
  -v absolute path through base instance to dir containing vcfs
  -b absolute path to base instance
- -u path from base jbrowse dir to dir containing vcfs
  -h database hostname
  -d database name
 
 =head1 DESCRIPTION
 
 Takes a directory containing individual vcf files, including filtered and imputed versions, and creates or updates jbrowse instances by symlinking to all necessary files in a base instance,  then generating a uniq tracks.conf file and appending dataset info to jbrowse.conf. Should be run from /data/json/accessions dir in jbrowse instance.
+
 =head1 AUTHOR
 
 Bryan Ellerbrock (bje24@cornell.edu) - Oct 2015
@@ -31,19 +31,21 @@ use Getopt::Std;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 
-our ($opt_v, $opt_b, $opt_u, $opt_h, $opt_d);
+our ($opt_v, $opt_b, $opt_h, $opt_d);
 
 #-----------------------------------------------------------------------
 # define paths & array of vcf_file names. Open file handles to read accession lists and append datasets to jbrowse.conf 
 #-----------------------------------------------------------------------
 
-getopts('v:b:u:h:d:');
+getopts('v:b:h:d:');
 
 my $vcf_dir_path = $opt_v;
 my $dbhost = $opt_h;
 my $dbname = $opt_d;
 my $link_path = $opt_b;
-my $url_path = $opt_u;
+my $url_path = $opt_v;
+$url_path =~ s:$link_path/(.+):$1:;
+print STDERR "url path = $url_path \n";
 
 my ($file_type,$out,$header,@tracks,$imp_track,$filt_track,$h,$q,$dbh);
 my @files = ` dir -GD -1 --hide *.tbi $vcf_dir_path ` ; 
@@ -122,9 +124,12 @@ variantIsHeterozygous = function( feature ) {
 key = ' . $key  .'
 storeClass = JBrowse/Store/SeqFeature/VCFTabix
 urlTemplate = ' . $path .'
-category = VCF
+category = Diversity/NEXTGEN/Unimputed
 type = JBrowse/View/Track/HTMLVariants
 metadata.Description = Homozygous reference: Green	Heterozygous: Red		Homozygous alternate: Blue	Filtered to remove SNPs with a depth of 0 and SNPs with 2 or more alt alleles.
+metadata.Link = <a href=ftp://cassavabase.org/jbrowse/diversity/igdBuildWithV6_hapmap_20150404_vcfs/' . $file . '>Download VCF File</a>
+metadata.Provider = NEXTGEN Cassava project
+metadata.Accession = ' . $name . '
 label = ' . $key  . '
 ' ;
 push @tracks, $filt_track;
@@ -167,9 +172,12 @@ variantIsImputed = function( feature ) {
 key = ' . $key  .'
 storeClass = JBrowse/Store/SeqFeature/VCFTabix
 urlTemplate = ' . $path .'
-category = VCF
+category = Diversity/NEXTGEN/Imputed
 type = JBrowse/View/Track/HTMLVariants
 metadata.Description = Homozygous reference: Green	Heterozygous: Red		Homozygous alternate: Blue	Values imputed with GLMNET are shown at 1/3 opacity.
+metadata.Link = <a href=ftp://cassavabase.org/jbrowse/diversity/igdBuildWithV6_hapmap_20150404_vcfs/' . $file . '>Download VCF File</a>
+metadata.Provider = NEXTGEN Cassava project                                                                                                                         
+metadata.Accession = ' . $name . '  
 label = ' . $key  . '
 ' ;
 push @tracks, $imp_track
