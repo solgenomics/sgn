@@ -18,13 +18,28 @@ $trial_id
 		overflow: auto;
 		//overflow: scroll;
 		display: none;
+		margin: 10px;
 	}
          #trial_coords {display: inline; }
          #trial_no_coordsMSG {display: none; }
+	 #row_desc {display: none; margin: 2px}
+	 #col_desc {display: none; margin: 2px}
+
+	.row_desc {
+		transform: rotate(-270deg);
+		/*transform-origin: left top;*/
+		transform-origin: 0% 4%; 
+		float: left;
+	}
+
     </style>
 
+
+<div id="row_desc" class="row_desc" >  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <b>Field Layout Rows </b></div>
+<p></br><div id="col_desc" class="col_desc"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <b>Field Layout Columns </b></div></p>
+
  <div id="container" ></div>
- <div id="trial_coords" >loading...</div> 
+ <div id="trial_coords" >loading...</div>
  <div id="trial_no_coordsMSG" >Upload physical field coordinates for this trial</div>  
 
  <script defer="defer">
@@ -39,7 +54,8 @@ var trial_id = <% $trial_id %>;
 		if (response.coord_col[0] && response.coord_row[0]){
 			jQuery("#container").css({"display": "inline-block", "overflow": "auto"});
 			//$("#container").css({"display": "inline-block", "overflow": "auto"});
-			//$("#container").css("display","inline-block");
+			jQuery("#row_desc").css("display","inline-block");
+			jQuery("#col_desc").css("display","inline-block");
            		jQuery("#trial_coords").css("display", "none"); 
 		} 
 		
