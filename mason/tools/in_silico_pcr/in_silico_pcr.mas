@@ -50,6 +50,7 @@
     	</td>
     	<td>
     		<input id="rprimer" class="form-control" size="65" value="" name="rprimer" />
+        <p id="rev_primer_alert" class="text-danger"></p>
     	</td>
     </tr>
   	<tr>
@@ -196,16 +197,40 @@
     // alert($("#fprimer").val());
     
     $("#run_blast").click(function(){
+      validate_form();
+    });
+    
+    $("#fprimer").focusout(function(){
+      validate_form();
+    });
       
-      if ($("#fprimer").val().length < 15) {
-        $('#fprimer').addClass("alert-danger");
-        $('#fwd_primer_alert').html("Primer must be 15 nt long at least");
-      }
+    $("#rprimer").focusout(function(){
+      validate_form();
     });
       
     function swap_menu(group_id) { 
       var menu_html = eval( <% JSON::Any->encode($menus) %>);
       jQuery('#database_select').html(menu_html[group_id]);
+    }
+    
+    function validate_form() {
+      
+      if ($("#fprimer").val().length < 15) {
+        $('#fprimer').addClass("alert-danger");
+        $('#fwd_primer_alert').html("Primer must be 15 nt long at least");
+      } else {
+        $('#fprimer').removeClass("alert-danger");
+        $('#fwd_primer_alert').html("");
+      }
+      
+      if ($("#rprimer").val().length < 15) {
+        $('#rprimer').addClass("alert-danger");
+        $('#rev_primer_alert').html("Primer must be 15 nt long at least");
+      } else {
+        $('#rprimer').removeClass("alert-danger");
+        $('#rev_primer_alert').html("");
+      }
+      
     }
     
   });
