@@ -43,7 +43,7 @@
   # array with the preselected output formats
   my @parse_options_selected = ();
   foreach my $po (@parse_options) { 
-    if (($po->[0] ne "Basic") && ($po->[0] ne "Table")) { 
+    if (($po->[0] ne "Basic") && ($po->[0] ne "Table") && ($po->[0] ne "Coverage")) { 
       push @parse_options_selected, $po;
     }
   }
