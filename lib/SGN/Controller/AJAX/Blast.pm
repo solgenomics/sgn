@@ -21,6 +21,8 @@ use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
 use CXGN::Blast::SeqQuery;
 
+use Time::HiRes qw(gettimeofday tv_interval);
+
 BEGIN { extends 'Catalyst::Controller::REST'; };
 
 __PACKAGE__->config(
@@ -33,6 +35,9 @@ sub run : Path('/tools/blast/run') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    my $t0 = [gettimeofday]; #-------------------------- TIME CHECK
+
+
     my $params = $c->req->params();
 
     my $input_query = CXGN::Blast::SeqQuery->new();
@@ -43,14 +48,19 @@ sub run : Path('/tools/blast/run') Args(0) {
 	$c->stash->{rest} = { error => "Your input contains illegal characters. Please verify your input." };
 	return;
     }
+  
+    my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
 	
     $params->{sequence} = $input_query->process($c, $params->{input_options}, $params->{sequence});
 
     # print STDERR "SEQUENCE now : ".$params->{sequence}."\n";
 	
+    my $t2 = [gettimeofday]; #-------------------------- TIME CHECK
+  
 	if ($params->{input_options} eq 'autodetect') {
 		my $detected_type = $input_query->autodetect_seq_type($c, $params->{input_options}, $params->{sequence});
 		
+    
 		# print STDERR "SGN BLAST detected your sequence is: $detected_type\n";
 		
 		# create a hash with the valid options =1 and check and if result 0 return error
@@ -79,18 +89,20 @@ sub run : Path('/tools/blast/run') Args(0) {
 			return;
 		}
 	}
+    my $t3 = [gettimeofday]; #-------------------------- TIME CHECK
 	
     my $seq_count = 1;
     my $blast_tmp_output = $c->config->{cluster_shared_tempdir}."/blast";
     mkdir $blast_tmp_output if ! -d $blast_tmp_output;
-	if ($params->{sequence} =~ /\>/) {
-		$seq_count= $params->{sequence} =~ tr/\>/\>/;
-	}
+    if ($params->{sequence} =~ /\>/) {
+    	$seq_count= $params->{sequence} =~ tr/\>/\>/;
+    }
+    
     print STDERR "SEQ COUNT = $seq_count\n";
     my ($seq_fh, $seqfile) = tempfile( 
-	"blast_XXXXXX",
-	DIR=> $blast_tmp_output,
-	);
+      "blast_XXXXXX",
+      DIR=> $blast_tmp_output,
+    );
     
     my $jobid = basename($seqfile);
 
@@ -222,6 +234,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 	     return -p => $params->{program};
 	 },
 	);
+  my $t4 = [gettimeofday]; #-------------------------- TIME CHECK
 
     print STDERR "BUILDING COMMAND...\n";
 	
@@ -230,12 +243,12 @@ sub run : Path('/tools/blast/run') Args(0) {
     #
     my @command = ('blastall');
     foreach my $k (keys %arg_handlers) { 
-	
-	print STDERR "evaluating $k..."; 
-	my @x = $arg_handlers{$k}->(); 
-	print STDERR "component:
-  ", (join ",", @x)."\n"; 
-	@command = (@command, @x);
+
+      print STDERR "evaluating $k..."; 
+      my @x = $arg_handlers{$k}->(); 
+      print STDERR "component:
+      ", (join ",", @x)."\n"; 
+      @command = (@command, @x);
     } 
 	
     print STDERR "COMMAND: ".join(" ", @command);
@@ -246,55 +259,77 @@ sub run : Path('/tools/blast/run') Args(0) {
     
     # now run the blast
     #
+    my $t5 = [gettimeofday]; #-------------------------- TIME CHECK
 
-  my $job;
-  eval { 
-	  $job = CXGN::Tools::Run->run_cluster(
-	    @command,
-	    { 
-        temp_base => $blast_tmp_output,
-        queue => $c->config->{'web_cluster_queue'},
-        working_dir => $blast_tmp_output,
+
+    my $job;
+    eval { 
+      $job = CXGN::Tools::Run->run_cluster(
+        @command,
+        { 
+          temp_base => $blast_tmp_output,
+          queue => $c->config->{'web_cluster_queue'},
+          working_dir => $blast_tmp_output,
         
-        # temp_base => $c->config->{'cluster_shared_tempdir'},
-        # queue => $c->config->{'web_cluster_queue'},
-        # working_dir => $c->config->{'cluster_shared_tempdir'},
+          # temp_base => $c->config->{'cluster_shared_tempdir'},
+          # queue => $c->config->{'web_cluster_queue'},
+          # working_dir => $c->config->{'cluster_shared_tempdir'},
 
-		    # don't block and wait if the cluster looks full
-		    max_cluster_jobs => 1_000_000_000,
-	    }
-	  );
+  		    # don't block and wait if the cluster looks full
+  		    max_cluster_jobs => 1_000_000_000,
+  	    }
+  	  );
 	 
-	 print STDERR "Saving job state to $seqfile.job for id ".$job->job_id()."\n";
+   
+      print STDERR "Saving job state to $seqfile.job for id ".$job->job_id()."\n";
 
-	 $job->do_not_cleanup(1);
+      $job->do_not_cleanup(1);
 
-	 nstore( $job, $seqfile.".job" )
-	     or die 'could not serialize job object';
+      nstore( $job, $seqfile.".job" ) or die 'could not serialize job object';
 
     };
 
+    my $t6 = [gettimeofday]; #-------------------------- TIME CHECK
+
+
     if ($@) { 
-	print STDERR "An error occurred! $@\n";
-	$c->stash->{rest} = { error => $@ };
+      print STDERR "An error occurred! $@\n";
+      $c->stash->{rest} = { error => $@ };
     }
     else { 
-		# write data in blast.log
-		my $blast_log_path = $c->config->{blast_log};
-		my $blast_log_fh;
-		if (-e $blast_log_path) {
-			open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
-		} else {
-			open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
-			print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
-		}
-		print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
+  		# write data in blast.log
+  		my $blast_log_path = $c->config->{blast_log};
+  		my $blast_log_fh;
+  		if (-e $blast_log_path) {
+  			open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
+  		} else {
+  			open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
+  			print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
+  		}
+  		print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
 		
-		
-		print STDERR "Passing jobid code ".(basename($jobid))."\n";
-		$c->stash->{rest} = { jobid =>  basename($jobid), 
-	                      seq_count => $seq_count, 
-		};
+      my $t7 = [gettimeofday]; #-------------------------- TIME CHECK
+  		my $t0_t1 = tv_interval $t0, $t1;
+  		my $t0_t2 = tv_interval $t0, $t2;
+  		my $t0_t3 = tv_interval $t0, $t3;
+  		my $t0_t4 = tv_interval $t0, $t4;
+  		my $t0_t5 = tv_interval $t0, $t5;
+  		my $t0_t6 = tv_interval $t0, $t6;
+  		my $t0_t7 = tv_interval $t0, $t7;
+
+      print "0-1: $t0_t1\n";
+      print "0-2: $t0_t2\n";
+      print "0-3: $t0_t3\n";
+      print "0-4: $t0_t4\n";
+      print "0-5: $t0_t5\n";
+      print "0-6: $t0_t6\n";
+      print "0-7: $t0_t7\n";
+      
+      
+  		print STDERR "Passing jobid code ".(basename($jobid))."\n";
+  		$c->stash->{rest} = { jobid =>  basename($jobid), 
+  	                      seq_count => $seq_count, 
+  		};
     }
 }
 
@@ -304,47 +339,67 @@ sub check : Path('/tools/blast/check') Args(1) {
     my $c = shift;
     my $jobid = shift;
     
+    my $t0 = [gettimeofday]; #-------------------------- TIME CHECK
+    
     my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/blast";
     
     #my $jobid =~ s/\.\.//g; # prevent hacks
     my $job = retrieve($blast_tmp_output."/".$jobid.".job");
     
+    my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
+    
     if ( $job->alive ){
-	sleep(1);
-	$c->stash->{rest} = { status => 'running', };
-	return;
+      sleep(1);
+      $c->stash->{rest} = { status => 'running', };
+  
+      return;
     }
     else {
-	# the job has finished
-	# copy the cluster temp file back into "apache space"
-	#
-	my $result_file = $self->jobid_to_file($c, $jobid.".out");
+      
+      my $t3 = [gettimeofday]; #-------------------------- TIME CHECK
+      
+      # the job has finished
+      # copy the cluster temp file back into "apache space"
+      #
+      my $result_file = $self->jobid_to_file($c, $jobid.".out");
 
-	my $job_out_file = $job->out_file();
-	for( 1..10 ) {
-	    uncache($job_out_file);
-	    last if -f $job_out_file;
-	    sleep 1;
-	}
+      my $job_out_file = $job->out_file();
+      for( 1..10 ) {
+  	    uncache($job_out_file);
+  	    last if -f $job_out_file;
+  	    sleep 1;
+        my $t4 = [gettimeofday]; #-------------------------- TIME CHECK
+    		my $t3_t4 = tv_interval $t3, $t4;
+        print "3-4: $t3_t4\n";
+      
+      }
 	
-	-f $job_out_file or die "job output file ($job_out_file) doesn't exist";
-	-r $job_out_file or die "job output file ($job_out_file) not readable";
+      -f $job_out_file or die "job output file ($job_out_file) doesn't exist";
+      -r $job_out_file or die "job output file ($job_out_file) not readable";
 
-	# You may wish to provide a different output file to send back
-	# rather than STDOUT from the job.  Use the out_file_override
-	# parameter if this is the case.
-	#my $out_file = $out_file_override || $job->out_file();
-	system("ls $blast_tmp_output 2>&1 >/dev/null");
-  # system("ls $c->{config}->{cluster_shared_tempdir} 2>&1 >/dev/null");
-	copy($job_out_file, $result_file)
-	    or die "Can't copy result file '$job_out_file' to $result_file ($!)";
+      # You may wish to provide a different output file to send back
+      # rather than STDOUT from the job.  Use the out_file_override
+      # parameter if this is the case.
+      #my $out_file = $out_file_override || $job->out_file();
+      system("ls $blast_tmp_output 2>&1 >/dev/null");
+      # system("ls $c->{config}->{cluster_shared_tempdir} 2>&1 >/dev/null");
+      copy($job_out_file, $result_file) or die "Can't copy result file '$job_out_file' to $result_file ($!)";
 	
-	#clean up the job tempfiles
-	$job->cleanup();
+    	#clean up the job tempfiles
+    	$job->cleanup();
 	
-	#also delete the job file
+    	#also delete the job file
 	
-	$c->stash->{rest} = { status => "complete" };
+      my $t5 = [gettimeofday]; #-------------------------- TIME CHECK
+    	my $t0_t1 = tv_interval $t0, $t1;
+    	my $t0_t3 = tv_interval $t0, $t3;
+    	my $t0_t5 = tv_interval $t0, $t5;
+      print "0-1: $t0_t1\n";
+      print "0-3: $t0_t3\n";
+      print "0-5: $t0_t5\n";
+  
+  
+    	$c->stash->{rest} = { status => "complete" };
     }
 }
 
