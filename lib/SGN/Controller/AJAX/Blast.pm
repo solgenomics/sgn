@@ -317,13 +317,13 @@ sub run : Path('/tools/blast/run') Args(0) {
   		my $t0_t6 = tv_interval $t0, $t6;
   		my $t0_t7 = tv_interval $t0, $t7;
 
-      print "0-1: $t0_t1\n";
-      print "0-2: $t0_t2\n";
-      print "0-3: $t0_t3\n";
-      print "0-4: $t0_t4\n";
-      print "0-5: $t0_t5\n";
-      print "0-6: $t0_t6\n";
-      print "0-7: $t0_t7\n";
+      print STDERR "0-1: $t0_t1\n";
+      print STDERR "0-2: $t0_t2\n";
+      print STDERR "0-3: $t0_t3\n";
+      print STDERR "0-4: $t0_t4\n";
+      print STDERR "0-5: $t0_t5\n";
+      print STDERR "0-6: $t0_t6\n";
+      print STDERR "0-7: $t0_t7\n";
       
       
   		print STDERR "Passing jobid code ".(basename($jobid))."\n";
@@ -370,7 +370,7 @@ sub check : Path('/tools/blast/check') Args(1) {
   	    sleep 1;
         my $t4 = [gettimeofday]; #-------------------------- TIME CHECK
     		my $t3_t4 = tv_interval $t3, $t4;
-        print "3-4: $t3_t4\n";
+        print STDERR "3-4: $t3_t4\n";
       
       }
 	
@@ -394,9 +394,9 @@ sub check : Path('/tools/blast/check') Args(1) {
     	my $t0_t1 = tv_interval $t0, $t1;
     	my $t0_t3 = tv_interval $t0, $t3;
     	my $t0_t5 = tv_interval $t0, $t5;
-      print "0-1: $t0_t1\n";
-      print "0-3: $t0_t3\n";
-      print "0-5: $t0_t5\n";
+      print STDERR "0-1: $t0_t1\n";
+      print STDERR "0-3: $t0_t3\n";
+      print STDERR "0-5: $t0_t5\n";
   
   
     	$c->stash->{rest} = { status => "complete" };
@@ -420,6 +420,8 @@ sub get_result : Path('/tools/blast/result') Args(1) {
     my $c = shift;
     my $jobid = shift;
     
+    my $t0 = [gettimeofday]; #-------------------------- TIME CHECK
+    
     my $format = $c->req->param('format');
     my $db_id = $c->req->param('db_id');
     
@@ -434,6 +436,10 @@ sub get_result : Path('/tools/blast/result') Args(1) {
     if (!$db) { die "Can't find database with id $db_id"; }
     my $parser = CXGN::Blast::Parse->new();
     my $parsed_data = $parser->parse($c, $format, $result_file, $db);
+    
+    my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
+  	my $t0_t1 = tv_interval $t0, $t1;
+    print STDERR "0-1: $t0_t1\n";
     
     $c->stash->{rest} = $parsed_data; # { blast_report => '<pre>'.(join("\n", read_file($parsed_file))).'</pre>', };
 }
