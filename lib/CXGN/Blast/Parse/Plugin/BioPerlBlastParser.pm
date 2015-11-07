@@ -183,7 +183,7 @@ sub make_bioperl_result_writer {
 
 	my ($self, $hit, $result) = @_;
 
-	print STDERR "HIT LINK: $hit->name, $result\n";
+  # print STDERR "HIT LINK: $hit->name, $result\n";
 
 	my $id = $hit->name;
 	

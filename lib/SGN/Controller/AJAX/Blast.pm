@@ -330,7 +330,7 @@ sub check : Path('/tools/blast/check') Args(1) {
     if ( $job->alive ){
       my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
       
-      sleep(1);
+      sleep(0.5);
       $c->stash->{rest} = { status => 'running', };
       
       my $t2 = [gettimeofday]; #-------------------------- TIME CHECK
