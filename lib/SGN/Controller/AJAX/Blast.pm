@@ -49,14 +49,10 @@ sub run : Path('/tools/blast/run') Args(0) {
 	return;
     }
   
-    my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
-	
     $params->{sequence} = $input_query->process($c, $params->{input_options}, $params->{sequence});
 
     # print STDERR "SEQUENCE now : ".$params->{sequence}."\n";
 	
-    my $t2 = [gettimeofday]; #-------------------------- TIME CHECK
-  
 	if ($params->{input_options} eq 'autodetect') {
 		my $detected_type = $input_query->autodetect_seq_type($c, $params->{input_options}, $params->{sequence});
 		
@@ -89,7 +85,6 @@ sub run : Path('/tools/blast/run') Args(0) {
 			return;
 		}
 	}
-    my $t3 = [gettimeofday]; #-------------------------- TIME CHECK
 	
     my $seq_count = 1;
     my $blast_tmp_output = $c->config->{cluster_shared_tempdir}."/blast";
@@ -234,7 +229,6 @@ sub run : Path('/tools/blast/run') Args(0) {
 	     return -p => $params->{program};
 	 },
 	);
-  my $t4 = [gettimeofday]; #-------------------------- TIME CHECK
 
     print STDERR "BUILDING COMMAND...\n";
 	
@@ -259,7 +253,6 @@ sub run : Path('/tools/blast/run') Args(0) {
     
     # now run the blast
     #
-    my $t5 = [gettimeofday]; #-------------------------- TIME CHECK
 
 
     my $job;
@@ -289,7 +282,6 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     };
 
-    my $t6 = [gettimeofday]; #-------------------------- TIME CHECK
 
 
     if ($@) { 
@@ -309,21 +301,9 @@ sub run : Path('/tools/blast/run') Args(0) {
   		print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
 		
       my $t7 = [gettimeofday]; #-------------------------- TIME CHECK
-  		my $t0_t1 = tv_interval $t0, $t1;
-  		my $t0_t2 = tv_interval $t0, $t2;
-  		my $t0_t3 = tv_interval $t0, $t3;
-  		my $t0_t4 = tv_interval $t0, $t4;
-  		my $t0_t5 = tv_interval $t0, $t5;
-  		my $t0_t6 = tv_interval $t0, $t6;
   		my $t0_t7 = tv_interval $t0, $t7;
 
-      print STDERR "0-1: $t0_t1\n";
-      print STDERR "0-2: $t0_t2\n";
-      print STDERR "0-3: $t0_t3\n";
-      print STDERR "0-4: $t0_t4\n";
-      print STDERR "0-5: $t0_t5\n";
-      print STDERR "0-6: $t0_t6\n";
-      print STDERR "0-7: $t0_t7\n";
+      print STDERR "RUN BLAST TIME: $t0_t7\n";
       
       
   		print STDERR "Passing jobid code ".(basename($jobid))."\n";
@@ -346,12 +326,18 @@ sub check : Path('/tools/blast/check') Args(1) {
     #my $jobid =~ s/\.\.//g; # prevent hacks
     my $job = retrieve($blast_tmp_output."/".$jobid.".job");
     
-    my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
     
     if ( $job->alive ){
+      my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
+      
       sleep(1);
       $c->stash->{rest} = { status => 'running', };
-  
+      
+      my $t2 = [gettimeofday]; #-------------------------- TIME CHECK
+      
+  		my $t1_t2 = tv_interval $t1, $t2;
+      print STDERR "Job alive: $t1_t2\n";
+      
       return;
     }
     else {
@@ -370,33 +356,55 @@ sub check : Path('/tools/blast/check') Args(1) {
   	    sleep 1;
         my $t4 = [gettimeofday]; #-------------------------- TIME CHECK
     		my $t3_t4 = tv_interval $t3, $t4;
-        print STDERR "3-4: $t3_t4\n";
+        print STDERR "Job not alive loop: $t3_t4\n";
       
       }
+      my $t5 = [gettimeofday]; #-------------------------- TIME CHECK
 	
       -f $job_out_file or die "job output file ($job_out_file) doesn't exist";
       -r $job_out_file or die "job output file ($job_out_file) not readable";
+      
+      my $t6 = [gettimeofday]; #-------------------------- TIME CHECK
 
       # You may wish to provide a different output file to send back
       # rather than STDOUT from the job.  Use the out_file_override
       # parameter if this is the case.
       #my $out_file = $out_file_override || $job->out_file();
       system("ls $blast_tmp_output 2>&1 >/dev/null");
+      
+      my $t7 = [gettimeofday]; #-------------------------- TIME CHECK
+      
       # system("ls $c->{config}->{cluster_shared_tempdir} 2>&1 >/dev/null");
       copy($job_out_file, $result_file) or die "Can't copy result file '$job_out_file' to $result_file ($!)";
 	
+      my $t8 = [gettimeofday]; #-------------------------- TIME CHECK
+  
     	#clean up the job tempfiles
     	$job->cleanup();
+      
+      my $t9 = [gettimeofday]; #-------------------------- TIME CHECK
 	
     	#also delete the job file
 	
-      my $t5 = [gettimeofday]; #-------------------------- TIME CHECK
-    	my $t0_t1 = tv_interval $t0, $t1;
-    	my $t0_t3 = tv_interval $t0, $t3;
-    	my $t0_t5 = tv_interval $t0, $t5;
-      print STDERR "0-1: $t0_t1\n";
-      print STDERR "0-3: $t0_t3\n";
-      print STDERR "0-5: $t0_t5\n";
+      my $t10 = [gettimeofday]; #-------------------------- TIME CHECK
+      
+    	my $t5_t6 = tv_interval $t5, $t6;
+    	my $t6_t7 = tv_interval $t6, $t7;
+    	my $t7_t8 = tv_interval $t7, $t8;
+    	my $t8_t9 = tv_interval $t8, $t9;
+    	my $t9_t10 = tv_interval $t9, $t10;
+      
+    	my $t3_t10 = tv_interval $t3, $t10;
+    	my $t0_t10 = tv_interval $t0, $t10;
+      
+      print STDERR "check 5-6 interval: $t5_t6\n";
+      print STDERR "check 6-7 interval: $t6_t7\n";
+      print STDERR "check 7-8 interval: $t7_t8\n";
+      print STDERR "check 8-9 interval: $t8_t9\n";
+      print STDERR "check 9-10 interval: $t9_t10\n";
+      
+      print STDERR "Job not alive (else): $t3_t10\n";
+      print STDERR "CHECK SUB TIME: $t0_t10\n";
   
   
     	$c->stash->{rest} = { status => "complete" };
@@ -439,7 +447,7 @@ sub get_result : Path('/tools/blast/result') Args(1) {
     
     my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
   	my $t0_t1 = tv_interval $t0, $t1;
-    print STDERR "0-1: $t0_t1\n";
+    print STDERR "GET RESULT SUB TIME: $t0_t1\n";
     
     $c->stash->{rest} = $parsed_data; # { blast_report => '<pre>'.(join("\n", read_file($parsed_file))).'</pre>', };
 }
