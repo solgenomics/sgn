@@ -330,7 +330,7 @@ sub check : Path('/tools/blast/check') Args(1) {
     if ( $job->alive ){
       my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
       
-      sleep(0.5);
+      sleep(1);
       $c->stash->{rest} = { status => 'running', };
       
       my $t2 = [gettimeofday]; #-------------------------- TIME CHECK
@@ -436,7 +436,7 @@ sub get_result : Path('/tools/blast/result') Args(1) {
     my $result_file = $self->jobid_to_file($c, $jobid.".out");
     my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/blast";
     
-    system("ls $blast_tmp_output 2>&1 >/dev/null");
+    # system("ls $blast_tmp_output 2>&1 >/dev/null");
     # system("ls ".($c->config->{cluster_shared_tempdir})." 2>&1 >/dev/null");
 
     my $schema = $c->dbic_schema("SGN::Schema");
