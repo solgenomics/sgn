@@ -370,7 +370,7 @@ sub check : Path('/tools/blast/check') Args(1) {
       # rather than STDOUT from the job.  Use the out_file_override
       # parameter if this is the case.
       #my $out_file = $out_file_override || $job->out_file();
-      system("ls $blast_tmp_output 2>&1 >/dev/null");
+      # system("ls $blast_tmp_output 2>&1 >/dev/null");
       
       my $t7 = [gettimeofday]; #-------------------------- TIME CHECK
       
