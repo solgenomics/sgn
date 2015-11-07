@@ -1,6 +1,12 @@
 <%args>
+$pcr_seq => ''
+$gel_url => ''
 </%args>
 
 <& /page/page_title.mas, title=>"In Silico PCR Results" &>
-
-
+<br>
+<center>
+  <img class="img-thumbnail" width="300" src=<% "/static/tmp_files/".$gel_url %>>
+  <br><br>
+  <pre class="text-left"><% $pcr_seq %></pre>
+</center>

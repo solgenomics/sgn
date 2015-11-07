@@ -34,14 +34,14 @@
       <label class="blast_select_label" for="fprimer">Forward Primer </label>
       	</td>
       	<td>
-      		<input id="fprimer" class="form-control" size="65" value="" name="fprimer" />
+      		<input id="fprimer" class="form-control" size="65" value="GGTTGTTGTTTAAATGCTCTTTCACTTGCAATGAAAGAAGAAATTGTTAAGTCAAGGTGA" name="fprimer" />
           <p id="fwd_primer_alert" class="text-danger"></p>
       	</td>
       </tr>
   	<tr>
   		<td></td>
       <td>
-  			<input id="frevcom" type="checkbox" name="frevcom"/> <label class="blast_select_label" for="frevcom">Reverse Complement </label>
+  			<input id="frevcom" type="checkbox" checked="checked" name="frevcom"/> <label class="blast_select_label" for="frevcom">Reverse Complement </label>
       </td>
     </tr>
   	<tr>
@@ -49,7 +49,7 @@
         <label class="blast_select_label" for="rprimer">Reverse Primer </label>
     	</td>
     	<td>
-    		<input id="rprimer" class="form-control" size="65" value="" name="rprimer" />
+    		<input id="rprimer" class="form-control" size="65" value="ATGGCGAAAAGTGCAATGTATGATCAAAAATCAATTGAAGATAAATTTTCAAAGATACAT" name="rprimer" />
         <p id="rev_primer_alert" class="text-danger"></p>
     	</td>
     </tr>
@@ -65,7 +65,7 @@
         <label class="blast_select_label" for="productLength">Product Maximum Length </label>
       </td>
       <td>
-        <input class="blast_select_box form-control" size="5" value="5000" name="productLength" />
+        <input class="blast_select_box form-control" size="5" value="7000" name="productLength" />
       </td>
     </tr>
     <tr>
@@ -118,10 +118,10 @@
       </tr>
       <tr>
       	<td>
-        <label class="blast_select_label" for="expect">e value</label>
+        <label class="blast_select_label" for="evalue">e value</label>
       	</td>
           <td >
-          	<input class="blast_select_box form-control" type="text" size="10" value="10" name="expect" />
+          	<input class="blast_select_box form-control" type="text" size="10" value="10" name="evalue" />
           </td>
       </tr>
       <tr>
@@ -198,6 +198,7 @@
     
     $("#run_blast").click(function(){
       validate_form();
+      $('#PCRform').submit();
     });
     
     $("#fprimer").focusout(function(){
