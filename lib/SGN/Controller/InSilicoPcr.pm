@@ -221,6 +221,7 @@ sub run_pcr_blast :Path('/tools/pcr_results') :Args(0) {
   print STDERR "gel_img_tempdir: $gel_img_tempdir\n";
   print STDERR "gel_url: ".$pcr_img_path."/".$gel_url."\n";
   
+  $c->stash->{blast_file} = basename($result_file);
   $c->stash->{pcr_seq} = $pcr_seq;
   $c->stash->{gel_url} = $pcr_img_path."/".$gel_url;
   $c->stash->{template} = '/tools/in_silico_pcr/insilicopcr_output.mas';

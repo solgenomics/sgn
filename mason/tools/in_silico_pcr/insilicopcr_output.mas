@@ -1,4 +1,5 @@
 <%args>
+$blast_file => ''
 $pcr_seq => ''
 $gel_url => ''
 </%args>
@@ -8,5 +9,14 @@ $gel_url => ''
 <center>
   <img class="img-thumbnail" src=<% $gel_url %>>
   <br><br>
+  <&| /page/info_section.mas, title=>"Amplified Fragments", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">BLAST&#8675;</a>' &>
   <pre class="text-left"><% $pcr_seq %></pre>
+  </&>
 </center>
+
+<script>
+  function download() { 
+    var blast_file = eval(<% $blast_file %>);
+    window.location.href= '/documents/tempfiles/blast/'+blast_file;
+  }
+</script>
