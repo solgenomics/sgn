@@ -26,12 +26,10 @@ sub prereqs {
       </div>
       <div class="modal-body">
         <dl>
-          <dt>Hit region <span class="region_string"></span></dt>
             <dd>
               <div style="margin: 0.5em 0"><a class="match_details" href="" target="_blank">View matched sequence</a></div>
               <div class="hit_region_xrefs"></div>
             </dd>
-          <dt>Subject sequence <span class="sequence_name"></span></dt>
             <dd class="subject_sequence_xrefs">
             </dd>
         </dl>
@@ -46,15 +44,14 @@ sub prereqs {
 
   function resolve_blast_ident( id, id_region, match_detail_url, identifier_url ) {
     var popup = jQuery( "#xref_menu_popup" );
-
-    var sequence_name = popup.find('.sequence_name');
+    
+    jQuery('.modal-title').html( id );
+    
     if( identifier_url == null ) {
-       sequence_name.html( id );
+       jQuery('.sequence_name').html( id );
     } else {
-       sequence_name.html( '<a href="' + identifier_url + '" target="_blank">' + id + '</a>' );
+       jQuery('.sequence_name').html( '<a href="' + identifier_url + '" target="_blank">' + id + '</a>' );
     }
-
-    popup.find('.region_string').html( id_region );
 
     popup.find('a.match_details').attr( 'href', match_detail_url );
 
@@ -67,12 +64,12 @@ sub prereqs {
     var region = popup.find('.hit_region_xrefs');
     region.html( '<img src="/img/throbber.gif" /> searching ...' );
     region.load( '/api/v1/feature_xrefs?q='+id_region );
-
+    
     popup.modal("show");
 
     return false;
   }
-
+  
 </script>
 
 
@@ -108,14 +105,15 @@ sub parse {
 
   open (my $blast_fh, "<", $file);
 
-  push(@res_html, "<center><table id=\"blast_table\" class=\"table\">");
-  push(@res_html, "<tr><th>QueryId</th><th>SubjectId</th><th>id%</th><th>Aln</th><th>evalue</th><th>Score</th><th>Description</th></tr>");
+  push(@res_html, "<table id=\"blast_table\" class=\"table\">");
+  push(@res_html, "<tr><th>SubjectId</th><th>id%</th><th>Aln</th><th>evalue</th><th>Score</th><th>Description</th></tr>");
 
   while (my $line = <$blast_fh>) {
     chomp($line);
 
     if ($line =~ /Query\=\s*(\S+)/) {
       $query = $1;
+      unshift(@res_html, "<center><h3>$query</h3>");
     }
 
     if ($append_desc) {
@@ -134,7 +132,7 @@ sub parse {
       $append_desc = 1;
       
       if ($subject) {
-        push(@res_html, "<tr><td>$query</td><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$subject:$sstart..$send', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+        push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$subject:$sstart..$send', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
         # push(@res_html, "<tr><td>$query</td><td>$subject</td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
         # push(@res_html, "<tr><td>$query</td><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" target=\"_blank\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
       }
@@ -159,7 +157,7 @@ sub parse {
 
     if ($line =~ /Score\s*=/ && $one_hsp == 1) {
       # push(@res_html, "<tr><td>$query</td><td>$subject</td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
-      push(@res_html, "<tr><td>$query</td><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$subject:$sstart..$send', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+      push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$subject:$sstart..$send', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
 
       $id = 0.0;
       $aln = 0;
@@ -184,8 +182,9 @@ sub parse {
 
     if ($line =~ /Identities\s*=\s*(\d+)\/(\d+)/) {
       my $aln_matched = $1;
-      $aln = $2;
-      $id = sprintf("%.2f", $aln_matched*100/$aln);
+      my $aln_total = $2;
+      $aln = "$aln_matched/$aln_total";
+      $id = sprintf("%.2f", $aln_matched*100/$aln_total);
     }
 
     if (($line =~ /^Query:\s+(\d+)/) && ($qstart == 0)) {
@@ -209,7 +208,7 @@ sub parse {
 
   }
   # push(@res_html, "<tr><td>$query</td><td>$subject</td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
-  push(@res_html, "<tr><td>$query</td><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$subject:$sstart..$send', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+  push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$subject:$sstart..$send', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
   push(@res_html, "</table></center>");
   
   push(@res_html, "<br><pre>");
