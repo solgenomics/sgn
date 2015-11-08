@@ -212,16 +212,17 @@ sub run_pcr_blast :Path('/tools/pcr_results') :Args(0) {
     $c->stash->{rest} = { error => $blast_error };
   }
   
+  my $pcr_img_path = $c->tempfiles_subdir('temp_images');
+  my $gel_img_tempdir = $c->path_to( $c->tempfiles_subdir('temp_images') );
+
+  my ($pcr_seq,$gel_url) = _blast_to_pcr($result_file,$params,$gel_img_tempdir,$basename);
   
-  my $pcr_img_path = $c->config->{'tempfiles_subdir'};
-  my ($pcr_seq,$gel_url) = _blast_to_pcr($result_file,$params,$pcr_img_path,$basename);
   
-  
-  print STDERR "pcr_img_path: $pcr_img_path\n";
-  print STDERR "gel_url: $gel_url\n";
+  print STDERR "gel_img_tempdir: $gel_img_tempdir\n";
+  print STDERR "gel_url: ".$pcr_img_path."/".$gel_url."\n";
   
   $c->stash->{pcr_seq} = $pcr_seq;
-  $c->stash->{gel_url} = $gel_url;
+  $c->stash->{gel_url} = $pcr_img_path."/".$gel_url;
   $c->stash->{template} = '/tools/in_silico_pcr/insilicopcr_output.mas';
 }
 

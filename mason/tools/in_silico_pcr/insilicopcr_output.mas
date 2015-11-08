@@ -6,7 +6,7 @@ $gel_url => ''
 <& /page/page_title.mas, title=>"In Silico PCR Results" &>
 <br>
 <center>
-  <img class="img-thumbnail" src=<% "/static/documents/tempfiles/".$gel_url %>>
+  <img class="img-thumbnail" src=<% $gel_url %>>
   <br><br>
   <pre class="text-left"><% $pcr_seq %></pre>
 </center>
