@@ -267,12 +267,12 @@ sub store {
 	$file_row->insert();
 	foreach my $nd_experiment_id (keys %experiment_ids) {
 	    ## Link the file to the experiment
-	    my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")
-		->create({
-			  nd_experiment_id => $nd_experiment_id,
-			  file_id => $file_row->file_id(),
-			 });
-	    $experiment_files->insert();
+	#   my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")
+	#	->create({
+	#		  nd_experiment_id => $nd_experiment_id,
+	#		  file_id => $file_row->file_id(),
+	#		 });
+	#    $experiment_files->insert();
 	    print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
 	}
     }

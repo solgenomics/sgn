@@ -635,16 +635,14 @@ sub genotype_data {
 		my $stock = $geno->get_column('stock_name');
 		
 		my $duplicate_stock;
-
+		
 		if ($cnt > 1)
 		{
-		    ($duplicate_stock) = grep(/$stock/, @stocks);
+		    ($duplicate_stock) = grep(/^$stock$/, @stocks);
 		}
                  
-                if ( $cnt == 1  || ($cnt > 1 && !$duplicate_stock) )
-                {
-                    push @stocks, $stock;
-                    
+                if ( ($cnt == 1)  || (($cnt > 1) && (!$duplicate_stock)) )
+                {                    
                     my $json_values  = $geno->get_column('value');
                     my $values       = JSON::Any->decode($json_values);
                     my @markers      = keys %$values;
@@ -654,6 +652,7 @@ sub genotype_data {
                   
                     if ($similarity == 1)     
                     {
+			push @stocks, $stock;
                         my $geno_values = $self->stock_genotype_values($geno);               
                         $geno_data     .= $geno_values;                       
                     }
@@ -679,20 +678,21 @@ sub genotype_data {
                 $cnt++;
               	
 		my $stock = $geno->get_column('stock_name');
-		
+				
 		my $duplicate_stock;
 
 		if ($cnt > 1)
 		{
-		    ($duplicate_stock) = grep(/$stock/, @stocks);
-		}
+		    ($duplicate_stock) = grep(/^$stock$/, @stocks);
+      		}
                  
-                if ( $cnt == 1  || ($cnt > 1 && !$duplicate_stock) )
+                if ( ($cnt == 1)  || (($cnt > 1) && (!$duplicate_stock)) )
                 {
 		    my $json_values = $geno->get_column('value');
 		    my $values      = JSON::Any->decode($json_values);
 		    my @markers     = keys %$values;
-
+		    my $marker_count = scalar(@markers);
+		    
 		    if ($cnt == 1) 
 		    {
 			@header_markers = @markers;   
@@ -706,6 +706,7 @@ sub genotype_data {
                 
 		    if ($similarity == 1)     
 		    {
+			push @stocks, $stock;
 			my $geno_values = $self->stock_genotype_values($geno);             
 			$geno_data     .= $geno_values;
 		    }
@@ -733,22 +734,22 @@ sub format_user_list_genotype_data {
     my $population_type = $self->context->stash->{population_type};
    
     my @genotypes;
+    my @filtered_genotypes;
 
     if ($population_type =~ /reference/)         
     {
 	my  @plots = @{ $self->context->stash->{reference_population_plot_names} };
 	my $genotypes_rs = $self->get_genotypes_from_plots(\@plots);
 	
-	while (my $genotype = $genotypes_rs->next) {
+	while (my $genotype = $genotypes_rs->next) 
+	{
 	    my $name = $genotype->uniquename;
 	    push @genotypes, $name;
-
 	}
     }
     else
     {
-	@genotypes = @{$self->context->stash->{genotypes_list}};
-	    
+	@genotypes = @{$self->context->stash->{genotypes_list}};	    
     }    
  
     @genotypes = uniq(@genotypes);
@@ -758,30 +759,42 @@ sub format_user_list_genotype_data {
     my @header_markers;
 
     my $list_genotypes_rs = $self->accessions_list_genotypes_rs(\@genotypes);
-
-    while (my $stock_genotype = $list_genotypes_rs->next) {
-
+    my $cnt = 0;
+    
+    while (my $stock_genotype = $list_genotypes_rs->next) 
+    {
+	$cnt++;
 	my $stock_name = $stock_genotype->get_column('stock_name');
-
-	unless ($header_markers) 
+	my $duplicate_stock;
+       
+	if ($cnt > 1)
 	{
-	    $header_markers   = $self->extract_project_markers($stock_genotype);                
-	    $geno_data = "\t" . $header_markers . "\n";
-	    @header_markers = split(/\t/, $header_markers);
-        }
-      
-	my $json_values  = $stock_genotype->get_column('value');
-	my $values       = JSON::Any->decode($json_values);
-	my @markers      = keys %$values;
-            
-	my $common_markers = scalar(intersect(@header_markers, @markers));
-	my $similarity = $common_markers / scalar(@header_markers);
+	    ($duplicate_stock) = grep(/^$stock_name$/, @filtered_genotypes);
+	}
 	
-	if ($similarity == 1 )     
+	if ( ($cnt == 1)  || (($cnt > 1) && (!$duplicate_stock)) )
 	{
-	    my $geno_values = $self->stock_genotype_values($stock_genotype);               
-	    $geno_data .= $geno_values;
-	}       
+	    unless ($header_markers) 
+	    {
+		$header_markers   = $self->extract_project_markers($stock_genotype);                
+		$geno_data = "\t" . $header_markers . "\n";
+		@header_markers = split(/\t/, $header_markers);
+	    }
+	    
+	    my $json_values  = $stock_genotype->get_column('value');
+	    my $values       = JSON::Any->decode($json_values);
+	    my @markers      = keys %$values;
+            
+	    my $common_markers = scalar(intersect(@header_markers, @markers));
+	    my $similarity = $common_markers / scalar(@header_markers);
+	
+	    if ($similarity == 1 )     
+	    {
+		push @filtered_genotypes, $stock_name;
+		my $geno_values = $self->stock_genotype_values($stock_genotype);               
+		$geno_data .= $geno_values;
+	    }   
+	}    
     }
 
     if ($population_type =~ /reference/) 
@@ -816,11 +829,9 @@ sub project_genotype_data_rs {
         ->search_related('genotypeprops')
 	->search_related('type',
 			 {},               
-                         { 
-			     select   => [qw / genotypeprops.genotypeprop_id genotypeprops.value 
-                                            me.project_id me.name object.stock_id object.uniquename / ],
-			     as       => [ qw / genotypeprop_id value project_id project_name stock_id stock_name / ],
-			     distinct => [ qw / stock_name /]
+                         { select   => [qw / object.uniquename object.stock_id  me.name me.project_id genotypeprops.genotypeprop_id genotypeprops.value  / ],
+			        as       => [ qw / stock_name stock_id project_name project_id genotypeprop_id value / ],
+				     distinct => 1,
                          }
         );
 
@@ -864,7 +875,8 @@ sub accessions_list_genotypes_rs {
                          {'type.name' => {'ilike' => 'snp genotyping'}},
                          {  
                              select => [ qw / me.stock_id me.uniquename  genotypeprops.genotypeprop_id genotypeprops.value / ], 
-                             as     => [ qw / stock_id stock_name  genotypeprop_id value/ ] 
+			     as     => [ qw / stock_id stock_name  genotypeprop_id value/ ],
+			     distinct => 1,
                          }
         );
 
@@ -987,8 +999,11 @@ sub stock_genotype_values {
     my $json_values  = $geno_row->get_column('value');
     my $values       = JSON::Any->decode($json_values);
     my @markers      = keys %$values;
-      
-    my $round =  Math::Round::Var->new(0);
+    my $marker_count = scalar(@markers);
+    
+    my $stock_name = $geno_row->get_column('stock_name');
+   
+    my $round = Math::Round::Var->new(0);
                       
     my $geno_values = $geno_row->get_column('stock_name') . "\t";
    

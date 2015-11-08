@@ -114,10 +114,12 @@ sub autodetect_seq_type {
 		
 		foreach my $line (@lines) {
 			if ($line !~ />/) {
-				$valid_nt += $sequence=~ tr/acgtACGTNn /acgtACGTNn /;
+        $line=~ s/[^a-z]+//gi;
+				$valid_nt += $line=~ tr/acgtACGTNn /acgtACGTNn /;
 			}
 		}
 	} else {
+    $sequence=~ s/[^a-z]+//gi;
 		$valid_nt += $sequence=~ tr/acgtACGTNn /acgtACGTNn /;
 	}
 	

@@ -43,7 +43,7 @@
   # array with the preselected output formats
   my @parse_options_selected = ();
   foreach my $po (@parse_options) { 
-    if (($po->[0] ne "Basic") && ($po->[0] ne "Table")) { 
+    if (($po->[0] ne "Basic") && ($po->[0] ne "Table") && ($po->[0] ne "Coverage")) { 
       push @parse_options_selected, $po;
     }
   }
@@ -94,7 +94,7 @@
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
-<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a href="/help/tools/blast">Help</a>' &>
+<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/tools/blast" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
   
   <div class="form-group form-inline">
@@ -192,6 +192,7 @@
     
   </div>
 </div>
+
 
 <div class="modal fade" id="search_modal" role="dialog">
   <div class="modal-dialog modal-lg">
@@ -328,6 +329,7 @@ h1 {
 .ui-dialog {
 	position:relative;
 }
+
 #region_square {
 	position:absolute;
 	vertical-align:middle;
@@ -357,43 +359,7 @@ h1 {
   max-width: 98%;
 }
 
-.submit_blast_button {
-background-color:#555555;
-/*background-color:#4387FD;*/
-border:0px;
-border-radius:2px;
-/*color:#fff;*/
-color:#EEEEEE;
-box-shadow: 1px 1px 0px 0px #C6C6C6;
-font-family:Arial;
-font-size:12px;
-height:20px;
-line-height:18px;
-vertical-align: top;
-cursor:pointer;
-}
-.submit_blast_button:hover {
-background-color:#444444;
-/*background-color:#5EA1FF;*/
-/*color:#acf;*/
-color:#fff;
-}
-.submit_blast_button:active {
-position:relative;
-top:1px;
-left:1px;
-box-shadow: 0px 0px 0px 0px #fff;
-}
 
-/*.blast_search_input_box {
-border-color:#AAA;
-border-width:1px;
-border-style:solid;
-border-radius:5px;
-height: 20px;
-padding-left: 5px;
-}
-*/
 .download_tag {
   display:none;
 }
