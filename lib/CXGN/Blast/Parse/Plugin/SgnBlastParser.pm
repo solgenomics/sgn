@@ -118,6 +118,16 @@ sub parse {
       $query = $1;
     }
 
+    if ($append_desc) {
+      if ($line =~ /\w+/) {
+        my $new_desc_line = $line;
+        $new_desc_line =~ s/\s+/ /g;
+        $desc .= $new_desc_line;
+      }
+      else {
+        $append_desc = 0;
+      }
+    }
 
     if ($line =~ /^>/) {
       $start_aln = 1;
@@ -140,17 +150,12 @@ sub parse {
       $desc = "";
       $one_hsp = 0;
 
-      if ($line =~ /^>(\S+)\s+(.+)/) {
+      if ($line =~ /^>(\S+)\s*(.*)/) {
         $subject = $1;
         $desc = $2;
       }
     }
 
-    if ($append_desc && $line =~ /\w+/) {
-      my $new_desc_line = $line;
-      $new_desc_line =~ s/\s+/ /g;
-      $desc .= $new_desc_line;
-    }
 
     if ($line =~ /Score\s*=/ && $one_hsp == 1) {
       # push(@res_html, "<tr><td>$query</td><td>$subject</td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
@@ -171,6 +176,7 @@ sub parse {
       $one_hsp = 1;
       $append_desc = 0;
     }
+
 
     if ($line =~ /Expect\s*=\s*([\d\.\-e]+)/) {
       $evalue = $1;
