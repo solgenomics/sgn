@@ -218,10 +218,11 @@ sub run_pcr_blast :Path('/tools/pcr_results') :Args(0) {
   my ($pcr_seq,$gel_url) = _blast_to_pcr($result_file,$params,$gel_img_tempdir,$basename);
   
   
+  # print STDERR "result_file: ".read_file($result_file)."\n";
   print STDERR "gel_img_tempdir: $gel_img_tempdir\n";
   print STDERR "gel_url: ".$pcr_img_path."/".$gel_url."\n";
   
-  $c->stash->{blast_file} = basename($result_file);
+  $c->stash->{blast_res} = read_file($result_file);
   $c->stash->{pcr_seq} = $pcr_seq;
   $c->stash->{gel_url} = $pcr_img_path."/".$gel_url;
   $c->stash->{template} = '/tools/in_silico_pcr/insilicopcr_output.mas';
@@ -382,9 +383,8 @@ sub _blast_to_pcr {
 
       #reverse complementing $find_subseq if the orientation is '-'
       $pcr_seq = $seq_obj->revcom->seq if $result->[2] eq '-'; 
-  
-      # print STDERR " $find_id\n $pcr_seq\n";
-
+      
+      $pcr_seq = ">$find_id\n$pcr_seq"
     }
     
     ##############################################################################################################################
