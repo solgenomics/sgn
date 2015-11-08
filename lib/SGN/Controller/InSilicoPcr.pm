@@ -217,11 +217,8 @@ sub run_pcr_blast :Path('/tools/pcr_results') :Args(0) {
   my ($pcr_seq,$gel_url) = _blast_to_pcr($result_file,$params,$pcr_img_path,$basename);
   
   
-  
-
-      
-  
-  
+  print STDERR "pcr_img_path: $pcr_img_path\n";
+  print STDERR "gel_url: $gel_url\n";
   
   $c->stash->{pcr_seq} = $pcr_seq;
   $c->stash->{gel_url} = $gel_url;
@@ -283,11 +280,11 @@ sub _blast_to_pcr {
 
   foreach my $forward (@fprimer_ids){
     
-    print STDERR "fwd: ".$subject_id{$forward}."\t".$s_start{$forward}."\t".$align_length{$forward}."\t".$mismatches {$forward}."\n";
-    print STDERR "params: product length: ".$params->{productLength}."\tmm: ".$params->{allowedMismatches}."\tfwd length: ".$params->{flength}."\trev length: ".$params->{rlength}."\n";
+    # print STDERR "fwd: ".$subject_id{$forward}."\t".$s_start{$forward}."\t".$align_length{$forward}."\t".$mismatches {$forward}."\n";
+    # print STDERR "params: product length: ".$params->{productLength}."\tmm: ".$params->{allowedMismatches}."\tfwd length: ".$params->{flength}."\trev length: ".$params->{rlength}."\n";
     
     foreach my $reverse (@rprimer_ids){
-      print STDERR "rev: ".$subject_id{$reverse}."\t".$s_start{$reverse}."\t".$align_length{$reverse}."\t".$mismatches {$reverse}."\n";
+      # print STDERR "rev: ".$subject_id{$reverse}."\t".$s_start{$reverse}."\t".$align_length{$reverse}."\t".$mismatches {$reverse}."\n";
 	    
   		if ($subject_id{$forward} eq $subject_id{$reverse}    #both on the same subject seq
         and  $s_start{$reverse}- $s_start{$forward}<= $params->{productLength} #product Length is within user's choice
@@ -296,9 +293,9 @@ sub _blast_to_pcr {
         and  $align_length{$forward} == $params->{flength}  #primers match exact length
         and  $align_length {$reverse} == $params->{rlength}
   		) {
-        print STDERR "\ninside the if\n";
-        print STDERR "orientation fwd: ".$orientation{$forward}." s_end fwd: ".$s_end{$forward}."\n";
-        print STDERR "orientation rev: ".$orientation{$reverse}." s_end rev: ".$s_end{$reverse}."\n";
+        # print STDERR "\ninside the if\n";
+        # print STDERR "orientation fwd: ".$orientation{$forward}." s_end fwd: ".$s_end{$forward}."\n";
+        # print STDERR "orientation rev: ".$orientation{$reverse}." s_end rev: ".$s_end{$reverse}."\n";
         
           #if the product is in the + starnd of parent seq add a + sign in the array
         
@@ -306,144 +303,111 @@ sub _blast_to_pcr {
           and  $orientation{$reverse} eq '-'     #reverse is on the - strand b/c its a complement
           and  $s_end{$forward} < $s_end{$reverse}  #end of forward located upstream of beginning of reverse 
           ){
-            print STDERR "first if";
+            # print STDERR "first if";
           	push (@pcr_results , [$forward,$reverse, '+']) ;
            }
         	
           #if the product is in the - strand of the parent seq add a - sign in the array	
           elsif ( $orientation{$forward} eq '-'     #forward is on the - strand (complemet here)
              and  $orientation{$reverse} eq '+'     #reverse is on the + strand 
-             # and  $s_end{$forward} < $s_end{$reverse}  #end of forward located downstream of beginning of reverse
              and  $s_end{$forward} > $s_end{$reverse}  #end of forward located downstream of beginning of reverse
             )
              {
-               print STDERR "scond if\n";
+               # print STDERR "scond if\n";
                 push (@pcr_results , [$forward,$reverse, '-']);
              }	
              else {
-               print STDERR "\nin else\n";
+               # print STDERR "\nin else\n";
              }
        }
     }#end of the 4each loop
 
   }
   
-  
-  
-  
   ##############################################################################################################################
   
   my $fs = Bio::BLAST::Database->open(full_file_basename => "$basename",);
-			
   
-  
-
-  # my $bdb = CXGN::BlastDB->from_id($params->{database});
-  # die "No such database" if (!$bdb);
-  #
-  # my $basename = $bdb->full_file_basename;
-
-  # print STDERR "bdb: $bdb\n";
-  print STDERR "basename: $basename\n";
-
   my $find_seq;
   my $find_subseq;
   my $find_id;
   my $pcr_seq;
   
-  # my $report_download_link = qq|[ <a href="$raw_report_url">BLAST OUTPUT</a> ]|;
-
-
   my @product_sizes; #for the gel
-
-
-
-
-  # print info_section_html( title => 'PCR Report',
-  #           subtitle => $report_download_link,
-  #           contents => "\n");
-
-
-
+  
+  
   if (scalar(@pcr_results) ==  0 ){
     print STDERR "No PCR Product Found\n";
+    
+    $pcr_seq = "No PCR Product Found";
+    my $pcr_img_name = "insilicopcr_no_result.png";
+    
+    system("cp static/img/$pcr_img_name $gel_img_tempdir");
+    return ($pcr_seq,$pcr_img_name);
   }
   else{
 
     foreach my $result (@pcr_results){
 	
-  	#finding parent sequence
-    $find_id = $subject_id{$result->[0]};
-    $find_seq = $fs->get_sequence($find_id);
-    # $find_seq = $bdb->get_sequence($find_id);
-    print STDERR "id: $find_id\n";
-    print STDERR "seq: $find_seq\n";
-    
-    print STDERR "s_sstart1: ".$s_start{$result->[1]}." s_start0: ".$s_start{$result->[0]}." res2: ".$result->[2]."\n";
+      #finding parent sequence
+      $find_id = $subject_id{$result->[0]};
+      $find_seq = $fs->get_sequence($find_id);
+      # $find_seq = $bdb->get_sequence($find_id);
+      # print STDERR "id: $find_id\n";
+      # print STDERR "seq: $find_seq\n";
+  
+      # print STDERR "s_sstart1: ".$s_start{$result->[1]}." s_start0: ".$s_start{$result->[0]}." res2: ".$result->[2]."\n";
 
-  	#finding the pcr result sequence
-  	$find_subseq = $find_seq->subseq($s_start{$result->[0]},$s_start{$result->[1]}) if $result->[2] eq '+';
-    $find_subseq = $find_seq->subseq($s_start{$result->[1]},$s_start{$result->[0]}) if $result->[2] eq '-';
-	
-  	######################################################################################
-	
-  	#generating sequence object for the result to be able to find its molecular weight
-  	my $seq_obj = Bio::Seq->new(-seq       => $find_subseq ,
+    	#finding the pcr result sequence
+    	$find_subseq = $find_seq->subseq($s_start{$result->[0]},$s_start{$result->[1]}) if $result->[2] eq '+';
+      $find_subseq = $find_seq->subseq($s_start{$result->[1]},$s_start{$result->[0]}) if $result->[2] eq '-';
+
+    	######################################################################################
+
+    	#generating sequence object for the result to be able to find its molecular weight
+    	my $seq_obj = Bio::Seq->new(-seq       => $find_subseq ,
                                   -alphabet  => 'dna' 
-                                  );
+      );
 
-
-  	my $seq_size = $seq_obj->length;
-     	push (@product_sizes , $seq_size);
-    
+      my $seq_size = $seq_obj->length;
+      push (@product_sizes , $seq_size);
+  
       #finding the ID of the sequence and adding + sign if it is on the plus strand and - if its on minus strand and some coordinates
-  	$find_id = $find_seq->id();
-  	$find_id .= $result->[2] eq '+' ? ' strand = plus, ' : ' strand = minus, ';
-  	$find_id .= " start = $s_start{$result->[0]}, end = $s_start{$result->[1]}, size = $seq_size bp";
-	 
-  	#######################################################################################
+      $find_id = $find_seq->id();
+      $find_id .= $result->[2] eq '+' ? ' strand = plus, ' : ' strand = minus, ';
+      $find_id .= " start = $s_start{$result->[0]}, end = $s_start{$result->[1]}, size = $seq_size bp";
+      #######################################################################################
 
-  	#reverse complementing $find_subseq if the orientation is '-'
-  	$pcr_seq = $seq_obj->revcom->seq if $result->[2] eq '-'; 
-	
-    # $find_subseq = html_break_string($find_subseq , 90);
-    # for (my $i=0; $i<length($find_subseq); $i=$i+100) {
-    #   $pcr_seq = $pcr_seq.substr($find_subseq,$i,100)."\n";
-    # }
-    # chomp($pcr_seq);
+      #reverse complementing $find_subseq if the orientation is '-'
+      $pcr_seq = $seq_obj->revcom->seq if $result->[2] eq '-'; 
+  
+      # print STDERR " $find_id\n $pcr_seq\n";
 
-  	print STDERR " $find_id\n $pcr_seq\n";
+    }
+    
+    ##############################################################################################################################
+    #Generating a gel of the results 
+    
+    my $gel = Bio::Graphics::Gel->new('pcr' => \@product_sizes,             	
+            	      -lane_length => 400,
+            	      -lane_width => 100,
+            	      -band_thickness => 2,
+            	      -min_frag => 1000,
+            	      -font_size => 16,
+            	      -gelcolor => [240,240,240],
+            	      -bandcolor => [170,170,170]
+                    );
+  
+    my $gel_img = $gel->img->png;
+    
+    # create the gel img temp name
+    my ($fh ,$temp_file) = tempfile( DIR => $gel_img_tempdir, TEMPLATE=>"gel_XXXXXX", SUFFIX => ".png");
+    print $fh $gel_img;
 
+    my $pcr_img_name = basename ($temp_file);
+    
+    return ($pcr_seq,$pcr_img_name);
   }
-
-  ##############################################################################################################################
-  #Generating a gel of the results 
-
-      my $gel = Bio::Graphics::Gel->new('pcr' => \@product_sizes,             	
-              	      -lane_length => 200,
-              	      -bandcolor => [0xff,0xc6,0x00]);
-    
-      my $gel_img = $gel->img->png;
-    
-
-      #saving the gel img in a temp file 
-      # my $gel_img_tempdir = $c->path_to( $c->tempfiles_subdir('temp_images') );
-    
-      my ($fh ,$temp_file) = tempfile( DIR => $gel_img_tempdir, TEMPLATE=>"gel_XXXXXX", SUFFIX => ".png");
-      print $fh $gel_img;
-
-      my $pcr_img_name = basename ($temp_file);
-
-      #generating the url
-      my $img_url = $temp_file;
-
-      print STDERR "img_url: $img_url\n";
-      print STDERR "base_temp: $pcr_img_name\n";
-      
-      return ($pcr_seq,$pcr_img_name);
-  } 
-  
-  
   
 }
 
