@@ -28,7 +28,6 @@ sub prereqs {
         <dl>
             <dd>
               <div style="margin: 0.5em 0"><a class="match_details" href="" target="_blank">View matched sequence</a></div>
-              <div class="hit_region_xrefs"></div>
             </dd>
             <dd class="subject_sequence_xrefs">
             </dd>
@@ -59,11 +58,6 @@ sub prereqs {
     var subj = popup.find('.subject_sequence_xrefs');
     subj.html( '<img src="/img/throbber.gif" /> searching ...' );
     subj.load( '/api/v1/feature_xrefs?q='+id );
-
-    // look up xrefs for the hit region
-    var region = popup.find('.hit_region_xrefs');
-    region.html( '<img src="/img/throbber.gif" /> searching ...' );
-    region.load( '/api/v1/feature_xrefs?q='+id_region );
     
     popup.modal("show");
 
