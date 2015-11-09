@@ -64,6 +64,18 @@ my $owner_search = $phenome_schema->resultset("StockOwner")
     ->find({
 	stock_id     => $stock_search->first()->stock_id(),
 	   });
-is ($owner_search->sp_person_id(), $owner_sp_person_id, "Stock owner attached to added stock");
+is($owner_search->sp_person_id(), $owner_sp_person_id, "Stock owner attached to added stock");
+
+is($stock_add->validate_organism(), 1, "Species name validation"); 
+
+is($stock_add->validate_owner(), 1, "Stock owner name validation"); 
+
+$stock_add->set_species("wrongname");
+
+is($stock_add->validate_stocks(), undef, "Incorrect species should not validate"); 
+
+$stock_add->set_owner_name("wrongowner");
+
+is($stock_add->validate_owner(), undef, "Stock owner names that do not exist should not validate"); 
 
 done_testing();
