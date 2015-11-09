@@ -108,7 +108,26 @@
     $('.carousel').carousel({
       interval: 20000,
       // wrap:true
-    })
+    });
+    
+    var currentSlide;
+    var rand;
+    
+    currentSlide = Math.floor((Math.random() * $('.item').length));
+    rand = currentSlide;
+    // $('#myCarousel').carousel(currentSlide);
+    // $('#myCarousel').fadeIn(1000);
+    // setInterval(function(){
+    //  while(rand == currentSlide){
+    //    rand = Math.floor((Math.random() * $('.item').length));
+    //  }
+    //  currentSlide = rand;
+    //  $('#myCarousel').carousel(rand);
+    // },20000);
+    
+    
+    
+    
     
     //$("#myCarousel").swiperight(function() {  
     //      $("#myCarousel").carousel('prev');  
