@@ -113,26 +113,6 @@ sub pagination_response {
     return \%pagination;
 }
 
-sub germplasm_data_response {
-    my $schema = shift;
-    my $rs_slice = shift;
-    my @synonyms;
-    my $rsp;
-    my @data;
-    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
-    while (my $stock = $rs_slice->next()) { 
-	@synonyms = ();
-	$rsp = $schema->resultset("Stock::Stockprop")->search({type_id => $synonym_id, stock_id=>$stock->stock_id() });
-	while (my $stockprop = $rsp->next()) { 
-	    push( @synonyms, $stockprop->value() );
-	}
-	if ($rs_slice->count() == 1) {
-	    return { germplasmDbId=>$stock->stock_id(), defaultDisplayName=>$stock->uniquename(), germplasmName=>$stock->uniquename(), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>\@synonyms };
-	}
-	push @data, { germplasmDbId=>$stock->stock_id(), defaultDisplayName=>$stock->uniquename(), germplasmName=>$stock->uniquename(), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>\@synonyms };
-    }
-    return \@data;
-}
 
 =head2 brapi/v1/germplasm?name=*Mo?re%&matchMethod=wildcard&include=&pageSize=1000&page=10
 
@@ -179,34 +159,59 @@ sub germplasm_data_response {
 
 =cut
 
+sub germplasm_synonyms {
+    my $schema = shift;
+    my $stock_id = shift;
+    my $synonym_id = shift;
+    my @synonyms;
+    my $rsp = $schema->resultset("Stock::Stockprop")->search({type_id => $synonym_id, stock_id=>$stock_id });
+    while (my $stockprop = $rsp->next()) { 
+	push( @synonyms, $stockprop->value() );
+    }
+    return \@synonyms;
+}
+
+sub germplasm_data_response {
+    my $schema = shift;
+    my $rs_slice = shift;
+    my $total_count = shift;
+    my @data;
+    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
+    if ($total_count == 1) {
+	while (my $stock = $rs_slice->next()) { 	    
+	    return { germplasmDbId=>$stock->get_column('stock_id'), defaultDisplayName=>$stock->get_column('name'), germplasmName=>$stock->get_column('uniquename'), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>germplasm_synonyms($schema, $stock->get_column('stock_id'), $synonym_id) };
+	}
+    } elsif ($total_count > 1) {
+	while (my $stock = $rs_slice->next()) { 
+	    push @data, { germplasmDbId=>$stock->get_column('stock_id'), defaultDisplayName=>$stock->get_column('name'), germplasmName=>$stock->get_column('uniquename'), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>germplasm_synonyms($schema, $stock->get_column('stock_id'), $synonym_id) };
+	}
+	return \@data;
+    }
+}
+
 sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) { 
     my $self = shift;
     my $c = shift;
-    my $schema = $self->bcs_schema();
-    my $page_size = $c->stash->{page_size};
-    my $page = $c->stash->{current_page};
     my $params = $c->req->params();
     
     my @status;
- 
     if ($params->{include}) {
 	push (@status, 'include not implemented');
     }
-
     my $rs;
     my $total_count = 0;
     my %result;
-    my $type_id = $schema->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
+    my $type_id = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
 
     if (!$params->{name}) {
-	$rs = $schema->resultset("Stock::Stock")->search( {type_id=>$type_id} );
+	$rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {type_id=>$type_id}, { '+select'=> ['stock_id', 'name', 'uniquename'], '+as'=> ['stock_id', 'name', 'uniquename'], order_by=>{ -asc=>'stock_id' } } );
     } else {
 	if (!$params->{matchMethod} || $params->{matchMethod} eq "exact") { 
-	    $rs = $schema->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>$params->{name} }, { order_by=>{ -asc=>'stock_id' } } );
+	    $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>$params->{name} }, { '+select'=> ['stock_id', 'name', 'uniquename'], '+as'=> ['stock_id', 'name', 'uniquename'], order_by=>{ -asc=>'stock_id' } } );
 	}
 	elsif ($params->{matchMethod} eq "wildcard") { 
 	    $params->{name} =~ tr/*?/%_/;
-	    $rs = $schema->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>{ ilike => $params->{name} } }, { order_by=>{ -asc=>'stock_id' } } );
+	    $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>{ ilike => $params->{name} } }, { '+select'=> ['stock_id', 'name', 'uniquename'], '+as'=> ['stock_id', 'name', 'uniquename'],  order_by=>{ -asc=>'stock_id' } } );
 	}
 	else { 
 	    push(@status, "matchMethod '$params->{matchMethod}' not recognized");
@@ -214,11 +219,11 @@ sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) {
     }
     if ($rs) {
 	$total_count = $rs->count();
-	my $rs_slice = $rs->slice($page_size*($page-1), $page_size*$page-1);
-	%result = (data => germplasm_data_response($schema, $rs_slice));
+	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+	%result = (data => germplasm_data_response($self->bcs_schema(), $rs_slice, $total_count));
     }
 
-    my %metadata = (pagination=> pagination_response($total_count, $page_size, $page), status=>\@status);
+    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -255,7 +260,7 @@ sub germplasm : Chained('brapi') PathPart('germplasm') CaptureArgs(1) {
     my $stock_id = shift;
 
     $c->stash->{stock_id} = $stock_id;
-    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {stock_id=>$stock_id} );
+    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {stock_id=>$stock_id}, { '+select'=> ['stock_id', 'name', 'uniquename'], '+as'=> ['stock_id', 'name', 'uniquename'] } );
     $c->stash->{stock} = $rs;
 }
 
@@ -267,7 +272,7 @@ sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) {
     my @status;
     my %pagination;
     my %metadata = (pagination=>\%pagination, status=>\@status);
-    my %response = (metadata=>\%metadata, result=>germplasm_data_response($self->bcs_schema(), $rs));
+    my %response = (metadata=>\%metadata, result=>germplasm_data_response($self->bcs_schema(), $rs, $rs->count() ));
     $c->stash->{rest} = \%response;
 }
 
@@ -288,7 +293,7 @@ sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) {
     },
     "result": {
         "studyDbId": 123,
-        "trialName": "myBestTrial",
+        "studyName": "myBestTrial",
         "data": [
             { 
                 "germplasmDbId": "382",
@@ -320,14 +325,26 @@ sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) {
 
 =cut
 
-sub germplasm : Chained('brapi') PathPart('study') CaptureArgs(1) { 
+sub study_germplasm_data_response {
+    my $schema = shift;
+    my $rs_slice = shift;
+    my @data;
+    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
+    while (my $s = $rs_slice->next()) { 
+	push @data, { germplasmDbId=>$s->get_column('stock_id'), studyEntryNumberId=>$s->get_column('study_entry_id'), defaultDisplayName=>$s->get_column('name'), germplasmName=>$s->get_column('uniquename'), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>germplasm_synonyms($schema, $s->get_column('stock_id'), $synonym_id) };
+    }
+    return \@data;
+}
+
+sub study : Chained('brapi') PathPart('study') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
     my $study_id = shift;
 
     $c->stash->{study_id} = $study_id;
-    my $rs = $self->bcs_schema()->resultset("Project::Project")->search( {project_id=>$study_id} );
+    my $rs = $self->bcs_schema()->resultset("Project::Project")->find( {project_id=>$study_id} );
     $c->stash->{study} = $rs;
+    $c->stash->{studyName} = $rs->get_columns('name');
 }
 
 sub study_germplasm : Chained('study') PathPart('germplasm') Args(0) { 
@@ -336,11 +353,22 @@ sub study_germplasm : Chained('study') PathPart('germplasm') Args(0) {
     my $schema = $self->bcs_schema();
     my %result;
     my @status;
+    my $total_count = 0;
+    my $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdExperimentProject')->search(
+	{'me.project_id' => $c->stash->{study_id}},
+	{join=> ['project', {'nd_experiment' => {'nd_experiment_stocks' => 'stock'} }],
+	 '+select'=> ['nd_experiment_stocks.nd_experiment_stock_id', 'stock.stock_id', 'stock.name', 'stock.uniquename'], 
+	 '+as'=> ['study_entry_id', 'stock_id', 'name', 'uniquename'],
+	 order_by=>{ -asc=>'stock.stock_id' }
+	}
+    );
+    if ($rs) {
+	$total_count = $rs->count();
+	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+	%result = (data => study_germplasm_data_response($self->bcs_schema(), $rs_slice));
+    }
 
-    
-
-    my %pagination;
-    my %metadata = (pagination=>\%pagination, status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
