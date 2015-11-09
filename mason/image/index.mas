@@ -41,7 +41,7 @@ Lukas Mueller
 $object_id => undef
 $dbh
 $person_id => undef
-$size => 'large'
+$size => 'medium'
 </%args>
 
 <%perl> 
