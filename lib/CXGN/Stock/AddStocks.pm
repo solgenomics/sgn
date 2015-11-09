@@ -6,8 +6,10 @@ CXGN::Stock::AddStocks - a module to add a list of stocks.
 
 =head1 USAGE
 
- my $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@stocks, species => $species_name} );
- my $validated = $stock_add->validate_stocks(); #is true when none of the stock names in the array exist in the database.
+ my $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, phenome_schema => $phenome_schema, dbh => $dbh, stocks => \@stocks, species => $species_name, owner_name => $owner_name } );
+ my $validated_stocks = $stock_add->validate_stocks(); #is true when none of the stock names in the array exist in the database.
+ my $validated_owner = $stock_add->validate_owner(); #is true when the owner exists in the database.
+ my $validated_organism = $stock_add->validate_organism(); #is true when the organism name exists in the database.
  $stock_add->add_accessions();
 
 =head1 DESCRIPTION
@@ -24,6 +26,8 @@ use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
+use CXGN::People::Person;
+
 
 has 'schema' => (
 		 is       => 'rw',
@@ -34,6 +38,7 @@ has 'schema' => (
 has 'stocks' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_stocks');
 has 'species' => (isa => 'Str', is => 'rw', predicate => 'has_species');
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name',required => 1,);
+has 'accession_group' => (isa => 'Str', is => 'rw', predicate => 'has_accession_group');
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'phenome_schema' => (
 		 is       => 'rw',
@@ -53,6 +58,14 @@ sub add_plots {
   my $added = $self->_add_stocks('plot');
   return $added;
 }
+
+#### Jeremy Edwards needs the ability to create accession groups
+sub add_accession_group {
+  my $self = shift;
+  my $added = $self->_add_stocks('accession_group');
+  return $added;
+}
+####
 
 sub _add_stocks {
   my $self = shift;
@@ -88,6 +101,38 @@ sub _add_stocks {
 		     dbxref => $stock_type,
 		    });
 
+
+    my $accession_group_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'accession_group',
+      cv     => 'stock type',
+      db     => 'null',
+      dbxref => 'accession_group',
+    });
+
+    my $accession_group_member_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
+        name   => 'accession_group_member_of',
+        cv     => 'stock relationship',
+        db     => 'null',
+        dbxref => 'accession_group_member_of',
+       });
+
+    #### Jeremy Edwards needs the ability to assign accessions to groups
+    my $accession_group;
+    if ($self->has_accession_group()) {
+        $accession_group = $schema->resultset("Stock::Stock")
+            ->find_or_create({
+                uniquename => $self->get_accession_group(),
+                name => $self->get_accession_group(),
+                organism_id => $organism_id,
+                type_id => $accession_group_cvterm->cvterm_id(),
+                   });
+        if (!$accession_group){
+            print STDERR "Could not find accession panel $accession_group\n";
+            return;
+        }
+    }
+    ####
+
     foreach my $stock_name (@stocks) {
       my $stock = $schema->resultset("Stock::Stock")
 	->create({
@@ -96,6 +141,14 @@ sub _add_stocks {
 		  uniquename => $stock_name,
 		  type_id     => $stock_cvterm->cvterm_id,
 		 } );
+      if ($accession_group) {
+          $stock->find_or_create_related('stock_relationship_objects', {
+	      type_id => $accession_group_member_cvterm->cvterm_id(),
+	      object_id => $accession_group->stock_id(),
+	      subject_id => $stock->stock_id(),
+					 } );
+      }
+
       push (@added_stock_ids,  $stock->stock_id());
     }
   };
@@ -152,6 +205,69 @@ sub validate_stocks {
 
   return 1;
 }
+
+sub validate_organism {
+  my $self = shift;
+  if (!$self->has_schema() || !$self->has_species() || !$self->has_stocks()) {
+    return;
+  }
+  my $schema = $self->get_schema();
+  my $species = $self->get_species();
+  my $organism = $schema->resultset("Organism::Organism")
+    ->find({
+	    species => $species,
+	   } );
+  if ($organism->organism_id()) {
+      return 1;
+  }
+  return;
+}
+
+sub validate_owner {
+  my $self = shift;
+  if (!$self->has_schema() || !$self->has_species() || !$self->has_stocks()) {
+    return;
+  }
+  my $schema = $self->get_schema();
+  my $phenome_schema = $self->get_phenome_schema();
+  my $owner_name = $self->get_owner_name();;
+  my $dbh = $self->get_dbh();
+  my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name);
+  my $owner_search = $phenome_schema->resultset("StockOwner")
+    ->find({
+	sp_person_id =>  $owner_sp_person_id,
+	   });
+  if ($owner_search) {
+      return 1;
+  }
+  return;
+}
+
+####  Check that accession group exists
+sub validate_accession_group {
+  my $self = shift;
+  if (!$self->has_schema() || !$self->has_species() || !$self->has_stocks()) {
+    return;
+  }
+  my $schema = $self->get_schema();
+  my $accession_group_cvterm = $schema->resultset("Cv::Cvterm")
+      ->create_with({
+	  name   => 'accession_group',
+	  cv     => 'stock type',
+	  db     => 'null',
+	  dbxref => 'accession_group',
+		    });
+  my $accession_group_search = $schema->resultset("Stock::Stock")
+      ->search({
+	  uniquename => $self->get_accession_group(),
+	  type_id => $accession_group_cvterm->cvterm_id(),
+	       } );
+    if ($accession_group_search->first()) {
+	return 1;
+    }
+  return;
+}
+
 
 #######
 1;
