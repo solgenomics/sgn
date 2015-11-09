@@ -105,28 +105,53 @@
 <script>
 
   jQuery(document).ready(function() {
+  //   $('.carousel').carousel({
+  //     interval: 20000,
+  //     // wrap:true
+  //   });
+    
+    
+    
+    
+    
+    
+    var $item = $('.carousel .item');
+    var $wHeight = $(window).height();
+
+    var $numberofSlides = $('.item').length;
+    var $currentSlide = Math.floor((Math.random() * $numberofSlides));
+
+    $('.carousel-indicators li').each(function(){
+      var $slideValue = $(this).attr('data-slide-to');
+      if($currentSlide == $slideValue) {
+        $(this).addClass('active');
+        $item.eq($slideValue).addClass('active');
+      } else {
+        $(this).removeClass('active');
+        $item.eq($slideValue).removeClass('active');
+      }
+    });
+
+    // $('.carousel img').each(function() {
+    //   var $src = $(this).attr('src');
+    //   var $color = $(this).attr('data-color');
+    //   $(this).parent().css({
+    //     'background-image' : 'url(' + $src + ')',
+    //     'background-color' : $color
+    //   });
+    //   $(this).remove();
+    // });
+
+    // $(window).on('resize', function (){
+    //   $wHeight = $(window).height();
+    //   $item.height($wHeight);
+    // });
+
     $('.carousel').carousel({
       interval: 20000,
-      // wrap:true
+      wrap: "true",
+      pause: "false"
     });
-    
-    var currentSlide;
-    var rand;
-    
-    currentSlide = Math.floor((Math.random() * $('.item').length));
-    rand = currentSlide;
-    // $('#myCarousel').carousel(currentSlide);
-    // $('#myCarousel').fadeIn(1000);
-    // setInterval(function(){
-    //  while(rand == currentSlide){
-    //    rand = Math.floor((Math.random() * $('.item').length));
-    //  }
-    //  currentSlide = rand;
-    //  $('#myCarousel').carousel(rand);
-    // },20000);
-    
-    
-    
     
     
     //$("#myCarousel").swiperight(function() {  
@@ -155,7 +180,7 @@
     <!-- Wrapper for slides -->
     <div class="carousel-inner" role="listbox">
 
-      <div class="item active">
+      <div class="item">
           <div style="background:url(/documents/img/homepage_carousel/carousel_slideshare.png) center center; background-size:cover;" class="slider-size">
             <div class="carousel-sgn-caption">
               <a href="http://www.slideshare.net/solgenomics" target="_blank">
