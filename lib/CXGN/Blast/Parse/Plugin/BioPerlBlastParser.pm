@@ -36,7 +36,7 @@ return <<EOJS;
         <dl>
           <dt>Hit region <span class="region_string"></span></dt>
             <dd>
-              <div style="margin: 0.5em 0"><a class="match_details" href="">View matched sequence</a></div>
+              <div style="margin: 0.5em 0"><a class="match_details" href="" target="_blank">View matched sequence</a></div>
               <div class="hit_region_xrefs"></div>
             </dd>
           <dt>Subject sequence <span class="sequence_name"></span></dt>
@@ -59,7 +59,7 @@ return <<EOJS;
     if( identifier_url == null ) {
        sequence_name.html( id );
     } else {
-       sequence_name.html( '<a href="' + identifier_url + '">' + id + '</a>' );
+       sequence_name.html( '<a href="' + identifier_url + '" target="_blank">' + id + '</a>' );
     }
 
     popup.find('.region_string').html( id_region );

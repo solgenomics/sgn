@@ -193,29 +193,6 @@
   </div>
 </div>
 
-<div class="modal fade" id="xref_modal" role="dialog">
-  <div class="modal-dialog">
-  
-    <!-- Modal content-->
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">Match Information</h4>
-      </div>
-      <div class="modal-body">
-        Hit region <span class="region_string"></span>
-        <div style="margin: 0.5em 0"><a class="match_details" href="">View matched sequence</a></div>
-        <div class="hit_region_xrefs"></div>
-        Subject sequence <span class="sequence_name"></span>
-        <div class="subject_sequence_xrefs"></div>
-      </div>
-    </div>
-    
-    <div class="modal-footer">
-      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-    </div>
-    
-  </div>
-</div>
 
 <div class="modal fade" id="search_modal" role="dialog">
   <div class="modal-dialog modal-lg">
