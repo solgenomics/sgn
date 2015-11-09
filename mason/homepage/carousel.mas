@@ -130,22 +130,7 @@
         $(this).removeClass('active');
         $item.eq($slideValue).removeClass('active');
       }
-    });
-
-    // $('.carousel img').each(function() {
-    //   var $src = $(this).attr('src');
-    //   var $color = $(this).attr('data-color');
-    //   $(this).parent().css({
-    //     'background-image' : 'url(' + $src + ')',
-    //     'background-color' : $color
-    //   });
-    //   $(this).remove();
-    // });
-
-    // $(window).on('resize', function (){
-    //   $wHeight = $(window).height();
-    //   $item.height($wHeight);
-    // });
+    }); 
 
     $('.carousel').carousel({
       interval: 20000,
@@ -191,7 +176,7 @@
             
             <div class="carousel-sgn-links">
               <ul>
-                <li><a href="http://www.slideshare.net/solgenomics/sol2015-sgn-bioinformatics-tools" target="_blank">SOL Meeting 2015</a></li>
+                <li><a href="http://www.slideshare.net/solgenomics/sol-meeting-2015-sgn-workshop-introduction?related=1" target="_blank">SOL Meeting 2015</a></li>
                 <li><a href="http://www.slideshare.net/solgenomics/sgn-introduction-to-unix-commandline-2015-part-1?related=1" target="_blank">Introduction to UNIX Command-line</a></li>
               </ul>
             </div>
