@@ -10,6 +10,8 @@ use Test::More;
 use SGN::Test::Fixture;
 use CXGN::People::Person;
 
+use Data::Dumper;
+
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema();
 my $phenome_schema = $f->phenome_schema();
@@ -77,5 +79,68 @@ is($stock_add->validate_stocks(), undef, "Incorrect species should not validate"
 $stock_add->set_owner_name("wrongowner");
 
 is($stock_add->validate_owner(), undef, "Stock owner names that do not exist should not validate"); 
+
+# Create a group
+my $accession_group_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+    { name   => 'accession_group',
+      cv     => 'stock type',
+      db     => 'null',
+      dbxref => 'accession_group',
+    });
+
+my $accession_group_name = "test_1_accession_group";
+
+my @groups_to_add = ( $accession_group_name );
+
+ok(my $add_group = CXGN::Stock::AddStocks
+   ->new({
+       schema => $schema,
+       phenome_schema => $phenome_schema,
+       dbh => $dbh,
+       stocks => \@groups_to_add,
+       species => $species,
+       owner_name => $owner_name,
+	 }),"Create AddStocks object to add accession_group");
+
+ok($add_group->add_accession_group(), "Add new accession_group");
+
+my @stocks_in_group = qw( GroupTestAddStock1 GroupTestAddStock2 );
+ok(my $stock_add_in_group = CXGN::Stock::AddStocks
+   ->new({
+       schema => $schema,
+       phenome_schema => $phenome_schema,
+       dbh => $dbh,
+       stocks => \@stocks_in_group,
+       species => $species,
+       accession_group => $accession_group_name,
+       owner_name => $owner_name,
+	 }),"Create AddStocks object");
+
+is($stock_add_in_group->validate_accession_group(), 1, "Stock accession group validation"); 
+
+ok($stock_add_in_group->add_accessions(), "Add new stocks to a group");
+
+my $accession_group_find = $schema->resultset("Stock::Stock")
+      ->find({
+	  uniquename => $accession_group_name,
+	  type_id => $accession_group_cvterm->cvterm_id(),
+	       } );
+
+my $accession_group_member_cvterm = $schema->resultset("Cv::Cvterm")
+    ->create_with({
+	name   => 'accession_group_member_of',
+	cv     => 'stock relationship',
+	db     => 'null',
+	dbxref => 'accession_group_member_of',
+		  });
+
+my $group_member = $schema->resultset("Stock::Stock")
+    ->find({
+	uniquename => $stocks_in_group[0],
+	'object.uniquename'=> $accession_group_name,
+	'stock_relationship_subjects.type_id' => $accession_group_member_cvterm->cvterm_id()
+	   }, {join => {'stock_relationship_subjects' => 'object'}});
+
+is($group_member->uniquename(), $stocks_in_group[0], "Find members of accession group"); 
 
 done_testing();

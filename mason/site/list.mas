@@ -65,8 +65,8 @@
 
 <script>
 
-$("#list_item_dialog").draggable();
-$("#list_dialog").draggable();
-$("#public_list_dialog").draggable();
+jQuery("#list_item_dialog").draggable();
+jQuery("#list_dialog").draggable();
+jQuery("#public_list_dialog").draggable();
 
 </script>
