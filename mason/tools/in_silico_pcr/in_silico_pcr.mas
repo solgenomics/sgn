@@ -34,14 +34,14 @@
       <label class="blast_select_label" for="fprimer">Forward Primer </label>
       	</td>
       	<td>
-      		<input id="fprimer" class="form-control" size="65" value="GGTTGTTGTTTAAATGCTCTTTCACTTGCAATGAAAGAAGAAATTGTTAAGTCAAGGTGA" name="fprimer" />
-          <p id="fwd_primer_alert" class="text-danger"></p>
+      		<input id="fprimer" class="form-control" size="65" value="CCAGCAATCCTCTTCAAAGC" name="fprimer" />
+          <p id="fprimer_alert" class="text-danger"></p>
       	</td>
       </tr>
   	<tr>
   		<td></td>
       <td>
-  			<input id="frevcom" type="checkbox" checked="checked" name="frevcom"/> <label class="blast_select_label" for="frevcom">Reverse Complement </label>
+  			<input id="frevcom" type="checkbox" name="frevcom"/> <label class="blast_select_label" for="frevcom">Reverse Complement </label>
       </td>
     </tr>
   	<tr>
@@ -49,8 +49,8 @@
         <label class="blast_select_label" for="rprimer">Reverse Primer </label>
     	</td>
     	<td>
-    		<input id="rprimer" class="form-control" size="65" value="ATGGCGAAAAGTGCAATGTATGATCAAAAATCAATTGAAGATAAATTTTCAAAGATACAT" name="rprimer" />
-        <p id="rev_primer_alert" class="text-danger"></p>
+    		<input id="rprimer" class="form-control" size="65" value="TGATCCACTGCAAAGTACGC" name="rprimer" />
+        <p id="rprimer_alert" class="text-danger"></p>
     	</td>
     </tr>
   	<tr>
@@ -65,7 +65,8 @@
         <label class="blast_select_label" for="productLength">Product Maximum Length </label>
       </td>
       <td>
-        <input class="blast_select_box form-control" size="5" value="7000" name="productLength" />
+        <input id="product_length" class="blast_select_box form-control" size="5" value="5000" name="productLength" />
+        <p id="product_length_alert" class="text-danger"></p>
       </td>
     </tr>
     <tr>
@@ -73,7 +74,8 @@
         <label class="blast_select_label" for="allowedMismatches">Allowed Mismatches</label>
       </td>
       <td>
-        <input class="blast_select_box form-control" size="5" value="0" name="allowedMismatches" />
+        <input id="allowed_mm" class="blast_select_box form-control" size="5" value="0" name="allowedMismatches" />
+        <p id="allowed_mm_alert" class="text-danger"></p>
       </td>
     </tr>
   </table>
@@ -197,16 +199,24 @@
     // alert($("#fprimer").val());
     
     $("#run_blast").click(function(){
-      validate_form();
+      // validate_form();
       $('#PCRform').submit();
     });
     
     $("#fprimer").focusout(function(){
-      validate_form();
+      validate_primer($("#fprimer"));
     });
       
     $("#rprimer").focusout(function(){
-      validate_form();
+      validate_primer($("#rprimer"));
+    });
+      
+    $("#product_length").focusout(function(){
+      validate_input_integer($("#product_length"),"Max Product Length should be a positive digit.");
+    });
+      
+    $("#allowed_mm").focusout(function(){
+      validate_input_integer($("#allowed_mm"),"Allowed mismatches should be a positive digit.");
     });
       
     function swap_menu(group_id) { 
@@ -214,25 +224,43 @@
       jQuery('#database_select').html(menu_html[group_id]);
     }
     
-    function validate_form() {
+    function validate_primer(primer) {
       
-      if ($("#fprimer").val().length < 15) {
-        $('#fprimer').addClass("alert-danger");
-        $('#fwd_primer_alert').html("Primer must be 15 nt long at least");
-      } else {
-        $('#fprimer').removeClass("alert-danger");
-        $('#fwd_primer_alert').html("");
+      $(primer).removeClass("alert-danger");
+      $(primer).parent().find("p:first").html("");
+      
+      if ($(primer).val().length < 10) {
+        $(primer).addClass("alert-danger");
+        $(primer).parent().find("p:first").html("Primer must be 10 nt long at least. ");
       }
       
-      if ($("#rprimer").val().length < 15) {
-        $('#rprimer').addClass("alert-danger");
-        $('#rev_primer_alert').html("Primer must be 15 nt long at least");
-      } else {
-        $('#rprimer').removeClass("alert-danger");
-        $('#rev_primer_alert').html("");
+      if ($(primer).val().search(/[^ACGT]+/i) > 0) {
+          alert("hi")
+          $(primer).addClass("alert-danger");
+          $(primer).parent().find("p:first").append("Primer can only contain valid nt. ");
       }
       
     }
+    
+    function validate_input_integer(input,msg) {
+      
+      $(input).removeClass("alert-danger");
+      $(input).parent().find("p:first").html("");
+      
+      if (($(input).val().length < 0) || ($(input).val().search(/[\D]+/) > 0)) {
+        $(input).addClass("alert-danger");
+        $(input).parent().find("p:first").html(msg);
+      }
+    }
+    
+    // function validate_form() {
+    //
+    //   validate_primer($("#fprimer"));
+    //   validate_primer($("#rprimer"));
+    //   validate_input_integer($("#product_length"),"Max Product Length should be a positive digit.");
+    //   validate_input_integer($("#allowed_mm"),"Allowed mismatches should be a positive digit.");
+    //
+    // }
     
   });
 

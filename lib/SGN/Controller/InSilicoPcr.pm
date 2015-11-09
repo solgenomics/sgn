@@ -123,35 +123,22 @@ sub run_pcr_blast :Path('/tools/pcr_results') :Args(0) {
 
   # print STDERR "fprimer: $fprimer, rprimer: $rprimer\n";
   # print STDERR "DB id: $blast_db_id\n";
-
   
-  #validating the primers input
-  if  (!$fprimer){
-      push ( @errors , "Forward Primer was not provided!\n");
-  }
-  elsif ($fprimer =~ /[^a-zA-Z]/g){
-       push (  @errors , "Forward Primer Can only hold letters (no numbers are allowed)\n");
-  }
-  if (!$rprimer){
-      push (  @errors , "Reverse Primer was not provided!\n");
-  }
-  elsif ($rprimer =~ /[^a-zA-Z]/g){
-       push (  @errors , "Reverse Primer Can only hold letters (no numbers are allowed)\n");
-  }
-
   #validating productLength
-  push (@errors , "Max Product Length should be a positive digit\n")
-  	if ($productLength <= 0 or $productLength !~ /^[\d]*$/g);
+  if ($productLength <= 0 or $productLength !~ /^[\d]*$/g) {
+    push (@errors , "Max Product Length should be a positive digit\n");
+  }
 
   #validating AllowedMismatches
-  push (@errors , "Allowed mismatches should be a positive digit\n")
-  	if ($allowedMismatches < 0 or $allowedMismatches !~ /^[\d]*$/g);
-  
+  if ($allowedMismatches < 0 or $allowedMismatches !~ /^[\d]*$/g) {
+    push (@errors , "Allowed mismatches should be a positive digit\n");
+  }
   
   # return errors
   if (scalar (@errors) > 0){
     $c->stash->{errors} = join("<BR>" , @errors);
     $c->stash->{template} = '/tools/in_silico_pcr/insilicopcr_output.mas';
+    return;
   }
   
   # giving the primers a fasta format
