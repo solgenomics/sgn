@@ -156,7 +156,7 @@
     </div>
     
     <div class="modal-body">
-      <p></p>
+      <p>Paste your primers, the maximum distance between them and the number of missmatches</p>
     </div>
     
     <div class="modal-footer">
@@ -178,7 +178,7 @@
     </div>
     
     <div class="modal-body">
-      <p></p>
+      <p>Select a genomic database and the other BLAST parameters</p>
     </div>
     
     <div class="modal-footer">
