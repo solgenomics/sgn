@@ -196,8 +196,6 @@
   jQuery(document).ready(function() {
     swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
     
-    // alert($("#fprimer").val());
-    
     $("#run_blast").click(function(){
       // validate_form();
       $('#PCRform').submit();
@@ -235,8 +233,7 @@
       }
       
       if ($(primer).val().search(/[^ACGT]+/i) > 0) {
-          alert("hi")
-          $(primer).addClass("alert-danger");
+        $(primer).addClass("alert-danger");
           $(primer).parent().find("p:first").append("Primer can only contain valid nt. ");
       }
       
