@@ -20,8 +20,9 @@
 <table id="trial_summary_data" class="display">
 <thead>
   <tr>
-    <th>Trial name</th>
-    <th>Location</th>
+    <th>Accession name</th>
+    <th>Number of associated trials</th>
+    <th>Trial list</th>
   </tr>
 </thead>
 
@@ -79,10 +80,9 @@ jQuery(document).ready(function() {
 		      async: false,
 		      url: '/stock/get_shared_trials',
 		      data: {stock_ids: stock_ids},
+		      success : enable_ui()
 		      }
 	});
-	enable_ui();	
-
   });
 
   function disable_ui() {

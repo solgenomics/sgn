@@ -1219,15 +1219,16 @@ sub get_shared_trials_GET :Args(1) {
     my @formatted_rows = ();
 
     foreach my $stock_id (@stock_ids) {
-	my $trials_string;
+	my $trials_string = "";
 	my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
 	my $uniquename = $stock->get_uniquename;
        	my @current_trials = $stock->get_trials();
+	my $num_trials = scalar @current_trials;
 	foreach my $t (@current_trials) { 
 	    $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,';
 	}
 	$trials_string =~ s/,+$//; 
-	push @formatted_rows, ['<a href="/stock/'.$stock_id.'/view">'.$uniquename.'</a>', $trials_string ];
+	push @formatted_rows, ['<a href="/stock/'.$stock_id.'/view">'.$uniquename.'</a>', $num_trials, $trials_string ];
 	my @intersection = ();
 	my @difference = ();
 	my %count = ();
@@ -1241,16 +1242,17 @@ sub get_shared_trials_GET :Args(1) {
 	}
 	@shared_trials = @intersection;
     }
-
-    if (scalar @shared_trials > 0) {
-	my $trials_string;
+    
+    my $num_trials = scalar @shared_trials;
+    if ($num_trials > 0) {
+	my $trials_string = "";
 	foreach my $t (@shared_trials) { 
 	    $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,';
 	}
 	$trials_string  =~ s/,+$//;
-	push @formatted_rows, [ "All Accessions", $trials_string];
+	push @formatted_rows, [ "All Accessions", $num_trials, $trials_string];
     } else {
-	push @formatted_rows, [ "All Accessions", "No shared trials found."];
+	push @formatted_rows, [ "All Accessions", $num_trials, "No shared trials found."];
     }
 
     $c->stash->{rest} = { data => \@formatted_rows };
