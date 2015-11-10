@@ -95,6 +95,28 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->driver->accept_alert();
 
+    sleep(1);
+
+    $t->find_element_ok("select2", "id", "select traits")->send_keys('traits');
+
+    sleep(2);
+
+    $t->find_element_ok("c2_data", "id", "select test traits")->send_keys('test_traits');
+
+    sleep(1);
+
+    $t->find_element_ok("c2_select_all", "id", "select all traits")->click();
+
+    sleep(1);
+
+    $t->find_element_ok("c2_data_new_list_name", "id", "new list")->send_keys('trait_list');
+
+    $t->find_element_ok("c2_data_add_to_new_list", "id", "add traits to list")->click();
+
+    sleep(1);
+
+    $t->driver->accept_alert();
+
     }
 
 );
