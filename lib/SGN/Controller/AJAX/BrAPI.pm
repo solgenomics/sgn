@@ -342,9 +342,9 @@ sub study : Chained('brapi') PathPart('study') CaptureArgs(1) {
     my $study_id = shift;
 
     $c->stash->{study_id} = $study_id;
-    my $rs = $self->bcs_schema()->resultset("Project::Project")->find( {project_id=>$study_id} );
-    $c->stash->{study} = $rs;
-    $c->stash->{studyName} = $rs->get_columns('name');
+    my $t = CXGN::Trial->new( { trial_id => $study_id, bcs_schema => $self->bcs_schema } );
+    $c->stash->{study} = $t;
+    $c->stash->{studyName} = $t->get_name();
 }
 
 sub study_germplasm : Chained('study') PathPart('germplasm') Args(0) { 
@@ -365,7 +365,7 @@ sub study_germplasm : Chained('study') PathPart('germplasm') Args(0) {
     if ($rs) {
 	$total_count = $rs->count();
 	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-	%result = (data => study_germplasm_data_response($self->bcs_schema(), $rs_slice));
+	%result = (studyDbId=>$c->stash->{study_id}, studyName=>$c->stash->{studyName}, data => study_germplasm_data_response($self->bcs_schema(), $rs_slice));
     }
 
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
