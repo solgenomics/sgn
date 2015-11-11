@@ -440,6 +440,8 @@ jQuery(document).ready(function () {
 
   display_harvest_date();
 
+  display_planting_date();
+
   var type = get_trial_type(<% $trial_id %>);
 
   display_trial_type(type);
