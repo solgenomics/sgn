@@ -24,6 +24,7 @@ jQuery(document).ready(function () {
    jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
 
       jQuery('#phenotype_summary_data').DataTable( { 
+      	  'retrieve': true,
           'ajax': '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes',
       });
 
