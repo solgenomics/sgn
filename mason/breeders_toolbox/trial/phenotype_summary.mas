@@ -21,11 +21,13 @@ $trial_id
 
 jQuery(document).ready(function () {
 
-   jQuery('#phenotype_summary_data').DataTable( { 
-       'ajax': '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes',
+   jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
+
+      jQuery('#phenotype_summary_data').DataTable( { 
+          'ajax': '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes',
+      });
+
    });
-
-
 
 });
 
