@@ -22,6 +22,8 @@
 
 <&| /page/info_section.mas, title => 'Exact matches' &>
 
+<div class="well">
+
 % if( $show_times ) {
   <div>Site xref search time: <% sprintf('%0.1f sec', $xrefs_time) %></div>
 % }
@@ -48,46 +50,83 @@
     </dl>
   </div>
 
+</div>
+
 </&>
 
 <&| /page/info_section.mas,
     title => 'Fuzzy searches',
     subtitle => 'click to view search results',
  &>
-  <div style="float: left; width: 50%">
+
+<div class="well">
+  
+  <div>
     <dl>
-    <dt>Identifiers</dt>
+    <dt>
+      <div style="float: left; width: 50%">Identifiers</div>
+      <div style="float: right; width: 50%">cDNA Libraries</div>
+    </dt>
     <dd>
-      <% $search{marker} %>
-      <% $search{bac} %>
-      <% $search{phenotype} %>
-      <% $search{locus_allele} %>
-    </dd>
-    <dt>People (searching by name)</dt>
-    <dd><% $search{people} %></dd>
-    <dt>Images</dt>
-    <dd>
-      <% $search{image} %>
+      <div style="float: left; width: 50%">
+        <% $search{marker} %>
+        <% $search{bac} %>
+        <% $search{phenotype} %>
+        <% $search{locus_allele} %>
+      </div>
+      <div style="float: right; width: 50%">
+        <% $search{library} %>
+      </div>
+      <div style="clear: both; margin-bottom: -1.7em">&nbsp;</div>
     </dd>
     </dl>
   </div>
-  <div style="float: right; width: 50%">
+
+  <hr style="border: 0; border-bottom: 1px solid #aaa; width: 90%; margin: 1.5em auto 1.2em auto"  />
+
+  <div>
     <dl>
-    <dt>cDNA libraries</dt>
-    <dd><% $search{library} %></dd>
-    <dt>Annotations</dt>
+    <dt>
+      <div style="float: left; width: 50%">People (searching by name)</div>
+      <div style="float: right; width: 50%">Annotations</div>
+    </dt>
     <dd>
-      <% $search{manual_annotations} %>
-      <% $search{automatic_annotations} %>
-    </dd>
-    <dt>Web pages</dt>
-    <dd>
-      <% $search{sgn_pages} %>
-      <% $search{external_link} %>
-      <% $search{web} %>
+      <div style="float: left; width: 50%">
+        <% $search{people} %>
+      </div>
+      <div style="float: right; width: 50%">
+        <% $search{manual_annotations} %>
+        <% $search{automatic_annotations} %>
+      </div>
+      <div style="clear: both; margin-bottom: -1.7em">&nbsp;</div>
     </dd>
     </dl>
   </div>
+
+  <hr style="border: 0; border-bottom: 1px solid #aaa; width: 90%; margin: 1.5em auto 1.2em auto"  />
+
+  <div>
+    <dl>
+    <dt>
+      <div style="float: left; width: 50%">Images</div>
+      <div style="float: right; width: 50%">Web Pages</div>
+    </dt>
+    <dd>
+      <div style="float: left; width: 50%">
+        <% $search{image} %>
+      </div>
+      <div style="float: right; width: 50%">
+        <% $search{sgn_pages} %>
+        <% $search{external_link} %>
+        <% $search{web} %>
+      </div>
+      <div style="clear: both; margin-bottom: -1.7em">&nbsp;</div>
+    </dd>
+    </dl>
+  </div>
+
+</div>
+
 </&>
 
 <%init>
