@@ -1,6 +1,6 @@
-<& /util/import_javascript.mas, classes => [ "moment_min", "fullcalendar", "jquery.dataTables", "fullcalendar_gcal" ] &>
+<& /util/import_javascript.mas, classes => [ "calendar.moment_min", "calendar.fullcalendar_min", "jquery.dataTables", "calendar.fullcalendar_gcal_min", "calendar.bootstrap_datepicker_min" ] &>
 
-<!--"bootstrap_datepicker"-->
+<link rel="stylesheet" href="/css/datepicker.css" />
 
 <style>
 .fc-center h2 {
@@ -10,13 +10,12 @@
 .fc-day-header {
     font-size: 0.9em;
 }
+.datepicker{z-index:1151 !important;}
 </style>
 
 <div id='calendar' style="width:100%"></div>
 <br/><br/>
 
-<p><a href='/calendar/test_datatables/'>View Available Project Properties</a></p>
-<br/><br/>
 
 <div class="modal fade" id="day_dialog" name="day_dialog"  tabindex="-1" role="dialog" aria-labelledby="addEventDialog">
   <div class="modal-dialog" role="document">
@@ -37,22 +36,29 @@
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Event Type: </label>
       	      <div class="col-sm-10">
-	        <div class="input-group">
-		  <select class="form-control" name="event_type_select" id="event_type_select" aria-describedby="basic-addon1"></select>
-  		  <span class="input-group-btn" id="basic-addon1"><button type="button" class="btn btn-primary" name="add_event_type">Add New Type</button></span>
-		</div>
+	        <select class="form-control" name="event_type_select" id="event_type_select" ></select>
               </div>
 	    </div>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Start: </label>
       	      <div class="col-sm-10">
-		<input class="form-control" name="event_start" id="event_start" type="text" placeholder="Formats: 2015-01-30 or 2015-01-30T14:30:00">
+	        <div class="input-group date">
+    		  <input type="text" class="form-control datepicker" name="event_start" id="event_start">
+    		  <div class="input-group-addon">
+        	    <span class="glyphicon glyphicon-th"></span>
+    		  </div>
+		</div>
               </div>
 	    </div>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">End: </label>
       	      <div class="col-sm-10">
-		<input class="form-control" name="event_end" id="event_end" type="text" placeholder="Formats: 2015-01-30 or 2015-01-30T14:30:00">
+	        <div class="input-group date">
+    		  <input type="text" class="form-control datepicker" name="event_end" id="event_end" placeholder="Leave Blank if Not Applicable">
+    		  <div class="input-group-addon">
+        	    <span class="glyphicon glyphicon-th"></span>
+    		  </div>
+		</div>
               </div>
 	    </div>
 	    <div class="form-group">
@@ -66,7 +72,7 @@
       	      <div class="col-sm-10">
 	        <div class="input-group">
 		  <span class="input-group-addon" id="basic-addon2">http://www.</span>
-  		  <input type="text" name="event_url" id="event_url" class="form-control" placeholder="example.com" aria-describedby="basic-addon2">
+  		  <input type="text" name="event_url" id="event_url" class="form-control" placeholder="example.com" aria-describedby="basic-addon2" />
   		</div>
               </div>
 	    </div>
@@ -138,56 +144,15 @@
 	<form name="event_dialog_delete_event_form" id="event_dialog_delete_event_form">
           <input type="hidden" name="event_projectprop_id" id="event_projectprop_id" />
         </form>
-        <button type="button" class="btn btn-success" name="event_more_info_submit" id="event_more_info_submit">Project Info</button>
 	<button type="button" class="btn btn-primary" name="event_edit_display" id="event_edit_display">Edit Event</button>
 	<button type="button" class="btn btn-danger" name="delete_event_submit" id="delete_event_submit">Delete Event</button>
 	<button type="button" class="btn btn-info" name="export_event_display" id="export_event_display">Export Event</button>
-	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	<button type="button" class="btn btn-default" data-dismiss="modal" id="event_dialog_dismiss">Close</button>
       </div>
     </div>
   </div>
 </div>
 
-
-<div class="modal fade" id="event_more_info_dialog" name="event_more_info_dialog"  tabindex="-1" role="dialog" aria-labelledby="eventMoreInfoDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="eventMoreInfoDialog"></h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <h4>Description</h4>
- 	  <p id="more_info_description"></p>
-	  <hr>
- 	  <h4>Project Properties</h4>
- 	  <table id="more_info_properties" class="table">
-  	    <thead>
-    	      <tr>
-      	        <th>Property</th>
-      		<th>Value</th>
-              </tr>
-  	    </thead>
- 	  </table>
-	  <hr>
- 	  <h4>Project Relationships</h4>
- 	  <table id="more_info_relationships" class="table">
-  	    <thead>
-    	      <tr>
-      	        <th>Project</th>
-      		<th>Relationship</th>
-    	      </tr>
-  	    </thead>
- 	  </table>
-	</div>
-      </div>
-      <div class="modal-footer">
-	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <div class="modal fade" id="edit_event_dialog" name="edit_event_dialog" tabindex="-1" role="dialog" aria-labelledby="editEventDialog">
   <div class="modal-dialog" role="document">
@@ -208,22 +173,29 @@
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Event Type: </label>
       	      <div class="col-sm-10">
-	        <div class="input-group">
-		  <select class="form-control" name="edit_event_type_select" id="edit_event_type_select" aria-describedby="basic-addon1"></select>
-  		  <span class="input-group-btn" id="basic-addon1"><button type="button" class="btn btn-primary" name="add_event_type">Add New Type</button></span>
-		</div>
+		<select class="form-control" name="edit_event_type_select" id="edit_event_type_select" ></select>
               </div>
 	    </div>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Start: </label>
       	      <div class="col-sm-10">
-		<input class="form-control" name="edit_event_start" id="edit_event_start" type="text" >
+	        <div class="input-group date">
+    		  <input type="text" class="form-control datepicker" name="edit_event_start" id="edit_event_start">
+    		  <div class="input-group-addon">
+        	    <span class="glyphicon glyphicon-th"></span>
+    		  </div>
+		</div>
               </div>
 	    </div>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">End: </label>
       	      <div class="col-sm-10">
-		<input class="form-control" name="edit_event_end" id="edit_event_end" type="text" >
+	        <div class="input-group date">
+    		  <input type="text" class="form-control datepicker" name="edit_event_end" id="edit_event_end" placeholder="Leave Blank if Not Applicable">
+    		  <div class="input-group-addon">
+        	    <span class="glyphicon glyphicon-th"></span>
+    		  </div>
+		</div>
               </div>
 	    </div>
 	    <div class="form-group">
@@ -235,11 +207,8 @@
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Web URL: </label>
       	      <div class="col-sm-10">
-	        <div class="input-group">
-		  <input type="hidden" id="edit_event_projectprop_id" name="edit_event_projectprop_id" />
-		  <span class="input-group-addon" id="basic-addon2">http://www.</span>
-  		  <input type="text" name="edit_event_url" id="edit_event_url" class="form-control" placeholder="example.com" aria-describedby="basic-addon2">
-  		</div>
+		<input type="hidden" id="edit_event_projectprop_id" name="edit_event_projectprop_id" />
+  		<input type="text" name="edit_event_url" id="edit_event_url" class="form-control" placeholder="example.com">
               </div>
 	    </div>
           </form>      
@@ -253,56 +222,20 @@
   </div>
 </div>
 
-<div class="modal fade" id="add_event_type_dialog" name="add_event_type_dialog"  tabindex="-1" role="dialog" aria-labelledby="addEventTypeDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addEventTypeDialog">Add New Event Type</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <form class="form-horizontal" role="form" name="add_event_type_form" id="add_event_type_form">
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Name: </label>
-      	      <div class="col-sm-10">
-		<input class="form-control" name="event_type_name" id="event_type_name" type="text" >
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Definition: </label>
-      	      <div class="col-sm-10">
-		<input class="form-control" name="event_type_definition" id="event_type_definition" type="text" >
-              </div>
-	    </div>
-	  </form>      
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="add_event_type_submit" id="add_event_type_submit">Add Event Type</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <script>
 
 $(document).ready(function() {
 
-    //$('#event_start').datepicker()
+    $('.datepicker').datepicker({
+        format: 'yyyy-mm-dd',
+    });
 
     var fcSources = {
          month_view: {
-	     url: '/ajax/calendar/populate/month',
-	     error: function() {alert('There was an error fetching month view events!');},
-	     className: 'bg-info',
-	     textColor: '#000',
-	     borderColor: '#FFF',
-	 },
-	 agendaWeek_view: {
-	     url: '/ajax/calendar/populate/agendaWeek',
-	     error: function() {alert('There was an error fetching agendaWeek view events!');},
+	     url: '/ajax/calendar/populate/personal/month',
+	     error: function() {window.location.replace('/solpeople/login.pl');},
 	     className: 'bg-info',
 	     textColor: '#000',
 	     borderColor: '#FFF',
@@ -325,32 +258,13 @@ $(document).ready(function() {
     $('#calendar').fullCalendar({
 	editable: true,
 	eventLimit: true,
-	lazyFetching: false,
+	lazyFetching: true,
 	header: {
-   	   left:   'month,agendaWeek',
-           center: 'title',
+   	   left:   'title',
            right:  'prevYear,prev,today,next,nextYear'
 	},
 	googleCalendarApiKey: 'AIzaSyDHH6NGHEYJcYRcxr5mHBWKcqNlKyu-L-Q',
-        eventSources: [fcSources.month_view, fcSources.agendaWeek_view, fcSources.gcal_cassbase, fcSources.gcal_holidays],
-	viewRender: function(view) {
-	    if (view.name == 'month' && lastView == 'from_month') {
-	       $('#calendar').fullCalendar( 'removeEventSource', fcSources.agendaWeek_view );
-	       $('#calendar').fullCalendar( 'addEventSource', fcSources.month_view );
-	       lastView = 'from_agendaWeek';
-	    } else if (view.name == 'agendaWeek' && lastView == 'from_agendaWeek') {
-	       $('#calendar').fullCalendar( 'removeEventSource', fcSources.month_view );
-	       $('#calendar').fullCalendar( 'addEventSource', fcSources.agendaWeek_view );
-	       lastView = 'from_month';
-	    } else if (view.name == 'agendaWeek' && lastView == 'initial') {
-	       $('#calendar').fullCalendar( 'removeEventSource', fcSources.month_view );
-	       $('#calendar').fullCalendar( 'addEventSource', fcSources.agendaWeek_view );
-	       lastView = 'from_month';
-	    } else if (view.name == 'month') {
-	       $('#calendar').fullCalendar( 'removeEventSource', fcSources.agendaWeek_view );
-	       lastView = 'initial';
-	    }
-	},
+        eventSources: [fcSources.month_view, fcSources.gcal_cassbase, fcSources.gcal_holidays],
 	eventRender: function(event, element, view) {
 	  if (!event.url) {
     	    element.find('.fc-title').html(event.title + ": " + event.property ); 
@@ -358,7 +272,7 @@ $(document).ready(function() {
 	},
 	dayClick: function(date, jsEvent, view) {
 	   $.ajax({
-	      url: "/ajax/calendar/dayclick",
+	      url: "/ajax/calendar/dayclick/personal",
     	      type: "GET",
 	      dataType: "json",
     	      success: function(data) {
@@ -388,8 +302,6 @@ $(document).ready(function() {
 	     return false;
        	   } else {
 	     $("#event_info_title").html("<a href='" + event.project_url + "'>" + event.title + "</a>");
-	     $('#more_info_description').html(event.p_description);
-	     $('#eventMoreInfoDialog').html("<a href='" + event.project_url + "'>" + event.title + "</a>");
 	     $("#event_info_start_display").html(event.start_display);
 	     $("#event_info_end_display").html(event.end_display);
 	     $("input#event_info_start").val(event.start_drag);
@@ -416,13 +328,8 @@ $(document).ready(function() {
 	   }
         },
 	eventMouseout: function(event) {
-	   if (event.url) {
-             $(this).popover("hide");
-	     return false;
-       	   } else {
-	     $(this).popover("hide");
-	     return false;
-	   }
+           $(this).popover("hide");
+	   return false;
 	},
 	eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
 	   if (!confirm("Are you sure about this change?")) {
@@ -512,8 +419,6 @@ $(document).ready(function() {
        		    alert("Event Successfully Added!");
 		    $('#day_dialog').modal('hide');
 		    $('#calendar').fullCalendar('refetchEvents');
-    		}else if(data.status == 0){
-        	    alert("Event Already Added! Did Not Save New Event!");
     		}else if(data.status == 2){
 		    alert("Error! Event Not Added! E.002");
 		}
@@ -545,15 +450,10 @@ $(document).ready(function() {
         });
     });
     
-    $("button[name = 'add_event_type']").click( function(event) {
-        event.preventDefault();
-        $("#add_event_type_dialog").modal("show");
-    });
-
     $('button#event_edit_display').click( function(event) {
         event.preventDefault();
 	$.ajax({
-	   url: "/ajax/calendar/dayclick",
+	   url: "/ajax/calendar/dayclick/personal",
     	   type: "GET",
 	   dataType: "json",
     	   success: function(data) {
@@ -605,100 +505,6 @@ $(document).ready(function() {
     	    error: function() {
 	    	alert("Did Not Save Edit! E.001");
     	    }
-        });
-    });
-
-    $('button#add_event_type_submit').click( function(event) {
-    	event.preventDefault();
-    	if (!confirm("Are you sure you want to add this event type?")) {
-	    return;
-        }
-        $.ajax({
-	    url: "/ajax/calendar/add_event_type",
-    	    type: "POST",
-	    dataType: "json",
-	    data: $('form#add_event_type_form').serialize(),
-    	    success: function(data) {
-	    	$('#add_event_type_dialog').modal('hide');
-		if (data.status == 1) {
-		    $.ajax({
-		        url: "/ajax/calendar/dayclick",
-    	            	type: "GET",
-	      	    	dataType: "json",
-    	      	    	success: function(data) {
-		            var options = $("#event_type_select");
-			    options.empty();
-     		  	    $.each(data.projectprop_list, function () {
-         	      	        options.append($("<option />").val(this.cvterm_id).text(this.cvterm_name));
-     		 	    });
-			    var options = $("#edit_event_type_select");
-			    options.empty();
-     		  	    $.each(data.projectprop_list, function () {
-         	      	        options.append($("<option />").val(this.cvterm_id).text(this.cvterm_name));
-     		 	    });
-		  	    return;
-		        },
-    	      	    	error: function() {
-		            alert("Error preparing Day Dialog After Adding Event Type!");
-    	      	        }
-           	    });
-		} else if (data.status == 0) {
-		    alert("Event Type Already Existed And Was Not Added Again!");
-		}
-            },
-    	    error: function() {
-	    	alert("Did Not Add Event Type! E.001");
-    	    }
-        });
-    });
-
-    $('button#event_more_info_submit').click( function(event) {
-    	event.preventDefault();
-	$('button#export_event_display').popover('hide');
-    	$('#event_more_info_dialog').modal("show");
-	$('#more_info_properties').dataTable({
-		"bDestroy": true,
- 		"searching": false,
-		"scrollCollapse": true,
-		"paginate": false,
-		"ajax": {
-			"url": "/ajax/calendar/more_info_properties",
-    	   		"type": "POST",
-	    		"dataType": "json",
-	    		"data": function ( d ) {
-               			d.event_project_id = $('#event_project_id').val();
-          		}
-		},
-		"aoColumns": [
-        	     { "mData": "property",
-		       "mRender": function (data, type, full) {
-              	       		  return '<a href="' + full.cvterm_url + '">' + full.property + '</a>';
-          			  }
-		     },
-        	     { "mData": "value"},
-    		     ],
-        });
-	$('#more_info_relationships').dataTable({
-		"bDestroy": true,
- 		"searching": false,
-		"scrollCollapse": true,
-		"paginate": false,
-		"ajax": {
-			"url": "/ajax/calendar/more_info_relationships",
-    	   		"type": "POST",
-	    		"dataType": "json",
-	    		"data": function ( d ) {
-               			d.event_project_id = $('#event_project_id').val();
-          		}
-		},
-		"aoColumns": [
-        	     { "mData": "object_project"},
-		     { "mData": "cvterm",
-		       "mRender": function (data, type, full) {
-              	       		  return '<a href="' + full.cvterm_url + '">' + full.cvterm + '</a>';
-          			  }
-		     },
-    		     ],
         });
     });
 
