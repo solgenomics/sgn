@@ -325,18 +325,7 @@ sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) {
 
 =cut
 
-sub study_germplasm_data_response {
-    my $schema = shift;
-    my $rs_slice = shift;
-    my @data;
-    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
-    while (my $s = $rs_slice->next()) { 
-	push @data, { germplasmDbId=>$s->get_column('stock_id'), studyEntryNumberId=>$s->get_column('study_entry_id'), defaultDisplayName=>$s->get_column('name'), germplasmName=>$s->get_column('uniquename'), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>germplasm_synonyms($schema, $s->get_column('stock_id'), $synonym_id) };
-    }
-    return \@data;
-}
-
-sub study : Chained('brapi') PathPart('study') CaptureArgs(1) { 
+sub studies : Chained('brapi') PathPart('studies') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
     my $study_id = shift;
@@ -347,25 +336,25 @@ sub study : Chained('brapi') PathPart('study') CaptureArgs(1) {
     $c->stash->{studyName} = $t->get_name();
 }
 
-sub study_germplasm : Chained('study') PathPart('germplasm') Args(0) { 
+sub studies_germplasm : Chained('studies') PathPart('germplasm') Args(0) { 
     my $self = shift;
     my $c = shift;
-    my $schema = $self->bcs_schema();
     my %result;
     my @status;
     my $total_count = 0;
-    my $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdExperimentProject')->search(
-	{'me.project_id' => $c->stash->{study_id}},
-	{join=> ['project', {'nd_experiment' => {'nd_experiment_stocks' => 'stock'} }],
-	 '+select'=> ['nd_experiment_stocks.nd_experiment_stock_id', 'stock.stock_id', 'stock.name', 'stock.uniquename'], 
-	 '+as'=> ['study_entry_id', 'stock_id', 'name', 'uniquename'],
-	 order_by=>{ -asc=>'stock.stock_id' }
-	}
-    );
+
+    my $t = CXGN::Trial->new( { trial_id => $c->stash->{study_id}, bcs_schema => $self->bcs_schema } );
+    my $rs = $t->_brapi_get_trial_accessions();
+
     if ($rs) {
 	$total_count = $rs->count();
 	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-	%result = (studyDbId=>$c->stash->{study_id}, studyName=>$c->stash->{studyName}, data => study_germplasm_data_response($self->bcs_schema(), $rs_slice));
+	my @data;
+	my $synonym_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
+	while (my $s = $rs_slice->next()) { 
+	    push @data, { germplasmDbId=>$s->get_column('stock_id'), studyEntryNumberId=>$s->get_column('study_entry_id'), defaultDisplayName=>$s->get_column('name'), germplasmName=>$s->get_column('uniquename'), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>germplasm_synonyms($self->bcs_schema, $s->get_column('stock_id'), $synonym_id) };
+	}
+	%result = (studyDbId=>$c->stash->{study_id}, studyName=>$c->stash->{studyName}, data =>\@data);
     }
 
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
@@ -704,13 +693,6 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 		    scores => \@marker_score_lines,
     };
     
-}
-
-
-sub studies : Chained('brapi') PathPart('studies') CaptureArgs(0) {
-    my $self = shift;
-    my $c = shift;
-
 }
 
 sub study_list : Chained('studies') PathPart('list') Args(0) { 
