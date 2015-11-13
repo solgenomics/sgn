@@ -63,19 +63,19 @@ Search accessions and plots using location, year, trial, and trait data.
 <div id="c1_to_list_menu"></div>
 </td>
 <td>
-<button class="btn btn-default btn-sm" id="c2_select_all" />select all</button>
+<button class="btn btn-default btn-sm" id="c2_select_all" />Select All</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
 <div class="well well-sm"><div id="c2_data_count">No Selection</div></div>
 <div id="c2_to_list_menu"></div>
 </td>
 <td>
-<button class="btn btn-default btn-sm" id="c3_select_all" />select all</button>
+<button class="btn btn-default btn-sm" id="c3_select_all" />Select All</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
 <div class="well well-sm"><div id="c3_data_count">No Selection</div></div>
 <div id="c3_to_list_menu"></div>
 </td>
 <td>
-<button class="btn btn-default btn-sm" id="stock_select_all" />select all</button>
+<button class="btn btn-default btn-sm" id="stock_select_all" />Select All</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
 <div class="well well-sm"><div id="stock_count">No Selection</div></div>
 <div id="add_to_list_menu"></div>
