@@ -295,7 +295,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 %# </&>
 
-<&| /page/info_section.mas, title => "Traits assayed", subtitle => "Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
+<&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle => "Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
 
 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
 
@@ -439,6 +439,8 @@ jQuery(document).ready(function () {
   display_trial_year();
 
   display_harvest_date();
+
+  display_planting_date();
 
   var type = get_trial_type(<% $trial_id %>);
 

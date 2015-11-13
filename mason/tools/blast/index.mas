@@ -43,7 +43,7 @@
   # array with the preselected output formats
   my @parse_options_selected = ();
   foreach my $po (@parse_options) { 
-    if (($po->[0] ne "Basic") && ($po->[0] ne "Table")) { 
+    if (($po->[0] ne "Basic") && ($po->[0] ne "Table") && ($po->[0] ne "Coverage")) { 
       push @parse_options_selected, $po;
     }
   }
@@ -94,7 +94,7 @@
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
-<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a href="/help/tools/blast">Help</a>' &>
+<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/tools/blast" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
   
   <div class="form-group form-inline">
