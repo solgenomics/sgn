@@ -2,6 +2,8 @@
 
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+
 <form id="accession_list_selector">
 <table class="table" cellpadding="10" border="0" >
   <tbody>
@@ -22,17 +24,19 @@
   <tr>
     <th>Accession name</th>
     <th>Number of associated trials</th>
-    <th>Trial list</th>
+    <th id="c1_div">Trial list</th>
   </tr>
 </thead>
 
 </table>
 
+<div id="c1_to_list_menu"></div>
+
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <script>
-jQuery(document).ready(function() { 
-
+jQuery(document).ready(function() {
+	   
     var lo = new CXGN.List();
 
     jQuery('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
@@ -83,6 +87,10 @@ jQuery(document).ready(function() {
 		      success : enable_ui()
 		      }
 	});
+	addToListMenu('c1_to_list_menu', 'c1_data', {
+		listType: 'trials',
+		});
+
   });
 
   function disable_ui() {
