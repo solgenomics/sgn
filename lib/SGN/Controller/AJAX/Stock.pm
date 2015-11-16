@@ -1219,7 +1219,7 @@ sub get_shared_trials_GET :Args(1) {
     my @formatted_rows = ();
 
     foreach my $stock_id (@stock_ids) {
-	my $trials_string;
+	my $trials_string ='';
 	my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
 	my $uniquename = $stock->get_uniquename;
        	my @current_trials = $stock->get_trials();
@@ -1245,7 +1245,7 @@ sub get_shared_trials_GET :Args(1) {
     
     my $num_trials = scalar @shared_trials;
     if ($num_trials > 0) {
-	my $trials_string;
+	my $trials_string = '';
 	foreach my $t (@shared_trials) { 
 	    $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'" id="c1_data">'.$t->[1].'</a>,  ';
 	}
@@ -1254,8 +1254,8 @@ sub get_shared_trials_GET :Args(1) {
     } else {
 	push @formatted_rows, [ "Trials in Common", $num_trials, "No shared trials found."];
     }
-
-    $c->stash->{rest} = { data => \@formatted_rows };
+    
+    $c->stash->{rest} = { data => \@formatted_rows, shared_trials => \@shared_trials };
 }
 }
 =head2 action get_stock_trait_list()

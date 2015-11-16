@@ -24,7 +24,7 @@
   <tr>
     <th>Accession name</th>
     <th>Number of associated trials</th>
-    <th id="c1_div">Trial list</th>
+    <th>Trial list</th>
   </tr>
 </thead>
 
@@ -43,7 +43,7 @@ jQuery(document).ready(function() {
  
     jQuery('#find_trials').click(function() {
       
-	disable_ui();
+	//disable_ui();
    
 	var accession_list_id = jQuery('#accession_list_list_select').val();
 
@@ -79,18 +79,23 @@ jQuery(document).ready(function() {
 	    error: function(response) { alert("An error occurred while transforming the list "+list_id); }
 	    });      
 
-	jQuery('#trial_summary_data').DataTable( {  // get shared trials using accession ids
-		ajax: {
-		      async: false,
-		      url: '/stock/get_shared_trials',
-		      data: {stock_ids: stock_ids},
-		      success : enable_ui()
-		      }
-	});
+
+	jQuery.ajax({   // get shared trials using accession ids
+		async: false,
+		url: '/stock/get_shared_trials',
+		data: {stock_ids: stock_ids}
+	}).done(function(data) {
+		jQuery('#trial_summary_data').DataTable({
+			data: data.data
+		});
+		var select1 = data.shared_trials;
+		console.log(JSON.parse(JSON.stringify(select1)));
+	});    	 
 	addToListMenu('c1_to_list_menu', 'c1_data', {
 		listType: 'trials',
 		});
-
+	jQuery('#c1_data_add_to_new_list').prop('value', 'create new list of the trials in common');
+	jQuery('#c1_data_button').prop('value', 'add the trials in common to an existing list');
   });
 
   function disable_ui() {
