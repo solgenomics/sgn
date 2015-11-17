@@ -346,7 +346,7 @@ sub multi_modeling_message {
 		    my $trait_page = $output_details->{$k}->{trait_page};
 		    $message .= "The analysis for $trait_name is done."
 			." You can view the output here:\n"
-			."$trait_page.\n";
+			."$trait_page.\n\n";
 		}
 		else 
 		{  
@@ -390,7 +390,7 @@ sub single_modeling_message {
 		else 
 		{  
 		    $message = "The analysis for $trait_name failed."
-			."\nWe are troubleshooting the cause. " 
+			."\n\nWe are troubleshooting the cause. " 
 			. "We will contact you when we find out more.";	 
 		}		
 	    }
