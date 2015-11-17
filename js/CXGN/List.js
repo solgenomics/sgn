@@ -968,6 +968,7 @@ function togglePublicList(list_id) {
 	"type": "POST",
 	"data": {'list_id': list_id},
 	success: function(r) {
+	    var lo = new CXGN.List();
 	    if (r.error) {
 		alert(r.error);
 	    } else if (r.r == 1) {
@@ -975,6 +976,7 @@ function togglePublicList(list_id) {
 	    } else if (r.r == 0) {
 		alert("List set to Public");
 	    }
+	    lo.renderLists('list_dialog');
 	},
 	error: function() {
 	    alert("Error Setting List to Public! List May Not Exist.");
