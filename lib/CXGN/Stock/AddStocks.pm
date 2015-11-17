@@ -155,6 +155,44 @@ sub validate_stocks {
   return 1;
 }
 
+sub validate_organism {
+  my $self = shift;
+  if (!$self->has_schema() || !$self->has_species() || !$self->has_stocks()) {
+    return;
+  }
+  my $schema = $self->get_schema();
+  my $species = $self->get_species();
+  my $organism = $schema->resultset("Organism::Organism")
+    ->find({
+	    species => $species,
+	   } );
+  if ($organism->organism_id()) {
+      return 1;
+  }
+  return;
+}
+
+sub validate_owner {
+  my $self = shift;
+  if (!$self->has_schema() || !$self->has_species() || !$self->has_stocks()) {
+    return;
+  }
+  my $schema = $self->get_schema();
+  my $phenome_schema = $self->get_phenome_schema();
+  my $owner_name = $self->get_owner_name();;
+  my $dbh = $self->get_dbh();
+  my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name);
+  my $owner_search = $phenome_schema->resultset("StockOwner")
+    ->find({
+	sp_person_id =>  $owner_sp_person_id,
+	   });
+  if ($owner_search) {
+      return 1;
+  }
+  return;
+}
+
+
 #######
 1;
 #######
