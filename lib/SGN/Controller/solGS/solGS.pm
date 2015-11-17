@@ -837,7 +837,7 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     $c->stash->{prediction_pop_id} = $selection_pop_id;
     $c->stash->{template} = $self->template('/population/selection_trait.mas');
  
-    $self->get_trait_name($c, $trait_id);
+    $self->get_trait_details($c, $trait_id);
     
     my $page = $c->req->referer();
 
@@ -939,7 +939,7 @@ sub build_single_trait_model {
     my ($self, $c)  = @_;
 
     my $trait_id =  $c->stash->{trait_id};    
-    $self->get_trait_name($c, $trait_id);
+    $self->get_trait_details($c, $trait_id);
  
     $self->get_rrblup_output($c);
  
@@ -1316,7 +1316,7 @@ sub blups_file {
 sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
     my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
  
-    $self->get_trait_name($c, $trait_id);
+    $self->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
    
     my $dir = $c->stash->{solgs_cache_dir};
@@ -1337,7 +1337,7 @@ sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
 sub download_marker_effects :Path('/solgs/download/marker/pop') Args(3) {
     my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
  
-    $self->get_trait_name($c, $trait_id);
+    $self->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
   
     my $dir = $c->stash->{solgs_cache_dir};
@@ -1467,7 +1467,7 @@ sub combined_gebvs_file {
 sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
     my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
  
-    $self->get_trait_name($c, $trait_id);
+    $self->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
     my $dir = $c->stash->{solgs_cache_dir};
@@ -1505,7 +1505,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         $c->stash->{model_id}      = $model_id;                          
         $c->stash->{prediction_pop_id} = $prediction_pop_id;  
         
-        $self->get_trait_name($c, $trait_id);
+        $self->get_trait_details($c, $trait_id);
         my $trait_abbr = $c->stash->{trait_abbr};
 
         my $identifier = $combo_pops_id . '_' . $prediction_pop_id;
@@ -1550,7 +1550,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         $c->stash->{model_id}          = $model_id;                          
         $c->stash->{prediction_pop_id} = $prediction_pop_id;  
         
-        $self->get_trait_name($c, $trait_id);
+        $self->get_trait_details($c, $trait_id);
         my $trait_abbr = $c->stash->{trait_abbr};
 
         my $identifier = $pop_id . '_' . $prediction_pop_id;
@@ -1599,7 +1599,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
 
         foreach my $trait_id (@traits_ids) 
         {            
-            $self->get_trait_name($c, $trait_id);
+            $self->get_trait_details($c, $trait_id);
             my $trait_abbr = $c->stash->{trait_abbr};
 
             my $identifier = $model_id . '_' . $prediction_pop_id;
@@ -1686,7 +1686,7 @@ sub list_predicted_selection_pops {
 sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) {
     my ($self, $c, $pop_id, $prediction, $prediction_id, $trait_id) = @_;   
  
-    $self->get_trait_name($c, $trait_id);
+    $self->get_trait_details($c, $trait_id);
     $c->stash->{pop_id} = $pop_id;
 
     my $path = $c->req->path; my $referer= $c->req->referer;
@@ -1735,7 +1735,7 @@ sub prediction_pop_analyzed_traits {
     {
         foreach (@trait_ids)
         { 
-            $self->get_trait_name($c, $_);
+            $self->get_trait_details($c, $_);
             push @traits, $c->stash->{trait_abbr};
         }
     }
@@ -1790,7 +1790,7 @@ sub download_prediction_urls {
 
     foreach my $sl_tr_id (@$trait_ids) 
     {
-        $self->get_trait_name($c, $sl_tr_id);
+        $self->get_trait_details($c, $sl_tr_id);
         my $trait_abbr = $c->stash->{trait_abbr};
         my $trait_name = $c->stash->{trait_name};
      
@@ -1862,7 +1862,7 @@ sub model_parameters {
 }
 
 
-sub get_trait_name {
+sub get_trait_details {
     my ($self, $c, $trait_id) = @_;
 
     my $trait_name = $c->model('solGS::solGS')->trait_name($trait_id);
@@ -2408,7 +2408,7 @@ sub build_multiple_traits_models {
                         my $trait_name =  $r->[1];
                         $trait_name    =~ s/\n//g;                                
                         my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
-                        $self->get_trait_name($c, $trait_id);
+                        $self->get_trait_details($c, $trait_id);
                     }
                 }
             }
@@ -2781,7 +2781,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
         $ids = $c->req->param($trait_id);
         @pop_ids = split(/,/, $ids);
 
-        $self->get_trait_name($c, $trait_id);
+        $self->get_trait_details($c, $trait_id);
     } 
    
     my $combo_pops_id;
@@ -2872,7 +2872,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
         $c->stash->{trait_combo_pops} = $pops_ids; 
     }
 
-    $self->get_trait_name($c, $trait_id);
+    $self->get_trait_details($c, $trait_id);
     $self->trait_phenotype_stat($c);    
     $self->validation_file($c);
     $self->model_accuracy($c);
@@ -3236,7 +3236,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
     my $trait_id      = $c->req->param('trait_id');
     my $combo_pops_id = $c->req->param('combo_pops_id');
 
-    $self->get_trait_name($c, $trait_id);
+    $self->get_trait_details($c, $trait_id);
 
     $c->stash->{pop_id}        = $pop_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
@@ -3360,7 +3360,7 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     $c->stash->{trait_combo_pops} = $trait_combo_pops;
     $c->stash->{prediction_pop_id} = $prediction_pop_id;
    
-    $self->get_trait_name($c, $trait_id);
+    $self->get_trait_details($c, $trait_id);
   
     $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
     my $page = $c->req->referer();
