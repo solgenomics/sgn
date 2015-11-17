@@ -112,18 +112,41 @@ sub available_lists {
     my $owner = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name ORDER BY list.name";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name ORDER BY list.name";
     my $h = $dbh->prepare($q);
     $h->execute($owner);
 
     my @lists = ();
-    while (my ($id, $name, $desc, $item_count, $type_id, $type) = $h->fetchrow_array()) { 
+    while (my ($id, $name, $desc, $item_count, $type_id, $type, $public) = $h->fetchrow_array()) { 
 	if ($requested_type) { 
+	    if ($type && ($type eq $requested_type)) { 
+		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public ];
+	    }
+	}
+	else { 
+	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public ];
+	}
+    }
+    return \@lists;
+}
+
+sub available_public_lists { 
+    my $dbh = shift;
+    my $requested_type = shift;
+
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name ORDER BY list.name";
+    my $h = $dbh->prepare($q);
+    $h->execute();
+
+    my @lists = ();
+    while (my ($id, $name, $desc, $item_count, $type_id, $type) = $h->fetchrow_array()) { 
+	if ($requested_type) {
 	    if ($type && ($type eq $requested_type)) { 
 		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
 	    }
 	}
 	else { 
+	    
 	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
 	}
     }
@@ -338,6 +361,48 @@ sub list_size {
     $h->execute($self->list_id());
     my ($count) = $h->fetchrow_array();
     return $count;
+}    
+
+sub toggle_public { 
+    my $self = shift;
+
+    my $h = $self->dbh->prepare("SELECT is_public FROM sgn_people.list WHERE list_id=?");
+    $h->execute($self->list_id());
+    my $public = $h->fetchrow_array();
+
+    my $rows_affected;
+    if ($public == 0) {
+	my $h = $self->dbh->prepare("UPDATE sgn_people.list SET is_public='t' WHERE list_id=?");
+	$h->execute($self->list_id());
+	$rows_affected = $h->rows;
+    } elsif ($public == 1) {
+	my $h = $self->dbh->prepare("UPDATE sgn_people.list SET is_public='f' WHERE list_id=?");
+	$h->execute($self->list_id());
+	$rows_affected = $h->rows;
+    }
+    return ($public, $rows_affected);
+}    
+
+sub copy_public { 
+    my $self = shift;
+    my $user_id = shift;
+
+    my $h = $self->dbh->prepare("INSERT INTO sgn_people.list (name, description, owner, type_id) SELECT name, description, ?, type_id FROM sgn_people.list as old WHERE old.list_id=? RETURNING list_id");
+    $h->execute($user_id, $self->list_id());
+    my $list_id = $h->fetchrow_array();
+
+    $h = $self->dbh->prepare("INSERT INTO sgn_people.list_item (content, list_id) SELECT content, ? FROM sgn_people.list_item as old WHERE old.list_id=?");
+    $h->execute($list_id, $self->list_id());
+    
+    return $list_id;
+}    
+
+sub check_if_public { 
+    my $self = shift;
+    my $h = $self->dbh->prepare("SELECT is_public FROM sgn_people.list WHERE list_id=?");
+    $h->execute($self->list_id());
+    my $public = $h->fetchrow_array();
+    return $public;
 }    
 
 sub exists_element {
