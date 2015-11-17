@@ -642,7 +642,7 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
     my ($self, $c) = @_;
   
     my ($pop_id, $action) = @{$c->req->captures};
-    print STDERR "pop page: $pop_id\n";
+  
     my $uploaded_reference = $c->req->param('uploaded_reference');
     $c->stash->{uploaded_reference} = $uploaded_reference;
 
@@ -748,7 +748,7 @@ sub uploaded_population_summary {
 
 sub get_project_details {
     my ($self, $c, $pr_id) = @_;
-    print STDERR "get_project_details: $pr_id\n";
+  
     my $pr_rs = $c->model('solGS::solGS')->project_details($pr_id);
 
     while (my $row = $pr_rs->next)
@@ -1527,7 +1527,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
             $c->stash->{trait_combined_geno_file}  = $geno_file;
             $self->prediction_population_file($c, $prediction_pop_id);
   
-            $c->forward('get_rrblup_output'); 
+            $self->get_rrblup_output($c); 
         }
         
         $self->combined_pops_summary($c);        
@@ -1572,8 +1572,9 @@ sub prediction_population :Path('/solgs/model') Args(3) {
             $c->stash->{geno_file}  = $geno_file;
             $self->prediction_population_file($c, $prediction_pop_id);
   
-            $c->forward('get_rrblup_output'); 
+            $self->get_rrblup_output($c); 
         }
+
          $self->trait_phenotype_stat($c);
          $self->gs_files($c);
         
@@ -1621,7 +1622,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
                 $c->stash->{prediction_pop_id} = $prediction_pop_id;
                 $self->prediction_population_file($c, $prediction_pop_id);
                 
-                $c->forward('get_rrblup_output'); 
+                $self->get_rrblup_output($c); 
                
              }
          }
@@ -1750,35 +1751,46 @@ sub download_prediction_urls {
     my ($self, $c, $training_pop_id, $prediction_pop_id) = @_;
   
     my $trait_ids;
-    my $page_trait_id = $c->stash->{trait_id};
-    $page_trait_id = $c->stash->{page_trait_id} if $c->stash->{page_trait_id}; 
-    my $page = $c->req->path;
-   
+    my $trait_is_predicted;
+    my $download_url;# = $c->stash->{download_prediction};
+    my $model_tr_id = $c->stash->{trait_id};
+
+    my $page = $c->req->referer;
+    my $base = $c->req->base;
+    $page    =~ s/$base//;
+    
     no warnings 'uninitialized';
 
     if ($prediction_pop_id)
     {
         $self->prediction_pop_analyzed_traits($c, $training_pop_id, $prediction_pop_id);
-        $trait_ids = $c->stash->{prediction_pop_analyzed_traits_ids};   
+        $trait_ids = $c->stash->{prediction_pop_analyzed_traits_ids}; 
     } 
-     
-   my ($trait_is_predicted) = grep {/$page_trait_id/ } @$trait_ids;
-
-    my $download_url;# = $c->stash->{download_prediction};
+    
   
-    if ($page =~ /(solgs\/trait\/)|(solgs\/model\/combined\/populations\/)/ )
+    if ($page =~ /solgs\/model\/combined\/populations\// )
     { 
-        $trait_ids = [$page_trait_id];
+	($model_tr_id) = $page =~ /(\d+)$/;
+	$model_tr_id   =~ s/s+//g;
+        $trait_ids     = [$model_tr_id];
     }
 
-    if ($page =~ /(\/uploaded\/prediction\/)/ && $c->req->referer !~ /(\/solgs\/traits\/all)/ )
+    if ($page =~ /solgs\/trait\// )
     { 
-        $trait_ids = [$page_trait_id];
+	$model_tr_id = (split '/', $page)[2];
+        $trait_ids   = [$model_tr_id];
     }
 
-    foreach my $trait_id (@$trait_ids) 
+    if ($page =~ /(\/uploaded\/prediction\/)/ && $page !~ /(\/solgs\/traits\/all)/)
+    { 
+	($model_tr_id) = $page =~ /(\d+)$/;
+	$model_tr_id =~ s/s+//g;	
+        $trait_ids = [$model_tr_id];
+    }
+
+    foreach my $sl_tr_id (@$trait_ids) 
     {
-        $self->get_trait_name($c, $trait_id);
+        $self->get_trait_name($c, $sl_tr_id);
         my $trait_abbr = $c->stash->{trait_abbr};
         my $trait_name = $c->stash->{trait_name};
      
@@ -1790,23 +1802,26 @@ sub download_prediction_urls {
             }
         }
 
-        $download_url   .= " | " if $download_url;        
-        $download_url   .= qq | <a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> | if $trait_id;
-        
-        $download_url = '' if (!$trait_is_predicted);
+  	if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
+	{
+	    $download_url   .= " | " if $download_url;     
+	}
+     
+	if ($sl_tr_id)
+	{
+	    $download_url .= qq | <a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$sl_tr_id">$trait_abbr</a> |; 
+	}          
     }
 
     if ($download_url) 
     {    
-        $c->stash->{download_prediction} = $download_url;
-         
+        $c->stash->{download_prediction} = $download_url;         
     }
     else
-    {
-        
+    {       
         $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$prediction_pop_id"  onclick="solGS.waitPage()">[ Predict ]</a> |;
 
-         $c->stash->{download_prediction} = '' if $c->stash->{uploaded_prediction};
+	$c->stash->{download_prediction} = '' if $c->stash->{uploaded_prediction};
     }
   
 }
@@ -2165,6 +2180,7 @@ sub list_of_prediction_pops {
     $c->stash->{list_of_prediction_pops} = $c->stash->{selection_pops_list};
 
 }
+
 
 sub format_selection_pops {
     my ($self, $c, $pred_pops_ids) = @_;
@@ -3405,7 +3421,7 @@ sub get_all_traits {
  
     $self->traits_acronym_file($c);
     my $acronym_file = $c->stash->{traits_acronym_file};
-
+   
     unless (-s $acronym_file)
     {
 	    my @filtered_traits = split(/\t/, $traits);
@@ -3413,8 +3429,7 @@ sub get_all_traits {
 
 	    my $acronymized_traits = $self->acronymize_traits(\@filtered_traits);    
 	    my $acronym_table = $acronymized_traits->{acronym_table};
-	    my @trs = keys %$acronym_table;
-	  
+
 	    $self->traits_acronym_table($c, $acronym_table);
     }
 	
@@ -3426,7 +3441,7 @@ sub create_trait_data {
     my ($self, $c) = @_;   
        
     my $table = 'trait_id' . "\t" . 'trait_name' . "\t" . 'acronym' . "\n"; 
- 
+   
     my $acronym_pairs = $self->get_acronym_pairs($c);
     
     foreach (@$acronym_pairs)
@@ -3441,9 +3456,7 @@ sub create_trait_data {
 
     $self->all_traits_file($c);
     my $traits_file =  $c->stash->{all_traits_file};
-
     write_file($traits_file, $table);
-
 }
 
 
@@ -3481,7 +3494,6 @@ sub get_acronym_pairs {
     my ($self, $c) = @_;
 
     my $pop_id = $c->stash->{pop_id};
-    
     my $dir    = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir 
         or die "can't open $dir: $!\n";
@@ -3492,8 +3504,7 @@ sub get_acronym_pairs {
     $dh->close;
 
     my $acronyms_file = catfile($dir, $file);
-      
-   
+  
     my @acronym_pairs;
     if (-f $acronyms_file) 
     {
@@ -3578,16 +3589,14 @@ sub analyzed_traits {
             if ($acronym_pairs)
             {
                 foreach my $r (@$acronym_pairs) 
-                {
-                    
+                {                    
                     if ($r->[0] eq $trait) 
                     {
                         my $trait_name =  $r->[1];
                         $trait_name    =~ s/\n//g;                                                       
                         my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
                        
-                        push @traits_ids, $trait_id;
-                                               
+                        push @traits_ids, $trait_id;                                               
                     }
                 }
             }
@@ -3788,7 +3797,7 @@ sub gs_traits : Path('/solgs/traits') Args(1) {
 }
 
 
-sub run_phenotype_file_cluster {
+sub submit_cluster_phenotype_query {
     my ($self, $c, $args) = @_;
 
     $c->stash->{r_temp_file} = 'phenotype-data-query';
@@ -3801,11 +3810,6 @@ sub run_phenotype_file_cluster {
 
     my $status;
  
-    my $pheno_file  = $args->{phenotype_file};
-    my $pop_id      = $args->{population_id};
-    my $traits_file = $args->{traits_list_file};
-    my $cache_dir   = $args->{cache_dir};
-    
     try 
     { 
         my $pheno_job = CXGN::Tools::Run->run_cluster_perl({
@@ -3840,6 +3844,58 @@ sub run_phenotype_file_cluster {
 }
 
 
+sub submit_cluster_genotype_query {
+    my ($self, $c, $args) = @_;
+
+    $c->stash->{r_temp_file} = 'genotype-data-query';
+    $self->create_cluster_acccesible_tmp_files($c);
+    my $out_temp_file = $c->stash->{out_file_temp};
+    my $err_temp_file = $c->stash->{err_file_temp};
+   
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $background_job = $c->stash->{background_job};
+
+    my $status;
+ 
+    # my $pheno_file  = $args->{genotype_file};
+    # my $pop_id      = $args->{population_id};
+    # my $traits_file = $args->{traits_list_file};
+    # my $cache_dir   = $args->{cache_dir};
+    
+    try 
+    { 
+        my $geno_job = CXGN::Tools::Run->run_cluster_perl({
+           
+            method        => ["SGN::Controller::solGS::solGS" => "prep_genotype_file"],
+    	    args          => [$args],
+    	    load_packages => ['SGN::Controller::solGS::solGS', 'SGN::Context', 'SGN::Model::solGS::solGS'],
+    	    run_opts      => {
+    		              out_file    => $out_temp_file,
+			      err_file    => $err_temp_file,
+    		              working_dir => $temp_dir,
+			      max_cluster_jobs => 1_000_000_000,
+	    },
+	    
+         });
+
+	$c->stash->{r_job_tempdir} = $geno_job->tempdir();
+	$c->stash->{r_job_id} = $geno_job->job_id();
+
+	unless ($background_job)
+	{ 
+	    $geno_job->wait();
+	}
+	
+    }
+    catch 
+    {
+	$status = $_;
+	$status =~ s/\n at .+//s;           
+    }; 
+
+}
+
+
 sub prep_phenotype_file {
     my ($self,$args) = @_;
     
@@ -3862,6 +3918,29 @@ sub prep_phenotype_file {
     my $file_cache  = Cache::File->new(cache_root => $cache_dir);
 
     $file_cache->set('phenotype_data_' . $pop_id, $pheno_file, '30 days');
+    
+}
+
+
+sub prep_genotype_file {
+    my ($self, $args) = @_;
+    
+    my $geno_file  = $args->{genotype_file};
+    my $cache_dir  = $args->{cache_dir};
+    my $pop_id     = ($args->{prediction_id} ? $args->{prediction_id} : $args->{population_id});
+    my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
+					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
+   
+    my $geno_data = $model->genotype_data($args);
+
+    if ($geno_data)
+    {
+	write_file($geno_file, $geno_data);
+    }
+
+    my $file_cache  = Cache::File->new(cache_root => $cache_dir);
+
+    $file_cache->set('genotype_data_' . $pop_id, $geno_file, '30 days');
     
 }
 
@@ -3905,8 +3984,11 @@ sub phenotype_file {
 		'traits_list_file' => $traits_file,
 		'cache_dir'        => $dir,
 	    };
-
-	    $self->run_phenotype_file_cluster($c, $args);	    
+	   
+	    if(!$c->stash->{uploaded_reference}) 
+	    {
+		$self->submit_cluster_phenotype_query($c, $args);
+	    }	    
         }
     }
    
@@ -3951,11 +4033,11 @@ sub format_phenotype_dataset_headers {
     $raw_headers =~ s/\n//g;  
 
     my $meta_headers=  $self->filter_phenotype_header();
-   
     $raw_headers =~ s/($meta_headers\t)//g;
+   
     write_file($traits_file, $raw_headers) if $traits_file;   
-    my @filtered_traits = split(/\t/, $raw_headers);
-    
+    my  @filtered_traits = split(/\t/, $raw_headers);
+
     my $acronymized_traits = $self->acronymize_traits(\@filtered_traits);
     my $formatted_headers = $acronymized_traits->{formatted_headers}; 
    
@@ -4000,7 +4082,7 @@ sub acronymize_traits {
 sub genotype_file  {
     my ($self, $c, $pred_pop_id) = @_;
     my $pop_id  = $c->stash->{pop_id};
-    
+  
     my $geno_file;
 
     if ($pred_pop_id) 
@@ -4032,7 +4114,8 @@ sub genotype_file  {
 
     unless($geno_file) 
     {
-        my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
+	my $cache_dir = $c->stash->{solgs_cache_dir};
+        my $file_cache  = Cache::File->new(cache_root => $cache_dir);
         $file_cache->purge();
    
         my $key        = "genotype_data_" . $pop_id;
@@ -4041,11 +4124,18 @@ sub genotype_file  {
         unless (-s $geno_file)
         {  
             $geno_file = catfile($c->stash->{solgs_cache_dir}, "genotype_data_" . $pop_id . ".txt");
-            my $data = $c->model('solGS::solGS')->genotype_data($pop_id);
-           
-            write_file($geno_file, $data);
 
-            $file_cache->set($key, $geno_file, '30 days');
+	    my $args = {
+		'population_id' => $pop_id,
+		'data_set_type' => $c->stash->{data_set_type},
+		'cache_dir'     => $cache_dir,
+		'prediction_id' => $pred_pop_id,
+		'trait_abbr'    => $c->stash->{trait_abbr},
+		'model_id'      => $c->stash->{model_id},
+		'genotype_file' => $geno_file,
+	    };
+
+	    $self->submit_cluster_genotype_query($c, $args);
         }
     }
    
