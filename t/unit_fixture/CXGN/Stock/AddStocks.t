@@ -8,7 +8,7 @@ use lib 't/lib';
 
 use Test::More;
 use SGN::Test::Fixture;
-#use CXGN::People::Person;
+use CXGN::People::Person;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema();
@@ -58,6 +58,12 @@ is($stock_search->first()->organism_id(), $organism_id, "Organism id on added st
 
 is($stock_add->validate_stocks(), undef, "Stocks should not validate after being added"); 
 
-#my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name);
+my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name);
+
+my $owner_search = $phenome_schema->resultset("StockOwner")
+    ->find({
+	stock_id     => $stock_search->first()->stock_id(),
+	   });
+is ($owner_search->sp_person_id(), $owner_sp_person_id, "Stock owner attached to added stock");
 
 done_testing();
