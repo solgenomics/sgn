@@ -112,7 +112,7 @@ sub available_lists {
     my $owner = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name ORDER BY list.name";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
     my $h = $dbh->prepare($q);
     $h->execute($owner);
 
