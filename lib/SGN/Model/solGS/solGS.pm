@@ -157,13 +157,6 @@ sub project_location {
                 WHERE project_id = ?
                       AND cvterm.name ilike ?";
 
-
-   # my $q = "SELECT description FROM projectprop 
-   #             LEFT JOIN cvterm ON (type_id = cvterm_id) 
-   #             LEFT JOIN  nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id) 
-   #             WHERE project_id = ?";
-
-    print STDERR "\nckeck query :$q\n";
 	   
     my $sth = $self->context->dbc->dbh()->prepare($q);
 
@@ -173,12 +166,9 @@ sub project_location {
         $pr_id = undef;
     }
 
-    print STDERR "\nproject id  :$pr_id\n";
 
     $sth->execute($pr_id,'project location');
     
-   # $sth->execute(699, 'project location');
-   # $sth->execute($pr_id);
 
     my $loc = $sth->fetchrow_array;
 
@@ -237,7 +227,7 @@ sub has_phenotype {
 	     
 		 if($header) 
 		 {
-		     $data =  $self->context->controller("solGS::solGS")->format_phenotype_dataset($self->context, $data); 
+		     $data =  $self->context->controller("solGS::solGS")->format_phenotype_dataset($data); 
 		     write_file($pheno_file, $data);
 
 		     $file_cache->set($key, $pheno_file, '30 days');
@@ -585,8 +575,15 @@ sub search_stock_using_plot_name {
 
 
 sub genotype_data {
-    my ($self, $project_id) = @_;
-    
+    my ($self, $args) = @_;
+
+    my $project_id    = $args->{population_id};
+    my $prediction_id = $args->{prediction_id};
+    my $data_set_type = $args->{data_set_type};
+    my $cache_dir     = $args->{cache_dir};
+    my $trait_abbr    = $args->{trait_abbr};
+    my $model_id      = ($args->{model_id} ? $args->{model_id} : $project_id);
+
     my $stock_genotype_rs;
     my @genotypes;
     my $geno_data;
@@ -596,29 +593,21 @@ sub genotype_data {
     my @stocks;
 
     if ($project_id) 
-    {
-        my $prediction_id = $self->context->stash->{prediction_pop_id};
-        my $model_id      = $self->context->stash->{model_id};
-       
+    {    
         if ($prediction_id && $project_id == $prediction_id) 
-        {    
-            my $data_set_type = $self->context->stash->{data_set_type};
-            my $trait_abbr    = $self->context->stash->{trait_abbr};
-            
+        {      
             $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
             my $stock_count = $stock_genotype_rs->count;
-                
+            
             unless ($header_markers) 
             {
                 if ($stock_count)
                 {
-                    my $dir = $self->context->stash->{solgs_cache_dir};
-                    
                     my $file = $data_set_type =~ /combined/ 
                         ? "genotype_data_${model_id}_${trait_abbr}" 
                         : "genotype_data_${model_id}.txt";
-                    
-                    my $training_geno_file = $self->context->controller("solGS::solGS")->grep_file($dir, $file);
+                 
+                    my $training_geno_file = SGN::Controller::solGS::solGS->grep_file($cache_dir, $file);
 
                     open my $fh, $training_geno_file or die "couldnot open $training_geno_file: $!";    
                     my $header_markers = <$fh>;
@@ -635,7 +624,7 @@ sub genotype_data {
             {  
                 $cnt++;
 		my $stock = $geno->get_column('stock_name');
-		
+    
 		my $duplicate_stock;
 
 		if ($cnt > 1)
@@ -657,7 +646,7 @@ sub genotype_data {
                     if ($similarity == 1)     
                     {
                         my $geno_values = $self->stock_genotype_values($geno);               
-                        $geno_data     .= $geno_values;                       
+                        $geno_data     .= $geno_values; 
                     }
                     else 
                     {                       
@@ -1329,8 +1318,8 @@ sub plots_list_phenotype_data_rs {
                   }
                 } ,
                 ],
-            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description / ],
-            as       => [ qw/ stock_id uniquename value observable observable_id project_description / ],
+            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.project_id project.description / ],
+            as       => [ qw/ stock_id uniquename value observable observable_id project_id project_description / ],
           
             order_by => [  'observable.name' ],
         }  );
@@ -1487,8 +1476,8 @@ sub structure_phenotype_data {
 	    $d .= "\n";
 	}
    
-	#@project_genotypes = uniq(@project_genotypes);
-	#$self->context->stash->{project_genotypes} = \@project_genotypes;
+	@project_genotypes = uniq(@project_genotypes);
+	$self->context->stash->{project_genotypes} = \@project_genotypes;
     }
  
     return $d;
