@@ -35,4 +35,24 @@ is($stock_add->validate_stocks(), 1);  #is true when none of the stock names in 
 
 ok($stock_add->add_accessions(), "Add new stocks");
 
+my $stock_search = $schema->resultset("Stock::Stock")
+    ->search({
+	uniquename => $stocks[0],
+	     } );
+ok($stock_search->first(), "Stock exists after adding");
+
+my $stock_search_2 = $schema->resultset("Stock::Stock")
+    ->search({
+	uniquename => $stocks[1],
+	     } );
+ok($stock_search_2->first(), "Multiple stocks added");
+
+my $organism = $schema->resultset("Organism::Organism")
+    ->find({
+	species => $species,
+	   } );
+my $organism_id = $organism->organism_id();
+
+is($stock_search->first()->organism_id(), $organism_id, "Organism id on added stocks is correct");
+
 done_testing();
