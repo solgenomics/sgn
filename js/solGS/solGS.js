@@ -152,21 +152,20 @@ function blockPage (page, args) {
 
 
 function goToPage (page, args) {    
-
-    if (page.match( /[solgs\/population\/|solgs\/confirm\/request\/|solgs\/trait\/|solgs\/model\/combined\/trials\/]/)) {
+  
+    if (page.match( /(solgs\/population\/|solgs\/confirm\/request|solgs\/trait\/|solgs\/model\/combined\/trials\/)/)) {
 
 	window.location = page;
 	
-    } else if (page.match(/[solgs\/analyze\/traits\/population\/|solgs\/models\/combined\/trials\/]/)) {
-	
+    } else if (page.match(/(solgs\/analyze\/traits\/population\/|solgs\/models\/combined\/trials\/)/)) {
+
 	submitTraitSelections(page, args);
 		    
     }  else {
-
+ 
 	window.location = window.location.href;
 
-    }
-	    
+    }	    
 }
 
 
