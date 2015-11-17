@@ -24,6 +24,8 @@ use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
+use CXGN::People::Person;
+
 
 has 'schema' => (
 		 is       => 'rw',
