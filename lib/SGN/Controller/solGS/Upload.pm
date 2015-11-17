@@ -157,8 +157,7 @@ sub create_user_list_genotype_data_file {
     my $list_id =  $c->stash->{list_id};
     $list_id = $c->stash->{model_id} if !$list_id;
     my $population_type = $c->stash->{population_type};
-    # if ($c->stash->{list_source}  eq 'from_db') { $list_id= $c->stash->{list_id} };
-    # if ($c->stash->{list_source}  eq 'from_file') { $list_id= $c->stash->{list_id} };  
+   
     my $user_id   = $c->user->id;
     my $geno_data;
     
@@ -196,17 +195,18 @@ sub create_user_reference_list_phenotype_data_file {
 
     my $user_id    = $c->user->id;
     my $pheno_data = $c->stash->{user_reference_list_phenotype_data};
-   
-    $pheno_data = $c->controller("solGS::solGS")->format_phenotype_dataset($c, $pheno_data);
+    
+    $c->controller("solGS::solGS")->traits_list_file($c);    
+    my $traits_file =  $c->stash->{traits_list_file};
+  
+    $pheno_data = $c->controller("solGS::solGS")->format_phenotype_dataset($pheno_data, $traits_file);
     
     my $file = catfile ($tmp_dir, "phenotype_data_${user_id}_${model_id}");
-
     write_file($file, $pheno_data);
- 
+    
     $c->stash->{user_reference_list_phenotype_data_file} = $file;
   
 }
-
 
 
 sub create_list_population_metadata {
@@ -459,16 +459,9 @@ sub user_prediction_population_file {
                                    DIR => $upload_dir
         );
 
-    my $exp = "genotype_data_${user_id}_uploaded_${pred_pop_id}";
-   # if($c->stash->{'list_source'} eq 'from_db')
-   # {
+    my $exp = "genotype_data_${user_id}_uploaded_${pred_pop_id}"; 
     my  $pred_pop_file = $c->controller("solGS::solGS")->grep_file($upload_dir, $exp);
-   # } else 
-   # {
-   #    my $solgs_prediction_upload = $c->stash->{solgs_prediction_upload_dir}      
-
-    #}
-    
+ 
     $c->stash->{user_selection_list_genotype_data_file} = $pred_pop_file;
    
     $fh->print($pred_pop_file);
@@ -506,16 +499,17 @@ sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/lis
     $c->stash->{list_name} = $list_name;
     $c->stash->{model_id}   = $model_id;
 
-  #####
-    $c->model('solGS::solGS')->format_user_list_genotype_data($c);
-    $c->model('solGS::solGS')->format_user_reference_list_phenotype_data($c);
-   
+    #####
+    $c->model('solGS::solGS')->format_user_list_genotype_data();
+    $c->model('solGS::solGS')->format_user_reference_list_phenotype_data();
+    
     $self->create_user_list_genotype_data_file($c);
     my $geno_file = $c->stash->{user_reference_list_genotype_data_file};
-
+ 
     $self->create_user_reference_list_phenotype_data_file($c);
     my $pheno_file =  $c->stash->{user_reference_list_phenotype_data_file};
-  #####
+
+    #####
 
 ######
 #     my $user_id = $c->user->id;
@@ -524,7 +518,7 @@ sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/lis
 ##### 
 
     $self->create_list_population_metadata_file($c);
-   
+ 
     my $ret->{status} = 'failed';
     
     if (-s $geno_file && -s $pheno_file) 
