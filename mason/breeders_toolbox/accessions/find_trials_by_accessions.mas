@@ -2,7 +2,7 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
 <form id="accession_list_selector">
 <table class="table borderless" cellpadding="10" border="0" >
@@ -59,7 +59,8 @@
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
-<script>
+<script defer="defer">
+
 jQuery(document).ready(function() {
 
 jQuery('#trial_summary_data').hide();
@@ -73,11 +74,11 @@ jQuery('#shared_trials_2_lists').hide();
 		selectText: true,
 		listType: 'trials',
 		});
- 
+
     jQuery('#find_trials').click(function() {
-      
-	disable_ui();
    
+	disable_ui();
+
 	var accession_list_id = jQuery('#accession_list_list_select').val();
 
       	var accession_validation = 1;
@@ -100,42 +101,40 @@ jQuery('#shared_trials_2_lists').hide();
 
       	jQuery.ajax( {   //convert accession names to ids
 	    url: '/list/transform/'+accession_list_id+'/'+transform_name,
-	    async: false,
 	    success: function(response) { 
 		if (response.error) { 
 		    alert(response.error);
 		    }
 		else { 
-		    stock_ids = response.transform;
+		     stock_ids = response.transform;
+		     jQuery.ajax({   // get shared trials using accession ids
+				url: '/stock/get_shared_trials',
+				data: {stock_ids: stock_ids}
+			}).done(function(data) {
+			jQuery('#trial_summary_data').DataTable({  //populate datatable
+				data: data.data,
+				"autoWidth": false
+			});
+			jQuery('#c1_data').html(format_options_list(data.shared_trials)); // populate selectbox
+			enable_ui();
+			jQuery('#trial_summary_data').show();
+			jQuery('#shared_trials_2_lists').show();
+			});    	 
 		    }
 	    	    },
 	    error: function(response) { alert("An error occurred while transforming the list "+list_id); }
 	    });      
-
-
-	jQuery.ajax({   // get shared trials using accession ids
-		async: false,
-		url: '/stock/get_shared_trials',
-		data: {stock_ids: stock_ids}
-	}).done(function(data) {
-		jQuery('#trial_summary_data').DataTable({
-			data: data.data,
-			"autoWidth": false
-		});
-		console.log(JSON.parse(JSON.stringify(data.shared_trials)));
-		jQuery('#c1_data').html(format_options_list(data.shared_trials));
-		enable_ui();
-		jQuery('#trial_summary_data').show();
-		jQuery('#shared_trials_2_lists').show();
-
-	});    	 
   });
 
   function disable_ui() {
-  jQuery('#working_modal').modal("show");
+  	   jQuery('#working_modal').modal("show");
   }
 
-  function format_options_list(items) { 
+  function enable_ui() {
+  	   jQuery('#working_modal').modal("hide");
+  }
+
+  function format_options_list(items) { //take only id and name of shared trials and format for selectbox 
     var html = '';
     if (items) { 
 	for(var i=0; i<items.length; i++) { 
@@ -146,9 +145,6 @@ jQuery('#shared_trials_2_lists').hide();
     return "no data";
   }
 
-  function enable_ui() {
-  jQuery('#working_modal').modal("hide");
-  }
-
 });
+
 </script>
