@@ -49,5 +49,68 @@ sub get_all_accessions {
     return \@accessions;
 }
 
+sub get_all_accession_groups { 
+    my $self = shift;
+    my $schema = $self->schema();
+
+    my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'accession',
+      cv     => 'stock type',
+      db     => 'null',
+      dbxref => 'accession',
+    });
+
+    my $accession_group_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'accession_group',
+      cv     => 'stock type',
+      db     => 'null',
+      dbxref => 'accession_group',
+    });
+
+    my $accession_group_member_cvterm = $schema->resultset("Cv::Cvterm")
+	->create_with({
+	    name   => 'accession_group_member_of',
+	    cv     => 'stock relationship',
+	    db     => 'null',
+	    dbxref => 'accession_group_member_of',
+		      });
+
+    my $accession_groups_rs = $schema->resultset("Stock::Stock")
+	->search({'stock_relationship_objects.type_id' => $accession_group_member_cvterm->cvterm_id()},
+		 {join =>'stock_relationship_objects', order_by => 'name'});
+    
+    my @accessions_by_group;
+
+    while (my $group_row = $accession_groups_rs->next()) {
+
+	my %group_info;
+	$group_info{'name'}=$group_row->name();
+	$group_info{'description'}=$group_row->description();
+	$group_info{'stock_id'}=$group_row->stock_id();
+
+	my $group_members = $schema->resultset("Stock::Stock") 
+	    ->search({
+		'object.stock_id'=> $group_row->stock_id(),
+		'stock_relationship_subjects.type_id' => $accession_group_member_cvterm->cvterm_id()
+		     }, {join => {'stock_relationship_subjects' => 'object', order_by => 'name'}});
+
+	my @accessions_in_group;
+	while (my $group_member_row = $group_members->next()) {
+
+	    my %accession_info;
+	    $accession_info{'name'}=$group_member_row->name();
+	    $accession_info{'description'}=$group_member_row->description();
+	    $accession_info{'stock_id'}=$group_member_row->stock_id();
+
+	    push @accessions_in_group, \%accession_info;
+	}
+	$group_info{'members'}=@accessions_in_group;
+	push @accessions_by_group, \%group_info;
+    }
+
+    return \@accessions_by_group;
+}
+
+
 
 1;
