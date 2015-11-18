@@ -79,13 +79,18 @@ sub recursive_parent_levels {
 	    $cross_type = "self";
 	}
     }
+
+    my $male_parent_name = '';
+    if (defined($p->get_male_parent())) {
+	$male_parent_name = $p->get_male_parent()->get_name();
+    }
     
     $levels[0] = { female_parent => $p->get_female_parent()->get_name(), 
-		   male_parent =>  $p->get_male_parent()->get_name(),
+		   male_parent => $male_parent_name ,
 		   level => $current_level, 
 		   cross_type => $cross_type,
 		   parent_string => $p->get_female_parent()->get_name().
-		       "/".$p->get_male_parent()->get_name(),
+		       "/".$male_parent_name,
     };
 
     if ($p->get_female_parent()) { 
