@@ -1,0 +1,73 @@
+<%args>
+$trial_id
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.iframe-post-form' ] &>
+
+<div class="container"> 
+  <form role="form">
+    <div class="form-group">
+      <label for="sel1">Select trait to derive:&nbsp;&nbsp;<span class="pull-center" data-toggle="modal" data-target="#myModal">[<a id="help_dialog">Help</a>]</span> </label>
+     <div class="form-inline" >
+      <select class="form-control" id="sel1" style="width: 160px;" > 
+	<option>select trait</option>
+        <option value="specific gravity|CO:0000163">specific gravity</option>
+        <option value="harvest index|CO:0000267">harvest index</option>
+        <option value="fresh root yield|CO:0000013">fresh root yield</option>
+        <option value="dry matter content by specific gravity method|CO:0000160">dry matter content (by S.gravity)</option>
+	<option value="dry matter content percentage|CO:0000092">dry matter content</option>
+	<option value="top yield|CO:0000017">top yield</option>
+        <option value="starch content percentage|CO:0000071">starch content</option>
+        <option value="dry yield|CO:0000014">dry yield</option>
+      </select> 
+      <a id="compute_trait_link"><button class="button"  type="button" id="button" value="Create_Trait" >Compute Trait</button></a>
+     </div>
+   </div>
+  </form>
+</div>
+
+<div id="compute_derived_trait_dialog" title="Compute Derived Traits" style="display:none;">
+  <div id="trait_list_dc" name="trait_list">
+    <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 200px;">Selected trait: 
+    </label> 
+    <div id="test_xyz"></div>
+  </div>
+</div>
+
+<div id="derived_trait_saved_dialog_message" title="Computation of Derived Traits" style="display:none;">
+  <p>
+    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    The trait was created and saved successfully
+  </p>
+</div>
+
+
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Trait Measurement help</h4>
+      </div>
+      <div class="modal-body">
+	<ul class="list-group">
+    		<li class="list-group-item"><b>Specific gravity:</b> </li>
+    		<li class="list-group-item"><b>Harvest index:</b> </li>
+    		<li class="list-group-item"><b>Fresh root yield:</b> </li>
+		<li class="list-group-item"><b>Dry matter content:</b> </li>
+    		<li class="list-group-item"><b>Top yield:</b> </li>
+    		<li class="list-group-item"><b>Starch content:</b> </li>
+		<li class="list-group-item"><b>Dry yield:</b> </li>
+  	</ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+

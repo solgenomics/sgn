@@ -307,6 +307,10 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 %   print $p."<br />\n";
 % }
 
+<&| /page/info_section.mas, title=>'Compute Derived Traits', collapsible=>1, collapsed=>1, &>
+	<& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
+</&>
+
 <&| /page/info_section.mas,
    title       => 'Trial JBrowse',
    collapsible => 1,
