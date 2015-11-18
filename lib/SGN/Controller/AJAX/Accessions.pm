@@ -149,6 +149,7 @@ sub add_accession_list_POST : Args(0) {
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $accession_list_json = $c->req->param('accession_list');
   my $species_name = $c->req->param('species_name');
+  my $group_name = $c->req->param('group_name');
   my @accession_list;
   my $stock_add;
   my $validated;
@@ -172,7 +173,11 @@ sub add_accession_list_POST : Args(0) {
   }
 
   @accession_list = @{_parse_list_from_json($accession_list_json)};
-  $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name, owner_name => $owner_name,phenome_schema => $phenome_schema, dbh => $dbh} );
+  if ($group_name eq '') {
+      $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name, owner_name => $owner_name,phenome_schema => $phenome_schema, dbh => $dbh} );
+  } else {
+      $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name, owner_name => $owner_name,phenome_schema => $phenome_schema, dbh => $dbh, accession_group => $group_name} );
+  }
   $validated = $stock_add->validate_stocks();
   if (!$validated) {
     $c->stash->{rest} = {error =>  "Stocks already exist in the database" };
