@@ -5,7 +5,7 @@
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
 <form id="accession_list_selector">
-<table class="table" cellpadding="10" border="0" >
+<table class="table borderless" cellpadding="10" border="0" >
   <tbody>
   <p>Select accession list:</p>
     <td>
@@ -19,7 +19,7 @@
   </table>
 </form>
 
-<table id="trial_summary_data" class="display">
+<table id="trial_summary_data" style="margin-top: 50px;" class="display">
 <thead>
   <tr>
     <th>Accession name</th>
@@ -30,20 +30,53 @@
 
 </table>
 
-<div id="c1_to_list_menu"></div>
+<table class="table borderless" alt="breedersearch" border="0" style="margin-top: 25px;" id="shared_trials_2_lists">
+<tbody>
+	<tr>
+	<td>
+	<p style="font-size:14px"><b>Use the trials in common in lists:</b></p>
+	</td>
+       </tr>
+       <tr>
+	<td>
+	    <div id="c1_div" >
+	    	 <select multiple class="form-control" id="c1_data" size="10"></select>
+		</div>
+	</td>
+	<td>
+		<hr style="margin-top:4px;margin-bottom:4px" />
+		<div class="well well-sm"><div id="c1_data_count">No Selection</div></div>
+		<div id="c1_to_list_menu" align="center"></div>
+	</td>
+	</tr>
+	<tr>
+	<td>
+		<button class="btn btn-default btn-sm" id="c1_select_all" align="center"/>Select All</button>
+	</td>
+</tr>
+</tbody>
+</table>
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <script>
 jQuery(document).ready(function() {
+
+jQuery('#trial_summary_data').hide();
+jQuery('#shared_trials_2_lists').hide();
 	   
     var lo = new CXGN.List();
 
     jQuery('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
+
+    addToListMenu('c1_to_list_menu', 'c1_data', {
+		selectText: true,
+		listType: 'trials',
+		});
  
     jQuery('#find_trials').click(function() {
       
-	//disable_ui();
+	disable_ui();
    
 	var accession_list_id = jQuery('#accession_list_list_select').val();
 
@@ -86,20 +119,31 @@ jQuery(document).ready(function() {
 		data: {stock_ids: stock_ids}
 	}).done(function(data) {
 		jQuery('#trial_summary_data').DataTable({
-			data: data.data
+			data: data.data,
+			"autoWidth": false
 		});
-		var select1 = data.shared_trials;
-		console.log(JSON.parse(JSON.stringify(select1)));
+		console.log(JSON.parse(JSON.stringify(data.shared_trials)));
+		jQuery('#c1_data').html(format_options_list(data.shared_trials));
+		enable_ui();
+		jQuery('#trial_summary_data').show();
+		jQuery('#shared_trials_2_lists').show();
+
 	});    	 
-	addToListMenu('c1_to_list_menu', 'c1_data', {
-		listType: 'trials',
-		});
-	jQuery('#c1_data_add_to_new_list').prop('value', 'create new list of the trials in common');
-	jQuery('#c1_data_button').prop('value', 'add the trials in common to an existing list');
   });
 
   function disable_ui() {
   jQuery('#working_modal').modal("show");
+  }
+
+  function format_options_list(items) { 
+    var html = '';
+    if (items) { 
+	for(var i=0; i<items.length; i++) { 
+	    html = html + '<option value="'+items[i][0]+'">'+items[i][1]+'</a>\n';
+	}
+	return html;
+    }
+    return "no data";
   }
 
   function enable_ui() {

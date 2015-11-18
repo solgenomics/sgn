@@ -1247,7 +1247,7 @@ sub get_shared_trials_GET :Args(1) {
     if ($num_trials > 0) {
 	my $trials_string = '';
 	foreach my $t (@shared_trials) { 
-	    $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'" id="c1_data">'.$t->[1].'</a>,  ';
+	    $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
 	}
 	$trials_string  =~ s/,\s+$//;
 	push @formatted_rows, [ "Trials in Common", $num_trials, $trials_string];
