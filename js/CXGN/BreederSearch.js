@@ -411,7 +411,10 @@ window.onload = function initialize() {
 		//disable_ui();
             },  
             complete : function(){
-
+		addToListMenu('add_to_list_menu', 'stock_data', { 
+		    selectText: true,
+		    typeSourceDiv: 'select4',
+		});
             },  
 	    success: function(response) { 
 		if (response.error) { 

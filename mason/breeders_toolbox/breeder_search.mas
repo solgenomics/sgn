@@ -25,8 +25,8 @@ Search accessions and plots using location, year, trial, and trait data.
   <div class="row" >
     <div class="col-sm-7" style="margin-right:0px; padding-right:0px;">
       <select class="form-control input-sm" id="select4"> 
+        <option value="accessions">accessions</option>
         <option value="plots">plots</option>
-    	<option value="accessions" selected="selected">accessions</option>
       </select>
     </div>
     <div class="col-sm-5" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;">
