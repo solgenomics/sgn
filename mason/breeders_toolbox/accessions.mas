@@ -1,7 +1,6 @@
 
 <%args>
 $accessions
-$accession_groups
 </%args>
 
 <%perl>

@@ -77,7 +77,7 @@ sub get_all_accession_groups {
 
     my $accession_groups_rs = $schema->resultset("Stock::Stock")
 	->search({'stock_relationship_objects.type_id' => $accession_group_member_cvterm->cvterm_id()},
-		 {join =>'stock_relationship_objects', order_by => 'name'});
+		 {join =>'stock_relationship_objects',  order_by => { -asc => 'name'}});
     
     my @accessions_by_group;
 
@@ -92,7 +92,7 @@ sub get_all_accession_groups {
 	    ->search({
 		'object.stock_id'=> $group_row->stock_id(),
 		'stock_relationship_subjects.type_id' => $accession_group_member_cvterm->cvterm_id()
-		     }, {join => {'stock_relationship_subjects' => 'object', order_by => 'name'}});
+		     }, {join => {'stock_relationship_subjects' => 'object'}, order_by => { -asc => 'name'}});
 
 	my @accessions_in_group;
 	while (my $group_member_row = $group_members->next()) {
@@ -104,7 +104,7 @@ sub get_all_accession_groups {
 
 	    push @accessions_in_group, \%accession_info;
 	}
-	$group_info{'members'}=@accessions_in_group;
+	$group_info{'members'}=\@accessions_in_group;
 	push @accessions_by_group, \%group_info;
     }
 

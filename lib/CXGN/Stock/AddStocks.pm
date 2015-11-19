@@ -119,6 +119,7 @@ sub _add_stocks {
     #### Jeremy Edwards needs the ability to assign accessions to groups
     my $accession_group;
     if ($self->has_accession_group()) {
+	print STDERR "\n\nCreating stock for accession group:".$self->get_accession_group().":\n";
         $accession_group = $schema->resultset("Stock::Stock")
             ->find_or_create({
                 uniquename => $self->get_accession_group(),

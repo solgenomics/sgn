@@ -94,7 +94,7 @@ jQuery(document).ready(function ($) {
 
     $('#review_absent_accessions_submit').click(function () {
 	var speciesName = $("#species_name_input").val();
-	var groupName = $("#species_name_input").val();
+	var groupName = $("#accession_group_name_input").val();
 	var accessionsToAdd = accessionList;
 	if (!speciesName) {
 	    alert("Species name required");
