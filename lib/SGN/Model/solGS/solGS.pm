@@ -1476,8 +1476,8 @@ sub structure_phenotype_data {
 	    $d .= "\n";
 	}
    
-	@project_genotypes = uniq(@project_genotypes);
-	$self->context->stash->{project_genotypes} = \@project_genotypes;
+#	@project_genotypes = uniq(@project_genotypes);
+#	$self->context->stash->{project_genotypes} = \@project_genotypes;
     }
  
     return $d;
