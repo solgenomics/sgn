@@ -279,7 +279,7 @@ sub structure_output_details {
 	{	    
 	    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
 
-	    $solgs_controller->get_trait_name($c, $trait_id);	    
+	    $solgs_controller->get_trait_details($c, $trait_id);	    
 	    $solgs_controller->gebv_kinship_file($c);
 	 	  
 	    my$trait_abbr = $c->stash->{trait_abbr};	  
@@ -301,11 +301,8 @@ sub structure_output_details {
 		$trait_page = $base . "solgs/model/combined/trials/$pop_id/trait/$trait_id";
 
 		$c->stash->{combo_pops_id} = $pop_id;
-
 		$solgs_controller->cache_combined_pops_data($c);
-
-		$pheno_file = $c->stash->{trait_combined_pheno_file};
-		$geno_file  = $c->stash->{trait_combined_geno_file};  		
+		
 	    }
 	    
 	    $output_details{$trait_abbr} = {
@@ -314,8 +311,8 @@ sub structure_output_details {
 		'trait_page'     => $trait_page,
 		'gebv_file'      => $c->stash->{gebv_kinship_file},
 		'pop_id'         => $pop_id,
-		'phenotype_file' => $pheno_file,
-		'genotype_file'  => $geno_file,
+		'phenotype_file' => $c->stash->{trait_combined_pheno_file},
+		'genotype_file'  => $c->stash->{trait_combined_geno_file},
 		'data_set_type'  => $c->stash->{data_set_type},
 	    };
 	}
@@ -327,24 +324,21 @@ sub structure_output_details {
 
 	$c->stash->{pop_id} = $pop_id;
 
-	$solgs_controller->phenotype_file($c);
-#	$solgs_controller->genotype_file($c);
-	$pheno_file = $c->stash->{phenotype_file};
-#	$geno_file  = $c->stash->{genotype_file};  
-
+	$solgs_controller->phenotype_file($c);	
+	$solgs_controller->genotype_file($c);
 	$solgs_controller->get_project_details($c, $pop_id);
 
 	$output_details{$pop_id} = {
 		'population_page' => $population_page,
 		'population_id'   => $pop_id,
 		'population_name' => $c->stash->{project_name},
-		'phenotype_file'  => $pheno_file,
-		'genotype_file'   => $geno_file,
+		'phenotype_file'  => $c->stash->{phenotype_file},
+		'genotype_file'   => $c->stash->{genotype_file},  
 		'data_set_type'   => $c->stash->{data_set_type},
 	};
 		
     }
-
+  
     $output_details{analysis_profile} = $analysis_data;
     $output_details{r_job_tempdir}    = $c->stash->{r_job_tempdir};
     $output_details{contact_page}     = $base . 'contact/form';
@@ -380,7 +374,7 @@ sub run_analysis {
 	   
 	    foreach my $trait_id (@selected_traits)		
 	    {		
-		$c->controller('solGS::solGS')->get_trait_name($c, $trait_id);   	
+		$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);   	
 		$c->controller('solGS::combinedTrials')->combine_data_build_model($c);
 	    }
 	}
@@ -390,7 +384,7 @@ sub run_analysis {
 	$c->stash->{combo_pops_id} = $c->stash->{pop_id};
 	my $trait_id = $c->stash->{selected_traits}->[0];		
 	
-	$c->controller('solGS::solGS')->get_trait_name($c, $trait_id);
+	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 	$c->controller('solGS::combinedTrials')->combine_data_build_model($c);
        
     }
@@ -401,11 +395,8 @@ sub run_analysis {
     }
     elsif ($analysis_page =~ /solgs\/population\//)
     {
-	my $pop_id = $c->stash->{pop_id};
-
 	$c->controller('solGS::solGS')->phenotype_file($c);
-#	$c->controller('solGS::solGS')->genotype_file($c);
-
+	$c->controller('solGS::solGS')->genotype_file($c);
     }
     else 
     {
