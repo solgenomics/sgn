@@ -18,9 +18,9 @@
 
 <&| /page/info_section.mas, title=>"Disclaimer and data access agreement" &>
 
-<div style="text-align: justify; border: 1px solid gray; padding: 2em 3em 3em 3em">
+<!-- div style="text-align: justify; border: 1px solid gray; padding: 2em 3em 3em 3em">
 
-<!-- h2 style="text-align: center">Wild Tomato Species Genome Sequence Release</h2>
+<h2 style="text-align: center">Wild Tomato Species Genome Sequence Release</h2>
 <h2 style="text-align: center">PLEASE READ BEFORE ACCESSING THE PRE-PUBLICATION SEQUENCE OF SOLANUM PIMPINELLIFOLIUM</h2>
 
   The research groups of D. Ware, W.R. McCombie, and Z. B. Lippman at
@@ -42,13 +42,17 @@
   users to review NIH-NHGRI guidelines on distribution and use of
   pre-publication genome sequence at
   <a
-  href="http://www.genome.gov/page.cfm?pageID=10506537">http://www.genome.gov/page.cfm?pageID=10506537</a -->. 
-  <!-- Any
+  href="http://www.genome.gov/page.cfm?pageID=10506537">http://www.genome.gov/page.cfm?pageID=10506537</a>. 
+  Any
   use of the
   S. pimpinellifolium genome sequence prior to its publication should
   credit "D. Ware, W. R. McCombie, and Z. B. Lippman at Cold Spring
   Harbor Laboratory". 
-  -->
+ 
+</div -->  
+
+<div>
+ These data have been published and are freely accessible. Please cite <a href="http://www.nature.com/nature/journal/v485/n7400/full/nature11119.html">Nature 485, 635-641</a> when using this resource. <br /><br />
  Please contact D. Ware or Z. B. Lippman (E-mail:
   <a href="mailto:ware@cshl.edu">ware@cshl.edu</a> or
   <a href="mailto:lippman@cshl.edu">lippman@cshl.edu</a>) with any questions.
