@@ -11,7 +11,7 @@ $trial_id
       <label for="sel1">Select trait to derive:&nbsp;&nbsp;<span class="pull-center" data-toggle="modal" data-target="#myModal">[<a id="help_dialog">Help</a>]</span> </label>
      <div class="form-inline" >
       <select class="form-control" id="sel1" style="width: 160px;" > 
-	<option>select trait</option>
+	<option value=""disabled selected>select your option</option>
         <option value="specific gravity|CO:0000163">specific gravity</option>
         <option value="harvest index|CO:0000267">harvest index</option>
         <option value="fresh root yield|CO:0000013">fresh root yield</option>

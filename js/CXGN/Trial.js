@@ -265,20 +265,17 @@ function compute_derived_trait() {
     jQuery('#working_modal').modal("show");
     var trait = jQuery('#sel1').val();
     var trialID = parseInt(jQuery('#trialIDDiv').text());
-    //var trait_id = jQuery('#trait_list_list_select').val();
-    //var selected_trait;
-    //if (! trait_id == "") {
-//	selected_trait = JSON.stringify(list.getList(trait_id)); 
- 
-  //  }
+    if (trait === '') {
+		alert("No trait selected");
+	    }
+    
      new jQuery.ajax({
 	 type: 'POST',
 	 url: '/ajax/phenotype/create_derived_trait',
 	 dataType: "json",
 	 data: {
              'trial_id': trialID,
-            // 'selected_trait': selected_trait,
-	     'trait': trait,
+             'trait': trait,
 	 },
 		
 	 success: function (response) {

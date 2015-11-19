@@ -28,10 +28,9 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");   
     my $trial_id = $c->req->param('trial_id');
-    my $trait_list_ref = $c->req->param('selected_trait');
-    my $trait = $c->req->param('trait');
+    my $selected_trait = $c->req->param('trait');
 
-print "TRAIT NAME: $trait\n";
+print "TRAIT NAME: $selected_trait\n";
 
     if (!$c->user()) { 
 	print STDERR "User not logged in... not computing trait.\n";
@@ -44,10 +43,21 @@ print "TRAIT NAME: $trait\n";
 	return;
     }
 
-    my $time = DateTime->now();
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $user_name = $c->user()->get_object()->get_username();
-    my $timestamp = $time->ymd()."_".$time->hms();
+   
+    has 'trial_id' => (isa => 'Int',
+		   is => 'rw',
+		   reader => 'get_trial_id',
+		   writer => 'set_trial_id',
+    );
+
+
+    sub total_phenotypes { 
+    my $self = shift;
+    
+    my $pt_rs = $self->bcs_schema()->resultset("Phenotype::Phenotype")->search( { });
+    return $pt_rs;
+
+    }
 
 
 }
