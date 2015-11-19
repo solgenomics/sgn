@@ -63,6 +63,8 @@ if (!$marker) {
 
 my ($marker_name, @other_names) = $marker->name_that_marker();
 
+my $jbrowse_url = "/jbrowse/current/?data=data%2Fjson%2FSL2.50&tracks=DNA&loc=$marker_name";
+
 </%perl>
 
 <& /page/page_title.mas, title=> "SGN Marker $marker_name" &>
@@ -103,7 +105,9 @@ my ($marker_name, @other_names) = $marker->name_that_marker();
 
 <& /markers/attributions.mas, marker=>$marker &>
 
-<& /markers/genome.mas, marker => $marker &>
+<&| /page/info_section.mas, title => "Genomic location of $marker_name", collapsible=>1 &>
+<a id="jbrowse_link" href="<% $jbrowse_url %>">View in JBrowse</a>
+</&>
 
 <& /markers/comments.mas, marker=>$marker &>
 
