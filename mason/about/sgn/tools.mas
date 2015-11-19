@@ -34,31 +34,13 @@ designer</a>,  an <a href="/tools/align_viewer/">Alignment Analyzer</a> and <a h
 <p>The data in SGN have been submitted by many different research
 groups around the world which are acknowledged on the corresponding
 pages on SGN.  If you have data you would like to submit for display
-on SGN, please use the <a href="/contact/form">contact us</a> web
-form, or email us at <a href="mailto:sgn-feedback\@sgn.cornell.edu">
-sgn-feedback\@sgn.cornell.edu</a>.</p>
+on SGN, please use the <a href="/contact/form">contact us</a> web form.</p>
 
 <p>For more information about SGN datasets, see the <a href= "/content/sgn_data.pl">SGN Data
-Overview</a>. Entire datasets can also be downloaded from our <a href="ftp://ftp.sgn.cornell.edu">FTP site</a>.</p>
+Overview</a>. Entire datasets can also be downloaded from our <a href="ftp://ftp.solgenomics.net">FTP site</a>.</p>
 
 </&>
-<&|  /page/info_section.mas, title => 'SGN Tools and Processing' &>
-<ul style="margin: 0; padding-left: 1em">
 
-   <li>We attempt to process all EST sequences
-   directly from sequencing chromatograms using a custom
-   pipeline developed at SGN. The sequences are assembled into unigenes
-   using standard clustering software and in-house tools. A higher level of sequence
-   quality is obtained when sequences are uniformly base-called and
-   quality trimmed. Other software developed at SGN include the <a href="/cview/view_chromosome.pl">interactive comparative map viewer</a> for genetic and
-   physical maps, the <a href="/tools/tree_browser/">Tree Browser</a> and the <a href="/tools/align_viewer">Alignment Analyzer</a>.</li>
-
-   <li><a href="/methods/unigene/index.pl">Unigene Methods</a>
-   including assembly process, builds, cluster, and validation</li>
-
-</ul>
-
-</&>
 
 <&| /page/info_section.mas, title => 'SGN community-driven gene and phenotype database' &>
 <ul style="margin: 0; padding-left: 1em">
