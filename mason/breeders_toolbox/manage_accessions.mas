@@ -27,6 +27,7 @@ $accession_groups
 
 </&>
 
+% #### Will not appear unless accession groups exist - in use with ricebase
 % if (scalar(@$accession_groups) > 0) {
 <&| /page/info_section.mas, title=>"Accession groups", collapsible=>1, collapsed=>0, &>
     <& /breeders_toolbox/accession_groups.mas, accession_groups=>$accession_groups&>
