@@ -97,7 +97,6 @@ sub get_all_accession_groups {
 	    $accession_info{'name'}=$group_member_row->name();
 	    $accession_info{'description'}=$group_member_row->description();
 	    $accession_info{'stock_id'}=$group_member_row->stock_id();
-
 	    my $synonyms_rs;
 	    $synonyms_rs = $group_member_row->search_related('stockprops', {'type.name' => 'synonym'}, { join => 'type' });
 	    my @synonyms;
@@ -107,6 +106,7 @@ sub get_all_accession_groups {
 		}
 	    }
 	    $accession_info{'synonyms'}=\@synonyms;
+	    push @accessions_in_group, \%accession_info;
 	}
 	$group_info{'members'}=\@accessions_in_group;
 	push @accessions_by_group, \%group_info;
