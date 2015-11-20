@@ -27,11 +27,11 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("store_image_submit", "id", "store image upload")->click();
 
-    sleep(2);
+    sleep(3);
 
     $t->find_element_ok("Stock name: UG120002.", "partial_link_text", "find stock image link")->click();
 
-    sleep(2);
+    sleep(3);
 
     $t->find_element_ok("Images", "partial_link_text", "see stock images")->click();
 

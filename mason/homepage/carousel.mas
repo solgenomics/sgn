@@ -105,10 +105,39 @@
 <script>
 
   jQuery(document).ready(function() {
+  //   $('.carousel').carousel({
+  //     interval: 20000,
+  //     // wrap:true
+  //   });
+    
+    
+    
+    
+    
+    
+    var $item = $('.carousel .item');
+    var $wHeight = $(window).height();
+
+    var $numberofSlides = $('.item').length;
+    var $currentSlide = Math.floor((Math.random() * $numberofSlides));
+
+    $('.carousel-indicators li').each(function(){
+      var $slideValue = $(this).attr('data-slide-to');
+      if($currentSlide == $slideValue) {
+        $(this).addClass('active');
+        $item.eq($slideValue).addClass('active');
+      } else {
+        $(this).removeClass('active');
+        $item.eq($slideValue).removeClass('active');
+      }
+    }); 
+
     $('.carousel').carousel({
       interval: 20000,
-      // wrap:true
-    })
+      wrap: "true",
+      pause: "false"
+    });
+    
     
     //$("#myCarousel").swiperight(function() {  
     //      $("#myCarousel").carousel('prev');  
@@ -130,12 +159,34 @@
       <li data-target="#myCarousel" data-slide-to="2"></li>
       <li data-target="#myCarousel" data-slide-to="3"></li>
       <li data-target="#myCarousel" data-slide-to="4"></li>
+      <li data-target="#myCarousel" data-slide-to="5"></li>
     </ol>
 
     <!-- Wrapper for slides -->
     <div class="carousel-inner" role="listbox">
 
-      <div class="item active">
+      <div class="item">
+          <div style="background:url(/documents/img/homepage_carousel/carousel_slideshare.png) center center; background-size:cover;" class="slider-size">
+            <div class="carousel-sgn-caption">
+              <a href="http://www.slideshare.net/solgenomics" target="_blank">
+                <h3>SGN SlideShare</h3>
+                <p>Slides from conferences and courses</p>
+              </a>
+            </div>
+            
+            <div class="carousel-sgn-links">
+              <ul>
+                <li><a href="http://www.slideshare.net/solgenomics/sol-meeting-2015-sgn-workshop-introduction?related=1" target="_blank">SOL Meeting 2015</a></li>
+                <li><a href="http://www.slideshare.net/solgenomics/sgn-introduction-to-unix-commandline-2015-part-1?related=1" target="_blank">Introduction to UNIX Command-line</a></li>
+              </ul>
+            </div>
+            
+          </div>
+        </a>
+      </div>
+      
+
+      <div class="item">
           <div style="background:url(/documents/img/homepage_carousel/pag_24.jpg) center center; background-size:cover;" class="slider-size">
             <div class="carousel-sgn-caption">
               <a href="http://www.intlpag.org" target="_blank">

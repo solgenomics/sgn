@@ -4,7 +4,7 @@ $accessions
 $accession_groups
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery','jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables' ] &>
 
 <& /page/page_title.mas, title=>"Manage Accessions" &>
 
@@ -12,12 +12,18 @@ $accession_groups
 
 <&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
 
-<& /breeders_toolbox/accessions.mas, accessions=>$accessions&>
-
+<& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
+    
 <div>
   </br>
   <a href="/search/stocks">Search Accessions</a>
 </div>
+
+</&>
+
+<&| /page/info_section.mas, title=>'Find Trials in Common', collapsible=>1, collapsed=>0, subtitle=>'<i>Use a list of accessions to search for trials that contain them all</i>'&>
+
+<& /breeders_toolbox/accessions/find_trials_by_accessions.mas &>
 
 </&>
 
@@ -26,7 +32,6 @@ $accession_groups
     <& /breeders_toolbox/accession_groups.mas, accession_groups=>$accession_groups&>
 </&>
 % }
-
 
 </div>
 
