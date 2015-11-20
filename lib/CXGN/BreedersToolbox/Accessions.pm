@@ -75,14 +75,11 @@ sub get_all_accession_groups {
 	    dbxref => 'accession_group_member_of',
 		      });
 
-    my $accession_groups_rs = $schema->resultset("Stock::Stock")
-	->search({'stock_relationship_objects.type_id' => $accession_group_member_cvterm->cvterm_id()},
-		 {join =>'stock_relationship_objects',  order_by => { -asc => 'name'}});
-    
+    my $accession_groups_rs = $schema->resultset("Stock::Stock")->search({'type_id' => $accession_group_cvterm->cvterm_id()});
+
     my @accessions_by_group;
 
     while (my $group_row = $accession_groups_rs->next()) {
-
 	my %group_info;
 	$group_info{'name'}=$group_row->name();
 	$group_info{'description'}=$group_row->description();
@@ -96,13 +93,20 @@ sub get_all_accession_groups {
 
 	my @accessions_in_group;
 	while (my $group_member_row = $group_members->next()) {
-
 	    my %accession_info;
 	    $accession_info{'name'}=$group_member_row->name();
 	    $accession_info{'description'}=$group_member_row->description();
 	    $accession_info{'stock_id'}=$group_member_row->stock_id();
 
-	    push @accessions_in_group, \%accession_info;
+	    my $synonyms_rs;
+	    $synonyms_rs = $group_member_row->search_related('stockprops', {'type.name' => 'synonym'}, { join => 'type' });
+	    my @synonyms;
+	    if ($synonyms_rs) {
+		while (my $synonym_row = $synonyms_rs->next()) {
+		    push @synonyms, $synonym_row->value();
+		}
+	    }
+	    $accession_info{'synonyms'}=\@synonyms;
 	}
 	$group_info{'members'}=\@accessions_in_group;
 	push @accessions_by_group, \%group_info;
@@ -110,7 +114,5 @@ sub get_all_accession_groups {
 
     return \@accessions_by_group;
 }
-
-
 
 1;
