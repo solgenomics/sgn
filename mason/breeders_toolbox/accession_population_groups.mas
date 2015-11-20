@@ -1,9 +1,9 @@
 <%args>
-$accession_groups
+$population_groups
 </%args>
 
 
-% foreach my $group (@{$accession_groups}) {
+% foreach my $group (@{$population_groups}) {
   <&| /page/info_section.mas, title=>$group->{'name'}, collapsible=>1, collapsed=>1, &>
   <table class="table table-bordered table-striped table-hover table-condensed">
   <thead>

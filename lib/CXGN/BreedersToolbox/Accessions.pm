@@ -49,7 +49,7 @@ sub get_all_accessions {
     return \@accessions;
 }
 
-sub get_all_accession_groups { 
+sub get_all_populations { 
     my $self = shift;
     my $schema = $self->schema();
 
@@ -60,45 +60,45 @@ sub get_all_accession_groups {
       dbxref => 'accession',
     });
 
-    my $accession_group_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'accession_group',
+    my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'population',
       cv     => 'stock type',
       db     => 'null',
-      dbxref => 'accession_group',
+      dbxref => 'population',
     });
 
-    my $accession_group_member_cvterm = $schema->resultset("Cv::Cvterm")
+    my $population_member_cvterm = $schema->resultset("Cv::Cvterm")
 	->create_with({
-	    name   => 'accession_group_member_of',
+	    name   => 'member_of',
 	    cv     => 'stock relationship',
 	    db     => 'null',
-	    dbxref => 'accession_group_member_of',
+	    dbxref => 'member_of',
 		      });
 
-    my $accession_groups_rs = $schema->resultset("Stock::Stock")->search({'type_id' => $accession_group_cvterm->cvterm_id()});
+    my $populations_rs = $schema->resultset("Stock::Stock")->search({'type_id' => $population_cvterm->cvterm_id()});
 
-    my @accessions_by_group;
+    my @accessions_by_population;
 
-    while (my $group_row = $accession_groups_rs->next()) {
-	my %group_info;
-	$group_info{'name'}=$group_row->name();
-	$group_info{'description'}=$group_row->description();
-	$group_info{'stock_id'}=$group_row->stock_id();
+    while (my $population_row = $populations_rs->next()) {
+	my %population_info;
+	$population_info{'name'}=$population_row->name();
+	$population_info{'description'}=$population_row->description();
+	$population_info{'stock_id'}=$population_row->stock_id();
 
-	my $group_members = $schema->resultset("Stock::Stock") 
+	my $population_members = $schema->resultset("Stock::Stock") 
 	    ->search({
-		'object.stock_id'=> $group_row->stock_id(),
-		'stock_relationship_subjects.type_id' => $accession_group_member_cvterm->cvterm_id()
+		'object.stock_id'=> $population_row->stock_id(),
+		'stock_relationship_subjects.type_id' => $population_member_cvterm->cvterm_id()
 		     }, {join => {'stock_relationship_subjects' => 'object'}, order_by => { -asc => 'name'}});
 
-	my @accessions_in_group;
-	while (my $group_member_row = $group_members->next()) {
+	my @accessions_in_population;
+	while (my $population_member_row = $population_members->next()) {
 	    my %accession_info;
-	    $accession_info{'name'}=$group_member_row->name();
-	    $accession_info{'description'}=$group_member_row->description();
-	    $accession_info{'stock_id'}=$group_member_row->stock_id();
+	    $accession_info{'name'}=$population_member_row->name();
+	    $accession_info{'description'}=$population_member_row->description();
+	    $accession_info{'stock_id'}=$population_member_row->stock_id();
 	    my $synonyms_rs;
-	    $synonyms_rs = $group_member_row->search_related('stockprops', {'type.name' => 'synonym'}, { join => 'type' });
+	    $synonyms_rs = $population_member_row->search_related('stockprops', {'type.name' => 'synonym'}, { join => 'type' });
 	    my @synonyms;
 	    if ($synonyms_rs) {
 		while (my $synonym_row = $synonyms_rs->next()) {
@@ -106,13 +106,13 @@ sub get_all_accession_groups {
 		}
 	    }
 	    $accession_info{'synonyms'}=\@synonyms;
-	    push @accessions_in_group, \%accession_info;
+	    push @accessions_in_population, \%accession_info;
 	}
-	$group_info{'members'}=\@accessions_in_group;
-	push @accessions_by_group, \%group_info;
+	$population_info{'members'}=\@accessions_in_population;
+	push @accessions_by_population, \%population_info;
     }
 
-    return \@accessions_by_group;
+    return \@accessions_by_population;
 }
 
 1;

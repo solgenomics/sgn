@@ -95,10 +95,10 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
 
     my $accessions = $ac->get_all_accessions($c);
-    my $accession_groups = $ac->get_all_accession_groups($c);
+    my $populations = $ac->get_all_populations($c);
 
     $c->stash->{accessions} = $accessions;
-    $c->stash->{accession_groups} = $accession_groups;
+    $c->stash->{population_groups} = $populations;
 
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
 

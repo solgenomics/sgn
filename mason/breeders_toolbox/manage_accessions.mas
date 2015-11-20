@@ -1,7 +1,7 @@
 
 <%args>
 $accessions
-$accession_groups
+$population_groups
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery','jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables' ] &>
@@ -27,10 +27,10 @@ $accession_groups
 
 </&>
 
-% #### Will not appear unless accession groups exist - in use with ricebase
-% if (scalar(@$accession_groups) > 0) {
-<&| /page/info_section.mas, title=>"Accession groups", collapsible=>1, collapsed=>0, &>
-    <& /breeders_toolbox/accession_groups.mas, accession_groups=>$accession_groups&>
+% #### Will not appear unless populations exist - in use with ricebase
+% if (scalar(@$population_groups) > 0) {
+<&| /page/info_section.mas, title=>"Populations", collapsible=>1, collapsed=>0, &>
+    <& /breeders_toolbox/accession_population_groups.mas, population_groups=>$population_groups&>
 </&>
 % }
 
@@ -92,8 +92,8 @@ $accession_groups
     	  <label for="species_name_input">Species name for added accessions</label>
   	  <input class="form-control" type="text" id="species_name_input"></input>
   	  <br><br>
-    	  <label for="accession_group_name_input">Group name for added accessions (optional)</label>
-  	  <input class="form-control" type="text" id="accession_group_name_input"></input>
+    	  <label for="population_name_input">Population name for added accessions (optional)</label>
+  	  <input class="form-control" type="text" id="population_name_input"></input>
   	  <br><br>
   	  <b>The following accessions will be added to the database:</b>
   	  <div id="count_of_absent_accessions"></div>

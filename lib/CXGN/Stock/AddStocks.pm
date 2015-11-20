@@ -38,7 +38,7 @@ has 'schema' => (
 has 'stocks' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_stocks');
 has 'species' => (isa => 'Str', is => 'rw', predicate => 'has_species');
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name',required => 1,);
-has 'accession_group' => (isa => 'Str', is => 'rw', predicate => 'has_accession_group');
+has 'population_name' => (isa => 'Str', is => 'rw', predicate => 'has_population_name');
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'phenome_schema' => (
 		 is       => 'rw',
@@ -60,9 +60,9 @@ sub add_plots {
 }
 
 #### Jeremy Edwards needs the ability to create accession groups
-sub add_accession_group {
+sub add_population {
   my $self = shift;
-  my $added = $self->_add_stocks('accession_group');
+  my $added = $self->_add_stocks('population');
   return $added;
 }
 ####
@@ -102,33 +102,32 @@ sub _add_stocks {
 		    });
 
 
-    my $accession_group_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'accession_group',
+    my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'population',
       cv     => 'stock type',
       db     => 'null',
-      dbxref => 'accession_group',
+      dbxref => 'population',
     });
 
-    my $accession_group_member_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
-        name   => 'accession_group_member_of',
+    my $population_member_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
+        name   => 'member_of',
         cv     => 'stock relationship',
         db     => 'null',
-        dbxref => 'accession_group_member_of',
+        dbxref => 'member_of',
        });
 
-    #### Jeremy Edwards needs the ability to assign accessions to groups
-    my $accession_group;
-    if ($self->has_accession_group()) {
-	print STDERR "\n\nCreating stock for accession group:".$self->get_accession_group().":\n";
-        $accession_group = $schema->resultset("Stock::Stock")
+    #### assign accessions to populations
+    my $population;
+    if ($self->has_population_name()) {
+        $population = $schema->resultset("Stock::Stock")
             ->find_or_create({
-                uniquename => $self->get_accession_group(),
-                name => $self->get_accession_group(),
+                uniquename => $self->get_population_name(),
+                name => $self->get_population_name(),
                 organism_id => $organism_id,
-                type_id => $accession_group_cvterm->cvterm_id(),
+                type_id => $population_cvterm->cvterm_id(),
                    });
-        if (!$accession_group){
-            print STDERR "Could not find accession panel $accession_group\n";
+        if (!$population){
+            print STDERR "Could not find population $population\n";
             return;
         }
     }
@@ -142,10 +141,10 @@ sub _add_stocks {
 		  uniquename => $stock_name,
 		  type_id     => $stock_cvterm->cvterm_id,
 		 } );
-      if ($accession_group) {
+      if ($population) {
           $stock->find_or_create_related('stock_relationship_objects', {
-	      type_id => $accession_group_member_cvterm->cvterm_id(),
-	      object_id => $accession_group->stock_id(),
+	      type_id => $population_member_cvterm->cvterm_id(),
+	      object_id => $population->stock_id(),
 	      subject_id => $stock->stock_id(),
 					 } );
       }
@@ -245,25 +244,25 @@ sub validate_owner {
 }
 
 ####  Check that accession group exists
-sub validate_accession_group {
+sub validate_population {
   my $self = shift;
   if (!$self->has_schema() || !$self->has_species() || !$self->has_stocks()) {
     return;
   }
   my $schema = $self->get_schema();
-  my $accession_group_cvterm = $schema->resultset("Cv::Cvterm")
+  my $population_cvterm = $schema->resultset("Cv::Cvterm")
       ->create_with({
-	  name   => 'accession_group',
+	  name   => 'population',
 	  cv     => 'stock type',
 	  db     => 'null',
-	  dbxref => 'accession_group',
+	  dbxref => 'population',
 		    });
-  my $accession_group_search = $schema->resultset("Stock::Stock")
+  my $population_search = $schema->resultset("Stock::Stock")
       ->search({
-	  uniquename => $self->get_accession_group(),
-	  type_id => $accession_group_cvterm->cvterm_id(),
+	  uniquename => $self->get_population_name(),
+	  type_id => $population_cvterm->cvterm_id(),
 	       } );
-    if ($accession_group_search->first()) {
+    if ($population_search->first()) {
 	return 1;
     }
   return;
