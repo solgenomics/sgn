@@ -331,6 +331,46 @@ sub toggle_public_list : Path('/list/public/toggle') Args(0) {
     }
 }
 
+sub make_public_list : Path('/list/public/true') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id"); 
+
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return; 
+    }
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my ($rows_affected) = $list->make_public();
+    if ($rows_affected == 1) {
+	$c->stash->{rest} = { success=>1 };
+    } else {
+	die;
+    }
+}
+
+sub make_private_list : Path('/list/public/false') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id"); 
+
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return; 
+    }
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my ($rows_affected) = $list->make_private();
+    if ($rows_affected == 1) {
+	$c->stash->{rest} = { success=>1 };
+    } else {
+	die;
+    }
+}
+
 sub copy_public_list : Path('/list/public/copy') Args(0) { 
     my $self = shift;
     my $c = shift;

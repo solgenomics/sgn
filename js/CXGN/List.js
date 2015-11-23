@@ -366,13 +366,12 @@ CXGN.List.prototype = {
 		$("input:checkbox:checked").each(function() {
 		    selected.push($(this).attr('value'));
 		});
-		console.log(selected);
 
 		list_group_select_action_html = '<hr><div class="row"><div class="col-sm-4">For Selected Lists:</div><div class="col-sm-8">';
 		if (total == 1) {
-		    list_group_select_action_html += '<a class="btn btn-default btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(\'list_item_dialog\','+selected+')">Make Public</a>';	
+		    list_group_select_action_html += '<a class="btn btn-default btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>';	
 		} else if (total > 1) {
-		    list_group_select_action_html += '<a class="btn btn-default btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(\'list_item_dialog\','+selected+')">Make Public</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:combineSelectedListGroup(\'list_item_dialog\','+selected+')">Combine</a>';
+		    list_group_select_action_html += '<a class="btn btn-default btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:combineSelectedListGroup(['+selected+'])">Combine</a>';
 		}
 		list_group_select_action_html += '</div></div>';
 	    }
@@ -980,6 +979,40 @@ function togglePublicList(list_id) {
     lo.renderLists('list_dialog');
 }
 
+function makePublicList(list_id) { 
+    $.ajax({
+	"url": "/list/public/true",
+	"type": "POST",
+	"data": {'list_id': list_id},
+	success: function(r) {
+	    var lo = new CXGN.List();
+	    if (r.error) {
+		alert(r.error);
+	    }
+	},
+	error: function() {
+	    alert("Error Setting List to Public! List May Not Exist.");
+	}
+    });
+}
+
+function makePrivateList(list_id) { 
+    $.ajax({
+	"url": "/list/public/false",
+	"type": "POST",
+	"data": {'list_id': list_id},
+	success: function(r) {
+	    var lo = new CXGN.List();
+	    if (r.error) {
+		alert(r.error);
+	    }
+	},
+	error: function() {
+	    alert("Error Setting List to Private! List May Not Exist.");
+	}
+    });
+}
+
 function copyPublicList(list_id) { 
     $.ajax({
 	"url": "/list/public/copy",
@@ -1065,6 +1098,28 @@ function deleteSelectedListGroup(list_ids) {
 	    var lo = new CXGN.List();
 	    lo.deleteList(list_ids[i]);
 	}
+	lo.renderLists('list_dialog');
+    }
+}
+
+function makePublicSelectedListGroup(list_ids) {
+    var arrayLength = list_ids.length;
+    if (confirm('Make selected lists public?')) {
+	for (var i=0; i<arrayLength; i++) {
+	    makePublicList(list_ids[i]);
+	}
+	var lo = new CXGN.List();
+	lo.renderLists('list_dialog');
+    }
+}
+
+function makePrivateSelectedListGroup(list_ids) {
+    var arrayLength = list_ids.length;
+    if (confirm('Make selected lists private?')) {
+	for (var i=0; i<arrayLength; i++) {
+	    makePrivateList(list_ids[i]);
+	}
+	var lo = new CXGN.List();
 	lo.renderLists('list_dialog');
     }
 }
