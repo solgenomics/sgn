@@ -228,6 +228,25 @@ CXGN.List.prototype = {
 	return lists;
     },
 
+    publicLists: function(list_type) { 
+	var lists = [];
+	jQuery.ajax( { 
+	    url: '/list/available_public',
+	    data: { 'type': list_type },
+	    async: false,
+	    success: function(response) { 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		lists = response;
+	    },
+	    error: function(response) { 
+		alert("An error occurred");
+	    }
+	});
+	return lists;
+    },
+
     //return the newly created list_item_id or 0 if nothing was added
     //(due to duplicates)
     addItem: function(list_id, item) { 
@@ -307,9 +326,14 @@ CXGN.List.prototype = {
 	    html += '<tr><td><b>'+lists[i][1]+'</b></td>';
 	    html += '<td>'+lists[i][3]+'</td>';
 	    html += '<td>'+lists[i][5]+'</td>';
-	    html += '<td><a id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')">view</a></td>';
-	    html += '<td><a id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')">delete</a></td>';
-	    html += '<td><a id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'">download</a></td></tr>';
+	    html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
+	    html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
+	    html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
+	    if (lists[i][6] == 0){
+		html += '<td><a title="Make Public" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-share-alt"></span></a></td></tr>';
+	    } else if (lists[i][6] == 1){
+		html += '<td><a title="Make Private" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td></tr>';
+	    }
 	}
 	html = html + '</tbody></table>';
 
@@ -323,10 +347,48 @@ CXGN.List.prototype = {
 	    lo.newList(name);
 	    lo.renderLists(div);
 	});
+
+	jQuery('#view_public_lists_button').click(function() { 
+	    jQuery('#public_list_dialog').modal('show');
+	    var lo = new CXGN.List();
+	    lo.renderPublicLists('public_list_dialog_div');
+	});
+
+    },
+
+    renderPublicLists: function(div) {
+	var lists = this.publicLists();
+	var html = '';
+
+	html += '<table id="public_list_data_table" class="table table-hover table-condensed">';
+	html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>Actions</th><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody>'; 
+	for (var i = 0; i < lists.length; i++) { 
+	    html += '<tr><td><b>'+lists[i][1]+'</b></td>';
+	    html += '<td>'+lists[i][3]+'</td>';
+	    html += '<td>'+lists[i][5]+'</td>';
+	    html += '<td><a title="View" id="view_public_list_'+lists[i][1]+'" href="javascript:showPublicListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
+	    html += '<td><a target="_blank" title="Download" id="download_public_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
+	    html += '<td><a title="Copy to Your Lists" id="copy_public_list_'+lists[i][1]+'" href="javascript:copyPublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-plus"></span></a></td>';
+	}
+	html = html + '</tbody></table>';
+
+	jQuery('#'+div).html(html);
+
+	jQuery('#public_list_data_table').DataTable({
+	    "destroy": true,
+	    "columnDefs": [   { "orderable": false, "targets": [3,4,5] }  ]
+	});
     },
     
     listNameById: function(list_id) { 
 	lists = this.availableLists();
+	for (var n=0; n<lists.length; n++) { 
+	    if (lists[n][0] == list_id) { return lists[n][1]; }
+	}
+    },
+
+    publicListNameById: function(list_id) { 
+	lists = this.publicLists();
 	for (var n=0; n<lists.length; n++) { 
 	    if (lists[n][0] == list_id) { return lists[n][1]; }
 	}
@@ -339,20 +401,27 @@ CXGN.List.prototype = {
 	var list_name = this.listNameById(list_id);
 	
 	var html = '';
-	html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td><td></td></tr>';
-	html += '<tr><td>List name</td>';
-	html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td>';
-        html += '<td><input type="button" class="btn btn-info" id="updateNameButton" value="update"  /></td></tr>';
+	html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>';
+	html += '<tr><td>List name:<br/><input type="button" class="btn btn-primary btn-xs" id="updateNameButton" value="Update" /></td>';
+	html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
+	html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" /></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
+	html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td></tr></table>';
 
-	html += '<tr><td>Type</td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td><td colspan="2"><input id="list_item_dialog_validate" type="button" class="btn btn-info" value="validate" onclick="javascript:validateList('+list_id+',\'type_select\')"  /></td></tr>';
-	html += '<tr><td>Add New Items</td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td><td colspan="2"><button class="btn btn-primary" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td></tr></table>';
-	html += '<table class="table table-condensed table-hover"><thead><th colspan="2"><b>List items</b> ('+items.length+')</th></tr></thead><tbody>';
+	html += '<table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
 
 	for(var n=0; n<items.length; n++) { 
-	    html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-warning btn-xs" value="remove" /></td></tr>';   
+	    html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
 	}
 	html += '</tbody></table>';
+	
 	jQuery('#'+div+'_div').html(html);
+
+	jQuery('#list_item_dialog_datatable').DataTable({
+	    destroy: true,
+	    scrollY:        '30vh',
+            scrollCollapse: true,
+            paging:         false,
+	});
 
 	for (var n=0; n<items.length; n++) { 
 	    var list_item_id = items[n][0];
@@ -367,7 +436,6 @@ CXGN.List.prototype = {
 		    lo.renderLists('list_dialog');
 		});
 	}
-    
 	
 	jQuery('#dialog_add_list_item_button').click(
 	    function() { 
@@ -390,6 +458,34 @@ CXGN.List.prototype = {
 	);
     },
     
+    renderPublicItems: function(div, list_id) { 
+	var list_data = this.getListData(list_id);
+	var items = list_data.elements;
+	var list_type = list_data.type_name;
+	var list_name = this.publicListNameById(list_id);
+	
+	var html = '';
+	html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>';
+	html += '<tr><td>List name:</td>';
+	html += '<td>'+list_name+'</td></tr>';
+	html += '<tr><td>Type:</td><td>'+list_type+'</td></tr>';
+	html += '</table>';
+	html += '<table id="public_list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th></tr></thead><tbody>';
+	for(var n=0; n<items.length; n++) { 
+	    html = html +'<tr><td>'+ items[n][1] + '</td></tr>';
+	}
+	html += '</tbody></table>';
+	
+	jQuery('#'+div+'_div').html(html);
+
+	jQuery('#public_list_item_dialog_datatable').DataTable({
+	    destroy: true,
+	    scrollY:        '30vh',
+            scrollCollapse: true,
+            paging:         false,
+	});
+    },
+
     existsList: function(name) { 
 	var list_id = 0;
 	jQuery.ajax( { 
@@ -865,6 +961,50 @@ function deleteList(list_id) {
 	alert('Deleted list '+list_name);
     }
 }
+
+function togglePublicList(list_id) { 
+    $.ajax({
+	"url": "/list/public/toggle",
+	"type": "POST",
+	"data": {'list_id': list_id},
+	success: function(r) {
+	    var lo = new CXGN.List();
+	    if (r.error) {
+		alert(r.error);
+	    } else if (r.r == 1) {
+		alert("List set to Private");
+	    } else if (r.r == 0) {
+		alert("List set to Public");
+	    }
+	    lo.renderLists('list_dialog');
+	},
+	error: function() {
+	    alert("Error Setting List to Public! List May Not Exist.");
+	}
+    });
+    var lo = new CXGN.List();
+    lo.renderLists('list_dialog');
+}
+
+function copyPublicList(list_id) { 
+    $.ajax({
+	"url": "/list/public/copy",
+	"type": "POST",
+	"data": {'list_id': list_id},
+	success: function(r) {
+	    if (r.error) {
+		alert(r.error);
+	    } else if (r.success == 'true') {
+		alert("Public List Copied to Your Lists.");
+	    }
+	},
+	error: function() {
+	    alert("Error Copying Public List! List May Not Exist.");
+	}
+    });
+    var lo = new CXGN.List();
+    lo.renderLists('list_dialog');
+}
 	
 function deleteItemLink(list_item_id) { 
     var lo = new CXGN.List();
@@ -876,6 +1016,12 @@ function showListItems(div, list_id) {
     var l = new CXGN.List();
     jQuery('#'+div).modal("show");
     l.renderItems(div, list_id);
+}
+
+function showPublicListItems(div, list_id) { 
+    var l = new CXGN.List();
+    jQuery('#'+div).modal("show");
+    l.renderPublicItems(div, list_id);
 }
 
 function addNewList(div_id) { 

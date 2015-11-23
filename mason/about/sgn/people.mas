@@ -44,28 +44,31 @@ print info_section_html( title => 'Lab members',
                 ['lukas','Lukas Mueller','Director'],
                 ['white','',''],
                ],
-              [
-                ['naama','Naama Menda','Postdoc'],
-                ['isaak', 'Isaak Y Tecle', 'Bioinformatics Consultant' ],
-					      ['tom', 'Tom York', 'Postdoc' ],
-                # ['jeremy', 'Jeremy Edwards', 'Assistant Director'],
+	       [
+		['naama','Naama Menda','Postdoc'],
+		['isaak', 'Isaak Y Tecle', 'Bioinformatics Consultant' ],
+		['tom', 'Tom York', 'Postdoc' ],
                ],
-					     [
-				        ['suzy', 'Susan Strickler', 'Postdoc'],
+	       [
+		['suzy', 'Susan Strickler', 'Postdoc'],
                 ['noe', 'Noe Fernandez-Pozo', 'Postdoc' ],
                 [ 'hartmut', 'Hartmut Foerster', 'MetaCyc curator' ],
-					     ],
-					     [
-                 ['surya', 'Surya Saha', 'Postdoc' ],
-                 ['aimin', 'Aimin Yan', 'Postdoc' ],
-                 ['guillaume', 'Guillaume Bauchet', 'Postdoc' ],
-                  # ['aureliano', 'Aureliano Bombarely', 'Postdoc' ],
-					     ],
+	       ],
+	       [
+		['surya', 'Surya Saha', 'Postdoc' ],
+		['guillaume', 'Guillaume Bauchet', 'Postdoc' ],
+		['bryan', 'Bryan Ellerbrock', 'Bioformatics' ],
+	       ],
                [
-                 ['bryan', 'Bryan Ellerbrock', '' ],
-                 ['nick', 'Nicolas Morales', '' ],
-                 ['alex', 'Alex Agbonna', '' ],
-               ]
+		['nick', 'Nicolas Morales', 'Programmer' ],
+		['alex', 'Alex Agbonna', 'Bioinformatics' ],
+		['white', 'Prashant Hosmani', 'Postdoc'],
+               ],
+	       [
+		['white', 'Mirella Flores', 'Postdoc'],
+		['white', '', ''],
+		['white', '', ''],
+	       ]
 					    ),
 					  )
 			 
@@ -84,7 +87,10 @@ print info_section_html( title => 'Emeritus Staff',
 			 contents =>
 			 info_table_html( __multicol => 3, __border => 0,
 					 'Bioinformatics Analysts' =>
-					  ul('Anuradha Pujar',
+					  ul('Aimin Yan',
+					     'Jeremy Edwards',
+					     'Aureliano Bombarely',
+					     'Anuradha Pujar',
                                              'Robert Buels',
 					     'Joseph Gosselin',
 					     'Jonathan Leto',
@@ -102,7 +108,11 @@ print info_section_html( title => 'Emeritus Staff',
 					     'Mark Wright',
 					    ),
 					  'Interns' =>
-					  ul(
+					  ul('Allison Izsak (2015)',
+					     'Jonathan Gomes Selman (2015)',
+					     'Ivana Rodriguez (2015)',
+					     'Angela Zhang (2014)',
+					     'Javon Mullings (2014)',
 					     'Matthew Crum (2013)',
 					     'Amelia Lovelace (2013)',
 					     'Akhil Saji (2013)',

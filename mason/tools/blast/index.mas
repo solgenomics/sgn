@@ -43,13 +43,13 @@
   # array with the preselected output formats
   my @parse_options_selected = ();
   foreach my $po (@parse_options) { 
-    if (($po->[0] ne "Basic") && ($po->[0] ne "Table")) { 
+    if (($po->[0] ne "Basic") && ($po->[0] ne "Table") && ($po->[0] ne "Coverage") && ($po->[0] ne "SGN")) { 
       push @parse_options_selected, $po;
     }
   }
 
   # output formats alphabetically sorted
-  my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>"size = \"5\" class\=\"form-control input-sm blast_select_box\"", choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
+  my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>"size = \"6\" class\=\"form-control input-sm blast_select_box\"", choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
 
   # print STDERR "OUTPUT OPTIONS: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n";
   # print STDERR "OUTPUT SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options_selected) ))."\n";
@@ -94,7 +94,7 @@
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
-<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a href="/help/tools/blast">Help</a>' &>
+<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/tools/blast" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
   
   <div class="form-group form-inline">
@@ -162,11 +162,12 @@
 </&>
 
 <&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
-<table style="width:700px;">
+<table>
   <tr><td><div id="prereqs"></div></td></tr>
   <tr><td><div id="Overview_output"></div></td></tr>
   <tr><td><div id="Coverage_output"></div></td></tr>
-  <tr><td><div id="Table_output"></div></td></tr>
+  <tr><td><div id="Table_output" style="min-width:900px;"></div></td></tr>
+  <tr><td><div id="SGN_output"></div></td></tr>
   <tr><td><div id="Bioperl_output"></div></td></tr>
   <tr><td><div id="Basic_output"></div></td></tr>
 </table>
