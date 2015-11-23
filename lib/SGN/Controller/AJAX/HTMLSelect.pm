@@ -90,6 +90,24 @@ sub get_year_select : Path('/ajax/html/select/years') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_genotyping_protocols_select : Path('/ajax/html/select/genotyping_protocols') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "genotyping_protocol_select";
+    my $name = $c->req->param("name") || "genotyping_protocol_select";
+    my $empty = $c->req->param("empty") || "";
+    
+    my $gt_protocols = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_gt_protocols();
+
+    my $html = simple_selectbox_html(
+	name => $name,
+	id => $id,
+	choices => $gt_protocols,
+	);
+    $c->stash->{rest} = { select => $html };
+}
+
 1;
     
     
