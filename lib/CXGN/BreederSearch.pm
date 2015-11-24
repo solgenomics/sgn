@@ -51,7 +51,7 @@ sub get_intersect {
     my $criteria_list = shift;
     my $dataref = shift;
     my $traits_db_name = shift;
-    my $genotypes = shift;
+    my $genotype_protocol_id = shift;
 
     if (!$traits_db_name) { die "Need a db_name for the ontology!"; }
     
@@ -236,10 +236,13 @@ sub get_intersect {
 	}
     }
     
-    print STDERR "Genotypes: $genotypes\n";
-    if ($genotypes) { 
+    print STDERR "Genotype protocol id: $genotype_protocol_id\n";
+    if ($genotype_protocol_id) { 
 	print STDERR "Restricting by available genotypes... \n";
-	push @query, $queries{$item}{genotypes};
+	my $genotype_filter;
+	if ($queries{$item}{genotypes}) {$genotype_filter = $queries{$item}{genotypes} . "JOIN nd_experiment_protocol USING(nd_experiment_id) WHERE nd_protocol_id=$genotype_protocol_id "};
+	print STDERR "GENOTYPE query = $genotype_filter";
+	push @query, $genotype_filter;
     }
     
     my $query = join (" INTERSECT ", @query). $queries{$item}{order_by};
