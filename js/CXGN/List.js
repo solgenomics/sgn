@@ -323,7 +323,7 @@ CXGN.List.prototype = {
 	html += '<table class="table table-hover table-condensed">';
 	html += '<thead><tr><th>&nbsp;</th><th>List Name</th><th>Count</th><th>Type</th><th colspan="4">Actions</th></tr></thead><tbody>'; 
 	for (var i = 0; i < lists.length; i++) { 
-	    html += '<tr><td><input type="checkbox" name="list_select_checkbox" value="'+lists[i][0]+'"/></td>';
+	    html += '<tr><td><input type="checkbox" id="list_select_checkbox_'+lists[i][0]+'" name="list_select_checkbox" value="'+lists[i][0]+'"/></td>';
 	    html += '<td><b>'+lists[i][1]+'</b></td>';
 	    html += '<td>'+lists[i][3]+'</td>';
 	    html += '<td>'+lists[i][5]+'</td>';
@@ -369,9 +369,9 @@ CXGN.List.prototype = {
 
 		list_group_select_action_html = '<hr><div class="row well well-sm"><div class="col-sm-4">For Selected Lists:</div><div class="col-sm-8">';
 		if (total == 1) {
-		    list_group_select_action_html += '<a class="btn btn-default btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>';	
+		    list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-default btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a><a id="make_public_selected_list_group" class="btn btn-default btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a><a id="make_private_selected_list_group" class="btn btn-default btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>';	
 		} else if (total > 1) {
-		    list_group_select_action_html += '<a class="btn btn-default btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a><br/><br/><div class="input-group input-group-sm"><input type="text" class="form-control" id="new_combined_list_name" placeholder="New List Name"><span class="input-group-btn"><a class="btn btn-default btn-sm" style="color:white" href="javascript:combineSelectedListGroup(['+selected+'])">Combine</a></span></div>';
+		    list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-default btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a><a id="make_public_selected_list_group" class="btn btn-default btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a><a id="make_private_selected_list_group" class="btn btn-default btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a><br/><br/><div class="input-group input-group-sm"><input type="text" class="form-control" id="new_combined_list_name" placeholder="New List Name"><span class="input-group-btn"><a id="combine_selected_list_group" class="btn btn-default btn-sm" style="color:white" href="javascript:combineSelectedListGroup(['+selected+'])">Combine</a></span></div>';
 		}
 		list_group_select_action_html += '</div></div>';
 	    }
