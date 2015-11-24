@@ -94,16 +94,24 @@ sub get_genotyping_protocols_select : Path('/ajax/html/select/genotyping_protoco
     my $self = shift;
     my $c = shift;
 
-    my $id = $c->req->param("id") || "genotyping_protocol_select";
+    my $id = $c->req->param("id") || "gtp_select";
     my $name = $c->req->param("name") || "genotyping_protocol_select";
     my $empty = $c->req->param("empty") || "";
     
     my $gt_protocols = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_gt_protocols();
 
+#    my $default_gtp = lc($c->config->{default_genotyping_protocol});
+
+#    my %gtps = map { $_ => 1 } @$gt_protocols;
+#    if(!exist($gtps{$default_gtp})) {
+#	die "The default genotyping protocol ($default_gtp) defined in the local conf file doesn't match any protocols in the database";
+#    }
+
     my $html = simple_selectbox_html(
 	name => $name,
 	id => $id,
 	choices => $gt_protocols,
+#	selected => $default_gtp
 	);
     $c->stash->{rest} = { select => $html };
 }
