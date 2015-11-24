@@ -249,7 +249,7 @@ sub get_locus : Chained('/')  PathPart('locus')  CaptureArgs(1) {
 	    $c->throw_client_error( public_message => 'Locus ID must be a positive integer.' );
 	}
     }
-
+    $locus_id =~ s/(.*)(\.\d+)/$1/ ;
     my $matching_loci = $self->schema->resultset('Locus')->search(
 	{
 	    $identifier_type => $locus_id,

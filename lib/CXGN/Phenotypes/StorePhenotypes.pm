@@ -261,7 +261,7 @@ sub store {
 		      basename => basename($archived_file),
 		      dirname => dirname($archived_file),
 		      filetype => $archived_file_type,
-		      md5checksum => $md5->digest(),
+		      md5checksum => $md5->hexdigest(),
 		      metadata_id => $md_row->metadata_id(),
 		     });
 	$file_row->insert();
