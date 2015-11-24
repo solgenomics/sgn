@@ -367,11 +367,11 @@ CXGN.List.prototype = {
 		    selected.push($(this).attr('value'));
 		});
 
-		list_group_select_action_html = '<hr><div class="row"><div class="col-sm-4">For Selected Lists:</div><div class="col-sm-8">';
+		list_group_select_action_html = '<hr><div class="row well well-sm"><div class="col-sm-4">For Selected Lists:</div><div class="col-sm-8">';
 		if (total == 1) {
 		    list_group_select_action_html += '<a class="btn btn-default btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>';	
 		} else if (total > 1) {
-		    list_group_select_action_html += '<a class="btn btn-default btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:combineSelectedListGroup(['+selected+'])">Combine</a>';
+		    list_group_select_action_html += '<a class="btn btn-default btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a><a class="btn btn-default btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a><br/><br/><div class="input-group input-group-sm"><input type="text" class="form-control" id="new_combined_list_name" placeholder="New List Name"><span class="input-group-btn"><a class="btn btn-default btn-sm" style="color:white" href="javascript:combineSelectedListGroup(['+selected+'])">Combine</a></span></div>';
 		}
 		list_group_select_action_html += '</div></div>';
 	    }
@@ -1123,3 +1123,24 @@ function makePrivateSelectedListGroup(list_ids) {
 	lo.renderLists('list_dialog');
     }
 }
+
+function combineSelectedListGroup(list_ids) {
+    var arrayLength = list_ids.length;
+	var list_name = jQuery('#new_combined_list_name').val();
+    if (confirm('Combine selected lists into a new list called '+list_name+'?')) {
+		var lo = new CXGN.List();
+		var new_list_id = lo.newList(list_name);
+		for (var i=0; i<arrayLength; i++) {
+			list = lo.getListData(list_ids[i]);
+			var numElements = list.elements.length;
+			var arrayItems = [];
+			for (var j=0; j<numElements; j++) {
+				arrayItems.push(list.elements[j][1]);
+			}
+			lo.addBulk(new_list_id, arrayItems);
+		}
+	lo.renderLists('list_dialog');
+    }
+}
+
+
