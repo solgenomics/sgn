@@ -80,11 +80,9 @@ Search accessions and plots using location, year, trial, and trait data.
 <div class="well well-sm"><div id="stock_count">No Selection</div></div>
 <div id="add_to_list_menu"></div>
 </td></tr>
-<tr><td>
-<input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;Only show accessions genotyped with genotyping protocol:
-<div id="select_gt_protocol_div"></div>
-</td></tr>
 </table>
+<input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;Only show accessions that have been genotyped with protocol:
+<div id="select_gt_protocol_div"></div>
 
 
 <style>
