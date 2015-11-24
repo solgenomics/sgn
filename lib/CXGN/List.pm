@@ -75,13 +75,13 @@ sub create_list {
     ($new_list_id) = $h->fetchrow_array();
     print STDERR "NEW LIST using returning = $new_list_id\n";
     
-    $q = "SELECT list.name, list.description, type_id, cvterm.name, list_id FROM sgn_people.list LEFT JOIN cvterm ON (type_id=cvterm_id)";
-    $h = $dbh->prepare($q);
-    $h->execute();
-    while (my @data = $h->fetchrow_array()) {
-	print STDERR join ", ", @data;
-	print STDERR "\n";
-    }
+    #$q = "SELECT list.name, list.description, type_id, cvterm.name, list_id FROM sgn_people.list LEFT JOIN cvterm ON (type_id=cvterm_id)";
+    #$h = $dbh->prepare($q);
+    #$h->execute();
+    #while (my @data = $h->fetchrow_array()) {
+	#print STDERR join ", ", @data;
+	#print STDERR "\n";
+    #}
     ###END TEST
     }; 
     if ($@) { 
