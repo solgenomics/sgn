@@ -383,6 +383,24 @@ sub toggle_public {
     return ($public, $rows_affected);
 }    
 
+sub make_public { 
+    my $self = shift;
+
+	my $h = $self->dbh->prepare("UPDATE sgn_people.list SET is_public='t' WHERE list_id=?");
+	$h->execute($self->list_id());
+	my $rows_affected = $h->rows;
+    return $rows_affected;
+}
+
+sub make_private { 
+    my $self = shift;
+
+	my $h = $self->dbh->prepare("UPDATE sgn_people.list SET is_public='f' WHERE list_id=?");
+	$h->execute($self->list_id());
+	my $rows_affected = $h->rows;
+    return $rows_affected;
+}
+
 sub copy_public { 
     my $self = shift;
     my $user_id = shift;
