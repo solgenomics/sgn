@@ -99,7 +99,7 @@ my $add_image_link = qq|<a href="/image/add?type_id=$stock_id&action=new&type=st
 my $image_ids =  $stockref->{image_ids} || [] ;
 my $stockprops = $stockref->{props};
 
-my $metadata = ['variety', 'donor', 'donor institute', 'country', 'state' , 'adaptation' , 'notes'];
+my $metadata = ['variety', 'donor', 'donor institute', 'country', 'state' , 'adaptation' , 'notes', 'GSOR', 'NPGS', 'Gpno', 'IRGSP', 'NSFTV', 'CIor', 'PI', 'subpopulation'];
 
 #my $pedigree= ['pedigree', 'male parent', 'female parent'];
 # get pedigree of stock
