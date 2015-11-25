@@ -543,5 +543,18 @@ sub get_project_year_cvterm_id {
     return $year_cvterm_row->cvterm_id();
 }
 
+sub get_gt_protocols {
+    my $self = shift;
+    my $rs = $self->schema->resultset("NaturalDiversity::NdProtocol")->search( { } );
+    print STDERR "NdProtocol resultset rows:\n";
+    my @protocols;
+    while (my $row = $rs->next()) {
+	print STDERR "Name: " . $row->name() . "\n";
+	print STDERR "Name: " . $row->nd_protocol_id() . "\n";
+	print STDERR $row;
+	push @protocols, [ $row->nd_protocol_id(), $row->name()];
+    }
+    return \@protocols;
+}
 
 1;
