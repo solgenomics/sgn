@@ -22,6 +22,8 @@ my $verbose = 0;
 my $nocleanup;
 my $noserver;
 my $noparallel = 0;
+my $fixture_path = '../fixture/cxgn_fixture.sql';
+
 GetOptions(
     "carpalways" => \( my $carpalways = 0 ),
     "verbose" => \$verbose ,
@@ -80,7 +82,7 @@ system("chmod 0600 $ENV{HOME}/.pgpass");
 print STDERR "Done.\n";
 
 print STDERR "# Loading database fixture... ";
-my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $fixture_path || '../fixture/cxgn_fixture.sql';
+my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $fixture_path;
 system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
 system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
 
