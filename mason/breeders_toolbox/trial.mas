@@ -295,7 +295,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 %# </&>
 
-<&| /page/info_section.mas, title => "Traits assayed", subtitle => "Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
+<&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle => "Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
 
 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
 
@@ -306,6 +306,16 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % foreach my $p (@plot_data) { 
 %   print $p."<br />\n";
 % }
+
+<&| /page/info_section.mas,
+   title       => 'Trial JBrowse',
+   collapsible => 1,
+&>
+
+	<& /breeders_toolbox/trial_jbrowse_instance.mas, trial_id => $trial_id &>
+
+</&>
+
 <&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
   <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
     <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_spreadsheet_link">Create Spreadsheet</a>]' &>
@@ -319,6 +329,8 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
     <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_phenotyping_spreadsheet_link">Upload</a>]'&>
     </&>
     <&| /page/info_section.mas, title=>"Android Field Book Exported", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_field_book_link">Upload</a>]'&>
+    </&>
+    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_data_collector_link">Upload</a>]'&>
     </&>
   </&>
 </&>
@@ -388,6 +400,13 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   </p>
 </div>
 
+<div id="upload_DataCollector_spreadsheet_dialog" class="ui-widget" title="Upload Data Collector spreadsheet File" >
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_DataCollector_form" name="upload_DataCollector_form">
+      <label for="datacollector_upload_file" style="display: inline-block; width: 100px;">Upload file:</label>
+      <input type="file" name="DataCollector_upload_file" id="DataCollector_upload_file" encoding="multipart/form-data" />
+  </form>
+</div> 
+
 <div id="change_breeding_program_dialog">
   Please select a breeding program for this trial:<br />
   <div id="change_breeding_program_select_div">
@@ -420,6 +439,8 @@ jQuery(document).ready(function () {
   display_trial_year();
 
   display_harvest_date();
+
+  display_planting_date();
 
   var type = get_trial_type(<% $trial_id %>);
 

@@ -1,6 +1,6 @@
  #SNOPSIS
 
- #runs principal component analysis using prcomp
+ #population structure analysis using singular values decomposition (SVD)
 
  #AUTHOR
  # Isaak Y Tecle (iyt2@cornell.edu)
@@ -60,16 +60,19 @@ message("pca variance file: ", varianceFile)
 if (is.null(genoDataFile))
 {
   stop("genotype dataset missing.")
+  q("no", 1, FALSE)
 }
 
 if (is.null(scoresFile))
 {
   stop("Scores output file is missing.")
+  q("no", 1, FALSE) 
 }
 
 if (is.null(loadingsFile))
 {
   stop("Laodings file is missing.")
+  q("no", 1, FALSE)
 }
 
 genoData <- read.table(genoDataFile,
@@ -80,16 +83,21 @@ genoData <- read.table(genoDataFile,
                         dec = "."
                         )
 
+message("No. of geno missing values, ", sum(is.na(genoData)) )
+
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
 genoTrCode <- grep("2", genoData[1, ], fixed=TRUE, value=TRUE)
-if(length(genoTrCode) != 0) {
-  genoData <- genoData - 1
-}
+#if(length(genoTrCode) != 0) {
+# genoData <- genoData - 1
+#}
+
+#genoData <- subset(genoData[,1:2000])
+#submarkerNo <- ncol(genoData)
+#message("subset markerNo ", submarkerNo)
 
 genoDataMissing <- c()
 if (sum(is.na(genoData)) > 0) {
   genoDataMissing <- c('yes')
-  message("sum of geno missing values, ", sum(is.na(genoData)) )
   genoData <- na.roughfix(genoData)
 }
 

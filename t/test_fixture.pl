@@ -22,12 +22,15 @@ my $verbose = 0;
 my $nocleanup;
 my $noserver;
 my $noparallel = 0;
+my $fixture_path = '../fixture/cxgn_fixture.sql';
+
 GetOptions(
     "carpalways" => \( my $carpalways = 0 ),
     "verbose" => \$verbose ,
     "nocleanup" => \$nocleanup,
     "noserver" => \$noserver,
     "noparallel" => \$noparallel,
+    "fixture_path" => \$fixture_path,
     );
 
 require Carp::Always if $carpalways;
@@ -79,7 +82,7 @@ system("chmod 0600 $ENV{HOME}/.pgpass");
 print STDERR "Done.\n";
 
 print STDERR "# Loading database fixture... ";
-my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || '../cxgn_fixture.sql';
+my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $fixture_path;
 system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
 system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
 
@@ -275,6 +278,14 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
   --noserver     Do not start webserver (if running unit_fixture tests only)
 
   --noparallel   Do not run the server in parallel mode.
+
+  --fixture_path specify a path to the fixture different from the default
+                 (../fixture/cxgn_fixture.pl). Note: You can also set the env
+                 variable DATABASE_FIXTURE_PATH, which will overrule this 
+                 option.
+
+  -- -v          options specified after two dashes will be passed to prove 
+                 directly, such -v will run prove in verbose mode.
 
 =head1 AUTHORS
 

@@ -4,7 +4,13 @@ function run_blast(database_types, input_option_types) {
   update_status("Initializing run... ");
 
   jQuery('#prereqs').html('');
-  jQuery('#blast_report').html('');
+  // jQuery('#blast_report').html('');
+  jQuery('#Basic_output').html('');
+  jQuery('#Overview_output').html('');
+  jQuery('#Coverage_output').html('');
+  jQuery('#Table_output').html('');
+  jQuery('#SGN_output').html('');
+  jQuery('#Bioperl_output').html('');
 
   var program  = jQuery('#program_select').val();
   var sequence = jQuery('#sequence').val();
@@ -14,6 +20,7 @@ function run_blast(database_types, input_option_types) {
   if (msie) {
     sequence = sequence.replace(/\s+/g, "\n");
   }
+  
 
   var database = jQuery('#database').val();
   var evalue   = jQuery('#evalue').val();
@@ -103,7 +110,7 @@ function finish_blast(jobid, seq_count) {
   
   var format   =  jQuery('#parse_options').val() || [ 'Basic' ];
   
-  //alert("FORMAT IS: "+format + " seqcount ="+ seq_count + "jobid = "+jobid);
+  // alert("FORMAT IS: "+format + " seqcount ="+ seq_count + "jobid = "+jobid);
 
   var blast_reports = new Array();
   var prereqs = new Array();
@@ -123,9 +130,14 @@ function finish_blast(jobid, seq_count) {
       data: { 'format': format[n], 'db_id': database },
     
       success: function(response) { 
+        
+        // alert("output format: "+response.blast_format);
+        
         if (response.blast_report) {
           var out_id = "#"+response.blast_format+"_output";
           // var out_id = "#"+response.blast_format.replace(" graph", "")+"_output";
+          // alert("out_id: "+out_id);
+          // alert("blast_report: "+response.blast_report);
           
           jQuery(out_id).html(response.blast_report+"<br><br>\n");
         }
@@ -146,7 +158,7 @@ function finish_blast(jobid, seq_count) {
         jQuery('#notes').css("width","75%")
         enable_ui();
       },
-      error: function(response) { alert("Parse BLAST: An error occurred. "+response.error); }
+      error: function(response) { alert("Parse BLAST: An error occurred. "+response.error); enable_ui();}
     });
   }
 }

@@ -25,6 +25,8 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("stockForm_reset_button", "id", "find reset edit button")->click();
 
+    sleep(1);
+    
     my $species_name = $t->find_element_ok("species_name", "id", "edit stock organism");
     $species_name->clear();
     $species_name->send_keys('Manihot esculenta');
@@ -101,6 +103,36 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
     $t->driver->accept_alert();
     sleep(2);
+
+
+    $t->find_element_ok("add_parent_link", "id", "find add parent link")->click();
+
+    sleep(1);
+
+    my $stock_name = $t->find_element_ok("stock_autocomplete", "id", "add parent input");
+
+    $t->find_element_ok("male", "id", "find male input")->click();
+    
+    $stock_name->clear();
+    $stock_name->send_keys('test_accession2');
+  
+    $t->find_element_ok("add_parent_dialog_submit_button", "id", "submit add parent")->click();
+
+    sleep(1);
+    $t->driver->accept_alert();
+    sleep(2);
+
+
+    $t->find_element_ok("remove_parent_link", "id", "find delete parent link")->click();
+
+    sleep(1);
+
+    $t->find_element_ok("X", "partial_link_text", "find delete parent link")->click();
+
+    $t->driver->accept_alert();
+    sleep(1);
+    $t->driver->accept_alert();
+    sleep(1);
 
     $t->find_element_ok("[New]", "partial_link_text", "find new stock link")->click();
 
