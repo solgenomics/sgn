@@ -6,7 +6,6 @@ use List::Util 'max';
 use Bio::Chado::Schema;
 use List::Util qw | any |;
 
-
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
@@ -14,6 +13,7 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
+
 
 has 'schema' => (
 		 is       => 'rw',
@@ -29,8 +29,11 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     my $schema = $c->dbic_schema("Bio::Chado::Schema");   
     my $trial_id = $c->req->param('trial_id');
     my $selected_trait = $c->req->param('trait');
+    $c->stash->{trial_id} = $trial_id;
+    $c->stash->{trial} = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
 
 print "TRAIT NAME: $selected_trait\n";
+print "TRIAl ID: $trial_id\n";
 
     if (!$c->user()) { 
 	print STDERR "User not logged in... not computing trait.\n";
@@ -51,15 +54,28 @@ print "TRAIT NAME: $selected_trait\n";
     );
 
 
-    sub total_phenotypes { 
-    my $self = shift;
+    my $layout = CXGN::Trial::TrialLayout->new(
+	{ 
+	    schema => $schema,
+	    trial_id =>$c->stash->{trial_id}
+	});
     
-    my $pt_rs = $self->bcs_schema()->resultset("Phenotype::Phenotype")->search( { });
-    return $pt_rs;
+    my $design = $layout-> get_design();
+    
+    #print STDERR Dumper($design);
+    my $dbh = $c->dbc->dbh();
+    my $trait_sql = shift;
+    my $traits_measured = CXGN::BreederSearch->new(
+	{
+	    dbh=>$dbh, 
+	    schema => $schema,
+	    #trial_id =>$c->stash->{trial_id}
+	    trial_id =>$c->req->param('trial_id')
+	});
+	
+	my $pheno_info = $traits_measured-> get_phenotype_info();
 
-    }
-
-
+	print STDERR Dumper($pheno_info);
 }
 
 1;

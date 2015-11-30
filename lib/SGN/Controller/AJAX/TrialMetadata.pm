@@ -360,7 +360,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     
     my $design = $layout-> get_design();
     
-    print STDERR Dumper($design);
+    #print STDERR Dumper($design);
          
     my @layout_info;
     foreach my $plot_number (keys %{$design}) {
