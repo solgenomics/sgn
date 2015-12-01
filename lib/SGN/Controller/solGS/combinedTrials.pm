@@ -27,9 +27,9 @@ BEGIN { extends 'Catalyst::Controller' }
 sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
     my ($self, $c) = @_;
    
-    my $ids = $c->req->param('trials');
-    my  @pop_ids = split(/,/, $ids);
-
+    my $ids     = $c->req->param('trials');
+    my @pop_ids = split(/,/, $ids);
+ 
     my $combo_pops_id;
     my $ret->{status} = 0;
 
@@ -37,20 +37,14 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
     my $not_matching_pops;
     my @g_files;
     
-    if (scalar(@pop_ids) > 1 )
+    if (scalar(@pop_ids) > 1)
     {  
         $combo_pops_id =  crc(join('', @pop_ids));
         $c->stash->{combo_pops_id} = $combo_pops_id;
       
         $solgs_controller->multi_pops_phenotype_data($c, \@pop_ids);
         $solgs_controller->multi_pops_genotype_data($c, \@pop_ids);
-
-        $solgs_controller->multi_pops_pheno_files($c, \@pop_ids);
-        my $all_pheno_files = $c->stash->{multi_pops_pheno_files};
-        
-        my @all_pheno_files = split(/\t/, $all_pheno_files);
-        $self->find_common_traits($c, \@all_pheno_files);
-        
+	
         my $entry = "\n" . $combo_pops_id . "\t" . $ids;
         $solgs_controller->catalogue_combined_pops($c, $entry);
 
@@ -61,7 +55,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
         $not_matching_pops =  $c->stash->{pops_with_no_genotype_match};
      
         if (!$not_matching_pops) 
-        {
+        {	   	   
             $self->save_common_traits_acronyms($c);
         }
         else 
@@ -97,7 +91,7 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args(1) {
      
     my $solgs_controller = $c->controller('solGS::solGS');
     
-    $solgs_controller->all_traits_file($c);
+    $solgs_controller->get_all_traits($c);
     $solgs_controller->select_traits($c);
     $solgs_controller->get_acronym_pairs($c);
 
@@ -258,7 +252,7 @@ sub combine_trait_data {
     my $trait_id      = $c->stash->{trait_id};
    
     my $solgs_controller = $c->controller('solGS::solGS');
-    $solgs_controller->get_trait_name($c, $trait_id);
+    $solgs_controller->get_trait_details($c, $trait_id);
  
     $solgs_controller->cache_combined_pops_data($c);
 
@@ -268,7 +262,6 @@ sub combine_trait_data {
     unless (-s $combined_pops_geno_file  && -s $combined_pops_pheno_file ) 
     { 
 	$solgs_controller->get_combined_pops_list($c, $combo_pops_id);
-
 	my $pops_list = $c->stash->{combined_pops_list};
 	$c->stash->{trait_combo_pops} = $pops_list; 
 
@@ -288,7 +281,7 @@ sub combine_data_build_model {
     my ($self, $c) = @_;
 
     my $trait_id = $c->stash->{trait_id};
-    $c->controller('solGS::solGS')->get_trait_name($c, $trait_id);
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 	
     $self->combine_trait_data($c); 
   
@@ -372,16 +365,19 @@ sub combined_trials_desc {
 
 
 sub find_common_traits {
-    my ($self, $c, $all_pheno_files) = @_;
+    my ($self, $c) = @_;
+          
+    my $pop_ids_list = $c->stash->{pop_ids_list};
+    my $solgs_controller = $c->controller('solGS::solGS');
     
-    my @common_traits;    
-    
-    foreach my $pheno_file (@$all_pheno_files)
-    {     
-        open my $ph, "<", $pheno_file or die "$pheno_file:$!\n";
-        my $traits = <$ph>;
-        $ph->close;
-        
+    my @common_traits;  
+    foreach my $pop_id (@$pop_ids_list)
+    {  
+	$c->stash->{pop_id} = $pop_id;
+	$solgs_controller->traits_list_file($c);
+	my $traits_list_file = $c->stash->{traits_list_file};
+
+	my $traits = read_file($traits_list_file);
         my @trial_traits = split(/\t/, $traits);
        
         if (@common_traits)        
@@ -402,97 +398,25 @@ sub save_common_traits_acronyms {
     my ($self, $c) = @_;
     
     my $combo_pops_id = $c->stash->{combo_pops_id};
+     
     my $solgs_controller = $c->controller('solGS::solGS');
-    
+   
+    $solgs_controller->get_combined_pops_list($c, $combo_pops_id);
+    my $pops_list = $c->stash->{combined_pops_list};
+    my @pops_list = split(/,/, $pops_list);
+
+    $solgs_controller->multi_pops_pheno_files($c, \@pops_list);
+    my $all_pheno_files = $c->stash->{multi_pops_pheno_files};
+        
+    my @all_pheno_files = split(/\t/, $all_pheno_files);
+    $self->find_common_traits($c, \@all_pheno_files);
+    my $common_traits = $c->stash->{common_traits};
+       
     $c->stash->{pop_id} = $combo_pops_id;
-    
-    $self->find_common_traits_acronyms($c);
-    my $acronyms_table = $c->stash->{common_traits_acronyms};
-
-    $solgs_controller->traits_acronym_file($c);
-    my $traits_acronym_file = $c->stash->{traits_acronym_file};
-    write_file($traits_acronym_file, $acronyms_table);
-
-    $solgs_controller->all_traits_file($c);
-    my $common_traits_file = $c->stash->{all_traits_file};
-    
-    $self->create_common_traits_data($c);
-    my $common_traits_data = $c->stash->{common_traits_data};
-    write_file($common_traits_file, $common_traits_data);
-      
-}
-
-
-sub create_common_traits_data {
-    my ($self, $c) = @_;   
-       
-    my $acronym_table = $c->stash->{common_traits_acronyms};  
-    my @acronym_pairs =  split (/\n/, $acronym_table);
-    shift(@acronym_pairs);
-
-    my $table = 'trait_id' . "\t" . 'trait_name' . "\t" . 'acronym' . "\n";  
-    
-    for (my $i=0; $i < scalar(@acronym_pairs); $i++)
-    {
-        my $trait_acronym = $acronym_pairs[$i];
-        $trait_acronym =~ s/\n//g;
-
-        my ($acronym, $trait_name) = split (/\t/, $trait_acronym);
-        
-        my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
-        $table .= $trait_id . "\t" . $trait_name . "\t" . $acronym . "\n";
-       
-    }
-
-    $c->stash->{common_traits_data} = $table;
+    $solgs_controller->traits_list_file($c);
+    my $traits_file = $c->stash->{traits_list_file};
+    write_file($traits_file, join("\t", @$common_traits)) if $traits_file;
   
-}    
-
-
-sub find_common_traits_acronyms {
-    my ($self, $c) = @_;
-
-    my $combo_pops_id = $c->stash->{combo_pops_id};
-    my $solgs_controller = $c->controller('solGS::solGS');
-    my @common_traits_acronyms;
-    
-    if ($combo_pops_id)
-    {
-        $solgs_controller->get_combined_pops_list($c, $combo_pops_id);
-        my $pops_list = $c->stash->{combined_pops_list};
-      
-        my @pops_list = split(/,/, $pops_list);
-
-        foreach my $pop_id (@pops_list)
-        {
-            $c->stash->{pop_id} = $pop_id;
-          
-            $solgs_controller->traits_acronym_file($c);
-            my $traits_acronym_file = $c->stash->{traits_acronym_file};
-
-            my @traits_acronyms = read_file($traits_acronym_file);
-
-            if (@common_traits_acronyms)        
-            {
-                @common_traits_acronyms = intersect(@common_traits_acronyms, @traits_acronyms);
-            }
-            else 
-            {    
-                @common_traits_acronyms = @traits_acronyms;
-            }
-
-        }
-        
-        $c->stash->{pop_id} = $combo_pops_id;
-        my $acronym_table = join("", @common_traits_acronyms);
-        $c->stash->{common_traits_acronyms} = $acronym_table;
-
-    }
-    else 
-    {   
-        die "An id for the combined trials is missing.";
-    }
-
 }
 
 
