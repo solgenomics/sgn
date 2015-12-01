@@ -10,7 +10,7 @@ Creating and viewing trials
 
 =head1 AUTHOR
 
-Jeremy Edwards <jde22@cornell.edu> 
+Jeremy Edwards <jde22@cornell.edu> , Alex Ogbonna <aco46@cornell.edu>
 
 =cut
 
