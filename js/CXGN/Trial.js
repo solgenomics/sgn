@@ -1057,7 +1057,7 @@ jQuery(document).ready(function ($) {
    function upload_phenotyping_spreadsheet_file() {
 	jQuery('#working_modal').modal("show");
         var uploadFile = $("#phenotyping_spreadsheet_upload_file").val();
-        $('#upload_phenotyping_spreadsheet_form').attr("action", "/ajax/phenospreadsheet/upload_phenotyping_spreadsheet");
+        $('#upload_phenotyping_spreadsheet_form').attr("action", "/ajax/phenoSheet/upload_pheno_sheet");
         if (uploadFile === '') {
 	    alert("Please select a file");
 	    return;
