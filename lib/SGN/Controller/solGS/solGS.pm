@@ -3098,7 +3098,7 @@ sub multi_pops_pheno_files {
     my $trait_id = $c->stash->{trait_id};
     my $dir = $c->stash->{solgs_cache_dir};
     my $files;
-    
+   
     if (defined reftype($pop_ids) && reftype($pop_ids) eq 'ARRAY')
     {
         foreach my $pop_id (@$pop_ids) 
@@ -3196,12 +3196,12 @@ sub grep_file {
 
 sub multi_pops_phenotype_data {
     my ($self, $c, $pop_ids) = @_;
-    
+   
     if (@$pop_ids)
     {
-        foreach (@$pop_ids)        
-        {
-            $c->stash->{pop_id} = $_;
+        foreach my $pop_id (@$pop_ids)        
+        { 
+            $c->stash->{pop_id} = $pop_id;
             $self->phenotype_file($c);
         }
     }
@@ -3214,12 +3214,12 @@ sub multi_pops_phenotype_data {
 
 sub multi_pops_genotype_data {
     my ($self, $c, $pop_ids) = @_;
-    
+  
     if (@$pop_ids)
     {
-        foreach (@$pop_ids)        
+        foreach my $pop_id (@$pop_ids)        
         {
-            $c->stash->{pop_id} = $_;
+            $c->stash->{pop_id} = $pop_id;
             $self->genotype_file($c);
         }
     }
@@ -4052,7 +4052,7 @@ sub acronymize_traits {
     my $formatted_traits;
     my $acronym_table = {};
    
-    my $cnt=0;
+    my $cnt = 0;
     foreach my $trait_name (@$traits)
     {
 	$cnt++;
