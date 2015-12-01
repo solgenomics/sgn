@@ -1,6 +1,6 @@
  #SNOPSIS
 
- #population structure analysis using singular values decomposition (SVD)
+ #runs population structure analysis using singular values decomposition (SVD)
 
  #AUTHOR
  # Isaak Y Tecle (iyt2@cornell.edu)
@@ -10,6 +10,8 @@ options(echo = FALSE)
 
 library(randomForest)
 library(irlba)
+library(data.table)
+
 
 allArgs <- commandArgs()
 
@@ -75,54 +77,35 @@ if (is.null(loadingsFile))
   q("no", 1, FALSE)
 }
 
-genoData <- read.table(genoDataFile,
-                        header = TRUE,
-                        row.names = 1,
-                        sep = "\t",
-                        na.strings = c("NA", " ", "--", "-", "."),
-                        dec = "."
-                        )
+genoData <- as.data.frame(fread(genoDataFile,
+                                na.strings = c("NA", " ", "--", "-", "."),
+                                ))
+
+rownames(genoData) <- genoData[, 1]
+genoData[, 1]      <- NULL
+str(genoData)
+
+genoData[1:2, 1:5]
 
 message("No. of geno missing values, ", sum(is.na(genoData)) )
-
+ncol(genoData)
+genoData  <- genoData[, colSums(is.na(genoData)) < nrow(genoData) * 0.5]
+ncol(genoData)
+#genoData <- as.data.frame(round(genoData, digits=0))
+#str(genoData)
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
-genoTrCode <- grep("2", genoData[1, ], fixed=TRUE, value=TRUE)
+#genoTrCode <- grep("2", genoData[1, ], fixed=TRUE, value=TRUE)
 #if(length(genoTrCode) != 0) {
 # genoData <- genoData - 1
 #}
 
-#genoData <- subset(genoData[,1:2000])
-#submarkerNo <- ncol(genoData)
-#message("subset markerNo ", submarkerNo)
-
+message("No. of geno missing values, ", sum(is.na(genoData)) )
 genoDataMissing <- c()
 if (sum(is.na(genoData)) > 0) {
   genoDataMissing <- c('yes')
   genoData <- na.roughfix(genoData)
 }
 
-#additive relationship model
-#calculate the inner products for
-#genotypes (realized relationship matrix)
-#genoData2 <- data.matrix(genoData)
-#print(genoData[1:5, 1:5])
-#relationshipMatrix <- tcrossprod(genoData2)
-#print(relationshipMatrix[1:5, 1:3])
-## message("prcomp time")
-## system.time(pca      <- prcomp(genoData, retx=TRUE))
-## scores   <- round(pca$x[, 1:10], digits=2)
-## loadings <- round(pca$rotation[, 1:10], digits=5)
-
-## totalVar  <- sum((pca$sdev)^2)
-## variances <- unlist(
-##                lapply(pca$sdev,
-##                       function(x)
-##                       round((x^2 / totalVar)*100, digits=2)
-##                       )
-##                )
-
-## variances <- as.data.frame(variances)
-## colnames(variances)[1] <- "variances"
 
 ######
 genotypes <- rownames(genoData)

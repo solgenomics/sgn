@@ -21,7 +21,8 @@ is($trait->accession(), "0000012", "check accession property");
 
 is($trait->term(), "CO:0000012", "check term property");
 
-is($trait->display_name(), "CO:fresh root weight", "check display name property");
+#is($trait->display_name(), "CO:fresh root weight", "check display name property");
+is($trait->display_name(), "fresh root weight|CO:0000012", "check display name property");
 
 done_testing();
 

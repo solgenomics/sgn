@@ -101,11 +101,11 @@ my $lp = CXGN::Phenotypes::StorePhenotypes->new();
 
 my $plotlist_ref = [ 'anothertrial1', 'anothertrial2', 'anothertrial3', 'anothertrial4', 'anothertrial5' ];
 
-my $traitlist_ref = [ 'CO:root number', 'CO:dry yield' ];
+my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014' ];
 
-my %plot_trait_value = ( 'anothertrial1' => { 'CO:root number'  => 12, 'CO:dry yield' => 30 },
-			   'anothertrial2' => { 'CO:root number'  => 10, 'CO:dry yield' => 40 },
-			   'anothertrial3' => { 'CO:root number'  => 20, 'CO:dry_yield' => 50 },
+my %plot_trait_value = ( 'anothertrial1' => { 'root number|CO:0000011'  => 12, 'CO:dry yield' => 30 },
+			   'anothertrial2' => { 'root number|CO:0000011'  => 10, 'CO:dry yield' => 40 },
+			   'anothertrial3' => { 'root number|CO:0000011'  => 20, 'CO:dry_yield' => 50 },
     );
 
 
@@ -117,6 +117,7 @@ my $total_phenotypes = $trial->total_phenotypes();
 
 my $trial_phenotype_count = $trial->phenotype_count();
 
+print STDERR "Total phentoypes: $total_phenotypes\n";
 is($trial_phenotype_count, 10, "trial has phenotype data");
 
 # check trial deletion - first, delete associated phenotypes
