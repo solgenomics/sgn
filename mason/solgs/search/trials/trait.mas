@@ -27,7 +27,7 @@ $trait_name
 
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTrials"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTrials", "solGS.combineTrials"] &>
 
 <p>&nbsp</p>
 
@@ -66,13 +66,13 @@ $trait_name
 <table class="table" id="selected_trials_header" style="text-align:left;width:100%">
 <tr>
   <td>
-    <div id="combine" style="display:none">
-      <input  class="button" type="button" name="combine" value="Combine" onclick="combineTraitTrials();"/>
+    <div id="combine_trials_div" style="display:none">
+      <input  class="button" type="button" id="combine_trait_trials" value="Combine trials"/>
   </div>  
   </td>
   <td>
-    <div id="search_again" style="display:none;text-align:right">
-    <input style class="button" type="button" name="search_again" value="Search again" onclick="searchAgain();"/></td>
+    <div id="search_again_div" style="display:none;text-align:right">
+    <input style class="button" type="button" id="search_again" value="Search again"/></td>
   </div>
 </tr>
 </table>

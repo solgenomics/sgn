@@ -13,7 +13,7 @@ function getPopIds () {
     jQuery('#homepage_trials_list tr').filter(':has(:checkbox:checked)')
         .bind('click',  function() {
      
-            jQuery("#done_selecting input").val('Done selecting');
+            jQuery("#done_selecting").val('Done selecting');
             var td =  jQuery(this).html();
             //alert(td);
             var selectedTrial = '<tr>' + td + '</tr>';
@@ -28,15 +28,23 @@ function getPopIds () {
         });
    
     jQuery("#selected_trials").show();  
-    jQuery("#combine").show();
-    jQuery("#search_again").show();
+    jQuery("#combine_trials_div").show();
+    jQuery("#search_again_div").show();
    
 }
 
 
-function doneSelecting() {
+jQuery(document).ready(function() {
+    jQuery('#done_selecting').on('click', function() {
+	hideTrialsList();
+    });  
+
+});
+
+
+function hideTrialsList() {
     jQuery("#homepage_trials_list").hide();
-    jQuery("#done_selecting").hide();
+    jQuery("#done_selecting_div").hide();
     jQuery("#homepage_message").hide();
     
 }
@@ -50,15 +58,23 @@ function removeSelectedTrial() {
         
         if( jQuery("#selected_trials_table td").length == 0) {
             jQuery("#selected_trials").hide();
-            jQuery("#combine").hide();
-            jQuery("#search_again").hide();
-            jQuery("#done_selecting input").val('Select');            
+            jQuery("#combine_trials_div").hide();
+            jQuery("#search_again_div").hide();
+            jQuery("#done_selecting").val('Select');            
             
             searchAgain();           
         }
     });
 
 }
+
+
+jQuery(document).ready(function() {
+    jQuery('#search_again').on('click', function() {
+	searchAgain();
+    });  
+
+});
 
 
 function searchAgain () {
@@ -75,11 +91,18 @@ function searchAgain () {
     jQuery('#homepage_trials_list').empty();
     searchTrials(url);  
     jQuery("#homepage_message").show();
-    jQuery("#done_selecting").show();
-    jQuery("#done_selecting input").val('Select');
+    jQuery("#done_selecting_div").show();
+    jQuery("#done_selecting").val('Select');
     
 }
 
+
+jQuery(document).ready(function() {
+    jQuery('#combine_trait_trials').on('click', function() {
+	combineTraitTrials();
+    });  
+
+});
 
 function combineTraitTrials () {
     var trId = getTraitId();
@@ -130,11 +153,19 @@ function combineTraitTrials () {
 }
 
 
-function downloadData() {
+jQuery(document).ready(function() {
+    jQuery('#combine_trials').on('click', function() {
+	retrievePopsData();
+    });  
+
+});
+
+
+function retrievePopsData() {
 
     var trialIds = getSelectedTrials();
     trialIds = trialIds.join(",");
-   
+
     var action = "/solgs/retrieve/populations/data";
      
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
