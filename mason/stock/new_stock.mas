@@ -5,10 +5,10 @@ $stockref => undef
 
 % my $stock_id = $stockref->{stock_id};
 
-<& /page/page_title.mas, title=> 'Create a new stock' &>
+<& /page/page_title.mas, title=> 'Create a New Stock' &>
 
 
-<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/phenome/qtl_form.pl>New QTL population</a> | <a href=/search/stocks/>Back to stock search</a>"  &>
+<&| /page/info_section.mas, title=>"Stock details"  &>
 
 <div class="row">
   <div class="col-sm-12">
@@ -24,7 +24,9 @@ $stockref => undef
   alternate_new_button => '<a href ="/stock/0/new">[New]</a>'
   &>
 
+  </div>
 </div>
+
 </&>
 
 <script language="javascript">
