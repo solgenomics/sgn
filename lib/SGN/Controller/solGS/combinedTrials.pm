@@ -261,15 +261,12 @@ sub combine_trait_data {
              
     unless (-s $combined_pops_geno_file  && -s $combined_pops_pheno_file ) 
     { 
-	$solgs_controller->get_combined_pops_list($c, $combo_pops_id);
-	my $pops_list = $c->stash->{combined_pops_list};
-	$c->stash->{trait_combo_pops} = $pops_list; 
+	$self->get_combined_pops_list($c);
+	my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
+	$c->stash->{trait_combine_populations} = $combined_pops_list;
 
-	my @pops_list = split(/,/, $pops_list);
-	$c->stash->{trait_combine_populations} = \@pops_list;
-
-	$solgs_controller->multi_pops_phenotype_data($c, \@pops_list);
-	$solgs_controller->multi_pops_genotype_data($c, \@pops_list);
+	$solgs_controller->multi_pops_phenotype_data($c, $combined_pops_list);
+	$solgs_controller->multi_pops_genotype_data($c, $combined_pops_list);
     
 	$solgs_controller->r_combine_populations($c);         
     }
@@ -301,19 +298,18 @@ sub combined_trials_desc {
     my ($self, $c) = @_;
     
     my $combo_pops_id = $c->stash->{combo_pops_id};
+        
+    $self->get_combined_pops_list($c);
+    my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
     
     my $solgs_controller = $c->controller('solGS::solGS');
-    $solgs_controller->get_combined_pops_list($c, $combo_pops_id);
-    
-    my $pops_list = $c->stash->{combined_pops_list};      
-    my @pops = split(/,/, $pops_list);
-      
+          
     my $desc = 'This training population is a combination of ';
     
     my $projects_owners;
     my $s_pop_id;
 
-    foreach my $pop_id (@pops)
+    foreach my $pop_id (@$combined_pops_list)
     {  
         my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
 
@@ -322,8 +318,8 @@ sub combined_trials_desc {
          
             my $pr_id   = $row->id;
             my $pr_name = $row->name;
-            $desc .= qq | <a href="/solgs/population/$pr_id">$pr_name </a>|; 
-            $desc .= $pop_id == $pops[-1] ? '.' : ' and ';
+            $desc .= qq | <a href="/solgs/population/$pr_id">$pr_name</a>|; 
+            $desc .= $pop_id == $combined_pops_list->[-1] ? '.' : ' and ';
         } 
 
         $solgs_controller->get_project_owners($c, $_);
@@ -366,12 +362,16 @@ sub combined_trials_desc {
 
 sub find_common_traits {
     my ($self, $c) = @_;
-          
-    my $pop_ids_list = $c->stash->{pop_ids_list};
+    
+    my $combo_pops_id = $c->stash->{combo_pops_id};
+   
+    $self->get_combined_pops_list($c);
+    my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
+
     my $solgs_controller = $c->controller('solGS::solGS');
     
     my @common_traits;  
-    foreach my $pop_id (@$pop_ids_list)
+    foreach my $pop_id (@$combined_pops_list)
     {  
 	$c->stash->{pop_id} = $pop_id;
 	$solgs_controller->traits_list_file($c);
@@ -398,17 +398,16 @@ sub save_common_traits_acronyms {
     my ($self, $c) = @_;
     
     my $combo_pops_id = $c->stash->{combo_pops_id};
-     
+    
+    $self->get_combined_pops_list($c);
+    my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
+    
     my $solgs_controller = $c->controller('solGS::solGS');
    
-    $solgs_controller->get_combined_pops_list($c, $combo_pops_id);
-    my $pops_list = $c->stash->{combined_pops_list};
-    my @pops_list = split(/,/, $pops_list);
-
-    $solgs_controller->multi_pops_pheno_files($c, \@pops_list);
-    my $all_pheno_files = $c->stash->{multi_pops_pheno_files};
-        
+    $solgs_controller->multi_pops_pheno_files($c, $combined_pops_list);
+    my $all_pheno_files = $c->stash->{multi_pops_pheno_files};        
     my @all_pheno_files = split(/\t/, $all_pheno_files);
+    
     $self->find_common_traits($c, \@all_pheno_files);
     my $common_traits = $c->stash->{common_traits};
        
@@ -419,6 +418,19 @@ sub save_common_traits_acronyms {
   
 }
 
+
+sub get_combined_pops_list {
+   my ($self, $c) = @_;
+   
+   my $combo_pops_id = $c->stash->{combo_pops_id};
+ 
+   $c->controller('solGS::solGS')->get_combined_pops_list($c, $combo_pops_id);
+   my $pops_list = $c->stash->{combined_pops_list};
+   my @pops_list = split(/,/, $pops_list);
+
+   $c->stash->{arrayref_combined_pops_ids} = \@pops_list;
+
+}
 
 sub begin : Private {
     my ($self, $c) = @_;
