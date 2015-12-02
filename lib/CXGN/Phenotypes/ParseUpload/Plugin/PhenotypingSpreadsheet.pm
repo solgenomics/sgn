@@ -37,17 +37,18 @@ sub validate {
       #$self->_set_parse_errors(\@errors);
       print STDERR "Spreadsheet is missing header\n";
       return;
+
     }
 
     my $plot_name_head;
-    if ($worksheet->get_cell(0,0)) {
-      $plot_name_head  = $worksheet->get_cell(0,0)->value();
+    if ($worksheet->get_cell(5,0)) {
+      $plot_name_head  = $worksheet->get_cell(5,0)->value();
     }
 
     if (!$plot_name_head || $plot_name_head ne 'plot_name') {
       print STDERR "No plot name in header\n";
     }
-
+print "PLOT HEAD: $plot_name_head\n";
 
     #if the rest of the header rows are not two caps followed by colon followed by text then return
 
@@ -88,10 +89,10 @@ sub parse {
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
     #get trait names and column numbers;
-    for my $col (1 .. $col_max) {
+    for my $col (6 .. $col_max) {
       my $cell_val;
-      if ($worksheet->get_cell(0,$col)) {
-	$cell_val = $worksheet->get_cell(0,$col)->value();
+      if ($worksheet->get_cell(5,$col)) {
+	$cell_val = $worksheet->get_cell(5,$col)->value();
       }
       if ($cell_val) {
 	$header_column_info{$cell_val} = $col;
@@ -99,7 +100,7 @@ sub parse {
       }
     }
 
-    for my $row ( 1 .. $row_max ) {
+    for my $row ( 6 .. $row_max ) {
       my $plot_name;
 
       if ($worksheet->get_cell($row,0)) {
