@@ -63,6 +63,8 @@ if (!$marker) {
 
 my ($marker_name, @other_names) = $marker->name_that_marker();
 
+my $src_feature = "SL2.50";
+
 </%perl>
 
 <& /page/page_title.mas, title=> "SGN Marker $marker_name" &>
@@ -103,7 +105,9 @@ my ($marker_name, @other_names) = $marker->name_that_marker();
 
 <& /markers/attributions.mas, marker=>$marker &>
 
-<& /markers/genome.mas, marker => $marker &>
+<&| /page/info_section.mas, title => "Genomic location of $marker_name", collapsible=>1 &>
+<& /feature/jbrowse_exact_match.mas, feature=> $marker_name, src_feature=> $src_feature &>
+</&>
 
 <& /markers/comments.mas, marker=>$marker &>
 

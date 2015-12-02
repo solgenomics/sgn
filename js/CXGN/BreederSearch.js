@@ -411,7 +411,10 @@ window.onload = function initialize() {
 		//disable_ui();
             },  
             complete : function(){
-
+		addToListMenu('add_to_list_menu', 'stock_data', { 
+		    selectText: true,
+		    typeSourceDiv: 'select4',
+		});
             },  
 	    success: function(response) { 
 		if (response.error) { 
@@ -658,8 +661,9 @@ function show_list_selected_count(select_div, selected_count_div) {
 function get_genotype_checkbox() { 
     var checkbox = jQuery('#restrict_genotypes').is(':checked')
 
-    if (checkbox == true) { 
-	return 1;
+    if (checkbox == true) {
+	console.log("Selected protocol = "+jQuery("#gtp_select").text()+" and id = "+jQuery("#gtp_select").val());
+	return jQuery("#gtp_select").val();
     }
     return 0;
 

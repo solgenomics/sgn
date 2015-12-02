@@ -20,6 +20,8 @@ $t->while_logged_in_as(
 	    "find element add location link as submitter"
 	    )->click();
 
+	sleep(2);
+
 	$t->find_element_ok(
 	    "cross_name", "id", "find cross name input element")
 	    ->send_keys("test_cross_1");

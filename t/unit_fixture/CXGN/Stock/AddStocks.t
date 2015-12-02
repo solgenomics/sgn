@@ -80,67 +80,67 @@ $stock_add->set_owner_name("wrongowner");
 
 is($stock_add->validate_owner(), undef, "Stock owner names that do not exist should not validate"); 
 
-# Create a group
-my $accession_group_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'accession_group',
+# Create a population
+my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+    { name   => 'population',
       cv     => 'stock type',
       db     => 'null',
-      dbxref => 'accession_group',
+      dbxref => 'population',
     });
 
-my $accession_group_name = "test_1_accession_group";
+my $population_name = "test_1_population";
 
-my @groups_to_add = ( $accession_group_name );
+my @populations_to_add = ( $population_name );
 
-ok(my $add_group = CXGN::Stock::AddStocks
+ok(my $add_population = CXGN::Stock::AddStocks
    ->new({
        schema => $schema,
        phenome_schema => $phenome_schema,
        dbh => $dbh,
-       stocks => \@groups_to_add,
+       stocks => \@populations_to_add,
        species => $species,
        owner_name => $owner_name,
-	 }),"Create AddStocks object to add accession_group");
+	 }),"Create AddStocks object to add population");
 
-ok($add_group->add_accession_group(), "Add new accession_group");
+ok($add_population->add_population(), "Add new population");
 
-my @stocks_in_group = qw( GroupTestAddStock1 GroupTestAddStock2 );
-ok(my $stock_add_in_group = CXGN::Stock::AddStocks
+my @stocks_in_population = qw( GroupTestAddStock1 GroupTestAddStock2 );
+ok(my $stock_add_in_population = CXGN::Stock::AddStocks
    ->new({
        schema => $schema,
        phenome_schema => $phenome_schema,
        dbh => $dbh,
-       stocks => \@stocks_in_group,
+       stocks => \@stocks_in_population,
        species => $species,
-       accession_group => $accession_group_name,
+       population_name => $population_name,
        owner_name => $owner_name,
 	 }),"Create AddStocks object");
 
-is($stock_add_in_group->validate_accession_group(), 1, "Stock accession group validation"); 
+is($stock_add_in_population->validate_population(), 1, "Stock population validation"); 
 
-ok($stock_add_in_group->add_accessions(), "Add new stocks to a group");
+ok($stock_add_in_population->add_accessions(), "Add new stocks to a population");
 
-my $accession_group_find = $schema->resultset("Stock::Stock")
+my $accession_population_find = $schema->resultset("Stock::Stock")
       ->find({
-	  uniquename => $accession_group_name,
-	  type_id => $accession_group_cvterm->cvterm_id(),
+	  uniquename => $population_name,
+	  type_id => $population_cvterm->cvterm_id(),
 	       } );
 
-my $accession_group_member_cvterm = $schema->resultset("Cv::Cvterm")
+my $population_member_cvterm = $schema->resultset("Cv::Cvterm")
     ->create_with({
-	name   => 'accession_group_member_of',
+	name   => 'member_of',
 	cv     => 'stock relationship',
 	db     => 'null',
-	dbxref => 'accession_group_member_of',
+	dbxref => 'member_of',
 		  });
 
-my $group_member = $schema->resultset("Stock::Stock")
+my $population_member = $schema->resultset("Stock::Stock")
     ->find({
-	uniquename => $stocks_in_group[0],
-	'object.uniquename'=> $accession_group_name,
-	'stock_relationship_subjects.type_id' => $accession_group_member_cvterm->cvterm_id()
+	uniquename => $stocks_in_population[0],
+	'object.uniquename'=> $population_name,
+	'stock_relationship_subjects.type_id' => $population_member_cvterm->cvterm_id()
 	   }, {join => {'stock_relationship_subjects' => 'object'}});
 
-is($group_member->uniquename(), $stocks_in_group[0], "Find members of accession group"); 
+is($population_member->uniquename(), $stocks_in_population[0], "Find members of population"); 
 
 done_testing();

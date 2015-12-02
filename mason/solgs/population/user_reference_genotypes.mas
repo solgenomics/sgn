@@ -15,7 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 </%args>
-<!-- "jqueryfileupload.vendor.ui-widget", "jqueryfileupload.iframe-transport",   "jqueryfileupload.fileupload", -->
+
 <& /util/import_javascript.mas, classes => ["solGS.userReferenceGenotypes"] &>
 
  <div class="fileupload-buttonbar">
@@ -37,7 +37,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
     <br>
     <br>
    
-    <!-- The container for the uploaded list reference populations -->
     <div class="sub_infosectioncontent" id="uploaded_reference_populations" style="display:none"></div>
     <br>
 
