@@ -115,7 +115,7 @@ Chained off of L</get_stock> below.
 sub new_stock : Chained('get_stock') PathPart('new') Args(0) {
     my ( $self, $c ) = @_;
     $c->stash(
-        template => '/stock/index.mas',
+        template => '/stock/new_stock.mas',
 
         stockref => {
             action    => "new",
