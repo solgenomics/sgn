@@ -296,11 +296,12 @@ function trial_detail_page_setup_dialogs() {
 		jQuery( this ).dialog( "close" );
 		return;
 	    },
-	    Create: function() {
+	    Create: {text: "Ok", id:"create_phenotyping_ok_button", click:function() {
 		create_spreadsheet();
 		//save_experimental_design(design_json);
 		jQuery( this ).dialog( "close" );
 		//jQuery('#add_project_dialog').dialog("close");
+	       },
 	    },
 	},
     });
