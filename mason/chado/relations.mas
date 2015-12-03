@@ -9,7 +9,6 @@
 
 <%init>
   use JSON::Any;
-  my $item_json = "";
 
     # make a hash of relationship_type => {
     #    upstream   => \@list_of_objects
@@ -26,54 +25,75 @@
 
 </%init>
 
+%  my $unique_num = 0;
+%  my $item_list_div;
+%  my $item_list_menu_div;
+%  my @item_json;
 
 %  for my $reltype ( sort keys %rels ) {
 %    my $updown = $rels{$reltype};
 %       for my $direction ( 'upstream', 'downstream' ) {
 %         if( my $objects = $updown->{$direction} ) {
-
+%	    $item_list_div = "item_list_".$unique_num;
+%	    $item_list_menu_div = "item_list_menu_".$unique_num;
 
 % my ($is,$are) = $reltype =~ /\w+[ _]of/i ? (' is a',' are') : ('','');
+
 <&| /page/info_section.mas,
    title => $direction eq 'upstream' ? qq|$object_type_text this $type$is $reltype| : qq|$object_type_text that$are $reltype this $type|,
    is_subsection => 1,
 &>
+  <div class="row well well-sm">
     <& $list_component,
        %ARGS,
        objects => $objects,
      &>
+  </div>
+  <div class="row well well-sm">
+    <div id="<% $item_list_div %>"></div>
+    Add items to a list:<br/><br/>
+    <div id="<% $item_list_menu_div %>"></div>
+  </div>
+
 </&>
 
-<div id="item_list"></div>
 
-<div id="whatever" style="text-align:right">
-Add accessions to a list:
 
-<div id="item_list_menu"></div>
-</div>
 % my @items = map { $_->uniquename() } @$objects;
 
-% $item_json = JSON::Any->new->encode(\@items);
+% push @item_json, JSON::Any->new->encode(\@items);
+
+% $unique_num = $unique_num + 1;
 
 %         }
 %       }
 %  }
 
+% my $item_json_array = JSON::Any->new->encode(\@item_json);
 
 <script>
 
   jQuery(document).ready( function() { 
-    var items = eval(<% $item_json %>);
+    var items = eval(<% $item_json_array %>);
+    var arrayLength = items.length;
 
-    if (jQuery.cookie("sgn_session_id")) { 
-      jQuery('#item_list').hide();
-      jQuery('#item_list').html(items.join("\n"));
+    for (var i = 0; i < arrayLength; i++) {
+      var item_list = "item_list_"+i;
+      var item_list_div = "#"+item_list;
+      var item_list_menu = "item_list_menu_"+i;
+      var item_list_menu_div = "#"+item_list_menu;
+      if (jQuery.cookie("sgn_session_id")) {
+ 	var current_item = eval(items[i]).join("\n");
+        jQuery(item_list_div).hide();
+      	jQuery(item_list_div).html(current_item);
       
-      addToListMenu('item_list_menu', 'item_list', 'div');
+	addToListMenu(item_list_menu, item_list, 'div');
+      }
+      else { 
+      	jQuery(item_list_menu_div).html('Log in to use lists.');
+      }
     }
-    else { 
-      jQuery('#item_list_menu').html('Log in to use lists.');
-    }
+    
   });
 
 </script>
