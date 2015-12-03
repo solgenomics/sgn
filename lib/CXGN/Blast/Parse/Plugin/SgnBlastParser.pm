@@ -22,13 +22,13 @@ sub prereqs {
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">Match Information</h4>
+        <h4 id="match_name" class="modal-title">Match Information</h4>
       </div>
       <div class="modal-body">
         <dl>
             <dd>
               <div style="margin: 0.5em 0"><a class="match_details" href="" target="_blank">View matched sequence</a></div>
-              <div id="jbrowse_div" style="display:none"><a id="jbrowse_link" href="" target="_blank">Browse genome</a></div>
+              <div id="jbrowse_div" style="display:none"><a id="jbrowse_link" href="" target="_blank">View in genome context</a></div>
             </dd>
             <dd class="subject_sequence_xrefs">
             </dd>
@@ -47,13 +47,13 @@ sub prereqs {
     
     var popup = jQuery( "#xref_menu_popup" );
     
-    jQuery('.modal-title').html( id );
+    jQuery('#match_name').html( id );
     
-    if( identifier_url == null ) {
-       jQuery('.sequence_name').html( id );
-    } else {
-       jQuery('.sequence_name').html( '<a href="' + identifier_url + '" target="_blank">' + id + '</a>' );
-    }
+//    if( identifier_url == null ) {
+//       jQuery('.sequence_name').html( id );
+//    } else {
+//       jQuery('.sequence_name').html( '<a href="' + identifier_url + '" target="_blank">' + id + '</a>' );
+//    }
 
     popup.find('a.match_details').attr( 'href', match_detail_url );
     popup.find('#jbrowse_link').attr( 'href', jbrowse_url );
@@ -88,8 +88,7 @@ sub parse {
   my $db_id = $bdb->blast_db_id();
   my $jbr_src = $bdb->jbrowse_src();
   
-  print STDERR "jbr_src: $jbr_src\n";
-  
+  # print STDERR "jbr_src: $jbr_src\n";
   
   my $query = "";
   my $subject = "";
@@ -120,7 +119,7 @@ sub parse {
 
     if ($line =~ /Query\=\s*(\S+)/) {
       $query = $1;
-      unshift(@res_html, "<center><h3>$query</h3>");
+      unshift(@res_html, "<center><h3>".$query." x ".$bdb->title()."</h3>");
     }
 
     if ($append_desc) {
