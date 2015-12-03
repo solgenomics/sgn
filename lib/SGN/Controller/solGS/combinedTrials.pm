@@ -42,11 +42,10 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
         $combo_pops_id =  crc(join('', @pop_ids));
         $c->stash->{combo_pops_id} = $combo_pops_id;
       
-        $solgs_controller->multi_pops_phenotype_data($c, \@pop_ids);
-        $solgs_controller->multi_pops_genotype_data($c, \@pop_ids);
-	
         my $entry = "\n" . $combo_pops_id . "\t" . $ids;
         $solgs_controller->catalogue_combined_pops($c, $entry);
+	
+	$self->prepare_multi_pops_data($c);
 
         my $geno_files = $c->stash->{multi_pops_geno_files};
         @g_files = split(/\t/, $geno_files);
@@ -96,6 +95,7 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args(1) {
     $solgs_controller->get_acronym_pairs($c);
 
     $c->stash->{combo_pops_id} = $combo_pops_id;
+  
     $self->combined_trials_desc($c);
   
     $c->stash->{template} = $solgs_controller->template('/population/combined/combined.mas');
@@ -265,8 +265,7 @@ sub combine_trait_data {
 	my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
 	$c->stash->{trait_combine_populations} = $combined_pops_list;
 
-	$solgs_controller->multi_pops_phenotype_data($c, $combined_pops_list);
-	$solgs_controller->multi_pops_genotype_data($c, $combined_pops_list);
+	$self->prepare_multi_pops_data($c);
     
 	$solgs_controller->r_combine_populations($c);         
     }
@@ -423,14 +422,30 @@ sub get_combined_pops_list {
    my ($self, $c) = @_;
    
    my $combo_pops_id = $c->stash->{combo_pops_id};
- 
+
    $c->controller('solGS::solGS')->get_combined_pops_list($c, $combo_pops_id);
    my $pops_list = $c->stash->{combined_pops_list};
+  
    my @pops_list = split(/,/, $pops_list);
 
    $c->stash->{arrayref_combined_pops_ids} = \@pops_list;
 
 }
+
+
+sub prepare_multi_pops_data {
+   my ($self, $c) = @_;
+   
+   $self->get_combined_pops_list($c);
+   my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
+ 
+   my $solgs_controller = $c->controller('solGS::solGS');
+  
+   $solgs_controller->multi_pops_phenotype_data($c, $combined_pops_list);
+   $solgs_controller->multi_pops_genotype_data($c, $combined_pops_list);
+
+}
+
 
 sub begin : Private {
     my ($self, $c) = @_;
