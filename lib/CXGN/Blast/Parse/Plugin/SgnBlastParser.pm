@@ -119,7 +119,7 @@ sub parse {
 
     if ($line =~ /Query\=\s*(\S+)/) {
       $query = $1;
-      unshift(@res_html, "<center><h3>".$query." x ".$bdb->title()."</h3>");
+      unshift(@res_html, "<center><h3>".$query." vs ".$bdb->title()."</h3>");
     }
 
     if ($append_desc) {
