@@ -242,9 +242,9 @@ sub _build_jbrowse_url {
   $subject =~ s/\.\d$//;
   
   if ($jbr_src =~ /(.+)_gene/) {
-    $jbrowse_url = "https://solgenomics.net/jbrowse/current/?data=data/json/".$1."&loc=".$subject."&tracks=DNA,gene_models";
+    $jbrowse_url = "/jbrowse/current/?data=data/json/".$1."&loc=".$subject."&tracks=DNA,gene_models";
   } elsif ($jbr_src =~ /(.+)_genome/) {
-    $jbrowse_url = "https://solgenomics.net/jbrowse/current/?data=data/json/".$1."&loc=".$subject."%3A".$sstart."..".$send."&tracks=DNA,gene_models";
+    $jbrowse_url = "/jbrowse/current/?data=data/json/".$1."&loc=".$subject."%3A".$sstart."..".$send."&tracks=DNA,gene_models";
   } else {
     $jbrowse_url;
   }
