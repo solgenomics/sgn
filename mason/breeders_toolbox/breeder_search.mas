@@ -80,8 +80,9 @@ Search accessions and plots using location, year, trial, and trait data.
 <div class="well well-sm"><div id="stock_count">No Selection</div></div>
 <div id="add_to_list_menu"></div>
 </td></tr>
-<tr><td colspan="4"><input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;Only show genotyped accessions</td></tr>
 </table>
+<input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;Only show accessions that have been genotyped with protocol:
+<div id="select_gt_protocol_div"></div>
 
 
 <style>
@@ -94,11 +95,14 @@ Search accessions and plots using location, year, trial, and trait data.
 <script defer="defer">
   jQuery(document).ready(function() { 
   
+  get_select_box('genotyping_protocols', 'select_gt_protocol_div', 'gt_protocol_select');
+
     if (!isLoggedIn()) {
       jQuery('#c1_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
       jQuery('#c2_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
       jQuery('#c3_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
       jQuery('#add_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
+
     }
     else { 
       addToListMenu('c1_to_list_menu', 'c1_data', { 
@@ -119,9 +123,6 @@ Search accessions and plots using location, year, trial, and trait data.
         }
       );
     }
-
-
-
  });
 
 </script>

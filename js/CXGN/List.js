@@ -321,9 +321,10 @@ CXGN.List.prototype = {
 	}
 
 	html += '<table class="table table-hover table-condensed">';
-	html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th colspan="3">Actions</th></tr></thead><tbody>'; 
+	html += '<thead><tr><th>&nbsp;</th><th>List Name</th><th>Count</th><th>Type</th><th colspan="4">Actions</th></tr></thead><tbody>'; 
 	for (var i = 0; i < lists.length; i++) { 
-	    html += '<tr><td><b>'+lists[i][1]+'</b></td>';
+	    html += '<tr><td><input type="checkbox" id="list_select_checkbox_'+lists[i][0]+'" name="list_select_checkbox" value="'+lists[i][0]+'"/></td>';
+	    html += '<td><b>'+lists[i][1]+'</b></td>';
 	    html += '<td>'+lists[i][3]+'</td>';
 	    html += '<td>'+lists[i][5]+'</td>';
 	    html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
@@ -336,6 +337,7 @@ CXGN.List.prototype = {
 	    }
 	}
 	html = html + '</tbody></table>';
+	html += '<div id="list_group_select_action"></div>';
 
 	jQuery('#'+div+'_div').html(html);
 
@@ -354,6 +356,27 @@ CXGN.List.prototype = {
 	    lo.renderPublicLists('public_list_dialog_div');
 	});
 
+	jQuery("input[name='list_select_checkbox']").click(function() {
+	    var total=jQuery("input[name='list_select_checkbox']:checked").length;
+	    var list_group_select_action_html='';
+	    if (total == 0) {
+		list_group_select_action_html += '';
+	    } else {
+		var selected = [];
+		$("input:checkbox:checked").each(function() {
+		    selected.push($(this).attr('value'));
+		});
+
+		list_group_select_action_html = '<hr><div class="row well well-sm"><div class="col-sm-4">For Selected Lists:</div><div class="col-sm-8">';
+		if (total == 1) {
+		    list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a>&nbsp;<a id="make_public_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a>&nbsp;<a id="make_private_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>';	
+		} else if (total > 1) {
+		    list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a>&nbsp;<a id="make_public_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a>&nbsp;<a id="make_private_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a><br/><br/><div class="input-group input-group-sm"><input type="text" class="form-control" id="new_combined_list_name" placeholder="New List Name"><span class="input-group-btn"><a id="combine_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:combineSelectedListGroup(['+selected+'])">Combine</a></span></div>';
+		}
+		list_group_select_action_html += '</div></div>';
+	    }
+	    jQuery("#list_group_select_action").html(list_group_select_action_html);
+	});
     },
 
     renderPublicLists: function(div) {
@@ -649,37 +672,7 @@ CXGN.List.prototype = {
     }
 };
 
-function setUpLists() { 
-//    jQuery('#list_dialog').dialog( {
-//	height: 300,
-//	width: 500,
-//	autoOpen: false,
-//	title: 'Available lists',
-//	buttons: [ { text: "Done",
-//		   click: function() { 
-//		       jQuery('#list_dialog').dialog("close"); 
-//		   },
-//		   id: 'close_list_dialog_button'
-//		 }],
-//	
-//	modal: true 
-//    });
-       
-    //jQuery('#list_item_dialog').dialog( { 
-//	height: 400,
-//	width: 400,
-//	autoOpen: false,
-//	buttons: [{ 
-//	    text: "Done",
-//	    click: function() { 
-//		jQuery('#list_item_dialog').dialog("close"); 
-//	    },
-//	    id: 'close_list_item_dialog'
-//	}],
-//	modal: true,
-//      title: 'List contents'
-//    });
-    
+function setUpLists() {  
     jQuery("button[name='lists_link']").click(
 	function() { show_lists(); }
     );
@@ -986,6 +979,40 @@ function togglePublicList(list_id) {
     lo.renderLists('list_dialog');
 }
 
+function makePublicList(list_id) { 
+    $.ajax({
+	"url": "/list/public/true",
+	"type": "POST",
+	"data": {'list_id': list_id},
+	success: function(r) {
+	    var lo = new CXGN.List();
+	    if (r.error) {
+		alert(r.error);
+	    }
+	},
+	error: function() {
+	    alert("Error Setting List to Public! List May Not Exist.");
+	}
+    });
+}
+
+function makePrivateList(list_id) { 
+    $.ajax({
+	"url": "/list/public/false",
+	"type": "POST",
+	"data": {'list_id': list_id},
+	success: function(r) {
+	    var lo = new CXGN.List();
+	    if (r.error) {
+		alert(r.error);
+	    }
+	},
+	error: function() {
+	    alert("Error Setting List to Private! List May Not Exist.");
+	}
+    });
+}
+
 function copyPublicList(list_id) { 
     $.ajax({
 	"url": "/list/public/copy",
@@ -1063,4 +1090,57 @@ function validateList(list_id, html_select_id) {
     var type = jQuery('#'+html_select_id).val();
     lo.validate(list_id, type);
 }
+
+function deleteSelectedListGroup(list_ids) {
+    var arrayLength = list_ids.length;
+    if (confirm('Delete the selected lists? This cannot be undone.')) {
+	for (var i=0; i<arrayLength; i++) {
+	    var lo = new CXGN.List();
+	    lo.deleteList(list_ids[i]);
+	}
+	lo.renderLists('list_dialog');
+    }
+}
+
+function makePublicSelectedListGroup(list_ids) {
+    var arrayLength = list_ids.length;
+    if (confirm('Make selected lists public?')) {
+	for (var i=0; i<arrayLength; i++) {
+	    makePublicList(list_ids[i]);
+	}
+	var lo = new CXGN.List();
+	lo.renderLists('list_dialog');
+    }
+}
+
+function makePrivateSelectedListGroup(list_ids) {
+    var arrayLength = list_ids.length;
+    if (confirm('Make selected lists private?')) {
+	for (var i=0; i<arrayLength; i++) {
+	    makePrivateList(list_ids[i]);
+	}
+	var lo = new CXGN.List();
+	lo.renderLists('list_dialog');
+    }
+}
+
+function combineSelectedListGroup(list_ids) {
+    var arrayLength = list_ids.length;
+	var list_name = jQuery('#new_combined_list_name').val();
+    if (confirm('Combine selected lists into a new list called '+list_name+'?')) {
+		var lo = new CXGN.List();
+		var new_list_id = lo.newList(list_name);
+		for (var i=0; i<arrayLength; i++) {
+			list = lo.getListData(list_ids[i]);
+			var numElements = list.elements.length;
+			var arrayItems = [];
+			for (var j=0; j<numElements; j++) {
+				arrayItems.push(list.elements[j][1]);
+			}
+			lo.addBulk(new_list_id, arrayItems);
+		}
+	lo.renderLists('list_dialog');
+    }
+}
+
 
