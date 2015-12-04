@@ -139,6 +139,7 @@ sub parse {
       
       if ($subject) {
         my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send);
+        ($sstart,$send) = _check_coordinates($sstart,$send);
         
         push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
       }
@@ -163,6 +164,7 @@ sub parse {
 
     if ($line =~ /Score\s*=/ && $one_hsp == 1) {
       my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send);
+      ($sstart,$send) = _check_coordinates($sstart,$send);
       
       push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
 
@@ -217,7 +219,8 @@ sub parse {
   
   
   my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send);
-
+  ($sstart,$send) = _check_coordinates($sstart,$send);
+  
   push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
   push(@res_html, "</table></center>");
   
@@ -250,6 +253,21 @@ sub _build_jbrowse_url {
   }
   
   return $jbrowse_url;
+}
+
+sub _check_coordinates {
+  my $tmp_start = shift;
+  my $tmp_end = shift;
+  
+  my $final_start = $tmp_start;
+  my $final_end = $tmp_end;
+  
+  if ($tmp_start > $tmp_end) {
+    $final_start = $tmp_end;
+    $final_end = $tmp_start;
+  }
+  
+  return ($final_start, $final_end);
 }
 
 
