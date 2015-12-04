@@ -93,9 +93,11 @@ Search accessions and plots using location, year, trial, and trait data.
 
 
 <script defer="defer">
-  jQuery(document).ready(function() { 
-  
+jQuery(document).ready(function() {
+
   get_select_box('genotyping_protocols', 'select_gt_protocol_div', 'gt_protocol_select');
+  
+  jQuery('select').mouseenter(function() {this.tooltip});
 
     if (!isLoggedIn()) {
       jQuery('#c1_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
