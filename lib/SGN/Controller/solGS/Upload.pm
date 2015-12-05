@@ -302,7 +302,8 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
         $c->stash->{uploaded_prediction} = $uploaded_prediction;
         $c->stash->{list_source}         = $list_source;
         $c->stash->{page_trait_id}       = $trait_id;
-        my @analyzed_traits;
+        
+	my @analyzed_traits;
        
         if ($uploaded_prediction) 
         {
@@ -311,6 +312,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
          }
 
         my $prediction_pop_gebvs_file;
+
         foreach my $trait_name (@analyzed_traits) 
         {    
             my $acronym_pairs = $c->controller("solGS::solGS")->get_acronym_pairs($c);
@@ -343,12 +345,13 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
 
                  if ($model_id =~ /uploaded/) 
                  {
-                     my $dir = $c->stash->{solgs_prediction_upload_dir};
+                     my $dir     = $c->stash->{solgs_prediction_upload_dir};
                      my $user_id = $c->user->id;
-                     my $exp = "phenotype_data_${user_id}_${model_id}"; 
+                     
+		     my $exp     = "phenotype_data_${user_id}_${model_id}"; 
                      $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
                 
-                     $exp = "genotype_data_${user_id}_${model_id}"; 
+                     $exp       = "genotype_data_${user_id}_${model_id}"; 
                      $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);    
 
                  }
@@ -356,7 +359,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
                  {
                      my $dir = $c->stash->{solgs_cache_dir};
            
-                     my $exp = "phenotype_data_${model_id}"; 
+                     my $exp     = "phenotype_data_${model_id}"; 
                      $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
                     
                      $exp = "genotype_data_${model_id}"; 
@@ -378,17 +381,16 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
                  }
                  else 
                  {
-                     $ret->{status} = 'The selection population was genotyped by a set of markers different from the ones used for the training population. Therefore, you can\'t use this prediction model on it.';   
+                     $ret->{status} = 'The selection population was genotyped by a set of markers different from the ones used for the training population. Therefore, this model can not be used to predict the breeding values of this selection population.';   
                      
                  }
              }
          } 
           
-        $c->controller("solGS::solGS")->trait_phenotype_stat($c);
-  
-        $c->controller("solGS::solGS")->gs_files($c);
-               
-        $c->controller("solGS::solGS")->download_prediction_urls($c, $model_id, $prediction_pop_id );
+        $c->controller("solGS::solGS")->trait_phenotype_stat($c);  
+        $c->controller("solGS::solGS")->gs_files($c);               
+        
+	$c->controller("solGS::solGS")->download_prediction_urls($c, $model_id, $prediction_pop_id );
         my $download_prediction = $c->stash->{download_prediction};
                  
         if (-s $prediction_pop_gebvs_file) 
@@ -445,6 +447,7 @@ sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/lis
     $list = from_json($list);
 
     my @plots_names = ();  
+   
     foreach my $plot (@$list)
     {
         push @plots_names, $plot->[1];
