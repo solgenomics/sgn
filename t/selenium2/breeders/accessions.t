@@ -73,6 +73,8 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
+    $t->driver->accept_alert();
+
     
     #then we add new_test_list not using fuzzy search
 
@@ -101,6 +103,8 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->driver->accept_alert();
 
+    sleep(1);
+
     $t->find_element_ok("species_name_input", "id", "input species name")->send_keys("Manihot esculenta");
 
     my $review_matches = $t->find_element_ok("review_absent_accessions_submit", "id", "review matches submit");
@@ -108,6 +112,8 @@ $t->while_logged_in_as("submitter", sub {
     $review_matches->click();
 
     sleep(2);
+
+    $t->driver->accept_alert();
 
 
     #then we add new_test_list again, not using fuzzy search to see if it sees them in the db.

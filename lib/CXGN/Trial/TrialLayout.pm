@@ -174,11 +174,11 @@ sub _get_design_from_trial {
 
     if ($genotyping_user_id_row) {       
 	$design_info{genotyping_user_id} = $genotyping_user_id_row->get_column("value") || "unknown";
-	print STDERR "RETRIEVED: genotyping_user_id: $design{genotyping_user_id}\n";
+	#print STDERR "RETRIEVED: genotyping_user_id: $design{genotyping_user_id}\n";
     }
     if ($genotyping_project_name_row) { 
 	$design_info{genotyping_project_name} = $genotyping_project_name_row->get_column("value") || "unknown";
-	print STDERR "RETRIEVED: genotyping_project_name: $design{genotyping_project_name}\n";
+	#print STDERR "RETRIEVED: genotyping_project_name: $design{genotyping_project_name}\n";
     }
     
     my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});

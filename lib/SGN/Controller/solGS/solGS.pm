@@ -1869,7 +1869,7 @@ sub get_gebv_files_of_traits {
         foreach my $tr_file (@analyzed_traits_files) 
         {
             $gebv_files .= $tr_file;
-            $gebv_files .= "\t" unless (@analyzed_traits_files[-1] eq $tr_file);
+            $gebv_files .= "\t" unless ($analyzed_traits_files[-1] eq $tr_file);
         }
         
         my @analyzed_valid_traits_files = @{$c->stash->{analyzed_valid_traits_files}};
@@ -1877,7 +1877,7 @@ sub get_gebv_files_of_traits {
         foreach my $tr_file (@analyzed_valid_traits_files) 
         {
             $valid_gebv_files .= $tr_file;
-            $valid_gebv_files .= "\t" unless (@analyzed_valid_traits_files[-1] eq $tr_file);
+            $valid_gebv_files .= "\t" unless ($analyzed_valid_traits_files[-1] eq $tr_file);
         }
 
 

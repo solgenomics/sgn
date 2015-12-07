@@ -49,5 +49,70 @@ sub get_all_accessions {
     return \@accessions;
 }
 
+sub get_all_populations { 
+    my $self = shift;
+    my $schema = $self->schema();
+
+    my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'accession',
+      cv     => 'stock type',
+      db     => 'null',
+      dbxref => 'accession',
+    });
+
+    my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'population',
+      cv     => 'stock type',
+      db     => 'null',
+      dbxref => 'population',
+    });
+
+    my $population_member_cvterm = $schema->resultset("Cv::Cvterm")
+	->create_with({
+	    name   => 'member_of',
+	    cv     => 'stock relationship',
+	    db     => 'null',
+	    dbxref => 'member_of',
+		      });
+
+    my $populations_rs = $schema->resultset("Stock::Stock")->search({'type_id' => $population_cvterm->cvterm_id()});
+
+    my @accessions_by_population;
+
+    while (my $population_row = $populations_rs->next()) {
+	my %population_info;
+	$population_info{'name'}=$population_row->name();
+	$population_info{'description'}=$population_row->description();
+	$population_info{'stock_id'}=$population_row->stock_id();
+
+	my $population_members = $schema->resultset("Stock::Stock") 
+	    ->search({
+		'object.stock_id'=> $population_row->stock_id(),
+		'stock_relationship_subjects.type_id' => $population_member_cvterm->cvterm_id()
+		     }, {join => {'stock_relationship_subjects' => 'object'}, order_by => { -asc => 'stock_id'}});
+
+	my @accessions_in_population;
+	while (my $population_member_row = $population_members->next()) {
+	    my %accession_info;
+	    $accession_info{'name'}=$population_member_row->name();
+	    $accession_info{'description'}=$population_member_row->description();
+	    $accession_info{'stock_id'}=$population_member_row->stock_id();
+	    my $synonyms_rs;
+	    $synonyms_rs = $population_member_row->search_related('stockprops', {'type.name' => 'synonym'}, { join => 'type' });
+	    my @synonyms;
+	    if ($synonyms_rs) {
+		while (my $synonym_row = $synonyms_rs->next()) {
+		    push @synonyms, $synonym_row->value();
+		}
+	    }
+	    $accession_info{'synonyms'}=\@synonyms;
+	    push @accessions_in_population, \%accession_info;
+	}
+	$population_info{'members'}=\@accessions_in_population;
+	push @accessions_by_population, \%population_info;
+    }
+
+    return \@accessions_by_population;
+}
 
 1;

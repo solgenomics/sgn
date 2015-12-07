@@ -34,6 +34,7 @@ use Math::Round::Var;
 use Scalar::Util qw(looks_like_number);
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
+use Math::Round::Var;
 
 extends 'Catalyst::Model';
 
@@ -624,7 +625,7 @@ sub genotype_data {
                                 
                     @header_markers = split(/\t/, $header_markers);
                                            
-                    $geno_data = $header_markers . "\n"; 
+                    $geno_data = "\t" . $header_markers . "\n"; 
                 }
             }
             
@@ -977,11 +978,9 @@ sub extract_project_markers {
  
     my $markers;
 
-    my $genotype_json =  $geno_row->get_column('value');
-
+    my $genotype_json = $geno_row->get_column('value');
     my $genotype_hash = JSON::Any->decode($genotype_json);
-
-    my @markers = keys %$genotype_hash;
+    my @markers       = keys %$genotype_hash;
    
     foreach my $marker (@markers) 
     {
@@ -1409,6 +1408,8 @@ sub structure_phenotype_data {
    
     no warnings 'uninitialized';
 
+    my $round = Math::Round::Var->new(0.001);
+
     while ( my $r =  $phenotypes->next )  
     {
         my $observable = $r->get_column('observable');
@@ -1487,10 +1488,15 @@ sub structure_phenotype_data {
 	    foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
 	    {    
 		my $val = $phen_hashref->{$key}{$term_name};
-		unless (looks_like_number($val)) 
+		if (looks_like_number($val)) 
 		{ 
-		    $val = "NA";		  
+		    $val = $round->round($val);		  
 		}
+		else 
+		{
+		    $val = "NA";
+		}
+	
 		$d .= "\t" . $val;
 	    }
 	    $d .= "\n";
@@ -1524,7 +1530,10 @@ sub phenotypes_by_trait {
     my $replicate = 1;
     my $cvterm_name;
     my $cnt = 0;
+    
     no warnings 'uninitialized';
+
+    my $round = Math::Round::Var->new(0.001);
 
     foreach my $rs (@$phenotypes) 
     {
@@ -1603,14 +1612,19 @@ sub phenotypes_by_trait {
 
         foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
         { 
-	    	my $val = $phen_hashref->{$key}{$term_name};
-	
-		unless (looks_like_number($val)) 
+	    	my $val = $phen_hashref->{$key}{$term_name};	       
+
+		if (looks_like_number($val)) 
 		{ 
+		    $val = $round->round($val);		  
+		}
+		else 
+		{
 		    $val = "NA";
 		}
+	
 		$d .= "\t" . $val;
-            $d .= "\t" . $phen_hashref->{$key}{$term_name};
+		$d .= "\t" . $phen_hashref->{$key}{$term_name};
         }
 
         $d .= "\n";

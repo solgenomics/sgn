@@ -1,0 +1,21 @@
+<%args>
+$errors => ''
+$blast_res => ''
+$pcr_seq => ''
+$gel_url => ''
+</%args>
+
+<& /page/page_title.mas, title=>"In Silico PCR Results" &>
+<br>
+<center>
+  <&| /page/info_section.mas, title=>"In Silico Gel", collapsible=>1, collapsed=>0 &>
+  <img class="img-thumbnail" src=<% $gel_url %>>
+  </&>
+  <&| /page/info_section.mas, title=>"BLAST Results", collapsible=>1, collapsed=>1 &>
+  <pre class="text-left"><% $blast_res %></pre>
+  </&>
+  <br><br>
+  <&| /page/info_section.mas, title=>"Amplified Fragments", collapsible=>1, collapsed=>0 &>
+  <pre class="text-left"><% $pcr_seq %></pre>
+  </&>
+</center>

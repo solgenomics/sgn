@@ -9,6 +9,7 @@ library(stringr)
 library(randomForest)
 library(plyr)
 library(lme4)
+library(data.table)
 
 
 allArgs <- commandArgs()
@@ -93,12 +94,8 @@ for (popPhenoNum in 1:popsPhenoSize)
     popId <- str_extract(allPhenoFiles[[popPhenoNum]], "\\d+")
     popIds <- append(popIds, popId)
 
-    phenoData <- read.table(allPhenoFiles[[popPhenoNum]],
-                            header = TRUE,
-                            row.names = 1,
-                            sep = "\t",
+    phenoData <- fread(allPhenoFiles[[popPhenoNum]],
                             na.strings = c("NA", " ", "--", "-", "."),
-                            dec = "."
                            )
 
 
@@ -259,13 +256,13 @@ for (popGenoNum in 1:popsGenoSize)
     popId <- str_extract(allGenoFiles[[popGenoNum]], "\\d+")
     popIds <- append(popIds, popId)
 
-    genoData <- read.table(allGenoFiles[[popGenoNum]],
-                            header = TRUE,
-                            row.names = 1,
-                            sep = "\t",
+    genoData <- fread(allGenoFiles[[popGenoNum]],
                             na.strings = c("NA", " ", "--", "-"),
-                            dec = "."
                            )
+
+    genoData           <- as.data.frame(genoData)
+    rownames(genoData) <- genoData[, 1]
+    genoData[, 1]      <- NULL
     
     popMarkers <- colnames(genoData)
     message("No of markers from population ", popId, ": ", length(popMarkers))

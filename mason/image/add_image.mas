@@ -23,11 +23,12 @@ $refering_page => undef
 	    <input type="hidden" name="type" value="<% $type %>" />
 	    <input type="hidden" name="type_id" value="<% $type_id %>" />
 	    <input type="hidden" name="refering_page" value="<% $refering_page %>" />
-	    <input type="submit" value="Upload" />
+	    <input id="upload_image_submit" class="btn btn-primary" type="submit" value="Upload" />
 	 </form>
+	 <br/>
 
 
-%   if ($refering_page) { print "<a href=\"$refering_page\">Go back</a>"; }
+%   if ($refering_page) { print "<a class=\"footer\" href=\"$refering_page\"><button class=\"btn btn-default\">Go Back</button></a>"; }
 
 
 

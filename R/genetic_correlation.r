@@ -1,6 +1,6 @@
  #SNOPSIS
 
- #commands for running genetic correlation analyis.
+ #runs genetic correlation analyis.
  #correlation coeffiecients are stored in tabular and json formats 
 
  #AUTHOR
@@ -13,32 +13,30 @@ library(gplots)
 library(ltm)
 library(plyr)
 library(rjson)
-library(nlme)
-
 
 
 allargs<-commandArgs()
 
 geneticDataFile <- grep("combined_gebvs",
+                        allargs,
+                        ignore.case=TRUE,
+                        perl=TRUE,
+                        value=TRUE
+                      )
+
+correTableFile <- grep("genetic_corre_table",
+                       allargs,
+                       ignore.case=TRUE,
+                       perl=TRUE,
+                       value=TRUE
+                       )
+
+correJsonFile <- grep("genetic_corre_json",
                       allargs,
                       ignore.case=TRUE,
                       perl=TRUE,
                       value=TRUE
                       )
-
-correTableFile <- grep("genetic_corre_table",
-                              allargs,
-                              ignore.case=TRUE,
-                              perl=TRUE,
-                              value=TRUE
-                              )
-
-correJsonFile <- grep("genetic_corre_json",
-                                  allargs,
-                                  ignore.case=TRUE,
-                                  perl=TRUE,
-                                  value=TRUE
-                                  )
 
 geneticData <- read.table(geneticDataFile,
                           header = TRUE,
@@ -47,8 +45,6 @@ geneticData <- read.table(geneticDataFile,
                           na.strings = c("NA"),
                           dec = "."
                           )
-
-
 
 coefpvalues <- rcor.test(geneticData,
                          method="pearson",
@@ -100,8 +96,8 @@ if ( apply(coefficients,
   }
 
 
-pvalues[upper.tri(pvalues)]<-NA
-coefficients[upper.tri(coefficients)]<-NA
+pvalues[upper.tri(pvalues)]           <- NA
+coefficients[upper.tri(coefficients)] <- NA
 
 coefficients2json <- function(mat){
     mat <- as.list(as.data.frame(t(mat)))

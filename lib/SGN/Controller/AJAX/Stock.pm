@@ -65,46 +65,21 @@ sub add_stockprop_POST {
         my $stock_id = $c->req->param('stock_id');
         my $prop  = $c->req->param('prop');
         my $prop_type = $c->req->param('prop_type');
+	#if ($prop_type eq 'synonym') { $prop_type = 'stock_synonym' ; } 
 
-	my $type_row = $schema->resultset("Cv::Cvterm")->find( { name => $prop_type } );
+	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } ); 
 
-	if (!defined($type_row)) { 
-	    $c->stash->{rest} = { error => "the type $prop_type does not exist" }; return ;
-	        #$schema->resultset("Stock::Stock")->create_stockprop({ });
-	}
-	
-
-	my $type_id = $type_row->cvterm_id();
-				  
-        my ($existing_prop) = $schema->resultset("Stock::Stockprop")->search( {
-            stock_id => $stock_id,
-            type_id => $type_id,
-            value => $prop, } );
-
-        if ($existing_prop) { $c->stash->{rest} = { error=> 'type_id/prop '.$type_id." ".$prop." already associated" } ; 
-        } 
-	else {
-            my $prop_rs = $schema->resultset("Stock::Stockprop")->search( {
-                stock_id => $stock_id,
-                type_id => $type_id, } );
-            my $rank = $prop_rs ? $prop_rs->get_column('rank')->max : -1 ;
-            $rank++;
-
-            try {
-		$schema->resultset("Stock::Stockprop")->find_or_create( {
-		    stock_id => $stock_id,
-		    type_id => $type_id,
-		    value => $prop,
-		    rank => $rank, } );
-		
-		$c->stash->{rest} = { message => "stock_id $stock_id and type_id $type_id have been associated with value $prop", }
-            } 
-	    catch {
-                $c->stash->{rest} = { error => "Failed: $_" }
+	if ($stock && $prop && $prop_type) { 
+	    try {
+		$stock->create_stockprops( { $prop_type => $prop }, { dbxref_accession_prefix => 'stock_synonym:', autocreate => 1 } ); 
+		$c->stash->{rest} = { message => "stock_id $stock_id and type_id $prop_type have been associated with value $prop", }
+	    } catch {
+		$c->stash->{rest} = { error => "Failed: $_" }
             };
-        }
-    } 
-    else {  
+	} else { 
+	    $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
+	}
+    } else {  
 	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
     #$c->stash->{rest} = { message => 'success' };
@@ -148,7 +123,7 @@ sub get_stockprops_GET {
 
     my @propinfo = ();
     while (my $prop = $prop_rs->next()) { 
-	push @propinfo, { stockprop_id => $prop->stockprop_id, stock_id => $prop->stock_id, type_id => $prop->type_id(), type_name => $prop->type->name(), value => $prop->value() }
+	push @propinfo, { stockprop_id => $prop->stockprop_id, stock_id => $prop->stock_id, type_id => $prop->type_id(), type_name => $prop->type->name(), value => $prop->value() };
     }
 	
     $c->stash->{rest} = \@propinfo;
@@ -1189,6 +1164,75 @@ sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') 
     $c->stash->{rest} = { data => \@formatted_trials };
 }
 
+
+=head2 action get_shared_trials()
+
+ Usage:        /datatables/sharedtrials
+ Desc:         retrieves trials associated with multiple stocks
+ Ret:          a table in json suitable for datatables
+ Args:         array of stock uniquenames
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_shared_trials :Path('/stock/get_shared_trials') : ActionClass('REST'){
+
+sub get_shared_trials_POST :Args(1) {
+    my ($self, $c) = @_;
+    $c->stash->{rest} = { error => "Nothing here, it's a POST.." } ;
+}
+sub get_shared_trials_GET :Args(1) { 
+
+    my $self = shift;
+    my $c = shift;
+    my @stock_ids = $c->request->param( 'stock_ids[]' );
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    
+    my $initial_stock = CXGN::Chado::Stock->new($schema, $stock_ids[0]);
+    my @shared_trials= $initial_stock->get_trials();
+    my @formatted_rows = ();
+
+    foreach my $stock_id (@stock_ids) {
+	my $trials_string ='';
+	my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+	my $uniquename = $stock->get_uniquename;
+       	my @current_trials = $stock->get_trials();
+	my $num_trials = scalar @current_trials;
+	foreach my $t (@current_trials) { 
+	    $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
+	}
+	$trials_string =~ s/,\s+$//; 
+	push @formatted_rows, ['<a href="/stock/'.$stock_id.'/view">'.$uniquename.'</a>', $num_trials, $trials_string ];
+	my @intersection = ();
+	my @difference = ();
+	my %count = ();
+	my %arrays = ();
+
+	foreach my $trial_id (@current_trials, @shared_trials) { $count{@$trial_id[0]}++ }
+	foreach my $array (@current_trials, @shared_trials) { $arrays{@$array[0]} = $array }
+
+	foreach my $key (keys %count) {
+	    push @{ $count{$key} > 1 ? \@intersection : \@difference}, $arrays{$key};
+	}
+	@shared_trials = @intersection;
+    }
+    
+    my $num_trials = scalar @shared_trials;
+    if ($num_trials > 0) {
+	my $trials_string = '';
+	foreach my $t (@shared_trials) { 
+	    $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
+	}
+	$trials_string  =~ s/,\s+$//;
+	push @formatted_rows, [ "Trials in Common", $num_trials, $trials_string];
+    } else {
+	push @formatted_rows, [ "Trials in Common", $num_trials, "No shared trials found."];
+    }
+    
+    $c->stash->{rest} = { data => \@formatted_rows, shared_trials => \@shared_trials };
+}
+}
 =head2 action get_stock_trait_list()
 
  Usage:        /stock/<stock_id>/datatables/traitlist
@@ -1205,9 +1249,10 @@ sub get_stock_trait_list :Chained('/stock/get_stock') PathPart('datatables/trait
     my $c = shift;
 
     my @trait_list = $c->stash->{stock}->get_trait_list();
-    
+
     my @formatted_list; 
     foreach my $t (@trait_list) { 
+	print STDERR Dumper($t);
 	push @formatted_list, [ '<a href="/chado/cvterm?cvterm_id='.$t->[0].'">'.$t->[1].'</a>', $t->[2], sprintf("%3.1f", $t->[3]), sprintf("%3.1f", $t->[4]) ];
     }
     print STDERR Dumper(\@formatted_list);
@@ -1236,6 +1281,7 @@ sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('dat
 sub get_phenotypes { 
     my $self = shift;
     my $c = shift;
+    shift;
     my $trait_id = shift;
 
     my $stock_id = $c->stash->{stock_row}->stock_id();
