@@ -5,7 +5,8 @@ backend for authenticating users across websites.
 
 =head1 DESCRIPTION
 
-If a user has logged into an sgn database, they will have an active session cookie stored inthe sgn database. If a user is on an external website, that website could use this module to check if that user is logged into the sgn website, and can then have access to the user's information.
+This module is used to log users into an sgn database from other websites. Currently used by Matthias for ETH Cassbase project.
+
 =head1 AUTHOR
 Nicolas Morales <nm529@cornell.edu>
 Created: 09/24/15
@@ -46,7 +47,7 @@ sub authenticate_cookie_GET {
 
     my @status;
     my $cookie = '';
-    my @result;
+    my %userinfo;
 
     if ( $login_controller->login_allowed() ) {
 	if ($grant_type eq 'password') {
@@ -70,7 +71,7 @@ sub authenticate_cookie_GET {
 		my $person_id = $login_info->{person_id};
 		my $p = CXGN::People::Login->new($dbh, $person_id);
 		my @roles = $p->get_roles();
-		@result = {person_id=>$p->get_sp_person_id(), username=>$p->get_username(), first_name=>$p->get_first_name(), last_name=>$p->get_last_name(), roles=>\@roles};
+		%userinfo = (person_id=>$p->get_sp_person_id(), username=>$p->get_username(), first_name=>$p->get_first_name(), last_name=>$p->get_last_name(), roles=>\@roles);
 
 	    }
 	} else {
@@ -80,7 +81,7 @@ sub authenticate_cookie_GET {
 	push(@status, 'Login Not Allowed');
     }
     
-    my %result = (status=>\@status, result=>\@result);
+    my %result = (status=>\@status, result=>\%userinfo);
 
     $c->stash->{rest} = \%result;
 }
