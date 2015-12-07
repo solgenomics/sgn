@@ -868,10 +868,10 @@ jQuery(document).ready(function ($) {
             "Cancel": function () {
                 jQuery('#upload_trial_coord_dialog').dialog("close");
             },
-	    "Ok": function () {
+	    "Ok": {text: "Ok", id:"upload_trial_coords_ok_button", click:function () {
 		upload_trial_coord_file();
                 jQuery('#upload_trial_coord_dialog').dialog("close");
-		
+	      }
 	    }
 	}
     });
@@ -911,15 +911,15 @@ jQuery(document).ready(function ($) {
      $('#upload_trial_coordinates_form').iframePostForm({
 	json: true,
 	post: function () {
-            var uploadedtrialcoordFile = $("#trial_coordinates_uploaded_file").val();
-	    $('#working').dialog("open");
+            var uploadedtrialcoordFile = $("#trial_coordinates_uploaded_file").val(); 
+	    $('#working_modal').modal("show");
             if (uploadedtrialcoordFile === '') {
-		$('#working').dialog("close");
+		$('#working_modal').modal("hide");
 		alert("No file selected");
             }
 	},
-	complete: function (response) {
-	    $('#working').dialog("close");
+	complete: function (response) { 
+	    $('#working_modal').modal("hide");
             if (response.error_string) {
 		$("#upload_trial_coord_error_display tbody").html('');
 		$("#upload_trial_coord_error_display tbody").append(response.error_string);
@@ -964,7 +964,6 @@ jQuery(document).ready(function ($) {
 
     function open_upload_trial_coord_dialog() {
 	$('#upload_trial_coord_dialog').dialog("open");
-	//add a blank line to design method select dropdown that dissappears when dropdown is opened 
 
     }
 
