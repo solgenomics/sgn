@@ -82,7 +82,7 @@
       var item_list_div = "#"+item_list;
       var item_list_menu = "item_list_menu_"+i;
       var item_list_menu_div = "#"+item_list_menu;
-      if (jQuery.cookie("sgn_session_id")) {
+      if (jQuery.cookie("sgn_session_id") && items.length > 0) {
  	var current_item = eval(items[i]).join("\n");
         jQuery(item_list_div).hide();
       	jQuery(item_list_div).html(current_item);
