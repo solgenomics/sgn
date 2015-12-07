@@ -536,7 +536,9 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
     }
 
-   }
+    }
+
+    $c->stash->{rest} = {success => 1};
 
 	
 }    
