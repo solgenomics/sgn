@@ -32,7 +32,6 @@ $breeding_programs
   </tr>
   </tbody>
 </table>
-
 <script>
 
   jQuery.noConflict(); 
@@ -199,11 +198,11 @@ $breeding_programs
       	        <label class="col-sm-3 control-label">Design Type: </label>
       	        <div class="col-sm-9">
 	          <select class="form-control" id="select_design_method" name="select_design_method">
-		    <option value=CRD>Completely Randomized</option>
-        	    <option value=RCBD>Complete Block</option>
-        	    <option value=Alpha>Alpha Lattice</option>
-        	    <option value=Augmented>Augmented</option>
-		    <option value=MAD>Modified Augmented Design </option>
+		    <option title="It generates completely a randomized design with equal or different repetition, using the methods of random number generation in R." value=CRD>Completely Randomized</option>
+        	    <option title="It generates Randomized Complete Block Design, using the methods of random number generation in R." value=RCBD>Complete Block</option>
+        	    <option title="Creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams." value=Alpha>Alpha Lattice</option>
+        	    <option title="n  these  designs,  some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once." value=Augmented>Augmented</option>
+		    <option title="TRTTTTTTTTTTTTT" value=MAD>Modified Augmented Design </option>
 
 		    <!--<option value=MADIII>MADIII</option>-->
 		    <!--<option value=MADIV>MADIV</option>-->
@@ -835,7 +834,6 @@ background-color: #ccc;
     </div>
   </div>
 </div>
-
 <!--
 <div id="trial_upload_success_dialog_message" title="Trial file uploaded">
   <p>
