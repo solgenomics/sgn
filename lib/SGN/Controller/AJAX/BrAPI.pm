@@ -11,6 +11,7 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Chado::Stock;
 use CXGN::Login;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -399,8 +400,12 @@ sub germplasm_pedigree : Chained('germplasm') PathPart('pedigree') Args(0) {
 	}
     }
     
-    # Need to fill in this result hash with actual results
-    %result = (germplasmDbId=>$c->stash->{stock_id}, pedigree=>'', parent1Id=>'', parent2Id=>'');
+    my $s = CXGN::Chado::Stock->new($schema, $c->stash->{stock_id});
+    my $pedigree_root = $s->get_parents('1');
+    my $pedigree_string = $pedigree_root->get_pedigree_string('1');
+    my @direct_parents = $s->get_direct_parents();
+
+    %result = (germplasmDbId=>$c->stash->{stock_id}, pedigree=>$pedigree_string, parent1Id=>$direct_parents[0][0], parent2Id=>$direct_parents[1][0]);
     
     my %pagination;
     my %metadata = (pagination=>\%pagination, status=>\@status);
