@@ -31,29 +31,34 @@ sub check_success {
     {
 	if ($output_details->{data_set_type} =~ /combined populations/) 
 	{	
-	    $output_details = $self->check_combined_pops_modeling($output_details);
+	    $output_details = $self->check_combined_pops_trait_modeling($output_details);
 	}
 	elsif ($output_details->{data_set_type} =~ /single population/)
 	{
 	    $output_details = $self->check_trait_modeling($output_details);
 	}
     }
+    elsif ( $analysis_profile->{analysis_type} =~ /combine populations/ ) 
+    {	
+	$output_details = $self->check_multi_pops_data_download($output_details);
+	## check if pops are combinable
+    }
     
     return $output_details;  
 }
 
 
-sub check_combined_pops_modeling {
+sub check_combined_pops_trait_modeling {
     my ($self, $output_details) = @_;
 
-    $output_details = $self->check_pops_data_combination($output_details);
+    $output_details = $self->check_pops_trait_data_combination($output_details);
     $output_details = $self->check_trait_modeling($output_details);
      
     return $output_details;
 }
 
 
-sub check_pops_data_combination {
+sub check_pops_trait_data_combination {
     my ($self, $output_details) = @_;
   
     my $job_tempdir = $output_details->{r_job_tempdir};
@@ -121,6 +126,83 @@ sub check_pops_data_combination {
 		$output_details->{$k}->{pheno_success}   = 0;
 		$output_details->{$k}->{geno_success}    = 0;
 		$output_details->{$k}->{combine_success} = 0;
+	    }
+	}  
+    }
+
+    return $output_details;  
+}
+
+
+
+sub check_multi_pops_data_download {
+    my ($self, $output_details) = @_;
+  
+    my $job_tempdir = $output_details->{r_job_tempdir};
+    
+    my $no_match = $output_details->{no_match};
+
+    foreach my $k (keys %{$output_details})
+    {
+	my $pheno_file;
+	my $geno_file;
+	
+	if (ref $output_details->{$k} eq 'HASH') 
+	{
+	   $pheno_file = $output_details->{$k}->{phenotype_file}; 
+	   $geno_file  = $output_details->{$k}->{genotype_file}; 
+	} 
+	
+	if ($geno_file || $pheno_file) 
+	{
+	    my $pheno_size;
+	    my $geno_size;
+	    my $died_file;
+	
+	    while (1) 
+	    {
+		sleep 5;
+		$pheno_size = -s $pheno_file;
+		$geno_size  = -s $geno_file;
+	
+		if ($pheno_size) 
+		{
+		    $output_details->{$k}->{pheno_success} = 'pheno success';		   		
+		}
+
+		if ($geno_size) 
+		{
+		    $output_details->{$k}->{geno_success} = 'geno success';		   		
+		}
+
+		if ($pheno_size && $geno_size) 
+		{
+		    $output_details->{$k}->{download_success} = 1;
+		    last;
+		}
+		else
+		{
+		    if ($job_tempdir) 
+		    {
+			$died_file = $self->get_file($job_tempdir, 'died');
+			if ($died_file) 
+			{
+			    $output_details->{$k}->{pheno_success}   = 0;
+			    $output_details->{$k}->{geno_success}    = 0;
+			    $output_details->{$k}->{download_success} = 0;
+			    last;
+			}
+		    }
+		}	    
+	    }	   	    
+	}
+	else 
+	{  
+	    if (ref $output_details->{$k} eq 'HASH')	
+	    {   	    
+		$output_details->{$k}->{pheno_success}   = 0;
+		$output_details->{$k}->{geno_success}    = 0;
+		$output_details->{$k}->{download_success} = 0;
 	    }
 	}  
     }
@@ -305,6 +387,10 @@ sub report_status {
     {
     	$analysis_result = $self->population_download_message($output_details);
     }
+    elsif ($analysis_type =~ /combine populations/  ) 
+    {
+    	$analysis_result = $self->combine_populations_message($output_details);
+    }
    
     my $closing = "If you have any remarks, please contact us:\n"
 	. $output_details->{contact_page}
@@ -434,6 +520,62 @@ sub population_download_message {
 	}
     }
   
+    return  $message;
+}
+
+
+sub combine_populations_message {
+    my ($self, $output_details) = @_;
+    
+    my $no_match = $output_details->{no_match};
+    
+    my $message;
+     
+    if ($no_match)
+    {
+	$message = $no_match 
+	    . " can not be combined.\n"
+	    . "Possibly the the populations were genotyped\n" 
+	    . "with different marker sets or querying the data for one or more of the\n"
+	    . "populations failed. See details below:\n\n";
+
+	my $troost_mededeling;
+	
+    	foreach my $k (keys %{$output_details}) 
+	{
+	    if (ref $output_details->{$k} eq 'HASH')
+	    {
+		if ($output_details->{$k}->{population_id})
+		{
+		    my $pop_name = uc($output_details->{$k}->{population_name});
+		    my $pop_page = $output_details->{$k}->{population_page};
+		
+		    if ($output_details->{$k}->{download_success})		
+		    {		
+			$message .= "The phenotype and genotype data for $pop_name is succesfuly downloaded."
+			    ."\nYou can view the population here:"
+			    ."\n$pop_page.\n\n";
+		    }
+		    else 
+		    {  		    
+			$message .= "Downloading phenotype and genotype data for $pop_name failed.";
+			$troost_mededeling = "\n\nWe are troubleshooting the cause. " 
+			    . "We will contact you when we find out more.";	
+			    
+		    }
+		}		
+	    }
+	}
+	
+	$message .= $troost_mededeling; 
+    }
+    else 
+    {
+	my $combined_pops_page = $output_details->{combined_pops_page};
+	$message .= "Your combined population is ready for analysis." 
+	    ."You can view it here:\n$combined_pops_page\n";
+    } 
+ 
     return  $message;
 }
 
