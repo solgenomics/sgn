@@ -89,10 +89,11 @@ sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
 		push(@status, 'Logins Disabled');
 	    }
 	    if ($login_info->{person_id}) {
+		push(@status, 'Login Successfull');
 		$cookie = $login_info->{cookie_string};
 	    }
 	} else {
-	    push(@status, 'Grant Type Not Supported');
+	    push(@status, 'Grant Type Not Supported. Valid grant type: password');
 	}
     } else {
 	push(@status, 'Login Not Allowed');
@@ -172,22 +173,13 @@ sub germplasm_synonyms {
     return \@synonyms;
 }
 
-sub germplasm_data_response {
+sub germplasm_pedigree_string {
     my $schema = shift;
-    my $rs_slice = shift;
-    my $total_count = shift;
-    my @data;
-    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
-    if ($total_count == 1) {
-	while (my $stock = $rs_slice->next()) { 	    
-	    return { germplasmDbId=>$stock->get_column('stock_id'), defaultDisplayName=>$stock->get_column('name'), germplasmName=>$stock->get_column('uniquename'), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>germplasm_synonyms($schema, $stock->get_column('stock_id'), $synonym_id) };
-	}
-    } elsif ($total_count > 1) {
-	while (my $stock = $rs_slice->next()) { 
-	    push @data, { germplasmDbId=>$stock->get_column('stock_id'), defaultDisplayName=>$stock->get_column('name'), germplasmName=>$stock->get_column('uniquename'), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>germplasm_synonyms($schema, $stock->get_column('stock_id'), $synonym_id) };
-	}
-	return \@data;
-    }
+    my $stock_id = shift;
+    my $s = CXGN::Chado::Stock->new($schema, $stock_id);
+    my $pedigree_root = $s->get_parents('1');
+    my $pedigree_string = $pedigree_root->get_pedigree_string('1');
+    return $pedigree_string;
 }
 
 sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) { 
@@ -215,13 +207,18 @@ sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) {
 	    $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>{ ilike => $params->{name} } }, { '+select'=> ['stock_id', 'name', 'uniquename'], '+as'=> ['stock_id', 'name', 'uniquename'],  order_by=>{ -asc=>'stock_id' } } );
 	}
 	else { 
-	    push(@status, "matchMethod '$params->{matchMethod}' not recognized");
+	    push(@status, "matchMethod '$params->{matchMethod}' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.");
 	} 
     }
     if ($rs) {
+	my @data;
 	$total_count = $rs->count();
 	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-	%result = (data => germplasm_data_response($self->bcs_schema(), $rs_slice, $total_count));
+	my $synonym_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
+	while (my $stock = $rs_slice->next()) { 
+	    push @data, { germplasmDbId=>$stock->get_column('stock_id'), defaultDisplayName=>$stock->get_column('name'), germplasmName=>$stock->get_column('uniquename'), accessionNumber=>'', germplasmPUI=>'', pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->get_column('stock_id')), seedSource=>'', synonyms=>germplasm_synonyms($self->bcs_schema(), $stock->get_column('stock_id'), $synonym_id) };
+	}
+	%result = (data => \@data);
     }
 
     my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
@@ -261,19 +258,88 @@ sub germplasm : Chained('brapi') PathPart('germplasm') CaptureArgs(1) {
     my $stock_id = shift;
 
     $c->stash->{stock_id} = $stock_id;
-    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {stock_id=>$stock_id}, { '+select'=> ['stock_id', 'name', 'uniquename'], '+as'=> ['stock_id', 'name', 'uniquename'] } );
-    $c->stash->{stock} = $rs;
+    $c->stash->{stock} = CXGN::Chado::Stock->new($self->bcs_schema(), $stock_id);
 }
 
 sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) { 
     my $self = shift;
     my $c = shift;
     my $rs = $c->stash->{stock};
+    my $schema = $self->bcs_schema();
+
+    my %result;
+    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
+
+    %result = (germplasmDbId=>$c->stash->{stock_id}, defaultDisplayName=>$c->stash->{stock}->get_uniquename(), germplasmName=>$c->stash->{stock}->get_name(), accessionNumber=>'', germplasmPUI=>'', pedigree=>germplasm_pedigree_string($self->bcs_schema(), $c->stash->{stock_id}), seedSource=>'', synonyms=>germplasm_synonyms($schema, $c->stash->{stock_id}, $synonym_id));
 
     my @status;
     my %pagination;
     my %metadata = (pagination=>\%pagination, status=>\@status);
-    my %response = (metadata=>\%metadata, result=>germplasm_data_response($self->bcs_schema(), $rs, $rs->count() ));
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+=head2 brapi/v1/germplasm/{id}/MCPD
+
+ Usage: To retrieve multi crop passport descriptor for a single germplasm
+ Desc:
+ Return JSON example:
+{
+    "metadata": {
+        "status": [],
+        "pagination": {}
+    },
+    "result": {
+                "germplasmDbId": "01BEL084609",
+                "defaultDisplayName": "Pahang",
+                "accessionNumber": "ITC0609",
+                "germplasmName": "Pahang",
+                "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084609",
+                "pedigree": "TOBA97/SW90.1057",
+                "germplasmSeedSource": "Female GID:4/Male GID:4",
+                "synonyms": [ ],
+                "commonCropName": "banana",
+                "instituteCode": "01BEL084",
+                "instituteName": "ITC",
+                "biologicalStatusOfAccessionCode": 412,
+                "countryOfOriginCode": "UNK",
+                "typeOfGermplasmStorageCode": 10,
+                "genus": "Musa",
+                "species": "acuminata",
+                "speciesAuthority": "",
+                "subtaxa": "sp malaccensis var pahang",
+                "subtaxaAuthority": "",
+                "donors": 
+                [
+                    {
+                        "donorAccessionNumber": "",
+                        "donorInstituteCode": "",
+                        "germplasmPUI": ""
+                    }
+                ],
+                "acquisitionDate": "19470131"
+}
+ Args:
+ Side Effects:
+
+=cut
+
+sub germplasm_mcpd : Chained('germplasm') PathPart('MCPD') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $schema = $self->bcs_schema();
+    my %result;
+    my @status;
+
+    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
+
+    my $organism = CXGN::Chado::Organism->new( $schema, $c->stash->{stock}->get_organism_id() );
+
+    %result = (germplasmDbId=>$c->stash->{stock_id}, defaultDisplayName=>$c->stash->{stock}->get_uniquename(), accessionNumber=>'', germplasmName=>$c->stash->{stock}->get_name(), germplasmPUI=>'', pedigree=>germplasm_pedigree_string($schema, $c->stash->{stock_id}), germplasmSeedSource=>'', synonyms=>germplasm_synonyms($schema, $c->stash->{stock_id}, $synonym_id), commonCropName=>$organism->get_common_name(), instituteCode=>'', instituteName=>'', biologicalStatusOfAccessionCode=>'', countryOfOriginCode=>'', typeOfGermplasmStorageCode=>'', genus=>$organism->get_genus(), species=>$organism->get_species(), speciesAuthority=>'', subtaxa=>$organism->get_taxon(), subtaxaAuthority=>'', donors=>'', acquisitionDate=>'');
+    
+    my %pagination;
+    my %metadata = (pagination=>\%pagination, status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
 
@@ -353,7 +419,7 @@ sub studies_germplasm : Chained('studies') PathPart('germplasm') Args(0) {
 	my @data;
 	my $synonym_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
 	while (my $s = $rs_slice->next()) { 
-	    push @data, { germplasmDbId=>$s->get_column('stock_id'), studyEntryNumberId=>$s->get_column('study_entry_id'), defaultDisplayName=>$s->get_column('name'), germplasmName=>$s->get_column('uniquename'), accessionNumber=>'', germplasmPUI=>'', pedigree=>'', seedSource=>'', synonyms=>germplasm_synonyms($self->bcs_schema, $s->get_column('stock_id'), $synonym_id) };
+	    push @data, { germplasmDbId=>$s->get_column('stock_id'), studyEntryNumberId=>$s->get_column('study_entry_id'), defaultDisplayName=>$s->get_column('name'), germplasmName=>$s->get_column('uniquename'), accessionNumber=>'', germplasmPUI=>'', pedigree=>germplasm_pedigree_string($self->bcs_schema, $s->get_column('stock_id')), seedSource=>'', synonyms=>germplasm_synonyms($self->bcs_schema, $s->get_column('stock_id'), $synonym_id) };
 	}
 	%result = (studyDbId=>$c->stash->{study_id}, studyName=>$c->stash->{studyName}, data =>\@data);
     }
@@ -401,11 +467,9 @@ sub germplasm_pedigree : Chained('germplasm') PathPart('pedigree') Args(0) {
     }
     
     my $s = CXGN::Chado::Stock->new($schema, $c->stash->{stock_id});
-    my $pedigree_root = $s->get_parents('1');
-    my $pedigree_string = $pedigree_root->get_pedigree_string('1');
     my @direct_parents = $s->get_direct_parents();
 
-    %result = (germplasmDbId=>$c->stash->{stock_id}, pedigree=>$pedigree_string, parent1Id=>$direct_parents[0][0], parent2Id=>$direct_parents[1][0]);
+    %result = (germplasmDbId=>$c->stash->{stock_id}, pedigree=>germplasm_pedigree_string($schema, $c->stash->{stock_id}), parent1Id=>$direct_parents[0][0], parent2Id=>$direct_parents[1][0]);
     
     my %pagination;
     my %metadata = (pagination=>\%pagination, status=>\@status);
