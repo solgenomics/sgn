@@ -578,7 +578,52 @@ sub markerprofiles_search : Chained('brapi') PathPart('markerprofiles') Args(0) 
     my @data;
     my %result;
     
-    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( undef, { order_by=>{ -asc=>'genotypeprop_id' } } );
+    my $rs; 
+    if ($germplasm && $method) {
+	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+	    {'stock.stock_id'=>$germplasm, 'nd_protocol.nd_protocol_id'=>$method},
+	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
+	     '+select'=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'], 
+	     '+as'=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
+	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
+	    }
+	);
+    }
+    if ($germplasm && !$method) {
+	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+	    {'stock.stock_id'=>$germplasm},
+	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
+	     '+select'=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'], 
+	     '+as'=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
+	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
+	    }
+	);
+    }
+    if (!$germplasm && $method) {
+	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+	    {'nd_protocol.nd_protocol_id'=>$method},
+	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
+	     '+select'=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'], 
+	     '+as'=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
+	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
+	    }
+	);
+    }
+    if (!$germplasm && !$method) {
+	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+	    {},
+	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
+	     '+select'=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'], 
+	     '+as'=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
+	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
+	    }
+	);
+    }
+    
+    if ($extract) {
+	push @status, 'Extract not supported';
+    }
+
     my $total_count = 0;
 
     if ($rs) {
@@ -586,10 +631,10 @@ sub markerprofiles_search : Chained('brapi') PathPart('markerprofiles') Args(0) 
 	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
         my @runs;
 	foreach my $row ($rs_slice->all()) { 
-	    my $genotype_json = $row->value();
+	    my $genotype_json = $row->get_column('value');
 	    my $genotype = JSON::Any->decode($genotype_json);
 	
-	    push @data, {markerProfileDbId => $row->genotypeprop_id(), germplasmDbId => "", extractDbId => "", analysisMethod => "null", resultCount => scalar(keys(%$genotype)) };
+	    push @data, {markerProfileDbId => $row->get_column('genotypeprop_id'), germplasmDbId => $row->get_column('stock_id'), extractDbId => "", analysisMethod => $row->get_column('protocol_name'), resultCount => scalar(keys(%$genotype)) };
 	}
     }
 
@@ -645,9 +690,7 @@ sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){
     my @data;
     my %result;
 
-    my $total_count = 0;
-    #my $rs = $self->markerprofile_rs($c);
-    
+    my $total_count = 0; 
     my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
 	{'genotypeprops.genotypeprop_id' => $c->stash->{markerprofile_id} },
 	{join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
@@ -731,17 +774,6 @@ sub convert_dosage_to_genotype {
     }
 }
 
-
-sub markerprofile_rs { 
-    my $self = shift;
-    my $c = shift;
-
-#    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( { 'me.stock_id' => $c->stash->{genotype_id} })->search_related('nd_experiment_stocks')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
-    
-    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => $c->stash->{markerprofile_id} });
-    
-    return $rs;
-}
 
 sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) { 
     my $self = shift;
@@ -961,7 +993,7 @@ sub study_detail : Chained('studies') PathPart('detail') Args(1) {
     # 	blockId: "1",
     # 	rowId: "20",
     # 	columnId: "22",
-    # 	replication: "1",
+    # 	replication: "15d23e60851bfbf98c5d7d33465d4e6b2704de261",
     # 	checkId: "0",
     # 	lineId: "143",
     # 	lineRecordName: "ZIPA_68"
