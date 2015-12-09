@@ -155,10 +155,53 @@ function combineTraitTrials () {
 
 jQuery(document).ready(function() {
     jQuery('#combine_trials').on('click', function() {
-	retrievePopsData();
+	getCombinedPopsId();
     });  
 
 });
+
+
+function getCombinedPopsId() {
+
+    var comboPopsList = getSelectedTrials();
+    var trialIds = comboPopsList.join(",");
+
+    var action = "/solgs/get/combined/populations/id";
+    var combinedPopsId;
+ 
+    jQuery.ajax({  
+        type: 'POST',
+        dataType: "json",
+        url: action,
+        data: {'trials' : trialIds},
+        success: function(res) {                         
+            if (res.status) {               
+    		comboPopsId = res.combo_pops_id;
+
+		if (window.Prototype) {
+		    delete Array.prototype.toJSON;
+		}
+
+		 var args = {
+		     'combo_pops_id'   : comboPopsId,
+		     'combo_pops_list' : comboPopsList,
+		     'analysis_type'   : 'combine populations',
+		     'data_set_type'   : 'multiple populations',
+		    };
+		
+		var page = '/solgs/populations/combined/' + comboPopsId;
+		
+		askUser(page, args);
+            } 
+        },
+        error: function(res) {
+    	    //combinedPopsId = 0;   
+        }       
+    }); 
+
+   // return combinedPopsId;
+    
+}
 
 
 function retrievePopsData() {
