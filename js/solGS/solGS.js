@@ -14,7 +14,7 @@ function solGS () {};
 
 solGS.waitPage = function (page) {
  
-    if ( page.match(/[solgs\/population\/|solgs\/trait\/|solgs\/model\/combined\/trials\/]/)) {
+    if ( page.match(/(solgs\/population\/|solgs\/populations\/combined\/|solgs\/trait\/|solgs\/model\/combined\/trials\/)/)) {
     	askUser(page);
     } else {
     	blockPage(page);
@@ -101,21 +101,19 @@ function loginAlert () {
 	    buttons: {
 		OK: {
 		    click: function () {
-		    jQuery(this).dialog('close');
-		
-		    loginUser();
+		    jQuery(this).dialog('close');		
+			loginUser();
 		    },
 		    class: 'btn btn-success',
-		    text: 'OK',
+		    text : 'OK',
 		},
 
 		Cancel: {
 		    click: function () {
-		    jQuery(this).dialog('close');
-		
+			jQuery(this).dialog('close');		
 		    },
 		    class: 'btn btn-primary',
-		    text: 'Cancel'
+		    text : 'Cancel'
 		}
 	    }			
 	});	    
@@ -139,8 +137,10 @@ function displayAnalysisNow (page, args) {
 
 function blockPage (page, args) {
 
+    alert('going to page..' + page)
     goToPage(page, args);
 
+    
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
     jQuery.blockUI({message: 'Please wait..'});
          
@@ -161,11 +161,12 @@ function goToPage (page, args) {
 
 	submitTraitSelections(page, args);
 		    
+    }  else if (page.match(/solgs\/populations\/combined\//)) {
+	retrievePopsData();  
     }  else {
- 
 	window.location = window.location.href;
-
-    }	    
+    }
+	    
 }
 
 
@@ -382,6 +383,10 @@ function getProfileForm (args) {
 jQuery(document).ready(function (){
  
      jQuery('#runGS').on('click',  function() {
+
+	 var page;
+	 var analysisType;
+	 var dataSetType;
 	 		 
 	 var hostName = window.location.protocol 
 	     + '//' 
@@ -401,10 +406,6 @@ jQuery(document).ready(function (){
 	 
 	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
 	 var popId = jQuery('#population_id').val(); 
-
-	 var page;
-	 var analysisType;
-	 var dataSetType;
 	 
 	 if (traitIds.length == 1 ) {	   
 
