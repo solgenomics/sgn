@@ -342,6 +342,119 @@ sub germplasm_mcpd : Chained('germplasm') PathPart('MCPD') Args(0) {
     $c->stash->{rest} = \%response;
 }
 
+
+=head2 brapi/v1/studies?programId=programId
+
+ Usage: To retrieve studies
+ Desc:
+ Return JSON example:
+        {
+            "metadata": {
+                "pagination": {
+                    "pageSize": 2,
+                    "currentPage": 1,
+                    "totalCount": 100,
+                    "totalPages": 50
+                },
+            "status" : []
+            },
+            "result": {
+                "data": [ 
+                    {
+                        "studyDbId": 35,
+                        "name": "Earlygenerationtesting",
+                        "studyType": "Trial",
+                        "years": ["2005", "2008"],
+                        "locationDbId": 23,
+                        "programDbId": 27,
+                        "optionalInfo" : {
+                            "studyPUI" : "PUI string",
+                            "studyType": "Trial",
+                            "startDate": "2015-06-01",
+                            "endDate"  : "2015-12-31",
+                        }
+                    }
+                    ,
+                    {
+                        "studyDbId": 345,
+                        "name": "Earlygenerationtesting",
+                        "seasons": ["2005", "2008"],
+                        "locationDbId": 33,
+                        "programDbId": 58,
+                        "optionalInfo" : {
+                            "studyPUI" : "PUI string",
+                            "studyType": "Trial",
+                            "startDate": "2015-06-01",
+                            "endDate"  : "2015-12-31",
+                        }
+                    }
+                ]
+            }
+        }        
+ Args:
+ Side Effects:
+
+=cut
+
+
+sub study_list : Chained('brapi') PathPart('studies') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $program = $c->req->param("programId");
+    my @status;
+    my @data;
+    my %result;
+
+    my $ps = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
+    my $programs = $ps -> get_breeding_programs();
+
+    if ($program) { 
+	my $program_info;
+	foreach my $bp (@$programs) { 
+	    if (uc($bp->[1]) eq uc($program)) { 
+		$program_info = $bp;
+	    }
+	}
+	if (!$program_info) { 
+	    push @status, "ProgramId $program does not exist. Ignoring program parameter"; 
+	}
+	else { 
+	    $programs = $program_info;
+	}
+    }
+    
+    my $total_count = 0;
+
+    foreach my $bp (@$programs) { 
+	my $trial_data = {};
+	my @trials = $ps->get_trials_by_breeding_program($bp->[0]);
+	my @trial_ids = map { $_->[0] } @trials;
+	#print STDERR Dumper(\@trial_ids);
+	print STDERR scalar(@trial_ids)."number ";
+	foreach my $trial_id (@trial_ids) { 
+
+	    if ($trial_id) {
+
+		my $t = CXGN::Trial->new( { trial_id => $trial_id->[0], bcs_schema => $self->bcs_schema } );
+	    
+		my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $bp->[0] } );
+
+		
+		my @years = ($t->get_year());
+
+		my %optional_info = (studyPUI=>'', startDate=>'', endDate=>'');
+		push @data, {studyDbId=>$t->get_trial_id(), name=>$t->get_name(), studyType=>$t->get_project_type()->[1], years=>\@years, locationDbId=>$t->get_location()->[0], optionalInfo=>\%optional_info};
+	    }
+	}
+    }
+
+    %result = (data=>\@data);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+
 =head2 brapi/v1/studies/{studyId}/germplasm?pageSize=20&page=1 
 
  Usage: To retrieve all germplasm used in a study
@@ -775,6 +888,35 @@ sub convert_dosage_to_genotype {
 }
 
 
+=head2 brapi/v1/allelematrix?markerprofileDbId=100&markerprofileDbId=101
+
+ Usage: Gives a matrix data structure for a given list of markerprofileDbIds
+ Desc:
+ Return JSON example:
+         {
+            "metadata": {   
+                "status": [],
+                "pagination": {
+                    "pageSize": 100,
+                    "currentPage": 1,
+                    "totalCount": 1,
+                    "totalPages": 1
+                }
+            },
+            "result" : {
+                "makerprofileDbIds": ["markerprofileId1","markerprofileId2","markerprofileId3"],
+                "data" : [ 
+                    { "markerId1":["AB","AA","AA"] },
+                    { "markerId2":["AA","AB","AA"] },
+                    { "markerId3":["AB","AB","BB"] }
+                ]
+            }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
 sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -853,73 +995,147 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     
 }
 
-sub study_list : Chained('studies') PathPart('list') Args(0) { 
+
+=head2 brapi/v1/programs
+
+ Usage: To retrieve a list of programs being worked on
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+            "result" : {
+                "data" : [
+                    {
+                        "programDbid": "123",
+                        "name": "Wheat Resistance Program",
+                        "objective" : "Disease resistance",
+                        "leadPerson" : "Dr. Henry Beachell"
+                    },
+                    {
+                        "programDbId": "456",
+                        "name": "Wheat Improvement Program",
+                        "objective" : "Yield improvement",
+                        "leadPerson" : "Dr. Norman Borlaug"
+                    }
+                ]
+            }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub programs_list : Chained('brapi') PathPart('programs') Args(0) { 
     my $self = shift;
     my $c = shift;
-    my $program = $c->req->param("program");
+    my @status;
+    my %result;
+    my @data;
 
     my $ps = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 
     my $programs = $ps -> get_breeding_programs();
-    my $message;
+    my $total_count = scalar(@$programs);
 
-    if ($program) { 
-	my $program_info;
-	foreach my $bp (@$programs) { 
-	    if (uc($bp->[1]) eq uc($program)) { 
-		$program_info = $bp;
-	    }
-	}
-	if (!$program_info) { 
-	    $message = "Program $program does not exist. Ignoring program parameter"; 
-	}
-	else { 
-	    $programs = $program_info;
-	}
-    }
-    
-    my @response;
-    foreach my $bp (@$programs) { 
-	my $trial_data = {};
-	my @trials = $ps->get_trials_by_breeding_program($bp->[0]);
-	my @trial_ids = map { $_->[0] } @trials;
-	print STDERR Dumper(\@trial_ids);
-	foreach my $trial_id (@trial_ids) { 
-	    print STDERR "TRIAL ID $trial_id\n";
-	    my $t = CXGN::Trial->new( { trial_id => $trial_id->[0], bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
-	    
-	    my $layout = CXGN::Trial::TrialLayout->new( 
-		{ 
-		    schema => $c->dbic_schema("Bio::Chado::Schema"), 
-		    trial_id => $bp->[0] 
-		});
-
-	    $trial_data->{studyId} = $t->get_trial_id();
-	    $trial_data->{studyType} = $t->get_project_type()->[1];
-	    $trial_data->{name} = $t->get_name();
-	    $trial_data->{programName} = $t->get_breeding_program();
-	    $trial_data->{keyContact} = "";
-	    $trial_data->{locationName} = $t->get_location()->[1];
-	    $trial_data->{designType} = $layout->get_design_type();
-	    
-	    push @response, $trial_data;
-	}
+    foreach my $bp (@$programs) {
+	push @data, {programDbId=>$bp->[0], name=>$bp->[1], objective=>$bp->[2], leadPerson=>''};
     }
 
-
-    $c->stash->{rest} = \@response;
-
-    # studyId: "1",
-    # studyType: "NURSERY",
-    # name: "Nursery XYZ",
-    # objective: "Generate more seeds",
-    # programName: "TCAP",
-    # startDate: "2014-08-01",
-    # keyContact: "Mr. Plant Breeder A",
-    # locationName: "Ibadan",
-    # designType: "RCBD"
+    %result = (data=>\@data);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
 }
 
+
+=head2 brapi/v1/studyTypes
+
+ Usage: To retrieve a list of programs being worked onthe various study types
+ Desc:
+ Return JSON example:
+        {
+             "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+            "result" : {
+                "data" : [
+                    {
+                        "name": "Nursery",
+                        "description": "Description for Nursery study type"
+                    },
+                    {
+                        "name": "Trial",
+                        "description": "Description for Nursery study type"
+                    }
+                ]
+            }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub studies_types : Chained('brapi') PathPart('studyTypes') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my %result;
+    my @status;
+    my $total_count = 0;
+
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+sub studies_instances : Chained('studies') PathPart('instances') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my %result;
+    my @status;
+    my $total_count = 0;
+
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+sub studies_info : Chained('studies') PathPart('') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my %result;
+    my @status;
+    my $total_count = 0;
+
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+sub studies_details : Chained('studies') PathPart('details') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my %result;
+    my @status;
+    my $total_count = 0;
+
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
 
 sub study_detail : Chained('studies') PathPart('detail') Args(1) { 
 
