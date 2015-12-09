@@ -23,6 +23,34 @@ use JSON;
 BEGIN { extends 'Catalyst::Controller' }
 
 
+sub get_combined_pops_id :Path('/solgs/get/combined/populations/id') Args() {
+    my ($self, $c) = @_;
+
+    my $ids = $c->req->param('trials');
+    my @ids_list = split(/,/, $ids);
+ 
+    my $combo_pops_id;
+    my $ret->{status} = 0;
+
+    if (@ids_list > 1) 
+    {
+	$c->stash->{pops_ids_list} = \@ids_list;
+	$self->create_combined_pops_id($c);
+	my $combo_pops_id = $c->stash->{combo_pops_id};
+	$ret->{combo_pops_id} = $combo_pops_id;
+	$ret->{status} = 1;
+
+	my $entry = "\n" . $combo_pops_id . "\t" . $ids;
+        $c->controller("solGS::solGS")->catalogue_combined_pops($c, $entry);
+    }
+
+    $ret = to_json($ret);
+    
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+
+}
+
 
 sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
     my ($self, $c) = @_;
@@ -39,9 +67,10 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
     
     if (scalar(@pop_ids) > 1)
     {  
-        $combo_pops_id =  crc(join('', @pop_ids));
-        $c->stash->{combo_pops_id} = $combo_pops_id;
-      
+	$c->stash->{pops_ids_list} = \@pop_ids;
+	$self->create_combined_pops_id($c);
+	my $combo_pops_id = $c->stash->{combo_pops_id};
+ 
         my $entry = "\n" . $combo_pops_id . "\t" . $ids;
         $solgs_controller->catalogue_combined_pops($c, $entry);
 	
@@ -205,8 +234,8 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
     $solgs_controller->analyzed_traits($c);
     my $analyzed_traits = $c->stash->{analyzed_traits};
    
-    $c->stash->{trait_pages}  = \@traits_pages;
-    $c->stash->{template}     = $solgs_controller->template('/population/combined/multiple_traits_output.mas');
+    $c->stash->{trait_pages} = \@traits_pages;
+    $c->stash->{template}    = $solgs_controller->template('/population/combined/multiple_traits_output.mas');
        
     $self->combined_trials_desc($c);
         
@@ -443,6 +472,14 @@ sub prepare_multi_pops_data {
   
    $solgs_controller->multi_pops_phenotype_data($c, $combined_pops_list);
    $solgs_controller->multi_pops_genotype_data($c, $combined_pops_list);
+
+}
+
+
+sub create_combined_pops_id {    
+    my ($self, $c) = @_;
+    
+    $c->stash->{combo_pops_id} = crc(join('', @{$c->stash->{pops_ids_list}}));
 
 }
 
