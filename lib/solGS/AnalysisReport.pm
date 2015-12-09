@@ -560,8 +560,7 @@ sub combine_populations_message {
 		    {  		    
 			$message .= "Downloading phenotype and genotype data for $pop_name failed.";
 			$troost_mededeling = "\n\nWe are troubleshooting the cause. " 
-			    . "We will contact you when we find out more.";	
-			    
+			    . "We will contact you when we find out more.";				    
 		    }
 		}		
 	    }
@@ -573,7 +572,7 @@ sub combine_populations_message {
     {
 	my $combined_pops_page = $output_details->{combined_pops_page};
 	$message .= "Your combined population is ready for analysis." 
-	    ."You can view it here:\n$combined_pops_page\n";
+	    ."You can view it here:\n\n$combined_pops_page\n";
     } 
  
     return  $message;
