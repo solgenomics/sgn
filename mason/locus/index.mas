@@ -143,9 +143,9 @@ foreach ( @{ $dbxrefs{'TAIR locus'} } ) {
   }
 }
 
-my @sorted_pubs =  defined @{ $dbxrefs{PMID} } ? sort { $a->[0]->get_accession() <=> $b->[0]->get_accession() } @{ $dbxrefs{PMID} } : () ;
+my @sorted_pubs =  $dbxrefs{PMID} ? sort { $a->[0]->get_accession() <=> $b->[0]->get_accession() } @{ $dbxrefs{PMID} } : () ;
 
-my @sgn_ref =  defined ( @{ $dbxrefs{SGN_ref} } ) ? @{ $dbxrefs{SGN_ref} } : () ;
+my @sgn_ref =  $dbxrefs{SGN_ref} ? @{ $dbxrefs{SGN_ref} } : () ;
 
 @sorted_pubs = ( @sorted_pubs, @sgn_ref );
 my $pub_count = scalar (@sorted_pubs) ;
