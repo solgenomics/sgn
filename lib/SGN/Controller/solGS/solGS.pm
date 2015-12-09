@@ -3103,7 +3103,7 @@ sub multi_pops_pheno_files {
     {
         foreach my $pop_id (@$pop_ids) 
         {
-            my $exp = "phenotype_data_${pop_id}\.txt";
+            my $exp = "phenotype_data_${pop_id}.txt";
             $files .= $self->grep_file($dir, $exp);          
             $files .= "\t" unless (@$pop_ids[-1] eq $pop_id);    
         }
@@ -3112,7 +3112,7 @@ sub multi_pops_pheno_files {
     }
     else 
     {
-        my $exp = "phenotype_data_${pop_ids}\.txt";
+        my $exp = "phenotype_data_${pop_ids}.txt";
         $files = $self->grep_file($dir, $exp);
     }
 
