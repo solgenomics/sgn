@@ -221,6 +221,23 @@ sub parse_arguments {
 	      }
 	  }
 
+	  if ($k eq 'combo_pops_id') 
+	  {
+	      my $combo_pops_id = $arguments->{$k};
+	      $c->stash->{combo_pops_id} = $arguments->{$k};
+	  }
+
+	  if ($k eq 'combo_pops_list') 
+	  {
+	      my @pop_ids = @{ $arguments->{$k} };
+	      $c->stash->{combo_pops_list} = \@pop_ids;
+	      
+	      if (scalar(@pop_ids) == 1) 
+	      {		  
+		  $c->stash->{pop_id}  = $pop_ids[0];
+	      }
+	  }
+
 	  if ($k eq 'trait_id') 
 	  {
 	      my @selected_traits = @{ $arguments->{$k} };
@@ -254,20 +271,20 @@ sub structure_output_details {
     
     if ($c->stash->{selected_traits}) 
     {
-	@traits_ids = @{ $c->stash->{selected_traits}};
+	@traits_ids = @{$c->stash->{selected_traits}};
     }
    
-    my $pop_id =  $c->stash->{pop_id}; 
+    my $pop_id        = $c->stash->{pop_id}; 
+    my $combo_pops_id = $c->stash->{combo_pops_id};
     
-    my $base    = $c->req->base;    
+    my $base = $c->req->base;    
     if ( $base !~ /localhost/)
     {
 	$base =~ s/:\d+//;    
     } 
            
-    my $geno_file;
-    my $pheno_file;
     my %output_details = ();
+
     my $solgs_controller = $c->controller('solGS::solGS');
     my $analysis_page = $analysis_data->{analysis_page};
 
@@ -301,8 +318,7 @@ sub structure_output_details {
 		$trait_page = $base . "solgs/model/combined/trials/$pop_id/trait/$trait_id";
 
 		$c->stash->{combo_pops_id} = $pop_id;
-		$solgs_controller->cache_combined_pops_data($c);
-		
+		$solgs_controller->cache_combined_pops_data($c);		
 	    }
 	    
 	    $output_details{$trait_abbr} = {
@@ -335,15 +351,56 @@ sub structure_output_details {
 		'phenotype_file'  => $c->stash->{phenotype_file},
 		'genotype_file'   => $c->stash->{genotype_file},  
 		'data_set_type'   => $c->stash->{data_set_type},
-	};
-		
+	};		
     }
-  
+    elsif ($analysis_page =~ m/solgs\/populations\/combined\//) 
+    {
+	my $combined_pops_page = $base . "solgs/populations/combined/$combo_pops_id";
+
+	$solgs_controller->multi_pops_pheno_files($c);	
+	$solgs_controller->multi_pops_geno_files($c);
+
+	my $ph_files = $c->stash->{multi_pops_pheno_files};
+	my @pheno_files = split(/\t/, \$ph_files);
+
+	my $match_status = $c->stash->{pops_with_no_genotype_match};
+	
+	my @combined_pops_ids = @{$c->stash->{combo_pops_list}};
+
+	foreach my $pop_id (@combined_pops_ids) 
+	{	    
+	    $solgs_controller->get_project_details($c, $pop_id);
+	    my $population_name = $c->stash->{project_name};
+	    
+	    $c->stash->{pop_id} = $pop_id;
+	    $solgs_controller->phenotype_file($c);
+	    my $pheno_file = $c->stash->{phenotype_file};
+
+	    $solgs_controller->genotype_file($c);
+	    my $geno_file = $c->stash->{genotype_file};
+
+	    my $population_page = $base . "solgs/population/$pop_id";
+
+	    $output_details{$pop_id} = {
+		'population_page'   => $population_page,
+		'population_id'     => $pop_id,
+		'population_name'   => $population_name,
+		'combo_pops_id'     => $combo_pops_id,	
+		'phenotype_file'    => $pheno_file,
+		'genotype_file'     => $geno_file,
+		'data_set_type'     => $c->stash->{data_set_type},
+	    };	    
+	}
+	
+	$output_details{no_match}           = $match_status;
+	$output_details{combined_pops_page} = $combined_pops_page;
+    }
+
     $output_details{analysis_profile} = $analysis_data;
     $output_details{r_job_tempdir}    = $c->stash->{r_job_tempdir};
     $output_details{contact_page}     = $base . 'contact/form';
     $output_details{data_set_type}    = $c->stash->{data_set_type};
-    
+   
     $c->stash->{bg_job_output_details} = \%output_details;
    
 }
@@ -397,6 +454,17 @@ sub run_analysis {
     {
 	$c->controller('solGS::solGS')->phenotype_file($c);
 	$c->controller('solGS::solGS')->genotype_file($c);
+    }
+    elsif ($analysis_page =~ /solgs\/populations\/combined\//)
+    {
+	my $combo_pops_id = $c->stash->{combo_pops_id};
+
+	$c->controller("solGS::combinedTrials")->prepare_multi_pops_data($c);	
+	
+	$c->controller('solGS::solGS')->multi_pops_geno_files($c);
+	my $g_files = $c->stash->{multi_pops_geno_files};
+	my @geno_files = split(/\t/, $g_files);
+	$c->controller('solGS::solGS')->compare_genotyping_platforms($c, \@geno_files);
     }
     else 
     {
