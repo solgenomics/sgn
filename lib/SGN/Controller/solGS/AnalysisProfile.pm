@@ -76,8 +76,8 @@ sub save_analysis_profile :Path('/solgs/save/analysis/profile') Args(0) {
 sub save_profile {
     my ($self, $c) = @_;
         
-    $self->analysis_profile_file($c);
-    my $profile_file = $c->stash->{analysis_profile_file};
+    $self->analysis_log_file($c);
+    my $log_file = $c->stash->{analysis_log_file};
 
     $self->add_headers($c);
 
@@ -86,9 +86,9 @@ sub save_profile {
     
     my $analysis_page= $c->stash->{analysis_page};
 
-    my @contents = read_file($profile_file);
+    my @contents = read_file($log_file);
  
-    write_file($profile_file, {append => 1}, $formatted_profile);
+    write_file($log_file, {append => 1}, $formatted_profile);
    
 }
 
@@ -96,10 +96,10 @@ sub save_profile {
 sub add_headers {
   my ($self, $c) = @_;
 
-  $self->analysis_profile_file($c);
-  my $profile_file = $c->stash->{analysis_profile_file};
+  $self->analysis_log_file($c);
+  my $log_file = $c->stash->{analysis_log_file};
 
-  my $headers = read_file($profile_file);
+  my $headers = read_file($log_file);
   
   unless ($headers) 
   {  
@@ -111,7 +111,7 @@ sub add_headers {
 	  "\t" . "Status" .
 	  "\n";
 
-      write_file($profile_file, $headers);
+      write_file($log_file, $headers);
   }
   
 }
@@ -396,10 +396,14 @@ sub structure_output_details {
 	$output_details{combined_pops_page} = $combined_pops_page;
     }
 
-    $output_details{analysis_profile} = $analysis_data;
-    $output_details{r_job_tempdir}    = $c->stash->{r_job_tempdir};
-    $output_details{contact_page}     = $base . 'contact/form';
-    $output_details{data_set_type}    = $c->stash->{data_set_type};
+    $self->analysis_log_file($c);
+    my $log_file = $c->stash->{analysis_log_file};
+
+    $output_details{analysis_profile}  = $analysis_data;
+    $output_details{r_job_tempdir}     = $c->stash->{r_job_tempdir};
+    $output_details{contact_page}      = $base . 'contact/form';
+    $output_details{data_set_type}     = $c->stash->{data_set_type};
+    $output_details{analysis_log_file} = $log_file;
    
     $c->stash->{bg_job_output_details} = \%output_details;
    
@@ -476,11 +480,11 @@ sub run_analysis {
     
     if ($error[0]) 
     {
-	$c->stash->{status} = 'Error';
+	$c->stash->{status} = 'Submitting failed';
     }
     else 
     {    
-	$c->stash->{status} = 'OK';
+	$c->stash->{status} = 'Submitted OK';
     }
  
     $self->update_analysis_progress($c);
@@ -495,32 +499,32 @@ sub update_analysis_progress {
     my $analysis_name= $analysis_data->{analysis_name};
     my $status = $c->stash->{status};
     
-    $self->analysis_profile_file($c);
-    my $profile_file = $c->stash->{analysis_profile_file};
+    $self->analysis_log_file($c);
+    my $log_file = $c->stash->{analysis_log_file};
   
-    my @contents = read_file($profile_file);
+    my @contents = read_file($log_file);
    
     map{ $contents[$_] =~ /$analysis_name/ 
 	     ? $contents[$_] =~ s/error|running/$status/ig 
 	     : $contents[$_] } 0..$#contents; 
    
-    write_file($profile_file, @contents);
+    write_file($log_file, @contents);
 
 }
 
 
-sub analysis_profile_file {
+sub analysis_log_file {
     my ($self, $c) = @_;
 
-    $self->create_profiles_dir($c);   
-    my $profiles_dir = $c->stash->{profiles_dir};
+    $self->create_analysis_log_dir($c);   
+    my $log_dir = $c->stash->{analysis_log_dir};
     
-    $c->stash->{cache_dir} = $profiles_dir;
+    $c->stash->{cache_dir} = $log_dir;
 
     my $cache_data = {
-	key       => 'analysis_profiles',
-	file      => 'analysis_profiles',
-	stash_key => 'analysis_profile_file'
+	key       => 'analysis_log',
+	file      => 'analysis_log',
+	stash_key => 'analysis_log_file'
     };
 
     $c->controller('solGS::solGS')->cache_file($c, $cache_data);
@@ -542,7 +546,7 @@ sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
 }
 
 
-sub create_profiles_dir {
+sub create_analysis_log_dir {
     my ($self, $c) = @_;
         
     my $analysis_profile = $c->stash->{analysis_profile};
@@ -552,12 +556,12 @@ sub create_profiles_dir {
 
     $c->controller('solGS::solGS')->get_solgs_dirs($c);
 
-    my $profiles_dir = $c->stash->{profiles_dir};
+    my $log_dir = $c->stash->{analysis_log_dir};
 
-    $profiles_dir = catdir($profiles_dir, $user_email);
-    mkpath ($profiles_dir, 0, 0755);
+    $log_dir = catdir($log_dir, $user_email);
+    mkpath ($log_dir, 0, 0755);
 
-    $c->stash->{profiles_dir} = $profiles_dir;
+    $c->stash->{analysis_log_dir} = $log_dir;
   
 }
 
