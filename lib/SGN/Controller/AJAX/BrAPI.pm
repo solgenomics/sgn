@@ -332,7 +332,6 @@ sub germplasm_mcpd : Chained('germplasm') PathPart('MCPD') Args(0) {
     my @status;
 
     my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
-
     my $organism = CXGN::Chado::Organism->new( $schema, $c->stash->{stock}->get_organism_id() );
 
     %result = (germplasmDbId=>$c->stash->{stock_id}, defaultDisplayName=>$c->stash->{stock}->get_uniquename(), accessionNumber=>'', germplasmName=>$c->stash->{stock}->get_name(), germplasmPUI=>'', pedigree=>germplasm_pedigree_string($schema, $c->stash->{stock_id}), germplasmSeedSource=>'', synonyms=>germplasm_synonyms($schema, $c->stash->{stock_id}, $synonym_id), commonCropName=>$organism->get_common_name(), instituteCode=>'', instituteName=>'', biologicalStatusOfAccessionCode=>'', countryOfOriginCode=>'', typeOfGermplasmStorageCode=>'', genus=>$organism->get_genus(), species=>$organism->get_species(), speciesAuthority=>'', subtaxa=>$organism->get_taxon(), subtaxaAuthority=>'', donors=>'', acquisitionDate=>'');
@@ -529,18 +528,107 @@ sub germplasm_markerprofile : Chained('germplasm') PathPart('markerprofiles') Ar
 #
 
 
-sub markerprofiles_all : Chained('brapi') PathPart('markerprofiles') Args(0) { 
+=head2 brapi/v1/markerprofiles?germplasm=germplasmDbId&extract=extractDbId&method=methodDbId
+
+ Usage: To retrieve markerprofile ids for a single germplasm
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+            "result" : {
+                "data" : [
+                    {   
+                        "markerProfileDbId": "993",
+                        "germplasmDbId" : 2374,
+                        "extractDbId" : 3939,
+                        "analysisMethod": "GoldenGate",
+                        "resultCount": 1470
+                    },
+                    {
+                        "markerProfileDbId": "994",
+                        "germplasmDbId" : 2374,
+                        "extractDbId" : 3939,
+                        "analysisMethod": "GBS",
+                        "resultCount": 1470
+                    }
+                ]
+            }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+
+sub markerprofiles_search : Chained('brapi') PathPart('markerprofiles') Args(0) { 
     my $self = shift;
     my $c = shift;
-    my $method = $c->req->param("methodId");
+    my $germplasm = $c->req->param("germplasm");
+    my $extract = $c->req->param("extract");
+    my $method = $c->req->param("method");
+    my @status;
+    my @data;
+    my %result;
     
-    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( {} );
-    my @genotypes;
-    while (my $gt = $rs->next()) { 
-	push @genotypes, { markerprofileId => $gt->genotypeprop_id };
+    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( undef, { order_by=>{ -asc=>'genotypeprop_id' } } );
+    my $total_count = 0;
+
+    if ($rs) {
+	$total_count = $rs->count();
+	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+        my @runs;
+	foreach my $row ($rs_slice->all()) { 
+	    my $genotype_json = $row->value();
+	    my $genotype = JSON::Any->decode($genotype_json);
+	
+	    push @data, {markerProfileDbId => $row->genotypeprop_id(), germplasmDbId => "", extractDbId => "", analysisMethod => "null", resultCount => scalar(keys(%$genotype)) };
+	}
     }
-    $c->stash->{rest} = \@genotypes;
+
+    %result = (data => \@data);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
 }
+
+
+=head2 brapi/v1/markerprofiles/markerprofilesDbId
+
+ Usage: To retrieve data for a single markerprofile
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+        
+            "result": {
+                "germplasmDbId": 993,
+                "extractDbId" : 38383, 
+                "markerprofileDbId": 37484,
+                "analysisMethod": "GBS-Pst1",
+                "encoding": "AA,BB,AB",
+                "data" : [ { "marker1": "AA" }, { "marker2":"AB" }, ... ]
+           }
+        }
+ Args:
+ Side Effects:
+
+=cut
 
 sub markerprofiles : Chained('brapi') PathPart('markerprofiles') CaptureArgs(1) { 
     my $self = shift;
@@ -549,76 +637,45 @@ sub markerprofiles : Chained('brapi') PathPart('markerprofiles') CaptureArgs(1) 
     $c->stash->{markerprofile_id} = $id; # this is genotypeprop_id
 }
 
-sub markerprofile_count : Chained('markerprofiles') PathPart('count') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    print STDERR "PROCESSING genotype/count...\n";
-
-    my $rs = $self->markerprofile_rs($c);
-
-    my @runs;
-    foreach my $row ($rs->all()) { 
-	my $genotype_json = $row->value();
-	my $genotype = JSON::Any->decode($genotype_json);
-	
-	push @runs, { 
-	    runId => $row->genotypeprop_id(),
-	    analysisMethod => "null",
-	    resultCount => scalar(keys(%$genotype)),
-	};
-    }
-    my $response = {
-	id => $c->stash->{markerprofile_id},
-	markerCounts => \@runs
-    };
-    
-    $c->stash->{rest} = $response;	
-}
 
 sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){ 
     my $self = shift;
     my $c = shift;
+    my @status;
+    my @data;
+    my %result;
 
-    print STDERR "Markerprofile_fetch\n";
-    my $rs = $self->markerprofile_rs($c);
+    my $total_count = 0;
+    #my $rs = $self->markerprofile_rs($c);
+    
+    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+	{'genotypeprops.genotypeprop_id' => $c->stash->{markerprofile_id} },
+	{join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
+	 '+select'=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'], 
+	 '+as'=> ['value', 'protocol_name', 'stock_id'],
+	 order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
+	}
+    );
 
-    my $params = $c->req->params();
-
-    my @runs = ();
-    my $count = 0;
-    foreach my $row ($rs->all()) { 
-	my $genotype_json = $row->value();
-	my $genotype = JSON::Any->decode($genotype_json);
-	my %encoded_genotype = ();
-	foreach my $m (sort genosort keys %$genotype) { 
-	    $count++;
-
-	    if ($params->{page} && $params->{pageSize}) { 
-		if ($count <= $params->{page} * $params->{pageSize} ||
-		    $count > $params->{page} * $params->{pageSize} + $params->{pageSize}) { 
-		    next;
-		}
+    if ($rs) {
+	$total_count = $rs->count();
+	foreach my $row ($rs->all()) { 
+	    
+	    my $genotype_json = $row->get_column('value');
+	    my $genotype = JSON::Any->decode($genotype_json);
+	    foreach my $m (sort genosort keys %$genotype) { 
+		push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
 	    }
 
-	    $encoded_genotype{$m} = $self->convert_dosage_to_genotype($genotype->{$m});
+	    %result = (germplasmDbId=>$row->get_column('stock_id'), extractDbId=>'', markerprofileDbId=>$c->stash->{markerprofile_id}, analysisMethod=>$row->get_column('protocol_name'), encoding=>"AA,BB,AB", data => \@data);
 	}
-	push @runs, { data => \%encoded_genotype, runId => $row->genotypeprop_id() };
     }
-    my $total_pages;
-    my $total_count;
-    $c->stash->{rest} =  {
 
-	pagination => { 
-	    page => $c->stash->{current_page},
-	    pageSize => $c->stash->{page_size} || $DEFAULT_PAGE_SIZE,
-	    totalPages => $total_pages, 
-	    totalCount => $total_count 
-	},
-	germplasmId => $c->stash->{markerprofile_id},
-	genotypes => \@runs,
-    };
-
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
 }
+
 
 sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods') Args(0) { 
     my $self = shift;

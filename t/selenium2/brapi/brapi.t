@@ -35,16 +35,46 @@ $d->while_logged_in_as("submitter", sub {
 
     #Germplasm MCPD
 
-    $d->get_ok('/brapi/v1/germplasm/38843/MCPD');
-    ok($d->driver->get_page_source()=~/test_accession4/, "germplasm MCPD detail call");
+    #$d->get_ok('/brapi/v1/germplasm/38843/MCPD');
+    #ok($d->driver->get_page_source()=~/test_accession4/, "germplasm MCPD detail call");
+
+    #Germplasm Details List by StudyId
+
+    $d->get_ok('/brapi/v1/studies/139/germplasm');
+    ok($d->driver->get_page_source()=~/test_accession4/, "study germplasm detail list call");
+
+    #Germplasm Pedigree
+
+    $d->get_ok('/brapi/v1/germplasm/38843/pedigree');
+    ok($d->driver->get_page_source()=~/test_accession4/, "germplasm pedigree call");
+
+    #Germplasm Markerprofiles
+
+    $d->get_ok('/brapi/v1/germplasm/38843/markerprofiles');
+    ok($d->driver->get_page_source()=~/test_accession4/, "germplasm markerprofiles call");
+
+    
+    #Germplasm Attributes
+
+    #
 
 
+
+    #MarkerProfiles
+
+    #Markerprofile search
 
     $d->get_ok('/brapi/v1/markerprofiles');
     ok($d->driver->get_page_source()=~/1622/, "markerprofile summary call");
 
+    #Markerprofile data
+
     $d->get_ok('/brapi/v1/markerprofiles/1622');
     ok($d->driver->get_page_source()=~/AA/, "markerprofile detail call");
+
+
+
+
 
     $d->get_ok('/brapi/v1/maps');
     ok($d->driver->get_page_source()=~/linkageGroupCount/, "check map detail");
