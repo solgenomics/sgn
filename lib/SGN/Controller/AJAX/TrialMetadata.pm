@@ -332,13 +332,15 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
 
-    my $h = $dbh->prepare("SELECT distinct(cvterm.name),  cvterm.cvterm_id, count(*) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? GROUP BY cvterm.name, cvterm.cvterm_id");
+    my $h = $dbh->prepare("SELECT cvterm.name, cvterm.cvterm_id, count(phenotype.value), avg(phenotype.value::integer) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY cvterm.name, cvterm.cvterm_id;");
 
-    $h->execute($c->stash->{trial_id});
+    my $numeric_regex = '^\d+$';
+    $h->execute($c->stash->{trial_id}, $numeric_regex );
 
     my @phenotype_data;
-    while (my ($trait, $trait_id, $count,) = $h->fetchrow_array()) { 
-	push @phenotype_data, [ qq { <a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a> },  qq{ <a href="/breeders/trial/$trial_id/trait/$trait_id">$count [more stats]</a> } ];
+    print STDERR @phenotype_data;
+    while (my ($trait, $trait_id, $count, $average) = $h->fetchrow_array()) { 
+	push @phenotype_data, [ qq { <a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a> }, qq{ $average  },  qq{ <a href="/breeders/trial/$trial_id/trait/$trait_id">$count [more stats]</a> } ];
     }
 
     $c->stash->{rest} = { data => \@phenotype_data };

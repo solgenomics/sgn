@@ -9,6 +9,7 @@ $trial_id
 <thead>
   <tr>
     <th>Trait</th>
+    <th>Trial Average</th>
     <th>Count</th>
 </tr>
 </thead>
