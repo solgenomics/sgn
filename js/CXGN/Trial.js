@@ -755,7 +755,8 @@ function save_trial_description() {
     var description = jQuery('#trial_description_input').val();
     alert('New description = '+description);
     jQuery.ajax( { 
-	url: '/ajax/breeders/trial/'+trial_id+'/description/'+description,
+	url: '/ajax/breeders/trial/'+trial_id+'/description/',
+	data: {description:description},
         type: 'POST',
 	success: function(response) { 
             if (response.error) { 
