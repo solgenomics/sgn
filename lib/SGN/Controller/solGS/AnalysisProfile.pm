@@ -399,6 +399,8 @@ sub structure_output_details {
     $self->analysis_log_file($c);
     my $log_file = $c->stash->{analysis_log_file};
 
+    print STDERR "\nstr out put -logfile: $log_file\n";
+
     $output_details{analysis_profile}  = $analysis_data;
     $output_details{r_job_tempdir}     = $c->stash->{r_job_tempdir};
     $output_details{contact_page}      = $base . 'contact/form';
@@ -484,7 +486,7 @@ sub run_analysis {
     }
     else 
     {    
-	$c->stash->{status} = 'Submitted OK';
+	$c->stash->{status} = 'Submitted';
     }
  
     $self->update_analysis_progress($c);
