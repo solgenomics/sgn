@@ -7,14 +7,20 @@ use Email::Sender::Simple qw /sendmail/;
 use Email::Simple;
 use Email::Simple::Creator;
 use File::Spec::Functions qw /catfile catdir/;
+use File::Slurp qw /write_file read_file/;
+
+
+
 
 
 sub check_analysis_status {   
     my ($self, $output_details) = @_;
  
-    my $output_success = $self->check_success($output_details);
+    my $output_details = $self->check_success($output_details);
     
-    $self->report_status($output_success); 
+    $self->report_status($output_details); 
+    
+    $self->log_analysis_status($output_details);
 }
 
 
@@ -41,7 +47,6 @@ sub check_success {
     elsif ( $analysis_profile->{analysis_type} =~ /combine populations/ ) 
     {	
 	$output_details = $self->check_multi_pops_data_download($output_details);
-	## check if pops are combinable
     }
     
     return $output_details;  
@@ -88,19 +93,18 @@ sub check_pops_trait_data_combination {
 	
 		if ($pheno_size) 
 		{
-		    $output_details->{$k}->{pheno_success} = 'pheno success';
-		   		
+		    $output_details->{$k}->{pheno_success} = 'pheno success';		   		
 		}
 
 		if ($geno_size) 
 		{
-		    $output_details->{$k}->{geno_success} = 'geno success';
-		   		
+		    $output_details->{$k}->{geno_success} = 'geno success';		   		
 		}
 
 		if ($pheno_size && $geno_size) 
 		{
-		    $output_details->{$k}->{combine_success} = 1;
+		    $output_details->{$k}->{success} = 1;
+		    $output_details->{status} = 'Done';
 		    last;
 		}
 		else
@@ -112,7 +116,8 @@ sub check_pops_trait_data_combination {
 			{
 			    $output_details->{$k}->{pheno_success}   = 0;
 			    $output_details->{$k}->{geno_success}    = 0;
-			    $output_details->{$k}->{combine_success} = 0;
+			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Died';
 			    last;
 			}
 		    }
@@ -125,8 +130,10 @@ sub check_pops_trait_data_combination {
 	    {   	    
 		$output_details->{$k}->{pheno_success}   = 0;
 		$output_details->{$k}->{geno_success}    = 0;
-		$output_details->{$k}->{combine_success} = 0;
+		$output_details->{$k}->{success} = 0;
 	    }
+	    
+	    $output_details->{status} = 'Died';
 	}  
     }
 
@@ -177,7 +184,8 @@ sub check_multi_pops_data_download {
 
 		if ($pheno_size && $geno_size) 
 		{
-		    $output_details->{$k}->{download_success} = 1;
+		    $output_details->{$k}->{success} = 1;
+		    $output_details->{status} = 'Done';
 		    last;
 		}
 		else
@@ -187,9 +195,10 @@ sub check_multi_pops_data_download {
 			$died_file = $self->get_file($job_tempdir, 'died');
 			if ($died_file) 
 			{
-			    $output_details->{$k}->{pheno_success}   = 0;
-			    $output_details->{$k}->{geno_success}    = 0;
-			    $output_details->{$k}->{download_success} = 0;
+			    $output_details->{$k}->{pheno_success} = 0;
+			    $output_details->{$k}->{geno_success}  = 0;
+			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Died';
 			    last;
 			}
 		    }
@@ -200,10 +209,12 @@ sub check_multi_pops_data_download {
 	{  
 	    if (ref $output_details->{$k} eq 'HASH')	
 	    {   	    
-		$output_details->{$k}->{pheno_success}   = 0;
-		$output_details->{$k}->{geno_success}    = 0;
-		$output_details->{$k}->{download_success} = 0;
+		$output_details->{$k}->{pheno_success} = 0;
+		$output_details->{$k}->{geno_success}  = 0;
+		$output_details->{$k}->{success} = 0;
 	    }
+	    
+	    $output_details->{status} = 'Died';
 	}  
     }
 
@@ -237,6 +248,7 @@ sub check_trait_modeling {
 		if ($gebv_size) 
 		{
 		    $output_details->{$k}->{success} = 1;
+		    $output_details->{status} = 'Done';
 		    last;		
 		}
 		else
@@ -247,6 +259,7 @@ sub check_trait_modeling {
 			if ($died_file) 
 			{
 			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Died';
 			    last;
 			}
 		    }
@@ -259,6 +272,8 @@ sub check_trait_modeling {
 	    {   	    
 		$output_details->{$k}->{success} = 0;
 	    }
+	    
+	    $output_details->{status} = 'Died';
 	}  
     }
 
@@ -308,6 +323,7 @@ sub check_population_download {
 			if ($pheno_size && $geno_size) 
 			{		    
 			    $output_details->{$k}->{success} = 1;
+			    $output_details->{status} = 'Done';
 			    last;
 			}		
 			else
@@ -320,6 +336,7 @@ sub check_population_download {
 				    $output_details->{$k}->{pheno_success}   = 0;
 				    $output_details->{$k}->{geno_success}    = 0;
 				    $output_details->{$k}->{success} = 0;
+				    $output_details->{status} = 'Died';
 				    last;
 				}
 			    }
@@ -334,6 +351,8 @@ sub check_population_download {
 			$output_details->{$k}->{geno_success}    = 0;
 			$output_details->{$k}->{success} = 0;
 		    }
+		    
+		    $output_details->{status} = 'Died';
 		} 
 	    } 
 	}
@@ -550,7 +569,7 @@ sub combine_populations_message {
 		    my $pop_name = uc($output_details->{$k}->{population_name});
 		    my $pop_page = $output_details->{$k}->{population_page};
 		
-		    if ($output_details->{$k}->{download_success})		
+		    if ($output_details->{$k}->{success})		
 		    {		
 			$message .= "The phenotype and genotype data for $pop_name is succesfuly downloaded."
 			    ."\nYou can view the population here:"
@@ -579,12 +598,31 @@ sub combine_populations_message {
 }
 
 
+sub log_analysis_status {
+    my ($self, $output_details) = @_;
+    
+    my $log_file = $output_details->{analysis_log_file};
+    
+    my $analysis_profile = $output_details->{analysis_profile};
+    my $analysis_name    = $analysis_profile->{analysis_name};
+    
+    my $status = $output_details->{status};
+
+    my @contents = read_file($log_file);
+   
+    map{ $contents[$_] =~ /$analysis_name/ 
+	     ? $contents[$_] =~ s/error|running|submitted/$status/ig 
+	     : $contents[$_] } 0..$#contents; 
+   
+    write_file($log_file, @contents);
+
+}
+
+
+
 
 
 __PACKAGE__->meta->make_immutable;
-
-
-
 
 
 
