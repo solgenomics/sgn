@@ -20,6 +20,7 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::Trial;
 
 use Moose;
+use Data::Dumper;
 use Try::Tiny;
 use CXGN::Trial::TrialLayout;
 
@@ -49,8 +50,6 @@ sub BUILD {
 	die "The trial ".$self->get_trial_id()." does not exist";
     }
 
-    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->get_trial_id() });
-    $self->set_layout($layout);
 
 }
 
@@ -78,10 +77,19 @@ has 'layout' => (isa => 'CXGN::Trial::TrialLayout',
 		 reader => 'get_layout',
 		 writer => 'set_layout',
 		 predicate => 'has_layout',
+		 lazy => 1,
+		 default => sub { my $self = shift; $self->_get_layout(); }
 		 
 
     );
 
+sub _get_layout { 
+    my $self = shift;
+    print STDERR "RETRIEVING LAYOUT...\n";
+    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->get_trial_id() });
+    $self->set_layout($layout);
+}
+    
 
 =head2 accessors get_year(), set_year()
 
@@ -118,8 +126,10 @@ sub set_year {
     }
     else { 
 	$row = $self->bcs_schema->resultset('Project::Projectprop')->create(
-	    { type_id => $type_id,
-	    value => $year,
+	    { 
+		project_id => $self->get_trial_id(),
+		type_id => $type_id,
+		value => $year,
 	    } );
     }
 }
@@ -345,10 +355,13 @@ sub dissociate_project_type {
     return undef;
 }
 
-=head2 function get_project_type()
+=head2 function get_project_type(), set_project_type()
 
  Usage:        [ $project_type_cvterm_id, $project_type_name ] = $t -> get_project_type();
- Desc:
+               $t->set_project_type("phenotyping trial")
+ Desc:         In Cassavabase, possible project types are: 
+               phenotyping_trial, genotyping_trial, crossing_trial
+               see cvterm table for more options.
  Ret:
  Args:
  Side Effects:
@@ -381,6 +394,72 @@ sub get_project_type {
 
 }
 
+sub set_project_type { 
+    my $self = shift;
+    my $project_type = shift;
+
+    my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
+    
+    my $cvterm = $self->bcs_schema()->resultset('Cv::Cvterm')->find( { name => $project_type });
+    if ($cvterm) { 
+	if (any { $cvterm->cvterm_id() } @project_type_ids) { 
+	    my $prop = $self->bcs_schema()->resultset('Project::Projectprop')->create(
+		{ 
+		    type_id => $cvterm->cvterm_id(),
+		    value => '',
+		});
+	}
+    }
+    else { 
+	print STDERR "Invalid project type $project_type\n";
+    }
+}
+
+=head2 accessors set_design_type(), get_design_type()
+
+ Usage:        $trial->set_design_type("RCBD");
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_design_type { 
+    my $self = shift;
+    return $self->get_layout()->_get_design_type_from_project();
+}
+
+sub set_design_type { 
+    my $self = shift;
+    my $design_type = shift;
+    
+    my $design_cv_type = $self->bcs_schema->resultset('Cv::Cvterm')->find( { name => 'design' });
+    if (!$design_cv_type) { 
+	print STDERR "Design CV term not found. Cannot set design type.\n";
+	return;
+    }
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create( 
+	{ 
+	    project_id => $self->get_trial_id(), 
+	    type_id => $design_cv_type->cvterm_id(),
+	});
+    $row->value($design_type);
+    $row->update();
+}
+
+=head2 accessors get_breeding_program(), set_breeding_program()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_breeding_program { 
     my $self = shift;
     my $rs = $self->bcs_schema()->resultset("Project::ProjectRelationship")->search( 
@@ -395,14 +474,53 @@ sub get_breeding_program {
 
     my $bp_rs = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $rs->first()->object_project_id() });
     if ($bp_rs->count > 0) { 
-	return $bp_rs->first()->name();
+	if (wantarray) { 
+	    return ( $bp_rs->first->project_id(), $bp_rs->first()->name() );
+	}
+	else { 
+	    return $bp_rs->first()->name();
+	}
     }
     return undef;
 									      
 }
 
 sub set_breeding_program { 
-
+    my $self = shift;
+    my $breeding_project_id = shift;
+    
+    my $breeding_trial_cvterm_id = $self->get_breeding_trial_cvterm_id();
+    
+    # to do: check if the two provided IDs are of the proper type
+    
+    eval {
+	my $breeding_trial_assoc = $self->bcs_schema->resultset("Project::ProjectRelationship")->find (
+	    {
+		subject_project_id => $self->get_trial_id(),
+		type_id => $breeding_trial_cvterm_id,
+	    }
+	    );
+	
+	if ($breeding_trial_assoc) { 
+	    
+	    $breeding_trial_assoc->object_project_id($breeding_project_id);
+	    $breeding_trial_assoc->update();
+	}
+	else {     
+	    $breeding_trial_assoc = $self->bcs_schema->resultset("Project::ProjectRelationship")->create({ 
+		object_project_id => $breeding_project_id,
+		subject_project_id => $self->get_trial_id(),
+		type_id => $breeding_trial_cvterm_id,
+													 });	
+	    $breeding_trial_assoc->insert(); 
+	}	
+    };
+    if ($@) {
+	print STDERR "ERROR: $@\n";
+	return { error => "An error occurred while storing the breeding program - trial relationship." };
+    }
+    return {};
+    
 }
 
 sub remove_breeding_program { 
@@ -464,6 +582,19 @@ sub set_name {
     }
 }   
 
+=head2 accessors get_harvest_date(), set_harvest_date()
+
+ Usage:         $t->set_harvest_date("2016/09/17");
+ Desc:          sets the projects harvest_date property.
+                The date format in the setter has to be
+                YYYY/MM/DD
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_harvest_date { 
     my $self = shift;
 
@@ -500,6 +631,17 @@ sub set_harvest_date {
     }
 }
 
+=head2 accessors get_planting_date(), set_planting_date()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_planting_date { 
     my $self = shift;
 
@@ -535,6 +677,18 @@ sub set_planting_date {
 	}
     }
 }
+
+=head2 accessors get_plot_dimensions(), set_plot_dimensions()
+
+ Usage:        $dimension =  $t->get_plot_dimensions(),
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_plot_dimensions { 
     my $self = shift;
     my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
@@ -938,21 +1092,21 @@ sub get_year_type_id {
 
 
 sub get_breeding_program_id { 
-    my $self = shift;
-    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program_trial_relationship' });
-    
-    return $rs->first()->cvterm_id();
+   my $self = shift;
+   my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program_trial_relationship' });
+   
+   return $rs->first()->cvterm_id();
 }
 
 sub get_breeding_trial_cvterm_id {
     my $self = shift;
 
-    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'local' } )->cv_id();
+    my $cv_id = $self->bcs_schema->resultset('Cv::Cv')->find( { name => 'local' } )->cv_id();
 
-    my $breeding_trial_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program_trial_relationship' });
+    my $breeding_trial_cvterm_row = $self->bcs_schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program_trial_relationship' });
 
     if (!$breeding_trial_cvterm_row) {
-	my $row = $self->schema->resultset('Cv::Cvterm')->create_with(
+	my $row = $self->bcs_schema->resultset('Cv::Cvterm')->create_with(
 	    {
 		name => 'breeding_program_trial_relationship',
 		cv   => 'local',
@@ -1034,7 +1188,7 @@ sub get_planting_date_cvterm_id {
     return $row->cvterm_id();
 }
 
-=head2 create_plant_entries
+=head2 function create_plant_entries()
 
  Usage:        $trial->create_plant_entries($plants_per_plot);
  Desc:         Some trials require plant-level data. This function will
@@ -1050,63 +1204,110 @@ sub create_plant_entities {
     my $self = shift;
     my $plants_per_plot = shift;
 
-    my %design = CXGN::Trial::TrialDesign->new( { });
+    print STDERR "Create plant entities...\n";
     my $chado_schema = $self->bcs_schema();
-    
+    my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id() });
+    my $design = $layout->get_design();
+
+    print STDERR "creating project...\n";
     my $plant_trial_name = $self->get_name()."_plants";
-    my $breeding_program = $self->get_breeding_program();
+    my $project_type = $self->get_project_type();
+    my $project_year = $self->get_year();
+    my $project_location = $self->get_location();
+    my $design_type = $self->get_design_type();
+
+    my ($breeding_program_id, $breeding_program_name) = $self->get_breeding_program();
+    my ($location_id, $location_name) = @$project_location;
 
     my $project = $self->bcs_schema()->resultset("Project::Project")->create( 
 	{ 
 	    name => $plant_trial_name,
+	    description => $self->get_description()." (trial with plant entries)"
 	});
 
     # create a new experiment
-    my $nd_experiment_id = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->create()->nd_experiment_id();
+    print STDERR "Create new experiment...\n";
 
-    my $nd_experiment_project = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->create( { 
-	nd_experiment_id => $nd_experiment_id,
-	project_id => $project->project_id(),
-													 });
+    my $experiment_type_id = $layout-> _get_field_layout_experiment_from_project()->type_id();
 
-    foreach my $plot (keys %design) { 
-	my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $plot });
-	
-	my $plant_cvterm = $chado_schema->resultset("Cv::Cvterm")
+    my $nd_experiment_id = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->create( { nd_geolocation_id => $location_id, type_id => $experiment_type_id } )->nd_experiment_id();
+
+    print STDERR "Create project entry...\n";
+    my $nd_experiment_project = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->create( 
+	{ 
+	    nd_experiment_id => $nd_experiment_id,
+	    project_id => $project->project_id(),
+	});
+
+    print STDERR "Create the plant entities...\n";
+    print STDERR Dumper($design);
+
+    my $new_trial_id = $project->project_id();
+    my $new_trial = CXGN::Trial->new( { bcs_schema => $chado_schema, trial_id => $new_trial_id });
+    
+    $new_trial->set_project_type($project_type);
+    $new_trial->set_year($project_year);
+    $new_trial->add_location($location_id);
+    $new_trial->set_breeding_program($breeding_program_id);
+    $new_trial->set_design_type($design_type);
+
+    my $plant_cvterm = $chado_schema->resultset("Cv::Cvterm")
 	    ->create_with({
 		name   => 'plant',
 		cv     => 'stock type',
 		db     => 'null',
 		dbxref => 'plant',
 			  });
-	
 
+    my $plant_relationship_cvterm = $chado_schema->resultset("Cv::Cvterm")
+	    ->create_with({
+		name   => 'plant_of',
+		cv     => 'stock relationship',
+		db     => 'null',
+		dbxref => 'plant_of',
+			  });
+	
+    my $field_layout_cvterm_id = $chado_schema->resultset("Cv::Cvterm")->find( { name=>'field layout' })->cvterm_id;
+
+    foreach my $plot (keys %$design) { 
+	print STDERR " ... creating plants for plot $plot...\n";
+	my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $design->{$plot}->{plot_name} });
+	
 	if (! $plot_row) { 
-	    return "The plot $plot is not yet in the database. Cannot create plant entries. Check carefully what you are doing... maybe you are too tired?";
+	    print STDERR "The plot $plot is not found in the database\n";
+	    return "The plot $plot is not yet in the database. Cannot create plant entries.";
 	}
 	
 	my $parent_plot = $plot_row->stock_id();
 
 	foreach my $number (1..$plants_per_plot) { 
 	    my $plant_name = $plot_row->uniquename()."_plant_$number";
+	    print STDERR "... ... creating plant $plant_name...\n";
 	    # create new plant row
 	    my $plant = $chado_schema->resultset("Stock::Stock")
 		->find_or_create({
-		    organism_id => $parent_plot->organism_id(),
+		    organism_id => $plot_row->organism_id(),
 		    name       => $plant_name,
 		    uniquename => $plant_name,
 		    type_id => $plant_cvterm->cvterm_id,
 				 } );
-	    my $nd_experiment_link = $self->bcs_schema()->resulset("NaturalDiversity::NdExperimentStock")->find_or_create({ 
-		nd_experiment_id => $nd_experiment_id,
-		stock_id => $plant->stock_id(),
-														       });
+	    my $nd_experiment_link = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentStock")->find_or_create(
+		{ 
+		    nd_experiment_id => $nd_experiment_id,
+		    stock_id => $plant->stock_id(),
+		    type_id => $field_layout_cvterm_id, 
+		});
+
+	    my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create(
+		{ 
+		    object_id => $parent_plot,
+		    subject_id => $plant->stock_id(),
+		    type_id => $plant_relationship_cvterm->cvterm_id(),
+		});
 	}
 	
     }
+    return $new_trial->get_trial_id();
 }
-
-
-
 
 1;

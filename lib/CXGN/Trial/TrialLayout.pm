@@ -66,7 +66,10 @@ sub _lookup_trial_id {
   my $accession_names_ref;
   my $control_names_ref;
   my $design_type_from_project;
-  if (!$self->_get_trial_year_from_project()) {return;}
+  if (!$self->_get_trial_year_from_project()) {
+      print STDERR "Trial has no year... not creating layout object.\n";
+      return;
+  }
   $self->_set_trial_year($self->_get_trial_year_from_project());
   $self->_set_trial_name($self->get_project->name());
   $self->_set_trial_description($self->get_project->description());
@@ -74,11 +77,18 @@ sub _lookup_trial_id {
   
   $design_type_from_project =  $self->_get_design_type_from_project();
   if (! $design_type_from_project) {
-    return;
+      print STDERR "Trial has no design type... not creating layout object.\n";
+      return;
   }
-  if (!$self->_get_location_from_field_layout_experiment()) {return;}
+  if (!$self->_get_location_from_field_layout_experiment()) {
+      print STDERR "Trial has not location... not creating layout object.\n";
+      return;
+  }
   $self->_set_trial_location($self->_get_location_from_field_layout_experiment());
-  if (!$self->has_trial_location) {return;}
+  if (!$self->has_trial_location) {
+      print STDERR "No trial location defined... not creating layout object.\n";
+      return;
+  }
   $self->_set_plot_dimensions($self->_get_plot_dimensions_from_trial());
   $self->_set_design_type($self->_get_design_type_from_project());
   $self->_set_design($self->_get_design_from_trial());
@@ -181,7 +191,11 @@ sub _get_design_from_trial {
 	print STDERR "RETRIEVED: genotyping_project_name: $design{genotyping_project_name}\n";
     }
     
+    my $plot_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot' });
     my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
+    my $plant_of_cv = $schema->resultset("Cv::Cvterm")->find({name=> 'plant_of'});
+    my $plant_of_id = 0;
+    if ($plant_of_cv) { $plant_of_id = $plant_of_cv->cvterm_id(); }
     my $tissue_sample_of_cv = $schema->resultset("Cv::Cvterm")->find({ name=>'tissue_sample_of' });
     my $plot_name = $plot->uniquename;
     my $plot_number_prop = $plot->stockprops->find( { 'type.name' => 'plot number' }, { join => 'type'} );
@@ -193,38 +207,41 @@ sub _get_design_from_trial {
     my $col_number_prop = $plot->stockprops->find( { 'type.name' => 'col_number' }, { join => 'type'} );
 
 
-    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
+    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id(), $plant_of_id ] } })->object;
     my $accession_name = $accession->uniquename;
     $design_info{"plot_name"}=$plot->uniquename;
     $design_info{"plot_id"}=$plot->stock_id;
 
-    if ($plot_number_prop) {
-      $design_info{"plot_number"}=$plot_number_prop->value();
-    }
-    else {die "no plot number stockprop found for plot $plot_name";}
-    if ($row_number_prop) { 
-	$design_info{"row_number"} = $row_number_prop->value();
-    }
-    if ($col_number_prop) { 
-	$design_info{"col_number"} = $col_number_prop->value();
-    }
-
-    if ($block_number_prop) {
-      $design_info{"block_number"}=$block_number_prop->value();
-    }
-    if ($replicate_number_prop) {
-      $design_info{"rep_number"}=$replicate_number_prop->value();
-    }
-    if ($range_number_prop) {
+    if ($plot->type_id() == $plot_cv->cvterm_id()) { 
+	print STDERR "Enforcing some metadata for plots of type plot (vs. plants)...\n";
+	if ($plot_number_prop) {
+	    $design_info{"plot_number"}=$plot_number_prop->value();
+	}
+	else {die "no plot number stockprop found for plot $plot_name";}
+	if ($row_number_prop) { 
+	    $design_info{"row_number"} = $row_number_prop->value();
+	}
+	if ($col_number_prop) { 
+	    $design_info{"col_number"} = $col_number_prop->value();
+	}
+	
+	if ($block_number_prop) {
+	    $design_info{"block_number"}=$block_number_prop->value();
+	}
+	if ($replicate_number_prop) {
+	    $design_info{"rep_number"}=$replicate_number_prop->value();
+	}
+	if ($range_number_prop) {
       $design_info{"range_number"}=$replicate_number_prop->value();
+	}
+	if ($is_a_control_prop) {
+	    $design_info{"is_a_control"}=$is_a_control_prop->value();
+	}
+	if ($accession_name) {
+	    $design_info{"accession_name"}=$accession_name;
+	}
+	$design{$plot_number_prop->value}=\%design_info;
     }
-    if ($is_a_control_prop) {
-      $design_info{"is_a_control"}=$is_a_control_prop->value();
-    }
-    if ($accession_name) {
-      $design_info{"accession_name"}=$accession_name;
-    }
-    $design{$plot_number_prop->value}=\%design_info;
   }
 
   return \%design;
@@ -252,7 +269,8 @@ sub _get_location_from_field_layout_experiment {
   my $location_name;
   $field_layout_experiment = $self -> _get_field_layout_experiment_from_project();
   if (!$field_layout_experiment) {
-    return;
+      print STDERR "No field layout detected for this trial.\n";
+      return;
   }
   $location_name = $field_layout_experiment -> nd_geolocation -> description();
   #print STDERR "Location: $location_name\n";
@@ -387,9 +405,17 @@ sub _get_plots {
   }
   $field_layout_experiment = $self->_get_field_layout_experiment_from_project();
   if (!$field_layout_experiment) {
-    return;
+      print STDERR "No field layout experiment found!\n";
+      return;
   }
   @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock');
+
+  #debug...
+  print STDERR "PLOT LIST: \n";
+  foreach my $p (@plots) { 
+      print STDERR  $p->name()."\n";
+  }
+
   return \@plots;
 }
 
@@ -454,8 +480,11 @@ sub _get_trial_accession_names_and_control_names {
   @plots = @{$plots_ref};
   $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
   $sample_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'tissue_sample_of'});
+  my $plant_of_cv = $schema->resultset("Cv::Cvterm")->find({name=>'plant_of'});
+  my $plant_of_id = 0;
+  if ($plant_of_cv) { $plant_of_id = $plant_of_cv->cvterm_id(); }
   foreach $plot (@plots) {
-    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => [$plot_of_cv->cvterm_id(),$sample_of_cv->cvterm_id()]})->object;
+    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => [$plot_of_cv->cvterm_id(),$sample_of_cv->cvterm_id(), $plant_of_id ]})->object;
     my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
     my $is_a_control;
     if ($is_a_control_prop) {
