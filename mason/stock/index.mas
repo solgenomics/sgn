@@ -78,9 +78,11 @@ my $pubs = $stockref->{pubs};
 my $has_pedigree = $stockref->{has_pedigree};
 my $has_descendants = $stockref->{has_descendants};
 my $trait_ontology_db_name = $stockref->{trait_ontology_db_name};
-
+my $editable_stock_props_string = $stockref->{editable_stock_props};
 my $schema = $stockref->{schema};
 my $dbh = $stockref->{dbh};
+
+my @editable_stock_props = split "," , $editable_stock_props_string;
 
 my $stockprop_cv = $schema->resultset("Cv::Cv")->search( {
  'me.name' => 'stock_property'} );
@@ -99,7 +101,10 @@ my $add_image_link = qq|<a href="/image/add?type_id=$stock_id&action=new&type=st
 my $image_ids =  $stockref->{image_ids} || [] ;
 my $stockprops = $stockref->{props};
 
+###this is replaced by $editable_stock_props. Needs to be provided in the conf file
 my $metadata = ['variety', 'donor', 'donor institute', 'country', 'state' , 'adaptation' , 'notes', 'GSOR', 'NPGS', 'Gpno', 'IRGSP', 'NSFTV', 'CIor', 'PI', 'subpopulation'];
+####
+
 
 #my $pedigree= ['pedigree', 'male parent', 'female parent'];
 # get pedigree of stock
@@ -230,24 +235,24 @@ function jqueryStuff() {
 % my $subtitle = $edit_privs ? "[<a id=\"stock_add_synonym\" href=\"javascript:synonyms_addPropDialog()\">Add...</a>]" : "[Add]";
    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
       <& /stock/stockprops.mas,
-       stock_id=> $stock_id,
-	props=> $stockprops ,
-	div_name=>'synonyms',
-	subset=>$resources,
-	editable=> [ 'synonym' ],
+       stock_id    => $stock_id,
+	props      => $stockprops ,
+	div_name   =>'synonyms',
+	subset     =>$resources,
+	editable   => [ 'synonym' ],
 	edit_privs => $edit_privs   &>
 </&>
-%  $div_name = join("_", @$metadata);
+%  $div_name = join("_", @editable_stock_props);
 % my $props_subtitle = $edit_privs ? "[<a id=\"stock_add_props\" href=\"javascript:stockprops_addPropDialog()\">Add...</a>]" : "[Add]";
 
     <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
       <& /stock/stockprops.mas,
-	 stock_id=>$stock_id,
-	props=> $stockprops,
-        div_name => 'stockprops',
-	subset=>  $metadata ,
+	 stock_id  =>$stock_id,
+	props      => $stockprops,
+        div_name   => 'stockprops',
 	edit_privs => $edit_privs,
-	editable=> [ ]  &>
+	subset     => \@editable_stock_props,
+	editable   => \@editable_stock_props  &>
 </&>
 
 

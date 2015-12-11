@@ -115,7 +115,7 @@ Chained off of L</get_stock> below.
 sub new_stock : Chained('get_stock') PathPart('new') Args(0) {
     my ( $self, $c ) = @_;
     $c->stash(
-        template => '/stock/index.mas',
+        template => '/stock/new_stock.mas',
 
         stockref => {
             action    => "new",
@@ -263,6 +263,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	    has_pedigree => $c->stash->{has_pedigree},
 	    has_descendants => $c->stash->{has_descendants},
             trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
+	    editable_stock_props   => $c->get_conf('editable_stock_props'),
 
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),

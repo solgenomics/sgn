@@ -100,8 +100,7 @@ sub trial_description_GET   {
 sub trial_description_POST  {  
     my $self = shift;
     my $c = shift;
-    my $description = shift;
-    
+    my $description = $c->req->param('description');
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
 	return;
@@ -536,7 +535,9 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
     }
 
-   }
+    }
+
+    $c->stash->{rest} = {success => 1};
 
 	
 }    

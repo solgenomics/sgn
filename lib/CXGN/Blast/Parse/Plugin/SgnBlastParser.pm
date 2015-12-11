@@ -22,12 +22,13 @@ sub prereqs {
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">Match Information</h4>
+        <h4 id="match_name" class="modal-title">Match Information</h4>
       </div>
       <div class="modal-body">
         <dl>
             <dd>
               <div style="margin: 0.5em 0"><a class="match_details" href="" target="_blank">View matched sequence</a></div>
+              <div id="jbrowse_div" style="display:none"><a id="jbrowse_link" href="" target="_blank">View in genome context</a></div>
             </dd>
             <dd class="subject_sequence_xrefs">
             </dd>
@@ -41,21 +42,29 @@ sub prereqs {
 
 <script>
 
-  function resolve_blast_ident( id, id_region, match_detail_url, identifier_url ) {
+  function resolve_blast_ident( id, jbrowse_url, match_detail_url, identifier_url ) {
+    
+    
     var popup = jQuery( "#xref_menu_popup" );
     
-    jQuery('.modal-title').html( id );
+    jQuery('#match_name').html( id );
     
-    if( identifier_url == null ) {
-       jQuery('.sequence_name').html( id );
-    } else {
-       jQuery('.sequence_name').html( '<a href="' + identifier_url + '" target="_blank">' + id + '</a>' );
-    }
+//    if( identifier_url == null ) {
+//       jQuery('.sequence_name').html( id );
+//    } else {
+//       jQuery('.sequence_name').html( '<a href="' + identifier_url + '" target="_blank">' + id + '</a>' );
+//    }
 
     popup.find('a.match_details').attr( 'href', match_detail_url );
-
+    popup.find('#jbrowse_link').attr( 'href', jbrowse_url );
+    
+    if (jbrowse_url) {
+      popup.find('#jbrowse_div').css( 'display', 'inline' );
+    }
+    
     // look up xrefs for overall subject sequence
     var subj = popup.find('.subject_sequence_xrefs');
+    
     subj.html( '<img src="/img/throbber.gif" /> searching ...' );
     subj.load( '/api/v1/feature_xrefs?q='+id );
     
@@ -77,7 +86,10 @@ sub parse {
   my $bdb = shift;
   
   my $db_id = $bdb->blast_db_id();
-
+  my $jbr_src = $bdb->jbrowse_src();
+  
+  # print STDERR "jbr_src: $jbr_src\n";
+  
   my $query = "";
   my $subject = "";
   my $id = 0.0;
@@ -107,7 +119,7 @@ sub parse {
 
     if ($line =~ /Query\=\s*(\S+)/) {
       $query = $1;
-      unshift(@res_html, "<center><h3>$query</h3>");
+      unshift(@res_html, "<center><h3>".$query." vs ".$bdb->title()."</h3>");
     }
 
     if ($append_desc) {
@@ -126,9 +138,9 @@ sub parse {
       $append_desc = 1;
       
       if ($subject) {
-        push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$subject:$sstart..$send', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
-        # push(@res_html, "<tr><td>$query</td><td>$subject</td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
-        # push(@res_html, "<tr><td>$query</td><td><a href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" target=\"_blank\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+        my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send);
+        
+        push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
       }
       $subject = "";
       $id = 0.0;
@@ -150,8 +162,9 @@ sub parse {
 
 
     if ($line =~ /Score\s*=/ && $one_hsp == 1) {
-      # push(@res_html, "<tr><td>$query</td><td>$subject</td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
-      push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$subject:$sstart..$send', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+      my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send);
+      
+      push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
 
       $id = 0.0;
       $aln = 0;
@@ -200,9 +213,12 @@ sub parse {
     }
 
 
-  }
-  # push(@res_html, "<tr><td>$query</td><td>$subject</td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
-  push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$subject:$sstart..$send', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+  } # while_end
+  
+  
+  my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send);
+
+  push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
   push(@res_html, "</table></center>");
   
   push(@res_html, "<br><pre>");
@@ -211,8 +227,30 @@ sub parse {
   #
   # # print STDERR join("\n", @res_html);
   
-  # return ("<p>SGN output</p>");
   return (join("\n", @res_html));
 }
+
+sub _build_jbrowse_url {
+  my $jbr_src = shift;
+  my $subject = shift;
+  my $sstart = shift;
+  my $send = shift;
+  
+  my $jbrowse_url;
+  
+  $subject =~ s/\.\d$//;
+  $subject =~ s/\.\d$//;
+  
+  if ($jbr_src =~ /(.+)_gene/) {
+    $jbrowse_url = "/jbrowse/current/?data=data/json/".$1."&loc=".$subject."&tracks=DNA,gene_models";
+  } elsif ($jbr_src =~ /(.+)_genome/) {
+    $jbrowse_url = "/jbrowse/current/?data=data/json/".$1."&loc=".$subject."%3A".$sstart."..".$send."&tracks=DNA,gene_models";
+  } else {
+    $jbrowse_url;
+  }
+  
+  return $jbrowse_url;
+}
+
 
 1;

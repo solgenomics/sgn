@@ -183,7 +183,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </div>
 
 
-<&| /page/info_section.mas, title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
+<&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
 
   <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
  
@@ -404,6 +404,13 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_DataCollector_form" name="upload_DataCollector_form">
       <label for="datacollector_upload_file" style="display: inline-block; width: 100px;">Upload file:</label>
       <input type="file" name="DataCollector_upload_file" id="DataCollector_upload_file" encoding="multipart/form-data" />
+  </form>
+</div> 
+
+<div id="upload_phenotyping_spreadsheet_dialog" class="ui-widget" title="Upload Phenotyping spreadsheet File" >
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_phenotyping_spreadsheet_form" name="upload_phenotyping_spreadsheet_form">
+      <label for="phenotyping_spreadsheet_upload_file" style="display: inline-block; width: 100px;">Upload file:</label>
+      <input type="file" name="phenotyping_spreadsheet_upload_file" id="phenotyping_spreadsheet_upload_file" encoding="multipart/form-data" />
   </form>
 </div> 
 

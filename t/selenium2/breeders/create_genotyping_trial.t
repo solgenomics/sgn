@@ -48,7 +48,7 @@ $t->while_logged_in_as(
 	my $accession_input = $t->find_element_ok("igd_accession_select_box_list_select", "id", "find accession list"); 
 	$accession_input->send_keys("test_list");
 
-	my $ok = $t->find_element_ok("genotype_trial_submit_button", "id", "find ok button on submit genotype trial dialog");
+	my $ok = $t->find_element_ok("add_igd_geno_trial_submit", "id", "find ok button on submit genotype trial dialog");
 	$ok->click();
 
 	sleep(5);
