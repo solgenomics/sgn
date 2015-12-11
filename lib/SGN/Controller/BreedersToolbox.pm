@@ -99,7 +99,7 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
 
     $c->stash->{accessions} = $accessions;
     $c->stash->{population_groups} = $populations;
-    $c->stash->{default_species} = $c->config->{default_species};
+    $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
 
 }

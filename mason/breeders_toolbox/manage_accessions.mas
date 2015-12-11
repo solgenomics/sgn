@@ -2,7 +2,7 @@
 <%args>
 $accessions
 $population_groups
-$default_species => ""
+$preferred_species => ""
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery','jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables' ] &>
@@ -91,7 +91,7 @@ $default_species => ""
       <div class="modal-body">
         <div class="container-fluid">
     	  <label for="species_name_input">Species name for added accessions</label>
-  	  <input class="form-control" type="text" id="species_name_input">$default_species</input>
+  	  <input class="form-control" type="text" id="species_name_input" value="<% $preferred_species %>"></input>
   	  <br><br>
     	  <label for="population_name_input">Population name for added accessions (optional)</label>
   	  <input class="form-control" type="text" id="population_name_input"></input>
