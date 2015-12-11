@@ -593,7 +593,7 @@ function update_stocks(stocks, message) {
 function format_options(items) { 
     var html = '';
     for (var key in items) { 
-	html = html + '<option value="'+key+'">'+items[key]+'</a>\n';
+	html = html + '<option value="'+key+'" title="'+items[key]+'">'+items[key]+'</a>\n';
     }
     return html;
 }
@@ -610,7 +610,7 @@ function format_options_list(items) {
     var html = '';
     if (items) { 
 	for(var i=0; i<items.length; i++) { 
-	    html = html + '<option value="'+items[i][0]+'">'+items[i][1]+'</a>\n';
+	    html = html + '<option value="'+items[i][0]+'" title="'+items[i][1]+'">'+items[i][1]+'</a>\n';
 	}
 	return html;
     }
@@ -661,8 +661,9 @@ function show_list_selected_count(select_div, selected_count_div) {
 function get_genotype_checkbox() { 
     var checkbox = jQuery('#restrict_genotypes').is(':checked')
 
-    if (checkbox == true) { 
-	return 1;
+    if (checkbox == true) {
+	console.log("Selected protocol = "+jQuery("#gtp_select").text()+" and id = "+jQuery("#gtp_select").val());
+	return jQuery("#gtp_select").val();
     }
     return 0;
 

@@ -65,46 +65,21 @@ sub add_stockprop_POST {
         my $stock_id = $c->req->param('stock_id');
         my $prop  = $c->req->param('prop');
         my $prop_type = $c->req->param('prop_type');
+	#if ($prop_type eq 'synonym') { $prop_type = 'stock_synonym' ; } 
 
-	my $type_row = $schema->resultset("Cv::Cvterm")->find( { name => $prop_type } );
+	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } ); 
 
-	if (!defined($type_row)) { 
-	    $c->stash->{rest} = { error => "the type $prop_type does not exist" }; return ;
-	        #$schema->resultset("Stock::Stock")->create_stockprop({ });
-	}
-	
-
-	my $type_id = $type_row->cvterm_id();
-				  
-        my ($existing_prop) = $schema->resultset("Stock::Stockprop")->search( {
-            stock_id => $stock_id,
-            type_id => $type_id,
-            value => $prop, } );
-
-        if ($existing_prop) { $c->stash->{rest} = { error=> 'type_id/prop '.$type_id." ".$prop." already associated" } ; 
-        } 
-	else {
-            my $prop_rs = $schema->resultset("Stock::Stockprop")->search( {
-                stock_id => $stock_id,
-                type_id => $type_id, } );
-            my $rank = $prop_rs ? $prop_rs->get_column('rank')->max : -1 ;
-            $rank++;
-
-            try {
-		$schema->resultset("Stock::Stockprop")->find_or_create( {
-		    stock_id => $stock_id,
-		    type_id => $type_id,
-		    value => $prop,
-		    rank => $rank, } );
-		
-		$c->stash->{rest} = { message => "stock_id $stock_id and type_id $type_id have been associated with value $prop", }
-            } 
-	    catch {
-                $c->stash->{rest} = { error => "Failed: $_" }
+	if ($stock && $prop && $prop_type) { 
+	    try {
+		$stock->create_stockprops( { $prop_type => $prop }, { dbxref_accession_prefix => 'stock_synonym:', autocreate => 1 } ); 
+		$c->stash->{rest} = { message => "stock_id $stock_id and type_id $prop_type have been associated with value $prop", }
+	    } catch {
+		$c->stash->{rest} = { error => "Failed: $_" }
             };
-        }
-    } 
-    else {  
+	} else { 
+	    $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
+	}
+    } else {  
 	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
     #$c->stash->{rest} = { message => 'success' };
@@ -148,7 +123,7 @@ sub get_stockprops_GET {
 
     my @propinfo = ();
     while (my $prop = $prop_rs->next()) { 
-	push @propinfo, { stockprop_id => $prop->stockprop_id, stock_id => $prop->stock_id, type_id => $prop->type_id(), type_name => $prop->type->name(), value => $prop->value() }
+	push @propinfo, { stockprop_id => $prop->stockprop_id, stock_id => $prop->stock_id, type_id => $prop->type_id(), type_name => $prop->type->name(), value => $prop->value() };
     }
 	
     $c->stash->{rest} = \@propinfo;
