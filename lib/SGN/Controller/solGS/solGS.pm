@@ -2091,6 +2091,97 @@ sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1
 }
 
 
+sub check_genotype_data_population :Path('/solgs/check/genotype/data/population/') Args(1) {
+    my ($self, $c, $pop_id) = @_;
+#query selection pop id using pop name;
+#add to response selection pop id if it has genotype data; 
+    $c->stash->{pop_id} = $pop_id;
+    $self->check_population_has_genotype($c);
+       
+    my $ret->{has_genotype} = $c->stash->{population_has_genotype};
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
+sub check_population_has_genotype {
+    my ($self, $c) = @_;
+    
+    my $pop_id = $c->stash->{pop_id};
+
+    my $pop_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pop_id);
+    my $marker_cnt = $pop_prop->{'marker_count'};
+
+    my $has_genotype;
+    my $has_genotype = 1 if $marker_cnt;
+    
+    unless ($marker_cnt) 
+    {	
+	my $geno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "genotype_data_${pop_id}");  
+
+	$has_genotype = 1 if -s $geno_file;
+	unless ($has_genotype) 
+	{
+	    my $markers = $c->model("solGS::solGS")->get_project_genotyping_markers($pop_id);
+	    $has_genotype = 1 if $markers;
+	}	
+    }
+    
+    $c->stash->{population_has_genotype} = $has_genotype;
+
+}
+
+
+sub check_selection_population_relevance :Path('/solgs/check/selection/population/relevance') Args() {
+    my ($self, $c) = @_;
+
+    my $training_pop_id    = $c->req->param('training_pop_id');
+    my $selection_pop_name = $c->req->param('selection_pop_name');    
+
+    my $pr_rs = $c->model("solGS::solGS")->project_details_by_exact_name($selection_pop_name);
+   
+    my $selection_pop_id;
+    while (my $row = $pr_rs->next) {  
+	$selection_pop_id = $row->project_id;
+    }
+    
+    my $has_genotype;
+    if ($selection_pop_id)
+    {
+	$c->stash->{pop_id} = $selection_pop_id;
+	$self->check_population_has_genotype($c);
+	$has_genotype = $c->stash->{population_has_genotype}; 
+    }  
+    
+    my $similarity;  
+    if ($has_genotype)
+    {
+	$c->stash->{pop_id} = $selection_pop_id;
+	$self->genotype_file($c);
+	my $selection_pop_geno_file = $c->stash->{genotype_file};
+	
+	$c->stash->{pop_id} = $training_pop_id;
+	$self->genotype_file($c); 
+	my $training_pop_geno_file = $c->stash->{genotype_file}; 
+
+	$similarity = $self->compare_marker_set_similarity([$selection_pop_geno_file, $training_pop_geno_file]);
+    } 
+
+    my $ret->{similarity}    = $similarity;
+    $ret->{has_genotype}     = $has_genotype;
+    $ret->{selection_pop_id} = $selection_pop_id;
+ 
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
 sub search_selection_pops :Path('/solgs/search/selection/populations/') {
     my ($self, $c, $tr_pop_id) = @_;
     
@@ -2139,6 +2230,7 @@ sub list_of_prediction_pops {
     $c->stash->{list_of_prediction_pops} = $c->stash->{selection_pops_list};
 
 }
+
 
 sub format_selection_pops {
     my ($self, $c, $pred_pops_ids) = @_;
@@ -2928,6 +3020,23 @@ sub combined_pops_summary {
 }
 
 
+sub compare_marker_set_similarity {
+    my ($self, $marker_file_pair) = @_;
+
+    my $first_markers = (read_file($marker_file_pair->[0]))[0];
+    my $sec_markers   = (read_file($marker_file_pair->[1]))[0];
+ 
+    my @first_geno_markers = split(/\t/, $first_markers);
+    my @sec_geno_markers   = split(/\t/, $sec_markers);
+  
+    my $common_markers = scalar(intersect(@first_geno_markers, @sec_geno_markers));
+    my $similarity     = $common_markers / scalar(@first_geno_markers);
+
+    return $similarity;
+
+}
+
+
 sub compare_genotyping_platforms {
     my ($self, $c,  $g_files) = @_;
  
@@ -2944,25 +3053,10 @@ sub compare_genotyping_platforms {
     }
 
     while (my $pair = $combinations->next)
-    {            
-        open my $first_file, "<", $pair->[0] or die "cannot open genotype file:$!\n";
-        my $first_markers = <$first_file>;
-        $first_file->close;
+    {  
+	$cnt++;
+	my $similarity = $self->compare_marker_set_similarity($pair);
 
-       
-        open my $sec_file, "<", $pair->[1] or die "cannot open genotype file:$!\n";
-        my $sec_markers = <$sec_file>;
-        $sec_file->close;
-
-        my @first_geno_markers = split(/\t/, $first_markers);
-        my @sec_geno_markers = split(/\t/, $sec_markers);
-  
-        my $f_cnt = scalar(@first_geno_markers);
-        my $sec_cnt = scalar(@sec_geno_markers);
-        
-        $cnt++;
-        my $common_markers = scalar(intersect(@first_geno_markers, @sec_geno_markers));
-        my $similarity = $common_markers / scalar(@first_geno_markers);
         unless ($similarity > 0.5 )      
         {
             no warnings 'uninitialized';
@@ -2971,9 +3065,9 @@ sub compare_genotyping_platforms {
           
             map { s/genotype_data_|\.txt//g } $pop_id_1, $pop_id_2;
            
-            my $list_pop = $c->stash->{uploaded_prediction};
+            my $list_type_pop = $c->stash->{uploaded_prediction};
           
-            if (!$list_pop) 
+            if (!$list_type_pop) 
             {
                 my @pop_names;
                 foreach ($pop_id_1, $pop_id_2)
@@ -3783,6 +3877,7 @@ sub format_phenotype_dataset {
 
 sub genotype_file  {
     my ($self, $c, $pred_pop_id) = @_;
+   
     my $pop_id  = $c->stash->{pop_id};
     
     my $geno_file;
