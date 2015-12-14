@@ -1218,40 +1218,51 @@ sub study_detail : Chained('studies') PathPart('detail') Args(1) {
 
 }
 
-sub traits :  Chained('brapi') PathPart('traits') CaptureArgs(0) {
+sub traits :  Chained('brapi') PathPart('traits') Args(0) {
     my $self = shift;
     my $c = shift;
+    my @status;
 
-
-}
-
-sub traits_list : Chained('traits') PathPart('list') Args(0) { 
-    my $self = shift;
-    my $c = shift;
+    #my $db_rs = $self->bcs_schema()->resultset("General::Db")->search( { name => $c->config->{trait_ontology_db_name} } );
+    #if ($db_rs->count ==0) { return undef; }
+    #my $db_id = $db_rs->first()->db_id();
     
-    my $db_rs = $self->bcs_schema()->resultset("General::Db")->search( { name => $c->config->{trait_ontology_db_name} } );
-    if ($db_rs->count ==0) { return undef; }
-    my $db_id = $db_rs->first()->db_id();
-    
-    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, cvtermprop.value, dbxref.accession FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) WHERE dbxref.db_id=?";
-    my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-    $h->execute($db_id);
+    #my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, cvtermprop.value, dbxref.accession FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) WHERE dbxref.db_id=?";
+    #my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+    #$h->execute($db_id);
 
-    my $traits = [];
-    while (my ($cvterm_id, $name, $description, $scale, $accession) = $h->fetchrow_array()) { 
-	push @$traits, { uid => $cvterm_id, name => $name, method => $description, unit => "", scale => $scale, accession => $accession };
+    my $q = "SELECT cvterm_id, name FROM materialized_traits;";
+    my $p = $self->bcs_schema()->storage->dbh()->prepare($q);
+    $p->execute();
+
+    my @data;
+    while (my ($cvterm_id, $name) = $p->fetchrow_array()) { 
+	my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) WHERE cvterm.cvterm_id=?";
+	my $h = $self->bcs_schema()->storage->dbh()->prepare($q2);
+	$h->execute($cvterm_id);
+    
+	while (my ($description, $scale, $accession) = $h->fetchrow_array()) { 
+	    my @observation_vars = ();
+	    push (@observation_vars, ($name, $accession)); 
+	    push @data, { traitDbId => $cvterm_id, traitId => $name, name => $name, description => $description, observationVariables => \@observation_vars, defaultValue => '', scale =>$scale };
+	}
     }
 
-    $c->stash->{rest} = { traits => $traits };
-}
-
-sub specific_traits_list : Chained('traits') PathPart('') Args(1) { 
-    my $self = shift;
-    my $c = shift;
-
-    $c->res->body("IT WORKS");
+    my $total_count = $p->rows;
+    my %result = (data => \@data);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
 
 }
+
+#sub specific_traits_list : Chained('traits') PathPart('') Args(1) { 
+#    my $self = shift;
+#    my $c = shift;
+
+#    $c->res->body("IT WORKS");
+
+#}
 
 sub maps : Chained('brapi') PathPart('maps') CaptureArgs(1) { 
     my $self = shift;
