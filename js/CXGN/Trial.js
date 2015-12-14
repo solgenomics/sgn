@@ -296,11 +296,12 @@ function trial_detail_page_setup_dialogs() {
 		jQuery( this ).dialog( "close" );
 		return;
 	    },
-	    Create: function() {
+	    Create: {text: "Ok", id:"create_phenotyping_ok_button", click:function() {
 		create_spreadsheet();
 		//save_experimental_design(design_json);
 		jQuery( this ).dialog( "close" );
 		//jQuery('#add_project_dialog').dialog("close");
+	       },
 	    },
 	},
     });
@@ -754,7 +755,8 @@ function save_trial_description() {
     var description = jQuery('#trial_description_input').val();
     alert('New description = '+description);
     jQuery.ajax( { 
-	url: '/ajax/breeders/trial/'+trial_id+'/description/'+description,
+	url: '/ajax/breeders/trial/'+trial_id+'/description/',
+	data: {description:description},
         type: 'POST',
 	success: function(response) { 
             if (response.error) { 
@@ -868,10 +870,10 @@ jQuery(document).ready(function ($) {
             "Cancel": function () {
                 jQuery('#upload_trial_coord_dialog').dialog("close");
             },
-	    "Ok": function () {
+	    "Ok": {text: "Ok", id:"upload_trial_coords_ok_button", click:function () {
 		upload_trial_coord_file();
                 jQuery('#upload_trial_coord_dialog').dialog("close");
-		
+	      }
 	    }
 	}
     });
@@ -911,15 +913,15 @@ jQuery(document).ready(function ($) {
      $('#upload_trial_coordinates_form').iframePostForm({
 	json: true,
 	post: function () {
-            var uploadedtrialcoordFile = $("#trial_coordinates_uploaded_file").val();
-	    $('#working').dialog("open");
+            var uploadedtrialcoordFile = $("#trial_coordinates_uploaded_file").val(); 
+	    $('#working_modal').modal("show");
             if (uploadedtrialcoordFile === '') {
-		$('#working').dialog("close");
+		$('#working_modal').modal("hide");
 		alert("No file selected");
             }
 	},
-	complete: function (response) {
-	    $('#working').dialog("close");
+	complete: function (response) { 
+	    $('#working_modal').modal("hide");
             if (response.error_string) {
 		$("#upload_trial_coord_error_display tbody").html('');
 		$("#upload_trial_coord_error_display tbody").append(response.error_string);
@@ -964,7 +966,6 @@ jQuery(document).ready(function ($) {
 
     function open_upload_trial_coord_dialog() {
 	$('#upload_trial_coord_dialog').dialog("open");
-	//add a blank line to design method select dropdown that dissappears when dropdown is opened 
 
     }
 
@@ -1025,6 +1026,71 @@ jQuery(document).ready(function ($) {
 	    }
 	}
     });
+
+
+
+
+
+
+    $('#upload_phenotyping_spreadsheet_link').click(function () {
+        	$('#upload_phenotyping_spreadsheet_dialog').dialog("open");
+	
+    });
+
+	$( "#upload_phenotyping_spreadsheet_dialog" ).dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+	    "Cancel": function () {
+                jQuery('#upload_phenotyping_spreadsheet_dialog').dialog("close");
+            },
+	    "Ok": {text: "Ok", id:"upload_phenotyping_ok_button", click:function() {
+                upload_phenotyping_spreadsheet_file();
+		$( this ).dialog( "close" );
+	      }		
+	    }
+	}
+    });
+
+   function upload_phenotyping_spreadsheet_file() {
+	jQuery('#working_modal').modal("show");
+        var uploadFile = $("#phenotyping_spreadsheet_upload_file").val();
+        $('#upload_phenotyping_spreadsheet_form').attr("action", "/ajax/phenoSheet/upload_pheno_sheet");
+        if (uploadFile === '') {
+	    alert("Please select a file");
+	    return;
+        }
+        $("#upload_phenotyping_spreadsheet_form").submit();
+    }
+
+   $('#upload_phenotyping_spreadsheet_form').iframePostForm({
+	json: true,
+	post: function () {
+	    var uploadFile = $("#phenotyping_spreadsheet_upload_file").val();
+		//alert("UPLOADED FILE: "+uploadFile);
+	    if (uploadFile === '') {
+		alert("No file selected");
+	    }
+	},
+	complete: function (response) {
+	    if (response.error) {
+		alert(response.error);
+		return;
+	    }
+	    if (response.success) {
+		jQuery('#working_modal').modal("hide");
+		alert("File uploaded successfully");
+		$( this ).dialog( "close" );
+		location.reload();
+	    }
+	}
+    });
+
+
+
 
 
 });

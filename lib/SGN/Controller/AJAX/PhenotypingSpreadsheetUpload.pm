@@ -1,8 +1,7 @@
-
 =head1 NAME
 
-SGN::Controller::AJAX::DataCollector - a REST controller class to provide the
-backend for Data Collector Spreadsheet operations
+SGN::Controller::AJAX::PhenotypingSpreadsheetUpload.pm - a REST controller class to provide the
+backend for Phenotyping Spreadsheet Upload operations
 
 =head1 DESCRIPTION
 
@@ -14,7 +13,7 @@ Jeremy Edwards <jde22@cornell.edu> , Alex Ogbonna <aco46@cornell.edu>
 
 =cut
 
-package SGN::Controller::AJAX::DataCollector;
+package SGN::Controller::AJAX::PhenotypingSpreadsheetUpload;
 
 use Moose;
 use List::MoreUtils qw /any /;
@@ -48,17 +47,17 @@ __PACKAGE__->config(
    );
 
 
-sub upload_phenotype_file_for_data_collector : Path('/ajax/datacollector/upload_dc_sheet') : ActionClass('REST') { }
+sub upload_phenotyping_file_for_spreadsheet : Path('/ajax/phenoSheet/upload_pheno_sheet') : ActionClass('REST') { }
 
-sub upload_phenotype_file_for_data_collector_POST : Args(0) {
+sub upload_phenotyping_file_for_spreadsheet_POST : Args(0) {
   my ($self, $c) = @_;
   my $uploader = CXGN::UploadFile->new();
   my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
   my $parser = CXGN::Phenotypes::ParseUpload->new();
-  my $upload = $c->req->upload('DataCollector_upload_file');
+  my $upload = $c->req->upload('phenotyping_spreadsheet_upload_file');
   my $upload_original_name = $upload->filename();
   my $upload_tempfile = $upload->tempname;
-  my $subdirectory = "data_collector_phenotype_upload";
+  my $subdirectory = "phenotyping_spreadsheet_phenotype_upload";
   my $archived_filename_with_path;
   my $md5;
   my $validate_file;
@@ -86,14 +85,14 @@ sub upload_phenotype_file_for_data_collector_POST : Args(0) {
   ## Set metadata
 
   $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
-  $phenotype_metadata{'archived_file_type'}="data collector phenotype file";
+  $phenotype_metadata{'archived_file_type'}="phenotyping spreadsheet phenotype file";
   $phenotype_metadata{'operator'}="tester_operator"; #####Need to get this from uploaded file
   $phenotype_metadata{'date'}="$timestamp";
 
   print STDERR "Validate uploaded file\n";
 
   ## Validate and parse uploaded file
-  $validate_file = $parser->validate('datacollector spreadsheet', $archived_filename_with_path);
+  $validate_file = $parser->validate('phenotyping spreadsheet', $archived_filename_with_path);
   if (!$validate_file) {
       $c->stash->{rest} = {error => "File not valid: $upload_original_name",};
       return;
@@ -101,7 +100,7 @@ sub upload_phenotype_file_for_data_collector_POST : Args(0) {
 
   print STDERR "Parse uploaded file\n";
 
-  $parsed_file = $parser->parse('datacollector spreadsheet', $archived_filename_with_path);
+  $parsed_file = $parser->parse('phenotyping spreadsheet', $archived_filename_with_path);
   if (!$parsed_file) {
       $c->stash->{rest} = {error => "Error parsing file $upload_original_name",};
       return;
