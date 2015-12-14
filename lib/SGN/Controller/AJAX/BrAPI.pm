@@ -1256,13 +1256,34 @@ sub traits :  Chained('brapi') PathPart('traits') Args(0) {
 
 }
 
-#sub specific_traits_list : Chained('traits') PathPart('') Args(1) { 
-#    my $self = shift;
-#    my $c = shift;
+sub specific_trait : Chained('brapi') PathPart('traits') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $cvterm_id = shift;
+    my @status;
+    my %result;
+ 
+    my $q = "SELECT cvterm_id, name FROM materialized_traits where cvterm_id=?;";
+    my $p = $self->bcs_schema()->storage->dbh()->prepare($q);
+    $p->execute($cvterm_id);
 
-#    $c->res->body("IT WORKS");
+    while (my ($cvterm_id, $name) = $p->fetchrow_array()) { 
+	my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) WHERE cvterm.cvterm_id=?";
+	my $h = $self->bcs_schema()->storage->dbh()->prepare($q2);
+	$h->execute($cvterm_id);
+    
+	while (my ($description, $scale, $accession) = $h->fetchrow_array()) { 
+	    my @observation_vars = ();
+	    push (@observation_vars, ($name, $accession)); 
+	    %result = ( traitDbId => $cvterm_id, traitId => $name, name => $name, description => $description, observationVariables => \@observation_vars, defaultValue => '', scale =>$scale );
+	}
+    }
 
-#}
+    my $total_count = $p->rows;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
 
 sub maps : Chained('brapi') PathPart('maps') CaptureArgs(1) { 
     my $self = shift;
