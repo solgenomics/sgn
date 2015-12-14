@@ -332,7 +332,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
 
-    my $h = $dbh->prepare("SELECT cvterm.name, cvterm.cvterm_id, count(phenotype.value), avg(phenotype.value::integer) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY cvterm.name, cvterm.cvterm_id;");
+    my $h = $dbh->prepare("SELECT cvterm.name, cvterm.cvterm_id, count(phenotype.value), to_char(avg(phenotype.value::integer), 'FM999999.990') FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY cvterm.name, cvterm.cvterm_id;");
 
     my $numeric_regex = '^\d+$';
     $h->execute($c->stash->{trial_id}, $numeric_regex );
