@@ -98,6 +98,16 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <tr>
 <td valign="top" >
   
+  <b>Trial Name</b>
+</td><td>
+  <div id="trial_name">
+    [loading...]
+  </div>
+</td><td>
+  [<a id="edit_trial_name">change</a>]
+</td></tr>
+
+<td valign="top" >
   <b>Trial Type</b>
 </td><td>
   <div id="trial_type">
@@ -158,6 +168,11 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <div id="edit_trial_description_dialog">
    Please enter the description for this trial:<br/>
    <textarea id="trial_description_input" cols="50" rows="10"></textarea>
+</div>
+
+<div id="edit_trial_name_dialog">
+  Please enter the name for this trial:<br />
+  <textarea id="trial_name_input" cols="20" rows="1"></textarea>
 </div>
 
 <div id="edit_trial_type_dialog">
@@ -452,6 +467,8 @@ jQuery(document).ready(function () {
   var type = get_trial_type(<% $trial_id %>);
 
   display_trial_type(type);
+
+  display_trial_name(<% $trial_id %>);
 
   jQuery('#delete_breeding_program_trial_association_link').click(
      function() { 

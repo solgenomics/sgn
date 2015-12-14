@@ -124,6 +124,52 @@ sub trial_description_POST  {
     $c->stash->{rest} = { success => 1 };
 }
 
+
+sub trial_name : Chained('trial') PathPart('names') Args(0) ActionClass('REST') {};
+
+sub trial_name_POST {
+	my $self = shift;
+	my $c = shift;
+	#my $name = shift;
+	my $name = $c->req->param("names");
+
+	print STDERR "TRIAL NAME POST with $name\n";
+	if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+		$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial name of this trial.' };
+		return;
+   	}
+
+ 	my $trial_id = $c->stash->{trial_id};
+    	my $trial = $c->stash->{trial};
+
+      	my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
+
+	my $breeding_program = $p->get_breeding_programs_by_trial($trial_id);
+
+    	if (! ($c->user() &&  ($c->user->check_roles("curator") || $c->user->check_roles($breeding_program)))) { 
+		$c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the name of a trial." };
+		return;
+    	}
+
+	$trial->set_name($name);
+
+    $c->stash->{rest} = { success => 1 };
+}
+
+sub trial_name_GET { 
+	my $self = shift;
+	my $c = shift;
+
+	my $trial = $c->stash->{trial};
+
+	$c->stash->{rest} = {names => $trial->get_name() };
+
+}
+
+
+
+
+
 sub harvest_date  : Chained('trial') PathPart('harvest_date') Args(0) ActionClass('REST') {};
 
 

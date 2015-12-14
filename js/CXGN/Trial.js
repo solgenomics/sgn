@@ -549,6 +549,29 @@ function trial_detail_page_setup_dialogs() {
 	}	
     });   
 
+    jQuery('#edit_trial_name').click( function () { 
+	jQuery('#edit_trial_name_dialog').dialog("open");
+	
+    });
+    
+    jQuery('#edit_trial_name_dialog').dialog( { 
+	autoOpen: false,
+	height: 200,
+	width: 300,
+	modal: true,
+	title: "Change trial name",
+	buttons: {
+	    cancel: { text: "Cancel",
+                      click: function() { jQuery( this ).dialog("close"); },
+                      id: "edit_name_cancel_button"
+		    },
+	    save:   { text: "Save", 
+                      click: function() { save_trial_name(); },
+                      id: "edit_name_save_button"
+		    }          
+	}	
+    });   
+
     jQuery('#change_trial_location_dialog').dialog( { 
 	autoOpen: false,
 	height: 200,
@@ -573,6 +596,48 @@ function trial_detail_page_setup_dialogs() {
     
 }
 
+function display_trial_name(trial_id) { 
+    jQuery.ajax( { 
+	url: '/ajax/breeders/trial/'+trial_id+'/names',
+	success: function(response) { 
+            if (response.error) { alert(response.error); }
+            else { 
+		jQuery('#trial_name').html(response.names);
+		jQuery('#trial_name_input').html(response.names);
+            }
+	},
+	error: function(response) { 
+	    jQuery('#trial_name').html('An error occurred trying to display the name.'); 
+	}
+    });
+}
+
+
+function save_trial_name(names) {
+	var trial_id = parseInt(jQuery('#trialIDDiv').text());
+	//var trial_id = get_trial_id();
+	var names = jQuery('#trial_name_input').val();
+	alert('New name = '+names);
+	jQuery.ajax( { 
+		url: '/ajax/breeders/trial/'+trial_id+'/names/',
+		type: 'POST',
+		data: {'names' : names},
+		success: function(response) {
+			if (response.error) {
+				alert(response.error);
+			}
+			else {
+				alert("Successfully updated trial name");
+				jQuery('#edit_trial_name_dialog').dialog("close");
+				display_trial_name(trial_id);
+			}
+		},
+		error: function(response) {
+			alert("An error occurred updating the trial name");
+		},
+	});
+
+}
 
 function save_trial_type(type) { 
     var trial_id = get_trial_id();
@@ -593,7 +658,7 @@ function save_trial_type(type) {
 	    alert('An error occurred setting the trial type.');
 	}
     });
-    
+
 
 }
 
@@ -1027,10 +1092,6 @@ jQuery(document).ready(function ($) {
     });
 
 
-
-
-
-
     $('#upload_phenotyping_spreadsheet_link').click(function () {
         	$('#upload_phenotyping_spreadsheet_dialog').dialog("open");
 	
@@ -1087,10 +1148,6 @@ jQuery(document).ready(function ($) {
 	    }
 	}
     });
-
-
-
-
 
 });
 
