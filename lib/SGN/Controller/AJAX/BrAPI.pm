@@ -25,7 +25,7 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 		      is => 'rw',
     );
 
-my $DEFAULT_PAGE_SIZE=500;
+my $DEFAULT_PAGE_SIZE=20;
 
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) { 
@@ -400,51 +400,49 @@ sub germplasm_mcpd : Chained('germplasm') PathPart('MCPD') Args(0) {
 sub study_list : Chained('brapi') PathPart('studies') Args(0) { 
     my $self = shift;
     my $c = shift;
-    my $program = $c->req->param("programId");
+    my $program_id = $c->req->param("programId");
     my @status;
     my @data;
     my %result;
-
-    my $ps = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
-    my $programs = $ps -> get_breeding_programs();
-
-    if ($program) { 
-	my $program_info;
-	foreach my $bp (@$programs) { 
-	    if (uc($bp->[1]) eq uc($program)) { 
-		$program_info = $bp;
+    my $rs;
+    if (!$program_id) {
+	$rs = $self->bcs_schema->resultset('Project::Project')->search(
+	    {'type.name' => 'breeding_program_trial_relationship' },
+	    {join=> {'project_relationship_subject_projects' => 'type'},
+	     '+select'=> ['me.project_id'], 
+	     '+as'=> ['study_id' ],
+	     order_by=>{ -asc=>'me.project_id' }
 	    }
-	}
-	if (!$program_info) { 
-	    push @status, "ProgramId $program does not exist. Ignoring program parameter"; 
-	}
-	else { 
-	    $programs = $program_info;
-	}
+	);
+    }elsif ($program_id) {
+	$rs = $self->bcs_schema->resultset('Project::Project')->search(
+	    {'type.name' => 'breeding_program_trial_relationship', 'project_relationship_subject_projects.object_project_id' => $program_id },
+	    {join=> {'project_relationship_subject_projects' => 'type'},
+	     '+select'=> ['me.project_id'], 
+	     '+as'=> ['study_id' ],
+	     order_by=>{ -asc=>'me.project_id' }
+	    }
+	);
     }
-    
+
     my $total_count = 0;
+    if ($rs) {
+	$total_count = $rs->count();
+	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+	while (my $s = $rs_slice->next()) { 
+	   my $t = CXGN::Trial->new( { trial_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
 
-    foreach my $bp (@$programs) { 
-	my $trial_data = {};
-	my @trials = $ps->get_trials_by_breeding_program($bp->[0]);
-	my @trial_ids = map { $_->[0] } @trials;
-	#print STDERR Dumper(\@trial_ids);
-	print STDERR scalar(@trial_ids)."number ";
-	foreach my $trial_id (@trial_ids) { 
-
-	    if ($trial_id) {
-
-		my $t = CXGN::Trial->new( { trial_id => $trial_id->[0], bcs_schema => $self->bcs_schema } );
-	    
-		my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $bp->[0] } );
-
-		
-		my @years = ($t->get_year());
-
-		my %optional_info = (studyPUI=>'', startDate=>'', endDate=>'');
-		push @data, {studyDbId=>$t->get_trial_id(), name=>$t->get_name(), studyType=>$t->get_project_type()->[1], years=>\@years, locationDbId=>$t->get_location()->[0], optionalInfo=>\%optional_info};
-	    }
+	   my @years = ($t->get_year());
+	   my %optional_info = (studyPUI=>'', startDate=>'', endDate=>'');
+	   my $project_type = '';
+	   if ($t->get_project_type()) {
+	       $project_type = $t->get_project_type()->[1];
+	   }
+	   my $location = '';
+	   if ($t->get_location()) {
+	       $location = $t->get_location()->[0];
+	   }
+	   push @data, {studyDbId=>$t->get_trial_id(), name=>$t->get_name(), studyType=>$project_type, years=>\@years, locationDbId=>$location, optionalInfo=>\%optional_info};
 	}
     }
 
@@ -453,7 +451,6 @@ sub study_list : Chained('brapi') PathPart('studies') Args(0) {
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
-
 
 =head2 brapi/v1/studies/{studyId}/germplasm?pageSize=20&page=1 
 
@@ -523,7 +520,7 @@ sub studies_germplasm : Chained('studies') PathPart('germplasm') Args(0) {
     my $total_count = 0;
 
     my $t = CXGN::Trial->new( { trial_id => $c->stash->{study_id}, bcs_schema => $self->bcs_schema } );
-    my $rs = $t->_brapi_get_trial_accessions();
+    my $rs = $t->brapi_get_trial_accessions();
 
     if ($rs) {
 	$total_count = $rs->count();

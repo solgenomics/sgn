@@ -1035,7 +1035,7 @@ sub get_planting_date_cvterm_id {
 }
 
 
-sub _brapi_get_trial_accessions {
+sub brapi_get_trial_accessions {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
