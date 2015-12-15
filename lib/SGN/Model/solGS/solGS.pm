@@ -293,7 +293,15 @@ sub project_details_by_name {
     my ($self, $pr_name) = @_;
     
     return $self->schema->resultset("Project::Project")
-        ->search( {'me.name' => $pr_name});
+        ->search( {'me.name' => {'iLIKE' => '%' . $pr_name . '%'}});
+}
+
+
+sub project_details_by_exact_name {
+    my ($self, $pr_name) = @_;
+    
+    return $self->schema->resultset("Project::Project")
+        ->search( {'me.name' => {'iLIKE' => $pr_name }});
 }
 
 
@@ -1712,7 +1720,7 @@ sub get_genotypes_from_plots {
 }
 
 
-sub get_genotyping_markers {
+sub get_project_genotyping_markers {
     my ($self, $pr_id) = @_;
 
     my $stock_genotype_rs = $self->project_genotype_data_rs($pr_id);   
