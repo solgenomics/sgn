@@ -1090,9 +1090,18 @@ sub studies_types : Chained('brapi') PathPart('studyTypes') Args(0) {
     my $self = shift;
     my $c = shift;
     my %result;
+    my @data;
     my @status;
-    my $total_count = 0;
 
+    my @cvterm_ids = CXGN::Trial::get_all_project_types($self->bcs_schema);
+    my $cvterm;
+    foreach (@cvterm_ids) {
+	$cvterm = CXGN::Chado::Cvterm->new($c->dbc->dbh, $_->[0]);
+	push @data, {name=>$_->[1], description=>$cvterm->get_definition },
+    }
+    
+    my $total_count = scalar(@cvterm_ids);
+    %result = (data => \@data);
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
