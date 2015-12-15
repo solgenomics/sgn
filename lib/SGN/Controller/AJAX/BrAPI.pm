@@ -1126,102 +1126,121 @@ sub studies_info : Chained('studies') PathPart('') Args(0) {
     my @status;
     my $total_count = 0;
 
+    my $t = CXGN::Trial->new( { trial_id => $c->stash->{study_id}, bcs_schema => $self->bcs_schema } );
+    if ($t) {
+	$total_count = 1;
+	my @years = ($t->get_year());
+	my %optional_info = (studyPUI=>'', startDate=>'', endDate=>'');
+	my $project_type = '';
+	if ($t->get_project_type()) {
+	    $project_type = $t->get_project_type()->[1];
+	}
+	my $location = '';
+	if ($t->get_location()) {
+	    $location = $t->get_location()->[0];
+	}
+	my $ps = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
+	my $programs = $ps->get_breeding_program_with_trial($c->stash->{study_id});
+	my @program_ids;
+	foreach (@$programs) {
+	    push @program_ids, $_->[0];
+	}
+	%result = (studyDbId=>$t->get_trial_id(), studyName=>$t->get_name(), studyType=>$project_type, years=>\@years, locationDbId=>$location, programDbId=>\@program_ids, optionalInfo=>\%optional_info);
+    }
+
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
 
-sub studies_details : Chained('studies') PathPart('details') Args(0) { 
+sub studies_details : Chained('studies') PathPart('details') Args(0) {
     my $self = shift;
     my $c = shift;
-    my %result;
     my @status;
+    my %result;
     my $total_count = 0;
 
+    my $schema = $self->bcs_schema();
+    my $t = CXGN::Trial->new( {bcs_schema => $schema, trial_id => $c->stash->{study_id} });
+
+    if (!$t) { 
+	$c->stash->{rest} = { error => "The trial with id $c->stash->{study_id} does not exist" };
+	return;
+    }
+    my $tl = CXGN::Trial::TrialLayout->new( { schema => $schema, trial_id => $c->stash->{study_id} });
+    
+    my $data = { 
+	studyDbId => $c->stash->{study_id},
+	studyId => $t->get_trial_id(),
+	studyPUI => "",
+	studyName => "",
+	studyObjective => "",
+	studyType => $t->get_project_type() ? $t->get_project_type()->[1] : "trial",
+	studyLocation => $t->get_location() ? $t->get_location()->[1] : undef,
+	studyObjective => "",
+	studyProject => "",
+	dataSet => "",
+	studyPlatform => "",
+	startDate => "",
+	endDate => "",
+	programName => "",
+	designType => $tl->get_design_type(),
+	keyContact => "",
+	contacts => "",
+	meteoStationCode => "",
+	meteoStationNetwork => "",
+	studyHistory => "",
+	studyComments => "",
+	attributes => "",
+	seasons => "",
+	observationVariables => "",
+	germplasm => ""
+    };
+
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
-    my %response = (metadata=>\%metadata, result=>\%result);
+    my %response = (metadata=>\%metadata, result=>$data);
     $c->stash->{rest} = \%response;
 }
 
-sub study_detail : Chained('studies') PathPart('detail') Args(1) { 
-
+sub studies_layout : Chained('studies') PathPart('layout') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $trial_id = shift;
+    my @status;
+    my %result;
+    my $total_count = 0;
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $t = CXGN::Trial->new( {bcs_schema => $schema, trial_id => $trial_id });
-
-    if (!$t) { 
-	$c->stash->{rest} = { error => "The trial with id $trial_id does not exist" };
-	return;
-    }
-    my $tl = CXGN::Trial::TrialLayout->new( { schema => $schema, trial_id=>$trial_id });
-
+    my $tl = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
     my $design = $tl->get_design();
     
     my $plot_data = [];
     my $formatted_plot = {};
+    my %optional_info;
+    my $check_id;
+    my $type;
     
-    # print STDERR Dumper($design);
-
-    foreach my $plot_number (keys %$design) { 
+    foreach my $plot_number (keys %$design) {
+	$check_id = $design->{$plot_number}->{is_a_control} ? 1 : 0;
+	if ($check_id == 1) {
+	    $type = 'Check';
+	} else {
+	    $type = 'Test';
+	}
+	%optional_info = (germplasmName => $design->{$plot_number}->{accession_name}, blockNumber => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : undef, rowNumber => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : undef, columnNumber => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : undef, type => $type);
 	$formatted_plot = { 
-	    plotId => $design->{$plot_number}->{plot_name},
-	    blockId => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : undef,
-	    rowId => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : undef,
-	    columnId => $design->{$plot_number}->{col_number},
-	    replication => $design->{$plot_number}->{replicate} ? 1 : 0,
-	    checkId => $design->{$plot_number}->{is_a_control} ? 1 : 0,
-	    lineId => $design->{$plot_number}->{stock_id},
-	    lineRecord_Name => $design->{$plot_number}->{accession_name},
+	    studyDbId => $c->stash->{study_id},
+	    plotDbId => $design->{$plot_number}->{plot_id},
+	    plotName => $design->{$plot_number}->{plot_name},
+	    replicate => $design->{$plot_number}->{replicate} ? 1 : 0,
+	    germplasmDbId => $design->{$plot_number}->{accession_id},
+	    optionalInfo => \%optional_info
 	};
-
 	push @$plot_data, $formatted_plot;
-	# plotId: "11",
-	# blockId: "1",
-	# rowId: "20",
-	# columnId: "22",
-	# replication: "1",
-	# checkId: "0",
-	# lineId: "143",
-	# lineRecordName: "ZIPA_68"
-	
+	$total_count += 1;
     }
-    
-    my $data = { studyId => $t->get_trial_id(),
-		 studyType => $t->get_project_type() ? $t->get_project_type()->[1] : "trial",
-		 objective => "",
-		 startDate => "",
-		 keyContact => "",
-		 locationName => $t->get_location() ? $t->get_location()->[1] : undef,
-		 designType => $tl->get_design_type(),
-		 designDetails => $plot_data,
-    };
-
-    $c->stash->{rest} = $data;
-
-    # studyId: "1",
-    #  studyType: "trial",
-    #  name: "Fieldbook A",
-    #  objective: "Generate seeds",
-    #  startDate: "2014-08-01",
-    #  keyContact: "Mr. Plant Breeder",
-    #  locationName: "Ibadan",
-    #  designType: "RCBD",
-    #  designDetails: [ 
-    #      { 
-    # 	plotId: "11",
-    # 	blockId: "1",
-    # 	rowId: "20",
-    # 	columnId: "22",
-    # 	replication: "15d23e60851bfbf98c5d7d33465d4e6b2704de261",
-    # 	checkId: "0",
-    # 	lineId: "143",
-    # 	lineRecordName: "ZIPA_68"
-    #      }, ...
-    #    ]
-
+    %result = (data=>$plot_data);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
 }
 
 sub traits :  Chained('brapi') PathPart('traits') Args(0) {

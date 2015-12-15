@@ -195,6 +195,7 @@ sub _get_design_from_trial {
 
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
     my $accession_name = $accession->uniquename;
+    my $accession_id = $accession->stock_id;
     $design_info{"plot_name"}=$plot->uniquename;
     $design_info{"plot_id"}=$plot->stock_id;
 
@@ -223,6 +224,9 @@ sub _get_design_from_trial {
     }
     if ($accession_name) {
       $design_info{"accession_name"}=$accession_name;
+    }
+    if ($accession_id) {
+      $design_info{"accession_id"}=$accession_id;
     }
     $design{$plot_number_prop->value}=\%design_info;
   }
