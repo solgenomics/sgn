@@ -5,15 +5,22 @@ $trial_id
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'd3.d3Min' ] &>
 
+<div class="well">
 <table id="phenotype_summary_data" class="display">
 <thead>
   <tr>
     <th>Trait</th>
+    <th>Average</th>
+    <th>Min</th>
+    <th>Max</th>
+    <th>Std Dev</th>
     <th>Count</th>
+    <th>More Info</th>
 </tr>
 </thead>
 
 </table>
+</div>
 
 <div class="well">
 
