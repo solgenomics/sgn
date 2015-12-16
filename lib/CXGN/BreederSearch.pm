@@ -52,6 +52,7 @@ sub get_intersect {
     my $dataref = shift;
     my $traits_db_name = shift;
     my $genotype_protocol_id = shift;
+    my $h;
 
     if (!$traits_db_name) { die "Need a db_name for the ontology!"; }
       
@@ -59,30 +60,31 @@ sub get_intersect {
     print STDERR "Dataref = ".Dumper($dataref);
     
     my $target = $criteria_list->[-1];
-    
-    my $query;
+  
     if (!$dataref->{$target}) {
-	$query = "SELECT * from $target";
+	my $query = "SELECT * from $target";
+	print STDERR "QUERY: $query\n";
+	$h = $self->dbh->prepare($query);
+	$h->execute();
     } else {
+	my @wheres;
 	$target =~ s/s$//;
-	$query = "SELECT " . $target ."_id, " . $target . "_name FROM materialized_fullview WHERE ";
+	my $select = "SELECT ".$target."_id, ".$target."_name FROM materialized_fullview WHERE ";
 	foreach my $criterion (@$criteria_list) {
-	    if ($dataref->{$criteria_list->[-1]}->{$criterion}) {
+	    if ($dataref->{$criteria_list->[-1]}->{$criterion}) {		
 		my $singular = $criterion;
 		$singular =~ s/s$//;
-		$query = $query . $singular . "_id IN (" . $dataref->{$criteria_list->[-1]}->{$criterion} . ") AND ";
+		push @wheres, $singular . "_id IN (" . $dataref->{$criteria_list->[-1]}->{$criterion} . ") ";
 	    }
 	}
-	if ($genotype_protocol_id) { $query = $query . "nd_protocol_id = $genotype_protocol_id AND ";}
-	$query =~ s/AND\s$/GROUP BY /;
-	$query = $query . $target ."_id, " . $target . "_name ORDER BY 2";
+	if ($genotype_protocol_id) { push @wheres, "nd_protocol_id = $genotype_protocol_id ";}
+	my $group_by = "GROUP BY ".$target."_id, ".$target."_name ORDER BY 2";
+	my $query = $select . join ("AND ", @wheres). $group_by;
+	print STDERR "QUERY: $query\n";
+	$h = $self->dbh->prepare($query);
+	$h->execute();
     }
 
-    print STDERR "QUERY: $query\n";
-    
-    my $h = $self->dbh->prepare($query);
-    $h->execute();
-    
     my @results;
     while (my ($id, $name) = $h->fetchrow_array()) { 
 	push @results, [ $id, $name ];

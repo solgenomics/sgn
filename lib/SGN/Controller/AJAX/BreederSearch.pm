@@ -23,6 +23,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     my $criteria_list;
     my @selects = qw | select1 select2 select3 |;
     foreach my $s (@selects) { 
+	print STDERR "param:" .  Dumper($c->req->param($s)) . "\n";
 	my $value = $c->req->param($s);
 	if ($value) { 
 	    push @$criteria_list, $c->req->param($s);
@@ -49,7 +50,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 	}
 	# items need to be quoted in sql
 	#
-	#print STDERR "DATA: $data\n";
+	print STDERR "DATA: $data\n";
 	if ($data) { 
 	    my $qdata = join ",", (map { "\'$_\'"; } (split ",", $data));
 	    $dataref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $qdata;
@@ -73,8 +74,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
      foreach my $select (@$criteria_list) { 
      	print STDERR "Checking $select\n";
      	chomp($select);
-     	if (! any { $select eq $_ } ('breeding_programs', 'accessions', 'projects', 'locations', 'years', 'traits', 'genotypes', undef)) { 
-     	    $error = "Valid keys are breeding_programs, projects, years, traits and locations";
+     	if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'locations', 'plots', 'traits', 'trials', 'years', 'genotypes', undef)) { 
+     	    $error = "Valid keys are accessions, breeding_programs, locations, plots, traits, trials, years, and genotypes or undef";
      	    $c->stash->{rest} = { error => $error };
      	    return;
      	}
@@ -166,10 +167,10 @@ sub get_stock_data : Path('/ajax/breeder/search/stocks') Args(0) {
      foreach my $select (@$criteria_list) { 
      	print STDERR "Checking $select\n";
      	chomp($select);
-     	if (! any { $select eq $_ } ('breeding_programs', 'accessions', 'projects', 'locations', 'years', 'traits', 'genotypes', undef)) { 
-     	    $error = "Valid keys are breeding_programs, projects, years, traits and locations";
-     	    $c->stash->{rest} = { error => $error };
-     	    return;
+	if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'locations', 'plots', 'traits', 'trials', 'years', 'genotypes', undef)) { 
+	    $error = "Valid keys are accessions, breeding_programs, locations, plots, traits, trials, years, and genotypes or undef";
+	    $c->stash->{rest} = { error => $error };
+	    return;
      	}
      }
      my $dbh = $c->dbc->dbh();
