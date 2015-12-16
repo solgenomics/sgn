@@ -1,28 +1,10 @@
 
 <%args>
 $trial_id
+@traits_assayed
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'd3.d3Min' ] &>
-
-<div class="well">
-<table id="phenotype_summary_data" class="display">
-<thead>
-  <tr>
-    <th>Trait</th>
-    <th>Average</th>
-    <th>Min</th>
-    <th>Max</th>
-    <th>Std Dev</th>
-    <th>Count</th>
-    <th>More Info</th>
-</tr>
-</thead>
-
-</table>
-</div>
-
-<div class="well">
 
 <style>
 
@@ -42,9 +24,48 @@ $trial_id
 }
 
 </style>
-<div id="test_hist">
+
+
+<div class="well">
+     <table id="phenotype_summary_data" class="display">
+     <thead>
+     <tr>
+     <th>Trait</th>
+     <th>Average</th>
+     <th>Min</th>
+     <th>Max</th>
+     <th>Std Dev</th>
+     <th>Count</th>
+     <th>More Info</th>
+     </tr>
+     </thead>
+     <tbody>
+     </tbody>
+     </table>
 </div>
 
+<div class="well">
+  <div class="row">
+    <div class="col-sm-8">
+      <form class="form-horizontal">
+        <div class="form-group form-group-sm">
+    	  <label for="trial_summary_hist_dropdown" class="col-sm-2 control-label">Select:</label>
+    	  <div class="col-sm-10">
+
+      	    <select class="form-control" id="trial_summary_hist_dropdown" onchange="trait_summary_hist_change(this.value)">
+% foreach (@traits_assayed) {
+  <option value="<% $_->[0] %>" ><% $_->[1] %></option>
+% }
+
+	    </select>
+    	  </div>
+  	</div>
+      </form>
+    </div>
+  </div>
+
+  <div id="trial_summary_hist">
+  </div>
 </div>
 
 
@@ -61,40 +82,58 @@ jQuery(document).ready(function () {
           'ajax': '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes',
       });
 
-      //jQuery.ajax( {
-      //	    url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram'+,
-      //    type: 'POST',
-	//    success: function(response){ 
-	//	if (response.error) { 
-	//	    alert(response.error);
-	//	}
-	//	else { 
-	//	    alert("Successfully stored planting date.");
-	//	    display_planting_date();
-	//	    jQuery('#change_planting_date_dialog').dialog("close");
-	//	}
-	//    },
-	//    error: function(response) { 
-	//	alert('An error test.');
-	//    }
-	//});
+      jQuery.ajax( {
+          url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+jQuery("#trial_summary_hist_dropdown").val(),
+          type: 'POST',
+	  success: function(response){ 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		 plot_histogram(response.data);
+		}
+	  },
+	  error: function(response) { 
+	      alert('An error occured retrieving trait histogram data.');
+	  }
+      });
 
-      // Generate a Bates distribution of 10 random variables.
-      var values = d3.range(1000).map(d3.random.bates(10));
+   });
 
-      console.log(values);
+});
+
+function trait_summary_hist_change(value) {
+      jQuery.ajax( {
+          url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+value,
+          type: 'POST',
+	  success: function(response){ 
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		 d3.select("#trial_summary_hist").selectAll("*").remove();
+		 plot_histogram(response.data);
+		}
+	  },
+	  error: function(response) { 
+	      alert('An error occured retrieving trait histogram data.');
+	  }
+      });
+}
+
+function plot_histogram(values) {
 
       // A formatter for counts.
       var formatCount = d3.format(",.0f");
 
-      var div_width = document.getElementById("test_hist").offsetWidth;
+      var div_width = document.getElementById("trial_summary_hist").offsetWidth;
 
       var margin = {top: 10, right: 30, bottom: 30, left: 30},
       width = div_width - margin.left - margin.right,
       height = 200 - margin.top - margin.bottom;
 
       var x = d3.scale.linear()
-      .domain([0, 1])
+      .domain([d3.min(values),d3.max(values)])
       .range([0, width]);
 
       // Generate a histogram using twenty uniformly-spaced bins.
@@ -110,40 +149,41 @@ jQuery(document).ready(function () {
       .scale(x)
       .orient("bottom");
 
-      var svg = d3.select("#test_hist").append("svg")
+      var svg = d3.select("#trial_summary_hist").append("svg")
+      .attr("id", "svg_id")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
       .append("g")
+      .attr("id", "g_id")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       var bar = svg.selectAll(".bar")
       .data(data)
       .enter().append("g")
+      .attr("id", "g_id")
       .attr("class", "bar")
       .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
 
       bar.append("rect")
+      .attr("id", "rect_id")
       .attr("x", 1)
-      .attr("width", x(data[0].dx) - 1)
+      .attr("width", (x.range()[1] - x.range()[0]) / 20 )
       .attr("height", function(d) { return height - y(d.y); });
 
       bar.append("text")
+      .attr("id", "text_id")
       .attr("dy", ".75em")
       .attr("y", 6)
-      .attr("x", x(data[0].dx) / 2)
+      .attr("x", ((x.range()[1] - x.range()[0]) / 20) / 2)
       .attr("text-anchor", "middle")
       .text(function(d) { return formatCount(d.y); });
 
       svg.append("g")
+      .attr("id", "g_id")
       .attr("class", "x axis")
       .attr("transform", "translate(0," + height + ")")
       .call(xAxis);
-
-
-   });
-
-});
-
+}
 
   
 </script>

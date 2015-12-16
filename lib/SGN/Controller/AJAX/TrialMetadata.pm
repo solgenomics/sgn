@@ -345,6 +345,18 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
+sub trait_histogram : Chained('trial') PathPart('trait_histogram') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $trait_id = shift;
+    
+    my $dbh = $c->dbc->dbh();
+    my $trial_id = $c->stash->{trial_id};
+
+    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id);
+    
+    $c->stash->{rest} = { data => \@data };
+}
 
 sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     
