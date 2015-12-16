@@ -85,7 +85,11 @@ jQuery(document).ready(function () {
       jQuery.ajax( {
           url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+jQuery("#trial_summary_hist_dropdown").val(),
           type: 'POST',
+	  beforeSend: function() {
+	    jQuery("#working_modal").modal("show");
+	  },
 	  success: function(response){ 
+	  	jQuery("#working_modal").modal("hide");
 		if (response.error) { 
 		    alert(response.error);
 		}
@@ -94,6 +98,7 @@ jQuery(document).ready(function () {
 		}
 	  },
 	  error: function(response) { 
+	      jQuery("#working_modal").modal("hide");
 	      alert('An error occured retrieving trait histogram data.');
 	  }
       });
@@ -106,7 +111,11 @@ function trait_summary_hist_change(value) {
       jQuery.ajax( {
           url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+value,
           type: 'POST',
+	  beforeSend: function() {
+	    jQuery("#working_modal").modal("show");
+	  },
 	  success: function(response){ 
+	        jQuery("#working_modal").modal("hide");
 		if (response.error) { 
 		    alert(response.error);
 		}
@@ -116,6 +125,7 @@ function trait_summary_hist_change(value) {
 		}
 	  },
 	  error: function(response) { 
+	      jQuery("#working_modal").modal("hide");
 	      alert('An error occured retrieving trait histogram data.');
 	  }
       });
