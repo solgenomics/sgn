@@ -1460,6 +1460,24 @@ sub maps_marker_detail : Chained('maps') PathPart('positions') Args(0) {
     $c->stash->{rest} = { markers => \@markers };	
 }
 
+sub locations : Chained('brapi') PathPart('locations') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my @status;
+    my @data;
+    my @attributes;
+
+    my @locations = CXGN::Trial::get_all_locations($self->bcs_schema);
+    foreach (@locations) {
+	push @data, {locationDbId => $_->[0], name=> $_->[1], countryCode=>'', countryName=>'', latitude=>$_->[2], longitude=>$_->[3], altitude=>$_->[5], attributes=>\@attributes};
+    }
+
+    my $total_count = scalar(@locations);
+    my %result = (data=>\@data);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
 
 sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) { 
     my $self = shift;

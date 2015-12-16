@@ -235,6 +235,36 @@ sub remove_location {
 
 }
 
+# CLASS METHOD!
+
+=head2 class method get_all_locations()
+
+ Usage:        my @locations = CXGN::Trial::get_all_locations($schema)
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_all_locations { 
+    my $schema = shift;
+    my @locations;
+
+    my $location_type_id = $schema->resultset('Cv::Cvterm')->search( { name => 'project location' })->first()->cvterm_id();
+
+    if ($location_type_id) { 
+	my $rows = $schema->resultset('Project::Projectprop')->search( { type_id=> $location_type_id });
+	
+	while (my $s = $rows->next()) { 
+	    my $loc = $schema->resultset('NaturalDiversity::NdGeolocation')->find( { nd_geolocation_id => $s->value() });
+	    push @locations, [$s->value(), $loc->description(), $loc->latitude(), $loc->longitude(), $loc->geodetic_datum(), $loc->altitude()], 
+	}
+    }
+    return @locations;
+}
+
 =head2 function get_breeding_programs()
 
  Usage:
