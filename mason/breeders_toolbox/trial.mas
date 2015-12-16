@@ -32,6 +32,7 @@ $number_of_replicates
 $trial_description
 $design_layout_view
 $user_can_modify => undef
+$has_plant_entries => 0
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
@@ -82,7 +83,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
 <&| /page/info_section.mas, title=>"Trial details" &>
-
 
 
 <table class="table" ><tr><td valign="top">
@@ -151,6 +151,11 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <div id="trial_description">[loading...]</div>
 </td><td>
 [<a id="edit_trial_description">edit</a>]
+</td></tr>
+<tr><td colspan="2">
+% if ($has_plant_entries) { print "This trial has plant entries which can be used to store plant level observations." }
+% else { print "This trial does not have plant entries. <a href=\"\">add</a>."; }
+%
 </td></tr></table>
 
 </&>

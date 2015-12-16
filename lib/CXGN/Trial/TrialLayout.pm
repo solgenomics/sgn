@@ -25,6 +25,7 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
+use Data::Dumper;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -46,7 +47,7 @@ has 'trial_name' => (isa => 'Str', is => 'ro', predicate => 'has_trial_name', re
 has 'trial_description' => (isa => 'Str', is => 'ro', predicate => 'has_trial_description', reader => 'get_trial_description', writer => '_set_trial_description');
 has 'trial_location' => (isa => 'Str', is => 'ro', predicate => 'has_trial_location', reader => 'get_trial_location', writer => '_set_trial_location');
 has 'plot_dimensions' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_plot_dimensions', reader => 'get_plot_dimensions', writer => '_set_plot_dimensions');
-has 'design' => (isa => 'HashRef[HashRef[Str]]', is => 'ro', predicate => 'has_design', reader => 'get_design', writer => '_set_design');
+has 'design' => (isa => 'HashRef', is => 'ro', predicate => 'has_design', reader => 'get_design', writer => '_set_design');
 has 'plot_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_plot_names', reader => 'get_plot_names', writer => '_set_plot_names', default => sub { [] } );
 has 'block_numbers' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_block_numbers', reader => 'get_block_numbers', writer => '_set_block_numbers');
 has 'replicate_numbers' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_replicate_numbers', reader => 'get_replicate_numbers', writer => '_set_replicate_numbers');
@@ -138,6 +139,7 @@ sub _get_plot_info_fields_from_trial {
     my %design_info = %{$design{$key}};
     if (exists($design_info{$field_name})) { 
 	if (! exists($unique_field_values{$design_info{$field_name}})) {
+	    print STDERR "pushing $design_info{$field_name}...\n";
 	    push(@field_values, $design_info{$field_name});
 	}
 	$unique_field_values{$design_info{$field_name}} = 1;
@@ -180,6 +182,7 @@ sub _get_design_from_trial {
 
   @plots = @{$plots_ref};
   foreach my $plot (@plots) {
+      print STDERR "_get_design_from_trial. Working on plot ".$plot->uniquename()."\n";
     my %design_info;
 
     if ($genotyping_user_id_row) {       
@@ -207,43 +210,53 @@ sub _get_design_from_trial {
     my $col_number_prop = $plot->stockprops->find( { 'type.name' => 'col_number' }, { join => 'type'} );
 
 
-    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id(), $plant_of_id ] } })->object;
+    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' =>  $plot_of_cv->cvterm_id() })->object;
+      my $plants = $plot->search_related('stock_relationship_subjects')->search( { type_id => $plant_of_id } ); 
     my $accession_name = $accession->uniquename;
     $design_info{"plot_name"}=$plot->uniquename;
     $design_info{"plot_id"}=$plot->stock_id;
 
-    if ($plot->type_id() == $plot_cv->cvterm_id()) { 
-	print STDERR "Enforcing some metadata for plots of type plot (vs. plants)...\n";
-	if ($plot_number_prop) {
-	    $design_info{"plot_number"}=$plot_number_prop->value();
-	}
-	else {die "no plot number stockprop found for plot $plot_name";}
-	if ($row_number_prop) { 
-	    $design_info{"row_number"} = $row_number_prop->value();
-	}
-	if ($col_number_prop) { 
-	    $design_info{"col_number"} = $col_number_prop->value();
-	}
-	
-	if ($block_number_prop) {
-	    $design_info{"block_number"}=$block_number_prop->value();
-	}
-	if ($replicate_number_prop) {
-	    $design_info{"rep_number"}=$replicate_number_prop->value();
-	}
-	if ($range_number_prop) {
-      $design_info{"range_number"}=$replicate_number_prop->value();
-	}
-	if ($is_a_control_prop) {
-	    $design_info{"is_a_control"}=$is_a_control_prop->value();
-	}
-	if ($accession_name) {
-	    $design_info{"accession_name"}=$accession_name;
-	}
-	$design{$plot_number_prop->value}=\%design_info;
-    }
-  }
+      if ($plot_number_prop) {
+	  $design_info{"plot_number"}=$plot_number_prop->value();
+      }
+      else { 
+	  die "no plot number stockprop found for plot $plot_name"; 
+      }
 
+      
+      if ($row_number_prop) { 
+	  $design_info{"row_number"} = $row_number_prop->value();
+      }
+      if ($col_number_prop) { 
+	  $design_info{"col_number"} = $col_number_prop->value();
+      }
+      
+      if ($block_number_prop) {
+	  $design_info{"block_number"}=$block_number_prop->value();
+      }
+      if ($replicate_number_prop) {
+	  $design_info{"rep_number"}=$replicate_number_prop->value();
+      }
+      if ($range_number_prop) {
+	  $design_info{"range_number"}=$replicate_number_prop->value();
+      }
+      if ($is_a_control_prop) {
+	  $design_info{"is_a_control"}=$is_a_control_prop->value();
+      }
+
+      my @plants;
+      while (my $p = $plants->next()) { 
+	  push @plants, $p->object()->uniquename();
+      }
+      $design_info{"plants"} = \@plants;
+      
+      if ($accession_name) {
+	  $design_info{"accession_name"}=$accession_name;
+      }
+
+      $design{$plot_number_prop->value}=\%design_info;
+  }
+  print STDERR "Design = ".Dumper(\%design);
   return \%design;
 }
 
@@ -366,8 +379,6 @@ sub _get_design_type_from_project {
   return $design_type;
 }
 
-
-
 sub _get_trial_year_from_project {
   my $self = shift;
   my $project;
@@ -392,8 +403,6 @@ sub _get_trial_year_from_project {
   return $year;
 }
 
-
-
 sub _get_plots {
   my $self = shift;
   my $project;
@@ -412,9 +421,7 @@ sub _get_plots {
 
   #debug...
   print STDERR "PLOT LIST: \n";
-  foreach my $p (@plots) { 
-      print STDERR  $p->name()."\n";
-  }
+  print STDERR  join "\n", map { $_->name() } @plots;
 
   return \@plots;
 }
@@ -484,7 +491,7 @@ sub _get_trial_accession_names_and_control_names {
   my $plant_of_id = 0;
   if ($plant_of_cv) { $plant_of_id = $plant_of_cv->cvterm_id(); }
   foreach $plot (@plots) {
-    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => [$plot_of_cv->cvterm_id(),$sample_of_cv->cvterm_id(), $plant_of_id ]})->object;
+    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => [$plot_of_cv->cvterm_id(),$sample_of_cv->cvterm_id() ]})->object;
     my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
     my $is_a_control;
     if ($is_a_control_prop) {
