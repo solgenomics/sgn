@@ -1162,43 +1162,48 @@ sub studies_details : Chained('studies') PathPart('details') Args(0) {
 
     my $schema = $self->bcs_schema();
     my $t = CXGN::Trial->new( {bcs_schema => $schema, trial_id => $c->stash->{study_id} });
-
-    if (!$t) { 
-	$c->stash->{rest} = { error => "The trial with id $c->stash->{study_id} does not exist" };
-	return;
-    }
     my $tl = CXGN::Trial::TrialLayout->new( { schema => $schema, trial_id => $c->stash->{study_id} });
-    
-    my $data = { 
-	studyDbId => $c->stash->{study_id},
-	studyId => $t->get_trial_id(),
-	studyPUI => "",
-	studyName => "",
-	studyObjective => "",
-	studyType => $t->get_project_type() ? $t->get_project_type()->[1] : "trial",
-	studyLocation => $t->get_location() ? $t->get_location()->[1] : undef,
-	studyObjective => "",
-	studyProject => "",
-	dataSet => "",
-	studyPlatform => "",
-	startDate => "",
-	endDate => "",
-	programName => "",
-	designType => $tl->get_design_type(),
-	keyContact => "",
-	contacts => "",
-	meteoStationCode => "",
-	meteoStationNetwork => "",
-	studyHistory => "",
-	studyComments => "",
-	attributes => "",
-	seasons => "",
-	observationVariables => "",
-	germplasm => ""
-    };
+
+    if ($t) {
+	$total_count = 1;
+	my $germplasm_rs = $t->brapi_get_trial_accessions();
+	my @germplasm_data;
+	if ($germplasm_rs) {
+	    while (my $s = $germplasm_rs->next()) { 
+		push @germplasm_data, { germplasmDbId=>$s->get_column('stock_id'), germplasmName=>$s->get_column('uniquename'), germplasmPUI=>'' };
+	    }
+	}
+	
+	%result = ( 
+	    studyDbId => $c->stash->{study_id},
+	    studyId => $t->get_name(),
+	    studyPUI => "",
+	    studyName => $t->get_name(),
+	    studyObjective => $t->get_description(),
+	    studyType => $t->get_project_type() ? $t->get_project_type()->[1] : "trial",
+	    studyLocation => $t->get_location() ? $t->get_location()->[1] : undef,
+	    studyProject => $t->get_breeding_program(),
+	    dataSet => "",
+	    studyPlatform => "",
+	    startDate => $t->get_planting_date(),
+	    endDate => $t->get_harvest_date(),
+	    programName => $t->get_breeding_program(),
+	    designType => $tl->get_design_type(),
+	    keyContact => "",
+	    contacts => "",
+	    meteoStationCode => "",
+	    meteoStationNetwork => "",
+	    studyHistory => "",
+	    studyComments => "",
+	    attributes => "",
+	    seasons => "",
+	    observationVariables => "",
+	    germplasm => \@germplasm_data,
+	);
+    }
 
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
-    my %response = (metadata=>\%metadata, result=>$data);
+    my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
 
@@ -1454,6 +1459,7 @@ sub maps_marker_detail : Chained('maps') PathPart('positions') Args(0) {
     }
     $c->stash->{rest} = { markers => \@markers };	
 }
+
 
 sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) { 
     my $self = shift;
