@@ -117,7 +117,7 @@ sub check_pops_trait_data_combination {
 			    $output_details->{$k}->{pheno_success}   = 0;
 			    $output_details->{$k}->{geno_success}    = 0;
 			    $output_details->{$k}->{success} = 0;
-			    $output_details->{status} = 'Died';
+			    $output_details->{status} = 'Failed';
 			    last;
 			}
 		    }
@@ -131,10 +131,8 @@ sub check_pops_trait_data_combination {
 		$output_details->{$k}->{pheno_success}   = 0;
 		$output_details->{$k}->{geno_success}    = 0;
 		$output_details->{$k}->{success} = 0;
-		$output_details->{status} = 'Died';
-	    }
-	    
-	   
+		$output_details->{status} = 'Failed';
+	    }	   
 	}  
     }
 
@@ -199,7 +197,7 @@ sub check_multi_pops_data_download {
 			    $output_details->{$k}->{pheno_success} = 0;
 			    $output_details->{$k}->{geno_success}  = 0;
 			    $output_details->{$k}->{success} = 0;
-			    $output_details->{status} = 'Died';
+			    $output_details->{status} = 'Failed';
 			    last;
 			}
 		    }
@@ -213,7 +211,7 @@ sub check_multi_pops_data_download {
 		$output_details->{$k}->{pheno_success} = 0;
 		$output_details->{$k}->{geno_success}  = 0;
 		$output_details->{$k}->{success} = 0;
-		$output_details->{status} = 'Died';
+		$output_details->{status} = 'Failed';
 	    }
 	    
 	    
@@ -261,7 +259,7 @@ sub check_trait_modeling {
 			if ($died_file) 
 			{
 			    $output_details->{$k}->{success} = 0;
-			    $output_details->{status} = 'Died';
+			    $output_details->{status} = 'Failed';
 			    last;
 			}
 		    }
@@ -273,10 +271,8 @@ sub check_trait_modeling {
 	    if (ref $output_details->{$k} eq 'HASH')	
 	    {   	    
 		$output_details->{$k}->{success} = 0;
-		$output_details->{status} = 'Died';
-	    }
-	    
-	   
+		$output_details->{status} = 'Failed';
+	    }	   
 	}  
     }
 
@@ -339,7 +335,7 @@ sub check_population_download {
 				    $output_details->{$k}->{pheno_success}   = 0;
 				    $output_details->{$k}->{geno_success}    = 0;
 				    $output_details->{$k}->{success} = 0;
-				    $output_details->{status} = 'Died';
+				    $output_details->{status} = 'Failed';
 				    last;
 				}
 			    }
@@ -353,7 +349,7 @@ sub check_population_download {
 			$output_details->{$k}->{pheno_success}   = 0;
 			$output_details->{$k}->{geno_success}    = 0;
 			$output_details->{$k}->{success} = 0;
-			$output_details->{status} = 'Died';
+			$output_details->{status} = 'Failed';
 		    }
 		    
 		    
