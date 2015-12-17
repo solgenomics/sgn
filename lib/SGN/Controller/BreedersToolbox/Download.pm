@@ -412,7 +412,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 		my $ss = Spreadsheet::WriteExcel->new($tempfile);
 		my $ws = $ss->add_worksheet();
 		
-		for (my $column =0; $column< 10; $column++) {
+		for (my $column =0; $column< @col_names; $column++) {
 		    $ws->write(0, $column, $col_names[$column]);
 		}
 		for (my $line =0; $line < @data; $line++) {
