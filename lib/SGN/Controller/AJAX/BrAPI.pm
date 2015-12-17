@@ -266,15 +266,19 @@ sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) {
     my $c = shift;
     my $rs = $c->stash->{stock};
     my $schema = $self->bcs_schema();
+    my @status;
+
+    my $total_count = 0;
+    if ($c->stash->{stock}) {
+	$total_count = 1;
+    }
 
     my %result;
     my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
 
     %result = (germplasmDbId=>$c->stash->{stock_id}, defaultDisplayName=>$c->stash->{stock}->get_uniquename(), germplasmName=>$c->stash->{stock}->get_name(), accessionNumber=>'', germplasmPUI=>'', pedigree=>germplasm_pedigree_string($self->bcs_schema(), $c->stash->{stock_id}), seedSource=>'', synonyms=>germplasm_synonyms($schema, $c->stash->{stock_id}, $synonym_id));
 
-    my @status;
-    my %pagination;
-    my %metadata = (pagination=>\%pagination, status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -433,7 +437,7 @@ sub study_list : Chained('brapi') PathPart('studies') Args(0) {
 	   my $t = CXGN::Trial->new( { trial_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
 
 	   my @years = ($t->get_year());
-	   my %optional_info = (studyPUI=>'', startDate=>'', endDate=>'');
+	   my %optional_info = (studyPUI=>'', startDate => $t->get_planting_date(), endDate => $t->get_harvest_date());
 	   my $project_type = '';
 	   if ($t->get_project_type()) {
 	       $project_type = $t->get_project_type()->[1];
@@ -567,6 +571,7 @@ sub germplasm_pedigree : Chained('germplasm') PathPart('pedigree') Args(0) {
     my $schema = $self->bcs_schema();
     my %result;
     my @status;
+    my $total_count = 0;
 
     if ($c->req->param('notation')) {
 	push @status, 'notation not implemented';
@@ -575,13 +580,17 @@ sub germplasm_pedigree : Chained('germplasm') PathPart('pedigree') Args(0) {
 	}
     }
     
-    my $s = CXGN::Chado::Stock->new($schema, $c->stash->{stock_id});
+    my $s = $c->stash->{stock};
+    if ($s) {
+	$total_count = 1;
+    }
+
     my @direct_parents = $s->get_direct_parents();
 
     %result = (germplasmDbId=>$c->stash->{stock_id}, pedigree=>germplasm_pedigree_string($schema, $c->stash->{stock_id}), parent1Id=>$direct_parents[0][0], parent2Id=>$direct_parents[1][0]);
     
     my %pagination;
-    my %metadata = (pagination=>\%pagination, status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
