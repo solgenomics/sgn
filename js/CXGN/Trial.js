@@ -823,6 +823,7 @@ function save_trial_description() {
 	url: '/ajax/breeders/trial/'+trial_id+'/description/',
 	data: {description:description},
         type: 'POST',
+	data: {'description' : description},
 	success: function(response) { 
             if (response.error) { 
 		alert(response.error);
