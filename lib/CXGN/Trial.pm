@@ -915,12 +915,12 @@ sub get_phenotypes_for_trait {
     my @data;
     my $dbh = $self->bcs_schema->storage()->dbh();
     
-    my $h = $dbh->prepare("SELECT phenotype.value FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and cvterm.cvterm_id = ? and phenotype.value~?;");
+    my $h = $dbh->prepare("SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and cvterm.cvterm_id = ? and phenotype.value~?;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );
     while (my ($value) = $h->fetchrow_array()) { 
-	push @data, int($value);
+	push @data, $value + 0;
     }
     return @data;
 }
