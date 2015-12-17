@@ -25,12 +25,8 @@ sub check_user_login :Path('/solgs/check/user/login') Args(0) {
       my $first_name = $user->get_first_name();
       my $last_name  = $user->get_last_name();
           
-      my $private_email = $user->get_private_email();
-      my $public_email  = $user->get_contact_email();
-     
-      my $email = $public_email 
-	  ? $public_email 
-	  : $private_email;
+      $self->get_user_email($c);
+      my $email = $c->stash->{user_email};
 
       $ret->{loggedin} = 1;
       my $contact = { 'name' => $first_name, 'email' => $email};
@@ -84,10 +80,6 @@ sub save_profile {
     $self->format_profile_entry($c);
     my $formatted_profile = $c->stash->{formatted_profile};
     
-    my $analysis_page= $c->stash->{analysis_page};
-
-    my @contents = read_file($log_file);
- 
     write_file($log_file, {append => 1}, $formatted_profile);
    
 }
@@ -103,17 +95,39 @@ sub add_headers {
   
   unless ($headers) 
   {  
-      $headers = 'User name' . 
-	  "\t" . 'User email' . 
-	  "\t" . 'Analysis name' . 
-	  "\t" . "Analysis page" . 
-	  "\t" . "Arguments" .
+      $headers = 'User_name' . 
+	  "\t" . 'User_email' . 
+	  "\t" . 'Analysis_name' . 
+	  "\t" . "Analysis_page" . 	 
 	  "\t" . "Status" .
+	  "\t" . "Arguments" .
 	  "\n";
 
       write_file($log_file, $headers);
   }
   
+}
+
+
+sub index_log_file_headers {
+   my ($self, $c) = @_;
+   
+   $self->analysis_log_file($c);
+   my $log_file = $c->stash->{analysis_log_file};
+   
+   my @headers = split(/\t/, (read_file($log_file))[0]);
+   
+   my $header_index = {};
+   my $cnt = 0;
+   
+   foreach my $header (@headers)
+   {
+       $header_index->{$header} = $cnt;
+       $cnt++;
+   }
+  
+   $c->stash->{header_index} = $header_index;
+
 }
 
 
@@ -126,14 +140,16 @@ sub format_profile_entry {
 		     ($profile->{user_name}, 
 		      $profile->{user_email}, 
 		      $profile->{analysis_name}, 
-		      $profile->{analysis_page}, 
+		      $profile->{analysis_page},
+		      'running',
 		      $profile->{arguments}, 
-		      'running')
+		     )
 	);
 
     $entry .= "\n";
 	
    $c->stash->{formatted_profile} = $entry; 
+
 }
 
 
@@ -475,18 +491,18 @@ sub run_analysis {
     else 
     {
 	$c->stash->{status} = 'Error';
-	print STDERR "\n I don't know what to analyze\n";
+	print STDERR "\n I don't know what to analyze.\n";
     }
 
     my @error = @{$c->error};
     
     if ($error[0]) 
     {
-	$c->stash->{status} = 'Submitting failed';
+	$c->stash->{status} = 'Submitting failed.';
     }
     else 
     {    
-	$c->stash->{status} = 'Submitted';
+	$c->stash->{status} = 'Submitted.';
     }
  
     $self->update_analysis_progress($c);
@@ -515,9 +531,26 @@ sub update_analysis_progress {
 }
 
 
+sub get_user_email {
+    my ($self, $c) = @_;
+   
+    my $user = $c->user();
+
+    my $private_email = $user->get_private_email();
+    my $public_email  = $user->get_contact_email();
+     
+    my $email = $public_email 
+	? $public_email 
+	: $private_email;
+
+    $c->stash->{user_email} = $email;
+
+}
+
+
 sub analysis_log_file {
     my ($self, $c) = @_;
-
+      
     $self->create_analysis_log_dir($c);   
     my $log_dir = $c->stash->{analysis_log_dir};
     
@@ -548,19 +581,73 @@ sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
 }
 
 
+sub display_analysis_status :Path('/solgs/display/analysis/status') Args(0) {
+    my ($self, $c) = @_;
+    
+    my @panel_data = $self->solgs_analysis_status_log($c);
+
+    my $ret->{data} = \@panel_data;
+    
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);  
+    
+}
+
+
+sub solgs_analysis_status_log {
+    my ($self, $c) = @_;
+    
+    $self->analysis_log_file($c);
+    my $log_file = $c->stash->{analysis_log_file};
+ 
+    my $ret = {};
+    my @panel_data;
+   
+    if ($log_file)
+    {    
+	my @user_analyses = grep{$_ !~ /User_name\s+/i }
+	                    read_file($log_file);
+
+	$self->index_log_file_headers($c);
+	my $header_index = $c->stash->{header_index};
+	
+	foreach my $row (@user_analyses) 
+	{
+	    my @analysis = split(/\t/, $row);
+	    
+	    my $analysis_name   = $analysis[$header_index->{'Analysis_name'}];
+	    my $result_page   = $analysis[$header_index->{'Analysis_page'}];
+	    my $analysis_status = $analysis[$header_index->{'Status'}];
+
+	    if ($analysis_status =~ /(Failed|Submitted)/) 
+	    {
+		$result_page = 'N/A';
+	    }
+	    else 
+	    {
+		$result_page = qq | <a href=$result_page>[View]</a> |;
+	    }
+
+	    push @panel_data, [$analysis_name, $analysis_status, $result_page];
+	}		
+    }
+ 
+    return \@panel_data;
+}
+
+
 sub create_analysis_log_dir {
     my ($self, $c) = @_;
         
-    my $analysis_profile = $c->stash->{analysis_profile};
-    my $user_email = $analysis_profile->{user_email};
+    my $user_id = $c->user->id;
       
-    $user_email =~ s/(\@|\.)//g;
-
     $c->controller('solGS::solGS')->get_solgs_dirs($c);
 
     my $log_dir = $c->stash->{analysis_log_dir};
 
-    $log_dir = catdir($log_dir, $user_email);
+    $log_dir = catdir($log_dir, $user_id);
     mkpath ($log_dir, 0, 0755);
 
     $c->stash->{analysis_log_dir} = $log_dir;
