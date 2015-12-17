@@ -137,9 +137,7 @@ function displayAnalysisNow (page, args) {
 
 function blockPage (page, args) {
 
-    alert('going to page..' + page)
     goToPage(page, args);
-
     
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
     jQuery.blockUI({message: 'Please wait..'});

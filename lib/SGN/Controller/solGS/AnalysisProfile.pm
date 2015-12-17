@@ -573,8 +573,8 @@ sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     my $referer = $c->req->referer;
     
     $c->stash->{message} = "<p>Your analysis is running.</p>
-                            <p>You will receive an email when it is completed.
-                             </p><p><a href=\"$referer\">[ Go back ]</a></p>";
+                            <p>You will receive an email when it is completed.</p>
+                            <p><a href=\"$referer\">[ Go back ]</a></p>";
 
     $c->stash->{template} = "/generic_message.mas"; 
 
