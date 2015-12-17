@@ -26,7 +26,8 @@ $trial_id
 </style>
 
 
-<div class="well">
+<div class="well well-sm">
+     <center><h4>Raw Data Statistics</h4></center><hr>
      <table id="phenotype_summary_data" class="display">
      <thead>
      <tr>
@@ -44,7 +45,8 @@ $trial_id
      </table>
 </div>
 
-<div class="well">
+<div class="well well-sm">
+  <center><h4>Raw Data Histogram</h4></center><hr>
   <div class="row">
     <div class="col-sm-8">
       <form class="form-horizontal">
@@ -61,6 +63,8 @@ $trial_id
     	  </div>
   	</div>
       </form>
+    </div>
+    <div class="col-sm-4">
     </div>
   </div>
 
@@ -94,6 +98,7 @@ jQuery(document).ready(function () {
 		    alert(response.error);
 		}
 		else { 
+		 d3.select("#trial_summary_hist").selectAll("*").remove();
 		 plot_histogram(response.data);
 		}
 	  },
