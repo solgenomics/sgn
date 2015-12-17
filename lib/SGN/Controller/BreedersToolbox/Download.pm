@@ -391,7 +391,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 	    my $temp_file_name = $time_stamp . "$what" . "XXXX";
 	    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
 	    my $tempfile = $c->config->{basepath}."/".$rel_file;
-	    my @col_names = qw/project_name stock_name location trait value plot_name cv_name cvterm_accession rep block_number/;
+	    my @col_names = qw/year project_name stock_name location trait value plot_name cv_name cvterm_accession rep block_number/;
 	    
 	    if ($format eq ".csv") {
 		
