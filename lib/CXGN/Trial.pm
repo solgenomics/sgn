@@ -925,6 +925,32 @@ sub get_phenotypes_for_trait {
     return @data;
 }
 
+=head2 function get_traits_assayed()
+
+ Usage:        
+ Desc:         returns the cvterm_id and name for traits assayed
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_traits_assayed { 
+    my $self = shift;
+    my $dbh = $self->bcs_schema->storage()->dbh();
+
+    my @traits_assayed;
+    my $traits_assayed_q = $dbh->prepare("SELECT cvterm.name, cvterm.cvterm_id FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY cvterm.name, cvterm.cvterm_id;");
+
+    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    $traits_assayed_q->execute($self->get_trial_id(), $numeric_regex );
+    while (my ($trait_name, $trait_id) = $traits_assayed_q->fetchrow_array()) { 
+	push @traits_assayed, [$trait_id, ucfirst($trait_name)];
+    }
+    return \@traits_assayed;
+}
+
 =head2 function get_experiment_count()
 
  Usage:

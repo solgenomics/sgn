@@ -174,17 +174,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{plot_data} = [];
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
-
-    my @traits_assayed;
-    my $traits_assayed_q = $dbh->prepare("SELECT cvterm.name, cvterm.cvterm_id FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY cvterm.name, cvterm.cvterm_id;");
-
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $traits_assayed_q->execute($c->stash->{trial_id}, $numeric_regex );
-    while (my ($trait_name, $trait_id) = $traits_assayed_q->fetchrow_array()) { 
-	push @traits_assayed, [$trait_id, ucfirst($trait_name)];
-    }
     
-    $c->stash->{traits_assayed} = \@traits_assayed;
+    $c->stash->{traits_assayed} = $c->stash->{trial}->get_traits_assayed();
 
     if ($design_type eq "genotyping_plate") { 
 	if ($format eq "as_table") { 
