@@ -54,15 +54,6 @@ print "TRIAl ID: $trial_id\n";
     );
 
 
-    my $layout = CXGN::Trial::TrialLayout->new(
-	{ 
-	    schema => $schema,
-	    trial_id =>$c->stash->{trial_id}
-	});
-    
-    my $design = $layout-> get_design();
-    
-    #print STDERR Dumper($design);
     my $dbh = $c->dbc->dbh();
     my $trait_sql = shift;
     my $traits_measured = CXGN::BreederSearch->new(
@@ -75,6 +66,7 @@ print "TRIAl ID: $trial_id\n";
 	
 	my $pheno_info = $traits_measured-> get_phenotype_info();
 
+	
 	print STDERR Dumper($pheno_info);
 }
 
