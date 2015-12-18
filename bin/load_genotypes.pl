@@ -182,8 +182,10 @@ my $json_obj = JSON::Any->new;
 
 my $coderef = sub {
     while (my $gt = $gtio->next())  {
-	my $accession_name = $gt->name();
-	
+	my $identifier = $gt->name();
+	my $accession_name =~ s/^(.+):\d+$/$1/;
+	my $igd_number =~ s/^.+:(\d+)$/$1/;
+	print STDERR " identifier = $identifier \n accession_name = $accession_name \n igd_number = $igd_number \n";
 	my $db_name = $accession_name;
 
 	$db_name =~ s/(.*?)\.(.*)/$1/;
@@ -340,6 +342,7 @@ my $coderef = sub {
             }
             );
         $genotype->create_genotypeprops( { 'snp genotyping' => $json_string } , {autocreate =>1 , allow_duplicate_values => 1 } );
+        $genotype->create_genotypeprops( { 'snp genotyping' => $igd_number } , {autocreate =>1 , allow_duplicate_values => 1 } );
         #link the genotype to the nd_experiment
         my $nd_experiment_genotype = $experiment->find_or_create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
     }
