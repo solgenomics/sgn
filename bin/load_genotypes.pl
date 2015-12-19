@@ -183,10 +183,7 @@ my $json_obj = JSON::Any->new;
 
 my $coderef = sub {
     while (my $gt = $gtio->next())  {
-	my $identifier = $gt->name();
-	my $accession_name =~ s/^(.+):\d+$/$1/;
-	my $igd_number =~ s/^.+:(\d+)$/$1/;
-	print STDERR " identifier = $identifier \n accession_name = $accession_name \n igd_number = $igd_number \n";
+	my ($accession_name, $igd_number) = split(/:/, $gt->name());
 	my $db_name = $accession_name;
 
 	$db_name =~ s/(.*?)\.(.*)/$1/;
