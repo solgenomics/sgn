@@ -542,7 +542,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 		print $TEMP "$AoH[$i]{$k[$j]}";
 
             }else{
-		print $TEMP "$AoH[$i]{$k[$j]}\t";
+		if (exists($AoH[$i]{$k[$j]})) {
+		    print $TEMP "$AoH[$i]{$k[$j]}\t";
+		}
 	    }
              
             }
