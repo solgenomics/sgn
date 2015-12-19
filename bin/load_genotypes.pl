@@ -335,7 +335,7 @@ my $coderef = sub {
             {
                 name        => $cassava_stock->name . "|" . $experiment->nd_experiment_id,
                 uniquename  => $cassava_stock->name . "|" . $experiment->nd_experiment_id,
-                description => "Cassava SNP genotypes for stock $ (name = " . $cassava_stock->name . ", id = " . $cassava_stock->stock_id . ")",
+                description => "Cassava SNP genotypes for stock " . "(name = " . $cassava_stock->name . ", id = " . $cassava_stock->stock_id . ")",
                 type_id     => $snp_genotype->cvterm_id,
             }
             );
