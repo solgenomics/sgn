@@ -6,17 +6,18 @@ load_genotypes.pl - loading genotypes into cxgn databases, based on the load_cas
 
 =head1 SYNOPSIS
 
-    load_genotypes.pl -H [dbhost] -D [dbname] -g [population name] [-t]
+    load_genotypes.pl -H [dbhost] -D [dbname] -i [infile] -p [project name] -y [year] g [population name] -m [protocol name] -t
 
 =head1 COMMAND-LINE OPTIONS
-
- -H host name
- -D database name
- -i infile
- -p project name (e.g. SNP genotyping 2012 Cornell Biotech)
- -y project year [2012]
- -g population name (e.g., NaCRRI training population) Mandatory option
- -m specify protocol name or defaults to GBS ApeKI Cassava genome v5
+  ARGUMENTS
+ -H host name (required) e.g. "localhost"
+ -D database name (required) e.g. "cxgn_cassava"
+ -i path to infile (required)
+ -p project name (required) e.g. "SNP genotyping 2012 Cornell Biotech"
+ -y project year (required) e.g. "2012"
+ -g population name (required) e.g. "NaCRRI training population"
+ -m protocol name (required) e.g. "GBS ApeKI Cassava genome v6"
+  FLAGS
  -x delete old genotypes for accessions that have new genotypes
  -a add accessions that are not in the database
  -s sort markers according to custom sort order (see script source)
@@ -56,7 +57,7 @@ my $dbhost = $opt_H;
 my $dbname = $opt_D;
 my $file = $opt_i;
 my $population_name = $opt_g;
-my $protocol_name = $opt_m || "GBS ApeKI Cassava genome v5";
+my $protocol_name = $opt_m;
 
 print STDERR "Input file: $file\n";
 print STDERR "DB host: $dbhost\n";
