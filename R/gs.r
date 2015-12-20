@@ -304,7 +304,7 @@ if (datasetInfo == 'combined populations') {
     }
   }
 }
- 
+
 genoFile <- grep("genotype_data",
                  inFiles,
                  ignore.case = TRUE,                
@@ -504,7 +504,7 @@ iGEBVu <- iGEBV$u
 heritability <- c()
 
 if ( is.null(predictionFile) == TRUE ) {
-    heritability <- round((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve) * 100), digits=3)
+   # heritability <- round((iGEBV$Vu /(iGEBV$Vu + iGEBV$Ve) * 100), digits=3)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
     cat('Error variance', iGEBV$Ve, file=varianceComponentsFile, sep="\t", append=TRUE)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
@@ -512,7 +512,7 @@ if ( is.null(predictionFile) == TRUE ) {
     cat("\n", file=varianceComponentsFile,  append=TRUE)
     cat('&#956;', iGEBV$beta,file=varianceComponentsFile, sep='\t', append=TRUE)
     cat("\n", file=varianceComponentsFile,  append=TRUE)
-    cat('Heritability (h, %)', heritability, file=varianceComponentsFile, sep='\t', append=TRUE)
+  #  cat('Heritability (h, %)', heritability, file=varianceComponentsFile, sep='\t', append=TRUE)
 }
 
 iGEBV <- data.matrix(iGEBVu)
