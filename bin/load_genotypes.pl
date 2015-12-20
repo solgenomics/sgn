@@ -118,6 +118,13 @@ my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
 	dbxref => 'training population',
     });
 
+my $igd_number_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'igd number',
+	cv     => 'genotype_property',
+	db     => 'null',
+	dbxref => 'igd number',
+    });
+
  #store a project
 my $project = $schema->resultset("Project::Project")->find_or_create(
     {
@@ -342,7 +349,7 @@ my $coderef = sub {
             }
             );
         $genotype->create_genotypeprops( { 'snp genotyping' => $json_string } , {autocreate =>1 , allow_duplicate_values => 1 } );
-        $genotype->create_genotypeprops( { 'snp genotyping' => $igd_number } , {autocreate =>1 , allow_duplicate_values => 1 } );
+        $genotype->create_genotypeprops( { 'igd number' => $igd_number } , {autocreate =>1 , allow_duplicate_values => 1 } );
         #link the genotype to the nd_experiment
         my $nd_experiment_genotype = $experiment->find_or_create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
     }
