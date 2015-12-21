@@ -1,11 +1,11 @@
 
 function plot_histogram(values) {
 
-      var identical = identical_check(values);
+  var identical = identical_check(values);
 
-      if (identical == true) {
-	  jQuery("#trial_summary_hist").html("<center><h3>All "+values.length+" values were the same value of "+values[0]+".</h3></center>");
-      }  else {
+  if (identical == true) {
+      jQuery("#trial_summary_hist").html("<center><h3>All "+values.length+" values were the same value of "+values[0]+".</h3></center>");
+  }  else {
 
       // A formatter for counts.
       var formatCount = d3.format(",.0f");
@@ -68,7 +68,7 @@ function plot_histogram(values) {
       .attr("transform", "translate(0," + height + ")")
       .call(xAxis);
 
-      }
+  }
 }
 
 function identical_check(array) {
