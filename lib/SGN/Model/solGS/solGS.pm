@@ -839,7 +839,7 @@ sub genotypes_nd_experiment_ids_rs {
 
     my $nd_experiment_rs = $self->schema->resultset("NaturalDiversity::NdExperimentStock")
 	->search({'me.stock_id' => { -in => $genotypes_ids},
-		  'nd_protocol.name' => {'ilike' => 'GBS ApeKI Cassava genome v5'}
+		  'nd_protocol.name' => {'ilike' => $protocol}
 		 })
 	->search_related('nd_experiment')
 	->search_related('nd_experiment_protocols')
