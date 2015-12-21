@@ -339,12 +339,16 @@ sub combined_trials_desc {
     my $traits_no   =  scalar(@traits_list) - 1;
 
     my $training_pop = "Training population $combo_pops_id";
+    
+    my $protocol = $c->config->{default_genotyping_protocol};
+    $protocol = 'N/A' if !$protocol;
 
     $c->stash(markers_no   => $markers_no,
               traits_no    => $traits_no,
               project_desc => $desc,
               project_name => $training_pop,
-              owner        => $projects_owners
+              owner        => $projects_owners,
+	      protocol     => $protocol,
         );
 
 }

@@ -798,9 +798,13 @@ sub project_description {
     my @traits    =  split (/\t/, $traits);    
     my $traits_no = scalar(@traits);
 
+    my $protocol = $c->config->{default_genotyping_protocol};
+    $protocol = 'N/A' if !$protocol;
+   
     $c->stash(markers_no => $markers_no,
               traits_no  => $traits_no,
               stocks_no  => $stocks_no,
+	      protocol   => $protocol,
         );
 }
 
