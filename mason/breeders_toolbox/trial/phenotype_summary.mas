@@ -64,7 +64,7 @@ $trial_id
   	</div>
       </form>
     </div>
-    <div class="col-sm-4">
+    <div class="col-sm-4" id="traits_assayed_histogram_cvterm_link">
     </div>
   </div>
 
@@ -85,6 +85,8 @@ jQuery(document).ready(function () {
       	  'retrieve': true,
           'ajax': '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes',
       });
+
+      jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/chado/cvterm?cvterm_id="+jQuery("#trial_summary_hist_dropdown").val()+"'>Definition</a>");
 
       jQuery.ajax( {
           url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+jQuery("#trial_summary_hist_dropdown").val(),
@@ -113,6 +115,8 @@ jQuery(document).ready(function () {
 });
 
 function trait_summary_hist_change(value) {
+      jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/chado/cvterm?cvterm_id="+value+"'>Definition</a>");
+
       jQuery.ajax( {
           url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+value,
           type: 'POST',
