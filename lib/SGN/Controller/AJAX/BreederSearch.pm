@@ -57,6 +57,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 	}
     }
     my $genotypes = $c->req->param("genotypes");
+    my $intersect = $c->req->param("intersect");
+
     #  print STDERR "Genotypes: $genotypes\n";
     # if ($genotypes){ 
     # 	$dataref->{$criteria_list->[-1]}->{genotypes}=1;
@@ -86,7 +88,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
      my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
     
-     my $results_ref = $bs->get_intersect($criteria_list, $dataref, $c->config->{trait_ontology_db_name}); 
+     my $results_ref = $bs->get_intersect($criteria_list, $dataref, $genotypes, $intersect); 
 
     my $stock_ref = [];
     my $stockdataref->{$output} = $dataref->{$criteria_list->[-1]};
@@ -153,6 +155,7 @@ sub get_stock_data : Path('/ajax/breeder/search/stocks') Args(0) {
 	}
     }
     my $genotypes = $c->req->param("genotypes");
+    my $intersect = $c->req->param("intersect");
 
     print STDERR "DATAREF: ".Dumper($dataref);
 
@@ -186,7 +189,7 @@ sub get_stock_data : Path('/ajax/breeder/search/stocks') Args(0) {
 
     push @$criteria_list, $output;
     print STDERR "OUTPUT: $output CRITERIA: ", Data::Dumper::Dumper($criteria_list);
-    $stock_ref = $bs->get_intersect($criteria_list, $stockdataref, $c->config->{trait_ontology_db_name}, $genotypes);
+    $stock_ref = $bs->get_intersect($criteria_list, $stockdataref, $genotypes, $intersect);
     
     print STDERR "RESULTS: ".Data::Dumper::Dumper($stock_ref);
 

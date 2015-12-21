@@ -26,7 +26,7 @@ has 'dbh' => (
 
 =head2 get_intersect
 
- Usage:        my %info = $bs->get_intersect($criteria_list, $dataref, $db_name);
+ Usage:        my %info = $bs->get_intersect($criteria_list, $dataref, $genotypes, $intersect);
  Desc:         
  Ret:          returns a hash with a key called results that contains 
                a listref of listrefs specifying the matching list with ids
@@ -38,8 +38,9 @@ has 'dbh' => (
                dataref: The dataref is a hashref of hashrefs. The first key
                is the target of the transformation, and the second is the
                source type of the transformation, containing comma separated
-               values of the source type. 
-               db_name: the db name of the ontology used
+               values of the source type.
+               genotypes: nd_protocol_id of genotype protocol to filter by, if provided
+               intersect: 1 if where clause arguments should find intersect rather than union
  Side Effects: will create a materialized view of the ontology corresponding to 
                $db_name
  Example:
@@ -50,36 +51,57 @@ sub get_intersect {
     my $self = shift;
     my $criteria_list = shift;
     my $dataref = shift;
-    my $traits_db_name = shift;
     my $genotype_protocol_id = shift;
+    my $intersect = shift;
+
+    print STDERR "gtpid = $genotype_protocol_id \n";
+    print STDERR "intersect = $intersect \n";
     my $h;
 
-    if (!$traits_db_name) { die "Need a db_name for the ontology!"; }
-      
     print STDERR "CRITERIA LIST: ".(join ",", @$criteria_list)."\n";
     print STDERR "Dataref = ".Dumper($dataref);
     
     my $target = $criteria_list->[-1];
-  
+    my $query;
     if (!$dataref->{$target}) {
 	my $query = "SELECT * from $target";
 	print STDERR "QUERY: $query\n";
 	$h = $self->dbh->prepare($query);
 	$h->execute();
     } else {
-	my @wheres;
-	$target =~ s/s$//;
-	my $select = "SELECT ".$target."_id, ".$target."_name FROM materialized_fullview WHERE ";
-	foreach my $criterion (@$criteria_list) {
-	    if ($dataref->{$criteria_list->[-1]}->{$criterion}) {		
-		my $singular = $criterion;
-		$singular =~ s/s$//;
-		push @wheres, $singular . "_id IN (" . $dataref->{$criteria_list->[-1]}->{$criterion} . ") ";
+	if ($intersect) {
+	    my @parts;
+	    $target =~ s/s$//;
+	    foreach my $criterion (@$criteria_list) {
+		if ($dataref->{$criteria_list->[-1]}->{$criterion}) {
+		    my @ids = split(/,/, $dataref->{$criteria_list->[-1]}->{$criterion});
+		    my $singular = $criterion;
+		    $singular =~ s/s$//;
+		    foreach my $id (@ids) {
+			my $statement = "SELECT ".$target."_id, ".$target."_name FROM materialized_fullview WHERE ".$singular."_id IN (".$id.") ";
+			if ($genotype_protocol_id) { $statement .= "AND nd_protocol_id = $genotype_protocol_id ";}
+			$statement .= "GROUP BY ".$target."_id, ".$target."_name";
+			push @parts, $statement;
+		    }
+		}
 	    }
+	    $query = join (" INTERSECT ", @parts);
+	    $query .= " ORDER BY 2";
+	} else {  # use all criteria at once to find union
+	    my @wheres;
+	    $target =~ s/s$//;
+	    my $select = "SELECT ".$target."_id, ".$target."_name FROM materialized_fullview WHERE ";
+	    foreach my $criterion (@$criteria_list) {
+		if ($dataref->{$criteria_list->[-1]}->{$criterion}) {
+		    my $singular = $criterion;
+		    $singular =~ s/s$//;
+		    push @wheres, $singular . "_id IN (" . $dataref->{$criteria_list->[-1]}->{$criterion} . ") ";	
+		}
+	    }
+	    if ($genotype_protocol_id) { push @wheres, "nd_protocol_id = $genotype_protocol_id ";}
+	    my $group_by = "GROUP BY ".$target."_id, ".$target."_name ORDER BY 2";
+	    $query = $select . join ("AND ", @wheres). $group_by;
 	}
-	if ($genotype_protocol_id) { push @wheres, "nd_protocol_id = $genotype_protocol_id ";}
-	my $group_by = "GROUP BY ".$target."_id, ".$target."_name ORDER BY 2";
-	my $query = $select . join ("AND ", @wheres). $group_by;
 	print STDERR "QUERY: $query\n";
 	$h = $self->dbh->prepare($query);
 	$h->execute();

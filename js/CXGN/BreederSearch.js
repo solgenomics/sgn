@@ -51,7 +51,7 @@ window.onload = function initialize() {
 	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
-	    data: {'select1':select1, 'select4': select4, 'genotypes': get_genotype_checkbox() },
+	    data: {'select1':select1, 'select4': select4, 'genotypes': get_genotype_checkbox(), 'intersect': get_intersect_checkbox()},
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -180,7 +180,7 @@ window.onload = function initialize() {
 	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","), 'select4':select4, 'genotypes': get_genotype_checkbox()  },
+	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","), 'select4':select4, 'genotypes': get_genotype_checkbox(), 'intersect': get_intersect_checkbox()},
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -303,7 +303,7 @@ window.onload = function initialize() {
 	    //async: false,
 	    timeout: 60000,
 	    method: 'POST',
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4, 'genotypes': get_genotype_checkbox()  },
+	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4, 'genotypes': get_genotype_checkbox(), 'intersect': get_intersect_checkbox()},
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -406,7 +406,7 @@ window.onload = function initialize() {
 	    url: '/ajax/breeder/search/stocks',
 	    timeout: 60000,
 	    method: 'POST',
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4, 'c3_data': c3_data.join(","), 'genotypes': get_genotype_checkbox()  },
+	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4, 'c3_data': c3_data.join(","), 'genotypes': get_genotype_checkbox(),'intersect': get_intersect_checkbox()},
 	    beforeSend: function(){
 		//disable_ui();
             },  
@@ -549,7 +549,7 @@ window.onload = function initialize() {
 		//async: false,
 		timeout: 30000,
 		method: 'POST',
-		data: {'select1':select1, 'c1_data': c1_str, 'select2': select2, 'c2_data': c2_str, 'select3':select3, 'c3_data': c3_str, 'select4' : select4, 'genotypes': get_genotype_checkbox()  },
+		data: {'select1':select1, 'c1_data': c1_str, 'select2': select2, 'c2_data': c2_str, 'select3':select3, 'c3_data': c3_str, 'select4' : select4, 'genotypes': get_genotype_checkbox(), 'intersect': get_intersect_checkbox()},
 		beforeSend: function(){
 		    disable_ui();
 		},  
@@ -664,6 +664,17 @@ function get_genotype_checkbox() {
     if (checkbox == true) {
 	console.log("Selected protocol = "+jQuery("#gtp_select").text()+" and id = "+jQuery("#gtp_select").val());
 	return jQuery("#gtp_select").val();
+    }
+    return 0;
+
+}
+
+function get_intersect_checkbox() { 
+    var checkbox = jQuery('#intersect').is(':checked')
+
+    if (checkbox == true) {
+	console.log("Intersect value = "+jQuery("#intersect").val());
+	return jQuery("#intersect").val();
     }
     return 0;
 

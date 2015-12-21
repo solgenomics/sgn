@@ -81,6 +81,9 @@ Search accessions and plots using location, year, trial, and trait data.
 <div id="add_to_list_menu"></div>
 </td></tr>
 </table>
+<div class="checkbox">
+  <label><input type="checkbox" id="intersect" name="intersect" value="1"/>Find intersect (rather than union)</label>
+</div>
 <input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;Only show accessions that have been genotyped with protocol:
 <div id="select_gt_protocol_div"></div>
 
