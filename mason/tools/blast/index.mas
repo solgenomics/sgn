@@ -43,9 +43,12 @@
   # array with the preselected output formats
   my @parse_options_selected = ();
   foreach my $po (@parse_options) { 
-    if (($po->[0] ne "Basic") && ($po->[0] ne "Table") && ($po->[0] ne "Coverage") && ($po->[0] ne "SGN")) { 
+    if ($po->[0] eq "SGN") { 
       push @parse_options_selected, $po;
     }
+    # if (($po->[0] ne "Basic") && ($po->[0] ne "Table") && ($po->[0] ne "Coverage") && ($po->[0] ne "SGN")) {
+    #   push @parse_options_selected, $po;
+    # }
   }
 
   # output formats alphabetically sorted

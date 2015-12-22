@@ -1,19 +1,77 @@
 
 <%args>
 $trial_id
+@traits_assayed
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'd3.d3Min', 'SGN.Histogram' ] &>
 
-<table id="phenotype_summary_data" class="display">
-<thead>
-  <tr>
-    <th>Trait</th>
-    <th>Count</th>
-</tr>
-</thead>
+<style>
 
-</table>
+.bar rect {
+  fill: steelblue;
+  shape-rendering: crispEdges;
+}
+
+.bar text {
+  fill: #fff;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+
+
+<div class="well well-sm">
+     <center><h4>Raw Data Statistics</h4></center><hr>
+     <table id="phenotype_summary_data" class="display">
+     <thead>
+     <tr>
+     <th>Trait</th>
+     <th>Average</th>
+     <th>Min</th>
+     <th>Max</th>
+     <th>Std Dev</th>
+     <th>Count</th>
+     <th>More Info</th>
+     </tr>
+     </thead>
+     <tbody>
+     </tbody>
+     </table>
+</div>
+
+<div class="well well-sm">
+  <center><h4>Raw Data Histogram</h4></center><hr>
+  <div class="row">
+    <div class="col-sm-8">
+      <form class="form-horizontal">
+        <div class="form-group form-group-sm">
+    	  <label for="trial_summary_hist_dropdown" class="col-sm-2 control-label">Select:</label>
+    	  <div class="col-sm-10">
+
+      	    <select class="form-control" id="trial_summary_hist_dropdown" onchange="trait_summary_hist_change(this.value)">
+% foreach (@traits_assayed) {
+  <option value="<% $_->[0] %>" ><% $_->[1] %></option>
+% }
+
+	    </select>
+    	  </div>
+  	</div>
+      </form>
+    </div>
+    <div class="col-sm-4" id="traits_assayed_histogram_cvterm_link">
+    </div>
+  </div>
+
+  <div id="trial_summary_hist">
+  </div>
+</div>
+
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
@@ -28,10 +86,59 @@ jQuery(document).ready(function () {
           'ajax': '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes',
       });
 
+      jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/chado/cvterm?cvterm_id="+jQuery("#trial_summary_hist_dropdown").val()+"'>Definition</a>");
+
+      jQuery.ajax( {
+          url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+jQuery("#trial_summary_hist_dropdown").val(),
+          type: 'POST',
+	  beforeSend: function() {
+	    jQuery("#working_modal").modal("show");
+	  },
+	  success: function(response){ 
+	  	jQuery("#working_modal").modal("hide");
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		 d3.select("#trial_summary_hist").selectAll("*").remove();
+		 plot_histogram(response.data);
+		}
+	  },
+	  error: function(response) { 
+	      jQuery("#working_modal").modal("hide");
+	      alert('An error occured retrieving trait histogram data.');
+	  }
+      });
+
    });
 
 });
 
+function trait_summary_hist_change(value) {
+      jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/chado/cvterm?cvterm_id="+value+"'>Definition</a>");
+
+      jQuery.ajax( {
+          url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+value,
+          type: 'POST',
+	  beforeSend: function() {
+	    jQuery("#working_modal").modal("show");
+	  },
+	  success: function(response){ 
+	        jQuery("#working_modal").modal("hide");
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		 d3.select("#trial_summary_hist").selectAll("*").remove();
+		 plot_histogram(response.data);
+		}
+	  },
+	  error: function(response) { 
+	      jQuery("#working_modal").modal("hide");
+	      alert('An error occured retrieving trait histogram data.');
+	  }
+      });
+}
 
   
 </script>

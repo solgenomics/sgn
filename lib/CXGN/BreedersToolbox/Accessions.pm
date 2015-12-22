@@ -89,7 +89,7 @@ sub get_all_populations {
 	    ->search({
 		'object.stock_id'=> $population_row->stock_id(),
 		'stock_relationship_subjects.type_id' => $population_member_cvterm->cvterm_id()
-		     }, {join => {'stock_relationship_subjects' => 'object'}, order_by => { -asc => 'name'}});
+		     }, {join => {'stock_relationship_subjects' => 'object'}, order_by => { -asc => 'stock_id'}});
 
 	my @accessions_in_population;
 	while (my $population_member_row = $population_members->next()) {

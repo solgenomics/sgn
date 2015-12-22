@@ -17,6 +17,8 @@ $t->while_logged_in_as("submitter", sub {
 	);
     
     $add_location_link->click();
+
+    sleep(2);
     
     my $location_desc_input = $t->find_element_ok(
 	"location_description", 
