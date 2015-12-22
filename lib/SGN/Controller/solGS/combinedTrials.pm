@@ -321,7 +321,7 @@ sub combined_trials_desc {
         }
 	
 	$s_pop_id = $pop_id;
-	$s_pop_id  =~ s/\s+//;
+	$s_pop_id =~ s/\s+//;
     }
    
     my $dir = $c->{stash}->{solgs_cache_dir};
@@ -336,7 +336,7 @@ sub combined_trials_desc {
     my $traits_list_file = $solgs_controller->grep_file($dir, $trait_exp);  
 
     my @traits_list = read_file($traits_list_file);
-    my $traits_no   =  scalar(@traits_list) - 1;
+    my $traits_no   = scalar(@traits_list) - 1;
 
     my $training_pop = "Training population $combo_pops_id";
     

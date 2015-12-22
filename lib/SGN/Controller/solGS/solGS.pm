@@ -61,6 +61,7 @@ sub solgs : Path('/solgs'){
     $c->forward('search');
 }
 
+
 sub solgs_breeder_search :Path('/solgs/breeder_search') Args(0) { 
     my ($self, $c) = @_;
     $c->stash->{referer}  = $c->req->referer();
@@ -714,6 +715,9 @@ sub uploaded_population_summary {
     my $model_id = $c->stash->{model_id};
     my $selection_pop_id = $c->stash->{prediction_pop_id};
  
+    my $protocol = $c->config->{default_genotyping_protocol};
+    $protocol = 'N/A' if !$protocol;
+
     if ($model_id) 
     {
         my $metadata_file_tr = catfile($tmp_dir, "metadata_${user_name}_${model_id}");
@@ -732,6 +736,7 @@ sub uploaded_population_summary {
                   project_name        => $list_name,
                   project_desc        => $desc,
                   owner               => $user_name,
+		  protocol            => $protocol,
             );  
     }
 
@@ -752,6 +757,9 @@ sub project_description {
     my ($self, $c, $pr_id) = @_;
 
     $c->stash->{uploaded_reference} = 1 if ($pr_id =~ /uploaded/);
+
+    my $protocol = $c->config->{default_genotyping_protocol};
+    $protocol = 'N/A' if !$protocol;
 
     if(!$c->stash->{uploaded_reference}) {
         my $pr_rs = $c->model('solGS::solGS')->project_details($pr_id);
@@ -797,9 +805,6 @@ sub project_description {
 
     my @traits    =  split (/\t/, $traits);    
     my $traits_no = scalar(@traits);
-
-    my $protocol = $c->config->{default_genotyping_protocol};
-    $protocol = 'N/A' if !$protocol;
    
     $c->stash(markers_no => $markers_no,
               traits_no  => $traits_no,
