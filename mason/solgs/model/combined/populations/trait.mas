@@ -57,6 +57,7 @@ $model_parameters
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     owner        => $owner,
+    protocol     => $protocol,
  &>
  
 </&>
