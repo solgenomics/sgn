@@ -285,7 +285,6 @@ function compute_derived_trait() {
 		 //alert("error: "+response.error);
 		 jQuery('#open_derived_trait_dialog').dialog("close");
              } else {
-		 //alert("success: "+response.filename);
 		 jQuery('#open_derived_trait_dialog').dialog("close");
 		 jQuery('#working_modal').modal("hide");
 		 
@@ -297,14 +296,6 @@ function compute_derived_trait() {
 	 }
      });
 }
-
-
-
-
-
-
-
-
 
 
 function trial_detail_page_setup_dialogs() { 
