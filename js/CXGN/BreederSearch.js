@@ -158,8 +158,15 @@ window.onload = function initialize() {
     );
 
 
-    jQuery('#select2').change(function() { 
+    jQuery('#select2').change(function() {
  	var select1 = jQuery('#select1').val();
+	if (select1 === '') {
+	    var list_id = jQuery('#c1_data_list_select').val();
+	    var list_data = lo.getListData(list_id);
+	    select1 = list_data.type_name;
+	} else {
+	    select1 = jQuery('#select1').val()
+	}
 	var select2 = jQuery('#select2').val();
 	var select4 = jQuery('#select4').val();
 	var c1_data = jQuery('#c1_data').val() || [];
