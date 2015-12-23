@@ -723,12 +723,16 @@ function pasteList(div_name) {
 
     } else {
 	var data = lo.getListData(list_id);
-	var ids = lo.transform2Ids(list_id);
+	if (data.type_name !== 'years') {var ids = lo.transform2Ids(list_id);}
 
 	var elements = data.elements;
 	var options = [];
 	for (var n=0; n<elements.length; n++) {
+	if (data.type_name === 'years') {
+	    options.push([elements[n][1], elements[n][1]]);
+	} else {
 	    options.push([ids[n], elements[n][1]]);
+	}
 	} 
 	
 	c1_html = format_options_list(options);
