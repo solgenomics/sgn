@@ -39,6 +39,7 @@ __PACKAGE__->config(
 
 sub upload_phenotype_spreadsheet :  Path('/ajax/phenotype/upload_spreadsheet') : ActionClass('REST') { }
 sub upload_phenotype_spreadsheet_POST : Args(0) {
+    print STDERR "Check1: ".localtime();
   my ($self, $c) = @_;
   my $uploader = CXGN::UploadFile->new();
   my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
@@ -74,12 +75,16 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   $phenotype_metadata{'operator'}="tester_operator"; #####Need to get this from uploaded file
   $phenotype_metadata{'date'}="$timestamp";
 
+    print STDERR "Check2: ".localtime();
+
   ## Validate and parse uploaded file
   $validate_file = $parser->validate('phenotype spreadsheet', $archived_filename_with_path);
   if (!$validate_file) {
       $c->stash->{rest} = {error => "File not valid: $upload_original_name",};
       return;
   }
+
+   print STDERR "Check3: ".localtime();
 
  $parsed_file = $parser->parse('phenotype spreadsheet', $archived_filename_with_path);
   if (!$parsed_file) {
@@ -94,6 +99,8 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
   @plots = @{$parsed_file->{'plots'}};
   @traits = @{$parsed_file->{'traits'}};
 
+    print STDERR "Check4: ".localtime();
+
   print STDERR "store phenotypes from uploaded file\n";
   $stored_phenotype_success = $store_phenotypes->store($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
 
@@ -101,6 +108,8 @@ sub upload_phenotype_spreadsheet_POST : Args(0) {
     $c->stash->{rest} = { error => 'Error storing uploaded file', };
     return;
   }
+
+    print STDERR "Check5: ".localtime();
 
   $c->stash->{rest} = {success => "1",};
 
