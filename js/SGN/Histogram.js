@@ -1,16 +1,18 @@
 
-function plot_histogram(values) {
+//Pass an array of values e.g. ['1.01', '2', '500'] and the div_id for the div you want the histogram to appear in.
+
+function plot_histogram(values, div_id) {
 
   var identical = identical_check(values);
 
   if (identical == true) {
-      jQuery("#trial_summary_hist").html("<center><h3>All "+values.length+" values were the same value of "+values[0]+".</h3></center>");
+      jQuery("#"+div_id).html("<center><h3>All "+values.length+" values were the same value of "+values[0]+".</h3></center>");
   }  else {
 
       // A formatter for counts.
       var formatCount = d3.format(",.0f");
 
-      var div_width = document.getElementById("trial_summary_hist").offsetWidth;
+      var div_width = document.getElementById(div_id).offsetWidth;
 
       var margin = {top: 10, right: 30, bottom: 30, left: 30},
       width = div_width - margin.left - margin.right,
@@ -33,7 +35,7 @@ function plot_histogram(values) {
       .scale(x)
       .orient("bottom");
 
-      var svg = d3.select("#trial_summary_hist").append("svg")
+      var svg = d3.select("#"+div_id).append("svg")
       .attr("id", "svg_id")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)

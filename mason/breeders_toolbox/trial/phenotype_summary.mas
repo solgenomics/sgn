@@ -101,7 +101,7 @@ jQuery(document).ready(function () {
 		}
 		else { 
 		 d3.select("#trial_summary_hist").selectAll("*").remove();
-		 plot_histogram(response.data);
+		 plot_histogram(response.data, 'trial_summary_hist');
 		}
 	  },
 	  error: function(response) { 
@@ -130,7 +130,7 @@ function trait_summary_hist_change(value) {
 		}
 		else { 
 		 d3.select("#trial_summary_hist").selectAll("*").remove();
-		 plot_histogram(response.data);
+		 plot_histogram(response.data, 'trial_summary_hist');
 		}
 	  },
 	  error: function(response) { 
