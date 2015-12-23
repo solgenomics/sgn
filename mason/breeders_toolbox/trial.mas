@@ -286,6 +286,14 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 %}
 
 </&>
+%if (!$has_plant_entries) { 
+   <button id="create_plant_entries_button">Add plant entries</button>
+%} else {
+
+<&| /page/info_section.mas, title=>"Plant entries", is_subsection => 1, collapsible=> 1, collapsed=>1, hide_if_empty=> 1, is_empty => !$has_plant_entries &>
+
+</&>
+%}
 
 </&>
 
@@ -369,6 +377,10 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
+</div>
+
+<div id="create_plant_entries_dialog"> 
+<input id="plants_per_plot" value="<% $plant_per_plot %>"</input>
 </div>
 
 <div id="tablet_field_layout_saved_dialog_message" title="Field book layout file" style="display:none;">

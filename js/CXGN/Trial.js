@@ -246,6 +246,23 @@ function create_DataCollector() {
 
 function trial_detail_page_setup_dialogs() { 
 
+    jQuery('#create_plant_entries_dialog').dialog( { 
+	height: 200,
+	width: 400,
+	title: 'Create plant entries for this trial',
+	autoOpen: false,
+	buttons: {
+	    'OK' : function() { 
+		alert("Creating plant entries...");
+		create_plant_entries();
+		jQuery('#create_plant_entries_dialog').dialog("close");
+	    },
+	    'Cancel': function() { 
+		jQuery('#create_plant_entries_dialog').dialog("close");
+	    }
+	}
+    });
+    
     jQuery('#change_breeding_program_dialog').dialog( {
 	height: 200,
 	width: 400,
@@ -775,6 +792,7 @@ function save_trial_description() {
     });
 }
 
+
 function display_trial_location(trial_id) { 
     jQuery.ajax( { 
 	url: '/ajax/breeders/trial/'+trial_id+'/location',
@@ -855,6 +873,9 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
 
+    $('#create_plant_entries_button').click(function() { 
+	$('#create_plant_entries_dialog').dialog("open");
+    });
 
     $('#upload_trial_coords_link').click(function () {
         open_upload_trial_coord_dialog();
