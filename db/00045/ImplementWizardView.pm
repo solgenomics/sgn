@@ -98,8 +98,11 @@ CREATE INDEX year_idx ON materialized_fullview(year_id) WITH (fillfactor =100);
 CREATE INDEX location_id_idx ON materialized_fullview(location_id) WITH (fillfactor =100);
 CREATE INDEX accession_id_idx ON materialized_fullview(accession_id) WITH (fillfactor =100);
 CREATE INDEX plot_id_idx ON materialized_fullview(plot_id) WITH (fillfactor =100);
-CREATE INDEX project_by_loc_by_breed_prog_idx ON materialized_fullview(breeding_program_id,location_id,trial_id) WITH (fillfactor =100);
-CREATE INDEX project_by_year_by_loc_idx ON materialized_fullview(location_id,year_id,trial_id) WITH (fillfactor =100);
+CREATE INDEX trial_by_loc_by_breed_prog_idx ON materialized_fullview(breeding_program_id,location_id,trial_id) WITH (fillfactor =100);
+CREATE INDEX trial_by_year_by_loc_idx ON materialized_fullview(location_id,year_id,trial_id) WITH (fillfactor =100);
+CREATE INDEX trial_by_breed_prog_idx ON materialized_fullview(breeding_program_id,trial_id) WITH (fillfactor =100);
+CREATE INDEX trial_by_year_idx ON materialized_fullview(year_id,trial_id) WITH (fillfactor =100);
+CREATE INDEX year_by_breed_prog_idx ON materialized_fullview(breeding_program_id,year_id) WITH (fillfactor =100);
 
 CREATE RECURSIVE VIEW accession_ids(accession_id) AS SELECT MIN(accession_id) FROM materialized_fullview UNION SELECT (SELECT m.accession_id FROM materialized_fullview m WHERE m.accession_id > accession_ids.accession_id ORDER BY accession_id LIMIT 1) FROM accession_ids WHERE accession_id IS NOT NULL;
 CREATE VIEW accessions AS SELECT accession_id, (SELECT accession_name FROM materialized_fullview m WHERE accession_ids.accession_id = m.accession_id ORDER BY m.accession_id LIMIT 1) FROM accession_ids;
@@ -128,6 +131,10 @@ GRANT ALL ON trials to web_usr;
 CREATE RECURSIVE VIEW year_ids(year_id) AS SELECT MIN(year_id) FROM materialized_fullview UNION SELECT (SELECT m.year_id FROM materialized_fullview m WHERE m.year_id > year_ids.year_id ORDER BY year_id LIMIT 1) FROM year_ids WHERE year_id IS NOT NULL;
 CREATE VIEW years AS SELECT year_id, year_id AS year_name FROM year_ids;
 GRANT ALL ON years to web_usr;
+
+INSERT INTO dbxref (db_id, accession) VALUES(288,'breeding_programs');
+INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES(50, 'breeding_programs', 'breeding_programs', (SELECT dbxref_id FROM dbxref WHERE accession = 'breeding_programs');
+
 --
 SELECT * from public.stock;
 

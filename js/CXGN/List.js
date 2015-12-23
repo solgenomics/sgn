@@ -654,15 +654,18 @@ CXGN.List.prototype = {
     },
 
     transform2Ids: function(list_id) { 
+	var data = this.getListData(list_id);
+	console.log("data ="+JSON.stringify(data));
 	var list_type = this.getListType(list_id);
 	console.log("list_type = "+list_type);
 	var new_type;
 	if (list_type == 'traits') { new_type = 'traits_2_trait_ids'; }
 	if (list_type == 'locations') { new_type = 'locations_2_location_ids'; }
 	if (list_type == 'trials') { new_type = 'projects_2_project_ids'; }
-	if (list_type == 'projects') { new_type = 'projects_2_project_ids'; }
+	if (list_type == 'breeding_programs') { new_type = 'projects_2_project_ids'; }
 	if (list_type == 'accessions') { new_type = 'accessions_2_accession_ids'; }
-	
+	if (list_type == 'plots') { new_type = 'plots_2_plot_ids'; }
+
 	if (! new_type) { 
 	    return { 'error' : "cannot convert the list because of unknown type" };
 	}

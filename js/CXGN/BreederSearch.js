@@ -1,7 +1,7 @@
 
 window.onload = function initialize() { 
 
-    var choices = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding programs', locations : 'locations', plots : 'plots', traits : 'traits', trials :'trials', years : 'years'};
+    var choices = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', locations : 'locations', plots : 'plots', traits : 'traits', trials :'trials', years : 'years'};
 
     var html = ''; 
     var c1_html = '';
