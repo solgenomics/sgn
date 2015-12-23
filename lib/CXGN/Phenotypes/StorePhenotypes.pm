@@ -133,17 +133,17 @@ sub store {
 	    $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
 	}
 
-	my $rs = $schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {'type.name' => $phenotyping_experiment_cvterm},
-	    {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
-	     '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'], 
-	     '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
-	    }
-	);
-	my %data;
-	while (my $s = $rs->next()) { 
-	    $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
-	}
+	#my $rs = $schema->resultset('NaturalDiversity::NdExperiment')->search(
+	#    {'type.name' => $phenotyping_experiment_cvterm},
+	#    {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
+	#     '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'], 
+	#     '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
+	#    }
+	#);
+	#my %data;
+	#while (my $s = $rs->next()) { 
+	#    $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
+	#}
 
 	#stock->stock_id (searching for stock name), ndexperiment->nd_geolocation_id, nd_experiment_project->project_id
 
