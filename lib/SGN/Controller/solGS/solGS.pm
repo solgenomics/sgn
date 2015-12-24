@@ -2160,54 +2160,63 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     while (my $row = $pr_rs->next) {  
 	$selection_pop_id = $row->project_id;
     }
-    
-    my $has_genotype;
-    if ($selection_pop_id)
+       
+    my $ret = {};
+
+    if ($selection_pop_id != $training_pop_id)
     {
-	$c->stash->{pop_id} = $selection_pop_id;
-	$self->check_population_has_genotype($c);
-	$has_genotype = $c->stash->{population_has_genotype};
-    }  
-    
-    my $similarity;
-    if ($has_genotype)
-    {
-	$c->stash->{pop_id} = $selection_pop_id;
-	$self->genotype_file($c);
-	my $selection_pop_geno_file = $c->stash->{genotype_file};
-		
-	my $training_pop_geno_file;
-	
-	if ($training_pop_id =~ /upload/) 
-	{	  	
-	    my $dir = $c->stash->{solgs_prediction_upload_dir};
-	    my $user_id = $c->user->id;
-	    my $tr_geno_file = "genotype_data_${user_id}_${training_pop_id}";
-	    $training_pop_geno_file = $self->grep_file($dir,  $tr_geno_file);  	
-	}
-	else 
+	my $has_genotype;
+	if ($selection_pop_id)
 	{
-	    my $dir = $c->stash->{solgs_cache_dir}; 
-	    my $tr_geno_file = "genotype_data_${training_pop_id}";
-	    $training_pop_geno_file = $self->grep_file($dir,  $tr_geno_file);  
-	}
+	    $c->stash->{pop_id} = $selection_pop_id;
+	    $self->check_population_has_genotype($c);
+	    $has_genotype = $c->stash->{population_has_genotype};
+	}  
 
-	$similarity = $self->compare_marker_set_similarity([$selection_pop_geno_file, $training_pop_geno_file]);
-    } 
-
-    my $selection_pop_data;
-    if ($similarity >= 0.5 ) 
-    {	
-   	$c->stash->{training_pop_id} = $training_pop_id;
-	$self->format_selection_pops($c, [$selection_pop_id]);
-	$selection_pop_data = $c->stash->{selection_pops_list};
-	$self->save_selection_pops($c, [$selection_pop_id]);
-    }
+	my $similarity;
+	if ($has_genotype)
+	{
+	    $c->stash->{pop_id} = $selection_pop_id;
+	    $self->genotype_file($c);
+	    my $selection_pop_geno_file = $c->stash->{genotype_file};
+		
+	    my $training_pop_geno_file;
 	
-    my $ret->{selection_pop_data} = $selection_pop_data;
-    $ret->{similarity}         = $similarity;
-    $ret->{has_genotype}       = $has_genotype;
-    $ret->{selection_pop_id}   = $selection_pop_id;
+	    if ($training_pop_id =~ /upload/) 
+	    {	  	
+		my $dir = $c->stash->{solgs_prediction_upload_dir};
+		my $user_id = $c->user->id;
+		my $tr_geno_file = "genotype_data_${user_id}_${training_pop_id}";
+		$training_pop_geno_file = $self->grep_file($dir,  $tr_geno_file);  	
+	    }
+	    else 
+	    {
+		my $dir = $c->stash->{solgs_cache_dir}; 
+		my $tr_geno_file = "genotype_data_${training_pop_id}";
+		$training_pop_geno_file = $self->grep_file($dir,  $tr_geno_file);  
+	    }
+
+	    $similarity = $self->compare_marker_set_similarity([$selection_pop_geno_file, $training_pop_geno_file]);
+	} 
+
+	my $selection_pop_data;
+	if ($similarity >= 0.5 ) 
+	{	
+	    $c->stash->{training_pop_id} = $training_pop_id;
+	    $self->format_selection_pops($c, [$selection_pop_id]);
+	    $selection_pop_data = $c->stash->{selection_pops_list};
+	    $self->save_selection_pops($c, [$selection_pop_id]);
+	}
+	
+	$ret->{selection_pop_data} = $selection_pop_data;
+	$ret->{similarity}         = $similarity;
+	$ret->{has_genotype}       = $has_genotype;
+	$ret->{selection_pop_id}   = $selection_pop_id;
+    }
+    else
+    {
+	$ret->{selection_pop_id}   = $selection_pop_id;
+    }
  
     $ret = to_json($ret);
        

@@ -45,6 +45,8 @@ jQuery(document).ready( function () {
 
     jQuery('#search_selection_pop').on('click', function () {
 	
+	jQuery("#selection_pops_message").hide();
+
 	var entry = jQuery('#population_search_entry').val();
 
 	if (entry) {
@@ -53,29 +55,6 @@ jQuery(document).ready( function () {
     });
           
 });
-
-
-// function getSelectionPopulationId (popName) {
-        
-//     jQuery.ajax({
-//         type: 'POST',
-//         dataType: 'json',
-// 	data: popName,
-//         url: '/solgs/get/selection/population/id/',
-//         success: function(response) {
-//             if (response.selection_pop_id) {
-// 		alert('selection pop id: ' + response.selection_pop_id);
-// 		return {'selection_pop_id': response.selection_pop_id};
-//             } else {
-// 		return 0;
-// 		jQuery("#search_pops_message")
-// 		    .html(popName + " does not exist in the database.")
-// 		    .show();	
-//             }
-// 	}
-//     });
-    
-// }
 
 
 function checkSelectionPopulationRelevance (popName) {
@@ -106,21 +85,35 @@ function checkSelectionPopulationRelevance (popName) {
         url: '/solgs/check/selection/population/relevance/',
         success: function(response) {
 	    
-	    if (response.selection_pop_id) {
+	    var selectionPopId = response.selection_pop_id;
+	    if (selectionPopId) {
 		
-		if (response.similarity >= 0.5 ) {
+		if (selectionPopId != trainingPopId) {
+	
+		    if (response.similarity >= 0.5 ) {
 		    
-		    jQuery("#selection_pops_message").hide();
-		    jQuery("#selection_populations").show();
+			jQuery("#selection_pops_message ").hide();
+			jQuery("#selection_populations").show();
+			
+			var selPopExists = jQuery('#selection_pops_list:contains(' + popName + ')').length;
+			if (!selPopExists) {
+			    displaySelectionPopulations(response.selection_pop_data);
+			}
+
+		    } else { 
 		    
-		    displaySelectionPopulations(response.selection_pop_data);				
-		} else { 
-		    
-		    jQuery("#selection_pops_message")
+			jQuery("#selection_pops_message")
 			.html(popName +" is genotyped by a marker set different  " 
 			      + "from the one used for the training population. "
 			      + "Therefore you can not predict its GEBVs using this model.")
 			.show();	
+		    }
+		} else {
+		    jQuery("#selection_pops_message")
+			.html(popName +" is the same population as the " 
+			      + "the training population. "
+			      + "Please select a different selection population.")
+			.show();		    
 		}
 	    } else {
 		
@@ -193,7 +186,7 @@ function displaySelectionPopulations (data) {
 	});
 
     } else {
-	
+
 	jQuery('#selection_pops_list').dataTable().fnAddData(data);
     }
 }
