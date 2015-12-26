@@ -23,18 +23,17 @@ Lukas Mueller
 
 =cut
 
-package SGN::Role::Site::Cvterm;
-
-use Moose::Role;
+package SGN::Model::Cvterm;
 
 use CXGN::Chado::Cvterm;
 
 sub get_cvterm_object { 
     my $self = shift;
+    my $schema = shift;
     my $cvterm_name = shift;
     my $cv_name = shift;
 
-    my $cv = $self->dbic_schema("Bio::Chado::Schema")->resultset('Cv::Cv')->find( { name => $cv_name });
+    my $cv = $schema->resultset('Cv::Cv')->find( { name => $cv_name });
 
     if (! $cv) { 
 	print STDERR "CV $cv_name not found. Ignoring.";
@@ -51,10 +50,10 @@ sub get_cvterm_object {
 
 sub get_cvterm_row { 
     my $self = shift;
+    my $schema = shift;
     my $name = shift;
     my $cv_name = shift;
 
-    my $schema = $self->dbic_schema('Bio::Chado::Schema');
     my $cvterm = $schema->resultset('Cv::Cvterm')->find( 
         { 
             name => $name,
