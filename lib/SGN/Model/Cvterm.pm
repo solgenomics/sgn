@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-SGN::Model::Cvterm - a role that provides information on cvterms
+SGN::Model::Cvterm - a simple model that provides information on cvterms
 
 =head1 DESCRIPTION
 
@@ -11,11 +11,9 @@ get_cvterm_object retrieves the term as a CXGN::Chado::Cvterm object.
 
 get_cvterm_row retrieves the term as a DBIx::Class row.
 
-Both function take a cvterm name and a cv name as an argument.
+Both function take a schema object, cvterm name and a cv name as an argument.
 
 If a term is not in the database, undef is returned.
-
-This role was added to the SGN.pm website application object.
 
 =head1 AUTHOR
 
