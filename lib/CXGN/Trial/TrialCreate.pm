@@ -213,7 +213,7 @@ sub save_trial {
       $plot_cvterm = $sample_cvterm;
       $plot_of = $sample_of;
 
-      print STDERR "Storing user_id and project_name provided by the IGD spreadksheet for later recovery in the spreadsheet download... ".(join ",", ($self->get_genotyping_user_id(), $self->get_genotyping_project_name()))."\n";
+      #print STDERR "Storing user_id and project_name provided by the IGD spreadksheet for later recovery in the spreadsheet download... ".(join ",", ($self->get_genotyping_user_id(), $self->get_genotyping_project_name()))."\n";
 
       $genotyping_layout_experiment->create_nd_experimentprops( 
 	  { 

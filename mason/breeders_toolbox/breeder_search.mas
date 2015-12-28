@@ -25,8 +25,8 @@ Search accessions and plots using location, year, trial, and trait data.
   <div class="row" >
     <div class="col-sm-7" style="margin-right:0px; padding-right:0px;">
       <select class="form-control input-sm" id="select4"> 
+        <option value="accessions">accessions</option>
         <option value="plots">plots</option>
-    	<option value="accessions" selected="selected">accessions</option>
       </select>
     </div>
     <div class="col-sm-5" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;">
@@ -59,29 +59,30 @@ Search accessions and plots using location, year, trial, and trait data.
 <td>
 <button class="btn btn-default btn-sm" id="c1_select_all" />Select All</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
-<div id="c1_data_count"></div>
+<div class="well well-sm"><div id="c1_data_count">No Selection</div></div>
 <div id="c1_to_list_menu"></div>
 </td>
 <td>
-<button class="btn btn-default btn-sm" id="c2_select_all" />select all</button>
+<button class="btn btn-default btn-sm" id="c2_select_all" />Select All</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
-<div id="c2_data_count"></div>
+<div class="well well-sm"><div id="c2_data_count">No Selection</div></div>
 <div id="c2_to_list_menu"></div>
 </td>
 <td>
-<button class="btn btn-default btn-sm" id="c3_select_all" />select all</button>
+<button class="btn btn-default btn-sm" id="c3_select_all" />Select All</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
-<div id="c3_data_count"></div>
+<div class="well well-sm"><div id="c3_data_count">No Selection</div></div>
 <div id="c3_to_list_menu"></div>
 </td>
 <td>
-<button class="btn btn-default btn-sm" id="stock_select_all" />select all</button>
+<button class="btn btn-default btn-sm" id="stock_select_all" />Select All</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
-<div id="stock_count"></div>
+<div class="well well-sm"><div id="stock_count">No Selection</div></div>
 <div id="add_to_list_menu"></div>
 </td></tr>
-<tr><td colspan="4"><input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;Only show genotyped accessions</td></tr>
 </table>
+<input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;Only show accessions that have been genotyped with protocol:
+<div id="select_gt_protocol_div"></div>
 
 
 <style>
@@ -92,13 +93,18 @@ Search accessions and plots using location, year, trial, and trait data.
 
 
 <script defer="defer">
-  jQuery(document).ready(function() { 
+jQuery(document).ready(function() {
+
+  get_select_box('genotyping_protocols', 'select_gt_protocol_div', 'gt_protocol_select');
   
+  jQuery('select').mouseenter(function() {this.tooltip});
+
     if (!isLoggedIn()) {
-      jQuery('#c1_to_list_menu').html('(log in to use lists)');
-      jQuery('#c2_to_list_menu').html('(log in to use lists)');
-      jQuery('#c3_to_list_menu').html('(log in to use lists)');
-      jQuery('#add_to_list_menu').html('(log in to use lists)');
+      jQuery('#c1_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
+      jQuery('#c2_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
+      jQuery('#c3_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
+      jQuery('#add_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
+
     }
     else { 
       addToListMenu('c1_to_list_menu', 'c1_data', { 
@@ -119,9 +125,6 @@ Search accessions and plots using location, year, trial, and trait data.
         }
       );
     }
-
-
-
  });
 
 </script>

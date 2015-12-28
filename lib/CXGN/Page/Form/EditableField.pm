@@ -28,7 +28,7 @@ sub new {
 sub render {
     my $self = shift;
     my $id = $self->get_id;
-    my $input =  " <input type=\"text\" id=\"" . $self->get_id() . "\" name=\"".$self->get_field_name()."\" value=\"".$self->get_contents()."\" size=\"".$self->get_length()."\"  onclick=\"jqueryStuff()\" />\n";
+    my $input =  " <input class=\"form-control\" type=\"text\" id=\"" . $self->get_id() . "\" name=\"".$self->get_field_name()."\" value=\"".$self->get_contents()."\" size=\"".$self->get_length()."\"  onclick=\"jqueryStuff()\" />\n";
 
     return $input;
 }

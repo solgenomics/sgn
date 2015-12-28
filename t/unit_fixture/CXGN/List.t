@@ -22,7 +22,8 @@ my @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
             undef,
             '5',
             '76451',
-            'accessions'
+            'accessions',
+	    '0'
           ], 
           [
             '5',
@@ -30,7 +31,8 @@ my @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
             undef,
             '374',
             '76451',
-            'accessions'
+            'accessions',
+	    '0'
           ],
           [
             '6',
@@ -38,7 +40,8 @@ my @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
             undef,
             '307',
             '76451',
-            'accessions'
+            'accessions',
+	    '0'
           ],
           [
             '7',
@@ -46,7 +49,26 @@ my @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
             undef,
             '20',
             undef,
-            undef
+            undef,
+	    '0'
+          ],
+	  [
+            '809',
+            'janedoe_1_public',
+            undef,
+            '2',
+            undef,
+            undef,
+	    '1'
+          ],
+	  [
+            '811',
+            'janedoe_1_private',
+            undef,
+            '2',
+            undef,
+            undef,
+	    '0'
           ],
 	   ], "check available lists initially");
 
@@ -112,7 +134,8 @@ is_deeply(\@lists_sorted, [
             undef,
             '5',
             '76451',
-            'accessions'
+            'accessions',
+	    '0'
           ],
           [
             '5',
@@ -120,7 +143,8 @@ is_deeply(\@lists_sorted, [
             undef,
             '374',
             '76451',
-            'accessions'
+            'accessions',
+	    '0'
           ],
           [
             '6',
@@ -128,7 +152,8 @@ is_deeply(\@lists_sorted, [
             undef,
             '307',
             '76451',
-            'accessions'
+            'accessions',
+	    '0'
           ],
           [
             '7',
@@ -136,7 +161,8 @@ is_deeply(\@lists_sorted, [
             undef,
             '20',
             undef,
-            undef
+            undef,
+	    '0'
           ],
           [
             '8',
@@ -144,7 +170,26 @@ is_deeply(\@lists_sorted, [
             'new description',
             '1',
             '76451',
-            'accessions'
+            'accessions',
+	    '0'
+          ],
+	  [
+            '809',
+            'janedoe_1_public',
+            undef,
+            '2',
+            undef,
+            undef,
+	    '1'
+          ],
+	  [
+            '811',
+            'janedoe_1_private',
+            undef,
+            '2',
+            undef,
+            undef,
+	    '0'
           ],
 
         ],
@@ -167,7 +212,8 @@ is_deeply(\@lists_sorted, [
 	       undef,
 	       '5',
 	       '76451',
-	       'accessions'
+	       'accessions',
+	       '0'
 	      ],
 	      [
 	       '6',
@@ -175,7 +221,8 @@ is_deeply(\@lists_sorted, [
 	       undef,
 	       '307',
 	       '76451',
-	       'accessions'
+	       'accessions',
+	       '0'
 	      ],
 	      [
 	       '7',
@@ -183,7 +230,8 @@ is_deeply(\@lists_sorted, [
 	       undef,
 	       '20',
 	       undef,
-	       undef
+	       undef,
+	       '0'
 	      ],
 	      [
 	       '8',
@@ -191,8 +239,28 @@ is_deeply(\@lists_sorted, [
 	       'new description',
 	       '1',
 	       '76451',
-	       'accessions'
+	       'accessions',
+	       '0'
 	      ],
+	      [
+            '809',
+            'janedoe_1_public',
+            undef,
+            '2',
+            undef,
+            undef,
+	    '1'
+          ],
+	  [
+            '811',
+            'janedoe_1_private',
+            undef,
+            '2',
+            undef,
+            undef,
+	    '0'
+          ],
+
 	  ]
 	  , "check available lists after deletion");
 

@@ -197,7 +197,7 @@ function open_create_DataCollector_dialog() {
     jQuery("#trait_list_dc").html(list.listSelect("trait_list", [ 'traits' ]));
     //jQuery('#working').dialog("close");
     jQuery('#working_modal').modal("hide");
-    jQuery('#create_DataCollector_dialog').dialog("open");
+    jQuery('#create_DataCollector_dialog').dialog("open"); 
 }
 
 
@@ -209,7 +209,7 @@ function create_DataCollector() {
     var trait_list_id = jQuery('#trait_list_list_select').val();
     var trait_list;
     if (! trait_list_id == "") {
-	trait_list = JSON.stringify(list.getList(trait_list_id));
+	trait_list = JSON.stringify(list.getList(trait_list_id)); 
     }
      new jQuery.ajax({
 	 type: 'POST',
@@ -219,10 +219,10 @@ function create_DataCollector() {
              'trial_id': trialID,
              'trait_list': trait_list,
 	 },
+		
 	 success: function (response) {
 	     //jQuery('#working').dialog("close");
 	     jQuery('#working_modal').modal("hide");
-		//alert("hello");
 		
              if (response.error) {
 		 //alert("error: "+response.error);
@@ -296,11 +296,12 @@ function trial_detail_page_setup_dialogs() {
 		jQuery( this ).dialog( "close" );
 		return;
 	    },
-	    Create: function() {
+	    Create: {text: "Ok", id:"create_phenotyping_ok_button", click:function() {
 		create_spreadsheet();
 		//save_experimental_design(design_json);
 		jQuery( this ).dialog( "close" );
 		//jQuery('#add_project_dialog').dialog("close");
+	       },
 	    },
 	},
     });
@@ -317,11 +318,12 @@ function trial_detail_page_setup_dialogs() {
 		jQuery( this ).dialog( "close" );
 		return;
 	    },
-	    Create: function() {
+	    Create: {text: "Create", id:"create_DataCollector_submit_button", click:function() {
 		create_DataCollector();
 		//save_experimental_design(design_json);
 		jQuery( this ).dialog( "close" );		
 		//jQuery('#add_project_dialog').dialog("close");
+		}
 	    },
 	},
     });	
@@ -549,6 +551,29 @@ function trial_detail_page_setup_dialogs() {
 	}	
     });   
 
+    jQuery('#edit_trial_name').click( function () { 
+	jQuery('#edit_trial_name_dialog').dialog("open");
+	
+    });
+    
+    jQuery('#edit_trial_name_dialog').dialog( { 
+	autoOpen: false,
+	height: 200,
+	width: 300,
+	modal: true,
+	title: "Change trial name",
+	buttons: {
+	    cancel: { text: "Cancel",
+                      click: function() { jQuery( this ).dialog("close"); },
+                      id: "edit_name_cancel_button"
+		    },
+	    save:   { text: "Save", 
+                      click: function() { save_trial_name(); },
+                      id: "edit_name_save_button"
+		    }          
+	}	
+    });   
+
     jQuery('#change_trial_location_dialog').dialog( { 
 	autoOpen: false,
 	height: 200,
@@ -620,6 +645,48 @@ function trial_detail_page_setup_dialogs() {
 
 }
 
+function display_trial_name(trial_id) { 
+    jQuery.ajax( { 
+	url: '/ajax/breeders/trial/'+trial_id+'/names',
+	success: function(response) { 
+            if (response.error) { alert(response.error); }
+            else { 
+		jQuery('#trial_name').html(response.names);
+		jQuery('#trial_name_input').html(response.names);
+            }
+	},
+	error: function(response) { 
+	    jQuery('#trial_name').html('An error occurred trying to display the name.'); 
+	}
+    });
+}
+
+
+function save_trial_name(names) {
+	var trial_id = parseInt(jQuery('#trialIDDiv').text());
+	//var trial_id = get_trial_id();
+	var names = jQuery('#trial_name_input').val();
+	alert('New name = '+names);
+	jQuery.ajax( { 
+		url: '/ajax/breeders/trial/'+trial_id+'/names/',
+		type: 'POST',
+		data: {'names' : names},
+		success: function(response) {
+			if (response.error) {
+				alert(response.error);
+			}
+			else {
+				alert("Successfully updated trial name");
+				jQuery('#edit_trial_name_dialog').dialog("close");
+				display_trial_name(trial_id);
+			}
+		},
+		error: function(response) {
+			alert("An error occurred updating the trial name");
+		},
+	});
+
+}
 
 function save_trial_type(type) { 
     var trial_id = get_trial_id();
@@ -640,7 +707,7 @@ function save_trial_type(type) {
 	    alert('An error occurred setting the trial type.');
 	}
     });
-    
+
 
 }
 
@@ -802,8 +869,10 @@ function save_trial_description() {
     var description = jQuery('#trial_description_input').val();
     alert('New description = '+description);
     jQuery.ajax( { 
-	url: '/ajax/breeders/trial/'+trial_id+'/description/'+description,
+	url: '/ajax/breeders/trial/'+trial_id+'/description/',
+	data: {description:description},
         type: 'POST',
+	data: {'description' : description},
 	success: function(response) { 
             if (response.error) { 
 		alert(response.error);
@@ -979,10 +1048,10 @@ jQuery(document).ready(function ($) {
             "Cancel": function () {
                 jQuery('#upload_trial_coord_dialog').dialog("close");
             },
-	    "Ok": function () {
+	    "Ok": {text: "Ok", id:"upload_trial_coords_ok_button", click:function () {
 		upload_trial_coord_file();
                 jQuery('#upload_trial_coord_dialog').dialog("close");
-		
+	      }
 	    }
 	}
     });
@@ -1022,15 +1091,15 @@ jQuery(document).ready(function ($) {
      $('#upload_trial_coordinates_form').iframePostForm({
 	json: true,
 	post: function () {
-            var uploadedtrialcoordFile = $("#trial_coordinates_uploaded_file").val();
-	    $('#working').dialog("open");
+            var uploadedtrialcoordFile = $("#trial_coordinates_uploaded_file").val(); 
+	    $('#working_modal').modal("show");
             if (uploadedtrialcoordFile === '') {
-		$('#working').dialog("close");
+		$('#working_modal').modal("hide");
 		alert("No file selected");
             }
 	},
-	complete: function (response) {
-	    $('#working').dialog("close");
+	complete: function (response) { 
+	    $('#working_modal').modal("hide");
             if (response.error_string) {
 		$("#upload_trial_coord_error_display tbody").html('');
 		$("#upload_trial_coord_error_display tbody").append(response.error_string);
@@ -1075,9 +1144,125 @@ jQuery(document).ready(function ($) {
 
     function open_upload_trial_coord_dialog() {
 	$('#upload_trial_coord_dialog').dialog("open");
-	//add a blank line to design method select dropdown that dissappears when dropdown is opened 
 
     }
 
+
+   $('#upload_data_collector_link').click(function () {
+        	$('#upload_DataCollector_spreadsheet_dialog').dialog("open");
+	
+    });
+
+	$( "#upload_DataCollector_spreadsheet_dialog" ).dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+	    "Cancel": function () {
+                jQuery('#upload_DataCollector_spreadsheet_dialog').dialog("close");
+            },
+	    "Ok": {text: "Ok", id:"upload_DataCollector_ok_button", click:function() {
+                upload_DataCollector_spreadsheet_file();
+		$( this ).dialog( "close" );
+	      }		
+	    }
+	}
+    });
+
+   function upload_DataCollector_spreadsheet_file() {
+	jQuery('#working_modal').modal("show");
+        var uploadFile = $("#DataCollector_upload_file").val();
+        $('#upload_DataCollector_form').attr("action", "/ajax/datacollector/upload_dc_sheet");
+        if (uploadFile === '') {
+	    alert("Please select a file");
+	    return;
+        }
+        $("#upload_DataCollector_form").submit();
+    }
+
+   $('#upload_DataCollector_form').iframePostForm({
+	json: true,
+	post: function () {
+	    var uploadFile = $("#DataCollector_upload_file").val();
+		//alert("UPLOADED FILE: "+uploadFile);
+	    if (uploadFile === '') {
+		alert("No file selected");
+	    }
+	},
+	complete: function (response) {
+	    if (response.error) {
+		alert(response.error);
+		return;
+	    }
+	    if (response.success) {
+		jQuery('#working_modal').modal("hide");
+		alert("File uploaded successfully");
+		$( this ).dialog( "close" );
+		location.reload();
+	    }
+	}
+    });
+
+
+    $('#upload_phenotyping_spreadsheet_link').click(function () {
+        	$('#upload_phenotyping_spreadsheet_dialog').dialog("open");
+	
+    });
+
+	$( "#upload_phenotyping_spreadsheet_dialog" ).dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+        width: 500,
+        position: ['top', 150],
+	buttons: {
+	    "Cancel": function () {
+                jQuery('#upload_phenotyping_spreadsheet_dialog').dialog("close");
+            },
+	    "Ok": {text: "Ok", id:"upload_phenotyping_ok_button", click:function() {
+                upload_phenotyping_spreadsheet_file();
+		$( this ).dialog( "close" );
+	      }		
+	    }
+	}
+    });
+
+   function upload_phenotyping_spreadsheet_file() {
+	jQuery('#working_modal').modal("show");
+        var uploadFile = $("#phenotyping_spreadsheet_upload_file").val();
+        $('#upload_phenotyping_spreadsheet_form').attr("action", "/ajax/phenoSheet/upload_pheno_sheet");
+        if (uploadFile === '') {
+	    alert("Please select a file");
+	    return;
+        }
+        $("#upload_phenotyping_spreadsheet_form").submit();
+    }
+
+   $('#upload_phenotyping_spreadsheet_form').iframePostForm({
+	json: true,
+	post: function () {
+	    var uploadFile = $("#phenotyping_spreadsheet_upload_file").val();
+		//alert("UPLOADED FILE: "+uploadFile);
+	    if (uploadFile === '') {
+		alert("No file selected");
+	    }
+	},
+	complete: function (response) {
+	    if (response.error) {
+		alert(response.error);
+		return;
+	    }
+	    if (response.success) {
+		jQuery('#working_modal').modal("hide");
+		alert("File uploaded successfully");
+		$( this ).dialog( "close" );
+		location.reload();
+	    }
+	}
+    });
+
 });
+
 

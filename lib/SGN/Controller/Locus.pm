@@ -242,10 +242,14 @@ sub get_locus : Chained('/')  PathPart('locus')  CaptureArgs(1) {
         || $locus_id =~ /[^-\d]/ ? 'locus' : 'locus_id';
     
     if( $identifier_type eq 'locus_id' ) {
-        $locus_id > 0
-            or $c->throw_client_error( public_message => 'Locus ID must be a positive integer.' );
+        if ( $locus_id == 0 ) { 
+	    $c->stash->{locus}     = CXGN::Phenome::Locus->new($c->dbc->dbh);
+	    return 1;
+	} elsif ( $locus_id < 0 ) {
+	    $c->throw_client_error( public_message => 'Locus ID must be a positive integer.' );
+	}
     }
-
+    $locus_id =~ s/(.*)(\.\d+)/$1/ ;
     my $matching_loci = $self->schema->resultset('Locus')->search(
 	{
 	    $identifier_type => $locus_id,

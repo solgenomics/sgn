@@ -7,7 +7,7 @@ use CXGN::DB::Schemas;
 use CXGN::Chado::Stock;
 
 our($opt_H, $opt_D, $opt_x);
-getopt('H:D:x');
+getopts('H:D:x');
 
 my $dbh = CXGN::DB::InsertDBH->new( 
     { 

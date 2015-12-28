@@ -577,13 +577,13 @@ sub as_table {
 
 sub as_table_string {
     my $self = shift;
-    my $string = qq { <table> };
+    my $string = qq { <br/><div class="panel panel-info"><table class="table table-hover"> };
     foreach my $f ($self->get_fields()) { 
 	if (ref($f)!~/hidden/i) { 
-	    $string .=  "<tr><td>".($f->get_display_name || '')."</td><td width=\"20\">&nbsp;</td><td><b>".($f->render || '')."</b></td></tr>\n";
+	    $string .=  "<tr><td>".($f->get_display_name || '')."</td><td><b>".($f->render || '')."</b></td></tr>\n";
 	}
     }
-    $string .= qq { </table> };
+    $string .= qq { </table></div> };
     return $string;
 }
 

@@ -301,7 +301,7 @@ sub store {
 								     basename => basename($self->filename()),
 								     dirname => dirname($self->filename()),
 								     filetype => 'phenotype spreadsheet upload xls',
-								     md5checksum => $md5->digest(),
+								     md5checksum => $md5->hexdigest(),
 								     metadata_id => $md_row->metadata_id(),
 								    });
       $file_row->insert();

@@ -1,0 +1,40 @@
+
+<%args>
+$stockref => undef
+</%args>
+
+% my $stock_id = $stockref->{stock_id};
+
+<& /page/page_title.mas, title=> 'Create a New Stock' &>
+
+
+<&| /page/info_section.mas, title=>"Stock details"  &>
+
+<div class="row">
+  <div class="col-sm-12">
+
+  <& /page/form.mas,
+  object_type=>'stock',
+  object_id=>"$stock_id",
+  form_name=> 'stock_form',
+  server_side_script => '/phenome/stock/stock_ajax_form.pl',
+  form_div_name=>'stock_details',
+  js_object_name=> 'stockForm',
+  page_url => "/stock/$stock_id/view/" ,
+  alternate_new_button => '<a href ="/stock/0/new">[New]</a>'
+  &>
+
+  </div>
+</div>
+
+</&>
+
+<script language="javascript">
+function jqueryStuff() { 
+   jQuery(function() {
+     jQuery("#species_name").autocomplete({
+        source: '/organism/autocomplete'
+     });
+  });
+}
+</script>
