@@ -3090,11 +3090,18 @@ sub compare_marker_set_similarity {
  
     my @first_geno_markers = split(/\t/, $first_markers);
     my @sec_geno_markers   = split(/\t/, $sec_markers);
-  
-    my $common_markers = scalar(intersect(@first_geno_markers, @sec_geno_markers));
-    my $similarity     = $common_markers / scalar(@first_geno_markers);
 
-    return $similarity;
+    if ( @first_geno_markers && @first_geno_markers) 
+    {  
+	my $common_markers = scalar(intersect(@first_geno_markers, @sec_geno_markers));
+	my $similarity     = $common_markers / scalar(@first_geno_markers);
+
+	return $similarity;
+    }
+    else
+    {
+	return 0;
+    }
 
 }
 
