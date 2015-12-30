@@ -818,15 +818,82 @@ sub format_user_list_genotype_data {
 }
 
 
+sub project_genotypes_rs {
+    my ($self, $project_id) = @_;
+    
+    my $pr_genotypes_rs = $self->schema->resultset("Project::Project")
+	->search({'me.project_id' => $project_id })
+	->search_related('nd_experiment_projects')
+	->search_related('nd_experiment')
+	->search_related('nd_experiment_stocks')       
+	->search_related('stock')
+	->search_related('stock_relationship_subjects')
+	->search_related('object', 
+		     {},
+		     {select   => [ 'object.stock_id' ],
+		      distinct => 1
+		     }
+	);
+
+    return $pr_genotypes_rs;
+
+
+}
+
+sub genotypes_nd_experiment_ids_rs {
+    my ($self, $genotypes_ids) = @_;
+    
+    my $protocol = $self->context->config->{default_genotyping_protocol};
+
+    my $nd_experiment_rs = $self->schema->resultset("NaturalDiversity::NdExperimentStock")
+	->search({'me.stock_id' => { -in => $genotypes_ids},
+		  'nd_protocol.name' => {'ilike' => $protocol}
+		 })
+	->search_related('nd_experiment')
+	->search_related('nd_experiment_protocols')
+	->search_related('nd_protocol', {},
+			 {
+			     select   => [ 'me.nd_experiment_id' ],
+			     as       => [ 'nd_experiment_id' ],
+			     distinct => 1
+			 });
+
+    return $nd_experiment_rs;
+
+}
+
+
 sub project_genotype_data_rs {
     my ($self, $project_id) = @_;
 
+    my $pr_genotypes_rs = $self->project_genotypes_rs($project_id);
+
+    my @genotypes_ids;
+    
+    while (my $row = $pr_genotypes_rs->next)
+    {
+	push @genotypes_ids, $row->get_column('stock_id');
+    }
+ 
+    my $cnt = scalar(@genotypes_ids);
+
+    my $nd_exp_rs = $self->genotypes_nd_experiment_ids_rs(\@genotypes_ids);
+
+    my @nd_exp_ids;
+    
+    while (my $row = $nd_exp_rs->next)
+    {
+	push @nd_exp_ids, $row->get_column('nd_experiment_id');
+
+    }
+   
     my $genotype_rs = $self->schema->resultset("Project::Project")
         ->search({'me.project_id' => $project_id, 
-		  'type.name' => {'ilike' => 'snp genotyping'}
+		  'type.name' => {'ilike' => 'snp genotyping'},
+		  'nd_experiment_genotypes.nd_experiment_id' => {-in => \@nd_exp_ids}
 		 })
-        ->search_related('nd_experiment_projects')
-        ->search_related('nd_experiment') 
+	->search_related('nd_experiment_projects')
+	->search_related('nd_experiment')
         ->search_related('nd_experiment_stocks')       
         ->search_related('stock')
         ->search_related('stock_relationship_subjects')
@@ -838,8 +905,9 @@ sub project_genotype_data_rs {
         ->search_related('genotypeprops')
 	->search_related('type',
 			 {},               
-                         { select   => [qw / object.uniquename object.stock_id  me.name me.project_id genotypeprops.genotypeprop_id genotypeprops.value  / ],
-			        as       => [ qw / stock_name stock_id project_name project_id genotypeprop_id value / ],
+                         { select => [qw / object.uniquename object.stock_id  me.name me.project_id 
+                                           genotypeprops.genotypeprop_id genotypeprops.value / ],
+			   as     => [ qw / stock_name stock_id project_name project_id genotypeprop_id value/ ],
 				     distinct => 1,
                          }
         );
@@ -851,6 +919,16 @@ sub project_genotype_data_rs {
 
 sub individual_stock_genotypes_rs {
     my ($self, $stock_rs) = @_;
+
+    my $stock_id = $stock_rs->first()->stock_id;    
+    my $nd_exp_rs = $self->genotypes_nd_experiment_ids_rs([$stock_id]);
+    
+    my @nd_exp_ids;
+    
+    while (my $row = $nd_exp_rs->next)
+    {
+	push @nd_exp_ids, $row->get_column('nd_experiment_id');
+    }
     
     my $genotype_rs = $stock_rs
         ->search_related('nd_experiment_stocks')
@@ -859,7 +937,9 @@ sub individual_stock_genotypes_rs {
         ->search_related('genotype')
         ->search_related('genotypeprops')
 	->search_related('type',
-                         {'type.name' => {'ilike' => 'snp genotyping'}},
+                         {'type.name' => {'ilike' => 'snp genotyping'},
+			  'nd_experiment_genotypes.nd_experiment_id' => {-in => \@nd_exp_ids}
+			 },
                          {  
                              select => [ qw / me.stock_id me.uniquename  genotypeprops.genotypeprop_id genotypeprops.value / ], 
                              as     => [ qw / stock_id stock_name  genotypeprop_id value/ ] 
@@ -873,8 +953,25 @@ sub individual_stock_genotypes_rs {
 
 sub accessions_list_genotypes_rs {
     my ($self, $accessions_list) = @_;
+
+    my $stocks_rs = $self->get_stocks_rs($accessions_list);
+    
+    my @genotypes_ids;    
+    while (my $row = $stocks_rs->next)
+    {
+	push @genotypes_ids, $row->get_column('stock_id');
+    }
+    
+    my $nd_exp_rs = $self->genotypes_nd_experiment_ids_rs(\@genotypes_ids);
+    my @nd_exp_ids;
+    
+    while (my $row = $nd_exp_rs->next)
+    {
+	push @nd_exp_ids, $row->get_column('nd_experiment_id');
+    }
+
     my $genotype_rs = $self->schema->resultset("Stock::Stock")
-        ->search({ 'me.uniquename' => {-in => $accessions_list} })
+        ->search({'nd_experiment_genotypes.nd_experiment_id' => {-in => \@nd_exp_ids}})
         ->search_related('nd_experiment_stocks')
         ->search_related('nd_experiment')
         ->search_related('nd_experiment_genotypes')
@@ -894,8 +991,40 @@ sub accessions_list_genotypes_rs {
 }
 
 
+sub get_stocks_rs {
+    my ($self, $stock_names) = @_;
+    
+     my $stocks_rs = $self->schema->resultset("Stock::Stock")
+	 ->search({ 'me.uniquename' => {-in => $stock_names} },  
+		  {  
+		      select   => [ 'me.stock_id', 'me.uniquename' ], 
+		      as       => [ 'stock_id', 'uniquename'],
+		      distinct => 1,
+		  }
+	 );
+
+    return $stocks_rs;
+
+}
+
+
 sub stock_genotypes_rs {
     my ($self, $stock_rs) = @_;
+
+    my @genotypes_ids;
+    
+    while (my $row = $stock_rs->next)
+    {
+	push @genotypes_ids, $row->get_column('stock_id');
+    }
+    
+    my $nd_exp_rs = $self->genotypes_nd_experiment_ids_rs(\@genotypes_ids);
+    my @nd_exp_ids;
+    
+    while (my $row = $nd_exp_rs->next)
+    {
+	push @nd_exp_ids, $row->get_column('nd_experiment_id');
+    }
     
     my $genotype_rs = $stock_rs
         ->search_related('nd_experiment_stocks')
@@ -904,7 +1033,9 @@ sub stock_genotypes_rs {
         ->search_related('genotype')
         ->search_related('genotypeprops')
         ->search_related('type',
-                         {'type.name' =>{'ilike'=> 'snp genotyping'}}, 
+                         {'type.name' =>{'ilike'=> 'snp genotyping'},
+			  'nd_experiment_genotypes.nd_experiment_id' => {-in => \@nd_exp_ids}
+			 }, 
                          { 
                              select => [ qw / me.project_id me.name object.stock_id object.uniquename  
                                                  genotypeprops.genotypeprop_id genotypeprops.value/ ], 
@@ -919,7 +1050,7 @@ sub stock_genotypes_rs {
 
 sub genotyping_trials_rs {
     my $self = shift;
- 
+     
     my $geno_pr_rs = $self->schema->resultset("Project::Project")
         ->search({"genotypeprops.value" =>  {"!=",  undef}, 
 		  'type.name' =>{'ilike' => 'snp genotyping'}
@@ -952,10 +1083,32 @@ sub genotyping_trials_rs {
 
 sub prediction_genotypes_rs {
     my ($self, $pr_id) = @_;
+
+
+    my $pr_genotypes_rs = $self->project_genotypes_rs($pr_id);
+
+    my @genotypes_ids;
+    
+    while (my $row = $pr_genotypes_rs->next)
+    {
+	push @genotypes_ids, $row->get_column('stock_id');
+
+    }
+
+    my $nd_exp_rs = $self->genotypes_nd_experiment_ids_rs(\@genotypes_ids);
+
+    my @nd_exp_ids;
+    
+    while (my $row = $nd_exp_rs->next)
+    {
+	push @nd_exp_ids, $row->get_column('nd_experiment_id');
+
+    }
     
     my $genotype_rs = $self->schema->resultset("Project::Project")
         ->search({'me.project_id' => $pr_id, 
-		  'type.name' => {'ilike' => 'snp genotyping'}
+		  'type.name' => {'ilike' => 'snp genotyping'},
+		  'nd_experiment_genotypes.nd_experiment_id' => {-in => \@nd_exp_ids}
 		 })
         ->search_related('nd_experiment_projects')
         ->search_related('nd_experiment') 
@@ -1297,7 +1450,6 @@ sub get_plot_phenotype_data {
    
     return $d, $dh;
 }
-
 
 
 sub project_phenotype_data_rs {
