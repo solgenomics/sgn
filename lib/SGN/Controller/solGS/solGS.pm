@@ -1729,33 +1729,45 @@ sub prediction_pop_analyzed_traits {
 
 sub download_prediction_urls {
     my ($self, $c, $training_pop_id, $prediction_pop_id) = @_;
-  
+ 
     my $trait_ids;
-    my $page_trait_id = $c->stash->{trait_id};
-    $page_trait_id = $c->stash->{page_trait_id} if $c->stash->{page_trait_id}; 
-    my $page = $c->req->path;
-   
+    my $trait_is_predicted;
+    my $download_url;# = $c->stash->{download_prediction};
+    my $model_tr_id = $c->stash->{trait_id};
+
+    my $page = $c->req->referer;
+    my $base = $c->req->base;
+    $page    =~ s/$base//;
+
     no warnings 'uninitialized';
 
     if ($prediction_pop_id)
     {
         $self->prediction_pop_analyzed_traits($c, $training_pop_id, $prediction_pop_id);
-        $trait_ids = $c->stash->{prediction_pop_analyzed_traits_ids};   
+        $trait_ids = $c->stash->{prediction_pop_analyzed_traits_ids};
     } 
+
+    if ($page =~ /solgs\/model\/combined\/populations\// )
+    { 
+	($model_tr_id) = $page =~ /(\d+)$/;
+	$model_tr_id   =~ s/s+//g;
+        $trait_ids     = [$model_tr_id];
+    }
+
+    if ($page =~ /solgs\/trait\// )
+    { 
+	$model_tr_id = (split '/', $page)[2];
+        $trait_ids   = [$model_tr_id];
+    }
+
+    if ($page =~ /(\/uploaded\/prediction\/)/ && $page !~ /(\/solgs\/traits\/all)/)
+    { 
+	($model_tr_id) = $page =~ /(\d+)$/;
+	$model_tr_id =~ s/s+//g;	
+        $trait_ids = [$model_tr_id];
+    }
      
-   my ($trait_is_predicted) = grep {/$page_trait_id/ } @$trait_ids;
-
-    my $download_url;# = $c->stash->{download_prediction};
-  
-    if ($page =~ /(solgs\/trait\/)|(solgs\/model\/combined\/populations\/)/ )
-    { 
-        $trait_ids = [$page_trait_id];
-    }
-
-    if ($page =~ /(\/uploaded\/prediction\/)/ && $c->req->referer !~ /(\/solgs\/traits\/all)/ )
-    { 
-        $trait_ids = [$page_trait_id];
-    }
+    my ($trait_is_predicted) = grep {/$model_tr_id/ } @$trait_ids;
 
     foreach my $trait_id (@$trait_ids) 
     {
@@ -1770,21 +1782,23 @@ sub download_prediction_urls {
                 $prediction_pop_id = 'uploaded_' . $prediction_pop_id;
             }
         }
-
-        $download_url   .= " | " if $download_url;        
-        $download_url   .= qq | <a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> | if $trait_id;
-        
-        $download_url = '' if (!$trait_is_predicted);
+	if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
+	{
+	    $download_url   .= " | " if $download_url;     
+	}
+	
+	if ($trait_id)
+	{
+	    $download_url   .= qq | <a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> |;
+	}        
     }
 
     if ($download_url) 
     {    
-        $c->stash->{download_prediction} = $download_url;
-         
+        $c->stash->{download_prediction} = $download_url;         
     }
     else
-    {
-        
+    {        
         $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$prediction_pop_id"  onclick="solGS.waitPage()">[ Predict ]</a> |;
 
          $c->stash->{download_prediction} = '' if $c->stash->{uploaded_prediction};
@@ -2343,7 +2357,7 @@ sub format_selection_pops {
                   {
                       $project_yr = $yr_r->value;
                   }
-
+		  print STDERR "\n tr pop id: $training_pop_id -- pred pop id: $prediction_pop_id\n";
                   $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
                   my $download_prediction = $c->stash->{download_prediction};
                   push @data,  [$pred_pop_link, $desc, $project_yr, $download_prediction];
