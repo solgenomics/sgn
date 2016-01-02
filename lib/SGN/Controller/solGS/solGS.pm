@@ -1071,14 +1071,12 @@ sub output_files {
     no warnings 'uninitialized';
    
     $prediction_id = "uploaded_${prediction_id}" if $c->stash->{uploaded_prediction};
-
-    my $identifier    = $pop_id . '_' . $prediction_id;
     
     my $pred_pop_gebvs_file;
     
     if ($prediction_id) 
     {
-       
+	my $identifier    = $pop_id . '_' . $prediction_id;
         $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
         $pred_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
     }
@@ -1691,7 +1689,7 @@ sub prediction_pop_analyzed_traits {
            
     my $dir = $c->stash->{solgs_cache_dir};
     my @pred_files;
-
+ 
     opendir my $dh, $dir or die "can't open $dir: $!\n";
    
     no warnings 'uninitialized';
@@ -1700,29 +1698,38 @@ sub prediction_pop_analyzed_traits {
   
     $prediction_pop_id = "uploaded_${prediction_pop_id}" if $prediction_is_uploaded;
  
-    my  @files  =  grep { /prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}/ && -s "$dir/$_" } 
+    if ($training_pop_id != $prediction_pop_id) 
+    {
+	my  @files  =  grep { /prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}/ && -s "$dir/$_" > 0 } 
                  readdir($dh); 
    
-    closedir $dh; 
+	closedir $dh; 
+ 
+	my @trait_ids;
 
-    my @copy_files = @files;
+	if ($files[0]) 
+	{
+	    my @copy_files = @files;
    
-    my @trait_ids = map { s/prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}_//g ? $_ : 0} @copy_files;
+	    @trait_ids = map { s/prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}_//g ? $_ : 0} @copy_files;
 
-    my @traits = ();
-
-    if(@trait_ids) 
-    {
-        foreach (@trait_ids)
-        { 
-            $self->get_trait_name($c, $_);
-            push @traits, $c->stash->{trait_abbr};
-        }
+	    my @traits = ();
+   
+	    if(@trait_ids) 
+	    {
+		foreach my $trait_id (@trait_ids)
+		{ 	
+		    $trait_id =~ s/s+//g;
+		    $self->get_trait_name($c, $trait_id);
+		    push @traits, $c->stash->{trait_abbr};
+		}
+	    }
+   
+	    $c->stash->{prediction_pop_analyzed_traits} = \@traits;
+	    $c->stash->{prediction_pop_analyzed_traits_ids} = \@trait_ids;
+	    $c->stash->{prediction_pop_analyzed_traits_files} = \@files;
+	} 
     }
-   
-    $c->stash->{prediction_pop_analyzed_traits} = \@traits;
-    $c->stash->{prediction_pop_analyzed_traits_ids} = \@trait_ids;
-    $c->stash->{prediction_pop_analyzed_traits_files} = \@files;
     
 }
 
@@ -1730,47 +1737,53 @@ sub prediction_pop_analyzed_traits {
 sub download_prediction_urls {
     my ($self, $c, $training_pop_id, $prediction_pop_id) = @_;
  
-    my $trait_ids;
-    my $trait_is_predicted;
+    my $selection_traits_ids;
+    my $selection_traits_files;
     my $download_url;# = $c->stash->{download_prediction};
     my $model_tr_id = $c->stash->{trait_id};
 
     my $page = $c->req->referer;
     my $base = $c->req->base;
+   
+    if ( $base !~ /localhost/)
+    {
+	$base =~ s/:\d+//; 
+	$base =~ s/http\w?/https/;
+    }
+ 
     $page    =~ s/$base//;
-
+ 
     no warnings 'uninitialized';
 
     if ($prediction_pop_id)
     {
         $self->prediction_pop_analyzed_traits($c, $training_pop_id, $prediction_pop_id);
-        $trait_ids = $c->stash->{prediction_pop_analyzed_traits_ids};
+        $selection_traits_ids = $c->stash->{prediction_pop_analyzed_traits_ids};
+	$selection_traits_files = $c->stash->{prediction_pop_analyzed_traits_files};
     } 
 
     if ($page =~ /solgs\/model\/combined\/populations\// )
     { 
 	($model_tr_id) = $page =~ /(\d+)$/;
 	$model_tr_id   =~ s/s+//g;
-        $trait_ids     = [$model_tr_id];
     }
 
     if ($page =~ /solgs\/trait\// )
     { 
 	$model_tr_id = (split '/', $page)[2];
-        $trait_ids   = [$model_tr_id];
     }
 
     if ($page =~ /(\/uploaded\/prediction\/)/ && $page !~ /(\/solgs\/traits\/all)/)
     { 
 	($model_tr_id) = $page =~ /(\d+)$/;
 	$model_tr_id =~ s/s+//g;	
-        $trait_ids = [$model_tr_id];
     }
      
-    my ($trait_is_predicted) = grep {/$model_tr_id/ } @$trait_ids;
+    my ($trait_is_predicted) = grep {/$model_tr_id/ } @$selection_traits_ids;
 
-    foreach my $trait_id (@$trait_ids) 
+    foreach my $trait_id (@$selection_traits_ids) 
     {
+	$trait_id =~ s/s+//g;
         $self->get_trait_name($c, $trait_id);
         my $trait_abbr = $c->stash->{trait_abbr};
         my $trait_name = $c->stash->{trait_name};
@@ -1787,9 +1800,10 @@ sub download_prediction_urls {
 	    $download_url   .= " | " if $download_url;     
 	}
 	
-	if ($trait_id)
+	if ($selection_traits_files->[0] =~ $prediction_pop_id)
 	{
 	    $download_url   .= qq | <a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> |;
+	      
 	}        
     }
 
@@ -1869,8 +1883,8 @@ sub get_gebv_files_of_traits {
     my $gebv_files;
     my $valid_gebv_files;
     my $pred_gebv_files;
-
-    if ($pred_pop_id) 
+   
+    if ($pred_pop_id && $pred_pop_id != $pop_id) 
     {
         $self->prediction_pop_analyzed_traits($c, $pop_id, $pred_pop_id);
         $pred_gebv_files = $c->stash->{prediction_pop_analyzed_traits_files};
@@ -2357,7 +2371,7 @@ sub format_selection_pops {
                   {
                       $project_yr = $yr_r->value;
                   }
-		  print STDERR "\n tr pop id: $training_pop_id -- pred pop id: $prediction_pop_id\n";
+		 
                   $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
                   my $download_prediction = $c->stash->{download_prediction};
                   push @data,  [$pred_pop_link, $desc, $project_yr, $download_prediction];
