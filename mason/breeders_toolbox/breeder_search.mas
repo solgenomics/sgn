@@ -48,6 +48,30 @@ Search using accession, plot, location, year, trial, and trait data.
     </div>
   </div>
 </td>
+<td>
+<div class="checkbox">
+  <label><input type="checkbox" id="c2_querytype" name="union" value="union">Find Union</label>
+</div>
+<div class="checkbox">
+  <label><input type="checkbox" id="c2_querytype" name="intersect" value="intersect">Find Intersection</label>
+</div>
+</td>
+<td>
+<div class="checkbox">
+  <label><input type="checkbox" id="c3_querytype" name="union" value="union">Find Union</label>
+</div>
+<div class="checkbox">
+  <label><input type="checkbox" id="c3_querytype" name="intersect" value="intersect">Find Intersection</label>
+</div>
+</td>
+<td>
+<div class="checkbox">
+  <label><input type="checkbox" id="c4_querytype" name="union" value="union">Find Union</label>
+</div>
+<div class="checkbox">
+  <label><input type="checkbox" id="c4_querytype" name="intersect" value="intersect">Find Intersection</label>
+</div>
+</td>
 </tr>
 <tr>
 <td >
@@ -55,7 +79,6 @@ Search using accession, plot, location, year, trial, and trait data.
   <select multiple class="form-control" id="c1_data" size="10" style="width:200px; overflow:auto;"></select>
 </div>
 </td>
-
 <td width="200">
   <select multiple class="form-control" id="c2_data" size="10"  style="width:200px; overflow:auto;"></select>
 </td>
