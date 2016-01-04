@@ -21,7 +21,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     my $c = shift;
     
     my $criteria_list;
-    my @selects = qw | select1 select2 select3 |;
+    my @selects = qw | select1 select2 select3 select4|;
     foreach my $s (@selects) { 
 	print STDERR "param:" .  Dumper($c->req->param($s)) . "\n";
 	my $value = $c->req->param($s);
@@ -29,7 +29,6 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 	    push @$criteria_list, $c->req->param($s);
 	}
     }
-    my $output = $c->req->param('select4') || 'plots';
 
     my $dataref = {};
     
@@ -59,11 +58,6 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     my $genotypes = $c->req->param("genotypes");
     my $intersect = $c->req->param("intersect");
 
-    #  print STDERR "Genotypes: $genotypes\n";
-    # if ($genotypes){ 
-    # 	$dataref->{$criteria_list->[-1]}->{genotypes}=1;
- #   }
-
     print STDERR "DATAREF: ".Dumper($dataref);
     if ($data_tainted) { 
 	$c->stash->{rest} =  { error => "Illegal data.", };
@@ -90,28 +84,11 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     
      my $results_ref = $bs->get_intersect($criteria_list, $dataref, $genotypes, $intersect); 
 
-    my $stock_ref = [];
-    my $stockdataref->{$output} = $dataref->{$criteria_list->[-1]};
-
-    push @$criteria_list, $output;
-    print STDERR "OUTPUT: $output CRITERIA: ", Data::Dumper::Dumper($criteria_list);
-    $stock_ref = { }; #$bs->get_intersect($criteria_list, $stockdataref, $c->config->{trait_ontology_db_name}, $genotypes);
-    
     print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
 
-    if ($stock_ref->{message}) { 
-	$c->stash->{rest} = { 
-	    list => $results_ref->{results},
-	    message => $stock_ref->{message},
-	};
-    }
-    else { 
-	
-	$c->stash->{rest} = { 
-	    list => $results_ref->{results},
-	    stocks => $stock_ref->{results},
-	};
-    }
+    $c->stash->{rest} = {
+	list => $results_ref->{results}
+    };
 }
     
 
