@@ -50,26 +50,26 @@ Search using accession, plot, location, year, trial, and trait data.
 </td>
 <td>
 <div class="checkbox">
-  <label><input type="checkbox" id="c2_querytype" name="union" value="union">Find Union</label>
+  <label><input type="checkbox" id="c2_querytype" name="union" value="union">Find Union (&cup;)</label>
 </div>
 <div class="checkbox">
-  <label><input type="checkbox" id="c2_querytype" name="intersect" value="intersect">Find Intersection</label>
-</div>
-</td>
-<td>
-<div class="checkbox">
-  <label><input type="checkbox" id="c3_querytype" name="union" value="union">Find Union</label>
-</div>
-<div class="checkbox">
-  <label><input type="checkbox" id="c3_querytype" name="intersect" value="intersect">Find Intersection</label>
+  <label><input type="checkbox" id="c2_querytype" name="intersect" value="intersect">Find Intersection (&cap;)</label>
 </div>
 </td>
 <td>
 <div class="checkbox">
-  <label><input type="checkbox" id="c4_querytype" name="union" value="union">Find Union</label>
+  <label><input type="checkbox" id="c3_querytype" name="union" value="union">Find Union (&cup;)</label>
 </div>
 <div class="checkbox">
-  <label><input type="checkbox" id="c4_querytype" name="intersect" value="intersect">Find Intersection</label>
+  <label><input type="checkbox" id="c3_querytype" name="intersect" value="intersect">Find Intersection (&cap;)</label>
+</div>
+</td>
+<td>
+<div class="checkbox">
+  <label><input type="checkbox" id="c4_querytype" name="union" value="union">Find Union (&cup;)</label>
+</div>
+<div class="checkbox">
+  <label><input type="checkbox" id="c4_querytype" name="intersect" value="intersect">Find Intersection (&cap;)</label>
 </div>
 </td>
 </tr>
