@@ -119,60 +119,27 @@ sub store {
 
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails
     my $coderef = sub {
-	print STDERR "Start".localtime()."\n";
-
-	my $rs = $schema->resultset('Stock::Stock')->search(
-	    {'type.name' => 'field layout'},
-	    {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
-	     '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'], 
-	     '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
-	    }
-	);
-	my %data;
-	while (my $s = $rs->next()) { 
-	    $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
-	}
-
-	my $rs = $schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {'type.name' => $phenotyping_experiment_cvterm},
-	    {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
-	     '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'], 
-	     '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
-	    }
-	);
-	my %data;
-	while (my $s = $rs->next()) { 
-	    $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
-	}
-
-	#stock->stock_id (searching for stock name), ndexperiment->nd_geolocation_id, nd_experiment_project->project_id
-
 	foreach my $plot_name (@plot_list) {
-	    print STDERR "plot: $plot_name".localtime()."\n";
-
-	    #my $plot_stock = $schema->resultset("Stock::Stock")->find( { uniquename => $plot_name});
-	    #my $plot_stock_id = $plot_stock->stock_id;
+	    print STDERR "plot: $plot_name\n";
+	    my $plot_stock = $schema->resultset("Stock::Stock")->find( { uniquename => $plot_name});
+	    my $plot_stock_id = $plot_stock->stock_id;
 
 	    ###This has to be stored in the database when creating a trial for these plots
-	    #my $field_layout_experiment = $plot_stock
-		#->search_related('nd_experiment_stocks')
-		 #   ->search_related('nd_experiment')
-		#	->find({'type.name' => 'field layout' },
-		#	       { join => 'type' });
+	    my $field_layout_experiment = $plot_stock
+		->search_related('nd_experiment_stocks')
+		    ->search_related('nd_experiment')
+			->find({'type.name' => 'field layout' },
+			       { join => 'type' });
 	    #####
 
-	    #my $location_id = $field_layout_experiment->nd_geolocation_id;
-	    #my $project = $field_layout_experiment
-		#->nd_experiment_projects->single ; #there should be one project linked with the field experiment
-	    #my $project_id = $project->project_id;
-
-	    my $plot_stock_id = $data{$plot_name}[0];
-	    my $location_id = $data{$plot_name}[1];
-	    my $project_id = $data{$plot_name}[2];
+	    my $location_id = $field_layout_experiment->nd_geolocation_id;
+	    my $project = $field_layout_experiment
+		->nd_experiment_projects->single ; #there should be one project linked with the field experiment
+	    my $project_id = $project->project_id;
 
 
 	    foreach my $trait_name (@trait_list) {
-		print STDERR "trait: $trait_name".localtime()."\n";
+		print STDERR "trait: $trait_name\n";
 		#fieldbook trait string should be "CO:$trait_name|$trait_accession" e.g. CO:plant height|0000123
 		my ( $full_cvterm_name, $full_accession) = split (/\|/, $trait_name);
 		my ( $db_name , $accession ) = split (/:/ , $full_accession);
@@ -210,7 +177,7 @@ sub store {
 								   uniquename => $plot_trait_uniquename,
 								  });
 
-		print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:".localtime()."\n";
+		print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
 		my $experiment;
 
 		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
@@ -236,12 +203,12 @@ sub store {
 			->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
 		    $experiment->create_nd_experimentprops({date => $phenotyping_date},{autocreate => 1, cv_name => 'local'});
 		    $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
-		    print STDERR "[StorePhenotypes] Created new experiment: " . $experiment->nd_experiment_id ." Time:".localtime(). "\n";
+		    print STDERR "[StorePhenotypes] Created new experiment: " . $experiment->nd_experiment_id . "\n";
 		}
 
 		## Link the experiment to the project
 		$experiment->find_or_create_related('nd_experiment_projects', {project_id => $project_id});
-		print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " with project $project_id ".localtime()."\n";
+		print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " with project $project_id \n";
 
 		# Link the experiment to the stock
 		$experiment->find_or_create_related('nd_experiment_stocks', 
@@ -249,12 +216,12 @@ sub store {
 						     stock_id => $plot_stock_id,
 						     type_id => $phenotyping_experiment_cvterm->cvterm_id
 						    });
-		print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " to stock $plot_stock_id ".localtime()."\n";
+		print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " to stock $plot_stock_id \n";
 
 		## Link the phenotype to the experiment
 		$experiment->find_or_create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
 		print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .
-		    $experiment->nd_experiment_id . "Time:".localtime()."\n";
+		    $experiment->nd_experiment_id . "\n";
 
 		$experiment_ids{$experiment->nd_experiment_id()}=1;
 	    }
