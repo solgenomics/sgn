@@ -54,29 +54,58 @@ sub verify {
 	$return_message = "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
 	return $return_message;
     }
+
+#CHECKS FOR DUPLICATES IS NOT WORKING
+    #my $rs = $schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search(
+#	{},
+#	{join=> [ {'nd_experiment' => {'nd_experiment_stocks' => 'stock'} } , {'phenotype'=> 'cvalue'} ] ,
+#	   '+select'=> ['cvalue.name', 'phenotype.value', 'stock.uniquename'], 
+#           '+as'=> ['trait_name', 'value', 'plot_name']
+#        }
+#    );
+    my %check_unique_db;
+    my $unique_key;
+#    while (my $s = $rs->next()) { 
+#	if (length($s->get_column('value')) && length($s->get_column('trait_name')) && length($s->get_column('plot_name'))) {
+#	    $unique_key = join('$', $s->get_column('value'), $s->get_column('trait_name'), $s->get_column('plot_name'));
+#	    #print STDERR $unique_key;
+#	    $check_unique_db{$unique_key} = 1;
+#	}
+#    }
+
+#CHECK FOR DUPLICATES AND VALUE VALIDATION NOT WORKING
+    my %check_unique_f;
     foreach my $plot_name (@plot_list) {
 	foreach my $trait_name (@trait_list) {
 	    my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
 	    #check that trait value is valid for trait name
+	    
+	    #check if the plot_name, trait_name, trait_value combination already exists in database.
+	    if (exists $check_unique_db{join('$', $trait_value, $trait_name, $plot_name)} ) {
+		$return_message = $return_message."This combination exists in database: Plot Name: ".$plot_name." Trait Name: ".$trait_name." Value: ".$trait_value."<br/>";
+	    }
 
-	    #check if the plot_name, trait_name, trait_value combination already exists.
+	    #check if the plot_name, trait_name, trait_value combination already exists in the file being uploaded.
+	    if (exists $check_unique_f{join('$', $trait_value, $trait_name, $plot_name)} ) {
+		$return_message = $return_message."This combination duplicated in file: Plot Name: ".$plot_name." Trait Name: ".$trait_name." Value: ".$trait_value."<br/>";
+	    }
+	    $unique_key = join('$', $trait_value, $trait_name, $plot_name);
+	    $check_unique_f{$unique_key} = 1;
 	}
     }
-    print STDERR "StorePhenotypes: Plots and traits are valid\n";
+
 
     ## Verify metadata
-    if ($phenotype_metadata{'archived_file'} && (!$phenotype_metadata{'archived_file_type'} ||
-						 $phenotype_metadata{'archived_file_type'} eq "")) {
+    if ($phenotype_metadata{'archived_file'} && (!$phenotype_metadata{'archived_file_type'} || $phenotype_metadata{'archived_file_type'} eq "")) {
 	$return_message = "No file type provided for archived file.";
-	print STDERR "No file type provided for archived file\n";
 	return $return_message;
     }
     if (!$phenotype_metadata{'operator'} || $phenotype_metadata{'operator'} eq "") {
-	print STDERR "No operaror provided in file upload metadata\n";
+	$return_message = "No operaror provided in file upload metadata.";
 	return $return_message;
     }
     if (!$phenotype_metadata{'date'} || $phenotype_metadata{'date'} eq "") {
-	print STDERR "No date provided in file upload metadata\n";
+	$return_message = "No date provided in file upload metadata.";
 	return $return_message;
     }
 
@@ -96,7 +125,7 @@ sub store {
     my $plot_trait_value_hashref = shift;
     #####
 
-
+    my $return_message;
     my $phenotype_metadata = shift;
     my $transaction_error;
     my @plot_list = @{$plot_list_ref};
@@ -137,18 +166,6 @@ sub store {
 	my %data;
 	while (my $s = $rs->next()) { 
 	    $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
-	}
-
-	my $nd_rs = $schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {'nd_experiment_stocks.type_id' => $phenotyping_experiment_cvterm->cvterm_id},
-	    {join=> 'nd_experiment_stocks' ,
-	     '+select'=> ['nd_experiment_stocks.stock_id'], 
-	     '+as'=> ['stock_id']
-	    }
-	);
-	my %nd_data;
-	while (my $s = $nd_rs->next()) { 
-	    $nd_data{$s->get_column('stock_id')} = $s->get_column('stock_id');
 	}
 
 	#stock->stock_id (searching for stock name), ndexperiment->nd_geolocation_id, nd_experiment_project->project_id
@@ -246,22 +263,19 @@ sub store {
 		}
 
 		## Link the experiment to the project
-		$experiment->find_or_create_related('nd_experiment_projects', {project_id => $project_id});
+		$experiment->create_related('nd_experiment_projects', {project_id => $project_id});
 		print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " with project $project_id ".localtime()."\n";
 
 		# Link the experiment to the stock
-		if (!$nd_data{$plot_stock_id}) {
-		    $experiment->create_related('nd_experiment_stocks', 
-						    {
-						     stock_id => $plot_stock_id,
-						     type_id => $phenotyping_experiment_cvterm->cvterm_id
-						    });
-		    print STDERR "HERE \n";
-		}
+		$experiment->create_related('nd_experiment_stocks', 
+						{
+						 stock_id => $plot_stock_id,
+						 type_id => $phenotyping_experiment_cvterm->cvterm_id
+						});
 		print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " to stock $plot_stock_id ".localtime()."\n";
 
 		## Link the phenotype to the experiment
-		$experiment->find_or_create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
+		$experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
 		print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .
 		    $experiment->nd_experiment_id . "Time:".localtime()."\n";
 
@@ -270,11 +284,6 @@ sub store {
 	}
     };
 
-    ## Verify phenotype data
-    if (!$self->_verify($c, $plot_list_ref, $trait_list_ref, $plot_trait_value_hashref, $phenotype_metadata)) {
-	return;
-    }
-
     try {
 	$schema->txn_do($coderef);
     } catch {
@@ -282,8 +291,9 @@ sub store {
     };
 
     if ($transaction_error) {
+	$return_message = $transaction_error;
 	print STDERR "Transaction error storing phenotypes: $transaction_error\n";
-	return;
+	return $return_message;
     }
 
     if ($archived_file) {
@@ -319,7 +329,7 @@ sub store {
 	}
     }
 
-    return 1;
+    return $return_message;
 }
 
 

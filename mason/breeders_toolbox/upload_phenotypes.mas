@@ -20,35 +20,14 @@
 	        <input type="file" name="upload_phenotype_spreadsheet_file_input" id="upload_phenotype_spreadsheet_file_input" encoding="multipart/form-data" />
               </div>
 	    </div>
-	  </form>      
+	  </form>
+	  <div id="upload_phenotype_spreadsheet_verify_status"></div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button type="button" class="btn btn-info" name="upload_phenotype_submit_verify" id="upload_phenotype_submit_verify">Verify</button>
-	<button type="button" class="btn btn-primary disabled" name="upload_phenotype_submit_store" id="upload_phenotype_submit_store" title="First Verify Your File">Store</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="upload_phenotype_spreadsheet_verify_dialog" name="upload_phenotype_spreadsheet_verify_dialog" tabindex="-1" role="dialog" aria-labelledby="addPhenotypeVerifyDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addPhenotypeVerifyDialog">Upload Phenotype Spreadsheet</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <div id="upload_phenotype_spreadsheet_verify_status"></div>
-	     
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-info disabled" name="upload_phenotype_submit_verify_verify" id="upload_phenotype_submit_verify_verify">Verify</button>
-	<button type="button" class="btn btn-primary" name="upload_phenotype_submit_verify_store" id="upload_phenotype_submit_verify_store" title="First Verify Your File">Store</button>
+	<button disabled type="button" class="btn btn-primary" name="upload_phenotype_submit_store" id="upload_phenotype_submit_store" title="First Verify Your File">Store</button>
       </div>
     </div>
   </div>
@@ -60,30 +39,29 @@
 
 jQuery(document).ready(function() {
 
+    $('#upload_phenotypes_link').click( function() {
+	jQuery('#upload_phenotype_spreadsheet_dialog').modal("show");
+    });
+
     $('#upload_phenotype_submit_verify').click( function() {
 	var uploadFile = jQuery("#upload_phenotype_spreadsheet_file_input").val();
 	if (uploadFile === '') {
 	    alert("Please select a file");
 	} else {
-	    $('#working_msg').html("Uploading Phenotype Spreadsheet");
+	    $('#working_msg').html("Verifying Phenotype Spreadsheet and Data");
 	    $('#working_modal').modal("show");
 	    $('#upload_phenotype_spreadsheet_file_form').attr("action", "/ajax/phenotype/upload_spreadsheet_verify");
             $('#upload_phenotype_spreadsheet_file_form').submit();
 	}
     });
 
-    $('#upload_phenotypes_link').click( function() {
-	jQuery('#upload_phenotype_spreadsheet_dialog').modal("show");
-    });
-
     $('#upload_phenotype_spreadsheet_file_form').iframePostForm({
 	json: true,
-	post: function () {
-	},
+	post: function () { },
 	complete: function (response) {
 	    $('#working_modal').modal("hide");
-	    jQuery('#upload_phenotype_spreadsheet_dialog').modal("hide");
-	    var message_text = "<ul class='list-group'>";
+	    jQuery("#upload_phenotype_submit_verify").attr('disabled', true);
+	    var message_text = "<hr><ul class='list-group'>";
 	    if (response.success) {
 		var arrayLength = response.success.length;
 		for (var i = 0; i < arrayLength; i++) {
@@ -92,6 +70,7 @@ jQuery(document).ready(function() {
     		    message_text += response.success[i];
 		    message_text += "</li>";
     	 	}
+		jQuery("#upload_phenotype_submit_store").attr('disabled', false);
             }
             if (response.error) {
                 var errorarrayLength = response.error.length;
@@ -102,14 +81,59 @@ jQuery(document).ready(function() {
 		    message_text += "</li>";
     	 	}
 		if (errorarrayLength > 0) {
-		   jQuery("#upload_phenotype_submit_verify_store").attr('disabled', true);
+		   jQuery("#upload_phenotype_submit_store").attr('disabled', true);
 		}
             }
 	    message_text += "</ul>";
 	    jQuery("#upload_phenotype_spreadsheet_verify_status").html(message_text);
-	    jQuery('#upload_phenotype_spreadsheet_verify_dialog').modal("show");
+
+	    
+	    $('#upload_phenotype_submit_store').click( function() {
+	        var uploadFile = jQuery("#upload_phenotype_spreadsheet_file_input").val();
+		if (uploadFile === '') {
+	    	    alert("Please select a file");
+		} else {
+	    	    $('#working_msg').html("Storing Phenotype Spreadsheet Data");
+	    	    $('#working_modal').modal("show");
+	    	    $('#upload_phenotype_spreadsheet_file_form').attr("action", "/ajax/phenotype/upload_spreadsheet_store");
+            	    $('#upload_phenotype_spreadsheet_file_form').submit();
+		}
+            });
+
+    	    $('#upload_phenotype_spreadsheet_file_form').iframePostForm({
+		json: true,
+		post: function () { },
+	    	complete: function (response) {
+	    	    $('#working_modal').modal("hide");
+		    jQuery("#upload_phenotype_spreadsheet_verify_status").empty();
+		    jQuery("#upload_phenotype_submit_store").attr('disabled', true);
+	    	    var message_text = "<hr><ul class='list-group'>";
+	    	    if (response.success) {
+		        var arrayLength = response.success.length;
+			for (var i = 0; i < arrayLength; i++) {
+		    	    message_text += "<li class='list-group-item list-group-item-success'>";
+		    	    message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
+    		    	    message_text += response.success[i];
+		    	    message_text += "</li>";
+    	 		}
+            	    }
+            	    if (response.error) {
+                        var errorarrayLength = response.error.length;
+			for (var i = 0; i < errorarrayLength; i++) {
+		    	    message_text += "<li class='list-group-item list-group-item-danger'>";
+		    	    message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+    		    	    message_text += response.error[i];
+		   	    message_text += "</li>";
+    	 		}
+            	    }
+	    	    message_text += "</ul><hr><h3>Upload Successfull!</h3>";
+	    	    jQuery("#upload_phenotype_spreadsheet_verify_status").html(message_text);
+		}
+    	    });
+
 	}
     });
+    
 
 });  
 

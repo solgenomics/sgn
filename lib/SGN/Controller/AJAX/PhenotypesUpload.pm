@@ -123,74 +123,83 @@ sub upload_phenotype_spreadsheet_verify_POST : Args(0) {
 
 sub upload_phenotype_spreadsheet_store :  Path('/ajax/phenotype/upload_spreadsheet_store') : ActionClass('REST') { }
 sub upload_phenotype_spreadsheet_store_POST : Args(0) {
-  my ($self, $c) = @_;
-  my $uploader = CXGN::UploadFile->new();
-  my $verify_phenotypes = CXGN::Phenotypes::VerifyPhenotypes->new();
-  my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-  my $parser = CXGN::Phenotypes::ParseUpload->new();
-  my $upload = $c->req->upload('upload_phenotype_spreadsheet_file_input');
-  my $upload_original_name = $upload->filename();
-  my $upload_tempfile = $upload->tempname;
-  my $subdirectory = "spreadsheet_phenotype_upload";
-  my %phenotype_metadata;
-  my $time = DateTime->now();
-  my $timestamp = $time->ymd()."_".$time->hms();
-  my @status;
+print STDERR "Check1: ".localtime();
+    my ($self, $c) = @_;
+    my $uploader = CXGN::UploadFile->new();
+    my $parser = CXGN::Phenotypes::ParseUpload->new();
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
+    my $upload = $c->req->upload('upload_phenotype_spreadsheet_file_input');
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "spreadsheet_phenotype_upload";
+    my %phenotype_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my @success_status;
+    my @error_status;
 
-  my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
-  my $md5 = $uploader->get_md5($archived_filename_with_path);
-  if (!$archived_filename_with_path) {
-      $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-      return;
-  }
-  unlink $upload_tempfile;
+    my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+	push @error_status, "Could not save file $upload_original_name in archive.";
+	$c->stash->{rest} = {success => \@success_status, error => \@error_status};
+	return;
+    }
+    unlink $upload_tempfile;
+    push @success_status, "File $upload_original_name saved in archive.";
 
-  ## Set metadata
-
-  $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
-  $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
-  $phenotype_metadata{'operator'}="tester_operator"; #####Need to get this from uploaded file
-  $phenotype_metadata{'date'}="$timestamp";
+    ## Validate and parse uploaded file
+    my $validate_file = $parser->validate('phenotype spreadsheet', $archived_filename_with_path);
+    if (!$validate_file) {
+	push @error_status, "Archived file not valid: $upload_original_name.";
+	$c->stash->{rest} = {success => \@success_status, error => \@error_status};
+	return;
+    }
+    push @success_status, "File valid: $upload_original_name.";
 
     print STDERR "Check2: ".localtime();
 
-  ## Validate and parse uploaded file
-  my $validate_file = $parser->validate('phenotype spreadsheet', $archived_filename_with_path);
-  if (!$validate_file) {
-      $c->stash->{rest} = {error => "File not valid: $upload_original_name",};
-      return;
-  }
+    ## Set metadata
+    $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+    $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+    my $person_id=CXGN::Login->new($c->dbc->dbh)->has_session();
+    my $operator=CXGN::People::Login->new($c->dbc->dbh, $person_id)->get_username();
+    $phenotype_metadata{'operator'}="$operator"; 
+    $phenotype_metadata{'date'}="$timestamp";
+    push @success_status, "File metadata set.";
 
-   print STDERR "Check3: ".localtime();
+    print STDERR "Check3: ".localtime();
 
-  my $parsed_file = $parser->parse('phenotype spreadsheet', $archived_filename_with_path);
-  if (!$parsed_file) {
-      $c->stash->{rest} = {error => "Error parsing file $upload_original_name",};
-      return;
-  }
-  if ($parsed_file->{'error'}) {
-      $c->stash->{rest} = {error => $parsed_file->{'error'},};
-      return;
-  }
-  my %parsed_data = %{$parsed_file->{'data'}};
-  my @plots = @{$parsed_file->{'plots'}};
-  my @traits = @{$parsed_file->{'traits'}};
+    my $parsed_file = $parser->parse('phenotype spreadsheet', $archived_filename_with_path);
+    if (!$parsed_file) {
+	push @error_status, "Error parsing file $upload_original_name.";
+	$c->stash->{rest} = {success => \@success_status, error => \@error_status};
+	return;
+    }
+    if ($parsed_file->{'error'}) {
+	push @error_status, $parsed_file->{'error'};
+	$c->stash->{rest} = {success => \@success_status, error => \@error_status};
+	return;
+    }
+    my %parsed_data = %{$parsed_file->{'data'}};
+    my @plots = @{$parsed_file->{'plots'}};
+    my @traits = @{$parsed_file->{'traits'}};
+    push @success_status, "File data successfully parsed.";
 
     print STDERR "Check4: ".localtime();
+    print STDERR "Store phenotypes from uploaded file\n";
+    my $stored_phenotype_message = $store_phenotypes->store($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
 
-  print STDERR "verify phenotypes from uploaded file\n";
-  my $verified_phenotype_success = $verify_phenotypes->verify($c->dbic_schema("Bio::Chado::Schema"),\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
-
-  if (!$verified_phenotype_success) {
-    $c->stash->{rest} = { error => 'Error verifying uploaded file data', };
-    return;
-  }
+    if ($stored_phenotype_message) {
+	push @error_status, $stored_phenotype_message;
+	$c->stash->{rest} = {success => \@success_status, error => \@error_status};
+        return;
+    }
+    push @success_status, "File data successfully stored.";
 
     print STDERR "Check5: ".localtime();
 
-  $c->stash->{rest} = {success => "1",};
-
-
+    $c->stash->{rest} = {success => \@success_status, error => \@error_status};
 }
 
 
