@@ -1773,21 +1773,22 @@ sub download_prediction_urls {
 	$model_tr_id = (split '/', $page)[2];
     }
 
-    if ($page =~ /(\/uploaded\/prediction\/)/ && $page !~ /(\/solgs\/traits\/all)/)
+    if ($page =~ /(\/uploaded\/prediction\/)/ && $page !~ /(\solgs\/traits\/all)/)
     { 
 	($model_tr_id) = $page =~ /(\d+)$/;
 	$model_tr_id =~ s/s+//g;	
     }
      
     my ($trait_is_predicted) = grep {/$model_tr_id/ } @$selection_traits_ids;
+    my @selection_traits_ids = uniq(@$selection_traits_ids);
 
-    foreach my $trait_id (@$selection_traits_ids) 
+    foreach my $trait_id (@selection_traits_ids) 
     {
 	$trait_id =~ s/s+//g;
         $self->get_trait_name($c, $trait_id);
         my $trait_abbr = $c->stash->{trait_abbr};
         my $trait_name = $c->stash->{trait_name};
-     
+
         if  ($c->stash->{uploaded_prediction}) 
         {  
             unless ($prediction_pop_id =~ /uploaded/) 
@@ -1797,13 +1798,13 @@ sub download_prediction_urls {
         }
 	if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
 	{
-	    $download_url   .= " | " if $download_url;     
+	    $model_tr_id   = $trait_id;
+	    $download_url .= " | " if $download_url;     
 	}
-	
-	if ($selection_traits_files->[0] =~ $prediction_pop_id)
+
+	if ($selection_traits_files->[0] =~ $prediction_pop_id && $trait_id == $model_tr_id)
 	{
-	    $download_url   .= qq | <a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> |;
-	      
+	    $download_url .= qq |<a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> |;	      
 	}        
     }
 
