@@ -28,9 +28,9 @@ use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
 
-sub _verify {
+sub verify {
     my $self = shift;
-    my $c = shift;
+    my $schema = shift;
     my $plot_list_ref = shift;
     my $trait_list_ref = shift;
     my $plot_trait_value_hashref = shift;
@@ -42,18 +42,24 @@ sub _verify {
     my %plot_trait_value = %{$plot_trait_value_hashref};
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plot_validator->validate($c->dbic_schema("Bio::Chado::Schema"),'plots',\@plot_list)->{'missing'}};
-    my @traits_missing = @{$trait_validator->validate($c->dbic_schema("Bio::Chado::Schema"),'traits',\@trait_list)->{'missing'}};
+    my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plot_list)->{'missing'}};
+    my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
+    my $return_message;
+
     if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
 	print STDERR "Plots or traits not valid\n";
 	print STDERR "Invalid plots: ".join(", ", map { "'$_'" } @plots_missing)."\n" if (@plots_missing);
 	print STDERR "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" if (@traits_missing);
-	return;
+	$return_message = "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
+	$return_message = "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
+	return $return_message;
     }
     foreach my $plot_name (@plot_list) {
 	foreach my $trait_name (@trait_list) {
 	    my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
 	    #check that trait value is valid for trait name
+
+	    #check if the plot_name, trait_name, trait_value combination already exists.
 	}
     }
     print STDERR "StorePhenotypes: Plots and traits are valid\n";
@@ -61,21 +67,21 @@ sub _verify {
     ## Verify metadata
     if ($phenotype_metadata{'archived_file'} && (!$phenotype_metadata{'archived_file_type'} ||
 						 $phenotype_metadata{'archived_file_type'} eq "")) {
+	$return_message = "No file type provided for archived file.";
 	print STDERR "No file type provided for archived file\n";
-	return;
+	return $return_message;
     }
     if (!$phenotype_metadata{'operator'} || $phenotype_metadata{'operator'} eq "") {
 	print STDERR "No operaror provided in file upload metadata\n";
-	return;
+	return $return_message;
     }
     if (!$phenotype_metadata{'date'} || $phenotype_metadata{'date'} eq "") {
 	print STDERR "No date provided in file upload metadata\n";
-	return;
+	return $return_message;
     }
 
-    return 1;
+    return $return_message;
 }
-
 
 sub store {
     my $self = shift;
@@ -133,17 +139,17 @@ sub store {
 	    $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
 	}
 
-	#my $rs = $schema->resultset('NaturalDiversity::NdExperiment')->search(
-	#    {'type.name' => $phenotyping_experiment_cvterm},
-	#    {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
-	#     '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'], 
-	#     '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
-	#    }
-	#);
-	#my %data;
-	#while (my $s = $rs->next()) { 
-	#    $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
-	#}
+	my $nd_rs = $schema->resultset('NaturalDiversity::NdExperiment')->search(
+	    {'nd_experiment_stocks.type_id' => $phenotyping_experiment_cvterm->cvterm_id},
+	    {join=> 'nd_experiment_stocks' ,
+	     '+select'=> ['nd_experiment_stocks.stock_id'], 
+	     '+as'=> ['stock_id']
+	    }
+	);
+	my %nd_data;
+	while (my $s = $nd_rs->next()) { 
+	    $nd_data{$s->get_column('stock_id')} = $s->get_column('stock_id');
+	}
 
 	#stock->stock_id (searching for stock name), ndexperiment->nd_geolocation_id, nd_experiment_project->project_id
 
@@ -244,11 +250,14 @@ sub store {
 		print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " with project $project_id ".localtime()."\n";
 
 		# Link the experiment to the stock
-		$experiment->find_or_create_related('nd_experiment_stocks', 
+		if (!$nd_data{$plot_stock_id}) {
+		    $experiment->create_related('nd_experiment_stocks', 
 						    {
 						     stock_id => $plot_stock_id,
 						     type_id => $phenotyping_experiment_cvterm->cvterm_id
 						    });
+		    print STDERR "HERE \n";
+		}
 		print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " to stock $plot_stock_id ".localtime()."\n";
 
 		## Link the phenotype to the experiment
