@@ -12,6 +12,7 @@ $trait_id
 $prediction_pop_id
 $prediction_pop_name => ''
 $owner=>''
+$protocol
 $top_blups
 $blups_download_url
 $combined_populations => ''
@@ -48,6 +49,7 @@ $combined_populations => ''
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
+    protocol     => $protocol,
     owner        => $owner,
    combined_populations => $combined_populations,
  &>

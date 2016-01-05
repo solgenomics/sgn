@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-SGN::Role::Site::Cvterm - a role that provides information on cvterms
+SGN::Model::Cvterm - a simple model that provides information on cvterms
 
 =head1 DESCRIPTION
 
@@ -11,11 +11,9 @@ get_cvterm_object retrieves the term as a CXGN::Chado::Cvterm object.
 
 get_cvterm_row retrieves the term as a DBIx::Class row.
 
-Both function take a cvterm name and a cv name as an argument.
+Both function take a schema object, cvterm name and a cv name as an argument.
 
 If a term is not in the database, undef is returned.
-
-This role was added to the SGN.pm website application object.
 
 =head1 AUTHOR
 
@@ -23,18 +21,17 @@ Lukas Mueller
 
 =cut
 
-package SGN::Role::Site::Cvterm;
-
-use Moose::Role;
+package SGN::Model::Cvterm;
 
 use CXGN::Chado::Cvterm;
 
 sub get_cvterm_object { 
     my $self = shift;
+    my $schema = shift;
     my $cvterm_name = shift;
     my $cv_name = shift;
 
-    my $cv = $self->dbic_schema("Bio::Chado::Schema")->resultset('Cv::Cv')->find( { name => $cv_name });
+    my $cv = $schema->resultset('Cv::Cv')->find( { name => $cv_name });
 
     if (! $cv) { 
 	print STDERR "CV $cv_name not found. Ignoring.";
@@ -51,10 +48,10 @@ sub get_cvterm_object {
 
 sub get_cvterm_row { 
     my $self = shift;
+    my $schema = shift;
     my $name = shift;
     my $cv_name = shift;
 
-    my $schema = $self->dbic_schema('Bio::Chado::Schema');
     my $cvterm = $schema->resultset('Cv::Cvterm')->find( 
         { 
             name => $name,
