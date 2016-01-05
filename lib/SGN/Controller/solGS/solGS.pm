@@ -2740,7 +2740,7 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     $c->stash->{prediction_pop_id} = $pred_pop_id;
    
     my @traits;
-    if ( !$pred_pop_id) 
+    if (!$pred_pop_id) 
     {    
         $self->analyzed_traits($c);
         @traits = @{ $c->stash->{selection_index_traits} }; 
