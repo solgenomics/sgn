@@ -191,6 +191,17 @@ print STDERR "Check1: ".localtime();
     push @success_status, "File data successfully parsed.";
 
     print STDERR "Check4: ".localtime();
+
+    print STDERR "verify phenotypes from uploaded file\n";
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+
+    if ($verified_error) {
+	push @error_status, $verified_error;
+	$c->stash->{rest} = {success => \@success_status, error => \@error_status };
+	return;
+    }
+    push @success_status, "File data verified. Plot names and trait names are valid.";
+
     print STDERR "Store phenotypes from uploaded file\n";
     my $stored_phenotype_message = $store_phenotypes->store($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
 

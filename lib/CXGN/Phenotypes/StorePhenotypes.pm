@@ -60,7 +60,7 @@ sub verify {
     }
 
 
-#CHECK FOR DUPLICATES AND VALUE VALIDATION NOT WORKING
+    #CHECK FOR DUPLICATES AND VALUE VALIDATION NOT WORKING
 
     my $sql = "SELECT phenotype.value FROM phenotype WHERE value=? and cvalue_id=? and uniquename LIKE ?; ";
     my $sth = $c->dbc->dbh->prepare($sql);
@@ -81,7 +81,7 @@ sub verify {
 	    $sth->execute($trait_value, $trait_cvterm_id, "%Stock: $stock_id%");
 	    
 	    if ($found = $sth->fetch() ) {
-		$warning_message = $warning_message."This combination exists in database: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."<hr>";
+		$warning_message = $warning_message."<small>This combination exists in database: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
 	    }
 
 	    #check if the plot_name, trait_name, trait_value combination already exists in the file being uploaded.
@@ -89,7 +89,7 @@ sub verify {
 	    print STDERR $unique_key;
 	    if (exists($check_unique_f{$unique_key}) ) {
 		print STDERR "HERE";
-		$warning_message = $warning_message."This combination duplicated in file: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."<hr>";
+		$warning_message = $warning_message."<small>This combination duplicated in file: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
 	    }
 	    $check_unique_f{$unique_key} = 1;
 	}

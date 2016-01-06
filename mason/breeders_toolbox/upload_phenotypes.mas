@@ -33,24 +33,7 @@
   </div>
 </div>
 
-<div class="modal fade" id="upload_phenotype_spreadsheet_warning_dialog" name="upload_phenotype_spreadsheet_warning_dialog" tabindex="-1" role="dialog" aria-labelledby="addPhenotypeWarningDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addPhenotypeWarningDialog">Upload Phenotype Spreadsheet Warning</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <div id="upload_phenotype_spreadsheet_warning_status"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <script defer="defer">
 
@@ -104,21 +87,16 @@ jQuery(document).ready(function() {
 	    if (response.warning) {
 	        var warningarrayLength = response.warning.length;
 		if (warningarrayLength > 0) {
-		    message_text += "<li class='list-group-item list-group-item-warning'>";
+		    message_text += "<li class='list-group-item list-group-item-danger'>";
 		    message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-    		    message_text += "The duplicate measurements will be stored.";
+    		    message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>'This combination exists in the database' can be disregarded if the values in your file are indeed new.";
 		    message_text += "</li>";
-		    var warning_text = "<ul class='list-group list-group-item-danger'>";
 		    for (var i = 0; i < warningarrayLength; i++) {
-		        warning_text += "<li class='list-group-item'>";
-		       	warning_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-    		       	warning_text += response.warning[i];
-		       	warning_text += "</li>";
+		        message_text += "<li class='list-group-item list-group-item-warning'>";
+		       	message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
+    		       	message_text += response.warning[i];
+		       	message_text += "</li>";
     	 	    }
-		    warning_text += "</ul>";
-		    $('#upload_phenotype_spreadsheet_warning_dialog').modal("show");
-	    	    jQuery("#upload_phenotype_spreadsheet_warning_status").html(warning_text);
-	            
 		}
 	    }
 	    message_text += "</ul>";
