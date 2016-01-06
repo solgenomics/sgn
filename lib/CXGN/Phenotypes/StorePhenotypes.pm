@@ -28,13 +28,15 @@ use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
 
+
 sub verify {
     my $self = shift;
-    my $schema = shift;
+    my $c = shift;
     my $plot_list_ref = shift;
     my $trait_list_ref = shift;
     my $plot_trait_value_hashref = shift;
     my $phenotype_metadata_ref = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $transaction_error;
     my @plot_list = @{$plot_list_ref};
     my @trait_list = @{$trait_list_ref};
@@ -44,52 +46,51 @@ sub verify {
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
-    my $return_message;
+    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping experiment', 'experiment type');
+    my $error_message;
+    my $warning_message;
 
     if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
 	print STDERR "Plots or traits not valid\n";
 	print STDERR "Invalid plots: ".join(", ", map { "'$_'" } @plots_missing)."\n" if (@plots_missing);
 	print STDERR "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" if (@traits_missing);
-	$return_message = "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
-	$return_message = "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
-	return $return_message;
+	$error_message = "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
+	$error_message = "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
+	return ($warning_message, $error_message);
     }
 
-#CHECKS FOR DUPLICATES IS NOT WORKING
-    #my $rs = $schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search(
-#	{},
-#	{join=> [ {'nd_experiment' => {'nd_experiment_stocks' => 'stock'} } , {'phenotype'=> 'cvalue'} ] ,
-#	   '+select'=> ['cvalue.name', 'phenotype.value', 'stock.uniquename'], 
-#           '+as'=> ['trait_name', 'value', 'plot_name']
-#        }
-#    );
-    my %check_unique_db;
-    my $unique_key;
-#    while (my $s = $rs->next()) { 
-#	if (length($s->get_column('value')) && length($s->get_column('trait_name')) && length($s->get_column('plot_name'))) {
-#	    $unique_key = join('$', $s->get_column('value'), $s->get_column('trait_name'), $s->get_column('plot_name'));
-#	    #print STDERR $unique_key;
-#	    $check_unique_db{$unique_key} = 1;
-#	}
-#    }
 
 #CHECK FOR DUPLICATES AND VALUE VALIDATION NOT WORKING
+
+    my $sql = "SELECT phenotype.value FROM phenotype WHERE value=? and cvalue_id=? and uniquename LIKE ?; ";
+    my $sth = $c->dbc->dbh->prepare($sql);
     my %check_unique_f;
     foreach my $plot_name (@plot_list) {
 	foreach my $trait_name (@trait_list) {
 	    my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
+	    my $found;
+	    my $unique_key;
+	    my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
+
 	    #check that trait value is valid for trait name
-	    
+
+	
+
 	    #check if the plot_name, trait_name, trait_value combination already exists in database.
-	    if (exists $check_unique_db{join('$', $trait_value, $trait_name, $plot_name)} ) {
-		$return_message = $return_message."This combination exists in database: Plot Name: ".$plot_name." Trait Name: ".$trait_name." Value: ".$trait_value."<br/>";
+	    my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
+	    $sth->execute($trait_value, $trait_cvterm_id, "%Stock: $stock_id%");
+	    
+	    if ($found = $sth->fetch() ) {
+		$warning_message = $warning_message."This combination exists in database: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."<hr>";
 	    }
 
 	    #check if the plot_name, trait_name, trait_value combination already exists in the file being uploaded.
-	    if (exists $check_unique_f{join('$', $trait_value, $trait_name, $plot_name)} ) {
-		$return_message = $return_message."This combination duplicated in file: Plot Name: ".$plot_name." Trait Name: ".$trait_name." Value: ".$trait_value."<br/>";
-	    }
 	    $unique_key = join('$', $trait_value, $trait_name, $plot_name);
+	    print STDERR $unique_key;
+	    if (exists($check_unique_f{$unique_key}) ) {
+		print STDERR "HERE";
+		$warning_message = $warning_message."This combination duplicated in file: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."<hr>";
+	    }
 	    $check_unique_f{$unique_key} = 1;
 	}
     }
@@ -97,19 +98,19 @@ sub verify {
 
     ## Verify metadata
     if ($phenotype_metadata{'archived_file'} && (!$phenotype_metadata{'archived_file_type'} || $phenotype_metadata{'archived_file_type'} eq "")) {
-	$return_message = "No file type provided for archived file.";
-	return $return_message;
+	$error_message = "No file type provided for archived file.";
+	return ($warning_message, $error_message);
     }
     if (!$phenotype_metadata{'operator'} || $phenotype_metadata{'operator'} eq "") {
-	$return_message = "No operaror provided in file upload metadata.";
-	return $return_message;
+	$error_message = "No operaror provided in file upload metadata.";
+	return ($warning_message, $error_message);
     }
     if (!$phenotype_metadata{'date'} || $phenotype_metadata{'date'} eq "") {
-	$return_message = "No date provided in file upload metadata.";
-	return $return_message;
+	$error_message = "No date provided in file upload metadata.";
+	return ($warning_message, $error_message);
     }
 
-    return $return_message;
+    return ($warning_message, $error_message);
 }
 
 sub store {
@@ -139,13 +140,7 @@ sub store {
     my $archived_file_type = $phenotype_metadata->{'archived_file_type'};
     my $operator = $phenotype_metadata->{'operator'};
     my $phenotyping_date = $phenotype_metadata->{'date'};
-    my $phenotyping_experiment_cvterm = $schema->resultset('Cv::Cvterm')
-	->create_with({
-		       name   => 'phenotyping experiment',
-		       cv     => 'experiment type',
-		       db     => 'null',
-		       dbxref => 'phenotyping experiment',
-		      });
+    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping experiment', 'experiment type');
 
     ## Track experiments seen to allow for multiple trials and experiments to exist in an uploaded file.
     ## Used later to attach file metadata.
@@ -196,29 +191,8 @@ sub store {
 
 	    foreach my $trait_name (@trait_list) {
 		print STDERR "trait: $trait_name".localtime()."\n";
-		#fieldbook trait string should be "CO:$trait_name|$trait_accession" e.g. CO:plant height|0000123
-		my ( $full_cvterm_name, $full_accession) = split (/\|/, $trait_name);
-		my ( $db_name , $accession ) = split (/:/ , $full_accession);
 
-
-		#check if the trait name string does have  
-		$accession =~ s/\s+$//;
-		$accession =~ s/^\s+//;
-		$db_name  =~ s/\s+$//;
-		$db_name  =~ s/^\s+//;
-
-		my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
-
-		my $trait_cvterm = $schema->resultset("Cv::Cvterm")
-		  ->find( {
-			     'dbxref.db_id'     => $db_rs->first()->db_id(),
-			     'dbxref.accession' => $accession 
-			    },
-			    {
-			     'join' => 'dbxref'
-			    }
-			  );
-
+		my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
 		my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
 
 		my $plot_trait_uniquename = "Stock: " .

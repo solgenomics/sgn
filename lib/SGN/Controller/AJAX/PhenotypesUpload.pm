@@ -54,6 +54,7 @@ sub upload_phenotype_spreadsheet_verify_POST : Args(0) {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my @success_status;
+    my @warning_status;
     my @error_status;
 
     my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
@@ -107,18 +108,21 @@ sub upload_phenotype_spreadsheet_verify_POST : Args(0) {
     print STDERR "Check4: ".localtime();
 
     print STDERR "verify phenotypes from uploaded file\n";
-    my $verified_phenotype_error = $store_phenotypes->verify($c->dbic_schema("Bio::Chado::Schema"),\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
 
-    if ($verified_phenotype_error) {
-	push @error_status, $verified_phenotype_error;
+    if ($verified_error) {
+	push @error_status, $verified_error;
 	$c->stash->{rest} = {success => \@success_status, error => \@error_status };
 	return;
+    }
+    if ($verified_warning) {
+	push @warning_status, $verified_warning;
     }
     push @success_status, "File data verified. Plot names and trait names are valid.";
 
     print STDERR "Check5: ".localtime();
 
-    $c->stash->{rest} = {success => \@success_status, error => \@error_status};
+    $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status};
 }
 
 sub upload_phenotype_spreadsheet_store :  Path('/ajax/phenotype/upload_spreadsheet_store') : ActionClass('REST') { }
