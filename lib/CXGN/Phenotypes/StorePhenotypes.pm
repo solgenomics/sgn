@@ -75,7 +75,6 @@ sub verify {
     }
     print STDERR "Check 4.3: ".localtime();
 
-    my %check_unique_f;
     foreach my $plot_name (@plot_list) {
 	foreach my $trait_name (@trait_list) {
 	    my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
@@ -90,14 +89,6 @@ sub verify {
 	    if (exists($check_unique_db{$trait_value, $trait_cvterm_id, "Stock: ".$stock_id})) {
 		$warning_message = $warning_message."<small>This combination exists in database: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
 	    }
-
-	    #check if the plot_name, trait_name, trait_value combination already exists in the file being uploaded.
-	    my $unique_key = join('$', $trait_value, $trait_cvterm_id, $stock_id);
-	    if (exists($check_unique_f{$unique_key}) ) {
-		print STDERR "HERE";
-		$warning_message = $warning_message."<small>This combination duplicated in file: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
-	    }
-	    $check_unique_f{$unique_key} = 1;
 	}
     }
 
@@ -299,12 +290,12 @@ sub store {
 	$file_row->insert();
 	foreach my $nd_experiment_id (keys %experiment_ids) {
 	    ## Link the file to the experiment
-	#   my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")
-	#	->create({
-	#		  nd_experiment_id => $nd_experiment_id,
-	#		  file_id => $file_row->file_id(),
-	#		 });
-	#    $experiment_files->insert();
+	   my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")
+		->create({
+			  nd_experiment_id => $nd_experiment_id,
+			  file_id => $file_row->file_id(),
+			 });
+	    $experiment_files->insert();
 	    print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
 	}
     }

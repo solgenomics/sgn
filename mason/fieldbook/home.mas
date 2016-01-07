@@ -11,7 +11,7 @@ $user_id => undef
 @roles => ()
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.FieldBook'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.FieldBook', 'SGN.PhenotypeUpload'] &>
 
 <& /page/page_title.mas, title=>'Field Book Tools' &>
 
@@ -91,13 +91,34 @@ foreach my $file (@file_metadata) {
   </form>
 </div>
 
-
-
-<div id="upload_fieldbook_phenotypes_dialog" class="ui-widget" title="Upload Fieldbook File">
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_fieldbook_form" name="upload_fieldbook_form">
-      <label for="fieldbook_upload_file">Upload file:</label>
-      <input type="file" name="fieldbook_upload_file" id="fieldbook_upload_file" encoding="multipart/form-data" />
-  </form>
+<div class="modal fade" id="upload_fieldbook_phenotypes_dialog" name="upload_fieldbook_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="addFieldbookPhenotypeDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addFieldbookPhenotypeDialog">Upload Fieldbook File</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_phenotype_file_form" name="upload_phenotype_file_form">
+	    <div class="form-group">
+      	      <label class="col-sm-3 control-label">Fieldbook File: </label>
+      	      <div class="col-sm-9" >
+	        <input type="hidden" name="upload_phenotype_file_type" id="upload_phenotype_file_type" value="fieldbook" />
+	        <input type="file" name="upload_phenotype_file_input" id="upload_phenotype_file_input" encoding="multipart/form-data" />
+              </div>
+	    </div>
+	  </form><br/>
+	  <div id="upload_phenotype_spreadsheet_verify_status"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-info" name="upload_phenotype_submit_verify" id="upload_phenotype_submit_verify">Verify</button>
+	<button disabled type="button" class="btn btn-primary" name="upload_phenotype_submit_store" id="upload_phenotype_submit_store" title="First Verify Your File">Store</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 
@@ -106,22 +127,21 @@ foreach my $file (@file_metadata) {
   function remove_phenotype_data(file_id) { 
     var yes = confirm("Do you really want to remove all data associated with this file (id="+file_id+")");
     jQuery.ajax( { 
-      beforeSend: function() { jQuery('#working').dialog("open"); },
+      beforeSend: function() { jQuery('#working_modal').modal("show"); },
       url: '/breeders/trial/delete/file/'+file_id,
       success: function(response) { 
+         jQuery('#working_modal').modal("hide");
          if (response.error) { 
            alert(response.error);
-           jQuery('#working').dialog("close");
          }
          else { 
-           alert("SUCCESS!");
-           jQuery('#working').dialog("close");
-           location.reload();
+            alert("SUCCESS!");
+            location.reload();
          }
       },
       error: function(response) { 
-        alert("An error occurred!");
-       jQuery('#working').dialog("close");
+         jQuery('#working_modal').modal("hide");
+         alert("An error occurred!");
       }
     });
   }
