@@ -12,6 +12,7 @@ Uploading Phenotype Spreadsheets
 
 Jeremy Edwards <jde22@cornell.edu>
 Naama Menda <nm249@cornell.edu>
+Nicolas Morales <nm529@cornell.edu>
 
 =cut
 
@@ -203,10 +204,10 @@ print STDERR "Check1: ".localtime();
     push @success_status, "File data verified. Plot names and trait names are valid.";
 
     print STDERR "Store phenotypes from uploaded file\n";
-    my $stored_phenotype_message = $store_phenotypes->store($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+    my $stored_phenotype_error = $store_phenotypes->store($c,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
 
-    if ($stored_phenotype_message) {
-	push @error_status, $stored_phenotype_message;
+    if ($stored_phenotype_error) {
+	push @error_status, $stored_phenotype_error;
 	$c->stash->{rest} = {success => \@success_status, error => \@error_status};
         return;
     }

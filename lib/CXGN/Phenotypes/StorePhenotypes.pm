@@ -16,6 +16,7 @@ CXGN::Phenotypes::StorePhenotypes - an object to handle storing phenotypes for S
 
  Jeremy D. Edwards (jde22@cornell.edu)
  Naama Menda (nm249@cornell.edu)
+ Nicolas Morales (nm529@cornell.edu)
 
 =cut
 
@@ -131,7 +132,7 @@ sub store {
     my $plot_trait_value_hashref = shift;
     #####
 
-    my $return_message;
+    my $error_message;
     my $phenotype_metadata = shift;
     my $transaction_error;
     my @plot_list = @{$plot_list_ref};
@@ -270,9 +271,9 @@ sub store {
     };
 
     if ($transaction_error) {
-	$return_message = $transaction_error;
+	$error_message = $transaction_error;
 	print STDERR "Transaction error storing phenotypes: $transaction_error\n";
-	return $return_message;
+	return $error_message;
     }
 
     if ($archived_file) {
@@ -308,7 +309,7 @@ sub store {
 	}
     }
 
-    return $return_message;
+    return $error_message;
 }
 
 
