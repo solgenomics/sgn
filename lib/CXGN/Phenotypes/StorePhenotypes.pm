@@ -59,34 +59,39 @@ sub verify {
 	return ($warning_message, $error_message);
     }
 
+    print STDERR "Check 4.1: ".localtime();
 
-    #CHECK FOR DUPLICATES AND VALUE VALIDATION NOT WORKING
-
-    my $sql = "SELECT phenotype.value FROM phenotype WHERE value=? and cvalue_id=? and uniquename LIKE ?; ";
+    my %check_unique_db;
+    my $sql = "SELECT value, cvalue_id, uniquename FROM phenotype WHERE value is not NULL; ";
     my $sth = $c->dbc->dbh->prepare($sql);
+    $sth->execute();
+
+    print STDERR "Check 4.2: ".localtime();
+
+    while (my ($db_value, $db_cvalue_id, $db_uniquename) = $sth->fetchrow_array) {
+	my ($stock_string, $rest_of_name) = split( /,/, $db_uniquename);
+	$check_unique_db{$db_value, $db_cvalue_id, $stock_string} = 1;
+    }
+    print STDERR "Check 4.3: ".localtime();
+
     my %check_unique_f;
     foreach my $plot_name (@plot_list) {
 	foreach my $trait_name (@trait_list) {
 	    my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
-	    my $found;
-	    my $unique_key;
 	    my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
+	    my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
 	    #check that trait value is valid for trait name
 
 	
 
 	    #check if the plot_name, trait_name, trait_value combination already exists in database.
-	    my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
-	    $sth->execute($trait_value, $trait_cvterm_id, "%Stock: $stock_id%");
-	    
-	    if ($found = $sth->fetch() ) {
+	    if (exists($check_unique_db{$trait_value, $trait_cvterm_id, "Stock: ".$stock_id})) {
 		$warning_message = $warning_message."<small>This combination exists in database: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
 	    }
 
 	    #check if the plot_name, trait_name, trait_value combination already exists in the file being uploaded.
-	    $unique_key = join('$', $trait_value, $trait_name, $plot_name);
-	    print STDERR $unique_key;
+	    my $unique_key = join('$', $trait_value, $trait_cvterm_id, $stock_id);
 	    if (exists($check_unique_f{$unique_key}) ) {
 		print STDERR "HERE";
 		$warning_message = $warning_message."<small>This combination duplicated in file: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
