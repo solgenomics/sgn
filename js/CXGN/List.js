@@ -737,7 +737,7 @@ function pasteList(div_name) {
 	
 	c1_html = format_options_list(options);
 
-	show_list_total_count('#c1_data_count', options.length);
+	show_list_counts('c1_data_count', options.length);
 	jQuery('#c1_data_text').html(retrieve_sublist(options, 1).join("\n"));
 	jQuery('#c1_data').html(c1_html);
 	jQuery('#c2_data').html('');

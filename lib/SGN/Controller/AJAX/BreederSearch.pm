@@ -19,55 +19,45 @@ __PACKAGE__->config(
 sub get_data : Path('/ajax/breeder/search') Args(0) { 
     my $self = shift;
     my $c = shift;
+    my $j = JSON::Any->new;
     
-    my $criteria_list;
-    my @selects = qw | select1 select2 select3 select4|;
-    foreach my $s (@selects) { 
-	print STDERR "param:" .  Dumper($c->req->param($s)) . "\n";
-	my $value = $c->req->param($s);
-	if ($value) { 
-	    push @$criteria_list, $c->req->param($s);
-	}
-    }
+    my @criteria_list = $c->req->param('categories[]');
+#    my @jdata = $c->req->param('data');
+    my $data;
+    my $dataref;
+    my $genotypes = $c->req->param('genotypes');
+    my @retrieval_types = $c->req->param('retrieval_types');
 
-    my $dataref = {};
-    
-    my @params = qw | c1_data c2_data c3_data |;
-    my $data_tainted = 0;
+    print STDERR "criteria list = " . Dumper(@criteria_list);
 
-    if (!$criteria_list) {
-	$c->stash->{rest} = { };
-	return;
-    }
-    for (my $i=0; $i<scalar(@$criteria_list); $i++) { 
-	my $data;
-	print STDERR "PARAM: $params[$i]\n";
-	if (defined($params[$i]) && ($params[$i] ne '')) { $data =  $c->req->param($params[$i]); }
-	if (defined($data) && ($data ne '') && ($data !~ /^[\d,\/ ]+$/g)) { 
-	    print STDERR "Illegal chars in '$data'\n"; 
-	    $data_tainted =1;
-	}
-	# items need to be quoted in sql
-	#
-	print STDERR "DATA: $data\n";
-	if ($data) { 
-	    my $qdata = join ",", (map { "\'$_\'"; } (split ",", $data));
-	    $dataref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $qdata;
-	}
-    }
-    my $genotypes = $c->req->param("genotypes");
     my $intersect = $c->req->param("intersect");
 
-    print STDERR "DATAREF: ".Dumper($dataref);
-    if ($data_tainted) { 
-	$c->stash->{rest} =  { error => "Illegal data.", };
-	return;
+    print STDERR "DATA: " . Dumper($data);
+
+ #   if ($c->req->param('data')) {
+#	my @array = @$data; 
+#	#my %dataref = $array[0];
+#	my $dataref = $data;
+ #   }
+
+    if ($c->req->param('data')) {
+	$data = $j->jsonToObj($c->req->param('data'));
+	my @array = @$data;
+	my $hashref = $array[0];
+	my %hash = %$hashref;
+	$dataref = \%hash;
+	print STDERR "DATAREF: " . Dumper($dataref);
     }
-    
-    my $stocks = undef;
+
+    #foreach my $string (@data) {
+#	print STDERR "thing =" . Dumper($string);
+#	my $value = @$string[0];
+#	print STDERR "thing =" . Dumper($value);
+#	$dataref{$criteria_list[1]} => $string;
+ #   }
     my $error = "";
 
-     foreach my $select (@$criteria_list) { 
+     foreach my $select (@criteria_list) { 
      	print STDERR "Checking $select\n";
      	chomp($select);
      	if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'locations', 'plots', 'traits', 'trials', 'years', 'genotypes', undef)) { 
@@ -78,11 +68,9 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
      }
      my $dbh = $c->dbc->dbh();
 
-     my $item = $criteria_list->[-1];
-
      my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
     
-     my $results_ref = $bs->get_intersect($criteria_list, $dataref, $genotypes, $intersect); 
+     my $results_ref = $bs->get_intersect(\@criteria_list, $dataref, $genotypes, $intersect); 
 
     print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
 
@@ -92,101 +80,6 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 }
     
 
-sub get_stock_data : Path('/ajax/breeder/search/stocks') Args(0) { 
-    my $self = shift;
-    my $c = shift;
-    
-    my $criteria_list;
-    my @selects = qw | select1 select2 select3 |;
-    foreach my $s (@selects) { 
-	my $value = $c->req->param($s);
-	if ($value) { 
-	    push @$criteria_list, $c->req->param($s);
-	}
-    }
-    my $output = $c->req->param('select4') || 'plots';
-
-    my $dataref = {};
-    
-    my @params = qw | c1_data c2_data c3_data |;
-    my $data_tainted = 0;
-
-    if (!$criteria_list) {
-	$c->stash->{rest} = { };
-	return;
-    }
-    for (my $i=0; $i<scalar(@$criteria_list); $i++) { 
-	my $data;
-	print STDERR "PARAM: $params[$i]\n";
-	if (defined($params[$i]) && ($params[$i] ne '')) { $data =  $c->req->param($params[$i]); }
-	if (defined($data) && ($data ne '') && ($data !~ /^[\d,\/ ]+$/g)) { 
-	    print STDERR "Illegal chars in '$data'\n"; 
-	    $data_tainted =1;
-	}
-	# items need to be quoted in sql
-	#
-	#print STDERR "DATA: $data\n";
-	if ($data) { 
-	    my $qdata = join ",", (map { "\'$_\'"; } (split ",", $data));
-	    $dataref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $qdata;
-	}
-    }
-    my $genotypes = $c->req->param("genotypes");
-    my $intersect = $c->req->param("intersect");
-
-    print STDERR "DATAREF: ".Dumper($dataref);
-
-    if ($data_tainted) { 
-	$c->stash->{rest} =  { error => "Illegal data.", };
-	return;
-    }
-    
-    my $stocks = undef;
-    my $error = "";
-
-     foreach my $select (@$criteria_list) { 
-     	print STDERR "Checking $select\n";
-     	chomp($select);
-	if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'locations', 'plots', 'traits', 'trials', 'years', 'genotypes', undef)) { 
-	    $error = "Valid keys are accessions, breeding_programs, locations, plots, traits, trials, years, and genotypes or undef";
-	    $c->stash->{rest} = { error => $error };
-	    return;
-     	}
-     }
-     my $dbh = $c->dbc->dbh();
-
-     my $item = $criteria_list->[-1];
-
-     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
-    
-     my $results_ref = {}; #$bs->get_intersect($criteria_list, $dataref, $c->config->{trait_ontology_db_name}); 
-
-    my $stock_ref = [];
-    my $stockdataref->{$output} = $dataref->{$criteria_list->[-1]};
-
-    push @$criteria_list, $output;
-    print STDERR "OUTPUT: $output CRITERIA: ", Data::Dumper::Dumper($criteria_list);
-    $stock_ref = $bs->get_intersect($criteria_list, $stockdataref, $genotypes, $intersect);
-    
-    print STDERR "RESULTS: ".Data::Dumper::Dumper($stock_ref);
-
-    if ($stock_ref->{message}) { 
-	$c->stash->{rest} = { 
-	    list => $stock_ref->{results},
-	    message => $stock_ref->{message},
-	};
-    }
-    else { 
-	
-	$c->stash->{rest} = { 
-	    list => $results_ref->{results},
-	    stocks => $stock_ref->{results},
-	};
-    }
-}
-
-
-1;
 
 
     

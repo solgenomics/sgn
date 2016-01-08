@@ -12,22 +12,8 @@ Search using accession, plot, location, year, trial, and trait data.
 <table class="table borderless" alt="breeder search" border="0" >
 <tr>
 <td width="200">
-  <select class="form-control input-sm" id="select1"></select>
-</td>
-<td>
-  <select class="form-control input-sm" id="select2"></select>
-</td>
-<td>
-  <select class="form-control input-sm" id="select3" ></select>
-</td>
-<td>
-  <select class="form-control input-sm" id="select4" ></select>
-</td>
-</tr>
-<tr>
-<td width="200">
   <div class="form-group form-group-sm">
-    <label class="col-sm-4 control-label">Or Paste From a List: </label>
+    <label class="col-sm-4 control-label">Start from a List: </label>
     <div class="col-sm-8">
       <div id="paste_list"></div>
 <script defer="defer">
@@ -40,77 +26,90 @@ Search using accession, plot, location, year, trial, and trait data.
 </td>
 <td>
 <div class="checkbox">
-  <label><input type="checkbox" id="c2_querytype" name="union" value="union">Find Union (&cup;)</label>
-</div>
-<div class="checkbox">
-  <label><input type="checkbox" id="c2_querytype" name="intersect" value="intersect">Find Intersection (&cap;)</label>
-</div>
-</td>
-<td>
-<div class="checkbox">
-  <label><input type="checkbox" id="c3_querytype" name="union" value="union">Find Union (&cup;)</label>
-</div>
-<div class="checkbox">
-  <label><input type="checkbox" id="c3_querytype" name="intersect" value="intersect">Find Intersection (&cap;)</label>
+  <div align="center">Retrieve</div>
+  <label><input type="checkbox" id="c2_querytype" name="2" value="union" checked>Union (&cup;)</label>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <label><input type="checkbox" id="c2_querytype" name="2" value="intersect">Intersection (&cap;)</label>
+  <div align="center">of selected data with:</div>
 </div>
 </td>
 <td>
 <div class="checkbox">
-  <label><input type="checkbox" id="c4_querytype" name="union" value="union">Find Union (&cup;)</label>
+  <div align="center">Retrieve</div>
+  <label><input type="checkbox" id="c3_querytype" name="3" value="union" checked>Union (&cup;)</label>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <label><input type="checkbox" id="c3_querytype" name="3" value="intersect">Intersection (&cap;)</label>
+  <div align="center">of selected data with:</div>
 </div>
+</td>
+<td>
 <div class="checkbox">
-  <label><input type="checkbox" id="c4_querytype" name="intersect" value="intersect">Find Intersection (&cap;)</label>
+  <div align="center">Retrieve</div>
+  <label><input type="checkbox" id="c4_querytype" name="4" value="union" checked>Union (&cup;)</label>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <label><input type="checkbox" id="c4_querytype" name="4" value="intersect">Intersection (&cap;)</label>
+  <div align="center">of selected data with:</div>
 </div>
+</td>
+</tr>
+<tr>
+<td width="200">
+  <select class="form-control input-sm" id="select1" name="1"></select>
+</td>
+<td>
+  <select class="form-control input-sm" id="select2" name="2"></select>
+</td>
+<td>
+  <select class="form-control input-sm" id="select3" name="3"></select>
+</td>
+<td>
+  <select class="form-control input-sm" id="select4" name="4"></select>
 </td>
 </tr>
 <tr>
 <td >
-<div id="c1_div" >
-  <select multiple class="form-control" id="c1_data" size="10" style="width:200px; overflow:auto;"></select>
-</div>
+  <select multiple class="form-control" id="c1_data" name="1" size="10" style="width:200px; overflow:auto;"></select>
 </td>
 <td width="200">
-  <select multiple class="form-control" id="c2_data" size="10"  style="width:200px; overflow:auto;"></select>
+  <select multiple class="form-control" id="c2_data" name="2" size="10"  style="width:200px; overflow:auto;"></select>
 </td>
 
 <td width="200">
-  <select multiple class="form-control" id="c3_data" size="10" style="width:200px; overflow:auto;"></select>
+  <select multiple class="form-control" id="c3_data" name="3" size="10" style="width:200px; overflow:auto;"></select>
 </td>
 
 <td width="200">
-  <select multiple class="form-control" id="c4_data" size="10" style="width:200px; overflow:auto;"></select>	  
+  <select multiple class="form-control" id="c4_data" name="4" size="10" style="width:200px; overflow:auto;"></select>	  
 </td>
 
 </tr>
 <tr>
 <td>
-<button class="btn btn-default btn-sm" id="c1_select_all" />Select All</button>
+<button class="btn btn-default btn-sm" id="c1_select_all" name="1"/>Select All</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
-<div class="well well-sm"><div id="c1_data_count">No Selection</div></div>
+<div class="well well-sm"><div id="c1_data_count" name="1">No Selection</div></div>
 <div id="c1_to_list_menu"></div>
 </td>
 <td>
-<button class="btn btn-default btn-sm" id="c2_select_all" />Select All</button>
+<button class="btn btn-default btn-sm" id="c2_select_all" name="2"/>Select All</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
-<div class="well well-sm"><div id="c2_data_count">No Selection</div></div>
+<div class="well well-sm"><div id="c2_data_count" name="2">No Selection</div></div>
 <div id="c2_to_list_menu"></div>
 </td>
 <td>
-<button class="btn btn-default btn-sm" id="c3_select_all" />Select All</button>
+<button class="btn btn-default btn-sm" id="c3_select_all" name="3"/>Select All</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
-<div class="well well-sm"><div id="c3_data_count">No Selection</div></div>
+<div class="well well-sm"><div id="c3_data_count" name="3">No Selection</div></div>
 <div id="c3_to_list_menu"></div>
 </td>
 <td>
-<button class="btn btn-default btn-sm" id="c4_select_all" />Select All</button>
+<button class="btn btn-default btn-sm" id="c4_select_all" name="4"/>Select All</button>
 <hr style="margin-top:4px;margin-bottom:4px" />
-<div class="well well-sm"><div id="c4_data_count">No Selection</div></div>
+<div class="well well-sm"><div id="c4_data_count" name="4">No Selection</div></div>
 <div id="c4_to_list_menu"></div>
 </td></tr>
 </table>
-<div class="checkbox">
-  <label><input type="checkbox" id="intersect" name="intersect" value="1"/>Find intersect (rather than union)</label>
-</div>
+
 <input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;Only show accessions that have been genotyped with protocol:
 <div id="select_gt_protocol_div"></div>
 

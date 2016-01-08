@@ -1,163 +1,72 @@
-
 window.onload = function initialize() { 
 
-    var choices = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', locations : 'locations', plots : 'plots', traits : 'traits', trials :'trials', years : 'years'};
+    var starting_categories = { '': 'please select', breeding_programs: 'breeding_programs', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
+    var html = '';
+    html = html + format_options(starting_categories);
 
-    var html = ''; 
-    var c1_html = '';
-    html = html + format_options(choices);
+    jQuery('input[type="checkbox"]').on('change', function() {  // ensure only one checkbox is selected at a time
+	jQuery('input[id="' + this.id + '"]').not(this).prop('checked', false);
+    });
 
-    if (isLoggedIn()) { 
-	var lo = new CXGN.List();
-	
-	for (var i=0; i<choices.length; i++) { 
-	    if (!typeof(choices[i])=='undefined') { 
-		var lists = lo.availableLists(choices[i]);
+    jQuery('#select1').html(html); //populate starting dropdown
 
-		var options = [];
-		for (var n=0; n<lists.length; n++) { 
-		    options[lists[n][0]] = lists[n][1]+" ("+lists[n][5]+")";
-		    html += "<optgroup>\n";
-		    html += format_options(options);
-		    html += "</optgroup>\n";
-		}
+    jQuery('#select1, #select2, #select3, #select4').change(  // retrieve new data once new category is selected
+    	function() {
+	    var this_section = jQuery(this).attr('name');
+
+	    if (jQuery(this).val() == '') { // return empty if no category defined
+		var data_element = "c"+this_section+"_data";
+		console.log("select not used yet");
+		jQuery("#"+data_element).html("");
+		return;
 	    }
-	}
-    }
-
-    jQuery('#select1').html(html);   
-
-    jQuery('#select1').change(function() { 
-	var select1 = jQuery( this ).val();
-	var select4 = jQuery('#select4').val();
-
-	//disable_ui();
-
-	var list = new Array();
-
-	if (parseInt(select1)) { 
-	    var lo = new CXGN.List();
-	    var list_data = lo.getListData(select1);
-	    var id_data = lo.transform2Ids(select1);
-	    var dump = JSON.stringify(id_data);
-	}
-	
-	jQuery.ajax( { 
-	    url: '/ajax/breeder/search',
-	    //async: false,
-	    timeout: 60000,
-	    method: 'POST',
-	    data: {'select1':select1, 'select4': select4, 'genotypes': get_genotype_checkbox(), 'intersect': get_intersect_checkbox()},
-	    beforeSend: function(){
-		disable_ui();
-            },  
-            complete : function(){
-		enable_ui();
-            },  
-	    success: function(response) { 
-		if (response.error) { 
-		    alert(response.error);
-		    return;
-		} 
-		else {
-		    list = response.list || [];
-		    c1_html = format_options_list(list);
-		    show_list_total_count('#c1_data_count', list.length);
-		    
-		    jQuery('#c1_data_text').html(retrieve_sublist(list, 1).join("\n"));
-		    jQuery('#c1_data').html(c1_html);
-		    jQuery('#c2_data').html('');
-		    jQuery('#c3_data').html('');	
-		    jQuery('#select2').html('');
-		    jQuery('#select3').html('');
-
-		    if (isLoggedIn()) { 
-			addToListMenu('c1_to_list_menu', 'c1_data', {
-			    selectText: true,
-			    typeSourceDiv: 'select1' });
-		    }
-		}
-	    }
+	    
+	    retrieve_and_display_set(get_selected_categories(this_section), get_selected_data(this_section), this_section);
 	});
 
 
-	//enable_ui();	
-    });
-    
-    jQuery('#c1_data').change(function() { 
+    jQuery('#c1_data, #c2_data, #c3_data, #c4_data').change( // update wizard panels and categories when data selections change 
+    	function() {
+	    var this_section = jQuery(this).attr('name');
+	    var current_section = this_section;
+	    var next_section = ++current_section;
+	    var data_id = jQuery(this).attr('id');
+	    var data = jQuery('#'+data_id).val() || [];;
+	    var count_id = "c"+this_section+"_data_count";
+	    var next_data_id = "c"+next_section+"_data";
+	    jQuery('#'+next_data_id).html('');
 
-	//disable_ui();
-	
-	jQuery('#select2').val('please select');
-	jQuery('#select3').html('');
-	jQuery('#c2_data').html('');
-	jQuery('#c3_data').html('');
+	    update_downstream_categories(this_section);
+	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+	});		 
 
-	var select1 = jQuery('#select1').val();
-	if (select1 === '') { // if paste from list was used at start instead of select then get list type
-	    var list_id = jQuery('#c1_data_list_select').val();
-	    var list_data = lo.getListData(list_id);
-	    select1 = list_data.type_name;
-	} 
-	var select4 = jQuery('#select4').val();
-	var c1_data = jQuery('#c1_data').val() || [];
+    jQuery('#c1_select_all, #c2_select_all, #c3_select_all, #c4_select_all').click( // select all data in a wizard panel 
+    	function() { 
+	    var this_section = jQuery(this).attr('name');
+	    var data_id = "c"+this_section+"_data";
+	    selectAllOptions(document.getElementById(data_id));
+	     console.log('data_id ='+ data_id);
+	    var data = jQuery("#"+data_id).val() || [];;
+	    console.log('data ='+ data);
+	    var count_id = "c"+this_section+"_data_count";
 
-	show_list_total_count('#c1_data_count', jQuery('#c1_data').text().split("\n").length-1, c1_data.length);
-
-	// as soon as a data item is selected, show the next menu select
-	//
-	var second_choices = copy_hash(choices);
-	delete second_choices[select1];
-	var html = format_options(second_choices);
-	jQuery('#select2').html(html);
-
-    });
-    
-
-    jQuery('#c1_select_all').click(
-	function() { 
-	    selectAllOptions(document.getElementById('c1_data'));
-            show_list_total_count('#c1_data_count', jQuery('#c1_data').text().split("\n").length-1, jQuery('#c1_data').val().length);
-
-	    var select1 = jQuery('#select1').val();
-	    if (select1 === '') { // if paste from list was used at start instead of select then get list type
-		var list_id = jQuery('#c1_data_list_select').val();
-		var list_data = lo.getListData(list_id);
-		select1 = list_data.type_name;
-	    } 
-	    var second_choices = copy_hash(choices);
-	    delete second_choices[select1];
-	    var html = format_options(second_choices);
-	    jQuery('#select2').html(html);
-	}
-    );
+	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+	    update_downstream_categories(this_section);
+	    
+	});
+}
 
 
-    jQuery('#select2').change(function() {
- 	var select1 = jQuery('#select1').val();
-	if (select1 === '') { // if paste from list was used at start instead of select then get list type
-	    var list_id = jQuery('#c1_data_list_select').val();
-	    var list_data = lo.getListData(list_id);
-	    select1 = list_data.type_name;
-	}
-	var select2 = jQuery('#select2').val();
-	var select4 = jQuery('#select4').val();
-	var c1_data = jQuery('#c1_data').val() || [];
-	jQuery('#select3').val('please select');
-	jQuery('#c2_data').val('');
-
-	if (select2 == '') { 
-	    jQuery('#c2_data').html("");
-	    return;
-	}
-	var c2_data = '';
-
-	jQuery.ajax( { 
-	    url: '/ajax/breeder/search',
-	    //async: false,
-	    timeout: 60000,
-	    method: 'POST',
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","), 'select4':select4, 'genotypes': get_genotype_checkbox(), 'intersect': get_intersect_checkbox()},
+function retrieve_and_display_set(categories, data, this_section) {
+    console.log("categories = "+categories);
+    console.log("data = "+JSON.stringify(data));
+    console.log("genotypes="+get_genotype_checkbox());
+    console.log("retrieval types="+get_retrieval_types());
+    jQuery.ajax( {
+	url: '/ajax/breeder/search',
+	timeout: 60000,
+	method: 'POST',
+	data: {'categories': categories, 'data': JSON.stringify(data), 'genotypes': get_genotype_checkbox(), 'retrieval_types': get_retrieval_types()},
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -170,309 +79,94 @@ window.onload = function initialize() {
 		} 
 		else {
                     var list = response.list || [];
-		    c2_html = format_options_list(list);
-
-		    jQuery('#c2_data').html(c2_html);
-		    show_list_total_count('#c2_data_count', list.length);
+		    data_html = format_options_list(list);
+		    var data_id = "c"+this_section+"_data";
+		    var count_id = "c"+this_section+"_data_count";
+		    var listmenu_id = "c"+this_section+"_to_list_menu";
+		    var select_id = "select"+this_section;
+		    
+		    jQuery('#'+data_id).html(data_html);
+		    show_list_counts(count_id, list.length);
 
 		    if (isLoggedIn()) { 
-			addToListMenu('c2_to_list_menu', 'c2_data', {
+			addToListMenu(listmenu_id, data_id, {
 			    selectText: true,
-			    typeSourceDiv: 'select2' });
+			    typeSourceDiv: select_id });
 		    }
-		    //enable_ui();   		    
 		}	
 	    } 
 	});		
 
-
-	//enable_ui();
-    });
-
-    jQuery('#c2_data').change(function() { 
-	jQuery('#c3_data').html('');
-
-	var select1 = jQuery('#select1').val();
-	if (select1 === '') { // if paste from list was used at start instead of select then get list type
-	    var list_id = jQuery('#c1_data_list_select').val();
-	    var list_data = lo.getListData(list_id);
-	    select1 = list_data.type_name;
-	} 
-	var select2 = jQuery('#select2').val();
-	var select4 = jQuery('#select4').val();
-	var c1_data = jQuery('#c1_data').val() || [];
-	var c2_data = jQuery('#c2_data').val() || [];
-
-	show_list_total_count('#c2_data_count', jQuery('#c2_data').text().split("\n").length-1, c2_data.length);
-
-	var third_choices = copy_hash(choices);
-	delete third_choices[select1];
-	delete third_choices[select2];
-	var html = format_options(third_choices);
-	jQuery('#select3').html(html);
-
-    });
-
-    jQuery('#c2_select_all').click(
-	function() { 
-	    selectAllOptions(document.getElementById('c2_data'));
-            show_list_total_count('#c2_data_count', jQuery('#c2_data').text().split("\n").length-1, jQuery('#c2_data').val().length);
-
-	    var select1 = jQuery('#select1').val();
-	    if (select1 === '') { // if paste from list was used at start instead of select then get list type
-		var list_id = jQuery('#c1_data_list_select').val();
-		var list_data = lo.getListData(list_id);
-		select1 = list_data.type_name;
-	    } 
-	    var select2 = jQuery('#select2').val();
-	    var third_choices = copy_hash(choices);
-	    delete third_choices[select1];
-	    delete third_choices[select2];
-	    var html = format_options(third_choices);
-	    jQuery('#select3').html(html);
-	}
-    );
-    
-
-    jQuery('#select3').change( function() {
- 	var select1 = jQuery('#select1').val();
-	if (select1 === '') { // if paste from list was used at start instead of select then get list type
-	    var list_id = jQuery('#c1_data_list_select').val();
-	    var list_data = lo.getListData(list_id);
-
-	    select1 = list_data.type_name;
-	} 
-	var select2 = jQuery('#select2').val();
-	var select3 = jQuery('#select3').val();
-	var select4 = jQuery('#select4').val();
-	var c1_data = jQuery('#c1_data').val() || [];
-	var c2_data = jQuery('#c2_data').val() || [];
-	
-	if (select3 == '') { 
-	    jQuery('#c3_data').html("");
-	    return;
-	}
-	
-	var list;
-
-	jQuery.ajax( { 
-	    url: '/ajax/breeder/search',
-	    //async: false,
-	    timeout: 60000,
-	    method: 'POST',
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4, 'genotypes': get_genotype_checkbox(), 'intersect': get_intersect_checkbox()},
-	    beforeSend: function(){
-		disable_ui();
-            },  
-            complete : function(){
-		enable_ui();
-            },  
-	    success: function(response) { 
-		if (response.error) { 
-		    alert(response.error);
-		} 
-		else {
-		    list = response.list || [];
-		    c3_html = format_options_list(list);
-
-		    jQuery('#c3_data').html(c3_html);
-		    show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, 0);
-
-		    if (isLoggedIn()) { 
-			addToListMenu('c3_to_list_menu', 'c3_data', {
-			    selectText: true,
-			    typeSourceDiv: 'select3' });
-		    }
-		}
-	    },
-	    error: function(response) { 
-		alert("An error occurred. Timeout?");
-	    }
-	});
-	
-    });
-
-     jQuery('#c3_data').change(function() { 
-	jQuery('#c4_data').html('');
-
-	var select1 = jQuery('#select1').val();
-	if (select1 === '') { // if paste from list was used at start instead of select then get list type
-	    var list_id = jQuery('#c1_data_list_select').val();
-	    var list_data = lo.getListData(list_id);
-	    select1 = list_data.type_name;
-	} 
-	var select2 = jQuery('#select2').val();
-	var select3 = jQuery('#select3').val();
-	var select4 = jQuery('#select4').val();
-	var c1_data = jQuery('#c1_data').val() || [];
-	var c2_data = jQuery('#c2_data').val() || [];
-	var c3_data = jQuery('#c3_data').val() || [];
-
-	show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, c3_data.length);
-
-	var fourth_choices = copy_hash(choices);
-	delete fourth_choices[select1];
-	delete fourth_choices[select2];
-	delete fourth_choices[select3];
-	var html = format_options(fourth_choices);
-	jQuery('#select4').html(html);
-
-    });
-
-    jQuery('#c3_select_all').click(
-	function() { 
-	    selectAllOptions(document.getElementById('c3_data'));
-            show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, jQuery('#c3_data').val().length);
-
-	    var select1 = jQuery('#select1').val();
-	    if (select1 === '') { // if paste from list was used at start instead of select then get list type
-		var list_id = jQuery('#c1_data_list_select').val();
-		var list_data = lo.getListData(list_id);
-		select1 = list_data.type_name;
-	    } 
-	    var select2 = jQuery('#select2').val();
-	    var select3 = jQuery('#select3').val();	    
-	    var fourth_choices = copy_hash(choices);
-	    delete fourth_choices[select1];
-	    delete fourth_choices[select2];
-	    delete fourth_choices[select3];
-	    var html = format_options(fourth_choices);
-	    jQuery('#select4').html(html);
-	}
-    );
-
-
-    jQuery('#select4').change( function() {
- 	var select1 = jQuery('#select1').val();
-	if (select1 === '') { // if paste from list was used at start instead of select then get list type
-	    var list_id = jQuery('#c1_data_list_select').val();
-	    var list_data = lo.getListData(list_id);
-	    select1 = list_data.type_name;
-	} 
-	var select2 = jQuery('#select2').val();
-	var select3 = jQuery('#select3').val();
-	var select4 = jQuery('#select4').val();
-	var c1_data = jQuery('#c1_data').val() || [];
-	var c2_data = jQuery('#c2_data').val() || [];
-	var c3_data = jQuery('#c3_data').val() || [];
-	
-	if (select4 == '') { 
-	    jQuery('#c4_data').html("");
-	    return;
-	}
-	
-	var list;
-
-	jQuery.ajax( { 
-	    url: '/ajax/breeder/search',
-	    //async: false,
-	    timeout: 60000,
-	    method: 'POST',
-	    data: {'select1':select1, 'select2':select2, 'select3':select3, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'c3_data': c3_data.join(","), 'select4': select4, 'genotypes': get_genotype_checkbox(), 'intersect': get_intersect_checkbox()},
-	    beforeSend: function(){
-		disable_ui();
-            },  
-            complete : function(){
-		enable_ui();
-            },  
-	    success: function(response) { 
-		if (response.error) { 
-		    alert(response.error);
-		} 
-		else {
-		    list = response.list || [];
-		    c4_html = format_options_list(list);
-		    jQuery('#c4_data').html(c4_html);
-		    show_list_total_count('#c4_data_count', jQuery('#c4_data').text().split("\n").length-1, 0);
-
-		    if (isLoggedIn()) { 
-			addToListMenu('c4_to_list_menu', 'c4_data', {
-			    selectText: true,
-			    typeSourceDiv: 'select4' });
-		    }
-		}
-	    },
-	    error: function(response) { 
-		alert("An error occurred. Timeout?");
-	    }
-	});
-
-    });
-
-    jQuery('#c4_data').change(function() { 
-
-	show_list_total_count('#c4_data_count', jQuery('#c4_data').text().split("\n").length-1, c4_data.length);
-
-    });
-
-    jQuery('#c4_select_all').click(
-	function() { 
-	    selectAllOptions(document.getElementById('c4_data'));
-            show_list_total_count('#c4_data_count', jQuery('#c4_data').text().split("\n").length-1, jQuery('#c4_data').val().length);
-	}
-    );
-
-    jQuery('#restrict_genotypes').change(
-	function() { 
-	    var select1 = jQuery('#select1').val();
-	    if (select1 === '') { // if paste from list was used at start instead of select then get list type
-		var list_id = jQuery('#c1_data_list_select').val();
-		var list_data = lo.getListData(list_id);
-		select1 = list_data.type_name;
-	    } 
-	    var select2 = jQuery('#select2').val();
-	    var select3 = jQuery('#select3').val();
-	    var select4 = jQuery('#select4').val();
-	    var c1_data = jQuery('#c1_data').val() || [];
-	    var c2_data = jQuery('#c2_data').val() || [];
-	    var c3_data = jQuery('#c3_data').val() || [];
-	
-	    if (typeof select3 != 'string') { select3 = ''; }
-	    
-	    var c1_str = '';
-	    var c2_str = '';
-	    var c3_str = '';
-	    var restrict_genotypes = '';
-
-	    if (c1_data.length > 0) { c1_str = c1_data.join(","); }
-	    if (c2_data.length > 0) { c2_str = c2_data.join(","); }
-	    if (c3_data.length > 0) { c3_str = c3_data.join(","); }
-	    restrict_genotypes = 0;
-
-	    disable_ui();
-
-    	    jQuery.ajax( { 
-		url: '/ajax/breeder/search',
-		//async: false,
-		timeout: 30000,
-		method: 'POST',
-		data: {'select1':select1, 'c1_data': c1_str, 'select2': select2, 'c2_data': c2_str, 'select3':select3, 'c3_data': c3_str, 'select4' : select4, 'genotypes': get_genotype_checkbox(), 'intersect': get_intersect_checkbox()},
-		beforeSend: function(){
-		    disable_ui();
-		},  
-		complete : function(){
-		    enable_ui();
-		},  
-		success: function(response) { 
-		    if (response.error) { 
-			alert(response.error);
-		    } 
-		    else {
-			
-			if (isLoggedIn()) { 
-			    addToListMenu('add_to_list_menu', 'c4_data', {
-			    selectText: true,
-				typeSourceDiv: 'select4' });
-			}
-		    }		
-	    },
-	    error: function(message) { 
-		alert("an error occurred. ("+ message.responseText +")");
-	    }
-	    });
-	});      
 }
 
+function get_selected_data(this_section) {
+    var selected_data = new Array();
+    var selected_categories = get_selected_categories(this_section);
+    for (i=1; i < this_section; i++) {
+	var element_id = "c"+i+"_data";
+	//selected_data.push(jQuery("#"+element_id).val());
+	var data = jQuery("#"+element_id).val();
+	console.log("data="+data);
+	var criteria = {};
+	var counter = i;
+	counter--;
+	//selected_data.push(criteria);
+	//selected_data[counter] = {
+	//    "selected_categories[counter]" : data
+	//};
+	criteria[selected_categories[counter]] = data;
+	selected_data.push(criteria);
+    }
+    var this_data_id = "c"+this_section+"_data";
+    jQuery("#"+this_data_id).val('');
+    console.log("selected data= "+JSON.stringify(selected_data));
+    if (selected_data.length > 0) {
+    return selected_data;
+    }
+}
+
+function get_selected_categories(this_section) {
+
+    var selected_categories = [];
+    var select1 = jQuery('#select1').val();
+    if (select1 === '') { // if paste from list was used at start instead of select then get list type
+	var list_id = jQuery('#c1_data_list_select').val();
+	var lo = new CXGN.List();
+	var list_data = lo.getListData(list_id);
+	select1 = list_data.type_name;
+    }
+    selected_categories.push(select1);
+    for (i=2; i <= this_section; i++) {
+	var element_id = "select"+i;
+	var category = jQuery("#"+element_id).val();
+	selected_categories.push(category);
+    }
+    var next_section = this_section +1;
+    var next_select_id = "select"+next_section;
+    jQuery("#"+next_select_id).val('please select');
+    console.log("selected categories= "+JSON.stringify(selected_categories));
+    return selected_categories;
+}
+
+function update_downstream_categories(this_section) {
+    console.log("updating . . .");
+    var selected_categories = get_selected_categories(this_section);
+    
+    console.log("selected_category 0 ="+selected_categories[0]);
+    var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', locations : 'locations', plots : 'plots', traits : 'traits', trials :'trials', years : 'years'};
+    var all_categories = copy_hash(categories);
+    console.log("starting = "+all_categories);
+    for (i=0; i < this_section; i++) {
+	console.log("deleting");
+	delete all_categories[selected_categories[i]];
+    }
+    var remaining_categories = format_options(all_categories);
+    var next_section = ++this_section;
+    var next_select_id = "select"+next_section;
+
+    jQuery('#'+next_select_id).html(remaining_categories);
+}
+	
 function format_options(items) { 
     var html = '';
     for (var key in items) { 
@@ -506,7 +200,7 @@ function copy_hash(hash) {
     for (var key in hash) { 
 	new_hash[key] = hash[key];
     }
-    return new_hash;
+     return new_hash;
 }
 
 function disable_ui() { 
@@ -517,28 +211,20 @@ function enable_ui() {
      jQuery('#working_modal').modal("hide");
 }
 
-function show_list_total_count(count_div, total_count, selected) { 
+function show_list_counts(count_div, total_count, selected) { 
     var html = 'Items: '+total_count+'<br />';
     if (selected) { 
 	html += 'Selected: '+selected;
     }
-    jQuery(count_div).html(html);
+    jQuery('#'+count_div).html(html);
 }
 
-function show_list_selected_count(select_div, selected_count_div) { 
-    var selected_count = 0;
-    var selected = jQuery(select_div).val();
-    if (selected != undefined) { selected_count = selected.count; }
-
-    jQuery(count_div).html('selected: '+selected_count);
-}
-
-  function selectAllOptions(obj) {
+function selectAllOptions(obj) {
     if (!obj || obj.options.length ==0) { return; }
     for (var i=0; i<obj.options.length; i++) {
       obj.options[i].selected = true;
     }
-  }
+}
 
 
 function get_genotype_checkbox() { 
@@ -551,12 +237,16 @@ function get_genotype_checkbox() {
 
 }
 
-function get_intersect_checkbox() { 
-    var checkbox = jQuery('#intersect').is(':checked')
 
-    if (checkbox == true) {
-	return jQuery("#intersect").val();
-    }
-    return 0;
+
+
+
+
+
+
+
+
+
+function get_retrieval_types() { 
 
 }
