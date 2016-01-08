@@ -25,7 +25,7 @@ $combined_populations => ''
   <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.traitGebvFlot", 
                                               "flot.flot", "flot.categories", 
                                               "flot.tooltip", "flot.selection", "flot.navigate", 
-                                              "flot.axisLabels"
+                                              "flot.axisLabels", "d3.d3Min",
                                              ] 
   &>
 
@@ -53,8 +53,10 @@ $combined_populations => ''
     owner        => $owner,
    combined_populations => $combined_populations,
  &>
- 
+
 </&>
+
+<& /solgs/model/pca.mas &>
 
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
