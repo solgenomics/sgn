@@ -606,7 +606,9 @@ function trial_detail_page_setup_dialogs() {
 		    },
 	    save:   { text: "Set",
 		      click: function() { 
+			  jQuery('#trial_folder_div').html('[Updating...]');
 			  set_trial_folder();
+			  display_trial_folder();
 			  jQuery(this).dialog("close");
 		      }
 		    }
@@ -921,10 +923,6 @@ function save_trial_location(location_id) {
 	success: function(response) { 
 	    if (response.message) { alert(response.message); }
 	    if (response.error) { alert(response.error); }
-	    else { 
-		alert("Not sure what happened.");
-	    }
-	    
 	},
 	error: function(response) { 
 	    alert("An error occurred.");
