@@ -26,6 +26,7 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     my $c = shift;
     my $parent_folder_id = $c->req->param("parent_folder_id");
     my $folder_name = $c->req->param("folder_name");
+    my $breeding_program_id = $c->req->param("breeding_program_id");
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $existing = $schema->resultset("Project::Project")->find( { name => $folder_name });
@@ -39,6 +40,7 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
 	    bcs_schema => $schema,
 	    parent_folder_id => $parent_folder_id,
 	    name => $folder_name,
+	    breeding_program_id => $breeding_program_id,
 	});
 
     $c->stash->{rest} = { success => 1 };

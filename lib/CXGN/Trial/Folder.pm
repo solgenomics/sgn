@@ -122,7 +122,7 @@ sub create {
 	    project_id => $project_id,
 	    type_id => $folder_type_id }
 	);
-
+    print STDERR "PROJECT ID = $project_id\n";
     my $folder = CXGN::Trial::Folder->new( { bcs_schema => $args->{bcs_schema}, folder_id => $project_id });
 
     $folder->associate_parent($args->{parent_folder_id});
@@ -198,21 +198,14 @@ sub get_parent {
 sub children { 
     my $self = shift;
     
-    my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_subject_projects', { object_project_id => $self->folder_id() });
+    my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_subject_projects', { object_project_id => $self->folder_id() }, { order_by => 'me.name' });
 
-    my @child_ids;
-    while (my $child = $rs->next()) { 
-	push @child_ids, $child->subject_project_id();
-    }
-
-    print STDERR "child_ids: ".(join(",",@child_ids))."; parent id: ".$self->folder_id()."\n";
-
-    my $children_rs = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => { -in => [ @child_ids] }});
     my @children;
-    while (my $child = $children_rs->next()) { 
-	push @children, CXGN::Trial::Folder->new( { bcs_schema=> $self->bcs_schema(), folder_id=>$child->project_id() });
-    }
+    while (my $child = $rs->next()) { 
+	push @children, CXGN::Trial::Folder->new( { bcs_schema=> $self->bcs_schema(), folder_id=>$child->subject_project_id() });
 
+    }
+    
     return \@children;
 }
 
@@ -220,38 +213,42 @@ sub associate_parent {
     my $self = shift;
     my $parent_id = shift;
 
-    my $parent_row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $parent_id });
+    my $folder_type_id = CXGN::Trial::Folder->folder_cvterm_id( { bcs_schema => $self->bcs_schema() } );
+    my $breeding_program_type_id = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { name => 'breeding_program' })->cvterm_id();
+
+    my $parent_row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $parent_id } );
 
     if (!$parent_row) { 
 	return "The folder specified as parent does not exist";
     }
     
-    my $parentprop_row = $self->bcs_schema()->resultset("Project::Projectprop")->find( { project_id => $parent_id, type_id => $self->folder_cvterm_id() });
+    my $parentprop_row = $self->bcs_schema()->resultset("Project::Projectprop")->find( { project_id => $parent_id, type_id => { '-in' => [ $folder_type_id, $breeding_program_type_id ] } } );
 
     if (!$parentprop_row) { 
 	return "The specified parent folder is not of type folder";
     }
 
-    my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( 
+    my $project_rels = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search( 
 	{ object_project_id => $parent_id, 
-	  subject_project_id => $self->folder_id() 
+	  subject_project_id => $self->folder_id(),
+	  type_id => $folder_type_id,
 	});
 
-    if (! $project_rel_row) { 
-	$project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create( 
-	    { 
-		object_project_id => $parent_id,
-		subject_project_id => $self->project()->project_id(),
-		type_id => $self->folder_type_id(),
-	    });
-	
-	$project_rel_row->insert();
-    }
-    else { 
-	$project_rel_row->object_project_id($parent_id);
-	$project_rel_row->update();
+    if ($project_rels->count() > 0) {
+	while (my $p = $project_rels->next()) {
+	    print STDERR "Removing parent folder association...\n";
+	    $p->delete();
+	}
     }
 
+    my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create( 
+	{ 
+	    object_project_id => $parent_id,
+	    subject_project_id => $self->project()->project_id(),
+	    type_id => $folder_type_id,
+	});
+    
+    $project_rel_row->insert();
 }
 
 sub associate_child { 
@@ -310,33 +307,28 @@ sub remove_child {
 sub get_jstree_html { 
     my $self = shift;
     
-    my $html = "<ul>";
+    my $html = "";
 
-    if ($self->is_folder()) { 
-	
-	$html .= $self->_jstree_li_html('folder', $self->folder_id(), $self->name());
-	
-	my $children = $self->children();
-	$html .= '<ul>';
+    $html .= $self->_jstree_li_html('folder', $self->folder_id(), $self->name());
+    $html .= "<ul>";	
+    my $children = $self->children();
+
+    if (@$children > 0) { 
 	foreach my $child (@$children) { 
-
 	    if ($child->is_folder()) { 
+
 		$html .= $child->get_jstree_html();
+
 	    }
 	    else { 
 		$html .= $self->_jstree_li_html('trial', $child->folder_id(), $child->name())."</li>\n";
 	    }
-
+	    
 	}
-	$html .= "</ul></li>";
-    }
-    else { 
-	$html .= $self->_jstree_li_html('trial', $self->folder_id(), $self->name())."</li>\n";
-    }
 	
-    $html .= "</ul>";
-
-    print STDERR "HTML: $html\n";
+    }
+    
+    $html .= '</ul></li>';
     return $html;
 }
 
