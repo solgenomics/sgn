@@ -42,12 +42,13 @@ $uri => "/ajax/cvterm/autocomplete"
 
 <script language="javascript">
   
-  test("test_alert");
+  //test("test_alert");
 
   
-  function test(message) {
-  	   alert(message);
-}
+  //function test(message) {
+  //	   alert(message);
+  //}
+
   jQuery(function() {
      jQuery("#trait_ontology_name").autocomplete({
       source: '<% $uri %>' + '?db_name=' + '<% $trait_ontology_db_name %>'
@@ -64,7 +65,7 @@ $uri => "/ajax/cvterm/autocomplete"
         dataType: "json",
         method: "POST",
         async: false,
-        data: { 'stock_id' : stock_id, 'trait': trait, 'phenotype_value': phenotype_value }
+        data: { 'stock_id' : stock_id, 'trait': trait, 'phenotype_value': phenotype_value },
         //error: function(response) { alert("An error occurred. Please try again later!"+response); },
         //parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
         success: function(response) {
