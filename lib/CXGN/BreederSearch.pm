@@ -54,6 +54,9 @@ sub get_intersect {
     my $genotype_protocol_id = shift;
     my $intersect = shift;
 
+    my @array = join ",", @$criteria_list;
+    my $count = scalar @array;
+
     print STDERR "gtpid = $genotype_protocol_id \n";
     print STDERR "intersect = $intersect \n";
     my $h;
@@ -61,9 +64,17 @@ sub get_intersect {
     print STDERR "CRITERIA LIST: ".(join ",", @$criteria_list)."\n";
     print STDERR "Dataref = ".Dumper($dataref);
     
+    
+    print STDERR "length =" . $count;
+
     my $target = $criteria_list->[-1];
+    print STDERR "target=". $target . "\n";
+
+    print STDERR "Dataref target : " . Dumper($dataref->{"$target"});
+    print STDERR "Dataref hardcoded : " . Dumper($dataref->{'years'});
+
     my $query;
-    if (!$dataref->{$target}) {
+    if ($count <= 1) {
 	my $query = "SELECT * from $target";
 	print STDERR "QUERY: $query\n";
 	$h = $self->dbh->prepare($query);

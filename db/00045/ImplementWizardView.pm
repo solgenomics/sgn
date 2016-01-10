@@ -52,6 +52,17 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
+CREATE OR REPLACE FUNCTION pc_chartonum(chartoconvert character varying)              
+  RETURNS numeric AS
+$BODY$
+SELECT CASE WHEN trim($1) SIMILAR TO '[0-9]+' 
+        THEN CAST($1 AS numeric) 
+    ELSE NULL END;
+$BODY$
+  LANGUAGE 'sql' IMMUTABLE STRICT;
+
+ALTER TABLE phenotype ALTER COLUMN value TYPE numeric USING pc_chartonum(value);
+
 CREATE MATERIALIZED VIEW materialized_fullview AS
  SELECT plot.uniquename AS plot_name,
     stock_relationship.subject_id AS plot_id,
@@ -67,6 +78,8 @@ CREATE MATERIALIZED VIEW materialized_fullview AS
     breeding_program.name AS breeding_program_name,
     cvterm.cvterm_id AS trait_id,
     (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name,
+phenotype.phenotype_id,
+    phenotype.value AS phenotype_value,
     nd_experiment_protocol.nd_protocol_id
    FROM stock plot
      LEFT JOIN stock_relationship ON plot.stock_id = stock_relationship.subject_id
@@ -86,10 +99,10 @@ CREATE MATERIALIZED VIEW materialized_fullview AS
      LEFT JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id
      LEFT JOIN db ON dbxref.db_id = db.db_id
   WHERE plot.type_id = 76393 AND projectprop.type_id = 76395 AND db.db_id = 186
-  GROUP BY stock_relationship.subject_id, cvterm.cvterm_id, plot.uniquename, accession.uniquename, stock_relationship.object_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, trial.name, project_relationship.subject_project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, nd_experiment.nd_geolocation_id, nd_geolocation.description, nd_experiment_protocol.nd_protocol_id;
+  GROUP BY stock_relationship.subject_id, cvterm.cvterm_id, plot.uniquename, accession.uniquename, stock_relationship.object_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, trial.name, project_relationship.subject_project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, nd_experiment.nd_geolocation_id, nd_geolocation.description, phenotype.phenotype_id, phenotype.value, nd_experiment_protocol.nd_protocol_id;
 GRANT ALL ON materialized_fullview to web_usr;
 
-CREATE UNIQUE INDEX unqmeasurement_idx ON materialized_fullview(trial_id, trait_id, plot_id) WITH (fillfactor =100);
+CREATE UNIQUE INDEX unqmeasurement_idx ON materialized_fullview(trial_id, trait_id, plot_id, phenotype_id) WITH (fillfactor =100);
 CREATE INDEX trait_id_idx ON materialized_fullview(trait_id) WITH (fillfactor =100);
 CREATE INDEX breeding_program_id_idx ON materialized_fullview(breeding_program_id) WITH (fillfactor =100);
 CREATE INDEX trial_id_idx ON materialized_fullview(trial_id) WITH (fillfactor =100);
@@ -131,6 +144,10 @@ GRANT ALL ON trials to web_usr;
 CREATE RECURSIVE VIEW year_ids(year_id) AS SELECT MIN(year_id) FROM materialized_fullview UNION SELECT (SELECT m.year_id FROM materialized_fullview m WHERE m.year_id > year_ids.year_id ORDER BY year_id LIMIT 1) FROM year_ids WHERE year_id IS NOT NULL;
 CREATE VIEW years AS SELECT year_id, year_id AS year_name FROM year_ids;
 GRANT ALL ON years to web_usr;
+
+CREATE VIEW trials_years AS SELECT trial_id, (SELECT year_id FROM materialized_fullview m WHERE trial_ids.trial_id = m.trial_id ORDER BY m.trial_id LIMIT 1) FROM trial_ids;
+
+CREATE VIEW trials_programs AS SELECT trial_id, (SELECT breeding_program_id FROM materialized_fullview m WHERE trial_ids.trial_id = m.trial_id ORDER BY m.trial_id LIMIT 1) FROM trial_ids;
 
 INSERT INTO dbxref (db_id, accession) VALUES(288,'breeding_programs');
 INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES(50, 'breeding_programs', 'breeding_programs', (SELECT dbxref_id FROM dbxref WHERE accession = 'breeding_programs');
