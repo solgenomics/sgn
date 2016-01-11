@@ -141,50 +141,13 @@ sub save_trial {
 
   my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $chado_schema } );
 
-  my $field_layout_cvterm = $chado_schema->resultset('Cv::Cvterm')
-    ->create_with({
-		   name   => 'field layout',
-		   cv     => 'experiment type',
-		   db     => 'null',
-		   dbxref => 'field layout',
-		  });
-  my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
-    ->create_with({
-		   name   => 'accession',
-		   cv     => 'stock type',
-		   db     => 'null',
-		   dbxref => 'accession',
-		  });
-  my $plot_cvterm = $chado_schema->resultset("Cv::Cvterm")
-    ->create_with({
-		   name   => 'plot',
-		   cv     => 'stock type',
-		   db     => 'null',
-		   dbxref => 'plot',
-		  });
-  my $plot_of = $chado_schema->resultset("Cv::Cvterm")
-    ->create_with({
-		   name   => 'plot_of',
-		   cv     => 'stock relationship',
-		   db     => 'null',
-		   dbxref => 'plot_of',
-		  });
-
-  my $sample_cvterm = $chado_schema->resultset("Cv::Cvterm")
-    ->create_with({
-		   name   => 'tissue_sample',
-		   cv     => 'stock type',
-		   db     => 'null',
-		   dbxref => 'tissue_sample',
-		  });
-
-  my $sample_of = $chado_schema->resultset("Cv::Cvterm")
-    ->create_with({
-		   name   => 'tissue_sample_of',
-		   cv     => 'stock relationship',
-		   db     => 'null',
-		   dbxref => 'tissue_sample_of',
-		  });
+  my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field layout', 'experiment type');
+  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock type');
+  my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock type');
+  my $plot_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock relationship');
+  my $sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock type');
+  my $sample_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock relationship');
+  my $genotyping_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping layout', 'experiment type');
 
   my $project = $chado_schema->resultset('Project::Project')
     ->create({
@@ -197,14 +160,6 @@ sub save_trial {
 		nd_geolocation_id => $geolocation->nd_geolocation_id(),
 		type_id => $field_layout_cvterm->cvterm_id(),
 		});
-
-  my $genotyping_layout_cvterm = $chado_schema->resultset('Cv::Cvterm')
-    ->create_with({
-		   name   => 'genotyping layout',
-		   cv     => 'experiment type',
-		   db     => 'null',
-		   dbxref => 'genotyping layout',
-		  });
 
   my $genotyping_layout_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
       ->create({
@@ -243,9 +198,21 @@ sub save_trial {
 
   $project->create_projectprops( { 'project year' => $self->get_trial_year(),'design' => $self->get_design_type()}, {autocreate=>1});
 
+  my $rs = $chado_schema->resultset('Stock::Stock')->search(
+	{},
+	{
+	 '+select'=> ['me.stock_id', 'me.uniquename', 'me.organism_id'], 
+	 '+as'=> ['stock_id', 'uniquename', 'organism_id']
+	}
+  );
+  my %data;
+  while (my $s = $rs->next()) { 
+     $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('organism_id') ];
+  }
+
   foreach my $key (sort { $a cmp $b} keys %design) {
       
-      print STDERR "Check: ".localtime();
+      print STDERR "Check 01: ".localtime();
 
     my $plot_name = $design{$key}->{plot_name};
     my $plot_number = $design{$key}->{plot_number};
@@ -276,20 +243,23 @@ sub save_trial {
     my $is_a_control = $design{$key}->{is_a_control};
     #my $plot_unique_name = $stock_name."_replicate:".$rep_number."_block:".$block_number."_plot:".$plot_name."_".$self->get_trial_year()."_".$self->get_trial_location;
     my $plot;
-    my $parent_stock;
-    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-    $stock_lookup->set_stock_name($stock_name);
-    $parent_stock = $stock_lookup->get_stock();
-    if (!$parent_stock) {
+    #my $parent_stock;
+    #my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+    #$stock_lookup->set_stock_name($stock_name);
+    #$parent_stock = $stock_lookup->get_stock();
+
+    #parent_stock->organism_id(), parent_stock->stock_id(), 
+
+    if (!$data{$stock_name}) {
       die ("Error while saving trial layout: no stocks found matching $stock_name");
     }
 
-      print STDERR "Check: ".localtime();
+      print STDERR "Check 02: ".localtime();
 
     #create the plot
     $plot = $chado_schema->resultset("Stock::Stock")
       ->find_or_create({
-			organism_id => $parent_stock->organism_id(),
+			organism_id => $data{$stock_name}[1],
 			name       => $plot_name,
 			uniquename => $plot_name,
 			type_id => $plot_cvterm->cvterm_id,
@@ -323,24 +293,23 @@ sub save_trial {
 	$plot->create_stockprops({'well' => $well}, {autocreate => 1});
     }
 
-      print STDERR "Check: ".localtime();
+      print STDERR "Check 03: ".localtime();
 
 
     #create the stock_relationship with the accession
-    $parent_stock
-      ->find_or_create_related('stock_relationship_objects',{
+    my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->find_or_create({  object_id => $data{$stock_name}[0],
 							     type_id => $plot_of->cvterm_id(),
 							     subject_id => $plot->stock_id(),
 							    } );
 
     #link the experiment to the stock
     $field_layout_experiment
-      ->find_or_create_related('nd_experiment_stocks' , {
+      ->create_related('nd_experiment_stocks' , {
 							 type_id => $field_layout_cvterm->cvterm_id(),
 							 stock_id => $plot->stock_id(),
 							});
 
-      print STDERR "Check: ".localtime();
+      print STDERR "Check 04: ".localtime();
   }
 
     print STDERR "Check 4.8: ".localtime();

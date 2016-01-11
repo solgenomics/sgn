@@ -26,8 +26,6 @@ use File::Spec::Functions;
 use File::Copy;
 use List::MoreUtils qw /any /;
 use SGN::View::ArrayElements qw/array_elements_simple_view/;
-use CXGN::Login;
-use CXGN::People::Login;
 use CXGN::Stock::StockTemplate;
 use JSON -support_by_pp;
 
@@ -96,8 +94,7 @@ sub upload_phenotype_verify_POST : Args(0) {
     ## Set metadata
     $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
     $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
-    my $person_id=CXGN::Login->new($c->dbc->dbh)->has_session();
-    my $operator=CXGN::People::Login->new($c->dbc->dbh, $person_id)->get_username();
+    my $operator = $c->user()->get_object()->get_username();
     $phenotype_metadata{'operator'}="$operator"; 
     $phenotype_metadata{'date'}="$timestamp";
     push @success_status, "File metadata set.";
@@ -192,8 +189,7 @@ print STDERR "Check1: ".localtime();
     ## Set metadata
     $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
     $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
-    my $person_id=CXGN::Login->new($c->dbc->dbh)->has_session();
-    my $operator=CXGN::People::Login->new($c->dbc->dbh, $person_id)->get_username();
+    my $operator = $c->user()->get_object()->get_username();
     $phenotype_metadata{'operator'}="$operator"; 
     $phenotype_metadata{'date'}="$timestamp";
     push @success_status, "File metadata set.";
