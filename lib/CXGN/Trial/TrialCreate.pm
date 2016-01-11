@@ -198,17 +198,30 @@ sub save_trial {
 
   $project->create_projectprops( { 'project year' => $self->get_trial_year(),'design' => $self->get_design_type()}, {autocreate=>1});
 
+  # instead of 
   my $rs = $chado_schema->resultset('Stock::Stock')->search(
-	{},
-	{
-	 '+select'=> ['me.stock_id', 'me.uniquename', 'me.organism_id'], 
-	 '+as'=> ['stock_id', 'uniquename', 'organism_id']
+	{ 'me.is_obsolete' => { '!=' => 't' } },
+        { join => [ 'stock_relationship_objects', 'nd_experiment_stocks' ],
+	 '+select'=> ['me.stock_id', 'me.uniquename', 'me.organism_id', 'stock_relationship_objects.type_id', 'stock_relationship_objects.subject_id', 'nd_experiment_stocks.nd_experiment_id', 'nd_experiment_stocks.type_id'], 
+	 '+as'=> ['stock_id', 'uniquename', 'organism_id', 'stock_relationship_type_id', 'stock_relationship_subject_id', 'stock_experiment_id', 'stock_experiment_type_id']
 	}
   );
-  my %data;
+
+  my %stock_data;
+  my %stock_relationship_data;
+  my %stock_experiment_data;
   while (my $s = $rs->next()) { 
-     $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('organism_id') ];
+     $stock_data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('organism_id') ];
+     if ($s->get_column('stock_relationship_type_id') && $s->get_column('stock_relationship_subject_id') ) {
+	 $stock_relationship_data{$s->get_column('stock_id'), $s->get_column('stock_relationship_type_id'), $s->get_column('stock_relationship_subject_id') } = 1;
+     }
+     if ($s->get_column('stock_experiment_id') && $s->get_column('stock_experiment_type_id') ) {
+	 $stock_experiment_data{$s->get_column('stock_id'), $s->get_column('stock_experiment_id'), $s->get_column('stock_experiment_type_id')} = 1;
+     }
   }
+  
+    my $stock_id_checked;
+    my $organism_id_checked;
 
   foreach my $key (sort { $a cmp $b} keys %design) {
       
@@ -241,17 +254,24 @@ sub save_trial {
     }
 
     my $is_a_control = $design{$key}->{is_a_control};
-    #my $plot_unique_name = $stock_name."_replicate:".$rep_number."_block:".$block_number."_plot:".$plot_name."_".$self->get_trial_year()."_".$self->get_trial_location;
     my $plot;
-    #my $parent_stock;
-    #my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-    #$stock_lookup->set_stock_name($stock_name);
-    #$parent_stock = $stock_lookup->get_stock();
 
-    #parent_stock->organism_id(), parent_stock->stock_id(), 
+    #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database. 
+    if ($stock_data{$stock_name}) {
+	$stock_id_checked = $stock_data{$stock_name}[0];
+	$organism_id_checked = $stock_data{$stock_name}[1];
+    } else {
+	my $parent_stock;
+	my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+	$stock_lookup->set_stock_name($stock_name);
+	$parent_stock = $stock_lookup->get_stock();
 
-    if (!$data{$stock_name}) {
-      die ("Error while saving trial layout: no stocks found matching $stock_name");
+	if (!$parent_stock) {
+	    die ("Error while saving trial layout: no stocks found matching $stock_name");
+	}
+
+	$stock_id_checked = $parent_stock->stock_id();
+	$organism_id_checked = $parent_stock->organism_id();
     }
 
       print STDERR "Check 02: ".localtime();
@@ -259,7 +279,7 @@ sub save_trial {
     #create the plot
     $plot = $chado_schema->resultset("Stock::Stock")
       ->find_or_create({
-			organism_id => $data{$stock_name}[1],
+			organism_id => $organism_id_checked,
 			name       => $plot_name,
 			uniquename => $plot_name,
 			type_id => $plot_cvterm->cvterm_id,
@@ -290,24 +310,29 @@ sub save_trial {
     }
 
     if ($plate) {
-	$plot->create_stockprops({'well' => $well}, {autocreate => 1});
+	$plot->create_stockprops({'plate' => $plate}, {autocreate => 1});
     }
 
       print STDERR "Check 03: ".localtime();
 
 
-    #create the stock_relationship with the accession
-    my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->find_or_create({  object_id => $data{$stock_name}[0],
-							     type_id => $plot_of->cvterm_id(),
-							     subject_id => $plot->stock_id(),
-							    } );
+    #create the stock_relationship of the accession with the plot, if it does not exist already
+    if (!$stock_relationship_data{$stock_id_checked, $plot_of->cvterm_id(), $plot->stock_id()} ) {
+	my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({  
+	    object_id => $stock_id_checked,
+	    type_id => $plot_of->cvterm_id(),
+	    subject_id => $plot->stock_id()
+	});
+    }
 
-    #link the experiment to the stock
-    $field_layout_experiment
-      ->create_related('nd_experiment_stocks' , {
-							 type_id => $field_layout_cvterm->cvterm_id(),
-							 stock_id => $plot->stock_id(),
-							});
+    #link the experiment to the plot, if it is not already
+    if (!$stock_experiment_data{$plot->stock_id(), $field_layout_experiment->nd_experiment_id(), $field_layout_cvterm->cvterm_id()} ) {
+	my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({ 
+	    nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
+	    type_id => $field_layout_cvterm->cvterm_id(),
+	    stock_id => $plot->stock_id(),
+        });
+    }
 
       print STDERR "Check 04: ".localtime();
   }
