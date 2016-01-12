@@ -81,10 +81,4 @@ jQuery(document).ready(function ($) {
         $('#create_trait_file_dialog').dialog("open");
     });
 
-    $('#upload_tablet_phenotype_file_link').click(function () {
-        $('#upload_fieldbook_phenotypes_dialog').modal("show");
-        //$( this ).dialog( "close" );
-	//location.reload();
-    });
-
 });

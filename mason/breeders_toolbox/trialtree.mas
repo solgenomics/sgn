@@ -32,6 +32,8 @@ $breeding_programs
   </tr>
   </tbody>
 </table>
+
+
 <script>
 
   jQuery.noConflict(); 
@@ -114,6 +116,7 @@ $breeding_programs
     }); 
   });
 </script>
+
 
 <div class="modal fade" id="add_project_dialog" name="add_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addProjectDialog">
   <div class="modal-dialog modal-lg" role="document">
@@ -387,26 +390,13 @@ $breeding_programs
   </div>
 </div>
 
-<!--
-<div id="trial_design_view_layout" title="Trial design layout">
-  <p><span class="ui-icon ui-icon-info"></span>Trial layout</p>
-</div>
--->
-
-<!--
-<div id="trial_saving_dialog" title="Saving">
-  <p>
-    Saving trial<br>
-    <span style="float: center;"><img src="/img/wheel.gif"/></span>
-  </p>
-</div>
--->
 
 <style>
 #progressbar .ui-progressbar-value {
 background-color: #ccc;
 }
 </style>
+
 
 <div class="modal fade" id="trial_saved_dialog_message" name="trial_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addTrialSavedDialog">
   <div class="modal-dialog modal-lg" role="document">

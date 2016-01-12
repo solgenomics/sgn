@@ -11,7 +11,7 @@ $locations => undef
 
 <button class="btn btn-info" onclick=location.href="/search/stocks">Phenotype Search</button><br /><br />
 
-  <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>  
+<& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>  
 
 
 <&| /page/info_section.mas, title=>'Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link" >Upload Phenotypes</a>]' &>
