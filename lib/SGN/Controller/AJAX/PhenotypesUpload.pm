@@ -39,26 +39,27 @@ __PACKAGE__->config(
 
 
 sub upload_phenotype_verify :  Path('/ajax/phenotype/upload_verify') : ActionClass('REST') { }
-sub upload_phenotype_verify_POST : Args(0) {
+sub upload_phenotype_verify_POST : Args(1) {
     print STDERR "Check1: ".localtime();
-    my ($self, $c) = @_;
+    my ($self, $c, $file_type) = @_;
     my $uploader = CXGN::UploadFile->new();
     my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-    my $upload = $c->req->upload('upload_phenotype_file_input');
+    my $upload;
 
     my $subdirectory;
     my $validate_type;
-    my $file_type = $c->req->param('upload_phenotype_file_type');
     if ($file_type eq "spreadsheet") {
 	print STDERR "Spreadsheet \n";
 	$subdirectory = "spreadsheet_phenotype_upload";
 	$validate_type = "phenotype spreadsheet";
+	$upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
     } 
     elsif ($file_type eq "fieldbook") {
 	print STDERR "Fieldbook \n";
 	$subdirectory = "tablet_phenotype_upload";
 	$validate_type = "field book";
+	$upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
     }
 
     my $upload_original_name = $upload->filename();
@@ -138,25 +139,25 @@ sub upload_phenotype_verify_POST : Args(0) {
 }
 
 sub upload_phenotype_store :  Path('/ajax/phenotype/upload_store') : ActionClass('REST') { }
-sub upload_phenotype_store_POST : Args(0) {
-print STDERR "Check1: ".localtime();
-    my ($self, $c) = @_;
+sub upload_phenotype_store_POST : Args(1) {
+    print STDERR "Check1: ".localtime();
+    my ($self, $c, $file_type) = @_;
     my $uploader = CXGN::UploadFile->new();
     my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-
+    my $upload;
     my $subdirectory;
     my $validate_type;
-    my $file_type = $c->req->param('upload_phenotype_file_type');
     if ($file_type eq "spreadsheet") {
 	$subdirectory = "spreadsheet_phenotype_upload";
 	$validate_type = "phenotype spreadsheet";
+	$upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
     } 
     elsif ($file_type eq "fieldbook") {
 	$subdirectory = "tablet_phenotype_upload";
 	$validate_type = "field book";
+	$upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
     }
-    my $upload = $c->req->upload('upload_phenotype_file_input');
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
     my %phenotype_metadata;

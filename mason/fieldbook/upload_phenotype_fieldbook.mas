@@ -1,7 +1,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'SGN.PhenotypeUpload' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadPhenotypeFieldbook' ] &>
 
 <div class="modal fade" id="upload_fieldbook_phenotypes_dialog" name="upload_fieldbook_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="addFieldbookPhenotypeDialog">
   <div class="modal-dialog" role="document">
@@ -12,22 +12,21 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_phenotype_file_form" name="upload_phenotype_file_form">
+	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_fieldbook_phenotype_file_form" name="upload_fieldbook_phenotype_file_form">
 	    <div class="form-group">
       	      <label class="col-sm-3 control-label">Fieldbook File: </label>
       	      <div class="col-sm-9" >
-	        <input type="hidden" name="upload_phenotype_file_type" id="upload_phenotype_file_type" value="fieldbook" />
-	        <input type="file" name="upload_phenotype_file_input" id="upload_phenotype_file_input" encoding="multipart/form-data" />
+	        <input type="file" id="upload_fieldbook_phenotype_file_input" name="upload_fieldbook_phenotype_file_input" encoding="multipart/form-data" />
               </div>
 	    </div>
 	  </form><br/>
-	  <div id="upload_phenotype_spreadsheet_verify_status"></div>
+	  <div id="upload_phenotype_fieldbook_verify_status"></div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-info" name="upload_phenotype_submit_verify" id="upload_phenotype_submit_verify">Verify</button>
-	<button disabled type="button" class="btn btn-primary" name="upload_phenotype_submit_store" id="upload_phenotype_submit_store" title="First Verify Your File">Store</button>
+        <button type="button" class="btn btn-info" name="upload_fieldbook_phenotype_submit_verify" id="upload_fieldbook_phenotype_submit_verify">Verify</button>
+	<button disabled type="button" class="btn btn-primary" name="upload_fieldbook_phenotype_submit_store" id="upload_fieldbook_phenotype_submit_store" title="First Verify Your File">Store</button>
       </div>
     </div>
   </div>

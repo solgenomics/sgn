@@ -29,6 +29,7 @@ use CXGN::Location::LocationLookup;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::People::Person;
 use CXGN::Trial;
+use SGN::Model::Cvterm;
 
 has 'chado_schema' => (
 		 is       => 'rw',

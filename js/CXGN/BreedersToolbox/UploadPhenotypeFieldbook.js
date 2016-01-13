@@ -1,23 +1,23 @@
 
 jQuery( document ).ready( function() {
-    jQuery('#upload_phenotype_submit_verify').click( function() {
-	var uploadFile = jQuery("#upload_phenotype_file_input").val();
+    jQuery('#upload_fieldbook_phenotype_submit_verify').click( function() {
+	var uploadFile = jQuery("#upload_fieldbook_phenotype_file_input").val();
 	if (uploadFile === '') {
 	    alert("Please select a file");
 	} else {
 	    jQuery('#working_msg').html("Verifying Phenotype Spreadsheet and Data");
 	    jQuery('#working_modal').modal("show");
-	    jQuery('#upload_phenotype_file_form').attr("action", "/ajax/phenotype/upload_verify");
-            jQuery('#upload_phenotype_file_form').submit();
+	    jQuery('#upload_fieldbook_phenotype_file_form').attr("action", "/ajax/phenotype/upload_verify/fieldbook");
+            jQuery('#upload_fieldbook_phenotype_file_form').submit();
 	}
     });
 
-    jQuery('#upload_phenotype_file_form').iframePostForm({
+    jQuery('#upload_fieldbook_phenotype_file_form').iframePostForm({
 	json: true,
 	post: function () { },
 	complete: function (response) {
 	    jQuery('#working_modal').modal("hide");
-	    jQuery("#upload_phenotype_submit_verify").attr('disabled', true);
+	    jQuery("#upload_fieldbook_phenotype_submit_verify").attr('disabled', true);
 	    var message_text = "<hr><ul class='list-group'>";
 	    if (response.success) {
 		var arrayLength = response.success.length;
@@ -27,7 +27,7 @@ jQuery( document ).ready( function() {
     		    message_text += response.success[i];
 		    message_text += "</li>";
     	 	}
-		jQuery("#upload_phenotype_submit_store").attr('disabled', false);
+		jQuery("#upload_fieldbook_phenotype_submit_store").attr('disabled', false);
             }
             if (response.error) {
                 var errorarrayLength = response.error.length;
@@ -38,7 +38,7 @@ jQuery( document ).ready( function() {
 		    message_text += "</li>";
     	 	}
 		if (errorarrayLength > 0) {
-		   jQuery("#upload_phenotype_submit_store").attr('disabled', true);
+		   jQuery("#upload_fieldbook_phenotype_submit_store").attr('disabled', true);
 		}
             }
 	    if (response.warning) {
@@ -57,28 +57,28 @@ jQuery( document ).ready( function() {
 		}
 	    }
 	    message_text += "</ul>";
-	    jQuery("#upload_phenotype_spreadsheet_verify_status").html(message_text);
+	    jQuery("#upload_phenotype_fieldbook_verify_status").html(message_text);
 
 	    
-	    jQuery('#upload_phenotype_submit_store').click( function() {
-	        var uploadFile = jQuery("#upload_phenotype_file_input").val();
+	    jQuery('#upload_fieldbook_phenotype_submit_store').click( function() {
+	        var uploadFile = jQuery("#upload_fieldbook_phenotype_file_input").val();
 		if (uploadFile === '') {
 	    	    alert("Please select a file");
 		} else {
 	    	    jQuery('#working_msg').html("Storing Phenotype Spreadsheet Data");
 	    	    jQuery('#working_modal').modal("show");
-	    	    jQuery('#upload_phenotype_file_form').attr("action", "/ajax/phenotype/upload_store");
-            	    jQuery('#upload_phenotype_file_form').submit();
+	    	    jQuery('#upload_fieldbook_phenotype_file_form').attr("action", "/ajax/phenotype/upload_store/fieldbook");
+            	    jQuery('#upload_fieldbook_phenotype_file_form').submit();
 		}
             });
 
-    	    jQuery('#upload_phenotype_file_form').iframePostForm({
+    	    jQuery('#upload_fieldbook_phenotype_file_form').iframePostForm({
 		json: true,
 		post: function () { },
 	    	complete: function (response) {
 	    	    jQuery('#working_modal').modal("hide");
-		    jQuery("#upload_phenotype_spreadsheet_verify_status").empty();
-		    jQuery("#upload_phenotype_submit_store").attr('disabled', true);
+		    jQuery("#upload_phenotype_fieldbook_verify_status").empty();
+		    jQuery("#upload_fieldbook_phenotype_submit_store").attr('disabled', true);
 	    	    var message_text = "<hr><ul class='list-group'>";
 	    	    if (response.success) {
 		        var arrayLength = response.success.length;
@@ -99,7 +99,7 @@ jQuery( document ).ready( function() {
     	 		}
             	    }
 	    	    message_text += "</ul><hr><h3>Upload Successfull!</h3>";
-	    	    jQuery("#upload_phenotype_spreadsheet_verify_status").html(message_text);
+	    	    jQuery("#upload_phenotype_fieldbook_verify_status").html(message_text);
 		},
     	    });
 	}
