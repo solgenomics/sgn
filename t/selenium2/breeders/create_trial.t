@@ -37,7 +37,7 @@ $t->while_logged_in_as(
 	$t->find_element_ok('rep_count', 'id', "find replicate count input box")->send_keys("3");
 
 	$t->find_element_ok('new_trial_submit', 'id', "find Add button")->click();
-	sleep(15);
+	sleep(20);
 
 	$t->find_element_ok('new_trial_confirm_submit', 'id', "find trial design confirm button")->click();
 	

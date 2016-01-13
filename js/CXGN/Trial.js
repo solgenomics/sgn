@@ -1036,63 +1036,6 @@ jQuery(document).ready(function ($) {
     }
 
 
-   $('#upload_data_collector_link').click(function () {
-        	$('#upload_DataCollector_spreadsheet_dialog').dialog("open");
-	
-    });
-
-	$( "#upload_DataCollector_spreadsheet_dialog" ).dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 150],
-	buttons: {
-	    "Cancel": function () {
-                jQuery('#upload_DataCollector_spreadsheet_dialog').dialog("close");
-            },
-	    "Ok": {text: "Ok", id:"upload_DataCollector_ok_button", click:function() {
-                upload_DataCollector_spreadsheet_file();
-		$( this ).dialog( "close" );
-	      }		
-	    }
-	}
-    });
-
-   function upload_DataCollector_spreadsheet_file() {
-	jQuery('#working_modal').modal("show");
-        var uploadFile = $("#DataCollector_upload_file").val();
-        $('#upload_DataCollector_form').attr("action", "/ajax/datacollector/upload_dc_sheet");
-        if (uploadFile === '') {
-	    alert("Please select a file");
-	    return;
-        }
-        $("#upload_DataCollector_form").submit();
-    }
-
-   $('#upload_DataCollector_form').iframePostForm({
-	json: true,
-	post: function () {
-	    var uploadFile = $("#DataCollector_upload_file").val();
-		//alert("UPLOADED FILE: "+uploadFile);
-	    if (uploadFile === '') {
-		alert("No file selected");
-	    }
-	},
-	complete: function (response) {
-	    if (response.error) {
-		alert(response.error);
-		return;
-	    }
-	    if (response.success) {
-		jQuery('#working_modal').modal("hide");
-		alert("File uploaded successfully");
-		$( this ).dialog( "close" );
-		location.reload();
-	    }
-	}
-    });
-
 });
 
 

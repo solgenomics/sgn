@@ -47,42 +47,32 @@ sleep(1);
 
 $d->find_element_ok("close_list_dialog_button", "id", "find close dialog button")->click();
 
-$d->logout_ok();
 
-
-my $t = SGN::Test::WWW::WebDriver->new();
-
-$t->while_logged_in_as(
-    "submitter", 
-
-
- sub { 
-	$t->get_ok('/breeders/trial/137');
+	$d->get_ok('/breeders/trial/137');
 	
-	sleep(2);
+	sleep(3);
 
-	my $create_spreadsheet_link = $t->find_element_ok('create_spreadsheet_link', 'id', "find create spreadsheet link");
+	my $create_spreadsheet_link = $d->find_element_ok('create_spreadsheet_link', 'id', "find create spreadsheet link");
 
 	$create_spreadsheet_link->click();
 
-	sleep(10);
+	sleep(5);
 
-#	my $trait_list_list_select = $t->find_element_ok("trait_list_list_select", "id", "find list select select box");
+#	my $trait_list_list_select = $d->find_element_ok("trait_list_list_select", "id", "find list select select box");
 
 #	$trait_list_list_select->send_keys("new_test_list");
 
-	$t->find_element_ok('trait_list_list_select', 'id', "find list select select box")->send_keys('new_test_list');
+	$d->find_element_ok('trait_list_list_select', 'id', "find list select select box")->send_keys('new_test_list');
 
-	my $button = $t->find_element_ok('create_phenotyping_ok_button', 'id', "create");
+	my $button = $d->find_element_ok('create_phenotyping_ok_button', 'id', "create");
 
 	$button->click();
 
 	sleep(10);
 
 	
-    });
     
-	
+$d->logout_ok();
 
 done_testing();
 

@@ -12,6 +12,7 @@ Uploading Phenotype Spreadsheets
 
 Jeremy Edwards <jde22@cornell.edu>
 Naama Menda <nm249@cornell.edu>
+Alex Ogbonna <aco46@cornell.edu>
 Nicolas Morales <nm529@cornell.edu>
 
 =cut
@@ -24,10 +25,6 @@ use DateTime;
 use File::Slurp;
 use File::Spec::Functions;
 use File::Copy;
-use List::MoreUtils qw /any /;
-use SGN::View::ArrayElements qw/array_elements_simple_view/;
-use CXGN::Stock::StockTemplate;
-use JSON -support_by_pp;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -49,17 +46,27 @@ sub upload_phenotype_verify_POST : Args(1) {
 
     my $subdirectory;
     my $validate_type;
+    my $metadata_file_type;
     if ($file_type eq "spreadsheet") {
 	print STDERR "Spreadsheet \n";
 	$subdirectory = "spreadsheet_phenotype_upload";
 	$validate_type = "phenotype spreadsheet";
+	$metadata_file_type = "spreadsheet phenotype file";
 	$upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
     } 
     elsif ($file_type eq "fieldbook") {
 	print STDERR "Fieldbook \n";
 	$subdirectory = "tablet_phenotype_upload";
 	$validate_type = "field book";
+	$metadata_file_type = "tablet phenotype file";
 	$upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
+    }
+    elsif ($file_type eq "datacollector") {
+	print STDERR "Datacollector \n";
+	$subdirectory = "data_collector_phenotype_upload";
+	$validate_type = "datacollector spreadsheet";
+	$metadata_file_type = "data collector phenotype file";
+	$upload = $c->req->upload('upload_datacollector_phenotype_file_input');
     }
 
     my $upload_original_name = $upload->filename();
@@ -94,7 +101,7 @@ sub upload_phenotype_verify_POST : Args(1) {
 
     ## Set metadata
     $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
-    $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+    $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
     my $operator = $c->user()->get_object()->get_username();
     $phenotype_metadata{'operator'}="$operator"; 
     $phenotype_metadata{'date'}="$timestamp";
@@ -148,15 +155,27 @@ sub upload_phenotype_store_POST : Args(1) {
     my $upload;
     my $subdirectory;
     my $validate_type;
+    my $metadata_file_type;
     if ($file_type eq "spreadsheet") {
+	print STDERR "Spreadsheet \n";
 	$subdirectory = "spreadsheet_phenotype_upload";
 	$validate_type = "phenotype spreadsheet";
+	$metadata_file_type = "spreadsheet phenotype file";
 	$upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
     } 
     elsif ($file_type eq "fieldbook") {
+	print STDERR "Fieldbook \n";
 	$subdirectory = "tablet_phenotype_upload";
 	$validate_type = "field book";
+	$metadata_file_type = "tablet phenotype file";
 	$upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
+    }
+    elsif ($file_type eq "datacollector") {
+	print STDERR "Datacollector \n";
+	$subdirectory = "data_collector_phenotype_upload";
+	$validate_type = "datacollector spreadsheet";
+	$metadata_file_type = "data collector phenotype file";
+	$upload = $c->req->upload('upload_datacollector_phenotype_file_input');
     }
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -189,7 +208,7 @@ sub upload_phenotype_store_POST : Args(1) {
 
     ## Set metadata
     $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
-    $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+    $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
     my $operator = $c->user()->get_object()->get_username();
     $phenotype_metadata{'operator'}="$operator"; 
     $phenotype_metadata{'date'}="$timestamp";
