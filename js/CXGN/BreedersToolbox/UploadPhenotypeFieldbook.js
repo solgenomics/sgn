@@ -97,8 +97,13 @@ jQuery( document ).ready( function() {
     		    	    message_text += response.error[i];
 		   	    message_text += "</li>";
     	 		}
-            	    }
-	    	    message_text += "</ul><hr><h3>Upload Successfull!</h3>";
+			if (errorarrayLength == 0) {
+			    message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+			}
+            	    } else {
+			message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+		    }
+	    	    message_text += "</ul>";
 	    	    jQuery("#upload_phenotype_fieldbook_verify_status").html(message_text);
 		},
     	    });
