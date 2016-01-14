@@ -15,7 +15,7 @@ $locations => undef
 
 
 <&| /page/info_section.mas, title=>'Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link" >Upload Phenotypes</a>]' &>
-  
+  <br/>
   <& /breeders_toolbox/file_list.mas, files=>$phenotype_files &>  
 
 </&>
