@@ -54,14 +54,21 @@ foreach my $file (@file_metadata) {
 
 <&| /page/info_section.mas, title=>'Uploaded Phenotype Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]' &>
   <%perl>
-  foreach my $phenotype_ref (@phenotype_files) {
-    my @phenotype_array = @{$phenotype_ref};
-    my $phenotype_file_name = $phenotype_array[0];
-    #my $phenotype_file_download = '[<a href="/fieldbook/trait_file_download/'.$trait_array[1].'">Download</a>]';
-    #print $phenotype_array[0]."$trait_file_download<br>";
-    print qq { $phenotype_array[0]  <a href="javascript:remove_phenotype_data($phenotype_array[1])"><b>X</b></a></br> };
+  if (scalar(@phenotype_files)>0) {
+    print qq { <br/><div class="well well-sm"><table class="table fieldbook_phenotype_datatables"><thead><tr><th>Filename</th><th>Delete</th></tr></thead><tbody> };
+       
+    foreach my $phenotype_ref (@phenotype_files) {
+      my @phenotype_array = @{$phenotype_ref};
+      my $phenotype_file_name = $phenotype_array[0];
+      #my $phenotype_file_download = '[<a href="/fieldbook/trait_file_download/'.$trait_array[1].'">Download</a>]';
+      #print $phenotype_array[0]."$trait_file_download<br>";
+      print qq { <tr><td>$phenotype_array[0]</td><td><a href="javascript:remove_phenotype_data($phenotype_array[1])"><b>X</b></a></td></tr> };
+    }
+    
+    print qq { </tbody></table></div> }; 
   }
   </%perl>
+
 </&>
 
 <& /fieldbook/upload_phenotype_fieldbook.mas &>  
@@ -96,6 +103,10 @@ foreach my $file (@file_metadata) {
 
 
 <script>
+
+jQuery(document).ready(function() {
+    jQuery('.fieldbook_phenotype_datatables').DataTable();
+} );
 
   function remove_phenotype_data(file_id) { 
     var yes = confirm("Do you really want to remove all data associated with this file (id="+file_id+")");

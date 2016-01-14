@@ -590,7 +590,6 @@ sub get_phenotyping_data : Private {
 	
 	if (!$md_row->obsolete) { 
 	    while (my $file_row = $file_rs->next()) {
-		print STDERR $file_row->md5checksum;
 		push @$file_info, { file_id => $file_row->file_id(),            
 				    basename => $file_row->basename,
 				    dirname  => $file_row->dirname,
