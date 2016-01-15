@@ -28,7 +28,7 @@ $gs_traits_index
 
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTrials", "solGS.ajaxAutocomplete"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTrials", "jquery.dataTables", "solGS.ajaxAutocomplete"] &>
 
 <p>&nbsp</p>
 
@@ -63,6 +63,36 @@ $gs_traits_index
     collapsed   => 1,
     title       => "Select a training population or create a new one using one or more trials",
   &>
+
+
+  <div  class="form-inline">
+    <input  type="text" class="form-control" placeholder="search for a trial or training population" size="50" id="population_search_entry"/>   
+    <button type="submit" class="btn btn-primary" id="search_training_pop">
+      <span class="glyphicon glyphicon-search"></span>
+    </button>
+
+    <button id="search_all_training_pops" style="position:absolute;right:100px;" class="btn btn-success" type="submit"> 
+      <span value="Search for all training populations">Search for all training populations</span> 
+    </button>
+  </div>
+
+  <div id="training_pops_message"  style="padding:20px 0px 10px 0px;font-weight:bold;text-align:center;color:#A7C942"></div>
+
+  <div id="training_populations" style="display:none;">
+    <table class="table" id="training_pops_list" style="text-align:left;"> 
+      <thead>
+	<tr>
+	  <th>Trial/training population</th>
+	  <th>Description</th>
+	  <th>Year</th>
+	  <th>Predict GEBVs</th>
+	</tr>
+      </thead>
+  </table>
+  </div>
+
+  <br />
+
 
 
 <& /solgs/population/project_details_form.mas &>
