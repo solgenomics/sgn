@@ -1048,7 +1048,7 @@ sub get_folder {
 
     my $f = CXGN::Trial::Folder->new( { bcs_schema => $self->bcs_schema(), folder_id => $self->get_trial_id() });
     
-    my $parent_folder_data = $f->get_parent();
+    my $parent_folder_data = $f->parent();
 
     if ($parent_folder_data) { 
 	return $parent_folder_data;

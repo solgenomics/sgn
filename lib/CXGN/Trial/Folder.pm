@@ -96,11 +96,8 @@ sub BUILD {
 
     my $folder_type = $self->bcs_schema()->resultset('Project::Projectprop')->find( { project_id => $self->folder_id(), type_id => { '-in' => [ $folder_cvterm_id, $self->breeding_program_trial_relationship_id ] } } );
     if ($folder_type) { 
-	print STDERR "SETTING FOLDER TYPE TO = ".$folder_type->type_id()."\n";
 	$self->is_folder(1);
     }
-
-
 
     my $breeding_program_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( { subject_project_id => $self->folder_id(), type_id =>  $self->breeding_program_trial_relationship_id() });
 
@@ -212,8 +209,8 @@ sub _get_breeding_program_trial_relationship_id {
 sub _get_parent { 
     my $self = shift;
 
-#    my $parent_rs = $self->project()->project_relationship_object_projects();
-    my $parent_rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_object_projects', { subject_project_id => $self->folder_id() }, { order_by => 'me.name' });
+    
+    my $parent_rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_object_projects', { subject_project_id => $self->folder_id(), type_id => $self->folder_type_id() }, { order_by => 'me.name' });
     
 
 
@@ -221,9 +218,19 @@ sub _get_parent {
 	print STDERR "A folder can only have one parent... ignoring some parents.\n";
     }
     
+    
+
     if ($parent_rs->count() == 0) { 
-	print STDERR "Folder ".$self->name()." has no parent folder.\n";
-	return undef;
+	# the parent is the breeding program
+	my $breeding_program_rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_object_projects', { subject_project_id => $self->folder_id(), type_id => $self->breeding_program_relationship_id() }, { order_by => 'me.name' });
+
+	if ($breeding_program_rs->count() == 0) { 
+	    print STDERR "Folder ".$self->name()." has no parent folder.\n";
+	    return undef;
+	}
+	else { 
+	    $parent_rs = $breeding_program_rs;
+	}
     }
 
     my $p_row = $parent_rs->first();
@@ -257,7 +264,7 @@ sub associate_parent {
 
     my $folder_type_id = $self->folder_type_id();
     
-    my $breeding_program_type_id = $self->breeding_program_trial_relationship_id( { bcs_schema => $self->bcs_schema() });
+    my $breeding_program_type_id = $self->breeding_program_trial_relationship_id();
 
     my $parent_row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $parent_id } );
 
@@ -266,7 +273,7 @@ sub associate_parent {
 	return;
     }
     
-    my $parentprop_row = $self->bcs_schema()->resultset("Project::Projectprop")->find( { project_id => $parent_id, type_id => { '-in' => [ $folder_type_id, $breeding_program_type_id ] } } );
+    my $parentprop_row = $self->bcs_schema()->resultset("Project::Projectprop")->find( { project_id => $parent_id,  type_id => { -in => [ $folder_type_id, $breeding_program_type_id ] } } );
 
     if (!$parentprop_row) { 
 	print STDERR "The specified parent folder is not of type folder or breeding program. Ignoring.";
@@ -276,7 +283,7 @@ sub associate_parent {
     my $project_rels = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search( 
 	{ object_project_id => $parent_id, 
 	  subject_project_id => $self->folder_id(),
-	  type_id => { -in => [ $folder_type_id, $breeding_program_type_id ] }
+	  type_id => $folder_type_id
 	});
 
     if ($project_rels->count() > 0) {

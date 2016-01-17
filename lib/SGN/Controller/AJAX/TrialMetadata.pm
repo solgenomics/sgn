@@ -412,9 +412,9 @@ sub get_trial_folder :Chained('trial') PathPart('folder') Args(0) {
     }
     
     my ($parent_folder_id, $parent_folder_name);
-    ($parent_folder_id, $parent_folder_name) = @{$c->stash->{trial}->get_folder()};
+    my $folder = $c->stash->{trial}->get_folder();
 
-    $c->stash->{rest} = { folder => [ $parent_folder_id, $parent_folder_name ] };
+    $c->stash->{rest} = { folder => [ $folder->folder_id(), $folder->name() ] };
     
 }
 

@@ -625,10 +625,12 @@ function trial_detail_page_setup_dialogs() {
     jQuery('#new_folder_dialog_link').click( function() { 
 	jQuery('#new_folder_dialog').dialog("open");
 	get_select_box('folders', 'new_folder_parent_folder_select_div', 'new_folder_parent_folder_id');
+	get_select_box('breeding_programs', 'new_folder_breeding_program_select_div');
     });
 
     jQuery('#new_folder_dialog').dialog( { 
 	autoOpen: false,
+	title: 'Create new folder',
 	buttons: { 
 	    cancel: { text: "Cancel",
 		      click: function() { jQuery( this ).dialog("close"); },
@@ -638,7 +640,7 @@ function trial_detail_page_setup_dialogs() {
 		      id: "new_folder_dialog_save_button",
 		      click: function() { 
 			  new_trial_folder();
-			  
+			  jQuery( this ).dialog("close");
 		      }
 		    }
 	}

@@ -208,9 +208,10 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </div>
   
 <div id="new_folder_dialog">
-  Create a new folder<br />
+  Folder name: 
   <input name="new_folder_name" id="new_folder_name" /><br />
   Parent folder <span id="new_folder_parent_folder_select_div"></span>
+  Breeding program <span id="new_folder_breeding_program_select_div"></span>
 </div>
 
 <&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
