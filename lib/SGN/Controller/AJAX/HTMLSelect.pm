@@ -108,6 +108,10 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
 	    breeding_program_id => $breeding_program_id
 	});
 
+    if ($empty) { 
+	unshift @folders, [ "", "none" ];
+    }
+    
     my $html = simple_selectbox_html(
 	name => $name,
 	id => $id,

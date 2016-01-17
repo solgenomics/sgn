@@ -1,9 +1,10 @@
 
-function get_select_box(type, div_id, name) { 
-    
+function get_select_box(type, div_id, options) { 
+
+    alert(JSON.stringify(options));
     jQuery.ajax( { 
 	url: '/ajax/html/select/'+type,
-	data: { 'name' : name },
+	data: options ,
 	success: function(response) { 
 	    jQuery('#'+div_id).html(response.select);
 	},

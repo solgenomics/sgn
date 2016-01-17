@@ -413,12 +413,12 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#change_year_link').click( function() { 
 	jQuery('#change_trial_year_dialog').dialog("open");
-	get_select_box('years', 'change_year_select_div', 'year_select');
+	get_select_box('years', 'change_year_select_div', { 'name' : 'year_select'});
     });
     
     jQuery('#change_trial_location_link').click( function() { 
 	jQuery('#change_trial_location_dialog').dialog("open");
-	get_select_box('locations', 'trial_location_select_div', 'trial_location_select');
+	get_select_box('locations', 'trial_location_select_div', { 'name' : 'trial_location_select' });
     });
 
     jQuery('#change_planting_date_dialog').dialog( { 
@@ -618,14 +618,14 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#open_folder_dialog_link').click( function() { 
 	jQuery('#set_folder_dialog').dialog("open");
-	get_select_box('folders', 'trial_folder_select_div', 'trial_folder_select');
+	get_select_box('folders', 'trial_folder_select_div', { 'name' : 'trial_folder_select' });
     });
 
 
     jQuery('#new_folder_dialog_link').click( function() { 
 	jQuery('#new_folder_dialog').dialog("open");
-	get_select_box('folders', 'new_folder_parent_folder_select_div', 'new_folder_parent_folder_id');
-	get_select_box('breeding_programs', 'new_folder_breeding_program_select_div');
+	get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id' });
+	get_select_box('breeding_programs', 'new_folder_breeding_program_select_div', { 'empty' : true });
     });
 
     jQuery('#new_folder_dialog').dialog( { 
