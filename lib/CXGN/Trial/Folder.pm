@@ -41,6 +41,10 @@ has 'is_folder' => (isa => 'Bool',
 		    default => 0,
     );
 
+has 'folder_type' => (isa => 'Str',
+		      is => 'rw',
+    );
+
 has 'name' => (isa => 'Str',
 	       is => 'rw',
 	       default => 'Untitled',
@@ -55,16 +59,24 @@ has 'breeding_program_trial_relationship_id' =>  (isa => 'Int',
 						  });
 						      
 
-has 'folder_type_id' => (isa => 'Int',
-			 is => 'rw',
-			 default => sub { 
-			     my $self =shift;
-			     CXGN::Trial::Folder->_get_folder_type_id( { bcs_schema => $self->bcs_schema() });
-			 });
 
 has 'breeding_program' => (isa => 'Bio::Chado::Schema::Result::Project::Project',
 			  is => 'rw',
     );
+
+
+
+has 'breeding_program_cvterm_id' => (isa => 'Int',
+				     is => 'rw',
+    );
+
+has 'folder_cvterm_id' => (isa => 'Int',
+			 is => 'rw',
+			 default => sub { 
+			     my $self =shift;
+			     CXGN::Trial::Folder->_get_folder_cvterm_id( { bcs_schema => $self->bcs_schema() });
+			 });
+
 
 sub BUILD { 
     my $self = shift;
@@ -77,8 +89,9 @@ sub BUILD {
 
     $self->name($row->name());
 
-    my $folder_cvterm_id = $self->folder_type_id();
+    my $folder_cvterm_id = $self->folder_cvterm_id();
     my $breeding_program_type_id = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { name => 'breeding_program' })->cvterm_id();
+    $self->breeding_program_cvterm_id($breeding_program_type_id);
     my $parent_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( 
 	{ 
 	    subject_project_id => $self->folder_id(), 
@@ -94,11 +107,25 @@ sub BUILD {
     }
     $self->project($row);
 
-    my $folder_type = $self->bcs_schema()->resultset('Project::Projectprop')->find( { project_id => $self->folder_id(), type_id => { '-in' => [ $folder_cvterm_id, $self->breeding_program_trial_relationship_id ] } } );
+    my $folder_type = $self->bcs_schema()->resultset('Project::Projectprop')->find( { project_id => $self->folder_id(), type_id => { '-in' => [ $folder_cvterm_id, $self->breeding_program_cvterm_id() ] } } );
+
     if ($folder_type) { 
 	$self->is_folder(1);
+    
+	if ($folder_type->type_id() == $folder_cvterm_id) { 
+	    print STDERR "Setting folder type to folder\n";
+	    $self->folder_type("folder");
+	}
+	elsif ($folder_type->type_id() == $self->breeding_program_cvterm_id()) { 
+	    print STDERR "Setting folder type to breeding_program.\n";
+	    $self->folder_type("breeding_program");
+	}
     }
-
+    else { 
+	print STDERR "Setting folder type to trial\n";
+	$self->folder_type("trial");
+    }
+    
     my $breeding_program_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( { subject_project_id => $self->folder_id(), type_id =>  $self->breeding_program_trial_relationship_id() });
 
     if ($breeding_program_rel_row) { 
@@ -122,7 +149,7 @@ sub create {
 	die "The name ".$args->{name}." cannot be used for a folder because it already exists.";
     }
     
-    my $folder_type_id = CXGN::Trial::Folder->_get_folder_type_id( $args );
+    my $folder_cvterm_id = CXGN::Trial::Folder->_get_folder_cvterm_id( $args );
         
     my $project_row = $args->{bcs_schema}->resultset('Project::Project')->create(
 	{ 
@@ -135,9 +162,9 @@ sub create {
     my $folder_projectprop_row = $args->{bcs_schema}->resultset('Project::Projectprop')->create( 
 	{ 
 	    project_id => $project_id,
-	    type_id => $folder_type_id }
+	    type_id => $folder_cvterm_id }
 	);
-    print STDERR "PROJECT ID = $project_id\n";
+
     my $folder = CXGN::Trial::Folder->new( { bcs_schema => $args->{bcs_schema}, folder_id => $project_id });
 
     $folder->associate_parent($args->{parent_folder_id});
@@ -151,14 +178,15 @@ sub list {
     my $class = shift;
     my $args = shift;
     
-    my $folder_type_id = CXGN::Trial::Folder->_get_folder_type_id( $args );
+    my $folder_cvterm_id = CXGN::Trial::Folder->_get_folder_cvterm_id( $args );
 
-    my $breeding_program_type_id = $args->{bcs_schema}->resultset("Cv::Cvterm")->find( { name => 'breeding_program' })->cvterm_id();
+    my $breeding_program_cvterm_id = $args->{bcs_schema}->resultset("Cv::Cvterm")->find( { name => 'breeding_program' })->cvterm_id();
+
     
-    my $search_params = { type_id => { -in => $folder_type_id }};
+    my $search_params = { type_id => { -in => $folder_cvterm_id }};
 
     if ($args->{breeding_program_id}) { 
-	push @{$search_params->{type_id}->{'-in'}}, $breeding_program_type_id;
+	push @{$search_params->{type_id}->{'-in'}}, $breeding_program_cvterm_id;
     }
 
     my $rs = $args->{bcs_schema}->resultset("Project::Projectprop")->search($search_params)->search_related("project");
@@ -171,7 +199,7 @@ sub list {
     return @folders;								}
 
 
-sub _get_folder_type_id { 
+sub _get_folder_cvterm_id { 
     my $class = shift;
     my $args = shift;
     
@@ -210,7 +238,7 @@ sub _get_parent {
     my $self = shift;
 
     
-    my $parent_rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_object_projects', { subject_project_id => $self->folder_id(), type_id => $self->folder_type_id() }, { order_by => 'me.name' });
+    my $parent_rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_object_projects', { subject_project_id => $self->folder_id(), type_id => $self->folder_cvterm_id() }, { order_by => 'me.name' });
     
 
 
@@ -222,7 +250,7 @@ sub _get_parent {
 
     if ($parent_rs->count() == 0) { 
 	# the parent is the breeding program
-	my $breeding_program_rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_object_projects', { subject_project_id => $self->folder_id(), type_id => $self->breeding_program_relationship_id() }, { order_by => 'me.name' });
+	my $breeding_program_rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_object_projects', { subject_project_id => $self->folder_id(), type_id => $self->breeding_program_trial_relationship_id() }, { order_by => 'me.name' });
 
 	if ($breeding_program_rs->count() == 0) { 
 	    print STDERR "Folder ".$self->name()." has no parent folder.\n";
@@ -246,25 +274,47 @@ sub _get_parent {
 #
 sub _get_children { 
     my $self = shift;
-    
-    my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_subject_projects', { object_project_id => $self->folder_id() }, { order_by => 'me.name' });
 
     my @children;
-    while (my $child = $rs->next()) { 
-	push @children, CXGN::Trial::Folder->new( { bcs_schema=> $self->bcs_schema(), folder_id=>$child->subject_project_id() });
+    
+    my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_subject_projects', { object_project_id => $self->folder_id() }, { order_by => 'me.name' });
+    
+    @children = map { $_->subject_project_id() } $rs->all();
+    
+    my @child_folders;
+    foreach my $id (@children) { 
+	my $folder = CXGN::Trial::Folder->new( { bcs_schema=> $self->bcs_schema(), folder_id=>$id });
+	
+	# if the parent is a breeding program, don't 
+	# push children that have other parents
+	#
 
+	if ($self->folder_type() eq "breeding_program") { 
+	    print STDERR "Current folder is a breeding program... filter children with other parents...\n";
+	    if ($folder->parent()->name() eq $self->name()) {
+		print STDERR "Pushing ".$folder->name()."\n";
+		push @child_folders, $folder;
+	    }
+	    else { 
+		print STDERR "Ignoring ".$folder->name()."\n";
+	    }
+	}
+	else {
+	    print STDERR "parent is not a breeding program... pushing ".$folder->name()."...\n";
+	    push @child_folders, $folder;
+	}
     }
     
-    return \@children;
+    return \@child_folders;
 }
 
 sub associate_parent { 
     my $self = shift;
     my $parent_id = shift;
 
-    my $folder_type_id = $self->folder_type_id();
+    my $folder_cvterm_id = $self->folder_cvterm_id();
     
-    my $breeding_program_type_id = $self->breeding_program_trial_relationship_id();
+    my $breeding_program_trial_relationship_id = $self->breeding_program_trial_relationship_id();
 
     my $parent_row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $parent_id } );
 
@@ -273,7 +323,7 @@ sub associate_parent {
 	return;
     }
     
-    my $parentprop_row = $self->bcs_schema()->resultset("Project::Projectprop")->find( { project_id => $parent_id,  type_id => { -in => [ $folder_type_id, $breeding_program_type_id ] } } );
+    my $parentprop_row = $self->bcs_schema()->resultset("Project::Projectprop")->find( { project_id => $parent_id,  type_id => { -in => [ $folder_cvterm_id, $breeding_program_trial_relationship_id ] } } );
 
     if (!$parentprop_row) { 
 	print STDERR "The specified parent folder is not of type folder or breeding program. Ignoring.";
@@ -283,7 +333,7 @@ sub associate_parent {
     my $project_rels = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search( 
 	{ object_project_id => $parent_id, 
 	  subject_project_id => $self->folder_id(),
-	  type_id => $folder_type_id
+	  type_id => $folder_cvterm_id
 	});
 
     if ($project_rels->count() > 0) {
@@ -297,7 +347,7 @@ sub associate_parent {
 	{ 
 	    object_project_id => $parent_id,
 	    subject_project_id => $self->project()->project_id(),
-	    type_id => $folder_type_id,
+	    type_id => $folder_cvterm_id,
 	});
     
     $project_rel_row->insert();
@@ -313,7 +363,7 @@ sub associate_child {
 	{ 
 	    subject_project_id => $child_id,
 	    object_project_id => $self->project()->project_id(),
-	    type_id => $self->folder_type_id(),
+	    type_id => $self->folder_cvterm_id(),
 	});
 
     $project_rel_row->insert();
@@ -339,7 +389,7 @@ sub associate_breeding_program {
 	    { 
 		object_project_id => $breeding_program_id,
 		subject_project_id => $self->folder_id(),
-		type_id => $self->breeding_program_trial_relationship_type_id(),
+		type_id => $self->breeding_program_trial_relationship_id(),
 	    });
 	
 	$project_rel_row->insert();
@@ -348,6 +398,10 @@ sub associate_breeding_program {
 	$project_rel_row->object_project_id($breeding_program_id);
 	$project_rel_row->update();
     }
+
+    my $row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=> $project_rel_row->object_project_id() });
+    $self->breeding_program($row);
+
 }
 
 sub remove_parent { 
