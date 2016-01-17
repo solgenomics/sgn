@@ -22,9 +22,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     my $j = JSON::Any->new;
     
     my @criteria_list = $c->req->param('categories[]');
-#    my @jdata = $c->req->param('data');
-    my $data;
-    my $dataref;
+	
+    my $dataref = {};
     my $genotypes = $c->req->param('genotypes');
     my @retrieval_types = $c->req->param('retrieval_types');
 
@@ -32,32 +31,9 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
     my $intersect = $c->req->param("intersect");
 
-    print STDERR "DATA: " . Dumper($data);
+    my $error = '';
 
- #   if ($c->req->param('data')) {
-#	my @array = @$data; 
-#	#my %dataref = $array[0];
-#	my $dataref = $data;
- #   }
-
-    if ($c->req->param('data')) {
-	$data = $j->jsonToObj($c->req->param('data'));
-	my @array = @$data;
-	my $hashref = $array[0];
-	my %hash = %$hashref;
-	$dataref = \%hash;
-	print STDERR "DATAREF: " . Dumper($dataref);
-    }
-
-    #foreach my $string (@data) {
-#	print STDERR "thing =" . Dumper($string);
-#	my $value = @$string[0];
-#	print STDERR "thing =" . Dumper($value);
-#	$dataref{$criteria_list[1]} => $string;
- #   }
-    my $error = "";
-
-     foreach my $select (@criteria_list) { 
+    foreach my $select (@criteria_list) { 
      	print STDERR "Checking $select\n";
      	chomp($select);
      	if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'locations', 'plots', 'traits', 'trials', 'years', 'genotypes', undef)) { 
@@ -66,6 +42,20 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
      	    return;
      	}
      }
+
+    my $criteria_list = \@criteria_list;
+    for (my $i=0; $i<scalar(@$criteria_list); $i++) { 
+	my $data;
+	my $param = $c->req->param("data[$i][]");
+	print STDERR "PARAM: $param";
+	if (defined($param) && ($param ne '')) { $data =  $c->req->param("data[$i][]"); }
+	
+	if ($data) { 
+	    my $qdata = join ",", (map { "\'$_\'"; } (split ",", $data));
+	    $dataref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $qdata;
+	}
+    }
+
      my $dbh = $c->dbc->dbh();
 
      my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );

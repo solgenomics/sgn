@@ -36,7 +36,7 @@ window.onload = function initialize() {
 	    var next_data_id = "c"+next_section+"_data";
 	    jQuery('#'+next_data_id).html('');
 
-	    update_downstream_categories(this_section);
+	    update_selected_categories(this_section);
 	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
 	});		 
 
@@ -51,7 +51,7 @@ window.onload = function initialize() {
 	    var count_id = "c"+this_section+"_data_count";
 
 	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-	    update_downstream_categories(this_section);
+	    update_selected_categories(this_section);
 	    
 	});
 }
@@ -66,7 +66,7 @@ function retrieve_and_display_set(categories, data, this_section) {
 	url: '/ajax/breeder/search',
 	timeout: 60000,
 	method: 'POST',
-	data: {'categories': categories, 'data': JSON.stringify(data), 'genotypes': get_genotype_checkbox(), 'retrieval_types': get_retrieval_types()},
+	data: {'categories': categories, 'data': data, 'genotypes': get_genotype_checkbox(), 'retrieval_types': get_retrieval_types()},
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -100,22 +100,13 @@ function retrieve_and_display_set(categories, data, this_section) {
 }
 
 function get_selected_data(this_section) {
-    var selected_data = new Array();
-    var selected_categories = get_selected_categories(this_section);
+    var selected_data = [];
+
     for (i=1; i < this_section; i++) {
 	var element_id = "c"+i+"_data";
-	//selected_data.push(jQuery("#"+element_id).val());
 	var data = jQuery("#"+element_id).val();
 	console.log("data="+data);
-	var criteria = {};
-	var counter = i;
-	counter--;
-	//selected_data.push(criteria);
-	//selected_data[counter] = {
-	//    "selected_categories[counter]" : data
-	//};
-	criteria[selected_categories[counter]] = data;
-	selected_data.push(criteria);
+	selected_data.push(data);
     }
     var this_data_id = "c"+this_section+"_data";
     jQuery("#"+this_data_id).val('');
@@ -148,7 +139,7 @@ function get_selected_categories(this_section) {
     return selected_categories;
 }
 
-function update_downstream_categories(this_section) {
+function update_select_categories(this_section) {
     console.log("updating . . .");
     var selected_categories = get_selected_categories(this_section);
     
@@ -167,6 +158,10 @@ function update_downstream_categories(this_section) {
     jQuery('#'+next_select_id).html(remaining_categories);
 }
 	
+function reset_downstream_sections(this_section) {
+
+}
+
 function format_options(items) { 
     var html = '';
     for (var key in items) { 

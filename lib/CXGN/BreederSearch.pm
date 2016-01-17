@@ -74,7 +74,7 @@ sub get_intersect {
     print STDERR "Dataref hardcoded : " . Dumper($dataref->{'years'});
 
     my $query;
-    if ($count <= 1) {
+    if (!$dataref->{"$target"}) {
 	my $query = "SELECT * from $target";
 	print STDERR "QUERY: $query\n";
 	$h = $self->dbh->prepare($query);
