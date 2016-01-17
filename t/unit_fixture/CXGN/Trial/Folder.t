@@ -9,7 +9,9 @@ use CXGN::Trial::Folder;
 
 my $f = SGN::Test::Fixture->new();
 
-my $folder1 = CXGN::Trial::Folder->create( { bcs_schema => $f->bcs_schema(), name=>"test_folder", description => "test_description" });
+my $folder1 = CXGN::Trial::Folder->create( { bcs_schema => $f->bcs_schema(), name=>"test_folder", description => "test_description", breeding_program_id => 134 });
+
+is($folder1->breeding_program()->name(), "test", "breeding program test");
 
 my $folder2 = CXGN::Trial::Folder->create( { bcs_schema => $f->bcs_schema(), name=>"test_folder_parent", description => "test_parent_description" });
 
