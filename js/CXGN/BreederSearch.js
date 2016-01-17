@@ -24,7 +24,6 @@ window.onload = function initialize() {
 	    retrieve_and_display_set(get_selected_categories(this_section), get_selected_data(this_section), this_section);
 	});
 
-
     jQuery('#c1_data, #c2_data, #c3_data, #c4_data').change( // update wizard panels and categories when data selections change 
     	function() {
 	    var this_section = jQuery(this).attr('name');
@@ -36,7 +35,7 @@ window.onload = function initialize() {
 	    var next_data_id = "c"+next_section+"_data";
 	    jQuery('#'+next_data_id).html('');
 
-	    update_selected_categories(this_section);
+	    update_select_categories(this_section);
 	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
 	});		 
 
@@ -51,7 +50,7 @@ window.onload = function initialize() {
 	    var count_id = "c"+this_section+"_data_count";
 
 	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-	    update_selected_categories(this_section);
+	    update_select_categories(this_section);
 	    
 	});
 }

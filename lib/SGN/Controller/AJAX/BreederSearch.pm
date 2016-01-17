@@ -45,13 +45,16 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
     my $criteria_list = \@criteria_list;
     for (my $i=0; $i<scalar(@$criteria_list); $i++) { 
-	my $data;
+	my @data;
 	my $param = $c->req->param("data[$i][]");
 	print STDERR "PARAM: $param";
-	if (defined($param) && ($param ne '')) { $data =  $c->req->param("data[$i][]"); }
+	if (defined($param) && ($param ne '')) { @data =  $c->req->param("data[$i][]"); }
 	
-	if ($data) { 
-	    my $qdata = join ",", (map { "\'$_\'"; } (split ",", $data));
+	if (@data) { 
+	    print STDERR "data=" . Dumper(@data);
+	    my @cdata = map {"'$_'"} @data;
+	    my $qdata = join ",", @cdata;	    
+	    print STDERR "qdata=" . Dumper($qdata);
 	    $dataref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $qdata;
 	}
     }
