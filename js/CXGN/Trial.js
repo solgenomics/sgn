@@ -98,7 +98,7 @@ function load_breeding_program_info(trial_id) {
 	url:'/breeders/programs_by_trial/'+trial_id,
 	success: function(response) { 
             if (response.error) { 
-		alert(response.error);
+		jQuery('#breeding_programs').html('[ An error occurred fetching the breeding program information ]'); 
             }
             else { 
 		var programs = response.projects;
@@ -109,7 +109,9 @@ function load_breeding_program_info(trial_id) {
 		jQuery('#breeding_programs').html(html); 
             }
 	},
-	error: function() { alert("An error occurred."); }
+	error: function() { 		
+	    jQuery('#breeding_programs').html('[ An error occurred ]');  
+	}
     });  
 }
 
@@ -599,6 +601,7 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#set_folder_dialog').dialog( { 
 	autoOpen: false,
+	title: 'Select parent folder',
 	buttons: { 
 	    cancel: { text: "Cancel",
 		      click: function() { jQuery( this ).dialog("close"); },
@@ -625,7 +628,6 @@ function trial_detail_page_setup_dialogs() {
     jQuery('#new_folder_dialog_link').click( function() { 
 	jQuery('#new_folder_dialog').dialog("open");
 	get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id', 'empty' : 1 });
-	get_select_box('breeding_programs', 'new_folder_breeding_program_select_div', { 'empty' : 1 });
     });
 
     jQuery('#new_folder_dialog').dialog( { 
@@ -653,14 +655,16 @@ function display_trial_name(trial_id) {
     jQuery.ajax( { 
 	url: '/ajax/breeders/trial/'+trial_id+'/names',
 	success: function(response) { 
-            if (response.error) { alert(response.error); }
+            if (response.error) { 
+		jQuery('#trial_name').html('[ An error occurred fetching the trial name ]');
+	    }
             else { 
 		jQuery('#trial_name').html(response.names);
 		jQuery('#trial_name_input').html(response.names);
             }
 	},
 	error: function(response) { 
-	    jQuery('#trial_name').html('An error occurred trying to display the name.'); 
+	    jQuery('#trial_name').html('[ A protocol error occurred ]'); 
 	}
     });
 }
@@ -772,6 +776,7 @@ function display_harvest_date() {
 	    jQuery('#harvest_date').html(response.harvest_date);
 	},
 	error: function(response) { 
+	    jQuery('#harvest_date').html('[ Protocol error. ]');
 	}
     });
 }
@@ -814,6 +819,7 @@ function display_planting_date() {
 	    jQuery('#planting_date').html(response.planting_date);
 	},
 	error: function(response) { 
+	    jQuery('#planting_date').html('[ Protocol error. ]');
 	}
     });
 }
@@ -840,14 +846,14 @@ function display_trial_year() {
 	type: 'GET',
 	success: function(response) { 
 	    if (response.error) { 
-		alert(response.error); 
+		jQuery('#trial_year').html('[ An error occurred fetching the trial year information. ]');
 	    }
 	    else { 
 		jQuery('#trial_year').html(response.year);
 	    }
 	},
 	error: function(response) { 
-	    alert('an error occurred');
+	    jQuery('#trial_year').html('[ Protocol error ]');
 	}
     });
 }
@@ -856,7 +862,9 @@ function display_trial_description(trial_id) {
     jQuery.ajax( { 
 	url: '/ajax/breeders/trial/'+trial_id+'/description',
 	success: function(response) { 
-            if (response.error) { alert(response.error); }
+            if (response.error) {
+		jQuery('#trial_description').html('[ An error occurred. ]');
+	    }
             else { 
 		jQuery('#trial_description').html(response.description);
 		jQuery('#trial_description_input').html(response.description);
@@ -900,7 +908,7 @@ function display_trial_location(trial_id) {
 	type: 'GET',
 	success: function(response) { 
 	    if (response.error) { 
-		alert(response.error);
+		jQuery('#trial_location').html('[ An error occurred fetching the location. ]');
 	    }
 	    else { 
 		var html = "";
@@ -911,7 +919,7 @@ function display_trial_location(trial_id) {
 	    }
 	},
 	error: function(response) { 
-	    alert('An error occurred trying to display the location.');
+	    jQuery('#trial_location').html('[ Protocol error ]');
 	}
     });
 }
@@ -950,7 +958,7 @@ function get_trial_type(trial_id) {
 	    }
 	},
 	error: function(response) { 
-	    alert('An error occurred trying to display the trial type.');
+	    display_trial_type('[ Protocol error. ]');
 	}
     });
 }
@@ -967,7 +975,7 @@ function display_trial_folder() {
 	    jQuery('#trial_folder_div').html(response.folder[1]);
 	},
 	error: function(response) { 
-	    alert("An error occurred fetching the folder information.");
+	    jQuery('#trial_folder_div').html('[ Protocol error. ]');
 	}
     });
    
@@ -985,9 +993,14 @@ function new_folder_dialog() {
 function new_trial_folder() { 
     var parent_id = jQuery('#new_folder_parent_folder_id').val();
     var folder_name = jQuery('#new_folder_name').val();
+    var breeding_program_id = jQuery('#new_folder_breeding_program_id').val();
+
     jQuery.ajax( { 
 	'url': '/ajax/folder/new',
-	'data': { 'parent_folder_id' : parent_id, 'folder_name' :  folder_name },
+	'data': { 'parent_folder_id' : parent_id, 
+		  'folder_name' :  folder_name,
+		  'breeding_program_id' : breeding_program_id
+		},
 	'success': function(response) { 
 	    if (response.error){ 
 		alert(response.error);
@@ -998,14 +1011,13 @@ function new_trial_folder() {
 	    }
 	},
 	error: function(response) { 
-	    alert('an error occurred');
+	    alert('An error occurred');
 	}
     });
 }
 
 function set_trial_folder() { 
     var folder_id = jQuery('#folder_select').val();
-    alert("folder "+folder_id);
     var trial_id = get_trial_id();
     jQuery.ajax( { 
 	url: '/ajax/folder/'+trial_id+'/associate/parent/'+folder_id,
@@ -1186,7 +1198,6 @@ jQuery(document).ready(function ($) {
 	json: true,
 	post: function () {
 	    var uploadFile = $("#DataCollector_upload_file").val();
-		//alert("UPLOADED FILE: "+uploadFile);
 	    if (uploadFile === '') {
 		alert("No file selected");
 	    }
@@ -1244,7 +1255,6 @@ jQuery(document).ready(function ($) {
 	json: true,
 	post: function () {
 	    var uploadFile = $("#phenotyping_spreadsheet_upload_file").val();
-		//alert("UPLOADED FILE: "+uploadFile);
 	    if (uploadFile === '') {
 		alert("No file selected");
 	    }
