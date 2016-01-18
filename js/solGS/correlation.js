@@ -10,7 +10,9 @@ jQuery(document).ready( function() {
    
     if (page.match(/solgs\/traits\/all\//) != null || 
         page.match(/solgs\/models\/combined\/trials\//) != null) {
-        listGenCorPopulations();
+	
+	setTimeout(function() {listGenCorPopulations()}, 5000);
+        
     } else {
 
 	var url = window.location.pathname;
