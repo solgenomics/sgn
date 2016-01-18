@@ -16,7 +16,7 @@ window.onload = function initialize() {
 
 	    if (jQuery(this).val() == '') { // return empty if no category defined
 		var data_element = "c"+this_section+"_data";
-		console.log("select not used yet");
+
 		jQuery("#"+data_element).html("");
 		return;
 	    }
@@ -28,13 +28,12 @@ window.onload = function initialize() {
     	function() {
 	    var this_section = jQuery(this).attr('name');
 	    var current_section = this_section;
-	    var next_section = ++current_section;
+
 	    var data_id = jQuery(this).attr('id');
 	    var data = jQuery('#'+data_id).val() || [];;
 	    var count_id = "c"+this_section+"_data_count";
-	    var next_data_id = "c"+next_section+"_data";
-	    jQuery('#'+next_data_id).html('');
 
+	    reset_downstream_sections(this_section);
 	    update_select_categories(this_section);
 	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
 	});		 
@@ -44,9 +43,8 @@ window.onload = function initialize() {
 	    var this_section = jQuery(this).attr('name');
 	    var data_id = "c"+this_section+"_data";
 	    selectAllOptions(document.getElementById(data_id));
-	     console.log('data_id ='+ data_id);
+
 	    var data = jQuery("#"+data_id).val() || [];;
-	    console.log('data ='+ data);
 	    var count_id = "c"+this_section+"_data_count";
 
 	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
@@ -104,9 +102,9 @@ function get_selected_data(this_section) {
     for (i=1; i < this_section; i++) {
 	var element_id = "c"+i+"_data";
 	var data = jQuery("#"+element_id).val();
-	console.log("data="+data);
 	selected_data.push(data);
     }
+
     var this_data_id = "c"+this_section+"_data";
     jQuery("#"+this_data_id).val('');
     console.log("selected data= "+JSON.stringify(selected_data));
@@ -139,13 +137,11 @@ function get_selected_categories(this_section) {
 }
 
 function update_select_categories(this_section) {
-    console.log("updating . . .");
     var selected_categories = get_selected_categories(this_section);
     
-    console.log("selected_category 0 ="+selected_categories[0]);
     var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', locations : 'locations', plots : 'plots', traits : 'traits', trials :'trials', years : 'years'};
     var all_categories = copy_hash(categories);
-    console.log("starting = "+all_categories);
+
     for (i=0; i < this_section; i++) {
 	console.log("deleting");
 	delete all_categories[selected_categories[i]];
@@ -157,8 +153,15 @@ function update_select_categories(this_section) {
     jQuery('#'+next_select_id).html(remaining_categories);
 }
 	
-function reset_downstream_sections(this_section) {
-
+function reset_downstream_sections(this_section) {  // clear downstream selects, data_panels, data_counts
+    for (i = 4; i > this_section; i--) {
+	var select_id = "select"+i;
+	var data_id = "c"+i+"_data";
+	var count_id = "c"+i+"_data_count";
+	jQuery('#'+select_id).html('');
+	jQuery('#'+data_id).html('');
+	jQuery('#'+count_id).html('');
+    }
 }
 
 function format_options(items) { 
