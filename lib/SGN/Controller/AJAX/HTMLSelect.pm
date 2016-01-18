@@ -45,6 +45,8 @@ sub get_location_select : Path('/ajax/html/select/locations') Args(0) {
 
     my $locations = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_all_locations();
     
+    if ($empty) { unshift @$locations, [ "", "please select" ] }
+    
     my $html = simple_selectbox_html(
 	name => $name,
 	id => $id,
@@ -63,7 +65,7 @@ sub get_breeding_program_select : Path('/ajax/html/select/breeding_programs') Ar
 
     my $breeding_programs = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_breeding_programs();
 
-    push @$breeding_programs, [ "", "please select" ];
+    if ($empty) { unshift @$breeding_programs, [ "", "please select" ]; }
     
     my $html = simple_selectbox_html(
 	name => $name,
@@ -99,7 +101,7 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
 
     my $id = $c->req->param("id") || "folder_select";
     my $name = $c->req->param("name") || "folder_select";
-    my $empty = $c->req->param("empty") || "";
+    my $empty = $c->req->param("empty") || ""; # set if an empty selection should be present
 
 
     my @folders = CXGN::Trial::Folder->list( 
