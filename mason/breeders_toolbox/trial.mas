@@ -82,7 +82,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<&| /page/info_section.mas, title=>"Trial details" &>
+<&| /page/info_section.mas, title=>"Trial details",  collapsible => 1, &>
 
 
 
