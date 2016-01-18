@@ -38,7 +38,7 @@ $user_can_modify => undef
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
 <%perl>
-
+  use Data::Dumper;
 my $start_time = time();
 my $description_empty = 1;
 if ($trial_description) {
@@ -76,6 +76,9 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
 my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link">change</a>] } if $user_can_modify;
 
 print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
+
+print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
+
 </%perl>
 
 <br/>
@@ -211,7 +214,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   Folder name: 
   <input name="new_folder_name" id="new_folder_name" /><br />
   Parent folder <span id="new_folder_parent_folder_select_div"></span>
-  Breeding program <span id="new_folder_breeding_program_select_div"></span>
+  <input type="hidden" id="new_folder_breeding_program_id" value="<% $breeding_program->[0]->[0] %>" />
 </div>
 
 <&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
