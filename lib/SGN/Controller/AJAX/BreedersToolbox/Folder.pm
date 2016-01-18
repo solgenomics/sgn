@@ -28,6 +28,9 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     my $folder_name = $c->req->param("folder_name");
     my $breeding_program_id = $c->req->param("breeding_program_id");
 
+    if (! $self->check_privileges($c)) { 
+	return;
+    }
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $existing = $schema->resultset("Project::Project")->find( { name => $folder_name });
 
@@ -52,6 +55,10 @@ sub associate_child_folder :Chained('get_folder') PathPart('associate/child') Ar
     
     my $child_id = shift;
     
+    if (! $self->check_privileges($c)) { 
+	return;
+    }
+
     my $folder = CXGN::Trial::Folder->new( 
 	{ 
 	    bcs_schema => $c->stash->{schema}, 
@@ -69,6 +76,10 @@ sub associate_parent_folder : Chained('get_folder')
     my $c = shift;
     my $parent_id = shift;
 
+    if (! $self->check_privileges($c)) { 
+	return;
+    }
+
     my $folder = CXGN::Trial::Folder->new( 
 	{ 
 	    bcs_schema => $c->stash->{schema}, 
@@ -81,7 +92,22 @@ sub associate_parent_folder : Chained('get_folder')
 
 }
 
-
+sub check_privileges { 
+    my $self = shift;
+    my $c = shift;
+    
+    if (!$c->user()) { 
+	print STDERR "User not logged in... not uploading coordinates.\n";
+	$c->stash->{rest} = {error => "You need to be logged in to upload coordinates." };
+	return 0;
+    }
+    
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+	$c->stash->{rest} = {error =>  "You have insufficient privileges to add coordinates." };
+	return 0;
+    }
+    return 1;
+}
 
 
 

@@ -618,14 +618,14 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#open_folder_dialog_link').click( function() { 
 	jQuery('#set_folder_dialog').dialog("open");
-	get_select_box('folders', 'trial_folder_select_div', { 'name' : 'trial_folder_select' });
+	get_select_box('folders', 'trial_folder_select_div', { 'name' : 'trial_folder_select', 'empty' : 1 });
     });
 
 
     jQuery('#new_folder_dialog_link').click( function() { 
 	jQuery('#new_folder_dialog').dialog("open");
-	get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id' });
-	get_select_box('breeding_programs', 'new_folder_breeding_program_select_div', { 'empty' : true });
+	get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id', 'empty' : 1 });
+	get_select_box('breeding_programs', 'new_folder_breeding_program_select_div', { 'empty' : 1 });
     });
 
     jQuery('#new_folder_dialog').dialog( { 
