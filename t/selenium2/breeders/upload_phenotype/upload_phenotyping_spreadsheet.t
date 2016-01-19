@@ -33,8 +33,6 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("//div[contains(., 'File upload_phenotypin_spreadsheet_test.xls saved in archive.')]", "xpath", "verify the verification")->get_text();
 
     $t->find_element_ok("//div[contains(., 'File valid: upload_phenotypin_spreadsheet_test.xls.')]", "xpath", "verify the verification")->get_text();
-
-    $t->find_element_ok("//div[contains(., 'File metadata set.')]", "xpath", "verify the verification")->get_text();
     
     $t->find_element_ok("//div[contains(., 'File data successfully parsed.')]", "xpath", "verify the verification")->get_text();
 
@@ -47,12 +45,12 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("//div[contains(., 'File upload_phenotypin_spreadsheet_test.xls saved in archive.')]", "xpath", "verify the verification")->get_text();
 
     $t->find_element_ok("//div[contains(., 'File valid: upload_phenotypin_spreadsheet_test.xls.')]", "xpath", "verify the verification")->get_text();
-
-    $t->find_element_ok("//div[contains(., 'File metadata set.')]", "xpath", "verify the verification")->get_text();
     
     $t->find_element_ok("//div[contains(., 'File data successfully parsed.')]", "xpath", "verify the verification")->get_text();
 
-    $t->find_element_ok("//div[contains(., 'File data verified. Plot names and trait names are valid.')]", "xpath", "verify the verification")->get_text();
+    #$t->find_element_ok("//div[contains(., 'File data verified. Plot names and trait names are valid.')]", "xpath", "verify the verification")->get_text();
+
+    $t->find_element_ok("//div[contains(., 'Metadata saved for archived file.')]", "xpath", "verify the verification")->get_text();
 
     $t->find_element_ok("//div[contains(., 'File data successfully stored.')]", "xpath", "verify the verification")->get_text();
 
@@ -84,8 +82,6 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("//div[contains(., 'File upload_phenotypin_spreadsheet_test.xls saved in archive.')]", "xpath", "verify the verification")->get_text();
 
     $t->find_element_ok("//div[contains(., 'File valid: upload_phenotypin_spreadsheet_test.xls.')]", "xpath", "verify the verification")->get_text();
-
-    $t->find_element_ok("//div[contains(., 'File metadata set.')]", "xpath", "verify the verification")->get_text();
     
     $t->find_element_ok("//div[contains(., 'File data successfully parsed.')]", "xpath", "verify the verification")->get_text();
 
@@ -107,12 +103,12 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("//div[contains(., 'File upload_phenotypin_spreadsheet_test.xls saved in archive.')]", "xpath", "verify the verification")->get_text();
 
     $t->find_element_ok("//div[contains(., 'File valid: upload_phenotypin_spreadsheet_test.xls.')]", "xpath", "verify the verification")->get_text();
-
-    $t->find_element_ok("//div[contains(., 'File metadata set.')]", "xpath", "verify the verification")->get_text();
     
     $t->find_element_ok("//div[contains(., 'File data successfully parsed.')]", "xpath", "verify the verification")->get_text();
 
-    $t->find_element_ok("//div[contains(., 'File data verified. Plot names and trait names are valid.')]", "xpath", "verify the verification")->get_text();
+    #$t->find_element_ok("//div[contains(., 'File data verified. Plot names and trait names are valid.')]", "xpath", "verify the verification")->get_text();
+
+    $t->find_element_ok("//div[contains(., 'Metadata saved for archived file.')]", "xpath", "verify the verification")->get_text();
 
     $t->find_element_ok("//div[contains(., 'File data successfully stored.')]", "xpath", "verify the verification")->get_text();
 
@@ -144,8 +140,6 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("//div[contains(., 'File upload_phenotypin_spreadsheet_test.xls saved in archive.')]", "xpath", "verify the verification")->get_text();
 
     $t->find_element_ok("//div[contains(., 'File valid: upload_phenotypin_spreadsheet_test.xls.')]", "xpath", "verify the verification")->get_text();
-
-    $t->find_element_ok("//div[contains(., 'File metadata set.')]", "xpath", "verify the verification")->get_text();
     
     $t->find_element_ok("//div[contains(., 'File data successfully parsed.')]", "xpath", "verify the verification")->get_text();
 
@@ -167,12 +161,12 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("//div[contains(., 'File upload_phenotypin_spreadsheet_test.xls saved in archive.')]", "xpath", "verify the verification")->get_text();
 
     $t->find_element_ok("//div[contains(., 'File valid: upload_phenotypin_spreadsheet_test.xls.')]", "xpath", "verify the verification")->get_text();
-
-    $t->find_element_ok("//div[contains(., 'File metadata set.')]", "xpath", "verify the verification")->get_text();
     
     $t->find_element_ok("//div[contains(., 'File data successfully parsed.')]", "xpath", "verify the verification")->get_text();
 
-    $t->find_element_ok("//div[contains(., 'File data verified. Plot names and trait names are valid.')]", "xpath", "verify the verification")->get_text();
+    #$t->find_element_ok("//div[contains(., 'File data verified. Plot names and trait names are valid.')]", "xpath", "verify the verification")->get_text();
+
+    $t->find_element_ok("//div[contains(., 'Metadata saved for archived file.')]", "xpath", "verify the verification")->get_text();
 
     $t->find_element_ok("//div[contains(., 'File data successfully stored.')]", "xpath", "verify the verification")->get_text();
 

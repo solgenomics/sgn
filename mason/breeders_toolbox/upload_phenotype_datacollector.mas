@@ -1,7 +1,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadPhenotypeDatacollector' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadPhenotype' ] &>
 
 <div class="modal fade" id="upload_datacollector_phenotypes_dialog" name="upload_datacollector_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="addDatacollectorPhenotypeDialog">
   <div class="modal-dialog" role="document">
