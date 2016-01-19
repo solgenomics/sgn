@@ -47,7 +47,7 @@ sub upload_phenotype_verify_POST : Args(1) {
 	return;
     }
 
-    my ($verified_warning, $verified_error) = $store_phenotypes->verify($c,$plots,$traits, $parsed_data, $phenotype_metadata);
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify($c, $plots, $traits, $parsed_data, $phenotype_metadata);
     if ($verified_error) {
 	push @$error_status, $verified_error;
 	$c->stash->{rest} = {success => $success_status, error => $error_status };
@@ -72,15 +72,18 @@ sub upload_phenotype_store_POST : Args(1) {
 	return;
     }
 
-    my ($verified_warning, $verified_error) = $store_phenotypes->verify($c,$plots,$traits, $parsed_data, $phenotype_metadata);
-    if ($verified_error) {
-	push @$error_status, $verified_error;
-	$c->stash->{rest} = {success => $success_status, error => $error_status };
-	return;
-    }
-    push @$success_status, "File data verified. Plot names and trait names are valid.";
+    #upload_phenotype_store function redoes the same verification that upload_phenotype_verify does before actually uploading. maybe this should be commented out.
+    #my ($verified_warning, $verified_error) = $store_phenotypes->verify($c,$plots,$traits, $parsed_data, $phenotype_metadata);
+    #if ($verified_error) {
+	#push @$error_status, $verified_error;
+	#$c->stash->{rest} = {success => $success_status, error => $error_status };
+	#return;
+    #}
+    #push @$success_status, "File data verified. Plot names and trait names are valid.";
 
-    my $stored_phenotype_error = $store_phenotypes->store($c,$plots, $traits, $parsed_data, $phenotype_metadata);
+
+    my $size = scalar(@$plots) * scalar(@$traits);
+    my $stored_phenotype_error = $store_phenotypes->store($c, $size, $plots, $traits, $parsed_data, $phenotype_metadata);
 
     if ($stored_phenotype_error) {
 	push @$error_status, $stored_phenotype_error;
