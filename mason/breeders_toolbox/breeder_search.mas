@@ -127,6 +127,11 @@ jQuery(document).ready(function() {
 //pasteListMenu('c1_data', 'populate_from_list');
 
   get_select_box('genotyping_protocols', 'select_gt_protocol_div', 'gt_protocol_select');
+
+  var starting_categories = { '': 'please select', breeding_programs: 'breeding_programs', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
+  var html = format_options(starting_categories);
+
+  jQuery('#select1').html(html);  
   
   jQuery('select').mouseenter(function() {this.tooltip});
 

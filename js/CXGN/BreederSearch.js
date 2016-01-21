@@ -1,14 +1,14 @@
 window.onload = function initialize() { 
 
-    var starting_categories = { '': 'please select', breeding_programs: 'breeding_programs', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
-    var html = '';
-    html = html + format_options(starting_categories);
+    //var starting_categories = { '': 'please select', breeding_programs: 'breeding_programs', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
+    //var html = '';
+    //html = html + format_options(starting_categories);
 
     jQuery('input[type="checkbox"]').on('change', function() {  // ensure only one checkbox is selected at a time
 	jQuery('input[id="' + this.id + '"]').not(this).prop('checked', false);
     });
 
-    jQuery('#select1').html(html); //populate starting dropdown
+    //jQuery('#select1').html(html); //populate starting dropdown
 
     jQuery('#select1, #select2, #select3, #select4').change(  // retrieve new data once new category is selected
     	function() {
@@ -51,6 +51,34 @@ window.onload = function initialize() {
 	    update_select_categories(this_section);
 	    
 	});
+
+      jQuery('select').dblclick(function() { // open detail page in new window/tab on double-click 
+	  var this_section = jQuery(this).attr('name');
+	  var categories = get_selected_categories(this_section);
+	  var category = categories.pop();
+	  switch (category)
+	  {
+	  case "accessions":
+	  case "plots":
+	      window.open("../../stock/"+this.value+"/view");
+	      break;	    
+	  case "trials":
+	      window.open("../../breeders_toolbox/trial/"+this.value);
+	      break;
+	  case "breeding_programs":
+	      window.open("../../breeders/manage_programs");
+	      break;
+	  case "locations":
+	      window.open("../../breeders/locations");
+	      break;
+	  case "traits":
+	      window.open("../../chado/cvterm?action=view&cvterm_id="+this.value);
+	      break;
+	  default: 
+	      if (window.console) console.log("no link for this category");
+	}
+      });
+
 }
 
 
