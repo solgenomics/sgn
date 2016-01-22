@@ -893,13 +893,13 @@ sub _stock_has_pedigree {
   my $bcs_stock = $stock->get_object_row;
   my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 										 { name   => 'female_parent',
-										   cv     => 'stock relationship',
+										   cv     => 'stock_relationship',
 										   db     => 'null',
 										   dbxref => 'female_parent',
 										 });
   my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 									       { name   => 'male_parent',
-										 cv     => 'stock relationship',
+										 cv     => 'stock_relationship',
 										 db     => 'null',
 										 dbxref => 'male_parent',
 									       });
@@ -919,13 +919,13 @@ sub _stock_has_descendants {
   my $bcs_stock = $stock->get_object_row;
   my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 										 { name   => 'female_parent',
-										   cv     => 'stock relationship',
+										   cv     => 'stock_relationship',
 										   db     => 'null',
 										   dbxref => 'female_parent',
 										 });
   my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 									       { name   => 'male_parent',
-										 cv     => 'stock relationship',
+										 cv     => 'stock_relationship',
 										 db     => 'null',
 										 dbxref => 'male_parent',
 									       });

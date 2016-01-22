@@ -31,7 +31,7 @@ sub get_all_accessions {
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
-      cv     => 'stock type',
+      cv     => 'stock_type',
       db     => 'null',
       dbxref => 'accession',
     });
@@ -55,14 +55,14 @@ sub get_all_populations {
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
-      cv     => 'stock type',
+      cv     => 'stock_type',
       db     => 'null',
       dbxref => 'accession',
     });
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'population',
-      cv     => 'stock type',
+      cv     => 'stock_type',
       db     => 'null',
       dbxref => 'population',
     });
@@ -70,7 +70,7 @@ sub get_all_populations {
     my $population_member_cvterm = $schema->resultset("Cv::Cvterm")
 	->create_with({
 	    name   => 'member_of',
-	    cv     => 'stock relationship',
+	    cv     => 'stock_relationship',
 	    db     => 'null',
 	    dbxref => 'member_of',
 		      });
