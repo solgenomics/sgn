@@ -78,6 +78,7 @@ sub get_intersect {
 	my $query = "SELECT * from $target";
 	print STDERR "QUERY: $query\n";
 	$h = $self->dbh->prepare($query);
+	print STDERR "Prepared, now executing query  . . .";
 	$h->execute();
     } else {
 	if ($intersect) {

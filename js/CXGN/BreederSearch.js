@@ -1,14 +1,8 @@
 window.onload = function initialize() { 
 
-    //var starting_categories = { '': 'please select', breeding_programs: 'breeding_programs', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
-    //var html = '';
-    //html = html + format_options(starting_categories);
-
     jQuery('input[type="checkbox"]').on('change', function() {  // ensure only one checkbox is selected at a time
 	jQuery('input[id="' + this.id + '"]').not(this).prop('checked', false);
     });
-
-    //jQuery('#select1').html(html); //populate starting dropdown
 
     jQuery('#select1, #select2, #select3, #select4').change(  // retrieve new data once new category is selected
     	function() {
@@ -16,11 +10,9 @@ window.onload = function initialize() {
 
 	    if (jQuery(this).val() == '') { // return empty if no category defined
 		var data_element = "c"+this_section+"_data";
-
 		jQuery("#"+data_element).html("");
 		return;
 	    }
-	    
 	    retrieve_and_display_set(get_selected_categories(this_section), get_selected_data(this_section), this_section);
 	});
 
@@ -52,7 +44,7 @@ window.onload = function initialize() {
 	    
 	});
 
-      jQuery('select').dblclick(function() { // open detail page in new window/tab on double-click 
+      jQuery('select').dblclick(function() { // open detail page in new window or tab on double-click 
 	  var this_section = jQuery(this).attr('name');
 	  var categories = get_selected_categories(this_section);
 	  var category = categories.pop();
@@ -78,15 +70,13 @@ window.onload = function initialize() {
 	      if (window.console) console.log("no link for this category");
 	}
       });
-
 }
 
-
 function retrieve_and_display_set(categories, data, this_section) {
-    console.log("categories = "+categories);
-    console.log("data = "+JSON.stringify(data));
-    console.log("genotypes="+get_genotype_checkbox());
-    console.log("retrieval types="+get_retrieval_types());
+    if (window.console) console.log("categories = "+categories);
+    if (window.console) console.log("data = "+JSON.stringify(data));
+    if (window.console) console.log("genotypes="+get_genotype_checkbox());
+    if (window.console) console.log("retrieval types="+get_retrieval_types());
     jQuery.ajax( {
 	url: '/ajax/breeder/search',
 	timeout: 60000,
@@ -121,7 +111,6 @@ function retrieve_and_display_set(categories, data, this_section) {
 		}	
 	    } 
 	});		
-
 }
 
 function get_selected_data(this_section) {
@@ -135,7 +124,7 @@ function get_selected_data(this_section) {
 
     var this_data_id = "c"+this_section+"_data";
     jQuery("#"+this_data_id).val('');
-    console.log("selected data= "+JSON.stringify(selected_data));
+    if (window.console) console.log("selected data= "+JSON.stringify(selected_data));
     if (selected_data.length > 0) {
     return selected_data;
     }
@@ -160,7 +149,7 @@ function get_selected_categories(this_section) {
     var next_section = this_section +1;
     var next_select_id = "select"+next_section;
     jQuery("#"+next_select_id).val('please select');
-    console.log("selected categories= "+JSON.stringify(selected_categories));
+    if (window.console) console.log("selected categories= "+JSON.stringify(selected_categories));
     return selected_categories;
 }
 
@@ -171,7 +160,6 @@ function update_select_categories(this_section) {
     var all_categories = copy_hash(categories);
 
     for (i=0; i < this_section; i++) {
-	console.log("deleting");
 	delete all_categories[selected_categories[i]];
     }
     var remaining_categories = format_options(all_categories);
@@ -251,7 +239,6 @@ function selectAllOptions(obj) {
     }
 }
 
-
 function get_genotype_checkbox() { 
     var checkbox = jQuery('#restrict_genotypes').is(':checked')
 
@@ -261,16 +248,6 @@ function get_genotype_checkbox() {
     return 0;
 
 }
-
-
-
-
-
-
-
-
-
-
 
 function get_retrieval_types() { 
 

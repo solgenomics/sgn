@@ -122,7 +122,13 @@ CREATE VIEW accessions AS SELECT accession_id, (SELECT accession_name FROM mater
 GRANT ALL ON accessions to web_usr;
 
 CREATE RECURSIVE VIEW breeding_program_ids(breeding_program_id) AS SELECT MIN(breeding_program_id) FROM materialized_fullview UNION SELECT (SELECT m.breeding_program_id FROM materialized_fullview m WHERE m.breeding_program_id > breeding_program_ids.breeding_program_id ORDER BY breeding_program_id LIMIT 1) FROM breeding_program_ids WHERE breeding_program_id IS NOT NULL;
-CREATE VIEW breeding_programs AS SELECT breeding_program_id, (SELECT breeding_program_name FROM materialized_fullview m WHERE breeding_program_ids.breeding_program_id = m.breeding_program_id ORDER BY m.breeding_program_id LIMIT 1) FROM breeding_program_ids;
+CREATE OR REPLACE VIEW breeding_programs AS SELECT breeding_program_ids.breeding_program_id,
+    ( SELECT p.name
+           FROM project p
+          WHERE breeding_program_ids.breeding_program_id = p.project_id
+          ORDER BY breeding_program_id
+         LIMIT 1) AS breeding_program_name
+   FROM breeding_program_ids;
 GRANT ALL ON breeding_programs to web_usr;
 
 CREATE RECURSIVE VIEW location_ids(location_id) AS SELECT MIN(location_id) FROM materialized_fullview UNION SELECT (SELECT m.location_id FROM materialized_fullview m WHERE m.location_id > location_ids.location_id ORDER BY location_id LIMIT 1) FROM location_ids WHERE location_id IS NOT NULL;
