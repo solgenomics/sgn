@@ -100,6 +100,7 @@ sub add_headers {
 	  "\t" . 'Analysis_name' . 
 	  "\t" . "Analysis_page" . 	 
 	  "\t" . "Status" .
+	  "\t" . "Submitted on" .
 	  "\t" . "Arguments" .
 	  "\n";
 
@@ -135,13 +136,15 @@ sub format_profile_entry {
     my ($self, $c) = @_; 
     
     my $profile = $c->stash->{analysis_profile};
-   
+    my $time    = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
+
     my $entry = join("\t", 
 		     ($profile->{user_name}, 
 		      $profile->{user_email}, 
 		      $profile->{analysis_name}, 
 		      $profile->{analysis_page},
 		      'running',
+		      $time,
 		      $profile->{arguments}, 
 		     )
 	);
@@ -618,8 +621,9 @@ sub solgs_analysis_status_log {
 	    my @analysis = split(/\t/, $row);
 	    
 	    my $analysis_name   = $analysis[$header_index->{'Analysis_name'}];
-	    my $result_page   = $analysis[$header_index->{'Analysis_page'}];
+	    my $result_page     = $analysis[$header_index->{'Analysis_page'}];
 	    my $analysis_status = $analysis[$header_index->{'Status'}];
+	    my $submitted_on = $analysis[$header_index->{'Submitted on'}];
 
 	    if ($analysis_status =~ /(Failed|Submitted)/) 
 	    {
@@ -627,10 +631,10 @@ sub solgs_analysis_status_log {
 	    }
 	    else 
 	    {
-		$result_page = qq | <a href=$result_page>[View]</a> |;
+		$result_page = qq | <a href=$result_page>[ View ]</a> |;
 	    }
 
-	    push @panel_data, [$analysis_name, $analysis_status, $result_page];
+	    push @panel_data, [$analysis_name, $submitted_on, $analysis_status, $result_page];
 	}		
     }
  
