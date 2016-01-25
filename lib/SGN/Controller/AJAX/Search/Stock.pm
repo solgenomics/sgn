@@ -31,6 +31,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
     
     my ($or_conditions, $and_conditions);
+    $or_conditions->{'me.stock_id'} =  { '>' => 0 };
+    $and_conditions->{'me.stock_id'} = { '>' => 0 }; 
     if (exists($params->{any_name} ) && $params->{any_name} ) {
 	my $start = '%';
 	my $end = '%';
@@ -46,7 +48,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	$or_conditions = [ 
 	    { 'me.name'          => {'ilike', $start.$params->{any_name}.$end} },  
 	    { 'me.uniquename'    => {'ilike', $start.$params->{any_name}.$end} },  
-	    { 'me.description'   => {'ilike', $start.$params->{any_name}.$end} } 
+	    { 'me.description'   => {'ilike', $start.$params->{any_name}.$end} },
+	    { 'stockprops.value'   => {'ilike', $start.$params->{any_name}.$end} } 
 	    ] ; 
     } else { 
 	$or_conditions = [ { 'me.uniquename' => { '!=', undef } } ];
@@ -117,7 +120,6 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 
     my $page = int($start / $rows)+1;
 
-
     # get the count first
     my $rs = $schema->resultset("Stock::Stock")->search( 
 	{
@@ -127,7 +129,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		],
 	},
 	{
-	    join => ['type', 'organism' , { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}}, { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects'] }  } } }, { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
+	    join => ['type', 'organism', 'stockprops', { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}}, { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects'] }  } } }, { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
 	    distinct => 1,
 	}
     );
@@ -144,7 +146,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		],
 	} ,
 	{ 
-	    join => ['type', 'organism', { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}} ,  { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects'] } } } } , { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
+	    join => ['type', 'organism', 'stockprops', { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}} ,  { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects'] } } } } , { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
 
 	    '+select' => [ 'type.name' , 'organism.species' ],
 	    '+as'     => [ 'cvterm_name' , 'species' ],

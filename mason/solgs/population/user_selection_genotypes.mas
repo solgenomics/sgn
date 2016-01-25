@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-population/upload_prediction_genotypes.mas - prediction genotype upload form 
+population/user_selection_genotypes.mas - prediction genotype upload form 
 
 =AUTHOR
 
@@ -16,24 +16,15 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jqueryfileupload.vendor.ui-widget", "jqueryfileupload.iframe-transport",   "jqueryfileupload.fileupload",   "solGS.userSelectionGenotypes"] &>
-
-<!-- The fileinput-button span is used to style the file input field as button --> 
-<div class="fileupload-buttonbar">
-  <!--  <span class="btn btn-success fileinput-button"> -->
-  <!--         <i class="glyphicon-plus"></i> -->
-  <!--         <span>Upload selection genotypes</span> -->
-  <!--         The file input field used as target for the file upload widget        -->
-  <!--         <input id="fileupload"  type="file" name="files[]" multiple> -->
-  <!--         <input type="hidden" id="check_value" value="">  -->
-  <!--     </span> -->
-   
-   
+<& /util/import_javascript.mas, classes => ["solGS.userSelectionGenotypes"] &>
+  
   <div class="list_upload" id="list_label">
     <label for="prediction_genotypes_list">List-based selection population </label>
   </div> 
+  
   <div class="list_upload" id="prediction_genotypes_list">      
   </div>
+  
   <div class="list_upload" id="prediction_genotypes_list_upload">
     <input type="button" value="Go" />
   </div>
@@ -42,11 +33,13 @@ Isaak Y Tecle (iyt2@cornell.edu)
     <i class="glyphicon-plus"></i>
     <a href="/solgs/breeder_search" style="color:#ffffff">Make a new list of clones</a>  
   </div>
+  
   <br>
   <br>  
-  <!-- The container for the uploaded files -->
-  <div class="sub_infosectioncontent" id="uploaded_selection_populations" style="display:none"></div>
-</div>
+  
+  <div class="sub_infosectioncontent" id="uploaded_selection_populations" style="display:none">
+  </div>
+
 
 
 

@@ -171,9 +171,11 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{years} = \@years;
 
-						     $c->stash->{plot_data} = [];
+    $c->stash->{plot_data} = [];
 
-						     $c->stash->{trial_id} = $c->stash->{trial_id};
+    $c->stash->{trial_id} = $c->stash->{trial_id};
+    
+    $c->stash->{traits_assayed} = $c->stash->{trial}->get_traits_assayed();
 
     if ($design_type eq "genotyping_plate") { 
 	if ($format eq "as_table") { 
@@ -268,9 +270,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id} });
     my $trial_name = $trial_layout->get_trial_name();
-
+    my $trial_id = $trial_layout->get_trial_id();
     my $dir = $c->tempfiles_subdir('download');
-    my $temp_file_name = $trial_name . "_" . "$what" . "XXXX";
+    my $temp_file_name = $trial_id . "_" . "$what" . "XXXX";
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
@@ -288,7 +290,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
       my $error = $download->download();
 
-      my $file_name = $trial_name . "_" . "$what" . ".$format";
+      my $file_name = $trial_id . "_" . "$what" . ".$format";
      $c->res->content_type('Application/'.$format);    
      $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
 

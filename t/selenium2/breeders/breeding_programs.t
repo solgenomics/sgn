@@ -16,6 +16,8 @@ $t->while_logged_in_as("curator", sub {
 
     $new_bp_link->click();
 
+    sleep(2);
+
     my $breeding_program_name_input = $t->find_element_ok('new_breeding_program_name', 'id', 'find add breeding program name input');
 
     $breeding_program_name_input->send_keys('WEBTEST');

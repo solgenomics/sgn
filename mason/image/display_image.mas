@@ -39,7 +39,7 @@ Lukas Mueller <lam87@cornell.edu>
 <%args>
 $image => undef
 $person_id => undef
-$size => 'large'
+$size => 'medium'
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.Image', 'Prototype' ] &>

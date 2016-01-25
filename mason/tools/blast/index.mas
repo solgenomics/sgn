@@ -43,13 +43,16 @@
   # array with the preselected output formats
   my @parse_options_selected = ();
   foreach my $po (@parse_options) { 
-    if (($po->[0] ne "Basic") && ($po->[0] ne "Table")) { 
+    if ($po->[0] eq "SGN") { 
       push @parse_options_selected, $po;
     }
+    # if (($po->[0] ne "Basic") && ($po->[0] ne "Table") && ($po->[0] ne "Coverage") && ($po->[0] ne "SGN")) {
+    #   push @parse_options_selected, $po;
+    # }
   }
 
   # output formats alphabetically sorted
-  my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>"size = \"5\" class\=\"form-control input-sm blast_select_box\"", choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
+  my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>"size = \"6\" class\=\"form-control input-sm blast_select_box\"", choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
 
   # print STDERR "OUTPUT OPTIONS: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n";
   # print STDERR "OUTPUT SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options_selected) ))."\n";
@@ -94,7 +97,7 @@
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
-<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a href="/help/tools/blast">Help</a>' &>
+<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/tools/blast" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
   
   <div class="form-group form-inline">
@@ -162,11 +165,12 @@
 </&>
 
 <&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
-<table style="width:700px;">
+<table>
   <tr><td><div id="prereqs"></div></td></tr>
   <tr><td><div id="Overview_output"></div></td></tr>
   <tr><td><div id="Coverage_output"></div></td></tr>
-  <tr><td><div id="Table_output"></div></td></tr>
+  <tr><td><div id="Table_output" style="min-width:900px;"></div></td></tr>
+  <tr><td><div id="SGN_output"></div></td></tr>
   <tr><td><div id="Bioperl_output"></div></td></tr>
   <tr><td><div id="Basic_output"></div></td></tr>
 </table>
@@ -192,6 +196,7 @@
     
   </div>
 </div>
+
 
 <div class="modal fade" id="search_modal" role="dialog">
   <div class="modal-dialog modal-lg">
@@ -328,6 +333,7 @@ h1 {
 .ui-dialog {
 	position:relative;
 }
+
 #region_square {
 	position:absolute;
 	vertical-align:middle;
@@ -357,43 +363,7 @@ h1 {
   max-width: 98%;
 }
 
-.submit_blast_button {
-background-color:#555555;
-/*background-color:#4387FD;*/
-border:0px;
-border-radius:2px;
-/*color:#fff;*/
-color:#EEEEEE;
-box-shadow: 1px 1px 0px 0px #C6C6C6;
-font-family:Arial;
-font-size:12px;
-height:20px;
-line-height:18px;
-vertical-align: top;
-cursor:pointer;
-}
-.submit_blast_button:hover {
-background-color:#444444;
-/*background-color:#5EA1FF;*/
-/*color:#acf;*/
-color:#fff;
-}
-.submit_blast_button:active {
-position:relative;
-top:1px;
-left:1px;
-box-shadow: 0px 0px 0px 0px #fff;
-}
 
-/*.blast_search_input_box {
-border-color:#AAA;
-border-width:1px;
-border-style:solid;
-border-radius:5px;
-height: 20px;
-padding-left: 5px;
-}
-*/
 .download_tag {
   display:none;
 }
