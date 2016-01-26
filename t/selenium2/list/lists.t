@@ -116,7 +116,7 @@ foreach my $list_type ( keys %test_lists ) {
 
 $d->find_element_ok("view_public_lists_button", "id", "find public list button")->click();
 
-sleep(1);
+sleep(3);
 
 $d->find_element_ok("view_public_list_johndoe_1_public", "id", "view johndoe1public list")->click();
 

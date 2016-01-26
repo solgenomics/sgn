@@ -34,6 +34,7 @@ sub solgs_trait_search_autocomplete_GET :Args(0) {
     
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
+    
     my @response_list;
 
     my $rs = $c->model("solGS::solGS")->search_trait($term);
@@ -44,6 +45,28 @@ sub solgs_trait_search_autocomplete_GET :Args(0) {
 
     $c->{stash}->{rest} = \@response_list;
 }
+
+
+sub solgs_population_search_autocomplete :  Path('/solgs/ajax/population/search') : ActionClass('REST') { }
+
+sub solgs_population_search_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $term = $c->req->param('term');
+   
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $rs = $c->model("solGS::solGS")->project_details_by_name($term);
+
+    while (my $row = $rs->next) {  
+        push @response_list, $row->name;
+    }
+
+    $c->{stash}->{rest} = \@response_list;
+}
+
 
 
 
