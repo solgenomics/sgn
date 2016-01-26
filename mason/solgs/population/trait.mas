@@ -81,6 +81,8 @@ $combo_pops_id => ''
 
 </&>
 
+<& /solgs/model/pca.mas &>
+
 % if ($show_data) 
 %{
 
@@ -92,8 +94,6 @@ $combo_pops_id => ''
    accuracy_report        => $accuracy_report,
   validation_download_url => $validation_download_url
 &>
-
-<& /solgs/model/pca.mas &>
 
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
