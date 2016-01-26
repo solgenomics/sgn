@@ -22,9 +22,9 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
 
     print STDERR "TRIAL INIT...".localtime()."\n";
 
-
     $c->stash->{trial_id} = $trial_id;
     print STDERR "TRIAL ID = $trial_id\n";
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     $c->stash->{schema} = $schema;
     my $trial;
@@ -38,7 +38,6 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     }
     $c->stash->{trial} = $trial;    
     
-    print STDERR "Check2: ".localtime()."\n";
 }
 
 sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) { 
@@ -51,7 +50,6 @@ sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
 sub trial_info : Chained('trial_init') PathPart('') Args(0) { 
     my $self = shift;
     my $c = shift;
-    print STDERR "Check3: ".localtime()."\n";
     my $format = $c->req->param("format");
 
     my $user = $c->user();
@@ -157,7 +155,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 	$c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
     
-    print STDERR "check 6: ".(time()-$start_time)."\n";
+    print STDERR "End Load Trial Detail Page: ".localtime()."\n";
     
 }
 
