@@ -54,70 +54,56 @@ sub get_intersect {
     my $genotype_protocol_id = shift;
     my $intersect = shift;
 
-    my @array = join ",", @$criteria_list;
-    my $count = scalar @array;
-
-    print STDERR "gtpid = $genotype_protocol_id \n";
-    print STDERR "intersect = $intersect \n";
     my $h;
 
-    print STDERR "CRITERIA LIST: ".(join ",", @$criteria_list)."\n";
-    print STDERR "Dataref = ".Dumper($dataref);
-    
-    
-    print STDERR "length =" . $count;
+    my $target_table = $criteria_list->[-1];
+    print STDERR "target_table=". $target_table . "\n";
+    my $target = $target_table;
+    $target =~ s/s$//;
+    my $geno_filter;
+    $genotype_protocol_id ? $geno_filter = "AND nd_protocol_id = $genotype_protocol_id " : $geno_filter = '';
 
-    my $target = $criteria_list->[-1];
-    print STDERR "target=". $target . "\n";
+    my $select = "SELECT ".$target."_id, ".$target."_name ";
+    my $group = "GROUP BY ".$target."_id, ".$target."_name ";
 
-    print STDERR "Dataref target : " . Dumper($dataref->{"$target"});
-    print STDERR "Dataref hardcoded : " . Dumper($dataref->{'years'});
-
-    my $query;
-    if (!$dataref->{"$target"}) {
-	my $query = "SELECT * from $target";
-	print STDERR "QUERY: $query\n";
-	$h = $self->dbh->prepare($query);
-	print STDERR "Prepared, now executing query  . . .";
-	$h->execute();
+    my $full_query;
+    if (!$dataref->{"$target_table"}) {
+	my $from = "FROM ". $target_table;
+	$full_query = $select . $from . $geno_filter;
     } else {
-	if ($intersect) {
-	    my @parts;
-	    $target =~ s/s$//;
-	    foreach my $criterion (@$criteria_list) {
-		if ($dataref->{$criteria_list->[-1]}->{$criterion}) {
-		    my @ids = split(/,/, $dataref->{$criteria_list->[-1]}->{$criterion});
-		    my $singular = $criterion;
-		    $singular =~ s/s$//;
+	my @queries;
+	foreach my $category (@$criteria_list) {
+	    if ($dataref->{$criteria_list->[-1]}->{$category}) {
+		my $query;
+		my @categories = ($target_table, $category);
+		@categories = sort @categories;
+		my $from = "FROM ". $categories[0] ."x". $categories[1] . " JOIN " . $target_table . " USING(" . $target."_id) ";
+		my $criterion = $category;
+		$criterion =~ s/s$//;
+		if ($intersect) {
+		    my @parts;
+		    my @ids = split(/,/, $dataref->{$criteria_list->[-1]}->{$category});
 		    foreach my $id (@ids) {
-			my $statement = "SELECT ".$target."_id, ".$target."_name FROM materialized_fullview WHERE ".$singular."_id IN (".$id.") ";
-			if ($genotype_protocol_id) { $statement .= "AND nd_protocol_id = $genotype_protocol_id ";}
-			$statement .= "GROUP BY ".$target."_id, ".$target."_name";
+			my $where = "WHERE ". $criterion. "_id IN (". $id .") ";
+			my $statement = $select . $from . $where . $geno_filter . $group;
 			push @parts, $statement;
 		    }
+		    $query = join (" INTERSECT ", @parts);
+		    push @queries, $query;
+		} else {
+		    my $where = "WHERE ". $criterion. "_id IN (" . $dataref->{$criteria_list->[-1]}->{$category} . ") ";
+		    $query = $select . $from . $where . $geno_filter . $group;
+		    push @queries, $query;
 		}
 	    }
-	    $query = join (" INTERSECT ", @parts);
-	    $query .= " ORDER BY 2";
-	} else {  # use all criteria at once to find union
-	    my @wheres;
-	    $target =~ s/s$//;
-	    my $select = "SELECT ".$target."_id, ".$target."_name FROM materialized_fullview WHERE ";
-	    foreach my $criterion (@$criteria_list) {
-		if ($dataref->{$criteria_list->[-1]}->{$criterion}) {
-		    my $singular = $criterion;
-		    $singular =~ s/s$//;
-		    push @wheres, $singular . "_id IN (" . $dataref->{$criteria_list->[-1]}->{$criterion} . ") ";	
-		}
-	    }
-	    if ($genotype_protocol_id) { push @wheres, "nd_protocol_id = $genotype_protocol_id ";}
-	    my $group_by = "GROUP BY ".$target."_id, ".$target."_name ORDER BY 2";
-	    $query = $select . join ("AND ", @wheres). $group_by;
 	}
-	print STDERR "QUERY: $query\n";
-	$h = $self->dbh->prepare($query);
-	$h->execute();
+	$full_query = join (" INTERSECT ", @queries);
     }
+    $full_query .= " ORDER BY 2";
+    print STDERR "QUERY: $full_query\n";
+    $h = $self->dbh->prepare($full_query);
+    print STDERR "Prepared, now executing query  . . .";
+    $h->execute();
 
     my @results;
     while (my ($id, $name) = $h->fetchrow_array()) { 

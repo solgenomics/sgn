@@ -81,7 +81,12 @@ Search using accession, plot, location, year, trial, and trait data.
 <td width="200">
   <select multiple class="form-control" id="c4_data" name="4" size="10" style="width:200px; overflow:auto;"></select>	  
 </td>
-
+    <td>
+      <input class="btn btn-primary" type="button" id="phenotype" value="Download Phenotypes"/>
+      <input type="hidden" id="download_token_value" name="download_token_value"/>
+      <br>
+      <input class="btn btn-primary" type="button" id="genotype" value="Download Genotypes" />
+    </td>
 </tr>
 <tr>
 <td>

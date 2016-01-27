@@ -61,8 +61,6 @@ SELECT CASE WHEN trim($1) SIMILAR TO '[0-9]+'
 $BODY$
   LANGUAGE 'sql' IMMUTABLE STRICT;
 
-ALTER TABLE phenotype ALTER COLUMN value TYPE numeric USING pc_chartonum(value);
-
 CREATE MATERIALIZED VIEW materialized_fullview AS
  SELECT plot.uniquename AS plot_name,
     stock_relationship.subject_id AS plot_id,
@@ -78,9 +76,8 @@ CREATE MATERIALIZED VIEW materialized_fullview AS
     breeding_program.name AS breeding_program_name,
     cvterm.cvterm_id AS trait_id,
     (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name,
-phenotype.phenotype_id,
-    phenotype.value AS phenotype_value,
-    nd_experiment_protocol.nd_protocol_id
+    nd_experiment_protocol.nd_protocol_id AS genotyping_protocol_id,
+    nd_protocol.name AS genotyping_protocol_name
    FROM stock plot
      LEFT JOIN stock_relationship ON plot.stock_id = stock_relationship.subject_id
      LEFT JOIN stock accession ON stock_relationship.object_id = accession.stock_id
@@ -88,6 +85,7 @@ phenotype.phenotype_id,
      LEFT JOIN nd_experiment ON nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id
      LEFT JOIN nd_geolocation ON nd_experiment.nd_geolocation_id = nd_geolocation.nd_geolocation_id
      LEFT JOIN nd_experiment_protocol ON nd_experiment.nd_experiment_id = nd_experiment_protocol.nd_experiment_id
+     LEFT JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id
      LEFT JOIN nd_experiment_project ON nd_experiment.nd_experiment_id = nd_experiment_project.nd_experiment_id
      LEFT JOIN project trial ON nd_experiment_project.project_id = trial.project_id
      LEFT JOIN project_relationship ON trial.project_id = project_relationship.subject_project_id
@@ -99,61 +97,252 @@ phenotype.phenotype_id,
      LEFT JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id
      LEFT JOIN db ON dbxref.db_id = db.db_id
   WHERE plot.type_id = 76393 AND projectprop.type_id = 76395 AND db.db_id = 186
-  GROUP BY stock_relationship.subject_id, cvterm.cvterm_id, plot.uniquename, accession.uniquename, stock_relationship.object_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, trial.name, project_relationship.subject_project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, nd_experiment.nd_geolocation_id, nd_geolocation.description, phenotype.phenotype_id, phenotype.value, nd_experiment_protocol.nd_protocol_id;
+  GROUP BY stock_relationship.subject_id, cvterm.cvterm_id, plot.uniquename, accession.uniquename, stock_relationship.object_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, trial.name, project_relationship.subject_project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, nd_experiment.nd_geolocation_id, nd_geolocation.description, nd_experiment_protocol.nd_protocol_id, nd_protocol.name;
 GRANT ALL ON materialized_fullview to web_usr;
 
 CREATE UNIQUE INDEX unqmeasurement_idx ON materialized_fullview(trial_id, trait_id, plot_id, phenotype_id) WITH (fillfactor =100);
 CREATE INDEX trait_id_idx ON materialized_fullview(trait_id) WITH (fillfactor =100);
-CREATE INDEX breeding_program_id_idx ON materialized_fullview(breeding_program_id) WITH (fillfactor =100);
+
 CREATE INDEX trial_id_idx ON materialized_fullview(trial_id) WITH (fillfactor =100);
-CREATE INDEX nd_protocol_id_idx ON materialized_fullview(nd_protocol_id) WITH (fillfactor =100);
-CREATE INDEX year_idx ON materialized_fullview(year_id) WITH (fillfactor =100);
-CREATE INDEX location_id_idx ON materialized_fullview(location_id) WITH (fillfactor =100);
+CREATE INDEX genotyping_protocol_id_idx ON materialized_fullview(genotyping_protocol_id) WITH (fillfactor =100);
 CREATE INDEX accession_id_idx ON materialized_fullview(accession_id) WITH (fillfactor =100);
 CREATE INDEX plot_id_idx ON materialized_fullview(plot_id) WITH (fillfactor =100);
-CREATE INDEX trial_by_loc_by_breed_prog_idx ON materialized_fullview(breeding_program_id,location_id,trial_id) WITH (fillfactor =100);
-CREATE INDEX trial_by_year_by_loc_idx ON materialized_fullview(location_id,year_id,trial_id) WITH (fillfactor =100);
-CREATE INDEX trial_by_breed_prog_idx ON materialized_fullview(breeding_program_id,trial_id) WITH (fillfactor =100);
-CREATE INDEX trial_by_year_idx ON materialized_fullview(year_id,trial_id) WITH (fillfactor =100);
-CREATE INDEX year_by_breed_prog_idx ON materialized_fullview(breeding_program_id,year_id) WITH (fillfactor =100);
 
-CREATE RECURSIVE VIEW accession_ids(accession_id) AS SELECT MIN(accession_id) FROM materialized_fullview UNION SELECT (SELECT m.accession_id FROM materialized_fullview m WHERE m.accession_id > accession_ids.accession_id ORDER BY accession_id LIMIT 1) FROM accession_ids WHERE accession_id IS NOT NULL;
-CREATE VIEW accessions AS SELECT accession_id, (SELECT accession_name FROM materialized_fullview m WHERE accession_ids.accession_id = m.accession_id ORDER BY m.accession_id LIMIT 1) FROM accession_ids;
+CREATE INDEX breed_prog_X_accessions_idx ON materialized_fullview(breeding_program_id,accession_id) WITH (fillfactor=100);
+CREATE INDEX breed_prog_X_plots_idx ON materialized_fullview(breeding_program_id,plot_id) WITH (fillfactor=100);
+CREATE INDEX breed_prog_X_trials_idx ON materialized_fullview(breeding_program_id,trial_id) WITH (fillfactor=100);
+CREATE INDEX location_X_accessions_idx ON materialized_fullview(location_id,accession_id) WITH (fillfactor=100);
+CREATE INDEX location_X_plots_idx ON materialized_fullview(location_id,plot_id) WITH (fillfactor=100);
+CREATE INDEX location_X_trials_idx ON materialized_fullview(location_id,trial_id) WITH (fillfactor=100);
+
+CREATE INDEX breed_prog_X_location_X_trials_idx ON materialized_fullview(breeding_program_id,location_id,trial_id) WITH (fillfactor =100);
+CREATE INDEX breed_prog_X_year_X_trials_idx ON materialized_fullview(breeding_program_id,year_id,trial_id) WITH (fillfactor =100);
+CREATE INDEX location_X_year_X_trials_idx ON materialized_fullview(location_id,year_id,trial_id) WITH (fillfactor =100);
+CREATE INDEX years_X_trials_idx ON materialized_fullview(year_id,trial_id) WITH (fillfactor =100);
+
+CREATE MATERIALIZED VIEW accessions AS
+SELECT materialized_fullview.accession_id,
+    materialized_fullview.accession_name
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.accession_id, materialized_fullview.accession_name;
 GRANT ALL ON accessions to web_usr;
+CREATE MATERIALIZED VIEW accessionsXbreeding_programs AS
+SELECT materialized_fullview.accession_id,
+    materialized_fullview.breeding_program_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.accession_id, materialized_fullview.breeding_program_id;
+GRANT ALL ON accessionsXbreeding_programs to web_usr;
+CREATE MATERIALIZED VIEW accessionsXlocations AS
+SELECT materialized_fullview.accession_id,
+    materialized_fullview.location_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.accession_id, materialized_fullview.location_id;
+GRANT ALL ON accessionsXlocations to web_usr;
+CREATE MATERIALIZED VIEW accessionsXgenotyping_protocols AS
+SELECT materialized_fullview.accession_id,
+    materialized_fullview.genotyping_protocol_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.accession_id, materialized_fullview.genotyping_protocol_id;
+GRANT ALL ON accessionsXgenotyping_protocols to web_usr;
+CREATE MATERIALIZED VIEW accessionsXplots AS
+SELECT materialized_fullview.accession_id,
+    materialized_fullview.plot_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.accession_id, materialized_fullview.plot_id;
+GRANT ALL ON accessionsXplots to web_usr;
+CREATE MATERIALIZED VIEW accessionsXtraits AS
+SELECT materialized_fullview.accession_id,
+    materialized_fullview.trait_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.accession_id, materialized_fullview.trait_id;
+GRANT ALL ON accessionsXtraits to web_usr;
+CREATE MATERIALIZED VIEW accessionsXtrials AS
+SELECT materialized_fullview.accession_id,
+    materialized_fullview.trial_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.accession_id, materialized_fullview.trial_id;
+GRANT ALL ON accessionsXtrials to web_usr;
+CREATE MATERIALIZED VIEW accessionsXyears AS
+SELECT materialized_fullview.accession_id,
+    materialized_fullview.year_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.accession_id, materialized_fullview.year_id;
+GRANT ALL ON accessionsXyears to web_usr;
 
-CREATE RECURSIVE VIEW breeding_program_ids(breeding_program_id) AS SELECT MIN(breeding_program_id) FROM materialized_fullview UNION SELECT (SELECT m.breeding_program_id FROM materialized_fullview m WHERE m.breeding_program_id > breeding_program_ids.breeding_program_id ORDER BY breeding_program_id LIMIT 1) FROM breeding_program_ids WHERE breeding_program_id IS NOT NULL;
-CREATE OR REPLACE VIEW breeding_programs AS SELECT breeding_program_ids.breeding_program_id,
-    ( SELECT p.name
-           FROM project p
-          WHERE breeding_program_ids.breeding_program_id = p.project_id
-          ORDER BY breeding_program_id
-         LIMIT 1) AS breeding_program_name
-   FROM breeding_program_ids;
+CREATE MATERIALIZED VIEW breeding_programs AS
+SELECT materialized_fullview.breeding_program_id,
+    materialized_fullview.breeding_program_name
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.breeding_program_name;
 GRANT ALL ON breeding_programs to web_usr;
+CREATE MATERIALIZED VIEW breeding_programsXlocations AS
+SELECT materialized_fullview.breeding_program_id,
+    materialized_fullview.location_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.location_id;
+GRANT ALL ON breeding_programsXlocations to web_usr;
+CREATE MATERIALIZED VIEW breeding_programsXgenotyping_protocols AS
+SELECT materialized_fullview.breeding_program_id,
+    materialized_fullview.genotyping_protocol_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.genotyping_protocol_id;
+GRANT ALL ON breeding_programsXgenotyping_protocols to web_usr;
+CREATE MATERIALIZED VIEW breeding_programsXplots AS
+SELECT materialized_fullview.breeding_program_id,
+    materialized_fullview.plot_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.plot_id;
+GRANT ALL ON breeding_programsXplots to web_usr;
+CREATE MATERIALIZED VIEW breeding_programsXtraits AS
+SELECT materialized_fullview.breeding_program_id,
+    materialized_fullview.trait_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.trait_id;
+GRANT ALL ON breeding_programsXtraits to web_usr;
+CREATE MATERIALIZED VIEW breeding_programsXtrials AS
+SELECT materialized_fullview.breeding_program_id,
+    materialized_fullview.trial_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.trial_id;
+GRANT ALL ON breeding_programsXtrials to web_usr;
+CREATE MATERIALIZED VIEW breeding_programsXyears AS
+SELECT materialized_fullview.breeding_program_id,
+    materialized_fullview.year_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.year_id;
+GRANT ALL ON breeding_programsXyears to web_usr;
 
-CREATE RECURSIVE VIEW location_ids(location_id) AS SELECT MIN(location_id) FROM materialized_fullview UNION SELECT (SELECT m.location_id FROM materialized_fullview m WHERE m.location_id > location_ids.location_id ORDER BY location_id LIMIT 1) FROM location_ids WHERE location_id IS NOT NULL;
-CREATE VIEW locations AS SELECT location_id, (SELECT location_name FROM materialized_fullview m WHERE location_ids.location_id = m.location_id ORDER BY m.location_id LIMIT 1) FROM location_ids;
+CREATE MATERIALIZED VIEW genotyping_protocols AS
+SELECT materialized_fullview.genotyping_protocol_id,
+    materialized_fullview.genotyping_protocol_name
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.genotyping_protocol_id, materialized_fullview.genotyping_protocol_name;
+GRANT ALL ON genotyping_protocols to web_usr;
+CREATE MATERIALIZED VIEW genotyping_protocolsXlocations AS
+SELECT materialized_fullview.genotyping_protocol_id,
+    materialized_fullview.location_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.genotyping_protocol_id, materialized_fullview.location_id;
+GRANT ALL ON genotyping_protocolsXlocations to web_usr;
+CREATE MATERIALIZED VIEW genotyping_protocolsXplots AS
+SELECT materialized_fullview.genotyping_protocol_id,
+    materialized_fullview.plot_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.genotyping_protocol_id, materialized_fullview.plot_id;
+GRANT ALL ON genotyping_protocolsXplots to web_usr;
+CREATE MATERIALIZED VIEW genotyping_protocolsXtraits AS
+SELECT materialized_fullview.genotyping_protocol_id,
+    materialized_fullview.trait_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.genotyping_protocol_id, materialized_fullview.trait_id;
+GRANT ALL ON genotyping_protocolsXtraits to web_usr;
+CREATE MATERIALIZED VIEW genotyping_protocolsXtrials AS
+SELECT materialized_fullview.genotyping_protocol_id,
+    materialized_fullview.trial_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.genotyping_protocol_id, materialized_fullview.trial_id;
+GRANT ALL ON genotyping_protocolsXtrials to web_usr;
+CREATE MATERIALIZED VIEW genotyping_protocolsXyears AS
+SELECT materialized_fullview.genotyping_protocol_id,
+    materialized_fullview.year_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.genotyping_protocol_id, materialized_fullview.year_id;
+GRANT ALL ON genotyping_protocolsXyears to web_usr;
+
+CREATE MATERIALIZED VIEW locations AS
+SELECT materialized_fullview.location_id,
+    materialized_fullview.location_name
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.location_id, materialized_fullview.location_name;
 GRANT ALL ON locations to web_usr;
+CREATE MATERIALIZED VIEW locationsXplots AS
+SELECT materialized_fullview.location_id,
+    materialized_fullview.plot_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.location_id, materialized_fullview.plot_id;
+GRANT ALL ON locationsXplots to web_usr;
+CREATE MATERIALIZED VIEW locationsXtraits AS
+SELECT materialized_fullview.location_id,
+    materialized_fullview.trait_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.location_id, materialized_fullview.trait_id;
+GRANT ALL ON locationsXtraits to web_usr;
+CREATE MATERIALIZED VIEW locationsXtrials AS
+SELECT materialized_fullview.location_id,
+    materialized_fullview.trial_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.location_id, materialized_fullview.trial_id;
+GRANT ALL ON locationsXtrials to web_usr;
+CREATE MATERIALIZED VIEW locationsXyears AS
+SELECT materialized_fullview.location_id,
+    materialized_fullview.year_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.location_id, materialized_fullview.year_id;
+GRANT ALL ON locationsXyears to web_usr;
 
-CREATE RECURSIVE VIEW plot_ids(plot_id) AS SELECT MIN(plot_id) FROM materialized_fullview UNION SELECT (SELECT m.plot_id FROM materialized_fullview m WHERE m.plot_id > plot_ids.plot_id ORDER BY plot_id LIMIT 1) FROM plot_ids WHERE plot_id IS NOT NULL;
-CREATE VIEW plots AS SELECT plot_id, (SELECT plot_name FROM materialized_fullview m WHERE plot_ids.plot_id = m.plot_id ORDER BY m.plot_id LIMIT 1) FROM plot_ids;
+CREATE MATERIALIZED VIEW plots AS
+SELECT materialized_fullview.plot_id,
+    materialized_fullview.plot_name
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.plot_id, materialized_fullview.plot_name;
 GRANT ALL ON plots to web_usr;
+CREATE MATERIALIZED VIEW plotsXtraits AS
+SELECT materialized_fullview.plot_id,
+    materialized_fullview.trait_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.plot_id, materialized_fullview.trait_id;
+GRANT ALL ON plotsXtraits to web_usr;
+CREATE MATERIALIZED VIEW plotsXtrials AS
+SELECT materialized_fullview.plot_id,
+    materialized_fullview.trial_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.plot_id, materialized_fullview.trial_id;
+GRANT ALL ON plotsXtrials to web_usr;
+CREATE MATERIALIZED VIEW plotsXyears AS
+SELECT materialized_fullview.plot_id,
+    materialized_fullview.year_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.plot_id, materialized_fullview.year_id;
+GRANT ALL ON plotsXyears to web_usr;
 
-CREATE RECURSIVE VIEW trait_ids(trait_id) AS SELECT MIN(trait_id) FROM materialized_fullview UNION SELECT (SELECT m.trait_id FROM materialized_fullview m WHERE m.trait_id > trait_ids.trait_id ORDER BY trait_id LIMIT 1) FROM trait_ids WHERE trait_id IS NOT NULL;
-CREATE VIEW traits AS SELECT trait_id, (SELECT trait_name FROM materialized_fullview m WHERE trait_ids.trait_id = m.trait_id ORDER BY m.trait_id LIMIT 1) FROM trait_ids;
+CREATE MATERIALIZED VIEW traits AS
+SELECT materialized_fullview.trait_id,
+    materialized_fullview.trait_name
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.trait_id, materialized_fullview.trait_name;
 GRANT ALL ON traits to web_usr;
+CREATE MATERIALIZED VIEW traitsXtrials AS
+SELECT materialized_fullview.trait_id,
+    materialized_fullview.trial_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.trait_id, materialized_fullview.trial_id;
+GRANT ALL ON traitsXtrials to web_usr;
+CREATE MATERIALIZED VIEW traitsXyears AS
+SELECT materialized_fullview.trait_id,
+    materialized_fullview.year_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.trait_id, materialized_fullview.year_id;
+GRANT ALL ON traitsXyears to web_usr;
 
-CREATE RECURSIVE VIEW trial_ids(trial_id) AS SELECT MIN(trial_id) FROM materialized_fullview UNION SELECT (SELECT m.trial_id FROM materialized_fullview m WHERE m.trial_id > trial_ids.trial_id ORDER BY trial_id LIMIT 1) FROM trial_ids WHERE trial_id IS NOT NULL;
-CREATE VIEW trials AS SELECT trial_id, (SELECT trial_name FROM materialized_fullview m WHERE trial_ids.trial_id = m.trial_id ORDER BY m.trial_id LIMIT 1) FROM trial_ids;
+CREATE MATERIALIZED VIEW trials AS
+SELECT materialized_fullview.trial_id,
+    materialized_fullview.trial_name
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.trial_id, materialized_fullview.trial_name;
 GRANT ALL ON trials to web_usr;
+CREATE MATERIALIZED VIEW trialsXyears AS
+SELECT materialized_fullview.trial_id,
+    materialized_fullview.year_id
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.trial_id, materialized_fullview.year_id;
+GRANT ALL ON trialsXyears to web_usr;
 
-CREATE RECURSIVE VIEW year_ids(year_id) AS SELECT MIN(year_id) FROM materialized_fullview UNION SELECT (SELECT m.year_id FROM materialized_fullview m WHERE m.year_id > year_ids.year_id ORDER BY year_id LIMIT 1) FROM year_ids WHERE year_id IS NOT NULL;
-CREATE VIEW years AS SELECT year_id, year_id AS year_name FROM year_ids;
+CREATE MATERIALIZED VIEW years AS
+SELECT materialized_fullview.year_id,
+    materialized_fullview.year_name
+   FROM materialized_fullview
+  GROUP BY materialized_fullview.year_id, materialized_fullview.year_name;
 GRANT ALL ON years to web_usr;
-
-CREATE VIEW trials_years AS SELECT trial_id, (SELECT year_id FROM materialized_fullview m WHERE trial_ids.trial_id = m.trial_id ORDER BY m.trial_id LIMIT 1) FROM trial_ids;
-
-CREATE VIEW trials_programs AS SELECT trial_id, (SELECT breeding_program_id FROM materialized_fullview m WHERE trial_ids.trial_id = m.trial_id ORDER BY m.trial_id LIMIT 1) FROM trial_ids;
 
 INSERT INTO dbxref (db_id, accession) VALUES(288,'breeding_programs');
 INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES(50, 'breeding_programs', 'breeding_programs', (SELECT dbxref_id FROM dbxref WHERE accession = 'breeding_programs');
