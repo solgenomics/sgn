@@ -16,11 +16,10 @@ use File::Slurp qw /write_file read_file/;
 sub check_analysis_status {   
     my ($self, $output_details) = @_;
  
-    my $output_details = $self->check_success($output_details);
-    
+    $output_details = $self->check_success($output_details);
+    $self->log_analysis_status($output_details);
     $self->report_status($output_details); 
     
-    $self->log_analysis_status($output_details);
 }
 
 
@@ -226,45 +225,48 @@ sub check_trait_modeling {
     my ($self, $output_details) = @_;
 
     my $job_tempdir = $output_details->{r_job_tempdir};
-          
+     
     foreach my $k (keys %{$output_details})
     {
 	my $gebv_file;
 	if (ref $output_details->{$k} eq 'HASH') 
-	{
-	   $gebv_file = $output_details->{$k}->{gebv_file}; 
-	} 
-	
-	if ($gebv_file) 
-	{
-	    my $gebv_size;
-	    my $died_file;
-	
-	    while (1) 
+	{ 
+	     if ($output_details->{$k}->{trait_id})
 	    {
-		sleep 5;
-		$gebv_size = -s $gebv_file;
+		$gebv_file = $output_details->{$k}->{gebv_file}; 
+	    }
 
-		if ($gebv_size) 
-		{
-		    $output_details->{$k}->{success} = 1;
-		    $output_details->{status} = 'Done';
-		    last;		
-		}
-		else
-		{
-		    if ($job_tempdir) 
-		    {
-			$died_file = $self->get_file($job_tempdir, 'died');
-			if ($died_file) 
-			{
-			    $output_details->{$k}->{success} = 0;
-			    $output_details->{status} = 'Failed';
-			    last;
-			}
-		    }
-		}	    
-	    }	   	    
+	     if ($gebv_file) 
+	     {
+		 my $gebv_size;
+		 my $died_file;
+	
+		 while (1) 
+		 {
+		     sleep 5;
+		     $gebv_size = -s $gebv_file;
+
+		     if ($gebv_size) 
+		     {
+			 $output_details->{$k}->{success} = 1;
+			 $output_details->{status} = 'Done';
+			 last;		
+		     }
+		     else
+		     {
+			 if ($job_tempdir) 
+			 {
+			     $died_file = $self->get_file($job_tempdir, 'died');
+			     if ($died_file) 
+			     {
+				 $output_details->{$k}->{success} = 0;
+				 $output_details->{status} = 'Failed ' .  " $k " . $gebv_file2;
+				 last;
+			     }
+			 }
+		     }	    
+		 }	   	    
+	     }
 	}
 	else 
 	{  
@@ -350,9 +352,7 @@ sub check_population_download {
 			$output_details->{$k}->{geno_success}    = 0;
 			$output_details->{$k}->{success} = 0;
 			$output_details->{status} = 'Failed';
-		    }
-		    
-		    
+		    }		    
 		} 
 	    } 
 	}
@@ -417,7 +417,7 @@ sub report_status {
 
     my $body = "Dear $user_name,"
 	. "\n\n$analysis_result" 
-	. "\n\n$closing";
+	. "$closing";
    
     my $email = Email::Simple->create(
 	header => [
@@ -460,7 +460,7 @@ sub multi_modeling_message {
 		{  
 		    $all_success = 0; 
 		    my $trait_name = uc($output_details->{$k}->{trait_name});
-		    $message .= "The analysis for $trait_name failed.\n";	 
+		    $message .= "The analysis for $trait_name failed.\n\n";	 
 		}		
 	    }
 	}
@@ -482,18 +482,20 @@ sub single_modeling_message {
     my $message;
     foreach my $k (keys %{$output_details}) 
     {
+	my $gebv_file;
 	if (ref $output_details->{$k} eq 'HASH')
 	{
 	    if ($output_details->{$k}->{trait_id})
 	    {
 		my $trait_name = uc($output_details->{$k}->{trait_name});
 		my $trait_page = $output_details->{$k}->{trait_page};
-		
+		$gebv_file = $output_details->{$k}->{gebv_file};
+
 		if ($output_details->{$k}->{success})		
 		{		
 		    $message = "The analysis for $trait_name is done."
 			." You can view the output here:\n"
-			."$trait_page.\n";
+			."$trait_page.\n\n";
 		}
 		else 
 		{  
@@ -527,7 +529,7 @@ sub population_download_message {
 		{		
 		    $message = "The phenotype and genotype data for $pop_name is ready for analysis."
 			."\nYou can view population page here:\n"
-			."\n$pop_page.\n";
+			."\n$pop_page.\n\n";
 		}
 		else 
 		{  
@@ -591,7 +593,7 @@ sub combine_populations_message {
     {
 	my $combined_pops_page = $output_details->{combined_pops_page};
 	$message .= "Your combined population is ready for analysis." 
-	    ."You can view it here:\n\n$combined_pops_page\n";
+	    ."You can view it here:\n\n$combined_pops_page\n\n";
     } 
  
     return  $message;
@@ -607,11 +609,11 @@ sub log_analysis_status {
     my $analysis_name    = $analysis_profile->{analysis_name};
     
     my $status = $output_details->{status};
-
+    print STDERR "\n status: $status $analysis_name\n";
     my @contents = read_file($log_file);
    
-    map{ $contents[$_] =~ /$analysis_name/ 
-	     ? $contents[$_] =~ s/error|running|submitted/$status/ig 
+    map{ $contents[$_] =~ m/\t$analysis_name\t/ 
+	     ? $contents[$_] =~ s/error|submitted/$status/ig 
 	     : $contents[$_] } 0..$#contents; 
    
     write_file($log_file, @contents);
