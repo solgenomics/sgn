@@ -137,21 +137,21 @@ sub format_profile_entry {
     
     my $profile = $c->stash->{analysis_profile};
     my $time    = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
-
-    my $entry = join("\t", 
-		     ($profile->{user_name}, 
-		      $profile->{user_email}, 
-		      $profile->{analysis_name}, 
-		      $profile->{analysis_page},
-		      'running',
-		      $time,
-		      $profile->{arguments}, 
-		     )
+    my $entry   = join("\t", 
+		       (
+			$profile->{user_name}, 
+			$profile->{user_email}, 
+			$profile->{analysis_name}, 
+			$profile->{analysis_page},
+			'Submitted',
+			$time,
+			$profile->{arguments},
+		       )
 	);
 
     $entry .= "\n";
 	
-   $c->stash->{formatted_profile} = $entry; 
+    $c->stash->{formatted_profile} = $entry; 
 
 }
 
@@ -317,8 +317,8 @@ sub structure_output_details {
 
 	    $solgs_controller->get_trait_details($c, $trait_id);	    
 	    $solgs_controller->gebv_kinship_file($c);
-	 	  
-	    my$trait_abbr = $c->stash->{trait_abbr};	  
+	 
+	    my$trait_abbr = $c->stash->{trait_abbr};
 	    my $trait_page;
 	    my $referer = $c->req->referer;   
 	    
@@ -418,8 +418,6 @@ sub structure_output_details {
     $self->analysis_log_file($c);
     my $log_file = $c->stash->{analysis_log_file};
 
-    print STDERR "\nstr out put -logfile: $log_file\n";
-
     $output_details{analysis_profile}  = $analysis_data;
     $output_details{r_job_tempdir}     = $c->stash->{r_job_tempdir};
     $output_details{contact_page}      = $base . 'contact/form';
@@ -501,11 +499,11 @@ sub run_analysis {
     
     if ($error[0]) 
     {
-	$c->stash->{status} = 'Submitting failed.';
+	$c->stash->{status} = 'Failed submitting';
     }
     else 
     {    
-	$c->stash->{status} = 'Submitted.';
+	$c->stash->{status} = 'Submitted';
     }
  
     $self->update_analysis_progress($c);
@@ -525,8 +523,8 @@ sub update_analysis_progress {
   
     my @contents = read_file($log_file);
    
-    map{ $contents[$_] =~ /$analysis_name/ 
-	     ? $contents[$_] =~ s/error|running/$status/ig 
+    map{ $contents[$_] =~ m/\t$analysis_name\t/
+	     ? $contents[$_] =~ s/error|submitted/$status/ig 
 	     : $contents[$_] } 0..$#contents; 
    
     write_file($log_file, @contents);
@@ -623,9 +621,9 @@ sub solgs_analysis_status_log {
 	    my $analysis_name   = $analysis[$header_index->{'Analysis_name'}];
 	    my $result_page     = $analysis[$header_index->{'Analysis_page'}];
 	    my $analysis_status = $analysis[$header_index->{'Status'}];
-	    my $submitted_on = $analysis[$header_index->{'Submitted on'}];
+	    my $submitted_on    = $analysis[$header_index->{'Submitted on'}];
 
-	    if ($analysis_status =~ /(Failed|Submitted)/) 
+	    if ($analysis_status =~ /(Failed|Submitted)/i) 
 	    {
 		$result_page = 'N/A';
 	    }
