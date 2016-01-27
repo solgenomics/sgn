@@ -120,6 +120,7 @@ sub set_year {
 	$row = $self->bcs_schema->resultset('Project::Projectprop')->create(
 	    { type_id => $type_id,
 	    value => $year,
+	      project_id =>  $self->get_trial_id()
 	    } );
     }
 }
