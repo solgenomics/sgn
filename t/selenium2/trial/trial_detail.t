@@ -54,7 +54,7 @@ $t->while_logged_in_as("curator", sub {
     #Verify Trial Info
     $t->find_element_ok("//div[contains(., 'test (test)')]", "xpath", "verify breeding program")->get_text();
     $t->find_element_ok("//div[contains(., 'T100')]", "xpath", "verify trial name")->get_text();
-    $t->find_element_ok("//div[contains(., '[type not set]')]", "xpath", "verify trial type")->get_text();
+    $t->find_element_ok("//div[contains(., '[Type not set]')]", "xpath", "verify trial type")->get_text();
     $t->find_element_ok("//div[contains(., 'T100 trial test description')]", "xpath", "verify description")->get_text();
 
     #Verify Trial Design
@@ -162,7 +162,7 @@ $t->while_logged_in_as("curator", sub {
     sleep(1);
     $t->driver->accept_alert();
     sleep(1);
-    $t->find_element_ok("//div[contains(., 'trial_description')]", "xpath", "verify desc")->get_text();
+    $t->find_element_ok("//div[contains(., 'test_description')]", "xpath", "verify desc")->get_text();
 
 
 

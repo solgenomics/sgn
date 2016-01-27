@@ -134,7 +134,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 %  print "$_ <br/>";
 % }
 % } else {
-% print "[No Trial Type]";
+% print "[Type not set]";
 % }
 </div>
 </td>
