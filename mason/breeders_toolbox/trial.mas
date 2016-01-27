@@ -263,7 +263,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <br /><br />
 
-<&| /page/info_section.mas, title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $accessions_empty &>
+<&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $accessions_empty &>
 
 <table class="table table-hover table-condensed table-bordered">
 <thead><tr><th>Stock Unique Name</th></tr></thead>
@@ -277,7 +277,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
-<&| /page/info_section.mas, title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $controls_empty&>
+<&| /page/info_section.mas, id => "trial_controls", title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $controls_empty&>
 
 <table class="table table-hover table-condensed table-bordered">
 <thead><tr><th>Stock Unique Name</th></tr></thead>
@@ -291,7 +291,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
-<&| /page/info_section.mas, title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $plots_empty&>
+<&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $plots_empty&>
 % foreach my $plot (@plot_names) { 
 %  print "$plot <br />\n";
 %}
