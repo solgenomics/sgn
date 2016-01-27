@@ -7,7 +7,8 @@ window.onload = function initialize() {
     jQuery('#select1, #select2, #select3, #select4').change(  // retrieve new data once new category is selected
     	function() {
 	    var this_section = jQuery(this).attr('name');
-
+	    reset_downstream_sections(this_section);
+	    update_select_categories(this_section);
 	    if (jQuery(this).val() == '') { // return empty if no category defined
 		var data_element = "c"+this_section+"_data";
 		jQuery("#"+data_element).html("");
