@@ -98,7 +98,7 @@ sub get_all_populations {
 	    $accession_info{'description'}=$population_member_row->description();
 	    $accession_info{'stock_id'}=$population_member_row->stock_id();
 	    my $synonyms_rs;
-	    $synonyms_rs = $population_member_row->search_related('stockprops', {'type.name' => 'synonym'}, { join => 'type' });
+	    $synonyms_rs = $population_member_row->search_related('stockprops', {'type.name' => {ilike => '%synonym%' } }, { join => 'type' });
 	    my @synonyms;
 	    if ($synonyms_rs) {
 		while (my $synonym_row = $synonyms_rs->next()) {

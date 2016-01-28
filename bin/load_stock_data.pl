@@ -249,7 +249,7 @@ my $coderef= sub  {
 		my $existing_synonym = $stock->search_related(
                     'stockprops' , {
                         'me.value'   => $syn,
-                        'type.name'  => 'synonym'
+                        'type.name'  => { ilike => '%synonym%' }
                     },
                     { join =>  'type' }
 		    )->single;
