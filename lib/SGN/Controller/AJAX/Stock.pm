@@ -65,13 +65,13 @@ sub add_stockprop_POST {
         my $stock_id = $c->req->param('stock_id');
         my $prop  = $c->req->param('prop');
         my $prop_type = $c->req->param('prop_type');
-	#if ($prop_type eq 'synonym') { $prop_type = 'stock_synonym' ; } 
+	if ($prop_type eq 'synonym') { $prop_type = 'stock_synonym' ; } 
 
 	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } ); 
 
 	if ($stock && $prop && $prop_type) { 
 	    try {
-		$stock->create_stockprops( { $prop_type => $prop }, { dbxref_accession_prefix => 'stock_synonym:', autocreate => 1 } ); 
+		$stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } ); 
 		$c->stash->{rest} = { message => "stock_id $stock_id and type_id $prop_type have been associated with value $prop", }
 	    } catch {
 		$c->stash->{rest} = { error => "Failed: $_" }
