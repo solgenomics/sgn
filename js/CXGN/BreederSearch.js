@@ -1,7 +1,11 @@
 window.onload = function initialize() { 
 
     jQuery('input[type="checkbox"]').on('change', function() {  // ensure only one checkbox is selected at a time
-	jQuery('input[id="' + this.id + '"]').not(this).prop('checked', false);
+	if (jQuery('input[id="' + this.id + '"]').not(this).is(':checked')) {
+	    jQuery('input[id="' + this.id + '"]').not(this).prop('checked', false);
+	} else {
+	    jQuery('input[id="' + this.id + '"]').not(this).prop('checked', true);
+	}
     });
 
     jQuery('#select1, #select2, #select3, #select4').change(  // retrieve new data once new category is selected
@@ -77,12 +81,12 @@ function retrieve_and_display_set(categories, data, this_section) {
     if (window.console) console.log("categories = "+categories);
     if (window.console) console.log("data = "+JSON.stringify(data));
     if (window.console) console.log("genotypes="+get_genotype_checkbox());
-    if (window.console) console.log("retrieval types="+get_retrieval_types());
+    if (window.console) console.log("querytypes="+get_querytypes(this_section));
     jQuery.ajax( {
 	url: '/ajax/breeder/search',
 	timeout: 60000,
 	method: 'POST',
-	data: {'categories': categories, 'data': data, 'genotypes': get_genotype_checkbox(), 'retrieval_types': get_retrieval_types()},
+	data: {'categories': categories, 'data': data, 'genotypes': get_genotype_checkbox(), 'querytypes': get_querytypes(this_section)},
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -250,6 +254,20 @@ function get_genotype_checkbox() {
 
 }
 
-function get_retrieval_types() { 
+function get_querytypes(this_section) {
+    var querytypes = [];
 
+    for (i=2; i <= this_section; i++) {
+	var element_name = "c"+i+"_intersect";
+	if (jQuery('[name="'+element_name+'"]').is(':checked')) {
+	    var type = 1;
+	} else {
+	    var type = 0;
+	}
+	console.log("type="+type);
+	querytypes.push(type);
+    }
+    if (querytypes.length > 0) {
+    return querytypes;
+    }
 }

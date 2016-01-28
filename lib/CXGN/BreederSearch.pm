@@ -50,9 +50,12 @@ has 'dbh' => (
 sub get_intersect { 
     my $self = shift;
     my $criteria_list = shift;
+    print STDERR "criteria_list=" . Dumper($criteria_list);
     my $dataref = shift;
+    print STDERR "dataref=" . Dumper($dataref);
     my $genotype_protocol_id = shift;
-    my $intersect = shift;
+    my $queryref = shift;
+    print STDERR "queryref=" . Dumper($queryref);
 
     my $h;
 
@@ -80,6 +83,8 @@ sub get_intersect {
 		my $from = "FROM ". $categories[0] ."x". $categories[1] . " JOIN " . $target_table . " USING(" . $target."_id) ";
 		my $criterion = $category;
 		$criterion =~ s/s$//;
+		my $intersect = $queryref->{$criteria_list->[-1]}->{$category};
+		print STDERR "intersect=" . Dumper($intersect);
 		if ($intersect) {
 		    my @parts;
 		    my @ids = split(/,/, $dataref->{$criteria_list->[-1]}->{$category});

@@ -12,6 +12,38 @@ Search using accession, plot, location, year, trial, and trait data.
 <table class="table borderless" alt="breeder search" border="0" >
 <tr>
 <td width="200">
+  <select class="form-control input-sm" id="select1" name="1"></select>
+</td>
+<td>
+<div class="checkbox">
+  <div align="center">Retrieve</div>
+  <label><input type="checkbox" id="c2_querytype" name="c2_union" value="0" checked>Union (&cup;)</label>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <label><input type="checkbox" id="c2_querytype" name="c2_intersect" value="1">Intersection (&cap;)</label>
+  <div align="center">of selected data with:</div>
+</div>
+</td>
+<td>
+<div class="checkbox">
+  <div align="center">Retrieve</div>
+  <label><input type="checkbox" id="c3_querytype" name="c3_union" value="0" checked>Union (&cup;)</label>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <label><input type="checkbox" id="c3_querytype" name="c3_intersect" value="1">Intersection (&cap;)</label>
+  <div align="center">of selected data with:</div>
+</div>
+</td>
+<td>
+<div class="checkbox">
+  <div align="center">Retrieve</div>
+  <label><input type="checkbox" id="c4_querytype" name="c4_union" value="0" checked>Union (&cup;)</label>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <label><input type="checkbox" id="c4_querytype" name="c4_intersect" value="1">Intersection (&cap;)</label>
+  <div align="center">of selected data with:</div>
+</div>
+</td>
+</tr>
+<tr>
+<td width="200">
   <div class="form-group form-group-sm">
     <label class="col-sm-4 control-label">Start from a List: </label>
     <div class="col-sm-8">
@@ -23,38 +55,6 @@ Search using accession, plot, location, year, trial, and trait data.
 </script>
     </div>
   </div>
-</td>
-<td>
-<div class="checkbox">
-  <div align="center">Retrieve</div>
-  <label><input type="checkbox" id="c2_querytype" name="2" value="union" checked>Union (&cup;)</label>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <label><input type="checkbox" id="c2_querytype" name="2" value="intersect">Intersection (&cap;)</label>
-  <div align="center">of selected data with:</div>
-</div>
-</td>
-<td>
-<div class="checkbox">
-  <div align="center">Retrieve</div>
-  <label><input type="checkbox" id="c3_querytype" name="3" value="union" checked>Union (&cup;)</label>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <label><input type="checkbox" id="c3_querytype" name="3" value="intersect">Intersection (&cap;)</label>
-  <div align="center">of selected data with:</div>
-</div>
-</td>
-<td>
-<div class="checkbox">
-  <div align="center">Retrieve</div>
-  <label><input type="checkbox" id="c4_querytype" name="4" value="union" checked>Union (&cup;)</label>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <label><input type="checkbox" id="c4_querytype" name="4" value="intersect">Intersection (&cap;)</label>
-  <div align="center">of selected data with:</div>
-</div>
-</td>
-</tr>
-<tr>
-<td width="200">
-  <select class="form-control input-sm" id="select1" name="1"></select>
 </td>
 <td>
   <select class="form-control input-sm" id="select2" name="2"></select>
