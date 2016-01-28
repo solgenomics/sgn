@@ -257,9 +257,9 @@ my $coderef= sub  {
 		    $syn_count++;
 		    print STDOUT "Adding synonym: $syn \n"  ;
                     #add the synonym as a stockprop
-                    $stock->create_stockprops({ synonym => $syn},
+                    $stock->create_stockprops({ stock_synonym => $syn},
                                               {autocreate => 1,
-                                               cv_name => 'local',
+                                               #cv_name => 'local', #use the default stock_property cv
                                                allow_duplicate_values=> 1,
 					       
                                               });

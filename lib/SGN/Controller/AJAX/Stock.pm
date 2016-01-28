@@ -522,7 +522,7 @@ sub associate_ontology_POST :Args(0) {
                 $s_cvterm->create_stock_cvtermprops(
                     { 'evidence_code' => $evidence_code } , { db_name => 'ECO', cv_name =>'evidence_code' } ) if looks_like_number($evidence_code);
                  $s_cvterm->create_stock_cvtermprops(
-                     { 'evidence_description' => $evidence_description } , { cv_name =>'null', autocreate => 1 } ) if looks_like_number($evidence_description);
+                     { 'evidence_description' => $evidence_description } , { cv_name =>'local', autocreate => 1 } ) if looks_like_number($evidence_description);
                 $s_cvterm->create_stock_cvtermprops(
                     { 'evidence_with' => $evidence_with  } , { cv_name =>'local' , autocreate=>1} ) if looks_like_number($evidence_with);
                 # store the person loading the annotation 

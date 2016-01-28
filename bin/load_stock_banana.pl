@@ -329,7 +329,7 @@ my $coderef= sub  {
 				my $existing_synonym = $stock->search_related(
                     'stockprops' , {
                         'me.value'   => $syn,
-                        'type.name'  => 'synonym'
+                        'type.name'  => { ilike => '%synonym' }
                     },
                     { join =>  'type' }
             )->single;
@@ -337,9 +337,9 @@ my $coderef= sub  {
             $syn_count++;
             print STDOUT "Adding synonym: $syn \n"  ;
                     #add the synonym as a stockprop
-                    $stock->create_stockprops({ synonym => $syn},
+                    $stock->create_stockprops({ stock_synonym => $syn},
                                               {autocreate => 1,
-                                               cv_name => 'local',
+                                               #cv_name => 'local', #use default stock_property cv
                                                allow_duplicate_values=> 1,
                           
                                               });
