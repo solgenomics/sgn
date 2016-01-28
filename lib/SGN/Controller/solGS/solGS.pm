@@ -2543,8 +2543,7 @@ sub build_multiple_traits_models {
 		}
 	    }	    
 	} 
-    }
-       
+    }       
 
     my $single_trait_id;
     if (!@selected_traits)
@@ -2765,7 +2764,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
 
          $c->controller("solGS::Heritability")->get_heritability($c);
          my $heritability = $c->stash->{heritability};
-#onclick="solGS.waitPage();
+
          push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id">$trait_abbr</a>|, $accuracy_value, $heritability];
        
      }
@@ -2849,7 +2848,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
     
     $c->stash->{pop_id} = $model_id;
 
-    if( $pred_pop_id =~ /\d+/ && $model_id != $pred_pop_id)
+    if ($pred_pop_id =~ /\d+/ && $model_id != $pred_pop_id)
     {
         $c->stash->{prediction_pop_id} = $pred_pop_id;       
     }
@@ -3068,22 +3067,22 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
 
 
 sub get_model_accuracy_value {
-  my ($self, $c, $model_id, $trait_abbr) = @_;
+    my ($self, $c, $model_id, $trait_abbr) = @_;
  
-  my $dir = $c->stash->{solgs_cache_dir};
-  opendir my $dh, $dir or die "can't open $dir: $!\n";
+    my $dir = $c->stash->{solgs_cache_dir};
+    opendir my $dh, $dir or die "can't open $dir: $!\n";
     
-  my ($validation_file)  = grep { /cross_validation_${trait_abbr}_${model_id}/ && -f "$dir/$_" } 
-  readdir($dh);  
+    my ($validation_file)  = grep { /cross_validation_${trait_abbr}_${model_id}/ && -f "$dir/$_" } 
+    readdir($dh);  
  
-  closedir $dh; 
+    closedir $dh; 
         
-  $validation_file = catfile($dir, $validation_file);
+    $validation_file = catfile($dir, $validation_file);
        
-  my ($row) = grep {/Average/} read_file($validation_file);
-  my ($text, $accuracy_value)    = split(/\t/,  $row);
+    my ($row) = grep {/Average/} read_file($validation_file);
+    my ($text, $accuracy_value) = split(/\t/,  $row);
  
-  $c->stash->{accuracy_value} = $accuracy_value;
+    $c->stash->{accuracy_value} = $accuracy_value;
   
 }
 
@@ -3616,16 +3615,16 @@ sub get_all_traits {
    
     unless (-s $acronym_file)
     {
-	    my @filtered_traits = split(/\t/, $traits);
-	    my $count = scalar(@filtered_traits);
+	my @filtered_traits = split(/\t/, $traits);
+	my $count = scalar(@filtered_traits);
 
-	    my $acronymized_traits = $self->acronymize_traits(\@filtered_traits);    
-	    my $acronym_table = $acronymized_traits->{acronym_table};
+	my $acronymized_traits = $self->acronymize_traits(\@filtered_traits);    
+	my $acronym_table = $acronymized_traits->{acronym_table};
 
-	    $self->traits_acronym_table($c, $acronym_table);
+	$self->traits_acronym_table($c, $acronym_table);
     }
 	
-	$self->create_trait_data($c);       
+    $self->create_trait_data($c);       
 }
 
 
@@ -3824,7 +3823,7 @@ sub filter_phenotype_header {
        
     my $meta_headers = "uniquename\tobject_name\tobject_id\tstock_id\tstock_name\tdesign\tblock\treplicate";
 
-    if($c) 
+    if ($c) 
     {
 	$c->stash->{filter_phenotype_header} = $meta_headers;
     }
@@ -3962,7 +3961,9 @@ sub hyperlink_traits {
     {
         push @traits_urls, [ qq | <a href="/solgs/search/result/traits/$tr">$tr</a> | ];
     }
+
     $c->stash->{traits_urls} = \@traits_urls;
+
 }
 
 
@@ -4049,11 +4050,6 @@ sub submit_cluster_genotype_query {
 
     my $status;
  
-    # my $pheno_file  = $args->{genotype_file};
-    # my $pop_id      = $args->{population_id};
-    # my $traits_file = $args->{traits_list_file};
-    # my $cache_dir   = $args->{cache_dir};
-    
     try 
     { 
         my $geno_job = CXGN::Tools::Run->run_cluster_perl({
@@ -4413,8 +4409,7 @@ sub get_rrblup_output {
             $self->gs_files($c);
             $c->stash->{template} = $self->template('population/trait.mas');
         }
-    
-    
+        
         if (scalar(@traits) > 1)    
         {
             $c->stash->{model_id} = $pop_id;
