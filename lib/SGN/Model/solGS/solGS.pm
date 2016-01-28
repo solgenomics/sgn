@@ -86,15 +86,13 @@ sub all_gs_traits {
     my $self = shift;
 
     my $rs = $self->schema->resultset("Phenotype::Phenotype")
-        ->search(
-        {}, 
-        {
-            columns => 'observable_id', 
-            distinct => 1
-        }
-        )
+        ->search({})
         ->search_related('observable', 
-                         {},                        
+                         {}, 
+			 {
+			     columns  => [ qw / cvterm_id observable.name / ],
+			     distinct => 1
+			 },	 	
         );
 
     return $rs;      
@@ -122,7 +120,7 @@ sub search_populations {
 		                          
 			   'select'   => [ qw / project.project_id project.name project.description / ], 
 			   'as'       => [ qw / project_id name description / ],
-			   distinct => [ qw / project.project_id / ]
+			   distinct   => [ qw / project.project_id / ]
                          },			
 	);
 
@@ -157,20 +155,11 @@ sub project_location {
                 LEFT JOIN  nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id) 
                 WHERE project_id = ?
                       AND cvterm.name ilike ?";
-
 	   
     my $sth = $self->context->dbc->dbh()->prepare($q);
 
-    print STDERR "\nckeck query :$sth\n";
-
-    if ( $pr_id eq '' ) { 
-        $pr_id = undef;
-    }
-
-
     $sth->execute($pr_id,'project location');
     
-
     my $loc = $sth->fetchrow_array;
 
     return $loc; 
