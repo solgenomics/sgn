@@ -1343,27 +1343,66 @@ sub project_traits {
 
 }
 
-# sub project_trait_phenotype {
-#   my ($self, $pr_id) = @_;
+
+# sub project_trait_phenotype_data_rs {
+#     my ($self, $project_id, $trait_id) = @_;
   
-#   my $rs = $self->schema->resultset("Project::Project")
-#       ->search({"me.project_id"  => $pr_id, observable.observable_id => $trait_id })
-#        ->search_related("nd_experiment_projects")
-#        ->search_related("nd_experiment")
-#        ->search_related("nd_experiment_phenotypes")
-#        ->search_related("phenotype")
-#        ->search_related("observable",
-#        {},
-#        {
-#            '+select' => [qw / phenotype.phenotype_id phenotype.uniquename phenotype.value /],
-#            '+as' => [qw / phenotype_id phenotype_uniquename phenotype_value /],
+#     my $rs = $self->schema->resultset("Stock::Stock")->search(
+#         {
+#             'observable.cvterm_id' => $trait_id ,
+#             'project.project_id'   => $project_id,           
+#         }, {
+#             join => [
+#                 { stock_relationship_subjects => 'object',     
+# 		  nd_experiment_stocks => {
+# 		      nd_experiment => {
+# 			  nd_experiment_phenotypes => {
+# 			      phenotype => 'observable'                    
+# 			  },
+# 				  nd_experiment_projects => 'project',
+# 		      },
+# 		  },
+# 		},		 
+#                 ],
+#             select   => [ qw/ object.uniquename object.stock_id me.uniquename phenotype.value / ],
+#             as       => [ qw/ stock_name stock_id uniquename value / ],
+          
+#         });
+              
+#     return $rs;
 
-#         order_by => [qw / observable.name / ]
-#        }
-#        );
-
-#        return $rs;
 # }
+
+sub project_trait_phenotype_data_rs {
+    my ($self, $project_id, $trait_id) = @_;
+  
+    my $rs = $self->schema->resultset("Stock::Stock")->search(
+        {
+            'observable.cvterm_id' => $trait_id ,
+            'project.project_id'   => $project_id,           
+        }, {
+            join => [
+                {  nd_experiment_stocks => {
+		    nd_experiment => {
+			nd_experiment_phenotypes => {
+			    phenotype => 'observable'                    
+			},
+				nd_experiment_projects => 'project',
+		    },
+		   }
+		},		 
+                ],
+
+	    select  => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description project.project_id / ],
+	    as      => [ qw/ stock_id uniquename value observable observable_id project_description project_id / ],
+        
+        });
+              
+    return $rs;
+
+}
+
+
 
 sub get_plot_phenotype_rs {
     my ($self, $plot_id, $trait_id) = @_;
@@ -1542,7 +1581,21 @@ sub phenotype_data {
 	 my  $phenotypes = $self->project_phenotype_data_rs($pop_id);
 	 $data           = $self->structure_phenotype_data($phenotypes);                   
      }
-     
+    
+     return  $data; 
+}
+
+
+sub project_trait_phenotype_data {
+     my ($self, $pop_id, $trait_id ) = @_; 
+    
+     my $data;
+     if ($pop_id && $trait_id) 
+     {
+	 my  $phenotypes = $self->project_trait_phenotype_data_rs($pop_id, $trait_id);
+	 $data           = $self->structure_phenotype_data($phenotypes);                   
+     }
+      
      return  $data; 
 }
 
@@ -1627,13 +1680,13 @@ sub structure_phenotype_data {
 	    } 
         
 	    my $block_rs = $self->search_plotprop($subject_id, 'block');
-	    if($block_rs->next)      
+	    if ($block_rs->next)      
 	    {
 		$block = $block_rs->first->value();
 	    } 
         
 	    my $replicate_rs = $self->search_plotprop($subject_id, 'replicate');     
-	    if($replicate_rs->next)       
+	    if ($replicate_rs->next)       
 	    {
 		$replicate = $replicate_rs->first->value();
 	    }
@@ -1712,8 +1765,7 @@ sub phenotypes_by_trait {
              $phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
              $phen_hashref->{$hash_key}{stock_id} = $r->get_column('stock_id');
              $phen_hashref->{$hash_key}{stock_name} = $r->get_column('uniquename');
-             $cvterms{$observable} =  'NA';
-             
+             $cvterms{$observable} =  'NA';             
         }
     }
 
@@ -1747,20 +1799,19 @@ sub phenotypes_by_trait {
        
         my $design_rs = $self->experimental_design($trial_id);
 
-        if($design_rs->next)       
+        if ($design_rs->next)       
         {
             $design = $design_rs->first->value();
         } 
         
         my $block_rs = $self->search_plotprop($subject_id, 'block');
-        if($block_rs->next)
-        
+        if ($block_rs->next)        
         {
             $block = $block_rs->first->value();
         } 
         
         my $replicate_rs = $self->search_plotprop($subject_id, 'replicate');     
-        if($replicate_rs->next)       
+        if ($replicate_rs->next)       
         {
             $replicate = $replicate_rs->first->value();
         }
