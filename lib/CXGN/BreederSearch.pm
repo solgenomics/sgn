@@ -24,9 +24,9 @@ has 'dbh' => (
     );
 
 
-=head2 get_intersect
+=head2 metadata_query
 
- Usage:        my %info = $bs->get_intersect($criteria_list, $dataref, $genotypes, $intersect);
+ Usage:        my %info = $bs->metadata_query($criteria_list, $dataref, $genotypes, $intersect);
  Desc:         
  Ret:          returns a hash with a key called results that contains 
                a listref of listrefs specifying the matching list with ids
@@ -47,7 +47,7 @@ has 'dbh' => (
 
 =cut
 
-sub get_intersect { 
+sub metadata_query { 
     my $self = shift;
     my $criteria_list = shift;
     print STDERR "criteria_list=" . Dumper($criteria_list);
@@ -64,7 +64,7 @@ sub get_intersect {
     my $target = $target_table;
     $target =~ s/s$//;
     my $geno_filter;
-    $genotype_protocol_id ? $geno_filter = "AND nd_protocol_id = $genotype_protocol_id " : $geno_filter = '';
+    $genotype_protocol_id ? $geno_filter = "AND genotyping_protocol_id = $genotype_protocol_id " : $geno_filter = '';
 
     my $select = "SELECT ".$target."_id, ".$target."_name ";
     my $group = "GROUP BY ".$target."_id, ".$target."_name ";
@@ -84,7 +84,7 @@ sub get_intersect {
 		my $criterion = $category;
 		$criterion =~ s/s$//;
 		my $intersect = $queryref->{$criteria_list->[-1]}->{$category};
-		print STDERR "intersect=" . Dumper($intersect);
+		#print STDERR "intersect=" . $intersect ."\n";
 		if ($intersect) {
 		    my @parts;
 		    my @ids = split(/,/, $dataref->{$criteria_list->[-1]}->{$category});

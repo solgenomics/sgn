@@ -22,14 +22,14 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     my $j = JSON::Any->new;
     
     my @criteria_list = $c->req->param('categories[]');
-	
+    my @querytypes = $c->req->param('querytypes[]');
+    my $genotypes = $c->req->param('genotypes');
+
+    #print STDERR "criteria list = " . Dumper(@criteria_list);
+    #print STDERR "querytypes = " . Dumper(@querytypes);
+
     my $dataref = {};
     my $queryref = {};
-    my $genotypes = $c->req->param('genotypes');
-    my @querytypes = $c->req->param('querytypes[]');
-
-    print STDERR "criteria list = " . Dumper(@criteria_list);
-    print STDERR "querytypes = " . Dumper(@querytypes);
 
     my $error = '';
 
@@ -47,26 +47,23 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     for (my $i=0; $i<scalar(@$criteria_list); $i++) { 
 	my @data;
 	my $param = $c->req->param("data[$i][]");
-	print STDERR "PARAM: $param";
+	# print STDERR "data = " . $param;
+
 	if (defined($param) && ($param ne '')) { @data =  $c->req->param("data[$i][]"); }
 	
 	if (@data) { 
-	    print STDERR "data=" . Dumper(@data);
 	    my @cdata = map {"'$_'"} @data;
 	    my $qdata = join ",", @cdata;	    
-	    print STDERR "qdata=" . Dumper($qdata);
 	    $dataref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $qdata;
 	    $queryref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $querytypes[$i];
 	}
     }
 
-    print STDERR "queryref=" . Dumper($queryref);
-
      my $dbh = $c->dbc->dbh();
 
      my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
     
-     my $results_ref = $bs->get_intersect(\@criteria_list, $dataref, $genotypes, $queryref); 
+     my $results_ref = $bs->metadata_query(\@criteria_list, $dataref, $genotypes, $queryref); 
 
     print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
 
