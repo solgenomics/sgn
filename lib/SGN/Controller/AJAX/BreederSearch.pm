@@ -23,7 +23,6 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     
     my @criteria_list = $c->req->param('categories[]');
     my @querytypes = $c->req->param('querytypes[]');
-    my $genotypes = $c->req->param('genotypes');
 
     #print STDERR "criteria list = " . Dumper(@criteria_list);
     #print STDERR "querytypes = " . Dumper(@querytypes);
@@ -36,8 +35,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     foreach my $select (@criteria_list) { 
      	print STDERR "Checking $select\n";
      	chomp($select);
-     	if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'locations', 'plots', 'traits', 'trials', 'years', 'genotypes', undef)) { 
-     	    $error = "Valid keys are accessions, breeding_programs, locations, plots, traits, trials, years, and genotypes or undef";
+     	if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'genotyping_protocols', 'locations', 'plots', 'traits', 'trials', 'years', undef)) { 
+     	    $error = "Valid keys are accessions, breeding_programs, 'genotyping_protocols', locations, plots, traits, trials and years or undef";
      	    $c->stash->{rest} = { error => $error };
      	    return;
      	}
@@ -63,7 +62,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
      my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
     
-     my $results_ref = $bs->metadata_query(\@criteria_list, $dataref, $genotypes, $queryref); 
+     my $results_ref = $bs->metadata_query(\@criteria_list, $dataref, $queryref); 
 
     print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
 

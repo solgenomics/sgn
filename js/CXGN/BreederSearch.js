@@ -18,13 +18,32 @@ window.onload = function initialize() {
 		jQuery("#"+data_element).html("");
 		return;
 	    }
-	    retrieve_and_display_set(get_selected_categories(this_section), get_selected_data(this_section), this_section);
+	    var categories = get_selected_categories(this_section);
+	    var data = get_selected_data(this_section);
+
+	    retrieve_and_display_set(categories, data, this_section);
 	});
 
     jQuery('#c1_data, #c2_data, #c3_data, #c4_data').change( // update wizard panels and categories when data selections change 
     	function() {
 	    var this_section = jQuery(this).attr('name');
-	    var current_section = this_section;
+	    var categories = get_selected_categories(this_section);
+	    var data = get_selected_data(this_section);
+
+	    var trials_selected = 0;
+	    for (i=0; i < categories.length; i++) {
+		//if (categories[i]) {console.log("category ="+categories[i]);}
+		//if (data !== undefined) {console.log("data ="+data[i]);}
+		if (categories[i] === 'trials' && data[i]) {
+		    trials_selected = 1;
+		    jQuery('#download_button_excel').removeAttr('disabled');
+		    jQuery('#download_button_csv').removeAttr('disabled');
+		} 
+	    }
+	    if (trials_selected !== 1) {
+		jQuery('#download_button_excel').attr('disabled', 'disabled');
+		jQuery('#download_button_csv').attr('disabled', 'disabled');
+	    }
 
 	    var data_id = jQuery(this).attr('id');
 	    var data = jQuery('#'+data_id).val() || [];;
@@ -73,15 +92,34 @@ window.onload = function initialize() {
 	      break;
 	  default: 
 	      if (window.console) console.log("no link for this category");
-	}
+	  }
       });
+    
+    
+    jQuery('#download_button_excel').on('click', function () {
+        var selected = get_selected_trials();
+        if (selected.length !== 0) { 
+	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
+        }
+        else { alert("No trials selected for download."); }
+       
+    });
+
+    jQuery('#download_button_csv').on('click', function () {
+        var selected = get_selected_trials();
+        if (selected.length !== 0) { 
+	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
+        }
+        else { alert("No trials selected for download."); }
+       
+    });
 }
 
 function retrieve_and_display_set(categories, data, this_section) {
     if (window.console) console.log("categories = "+categories);
     if (window.console) console.log("data = "+JSON.stringify(data));
-    if (window.console) console.log("genotypes="+get_genotype_checkbox());
-    if (window.console) console.log("querytypes="+get_querytypes(this_section));
+    //if (window.console) console.log("genotypes="+get_genotype_checkbox());
+    //if (window.console) console.log("querytypes="+get_querytypes(this_section));
     jQuery.ajax( {
 	url: '/ajax/breeder/search',
 	timeout: 60000,
@@ -121,15 +159,13 @@ function retrieve_and_display_set(categories, data, this_section) {
 function get_selected_data(this_section) {
     var selected_data = [];
 
-    for (i=1; i < this_section; i++) {
+    for (i=1; i <= this_section; i++) {
 	var element_id = "c"+i+"_data";
 	var data = jQuery("#"+element_id).val();
 	selected_data.push(data);
     }
 
-    var this_data_id = "c"+this_section+"_data";
-    jQuery("#"+this_data_id).val('');
-    if (window.console) console.log("selected data= "+JSON.stringify(selected_data));
+    //if (window.console) console.log("selected data= "+JSON.stringify(selected_data));
     if (selected_data.length > 0) {
     return selected_data;
     }
@@ -154,14 +190,32 @@ function get_selected_categories(this_section) {
     var next_section = this_section +1;
     var next_select_id = "select"+next_section;
     jQuery("#"+next_select_id).val('please select');
-    if (window.console) console.log("selected categories= "+JSON.stringify(selected_categories));
+    //if (window.console) console.log("selected categories= "+JSON.stringify(selected_categories));
     return selected_categories;
+}
+
+function get_selected_trials () {
+    var max_section = 4;
+    var selected_trials;
+    var categories = get_selected_categories(max_section);
+    var data = get_selected_data(max_section);
+    for (i=0; i < categories.length; i++) {
+	if (categories[i] === 'trials' && data[i]) {
+	    selected_trials = data[i];
+	} else {
+	}
+    }
+    if (selected_trials.length > 0) {
+	return selected_trials;
+    } else {
+	alert("No trials selected");
+    }
 }
 
 function update_select_categories(this_section) {
     var selected_categories = get_selected_categories(this_section);
     
-    var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', locations : 'locations', plots : 'plots', traits : 'traits', trials :'trials', years : 'years'};
+    var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', plots : 'plots', traits : 'traits', trials :'trials', years : 'years'};
     var all_categories = copy_hash(categories);
 
     for (i=0; i < this_section; i++) {
@@ -258,13 +312,13 @@ function get_querytypes(this_section) {
     var querytypes = [];
 
     for (i=2; i <= this_section; i++) {
-	var element_name = "c"+i+"_intersect";
-	if (jQuery('[name="'+element_name+'"]').is(':checked')) {
+	var element_id = "c"+i+"_querytype";
+	if (jQuery('#'+element_id).is(":checked")) {
 	    var type = 1;
 	} else {
 	    var type = 0;
 	}
-	console.log("type="+type);
+	if (window.console) console.log("type="+type);
 	querytypes.push(type);
     }
     if (querytypes.length > 0) {

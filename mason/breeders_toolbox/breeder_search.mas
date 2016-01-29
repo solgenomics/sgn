@@ -4,57 +4,17 @@
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
-
-<table><tr><td>
-Search using accession, plot, location, year, trial, and trait data.
-</td></tr></table>
   
 <table class="table borderless" alt="breeder search" border="0" >
 <tr>
 <td width="200">
-  <select class="form-control input-sm" id="select1" name="1"></select>
-</td>
-<td>
-<div class="checkbox">
-  <div align="center">Retrieve</div>
-  <label><input type="checkbox" id="c2_querytype" name="c2_union" value="0" checked>Union (&cup;)</label>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <label><input type="checkbox" id="c2_querytype" name="c2_intersect" value="1">Intersection (&cap;)</label>
-  <div align="center">of selected data with:</div>
-</div>
-</td>
-<td>
-<div class="checkbox">
-  <div align="center">Retrieve</div>
-  <label><input type="checkbox" id="c3_querytype" name="c3_union" value="0" checked>Union (&cup;)</label>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <label><input type="checkbox" id="c3_querytype" name="c3_intersect" value="1">Intersection (&cap;)</label>
-  <div align="center">of selected data with:</div>
-</div>
-</td>
-<td>
-<div class="checkbox">
-  <div align="center">Retrieve</div>
-  <label><input type="checkbox" id="c4_querytype" name="c4_union" value="0" checked>Union (&cup;)</label>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <label><input type="checkbox" id="c4_querytype" name="c4_intersect" value="1">Intersection (&cap;)</label>
-  <div align="center">of selected data with:</div>
-</div>
+  <p>Start from a list:
+  <div class="form-group form-group-sm" id="paste_list"></div>
 </td>
 </tr>
 <tr>
 <td width="200">
-  <div class="form-group form-group-sm">
-    <label class="col-sm-4 control-label">Start from a List: </label>
-    <div class="col-sm-8">
-      <div id="paste_list"></div>
-<script defer="defer">
-  jQuery(document).ready(function() {
-      pasteListMenu('c1_data', 'paste_list');
-  });
-</script>
-    </div>
-  </div>
+  <select class="form-control input-sm" id="select1" name="1"></select>
 </td>
 <td>
   <select class="form-control input-sm" id="select2" name="2"></select>
@@ -73,36 +33,31 @@ Search using accession, plot, location, year, trial, and trait data.
 <td width="200">
   <select multiple class="form-control" id="c2_data" name="2" size="10"  style="width:200px; overflow:auto;"></select>
 </td>
-
 <td width="200">
   <select multiple class="form-control" id="c3_data" name="3" size="10" style="width:200px; overflow:auto;"></select>
 </td>
-
 <td width="200">
   <select multiple class="form-control" id="c4_data" name="4" size="10" style="width:200px; overflow:auto;"></select>	  
 </td>
-    <td>
-      <input class="btn btn-primary" type="button" id="phenotype" value="Download Phenotypes"/>
-      <input type="hidden" id="download_token_value" name="download_token_value"/>
-      <br>
-      <input class="btn btn-primary" type="button" id="genotype" value="Download Genotypes" />
-    </td>
 </tr>
 <tr>
 <td>
 <button class="btn btn-default btn-sm" id="c1_select_all" name="1"/>Select All</button>
+<div class="pull-right"><input type="checkbox" id="c2_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div>
 <hr style="margin-top:4px;margin-bottom:4px" />
 <div class="well well-sm"><div id="c1_data_count" name="1">No Selection</div></div>
 <div id="c1_to_list_menu"></div>
 </td>
 <td>
 <button class="btn btn-default btn-sm" id="c2_select_all" name="2"/>Select All</button>
+<div class="pull-right"><input type="checkbox" id="c3_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div>
 <hr style="margin-top:4px;margin-bottom:4px" />
 <div class="well well-sm"><div id="c2_data_count" name="2">No Selection</div></div>
 <div id="c2_to_list_menu"></div>
 </td>
 <td>
 <button class="btn btn-default btn-sm" id="c3_select_all" name="3"/>Select All</button>
+<div class="pull-right"><input type="checkbox" id="c4_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div>
 <hr style="margin-top:4px;margin-bottom:4px" />
 <div class="well well-sm"><div id="c3_data_count" name="3">No Selection</div></div>
 <div id="c3_to_list_menu"></div>
@@ -115,10 +70,6 @@ Search using accession, plot, location, year, trial, and trait data.
 </td></tr>
 </table>
 
-<input type="checkbox" id="restrict_genotypes" name="restrict_genotypes" />&nbsp;Only show accessions that have been genotyped with protocol:
-<div id="select_gt_protocol_div"></div>
-
-
 <style>
 .borderless tbody tr td, .borderless tbody tr th, .borderless thead tr th {
     border: none;
@@ -129,11 +80,18 @@ Search using accession, plot, location, year, trial, and trait data.
 <script defer="defer">
 jQuery(document).ready(function() {
 
-//pasteListMenu('c1_data', 'populate_from_list');
+  var lo = new CXGN.List();
+  var listhtml = lo.listSelect(c1_data);
+  jQuery('#paste_list').html(listhtml);
+  jQuery('#paste_list').change(
+  	function() {
+		   pasteList('c1_data');
+	});
+   
 
   get_select_box('genotyping_protocols', 'select_gt_protocol_div', 'gt_protocol_select');
 
-  var starting_categories = { '': 'please select', breeding_programs: 'breeding_programs', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
+  var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
   var html = format_options(starting_categories);
 
   jQuery('#select1').html(html);  

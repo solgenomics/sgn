@@ -39,7 +39,6 @@ has 'dbh' => (
                is the target of the transformation, and the second is the
                source type of the transformation, containing comma separated
                values of the source type.
-               genotypes: nd_protocol_id of genotype protocol to filter by, if provided
                intersect: 1 if where clause arguments should find intersect rather than union
  Side Effects: will create a materialized view of the ontology corresponding to 
                $db_name
@@ -53,7 +52,6 @@ sub metadata_query {
     print STDERR "criteria_list=" . Dumper($criteria_list);
     my $dataref = shift;
     print STDERR "dataref=" . Dumper($dataref);
-    my $genotype_protocol_id = shift;
     my $queryref = shift;
     print STDERR "queryref=" . Dumper($queryref);
 
@@ -63,8 +61,6 @@ sub metadata_query {
     print STDERR "target_table=". $target_table . "\n";
     my $target = $target_table;
     $target =~ s/s$//;
-    my $geno_filter;
-    $genotype_protocol_id ? $geno_filter = "AND genotyping_protocol_id = $genotype_protocol_id " : $geno_filter = '';
 
     my $select = "SELECT ".$target."_id, ".$target."_name ";
     my $group = "GROUP BY ".$target."_id, ".$target."_name ";
@@ -72,7 +68,8 @@ sub metadata_query {
     my $full_query;
     if (!$dataref->{"$target_table"}) {
 	my $from = "FROM ". $target_table;
-	$full_query = $select . $from . $geno_filter;
+	my $where = " WHERE ".$target."_id > 0";
+	$full_query = $select . $from . $where;
     } else {
 	my @queries;
 	foreach my $category (@$criteria_list) {
@@ -90,14 +87,14 @@ sub metadata_query {
 		    my @ids = split(/,/, $dataref->{$criteria_list->[-1]}->{$category});
 		    foreach my $id (@ids) {
 			my $where = "WHERE ". $criterion. "_id IN (". $id .") ";
-			my $statement = $select . $from . $where . $geno_filter . $group;
+			my $statement = $select . $from . $where . $group;
 			push @parts, $statement;
 		    }
 		    $query = join (" INTERSECT ", @parts);
 		    push @queries, $query;
 		} else {
 		    my $where = "WHERE ". $criterion. "_id IN (" . $dataref->{$criteria_list->[-1]}->{$category} . ") ";
-		    $query = $select . $from . $where . $geno_filter . $group;
+		    $query = $select . $from . $where . $group;
 		    push @queries, $query;
 		}
 	    }
@@ -112,6 +109,7 @@ sub metadata_query {
 
     my @results;
     while (my ($id, $name) = $h->fetchrow_array()) { 
+	print STDERR "id = ". $id . " and name = " . $name . "\n";
 	push @results, [ $id, $name ];
     }    
     

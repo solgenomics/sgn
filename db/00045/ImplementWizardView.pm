@@ -52,15 +52,6 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
-CREATE OR REPLACE FUNCTION pc_chartonum(chartoconvert character varying)              
-  RETURNS numeric AS
-$BODY$
-SELECT CASE WHEN trim($1) SIMILAR TO '[0-9]+' 
-        THEN CAST($1 AS numeric) 
-    ELSE NULL END;
-$BODY$
-  LANGUAGE 'sql' IMMUTABLE STRICT;
-
 CREATE MATERIALIZED VIEW materialized_fullview AS
  SELECT plot.uniquename AS plot_name,
     stock_relationship.subject_id AS plot_id,
@@ -81,10 +72,11 @@ CREATE MATERIALIZED VIEW materialized_fullview AS
    FROM stock plot
      LEFT JOIN stock_relationship ON plot.stock_id = stock_relationship.subject_id
      LEFT JOIN stock accession ON stock_relationship.object_id = accession.stock_id
-     LEFT JOIN nd_experiment_stock ON stock_relationship.subject_id = nd_experiment_stock.stock_id
-     LEFT JOIN nd_experiment ON nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id
+     LEFT JOIN nd_experiment_stock nd_experiment_plot ON stock_relationship.subject_id = nd_experiment_plot.stock_id
+     LEFT JOIN nd_experiment ON nd_experiment_plot.nd_experiment_id = nd_experiment.nd_experiment_id
      LEFT JOIN nd_geolocation ON nd_experiment.nd_geolocation_id = nd_geolocation.nd_geolocation_id
-     LEFT JOIN nd_experiment_protocol ON nd_experiment.nd_experiment_id = nd_experiment_protocol.nd_experiment_id
+     LEFT JOIN nd_experiment_stock nd_experiment_accession ON stock_relationship.object_id = nd_experiment_accession.stock_id
+     LEFT JOIN nd_experiment_protocol ON nd_experiment_accession.nd_experiment_id = nd_experiment_protocol.nd_experiment_id
      LEFT JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id
      LEFT JOIN nd_experiment_project ON nd_experiment.nd_experiment_id = nd_experiment_project.nd_experiment_id
      LEFT JOIN project trial ON nd_experiment_project.project_id = trial.project_id
@@ -100,25 +92,15 @@ CREATE MATERIALIZED VIEW materialized_fullview AS
   GROUP BY stock_relationship.subject_id, cvterm.cvterm_id, plot.uniquename, accession.uniquename, stock_relationship.object_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, trial.name, project_relationship.subject_project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, nd_experiment.nd_geolocation_id, nd_geolocation.description, nd_experiment_protocol.nd_protocol_id, nd_protocol.name;
 GRANT ALL ON materialized_fullview to web_usr;
 
-CREATE UNIQUE INDEX unqmeasurement_idx ON materialized_fullview(trial_id, trait_id, plot_id, phenotype_id) WITH (fillfactor =100);
-CREATE INDEX trait_id_idx ON materialized_fullview(trait_id) WITH (fillfactor =100);
-
-CREATE INDEX trial_id_idx ON materialized_fullview(trial_id) WITH (fillfactor =100);
-CREATE INDEX genotyping_protocol_id_idx ON materialized_fullview(genotyping_protocol_id) WITH (fillfactor =100);
+CREATE UNIQUE INDEX unqmeasurement_idx ON materialized_fullview(trial_id, trait_id, plot_id) WITH (fillfactor =100);
 CREATE INDEX accession_id_idx ON materialized_fullview(accession_id) WITH (fillfactor =100);
+CREATE INDEX breeding_program_id_idx ON materialized_fullview(breeding_program_id) WITH (fillfactor =100);
+CREATE INDEX genotyping_protocol_id_idx ON materialized_fullview(genotyping_protocol_id) WITH (fillfactor =100);
+CREATE INDEX location_id_idx ON materialized_fullview(location_id) WITH (fillfactor =100);
 CREATE INDEX plot_id_idx ON materialized_fullview(plot_id) WITH (fillfactor =100);
-
-CREATE INDEX breed_prog_X_accessions_idx ON materialized_fullview(breeding_program_id,accession_id) WITH (fillfactor=100);
-CREATE INDEX breed_prog_X_plots_idx ON materialized_fullview(breeding_program_id,plot_id) WITH (fillfactor=100);
-CREATE INDEX breed_prog_X_trials_idx ON materialized_fullview(breeding_program_id,trial_id) WITH (fillfactor=100);
-CREATE INDEX location_X_accessions_idx ON materialized_fullview(location_id,accession_id) WITH (fillfactor=100);
-CREATE INDEX location_X_plots_idx ON materialized_fullview(location_id,plot_id) WITH (fillfactor=100);
-CREATE INDEX location_X_trials_idx ON materialized_fullview(location_id,trial_id) WITH (fillfactor=100);
-
-CREATE INDEX breed_prog_X_location_X_trials_idx ON materialized_fullview(breeding_program_id,location_id,trial_id) WITH (fillfactor =100);
-CREATE INDEX breed_prog_X_year_X_trials_idx ON materialized_fullview(breeding_program_id,year_id,trial_id) WITH (fillfactor =100);
-CREATE INDEX location_X_year_X_trials_idx ON materialized_fullview(location_id,year_id,trial_id) WITH (fillfactor =100);
-CREATE INDEX years_X_trials_idx ON materialized_fullview(year_id,trial_id) WITH (fillfactor =100);
+CREATE INDEX trait_id_idx ON materialized_fullview(trait_id) WITH (fillfactor =100);
+CREATE INDEX trial_id_idx ON materialized_fullview(trial_id) WITH (fillfactor =100);
+CREATE INDEX year_id_idx ON materialized_fullview(year_id) WITH (fillfactor =100);
 
 CREATE MATERIALIZED VIEW accessions AS
 SELECT materialized_fullview.accession_id,
@@ -343,9 +325,6 @@ SELECT materialized_fullview.year_id,
    FROM materialized_fullview
   GROUP BY materialized_fullview.year_id, materialized_fullview.year_name;
 GRANT ALL ON years to web_usr;
-
-INSERT INTO dbxref (db_id, accession) VALUES(288,'breeding_programs');
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES(50, 'breeding_programs', 'breeding_programs', (SELECT dbxref_id FROM dbxref WHERE accession = 'breeding_programs');
 
 --
 SELECT * from public.stock;

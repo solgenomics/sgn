@@ -1410,3 +1410,9 @@ div.xref_rich_gbrowse2 img {
     color: #666;
 }
 
+.divider{
+    width:5px;
+    height:auto;
+    display:inline-block;
+}
+
