@@ -371,6 +371,16 @@ sub trial_type_POST : Chained('trial') PathPart('type') Args(1) {
     $c->stash->{rest} = { success => 1 };
 }
 
+
+sub traits_assayed : Chained('trial') PathPart('traits_assayed') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my @traits_assayed  = $c->stash->{trial}->get_traits_assayed();
+    $c->stash->{rest} = { traits_assayed => \@traits_assayed };
+}
+
+
 sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;

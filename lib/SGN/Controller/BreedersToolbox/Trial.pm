@@ -139,8 +139,6 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{plot_data} = [];
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
-    
-    $c->stash->{traits_assayed} = $c->stash->{trial}->get_traits_assayed();
 
     if ($design_type eq "genotyping_plate") { 
 	if ($format eq "as_table") { 

@@ -35,7 +35,6 @@ $number_of_replicates
 $trial_description
 $design_layout_view
 $user_can_modify => undef
-@traits_assayed
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
@@ -372,7 +371,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle => "Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
 
-<& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id, traits_assayed => \@traits_assayed &>
+<& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
 
 </&>
 
