@@ -75,8 +75,8 @@ has 'layout' => (isa => 'CXGN::Trial::TrialLayout',
 		 reader => 'get_layout',
 		 writer => 'set_layout',
 		 predicate => 'has_layout',
-		 
-
+		 lazy => 1,
+		 builder => 'CXGN::Trial::TrialLayout'
     );
 
 
