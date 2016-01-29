@@ -49,9 +49,6 @@ sub BUILD {
 	die "The trial ".$self->get_trial_id()." does not exist";
     }
 
-    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->get_trial_id() });
-    $self->set_layout($layout);
-
 }
 
 =head2 accessors get_trial_id()
@@ -78,8 +75,8 @@ has 'layout' => (isa => 'CXGN::Trial::TrialLayout',
 		 reader => 'get_layout',
 		 writer => 'set_layout',
 		 predicate => 'has_layout',
-		 
-
+		 lazy => 1,
+		 builder => 'CXGN::Trial::TrialLayout'
     );
 
 
@@ -120,6 +117,7 @@ sub set_year {
 	$row = $self->bcs_schema->resultset('Project::Projectprop')->create(
 	    { type_id => $type_id,
 	    value => $year,
+	      project_id =>  $self->get_trial_id()
 	    } );
     }
 }

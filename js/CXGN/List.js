@@ -363,8 +363,8 @@ CXGN.List.prototype = {
 		list_group_select_action_html += '';
 	    } else {
 		var selected = [];
-		$("input:checkbox:checked").each(function() {
-		    selected.push($(this).attr('value'));
+		jQuery("input:checkbox:checked").each(function() {
+		    selected.push(jQuery(this).attr('value'));
 		});
 
 		list_group_select_action_html = '<hr><div class="row well well-sm"><div class="col-sm-4">For Selected Lists:</div><div class="col-sm-8">';
@@ -994,7 +994,7 @@ function deleteList(list_id) {
 }
 
 function togglePublicList(list_id) { 
-    $.ajax({
+    jQuery.ajax({
 	"url": "/list/public/toggle",
 	"type": "POST",
 	"data": {'list_id': list_id},
@@ -1018,7 +1018,7 @@ function togglePublicList(list_id) {
 }
 
 function makePublicList(list_id) { 
-    $.ajax({
+    jQuery.ajax({
 	"url": "/list/public/true",
 	"type": "POST",
 	"data": {'list_id': list_id},
@@ -1035,7 +1035,7 @@ function makePublicList(list_id) {
 }
 
 function makePrivateList(list_id) { 
-    $.ajax({
+    jQuery.ajax({
 	"url": "/list/public/false",
 	"type": "POST",
 	"data": {'list_id': list_id},
@@ -1052,7 +1052,7 @@ function makePrivateList(list_id) {
 }
 
 function copyPublicList(list_id) { 
-    $.ajax({
+    jQuery.ajax({
 	"url": "/list/public/copy",
 	"type": "POST",
 	"data": {'list_id': list_id},

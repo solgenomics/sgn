@@ -20,7 +20,8 @@ load_genotypes.pl - loading genotypes into cxgn databases, based on the load_cas
   FLAGS
  -x delete old genotypes for accessions that have new genotypes
  -a add accessions that are not in the database
- -s sort markers according to custom sort order (see script source)
+ -v order markers using version sort
+ -s sort markers according to custom sort order (see script source) 
  -t Test run . Rolling back at the end.
 
 =head1 DESCRIPTION
@@ -38,6 +39,7 @@ use strict;
 
 use Getopt::Std;
 use Data::Dumper;
+use JSON::Any;
 use JSON::PP;
 use Carp qw /croak/ ;
 use Try::Tiny;
@@ -50,7 +52,7 @@ use CXGN::Genotype;
 use CXGN::GenotypeIO;
 use Sort::Versions;
 
-our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_y, $opt_g, $opt_a, $opt_x, $opt_s, $opt_m);
+our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m);
 
 getopts('H:i:tD:p:y:g:axsm:');
 
@@ -186,8 +188,6 @@ my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "dosage_transposed"
 
 #my @rows = $spreadsheet->row_labels();
 #my @columns = $spreadsheet->column_labels();
-
-my $json_obj = JSON::PP->new;
 
 my $coderef = sub {
     while (my $gt = $gtio->next())  {
@@ -335,9 +335,16 @@ my $coderef = sub {
 
 	    $json{$marker_name} = $base_calls;
         }
-
-	print STDERR "Sorting and encoding markers and values... \n\n";
-        my $json_string = $json_obj->sort_by(sub {versioncmp($JSON::PP::a,$JSON::PP::b)})->encode(\%json);
+	
+	my $json_string;
+	if ($opt_v) {
+	    my $json_obj = JSON::PP->new;
+	    print STDERR "Sorting and encoding markers and values... \n\n";
+	    $json_string = $json_obj->sort_by(sub {versioncmp($JSON::PP::a,$JSON::PP::b)})->encode(\%json);
+	} else {
+	    my $json_obj = JSON::Any->new;
+	    $json_string = $json_obj->encode(\%json);
+	}
 
         print "Storing new genotype for stock " . $cassava_stock->name . " \n\n";
         my $genotype = $schema->resultset("Genetic::Genotype")->find_or_create(
