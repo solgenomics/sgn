@@ -112,7 +112,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $design_type = $trial_layout->get_design_type();
     $c->stash->{design_type} = $design_type;
 
-    $c->stash->{accession_names} = $trial_layout->get_accession_names();
+    #$c->stash->{accession_names} = $trial_layout->get_accession_names();
 
     $c->stash->{control_names} = $trial_layout->get_control_names();
 

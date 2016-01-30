@@ -411,6 +411,18 @@ sub trait_histogram : Chained('trial') PathPart('trait_histogram') Args(1) {
     $c->stash->{rest} = { data => \@data };
 }
 
+sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    
+    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
+    my @data = $layout->get_accession_names();
+    
+    $c->stash->{rest} = { accessions => \@data };
+}
+
+
 sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     
     my $self = shift;

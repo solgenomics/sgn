@@ -23,7 +23,6 @@ $trial_type
 $planting_date
 $harvest_date
 @plot_data
-@accession_names
 @control_names
 @plot_names
 $plot_length => "unknown"
@@ -48,13 +47,7 @@ if ($trial_description) {
     $description_empty = 0;
   }
 }
-my $number_of_accessions = scalar(@accession_names);
-my $accessions_empty = 1;
-if ($number_of_accessions >= 1) {
-  if (!$accession_names[0] eq "") {
-    $accessions_empty = 0;
-  }
-}
+
 my $number_of_controls = scalar(@control_names);
 my $controls_empty = 1;
 if ($number_of_controls >= 1) {
@@ -321,17 +314,9 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <br /><br />
 
-<&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $accessions_empty &>
+<&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1,  &>
 
-<table class="table table-hover table-condensed table-bordered">
-<thead><tr><th>Stock Unique Name</th></tr></thead>
-<tbody>
-% foreach my $accession (@accession_names) { 
-%  print "<tr><td><a href='/stock/$accession->{stock_id}/view'>$accession->{accession_name}</a></td></tr>";
-%}
-
-</tbody>
-</table>
+<& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
 
 </&>
 
@@ -342,7 +327,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <tbody>
 % foreach my $accession (@control_names) { 
 %  print "<tr><td><a href='/stock/$accession->{stock_id}/view'>$accession->{accession_name}</a></td></tr>";
-%}
+% }
 
 </tbody>
 </table>
