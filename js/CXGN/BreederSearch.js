@@ -1,25 +1,20 @@
 window.onload = function initialize() { 
 
-    jQuery('input[type="checkbox"]').on('change', function() {  // ensure only one checkbox is selected at a time
-	if (jQuery('input[id="' + this.id + '"]').not(this).is(':checked')) {
-	    jQuery('input[id="' + this.id + '"]').not(this).prop('checked', false);
-	} else {
-	    jQuery('input[id="' + this.id + '"]').not(this).prop('checked', true);
-	}
-    });
-
     jQuery('#select1, #select2, #select3, #select4').change(  // retrieve new data once new category is selected
     	function() {
 	    var this_section = jQuery(this).attr('name');
 	    reset_downstream_sections(this_section);
 	    update_select_categories(this_section);
+	    console.log("this.value="+jQuery(this).val());
 	    if (jQuery(this).val() == '') { // return empty if no category defined
+		console.log(" no category defined");
 		var data_element = "c"+this_section+"_data";
 		jQuery("#"+data_element).html("");
 		return;
 	    }
 	    var categories = get_selected_categories(this_section);
-	    var data = get_selected_data(this_section);
+	    var data = ''
+	    if (this_section !== "1") data = get_selected_data(this_section);
 
 	    retrieve_and_display_set(categories, data, this_section);
 	});

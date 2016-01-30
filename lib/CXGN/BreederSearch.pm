@@ -68,8 +68,7 @@ sub metadata_query {
     my $full_query;
     if (!$dataref->{"$target_table"}) {
 	my $from = "FROM ". $target_table;
-	my $where = " WHERE ".$target."_id > 0";
-	$full_query = $select . $from . $where;
+	$full_query = $select . $from;
     } else {
 	my @queries;
 	foreach my $category (@$criteria_list) {

@@ -711,7 +711,6 @@ function pasteListMenu (div_name, menu_div, button_name) {
 function pasteList(div_name) { 
     var lo = new CXGN.List();
     var list_id = jQuery('#'+div_name+'_list_select').val();
-
     if (jQuery('#'+div_name).is("textarea")) {
 	var list = lo.getList(list_id);
 	// textify list
@@ -724,7 +723,7 @@ function pasteList(div_name) {
     } else {
 	var data = lo.getListData(list_id);
 	if (data.type_name !== 'years') {var ids = lo.transform2Ids(list_id);}
-
+	
 	var elements = data.elements;
 	var options = [];
 	for (var n=0; n<elements.length; n++) {
