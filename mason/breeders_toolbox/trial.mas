@@ -24,7 +24,6 @@ $planting_date
 $harvest_date
 @plot_data
 @control_names
-@plot_names
 $plot_length => "unknown"
 $plot_width => "unknown"
 $plant_per_plot => "unknown"
@@ -55,13 +54,7 @@ if ($number_of_controls >= 1) {
     $controls_empty = 0;
   }
 }
-my $number_of_plots = scalar(@plot_names);
-my $plots_empty = 1;
-if ($number_of_plots >= 1) {
-  if (!$plot_names[0] eq "") {
-    $plots_empty = 0;
-  }
-}
+
 my $design_empty = 1;
 if (!$design_type eq "") {
   $design_empty = 0;
@@ -334,10 +327,9 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
-<&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $plots_empty&>
-% foreach my $plot (@plot_names) { 
-%  print "$plot <br />\n";
-%}
+<&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+
+<& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
 
 </&>
 

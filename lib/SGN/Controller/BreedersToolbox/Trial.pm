@@ -71,13 +71,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 	return;
     }
 	
-    my $plot_names_ref = $trial_layout->get_plot_names();
     my $plot_dimensions = $trial_layout->get_plot_dimensions();
-
-    my @plot_names;
-    if ($plot_names_ref) {
-      @plot_names = @{$trial_layout->get_plot_names()};
-    }
 
     my %design;
     my $design_ref;
@@ -112,11 +106,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $design_type = $trial_layout->get_design_type();
     $c->stash->{design_type} = $design_type;
 
-    #$c->stash->{accession_names} = $trial_layout->get_accession_names();
-
     $c->stash->{control_names} = $trial_layout->get_control_names();
-
-    $c->stash->{plot_names} = $plot_names_ref;
 
     $c->stash->{trial_description} = $trial->get_description();
 
