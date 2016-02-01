@@ -13,7 +13,7 @@ $trial_id
 
 jQuery(document).ready(function () {
 
-    jQuery('#trial_controls_onswitch').click( function() {
+    jQuery('#trial_controls_onswitch').one("click", function() {
 
 	jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/controls',

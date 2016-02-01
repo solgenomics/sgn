@@ -156,14 +156,6 @@ sub _get_design_from_trial {
   my @plots;
   my %design;
 
-#    my $plots_ref = $schema->resultset('Project::Project')->search(
-#	{'me.project_id' => $self->get_trial_id(), 'type.name' => ['field layout', 'genotyping layout'],  },
-#	{join => {'nd_experiment_projects' => {'nd_experiment'=> ['type', {'nd_experiment_stocks' => { 'stock' => ['stock_relationship_subjects', 'stockprops' ] } } ] } },
-#	'+select'=> ['stock.uniquename', 'stock.stock_id'],
-#	'+as'=> [''],
-#	}
-#    );
-
   $plots_ref = $self->_get_plots();
   if (!$plots_ref) {
       print STDERR "_get_design_from_trial: not plots provided... returning.\n";
