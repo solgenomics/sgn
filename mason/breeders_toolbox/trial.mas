@@ -22,12 +22,6 @@ $year
 $trial_type
 $planting_date
 $harvest_date
-$plot_length => "unknown"
-$plot_width => "unknown"
-$plant_per_plot => "unknown"
-$design_type
-$number_of_blocks => undef
-$number_of_replicates => undef
 $trial_description
 $design_layout_view => undef
 $user_can_modify => undef
@@ -45,10 +39,6 @@ if ($trial_description) {
   }
 }
 
-my $design_empty = 1;
-if (!$design_type eq "") {
-  $design_empty = 0;
-}
 my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Download Field Book</a>]';
 
 my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link">change</a>] } if $user_can_modify;
@@ -285,17 +275,9 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </style> -->
 
 
-<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
+<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
 
-%print STDERR "Check 8 (mason) : ".(time() - $start_time)."\n";
-%print "Design: $design_type <br /><br />";
-%print "Number of blocks: $number_of_blocks <br />";
-%print "Number of replicates: $number_of_replicates <br />";
-%print "Plot length: $plot_length <br />";
-%print "Plot width: $plot_width <br />";
-%print "Plants per plot: $plant_per_plot <br />";
-
-<br /><br />
+<& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 
 <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
@@ -317,7 +299,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
-<br /><br />
+<br />
 
 %# <&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
 %# foreach my $trait (@phenotype_data) {
