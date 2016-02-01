@@ -477,7 +477,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	my $my_hash;
 	
 	foreach $my_hash (@layout_info) {
-		#if (length($my_hash->{'row_number'}) == 0) {
+	    if ($my_hash->{'row_number'}) {
 		if ($my_hash->{'row_number'} =~ m/\d+/) {
 		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'};
 	
@@ -487,9 +487,10 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	$plot_number[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_number'};
 	#$plot_number[$my_hash->{'plot_number'}] = $my_hash->{'plot_number'};	
 	
-	}
+		}
 		else {
 		}
+	    }
 	}
  # Looping through the hash and printing out all the hash elements.
 
