@@ -645,7 +645,7 @@ CXGN.List.prototype = {
 		}
 		else { 
 		    ajaxResponse = response;
-		    console.log("transformed="+ajaxResponse);
+		    //console.log("transformed="+ajaxResponse);
 		}
 	    },
 	    error: function(response) { alert("An error occurred while validating the list "+list_id); }
@@ -655,25 +655,34 @@ CXGN.List.prototype = {
 
     transform2Ids: function(list_id) { 
 	var data = this.getListData(list_id);
-	console.log("data ="+JSON.stringify(data));
+	//console.log("data ="+JSON.stringify(data));
 	var list_type = this.getListType(list_id);
-	console.log("list_type = "+list_type);
 	var new_type;
-	if (list_type == 'traits') { new_type = 'traits_2_trait_ids'; }
-	if (list_type == 'locations') { new_type = 'locations_2_location_ids'; }
-	if (list_type == 'trials') { new_type = 'projects_2_project_ids'; }
-	if (list_type == 'breeding_programs') { new_type = 'projects_2_project_ids'; }
-	if (list_type == 'accessions') { new_type = 'accessions_2_accession_ids'; }
-	if (list_type == 'plots') { new_type = 'plots_2_plot_ids'; }
-
-	if (! new_type) { 
-	    return { 'error' : "cannot convert the list because of unknown type" };
+	switch (list_type)
+	{
+	  case "traits":
+	      new_type = 'traits_2_trait_ids';
+	      break;
+	  case "locations": 
+	      new_type = 'locations_2_location_ids';
+	      break;
+	  case "trials":
+	  case "breeding_programs":
+	      new_type = 'projects_2_project_ids';
+	      break;
+	  case "accessions":
+	      new_type = 'accessions_2_accession_ids';
+	      break;
+	  case "plots":
+	      new_type = 'plots_2_plot_ids';
+	      break;
+	  default: 
+	      return { 'error' : "cannot convert the list because of unknown type" };
 	}
 	console.log("new type = "+new_type);
 	var transformed = this.transform(list_id, new_type);
 	console.log("transformed="+JSON.stringify(transformed));
-	return transformed;
-	    
+	return transformed;	    
 
     }
 };
@@ -735,7 +744,10 @@ function pasteList(div_name) {
 	} 
 	
 	c1_html = format_options_list(options);
-
+	var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
+	var start = format_options(starting_categories);
+	jQuery('#select1').html(start);  
+	
 	show_list_counts('c1_data_count', options.length);
 	jQuery('#c1_data_text').html(retrieve_sublist(options, 1).join("\n"));
 	jQuery('#c1_data').html(c1_html);

@@ -67,8 +67,9 @@ sub metadata_query {
 
     my $full_query;
     if (!$dataref->{"$target_table"}) {
-	my $from = "FROM ". $target_table;
-	$full_query = $select . $from;
+	my $from = "FROM public.". $target_table;
+	my $where = " WHERE ".$target."_id IS NOT NULL";
+	$full_query = $select . $from . $where;
     } else {
 	my @queries;
 	foreach my $category (@$criteria_list) {
@@ -76,7 +77,7 @@ sub metadata_query {
 		my $query;
 		my @categories = ($target_table, $category);
 		@categories = sort @categories;
-		my $from = "FROM ". $categories[0] ."x". $categories[1] . " JOIN " . $target_table . " USING(" . $target."_id) ";
+		my $from = "FROM public.". $categories[0] ."x". $categories[1] . " JOIN public." . $target_table . " USING(" . $target."_id) ";
 		my $criterion = $category;
 		$criterion =~ s/s$//;
 		my $intersect = $queryref->{$criteria_list->[-1]}->{$category};

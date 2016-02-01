@@ -52,7 +52,7 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
-CREATE MATERIALIZED VIEW materialized_fullview AS
+CREATE MATERIALIZED VIEW public.materialized_fullview AS
  SELECT plot.uniquename AS plot_name,
     stock_relationship.subject_id AS plot_id,
     accession.uniquename AS accession_name,
@@ -90,241 +90,241 @@ CREATE MATERIALIZED VIEW materialized_fullview AS
      LEFT JOIN db ON dbxref.db_id = db.db_id
   WHERE plot.type_id = 76393 AND projectprop.type_id = 76395 AND db.db_id = 186
   GROUP BY stock_relationship.subject_id, cvterm.cvterm_id, plot.uniquename, accession.uniquename, stock_relationship.object_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, trial.name, project_relationship.subject_project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, nd_experiment.nd_geolocation_id, nd_geolocation.description, nd_experiment_protocol.nd_protocol_id, nd_protocol.name;
-GRANT ALL ON materialized_fullview to web_usr;
+GRANT ALL ON public.materialized_fullview to web_usr;
 
-CREATE UNIQUE INDEX unqmeasurement_idx ON materialized_fullview(trial_id, trait_id, plot_id) WITH (fillfactor =100);
-CREATE INDEX accession_id_idx ON materialized_fullview(accession_id) WITH (fillfactor =100);
-CREATE INDEX breeding_program_id_idx ON materialized_fullview(breeding_program_id) WITH (fillfactor =100);
-CREATE INDEX genotyping_protocol_id_idx ON materialized_fullview(genotyping_protocol_id) WITH (fillfactor =100);
-CREATE INDEX location_id_idx ON materialized_fullview(location_id) WITH (fillfactor =100);
-CREATE INDEX plot_id_idx ON materialized_fullview(plot_id) WITH (fillfactor =100);
-CREATE INDEX trait_id_idx ON materialized_fullview(trait_id) WITH (fillfactor =100);
-CREATE INDEX trial_id_idx ON materialized_fullview(trial_id) WITH (fillfactor =100);
-CREATE INDEX year_id_idx ON materialized_fullview(year_id) WITH (fillfactor =100);
+CREATE UNIQUE INDEX unqmeasurement_idx ON public.materialized_fullview(trial_id, trait_id, plot_id, genotyping_protocol_id) WITH (fillfactor =100);
+CREATE INDEX accession_id_idx ON public.materialized_fullview(accession_id) WITH (fillfactor =100);
+CREATE INDEX breeding_program_id_idx ON public.materialized_fullview(breeding_program_id) WITH (fillfactor =100);
+CREATE INDEX genotyping_protocol_id_idx ON public.materialized_fullview(genotyping_protocol_id) WITH (fillfactor =100);
+CREATE INDEX location_id_idx ON public.materialized_fullview(location_id) WITH (fillfactor =100);
+CREATE INDEX plot_id_idx ON public.materialized_fullview(plot_id) WITH (fillfactor =100);
+CREATE INDEX trait_id_idx ON public.materialized_fullview(trait_id) WITH (fillfactor =100);
+CREATE INDEX trial_id_idx ON public.materialized_fullview(trial_id) WITH (fillfactor =100);
+CREATE INDEX year_id_idx ON public.materialized_fullview(year_id) WITH (fillfactor =100);
 
-CREATE MATERIALIZED VIEW accessions AS
-SELECT materialized_fullview.accession_id,
-    materialized_fullview.accession_name
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.accession_id, materialized_fullview.accession_name;
-GRANT ALL ON accessions to web_usr;
-CREATE MATERIALIZED VIEW accessionsXbreeding_programs AS
-SELECT materialized_fullview.accession_id,
-    materialized_fullview.breeding_program_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.accession_id, materialized_fullview.breeding_program_id;
-GRANT ALL ON accessionsXbreeding_programs to web_usr;
-CREATE MATERIALIZED VIEW accessionsXlocations AS
-SELECT materialized_fullview.accession_id,
-    materialized_fullview.location_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.accession_id, materialized_fullview.location_id;
-GRANT ALL ON accessionsXlocations to web_usr;
-CREATE MATERIALIZED VIEW accessionsXgenotyping_protocols AS
-SELECT materialized_fullview.accession_id,
-    materialized_fullview.genotyping_protocol_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.accession_id, materialized_fullview.genotyping_protocol_id;
-GRANT ALL ON accessionsXgenotyping_protocols to web_usr;
-CREATE MATERIALIZED VIEW accessionsXplots AS
-SELECT materialized_fullview.accession_id,
-    materialized_fullview.plot_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.accession_id, materialized_fullview.plot_id;
-GRANT ALL ON accessionsXplots to web_usr;
-CREATE MATERIALIZED VIEW accessionsXtraits AS
-SELECT materialized_fullview.accession_id,
-    materialized_fullview.trait_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.accession_id, materialized_fullview.trait_id;
-GRANT ALL ON accessionsXtraits to web_usr;
-CREATE MATERIALIZED VIEW accessionsXtrials AS
-SELECT materialized_fullview.accession_id,
-    materialized_fullview.trial_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.accession_id, materialized_fullview.trial_id;
-GRANT ALL ON accessionsXtrials to web_usr;
-CREATE MATERIALIZED VIEW accessionsXyears AS
-SELECT materialized_fullview.accession_id,
-    materialized_fullview.year_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.accession_id, materialized_fullview.year_id;
-GRANT ALL ON accessionsXyears to web_usr;
+CREATE MATERIALIZED VIEW public.accessions AS
+SELECT public.materialized_fullview.accession_id,
+    public.materialized_fullview.accession_name
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.accession_id, public.materialized_fullview.accession_name;
+GRANT ALL ON public.accessions to web_usr;
+CREATE MATERIALIZED VIEW public.accessionsXbreeding_programs AS
+SELECT public.materialized_fullview.accession_id,
+    public.materialized_fullview.breeding_program_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.accession_id, public.materialized_fullview.breeding_program_id;
+GRANT ALL ON public.accessionsXbreeding_programs to web_usr;
+CREATE MATERIALIZED VIEW public.accessionsXlocations AS
+SELECT public.materialized_fullview.accession_id,
+    public.materialized_fullview.location_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.accession_id, public.materialized_fullview.location_id;
+GRANT ALL ON public.accessionsXlocations to web_usr;
+CREATE MATERIALIZED VIEW public.accessionsXgenotyping_protocols AS
+SELECT public.materialized_fullview.accession_id,
+    public.materialized_fullview.genotyping_protocol_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.accession_id, public.materialized_fullview.genotyping_protocol_id;
+GRANT ALL ON public.accessionsXgenotyping_protocols to web_usr;
+CREATE MATERIALIZED VIEW public.accessionsXplots AS
+SELECT public.materialized_fullview.accession_id,
+    public.materialized_fullview.plot_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.accession_id, public.materialized_fullview.plot_id;
+GRANT ALL ON public.accessionsXplots to web_usr;
+CREATE MATERIALIZED VIEW public.accessionsXtraits AS
+SELECT public.materialized_fullview.accession_id,
+    public.materialized_fullview.trait_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.accession_id, public.materialized_fullview.trait_id;
+GRANT ALL ON public.accessionsXtraits to web_usr;
+CREATE MATERIALIZED VIEW public.accessionsXtrials AS
+SELECT public.materialized_fullview.accession_id,
+    public.materialized_fullview.trial_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.accession_id, public.materialized_fullview.trial_id;
+GRANT ALL ON public.accessionsXtrials to web_usr;
+CREATE MATERIALIZED VIEW public.accessionsXyears AS
+SELECT public.materialized_fullview.accession_id,
+    public.materialized_fullview.year_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.accession_id, public.materialized_fullview.year_id;
+GRANT ALL ON public.accessionsXyears to web_usr;
 
-CREATE MATERIALIZED VIEW breeding_programs AS
-SELECT materialized_fullview.breeding_program_id,
-    materialized_fullview.breeding_program_name
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.breeding_program_name;
-GRANT ALL ON breeding_programs to web_usr;
-CREATE MATERIALIZED VIEW breeding_programsXlocations AS
-SELECT materialized_fullview.breeding_program_id,
-    materialized_fullview.location_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.location_id;
-GRANT ALL ON breeding_programsXlocations to web_usr;
-CREATE MATERIALIZED VIEW breeding_programsXgenotyping_protocols AS
-SELECT materialized_fullview.breeding_program_id,
-    materialized_fullview.genotyping_protocol_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.genotyping_protocol_id;
-GRANT ALL ON breeding_programsXgenotyping_protocols to web_usr;
-CREATE MATERIALIZED VIEW breeding_programsXplots AS
-SELECT materialized_fullview.breeding_program_id,
-    materialized_fullview.plot_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.plot_id;
-GRANT ALL ON breeding_programsXplots to web_usr;
-CREATE MATERIALIZED VIEW breeding_programsXtraits AS
-SELECT materialized_fullview.breeding_program_id,
-    materialized_fullview.trait_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.trait_id;
-GRANT ALL ON breeding_programsXtraits to web_usr;
-CREATE MATERIALIZED VIEW breeding_programsXtrials AS
-SELECT materialized_fullview.breeding_program_id,
-    materialized_fullview.trial_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.trial_id;
-GRANT ALL ON breeding_programsXtrials to web_usr;
-CREATE MATERIALIZED VIEW breeding_programsXyears AS
-SELECT materialized_fullview.breeding_program_id,
-    materialized_fullview.year_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.breeding_program_id, materialized_fullview.year_id;
-GRANT ALL ON breeding_programsXyears to web_usr;
+CREATE MATERIALIZED VIEW public.breeding_programs AS
+SELECT public.materialized_fullview.breeding_program_id,
+    public.materialized_fullview.breeding_program_name
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.breeding_program_id, public.materialized_fullview.breeding_program_name;
+GRANT ALL ON public.breeding_programs to web_usr;
+CREATE MATERIALIZED VIEW public.breeding_programsXlocations AS
+SELECT public.materialized_fullview.breeding_program_id,
+    public.materialized_fullview.location_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.breeding_program_id, public.materialized_fullview.location_id;
+GRANT ALL ON public.breeding_programsXlocations to web_usr;
+CREATE MATERIALIZED VIEW public.breeding_programsXgenotyping_protocols AS
+SELECT public.materialized_fullview.breeding_program_id,
+    public.materialized_fullview.genotyping_protocol_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.breeding_program_id, public.materialized_fullview.genotyping_protocol_id;
+GRANT ALL ON public.breeding_programsXgenotyping_protocols to web_usr;
+CREATE MATERIALIZED VIEW public.breeding_programsXplots AS
+SELECT public.materialized_fullview.breeding_program_id,
+    public.materialized_fullview.plot_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.breeding_program_id, public.materialized_fullview.plot_id;
+GRANT ALL ON public.breeding_programsXplots to web_usr;
+CREATE MATERIALIZED VIEW public.breeding_programsXtraits AS
+SELECT public.materialized_fullview.breeding_program_id,
+    public.materialized_fullview.trait_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.breeding_program_id, public.materialized_fullview.trait_id;
+GRANT ALL ON public.breeding_programsXtraits to web_usr;
+CREATE MATERIALIZED VIEW public.breeding_programsXtrials AS
+SELECT public.materialized_fullview.breeding_program_id,
+    public.materialized_fullview.trial_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.breeding_program_id, public.materialized_fullview.trial_id;
+GRANT ALL ON public.breeding_programsXtrials to web_usr;
+CREATE MATERIALIZED VIEW public.breeding_programsXyears AS
+SELECT public.materialized_fullview.breeding_program_id,
+    public.materialized_fullview.year_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.breeding_program_id, public.materialized_fullview.year_id;
+GRANT ALL ON public.breeding_programsXyears to web_usr;
 
-CREATE MATERIALIZED VIEW genotyping_protocols AS
-SELECT materialized_fullview.genotyping_protocol_id,
-    materialized_fullview.genotyping_protocol_name
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.genotyping_protocol_id, materialized_fullview.genotyping_protocol_name;
-GRANT ALL ON genotyping_protocols to web_usr;
-CREATE MATERIALIZED VIEW genotyping_protocolsXlocations AS
-SELECT materialized_fullview.genotyping_protocol_id,
-    materialized_fullview.location_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.genotyping_protocol_id, materialized_fullview.location_id;
-GRANT ALL ON genotyping_protocolsXlocations to web_usr;
-CREATE MATERIALIZED VIEW genotyping_protocolsXplots AS
-SELECT materialized_fullview.genotyping_protocol_id,
-    materialized_fullview.plot_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.genotyping_protocol_id, materialized_fullview.plot_id;
-GRANT ALL ON genotyping_protocolsXplots to web_usr;
-CREATE MATERIALIZED VIEW genotyping_protocolsXtraits AS
-SELECT materialized_fullview.genotyping_protocol_id,
-    materialized_fullview.trait_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.genotyping_protocol_id, materialized_fullview.trait_id;
-GRANT ALL ON genotyping_protocolsXtraits to web_usr;
-CREATE MATERIALIZED VIEW genotyping_protocolsXtrials AS
-SELECT materialized_fullview.genotyping_protocol_id,
-    materialized_fullview.trial_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.genotyping_protocol_id, materialized_fullview.trial_id;
-GRANT ALL ON genotyping_protocolsXtrials to web_usr;
-CREATE MATERIALIZED VIEW genotyping_protocolsXyears AS
-SELECT materialized_fullview.genotyping_protocol_id,
-    materialized_fullview.year_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.genotyping_protocol_id, materialized_fullview.year_id;
-GRANT ALL ON genotyping_protocolsXyears to web_usr;
+CREATE MATERIALIZED VIEW public.genotyping_protocols AS
+SELECT public.materialized_fullview.genotyping_protocol_id,
+    public.materialized_fullview.genotyping_protocol_name
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.genotyping_protocol_id, public.materialized_fullview.genotyping_protocol_name;
+GRANT ALL ON public.genotyping_protocols to web_usr;
+CREATE MATERIALIZED VIEW public.genotyping_protocolsXlocations AS
+SELECT public.materialized_fullview.genotyping_protocol_id,
+    public.materialized_fullview.location_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.genotyping_protocol_id, public.materialized_fullview.location_id;
+GRANT ALL ON public.genotyping_protocolsXlocations to web_usr;
+CREATE MATERIALIZED VIEW public.genotyping_protocolsXplots AS
+SELECT public.materialized_fullview.genotyping_protocol_id,
+    public.materialized_fullview.plot_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.genotyping_protocol_id, public.materialized_fullview.plot_id;
+GRANT ALL ON public.genotyping_protocolsXplots to web_usr;
+CREATE MATERIALIZED VIEW public.genotyping_protocolsXtraits AS
+SELECT public.materialized_fullview.genotyping_protocol_id,
+    public.materialized_fullview.trait_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.genotyping_protocol_id, public.materialized_fullview.trait_id;
+GRANT ALL ON public.genotyping_protocolsXtraits to web_usr;
+CREATE MATERIALIZED VIEW public.genotyping_protocolsXtrials AS
+SELECT public.materialized_fullview.genotyping_protocol_id,
+    public.materialized_fullview.trial_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.genotyping_protocol_id, public.materialized_fullview.trial_id;
+GRANT ALL ON public.genotyping_protocolsXtrials to web_usr;
+CREATE MATERIALIZED VIEW public.genotyping_protocolsXyears AS
+SELECT public.materialized_fullview.genotyping_protocol_id,
+    public.materialized_fullview.year_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.genotyping_protocol_id, public.materialized_fullview.year_id;
+GRANT ALL ON public.genotyping_protocolsXyears to web_usr;
 
-CREATE MATERIALIZED VIEW locations AS
-SELECT materialized_fullview.location_id,
-    materialized_fullview.location_name
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.location_id, materialized_fullview.location_name;
-GRANT ALL ON locations to web_usr;
-CREATE MATERIALIZED VIEW locationsXplots AS
-SELECT materialized_fullview.location_id,
-    materialized_fullview.plot_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.location_id, materialized_fullview.plot_id;
-GRANT ALL ON locationsXplots to web_usr;
-CREATE MATERIALIZED VIEW locationsXtraits AS
-SELECT materialized_fullview.location_id,
-    materialized_fullview.trait_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.location_id, materialized_fullview.trait_id;
-GRANT ALL ON locationsXtraits to web_usr;
-CREATE MATERIALIZED VIEW locationsXtrials AS
-SELECT materialized_fullview.location_id,
-    materialized_fullview.trial_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.location_id, materialized_fullview.trial_id;
-GRANT ALL ON locationsXtrials to web_usr;
-CREATE MATERIALIZED VIEW locationsXyears AS
-SELECT materialized_fullview.location_id,
-    materialized_fullview.year_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.location_id, materialized_fullview.year_id;
-GRANT ALL ON locationsXyears to web_usr;
+CREATE MATERIALIZED VIEW public.locations AS
+SELECT public.materialized_fullview.location_id,
+    public.materialized_fullview.location_name
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.location_id, public.materialized_fullview.location_name;
+GRANT ALL ON public.locations to web_usr;
+CREATE MATERIALIZED VIEW public.locationsXplots AS
+SELECT public.materialized_fullview.location_id,
+    public.materialized_fullview.plot_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.location_id, public.materialized_fullview.plot_id;
+GRANT ALL ON public.locationsXplots to web_usr;
+CREATE MATERIALIZED VIEW public.locationsXtraits AS
+SELECT public.materialized_fullview.location_id,
+    public.materialized_fullview.trait_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.location_id, public.materialized_fullview.trait_id;
+GRANT ALL ON public.locationsXtraits to web_usr;
+CREATE MATERIALIZED VIEW public.locationsXtrials AS
+SELECT public.materialized_fullview.location_id,
+    public.materialized_fullview.trial_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.location_id, public.materialized_fullview.trial_id;
+GRANT ALL ON public.locationsXtrials to web_usr;
+CREATE MATERIALIZED VIEW public.locationsXyears AS
+SELECT public.materialized_fullview.location_id,
+    public.materialized_fullview.year_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.location_id, public.materialized_fullview.year_id;
+GRANT ALL ON public.locationsXyears to web_usr;
 
-CREATE MATERIALIZED VIEW plots AS
-SELECT materialized_fullview.plot_id,
-    materialized_fullview.plot_name
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.plot_id, materialized_fullview.plot_name;
-GRANT ALL ON plots to web_usr;
-CREATE MATERIALIZED VIEW plotsXtraits AS
-SELECT materialized_fullview.plot_id,
-    materialized_fullview.trait_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.plot_id, materialized_fullview.trait_id;
-GRANT ALL ON plotsXtraits to web_usr;
-CREATE MATERIALIZED VIEW plotsXtrials AS
-SELECT materialized_fullview.plot_id,
-    materialized_fullview.trial_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.plot_id, materialized_fullview.trial_id;
-GRANT ALL ON plotsXtrials to web_usr;
-CREATE MATERIALIZED VIEW plotsXyears AS
-SELECT materialized_fullview.plot_id,
-    materialized_fullview.year_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.plot_id, materialized_fullview.year_id;
-GRANT ALL ON plotsXyears to web_usr;
+CREATE MATERIALIZED VIEW public.plots AS
+SELECT public.materialized_fullview.plot_id,
+    public.materialized_fullview.plot_name
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.plot_id, public.materialized_fullview.plot_name;
+GRANT ALL ON public.plots to web_usr;
+CREATE MATERIALIZED VIEW public.plotsXtraits AS
+SELECT public.materialized_fullview.plot_id,
+    public.materialized_fullview.trait_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.plot_id, public.materialized_fullview.trait_id;
+GRANT ALL ON public.plotsXtraits to web_usr;
+CREATE MATERIALIZED VIEW public.plotsXtrials AS
+SELECT public.materialized_fullview.plot_id,
+    public.materialized_fullview.trial_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.plot_id, public.materialized_fullview.trial_id;
+GRANT ALL ON public.plotsXtrials to web_usr;
+CREATE MATERIALIZED VIEW public.plotsXyears AS
+SELECT public.materialized_fullview.plot_id,
+    public.materialized_fullview.year_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.plot_id, public.materialized_fullview.year_id;
+GRANT ALL ON public.plotsXyears to web_usr;
 
-CREATE MATERIALIZED VIEW traits AS
-SELECT materialized_fullview.trait_id,
-    materialized_fullview.trait_name
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.trait_id, materialized_fullview.trait_name;
-GRANT ALL ON traits to web_usr;
-CREATE MATERIALIZED VIEW traitsXtrials AS
-SELECT materialized_fullview.trait_id,
-    materialized_fullview.trial_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.trait_id, materialized_fullview.trial_id;
-GRANT ALL ON traitsXtrials to web_usr;
-CREATE MATERIALIZED VIEW traitsXyears AS
-SELECT materialized_fullview.trait_id,
-    materialized_fullview.year_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.trait_id, materialized_fullview.year_id;
-GRANT ALL ON traitsXyears to web_usr;
+CREATE MATERIALIZED VIEW public.traits AS
+SELECT public.materialized_fullview.trait_id,
+    public.materialized_fullview.trait_name
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.trait_id, public.materialized_fullview.trait_name;
+GRANT ALL ON public.traits to web_usr;
+CREATE MATERIALIZED VIEW public.traitsXtrials AS
+SELECT public.materialized_fullview.trait_id,
+    public.materialized_fullview.trial_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.trait_id, public.materialized_fullview.trial_id;
+GRANT ALL ON public.traitsXtrials to web_usr;
+CREATE MATERIALIZED VIEW public.traitsXyears AS
+SELECT public.materialized_fullview.trait_id,
+    public.materialized_fullview.year_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.trait_id, public.materialized_fullview.year_id;
+GRANT ALL ON public.traitsXyears to web_usr;
 
-CREATE MATERIALIZED VIEW trials AS
-SELECT materialized_fullview.trial_id,
-    materialized_fullview.trial_name
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.trial_id, materialized_fullview.trial_name;
-GRANT ALL ON trials to web_usr;
-CREATE MATERIALIZED VIEW trialsXyears AS
-SELECT materialized_fullview.trial_id,
-    materialized_fullview.year_id
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.trial_id, materialized_fullview.year_id;
-GRANT ALL ON trialsXyears to web_usr;
+CREATE MATERIALIZED VIEW public.trials AS
+SELECT public.materialized_fullview.trial_id,
+    public.materialized_fullview.trial_name
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.trial_id, public.materialized_fullview.trial_name;
+GRANT ALL ON public.trials to web_usr;
+CREATE MATERIALIZED VIEW public.trialsXyears AS
+SELECT public.materialized_fullview.trial_id,
+    public.materialized_fullview.year_id
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.trial_id, public.materialized_fullview.year_id;
+GRANT ALL ON public.trialsXyears to web_usr;
 
-CREATE MATERIALIZED VIEW years AS
-SELECT materialized_fullview.year_id,
-    materialized_fullview.year_name
-   FROM materialized_fullview
-  GROUP BY materialized_fullview.year_id, materialized_fullview.year_name;
-GRANT ALL ON years to web_usr;
+CREATE MATERIALIZED VIEW public.years AS
+SELECT public.materialized_fullview.year_id,
+    public.materialized_fullview.year_name
+   FROM public.materialized_fullview
+  GROUP BY public.materialized_fullview.year_id, public.materialized_fullview.year_name;
+GRANT ALL ON public.years to web_usr;
 
 --
 SELECT * from public.stock;

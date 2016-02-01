@@ -1,15 +1,62 @@
 window.onload = function initialize() { 
 
+    var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
+    var start = format_options(starting_categories);
+
+    jQuery('#select1').html(start);  
+  
+    jQuery('select').mouseenter(function() {this.tooltip});
+
+    if (!isLoggedIn()) {
+
+       create_list_start('Login to start from a list');
+
+       jQuery('#c1_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
+       jQuery('#c2_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
+       jQuery('#c3_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
+       jQuery('#c4_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
+
+    } else {
+
+      create_list_start('Start from a list');
+
+      addToListMenu('c1_to_list_menu', 'c1_data', { 
+        selectText: true,
+        typeSourceDiv: 'select1',
+      });
+      addToListMenu('c2_to_list_menu', 'c2_data', { 
+        selectText: true,
+        typeSourceDiv: 'select2',
+      });
+      addToListMenu('c3_to_list_menu', 'c3_data', { 
+        selectText: true,
+        Typesourcediv: 'select3',
+       });      
+      addToListMenu('c4_to_list_menu', 'c4_data', { 
+        selectText: true,
+        typeSourceDiv: 'select4',
+       });
+    }
+
+    jQuery('#select1').change( // reset start from list if select1 changes
+	function() {
+	    var startlist = jQuery('#c1_data_list_select').val();
+	    if (startlist) {
+		create_list_start('Start from a list');
+	    }
+	});
+
     jQuery('#select1, #select2, #select3, #select4').change(  // retrieve new data once new category is selected
     	function() {
 	    var this_section = jQuery(this).attr('name');
 	    reset_downstream_sections(this_section);
 	    update_select_categories(this_section);
-	    console.log("this.value="+jQuery(this).val());
-	    if (jQuery(this).val() == '') { // return empty if no category defined
+	    var category = jQuery(this).val();
+
+	    if (!category) { // return empty if no category defined
 		console.log(" no category defined");
 		var data_element = "c"+this_section+"_data";
-		jQuery("#"+data_element).html("");
+		jQuery("#"+data_element).html('');
 		return;
 	    }
 	    var categories = get_selected_categories(this_section);
@@ -22,23 +69,7 @@ window.onload = function initialize() {
     jQuery('#c1_data, #c2_data, #c3_data, #c4_data').change( // update wizard panels and categories when data selections change 
     	function() {
 	    var this_section = jQuery(this).attr('name');
-	    var categories = get_selected_categories(this_section);
-	    var data = get_selected_data(this_section);
-
-	    var trials_selected = 0;
-	    for (i=0; i < categories.length; i++) {
-		//if (categories[i]) {console.log("category ="+categories[i]);}
-		//if (data !== undefined) {console.log("data ="+data[i]);}
-		if (categories[i] === 'trials' && data[i]) {
-		    trials_selected = 1;
-		    jQuery('#download_button_excel').removeAttr('disabled');
-		    jQuery('#download_button_csv').removeAttr('disabled');
-		} 
-	    }
-	    if (trials_selected !== 1) {
-		jQuery('#download_button_excel').attr('disabled', 'disabled');
-		jQuery('#download_button_csv').attr('disabled', 'disabled');
-	    }
+	    update_download_options(this_section);
 
 	    var data_id = jQuery(this).attr('id');
 	    var data = jQuery('#'+data_id).val() || [];;
@@ -113,13 +144,12 @@ window.onload = function initialize() {
 function retrieve_and_display_set(categories, data, this_section) {
     if (window.console) console.log("categories = "+categories);
     if (window.console) console.log("data = "+JSON.stringify(data));
-    //if (window.console) console.log("genotypes="+get_genotype_checkbox());
     //if (window.console) console.log("querytypes="+get_querytypes(this_section));
     jQuery.ajax( {
 	url: '/ajax/breeder/search',
 	timeout: 60000,
 	method: 'POST',
-	data: {'categories': categories, 'data': data, 'genotypes': get_genotype_checkbox(), 'querytypes': get_querytypes(this_section)},
+	data: {'categories': categories, 'data': data, 'querytypes': get_querytypes(this_section)},
 	    beforeSend: function(){
 		disable_ui();
             },  
@@ -170,11 +200,14 @@ function get_selected_categories(this_section) {
 
     var selected_categories = [];
     var select1 = jQuery('#select1').val();
-    if (select1 === '') { // if paste from list was used at start instead of select then get list type
+    if (select1 === '') { // if starting category is undefined
 	var list_id = jQuery('#c1_data_list_select').val();
-	var lo = new CXGN.List();
-	var list_data = lo.getListData(list_id);
-	select1 = list_data.type_name;
+	if (list_id) { // check to see if paste from list was used, if so get list type
+	    var list_id = jQuery('#c1_data_list_select').val();
+	    var lo = new CXGN.List();
+	    var list_data = lo.getListData(list_id);
+	    select1 = list_data.type_name;
+	}
     }
     selected_categories.push(select1);
     for (i=2; i <= this_section; i++) {
@@ -222,16 +255,49 @@ function update_select_categories(this_section) {
 
     jQuery('#'+next_select_id).html(remaining_categories);
 }
+
+function update_download_options(this_section) {
+    var categories = get_selected_categories(this_section);
+    var data = get_selected_data(this_section);
+    var trials_selected = 0;
+    for (i=0; i < categories.length; i++) {
+	//if (categories[i]) {console.log("category ="+categories[i]);}
+	//if (data !== undefined) {console.log("data ="+data[i]);}
+	if (categories[i] === 'trials' && data[i]) {
+	    trials_selected = 1;
+	    jQuery('#download_button_excel').removeAttr('disabled');
+	    jQuery('#download_button_csv').removeAttr('disabled');
+	}
+    }
+    if (trials_selected !== 1) {
+	jQuery('#download_button_excel').attr('disabled', 'disabled');
+	jQuery('#download_button_csv').attr('disabled', 'disabled');
+    }
+}
+
 	
 function reset_downstream_sections(this_section) {  // clear downstream selects, data_panels, data_counts
     for (i = 4; i > this_section; i--) {
 	var select_id = "select"+i;
 	var data_id = "c"+i+"_data";
 	var count_id = "c"+i+"_data_count";
+	var querytype_id = "c"+i+"_querytype";
 	jQuery('#'+select_id).html('');
 	jQuery('#'+data_id).html('');
 	jQuery('#'+count_id).html('');
+	jQuery('#'+querytype_id).bootstrapToggle('off');
     }
+}
+
+function create_list_start(message) {
+    var lo = new CXGN.List();
+    var listhtml = lo.listSelect('c1_data', '', message);
+    jQuery('#paste_list').html(listhtml);
+    jQuery('#paste_list').change(
+    function() { // if 'select a list', reinitialize, otherwise
+	
+		   pasteList('c1_data');
+    });
 }
 
 function format_options(items) { 
@@ -291,16 +357,6 @@ function selectAllOptions(obj) {
     for (var i=0; i<obj.options.length; i++) {
       obj.options[i].selected = true;
     }
-}
-
-function get_genotype_checkbox() { 
-    var checkbox = jQuery('#restrict_genotypes').is(':checked')
-
-    if (checkbox == true) {
-	return jQuery("#gtp_select").val();
-    }
-    return 0;
-
 }
 
 function get_querytypes(this_section) {
