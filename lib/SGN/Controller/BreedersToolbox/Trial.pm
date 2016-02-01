@@ -48,6 +48,7 @@ sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
 }
 
 sub trial_info : Chained('trial_init') PathPart('') Args(0) { 
+    print STDERR "Check 1: ".localtime()."\n";
     my $self = shift;
     my $c = shift;
     my $format = $c->req->param("format");
@@ -63,22 +64,26 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $start_time = time();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial = $c->stash->{trial};
+    print STDERR "Check 2: ".localtime()."\n";
     my $trial_layout = CXGN::Trial::TrialLayout->new( { schema => $schema, trial_id => $c->stash->{trial_id} });
+    print STDERR "Check 3: ".localtime()."\n";
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+    print STDERR "Check 4: ".localtime()."\n";
     if (!$program_object->trial_exists($c->stash->{trial_id})) { 
 	$c->stash->{message} = "The requested trial does not exist or has been deleted.";
 	$c->stash->{template} = 'generic_message.mas';
 	return;
     }
-	
+
+    print STDERR "Check 5: ".localtime()."\n";
     my $plot_dimensions = $trial_layout->get_plot_dimensions();
 
-    my %design;
-    my $design_ref;
-    $design_ref = $trial_layout->get_design();
-    if ($design_ref) {
-      %design = %{$design_ref};
-    }
+    #my %design;
+    #my $design_ref;
+    #$design_ref = $trial_layout->get_design();
+    #if ($design_ref) {
+    #  %design = %{$design_ref};
+    #}
 
     my $block_numbers = $trial_layout->get_block_numbers();
     my $number_of_blocks;
@@ -93,6 +98,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
       $number_of_replicates = scalar(@{$replicate_numbers});
     }
 
+    print STDERR "Check 6: ".localtime()."\n";
     $c->stash->{number_of_replicates} = $number_of_replicates;
 
     $c->stash->{trial_name} = $trial->get_name();
@@ -110,9 +116,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{trial_description} = $trial->get_description();
 
-    $c->stash->{design} = \%design;
+    #$c->stash->{design} = \%design;
 
-    $c->stash->{design_layout_view} = trial_detail_design_view(\%design);
+    #$c->stash->{design_layout_view} = trial_detail_design_view(\%design);
 
     $c->stash->{plot_length} = $plot_dimensions->[0];
 
@@ -129,6 +135,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{plot_data} = [];
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
+
+    print STDERR "Check 7: ".localtime()."\n";
 
     if ($design_type eq "genotyping_plate") { 
 	if ($format eq "as_table") { 

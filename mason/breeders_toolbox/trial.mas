@@ -31,7 +31,7 @@ $design_type
 $number_of_blocks
 $number_of_replicates
 $trial_description
-$design_layout_view
+$design_layout_view => undef
 $user_can_modify => undef
 </%args>
 
