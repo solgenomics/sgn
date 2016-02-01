@@ -22,14 +22,12 @@ $year
 $trial_type
 $planting_date
 $harvest_date
-@plot_data
-@control_names
 $plot_length => "unknown"
 $plot_width => "unknown"
 $plant_per_plot => "unknown"
 $design_type
-$number_of_blocks
-$number_of_replicates
+$number_of_blocks => undef
+$number_of_replicates => undef
 $trial_description
 $design_layout_view => undef
 $user_can_modify => undef
@@ -44,14 +42,6 @@ my $description_empty = 1;
 if ($trial_description) {
   if ($trial_description ne "") {
     $description_empty = 0;
-  }
-}
-
-my $number_of_controls = scalar(@control_names);
-my $controls_empty = 1;
-if ($number_of_controls >= 1) {
-  if (!$control_names[0] eq "") {
-    $controls_empty = 0;
   }
 }
 
@@ -307,23 +297,15 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <br /><br />
 
-<&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1,  &>
+<&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
 <& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
 
 </&>
 
-<&| /page/info_section.mas, id => "trial_controls", title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1, is_empty=> $controls_empty&>
+<&| /page/info_section.mas, id => "trial_controls", title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
-<table class="table table-hover table-condensed table-bordered">
-<thead><tr><th>Stock Unique Name</th></tr></thead>
-<tbody>
-% foreach my $accession (@control_names) { 
-%  print "<tr><td><a href='/stock/$accession->{stock_id}/view'>$accession->{accession_name}</a></td></tr>";
-% }
-
-</tbody>
-</table>
+<& /breeders_toolbox/trial/trial_controls.mas, trial_id => $trial_id &>
 
 </&>
 
@@ -352,11 +334,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
-
-% print STDERR "Check 8 (mason) : ".(time() - $start_time)."\n";
-% foreach my $p (@plot_data) { 
-%   print $p."<br />\n";
-% }
 
 <&| /page/info_section.mas,
    title       => 'Trial JBrowse',

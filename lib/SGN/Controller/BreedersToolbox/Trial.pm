@@ -65,7 +65,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial = $c->stash->{trial};
     print STDERR "Check 2: ".localtime()."\n";
-    my $trial_layout = CXGN::Trial::TrialLayout->new( { schema => $schema, trial_id => $c->stash->{trial_id} });
+    #my $trial_layout = CXGN::Trial::TrialLayout->new( { schema => $schema, trial_id => $c->stash->{trial_id} });
     print STDERR "Check 3: ".localtime()."\n";
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
     print STDERR "Check 4: ".localtime()."\n";
@@ -76,7 +76,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     }
 
     print STDERR "Check 5: ".localtime()."\n";
-    my $plot_dimensions = $trial_layout->get_plot_dimensions();
+    #my $plot_dimensions = $trial_layout->get_plot_dimensions();
 
     #my %design;
     #my $design_ref;
@@ -85,21 +85,22 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     #  %design = %{$design_ref};
     #}
 
-    my $block_numbers = $trial_layout->get_block_numbers();
-    my $number_of_blocks;
-    if ($block_numbers) {
-      $number_of_blocks = scalar(@{$block_numbers});
-    }
-    $c->stash->{number_of_blocks} = $number_of_blocks;
+    #my $block_numbers = $trial_layout->get_block_numbers();
+    #my $number_of_blocks;
+    #if ($block_numbers) {
+    #  $number_of_blocks = scalar(@{$block_numbers});
+    #}
+    #$c->stash->{number_of_blocks} = $number_of_blocks;
 
-    my $replicate_numbers = $trial_layout->get_replicate_numbers();
-    my $number_of_replicates;
-    if ($replicate_numbers) {
-      $number_of_replicates = scalar(@{$replicate_numbers});
-    }
+    #my $replicate_numbers = $trial_layout->get_replicate_numbers();
+    #my $number_of_replicates;
+    #if ($replicate_numbers) {
+    #  $number_of_replicates = scalar(@{$replicate_numbers});
+    #}
 
     print STDERR "Check 6: ".localtime()."\n";
-    $c->stash->{number_of_replicates} = $number_of_replicates;
+
+    #$c->stash->{number_of_replicates} = $number_of_replicates;
 
     $c->stash->{trial_name} = $trial->get_name();
 
@@ -109,30 +110,26 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{harvest_date} = $trial->get_harvest_date();
 
-    my $design_type = $trial_layout->get_design_type();
+    my $design_type = $trial->get_design_type();
     $c->stash->{design_type} = $design_type;
 
-    $c->stash->{control_names} = $trial_layout->get_control_names();
+    #$c->stash->{control_names} = $trial_layout->get_control_names();
 
     $c->stash->{trial_description} = $trial->get_description();
 
-    #$c->stash->{design} = \%design;
-
     #$c->stash->{design_layout_view} = trial_detail_design_view(\%design);
 
-    $c->stash->{plot_length} = $plot_dimensions->[0];
+    #$c->stash->{plot_length} = $plot_dimensions->[0];
 
-    $c->stash->{plot_width} = $plot_dimensions->[1];
+    #$c->stash->{plot_width} = $plot_dimensions->[1];
 
-    $c->stash->{plant_per_plot} = $plot_dimensions->[2];
+    #$c->stash->{plant_per_plot} = $plot_dimensions->[2];
 
     $c->stash->{location_data} = [ $trial->get_location()->[0], $trial->get_location()->[1] ];
 
     $c->stash->{breeding_program} = $program_object->get_breeding_programs_by_trial($c->stash->{trial_id});
 
     $c->stash->{year} = $trial->get_year();
-
-    $c->stash->{plot_data} = [];
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
 
