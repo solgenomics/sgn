@@ -14,7 +14,7 @@ function solGS () {};
 
 solGS.waitPage = function (page) {
  
-    if ( page.match(/(solgs\/population\/|solgs\/populations\/combined\/|solgs\/trait\/|solgs\/model\/combined\/trials\/)/)) {
+    if ( page.match(/(solgs\/population\/|solgs\/populations\/combined\/|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/search\/trials\/trait\/)/)) {
     	askUser(page);
     } else {
     	blockPage(page);
@@ -275,11 +275,15 @@ function getProfileDialog (page, args) {
 
 
 function getArgsFromUrl (url, args) {
-    
+
     if (url.match(/solgs\/trait\//)) {
 	
 	var urlStr = url.split(/\/+/);
-
+	
+	if (window.Prototype) {
+		delete Array.prototype.toJSON;
+	}
+	
 	if (args === undefined) {
 	      
 	    args = {'trait_id'      : [ urlStr[4] ], 
@@ -290,8 +294,8 @@ function getArgsFromUrl (url, args) {
 	}
 	else {
 
-	    args['trait_id']      = [ urlStr[4]  ];
-	    args['population_id'] = [  urlStr[6] ];
+	    args['trait_id']      = [ urlStr[4] ];
+	    args['population_id'] = [ urlStr[6] ];
 	    args['analysis_type'] = 'single model';
 	    args['data_set_type'] = 'single population';
 	

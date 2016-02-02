@@ -327,6 +327,11 @@ sub structure_output_details {
 		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
 	    }
 	    
+	    if ( $referer =~ m/solgs\/search\/trials\/trait/ ) 
+	    {
+		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
+	    }
+	    
 	    if ( $referer =~ m/solgs\/populations\/combined\// ) 
 	    {
 		$trait_page = $base . "solgs/model/combined/trials/$pop_id/trait/$trait_id";

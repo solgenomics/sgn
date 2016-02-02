@@ -260,7 +260,7 @@ sub check_trait_modeling {
 			     if ($died_file) 
 			     {
 				 $output_details->{$k}->{success} = 0;
-				 $output_details->{status} = 'Failed ' .  " $k " . $gebv_file2;
+				 $output_details->{status} = 'Failed';
 				 last;
 			     }
 			 }

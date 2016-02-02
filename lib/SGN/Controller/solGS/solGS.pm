@@ -367,11 +367,10 @@ sub projects_links {
 sub search_trials_trait : Path('/solgs/search/trials/trait') Args(1) {
     my ($self, $c, $trait_id) = @_;
     
-    my $trait_name = $c->model('solGS::solGS')->trait_name($trait_id);
+    $self->get_trait_details($c, $trait_id);
     
-    $c->stash->{template}   = $self->template('/search/trials/trait.mas');
-    $c->stash->{trait_id}   = $trait_id;
-    $c->stash->{trait_name} = $trait_name;
+    $c->stash->{template} = $self->template('/search/trials/trait.mas');
+
 }
 
 
@@ -432,7 +431,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
 	    my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 	    $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
-	    push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage();">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code
+	    push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code
                 ];
 	}
    }     
