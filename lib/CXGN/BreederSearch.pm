@@ -104,21 +104,22 @@ sub metadata_query {
     $full_query .= " ORDER BY 2";
     print STDERR "QUERY: $full_query\n";
     $h = $self->dbh->prepare($full_query);
-    print STDERR "Prepared, now executing query  . . .";
     $h->execute();
 
     my @results;
     while (my ($id, $name) = $h->fetchrow_array()) { 
-	print STDERR "id = ". $id . " and name = " . $name . "\n";
 	push @results, [ $id, $name ];
     }    
     
-    if (@results <= 10_000) { 
+    if (@results >= 10_000) { 
+	return { error => scalar(@results).' matches. Too many results to display' };
+    }
+    elsif (@results < 1) { 
+	return { error => scalar(@results).' matches. No results to display' };
+    } 
+    else {
 	return { results => \@results };
-    }
-    else { 
-	return { message => '<font color="red">Too many items to display ('.(scalar(@results)).')</font>' };
-    }
+    }	
 }
 
 

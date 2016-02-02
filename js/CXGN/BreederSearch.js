@@ -56,8 +56,8 @@ window.onload = function initialize() {
 	    if (!category) { // return empty if no category defined
 		console.log(" no category defined");
 		var data_element = "c"+this_section+"_data";
-		jQuery("#"+data_element).html('');
-		return;
+		jQuery("#"+data_element).html('');	
+	return;
 	    }
 	    var categories = get_selected_categories(this_section);
 	    var data = ''
@@ -92,6 +92,8 @@ window.onload = function initialize() {
 	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
 	    update_select_categories(this_section);
 	    
+	    console.log("showing message modal . . .");
+	    jQuery('#message_modal').modal("show");
 	});
 
       jQuery('select').dblclick(function() { // open detail page in new window or tab on double-click 
@@ -157,8 +159,10 @@ function retrieve_and_display_set(categories, data, this_section) {
 		enable_ui();
             },  
 	    success: function(response) { 
-		if (response.error) { 
-		    alert("ERROR: "+response.error);
+		if (response.error) {
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">'+response.error+'</font></div>';
+		    var selectall_id = "c"+this_section+"_select_all";
+		    jQuery('#'+selectall_id).before(error_html);
 		} 
 		else {
                     var list = response.list || [];
@@ -178,6 +182,7 @@ function retrieve_and_display_set(categories, data, this_section) {
 		    }
 		}	
 	    } 
+	
 	});		
 }
 
@@ -277,6 +282,7 @@ function update_download_options(this_section) {
 
 	
 function reset_downstream_sections(this_section) {  // clear downstream selects, data_panels, data_counts
+    jQuery('#response_error').remove();
     for (i = 4; i > this_section; i--) {
 	var select_id = "select"+i;
 	var data_id = "c"+i+"_data";

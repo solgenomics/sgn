@@ -66,9 +66,14 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
     print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
 
-    $c->stash->{rest} = {
-	list => $results_ref->{results}
-    };
+    if ($results_ref->{error}) {
+	print STDERR "Returning with error . . .\n";
+	$c->stash->{rest} = { error => $results_ref->{'error'} };
+	return;
+    } else {
+	$c->stash->{rest} = { list => $results_ref->{'results'} };
+	return;
+    }
 }
     
 
