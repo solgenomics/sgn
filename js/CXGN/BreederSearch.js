@@ -53,15 +53,17 @@ window.onload = function initialize() {
 	    update_select_categories(this_section);
 	    var category = jQuery(this).val();
 
-	    if (!category) { // return empty if no category defined
-		console.log(" no category defined");
+	    if (!category) { // reset by returning empty if no category was defined
 		var data_element = "c"+this_section+"_data";
 		jQuery("#"+data_element).html('');	
-	return;
+		return;
 	    }
 	    var categories = get_selected_categories(this_section);
 	    var data = ''
 	    if (this_section !== "1") data = get_selected_data(this_section);
+	    var error = check_missing_criteria(categories, data, this_section); // make sure criteria selected in each panel
+	    if (error) return;
+	    if (data.length >= categories.length) data.pop(); //remove extra data array if exists
 
 	    retrieve_and_display_set(categories, data, this_section);
 	});
@@ -192,13 +194,10 @@ function get_selected_data(this_section) {
     for (i=1; i <= this_section; i++) {
 	var element_id = "c"+i+"_data";
 	var data = jQuery("#"+element_id).val();
-	selected_data.push(data);
+	if (data) selected_data.push(data);
     }
-
     //if (window.console) console.log("selected data= "+JSON.stringify(selected_data));
-    if (selected_data.length > 0) {
     return selected_data;
-    }
 }
 
 function get_selected_categories(this_section) {
@@ -270,11 +269,15 @@ function update_download_options(this_section) {
 	//if (data !== undefined) {console.log("data ="+data[i]);}
 	if (categories[i] === 'trials' && data[i]) {
 	    trials_selected = 1;
+	    jQuery('#download_button_excel').prop( 'title', 'Click to Download Trial Phenotypes');
+	    jQuery('#download_button_csv').prop('title', 'Click to Download Trial Phenotypes');
 	    jQuery('#download_button_excel').removeAttr('disabled');
 	    jQuery('#download_button_csv').removeAttr('disabled');
 	}
     }
     if (trials_selected !== 1) {
+	jQuery('#download_button_excel').prop('title','First Select a Trial to Download');
+	jQuery('#download_button_csv').prop('title', 'First Select a Trial to Download');
 	jQuery('#download_button_excel').attr('disabled', 'disabled');
 	jQuery('#download_button_csv').attr('disabled', 'disabled');
     }
@@ -362,6 +365,18 @@ function selectAllOptions(obj) {
     if (!obj || obj.options.length ==0) { return; }
     for (var i=0; i<obj.options.length; i++) {
       obj.options[i].selected = true;
+    }
+}
+
+function check_missing_criteria(categories, data, this_section) {
+    var test = data.length + 1;
+    if (categories.length > test) {
+	var error_html = '<div class="well well-sm" id="response_error"><font color="red">Error: Select at least one option from each preceding panel</font></div>';
+	var selectall_id = "c"+this_section+"_select_all";
+	jQuery('#'+selectall_id).before(error_html);
+	return 1;
+    } else {
+	return 0;
     }
 }
 
