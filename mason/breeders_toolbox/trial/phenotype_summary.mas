@@ -86,7 +86,6 @@ jQuery(document).ready(function () {
 	      jQuery("#working_modal").modal("show");
 	  },
 	  success: function(response){
-	      console.log(response.traits_assayed);
 	      var traits_assayed_html = "<select class='form-control' id='trial_summary_hist_dropdown' onchange='trait_summary_hist_change(this.value)'>";
 	      for (i=0; i<response.traits_assayed[0].length; i++) {
 	          traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";

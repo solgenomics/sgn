@@ -1,0 +1,34 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [  ] &>
+
+
+<div id="trial_design_html" >
+<div class="well">
+[LOADING...]
+<br/>
+</div>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+ 	jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/design',
+	    success: function(response){
+		var trial_design_html = "<table class='table table-hover table-condensed table-bordered table-striped' id='trial_controls_table'><thead><tr><th>Attribute</th><th>Value</th></tr></thead><tbody><tr><td>Design</td><td><b>"+response.design_type+"</b></td></tr><tr><td>Number of Blocks</td><td>"+response.num_blocks+"</td></tr><tr><td>Number of Replicates</td><td>"+response.num_reps+"</td></tr><tr><td>Plot Length</td><td>"+response.plot_length+"</td></tr><tr><td>Plot Width</td><td>"+response.plot_width+"</td></tr><tr><td>Plants Per Plot</td><td>"+response.plants_pers_plot+"</td></tr></tbody></table>";
+		jQuery('#trial_design_html').empty();
+		jQuery('#trial_design_html').html(trial_design_html);
+	    },
+	    error: function(response){
+		alert("Error retrieving design.");
+	    }
+	});
+
+});
+
+</script>
