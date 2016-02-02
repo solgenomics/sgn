@@ -20,6 +20,7 @@ $project_desc
 $stocks_no
 $markers_no
 $traits_no
+$protocol
 $uploaded_reference => ''
 $owner => ''
 $combined_populations => ''
@@ -60,6 +61,7 @@ if (!$uploaded_reference && !$combined_populations) {
          data       => [['No. of lines', $stocks_no],
                         ['No. of traits', $traits_no],
                         ['No. of markers', $markers_no],
+			['Genotyping version', $protocol],
                        ],
         __alt_freq  => 1,
         __align     => "l",

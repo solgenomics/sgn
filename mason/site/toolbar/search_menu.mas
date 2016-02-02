@@ -22,8 +22,5 @@
     <li><a href="/search/people">People</a></li>
     <li><a href="/help/faq.pl">FAQ</a></li>
 
-    <li role="separator" class="divider"></li>
-    <li><a href="/search">Advanced Search</a></li>
-
   </ul>
 </li>

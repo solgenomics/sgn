@@ -49,9 +49,6 @@ sub BUILD {
 	die "The trial ".$self->get_trial_id()." does not exist";
     }
 
-    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->get_trial_id() });
-    $self->set_layout($layout);
-
 }
 
 =head2 accessors get_trial_id()
@@ -77,9 +74,7 @@ has 'layout' => (isa => 'CXGN::Trial::TrialLayout',
 		 is => 'rw',
 		 reader => 'get_layout',
 		 writer => 'set_layout',
-		 predicate => 'has_layout',
-		 
-
+		 predicate => 'has_layout'
     );
 
 
@@ -120,6 +115,7 @@ sub set_year {
 	$row = $self->bcs_schema->resultset('Project::Projectprop')->create(
 	    { type_id => $type_id,
 	    value => $year,
+	      project_id =>  $self->get_trial_id()
 	    } );
     }
 }
@@ -898,6 +894,59 @@ sub total_phenotypes {
     return $pt_rs->count();
 }
 
+=head2 function get_phenotypes_for_trait($trait_id)
+
+ Usage:        
+ Desc:         returns the measurements for the given trait in this trial
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_phenotypes_for_trait { 
+    my $self = shift;
+    my $trait_id = shift;
+    my @data;
+    my $dbh = $self->bcs_schema->storage()->dbh();
+    
+    my $h = $dbh->prepare("SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and cvterm.cvterm_id = ? and phenotype.value~?;");
+
+    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );
+    while (my ($value) = $h->fetchrow_array()) { 
+	push @data, $value + 0;
+    }
+    return @data;
+}
+
+=head2 function get_traits_assayed()
+
+ Usage:        
+ Desc:         returns the cvterm_id and name for traits assayed
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_traits_assayed { 
+    my $self = shift;
+    my $dbh = $self->bcs_schema->storage()->dbh();
+
+    my @traits_assayed;
+    my $traits_assayed_q = $dbh->prepare("SELECT cvterm.name, cvterm.cvterm_id FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY cvterm.name, cvterm.cvterm_id;");
+
+    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    $traits_assayed_q->execute($self->get_trial_id(), $numeric_regex );
+    while (my ($trait_name, $trait_id) = $traits_assayed_q->fetchrow_array()) { 
+	push @traits_assayed, [$trait_id, ucfirst($trait_name)];
+    }
+    return \@traits_assayed;
+}
+
 =head2 function get_experiment_count()
 
  Usage:
@@ -1034,7 +1083,27 @@ sub get_planting_date_cvterm_id {
     return $row->cvterm_id();
 }
 
+sub get_design_type {
+  my $self = shift;
+  my $design_prop;
+  my $design_type;
+  my $project;
 
+  my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $self->get_trial_id() });
+
+  $design_prop =  $project->projectprops->find(
+        { 'type.name' => 'design' },
+        { join => 'type'}
+        ); #there should be only one design prop.
+  if (!$design_prop) {
+    return;
+  }
+  $design_type = $design_prop->value;
+  if (!$design_type) {
+    return;
+  }
+  return $design_type;
+}
 
 
 
