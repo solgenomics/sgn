@@ -679,9 +679,9 @@ CXGN.List.prototype = {
 	  default: 
 	      return { 'error' : "cannot convert the list because of unknown type" };
 	}
-	console.log("new type = "+new_type);
+	if (window.console) console.log("new type = "+new_type);
 	var transformed = this.transform(list_id, new_type);
-	console.log("transformed="+JSON.stringify(transformed));
+	if (window.console) console.log("transformed="+JSON.stringify(transformed));
 	return transformed;	    
 
     }

@@ -93,9 +93,6 @@ window.onload = function initialize() {
 
 	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
 	    update_select_categories(this_section);
-	    
-	    console.log("showing message modal . . .");
-	    jQuery('#message_modal').modal("show");
 	});
 
       jQuery('select').dblclick(function() { // open detail page in new window or tab on double-click 
@@ -390,7 +387,7 @@ function get_querytypes(this_section) {
 	} else {
 	    var type = 0;
 	}
-	if (window.console) console.log("type="+type);
+	if (window.console) console.log("querytype="+type);
 	querytypes.push(type);
     }
     if (querytypes.length > 0) {
