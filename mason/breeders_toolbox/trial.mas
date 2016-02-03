@@ -17,12 +17,12 @@ Jeremy D. Edwards
 $trial_id
 $breeding_program
 $trial_name
-$location_data
-$year
-$trial_type
-$planting_date
-$harvest_date
-$trial_description
+$location_data => undef
+$year => undef
+$trial_type => undef
+$planting_date => undef
+$harvest_date => undef
+$trial_description => undef
 $design_layout_view => undef
 $user_can_modify => undef
 </%args>
