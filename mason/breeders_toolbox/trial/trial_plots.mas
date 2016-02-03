@@ -23,7 +23,7 @@ jQuery(document).ready(function () {
 	    success: function(response){
 	        //console.log(response);
 		jQuery("#working_modal").modal("hide");
-		var trial_plots_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plots_table'><thead><tr><th>Plot Name</th></tr></thead><tbody>";
+		var trial_plots_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plots_table'><thead><tr><th>Name</th></tr></thead><tbody>";
 		for (i=0; i<response.plots[0].length; i++) {
 		    trial_plots_html = trial_plots_html + "<tr><td>"+ response.plots[0][i] + "</td></tr>";
 		}

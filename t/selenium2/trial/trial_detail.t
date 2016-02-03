@@ -58,18 +58,21 @@ $t->while_logged_in_as("curator", sub {
     $t->find_element_ok("//div[contains(., 'T100 trial test description')]", "xpath", "verify description")->get_text();
 
     #Verify Trial Design
-    $t->find_element_ok("//div[contains(., 'Design: CRD')]", "xpath", "verify design type")->get_text();
-    $t->find_element_ok("//div[contains(., 'Number of blocks: 2')]", "xpath", "verify number of blocks")->get_text();
-    $t->find_element_ok("//div[contains(., 'Number of replicates: 2')]", "xpath", "verify number of blocks")->get_text();
+    $t->find_element_ok("//div[contains(., 'CRD')]", "xpath", "verify design type")->get_text();
+    $t->find_element_ok("//div[contains(., '2')]", "xpath", "verify number of blocks")->get_text();
+    $t->find_element_ok("//div[contains(., '2')]", "xpath", "verify number of blocks")->get_text();
     $t->find_element_ok("trial_accessions_onswitch", "id", "view trial accessions")->click();
+    sleep(3);
     $t->find_element_ok("test_accession1", "partial_link_text", "verify accessions");
     $t->find_element_ok("test_accession2", "partial_link_text", "verify accessions");
     $t->find_element_ok("test_accession3", "partial_link_text", "verify accessions");
     $t->find_element_ok("test_accession4", "partial_link_text", "verify accessions");
      $t->find_element_ok("trial_controls_onswitch", "id", "view trial controls")->click();
+     sleep(3);
     $t->find_element_ok("test_accession2", "partial_link_text", "verify controls");
     $t->find_element_ok("test_accession3", "partial_link_text", "verify controls");
     $t->find_element_ok("trial_plots_onswitch", "id", "view trial plots")->click();
+    sleep(3);
     $t->find_element_ok("//div[contains(., 'T100_plot_01')]", "xpath", "verify plots")->get_text();
     $t->find_element_ok("//div[contains(., 'T100_plot_02')]", "xpath", "verify plots")->get_text();
     $t->find_element_ok("//div[contains(., 'T100_plot_03')]", "xpath", "verify plots")->get_text();
@@ -111,6 +114,7 @@ $t->while_logged_in_as("curator", sub {
 
     #Edit year
     $t->find_element_ok("change_year_link", "id", "find edit year")->click();
+    sleep(1);
     $t->find_element_ok("year_select", "id", "edit year")->send_keys('2014');
     $t->find_element_ok("change_trial_year_save_button", "id", "submit edit year")->click();
     sleep(1);

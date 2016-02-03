@@ -451,6 +451,7 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
     
     my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
 
+    my $design = $layout->get_design();
     my $design_type = $layout->get_design_type();
     my $plot_dimensions = $layout->get_plot_dimensions();
     
@@ -481,7 +482,7 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
       $number_of_replicates = scalar(@{$replicate_numbers});
     }
 
-    $c->stash->{rest} = { design_type => $design_type, num_blocks => $number_of_blocks, num_reps => $number_of_replicates, plot_length => $plot_length, plot_width => $plot_width, plants_per_plot => $plants_per_plot };
+    $c->stash->{rest} = { design_type => $design_type, num_blocks => $number_of_blocks, num_reps => $number_of_replicates, plot_length => $plot_length, plot_width => $plot_width, plants_per_plot => $plants_per_plot, design => $design };
 }
 
 sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
