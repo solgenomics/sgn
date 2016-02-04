@@ -373,6 +373,7 @@ function create_list_start(message) {
 	} else {
 	    pasteList('c1_data');
 	}
+	update_download_options(1);
     });
 }
 
