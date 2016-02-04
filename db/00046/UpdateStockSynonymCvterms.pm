@@ -86,7 +86,7 @@ sub patch {
 
 	my $stockprops = $schema->resultset("Stock::Stockprop")->search( 
 	    {
-		'type.name' => { ilike => '%synonym%' },
+		'type.name' => { ilike => 'synonym%' },
 	    },
 	    { 
 		join => 'type' 
