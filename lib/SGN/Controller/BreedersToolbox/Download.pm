@@ -450,53 +450,76 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 }
 
 #=pod
-sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) { 
+sub download_gbs_action : Path('/breeders/download_gbs_action') { 
     my $self = shift;
     my $c = shift;
-    
-    my $accession_list_id = $c->req->param("genotype_accession_list_list_select");
-    my $trial_list_id     = $c->req->param("genotype_trial_list_list_select");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $data_type = $c->req->param("data_type") || "genotype";
+    my $format = $c->req->param("format");
 
-    my $data_type         = $c->req->param("data_type") || "genotype";
-    my $format            = $c->req->param("format");
-
-
-
-    my $accession_data;
-    if ($accession_list_id) { 
-	$accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-    }
-    my $trial_data;
-    if ($trial_list_id) { 
-	$trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
-    }
-
-
-    my @accession_list = map { $_->[1] } @$accession_data;
-    my @trial_list = map { $_->[1] } @$trial_data;
-
+    my $accession_sql;
+    my $trial_sql;
+    my @accession_list;
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $t = CXGN::List::Transform->new();
-    
+    if ($format eq 'ids') {
 
+	my $accession_ids = shift;
+	#print STDERR "accession ids = " . $accession_ids. "\n";
 
-    my $acc_t = $t->can_transform("accessions", "accession_ids");
-    my $accession_id_data = $t->transform($schema, $acc_t, \@accession_list);
+	my @ids = split(',', $accession_ids);
+	$accession_sql = join ",", map { "\'$_\'" } @ids;
 
-    my $trial_t = $t->can_transform("trials", "trial_ids");
-    my $trial_id_data = $t->transform($schema, $trial_t, \@trial_list);
+	#print STDERR "accession sql = " . $accession_sql . "\n";
 
-    my $accession_sql = "";
-    if ($accession_id_data) { 
-	$accession_sql = join ",", map { "\'$_\'" } @{$accession_id_data->{transform}};
-    }
+	my @missing;
+	foreach my $id (@ids) { 
+	    #print STDERR "Converting accession_id $id to accession_uniquename...\n";
+	    my $rs = $schema->resultset("Stock::Stock")->search( { stock_id => $id });
+	    #$schema->storage->debug(1);
+	    if ($rs->count() == 0) { 
+		push @missing, $id;
+	    }
+	    else { 
+		push @accession_list, $rs->first()->uniquename();
+	    }
+	    my $count = @missing;
+	    #print STDERR $count . " ids not converted: " . @missing ."\n";
+	}
 
-    my $trial_sql = "";
-    if ($trial_id_data) { 
-	$trial_sql = join ",", map { "\'$_\'" } @{$trial_id_data->{transform}};
+    } else {
+
+	my $accession_list_id = $c->req->param("genotype_accession_list_list_select");
+	my $trial_list_id     = $c->req->param("genotype_trial_list_list_select");
+
+	my $accession_data;
+	if ($accession_list_id) { 
+	    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+	}
+	my $trial_data;
+	if ($trial_list_id) { 
+	    $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
+	}
+
+	@accession_list = map { $_->[1] } @$accession_data;
+	my @trial_list = map { $_->[1] } @$trial_data;
+
+	my $t = CXGN::List::Transform->new();
+
+	my $acc_t = $t->can_transform("accessions", "accession_ids");
+	my $accession_id_data = $t->transform($schema, $acc_t, \@accession_list);
+
+	my $trial_t = $t->can_transform("trials", "trial_ids");
+	my $trial_id_data = $t->transform($schema, $trial_t, \@trial_list);
+
+	if ($accession_id_data) { 
+	    $accession_sql = join ",", map { "\'$_\'" } @{$accession_id_data->{transform}};
+	}
+
+	if ($trial_id_data) { 
+	    $trial_sql = join ",", map { "\'$_\'" } @{$trial_id_data->{transform}};
+	}
     }
 
     my $data; 
@@ -567,6 +590,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 #=pod
 
 #=cut
+
 sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) { 
     my $self = shift;
     my $c = shift;

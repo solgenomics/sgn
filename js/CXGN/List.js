@@ -746,7 +746,7 @@ function pasteList(div_name) {
 	c1_html = format_options_list(options);
 	var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
 	var start = format_options(starting_categories);
-	jQuery('#select1').html(start);  
+	jQuery('#select1').html(start);
 	
 	show_list_counts('c1_data_count', options.length);
 	jQuery('#c1_data_text').html(retrieve_sublist(options, 1).join("\n"));
