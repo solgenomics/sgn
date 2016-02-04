@@ -19,7 +19,11 @@ $user_can_modify => undef
 
 <& /page/page_title.mas, title=>"Genotyping trial $trial_name" &>
 
-<table><tr><td width="400px" valign="top" >
+<br/>
+
+<div class="well">
+<div class="row">
+<div class="col-sm-6">
 
 <&| /page/info_section.mas, title=>"Breeding program" &>
 
@@ -29,7 +33,8 @@ $user_can_modify => undef
 
 </&>
 
-</td><td width="400px" valign="top" >
+</div>
+<div class="col-sm-6">
 
 <&| /page/info_section.mas, title=>"Trial type" &>
   <div id="trial_type">
@@ -37,9 +42,11 @@ $user_can_modify => undef
   </div>
 </&>
 
-</td></tr></table>
+</div>
+</div>
+</div>
 
-<center><div class="boxbgcolor5" style="width:70%"><a id="genotyping_trial_spreadsheet_link" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br /></div>
+<center><a id="genotyping_trial_spreadsheet_link" class="btn btn-default" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br />
 
 <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
 
