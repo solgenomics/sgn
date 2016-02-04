@@ -23,6 +23,7 @@ use CXGN::List::Transform;
 use Spreadsheet::WriteExcel;
 use CXGN::Trial::Download;
 use POSIX qw(strftime);
+use Sort::Versions;
 
 sub breeder_download : Path('/breeders/download/') Args(0) { 
     my $self = shift;
@@ -391,7 +392,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 	    my $temp_file_name = $time_stamp . "$what" . "XXXX";
 	    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
 	    my $tempfile = $c->config->{basepath}."/".$rel_file;
-	    my @col_names = qw/project_name stock_name location trait value plot_name cv_name cvterm_accession rep block_number/;
+	    my @col_names = qw/year project_name stock_name location trait value plot_name cv_name cvterm_accession rep block_number/;
 	    
 	    if ($format eq ".csv") {
 		
@@ -412,7 +413,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 		my $ss = Spreadsheet::WriteExcel->new($tempfile);
 		my $ws = $ss->add_worksheet();
 		
-		for (my $column =0; $column< 10; $column++) {
+		for (my $column =0; $column< @col_names; $column++) {
 		    $ws->write(0, $column, $col_names[$column]);
 		}
 		for (my $line =0; $line < @data; $line++) {
@@ -526,12 +527,13 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
       my $decoded = decode_json($data->[$i][1]);
       push(@AoH, $decoded); 
      } 
-	
-        my @k=();
+     #print STDERR "AoH = " . Dumper(@AoH);
+     
+	my @snp_names=();
 	for my $i ( 0 .. $#AoH ){
-	   @k = keys   %{ $AoH[$i] }
+	   @snp_names = keys   %{ $AoH[$i] }
 	}
-
+	my @k = sort versioncmp @snp_names; 
 
         for my $j (0 .. $#k){
 	    print $TEMP "$k[$j]\t";
@@ -542,7 +544,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 		print $TEMP "$AoH[$i]{$k[$j]}";
 
             }else{
-		print $TEMP "$AoH[$i]{$k[$j]}\t";
+		if (exists($AoH[$i]{$k[$j]})) {
+		    print $TEMP "$AoH[$i]{$k[$j]}\t";
+		}
 	    }
              
             }

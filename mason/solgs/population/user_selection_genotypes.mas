@@ -21,8 +21,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
   <div class="list_upload" id="list_label">
     <label for="prediction_genotypes_list">List-based selection population </label>
   </div> 
+  
   <div class="list_upload" id="prediction_genotypes_list">      
   </div>
+  
   <div class="list_upload" id="prediction_genotypes_list_upload">
     <input type="button" value="Go" />
   </div>
@@ -31,10 +33,13 @@ Isaak Y Tecle (iyt2@cornell.edu)
     <i class="glyphicon-plus"></i>
     <a href="/solgs/breeder_search" style="color:#ffffff">Make a new list of clones</a>  
   </div>
+  
   <br>
   <br>  
-  <div class="sub_infosectioncontent" id="uploaded_selection_populations" style="display:none"></div>
-</div>
+  
+  <div class="sub_infosectioncontent" id="uploaded_selection_populations" style="display:none">
+  </div>
+
 
 
 

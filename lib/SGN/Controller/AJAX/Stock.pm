@@ -119,7 +119,7 @@ sub get_stockprops_GET {
 	{
 	    stock_id => $stock_id,
 	    #type_id => $type_id,
-	}, { join => 'type' } );
+	}, { join => 'type', order_by => 'stockprop_id' } );
 
     my @propinfo = ();
     while (my $prop = $prop_rs->next()) { 

@@ -20,6 +20,7 @@ $project_desc
 $markers_no
 $traits_no
 $owner => ''
+$protocol
 
 </%args>
 
@@ -48,6 +49,7 @@ $traits_no = 1 if !$traits_no;
          data       => [[' ',  ' '],
                         ['No. of traits', $traits_no],
                         ['No. of markers', $markers_no],
+			['Genotyping version', $protocol],
                        ],
         __alt_freq  => 1,
         __align     => "l",
