@@ -95,9 +95,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <td>
 <div id="trial_type">
 % if ($trial_type) {
-% foreach (@$trial_type) {
-%  print "$_ <br/>";
-% }
+%  print "@$trial_type[1]<br/>";
 % } else {
 % print "[Type not set]";
 % }
