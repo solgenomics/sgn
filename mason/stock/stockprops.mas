@@ -27,7 +27,7 @@ Naama Menda <nm249@cornell.edu>
 
 <%args>
   $stock_id 
-  $subset => [ 'synonym', 'stock_synonym' ]
+  $subset => [  'stock_synonym' ]
   $props
   $editable => []
   $div_name => ''

@@ -114,7 +114,7 @@ my $metadata = ['variety', 'donor', 'donor institute', 'country', 'state' , 'ada
 
 my $experiment = ['year', 'location', 'replicate']; # these values should be in nd_experimentprop ?
 
-my $resources = [ 'stock_synonym', 'synonym', 'solcap number'];
+my $resources = [ 'stock_synonym', 'solcap number'];
 
 my $allele_div = "stock_alleles";
 my $new_locus_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in to associate new locus]</a> | : '' ;
@@ -239,7 +239,7 @@ function jqueryStuff() {
 	props      => $stockprops ,
 	div_name   =>'synonyms',
 	subset     =>$resources,
-	editable   => [ 'stock_synonym', 'synonym' ],
+	editable   => [ 'stock_synonym' ],
 	edit_privs => $edit_privs   &>
 </&>
 %  $div_name = join("_", @editable_stock_props);
