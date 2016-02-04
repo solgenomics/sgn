@@ -12,6 +12,8 @@
   <div style="margin-bottom: 5;" class="form-group form-group-sm" id="paste_list"></div>
   <p style="margin: 0; padding: 0;" align="center"><i>or</i></p>
 </td>
+<td id="refresh_button">
+</td>
 </tr>
 <tr>
 <td>

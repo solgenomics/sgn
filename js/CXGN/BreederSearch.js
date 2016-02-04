@@ -19,6 +19,7 @@ window.onload = function initialize() {
     } else {
 
       create_list_start('Start from a list');
+	jQuery('#refresh_button').append('<input class="btn btn-primary btn-sm" id="refresh_lists" type="button" value="Refresh lists">');
 
       addToListMenu('c1_to_list_menu', 'c1_data', { 
         selectText: true,
@@ -124,6 +125,10 @@ window.onload = function initialize() {
 	  }
       });
     
+    jQuery('#refresh_lists').on('click', function () {
+	console.log("refreshing lists . . .");
+	create_list_start('Start from a list');
+    });
     
     jQuery('#download_button_excel').on('click', function () {
         var selected = get_selected_trials();
