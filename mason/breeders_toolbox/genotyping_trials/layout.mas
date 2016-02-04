@@ -24,7 +24,7 @@ jQuery(document).ready(function () {
 		jQuery("#working_modal").modal("show");
 	    },
 	    success: function(response){
-	        console.log(response);
+	        //console.log(response);
 		jQuery("#working_modal").modal("hide");
 		var trial_plate_layout_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plate_layout_table'><thead><tr><th>Well</th><th>Accession Name</th></tr></thead><tbody>";
 

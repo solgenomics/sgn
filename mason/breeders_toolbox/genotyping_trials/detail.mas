@@ -74,8 +74,8 @@ $user_can_modify => undef
 
 <br />
 
-
-<&| /page/info_section.mas, title=>"Plate layout", id=>"trial_plate_layout", collapsible=>1, collapsed=>1, is_subsection=>1,subtitle=> qq{ [<a href="/breeders_toolbox/trial/$trial_id?format=as_table">Plate View</a>] } &>
+% my $plate_view_link = '/breeders_toolbox/trial/'.$trial_id.'?format=as_table';
+<&| /page/info_section.mas, title=>"Plate layout", id=>"trial_plate_layout", collapsible=>1, collapsed=>1, is_subsection=>1,subtitle=> qq{ [<a href=$plate_view_link>Plate View</a>] } &>
 
   <& /breeders_toolbox/genotyping_trials/layout.mas, trial_id => $trial_id &>
 
