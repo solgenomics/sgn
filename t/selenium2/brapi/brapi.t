@@ -41,12 +41,12 @@ $d->while_logged_in_as("submitter", sub {
     #Germplasm Details List by StudyId
 
     $d->get_ok('/brapi/v1/studies/139/germplasm');
-    ok($d->driver->get_page_source()=~/test_accession4/, "study germplasm detail list call");
+    ok($d->driver->get_page_source()=~/KASESE_TP2013_1016/, "study germplasm detail list call");
 
     #Germplasm Pedigree
 
-    $d->get_ok('/brapi/v1/germplasm/38843/pedigree');
-    ok($d->driver->get_page_source()=~/test_accession4/, "germplasm pedigree call");
+    $d->get_ok('/brapi/v1/germplasm/38846/pedigree');
+    ok($d->driver->get_page_source()=~/test_accession4\/test_accession5/, "germplasm pedigree call");
 
     #Germplasm Markerprofiles
 

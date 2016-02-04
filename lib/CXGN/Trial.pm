@@ -1128,6 +1128,7 @@ sub brapi_get_trial_accessions {
 	}
     );
     return $rs;
+}
 
 sub get_design_type {
   my $self = shift;
