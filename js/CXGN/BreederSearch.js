@@ -172,7 +172,7 @@ function retrieve_and_display_set(categories, data, this_section) {
             },  
             complete : function(){
 		enable_ui();
-            },  
+            },
 	    success: function(response) { 
 		if (response.error) {
 		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">'+response.error+'</font></div>';
@@ -196,8 +196,21 @@ function retrieve_and_display_set(categories, data, this_section) {
 			    typeSourceDiv: select_id });
 		    }
 		}	
-	    } 
-	
+	    }, 
+	error: function(request, status, err) {
+		if (status == "timeout") {
+                    // report timeout
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
+		    var selectall_id = "c"+this_section+"_select_all";
+		    jQuery('#'+selectall_id).before(error_html);
+		} else {
+                    // report unspecified error occured  
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
+		    var selectall_id = "c"+this_section+"_select_all";
+		    jQuery('#'+selectall_id).before(error_html);
+		}
+            }
+
 	});		
 }
 
@@ -352,9 +365,14 @@ function create_list_start(message) {
     var listhtml = lo.listSelect('c1_data', '', message);
     jQuery('#paste_list').html(listhtml);
     jQuery('#paste_list').change(
-    function() { // if 'select a list', reinitialize, otherwise
-	
-		   pasteList('c1_data');
+    function() { // if 'select a list', reinitialize, otherwise paste list
+	var value = jQuery('#c1_data_list_select').val();
+	console.log("c1_data_list_select_val ="+value);
+	if (value === '') {
+	    jQuery('#c1_data').html('');
+	} else {
+	    pasteList('c1_data');
+	}
     });
 }
 
