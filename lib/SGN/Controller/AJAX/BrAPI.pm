@@ -182,7 +182,15 @@ sub germplasm_pedigree_string {
     return $pedigree_string;
 }
 
-sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) { 
+sub germplasm_list  : Chained('brapi') PathPart('germplasm') Args(0) : ActionClass('REST') { }
+
+sub germplasm_list_POST { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{rest} = {status => '1'};
+}
+
+sub germplasm_list_GET { 
     my $self = shift;
     my $c = shift;
     my $params = $c->req->params();
@@ -252,7 +260,7 @@ sub germplasm_search : Chained('brapi') PathPart('germplasm') Args(0) {
 
 =cut
 
-sub germplasm : Chained('brapi') PathPart('germplasm') CaptureArgs(1) { 
+sub germplasm_single  : Chained('brapi') PathPart('germplasm') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
     my $stock_id = shift;
@@ -261,7 +269,17 @@ sub germplasm : Chained('brapi') PathPart('germplasm') CaptureArgs(1) {
     $c->stash->{stock} = CXGN::Chado::Stock->new($self->bcs_schema(), $stock_id);
 }
 
-sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) { 
+
+sub germplasm_detail  : Chained('germplasm_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub germplasm_detail_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status=>'1'};
+}
+
+sub germplasm_detail_GET { 
     my $self = shift;
     my $c = shift;
     my $rs = $c->stash->{stock};
@@ -328,7 +346,16 @@ sub germplasm_detail : Chained('germplasm') PathPart('') Args(0) {
 
 =cut
 
-sub germplasm_mcpd : Chained('germplasm') PathPart('MCPD') Args(0) { 
+sub germplasm_mcpd  : Chained('germplasm_single') PathPart('MCPD') Args(0) : ActionClass('REST') { }
+
+sub germplasm_mcpd_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status=>'1'};
+}
+
+sub germplasm_mcpd_GET { 
     my $self = shift;
     my $c = shift;
     my $schema = $self->bcs_schema();
@@ -400,8 +427,15 @@ sub germplasm_mcpd : Chained('germplasm') PathPart('MCPD') Args(0) {
 
 =cut
 
+sub studies_list  : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
 
-sub study_list : Chained('brapi') PathPart('studies') Args(0) { 
+sub studies_list_POST { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{rest} = {status => '1'};
+}
+
+sub studies_list_GET { 
     my $self = shift;
     my $c = shift;
     my $program_id = $c->req->param("programId");
@@ -505,7 +539,7 @@ sub study_list : Chained('brapi') PathPart('studies') Args(0) {
 
 =cut
 
-sub studies : Chained('brapi') PathPart('studies') CaptureArgs(1) { 
+sub studies_single  : Chained('brapi') PathPart('studies') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
     my $study_id = shift;
@@ -516,14 +550,24 @@ sub studies : Chained('brapi') PathPart('studies') CaptureArgs(1) {
     $c->stash->{studyName} = $t->get_name();
 }
 
-sub studies_germplasm : Chained('studies') PathPart('germplasm') Args(0) { 
+
+sub studies_germplasm : Chained('studies_single') PathPart('germplasm') Args(0) : ActionClass('REST') { }
+
+sub studies_germplasm_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status=>'1'};
+}
+
+sub studies_germplasm_GET { 
     my $self = shift;
     my $c = shift;
     my %result;
     my @status;
     my $total_count = 0;
 
-    my $t = CXGN::Trial->new( { trial_id => $c->stash->{study_id}, bcs_schema => $self->bcs_schema } );
+    my $t = $c->stash->{study};
     my $rs = $t->brapi_get_trial_accessions();
 
     if ($rs) {
@@ -565,7 +609,16 @@ sub studies_germplasm : Chained('studies') PathPart('germplasm') Args(0) {
 
 =cut
 
-sub germplasm_pedigree : Chained('germplasm') PathPart('pedigree') Args(0) { 
+sub germplasm_pedigree : Chained('germplasm_single') PathPart('pedigree') Args(0) : ActionClass('REST') { }
+
+sub germplasm_pedigree_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status=>'1'};
+}
+
+sub germplasm_pedigree_GET { 
     my $self = shift;
     my $c = shift;
     my $schema = $self->bcs_schema();
@@ -618,7 +671,16 @@ sub germplasm_pedigree : Chained('germplasm') PathPart('pedigree') Args(0) {
 
 =cut
 
-sub germplasm_markerprofile : Chained('germplasm') PathPart('markerprofiles') Args(0) { 
+sub germplasm_markerprofile : Chained('germplasm_single') PathPart('markerprofiles') Args(0) : ActionClass('REST') { }
+
+sub germplasm_markerprofile_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status=>'1'};
+}
+
+sub germplasm_markerprofile_GET { 
     my $self = shift;
     my $c = shift;
     my $schema = $self->bcs_schema();
@@ -641,6 +703,7 @@ sub germplasm_markerprofile : Chained('germplasm') PathPart('markerprofiles') Ar
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
+
 
 #
 # Need to implement Germplasm Attributes
@@ -686,8 +749,16 @@ sub germplasm_markerprofile : Chained('germplasm') PathPart('markerprofiles') Ar
 
 =cut
 
+sub markerprofiles_list : Chained('brapi') PathPart('markerprofiles') Args(0) : ActionClass('REST') { }
 
-sub markerprofiles_search : Chained('brapi') PathPart('markerprofiles') Args(0) { 
+sub markerprofiles_list_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status=>'1'};
+}
+
+sub markerprofiles_list_GET { 
     my $self = shift;
     my $c = shift;
     my $germplasm = $c->req->param("germplasm");
@@ -794,15 +865,23 @@ sub markerprofiles_search : Chained('brapi') PathPart('markerprofiles') Args(0) 
 
 =cut
 
-sub markerprofiles : Chained('brapi') PathPart('markerprofiles') CaptureArgs(1) { 
+sub markerprofiles_single : Chained('brapi') PathPart('markerprofiles') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
     my $id = shift;
     $c->stash->{markerprofile_id} = $id; # this is genotypeprop_id
 }
 
+sub genotype_fetch : Chained('markerprofiles_single') PathPart('') Args(0) : ActionClass('REST') { }
 
-sub genotype_fetch : Chained('markerprofiles') PathPart('') Args(0){ 
+sub genotype_fetch_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status=>'1'};
+}
+
+sub genotype_fetch_GET { 
     my $self = shift;
     my $c = shift;
     my @status;
@@ -1039,7 +1118,16 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 
 =cut
 
-sub programs_list : Chained('brapi') PathPart('programs') Args(0) { 
+sub programs_list : Chained('brapi') PathPart('programs') Args(0) : ActionClass('REST') { }
+
+sub programs_list_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status=>'1'};
+}
+
+sub programs_list_GET { 
     my $self = shift;
     my $c = shift;
     my @status;
@@ -1095,7 +1183,16 @@ sub programs_list : Chained('brapi') PathPart('programs') Args(0) {
 
 =cut
 
-sub studies_types : Chained('brapi') PathPart('studyTypes') Args(0) { 
+sub studies_types_list  : Chained('brapi') PathPart('studyTypes') Args(0) : ActionClass('REST') { }
+
+sub studies_types_list_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status=>'1'};
+}
+
+sub studies_types_list_GET { 
     my $self = shift;
     my $c = shift;
     my %result;
@@ -1116,7 +1213,17 @@ sub studies_types : Chained('brapi') PathPart('studyTypes') Args(0) {
     $c->stash->{rest} = \%response;
 }
 
-sub studies_instances : Chained('studies') PathPart('instances') Args(0) { 
+
+sub studies_instances  : Chained('studies_single') PathPart('instances') Args(0) : ActionClass('REST') { }
+
+sub studies_instances_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status=>'1'};
+}
+
+sub studies_instances_GET { 
     my $self = shift;
     my $c = shift;
     my %result;
@@ -1128,14 +1235,24 @@ sub studies_instances : Chained('studies') PathPart('instances') Args(0) {
     $c->stash->{rest} = \%response;
 }
 
-sub studies_info : Chained('studies') PathPart('') Args(0) { 
+
+sub studies_info  : Chained('studies_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub studies_info_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status => '1'};
+}
+
+sub studies_info_GET { 
     my $self = shift;
     my $c = shift;
     my %result;
     my @status;
     my $total_count = 0;
 
-    my $t = CXGN::Trial->new( { trial_id => $c->stash->{study_id}, bcs_schema => $self->bcs_schema } );
+    my $t = $c->stash->{study};
     if ($t) {
 	$total_count = 1;
 	my @years = ($t->get_year());
@@ -1155,6 +1272,8 @@ sub studies_info : Chained('studies') PathPart('') Args(0) {
 	    push @program_ids, $_->[0];
 	}
 	%result = (studyDbId=>$t->get_trial_id(), studyName=>$t->get_name(), studyType=>$project_type, years=>\@years, locationDbId=>$location, programDbId=>\@program_ids, optionalInfo=>\%optional_info);
+    } else {
+	push @status, "Study ID not found.";
     }
 
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
@@ -1162,7 +1281,17 @@ sub studies_info : Chained('studies') PathPart('') Args(0) {
     $c->stash->{rest} = \%response;
 }
 
-sub studies_details : Chained('studies') PathPart('details') Args(0) {
+
+sub studies_details  : Chained('studies_single') PathPart('details') Args(0) : ActionClass('REST') { }
+
+sub studies_details_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status => '1'};
+}
+
+sub studies_details_GET {
     my $self = shift;
     my $c = shift;
     my @status;
@@ -1170,7 +1299,7 @@ sub studies_details : Chained('studies') PathPart('details') Args(0) {
     my $total_count = 0;
 
     my $schema = $self->bcs_schema();
-    my $t = CXGN::Trial->new( {bcs_schema => $schema, trial_id => $c->stash->{study_id} });
+    my $t = $c->stash->{study};
     my $tl = CXGN::Trial::TrialLayout->new( { schema => $schema, trial_id => $c->stash->{study_id} });
 
     if ($t) {
@@ -1216,7 +1345,17 @@ sub studies_details : Chained('studies') PathPart('details') Args(0) {
     $c->stash->{rest} = \%response;
 }
 
-sub studies_layout : Chained('studies') PathPart('layout') Args(0) {
+
+sub studies_layout : Chained('studies_single') PathPart('layout') Args(0) : ActionClass('REST') { }
+
+sub studies_layout_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status => '1'};
+}
+
+sub studies_layout_GET {
     my $self = shift;
     my $c = shift;
     my @status;
@@ -1257,7 +1396,18 @@ sub studies_layout : Chained('studies') PathPart('layout') Args(0) {
     $c->stash->{rest} = \%response;
 }
 
-sub traits :  Chained('brapi') PathPart('traits') Args(0) {
+
+
+sub traits_list : Chained('brapi') PathPart('traits') Args(0) : ActionClass('REST') { }
+
+sub traits_list_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status => '1'};
+}
+
+sub traits_list_GET {
     my $self = shift;
     my $c = shift;
     my @status;
@@ -1295,7 +1445,7 @@ sub traits :  Chained('brapi') PathPart('traits') Args(0) {
 
 }
 
-sub specific_trait : Chained('brapi') PathPart('traits') Args(1) { 
+sub traits_single  : Chained('brapi') PathPart('traits') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
     my $cvterm_id = shift;
@@ -1324,61 +1474,19 @@ sub specific_trait : Chained('brapi') PathPart('traits') Args(1) {
     $c->stash->{rest} = \%response;
 }
 
-sub maps : Chained('brapi') PathPart('maps') CaptureArgs(1) { 
-    my $self = shift;
-    my $c = shift;
-    my $map_id = shift;
 
-    $c->stash->{map_id} = $map_id;
-}
 
-sub maps_detail : Chained('maps') PathPart('') Args(0) { 
+
+sub maps_list : Chained('brapi') PathPart('maps') Args(0) : ActionClass('REST') { }
+
+sub maps_list_POST { 
     my $self = shift;
     my $c = shift;
 
-    # maps are just marker lists associated with specific protocols
-    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
-    my %map_info;
-    while (my $row = $rs->next()) { 
-	print STDERR "Retrieving map info for ".$row->name()."\n";
-	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { nd_protocol_id => $row->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
-	
-	my $lg_row = $lg_rs->first();
-
-	print STDERR "LG RS COUNT = ".$lg_rs->count()."\n";
-
-	if (!$lg_row) { 
-	    die "This was never supposed to happen :-(";
-	}
-
-	my $scores;
-	if ($lg_row) { 
-	    $scores = JSON::Any->decode($lg_row->value());
-	}
-	my %chrs;
-
-	foreach my $m (sort genosort (keys %$scores)) { 
-	    my ($chr, $pos) = split "_", $m;
-	    print STDERR "CHR: $chr. POS: $pos\n";
-	    $chrs{$chr} = $pos;
-	}
-
-	%map_info = (
-	    mapId =>  $row->nd_protocol_id(), 
-	    name => $row->name(), 
-	    type => "physical", 
-	    unit => "bp",
-	    linkageGroupCount => scalar(keys %chrs),
-	    publishedDate => undef,
-	    comments => "",
-	    );
-    }
-    $c->stash->{rest} = \%map_info;
-    
-
+    $c->stash->{rest} = {status => '1'};
 }
 
-sub maps_summary : Chained('brapi') PathPart('maps') Args(0) { 
+sub maps_list_GET { 
     my $self = shift;
     my $c = shift;
     
@@ -1430,7 +1538,81 @@ sub maps_summary : Chained('brapi') PathPart('maps') Args(0) {
 }
 
 
-sub maps_marker_detail : Chained('maps') PathPart('positions') Args(0) { 
+sub maps_single : Chained('brapi') PathPart('maps') CaptureArgs(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $map_id = shift;
+
+    $c->stash->{map_id} = $map_id;
+}
+
+
+sub maps_details : Chained('maps_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub maps_details_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status => '1'};
+}
+
+sub maps_details_GET { 
+    my $self = shift;
+    my $c = shift;
+
+    # maps are just marker lists associated with specific protocols
+    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
+    my %map_info;
+    while (my $row = $rs->next()) { 
+	print STDERR "Retrieving map info for ".$row->name()."\n";
+	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { nd_protocol_id => $row->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
+	
+	my $lg_row = $lg_rs->first();
+
+	print STDERR "LG RS COUNT = ".$lg_rs->count()."\n";
+
+	if (!$lg_row) { 
+	    die "This was never supposed to happen :-(";
+	}
+
+	my $scores;
+	if ($lg_row) { 
+	    $scores = JSON::Any->decode($lg_row->value());
+	}
+	my %chrs;
+
+	foreach my $m (sort genosort (keys %$scores)) { 
+	    my ($chr, $pos) = split "_", $m;
+	    print STDERR "CHR: $chr. POS: $pos\n";
+	    $chrs{$chr} = $pos;
+	}
+
+	%map_info = (
+	    mapId =>  $row->nd_protocol_id(), 
+	    name => $row->name(), 
+	    type => "physical", 
+	    unit => "bp",
+	    linkageGroupCount => scalar(keys %chrs),
+	    publishedDate => undef,
+	    comments => "",
+	    );
+    }
+    $c->stash->{rest} = \%map_info;
+    
+
+}
+
+
+sub maps_marker_detail : Chained('maps_single') PathPart('positions') Args(0) : ActionClass('REST') { }
+
+sub maps_marker_detail_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status => '1'};
+}
+
+sub maps_marker_detail_GET { 
     my $self = shift;
     my $c = shift;
     
@@ -1469,7 +1651,17 @@ sub maps_marker_detail : Chained('maps') PathPart('positions') Args(0) {
     $c->stash->{rest} = { markers => \@markers };	
 }
 
-sub locations : Chained('brapi') PathPart('locations') Args(0) { 
+
+sub locations_list : Chained('brapi') PathPart('locations') Args(0) : ActionClass('REST') { }
+
+sub locations_list_POST { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{rest} = {status => '1'};
+}
+
+sub locations_list_GET { 
     my $self = shift;
     my $c = shift;
     my @status;
@@ -1487,6 +1679,8 @@ sub locations : Chained('brapi') PathPart('locations') Args(0) {
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
+
+
 
 sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) { 
     my $self = shift;
