@@ -48,10 +48,16 @@ $trial_id
 var trial_id = <% $trial_id %>;
 //alert("trial_id: "+trial_id)
    jQuery(document).ready( function() { 
-	
+
+     jQuery('#physical_layout_onswitch').click( function() {
+
 	jQuery.ajax( { 
 	     url: '/ajax/breeders/trial/'+trial_id+'/coords',
+	     beforeSend: function() {
+	       jQuery("#working_modal").modal("show");
+	     },
 	     success: function(response) { 
+	        jQuery("#working_modal").modal("hide");
 			//alert("coordfile: "+response.coord_row);
 		if (response.coord_col[0] && response.coord_row[0]){
 			jQuery("#container").css({"display": "inline-block", "overflow": "auto"});
@@ -100,9 +106,11 @@ var trial_id = <% $trial_id %>;
 
 	    },
              error: function(reponse) { 
+	       jQuery("#working_modal").modal("hide");
               // alert('an error occurred');
              }
         });
+     });
 
     function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, max_col, col_number, row_number, plot_counter, plot_id, plot_number){
 	var width = 65;

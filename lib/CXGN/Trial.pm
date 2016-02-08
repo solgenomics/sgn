@@ -49,9 +49,6 @@ sub BUILD {
 	die "The trial ".$self->get_trial_id()." does not exist";
     }
 
-    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->get_trial_id() });
-    $self->set_layout($layout);
-
 }
 
 =head2 accessors get_trial_id()
@@ -77,9 +74,7 @@ has 'layout' => (isa => 'CXGN::Trial::TrialLayout',
 		 is => 'rw',
 		 reader => 'get_layout',
 		 writer => 'set_layout',
-		 predicate => 'has_layout',
-		 
-
+		 predicate => 'has_layout'
     );
 
 
@@ -120,6 +115,7 @@ sub set_year {
 	$row = $self->bcs_schema->resultset('Project::Projectprop')->create(
 	    { type_id => $type_id,
 	    value => $year,
+	      project_id =>  $self->get_trial_id()
 	    } );
     }
 }
@@ -1087,7 +1083,27 @@ sub get_planting_date_cvterm_id {
     return $row->cvterm_id();
 }
 
+sub get_design_type {
+  my $self = shift;
+  my $design_prop;
+  my $design_type;
+  my $project;
 
+  my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $self->get_trial_id() });
+
+  $design_prop =  $project->projectprops->find(
+        { 'type.name' => 'design' },
+        { join => 'type'}
+        ); #there should be only one design prop.
+  if (!$design_prop) {
+    return;
+  }
+  $design_type = $design_prop->value;
+  if (!$design_type) {
+    return;
+  }
+  return $design_type;
+}
 
 
 

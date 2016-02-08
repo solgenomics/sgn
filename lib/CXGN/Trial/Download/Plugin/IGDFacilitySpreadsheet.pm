@@ -14,8 +14,9 @@ sub download {
     my $trial_id = $self->trial_id();
 
     my $t = CXGN::Trial->new( { bcs_schema => $self->bcs_schema(), trial_id => $trial_id });
-    
-    my $layout = $t->get_layout()->get_design();
+    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema(), trial_id => $trial_id });
+
+    my $layout = $layout->get_design();
     print STDERR "FILENAME: ".$self->filename()."\n";
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
