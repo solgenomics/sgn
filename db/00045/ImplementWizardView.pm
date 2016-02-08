@@ -67,6 +67,8 @@ CREATE MATERIALIZED VIEW public.materialized_fullview AS
     breeding_program.name AS breeding_program_name,
     cvterm.cvterm_id AS trait_id,
     (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name,
+    phenotype.phenotype_id AS phenotype_id,
+    phenotype.value AS phenotype_value,
     nd_experiment_protocol.nd_protocol_id AS genotyping_protocol_id,
     nd_protocol.name AS genotyping_protocol_name
    FROM stock plot
@@ -89,7 +91,8 @@ CREATE MATERIALIZED VIEW public.materialized_fullview AS
      LEFT JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id
      LEFT JOIN db ON dbxref.db_id = db.db_id
   WHERE plot.type_id = 76393 AND projectprop.type_id = 76395 AND db.db_id = 186
-  GROUP BY stock_relationship.subject_id, cvterm.cvterm_id, plot.uniquename, accession.uniquename, stock_relationship.object_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, trial.name, project_relationship.subject_project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, nd_experiment.nd_geolocation_id, nd_geolocation.description, nd_experiment_protocol.nd_protocol_id, nd_protocol.name;
+  GROUP BY stock_relationship.subject_id, cvterm.cvterm_id, plot.uniquename, accession.uniquename, stock_relationship.object_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, trial.name, project_relationship.subject_project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, nd_experiment.nd_geolocation_id, nd_geolocation.description, phenotype.phenotype_id, phenotype.value, nd_experiment_protocol.nd_protocol_id, nd_protocol.name;
+
 GRANT ALL ON public.materialized_fullview to web_usr;
 
 CREATE UNIQUE INDEX unqmeasurement_idx ON public.materialized_fullview(trial_id, trait_id, plot_id, genotyping_protocol_id) WITH (fillfactor =100);
@@ -325,6 +328,64 @@ SELECT public.materialized_fullview.year_id,
    FROM public.materialized_fullview
   GROUP BY public.materialized_fullview.year_id, public.materialized_fullview.year_name;
 GRANT ALL ON public.years to web_usr;
+
+CREATE OR REPLACE FUNCTION update_matviews() RETURNS trigger AS
+$$
+BEGIN
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessions;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXbreeding_programs;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXlocations;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXgenotyping_protocols;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXplots;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtraits;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtrials;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXyears;
+    
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programs;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXlocations;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXgenotyping_protocols;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXplots;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtraits;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtrials;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXyears;
+        
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.locations;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXgenotyping_protocols;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXplots;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtraits;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtrials;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXyears;
+    
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocols;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXplots;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtraits;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtrials;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXyears;
+    
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.plots;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtraits;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtrials;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXyears;
+
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.traits;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.traitsXtrials;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.traitsXyears;
+
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.trials;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.trialsXyears;
+
+    REFRESH MATERIALIZED VIEW CONCURRENTLY public.years;
+    
+    RETURN NULL;
+END;
+$$
+LANGUAGE plpgsql ;
+
+
+CREATE TRIGGER update_sub_matviews
+    AFTER TRUNCATE OR INSERT OR UPDATE OR DELETE ON materialized_fullview
+    FOR EACH STATEMENT
+    EXECUTE PROCEDURE update_matviews();
 
 --
 SELECT * from public.stock;

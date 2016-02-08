@@ -17,26 +17,28 @@ window.onload = function initialize() {
        jQuery('#c4_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
 
     } else {
+	
+	create_list_start('Start from a list');
+	jQuery('#list_refresh').append('<input class="btn btn-info btn-sm" id="refresh_lists" type="button" value="Refresh lists">');
 
-      create_list_start('Start from a list');
-	jQuery('#refresh_button').append('<input class="btn btn-primary btn-sm" id="refresh_lists" type="button" value="Refresh lists">');
+	add_data_refresh();
 
-      addToListMenu('c1_to_list_menu', 'c1_data', { 
-        selectText: true,
-        typeSourceDiv: 'select1',
-      });
-      addToListMenu('c2_to_list_menu', 'c2_data', { 
-        selectText: true,
-        typeSourceDiv: 'select2',
-      });
-      addToListMenu('c3_to_list_menu', 'c3_data', { 
-        selectText: true,
-        Typesourcediv: 'select3',
-       });      
-      addToListMenu('c4_to_list_menu', 'c4_data', { 
-        selectText: true,
-        typeSourceDiv: 'select4',
-       });
+	addToListMenu('c1_to_list_menu', 'c1_data', { 
+            selectText: true,
+            typeSourceDiv: 'select1',
+	});
+	addToListMenu('c2_to_list_menu', 'c2_data', { 
+            selectText: true,
+            typeSourceDiv: 'select2',
+	});
+	addToListMenu('c3_to_list_menu', 'c3_data', { 
+            selectText: true,
+            Typesourcediv: 'select3',
+	});      
+	addToListMenu('c4_to_list_menu', 'c4_data', { 
+            selectText: true,
+            typeSourceDiv: 'select4',
+	});
     }
 
     jQuery('#select1').change( // reset start from list if select1 changes
@@ -463,5 +465,13 @@ function get_querytypes(this_section) {
     }
     if (querytypes.length > 0) {
     return querytypes;
+    }
+}
+
+function add_data_refresh() {
+    var roles = getUserRoles();
+    console.log("userroles="+roles);
+    if (jQuery.inArray(roles, ['submitter', 'curator', 'sequencer']) >= 0) {
+	jQuery('#data_refresh').append('<p align="center">Don\'t see your data?</p><input align="center" class="btn btn-info btn-sm center-block" id="data_refresh" type="button" value="Update wizard">');
     }
 }
