@@ -108,14 +108,14 @@ my %seq  = (
 
 my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'accession',
-      cv     => 'stock type',
+      cv     => 'stock_type',
       db     => 'null',
       dbxref => 'accession',
     });
 
 my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'training population',
-	cv     => 'stock type',
+	cv     => 'stock_type',
 	db     => 'null',
 	dbxref => 'training population',
     });
@@ -138,7 +138,7 @@ $project->create_projectprops( { 'project year' => $opt_y }, { autocreate => 1 }
 # find the cvterm for a genotyping experiment
 my $geno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
     { name   => 'genotyping experiment',
-      cv     => 'experiment type',
+      cv     => 'experiment_type',
       db     => 'null',
       dbxref => 'genotyping experiment',
     });
@@ -172,7 +172,7 @@ my $organism = $schema->resultset("Organism::Organism")->find_or_create(
 
 my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'members of',
-      cv     => 'stock relationship',
+      cv     => 'stock_relationship',
       db     => 'null',
       dbxref => 'members of',
     });

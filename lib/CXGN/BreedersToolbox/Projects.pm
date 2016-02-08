@@ -513,14 +513,14 @@ sub get_breeding_trial_cvterm_id {
 
 sub get_cross_cvterm_id {
     my $self = shift;
-    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'stock type' } )->cv_id();
+    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'stock_type' } )->cv_id();
     my $cross_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'cross', cv_id=> $cv_id });
     if ($cross_cvterm_row) {
       return $cross_cvterm_row->cvterm_id();
     }
     my $cross_cvterm = $self->schema->resultset("Cv::Cvterm")
       ->create_with( { name   => 'cross',
-		       cv     => 'stock type',
+		       cv     => 'stock_type',
 		     });
     return $cross_cvterm->cvterm_id();
 }

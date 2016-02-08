@@ -142,13 +142,13 @@ sub save_trial {
 
   my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $chado_schema } );
 
-  my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field layout', 'experiment type');
-  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock type');
-  my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock type');
-  my $plot_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock relationship');
-  my $sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock type');
-  my $sample_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock relationship');
-  my $genotyping_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping layout', 'experiment type');
+  my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field layout', 'experiment_type');
+  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+  my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type');
+  my $plot_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship');
+  my $sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type');
+  my $sample_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship');
+  my $genotyping_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping layout', 'experiment_type');
 
   my $project = $chado_schema->resultset('Project::Project')
     ->create({

@@ -96,7 +96,7 @@ sub _add_stocks {
     my $stock_cvterm = $schema->resultset("Cv::Cvterm")
       ->create_with({
 		     name   => $stock_type,
-		     cv     => 'stock type',
+		     cv     => 'stock_type',
 		     db     => 'null',
 		     dbxref => $stock_type,
 		    });
@@ -104,14 +104,14 @@ sub _add_stocks {
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'population',
-      cv     => 'stock type',
+      cv     => 'stock_type',
       db     => 'null',
       dbxref => 'population',
     });
 
     my $population_member_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
         name   => 'member_of',
-        cv     => 'stock relationship',
+        cv     => 'stock_relationship',
         db     => 'null',
         dbxref => 'member_of',
        });
@@ -253,7 +253,7 @@ sub validate_population {
   my $population_cvterm = $schema->resultset("Cv::Cvterm")
       ->create_with({
 	  name   => 'population',
-	  cv     => 'stock type',
+	  cv     => 'stock_type',
 	  db     => 'null',
 	  dbxref => 'population',
 		    });

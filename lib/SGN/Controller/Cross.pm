@@ -293,7 +293,7 @@ sub _add_cross {
   my $project = $schema->resultset("Project::Project")->find({name=>$trial,});
   my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
 								       { name   => 'accession',
-									 cv     => 'stock type',
+									 cv     => 'stock_type',
 									 db     => 'null',
 									 dbxref => 'accession',
 								       });
@@ -324,19 +324,19 @@ sub _add_cross {
 									    } );
   my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
 								    { name   => 'female_parent',
-								      cv     => 'stock relationship',
+								      cv     => 'stock_relationship',
 								      db     => 'null',
 								      dbxref => 'female_parent',
 								    });
   my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
 								  { name   => 'male_parent',
-								    cv     => 'stock relationship',
+								    cv     => 'stock_relationship',
 								    db     => 'null',
 								    dbxref => 'male_parent',
 								  });
   my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
 									 { name   => 'cross_name',
-									   cv     => 'stock relationship',
+									   cv     => 'stock_relationship',
 									   db     => 'null',
 									   dbxref => 'cross_name',
 									 });
@@ -536,7 +536,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
-      cv     => 'stock type',
+      cv     => 'stock_type',
       db     => 'null',
       dbxref => 'accession',
     });
@@ -575,21 +575,21 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
             } );
       my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'female_parent',
-      cv     => 'stock relationship',
+      cv     => 'stock_relationship',
       db     => 'null',
       dbxref => 'female_parent',
     });
 
       my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'male_parent',
-      cv     => 'stock relationship',
+      cv     => 'stock_relationship',
       db     => 'null',
       dbxref => 'male_parent',
     });
 
       my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'cross_name',
-      cv     => 'stock relationship',
+      cv     => 'stock_relationship',
       db     => 'null',
       dbxref => 'cross_name',
     });

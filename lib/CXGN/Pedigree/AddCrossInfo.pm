@@ -128,7 +128,7 @@ sub _get_cross {
   my $cross_cvterm = $schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'cross',
-		   cv     => 'stock type',
+		   cv     => 'stock_type',
 		   db     => 'null',
 		   dbxref => 'accession',
 		  });

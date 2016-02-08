@@ -272,7 +272,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
-      cv     => 'stock type',
+      cv     => 'stock_type',
       db     => 'null',
       dbxref => 'accession',
     });
@@ -311,21 +311,21 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
             } );
       my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'female_parent',
-      cv     => 'stock relationship',
+      cv     => 'stock_relationship',
       db     => 'null',
       dbxref => 'female_parent',
     });
 
       my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'male_parent',
-      cv     => 'stock relationship',
+      cv     => 'stock_relationship',
       db     => 'null',
       dbxref => 'male_parent',
     });
 
       my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'cross_name',
-      cv     => 'stock relationship',
+      cv     => 'stock_relationship',
       db     => 'null',
       dbxref => 'cross_name',
     });
@@ -521,7 +521,7 @@ sub get_crosses : Private {
 
     # get crosses
     #
-    my $stock_type_cv = $schema->resultset("Cv::Cv")->find( {name=>'stock type'});
+    my $stock_type_cv = $schema->resultset("Cv::Cv")->find( {name=>'stock_type'});
     my $cross_cvterm = $schema->resultset("Cv::Cvterm")->find(
 	{ name   => 'cross',
 	  cv_id => $stock_type_cv->cv_id(),
@@ -549,7 +549,7 @@ sub get_stock_relationships : Private {
 
     my $stockrel = $schema->resultset("Cv::Cvterm")->create_with(
 	{ name   => 'cross',
-	  cv     => 'stock relationship',
+	  cv     => 'stock_relationship',
 	  db     => 'null',
 	  dbxref => 'cross',
 	});
