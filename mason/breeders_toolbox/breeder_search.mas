@@ -9,12 +9,12 @@
 
 <tr>
 <td>
-  <div style="margin-bottom: 5;" class="form-group form-group-sm" id="paste_list"></div>
+  <div style="margin-bottom:5;display:inline-block;" class="form-group form-group-sm" id="paste_list"></div>
   <p style="margin: 0; padding: 0;" align="center"><i>or</i></p>
 </td>
-<td id="list_refresh"></td>
 <td></td>
-<td id="data_refresh"></td>
+<td></td>
+<td id="wizard_refresh"></td>
 </tr>
 <tr>
 <td>

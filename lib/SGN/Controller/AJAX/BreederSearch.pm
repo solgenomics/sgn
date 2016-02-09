@@ -77,6 +77,20 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 }
     
 
+sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $cookie_value = $c->req->param("refresh_token");
 
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+    my $refresh = $bs->refresh_matviews();
+
+    if ($refresh == 1) {
+	$c->res->cookies->{matviewRefreshToken} = { value => $cookie_value};
+    }
+    
+    
+}
 
     

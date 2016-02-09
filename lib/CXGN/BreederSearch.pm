@@ -121,15 +121,74 @@ sub metadata_query {
     }	
 }
 
+=head2 refresh_matviews
 
-=head2 get_phenotype_info
+parameters: None. 
 
-parameters: comma-separated lists of accession, trial, and trait IDs. May be empty.
+returns: success or error
 
-returns: an array with phenotype information
+Side Effects: refreshes matertialized_fullview and all of the smaller materialized views that are based on it and used in the wizard.
 
 =cut
 
+sub refresh_matviews {
+    my $self = shift;
+    
+    eval { 
+       my $q = "REFRESH MATERIALIZED VIEW CONCURRENTLY public.materialized_fullview;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessions;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXbreeding_programs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXlocations;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXgenotyping_protocols;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXplots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXyears;
+    
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXlocations;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXgenotyping_protocols;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXplots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXyears;
+        
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locations;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXgenotyping_protocols;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXplots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXyears;
+
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocols;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXplots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXyears;
+    
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXyears;
+
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.traits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.traitsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.traitsXyears;
+
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trialsXyears;
+
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.years;";
+
+       my $h = $self->dbh->prepare($q);
+       $h->execute();
+    };
+    if ($@) {
+	die "Error refreshing materialized views: $@\n";
+    }
+    my $success =1;
+    return $success;
+}
 
 sub get_phenotype_info {  
     my $self = shift;
@@ -395,48 +454,6 @@ sub get_projectprop_type_id {
     $h->execute($term);
     my ($type_id) = $h->fetchrow_array();
     return $type_id;
-}
-
-sub create_materialized_cvterm_view { 
-    my $self = shift;
-    my $db_name = shift;
-
-    # change this to materialized view once we use 9.4.
-    #
-    eval { 
-	my $q = "CREATE TABLE public.materialized_traits
-               AS SELECT cvterm_id, cvterm.name || '|' || db.name || ':' || dbxref.accession AS name FROM db JOIN dbxref using(db_id) JOIN cvterm using(dbxref_id) WHERE db.name=?";
-	my $h = $self->dbh()->prepare($q);
-	$h->execute($db_name);
-	$q = "GRANT ALL ON public.materialized_traits TO web_usr";
-	$h = $self->dbh()->prepare($q);
-	$h->execute();
-    };
-    if ($@) {
-	if ($@!~/relation.*already exists/) { 
-	    die "Materialized trait view: $@\n";
-	}
-    }
-    
-
-}
-
-sub create_materialized_cvalue_ids_view { 
-    my $self = shift;
-    
-    eval { 
-       my $q = "CREATE TABLE public.cvalue_ids 
-              AS SELECT distinct(cvalue_id), phenotype_id FROM phenotype";
-       my $h = $self->dbh->prepare($q);
-       $h->execute();
-       $q = "GRANT ALL ON cvalue_ids TO web_usr";
-       $h->execute();
-    };
-    if ($@) { 
-       if ($@!~/relation.*already exists/) { 
-	    die "Materialized cvalue view $@\n";
-	}
-    }
 }
 
 1;
