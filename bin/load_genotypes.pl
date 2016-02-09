@@ -205,50 +205,53 @@ my $coderef = sub {
         my $cassava_stock;
         my $stock_name;
         my $stock_rs = $schema->resultset("Stock::Stock")->search(
-            {
-                -or => [
-                     'lower(me.uniquename)' => { like => lc($db_name) },
-                     -and => [
-                         'lower(type.name)'       => { like => '%synonym%' },
-                         'lower(stockprops.value)' => { like => lc($db_name) },
+            { 'lower(me.uniquename)' => { like => lc($db_name) },
+                
+            });
+           
+		if ($stock_rs->count() == 0) { 
+			$stock_rs = $schema->resultset("Stock::Stock")->search(
+				{
+					-and => [
+                      'lower(type.name)'       => { like => '%synonym%' },
+                      'lower(stockprops.value)' => { like => lc($db_name) },
                      ],
-                    ],
             },
             { join => { 'stockprops' => 'type'} ,
               distinct => 1
             }
             );
+		}
         if ($stock_rs->count >1 ) {
             print STDERR "ERROR: found multiple accessions for name $accession_name! \n";
             while ( my $st = $stock_rs->next) {
                 print STDERR "stock name = " . $st->uniquename . "\n";
             }
-	    next;
             # die;
         } elsif ($stock_rs->count == 1) {
-	    print STDERR "Accession $db_name found !\n";
+			print STDERR "Accession $db_name found !\n";
             $cassava_stock = $stock_rs->first;	    
             $stock_name = $cassava_stock->uniquename;
         } else {
 	    
-	    print STDERR "The accession $db_name was not found in the database. Use option -a to add automatically.\n";
-            #store the plant accession in the stock table if $opt_a
+			print STDERR "The accession $db_name was not found in the database. Use option -a to add automatically.\n";
+			#store the plant accession in the stock table if $opt_a
 	    #
-	    if ($opt_a) { 
-
-		$cassava_stock = $schema->resultset("Stock::Stock")->create(
-		    { organism_id => $organism_id,
-		      name       => $db_name,
-		      uniquename => $db_name,
-		      type_id     => $accession_cvterm->cvterm_id,
-		    } );
+			if ($opt_a) {
+				$cassava_stock = $schema->resultset("Stock::Stock")->create(
+				{ organism_id => $organism_id,
+					name       => $db_name,
+					uniquename => $db_name,
+					type_id     => $accession_cvterm->cvterm_id,
+				} );
 		
-	    }
-	    else { 
-		print STDERR "WARNING! Accession $accession_name (using: $db_name) not found.\n";
-		next();
-	    }
+			}
+			else { 
+				print STDERR "WARNING! Accession $accession_name (using: $db_name) not found.\n";
+				next();
+			}
         }
+	
 	my $population_stock = $schema->resultset("Stock::Stock")->find_or_create(
             { organism_id => $organism_id,
 	      name       => $population_name,
