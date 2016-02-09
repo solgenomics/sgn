@@ -91,7 +91,7 @@ sub _validate_with_plugin {
     push @errors, "Cell E1: Column E should contain the header \"is_a_control\"";
   }
 
-  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock type');
+  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
 
   my $rs = $schema->resultset('Stock::Stock')->search(
       { 'me.is_obsolete' => { '!=' => 't' } },
