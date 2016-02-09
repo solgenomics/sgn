@@ -31,7 +31,7 @@ sub get_all_accessions {
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
-      cv     => 'stock type',
+      cv     => 'stock_type',
       db     => 'null',
       dbxref => 'accession',
     });
@@ -55,14 +55,14 @@ sub get_all_populations {
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
-      cv     => 'stock type',
+      cv     => 'stock_type',
       db     => 'null',
       dbxref => 'accession',
     });
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'population',
-      cv     => 'stock type',
+      cv     => 'stock_type',
       db     => 'null',
       dbxref => 'population',
     });
@@ -70,7 +70,7 @@ sub get_all_populations {
     my $population_member_cvterm = $schema->resultset("Cv::Cvterm")
 	->create_with({
 	    name   => 'member_of',
-	    cv     => 'stock relationship',
+	    cv     => 'stock_relationship',
 	    db     => 'null',
 	    dbxref => 'member_of',
 		      });
@@ -98,7 +98,7 @@ sub get_all_populations {
 	    $accession_info{'description'}=$population_member_row->description();
 	    $accession_info{'stock_id'}=$population_member_row->stock_id();
 	    my $synonyms_rs;
-	    $synonyms_rs = $population_member_row->search_related('stockprops', {'type.name' => 'synonym'}, { join => 'type' });
+	    $synonyms_rs = $population_member_row->search_related('stockprops', {'type.name' => {ilike => '%synonym%' } }, { join => 'type' });
 	    my @synonyms;
 	    if ($synonyms_rs) {
 		while (my $synonym_row = $synonyms_rs->next()) {

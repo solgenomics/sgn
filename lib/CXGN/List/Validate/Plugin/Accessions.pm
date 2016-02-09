@@ -16,19 +16,18 @@ sub validate {
 
     my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"accession" })->first->cvterm_id();
 
-    my $local_cv_id = $schema->resultset("Cv::Cv")->search({ name=> "local" })->first()->cv_id();
+    my $stock_property_cv_id = $schema->resultset("Cv::Cv")->search({ name=> "stock_property" })->first()->cv_id();
 
 
-    my $synonym_type_rs = $schema->resultset("Cv::Cvterm")->search({name=>"synonym", cv_id=> $local_cv_id });
+    my $synonym_type_rs = $schema->resultset("Cv::Cvterm")->search({name=>"stock_synonym", cv_id=> $stock_property_cv_id });
 
     my $synonym_rs;
     my $synonym_type_id;
     if ($synonym_type_rs->count == 0) { 
 	$synonym_rs = $schema->resultset("Cv::Cvterm")->create_with( 
-	    { name => 'synonym',
-	      cv   => 'local',
-	      db   => 'local',
-	      dbxref => 'synonym'
+	    { name => 'stock_synonym',
+	      cv   => 'stock_property',
+	      #db and dbxref are set to default values "null" and "autocreated:stock_synonym" 
 	    });
 	$synonym_type_id = $synonym_rs->cvterm_id();
     }

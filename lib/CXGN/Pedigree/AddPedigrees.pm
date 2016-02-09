@@ -78,19 +78,19 @@ sub add_pedigrees {
       # get cvterms for parents and offspring
       my $female_parent_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
 	  ->create_with( { name   => 'female_parent',
-			   cv     => 'stock relationship',
+			   cv     => 'stock_relationship',
 			   db     => 'null',
 			   dbxref => 'female_parent',
 			 });
       my $male_parent_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
 	  ->create_with({ name   => 'male_parent',
-			  cv     => 'stock relationship',
+			  cv     => 'stock_relationship',
 			  db     => 'null',
 			  dbxref => 'male_parent',
 			});
       my $progeny_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
 	  ->create_with({ name   => 'offspring_of',
-			  cv     => 'stock relationship',
+			  cv     => 'stock_relationship',
 			  db     => 'null',
 			  dbxref => 'offspring_of',
 			});
@@ -287,7 +287,7 @@ sub _get_accession {
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")
 	->create_with({
 	    name   => 'accession',
-	    cv     => 'stock type',
+	    cv     => 'stock_type',
 	    db     => 'null',
 	    dbxref => 'accession',
 		      });
