@@ -108,23 +108,17 @@ my %seq  = (
 
 my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'accession',
-      cv     => 'stock_type',
-      db     => 'null',
-      dbxref => 'accession',
+      cv     => 'stock type',
     });
 
 my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'training population',
-	cv     => 'stock_type',
-	db     => 'null',
-	dbxref => 'training population',
+		cv     => 'stock type',
     });
 
 my $igd_number_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'igd number',
-	cv     => 'genotype_property',
-	db     => 'null',
-	dbxref => 'igd number',
+		cv     => 'genotype_property',
     });
 
  #store a project
@@ -138,9 +132,7 @@ $project->create_projectprops( { 'project year' => $opt_y }, { autocreate => 1 }
 # find the cvterm for a genotyping experiment
 my $geno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
     { name   => 'genotyping experiment',
-      cv     => 'experiment_type',
-      db     => 'null',
-      dbxref => 'genotyping experiment',
+      cv     => 'experiment type',
     });
 
 my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_create( 
@@ -153,9 +145,7 @@ my $protocol_id = $protocol_row->nd_protocol_id();
 # find the cvterm for the SNP calling experiment
 my $snp_genotype = $schema->resultset('Cv::Cvterm')->create_with(
     { name   => 'snp genotyping',
-      cv     => 'local',
-      db     => 'null',
-      dbxref => 'snp genotyping',
+      cv     => 'genotype_property',
     });
 
 my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
@@ -172,9 +162,7 @@ my $organism = $schema->resultset("Organism::Organism")->find_or_create(
 
 my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'members of',
-      cv     => 'stock_relationship',
-      db     => 'null',
-      dbxref => 'members of',
+      cv     => 'stock relationship',
     });
 
 my $organism_id = $organism->organism_id();
@@ -209,7 +197,7 @@ my $coderef = sub {
                 
             });
            
-		if ($stock_rs->count() == 0) { 
+		if ($stock_rs->count() == 0) {
 			$stock_rs = $schema->resultset("Stock::Stock")->search(
 				{
 					-and => [
@@ -227,8 +215,7 @@ my $coderef = sub {
             while ( my $st = $stock_rs->next) {
                 print STDERR "stock name = " . $st->uniquename . "\n";
             }
-            # die;
-        } elsif ($stock_rs->count == 1) {
+            # die; } elsif ($stock_rs->count == 1) {
 			print STDERR "Accession $db_name found !\n";
             $cassava_stock = $stock_rs->first;	    
             $stock_name = $cassava_stock->uniquename;
