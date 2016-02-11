@@ -113,16 +113,16 @@ sub BUILD {
 	$self->is_folder(1);
     
 	if ($folder_type->type_id() == $folder_cvterm_id) { 
-	    print STDERR "Setting folder type to folder\n";
+	    #print STDERR "Setting folder type to folder\n";
 	    $self->folder_type("folder");
 	}
 	elsif ($folder_type->type_id() == $self->breeding_program_cvterm_id()) { 
-	    print STDERR "Setting folder type to breeding_program.\n";
+	    #print STDERR "Setting folder type to breeding_program.\n";
 	    $self->folder_type("breeding_program");
 	}
     }
     else { 
-	print STDERR "Setting folder type to trial\n";
+	#print STDERR "Setting folder type to trial\n";
 	$self->folder_type("trial");
     }
     
@@ -290,17 +290,16 @@ sub _get_children {
 	#
 
 	if ($self->folder_type() eq "breeding_program") { 
-	    print STDERR "Current folder is a breeding program... filter children with other parents...\n";
 	    if ($folder->parent()->name() eq $self->name()) {
 		print STDERR "Pushing ".$folder->name()."\n";
 		push @child_folders, $folder;
 	    }
 	    else { 
-		print STDERR "Ignoring ".$folder->name()."\n";
+		#print STDERR "Ignoring ".$folder->name()."\n";
 	    }
 	}
 	else {
-	    print STDERR "parent is not a breeding program... pushing ".$folder->name()."...\n";
+	    #print STDERR "parent is not a breeding program... pushing ".$folder->name()."...\n";
 	    push @child_folders, $folder;
 	}
     }
@@ -384,7 +383,7 @@ sub associate_breeding_program {
 	});
 
     if (! $project_rel_row) { 
-	print STDERR "Creating folder association with breeding program id= $breeding_program_id, folder_id = ".$self->folder_id().", type_id = ".$self->breeding_program_trial_relationship_id()."\n";
+	#print STDERR "Creating folder association with breeding program id= $breeding_program_id, folder_id = ".$self->folder_id().", type_id = ".$self->breeding_program_trial_relationship_id()."\n";
 	$project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create( 
 	    { 
 		object_project_id => $breeding_program_id,
