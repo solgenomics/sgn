@@ -34,6 +34,8 @@ it under the same terms as Perl itself.
 package AddTrialTypesYambase;
 
 use Moose;
+use Bio::Chado::Schema;
+use Try::Tiny;
 extends 'CXGN::Metadata::Dbpatch';
 
 
@@ -41,6 +43,9 @@ has '+description' => ( default => <<'' );
 Description of this patch goes here
 
 has '+prereq' => (
+	default => sub {
+        [],
+    },
     
   );
 
@@ -52,26 +57,20 @@ sub patch {
     print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
 
     print STDOUT "\nExecuting the SQL commands.\n";
-
-    $self->dbh->do(<<EOSQL);
---do your SQL here
---
-
-
-EOSQL
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
+   
 
     print STDERR "INSERTING CV TERMS...\n";
 
-    my @terms = qw | PYT AYT UYT | ;
+   # my @terms = qw | 'Preliminary Yield Trial' 'Advance Yield Trial' 'Uniform Yield Trial' | ;
+    my @terms = ('Preliminary Yield Trial', 'Advance Yield Trial', 'Uniform Yield Trial') ;
   
     foreach my $t (@terms) {
-	
-	$self->dbh->do(<<EOSQL);
-INSERT INTO dbxref (db_id, accession) VALUES ((SELECT db_id FROM db WHERE name='local'), '$t');
 
-INSERT INTO cvterm (cv_id, name, definition, dbxref_id) VALUES ( (SELECT cv_id FROM cv WHERE name='project_type' ), '$t', '$t', (SELECT dbxref_id FROM dbxref WHERE accession='$t') );
-
-EOSQL
+	 $schema->resultset("Cv::Cvterm")->create_with( {
+		name => $t,
+		cv => 'project_type', }
+		);
 
     }
 
