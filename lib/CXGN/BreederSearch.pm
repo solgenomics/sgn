@@ -133,8 +133,24 @@ Side Effects: refreshes matertialized_fullview and all of the smaller materializ
 
 sub refresh_matviews {
     my $self = shift;
-    
     eval { 
+	my $q = "UPDATE public.matviews
+	SET currently_refreshing=TRUE
+	WHERE mv_name='materialized_fullview';";
+	my $h = $self->dbh->prepare($q);
+        $h->execute();
+	
+	$q = "REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_fullview;";
+    	$h = $self->dbh->prepare($q);
+        $h->execute();
+	
+	$q = "UPDATE public.matviews
+	SET currently_refreshing=FALSE, last_refresh=CURRENT_TIMESTAMP
+	WHERE mv_name='materialized_fullview';";
+	$h = $self->dbh->prepare($q);
+        $h->execute();
+
+=for comment    
        my $q = "REFRESH MATERIALIZED VIEW CONCURRENTLY public.materialized_fullview;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessions;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXbreeding_programs;
@@ -179,12 +195,10 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY public.trials;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.trialsXyears;
 
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.years;";
-
-       my $h = $self->dbh->prepare($q);
-       $h->execute();
+=cut
     };
     if ($@) {
-	die "Error refreshing materialized views: $@\n";
+	die "Error refreshing materialized_fullview: $@\n";
     }
     my $success =1;
     return $success;
