@@ -108,12 +108,12 @@ my %seq  = (
 
 my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'accession',
-      cv     => 'stock type',
+      cv     => 'stock_type',
     });
 
 my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'training population',
-		cv     => 'stock type',
+		cv     => 'stock_type',
     });
 
 my $igd_number_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
@@ -132,7 +132,7 @@ $project->create_projectprops( { 'project year' => $opt_y }, { autocreate => 1 }
 # find the cvterm for a genotyping experiment
 my $geno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
     { name   => 'genotyping experiment',
-      cv     => 'experiment type',
+      cv     => 'experiment_type',
     });
 
 my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_create( 
@@ -162,7 +162,7 @@ my $organism = $schema->resultset("Organism::Organism")->find_or_create(
 
 my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'members of',
-      cv     => 'stock relationship',
+      cv     => 'stock_relationship',
     });
 
 my $organism_id = $organism->organism_id();
@@ -197,21 +197,23 @@ my $coderef = sub {
                 
             });
            
-		if ($stock_rs->count() == 0) {
-			$stock_rs = $schema->resultset("Stock::Stock")->search(
-				{
-					-and => [
-                      'lower(type.name)'       => { like => '%synonym%' },
-                      'lower(stockprops.value)' => { like => lc($db_name) },
-                     ],
-            },
-            { join => { 'stockprops' => 'type'} ,
-              distinct => 1
-            }
-            );
+	if ($stock_rs->count() == 0) {
+
+	    print STDERR "No uniquename found for $db_name, checking synonyms...\n";
+	    $stock_rs = $schema->resultset("Stock::Stock")->search(
+		{
+		    -and => [
+			 'lower(type.name)'       => { like => '%synonym%' },
+			 'lower(stockprops.value)' => { like => lc($db_name) },
+			],
+		},
+		{ join => { 'stockprops' => 'type'} ,
+		  distinct => 1
 		}
+		);
+	}
         if ($stock_rs->count >1 ) {
-            print STDERR "ERROR: found multiple accessions for name $accession_name! \n";
+            print STDERR "ERROR: found multiple accession synonyms found for that accession name $accession_name! \n";
             while ( my $st = $stock_rs->next) {
                 print STDERR "stock name = " . $st->uniquename . "\n";
             }
@@ -219,25 +221,26 @@ my $coderef = sub {
 			print STDERR "Accession $db_name found !\n";
             $cassava_stock = $stock_rs->first;	    
             $stock_name = $cassava_stock->uniquename;
-        } else {
-	    
-			print STDERR "The accession $db_name was not found in the database. Use option -a to add automatically.\n";
-			#store the plant accession in the stock table if $opt_a
+        } elsif ($stock_rs->count ==0)  {
+	    print STDERR "No synonym was found for $db_name\n";
+
+	    #store the plant accession in the stock table if $opt_a
 	    #
-			if ($opt_a) {
-				$cassava_stock = $schema->resultset("Stock::Stock")->create(
-				{ organism_id => $organism_id,
-					name       => $db_name,
-					uniquename => $db_name,
-					type_id     => $accession_cvterm->cvterm_id,
-				} );
+	    if (!$opt_a) {
+		print STDERR "WARNING! Accession $accession_name (using: $db_name) not found.\n";
+		print STDERR "Use option -a to add automatically.\n";
+		next();
+	    }
+	    else {
+		$cassava_stock = $schema->resultset("Stock::Stock")->create(
+		    { organism_id => $organism_id,
+		      name       => $db_name,
+		      uniquename => $db_name,
+		      type_id     => $accession_cvterm->cvterm_id,
+		    } );
 		
-			}
-			else { 
-				print STDERR "WARNING! Accession $accession_name (using: $db_name) not found.\n";
-				next();
-			}
-        }
+	    }
+	}
 	
 	my $population_stock = $schema->resultset("Stock::Stock")->find_or_create(
             { organism_id => $organism_id,
