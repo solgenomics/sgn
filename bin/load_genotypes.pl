@@ -112,16 +112,16 @@ my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     });
 
 my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'training population',
-		cv     => 'stock_type',
+    { name   => 'training population',
+      cv     => 'stock_type',
     });
 
 my $igd_number_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'igd number',
-		cv     => 'genotype_property',
+    { name   => 'igd number',
+      cv     => 'genotype_property',
     });
 
- #store a project
+#store a project
 my $project = $schema->resultset("Project::Project")->find_or_create(
     {
         name => $opt_p,
@@ -181,24 +181,25 @@ my $coderef = sub {
     while (my $gt = $gtio->next())  {
 	my ($accession_name, $igd_number) = split(/:/, $gt->name());
 	my $db_name = $accession_name;
-
+	
 	$db_name =~ s/(.*?)\.(.*)/$1/;
 	
 	if ($accession_name eq "marker" || $accession_name =~ /BLANK/i ) {next;}
-
+	
 	#print Dumper($gt->rawscores);
-
+	
         print STDERR "Looking for accession $accession_name ($db_name)\n";
         my %json;
         my $cassava_stock;
         my $stock_name;
         my $stock_rs = $schema->resultset("Stock::Stock")->search(
             { 'lower(me.uniquename)' => { like => lc($db_name) },
-                
+	      
             });
-           
-	if ($stock_rs->count() == 0) {
+	
 
+	if ($stock_rs->count() == 0) {
+	    
 	    print STDERR "No uniquename found for $db_name, checking synonyms...\n";
 	    $stock_rs = $schema->resultset("Stock::Stock")->search(
 		{
@@ -212,18 +213,22 @@ my $coderef = sub {
 		}
 		);
 	}
-        if ($stock_rs->count >1 ) {
-            print STDERR "ERROR: found multiple accession synonyms found for that accession name $accession_name! \n";
+        if ($stock_rs->count() >1 ) {
+            print STDERR "ERROR: found multiple accession synonyms found for that accession name, skipping $accession_name! \n";
             while ( my $st = $stock_rs->next) {
                 print STDERR "stock name = " . $st->uniquename . "\n";
             }
-            # die; } elsif ($stock_rs->count == 1) {
-			print STDERR "Accession $db_name found !\n";
-            $cassava_stock = $stock_rs->first;	    
-            $stock_name = $cassava_stock->uniquename;
-        } elsif ($stock_rs->count ==0)  {
-	    print STDERR "No synonym was found for $db_name\n";
+	    next();
+	}
 
+	if ($stock_rs->count() == 1) { 
+	    $cassava_stock = $stock_rs->first();
+	    $stock_name = $cassava_stock->uniquename();   
+	}
+
+        if ($stock_rs->count ==0)  {
+	    print STDERR "No synonym was found for $db_name\n";
+	    
 	    #store the plant accession in the stock table if $opt_a
 	    #
 	    if (!$opt_a) {
@@ -248,14 +253,14 @@ my $coderef = sub {
 	      uniquename => $population_name,
 	      type_id => $population_cvterm->cvterm_id,
             } );
-
+	
 	my $has_rel_rs = $schema->resultset("Stock::StockRelationship")->search(
 	    {
 		type_id => $population_members->cvterm_id(),
 		subject_id => $cassava_stock->stock_id(),
 		object_id => $population_stock->stock_id(),
 	    });
-
+	
 	if ($has_rel_rs->count() == 0) { 
 	    $cassava_stock->find_or_create_related('stock_relationship_objects', {
 		type_id => $population_members->cvterm_id(),
@@ -263,14 +268,14 @@ my $coderef = sub {
 		object_id => $population_stock->stock_id(),
 						   } );
 	}
-	    ###############
+	###############
         print STDERR "cassava stock name = " . $cassava_stock->name . "\n";
         my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
             {
                 nd_geolocation_id => $geolocation->nd_geolocation_id(),
                 type_id => $geno_cvterm->cvterm_id(),
             } );
-
+	
 	print STDERR "Linking to protocol...\n";
 	my $nd_experiment_protocol = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->create( 
 	    {
@@ -278,7 +283,7 @@ my $coderef = sub {
 		nd_protocol_id => $protocol_id,
 	    });
 	
-
+	
         #link to the project
         $experiment->find_or_create_related('nd_experiment_projects', {
             project_id => $project->project_id()
@@ -291,7 +296,7 @@ my $coderef = sub {
 	if ($opt_x) { 
 	    print STDERR "OPTION -x: REMOVING OLD GENOTYPE... \n";
 	    my $has_genotype_rs =  $schema->resultset('NaturalDiversity::NdExperimentStock')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops')->search( { 'me.stock_id' => $cassava_stock->stock_id() }); 
-
+	    
 	    while (my $has_genotype = $has_genotype_rs->next()) { 
 		print STDERR "Note: -x option: removing already present genotype for $db_name.\n";
 		my $genotypeprop_rs = $schema->resultset('Genetic::Genotypeprop')->search(  
@@ -305,14 +310,14 @@ my $coderef = sub {
 		
 		print STDERR "DELETING GENOTYPE: ".$has_genotype->genotype_id()."\n";
 		$genotype->delete();
-
+		
 		#my $nd_experiment_genotypes = $schema->resultset('Genetic::NdExperimentGenotypes')->search( { nd_experiment_id => $has_genotype_rs->nd_experiment_id(), });
-
+		
 	    }
 	}
 	
 	my @markers = @{$gtio->markers()};
-
+	
 	if ($opt_s) { 
 	    @markers = sort bychr @{$gtio->markers()};
 	}
@@ -325,7 +330,7 @@ my $coderef = sub {
 	    if ($base_calls !~/[0-9.]+|NA/i) { 
 		print STDERR "SKIPPING BASECALL $base_calls\n";
 	    }
-
+	    
 	    $json{$marker_name} = $base_calls;
         }
 	
@@ -338,8 +343,8 @@ my $coderef = sub {
 	    my $json_obj = JSON::Any->new;
 	    $json_string = $json_obj->encode(\%json);
 	}
-
-        print "Storing new genotype for stock " . $cassava_stock->name . " \n\n";
+	
+        print STDERR "Storing new genotype for stock " . $cassava_stock->name . " \n\n";
         my $genotype = $schema->resultset("Genetic::Genotype")->find_or_create(
             {
                 name        => $cassava_stock->name . "|" . $experiment->nd_experiment_id,
@@ -352,6 +357,7 @@ my $coderef = sub {
         $genotype->create_genotypeprops( { 'igd number' => $igd_number } , {autocreate =>1 , allow_duplicate_values => 1 } );
         #link the genotype to the nd_experiment
         my $nd_experiment_genotype = $experiment->find_or_create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
+	
     }
 };
 
@@ -369,7 +375,7 @@ try {
 };
 
 sub bychr { 
-my @a = split "\t", $a;
+    my @a = split "\t", $a;
     my @b = split "\t", $b;
     
     my $a_chr;
