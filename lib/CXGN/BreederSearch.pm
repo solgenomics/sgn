@@ -14,14 +14,16 @@ Aimin Yan <ay247@cornell.edu>
 package CXGN::BreederSearch;
 
 use Moose;
-
 use Data::Dumper;
 
 has 'dbh' => ( 
     is  => 'rw',
     required => 1,
     );
-
+has 'dbname' => (
+    is => 'rw',
+    isa => 'Str',
+    );
 
 =head2 metadata_query
 
@@ -133,75 +135,34 @@ Side Effects: refreshes matertialized_fullview and all of the smaller materializ
 
 sub refresh_matviews {
     my $self = shift;
-    eval { 
-	my $q = "UPDATE public.matviews
-	SET currently_refreshing=TRUE
-	WHERE mv_name='materialized_fullview';";
-	my $h = $self->dbh->prepare($q);
-        $h->execute();
-	
-	$q = "REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_fullview;";
-    	$h = $self->dbh->prepare($q);
-        $h->execute();
-	
-	$q = "UPDATE public.matviews
-	SET currently_refreshing=FALSE, last_refresh=CURRENT_TIMESTAMP
-	WHERE mv_name='materialized_fullview';";
-	$h = $self->dbh->prepare($q);
-        $h->execute();
 
-=for comment    
-       my $q = "REFRESH MATERIALIZED VIEW CONCURRENTLY public.materialized_fullview;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessions;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXbreeding_programs;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXlocations;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXgenotyping_protocols;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXplots;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtraits;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtrials;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXyears;
+    my $q = "SELECT currently_refreshing FROM public.matviews WHERE mv_id=1";
+    my $h = $self->dbh->prepare($q);
+    $h->execute();
     
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programs;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXlocations;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXgenotyping_protocols;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXplots;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtraits;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtrials;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXyears;
-        
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.locations;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXgenotyping_protocols;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXplots;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtraits;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtrials;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXyears;
+    my $refreshing = $h->fetchrow_array();
 
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocols;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXplots;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtraits;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtrials;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXyears;
-    
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.plots;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtraits;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtrials;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXyears;
+    if ($refreshing) {
+	return { error => 'Wizard update already in progress . . . ' };
+    } else {
+	
+	my $connect = "SELECT dblink_connect_u('myconn','dbname=".$self->dbname."')";
+	my $send_query = "SELECT dblink_send_query('myconn', 'SELECT refresh_materialized_views()')";
+	
+	$self->dbh->do($connect);
+	$h = $self->dbh->do($send_query);
 
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.traits;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.traitsXtrials;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.traitsXyears;
+	if ($h != 1) {
+	    return { error => 'Error initiating wizard update.'};
+	} else {
+	    $q = "UPDATE public.matviews SET currently_refreshing=TRUE";
+	    my $h = $self->dbh->prepare($q);
+	    $h->execute();
 
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.trials;
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.trialsXyears;
-
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.years;";
-=cut
-    };
-    if ($@) {
-	die "Error refreshing materialized_fullview: $@\n";
+	    print STDERR "materialized fullview status updated to refreshing\n";
+	    return { message => 'Wizard update initiated' };
+	}
     }
-    my $success =1;
-    return $success;
 }
 
 sub get_phenotype_info {  

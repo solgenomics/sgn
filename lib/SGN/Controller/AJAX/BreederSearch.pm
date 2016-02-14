@@ -80,17 +80,22 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) { 
     my $self = shift;
     my $c = shift;
-    my $cookie_value = $c->req->param("refresh_token");
+
+    print STDERR "dbname=" . $c->config->{dbname} ."\n";
 
     my $dbh = $c->dbc->dbh();
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews();
 
-    if ($refresh == 1) {
-	$c->res->cookies->{matviewRefreshToken} = { value => $cookie_value};
+    if ($refresh->{error}) {
+	print STDERR "Returning with error . . .\n";
+	$c->stash->{rest} = { error => $refresh->{'error'} };
+	return;
+    } else {
+	$c->stash->{rest} = { message => $refresh->{'message'} };
+	return;
     }
-    
-    
 }
 
     

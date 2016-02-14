@@ -478,32 +478,34 @@ function add_data_refresh() {
     var roles = getUserRoles();
     console.log("userroles="+roles);
     if (jQuery.inArray(roles, ['submitter', 'curator', 'sequencer']) >= 0) {
-	jQuery('#wizard_refresh').append('<p align="center" style="margin: 0px 0"><i>Don\'t see your data?</i></p><input class="btn btn-link center-block" id="update_wizard" type="button" data-loading-text="Updating..." value="Update wizard">');
+	jQuery('#wizard_refresh').append('<p align="center" style="margin: 0px 0"><i>Don\'t see your data?</i></p><input class="btn btn-link center-block" id="update_wizard" type="button" data-loading-text="Initiating update..." value="Update wizard">');
     }
 }
 
 function refresh_matviews(btn) {
-    var token = new Date().getTime(); //use the current timestamp as the token value
-    var fileDownloadCheckTimer;
-    
     jQuery.ajax( {
 	url: '/ajax/breeder/refresh',
 	timeout: 60000,
 	method: 'POST',
-	data: {'refresh_token': token },
+	success: function(response) { 
+		if (response.error) {
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">'+response.error+'</font></div>';
+		    jQuery('#update_wizard').after(error_html);
+		} else {
+		    btn.button('reset');
+		    jQuery('#update_wizard').prop('value', 'Update initiated.');
+		}	
+	    }, 
 	error: function(request, status, err) {
-	    // report unspecified error occured
-	    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
-	    jQuery('#update_wizard').after(error_html);
+		if (status == "timeout") {
+                    // report timeout
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
+		    jQuery('#update_wizard').after(error_html);
+		} else {
+                    // report unspecified error occured  
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
+		    jQuery('#update_wizard').after(error_html);
+		}
             }
-    });		
- 
-    fileDownloadCheckTimer = window.setInterval(function () { //checks for response cookie to keep working modal enabled until file is ready for download
-	var cookieValue = jQuery.cookie('matviewRefreshToken');
-	if (cookieValue == token) {
-	    window.clearInterval(fileDownloadCheckTimer);
-	    jQuery.removeCookie('fileDownloadToken'); //clears this cookie value
-	}
-    }, 1000);
-    btn.button('reset');
+    });
 }
