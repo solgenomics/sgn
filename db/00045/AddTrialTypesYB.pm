@@ -31,7 +31,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddTrialTypesYambase;
+package AddTrialTypesYB;
 
 use Moose;
 use Bio::Chado::Schema;
