@@ -44,7 +44,8 @@ sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
     my $self = shift;
     my $c = shift;
     my @args = @_;
-    $c->res->redirect('/breeders/trial/'.$args[0]);
+    my $format = $c->req->param("format");
+    $c->res->redirect('/breeders/trial/'.$args[0].'?format='.$format);
 }
 
 sub trial_info : Chained('trial_init') PathPart('') Args(0) { 
@@ -52,7 +53,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $self = shift;
     my $c = shift;
     my $format = $c->req->param("format");
-
+    print STDERR $format;
     my $user = $c->user();
     if (!$user) { 
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
