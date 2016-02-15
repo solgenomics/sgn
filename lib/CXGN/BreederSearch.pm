@@ -165,6 +165,23 @@ sub refresh_matviews {
     }
 }
 
+sub matviews_status {
+    my $self = shift;
+
+    my $q = "SELECT currently_refreshing, last_refresh FROM public.matviews WHERE mv_id=1";
+    my $h = $self->dbh->prepare($q);
+    $h->execute();
+
+    my ($refreshing, $timestamp) = $h->fetchrow_array();
+
+    if ($refreshing) {
+	return { message => "Wizard update already in progress . . . " };
+    } else {
+	print STDERR "materialized fullview last updated $timestamp\n";
+	return { message => "Wizard last updated: $timestamp" };
+    }
+}
+
 sub get_phenotype_info {  
     my $self = shift;
     my $accession_sql = shift;

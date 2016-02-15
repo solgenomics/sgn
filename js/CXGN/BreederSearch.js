@@ -127,6 +127,10 @@ window.onload = function initialize() {
 	  }
       });
     
+    $('#open_update_dialog').click(function () {
+        open_update_dialog();
+    });
+
     jQuery('#refresh_lists').on('click', function () {
 	console.log("refreshing lists . . .");
 	create_list_start('Start from a list');
@@ -478,8 +482,37 @@ function add_data_refresh() {
     var roles = getUserRoles();
     console.log("userroles="+roles);
     if (jQuery.inArray(roles, ['submitter', 'curator', 'sequencer']) >= 0) {
-	jQuery('#wizard_refresh').append('<p align="center" style="margin: 0px 0"><i>Don\'t see your data?</i></p><input class="btn btn-link center-block" id="update_wizard" type="button" data-loading-text="Initiating update..." value="Update wizard">');
+	jQuery('#wizard_refresh').append('<p align="center" style="margin: 0px 0"><i>Don\'t see your data?</i></p><input class="btn btn-link center-block" id="open_update_dialog" type="button" value="Update wizard">');
     }
+}
+
+function open_update_dialog() {
+    jQuery('#update_wizard_dialog').modal("show");
+    jQuery.ajax( {
+	url: '/ajax/breeder/check_status',
+	timeout: 60000,
+	method: 'POST',
+	success: function(response) { 
+		if (response.error) {
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">'+response.error+'</font></div>';
+		    jQuery('#wizard_status').after(error_html);
+		} else {
+		    var update_status = response.message;
+		    jQuery('#wizard_status').text(update_status);
+		}
+	    }, 
+	error: function(request, status, err) {
+		if (status == "timeout") {
+                    // report timeout
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
+		    jQuery('#wizard_status').after(error_html);
+		} else {
+                    // report unspecified error occured  
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
+		    jQuery('#wizard_status').after(error_html);
+		}
+            }
+    });
 }
 
 function refresh_matviews(btn) {

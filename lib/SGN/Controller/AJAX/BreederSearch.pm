@@ -98,4 +98,22 @@ sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
     }
 }
 
+sub check_status : Path('/ajax/breeder/check_status') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $dbh = $c->dbc->dbh();
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+    my $refresh = $bs->matviews_status();
+
+    if ($refresh->{error}) {
+	print STDERR "Returning with error . . .\n";
+	$c->stash->{rest} = { error => $refresh->{'error'} };
+	return;
+    } else {
+	$c->stash->{rest} = { message => $refresh->{'message'} };
+	return;
+    }
+}
     
