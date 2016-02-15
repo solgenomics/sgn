@@ -6,15 +6,25 @@
 $files => []
 </%args>
 
-
-<table cellpadding="5" alt="">
+% if (scalar(@$files)>0) {
+<table class="table table-bordered files_datatables" alt="">
+<thead>
+  <tr><th>Filename</th><th>Date Uploaded</th><th>Options</th></tr>
+</thead>
+<tbody>
 % foreach my $f (@$files) { 
   <tr>
     <td><% $f->{basename} %></td>
     <td><% $f->{create_date} %></td>
-    <td><a href="">delete</a> | <a href="">view</a></td>
+    <td><a href="">Delete</a> | <a href="">View</a></td>
   </tr>
 % }
+</tbody>
 </table>
+% }
 
-
+<script>
+jQuery(document).ready(function() {
+    jQuery('.files_datatables').DataTable();
+} );
+</script>

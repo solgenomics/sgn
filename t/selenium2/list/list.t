@@ -10,20 +10,21 @@ my $d = SGN::Test::WWW::WebDriver->new();
 
 $d->login_as("submitter");
 
-$d->get_ok("/", "get root url test");
+$d->get_ok("/search", "get root url test");
 
 my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
 
 # delete the list should it already exist
 #
-# if ($d->driver->get_page_source() =~ /new_test_list/) { 
-#     print "DELETE LIST new_test_list... ";
-#     $d->find_element_ok("delete_list_new_test_list", "id", "find delete_list_new_test_list test")->click();
-#     $d->driver->accept_alert();
-#     sleep(1);
+if ($d->driver->get_page_source() =~ /new_test_list/) { 
+     print "DELETE LIST new_test_list... ";
+     $d->find_element_ok("delete_list_new_test_list", "id", "find delete_list_new_test_list test")->click();
+     sleep(2);
+     $d->driver->accept_alert();
+     sleep(1);
 
-#     print "Done.\n";
-# }
+     print "Done.\n";
+ }
  
 #sleep(1);
 
@@ -156,7 +157,7 @@ sleep(1);
 
 $d->find_element_ok("view_public_lists_button", "id", "view public lists")->click();
 
-sleep(1);
+sleep(2);
 
 $d->find_element_ok("view_public_list_johndoe_1_private", "id", "view new public list")->click();
 

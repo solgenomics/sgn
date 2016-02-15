@@ -12,6 +12,8 @@ $d->login_as("submitter");
 
 $d->get_ok("/", "get root url test");
 
+sleep(1);
+
 my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
 
 # delete the list should it already exist
@@ -19,6 +21,7 @@ my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
 if ($d->driver->get_page_source() =~ /new_test_list/) { 
     print "DELETE LIST new_test_list... ";
     $d->find_element_ok("delete_list_new_test_list", "id", "find delete_list_new_test_list test")->click();
+    sleep(2);
     $d->driver->accept_alert();
     sleep(1);
 

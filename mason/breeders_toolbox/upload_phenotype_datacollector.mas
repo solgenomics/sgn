@@ -1,0 +1,47 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadPhenotype' ] &>
+
+<div class="modal fade" id="upload_datacollector_phenotypes_dialog" name="upload_datacollector_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="addDatacollectorPhenotypeDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addDatacollectorPhenotypeDialog">Upload Data Collector File</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_datacollector_phenotype_file_form" name="upload_datacollector_phenotype_file_form">
+	    <div class="form-group">
+      	      <label class="col-sm-3 control-label">Data Collector File: </label>
+      	      <div class="col-sm-9" >
+	        <input type="file" id="upload_datacollector_phenotype_file_input" name="upload_datacollector_phenotype_file_input" encoding="multipart/form-data" />
+              </div>
+	    </div>
+	  </form><br/>
+	  <div id="upload_phenotype_datacollector_verify_status"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-info" name="upload_datacollector_phenotype_submit_verify" id="upload_datacollector_phenotype_submit_verify">Verify</button>
+	<button disabled type="button" class="btn btn-primary" name="upload_datacollector_phenotype_submit_store" id="upload_datacollector_phenotype_submit_store" title="First Verify Your File">Store</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+
+    jQuery('#upload_datacollector_phenotypes_link').click( function() {
+	jQuery('#upload_datacollector_phenotypes_dialog').modal("show");
+    });
+
+});  
+
+</script>
