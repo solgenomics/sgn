@@ -19,11 +19,53 @@ sub trial_detail_design_view {
   $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
 
   foreach my $key (sort { $a <=> $b} keys %design) {
-    $design_result_html .= "<tr><td>".$design{$key}->{plot_name} ."</td><td>".$design{$key}->{accession_name} ."</td><td>".$design{$key}->{check_name}."</td><td>".$design{$key}->{row_number}."</td><td>".$design{$key}->{col_number}."</td><td>".$design{$key}->{block_number}."</td><td>".$design{$key}->{block_row_number}."</td><td>".$design{$key}->{block_col_number}."</td>";
-    if ($design{$key}->{rep_number}) {
-      $design_result_html .= "<td>".$design{$key}->{rep_number}."</td>";
-    }
-    $design_result_html .= "</tr>";
+      $design_result_html .= "<tr>";
+      if ($design{$key}->{plot_name}) {
+	  $design_result_html .= "<td>".$design{$key}->{plot_name}."</td>";
+      } else {
+	  $design_result_html .= "<td></td>";
+      }
+      if ($design{key}->{accession_name}) {
+	  $design_result_html .= "<td>".$design{$key}->{accession_name}."</td>";
+      } else {
+	  $design_result_html .= "<td></td>";
+      }
+      if ($design{key}->{check_name}) {
+	  $design_result_html .= "<td>".$design{$key}->{check_name}."</td>";
+      } else {
+	  $design_result_html .= "<td></td>";
+      } 
+      if ($design{key}->{row_number}) {
+	  $design_result_html .= "<td>".$design{$key}->{row_number}."</td>";
+      } else {
+	  $design_result_html .= "<td></td>";
+      }
+      if ($design{key}->{col_number}) {
+	  $design_result_html .= "<td>".$design{$key}->{col_number}."</td>";
+      } else {
+	  $design_result_html .= "<td></td>";
+      }
+      if ($design{key}->{block_number}) {
+	  $design_result_html .= "<td>".$design{$key}->{block_number}."</td>";
+      } else {
+	  $design_result_html .= "<td></td>";
+      }
+      if ($design{key}->{block_row_number}) {
+	  $design_result_html .= "<td>".$design{$key}->{block_row_number}."</td>";
+      } else {
+	  $design_result_html .= "<td></td>";
+      }
+      if ($design{key}->{block_col_number}) {
+	  $design_result_html .= "<td>".$design{$key}->{block_col_number}."</td>";
+      } else {
+	  $design_result_html .= "<td></td>";
+      }
+      if ($design{key}->{rep_number}) {
+	  $design_result_html .= "<td>".$design{$key}->{rep_number}."</td>";
+      } else {
+	  $design_result_html .= "<td></td>";
+      }
+      $design_result_html .= "</tr>";
   }
   $design_result_html .= "</table>";
   return  "$design_result_html";

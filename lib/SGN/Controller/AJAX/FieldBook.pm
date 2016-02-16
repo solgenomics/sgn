@@ -160,7 +160,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
   my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')
     ->create_with({
 		   name   => 'field layout',
-		   cv     => 'experiment type',
+		   cv     => 'experiment_type',
 		   db     => 'null',
 		   dbxref => 'field layout',
 		  });

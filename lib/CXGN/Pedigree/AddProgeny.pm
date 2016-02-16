@@ -68,26 +68,26 @@ sub add_progeny {
 
     my $female_parent_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with( { name   => 'female_parent',
-		       cv     => 'stock relationship',
+		       cv     => 'stock_relationship',
 		       db     => 'null',
 		       dbxref => 'female_parent',
 		     });
     my $male_parent_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with({ name   => 'male_parent',
-		      cv     => 'stock relationship',
+		      cv     => 'stock_relationship',
 		      db     => 'null',
 		      dbxref => 'male_parent',
 		    });
     my $member_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with({ name   => 'member_of',
-		      cv     => 'stock relationship',
+		      cv     => 'stock_relationship',
 		      db     => 'null',
 		      dbxref => 'member_of',
 		    });
     my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with({
 		     name   => 'accession',
-		     cv     => 'stock type',
+		     cv     => 'stock_type',
 		     db     => 'null',
 		     dbxref => 'accession',
 		    });
@@ -226,7 +226,7 @@ sub _get_cross {
   my $cross_cvterm = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'cross',
-		   cv     => 'stock type',
+		   cv     => 'stock_type',
 		   db     => 'null',
 		   dbxref => 'accession',
 		  });

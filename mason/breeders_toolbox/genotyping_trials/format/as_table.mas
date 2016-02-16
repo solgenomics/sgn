@@ -2,48 +2,78 @@
 <%args>
 $breeding_program
 $trial_name
-$design
+$trial_id
 </%args>
 
-% use Data::Dumper;
-% ##print Dumper($design);
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
 <h1>CASSAVABASE GENOTYPING TRIAL</h1>
 <h1>Breeding program: <% $breeding_program->[0]->[1] %></h1>
-<h2>Trial name: <% $trial_name %></h2>
-<table border="1" cellpadding="5">
-<tr>
-<td>&nbsp;</td>
-% foreach my $col (1..12) { 
-  <td align="center" bgcolor="lightblue"><% $col %></td>
-% }
-</tr>
-% foreach my $row ("A".."H") { 
-  <tr><td bgcolor="lightblue"><br /><% $row %><br /><br /></td>
-<%perl>
-   foreach my $col (1..12) {
-     $col = sprintf "%02d", $col;
-     my $cell = "";
-     my $bgcolor="lightgrey";
-     if (exists($design->{$row.$col})) { 
+<h2>Trial name: <a href='/breeders/trial/<% $trial_id %>'><% $trial_name %></a></h2>
+<br/>
 
-       if ($design->{$row.$col}->{accession_name} eq "BLANK") { 
-	 $bgcolor = "#FFCCBB";
-       }
-       else { 
-	 $bgcolor="#FFFFFF";
-       }
-       $cell= '<br />'. $design->{$row.$col}->{accession_name} .'<br /><br />';
+<div id="trial_plate_view_html">
+<div class="well">
+[LOADING...]
+</div>
+</div>
 
-     }
-     else {
-       $cell = "&nbsp;"
-     }
-</%perl>
-    <td align="center" bgcolor="<% $bgcolor %>" >
-      <% $cell %>
-    </td>
-% }
- </tr> 
-% }
-</table>
+<script type="text/javascript">
+
+jQuery(document).ready(function () {
+
+	jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/design',
+	    beforeSend: function() {
+		jQuery("#working_modal").modal("show");
+	    },
+	    success: function(response){
+	        console.log(response);
+		jQuery("#working_modal").modal("hide");
+		var trial_plate_view_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plate_view_table'><thead><tr><th>&nbsp;</th>";
+		for (col=1; col<13; col++) {
+		    var formatted_col = (col < 10 ? '0' : '') + col;
+		    trial_plate_view_html = trial_plate_view_html + "<th bgcolor='lightblue'>"+formatted_col+"<br/><br/></th>";
+		}
+
+		trial_plate_view_html = trial_plate_view_html + "</thead><tbody>";
+
+		var rows = "ABCDEFGH".split("");
+		jQuery.each(rows, function(row) {
+		    trial_plate_view_html = trial_plate_view_html + "<tr><td bgcolor = 'lightblue'><b>" + rows[row] + "</b></td>"
+
+		    for (col=1; col<13; col++) {
+		        var formatted_col = (col < 10 ? '0' : '') + col;
+			var well = rows[row] + formatted_col;
+
+			var cell = "&nbsp";
+			var bgcolor = "lightgrey";
+
+			if (response.design[well]) {
+			   if (response.design[well].accession_name) {
+			       if (response.design[well].accession_name == 'BLANK') {
+			           bgcolor = "#FFCCBB";
+			       } else {
+			           bgcolor="#FFFFFF";
+			       }
+			       cell = "<br/>" + response.design[well].accession_name + "<br/><br/>";
+			   }
+			}
+			trial_plate_view_html = trial_plate_view_html + "<td bgcolor=" + bgcolor + ">" + cell + "</td>";
+		      }
+		      trial_plate_view_html = trial_plate_view_html + "</tr>";
+		});
+
+		trial_plate_view_html = trial_plate_view_html + "</tbody></table>";
+		jQuery('#trial_plate_view_html').empty();
+		jQuery('#trial_plate_view_html').html(trial_plate_view_html);
+	    },
+	    error: function(response){
+	        jQuery("#working_modal").modal("hide");
+		alert("Error retrieving plate layout.");
+	    }
+	});
+
+});
+
+</script>

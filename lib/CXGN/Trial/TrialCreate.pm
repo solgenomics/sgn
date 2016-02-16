@@ -138,28 +138,28 @@ sub save_trial {
   my $field_layout_cvterm = $chado_schema->resultset('Cv::Cvterm')
     ->create_with({
 		   name   => 'field layout',
-		   cv     => 'experiment type',
+		   cv     => 'experiment_type',
 		   db     => 'null',
 		   dbxref => 'field layout',
 		  });
   my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'accession',
-		   cv     => 'stock type',
+		   cv     => 'stock_type',
 		   db     => 'null',
 		   dbxref => 'accession',
 		  });
   my $plot_cvterm = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'plot',
-		   cv     => 'stock type',
+		   cv     => 'stock_type',
 		   db     => 'null',
 		   dbxref => 'plot',
 		  });
   my $plot_of = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'plot_of',
-		   cv     => 'stock relationship',
+		   cv     => 'stock_relationship',
 		   db     => 'null',
 		   dbxref => 'plot_of',
 		  });
@@ -167,7 +167,7 @@ sub save_trial {
   my $sample_cvterm = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'tissue_sample',
-		   cv     => 'stock type',
+		   cv     => 'stock_type',
 		   db     => 'null',
 		   dbxref => 'tissue_sample',
 		  });
@@ -175,7 +175,7 @@ sub save_trial {
   my $sample_of = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'tissue_sample_of',
-		   cv     => 'stock relationship',
+		   cv     => 'stock_relationship',
 		   db     => 'null',
 		   dbxref => 'tissue_sample_of',
 		  });
@@ -195,7 +195,7 @@ sub save_trial {
   my $genotyping_layout_cvterm = $chado_schema->resultset('Cv::Cvterm')
     ->create_with({
 		   name   => 'genotyping layout',
-		   cv     => 'experiment type',
+		   cv     => 'experiment_type',
 		   db     => 'null',
 		   dbxref => 'genotyping layout',
 		  });

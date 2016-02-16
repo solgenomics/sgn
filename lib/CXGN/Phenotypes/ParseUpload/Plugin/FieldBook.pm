@@ -3,6 +3,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::FieldBook;
 
 use Moose;
 use File::Slurp;
+use Data::Dumper;
 
 sub name {
     return "field book";
@@ -95,7 +96,7 @@ sub parse {
 	return \%parse_result;
     }
 
-    foreach my $line (@file_lines) {
+    foreach my $line (sort @file_lines) {
 	chomp($line);
      	my @row =  split($delimiter, $line);
 	my $plot_id = $row[$header_column_info{plot_id}];
@@ -117,10 +118,10 @@ sub parse {
 	$data{$plot_id}->{$trait} = $value;
     }
 
-    foreach my $plot (keys %plots_seen) {
+    foreach my $plot (sort keys %plots_seen) {
 	push @plots, $plot;
     }
-    foreach my $trait (keys %traits_seen) {
+    foreach my $trait (sort keys %traits_seen) {
 	push @traits, $trait;
     }
 
@@ -128,6 +129,7 @@ sub parse {
     $parse_result{'plots'} = \@plots;
     $parse_result{'traits'} = \@traits;
 
+    print Dumper(\%parse_result);
     return \%parse_result;
 }
 
