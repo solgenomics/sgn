@@ -201,6 +201,8 @@ sub has_phenotype {
 	 my $key        = "phenotype_data_" . $pr_id;
 	 my $pheno_file = $file_cache->get($key);
         
+	 no warnings 'uninitialized';
+
 	 if ( -s $pheno_file)
 	 {  
 	     $has_phenotype = 'has_phenotype';
@@ -511,6 +513,8 @@ sub get_stock_owners {
    
     my $owners; 
     
+    no warnings 'uninitialized';
+
     unless ($stock_id =~ /uploaded/) 
     { 
         my $q = "SELECT sp_person_id, first_name, last_name 
