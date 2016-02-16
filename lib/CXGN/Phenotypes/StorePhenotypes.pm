@@ -132,6 +132,9 @@ sub store {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    if (!$user_id) { #For unit_test, SimulateC
+	$user_id = $c->sp_person_id();
+    }
     my $archived_file = $phenotype_metadata->{'archived_file'};
     my $archived_file_type = $phenotype_metadata->{'archived_file_type'};
     my $operator = $phenotype_metadata->{'operator'};
@@ -150,6 +153,7 @@ sub store {
 
 	foreach my $plot_name (@plot_list) {
 
+	    #print STDERR "plot: $plot_name\n";
 	    my $plot_stock = $schema->resultset("Stock::Stock")->find( { uniquename => $plot_name});
 	    my $plot_stock_id = $plot_stock->stock_id;
 
@@ -168,6 +172,8 @@ sub store {
 
 	    foreach my $trait_name (@trait_list) {
 
+		#print STDERR "trait: $trait_name\n";
+
 		my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
 		my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
 
@@ -185,7 +191,9 @@ sub store {
 								   uniquename => $plot_trait_uniquename,
 								  });
 
-		    my $experiment;
+
+		#print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
+		my $experiment;
 
 		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
 		# my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')

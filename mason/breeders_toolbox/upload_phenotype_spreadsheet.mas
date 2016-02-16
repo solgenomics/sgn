@@ -13,6 +13,15 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
+
+	  <&| /page/explanation.mas, title=>'Template Information' &>
+    	  <p>
+      	  <b>File format information</b>
+      	  <br>
+      	  <a id="phenotype_upload_spreadsheet_format_info">Spreadsheet Format</a>
+    	  </p>
+  	  </&>
+
 	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_spreadsheet_phenotype_file_form" name="upload_spreadsheet_phenotype_file_form">
 	    <div class="form-group">
       	      <label class="col-sm-3 control-label">Phenotype Spreadsheet: </label>

@@ -26,6 +26,7 @@ $locations => undef
 
 </&>
 
+<& /breeders_toolbox/trial/phenotype_spreadsheet_upload_format_info.mas &>
 </div>
 
 
