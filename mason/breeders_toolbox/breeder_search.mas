@@ -84,9 +84,7 @@
       <div class="modal-body">
         <div class="container-fluid">
 	     <h4>How the wizard works</h4>
-	     	     <p>For the search wizard to be as fast and flexible as possible, it avoids querying the database directly. Instead, it stores a copy of the data from the database in a temporary format that is optimized for the types of querys the wizard makes. 
-For this to be practical, the copy must be rountinely updated. Updates generally occur automatically every time new data is uploaded, however users with submitter status or higher can also initiate them here manually. 
-Just check below to make sure an update isn't already in progress in the background before initiaing a new update. A new update will be started in the backgorund without any additional input required from the user, and depending on the size of the database will take from a few minutes to a few hours.</p>
+	     	     <p>For the search wizard to be fast and flexible, it avoids querying the database directly. Instead, it stores a copy of the data from the database in a temporary format that is optimized for the types of queries the wizard makes.</p><p>For this to be practical, the copy must be updated regularly. Updates usually start every time new data is uploaded, however users with submitter status or higher can also initiate them manually.</p><p>If an update isn't already in progress, you can initiate one below. It will run independently on the server without any additional input required from the user. Depending on the size of the database, it will take from a few minutes to a few hours to complete.</p>
 	<div><h4>Current status:</h4><p id="wizard_status"></p></div>
         </div>
       </div>

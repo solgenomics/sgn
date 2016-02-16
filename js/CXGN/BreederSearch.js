@@ -95,12 +95,10 @@ window.onload = function initialize() {
 	create_list_start('Start from a list');
     });
     
-    //jQuery('#update_wizard').on('click', function () {
-    jQuery('#update_wizard_dialog, #upload_datacollector_phenotypes_dialog, #upload_phenotype_spreadsheet_dialog, #upload_fieldbook_phenotypes_dialog').on("click", function () {
-	jQuery('#update_wizard').on("click", function(){
-	    if (window.console) console.log("refreshing materialized views . . .");
-	    refresh_matviews();
-	});
+
+    jQuery('#update_wizard_dialog, #upload_datacollector_phenotypes_dialog, #upload_phenotype_spreadsheet_dialog, #upload_fieldbook_phenotypes_dialog').on("click", '.wiz-update', function () {
+	if (window.console) console.log("refreshing materialized views . . .");
+	refresh_matviews();
     });
     
     jQuery('#download_button_excel').on('click', function () {
@@ -489,13 +487,13 @@ function matviews_update_options() {
 		    // if already refreshing, display status in modal and create disabled button
 	            var update_status = response.refreshing;
 		    jQuery('#wizard_status').replaceWith(update_status);
-		    var button_html = '<button type="button" class="btn btn-primary" name="update_wizard" data-loading-text="Working..." id="update_wizard" title="A search wizard update is already in progress..." disabled>Update search wizard</button>';
+		    var button_html = '<button type="button" class="btn btn-primary wiz-update" name="update_wizard" data-loading-text="Working..." id="update_wizard" title="A search wizard update is already in progress..." disabled>Update search wizard</button>';
 		    jQuery('#update_wizard').replaceWith(button_html);
 		} else if (response.timestamp) {
 		    // if exists display timestamp in modal and create button
 		    var update_status = response.timestamp;
 		    jQuery('#wizard_status').replaceWith(update_status);
-		    var button_html = '<button type="button" class="btn btn-primary" name="update_wizard" data-loading-text="Working..." id="update_wizard" title="Refresh the search wizard to include newly uploaded data">Update search wizard</button>';
+		    var button_html = '<button type="button" class="btn btn-primary wiz-update" name="update_wizard" data-loading-text="Working..." id="update_wizard" title="Refresh the search wizard to include newly uploaded data">Update search wizard</button>';
 		    console.log("button html ="+button_html);
 		    jQuery('#update_wizard').replaceWith(button_html);
 		}
