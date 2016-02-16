@@ -365,11 +365,11 @@ heritability  <- c()
 
 if ( is.null(predictionFile) == TRUE ) {
   additiveEffects <- data.frame(iGEBVu)
+ 
+  pN <- nrow(phenoTrait)
+  aN <- nrow(additiveEffects)
 
-  pN <- length(phenoTrait)
-  aN <- length(additiveEffects)
-
-  if (pN <= 1 || pN != aN {
+  if (pN <= 1 || pN != aN) {
     stop("phenoTrait and additiveEffects have different lengths: ",
          pN, " and ", aN, ".")
   }
