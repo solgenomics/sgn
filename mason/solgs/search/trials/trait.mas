@@ -67,7 +67,7 @@ $trait_name
 <tr>
   <td>
     <div id="combine_trials_div" style="display:none">
-      <input  class="button" type="button" id="combine_trait_trials" value="Combine trials"/>
+      <input  class="button" type="button" id="combine_trait_trials" value="Combine trials & build model"/>
   </div>  
   </td>
   <td>

@@ -440,36 +440,37 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     
     my $pager = $projects_rs->pager; 
     $pager->change_entries_per_page(15);
-
+    my $pager = $projects_rs->pager; 
     my $pagination;
+
     my $url = "/solgs/search/result/populations/$trait_id";
    
     if ( $pager->previous_page || $pager->next_page )
     {
-	$pagination =   '<div  style="width:690px; overflow: auto;" class = "paginate_nav">';
+    	$pagination =   '<div  style="width:690px; overflow: auto;" class = "paginate_nav">';
         
-	if( $pager->previous_page ) 
-	{
-	    $pagination .=  '<a class="paginate_nav" href="' . $url .  $page_links->($pager->previous_page) . '">&lt;</a>';
-	}
+    	if( $pager->previous_page ) 
+    	{
+    	    $pagination .=  '<a class="paginate_nav" href="' . $url .  $page_links->($pager->previous_page) . '">&lt;</a>';
+    	}
         
-	for my $c_page ( $pager->first_page .. $pager->last_page ) 
-	{
-	    if( $pager->current_page == $c_page ) 
-	    {
-		$pagination .=  '<span class="paginate_nav_currpage paginate_nav">' .  $c_page . '</span>';
-	    }
-	    else 
-		{
-		    $pagination .=  '<a class="paginate_nav" href="' . $url.   $page_links->($c_page) . '">' . $c_page . '</a>';
-		}
-	}
-	if( $pager->next_page ) 
-	{
-	    $pagination .= '<a class="paginate_nav" href="' . $url . $page_links->($pager->next_page). '">&gt;</a>';
-	}
+    	for my $c_page ( $pager->first_page .. $pager->last_page ) 
+    	{
+    	    if( $pager->current_page == $c_page ) 
+    	    {
+    		$pagination .=  '<span class="paginate_nav_currpage paginate_nav">' .  $c_page . '</span>';
+    	    }
+    	    else 
+    		{
+    		    $pagination .=  '<a class="paginate_nav" href="' . $url.   $page_links->($c_page) . '">' . $c_page . '</a>';
+    		}
+    	}
+    	if( $pager->next_page ) 
+    	{
+    	    $pagination .= '<a class="paginate_nav" href="' . $url . $page_links->($pager->next_page). '">&gt;</a>';
+    	}
         
-	$pagination .= '</div>';
+    	$pagination .= '</div>';
     }
 
     my $ret->{status} = 'failed';
@@ -482,18 +483,17 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     } 
     else 
     { 
-	if ($pager->current_page == $pager->last_page) 
-	{
-	    $c->res->redirect("/solgs/search/result/populations/$trait_id/?page=1&trait=$trait");  
-	}
-	else 
-	{
-	    my $go_next = $pager->current_page + 1;
-	    $c->res->redirect("/solgs/search/result/populations/$trait_id/?page=$go_next&trait=$trait");
-	}
+    	if ($pager->current_page == $pager->last_page) 
+    	{
+    	    $c->res->redirect("/solgs/search/result/populations/$trait_id/?page=1&trait=$trait");  
+    	}
+    	else 
+    	{
+    	    my $go_next = $pager->current_page + 1;
+    	    $c->res->redirect("/solgs/search/result/populations/$trait_id/?page=$go_next&trait=$trait");
+    	}
     } 
-    
-    
+        
     $ret = to_json($ret);
         
     $c->res->content_type('application/json');
@@ -2491,15 +2491,17 @@ sub get_combined_pops_list {
     $self->combined_pops_catalogue_file($c);
     my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
     
-    my @combos = read_file($combo_pops_catalogue_file);
+    my @combos = uniq(read_file($combo_pops_catalogue_file));
     
     foreach (@combos)
     {
         if ($_ =~ m/$combined_pops_id/)
         {
             my ($combo_pops_id, $pops)  = split(/\t/, $_);
-            $c->stash->{combined_pops_list} = $pops; 
-            $c->stash->{trait_combo_pops} = $pops;
+           # $c->stash->{combined_pops_list} = $pops;
+	    my @pops_list = split(',', $pops);
+	    $c->stash->{combined_pops_list} = \@pops_list;
+            $c->stash->{trait_combo_pops} = \@pops_list;
         }   
     }     
 
@@ -2974,6 +2976,8 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
 
         $self->multi_pops_phenotype_data($c, \@pop_ids);
         $self->multi_pops_genotype_data($c, \@pop_ids);
+	$self->multi_pops_geno_files($c, \@pop_ids);
+	$self->multi_pops_pheno_files($c, \@pop_ids);
 
         my $geno_files = $c->stash->{multi_pops_geno_files};
         my @g_files = split(/\t/, $geno_files);
@@ -3036,17 +3040,18 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $c->stash->{data_set_type} = 'combined populations';
     $c->stash->{combo_pops_id} = $combo_pops_id;
     
-    my $pops_ids = $c->req->param('combined_populations');
+    my $pops_cvs = $c->req->param('combined_populations');
    
-    if ($pops_ids)
+    if ($pops_cvs)
     {
-        $c->stash->{trait_combo_pops} = $pops_ids;
+	my @pops = split(',', $pops_cvs);
+        $c->stash->{trait_combo_pops} = \@pops;
     }
     else
     {
         $self->get_combined_pops_list($c, $combo_pops_id);
-        $pops_ids = $c->stash->{combined_pops_list};
-        $c->stash->{trait_combo_pops} = $pops_ids; 
+        #$pops_ids = $c->stash->{combined_pops_list};
+        $c->stash->{trait_combo_pops} = $c->stash->{combined_pops_list}; 
     }
 
     $self->get_trait_details($c, $trait_id);
@@ -3112,16 +3117,16 @@ sub get_project_owners {
 sub combined_pops_summary {
     my ($self, $c) = @_;
     
-    my $pops_list = $c->stash->{trait_combo_pops};
+    my @pops_ids = @{$c->stash->{trait_combo_pops}};
 
-    my @pops = split(/,/, $pops_list);
+   # my @pops = split(/,/, $pops_list);
     
     my $desc = 'This training population is a combination of ';
     
     my $projects_owners;
-    foreach (@pops)
+    foreach my $pop_id (@pops_ids)
     {  
-        my $pr_rs = $c->model('solGS::solGS')->project_details($_);
+        my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
 
         while (my $row = $pr_rs->next)
         {
@@ -3129,7 +3134,7 @@ sub combined_pops_summary {
             my $pr_id   = $row->id;
             my $pr_name = $row->name;
             $desc .= qq | <a href="/solgs/population/$pr_id">$pr_name </a>|; 
-            $desc .= $_ == $pops[-1] ? '.' : ' and ';
+            $desc .= $pop_id == $pops_ids[-1] ? '.' : ' and ';
         } 
 
         $self->get_project_owners($c, $_);
@@ -3229,7 +3234,7 @@ sub compare_genotyping_platforms {
            
             my $list_type_pop = $c->stash->{uploaded_prediction};
           
-            if (!$list_type_pop) 
+            unless ($list_type_pop) 
             {
                 my @pop_names;
                 foreach ($pop_id_1, $pop_id_2)
@@ -3245,24 +3250,99 @@ sub compare_genotyping_platforms {
                 $not_matching_pops .= '[ ' . $pop_names[0]. ' and ' . $pop_names[1] . ' ]'; 
                 $not_matching_pops .= ', ' if $cnt != $cnt_pairs;       
             }
-            else 
-            {           
-                $not_matching_pops = 'not_matching';
-            }
+            # else 
+            # {           
+            #     $not_matching_pops = 'not_matching';
+            # }
         }           
     }
 
     $c->stash->{pops_with_no_genotype_match} = $not_matching_pops;
+  
       
+}
+
+
+sub submit_cluster_compare_trials_markers {
+    my ($self, $c, $geno_files) = @_;
+
+    $c->stash->{r_temp_file} = 'compare-trials-markers';
+    $self->create_cluster_acccesible_tmp_files($c);
+    my $out_temp_file = $c->stash->{out_file_temp};
+    my $err_temp_file = $c->stash->{err_file_temp};
+   
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $background_job = $c->stash->{background_job};
+
+    my $status;
+ 
+
+ 
+    # if ($dependency && $background_job) 
+    # {
+    # 	my $dependent_job_script  = $self->create_tempfile($c, "compare_trials_job", "pl");
+
+    # 	my $cmd = '#!/usr/bin/env perl;' . "\n";
+    # 	$cmd   .= 'use strict;' . "\n";
+    # 	$cmd   .= 'use warnings;' . "\n\n\n";
+    # 	$cmd   .= 'system("Rscript --slave ' 
+    # 	    . $in_file_temp 
+    # 	    . ' --args ' . $input_files . ' ' . $output_files 
+    # 	    . ' | qsub -W ' .  $dependency . '");';
+
+    # 	write_file($dependent_job_script, $cmd);
+    # 	chmod 0755, $dependent_job_script;
+	
+    # 	$r_job = CXGN::Tools::Run->run_cluster('perl', 
+    #         $dependent_job_script,
+    #         $out_file_temp,
+    #         {
+    #             working_dir => $c->stash->{solgs_tempfiles_dir},
+    #             max_cluster_jobs => 1_000_000_000,
+    #         },
+    #         );
+    # } 
+
+
+    try 
+    { 
+        my $compare_trials_job = CXGN::Tools::Run->run_cluster_perl({
+           
+            method        => ["SGN::Controller::solGS::solGS" => "compare_genotyping_platforms"],
+    	    args          => ['SGN::Context', $geno_files],
+    	    load_packages => ['SGN::Controller::solGS::solGS', 'SGN::Context'],
+    	    run_opts      => {
+    		              out_file    => $out_temp_file,
+			      err_file    => $err_temp_file,
+    		              working_dir => $temp_dir,
+			      max_cluster_jobs => 1_000_000_000,
+	    },
+	    
+         });
+
+	$c->stash->{r_job_tempdir} = $compare_trials_job->tempdir();
+	$c->stash->{r_job_id} = $compare_trials_job->job_id();
+
+	unless ($background_job)
+	{ 
+	    $compare_trials_job->wait();
+	}
+	
+    }
+    catch 
+    {
+	$status = $_;
+	$status =~ s/\n at .+//s;           
+    }; 
+
 }
 
 
 sub cache_combined_pops_data {
     my ($self, $c) = @_;
 
-    my $trait_id   = $c->stash->{trait_id};
-    my $trait_abbr = $c->stash->{trait_abbr};
-
+    my $trait_id      = $c->stash->{trait_id};
+    my $trait_abbr    = $c->stash->{trait_abbr};
     my $combo_pops_id = $c->stash->{combo_pops_id};
 
     my  $cache_pheno_data = {key       => "phenotype_data_trait_${trait_id}_${combo_pops_id}_combined",
@@ -3293,17 +3373,18 @@ sub multi_pops_pheno_files {
     {
         foreach my $pop_id (@$pop_ids) 
         {
-            my $exp = "phenotype_data_${pop_id}.txt";
-            $files .= $self->grep_file($dir, $exp);          
-            $files .= "\t" unless (@$pop_ids[-1] eq $pop_id);    
+	    my $exp = 'phenotype_data_' . $pop_id . '.txt';
+            $files .= catfile($dir, $exp);          
+            $files .= "\t" unless (@$pop_ids[-1] eq $pop_id); 		
         }
+
         $c->stash->{multi_pops_pheno_files} = $files;
 
     }
     else 
     {
-        my $exp = "phenotype_data_${pop_ids}.txt";
-        $files = $self->grep_file($dir, $exp);
+        my $exp = 'phenotype_data_' . ${pop_ids} . '.txt';
+        $files = catfile($dir, $exp);
     }
 
     if ($trait_id)
@@ -3327,19 +3408,19 @@ sub multi_pops_geno_files {
     {
         foreach my $pop_id (@$pop_ids) 
         {
-            my $exp = "genotype_data_${pop_id}\.txt";
-            $files .= $self->grep_file($dir, $exp);        
+            my $exp = 'genotype_data_' . $pop_id . '.txt';
+            $files .= catfile($dir, $exp);        
             $files .= "\t" unless (@$pop_ids[-1] eq $pop_id);    
         }
         $c->stash->{multi_pops_geno_files} = $files;
     }
     else 
     {
-        my $exp = "genotype_data_${pop_ids}\.txt";
-        $files = $self->grep_file($dir, $exp);
+        my $exp = 'genotype_data_' . ${pop_ids} . '.txt';
+        $files = catfile($dir, $exp);
     }
 
-    if($trait_id)
+    if ($trait_id)
     {
         my $name = "trait_${trait_id}_multi_geno_files";
         my $tempfile = $self->create_tempfile($c, $name);
@@ -3396,9 +3477,8 @@ sub multi_pops_phenotype_data {
         }
     }
    
-    $self->multi_pops_pheno_files($c, $pop_ids);
+  #  $self->multi_pops_pheno_files($c, $pop_ids);
     
-
 }
 
 
@@ -3414,8 +3494,8 @@ sub multi_pops_genotype_data {
         }
     }
 
-  $self->multi_pops_geno_files($c, $pop_ids);
-
+#  $self->multi_pops_geno_files($c, $pop_ids);
+ 
 }
 
 
@@ -3654,6 +3734,7 @@ sub all_traits_file {
     my ($self, $c) = @_;
 
     my $pop_id = $c->stash->{pop_id};
+    #$pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
     my $cache_data = {key       => 'all_traits_pop' . $pop_id,
                       file      => 'all_traits_pop_' . $pop_id,
@@ -3669,6 +3750,7 @@ sub traits_list_file {
     my ($self, $c) = @_;
 
     my $pop_id = $c->stash->{pop_id};
+   # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
     my $cache_data = {key       => 'traits_list_pop' . $pop_id,
                       file      => 'traits_list_pop_' . $pop_id,
@@ -3684,6 +3766,8 @@ sub get_acronym_pairs {
     my ($self, $c) = @_;
 
     my $pop_id = $c->stash->{pop_id};
+    #$pop_id = $c->stash->{combo_pops_id} if !$pop_id;
+
     my $dir    = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir 
         or die "can't open $dir: $!\n";
@@ -3733,6 +3817,7 @@ sub traits_acronym_file {
     my ($self, $c) = @_;
 
     my $pop_id = $c->stash->{pop_id};
+    #$pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
     my $cache_data = {key       => 'traits_acronym_pop' . $pop_id,
                       file      => 'traits_acronym_pop_' . $pop_id,
@@ -4138,7 +4223,8 @@ sub phenotype_file {
    
     die "Population id must be provided to get the phenotype data set." if !$pop_id;
     $pop_id =~ s/combined_//;
-    
+    print STDERR "\n phenotype_file--  pop_id : $pop_id\n";  
+   
     my $pheno_file;
  
     if ($c->stash->{uploaded_reference} || $pop_id =~ /uploaded/) {
@@ -4148,7 +4234,7 @@ sub phenotype_file {
         $pheno_file = catfile ($tmp_dir, "phenotype_data_${user_id}_${pop_id}");
  
     }
-
+  print STDERR "\n phenotype_file-- pheno_file: $pheno_file\n"; 
     unless ($pheno_file) 
     {
 	my $dir = $c->stash->{solgs_cache_dir};
@@ -4158,13 +4244,15 @@ sub phenotype_file {
         my $key        = "phenotype_data_" . $pop_id;
         $pheno_file = $file_cache->get($key);
 
-        unless ( -s $pheno_file)
+	no warnings 'uninitialized';
+       print STDERR "\n phenotype_file-- pheno_file: $pheno_file\n"; 
+	unless ( -s $pheno_file)
         {  	   
-            $pheno_file = catfile($dir, "phenotype_data_" . $pop_id . ".txt");
-	   
+            $pheno_file = catfile($dir, 'phenotype_data_' . $pop_id . '.txt');
+	   print STDERR "\n phenotype_file-- 0 size pheno_file: $pheno_file\n";   
 	    $self->traits_list_file($c);
 	    my $traits_file =  $c->stash->{traits_list_file};
-	    
+	    print STDERR "\n phenotype_file-- 0 size traits_list_file: $traits_file -- pop_id : $pop_id\n";   
 	    my $args = {
 		'population_id'    => $pop_id,
 		'phenotype_file'   => $pheno_file,
@@ -4172,7 +4260,7 @@ sub phenotype_file {
 		'cache_dir'        => $dir,
 	    };
 	   
-	    if(!$c->stash->{uploaded_reference}) 
+	    if (!$c->stash->{uploaded_reference}) 
 	    {
 		$self->submit_cluster_phenotype_query($c, $args);
 	    }	    
@@ -4309,9 +4397,11 @@ sub genotype_file  {
         my $key        = "genotype_data_" . $pop_id;
         $geno_file = $file_cache->get($key);
 
+	no warnings 'uninitialized';
+
         unless (-s $geno_file)
         {  
-            $geno_file = catfile($c->stash->{solgs_cache_dir}, "genotype_data_" . $pop_id . ".txt");
+            $geno_file = catfile($c->stash->{solgs_cache_dir}, 'genotype_data_' . $pop_id . '.txt');
 
 	    my $args = {
 		'population_id' => $pop_id,
@@ -4577,25 +4667,25 @@ sub r_combine_populations  {
     my ($self, $c) = @_;
     
     my $combo_pops_id = $c->stash->{combo_pops_id};
-    my $trait_id     = $c->stash->{trait_id};
-    my $trait_abbr   = $c->stash->{trait_abbr};
-    my $trait_info   = $trait_id . "\t" . $trait_abbr;
-
-    my $trait_file  = $self->create_tempfile($c, "trait_info_${trait_id}");
-    write_file($trait_file, $trait_info);
-
-    my $pheno_files = $c->stash->{multi_pops_pheno_files};
+    my $trait_id      = $c->stash->{trait_id};
+    my $trait_abbr    = $c->stash->{trait_abbr};
+ 
+    my $combo_pops_list = $c->stash->{combined_pops_list};
+    my $pheno_files = $c->stash->{multi_pops_pheno_files};  
     my $geno_files  = $c->stash->{multi_pops_geno_files};
-        
+    
+    my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
+    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+   
+    my $trait_info  = $trait_id . "\t" . $trait_abbr;
+    my $trait_file  = $self->create_tempfile($c, "trait_info_${trait_id}");
+    write_file($trait_file, $trait_info); 
+  
     my $input_files = join ("\t",
                             $pheno_files,
                             $geno_files,
-                            $trait_file,
-   
+                            $trait_file,   
         );
-
-    my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
-    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
     
     my $output_files = join ("\t", 
                              $combined_pops_pheno_file,

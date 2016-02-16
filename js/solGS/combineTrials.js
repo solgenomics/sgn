@@ -15,7 +15,7 @@ function getPopIds () {
      
             jQuery("#done_selecting").val('Done selecting');
             var td =  jQuery(this).html();
-            //alert(td);
+
             var selectedTrial = '<tr>' + td + '</tr>';
         
             jQuery("#selected_trials_table tr:last").after(selectedTrial);
@@ -56,7 +56,7 @@ function removeSelectedTrial() {
         
         jQuery(this).remove();
         
-        if( jQuery("#selected_trials_table td").length == 0) {
+        if (jQuery("#selected_trials_table td").length == 0) {
             jQuery("#selected_trials").hide();
             jQuery("#combine_trials_div").hide();
             jQuery("#search_again_div").hide();
@@ -99,10 +99,12 @@ function searchAgain () {
 
 jQuery(document).ready(function() {
     jQuery('#combine_trait_trials').on('click', function() {
-	combineTraitTrials();
+	//combineTraitTrials();
+	getCombinedPopsId();
     });  
 
 });
+
 
 function combineTraitTrials () {
     var trId = getTraitId();
@@ -137,7 +139,7 @@ function combineTraitTrials () {
                     
             } else {
                     
-                if(res.not_matching_pops ){                        
+                if (res.not_matching_pops){                        
                     alert('populations ' + res.not_matching_pops + 
                           ' were genotyped using different marker sets. ' + 
                           'Please make new selections to combine.' );
@@ -150,6 +152,7 @@ function combineTraitTrials () {
             } 
 	}
     });
+
 }
 
 
@@ -164,32 +167,40 @@ jQuery(document).ready(function() {
 function getCombinedPopsId() {
 
     var comboPopsList = getSelectedTrials();
-    var trialIds = comboPopsList.join(",");
-
-    var action = "/solgs/get/combined/populations/id";
-    var combinedPopsId;
- 
+    var trialsIds     = comboPopsList.join(","); 
+    var traitId       = getTraitId();
+    var action        = "/solgs/get/combined/populations/id";
+  
     jQuery.ajax({  
         type: 'POST',
         dataType: "json",
         url: action,
-        data: {'trials' : trialIds},
+        data: {'trials': trialsIds},
         success: function(res) {                         
             if (res.status) {               
-    		comboPopsId = res.combo_pops_id;
+    		var comboPopsId = res.combo_pops_id;
 
 		if (window.Prototype) {
 		    delete Array.prototype.toJSON;
 		}
 
 		 var args = {
-		     'combo_pops_id'   : comboPopsId,
+		     'combo_pops_id'   : [ comboPopsId ],
 		     'combo_pops_list' : comboPopsList,
 		     'analysis_type'   : 'combine populations',
 		     'data_set_type'   : 'multiple populations',
+		     'trait_id'        : traitId,
 		    };
 		
-		var page = '/solgs/populations/combined/' + comboPopsId;
+		var referer = window.location.href;
+		var page;
+	
+		if (referer.match(/search\/trials\/trait\//)) {
+		     page = '/solgs/model/combined/trials/' + comboPopsId + '/trait/' + traitId;
+		    
+		} else {
+		    page = '/solgs/populations/combined/' + comboPopsId;
+		}
 		
 		askUser(page, args);
             } 
@@ -206,11 +217,11 @@ function getCombinedPopsId() {
 
 function retrievePopsData() {
 
-    var trialIds = getSelectedTrials();
-    trialIds = trialIds.join(",");
-
+    var trialsIds = getSelectedTrials();
+    trialsIds = trialsIds.join(",");
+    
     var action = "/solgs/retrieve/populations/data";
-     
+   
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
     jQuery.blockUI({message: 'Please wait..'});
     
@@ -218,7 +229,7 @@ function retrievePopsData() {
         type: 'POST',
         dataType: "json",
         url: action,
-        data: {'trials' : trialIds},
+        data: {'trials': trialsIds},
         success: function(res) {                         
             if (res.not_matching_pops == null) {
                
@@ -274,8 +285,8 @@ function getSelectedTrials () {
 function goToCombinedTrialsPage(combinedPopsId) {
      
     var action = '/solgs/populations/combined/' + combinedPopsId;
-    
-    if(combinedPopsId) {      
+   
+    if (combinedPopsId) {      
         window.location.href = action;
     } 
 }
@@ -289,11 +300,11 @@ function goToSingleTrialPage(url) {
 }
 
 
-var getTraitId = function () {
+function  getTraitId() {
    
     var id = jQuery("input[name='trait_id']").val();   
     return id;
-};
+}
 
 
 Array.prototype.unique =
@@ -302,7 +313,7 @@ Array.prototype.unique =
     var l = this.length;
     for(var i=0; i<l; i++) {
       for(var j=i+1; j<l; j++) {
-        // If this[i] is found later in the array
+        // If this[i] is fo3und later in the array
         if (this[i] === this[j])
           j = ++i;
       }

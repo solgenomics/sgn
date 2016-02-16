@@ -161,6 +161,7 @@ function goToPage (page, args) {
 		    
     }  else if (page.match(/solgs\/populations\/combined\//)) {
 	retrievePopsData();  
+	//window.location = page;
     }  else {
 	window.location = window.location.href;
     }
@@ -301,45 +302,57 @@ function getArgsFromUrl (url, args) {
 	
 	}
     } else if (url.match(/solgs\/model\/combined\/trials\//)) {
-	
+
 	var urlStr = url.split(/\/+/);
 
-	if (args === undefined) {
-	    
-	    args = {'trait_id'      : [ urlStr[8] ], 
-		    'population_id' : [ urlStr[6] ], 
+	var traitId      = [];
+	var populationId = [];
+	var comboPopsId  = [];
+	
+	var referer      = window.location.href;
+	
+	if (referer.match(/solgs\/search\/trials\/trait\//)) {
+	    populationId.push(urlStr[5]);
+	    comboPopsId.push(urlStr[5]);
+	    traitId.push(urlStr[7]);
+	}
+	else if (referer.match(/solgs\/populations\/combined\//)) {
+	    populationId.push(urlStr[6]);
+	    comboPopsId.push(urlStr[6]);
+	    traitId.push(urlStr[8]);   
+	}
+	
+	if (args === undefined) {	   
+	    args = {'trait_id'      : traitId, 
+		    'population_id' : populationId, 
+		    'combo_pops_id' : comboPopsId,
 		    'analysis_type' : 'single model',
 		    'data_set_type' : 'combined populations',
 		   };
 	} else {
-
-	    args['trait_id']      = [ urlStr[8]  ];
-	    args['population_id'] = [  urlStr[6] ];
+	    args['trait_id']      = traitId;
+	    args['population_id'] = populationId;
+	    args['combo_pops_id'] = comboPopsId;
 	    args['analysis_type'] = 'single model';
-	    args['data_set_type'] = 'combined populations';
-	
+	    args['data_set_type'] = 'combined populations';	
 	}
-    } else if (url.match(/solgs\/population\//)) {
-	
+    } else if (url.match(/solgs\/population\//)) {	
 	var urlStr = url.split(/\/+/);
 
-	if (window.Prototype) {
-		delete Array.prototype.toJSON;
-	}
+	// if (window.Prototype) {
+	// 	delete Array.prototype.toJSON;
+	// }
 
 	if (args === undefined) {
-
 	    args = {
 		    'population_id' : [ urlStr[4] ], 
 		    'analysis_type' : 'population download',
 		    'data_set_type' : 'single population',
 		   };
-	} else {
-	    
+	} else {	    
 	    args['population_id'] = [ urlStr[4] ];
 	    args['analysis_type'] = 'population download';
-	    args['data_set_type'] = 'single population';
-	
+	    args['data_set_type'] = 'single population';	
 	}
     } 
 

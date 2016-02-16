@@ -158,7 +158,7 @@ sub check_multi_pops_data_download {
 	   $geno_file  = $output_details->{$k}->{genotype_file}; 
 	} 
 	
-	if ($geno_file || $pheno_file) 
+	if ($geno_file && $pheno_file) 
 	{
 	    my $pheno_size;
 	    my $geno_size;

@@ -113,6 +113,8 @@ sub add_headers {
 sub index_log_file_headers {
    my ($self, $c) = @_;
    
+   no warnings 'uninitialized';
+
    $self->analysis_log_file($c);
    my $log_file = $c->stash->{analysis_log_file};
    
@@ -242,8 +244,7 @@ sub parse_arguments {
 
 	  if ($k eq 'combo_pops_id') 
 	  {
-	      my $combo_pops_id = $arguments->{$k};
-	      $c->stash->{combo_pops_id} = $arguments->{$k};
+	      $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];
 	  }
 
 	  if ($k eq 'combo_pops_list') 
@@ -327,7 +328,7 @@ sub structure_output_details {
 		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
 	    }
 	    
-	    if ( $referer =~ m/solgs\/search\/trials\/trait/ ) 
+	    if ( $referer =~ m/solgs\/search\/trials\/trait\// && $analysis_page =~ m/solgs\/trait\// ) 
 	    {
 		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
 	    }
@@ -339,9 +340,9 @@ sub structure_output_details {
 
 	    if ( $analysis_page =~ m/solgs\/model\/combined\/trials\// ) 
 	    {
-		$trait_page = $base . "solgs/model/combined/trials/$pop_id/trait/$trait_id";
+		$trait_page = $base . "solgs/model/combined/trials/$combo_pops_id/trait/$trait_id";
 
-		$c->stash->{combo_pops_id} = $pop_id;
+		$c->stash->{combo_pops_id} = $combo_pops_id;
 		$solgs_controller->cache_combined_pops_data($c);		
 	    }
 	    
@@ -380,30 +381,28 @@ sub structure_output_details {
     elsif ($analysis_page =~ m/solgs\/populations\/combined\//) 
     {
 	my $combined_pops_page = $base . "solgs/populations/combined/$combo_pops_id";
-
-	$solgs_controller->multi_pops_pheno_files($c);	
-	$solgs_controller->multi_pops_geno_files($c);
-
-	my $ph_files = $c->stash->{multi_pops_pheno_files};
-	my @pheno_files = split(/\t/, \$ph_files);
-
-	my $match_status = $c->stash->{pops_with_no_genotype_match};
-	
 	my @combined_pops_ids = @{$c->stash->{combo_pops_list}};
 
+	$solgs_controller->multi_pops_pheno_files($c, \@combined_pops_ids);	
+	$solgs_controller->multi_pops_geno_files($c, \@combined_pops_ids);
+
+	my $multi_ph_files = $c->stash->{multi_pops_pheno_files};
+	my @pheno_files = split(/\t/, $multi_ph_files);
+	my $multi_gen_files = $c->stash->{multi_pops_geno_files};
+	my @geno_files = split(/\t/, $multi_gen_files);
+	my $match_status = $c->stash->{pops_with_no_genotype_match};
+	
 	foreach my $pop_id (@combined_pops_ids) 
 	{	    
 	    $solgs_controller->get_project_details($c, $pop_id);
 	    my $population_name = $c->stash->{project_name};
-	    
-	    $c->stash->{pop_id} = $pop_id;
-	    $solgs_controller->phenotype_file($c);
-	    my $pheno_file = $c->stash->{phenotype_file};
-
-	    $solgs_controller->genotype_file($c);
-	    my $geno_file = $c->stash->{genotype_file};
-
 	    my $population_page = $base . "solgs/population/$pop_id";
+	    
+	    my $phe_exp = 'phenotype_data_' . $pop_id . '.txt';
+	    my ($pheno_file)  = grep {$_ =~ /$phe_exp/} @pheno_files;
+	  
+	    my $gen_exp = 'genotype_data_' . $pop_id . '.txt';
+	    my ($geno_file)  = grep{$_ =~ /$gen_exp/} @geno_files;
 
 	    $output_details{$pop_id} = {
 		'population_page'   => $population_page,
@@ -455,7 +454,7 @@ sub run_analysis {
     {
 	if ($c->stash->{data_set_type} =~ /combined populations/)
 	{
-	    $c->stash->{combo_pops_id} = $c->stash->{pop_id};
+	   # $c->stash->{combo_pops_id} = $c->stash->{pop_id};
 	   
 	    foreach my $trait_id (@selected_traits)		
 	    {		
@@ -466,9 +465,9 @@ sub run_analysis {
     }
     elsif ($analysis_page =~ /solgs\/model\/combined\/trials\// )	  
     {
-	$c->stash->{combo_pops_id} = $c->stash->{pop_id};
-	my $trait_id = $c->stash->{selected_traits}->[0];		
-	
+	my $trait_id = $c->stash->{selected_traits}->[0];
+	my $combo_pops_id = $c->stash->{combo_pops_id};
+
 	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 	$c->controller('solGS::combinedTrials')->combine_data_build_model($c);
        
@@ -486,13 +485,15 @@ sub run_analysis {
     elsif ($analysis_page =~ /solgs\/populations\/combined\//)
     {
 	my $combo_pops_id = $c->stash->{combo_pops_id};
-
+	#$c->controller('solGS::solGS')->get_combined_pops_list($c, $combo_pops_id);
 	$c->controller("solGS::combinedTrials")->prepare_multi_pops_data($c);	
 	
-	$c->controller('solGS::solGS')->multi_pops_geno_files($c);
-	my $g_files = $c->stash->{multi_pops_geno_files};
-	my @geno_files = split(/\t/, $g_files);
-	$c->controller('solGS::solGS')->compare_genotyping_platforms($c, \@geno_files);
+        #my $combined_pops_list = $c->controller("solGS::combinedTrials")->get_combined_pops_arrayref($c);
+	#$c->controller('solGS::solGS')->multi_pops_geno_files($c, $combined_pops_list);
+	#my $g_files = $c->stash->{multi_pops_geno_files};
+	#my @geno_files = split(/\t/, $g_files);
+	#$c->controller('solGS::solGS')->submit_cluster_compare_trials_markers($c, \@geno_files);
+
     }
     else 
     {

@@ -89,9 +89,6 @@ $model_parameters
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
-   combo_pops_id      => $combo_pops_id,
-   trait_combo_pops   => $trait_combo_pops,
-   trait_id           => $trait_id
 &>
 
 <& /solgs/model/marker_effects.mas, 
