@@ -17,7 +17,7 @@ jQuery( document ).ready( function() {
 	    jQuery("#upload_spreadsheet_phenotype_submit_store").click( function() {
 		initializeUploadPhenotype(jQuery("#upload_spreadsheet_phenotype_file_input").val(), "Storing Spreadsheet File and Data", "#upload_spreadsheet_phenotype_file_form", "/ajax/phenotype/upload_store/spreadsheet");
             });
-
+	    
     	    jQuery("#upload_spreadsheet_phenotype_file_form").iframePostForm({
 		json: true,
 		post: function () { },
@@ -71,7 +71,7 @@ jQuery( document ).ready( function() {
 	    jQuery("#upload_fieldbook_phenotype_submit_store").click( function() {
 		initializeUploadPhenotype(jQuery("#upload_fieldbook_phenotype_file_input").val(), "Storing Fieldbook File and Phenotype Data", "#upload_fieldbook_phenotype_file_form", "/ajax/phenotype/upload_store/fieldbook");
             });
-
+	    	    
     	    jQuery("#upload_fieldbook_phenotype_file_form").iframePostForm({
 		json: true,
 		post: function () { },
@@ -200,11 +200,11 @@ function displayPhenotypeUploadStoreResponse(response, upload_type) {
    	    message_text += "</li>";
 	}
 	if (errorarrayLength == 0) {
-	    message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+	    message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3><p id='update_wizard_error'> To make this data available right away in searches: </p><div id='update_wizard'></div></li>";
 	}
     } else {
-	message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+	message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3><p id='update_wizard_error'> To make this data available right away in searches: </p><div id='update_wizard'></div></li>";
     }
     message_text += "</ul>";
     jQuery(upload_phenotype_status).html(message_text);
-}
+    matviews_update_options();}

@@ -1,45 +1,4 @@
-window.onload = function initialize() { 
-
-    var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
-    var start = format_options(starting_categories);
-
-    jQuery('#select1').html(start);  
-  
-    jQuery('select').mouseenter(function() {this.tooltip});
-
-    if (!isLoggedIn()) {
-
-       create_list_start('Login to start from a list');
-
-       jQuery('#c1_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
-       jQuery('#c2_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
-       jQuery('#c3_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
-       jQuery('#c4_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
-
-    } else {
-	
-	create_list_start('Start from a list');
-	jQuery('#paste_list').after('<button type="button" id="refresh_lists" class="btn btn-default"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>');
-
-	add_data_refresh();
-
-	addToListMenu('c1_to_list_menu', 'c1_data', { 
-            selectText: true,
-            typeSourceDiv: 'select1',
-	});
-	addToListMenu('c2_to_list_menu', 'c2_data', { 
-            selectText: true,
-            typeSourceDiv: 'select2',
-	});
-	addToListMenu('c3_to_list_menu', 'c3_data', { 
-            selectText: true,
-            Typesourcediv: 'select3',
-	});      
-	addToListMenu('c4_to_list_menu', 'c4_data', { 
-            selectText: true,
-            typeSourceDiv: 'select4',
-	});
-    }
+window.onload = function initialize() {
 
     jQuery('#select1').change( // reset start from list if select1 changes
 	function() {
@@ -127,19 +86,21 @@ window.onload = function initialize() {
 	  }
       });
     
-    $('#open_update_dialog').click(function () {
-        open_update_dialog();
+    jQuery('#open_update_dialog').on('click', function () {
+	jQuery('#update_wizard_dialog').modal("show");
+	matviews_update_options();
     });
 
     jQuery('#refresh_lists').on('click', function () {
-	console.log("refreshing lists . . .");
 	create_list_start('Start from a list');
     });
     
-    jQuery('#update_wizard').on('click', function () {
-	console.log("refreshing materialized views . . .");
-	var btn = jQuery(this).button('loading');
-	refresh_matviews(btn);
+    //jQuery('#update_wizard').on('click', function () {
+    jQuery('#update_wizard_dialog, #upload_datacollector_phenotypes_dialog, #upload_phenotype_spreadsheet_dialog, #upload_fieldbook_phenotypes_dialog').on("click", function () {
+	jQuery('#update_wizard').on("click", function(){
+	    if (window.console) console.log("refreshing materialized views . . .");
+	    refresh_matviews();
+	});
     });
     
     jQuery('#download_button_excel').on('click', function () {
@@ -486,58 +447,68 @@ function add_data_refresh() {
     }
 }
 
-function open_update_dialog() {
-    jQuery('#update_wizard_dialog').modal("show");
-    jQuery.ajax( {
-	url: '/ajax/breeder/check_status',
-	timeout: 60000,
-	method: 'POST',
-	success: function(response) { 
-		if (response.error) {
-		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">'+response.error+'</font></div>';
-		    jQuery('#wizard_status').after(error_html);
-		} else {
-		    var update_status = response.message;
-		    jQuery('#wizard_status').text(update_status);
-		}
-	    }, 
-	error: function(request, status, err) {
-		if (status == "timeout") {
-                    // report timeout
-		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
-		    jQuery('#wizard_status').after(error_html);
-		} else {
-                    // report unspecified error occured  
-		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
-		    jQuery('#wizard_status').after(error_html);
-		}
-            }
-    });
-}
-
-function refresh_matviews(btn) {
+function refresh_matviews() {
     jQuery.ajax( {
 	url: '/ajax/breeder/refresh',
 	timeout: 60000,
 	method: 'POST',
+	beforeSend: function() {
+	    jQuery('#update_wizard').button('loading');
+	},
 	success: function(response) { 
 		if (response.error) {
-		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">'+response.error+'</font></div>';
-		    jQuery('#update_wizard').after(error_html);
+		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">'+response.error+'</font></div>';
+		    jQuery('#update_wizard_error').replaceWith(error_html);
 		} else {
-		    btn.button('reset');
-		    jQuery('#update_wizard').prop('value', 'Update initiated.');
+		    var success_html = '<div class="well well-sm" id="update_wizard_error"><font color="green">Success! Update initiated.</font></div>';
+		    jQuery('#update_wizard_error').replaceWith(success_html);
+		    matviews_update_options();
 		}	
 	    }, 
 	error: function(request, status, err) {
 		if (status == "timeout") {
                     // report timeout
-		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
-		    jQuery('#update_wizard').after(error_html);
+		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
+		    jQuery('#update_wizard_error').replaceWith(error_html);
 		} else {
                     // report unspecified error occured  
-		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
-		    jQuery('#update_wizard').after(error_html);
+		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
+		    jQuery('#update_wizard_error').replaceWith(error_html);
+		}
+            }
+    });
+}
+
+function matviews_update_options() {
+    jQuery.ajax( {
+	url: '/ajax/breeder/check_status',
+	timeout: 60000,
+	method: 'POST',
+	success: function(response) { 
+		if (response.refreshing) {
+		    // if already refreshing, display status in modal and create disabled button
+	            var update_status = response.refreshing;
+		    jQuery('#wizard_status').replaceWith(update_status);
+		    var button_html = '<button type="button" class="btn btn-primary" name="update_wizard" data-loading-text="Working..." id="update_wizard" title="A search wizard update is already in progress..." disabled>Update search wizard</button>';
+		    jQuery('#update_wizard').replaceWith(button_html);
+		} else if (response.timestamp) {
+		    // if exists display timestamp in modal and create button
+		    var update_status = response.timestamp;
+		    jQuery('#wizard_status').replaceWith(update_status);
+		    var button_html = '<button type="button" class="btn btn-primary" name="update_wizard" data-loading-text="Working..." id="update_wizard" title="Refresh the search wizard to include newly uploaded data">Update search wizard</button>';
+		    console.log("button html ="+button_html);
+		    jQuery('#update_wizard').replaceWith(button_html);
+		}
+	    }, 
+	error: function(request, status, err) {
+		if (status == "timeout") {
+                    // report timeout
+		    var error_html = '<div class="well well-sm" id="wizard_status"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
+		    jQuery('#wizard_status').replaceWith(error_html);
+		} else {
+                    // report unspecified error occured  
+		    var error_html = '<div class="well well-sm" id="wizard_status"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
+		    jQuery('#wizard_status').replaceWith(error_html);
 		}
             }
     });

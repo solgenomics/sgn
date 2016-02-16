@@ -87,7 +87,7 @@ sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews();
-
+    
     if ($refresh->{error}) {
 	print STDERR "Returning with error . . .\n";
 	$c->stash->{rest} = { error => $refresh->{'error'} };
@@ -105,14 +105,13 @@ sub check_status : Path('/ajax/breeder/check_status') Args(0) {
     my $dbh = $c->dbc->dbh();
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
-    my $refresh = $bs->matviews_status();
+    my $status = $bs->matviews_status();
 
-    if ($refresh->{error}) {
-	print STDERR "Returning with error . . .\n";
-	$c->stash->{rest} = { error => $refresh->{'error'} };
+    if ($status->{refreshing}) {
+	$c->stash->{rest} = { refreshing => $status->{'refreshing'} };
 	return;
     } else {
-	$c->stash->{rest} = { message => $refresh->{'message'} };
+	$c->stash->{rest} = { timestamp => $status->{'timestamp'} };
 	return;
     }
 }

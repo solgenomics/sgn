@@ -175,10 +175,11 @@ sub matviews_status {
     my ($refreshing, $timestamp) = $h->fetchrow_array();
 
     if ($refreshing) {
-	return { message => "Wizard update already in progress . . . " };
+	print STDERR "Wizard is already refreshing, current status: $refreshing \n"; 
+	return { refreshing => "<p id='wizard_status'>Wizard update in progress . . . </p>"};
     } else {
 	print STDERR "materialized fullview last updated $timestamp\n";
-	return { message => "Wizard last updated: $timestamp" };
+	return { timestamp => "<p id='wizard_status'>Wizard last updated: $timestamp</p>" };
     }
 }
 
