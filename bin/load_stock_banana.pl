@@ -110,8 +110,7 @@ print "Finding/creating cvterm for 'stock type' \n";
 my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'accession',
       cv     => 'stock_type',
-      db     => 'null',
-      dbxref => 'accession',
+
     });
 
 #the cvterm for the relationship type
@@ -120,8 +119,7 @@ print "Finding/creating cvterm for stock relationship 'member_of' \n";
 my $member_of = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'member_of',
       cv     => 'stock_relationship',
-      db     => 'null',
-      dbxref => 'member_of',
+
     });
    
 #the cvterm for the population
@@ -129,8 +127,7 @@ print "Finding/creating cvterm for population\n";
 my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'population',
       cv     => 'stock_type',
-      db     => 'null',
-      dbxref => 'population',
+
     });
 
 print "Creating a stock for population $population_name (cvterm = " . $population_cvterm->name . ")\n";

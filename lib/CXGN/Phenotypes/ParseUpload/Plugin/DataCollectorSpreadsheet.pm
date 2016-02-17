@@ -3,7 +3,6 @@ package CXGN::Phenotypes::ParseUpload::Plugin::DataCollectorSpreadsheet;
 use Moose;
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
-use Data::Dumper;
 
 sub name {
     return "datacollector spreadsheet";
@@ -120,7 +119,7 @@ sub parse {
 	if ($worksheet->get_cell($row,$header_column_info{$trait_key})){
 	  $trait_value = $worksheet->get_cell($row,$header_column_info{$trait_key})->value();
 	}
-	if ($trait_value) {
+	if ($trait_value || $trait_value eq '0') {
 	  if ($trait_value ne '.'){
 	    $data{$plot_name}->{$trait_key} = $trait_value;
 	  }
@@ -139,7 +138,6 @@ sub parse {
     $parse_result{'plots'} = \@plots;
     $parse_result{'traits'} = \@traits;
 
-    print Dumper(\%parse_result);
     return \%parse_result;
 }
 

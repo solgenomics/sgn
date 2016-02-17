@@ -302,9 +302,7 @@ sub _get_accession {
     ->create_with({
  		   name   => 'accession',
  		   cv     => 'stock_type',
- 		   db     => 'null',
- 		   dbxref => 'accession',
- 		  });
+		  });
   $stock_lookup->set_stock_name($accession_name);
   $stock = $stock_lookup->get_stock_exact();
 

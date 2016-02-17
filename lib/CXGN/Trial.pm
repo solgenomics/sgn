@@ -1007,8 +1007,6 @@ sub get_breeding_trial_cvterm_id {
 	    {
 		name => 'breeding_program_trial_relationship',
 		cv   => 'local',
-		db   => 'null',
-		dbxref => 'breeding_program_trial_relationship',
 	    });
 	$breeding_trial_cvterm_row = $row;
     }
@@ -1027,8 +1025,6 @@ sub get_breeding_program_cvterm_id {
 	    {
 		name => 'breeding_program',
 		cv   => 'local',
-		db   => 'null',
-		dbxref => 'breeding_program',
 	    });
 
     }
@@ -1096,8 +1092,6 @@ sub get_harvest_date_cvterm_id {
 	    {
 		name => 'harvest_date',
 		cv   => 'local',
-		db   => 'null',
-		dbxref => 'harvest_date',
 	    });
 
     }
@@ -1119,8 +1113,6 @@ sub get_planting_date_cvterm_id {
 	    {
 		name => 'planting_date',
 		cv   => 'local',
-		db   => 'null',
-		dbxref => 'planting_date',
 	    });
 
     }

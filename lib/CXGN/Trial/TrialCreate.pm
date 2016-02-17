@@ -139,45 +139,33 @@ sub save_trial {
     ->create_with({
 		   name   => 'field layout',
 		   cv     => 'experiment_type',
-		   db     => 'null',
-		   dbxref => 'field layout',
 		  });
   my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'accession',
 		   cv     => 'stock_type',
-		   db     => 'null',
-		   dbxref => 'accession',
 		  });
   my $plot_cvterm = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'plot',
 		   cv     => 'stock_type',
-		   db     => 'null',
-		   dbxref => 'plot',
 		  });
   my $plot_of = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'plot_of',
 		   cv     => 'stock_relationship',
-		   db     => 'null',
-		   dbxref => 'plot_of',
 		  });
 
   my $sample_cvterm = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'tissue_sample',
 		   cv     => 'stock_type',
-		   db     => 'null',
-		   dbxref => 'tissue_sample',
 		  });
 
   my $sample_of = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'tissue_sample_of',
 		   cv     => 'stock_relationship',
-		   db     => 'null',
-		   dbxref => 'tissue_sample_of',
 		  });
 
   my $project = $chado_schema->resultset('Project::Project')
@@ -196,8 +184,6 @@ sub save_trial {
     ->create_with({
 		   name   => 'genotyping layout',
 		   cv     => 'experiment_type',
-		   db     => 'null',
-		   dbxref => 'genotyping layout',
 		  });
 
   my $genotyping_layout_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')

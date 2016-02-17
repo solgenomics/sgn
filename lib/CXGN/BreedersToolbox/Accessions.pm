@@ -32,9 +32,7 @@ sub get_all_accessions {
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
       cv     => 'stock_type',
-      db     => 'null',
-      dbxref => 'accession',
-    });
+      });
 
     my $rs = $self->schema->resultset('Stock::Stock')->search({type_id => $accession_cvterm->cvterm_id});
     #my $rs = $self->schema->resultset('Stock::Stock')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
@@ -56,25 +54,19 @@ sub get_all_populations {
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
       cv     => 'stock_type',
-      db     => 'null',
-      dbxref => 'accession',
-    });
+      });
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'population',
       cv     => 'stock_type',
-      db     => 'null',
-      dbxref => 'population',
-    });
+      });
 
     my $population_member_cvterm = $schema->resultset("Cv::Cvterm")
 	->create_with({
 	    name   => 'member_of',
 	    cv     => 'stock_relationship',
-	    db     => 'null',
-	    dbxref => 'member_of',
 		      });
-
+    
     my $populations_rs = $schema->resultset("Stock::Stock")->search({'type_id' => $population_cvterm->cvterm_id()});
 
     my @accessions_by_population;

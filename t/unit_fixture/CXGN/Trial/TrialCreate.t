@@ -31,8 +31,7 @@ ok(my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
    ->create_with({
        name   => 'accession',
        cv     => 'stock_type',
-       db     => 'null',
-       dbxref => 'accession',
+      
 		 }));
 my @stock_names;
 for (my $i = 1; $i <= 10; $i++) {

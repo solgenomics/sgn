@@ -13,6 +13,17 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
+
+
+	  <&| /page/explanation.mas, title=>'Template Information' &>
+    	  <p>
+      	  <b>File format information</b>
+      	  <br>
+      	  <a id="phenotype_upload_spreadsheet_format_info">Spreadsheet Format</a>
+    	  </p>
+  	  </&>
+
+
 	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_phenotype_spreadsheet_file_form" name="upload_phenotype_spreadsheet_file_form">
 	    <div class="form-group">
       	      <label class="col-sm-3 control-label">Phenotype Spreadsheet: </label>
@@ -92,6 +103,15 @@ jQuery(document).ready(function() {
             $('#upload_phenotype_spreadsheet_file_form').submit();
 	}
     });
+
+
+
+    $("#phenotype_upload_spreadsheet_format_info").click( function () { 
+	$('#upload_phenotype_spreadsheet_dialog').modal("hide");
+	$("#phenotype_upload_spreadsheet_info_dialog" ).modal("show");	
+    });
+
+
 
 //    jQuery('#upload_phenotype_spreadsheet_dialog').dialog( {
 //	autoOpen: false,

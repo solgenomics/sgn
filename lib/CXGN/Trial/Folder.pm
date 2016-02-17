@@ -98,6 +98,7 @@ sub BUILD {
 	    type_id =>  $folder_cvterm_id 
 	});
     
+
     if (! $parent_rel_row) { 
         $parent_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( 
 	    { 
@@ -204,11 +205,9 @@ sub _get_folder_cvterm_id {
     my $args = shift;
     
     my $folder_cvterm = $args->{bcs_schema}->resultset('Cv::Cvterm')->create_with(
+
 	{ 
-	    name   => 'trial_folder',
-	    cv     => 'local',
-	    db     => 'local',
-	    dbxref => 'trial_folder',
+	    name   => 'folder',
 	});
     
     return $folder_cvterm->cvterm_id();
@@ -221,8 +220,6 @@ sub _get_breeding_program_trial_relationship_id {
     my $bptr = $args->{bcs_schema}->resultset('Cv::Cvterm')->create_with(
 	{ 
 	    name   => 'breeding_program_trial_relationship',
-	    cv     => 'local',
-	    db     => 'local',
 	    dbxref => 'trial_folder',
 	});
     
