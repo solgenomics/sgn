@@ -5,6 +5,7 @@ use Spreadsheet::ParseExcel;
 use CXGN::Stock::StockLookup;
 
 sub _validate_with_plugin {
+    print STDERR "Check 3.1.1 ".localtime();
   my $self = shift;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
@@ -27,6 +28,8 @@ sub _validate_with_plugin {
     $self->_set_parse_errors(\@errors);
     return;
   }
+
+    print STDERR "Check 3.1.2 ".localtime();
 
   $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
   if (!$worksheet) {
@@ -93,7 +96,25 @@ sub _validate_with_plugin {
     push @errors, "Cell E1: Column E should contain the header \"is_a_control\"";
   }
 
+  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
+
+  my $rs = $schema->resultset('Stock::Stock')->search(
+      { 'me.is_obsolete' => { '!=' => 't' } },
+      {
+       '+select'=> ['me.uniquename', 'me.type_id'], 
+       '+as'=> ['uniquename', 'stock_type_id']
+      }
+  );
+
+  my %plot_check;
+  my %accession_check;
+  while (my $s = $rs->next()) { 
+      $plot_check{$s->get_column('uniquename')} = 1;
+      $accession_check{$s->get_column('uniquename'), $s->get_column('stock_type_id')} = 1;
+  }
+
   for my $row ( 1 .. $row_max ) {
+      print STDERR "Check 01 ".localtime();
     my $row_name = $row+1;
     my $plot_name;
     my $accession_name;
@@ -134,14 +155,17 @@ sub _validate_with_plugin {
       next;
     }
 
+      print STDERR "Check 02 ".localtime();
+
     #plot_name must not be blank
     if (!$plot_name || $plot_name eq '') {
       push @errors, "Cell A$row_name: plot name missing";
     } else {
       #plot must not already exist in the database
-      if ($self->_get_stock($plot_name)) {
+      if ($plot_check{$plot_name} ) {
 	push @errors, "Cell A$row_name: plot name already exists: $plot_name";
       }
+
       #file must not contain duplicate plot names
       if ($seen_plot_names{$plot_name}) {
 	push @errors, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
@@ -149,15 +173,21 @@ sub _validate_with_plugin {
       $seen_plot_names{$plot_name}=$row_name;
     }
 
+      print STDERR "Check 03 ".localtime();
+
     #accession name must not be blank
     if (!$accession_name || $accession_name eq '') {
       push @errors, "Cell B$row_name: accession name missing";
     } else {
       #accession name must exist in the database
-      if (!$self->_get_accession($accession_name)) {
-	push @errors, "Cell B$row_name: accession name does not exist: $accession_name";
+      if (!$accession_check{$accession_name, $accession_cvterm->cvterm_id()}) {
+	  if (!$self->_get_accession($accession_name)) {
+	      push @errors, "Cell B$row_name: accession name does not exist as a stock or as synonym: $accession_name";
+	  }
       }
     }
+
+      print STDERR "Check 04 ".localtime();
 
     #plot number must not be blank
     if (!$plot_number || $plot_number eq '') {
@@ -188,6 +218,8 @@ sub _validate_with_plugin {
     $self->_set_parse_errors(\@errors);
     return;
   }
+
+    print STDERR "Check 3.1.3 ".localtime();
 
   return 1; #returns true if validation is passed
 

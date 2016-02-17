@@ -1079,8 +1079,6 @@ sub get_design_type {
   my $self = shift;
   my $design_prop;
   my $design_type;
-  my $project;
-
   my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $self->get_trial_id() });
 
   $design_prop =  $project->projectprops->find(
