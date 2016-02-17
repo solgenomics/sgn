@@ -168,11 +168,13 @@ sub _prep_upload {
     my %parsed_data;
     my @plots;
     my @traits;
+    if (scalar(@error_status) == 0) {
     if ($parsed_file && !$parsed_file->{'error'}) {
 	%parsed_data = %{$parsed_file->{'data'}};
 	@plots = @{$parsed_file->{'plots'}};
 	@traits = @{$parsed_file->{'traits'}};
 	push @success_status, "File data successfully parsed.";
+    }
     }
 
     return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata);
