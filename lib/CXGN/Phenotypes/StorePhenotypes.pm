@@ -111,8 +111,6 @@ sub store {
 	->create_with({
 		       name   => 'phenotyping experiment',
 		       cv     => 'experiment_type',
-		       db     => 'null',
-		       dbxref => 'phenotyping experiment',
 		      });
 
     ## Track experiments seen to allow for multiple trials and experiments to exist in an uploaded file.
@@ -175,14 +173,14 @@ sub store {
 				"  operator = $operator" ;
 		my $phenotype = $trait_cvterm
 		    ->find_or_create_related("phenotype_cvalues", {
-								   observable_id => $trait_cvterm->cvterm_id,
-								   value => $trait_value ,
-								   uniquename => $plot_trait_uniquename,
-								  });
-
+			observable_id => $trait_cvterm->cvterm_id,
+			value => $trait_value ,
+			uniquename => $plot_trait_uniquename,
+					     });
+		
 		#print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
 		my $experiment;
-
+		
 		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
 		# my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
 		#     ->find({

@@ -1046,9 +1046,7 @@ sub add_phenotype_POST {
             my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
                 { name   => 'phenotyping experiment',
                   cv     => 'experiment_type',
-                  db     => 'null',
-                  dbxref => 'phenotyping experiment',
-                });
+		});
 
             #create the new phenotype
             my $phenotype = $schema->resultset("Phenotype::Phenotype")->find_or_create(

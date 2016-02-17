@@ -39,7 +39,7 @@ sub BUILD {
     my $folder_cvterm = $self->bcs_schema()->resultset('Cv::Cvterm')->create_with(
 	    { name   => 'folder',
 	      cv     => 'local',
-	      db     => 'local',
+	      db     => 'local', ## check why this is local and not null db name
 	      dbxref => 'folder',
 	    });
 
@@ -75,7 +75,7 @@ sub create {
     my $folder_cvterm = $args->{bcs_schema}->resultset('Cv::Cvterm')->create_with(
 	{ name   => 'folder',
 	      cv     => 'local',
-	      db     => 'local',
+	      db     => 'local', #### why is this local and not the default null db name 
 	      dbxref => 'folder',
 	    });
     

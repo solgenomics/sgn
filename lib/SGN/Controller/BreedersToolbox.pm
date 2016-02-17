@@ -271,34 +271,19 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $organism_id = $organism->organism_id();
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'accession',
-      cv     => 'stock_type',
-      db     => 'null',
-      dbxref => 'accession',
-    });
-
-#    my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-#      { name   => 'member',
-#      cv     => 'stock type',
-#      db     => 'null',
-#      dbxref => 'member',
-#    });
+	{ name   => 'accession',
+	  cv     => 'stock_type',
+	});
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
       { name   => 'population',
     });
 
-#    my $cross_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-#    { name   => 'cross',
-#      cv     => 'stock relationship',
-#      db     => 'null',
-#      dbxref => 'cross',
-#    });
 
     my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
-            { name       => $maternal,
-            } );
-
+	{ name       => $maternal,
+	} );
+    
     my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
             { name       => $paternal,
             } );
@@ -312,28 +297,21 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
       my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'female_parent',
       cv     => 'stock_relationship',
-      db     => 'null',
-      dbxref => 'female_parent',
     });
 
       my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'male_parent',
       cv     => 'stock_relationship',
-      db     => 'null',
-      dbxref => 'male_parent',
     });
 
       my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'cross_name',
       cv     => 'stock_relationship',
-      db     => 'null',
-      dbxref => 'cross_name',
     });
 
       my $visible_to_role_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'visible_to_role',
       cv => 'local',
-      db => 'null',
     });
 
     my $increment = 1;
@@ -550,8 +528,6 @@ sub get_stock_relationships : Private {
     my $stockrel = $schema->resultset("Cv::Cvterm")->create_with(
 	{ name   => 'cross',
 	  cv     => 'stock_relationship',
-	  db     => 'null',
-	  dbxref => 'cross',
 	});
     
     

@@ -84,20 +84,14 @@ sub add_crosses {
     my $female_parent_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with( { name   => 'female_parent',
 		       cv     => 'stock_relationship',
-		       db     => 'null',
-		       dbxref => 'female_parent',
 		     });
     my $male_parent_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with({ name   => 'male_parent',
 		      cv     => 'stock_relationship',
-		      db     => 'null',
-		      dbxref => 'male_parent',
 		    });
     my $progeny_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with({ name   => 'offspring_of',
 		      cv     => 'stock_relationship',
-		      db     => 'null',
-		      dbxref => 'offspring_of',
 		    });
 
     #get cvterm for cross_name or create if not found
@@ -109,8 +103,6 @@ sub add_crosses {
       $cross_name_cvterm = $chado_schema->resultset("Cv::Cvterm")
 	->create_with( { name   => 'cross_name',
 			 cv     => 'local',
-			 db     => 'null',
-			 dbxref => 'cross_name',
 		       });
     }
 
@@ -123,8 +115,6 @@ sub add_crosses {
       $cross_type_cvterm = $chado_schema->resultset("Cv::Cvterm")
 	->create_with( { name   => 'cross_type',
 			 cv     => 'local',
-			 db     => 'null',
-			 dbxref => 'cross_type',
 		       });
     }
 
@@ -133,8 +123,6 @@ sub add_crosses {
       ->create_with({
 		     name   => 'cross_experiment',
 		     cv     => 'experiment_type',
-		     db     => 'null',
-		     dbxref => 'cross_experiment',
 		    });
 
     #get cvterm for stock type cross
@@ -144,15 +132,6 @@ sub add_crosses {
 		     cv     => 'stock_type',
 		    });
     print STDERR "\n\ncvterm from addcrosses: ".$cross_stock_type_cvterm->cvterm_id()."\n\n";
-    # #get cvterm for type of cross
-    # my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")
-    #   ->create_with({
-    # 		     name   => 'cross_type',
-    # 		     cv     => 'local',
-    # 		     db     => 'null',
-    # 		     dbxref => 'cross_type',
-    # 		    });
-
 
     #lookup location by name
     $location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location });
@@ -446,8 +425,6 @@ sub _get_accession {
     ->create_with({
 		   name   => 'accession',
 		   cv     => 'stock_type',
-		   db     => 'null',
-		   dbxref => 'accession',
 		  });
   $stock_lookup->set_stock_name($accession_name);
   $stock = $stock_lookup->get_stock_exact();

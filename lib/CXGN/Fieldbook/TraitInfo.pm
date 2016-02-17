@@ -130,8 +130,6 @@ sub _get_cvterms {
       ->create_with({
 		     name   => $property_name,
 		     cv     => 'trait_property',
-		     db     => 'null',
-		     dbxref => $property_name,
 		    });
   }
 
