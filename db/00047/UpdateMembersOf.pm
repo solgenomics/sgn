@@ -110,9 +110,12 @@ sub patch {
 	    }
 	    );	
 	print "Found . " . $old_cvterm_rs->count . " cvterm(s) with name = 'members of' \n\n";
-	print "Found cvterm_id for term 'members of' = " . $old_cvterm_rs->first->cvterm_id . "\n DELETING...\n";
-	$old_cvterm_rs->delete();
-	
+	if ($old_cvterm_rs->count ) {
+	    print "Found cvterm_id for term 'members of' = " . $old_cvterm_rs->first->cvterm_id . "\n DELETING...\n";
+	    $old_cvterm_rs->delete();
+	} else { 
+	    print "nothing to delete here \n\n";
+	}
     
 	if ($self->trial) {
             print "Trial mode! Rolling back transaction\n\n";
