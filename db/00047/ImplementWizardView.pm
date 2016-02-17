@@ -411,7 +411,7 @@ CREATE UNIQUE INDEX years_idx ON public.years(year_id) WITH (fillfactor=100);
 GRANT SELECT ON years to web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('years', FALSE, CURRENT_TIMESTAMP);
 
-CREATE OR REPLACE FUNCTION refresh_materialized_views() RETURNS VOID AS '
+CREATE OR REPLACE FUNCTION public.refresh_materialized_views() RETURNS VOID AS '
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.materialized_fullview;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessions;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXbreeding_programs;
