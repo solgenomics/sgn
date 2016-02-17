@@ -83,19 +83,19 @@ sub add_crosses {
     #get cvterms for parents and offspring
     my $female_parent_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with( { name   => 'female_parent',
-		       cv     => 'stock relationship',
+		       cv     => 'stock_relationship',
 		       db     => 'null',
 		       dbxref => 'female_parent',
 		     });
     my $male_parent_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with({ name   => 'male_parent',
-		      cv     => 'stock relationship',
+		      cv     => 'stock_relationship',
 		      db     => 'null',
 		      dbxref => 'male_parent',
 		    });
     my $progeny_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with({ name   => 'offspring_of',
-		      cv     => 'stock relationship',
+		      cv     => 'stock_relationship',
 		      db     => 'null',
 		      dbxref => 'offspring_of',
 		    });
@@ -132,7 +132,7 @@ sub add_crosses {
     my $cross_experiment_type_cvterm = $chado_schema->resultset('Cv::Cvterm')
       ->create_with({
 		     name   => 'cross_experiment',
-		     cv     => 'experiment type',
+		     cv     => 'experiment_type',
 		     db     => 'null',
 		     dbxref => 'cross_experiment',
 		    });
@@ -141,7 +141,7 @@ sub add_crosses {
     my $cross_stock_type_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with({
 		     name   => 'cross',
-		     cv     => 'stock type',
+		     cv     => 'stock_type',
 		    });
     print STDERR "\n\ncvterm from addcrosses: ".$cross_stock_type_cvterm->cvterm_id()."\n\n";
     # #get cvterm for type of cross
@@ -445,7 +445,7 @@ sub _get_accession {
   my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'accession',
-		   cv     => 'stock type',
+		   cv     => 'stock_type',
 		   db     => 'null',
 		   dbxref => 'accession',
 		  });

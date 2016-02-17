@@ -372,6 +372,16 @@ sub trial_type_POST : Chained('trial') PathPart('type') Args(1) {
     $c->stash->{rest} = { success => 1 };
 }
 
+
+sub traits_assayed : Chained('trial') PathPart('traits_assayed') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my @traits_assayed  = $c->stash->{trial}->get_traits_assayed();
+    $c->stash->{rest} = { traits_assayed => \@traits_assayed };
+}
+
+
 sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -418,6 +428,79 @@ sub get_trial_folder :Chained('trial') PathPart('folder') Args(0) {
     
 }
 
+sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    
+    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
+    my @data = $layout->get_accession_names();
+    
+    $c->stash->{rest} = { accessions => \@data };
+}
+
+sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    
+    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
+    my @data = $layout->get_control_names();
+    
+    $c->stash->{rest} = { accessions => \@data };
+}
+
+sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    
+    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
+    my @data = $layout->get_plot_names();
+    
+    $c->stash->{rest} = { plots => \@data };
+}
+
+sub trial_design : Chained('trial') PathPart('design') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    
+    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
+
+    my $design = $layout->get_design();
+    my $design_type = $layout->get_design_type();
+    my $plot_dimensions = $layout->get_plot_dimensions();
+    
+    my $plot_length = '';
+    if ($plot_dimensions->[0]) {
+	$plot_length = $plot_dimensions->[0];
+    }
+    
+    my $plot_width = '';
+    if ($plot_dimensions->[1]){
+	$plot_width = $plot_dimensions->[1];
+    }
+    
+    my $plants_per_plot = '';
+    if ($plot_dimensions->[2]){
+	$plants_per_plot = $plot_dimensions->[2];
+    }
+
+    my $block_numbers = $layout->get_block_numbers();
+    my $number_of_blocks = '';
+    if ($block_numbers) {
+      $number_of_blocks = scalar(@{$block_numbers});
+    }
+
+    my $replicate_numbers = $layout->get_replicate_numbers();
+    my $number_of_replicates = '';
+    if ($replicate_numbers) {
+      $number_of_replicates = scalar(@{$replicate_numbers});
+    }
+
+    $c->stash->{rest} = { design_type => $design_type, num_blocks => $number_of_blocks, num_reps => $number_of_replicates, plot_length => $plot_length, plot_width => $plot_width, plants_per_plot => $plants_per_plot, design => $design };
+}
 
 sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     
@@ -463,7 +546,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	my $my_hash;
 	
 	foreach $my_hash (@layout_info) {
-		#if (length($my_hash->{'row_number'}) == 0) {
+	    if ($my_hash->{'row_number'}) {
 		if ($my_hash->{'row_number'} =~ m/\d+/) {
 		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'};
 	
@@ -473,9 +556,10 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	$plot_number[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_number'};
 	#$plot_number[$my_hash->{'plot_number'}] = $my_hash->{'plot_number'};	
 	
-	}
+		}
 		else {
 		}
+	    }
 	}
  # Looping through the hash and printing out all the hash elements.
 

@@ -618,7 +618,7 @@ sub _add_trial_layout_to_database {
   my $plot_cvterm = $schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'plot',
-		   cv     => 'stock type',
+		   cv     => 'stock_type',
 		   db     => 'null',
 		   dbxref => 'plot',
 		  });
@@ -636,7 +636,7 @@ sub _add_trial_layout_to_database {
   my $plot_exp_cvterm = $schema->resultset('Cv::Cvterm')
     ->create_with({
 		   name   => 'plot experiment',
-		   cv     => 'experiment type',
+		   cv     => 'experiment_type',
 		   db     => 'null',
 		   dbxref => 'plot experiment',
 		  });

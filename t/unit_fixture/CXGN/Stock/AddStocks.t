@@ -83,7 +83,7 @@ is($stock_add->validate_owner(), undef, "Stock owner names that do not exist sho
 # Create a population
 my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'population',
-      cv     => 'stock type',
+      cv     => 'stock_type',
       db     => 'null',
       dbxref => 'population',
     });
@@ -129,7 +129,7 @@ my $accession_population_find = $schema->resultset("Stock::Stock")
 my $population_member_cvterm = $schema->resultset("Cv::Cvterm")
     ->create_with({
 	name   => 'member_of',
-	cv     => 'stock relationship',
+	cv     => 'stock_relationship',
 	db     => 'null',
 	dbxref => 'member_of',
 		  });

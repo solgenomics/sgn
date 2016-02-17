@@ -23,6 +23,7 @@ use CXGN::List::Transform;
 use Spreadsheet::WriteExcel;
 use CXGN::Trial::Download;
 use POSIX qw(strftime);
+use Sort::Versions;
 
 sub breeder_download : Path('/breeders/download/') Args(0) { 
     my $self = shift;
@@ -526,12 +527,13 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
       my $decoded = decode_json($data->[$i][1]);
       push(@AoH, $decoded); 
      } 
-	
-        my @k=();
+     #print STDERR "AoH = " . Dumper(@AoH);
+     
+	my @snp_names=();
 	for my $i ( 0 .. $#AoH ){
-	   @k = keys   %{ $AoH[$i] }
+	   @snp_names = keys   %{ $AoH[$i] }
 	}
-
+	my @k = sort versioncmp @snp_names; 
 
         for my $j (0 .. $#k){
 	    print $TEMP "$k[$j]\t";
@@ -542,7 +544,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') Args(0) {
 		print $TEMP "$AoH[$i]{$k[$j]}";
 
             }else{
-		print $TEMP "$AoH[$i]{$k[$j]}\t";
+		if (exists($AoH[$i]{$k[$j]})) {
+		    print $TEMP "$AoH[$i]{$k[$j]}\t";
+		}
 	    }
              
             }

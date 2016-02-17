@@ -107,7 +107,7 @@ sub store {
     my $phenotyping_experiment_cvterm = $schema->resultset('Cv::Cvterm')
 	->create_with({
 		       name   => 'phenotyping experiment',
-		       cv     => 'experiment type',
+		       cv     => 'experiment_type',
 		       db     => 'null',
 		       dbxref => 'phenotyping experiment',
 		      });

@@ -254,11 +254,15 @@ function trial_detail_page_setup_dialogs() {
 	title: 'Select Breeding Program',
 	autoOpen: false,
 	buttons: {
-	    'OK': function() {
+	    'OK': {
+		text: "OK",
+		id: "edit_trial_breeding_program_submit",
+		click: function() {
 		associate_breeding_program();
 		jQuery('#change_breeding_program_dialog').dialog("close"); 
 		var trial_id = get_trial_id();
 		load_breeding_program_info(trial_id);
+	    }
 	    },
 	    'Cancel': function() { jQuery('#change_breeding_program_dialog').dialog("close"); }
 	}
@@ -588,6 +592,7 @@ function trial_detail_page_setup_dialogs() {
 		      id: "change_location_cancel_button",
 		    },
 	    save:   { text: "Save",
+		      id: "edit_trial_location_submit",
 		      click: function() { 
 			  var new_location = jQuery('#location_select').val();
 			  save_trial_location(new_location);
