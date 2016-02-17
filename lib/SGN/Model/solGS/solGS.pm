@@ -153,14 +153,14 @@ sub project_location {
     my $location_id = $self->schema->resultset('Cv::Cvterm')
 	->search( { 'name' => 'project location' })
 	->first
-	->cvterm_id();
+	->id;
 
     my $q = "SELECT description FROM projectprop 
                 LEFT JOIN cvterm ON (type_id = cvterm_id) 
                 LEFT JOIN  nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id) 
                 WHERE project_id = ?
-                      AND cvterm.name = ?";
-	   
+                      AND cvterm.cvterm_id = ?";
+
     my $sth = $self->context->dbc->dbh()->prepare($q);
 
     $sth->execute($pr_id, $location_id);
