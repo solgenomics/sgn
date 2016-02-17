@@ -100,6 +100,9 @@ sub store {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    if (!$user_id) { #For unit_test, SimulateC
+	$user_id = $c->sp_person_id();
+    }
     my $archived_file = $phenotype_metadata->{'archived_file'};
     my $archived_file_type = $phenotype_metadata->{'archived_file_type'};
     my $operator = $phenotype_metadata->{'operator'};
@@ -120,7 +123,7 @@ sub store {
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails
     my $coderef = sub {
 	foreach my $plot_name (@plot_list) {
-	    print STDERR "plot: $plot_name\n";
+	    #print STDERR "plot: $plot_name\n";
 	    my $plot_stock = $schema->resultset("Stock::Stock")->find( { uniquename => $plot_name});
 	    my $plot_stock_id = $plot_stock->stock_id;
 
@@ -139,7 +142,7 @@ sub store {
 
 
 	    foreach my $trait_name (@trait_list) {
-		print STDERR "trait: $trait_name\n";
+		#print STDERR "trait: $trait_name\n";
 		#fieldbook trait string should be "CO:$trait_name|$trait_accession" e.g. CO:plant height|0000123
 		my ( $full_cvterm_name, $full_accession) = split (/\|/, $trait_name);
 		my ( $db_name , $accession ) = split (/:/ , $full_accession);
@@ -177,7 +180,7 @@ sub store {
 								   uniquename => $plot_trait_uniquename,
 								  });
 
-		print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
+		#print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
 		my $experiment;
 
 		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
@@ -203,12 +206,12 @@ sub store {
 			->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
 		    $experiment->create_nd_experimentprops({date => $phenotyping_date},{autocreate => 1, cv_name => 'local'});
 		    $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
-		    print STDERR "[StorePhenotypes] Created new experiment: " . $experiment->nd_experiment_id . "\n";
+		    #print STDERR "[StorePhenotypes] Created new experiment: " . $experiment->nd_experiment_id . "\n";
 		}
 
 		## Link the experiment to the project
 		$experiment->find_or_create_related('nd_experiment_projects', {project_id => $project_id});
-		print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " with project $project_id \n";
+		#print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " with project $project_id \n";
 
 		# Link the experiment to the stock
 		$experiment->find_or_create_related('nd_experiment_stocks', 
@@ -216,12 +219,11 @@ sub store {
 						     stock_id => $plot_stock_id,
 						     type_id => $phenotyping_experiment_cvterm->cvterm_id
 						    });
-		print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " to stock $plot_stock_id \n";
+		#print STDERR "[StorePhenotypes] Linking experiment " . $experiment->nd_experiment_id . " to stock $plot_stock_id \n";
 
 		## Link the phenotype to the experiment
 		$experiment->find_or_create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-		print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .
-		    $experiment->nd_experiment_id . "\n";
+		#print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .   $experiment->nd_experiment_id . "\n";
 
 		$experiment_ids{$experiment->nd_experiment_id()}=1;
 	    }
@@ -267,13 +269,13 @@ sub store {
 	$file_row->insert();
 	foreach my $nd_experiment_id (keys %experiment_ids) {
 	    ## Link the file to the experiment
-	#   my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")
-	#	->create({
-	#		  nd_experiment_id => $nd_experiment_id,
-	#		  file_id => $file_row->file_id(),
-	#		 });
-	#    $experiment_files->insert();
-	    print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
+	   my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")
+		->create({
+			  nd_experiment_id => $nd_experiment_id,
+			  file_id => $file_row->file_id(),
+			 });
+	    $experiment_files->insert();
+	    #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
 	}
     }
 
