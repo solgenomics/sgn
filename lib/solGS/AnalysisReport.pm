@@ -419,10 +419,29 @@ sub report_status {
 	. "\n\n$analysis_result" 
 	. "$closing";
    
+    my $email_to;
+    my $email_cc;
+    my $email_from;
+
+    if ($analysis_page =~ /localhost/) 
+    {
+	my $uid = getpwuid($<);
+	$email_to   = '<' . $uid . '@localhost.localdomain>';
+	$email_from = '<' . $uid . '@localhost.localdomain>';
+	    
+    }
+    else 
+    {
+	$email_to   = "$user_name <$user_email>";
+	$email_from = '"solGS M Tool" <cluster-jobs@solgenomics.net>';
+	$email_cc   = 'solGS Job <cluster-jobs@solgenomics.net>';
+    }
+
     my $email = Email::Simple->create(
 	header => [
-	    To      => '"Isaak" <isaak@localhost.localdomain>',
-	    From    => '"Isaak Tecle" <isaak@localhost.localdomain>',
+	    To      => $email_to,
+	    Cc      => $email_cc,
+	    From    => $email_from,
 	    Subject => "Analysis result of $analysis_name",
 	],
 	body => $body,
@@ -609,7 +628,7 @@ sub log_analysis_status {
     my $analysis_name    = $analysis_profile->{analysis_name};
     
     my $status = $output_details->{status};
-    print STDERR "\n status: $status $analysis_name\n";
+   
     my @contents = read_file($log_file);
    
     map{ $contents[$_] =~ m/\t$analysis_name\t/ 

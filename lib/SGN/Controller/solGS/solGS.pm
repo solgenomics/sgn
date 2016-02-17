@@ -163,7 +163,7 @@ sub search_trials : Path('/solgs/search/trials') Args() {
     my ($self, $c) = @_;
 
     my $page = $c->req->param('page') || 1;
-
+  
     my $project_rs = $c->model('solGS::solGS')->all_projects($page, 15);
    
     $self->projects_links($c, $project_rs);
@@ -440,7 +440,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     
     my $pager = $projects_rs->pager; 
     $pager->change_entries_per_page(15);
-    my $pager = $projects_rs->pager; 
+ 
     my $pagination;
 
     my $url = "/solgs/search/result/populations/$trait_id";
@@ -3468,15 +3468,20 @@ sub grep_file {
 sub multi_pops_phenotype_data {
     my ($self, $c, $pop_ids) = @_;
    
+    my @job_ids;
     if (@$pop_ids)
     {
         foreach my $pop_id (@$pop_ids)        
         { 
             $c->stash->{pop_id} = $pop_id;
             $self->phenotype_file($c);
+	    push @job_ids, $c->stash->{r_job_id};
+	    my $job = $c->stash->{r_job_id}; 
+	    print "\n pheno job: $job\n";
         }
     }
-   
+    
+    $c->stash->{multi_pops_pheno_jobs_ids} = \@job_ids;
   #  $self->multi_pops_pheno_files($c, $pop_ids);
     
 }
@@ -3485,15 +3490,21 @@ sub multi_pops_phenotype_data {
 sub multi_pops_genotype_data {
     my ($self, $c, $pop_ids) = @_;
   
+    my @job_ids;
     if (@$pop_ids)
     {
         foreach my $pop_id (@$pop_ids)        
         {
             $c->stash->{pop_id} = $pop_id;
             $self->genotype_file($c);
+	    
+	    push @job_ids, $c->stash->{r_job_id};
+	    my $job = $c->stash->{r_job_id}; 
+	    print "\n geno job: $job\n";
         }
     }
 
+    $c->stash->{multi_pops_geno_jobs_ids} = \@job_ids;
 #  $self->multi_pops_geno_files($c, $pop_ids);
  
 }
@@ -4761,7 +4772,7 @@ sub run_r_script {
         copy($r_cmd_file, $in_file_temp)
             or die "could not copy '$r_cmd_file' to '$in_file_temp'";
     }
-        
+   print STDERR "\n run_r_script: dependency: $dependency\n";     
     my $r_job;  
     if ($dependency && $background_job) 
     {

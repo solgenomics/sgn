@@ -296,7 +296,14 @@ sub combine_trait_data {
 	$c->stash->{trait_combine_populations} = $combined_pops_list;
 
 	$self->prepare_multi_pops_data($c);
-    
+	my $prerequisite_jobs = $c->stash->{prerequisite_jobs};
+	print STDERR "\ncombine data build  model -- prerequisite jobs: $prerequisite_jobs\n";
+
+	if ($prerequisite_jobs) 
+	{
+	    $c->stash->{dependency} = 'depend=afterok:' . $prerequisite_jobs;
+	}
+	
 	$solgs_controller->r_combine_populations($c);         
     }
                        
@@ -315,9 +322,9 @@ sub combine_data_build_model {
   
     if ($combine_job_id) 
     {
-	$c->stash->{dependency} = 'depend=afterok:' . $combine_job_id;
+     	$c->stash->{dependency} = 'depend=afterok:' . $combine_job_id;
     }
-
+  
     $self->build_model_combined_trials_trait($c);
 	
 }
@@ -477,8 +484,24 @@ sub prepare_multi_pops_data {
    $solgs_controller->multi_pops_genotype_data($c, $combined_pops_list);
    $solgs_controller->multi_pops_geno_files($c, $combined_pops_list);
    $solgs_controller->multi_pops_pheno_files($c, $combined_pops_list);
+
+   my $pheno_jobs = $c->stash->{multi_pops_pheno_jobs_ids};
+   my $geno_jobs = $c->stash->{multi_pops_geno_jobs_ids};
+   my $all_jobs = join(':', (@$pheno_jobs, @$geno_jobs));
+
+   print STDERR "\n all pre req jobs: $all_jobs\n";
+   $c->stash->{prerequisite_jobs} = $all_jobs;
+
 }
 
+# sub log_prerequisite_jobs {
+#     my ($self, $job_ids) = @_;
+#  my $solgs_controller = $c->controller('solGS::solGS');
+    
+#   my $trait_info   = $trait_id . "\t" . $trait_abbr;     
+#     my $trait_file  = $self->create_tempfile($c, "trait_info_${trait_id}");   
+#  write_file($trait_file, $trait_info);
+# }
 
 sub create_combined_pops_id {    
     my ($self, $c) = @_;

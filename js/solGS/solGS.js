@@ -276,15 +276,15 @@ function getProfileDialog (page, args) {
 
 
 function getArgsFromUrl (url, args) {
-
+    	
+    if (window.Prototype) {
+	delete Array.prototype.toJSON;
+    }
+   
     if (url.match(/solgs\/trait\//)) {
 	
 	var urlStr = url.split(/\/+/);
-	
-	if (window.Prototype) {
-		delete Array.prototype.toJSON;
-	}
-	
+		
 	if (args === undefined) {
 	      
 	    args = {'trait_id'      : [ urlStr[4] ], 
@@ -312,17 +312,20 @@ function getArgsFromUrl (url, args) {
 	var referer      = window.location.href;
 	
 	if (referer.match(/solgs\/search\/trials\/trait\//)) {
+
 	    populationId.push(urlStr[5]);
 	    comboPopsId.push(urlStr[5]);
 	    traitId.push(urlStr[7]);
 	}
 	else if (referer.match(/solgs\/populations\/combined\//)) {
+
 	    populationId.push(urlStr[6]);
 	    comboPopsId.push(urlStr[6]);
 	    traitId.push(urlStr[8]);   
 	}
 	
-	if (args === undefined) {	   
+	if (args === undefined) {
+	   
 	    args = {'trait_id'      : traitId, 
 		    'population_id' : populationId, 
 		    'combo_pops_id' : comboPopsId,
@@ -330,18 +333,16 @@ function getArgsFromUrl (url, args) {
 		    'data_set_type' : 'combined populations',
 		   };
 	} else {
+
 	    args['trait_id']      = traitId;
 	    args['population_id'] = populationId;
 	    args['combo_pops_id'] = comboPopsId;
 	    args['analysis_type'] = 'single model';
 	    args['data_set_type'] = 'combined populations';	
 	}
-    } else if (url.match(/solgs\/population\//)) {	
+    } else if (url.match(/solgs\/population\//)) {
+	
 	var urlStr = url.split(/\/+/);
-
-	// if (window.Prototype) {
-	// 	delete Array.prototype.toJSON;
-	// }
 
 	if (args === undefined) {
 	    args = {
@@ -349,7 +350,8 @@ function getArgsFromUrl (url, args) {
 		    'analysis_type' : 'population download',
 		    'data_set_type' : 'single population',
 		   };
-	} else {	    
+	} else {
+	    
 	    args['population_id'] = [ urlStr[4] ];
 	    args['analysis_type'] = 'population download';
 	    args['data_set_type'] = 'single population';	

@@ -479,7 +479,7 @@ sub run_analysis {
     }
     elsif ($analysis_page =~ /solgs\/population\//)
     {
-	$c->controller('solGS::solGS')->phenotype_file($c);
+	$c->controller('solGS::solGS')->phenotype_file($c);	
 	$c->controller('solGS::solGS')->genotype_file($c);
     }
     elsif ($analysis_page =~ /solgs\/populations\/combined\//)
