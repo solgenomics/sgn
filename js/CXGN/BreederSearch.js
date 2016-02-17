@@ -1,593 +1,351 @@
+window.onload = function initialize() {
 
-window.onload = function initialize() { 
-
-    var choices = { '': 'please select', 'breeding_programs': 'breeding programs', projects :'trials', years : 'years', locations : 'locations', traits: 'traits' };
-
-    var html = ''; 
-    var c1_html = '';
-    var stock_data;
-    html = html + format_options(choices);
-
-    if (isLoggedIn()) { 
-	var lo = new CXGN.List();
-	
-	for (var i=0; i<choices.length; i++) { 
-	    if (!typeof(choices[i])=='undefined') { 
-		var lists = lo.availableLists(choices[i]);
-
-		var options = [];
-		for (var n=0; n<lists.length; n++) { 
-		    options[lists[n][0]] = lists[n][1]+" ("+lists[n][5]+")";
-		    html += "<optgroup>\n";
-		    html += format_options(options);
-		    html += "</optgroup>\n";
-		}
-	    }
-	}
-    }
-
-    jQuery('#select1').html(html);   
-
-    jQuery('#select1').change(function() { 
-	var select1 = jQuery( this ).val();
-	var select4 = jQuery('#select4').val();
-
-	//disable_ui();
-
-	var list = new Array();
-
-	if (parseInt(select1)) { 
-	    var lo = new CXGN.List();
-	    var list_data = lo.getListData(select1);
-	    var id_data = lo.transform2Ids(select1);
-	    var dump = JSON.stringify(id_data);
-	}
-	
-	var stocks;
-	var message;
-
-	jQuery.ajax( { 
-	    url: '/ajax/breeder/search',
-	    //async: false,
-	    timeout: 60000,
-	    method: 'POST',
-	    data: {'select1':select1, 'select4': select4, 'genotypes': get_genotype_checkbox() },
-	    beforeSend: function(){
-		disable_ui();
-            },  
-            complete : function(){
-		enable_ui();
-            },  
-	    success: function(response) { 
-		if (response.error) { 
-		    alert(response.error);
-		    return;
-		} 
-		else {
-		    list = response.list || [];
-		    stocks = response.stocks;
-		    message = response.message;
-		    c1_html = format_options_list(list);
-		    show_list_total_count('#c1_data_count', list.length);
-		    update_stocks(stocks, message);
-		    
-		    jQuery('#c1_data_text').html(retrieve_sublist(list, 1).join("\n"));
-		    jQuery('#c1_data').html(c1_html);
-		    jQuery('#c2_data').html('');
-		    jQuery('#c3_data').html('');	
-		    jQuery('#select2').html('');
-		    jQuery('#select3').html('');
-
-		    if (isLoggedIn()) { 
-			addToListMenu('c1_to_list_menu', 'c1_data', {
-			    selectText: true,
-			    typeSourceDiv: 'select1' });
-		    }
-		}
+    jQuery('#select1').change( // reset start from list if select1 changes
+	function() {
+	    var startlist = jQuery('#c1_data_list_select').val();
+	    if (startlist) {
+		create_list_start('Start from a list');
 	    }
 	});
 
+    jQuery('#select1, #select2, #select3, #select4').change(  // retrieve new data once new category is selected
+    	function() {
+	    var this_section = jQuery(this).attr('name');
+	    reset_downstream_sections(this_section);
+	    update_select_categories(this_section);
+	    var category = jQuery(this).val();
 
-	//enable_ui();	
+	    if (!category) { // reset by returning empty if no category was defined
+		var data_element = "c"+this_section+"_data";
+		jQuery("#"+data_element).html('');	
+		return;
+	    }
+	    var categories = get_selected_categories(this_section);
+	    var data = ''
+	    if (this_section !== "1") data = get_selected_data(this_section);
+	    var error = check_missing_criteria(categories, data, this_section); // make sure criteria selected in each panel
+	    if (error) return;
+	    if (data.length >= categories.length) data.pop(); //remove extra data array if exists
+
+	    retrieve_and_display_set(categories, data, this_section);
+	    update_download_options(this_section);
+	});
+
+    jQuery('#c1_data, #c2_data, #c3_data, #c4_data').change( // update wizard panels and categories when data selections change 
+    	function() {
+	    var this_section = jQuery(this).attr('name');
+
+	    var data_id = jQuery(this).attr('id');
+	    var data = jQuery('#'+data_id).val() || [];;
+	    var count_id = "c"+this_section+"_data_count";
+
+	    reset_downstream_sections(this_section);
+	    update_select_categories(this_section);
+	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+	    update_download_options(this_section);
+	});		 
+
+    jQuery('#c1_select_all, #c2_select_all, #c3_select_all, #c4_select_all').click( // select all data in a wizard panel 
+    	function() { 
+	    var this_section = jQuery(this).attr('name');
+	    var data_id = "c"+this_section+"_data";
+	    selectAllOptions(document.getElementById(data_id));
+
+	    var data = jQuery("#"+data_id).val() || [];;
+	    var count_id = "c"+this_section+"_data_count";
+
+	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+	    update_select_categories(this_section);
+	    update_download_options(this_section);
+	});
+
+      jQuery('select').dblclick(function() { // open detail page in new window or tab on double-click 
+	  var this_section = jQuery(this).attr('name');
+	  var categories = get_selected_categories(this_section);
+	  var category = categories.pop();
+	  switch (category)
+	  {
+	  case "accessions":
+	  case "plots":
+	      window.open("../../stock/"+this.value+"/view");
+	      break;	    
+	  case "trials":
+	      window.open("../../breeders_toolbox/trial/"+this.value);
+	      break;
+	  case "breeding_programs":
+	      window.open("../../breeders/manage_programs");
+	      break;
+	  case "locations":
+	      window.open("../../breeders/locations");
+	      break;
+	  case "traits":
+	      window.open("../../chado/cvterm?action=view&cvterm_id="+this.value);
+	      break;
+	  default: 
+	      if (window.console) console.log("no link for this category");
+	  }
+      });
+    
+    jQuery('#open_update_dialog').on('click', function () {
+	jQuery('#update_wizard_dialog').modal("show");
+	matviews_update_options();
+    });
+
+    jQuery('#refresh_lists').on('click', function () {
+	create_list_start('Start from a list');
     });
     
-    jQuery('#c1_data').change(function() { 
 
-	//disable_ui();
-	
-	jQuery('#select2').val('please select');
-	jQuery('#select3').html('');
-	jQuery('#c2_data').html('');
-	jQuery('#c3_data').html('');
-	jQuery('#stock_data').html('');
-	var select1 = jQuery('#select1').val();
-	var select4 = jQuery('#select4').val();
-	var c1_data = jQuery('#c1_data').val() || [];
-
-	show_list_total_count('#c1_data_count', jQuery('#c1_data').text().split("\n").length-1, c1_data.length);
-
-	// as soon as a data item is selected, show the next menu select
-	//
-	var second_choices = copy_hash(choices);
-	delete second_choices[select1];
-	var html = format_options(second_choices);
-	jQuery('#select2').html(html);
-
-	// jQuery.ajax( { 
-	//     url: '/ajax/breeder/search',
-	//     //async: false,
-	//     timeout: 60000,
-	//     method: 'POST',
-	//     data: {'select1':select1, 'c1_data': c1_data.join(","), 'select4':select4, 'genotypes': get_genotype_checkbox()  },
-	//     beforeSend: function(){
-	// 	disable_ui();
-        //     },  
-        //     complete : function(){
-	// 	enable_ui();
-        //     },  
-	//     success: function(response) { 
-	// 	if (response.error) { 
-	// 	    alert(response.error);
-	// 	} 
-	// 	else {
-	// 	    update_stocks(response.stocks, response.message);
-	// 	    show_list_total_count('#c1_data_count', jQuery('#c1_data').text().split("\n").length-1, jQuery('#c1_data').val().length);
-	// 	    show_list_total_count('#c2_data_count', 0, 0);
-	// 	    show_list_total_count('#c3_data_count', 0, 0);
-	// 	    //enable_ui();
-	// 	}
-	//     }
-	// });
-
-
-	//enable_ui();	
+    jQuery('#update_wizard_dialog, #upload_datacollector_phenotypes_dialog, #upload_phenotype_spreadsheet_dialog, #upload_fieldbook_phenotypes_dialog').on("click", '.wiz-update', function () {
+	if (window.console) console.log("refreshing materialized views . . .");
+	refresh_matviews();
     });
     
+    jQuery('#download_button_excel').on('click', function () {
+        var selected = get_selected_trials();
+        if (selected.length !== 0) { 
+	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
+        }
+        else { alert("No trials selected for download."); }
+       
+    });
 
-    jQuery('#c1_select_all').click(
-	function() { 
-	    selectAllOptions(document.getElementById('c1_data'));
-            show_list_total_count('#c1_data_count', jQuery('#c1_data').text().split("\n").length-1, jQuery('#c1_data').val().length);
+    jQuery('#download_button_csv').on('click', function () {
+        var selected = get_selected_trials();
+        if (selected.length !== 0) { 
+	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
+        }
+        else { alert("No trials selected for download."); }
+       
+    });
 
-	    var select1 = jQuery('#select1').val();
-	    var second_choices = copy_hash(choices);
-	    delete second_choices[select1];
-	    var html = format_options(second_choices);
-	    jQuery('#select2').html(html);
-	}
-    );
+    jQuery('#download_button_genotypes').on('click', function () {
+        var selected = get_selected_accessions();
+        if (selected.length !== 0) { 
+	  window.open('/breeders/download_gbs_action/'+selected.join(",")+'?format=ids');
+        }
+        else { alert("No accessions selected for download."); }
+       
+    });
+}
 
-
-    jQuery('#select2').change(function() { 
- 	var select1 = jQuery('#select1').val();
-	var select2 = jQuery('#select2').val();
-	var select4 = jQuery('#select4').val();
-	var c1_data = jQuery('#c1_data').val() || [];
-	jQuery('#select3').val('please select');
-	jQuery('#c2_data').val('');
-
-	if (select2 == '') { 
-	    jQuery('#c2_data').html("");
-	    return;
-	}
-	var c2_data = '';
-	var stock_data = '';
-
-	//disable_ui();
-
-	jQuery.ajax( { 
-	    url: '/ajax/breeder/search',
-	    //async: false,
-	    timeout: 60000,
-	    method: 'POST',
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","), 'select4':select4, 'genotypes': get_genotype_checkbox()  },
+function retrieve_and_display_set(categories, data, this_section) {
+    if (window.console) console.log("categories = "+categories);
+    if (window.console) console.log("data = "+JSON.stringify(data));
+    //if (window.console) console.log("querytypes="+get_querytypes(this_section));
+    jQuery.ajax( {
+	url: '/ajax/breeder/search',
+	timeout: 60000,
+	method: 'POST',
+	data: {'categories': categories, 'data': data, 'querytypes': get_querytypes(this_section)},
 	    beforeSend: function(){
 		disable_ui();
             },  
             complete : function(){
 		enable_ui();
-            },  
+            },
 	    success: function(response) { 
-		if (response.error) { 
-		    alert("ERROR: "+response.error);
+		if (response.error) {
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">'+response.error+'</font></div>';
+		    var selectall_id = "c"+this_section+"_select_all";
+		    jQuery('#'+selectall_id).before(error_html);
 		} 
 		else {
                     var list = response.list || [];
-		    c2_html = format_options_list(list);
+		    data_html = format_options_list(list);
+		    var data_id = "c"+this_section+"_data";
+		    var count_id = "c"+this_section+"_data_count";
+		    var listmenu_id = "c"+this_section+"_to_list_menu";
+		    var select_id = "select"+this_section;
+		    
+		    jQuery('#'+data_id).html(data_html);
+		    show_list_counts(count_id, list.length);
 
-		    jQuery('#c2_data').html(c2_html);
-		    show_list_total_count('#c2_data_count', list.length);
-		    update_stocks(response.stocks);
 		    if (isLoggedIn()) { 
-			addToListMenu('c2_to_list_menu', 'c2_data', {
+			addToListMenu(listmenu_id, data_id, {
 			    selectText: true,
-			    typeSourceDiv: 'select2' });
+			    typeSourceDiv: select_id });
 		    }
-		    //enable_ui();   		    
 		}	
-	    } 
-	});		
-
-
-	//enable_ui();
-    });
-
-    jQuery('#c2_data').change(function() { 
-	jQuery('#c3_data').html('');
-	jQuery('#stock_data').html('');
-
-	var select1 = jQuery('#select1').val();
-	var select2 = jQuery('#select2').val();
-	var select4 = jQuery('#select4').val();
-	var c1_data = jQuery('#c1_data').val() || [];
-	var c2_data = jQuery('#c2_data').val() || [];
-
-	show_list_total_count('#c2_data_count', jQuery('#c2_data').text().split("\n").length-1, c2_data.length);
-
-	var third_choices = copy_hash(choices);
-	delete third_choices[select1];
-	delete third_choices[select2];
-	var html = format_options(third_choices);
-	jQuery('#select3').html(html);
-
-	//disable_ui();
-	// jQuery.ajax( { 
-	//     url: '/ajax/breeder/search',
-	//     //async: false,
-	//     timeout: 60000,
-	//     method: 'POST',
-	//     data: {'select1':select1, 'c1_data': c1_data.join(","), 'select2':select2, 'c2_data':c2_data.join(","), 'select4':select4, 'genotypes': get_genotype_checkbox()   },
-	//     beforeSend: function(){
-	// 	disable_ui();
-        //     },  
-        //     complete : function(){
-	// 	enable_ui();
-        //     },  
-	//     success: function(response) { 
-	// 	if (response.error) { 
-	// 	    alert(response.error);
-	// 	} 
-	// 	else {
-        //             var list = response.list || [];
-	// 	    c3_html = format_options_list(list);
-	// 	    update_stocks(response.stocks);
-	// 	    show_list_total_count('#c2_data_count', jQuery('#c2_data').text().split("\n").length-1, jQuery('#c2_data').val().length);
-	// 	    show_list_total_count('#c3_data_count', 0, 0);
-	// 	    //enable_ui();
-	// 	    //jQuery('#c3_data').html(c3_html);
-	// 	}
-	//     }
-	// });
-
-
-	//enable_ui();
-    });
-
-    jQuery('#c2_select_all').click(
-	function() { 
-	    selectAllOptions(document.getElementById('c2_data'));
-            show_list_total_count('#c2_data_count', jQuery('#c2_data').text().split("\n").length-1, jQuery('#c2_data').val().length);
-
-	    var select1 = jQuery('#select1').val();
-	    var select2 = jQuery('#select2').val();
-	    var third_choices = copy_hash(choices);
-	    delete third_choices[select1];
-	    delete third_choices[select2];
-	    var html = format_options(third_choices);
-	    jQuery('#select3').html(html);
-	}
-    );
-    
-
-    jQuery('#select3').change( function() {
- 	var select1 = jQuery('#select1').val();
-	var select2 = jQuery('#select2').val();
-	var select3 = jQuery('#select3').val();
-	var select4 = jQuery('#select4').val();
-	var c1_data = jQuery('#c1_data').val() || [];
-	var c2_data = jQuery('#c2_data').val() || [];
-	
-	var stock_data = '';
-
-	if (select3 == '') { 
-	    jQuery('#c3_data').html("");
-	    return;
-	}
-	
-	jQuery('#stock_data').html('');
-
-	var list;
-
-	jQuery.ajax( { 
-	    url: '/ajax/breeder/search',
-	    //async: false,
-	    timeout: 60000,
-	    method: 'POST',
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4, 'genotypes': get_genotype_checkbox()  },
-	    beforeSend: function(){
-		disable_ui();
-            },  
-            complete : function(){
-		enable_ui();
-            },  
-	    success: function(response) { 
-		if (response.error) { 
-		    alert(response.error);
-		} 
-		else {
-		    list = response.list || [];
-		    c3_html = format_options_list(list);
-		    update_stocks(response.stocks);
-		    jQuery('#c3_data').html(c3_html);
-		    show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, 0);
-
-		    if (isLoggedIn()) { 
-			addToListMenu('c3_to_list_menu', 'c3_data', {
-			    selectText: true,
-			    typeSourceDiv: 'select3' });
-		    }
+	    }, 
+	error: function(request, status, err) {
+		if (status == "timeout") {
+                    // report timeout
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
+		    var selectall_id = "c"+this_section+"_select_all";
+		    jQuery('#'+selectall_id).before(error_html);
+		} else {
+                    // report unspecified error occured  
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
+		    var selectall_id = "c"+this_section+"_select_all";
+		    jQuery('#'+selectall_id).before(error_html);
 		}
-	    },
-	    error: function(response) { 
-		alert("An error occurred. Timeout?");
-	    }
-	});
-	
+            }
 
-
-	//enable_ui();
-    });
-    
-    jQuery('#c3_data').change(function() { 
-	jQuery('#stock_data').html('');
-
-	var select1 = jQuery('#select1').val();
-	var select2 = jQuery('#select2').val();
-	var select3 = jQuery('#select3').val();
-	var select4 = jQuery('#select4').val();
-	var c1_data = jQuery('#c1_data').val() || [];
-	var c2_data = jQuery('#c2_data').val() || [];
-	var c3_data = jQuery('#c3_data').val() || [];
-
-	show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, c3_data.length);
-	
-	var stock_data;
-
-	//disable_ui();
-
-    	// jQuery.ajax( { 
-	//     url: '/ajax/breeder/search',
-	//     //async: false,
-	//     timeout: 30000,
-	//     method: 'POST',
-	//     data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'c3_data': c3_data.join(","), 'select4' : select4, 'genotypes': get_genotype_checkbox()  },
-	//     beforeSend: function(){
-	// 	disable_ui();
-        //     },  
-        //     complete : function(){
-	// 	enable_ui();
-        //     },  
-	//     success: function(response) { 
-	// 	if (response.error) { 
-	// 	    alert(response.error);
-	// 	} 
-	// 	else {
-	// 	    update_stocks(response.stocks);
-	// 	    show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, jQuery('#c3_data').val().length);
-	// 	    //enable_ui();
-	// 	}		
-	//     },
-	//     error: function(response) { 
-	// 	alert("an error occurred. (possible timeout)");
-	//     }
-	// });
-
-
-	//enable_ui();
-    });    
-
-    
-    jQuery('#retrieve_stocklist_button').click( function() { 
-	jQuery('#stock_data').html('');
-
-	var select1 = jQuery('#select1').val();
-	var select2 = jQuery('#select2').val();
-	var select3 = jQuery('#select3').val();
-	var select4 = jQuery('#select4').val();
-	var c1_data = jQuery('#c1_data').val() || [];
-	var c2_data = jQuery('#c2_data').val() || [];
-	var c3_data = jQuery('#c3_data').val() || [];
-	
-	var stock_data;
-	
-	disable_ui();
-
-    	jQuery.ajax( { 
-	    url: '/ajax/breeder/search/stocks',
-	    timeout: 60000,
-	    method: 'POST',
-	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'select4': select4, 'c3_data': c3_data.join(","), 'genotypes': get_genotype_checkbox()  },
-	    beforeSend: function(){
-		//disable_ui();
-            },  
-            complete : function(){
-		addToListMenu('add_to_list_menu', 'stock_data', { 
-		    selectText: true,
-		    typeSourceDiv: 'select4',
-		});
-            },  
-	    success: function(response) { 
-		if (response.error) { 
-		    alert(response.error);
-		} 
-		else {
-		    update_stocks(response.stocks);
-		    //show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, jQuery('#c3_data').val().length);
-		    enable_ui();
-		}		
-		enable_ui();
-	    },
-	    error: function(response, a, b) { 
-		alert("an error occurred. (possible timeout) "+b);
-	    }
-	});
-    });    
-
-
-
-    jQuery('#c3_select_all').click(
-	function() { 
-	    selectAllOptions(document.getElementById('c3_data'));
-            show_list_total_count('#c3_data_count', jQuery('#c3_data').text().split("\n").length-1, jQuery('#c3_data').val().length);
-	}
-    );
-
-
-    // jQuery('#select4').change(function() { 
-    // 	//jQuery('#stock_data').html('');
-	
-    // 	var select1 = jQuery('#select1').val();
-    // 	var select2 = jQuery('#select2').val();
-    // 	var select3 = jQuery('#select3').val();
-    // 	var select4 = jQuery('#select4').val();
-    // 	var c1_data = jQuery('#c1_data').val() || [];
-    // 	var c2_data = jQuery('#c2_data').val() || [];
-    // 	var c3_data = jQuery('#c3_data').val() || [];
-	
-    // 	var stock_data;
-	
-    // 	if (typeof select3 != 'string') { select3 = ''; }
-
-    // 	var c1_str = '';
-    // 	var c2_str = '';
-    // 	var c3_str = '';
-	
-    // 	if (c1_data.length > 0) { c1_str = c1_data.join(","); }
-    // 	if (c2_data.length > 0) { c2_str = c2_data.join(","); }
-    // 	if (c3_data.length > 0) { c3_str = c3_data.join(","); }
-
-    // 	//disable_ui();
-
-    // 	jQuery.ajax( { 
-    // 	    url: '/ajax/breeder/search',
-    // 	    //async: false,
-    // 	    timeout: 30000,
-    // 	    method: 'POST',
-    // 	    data: {'select1':select1, 'c1_data': c1_str, 'select2': select2, 'c2_data': c2_str, 'select3':select3, 'c3_data': c3_str, 'select4' : select4, 'genotypes': get_genotype_checkbox()  },
-    // 	    beforeSend: function(){
-    // 		disable_ui();
-    //         },  
-    //         complete : function(){
-    // 		enable_ui();
-    //         },  
-    // 	    success: function(response) { 
-    // 		if (response.error) { 
-    // 		    alert(response.error);
-    // 		} 
-    // 		else {
-    // 		    update_stocks(response.stocks);
-
-    // 		    if (isLoggedIn()) { 
-    // 			addToListMenu('add_to_list_menu', 'stock_data', {
-    // 			    selectText: true,
-    // 			    typeSourceDiv: 'select4' });
-    // 		    }
-    // 		    //enable_ui();
-    // 		}		
-    // 	    },
-    // 	    error: function(message) { 
-    // 		alert("an error occurred. ("+ message.responseText +")");
-    // 	    }
-    // 	});
-
-
-	//enable_ui();
-//    });    
-
-    jQuery('#stock_data').change(function() { 
-	var stock_data = jQuery('#stock_data').val() || [];
-
-	show_list_total_count('#stock_count', jQuery('#stock_data').text().split("\n").length-1, stock_data.length);
-
-    });
-
-    jQuery('#stock_select_all').click(
-	function() { 
-	    selectAllOptions(document.getElementById('stock_data'));
-            show_list_total_count('#stock_count', jQuery('#stock_data').text().split("\n").length-1, jQuery('#stock_data').val().length);
-	}
-    );
- 
-    jQuery('#restrict_genotypes').change(
-	function() { 
-	    var select1 = jQuery('#select1').val();
-	    var select2 = jQuery('#select2').val();
-	    var select3 = jQuery('#select3').val();
-	    var select4 = jQuery('#select4').val();
-	    var c1_data = jQuery('#c1_data').val() || [];
-	    var c2_data = jQuery('#c2_data').val() || [];
-	    var c3_data = jQuery('#c3_data').val() || [];
-	
-	    var stock_data;
-	    
-	    if (typeof select3 != 'string') { select3 = ''; }
-	    
-	    var c1_str = '';
-	    var c2_str = '';
-	    var c3_str = '';
-	    var restrict_genotypes = '';
-
-	    if (c1_data.length > 0) { c1_str = c1_data.join(","); }
-	    if (c2_data.length > 0) { c2_str = c2_data.join(","); }
-	    if (c3_data.length > 0) { c3_str = c3_data.join(","); }
-	    restrict_genotypes = 0;
-
-	    disable_ui();
-
-    	    jQuery.ajax( { 
-		url: '/ajax/breeder/search',
-		//async: false,
-		timeout: 30000,
-		method: 'POST',
-		data: {'select1':select1, 'c1_data': c1_str, 'select2': select2, 'c2_data': c2_str, 'select3':select3, 'c3_data': c3_str, 'select4' : select4, 'genotypes': get_genotype_checkbox()  },
-		beforeSend: function(){
-		    disable_ui();
-		},  
-		complete : function(){
-		    enable_ui();
-		},  
-		success: function(response) { 
-		    if (response.error) { 
-			alert(response.error);
-		    } 
-		    else {
-			update_stocks(response.stocks);
-			
-			if (isLoggedIn()) { 
-			    addToListMenu('add_to_list_menu', 'stock_data', {
-			    selectText: true,
-				typeSourceDiv: 'select4' });
-			}
-		    }		
-	    },
-	    error: function(message) { 
-		alert("an error occurred. ("+ message.responseText +")");
-	    }
-	    });
-	});      
+	});		
 }
 
-function update_stocks(stocks, message) { 
-    if (! message) { 
-	var stock_data = format_options_list(stocks);
-	jQuery('#stock_data').html(stock_data);
+function get_selected_data(this_section) {
+    var selected_data = [];
+
+    for (i=1; i <= this_section; i++) {
+	var element_id = "c"+i+"_data";
+	var data = jQuery("#"+element_id).val();
+	if (data) selected_data.push(data);
     }
-    if (stocks) { 
-	jQuery('#stock_count').html(stocks.length+' items');
+    //if (window.console) console.log("selected data= "+JSON.stringify(selected_data));
+    return selected_data;
+}
+
+function get_selected_categories(this_section) {
+
+    var selected_categories = [];
+    var select1 = jQuery('#select1').val();
+    if (select1 === '') { // if starting category is undefined
+	var list_id = jQuery('#c1_data_list_select').val();
+	if (list_id) { // check to see if paste from list was used, if so get list type
+	    var list_id = jQuery('#c1_data_list_select').val();
+	    var lo = new CXGN.List();
+	    var list_data = lo.getListData(list_id);
+	    select1 = list_data.type_name;
+	}
     }
-    else { 
-	jQuery('#stock_count').html(message);
+    selected_categories.push(select1);
+    for (i=2; i <= this_section; i++) {
+	var element_id = "select"+i;
+	var category = jQuery("#"+element_id).val();
+	selected_categories.push(category);
     }
+    var next_section = this_section +1;
+    var next_select_id = "select"+next_section;
+    jQuery("#"+next_select_id).val('please select');
+    //if (window.console) console.log("selected categories= "+JSON.stringify(selected_categories));
+    return selected_categories;
+}
+
+function get_selected_trials () {
+    var max_section = 4;
+    var selected_trials;
+    var categories = get_selected_categories(max_section);
+    var data = get_selected_data(max_section);
+    for (i=0; i < categories.length; i++) {
+	if (categories[i] === 'trials' && data[i]) {
+	    selected_trials = data[i];
+	} else {
+	}
+    }
+    if (selected_trials.length > 0) {
+	return selected_trials;
+    } else {
+	alert("No trials selected");
+    }
+}
+
+function get_selected_accessions () {
+    var max_section = 4;
+    var selected_accessions;
+    var categories = get_selected_categories(max_section);
+    var data = get_selected_data(max_section);
+    for (i=0; i < categories.length; i++) {
+	if (categories[i] === 'accessions' && data[i]) {
+	    selected_accessions = data[i];
+	} else {
+	}
+    }
+    if (selected_accessions.length > 0) {
+	return selected_accessions;
+    } else {
+	alert("No accessions selected");
+    }
+}
+
+function update_select_categories(this_section) {
+    var selected_categories = get_selected_categories(this_section);
+    
+    var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', plots : 'plots', traits : 'traits', trials :'trials', years : 'years'};
+    var all_categories = copy_hash(categories);
+
+    for (i=0; i < this_section; i++) {
+	delete all_categories[selected_categories[i]];
+    }
+    var remaining_categories = format_options(all_categories);
+    var next_section = ++this_section;
+    var next_select_id = "select"+next_section;
+
+    jQuery('#'+next_select_id).html(remaining_categories);
+}
+
+function update_download_options(this_section) {
+    var categories = get_selected_categories(this_section);
+    var data = get_selected_data(this_section);
+    var trials_selected = 0;
+    var accessions_selected = 0;
+    for (i=0; i < categories.length; i++) {
+	//if (categories[i]) {console.log("category ="+categories[i]);}
+	//if (data !== undefined) {console.log("data ="+data[i]);}
+	if (categories[i] === 'trials' && data[i]) {
+	    trials_selected = 1;
+	    jQuery('#download_button_excel').prop( 'title', 'Click to Download Trial Phenotypes');
+	    jQuery('#download_button_csv').prop('title', 'Click to Download Trial Phenotypes');
+	    jQuery('#download_button_excel').removeAttr('disabled');
+	    jQuery('#download_button_csv').removeAttr('disabled');
+	    var trial_html = '<font color="green">'+data[i].length+' trials selected</font></div>';
+	    jQuery('#trials_list').html(trial_html);
+	}
+	if (categories[i] === 'accessions' && data[i]) {
+	    accessions_selected = 1;
+	    jQuery('#download_button_genotypes').prop( 'title', 'Click to Download Accession Genotypes');
+	    jQuery('#download_button_genotypes').removeAttr('disabled');
+	    var accession_html = '<font color="green">'+data[i].length+' accessions selected</font></div>';
+	    jQuery('#accessions_list').html(accession_html);
+	}
+    }
+    //console.log("trials-selected="+trials_selected);
+    //console.log("accessions-selected="+accessions_selected);
+    if (trials_selected !== 1) {
+	jQuery('#download_button_excel').prop('title','First Select a Trial to Download');
+	jQuery('#download_button_csv').prop('title', 'First Select a Trial to Download');
+	jQuery('#download_button_excel').attr('disabled', 'disabled');
+	jQuery('#download_button_csv').attr('disabled', 'disabled');
+	jQuery('#trials_list').html('No trials selected');
+    }
+    if (accessions_selected !== 1) {
+	jQuery('#download_button_genotypes').prop('title','First Select Accessions to Download');
+	jQuery('#download_button_genotypes').attr('disabled', 'disabled');
+	jQuery('#accessions_list').html('No accessions selected');
+    }
+}
+
+	
+function reset_downstream_sections(this_section) {  // clear downstream selects, data_panels, data_counts
+    jQuery('#response_error').remove();
+    for (i = 4; i > this_section; i--) {
+	var select_id = "select"+i;
+	var data_id = "c"+i+"_data";
+	var count_id = "c"+i+"_data_count";
+	var querytype_id = "c"+i+"_querytype";
+	jQuery('#'+select_id).html('');
+	jQuery('#'+data_id).html('');
+	jQuery('#'+count_id).html('');
+	jQuery('#'+querytype_id).bootstrapToggle('off');
+    }
+}
+
+function create_list_start(message) {
+    var lo = new CXGN.List();
+    var listhtml = lo.listSelect('c1_data', '', message);
+    jQuery('#paste_list').html(listhtml);
+    jQuery('#paste_list').change(
+    function() { // if 'select a list', reinitialize, otherwise paste list
+	var value = jQuery('#c1_data_list_select').val();
+	console.log("c1_data_list_select_val ="+value);
+	if (value === '') {
+	    jQuery('#c1_data').html('');
+	} else {
+	    pasteList('c1_data');
+	}
+	update_download_options(1);
+    });
 }
 
 function format_options(items) { 
@@ -623,7 +381,7 @@ function copy_hash(hash) {
     for (var key in hash) { 
 	new_hash[key] = hash[key];
     }
-    return new_hash;
+     return new_hash;
 }
 
 function disable_ui() { 
@@ -634,37 +392,122 @@ function enable_ui() {
      jQuery('#working_modal').modal("hide");
 }
 
-function show_list_total_count(count_div, total_count, selected) { 
+function show_list_counts(count_div, total_count, selected) { 
     var html = 'Items: '+total_count+'<br />';
     if (selected) { 
 	html += 'Selected: '+selected;
     }
-    jQuery(count_div).html(html);
+    jQuery('#'+count_div).html(html);
 }
 
-function show_list_selected_count(select_div, selected_count_div) { 
-    var selected_count = 0;
-    var selected = jQuery(select_div).val();
-    if (selected != undefined) { selected_count = selected.count; }
-
-    jQuery(count_div).html('selected: '+selected_count);
-}
-
-  function selectAllOptions(obj) {
+function selectAllOptions(obj) {
     if (!obj || obj.options.length ==0) { return; }
     for (var i=0; i<obj.options.length; i++) {
       obj.options[i].selected = true;
     }
-  }
+}
 
-
-function get_genotype_checkbox() { 
-    var checkbox = jQuery('#restrict_genotypes').is(':checked')
-
-    if (checkbox == true) {
-	console.log("Selected protocol = "+jQuery("#gtp_select").text()+" and id = "+jQuery("#gtp_select").val());
-	return jQuery("#gtp_select").val();
+function check_missing_criteria(categories, data, this_section) {
+    var test = data.length + 1;
+    if (categories.length > test) {
+	var error_html = '<div class="well well-sm" id="response_error"><font color="red">Error: Select at least one option from each preceding panel</font></div>';
+	var selectall_id = "c"+this_section+"_select_all";
+	jQuery('#'+selectall_id).before(error_html);
+	return 1;
+    } else {
+	return 0;
     }
-    return 0;
+}
 
+function get_querytypes(this_section) {
+    var querytypes = [];
+
+    for (i=2; i <= this_section; i++) {
+	var element_id = "c"+i+"_querytype";
+	if (jQuery('#'+element_id).is(":checked")) {
+	    var type = 1;
+	} else {
+	    var type = 0;
+	}
+	if (window.console) console.log("querytype="+type);
+	querytypes.push(type);
+    }
+    if (querytypes.length > 0) {
+    return querytypes;
+    }
+}
+
+function add_data_refresh() {
+    var roles = getUserRoles();
+    console.log("userroles="+roles);
+    if (jQuery.inArray(roles, ['submitter', 'curator', 'sequencer']) >= 0) {
+	jQuery('#wizard_refresh').append('<p align="center" style="margin: 0px 0"><i>Don\'t see your data?</i></p><input class="btn btn-link center-block" id="open_update_dialog" type="button" value="Update wizard">');
+    }
+}
+
+function refresh_matviews() {
+    jQuery.ajax( {
+	url: '/ajax/breeder/refresh',
+	timeout: 60000,
+	method: 'POST',
+	beforeSend: function() {
+	    jQuery('#update_wizard').button('loading');
+	},
+	success: function(response) { 
+		if (response.error) {
+		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">'+response.error+'</font></div>';
+		    jQuery('#update_wizard_error').replaceWith(error_html);
+		} else {
+		    var success_html = '<div class="well well-sm" id="update_wizard_error"><font color="green">Success! Update initiated.</font></div>';
+		    jQuery('#update_wizard_error').replaceWith(success_html);
+		    matviews_update_options();
+		}	
+	    }, 
+	error: function(request, status, err) {
+		if (status == "timeout") {
+                    // report timeout
+		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
+		    jQuery('#update_wizard_error').replaceWith(error_html);
+		} else {
+                    // report unspecified error occured  
+		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
+		    jQuery('#update_wizard_error').replaceWith(error_html);
+		}
+            }
+    });
+}
+
+function matviews_update_options() {
+    jQuery.ajax( {
+	url: '/ajax/breeder/check_status',
+	timeout: 60000,
+	method: 'POST',
+	success: function(response) { 
+		if (response.refreshing) {
+		    // if already refreshing, display status in modal and create disabled button
+	            var update_status = response.refreshing;
+		    jQuery('#wizard_status').replaceWith(update_status);
+		    var button_html = '<button type="button" class="btn btn-primary wiz-update" name="update_wizard" data-loading-text="Working..." id="update_wizard" title="A search wizard update is already in progress..." disabled>Update search wizard</button>';
+		    jQuery('#update_wizard').replaceWith(button_html);
+		} else if (response.timestamp) {
+		    // if exists display timestamp in modal and create button
+		    var update_status = response.timestamp;
+		    jQuery('#wizard_status').replaceWith(update_status);
+		    var button_html = '<button type="button" class="btn btn-primary wiz-update" name="update_wizard" data-loading-text="Working..." id="update_wizard" title="Refresh the search wizard to include newly uploaded data">Update search wizard</button>';
+		    console.log("button html ="+button_html);
+		    jQuery('#update_wizard').replaceWith(button_html);
+		}
+	    }, 
+	error: function(request, status, err) {
+		if (status == "timeout") {
+                    // report timeout
+		    var error_html = '<div class="well well-sm" id="wizard_status"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
+		    jQuery('#wizard_status').replaceWith(error_html);
+		} else {
+                    // report unspecified error occured  
+		    var error_html = '<div class="well well-sm" id="wizard_status"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
+		    jQuery('#wizard_status').replaceWith(error_html);
+		}
+            }
+    });
 }

@@ -151,7 +151,12 @@ LOAD...
 
 <& /ontology/embedded_browser.mas, cvterm => $cvterm &>
 
-<&| /page/info_section.mas, title=> "Annotated loci", subtitle => '<span id="loci_count"></span>', collapsible => 1&>
+<&| /page/info_section.mas,
+    title=> "Annotated loci",
+    subtitle => '<span id="loci_count"></span>',
+    collapsible => 1,
+    collapsed=>1
+&>
 <div id="loci_div">
    [Loading...]
 <script language="javascript">
@@ -169,6 +174,7 @@ LOAD...
 <&| /page/info_section.mas,
        title=> "Annotated stocks",
        collapsible => 1,
+       collapsed=>1,
        subtitle => '<span id="stocks_count"></span>',
  &>
 <div id="stocks_div">
@@ -203,6 +209,7 @@ LOAD...
 <&| /page/info_section.mas,
       title       => "Phenotyped accessions",
       collapsible => 1,
+      collapsed=>1,
       subtitle    => '<span id="pheno_count"></span>',
 &>
 <div id="pheno_div">
@@ -213,6 +220,27 @@ LOAD...
                          content_id: "pheno_div",
                          count_id:   "pheno_count",
                          inflect:    [ 'accession', 'accessions' ],
+                       });
+</script>
+</div>
+
+</&>
+
+
+<&| /page/info_section.mas,
+      title       => "Phenotyping trials",
+      collapsible => 1,
+      collapsed=>1,
+      subtitle    => '<span id="trial_count"></span>',
+&>
+<div id="trial_div">
+   [Loading...]
+<script language="javascript">
+  recursiveAnnotations({
+                         url:        "/ajax/cvterm/trials",
+                         content_id: "trial_div",
+                         count_id:   "trial_count",
+                         inflect:    [ 'trial', 'trials' ],
                        });
 </script>
 </div>

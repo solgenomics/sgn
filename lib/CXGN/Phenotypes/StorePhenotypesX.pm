@@ -129,9 +129,7 @@ sub store {
     my $phenotyping_experiment_cvterm = $schema->resultset('Cv::Cvterm')
 	->create_with({
 		       name   => 'phenotyping experiment',
-		       cv     => 'experiment type',
-		       db     => 'null',
-		       dbxref => 'phenotyping experiment',
+		       cv     => 'experiment_type',
 		      });
 
     ## Track experiments seen to allow for multiple trials and experiments to exist in an uploaded file.

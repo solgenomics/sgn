@@ -13,6 +13,7 @@
   <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
   <!-- <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"> -->
   <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/bootstrap-toggle/bootstrap-toggle.min.css">
 
 <script language="javascript" type="text/javascript">
    JSAN = {};
@@ -20,7 +21,7 @@
    MochiKit = {__export__: false};
 </script>
 
-<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "jquery.dataTables", "jquerymigrate", "CXGN.Effects", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min" ] &>
+<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "jquery.dataTables", "jquerymigrate", "CXGN.Effects", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min", "bootstrap-toggle.min" ] &>
 
 <& /site/header/local_head.mas &>
 <& /site/header/analytics.mas &>

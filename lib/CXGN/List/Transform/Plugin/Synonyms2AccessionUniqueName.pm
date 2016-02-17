@@ -31,9 +31,9 @@ sub transform {
     
     my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"accession" })->first->cvterm_id();
 
-    my $local_cv_id = $schema->resultset("Cv::Cv")->search({ name=> "local" })->first()->cv_id();
+    my $stock_property_cv_id = $schema->resultset("Cv::Cv")->search({ name=> "stock_property" })->first()->cv_id();
 
-    my $synonym_type_id = $schema->resultset("Cv::Cvterm")->search({name=>"synonym", cv_id=> $local_cv_id })->first->cvterm_id();
+    my $synonym_type_id = $schema->resultset("Cv::Cvterm")->search({name=>"stock_synonym", cv_id=> $stock_property_cv_id })->first->cvterm_id();
 
     my %items = ();
     my @transform = ();

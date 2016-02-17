@@ -3,19 +3,13 @@
 $trial_id
 $breeding_program
 $trial_name
-##@location_data
-##@phenotype_data
-##@years
-##@plot_data
-@accession_names
-@control_names
-@plot_names
-$design_type
-$number_of_blocks
-$number_of_replicates
-$trial_description
-$design
-$design_layout_view
+$location_data => undef
+$year => undef
+$trial_type => undef
+$planting_date => undef
+$harvest_date => undef
+$trial_description => undef
+$design_layout_view => undef
 $user_can_modify => undef
 </%args>
 
@@ -25,7 +19,11 @@ $user_can_modify => undef
 
 <& /page/page_title.mas, title=>"Genotyping trial $trial_name" &>
 
-<table><tr><td width="400px" valign="top" >
+<br/>
+
+<div class="well">
+<div class="row">
+<div class="col-sm-6">
 
 <&| /page/info_section.mas, title=>"Breeding program" &>
 
@@ -35,7 +33,8 @@ $user_can_modify => undef
 
 </&>
 
-</td><td width="400px" valign="top" >
+</div>
+<div class="col-sm-6">
 
 <&| /page/info_section.mas, title=>"Trial type" &>
   <div id="trial_type">
@@ -43,48 +42,46 @@ $user_can_modify => undef
   </div>
 </&>
 
-</td></tr></table>
+</div>
+</div>
+</div>
 
-<center><div class="boxbgcolor5" style="width:70%"><a id="genotyping_trial_spreadsheet_link" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br /></div>
+<center><a id="genotyping_trial_spreadsheet_link" class="btn btn-default" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br />
 
-<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1,  subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/layout/download/$trial_id\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/layout/download/$trial_id?format=csv\">csv</a>]" &>
+<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
 
-%print "Design: $design_type <br /><br />";
-%print "Number of blocks: $number_of_blocks <br />";
-%print "Number of replicates: $number_of_replicates <br />";
+<& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 
-<br /><br />
+<&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
-<&| /page/info_section.mas, title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1  &>
-% foreach my $accession (@accession_names) { 
-%  print "$accession<br />\n";
-%}
-</&>
-
-<&| /page/info_section.mas, title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
-% foreach my $control (@control_names) { 
-%  print "$control <br />\n";
-%}
+<& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
 
 </&>
 
-<&| /page/info_section.mas, title=>"Tissue samples",  is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
-% foreach my $plot (@plot_names) { 
-%  print "$plot <br />\n";
-%}
+<&| /page/info_section.mas, id => "trial_controls", title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
+<& /breeders_toolbox/trial/trial_controls.mas, trial_id => $trial_id &>
 
 </&>
 
+<&| /page/info_section.mas, id => "trial_plots", title=>"Tissue Samples",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
-
-<&| /page/info_section.mas, title=>"Plate layout", collapsible=>1, is_subsection=>1,subtitle=> qq{ [<a href="/breeders_toolbox/trial/$trial_id?format=as_table">Plate View</a>] } &>
-
-  <& /breeders_toolbox/genotyping_trials/layout.mas, design => $design &>
+<& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
 
 </&>
 
-<&| /page/info_section.mas, title=>"Delete", collapsible=>1, subtitle=>"<font color=\"red\">Deletion cannot be undonw</font>" &>
+</&>
+
+<br />
+
+% my $plate_view_link = '/breeders_toolbox/trial/'.$trial_id.'?format=as_table';
+<&| /page/info_section.mas, title=>"Plate layout", id=>"trial_plate_layout", collapsible=>1, collapsed=>1, is_subsection=>1,subtitle=> qq{ [<a href=$plate_view_link>Plate View</a>] } &>
+
+  <& /breeders_toolbox/genotyping_trials/layout.mas, trial_id => $trial_id &>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Delete", collapsible=>1, subtitle=>"<font color=\"red\">Deletion cannot be undone</font>" &>
 
 <div class="boxbgcolor5">Note: Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
 <br />
@@ -93,7 +90,6 @@ $user_can_modify => undef
 
 </&>
 
-</&>
 
 
 <script>
