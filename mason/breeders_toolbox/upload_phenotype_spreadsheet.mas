@@ -52,6 +52,15 @@ jQuery(document).ready(function() {
 	jQuery('#upload_phenotype_spreadsheet_dialog').modal("show");
     });
 
+    jQuery("#phenotype_upload_spreadsheet_format_info").click( function () { 
+	jQuery('#upload_phenotype_spreadsheet_dialog').modal("hide");
+	jQuery("#phenotype_upload_spreadsheet_info_dialog" ).modal("show");	
+    });
+
 });  
 
 </script>
+
+
+
+    

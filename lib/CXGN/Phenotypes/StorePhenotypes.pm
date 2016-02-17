@@ -177,7 +177,7 @@ sub store {
 		my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
 		my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
 
-		if ($trait_value) {
+		if ($trait_value || $trait_value eq '0') {
 
 		    my $plot_trait_uniquename = "Stock: " .
 		    $plot_stock_id . ", trait: " .
@@ -230,7 +230,7 @@ sub store {
 
 		    ## Link the phenotype to the experiment
 		    $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-		    print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
+		    #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
 
 		    $experiment_ids{$experiment->nd_experiment_id()}=1;
 		}
@@ -264,7 +264,7 @@ sub store {
 		my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
 		my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
 
-		if ($trait_value) {
+		if ($trait_value || $trait_value eq '0') {
 
 		    my $plot_trait_uniquename = "Stock: " .
 		    $plot_stock_id . ", trait: " .
@@ -315,7 +315,7 @@ sub store {
 
 		    ## Link the phenotype to the experiment
 		    $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-		    print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
+		    #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
 
 		    $experiment_ids{$experiment->nd_experiment_id()}=1;
 		}
@@ -373,7 +373,7 @@ sub store {
 			  file_id => $file_row->file_id(),
 			 });
 	    $experiment_files->insert();
-	    print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
+	    #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
 	}
     }
 
