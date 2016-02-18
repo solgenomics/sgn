@@ -485,23 +485,25 @@ sub prepare_multi_pops_data {
    $solgs_controller->multi_pops_geno_files($c, $combined_pops_list);
    $solgs_controller->multi_pops_pheno_files($c, $combined_pops_list);
 
-   my $pheno_jobs = $c->stash->{multi_pops_pheno_jobs_ids};
-   my $geno_jobs = $c->stash->{multi_pops_geno_jobs_ids};
-   my $all_jobs = join(':', (@$pheno_jobs, @$geno_jobs));
+   my @all_jobs = (@{$c->stash->{multi_pops_pheno_jobs_ids}}, 
+		   @{$c->stash->{multi_pops_geno_jobs_ids}});
+   
+   my $prerequisite_jobs;
 
-   print STDERR "\n all pre req jobs: $all_jobs\n";
-   $c->stash->{prerequisite_jobs} = $all_jobs;
+   if (@all_jobs && scalar(@all_jobs) > 1) 
+   {
+       $prerequisite_jobs = join(':', @all_jobs);
+   } 
+   else 
+   {
+       if (@all_jobs && scalar(@all_jobs) == 1) { $prerequisite_jobs = $all_jobs[0];}
+   }
+
+   print STDERR "\n all pre req jobs: $prerequisite_jobs\n";
+   $c->stash->{prerequisite_jobs} = $prerequisite_jobs;
 
 }
 
-# sub log_prerequisite_jobs {
-#     my ($self, $job_ids) = @_;
-#  my $solgs_controller = $c->controller('solGS::solGS');
-    
-#   my $trait_info   = $trait_id . "\t" . $trait_abbr;     
-#     my $trait_file  = $self->create_tempfile($c, "trait_info_${trait_id}");   
-#  write_file($trait_file, $trait_info);
-# }
 
 sub create_combined_pops_id {    
     my ($self, $c) = @_;

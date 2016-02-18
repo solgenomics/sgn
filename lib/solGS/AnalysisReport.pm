@@ -413,35 +413,34 @@ sub report_status {
    
     my $closing = "If you have any remarks, please contact us:\n"
 	. $output_details->{contact_page}
-	."\n\nThanks and regards,\nWebmaster";
+	."\n\nThanks and regards,\nsolGS M Tool";
 
-    my $body = "Dear $user_name,"
-	. "\n\n$analysis_result" 
+    my $body = "Dear $user_name,\n"
+	. "\n$analysis_result" 
 	. "$closing";
    
+    my $email_from;
     my $email_to;
     my $email_cc;
-    my $email_from;
-
-    if ($analysis_page =~ /localhost/) 
+   
+    if ($analysis_page =~ m/localhost/) 
     {
 	my $uid = getpwuid($<);
-	$email_to   = '<' . $uid . '@localhost.localdomain>';
-	$email_from = '<' . $uid . '@localhost.localdomain>';
-	    
+    	$email_from = '"' . $uid .'" <' . $uid . '@localhost.localdomain>';
+    	$email_to   = '"' . $uid .'" <' . $uid . '@localhost.localdomain>';
     }
     else 
     {
-	$email_to   = "$user_name <$user_email>";
-	$email_from = '"solGS M Tool" <cluster-jobs@solgenomics.net>';
-	$email_cc   = 'solGS Job <cluster-jobs@solgenomics.net>';
+    	$email_from = '"solGS M Tool" <cluster-jobs@solgenomics.net>';
+    	$email_to   = "$user_name <$user_email>";   
+    	$email_cc   = 'solGS Job <cluster-jobs@solgenomics.net>';
     }
 
     my $email = Email::Simple->create(
-	header => [
+	header => [	    
+	    From    => $email_from,
 	    To      => $email_to,
 	    Cc      => $email_cc,
-	    From    => $email_from,
 	    Subject => "Analysis result of $analysis_name",
 	],
 	body => $body,
@@ -472,7 +471,7 @@ sub multi_modeling_message {
 		    my $trait_name = uc($output_details->{$k}->{trait_name});
 		    my $trait_page = $output_details->{$k}->{trait_page};
 		    $message .= "The analysis for $trait_name is done."
-			." You can view the output here:\n"
+			." You can view the model output here:\n"
 			."$trait_page.\n\n";
 		}
 		else 
@@ -513,7 +512,7 @@ sub single_modeling_message {
 		if ($output_details->{$k}->{success})		
 		{		
 		    $message = "The analysis for $trait_name is done."
-			." You can view the output here:\n"
+			." You can view the model output here:\n"
 			."$trait_page.\n\n";
 		}
 		else 
@@ -547,7 +546,7 @@ sub population_download_message {
 		if ($output_details->{$k}->{success})		
 		{		
 		    $message = "The phenotype and genotype data for $pop_name is ready for analysis."
-			."\nYou can view population page here:\n"
+			."\nYou can view the training population page here:\n"
 			."\n$pop_page.\n\n";
 		}
 		else 
@@ -611,7 +610,7 @@ sub combine_populations_message {
     else 
     {
 	my $combined_pops_page = $output_details->{combined_pops_page};
-	$message .= "Your combined population is ready for analysis." 
+	$message .= "Your combined training population is ready for analysis." 
 	    ."You can view it here:\n\n$combined_pops_page\n\n";
     } 
  

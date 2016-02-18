@@ -437,12 +437,11 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
    }     
     
     my $page_links =  sub {uri ( query => {  page => shift } ) };
-    
     my $pager = $projects_rs->pager; 
     $pager->change_entries_per_page(15);
  
-    my $pagination;
-
+     my $pagination;
+   
     my $url = "/solgs/search/result/populations/$trait_id";
    
     if ( $pager->previous_page || $pager->next_page )
@@ -3481,6 +3480,7 @@ sub multi_pops_phenotype_data {
         }
     }
     
+    @job_ids = uniq(@job_ids);
     $c->stash->{multi_pops_pheno_jobs_ids} = \@job_ids;
   #  $self->multi_pops_pheno_files($c, $pop_ids);
     
@@ -3504,6 +3504,7 @@ sub multi_pops_genotype_data {
         }
     }
 
+    @job_ids = uniq(@job_ids);
     $c->stash->{multi_pops_geno_jobs_ids} = \@job_ids;
 #  $self->multi_pops_geno_files($c, $pop_ids);
  
@@ -4784,7 +4785,7 @@ sub run_r_script {
 	$cmd   .= 'system("Rscript --slave ' 
 	    . $in_file_temp 
 	    . ' --args ' . $input_files . ' ' . $output_files 
-	    . ' | qsub -W ' .  $dependency . '");';
+	    . ' | qsub -r y -W ' .  $dependency . '");';
 
 	write_file($dependent_job_script, $cmd);
 	chmod 0755, $dependent_job_script;
