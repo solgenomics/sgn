@@ -90,7 +90,7 @@ CREATE MATERIALIZED VIEW public.materialized_fullview AS
      LEFT JOIN cvterm ON phenotype.cvalue_id = cvterm.cvterm_id
      LEFT JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id
      LEFT JOIN db ON dbxref.db_id = db.db_id
-  WHERE plot.type_id = 76393 AND projectprop.type_id = 76395 AND db.db_id = 186
+  WHERE plot.type_id = 76393 AND projectprop.type_id = 76395
   GROUP BY stock_relationship.subject_id, cvterm.cvterm_id, plot.uniquename, accession.uniquename, stock_relationship.object_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, trial.name, project_relationship.subject_project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, nd_experiment.nd_geolocation_id, nd_geolocation.description, phenotype.phenotype_id, phenotype.value, nd_experiment_protocol.nd_protocol_id, nd_protocol.name;
 
 CREATE UNIQUE INDEX materializedfullview_idx ON public.materialized_fullview(trial_id, plot_id, phenotype_id, genotyping_protocol_id) WITH (fillfactor=100);
