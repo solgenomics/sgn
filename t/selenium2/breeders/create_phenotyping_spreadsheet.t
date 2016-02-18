@@ -11,6 +11,8 @@ $d->login_as("submitter");
 
 $d->get_ok('/breeders/trial/137');
 
+sleep(3);
+
 my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
 
 $d->find_element_ok("add_list_input", "id", "find add list input");
@@ -19,7 +21,11 @@ my $add_list_input = $d->find_element_ok("add_list_input", "id", "find add list 
    
 $add_list_input->send_keys("new_test_list_pheno_spreadsheet");
 
+sleep(1);
+
 $d->find_element_ok("add_list_button", "id", "find add list button test")->click();
+
+sleep(1);
 
 $d->find_element_ok("view_list_new_test_list_pheno_spreadsheet", "id", "view list test")->click();
 
@@ -64,7 +70,7 @@ $d->find_element_ok("close_list_dialog_button", "id", "find close dialog button"
 
 	$button->click();
 
-	sleep(10);
+	sleep(5);
 
 	
     
