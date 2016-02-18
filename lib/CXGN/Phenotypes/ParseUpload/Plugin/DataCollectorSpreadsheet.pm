@@ -91,6 +91,11 @@ sub parse {
     }
 
     $worksheet = ( $excel_obj->worksheets() )[7];
+    if (!$worksheet) {
+	print STDERR "No 7th tab found in your Excel file.\n";
+	return;
+    }
+
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
