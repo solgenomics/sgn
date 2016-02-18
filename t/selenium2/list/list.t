@@ -4,29 +4,25 @@ use strict;
 use lib 't/lib';
 
 use Test::More;
+use SGN::Test::Fixture;
 use SGN::Test::WWW::WebDriver;
+use CXGN::List;
+use SimulateC;
 
 my $d = SGN::Test::WWW::WebDriver->new();
+
+my $f = SGN::Test::Fixture->new();
+my $c = SimulateC->new( { dbh => $f->dbh(), 
+			  bcs_schema => $f->bcs_schema(), 
+			  metadata_schema => $f->metadata_schema(),
+			  phenome_schema => $f->phenome_schema(),
+			  sp_person_id => 41 });
 
 $d->login_as("submitter");
 
 $d->get_ok("/search", "get root url test");
 
 my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
-
-# delete the list should it already exist
-#
-if ($d->driver->get_page_source() =~ /new_test_list/) { 
-     print "DELETE LIST new_test_list... ";
-     $d->find_element_ok("delete_list_new_test_list", "id", "find delete_list_new_test_list test")->click();
-     sleep(2);
-     $d->driver->accept_alert();
-     sleep(1);
-
-     print "Done.\n";
- }
- 
-#sleep(1);
 
 print "Adding new list...\n";
 
@@ -175,7 +171,17 @@ $d->find_element_ok("view_list_janedoe_1_public", "id", "view new public list")-
 
 sleep(1);
 
-$d->find_element_ok("747", "id", "delete item from list")->click();
+my $list_id = 16;
+my $q = "SELECT list_item_id from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
+my $h = $c->dbh->prepare($q);
+$h->execute($list_id);
+my @list = ();
+while (my ($content) = $h->fetchrow_array()) { 
+      push @list, $content;
+}
+
+$d->find_element_ok($list[0], "id", "delete item from list")->click();
+$d->find_element_ok($list[1], "id", "delete item from list")->click();
 
 sleep(1);
 

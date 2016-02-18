@@ -41,8 +41,6 @@ sub field_book :Path("/fieldbook") Args(0) {
       ->create_with({
 		     name   => 'field layout',
 		     cv     => 'experiment_type',
-		     db     => 'null',
-		     dbxref => 'field layout',
 		    });
 
 #    foreach my $row (@rows) {

@@ -132,10 +132,14 @@ sub store {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    if (!$user_id) { #For unit_test, SimulateC
+	$user_id = $c->sp_person_id();
+    }
     my $archived_file = $phenotype_metadata->{'archived_file'};
     my $archived_file_type = $phenotype_metadata->{'archived_file_type'};
     my $operator = $phenotype_metadata->{'operator'};
     my $phenotyping_date = $phenotype_metadata->{'date'};
+
     my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping experiment', 'experiment_type');
 
     ## Track experiments seen to allow for multiple trials and experiments to exist in an uploaded file.
@@ -150,6 +154,7 @@ sub store {
 
 	foreach my $plot_name (@plot_list) {
 
+	    #print STDERR "plot: $plot_name\n";
 	    my $plot_stock = $schema->resultset("Stock::Stock")->find( { uniquename => $plot_name});
 	    my $plot_stock_id = $plot_stock->stock_id;
 
@@ -168,10 +173,12 @@ sub store {
 
 	    foreach my $trait_name (@trait_list) {
 
+		#print STDERR "trait: $trait_name\n";
+
 		my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
 		my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
 
-		if ($trait_value) {
+		if ($trait_value || $trait_value eq '0') {
 
 		    my $plot_trait_uniquename = "Stock: " .
 		    $plot_stock_id . ", trait: " .
@@ -180,13 +187,14 @@ sub store {
 				"  operator = $operator" ;
 		    my $phenotype = $trait_cvterm
 		    ->find_or_create_related("phenotype_cvalues", {
-								   observable_id => $trait_cvterm->cvterm_id,
-								   value => $trait_value ,
-								   uniquename => $plot_trait_uniquename,
-								  });
-
-		    my $experiment;
-
+			observable_id => $trait_cvterm->cvterm_id,
+			value => $trait_value ,
+			uniquename => $plot_trait_uniquename,
+					     });
+		
+		#print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
+		my $experiment;
+		
 		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
 		# my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
 		#     ->find({
@@ -222,7 +230,7 @@ sub store {
 
 		    ## Link the phenotype to the experiment
 		    $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-		    print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
+		    #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
 
 		    $experiment_ids{$experiment->nd_experiment_id()}=1;
 		}
@@ -256,7 +264,7 @@ sub store {
 		my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
 		my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
 
-		if ($trait_value) {
+		if ($trait_value || $trait_value eq '0') {
 
 		    my $plot_trait_uniquename = "Stock: " .
 		    $plot_stock_id . ", trait: " .
@@ -307,7 +315,7 @@ sub store {
 
 		    ## Link the phenotype to the experiment
 		    $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-		    print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
+		    #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
 
 		    $experiment_ids{$experiment->nd_experiment_id()}=1;
 		}
@@ -365,7 +373,7 @@ sub store {
 			  file_id => $file_row->file_id(),
 			 });
 	    $experiment_files->insert();
-	    print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
+	    #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
 	}
     }
 

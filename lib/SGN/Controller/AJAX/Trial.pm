@@ -630,8 +630,6 @@ sub _add_trial_layout_to_database {
     ->create_with({
 		   name   => 'plot',
 		   cv     => 'stock_type',
-		   db     => 'null',
-		   dbxref => 'plot',
 		  });
   my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")
     ->find_or_create({
@@ -648,8 +646,6 @@ sub _add_trial_layout_to_database {
     ->create_with({
 		   name   => 'plot experiment',
 		   cv     => 'experiment_type',
-		   db     => 'null',
-		   dbxref => 'plot experiment',
 		  });
 
   #create project

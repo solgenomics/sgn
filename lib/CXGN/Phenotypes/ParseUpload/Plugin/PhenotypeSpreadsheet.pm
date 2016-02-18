@@ -113,7 +113,7 @@ sub parse {
 	if ($worksheet->get_cell($row,$header_column_info{$trait_key})){
 	  $trait_value = $worksheet->get_cell($row,$header_column_info{$trait_key})->value();
 	}
-	if ($trait_value) {
+	if ($trait_value || $trait_value eq '0') {
 	  if ($trait_value ne '.'){
 	    $data{$plot_name}->{$trait_key} = $trait_value;
 	  }

@@ -161,8 +161,6 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     ->create_with({
 		   name   => 'field layout',
 		   cv     => 'experiment_type',
-		   db     => 'null',
-		   dbxref => 'field layout',
 		  });
 
 

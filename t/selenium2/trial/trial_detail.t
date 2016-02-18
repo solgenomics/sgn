@@ -33,8 +33,10 @@ $t->while_logged_in_as("curator", sub {
     $t->find_element_ok("upload_trial_submit", "id", "submit upload trial file ")->click();
     sleep(5);
 
+    my $trial_id = $f->bcs_schema->resultset('Project::Project')->search({name=>'T100'}, {order_by => { -desc => 'project_id'}})->first->project_id();
+
     #Upload Trial Coordinates -> New Trial ID 144
-    $t->get_ok('/breeders/trial/144');
+    $t->get_ok('/breeders/trial/'.$trial_id);
     sleep(10);
     $t->find_element_ok("upload_trial_coords_link", "id", "click on upload_trial_coords_link ")->click();
     sleep(2);
@@ -53,6 +55,7 @@ $t->while_logged_in_as("curator", sub {
 
     #Verify Trial Info
     $t->find_element_ok("//div[contains(., 'test (test)')]", "xpath", "verify breeding program")->get_text();
+    sleep(1);
     $t->find_element_ok("//div[contains(., 'T100')]", "xpath", "verify trial name")->get_text();
     $t->find_element_ok("//div[contains(., '[Type not set]')]", "xpath", "verify trial type")->get_text();
     $t->find_element_ok("//div[contains(., 'T100 trial test description')]", "xpath", "verify description")->get_text();

@@ -97,25 +97,20 @@ sub _add_stocks {
       ->create_with({
 		     name   => $stock_type,
 		     cv     => 'stock_type',
-		     db     => 'null',
-		     dbxref => $stock_type,
 		    });
 
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'population',
-      cv     => 'stock_type',
-      db     => 'null',
-      dbxref => 'population',
-    });
-
-    my $population_member_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
-        name   => 'member_of',
-        cv     => 'stock_relationship',
-        db     => 'null',
-        dbxref => 'member_of',
-       });
-
+	{ name   => 'population',
+	  cv     => 'stock_type',
+	});
+    
+    my $population_member_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+	{
+	    name   => 'member_of',
+	    cv     => 'stock_relationship',
+	});
+    
     #### assign accessions to populations
     my $population;
     if ($self->has_population_name()) {
@@ -254,8 +249,6 @@ sub validate_population {
       ->create_with({
 	  name   => 'population',
 	  cv     => 'stock_type',
-	  db     => 'null',
-	  dbxref => 'population',
 		    });
   my $population_search = $schema->resultset("Stock::Stock")
       ->search({
