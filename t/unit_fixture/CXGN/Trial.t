@@ -103,22 +103,24 @@ my $plotlist_ref = [ 'anothertrial1', 'anothertrial2', 'anothertrial3', 'another
 
 my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014' ];
 
-my %plot_trait_value = ( 'anothertrial1' => { 'root number|CO:0000011'  => 12, 'CO:dry yield' => 30 },
-			   'anothertrial2' => { 'root number|CO:0000011'  => 10, 'CO:dry yield' => 40 },
-			   'anothertrial3' => { 'root number|CO:0000011'  => 20, 'CO:dry_yield' => 50 },
+my %plot_trait_value = ( 'anothertrial1' => { 'root number|CO:0000011'  => 12, 'dry yield|CO:0000014' => 30 },
+			   'anothertrial2' => { 'root number|CO:0000011'  => 10, 'dry yield|CO:0000014' => 40 },
+			   'anothertrial3' => { 'root number|CO:0000011'  => 20, 'dry yield|CO:0000014' => 50 },
     );
 
 
 my %metadata = ( operator => 'johndoe', date => '20141223' );
 
-$lp->store($c, $plotlist_ref, $traitlist_ref, \%plot_trait_value, \%metadata);
+my $size = scalar(@$plotlist_ref) * scalar(@$traitlist_ref);
+
+$lp->store($c, $size, $plotlist_ref, $traitlist_ref, \%plot_trait_value, \%metadata);
 
 my $total_phenotypes = $trial->total_phenotypes();
 
 my $trial_phenotype_count = $trial->phenotype_count();
 
 print STDERR "Total phentoypes: $total_phenotypes\n";
-is($trial_phenotype_count, 10, "trial has phenotype data");
+is($trial_phenotype_count, 6, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 				trial_id => 141 });

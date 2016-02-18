@@ -165,9 +165,6 @@ $t->while_logged_in_as("submitter", sub {
     $t->driver->accept_alert();
     sleep(1);
 
-
-
-
     $t->find_element_ok("[New]", "partial_link_text", "find new stock link")->click();
 
     sleep(3);
