@@ -71,26 +71,26 @@ CREATE MATERIALIZED VIEW public.materialized_fullview AS
     phenotype.value AS phenotype_value,
     nd_experiment_protocol.nd_protocol_id AS genotyping_protocol_id,
     nd_protocol.name AS genotyping_protocol_name
-   FROM stock plot
-     LEFT JOIN stock_relationship ON plot.stock_id = stock_relationship.subject_id
-     LEFT JOIN stock accession ON stock_relationship.object_id = accession.stock_id
+   FROM stock accession
+     LEFT JOIN stock_relationship ON accession.stock_id = stock_relationship.object_id
+     LEFT JOIN stock plot ON stock_relationship.subject_id = plot.stock_id
      LEFT JOIN nd_experiment_stock nd_experiment_plot ON stock_relationship.subject_id = nd_experiment_plot.stock_id
+     LEFT JOIN nd_experiment_stock nd_experiment_accession ON accession.stock_id = nd_experiment_accession.stock_id
      LEFT JOIN nd_experiment ON nd_experiment_plot.nd_experiment_id = nd_experiment.nd_experiment_id
      LEFT JOIN nd_geolocation ON nd_experiment.nd_geolocation_id = nd_geolocation.nd_geolocation_id
-     LEFT JOIN nd_experiment_stock nd_experiment_accession ON stock_relationship.object_id = nd_experiment_accession.stock_id
      LEFT JOIN nd_experiment_protocol ON nd_experiment_accession.nd_experiment_id = nd_experiment_protocol.nd_experiment_id
      LEFT JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id
-     LEFT JOIN nd_experiment_project ON nd_experiment.nd_experiment_id = nd_experiment_project.nd_experiment_id
+     LEFT JOIN nd_experiment_project ON nd_experiment_plot.nd_experiment_id = nd_experiment_project.nd_experiment_id
      LEFT JOIN project trial ON nd_experiment_project.project_id = trial.project_id
      LEFT JOIN project_relationship ON trial.project_id = project_relationship.subject_project_id
      LEFT JOIN project breeding_program ON project_relationship.object_project_id = breeding_program.project_id
      LEFT JOIN projectprop ON project_relationship.subject_project_id = projectprop.project_id
-     LEFT JOIN nd_experiment_phenotype ON nd_experiment.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id
+     LEFT JOIN nd_experiment_phenotype ON nd_experiment_plot.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id
      LEFT JOIN phenotype ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id
      LEFT JOIN cvterm ON phenotype.cvalue_id = cvterm.cvterm_id
      LEFT JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id
      LEFT JOIN db ON dbxref.db_id = db.db_id
-  WHERE plot.type_id = 76393 AND projectprop.type_id = 76395
+  WHERE accession.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'accession')  AND projectprop.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'project year' )
   GROUP BY stock_relationship.subject_id, cvterm.cvterm_id, plot.uniquename, accession.uniquename, stock_relationship.object_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, trial.name, project_relationship.subject_project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, nd_experiment.nd_geolocation_id, nd_geolocation.description, phenotype.phenotype_id, phenotype.value, nd_experiment_protocol.nd_protocol_id, nd_protocol.name;
 
 CREATE UNIQUE INDEX materializedfullview_idx ON public.materialized_fullview(trial_id, plot_id, phenotype_id, genotyping_protocol_id) WITH (fillfactor=100);
