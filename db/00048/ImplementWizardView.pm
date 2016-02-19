@@ -454,8 +454,10 @@ UPDATE public.matviews SET currently_refreshing=FALSE, last_refresh=CURRENT_TIME
 
 
 CREATE EXTENSION dblink;
-GRANT EXECUTE ON FUNCTION dblink_connect_u(text) TO web_usr;
-GRANT EXECUTE ON FUNCTION dblink_connect_u(text, text) TO web_usr;
+ALTER FUNCTION dblink_connect_u(text) SET SCHEMA public;
+ALTER FUNCTION dblink_connect_u(text,text) SET SCHEMA public;
+GRANT EXECUTE ON FUNCTION public.dblink_connect_u(text) TO web_usr;
+GRANT EXECUTE ON FUNCTION public.dblink_connect_u(text, text) TO web_usr;
 
 --
 SELECT * from public.stock;
