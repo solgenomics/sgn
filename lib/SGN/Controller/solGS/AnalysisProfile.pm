@@ -247,6 +247,18 @@ sub parse_arguments {
 	      $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];
 	  }
 
+	  if ($k eq 'selection_pop_id') 
+	  {
+	      $c->stash->{selection_pop_id} = @{ $arguments->{$k} }[0];
+	  }
+
+	  if ($k eq 'training_pop_id') 
+	  {
+	      $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];
+	      $c->stash->{pop_id} = @{ $arguments->{$k} }[0];
+	      $c->stash->{model_id} = @{ $arguments->{$k} }[0];
+	  }
+
 	  if ($k eq 'combo_pops_list') 
 	  {
 	      my @pop_ids = @{ $arguments->{$k} };
@@ -360,6 +372,25 @@ sub structure_output_details {
 
     }
     elsif ( $analysis_page =~ m/solgs\/population\// ) 
+    {
+	my $population_page = $base . "solgs/population/$pop_id";
+
+	$c->stash->{pop_id} = $pop_id;
+
+	$solgs_controller->phenotype_file($c);	
+	$solgs_controller->genotype_file($c);
+	$solgs_controller->get_project_details($c, $pop_id);
+
+	$output_details{$pop_id} = {
+		'population_page' => $population_page,
+		'population_id'   => $pop_id,
+		'population_name' => $c->stash->{project_name},
+		'phenotype_file'  => $c->stash->{phenotype_file},
+		'genotype_file'   => $c->stash->{genotype_file},  
+		'data_set_type'   => $c->stash->{data_set_type},
+	};		
+    }
+    elsif ( $analysis_page =~ m/solgs\/model\/\d+\/prediction\// ) 
     {
 	my $population_page = $base . "solgs/population/$pop_id";
 

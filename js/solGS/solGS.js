@@ -14,7 +14,7 @@ function solGS () {};
 
 solGS.waitPage = function (page) {
  
-    if ( page.match(/(solgs\/population\/|solgs\/populations\/combined\/|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/search\/trials\/trait\/)/)) {
+    if ( page.match(/(solgs\/population\/|solgs\/populations\/combined\/|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/search\/trials\/trait\/|solgs\/model\/d+\/prediction\/)/)) {
     	askUser(page);
     } else {
     	blockPage(page);
@@ -330,8 +330,7 @@ function getArgsFromUrl (url, args) {
 		    'population_id' : populationId, 
 		    'combo_pops_id' : comboPopsId,
 		    'analysis_type' : 'single model',
-		    'data_set_type' : 'combined populations',
-		   };
+		    'data_set_type' : 'combined populations'};
 	} else {
 
 	    args['trait_id']      = traitId;
@@ -345,18 +344,35 @@ function getArgsFromUrl (url, args) {
 	var urlStr = url.split(/\/+/);
 
 	if (args === undefined) {
-	    args = {
-		    'population_id' : [ urlStr[4] ], 
-		    'analysis_type' : 'population download',
-		    'data_set_type' : 'single population',
-		   };
+	    args = { 'population_id' : [ urlStr[4] ], 
+		     'analysis_type' : 'population download',
+		     'data_set_type' : 'single population'};
 	} else {
 	    
 	    args['population_id'] = [ urlStr[4] ];
 	    args['analysis_type'] = 'population download';
 	    args['data_set_type'] = 'single population';	
 	}
-    } 
+    } else if (url.match(/solgs\/model\/\d+\/prediction\//)) {
+	alert(url)
+	var traitId = jQuery('#trait_id').val();
+	var urlStr = url.split(/\/+/);
+	alert('trait id ', traitId)
+	if (args === undefined) {
+	      
+	    args = {'trait_id'         : [traitId],
+		    'training_pop_id'  : [ urlStr[4] ], 
+		    'selection_pop_id' : [ urlStr[6] ], 
+		    'analysis_type'    : 'selection prediction'};
+	}
+	else {
+	    args['trait_id']         = traitId;
+	    args['training_pop_id']  = [ urlStr[4] ];
+	    args['selection_pop_id'] = [ urlStr[6] ];
+	    args['analysis_type']    = 'selection prediction';
+	    args['data_set_type']    = 'single population';	
+	}
+    }
 
     return args;
 

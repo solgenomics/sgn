@@ -1840,7 +1840,7 @@ sub download_prediction_urls {
     }
     else
     {        
-        $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$prediction_pop_id"  onclick="solGS.waitPage()">[ Predict ]</a> |;
+        $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$prediction_pop_id"  onclick="solGS.waitPage(this.href) return false;">[ Predict ]</a> |;
 
 	$c->stash->{download_prediction} = '' if $c->stash->{uploaded_prediction};
     }
