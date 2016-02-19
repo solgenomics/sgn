@@ -414,82 +414,6 @@ sub breeder_search : Path('/breeders/search/') :Args(0) {
 
 }
 
-# next two functions moved to CXGN::BreedersToolbox::Project
-#
-# sub get_locations : Private { 
-#     my $self = shift;
-#     my $c= shift;
-
-#     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-#     my @rows = $schema->resultset('NaturalDiversity::NdGeolocation')->all();
-    
-#     my $type_id = $schema->resultset('Cv::Cvterm')->search( { 'name'=>'plot' })->first->cvterm_id;
-
-    
-#     my @locations = ();
-#     foreach my $row (@rows) { 	    
-# 	my $plot_count = "SELECT count(*) from stock join cvterm on(type_id=cvterm_id) join nd_experiment_stock using(stock_id) join nd_experiment using(nd_experiment_id)   where cvterm.name='plot' and nd_geolocation_id=?"; # and sp_person_id=?";
-# 	my $sh = $c->dbc->dbh->prepare($plot_count);
-# 	$sh->execute($row->nd_geolocation_id); #, $c->user->get_object->get_sp_person_id);
-	
-# 	my ($count) = $sh->fetchrow_array();
-	
-# 	#if ($count > 0) { 
-	
-# 		push @locations,  [ $row->nd_geolocation_id, 
-# 				    $row->description,
-# 				    $row->latitude,
-# 				    $row->longitude,
-# 				    $row->altitude,
-# 				    $count, # number of experiments TBD
-				    
-# 		];
-#     }
-#     return \@locations;
-
-# }
-
-# sub get_all_locations { 
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-#     my $rs = $schema -> resultset("NaturalDiversity::NdGeolocation")->search( {} );
-    
-#     my @locations = ();
-#     foreach my $loc ($rs->all()) { 
-# 	push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
-#     }
-#     return \@locations;
-
-# }
-
-# sub get_projects : Private { 
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    
-
-#    # get breeding programs
-#     #
-
-#     my $bp_rows = ();
-#     # get projects
-#     #
-#     my @projects = ();
-#     foreach my $bp (@bp_rows) { 
-# 	my @project_rows = $schema->resultset('Project::Project')->search( { }, { join => 'project_relationship', { join => 'project' }}) ;
-	
-	
-# 	foreach my $row (@project_rows) { 
-# 	    push @projects, [ $row->project_id, $row->name, $row->description ];
-	    
-# 	}
-#     }
-#     return \@projects;
-# }
 
 sub get_crosses : Private { 
     my $self = shift;
@@ -519,34 +443,6 @@ sub get_crosses : Private {
 }
 
 
-sub get_stock_relationships : Private { 
-    my $self = shift;
-    my $c = shift;
-
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-
-    my $stockrel = $schema->resultset("Cv::Cvterm")->create_with(
-	{ name   => 'cross',
-	  cv     => 'stock_relationship',
-	});
-    
-    
-    
-    #my $stockrel_type_id = $schema->resultset('Cv::Cvterm')->search( { 'name'=>'cross' })->first->cvterm_id;
-    
-    my @rows = $schema->resultset('Stock::StockRelationship')->search( {type_id => $stockrel->cvterm_id });
-    
-    my @stockrelationships = ();
-    
-	foreach my $row (@rows) {
-	    push @stockrelationships, [$row->type_id];
-	}
-
-    push @stockrelationships, ["example"];
-	
- return \@stockrelationships;
-    
-}
 
 sub get_phenotyping_data : Private { 
     my $self = shift;
