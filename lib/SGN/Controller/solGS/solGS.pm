@@ -3321,6 +3321,7 @@ sub submit_cluster_compare_trials_markers {
 
 	$c->stash->{r_job_tempdir} = $compare_trials_job->tempdir();
 	$c->stash->{r_job_id} = $compare_trials_job->job_id();
+	$c->stash->{cluster_job} = $compare_trials_job;
 
 	unless ($background_job)
 	{ 
@@ -4117,18 +4118,19 @@ sub submit_cluster_phenotype_query {
 
 	$c->stash->{r_job_tempdir} = $pheno_job->tempdir();
 	$c->stash->{r_job_id} = $pheno_job->job_id();
+	$c->stash->{cluster_job} = $pheno_job;
 
 	unless ($background_job)
 	{ 
 	    $pheno_job->wait();
-	}
-	
+	}	
     }
     catch 
     {
 	$status = $_;
 	$status =~ s/\n at .+//s;           
-    }; 
+    };
+ 
 
 }
 
@@ -4164,6 +4166,7 @@ sub submit_cluster_genotype_query {
 
 	$c->stash->{r_job_tempdir} = $geno_job->tempdir();
 	$c->stash->{r_job_id} = $geno_job->job_id();
+	$c->stash->{cluster_job} = $geno_job;
 
 	unless ($background_job)
 	{ 
@@ -4819,6 +4822,7 @@ sub run_r_script {
 
 	$c->stash->{r_job_tempdir} = $r_job->tempdir();
 	$c->stash->{r_job_id} = $r_job->job_id();
+	$c->stash->{cluster_job} = $r_job;
 
 	unless ($background_job)
 	{
