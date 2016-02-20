@@ -86,7 +86,7 @@ sub check_pops_trait_data_combination {
 	
 	    while (1) 
 	    {
-		sleep 5;
+		sleep 60;
 		$pheno_size = -s $pheno_file;
 		$geno_size  = -s $geno_file;
 	
@@ -166,7 +166,7 @@ sub check_multi_pops_data_download {
 	
 	    while (1) 
 	    {
-		sleep 5;
+		sleep 60;
 		$pheno_size = -s $pheno_file;
 		$geno_size  = -s $geno_file;
 	
@@ -243,7 +243,7 @@ sub check_trait_modeling {
 	
 		 while (1) 
 		 {
-		     sleep 5;
+		     sleep 60;
 		     $gebv_size = -s $gebv_file;
 
 		     if ($gebv_size) 
@@ -307,7 +307,7 @@ sub check_population_download {
 	
 		    while (1) 
 		    {
-			sleep 5;
+			sleep 60;
 			$pheno_size = -s $pheno_file;
 			$geno_size  = -s $geno_file;
 
