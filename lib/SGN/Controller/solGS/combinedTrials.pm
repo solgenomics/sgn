@@ -297,6 +297,8 @@ sub combine_trait_data {
 
 	$self->prepare_multi_pops_data($c);
 	my $prerequisite_jobs = $c->stash->{prerequisite_jobs};
+
+	if ($prerequisite_jobs =~ /^[:+]$/) { $prerequisite_jobs = 0;}
 	print STDERR "\ncombine data build  model -- prerequisite jobs: $prerequisite_jobs\n";
 
 	if ($prerequisite_jobs) 
@@ -493,6 +495,7 @@ sub prepare_multi_pops_data {
    if (@all_jobs && scalar(@all_jobs) > 1) 
    {
        $prerequisite_jobs = join(':', @all_jobs);
+       
    } 
    else 
    {
