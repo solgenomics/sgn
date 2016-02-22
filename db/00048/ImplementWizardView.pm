@@ -453,9 +453,7 @@ UPDATE public.matviews SET currently_refreshing=FALSE, last_refresh=CURRENT_TIME
     LANGUAGE SQL;
 
 
-CREATE EXTENSION dblink;
-ALTER FUNCTION dblink_connect_u(text) SET SCHEMA public;
-ALTER FUNCTION dblink_connect_u(text,text) SET SCHEMA public;
+CREATE EXTENSION dblink WITH SCHEMA public;
 GRANT EXECUTE ON FUNCTION public.dblink_connect_u(text) TO web_usr;
 GRANT EXECUTE ON FUNCTION public.dblink_connect_u(text, text) TO web_usr;
 
