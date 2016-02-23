@@ -62,7 +62,7 @@ sub patch {
     my $coderef = sub {
 
 	my $vector_stock_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
-	    name => 'vector',
+	    name => 'vector_construct',
 	    cv   => 'stock_type',
 	});
 	my $vector_stockprop_transgenic_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
