@@ -204,10 +204,10 @@ sub _get_folder_cvterm_id {
     my $class = shift;
     my $args = shift;
     
-    my $folder_cvterm = $args->{bcs_schema}->resultset('Cv::Cvterm')->create_with(
-
+    my $folder_cvterm = $args->{bcs_schema}->resultset('Cv::Cvterm')->find(
 	{ 
-	    name   => 'folder',
+	    name   => 'trial_folder',
+	    cv => 'project_property',
 	});
     
     return $folder_cvterm->cvterm_id();
@@ -217,10 +217,9 @@ sub _get_breeding_program_trial_relationship_id {
     my $class = shift;
     my $args = shift;
     
-    my $bptr = $args->{bcs_schema}->resultset('Cv::Cvterm')->create_with(
+    my $bptr = $args->{bcs_schema}->resultset('Cv::Cvterm')->find(
 	{ 
 	    name   => 'breeding_program_trial_relationship',
-	    dbxref => 'trial_folder',
 	});
     
     return $bptr->cvterm_id();
