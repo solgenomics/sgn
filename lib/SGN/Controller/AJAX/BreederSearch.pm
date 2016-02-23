@@ -19,193 +19,100 @@ __PACKAGE__->config(
 sub get_data : Path('/ajax/breeder/search') Args(0) { 
     my $self = shift;
     my $c = shift;
+    my $j = JSON::Any->new;
     
-    my $criteria_list;
-    my @selects = qw | select1 select2 select3 |;
-    foreach my $s (@selects) { 
-	my $value = $c->req->param($s);
-	if ($value) { 
-	    push @$criteria_list, $c->req->param($s);
-	}
-    }
-    my $output = $c->req->param('select4') || 'plots';
+    my @criteria_list = $c->req->param('categories[]');
+    my @querytypes = $c->req->param('querytypes[]');
+
+    #print STDERR "criteria list = " . Dumper(@criteria_list);
+    #print STDERR "querytypes = " . Dumper(@querytypes);
 
     my $dataref = {};
-    
-    my @params = qw | c1_data c2_data c3_data |;
-    my $data_tainted = 0;
+    my $queryref = {};
 
-    if (!$criteria_list) {
-	$c->stash->{rest} = { };
-	return;
-    }
-    for (my $i=0; $i<scalar(@$criteria_list); $i++) { 
-	my $data;
-	print STDERR "PARAM: $params[$i]\n";
-	if (defined($params[$i]) && ($params[$i] ne '')) { $data =  $c->req->param($params[$i]); }
-	if (defined($data) && ($data ne '') && ($data !~ /^[\d,\/ ]+$/g)) { 
-	    print STDERR "Illegal chars in '$data'\n"; 
-	    $data_tainted =1;
-	}
-	# items need to be quoted in sql
-	#
-	#print STDERR "DATA: $data\n";
-	if ($data) { 
-	    my $qdata = join ",", (map { "\'$_\'"; } (split ",", $data));
-	    $dataref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $qdata;
-	}
-    }
-    my $genotypes = $c->req->param("genotypes");
-    #  print STDERR "Genotypes: $genotypes\n";
-    # if ($genotypes){ 
-    # 	$dataref->{$criteria_list->[-1]}->{genotypes}=1;
- #   }
+    my $error = '';
 
-    print STDERR "DATAREF: ".Dumper($dataref);
-    if ($data_tainted) { 
-	$c->stash->{rest} =  { error => "Illegal data.", };
-	return;
-    }
-    
-    my $stocks = undef;
-    my $error = "";
-
-     foreach my $select (@$criteria_list) { 
+    foreach my $select (@criteria_list) { 
      	print STDERR "Checking $select\n";
      	chomp($select);
-     	if (! any { $select eq $_ } ('breeding_programs', 'accessions', 'projects', 'locations', 'years', 'traits', 'genotypes', undef)) { 
-     	    $error = "Valid keys are breeding_programs, projects, years, traits and locations";
+     	if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'genotyping_protocols', 'locations', 'plots', 'traits', 'trials', 'years', undef)) { 
+     	    $error = "Valid keys are accessions, breeding_programs, 'genotyping_protocols', locations, plots, traits, trials and years or undef";
      	    $c->stash->{rest} = { error => $error };
      	    return;
      	}
      }
-     my $dbh = $c->dbc->dbh();
 
-     my $item = $criteria_list->[-1];
+    my $criteria_list = \@criteria_list;
+    for (my $i=0; $i<scalar(@$criteria_list); $i++) { 
+	my @data;
+	my $param = $c->req->param("data[$i][]");
+	# print STDERR "data = " . $param;
+
+	if (defined($param) && ($param ne '')) { @data =  $c->req->param("data[$i][]"); }
+	
+	if (@data) { 
+	    my @cdata = map {"'$_'"} @data;
+	    my $qdata = join ",", @cdata;	    
+	    $dataref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $qdata;
+	    $queryref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $querytypes[$i];
+	}
+    }
+
+     my $dbh = $c->dbc->dbh();
 
      my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
     
-     my $results_ref = $bs->get_intersect($criteria_list, $dataref, $c->config->{trait_ontology_db_name}); 
+     my $results_ref = $bs->metadata_query(\@criteria_list, $dataref, $queryref); 
 
-    my $stock_ref = [];
-    my $stockdataref->{$output} = $dataref->{$criteria_list->[-1]};
-
-    push @$criteria_list, $output;
-    print STDERR "OUTPUT: $output CRITERIA: ", Data::Dumper::Dumper($criteria_list);
-    $stock_ref = { }; #$bs->get_intersect($criteria_list, $stockdataref, $c->config->{trait_ontology_db_name}, $genotypes);
-    
     print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
 
-    if ($stock_ref->{message}) { 
-	$c->stash->{rest} = { 
-	    list => $results_ref->{results},
-	    message => $stock_ref->{message},
-	};
-    }
-    else { 
-	
-	$c->stash->{rest} = { 
-	    list => $results_ref->{results},
-	    stocks => $stock_ref->{results},
-	};
+    if ($results_ref->{error}) {
+	print STDERR "Returning with error . . .\n";
+	$c->stash->{rest} = { error => $results_ref->{'error'} };
+	return;
+    } else {
+	$c->stash->{rest} = { list => $results_ref->{'results'} };
+	return;
     }
 }
     
 
-sub get_stock_data : Path('/ajax/breeder/search/stocks') Args(0) { 
+sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) { 
     my $self = shift;
     my $c = shift;
-    
-    my $criteria_list;
-    my @selects = qw | select1 select2 select3 |;
-    foreach my $s (@selects) { 
-	my $value = $c->req->param($s);
-	if ($value) { 
-	    push @$criteria_list, $c->req->param($s);
-	}
-    }
-    my $output = $c->req->param('select4') || 'plots';
 
-    my $dataref = {};
-    
-    my @params = qw | c1_data c2_data c3_data |;
-    my $data_tainted = 0;
+    print STDERR "dbname=" . $c->config->{dbname} ."\n";
 
-    if (!$criteria_list) {
-	$c->stash->{rest} = { };
+    my $dbh = $c->dbc->dbh();
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews();
+    
+    if ($refresh->{error}) {
+	print STDERR "Returning with error . . .\n";
+	$c->stash->{rest} = { error => $refresh->{'error'} };
 	return;
-    }
-    for (my $i=0; $i<scalar(@$criteria_list); $i++) { 
-	my $data;
-	print STDERR "PARAM: $params[$i]\n";
-	if (defined($params[$i]) && ($params[$i] ne '')) { $data =  $c->req->param($params[$i]); }
-	if (defined($data) && ($data ne '') && ($data !~ /^[\d,\/ ]+$/g)) { 
-	    print STDERR "Illegal chars in '$data'\n"; 
-	    $data_tainted =1;
-	}
-	# items need to be quoted in sql
-	#
-	#print STDERR "DATA: $data\n";
-	if ($data) { 
-	    my $qdata = join ",", (map { "\'$_\'"; } (split ",", $data));
-	    $dataref->{$criteria_list->[-1]}->{$criteria_list->[$i]} = $qdata;
-	}
-    }
-    my $genotypes = $c->req->param("genotypes");
-
-    print STDERR "DATAREF: ".Dumper($dataref);
-
-    if ($data_tainted) { 
-	$c->stash->{rest} =  { error => "Illegal data.", };
+    } else {
+	$c->stash->{rest} = { message => $refresh->{'message'} };
 	return;
-    }
-    
-    my $stocks = undef;
-    my $error = "";
-
-     foreach my $select (@$criteria_list) { 
-     	print STDERR "Checking $select\n";
-     	chomp($select);
-     	if (! any { $select eq $_ } ('breeding_programs', 'accessions', 'projects', 'locations', 'years', 'traits', 'genotypes', undef)) { 
-     	    $error = "Valid keys are breeding_programs, projects, years, traits and locations";
-     	    $c->stash->{rest} = { error => $error };
-     	    return;
-     	}
-     }
-     my $dbh = $c->dbc->dbh();
-
-     my $item = $criteria_list->[-1];
-
-     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
-    
-     my $results_ref = {}; #$bs->get_intersect($criteria_list, $dataref, $c->config->{trait_ontology_db_name}); 
-
-    my $stock_ref = [];
-    my $stockdataref->{$output} = $dataref->{$criteria_list->[-1]};
-
-    push @$criteria_list, $output;
-    print STDERR "OUTPUT: $output CRITERIA: ", Data::Dumper::Dumper($criteria_list);
-    $stock_ref = $bs->get_intersect($criteria_list, $stockdataref, $c->config->{trait_ontology_db_name}, $genotypes);
-    
-    print STDERR "RESULTS: ".Data::Dumper::Dumper($stock_ref);
-
-    if ($stock_ref->{message}) { 
-	$c->stash->{rest} = { 
-	    list => $stock_ref->{results},
-	    message => $stock_ref->{message},
-	};
-    }
-    else { 
-	
-	$c->stash->{rest} = { 
-	    list => $results_ref->{results},
-	    stocks => $stock_ref->{results},
-	};
     }
 }
 
+sub check_status : Path('/ajax/breeder/check_status') Args(0) { 
+    my $self = shift;
+    my $c = shift;
 
-1;
+    my $dbh = $c->dbc->dbh();
 
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+    my $status = $bs->matviews_status();
 
+    if ($status->{refreshing}) {
+	$c->stash->{rest} = { refreshing => $status->{'refreshing'} };
+	return;
+    } else {
+	$c->stash->{rest} = { timestamp => $status->{'timestamp'} };
+	return;
+    }
+}
     

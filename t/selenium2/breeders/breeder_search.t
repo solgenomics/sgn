@@ -51,15 +51,15 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $t->find_element_ok("retrieve_stocklist_button", "id", "select accessions")->click();
+    $t->find_element_ok("select4", "id", "select accessions")->send_keys('accessions');
 
     sleep(1);
 
-    $t->find_element_ok("stock_data", "id", "select test accession")->send_keys('test_accession1');
+    $t->find_element_ok("c4_data", "id", "select test accession")->send_keys('test_accession1');
 
     sleep(1);
 
-    $t->find_element_ok("stock_select_all", "id", "select all accessions")->click();
+    $t->find_element_ok("c4_select_all", "id", "select all accessions")->click();
 
     sleep(1);
 
@@ -87,9 +87,9 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->driver->accept_alert();
 
-    $t->find_element_ok("stock_data_new_list_name", "id", "new list")->send_keys('acc_list');
+    $t->find_element_ok("c4_data_new_list_name", "id", "new list")->send_keys('acc_list');
 
-    $t->find_element_ok("stock_data_add_to_new_list", "id", "add accs to list")->click();
+    $t->find_element_ok("c4_data_add_to_new_list", "id", "add accs to list")->click();
 
     sleep(1);
 

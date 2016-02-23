@@ -175,8 +175,8 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
 
     my $data = $self->get_phenotyping_data($c);
 
-    $c->stash->{phenotype_files} = $data->{file_info};
-    $c->stash->{deleted_phenotype_files} = $data->{deleted_file_info};
+    $c->stash->{phenotype_files} = $data->{phenotype_files};
+    $c->stash->{deleted_phenotype_files} = $data->{deleted_phenotype_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_phenotyping.mas';
     
@@ -565,8 +565,8 @@ sub get_phenotyping_data : Private {
 	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id() } );
 	
 	if (!$md_row->obsolete) { 
-	    while (my $file_row = $file_rs->next()) { 
-		push @$file_info, { file_id => $file_row->file_id(),		                    
+	    while (my $file_row = $file_rs->next()) {
+		push @$file_info, { file_id => $file_row->file_id(),            
 				    basename => $file_row->basename,
 				    dirname  => $file_row->dirname,
 				    file_type => $file_row->filetype,

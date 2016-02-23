@@ -27,6 +27,32 @@ function isLoggedIn() {
     return user_id;
 }
 
+function getUserRoles() { 
+    
+    var roles; 
+
+    jQuery.ajax( { 
+	url: '/user/get_roles',
+	async: false,
+	success: function(response) { 
+	    if (response.error) { 
+		alert(response.error);
+	    }
+	    else { 
+		//alert("LOGGED IN USER ROLES: "+response.roles);
+		roles =  response.roles;
+	    }
+	},
+	error: function(response) { 
+	    alert("An error occurred. "+response);
+	}
+    }
+		 
+	       );
+
+    return roles;
+}
+
 function login() { 
     
     
