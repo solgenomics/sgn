@@ -29,6 +29,7 @@ use Time::Piece;
 use Time::Seconds;
 use Data::Dumper;
 use CXGN::Login;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -245,19 +246,19 @@ sub get_calendar_events_personal {
     my @roles = get_user_roles($c, $person_id);
     my @search_project_ids = '-1';
     foreach (@roles) {
-	my $q="SELECT project_id FROM project WHERE name=?";
-	my $sth = $c->dbc->dbh->prepare($q);
-	$sth->execute($_);
+    	my $q="SELECT project_id FROM project WHERE name=?";
+    	my $sth = $c->dbc->dbh->prepare($q);
+    	$sth->execute($_);
         while (my ($project_id) = $sth->fetchrow_array ) {
-	    push(@search_project_ids, $project_id);
+    	    push(@search_project_ids, $project_id);
 
-	    my $q="SELECT subject_project_id FROM project_relationship JOIN cvterm ON (type_id=cvterm_id) WHERE object_project_id=? and cvterm.name='breeding_program_trial_relationship'";
-	    my $sth = $c->dbc->dbh->prepare($q);
-	    $sth->execute($project_id);
-	    while (my ($trial) = $sth->fetchrow_array ) {
-		push(@search_project_ids, $trial);
-	    }
-	}
+    	    my $q="SELECT subject_project_id FROM project_relationship JOIN cvterm ON (type_id=cvterm_id) WHERE object_project_id=? and cvterm.name='breeding_program_trial_relationship'";
+    	    my $sth = $c->dbc->dbh->prepare($q);
+    	    $sth->execute($project_id);
+    	    while (my ($trial) = $sth->fetchrow_array ) {
+                push(@search_project_ids, $trial);
+    	    }
+    	}
     }
 
     @search_project_ids = map{$_='me.project_id='.$_; $_} @search_project_ids;
@@ -267,7 +268,7 @@ sub get_calendar_events_personal {
 	undef,
 	{join=>{'projectprops'=>{'type'=>'cv'}},
 	'+select'=> ['projectprops.projectprop_id', 'type.name', 'projectprops.value', 'type.cvterm_id'],
-	'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cv_id'],
+	'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cvterm_id'],
 	}
     );
     $search_rs = $search_rs->search([$search_projects]);
@@ -292,11 +293,17 @@ sub populate_calendar_events {
     while (my $result = $search_rs->next) {
 
 	#Check if project property value is an event, and if it is not, then skip to next result.
-	if (check_value_format($result->get_column('pp_value')) == -1) {
+    my $calendar_formatted_value = check_value_format($result->get_column('pp_value'));
+	if (!$calendar_formatted_value) {
 	    next;
 	}
 
-	@time_array = parse_time_array($result->get_column('pp_value'));
+    #print STDERR $calendar_formatted_value;
+
+	@time_array = parse_time_array($calendar_formatted_value);
+    if (!$time_array[0]) {
+        next;
+    }
 
 	#We begin with the start datetime, or the first element in the time_array.
 	#A time::piece object is returned from format_time(). Calling ->datetime on this object returns an ISO8601 datetime string. This string is what is used as the calendar event's start. Using format_display_date(), a nice date to display on mouse over is returned.
@@ -326,17 +333,31 @@ sub populate_calendar_events {
 	$property =~ s/([\w']+)/\u\L$1/g;
 
 	#Variables are pushed into the event array and will become properties of Fullcalendar events, like event.start, event.cvterm_url, etc.
-	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$title, property=>$property, start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_id=>$result->get_column('cv_id'), cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cv_id'), allDay=>$allday, p_description=>$result->description, event_description=>$time_array[2], event_url=>$time_array[3]});
+	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$title, property=>$property, start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_id=>$result->get_column('cvterm_id'), cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cvterm_id'), allDay=>$allday, p_description=>$result->description, event_description=>$time_array[2], event_url=>$time_array[3]});
     }
     return \@events;
 }
 
 sub check_value_format {
     my $value = shift;
-    if ($value and $value =~ /^{"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d","\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d","/) {
-	return 1;
+    if ($value) {
+        #Events saved through the calendar will have this format
+        if ($value =~ /^{"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d","\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d","/) {
+            return $value;
+        }
+        #Dates saved through the trial 'Add Harvest Date' or 'Add Planting Date' will have this format
+        elsif ($value =~ /^\d\d\d\d\/\d\d\/\d\d\s\d\d:\d\d:\d\d$/) {
+            return '{"'.$value.'","'.$value.'","","#"}';
+        }
+        #Historical dates in teh database often have this format
+        elsif ($value =~ /^(\d{4})-(Jan|January|Feb|February|March|Mar|April|Apr|May|June|Jun|July|Jul|August|Aug|September|Sep|October|Oct|November|Nov|December|Dec)-(\d)/) {
+            return '{"'.$value.'","'.$value.'","","#"}';
+        }
+        else {
+            return;
+        }
     } else {
-	return -1;
+	   return;
     }
 }
 
@@ -411,40 +432,66 @@ sub day_click_personal_GET {
 	}
     }
 
-    my @projectprop_names = ('Planting Event', 'Harvest Event', 'Fertilizer Event', 'Meeting Event', 'Planning Event', 'Presentation Event', 'Phenotyping Event', 'Genotyping Event');
+    my @calendar_projectprop_names = ('project planting date', 'project fertilizer date', 'project harvest date', 'Meeting Event', 'Planning Event', 'Presentation Event', 'Phenotyping Event', 'Genotyping Event');
+ 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my @projectprop_types;
-    foreach (@projectprop_names) {
-	my $q="SELECT cvterm_id, name FROM cvterm WHERE name=?";
-	my $sth = $c->dbc->dbh->prepare($q);
-	$sth->execute($_);
-	if ($sth->rows == 0) {
-	    my $add_term = $schema->resultset('Cv::Cvterm')->create_with(
-		{
-		    name=>$_, 
-		    cv=>'calendar', 
-		}
-		);
-	    push(@projectprop_types, {cvterm_id=>$add_term->cvterm_id(), cvterm_name=>$add_term->name() });
-	} else {
-	    while ( my ($cvterm_id, $cvterm_name ) = $sth->fetchrow_array ) {
-		push(@projectprop_types, {cvterm_id=>$cvterm_id, cvterm_name=>$cvterm_name});
-	    }
-	}
+    foreach (@calendar_projectprop_names) {
+    	my $q="SELECT cvterm_id, name FROM cvterm WHERE name=?";
+    	my $sth = $c->dbc->dbh->prepare($q);
+    	$sth->execute($_);
+    	if ($sth->rows == 0) {
+    	    next;
+    	} else {
+    	    while ( my ($cvterm_id, $cvterm_name ) = $sth->fetchrow_array ) {
+                push(@projectprop_types, {cvterm_id=>$cvterm_id, cvterm_name=>$cvterm_name});
+    	    }
+    	}
     }
  
     $c->stash->{rest} = {project_list => \@projects, projectprop_list => \@projectprop_types};
 }
     
-#This function is used to return a Time::Piece object, which is useful for format consistensy.
+#This function is used to return a Time::Piece object, which is useful for format consistency. It can take a variety of formats, which is important to match historic date data in teh database.
 sub format_time {
     my $input_time = shift;
+    #print STDERR $input_time."\n";
+
     my $formatted_time;
+
     if ($input_time =~ /^\d{4}-\d\d-\d\d$/) {
-	$formatted_time = Time::Piece->strptime($input_time, '%Y-%m-%d');
+        #print STDERR '1 '.$input_time."\n";
+        $formatted_time = Time::Piece->strptime($input_time, '%Y-%m-%d');
+    }
+    if ($input_time =~ /^\d\d\d\d\/\d\d\/\d\d\s\d\d:\d\d:\d\d$/) {
+        #print STDERR '2 '.$input_time."\n";
+        $formatted_time = Time::Piece->strptime($input_time, '%Y/%m/%d %H:%M:%S');
     }
     if ($input_time =~ /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/) {
-	$formatted_time = Time::Piece->strptime($input_time, '%Y-%m-%dT%H:%M:%S');
+        #print STDERR '3 '.$input_time."\n";
+        $formatted_time = Time::Piece->strptime($input_time, '%Y-%m-%dT%H:%M:%S');
+    }
+    if ($input_time =~ /^(\d{4})-(Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})$/) {
+        #print STDERR '4 '.$input_time."\n";
+        $formatted_time = Time::Piece->strptime($input_time, '%Y-%b-%d');
+    }
+    if ($input_time =~ /^(\d{4})-(Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{1})$/) {
+        my $single_digit_date = substr($input_time, -1);
+        my $input_time_1 = substr($input_time, 0, -1);
+        $input_time = $input_time_1.'0'.$single_digit_date;
+        #print STDERR '5 '.$input_time."\n";
+        $formatted_time = Time::Piece->strptime($input_time, '%Y-%b-%d');
+    }
+    if ($input_time =~ /^(\d{4})-(January|February|March|April|May|June|July|August|September|October|November|December)-(\d{2})$/) {
+        #print STDERR '6 '.$input_time."\n";
+        $formatted_time = Time::Piece->strptime($input_time, '%Y-%B-%d');
+    }
+    if ($input_time =~ /^(\d{4})-(January|February|March|April|May|June|July|August|September|October|November|December)-(\d{1})$/) {
+        my $single_digit_date = substr($input_time, -1);
+        my $input_time_1 = substr($input_time, 0, -1);
+        $input_time = $input_time_1.'0'.$single_digit_date;
+        #print STDERR '7 '.$input_time."\n";
+        $formatted_time = Time::Piece->strptime($input_time, '%Y-%B-%d');
     }
     return $formatted_time;
 }
