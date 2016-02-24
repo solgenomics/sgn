@@ -31,7 +31,8 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS","jquery.dataTables",  "solGS.selectionPopulations" ] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "jquery.dataTables", "solGS.selectionPopulations",  "solGS.ajaxAutocomplete"] &>
+
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <&| /page/info_section.mas, 
@@ -40,25 +41,36 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
     title       => $title,
 &>
 
-<input id="search_selection_pops" style="display:none;" class="button" type="button" value="Search relevant selection populations " /> 
-<div id="selection_pops_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
+  <div  class="form-inline">
+    <input  type="text" class="form-control" placeholder="search for a selection population" size="30" id="population_search_entry"/>   
+    <button type="submit" class="btn btn-primary" id="search_selection_pop">
+      <span class="glyphicon glyphicon-search"></span>
+    </button>
 
-<div id="selection_populations" style="display:none">
-  <table id="selection_pops_list" style="text-align: left;"> 
-    <thead>
-      <tr>
-	<th>Selection population</th>
-	<th>Description</th>
-	<th>Year</th>
-	<th>Predict GEBVs</th>
-      </tr>
-    </thead>
+    <button id="search_all_selection_pops" style="position:absolute;right:20px;display:none;" class="btn btn-success" type="submit"> 
+      <span value="Search for all relevant selection populations">Search for all relevant selection populations</span> 
+    </button>
+  </div>
+
+
+  <div id="selection_pops_message"  style="padding:20px 0px 10px 0px;font-weight:bold;text-align:center;color:#A7C942"></div>
+
+  <div id="selection_populations" style="display:none;">
+    <table class="table" id="selection_pops_list" style="text-align:left;"> 
+      <thead>
+	<tr>
+	  <th>Selection population</th>
+	  <th>Description</th>
+	  <th>Year</th>
+	  <th>Predict GEBVs</th>
+	</tr>
+      </thead>
   </table>
-</div>
+  </div>
 
-<br />
+  <br />
 
-<& user_selection_genotypes.mas &>
+  <& user_selection_genotypes.mas &>
 
 </&>
 

@@ -1,4 +1,4 @@
-<style>
+ <style>
 
 .slider-size {
   height: 400px; /* This is your slider height */
@@ -187,20 +187,44 @@
       
 
       <div class="item">
-          <div style="background:url(/documents/img/homepage_carousel/pag_24.jpg) center center; background-size:cover;" class="slider-size">
-            <div class="carousel-sgn-caption">
-              <a href="http://www.intlpag.org" target="_blank">
-                <h3>PAG XXIV</h3>
-                <p>International Plant & Animal Genome. Jan 9-13, 2016</p>
+          <div style="background:url(/documents/img/homepage_carousel/sol2016.jpeg) center center; background-size:cover;" class="slider-size">
+            <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
+              <a href="http://solgenomics2016.ucdavis.edu" target="_blank">
+                <h3 style="color: #00426c">The 13th Solanaceae Conference</h3>
+                <p style="color: #00426c"><img src="/documents/img/sgn_transparent_logo.png" width="30"> September 12-16, 2016 - Davis California USA</p>
+              </a>
+            </div>
+            
+            <div class="carousel-sgn-links" style="background-color: #efefef">
+              <ul>
+                <li><a href="http://solgenomics2016.ucdavis.edu/program/" target="_blank" style="color: #00426c">Preliminary Program</a></li>
+                <li><a href="http://solgenomics2016.ucdavis.edu/registration/" target="_blank" style="color: #00426c">Registration</a></li>
+                <li><a href="http://solgenomics2016.ucdavis.edu/abstract-submission-info/" target="_blank" style="color: #00426c">Abstract Submission</a></li>
+                <li><a href="http://solgenomics2016.ucdavis.edu/hotel-information/" target="_blank" style="color: #00426c">Venue Information</a></li>
+              </ul>
+            </div>
+            
+          </div>
+        </a>
+      </div>
+      
+
+
+      <div class="item">
+          <div style="background:url(/documents/img/homepage_carousel/tomato_diseases_2016.jpeg) center center; background-size:cover;" class="slider-size">
+            <div class="carousel-sgn-caption" style="opacity: 0.95">
+              <a href="http://www.tomatodiseases2016.es/web/" target="_blank">
+                <h3>5th International Symposium on Tomato Diseases</h3>
+                <p>Malaga, Spain June 13-16, 2016</p>
               </a>
             </div>
             
             <div class="carousel-sgn-links">
               <ul>
-                <li><a href="https://pag.confex.com/pag/xxiv/webprogram/Session3164.html" target="_blank"><b>SGN Workshop</b> <img src="/documents/img/sgn_transparent_logo.png" width="20"></a></li>
-                <li><a href="http://www.intlpag.org/2016/program/program-overview-xxiv" target="_blank">Conference Program</a></li>
-                <li><a href="https://pag.confex.com/pag/xxiv/registration/index.cgi" target="_blank">Registration</a></li>
-                <li><a href="http://www.intlpag.org/2016/venue/conference-location" target="_blank">Venue & Accomodation</a></li>
+                <li><a href="http://www.tomatodiseases2016.es/web/index.php/tentative-programme" target="_blank">Preliminary Program</a></li>
+                <li><a href="http://www.tomatodiseases2016.es/web/index.php/important-dates" target="_blank">Important Dates</a></li>
+                <li><a href="http://www.tomatodiseases2016.es/web/index.php/registration" target="_blank">Registration</a></li>
+                <li><a href="http://www.tomatodiseases2016.es/web/index.php/accommodation" target="_blank">Accomodation</a></li>
               </ul>
             </div>
             

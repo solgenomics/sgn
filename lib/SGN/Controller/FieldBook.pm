@@ -40,9 +40,7 @@ sub field_book :Path("/fieldbook") Args(0) {
     my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')
       ->create_with({
 		     name   => 'field layout',
-		     cv     => 'experiment type',
-		     db     => 'null',
-		     dbxref => 'field layout',
+		     cv     => 'experiment_type',
 		    });
 
 #    foreach my $row (@rows) {

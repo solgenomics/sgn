@@ -68,40 +68,30 @@ sub add_progeny {
 
     my $female_parent_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with( { name   => 'female_parent',
-		       cv     => 'stock relationship',
-		       db     => 'null',
-		       dbxref => 'female_parent',
+		       cv     => 'stock_relationship',
 		     });
     my $male_parent_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with({ name   => 'male_parent',
-		      cv     => 'stock relationship',
-		      db     => 'null',
-		      dbxref => 'male_parent',
+		      cv     => 'stock_relationship',
 		    });
     my $member_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with({ name   => 'member_of',
-		      cv     => 'stock relationship',
-		      db     => 'null',
-		      dbxref => 'member_of',
+		      cv     => 'stock_relationship',
 		    });
     my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
       ->create_with({
 		     name   => 'accession',
-		     cv     => 'stock type',
-		     db     => 'null',
-		     dbxref => 'accession',
+		     cv     => 'stock_type',
 		    });
 
     my $cross_name_cvterm = $chado_schema->resultset("Cv::Cvterm")->find(
-								   { name   => 'cross_name',
-								   });
+	{ name   => 'cross_name',
+	});
     if (!$cross_name_cvterm) {
-      $cross_name_cvterm = $chado_schema->resultset("Cv::Cvterm")
-	->create_with( { name   => 'cross_name',
-			 cv     => 'local',
-			 db     => 'null',
-			 dbxref => 'cross_name',
-		       });
+	$cross_name_cvterm = $chado_schema->resultset("Cv::Cvterm")
+	    ->create_with( { name   => 'cross_name',
+			     cv     => 'local',
+			   });
     }
 
     #Get stock of type cross matching cross name
@@ -226,9 +216,7 @@ sub _get_cross {
   my $cross_cvterm = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
 		   name   => 'cross',
-		   cv     => 'stock type',
-		   db     => 'null',
-		   dbxref => 'accession',
+		   cv     => 'stock_type',
 		  });
   $stock_lookup->set_stock_name($cross_name);
   $stock = $stock_lookup->get_stock_exact();

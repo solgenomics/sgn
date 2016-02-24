@@ -8,7 +8,9 @@ JSAN.use('jquery.blockUI');
 
 
 jQuery(document).ready( function () {
-        listSelectionIndexPopulations();
+    
+    setTimeout(function(){listSelectionIndexPopulations()}, 5000);
+       
 });
 
 
@@ -99,7 +101,7 @@ function listSelectionIndexPopulations ()  {
        
 function addSelectionPopulations(){
       
-    var selPopsTable = jQuery("#selection_populations table").html(); 
+    var selPopsTable = jQuery("#selection_pops_list").html();  
     var selPopsRows  = jQuery(selPopsTable).find("tr");
  
     var predictedPop = [];

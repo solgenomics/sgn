@@ -55,16 +55,6 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    function upload_fieldbook_phenotype_file() {
-        var uploadFile = $("#fieldbook_upload_file").val();
-        $('#upload_fieldbook_form').attr("action", "/ajax/fieldbook/upload_phenotype_file");
-        if (uploadFile === '') {
-	    alert("Please select a file");
-	    return;
-        }
-        $("#upload_fieldbook_form").submit();
-    }
-
     //$("#select_list").append(list.listSelect("select_list"));
     var list = new CXGN.List();
     var html = list.listSelect('select_list', [ 'traits' ]);
@@ -89,48 +79,6 @@ jQuery(document).ready(function ($) {
 
     $('#create_new_trait_file_link').click(function () {
         $('#create_trait_file_dialog').dialog("open");
-    });
-
-    $( "#upload_fieldbook_phenotypes_dialog" ).dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 150],
-	buttons: {
-	    Ok: function() {
-                upload_fieldbook_phenotype_file();
-		//$( this ).dialog( "close" );
-		//location.reload();
-	    }
-	}
-    });
-
-    $('#upload_tablet_phenotype_file_link').click(function () {
-        $('#upload_fieldbook_phenotypes_dialog').dialog("open");
-        //$( this ).dialog( "close" );
-	//location.reload();
-    });
-
-    $('#upload_fieldbook_form').iframePostForm({
-	json: true,
-	post: function () {
-	    var uploadFile = $("#fieldbook_upload_file").val();
-	    if (uploadFile === '') {
-		alert("No file selected");
-	    }
-	},
-	complete: function (response) {
-	    if (response.error) {
-		alert(response.error);
-		return;
-	    }
-	    if (response.success) {
-		alert("File uploaded successfully");
-		$( this ).dialog( "close" );
-		location.reload();
-	    }
-	}
     });
 
 });

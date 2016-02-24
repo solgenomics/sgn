@@ -160,17 +160,13 @@ sub _get_pedigree {
   $pedigree{'link'} = "/stock/$pedigree{'id'}/view";
   #get cvterms for parent relationships
   my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
-										 { name   => 'female_parent',
-										   cv     => 'stock relationship',
-										   db     => 'null',
-										   dbxref => 'female_parent',
-										 });
+      { name   => 'female_parent',
+	cv     => 'stock_relationship',
+      });
   my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
-									       { name   => 'male_parent',
-										 cv     => 'stock relationship',
-										 db     => 'null',
-										 dbxref => 'male_parent',
-									       });
+      { name   => 'male_parent',
+	cv     => 'stock_relationship',
+      });
   #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
   my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
   my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id()});
@@ -205,17 +201,13 @@ sub _get_descendants {
   $descendants{'link'} = "/stock/$descendants{'id'}/view";
   #get cvterms for parent relationships
   my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
-										 { name   => 'female_parent',
-										   cv     => 'stock relationship',
-										   db     => 'null',
-										   dbxref => 'female_parent',
-										 });
+      { name   => 'female_parent',
+	cv     => 'stock_relationship',
+      });
   my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
-									       { name   => 'male_parent',
-										 cv     => 'stock relationship',
-										 db     => 'null',
-										 dbxref => 'male_parent',
-									       });
+      { name   => 'male_parent',
+	cv     => 'stock_relationship',
+      });
   #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
   my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
   if ($descendant_relationships) {

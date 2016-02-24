@@ -22,6 +22,7 @@ $list_of_prediction_pops =>''
 $prediction_pop_name => ''
 $analyzed_traits =>''
 $owner =>''
+$protocol
 $model_parameters
 
 </%args>
@@ -56,6 +57,7 @@ $model_parameters
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     owner        => $owner,
+    protocol     => $protocol,
  &>
  
 </&>
@@ -74,12 +76,12 @@ $model_parameters
 
 </&>
 
+<& /solgs/model/pca.mas &>
+
 <& /solgs/model/accuracy.mas, 
    accuracy_report        => $accuracy_report,
   validation_download_url => $validation_download_url
 &>
-
-<& /solgs/model/pca.mas &>
 
 <& /solgs/model/model_parameters.mas, 
    model_parameters => $model_parameters,

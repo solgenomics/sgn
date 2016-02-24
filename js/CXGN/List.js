@@ -363,8 +363,8 @@ CXGN.List.prototype = {
 		list_group_select_action_html += '';
 	    } else {
 		var selected = [];
-		$("input:checkbox:checked").each(function() {
-		    selected.push($(this).attr('value'));
+		jQuery("input:checkbox:checked").each(function() {
+		    selected.push(jQuery(this).attr('value'));
 		});
 
 		list_group_select_action_html = '<hr><div class="row well well-sm"><div class="col-sm-4">For Selected Lists:</div><div class="col-sm-8">';
@@ -635,6 +635,7 @@ CXGN.List.prototype = {
 
     transform: function(list_id, transform_name) { 
 	var transformed = new CXGN.List();
+	var ajaxResponse = [];
 	jQuery.ajax( { 
 	    url: '/list/transform/'+list_id+'/'+transform_name,
 	    async: false,
@@ -643,31 +644,45 @@ CXGN.List.prototype = {
 		    alert(response.error);
 		}
 		else { 
-		    transformed = response.transform;
+		    ajaxResponse = response;
+		    //console.log("transformed="+ajaxResponse);
 		}
 	    },
 	    error: function(response) { alert("An error occurred while validating the list "+list_id); }
 	});
+	return ajaxResponse.transform;
     },
 
     transform2Ids: function(list_id) { 
+	var data = this.getListData(list_id);
+	//console.log("data ="+JSON.stringify(data));
 	var list_type = this.getListType(list_id);
 	var new_type;
-	if (list_type == 'traits') { new_type = 'trait_ids'; }
-	if (list_type == 'locations') { new_type = 'location_ids'; }
-	if (list_type == 'trials') { new_type = 'project_ids'; }
-	if (list_type == 'projects') { new_type = 'project_ids'; }
-	if (list_type == 'plots') { new_type = 'plot_ids'; }
-	if (list_type == 'accessions') { new_type = 'accession_ids'; }
-	
-	if (! new_type) { 
-	    return { 'error' : "cannot convert the list because of unknown type" };
+	switch (list_type)
+	{
+	  case "traits":
+	      new_type = 'traits_2_trait_ids';
+	      break;
+	  case "locations": 
+	      new_type = 'locations_2_location_ids';
+	      break;
+	  case "trials":
+	  case "breeding_programs":
+	      new_type = 'projects_2_project_ids';
+	      break;
+	  case "accessions":
+	      new_type = 'accessions_2_accession_ids';
+	      break;
+	  case "plots":
+	      new_type = 'plots_2_plot_ids';
+	      break;
+	  default: 
+	      return { 'error' : "cannot convert the list because of unknown type" };
 	}
-
+	if (window.console) console.log("new type = "+new_type);
 	var transformed = this.transform(list_id, new_type);
-	
-	return { 'transformed' : transformed };
-	    
+	if (window.console) console.log("transformed="+JSON.stringify(transformed));
+	return transformed;	    
 
     }
 };
@@ -704,15 +719,49 @@ function pasteListMenu (div_name, menu_div, button_name) {
 
 function pasteList(div_name) { 
     var lo = new CXGN.List();
-    var list_name = jQuery('#'+div_name+'_list_select').val();
-    var list_content = lo.getList(list_name);
-    
-    // textify list
-    var list_text = '';
-    for (var n=0; n<list_content.length; n++) { 
-	list_text = list_text + list_content[n][1]+"\r\n";
+    var list_id = jQuery('#'+div_name+'_list_select').val();
+    if (jQuery('#'+div_name).is("textarea")) {
+	var list = lo.getList(list_id);
+	// textify list
+	var list_text = '';
+	for (var n=0; n<list.length; n++) { 
+	    list_text = list_text + list[n][1]+"\r\n";
+	}
+        jQuery('#'+div_name).text(list_text);
+
+    } else {
+	var data = lo.getListData(list_id);
+	if (data.type_name !== 'years') {var ids = lo.transform2Ids(list_id);}
+	
+	var elements = data.elements;
+	var options = [];
+	for (var n=0; n<elements.length; n++) {
+	if (data.type_name === 'years') {
+	    options.push([elements[n][1], elements[n][1]]);
+	} else {
+	    options.push([ids[n], elements[n][1]]);
+	}
+	} 
+	
+	c1_html = format_options_list(options);
+	var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
+	var start = format_options(starting_categories);
+	jQuery('#select1').html(start);
+	
+	show_list_counts('c1_data_count', options.length);
+	jQuery('#c1_data_text').html(retrieve_sublist(options, 1).join("\n"));
+	jQuery('#c1_data').html(c1_html);
+	jQuery('#c2_data').html('');
+	jQuery('#c3_data').html('');	
+	jQuery('#select2').html('');
+	jQuery('#select3').html('');
+
+	if (isLoggedIn()) { 
+			addToListMenu('c1_to_list_menu', 'c1_data', {
+			    selectText: true,
+			    listType: data.type_name });
+		    }
     }
-    jQuery('#'+div_name).text(list_text);
 }
 
 /*
@@ -956,7 +1005,7 @@ function deleteList(list_id) {
 }
 
 function togglePublicList(list_id) { 
-    $.ajax({
+    jQuery.ajax({
 	"url": "/list/public/toggle",
 	"type": "POST",
 	"data": {'list_id': list_id},
@@ -980,7 +1029,7 @@ function togglePublicList(list_id) {
 }
 
 function makePublicList(list_id) { 
-    $.ajax({
+    jQuery.ajax({
 	"url": "/list/public/true",
 	"type": "POST",
 	"data": {'list_id': list_id},
@@ -997,7 +1046,7 @@ function makePublicList(list_id) {
 }
 
 function makePrivateList(list_id) { 
-    $.ajax({
+    jQuery.ajax({
 	"url": "/list/public/false",
 	"type": "POST",
 	"data": {'list_id': list_id},
@@ -1014,7 +1063,7 @@ function makePrivateList(list_id) {
 }
 
 function copyPublicList(list_id) { 
-    $.ajax({
+    jQuery.ajax({
 	"url": "/list/public/copy",
 	"type": "POST",
 	"data": {'list_id': list_id},

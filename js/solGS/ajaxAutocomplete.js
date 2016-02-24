@@ -16,5 +16,14 @@ jQuery(document).ready( function() {
                 minLength: 3,
        });
     });
+
+
+//population search autocomplete
+jQuery(document).ready( function() {
+        jQuery("#population_search_entry").autocomplete({
+                source: "/solgs/ajax/population/search",
+                minLength: 3,
+       });
+    });
     
 

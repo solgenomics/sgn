@@ -893,16 +893,12 @@ sub _stock_has_pedigree {
   my $bcs_stock = $stock->get_object_row;
   my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 										 { name   => 'female_parent',
-										   cv     => 'stock relationship',
-										   db     => 'null',
-										   dbxref => 'female_parent',
-										 });
+										   cv     => 'stock_relationship',
+										  										 });
   my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 									       { name   => 'male_parent',
-										 cv     => 'stock relationship',
-										 db     => 'null',
-										 dbxref => 'male_parent',
-									       });
+										 cv     => 'stock_relationship',
+										 									       });
 
   my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
   my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id()});
@@ -919,16 +915,12 @@ sub _stock_has_descendants {
   my $bcs_stock = $stock->get_object_row;
   my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 										 { name   => 'female_parent',
-										   cv     => 'stock relationship',
-										   db     => 'null',
-										   dbxref => 'female_parent',
-										 });
+										   cv     => 'stock_relationship',
+																				 });
   my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 									       { name   => 'male_parent',
-										 cv     => 'stock relationship',
-										 db     => 'null',
-										 dbxref => 'male_parent',
-									       });
+										 cv     => 'stock_relationship',
+										 									       });
 
   my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
   if ($descendant_relationships) {

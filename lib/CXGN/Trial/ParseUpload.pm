@@ -42,10 +42,14 @@ sub parse {
     return;
   }
 
+  print STDERR "Check 3.1: ".localtime();
+
   if (!$self->_parse_with_plugin()) {
     print STDERR "\nCould not parse trial file: ".$self->get_filename()."\n";
     return;
   }
+
+  print STDERR "Check 3.2: ".localtime();
 
   if (!$self->_has_parsed_data()) {
     print STDERR "\nNo parsed data for trial file: ".$self->get_filename()."\n";
@@ -53,6 +57,8 @@ sub parse {
   } else {
     return $self->_parsed_data();
   }
+
+  print STDERR "Check 3.3: ".localtime();
 
   print STDERR "\nError parsing trial file: ".$self->get_filename()."\n";
   return;

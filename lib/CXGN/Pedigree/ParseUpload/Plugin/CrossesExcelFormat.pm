@@ -301,10 +301,8 @@ sub _get_accession {
   my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
     ->create_with({
  		   name   => 'accession',
- 		   cv     => 'stock type',
- 		   db     => 'null',
- 		   dbxref => 'accession',
- 		  });
+ 		   cv     => 'stock_type',
+		  });
   $stock_lookup->set_stock_name($accession_name);
   $stock = $stock_lookup->get_stock_exact();
 
