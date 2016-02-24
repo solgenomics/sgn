@@ -131,7 +131,7 @@ $project->create_projectprops( { 'project year' => $opt_y }, { autocreate => 1 }
 
 # find the cvterm for a genotyping experiment
 my $geno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-    { name   => 'genotyping experiment',
+    { name   => 'genotyping_experiment',
       cv     => 'experiment_type',
     });
 

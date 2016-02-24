@@ -326,7 +326,7 @@ sub store {
       print STDERR " ***store: phenotyping experiment cvterm = " . $pheno_cvterm->cvterm_id . "\n";
       ##################
       #This has to be stored in the database when adding a new project for these plots
-      my $field_layout_experiment = 'field layout'; #############################
+      my $field_layout_experiment = 'field_layout'; #############################
       ################
       foreach my $key (keys %$hashref) {
 	my ($spreadsheet_id, $operator, $date, $row) = split(/\t/, $key);
