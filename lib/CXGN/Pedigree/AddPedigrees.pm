@@ -98,7 +98,7 @@ sub add_pedigrees {
       if (!$cross_name_cvterm) {
 	  $cross_name_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
 	      ->create_with( { name   => 'cross_name',
-			       cv     => 'local',
+			       cv     => 'stock_relationship',
 			     });
       }
       # get cvterm for cross_type or create if not found
