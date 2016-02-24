@@ -243,23 +243,14 @@ function create_DataCollector() {
      });
 }
 
-
-
-
-
-
-
-
-
 function open_derived_trait_dialog() {
     jQuery('#working_modal').modal("show");
     jQuery('#compute_derived_trait_dialog').dialog("open"); 
     var trait = jQuery('#sel1').val();
-    jQuery("#test_xyz").html(trait);
+    //jQuery("#test_xyz").html(trait);
     jQuery('#working_modal').modal("hide");
     
 }
-
 
 function compute_derived_trait() {
     jQuery('#working_modal').modal("show");
@@ -282,12 +273,16 @@ function compute_derived_trait() {
 	     jQuery('#working_modal').modal("hide");
 		
              if (response.error) {
-		 //alert("error: "+response.error);
+		 alert("Computation stopped: "+response.error);
+		 //alert("Computation for "+trait+" stopped: "+response.error);
 		 jQuery('#open_derived_trait_dialog').dialog("close");
+		 
              } else {
 		 jQuery('#open_derived_trait_dialog').dialog("close");
 		 jQuery('#working_modal').modal("hide");
-		 
+		 jQuery('derived_trait_saved_dialog_message');
+		 alert("Successfully derived and uploaded phenotype");
+		// alert("Successfully derived and uploaded ' "+trait+" ' values for this trial");
              }
 	 },
 	 error: function () {
