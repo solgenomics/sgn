@@ -128,7 +128,7 @@ sub store {
     my $phenotyping_date = $phenotype_metadata->{'date'};
     my $phenotyping_experiment_cvterm = $schema->resultset('Cv::Cvterm')
 	->create_with({
-		       name   => 'phenotyping experiment',
+		       name   => 'phenotyping_experiment',
 		       cv     => 'experiment_type',
 		      });
 

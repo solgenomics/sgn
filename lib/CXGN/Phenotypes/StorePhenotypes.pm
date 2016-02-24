@@ -48,7 +48,7 @@ sub verify {
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
-    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping experiment', 'experiment type');
+    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type');
     my $error_message;
     my $warning_message;
 
@@ -170,7 +170,7 @@ sub store {
     my $operator = $phenotype_metadata->{'operator'};
     my $phenotyping_date = $phenotype_metadata->{'date'};
 
-    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping experiment', 'experiment_type');
+    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type');
 
     ## Track experiments seen to allow for multiple trials and experiments to exist in an uploaded file.
     ## Used later to attach file metadata.

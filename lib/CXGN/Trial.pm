@@ -769,7 +769,7 @@ sub _delete_field_layout_experiment {
 
     my $field_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "field_layout" })->cvterm_id();
 
-    my $genotyping_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'genotyping layout' }) ->cvterm_id();
+    my $genotyping_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'genotyping_layout' }) ->cvterm_id();
 
     print STDERR "Genotyping layout type id = $field_layout_type_id\n";
 
@@ -861,7 +861,7 @@ sub delete_project_entry {
 sub phenotype_count { 
     my $self = shift;
 
-    my $phenotyping_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'phenotyping experiment' })->cvterm_id();
+    my $phenotyping_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'phenotyping_experiment' })->cvterm_id();
     
     my $phenotype_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( 
     	{ 
