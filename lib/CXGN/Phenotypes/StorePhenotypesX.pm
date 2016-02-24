@@ -148,7 +148,7 @@ sub store {
 	    my $field_layout_experiment = $plot_stock
 		->search_related('nd_experiment_stocks')
 		    ->search_related('nd_experiment')
-			->find({'type.name' => 'field layout' },
+			->find({'type.name' => 'field_layout' },
 			       { join => 'type' });
 	    #####
 

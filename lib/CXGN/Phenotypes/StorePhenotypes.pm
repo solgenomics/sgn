@@ -192,7 +192,7 @@ sub store {
 	    my $field_layout_experiment = $plot_stock
 		->search_related('nd_experiment_stocks')
 		    ->search_related('nd_experiment')
-			->find({'type.name' => 'field layout' },
+			->find({'type.name' => 'field_layout' },
 			       { join => 'type' });
 	    #####
 
@@ -272,7 +272,7 @@ sub store {
     my $coderef_large_file = sub {
 
 	my $rs = $schema->resultset('Stock::Stock')->search(
-	    {'type.name' => 'field layout'},
+	    {'type.name' => 'field_layout'},
 	    {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
 	     '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'], 
 	     '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
