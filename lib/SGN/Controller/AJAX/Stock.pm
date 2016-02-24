@@ -1044,7 +1044,7 @@ sub add_phenotype_POST {
         try {
             # find the cvterm for a phenotyping experiment
             my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-                { name   => 'phenotyping experiment',
+                { name   => 'phenotyping_experiment',
                   cv     => 'experiment_type',
 		});
 
