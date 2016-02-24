@@ -160,6 +160,7 @@
       <li data-target="#myCarousel" data-slide-to="3"></li>
       <li data-target="#myCarousel" data-slide-to="4"></li>
       <li data-target="#myCarousel" data-slide-to="5"></li>
+      <li data-target="#myCarousel" data-slide-to="6"></li>
     </ol>
 
     <!-- Wrapper for slides -->
@@ -189,9 +190,9 @@
       <div class="item">
           <div style="background:url(/documents/img/homepage_carousel/sol2016.jpeg) center center; background-size:cover;" class="slider-size">
             <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
-              <a href="http://solgenomics2016.ucdavis.edu" target="_blank">
-                <h3 style="color: #00426c">The 13th Solanaceae Conference</h3>
-                <p style="color: #00426c"><img src="/documents/img/sgn_transparent_logo.png" width="30"> September 12-16, 2016 - Davis California USA</p>
+              <a href="http://solgenomics2016.ucdavis.edu" target="_blank" style="color: #00426c">
+                <h3>The 13th Solanaceae Conference</h3>
+                <p><img src="/documents/img/sgn_transparent_logo.png" width="30"> September 12-16, 2016 - Davis California USA</p>
               </a>
             </div>
             
