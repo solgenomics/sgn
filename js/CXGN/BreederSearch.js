@@ -17,7 +17,7 @@ window.onload = function initialize() {
 
 	    if (!category) { // reset by returning empty if no category was defined
 		var data_element = "c"+this_section+"_data";
-		jQuery("#"+data_element).html('');	
+		jQuery("#"+data_element).html('');
 		return;
 	    }
 	    var categories = get_selected_categories(this_section);
@@ -31,7 +31,7 @@ window.onload = function initialize() {
 	    update_download_options(this_section);
 	});
 
-    jQuery('#c1_data, #c2_data, #c3_data, #c4_data').change( // update wizard panels and categories when data selections change 
+    jQuery('#c1_data, #c2_data, #c3_data, #c4_data').change( // update wizard panels and categories when data selections change
     	function() {
 	    var this_section = jQuery(this).attr('name');
 
@@ -43,10 +43,10 @@ window.onload = function initialize() {
 	    update_select_categories(this_section);
 	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
 	    update_download_options(this_section);
-	});		 
+	});
 
-    jQuery('#c1_select_all, #c2_select_all, #c3_select_all, #c4_select_all').click( // select all data in a wizard panel 
-    	function() { 
+    jQuery('#c1_select_all, #c2_select_all, #c3_select_all, #c4_select_all').click( // select all data in a wizard panel
+    	function() {
 	    var this_section = jQuery(this).attr('name');
 	    var data_id = "c"+this_section+"_data";
 	    selectAllOptions(document.getElementById(data_id));
@@ -59,7 +59,7 @@ window.onload = function initialize() {
 	    update_download_options(this_section);
 	});
 
-      jQuery('select').dblclick(function() { // open detail page in new window or tab on double-click 
+      jQuery('select').dblclick(function() { // open detail page in new window or tab on double-click
 	  var this_section = jQuery(this).attr('name');
 	  var categories = get_selected_categories(this_section);
 	  var category = categories.pop();
@@ -68,7 +68,7 @@ window.onload = function initialize() {
 	  case "accessions":
 	  case "plots":
 	      window.open("../../stock/"+this.value+"/view");
-	      break;	    
+	      break;
 	  case "trials":
 	      window.open("../../breeders_toolbox/trial/"+this.value);
 	      break;
@@ -81,11 +81,11 @@ window.onload = function initialize() {
 	  case "traits":
 	      window.open("../../chado/cvterm?action=view&cvterm_id="+this.value);
 	      break;
-	  default: 
+	  default:
 	      if (window.console) console.log("no link for this category");
 	  }
       });
-    
+
     jQuery('#open_update_dialog').on('click', function () {
 	jQuery('#update_wizard_dialog').modal("show");
 	matviews_update_options();
@@ -94,38 +94,38 @@ window.onload = function initialize() {
     jQuery('#refresh_lists').on('click', function () {
 	create_list_start('Start from a list');
     });
-    
+
 
     jQuery('#update_wizard_dialog, #upload_datacollector_phenotypes_dialog, #upload_phenotype_spreadsheet_dialog, #upload_fieldbook_phenotypes_dialog').on("click", '.wiz-update', function () {
 	if (window.console) console.log("refreshing materialized views . . .");
 	refresh_matviews();
     });
-    
+
     jQuery('#download_button_excel').on('click', function () {
         var selected = get_selected_trials();
-        if (selected.length !== 0) { 
+        if (selected.length !== 0) {
 	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
         }
         else { alert("No trials selected for download."); }
-       
+
     });
 
     jQuery('#download_button_csv').on('click', function () {
         var selected = get_selected_trials();
-        if (selected.length !== 0) { 
+        if (selected.length !== 0) {
 	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
         }
         else { alert("No trials selected for download."); }
-       
+
     });
 
     jQuery('#download_button_genotypes').on('click', function () {
         var selected = get_selected_accessions();
-        if (selected.length !== 0) { 
+        if (selected.length !== 0) {
 	  window.open('/breeders/download_gbs_action/'+selected.join(",")+'?format=ids');
         }
         else { alert("No accessions selected for download."); }
-       
+
     });
 }
 
@@ -140,16 +140,16 @@ function retrieve_and_display_set(categories, data, this_section) {
 	data: {'categories': categories, 'data': data, 'querytypes': get_querytypes(this_section)},
 	    beforeSend: function(){
 		disable_ui();
-            },  
+            },
             complete : function(){
 		enable_ui();
             },
-	    success: function(response) { 
+	    success: function(response) {
 		if (response.error) {
 		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">'+response.error+'</font></div>';
 		    var selectall_id = "c"+this_section+"_select_all";
 		    jQuery('#'+selectall_id).before(error_html);
-		} 
+		}
 		else {
                     var list = response.list || [];
 		    data_html = format_options_list(list);
@@ -157,17 +157,17 @@ function retrieve_and_display_set(categories, data, this_section) {
 		    var count_id = "c"+this_section+"_data_count";
 		    var listmenu_id = "c"+this_section+"_to_list_menu";
 		    var select_id = "select"+this_section;
-		    
+
 		    jQuery('#'+data_id).html(data_html);
 		    show_list_counts(count_id, list.length);
 
-		    if (isLoggedIn()) { 
+		    if (isLoggedIn()) {
 			addToListMenu(listmenu_id, data_id, {
 			    selectText: true,
 			    typeSourceDiv: select_id });
 		    }
-		}	
-	    }, 
+		}
+	    },
 	error: function(request, status, err) {
 		if (status == "timeout") {
                     // report timeout
@@ -175,14 +175,14 @@ function retrieve_and_display_set(categories, data, this_section) {
 		    var selectall_id = "c"+this_section+"_select_all";
 		    jQuery('#'+selectall_id).before(error_html);
 		} else {
-                    // report unspecified error occured  
+                    // report unspecified error occured
 		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
 		    var selectall_id = "c"+this_section+"_select_all";
 		    jQuery('#'+selectall_id).before(error_html);
 		}
             }
 
-	});		
+	});
 }
 
 function get_selected_data(this_section) {
@@ -261,7 +261,7 @@ function get_selected_accessions () {
 
 function update_select_categories(this_section) {
     var selected_categories = get_selected_categories(this_section);
-    
+
     var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', plots : 'plots', traits : 'traits', trials :'trials', years : 'years'};
     var all_categories = copy_hash(categories);
 
@@ -316,7 +316,7 @@ function update_download_options(this_section) {
     }
 }
 
-	
+
 function reset_downstream_sections(this_section) {  // clear downstream selects, data_panels, data_counts
     jQuery('#response_error').remove();
     for (i = 4; i > this_section; i--) {
@@ -337,37 +337,68 @@ function create_list_start(message) {
     jQuery('#paste_list').html(listhtml);
     jQuery('#paste_list').change(
     function() { // if 'select a list', reinitialize, otherwise paste list
-	var value = jQuery('#c1_data_list_select').val();
-	console.log("c1_data_list_select_val ="+value);
-	if (value === '') {
-	    jQuery('#c1_data').html('');
-	} else {
-	    pasteList('c1_data');
-	}
-	update_download_options(1);
-    });
-}
+      var value = jQuery('#c1_data_list_select').val();
+      if (window.console) console.log("c1_data_list_select_val ="+value);
+    if (value === '') {
+        jQuery('#c1_data').html('');
+      }
+    else {  // paste list by retrieving ids and combing them with list values in proper format
+      var lo = new CXGN.List();
+      var list_id = jQuery('#c1_data_list_select').val();
+      var data = lo.getListData(list_id);
+      if (data.type_name !== 'years') {var ids = lo.transform2Ids(list_id);}
 
-function format_options(items) { 
+      var elements = data.elements;
+      var options = [];
+      for (var n=0; n<elements.length; n++) {
+        if (data.type_name === 'years') {
+          options.push([elements[n][1], elements[n][1]]);
+        }
+        else {
+          options.push([ids[n], elements[n][1]]);
+        }
+      }
+
+      c1_html = format_options_list(options);
+      jQuery('#c1_data_text').html(retrieve_sublist(options, 1).join("\n"));
+      jQuery('#c1_data').html(c1_html);
+
+      var this_section = 1;
+      initialize_first_select();
+      show_list_counts('c1_data_count', options.length);
+      reset_downstream_sections(this_section);
+	    update_select_categories(this_section);
+      update_download_options(this_section);
+
+      if (isLoggedIn()) {
+        addToListMenu('c1_to_list_menu', 'c1_data', {
+          selectText: true,
+          listType: data.type_name });
+        }
+      }
+    });
+  }
+
+function format_options(items) {
     var html = '';
-    for (var key in items) { 
+    for (var key in items) {
 	html = html + '<option value="'+key+'" title="'+items[key]+'">'+items[key]+'</a>\n';
     }
     return html;
 }
 
-function retrieve_sublist(list, sublist_index) { 
+function retrieve_sublist(list, sublist_index) {
     var new_list = new Array();
-    for(var i=0; i<list.length; i++) { 
+    for(var i=0; i<list.length; i++) {
 	new_list.push(list[i][sublist_index]);
     }
     return new_list;
 }
 
-function format_options_list(items) { 
+function format_options_list(items) {
     var html = '';
-    if (items) { 
-	for(var i=0; i<items.length; i++) { 
+    if (items) {
+	for(var i=0; i<items.length; i++) {
 	    html = html + '<option value="'+items[i][0]+'" title="'+items[i][1]+'">'+items[i][1]+'</a>\n';
 	}
 	return html;
@@ -375,26 +406,26 @@ function format_options_list(items) {
     return "no data";
 }
 
-function copy_hash(hash) { 
+function copy_hash(hash) {
     var new_hash = new Array();
 
-    for (var key in hash) { 
+    for (var key in hash) {
 	new_hash[key] = hash[key];
     }
      return new_hash;
 }
 
-function disable_ui() { 
+function disable_ui() {
     jQuery('#working_modal').modal("show");
 }
 
-function enable_ui() { 
+function enable_ui() {
      jQuery('#working_modal').modal("hide");
 }
 
-function show_list_counts(count_div, total_count, selected) { 
+function show_list_counts(count_div, total_count, selected) {
     var html = 'Items: '+total_count+'<br />';
-    if (selected) { 
+    if (selected) {
 	html += 'Selected: '+selected;
     }
     jQuery('#'+count_div).html(html);
@@ -437,6 +468,12 @@ function get_querytypes(this_section) {
     }
 }
 
+function initialize_first_select() {
+  var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
+  var start = format_options(starting_categories);
+  jQuery('#select1').html(start);  
+}
+
 function add_data_refresh() {
     var roles = getUserRoles();
     console.log("userroles="+roles);
@@ -453,7 +490,7 @@ function refresh_matviews() {
 	beforeSend: function() {
 	    jQuery('#update_wizard').button('loading');
 	},
-	success: function(response) { 
+	success: function(response) {
 		if (response.error) {
 		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">'+response.error+'</font></div>';
 		    jQuery('#update_wizard_error').replaceWith(error_html);
@@ -461,15 +498,15 @@ function refresh_matviews() {
 		    var success_html = '<div class="well well-sm" id="update_wizard_error"><font color="green">Success! Update initiated.</font></div>';
 		    jQuery('#update_wizard_error').replaceWith(success_html);
 		    matviews_update_options();
-		}	
-	    }, 
+		}
+	    },
 	error: function(request, status, err) {
 		if (status == "timeout") {
                     // report timeout
 		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
 		    jQuery('#update_wizard_error').replaceWith(error_html);
 		} else {
-                    // report unspecified error occured  
+                    // report unspecified error occured
 		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
 		    jQuery('#update_wizard_error').replaceWith(error_html);
 		}
@@ -482,7 +519,7 @@ function matviews_update_options() {
 	url: '/ajax/breeder/check_status',
 	timeout: 60000,
 	method: 'POST',
-	success: function(response) { 
+	success: function(response) {
 		if (response.refreshing) {
 		    // if already refreshing, display status in modal and create disabled button
 	            var update_status = response.refreshing;
@@ -497,14 +534,14 @@ function matviews_update_options() {
 		    console.log("button html ="+button_html);
 		    jQuery('#update_wizard').replaceWith(button_html);
 		}
-	    }, 
+	    },
 	error: function(request, status, err) {
 		if (status == "timeout") {
                     // report timeout
 		    var error_html = '<div class="well well-sm" id="wizard_status"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
 		    jQuery('#wizard_status').replaceWith(error_html);
 		} else {
-                    // report unspecified error occured  
+                    // report unspecified error occured
 		    var error_html = '<div class="well well-sm" id="wizard_status"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
 		    jQuery('#wizard_status').replaceWith(error_html);
 		}
