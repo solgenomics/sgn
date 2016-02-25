@@ -28,6 +28,7 @@ use File::Basename qw | basename dirname|;
 use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
+use Scalar::Util qw(looks_like_number);
 
 
 sub verify {
@@ -70,6 +71,22 @@ sub verify {
 	$check_unique_db{$db_value, $db_cvalue_id, $stock_string} = 1;
     }
 
+    my %check_trait_category;
+    $sql = "SELECT b.value, c.cvterm_id from cvtermprop as b join cvterm as a on (b.type_id = a.cvterm_id) join cvterm as c on (b.cvterm_id=c.cvterm_id) where a.name = 'trait_categories';";
+    $sth = $c->dbc->dbh->prepare($sql);
+    $sth->execute();
+    while (my ($category_value, $cvterm_id) = $sth->fetchrow_array) {
+    	$check_trait_category{$cvterm_id} = $category_value;    	
+    }
+
+    my %check_trait_format;
+    $sql = "SELECT b.value, c.cvterm_id from cvtermprop as b join cvterm as a on (b.type_id = a.cvterm_id) join cvterm as c on (b.cvterm_id=c.cvterm_id) where a.name = 'trait_format';";
+    $sth = $c->dbc->dbh->prepare($sql);
+    $sth->execute();
+    while (my ($format_value, $cvterm_id) = $sth->fetchrow_array) {
+    	$check_trait_format{$cvterm_id} = $format_value;    	
+    }
+
     foreach my $plot_name (@plot_list) {
 	foreach my $trait_name (@trait_list) {
 	    my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
@@ -79,9 +96,22 @@ sub verify {
 		my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
 		#check that trait value is valid for trait name
-
+		if (exists($check_trait_format{$trait_cvterm_id})) {
+			if ($check_trait_format{$trait_cvterm_id} eq 'numeric') {
+				my $trait_format_checked = looks_like_number($trait_value);
+				if (!$trait_format_checked) {
+					$error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+				}
+			}
+		}
+		if (exists($check_trait_category{$trait_cvterm_id})) {
+			my @trait_categories = split /\//, $check_trait_category{$trait_cvterm_id};
+			my %trait_categories_hash = map { $_ => 1 } @trait_categories;
+			if (!exists($trait_categories_hash{$trait_value})) {
+				$error_message = $error_message."<small>This trait value should be one of ".$check_trait_category{$trait_cvterm_id}.": <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+			}
+		}
 	
-
 		#check if the plot_name, trait_name, trait_value combination already exists in database.
 		if (exists($check_unique_db{$trait_value, $trait_cvterm_id, "Stock: ".$stock_id})) {
 		    $warning_message = $warning_message."<small>This combination exists in database: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
