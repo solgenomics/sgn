@@ -8,11 +8,12 @@
 <table class="table borderless" alt="breeder search" border="0" >
 
 <tr>
-<td>
+<td style="white-space:nowrap;">
   <div style="margin-bottom:5;display:inline-block;" class="form-group form-group-sm" id="paste_list"></div>
   <p style="margin: 0; padding: 0;" align="center"><i>or</i></p>
 </td>
-<td></td>
+<td id ="list_message">
+</td>
 <td></td>
 <td id="wizard_refresh"></td>
 </tr>
@@ -107,6 +108,7 @@
 jQuery(document).ready(function() {
 
     initialize_first_select();
+
     jQuery('select').mouseenter(function() {this.tooltip});
 
     if (!isLoggedIn()) {
@@ -121,7 +123,7 @@ jQuery(document).ready(function() {
     } else {
 
 	create_list_start('Start from a list');
-	jQuery('#paste_list').after('<button type="button" id="refresh_lists" class="btn btn-default"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>');
+	jQuery('#paste_list').after('<button type="button" id="refresh_lists" class="btn btn-default" title="Refresh lists" style="margin-bottom:5;display:inline-block;"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>');
 
 	add_data_refresh();
 

@@ -337,16 +337,32 @@ function create_list_start(message) {
     jQuery('#paste_list').html(listhtml);
     jQuery('#paste_list').change(
     function() { // if 'select a list', reinitialize, otherwise paste list
+      jQuery('#list_message').html('');
       var value = jQuery('#c1_data_list_select').val();
       if (window.console) console.log("c1_data_list_select_val ="+value);
     if (value === '') {
         jQuery('#c1_data').html('');
       }
     else {  // paste list by retrieving ids and combing them with list values in proper format
+      disable_ui();
       var lo = new CXGN.List();
       var list_id = jQuery('#c1_data_list_select').val();
       var data = lo.getListData(list_id);
-      if (data.type_name !== 'years') {var ids = lo.transform2Ids(list_id);}
+      if (! data) { // return with error message that list can't be used
+        enable_ui();
+        var error_html = '<div class="well well-sm"><font color="red">Unable to retrieve data from this list.</font></div>';
+        jQuery('#list_message').html(error_html);
+        return;
+      }
+      if (data.type_name !== 'years') {
+        var ids = lo.transform2Ids(list_id);
+        if (! ids) { // return with error message that ids can't be retrieved
+          enable_ui();
+          var error_html = '<div class="well well-sm"><font color="red">Unable to retrieve ids from this list.</font></div>';
+          jQuery('#list_message').html(error_html);
+          return;
+        }
+      }
 
       var elements = data.elements;
       var options = [];
@@ -374,10 +390,11 @@ function create_list_start(message) {
         addToListMenu('c1_to_list_menu', 'c1_data', {
           selectText: true,
           listType: data.type_name });
-        }
       }
-    });
-  }
+      enable_ui();
+    }
+  });
+}
 
 function format_options(items) {
     var html = '';
@@ -471,7 +488,7 @@ function get_querytypes(this_section) {
 function initialize_first_select() {
   var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', traits : 'traits', trials :'trials', years : 'years'};
   var start = format_options(starting_categories);
-  jQuery('#select1').html(start);  
+  jQuery('#select1').html(start);
 }
 
 function add_data_refresh() {
@@ -531,7 +548,6 @@ function matviews_update_options() {
 		    var update_status = response.timestamp;
 		    jQuery('#wizard_status').replaceWith(update_status);
 		    var button_html = '<button type="button" class="btn btn-primary wiz-update" name="update_wizard" data-loading-text="Working..." id="update_wizard" title="Refresh the search wizard to include newly uploaded data">Update search wizard</button>';
-		    console.log("button html ="+button_html);
 		    jQuery('#update_wizard').replaceWith(button_html);
 		}
 	    },
