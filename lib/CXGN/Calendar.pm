@@ -258,4 +258,25 @@ sub populate_calendar_events {
     return \@events;
 }
 
+sub display_start_date {
+	my $self = shift;
+	my $value = shift;
+
+	my $checked_value = $self->check_value_format($value);
+    if ($checked_value) {
+        my @calendar_array = $self->parse_calendar_array($checked_value);
+        if ($calendar_array[0]) {
+            my $formatted_time = $self->format_time($calendar_array[0]);
+            my $start_time = $formatted_time->datetime;
+            my $start_display = $self->format_display_date($formatted_time);
+            return $start_display;
+        } else {
+            return;
+        }
+    } else {
+        return;
+    }
+
+}
+
 1;
