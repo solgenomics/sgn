@@ -22,6 +22,10 @@ package CXGN::Trial;
 use Moose;
 use Try::Tiny;
 use CXGN::Trial::TrialLayout;
+use SGN::Model::Cvterm;
+use Time::Piece;
+use Time::Seconds;
+use CXGN::Calendar;
 
 =head2 accessor bcs_schema()
 
@@ -470,7 +474,26 @@ sub get_harvest_date {
 	    type_id => $harvest_date_cvterm_id,
 	});
 
-    if ($row) { return $row->value();}    
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    if ($row) {
+        my $checked_value = $calendar_funcs->check_value_format($row->value());
+        if ($checked_value) {
+            my @calendar_array = $calendar_funcs->parse_calendar_array($checked_value);
+            if ($calendar_array[0]) {
+                my $formatted_time = $calendar_funcs->format_time($calendar_array[0]);
+                my $start_time = $formatted_time->datetime;
+                my $start_display = $calendar_funcs->format_display_date($formatted_time);
+                return $start_display;
+            } else {
+                return;
+            }
+        } else {
+            return;
+        }
+    } else {
+        return;
+    }
 }
 
 sub set_harvest_date { 
@@ -478,9 +501,9 @@ sub set_harvest_date {
     my $harvest_date = shift;
 
     if ($harvest_date =~ m|^(\d{4})/(\d{2})/(\d{2})|) { 
-	if ($1 > 2100 || $1 < 1950 || $2 > 12 || $2 < 1 || $3 > 31 || $3 < 1) { 
-	    die "Harvest date of $harvest_date is not of the format YYYY/MM/DD. Not storing.\n";
-	}
+        if ($1 > 2100 || $1 < 1950 || $2 > 12 || $2 < 1 || $3 > 31 || $3 < 1) { 
+            die "Harvest date of $harvest_date is not of the format YYYY/MM/DD. Not storing.\n";
+        }
 	else { 
 
 	    my $harvest_date_cvterm_id = $self->get_harvest_date_cvterm_id();
@@ -505,19 +528,39 @@ sub get_planting_date {
 	    project_id => $self->get_trial_id(), 
 	    type_id => $planting_date_cvterm_id,
 	});
+    
+    my $calendar_funcs = CXGN::Calendar->new({});
 
-    if ($row) { return $row->value();}    
+    if ($row) {
+        my $checked_value = $calendar_funcs->check_value_format($row->value());
+        if ($checked_value) {
+            my @calendar_array = $calendar_funcs->parse_calendar_array($checked_value);
+            if ($calendar_array[0]) {
+                my $formatted_time = $calendar_funcs->format_time($calendar_array[0]);
+                my $start_time = $formatted_time->datetime;
+                my $start_display = $calendar_funcs->format_display_date($formatted_time);
+                return $start_display;
+            } else {
+                return;
+            }
+        } else {
+            return;
+        }
+    } else {
+        return;
+    }
 }
 
 sub set_planting_date { 
     my $self = shift;
     my $planting_date = shift;
 
+    my $calendar_funcs = CXGN::Calendar->new({$self->bcs_schema()});
+
     if ($planting_date =~ m|^(\d{4})/(\d{2})/(\d{2})|) { 
-	if ($1 > 2100 || $1 < 1950 || $2 > 12 || $2 < 1 || $3 > 31 || $3 < 1) { 
-	    die "Planting date of $planting_date is not of the format YYYY/MM/DD. Not storing.\n";
-	}
-	else { 
+    	if ($1 > 2100 || $1 < 1950 || $2 > 12 || $2 < 1 || $3 > 31 || $3 < 1) { 
+    	    die "Planting date of $planting_date is not of the format YYYY/MM/DD. Not storing.\n";
+    	}
 
 	    my $planting_date_cvterm_id = $self->get_planting_date_cvterm_id();
 	    
@@ -526,9 +569,9 @@ sub set_planting_date {
 		    project_id => $self->get_trial_id(), 
 		    type_id => $planting_date_cvterm_id,
 		});
+
 	    $row->value($planting_date);
 	    $row->update();
-	}
     }
 }
 sub get_plot_dimensions { 
@@ -988,91 +1031,56 @@ sub get_year_type_id {
 
 sub get_breeding_program_id { 
     my $self = shift;
-    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program_trial_relationship' });
-    
-    return $rs->first()->cvterm_id();
-}
 
-sub get_breeding_trial_cvterm_id {
-    my $self = shift;
-
-    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'local' } )->cv_id();
-
-    my $breeding_trial_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program_trial_relationship' });
-
-    if (!$breeding_trial_cvterm_row) {
-	my $row = $self->schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'breeding_program_trial_relationship',
-		cv   => 'local',
-	    });
-	$breeding_trial_cvterm_row = $row;
+    my $breeding_program_trial_relationship_cvterm_id;
+    my $breeding_program_trial_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'breeding_program_trial_relationship', 'project_relationship');
+    if ($breeding_program_trial_relationship_cvterm) {
+        $breeding_program_trial_relationship_cvterm_id = $breeding_program_trial_relationship_cvterm->cvterm_id();
     }
-    return $breeding_trial_cvterm_row->cvterm_id();
-}
 
+    return $breeding_program_trial_relationship_cvterm_id;
+}
 
 sub get_breeding_program_cvterm_id {
     my $self = shift;
 
-    my $breeding_program_cvterm_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program' });
-    my $row;
-
-    if ($breeding_program_cvterm_rs->count() == 0) {
-	$row = $self->schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'breeding_program',
-		cv   => 'local',
-	    });
-
-    }
-    else {
-	$row = $breeding_program_cvterm_rs->first();
+    my $breeding_program_cvterm_id;
+    my $breeding_program_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'breeding_program', 'project_property');
+    if ($breeding_program_cvterm) {
+        $breeding_program_cvterm_id = $breeding_program_cvterm->cvterm_id();
     }
 
-    return $row->cvterm_id();
+    return $breeding_program_cvterm_id;
 }
 
 sub get_harvest_date_cvterm_id { 
     my $self = shift;
 
-    my $harvest_date_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'harvest_date' });
-    my $row;
-
-    if ($harvest_date_rs->count() == 0) {
-	$row = $self->bcs_schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'harvest_date',
-		cv   => 'local',
-	    });
-
+    my $harvest_date_cvterm_id;
+    my $harvest_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_harvest_date', 'project_property');
+    if (!$harvest_date_cvterm) {
+        $harvest_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'harvest_date', 'local');
     }
-    else {
-	$row = $harvest_date_rs->first();
+    if ($harvest_date_cvterm) {
+        $harvest_date_cvterm_id = $harvest_date_cvterm->cvterm_id();
     }
 
-    return $row->cvterm_id();
+    return $harvest_date_cvterm_id;
 }
 
 sub get_planting_date_cvterm_id { 
     my $self = shift;
 
-    my $planting_date_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'planting_date' });
-    my $row;
-
-    if ($planting_date_rs->count() == 0) {
-	$row = $self->bcs_schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'planting_date',
-		cv   => 'local',
-	    });
-
+    my $planting_date_cvterm_id;
+    my $planting_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_planting_date', 'project_property');
+    if (!$planting_date_cvterm) {
+        $planting_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'planting_date', 'local');
     }
-    else {
-	$row = $planting_date_rs->first();
+    if ($planting_date_cvterm) {
+        $planting_date_cvterm_id = $planting_date_cvterm->cvterm_id();
     }
 
-    return $row->cvterm_id();
+    return $planting_date_cvterm_id;
 }
 
 sub get_design_type {
