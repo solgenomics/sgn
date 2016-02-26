@@ -30,6 +30,7 @@ use Data::Dumper;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use CXGN::Stock::StockLookup;
+use SGN::Model::Cvterm;
 
 #class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 has 'schema' => (
@@ -73,22 +74,14 @@ sub add_pedigrees {
   my $transaction_error = "";
 
   my $coderef = sub {
-
+      
       print STDERR "Getting cvterms...\n";
       # get cvterms for parents and offspring
-      my $female_parent_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	  ->create_with( { name   => 'female_parent',
-			   cv     => 'stock_relationship',
-			 });
-      my $male_parent_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	  ->create_with({ name   => 'male_parent',
-			  cv     => 'stock_relationship',
-			  
-			});
-      my $progeny_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	  ->create_with({ name   => 'offspring_of',
-			  cv     => 'stock_relationship',
-			});
+      my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'female_parent', 'stock_relationship');
+
+      my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'male_parent', 'stock_relationship');
+
+      my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'offspring_of', 'stock_relationship');
       
       # get cvterm for cross_name or create if not found
       my $cross_name_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
@@ -96,10 +89,7 @@ sub add_pedigrees {
      	      name   => 'cross_name',
 		 });
       if (!$cross_name_cvterm) {
-	  $cross_name_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	      ->create_with( { name   => 'cross_name',
-			       cv     => 'stock_relationship',
-			     });
+	  $cross_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_name', 'stock_relationship');
       }
       # get cvterm for cross_type or create if not found
       my $cross_type_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
@@ -107,15 +97,11 @@ sub add_pedigrees {
      	      name   => 'cross_type',
 		 });
       if (!$cross_type_cvterm) {
-	  $cross_type_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	      ->create_with( { name   => 'cross_type',
-			       cv     => 'local',
-			     });
+	  $cross_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_type', 'nd_experiment_property');
+      
       }
-      
-      
       foreach my $pedigree (@pedigrees) {
-
+	  
 	  print STDERR Dumper($pedigree);
 	  my $cross_stock;
 	  my $organism_id;
@@ -134,7 +120,7 @@ sub add_pedigrees {
 	      $male_parent_name = $pedigree->get_male_parent()->get_name();
 	      $male_parent = $self->_get_accession($male_parent_name);
 	  }
-
+	  
 	  my $cross_name = $female_parent_name ."/".$male_parent_name;
 
 	  print STDERR "Creating pedigree $cross_type, $cross_name\n";
@@ -167,8 +153,6 @@ sub add_pedigrees {
 		      subject_id => $male_parent->stock_id(),
 					   });
 	  }
-	  
-	  
 	  
 	  
       }
