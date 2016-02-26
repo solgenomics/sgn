@@ -348,25 +348,27 @@ function create_list_start(message) {
       var lo = new CXGN.List();
       var list_id = jQuery('#c1_data_list_select').val();
       var data = lo.getListData(list_id);
-      if (! data) { // return with error message that list can't be used
-        enable_ui();
-        var error_html = '<div class="well well-sm"><font color="red">Unable to retrieve data from this list.</font></div>';
-        jQuery('#list_message').html(error_html);
+      if (window.console) console.log("list_data="+JSON.stringify(data));
+      if (data === undefined) {
+        report_list_start_error("Unable to retrieve data from this list.");
         return;
       }
-      if (data.type_name !== 'years') {
+      if (data.type_name === '') {
+        report_list_start_error("Unable to start from a list of type null.");
+        return;
+      }
+      if (data.type_name !== 'years') { // retrieve ids if they exist
         var ids = lo.transform2Ids(list_id);
-        if (! ids) { // return with error message that ids can't be retrieved
-          enable_ui();
-          var error_html = '<div class="well well-sm"><font color="red">Unable to retrieve ids from this list.</font></div>';
-          jQuery('#list_message').html(error_html);
+        if (window.console) console.log("list_ids="+JSON.stringify(ids));
+        if (ids === undefined) {
+          report_list_start_error("Unable to retrieve ids from this list.");
           return;
         }
       }
 
       var elements = data.elements;
       var options = [];
-      for (var n=0; n<elements.length; n++) {
+      for (var n=0; n<elements.length; n++) { // format ids and names of list elements to display
         if (data.type_name === 'years') {
           options.push([elements[n][1], elements[n][1]]);
         }
@@ -379,6 +381,7 @@ function create_list_start(message) {
       jQuery('#c1_data_text').html(retrieve_sublist(options, 1).join("\n"));
       jQuery('#c1_data').html(c1_html);
 
+      // clear and reset all other wizard parts
       var this_section = 1;
       initialize_first_select();
       show_list_counts('c1_data_count', options.length);
@@ -394,6 +397,12 @@ function create_list_start(message) {
       enable_ui();
     }
   });
+}
+
+function report_list_start_error(error_message) {
+  enable_ui();
+  var error_html = '<div class="well well-sm"><font color="red">'+error_message+'</font></div>';
+  jQuery('#list_message').html(error_html);
 }
 
 function format_options(items) {
