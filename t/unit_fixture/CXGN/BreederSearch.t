@@ -42,9 +42,7 @@ $queryref = {'trials' => {'locations' => '0','years' => '0'}};
 
 $results = $bs ->metadata_query($criteria_list, $dataref, $queryref);
 
-is_deeply($results->{results}, [[139,'Kasese solgs trial'],[141,'trial2 NaCRRI']], "wizard project query");
+is_deeply($results->{results}, [[139,'Kasese solgs trial'],[137,'test_trial'],[141,'trial2 NaCRRI']], "wizard project query");
 
 
 done_testing();
-
-
