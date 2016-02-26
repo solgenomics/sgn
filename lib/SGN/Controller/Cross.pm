@@ -295,14 +295,14 @@ sub _add_cross {
       { name   => 'accession',
 	cv     => 'stock_type',
 
-								       });
+      });
   my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
-								 { name   => 'cross',
-								 });
-
+      { name   => 'cross',
+      });
+  
   my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'cross_type',
-	cv     => 'local',
+	cv     => 'nd_experiment_property',
 
     });
 
@@ -339,11 +339,11 @@ sub _add_cross {
       });
   my $number_of_flowers_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'number_of_flowers',
-	cv     => 'local',
+	cv     => 'nd_experiment_property',
       });
   my $number_of_seeds_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'number_of_seeds',
-	cv     => 'local',
+	cv     => 'nd_experiment_property',
       });
   my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
       {
