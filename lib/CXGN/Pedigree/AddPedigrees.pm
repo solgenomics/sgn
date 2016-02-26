@@ -259,11 +259,8 @@ sub _get_accession {
     my $schema = $self->get_schema();
     my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
     my $stock;
-    my $accession_cvterm = $schema->resultset("Cv::Cvterm")
-	->create_with({
-	    name   => 'accession',
-	    cv     => 'stock_type',
-		      });
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
+
     $stock_lookup->set_stock_name($accession_name);
     $stock = $stock_lookup->get_stock_exact();
     
