@@ -108,7 +108,7 @@ my $stock_rs = $schema->resultset("Stock::Stock");
 
 #the cvterm for the accession
 print "Finding/creating cvterm for 'stock type' \n";
-my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')
+my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
 
 #the cvterm for the relationship type
 print "Finding/creating cvterm for stock relationship 'member_of' \n";
