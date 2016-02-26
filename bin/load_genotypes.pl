@@ -51,6 +51,7 @@ use CXGN::DB::InsertDBH;
 use CXGN::Genotype;
 use CXGN::GenotypeIO;
 use Sort::Versions;
+use SGN::Model::Cvterm;
 
 our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m);
 
@@ -106,20 +107,12 @@ my %seq  = (
     'project_project_id_seq'   => $last_project_id,
     );
 
-my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'accession',
-      cv     => 'stock_type',
-    });
+my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
 
-my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'training population',
-      cv     => 'stock_type',
-    });
+my $population_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'training population', 'stock_type');
+   
 
-my $igd_number_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'igd number',
-      cv     => 'genotype_property',
-    });
+my $igd_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd number', 'genotype_property');
 
 #store a project
 my $project = $schema->resultset("Project::Project")->find_or_create(
@@ -130,10 +123,7 @@ my $project = $schema->resultset("Project::Project")->find_or_create(
 $project->create_projectprops( { 'project year' => $opt_y }, { autocreate => 1 } );
 
 # find the cvterm for a genotyping experiment
-my $geno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-    { name   => 'genotyping_experiment',
-      cv     => 'experiment_type',
-    });
+my $geno_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type');
 
 my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_create( 
     { name => $protocol_name,
@@ -143,10 +133,7 @@ my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_c
 my $protocol_id = $protocol_row->nd_protocol_id();
 
 # find the cvterm for the SNP calling experiment
-my $snp_genotype = $schema->resultset('Cv::Cvterm')->create_with(
-    { name   => 'snp genotyping',
-      cv     => 'genotype_property',
-    });
+my $snp_genotype = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property');
 
 my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
     {
@@ -160,10 +147,7 @@ my $organism = $schema->resultset("Organism::Organism")->find_or_create(
 	species => 'Manihot esculenta',
     } );
 
-my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'member_of',
-      cv     => 'stock_relationship',
-    });
+my $population_members = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship');
 
 my $organism_id = $organism->organism_id();
 ########################
