@@ -13,6 +13,7 @@ use SGN::Controller::AJAX::List;
 use CXGN::List::Transform;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::BreedersToolbox::Accessions;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -270,10 +271,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     } );
     my $organism_id = $organism->organism_id();
 
-    my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-	{ name   => 'accession',
-	  cv     => 'stock_type',
-	});
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
       { name   => 'population',
@@ -294,25 +292,13 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 	      uniquename => $cross_name,
 	      type_id => $population_cvterm->cvterm_id,
             } );
-      my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'female_parent',
-      cv     => 'stock_relationship',
-    });
+      my $female_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent',  'stock_relationship');
 
-      my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'male_parent',
-      cv     => 'stock_relationship',
-    });
+      my $male_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship');
 
-      my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'cross_name',
-      cv     => 'stock_relationship',
-    });
-
-      my $visible_to_role_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'visible_to_role',
-      cv => 'local',
-    });
+      my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema,  'cross_name','stock_relationship');
+    
+    my $visible_to_role_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema,  'visible_to_role', 'local');
 
     my $increment = 1;
     while ($increment < $progeny_number + 1) {
