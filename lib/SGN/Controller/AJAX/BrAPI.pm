@@ -557,6 +557,17 @@ sub studies_germplasm_POST {
     my $self = shift;
     my $c = shift;
 
+    my $metadata = $c->req->params("metadata");
+    my $result = $c->req->params("result");
+    my %metadata_hash = %$metadata;
+    my %result_hash = %$result;
+
+    print STDERR Dumper($metadata);
+    print STDERR Dumper($result);
+
+    my $pagintation = $metadata_hash{"pagination"};
+    my $status = $metadata_hash{"status"};
+
     $c->stash->{rest} = {status=>'1'};
 }
 
