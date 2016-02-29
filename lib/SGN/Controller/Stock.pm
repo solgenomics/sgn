@@ -776,12 +776,15 @@ sub _stock_project_genotypes {
                                                  { prefetch => { nd_experiment_genotypes => 'genotype' } },
                                                 );
     my %genotypes;
+    my $project_desc;
+    
     while (my $exp = $experiments->next) {
         # there should be one project linked to the experiment ?
         my @gen = map $_->genotype, $exp->nd_experiment_genotypes;
-        my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
-	or die "no project found for exp ".$exp->nd_experiment_id;
-	#my @values;
+        $project_desc = $project_descriptions{ $exp->nd_experiment_id };
+	#or die "no project found for exp ".$exp->nd_experiment_id;
+	
+    #my @values;
 	#foreach my $genotype (@gen) {
 	    #my $genotype_id = $genotype->genotype_id;
 	    #my $vals = $self->schema->storage->dbh->selectcol_arrayref
