@@ -121,9 +121,7 @@ window.onload = function initialize() {
 
     jQuery('#download_button_genotypes').on('click', function () {
         var accession_ids = get_selected_accessions();
-        var protocol_ids = get_selected_genotyping_protocols();
-        // use these protocol ids once download_gbs_action is refactored to accept them
-
+        var protocol_id = get_selected_genotyping_protocols();
         if (accession_ids.length !== 0) {
 	  window.open('/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_ids+'&format=ids');
         }
@@ -246,19 +244,19 @@ function get_selected_trials () {
 
 function get_selected_genotyping_protocols () {
     var max_section = 4;
-    var selected_genotyping_protocols;
+    var selected_genotyping_protocol;
     var categories = get_selected_categories(max_section);
     var data = get_selected_data(max_section);
     for (i=0; i < categories.length; i++) {
       if (categories[i] === 'genotyping_protocols' && data[i]) {
-        selected_genotyping_protocols = data[i];
+        selected_genotyping_protocol = data[i];
       }
     }
-    if (selected_genotyping_protocols.length > 0) {
-      return selected_genotyping_protocols;
+    if (selected_genotyping_protocol.length == 1) {
+      return selected_genotyping_protocol;
     }
     else {
-      alert("No genotyping protocols selected");
+      alert("Please select a single genotyping protocol");
     }
 }
 
