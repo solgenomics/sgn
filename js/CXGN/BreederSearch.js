@@ -122,11 +122,9 @@ window.onload = function initialize() {
     jQuery('#download_button_genotypes').on('click', function () {
         var accession_ids = get_selected_accessions();
         var protocol_id = get_selected_genotyping_protocols();
-        if (accession_ids.length !== 0) {
-	  window.open('/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_ids+'&format=ids');
+        if (accession_ids.length > 0 && protocol_id.length == 1) {
+	  window.open('/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&format=accession_ids');
         }
-        else { alert("No accessions selected for download."); }
-
     });
 }
 
@@ -319,7 +317,12 @@ function update_download_options(this_section) {
       }
       if (categories[i] === 'genotyping_protocols' && data[i]) {
         selected_genotyping_protocols = 1;
-        var genotyping_protocols_html = '<font color="green">'+data[i].length+' genotyping protocols selected</font></div>';
+        if (data[i].length > 1) {
+          var genotyping_protocols_html = '<font color="red">'+data[i].length+' genotyping protocols selected</font></div>';
+        }
+        else {
+          var genotyping_protocols_html = '<font color="green">'+data[i].length+' genotyping protocols selected</font></div>';
+        }
         jQuery('#selected_genotyping_protocols').html(genotyping_protocols_html);
       }
     }

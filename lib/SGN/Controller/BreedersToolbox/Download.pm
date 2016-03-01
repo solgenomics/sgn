@@ -451,26 +451,25 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
 #=pod
 sub download_gbs_action : Path('/breeders/download_gbs_action') {
+
   my $self = shift;
   my $c = shift;
   my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-  my $data_type = $c->req->param("data_type") || "genotype";
-  my $format = $c->req->param("format");
+  my $format = $c->req->param("format") || "list_id";
   my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
 
-  my (@accession_ids, $id_string, $protocol_id, @accession_list);
+  my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id);
 
-  if ($format eq 'ids') {
+  if ($format eq 'accession_ids') {       #use protocol id and accession ids supplied directly
     $id_string = $c->req->param("ids");
     @accession_ids = split(',',$id_string);
     $protocol_id = $c->req->param("protocol_id");
   }
-  else {
+  elsif ($format eq 'list_id') {        #get accession names from list and tranform them to ids
 
     $protocol_id = 2;
     my $accession_list_id = $c->req->param("genotype_accession_list_list_select");
 
-    my $accession_data;
     if ($accession_list_id) {
 	    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     }
@@ -483,57 +482,45 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
     @accession_ids = @{$accession_id_hash->{transform}};
 
-    print STDERR "accession_ids = " . @accession_ids ."\n";
-    print STDERR "accession_id_hash =" . Dumper($accession_id_hash);
-
+    #print STDERR "accession_ids = " . @accession_ids ."\n";
+    #print STDERR "accession_id_hash =" . Dumper($accession_id_hash);
   }
-
-  my $data;
-  my $output = "";
 
   my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
   open my $TEMP, '>', $tempfile or die "Cannot open output_test00.txt: $!";
 
+  print "Downloading genotype data ...\n";
 
-  if ($data_type eq "genotype") {
-    print "Download genotype data\n";
+  my $resultset = $bs->get_genotype_info(\@accession_ids, $protocol_id);
 
-    $data = $bs->get_genotype_info(\@accession_ids, $protocol_id);
-    $output = "";
+  print $TEMP "Marker\t";
 
-    my @AoH = ();
-    print $TEMP "Marker\t";
+  for (my $i=0; $i < scalar(@$resultset) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
+    print $TEMP $resultset->[$i][0] . "\t";
+    my $genotype_hash = decode_json($resultset->[$i][1]);
+    push(@accession_genotypes, $genotype_hash);
+  }
+  print $TEMP "\n";
 
-    for (my $i=0; $i < scalar(@$data) ; $i++) {
-      print $TEMP $data->[$i][0] . "\t"; # printing accession uniquenames as column headers
-      my $decoded = decode_json($data->[$i][1]);
-      push(@AoH, $decoded);
-    }
+  for my $i ( 0 .. $#accession_genotypes ) {
+    @unsorted_markers = keys   %{ $accession_genotypes[$i] }
+  }
 
-    print $TEMP "\n";
+  my @markers = sort versioncmp @unsorted_markers;       # order snp_names by chrom num, then position
 
-    my @snp_names=();
-    for my $i ( 0 .. $#AoH ){
-      @snp_names = keys   %{ $AoH[$i] }
-    }
+  for my $j (0 .. $#markers) {
+    print $TEMP "$markers[$j]\t";
 
-    my @k = sort versioncmp @snp_names;
-    for my $j (0 .. $#k){
-      print $TEMP "$k[$j]\t";
-
-      for my $i ( 0 .. $#AoH ) {
-        if($i == $#AoH ){
-          print $TEMP "$AoH[$i]{$k[$j]}";
-        }
-        else {
-          if (exists($AoH[$i]{$k[$j]})) {
-            print $TEMP "$AoH[$i]{$k[$j]}\t";
-          }
-        }
+    for my $i ( 0 .. $#accession_genotypes ) {
+      if($i == $#accession_genotypes ) {                              # print last accession genotype value and move onto new line
+        print $TEMP "$accession_genotypes[$i]{$markers[$j]}\n";
       }
-      print $TEMP "\n";
+      elsif (exists($accession_genotypes[$i]{$markers[$j]})) {        # print genotype and tab
+        print $TEMP "$accession_genotypes[$i]{$markers[$j]}\t";
+      }
     }
   }
+
   my $contents = $tempfile;
   $c->res->content_type("application/text");
   $c->res->body($contents);
