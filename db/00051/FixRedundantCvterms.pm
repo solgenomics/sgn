@@ -46,9 +46,13 @@ extends 'CXGN::Metadata::Dbpatch';
 
 has '+description' => ( default => <<'' );
 This patch will do the following:
-1. Obsolete unused cross cvterm cv = stock_relationship
-2. Set cv_id = nd_experiment_property for the cvterm cross_name
-3. Update the type_id of nd_experiment rows to cross_experiment where the type_id = cross 
+1. Set cv_id = nd_experiment_property for the cvterm cross_name
+2. Update the type_id of nd_experiment rows to cross_experiment where the type_id = cross , and then obsolete this stock_relationship cross cvterm
+3. Update the type_id of nd_experiment to ??? where typs_id = accession, which is a stock_type
+
+
+
+
 4. Create a new term called cross_relationship cv= stock_relationship to be used 
 in the stock_relationship table instead of the term cross_name which now 
 has a nd_experiment_property cv and is used as type_id in nd_experimentprop
@@ -74,7 +78,40 @@ sub patch {
 	my $cvterm_rs = $schema->resultset("Cv::Cvterm");
 	my $cv_rs = $schema->resultset("Cv::Cv");
 	
+	#############
+
 	#############1
+
+	my $nd_experiment_property_cv = $cv_rs->find_or_create( { name => 'nd_experiment_property' } ) ;
+	
+	my $cross_name_cvterm = $cvterm_rs->find(
+	    {
+		name => 'cross_name' , 
+	    });
+	if ($cross_name_cvterm) { 
+	    print "UPDATING cv_id of cvterm cross_name to nd_experiment_property\n";
+	    $cross_name_cvterm->update( { cv_id => $nd_experiment_property_cv->cv_id } ) ;
+	}
+	###############2
+
+	my $cross_experiment_cvterm = $cvterm_rs->create_with( 
+	    {
+		name => 'cross_experiment',
+		cv   => 'experiment_type',
+	    } ) ;
+	
+	my $nd_experiment_rs = $schema->resultset("NaturalDiversity::NdExperiment")->search(
+	    {
+		'type.name' => 'cross'
+	    },
+	    {
+		join => 'type',
+	    } );
+	if ( $nd_experiment_rs->count ) {
+	    print "UPDATING nd_experiment with type_id = cross to type_id = cross_experiment\n";
+	    $nd_experiment_rs->update( type_id => $cross_experiment_cvterm->cvterm_id );
+	}
+
 	my $cross_cvterm = $cvterm_rs->find(
 	    {
 		'me.name' => 'cross',
@@ -87,35 +124,27 @@ sub patch {
 	    print "UPDATING term cross cv= stock_relationship to name = OBSOLETE_cross. No one should use this term. There is a cross term with stock_type cv\n";
 	    $cross_cvterm->update( { name => 'OBSOLETE_cross' } ) ;
 	}
-	#############2
-
-	my $nd_experiment_property_cv = $cv_rs->find_or_create( { name => 'nd_experiment_property' } ) ;
+	##################3
 	
-	my $cross_name_cvterm = $cvterm_rs->find(
+	my $accession_experiment_cvterm = $cvterm_rs->create_with( 
 	    {
-		name => 'cross_name' , 
-	    });
-	if ($cross_name_cvterm) { 
-	    print "UPDATING cv_id of cvterm cross_name to nd_experiment_property\n";
-	    $cross_name_cvterm->update( { cv_id => $nd_experiment_property_cv->cv_id } ) ;
-	}
-	###############3
-
-	my $cross_experiment_cv = $cv_rs->find_or_create( { name => 'cross_experiment' } ) ;
+		#######name => 'accession_experiment', 
+		cv   => 'experiment_type',
+	    }
+	    ) ;
 	
 	my $nd_experiment_rs = $schema->resultset("NaturalDiversity::NdExperiment")->search(
 	    {
-		'type.name' => 'cross'
+		'type.name' => 'accession'
 	    },
 	    {
 		join => 'type',
 	    } );
 	if ( $nd_experiment_rs->count ) {
-	    print "UPDATING nd_experiment with type_id = cross to type_id = cross_experiment\n";
-	    $nd_experiment_rs->update( type_id => $cross_experiment_cv->cv_id );
+	    print "UPDATING nd_experiment with type_id = accession to type_id  =  ################\n";
+	    $nd_experiment_rs->update( type_id => $accession_experiment_cvterm->cvterm_id );
 	}
 	##################4
-
 	my $cross_relationship_cvterm = $cvterm_rs->create_with(
 	    {
 		name => 'cross_relationship' ,
