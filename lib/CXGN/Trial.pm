@@ -22,6 +22,8 @@ package CXGN::Trial;
 use Moose;
 use Try::Tiny;
 use CXGN::Trial::TrialLayout;
+use SGN::Model::Cvterm;
+
 
 =head2 accessor bcs_schema()
 
@@ -1001,11 +1003,8 @@ sub get_breeding_trial_cvterm_id {
     my $breeding_trial_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program_trial_relationship' });
 
     if (!$breeding_trial_cvterm_row) {
-	my $row = $self->schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'breeding_program_trial_relationship',
-		cv   => 'local',
-	    });
+	my $row = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program_trial_relationship', 'project_relationship');
+
 	$breeding_trial_cvterm_row = $row;
     }
     return $breeding_trial_cvterm_row->cvterm_id();
@@ -1019,11 +1018,7 @@ sub get_breeding_program_cvterm_id {
     my $row;
 
     if ($breeding_program_cvterm_rs->count() == 0) {
-	$row = $self->schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'breeding_program',
-		cv   => 'local',
-	    });
+	$row =  SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program', 'project_property');
 
     }
     else {
@@ -1040,11 +1035,7 @@ sub get_harvest_date_cvterm_id {
     my $row;
 
     if ($harvest_date_rs->count() == 0) {
-	$row = $self->bcs_schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'harvest_date',
-		cv   => 'local',
-	    });
+	$row =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'harvest_date', 'project_property');
 
     }
     else {
@@ -1061,11 +1052,7 @@ sub get_planting_date_cvterm_id {
     my $row;
 
     if ($planting_date_rs->count() == 0) {
-	$row = $self->bcs_schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'planting_date',
-		cv   => 'local',
-	    });
+	$row =  SGN::Model::Cvterm->get_cvterm_row($self->schema, 'planting_date', 'project_property');
 
     }
     else {
