@@ -48,12 +48,7 @@ has '+description' => ( default => <<'' );
 This patch will do the following:
 1. Set cv_id = nd_experiment_property for the cvterm cross_name
 2. Update the type_id of nd_experiment rows to cross_experiment where the type_id = cross , and then obsolete this stock_relationship cross cvterm
-3. Update the type_id of nd_experiment to ??? where typs_id = accession, which is a stock_type
-
-
-
-
-4. Create a new term called cross_relationship cv= stock_relationship to be used 
+3. Create a new term called cross_relationship cv= stock_relationship to be used 
 in the stock_relationship table instead of the term cross_name which now 
 has a nd_experiment_property cv and is used as type_id in nd_experimentprop
 this is important for making CVterms uniform and less room for errors when using these
@@ -81,7 +76,6 @@ sub patch {
 	#############
 
 	#############1
-
 	my $nd_experiment_property_cv = $cv_rs->find_or_create( { name => 'nd_experiment_property' } ) ;
 	
 	my $cross_name_cvterm = $cvterm_rs->find(
@@ -111,7 +105,7 @@ sub patch {
 	    print "UPDATING nd_experiment with type_id = cross to type_id = cross_experiment\n";
 	    $nd_experiment_rs->update( type_id => $cross_experiment_cvterm->cvterm_id );
 	}
-
+	### OBSOLETE name of cross cvterm cv = stock_relationship
 	my $cross_cvterm = $cvterm_rs->find(
 	    {
 		'me.name' => 'cross',
@@ -126,25 +120,6 @@ sub patch {
 	}
 	##################3
 	
-	my $accession_experiment_cvterm = $cvterm_rs->create_with( 
-	    {
-		#######name => 'accession_experiment', 
-		cv   => 'experiment_type',
-	    }
-	    ) ;
-	
-	my $nd_experiment_rs = $schema->resultset("NaturalDiversity::NdExperiment")->search(
-	    {
-		'type.name' => 'accession'
-	    },
-	    {
-		join => 'type',
-	    } );
-	if ( $nd_experiment_rs->count ) {
-	    print "UPDATING nd_experiment with type_id = accession to type_id  =  ################\n";
-	    $nd_experiment_rs->update( type_id => $accession_experiment_cvterm->cvterm_id );
-	}
-	##################4
 	my $cross_relationship_cvterm = $cvterm_rs->create_with(
 	    {
 		name => 'cross_relationship' ,
