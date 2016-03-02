@@ -3,6 +3,7 @@ package CXGN::BreedersToolbox::Projects;
 
 use Moose;
 use Data::Dumper;
+use SGN::Model::Cvterm;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -475,11 +476,7 @@ sub get_breeding_program_cvterm_id {
     my $row;
 
     if ($breeding_program_cvterm_rs->count() == 0) {
-	$row = $self->schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'breeding_program',
-		cv   => 'local',
-	    });
+	$row = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program','project_property');
 
     }
     else {
@@ -497,11 +494,7 @@ sub get_breeding_trial_cvterm_id {
     my $breeding_trial_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program_trial_relationship' });
 
     if (!$breeding_trial_cvterm_row) {
-	my $row = $self->schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'breeding_program_trial_relationship',
-		cv   => 'local',
-	    });
+	my $row = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program_trial_relationship', 'project_relationship');
 	$breeding_trial_cvterm_row = $row;
     }
     return $breeding_trial_cvterm_row->cvterm_id();
@@ -514,10 +507,7 @@ sub get_cross_cvterm_id {
     if ($cross_cvterm_row) {
       return $cross_cvterm_row->cvterm_id();
     }
-    my $cross_cvterm = $self->schema->resultset("Cv::Cvterm")
-      ->create_with( { name   => 'cross',
-		       cv     => 'stock_type',
-		     });
+    my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'cross',  'stock_type');
     return $cross_cvterm->cvterm_id();
 }
 
