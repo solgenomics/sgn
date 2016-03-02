@@ -27,6 +27,7 @@ use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
 use CXGN::BreedersToolbox::Projects;
+use SGN::Model::Cvterm;
 
 has 'chado_schema' => (
 		 is       => 'rw',
@@ -66,33 +67,15 @@ sub add_progeny {
   #add all progeny in a single transaction
   my $coderef = sub {
 
-    my $female_parent_cvterm = $chado_schema->resultset("Cv::Cvterm")
-      ->create_with( { name   => 'female_parent',
-		       cv     => 'stock_relationship',
-		     });
-    my $male_parent_cvterm = $chado_schema->resultset("Cv::Cvterm")
-      ->create_with({ name   => 'male_parent',
-		      cv     => 'stock_relationship',
-		    });
-    my $member_cvterm = $chado_schema->resultset("Cv::Cvterm")
-      ->create_with({ name   => 'member_of',
-		      cv     => 'stock_relationship',
-		    });
-    my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
-      ->create_with({
-		     name   => 'accession',
-		     cv     => 'stock_type',
-		    });
+    my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship');
 
-    my $cross_name_cvterm = $chado_schema->resultset("Cv::Cvterm")->find(
-	{ name   => 'cross_name',
-	});
-    if (!$cross_name_cvterm) {
-	$cross_name_cvterm = $chado_schema->resultset("Cv::Cvterm")
-	    ->create_with( { name   => 'cross_name',
-			     cv     => 'local',
-			   });
-    }
+    my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'male_parent', 'stock_relationship');
+
+    my $member_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'member_of', 'stock_relationship');
+
+    my $accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+
+    my $cross_name_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_relationship', 'stock_relationship');
 
     #Get stock of type cross matching cross name
     $cross_stock = $self->_get_cross($self->get_cross_name());
@@ -213,11 +196,8 @@ sub _get_cross {
   my $chado_schema = $self->get_chado_schema();
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
   my $stock;
-  my $cross_cvterm = $chado_schema->resultset("Cv::Cvterm")
-    ->create_with({
-		   name   => 'cross',
-		   cv     => 'stock_type',
-		  });
+  my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'cross_type');   
+
   $stock_lookup->set_stock_name($cross_name);
   $stock = $stock_lookup->get_stock_exact();
 
