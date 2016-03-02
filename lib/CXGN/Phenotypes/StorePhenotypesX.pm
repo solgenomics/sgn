@@ -31,6 +31,7 @@ use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use Digest::MD5;
 use CXGN::List::Validate;
+use SGN::Model::Cvterm;
 
 has 'chado_schema' => (
 		 is       => 'rw',
@@ -126,11 +127,7 @@ sub store {
     my $archived_file_type = $phenotype_metadata->{'archived_file_type'};
     my $operator = $phenotype_metadata->{'operator'};
     my $phenotyping_date = $phenotype_metadata->{'date'};
-    my $phenotyping_experiment_cvterm = $schema->resultset('Cv::Cvterm')
-	->create_with({
-		       name   => 'phenotyping_experiment',
-		       cv     => 'experiment_type',
-		      });
+    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type');
 
     ## Track experiments seen to allow for multiple trials and experiments to exist in an uploaded file.
     ## Used later to attach file metadata.
