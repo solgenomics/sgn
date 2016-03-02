@@ -28,6 +28,7 @@ use Try::Tiny;
 use Digest::MD5;
 use File::Basename qw | basename dirname|;
 use Spreadsheet::ParseExcel;
+use SGN::Model::Cvterm;
 
 
 has 'schema' => (
@@ -319,10 +320,8 @@ sub store {
 
 
       # find the cvterm for a phenotyping experiment
-      my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-	  { name   => 'phenotyping experiment',
-	    cv     => 'experiment_type',
-	  });
+      my $pheno_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping experiment', 'experiment_type');
+
       print STDERR " ***store: phenotyping experiment cvterm = " . $pheno_cvterm->cvterm_id . "\n";
       ##################
       #This has to be stored in the database when adding a new project for these plots
