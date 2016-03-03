@@ -489,24 +489,13 @@ sub get_breeding_program_cvterm_id {
 sub get_breeding_trial_cvterm_id {
     my $self = shift;
 
-    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'local' } )->cv_id();
+     my $breeding_trial_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program_trial_relationship',  'project_relationship');
 
-    my $breeding_trial_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program_trial_relationship' });
-
-    if (!$breeding_trial_cvterm_row) {
-	my $row = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program_trial_relationship', 'project_relationship');
-	$breeding_trial_cvterm_row = $row;
-    }
-    return $breeding_trial_cvterm_row->cvterm_id();
+    return $breeding_trial_cvterm->cvterm_id();
 }
 
 sub get_cross_cvterm_id {
     my $self = shift;
-    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'stock_type' } )->cv_id();
-    my $cross_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'cross', cv_id=> $cv_id });
-    if ($cross_cvterm_row) {
-      return $cross_cvterm_row->cvterm_id();
-    }
     my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'cross',  'stock_type');
     return $cross_cvterm->cvterm_id();
 }
