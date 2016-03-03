@@ -319,7 +319,7 @@ sub _add_cross {
   my $male_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship');
 
   ## change 'cross_name' to a more explicit term
-  my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_name', 'stock_relationship');
+  my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_relationship', 'stock_relationship');
 
   my $visible_to_role_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'visible_to_role', 'local');
 
@@ -530,7 +530,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 
       my $male_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship');
 
-      my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_name', 'stock_relationship');
+      my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_relationship', 'stock_relationship');
 
       my $visible_to_role_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema,  'visible_to_role', 'local');
 
