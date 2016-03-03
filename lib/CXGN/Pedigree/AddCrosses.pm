@@ -109,12 +109,7 @@ sub add_crosses {
       my $cross_experiment_type_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_experiment', 'experiment_type');
       
       #get cvterm for stock type cross
-<<<<<<< HEAD
       my $cross_stock_type_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
-=======
-      my $cross_stock_type_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_type', 'cross_type');
->>>>>>> 37cf2d065e7082fc6235917d11c1c1ef4eff65c1
-      
       
       print STDERR "\n\ncvterm from addcrosses: ".$cross_stock_type_cvterm->cvterm_id()."\n\n";
       
