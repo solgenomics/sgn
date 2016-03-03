@@ -653,10 +653,11 @@ CXGN.List.prototype = {
 	return ajaxResponse.transform;
     },
 
-    transform2Ids: function(list_id) {
-	var data = this.getListData(list_id);
+    transform2Ids: function(list_id, data) {
+	if (data === undefined) var data = this.getListData(list_id);
 	//console.log("data ="+JSON.stringify(data));
-	var list_type = this.getListType(list_id);
+	var list_type = data.type_name;
+
 	var new_type;
 	switch (list_type)
 	{
@@ -679,9 +680,9 @@ CXGN.List.prototype = {
 	  default:
 	      return { 'error' : "cannot convert the list because of unknown type" };
 	}
-	if (window.console) console.log("new type = "+new_type);
+	//if (window.console) console.log("new type = "+new_type);
 	var transformed = this.transform(list_id, new_type);
-	if (window.console) console.log("transformed="+JSON.stringify(transformed));
+	//if (window.console) console.log("transformed="+JSON.stringify(transformed));
 	return transformed;
 
     }
