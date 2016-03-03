@@ -30,7 +30,7 @@ sub get_all_accessions {
     my $self = shift;
     my $schema = $self->schema();
 
-    my $accession_cvterm = SGN::Model::Cvterms->get_cvterm_row($schema, 'accession', 'stock_type');
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
     
     my $rs = $self->schema->resultset('Stock::Stock')->search({type_id => $accession_cvterm->cvterm_id});
     #my $rs = $self->schema->resultset('Stock::Stock')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
