@@ -103,11 +103,7 @@ sub patch {
 	    } );
 	if ( $nd_experiment_rs->count ) {
 	    print "UPDATING nd_experiment with type_id = cross to type_id = cross_experiment\n";
-<<<<<<< HEAD
-	    $nd_experiment_rs->update( type_id => $cross_experiment_cvterm->cvterm_id );
-=======
 	    $nd_experiment_rs->update( { type_id => $cross_experiment_cvterm->cvterm_id }  );
->>>>>>> 37cf2d065e7082fc6235917d11c1c1ef4eff65c1
 	}
 	### OBSOLETE name of cross cvterm cv = stock_relationship
 	my $cross_cvterm = $cvterm_rs->find(
