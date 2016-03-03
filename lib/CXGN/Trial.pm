@@ -1000,6 +1000,14 @@ sub get_breeding_trial_cvterm_id {
 
     my $breeding_trial_cvterm_row = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'breeding_program_trial_relationship', 'project_relationship');
 
+<<<<<<< HEAD
+=======
+    if (!$breeding_trial_cvterm_row) {
+	my $row = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program_trial_relationship', 'project_relationship');
+
+	$breeding_trial_cvterm_row = $row;
+    }
+>>>>>>> 37cf2d065e7082fc6235917d11c1c1ef4eff65c1
     return $breeding_trial_cvterm_row->cvterm_id();
 }
 
@@ -1007,7 +1015,15 @@ sub get_breeding_trial_cvterm_id {
 sub get_breeding_program_cvterm_id {
     my $self = shift;
 
+<<<<<<< HEAD
     my $breeding_program_cvterm =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'breeding_program', 'project_property');
+=======
+    my $breeding_program_cvterm_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program' });
+    my $row;
+
+    if ($breeding_program_cvterm_rs->count() == 0) {
+	$row =  SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program', 'project_property');
+>>>>>>> 37cf2d065e7082fc6235917d11c1c1ef4eff65c1
 
     return $breeding_program_cvterm->cvterm_id();
 }
@@ -1015,7 +1031,15 @@ sub get_breeding_program_cvterm_id {
 sub get_harvest_date_cvterm_id { 
     my $self = shift;
 
+<<<<<<< HEAD
     my $harvest_date =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'harvest_date', 'project_property');
+=======
+    my $harvest_date_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'harvest_date' });
+    my $row;
+
+    if ($harvest_date_rs->count() == 0) {
+	$row =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'harvest_date', 'project_property');
+>>>>>>> 37cf2d065e7082fc6235917d11c1c1ef4eff65c1
 
     return $harvest_date->cvterm_id();
 }
@@ -1024,7 +1048,22 @@ sub get_planting_date_cvterm_id {
     my $self = shift;
     my $planting_date =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'planting_date', 'project_property');
 
+<<<<<<< HEAD
     return $planting_date->cvterm_id();
+=======
+    my $planting_date_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'planting_date' });
+    my $row;
+
+    if ($planting_date_rs->count() == 0) {
+	$row =  SGN::Model::Cvterm->get_cvterm_row($self->schema, 'planting_date', 'project_property');
+
+    }
+    else {
+	$row = $planting_date_rs->first();
+    }
+
+    return $row->cvterm_id();
+>>>>>>> 37cf2d065e7082fc6235917d11c1c1ef4eff65c1
 }
 
 sub get_design_type {

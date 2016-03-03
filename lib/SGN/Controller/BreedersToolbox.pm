@@ -296,7 +296,11 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 
       my $male_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship');
 
+<<<<<<< HEAD
       my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema,  'cross_relationship','stock_relationship');
+=======
+      my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema,  'cross_name','stock_relationship');
+>>>>>>> 37cf2d065e7082fc6235917d11c1c1ef4eff65c1
     
     my $visible_to_role_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema,  'visible_to_role', 'local');
 
