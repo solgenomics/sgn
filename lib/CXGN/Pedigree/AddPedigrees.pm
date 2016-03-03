@@ -80,7 +80,6 @@ sub add_pedigrees {
       my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'female_parent', 'stock_relationship');
 
       my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'male_parent', 'stock_relationship');
-<<<<<<< HEAD
       
       ####These are probably not necessary:
       #######################
@@ -97,28 +96,8 @@ sub add_pedigrees {
 ############################
 ########################
 ###################
-=======
-
-      my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'offspring_of', 'stock_relationship');
       
-      # get cvterm for cross_name or create if not found
-      my $cross_name_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	  ->find({
-     	      name   => 'cross_name',
-		 });
-      if (!$cross_name_cvterm) {
-	  $cross_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_name', 'stock_relationship');
-      }
-      # get cvterm for cross_type or create if not found
-      my $cross_type_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	  ->find({
-     	      name   => 'cross_type',
-		 });
-      if (!$cross_type_cvterm) {
-	  $cross_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_type', 'nd_experiment_property');
->>>>>>> 37cf2d065e7082fc6235917d11c1c1ef4eff65c1
-      
-      }
+ 
       foreach my $pedigree (@pedigrees) {
 	  
 	  print STDERR Dumper($pedigree);
