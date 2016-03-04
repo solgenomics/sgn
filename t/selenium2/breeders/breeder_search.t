@@ -95,7 +95,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->driver->accept_alert();
 
-    $t->find_element_ok("list_start_list_select", "id", "paste test acc list")->send_keys('test_list');
+    $t->find_element_ok("paste_list_select", "id", "paste test acc list")->send_keys('test_list');
 
     sleep(2);
 
@@ -119,9 +119,9 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $t->find_element_ok("list_start_list_select", "id", "paste test acc list")->send_keys('acc_list');
+    $t->find_element_ok("paste_list_select", "id", "paste test acc list")->send_keys('acc_list');
 
-    sleep(60);
+    sleep(5);
 
     $t->find_element_ok("c1_data", "id", "select pasted test accession")->send_keys('test_accession1');
 
@@ -135,7 +135,7 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $t->find_element_ok("c2_querytype", "id", "set querytype to intersect")->click();
+    $t->find_element_ok("c2_querytype_or", "id", "toggle querytype to intersect")->click();
 
     sleep(1);
 
@@ -163,7 +163,7 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $t->find_element_ok("c2_querytype", "id", "reset querytype to union")->click();
+    $t->find_element_ok("c2_querytype_and", "id", "toggle querytype to union")->click();
 
     sleep(1);
 

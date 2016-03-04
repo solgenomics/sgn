@@ -108,41 +108,24 @@
 jQuery(document).ready(function() {
 
     initialize_first_select();
-
     jQuery('select').mouseenter(function() {this.tooltip});
 
     if (!isLoggedIn()) {
+      create_list_start('Login to start from a list');
+      var login_message = '<div class="well well-sm">Login to use lists</div>';
 
-       create_list_start('Login to start from a list');
-
-       jQuery('#c1_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
-       jQuery('#c2_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
-       jQuery('#c3_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
-       jQuery('#c4_to_list_menu').html('<div class="well well-sm">Login to use lists</div>');
+      jQuery('#c1_to_list_menu').html(login_message);
+      jQuery('#c2_to_list_menu').html(login_message);
+      jQuery('#c3_to_list_menu').html(login_message);
+      jQuery('#c4_to_list_menu').html(login_message);
 
     } else {
+      create_list_start('Start from a list');
 
-	create_list_start('Start from a list');
-	jQuery('#paste_list').after('<button type="button" id="refresh_lists" class="btn btn-default" title="Refresh lists" style="margin-bottom:5;display:inline-block;"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>');
+      jQuery('#paste_list').after('<button type="button" id="refresh_lists" class="btn btn-default" title="Refresh lists" style="margin-bottom:5;display:inline-block;"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>');
 
-	add_data_refresh();
-
-	addToListMenu('c1_to_list_menu', 'c1_data', {
-            selectText: true,
-            typeSourceDiv: 'select1',
-	});
-	addToListMenu('c2_to_list_menu', 'c2_data', {
-            selectText: true,
-            typeSourceDiv: 'select2',
-	});
-	addToListMenu('c3_to_list_menu', 'c3_data', {
-            selectText: true,
-            Typesourcediv: 'select3',
-	});
-	addToListMenu('c4_to_list_menu', 'c4_data', {
-            selectText: true,
-            typeSourceDiv: 'select4',
-	});
+      add_data_refresh();
     }
+    addToggleIds();
 });
 </script>

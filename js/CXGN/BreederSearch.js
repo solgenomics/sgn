@@ -5,7 +5,7 @@ window.onload = function initialize() {
 	        if (jQuery('#paste_list_select').val()) {
             create_list_start('Start from a list');
 	         }
-	});
+	  });
 
     jQuery('#select1, #select2, #select3, #select4').change(  // retrieve new data once new category is selected
     	function() {
@@ -15,9 +15,9 @@ window.onload = function initialize() {
 	    var category = jQuery(this).val();
 
 	    if (!category) { // reset by returning empty if no category was defined
-		var data_element = "c"+this_section+"_data";
-		jQuery("#"+data_element).html('');
-		return;
+        var data_element = "c"+this_section+"_data";
+        jQuery("#"+data_element).html('');
+        return;
 	    }
 	    var categories = get_selected_categories(this_section);
 	    var data = ''
@@ -30,27 +30,6 @@ window.onload = function initialize() {
 	    update_download_options(this_section);
 	});
 
-  jQuery('#paste_list_select').change(
-    function() { // if 'select a list', reinitialize, otherwise paste list
-
-      console.log("pasting list . . .");
-
-      jQuery('#list_message').html('');
-      var list_id = jQuery(this).val();
-      //var value = jQuery('#list_start_list_select').val();
-      //if (window.console) console.log("list_start_list_select_val ="+value);
-      if (list_id === '') {
-        jQuery('#c1_data').html('');
-        return;
-      }
-      else {  // paste list by retrieving ids and combing them with list values in proper format
-        console.log("disabling ui . . .");
-        disable_ui();
-        paste_list(list_id);
-        enable_ui();
-      }
-  });
-
     jQuery('#c1_data, #c2_data, #c3_data, #c4_data').change( // update wizard panels and categories when data selections change
     	function() {
 	    var this_section = jQuery(this).attr('name');
@@ -59,10 +38,11 @@ window.onload = function initialize() {
 	    var data = jQuery('#'+data_id).val() || [];;
 	    var count_id = "c"+this_section+"_data_count";
 
+      var categories = get_selected_categories(this_section);
 	    reset_downstream_sections(this_section);
-	    update_select_categories(this_section);
+	    update_select_categories(this_section, categories);
 	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-	    update_download_options(this_section);
+	    update_download_options(this_section, categories);
 	});
 
     jQuery('#c1_select_all, #c2_select_all, #c3_select_all, #c4_select_all').click( // select all data in a wizard panel
@@ -75,8 +55,9 @@ window.onload = function initialize() {
 	    var count_id = "c"+this_section+"_data_count";
 
 	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-	    update_select_categories(this_section);
-	    update_download_options(this_section);
+      var categories = get_selected_categories(this_section);
+	    update_select_categories(this_section, categories);
+	    update_download_options(this_section, categories);
 	});
 
       jQuery('select').dblclick(function() { // open detail page in new window or tab on double-click
@@ -112,7 +93,9 @@ window.onload = function initialize() {
     });
 
     jQuery('#refresh_lists').on('click', function () {
-	create_list_start('Start from a list');
+	     create_list_start('Start from a list');
+       var message_html = '<div class="well well-sm"><font color="green">Lists refreshed.</font></div>';
+       jQuery('#list_message').html(message_html);
     });
 
 
@@ -148,9 +131,17 @@ window.onload = function initialize() {
     });
 }
 
+function addToggleIds () {
+  for (i=2; i <= 4; i++) {
+    var toggle_buttons = jQuery('#c'+i+'_querytype').next().children();
+    toggle_buttons.first().attr( 'id', 'c'+i+'_querytype_and' );
+    toggle_buttons.first().next().attr( 'id', 'c'+i+'_querytype_or' );
+  }
+}
+
 function retrieve_and_display_set(categories, data, this_section) {
-    if (window.console) console.log("categories = "+categories);
-    if (window.console) console.log("data = "+JSON.stringify(data));
+    //if (window.console) console.log("categories = "+categories);
+    //if (window.console) console.log("data = "+JSON.stringify(data));
     //if (window.console) console.log("querytypes="+get_querytypes(this_section));
     jQuery.ajax( {
 	url: '/ajax/breeder/search',
@@ -175,20 +166,19 @@ function retrieve_and_display_set(categories, data, this_section) {
 		    var data_id = "c"+this_section+"_data";
 		    var count_id = "c"+this_section+"_data_count";
 		    var listmenu_id = "c"+this_section+"_to_list_menu";
-        var listadd_id = "c"+this_section+"_add_to_new_list"
 		    var select_id = "select"+this_section;
 
 		    jQuery('#'+data_id).html(data_html);
 		    show_list_counts(count_id, list.length);
 
-		    if (jQuery('#'+listadd_id).length) {
-			addToListMenu(listmenu_id, data_id, {
-			    selectText: true,
-			    typeSourceDiv: select_id });
-		    }
-		}
-	    },
-	error: function(request, status, err) {
+		    if (jQuery('#navbar_lists').length) {
+          addToListMenu(listmenu_id, data_id, {
+            selectText: true,
+            typeSourceDiv: select_id });
+        }
+      }
+    },
+	  error: function(request, status, err) {
 		if (status == "timeout") {
                     // report timeout
 		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Timeout error. Request could not be completed within 60 second time limit.</font></div>';
@@ -222,9 +212,8 @@ function get_selected_categories(this_section) {
   var select1 = jQuery('#select1').val();
   if (select1 === '') { // if starting category is undefined
     if (jQuery('#paste_list_select').val()) { // check to see if paste from list was used, if so get list type
-	    var lo = new CXGN.List();
-	    var list_data = lo.getListData(jQuery('#paste_list_select').val());
-	    select1 = list_data.type_name;
+	    select1 = jQuery('#paste_list_select').prop('title');
+      //if (window.console) console.log("select1="+select1);
     }
   }
   selected_categories.push(select1);
@@ -295,6 +284,7 @@ function get_selected_accessions () {
 }
 
 function update_select_categories(this_section, selected_categories) {
+    //console.log("selected_categories="+selected_categories);
     if (selected_categories === undefined) var selected_categories = get_selected_categories(this_section);
     var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', plots : 'plots', traits : 'traits', trials :'trials', years : 'years'};
     var all_categories = copy_hash(categories);
@@ -309,8 +299,8 @@ function update_select_categories(this_section, selected_categories) {
     jQuery('#'+next_select_id).html(remaining_categories);
 }
 
-function update_download_options(this_section) {
-    var categories = get_selected_categories(this_section);
+function update_download_options(this_section, categories) {
+    if (categories === undefined) var categories = get_selected_categories(this_section);
     var data = get_selected_data(this_section);
     var selected_trials = 0;
     var selected_accessions= 0;
@@ -386,59 +376,77 @@ function create_list_start(message) {
     var lo = new CXGN.List();
     var listhtml = lo.listSelect('paste', '', message);
     jQuery('#paste_list').html(listhtml);
-
+    jQuery('#paste_list_select').change(
+      function() {
+        pasteList();
+    });
 }
 
-function paste_list(list_id) {
-  var lo = new CXGN.List();
-  var data = lo.getListData(list_id);
-  var elements = data.elements;
-  var options = [];
-  //if (window.console) console.log("list_data="+JSON.stringify(data));
+function pasteList() {
+  if (window.console) console.log("pasting list . . .");
 
-  if (data === undefined) {
-    report_list_start_error("Unable to retrieve data from this list.");
+  jQuery('#list_message').html('');
+  var list_id = jQuery('#paste_list_select').val();
+  //var value = jQuery('#list_start_list_select').val();
+  //if (window.console) console.log("list_start_list_select_val ="+value);
+  if (list_id === '') {
+    jQuery('#c1_data').html('');
     return;
   }
+  else {  // paste list by retrieving ids and combining them with list values in proper format
+    //if (window.console) console.log("disabling ui . . .");
+    disable_ui();
+    var lo = new CXGN.List();
+    var data = lo.getListData(list_id);
+    var elements = data.elements;
+    var options = [];
+    //if (window.console) console.log("list_data="+JSON.stringify(data));
 
-  if (data.type_name === '') {
-    report_list_start_error("Unable to start from a list of type null.");
-    return;
-  }
-  if (data.type_name === 'years') {
-    for (var n=0; n<elements.length; n++) {
-      options.push([elements[n][1], elements[n][1]]);
-    }
-  }
-  else { // retrieve ids if they exist
-    var ids = lo.transform2Ids(list_id, data);
-    //if (window.console) console.log("list_ids="+JSON.stringify(ids));
-    if (ids === undefined) {
-      report_list_start_error("Unable to retrieve ids from this list.");
+    if (data === undefined) {
+      report_list_start_error("Unable to retrieve data from this list.");
       return;
     }
-    for (var n=0; n<elements.length; n++) { // format ids and names of list elements to display
-      options.push([ids[n], elements[n][1]]);
+
+    if (data.type_name === '') {
+      report_list_start_error("Unable to start from a list of type null.");
+      return;
     }
-  }
-  c1_html = format_options_list(options);
-  jQuery('#c1_data').html(c1_html);
-  jQuery('#c1_data_text').html(retrieve_sublist(options, 1).join("\n"));
+    if (data.type_name === 'years') {
+      for (var n=0; n<elements.length; n++) {
+        options.push([elements[n][1], elements[n][1]]);
+      }
+    }
+    else { // retrieve ids if they exist
+      var ids = lo.transform2Ids(list_id, data);
+      //if (window.console) console.log("list_ids="+JSON.stringify(ids));
+      if (ids === undefined) {
+        report_list_start_error("Unable to retrieve ids from this list.");
+        return;
+      }
+      for (var n=0; n<elements.length; n++) { // format ids and names of list elements to display
+        options.push([ids[n], elements[n][1]]);
+      }
+    }
+    c1_html = format_options_list(options);
+    jQuery('#c1_data').html(c1_html);
+    jQuery('#c1_data_text').html(retrieve_sublist(options, 1).join("\n"));
 
-  // clear and reset all other wizard parts
-  var this_section = 1;
-  var listadd_id = "c"+this_section+"_add_to_new_list";
-  initialize_first_select();
-  show_list_counts('c1_data_count', options.length);
-  reset_downstream_sections(this_section);
-  update_select_categories(this_section, data.type_name);
-  update_download_options(this_section);
+    // clear and reset all other wizard parts
+    var this_section = 1;
+    initialize_first_select();
+    show_list_counts('c1_data_count', options.length);
+    reset_downstream_sections(this_section);
+    update_select_categories(this_section, data.type_name);
+    update_download_options(this_section, data.type_name);
 
-  if (jQuery('#'+listadd_id).length) {
-    addToListMenu('c1_to_list_menu', 'c1_data', {
-      selectText: true,
-      listType: data.type_name
-    });
+    if (jQuery('#navbar_lists').length) {
+      addToListMenu('c1_to_list_menu', 'c1_data', {
+        selectText: true,
+        listType: data.type_name
+      });
+    }
+    jQuery('#paste_list_select').prop('title', data.type_name);  // so get_selected_categories method doesn't have to retrieve list data everytime
+    enable_ui();
   }
 }
 
