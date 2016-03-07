@@ -639,7 +639,7 @@ sub _add_trial_layout_to_database {
 		     });
 
   #this is wrong.  Does not seem to be used in the database !!
-  my $plot_exp_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot experiment', 'experiment_type');
+  my $plot_exp_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_experiment', 'experiment_type');
 
 
   #create project
