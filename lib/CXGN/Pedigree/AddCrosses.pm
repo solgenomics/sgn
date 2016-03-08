@@ -85,7 +85,7 @@ sub add_crosses {
       my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship');
       
       my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'male_parent', 'stock_relationship');
-      my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'ofspring_of', 'stock_relationship');
+      my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'offspring_of', 'stock_relationship');
       
       #get cvterm for cross_name or create if not found
       my $cross_name_cvterm = $chado_schema->resultset("Cv::Cvterm")
