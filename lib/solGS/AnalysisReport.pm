@@ -225,7 +225,7 @@ sub check_trait_modeling {
     my ($self, $output_details) = @_;
 
     my $job_tempdir = $output_details->{r_job_tempdir};
-     
+    
     foreach my $k (keys %{$output_details})
     {
 	my $gebv_file;
@@ -422,18 +422,18 @@ sub report_status {
     my $email_from;
     my $email_to;
     my $email_cc;
-   
-    if ($analysis_page =~ m/localhost/) 
+    
+    if ($output_details->{host} =~ /localhost/) 
     {
 	my $uid = getpwuid($<);
-    	$email_from = '"' . $uid .'" <' . $uid . '@localhost.localdomain>';
-    	$email_to   = '"' . $uid .'" <' . $uid . '@localhost.localdomain>';
+	$email_from = '"' . $uid .'" <' . $uid . '@localhost.localdomain>';
+	$email_to   = '"' . $uid .'" <' . $uid . '@localhost.localdomain>';
     }
     else 
     {
-    	$email_from = '"solGS M Tool" <cluster-jobs@solgenomics.net>';
-    	$email_to   = "$user_name <$user_email>";   
-    	$email_cc   = 'solGS Job <cluster-jobs@solgenomics.net>';
+     	$email_from = '"solGS M Tool" <cluster-jobs@solgenomics.net>';
+     	$email_to   = "$user_name <$user_email>";   
+     	$email_cc   = 'solGS Job <cluster-jobs@solgenomics.net>';
     }
 
     my $email = Email::Simple->create(
@@ -445,8 +445,9 @@ sub report_status {
 	],
 	body => $body,
 	);
-
+   
     sendmail($email); 
+  
 }
 
 

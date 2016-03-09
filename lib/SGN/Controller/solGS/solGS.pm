@@ -21,6 +21,8 @@ use Algorithm::Combinatorics qw /combinations/;
 use Array::Utils qw(:all);
 use CXGN::Tools::Run;
 use JSON;
+use Storable qw/ nstore retrieve /;
+use Carp qw/ carp confess croak /;
 
 BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
 
@@ -634,11 +636,13 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 } 
 
 
+
+
 sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
     my ($self, $c) = @_;
   
     my ($pop_id, $action) = @{$c->req->captures};
-  
+   
     my $uploaded_reference = $c->req->param('uploaded_reference');
     $c->stash->{uploaded_reference} = $uploaded_reference;
 
@@ -2492,12 +2496,12 @@ sub get_combined_pops_list {
     
     my @combos = uniq(read_file($combo_pops_catalogue_file));
     
-    foreach (@combos)
+    foreach my $entry (@combos)
     {
-        if ($_ =~ m/$combined_pops_id/)
+        if ($entry =~ m/$combined_pops_id/)
         {
-            my ($combo_pops_id, $pops)  = split(/\t/, $_);
-           # $c->stash->{combined_pops_list} = $pops;
+	    chomp($entry);
+            my ($combo_pops_id, $pops)  = split(/\t/, $entry);
 	    my @pops_list = split(',', $pops);
 	    $c->stash->{combined_pops_list} = \@pops_list;
             $c->stash->{trait_combo_pops} = \@pops_list;
@@ -3374,7 +3378,7 @@ sub multi_pops_pheno_files {
         foreach my $pop_id (@$pop_ids) 
         {
 	    my $exp = 'phenotype_data_' . $pop_id . '.txt';
-            $files .= catfile($dir, $exp);          
+            $files .= catfile($dir, $exp);
             $files .= "\t" unless (@$pop_ids[-1] eq $pop_id); 		
         }
 
@@ -3476,8 +3480,6 @@ sub multi_pops_phenotype_data {
             $c->stash->{pop_id} = $pop_id;
             $self->phenotype_file($c);
 	    push @job_ids, $c->stash->{r_job_id};
-	    my $job = $c->stash->{r_job_id}; 
-	    print "\n pheno job: $job\n";
         }
     }
     
@@ -3497,11 +3499,8 @@ sub multi_pops_genotype_data {
         foreach my $pop_id (@$pop_ids)        
         {
             $c->stash->{pop_id} = $pop_id;
-            $self->genotype_file($c);
-	    
+            $self->genotype_file($c);	    
 	    push @job_ids, $c->stash->{r_job_id};
-	    my $job = $c->stash->{r_job_id}; 
-	    print "\n geno job: $job\n";
         }
     }
 
@@ -4238,8 +4237,7 @@ sub phenotype_file {
    
     die "Population id must be provided to get the phenotype data set." if !$pop_id;
     $pop_id =~ s/combined_//;
-    print STDERR "\n phenotype_file--  pop_id : $pop_id\n";  
-   
+    
     my $pheno_file;
  
     if ($c->stash->{uploaded_reference} || $pop_id =~ /uploaded/) {
@@ -4247,9 +4245,8 @@ sub phenotype_file {
         my $user_id = $c->user->id;
 
         $pheno_file = catfile ($tmp_dir, "phenotype_data_${user_id}_${pop_id}");
- 
     }
-  print STDERR "\n phenotype_file-- pheno_file: $pheno_file\n"; 
+ 
     unless ($pheno_file) 
     {
 	my $dir = $c->stash->{solgs_cache_dir};
@@ -4260,14 +4257,14 @@ sub phenotype_file {
         $pheno_file = $file_cache->get($key);
 
 	no warnings 'uninitialized';
-       print STDERR "\n phenotype_file-- pheno_file: $pheno_file\n"; 
+      
 	unless ( -s $pheno_file)
         {  	   
             $pheno_file = catfile($dir, 'phenotype_data_' . $pop_id . '.txt');
-	   print STDERR "\n phenotype_file-- 0 size pheno_file: $pheno_file\n";   
+	    
 	    $self->traits_list_file($c);
 	    my $traits_file =  $c->stash->{traits_list_file};
-	    print STDERR "\n phenotype_file-- 0 size traits_list_file: $traits_file -- pop_id : $pop_id\n";   
+	     
 	    my $args = {
 		'population_id'    => $pop_id,
 		'phenotype_file'   => $pheno_file,
@@ -4585,7 +4582,7 @@ sub run_rrblup_trait {
                 )
             {  
                 $c->stash->{input_files} = $input_file;
-                $self->output_files($c);
+               # $self->output_files($c);
                 $self->run_rrblup($c);        
             }
         }        
@@ -4619,7 +4616,7 @@ sub run_rrblup_trait {
         }
         else
         {   
-            $self->output_files($c);
+           # $self->output_files($c);
         
             if (-s $c->stash->{gebv_kinship_file} == 0 ||
                 -s $c->stash->{gebv_marker_file}  == 0 ||
@@ -4627,7 +4624,7 @@ sub run_rrblup_trait {
                 )
             {  
                 $self->input_files($c);            
-                $self->output_files($c);
+              #  $self->output_files($c);
                 $self->run_rrblup($c);        
             }
         }
@@ -4746,7 +4743,7 @@ sub create_cluster_acccesible_tmp_files {
             );
         $filename
     } 
-    qw / in out err /;
+    qw / in out err/;
 
     $c->stash( 
 	in_file_temp  => $in_file_temp,
@@ -4754,6 +4751,83 @@ sub create_cluster_acccesible_tmp_files {
 	err_file_temp => $err_file_temp,
 	);
 
+}
+
+
+sub run_async {
+    my ($self, $c) = @_;    
+
+    my $dependency         = $c->stash->{dependency};
+    my $dependency_type    = $c->stash->{dependency_type};
+    my $background_job     = $c->stash->{background_job};
+    my $dependent_job      = $c->stash->{dependent_job};
+    my $temp_file_template = $c->stash->{r_temp_file};
+    my $combine_pops_pid   = $c->stash->{combine_pops_pid};
+    my $job_type           = $c->stash->{job_type};
+    my $model_file         = $c->stash->{gs_model_args_file};
+ 
+    my $solgs_tmp_dir = "'" . $c->stash->{solgs_tempfiles_dir} . "'";
+  
+    my $r_script      = $c->stash->{r_commands_file};
+    my $r_script_args =  $c->stash->{r_script_args};
+
+    if ($combine_pops_pid) 
+    {
+	$dependency = $combine_pops_pid;       
+    }
+
+    my $script_args;
+    foreach my $arg (@$r_script_args) 
+    {     
+	$script_args .= $arg;
+	$script_args .= ' --script_args ' unless ($r_script_args->[-1] eq $arg);
+    }
+
+    my $report_file = $self->create_tempfile($c, 'analysis_report_args');
+    $c->stash->{report_file} = $report_file;
+
+    my $cmd = 'mx-run solGS::DependentJob'
+	. ' --dependency_jobs '           . $dependency
+	. ' --dependency_type '           . $dependency_type
+	. ' --r_script '                  . $r_script 
+	. ' --script_args '               . $script_args
+	. ' --temp_dir '                  . $solgs_tmp_dir
+	. ' --temp_file_template '        . $temp_file_template
+	. ' --analysis_report_args_file ' . $report_file
+	. ' --gs_model_args_file '        . $model_file
+	. ' --dependent_type '            . $job_type;
+
+    #print STDERR "\nrun_async mx-run: $cmd\n";
+    $c->stash->{r_temp_file} = 'run-async';
+    $self->create_cluster_acccesible_tmp_files($c);
+
+    my $err_file_temp = $c->stash->{err_file_temp};
+    my $out_file_temp = $c->stash->{out_file_temp};
+ 
+    my $async =  CXGN::Tools::Run->run_async($cmd,
+			     {
+				 working_dir      => $c->stash->{solgs_tempfiles_dir},
+				 temp_base        => $c->stash->{solgs_tempfiles_dir},
+				 max_cluster_jobs => 1_000_000_000,
+				 out_file         => $out_file_temp,
+				 err_file         => $err_file_temp,
+			     }
+     );
+ 
+    my $async_pid = $async->pid();
+   
+    $c->stash->{async_pid}        = $async_pid;
+    $c->stash->{r_job_tempdir}    = $async->tempdir();
+    $c->stash->{r_job_id}         = $async->job_id();
+ 
+    if ($c->stash->{r_script} =~ /combine_populations/)
+    {
+     	$c->stash->{combine_pops_pid} = $async_pid; 
+    #   #$c->stash->{r_job_tempdir}    = $async->tempdir();
+    #   #$c->stash->{r_job_id}         = $async->job_id();
+    #  # $c->stash->{cluster_job} = $r_job;
+    }
+ 
 }
 
 
@@ -4767,83 +4841,92 @@ sub run_r_script {
     $self->create_cluster_acccesible_tmp_files($c);
     my $in_file_temp   = $c->stash->{in_file_temp};
     my $out_file_temp  = $c->stash->{out_file_temp};
-    
-    my $dependency     = $c->stash->{dependency};
-    my $background_job = $c->stash->{background_job};
+    my $err_file_temp  = $c->stash->{err_file_temp};
+
+    my $dependency      = $c->stash->{dependency};
+    my $dependency_type = $c->stash->{dependency_type};
+    my $background_job  = $c->stash->{background_job};
     
     {
         my $r_cmd_file = $c->path_to($r_script);
         copy($r_cmd_file, $in_file_temp)
             or die "could not copy '$r_cmd_file' to '$in_file_temp'";
     }
-   print STDERR "\n run_r_script: dependency: $dependency\n";     
-    my $r_job;  
+  
     if ($dependency && $background_job) 
     {
-	my $dependent_job_script  = $self->create_tempfile($c, "dependent_r_job", "pl");
+	$c->stash->{r_commands_file}    = $in_file_temp;
+	$c->stash->{r_script_args}      = [$input_files, $output_files];
+	$c->stash->{gs_model_args_file} = $self->create_tempfile($c, 'gs_model_args');
 
-	my $cmd = '#!/usr/bin/env perl;' . "\n";
-	$cmd   .= 'use strict;' . "\n";
-	$cmd   .= 'use warnings;' . "\n\n\n";
-	$cmd   .= 'system("Rscript --slave ' 
-	    . $in_file_temp 
-	    . ' --args ' . $input_files . ' ' . $output_files 
-	    . ' | qsub -r y -W ' .  $dependency . '");';
+	if ($r_script =~ /combine_populations/) 
+	{	    
+	    $c->stash->{job_type} = 'combine_populations'; 	   
+	   # $c->stash->{combine_pops_pid} = $async_pid;
+	    $self->run_async($c);
+	}
+	elsif ($r_script =~ /gs/)
+	{
+	    $c->stash->{job_type} = 'model';
 
-	write_file($dependent_job_script, $cmd);
-	chmod 0755, $dependent_job_script;
-	
-	$r_job = CXGN::Tools::Run->run_cluster('perl', 
-            $dependent_job_script,
-            $out_file_temp,
-            {
-                working_dir => $c->stash->{solgs_tempfiles_dir},
-                max_cluster_jobs => 1_000_000_000,
-            },
-            );
+	    my $model_job = {
+		'r_command_file' => $in_file_temp,
+		'input_files'    => $input_files,
+		'output_files'   => $output_files,
+		'r_output_file'  => $out_file_temp,
+		'err_temp_file'  => $err_file_temp,
+	    };
+
+	    my $model_file = $c->stash->{gs_model_args_file};
+	    nstore $model_job, $model_file 
+		or croak "gs r script: $! serializing model details to '$model_file'";
+	    
+	    if ($dependency_type =~ /combine_populations/)
+	    {
+	     	$self->run_async($c);
+	    }
+	}
     } 
     else 
     {      
-	$r_job = CXGN::Tools::Run->run_cluster('R', 'CMD', 'BATCH',
-            '--slave',
-            "--args $input_files $output_files",
-            $in_file_temp,
-            $out_file_temp,
-            {
-                working_dir => $c->stash->{solgs_tempfiles_dir},
-                max_cluster_jobs => 1_000_000_000,
-            },
-            );
+	my $r_job = CXGN::Tools::Run->run_cluster('R', 'CMD', 'BATCH',
+						  '--slave',
+						  "--args $input_files $output_files",
+						  $in_file_temp,
+						  $out_file_temp,
+						  {
+						      working_dir => $c->stash->{solgs_tempfiles_dir},
+						      max_cluster_jobs => 1_000_000_000,
+						  });
+	try 
+	{ 
+	    $r_job;
+
+	    $c->stash->{r_job_tempdir} = $r_job->tempdir();
+	    $c->stash->{r_job_id} = $r_job->job_id();
+	   # $c->stash->{cluster_job} = $r_job;
+
+	    unless ($background_job)
+	    {
+		$r_job->wait();
+	    }
+	}
+	catch 
+	{
+	    my $err = $_;
+	    $err =~ s/\n at .+//s; 
+        
+	    try
+	    { 
+		$err .= "\n=== R output ===\n"
+		    .file($out_file_temp)->slurp
+		    ."\n=== end R output ===\n"; 
+	    };
+            
+	    $c->stash->{script_error} = "$r_script";
+	}   
     }
    
-    try 
-    { 
-	$r_job;
-
-	$c->stash->{r_job_tempdir} = $r_job->tempdir();
-	$c->stash->{r_job_id} = $r_job->job_id();
-	$c->stash->{cluster_job} = $r_job;
-
-	unless ($background_job)
-	{
-	    $r_job->wait();
-	}
-    }
-    catch 
-    {
-        my $err = $_;
-        $err =~ s/\n at .+//s; 
-        
-	try
-        { 
-            $err .= "\n=== R output ===\n"
-		.file($out_file_temp)->slurp
-		."\n=== end R output ===\n"; 
-        };
-            
-        $c->stash->{script_error} = "$r_script";
-    }
-
 }
  
  

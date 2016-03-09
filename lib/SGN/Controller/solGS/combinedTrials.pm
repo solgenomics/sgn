@@ -296,16 +296,26 @@ sub combine_trait_data {
 	$c->stash->{trait_combine_populations} = $combined_pops_list;
 
 	$self->prepare_multi_pops_data($c);
-	my $prerequisite_jobs = $c->stash->{prerequisite_jobs};
-
-	if ($prerequisite_jobs =~ /^[:+]$/) { $prerequisite_jobs = 0;}
-	print STDERR "\ncombine data build  model -- prerequisite jobs: $prerequisite_jobs\n";
-
-	if ($prerequisite_jobs) 
-	{
-	    $c->stash->{dependency} = 'depend=afterok:' . $prerequisite_jobs;
-	}
 	
+	my $background_job = $c->stash->{background_job};
+	
+	if ($background_job) 
+	{
+	    my $prerequisite_jobs = $c->stash->{prerequisite_jobs};
+	    
+	    if ($prerequisite_jobs =~ /^:+$/) 
+	    { 
+		$prerequisite_jobs = undef;
+	    }
+	    print STDERR "\ncombine data build  model -- prerequisite jobs: $prerequisite_jobs\n";
+
+	    if ($prerequisite_jobs) 
+	    {
+		$c->stash->{dependency}      =  $prerequisite_jobs;
+		$c->stash->{dependency_type} = 'download_data';
+	    }
+	}	
+
 	$solgs_controller->r_combine_populations($c);         
     }
                        
@@ -324,9 +334,14 @@ sub combine_data_build_model {
   
     if ($combine_job_id) 
     {
-     	$c->stash->{dependency} = 'depend=afterok:' . $combine_job_id;
+	$c->stash->{dependency} = "'" . $combine_job_id . "'";
+	
+	if (!$c->stash->{dependency_type}) 
+	{
+	    $c->stash->{dependency_type} = 'combine_populations';
+	}
     }
-  
+      
     $self->build_model_combined_trials_trait($c);
 	
 }
@@ -480,6 +495,11 @@ sub prepare_multi_pops_data {
    $self->get_combined_pops_arrayref($c);
    my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
 
+   foreach my $pop_id (@$combined_pops_list) {
+       print STDERR "\nprepare_multi_pops_data combo pops list : $pop_id\n";
+   }
+
+
    my $solgs_controller = $c->controller('solGS::solGS');
   
    $solgs_controller->multi_pops_phenotype_data($c, $combined_pops_list);
@@ -502,6 +522,7 @@ sub prepare_multi_pops_data {
        if (@all_jobs && scalar(@all_jobs) == 1) { $prerequisite_jobs = $all_jobs[0];}
    }
 
+   if ($prerequisite_jobs =~ /^:+$/) {$prerequisite_jobs = undef;}
    print STDERR "\n all pre req jobs: $prerequisite_jobs\n";
    $c->stash->{prerequisite_jobs} = $prerequisite_jobs;
 

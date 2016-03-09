@@ -43,9 +43,16 @@ if (length(datasetInfoFile) != 0 ) {
 validationTrait <- paste("validation", trait, sep = "_")
 validationFile  <- grep(validationTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
+if (is.null(validationFile)) {
+  stop("Validation output file is missing.")
+}
+
 kinshipTrait <- paste("kinship", trait, sep = "_")
 blupFile     <- grep(kinshipTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
+if (is.null(blupFile)) {
+  stop("GEBVs file is missing.")
+}
 markerTrait <- paste("marker", trait, sep = "_")
 markerFile  <- grep(markerTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
@@ -632,5 +639,6 @@ if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
               )
 }
 
+message("Done.")
 
 q(save = "no", runLast = FALSE)
