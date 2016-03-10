@@ -11,22 +11,19 @@ Choose a list for each parameter and click "Analyze".
 </div>
 
 <div class="well well-sm">
-<form id="analyze_form" action="/analyze/phenotypes/compare_trials" method="POST" >
+<form id="analyze_form" action="/analyze/phenotypes/trials" method="POST" >
 <table class="table" cellpadding="10" border="0" >
   <thead>
   <tr><td colspan="4"><h4>Analyze Trial Phenotypes</h4><p>Select parameter:</p></tr>
   <tr>
     <th>
-      Accessions
+      List of Trials
     </th>
     <th>
-      Trials
+      Trial Design
     </th>
     <th>
-      Traits
-    </th>
-    <th>
-      Type
+      Type of Analysis
     </th>
     <th>
       Action
@@ -36,26 +33,32 @@ Choose a list for each parameter and click "Analyze".
   <tbody>
   <tr>
     <td>
-      <div id="accession_list">
-      </div>      
-    </td>
-    <td>
       <div id="trial_list">
       </div>
     </td>
     <td>
-      <div id="trait_list">
-      </div>
-   </td>
+    <div class="checkbox">
+     <label><input type="checkbox" id="trial_design" name="trial_design" value="RCBD">RCBD</label>
+    </div>
+    <div class="checkbox">
+     <label><input type="checkbox" id="trial_design" name="trial_design" value="Alpha">Alpha</label>
+    </div>
+    <div class="checkbox">
+     <label><input type="checkbox" id="trial_design" name="trial_design" value="CRD">CRD</label>
+    </div>
+    <div class="checkbox">
+     <label><input type="checkbox" id="trial_design" name="trial_design" value="Augmented">Augmented</label>
+    </div>
+    </td>
    <td>
  <div class="checkbox">
-  <label><input type="checkbox" id="format" name="format" value="blocks">blocks (default)</label>
+  <label><input type="checkbox" id="analysis_type" name="analysis_type" value="Anova">Anova (default)</label>
 </div>
 <div class="checkbox">
-  <label><input type="checkbox" id="format" name="format" value="years">years</label>
+  <label><input type="checkbox" id="analysis_type" name="analysis_type" value="Heatmap">Heatmap</label>
 </div>
 <div class="checkbox">
-  <label><input type="checkbox" id="format" name="format" value="locations">locations</label>
+  <label><input type="checkbox" id="analysis_type" name="analysis_type" value="Something Else?">Something Else?</label>
 </div>
     </td>
     <td>
@@ -68,67 +71,50 @@ Choose a list for each parameter and click "Analyze".
 </form>
 </div>
 
-<script>  
-$(document).ready(function() { 
+<script>
+$(document).ready(function() {
 
     var lo = new CXGN.List();
-
-    $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
     $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ], 'select' ));
-    $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], 'select'  ));
- 
+
     $('#analyze').click(function() {
 
     disable_ui();
-   
-      var accession_list_id = $('#accession_list_list_select').val();
+
       var trial_list_id = $('#trial_list_list_select').val();
-      var trait_list_id = $('#trait_list_list_select').val();
 
-      var accession_validation = 1;
-      if (accession_list_id) { accession_validation = lo.validate(accession_list_id, 'accessions', true); }
-      
-      var trial_validation = 1; 
+      var trial_validation = 1;
       if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true); }
-  
-      var trait_validation = 1;
-      if (trait_list_id) { trait_validation = lo.validate(trait_list_id, 'traits', true); } 
 
-      if (!accession_list_id || !trial_list_id || !trait_list_id) {
+      if ( !trial_list_id ) {
       	 enable_ui();
-      	 alert("You need to select an accession, a trial, and a trait list!");
-	 return; 
+      	 alert("You need to select a list of trials!");
+	        return;
       }
 
       var problem_lists = new Array();
 
-      if (accession_validation != 1) { 
-        problem_lists.push('accessions');
-      }
-      if (trial_validation != 1) { 
-        problem_lists.push('trials');
-      }
-      if (trait_validation != 1) { 
+      if (trial_validation != 1) {
         problem_lists.push('trials');
       }
 
       if (problem_lists.length > 0) {
       	 enable_ui();
       	 alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
-	 return;
+	        return;
       }
 
       var token = new Date().getTime(); //use the current timestamp as the token value
       $('#analyze_token_value').val(token);
-      
+
       $('#analyze_form').submit();
-      
-      var fileDownloadCheckTimer;
-      fileDownloadCheckTimer = window.setInterval(function () { //checks for response cookie to keep working modal enabled until file is ready for download
-      			     var cookieValue = $.cookie('fileDownloadToken');
+
+      var fileAnalysisCheckTimer;
+      fileAnalysisCheckTimer = window.setInterval(function () { //checks for response cookie to keep working modal enabled until analysis output is ready to display
+      			     var cookieValue = $.cookie('fileAnalysisToken');
 			     if (cookieValue == token) {
-			     	window.clearInterval(fileDownloadCheckTimer);
-				jQuery.removeCookie('fileDownloadToken'); //clears this cookie value
+			     	window.clearInterval(fileAnalysisCheckTimer);
+				jQuery.removeCookie('fileAnalysisToken'); //clears this cookie value
 				enable_ui();
 				}
 			}, 1000);

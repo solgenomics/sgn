@@ -22,21 +22,49 @@ sub load_analyze_phenotypes : Path('/analyze/phenotypes') Args(0) {
     $c->stash->{template} = '/analyze/phenotypes.mas';
 }
 
-sub analyze_trial_phenotypes : Path('/analyze/phenotypes/trials') Args(1) {
+sub analyze_trial_phenotypes : Path('/analyze/phenotypes/trials') Args(0) {
   my $self = shift;
   my $c = shift;
-  my $trial_ids = shift;
-  my $design = $c->req->param("design");
+  my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+  my $trial_design = $c->req->param("trial_design");
   my $analysis_type = $c->req->param("analysis_type");
+  my $format = $c->req->param("format") || "list_id";
+  my (@trial_ids, $trial_data);
 
-  $self->trial_download_log($c, $trial_ids, "trial analyze phenotypes");
+  if ($format eq 'ids') {       #use trial ids supplied directly
+    my $id_string = $c->req->param("ids");
+    @trial_ids = split(',',$id_string);
+  }
+  elsif ($format eq 'list_id') {        #get trial names from list and tranform them to ids
 
-  my @trial_ids = split ",", $trial_ids;
+    my $trial_list_id = $c->req->param("trial_list_list_select");
+
+    if ($trial_list_id) {
+      $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
+    }
+
+    my @trial_list = map { $_->[1] } @$trial_data;
+
+    my $t = CXGN::List::Transform->new();
+
+    my $trial_t = $t->can_transform("trials", "trial_ids");
+    my $trial_id_hash = $t->transform($schema, $trial_t, \@trial_list);
+    @trial_ids = @{$trial_id_hash->{transform}};
+
+    print STDERR "trial_ids = " . @trial_ids ."\n";
+    print STDERR "trial_id_hash =" . Dumper($trial_id_hash);
+  }
+  else {
+    die "Unable to determine paramter format \n";
+  }
+
+  #$self->trial_download_log($c, @trial_ids, "trial analyze phenotypes");
+
+  #my @trial_ids = split ",", $trial_ids;
   my $trial_sql = join ",", map { "\'$_\'" } @trial_ids;
 
   my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
   my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef);
-  my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
   my $csv = $self->retrieve_phenotypes_csv($c, '', '', '', '', \@data);
 
@@ -50,9 +78,9 @@ sub analyze_trial_phenotypes : Path('/analyze/phenotypes/trials') Args(1) {
 
   print STDERR "path to R output is: $output_path \n";
 
-  # run different R scripts based on supplied analysis and design type
-  #if ($analysis_type eq 'ANOVA') {
-  #   if ($design eq 'RCBD') {
+  # run different R scripts based on supplied analysis and design types
+  #if ($analysis_type eq 'Anova') {
+  #   if ($trial_design eq 'RCBD') {
        #run analysis here, with CXGN:Tools Run
   #   }
   #}
@@ -62,6 +90,8 @@ sub analyze_trial_phenotypes : Path('/analyze/phenotypes/trials') Args(1) {
 
   # when analysis is complete, display output graphic
   if ( -e $output_path) {
+    # fix this return section to prevent the following error:
+    #[error] Caught exception in SGN::View::Mason->process "Can't find component for path /analyze/phenotypes/analyze_trial_phenotypes.mas at /home/bje24/cxgn/local-lib/lib/perl5//Catalyst/View/HTML/Mason.pm line 209.
     return "<img src=\"$output_path\" /><br>";
   }
   else {
@@ -79,11 +109,12 @@ sub analyze_trial_phenotypes : Path('/analyze/phenotypes/trials') Args(1) {
       my $dataref = shift;
       my @data = @$dataref;
 
+      my $dir = $c->tempfiles_subdir('data_export'); # make sure data_export dir exists
       my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"data_export/trial_".$program_name."_phenotypes_".$location."_".$trial_id."_XXXXX");
 
       close($fh);
       my $file_path = $c->config->{basepath}."/".$tempfile.".csv";
-      move($tempfile, $file_path);
+      #move($tempfile, $file_path);
 
       open(my $F, ">", $file_path) || die "Can't open file $file_path\n";
       for (my $line =0; $line< @data; $line++) {
