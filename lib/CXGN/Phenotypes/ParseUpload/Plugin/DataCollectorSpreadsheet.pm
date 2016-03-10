@@ -29,7 +29,12 @@ sub validate {
       return;
     }
 
-   $worksheet = ($excel_obj->worksheets())[7]; #support only one worksheet
+    $worksheet = ($excel_obj->worksheets())[7]; #support only one worksheet
+    if (!$worksheet) {
+	print STDERR "No 7th tab found in your Excel file.\n";
+	return;
+    }
+
    my  ( $row_min, $row_max ) = $worksheet->row_range();
    my  ( $col_min, $col_max ) = $worksheet->col_range();
 
@@ -47,6 +52,7 @@ sub validate {
 
     if (!$plot_name_head || $plot_name_head ne 'plot_name') {
       print STDERR "No plot name in header\n";
+      return;
     }
 
 
@@ -85,6 +91,11 @@ sub parse {
     }
 
     $worksheet = ( $excel_obj->worksheets() )[7];
+    if (!$worksheet) {
+	print STDERR "No 7th tab found in your Excel file.\n";
+	return;
+    }
+
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
@@ -108,12 +119,12 @@ sub parse {
 	$plots_seen{$plot_name} = 1;
       }
 
-      foreach my $trait_key (keys %header_column_info) {
+      foreach my $trait_key (sort keys %header_column_info) {
 	my $trait_value;
 	if ($worksheet->get_cell($row,$header_column_info{$trait_key})){
 	  $trait_value = $worksheet->get_cell($row,$header_column_info{$trait_key})->value();
 	}
-	if ($trait_value) {
+	if ($trait_value || $trait_value eq '0') {
 	  if ($trait_value ne '.'){
 	    $data{$plot_name}->{$trait_key} = $trait_value;
 	  }
@@ -121,10 +132,10 @@ sub parse {
       }
     }
 
-    foreach my $plot (keys %plots_seen) {
+    foreach my $plot (sort keys %plots_seen) {
 	push @plots, $plot;
     }
-    foreach my $trait (keys %traits_seen) {
+    foreach my $trait (sort keys %traits_seen) {
 	push @traits, $trait;
     }
 

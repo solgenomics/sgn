@@ -175,8 +175,8 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
 
     my $data = $self->get_phenotyping_data($c);
 
-    $c->stash->{phenotype_files} = $data->{file_info};
-    $c->stash->{deleted_phenotype_files} = $data->{deleted_file_info};
+    $c->stash->{phenotype_files} = $data->{phenotype_files};
+    $c->stash->{deleted_phenotype_files} = $data->{deleted_phenotype_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_phenotyping.mas';
     
@@ -271,34 +271,19 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $organism_id = $organism->organism_id();
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'accession',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'accession',
-    });
-
-#    my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-#      { name   => 'member',
-#      cv     => 'stock type',
-#      db     => 'null',
-#      dbxref => 'member',
-#    });
+	{ name   => 'accession',
+	  cv     => 'stock_type',
+	});
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
       { name   => 'population',
     });
 
-#    my $cross_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-#    { name   => 'cross',
-#      cv     => 'stock relationship',
-#      db     => 'null',
-#      dbxref => 'cross',
-#    });
 
     my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
-            { name       => $maternal,
-            } );
-
+	{ name       => $maternal,
+	} );
+    
     my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
             { name       => $paternal,
             } );
@@ -311,29 +296,22 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
             } );
       my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'female_parent',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'female_parent',
+      cv     => 'stock_relationship',
     });
 
       my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'male_parent',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'male_parent',
+      cv     => 'stock_relationship',
     });
 
       my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'cross_name',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'cross_name',
+      cv     => 'stock_relationship',
     });
 
       my $visible_to_role_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'visible_to_role',
       cv => 'local',
-      db => 'null',
     });
 
     my $increment = 1;
@@ -521,7 +499,7 @@ sub get_crosses : Private {
 
     # get crosses
     #
-    my $stock_type_cv = $schema->resultset("Cv::Cv")->find( {name=>'stock type'});
+    my $stock_type_cv = $schema->resultset("Cv::Cv")->find( {name=>'stock_type'});
     my $cross_cvterm = $schema->resultset("Cv::Cvterm")->find(
 	{ name   => 'cross',
 	  cv_id => $stock_type_cv->cv_id(),
@@ -549,9 +527,7 @@ sub get_stock_relationships : Private {
 
     my $stockrel = $schema->resultset("Cv::Cvterm")->create_with(
 	{ name   => 'cross',
-	  cv     => 'stock relationship',
-	  db     => 'null',
-	  dbxref => 'cross',
+	  cv     => 'stock_relationship',
 	});
     
     
@@ -589,8 +565,8 @@ sub get_phenotyping_data : Private {
 	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id() } );
 	
 	if (!$md_row->obsolete) { 
-	    while (my $file_row = $file_rs->next()) { 
-		push @$file_info, { file_id => $file_row->file_id(),		                    
+	    while (my $file_row = $file_rs->next()) {
+		push @$file_info, { file_id => $file_row->file_id(),            
 				    basename => $file_row->basename,
 				    dirname  => $file_row->dirname,
 				    file_type => $file_row->filetype,

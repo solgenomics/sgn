@@ -31,10 +31,8 @@ sub get_all_accessions {
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'accession',
-    });
+      cv     => 'stock_type',
+      });
 
     my $rs = $self->schema->resultset('Stock::Stock')->search({type_id => $accession_cvterm->cvterm_id});
     #my $rs = $self->schema->resultset('Stock::Stock')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
@@ -55,26 +53,20 @@ sub get_all_populations {
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'accession',
-    });
+      cv     => 'stock_type',
+      });
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'population',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'population',
-    });
+      cv     => 'stock_type',
+      });
 
     my $population_member_cvterm = $schema->resultset("Cv::Cvterm")
 	->create_with({
 	    name   => 'member_of',
-	    cv     => 'stock relationship',
-	    db     => 'null',
-	    dbxref => 'member_of',
+	    cv     => 'stock_relationship',
 		      });
-
+    
     my $populations_rs = $schema->resultset("Stock::Stock")->search({'type_id' => $population_cvterm->cvterm_id()});
 
     my @accessions_by_population;
@@ -98,7 +90,7 @@ sub get_all_populations {
 	    $accession_info{'description'}=$population_member_row->description();
 	    $accession_info{'stock_id'}=$population_member_row->stock_id();
 	    my $synonyms_rs;
-	    $synonyms_rs = $population_member_row->search_related('stockprops', {'type.name' => 'synonym'}, { join => 'type' });
+	    $synonyms_rs = $population_member_row->search_related('stockprops', {'type.name' => {ilike => '%synonym%' } }, { join => 'type' });
 	    my @synonyms;
 	    if ($synonyms_rs) {
 		while (my $synonym_row = $synonyms_rs->next()) {

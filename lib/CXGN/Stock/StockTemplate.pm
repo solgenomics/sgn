@@ -293,19 +293,19 @@ sub store {
       close($F);
 
       my $md_row = $metadata_schema->resultset("MdMetadata")->create({
-								      create_person_id => $user_id,
+	  create_person_id => $user_id,
 								     });
       $md_row->insert();
-
+      
       my $file_row = $metadata_schema->resultset("MdFiles")->create({
-								     basename => basename($self->filename()),
-								     dirname => dirname($self->filename()),
-								     filetype => 'phenotype spreadsheet upload xls',
-								     md5checksum => $md5->hexdigest(),
-								     metadata_id => $md_row->metadata_id(),
+	  basename => basename($self->filename()),
+	  dirname => dirname($self->filename()),
+	  filetype => 'phenotype spreadsheet upload xls',
+	  md5checksum => $md5->hexdigest(),
+	  metadata_id => $md_row->metadata_id(),
 								    });
       $file_row->insert();
-
+      
 
       print STDERR "\nFile id: ".$file_row->file_id()."\n";
 
@@ -320,11 +320,9 @@ sub store {
 
       # find the cvterm for a phenotyping experiment
       my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-								       { name   => 'phenotyping experiment',
-									 cv     => 'experiment type',
-									 db     => 'null',
-									 dbxref => 'phenotyping experiment',
-								       });
+	  { name   => 'phenotyping experiment',
+	    cv     => 'experiment_type',
+	  });
       print STDERR " ***store: phenotyping experiment cvterm = " . $pheno_cvterm->cvterm_id . "\n";
       ##################
       #This has to be stored in the database when adding a new project for these plots
@@ -398,57 +396,57 @@ sub store {
 											   } );
 		  print STDERR " ** store: created new experiment " . $experiment->nd_experiment_id . "\n";
 		  $experiment->create_nd_experimentprops(
-							 {
-							  date => $date } ,
-							 {
-							  autocreate => 1 , cv_name => 'local' }
-							);
+		      {
+			  date => $date } ,
+		      {
+			  autocreate => 1 , cv_name => 'local' }
+		      );
 		  $experiment->create_nd_experimentprops(
-							 {
-							  operator => $operator } ,
-							 {
-							  autocreate => 1 , cv_name => 'local' }
-							);
+		      {
+			  operator => $operator } ,
+		      {
+			  autocreate => 1 , cv_name => 'local' }
+		      );
 		}
 		##
 		#link the experiment to the project
 		$experiment->find_or_create_related('nd_experiment_projects', {
-									       project_id => $project_id
-									      } );
+		    project_id => $project_id
+						    } );
 		print STDERR " ** store: linking experiment " . $experiment->nd_experiment_id . " with project $project_id \n";
 		#link the experiment to the stock
 		$experiment->find_or_create_related('nd_experiment_stocks' , {
-									      stock_id => $plot_stock_id,
-									      type_id  =>  $pheno_cvterm->cvterm_id,
-									     });
+		    stock_id => $plot_stock_id,
+		    type_id  =>  $pheno_cvterm->cvterm_id,
+						    });
 		print STDERR " ** store: linking experiment " . $experiment->nd_experiment_id . " to stock $plot_stock_id \n";
 		my $uniquename = "Stock: " . $plot_stock_id . ", trait: " . $cvterm->name . " date: $date" . "  operator = $operator" ;
 		my $phenotype = $cvterm->find_or_create_related(
-								"phenotype_cvalues", {
-										      observable_id => $cvterm->cvterm_id,
-										      value => $value ,
-										      uniquename => $uniquename,
-										     });
+		    "phenotype_cvalues", {
+			observable_id => $cvterm->cvterm_id,
+			value => $value ,
+			uniquename => $uniquename,
+		    });
 		print STDERR " ** store: added phenotype value $value , observable = " . $cvterm->name ." uniquename = $uniquename \n";
 		#link the phenotpe to the experiment
 		$experiment->find_or_create_related('nd_experiment_phenotypes' , {
-										  phenotype_id => $phenotype->phenotype_id });
+		    phenotype_id => $phenotype->phenotype_id });
 		$message .= "Added phenotype: trait= " . $cvterm->name . ", value = $value, to stock " . qq|<a href="/stock/$plot_stock_id/view">$stock_name</a><br />| ;
-
+		
 		#link the file to the experiment
 		#$experiment->find_or_create_related('nd_experiment_md_files',{file_id => $file_row->file_id(),});
 		my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
-												  nd_experiment_id => $experiment->nd_experiment_id(),
-												  file_id => $file_row->file_id(),
+		    nd_experiment_id => $experiment->nd_experiment_id(),
+		    file_id => $file_row->file_id(),
 												 });
 		$experiment_files->insert();
-
+		
 	      }
 	    }
 	  }
 	}
       }
-
+      
 	
     };
     my $error;

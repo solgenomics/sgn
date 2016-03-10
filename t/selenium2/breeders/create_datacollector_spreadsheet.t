@@ -10,19 +10,27 @@ my $d = SGN::Test::WWW::WebDriver->new();
 
 $d->login_as("submitter");
 
-$d->get_ok("/", "get root url test");
+$d->get_ok('/breeders/trial/137');
+
+sleep(3);
 
 my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
 
 $d->find_element_ok("add_list_input", "id", "find add list input");
 
 my $add_list_input = $d->find_element_ok("add_list_input", "id", "find add list input test");
-   
-$add_list_input->send_keys("new_test_list");
+
+sleep(1);
+
+$add_list_input->send_keys("new_test_list_datacollector");
+
+sleep(1);
 
 $d->find_element_ok("add_list_button", "id", "find add list button test")->click();
 
-$d->find_element_ok("view_list_new_test_list", "id", "view list test")->click();
+sleep(1);
+
+$d->find_element_ok("view_list_new_test_list_datacollector", "id", "view list test")->click();
 
 sleep(2);
 
@@ -45,44 +53,30 @@ $button->click();
 
 sleep(1);
 
-print "Deleted the list\n";
-
 $d->find_element_ok("close_list_dialog_button", "id", "find close dialog button")->click();
 
-$d->logout_ok();
 
-
-my $t = SGN::Test::WWW::WebDriver->new();
-
-$t->while_logged_in_as(
-    "submitter", 
-
-
- sub { 
-	$t->get_ok('/breeders/trial/137');
+	$d->get_ok('/breeders/trial/137');
 	
-	sleep(2);
+	sleep(3);
 
-	my $create_DataCollector_link = $t->find_element_ok('create_DataCollector_link', 'id', "find create data collector spreadsheet link");
+	my $create_DataCollector_link = $d->find_element_ok('create_DataCollector_link', 'id', "find create data collector spreadsheet link");
 
 	$create_DataCollector_link->click();
 
-	sleep(10);
+	sleep(4);
 
-#	my $trait_list_list_select = $t->find_element_ok("trait_list_list_select", "id", "find list select select box");
 
-#	$trait_list_list_select->send_keys("new_test_list");
+	$d->find_element_ok('trait_list_list_select', 'id', "find list select select box")->send_keys('new_test_list_datacollector');
 
-	$t->find_element_ok('trait_list_list_select', 'id', "find list select select box")->send_keys('new_test_list');
-
-	my $button = $t->find_element_ok('create_DataCollector_submit_button', 'id', "create");
+	my $button = $d->find_element_ok('create_DataCollector_submit_button', 'id', "create");
 
 	$button->click();
 
-	sleep(10);
+	sleep(5);
 
 	
-    });
+$d->logout_ok();
     
 	
 

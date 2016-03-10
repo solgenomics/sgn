@@ -252,11 +252,15 @@ function trial_detail_page_setup_dialogs() {
 	title: 'Select Breeding Program',
 	autoOpen: false,
 	buttons: {
-	    'OK': function() {
+	    'OK': {
+		text: "OK",
+		id: "edit_trial_breeding_program_submit",
+		click: function() {
 		associate_breeding_program();
 		jQuery('#change_breeding_program_dialog').dialog("close"); 
 		var trial_id = get_trial_id();
 		load_breeding_program_info(trial_id);
+	    }
 	    },
 	    'Cancel': function() { jQuery('#change_breeding_program_dialog').dialog("close"); }
 	}
@@ -584,6 +588,7 @@ function trial_detail_page_setup_dialogs() {
 		      id: "change_location_cancel_button",
 		    },
 	    save:   { text: "Save",
+		      id: "edit_trial_location_submit",
 		      click: function() { 
 			  var new_location = jQuery('#location_select').val();
 			  save_trial_location(new_location);
@@ -872,9 +877,6 @@ function save_trial_location(location_id) {
 	success: function(response) { 
 	    if (response.message) { alert(response.message); }
 	    if (response.error) { alert(response.error); }
-	    else { 
-		alert("Not sure what happened.");
-	    }
 	    
 	},
 	error: function(response) { 
@@ -1035,121 +1037,6 @@ jQuery(document).ready(function ($) {
 
     }
 
-
-   $('#upload_data_collector_link').click(function () {
-        	$('#upload_DataCollector_spreadsheet_dialog').dialog("open");
-	
-    });
-
-	$( "#upload_DataCollector_spreadsheet_dialog" ).dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 150],
-	buttons: {
-	    "Cancel": function () {
-                jQuery('#upload_DataCollector_spreadsheet_dialog').dialog("close");
-            },
-	    "Ok": {text: "Ok", id:"upload_DataCollector_ok_button", click:function() {
-                upload_DataCollector_spreadsheet_file();
-		$( this ).dialog( "close" );
-	      }		
-	    }
-	}
-    });
-
-   function upload_DataCollector_spreadsheet_file() {
-	jQuery('#working_modal').modal("show");
-        var uploadFile = $("#DataCollector_upload_file").val();
-        $('#upload_DataCollector_form').attr("action", "/ajax/datacollector/upload_dc_sheet");
-        if (uploadFile === '') {
-	    alert("Please select a file");
-	    return;
-        }
-        $("#upload_DataCollector_form").submit();
-    }
-
-   $('#upload_DataCollector_form').iframePostForm({
-	json: true,
-	post: function () {
-	    var uploadFile = $("#DataCollector_upload_file").val();
-		//alert("UPLOADED FILE: "+uploadFile);
-	    if (uploadFile === '') {
-		alert("No file selected");
-	    }
-	},
-	complete: function (response) {
-	    if (response.error) {
-		alert(response.error);
-		return;
-	    }
-	    if (response.success) {
-		jQuery('#working_modal').modal("hide");
-		alert("File uploaded successfully");
-		$( this ).dialog( "close" );
-		location.reload();
-	    }
-	}
-    });
-
-
-    $('#upload_phenotyping_spreadsheet_link').click(function () {
-        	$('#upload_phenotyping_spreadsheet_dialog').dialog("open");
-	
-    });
-
-	$( "#upload_phenotyping_spreadsheet_dialog" ).dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 150],
-	buttons: {
-	    "Cancel": function () {
-                jQuery('#upload_phenotyping_spreadsheet_dialog').dialog("close");
-            },
-	    "Ok": {text: "Ok", id:"upload_phenotyping_ok_button", click:function() {
-                upload_phenotyping_spreadsheet_file();
-		$( this ).dialog( "close" );
-	      }		
-	    }
-	}
-    });
-
-   function upload_phenotyping_spreadsheet_file() {
-	jQuery('#working_modal').modal("show");
-        var uploadFile = $("#phenotyping_spreadsheet_upload_file").val();
-        $('#upload_phenotyping_spreadsheet_form').attr("action", "/ajax/phenoSheet/upload_pheno_sheet");
-        if (uploadFile === '') {
-	    alert("Please select a file");
-	    return;
-        }
-        $("#upload_phenotyping_spreadsheet_form").submit();
-    }
-
-   $('#upload_phenotyping_spreadsheet_form').iframePostForm({
-	json: true,
-	post: function () {
-	    var uploadFile = $("#phenotyping_spreadsheet_upload_file").val();
-		//alert("UPLOADED FILE: "+uploadFile);
-	    if (uploadFile === '') {
-		alert("No file selected");
-	    }
-	},
-	complete: function (response) {
-	    if (response.error) {
-		alert(response.error);
-		return;
-	    }
-	    if (response.success) {
-		jQuery('#working_modal').modal("hide");
-		alert("File uploaded successfully");
-		$( this ).dialog( "close" );
-		location.reload();
-	    }
-	}
-    });
 
 });
 

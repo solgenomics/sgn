@@ -67,6 +67,11 @@ table.borderless td,table.borderless th{
           transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
 
+.modal-body {
+  max-height: calc(100vh - 212px);
+  overflow-y: auto;
+}
+
 #xtratbl {
 background-color:#CCCCFF;
 border: 1px solid #C0C0C0;
