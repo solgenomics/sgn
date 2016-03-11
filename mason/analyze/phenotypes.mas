@@ -71,6 +71,12 @@ Choose a list for each parameter and click "Analyze".
 </form>
 </div>
 
+<&| /page/info_section.mas, title=>"Results" &>
+
+  <& /analyze/phenotype_results.mas &>
+
+</&>
+
 <script>
 $(document).ready(function() {
 
@@ -104,6 +110,45 @@ $(document).ready(function() {
 	        return;
       }
 
+      var trial_list_id = $('#trial_list_list_select').val();
+      var trial_design = document.getElementById("trial_design").checked;
+      if ( !trial_design ) {
+      	 enable_ui();
+      	 alert("You need to select a trial design!");
+	        return;
+      }
+      var analysis_type = document.getElementById("analysis_type").checked;
+      if ( !analysis_type ) {
+      	 enable_ui();
+      	 alert("You need to select an analysis type!");
+	        return;
+      }
+
+      jQuery.ajax( {
+        url: '/analyze/phenotypes/trials',
+        method: 'POST',
+        data: {'trial_list_list_select': trial_list_id, 'trial_design': trial_design, 'analysis_type': analysis_type},
+  	    beforeSend: function(){
+          disable_ui();
+        },
+        complete : function(){
+          enable_ui();
+        },
+  	    success: function(response) {
+          console.log('success, handling response..');
+          if (response.error) {
+            var error_html = '<div class="well well-sm" id="results_section"><font color="red">'+response.error+'</font></div>';
+            jQuery('#results_section').replaceWith(error_html);
+          }
+          else {
+            console.log("Adding div with image");
+            var results_html = '<div id="results_section"><img src="'+response.result+'"><img></div>';
+            jQuery('#results_section').replaceWith(results_html);
+          }
+        }
+      });
+
+/*
       var token = new Date().getTime(); //use the current timestamp as the token value
       $('#analyze_token_value').val(token);
 
@@ -118,6 +163,8 @@ $(document).ready(function() {
 				enable_ui();
 				}
 			}, 1000);
+
+*/
 	});
 
 	function disable_ui() {
