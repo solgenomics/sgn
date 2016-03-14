@@ -4616,15 +4616,12 @@ sub run_rrblup_trait {
         }
         else
         {   
-           # $self->output_files($c);
-        
             if (-s $c->stash->{gebv_kinship_file} == 0 ||
                 -s $c->stash->{gebv_marker_file}  == 0 ||
                 -s $c->stash->{validation_file}   == 0       
                 )
             {  
                 $self->input_files($c);            
-              #  $self->output_files($c);
                 $self->run_rrblup($c);        
             }
         }
@@ -4786,18 +4783,17 @@ sub run_async {
     my $report_file = $self->create_tempfile($c, 'analysis_report_args');
     $c->stash->{report_file} = $report_file;
 
-    my $cmd = 'mx-run solGS::DependentJob'
-	. ' --dependency_jobs '           . $dependency
-	. ' --dependency_type '           . $dependency_type
-	. ' --r_script '                  . $r_script 
-	. ' --script_args '               . $script_args
-	. ' --temp_dir '                  . $solgs_tmp_dir
-	. ' --temp_file_template '        . $temp_file_template
-	. ' --analysis_report_args_file ' . $report_file
-	. ' --gs_model_args_file '        . $model_file
-	. ' --dependent_type '            . $job_type;
+    my $cmd = 'mx-run solGS::DependentJob' . "\s"
+	. '--dependency_jobs'           . "\s$dependency\s"
+	. '--dependency_type'           . "\s$dependency_type\s"
+	. '--r_script'                  . "\s$r_script\s" 
+	. '--script_args'               . "\s$script_args\s"
+	. '--temp_dir'                  . "\s$solgs_tmp_dir\s"
+	. '--temp_file_template'        . "\s$temp_file_template\s"
+	. '--analysis_report_args_file' . "\s$report_file\s"
+	. '--gs_model_args_file'        . "\s$model_file\s"
+	. '--dependent_type'            . "\s$job_type\s";
 
-    #print STDERR "\nrun_async mx-run: $cmd\n";
     $c->stash->{r_temp_file} = 'run-async';
     $self->create_cluster_acccesible_tmp_files($c);
 
@@ -4857,12 +4853,12 @@ sub run_r_script {
     {
 	$c->stash->{r_commands_file}    = $in_file_temp;
 	$c->stash->{r_script_args}      = [$input_files, $output_files];
-	$c->stash->{gs_model_args_file} = $self->create_tempfile($c, 'gs_model_args');
 
 	if ($r_script =~ /combine_populations/) 
 	{	    
 	    $c->stash->{job_type} = 'combine_populations'; 	   
 	   # $c->stash->{combine_pops_pid} = $async_pid;
+	    $c->stash->{gs_model_args_file} = $self->create_tempfile($c, 'gs_model_args');
 	    $self->run_async($c);
 	}
 	elsif ($r_script =~ /gs/)
