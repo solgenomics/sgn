@@ -1,27 +1,57 @@
+<%doc>
+
+=head1 NAME
+
+/calendar/personal.mas - a page for displaying a calendar with events. A user needs to have a role in a breeding program to see that breeding program's and corresponding trials' events. 
+
+=head1 AUTHOR
+
+Nicolas Morales <nm529@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$roles => undef
+</%args>
+
 
 <br/>
 <center>
 
 	<div style="width:75%">
 
+		<& events_by_user_role.mas &>
+
 		<div class="well">
-			<table class="table table-bordered">
+			<h3>Permissions <small>: Events for breeding programs and their trials are accessible through the calendar to users who have a role in that breeding program. <br/>Please <a href='/contact/form'>contact us</a> to request a role in a breeding program.</small></h3>
+			<br/>
+
+			<table id="calendar_bp_user_roles" class="table table-bordered">
 			<thead>
 			<tr>
-			<th>Breeding Programs</th>
-			<th>Users</th>
+			<th>Breeding Program</th>
+			<th>Username</th>
 			</tr>
 			</thead>
 			<tbody>
-
+% foreach (@$roles) {
+% if ($_->[2] ne 'submitter' && $_->[2] ne 'user' && $_->[2] ne 'curator' && $_->[2] ne 'sequencer') {
+	<tr><td><% $_->[2] %></td><td><a href="/solpeople/personal-info.pl?sp_person_id=<% $_->[1] %>"><% $_->[0] %></a></td></tr>
+% }
+% }
 			</tbody>
 			</table>
 
 		</div>
 
-		<& events_by_user_role.mas &>
 	</div>
 
 </center>
 
-
+<script>
+jQuery(document).ready(function() {
+    jQuery('#calendar_bp_user_roles').DataTable();
+} );
+</script>

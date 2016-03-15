@@ -280,14 +280,18 @@ sub display_start_date {
 
 sub get_breeding_program_roles {
     my $self = shift;
+    my $c = shift; 
 
-    my $q="SELECT sp_person_id, sp_role_id FROM sgn_people.sp_person_roles";
+    my @breeding_program_roles;
+    my $q="SELECT username, sp_person_id, name FROM sgn_people.sp_person_roles JOIN sgn_people.sp_person using(sp_person_id) JOIN sgn_people.sp_roles using(sp_role_id)";
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute($_);
-    while (my ($p) = $sth->fetchrow_array ) {
-            push(@search_project_ids, $project_id);
-        }
+    $sth->execute();
+    while (my ($username, $sp_person_id, $sp_role) = $sth->fetchrow_array ) {
+        push(@breeding_program_roles, [$username, $sp_person_id, $sp_role] );
+    }
 
+    print STDERR Dumper \@breeding_program_roles;
+    return \@breeding_program_roles;
 }
 
 1;

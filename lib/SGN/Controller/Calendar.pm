@@ -16,7 +16,7 @@ sub personal_calendar :Path('/calendar/personal/') :Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $breeding_programs = CXGN::Calendar->get_breeding_program_roles();
+    my $breeding_programs = CXGN::Calendar->get_breeding_program_roles($c);
 
     $c->stash->{roles} = $breeding_programs;
     $c->stash->{template} = '/calendar/personal.mas';
