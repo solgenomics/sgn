@@ -365,10 +365,13 @@ function reset_downstream_sections(this_section) {  // clear downstream selects,
 	var data_id = "c"+i+"_data";
 	var count_id = "c"+i+"_data_count";
 	var querytype_id = "c"+i+"_querytype";
+  var list_menu_id = "c"+i+"_to_list_menu";
+  var replacement = '<div id="'+list_menu_id+'"></div>';
 	jQuery('#'+select_id).html('');
 	jQuery('#'+data_id).html('');
-	jQuery('#'+count_id).html('');
+	jQuery('#'+count_id).html('No Selection');
 	jQuery('#'+querytype_id).bootstrapToggle('off');
+  jQuery('#'+list_menu_id).replaceWith(replacement);
     }
 }
 
