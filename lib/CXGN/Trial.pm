@@ -27,6 +27,7 @@ use Time::Piece;
 use Time::Seconds;
 use CXGN::Calendar;
 
+
 =head2 accessor bcs_schema()
 
 accessor for bcs_schema. Needs to be set when calling the constructor.
@@ -785,9 +786,9 @@ sub _delete_field_layout_experiment {
 	return { error => "Trial still has associated phenotyping experiment, cannot delete." };
     }
 
-    my $field_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "field layout" })->cvterm_id();
+    my $field_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "field_layout" })->cvterm_id();
 
-    my $genotyping_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'genotyping layout' }) ->cvterm_id();
+    my $genotyping_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'genotyping_layout' }) ->cvterm_id();
 
     print STDERR "Genotyping layout type id = $field_layout_type_id\n";
 
@@ -879,7 +880,7 @@ sub delete_project_entry {
 sub phenotype_count { 
     my $self = shift;
 
-    my $phenotyping_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'phenotyping experiment' })->cvterm_id();
+    my $phenotyping_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'phenotyping_experiment' })->cvterm_id();
     
     my $phenotype_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( 
     	{ 
@@ -1032,10 +1033,7 @@ sub get_harvest_date_cvterm_id {
     my $self = shift;
 
     my $harvest_date_cvterm_id;
-    my $harvest_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_harvest_date', 'project_property');
-    if (!$harvest_date_cvterm) {
-        $harvest_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'harvest_date', 'local');
-    }
+    my $harvest_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'harvest_date', 'project_property');
     if ($harvest_date_cvterm) {
         $harvest_date_cvterm_id = $harvest_date_cvterm->cvterm_id();
     }
@@ -1047,10 +1045,7 @@ sub get_planting_date_cvterm_id {
     my $self = shift;
 
     my $planting_date_cvterm_id;
-    my $planting_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_planting_date', 'project_property');
-    if (!$planting_date_cvterm) {
-        $planting_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'planting_date', 'local');
-    }
+    my $planting_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'planting_date', 'project_property');
     if ($planting_date_cvterm) {
         $planting_date_cvterm_id = $planting_date_cvterm->cvterm_id();
     }

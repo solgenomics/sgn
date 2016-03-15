@@ -4,6 +4,8 @@ package CXGN::List::Validate::Plugin::Accessions;
 use Moose;
 
 use Data::Dumper;
+use SGN::Model::Cvterm;
+
 
 sub name { 
     return "accessions";
@@ -24,11 +26,8 @@ sub validate {
     my $synonym_rs;
     my $synonym_type_id;
     if ($synonym_type_rs->count == 0) { 
-	$synonym_rs = $schema->resultset("Cv::Cvterm")->create_with( 
-	    { name => 'stock_synonym',
-	      cv   => 'stock_property',
-	      #db and dbxref are set to default values "null" and "autocreated:stock_synonym" 
-	    });
+	$synonym_rs = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property');
+
 	$synonym_type_id = $synonym_rs->cvterm_id();
     }
     else { 

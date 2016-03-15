@@ -3,6 +3,7 @@ package CXGN::Pedigree::ParseUpload::Plugin::CrossesExcelFormat;
 use Moose::Role;
 use Spreadsheet::ParseExcel;
 use CXGN::Stock::StockLookup;
+use SGN::Model::Cvterm;
 
 sub _validate_with_plugin {
   my $self = shift;
@@ -298,11 +299,8 @@ sub _get_accession {
   my $chado_schema = $self->get_chado_schema();
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
   my $stock;
-  my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
-    ->create_with({
- 		   name   => 'accession',
- 		   cv     => 'stock_type',
-		  });
+  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+
   $stock_lookup->set_stock_name($accession_name);
   $stock = $stock_lookup->get_stock_exact();
 
