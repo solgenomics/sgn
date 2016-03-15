@@ -11,6 +11,8 @@ my $t = SGN::Test::WWW::WebDriver->new();
 $t->while_logged_in_as("submitter", sub { 
     $t->get_ok('stock/38879/view');
 
+    sleep(2);
+
     $t->find_element_ok("Add new image", "partial_link_text", "find add image link")->click();
 
     sleep(1);

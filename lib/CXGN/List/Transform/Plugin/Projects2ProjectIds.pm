@@ -2,6 +2,7 @@
 package CXGN::List::Transform::Plugin::Projects2ProjectIds;
 
 use Moose;
+use Data::Dumper;
 
 sub name { 
     return "projects_2_project_ids";
@@ -36,6 +37,7 @@ sub transform {
     my @missing = ();
 
     foreach my $l (@$list) { 
+	print STDERR "project_name = $l \n";
 	my $rs = $schema->resultset("Project::Project")->search(
 	    {
 		name => $l,
@@ -49,7 +51,8 @@ sub transform {
 	    
 
     }
-
+    print STDERR " transform array = " . Dumper(@transform);
+    print STDERR " missing array = " . Dumper(@missing);
     return { transform => \@transform,
 	     missing   => \@missing,
     };

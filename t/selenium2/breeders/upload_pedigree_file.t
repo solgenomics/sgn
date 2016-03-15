@@ -12,7 +12,11 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->get_ok('/breeders/accessions');
 
+    sleep(2);
+
     $t->find_element_ok("upload_pedigrees_link", "id", "click on upload_pedigrees_link ")->click();
+
+    sleep(1);
 
     my $upload_input = $t->find_element_ok("pedigrees_uploaded_file", "id", "find file input");
 
@@ -26,7 +30,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("upload_pedigrees_dialog_submit", "id", "submit upload pedigrees file ")->click();
 
-    sleep(2);
+    sleep(3);
 
     $t->find_element_ok("pedigrees_upload_success_dismiss", "id", "dismiss success modal ")->click();
 
