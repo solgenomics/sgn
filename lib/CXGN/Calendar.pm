@@ -280,7 +280,13 @@ sub display_start_date {
 
 sub get_breeding_program_roles {
     my $self = shift;
-    
+
+    my $q="SELECT sp_person_id, sp_role_id FROM sgn_people.sp_person_roles";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute($_);
+    while (my ($p) = $sth->fetchrow_array ) {
+            push(@search_project_ids, $project_id);
+        }
 
 }
 
