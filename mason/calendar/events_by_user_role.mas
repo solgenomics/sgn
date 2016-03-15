@@ -12,8 +12,7 @@
 }
 .datepicker{z-index:1151 !important;}
 </style>
-
-<div id='calendar' style="width:100%"></div>
+<div id='calendar' style="background:#f9f9f9; padding:2px; width:100%"></div>
 <br/><br/>
 
 

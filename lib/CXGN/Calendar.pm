@@ -290,7 +290,7 @@ sub get_breeding_program_roles {
         push(@breeding_program_roles, [$username, $sp_person_id, $sp_role] );
     }
 
-    print STDERR Dumper \@breeding_program_roles;
+    #print STDERR Dumper \@breeding_program_roles;
     return \@breeding_program_roles;
 }
 
