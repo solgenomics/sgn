@@ -3481,10 +3481,12 @@ sub multi_pops_phenotype_data {
             $self->phenotype_file($c);
 	    push @job_ids, $c->stash->{r_job_id};
         }
+
+	@job_ids = uniq(@job_ids);
+	$c->stash->{multi_pops_pheno_jobs_ids} = \@job_ids;
     }
     
-    @job_ids = uniq(@job_ids);
-    $c->stash->{multi_pops_pheno_jobs_ids} = \@job_ids;
+   
   #  $self->multi_pops_pheno_files($c, $pop_ids);
     
 }
@@ -3502,10 +3504,10 @@ sub multi_pops_genotype_data {
             $self->genotype_file($c);	    
 	    push @job_ids, $c->stash->{r_job_id};
         }
-    }
 
-    @job_ids = uniq(@job_ids);
-    $c->stash->{multi_pops_geno_jobs_ids} = \@job_ids;
+	@job_ids = uniq(@job_ids);
+	$c->stash->{multi_pops_geno_jobs_ids} = \@job_ids;
+    }    
 #  $self->multi_pops_geno_files($c, $pop_ids);
  
 }
@@ -4783,17 +4785,19 @@ sub run_async {
     my $report_file = $self->create_tempfile($c, 'analysis_report_args');
     $c->stash->{report_file} = $report_file;
 
-    my $cmd = 'mx-run solGS::DependentJob' . "\s"
-	. '--dependency_jobs'           . "\s$dependency\s"
-	. '--dependency_type'           . "\s$dependency_type\s"
-	. '--r_script'                  . "\s$r_script\s" 
-	. '--script_args'               . "\s$script_args\s"
-	. '--temp_dir'                  . "\s$solgs_tmp_dir\s"
-	. '--temp_file_template'        . "\s$temp_file_template\s"
-	. '--analysis_report_args_file' . "\s$report_file\s"
-	. '--gs_model_args_file'        . "\s$model_file\s"
-	. '--dependent_type'            . "\s$job_type\s";
+    my $cmd = 'mx-run solGS::DependentJob' 
+    	. ' --dependency_jobs '           . $dependency
+    	. ' --dependency_type '           . $dependency_type
+    	. ' --r_script '                  . $r_script 
+    	. ' --script_args '               . $script_args
+    	. ' --temp_dir '                  . $solgs_tmp_dir
+    	. ' --temp_file_template '        . $temp_file_template
+    	. ' --analysis_report_args_file ' . $report_file
+    	. ' --gs_model_args_file '        . $model_file
+    	. ' --dependent_type '            . $job_type;
 
+
+    print STDERR "\nasync cmd: $cmd\n";
     $c->stash->{r_temp_file} = 'run-async';
     $self->create_cluster_acccesible_tmp_files($c);
 
@@ -4857,7 +4861,7 @@ sub run_r_script {
 	if ($r_script =~ /combine_populations/) 
 	{	    
 	    $c->stash->{job_type} = 'combine_populations'; 	   
-	   # $c->stash->{combine_pops_pid} = $async_pid;
+	    $c->stash->{combine_pops_pid} = $dependency;
 	    $c->stash->{gs_model_args_file} = $self->create_tempfile($c, 'gs_model_args');
 	    $self->run_async($c);
 	}
@@ -4874,6 +4878,7 @@ sub run_r_script {
 	    };
 
 	    my $model_file = $c->stash->{gs_model_args_file};
+	   
 	    nstore $model_job, $model_file 
 		or croak "gs r script: $! serializing model details to '$model_file'";
 	    
@@ -4901,6 +4906,14 @@ sub run_r_script {
 	    $c->stash->{r_job_tempdir} = $r_job->tempdir();
 	    $c->stash->{r_job_id} = $r_job->job_id();
 	   # $c->stash->{cluster_job} = $r_job;
+
+	    if ($r_script =~ /combine_populations/) 
+	    {	    
+		#$c->stash->{job_type} = 'combine_populations'; 	   
+		#$c->stash->{combine_pops_pid} = $r_job->job_id();
+		$c->stash->{gs_model_args_file} = $self->create_tempfile($c, 'gs_model_args');
+		#$self->run_async($c);
+	    }
 
 	    unless ($background_job)
 	    {
