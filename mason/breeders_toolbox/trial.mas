@@ -334,14 +334,18 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
     </&>
   </&>
   <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_phenotyping_spreadsheet_link">Upload</a>]'&>
+    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
     </&>
-    <&| /page/info_section.mas, title=>"Android Field Book Exported", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_field_book_link">Upload</a>]'&>
+    <&| /page/info_section.mas, title=>"Android Field Book Exported", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
     </&>
-    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_data_collector_link">Upload</a>]'&>
+    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
     </&>
   </&>
 </&>
+
+<& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>  
+<& /fieldbook/upload_phenotype_fieldbook.mas &>  
+<& /breeders_toolbox/upload_phenotype_datacollector.mas &>  
 
 % my $data_agreement_link = "Add/edit data agreement";
 % if ($user_can_modify) { $data_agreement_link = '[<a id="add_data_agreement">Add/edit data agreement</a>]'; }
@@ -407,20 +411,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
     <a id="data_collector_download_link">Download File</a>
   </p>
 </div>
-
-<div id="upload_DataCollector_spreadsheet_dialog" class="ui-widget" title="Upload Data Collector spreadsheet File" >
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_DataCollector_form" name="upload_DataCollector_form">
-      <label for="datacollector_upload_file" style="display: inline-block; width: 100px;">Upload file:</label>
-      <input type="file" name="DataCollector_upload_file" id="DataCollector_upload_file" encoding="multipart/form-data" />
-  </form>
-</div> 
-
-<div id="upload_phenotyping_spreadsheet_dialog" class="ui-widget" title="Upload Phenotyping spreadsheet File" >
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_phenotyping_spreadsheet_form" name="upload_phenotyping_spreadsheet_form">
-      <label for="phenotyping_spreadsheet_upload_file" style="display: inline-block; width: 100px;">Upload file:</label>
-      <input type="file" name="phenotyping_spreadsheet_upload_file" id="phenotyping_spreadsheet_upload_file" encoding="multipart/form-data" />
-  </form>
-</div> 
 
 <div id="change_breeding_program_dialog">
   Please select a breeding program for this trial:<br />

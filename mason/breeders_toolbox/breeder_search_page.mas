@@ -1,8 +1,14 @@
 
 <& /page/page_title.mas, title=>"Search Wizard" &>
 
-<&| /page/info_section.mas, title=>"Search" &>
+<&| /page/info_section.mas, title=>"Explore the database using metadata" &>
   
   <& /breeders_toolbox/breeder_search.mas &>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Download selected data" &>
+
+  <& /breeders_toolbox/breeder_search_download.mas &>
 
 </&>

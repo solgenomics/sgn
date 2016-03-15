@@ -419,7 +419,12 @@ sub day_click_personal_GET {
 	my $sth = $c->dbc->dbh->prepare($q);
 	$sth->execute($_);
 	if ($sth->rows == 0) {
-	    my $add_term = $schema->resultset('Cv::Cvterm')->create_with({name=>$_, cv=>'calendar', db=>'local', dbxref=>$_});
+	    my $add_term = $schema->resultset('Cv::Cvterm')->create_with(
+		{
+		    name=>$_, 
+		    cv=>'calendar', 
+		}
+		);
 	    push(@projectprop_types, {cvterm_id=>$add_term->cvterm_id(), cvterm_name=>$add_term->name() });
 	} else {
 	    while ( my ($cvterm_id, $cvterm_name ) = $sth->fetchrow_array ) {

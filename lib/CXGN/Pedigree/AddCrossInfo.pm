@@ -72,36 +72,32 @@ sub add_info {
 	->create_with({
 		       name   => 'number_of_seeds',
 		       cv     => 'local',
-		       db     => 'null',
-		       dbxref => 'number_of_seeds',
 		      });
       $experiment
-	->find_or_create_related('nd_experimentprops' , {
-							 nd_experiment_id => $experiment->nd_experiment_id(),
-							 type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
-							 value  =>  $self->get_number_of_seeds(),
-							});
+	  ->find_or_create_related('nd_experimentprops' , {
+	      nd_experiment_id => $experiment->nd_experiment_id(),
+	      type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
+	      value  =>  $self->get_number_of_seeds(),
+				   });
     }
-
-
+    
+    
     if ($self->has_number_of_flowers()) {
-      my $number_of_flowers_cvterm = $schema->resultset("Cv::Cvterm")
-	->create_with({
-		       name   => 'number_of_flowers',
-		       cv     => 'local',
-		       db     => 'null',
-		       dbxref => 'number_of_flowers',
-		      });
-      $experiment
-	->find_or_create_related('nd_experimentprops' , {
-							 nd_experiment_id => $experiment->nd_experiment_id(),
-							 type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
-							 value  =>  $self->get_number_of_flowers(),
-							});
+	my $number_of_flowers_cvterm = $schema->resultset("Cv::Cvterm")
+	    ->create_with({
+		name   => 'number_of_flowers',
+		cv     => 'local',
+			  });
+	$experiment
+	    ->find_or_create_related('nd_experimentprops' , {
+		nd_experiment_id => $experiment->nd_experiment_id(),
+		type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
+		value  =>  $self->get_number_of_flowers(),
+				     });
     }
-
+    
   };
-
+  
   #try to add all cross info in a transaction
   try {
     $schema->txn_do($coderef);
@@ -129,8 +125,6 @@ sub _get_cross {
     ->create_with({
 		   name   => 'cross',
 		   cv     => 'stock_type',
-		   db     => 'null',
-		   dbxref => 'accession',
 		  });
   $stock_lookup->set_stock_name($cross_name);
   $stock = $stock_lookup->get_stock_exact();
