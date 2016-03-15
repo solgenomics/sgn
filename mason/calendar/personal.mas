@@ -1,9 +1,27 @@
 
 <br/>
 <center>
-<div style="width:75%">
-<& events_by_user_role.mas &>
-</div>
+
+	<div style="width:75%">
+
+		<div class="well">
+			<table class="table table-bordered">
+			<thead>
+			<tr>
+			<th>Breeding Programs</th>
+			<th>Users</th>
+			</tr>
+			</thead>
+			<tbody>
+
+			</tbody>
+			</table>
+
+		</div>
+
+		<& events_by_user_role.mas &>
+	</div>
+
 </center>
 
 

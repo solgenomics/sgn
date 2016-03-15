@@ -102,13 +102,10 @@ sub add_event_POST {
     my $rs = $schema->resultset('Project::Projectprop');
     my $count = $rs->search({ project_id=>$params->{event_project_select}, type_id=>$params->{event_type_select} })->count;
 
-    $schema->storage->txn_begin;
     if (my $insert = $rs->create({project_id=>$params->{event_project_select}, type_id=>$params->{event_type_select}, rank=>$count, value=>[$format_start, $format_end, $params->{event_description}, $params->{event_url}] })) {
-	$schema->storage->txn_commit;
-	$c->stash->{rest} = {status => 1,};
+	   $c->stash->{rest} = {status => 1,};
     } else {
-	$schema->storage->txn_rollback;
-	$c->stash->{rest} = {status => 2,};
+	   $c->stash->{rest} = {status => 2,};
     }
 }
 
@@ -135,13 +132,10 @@ sub delete_event_POST {
 
     my $projectprop_id = $c->req->param("event_projectprop_id");
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    $schema->storage->txn_begin;
     if (my $delete = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$projectprop_id})->delete) {
-	$schema->storage->txn_commit;
-	$c->stash->{rest} = {status => 1,};
+	   $c->stash->{rest} = {status => 1,};
     } else {
-	$schema->storage->txn_rollback;
-	$c->stash->{rest} = {status => 0,};
+	   $c->stash->{rest} = {status => 0,};
     }
 }
 
@@ -194,15 +188,11 @@ sub drag_or_resize_event_POST {
     my $new_end_display = $calendar_funcs->format_display_date($formatted_end);
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    $schema->storage->txn_begin;
     if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{projectprop_id} }, columns=>['value'])->update({value=>[$new_start, $new_end, $params->{description}, $params->{url}] })) {
-	$schema->storage->txn_commit;
 
-	#If the update was successfull, data is passed back to AJAX so that the event can be properly updated in display.
-	$c->stash->{rest} = {success => 1, start=>$new_start, start_drag=>$new_start, start_display=>$new_start_display, end=>$new_end_time, end_drag=>$new_end, end_display=>$new_end_display};
+	   $c->stash->{rest} = {success => 1, start=>$new_start, start_drag=>$new_start, start_display=>$new_start_display, end=>$new_end_time, end_drag=>$new_end, end_display=>$new_end_display};
     } else {
-	$schema->storage->txn_rollback;
-	$c->stash->{rest} = {error => 1,};
+	   $c->stash->{rest} = {error => 1,};
     }
 }
 
@@ -241,13 +231,10 @@ sub edit_event_POST {
     if ($params->{edit_event_url} eq '') {$params->{edit_event_url} = '#';}
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    $schema->storage->txn_begin;
     if (my $update_rs = $schema->resultset('Project::Projectprop')->find({projectprop_id=>$params->{edit_event_projectprop_id} }, columns=>['project_id', 'type_id', 'value'])->update({project_id=>$params->{edit_event_project_select}, type_id=>$params->{edit_event_type_select}, value=>[$format_start, $format_end, $params->{edit_event_description}, $params->{edit_event_url}] })) {
-	$schema->storage->txn_commit;
-	$c->stash->{rest} = {status => 1,};
+	   $c->stash->{rest} = {status => 1,};
     } else {
-	$schema->storage->txn_rollback;
-	$c->stash->{rest} = {error => 1,};
+	   $c->stash->{rest} = {error => 1,};
     }
 }
 

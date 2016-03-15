@@ -39,13 +39,12 @@ sub check_value_format {
         }
         #Dates saved through the trial 'Add Harvest Date' or 'Add Planting Date' will have this format
         elsif ($value =~ /^\d\d\d\d\/\d\d\/\d\d\s\d\d:\d\d:\d\d$/) {
-            return '{"'.$value.'","'.$value.'","","#"}';
-        }
-        elsif ($value =~ /^\d\d\d\d\/\d\d\/\d\d\s\d\d:\d\d:\d\d$/) {
+            $value = $self->format_time($value)->datetime;
             return '{"'.$value.'","'.$value.'","","#"}';
         }
         #Historical dates in teh database often have this format
         elsif ($value =~ /^(\d{4})-(Jan|January|Feb|February|March|Mar|April|Apr|May|June|Jun|July|Jul|August|Aug|September|Sep|October|Oct|November|Nov|December|Dec)-(\d)/) {
+            $value = $self->format_time($value)->datetime;
             return '{"'.$value.'","'.$value.'","","#"}';
         }
         else {
@@ -276,6 +275,12 @@ sub display_start_date {
     } else {
         return;
     }
+
+}
+
+sub get_breeding_program_roles {
+    my $self = shift;
+    
 
 }
 
