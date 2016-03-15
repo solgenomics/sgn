@@ -25,6 +25,18 @@ sub is_logged_in :Path('/user/logged_in') Args(0) {
     $c->stash->{rest} = { user_id => 0 };
 }
 
+sub get_roles :Path('/user/get_roles') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    if (my $user = $c->user()) { 
+	my @roles = $user->get_object->get_roles();
+	$c->stash->{rest} = { roles => @roles };
+	return;
+    }
+    $c->stash->{rest} = { roles => 0 };
+}
+
 sub log_in :Path('/user/login') Args(0) { 
     my $self = shift;
     my $c = shift;

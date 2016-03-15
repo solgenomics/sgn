@@ -130,8 +130,6 @@ sub store {
 	->create_with({
 		       name   => 'phenotyping experiment',
 		       cv     => 'experiment_type',
-		       db     => 'null',
-		       dbxref => 'phenotyping experiment',
 		      });
 
     ## Track experiments seen to allow for multiple trials and experiments to exist in an uploaded file.

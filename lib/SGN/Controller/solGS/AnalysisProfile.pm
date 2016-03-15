@@ -8,7 +8,8 @@ use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
 use CXGN::Tools::Run;
 use Try::Tiny;
-
+use Storable qw/ nstore retrieve /;
+use Carp qw/ carp confess croak /;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -180,28 +181,38 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $status;
    
-    try 
-    { 
-        my $job = CXGN::Tools::Run->run_cluster_perl({
-           
-            method        => ["solGS::AnalysisReport" => "check_analysis_status"],
-    	    args          => [$output_details],
-    	    load_packages => ['solGS::AnalysisReport'],
-    	    run_opts      => {
-    		              out_file    => $out_temp_file,
-			      err_file    => $err_temp_file,
-    		              working_dir => $temp_dir,
-			      max_cluster_jobs => 1_000_000_000,
-	    },
-	    
-         });
-	
+    my $async_pid = $c->stash->{async_pid};
+
+    if ($c->stash->{dependency} && $async_pid)
+    {	 
+	my $report_file = $c->stash->{report_file};
+	nstore $output_details,  $report_file 
+	    or croak "check_analysis_status: $! serializing output_details to $report_file";	
     }
-    catch 
+    else 
     {
-	$status = $_;
-	$status =~ s/\n at .+//s;           
-    };
+	try 
+	{ 
+	    my $job = CXGN::Tools::Run->run_cluster_perl({           
+		method        => ["solGS::AnalysisReport" => "check_analysis_status"],
+		args          => [$output_details],
+		load_packages => ['solGS::AnalysisReport'],
+		run_opts      => {
+		    out_file    => $out_temp_file,
+		    err_file    => $err_temp_file,
+		    working_dir => $temp_dir,
+		    max_cluster_jobs => 1_000_000_000,
+		},
+	    });
+	
+	}
+	catch 
+	{
+	    $status = $_;
+	    $status =~ s/\n at .+//s;           
+	};
+    }
+
 
     if (!$status) 
     { 
@@ -458,7 +469,8 @@ sub structure_output_details {
     $output_details{contact_page}      = $base . 'contact/form';
     $output_details{data_set_type}     = $c->stash->{data_set_type};
     $output_details{analysis_log_file} = $log_file;
-   
+    $output_details{async_pid}         = $c->stash->{async_pid};
+    $output_details{host}              = $base;
     $c->stash->{bg_job_output_details} = \%output_details;
    
 }
@@ -524,7 +536,6 @@ sub run_analysis {
 	#my $g_files = $c->stash->{multi_pops_geno_files};
 	#my @geno_files = split(/\t/, $g_files);
 	#$c->controller('solGS::solGS')->submit_cluster_compare_trials_markers($c, \@geno_files);
-
     }
     else 
     {

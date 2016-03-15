@@ -19,7 +19,7 @@ load_genotypes.pl - loading genotypes into cxgn databases, based on the load_cas
  -m protocol name (required) e.g. "GBS ApeKI Cassava genome v6"
   FLAGS
  -x delete old genotypes for accessions that have new genotypes
- -a add accessions that are not in the database
+ -a add accessions that are not in the databaseA
  -v order markers using version sort
  -s sort markers according to custom sort order (see script source) 
  -t Test run . Rolling back at the end.
@@ -161,7 +161,7 @@ my $organism = $schema->resultset("Organism::Organism")->find_or_create(
     } );
 
 my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'members of',
+    { name   => 'member_of',
       cv     => 'stock_relationship',
     });
 

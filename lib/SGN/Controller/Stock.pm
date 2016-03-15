@@ -776,12 +776,15 @@ sub _stock_project_genotypes {
                                                  { prefetch => { nd_experiment_genotypes => 'genotype' } },
                                                 );
     my %genotypes;
+    my $project_desc;
+    
     while (my $exp = $experiments->next) {
         # there should be one project linked to the experiment ?
         my @gen = map $_->genotype, $exp->nd_experiment_genotypes;
-        my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
-	or die "no project found for exp ".$exp->nd_experiment_id;
-	#my @values;
+        $project_desc = $project_descriptions{ $exp->nd_experiment_id };
+	#or die "no project found for exp ".$exp->nd_experiment_id;
+	
+    #my @values;
 	#foreach my $genotype (@gen) {
 	    #my $genotype_id = $genotype->genotype_id;
 	    #my $vals = $self->schema->storage->dbh->selectcol_arrayref
@@ -894,15 +897,11 @@ sub _stock_has_pedigree {
   my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 										 { name   => 'female_parent',
 										   cv     => 'stock_relationship',
-										   db     => 'null',
-										   dbxref => 'female_parent',
-										 });
+										  										 });
   my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 									       { name   => 'male_parent',
 										 cv     => 'stock_relationship',
-										 db     => 'null',
-										 dbxref => 'male_parent',
-									       });
+										 									       });
 
   my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
   my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id()});
@@ -920,15 +919,11 @@ sub _stock_has_descendants {
   my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 										 { name   => 'female_parent',
 										   cv     => 'stock_relationship',
-										   db     => 'null',
-										   dbxref => 'female_parent',
-										 });
+																				 });
   my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 									       { name   => 'male_parent',
 										 cv     => 'stock_relationship',
-										 db     => 'null',
-										 dbxref => 'male_parent',
-									       });
+										 									       });
 
   my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
   if ($descendant_relationships) {
