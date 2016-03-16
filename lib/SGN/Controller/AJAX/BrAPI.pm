@@ -1763,6 +1763,14 @@ sub maps_marker_detail_GET {
     my $self = shift;
     my $c = shift;
     my @status;
+    my $params = $c->req->params();
+    
+    my %linkage_groups;
+    if ($params->{linkageGroupIdList}) {
+        my $linkage_groups_list = $params->{linkageGroupIdList};
+        my @linkage_groups_array = split /,/, $linkage_groups_list;
+        %linkage_groups = map { $_ => 1 } @linkage_groups_array;
+    }
 
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { nd_protocol_id => $c->stash->{map_id} } );
 
@@ -1788,11 +1796,18 @@ sub maps_marker_detail_GET {
     	    my ($chr, $pos) = split "_", $m;
     	    print STDERR "CHR: $chr. POS: $pos\n";
     	    $chrs{$chr} = $pos;
-            # "markerId": 1,
-            #"markerName": "marker1",
-            #        "location": "1000",
-            #        "linkageGroup": "1A"
-    	    push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+            #   "markerId": 1,
+            #   "markerName": "marker1",
+            #   "location": "1000",
+            #   "linkageGroup": "1A"
+
+            if (%linkage_groups) {
+                if (exists $linkage_groups{$chr} ) {
+        	       push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+                }
+            } else {
+                push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+            }
     	}
     }
 
