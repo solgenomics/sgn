@@ -32,19 +32,39 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
     my $version = shift;
-    
-    my $person_id=CXGN::Login->new($c->dbc->dbh)->has_session();
-    if (!$person_id) {
-	$c->res->redirect("/solpeople/login.pl");
-    }
-
-    $c->stash->{current_page} = $c->req->param("page") || 1;
-    $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
+    my @status;
 
     $self->bcs_schema( $c->dbic_schema("Bio::Chado::Schema") );
     $c->stash->{api_version} = $version;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    $c->stash->{status} = \@status;
+    $c->stash->{current_page} = $c->req->param("page") || 1;
+    $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
 
+}
+
+sub _authenticate_user {
+    my $c = shift;
+    my $status = $c->stash->{status};
+    my @status = @$status;
+
+    my $person_id=CXGN::Login->new($c->dbc->dbh)->has_session();
+    if (!$person_id) {
+        push(@status, 'Not Logged In. You must login and have permission to access BrAPI calls.');
+        my %metadata = (status=>\@status);    
+        $c->stash->{rest} = \%metadata;
+        $c->detach;
+    }
+
+    my( $login_person_id, $login_user_type ) = CXGN::Login->new($c->dbc->dbh)->verify_session();  
+    if ($login_user_type ne 'curator') {
+        push(@status, 'You do not have permission to access BrAPI calls.');
+        my %metadata = (status=>\@status);    
+        $c->stash->{rest} = \%metadata;
+        $c->detach;
+    }
+
+    return 1;
 }
 
 =head2 /brapi/v1/token?grant_type=password&username=USERNAME&password=PASSWORD&client_id=CLIENT_ID
@@ -70,7 +90,8 @@ sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
     my $login_controller = CXGN::Login->new($c->dbc->dbh);
     my $params = $c->req->params();
 
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my $cookie = '';
 
     if ( $login_controller->login_allowed() ) {
@@ -187,15 +208,23 @@ sub germplasm_list  : Chained('brapi') PathPart('germplasm') Args(0) : ActionCla
 sub germplasm_list_POST { 
     my $self = shift;
     my $c = shift;
-    $c->stash->{rest} = {status => '1'};
+    my $auth = _authenticate_user($c);
+
+    my $status = $c->stash->{status};
+    my @status = @$status;
+
+    $c->stash->{rest} = {status => \@status};
 }
 
 sub germplasm_list_GET { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
     my $params = $c->req->params();
     
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
+
     if ($params->{include}) {
 	push (@status, 'include not implemented');
     }
@@ -275,16 +304,21 @@ sub germplasm_detail  : Chained('germplasm_single') PathPart('') Args(0) : Actio
 sub germplasm_detail_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status=>'1'};
+    $c->stash->{rest} = {status=>\@status};
 }
 
 sub germplasm_detail_GET { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
     my $rs = $c->stash->{stock};
     my $schema = $self->bcs_schema();
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
     my $total_count = 0;
     if ($c->stash->{stock}) {
@@ -351,16 +385,21 @@ sub germplasm_mcpd  : Chained('germplasm_single') PathPart('MCPD') Args(0) : Act
 sub germplasm_mcpd_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status=>'1'};
+    $c->stash->{rest} = {status=>\@status};
 }
 
 sub germplasm_mcpd_GET { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
     my $schema = $self->bcs_schema();
     my %result;
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
     my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
     my $organism = CXGN::Chado::Organism->new( $schema, $c->stash->{stock}->get_organism_id() );
@@ -432,14 +471,21 @@ sub studies_list  : Chained('brapi') PathPart('studies') Args(0) : ActionClass('
 sub studies_list_POST { 
     my $self = shift;
     my $c = shift;
-    $c->stash->{rest} = {status => '1'};
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
+
+    $c->stash->{rest} = {status => \@status};
 }
 
 sub studies_list_GET { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
     my $program_id = $c->req->param("programId");
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
+
     my @data;
     my %result;
     my $rs;
@@ -556,6 +602,9 @@ sub studies_germplasm : Chained('studies_single') PathPart('germplasm') Args(0) 
 sub studies_germplasm_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
     my $metadata = $c->req->params("metadata");
     my $result = $c->req->params("result");
@@ -566,16 +615,18 @@ sub studies_germplasm_POST {
     print STDERR Dumper($result);
 
     my $pagintation = $metadata_hash{"pagination"};
-    my $status = $metadata_hash{"status"};
+    push(@status, $metadata_hash{"status"});
 
-    $c->stash->{rest} = {status=>'1'};
+    $c->stash->{rest} = {status=>\@status};
 }
 
 sub studies_germplasm_GET { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
     my %result;
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my $total_count = 0;
 
     my $t = $c->stash->{study};
@@ -625,16 +676,21 @@ sub germplasm_pedigree : Chained('germplasm_single') PathPart('pedigree') Args(0
 sub germplasm_pedigree_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status=>'1'};
+    $c->stash->{rest} = {status=>\@status};
 }
 
 sub germplasm_pedigree_GET { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
     my $schema = $self->bcs_schema();
     my %result;
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my $total_count = 0;
 
     if ($c->req->param('notation')) {
@@ -687,16 +743,21 @@ sub germplasm_markerprofile : Chained('germplasm_single') PathPart('markerprofil
 sub germplasm_markerprofile_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status=>'1'};
+    $c->stash->{rest} = {status=>\@status};
 }
 
 sub germplasm_markerprofile_GET { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
     my $schema = $self->bcs_schema();
     my %result;
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my @marker_profiles;
 
     my $rs = $self->bcs_schema()->resultset("Stock::StockGenotype")->search( {stock_id=>$c->stash->{stock_id} } );
@@ -765,17 +826,22 @@ sub markerprofiles_list : Chained('brapi') PathPart('markerprofiles') Args(0) : 
 sub markerprofiles_list_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status=>'1'};
+    $c->stash->{rest} = {status=>\@status};
 }
 
 sub markerprofiles_list_GET { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
     my $germplasm = $c->req->param("germplasm");
     my $extract = $c->req->param("extract");
     my $method = $c->req->param("method");
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my @data;
     my %result;
     
@@ -888,14 +954,19 @@ sub genotype_fetch : Chained('markerprofiles_single') PathPart('') Args(0) : Act
 sub genotype_fetch_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status=>'1'};
+    $c->stash->{rest} = {status=>\@status};
 }
 
 sub genotype_fetch_GET { 
     my $self = shift;
     my $c = shift;
-    my @status;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my @data;
     my %result;
 
@@ -932,6 +1003,9 @@ sub genotype_fetch_GET {
 sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods') Args(0) { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
     my @response;
@@ -1016,6 +1090,9 @@ sub convert_dosage_to_genotype {
 sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
  
     my $markerprofile_ids = $c->req->param("markerprofileIds");
 
@@ -1134,14 +1211,19 @@ sub programs_list : Chained('brapi') PathPart('programs') Args(0) : ActionClass(
 sub programs_list_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status=>'1'};
+    $c->stash->{rest} = {status=>\@status};
 }
 
 sub programs_list_GET { 
     my $self = shift;
     my $c = shift;
-    my @status;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my %result;
     my @data;
 
@@ -1199,16 +1281,21 @@ sub studies_types_list  : Chained('brapi') PathPart('studyTypes') Args(0) : Acti
 sub studies_types_list_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status=>'1'};
+    $c->stash->{rest} = {status=>\@status};
 }
 
 sub studies_types_list_GET { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
     my %result;
     my @data;
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
     my @cvterm_ids = CXGN::Trial::get_all_project_types($self->bcs_schema);
     my $cvterm;
@@ -1230,15 +1317,20 @@ sub studies_instances  : Chained('studies_single') PathPart('instances') Args(0)
 sub studies_instances_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status=>'1'};
+    $c->stash->{rest} = {status=>\@status};
 }
 
 sub studies_instances_GET { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
     my %result;
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my $total_count = 0;
 
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
@@ -1252,15 +1344,20 @@ sub studies_info  : Chained('studies_single') PathPart('') Args(0) : ActionClass
 sub studies_info_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status => '1'};
+    $c->stash->{rest} = {status => \@status};
 }
 
 sub studies_info_GET { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
     my %result;
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my $total_count = 0;
 
     my $t = $c->stash->{study};
@@ -1298,14 +1395,19 @@ sub studies_details  : Chained('studies_single') PathPart('details') Args(0) : A
 sub studies_details_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status => '1'};
+    $c->stash->{rest} = {status => \@status};
 }
 
 sub studies_details_GET {
     my $self = shift;
     my $c = shift;
-    my @status;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my %result;
     my $total_count = 0;
 
@@ -1362,14 +1464,19 @@ sub studies_layout : Chained('studies_single') PathPart('layout') Args(0) : Acti
 sub studies_layout_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status => '1'};
+    $c->stash->{rest} = {status => \@status};
 }
 
 sub studies_layout_GET {
     my $self = shift;
     my $c = shift;
-    my @status;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my %result;
     my $total_count = 0;
 
@@ -1414,14 +1521,19 @@ sub traits_list : Chained('brapi') PathPart('traits') Args(0) : ActionClass('RES
 sub traits_list_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status => '1'};
+    $c->stash->{rest} = {status => \@status};
 }
 
 sub traits_list_GET {
     my $self = shift;
     my $c = shift;
-    my @status;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
     #my $db_rs = $self->bcs_schema()->resultset("General::Db")->search( { name => $c->config->{trait_ontology_db_name} } );
     #if ($db_rs->count ==0) { return undef; }
@@ -1459,8 +1571,10 @@ sub traits_list_GET {
 sub traits_single  : Chained('brapi') PathPart('traits') CaptureArgs(1) { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
     my $cvterm_id = shift;
-    my @status;
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my %result;
  
     my $q = "SELECT cvterm_id, name FROM materialized_traits where cvterm_id=?;";
@@ -1538,14 +1652,19 @@ sub maps_list : Chained('brapi') PathPart('maps') Args(0) : ActionClass('REST') 
 sub maps_list_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status => '1'};
+    $c->stash->{rest} = {status => \@status};
 }
 
 sub maps_list_GET { 
     my $self = shift;
     my $c = shift;
-    my @status;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
     
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
@@ -1656,14 +1775,19 @@ sub maps_details : Chained('maps_single') PathPart('') Args(0) : ActionClass('RE
 sub maps_details_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status => '1'};
+    $c->stash->{rest} = {status => \@status};
 }
 
 sub maps_details_GET { 
     my $self = shift;
     my $c = shift;
-    my @status;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
     # maps are just marker lists associated with specific protocols
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { nd_protocol_id => $c->stash->{map_id} } );
@@ -1755,14 +1879,19 @@ sub maps_marker_detail : Chained('maps_single') PathPart('positions') Args(0) : 
 sub maps_marker_detail_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status => '1'};
+    $c->stash->{rest} = {status => \@status};
 }
 
 sub maps_marker_detail_GET { 
     my $self = shift;
     my $c = shift;
-    my @status;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my $params = $c->req->params();
     
     my %linkage_groups;
@@ -1824,14 +1953,19 @@ sub locations_list : Chained('brapi') PathPart('locations') Args(0) : ActionClas
 sub locations_list_POST { 
     my $self = shift;
     my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
 
-    $c->stash->{rest} = {status => '1'};
+    $c->stash->{rest} = {status => \@status};
 }
 
 sub locations_list_GET { 
     my $self = shift;
     my $c = shift;
-    my @status;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
     my @data;
     my @attributes;
 
