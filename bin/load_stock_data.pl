@@ -41,6 +41,7 @@ use CXGN::Chado::Dbxref;
 use CXGN::Chado::Phenotype;
 use CXGN::People::Person;
 use Try::Tiny;
+use SGN::Model::Cvterm;
 
 our ($opt_H, $opt_D, $opt_i, $opt_t);
 
@@ -106,11 +107,7 @@ my $stock_rs = $schema->resultset("Stock::Stock");
 
 #the cvterm for the population
 print "Finding/creating cvterm for population\n";
-my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'population',
-      cv     => 'stock_type',
-
-    });
+my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type');
 
 print "Creating a stock for population $population_name (cvterm = " . $population_cvterm->name . ")\n";
 my $population = $stock_rs->find_or_create(
@@ -125,20 +122,12 @@ my $population = $stock_rs->find_or_create(
 
 #the cvterm for the accession
 print "Finding/creating cvtem for 'stock type' \n"; 
-my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'accession',
-      cv     => 'stock_type',
-
-    });
+my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
 
 #the cvterm for the relationship type
 print "Finding/creating cvtem for stock relationship 'member_of' \n";
 
-my $member_of = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'member_of',
-      cv     => 'stock_relationship',
-
-    });
+my $member_of = my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship');
 
 ## For the stock module
 ################################
