@@ -1486,7 +1486,52 @@ sub traits_single  : Chained('brapi') PathPart('traits') CaptureArgs(1) {
 }
 
 
+=head2 brapi/v1/maps?species=speciesId
 
+ Usage: To retrieve a list of all maps available in the database.
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination" : {    
+                    "pageSize": 30, 
+                    "currentPage": 2, 
+                    "totalCount": 40, 
+                    "totalPages": 2 
+                }
+                "status" : []
+            },
+            "result": { 
+                "data" : [
+                    {
+                        "mapId": 1,
+                        "name": "Some Map",
+                        "species": "Some species",
+                        "type": "Genetic",
+                        "unit": "cM",
+                        "publishedDate": "2008-04-16",
+                        "markerCount": 1000,
+                        "linkageGroupCount": 7,
+                        "comments": "This map contains ..."
+                    }, 
+                    { 
+                        "mapId": 2,
+                        "name": "Some Other map",
+                        "species": "Some Species",
+                        "type": "Genetic",
+                        "unit": "cM",
+                        "publishedDate": "2009-01-12",
+                        "markerCount": 1501,
+                        "linkageGroupCount": 7,
+                        "comments": "this is blah blah"
+                    }
+                ]
+            }
+        }
+ Args:
+ Side Effects:
+
+=cut
 
 sub maps_list : Chained('brapi') PathPart('maps') Args(0) : ActionClass('REST') { }
 
@@ -1500,53 +1545,60 @@ sub maps_list_POST {
 sub maps_list_GET { 
     my $self = shift;
     my $c = shift;
+    my @status;
+
     
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
 
+    my @data;
     my %map_info;
     while (my $row = $rs->next()) { 
-	print STDERR "Retrieving map info for ".$row->name()." ID:".$row->nd_protocol_id()."\n";
-    $self->bcs_schema->storage->debug(1);
-	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { })->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
-	
-	my $lg_row = $lg_rs->first();
+    	print STDERR "Retrieving map info for ".$row->name()." ID:".$row->nd_protocol_id()."\n";
+        $self->bcs_schema->storage->debug(1);
+    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id() } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {select=>['genotype.description', 'genotypeprops.value'], as=>['description', 'value'], rows=>1} );
+    	
+    	my $lg_row = $lg_rs->first();
 
-	print STDERR "LG RS COUNT = ".$lg_rs->count()."\n";
+    	if (!$lg_row) { 
+    	    die "This was never supposed to happen :-(";
+    	}
 
-	if (!$lg_row) { 
-	    die "This was never supposed to happen :-(";
-	}
+    	my $scores;
+    	if ($lg_row) { 
+    	    $scores = JSON::Any->decode($lg_row->value());
+    	}
+    	my %chrs;
 
-	my $scores;
-	if ($lg_row) { 
-	    $scores = JSON::Any->decode($lg_row->value());
-	}
-	my %chrs;
+    	my $marker_count =0;
+    	my $lg_count = 0;
+    	foreach my $m (sort genosort (keys %$scores)) { 
+    	    my ($chr, $pos) = split "_", $m;
+    	    #print STDERR "CHR: $chr. POS: $pos\n";
+    	    $chrs{$chr} = $pos;
+    	    $marker_count++;
+    	    $lg_count = scalar(keys(%chrs));
+    	}
 
-	my $marker_count =0;
-	my $lg_count = 0;
-	foreach my $m (sort genosort (keys %$scores)) { 
-	    my ($chr, $pos) = split "_", $m;
-	    print STDERR "CHR: $chr. POS: $pos\n";
-	    $chrs{$chr} = $pos;
-	    $marker_count++;
-	    $lg_count = scalar(keys(%chrs));
-	}
+    	%map_info = (
+    	    mapId =>  $row->nd_protocol_id(), 
+    	    name => $row->name(),
+            species => $lg_row->get_column('description'),
+    	    type => "physical", 
+    	    unit => "bp",
+    	    markerCount => $marker_count,
+    	    publishedDate => undef,
+    	    comments => "",
+    	    linkageGroupCount => $lg_count,
+    	    );
 
-	%map_info = (
-	    mapId =>  $row->nd_protocol_id(), 
-	    name => $row->name(), 
-	    type => "physical", 
-	    unit => "bp",
-	    linkageGroupCount => $marker_count,
-	    publishedDate => undef,
-	    comments => "",
-	    linkageGroups => $lg_count,
-	    );
+        push @data, \%map_info;
     }
-    $c->stash->{rest} = \%map_info;
 
-    
+    my $total_count = scalar(@data);
+    my %result = (data => \@data);
+    my %metadata = (pagination=>pagination_response($total_count, '1000000000000', $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;    
 }
 
 
@@ -1578,11 +1630,9 @@ sub maps_details_GET {
     while (my $row = $rs->next()) { 
 	print STDERR "Retrieving map info for ".$row->name()."\n";
     $self->bcs_schema->storage->debug(1);
-	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { nd_protocol_id => $row->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
+	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1} );
 	
 	my $lg_row = $lg_rs->first();
-
-	print STDERR "LG RS COUNT = ".$lg_rs->count()."\n";
 
 	if (!$lg_row) { 
 	    die "This was never supposed to happen :-(";
@@ -1618,7 +1668,7 @@ sub maps_details_GET {
 
 =head2 brapi/v1/maps/<map_id>/position?linkageGroupIdList=1,2,3
 
- Usage: To retrieve markerprofile ids for a single germplasm
+ Usage: To retrieve marker position data for a species map_id. Can provide a list of linkage groups (e.g. chromosomes) to narrow result set.
  Desc:
  Return JSON example:
         {
@@ -1667,7 +1717,7 @@ sub maps_marker_detail_GET {
     while (my $row = $rs->next()) { 
     	print STDERR "Retrieving map info for ".$row->name()."\n";
         $self->bcs_schema->storage->debug(1);
-    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $c->stash->{map_id}  } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1} );
+    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id()  } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1} );
     	
     	my $lg_row = $lg_rs->first();
     	
