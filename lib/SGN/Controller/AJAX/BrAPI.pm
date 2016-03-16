@@ -1505,7 +1505,8 @@ sub maps_list_GET {
 
     my %map_info;
     while (my $row = $rs->next()) { 
-	print STDERR "Retrieving map info for ".$row->name()."\n";
+	print STDERR "Retrieving map info for ".$row->name()." ID:".$row->nd_protocol_id()."\n";
+    $self->bcs_schema->storage->debug(1);
 	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { })->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
 	
 	my $lg_row = $lg_rs->first();
@@ -1572,10 +1573,11 @@ sub maps_details_GET {
     my $c = shift;
 
     # maps are just marker lists associated with specific protocols
-    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
+    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { nd_protocol_id => $c->stash->{map_id} } );
     my %map_info;
     while (my $row = $rs->next()) { 
 	print STDERR "Retrieving map info for ".$row->name()."\n";
+    $self->bcs_schema->storage->debug(1);
 	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { nd_protocol_id => $row->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
 	
 	my $lg_row = $lg_rs->first();
@@ -1614,6 +1616,37 @@ sub maps_details_GET {
 }
 
 
+=head2 brapi/v1/maps/<map_id>/position?linkageGroupIdList=1,2,3
+
+ Usage: To retrieve markerprofile ids for a single germplasm
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : { 
+                "pagination" : { "pageSize": 30, "currentPage": 2, "totalCount": 40, "totalPages":2 },
+                "status: []
+            },
+            "result": { 
+                "data" : [
+                    {
+                        "markerId": 1,
+                        "markerName": "marker1",
+                        "location": "1000",
+                        "linkageGroup": "1A"
+                    }, {
+                        "markerId": 2,
+                        "markerName": "marker2",
+                        "location": "1001",
+                        "linkageGroup": "1A"
+                    }
+                ]
+            }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
 sub maps_marker_detail : Chained('maps_single') PathPart('positions') Args(0) : ActionClass('REST') { }
 
 sub maps_marker_detail_POST { 
@@ -1626,40 +1659,45 @@ sub maps_marker_detail_POST {
 sub maps_marker_detail_GET { 
     my $self = shift;
     my $c = shift;
-    
+    my @status;
+
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { nd_protocol_id => $c->stash->{map_id} } );
 
     my @markers;
     while (my $row = $rs->next()) { 
-	print STDERR "Retrieving map info for ".$row->name()."\n";
-	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $c->stash->{map_id}  })->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops');
-	
-	my $lg_row = $lg_rs->first();
-	
-	print STDERR "LG RS COUNT = ".$lg_rs->count()."\n";
-	
-	if (!$lg_row) { 
-	    die "This was never supposed to happen :-(";
-	}
-	
-	my $scores;
-	if ($lg_row) { 
-	    $scores = JSON::Any->decode($lg_row->value());
-	}
-	my %chrs;
+    	print STDERR "Retrieving map info for ".$row->name()."\n";
+        $self->bcs_schema->storage->debug(1);
+    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $c->stash->{map_id}  } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1} );
+    	
+    	my $lg_row = $lg_rs->first();
+    	
+    	if (!$lg_row) { 
+    	    die "This was never supposed to happen :-(";
+    	}
+    	
+    	my $scores;
+    	if ($lg_row) { 
+    	    $scores = JSON::Any->decode($lg_row->value());
+    	}
+    	my %chrs;
 
-	foreach my $m (sort genosort (keys %$scores)) { 
-	    my ($chr, $pos) = split "_", $m;
-	    print STDERR "CHR: $chr. POS: $pos\n";
-	    $chrs{$chr} = $pos;
-	# "markerId": 1,
-	#"markerName": "marker1",
-        #        "location": "1000",
-        #        "linkageGroup": "1A"
-	    push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
-	}
+    	foreach my $m (sort genosort (keys %$scores)) { 
+    	    my ($chr, $pos) = split "_", $m;
+    	    print STDERR "CHR: $chr. POS: $pos\n";
+    	    $chrs{$chr} = $pos;
+            # "markerId": 1,
+            #"markerName": "marker1",
+            #        "location": "1000",
+            #        "linkageGroup": "1A"
+    	    push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+    	}
     }
-    $c->stash->{rest} = { markers => \@markers };	
+
+    my $total_count = scalar(@markers);
+    my %result = (data => \@markers);
+    my %metadata = (pagination=>pagination_response($total_count, '1000000000000', $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
 }
 
 
