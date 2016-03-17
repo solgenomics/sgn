@@ -2632,16 +2632,19 @@ sub build_multiple_traits_models {
                 $traits .= "\t" unless ($i == $#selected_traits); 
 
                     
-                foreach (@selected_traits)
+                foreach my $tr_id (@selected_traits)
                 {
-                    $trait_ids .= $_;
+                    $trait_ids .= $tr_id;
                 }
             }                 
         } 
     
-        my $identifier = crc($trait_ids);
-        $self->combined_gebvs_file($c, $identifier);
-        
+	if ($c->stash->{data_set_type} =~ /combined populations/)
+	{
+	    my $identifier = crc($trait_ids);
+	    $self->combined_gebvs_file($c, $identifier);
+	}  
+      
         my $name = "selected_traits_pop_${pop_id}";
         my $file = $self->create_tempfile($c, $name);
         
