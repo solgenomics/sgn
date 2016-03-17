@@ -12,6 +12,7 @@ use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use File::Spec::Functions;
 use CXGN::BreedersToolbox::Projects;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -37,11 +38,8 @@ sub field_book :Path("/fieldbook") Args(0) {
     my @phenotype_files = ();
     my @removed_phenotype_files = ();
 
-    my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')
-      ->create_with({
-		     name   => 'field layout',
-		     cv     => 'experiment_type',
-		    });
+    
+    my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout' , 'experiment_type' ) ;
 
 #    foreach my $row (@rows) {
     #   my $experiment_rs = $schema->resultset('NaturalDiversity::NdExperiment')->search({
