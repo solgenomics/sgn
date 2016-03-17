@@ -7,8 +7,6 @@ use SGN::Test::WWW::WebDriver;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 
-$d->while_logged_in_as("submitter", sub { 
-
     #Authentication
 
     $d->get_ok('/brapi/v1/token?grant_type=password&username=johndoe&password=secretpw');
@@ -85,8 +83,6 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->get_ok('/brapi/v1/maps/1/positions');
     ok($d->driver->get_page_source()=~/S224_309814/, "check marker in map");
-
-});
 
 done_testing();
 
