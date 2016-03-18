@@ -2566,6 +2566,22 @@ sub build_multiple_traits_models {
     elsif (scalar(@selected_traits) == 1)
     {
         $single_trait_id = $selected_traits[0];
+	 if ($single_trait_id =~ /\D/)
+	 {
+	     my $acronym_pairs = $self->get_acronym_pairs($c);                   
+	     if ($acronym_pairs)
+	     {
+		 foreach my $r (@$acronym_pairs) 
+		 {
+		     if ($r->[0] eq $single_trait_id) 
+		     {
+			 my $trait_name =  $r->[1];
+			 $trait_name    =~ s/\n//g;                                
+			 $single_trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
+		     }
+		 }
+	     }
+	 }
   
         if (!$prediction_id)
         { 
@@ -2677,6 +2693,8 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
     my ($tr_id)    = $referer =~ /(\d+)/;
     my $trait_page = "solgs/trait/$tr_id/population/$pop_id";
    
+    print STDERR "\n traits_to_analyze referer: $referer\n";
+
     my $error = $c->stash->{script_error};
   
     if ($error) 
@@ -2835,16 +2853,16 @@ sub traits_with_valid_models {
     my @filtered_analyzed_traits;
 
     foreach my $analyzed_trait (@analyzed_traits) 
-    {      
+    {   
         $self->get_model_accuracy_value($c, $pop_id, $analyzed_trait);        
-        my $accuracy_value = $c->stash->{accuracy_value}; 
-                    
+        my $accuracy_value = $c->stash->{accuracy_value};            
         if ($accuracy_value > 0)
         { 
             push @filtered_analyzed_traits, $analyzed_trait;
         }     
     }
 
+    @filtered_analyzed_traits = uniq(@filtered_analyzed_traits);
     $c->stash->{traits_with_valid_models} = \@filtered_analyzed_traits;
 
 }
