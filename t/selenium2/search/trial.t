@@ -18,7 +18,7 @@ my $trial_search_input = $d->find_element("//div[\@id=\"search_results_filter\"]
 
 $trial_search_input->send_keys("Kasese");
 
-sleep(9);
+sleep(5);
 
 my $page_source = $d->driver->get_page_source();
 

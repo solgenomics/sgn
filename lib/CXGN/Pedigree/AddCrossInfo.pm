@@ -26,6 +26,7 @@ use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
+use SGN::Model::Cvterm;
 
 has 'chado_schema' => (
 		 is       => 'rw',
@@ -68,11 +69,7 @@ sub add_info {
     }
 
     if ($self->has_number_of_seeds()) {
-      my $number_of_seeds_cvterm = $schema->resultset("Cv::Cvterm")
-	->create_with({
-		       name   => 'number_of_seeds',
-		       cv     => 'local',
-		      });
+      my $number_of_seeds_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_seeds', 'nd_experiment_property');
       $experiment
 	  ->find_or_create_related('nd_experimentprops' , {
 	      nd_experiment_id => $experiment->nd_experiment_id(),
@@ -83,11 +80,8 @@ sub add_info {
     
     
     if ($self->has_number_of_flowers()) {
-	my $number_of_flowers_cvterm = $schema->resultset("Cv::Cvterm")
-	    ->create_with({
-		name   => 'number_of_flowers',
-		cv     => 'local',
-			  });
+	my $number_of_flowers_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_flowers', 'nd_experiment_property');
+
 	$experiment
 	    ->find_or_create_related('nd_experimentprops' , {
 		nd_experiment_id => $experiment->nd_experiment_id(),
@@ -121,11 +115,8 @@ sub _get_cross {
   my $schema = $self->get_chado_schema();
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
   my $stock;
-  my $cross_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with({
-		   name   => 'cross',
-		   cv     => 'stock_type',
-		  });
+  my $cross_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type');
+
   $stock_lookup->set_stock_name($cross_name);
   $stock = $stock_lookup->get_stock_exact();
 

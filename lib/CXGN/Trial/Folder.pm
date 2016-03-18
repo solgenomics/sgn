@@ -2,6 +2,7 @@
 package CXGN::Trial::Folder;
 
 use Moose;
+use SGN::Model::Cvterm;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 		      is => 'rw',
@@ -36,12 +37,7 @@ sub BUILD {
 	die "The specified folder does not exist";
     }
     
-    my $folder_cvterm = $self->bcs_schema()->resultset('Cv::Cvterm')->create_with(
-	    { name   => 'folder',
-	      cv     => 'local',
-	      db     => 'local', ## check why this is local and not null db name
-	      dbxref => 'folder',
-	    });
+    my $folder_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property');
 
     my $prop = $self->bcs_schema()->resultset('Project::Projectprop')->find( { 
 	project_id => $self->folder_id() });
@@ -72,12 +68,7 @@ sub create {
 	die "The name ".$args->{name}." cannot be used for a folder because it already exists.";
     }
     
-    my $folder_cvterm = $args->{bcs_schema}->resultset('Cv::Cvterm')->create_with(
-	{ name   => 'folder',
-	      cv     => 'local',
-	      db     => 'local', #### why is this local and not the default null db name 
-	      dbxref => 'folder',
-	    });
+     my $folder_cvterm = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema},'trial_folder', 'project_property');
     
     my $project_row = $args->{bcs_schema}->resultset('Project::Project')->create(
 	    { 

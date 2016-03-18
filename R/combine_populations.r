@@ -293,24 +293,24 @@ combinedGenoPops <- unique(combinedGenoPops)
 message("combined unique number of stocks in genotype dataset: ", length(rownames(combinedGenoPops)))
 
 message("writing data into files...")
-if(length(combinedPhenoFile) != 0 )
-  {
+#if(length(combinedPhenoFile) != 0 )
+#  {
       write.table(combinedPhenoPops,
                   file = combinedPhenoFile,
                   sep = "\t",
                   quote = FALSE,
                   col.names = NA,
                   )
-  }
+#  }
 
-if(length(combinedGenoFile) != 0 )
-  {
+#if(length(combinedGenoFile) != 0 )
+#  {
       write.table(combinedGenoPops,
                   file = combinedGenoFile,
                   sep = "\t",
                   quote = FALSE,
                   col.names = NA,
                   )
-  }
+#  }
 
 q(save = "no", runLast = FALSE)
