@@ -38,6 +38,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $c->stash->{api_version} = $version;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->stash->{status} = \@status;
+    $c->stash->{session_token} = $c->req->param("session_token");
     $c->stash->{current_page} = $c->req->param("page") || 1;
     $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
 
@@ -48,17 +49,11 @@ sub _authenticate_user {
     my $status = $c->stash->{status};
     my @status = @$status;
 
-    my $person_id=CXGN::Login->new($c->dbc->dbh)->has_session();
-    if (!$person_id) {
-        push(@status, 'Not Logged In. You must login and have permission to access BrAPI calls.');
-        my %metadata = (status=>\@status);    
-        $c->stash->{rest} = \%metadata;
-        $c->detach;
-    }
-
-    my( $login_person_id, $login_user_type ) = CXGN::Login->new($c->dbc->dbh)->verify_session();  
-    if ($login_user_type ne 'curator') {
-        push(@status, 'You do not have permission to access BrAPI calls.');
+    my ($person_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
+    #print STDERR $person_id." : ".$user_type." : ".$expired;
+    
+    if (!$person_id || $expired || $user_type ne 'curator') {
+        push(@status, 'You must login and have permission to access BrAPI calls.');
         my %metadata = (status=>\@status);    
         $c->stash->{rest} = \%metadata;
         $c->detach;
@@ -1923,7 +1918,7 @@ sub maps_marker_detail_GET {
 
     	foreach my $m (sort genosort (keys %$scores)) { 
     	    my ($chr, $pos) = split "_", $m;
-    	    print STDERR "CHR: $chr. POS: $pos\n";
+    	    #print STDERR "CHR: $chr. POS: $pos\n";
     	    $chrs{$chr} = $pos;
             #   "markerId": 1,
             #   "markerName": "marker1",
