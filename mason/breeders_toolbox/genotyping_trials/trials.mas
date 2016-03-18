@@ -18,7 +18,7 @@ $trials_by_breeding_project => ()
 
 
 <div id="new_submission_process_explanation">
-<b>Instructions:</b><br />Please note the changes to the submission process for the Cornell genotyping facility (all Cassavabase users). 
+<b>Instructions:</b><br />Please note the changes to the submission process for the Cornell genotyping facility (all database users). 
 <ol><li>Go to <a href=" https://slims.biotech.cornell.edu">slims.biotech.cornell.edu</a> to get a tab delimited spreadsheet file containing information on the genotyping trial name and where to insert the blank.</li>
 <li>Use the "Create IGD Genotyping Trial" link on this page to upload the file, together with a list of accessions.</li>
 <li>Use the link on the trial detail page to create the file to proceed with the submission.</li>
