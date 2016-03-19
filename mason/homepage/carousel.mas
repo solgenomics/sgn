@@ -1,166 +1,14 @@
- <style>
+<div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="false">
 
-.slider-size {
-  height: 400px; /* This is your slider height */
-}
-.carousel {
-  max-width:98%;
-  /*width:100%;*/
-  margin:0 auto; /* center your carousel if other than 100% */
-  margin-bottom:0px;
-}
-
-.carousel-sgn-caption { 
-  position:relative;
-  float: left;
-  max-width:49%;
-  min-width:35%;
-  padding: 0px 10px 0px 10px;
-  margin-top:20px;
-
-  color: #000;
-  font-size: 16px;
-  text-decoration: none;
-  background-color: #fff;
-  opacity: 0.80;
-  filter: alpha(opacity=80); /* For IE8 and earlier */
-  border-top-right-radius:12px;
-  border-bottom-right-radius:12px;
-}
-
-.carousel-sgn-caption a { 
-  color: #000;
-  text-decoration: none;
-}
-
-.carousel-sgn-caption a:hover { 
-  color: #666;
-  text-decoration: none;
-}
-
-.carousel-sgn-links {
-  position:absolute;
-  min-width:35%;
-  max-width:49%;
-  margin-top:20px;
-  right:0px;
-
-  color: #000;
-  font-size: 16px;
-  text-decoration: none;
-  background-color: #fff;
-  opacity: 0.85;
-  filter: alpha(opacity=85); /* For IE8 and earlier */
-  border-top-left-radius:12px;
-  border-bottom-left-radius:12px;
-}
-
-.carousel-sgn-links ul { 
-  padding: 10px 30px 0px 15px;
-  list-style-type: none;
-}
-
-.carousel-sgn-links a { 
-  color: #000;
-  text-decoration: none;
-}
-
-.carousel-sgn-links a:hover { 
-  color: #666;
-  text-decoration: none;
-}
-
-@media (min-width: 0px) and (max-width: 650px) {
-
-    .carousel-sgn-caption {
-      margin-top:0px;
-      width: 100%;
-      max-width: 100%;
-      border-radius:0px;
-      float: none;
-      margin-bottom:0px;
-    }
-
-    .carousel-sgn-links {
-      max-width: 100%;
-      width: 100%;
-      border-radius:0px;
-      bottom:30px;
-    }
-    
-    .carousel-indicators {
-      bottom:0px;
-      margin-bottom:5px;
-    }
-
-}
-
-
-</style>
-
-<!--
-<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
--->
-
-<script>
-
-  jQuery(document).ready(function() {
-  //   $('.carousel').carousel({
-  //     interval: 20000,
-  //     // wrap:true
-  //   });
-    
-    
-    
-    
-    
-    
-    var $item = $('.carousel .item');
-    var $wHeight = $(window).height();
-
-    var $numberofSlides = $('.item').length;
-    var $currentSlide = Math.floor((Math.random() * $numberofSlides));
-
-    $('.carousel-indicators li').each(function(){
-      var $slideValue = $(this).attr('data-slide-to');
-      if($currentSlide == $slideValue) {
-        $(this).addClass('active');
-        $item.eq($slideValue).addClass('active');
-      } else {
-        $(this).removeClass('active');
-        $item.eq($slideValue).removeClass('active');
-      }
-    }); 
-
-    $('.carousel').carousel({
-      interval: 20000,
-      wrap: "true",
-      pause: "false"
-    });
-    
-    
-    //$("#myCarousel").swiperight(function() {  
-    //      $("#myCarousel").carousel('prev');  
-    //    });  
-    //   $("#myCarousel").swipeleft(function() {  
-    //      $("#myCarousel").carousel('next');  
-    //   });  
-       
-       $(".ui-loading").css("display","none");
-       $(".ui-loader").css("display","none");
-  });
-</script>
-
-  <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="false">
     <!-- Indicators -->
     <ol class="carousel-indicators">
-      <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
-      <li data-target="#myCarousel" data-slide-to="1"></li>
-      <li data-target="#myCarousel" data-slide-to="2"></li>
-      <li data-target="#myCarousel" data-slide-to="3"></li>
-      <li data-target="#myCarousel" data-slide-to="4"></li>
-      <li data-target="#myCarousel" data-slide-to="5"></li>
-      <li data-target="#myCarousel" data-slide-to="6"></li>
+      <li data-target="#myCarousel" data-slide-to="0">SS</li>
+      <li data-target="#myCarousel" data-slide-to="1">13</li>
+      <li data-target="#myCarousel" data-slide-to="2">TD</li>
+      <li data-target="#myCarousel" data-slide-to="3">Sl</li>
+      <li data-target="#myCarousel" data-slide-to="4">St</li>
+      <li data-target="#myCarousel" data-slide-to="5">Ca</li>
+      <li data-target="#myCarousel" data-slide-to="6">Sm</li>
     </ol>
 
     <!-- Wrapper for slides -->
@@ -306,19 +154,206 @@
         </div>
       </div>
 
-
-
     </div>
+	
+  <!-- Left and right controls -->
+  <a id="prev_slide" class="left carousel-control" href="#myCarousel" role="button" data-slide="prev" style="color:white;">
+    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+    <span class="sr-only">Previous</span>
+  </a>
+  <a  id="next_slide" class="right carousel-control" href="#myCarousel" role="button" data-slide="next" style="color:white;">
+    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+    <span class="sr-only">Next</span>
+  </a>
 
-    <!-- Left and right controls -->
-    <!-- <a id="prev_slide" class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
-      <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-      <span class="sr-only">Previous</span>
-    </a>
-    <a  id="next_slide" class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
-      <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-      <span class="sr-only">Next</span>
-    </a> -->
-  </div>
+</div>
+
+
+
+
+<style>
+
+	.slider-size {
+	  height: 400px; /* This is your slider height */
+	}
+	.carousel {
+	  max-width:98%;
+	  /*width:100%;*/
+	  margin:0 auto; /* center your carousel if other than 100% */
+	  margin-bottom:0px;
+	}
+
+	.carousel-sgn-caption { 
+	  position:relative;
+	  float: left;
+	  max-width:49%;
+	  min-width:35%;
+	  padding: 0px 10px 0px 10px;
+	  margin-top:20px;
+
+	  color: #000;
+	  font-size: 16px;
+	  text-decoration: none;
+	  background-color: #fff;
+	  opacity: 0.80;
+	  filter: alpha(opacity=80); /* For IE8 and earlier */
+	  border-top-right-radius:12px;
+	  border-bottom-right-radius:12px;
+	}
+
+	.carousel-sgn-caption a { 
+	  color: #000;
+	  text-decoration: none;
+	}
+
+	.carousel-sgn-caption a:hover { 
+	  color: #666;
+	  text-decoration: none;
+	}
+
+	.carousel-sgn-links {
+	  position:absolute;
+	  min-width:35%;
+	  max-width:49%;
+	  margin-top:20px;
+	  right:0px;
+
+	  color: #000;
+	  font-size: 16px;
+	  text-decoration: none;
+	  background-color: #fff;
+	  opacity: 0.85;
+	  filter: alpha(opacity=85); /* For IE8 and earlier */
+	  border-top-left-radius:12px;
+	  border-bottom-left-radius:12px;
+	}
+
+	.carousel-sgn-links ul { 
+	  padding: 10px 30px 0px 15px;
+	  list-style-type: none;
+	}
+
+	.carousel-sgn-links a { 
+	  color: #000;
+	  text-decoration: none;
+	}
+
+	.carousel-sgn-links a:hover { 
+	  color: #666;
+	  text-decoration: none;
+	}
+
+	@media (min-width: 0px) and (max-width: 650px) {
+
+	    .carousel-sgn-caption {
+	      margin-top:0px;
+	      width: 100%;
+	      max-width: 100%;
+	      border-radius:0px;
+	      float: none;
+	      margin-bottom:0px;
+	    }
+
+	    .carousel-sgn-links {
+	      max-width: 100%;
+	      width: 100%;
+	      border-radius:0px;
+	      bottom:30px;
+	    }
+    
+	    .carousel-indicators {
+	      bottom:0px;
+	      margin-bottom:5px;
+				width:100%;
+				left:auto;
+				margin-left:auto;
+	    }
+
+	}
+
+	.carousel-control {
+		height:100px;
+		margin-top:170px
+	}
+
+	.carousel-indicators li {
+		font-family: "Trebuchet MS", Helvetica, sans-serif;
+		background-color: rgba(0,0,0,0.5);
+		border-radius:5px;
+		border: 2px solid #ddd;
+		color: white;
+		text-indent: 0px;
+		width: 30px;
+		height: 22px;
+		margin: 0px;
+		padding: 0px;
+	}
+
+	.sgn-carousel-active {
+		width: 30px !important;
+		height: 22px !important;
+		background-color: #fff !important;
+		color: #000 !important;
+	}
+
+</style>
+
+<!--
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+-->
+
+<script>
+
+  jQuery(document).ready(function() {
+   
+		$('#myCarousel').bind('slid.bs.carousel', function (e) {
+
+			$('.carousel-indicators li').removeClass('sgn-carousel-active');
+		
+	    $('.carousel-indicators li').each(function(){
+				if ($(this).hasClass( "active")) {
+		      $(this).addClass('sgn-carousel-active');
+				}
+	    });
+		
+		});
+    
+    var $item = $('.carousel .item');
+    var $wHeight = $(window).height();
+
+    var $numberofSlides = $('.item').length;
+    var $currentSlide = Math.floor((Math.random() * $numberofSlides));
+
+    $('.carousel-indicators li').each(function(){
+      var $slideValue = $(this).attr('data-slide-to');
+      if($currentSlide == $slideValue) {
+        $(this).addClass('active sgn-carousel-active');
+        $item.eq($slideValue).addClass('active');
+      } else {
+        $(this).removeClass('active sgn-carousel-active');
+        $item.eq($slideValue).removeClass('active');
+      }
+    }); 
+
+    $('.carousel').carousel({
+      interval: 20000,
+      wrap: "true",
+      pause: "false"
+    });
+    
+    // touch screen
+		//     $("#myCarousel").swiperight(function() {
+		//       $("#myCarousel").carousel('prev');
+		//     });
+		//
+		// $("#myCarousel").swipeleft(function() {
+		//       $("#myCarousel").carousel('next');
+		//     });
+       
+    $(".ui-loading").css("display","none");
+    $(".ui-loader").css("display","none");
+  });
+</script>
+
 
 
