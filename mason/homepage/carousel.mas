@@ -1,7 +1,7 @@
 <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="false">
 
     <!-- Indicators -->
-    <ol class="carousel-indicators">
+    <ol class="carousel-indicators" style="display:none">
       <li data-target="#myCarousel" data-slide-to="0"></li>
       <li data-target="#myCarousel" data-slide-to="1"></li>
       <li data-target="#myCarousel" data-slide-to="2"></li>
@@ -168,11 +168,23 @@
 
 </div>
 
-
-
+<ul id="btn_carousel_indicators" class="nav nav-pills nav-justified sgn_carousel_button_group">
+  <li class="active"><a data-target="#myCarousel" data-slide-to="0">SlideShare</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="1">SOL Meeting</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="2">5th ISTD</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="3">Tomato</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="4">Potato</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="5">Pepper</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="6">Eggplant</a></li>
+</ul>
 
 <style>
-
+	.sgn_carousel_button_group {
+		margin-left: 10px;
+		margin-top: 10px;
+		width:98% !important;
+	}
+	
 	.slider-size {
 	  height: 400px; /* This is your slider height */
 	}
@@ -287,22 +299,52 @@
   jQuery(document).ready(function() {
    
     var $item = $('.carousel .item');
-    var $wHeight = $(window).height();
+    // var $wHeight = $(window).height();
 
-    var $numberofSlides = $('.item').length;
-    var $currentSlide = Math.floor((Math.random() * $numberofSlides));
-
+    var numberofSlides = $('.item').length;
+    var randomSlide = Math.floor((Math.random() * numberofSlides));
+    var currentSlide = randomSlide;
+    
     $('.carousel-indicators li').each(function(){
       var $slideValue = $(this).attr('data-slide-to');
-      if($currentSlide == $slideValue) {
+      if (randomSlide == $slideValue) {
         $(this).addClass('active');
         $item.eq($slideValue).addClass('active');
       } else {
         $(this).removeClass('active');
         $item.eq($slideValue).removeClass('active');
       }
-    }); 
+    });
 
+    $('#btn_carousel_indicators a').each(function(){
+      var $slideValue = $(this).attr('data-slide-to');
+      // alert("currentSlide: "+$currentSlide+", slideValue: "+$slideValue)
+      if (randomSlide == $slideValue) {
+        $(this).parent().addClass('active');
+      } else {
+        $(this).parent().removeClass('active');
+      }
+    });
+    
+    $('#myCarousel').bind('slid.bs.carousel', function (e) {
+      $('.carousel-indicators li').each(function(){
+        if ($(this).hasClass('active')) {
+          currentSlide = $(this).attr('data-slide-to');;
+        }
+      }); 
+      
+      $('#btn_carousel_indicators li').removeClass('active');
+
+      $('#btn_carousel_indicators a').each(function(){
+        var $slideValue = $(this).attr('data-slide-to');
+        // alert("currentSlide: "+currentSlide+", slideValue: "+$slideValue)
+        if(currentSlide == $slideValue) {
+          $(this).parent().addClass('active');
+        }
+      });
+
+    });
+    
     $('.carousel').carousel({
       interval: 20000,
       wrap: "true",
