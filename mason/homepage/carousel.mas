@@ -2,13 +2,13 @@
 
     <!-- Indicators -->
     <ol class="carousel-indicators">
-      <li data-target="#myCarousel" data-slide-to="0">SS</li>
-      <li data-target="#myCarousel" data-slide-to="1">13</li>
-      <li data-target="#myCarousel" data-slide-to="2">TD</li>
-      <li data-target="#myCarousel" data-slide-to="3">Sl</li>
-      <li data-target="#myCarousel" data-slide-to="4">St</li>
-      <li data-target="#myCarousel" data-slide-to="5">Ca</li>
-      <li data-target="#myCarousel" data-slide-to="6">Sm</li>
+      <li data-target="#myCarousel" data-slide-to="0"></li>
+      <li data-target="#myCarousel" data-slide-to="1"></li>
+      <li data-target="#myCarousel" data-slide-to="2"></li>
+      <li data-target="#myCarousel" data-slide-to="3"></li>
+      <li data-target="#myCarousel" data-slide-to="4"></li>
+      <li data-target="#myCarousel" data-slide-to="5"></li>
+      <li data-target="#myCarousel" data-slide-to="6"></li>
     </ol>
 
     <!-- Wrapper for slides -->
@@ -276,26 +276,6 @@
 		margin-top:170px
 	}
 
-	.carousel-indicators li {
-		font-family: "Trebuchet MS", Helvetica, sans-serif;
-		background-color: rgba(0,0,0,0.5);
-		border-radius:5px;
-		border: 2px solid #ddd;
-		color: white;
-		text-indent: 0px;
-		width: 30px;
-		height: 22px;
-		margin: 0px;
-		padding: 0px;
-	}
-
-	.sgn-carousel-active {
-		width: 30px !important;
-		height: 22px !important;
-		background-color: #fff !important;
-		color: #000 !important;
-	}
-
 </style>
 
 <!--
@@ -306,18 +286,6 @@
 
   jQuery(document).ready(function() {
    
-		$('#myCarousel').bind('slid.bs.carousel', function (e) {
-
-			$('.carousel-indicators li').removeClass('sgn-carousel-active');
-		
-	    $('.carousel-indicators li').each(function(){
-				if ($(this).hasClass( "active")) {
-		      $(this).addClass('sgn-carousel-active');
-				}
-	    });
-		
-		});
-    
     var $item = $('.carousel .item');
     var $wHeight = $(window).height();
 
@@ -327,10 +295,10 @@
     $('.carousel-indicators li').each(function(){
       var $slideValue = $(this).attr('data-slide-to');
       if($currentSlide == $slideValue) {
-        $(this).addClass('active sgn-carousel-active');
+        $(this).addClass('active');
         $item.eq($slideValue).addClass('active');
       } else {
-        $(this).removeClass('active sgn-carousel-active');
+        $(this).removeClass('active');
         $item.eq($slideValue).removeClass('active');
       }
     }); 
