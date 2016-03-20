@@ -24,6 +24,12 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller'; }
 
 
+sub brapi_test :Path('/brapi_test/') :Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/brapiclient/test.mas';
+}
+
 sub personal_calendar :Path('/calendar/personal/') :Args(0) { 
     my $self = shift;
     my $c = shift;
