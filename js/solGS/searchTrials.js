@@ -24,7 +24,9 @@ jQuery(document).ready(function(){
 
 
 function searchTrials(url) {
-   
+    
+    jQuery("#homepage_message").html('Searching for GS trials..').show();
+    
     jQuery.ajax({
         type: 'POST',
         dataType: "json",
@@ -87,8 +89,8 @@ function listTrials (trials)  {
     var table = '<table class="table" style="width:100%;text-align:left">';
     table    += '<tr>';
     table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th>'
-              + '<th>Year</th><th id="color_tip" title="You can combine trials sharing the same color.">'
-              + 'Tip(?)</th>';
+             +  '<th>Year</th><th id="color_tip" title="You can combine trials sharing the same color.">'
+             +  'Tip(?)</th>';
     table    += '</tr>';
    
     
@@ -97,11 +99,11 @@ function listTrials (trials)  {
         if (trials[i]) {
             table += '<tr>';
             table += '<td>' + trials[i][0] + '</td>' 
-                + '<td>' + trials[i][1] + '</td>'
-                + '<td>' + trials[i][2] + '</td>'
-                + '<td>' + trials[i][3] + '</td>'
-                + '<td>' + trials[i][4] + '</td>'
-                + '<td>' + trials[i][5] + '</td>';
+                  +  '<td>' + trials[i][1] + '</td>'
+                  +  '<td>' + trials[i][2] + '</td>'
+                  +  '<td>' + trials[i][3] + '</td>'
+                  +  '<td>' + trials[i][4] + '</td>'
+                  +  '<td>' + trials[i][5] + '</td>';
             table += '</tr>';
         }
     }
