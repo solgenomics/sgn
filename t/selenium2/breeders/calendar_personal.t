@@ -68,7 +68,7 @@ $t->while_logged_in_as("submitter", sub {
     
     my $edit_event_type_select = $t->find_element_ok("edit_event_type_select", "id", "find edit event type select");
 
-    $edit_event_type_select->send_keys('Harvest Event');
+    $edit_event_type_select->send_keys('harvest_date');
     
     $t->find_element_ok("edit_event_start", "id", "find edit event start")->click();
 
@@ -98,7 +98,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("test_trial", "partial_link_text", "find program in editted event details");
 
-    $t->find_element_ok("Harvest Event", "partial_link_text", "find event type in editted event details");
+    $t->find_element_ok("Harvest_date", "partial_link_text", "find event type in editted event details");
 
     $t->find_element_ok("http://www.testedit.com", "partial_link_text", "find event url in editted event details");
 
@@ -140,7 +140,7 @@ $t->while_logged_in_as("submitter", sub {
     
     my $event_type_select = $t->find_element_ok("event_type_select", "id", "find event type select");
 
-    $event_type_select->send_keys('Harvest Event');
+    $event_type_select->send_keys('harvest_date');
     
     $t->find_element_ok("event_start", "id", "find event start")->click();
 
