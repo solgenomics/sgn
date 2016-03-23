@@ -66,6 +66,7 @@ use CXGN::People::Person;
 use CXGN::Chado::Publication;
 use CXGN::Cview::Map::SGN::Genotype;
 use CXGN::Cview::MapOverviews;
+use Data::Dumper;
 
 my $stock = $stockref->{stock};
 my $stock_id = $stockref->{stock_id};
@@ -100,6 +101,14 @@ my $this_page = "/stock/$stock_id/view";
 my $add_image_link = qq|<a href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=$this_page">[Add new image]</a>|;
 my $image_ids =  $stockref->{image_ids} || [] ;
 my $stockprops = $stockref->{props};
+
+print STDERR Dumper $stockprops;
+
+my %stockprops_hash = %$stockprops;
+my $is_ethz_cass_transgenic;
+if ($stockprops_hash{'ethz_cass_transgenic'}) {
+  $is_ethz_cass_transgenic = 1;
+}
 
 ###this is replaced by $editable_stock_props. Needs to be provided in the conf file
 my $metadata = ['variety', 'donor', 'donor institute', 'country', 'state' , 'adaptation' , 'notes', 'GSOR', 'NPGS', 'Gpno', 'IRGSP', 'NSFTV', 'CIor', 'PI', 'subpopulation'];
@@ -165,11 +174,20 @@ my $pub_count = scalar( keys %$pubs );
 ## EUSOL, tgrc (stock_dbxref)
 my $dbxrefs = $stockref->{dbxrefs};
 my %source_dbs;
+my @dbx_ref_ethz_cass_construct_accessions;
+my @dbx_ref_ethz_cass_transgenic_accessions;
 foreach my $db_name ( keys %$dbxrefs ) {
   foreach my $dbxref ( @{ $dbxrefs->{$db_name} } ) {
     my $url = $dbxref->db->urlprefix . $dbxref->db->url;
     $url .= $dbxref->accession if $url =~ m/\?$|\=$/ ;
     $source_dbs{$url} = $db_name . ": " . $dbxref->accession if $url;
+
+    if ($dbxref->description eq 'ETHZ_CASS vector_construct id') {
+      push @dbx_ref_ethz_cass_construct_accessions, $dbxref->accession;
+    } elsif ($dbxref->description eq 'ETHZ_CASS transgenic id') {
+      push @dbx_ref_ethz_cass_transgenic_accessions, $dbxref->accession;
+    }
+    
   }
 }
 
@@ -236,28 +254,129 @@ function jqueryStuff() {
    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
       <& /stock/stockprops.mas,
        stock_id    => $stock_id,
-	props      => $stockprops ,
-	div_name   =>'synonyms',
-	subset     =>$resources,
-	editable   => [ 'stock_synonym' ],
-	edit_privs => $edit_privs   &>
+  props      => $stockprops ,
+  div_name   =>'synonyms',
+  subset     =>$resources,
+  editable   => [ 'stock_synonym' ],
+  edit_privs => $edit_privs   &>
 </&>
 %  $div_name = join("_", @editable_stock_props);
 % my $props_subtitle = $edit_privs ? "[<a id=\"stock_add_props\" href=\"javascript:stockprops_addPropDialog()\">Add...</a>]" : "[Add]";
 
     <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
       <& /stock/stockprops.mas,
-	 stock_id  =>$stock_id,
-	props      => $stockprops,
+   stock_id  =>$stock_id,
+  props      => $stockprops,
         div_name   => 'stockprops',
-	edit_privs => $edit_privs,
-	subset     => \@editable_stock_props,
-	editable   => \@editable_stock_props  &>
+  edit_privs => $edit_privs,
+  subset     => \@editable_stock_props,
+  editable   => \@editable_stock_props  &>
 </&>
 
+% if ($is_ethz_cass_transgenic == 1) {
+
+<div class="well">
+
+<div id="ethz_cass_transgenic_details">
+</div>
+
+<br/>
+
+<h3>Transformations</h3>
+<table class="table" id="transgenics_transformations_datatable">
+<thead>
+<tr>
+<th>Date</th>
+<th>Plates</th>
+<th>Meda Type</th>
+<th>Comments</th>
+</tr>
+</thead>
+
+</table>
+
+<br/>
+
+<h3>Transactions</h3>
+<table class="table" id="transgenics_transactions_datatable">
+<thead>
+<tr>
+<th>Date</th>
+<th>Jars</th>
+<th>Meda Type</th>
+<th>Comments</th>
+</tr>
+</thead>
+
+</table>
+</div>
+
+<script>
+
+  jQuery(document).ready(function() {
+  
+    jQuery.ajax({
+      type: 'GET',
+      url: 'https://cass.pb.ethz.ch/rest/transgenic/'+jQuery('#stock_dbxref_transgenic_accession').val()+'/details',
+      beforeSend: function() {
+        jQuery('#working_modal').modal("show");
+      },
+      success: function(response) { 
+        console.log(response);
+        if (response.error) { 
+            jQuery('#working_modal').modal("hide");
+            alert(response.error);
+        }
+        else {
+          if (response.construct) {
+            jQuery('#working_modal').modal("hide");
+            var html = '<h3>ETH CASS Transgenics Info</h3><br/><table class="table table-bordered"><thead><tr><th>Construct</th></tr></thead><tbody>';
+            var length = response.construct.length;
+            for (i=0; i<length; i++) {
+              var html = html + '<tr><td>'+response.construct[i]+'</td>';
+            }
+            var html = html + '</tbody></table>';
+            jQuery('#ethz_cass_transgenic_details').html(html);
+          } 
+        }
+      },
+      error: function(response) { 
+        jQuery('#working_modal').modal("hide");
+        alert("An error occurred.");
+      }
+    });
+
+    jQuery('#transgenics_transformations_datatable').dataTable({
+        "bProcessing": true,
+        "sAjaxSource": 'https://cass.pb.ethz.ch/rest/transgenic/'+jQuery('#stock_dbxref_transgenic_accession').val()+'/transformation/datatable',
+        "aoColumns": [
+            { "mData": "date" },
+            { "mData": "plates" },
+            { "mData": "mediatype" },
+            { "mData": "comment" }
+        ]
+    });
+
+    jQuery('#transgenics_transactions_datatable').dataTable({
+        "bProcessing": true,
+        "sAjaxSource": 'https://cass.pb.ethz.ch/rest/transgenic/'+jQuery('#stock_dbxref_transgenic_accession').val()+'/transaction/datatable',
+        "aoColumns": [
+            { "mData": "date" },
+            { "mData": "jars" },
+            { "mData": "mediatype" },
+            { "mData": "comment" }
+        ]
+    });
+
+  });
+
+</script>
+
+% }
 
 </&>
 
+% if ($stock->get_type->name() ne 'vector_construct') {
 
 <&| /page/info_section.mas, title => "Associated loci (" . $stockref->{allele_count} . ")" , subtitle => $new_locus_link, collapsible=> 1 , collapsed => 1 &>
 
@@ -447,11 +566,9 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 </&>
 
 
-<& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
-
-
 <script>
   jQuery(document).ready(function() { 
+
     stock_detail_page_init_dialogs();
     prepareJbrowse();
 
@@ -466,14 +583,154 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
     url: "<% $test_url %>",
     statusCode: {
         200: function () {  // if page is found, create and display link
-		jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View vcf tracks for <% $uniquename %> in JBrowse</a>');
-	},
-	404: function () { // if page not found, display message that jbrowse instance wasn't found
-		jQuery('#jbrowse_check').html(" <i>No Jbrowse instance found for this accession</i>.");
-     		}
-	}
+    jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View vcf tracks for <% $uniquename %> in JBrowse</a>');
+  },
+  404: function () { // if page not found, display message that jbrowse instance wasn't found
+    jQuery('#jbrowse_check').html(" <i>No Jbrowse instance found for this accession</i>.");
+        }
+  }
   });
   }
 
 });
 </script>
+
+
+% } elsif ($stock->get_type->name() eq 'vector_construct') {
+
+% foreach (@dbx_ref_ethz_cass_construct_accessions) {
+  <input type='hidden' value='<% $_ %>' id='stock_dbxref_construct_accession' />
+% }
+
+<div id="ethz_cass_construct_details">
+</div>
+
+<script>
+
+  jQuery(document).ready(function() {
+
+    jQuery.ajax({
+      type: 'GET',
+      url: 'https://cass.pb.ethz.ch/rest/construct/'+jQuery('#stock_dbxref_construct_accession').val()+'/details',
+      beforeSend: function() {
+        jQuery('#working_modal').modal("show");
+      },
+      success: function(response) { 
+        //console.log(response);
+        if (response.error) { 
+            jQuery('#working_modal').modal("hide");
+            alert(response.error);
+        }
+        else { 
+            jQuery('#working_modal').modal("hide");
+            var html = '<div class="well"><h3>ETH CASS Contruct Info</h3><br/><table class="table table-bordered"><thead><tr><th>3UTR</th><th>5UTR</th><th>CTAG</th><th>Gene</th><th>NTag</th><th>Promoter</th><th>SP NTP</th><th>Terminator</th></tr></thead><tbody>';
+            var length = response.cassette.length;
+            for (i=0; i<length; i++) {
+              var html = html + '<tr><td>'+response.cassette[i]["3utr"]+'</td><td>'+response.cassette[i]["5utr"]+'</td><td>'+response.cassette[i].ctag+'</td><td>'+response.cassette[i].gene+'</td><td>'+response.cassette[i].ntag+'</td><td>'+response.cassette[i].sp_ntp+'</td><td>'+response.cassette[i].terminator+'</td>';
+            }
+            var html = html + '</tbody></table></div>';
+            jQuery('#ethz_cass_construct_details').html(html);
+        }
+      },
+      error: function(response) { 
+        jQuery('#working_modal').modal("hide");
+        alert("An error occurred.");
+      }
+    });
+
+  });
+
+</script>
+  
+% } 
+
+
+% foreach (@dbx_ref_ethz_cass_transgenic_accessions) {
+  <input type='hidden' value='<% $_ %>' id='stock_dbxref_transgenic_accession' />
+% }
+
+
+
+
+<& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
+
+
+<script>
+
+  jQuery(document).ready(function() {
+
+    //Constructs
+
+    jQuery.ajax({
+      type: 'GET',
+      url: 'https://cass.pb.ethz.ch/rest/construct',
+      beforeSend: function() {
+        jQuery('#working_modal').modal("show");
+      },
+      success: function(response) { 
+        //console.log(response);
+        if (response.error) { 
+            jQuery('#working_modal').modal("hide");
+            alert(response.error);
+        }
+        else { 
+            jQuery('#working_modal').modal("hide");
+
+            jQuery.ajax({
+              type: 'POST',
+              data: {'data': JSON.stringify(response)},
+              url: '/ajax/cass_vector_construct/sync',
+              success: function(response) {
+                //console.log(response);
+              },
+              error: function(response) {
+                //alert('An Error Occured Syncing Constructs.');
+              }
+            });
+        }
+      },
+      error: function(response) { 
+        jQuery('#working_modal').modal("hide");
+        alert("An error occurred.");
+      }
+    });
+
+  
+    jQuery.ajax({
+      type: 'GET',
+      url: 'https://cass.pb.ethz.ch/rest/transgenic',
+      beforeSend: function() {
+        jQuery('#working_modal').modal("show");
+      },
+      success: function(response) { 
+        //console.log(response);
+        if (response.error) { 
+            jQuery('#working_modal').modal("hide");
+            alert(response.error);
+        }
+        else { 
+            jQuery('#working_modal').modal("hide");
+
+            jQuery.ajax({
+              type: 'POST',
+              data: {'data': JSON.stringify(response)},
+              url: '/ajax/cass_transgenics/sync',
+              success: function(response) {
+                //console.log(response);
+              },
+              error: function(response) {
+                //alert('An Error Occured Syncing Transgenics.');
+              }
+            });
+        }
+      },
+      error: function(response) { 
+        jQuery('#working_modal').modal("hide");
+        alert("An error occurred.");
+      }
+    });
+
+  });
+
+</script>
+
