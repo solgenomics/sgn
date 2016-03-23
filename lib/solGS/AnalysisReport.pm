@@ -17,6 +17,7 @@ sub check_analysis_status {
     my ($self, $output_details) = @_;
  
     $output_details = $self->check_success($output_details);
+    
     $self->log_analysis_status($output_details);
     $self->report_status($output_details); 
     
@@ -46,6 +47,18 @@ sub check_success {
     elsif ( $analysis_profile->{analysis_type} =~ /combine populations/ ) 
     {	
 	$output_details = $self->check_multi_pops_data_download($output_details);
+    }
+    elsif ( $analysis_profile->{analysis_type} =~ /selection prediction/ ) 
+    {	
+	if ($output_details->{data_set_type} =~ /combined populations/) 
+	{	
+	   # $output_details = $self->check_combined_pops_trait_modeling($output_details);
+	}
+	elsif ($output_details->{data_set_type} =~ /single population/)
+	{
+	    $output_details = $self->check_selection_prediction($output_details);
+	}
+
     }
     
     return $output_details;  
@@ -219,6 +232,68 @@ sub check_multi_pops_data_download {
 
     return $output_details;  
 }
+
+
+sub check_selection_prediction {
+    my ($self, $output_details) = @_;
+
+    my $job_tempdir = $output_details->{r_job_tempdir};
+    
+    foreach my $k (keys %{$output_details})
+    {
+	my $gebv_file;
+	if (ref $output_details->{$k} eq 'HASH') 
+	{ 
+	     if ($output_details->{$k}->{trait_id})
+	    {
+		$gebv_file = $output_details->{$k}->{gebv_file}; 
+	    }
+
+	     if ($gebv_file) 
+	     {
+		 my $gebv_size;
+		 my $died_file;
+	
+		 while (1) 
+		 {
+		     sleep 60;
+		     $gebv_size = -s $gebv_file;
+
+		     if ($gebv_size) 
+		     {
+			 $output_details->{$k}->{success} = 1;
+			 $output_details->{status} = 'Done';
+			 last;		
+		     }
+		     else
+		     {
+			 if ($job_tempdir) 
+			 {
+			     $died_file = $self->get_file($job_tempdir, 'died');
+			     if ($died_file) 
+			     {
+				 $output_details->{$k}->{success} = 0;
+				 $output_details->{status} = 'Failed';
+				 last;
+			     }
+			 }
+		     }	    
+		 }	   	    
+	     }
+	}
+	else 
+	{  
+	    if (ref $output_details->{$k} eq 'HASH')	
+	    {   	    
+		$output_details->{$k}->{success} = 0;
+		$output_details->{status} = 'Failed';
+	    }	   
+	}  
+    }
+
+    return $output_details;
+}
+
 
 
 sub check_trait_modeling {
@@ -410,6 +485,10 @@ sub report_status {
     {
     	$analysis_result = $self->combine_populations_message($output_details);
     }
+    elsif ($analysis_type =~ /selection prediction/  ) 
+    {
+    	$analysis_result = $self->selection_prediction_message($output_details);
+    }
    
     my $closing = "If you have any remarks, please contact us:\n"
 	. $output_details->{contact_page}
@@ -472,8 +551,8 @@ sub multi_modeling_message {
 		    my $trait_name = uc($output_details->{$k}->{trait_name});
 		    my $trait_page = $output_details->{$k}->{trait_page};
 		    $message .= "The analysis for $trait_name is done."
-			." You can view the model output here:\n"
-			."$trait_page.\n\n";
+			." You can view the model output here:"
+			."\n\n$trait_page.\n\n";
 		}
 		else 
 		{  
@@ -513,8 +592,45 @@ sub single_modeling_message {
 		if ($output_details->{$k}->{success})		
 		{		
 		    $message = "The analysis for $trait_name is done."
-			." You can view the model output here:\n"
-			."$trait_page.\n\n";
+			."\nYou can view the model output here:"
+			."\n\n$trait_page.\n\n";
+		}
+		else 
+		{  
+		    $message = "The analysis for $trait_name failed."
+			."\n\nWe are troubleshooting the cause. " 
+			. "We will contact you when we find out more.";	 
+		}		
+	    }
+	}
+    }
+
+    return  $message;
+}
+
+
+sub selection_prediction_message {
+    my ($self, $output_details) = @_;
+    
+    my $message;
+    foreach my $k (keys %{$output_details}) 
+    {
+	my $gebv_file;
+	if (ref $output_details->{$k} eq 'HASH')
+	{
+	    if ($output_details->{$k}->{trait_id})
+	    {
+		my $trait_name          = uc($output_details->{$k}->{trait_name});
+		my $training_pop_page   = $output_details->{$k}->{training_pop_page};
+		my $model_page          = $output_details->{$k}->{model_page};
+		my $prediction_pop_name = $output_details->{$k}->{prediction_pop_name};
+	
+		if ($output_details->{$k}->{success})		
+		{		
+		    $message = "The prediction of selection population $prediction_pop_name is done."
+			. "\nYou can view the prediction output by clicking the trait name "
+			. "\nat the bottom of the model page:"
+			. "\n\n$model_page.\n\n";
 		}
 		else 
 		{  
