@@ -8,11 +8,11 @@ jQuery.ajax({
 	url: 'http://127.0.0.1:3000/brapi/v1/token?username=nmorales&password=secretpw&grant_type=password',
 	success: function(response) {
 		//console.log(response);
-		var maps_url = 'http://127.0.0.1:3000/brapi/v1/studies/447/observationVariable/76906?page=3&session_token='+response.session_token;
+		var url = 'http://127.0.0.1:3000/brapi/v1/studies/447/observationVariable/76906?session_token='+response.session_token;
 
 		jQuery.ajax({
 			type: 'GET',
-			url: maps_url,
+			url: url,
 			beforeSend: function() {
 				jQuery('#working_modal').modal("show");
 			},

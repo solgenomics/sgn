@@ -956,7 +956,7 @@ sub get_phenotypes_for_trait {
 =head2 function get_plot_phenotypes_for_trait($trait_id)
 
  Usage:
- Desc:         returns all plot name, germplasmName, measurement for the given trait in this trial
+ Desc:         returns all plot_id, plot_name, pheno_uniquename, uploader_id, value for the given trait in this trial
  Ret:
  Args:
  Side Effects:

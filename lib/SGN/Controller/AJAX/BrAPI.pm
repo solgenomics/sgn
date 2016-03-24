@@ -1584,7 +1584,11 @@ sub studies_plot_phenotypes_GET {
             my ($part1 , $part2) = split( /date: /, $pheno_uniquename);
             my ($timestamp , $operator) = split( /\ \ operator = /, $part2);
 
-            my %data_hash = (studyDbId => $c->stash->{study_id}, plotDbId => @$phenotype_data[$i]->[0], observationVariableDbId => $trait_id, observationVariableName => $trait->name(), plotName => @$phenotype_data[$i]->[1], timestamp => $timestamp, uploadedBy => @$phenotype_data[$i]->[3], operator => $operator, germplasmName => '', value => @$phenotype_data[$i]->[4] );
+            my $plot_id = @$phenotype_data[$i]->[0];
+            my $stock_plot_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'plot_of', 'stock_relationship')->cvterm_id();
+            my $germplasm =$self->bcs_schema->resultset('Stock::StockRelationship')->find({ 'me.subject_id' => $plot_id, 'me.type_id' =>$stock_plot_relationship_type_id }, {join => 'object', '+select'=> ['object.stock_id', 'object.uniquename'], '+as'=> ['germplasm_id', 'germplasm_name'] } );
+
+            my %data_hash = (studyDbId => $c->stash->{study_id}, plotDbId => $plot_id, observationVariableDbId => $trait_id, observationVariableName => $trait->name(), plotName => @$phenotype_data[$i]->[1], timestamp => $timestamp, uploadedBy => @$phenotype_data[$i]->[3], operator => $operator, germplasmDbId => $germplasm->get_column('germplasm_id'), germplasmName => $germplasm->get_column('germplasm_name'), value => @$phenotype_data[$i]->[4] );
             push @data, \%data_hash;
         }
     }
