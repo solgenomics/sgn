@@ -1227,8 +1227,12 @@ sub programs_list_GET {
     my $programs = $ps -> get_breeding_programs();
     my $total_count = scalar(@$programs);
 
-    foreach my $bp (@$programs) {
-	push @data, {programDbId=>$bp->[0], name=>$bp->[1], objective=>$bp->[2], leadPerson=>''};
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
+    for( my $i = $start; $i <= $end; $i++ ) {
+        if (@$programs[$i]) {
+            push @data, {programDbId=>@$programs[$i]->[0], name=>@$programs[$i]->[1], objective=>@$programs[$i]->[2], leadPerson=>''};
+        }
     }
 
     %result = (data=>\@data);
@@ -2181,12 +2185,17 @@ sub locations_list_GET {
     my @data;
     my @attributes;
 
-    my @locations = CXGN::Trial::get_all_locations($self->bcs_schema);
-    foreach (@locations) {
-	push @data, {locationDbId => $_->[0], name=> $_->[1], countryCode=>'', countryName=>'', latitude=>$_->[2], longitude=>$_->[3], altitude=>$_->[5], attributes=>\@attributes};
+    my $locations = CXGN::Trial::get_all_locations($self->bcs_schema);
+
+    my $total_count = scalar(@$locations);
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
+    for( my $i = $start; $i <= $end; $i++ ) {
+        if (@$locations[$i]) {
+            push @data, {locationDbId => @$locations[$i]->[0], name=> @$locations[$i]->[1], countryCode=> @$locations[$i]->[5], countryName=> @$locations[$i]->[6], latitude=>@$locations[$i]->[2], longitude=>@$locations[$i]->[3], altitude=>@$locations[$i]->[4], attributes=> @$locations[$i]->[7]};
+        }
     }
 
-    my $total_count = scalar(@locations);
     my %result = (data=>\@data);
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
