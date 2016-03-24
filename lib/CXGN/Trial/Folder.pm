@@ -4,6 +4,7 @@ package CXGN::Trial::Folder;
 use CXGN::Chado::Cvterm;
 
 use Moose;
+use SGN::Model::Cvterm;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 		      is => 'rw',
@@ -99,31 +100,25 @@ sub BUILD {
 	});
     
 
-    if (! $parent_rel_row) { 
-        $parent_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( 
-	    { 
-		subject_project_id => $self->folder_id(), 
-		type_id => $self->breeding_program_trial_relationship_id(),
-	    });
-    }
-    $self->project($row);
+    my $folder_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property');
 
-    my $folder_type = $self->bcs_schema()->resultset('Project::Projectprop')->find( { project_id => $self->folder_id(), type_id => { '-in' => [ $folder_cvterm_id, $self->breeding_program_cvterm_id() ] } } );
+    my $folder_type_row = $self->bcs_schema()->resultset('Project::Projectprop')-> find( { project_id => $self->folder_id() });
 
-    if ($folder_type) { 
+    if ($folder_type_row) { 
 	$self->is_folder(1);
     
-	if ($folder_type->type_id() == $folder_cvterm_id) { 
+	if ($folder_type_row->type_id() == $folder_cvterm->cvterm_id()) { 
 	    #print STDERR "Setting folder type to folder\n";
 	    $self->folder_type("folder");
 	}
-	elsif ($folder_type->type_id() == $self->breeding_program_cvterm_id()) { 
+	elsif ($folder_type_row->type_id() == $self->breeding_program_cvterm_id()) { 
 	    #print STDERR "Setting folder type to breeding_program.\n";
 	    $self->folder_type("breeding_program");
 	}
     }
     else { 
 	#print STDERR "Setting folder type to trial\n";
+	# to do: also: cross.
 	$self->folder_type("trial");
     }
     
@@ -150,8 +145,8 @@ sub create {
 	die "The name ".$args->{name}." cannot be used for a folder because it already exists.";
     }
     
-    my $folder_cvterm_id = CXGN::Trial::Folder->_get_folder_cvterm_id( $args );
-        
+     my $folder_cvterm = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema},'trial_folder', 'project_property');
+    
     my $project_row = $args->{bcs_schema}->resultset('Project::Project')->create(
 	{ 
 	    name =>  $args->{name},
@@ -163,7 +158,7 @@ sub create {
     my $folder_projectprop_row = $args->{bcs_schema}->resultset('Project::Projectprop')->create( 
 	{ 
 	    project_id => $project_id,
-	    type_id => $folder_cvterm_id }
+	    type_id => $folder_cvterm->cvterm_id() }
 	);
 
     my $folder = CXGN::Trial::Folder->new( { bcs_schema => $args->{bcs_schema}, folder_id => $project_id });

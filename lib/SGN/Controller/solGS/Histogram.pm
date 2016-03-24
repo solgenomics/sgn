@@ -29,7 +29,7 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
 
     $c->stash->{pop_id} = $pop_id;
 
-    $c->controller('solGS::solGS')->get_trait_name($c, $trait_id);
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
     
     my $trait_pheno_file = $c->controller('solGS::solGS')->trait_phenodata_file($c);

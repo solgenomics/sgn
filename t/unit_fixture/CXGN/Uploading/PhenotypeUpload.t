@@ -24,7 +24,7 @@ my $c = SimulateC->new( { dbh => $f->dbh(),
 #######################################
 #Find out table counts before adding anything, so that changes can be compared
 
-my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($c->bcs_schema, 'phenotyping experiment', 'experiment_type')->cvterm_id();
+my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($c->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 my $experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
 my $pre_experiment_count = $experiment->count();
 

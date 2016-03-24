@@ -30,6 +30,7 @@ use CXGN::Phenome::DumpGenotypes;
 
 use Scalar::Util qw(looks_like_number);
 use DateTime;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1043,10 +1044,8 @@ sub add_phenotype_POST {
         my $user =  $c->user->get_object->get_sp_person_id;
         try {
             # find the cvterm for a phenotyping experiment
-            my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-                { name   => 'phenotyping experiment',
-                  cv     => 'experiment_type',
-		});
+            my $pheno_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'phenotyping_experiment','experiment_type');
+
 
             #create the new phenotype
             my $phenotype = $schema->resultset("Phenotype::Phenotype")->find_or_create(

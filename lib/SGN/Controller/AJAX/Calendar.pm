@@ -29,6 +29,7 @@ use Time::Piece;
 use Time::Seconds;
 use Data::Dumper;
 use CXGN::Login;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -415,24 +416,10 @@ sub day_click_personal_GET {
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my @projectprop_types;
     foreach (@projectprop_names) {
-	my $q="SELECT cvterm_id, name FROM cvterm WHERE name=?";
-	my $sth = $c->dbc->dbh->prepare($q);
-	$sth->execute($_);
-	if ($sth->rows == 0) {
-	    my $add_term = $schema->resultset('Cv::Cvterm')->create_with(
-		{
-		    name=>$_, 
-		    cv=>'calendar', 
-		}
-		);
-	    push(@projectprop_types, {cvterm_id=>$add_term->cvterm_id(), cvterm_name=>$add_term->name() });
-	} else {
-	    while ( my ($cvterm_id, $cvterm_name ) = $sth->fetchrow_array ) {
-		push(@projectprop_types, {cvterm_id=>$cvterm_id, cvterm_name=>$cvterm_name});
-	    }
-	}
+	my $term = SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'calendar');
+	    push(@projectprop_types, {cvterm_id=>$term->cvterm_id(), cvterm_name=>$term->name() });
     }
- 
+    
     $c->stash->{rest} = {project_list => \@projects, projectprop_list => \@projectprop_types};
 }
     

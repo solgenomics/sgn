@@ -2,7 +2,7 @@
   $message
 </%args>
 % #A generic message page.
-
+<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
 <div style="width: 63%; margin: 2em auto">
   <&| /page/explanation.mas &>
         <% $message %>

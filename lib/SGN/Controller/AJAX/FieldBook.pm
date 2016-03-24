@@ -36,6 +36,8 @@ use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::UploadFile;
 use CXGN::Fieldbook::TraitInfo;
+use SGN::Model::Cvterm;
+
 #use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -157,11 +159,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
 								    });
   $file_row->insert();
 
-  my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')
-    ->create_with({
-		   name   => 'field layout',
-		   cv     => 'experiment_type',
-		  });
+  my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type' );
 
 
   my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find({
