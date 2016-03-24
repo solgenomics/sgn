@@ -2192,7 +2192,7 @@ sub locations_list_GET {
     my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
     for( my $i = $start; $i <= $end; $i++ ) {
         if (@$locations[$i]) {
-            push @data, {locationDbId => @$locations[$i]->[0], name=> @$locations[$i]->[1], countryCode=> @$locations[$i]->[5], countryName=> @$locations[$i]->[6], latitude=>@$locations[$i]->[2], longitude=>@$locations[$i]->[3], altitude=>@$locations[$i]->[4], attributes=> @$locations[$i]->[7]};
+            push @data, {locationDbId => @$locations[$i]->[0], name=> @$locations[$i]->[1], countryCode=> @$locations[$i]->[6], countryName=> @$locations[$i]->[5], latitude=>@$locations[$i]->[2], longitude=>@$locations[$i]->[3], altitude=>@$locations[$i]->[4], attributes=> @$locations[$i]->[7]};
         }
     }
 
