@@ -5011,7 +5011,10 @@ sub cache_file {
 	$cache_dir = $c->stash->{solgs_cache_dir};
     }
    
-    my $file_cache  = Cache::File->new(cache_root => $cache_dir);
+    my $file_cache  = Cache::File->new(cache_root => $cache_dir, 
+				       lock_level => Cache::File::LOCK_NFS()
+	);
+
     $file_cache->purge();
 
     my $file  = $file_cache->get($cache_data->{key});
