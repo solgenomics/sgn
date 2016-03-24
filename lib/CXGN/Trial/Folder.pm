@@ -202,8 +202,8 @@ sub _get_folder_cvterm_id {
     my $folder_cvterm = $args->{bcs_schema}->resultset('Cv::Cvterm')->find(
 	{ 
 	    name   => 'trial_folder',
-	    cv => 'project_property',
-	});
+	    'cv.name' => 'project_property',
+	}, { join => 'cv' });
     
     return $folder_cvterm->cvterm_id();
 }
