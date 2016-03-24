@@ -64,6 +64,11 @@ my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
 my ( $row_min, $row_max ) = $worksheet->row_range();
 my ( $col_min, $col_max ) = $worksheet->col_range();
 
+if ($col_max ne '11' || $worksheet->get_cell(0,0)->value() ne 'Full Name' || $worksheet->get_cell(0,1)->value() ne 'Longitude' || $worksheet->get_cell(0,2)->value() ne 'Latitude' || $worksheet->get_cell(0,3)->value() ne 'Altitude' || $worksheet->get_cell(0,4)->value() ne 'Uniquename' || $worksheet->get_cell(0,5)->value() ne 'Agricultural Ecological Zone'|| $worksheet->get_cell(0,6)->value() ne 'Continent' || $worksheet->get_cell(0,7)->value() ne 'Country' || $worksheet->get_cell(0,8)->value() ne 'Country Code' || $worksheet->get_cell(0,9)->value() ne 'adm1' || $worksheet->get_cell(0,10)->value() ne 'adm2' || $worksheet->get_cell(0,11)->value() ne 'adm3') {
+    pod2usage(-verbose => 2, -message => "Headers must be only in this order: Full Name, Longitude, Latitude, Altitude, Uniquename, Agricultural Ecological Zone, Continent, Country, Country Code, adm1, adm2, adm3\n");
+}
+
+
 for my $row ( 1 .. $row_max ) {
 
 	my $name = $worksheet->get_cell($row,0)->value();
