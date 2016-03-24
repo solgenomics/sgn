@@ -2519,13 +2519,12 @@ sub build_multiple_traits_models {
    
     my @selected_traits = $c->req->param('trait_id');
 
-   
     if (!@selected_traits) 
     { 
 	my $params = $c->stash->{analysis_profile};
-	my $args = %{$params}->{arguments};
+	my $args = $params->{arguments};
 
-	if ($args) 
+	if (keys %{$args}) 
 	{
 	    my $json = JSON->new();
 	    $args = $json->decode($args);
@@ -2566,6 +2565,22 @@ sub build_multiple_traits_models {
     elsif (scalar(@selected_traits) == 1)
     {
         $single_trait_id = $selected_traits[0];
+	 if ($single_trait_id =~ /\D/)
+	 {
+	     my $acronym_pairs = $self->get_acronym_pairs($c);                   
+	     if ($acronym_pairs)
+	     {
+		 foreach my $r (@$acronym_pairs) 
+		 {
+		     if ($r->[0] eq $single_trait_id) 
+		     {
+			 my $trait_name =  $r->[1];
+			 $trait_name    =~ s/\n//g;                                
+			 $single_trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
+		     }
+		 }
+	     }
+	 }
   
         if (!$prediction_id)
         { 
@@ -2632,16 +2647,19 @@ sub build_multiple_traits_models {
                 $traits .= "\t" unless ($i == $#selected_traits); 
 
                     
-                foreach (@selected_traits)
+                foreach my $tr_id (@selected_traits)
                 {
-                    $trait_ids .= $_;
+                    $trait_ids .= $tr_id;
                 }
             }                 
         } 
     
-        my $identifier = crc($trait_ids);
-        $self->combined_gebvs_file($c, $identifier);
-        
+	if ($c->stash->{data_set_type} =~ /combined populations/)
+	{
+	    my $identifier = crc($trait_ids);
+	    $self->combined_gebvs_file($c, $identifier);
+	}  
+      
         my $name = "selected_traits_pop_${pop_id}";
         my $file = $self->create_tempfile($c, $name);
         
@@ -2673,7 +2691,7 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
     $referer       =~ s/$base//;
     my ($tr_id)    = $referer =~ /(\d+)/;
     my $trait_page = "solgs/trait/$tr_id/population/$pop_id";
-   
+
     my $error = $c->stash->{script_error};
   
     if ($error) 
@@ -2832,16 +2850,16 @@ sub traits_with_valid_models {
     my @filtered_analyzed_traits;
 
     foreach my $analyzed_trait (@analyzed_traits) 
-    {      
+    {   
         $self->get_model_accuracy_value($c, $pop_id, $analyzed_trait);        
-        my $accuracy_value = $c->stash->{accuracy_value}; 
-                    
+        my $accuracy_value = $c->stash->{accuracy_value};            
         if ($accuracy_value > 0)
         { 
             push @filtered_analyzed_traits, $analyzed_trait;
         }     
     }
 
+    @filtered_analyzed_traits = uniq(@filtered_analyzed_traits);
     $c->stash->{traits_with_valid_models} = \@filtered_analyzed_traits;
 
 }
@@ -3472,6 +3490,7 @@ sub grep_file {
 sub multi_pops_phenotype_data {
     my ($self, $c, $pop_ids) = @_;
    
+    no warnings 'uninitialized';
     my @job_ids;
     if (@$pop_ids)
     {
@@ -3481,9 +3500,12 @@ sub multi_pops_phenotype_data {
             $self->phenotype_file($c);
 	    push @job_ids, $c->stash->{r_job_id};
         }
-
-	@job_ids = uniq(@job_ids);
-	$c->stash->{multi_pops_pheno_jobs_ids} = \@job_ids;
+	
+	if (@job_ids)
+	{
+	    @job_ids = uniq(@job_ids);
+	    $c->stash->{multi_pops_pheno_jobs_ids} = \@job_ids;
+	}
     }
     
    
@@ -3494,7 +3516,8 @@ sub multi_pops_phenotype_data {
 
 sub multi_pops_genotype_data {
     my ($self, $c, $pop_ids) = @_;
-  
+   
+    no warnings 'uninitialized';
     my @job_ids;
     if (@$pop_ids)
     {
@@ -3505,8 +3528,11 @@ sub multi_pops_genotype_data {
 	    push @job_ids, $c->stash->{r_job_id};
         }
 
-	@job_ids = uniq(@job_ids);
-	$c->stash->{multi_pops_geno_jobs_ids} = \@job_ids;
+	if (@job_ids) 
+	{
+	    @job_ids = uniq(@job_ids);
+	    $c->stash->{multi_pops_geno_jobs_ids} = \@job_ids;
+	}
     }    
 #  $self->multi_pops_geno_files($c, $pop_ids);
  
@@ -4756,23 +4782,27 @@ sub create_cluster_acccesible_tmp_files {
 sub run_async {
     my ($self, $c) = @_;    
 
-    my $dependency         = $c->stash->{dependency};
-    my $dependency_type    = $c->stash->{dependency_type};
-    my $background_job     = $c->stash->{background_job};
-    my $dependent_job      = $c->stash->{dependent_job};
-    my $temp_file_template = $c->stash->{r_temp_file};
-    my $combine_pops_pid   = $c->stash->{combine_pops_pid};
-    my $job_type           = $c->stash->{job_type};
-    my $model_file         = $c->stash->{gs_model_args_file};
- 
-    my $solgs_tmp_dir = "'" . $c->stash->{solgs_tempfiles_dir} . "'";
+    my $dependency            = $c->stash->{dependency};
+    my $dependency_type       = $c->stash->{dependency_type};
+    my $background_job        = $c->stash->{background_job};
+    my $dependent_job         = $c->stash->{dependent_job};
+    my $temp_file_template    = $c->stash->{r_temp_file};  
+    my $job_type              = $c->stash->{job_type};
+    my $model_file            = $c->stash->{gs_model_args_file};
+    my $combine_pops_job_id   = $c->stash->{combine_pops_job_id};
+    my $solgs_tmp_dir         = "'" . $c->stash->{solgs_tempfiles_dir} . "'";
   
     my $r_script      = $c->stash->{r_commands_file};
     my $r_script_args =  $c->stash->{r_script_args};
 
-    if ($combine_pops_pid) 
+    if ($combine_pops_job_id) 
     {
-	$dependency = $combine_pops_pid;       
+	$dependency = $combine_pops_job_id;       
+    }
+
+    if ($dependency =~ /^:/)
+    {    
+	$dependency =~ s/://;
     }
 
     my $script_args;
@@ -4796,14 +4826,12 @@ sub run_async {
     	. ' --gs_model_args_file '        . $model_file
     	. ' --dependent_type '            . $job_type;
 
-
-    print STDERR "\nasync cmd: $cmd\n";
     $c->stash->{r_temp_file} = 'run-async';
     $self->create_cluster_acccesible_tmp_files($c);
 
     my $err_file_temp = $c->stash->{err_file_temp};
     my $out_file_temp = $c->stash->{out_file_temp};
- 
+
     my $async =  CXGN::Tools::Run->run_async($cmd,
 			     {
 				 working_dir      => $c->stash->{solgs_tempfiles_dir},
@@ -4814,19 +4842,19 @@ sub run_async {
 			     }
      );
  
-    my $async_pid = $async->pid();
+    #my $async_pid = $async->pid();
    
-    $c->stash->{async_pid}        = $async_pid;
-    $c->stash->{r_job_tempdir}    = $async->tempdir();
-    $c->stash->{r_job_id}         = $async->job_id();
+    #$c->stash->{async_pid}        = $async_pid;
+    #$c->stash->{r_job_tempdir}    = $async->tempdir();
+    #$c->stash->{r_job_id}         = $async->job_id();
  
-    if ($c->stash->{r_script} =~ /combine_populations/)
-    {
-     	$c->stash->{combine_pops_pid} = $async_pid; 
+   # if ($c->stash->{r_script} =~ /combine_populations/)
+   # {
+    # 	$c->stash->{combine_pops_job_id} = $async->job_id(); 
     #   #$c->stash->{r_job_tempdir}    = $async->tempdir();
     #   #$c->stash->{r_job_id}         = $async->job_id();
     #  # $c->stash->{cluster_job} = $r_job;
-    }
+  #  }
  
 }
 
@@ -4861,7 +4889,7 @@ sub run_r_script {
 	if ($r_script =~ /combine_populations/) 
 	{	    
 	    $c->stash->{job_type} = 'combine_populations'; 	   
-	    $c->stash->{combine_pops_pid} = $dependency;
+	    #$c->stash->{combine_pops_job_id} = $dependency;
 	    $c->stash->{gs_model_args_file} = $self->create_tempfile($c, 'gs_model_args');
 	    $self->run_async($c);
 	}
@@ -4910,7 +4938,7 @@ sub run_r_script {
 	    if ($r_script =~ /combine_populations/) 
 	    {	    
 		#$c->stash->{job_type} = 'combine_populations'; 	   
-		#$c->stash->{combine_pops_pid} = $r_job->job_id();
+		$c->stash->{combine_pops_job_id} = $r_job->job_id();
 		$c->stash->{gs_model_args_file} = $self->create_tempfile($c, 'gs_model_args');
 		#$self->run_async($c);
 	    }
@@ -4983,7 +5011,10 @@ sub cache_file {
 	$cache_dir = $c->stash->{solgs_cache_dir};
     }
    
-    my $file_cache  = Cache::File->new(cache_root => $cache_dir);
+    my $file_cache  = Cache::File->new(cache_root => $cache_dir, 
+				       lock_level => Cache::File::LOCK_NFS()
+	);
+
     $file_cache->purge();
 
     my $file  = $file_cache->get($cache_data->{key});

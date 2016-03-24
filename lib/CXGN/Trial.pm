@@ -22,6 +22,8 @@ package CXGN::Trial;
 use Moose;
 use Try::Tiny;
 use CXGN::Trial::TrialLayout;
+use SGN::Model::Cvterm;
+
 
 =head2 accessor bcs_schema()
 
@@ -229,6 +231,36 @@ sub remove_location {
 	$row->delete();
     }
 
+}
+
+# CLASS METHOD!
+
+=head2 class method get_all_locations()
+
+ Usage:        my @locations = CXGN::Trial::get_all_locations($schema)
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_all_locations { 
+    my $schema = shift;
+    my @locations;
+
+    my $location_type_id = $schema->resultset('Cv::Cvterm')->search( { name => 'project location' })->first()->cvterm_id();
+
+    if ($location_type_id) { 
+	my $rows = $schema->resultset('Project::Projectprop')->search( { type_id=> $location_type_id });
+	
+	while (my $s = $rows->next()) { 
+	    my $loc = $schema->resultset('NaturalDiversity::NdGeolocation')->find( { nd_geolocation_id => $s->value() });
+	    push @locations, [$s->value(), $loc->description(), $loc->latitude(), $loc->longitude(), $loc->geodetic_datum(), $loc->altitude()], 
+	}
+    }
+    return @locations;
 }
 
 =head2 function get_breeding_programs()
@@ -767,9 +799,9 @@ sub _delete_field_layout_experiment {
 	return { error => "Trial still has associated phenotyping experiment, cannot delete." };
     }
 
-    my $field_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "field layout" })->cvterm_id();
+    my $field_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "field_layout" })->cvterm_id();
 
-    my $genotyping_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'genotyping layout' }) ->cvterm_id();
+    my $genotyping_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'genotyping_layout' }) ->cvterm_id();
 
     print STDERR "Genotyping layout type id = $field_layout_type_id\n";
 
@@ -861,7 +893,7 @@ sub delete_project_entry {
 sub phenotype_count { 
     my $self = shift;
 
-    my $phenotyping_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'phenotyping experiment' })->cvterm_id();
+    my $phenotyping_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'phenotyping_experiment' })->cvterm_id();
     
     my $phenotype_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( 
     	{ 
@@ -996,18 +1028,8 @@ sub get_breeding_program_id {
 sub get_breeding_trial_cvterm_id {
     my $self = shift;
 
-    my $cv_id = $self->schema->resultset('Cv::Cv')->find( { name => 'local' } )->cv_id();
+    my $breeding_trial_cvterm_row = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'breeding_program_trial_relationship', 'project_relationship');
 
-    my $breeding_trial_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program_trial_relationship' });
-
-    if (!$breeding_trial_cvterm_row) {
-	my $row = $self->schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'breeding_program_trial_relationship',
-		cv   => 'local',
-	    });
-	$breeding_trial_cvterm_row = $row;
-    }
     return $breeding_trial_cvterm_row->cvterm_id();
 }
 
@@ -1015,64 +1037,41 @@ sub get_breeding_trial_cvterm_id {
 sub get_breeding_program_cvterm_id {
     my $self = shift;
 
-    my $breeding_program_cvterm_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'breeding_program' });
-    my $row;
+    my $breeding_program_cvterm =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'breeding_program', 'project_property');
 
-    if ($breeding_program_cvterm_rs->count() == 0) {
-	$row = $self->schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'breeding_program',
-		cv   => 'local',
-	    });
-
-    }
-    else {
-	$row = $breeding_program_cvterm_rs->first();
-    }
-
-    return $row->cvterm_id();
+    return $breeding_program_cvterm->cvterm_id();
 }
 
 sub get_harvest_date_cvterm_id { 
     my $self = shift;
 
-    my $harvest_date_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'harvest_date' });
-    my $row;
-
-    if ($harvest_date_rs->count() == 0) {
-	$row = $self->bcs_schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'harvest_date',
-		cv   => 'local',
-	    });
-
-    }
-    else {
-	$row = $harvest_date_rs->first();
-    }
-
-    return $row->cvterm_id();
+    my $harvest_date =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'harvest_date', 'project_property');
+    return $harvest_date->cvterm_id();
 }
 
 sub get_planting_date_cvterm_id { 
     my $self = shift;
+    my $planting_date =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'planting_date', 'project_property');
 
-    my $planting_date_rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'planting_date' });
-    my $row;
+    return $planting_date->cvterm_id();
 
-    if ($planting_date_rs->count() == 0) {
-	$row = $self->bcs_schema->resultset('Cv::Cvterm')->create_with(
-	    {
-		name => 'planting_date',
-		cv   => 'local',
-	    });
+}
 
-    }
-    else {
-	$row = $planting_date_rs->first();
-    }
+sub brapi_get_trial_accessions {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
+    my $sample_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'tissue_sample_of'});
 
-    return $row->cvterm_id();
+    my $rs = $schema->resultset('NaturalDiversity::NdExperimentProject')->search(
+	{'me.project_id' => $self->get_trial_id(), 'stock_relationship_subjects.type_id' => [$plot_of_cv->cvterm_id(),$sample_of_cv->cvterm_id()] },
+	{join=> ['project', {'nd_experiment' => {'nd_experiment_stocks' => {'stock' => 'stock_relationship_subjects'} } } ],
+	 '+select'=> ['nd_experiment_stocks.nd_experiment_stock_id', 'stock.stock_id', 'stock.name', 'stock.uniquename'], 
+	 '+as'=> ['study_entry_id', 'stock_id', 'name', 'uniquename'],
+	 order_by=>{ -asc=>'stock.stock_id' }
+	}
+    );
+    return $rs;
 }
 
 sub get_design_type {

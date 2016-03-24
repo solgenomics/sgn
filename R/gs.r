@@ -389,7 +389,7 @@ if ( is.null(predictionFile) == TRUE ) {
   gebvVariance  <- var(additiveEffects)
   heritability  <- round((gebvVariance / phenoVariance), digits = 2)
       
-  cat("\n", file = varianceComponentsFile,  append = TRUE)
+  cat("\n", file = varianceComponentsFile,  append = FALSE)
   cat('Error variance', iGEBV$Ve, file = varianceComponentsFile, sep = "\t", append = TRUE)
   cat("\n", file = varianceComponentsFile,  append = TRUE)
   cat('Additive genetic variance',  iGEBV$Vu, file = varianceComponentsFile, sep = '\t', append = TRUE)

@@ -181,9 +181,9 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $status;
    
-    my $async_pid = $c->stash->{async_pid};
+    #my $async_pid = $c->stash->{async_pid};
 
-    if ($c->stash->{dependency} && $async_pid)
+    if ($c->stash->{dependency})
     {	 
 	my $report_file = $c->stash->{report_file};
 	nstore $output_details,  $report_file 

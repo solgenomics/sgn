@@ -15,7 +15,7 @@ use File::Slurp qw /write_file read_file/;
 
 sub check_analysis_status {   
     my ($self, $output_details) = @_;
- 
+   
     $output_details = $self->check_success($output_details);
     
     $self->log_analysis_status($output_details);
@@ -566,8 +566,9 @@ sub multi_modeling_message {
     if ($cnt > 1 ) 
     {
 	$message .= "You can also view the summary of all the analyses in the page below."
-	    ." \nAdditionally, you may find the analytical features in the page useful.\n"
-	    . $output_details->{analysis_profile}->{analysis_page};
+	    ."\nAdditionally, you may find the analytical features in the page useful.\n"
+	    . $output_details->{analysis_profile}->{analysis_page}
+	    . "\n\n";
     }
 
     return  $message;

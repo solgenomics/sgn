@@ -288,9 +288,12 @@ sub combine_trait_data {
 
     my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-             
-    unless (-s $combined_pops_geno_file  && -s $combined_pops_pheno_file ) 
-    { 
+  
+    my $geno_cnt  = (split(/\s+/, qx / wc -l $combined_pops_geno_file /))[0];
+    my $pheno_cnt = (split(/\s+/, qx / wc -l $combined_pops_pheno_file /))[0];
+
+    unless ( $geno_cnt > 10  && $pheno_cnt > 10 ) 
+    {   	
 	$self->get_combined_pops_arrayref($c);
 	my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
 	$c->stash->{trait_combine_populations} = $combined_pops_list;
@@ -298,16 +301,14 @@ sub combine_trait_data {
 	$self->prepare_multi_pops_data($c);
 	
 	my $background_job = $c->stash->{background_job};
+	my $prerequisite_jobs = $c->stash->{prerequisite_jobs};
 	
 	if ($background_job) 
-	{
-	    my $prerequisite_jobs = $c->stash->{prerequisite_jobs};
-	    
+	{	    
 	    if ($prerequisite_jobs =~ /^:+$/) 
 	    { 
 		$prerequisite_jobs = undef;
 	    }
-	    print STDERR "\ncombine data build  model -- prerequisite jobs: $prerequisite_jobs\n";
 
 	    if ($prerequisite_jobs) 
 	    {
@@ -330,8 +331,8 @@ sub combine_data_build_model {
 	
     $self->combine_trait_data($c); 
   
-    my $combine_job_id = $c->stash->{r_job_id};
-  
+    my $combine_job_id = $c->stash->{combine_pops_job_id};
+   
     if ($combine_job_id) 
     {
 	$c->stash->{dependency} = "'" . $combine_job_id . "'";
