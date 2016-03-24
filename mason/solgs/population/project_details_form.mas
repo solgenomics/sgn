@@ -15,8 +15,8 @@ Searching for GS trials...
 </div>
 
 
-<div id="done_selecting">
-  <input  class="button" type="button" name="done_selecting"  value="Select" onclick="doneSelecting();"/>
+<div id="done_selecting_div">
+  <input  class="button" type="button" id="done_selecting"  value="Select"/>
 </div>
 
 

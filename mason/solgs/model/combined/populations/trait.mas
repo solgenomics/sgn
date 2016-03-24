@@ -31,13 +31,12 @@ $model_parameters
 
 </%perl>
 
-  <& /util/import_javascript.mas, classes => [ "solGS.phenotypeDataFlot", "solGS.traitGebvFlot", 
-                                              "flot.flot", "flot.categories", 
-                                              "flot.tooltip", "flot.selection", "flot.navigate", 
-                                              "flot.axisLabels", "statistics/simple_statistics"
-                                             ] 
-  &>
-
+<& /util/import_javascript.mas, classes => [ "solGS.phenotypeDataFlot", "solGS.traitGebvFlot", 
+					     "flot.flot", "flot.categories", 
+					     "flot.tooltip", "flot.selection", "flot.navigate", 
+					     "flot.axisLabels", "statistics/simple_statistics"
+					   ] 
+&>
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
@@ -49,7 +48,7 @@ $model_parameters
   collapsible => 1, 
   collapsed   => 0, 
   title       => "Training population summary",
-  &>
+&>
 
 <& summary.mas,
     project_name => $project_name,
@@ -58,8 +57,8 @@ $model_parameters
     markers_no   => $markers_no,
     owner        => $owner,
     protocol     => $protocol,
- &>
- 
+&>
+
 </&>
 
 <&| /page/info_section.mas, 
@@ -72,7 +71,7 @@ $model_parameters
   combo_pops_id    => $combo_pops_id,
   trait_id         => $trait_id,
   descriptive_stat => $descriptive_stat,
- &>
+&>
 
 </&>
 
@@ -90,16 +89,12 @@ $model_parameters
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
-   combo_pops_id      => $combo_pops_id,
-   trait_combo_pops   => $trait_combo_pops,
-   trait_id           => $trait_id
 &>
 
 <& /solgs/model/marker_effects.mas, 
    top_marker_effects          => $top_marker_effects,
    marker_effects_download_url => $marker_effects_download_url
 &>
-
 
 <& /solgs/population/selection_populations.mas, 
    download_prediction     => $download_prediction,
