@@ -929,7 +929,7 @@ sub total_phenotypes {
 =head2 function get_phenotypes_for_trait($trait_id)
 
  Usage:
- Desc:         returns the measurements for the given trait in this trial
+ Desc:         returns the measurements for the given trait in this trial as an array of values, e.g. [2.1, 2, 50]
  Ret:
  Args:
  Side Effects:
@@ -948,9 +948,38 @@ sub get_phenotypes_for_trait {
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );
     while (my ($value) = $h->fetchrow_array()) {
-	push @data, $value + 0;
+	   push @data, $value + 0;
     }
     return @data;
+}
+
+=head2 function get_plot_phenotypes_for_trait($trait_id)
+
+ Usage:
+ Desc:         returns all plot name, germplasmName, measurement for the given trait in this trial
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_plot_phenotypes_for_trait {
+    my $self = shift;
+    my $trait_id = shift;
+    my @data;
+    my $dbh = $self->bcs_schema->storage()->dbh();
+
+    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+
+    my $h = $dbh->prepare("SELECT stock.stock_id, stock.uniquename, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real FROM cvterm as a JOIN phenotype ON (a.cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN cvterm as b ON (b.cvterm_id=nd_experiment_stock.type_id) JOIN stock USING(stock_id) WHERE project_id=? and a.cvterm_id = ? and b.cvterm_id = ? and phenotype.value~? ORDER BY stock.stock_id;");
+
+    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    $h->execute($self->get_trial_id(), $trait_id, $phenotyping_experiment_cvterm, $numeric_regex );
+    while (my ($plot_id, $plot_name, $pheno_uniquename, $uploader_id, $value) = $h->fetchrow_array()) {
+        push @data, [$plot_id, $plot_name, $pheno_uniquename, $uploader_id, $value + 0];
+    }
+    return \@data;
 }
 
 =head2 function get_traits_assayed()

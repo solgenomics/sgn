@@ -1510,6 +1510,93 @@ sub studies_layout_GET {
 }
 
 
+=head2 brapi/v1/studies/<studyDbId>/observationVariable/<observationVariableDbId>
+
+ Usage: To retrieve phenotypic values on a the plot level for an entire trial
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : "status": [],
+                "pagination": {
+                    "pageSize": 1,
+                    "currentPage": 1,
+                    "totalCount": 1,
+                    "totalPages": 1
+                },
+            "result" : {
+                "data" : [ 
+                    {
+                        "studyDbId": 1,
+                        "plotDbId": 11,
+                        "observationVariableDbId" : 393939,
+                        "observationVariableName" : "Yield", 
+                        "plotName": "ZIPA_68_Ibadan_2014",
+                        "timestamp" : "2015-11-05 15:12",
+                        "uploadedBy" : {dbUserId},
+                        "operator" : "Jane Doe",
+                        "germplasmName": 143,
+                        "value" : 5,
+                    }
+                ]
+            }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub studies_plot_phenotypes : Chained('studies_single') PathPart('observationVariable') Args(1) : ActionClass('REST') { }
+
+sub studies_plot_phenotypes_POST {
+    my $self = shift;
+    my $c = shift;
+    my $trait_id = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
+
+    $c->stash->{rest} = {status => \@status};
+}
+
+sub studies_plot_phenotypes_GET {
+    my $self = shift;
+    my $c = shift;
+    my $trait_id = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
+    my %result;
+
+    my $t = $c->stash->{study};
+    my $phenotype_data = $t->get_plot_phenotypes_for_trait($trait_id);
+
+    my $trait =$self->bcs_schema->resultset('Cv::Cvterm')->find({ cvterm_id => $trait_id });
+
+    #print STDERR Dumper $phenotype_data;
+    
+    my @data;
+    my $total_count = scalar(@$phenotype_data);
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
+    for( my $i = $start; $i <= $end; $i++ ) {
+        if (@$phenotype_data[$i]) {
+            my $pheno_uniquename = @$phenotype_data[$i]->[2];
+            my ($part1 , $part2) = split( /date: /, $pheno_uniquename);
+            my ($timestamp , $operator) = split( /\ \ operator = /, $part2);
+
+            my %data_hash = (studyDbId => $c->stash->{study_id}, plotDbId => @$phenotype_data[$i]->[0], observationVariableDbId => $trait_id, observationVariableName => $trait->name(), plotName => @$phenotype_data[$i]->[1], timestamp => $timestamp, uploadedBy => @$phenotype_data[$i]->[3], operator => $operator, germplasmName => '', value => @$phenotype_data[$i]->[4] );
+            push @data, \%data_hash;
+        }
+    }
+
+    %result = (data=>\@data);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+
+
 =head2 brapi/v1/phenotypes?observationUnitLevel=plot&studyDbId=876&studyPUI=&studyLocation=&studySet=&studyProject=&treatmentFactor=lowInput&germplasmGenus=&germplasmSubTaxa=&germplasmDbId&germplasmPUI=http://data.inra.fr/accession/234Col342&germplasmSpecies=Triticum&panel=diversitypanel1&collection=none&observationVariables=CO_321:000034,CO_321:000025&location=bergheim&season=2005,2006&pageSize={pageSize}&page={page}
 
  Usage: To retrieve a phenotype dataset
@@ -1670,15 +1757,15 @@ sub traits_list_GET {
 
     my @data;
     while (my ($cvterm_id, $name) = $p->fetchrow_array()) {
-	my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) WHERE cvterm.cvterm_id=?";
-	my $h = $self->bcs_schema()->storage->dbh()->prepare($q2);
-	$h->execute($cvterm_id);
+        my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) WHERE cvterm.cvterm_id=?";
+        my $h = $self->bcs_schema()->storage->dbh()->prepare($q2);
+        $h->execute($cvterm_id);
 
-	while (my ($description, $scale, $accession) = $h->fetchrow_array()) {
-	    my @observation_vars = ();
-	    push (@observation_vars, ($name, $accession));
-	    push @data, { traitDbId => $cvterm_id, traitId => $name, name => $name, description => $description, observationVariables => \@observation_vars, defaultValue => '', scale =>$scale };
-	}
+        while (my ($description, $scale, $accession) = $h->fetchrow_array()) {
+            my @observation_vars = ();
+            push (@observation_vars, ($name, $accession));
+            push @data, { traitDbId => $cvterm_id, traitId => $name, name => $name, description => $description, observationVariables => \@observation_vars, defaultValue => '', scale =>$scale };
+        }
     }
 
     my $total_count = $p->rows;
