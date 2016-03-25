@@ -621,8 +621,10 @@ sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     
     my $referer = $c->req->referer;
     
-    $c->stash->{message} = "<p>Your analysis is running.</p>
-                            <p>You will receive an email when it is completed.</p>
+    $c->stash->{message} = "<p>Your analysis is running.<br />
+                            You will receive an email when it is completed.<br /></p>
+                            <p>You can also check the status of the analysis in 
+                            <a href=\"/solpeople/top-level.pl\">your profile page</a>.</p>
                             <p><a href=\"$referer\">[ Go back ]</a></p>";
 
     $c->stash->{template} = "/generic_message.mas"; 

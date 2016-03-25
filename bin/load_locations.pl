@@ -16,7 +16,8 @@ load_locations.pl - loading locations into cxgn databases.
 
 =head1 DESCRIPTION
 
-This script loads locations data into Chado, by adding data to nd_geolocation table. Infile is Excel .xls format and Header is in this order: 'Name', 'Longitude', 'Latitude', 'Altitude'
+This script loads locations data into Chado, by adding data to nd_geolocation table. Infile is Excel .xls format.
+Header is in this order: 'Full Name', 'Longitude', 'Latitude', 'Altitude'
 
 =head1 AUTHOR
 
@@ -56,10 +57,15 @@ my $dbh = CXGN::DB::InsertDBH->new({
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 $dbh->do('SET search_path TO public,sgn');
 
-
+ 
 my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
 my ( $row_min, $row_max ) = $worksheet->row_range();
 my ( $col_min, $col_max ) = $worksheet->col_range();
+
+if ($col_max ne '3' || $worksheet->get_cell(0,0)->value() ne 'Full Name' || $worksheet->get_cell(0,1)->value() ne 'Longitude' || $worksheet->get_cell(0,2)->value() ne 'Latitude' || $worksheet->get_cell(0,3)->value() ne 'Altitude') {
+    pod2usage(-verbose => 2, -message => "Headers must be only in this order: Full Name, Longitude, Latitude, Altitude\n");
+}
+
 
 for my $row ( 1 .. $row_max ) {
 
