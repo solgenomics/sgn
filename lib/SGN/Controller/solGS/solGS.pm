@@ -1496,7 +1496,79 @@ sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
 
 }
 
+
+sub predict_selection_pop_single_pop_model {
+    my ($self, $c) = @_;
+
+    my $trait_id          = $c->stash->{trait_id};
+    my $training_pop_id   = $c->stash->{training_pop_id};
+    my $prediction_pop_id = $c->stash->{prediction_pop_id};
+
+    $self->get_trait_details($c, $trait_id);
+    my $trait_abbr = $c->stash->{trait_abbr};
+
+    my $identifier = $training_pop_id . '_' . $prediction_pop_id;
+    $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    
+    my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+   
+    if (! -s $prediction_pop_gebvs_file)
+    {
+	my $dir = $c->stash->{solgs_cache_dir};
+        
+	my $exp = "phenotype_data_${training_pop_id}"; 
+	my $pheno_file = $self->grep_file($dir, $exp);
+
+	$exp = "genotype_data_${training_pop_id}"; 
+	my $geno_file = $self->grep_file($dir, $exp);
+
+	$c->stash->{pheno_file} = $pheno_file;
+	$c->stash->{geno_file}  = $geno_file;
+	$self->prediction_population_file($c, $prediction_pop_id);
+  
+	$self->get_rrblup_output($c); 
+    }   
+
+}
  
+
+sub predict_selection_pop_combined_pops_model {
+    my ($self, $c) = @_;
+         
+    my $data_set_type     = $c->stash->{data_set_type}; 
+    my $combo_pops_id     = $c->stash->{combo_pops_id};
+    my $model_id          = $c->stash->{model_id};                          
+    my $prediction_pop_id = $c->stash->{prediction_pop_id};
+    my $trait_id          = $c->stash->{trait_id};
+        
+    $self->get_trait_details($c, $trait_id);
+    my $trait_abbr = $c->stash->{trait_abbr};
+
+    my $identifier = $combo_pops_id . '_' . $prediction_pop_id;
+    $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+        
+    my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+      
+    if (! -s $prediction_pop_gebvs_file)
+    {
+	my $dir = $c->stash->{solgs_cache_dir};
+        
+	my $exp = "phenotype_data_${model_id}_${trait_abbr}_combined"; 
+	my $pheno_file = $self->grep_file($dir, $exp);
+
+	$exp = "genotype_data_${model_id}_${trait_abbr}_combined"; 
+	my $geno_file = $self->grep_file($dir, $exp);
+
+	$c->stash->{trait_combined_pheno_file} = $pheno_file;
+	$c->stash->{trait_combined_geno_file}  = $geno_file;
+	$self->prediction_population_file($c, $prediction_pop_id);
+  
+	$self->get_rrblup_output($c); 
+    }
+
+}
+
+
 sub prediction_population :Path('/solgs/model') Args(3) {
     my ($self, $c, $model_id, $pop, $prediction_pop_id) = @_;
 
@@ -1512,42 +1584,18 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         $model_id =~ s/combined_//;
         my ($combo_pops_id, $trait_id) = $referer =~ m/(\d+)/g;
 
-        $c->stash->{data_set_type} = "combined populations"; 
-        $c->stash->{combo_pops_id} = $model_id;
-        $c->stash->{model_id}      = $model_id;                          
+        $c->stash->{data_set_type}     = "combined populations"; 
+        $c->stash->{combo_pops_id}     = $model_id;
+        $c->stash->{model_id}          = $model_id;                          
         $c->stash->{prediction_pop_id} = $prediction_pop_id;  
-        
-        $self->get_trait_details($c, $trait_id);
-        my $trait_abbr = $c->stash->{trait_abbr};
-
-        my $identifier = $combo_pops_id . '_' . $prediction_pop_id;
-        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-        
-        my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
-      
-        if (! -s $prediction_pop_gebvs_file)
-        {
-            my $dir = $c->stash->{solgs_cache_dir};
-        
-            my $exp = "phenotype_data_${model_id}_${trait_abbr}_combined"; 
-            my $pheno_file = $self->grep_file($dir, $exp);
-
-            $exp = "genotype_data_${model_id}_${trait_abbr}_combined"; 
-            my $geno_file = $self->grep_file($dir, $exp);
-
-            $c->stash->{trait_combined_pheno_file} = $pheno_file;
-            $c->stash->{trait_combined_geno_file}  = $geno_file;
-            $self->prediction_population_file($c, $prediction_pop_id);
-  
-            $self->get_rrblup_output($c); 
-        }
+        $c->stash->{trait_id}          = $trait_id;
+       
+	$self->predict_selection_pop_combined_pops_model($c);
         
         $self->combined_pops_summary($c);        
         $self->trait_phenotype_stat($c);
         $self->gs_files($c);
-        
-        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-
+	
         $c->res->redirect("/solgs/model/combined/populations/$model_id/trait/$trait_id"); 
         $c->detach();
     }
@@ -1559,39 +1607,16 @@ sub prediction_population :Path('/solgs/model') Args(3) {
        
         $c->stash->{data_set_type}     = "single population"; 
         $c->stash->{pop_id}            = $pop_id;
-        $c->stash->{model_id}          = $model_id;                          
+        $c->stash->{model_id}          = $model_id;
+	$c->stash->{training_pop_id}   = $pop_id;
         $c->stash->{prediction_pop_id} = $prediction_pop_id;  
-        
-        $self->get_trait_details($c, $trait_id);
-        my $trait_abbr = $c->stash->{trait_abbr};
+        $c->stash->{trait_id}          = $trait_id;
 
-        my $identifier = $pop_id . '_' . $prediction_pop_id;
-        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-        
-        my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
-      
-        if (! -s $prediction_pop_gebvs_file)
-        {
-            my $dir = $c->stash->{solgs_cache_dir};
-        
-            my $exp = "phenotype_data_${pop_id}"; 
-            my $pheno_file = $self->grep_file($dir, $exp);
-
-            $exp = "genotype_data_${pop_id}"; 
-            my $geno_file = $self->grep_file($dir, $exp);
-
-            $c->stash->{pheno_file} = $pheno_file;
-            $c->stash->{geno_file}  = $geno_file;
-            $self->prediction_population_file($c, $prediction_pop_id);
-  
-            $self->get_rrblup_output($c); 
-        }
+	$self->predict_selection_pop_single_pop_model($c);
 
          $self->trait_phenotype_stat($c);
          $self->gs_files($c);
         
-         $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-
          $c->res->redirect("/solgs/trait/$trait_id/population/$pop_id");
          $c->detach();
            
@@ -1850,7 +1875,7 @@ sub download_prediction_urls {
     }
     else
     {        
-        $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$prediction_pop_id"  onclick="solGS.waitPage(this.href) return false;">[ Predict ]</a> |;
+        $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$prediction_pop_id"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a> |;
 
 	$c->stash->{download_prediction} = '' if $c->stash->{uploaded_prediction};
     }
@@ -2397,7 +2422,7 @@ sub format_selection_pops {
                   $id_pop_name             = to_json($id_pop_name);
 
                   $pred_pop_link = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id" 
-                                      onclick="solGS.waitPage()"><input type="hidden" value=\'$id_pop_name\'>$name</data> 
+                                      onclick="solGS.waitPage(this.href); return false;"><input type="hidden" value=\'$id_pop_name\'>$name</data> 
                                       </a> 
                                     |;
 
@@ -5035,6 +5060,7 @@ sub cache_file {
     }
 
     $c->stash->{$cache_data->{stash_key}} = $file;
+    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
 }
 
 
