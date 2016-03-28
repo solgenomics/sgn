@@ -83,13 +83,13 @@ jQuery( document ).ready( function() {
 	}
     });
 
-    $('#upload_phenotype_spreadsheet_dialog').on('hidden.bs.modal', function () {
+	$('#upload_phenotype_spreadsheet_dialog').on('hidden.bs.modal', function () {
 		location.reload();
 	})
-	$('#upload_phenotype_datacollector_dialog').on('hidden.bs.modal', function () {
+	$('#upload_datacollector_phenotypes_dialog').on('hidden.bs.modal', function () {
 		location.reload();
 	})
-	$('#upload_phenotype_fieldbook_dialog').on('hidden.bs.modal', function () {
+	$('#upload_fieldbook_phenotypes_dialog').on('hidden.bs.modal', function () {
 		location.reload();
 	})
 
