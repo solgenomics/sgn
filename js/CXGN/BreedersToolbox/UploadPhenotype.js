@@ -83,6 +83,16 @@ jQuery( document ).ready( function() {
 	}
     });
 
+    $('#upload_phenotype_spreadsheet_dialog').on('hidden.bs.modal', function () {
+		location.reload();
+	})
+	$('#upload_phenotype_datacollector_dialog').on('hidden.bs.modal', function () {
+		location.reload();
+	})
+	$('#upload_phenotype_fieldbook_dialog').on('hidden.bs.modal', function () {
+		location.reload();
+	})
+
 });
 
 function initializeUploadPhenotype(uploadFile, message, file_form, url) {
@@ -207,4 +217,6 @@ function displayPhenotypeUploadStoreResponse(response, upload_type) {
     }
     message_text += "</ul>";
     jQuery(upload_phenotype_status).html(message_text);
-    matviews_update_options();}
+    matviews_update_options();
+}
+
