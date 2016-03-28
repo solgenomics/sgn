@@ -716,7 +716,8 @@ sub uploaded_population_summary {
    
     if (!$c->user)
     {
-	$c->res->redirect('/solgs/list/login/message');
+	my $page = "/" . $c->req->path;
+	$c->res->redirect("/solgs/list/login/message?page=$page");
 	$c->detach;
     }
     else
@@ -981,8 +982,6 @@ sub trait :Path('/solgs/trait') Args(3) {
 	$c->stash->{trait_id} = $trait_id;
      
 	$self->build_single_trait_model($c);
-
-
 	
 	$self->gs_files($c);
 
