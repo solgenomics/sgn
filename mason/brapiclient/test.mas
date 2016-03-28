@@ -5,10 +5,10 @@
 
 jQuery.ajax({
 	type: 'POST',
-	url: 'http://127.0.0.1:3000/brapi/v1/token?username=nmorales&password=secretpw&grant_type=password',
+	url: 'http://127.0.0.1:3000/brapi/v1/token?username=janedoe&password=secretpw&grant_type=password',
 	success: function(response) {
 		//console.log(response);
-		var url = 'http://127.0.0.1:3000/brapi/v1/studies/341/details?session_token='+response.session_token;
+		var url = 'http://127.0.0.1:3000/brapi/v1/maps/1/positions?linkageGroupIdList=S3115&min=42000&max=1000000&session_token='+response.session_token;
 
 		jQuery.ajax({
 			type: 'GET',

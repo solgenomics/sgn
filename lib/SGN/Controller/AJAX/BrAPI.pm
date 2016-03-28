@@ -2154,7 +2154,21 @@ sub maps_marker_detail_GET {
 
             if (%linkage_groups) {
                 if (exists $linkage_groups{$chr} ) {
-        	       push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+                    if ($params->{min} && $params->{max}) {
+                        if ($pos >= $params->{min} && $pos <= $params->{max}) {
+                            push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+                        }
+                    } elsif ($params->{min}) {
+                        if ($pos >= $params->{min}) {
+                            push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+                        }
+                    } elsif ($params->{max}) {
+                        if ($pos <= $params->{max}) {
+                            push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+                        }
+                    } else {
+                        push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+                    }
                 }
             } else {
                 push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
