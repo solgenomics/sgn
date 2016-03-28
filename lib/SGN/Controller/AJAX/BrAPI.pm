@@ -622,19 +622,22 @@ sub studies_germplasm_GET {
     my %result;
     my $status = $c->stash->{status};
     my @status = @$status;
+    my $total_count = 0;
 
     my $synonym_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
     my $tl = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
     my ($accessions, $controls) = $tl->_get_trial_accession_names_and_control_names();
     my @germplasm_data;
 
-    push (@$accessions, @$controls);
-    my $total_count = scalar(@$accessions);
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
-    for( my $i = $start; $i <= $end; $i++ ) {
-        if (@$accessions[$i]) {
-            push @germplasm_data, { germplasmDbId=>@$accessions[$i]->{stock_id}, germplasmName=>@$accessions[$i]->{accession_name}, studyEntryNumberId=>'', defaultDisplayName=>@$accessions[$i]->{accession_name}, accessionNumber=>@$accessions[$i]->{accession_name}, germplasmPUI=>@$accessions[$i]->{accession_name}, pedigree=>germplasm_pedigree_string($self->bcs_schema, @$accessions[$i]->{stock_id}), seedSource=>'', synonyms=>germplasm_synonyms($self->bcs_schema, @$accessions[$i]->{stock_id}, $synonym_id)};
+    if ($accessions) {
+        push (@$accessions, @$controls);
+        $total_count = scalar(@$accessions);
+        my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+        my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
+        for( my $i = $start; $i <= $end; $i++ ) {
+            if (@$accessions[$i]) {
+                push @germplasm_data, { germplasmDbId=>@$accessions[$i]->{stock_id}, germplasmName=>@$accessions[$i]->{accession_name}, studyEntryNumberId=>'', defaultDisplayName=>@$accessions[$i]->{accession_name}, accessionNumber=>@$accessions[$i]->{accession_name}, germplasmPUI=>@$accessions[$i]->{accession_name}, pedigree=>germplasm_pedigree_string($self->bcs_schema, @$accessions[$i]->{stock_id}), seedSource=>'', synonyms=>germplasm_synonyms($self->bcs_schema, @$accessions[$i]->{stock_id}, $synonym_id)};
+            }
         }
     }
 
@@ -978,17 +981,22 @@ sub genotype_fetch_GET {
     );
 
     if ($rs) {
-	$total_count = $rs->count();
-	foreach my $row ($rs->all()) {
+    	foreach my $row ($rs->first()) {
 
-	    my $genotype_json = $row->get_column('value');
-	    my $genotype = JSON::Any->decode($genotype_json);
-	    foreach my $m (sort genosort keys %$genotype) {
-		push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
-	    }
+    	    my $genotype_json = $row->get_column('value');
+    	    my $genotype = JSON::Any->decode($genotype_json);
+            $total_count = scalar keys %$genotype;
 
-	    %result = (germplasmDbId=>$row->get_column('stock_id'), extractDbId=>'', markerprofileDbId=>$c->stash->{markerprofile_id}, analysisMethod=>$row->get_column('protocol_name'), encoding=>"AA,BB,AB", data => \@data);
-	}
+    	    foreach my $m (sort genosort keys %$genotype) {
+                push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
+    	    }
+
+            my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+            my $end = $c->stash->{page_size}*$c->stash->{current_page};
+            my @data_window = splice @data, $start, $end;
+
+    	    %result = (germplasmDbId=>$row->get_column('stock_id'), extractDbId=>'', markerprofileDbId=>$c->stash->{markerprofile_id}, analysisMethod=>$row->get_column('protocol_name'), encoding=>"AA,BB,AB", data => \@data_window);
+    	}
     }
 
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
@@ -1934,8 +1942,12 @@ sub maps_list_GET {
     }
 
     my $total_count = scalar(@data);
-    my %result = (data => \@data);
-    my %metadata = (pagination=>pagination_response($total_count, '1000000000000', $c->stash->{current_page}), status=>\@status);
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my @data_window = splice @data, $start, $end;
+
+    my %result = (data => \@data_window);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2009,7 +2021,7 @@ sub maps_details_GET {
     my $status = $c->stash->{status};
     my @status = @$status;
     my $params = $c->req->params();
-
+    my $total_count = 0;
 
     # maps are just marker lists associated with specific protocols
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { nd_protocol_id => $c->stash->{map_id} } );
@@ -2049,17 +2061,21 @@ sub maps_details_GET {
             push @data, \%linkage_groups_data;
         }
 
+        $total_count = scalar(@data);
+        my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+        my $end = $c->stash->{page_size}*$c->stash->{current_page};
+        my @data_window = splice @data, $start, $end;
+
     	%map_info = (
     	    mapId =>  $row->nd_protocol_id(),
     	    name => $row->name(),
     	    type => "physical",
     	    unit => "bp",
-    	    linkageGroups => \@data,
+    	    linkageGroups => \@data_window,
     	    );
     }
 
-    my $total_count = scalar(@data);
-    my %metadata = (pagination=>pagination_response($total_count, '1000000000000', $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%map_info);
     $c->stash->{rest} = \%response;
 }
@@ -2177,8 +2193,12 @@ sub maps_marker_detail_GET {
     }
 
     my $total_count = scalar(@markers);
-    my %result = (data => \@markers);
-    my %metadata = (pagination=>pagination_response($total_count, '1000000000000', $c->stash->{current_page}), status=>\@status);
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my @data_window = splice @markers, $start, $end;
+
+    my %result = (data => \@data_window);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
