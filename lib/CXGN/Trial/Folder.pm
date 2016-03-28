@@ -336,7 +336,7 @@ sub associate_parent {
     my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create( 
 	{ 
 	    object_project_id => $parent_id,
-	    subject_project_id => $self->project()->project_id(),
+	    subject_project_id => $self->folder_id(),
 	    type_id => $folder_cvterm_id,
 	});
     
