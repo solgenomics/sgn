@@ -34,7 +34,7 @@ function  askUser(page, args) {
 	    height : 200,
 	    width  : 400,
 	    modal  : true,
-	    title  : "Analysis update message",
+	    title  : "Analysis job submission",
  	    buttons: {	
 		Yes: {
 		    text: 'Yes',
@@ -53,6 +53,14 @@ function  askUser(page, args) {
 			jQuery(this).dialog("close");
 			  
 			displayAnalysisNow(page, args);
+		    },
+		},
+		
+		Cancel: { 
+		    text: 'Cancel',
+		    class: 'btn btn-info',
+		    click: function() { 
+			jQuery(this).dialog("close");
 		    },
 		},
 	    }
@@ -97,7 +105,7 @@ function loginAlert () {
 	    height : 200,
 	    width  : 250,
 	    modal  : true,
-	    title  : 'Login Alert',
+	    title  : 'Login',
 	    buttons: {
 		OK: {
 		    click: function () {

@@ -87,6 +87,20 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
 
 }
 
+sub solgs_list_login_message :Path('/solgs/list/login/message') Args(0) {
+    my ($self, $c) = @_;
+
+    my $page = $c->req->param('page');
+
+    my $message = "This is a private data. If you are the owner, "
+	. "please <a href=\"/solpeople/login.pl?goto_url=$page\">login</a> to view it.";
+
+    $c->stash->{message} = $message;
+
+    $c->stash->{template} = "/generic_message.mas"; 
+   
+}
+
 
 sub get_selection_genotypes_list_from_file {
     my ($self, $file) = @_;
@@ -175,7 +189,6 @@ sub create_list_population_metadata {
     $c->stash->{user_list_population_metadata} = $metadata;
   
 }
-
 
 
 sub create_list_population_metadata_file {
