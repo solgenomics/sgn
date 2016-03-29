@@ -215,7 +215,7 @@ sub germplasm_list_POST {
 sub germplasm_list_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $params = $c->req->params();
 
     my $status = $c->stash->{status};
@@ -310,7 +310,7 @@ sub germplasm_detail_POST {
 sub germplasm_detail_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $rs = $c->stash->{stock};
     my $schema = $self->bcs_schema();
     my $status = $c->stash->{status};
@@ -391,7 +391,7 @@ sub germplasm_mcpd_POST {
 sub germplasm_mcpd_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $schema = $self->bcs_schema();
     my %result;
     my $status = $c->stash->{status};
@@ -477,7 +477,7 @@ sub studies_list_POST {
 sub studies_list_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $program_id = $c->req->param("programId");
     my $status = $c->stash->{status};
     my @status = @$status;
@@ -619,7 +619,7 @@ sub studies_germplasm_POST {
 sub studies_germplasm_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my %result;
     my $status = $c->stash->{status};
     my @status = @$status;
@@ -687,7 +687,7 @@ sub germplasm_pedigree_POST {
 sub germplasm_pedigree_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $schema = $self->bcs_schema();
     my %result;
     my $status = $c->stash->{status};
@@ -754,7 +754,7 @@ sub germplasm_markerprofile_POST {
 sub germplasm_markerprofile_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $schema = $self->bcs_schema();
     my %result;
     my $status = $c->stash->{status};
@@ -837,7 +837,7 @@ sub markerprofiles_list_POST {
 sub markerprofiles_list_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $germplasm = $c->req->param("germplasm");
     my $extract = $c->req->param("extract");
     my $method = $c->req->param("method");
@@ -965,7 +965,7 @@ sub genotype_fetch_POST {
 sub genotype_fetch_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
     my @data;
@@ -1096,7 +1096,7 @@ sub convert_dosage_to_genotype {
 sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
 
@@ -1227,7 +1227,7 @@ sub programs_list_POST {
 sub programs_list_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
     my %result;
@@ -1301,7 +1301,7 @@ sub studies_types_list_POST {
 sub studies_types_list_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my %result;
     my @data;
     my $status = $c->stash->{status};
@@ -1337,7 +1337,7 @@ sub studies_instances_POST {
 sub studies_instances_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my %result;
     my $status = $c->stash->{status};
     my @status = @$status;
@@ -1364,7 +1364,7 @@ sub studies_info_POST {
 sub studies_info_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my %result;
     my $status = $c->stash->{status};
     my @status = @$status;
@@ -1412,7 +1412,7 @@ sub studies_details_POST {
 sub studies_details_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
     my %result;
@@ -1486,7 +1486,7 @@ sub studies_layout_POST {
 sub studies_layout_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
     my %result;
@@ -1579,7 +1579,7 @@ sub studies_plot_phenotypes_GET {
     my $self = shift;
     my $c = shift;
     my $trait_id = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
     my %result;
@@ -1665,7 +1665,7 @@ sub studies_table_POST {
 sub studies_table_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
     my %result;
@@ -1794,7 +1794,7 @@ sub phenotypes_dataset_POST {
 sub phenotypes_dataset_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my $params = $c->req->params();
     my @status = @$status;
@@ -1842,7 +1842,7 @@ sub traits_list_POST {
 sub traits_list_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
 
@@ -1882,7 +1882,7 @@ sub traits_list_GET {
 sub traits_single  : Chained('brapi') PathPart('traits') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $cvterm_id = shift;
     my $status = $c->stash->{status};
     my @status = @$status;
@@ -1973,7 +1973,7 @@ sub maps_list_POST {
 sub maps_list_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
 
@@ -2100,7 +2100,7 @@ sub maps_details_POST {
 sub maps_details_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
     my $params = $c->req->params();
@@ -2210,7 +2210,7 @@ sub maps_marker_detail_POST {
 sub maps_marker_detail_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
     my $params = $c->req->params();
@@ -2302,7 +2302,7 @@ sub locations_list_POST {
 sub locations_list_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
     my @data;
