@@ -11,6 +11,7 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Chado::Stock;
 use CXGN::Login;
+use CXGN::BreederSearch;
 use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -1615,6 +1616,88 @@ sub studies_plot_phenotypes_GET {
     $c->stash->{rest} = \%response;
 }
 
+
+=head2 brapi/v1/studies/<studyDbId>/table
+
+ Usage: To retrieve phenotypic values for a study, in a manner representative of a table, with headers and data separated
+ Desc:
+ Return JSON example:
+{
+    "metadata": {
+        "status": [],
+        "pagination": {
+            "pageSize": 1,
+            "currentPage": 1,
+            "totalCount": 1,
+            "totalPages": 1
+        },
+    }
+    "result" : {
+        "studyDbId": 1,
+        "observationVariableDbId": [ '', '', '', '', '', '', '', '', 44444, 55555, 66666...],
+        "observationVariableName": [ "plotDbId", "plotName", "block", "rep", "germplasmID", "germplasmName", "operator", "timestamp", "Yield", "Color", "Dry Matter"...],
+
+        "data" :
+        [
+          [1, "plot1", 1, 1, "CIP1", 41, "user1", "2015-11-05 15:12", 10, "yellow", 9, ...],
+          [2, "plot2", 1, 1, "CIP2", 42, "user1", "2015-11-05 20:12", 3, "red", 4, ...]
+        ]
+    }
+}
+ Args:
+ Side Effects:
+
+=cut
+
+sub studies_table : Chained('studies_single') PathPart('table') Args(0) : ActionClass('REST') { }
+
+sub studies_table_POST {
+    my $self = shift;
+    my $c = shift;
+    my $trait_id = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
+
+    $c->stash->{rest} = {status => \@status};
+}
+
+sub studies_table_GET {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my @status = @$status;
+    my %result;
+
+    my $bs = CXGN::BreederSearch->new( { dbh => $self->bcs_schema->storage->dbh() });
+    my $trial_id = $c->stash->{study_id};
+    my $trial_sql = "\'$trial_id\'";
+    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef);
+
+    #print STDERR Dumper \@data;
+
+    my $total_count = scalar(@data)-1;
+    my @header_ids;
+    my @header_names = split /\t/, $data[0];
+
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1)+1;
+    my $end = $c->stash->{page_size}*$c->stash->{current_page}+1;
+    my @data_window;
+    for (my $line = $start; $line < $end; $line++) { 
+        if ($data[$line]) {
+            my @columns = split /\t/, $data[$line];
+            
+            push @data_window, \@columns;
+        }
+    }
+    
+    
+    %result = (studyDbId => $c->stash->{study_id}, observationVariableDbId => \@header_ids, observationVariableName => \@header_names, data=>\@data_window);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
 
 
 =head2 brapi/v1/phenotypes?observationUnitLevel=plot&studyDbId=876&studyPUI=&studyLocation=&studySet=&studyProject=&treatmentFactor=lowInput&germplasmGenus=&germplasmSubTaxa=&germplasmDbId&germplasmPUI=http://data.inra.fr/accession/234Col342&germplasmSpecies=Triticum&panel=diversitypanel1&collection=none&observationVariables=CO_321:000034,CO_321:000025&location=bergheim&season=2005,2006&pageSize={pageSize}&page={page}
