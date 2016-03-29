@@ -1686,12 +1686,13 @@ sub studies_table_GET {
     my @data_window;
     for (my $line = $start; $line < $end; $line++) { 
         if ($data[$line]) {
-            my @columns = split /\t/, $data[$line];
+            my @columns = split /\t/, $data[$line], -1;
             
             push @data_window, \@columns;
         }
     }
     
+    #print STDERR Dumper \@data_window;
     
     %result = (studyDbId => $c->stash->{study_id}, observationVariableDbId => \@header_ids, observationVariableName => \@header_names, data=>\@data_window);
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
