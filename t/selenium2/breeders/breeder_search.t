@@ -21,7 +21,11 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("c1_data", "id", "select specific trait")->send_keys('dry matter content|CO:0000092');
 
+    sleep(1);
+
     $t->find_element_ok("c1_select_all", "id", "select all traits")->click();
+
+    sleep(1);
 
     $t->find_element_ok("select2", "id", "retrieve trials")->send_keys('trials');
 
@@ -29,29 +33,41 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("c2_data", "id", "select specific trial")->send_keys('Kasese solgs trial');
 
+    sleep(1);
+
     $t->find_element_ok("c2_select_all", "id", "select all trials")->click();
+
+    sleep(1);
 
     $t->find_element_ok("select3", "id", "retrieve years")->send_keys('years');
 
-    sleep(1);
+    sleep(3);
 
     $t->find_element_ok("c3_data", "id", "select specific year")->send_keys('2014');
 
-    $t->find_element_ok("c3_select_all", "id", "select all years")->click();
+    sleep(1);
 
-    $t->find_element_ok("select4", "id", "retrieve accessions")->send_keys('accessions');
+    $t->find_element_ok("c3_select_all", "id", "select all years")->click();
 
     sleep(1);
 
+    $t->find_element_ok("select4", "id", "retrieve accessions")->send_keys('accessions');
+
+    sleep(3);
+
     $t->find_element_ok("c4_data", "id", "select specific accession")->send_keys('UG120001');
 
+    sleep(1);
+
     $t->find_element_ok("c4_select_all", "id", "select all accessions")->click();
+
+    sleep(1);
 
     $t->find_element_ok("c1_data_new_list_name", "id", "new list")->send_keys('trait_list');
 
     $t->find_element_ok("c1_data_add_to_new_list", "id", "create trait list")->click();
 
-    sleep(1);
+    sleep(3);
 
     $t->driver->accept_alert();
 

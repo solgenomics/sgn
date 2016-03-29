@@ -83,7 +83,7 @@ sub _filter_stock_rs {
 
     $rs = $rs->search(
         {
-            'type.name' => 'genotyping experiment'
+            'type.name' => 'genotyping_experiment'
         } ,
         { join => {nd_experiment_stocks => { nd_experiment =>  'type'  } } ,
           distinct => 1

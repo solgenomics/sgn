@@ -212,7 +212,7 @@ sub delete_experiments_by_file {
 # 	return { error => "Trial still has associated phenotyping experiment, cannot delete." };
 #     }
 
-#     my $field_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "field layout" })->cvterm_id();
+#     my $field_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "field_layout" })->cvterm_id();
 #     print STDERR "Field layout type id = $field_layout_type_id\n";
 
 #     my $plot_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'plot' })->cvterm_id();
@@ -250,7 +250,7 @@ sub delete_experiments_by_file {
 #     my $self = shift;
 #     my $trial_id = shift;
 
-#     my $phenotyping_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'phenotyping experiment' })->cvterm_id();
+#     my $phenotyping_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'phenotyping_experiment' })->cvterm_id();
     
 #     my $phenotype_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( 
 # 	{ 
