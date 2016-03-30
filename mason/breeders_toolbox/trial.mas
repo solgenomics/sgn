@@ -143,7 +143,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <td>
 <div id="planting_date">
 % if ($planting_date) {
-%  print "$planting_date";
+  <a href="/calendar/personal?currentDate=<% $planting_date %>" target="_blank"><% $planting_date %></a>
 % } else {
 %  print "[No Planting Date]";
 % }
@@ -159,7 +159,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <td>
 <div id="harvest_date">
 % if ($harvest_date) {
-%  print "$harvest_date";
+  <a href="/calendar/personal?currentDate=<% $harvest_date %>" target="_blank"><% $harvest_date %></a>
 % } else {
 %  print "[No Harvest Date]";
 % }

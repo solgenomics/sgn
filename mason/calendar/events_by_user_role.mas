@@ -537,5 +537,17 @@ $(document).ready(function() {
        $('button#export_event_display').popover('hide');
     });
 
+
+    //If a date is given in the url, using the query parameter currentDate=<timestamp>
+    var captured = /currentDate=([^&]+)/.exec(window.location.href);
+    var result = captured ? captured[1] : Date.now();
+    var valid = (new Date(result)).getTime() > 0;
+    if (valid) {
+      $('#calendar').fullCalendar('gotoDate', result);
+    }
+
 });
+
+
+
 </script>

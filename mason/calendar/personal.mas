@@ -24,8 +24,29 @@ $roles => undef
 
 		<& events_by_user_role.mas &>
 
-		<div class="well">
-			<h3>Permissions <small>: Events for breeding programs and their trials are accessible through the calendar to users who have a role in that breeding program. <br/>Please <a href='/contact/form'>contact us</a> to request a role in a breeding program.</small></h3>
+		<div class="panel panel-warning">
+			<div class="panel-body">
+				<p>Having trouble viewing events on the calendar? <br/>Are you associated with the breeding program you are interested in viewing?</p>
+				<a class="btn btn-primary" id="calendar_bp_user_roles_show">Calendar Permissions</a>
+			</div>
+		</div>
+
+	</div>
+
+
+</center>
+
+
+<div class="modal fade" id="calendar_bp_user_roles_modal" name="calendar_bp_user_roles_modal" tabindex="-1" role="dialog" aria-labelledby="calendarBPRolesDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="calendarBPRolesDialog">Calendar Permissions</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+        	<h3>Permissions <small>: Events for breeding programs and their trials are accessible through the calendar to users who have a role in that breeding program. <br/><br/>Please <a href='/contact/form'>contact us</a> if you do not see your name in this table.</small></h3>
 			<br/>
 
 			<table id="calendar_bp_user_roles" class="table table-bordered">
@@ -44,14 +65,25 @@ $roles => undef
 			</tbody>
 			</table>
 
-		</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-	</div>
-
-</center>
 
 <script>
+
 jQuery(document).ready(function() {
+
+	jQuery('#calendar_bp_user_roles_show').click( function() {
+		jQuery('#calendar_bp_user_roles_modal').modal('show');
+	});
+
     jQuery('#calendar_bp_user_roles').DataTable();
 } );
+
 </script>
