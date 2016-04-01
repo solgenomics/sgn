@@ -228,7 +228,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <div class="row">
   <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnaylsis=Map$fbaInput=<% $trial_id %>" target="_blank">
+    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Map&fbaInput=<% $trial_id %>" target="_blank">
       <div class="well">
         <div class="row">
           <div class="col-sm-9">
@@ -242,7 +242,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
     </a>
   </div>
   <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnaylsis=Correlation$fbaInput=<% $trial_id %>" target="_blank">
+    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Correlation&fbaInput=<% $trial_id %>" target="_blank">
       <div class="well">
         <div class="row">
           <div class="col-sm-9">
@@ -256,7 +256,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
     </a>
   </div>
   <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnaylsis=Report$fbaInput=<% $trial_id %>" target="_blank">
+    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Report&fbaInput=<% $trial_id %>" target="_blank">
       <div class="well">
         <div class="row">
           <div class="col-sm-9">
