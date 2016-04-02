@@ -256,13 +256,12 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
         $model_key, $combined_key, $model_id, 
         $trait_key, $trait_id) = @_;
 
-    $c->stash->{combo_pops_id}   = $model_id;
-    $c->stash->{trait_id}        = $trait_id;
-    $c->stash->{prediction_pop_id} = $selection_pop_id;
-    $c->stash->{template} = $c->controller('solGS::solGS')->template('/selection/combined/selection_trait.mas');
-    $c->stash->{data_set_type} = 'combined populations';
+    $c->stash->{combo_pops_id}        = $model_id;
+    $c->stash->{trait_id}             = $trait_id;
+    $c->stash->{prediction_pop_id}    = $selection_pop_id;
+    $c->stash->{data_set_type}        = 'combined populations';
     $c->stash->{combined_populations} = 1;
-    
+        
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 
     my $page = $c->req->referer();
@@ -283,7 +282,6 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
     }
    
     my $identifier    = $model_id . '_' . $selection_pop_id;
- 
     $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     my $gebvs_file = $c->stash->{prediction_pop_gebvs_file};
     
@@ -291,9 +289,8 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
  
     $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$model_id/prediction/$selection_pop_id/$trait_id">Download all GEBVs</a>|; 
 
+    $c->stash->{template} = $c->controller('solGS::solGS')->template('/selection/combined/selection_trait.mas');
 } 
-
-
 
 
 sub build_model_combined_trials_trait {
@@ -309,13 +306,9 @@ sub build_model_combined_trials_trait {
     {   
         my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
         my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-        
-	# if (-s $combined_pops_pheno_file  && -s $combined_pops_geno_file ) 
-	# {  	 
+        	 
 	$c->stash->{pop_id} = $c->stash->{combo_pops_id};	    
 	$solgs_controller->get_rrblup_output($c);
-
-	# }
     }
 }
 
@@ -587,5 +580,6 @@ sub begin : Private {
 }
 
 
-
+#####
 1;
+#####
