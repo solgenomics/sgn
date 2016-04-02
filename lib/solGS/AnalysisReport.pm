@@ -52,7 +52,8 @@ sub check_success {
     {	
 	if ($output_details->{data_set_type} =~ /combined populations/) 
 	{	
-	   # $output_details = $self->check_combined_pops_trait_modeling($output_details);
+	  # $output_details = $self->check_combined_pops_trait_modeling($output_details);
+	   $output_details = $self->check_selection_prediction($output_details);
 	}
 	elsif ($output_details->{data_set_type} =~ /single population/)
 	{
