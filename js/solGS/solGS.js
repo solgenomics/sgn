@@ -14,7 +14,8 @@ function solGS () {};
 
 solGS.waitPage = function (page) {
  
-    if ( page.match(/(solgs\/population\/|solgs\/populations\/combined\/|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/search\/trials\/trait\/|solgs\/model\/d+\/prediction\/)/)) {
+    if ( page.match(/(solgs\/population\/|solgs\/populations\/combined\/|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/search\/trials\/trait\/|solgs\/model\/\d+\/prediction\/)/)) {
+
     	askUser(page);
     } else {
     	blockPage(page);
@@ -223,7 +224,7 @@ function wrapTraitsForm () {
 
 function getProfileDialog (page, args) {
    
-    if (page.match(/solgs\/population\/|solgs\/trait\/|solgs\/model\/combined\/trials\//) ) {
+    if (page.match(/solgs\/population\/|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/model\/\d+\/prediction\//) ) {
 
 	args = getArgsFromUrl(page, args);
     }
@@ -362,23 +363,35 @@ function getArgsFromUrl (url, args) {
 	    args['data_set_type'] = 'single population';	
 	}
     } else if (url.match(/solgs\/model\/\d+\/prediction\//)) {
-	alert(url)
+
 	var traitId = jQuery('#trait_id').val();
+	var modelId = jQuery('#model_id').val();
 	var urlStr = url.split(/\/+/);
-	alert('trait id ', traitId)
+
+	var dataSetType;
+
+	if (window.location.href.match(/solgs\/model\/combined\/populations\//)) {
+	    dataSetType = 'combined populations';
+	} else if (window.location.href.match(/solgs\/trait\//)) {
+	    dataSetType = 'single population';
+	}
+
 	if (args === undefined) {
 	      
-	    args = {'trait_id'         : [traitId],
-		    'training_pop_id'  : [ urlStr[4] ], 
-		    'selection_pop_id' : [ urlStr[6] ], 
-		    'analysis_type'    : 'selection prediction'};
+	    args = {
+		'trait_id'         : [ traitId ],
+		'training_pop_id'  : [ urlStr[4] ], 
+		'selection_pop_id' : [ urlStr[6] ], 
+		'analysis_type'    : 'selection prediction',
+		'data_set_type'    : dataSetType,
+	    };
 	}
 	else {
-	    args['trait_id']         = traitId;
+	    args['trait_id']         = [ traitId ];
 	    args['training_pop_id']  = [ urlStr[4] ];
 	    args['selection_pop_id'] = [ urlStr[6] ];
 	    args['analysis_type']    = 'selection prediction';
-	    args['data_set_type']    = 'single population';	
+	    args['data_set_type']    = dataSetType;	
 	}
     }
 
