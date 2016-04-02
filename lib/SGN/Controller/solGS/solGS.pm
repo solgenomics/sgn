@@ -972,8 +972,6 @@ sub trait :Path('/solgs/trait') Args(3) {
 	$c->stash->{trait_id} = $trait_id;
      
 	$self->build_single_trait_model($c);
-
-
 	
 	$self->gs_files($c);
 
@@ -1205,11 +1203,10 @@ sub variance_components_file {
 sub trait_phenodata_file {
     my ($self, $c) = @_;
    
-    my $pop_id = $c->stash->{pop_id};
-    my $trait  = $c->stash->{trait_abbr};
-    
+    my $pop_id        = $c->stash->{pop_id};
+    my $trait         = $c->stash->{trait_abbr};    
     my $data_set_type = $c->stash->{data_set_type};
-    
+   
     my $cache_data;
 
     no warnings 'uninitialized';
@@ -1217,7 +1214,6 @@ sub trait_phenodata_file {
     if ($data_set_type =~ /combined populations/)
     {
         my $combo_identifier = $c->stash->{combo_pops_id}; 
-
         $cache_data = {key       => 'phenotype_trait_combined_pops_'.  $trait . "_". $combo_identifier,
                        file      => 'phenotype_trait_'. $trait . '_' . $combo_identifier. '_combined_pops',
                        stash_key => 'trait_phenodata_file'
@@ -1548,19 +1544,11 @@ sub predict_selection_pop_combined_pops_model {
     $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
         
     my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
-      
+     
     if (! -s $prediction_pop_gebvs_file)
-    {
-	my $dir = $c->stash->{solgs_cache_dir};
-        
-	my $exp = "phenotype_data_${model_id}_${trait_abbr}_combined"; 
-	my $pheno_file = $self->grep_file($dir, $exp);
-
-	$exp = "genotype_data_${model_id}_${trait_abbr}_combined"; 
-	my $geno_file = $self->grep_file($dir, $exp);
-
-	$c->stash->{trait_combined_pheno_file} = $pheno_file;
-	$c->stash->{trait_combined_geno_file}  = $geno_file;
+    {    
+	$self->cache_combined_pops_data($c);
+ 
 	$self->prediction_population_file($c, $prediction_pop_id);
   
 	$self->get_rrblup_output($c); 
@@ -1628,7 +1616,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         $c->stash->{data_set_type}     = "combined populations"; 
         # $c->stash->{pop_id}            = $model_id;
         $c->stash->{model_id}          = $model_id;  
-        $c->stash->{combo_pops_id}        = $model_id;
+        $c->stash->{combo_pops_id}     = $model_id;
         $c->stash->{prediction_pop_id} = $prediction_pop_id;  
         
         $self->analyzed_traits($c);
@@ -1799,10 +1787,13 @@ sub download_prediction_urls {
     my $selection_traits_files;
     my $download_url;# = $c->stash->{download_prediction};
     my $model_tr_id = $c->stash->{trait_id};
+   
 
     my $page = $c->req->referer;
     my $base = $c->req->base;
    
+    my $data_set_type = 'combined populations' if $page =~ /combined/;
+
     if ( $base !~ /localhost/)
     {
 	$base =~ s/:\d+//; 
@@ -1865,7 +1856,14 @@ sub download_prediction_urls {
 
 	if ($selection_traits_files->[0] =~ $prediction_pop_id && $trait_id == $model_tr_id)
 	{
-	    $download_url .= qq |<a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> |;	      
+	    if ($data_set_type =~ /combined populations/)
+	    {
+		$download_url .= qq |<a href="/solgs/selection/$prediction_pop_id/model/combined/$training_pop_id/trait/$trait_id">$trait_abbr</a> |;
+	    }
+	    else 
+	    {
+		$download_url .= qq |<a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> |;
+	    }	      
 	}        
     }
 
@@ -3169,13 +3167,14 @@ sub get_project_owners {
 sub combined_pops_summary {
     my ($self, $c) = @_;
     
+    my $combo_pops_id = $c->stash->{combo_pops_id};
+ 
+    $self->get_combined_pops_list($c, $combo_pops_id);
     my @pops_ids = @{$c->stash->{trait_combo_pops}};
-
-   # my @pops = split(/,/, $pops_list);
-    
-    my $desc = 'This training population is a combination of ';
-    
+  
+    my $desc = 'This training population is a combination of ';    
     my $projects_owners;
+
     foreach my $pop_id (@pops_ids)
     {  
         my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
@@ -3200,8 +3199,7 @@ sub combined_pops_summary {
    
     my $trait_abbr = $c->stash->{trait_abbr};
     my $trait_id = $c->stash->{trait_id};
-    my $combo_pops_id = $c->stash->{combo_pops_id};
-
+  
     my $dir = $c->{stash}->{solgs_cache_dir};
 
     my $geno_exp  = "genotype_data_${combo_pops_id}_${trait_abbr}_combined";
@@ -3689,26 +3687,31 @@ sub trait_phenotype_stat {
 sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     my ($self, $c) = @_;
 
-    my $pop_id   = $c->req->param('pop_id');
-    my $trait_id = $c->req->param('trait_id');
-    my $combo_pops_id = $c->req->param('combo_pops_id');
-    my $trait_combo_pops = $c->req->param('combined_populations');
-
+    my $pop_id            = $c->req->param('pop_id');
+    my $trait_id          = $c->req->param('trait_id');
     my $prediction_pop_id = $c->req->param('selection_pop_id');
+    my $combo_pops_id     = $c->req->param('combo_pops_id');
+    
+    if ($combo_pops_id)
+    {
+	$self->get_combined_pops_list($c, $combo_pops_id);
+	$c->stash->{data_set_type} = 'combined populations';
+	$pop_id = $combo_pops_id;
+    }
+
+   
 
     $c->stash->{pop_id} = $pop_id;
-    $c->stash->{combo_pops_id} = $combo_pops_id;
-    $c->stash->{trait_combo_pops} = $trait_combo_pops;
+    $c->stash->{combo_pops_id} = $combo_pops_id; 
     $c->stash->{prediction_pop_id} = $prediction_pop_id;
    
     $self->get_trait_details($c, $trait_id);
-  
-    $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
+    
     my $page = $c->req->referer();
     my $gebv_file;
 
     if ($page =~ /solgs\/selection\//) 
-    {     
+    {   	
         my $identifier =  $pop_id . '_' . $prediction_pop_id;
         $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
    
@@ -4029,17 +4032,31 @@ sub abbreviate_term {
 sub all_gs_traits_list {
     my ($self, $c) = @_;
 
-    my $rs = $c->model('solGS::solGS')->all_gs_traits();
- 
-    my @all_traits;
-    while (my $row = $rs->next)
+    $self->trial_compatibility_file($c);
+    my $file = $c->stash->{trial_compatibility_file};
+   
+    my $traits;
+    my $matview = $c->model('solGS::solGS')->check_matview_exists('all_gs_traits');
+   
+    if (!-s $file) 
     {
-        my $trait_id = $row->id;
-        my $trait    = $row->name;
-        push @all_traits, $trait;
+	my $mv_name = 'all_gs_traits';
+	my $matview = $c->model('solGS::solGS')->check_matview_exists($mv_name);
+
+	if ($matview)
+	{
+	    $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
+	    $c->model('solGS::solGS')->update_matview_public($mv_name);
+	}
+	else 
+	{
+	    $c->model('solGS::solGS')->materialized_view_all_gs_traits();
+	    $c->model('solGS::solGS')->insert_matview_public($mv_name);
+	}
     }
 
-    $c->stash->{all_gs_traits} = \@all_traits;
+    $traits = $c->model('solGS::solGS')->all_gs_traits();
+    $c->stash->{all_gs_traits} = $traits;
 }
 
 
@@ -4630,7 +4647,7 @@ sub run_rrblup_trait {
         if ($c->stash->{prediction_pop_id})
         {       
             $c->stash->{input_files} = $input_file;
-            $self->output_files($c);
+           # $self->output_files($c);
             $self->run_rrblup($c); 
         }
         else
