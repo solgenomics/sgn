@@ -1,0 +1,89 @@
+<%doc>
+
+=head1 NAME 
+
+/solgs/selection/combined/selection_trait.mas - displays trait GEBV prediction output for selection population using combined trials model.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+
+<%args>
+
+$combo_pops_id
+$trait_abbr
+$trait_name
+$project_name
+$project_desc
+$stocks_no
+$markers_no
+$traits_no => ''
+$trait_id
+$prediction_pop_id
+$prediction_pop_name => ''
+$owner=>''
+$protocol
+$top_blups
+$blups_download_url
+$combined_populations => ''
+</%args>
+
+<%perl>
+
+$project_name = "<a href=\"/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id\">$project_name</a>";
+
+</%perl>
+
+  <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.traitGebvFlot", 
+                                              "flot.flot", "flot.categories", 
+                                              "flot.tooltip", "flot.selection", "flot.navigate", 
+                                              "flot.axisLabels", "d3.d3Min",
+                                             ] 
+  &>
+
+
+<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+
+<& /page/page_title.mas, 
+   title => "GEBVs for $trait_name ($trait_abbr) in $prediction_pop_name"
+&>
+
+<&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed   => 0, 
+  title       => "Training population summary",
+  &>
+
+ <& /solgs/population/combined/summary.mas,
+    project_id   => $combo_pops_id,
+    project_name => $project_name,
+    project_desc => $project_desc,
+    stocks_no    => $stocks_no,
+    markers_no   => $markers_no,
+    traits_no    => $traits_no,
+    protocol     => $protocol,
+    owner        => $owner,
+   combined_populations => $combined_populations,
+ &>
+
+</&>
+
+<& /solgs/model/pca.mas &>
+
+<& /solgs/model/top_blups.mas, 
+   top_blups          => $top_blups,
+   blups_download_url => $blups_download_url,
+   pop_id             => $combo_pops_id,
+   trait_id           => $trait_id
+&>
+
+ <input type="hidden"  id="model_id" value="<% $combo_pops_id %>" /> 
+ <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" /> 
+ <input type="hidden"  id="trait_id" value="<% $trait_id %>" />
+ <input type="hidden"  id="selection_pop_id" value="<% $prediction_pop_id %>" />
+ <input type="hidden"  id="prediction_pop_id" value="<% $prediction_pop_id %>" />
