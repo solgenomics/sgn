@@ -71,6 +71,26 @@
       </div>
 
       <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/carousel_benth.jpeg) center center; background-size:cover;" class="slider-size">
+        <div class="carousel-sgn-caption">
+            <h3><a href="/organism/Nicotiana_benthamiana/genome"><i>N. benthamiana</i> Genome</a></h3>
+            <p><a href="http://apsjournals.apsnet.org/doi/abs/10.1094/MPMI-06-12-0148-TA" target="_blank">A draft genome sequence of <i>Nicotiana benthamiana</i> to enhance molecular plant-microbe biology research</a></p>
+        </div>
+        
+        <div class="carousel-sgn-links">
+          <ul class="sgn_sm_list">
+            <a href="http://bti.cornell.edu/research/projects/nicotiana-benthamiana/"><li>The <i>N. benthamiana</i> sequencing project</li></a>
+            <a href="/jbrowse/current/?data=data%2Fjson%2FNiben1.0.1&loc=Niben101Scf00005"><li>Browse the genome</li></a>
+            <a href="/tools/blast/?db_id=266"><li>Find sequences by similarity</li></a>
+            <a href="http://vigs.solgenomics.net"><li>Design your VIGS constructs</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_benthamiana"><li>Downloads</li></a>
+          </ul>
+        </div>
+        
+        </div>
+      </div>
+
+      <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/carousel_eggplant.jpg) center center; background-size:cover;" class="slider-size">
           <div class="carousel-sgn-caption">
               <h3><a href="/organism/Solanum_melongena/genome">Eggplant Genome</a></h3>
@@ -173,9 +193,10 @@
   <li class="active"><a data-target="#myCarousel" data-slide-to="0">Tomato</a></li>
   <li><a data-target="#myCarousel" data-slide-to="1">Potato</a></li>
   <li><a data-target="#myCarousel" data-slide-to="2">Pepper</a></li>
-  <li><a data-target="#myCarousel" data-slide-to="3">Eggplant</a></li>
-  <li><a data-target="#myCarousel" data-slide-to="4">SlideShare</a></li>
-  <li><a data-target="#myCarousel" data-slide-to="5">SOL Meeting</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="3"><i>N. benthamiana</i></a></li>
+  <li><a data-target="#myCarousel" data-slide-to="4">Eggplant</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="5">SlideShare</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="6">SOL Meeting</a></li>
   <!-- <li><a data-target="#myCarousel" data-slide-to="6">5th ISTD</a></li> -->
 </ul>
 
