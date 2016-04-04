@@ -713,45 +713,55 @@ sub uploaded_population_summary {
     my ($self, $c) = @_;
     
     my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
-    my $user_name = $c->user->id;
-    
-    my $model_id = $c->stash->{model_id};
-    my $selection_pop_id = $c->stash->{prediction_pop_id};
- 
-    my $protocol = $c->config->{default_genotyping_protocol};
-    $protocol = 'N/A' if !$protocol;
-
-    if ($model_id) 
-    {
-        my $metadata_file_tr = catfile($tmp_dir, "metadata_${user_name}_${model_id}");
-       
-        my @metadata_tr = read_file($metadata_file_tr) if $model_id;
-       
-        my ($key, $list_name, $desc);
-     
-        ($desc)        = grep {/description/} @metadata_tr;       
-        ($key, $desc)  = split(/\t/, $desc);
-      
-        ($list_name)       = grep {/list_name/} @metadata_tr;      
-        ($key, $list_name) = split(/\t/, $list_name); 
    
-        $c->stash(project_id          => $model_id,
-                  project_name        => $list_name,
-                  project_desc        => $desc,
-                  owner               => $user_name,
-		  protocol            => $protocol,
-            );  
+    if (!$c->user)
+    {
+	my $page = "/" . $c->req->path;
+	$c->res->redirect("/solgs/list/login/message?page=$page");
+	$c->detach;
     }
-
-    if ($selection_pop_id =~ /uploaded/) 
+    else
     {
-        my $metadata_file_sl = catfile($tmp_dir, "metadata_${user_name}_${selection_pop_id}");    
-        my @metadata_sl = read_file($metadata_file_sl) if $selection_pop_id;
+	my $user_name = $c->user->id;
+    
+	my $model_id = $c->stash->{model_id};
+	my $selection_pop_id = $c->stash->{prediction_pop_id};
+ 
+	my $protocol = $c->config->{default_genotyping_protocol};
+	$protocol = 'N/A' if !$protocol;
+
+	if ($model_id) 
+	{
+	    my $metadata_file_tr = catfile($tmp_dir, "metadata_${user_name}_${model_id}");
+       
+	    my @metadata_tr = read_file($metadata_file_tr) if $model_id;
+       
+	    my ($key, $list_name, $desc);
+     
+	    ($desc)        = grep {/description/} @metadata_tr;       
+	    ($key, $desc)  = split(/\t/, $desc);
       
-        my ($list_name_sl)       = grep {/list_name/} @metadata_sl;      
-        my  ($key_sl, $list_name) = split(/\t/, $list_name_sl); 
+	    ($list_name)       = grep {/list_name/} @metadata_tr;      
+	    ($key, $list_name) = split(/\t/, $list_name); 
    
-        $c->stash->{prediction_pop_name} = $list_name;
+	    $c->stash(project_id          => $model_id,
+		      project_name        => $list_name,
+		      project_desc        => $desc,
+		      owner               => $user_name,
+		      protocol            => $protocol,
+		);  
+	}
+
+	if ($selection_pop_id =~ /uploaded/) 
+	{
+	    my $metadata_file_sl = catfile($tmp_dir, "metadata_${user_name}_${selection_pop_id}");    
+	    my @metadata_sl = read_file($metadata_file_sl) if $selection_pop_id;
+      
+	    my ($list_name_sl)       = grep {/list_name/} @metadata_sl;      
+	    my  ($key_sl, $list_name) = split(/\t/, $list_name_sl); 
+   
+	    $c->stash->{prediction_pop_name} = $list_name;
+	}
     }
 }
 
@@ -4323,9 +4333,20 @@ sub phenotype_file {
  
     if ($c->stash->{uploaded_reference} || $pop_id =~ /uploaded/) {
         my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};     
-        my $user_id = $c->user->id;
+	
+	if (!$c->user) {
+	    
+	    my $page = "/" . $c->req->path;
+	    print STDERR "\npheno page: $page\n";
+	    $c->res->redirect("/solgs/list/login/message?page=$page");
+	    $c->detach;   
 
-        $pheno_file = catfile ($tmp_dir, "phenotype_data_${user_id}_${pop_id}");
+	}	
+	else 
+	{
+	    my $user_id = $c->user->id;
+	    $pheno_file = catfile ($tmp_dir, "phenotype_data_${user_id}_${pop_id}");
+	}
     }
  
     unless ($pheno_file) 
@@ -4466,9 +4487,18 @@ sub genotype_file  {
     if ($c->stash->{uploaded_reference}) 
     {
         my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};     
-        my $user_id = $c->user->id;
-
-        $geno_file = catfile ($tmp_dir, "genotype_data_${user_id}_${pop_id}"); 
+       
+	if (!$c->user)
+	{
+	    my $path = "/" . $c->req->path;
+	    $c->res->redirect("/solgs/list/login/message?page=$path");
+	    $c->detach;
+	}
+	else	    
+	{
+	    my $user_id = $c->user->id;
+	    $geno_file = catfile ($tmp_dir, "genotype_data_${user_id}_${pop_id}"); 
+	}
     }
 
     if ($pop_id =~ /uploaded/) 

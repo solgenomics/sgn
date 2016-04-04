@@ -30,6 +30,13 @@ sub brapi_test :Path('/brapi_test/') :Args(0) {
     $c->stash->{template} = '/brapiclient/test.mas';
 }
 
+sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    #This mason component is in cassbase git repo.
+    $c->stash->{template} = '/stock/ethz_cass_sync.mas';
+}
+
 sub personal_calendar :Path('/calendar/personal/') :Args(0) { 
     my $self = shift;
     my $c = shift;
