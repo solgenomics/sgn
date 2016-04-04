@@ -41,6 +41,8 @@ extends 'Catalyst::Model';
 
 __PACKAGE__->mk_accessors(qw/context schema/);
 
+
+
  
 sub ACCEPT_CONTEXT {
     my ($self, $c ) = @_;
@@ -84,15 +86,13 @@ sub all_gs_traits {
     my $self = shift;
 
     my $rs = $self->schema->resultset("Phenotype::Phenotype")
-        ->search(
-        {}, 
-        {
-            columns => 'observable_id', 
-            distinct => 1
-        }
-        )
+        ->search({})
         ->search_related('observable', 
-                         {},                        
+                         {}, 
+			 {
+			     columns  => [ qw / cvterm_id observable.name / ],
+			     distinct => 1
+			 },	 	
         );
 
     return $rs;      
@@ -120,7 +120,7 @@ sub search_populations {
 		                          
 			   'select'   => [ qw / project.project_id project.name project.description / ], 
 			   'as'       => [ qw / project_id name description / ],
-			   distinct => [ qw / project.project_id / ]
+			   distinct   => [ qw / project.project_id / ]
                          },			
 	);
 
@@ -161,7 +161,6 @@ sub project_location {
                 WHERE project_id = ?
                       AND cvterm.cvterm_id = ?";
 
-	   
     my $sth = $self->context->dbc->dbh()->prepare($q);
 
     $sth->execute($pr_id, $location_id);
@@ -207,6 +206,8 @@ sub has_phenotype {
 	 my $key        = "phenotype_data_" . $pr_id;
 	 my $pheno_file = $file_cache->get($key);
         
+	 no warnings 'uninitialized';
+
 	 if ( -s $pheno_file)
 	 {  
 	     $has_phenotype = 'has_phenotype';
@@ -223,7 +224,7 @@ sub has_phenotype {
 	     
 		 if($header) 
 		 {
-		     $data =  $self->context->controller("solGS::solGS")->format_phenotype_dataset($self->context, $data); 
+		     $data =  $self->context->controller("solGS::solGS")->format_phenotype_dataset($data); 
 		     write_file($pheno_file, $data);
 
 		     $file_cache->set($key, $pheno_file, '30 days');
@@ -517,6 +518,8 @@ sub get_stock_owners {
    
     my $owners; 
     
+    no warnings 'uninitialized';
+
     unless ($stock_id =~ /uploaded/) 
     { 
         my $q = "SELECT sp_person_id, first_name, last_name 
@@ -579,8 +582,15 @@ sub search_stock_using_plot_name {
 
 
 sub genotype_data {
-    my ($self, $project_id) = @_;
-    
+    my ($self, $args) = @_;
+
+    my $project_id    = $args->{population_id};
+    my $prediction_id = $args->{prediction_id};
+    my $data_set_type = $args->{data_set_type};
+    my $cache_dir     = $args->{cache_dir};
+    my $trait_abbr    = $args->{trait_abbr};
+    my $model_id      = ($args->{model_id} ? $args->{model_id} : $project_id);
+
     my $stock_genotype_rs;
     my @genotypes;
     my $geno_data;
@@ -590,29 +600,21 @@ sub genotype_data {
     my @stocks;
 
     if ($project_id) 
-    {
-        my $prediction_id = $self->context->stash->{prediction_pop_id};
-        my $model_id      = $self->context->stash->{model_id};
-       
+    {    
         if ($prediction_id && $project_id == $prediction_id) 
-        {    
-            my $data_set_type = $self->context->stash->{data_set_type};
-            my $trait_abbr    = $self->context->stash->{trait_abbr};
-            
+        {      
             $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
             my $stock_count = $stock_genotype_rs->count;
-                
+            
             unless ($header_markers) 
             {
                 if ($stock_count)
                 {
-                    my $dir = $self->context->stash->{solgs_cache_dir};
-                    
                     my $file = $data_set_type =~ /combined/ 
                         ? "genotype_data_${model_id}_${trait_abbr}" 
                         : "genotype_data_${model_id}.txt";
-                    
-                    my $training_geno_file = $self->context->controller("solGS::solGS")->grep_file($dir, $file);
+                 
+                    my $training_geno_file = SGN::Controller::solGS::solGS->grep_file($cache_dir, $file);
 
                     open my $fh, $training_geno_file or die "couldnot open $training_geno_file: $!";    
                     my $header_markers = <$fh>;
@@ -629,7 +631,7 @@ sub genotype_data {
             {  
                 $cnt++;
 		my $stock = $geno->get_column('stock_name');
-		
+    
 		my $duplicate_stock;
 		
 		if ($cnt > 1)
@@ -650,7 +652,7 @@ sub genotype_data {
                     {
 			push @stocks, $stock;
                         my $geno_values = $self->stock_genotype_values($geno);               
-                        $geno_data     .= $geno_values;                       
+                        $geno_data     .= $geno_values; 
                     }
                     else 
                     {                       
@@ -1339,27 +1341,66 @@ sub project_traits {
 
 }
 
-# sub project_trait_phenotype {
-#   my ($self, $pr_id) = @_;
+
+# sub project_trait_phenotype_data_rs {
+#     my ($self, $project_id, $trait_id) = @_;
   
-#   my $rs = $self->schema->resultset("Project::Project")
-#       ->search({"me.project_id"  => $pr_id, observable.observable_id => $trait_id })
-#        ->search_related("nd_experiment_projects")
-#        ->search_related("nd_experiment")
-#        ->search_related("nd_experiment_phenotypes")
-#        ->search_related("phenotype")
-#        ->search_related("observable",
-#        {},
-#        {
-#            '+select' => [qw / phenotype.phenotype_id phenotype.uniquename phenotype.value /],
-#            '+as' => [qw / phenotype_id phenotype_uniquename phenotype_value /],
+#     my $rs = $self->schema->resultset("Stock::Stock")->search(
+#         {
+#             'observable.cvterm_id' => $trait_id ,
+#             'project.project_id'   => $project_id,           
+#         }, {
+#             join => [
+#                 { stock_relationship_subjects => 'object',     
+# 		  nd_experiment_stocks => {
+# 		      nd_experiment => {
+# 			  nd_experiment_phenotypes => {
+# 			      phenotype => 'observable'                    
+# 			  },
+# 				  nd_experiment_projects => 'project',
+# 		      },
+# 		  },
+# 		},		 
+#                 ],
+#             select   => [ qw/ object.uniquename object.stock_id me.uniquename phenotype.value / ],
+#             as       => [ qw/ stock_name stock_id uniquename value / ],
+          
+#         });
+              
+#     return $rs;
 
-#         order_by => [qw / observable.name / ]
-#        }
-#        );
-
-#        return $rs;
 # }
+
+sub project_trait_phenotype_data_rs {
+    my ($self, $project_id, $trait_id) = @_;
+  
+    my $rs = $self->schema->resultset("Stock::Stock")->search(
+        {
+            'observable.cvterm_id' => $trait_id ,
+            'project.project_id'   => $project_id,           
+        }, {
+            join => [
+                {  nd_experiment_stocks => {
+		    nd_experiment => {
+			nd_experiment_phenotypes => {
+			    phenotype => 'observable'                    
+			},
+				nd_experiment_projects => 'project',
+		    },
+		   }
+		},		 
+                ],
+
+	    select  => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description project.project_id / ],
+	    as      => [ qw/ stock_id uniquename value observable observable_id project_description project_id / ],
+        
+        });
+              
+    return $rs;
+
+}
+
+
 
 sub get_plot_phenotype_rs {
     my ($self, $plot_id, $trait_id) = @_;
@@ -1458,8 +1499,8 @@ sub project_phenotype_data_rs {
                   }
                 } ,
                 ],
-            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description / ],
-            as       => [ qw/ stock_id uniquename value observable observable_id project_description / ],
+            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description project.project_id / ],
+            as       => [ qw/ stock_id uniquename value observable observable_id project_description project_id / ],
           
             order_by => [  'observable.name' ],
         });
@@ -1488,8 +1529,8 @@ sub plots_list_phenotype_data_rs {
                   }
                 } ,
                 ],
-            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description / ],
-            as       => [ qw/ stock_id uniquename value observable observable_id project_description / ],
+            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.project_id project.description / ],
+            as       => [ qw/ stock_id uniquename value observable observable_id project_id project_description / ],
           
             order_by => [  'observable.name' ],
         }  );
@@ -1519,8 +1560,8 @@ sub stock_phenotype_data_rs {
                   }
                 } ,
                 ],
-            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description / ],
-            as       => [ qw/ stock_id uniquename value observable observable_id project_description / ],
+            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.description project.project_id/ ],
+            as       => [ qw/ stock_id uniquename value observable observable_id project_description project_id / ],
           
             order_by => [  'observable.name' ],
         }  );
@@ -1535,10 +1576,24 @@ sub phenotype_data {
      my $data;
      if ($pop_id) 
      {
-         my  $phenotypes = $self->project_phenotype_data_rs($pop_id);
-         $data           = $self->structure_phenotype_data($phenotypes);                   
-    }
-            
+	 my  $phenotypes = $self->project_phenotype_data_rs($pop_id);
+	 $data           = $self->structure_phenotype_data($phenotypes);                   
+     }
+    
+     return  $data; 
+}
+
+
+sub project_trait_phenotype_data {
+     my ($self, $pop_id, $trait_id ) = @_; 
+    
+     my $data;
+     if ($pop_id && $trait_id) 
+     {
+	 my  $phenotypes = $self->project_trait_phenotype_data_rs($pop_id, $trait_id);
+	 $data           = $self->structure_phenotype_data($phenotypes);                   
+     }
+      
      return  $data; 
 }
 
@@ -1555,6 +1610,8 @@ sub structure_phenotype_data {
    
     no warnings 'uninitialized';
 
+    my $trial_id;
+
     my $round = Math::Round::Var->new(0.001);
 
     while ( my $r =  $phenotypes->next )  
@@ -1566,7 +1623,8 @@ sub structure_phenotype_data {
         $cvterm_name = $observable;
            
         my $project = $r->get_column('project_description') ;
-
+	$trial_id   = $r->get_column('project_id') if $replicate == 1;
+	
 	my $hash_key = $r->get_column('uniquename');
 
         $phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
@@ -1581,6 +1639,7 @@ sub structure_phenotype_data {
     if (keys %cvterms) 
     {
 	$d = "uniquename\tobject_name\tobject_id\tstock_id\tstock_name\tdesign\tblock\treplicate";
+
 	foreach my $term_name (sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms )  
 	{
 	    $d .=  "\t" . $term_name;
@@ -1610,7 +1669,7 @@ sub structure_phenotype_data {
 	    my $block     = 'NA';
 	    my $replicate = 'NA';
 	    my $design    = 'NA';
-	    my $trial_id  = $self->context->stash->{pop_id};
+	 
 	    my $design_rs = $self->experimental_design($trial_id);
 
 	    if ($design_rs->next)       
@@ -1619,13 +1678,13 @@ sub structure_phenotype_data {
 	    } 
         
 	    my $block_rs = $self->search_plotprop($subject_id, 'block');
-	    if($block_rs->next)      
+	    if ($block_rs->next)      
 	    {
 		$block = $block_rs->first->value();
 	    } 
         
 	    my $replicate_rs = $self->search_plotprop($subject_id, 'replicate');     
-	    if($replicate_rs->next)       
+	    if ($replicate_rs->next)       
 	    {
 		$replicate = $replicate_rs->first->value();
 	    }
@@ -1649,9 +1708,10 @@ sub structure_phenotype_data {
 	    $d .= "\n";
 	}
    
-	@project_genotypes = uniq(@project_genotypes);
-	$self->context->stash->{project_genotypes} = \@project_genotypes;
+#	@project_genotypes = uniq(@project_genotypes);
+#	$self->context->stash->{project_genotypes} = \@project_genotypes;
     }
+ 
     return $d;
 }
 
@@ -1677,7 +1737,9 @@ sub phenotypes_by_trait {
     my $replicate = 1;
     my $cvterm_name;
     my $cnt = 0;
-    
+
+    my $trial_id;
+
     no warnings 'uninitialized';
 
     my $round = Math::Round::Var->new(0.001);
@@ -1692,18 +1754,16 @@ sub phenotypes_by_trait {
 
              if ($cvterm_name eq $observable) { $replicate ++ ; } else { $replicate = 1 ; }
              $cvterm_name = $observable;
-             # my $accession = $r->get_column('accession');
-             # my $db_name = $r->get_column('db_name');
-             my $project = $r->get_column('project_description') ;
-
+           
+             my $project  = $r->get_column('project_description') ;
+	     $trial_id    = $r->get_column('project_id') if $replicate == 1;
 	     my $hash_key = $r->get_column('uniquename');
  
              # $phen_hashref->{$hash_key}{accession} = $db_name . ":" . $accession ;
              $phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
              $phen_hashref->{$hash_key}{stock_id} = $r->get_column('stock_id');
              $phen_hashref->{$hash_key}{stock_name} = $r->get_column('uniquename');
-             $cvterms{$observable} =  'NA';
-             
+             $cvterms{$observable} =  'NA';             
         }
     }
 
@@ -1734,23 +1794,22 @@ sub phenotypes_by_trait {
         my $block     = 'NA';
         my $replicate = 'NA';
         my $design    = 'NA';
-        my $trial_id  = $self->context->stash->{pop_id};
+       
         my $design_rs = $self->experimental_design($trial_id);
 
-        if($design_rs->next)       
+        if ($design_rs->next)       
         {
             $design = $design_rs->first->value();
         } 
         
         my $block_rs = $self->search_plotprop($subject_id, 'block');
-        if($block_rs->next)
-        
+        if ($block_rs->next)        
         {
             $block = $block_rs->first->value();
         } 
         
         my $replicate_rs = $self->search_plotprop($subject_id, 'replicate');     
-        if($replicate_rs->next)       
+        if ($replicate_rs->next)       
         {
             $replicate = $replicate_rs->first->value();
         }

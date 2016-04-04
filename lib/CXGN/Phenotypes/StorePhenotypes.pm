@@ -48,7 +48,7 @@ sub verify {
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
-    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping experiment', 'experiment type');
+    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type');
     my $error_message;
     my $warning_message;
 
@@ -170,7 +170,7 @@ sub store {
     my $operator = $phenotype_metadata->{'operator'};
     my $phenotyping_date = $phenotype_metadata->{'date'};
 
-    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping experiment', 'experiment_type');
+    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type');
 
     ## Track experiments seen to allow for multiple trials and experiments to exist in an uploaded file.
     ## Used later to attach file metadata.
@@ -192,7 +192,7 @@ sub store {
 	    my $field_layout_experiment = $plot_stock
 		->search_related('nd_experiment_stocks')
 		    ->search_related('nd_experiment')
-			->find({'type.name' => 'field layout' },
+			->find({'type.name' => 'field_layout' },
 			       { join => 'type' });
 	    #####
 
@@ -272,7 +272,7 @@ sub store {
     my $coderef_large_file = sub {
 
 	my $rs = $schema->resultset('Stock::Stock')->search(
-	    {'type.name' => 'field layout'},
+	    {'type.name' => 'field_layout'},
 	    {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
 	     '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'], 
 	     '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']

@@ -27,6 +27,7 @@ use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::People::Person;
+use SGN::Model::Cvterm;
 
 
 has 'schema' => (
@@ -93,24 +94,12 @@ sub _add_stocks {
 
   my $coderef = sub {
 
-    my $stock_cvterm = $schema->resultset("Cv::Cvterm")
-      ->create_with({
-		     name   => $stock_type,
-		     cv     => 'stock_type',
-		    });
+    my $stock_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type,'stock_type');
 
+    my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population','stock_type');
+    
+    my $population_member_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship');
 
-    my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-	{ name   => 'population',
-	  cv     => 'stock_type',
-	});
-    
-    my $population_member_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-	{
-	    name   => 'member_of',
-	    cv     => 'stock_relationship',
-	});
-    
     #### assign accessions to populations
     my $population;
     if ($self->has_population_name()) {
@@ -245,11 +234,7 @@ sub validate_population {
     return;
   }
   my $schema = $self->get_schema();
-  my $population_cvterm = $schema->resultset("Cv::Cvterm")
-      ->create_with({
-	  name   => 'population',
-	  cv     => 'stock_type',
-		    });
+  my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population',  'stock_type');
   my $population_search = $schema->resultset("Stock::Stock")
       ->search({
 	  uniquename => $self->get_population_name(),

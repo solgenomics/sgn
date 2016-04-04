@@ -720,10 +720,12 @@ function save_trial_name(names) {
 function save_trial_type(type) { 
     var trial_id = get_trial_id();
     jQuery.ajax( { 
-	url: '/ajax/breeders/trial/'+trial_id+'/type/'+type,
+	url: '/ajax/breeders/trial/'+trial_id+'/type/',
+	//url: '/ajax/breeders/trial/'+trial_id+'/type/'+type,
+	data: { type:type },
 	type: 'POST',
 	//async: false, //async=false because it needs to finish before page is updated again.
-	//data: { 'type' : type },
+	data: { 'type' : type },
 	success: function(response) { 
 	    if (response.error) { 
 		alert(response.error);

@@ -54,7 +54,7 @@ sub get_cvterm_row {
 
     my $cvterm = $schema->resultset('Cv::Cvterm')->find( 
         { 
-            name => $name,
+            'me.name' => $name,
             'cv.name' => $cv_name,
         }, { join => 'cv' });
 

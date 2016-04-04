@@ -31,11 +31,13 @@ $no_traits_selected
  while (<FH>)
 {
  my ($id, $trait, $acronym) = split (/\t/);
- my $trait_link   = qq | <a href="/solgs/trait/$id/population/$pop_id" onclick="solGS.waitPage()">$trait</a> |;
+
+ my $trait_link   = qq | <a href="/solgs/trait/$id/population/$pop_id" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
  my $row          = <<ROW;
  <tr>
    <td>
      <input type  = "checkbox"
+       class      = "trait_id"
        name       = "trait_id"
        value      = $id > $trait_link
    </td>
@@ -52,6 +54,7 @@ if ($no_traits_selected eq 'none')
    $message = qq | <p style="color:red">Please select one or more traits to analyze.</p> |;
 }
 
+
 </%perl>
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
@@ -60,22 +63,24 @@ if ($no_traits_selected eq 'none')
 
  <% $message %>
 
-% if($trait_rows) {
- <form action="/solgs/analyze/traits/population/<%$pop_id %>" method="POST">
-  <table>
+% if ($trait_rows) {
+ <div id="traits_selection_div">
+
+  <table id="population_traits_list">
    <% $trait_rows %>
      <tr>
        <td>
          <input class   = "button"
                 type    = "submit"
+		id      = "runGS"
                 value   = "Build model"
-                name    = "runGS"
-                onclick = "solGS.waitPage()"
+                name    = "runGS"               
                 > 
        </td> 
      </tr>
    </table> 
- </form> 
+
+</div>
 %} else {
 
 <div id="traits_list_message"  style="font-weight:bold;text-align:center;text-transform:uppercase;color:#A7C942">
@@ -83,3 +88,5 @@ if ($no_traits_selected eq 'none')
 </div>
 
 %}
+
+<input type="hidden" id="population_id" value="<% $pop_id %>" />
