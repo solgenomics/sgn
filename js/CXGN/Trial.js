@@ -723,7 +723,7 @@ function display_harvest_date() {
 	url : '/ajax/breeders/trial/'+trial_id+'/harvest_date',
 	type: 'GET',
 	success: function(response) { 
-	    jQuery('#harvest_date').html(response.harvest_date);
+	    jQuery('#harvest_date').html("<a href='/calendar/personal?currentDate="+response.harvest_date+"' target=_blank>"+response.harvest_date+"</a>");
 	},
 	error: function(response) { 
 	}
@@ -765,7 +765,7 @@ function display_planting_date() {
 	url : '/ajax/breeders/trial/'+trial_id+'/planting_date',
 	type: 'GET',
 	success: function(response) { 
-	    jQuery('#planting_date').html(response.planting_date);
+	    jQuery('#planting_date').html("<a href='/calendar/personal?currentDate="+response.planting_date+"' target=_blank>"+response.planting_date+"</a>");
 	},
 	error: function(response) { 
 	}

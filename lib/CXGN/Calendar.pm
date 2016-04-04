@@ -64,7 +64,7 @@ sub parse_calendar_array {
     return @calendar_array;
 }
 
-#Displaying 00:00:00 time on mouseover and mouseclick is ugly, so this sub is used to determine date display format.
+#Displaying 00:00:00 time on mouseover and mouseclick is ugly, so this sub is used to determine date display format, given a datetime string.
 sub format_display_date {
     my $self = shift;
     my $date_display;
@@ -257,6 +257,7 @@ sub populate_calendar_events {
     return \@events;
 }
 
+#Takes an event string, which is the value stored in the database for events, and return a nice start date.
 sub display_start_date {
 	my $self = shift;
 	my $value = shift;
@@ -266,7 +267,6 @@ sub display_start_date {
         my @calendar_array = $self->parse_calendar_array($checked_value);
         if ($calendar_array[0]) {
             my $formatted_time = $self->format_time($calendar_array[0]);
-            my $start_time = $formatted_time->datetime;
             my $start_display = $self->format_display_date($formatted_time);
             return $start_display;
         } else {
@@ -275,9 +275,67 @@ sub display_start_date {
     } else {
         return;
     }
-
 }
 
+#Takes an event string, which is the value stored in the database for events, and return a nice end date.
+sub display_end_date {
+    my $self = shift;
+    my $value = shift;
+
+    my $checked_value = $self->check_value_format($value);
+    if ($checked_value) {
+        my @calendar_array = $self->parse_calendar_array($checked_value);
+        if ($calendar_array[1]) {
+            my $formatted_time = $self->format_time($calendar_array[1]);
+            my $end_display = $self->format_display_date($formatted_time);
+            return $end_display;
+        } else {
+            return;
+        }
+    } else {
+        return;
+    }
+}
+
+#Takes an event string, which is the value stored in the database for events, and returns the description.
+sub display_description {
+    my $self = shift;
+    my $value = shift;
+
+    my $checked_value = $self->check_value_format($value);
+    if ($checked_value) {
+        my @calendar_array = $self->parse_calendar_array($checked_value);
+        if ($calendar_array[2]) {
+            my $description = $calendar_array[2];
+            return $description;
+        } else {
+            return;
+        }
+    } else {
+        return;
+    }
+}
+
+#Takes an event string, which is the value stored in the database for events, and returns the url.
+sub display_description {
+    my $self = shift;
+    my $value = shift;
+
+    my $checked_value = $self->check_value_format($value);
+    if ($checked_value) {
+        my @calendar_array = $self->parse_calendar_array($checked_value);
+        if ($calendar_array[3]) {
+            my $url = $calendar_array[3];
+            return $url;
+        } else {
+            return;
+        }
+    } else {
+        return;
+    }
+}
+
+#For displaying the breeding program role permissions for the calendar.
 sub get_breeding_program_roles {
     my $self = shift;
     my $c = shift; 
