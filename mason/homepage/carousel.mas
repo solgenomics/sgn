@@ -23,11 +23,11 @@
           </div>
         
           <div class="carousel-sgn-links">
-            <ul>
-              <li><a href="/jbrowse">Browse the tomato genome</a></li>
-              <li><a href="/tools/blast?db_id=224">Find sequences by similarity</a></li>
-              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/">Download the annotations</a></li>
-              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/">Download the Genome Sequence</a></li>
+            <ul class="sgn_sm_list">
+              <a href="/jbrowse"><li>Browse the tomato genome</li></a>
+              <a href="/tools/blast?db_id=224"><li>Find sequences by similarity</li></a>
+              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/"><li>Download the annotations</li></a>
+              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/"><li>Download the Genome Sequence</li></a>
             </ul>
           </div>
         </div>
@@ -40,11 +40,11 @@
             <p><a href="http://www.nature.com/nature/journal/v475/n7355/full/nature10158.html" target="_blank">Genome sequence and analysis of the tuber crop potato</a></p>
         </div>
         <div class="carousel-sgn-links">
-          <ul>
-            <li><a href="/jbrowse/current/?data=data%2Fjson%2FPGSC_DM_v4.03">Browse the potato genome</a></li>
-            <li><a href="/tools/blast?db_id=262">Find sequences by similarity</a></li>
-            <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/annotation/">Download the annotations</a></li>
-            <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/assembly/PGSC_DM_v4.03/">Download the Genome Sequence</a></li>
+          <ul class="sgn_sm_list">
+            <a href="/jbrowse/current/?data=data%2Fjson%2FPGSC_DM_v4.03"><li>Browse the potato genome</li></a>
+            <a href="/tools/blast?db_id=262"><li>Find sequences by similarity</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/annotation/"><li>Download the annotations</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/assembly/PGSC_DM_v4.03/"><li>Download the Genome Sequence</li></a>
           </ul>
         </div>
         
@@ -59,11 +59,11 @@
         </div>
         
         <div class="carousel-sgn-links">
-          <ul>
-            <li><a href="/jbrowse/current/?data=data%2Fjson%2FPepper.v.1.55">Browse the pepper genome</a></li>
-            <li><a href="/tools/blast?db_id=217">Find sequences by similarity</a></li>
-            <li><a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Download the annotations</a></li>
-            <li><a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Download the Genome Sequence</a></li>
+          <ul class="sgn_sm_list">
+            <a href="/jbrowse/current/?data=data%2Fjson%2FPepper.v.1.55"><li>Browse the pepper genome</li></a>
+            <a href="/tools/blast?db_id=217"><li>Find sequences by similarity</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/"><li>Download the annotations</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/"><li>Download the Genome Sequence</li></a>
           </ul>
         </div>
         
@@ -78,10 +78,10 @@
           </div>
           
           <div class="carousel-sgn-links">
-            <ul>
-              <li><a href="/tools/blast?db_id=248">Find sequences by similarity</a></li>
-              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/">Download the annotations</a></li>
-              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/">Download the Genome Sequence</a></li>
+            <ul class="sgn_sm_list">
+              <a href="/tools/blast?db_id=248"><li>Find sequences by similarity</li></a>
+              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/"><li>Download the annotations</li></a>
+              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/"><li>Download the Genome Sequence</li></a>
             </ul>
           </div>
           
@@ -98,9 +98,9 @@
             </div>
             
             <div class="carousel-sgn-links">
-              <ul>
-                <li><a href="http://www.slideshare.net/solgenomics/sol-meeting-2015-sgn-workshop-introduction?related=1" target="_blank">SOL Meeting 2015</a></li>
-                <li><a href="http://www.slideshare.net/solgenomics/sgn-introduction-to-unix-commandline-2015-part-1?related=1" target="_blank">Introduction to UNIX Command-line</a></li>
+              <ul class="sgn_sm_list">
+                <a href="http://www.slideshare.net/solgenomics/sol-meeting-2015-sgn-workshop-introduction?related=1" target="_blank"><li>SOL Meeting 2015</li></a>
+                <a href="http://www.slideshare.net/solgenomics/sgn-introduction-to-unix-commandline-2015-part-1?related=1" target="_blank"><li>Introduction to UNIX Command-line</li></a>
               </ul>
             </div>
             
@@ -119,11 +119,11 @@
             </div>
             
             <div class="carousel-sgn-links" style="background-color: #efefef">
-              <ul>
-                <li><a href="http://solgenomics2016.ucdavis.edu/program/" target="_blank" style="color: #00426c">Preliminary Program</a></li>
-                <li><a href="http://solgenomics2016.ucdavis.edu/registration/" target="_blank" style="color: #00426c">Registration</a></li>
-                <li><a href="http://solgenomics2016.ucdavis.edu/abstract-submission-info/" target="_blank" style="color: #00426c">Abstract Submission</a></li>
-                <li><a href="http://solgenomics2016.ucdavis.edu/hotel-information/" target="_blank" style="color: #00426c">Venue Information</a></li>
+              <ul class="sgn_sm_list">
+                <a href="http://solgenomics2016.ucdavis.edu/program/" target="_blank"><li style="color: #00426c">Preliminary Program</li></a>
+                <a href="http://solgenomics2016.ucdavis.edu/registration/" target="_blank"><li style="color: #00426c">Registration</li></a>
+                <a href="http://solgenomics2016.ucdavis.edu/abstract-submission-info/" target="_blank"><li style="color: #00426c">Abstract Submission</li></a>
+                <a href="http://solgenomics2016.ucdavis.edu/hotel-information/" target="_blank"><li style="color: #00426c">Venue Information</li></a>
               </ul>
             </div>
             
@@ -204,7 +204,7 @@
 	  padding: 0px 10px 0px 10px;
 	  margin-top:20px;
 
-	  color: #000;
+    color: #444;
 	  font-size: 16px;
 	  text-decoration: none;
 	  background-color: #fff;
@@ -215,12 +215,12 @@
 	}
 
 	.carousel-sgn-caption a { 
-	  color: #000;
+    color: #444;
 	  text-decoration: none;
 	}
 
 	.carousel-sgn-caption a:hover { 
-	  color: #666;
+	  color: #00426c;
 	  text-decoration: none;
 	}
 
@@ -242,7 +242,7 @@
 	}
 
 	.carousel-sgn-links ul { 
-	  padding: 10px 30px 0px 15px;
+	  padding: 10px 0px 0px 15px;
 	  list-style-type: none;
 	}
 
@@ -255,7 +255,30 @@
 	  color: #666;
 	  text-decoration: none;
 	}
-
+  
+  .sgn_sm_list {
+    color: #444;
+    width: 100%;
+    padding: 0px;
+    padding-left: 5px;
+  }
+  
+  .sgn_sm_list li {
+    color: #444;
+    width: 100%;
+    padding: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  
+  .sgn_sm_list li:hover {
+    color: #00426c;
+  }
+  
+  #btn_carousel_indicators {
+    cursor: pointer;
+  }
+  
 	@media (min-width: 0px) and (max-width: 768px) {
 
     .carousel-sgn-caption {
@@ -265,27 +288,57 @@
       border-radius:0px;
       float: none;
       margin-bottom:0px;
+      opacity: 0.90;
     }
 
     .carousel-sgn-links {
+      background-color: #efefef;
       max-width: 100%;
       width: 100%;
       border-radius:0px;
-      bottom:30px;
-    }
-  
-    .carousel-indicators {
       bottom:0px;
-      margin-bottom:5px;
-			width:100%;
-			left:auto;
-			margin-left:auto;
+      opacity: 0.9;
     }
     
+  	.carousel-sgn-links ul { 
+  	  padding: 0px;
+      margin-bottom: 0px;
+  	}
+    
+    .sgn_sm_list li {
+      color: #00426c;
+      width: 100%;
+      position: relative;
+      display: block;
+      padding: 0px;
+      padding-left: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    .sgn_sm_list li:hover {
+      color: #444;
+  	  background-color: #fff;
+      opacity: 1;
+    }
+    
+/*    .carousel-indicators {
+      bottom:0px;
+      margin-bottom: 0px;
+      width:100%;
+      left:auto;
+      margin-left:auto;
+    }
+*/    
     .nav-pills>li>a {
       border-radius: 4px;
       border: 1px solid #ccc;
     }
+    
+  	.sgn_carousel_button_group {
+      margin-left: 5px;
+  		margin-top: 5px;
+  		width:98% !important;
+  	}
     
 	}
 
