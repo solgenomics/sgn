@@ -90,6 +90,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
 
+    $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
+
     my $design_type = $trial->get_design_type();
 
     if ($design_type eq "genotyping_plate") { 

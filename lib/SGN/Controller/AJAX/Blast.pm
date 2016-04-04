@@ -236,7 +236,11 @@ sub run : Path('/tools/blast/run') Args(0) {
       ", (join ",", @x)."\n"; 
       @command = (@command, @x);
     } 
-	
+    
+    # To get the proper format for gi sequences (CitrusGreening.org case)
+    push(@command, '-I');
+    push(@command, 'T');
+    
     print STDERR "COMMAND: ".join(" ", @command);
     print STDERR "\n";
     

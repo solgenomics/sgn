@@ -126,7 +126,7 @@
     <br>
     
     <label class="blast_select_label" for="input_example">Query &nbsp; </label>
-    <% $input_options_select %><a id="input_example" style="font-size: 80%">Show example</a>
+    <% $input_options_select %><a id="input_example" style="font-size: 80%;cursor:pointer;">Show example</a>
   </div>
 
     <textarea name="sequence" id="sequence" class="form-control" rows="8" cols="80"><% $preload %></textarea></td></tr>
