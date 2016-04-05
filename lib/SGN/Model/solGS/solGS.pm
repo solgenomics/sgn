@@ -1332,6 +1332,8 @@ sub project_traits {
       ->search_related("observable",
 		       {},
 		       {
+			   'select'   => [ qw / observable.cvterm_id observable.name/ ], 
+			   'as'       => [ qw / cvterm_id name  / ],
 			   distinct => [qw / observable.name / ],
 			   order_by => [qw / observable.name / ]
 		       }
