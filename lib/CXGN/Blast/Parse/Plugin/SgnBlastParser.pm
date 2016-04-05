@@ -243,8 +243,8 @@ sub _build_jbrowse_url {
   
   my $jbrowse_url = "";
   
-  $subject =~ s/\.\d$//;
-  $subject =~ s/\.\d$//;
+  # $subject =~ s/\.\d$//;
+  # $subject =~ s/\.\d$//;
   
   if ($jbr_src) {
     if ($jbr_src =~ /(.+)_gene/) {
