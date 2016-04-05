@@ -26,6 +26,7 @@
             <ul class="sgn_sm_list">
               <a href="/jbrowse"><li>Browse the tomato genome</li></a>
               <a href="/tools/blast?db_id=224"><li>Find sequences by similarity</li></a>
+              <a href="http://vigs.solgenomics.net"><li>Design VIGS constructs</li></a>
               <a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/"><li>Download the annotations</li></a>
               <a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/"><li>Download the Genome Sequence</li></a>
             </ul>
@@ -54,7 +55,7 @@
       <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/3.jpg) center center; background-size:cover;" class="slider-size">
         <div class="carousel-sgn-caption">
-            <h3><a href="/organism/Capsicum_annuum/genome">Pepper Genome</a></h3>
+            <h3><a href="/organism/Capsicum_annuum/genome">Pepper Sps. Genomes</a></h3>
             <p><a href="http://www.nature.com/ng/journal/v46/n3/full/ng.2877.html" target="_blank">Genome sequence of the hot pepper provides insights into the evolution of pungency in Capsicum species</a></p>
         </div>
         
@@ -82,13 +83,36 @@
             <a href="http://bti.cornell.edu/research/projects/nicotiana-benthamiana/"><li>The <i>N. benthamiana</i> sequencing project</li></a>
             <a href="/jbrowse/current/?data=data%2Fjson%2FNiben1.0.1&loc=Niben101Scf00005"><li>Browse the genome</li></a>
             <a href="/tools/blast/?db_id=266"><li>Find sequences by similarity</li></a>
-            <a href="http://vigs.solgenomics.net"><li>Design your VIGS constructs</li></a>
+            <a href="http://vigs.solgenomics.net"><li>Design VIGS constructs</li></a>
             <a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_benthamiana"><li>Downloads</li></a>
           </ul>
         </div>
         
         </div>
       </div>
+
+
+      <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/carousel_petunia.jpeg) center center; background-size:cover;" class="slider-size">
+        <div class="carousel-sgn-caption">
+            <h3><a href="http://www.nature.com/nplants/">Petunia Sps. Genomes</a></h3>
+            <p><a href="http://www.nature.com/nplants/" target="_blank">Insight into the evolution of the Solanaceae from the parental genomes of Petunia hybrida</a></p>
+        </div>
+        
+        <div class="carousel-sgn-links">
+          <ul class="sgn_sm_list">
+            <a href="/jbrowse/current/?data=data%2Fjson%2FPeaxi162"><li>Browse the <i>P. axillaris</i> genome</li></a>
+            <a href="/jbrowse/current/?data=data%2Fjson%2FPeaxi162"><li>Browse the <i>P. inflata</i> genome</li></a>
+            <a href="/tools/blast/?db_id=270"><li>Find sequences by similarity</li></a>
+            <a href="http://vigs.solgenomics.net"><li>Design VIGS constructs</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Petunia_axillaris"><li><i>P. axillaris</i> Downloads</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Petunia_inflata"><li><i>P. inflata</i> Downloads</li></a>
+          </ul>
+        </div>
+        
+        </div>
+      </div>
+
 
       <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/carousel_eggplant.jpg) center center; background-size:cover;" class="slider-size">
@@ -108,7 +132,7 @@
         </div>
       </div>
 
-      <div class="item">
+      <!-- <div class="item">
           <div style="background:url(/documents/img/homepage_carousel/carousel_slideshare.png) center center; background-size:cover;" class="slider-size">
             <div class="carousel-sgn-caption">
               <a href="http://www.slideshare.net/solgenomics" target="_blank">
@@ -116,17 +140,17 @@
                 <p>Slides from conferences and courses</p>
               </a>
             </div>
-            
+
             <div class="carousel-sgn-links">
               <ul class="sgn_sm_list">
                 <a href="http://www.slideshare.net/solgenomics/sol-meeting-2015-sgn-workshop-introduction?related=1" target="_blank"><li>SOL Meeting 2015</li></a>
                 <a href="http://www.slideshare.net/solgenomics/sgn-introduction-to-unix-commandline-2015-part-1?related=1" target="_blank"><li>Introduction to UNIX Command-line</li></a>
               </ul>
             </div>
-            
+
           </div>
         </a>
-      </div>
+      </div> -->
       
 
       <div class="item">
@@ -194,8 +218,8 @@
   <li><a data-target="#myCarousel" data-slide-to="1">Potato</a></li>
   <li><a data-target="#myCarousel" data-slide-to="2">Pepper</a></li>
   <li><a data-target="#myCarousel" data-slide-to="3"><i>N. benthamiana</i></a></li>
-  <li><a data-target="#myCarousel" data-slide-to="4">Eggplant</a></li>
-  <li><a data-target="#myCarousel" data-slide-to="5">SlideShare</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="4">Petunia</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="5">Eggplant</a></li>
   <li><a data-target="#myCarousel" data-slide-to="6">SOL Meeting</a></li>
   <!-- <li><a data-target="#myCarousel" data-slide-to="6">5th ISTD</a></li> -->
 </ul>
