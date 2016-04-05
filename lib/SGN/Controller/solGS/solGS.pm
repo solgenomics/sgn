@@ -4046,27 +4046,21 @@ sub all_gs_traits_list {
     my $file = $c->stash->{trial_compatibility_file};
     
     my $traits;
-
     my $mv_name = 'all_gs_traits';
+
     my $matview = $c->model('solGS::solGS')->check_matview_exists($mv_name);
-   
+  
     if (!$matview)
     {
         $c->model('solGS::solGS')->materialized_view_all_gs_traits();
 	$c->model('solGS::solGS')->insert_matview_public($mv_name);
     }
-    
-    if (!-s $file) 
-    {
-	if ($matview)
+    else 
+    {    
+	if (!-s $file) 
 	{
 	    $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
 	    $c->model('solGS::solGS')->update_matview_public($mv_name);
-	}
-	else 
-	{
-	    $c->model('solGS::solGS')->materialized_view_all_gs_traits();
-	    $c->model('solGS::solGS')->insert_matview_public($mv_name);
 	}
     }
 
