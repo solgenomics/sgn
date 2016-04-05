@@ -90,37 +90,30 @@ sub BUILD {
 
     $self->name($row->name());
 
-    my $folder_cvterm_id = $self->folder_cvterm_id();
     my $breeding_program_type_id = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { name => 'breeding_program' })->cvterm_id();
     $self->breeding_program_cvterm_id($breeding_program_type_id);
     my $parent_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( 
 	{ 
 	    subject_project_id => $self->folder_id(), 
-	    type_id =>  $folder_cvterm_id 
+	    type_id =>  $self->folder_cvterm_id() 
 	});
     
 
     my $folder_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property');
 
-    my $folder_type_row = $self->bcs_schema()->resultset('Project::Projectprop')-> find( { project_id => $self->folder_id() });
+    my $folder_type = $self->bcs_schema()->resultset('Project::Projectprop')-> search( { project_id => $self->folder_id() });
 
-    if ($folder_type_row) { 
-	$self->is_folder(1);
-    
-	if ($folder_type_row->type_id() == $folder_cvterm->cvterm_id()) { 
-	    #print STDERR "Setting folder type to folder\n";
-	    $self->folder_type("folder");
+    while (my $folder_type_row = $folder_type->next) {
+		if ($folder_type_row->type_id() == $self->folder_cvterm_id() ) { 
+			#print STDERR "Setting folder type to folder\n";
+			$self->folder_type("folder");
+			$self->is_folder(1);
+		}
+		elsif ($folder_type_row->type_id() == $self->breeding_program_cvterm_id()) { 
+			#print STDERR "Setting folder type to breeding_program.\n";
+			$self->folder_type("breeding_program");
+		}
 	}
-	elsif ($folder_type_row->type_id() == $self->breeding_program_cvterm_id()) { 
-	    #print STDERR "Setting folder type to breeding_program.\n";
-	    $self->folder_type("breeding_program");
-	}
-    }
-    else { 
-	#print STDERR "Setting folder type to trial\n";
-	# to do: also: cross.
-	$self->folder_type("trial");
-    }
     
     my $breeding_program_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( { subject_project_id => $self->folder_id(), type_id =>  $self->breeding_program_trial_relationship_id() });
 
@@ -192,7 +185,8 @@ sub list {
 	push @folders, [ $row->project_id(), $row->get_column('name') ];
     }
 
-    return @folders;								}
+    return @folders;
+}
 
 
 sub _get_folder_cvterm_id { 
@@ -407,17 +401,18 @@ sub remove_child {
 
 sub get_jstree_html { 
     my $self = shift;
+    my $parent_type = shift;
     
     my $html = "";
 
-    $html .= $self->_jstree_li_html('folder', $self->folder_id(), $self->name());
+    $html .= $self->_jstree_li_html($parent_type, $self->folder_id(), $self->name());
     $html .= "<ul>";	
     my $children = $self->children();
 
     if (@$children > 0) { 
 	foreach my $child (@$children) { 
 	    if ($child->is_folder()) { 
-		$html .= $child->get_jstree_html();
+		$html .= $child->get_jstree_html('folder');
 	    }
 	    else { 
 		$html .= $self->_jstree_li_html('trial', $child->folder_id(), $child->name())."</li>\n";

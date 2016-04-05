@@ -5,6 +5,7 @@ use Moose;
 
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial::Folder;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -49,8 +50,8 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
 
     my $html = "";
     foreach my $project (@$projects) { 
-	my $folder = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => $project->[0] });
-	$html .= $folder->get_jstree_html();
+	   my $folder = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => $project->[0] });
+	   $html .= $folder->get_jstree_html('breeding_program');
     }
 
     $c->stash->{rest} = { html => $html };

@@ -46,13 +46,16 @@ $breeding_programs
         jQuery('#trial_list').html(html);
         alert(html);
         jQuery('#trial_list').jstree( { 
-            "valid_children" : [ "folder", "trial" ],
+            "valid_children" : [ "folder", "trial", "breeding_program" ],
             "types" : {
+                "breeding_program" : {
+                    "icon": 'glyphicon glyphicon-briefcase text-info',
+                },
                 "folder" : {
-                    "icon": '/img/folder_yellow_3.png',
+                    "icon": 'glyphicon glyphicon-folder-open text-danger',
                 },
                 "trial" : {
-                    "icon": '/img/trialicon.png',
+                    "icon": 'glyphicon glyphicon-leaf text-success',
                 }
             },
           "plugins" : ["themes","html_data","dnd","ui","types"] 
