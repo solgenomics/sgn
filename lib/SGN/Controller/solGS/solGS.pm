@@ -3766,13 +3766,52 @@ sub tohtml_genotypes {
 }
 
 
+sub get_single_trial_traits {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id};
+
+    $self->traits_list_file($c);
+    my $traits_file = $c->stash->{traits_list_file};
+    
+    if (!-s $traits_file)
+    {
+	my $traits_rs = $c->model('solGS::solGS')->project_traits($pop_id);
+	
+	my @traits_list;
+	
+	while (my $row = $traits_rs->next)
+	{
+	    push @traits_list, $row->name;	    
+	}
+	
+	my $traits = join("\t", @traits_list);
+	write_file($traits_file, $traits);
+    }
+
+}
+
+
 sub get_all_traits {
     my ($self, $c) = @_;
     
+    my $pop_id = $c->stash->{pop_id};
+    
     $self->traits_list_file($c);
     my $traits_file = $c->stash->{traits_list_file};
+    
+    if (!-s $traits_file)
+    {
+	my $page = $c->req->path;    
+
+	if ($page =~ /solgs\/population\//)
+	{
+	    $self->get_single_trial_traits($c);
+	}
+    }  
+    
     my $traits = read_file($traits_file);
- 
+    
     $self->traits_acronym_file($c);
     my $acronym_file = $c->stash->{traits_acronym_file};
    
@@ -5006,8 +5045,6 @@ sub run_r_script {
 						  });
 	try 
 	{ 
-	    $r_job;
-
 	    $c->stash->{r_job_tempdir} = $r_job->tempdir();
 	    $c->stash->{r_job_id} = $r_job->job_id();
 	   # $c->stash->{cluster_job} = $r_job;
