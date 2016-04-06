@@ -721,9 +721,13 @@ sub solgs_analysis_status_log {
 	    my $analysis_status = $analysis[$header_index->{'Status'}];
 	    my $submitted_on    = $analysis[$header_index->{'Submitted on'}];
 
-	    if ($analysis_status =~ /(Failed|Submitted)/i) 
+	    if ($analysis_status =~ /Failed/i) 
 	    {
 		$result_page = 'N/A';
+	    }
+	    elsif ($analysis_status =~ /Submitted/i)
+	    {
+		$result_page = 'In process...'
 	    }
 	    else 
 	    {
