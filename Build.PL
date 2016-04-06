@@ -139,6 +139,7 @@ my $build = SGN::Build->new(
         'SOAP::Transport::HTTP'                    => 0,
 	'Spreadsheet::WriteExcel'                  => 0,
         'Spreadsheet::ParseExcel'                  => 0,
+        'Spreadsheet::Read'                        => 0,
         'Statistics::Descriptive'                  => 0,
         'Storable'                                 => 0,
 	'String::Approx'                           => 0,
