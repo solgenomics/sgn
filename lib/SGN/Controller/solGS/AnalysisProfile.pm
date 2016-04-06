@@ -181,8 +181,6 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $status;
    
-    #my $async_pid = $c->stash->{async_pid};
-
     if ($c->stash->{dependency})
     {	 
 	my $report_file = $c->stash->{report_file};
@@ -233,7 +231,8 @@ sub parse_arguments {
   my ($self, $c) = @_;
  
   my $analysis_data =  $c->stash->{analysis_profile};
-  my $arguments = $analysis_data->{arguments};
+  my $arguments     = $analysis_data->{arguments};
+  my $data_set_type = $analysis_data->{data_set_type};
 
   if ($arguments) 
   {
@@ -258,6 +257,24 @@ sub parse_arguments {
 	      $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];
 	  }
 
+	  if ($k eq 'selection_pop_id') 
+	  {
+	      $c->stash->{selection_pop_id}  = @{ $arguments->{$k} }[0];
+	      $c->stash->{prediction_pop_id} = @{ $arguments->{$k} }[0];
+	  }
+
+	  if ($k eq 'training_pop_id') 
+	  {
+	      $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];
+	      $c->stash->{pop_id}          = @{ $arguments->{$k} }[0];
+	      $c->stash->{model_id}        = @{ $arguments->{$k} }[0];
+	      
+	      if ($data_set_type =~ /combined populations/)
+	      {
+		  $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];
+	      }
+	  }
+
 	  if ($k eq 'combo_pops_list') 
 	  {
 	      my @pop_ids = @{ $arguments->{$k} };
@@ -273,6 +290,11 @@ sub parse_arguments {
 	  {
 	      my @selected_traits = @{ $arguments->{$k} };
 	      $c->stash->{selected_traits} = \@selected_traits;
+	      
+	      if (scalar(@selected_traits) == 1)
+	      {
+		$c->stash->{trait_id} = @{ $arguments->{$k} }[0]; 
+	      }
 	  } 
 	  
 	  if ($k eq 'analysis_type') 
@@ -387,6 +409,51 @@ sub structure_output_details {
 		'phenotype_file'  => $c->stash->{phenotype_file},
 		'genotype_file'   => $c->stash->{genotype_file},  
 		'data_set_type'   => $c->stash->{data_set_type},
+	};		
+    }
+    elsif ( $analysis_page =~ m/solgs\/model\/\d+\/prediction\// ) 
+    {
+	my $trait_id = $c->stash->{trait_id};
+	$solgs_controller->get_trait_details($c, $trait_id);
+	my $trait_abbr = $c->stash->{trait_abbr};
+
+	my $training_pop_id   = $c->stash->{training_pop_id};
+	my $prediction_pop_id = $c->stash->{prediction_pop_id};
+
+	my $training_pop_page   = $base . "solgs/population/$pop_id";
+	my $model_page          = $base . "solgs/trait/$trait_id/population/$pop_id";
+	my $prediction_pop_page = $base . "solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id";
+
+	my $training_pop_name;
+
+	if ($c->stash->{data_set_type} =~ /combined populations/)
+	{
+	    $training_pop_name = 'Training population ' . $training_pop_id;
+	}
+	else
+	{	    
+	    $solgs_controller->get_project_details($c, $training_pop_id);
+	    $training_pop_name = $c->stash->{project_name};
+	}
+	
+	$solgs_controller->get_project_details($c, $prediction_pop_id);
+	my $prediction_pop_name = $c->stash->{project_name};
+	
+	my $identifier = $training_pop_id . '_' . $prediction_pop_id;
+	$solgs_controller->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+	my $gebv_file = $c->stash->{prediction_pop_gebvs_file};
+	
+	$output_details{$trait_abbr} = {
+		'training_pop_page'   => $training_pop_page,
+		'training_pop_id'     => $training_pop_id,
+		'training_pop_name'   => $training_pop_name,
+		'prediction_pop_name' => $prediction_pop_name,
+		'prediction_pop_page' => $prediction_pop_page,
+		'trait_name'          => $c->stash->{trait_name},
+		'trait_id'            => $trait_id,
+		'model_page'          => $model_page,	
+		'gebv_file'           => $c->stash->{prediction_pop_gebvs_file},
+		'data_set_type'       => $c->stash->{data_set_type},
 	};		
     }
     elsif ($analysis_page =~ m/solgs\/populations\/combined\//) 
@@ -505,6 +572,18 @@ sub run_analysis {
 	#my $g_files = $c->stash->{multi_pops_geno_files};
 	#my @geno_files = split(/\t/, $g_files);
 	#$c->controller('solGS::solGS')->submit_cluster_compare_trials_markers($c, \@geno_files);
+    }
+    elsif ($analysis_page =~ /solgs\/model\/\d+\/prediction\//)
+    {
+	if ($c->stash->{data_set_type} =~ /single population/)
+	{
+	    $c->controller('solGS::solGS')->predict_selection_pop_single_pop_model($c);
+	}
+	elsif ($c->stash->{data_set_type} =~ /combined populations/) 
+	{
+	    $c->controller('solGS::solGS')->predict_selection_pop_combined_pops_model($c);
+	}
+	
     }
     else 
     {
