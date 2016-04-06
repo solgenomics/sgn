@@ -2505,7 +2505,9 @@ sub combined_pops_catalogue_file {
 sub catalogue_combined_pops {
     my ($self, $c, $entry) = @_;
     
-    my $file = $self->combined_pops_catalogue_file($c);
+    $self->combined_pops_catalogue_file($c);
+    my $file = $c->stash->{combined_pops_catalogue_file};
+  
     if (! -s $file) 
     {
         my $header = 'combo_pops_id' . "\t" . 'population_ids';
