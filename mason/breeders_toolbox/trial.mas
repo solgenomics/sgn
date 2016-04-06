@@ -25,6 +25,7 @@ $harvest_date => undef
 $trial_description => undef
 $design_layout_view => undef
 $user_can_modify => undef
+$hidap_enabled => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
@@ -56,8 +57,8 @@ print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
 <&| /page/info_section.mas, title=>"Trial details",  collapsible => 1, &>
 
 
-
-<table class="table" >
+<div class="panel panel-default">
+<table class="table table-hover" >
 
 <tr>
 <td><b>Breeding Program </b></td>
@@ -188,6 +189,7 @@ print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
 </td>
 </tr>
 </table>
+</div>
 
 </&>
 
@@ -223,6 +225,7 @@ print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
   <input id="harvest_date_picker"></input>
 </div>
 
+
 <&| /page/info_section.mas, title=>"Folder", collaspible=>1, collapsed=>0, 
   subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">change</a>]' &>
 <span id="trial_folder_div">[None]</span>
@@ -238,6 +241,61 @@ print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
   Parent folder <span id="new_folder_parent_folder_select_div"></span>
   <input type="hidden" id="new_folder_breeding_program_id" value="<% $breeding_program->[0]->[0] %>" />
 </div>
+
+
+% if ($hidap_enabled) {
+
+<&| /page/info_section.mas, id => "hidap_trial", title=>"HIDAP Trial Analysis", collapsible=>1, collapsed => 0 &>
+
+<div class="row">
+  <div class="col-sm-4">
+    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Map&fbaInput=<% $trial_id %>" target="_blank">
+      <div class="well">
+        <div class="row">
+          <div class="col-sm-9">
+            Phenotype Plot Map
+          </div>
+          <div class="col-sm-3">
+            <span class="glyphicon glyphicon-th"></span>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-sm-4">
+    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Correlation&fbaInput=<% $trial_id %>" target="_blank">
+      <div class="well">
+        <div class="row">
+          <div class="col-sm-9">
+            Phenotype Correlation
+          </div>
+          <div class="col-sm-3">
+            <span class="glyphicon glyphicon-stats"></span>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-sm-4">
+    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Report&fbaInput=<% $trial_id %>" target="_blank">
+      <div class="well">
+        <div class="row">
+          <div class="col-sm-9">
+            Analysis Report
+          </div>
+          <div class="col-sm-3">
+            <span class="glyphicon glyphicon-book"></span>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+</&>
+
+% }
+
 
 <&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
 
@@ -291,9 +349,8 @@ print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
   
 </style> -->
 
-% my $design_empty = 0;
 
-<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, hide_if_empty=>1, is_empty=> $design_empty, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
+<&| /page/info_section.mas, id => "trial_design_section", title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
 
 <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 

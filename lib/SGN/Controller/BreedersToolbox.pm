@@ -4,16 +4,21 @@ package SGN::Controller::BreedersToolbox;
 use Moose;
 
 use Data::Dumper;
-
-use CXGN::Trial::TrialLayout;
-use URI::FromHash 'uri';
-
 use CXGN::BreederSearch;
 use SGN::Controller::AJAX::List;
 use CXGN::List::Transform;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::BreedersToolbox::Accessions;
 use SGN::Model::Cvterm;
+use URI::FromHash 'uri';
+use Spreadsheet::WriteExcel;
+use Spreadsheet::Read;
+use File::Slurp qw | read_file |;
+use File::Temp;
+use CXGN::Trial::TrialLayout;
+use Try::Tiny;
+use File::Basename qw | basename dirname|;
+use File::Spec::Functions;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -180,10 +185,41 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
     $c->stash->{deleted_phenotype_files} = $data->{deleted_phenotype_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_phenotyping.mas';
-    
 
 }
 
+sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1) { 
+    my $self =shift;
+    my $c = shift;
+    my $file_id = shift;
+ 
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
+    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    #print STDERR "\n\n\nfile name:".$file_row->basename."\n";
+    my $contents = read_file($file_destination);
+    my $file_name = $file_row->basename;
+    $c->res->content_type('Application/trt');
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    $c->res->body($contents);
+}
+
+sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) { 
+    my $self =shift;
+    my $c = shift;
+    my $file_id = shift;
+ 
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
+    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    #print STDERR "\n\n\nfile name:".$file_row->basename."\n";
+    my @contents = ReadData ($file_destination);
+    #print STDERR Dumper \@contents;
+    my $file_name = $file_row->basename;
+    $c->stash->{file_content} = \@contents;
+    $c->stash->{filename} = $file_name;
+    $c->stash->{template} = '/breeders_toolbox/view_file.mas';
+}
 
 sub make_cross_form :Path("/stock/cross/new") :Args(0) { 
     my ($self, $c) = @_;

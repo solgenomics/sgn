@@ -1319,4 +1319,26 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0
     $c->stash->{rest} = { pedigree_string => $pedigree_string };
 }
 
+sub stock_lookup : Path('/stock_lookup/') Args(2) ActionClass('REST') { }
+
+sub stock_lookup_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $lookup_from_field = shift;
+    my $lookup_field = shift;
+    my $value_to_lookup = $c->req->param($lookup_from_field);
+
+    #print STDERR $lookup_from_field;
+    #print STDERR $lookup_field;
+    #print STDERR $value_to_lookup;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $s = $schema->resultset("Stock::Stock")->find( { $lookup_from_field => $value_to_lookup } );
+    my $value;
+    if ($s && $lookup_field eq 'stock_id') {
+        $value = $s->stock_id();
+    }
+    $c->stash->{rest} = { $lookup_from_field => $value_to_lookup, $lookup_field => $value };
+}
+
 1;

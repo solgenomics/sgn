@@ -84,18 +84,108 @@ sub search_trait {
 
 sub all_gs_traits {
     my $self = shift;
+   
+    my $q = "SELECT cvterm_id, name 
+                    FROM all_gs_traits                     
+                    ORDER BY name";
 
-    my $rs = $self->schema->resultset("Phenotype::Phenotype")
-        ->search({})
-        ->search_related('observable', 
-                         {}, 
-			 {
-			     columns  => [ qw / cvterm_id observable.name / ],
-			     distinct => 1
-			 },	 	
-        );
+    my $sth = $self->context->dbc->dbh->prepare($q);
 
-    return $rs;      
+    $sth->execute();
+
+    my @traits;
+
+    while ( my ($cvterm_id, $cvterm) = $sth->fetchrow_array()) 
+    {
+	push @traits, $cvterm;
+    }
+    
+    return \@traits;
+}
+
+# sub all_gs_traits {
+#     my $self = shift;
+
+#     my $rs = $self->schema->resultset("Phenotype::Phenotype")
+#         ->search({})
+#         ->search_related('observable', 
+#                          {}, 
+# 			 {
+# 			     columns  => [ qw / cvterm_id observable.name / ],
+# 			     distinct => 1
+# 			 },	 	
+#         );
+
+#     return $rs; 
+     
+# }
+
+
+sub materialized_view_all_gs_traits {
+    my $self = shift;
+    
+    my $q = "CREATE MATERIALIZED VIEW public.all_gs_traits 
+                    AS SELECT observable.cvterm_id, observable.name 
+                    FROM phenotype me  
+                    JOIN cvterm observable ON observable.cvterm_id = me.observable_id 
+                    GROUP BY observable.cvterm_id, observable.name";
+
+    my $sth = $self->context->dbc->dbh->prepare($q);
+
+    $sth->execute();
+    
+}
+
+
+sub insert_matview_public {
+    my ($self, $name)  = @_;
+ 
+    my $q = "INSERT INTO public.matviews (mv_name, last_refresh) VALUES (?, now())";
+
+    my $sth = $self->context->dbc->dbh->prepare($q);
+
+    $sth->execute($name);
+    
+}
+
+
+sub update_matview_public {
+    my ($self, $name)  = @_;
+ 
+    my $q = "Update public.matviews SET last_refresh = now() WHERE mv_name ilike ? ";
+
+    my $sth = $self->context->dbc->dbh->prepare($q);
+
+    $sth->execute($name);
+    
+}
+
+
+sub check_matview_exists {
+    my ($self, $name) = @_;
+ 
+    my $q = "SELECT mv_name FROM public.matviews WHERE mv_name ilike ?";
+
+    my $sth = $self->context->dbc->dbh->prepare($q);
+
+    $sth->execute($name);
+
+    my $exists =$sth->fetchrow_array();
+   
+    return $exists;
+    
+}
+
+
+sub refresh_materialized_view_all_gs_traits {
+    my $self = shift;
+    
+    my $q = "REFRESH MATERIALIZED VIEW public.all_gs_traits";
+
+    my $sth = $self->context->dbc->dbh->prepare($q);
+
+    $sth->execute();
+    
 }
 
 
@@ -1332,6 +1422,8 @@ sub project_traits {
       ->search_related("observable",
 		       {},
 		       {
+			   'select'   => [ qw / observable.cvterm_id observable.name/ ], 
+			   'as'       => [ qw / cvterm_id name  / ],
 			   distinct => [qw / observable.name / ],
 			   order_by => [qw / observable.name / ]
 		       }
