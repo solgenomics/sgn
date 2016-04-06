@@ -200,7 +200,9 @@
       </div> -->
 
     </div><!-- Wrapper for slides end-->
-	
+
+  <hr class="transition-timer-carousel-progress-bar" />
+
   <!-- Left and right controls -->
   <a id="prev_slide" class="left carousel-control" href="#myCarousel" role="button" data-slide="prev" style="color:white;">
     <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
@@ -392,7 +394,17 @@
 		margin-top:170px
 	}
   
-
+  .transition-timer-carousel-progress-bar {
+      height: 3px;
+      background-color: #337ab7;/*progress bar color*/
+      width: 0;
+      margin: 0 0 0 0;
+      border: none;
+      z-index: 11;
+      position: relative;
+  }
+  
+  
 </style>
 
 <!--
@@ -450,12 +462,6 @@
 
     });
     
-    $('.carousel').carousel({
-      interval: 20000,
-      wrap: "true",
-      pause: "false"
-    });
-    
     // touch screen
 		//     $("#myCarousel").swiperight(function() {
 		//       $("#myCarousel").carousel('prev');
@@ -465,6 +471,42 @@
 		//       $("#myCarousel").carousel('next');
 		//     });
        
+    
+    
+    
+  //progress bar
+  var percent = 0,
+  	interval = 50,//time showing each slide
+  	$bar = $('.transition-timer-carousel-progress-bar'),
+  	$crsl = $('#myCarousel');
+
+    $crsl.carousel({//initialize
+      interval: false,
+      pause: true
+    }).on('slide.bs.carousel', function (){percent = 0;});//restart progress bar on new slide
+    
+  	function progressBarCarousel() {
+  		$bar.css({width:percent+'%'});
+  		percent = percent +0.5;
+  		if (percent>=100) {
+  			percent=0;
+  			$crsl.carousel('next');
+  		}
+  	}
+  	var barInterval = setInterval(progressBarCarousel, interval);//set interval to progressBarCarousel function
+    if (!(/Mobi/.test(navigator.userAgent))) {//tests if it isn't mobile, progress bar stop on mouse over slide
+      $crsl.hover(function(){
+            clearInterval(barInterval);
+          },
+          function(){
+            barInterval = setInterval(progressBarCarousel, interval);
+          }
+      );
+    }
+    
+    
+    
+    
     $(".ui-loading").css("display","none");
     $(".ui-loader").css("display","none");
   });
