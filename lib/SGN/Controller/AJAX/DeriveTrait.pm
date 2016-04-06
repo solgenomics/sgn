@@ -55,24 +55,25 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 			return;	
 	    }
 	
-	   elsif ($selected_trait == '')  {
+	   elsif ($selected_trait eq '')  {
 		$c->stash->{rest} = {error => "Select trait to compute." };
 		return;
 	   } 
 	 } 
 
 	my $dbh = $c->dbc->dbh();
-	
-	#my @wtair_wtwater = ("76811", "76824");
-	#my @pheno_wtair;
-	my @container_array;
-	
+	my @plots;
+	my %data;
+	my @traits;	
+
+  if ($selected_trait == '76846') {
+		
 	my $computing_trait_name = 'specific gravity|CO:0000163';
-	my @traits;
+	#my @traits;
 	push @traits, $computing_trait_name;
+	print "FIRST_TRAIT: $traits[0]\n";
 	my $wtair = 76811;
 	my %hash_wtair;
-      #foreach my $wt (@wtair_wtwater){
 
 	my $h = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
 nd_experiment_stock nd_experiment_stocks ON nd_experiment_stocks.stock_id =
@@ -88,7 +89,6 @@ stock_relationship_subjects.object_id WHERE ( ( observable.cvterm_id =? AND
 project.project_id=? ) );");
 		
 
-	#$h->execute($wt, $trial_id);
 	$h->execute($wtair, $trial_id);
 	my @array_name;
 	
@@ -99,7 +99,6 @@ project.project_id=? ) );");
 	}
 	
 	print STDERR Dumper(\%hash_wtair);
-
 
 	my @plot_name_rename;
 	my $wtwater = 76824;
@@ -127,40 +126,175 @@ project.project_id=? ) );");
 	
 	print STDERR Dumper(\%hash_wtwater);
 	
-	my @plots;
-	my %data;
-	my (@keys, @specific_grvty );
-	
 	foreach (keys %hash_wtair) {
-		#if (defined $hash_wtwater{$plot_name}){
-		#	print "$plot_name: found in weight in water\n";
-		#	next;
-		#}
-	#	unless ( exists $hash_wtwater{$_} ) {
-	#		print "$_: found in weight in water\n";		
-	#		next;
-	#	}
 		
 		if ($hash_wtair{$_} && $hash_wtwater{$_}) { 
 				push @plots, $_;
 			 $data{$_}->{$computing_trait_name} = ( $hash_wtair{$_}/($hash_wtair{$_} - $hash_wtwater{$_}) );
-				#my $specific_grvty_entry = ( $hash_wtair{$_}/($hash_wtair{$_} - $hash_wtwater{$_}) );
-				#my $specific_grvty_entry2 = sprintf("%.4f", $specific_grvty_entry);				
-				#push @specific_grvty, $specific_grvty_entry2;
-				
 		}
 			
 	}
 
 	print STDERR Dumper (\%data);
 	print STDERR Dumper (\@plots);
-      	
+
+    }
+
+    elsif ($selected_trait == '70700') {
+
+	my $computing_trait_name = 'sprouting proportion|CO:0000008';
+	push @traits, $computing_trait_name;
+	my $stakes_planted = 76805;
+	my %hash_stakes_planted;
+
+	my $h = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
+nd_experiment_stock nd_experiment_stocks ON nd_experiment_stocks.stock_id =
+me.stock_id LEFT JOIN nd_experiment nd_experiment ON nd_experiment.nd_experiment_id = nd_experiment_stocks.nd_experiment_id LEFT JOIN nd_experiment_phenotype nd_experiment_phenotypes ON nd_experiment_phenotypes.nd_experiment_id = nd_experiment.nd_experiment_id LEFT JOIN phenotype phenotype ON phenotype.phenotype_id =
+nd_experiment_phenotypes.phenotype_id LEFT JOIN cvterm observable ON
+observable.cvterm_id = phenotype.observable_id LEFT JOIN nd_experiment_project
+nd_experiment_projects ON nd_experiment_projects.nd_experiment_id =
+nd_experiment.nd_experiment_id LEFT JOIN project project ON project.project_id =
+nd_experiment_projects.project_id LEFT JOIN stock_relationship
+stock_relationship_subjects ON stock_relationship_subjects.subject_id =
+me.stock_id LEFT JOIN stock object ON object.stock_id =
+stock_relationship_subjects.object_id WHERE ( ( observable.cvterm_id =? AND
+project.project_id=? ) );");
+		
+	$h->execute($stakes_planted, $trial_id);	
+	while (my ($stock_name, $stock_id, $plot_name, $value) = $h->fetchrow_array()) { 
+		$hash_stakes_planted{$plot_name} = $value;
+	}
+
+	print STDERR Dumper(\%hash_stakes_planted);
+
+	my @plot_name_rename;
+	my $sprout_count = 76894;
+	my %hash_sprout_count;
+
+	my $h1 = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
+nd_experiment_stock nd_experiment_stocks ON nd_experiment_stocks.stock_id =
+me.stock_id LEFT JOIN nd_experiment nd_experiment ON nd_experiment.nd_experiment_id = nd_experiment_stocks.nd_experiment_id LEFT JOIN nd_experiment_phenotype nd_experiment_phenotypes ON nd_experiment_phenotypes.nd_experiment_id = nd_experiment.nd_experiment_id LEFT JOIN phenotype phenotype ON phenotype.phenotype_id =
+nd_experiment_phenotypes.phenotype_id LEFT JOIN cvterm observable ON
+observable.cvterm_id = phenotype.observable_id LEFT JOIN nd_experiment_project
+nd_experiment_projects ON nd_experiment_projects.nd_experiment_id =
+nd_experiment.nd_experiment_id LEFT JOIN project project ON project.project_id =
+nd_experiment_projects.project_id LEFT JOIN stock_relationship
+stock_relationship_subjects ON stock_relationship_subjects.subject_id =
+me.stock_id LEFT JOIN stock object ON object.stock_id =
+stock_relationship_subjects.object_id WHERE ( ( observable.cvterm_id =? AND
+project.project_id=? ) );");
+		
+	my ($stock_name, $stock_id, $plot_name, $value);
+	$h1->execute($sprout_count, $trial_id);
+	while ( ($stock_name, $stock_id, $plot_name, $value) = $h1->fetchrow_array()) { 
+		$hash_sprout_count{$plot_name} = $value;
+		push @plot_name_rename, $plot_name;
+	}
+	
+	print STDERR Dumper(\%hash_sprout_count);
+
+	foreach (keys %hash_stakes_planted) {
+		
+		if ($hash_stakes_planted{$_} && $hash_sprout_count{$_}) { 
+				push @plots, $_;
+			 $data{$_}->{$computing_trait_name} = ( $hash_sprout_count{$_}/$hash_stakes_planted{$_} );
+		
+		}
+			
+	}
+
+   }
+	
+   elsif ($selected_trait == '76844') {
+
+	my $computing_trait_name = 'dry matter content by specific gravity method|CO:0000160';
+	push @traits, $computing_trait_name;
+	my $specific_gravity = 76846;
+	my %hash_specific_gravity;
+
+	my $h = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
+nd_experiment_stock nd_experiment_stocks ON nd_experiment_stocks.stock_id =
+me.stock_id LEFT JOIN nd_experiment nd_experiment ON nd_experiment.nd_experiment_id = nd_experiment_stocks.nd_experiment_id LEFT JOIN nd_experiment_phenotype nd_experiment_phenotypes ON nd_experiment_phenotypes.nd_experiment_id = nd_experiment.nd_experiment_id LEFT JOIN phenotype phenotype ON phenotype.phenotype_id =
+nd_experiment_phenotypes.phenotype_id LEFT JOIN cvterm observable ON
+observable.cvterm_id = phenotype.observable_id LEFT JOIN nd_experiment_project
+nd_experiment_projects ON nd_experiment_projects.nd_experiment_id =
+nd_experiment.nd_experiment_id LEFT JOIN project project ON project.project_id =
+nd_experiment_projects.project_id LEFT JOIN stock_relationship
+stock_relationship_subjects ON stock_relationship_subjects.subject_id =
+me.stock_id LEFT JOIN stock object ON object.stock_id =
+stock_relationship_subjects.object_id WHERE ( ( observable.cvterm_id =? AND
+project.project_id=? ) );");
+	
+	$h->execute($specific_gravity, $trial_id);
+	
+	while (my ($stock_name, $stock_id, $plot_name, $value) = $h->fetchrow_array()) { 
+		$hash_specific_gravity{$plot_name} = $value;
+	}
+	
+	print STDERR Dumper(\%hash_specific_gravity);
+
+	foreach (keys %hash_specific_gravity) {		
+		
+		if ($hash_specific_gravity{$_}) { 
+				push @plots, $_;
+			 $data{$_}->{$computing_trait_name} = ( (158.3 * $hash_specific_gravity{$_}) - 142 );
+				
+		}
+			
+	}
+   
+	print STDERR Dumper (\%data);
+	print STDERR Dumper (\@plots);
+
+
+   }   	
+
+   elsif ($selected_trait == '70746') {
+
+	my $computing_trait_name = 'starch content percentage|CO:0000071';
+	push @traits, $computing_trait_name;
+	my $specific_gravity = 76846;
+	my %hash_specific_gravity;
+
+	my $h = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
+nd_experiment_stock nd_experiment_stocks ON nd_experiment_stocks.stock_id =
+me.stock_id LEFT JOIN nd_experiment nd_experiment ON nd_experiment.nd_experiment_id = nd_experiment_stocks.nd_experiment_id LEFT JOIN nd_experiment_phenotype nd_experiment_phenotypes ON nd_experiment_phenotypes.nd_experiment_id = nd_experiment.nd_experiment_id LEFT JOIN phenotype phenotype ON phenotype.phenotype_id =
+nd_experiment_phenotypes.phenotype_id LEFT JOIN cvterm observable ON
+observable.cvterm_id = phenotype.observable_id LEFT JOIN nd_experiment_project
+nd_experiment_projects ON nd_experiment_projects.nd_experiment_id =
+nd_experiment.nd_experiment_id LEFT JOIN project project ON project.project_id =
+nd_experiment_projects.project_id LEFT JOIN stock_relationship
+stock_relationship_subjects ON stock_relationship_subjects.subject_id =
+me.stock_id LEFT JOIN stock object ON object.stock_id =
+stock_relationship_subjects.object_id WHERE ( ( observable.cvterm_id =? AND
+project.project_id=? ) );");
+		
+	$h->execute($specific_gravity, $trial_id);
+	
+	while (my ($stock_name, $stock_id, $plot_name, $value) = $h->fetchrow_array()) { 
+		$hash_specific_gravity{$plot_name} = $value;
+	}
+	
+	print STDERR Dumper(\%hash_specific_gravity);
+
+	foreach (keys %hash_specific_gravity) {		
+		
+		if ($hash_specific_gravity{$_}) { 
+				push @plots, $_;
+			 $data{$_}->{$computing_trait_name} = ( (210.8 * $hash_specific_gravity{$_}) - 213.4 );
+				
+		}	
+	}
+   
+	print STDERR Dumper (\%data);
+	print STDERR Dumper (\@plots);
+   }   	
 	
 	$parse_result{'data'} = \%data;
     	$parse_result{'plots'} = \@plots;
     	$parse_result{'traits'} = \@traits;
 
-
+	my $size = scalar(@plots) * scalar(@traits);
 	my $time = DateTime->now();
   	my $timestamp = $time->ymd()."_".$time->hms();
 	my %phenotype_metadata;
@@ -169,8 +303,8 @@ project.project_id=? ) );");
   	$phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
   	$phenotype_metadata{'date'}="$timestamp";
 
-	my $store = CXGN::Phenotypes::StorePhenotypes->store($c, \@plots, \@traits, \%data, \%phenotype_metadata);
-
+	my $store = CXGN::Phenotypes::StorePhenotypes->store($c, $size, \@plots, \@traits, \%data, \%phenotype_metadata);
+	print "ERROR: $store\n";
 
 	$c->stash->{rest} = {success => 1};
 }

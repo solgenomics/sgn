@@ -14,15 +14,15 @@ $trial_id
        
       <select class="form-control" id="sel1" onchange="trait_change(this.value)"> style="width: 160px;" > 
 	<option value=""disabled selected>select your option</option>
-	<option value="70700">Sprouting</option>
+	<option value="70700">Sprouting proportion</option>
         <option value="76846">specific gravity</option>
-        <option value="70668">Harvest index</option>
-        <option value="70691">fresh root yield</option>
-        <option value="76844">dry matter content(by S.gravity)</option>
-	<option value="70741">dry matter content</option>
-	<option value="70681">top yield</option>
-        <option value="70746">starch content</option>
-        <option value="70727">dry yield</option>
+	<option value="76844">dry matter content(by S.gravity)</option>
+	<option value="70746">starch content</option>
+        <!--<option value="70668">Harvest index</option>-->
+        <!--<option value="70691">fresh root yield</option>-->
+	<!--<option value="70741">dry matter content</option> -->
+	<!--<option value="70681">top yield</option>-->
+        <!--<option value="70727">dry yield</option>-->
       </select>    
     	
    </div>
