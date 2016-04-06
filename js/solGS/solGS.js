@@ -138,7 +138,7 @@ function loginUser () {
 
 
 function displayAnalysisNow (page, args) {
-  
+
     blockPage(page, args);
 
  }
@@ -159,8 +159,8 @@ function blockPage (page, args) {
 
 
 function goToPage (page, args) {    
-  
-    if (page.match( /(solgs\/population\/|solgs\/confirm\/request|solgs\/trait\/|solgs\/model\/combined\/trials\/)/)) {
+ 
+    if (page.match( /(solgs\/population\/|solgs\/confirm\/request|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/model\/\d+\/prediction\/)/)) {
 
 	window.location = page;
 	
@@ -172,6 +172,7 @@ function goToPage (page, args) {
 	retrievePopsData();  
 	//window.location = page;
     }  else {
+
 	window.location = window.location.href;
     }
 	    
