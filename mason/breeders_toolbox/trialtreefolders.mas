@@ -58,7 +58,7 @@ $breeding_programs
                     "icon": 'glyphicon glyphicon-leaf text-success',
                 }
             },
-          "plugins" : ["themes","html_data","dnd","ui","types"]
+          "plugins" : ["html_data","dnd","types"]
 
         });
 
