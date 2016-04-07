@@ -22,14 +22,14 @@ use File::Spec::Functions;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
-sub manage_breeding_programs : Path("/breeders/manage_programs") :Args(0) { 
+sub manage_breeding_programs : Path("/breeders/manage_programs") :Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if (!$c->user()) { 
-	
+    if (!$c->user()) {
+
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -38,23 +38,23 @@ sub manage_breeding_programs : Path("/breeders/manage_programs") :Args(0) {
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
 
     my $breeding_programs = $projects->get_breeding_programs();
-    
+
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{user} = $c->user();
 
     $c->stash->{template} = '/breeders_toolbox/breeding_programs.mas';
-    
+
 
 }
 
-sub manage_trials : Path("/breeders/trials") Args(0) { 
+sub manage_trials : Path("/breeders/trials") Args(0) {
     my $self = shift;
     my $c = shift;
- 
-    if (!$c->user()) { 
-	
+
+    if (!$c->user()) {
+
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -66,20 +66,20 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     my %trials_by_breeding_project = ();
 
-    foreach my $bp (@$breeding_programs) { 
-	print STDERR "RETRIEVING TRIALS FOR $bp->[1]\n";
+    foreach my $bp (@$breeding_programs) {
+	#print STDERR "RETRIEVING TRIALS FOR $bp->[1]\n";
 	$trials_by_breeding_project{$bp->[1]}= $projects->get_trials_by_breeding_program($bp->[0]);
     }
 
-    print STDERR Dumper(\%trials_by_breeding_project);
-    
+    #print STDERR Dumper(\%trials_by_breeding_project);
+
     $trials_by_breeding_project{'Other'} = $projects->get_trials_by_breeding_program();
 
     # use get_all_locations, as other calls for locations can be slow
     #
     $c->stash->{locations} = $projects->get_all_locations();
 
-    $c->stash->{trials_by_breeding_project} = \%trials_by_breeding_project; 
+    $c->stash->{trials_by_breeding_project} = \%trials_by_breeding_project;
 
     $c->stash->{breeding_programs} = $breeding_programs;
 
@@ -91,10 +91,10 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    if (!$c->user()) { 	
+    if (!$c->user()) {
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -111,15 +111,15 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
 }
 
 
-sub manage_locations : Path("/breeders/locations") Args(0) { 
+sub manage_locations : Path("/breeders/locations") Args(0) {
     my $self = shift;
     my $c = shift;
-    
-    if (!$c->user()) { 	
-	
+
+    if (!$c->user()) {
+
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -127,27 +127,27 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
     my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
     my $breeding_programs = $bp->get_breeding_programs();
     my $locations = {};
-    foreach my $b (@$breeding_programs) { 
+    foreach my $b (@$breeding_programs) {
 	$locations->{$b->[1]} = $bp->get_locations_by_breeding_program($b->[0]);
     }
     $locations->{'Other'} = $bp->get_locations_by_breeding_program();
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
-    
+
     $c->stash->{locations} = $locations;
 
     $c->stash->{template} = '/breeders_toolbox/manage_locations.mas';
 }
 
-sub manage_crosses : Path("/breeders/crosses") Args(0) { 
+sub manage_crosses : Path("/breeders/crosses") Args(0) {
     my $self = shift;
     my $c = shift;
-    
-    if (!$c->user()) { 	
-	
+
+    if (!$c->user()) {
+
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -155,7 +155,7 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
     my $breeding_programs = $bp->get_breeding_programs();
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
-    
+
     $c->stash->{locations} = $bp->get_all_locations($c);
 
     #$c->stash->{projects} = $self->get_projects($c);
@@ -170,12 +170,12 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 
 }
 
-sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) { 
+sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
     my $self =shift;
     my $c = shift;
- 
-    if (!$c->user()) { 
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+
+    if (!$c->user()) {
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -188,11 +188,11 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
 
 }
 
-sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1) { 
+sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1) {
     my $self =shift;
     my $c = shift;
     my $file_id = shift;
- 
+
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
     my $file_destination =  catfile($file_row->dirname, $file_row->basename);
@@ -204,11 +204,11 @@ sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1)
     $c->res->body($contents);
 }
 
-sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) { 
+sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) {
     my $self =shift;
     my $c = shift;
     my $file_id = shift;
- 
+
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
     my $file_destination =  catfile($file_row->dirname, $file_row->basename);
@@ -221,15 +221,15 @@ sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) {
     $c->stash->{template} = '/breeders_toolbox/view_file.mas';
 }
 
-sub make_cross_form :Path("/stock/cross/new") :Args(0) { 
+sub make_cross_form :Path("/stock/cross/new") :Args(0) {
     my ($self, $c) = @_;
     $c->stash->{template} = '/breeders_toolbox/new_cross.mas';
-    if ($c->user()) { 
+    if ($c->user()) {
       my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
       # get projects
       my @rows = $schema->resultset('Project::Project')->all();
       my @projects = ();
-      foreach my $row (@rows) { 
+      foreach my $row (@rows) {
 	push @projects, [ $row->project_id, $row->name, $row->description ];
       }
       $c->stash->{project_list} = \@projects;
@@ -248,7 +248,7 @@ sub make_cross_form :Path("/stock/cross/new") :Args(0) {
 }
 
 
-sub make_cross :Path("/stock/cross/generate") :Args(0) { 
+sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my ($self, $c) = @_;
     $c->stash->{template} = '/breeders_toolbox/progeny_from_crosses.mas';
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -263,7 +263,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $suffix = $c->req->param('suffix');
     my $progeny_number = $c->req->param('progeny_number');
     my $visible_to_role = $c->req->param('visible_to_role');
-    
+
     if (! $c->user()) { # redirect
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
@@ -317,7 +317,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
 	{ name       => $maternal,
 	} );
-    
+
     my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
             { name       => $paternal,
             } );
@@ -335,7 +335,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 
       my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema,  'cross_relationship','stock_relationship');
 
-    
+
     my $visible_to_role_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema,  'visible_to_role', 'local');
 
     my $increment = 1;
@@ -373,39 +373,39 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
       $increment++;
 
     }
-    if ($@) { 
+    if ($@) {
     }
 }
 
 
 
-    
-sub breeder_home :Path("/breeders/home") Args(0) { 
+
+sub breeder_home :Path("/breeders/home") Args(0) {
     my ($self , $c) = @_;
 
-    
-    if (!$c->user()) { 
-	
+
+    if (!$c->user()) {
+
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) ); 
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
-    
+
     # my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     # my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
     # my $breeding_programs = $bp->get_breeding_programs();
 
     # $c->stash->{programs} = $breeding_programs;
     # $c->stash->{breeding_programs} = $breeding_programs;
-    
+
     # # my $locations_by_breeding_program;
-    # # foreach my $b (@$breeding_programs) { 
+    # # foreach my $b (@$breeding_programs) {
     # #     $locations_by_breeding_program->{$b->[1]} = $bp->get_locations_by_breeding_program($b->[0]);
     # # }
     # # $locations_by_breeding_program->{'Other'} = $bp->get_locations_by_breeding_program();
 
     # $c->stash->{locations_by_breeding_program} = ""; #$locations_by_breeding_program;
-    
+
     # # get roles
     # #
     # my @roles = $c->user->roles();
@@ -416,7 +416,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     # $c->stash->{stockrelationships} = $self->get_stock_relationships($c);
 
     # my $locations = $bp->get_locations($c);
-    
+
     # $c->stash->{locations} = $locations;
     # # get uploaded phenotype files
     # #
@@ -426,23 +426,23 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     # $c->stash->{phenotype_files} = $data->{file_info};
     # $c->stash->{deleted_phenotype_files} = $data->{deleted_file_info};
 
-    
+
     $c->stash->{template} = '/breeders_toolbox/home.mas';
 }
 
 
-sub breeder_search : Path('/breeders/search/') :Args(0) { 
+sub breeder_search : Path('/breeders/search/') :Args(0) {
     my ($self, $c) = @_;
-    
+
     $c->stash->{template} = '/breeders_toolbox/breeder_search_page.mas';
 
 }
 
 
-sub get_crosses : Private { 
+sub get_crosses : Private {
     my $self = shift;
     my $c = shift;
-    
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     # get crosses
@@ -468,12 +468,12 @@ sub get_crosses : Private {
 
 
 
-sub get_phenotyping_data : Private { 
+sub get_phenotyping_data : Private {
     my $self = shift;
     my $c = shift;
 
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    
+
     my $file_info = [];
     my $deleted_file_info = [];
 
@@ -481,12 +481,12 @@ sub get_phenotyping_data : Private {
 
     print STDERR "RETRIEVED ".$metadata_rs->count()." METADATA ENTRIES...\n";
 
-    while (my $md_row = ($metadata_rs->next())) { 
+    while (my $md_row = ($metadata_rs->next())) {
 	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id() } );
-	
-	if (!$md_row->obsolete) { 
+
+	if (!$md_row->obsolete) {
 	    while (my $file_row = $file_rs->next()) {
-		push @$file_info, { file_id => $file_row->file_id(),            
+		push @$file_info, { file_id => $file_row->file_id(),
 				    basename => $file_row->basename,
 				    dirname  => $file_row->dirname,
 				    file_type => $file_row->filetype,
@@ -495,8 +495,8 @@ sub get_phenotyping_data : Private {
 		};
 	    }
 	}
-	else { 
-	    while (my $file_row = $file_rs->next()) { 
+	else {
+	    while (my $file_row = $file_rs->next()) {
 		push @$deleted_file_info, { file_id => $file_row->file_id(),
 					    basename => $file_row->basename,
 					    dirname => $file_row->dirname,
@@ -508,11 +508,11 @@ sub get_phenotyping_data : Private {
 	}
     }
 
-    my $data = { phenotype_files => $file_info, 
-		 deleted_phenotype_files => $deleted_file_info, 
+    my $data = { phenotype_files => $file_info,
+		 deleted_phenotype_files => $deleted_file_info,
     };
     return $data;
-		 
+
 
 }
 
@@ -525,7 +525,7 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
-    
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
@@ -542,7 +542,7 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     $c->stash->{locations} = $projects->get_all_locations($c);
 
-    $c->stash->{genotyping_trials_by_breeding_project} = \%genotyping_trials_by_breeding_project; 
+    $c->stash->{genotyping_trials_by_breeding_project} = \%genotyping_trials_by_breeding_project;
 
     $c->stash->{breeding_programs} = $breeding_programs;
 

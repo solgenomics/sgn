@@ -36,7 +36,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("upload_crosses_submit", "id", "submit upload cross file ")->click();
 
-    sleep(2);
+    sleep(4);
 
     $t->find_element_ok("cross_upload_success_dismiss", "id", "dismiss success modal ")->click();
 

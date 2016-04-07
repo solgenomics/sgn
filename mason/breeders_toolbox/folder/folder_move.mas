@@ -1,0 +1,141 @@
+
+<%args>
+$folder_id => undef
+$folder_name => undef
+$parent_folder_id => undef
+$parent_folder_name => undef
+$breeding_program_id => undef
+$breeding_program_name => undef
+</%args>
+
+<div class="modal fade" id="move_folder_dialog" name="move_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="moveFolderDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="moveFolderDialog">Move a folder</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+	       <form class="form-horizontal" role="form" method="post" id="move_folder_dialog_form" name="move_folder_dialog_form">
+          <div class="form-group">
+             <label class="col-sm-3 control-label">Breeding Program: </label>
+             <div class="col-sm-9" >
+               <div id="move_folder_breeding_program_select_div">
+% if ($breeding_program_id) {
+               <input type="text" class="form-control" value="<% $breeding_program_name %>" disabled/>
+               <input type="hidden" id="move_folder_breeding_program_id" name="move_folder_breeding_program_id" value="<% $breeding_program_id %>" />
+% } else {
+ [Loading...]
+% }
+               </div>
+             </div>
+          </div>
+          <div class="form-group">
+      	      <label class="col-sm-3 control-label">Parent Folder: </label>
+      	      <div class="col-sm-9" >
+                <div id="move_folder_parent_folder_select_div">
+% if ($parent_folder_id) {
+                  <input type="text" class="form-control" value="<% $parent_folder_name %>" disabled/>
+                  <input type="hidden" id="move_folder_parent_folder_id" name="move_folder_parent_folder_id" value="<% $parent_folder_id %>" />
+% } else {
+  [Loading...]
+% }
+                </div>
+              </div>
+	        </div>
+	        <div class="form-group">
+      	      <label class="col-sm-3 control-label">Folder Name: </label>
+      	      <div class="col-sm-9" >
+                <div id="move_folder_select_div">
+% if ($folder_id) {
+              <input type="text" class="form-control" value="<% $folder_name %>" disabled/>
+              <input type="hidden" id="move_folder_id" name="move_folder_id" value="<% $folder_id %>" />
+% } else {
+[Loading...]
+% }
+                </div>
+              </div>
+	        </div>
+	       </form><br/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	      <button type="button" class="btn btn-primary" name="move_folder_submit" id="move_folder_submit" title="Move folder">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script defer="defer">
+jQuery(document).ready(function() {
+
+  if(jQuery("#move_folder_breeding_program_id").length == 0) {
+    get_select_box('breeding_programs', 'move_folder_breeding_program_select_div', { 'name' : 'move_folder_breeding_program_id', 'id' : 'move_folder_breeding_program_id' });
+  }
+
+  jQuery('#move_folder_dialog_link').click( function() {
+    jQuery('#move_folder_dialog').modal("show");
+    if(jQuery("#move_folder_parent_folder_id").length == 0) {
+      breeding_program_change_move_parent_folders();
+    }
+    if(jQuery("#move_folder_id").length == 0) {
+      breeding_program_change_move_folders();
+    }
+  });
+  
+  jQuery("#move_folder_breeding_program_select_div").on('change', "#move_folder_breeding_program_id", function() {
+    breeding_program_change_move_parent_folders();
+    breeding_program_change_move_folders();
+  });
+
+  jQuery('#move_folder_submit').click( function() {
+    move_folder();
+  });
+
+});
+
+function breeding_program_change_move_parent_folders() {
+  var breeding_program_id = jQuery("#move_folder_breeding_program_id").val();
+  get_select_box('folders', 'move_folder_parent_folder_select_div', { 'name' : 'move_folder_parent_folder_id', 'id' : 'move_folder_parent_folder_id', 'breeding_program_id' : breeding_program_id, 'empty' : 1  });
+}
+
+function breeding_program_change_move_folders() {
+  var breeding_program_id = jQuery("#move_folder_breeding_program_id").val();
+  get_select_box('folders', 'move_folder_select_div', { 'name' : 'move_folder_id', 'id' : 'move_folder_id', 'breeding_program_id' : breeding_program_id });
+}
+
+function move_folder() {
+  var parent_folder_id = jQuery('#move_folder_parent_folder_id').val();
+  var folder_id = jQuery('#move_folder_id').val();
+  //console.log(parent_folder_id);
+  //console.log(folder_id);
+  if (parent_folder_id == folder_id) {
+    alert("Cannot make a folder its own parent.");
+    return;
+  }
+  jQuery.ajax( {
+    url: '/ajax/folder/'+folder_id+'/associate/parent/'+parent_folder_id,
+    success: function(response) {
+      if (response.error) {
+        alert(response.error);
+        jQuery('#move_folder_dialog').modal("hide");
+      }
+      else {
+        alert("Successfully associated folder");
+        jQuery('#move_folder_dialog').modal("hide");
+        location.reload();
+      }
+    },
+    error: function(response) {
+      alert('An error occurred trying to move folder.');
+      jQuery('#move_folder_dialog').modal("hide");
+    }
+  });
+}
+
+
+</script>

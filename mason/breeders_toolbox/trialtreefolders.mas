@@ -5,13 +5,17 @@
 $breeding_programs
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+
+<& /breeders_toolbox/folder/folder_set.mas &>
+<& /breeders_toolbox/folder/folder_new.mas &>
+<& /breeders_toolbox/folder/folder_move.mas &>
 
 <table class="table table-bordered">
   <thead>
     <tr>
       <th>Information</th>
-      <th>Breeding Programs -- -- Trials</th>
+      <th>Breeding Programs -- Folders -- Trials</th>
     </tr>
   </thead>
   <tbody>
@@ -21,9 +25,15 @@ $breeding_programs
       <button class="btn btn-primary" id="download_button" disabled="disabled" title="First Select a Trial to Download">Excel</button>
       <button class="btn btn-primary" id="download_button_csv" disabled="disabled" title="First Select a Trial to Download">CSV</button><br />
       <hr>
-      <h5><i>Double click<br />trial to view</i></h5>
-      <!-- hr>
-      <button id="delete" disabled="disabled" >Delete</button -->
+      <h5><i>Double click<br />trial (&nbsp;<span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
+      <hr>
+      <h4>Folders</h4>
+      <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
+      <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial to folder</button><br/><br/>
+      <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
+      <br/>
+
+      <!--<button id="delete" disabled="disabled" >Delete</button -->
       <br />
     </td>
     <td>
@@ -32,91 +42,93 @@ $breeding_programs
   </tr>
   </tbody>
 </table>
-
-
 <script>
 
-  jQuery.noConflict(); 
+  jQuery.noConflict();
 
-  jQuery(document).ready(function($) {  
-    
-    jQuery.ajax( { 
-      url: '/ajax/breeders/get_trials',
-      success: function(response) { 
-        var html = format(response);
+  jQuery(document).ready(function($) {
+
+    jQuery.ajax( {
+      url: '/ajax/breeders/get_trials_with_folders',
+      success: function(response) {
+        var html = '<ul>'+response.html+'</ul>';
+
         jQuery('#trial_list').html(html);
-        jQuery('#trial_list').jstree();
+        //console.log(html);
+        jQuery('#trial_list').jstree( {
+            "valid_children" : [ "folder", "trial", "breeding_program" ],
+            "types" : {
+                "breeding_program" : {
+                    "icon": 'glyphicon glyphicon-briefcase text-info',
+                },
+                "folder" : {
+                    "icon": 'glyphicon glyphicon-folder-open text-danger',
+                },
+                "trial" : {
+                    "icon": 'glyphicon glyphicon-leaf text-success',
+                }
+            },
+          "plugins" : ["html_data","types"]
+
+        });
 
       },
-      error: function(response) { 
-        alert("An error occurred");
+      error: function(response) {
+        alert("An error occurred while loading the trial data.");
       }
   });
 
-  function format(s) { 
-    var html = "<ul>";
-    for (var k in s) { 
-      if(s.hasOwnProperty(k)) { 
-        html += "<li>"+ k;
-        if (s[k] !== null) { 
-          html += '<ul>';
-          for (var n=0; n<s[k].length; n++) { 
-       
-            html += '<li id="'+s[k][n][0]+'">'+s[k][n][1]+"</li>";
 
-          }
-          html += '</ul>';
-        }
 
-      }
-        html += '</li>';
-    }
-    html += "</ul>";
-     return html;
-
-   }
-
-     $('#trial_list').on("changed.jstree", function (e, data) {
-       if ($('#trial_list').jstree('is_leaf', data.node)) { 
+  $('#trial_list').on("changed.jstree", function (e, data) {
+    //console.log(data);
+       if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'trial') {
          $('#download_button').removeAttr('disabled');
          $('#download_button_csv').removeAttr('disabled');
        }
-       else { 
+       else {
          $('#download_button').attr('disabled', 'disabled');
          $('#download_button_csv').attr('disabled', 'disabled');
        }
-	 
-       
+
+
          // }
-    });				      
+    });
 
     $('#download_button').on('click', function () {
         var selected = $('#trial_list').jstree('get_bottom_selected');
-        if (selected.length !== 0) { 
+        if (selected.length !== 0) {
 	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
         }
         else { alert("No leaf nodes selected for download."); }
-       
+
     });
 
     $('#download_button_csv').on('click', function () {
         var selected = $('#trial_list').jstree('get_bottom_selected');
-        if (selected.length !== 0) { 
+        if (selected.length !== 0) {
 	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
         }
         else { alert("No leaf nodes selected for download."); }
-       
+
     });
 
-    $("#trial_list").delegate("li", "dblclick", function(){ 
-      var node = $("#trial_list").jstree("get_node", this); 
-      if ($('#trial_list').jstree('is_leaf', node) && node.id.substr(0,1) !== 'j') { 				       
-        window.open('/breeders_toolbox/trial/'+node.id);
+    $("#trial_list").delegate("li", "dblclick", function(event){
+      var node = $("#trial_list").jstree("get_node", this);
+      //console.log(node);
+      if (node.id.substr(0,1) !== 'j') {
+        if (node.type == 'folder') {
+            window.open('/folder/'+node.id);
+            event.stopPropagation();
+        } else if (node.type == 'trial') {
+            window.open('/breeders_toolbox/trial/'+node.id);
+            event.stopPropagation();
+        }
       }
-    }); 
+    });
   });
-</script>
 
+</script>
 
 <div class="modal fade" id="add_project_dialog" name="add_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addProjectDialog">
   <div class="modal-dialog modal-lg" role="document">
@@ -354,8 +366,8 @@ $breeding_programs
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <p><span class="ui-icon ui-icon-check"></span>Trial Is Valid<br>The following trial will be added</p>  
-  	  <button class="btn btn-info btn-sm" id="view_trial_layout_button" >View Trial Layout</button> 
+	  <p><span class="ui-icon ui-icon-check"></span>Trial Is Valid<br>The following trial will be added</p>
+  	  <button class="btn btn-info btn-sm" id="view_trial_layout_button" >View Trial Layout</button>
   	  <hr>
   	  <div id="trial_design_information">
 	  </div>
@@ -389,14 +401,6 @@ $breeding_programs
     </div>
   </div>
 </div>
-
-
-<style>
-#progressbar .ui-progressbar-value {
-background-color: #ccc;
-}
-</style>
-
 
 <div class="modal fade" id="trial_saved_dialog_message" name="trial_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addTrialSavedDialog">
   <div class="modal-dialog modal-lg" role="document">
@@ -552,4 +556,3 @@ background-color: #ccc;
     </div>
   </div>
 </div>
-

@@ -21,6 +21,8 @@ package CXGN::Trial;
 
 use Moose;
 use Try::Tiny;
+use Data::Dumper;
+use CXGN::Trial::Folder;
 use CXGN::Trial::TrialLayout;
 use SGN::Model::Cvterm;
 
@@ -1087,6 +1089,21 @@ sub get_breeding_program_cvterm_id {
     return $breeding_program_cvterm->cvterm_id();
 }
 
+sub get_folder {
+    my $self = shift;
+
+    my $f = CXGN::Trial::Folder->new( { bcs_schema => $self->bcs_schema(), folder_id => $self->get_trial_id() });
+
+    my $parent_folder_data = $f->project_parent();
+
+    if ($parent_folder_data) {
+	return $parent_folder_data;
+    }
+    else {
+	return;
+    }
+}
+
 sub get_harvest_date_cvterm_id {
     my $self = shift;
 
@@ -1122,7 +1139,5 @@ sub get_design_type {
   }
   return $design_type;
 }
-
-
 
 1;
