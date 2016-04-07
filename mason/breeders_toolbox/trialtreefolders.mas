@@ -34,18 +34,18 @@ $breeding_programs
 </table>
 <script>
 
-  jQuery.noConflict(); 
+  jQuery.noConflict();
 
-  jQuery(document).ready(function($) {  
-    
-    jQuery.ajax( { 
+  jQuery(document).ready(function($) {
+
+    jQuery.ajax( {
       url: '/ajax/breeders/get_trials_with_folders',
-      success: function(response) { 
+      success: function(response) {
         var html = '<ul>'+response.html+'</ul>';
 
         jQuery('#trial_list').html(html);
-        alert(html);
-        jQuery('#trial_list').jstree( { 
+        //alert(html);
+        jQuery('#trial_list').jstree( {
             "valid_children" : [ "folder", "trial", "breeding_program" ],
             "types" : {
                 "breeding_program" : {
@@ -58,12 +58,12 @@ $breeding_programs
                     "icon": 'glyphicon glyphicon-leaf text-success',
                 }
             },
-          "plugins" : ["themes","html_data","dnd","ui","types"] 
+          "plugins" : ["themes","html_data","dnd","ui","types"]
 
         });
 
       },
-      error: function(response) { 
+      error: function(response) {
         alert("An error occurred while loading the trial data.");
       }
   });
@@ -71,43 +71,43 @@ $breeding_programs
 
 
   $('#trial_list').on("changed.jstree", function (e, data) {
-       if ($('#trial_list').jstree('is_leaf', data.node)) { 
+       if ($('#trial_list').jstree('is_leaf', data.node)) {
          $('#download_button').removeAttr('disabled');
          $('#download_button_csv').removeAttr('disabled');
        }
-       else { 
+       else {
          $('#download_button').attr('disabled', 'disabled');
          $('#download_button_csv').attr('disabled', 'disabled');
        }
-	 
-       
+
+
          // }
-    });				      
+    });
 
     $('#download_button').on('click', function () {
         var selected = $('#trial_list').jstree('get_bottom_selected');
-        if (selected.length !== 0) { 
+        if (selected.length !== 0) {
 	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
         }
         else { alert("No leaf nodes selected for download."); }
-       
+
     });
 
     $('#download_button_csv').on('click', function () {
         var selected = $('#trial_list').jstree('get_bottom_selected');
-        if (selected.length !== 0) { 
+        if (selected.length !== 0) {
 	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
         }
         else { alert("No leaf nodes selected for download."); }
-       
+
     });
 
-    $("#trial_list").delegate("li", "dblclick", function(){ 
-      var node = $("#trial_list").jstree("get_node", this); 
-      if ($('#trial_list').jstree('is_leaf', node) && node.id.substr(0,1) !== 'j') { 				       
+    $("#trial_list").delegate("li", "dblclick", function(){
+      var node = $("#trial_list").jstree("get_node", this);
+      if ($('#trial_list').jstree('is_leaf', node) && node.id.substr(0,1) !== 'j') {
         window.open('/breeders_toolbox/trial/'+node.id);
       }
-    }); 
+    });
   });
 
 </script>
@@ -396,7 +396,7 @@ $breeding_programs
 
       <div id="list_of_checks_section" style="display: none">
 	<label id="select_list_of_checks_label" for="select_list_of_checks_list_select" style="display: inline-block; width: 300px;">List of checks:<br>
-	(required parameter) 
+	(required parameter)
 	</label>
       </div>
 
@@ -417,12 +417,12 @@ $breeding_programs
 	  <input id="block_number" name="block_number" />
 	  <br>
         </div>
-       
+
 	<div id="row_number_section" style="display: none">
 	  <label for="row_number" style="display: inline-block; width: 300px;">Number of field rows:<br>
 	    (required parameter)
 	  </label>
-	  <input id="row_number" name="row_number" />   
+	  <input id="row_number" name="row_number" />
        	</div>
         <br>
 
@@ -434,11 +434,11 @@ $breeding_programs
 	  <br>
         </div>
 
-        <div id="other_parameter_section" style="display:none">  
+        <div id="other_parameter_section" style="display:none">
      	<label for="show_other_parameter_options">Other optional parameters</label>
         <input type="checkbox" id="show_other_parameter_options">
- 	<div id="other_parameter_options" style="display:none"> 
-          <hr> 
+ 	<div id="other_parameter_options" style="display:none">
+          <hr>
      	  <label for="col_number_per_block" style="display: inline-block; width: 300px;">Col Number Per Block:</label>
 	  <input id="col_number_per_block" name="col_number_per_block" />
 	  <br>
@@ -527,8 +527,8 @@ $breeding_programs
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <p><span class="ui-icon ui-icon-check"></span>Trial Is Valid<br>The following trial will be added</p>  
-  	  <button class="btn btn-info btn-sm" id="view_trial_layout_button" >View Trial Layout</button> 
+	  <p><span class="ui-icon ui-icon-check"></span>Trial Is Valid<br>The following trial will be added</p>
+  	  <button class="btn btn-info btn-sm" id="view_trial_layout_button" >View Trial Layout</button>
   	  <hr>
   	  <div id="trial_design_information">
 	  </div>
@@ -544,8 +544,8 @@ $breeding_programs
 
 <!--
 <div id="trial_design_confirm" title="Confirm trial design">
-  <p><span class="ui-icon ui-icon-check"></span>Trial is valid<br>The following trial will be added</p>  
-  <button id="view_trial_layout_button" class="ui-widget">View trial layout</button> 
+  <p><span class="ui-icon ui-icon-check"></span>Trial is valid<br>The following trial will be added</p>
+  <button id="view_trial_layout_button" class="ui-widget">View trial layout</button>
   <hr>
   <div id="trial_design_information" class="ui-widget"></div>
 </div>
@@ -767,9 +767,9 @@ background-color: #ccc;
       <option value=MAD>Modified Augmented Design</option>
 
 
-    <option value=MADIII>MADIII</option> 
-    <option value=MADIV>MADIV</option> 
-    <option value=MADV>MADV</option> 
+    <option value=MADIII>MADIII</option>
+    <option value=MADIV>MADIV</option>
+    <option value=MADV>MADV</option>
     </select>
     <br>
     <br>
