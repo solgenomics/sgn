@@ -44,7 +44,7 @@ $breeding_programs
         var html = '<ul>'+response.html+'</ul>';
 
         jQuery('#trial_list').html(html);
-        //alert(html);
+        //console.log(html);
         jQuery('#trial_list').jstree( {
             "valid_children" : [ "folder", "trial", "breeding_program" ],
             "types" : {
@@ -104,8 +104,13 @@ $breeding_programs
 
     $("#trial_list").delegate("li", "dblclick", function(){
       var node = $("#trial_list").jstree("get_node", this);
-      if ($('#trial_list').jstree('is_leaf', node) && node.id.substr(0,1) !== 'j') {
-        window.open('/breeders_toolbox/trial/'+node.id);
+      console.log(node);
+      if (node.id.substr(0,1) !== 'j') {
+        if (node.type == 'folder') {
+          window.open('/folder/'+node.id);
+        } else if (node.type == 'trial') {
+          window.open('/breeders_toolbox/trial/'+node.id);
+        }
       }
     });
   });

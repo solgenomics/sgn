@@ -48,7 +48,11 @@ has 'breeding_program_trial_relationship_id' =>  (isa => 'Int',
 						  is => 'rw',
 		);
 
-has 'project_breeding_program_parent' => (isa => 'Bio::Chado::Schema::Result::Project::Project',
+has 'project_parent' => (isa => 'Bio::Chado::Schema::Result::Project::Project',
+			  is => 'rw',
+    );
+
+has 'breeding_program' => (isa => 'Bio::Chado::Schema::Result::Project::Project',
 			  is => 'rw',
     );
 
@@ -95,11 +99,15 @@ sub BUILD {
 	}
 
     my $breeding_program_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( { subject_project_id => $self->folder_id(), type_id =>  $self->breeding_program_trial_relationship_id() });
-
     if ($breeding_program_rel_row) {
-			#print STDERR $self->folder_id.'\n';
-	my $row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=> $breeding_program_rel_row->object_project_id() });
-	$self->project_breeding_program_parent($row);
+				my $parent_row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=> $breeding_program_rel_row->object_project_id() });
+				$self->project_parent($parent_row);
+    }
+
+    my $folder_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( { subject_project_id => $self->folder_id(), type_id =>  $self->folder_cvterm_id() });
+    if ($folder_rel_row) {
+				my $parent_row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=> $folder_rel_row->object_project_id() });
+				$self->project_parent($parent_row);
     }
 
 }
@@ -193,13 +201,12 @@ sub _get_children {
 	#
 
 	if ($self->folder_type() eq "breeding_program") {
-	    if ($folder->project_breeding_program_parent()->name() eq $self->name()) {
-		#print STDERR "Pushing ".$folder->name()."\n";
-		push @child_folders, $folder;
+		if ($folder->project_parent()) {
+	    if ($folder->project_parent()->name() eq $self->name()) {
+				#print STDERR "Pushing ".$folder->name()."\n";
+				push @child_folders, $folder;
 	    }
-	    else {
-		#print STDERR "Ignoring ".$folder->name()."\n";
-	    }
+		}
 	}
 	else {
 	    #print STDERR "parent is not a breeding program... pushing ".$folder->name()."...\n";
@@ -214,7 +221,23 @@ sub associate_parent {
     my $self = shift;
     my $parent_id = shift;
 
-    my $folder_cvterm_id = $self->folder_cvterm_id();
+		my $folder_cvterm_id = $self->folder_cvterm_id();
+
+	#If the user selects 'None' to remove the trial from the folder, then the parent_id will be passed as 0.
+	if ($parent_id == 0) {
+		my $project_rels = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search(
+		{ subject_project_id => $self->folder_id(),
+		type_id => $folder_cvterm_id
+		});
+
+		if ($project_rels->count() > 0) {
+			while (my $p = $project_rels->next()) {
+			print STDERR "Removing parent folder association...\n";
+			$p->delete();
+			}
+		}
+		return;
+	}
 
     my $breeding_program_trial_relationship_id = $self->breeding_program_trial_relationship_id();
 
@@ -333,7 +356,7 @@ sub get_jstree_html {
 		$html .= $child->get_jstree_html('folder');
 	    }
 	    else {
-		$html .= $self->_jstree_li_html('trial', $child->folder_id(), $child->name())."</li>\n";
+		$html .= $self->_jstree_li_html('trial', $child->folder_id(), $child->name())."</li>";
 	    }
 	}
     }
@@ -347,7 +370,7 @@ sub _jstree_li_html {
     my $id = shift;
     my $name = shift;
 
-    return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\">$name\n";
+    return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\">".$name;
 }
 
 
