@@ -304,7 +304,7 @@ project.project_id=? ) );");
   	$phenotype_metadata{'date'}="$timestamp";
 
 	my $store = CXGN::Phenotypes::StorePhenotypes->store($c, $size, \@plots, \@traits, \%data, \%phenotype_metadata);
-	print "ERROR: $store\n";
+       
 
 	$c->stash->{rest} = {success => 1};
 }
