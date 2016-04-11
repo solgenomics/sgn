@@ -14,7 +14,79 @@ Nicolas Morales nm529@cornell.edu
 </%doc>
 
 <%args>
-
+$folder_id
+$folder_name
+$folder_description
+$children
+$project_parent => undef
+$breeding_program => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.Trial' , 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+
+<%perl>
+my $has_child_folders;
+foreach (@$children) {
+ if ($_->folder_type eq 'folder') {
+   $has_child_folders = 1;
+}
+}
+</%perl>
+
+<br/>
+
+<& /page/page_title.mas, title=>"Folder detail for ".$folder_name &>
+
+<div>
+
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#trials" aria-controls="trials" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;&nbsp;&nbsp;Trials</a></li>
+    <li role="presentation"><a href="#folders" aria-controls="folders" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;&nbsp;&nbsp;Folders</a></li>
+    <li role="presentation"><a href="#breeding_program" aria-controls="breeding_program" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;&nbsp;&nbsp;Breeding Program</a></li>
+  </ul>
+
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane fade in active" id="trials">
+      <div class="well">
+% foreach (@$children) {
+%   if ($_->folder_type eq 'trial') {
+    <a href="/breeders/trial/<% $_->folder_id() %>"><% $_->name() %></a><br/>
+% }
+% }
+      </div>
+    </div>
+
+    <div role="tabpanel" class="tab-pane fade" id="folders">
+      <div class="well">
+        <h3>Parent Folder</h3>
+% if ($breeding_program->name() ne $project_parent->name()) {
+        <a href="/folder/<% $project_parent->project_id %>"><% $project_parent->name() %></a>
+% } else {
+      No Parent Folder
+% }
+      </div>
+
+      <div class="well">
+        <h3>Child Folders</h3>
+% if ($has_child_folders) {
+% my $has_child_folders;
+% foreach (@$children) {
+%   if ($_->folder_type eq 'folder') {
+      <a href="/folder/<% $_->folder_id() %>"><% $_->name() %></a><br/>
+% }
+% }
+% } else {
+      No Child Folders
+% }
+      </div>
+    </div>
+
+    <div role="tabpanel" class="tab-pane fade" id="breeding_program">
+      <div class="well">
+        <% $breeding_program->name() %>
+      </div>
+    </div>
+
+  </div>
+
+</div>

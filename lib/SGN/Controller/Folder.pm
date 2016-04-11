@@ -4,6 +4,8 @@ use Moose;
 use Data::Dumper;
 use Try::Tiny;
 use SGN::Model::Cvterm;
+use Data::Dumper;
+use CXGN::Trial::Folder;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -17,8 +19,21 @@ sub _build_schema {
 }
 
 sub folder_page :Path("/folder") Args(1) {
-    my ($self , $c) = @_;
+    my $self = shift;
+    my $c = shift;
+    my $folder_id = shift;
 
+    print STDERR $folder_id;
+
+    my $folder_project = $self->schema->resultset("Project::Project")->find( { project_id => $folder_id } );
+    my $folder = CXGN::Trial::Folder->new({ bcs_schema => $self->schema, folder_id => $folder_id });
+
+    $c->stash->{children} = $folder->children();
+    $c->stash->{project_parent} = $folder->project_parent();
+    $c->stash->{breeding_program} = $folder->breeding_program();
+    $c->stash->{folder_id} = $folder_id;
+    $c->stash->{folder_name} = $folder_project->name();
+    $c->stash->{folder_description} = $folder_project->description();
     $c->stash->{template} = '/breeders_toolbox/folder.mas';
 }
 

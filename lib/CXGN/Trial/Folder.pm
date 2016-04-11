@@ -98,10 +98,15 @@ sub BUILD {
 		}
 	}
 
+		if (!$self->folder_type) {
+				$self->folder_type("trial");
+		}
+
     my $breeding_program_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( { subject_project_id => $self->folder_id(), type_id =>  $self->breeding_program_trial_relationship_id() });
     if ($breeding_program_rel_row) {
 				my $parent_row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=> $breeding_program_rel_row->object_project_id() });
 				$self->project_parent($parent_row);
+				$self->breeding_program($parent_row);
     }
 
     my $folder_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( { subject_project_id => $self->folder_id(), type_id =>  $self->folder_cvterm_id() });
@@ -256,8 +261,7 @@ sub associate_parent {
     }
 
     my $project_rels = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search(
-	{ object_project_id => $parent_id,
-	  subject_project_id => $self->folder_id(),
+	{ subject_project_id => $self->folder_id(),
 	  type_id => $folder_cvterm_id
 	});
 
