@@ -1100,7 +1100,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     my $status = $c->stash->{status};
     my @status = @$status;
 
-    my $markerprofile_ids = $c->req->param("markerprofileIds");
+    my $markerprofile_ids = $c->req->param("markerprofileDbIds");
 
     my @profile_ids = split ",", $markerprofile_ids;
 
@@ -1116,22 +1116,15 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 	my $profile_json = $rs->first()->value();
 	my $refmarkers = JSON::Any->decode($profile_json);
 
-	print STDERR Dumper($refmarkers);
+	#print STDERR Dumper($refmarkers);
 
 	@ordered_refmarkers = sort genosort keys(%$refmarkers);
 
-	print Dumper(\@ordered_refmarkers);
+	#print Dumper(\@ordered_refmarkers);
 
 	$total_count = scalar(@ordered_refmarkers);
 
-	if ($c->stash->{page_size}) {
-	    $total_pages = ceil($total_count / $c->stash->{page_size});
-	}
-	else {
-	    $total_pages = 1;
-	    $c->stash->{page_size} = $total_count;
-	}
-
+  $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
 	while (my $profile = $rs->next()) {
 	    foreach my $m (@ordered_refmarkers) {
 		my $markers_json = $profile->value();
@@ -1159,17 +1152,10 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     }
 
     $c->stash->{rest} = {
-	metadata => {
-	    pagination => {
-		pageSize => $c->stash->{page_size},
-		currentPage => $c->stash->{current_page},
-		totalPages => $total_pages,
-		totalCount => $total_count
-	    },
-		    status => [],
+	metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status,
 	},
-		    markerprofileIds => \@lines,
-		    scores => \@marker_score_lines,
+		    markerprofileDbIds => \@lines,
+		    data => \@marker_score_lines,
     };
 
 }
