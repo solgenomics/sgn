@@ -1009,7 +1009,7 @@ sub genotype_fetch_GET {
 sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
 
