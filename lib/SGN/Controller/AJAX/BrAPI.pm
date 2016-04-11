@@ -1094,69 +1094,65 @@ sub convert_dosage_to_genotype {
 =cut
 
 sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @status = @$status;
+  my $self = shift;
+  my $c = shift;
+  #my $auth = _authenticate_user($c);
+  my $status = $c->stash->{status};
+  my @status = @$status;
 
-    my $markerprofile_ids = $c->req->param("markerprofileDbIds");
+  my $markerprofile_ids = $c->req->param("markerprofileDbIds");
 
-    my @profile_ids = split ",", $markerprofile_ids;
+  my @profile_ids = split ",", $markerprofile_ids;
 
-    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
+  my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
 
-    my %scores;
-    my $total_pages;
-    my $total_count;
-    my @marker_score_lines;
-    my @ordered_refmarkers;
+  my %scores;
+  my $total_pages;
+  my $total_count;
+  my @marker_score_lines;
+  my @ordered_refmarkers;
 
-    if ($rs->count() > 0) {
-	my $profile_json = $rs->first()->value();
-	my $refmarkers = JSON::Any->decode($profile_json);
+  if ($rs->count() > 0) {
+    my $profile_json = $rs->first()->value();
+    my $refmarkers = JSON::Any->decode($profile_json);
+    #print STDERR Dumper($refmarkers);
+    @ordered_refmarkers = sort genosort keys(%$refmarkers);
+    #print Dumper(\@ordered_refmarkers);
+    $total_count = scalar(@ordered_refmarkers);
 
-	#print STDERR Dumper($refmarkers);
+    $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
+    while (my $profile = $rs->next()) {
+      foreach my $m (@ordered_refmarkers) {
+        my $markers_json = $profile->value();
+        my $markers = JSON::Any->decode($markers_json);
 
-	@ordered_refmarkers = sort genosort keys(%$refmarkers);
-
-	#print Dumper(\@ordered_refmarkers);
-
-	$total_count = scalar(@ordered_refmarkers);
-
-  $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
-	while (my $profile = $rs->next()) {
-	    foreach my $m (@ordered_refmarkers) {
-		my $markers_json = $profile->value();
-		my $markers = JSON::Any->decode($markers_json);
-
-		$scores{$profile->genotypeprop_id()}->{$m} =
-		    $self->convert_dosage_to_genotype($markers->{$m});
-	    }
-	}
+        $scores{$profile->genotypeprop_id()}->{$m} =
+        $self->convert_dosage_to_genotype($markers->{$m});
+      }
     }
-    my @lines;
+  }
+
+  my @lines;
+  foreach my $line (keys %scores) {
+    push @lines, $line;
+  }
+
+  my %markers_by_line;
+
+  for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
+
+    my $m = $ordered_refmarkers[$n];
     foreach my $line (keys %scores) {
-	push @lines, $line;
+      push @{$markers_by_line{$m}}, $scores{$line}->{$m};
+      push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
     }
+  }
 
-    my %markers_by_line;
-
-    for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
-
-	my $m = $ordered_refmarkers[$n];
-	foreach my $line (keys %scores) {
-	    push @{$markers_by_line{$m}}, $scores{$line}->{$m};
-	    push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
-	}
-    }
-
-    $c->stash->{rest} = {
-	metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status,
-	},
-		    markerprofileDbIds => \@lines,
-		    data => \@marker_score_lines,
-    };
+  $c->stash->{rest} = {
+    metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status },
+    markerprofileDbIds => \@lines,
+    data => \@marker_score_lines,
+  };
 
 }
 
