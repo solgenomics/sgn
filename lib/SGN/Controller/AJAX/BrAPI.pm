@@ -1973,7 +1973,9 @@ sub maps_list_GET {
     	my $lg_row = $lg_rs->first();
 
     	if (!$lg_row) {
-    	    die "This was never supposed to happen :-(";
+        #There are nd_protocols that do not have genotypeprops stored
+    	    #die "This was never supposed to happen :-(";
+          next;
     	}
 
     	my $scores;
@@ -2101,7 +2103,9 @@ sub maps_details_GET {
     	my $lg_row = $lg_rs->first();
 
     	if (!$lg_row) {
-    	    die "This was never supposed to happen :-(";
+          #There are nd_protocols that do not have genotypeprops stored
+    	    #die "This was never supposed to happen :-(";
+          next;
     	}
 
     	my $scores;
