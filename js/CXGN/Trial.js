@@ -604,27 +604,6 @@ function trial_detail_page_setup_dialogs() {
     });
 
 
-    //jQuery('#set_folder_dialog').dialog( {
-	//autoOpen: false,
-	//title: 'Select parent folder',
-	//buttons: {
-	//    cancel: { text: "Cancel",
-	//	      click: function() { jQuery( this ).dialog("close"); },
-	//	      id: "folder_dialog_cancel_button",
-	//	    },
-	//    save:   { text: "Set",
-	//	      click: function() {
-	//		  jQuery('#trial_folder_div').html('[Updating...]');
-	//		  set_trial_folder();
-	//		  display_trial_folder();
-	//		  jQuery(this).dialog("close");
-	//	      }
-	//	    }
-	//}
-
-    //});
-
-
     jQuery('#new_folder_dialog_link').click( function() {
 	jQuery('#new_folder_dialog').dialog("open");
 	get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id', 'empty' : 1 });

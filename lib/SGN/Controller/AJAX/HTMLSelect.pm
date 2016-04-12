@@ -141,7 +141,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
       }
     }
 
-    print STDERR Dumper \@trials;
+    #print STDERR Dumper \@trials;
     my $html = simple_selectbox_html(
       name => $name,
       id => $id,
