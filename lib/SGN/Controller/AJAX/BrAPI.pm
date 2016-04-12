@@ -2267,9 +2267,9 @@ sub maps_marker_detail_GET {
     my $end = $c->stash->{page_size}*$c->stash->{current_page};
     my @data_window = splice @markers, $start, $end;
 
-    #my %result = (data => \@data_window);
+    my %result = (data => \@data_window);
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
-    my %response = (metadata=>\%metadata, result=>\@data_window);
+    my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
 
