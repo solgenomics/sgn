@@ -22,7 +22,7 @@ $project_parent => undef
 $breeding_program => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.Trial' , 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
 <%perl>
 my $has_child_folders;
@@ -37,6 +37,8 @@ foreach (@$children) {
 
 <& /page/page_title.mas, title=>"Folder detail for ".$folder_name &>
 
+<& /breeders_toolbox/folder/folder_set.mas, folder_id=>$folder_id, folder_name=>$folder_name &>
+
 <div>
 
   <ul class="nav nav-tabs" role="tablist">
@@ -48,11 +50,19 @@ foreach (@$children) {
   <div class="tab-content">
     <div role="tabpanel" class="tab-pane fade in active" id="trials">
       <div class="well">
+        <h3>Trials in Folder</h3>
+        <table class="table table-hover table-bordered">
+        <tbody>
 % foreach (@$children) {
 %   if ($_->folder_type eq 'trial') {
-    <a href="/breeders/trial/<% $_->folder_id() %>"><% $_->name() %></a><br/>
+    <tr><td><a href="/breeders/trial/<% $_->folder_id() %>"><% $_->name() %></a></td></tr>
 % }
 % }
+        </tbody>
+        </table>
+
+        <button class="btn btn-primary" id="open_folder_dialog_link">Add trial to folder</button>
+
       </div>
     </div>
 
@@ -69,12 +79,15 @@ foreach (@$children) {
       <div class="well">
         <h3>Child Folders</h3>
 % if ($has_child_folders) {
-% my $has_child_folders;
+        <table class="table table-hover table-bordered">
+        <tbody>
 % foreach (@$children) {
 %   if ($_->folder_type eq 'folder') {
-      <a href="/folder/<% $_->folder_id() %>"><% $_->name() %></a><br/>
+      <tr><td><a href="/folder/<% $_->folder_id() %>"><% $_->name() %></a></td></tr>
 % }
 % }
+        </tbody>
+        </table>
 % } else {
       No Child Folders
 % }
@@ -83,6 +96,7 @@ foreach (@$children) {
 
     <div role="tabpanel" class="tab-pane fade" id="breeding_program">
       <div class="well">
+        <h3>Folder's Breeding Program</h3>
         <% $breeding_program->name() %>
       </div>
     </div>

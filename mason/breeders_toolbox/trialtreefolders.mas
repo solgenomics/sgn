@@ -5,7 +5,9 @@
 $breeding_programs
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+
+<& /breeders_toolbox/folder/folder_set.mas &>
 
 <table class="table table-bordered">
   <thead>
@@ -22,8 +24,12 @@ $breeding_programs
       <button class="btn btn-primary" id="download_button_csv" disabled="disabled" title="First Select a Trial to Download">CSV</button><br />
       <hr>
       <h5><i>Double click<br />trial to view</i></h5>
-      <!-- hr>
-      <button id="delete" disabled="disabled" >Delete</button -->
+      <hr>
+      <h4>Folders</h4>
+      <button class="btn btn-primary" id="open_folder_dialog_link">Add trial to folder</button>
+      <br/>
+
+      <!--<button id="delete" disabled="disabled" >Delete</button -->
       <br />
     </td>
     <td>
@@ -104,7 +110,7 @@ $breeding_programs
 
     $("#trial_list").delegate("li", "dblclick", function(){
       var node = $("#trial_list").jstree("get_node", this);
-      console.log(node);
+      //console.log(node);
       if (node.id.substr(0,1) !== 'j') {
         if (node.type == 'folder') {
           window.open('/folder/'+node.id);

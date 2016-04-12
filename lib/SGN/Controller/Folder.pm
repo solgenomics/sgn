@@ -34,7 +34,7 @@ sub folder_page :Path("/folder") Args(1) {
     $c->stash->{folder_id} = $folder_id;
     $c->stash->{folder_name} = $folder_project->name();
     $c->stash->{folder_description} = $folder_project->description();
-    $c->stash->{template} = '/breeders_toolbox/folder.mas';
+    $c->stash->{template} = '/breeders_toolbox/folder/folder.mas';
 }
 
 1;

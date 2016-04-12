@@ -1,0 +1,114 @@
+
+<%args>
+$trial_id => undef
+$trial_name => undef
+$folder_id => undef
+$folder_name => undef
+</%args>
+
+<div class="modal fade" id="set_folder_dialog" name="set_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="setFolderDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="setFolderDialog">Place trial in folder</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+	       <form class="form-horizontal" role="form" method="post" id="set_folder_dialog_form" name="set_folder_dialog_form">
+	        <div class="form-group">
+      	      <label class="col-sm-3 control-label">Trial: </label>
+      	      <div class="col-sm-9" >
+                <div id="select_trial_for_folder">
+% if ($trial_id) {
+	              <select class="form-control" id="html_select_trial_for_folder" name="html_select_trial_for_folder">
+                 <option value="<% $trial_id %>"><% $trial_name %></option>
+                </select>
+% } else {
+  [Loading...]
+% }
+                </div>
+              </div>
+	        </div>
+          <div class="form-group">
+      	      <label class="col-sm-3 control-label">Folder: </label>
+      	      <div class="col-sm-9" >
+                <div id="trial_folder_select_div">
+% if ($folder_id) {
+	              <select class="form-control" id="html_select_folder_for_trial" name="html_select_folder_for_trial">
+                 <option value="<% $folder_id %>"><% $folder_name %></option>
+                </select>
+% } else {
+  [Loading...]
+% }
+                </div>
+              </div>
+	        </div>
+	       </form><br/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	      <button type="button" class="btn btn-primary" name="set_trial_folder" id="set_trial_folder" title="Save a trial to a folder">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script defer="defer">
+jQuery(document).ready(function() {
+
+  jQuery('#open_folder_dialog_link').click( function() {
+    jQuery('#set_folder_dialog').modal("show");
+    if(jQuery("#html_select_folder_for_trial").length == 0) {
+      get_select_box('folders', 'trial_folder_select_div', { 'name' : 'html_select_folder_for_trial', 'id' : 'html_select_folder_for_trial' });
+    }
+    if(jQuery("#html_select_trial_for_folder").length == 0) {
+      get_select_box('trials', 'select_trial_for_folder', { 'name' : 'html_select_trial_for_folder', 'id' : 'html_select_trial_for_folder' });
+    }
+  });
+
+  jQuery('#set_trial_folder').click( function() {
+    jQuery('#trial_folder_div').html('[Updating...]');
+    set_trial_folder();
+    display_trial_folder();
+    jQuery('#set_folder_dialog').modal("hide");
+  });
+
+});
+
+function set_trial_folder() {
+  var trial_id = jQuery('#html_select_trial_for_folder').val();
+  var folder_id = jQuery('#html_select_folder_for_trial').val();
+  jQuery.ajax( {
+    url: '/ajax/folder/'+trial_id+'/associate/parent/'+folder_id,
+    success: function(response) {
+      if (response.error) {
+        alert(response.error);
+      }
+      else {
+        alert("Successfully associated folder");
+        location.reload();
+      }
+    },
+    error: function(response) {
+      alert('An error occurred trying to associate a folder to the trial.');
+    }
+  });
+}
+
+function display_trial_folder() {
+  var trial_id = jQuery('#html_select_trial_for_folder').val();
+  jQuery.ajax( {
+    url: '/ajax/breeders/trial/'+trial_id+'/folder',
+    success: function(response) {
+      jQuery('#trial_folder_div').html("<a href='/folder/"+response.folder[0]+"'>"+response.folder[1]+"</a>");
+    },
+    error: function(response) {
+      jQuery('#trial_folder_div').html('[ Protocol error. ]');
+    }
+  });
+}
+
+</script>

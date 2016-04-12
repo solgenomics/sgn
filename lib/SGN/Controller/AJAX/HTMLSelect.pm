@@ -123,6 +123,34 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
+
+    my $projects = $p->get_breeding_programs();
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my @trials;
+    foreach my $project (@$projects) {
+      my $t = $p->get_trials_by_breeding_program($project->[0]);
+      foreach (@$t) {
+          push @trials, $_;
+      }
+    }
+
+    print STDERR Dumper \@trials;
+    my $html = simple_selectbox_html(
+      name => $name,
+      id => $id,
+      choices => \@trials,
+    );
+
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_genotyping_protocols_select : Path('/ajax/html/select/genotyping_protocols') Args(0) {
     my $self = shift;
     my $c = shift;

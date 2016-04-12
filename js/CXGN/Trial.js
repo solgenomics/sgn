@@ -604,30 +604,25 @@ function trial_detail_page_setup_dialogs() {
     });
 
 
-    jQuery('#set_folder_dialog').dialog( {
-	autoOpen: false,
-	title: 'Select parent folder',
-	buttons: {
-	    cancel: { text: "Cancel",
-		      click: function() { jQuery( this ).dialog("close"); },
-		      id: "folder_dialog_cancel_button",
-		    },
-	    save:   { text: "Set",
-		      click: function() {
-			  jQuery('#trial_folder_div').html('[Updating...]');
-			  set_trial_folder();
-			  display_trial_folder();
-			  jQuery(this).dialog("close");
-		      }
-		    }
-	}
+    //jQuery('#set_folder_dialog').dialog( {
+	//autoOpen: false,
+	//title: 'Select parent folder',
+	//buttons: {
+	//    cancel: { text: "Cancel",
+	//	      click: function() { jQuery( this ).dialog("close"); },
+	//	      id: "folder_dialog_cancel_button",
+	//	    },
+	//    save:   { text: "Set",
+	//	      click: function() {
+	//		  jQuery('#trial_folder_div').html('[Updating...]');
+	//		  set_trial_folder();
+	//		  display_trial_folder();
+	//		  jQuery(this).dialog("close");
+	//	      }
+	//	    }
+	//}
 
-    });
-
-    jQuery('#open_folder_dialog_link').click( function() {
-	jQuery('#set_folder_dialog').dialog("open");
-	get_select_box('folders', 'trial_folder_select_div', { 'name' : 'trial_folder_select', 'empty' : 1 });
-    });
+    //});
 
 
     jQuery('#new_folder_dialog_link').click( function() {
@@ -974,20 +969,6 @@ function display_trial_type(type) {
     jQuery('#trial_type').html(type);
 }
 
-function display_trial_folder() {
-    var trial_id = get_trial_id();
-    jQuery.ajax( {
-	url: '/ajax/breeders/trial/'+trial_id+'/folder',
-	success: function(response) {
-	    jQuery('#trial_folder_div').html("<a href='/folder/"+response.folder[0]+"'>"+response.folder[1]+"</a>");
-	},
-	error: function(response) {
-	    jQuery('#trial_folder_div').html('[ Protocol error. ]');
-	}
-    });
-
-}
-
 function trial_folder_dialog() {
     jQuery('#set_folder_dialog').dialog("open");
 
@@ -1023,24 +1004,6 @@ function new_trial_folder() {
     });
 }
 
-function set_trial_folder() {
-    var folder_id = jQuery('#folder_select').val();
-    var trial_id = get_trial_id();
-    jQuery.ajax( {
-	url: '/ajax/folder/'+trial_id+'/associate/parent/'+folder_id,
-	success: function(response) {
-	    if (response.error) {
-		alert(response.error);
-	    }
-	    else {
-		alert("Successfully associated folder");
-	    }
-	},
-	error: function(response) {
-	    alert('An error occurred trying to associate a folder to the trial.');
-	}
-    });
-}
 
 function get_trial_id() {
     var trial_id = parseInt(jQuery('#trialIDDiv').text());

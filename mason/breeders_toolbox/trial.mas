@@ -233,13 +233,13 @@ print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
 % }
 
 <&| /page/info_section.mas, title=>"Folder", collaspible=>1, collapsed=>$folder_collapsed,
-  subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">change</a>]' &>
-<span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
-</&>
+  subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">Change</a>]' &>
 
-<div id="set_folder_dialog">
-  Choose parent folder for this trial: <br /><div id="trial_folder_select_div"></div>
-</div>
+  <& /breeders_toolbox/folder/folder_set.mas, trial_id => $trial_id, trial_name =>$trial_name &>
+
+  <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
+
+</&>
 
 <div id="new_folder_dialog">
   Folder name:
