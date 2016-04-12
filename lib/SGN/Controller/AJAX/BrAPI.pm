@@ -899,10 +899,12 @@ sub markerprofiles_list_GET {
 	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
         my @runs;
 	foreach my $row ($rs_slice->all()) {
+    if ($row->get_column('value')) {
 	    my $genotype_json = $row->get_column('value');
 	    my $genotype = JSON::Any->decode($genotype_json);
 
 	    push @data, {markerProfileDbId => $row->get_column('genotypeprop_id'), germplasmDbId => $row->get_column('stock_id'), extractDbId => "", analysisMethod => $row->get_column('protocol_name'), resultCount => scalar(keys(%$genotype)) };
+    }
 	}
     }
 
@@ -1968,19 +1970,19 @@ sub maps_list_GET {
     while (my $row = $rs->next()) {
     	print STDERR "Retrieving map info for ".$row->name()." ID:".$row->nd_protocol_id()."\n";
         #$self->bcs_schema->storage->debug(1);
-    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id() } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {select=>['genotype.description', 'genotypeprops.value'], as=>['description', 'value'], rows=>1} );
+    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id() } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {select=>['genotype.description', 'genotypeprops.value'], as=>['description', 'value'], rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
     	my $lg_row = $lg_rs->first();
 
     	if (!$lg_row) {
         #There are nd_protocols that do not have genotypeprops stored
-    	    #die "This was never supposed to happen :-(";
-          next;
+    	    die "This was never supposed to happen :-(";
+          #next;
     	}
 
     	my $scores;
     	if ($lg_row) {
-    	    $scores = JSON::Any->decode($lg_row->value());
+    	    $scores = JSON::Any->decode($lg_row->get_column('value'));
     	}
     	my %chrs;
 
@@ -2098,14 +2100,14 @@ sub maps_details_GET {
     while (my $row = $rs->next()) {
     	print STDERR "Retrieving map info for ".$row->name()."\n";
         #$self->bcs_schema->storage->debug(1);
-    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1} );
+    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
     	my $lg_row = $lg_rs->first();
 
     	if (!$lg_row) {
           #There are nd_protocols that do not have genotypeprops stored
-    	    #die "This was never supposed to happen :-(";
-          next;
+    	    die "This was never supposed to happen :-(";
+          #next;
     	}
 
     	my $scores;
@@ -2215,7 +2217,7 @@ sub maps_marker_detail_GET {
     while (my $row = $rs->next()) {
     	print STDERR "Retrieving map info for ".$row->name()."\n";
         #$self->bcs_schema->storage->debug(1);
-    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id()  } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1} );
+    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id()  } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
     	my $lg_row = $lg_rs->first();
 
