@@ -40,7 +40,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->stash->{status} = \@status;
     $c->stash->{session_token} = $c->req->param("session_token");
-    $c->stash->{current_page} = $c->req->param("page") || 1;
+    $c->stash->{current_page} = $c->req->param("currentPage") || 1;
     $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
 
 }
