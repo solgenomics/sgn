@@ -1009,7 +1009,7 @@ sub genotype_fetch_GET {
 sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
 
@@ -1094,83 +1094,65 @@ sub convert_dosage_to_genotype {
 =cut
 
 sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @status = @$status;
+  my $self = shift;
+  my $c = shift;
+  #my $auth = _authenticate_user($c);
+  my $status = $c->stash->{status};
+  my @status = @$status;
 
-    my $markerprofile_ids = $c->req->param("markerprofileIds");
+  my $markerprofile_ids = $c->req->param("markerprofileDbIds");
 
-    my @profile_ids = split ",", $markerprofile_ids;
+  my @profile_ids = split ",", $markerprofile_ids;
 
-    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
+  my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
 
-    my %scores;
-    my $total_pages;
-    my $total_count;
-    my @marker_score_lines;
-    my @ordered_refmarkers;
+  my %scores;
+  my $total_pages;
+  my $total_count;
+  my @marker_score_lines;
+  my @ordered_refmarkers;
 
-    if ($rs->count() > 0) {
-	my $profile_json = $rs->first()->value();
-	my $refmarkers = JSON::Any->decode($profile_json);
+  if ($rs->count() > 0) {
+    my $profile_json = $rs->first()->value();
+    my $refmarkers = JSON::Any->decode($profile_json);
+    #print STDERR Dumper($refmarkers);
+    @ordered_refmarkers = sort genosort keys(%$refmarkers);
+    #print Dumper(\@ordered_refmarkers);
+    $total_count = scalar(@ordered_refmarkers);
 
-	print STDERR Dumper($refmarkers);
+    $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
+    while (my $profile = $rs->next()) {
+      foreach my $m (@ordered_refmarkers) {
+        my $markers_json = $profile->value();
+        my $markers = JSON::Any->decode($markers_json);
 
-	@ordered_refmarkers = sort genosort keys(%$refmarkers);
-
-	print Dumper(\@ordered_refmarkers);
-
-	$total_count = scalar(@ordered_refmarkers);
-
-	if ($c->stash->{page_size}) {
-	    $total_pages = ceil($total_count / $c->stash->{page_size});
-	}
-	else {
-	    $total_pages = 1;
-	    $c->stash->{page_size} = $total_count;
-	}
-
-	while (my $profile = $rs->next()) {
-	    foreach my $m (@ordered_refmarkers) {
-		my $markers_json = $profile->value();
-		my $markers = JSON::Any->decode($markers_json);
-
-		$scores{$profile->genotypeprop_id()}->{$m} =
-		    $self->convert_dosage_to_genotype($markers->{$m});
-	    }
-	}
+        $scores{$profile->genotypeprop_id()}->{$m} =
+        $self->convert_dosage_to_genotype($markers->{$m});
+      }
     }
-    my @lines;
+  }
+
+  my @lines;
+  foreach my $line (keys %scores) {
+    push @lines, $line;
+  }
+
+  my %markers_by_line;
+
+  for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
+
+    my $m = $ordered_refmarkers[$n];
     foreach my $line (keys %scores) {
-	push @lines, $line;
+      push @{$markers_by_line{$m}}, $scores{$line}->{$m};
+      push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
     }
+  }
 
-    my %markers_by_line;
-
-    for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
-
-	my $m = $ordered_refmarkers[$n];
-	foreach my $line (keys %scores) {
-	    push @{$markers_by_line{$m}}, $scores{$line}->{$m};
-	    push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
-	}
-    }
-
-    $c->stash->{rest} = {
-	metadata => {
-	    pagination => {
-		pageSize => $c->stash->{page_size},
-		currentPage => $c->stash->{current_page},
-		totalPages => $total_pages,
-		totalCount => $total_count
-	    },
-		    status => [],
-	},
-		    markerprofileIds => \@lines,
-		    scores => \@marker_score_lines,
-    };
+  $c->stash->{rest} = {
+    metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status },
+    markerprofileDbIds => \@lines,
+    data => \@marker_score_lines,
+  };
 
 }
 
@@ -1449,7 +1431,7 @@ sub studies_details_GET {
 	    studyPlatform => "",
 	    startDate => $t->get_planting_date(),
 	    endDate => $t->get_harvest_date(),
-        programDbId=>@$programs[0]->[0], 
+        programDbId=>@$programs[0]->[0],
         programName=>@$programs[0]->[1],
 	    designType => $tl->get_design_type(),
 	    keyContact => "",
@@ -1541,12 +1523,12 @@ sub studies_layout_GET {
                     "totalPages": 1
                 },
             "result" : {
-                "data" : [ 
+                "data" : [
                     {
                         "studyDbId": 1,
                         "plotDbId": 11,
                         "observationVariableDbId" : 393939,
-                        "observationVariableName" : "Yield", 
+                        "observationVariableName" : "Yield",
                         "plotName": "ZIPA_68_Ibadan_2014",
                         "timestamp" : "2015-11-05 15:12",
                         "uploadedBy" : {dbUserId},
@@ -1590,7 +1572,7 @@ sub studies_plot_phenotypes_GET {
     my $trait =$self->bcs_schema->resultset('Cv::Cvterm')->find({ cvterm_id => $trait_id });
 
     #print STDERR Dumper $phenotype_data;
-    
+
     my @data;
     my $total_count = scalar(@$phenotype_data);
     my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
@@ -1684,16 +1666,16 @@ sub studies_table_GET {
     my $start = $c->stash->{page_size}*($c->stash->{current_page}-1)+1;
     my $end = $c->stash->{page_size}*$c->stash->{current_page}+1;
     my @data_window;
-    for (my $line = $start; $line < $end; $line++) { 
+    for (my $line = $start; $line < $end; $line++) {
         if ($data[$line]) {
             my @columns = split /\t/, $data[$line], -1;
-            
+
             push @data_window, \@columns;
         }
     }
-    
+
     #print STDERR Dumper \@data_window;
-    
+
     %result = (studyDbId => $c->stash->{study_id}, observationVariableDbId => \@header_ids, observationVariableName => \@header_names, data=>\@data_window);
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
@@ -1991,7 +1973,9 @@ sub maps_list_GET {
     	my $lg_row = $lg_rs->first();
 
     	if (!$lg_row) {
-    	    die "This was never supposed to happen :-(";
+        #There are nd_protocols that do not have genotypeprops stored
+    	    #die "This was never supposed to happen :-(";
+          next;
     	}
 
     	my $scores;
@@ -2119,7 +2103,9 @@ sub maps_details_GET {
     	my $lg_row = $lg_rs->first();
 
     	if (!$lg_row) {
-    	    die "This was never supposed to happen :-(";
+          #There are nd_protocols that do not have genotypeprops stored
+    	    #die "This was never supposed to happen :-(";
+          next;
     	}
 
     	my $scores;
@@ -2281,9 +2267,9 @@ sub maps_marker_detail_GET {
     my $end = $c->stash->{page_size}*$c->stash->{current_page};
     my @data_window = splice @markers, $start, $end;
 
-    my %result = (data => \@data_window);
+    #my %result = (data => \@data_window);
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
-    my %response = (metadata=>\%metadata, result=>\%result);
+    my %response = (metadata=>\%metadata, result=>\@data_window);
     $c->stash->{rest} = \%response;
 }
 
