@@ -761,18 +761,22 @@ sub germplasm_markerprofile_GET {
     my @status = @$status;
     my @marker_profiles;
 
-    my $rs = $self->bcs_schema()->resultset("Stock::StockGenotype")->search( {stock_id=>$c->stash->{stock_id} } );
-    my $mp;
-    while (my $gt = $rs->next()) {
-	$mp = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( {genotype_id=>$gt->genotype_id} );
-	while (my $gp = $mp->next()) {
-	    push @marker_profiles, $gp->genotypeprop_id;
-	}
+    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+  	    {'stock.stock_id'=>$c->stash->{stock_id}},
+  	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
+  	     select=> ['genotypeprops.genotypeprop_id'],
+  	     as=> ['genotypeprop_id'],
+  	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
+  	    }
+  	);
+
+    my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+    while (my $gt = $rs_slice->next()) {
+      push @marker_profiles, $gt->get_column('genotypeprop_id');
     }
     %result = (germplasmDbId=>$c->stash->{stock_id}, markerProfiles=>\@marker_profiles);
-
-    my %pagination;
-    my %metadata = (pagination=>\%pagination, status=>\@status);
+    my $total_count = scalar(@marker_profiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -851,8 +855,8 @@ sub markerprofiles_list_GET {
 	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
 	    {'stock.stock_id'=>$germplasm, 'nd_protocol.nd_protocol_id'=>$method},
 	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	     '+select'=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	     '+as'=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
+	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
+	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
 	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
 	    }
 	);
@@ -861,8 +865,8 @@ sub markerprofiles_list_GET {
 	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
 	    {'stock.stock_id'=>$germplasm},
 	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	     '+select'=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	     '+as'=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
+	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
+	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
 	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
 	    }
 	);
@@ -871,8 +875,8 @@ sub markerprofiles_list_GET {
 	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
 	    {'nd_protocol.nd_protocol_id'=>$method},
 	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	     '+select'=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	     '+as'=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
+	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
+	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
 	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
 	    }
 	);
@@ -881,8 +885,8 @@ sub markerprofiles_list_GET {
 	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
 	    {},
 	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	     '+select'=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	     '+as'=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
+	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
+	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
 	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
 	    }
 	);
@@ -895,11 +899,10 @@ sub markerprofiles_list_GET {
     my $total_count = 0;
 
     if ($rs) {
-	$total_count = $rs->count();
 	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-        my @runs;
 	foreach my $row ($rs_slice->all()) {
     if ($row->get_column('value')) {
+      $total_count =$total_count+ 1;
 	    my $genotype_json = $row->get_column('value');
 	    my $genotype = JSON::Any->decode($genotype_json);
 
@@ -1036,10 +1039,14 @@ sub genosort {
 	$b_pos = $2;
     }
 
-    if ($a_chr == $b_chr) {
-	return $a_pos <=> $b_pos;
+    if ($a_chr && $b_chr) {
+      if ($a_chr == $b_chr) {
+          return $a_pos <=> $b_pos;
+      }
+      return $a_chr <=> $b_chr;
+    } else {
+      return -1;
     }
-    return $a_chr <=> $b_chr;
 }
 
 
@@ -2234,7 +2241,7 @@ sub maps_marker_detail_GET {
     	foreach my $m (sort genosort (keys %$scores)) {
     	    my ($chr, $pos) = split "_", $m;
     	    #print STDERR "CHR: $chr. POS: $pos\n";
-    	    $chrs{$chr} = $pos;
+           $chrs{$chr} = $pos;
             #   "markerId": 1,
             #   "markerName": "marker1",
             #   "location": "1000",
