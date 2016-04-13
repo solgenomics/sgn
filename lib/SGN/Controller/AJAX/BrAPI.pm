@@ -2101,56 +2101,66 @@ sub maps_details_GET {
     my $total_count = 0;
 
     # maps are just marker lists associated with specific protocols
-    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { nd_protocol_id => $c->stash->{map_id} } );
+    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->find( { nd_protocol_id => $c->stash->{map_id} } );
     my %map_info;
     my @data;
-    while (my $row = $rs->next()) {
-    	print STDERR "Retrieving map info for ".$row->name()."\n";
-        #$self->bcs_schema->storage->debug(1);
-    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
-    	my $lg_row = $lg_rs->first();
+    print STDERR "Retrieving map info for ".$rs->name()."\n";
+    #$self->bcs_schema->storage->debug(1);
+    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'me.nd_protocol_id' => $rs->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
-    	if (!$lg_row) {
-    	    die "This was never supposed to happen :-(";
-    	}
+    my %chrs;
+    my %chrs_marker_count;
+    my %markers;
 
-    	my $scores;
-    	if ($lg_row) {
-    	    $scores = JSON::Any->decode($lg_row->value());
-    	}
+    while (my $pop = $lg_rs->next()) {
+      if (!$pop) {
+          die "This was never supposed to happen :-(";
+      }
 
-    	my %chrs;
-        my %chrs_marker_count;
-    	foreach my $m (sort genosort (keys %$scores)) {
-    	    my ($chr, $pos) = split "_", $m;
-    	    #print STDERR "CHR: $chr. POS: $pos\n";
-    	    $chrs{$chr} = $pos;
-            if ($chrs_marker_count{$chr}) {
-                ++$chrs_marker_count{$chr};
-            } else {
-                $chrs_marker_count{$chr} = 1;
-            }
-    	}
+      my $scores;
+      if ($pop->value()) {
+        $scores = JSON::Any->decode($pop->value());
+      }
 
-        foreach my $ci (sort (keys %chrs)) {
-            my %linkage_groups_data = (linkageGroupId => $ci, numberMarkers => $chrs_marker_count{$ci}, maxPosition => $chrs{$ci} );
-            push @data, \%linkage_groups_data;
+      foreach my $m (sort genosort (keys %$scores)) {
+
+        my ($chr, $pos) = split "_", $m;
+        #print STDERR "CHR: $chr. POS: $pos\n";
+
+        $markers{$chr}->{$m} = 1;
+
+        if ($pos > $chrs{$chr}) {
+          $chrs{$chr} = $pos;
         }
 
-        $total_count = scalar(@data);
-        my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-        my $end = $c->stash->{page_size}*$c->stash->{current_page};
-        my @data_window = splice @data, $start, $end;
+        if ($chrs_marker_count{$chr}) {
+          ++$chrs_marker_count{$chr};
+        } else {
+          $chrs_marker_count{$chr} = 1;
+        }
 
-    	%map_info = (
-    	    mapId =>  $row->nd_protocol_id(),
-    	    name => $row->name(),
-    	    type => "physical",
-    	    unit => "bp",
-    	    linkageGroups => \@data_window,
-    	    );
+      }
     }
+
+    foreach my $ci (sort (keys %chrs)) {
+      my $num_markers = scalar keys $markers{$ci};
+      my %linkage_groups_data = (linkageGroupId => $ci, numberMarkers => $num_markers, maxPosition => $chrs{$ci} );
+      push @data, \%linkage_groups_data;
+    }
+
+    $total_count = scalar(@data);
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my @data_window = splice @data, $start, $end;
+
+    %map_info = (
+      mapId =>  $rs->nd_protocol_id(),
+      name => $rs->name(),
+      type => "physical",
+      unit => "bp",
+      linkageGroups => \@data_window,
+    );
 
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%map_info);
