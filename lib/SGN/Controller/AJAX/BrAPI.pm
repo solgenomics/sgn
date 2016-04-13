@@ -896,13 +896,9 @@ sub markerprofiles_list_GET {
 	push @status, 'Extract not supported';
     }
 
-    my $total_count = 0;
-
     if ($rs) {
-	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-	foreach my $row ($rs_slice->all()) {
+	foreach my $row ($rs->all()) {
     if ($row->get_column('value')) {
-      $total_count =$total_count+ 1;
 	    my $genotype_json = $row->get_column('value');
 	    my $genotype = JSON::Any->decode($genotype_json);
 
@@ -911,7 +907,13 @@ sub markerprofiles_list_GET {
 	}
     }
 
-    %result = (data => \@data);
+    my $total_count = scalar(@data);
+
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my @data_window = splice @data, $start, $end;
+
+    %result = (data => \@data_window);
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
@@ -1973,8 +1975,8 @@ sub maps_list_GET {
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
 
     my @data;
-    my %map_info;
     while (my $row = $rs->next()) {
+      my %map_info;
     	print STDERR "Retrieving map info for ".$row->name()." ID:".$row->nd_protocol_id()."\n";
         #$self->bcs_schema->storage->debug(1);
     	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id() } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {select=>['genotype.description', 'genotypeprops.value'], as=>['description', 'value'], rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
@@ -1982,9 +1984,7 @@ sub maps_list_GET {
     	my $lg_row = $lg_rs->first();
 
     	if (!$lg_row) {
-        #There are nd_protocols that do not have genotypeprops stored
     	    die "This was never supposed to happen :-(";
-          #next;
     	}
 
     	my $scores;
@@ -2112,9 +2112,7 @@ sub maps_details_GET {
     	my $lg_row = $lg_rs->first();
 
     	if (!$lg_row) {
-          #There are nd_protocols that do not have genotypeprops stored
     	    die "This was never supposed to happen :-(";
-          #next;
     	}
 
     	my $scores;
