@@ -1124,12 +1124,14 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   my @ordered_refmarkers;
 
   if ($rs->count() > 0) {
-    my $profile_json = $rs->first()->value();
-    my $refmarkers = JSON::Any->decode($profile_json);
-    #print STDERR Dumper($refmarkers);
-    @ordered_refmarkers = sort genosort keys(%$refmarkers);
+    while (my $profile = $rs->next()) {
+      my $profile_json = $profile->value();
+      my $refmarkers = JSON::Any->decode($profile_json);
+      #print STDERR Dumper($refmarkers);
+      push @ordered_refmarkers, sort genosort keys(%$refmarkers);
+
+    }
     #print Dumper(\@ordered_refmarkers);
-    $total_count = scalar(@ordered_refmarkers);
 
     $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
     while (my $profile = $rs->next()) {
@@ -1137,27 +1139,38 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
         my $markers_json = $profile->value();
         my $markers = JSON::Any->decode($markers_json);
 
-        $scores{$profile->genotypeprop_id()}->{$m} =
-        $self->convert_dosage_to_genotype($markers->{$m});
+        $scores{$profile->genotypeprop_id()}->{$m} = $self->convert_dosage_to_genotype($markers->{$m});
       }
     }
   }
+
+  #print STDERR Dumper \%scores;
 
   my @lines;
   foreach my $line (keys %scores) {
     push @lines, $line;
   }
 
-  my %markers_by_line;
-
+  my %markers_seen;
   for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
 
+    my %markers_by_line;
     my $m = $ordered_refmarkers[$n];
-    foreach my $line (keys %scores) {
-      push @{$markers_by_line{$m}}, $scores{$line}->{$m};
-      push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
-    }
+      foreach my $line (keys %scores) {
+        push @{$markers_by_line{$m}}, $scores{$line}->{$m};
+        if (!exists $markers_seen{$m} ) {
+          $markers_seen{$m} = \@{$markers_by_line{$m}};
+          #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
+        }
+      }
+
   }
+
+  foreach my $marker_name (sort keys %markers_seen) {
+    push @marker_score_lines, { $marker_name => $markers_seen{$marker_name} };
+  }
+
+  $total_count = scalar(@marker_score_lines);
 
   $c->stash->{rest} = {
     metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status },
@@ -2114,7 +2127,6 @@ sub maps_details_GET {
     }
 
     my %chrs;
-    my %chrs_marker_count;
     my %markers;
 
     while (my $pop = $lg_rs->next()) {
@@ -2130,22 +2142,21 @@ sub maps_details_GET {
         #print STDERR "CHR: $chr. POS: $pos\n";
 
         $markers{$chr}->{$m} = 1;
-
-        if ($pos > $chrs{$chr}) {
-          $chrs{$chr} = $pos;
-        }
-
-        if ($chrs_marker_count{$chr}) {
-          ++$chrs_marker_count{$chr};
-        } else {
-          $chrs_marker_count{$chr} = 1;
+        if ($pos) {
+          if ($chrs{$chr}) {
+            if ($pos > $chrs{$chr}) {
+              $chrs{$chr} = $pos;
+            }
+          } else {
+            $chrs{$chr} = $pos;
+          }
         }
 
       }
     }
 
     foreach my $ci (sort (keys %chrs)) {
-      my $num_markers = scalar keys $markers{$ci};
+      my $num_markers = scalar keys %{ $markers{$ci} };
       my %linkage_groups_data = (linkageGroupId => $ci, numberMarkers => $num_markers, maxPosition => $chrs{$ci} );
       push @data, \%linkage_groups_data;
     }
@@ -2277,7 +2288,8 @@ sub maps_marker_detail_GET {
             } else {
                 push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
             }
-    	}
+
+        }
     }
 
     my $total_count = scalar(@markers);
