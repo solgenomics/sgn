@@ -2109,14 +2109,15 @@ sub maps_details_GET {
     #$self->bcs_schema->storage->debug(1);
     my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'me.nd_protocol_id' => $rs->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
+    if (!$lg_rs) {
+        die "This was never supposed to happen :-(";
+    }
+
     my %chrs;
     my %chrs_marker_count;
     my %markers;
 
     while (my $pop = $lg_rs->next()) {
-      if (!$pop) {
-          die "This was never supposed to happen :-(";
-      }
 
       my $scores;
       if ($pop->value()) {
@@ -2226,24 +2227,24 @@ sub maps_marker_detail_GET {
         %linkage_groups = map { $_ => 1 } @linkage_groups_array;
     }
 
-    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { nd_protocol_id => $c->stash->{map_id} } );
+    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->find( { nd_protocol_id => $c->stash->{map_id} } );
 
     my @markers;
-    while (my $row = $rs->next()) {
-    	print STDERR "Retrieving map info for ".$row->name()."\n";
-        #$self->bcs_schema->storage->debug(1);
-    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id()  } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
+    print STDERR "Retrieving map info for ".$rs->name()."\n";
+      #$self->bcs_schema->storage->debug(1);
+    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $rs->nd_protocol_id()  } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
-    	my $lg_row = $lg_rs->first();
+    if (!$lg_rs) {
+        die "This was never supposed to happen :-(";
+    }
 
-    	if (!$lg_row) {
-    	    die "This was never supposed to happen :-(";
-    	}
+    while (my $pop = $lg_rs->next()) {
 
-    	my $scores;
-    	if ($lg_row) {
-    	    $scores = JSON::Any->decode($lg_row->value());
-    	}
+      my $scores;
+      if ($pop->value()) {
+        $scores = JSON::Any->decode($pop->value());
+      }
+
     	my %chrs;
 
     	foreach my $m (sort genosort (keys %$scores)) {
