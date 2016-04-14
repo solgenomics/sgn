@@ -761,8 +761,10 @@ sub germplasm_markerprofile_GET {
     my @status = @$status;
     my @marker_profiles;
 
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+
     my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-  	    {'stock.stock_id'=>$c->stash->{stock_id}},
+  	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$c->stash->{stock_id}},
   	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
   	     select=> ['genotypeprops.genotypeprop_id'],
   	     as=> ['genotypeprop_id'],
@@ -850,10 +852,12 @@ sub markerprofiles_list_GET {
     my @data;
     my %result;
 
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+
     my $rs;
     if ($germplasm && $method) {
 	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {'stock.stock_id'=>$germplasm, 'nd_protocol.nd_protocol_id'=>$method},
+	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$germplasm, 'nd_protocol.nd_protocol_id'=>$method},
 	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
 	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
 	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
@@ -863,7 +867,7 @@ sub markerprofiles_list_GET {
     }
     if ($germplasm && !$method) {
 	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {'stock.stock_id'=>$germplasm},
+	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$germplasm},
 	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
 	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
 	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
@@ -873,7 +877,7 @@ sub markerprofiles_list_GET {
     }
     if (!$germplasm && $method) {
 	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {'nd_protocol.nd_protocol_id'=>$method},
+	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'nd_protocol.nd_protocol_id'=>$method},
 	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
 	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
 	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
@@ -883,7 +887,7 @@ sub markerprofiles_list_GET {
     }
     if (!$germplasm && !$method) {
 	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {},
+	    { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id },
 	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
 	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
 	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
@@ -897,23 +901,18 @@ sub markerprofiles_list_GET {
     }
 
     if ($rs) {
-	foreach my $row ($rs->all()) {
-    if ($row->get_column('value')) {
+      my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+	while (my $row = $rs_slice->next()) {
 	    my $genotype_json = $row->get_column('value');
 	    my $genotype = JSON::Any->decode($genotype_json);
 
 	    push @data, {markerProfileDbId => $row->get_column('genotypeprop_id'), germplasmDbId => $row->get_column('stock_id'), extractDbId => "", analysisMethod => $row->get_column('protocol_name'), resultCount => scalar(keys(%$genotype)) };
-    }
 	}
     }
 
-    my $total_count = scalar(@data);
+    my $total_count = $rs->count();
 
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page};
-    my @data_window = splice @data, $start, $end;
-
-    %result = (data => \@data_window);
+    %result = (data => \@data);
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
@@ -979,19 +978,16 @@ sub genotype_fetch_GET {
     my %result;
 
     my $total_count = 0;
-    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->find(
 	{'genotypeprops.genotypeprop_id' => $c->stash->{markerprofile_id} },
 	{join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	 '+select'=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	 '+as'=> ['value', 'protocol_name', 'stock_id'],
-	 order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
+	 select=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
+	 as=> ['value', 'protocol_name', 'stock_id'],
 	}
     );
 
     if ($rs) {
-    	foreach my $row ($rs->first()) {
-
-    	    my $genotype_json = $row->get_column('value');
+    	    my $genotype_json = $rs->get_column('value');
     	    my $genotype = JSON::Any->decode($genotype_json);
             $total_count = scalar keys %$genotype;
 
@@ -1003,8 +999,7 @@ sub genotype_fetch_GET {
             my $end = $c->stash->{page_size}*$c->stash->{current_page};
             my @data_window = splice @data, $start, $end;
 
-    	    %result = (germplasmDbId=>$row->get_column('stock_id'), extractDbId=>'', markerprofileDbId=>$c->stash->{markerprofile_id}, analysisMethod=>$row->get_column('protocol_name'), encoding=>"AA,BB,AB", data => \@data_window);
-    	}
+    	    %result = (germplasmDbId=>$rs->get_column('stock_id'), extractDbId=>'', markerprofileDbId=>$c->stash->{markerprofile_id}, analysisMethod=>$rs->get_column('protocol_name'), encoding=>"AA,BB,AB", data => \@data_window);
     }
 
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
@@ -1111,9 +1106,9 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   my $status = $c->stash->{status};
   my @status = @$status;
 
-  my $markerprofile_ids = $c->req->param("markerprofileDbIds");
-
-  my @profile_ids = split ",", $markerprofile_ids;
+  my @profile_ids = $c->req->param('markerprofileDbId');
+  #print STDERR Dumper \@profile_ids;
+  #my @profile_ids = split ",", $markerprofile_ids;
 
   my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
 
@@ -1174,8 +1169,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 
   $c->stash->{rest} = {
     metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status },
-    markerprofileDbIds => \@lines,
-    data => \@marker_score_lines,
+    result => {markerprofileDbIds => \@lines, data => \@marker_score_lines},
   };
 
 }
@@ -1984,7 +1978,7 @@ sub maps_list_GET {
     my $status = $c->stash->{status};
     my @status = @$status;
 
-
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
 
     my @data;
@@ -1992,7 +1986,7 @@ sub maps_list_GET {
       my %map_info;
     	print STDERR "Retrieving map info for ".$row->name()." ID:".$row->nd_protocol_id()."\n";
         #$self->bcs_schema->storage->debug(1);
-    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id() } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {select=>['genotype.description', 'genotypeprops.value'], as=>['description', 'value'], rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
+    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $row->nd_protocol_id() } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {select=>['genotype.description', 'genotypeprops.value'], as=>['description', 'value'], rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
     	my $lg_row = $lg_rs->first();
 
@@ -2007,19 +2001,18 @@ sub maps_list_GET {
     	my %chrs;
 
     	my $marker_count =0;
-    	my $lg_count = 0;
     	foreach my $m (sort genosort (keys %$scores)) {
     	    my ($chr, $pos) = split "_", $m;
     	    #print STDERR "CHR: $chr. POS: $pos\n";
     	    $chrs{$chr} = $pos;
     	    $marker_count++;
-    	    $lg_count = scalar(keys(%chrs));
     	}
+      my $lg_count = scalar(keys(%chrs));
 
     	%map_info = (
     	    mapId =>  $row->nd_protocol_id(),
     	    name => $row->name(),
-            species => $lg_row->get_column('description'),
+          species => $lg_row->get_column('description'),
     	    type => "physical",
     	    unit => "bp",
     	    markerCount => $marker_count,
@@ -2113,6 +2106,8 @@ sub maps_details_GET {
     my $params = $c->req->params();
     my $total_count = 0;
 
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+
     # maps are just marker lists associated with specific protocols
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->find( { nd_protocol_id => $c->stash->{map_id} } );
     my %map_info;
@@ -2120,7 +2115,7 @@ sub maps_details_GET {
 
     print STDERR "Retrieving map info for ".$rs->name()."\n";
     #$self->bcs_schema->storage->debug(1);
-    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'me.nd_protocol_id' => $rs->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
+    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $rs->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
     if (!$lg_rs) {
         die "This was never supposed to happen :-(";
@@ -2238,12 +2233,13 @@ sub maps_marker_detail_GET {
         %linkage_groups = map { $_ => 1 } @linkage_groups_array;
     }
 
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->find( { nd_protocol_id => $c->stash->{map_id} } );
 
     my @markers;
     print STDERR "Retrieving map info for ".$rs->name()."\n";
       #$self->bcs_schema->storage->debug(1);
-    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $rs->nd_protocol_id()  } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
+    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $rs->nd_protocol_id()  } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
     if (!$lg_rs) {
         die "This was never supposed to happen :-(";
