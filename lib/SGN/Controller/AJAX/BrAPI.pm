@@ -1994,10 +1994,7 @@ sub maps_list_GET {
     	    die "This was never supposed to happen :-(";
     	}
 
-    	my $scores;
-    	if ($lg_row) {
-    	    $scores = JSON::Any->decode($lg_row->get_column('value'));
-    	}
+    	my $scores = JSON::Any->decode($lg_row->get_column('value'));
     	my %chrs;
 
     	my $marker_count =0;
@@ -2115,7 +2112,7 @@ sub maps_details_GET {
 
     print STDERR "Retrieving map info for ".$rs->name()."\n";
     #$self->bcs_schema->storage->debug(1);
-    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $rs->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
+    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $rs->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
     if (!$lg_rs) {
         die "This was never supposed to happen :-(";
@@ -2123,15 +2120,16 @@ sub maps_details_GET {
 
     my %chrs;
     my %markers;
+    my @ordered_refmarkers;
+    while (my $profile = $lg_rs->next()) {
+      my $profile_json = $profile->value();
+      my $refmarkers = JSON::Any->decode($profile_json);
+      #print STDERR Dumper($refmarkers);
+      push @ordered_refmarkers, sort genosort keys(%$refmarkers);
 
-    while (my $pop = $lg_rs->next()) {
+    }
 
-      my $scores;
-      if ($pop->value()) {
-        $scores = JSON::Any->decode($pop->value());
-      }
-
-      foreach my $m (sort genosort (keys %$scores)) {
+    foreach my $m (@ordered_refmarkers) {
 
         my ($chr, $pos) = split "_", $m;
         #print STDERR "CHR: $chr. POS: $pos\n";
@@ -2148,7 +2146,6 @@ sub maps_details_GET {
         }
 
       }
-    }
 
     foreach my $ci (sort (keys %chrs)) {
       my $num_markers = scalar keys %{ $markers{$ci} };
@@ -2239,22 +2236,23 @@ sub maps_marker_detail_GET {
     my @markers;
     print STDERR "Retrieving map info for ".$rs->name()."\n";
       #$self->bcs_schema->storage->debug(1);
-    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $rs->nd_protocol_id()  } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
+    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $rs->nd_protocol_id()})->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
     if (!$lg_rs) {
         die "This was never supposed to happen :-(";
     }
 
-    while (my $pop = $lg_rs->next()) {
+    my @ordered_refmarkers;
+    while (my $profile = $lg_rs->next()) {
+      my $profile_json = $profile->value();
+      my $refmarkers = JSON::Any->decode($profile_json);
+      #print STDERR Dumper($refmarkers);
+      push @ordered_refmarkers, sort genosort keys(%$refmarkers);
+    }
 
-      my $scores;
-      if ($pop->value()) {
-        $scores = JSON::Any->decode($pop->value());
-      }
+  	my %chrs;
 
-    	my %chrs;
-
-    	foreach my $m (sort genosort (keys %$scores)) {
+    	foreach my $m (@ordered_refmarkers) {
     	    my ($chr, $pos) = split "_", $m;
     	    #print STDERR "CHR: $chr. POS: $pos\n";
            $chrs{$chr} = $pos;
@@ -2286,7 +2284,6 @@ sub maps_marker_detail_GET {
             }
 
         }
-    }
 
     my $total_count = scalar(@markers);
     my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
