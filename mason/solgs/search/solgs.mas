@@ -27,7 +27,7 @@ $gs_traits_index
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTrials", "jQuery.dataTables",  "solGS.combineTrials", "solGS.ajaxAutocomplete"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTrials", "jquery.dataTables",  "solGS.combineTrials", "solGS.ajaxAutocomplete"] &>
 
 <p>&nbsp</p>
 

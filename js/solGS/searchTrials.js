@@ -114,3 +114,51 @@ function listTrials (trials)  {
 
 }
 
+function checkTrainingPopulation () {
+    
+    var popId =  getPopulationId();
+   
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: '/solgs/check/training/population/' + popId,
+        success: function(response) {
+            if (response.data) {
+		jQuery("#train_pops_list").show();
+		jQuery("#search_all_training_pops").show();
+		displayTrainingPopulations(response.data);					
+            } else { 
+		jQuery("#search_all_training_pops").show();	
+            }
+	}
+    });
+    
+}
+
+
+function searchTrainingPopulation () {
+ 
+    var popId = getPopulationId();
+   
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: '/solgs/search/training/populations/' + popId,
+        success: function(res) {
+            
+	    if (res.data) {
+		
+		jQuery('#training_pops_list').show();
+		displaySelectionPopulations(res.data);
+		jQuery('#search_all_training_pops').hide();
+		jQuery('#training_pops_message').hide();
+            } else { 
+		
+		jQuery('#training_pops_message').html(
+		    '<p>There are no relevant trials or training populations in the database.' 
+                    + 'If you have or want to make a training population using the search wizard' 
+                    + 'use the form below.</p>');	
+            }
+	}
+    });
+}
