@@ -29,6 +29,7 @@ use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_a
 use CXGN::Pedigree::AddProgeny;
 use Scalar::Util qw(looks_like_number);
 use File::Slurp;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -291,22 +292,13 @@ sub _add_cross {
   my $visible_to_role = $cross{'visible_to_role'};
   my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$location,});
   my $project = $schema->resultset("Project::Project")->find({name=>$trial,});
-  my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-								       { name   => 'accession',
-									 cv     => 'stock type',
-									 db     => 'null',
-									 dbxref => 'accession',
-								       });
-  my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
-								 { name   => 'cross',
-								 });
+  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
 
-  my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'cross_type',
-	cv     => 'local',
-	db     => 'null',
-	dbxref => 'cross_type',
-    });
+  my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
+      { name   => 'cross',
+      });
+  
+  my $cross_type_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_type', 'nd_experiment_property');
 
   my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
 								     { name       => $maternal_parent,
@@ -317,85 +309,64 @@ sub _add_cross {
 								   { name       => $paternal_parent,
 								   } );
   my $population_stock = $schema->resultset("Stock::Stock")->find_or_create(
-									    { organism_id => $organism_id,
-									      name       => $cross_name,
-									      uniquename => $cross_name,
-									      type_id => $population_cvterm->cvterm_id,
-									    } );
-  my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
-								    { name   => 'female_parent',
-								      cv     => 'stock relationship',
-								      db     => 'null',
-								      dbxref => 'female_parent',
-								    });
-  my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
-								  { name   => 'male_parent',
-								    cv     => 'stock relationship',
-								    db     => 'null',
-								    dbxref => 'male_parent',
-								  });
-  my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
-									 { name   => 'cross_name',
-									   cv     => 'stock relationship',
-									   db     => 'null',
-									   dbxref => 'cross_name',
-									 });
-  my $visible_to_role_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-									     { name   => 'visible_to_role',
-									       cv => 'local',
-									       db => 'null',
-									     });
-  my $number_of_flowers_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-									   { name   => 'number_of_flowers',
-									     cv     => 'local',
-									     db     => 'null',
-									     dbxref => 'number_of_flowers',
-									   });
-  my $number_of_seeds_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-									   { name   => 'number_of_seeds',
-									     cv     => 'local',
-									     db     => 'null',
-									     dbxref => 'number_of_seeds',
-									   });
+      { organism_id => $organism_id,
+	name       => $cross_name,
+	uniquename => $cross_name,
+	type_id => $population_cvterm->cvterm_id,
+      } );
+  my $female_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship');
+	
+  my $male_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship');
+
+  ## change 'cross_name' to a more explicit term
+
+  my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_relationship', 'stock_relationship');
+
+  my $visible_to_role_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'visible_to_role', 'local');
+
+  my $number_of_flowers_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_flowers', 'nd_experiment_property');
+
+  my $number_of_seeds_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema,'number_of_seeds','nd_experiment_property');
+
   my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
-										{
-										 nd_geolocation_id => $geolocation->nd_geolocation_id(),
-										 type_id => $population_cvterm->cvterm_id(),
-										} );
+      {
+	  nd_geolocation_id => $geolocation->nd_geolocation_id(),
+	  type_id => $population_cvterm->cvterm_id(),
+      } );
   #link to the project
   $experiment->find_or_create_related('nd_experiment_projects', {
-								 project_id => $project->project_id()
-								} );
+      project_id => $project->project_id()
+				      } );
   #link the experiment to the stock
   $experiment->find_or_create_related('nd_experiment_stocks' , {
-								stock_id => $population_stock->stock_id(),
-								type_id  =>  $population_cvterm->cvterm_id(),
-							       });
+      stock_id => $population_stock->stock_id(),
+      type_id  =>  $population_cvterm->cvterm_id(),
+				      });
   if ($number_of_flowers) {
-    #set flower number in experimentprop
-    $experiment->find_or_create_related('nd_experimentprops' , {
-								nd_experiment_id => $experiment->nd_experiment_id(),
-								type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
-								value  =>  $number_of_flowers,
-							       });
+      #set flower number in experimentprop
+      $experiment->find_or_create_related('nd_experimentprops' , {
+	  nd_experiment_id => $experiment->nd_experiment_id(),
+	  type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
+	  value  =>  $number_of_flowers,
+					  });
   }
   if ($number_of_seeds) {
-    #set seed number in experimentprop
-    $experiment->find_or_create_related('nd_experimentprops' , {
-								nd_experiment_id => $experiment->nd_experiment_id(),
-								type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
-								value  =>  $number_of_seeds,
-							       });
+      #set seed number in experimentprop
+      $experiment->find_or_create_related('nd_experimentprops' , {
+	  nd_experiment_id => $experiment->nd_experiment_id(),
+	  type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
+	  value  =>  $number_of_seeds,
+					  });
   }
-
+  
   if ($cross_type) {
       $experiment->find_or_create_related('nd_experimentprops' , {
-								  nd_experiment_id => $experiment->nd_experiment_id(),
-								  type_id  =>  $cross_type_cvterm->cvterm_id(),
-								  value  =>  $cross_type,
-								 });
+	  nd_experiment_id => $experiment->nd_experiment_id(),
+	  type_id  =>  $cross_type_cvterm->cvterm_id(),
+	  value  =>  $cross_type,
+					  });
   }
-
+  
   ############
   #if progeny number exists
   my $increment = 1;
@@ -403,47 +374,47 @@ sub _add_cross {
       $increment = sprintf "%03d", $increment;
     my $stock_name = $prefix.$cross_name."_".$increment.$suffix;
     my $accession_stock = $schema->resultset("Stock::Stock")->create(
-								     { organism_id => $organism_id,
-								       name       => $stock_name,
-								       uniquename => $stock_name,
-								       type_id     => $accession_cvterm->cvterm_id,
-								     } );
-    $accession_stock->find_or_create_related('stock_relationship_objects', {
-									    type_id => $female_parent->cvterm_id(),
-									    object_id => $accession_stock->stock_id(),
-									    subject_id => $female_parent_stock->stock_id(),
-									   } );
-    $accession_stock->find_or_create_related('stock_relationship_objects', {
-									    type_id => $male_parent->cvterm_id(),
-									    object_id => $accession_stock->stock_id(),
-									    subject_id => $male_parent_stock->stock_id(),
-									   } );
-    $accession_stock->find_or_create_related('stock_relationship_objects', {
-									    type_id => $population_members->cvterm_id(),
-									    object_id => $accession_stock->stock_id(),
-									    subject_id => $population_stock->stock_id(),
-									   } );
-    #######################
-    #link the experiment to the progeny
-
-
+	{ organism_id => $organism_id,
+	  name       => $stock_name,
+	  uniquename => $stock_name,
+	  type_id     => $accession_cvterm->cvterm_id,
+	} );
+      $accession_stock->find_or_create_related('stock_relationship_objects', {
+	  type_id => $female_parent->cvterm_id(),
+	  object_id => $accession_stock->stock_id(),
+	  subject_id => $female_parent_stock->stock_id(),
+					       } );
+      $accession_stock->find_or_create_related('stock_relationship_objects', {
+	  type_id => $male_parent->cvterm_id(),
+	  object_id => $accession_stock->stock_id(),
+	  subject_id => $male_parent_stock->stock_id(),
+					       } );
+      $accession_stock->find_or_create_related('stock_relationship_objects', {
+	  type_id => $population_members->cvterm_id(),
+	  object_id => $accession_stock->stock_id(),
+	  subject_id => $population_stock->stock_id(),
+					       } );
+      #######################
+      #link the experiment to the progeny
+      
+      
     if ($visible_to_role) {
-      my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
-											{ type_id =>$visible_to_role_cvterm->cvterm_id(),
-											  value => $visible_to_role,
-											  stock_id => $accession_stock->stock_id()
-											});
+	my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
+	    { type_id =>$visible_to_role_cvterm->cvterm_id(),
+	      value => $visible_to_role,
+	      stock_id => $accession_stock->stock_id()
+	    });
     }
-    $increment++;
+      $increment++;
 
   }
-
+  
   if ($@) { 
-    $c->stash->{rest} = { error => "An error occurred: $@"};
+      $c->stash->{rest} = { error => "An error occurred: $@"};
   }
-
+  
   $c->stash->{rest} = { error => '', };
-
+  
 
 }
 
@@ -534,34 +505,17 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     } );
     my $organism_id = $organism->organism_id();
 
-    my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'accession',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'accession',
-    });
-
-#    my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-#      { name   => 'member',
-#      cv     => 'stock type',
-#      db     => 'null',
-#      dbxref => 'member',
-#    });
+    my $accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
+ 
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
       { name   => 'population',
     });
 
-#    my $cross_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-#    { name   => 'cross',
-#      cv     => 'stock relationship',
-#      db     => 'null',
-#      dbxref => 'cross',
-#    });
 
     my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
-            { name       => $maternal,
-            } );
+	{ name       => $maternal,
+	} );
 
     my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
             { name       => $paternal,
@@ -573,32 +527,13 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 	      uniquename => $cross_name,
 	      type_id => $population_cvterm->cvterm_id,
             } );
-      my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'female_parent',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'female_parent',
-    });
+      my $female_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship');
 
-      my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'male_parent',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'male_parent',
-    });
+      my $male_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship');
 
-      my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'cross_name',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'cross_name',
-    });
+      my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_name', 'stock_relationship');
 
-      my $visible_to_role_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'visible_to_role',
-      cv => 'local',
-      db => 'null',
-    });
+      my $visible_to_role_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema,  'visible_to_role', 'local');
 
     my $increment = 1;
     while ($increment < $progeny_number + 1) {

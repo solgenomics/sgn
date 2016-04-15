@@ -4,15 +4,21 @@ package SGN::Controller::BreedersToolbox;
 use Moose;
 
 use Data::Dumper;
-
-use CXGN::Trial::TrialLayout;
-use URI::FromHash 'uri';
-
 use CXGN::BreederSearch;
 use SGN::Controller::AJAX::List;
 use CXGN::List::Transform;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::BreedersToolbox::Accessions;
+use SGN::Model::Cvterm;
+use URI::FromHash 'uri';
+use Spreadsheet::WriteExcel;
+use Spreadsheet::Read;
+use File::Slurp qw | read_file |;
+use File::Temp;
+use CXGN::Trial::TrialLayout;
+use Try::Tiny;
+use File::Basename qw | basename dirname|;
+use File::Spec::Functions;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -175,14 +181,45 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
 
     my $data = $self->get_phenotyping_data($c);
 
-    $c->stash->{phenotype_files} = $data->{file_info};
-    $c->stash->{deleted_phenotype_files} = $data->{deleted_file_info};
+    $c->stash->{phenotype_files} = $data->{phenotype_files};
+    $c->stash->{deleted_phenotype_files} = $data->{deleted_phenotype_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_phenotyping.mas';
-    
 
 }
 
+sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1) { 
+    my $self =shift;
+    my $c = shift;
+    my $file_id = shift;
+ 
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
+    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    #print STDERR "\n\n\nfile name:".$file_row->basename."\n";
+    my $contents = read_file($file_destination);
+    my $file_name = $file_row->basename;
+    $c->res->content_type('Application/trt');
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    $c->res->body($contents);
+}
+
+sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) { 
+    my $self =shift;
+    my $c = shift;
+    my $file_id = shift;
+ 
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
+    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    #print STDERR "\n\n\nfile name:".$file_row->basename."\n";
+    my @contents = ReadData ($file_destination);
+    #print STDERR Dumper \@contents;
+    my $file_name = $file_row->basename;
+    $c->stash->{file_content} = \@contents;
+    $c->stash->{filename} = $file_name;
+    $c->stash->{template} = '/breeders_toolbox/view_file.mas';
+}
 
 sub make_cross_form :Path("/stock/cross/new") :Args(0) { 
     my ($self, $c) = @_;
@@ -270,35 +307,17 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     } );
     my $organism_id = $organism->organism_id();
 
-    my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'accession',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'accession',
-    });
-
-#    my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-#      { name   => 'member',
-#      cv     => 'stock type',
-#      db     => 'null',
-#      dbxref => 'member',
-#    });
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
       { name   => 'population',
     });
 
-#    my $cross_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-#    { name   => 'cross',
-#      cv     => 'stock relationship',
-#      db     => 'null',
-#      dbxref => 'cross',
-#    });
 
     my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
-            { name       => $maternal,
-            } );
-
+	{ name       => $maternal,
+	} );
+    
     my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
             { name       => $paternal,
             } );
@@ -309,32 +328,15 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 	      uniquename => $cross_name,
 	      type_id => $population_cvterm->cvterm_id,
             } );
-      my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'female_parent',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'female_parent',
-    });
+      my $female_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent',  'stock_relationship');
 
-      my $male_parent = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'male_parent',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'male_parent',
-    });
+      my $male_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship');
 
-      my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'cross_name',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'cross_name',
-    });
 
-      my $visible_to_role_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'visible_to_role',
-      cv => 'local',
-      db => 'null',
-    });
+      my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema,  'cross_relationship','stock_relationship');
+
+    
+    my $visible_to_role_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema,  'visible_to_role', 'local');
 
     my $increment = 1;
     while ($increment < $progeny_number + 1) {
@@ -436,82 +438,6 @@ sub breeder_search : Path('/breeders/search/') :Args(0) {
 
 }
 
-# next two functions moved to CXGN::BreedersToolbox::Project
-#
-# sub get_locations : Private { 
-#     my $self = shift;
-#     my $c= shift;
-
-#     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-#     my @rows = $schema->resultset('NaturalDiversity::NdGeolocation')->all();
-    
-#     my $type_id = $schema->resultset('Cv::Cvterm')->search( { 'name'=>'plot' })->first->cvterm_id;
-
-    
-#     my @locations = ();
-#     foreach my $row (@rows) { 	    
-# 	my $plot_count = "SELECT count(*) from stock join cvterm on(type_id=cvterm_id) join nd_experiment_stock using(stock_id) join nd_experiment using(nd_experiment_id)   where cvterm.name='plot' and nd_geolocation_id=?"; # and sp_person_id=?";
-# 	my $sh = $c->dbc->dbh->prepare($plot_count);
-# 	$sh->execute($row->nd_geolocation_id); #, $c->user->get_object->get_sp_person_id);
-	
-# 	my ($count) = $sh->fetchrow_array();
-	
-# 	#if ($count > 0) { 
-	
-# 		push @locations,  [ $row->nd_geolocation_id, 
-# 				    $row->description,
-# 				    $row->latitude,
-# 				    $row->longitude,
-# 				    $row->altitude,
-# 				    $count, # number of experiments TBD
-				    
-# 		];
-#     }
-#     return \@locations;
-
-# }
-
-# sub get_all_locations { 
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-#     my $rs = $schema -> resultset("NaturalDiversity::NdGeolocation")->search( {} );
-    
-#     my @locations = ();
-#     foreach my $loc ($rs->all()) { 
-# 	push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
-#     }
-#     return \@locations;
-
-# }
-
-# sub get_projects : Private { 
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    
-
-#    # get breeding programs
-#     #
-
-#     my $bp_rows = ();
-#     # get projects
-#     #
-#     my @projects = ();
-#     foreach my $bp (@bp_rows) { 
-# 	my @project_rows = $schema->resultset('Project::Project')->search( { }, { join => 'project_relationship', { join => 'project' }}) ;
-	
-	
-# 	foreach my $row (@project_rows) { 
-# 	    push @projects, [ $row->project_id, $row->name, $row->description ];
-	    
-# 	}
-#     }
-#     return \@projects;
-# }
 
 sub get_crosses : Private { 
     my $self = shift;
@@ -521,7 +447,7 @@ sub get_crosses : Private {
 
     # get crosses
     #
-    my $stock_type_cv = $schema->resultset("Cv::Cv")->find( {name=>'stock type'});
+    my $stock_type_cv = $schema->resultset("Cv::Cv")->find( {name=>'stock_type'});
     my $cross_cvterm = $schema->resultset("Cv::Cvterm")->find(
 	{ name   => 'cross',
 	  cv_id => $stock_type_cv->cv_id(),
@@ -541,36 +467,6 @@ sub get_crosses : Private {
 }
 
 
-sub get_stock_relationships : Private { 
-    my $self = shift;
-    my $c = shift;
-
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-
-    my $stockrel = $schema->resultset("Cv::Cvterm")->create_with(
-	{ name   => 'cross',
-	  cv     => 'stock relationship',
-	  db     => 'null',
-	  dbxref => 'cross',
-	});
-    
-    
-    
-    #my $stockrel_type_id = $schema->resultset('Cv::Cvterm')->search( { 'name'=>'cross' })->first->cvterm_id;
-    
-    my @rows = $schema->resultset('Stock::StockRelationship')->search( {type_id => $stockrel->cvterm_id });
-    
-    my @stockrelationships = ();
-    
-	foreach my $row (@rows) {
-	    push @stockrelationships, [$row->type_id];
-	}
-
-    push @stockrelationships, ["example"];
-	
- return \@stockrelationships;
-    
-}
 
 sub get_phenotyping_data : Private { 
     my $self = shift;
@@ -589,8 +485,8 @@ sub get_phenotyping_data : Private {
 	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id() } );
 	
 	if (!$md_row->obsolete) { 
-	    while (my $file_row = $file_rs->next()) { 
-		push @$file_info, { file_id => $file_row->file_id(),		                    
+	    while (my $file_row = $file_rs->next()) {
+		push @$file_info, { file_id => $file_row->file_id(),            
 				    basename => $file_row->basename,
 				    dirname  => $file_row->dirname,
 				    file_type => $file_row->filetype,

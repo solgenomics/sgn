@@ -57,6 +57,7 @@ has 'col_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_col_numbe
 
 
 sub _lookup_trial_id {
+  print STDERR "Check 2.1: ".localtime()."\n";
   my $self = shift;
   $self->_set_project_from_id();
   if (!$self->has_project()) {
@@ -66,22 +67,28 @@ sub _lookup_trial_id {
   my $accession_names_ref;
   my $control_names_ref;
   my $design_type_from_project;
+  print STDERR "Check 2.2: ".localtime()."\n";
   if (!$self->_get_trial_year_from_project()) {return;}
   $self->_set_trial_year($self->_get_trial_year_from_project());
   $self->_set_trial_name($self->get_project->name());
   $self->_set_trial_description($self->get_project->description());
-  
+  print STDERR "Check 2.3: ".localtime()."\n";
   
   $design_type_from_project =  $self->_get_design_type_from_project();
   if (! $design_type_from_project) {
     return;
   }
+  print STDERR "Check 2.3.1: ".localtime()."\n";
   if (!$self->_get_location_from_field_layout_experiment()) {return;}
   $self->_set_trial_location($self->_get_location_from_field_layout_experiment());
+  print STDERR "Check 2.3.2: ".localtime()."\n";
   if (!$self->has_trial_location) {return;}
   $self->_set_plot_dimensions($self->_get_plot_dimensions_from_trial());
+  print STDERR "Check 2.3.3: ".localtime()."\n";
   $self->_set_design_type($self->_get_design_type_from_project());
+  print STDERR "Check 2.3.4: ".localtime()."\n";
   $self->_set_design($self->_get_design_from_trial());
+  print STDERR "Check 2.4: ".localtime()."\n";
   $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
   $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
   $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
@@ -95,7 +102,7 @@ sub _lookup_trial_id {
   if ($control_names_ref) {
     $self->_set_control_names($control_names_ref);
   }
-
+  print STDERR "Check 2.5: ".localtime()."\n";
 
 }
 
@@ -142,6 +149,7 @@ sub _get_plot_info_fields_from_trial {
 
 
 sub _get_design_from_trial {
+    print STDERR "Check 2.3.4.1: ".localtime()."\n";
   my $self = shift;
   my $schema = $self->get_schema();
   my $plots_ref;
@@ -153,7 +161,7 @@ sub _get_design_from_trial {
       print STDERR "_get_design_from_trial: not plots provided... returning.\n";
       return;
   }
-
+print STDERR "Check 2.3.4.2: ".localtime()."\n";
   my $project = $self->get_project();
 
   my $genotyping_user_id_row = $project
@@ -167,6 +175,10 @@ sub _get_design_from_trial {
       ->search_related("nd_experiment")
       ->search_related("nd_experimentprops")
       ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
+print STDERR "Check 2.3.4.3: ".localtime()."\n";
+
+  my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
+  my $tissue_sample_of_cv = $schema->resultset("Cv::Cvterm")->find({ name=>'tissue_sample_of' });
 
   @plots = @{$plots_ref};
   foreach my $plot (@plots) {
@@ -180,9 +192,7 @@ sub _get_design_from_trial {
 	$design_info{genotyping_project_name} = $genotyping_project_name_row->get_column("value") || "unknown";
 	#print STDERR "RETRIEVED: genotyping_project_name: $design{genotyping_project_name}\n";
     }
-    
-    my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
-    my $tissue_sample_of_cv = $schema->resultset("Cv::Cvterm")->find({ name=>'tissue_sample_of' });
+
     my $plot_name = $plot->uniquename;
     my $plot_number_prop = $plot->stockprops->find( { 'type.name' => 'plot number' }, { join => 'type'} );
     my $block_number_prop = $plot->stockprops->find( { 'type.name' => 'block' }, { join => 'type'} );
@@ -191,11 +201,10 @@ sub _get_design_from_trial {
     my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
     my $row_number_prop = $plot->stockprops->find( { 'type.name' => 'row_number' }, { join => 'type'} );
     my $col_number_prop = $plot->stockprops->find( { 'type.name' => 'col_number' }, { join => 'type'} );
-
-
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
     my $accession_name = $accession->uniquename;
-    $design_info{"plot_name"}=$plot->uniquename;
+    my $accession_id = $accession->stock_id;
+    $design_info{"plot_name"}=$plot_name;
     $design_info{"plot_id"}=$plot->stock_id;
 
     if ($plot_number_prop) {
@@ -224,9 +233,12 @@ sub _get_design_from_trial {
     if ($accession_name) {
       $design_info{"accession_name"}=$accession_name;
     }
+    if ($accession_id) {
+      $design_info{"accession_id"}=$accession_id;
+    }
     $design{$plot_number_prop->value}=\%design_info;
   }
-
+print STDERR "Check 2.3.4.4: ".localtime()."\n";
   return \%design;
 }
 
@@ -241,7 +253,7 @@ sub _get_field_layout_experiment_from_project {
   $field_layout_experiment = $project
      ->search_related("nd_experiment_projects")
        ->search_related("nd_experiment")
-   	->find({ 'type.name' => ['field layout', 'genotyping layout']}, {join => 'type' });
+   	->find({ 'type.name' => ['field_layout', 'genotyping_layout']}, {join => 'type' });
   return $field_layout_experiment;
 }
 
@@ -392,6 +404,8 @@ sub _get_plots {
   @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock');
   return \@plots;
 }
+
+
 
 sub oldget_plot_names {
   my $self = shift;

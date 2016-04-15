@@ -30,6 +30,7 @@ use Data::Dumper;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use CXGN::Stock::StockLookup;
+use SGN::Model::Cvterm;
 
 #class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 has 'schema' => (
@@ -73,58 +74,32 @@ sub add_pedigrees {
   my $transaction_error = "";
 
   my $coderef = sub {
-
+      
       print STDERR "Getting cvterms...\n";
       # get cvterms for parents and offspring
-      my $female_parent_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	  ->create_with( { name   => 'female_parent',
-			   cv     => 'stock relationship',
-			   db     => 'null',
-			   dbxref => 'female_parent',
-			 });
-      my $male_parent_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	  ->create_with({ name   => 'male_parent',
-			  cv     => 'stock relationship',
-			  db     => 'null',
-			  dbxref => 'male_parent',
-			});
-      my $progeny_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	  ->create_with({ name   => 'offspring_of',
-			  cv     => 'stock relationship',
-			  db     => 'null',
-			  dbxref => 'offspring_of',
-			});
-      
-      # get cvterm for cross_name or create if not found
-      my $cross_name_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	  ->find({
-     	      name   => 'cross_name',
-		 });
-      if (!$cross_name_cvterm) {
-	  $cross_name_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	      ->create_with( { name   => 'cross_name',
-			       cv     => 'local',
-			       db     => 'null',
-			       dbxref => 'cross_name',
-			     });
-      }
-      # get cvterm for cross_type or create if not found
-      my $cross_type_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	  ->find({
-     	      name   => 'cross_type',
-		 });
-      if (!$cross_type_cvterm) {
-	  $cross_type_cvterm = $self->get_schema()->resultset("Cv::Cvterm")
-	      ->create_with( { name   => 'cross_type',
-			       cv     => 'local',
-			       db     => 'null',
-			       dbxref => 'cross_type',
-			     });
-      }
-      
-      
-      foreach my $pedigree (@pedigrees) {
+      my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'female_parent', 'stock_relationship');
 
+      my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'male_parent', 'stock_relationship');
+      
+      ####These are probably not necessary:
+      #######################
+########################
+###################
+      my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'offspring_of', 'stock_relationship');
+      
+      # get cvterm for cross_relationship
+      my $cross_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_relationship', 'stock_relationship');
+      
+      # get cvterm for cross_type
+      my $cross_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_type', 'nd_experiment_property');
+      ##########################
+############################
+########################
+###################
+      
+ 
+      foreach my $pedigree (@pedigrees) {
+	  
 	  print STDERR Dumper($pedigree);
 	  my $cross_stock;
 	  my $organism_id;
@@ -143,7 +118,7 @@ sub add_pedigrees {
 	      $male_parent_name = $pedigree->get_male_parent()->get_name();
 	      $male_parent = $self->_get_accession($male_parent_name);
 	  }
-
+	  
 	  my $cross_name = $female_parent_name ."/".$male_parent_name;
 
 	  print STDERR "Creating pedigree $cross_type, $cross_name\n";
@@ -176,8 +151,6 @@ sub add_pedigrees {
 		      subject_id => $male_parent->stock_id(),
 					   });
 	  }
-	  
-	  
 	  
 	  
       }
@@ -284,13 +257,8 @@ sub _get_accession {
     my $schema = $self->get_schema();
     my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
     my $stock;
-    my $accession_cvterm = $schema->resultset("Cv::Cvterm")
-	->create_with({
-	    name   => 'accession',
-	    cv     => 'stock type',
-	    db     => 'null',
-	    dbxref => 'accession',
-		      });
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
+
     $stock_lookup->set_stock_name($accession_name);
     $stock = $stock_lookup->get_stock_exact();
     

@@ -30,6 +30,7 @@ use CXGN::Phenome::DumpGenotypes;
 
 use Scalar::Util qw(looks_like_number);
 use DateTime;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -65,13 +66,13 @@ sub add_stockprop_POST {
         my $stock_id = $c->req->param('stock_id');
         my $prop  = $c->req->param('prop');
         my $prop_type = $c->req->param('prop_type');
-	#if ($prop_type eq 'synonym') { $prop_type = 'stock_synonym' ; } 
+	if ($prop_type eq 'synonym') { $prop_type = 'stock_synonym' ; } 
 
 	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } ); 
 
 	if ($stock && $prop && $prop_type) { 
 	    try {
-		$stock->create_stockprops( { $prop_type => $prop }, { dbxref_accession_prefix => 'stock_synonym:', autocreate => 1 } ); 
+		$stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } ); 
 		$c->stash->{rest} = { message => "stock_id $stock_id and type_id $prop_type have been associated with value $prop", }
 	    } catch {
 		$c->stash->{rest} = { error => "Failed: $_" }
@@ -522,7 +523,7 @@ sub associate_ontology_POST :Args(0) {
                 $s_cvterm->create_stock_cvtermprops(
                     { 'evidence_code' => $evidence_code } , { db_name => 'ECO', cv_name =>'evidence_code' } ) if looks_like_number($evidence_code);
                  $s_cvterm->create_stock_cvtermprops(
-                     { 'evidence_description' => $evidence_description } , { cv_name =>'null', autocreate => 1 } ) if looks_like_number($evidence_description);
+                     { 'evidence_description' => $evidence_description } , { cv_name =>'local', autocreate => 1 } ) if looks_like_number($evidence_description);
                 $s_cvterm->create_stock_cvtermprops(
                     { 'evidence_with' => $evidence_with  } , { cv_name =>'local' , autocreate=>1} ) if looks_like_number($evidence_with);
                 # store the person loading the annotation 
@@ -1043,12 +1044,8 @@ sub add_phenotype_POST {
         my $user =  $c->user->get_object->get_sp_person_id;
         try {
             # find the cvterm for a phenotyping experiment
-            my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-                { name   => 'phenotyping experiment',
-                  cv     => 'experiment type',
-                  db     => 'null',
-                  dbxref => 'phenotyping experiment',
-                });
+            my $pheno_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'phenotyping_experiment','experiment_type');
+
 
             #create the new phenotype
             my $phenotype = $schema->resultset("Phenotype::Phenotype")->find_or_create(
@@ -1320,6 +1317,28 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0
     my $pedigree_string = $pedigree_root->get_pedigree_string($level);
 
     $c->stash->{rest} = { pedigree_string => $pedigree_string };
+}
+
+sub stock_lookup : Path('/stock_lookup/') Args(2) ActionClass('REST') { }
+
+sub stock_lookup_POST { 
+    my $self = shift;
+    my $c = shift;
+    my $lookup_from_field = shift;
+    my $lookup_field = shift;
+    my $value_to_lookup = $c->req->param($lookup_from_field);
+
+    #print STDERR $lookup_from_field;
+    #print STDERR $lookup_field;
+    #print STDERR $value_to_lookup;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $s = $schema->resultset("Stock::Stock")->find( { $lookup_from_field => $value_to_lookup } );
+    my $value;
+    if ($s && $lookup_field eq 'stock_id') {
+        $value = $s->stock_id();
+    }
+    $c->stash->{rest} = { $lookup_from_field => $value_to_lookup, $lookup_field => $value };
 }
 
 1;

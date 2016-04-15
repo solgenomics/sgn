@@ -44,6 +44,7 @@ use CXGN::Chado::Dbxref;
 use CXGN::Chado::Phenotype;
 use CXGN::People::Person;
 use Try::Tiny;
+use SGN::Model::Cvterm;
 
 our ($opt_H, $opt_D, $opt_i, $opt_t);
 
@@ -107,31 +108,16 @@ my $stock_rs = $schema->resultset("Stock::Stock");
 
 #the cvterm for the accession
 print "Finding/creating cvterm for 'stock type' \n";
-my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'accession',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'accession',
-    });
+my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
 
 #the cvterm for the relationship type
 print "Finding/creating cvterm for stock relationship 'member_of' \n";
 
-my $member_of = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'member_of',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'member_of',
-    });
+my $member_of = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship');
    
 #the cvterm for the population
 print "Finding/creating cvterm for population\n";
-my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'population',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'population',
-    });
+my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type');
 
 print "Creating a stock for population $population_name (cvterm = " . $population_cvterm->name . ")\n";
 
@@ -329,7 +315,7 @@ my $coderef= sub  {
 				my $existing_synonym = $stock->search_related(
                     'stockprops' , {
                         'me.value'   => $syn,
-                        'type.name'  => 'synonym'
+                        'type.name'  => { ilike => '%synonym' }
                     },
                     { join =>  'type' }
             )->single;
@@ -337,9 +323,9 @@ my $coderef= sub  {
             $syn_count++;
             print STDOUT "Adding synonym: $syn \n"  ;
                     #add the synonym as a stockprop
-                    $stock->create_stockprops({ synonym => $syn},
+                    $stock->create_stockprops({ stock_synonym => $syn},
                                               {autocreate => 1,
-                                               cv_name => 'local',
+                                               #cv_name => 'local', #use default stock_property cv
                                                allow_duplicate_values=> 1,
                           
                                               });
