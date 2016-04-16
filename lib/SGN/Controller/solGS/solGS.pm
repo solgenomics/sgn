@@ -262,8 +262,7 @@ sub projects_links {
 	  
 	     if (!$is_gs || $is_gs !~ /genomic selection/)
 	     {
-		 my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");		 
-		 
+		 my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");		 		 
 		 unless (-e $pheno_file)
 		 {
 		     $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
@@ -640,8 +639,6 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
     }
 
 } 
-
-
 
 
 sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
@@ -2207,6 +2204,89 @@ sub check_genotype_data_population :Path('/solgs/check/genotype/data/population/
        
     $c->res->content_type('application/json');
     $c->res->body($ret);    
+
+}
+
+
+sub check_phenotype_data_population :Path('/solgs/check/phenotype/data/population/') Args(1) {
+    my ($self, $c, $pop_id) = @_;
+
+    $c->stash->{pop_id} = $pop_id;
+    $self->check_population_has_phenotype($c);
+       
+    my $ret->{has_phenotype} = $c->stash->{population_has_phenotype};
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
+sub check_training_population :Path('/solgs/check/training/population/') Args(1) {
+    my ($self, $c, $pop_id) = @_;
+
+    $c->stash->{pop_id} = $pop_id;
+
+    $self->check_population_is_training_population($c);
+
+    my $ret->{is_training_population} = $c->stash->{is_training_population};    
+    $ret = to_json($ret);     
+   
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
+sub check_population_is_training_population {
+    my ($self, $c) = @_;
+
+    my $pr_id = $c->stash->{pop_id};
+    my $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
+
+    my $has_phenotype;
+    my $has_genotype;
+
+    if ($is_gs !~ /genomic selection|training population/) 
+    {
+	$self->check_population_has_phenotype($c);    
+	$has_phenotype = $c->stash->{population_has_phenotype};
+
+	if ($has_phenotype) 
+	{
+	    $self->check_population_has_genotype($c);   
+	    $has_genotype = $c->stash->{population_has_genotype};	
+	}
+    }
+
+    if ($is_gs || ($has_phenotype && $has_genotype))
+    {
+	$c->stash->{is_training_population} = 1;
+    }
+ 
+}
+
+
+sub check_population_has_phenotype {
+    my ($self, $c) = @_;
+
+    my $pr_id = $c->stash->{pop_id};
+    my $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
+    my $has_phenotype = 1 if $is_gs;
+
+    if ($is_gs !~ /genomic selection/)
+    {
+	my $cache_dir  = $c->stash->{solgs_cache_dir};
+	my $pheno_file = $self->grep_file($cache_dir, "phenotype_data_${pr_id}.txt");		 		 
+	
+	unless (-s $pheno_file)
+	{
+	    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+	}
+    }
+ 
+    $c->stash->{population_has_phenotype} = $has_phenotype;
 
 }
 
