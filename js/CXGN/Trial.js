@@ -604,30 +604,6 @@ function trial_detail_page_setup_dialogs() {
     });
 
 
-    jQuery('#new_folder_dialog_link').click( function() {
-	jQuery('#new_folder_dialog').dialog("open");
-	get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id', 'empty' : 1 });
-    });
-
-    jQuery('#new_folder_dialog').dialog( {
-	autoOpen: false,
-	title: 'Create new folder',
-	buttons: {
-	    cancel: { text: "Cancel",
-		      click: function() { jQuery( this ).dialog("close"); },
-		      id: "new_folder_dialog_cancel_button",
-		    },
-	    save:   { text: "Set",
-		      id: "new_folder_dialog_save_button",
-		      click: function() {
-			  new_trial_folder();
-			  jQuery( this ).dialog("close");
-		      }
-		    }
-	}
-
-    });
-
 }
 
 function display_trial_name(trial_id) {
@@ -951,36 +927,6 @@ function display_trial_type(type) {
 function trial_folder_dialog() {
     jQuery('#set_folder_dialog').dialog("open");
 
-}
-
-function new_folder_dialog() {
-    jQuery('#new_folder_dialog').dialog("open");
-}
-
-function new_trial_folder() {
-    var parent_id = jQuery('#new_folder_parent_folder_id').val();
-    var folder_name = jQuery('#new_folder_name').val();
-    var breeding_program_id = jQuery('#new_folder_breeding_program_id').val();
-
-    jQuery.ajax( {
-	'url': '/ajax/folder/new',
-	'data': { 'parent_folder_id' : parent_id,
-		  'folder_name' :  folder_name,
-		  'breeding_program_id' : breeding_program_id
-		},
-	'success': function(response) {
-	    if (response.error){
-		alert(response.error);
-	    }
-	    else {
-		alert("Successfully created new folder.");
-		jQuery(this).dialog("close");
-	    }
-	},
-	error: function(response) {
-	    alert('An error occurred');
-	}
-    });
 }
 
 

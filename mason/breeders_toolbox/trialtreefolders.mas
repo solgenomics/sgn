@@ -8,6 +8,7 @@ $breeding_programs
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
 <& /breeders_toolbox/folder/folder_set.mas &>
+<& /breeders_toolbox/folder/folder_new.mas &>
 
 <table class="table table-bordered">
   <thead>
@@ -26,7 +27,8 @@ $breeding_programs
       <h5><i>Double click<br />trial to view</i></h5>
       <hr>
       <h4>Folders</h4>
-      <button class="btn btn-primary" id="open_folder_dialog_link">Add trial to folder</button>
+      <button class="btn btn-sm btn-primary" id="new_folder_dialog_link">Create new folder</button>
+      <button class="btn btn-sm btn-primary" id="open_folder_dialog_link">Add trial to folder</button>
       <br/>
 
       <!--<button id="delete" disabled="disabled" >Delete</button -->

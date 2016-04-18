@@ -62,7 +62,7 @@ jQuery(document).ready(function() {
   jQuery('#open_folder_dialog_link').click( function() {
     jQuery('#set_folder_dialog').modal("show");
     if(jQuery("#html_select_folder_for_trial").length == 0) {
-      get_select_box('folders', 'trial_folder_select_div', { 'name' : 'html_select_folder_for_trial', 'id' : 'html_select_folder_for_trial' });
+      get_select_box('folders', 'trial_folder_select_div', { 'name' : 'html_select_folder_for_trial', 'id' : 'html_select_folder_for_trial', 'empty' : 1  });
     }
     if(jQuery("#html_select_trial_for_folder").length == 0) {
       get_select_box('trials', 'select_trial_for_folder', { 'name' : 'html_select_trial_for_folder', 'id' : 'html_select_trial_for_folder' });
