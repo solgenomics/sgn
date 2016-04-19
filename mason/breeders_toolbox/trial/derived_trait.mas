@@ -14,10 +14,10 @@ $trial_id
        
       <select class="form-control" id="sel1" onchange="trait_change(this.value)"> style="width: 160px;" > 
 	<option value=""disabled selected>select your option</option>
-	<option value="70700">Sprouting proportion</option>
-        <option value="76846">specific gravity</option>
-	<option value="76844">dry matter content(by S.gravity)</option>
-	<option value="70746">starch content</option>
+	<option value="Sprouting">Sprouting proportion</option>
+        <option value="Specific gravity">specific gravity</option>
+	<option value="Dry matter content by specific gravity method">dry matter content(by Specific gravity)</option>
+	<option value="Starch content">starch content</option>
         <!--<option value="70668">Harvest index</option>-->
         <!--<option value="70691">fresh root yield</option>-->
 	<!--<option value="70741">dry matter content</option> -->
@@ -40,7 +40,7 @@ $trial_id
 
 <div id="compute_derived_trait_dialog" title="Compute Derived Traits" style="display:none;">
   <div id="trait_list_dc" name="trait_list">
-    <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Compute trait using 'create' button 
+    <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Compute selected trait: 
     </label> 
     <div id="test_xyz"></div>
   </div>

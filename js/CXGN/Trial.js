@@ -247,7 +247,7 @@ function open_derived_trait_dialog() {
     jQuery('#working_modal').modal("show");
     jQuery('#compute_derived_trait_dialog').dialog("open"); 
     var trait = jQuery('#sel1').val();
-    //jQuery("#test_xyz").html(trait);
+    jQuery("#test_xyz").html(trait);
     jQuery('#working_modal').modal("hide");
     
 }

@@ -23,6 +23,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	my $trial_id = $c->req->param('trial_id');
     	my $selected_trait = $c->req->param('trait');
 	my %parse_result;
+	my $trait_found;
 
 	print "TRAIT NAME: $selected_trait\n";
 	print "TRIAl ID: $trial_id\n";
@@ -48,8 +49,15 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     
 	print STDERR Dumper($triat_name);
 
-	foreach my $trait_found (@{$triat_name}) {
-	    if  ($selected_trait && ($trait_found->[0] eq $selected_trait)) {
+
+	if (scalar(@{$triat_name}) == 0)  {
+		$c->stash->{rest} = {error => "No trait assayed for this trial." };
+		return;
+	   } 
+
+
+	foreach $trait_found (@{$triat_name}) {
+	    if  ($selected_trait && ($trait_found->[1] eq $selected_trait)) {
 		print "Triat found = $trait_found->[1] with id $trait_found->[0]\n";
 		$c->stash->{rest} = {error => "$trait_found->[1] has been computed and uploaded for this trial." };
 			return;	
@@ -65,14 +73,42 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	my @plots;
 	my %data;
 	my @traits;	
+	my @trait_cvterm_id;
+	my $trait = 0;
+	my $counter_trait = 0;
+	
 
-  if ($selected_trait == '76846') {
+  if ($selected_trait eq 'Specific gravity') {
+	
+      foreach $trait_found (@{$triat_name}) {
+	
+	if ($trait_found->[1] eq 'Root weight in air') {
+		$trait = 1;
+	}
+
+	if ($trait_found->[1] eq 'Root weight in water') {
+		$trait = 1;
+	}
+
+	if ($trait == 1){
+		$counter_trait++;
+		push @trait_cvterm_id, $trait_found->[0];
 		
+		if ( ($trait_found->[1] ne 'Root weight in air') || ($trait_found->[1] ne 'Root weight in water') ){ 
+			$trait = 0;
+		}
+	 }
+
+       }
+
+       if (scalar(@trait_cvterm_id) != 2) {
+		$c->stash->{rest} = {error => "Upload phenotypes for 'weight in air' and 'weight in water' to compute 'specific gravity'." };
+		return;
+	}
+      
 	my $computing_trait_name = 'specific gravity|CO:0000163';
-	#my @traits;
 	push @traits, $computing_trait_name;
-	print "FIRST_TRAIT: $traits[0]\n";
-	my $wtair = 76811;
+	my $wtair = $trait_cvterm_id[0];
 	my %hash_wtair;
 
 	my $h = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
@@ -89,19 +125,14 @@ stock_relationship_subjects.object_id WHERE ( ( observable.cvterm_id =? AND
 project.project_id=? ) );");
 		
 
-	$h->execute($wtair, $trial_id);
-	my @array_name;
-	
+	$h->execute($wtair, $trial_id);	
 	while (my ($stock_name, $stock_id, $plot_name, $value) = $h->fetchrow_array()) { 
-		#push @pheno_wtair, [$stock_name, $stock_id, $plot_name, $value];
-		#push @array_name, [$stock_name, $plot_name, $value];
 		$hash_wtair{$plot_name} = $value;
 	}
 	
 	print STDERR Dumper(\%hash_wtair);
 
-	my @plot_name_rename;
-	my $wtwater = 76824;
+	my $wtwater = $trait_cvterm_id[1];
 	my %hash_wtwater;
 
 	my $h1 = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
@@ -121,7 +152,7 @@ project.project_id=? ) );");
 	$h1->execute($wtwater, $trial_id);
 	while ( ($stock_name, $stock_id, $plot_name, $value) = $h1->fetchrow_array()) { 
 		$hash_wtwater{$plot_name} = $value;
-		push @plot_name_rename, $plot_name;
+		
 	}
 	
 	print STDERR Dumper(\%hash_wtwater);
@@ -136,15 +167,42 @@ project.project_id=? ) );");
 	}
 
 	print STDERR Dumper (\%data);
-	print STDERR Dumper (\@plots);
+	print STDERR Dumper (\@plots); 
+   }
 
-    }
 
-    elsif ($selected_trait == '70700') {
+   elsif ($selected_trait eq 'Sprouting') {
+
+      foreach $trait_found (@{$triat_name}) {
+	
+	if  ($trait_found->[1] eq 'Number of planted stakes') {
+		$trait = 1;
+	}
+	
+	if ($trait_found->[1] eq 'Sprout count at one-month') {
+		$trait = 1;
+	}
+
+       	if ($trait == 1){
+		$counter_trait++;
+		push @trait_cvterm_id, $trait_found->[0];
+		
+		if ( ($trait_found->[1] ne 'Number of planted stakes') || ($trait_found->[1] ne 'Sprout count at one-month') ){ 
+			$trait = 0;
+		}
+
+	 }
+
+     }
+
+	if (scalar(@trait_cvterm_id) != 2) {
+		$c->stash->{rest} = {error => "Upload phenotypes for 'stake planted' and 'sprout count' to compute 'sprouting proportion'." };
+		return;
+	}	
 
 	my $computing_trait_name = 'sprouting proportion|CO:0000008';
 	push @traits, $computing_trait_name;
-	my $stakes_planted = 76805;
+	my $stakes_planted = $trait_cvterm_id[0];
 	my %hash_stakes_planted;
 
 	my $h = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
@@ -167,8 +225,7 @@ project.project_id=? ) );");
 
 	print STDERR Dumper(\%hash_stakes_planted);
 
-	my @plot_name_rename;
-	my $sprout_count = 76894;
+	my $sprout_count = $trait_cvterm_id[1];
 	my %hash_sprout_count;
 
 	my $h1 = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
@@ -188,7 +245,6 @@ project.project_id=? ) );");
 	$h1->execute($sprout_count, $trial_id);
 	while ( ($stock_name, $stock_id, $plot_name, $value) = $h1->fetchrow_array()) { 
 		$hash_sprout_count{$plot_name} = $value;
-		push @plot_name_rename, $plot_name;
 	}
 	
 	print STDERR Dumper(\%hash_sprout_count);
@@ -203,13 +259,28 @@ project.project_id=? ) );");
 			
 	}
 
-   }
+  }
 	
-   elsif ($selected_trait == '76844') {
+  elsif ($selected_trait eq 'Dry matter content by specific gravity method') {
+
+     foreach $trait_found (@{$triat_name}) {
+
+	if ($trait_found->[1] eq 'Specific gravity') {
+		
+		push @trait_cvterm_id, $trait_found->[0];
+		print "cvterm_id 1: $trait_cvterm_id[0]\n";	
+	 }
+
+     }
+
+     if (scalar(@trait_cvterm_id) != 1) {
+		$c->stash->{rest} = {error => "Compute or upload 'specific gravity' before computing 'dry matter content'." };
+		return;
+	}	
 
 	my $computing_trait_name = 'dry matter content by specific gravity method|CO:0000160';
 	push @traits, $computing_trait_name;
-	my $specific_gravity = 76846;
+	my $specific_gravity = $trait_cvterm_id[0];
 	my %hash_specific_gravity;
 
 	my $h = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
@@ -243,17 +314,28 @@ project.project_id=? ) );");
 			
 	}
    
+     
 	print STDERR Dumper (\%data);
 	print STDERR Dumper (\@plots);
+  }   	
 
+   elsif ($selected_trait eq 'Starch content') {
 
-   }   	
+	foreach $trait_found (@{$triat_name}) {
 
-   elsif ($selected_trait == '70746') {
+		if ($trait_found->[1] eq 'Specific gravity') {
+			push @trait_cvterm_id, $trait_found->[0];
+		}
+	}
+
+	if (scalar(@trait_cvterm_id) != 1) {
+		$c->stash->{rest} = {error => "Compute or upload 'specific gravity' before computing 'starch content'." };
+		return;
+	}	
 
 	my $computing_trait_name = 'starch content percentage|CO:0000071';
 	push @traits, $computing_trait_name;
-	my $specific_gravity = 76846;
+	my $specific_gravity = $trait_cvterm_id[0];
 	my %hash_specific_gravity;
 
 	my $h = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
