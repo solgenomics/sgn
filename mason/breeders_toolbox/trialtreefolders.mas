@@ -79,7 +79,8 @@ $breeding_programs
 
 
   $('#trial_list').on("changed.jstree", function (e, data) {
-       if ($('#trial_list').jstree('is_leaf', data.node)) {
+    //console.log(data);
+       if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'trial') {
          $('#download_button').removeAttr('disabled');
          $('#download_button_csv').removeAttr('disabled');
        }
