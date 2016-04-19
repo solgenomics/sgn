@@ -6,6 +6,7 @@ function get_select_box(type, div_id, options) {
 	url: '/ajax/html/select/'+type,
 	data: options ,
 	success: function(response) {
+      jQuery('#'+div_id).empty();
 	    jQuery('#'+div_id).html(response.select);
 	},
 	error: function(response) {

@@ -24,12 +24,12 @@ $breeding_program_name => undef
               </div>
 	        </div>
           <div class="form-group">
-      	      <label class="col-sm-3 control-label">Parent Folder: </label>
+      	      <label class="col-sm-3 control-label">Breeding Program: </label>
       	      <div class="col-sm-9" >
-                <div id="new_folder_parent_folder_select_div">
-% if ($parent_folder_id) {
-	              <select class="form-control" id="new_folder_parent_folder_id" name="new_folder_parent_folder_id">
-                 <option value="<% $parent_folder_id %>"><% $parent_folder_name %></option>
+                <div id="new_folder_breeding_program_select_div">
+% if ($breeding_program_id) {
+	              <select class="form-control" id="new_folder_breeding_program_id" name="new_folder_breeding_program_id">
+                 <option value="<% $breeding_program_id %>"><% $breeding_program_name %></option>
                 </select>
 % } else {
   [Loading...]
@@ -38,12 +38,12 @@ $breeding_program_name => undef
               </div>
 	        </div>
           <div class="form-group">
-      	      <label class="col-sm-3 control-label">Breeding Program: </label>
+      	      <label class="col-sm-3 control-label">Parent Folder: </label>
       	      <div class="col-sm-9" >
-                <div id="new_folder_breeding_program_select_div">
-% if ($breeding_program_id) {
-	              <select class="form-control" id="new_folder_breeding_program_id" name="new_folder_breeding_program_id">
-                 <option value="<% $breeding_program_id %>"><% $breeding_program_name %></option>
+                <div id="new_folder_parent_folder_select_div">
+% if ($parent_folder_id) {
+	              <select class="form-control" id="new_folder_parent_folder_id" name="new_folder_parent_folder_id">
+                 <option value="<% $parent_folder_id %>"><% $parent_folder_name %></option>
                 </select>
 % } else {
   [Loading...]
@@ -63,17 +63,24 @@ $breeding_program_name => undef
 </div>
 
 
-<script defer="defer">
+<script>
 jQuery(document).ready(function() {
+
+  if(jQuery("#new_folder_breeding_program_id").length == 0) {
+    get_select_box('breeding_programs', 'new_folder_breeding_program_select_div', { 'name' : 'new_folder_breeding_program_id', 'id' : 'new_folder_breeding_program_id' });
+  }
 
   jQuery('#new_folder_dialog_link').click( function() {
     jQuery('#new_folder_dialog').modal("show");
+    
     if(jQuery("#new_folder_parent_folder_id").length == 0) {
-      get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id', 'id' : 'new_folder_parent_folder_id', 'empty' : 1  });
+      get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id', 'id' : 'new_folder_parent_folder_id', 'breeding_program_id' : jQuery('#new_folder_breeding_program_id').val(), 'empty' : 1  });
     }
-    if(jQuery("#new_folder_breeding_program_id").length == 0) {
-      get_select_box('breeding_programs', 'new_folder_breeding_program_select_div', { 'name' : 'new_folder_breeding_program_id', 'id' : 'new_folder_breeding_program_id' });
-    }
+    
+  });
+
+  jQuery("#new_folder_breeding_program_select_div").on('change', "#new_folder_breeding_program_id", function() {
+    get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id', 'id' : 'new_folder_parent_folder_id', 'breeding_program_id' : jQuery("#new_folder_breeding_program_id").val(), 'empty' : 1  });
   });
 
   jQuery('#new_folder_submit').click( function() {

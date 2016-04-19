@@ -159,23 +159,22 @@ sub create {
 sub list {
     my $class = shift;
     my $args = shift;
+		my $schema = $args->{bcs_schema};
 
-    my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema},'trial_folder', 'project_property')->cvterm_id();
+    my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'trial_folder', 'project_property')->cvterm_id();
+		my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
+		
+		my $breeding_program_rel;
+		if ($args->{breeding_program_id}) {
+			$breeding_program_rel = $schema->resultset('Project::ProjectRelationship')->search({ 'me.object_project_id' => $args->{breeding_program_id}, 'me.type_id' => $breeding_program_trial_relationship_id })->search_related("subject_project")->search_related("projectprops", {'projectprops.type_id'=>$folder_cvterm_id}, {'+select'=>'subject_project.name', '+as'=>'name' } );
+		} else {
+			$breeding_program_rel = $schema->resultset('Project::ProjectRelationship')->search({ 'me.type_id' => $breeding_program_trial_relationship_id })->search_related("subject_project")->search_related("projectprops", {'projectprops.type_id'=>$folder_cvterm_id}, {'+select'=>'subject_project.name', '+as'=>'name' } );
+		}
 
-    my $breeding_program_cvterm_id = $args->{bcs_schema}->resultset("Cv::Cvterm")->find( { name => 'breeding_program' })->cvterm_id();
-
-
-    my $search_params = { type_id => { -in => $folder_cvterm_id }};
-
-    if ($args->{breeding_program_id}) {
-	push @{$search_params->{type_id}->{'-in'}}, $breeding_program_cvterm_id;
-    }
-
-    my $rs = $args->{bcs_schema}->resultset("Project::Projectprop")->search($search_params)->search_related("project");
 
     my @folders;
-    while (my $row = $rs->next()) {
-	push @folders, [ $row->project_id(), $row->get_column('name') ];
+    while (my $row = $breeding_program_rel->next()) {
+			push @folders, [ $row->project_id(), $row->get_column('name') ];
     }
 
     return @folders;
