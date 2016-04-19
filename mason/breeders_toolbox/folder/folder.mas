@@ -37,7 +37,7 @@ foreach (@$children) {
 
 <& /page/page_title.mas, title=>"Folder detail for ".$folder_name &>
 
-<& /breeders_toolbox/folder/folder_set.mas, folder_id=>$folder_id, folder_name=>$folder_name &>
+<& /breeders_toolbox/folder/folder_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name() &>
 
 <div>
 

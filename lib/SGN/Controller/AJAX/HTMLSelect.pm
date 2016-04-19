@@ -129,8 +129,14 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
 
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
 
-    my $projects = $p->get_breeding_programs();
-
+    my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $projects;
+    if (!$breeding_program_id) {
+      $projects = $p->get_breeding_programs();
+    } else {
+      push @$projects, [$breeding_program_id];
+    }
+    
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
     my @trials;

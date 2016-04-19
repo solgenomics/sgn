@@ -28,9 +28,8 @@ $breeding_program_name => undef
       	      <div class="col-sm-9" >
                 <div id="new_folder_breeding_program_select_div">
 % if ($breeding_program_id) {
-	              <select class="form-control" id="new_folder_breeding_program_id" name="new_folder_breeding_program_id">
-                 <option value="<% $breeding_program_id %>"><% $breeding_program_name %></option>
-                </select>
+                <input type="text" class="form-control" value="<% $breeding_program_name %>" disabled/>
+                <input type="hidden" id="new_folder_breeding_program_id" name="new_folder_breeding_program_id" value="<% $breeding_program_id %>" />
 % } else {
   [Loading...]
 % }
@@ -42,9 +41,8 @@ $breeding_program_name => undef
       	      <div class="col-sm-9" >
                 <div id="new_folder_parent_folder_select_div">
 % if ($parent_folder_id) {
-	              <select class="form-control" id="new_folder_parent_folder_id" name="new_folder_parent_folder_id">
-                 <option value="<% $parent_folder_id %>"><% $parent_folder_name %></option>
-                </select>
+                  <input type="text" class="form-control" value="<% $parent_folder_name %>" disabled/>
+                  <input type="hidden" id="new_folder_parent_folder_id" name="new_folder_parent_folder_id" value="<% $parent_folder_id %>" />
 % } else {
   [Loading...]
 % }
