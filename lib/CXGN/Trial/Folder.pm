@@ -279,6 +279,7 @@ sub associate_parent {
 	});
 
     $project_rel_row->insert();
+    $self->project_parent($parent_row);
 }
 
 sub associate_child {
