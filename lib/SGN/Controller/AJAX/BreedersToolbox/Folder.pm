@@ -50,27 +50,6 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     $c->stash->{rest} = { success => 1 };
 }
 
-sub associate_child_folder :Chained('get_folder') PathPart('associate/child') Args(1) {
-    my $self = shift;
-    my $c = shift;
-
-    my $child_id = shift;
-
-    if (! $self->check_privileges($c)) {
-	return;
-    }
-
-    my $folder = CXGN::Trial::Folder->new(
-	{
-	    bcs_schema => $c->stash->{schema},
-	    folder_id => $c->stash->{folder_id}
-	});
-
-    $folder->associate_child($child_id);
-
-    $c->stash->{rest} = { success => 1 };
-}
-
 sub associate_parent_folder : Chained('get_folder') PathPart('associate/parent') Args(1) { 
     my $self = shift;
     my $c = shift;

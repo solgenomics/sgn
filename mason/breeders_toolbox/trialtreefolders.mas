@@ -28,7 +28,7 @@ $breeding_programs
       <hr>
       <h4>Folders</h4>
       <button class="btn btn-sm btn-primary" id="new_folder_dialog_link">Create new folder</button>
-      <button class="btn btn-sm btn-primary" id="open_folder_dialog_link">Add trial to folder</button>
+      <button class="btn btn-sm btn-primary" id="open_folder_dialog_link">Move trial to folder</button>
       <br/>
 
       <!--<button id="delete" disabled="disabled" >Delete</button -->

@@ -11,17 +11,9 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 		      required => 1,
     );
 
-has 'project' => ( isa => 'Bio::Chado::Schema::Result::Project::Project',
-		   is => 'rw',
-    );
-
 has 'folder_id' => (isa => "Int",
 		    is => 'rw',
     );
-
-#has 'parent_folder_id' => (isa => 'Int',
-#			   is => 'rw',
-#    );
 
 has 'children' => (is => 'rw',
 		   lazy => 1,
@@ -280,22 +272,6 @@ sub associate_parent {
 
     $project_rel_row->insert();
     $self->project_parent($parent_row);
-}
-
-sub associate_child {
-    my $self = shift;
-    my $child_id = shift;
-
-    # to do: check if child is of type "folder" or "trial"; otherwise refuse to associate
-
-    my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create(
-	{
-	    subject_project_id => $child_id,
-	    object_project_id => $self->project()->project_id(),
-	    type_id => $self->folder_cvterm_id(),
-	});
-
-    $project_rel_row->insert();
 }
 
 sub associate_breeding_program {
