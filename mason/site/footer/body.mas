@@ -61,10 +61,10 @@
 
       	    <div class="col-sm-9 col-md-9 col-lg-9">
 
-	      <div class="panel panel-success" style="margin-bottom:11px; padding-bottom:5px;">
+	      <div class="panel panel-success" style="margin-bottom:11px; padding-bottom:5px; overflow:scroll;">
 	        <div class="panel-heading"></div>
 
-		  <table class="center table hidden-xs" style="margin-bottom:-4px">
+		  <table class="center table hidden-xs" style="margin-bottom:-4px;">
 	    	  <tbody>
             	    <tr>
               	      <td>

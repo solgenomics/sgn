@@ -1,0 +1,131 @@
+
+<%args>
+$file_content => undef
+$filename => undef
+</%args>
+
+<%perl>
+
+sub n2a {
+  my ($n) = @_;
+  my @a;
+  while ($n > 0) {
+    unshift @a, ($n-1) % 26;
+    $n = int(($n-1)/26); #Edited for failing corner case
+  }
+  join '', map chr(ord('A') + $_), @a;
+}
+
+</%perl>
+
+<center>
+<br/>
+<h1>File Viewer</h1>
+<br/>
+</center>
+
+<div class="panel panel-info">
+	<div class="panel-heading">
+		<h3>File Info</h3>
+	</div>
+	<div class="panel-body">
+		<table class="table">
+		<thead>
+		<tr>
+		<th>Filename</th>
+		<th>File Type</th>
+		<th>Number of Sheets</th>
+		<th>Parser</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr>
+		<td><% $filename %></td>
+		<td><% @$file_content[0]->[0]->{type} %></td>
+		<td><% @$file_content[0]->[0]->{sheets} %></td>
+		<td><% @$file_content[0]->[0]->{parser} %> (<% @$file_content[0]->[0]->{version} %>)</td>
+		</tr>
+		</tbody>
+		</table>
+	</div>
+</div>
+
+% my $num_sheets = @$file_content[0]->[0]->{sheets};
+
+<div class="panel panel-info">
+	<div class="panel-heading">
+		<h3>File Contents</h3>
+	</div>
+	<div class="panel-body">
+
+	<ul class="nav nav-tabs" role="tablist">
+
+% for ( my $s=1; $s<=$num_sheets; $s++) {
+	
+% my $sheet_label = @$file_content[0]->[$s]->{label};
+% $sheet_label =~ s/\s+//g;
+
+% if ($s ==1 ){
+		<li role="presentation" class="active"><a href="#<% $sheet_label %>" aria-controls="<% $sheet_label %>" role="tab" data-toggle="tab"><% $sheet_label %></a></li>
+% } else {
+		<li role="presentation"><a href="#<% $sheet_label %>" aria-controls="<% $sheet_label %>" role="tab" data-toggle="tab"><% $sheet_label %></a></li>
+% }
+
+% }
+
+	</ul>
+
+	<div class="tab-content">
+
+% for (my $i=1; $i<=$num_sheets; $i++) {
+
+% my $max_row = @$file_content[0]->[$i]->{maxrow};
+% my $max_col = @$file_content[0]->[$i]->{maxcol};
+
+% my $sheet_label = @$file_content[0]->[$i]->{label};
+% $sheet_label =~ s/\s+//g;
+
+% if ($i == 1) {
+		<div role="tabpanel" class="tab-pane fade in active" id="<% $sheet_label %>">
+% } else {
+		<div role="tabpanel" class="tab-pane fade" id="<% $sheet_label %>">
+% }
+
+			<table class="table table-hover table-bordered">
+				<thead>
+				<tr>
+
+% my $max_aa = n2a(@$file_content[0]->[$i]->{maxcol});
+% foreach ('A'..$max_aa) {
+				<th><% @$file_content[0]->[$i]->{$_.'1'} %></th>
+% }
+				</tr>
+				</thead>
+				<tbody>
+
+% for (my $j=2; $j<=$max_row; $j++) {
+
+				<tr>
+
+% foreach ('A'..$max_aa) {
+	
+				<td><% @$file_content[0]->[$i]->{$_.$j} %></td>
+
+% }
+				</tr>
+
+% }
+
+				</tbody>
+			</table>
+		</div>
+% }
+
+	</div>
+
+</div>
+</div>
+
+
+
+

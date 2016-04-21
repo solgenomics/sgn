@@ -85,6 +85,7 @@ sub parse {
   my $file = shift;
   my $bdb = shift;
   
+  my $jbrowse_path = $c->config->{jbrowse_path};;
   my $db_id = $bdb->blast_db_id();
   my $jbr_src = $bdb->jbrowse_src();
   
@@ -138,7 +139,7 @@ sub parse {
       $append_desc = 1;
       
       if ($subject) {
-        my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send);
+        my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
         ($sstart,$send) = _check_coordinates($sstart,$send);
         
         push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
@@ -163,7 +164,7 @@ sub parse {
 
 
     if ($line =~ /Score\s*=/ && $one_hsp == 1) {
-      my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send);
+      my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
       ($sstart,$send) = _check_coordinates($sstart,$send);
       
       push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
@@ -218,7 +219,7 @@ sub parse {
   } # while_end
   
   
-  my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send);
+  my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
   ($sstart,$send) = _check_coordinates($sstart,$send);
   
   push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
@@ -238,18 +239,20 @@ sub _build_jbrowse_url {
   my $subject = shift;
   my $sstart = shift;
   my $send = shift;
+  my $jbrowse_path = shift;
   
-  my $jbrowse_url;
+  my $jbrowse_url = "";
   
-  $subject =~ s/\.\d$//;
-  $subject =~ s/\.\d$//;
+  # $subject =~ s/\.\d$//;
+  # $subject =~ s/\.\d$//;
   
-  if ($jbr_src =~ /(.+)_gene/) {
-    $jbrowse_url = "/jbrowse/current/?data=data/json/".$1."&loc=".$subject."&tracks=DNA,gene_models";
-  } elsif ($jbr_src =~ /(.+)_genome/) {
-    $jbrowse_url = "/jbrowse/current/?data=data/json/".$1."&loc=".$subject."%3A".$sstart."..".$send."&tracks=DNA,gene_models";
-  } else {
-    $jbrowse_url;
+  if ($jbr_src) {
+    if ($jbr_src =~ /(.+)_gene/) {
+      $jbrowse_url = $jbrowse_path."/".$1."&loc=".$subject."&tracks=DNA,gene_models";
+    } 
+    elsif ($jbr_src =~ /(.+)_genome/) {
+      $jbrowse_url = $jbrowse_path."/".$1."&loc=".$subject."%3A".$sstart."..".$send."&tracks=DNA,gene_models";
+    }
   }
   
   return $jbrowse_url;

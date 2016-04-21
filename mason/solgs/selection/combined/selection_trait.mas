@@ -2,7 +2,7 @@
 
 =head1 NAME 
 
-/solgs/population/selection_trait.mas - displays trait GEBV prediction output for selection population using single trial model.
+/solgs/selection/combined/selection_trait.mas - displays trait GEBV prediction output for selection population using combined trials model.
 
 =AUTHOR
 
@@ -15,7 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$pop_id
+$combo_pops_id
 $trait_abbr
 $trait_name
 $project_name
@@ -35,7 +35,7 @@ $combined_populations => ''
 
 <%perl>
 
-$project_name = "<a href=\"/solgs/trait/$trait_id/population/$pop_id\">$project_name</a>";
+$project_name = "<a href=\"/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id\">$project_name</a>";
 
 </%perl>
 
@@ -59,8 +59,8 @@ $project_name = "<a href=\"/solgs/trait/$trait_id/population/$pop_id\">$project_
   title       => "Training population summary",
   &>
 
- <& summary.mas,
-    project_id   => $pop_id,
+ <& /solgs/population/combined/summary.mas,
+    project_id   => $combo_pops_id,
     project_name => $project_name,
     project_desc => $project_desc,
     stocks_no    => $stocks_no,
@@ -78,10 +78,12 @@ $project_name = "<a href=\"/solgs/trait/$trait_id/population/$pop_id\">$project_
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
-   pop_id             => $pop_id,
+   pop_id             => $combo_pops_id,
    trait_id           => $trait_id
 &>
 
- <input type="hidden"  id="model_id" value="<% $pop_id %>" /> 
+ <input type="hidden"  id="model_id" value="<% $combo_pops_id %>" /> 
+ <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" /> 
  <input type="hidden"  id="trait_id" value="<% $trait_id %>" />
  <input type="hidden"  id="selection_pop_id" value="<% $prediction_pop_id %>" />
+ <input type="hidden"  id="prediction_pop_id" value="<% $prediction_pop_id %>" />
