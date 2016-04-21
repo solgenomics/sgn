@@ -20,7 +20,7 @@ $breeding_program_name => undef
 	        <div class="form-group">
       	      <label class="col-sm-3 control-label">Folder Name: </label>
       	      <div class="col-sm-9" >
-                <input name="new_folder_name" id="new_folder_name" class="form-control" type="text" />
+                <input name="new_folder_name" id="new_folder_name" class="form-control" type="text" autofocus/>
               </div>
 	        </div>
           <div class="form-group">
@@ -83,7 +83,6 @@ jQuery(document).ready(function() {
 
   jQuery('#new_folder_submit').click( function() {
     new_trial_folder();
-    jQuery('#new_folder_dialog').modal("hide");
   });
 
 });
@@ -103,13 +102,16 @@ function new_trial_folder() {
     'success': function(response) {
       if (response.error){
         alert(response.error);
+        jQuery('#new_folder_dialog').modal("hide");
       } else {
         alert("Successfully created new folder.");
+        jQuery('#new_folder_dialog').modal("hide");
         location.reload();
       }
     },
     error: function(response) {
       alert('An error occurred');
+      jQuery('#new_folder_dialog').modal("hide");
     }
   });
 }

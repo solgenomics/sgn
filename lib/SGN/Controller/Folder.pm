@@ -23,7 +23,7 @@ sub folder_page :Path("/folder") Args(1) {
     my $c = shift;
     my $folder_id = shift;
 
-    print STDERR $folder_id;
+    #print STDERR Dumper $folder_id;
 
     my $folder_project = $self->schema->resultset("Project::Project")->find( { project_id => $folder_id } );
     my $folder = CXGN::Trial::Folder->new({ bcs_schema => $self->schema, folder_id => $folder_id });

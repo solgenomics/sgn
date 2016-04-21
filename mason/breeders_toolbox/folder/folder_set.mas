@@ -115,6 +115,10 @@ function breeding_program_change_trials() {
 function set_trial_folder() {
   var trial_id = jQuery('#html_select_trial_for_folder').val();
   var folder_id = jQuery('#html_select_folder_for_trial').val();
+  if (trial_id == folder_id) {
+    alert("Cannot make a folder its own parent.");
+    return;
+  }
   jQuery.ajax( {
     url: '/ajax/folder/'+trial_id+'/associate/parent/'+folder_id,
     success: function(response) {

@@ -9,6 +9,7 @@ $breeding_programs
 
 <& /breeders_toolbox/folder/folder_set.mas &>
 <& /breeders_toolbox/folder/folder_new.mas &>
+<& /breeders_toolbox/folder/folder_move.mas &>
 
 <table class="table table-bordered">
   <thead>
@@ -29,7 +30,7 @@ $breeding_programs
       <h4>Folders</h4>
       <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
       <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial to folder</button><br/><br/>
-      <button class="btn btn-sm btn-default" id="open_move_folder_dialog_link">Move folder</button>
+      <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
       <br/>
 
       <!--<button id="delete" disabled="disabled" >Delete</button -->
@@ -112,14 +113,16 @@ $breeding_programs
 
     });
 
-    $("#trial_list").delegate("li", "dblclick", function(){
+    $("#trial_list").delegate("li", "dblclick", function(event){
       var node = $("#trial_list").jstree("get_node", this);
       //console.log(node);
       if (node.id.substr(0,1) !== 'j') {
         if (node.type == 'folder') {
-          window.open('/folder/'+node.id);
+            window.open('/folder/'+node.id);
+            event.stopPropagation();
         } else if (node.type == 'trial') {
-          window.open('/breeders_toolbox/trial/'+node.id);
+            window.open('/breeders_toolbox/trial/'+node.id);
+            event.stopPropagation();
         }
       }
     });

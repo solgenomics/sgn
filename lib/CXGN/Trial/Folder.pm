@@ -5,6 +5,7 @@ use CXGN::Chado::Cvterm;
 
 use Moose;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 		      is => 'rw',
@@ -215,63 +216,90 @@ sub _get_children {
 
 sub associate_parent {
     my $self = shift;
-    my $parent_id = shift;
-
+		my $parent_id = shift;
+		
 		my $folder_cvterm_id = $self->folder_cvterm_id();
-
-	#If the user selects 'None' to remove the trial from the folder, then the parent_id will be passed as 0.
-	if ($parent_id == 0) {
-		my $project_rels = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search(
-		{ subject_project_id => $self->folder_id(),
-		type_id => $folder_cvterm_id
-		});
-
-		if ($project_rels->count() > 0) {
-			while (my $p = $project_rels->next()) {
-			print STDERR "Removing parent folder association...\n";
-			$p->delete();
-			}
+		my $breeding_program_trial_relationship_id = $self->breeding_program_trial_relationship_id();
+		
+		#If the user selects 'None' to remove the trial from the folder, then the parent_id will be passed as 0. No new parent will be created.
+		if ($parent_id == 0) {
+			$self->remove_parents;
+			return;
 		}
-		return;
-	}
 
-    my $breeding_program_trial_relationship_id = $self->breeding_program_trial_relationship_id();
+		my $parent_row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $parent_id } );
 
-    my $parent_row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $parent_id } );
+		if (!$parent_row) {
+			print STDERR "The folder specified as parent does not exist";
+			return;
+		}
 
-    if (!$parent_row) {
-	print STDERR "The folder specified as parent does not exist";
-	return;
-    }
+		my $parentprop_row = $self->bcs_schema()->resultset("Project::Projectprop")->find( { project_id => $parent_id,  type_id => { -in => [ $folder_cvterm_id, $breeding_program_trial_relationship_id ] } } );
 
-    my $parentprop_row = $self->bcs_schema()->resultset("Project::Projectprop")->find( { project_id => $parent_id,  type_id => { -in => [ $folder_cvterm_id, $breeding_program_trial_relationship_id ] } } );
+		if (!$parentprop_row) {
+			print STDERR "The specified parent folder is not of type folder or breeding program. Ignoring.";
+			return;
+		}
+		
+		$self->remove_parents;
 
-    if (!$parentprop_row) {
-	print STDERR "The specified parent folder is not of type folder or breeding program. Ignoring.";
-	return;
-    }
-
-    my $project_rels = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search(
-	{ subject_project_id => $self->folder_id(),
-	  type_id => $folder_cvterm_id
-	});
-
-    if ($project_rels->count() > 0) {
-	while (my $p = $project_rels->next()) {
-	    print STDERR "Removing parent folder association...\n";
-	    $p->delete();
-	}
-    }
-
-    my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create(
-	{
+		my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create({
 	    object_project_id => $parent_id,
 	    subject_project_id => $self->folder_id(),
 	    type_id => $folder_cvterm_id,
+		});
+		$project_rel_row->insert();
+
+    $self->project_parent($parent_row);
+		
+		my $parent_is_child = check_if_folder_is_child_in_tree($self->bcs_schema, $parent_id, $self->children());
+		if ($parent_is_child) {
+			print STDERR 'Parent '.$parent_id.' is child in tree of folder '.$self->folder_id()."\n";
+			my $parent_folder = CXGN::Trial::Folder->new({
+				bcs_schema => $self->bcs_schema,
+				folder_id => $parent_id
+			});
+			$parent_folder->remove_parents;			
+		}
+		
+}
+
+sub remove_parents {
+	my $self = shift;
+	#Remove any previous parents
+	my $project_rels = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search({
+		subject_project_id => $self->folder_id(),
+		type_id => $self->folder_cvterm_id()
 	});
 
-    $project_rel_row->insert();
-    $self->project_parent($parent_row);
+	if ($project_rels->count() > 0) {
+		while (my $p = $project_rels->next()) {
+			print STDERR $p->subject_project_id." : ".$p->object_project_id." : Removing parent folder association...\n";
+			$p->delete();
+		}
+	}
+	return;
+}
+
+sub check_if_folder_is_child_in_tree {
+	my $schema = shift;
+	my $folder_id = shift;
+	my $children = shift;
+	foreach (@$children) {
+		my $child_folder_id = $_->folder_id();
+		if ($child_folder_id == $folder_id) {
+			return 1;
+		} else{
+			#print STDERR $child_folder_id."\n";
+			my $child_folder = CXGN::Trial::Folder->new({
+				bcs_schema => $schema,
+				folder_id => $child_folder_id
+			});
+			return check_if_folder_is_child_in_tree($schema, $folder_id, $child_folder->children() );
+		}
+	}
+	
+	return;
 }
 
 sub associate_breeding_program {
