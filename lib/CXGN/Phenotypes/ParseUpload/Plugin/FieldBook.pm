@@ -110,8 +110,8 @@ sub parse {
 	my $value = $row[$header_column_info{'value'}];
 	$value =~ s/\"//g;
 #substr($row[$header_column_info{'value'}],1,-1);
-  my $timestamp = $row[$header_column_info{'value'}];
-  $timestamp =~ s/\"//g;
+    my $timestamp = $row[$header_column_info{'timestamp'}];
+    $timestamp =~ s/\"//g;
 	if (!defined($plot_id) || !defined($trait) || !defined($value)) {
 	    $parse_result{'error'} = "error getting value from file";
 	    print STDERR "value: $value\n";

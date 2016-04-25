@@ -119,9 +119,11 @@ sub verify {
             } else {
                 $error_message = $error_message."<small>No trait value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
             }
-            
+
             if ($timestamp) {
-                
+                if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+                    $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
+                } 
             } else {
                 $error_message = $error_message."<small>No timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
             }
