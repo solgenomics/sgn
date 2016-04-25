@@ -169,19 +169,19 @@ sleep(1);
 
 $d->find_element_ok("view_list_janedoe_1_public", "id", "view new public list")->click();
 
-sleep(1);
+#sleep(100);
 
-my $list_id = 16;
-my $q = "SELECT list_item_id from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
-my $h = $c->dbh->prepare($q);
-$h->execute($list_id);
-my @list = ();
-while (my ($content) = $h->fetchrow_array()) { 
-      push @list, $content;
-}
+#my $list_id = 16;
+#my $q = "SELECT list_item_id from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
+#my $h = $c->dbh->prepare($q);
+#$h->execute($list_id);
+#my @list = ();
+#while (my ($content) = $h->fetchrow_array()) { 
+#      push @list, $content;
+#}
 
-$d->find_element_ok($list[0], "id", "delete item from list")->click();
-$d->find_element_ok($list[1], "id", "delete item from list")->click();
+#$d->find_element_ok($list[0], "id", "delete item from list")->click();
+#$d->find_element_ok($list[1], "id", "delete item from list")->click();
 
 sleep(1);
 
