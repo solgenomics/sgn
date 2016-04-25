@@ -53,12 +53,12 @@ sub verify {
     my $warning_message;
 
     if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
-	print STDERR "Plots or traits not valid\n";
-	print STDERR "Invalid plots: ".join(", ", map { "'$_'" } @plots_missing)."\n" if (@plots_missing);
-	print STDERR "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" if (@traits_missing);
-	$error_message = "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
-	$error_message = "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
-	return ($warning_message, $error_message);
+        print STDERR "Plots or traits not valid\n";
+        print STDERR "Invalid plots: ".join(", ", map { "'$_'" } @plots_missing)."\n" if (@plots_missing);
+        print STDERR "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" if (@traits_missing);
+        $error_message = "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
+        $error_message = "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
+        return ($warning_message, $error_message);
     }
 
     my %check_unique_db;
@@ -66,9 +66,9 @@ sub verify {
     my $sth = $c->dbc->dbh->prepare($sql);
     $sth->execute();
 
-     while (my ($db_value, $db_cvalue_id, $db_uniquename) = $sth->fetchrow_array) {
-	my ($stock_string, $rest_of_name) = split( /,/, $db_uniquename);
-	$check_unique_db{$db_value, $db_cvalue_id, $stock_string} = 1;
+    while (my ($db_value, $db_cvalue_id, $db_uniquename) = $sth->fetchrow_array) {
+        my ($stock_string, $rest_of_name) = split( /,/, $db_uniquename);
+        $check_unique_db{$db_value, $db_cvalue_id, $stock_string} = 1;
     }
 
     my %check_trait_category;
@@ -76,7 +76,7 @@ sub verify {
     $sth = $c->dbc->dbh->prepare($sql);
     $sth->execute();
     while (my ($category_value, $cvterm_id) = $sth->fetchrow_array) {
-    	$check_trait_category{$cvterm_id} = $category_value;    	
+        $check_trait_category{$cvterm_id} = $category_value;
     }
 
     my %check_trait_format;
@@ -84,57 +84,64 @@ sub verify {
     $sth = $c->dbc->dbh->prepare($sql);
     $sth->execute();
     while (my ($format_value, $cvterm_id) = $sth->fetchrow_array) {
-    	$check_trait_format{$cvterm_id} = $format_value;    	
+        $check_trait_format{$cvterm_id} = $format_value;
     }
 
     foreach my $plot_name (@plot_list) {
-	foreach my $trait_name (@trait_list) {
-	    my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
+        foreach my $trait_name (@trait_list) {
+            my ($trait_value, $timestamp) = $plot_trait_value{$plot_name}->{$trait_name};
 
-	    if ($trait_value) {
-		my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
-		my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
+            if ($trait_value) {
+                my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
+                my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
-		#check that trait value is valid for trait name
-		if (exists($check_trait_format{$trait_cvterm_id})) {
-			if ($check_trait_format{$trait_cvterm_id} eq 'numeric') {
-				my $trait_format_checked = looks_like_number($trait_value);
-				if (!$trait_format_checked) {
-					$error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
-				}
-			}
-		}
-		if (exists($check_trait_category{$trait_cvterm_id})) {
-			my @trait_categories = split /\//, $check_trait_category{$trait_cvterm_id};
-			my %trait_categories_hash = map { $_ => 1 } @trait_categories;
-			if (!exists($trait_categories_hash{$trait_value})) {
-				$error_message = $error_message."<small>This trait value should be one of ".$check_trait_category{$trait_cvterm_id}.": <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
-			}
-		}
-	
-		#check if the plot_name, trait_name, trait_value combination already exists in database.
-		if (exists($check_unique_db{$trait_value, $trait_cvterm_id, "Stock: ".$stock_id})) {
-		    $warning_message = $warning_message."<small>This combination exists in database: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
-		}
-	    }
-	}
+                #check that trait value is valid for trait name
+                if (exists($check_trait_format{$trait_cvterm_id})) {
+                    if ($check_trait_format{$trait_cvterm_id} eq 'numeric') {
+                        my $trait_format_checked = looks_like_number($trait_value);
+                        if (!$trait_format_checked) {
+                            $error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                        }
+                    }
+                }
+                if (exists($check_trait_category{$trait_cvterm_id})) {
+                    my @trait_categories = split /\//, $check_trait_category{$trait_cvterm_id};
+                    my %trait_categories_hash = map { $_ => 1 } @trait_categories;
+                    if (!exists($trait_categories_hash{$trait_value})) {
+                        $error_message = $error_message."<small>This trait value should be one of ".$check_trait_category{$trait_cvterm_id}.": <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                    }
+                }
+
+                #check if the plot_name, trait_name, trait_value combination already exists in database.
+                if (exists($check_unique_db{$trait_value, $trait_cvterm_id, "Stock: ".$stock_id})) {
+                    $warning_message = $warning_message."<small>This combination exists in database: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                }
+            } else {
+                $error_message = $error_message."<small>No trait value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
+            }
+            
+            if ($timestamp) {
+                
+            } else {
+                $error_message = $error_message."<small>No timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
+            }
+        }
     }
-
 
     ## Verify metadata
     if ($phenotype_metadata{'archived_file'} && (!$phenotype_metadata{'archived_file_type'} || $phenotype_metadata{'archived_file_type'} eq "")) {
-	$error_message = "No file type provided for archived file.";
-	return ($warning_message, $error_message);
+        $error_message = "No file type provided for archived file.";
+        return ($warning_message, $error_message);
     }
     if (!$phenotype_metadata{'operator'} || $phenotype_metadata{'operator'} eq "") {
-	$error_message = "No operaror provided in file upload metadata.";
-	return ($warning_message, $error_message);
+        $error_message = "No operaror provided in file upload metadata.";
+        return ($warning_message, $error_message);
     }
     if (!$phenotype_metadata{'date'} || $phenotype_metadata{'date'} eq "") {
-	$error_message = "No date provided in file upload metadata.";
-	return ($warning_message, $error_message);
+        $error_message = "No date provided in file upload metadata.";
+        return ($warning_message, $error_message);
     }
-    
+
     return ($warning_message, $error_message);
 }
 

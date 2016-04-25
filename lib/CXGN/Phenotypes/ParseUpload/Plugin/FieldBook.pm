@@ -87,6 +87,9 @@ sub parse {
 	if ($header_cell eq "value") {
 	    $header_column_info{'value'} = $header_column_number;
 	}
+  if ($header_cell eq "timestamp") {
+	    $header_column_info{'timestamp'} = $header_column_number;
+	}
 	$header_column_number++;
     }
     if (!defined($header_column_info{'plot_id'}) || !defined($header_column_info{'trait'}) || !defined($header_column_info{'value'})) {
@@ -98,7 +101,7 @@ sub parse {
     foreach my $line (sort @file_lines) {
 	chomp($line);
      	my @row =  split($delimiter, $line);
-	my $plot_id = $row[$header_column_info{plot_id}];
+	my $plot_id = $row[$header_column_info{'plot_id'}];
 	$plot_id =~ s/\"//g;
 #substr($row[$header_column_info{'plot_id'}],1,-1);
 	my $trait = $row[$header_column_info{'trait'}];
@@ -107,6 +110,8 @@ sub parse {
 	my $value = $row[$header_column_info{'value'}];
 	$value =~ s/\"//g;
 #substr($row[$header_column_info{'value'}],1,-1);
+  my $timestamp = $row[$header_column_info{'value'}];
+  $timestamp =~ s/\"//g;
 	if (!defined($plot_id) || !defined($trait) || !defined($value)) {
 	    $parse_result{'error'} = "error getting value from file";
 	    print STDERR "value: $value\n";
@@ -115,7 +120,7 @@ sub parse {
 	$plots_seen{$plot_id} = 1;
 	$traits_seen{$trait} = 1;
 	if ($value || $value eq '0') {
-	    $data{$plot_id}->{$trait} = $value;
+	    $data{$plot_id}->{$trait} = [$value, $timestamp];
 	}
     }
 
