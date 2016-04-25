@@ -94,6 +94,8 @@ print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
 <td>
   [<a id="edit_trial_name">change</a>]
 </td>
+<& /breeders_toolbox/trial/edit_trial_name.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_type=>"Trial" &>
+
 </tr>
 
 <tr>
@@ -198,11 +200,6 @@ print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
 <div id="edit_trial_description_dialog">
    Please enter the description for this trial:<br/>
    <textarea id="trial_description_input" cols="50" rows="10"></textarea>
-</div>
-
-<div id="edit_trial_name_dialog">
-  Please enter the name for this trial:<br />
-  <textarea id="trial_name_input" cols="20" rows="1"></textarea>
 </div>
 
 <div id="edit_trial_type_dialog">

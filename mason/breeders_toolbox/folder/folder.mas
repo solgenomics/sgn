@@ -39,6 +39,7 @@ foreach (@$children) {
 
 <& /breeders_toolbox/folder/folder_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name() &>
 <& /breeders_toolbox/folder/folder_move.mas, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name() &>
+<& /breeders_toolbox/trial/edit_trial_name.mas, trial_id=>$folder_id, trial_name=>$folder_name, trial_type=>"Folder" &>
 
 <div>
 
@@ -110,3 +111,9 @@ foreach (@$children) {
   </div>
 
 </div>
+
+<div class="well">
+  <button class="btn btn-sm btn-default" id="edit_trial_name">Rename Folder</button>
+</div>
+
+
