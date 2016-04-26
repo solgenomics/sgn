@@ -44,6 +44,7 @@ sub verify {
     my @trait_list = @{$trait_list_ref};
     my %phenotype_metadata = %{$phenotype_metadata_ref};
     my %plot_trait_value = %{$plot_trait_value_hashref};
+    #print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plot_list)->{'missing'}};
@@ -89,7 +90,10 @@ sub verify {
 
     foreach my $plot_name (@plot_list) {
         foreach my $trait_name (@trait_list) {
-            my ($trait_value, $timestamp) = $plot_trait_value{$plot_name}->{$trait_name};
+            my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
+            #print STDERR Dumper $value_array;
+            my $trait_value = $value_array->[0];
+            my $timestamp = $value_array->[1];
 
             if ($trait_value) {
                 my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
@@ -116,14 +120,12 @@ sub verify {
                 if (exists($check_unique_db{$trait_value, $trait_cvterm_id, "Stock: ".$stock_id})) {
                     $warning_message = $warning_message."<small>This combination exists in database: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
                 }
-            } else {
-                $error_message = $error_message."<small>No trait value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
             }
 
             if ($timestamp) {
                 if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                    $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
-                } 
+                    $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+                }
             } else {
                 $error_message = $error_message."<small>No timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
             }
@@ -172,7 +174,7 @@ sub store {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     if (!$user_id) { #For unit_test, SimulateC
-	$user_id = $c->sp_person_id();
+        $user_id = $c->sp_person_id();
     }
     my $archived_file = $phenotype_metadata->{'archived_file'};
     my $archived_file_type = $phenotype_metadata->{'archived_file_type'};
@@ -191,38 +193,38 @@ sub store {
     #For storing files where num_plots * num_traits <= 100.
     my $coderef_small_file = sub {
 
-	foreach my $plot_name (@plot_list) {
+        foreach my $plot_name (@plot_list) {
 
-	    #print STDERR "plot: $plot_name\n";
-	    my $plot_stock = $schema->resultset("Stock::Stock")->find( { uniquename => $plot_name});
-	    my $plot_stock_id = $plot_stock->stock_id;
+            #print STDERR "plot: $plot_name\n";
+            my $plot_stock = $schema->resultset("Stock::Stock")->find( { uniquename => $plot_name});
+            my $plot_stock_id = $plot_stock->stock_id;
 
-	    ###This has to be stored in the database when creating a trial for these plots
-	    my $field_layout_experiment = $plot_stock
-		->search_related('nd_experiment_stocks')
-		    ->search_related('nd_experiment')
-			->find({'type.name' => 'field_layout' },
-			       { join => 'type' });
-	    #####
+            my $field_layout_experiment = $plot_stock
+            ->search_related('nd_experiment_stocks')
+            ->search_related('nd_experiment')
+            ->find({'type.name' => 'field_layout' },
+            { join => 'type' });
 
-	    my $location_id = $field_layout_experiment->nd_geolocation_id;
-	    my $project = $field_layout_experiment
-		->nd_experiment_projects->single ; #there should be one project linked with the field experiment
-	    my $project_id = $project->project_id;
+            my $location_id = $field_layout_experiment->nd_geolocation_id;
+            my $project = $field_layout_experiment->nd_experiment_projects->single ; #there should be one project linked with the field experiment
+            my $project_id = $project->project_id;
 
-	    foreach my $trait_name (@trait_list) {
+            foreach my $trait_name (@trait_list) {
 
-		#print STDERR "trait: $trait_name\n";
+                #print STDERR "trait: $trait_name\n";
 
-		my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
-		my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
+                my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+                my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
+                #print STDERR Dumper $value_array;
+                my $trait_value = $value_array->[0];
+                my $timestamp = $value_array->[1];
 
-		if ($trait_value || $trait_value eq '0') {
+                if ($trait_value || $trait_value eq '0') {
 
 		    my $plot_trait_uniquename = "Stock: " .
 		    $plot_stock_id . ", trait: " .
 			$trait_cvterm->name .
-			    " date: $phenotyping_date" .
+			    " date: $timestamp" .
 				"  operator = $operator" ;
 		    my $phenotype = $trait_cvterm
 		    ->find_or_create_related("phenotype_cvalues", {
@@ -230,9 +232,9 @@ sub store {
 			value => $trait_value ,
 			uniquename => $plot_trait_uniquename,
 					     });
-		
-		#print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
-		my $experiment;
+
+                     #print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
+                     my $experiment;
 		
 		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
 		# my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
@@ -249,32 +251,28 @@ sub store {
 		# 	   });
 
 
-		    # Create a new experiment, if one does not exist
-		    if (!$experiment) {
-			$experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-			    ->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
-			$experiment->create_nd_experimentprops({date => $phenotyping_date},{autocreate => 1, cv_name => 'local'});
-			$experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
-		    }
+                    # Create a new experiment, if one does not exist
+                    if (!$experiment) {
+                        $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+                        ->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
+                        $experiment->create_nd_experimentprops({date => $phenotyping_date},{autocreate => 1, cv_name => 'local'});
+                        $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
+                    }
 
-		    ## Link the experiment to the project
-		    $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
+                    ## Link the experiment to the project
+                    $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
 
-		    # Link the experiment to the stock
-		    $experiment->create_related('nd_experiment_stocks', 
-						{
-						 stock_id => $plot_stock_id,
-						 type_id => $phenotyping_experiment_cvterm->cvterm_id
-						});
+                    # Link the experiment to the stock
+                    $experiment->create_related('nd_experiment_stocks', {stock_id => $plot_stock_id, type_id => $phenotyping_experiment_cvterm->cvterm_id});
 
-		    ## Link the phenotype to the experiment
-		    $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-		    #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
+                    ## Link the phenotype to the experiment
+                    $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
+                    #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
 
-		    $experiment_ids{$experiment->nd_experiment_id()}=1;
-		}
-	    }
-	}
+                    $experiment_ids{$experiment->nd_experiment_id()}=1;
+                }
+            }
+        }
     };
 
     #For storing files where num_plots * num_traits > 100.
@@ -301,14 +299,18 @@ sub store {
 	    foreach my $trait_name (@trait_list) {
 
 		my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
-		my $trait_value = $plot_trait_value{$plot_name}->{$trait_name};
+        
+        my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
+        #print STDERR Dumper $value_array;
+        my $trait_value = $value_array->[0];
+        my $timestamp = $value_array->[1];
 
 		if ($trait_value || $trait_value eq '0') {
 
 		    my $plot_trait_uniquename = "Stock: " .
 		    $plot_stock_id . ", trait: " .
 			$trait_cvterm->name .
-			    " date: $phenotyping_date" .
+			    " date: $timestamp" .
 				"  operator = $operator" ;
 		    my $phenotype = $trait_cvterm
 		    ->find_or_create_related("phenotype_cvalues", {

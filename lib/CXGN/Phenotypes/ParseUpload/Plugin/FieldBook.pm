@@ -99,36 +99,42 @@ sub parse {
     }
 
     foreach my $line (sort @file_lines) {
-	chomp($line);
-     	my @row =  split($delimiter, $line);
-	my $plot_id = $row[$header_column_info{'plot_id'}];
-	$plot_id =~ s/\"//g;
-#substr($row[$header_column_info{'plot_id'}],1,-1);
-	my $trait = $row[$header_column_info{'trait'}];
-	$trait =~ s/\"//g;
-#substr($row[$header_column_info{'trait'}],1,-1);
-	my $value = $row[$header_column_info{'value'}];
-	$value =~ s/\"//g;
-#substr($row[$header_column_info{'value'}],1,-1);
-    my $timestamp = $row[$header_column_info{'timestamp'}];
-    $timestamp =~ s/\"//g;
-	if (!defined($plot_id) || !defined($trait) || !defined($value)) {
-	    $parse_result{'error'} = "error getting value from file";
-	    print STDERR "value: $value\n";
-	    return \%parse_result;
-	}
-	$plots_seen{$plot_id} = 1;
-	$traits_seen{$trait} = 1;
-	if ($value || $value eq '0') {
-	    $data{$plot_id}->{$trait} = [$value, $timestamp];
-	}
+        chomp($line);
+        my @row =  split($delimiter, $line);
+        my $plot_id = $row[$header_column_info{'plot_id'}];
+        $plot_id =~ s/\"//g;
+        #substr($row[$header_column_info{'plot_id'}],1,-1);
+        my $trait = $row[$header_column_info{'trait'}];
+        $trait =~ s/\"//g;
+        #substr($row[$header_column_info{'trait'}],1,-1);
+        my $value = $row[$header_column_info{'value'}];
+        $value =~ s/\"//g;
+        #substr($row[$header_column_info{'value'}],1,-1);
+        my $timestamp = $row[$header_column_info{'timestamp'}];
+        $timestamp =~ s/\"//g;
+        
+        if (!defined($plot_id) || !defined($trait) || !defined($value) || !defined($timestamp)) {
+            $parse_result{'error'} = "Error getting value from file";
+            print STDERR "value: $value\n";
+            return \%parse_result;
+        }
+        if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+            $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+            print STDERR "value: $timestamp\n";
+            return \%parse_result;
+        }
+        $plots_seen{$plot_id} = 1;
+        $traits_seen{$trait} = 1;
+        if (defined($value) && defined($timestamp)) {
+            $data{$plot_id}->{$trait} = [$value, $timestamp];
+        }
     }
 
     foreach my $plot (sort keys %plots_seen) {
-	push @plots, $plot;
+        push @plots, $plot;
     }
     foreach my $trait (sort keys %traits_seen) {
-	push @traits, $trait;
+        push @traits, $trait;
     }
 
     $parse_result{'data'} = \%data;

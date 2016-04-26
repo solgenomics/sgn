@@ -43,18 +43,18 @@ sub upload_phenotype_verify_POST : Args(1) {
 
     my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
-	$c->stash->{rest} = {success => $success_status, error => $error_status };
-	return;
+        $c->stash->{rest} = {success => $success_status, error => $error_status };
+        return;
     }
 
     my ($verified_warning, $verified_error) = $store_phenotypes->verify($c, $plots, $traits, $parsed_data, $phenotype_metadata);
     if ($verified_error) {
-	push @$error_status, $verified_error;
-	$c->stash->{rest} = {success => $success_status, error => $error_status };
-	return;
+        push @$error_status, $verified_error;
+        $c->stash->{rest} = {success => $success_status, error => $error_status };
+        return;
     }
     if ($verified_warning) {
-	push @$warning_status, $verified_warning;
+        push @$warning_status, $verified_warning;
     }
     push @$success_status, "File data verified. Plot names and trait names are valid.";
 
@@ -68,8 +68,8 @@ sub upload_phenotype_store_POST : Args(1) {
 
     my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
-	$c->stash->{rest} = {success => $success_status, error => $error_status };
-	return;
+        $c->stash->{rest} = {success => $success_status, error => $error_status };
+        return;
     }
 
     #upload_phenotype_store function redoes the same verification that upload_phenotype_verify does before actually uploading. maybe this should be commented out.
@@ -86,8 +86,8 @@ sub upload_phenotype_store_POST : Args(1) {
     my $stored_phenotype_error = $store_phenotypes->store($c, $size, $plots, $traits, $parsed_data, $phenotype_metadata);
 
     if ($stored_phenotype_error) {
-	push @$error_status, $stored_phenotype_error;
-	$c->stash->{rest} = {success => $success_status, error => $error_status};
+        push @$error_status, $stored_phenotype_error;
+        $c->stash->{rest} = {success => $success_status, error => $error_status};
         return;
     }
     push @$success_status, "Metadata saved for archived file.";
@@ -105,25 +105,25 @@ sub _prep_upload {
     my $validate_type;
     my $metadata_file_type;
     if ($file_type eq "spreadsheet") {
-	print STDERR "Spreadsheet \n";
-	$subdirectory = "spreadsheet_phenotype_upload";
-	$validate_type = "phenotype spreadsheet";
-	$metadata_file_type = "spreadsheet phenotype file";
-	$upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
+        print STDERR "Spreadsheet \n";
+        $subdirectory = "spreadsheet_phenotype_upload";
+        $validate_type = "phenotype spreadsheet";
+        $metadata_file_type = "spreadsheet phenotype file";
+        $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
     } 
     elsif ($file_type eq "fieldbook") {
-	print STDERR "Fieldbook \n";
-	$subdirectory = "tablet_phenotype_upload";
-	$validate_type = "field book";
-	$metadata_file_type = "tablet phenotype file";
-	$upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
+        print STDERR "Fieldbook \n";
+        $subdirectory = "tablet_phenotype_upload";
+        $validate_type = "field book";
+        $metadata_file_type = "tablet phenotype file";
+        $upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
     }
     elsif ($file_type eq "datacollector") {
-	print STDERR "Datacollector \n";
-	$subdirectory = "data_collector_phenotype_upload";
-	$validate_type = "datacollector spreadsheet";
-	$metadata_file_type = "data collector phenotype file";
-	$upload = $c->req->upload('upload_datacollector_phenotype_file_input');
+        print STDERR "Datacollector \n";
+        $subdirectory = "data_collector_phenotype_upload";
+        $validate_type = "datacollector spreadsheet";
+        $metadata_file_type = "data collector phenotype file";
+        $upload = $c->req->upload('upload_datacollector_phenotype_file_input');
     }
 
     my $upload_original_name = $upload->filename();
@@ -137,18 +137,18 @@ sub _prep_upload {
     my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-	push @error_status, "Could not save file $upload_original_name in archive.";
+        push @error_status, "Could not save file $upload_original_name in archive.";
     } else {
-	push @success_status, "File $upload_original_name saved in archive.";
+        push @success_status, "File $upload_original_name saved in archive.";
     }
     unlink $upload_tempfile;
 
     ## Validate and parse uploaded file
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path);
     if (!$validate_file) {
-	push @error_status, "Archived file not valid: $upload_original_name.";
+        push @error_status, "Archived file not valid: $upload_original_name.";
     } else {
-	push @success_status, "File valid: $upload_original_name.";
+        push @success_status, "File valid: $upload_original_name.";
     }
 
     ## Set metadata
@@ -160,21 +160,21 @@ sub _prep_upload {
 
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path);
     if (!$parsed_file) {
-	push @error_status, "Error parsing file $upload_original_name.";
+        push @error_status, "Error parsing file $upload_original_name.";
     }
     if ($parsed_file->{'error'}) {
-	push @error_status, $parsed_file->{'error'};
+        push @error_status, $parsed_file->{'error'};
     }
     my %parsed_data;
     my @plots;
     my @traits;
     if (scalar(@error_status) == 0) {
-    if ($parsed_file && !$parsed_file->{'error'}) {
-	%parsed_data = %{$parsed_file->{'data'}};
-	@plots = @{$parsed_file->{'plots'}};
-	@traits = @{$parsed_file->{'traits'}};
-	push @success_status, "File data successfully parsed.";
-    }
+        if ($parsed_file && !$parsed_file->{'error'}) {
+            %parsed_data = %{$parsed_file->{'data'}};
+            @plots = @{$parsed_file->{'plots'}};
+            @traits = @{$parsed_file->{'traits'}};
+            push @success_status, "File data successfully parsed.";
+        }
     }
 
     return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata);
