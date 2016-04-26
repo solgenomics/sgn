@@ -15,17 +15,20 @@ sub validate {
     my $delimiter = ',';
     my $header;
     my @header_row;
+    my %parse_result;
 
     ## Check that the file could be read
     @file_lines = read_file($filename);
     if (!@file_lines) {
-	print STDERR "Could not read file\n";
-	return;
+        $parse_result{'error'} = "Could not read file.";
+        print STDERR "Could not read file.\n";
+        return \%parse_result;
     }
     ## Check that the file has at least 2 lines;
     if (scalar(@file_lines < 2)) {
-	print STDERR "File has less than 2 lines\n";
-	return;
+        $parse_result{'error'} = "File has less than 2 lines.";
+        print STDERR "File has less than 2 lines.\n";
+        return \%parse_result;
     }
 
     $header = shift(@file_lines);
@@ -40,8 +43,9 @@ sub validate {
 	$header_row[-4] ne "\"value\"" ||
 	$header_row[-5] ne "\"trait\""
        ) {
-	print STDERR "File contents incorrect\n";
-	return;
+        $parse_result{'error'} = "File contents incorrect. Header needs to be plot_id, location, timestamp, person, value, trait";
+        print STDERR "File contents incorrect.\n";
+        return \%parse_result;
     }
 
     return 1;

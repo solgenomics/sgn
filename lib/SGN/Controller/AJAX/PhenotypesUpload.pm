@@ -147,8 +147,13 @@ sub _prep_upload {
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
-    } else {
+    }
+    if ($validate_file == 1){
         push @success_status, "File valid: $upload_original_name.";
+    } else { 
+        if ($validate_file->{'error'}) {
+            push @error_status, $validate_file->{'error'};
+        }
     }
 
     ## Set metadata
