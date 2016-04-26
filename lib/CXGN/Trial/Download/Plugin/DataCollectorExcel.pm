@@ -283,7 +283,7 @@ sub download {
    #$ws->data_validation(2,3, { validate => "date" });
     
 
-    my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+    my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number timestamp|;
     for(my $n=0; $n<@column_headers; $n++) { 
 	$ws->write(0, $n, $column_headers[$n]);
     }
@@ -318,7 +318,7 @@ sub download {
 								       
     for (my $i = 0; $i < @trait_list; $i++) { 
 	if (exists($cvinfo{$trait_list[$i]})) { 
-	    $ws->write(0, $i+6, $cvinfo{$trait_list[$i]}->display_name());
+	    $ws->write(0, $i+7, $cvinfo{$trait_list[$i]}->display_name());
 	}
 	else { 
 	    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";

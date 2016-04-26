@@ -50,11 +50,66 @@ sub validate {
     }
 
     if (!$plot_name_head || $plot_name_head ne 'plot_name') {
-        $parse_result{'error'} = "No plot name in header.";
-        print STDERR "No plot name in header\n";
+        $parse_result{'error'} = "No plot_name in header.";
+        print STDERR "No plot_name in header\n";
+        return \%parse_result;
+    }
+
+    my $accession_name_head;
+    if ($worksheet->get_cell(0,1)) {
+      $accession_name_head  = $worksheet->get_cell(0,1)->value();
+    }
+
+    if (!$accession_name_head || $accession_name_head ne 'accession_name') {
+        $parse_result{'error'} = "No accession_name in header.";
+        print STDERR "No accession_name in header\n";
         return \%parse_result;
     }
     
+    my $plot_num_head;
+    if ($worksheet->get_cell(0,2)) {
+      $plot_num_head  = $worksheet->get_cell(0,2)->value();
+    }
+
+    if (!$plot_num_head || $plot_num_head ne 'plot_number') {
+        $parse_result{'error'} = "No plot_number in header.";
+        print STDERR "No plot_number in header\n";
+        return \%parse_result;
+    }
+    
+    my $block_head;
+    if ($worksheet->get_cell(0,3)) {
+      $block_head  = $worksheet->get_cell(0,3)->value();
+    }
+
+    if (!$block_head || $block_head ne 'block_number') {
+        $parse_result{'error'} = "No block_number in header.";
+        print STDERR "No block_number in header\n";
+        return \%parse_result;
+    }
+    
+    my $is_control_head;
+    if ($worksheet->get_cell(0,4)) {
+      $is_control_head  = $worksheet->get_cell(0,4)->value();
+    }
+
+    if (!$is_control_head || $is_control_head ne 'is_a_control') {
+        $parse_result{'error'} = "No is_a_control in header.";
+        print STDERR "No is_a_control in header\n";
+        return \%parse_result;
+    }
+    
+    my $rep_head;
+    if ($worksheet->get_cell(0,5)) {
+      $rep_head  = $worksheet->get_cell(0,5)->value();
+    }
+
+    if (!$rep_head || $rep_head ne 'rep_number') {
+        $parse_result{'error'} = "No rep_number in header.";
+        print STDERR "No rep_number in header\n";
+        return \%parse_result;
+    }
+
     my $timestamp_head;
     if ($worksheet->get_cell(0,6)) {
         $timestamp_head  = $worksheet->get_cell(0,6)->value();
