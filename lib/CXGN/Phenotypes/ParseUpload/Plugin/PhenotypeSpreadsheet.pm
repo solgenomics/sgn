@@ -31,8 +31,8 @@ sub validate {
     $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
-    if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of phenotypes
-        $parse_result{'error'} = "Spreadsheet is missing plot_name and timestamp header.";
+    if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header with at least plot_name and timestamp and one trait, as well as one row of phenotypes
+        $parse_result{'error'} = "Spreadsheet is missing plot_name, timestamp, and atleast one trait in header.";
         print STDERR "Spreadsheet is missing header\n";
         return \%parse_result;
     }
