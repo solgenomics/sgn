@@ -12,6 +12,15 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
+        
+        <&| /page/explanation.mas, title=>'Template Information' &>
+      	  <p>
+        	  <b>File format information</b>
+        	  <br>
+        	  <a id="phenotype_upload_datacollector_format_info">Datacollector Format</a>
+      	  </p>
+    	  </&>
+        
 	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_datacollector_phenotype_file_form" name="upload_datacollector_phenotype_file_form">
 	    <div class="form-group">
       	      <label class="col-sm-3 control-label">Data Collector File: </label>
@@ -33,15 +42,76 @@
 </div>
 
 
+<div class="modal fade" id="phenotype_upload_datacollector_info_dialog" name="phenotype_upload_datacollector_info_dialog" tabindex="-1" role="dialog" aria-labelledby="datacollectorUploadInfoDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="datacollectorUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+        
+            <b>Must be in .xls excel file format</b>
+            <br>
+            <p>(tab-delimited text formats are NOT supported)</p>
+            <hr>
+            <b>"Field Book" Sheet Header: (8th Sheet in Workbook)</b>
+            <br>
+            <p>The first row (header) should contain the following:</p>
+
+            <table class="table table-hover table-bordered">
+                <body>
+                <tr>
+                    <td>plot_name</td>
+                    <td>accession_name</td>
+                    <td>plot_number</td>
+                    <td>block_number</td>
+                    <td>is_a_control</td>
+                    <td>rep_number</td>
+                    <td>timestamp</td>
+                    <td>trait name|trait id</td>
+                </tr>
+                </body>
+            </table>
+
+            <h4>Required fields:</h4>
+            <ul>
+              <li>plot_name (must exist in the database)</li>
+              <li>timestamp (format must be YYYY-MM-DD HH:MM:SS+0000 or YYYY-MM-DD HH:MM:SS-0000)</li>
+              <li>trait name|trait id (must exist in the trait ontology)</li>
+            </ul>
+
+    
+            <h4>Notes</h4>
+            <ul>
+                <li>For <b>"sprouting"</b> in cassava, <b>"trait name|trait id"</b><br> should be written as <b>"sprouting|CO:0000008"</b>.</li>
+                <li>If trait file was not generated from the database, </br> consult the <b>Trait Ontology</b> to ensure you have the correct trait id.</li>
+                <li>Two or more traits can be uploaded at the same time.</li>
+            </ul>
+    
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script defer="defer">
 
 jQuery(document).ready(function() {
 
     jQuery('#upload_datacollector_phenotypes_link').click( function() {
-	jQuery('#upload_datacollector_phenotypes_dialog').modal("show");
+        jQuery('#upload_datacollector_phenotypes_dialog').modal("show");
     });
 
-});  
+    jQuery("#phenotype_upload_datacollector_format_info").click( function () { 
+        jQuery("#phenotype_upload_datacollector_info_dialog" ).modal("show");
+    });
+
+});
 
 </script>
