@@ -145,7 +145,6 @@ sub parse {
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
-    my %parse_result;
 
     #try to open the excel file and report any errors
     $excel_obj = $parser->parse($filename);

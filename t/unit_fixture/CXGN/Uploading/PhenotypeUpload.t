@@ -60,13 +60,13 @@ my $pre_exp_md_files_count = $exp_md_files_rs->count();
 my $parser = CXGN::Phenotypes::ParseUpload->new();
 my $filename = "t/data/fieldbook/fieldbook_phenotype_file.csv";
 my $validate_file = $parser->validate('phenotype spreadsheet', $filename);
-ok(!$validate_file, "Check if parse validate phenotype spreadsheet fails for fieldbook");
+ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for fieldbook");
 
 #check that parse fails for datacollector file when using phenotype spreadsheet parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/data_collector_upload.xls";
 $validate_file = $parser->validate('phenotype spreadsheet', $filename);
-ok(!$validate_file, "Check if parse validate phenotype spreadsheet fails for datacollector");
+ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for datacollector");
 
 #Now parse phenotyping spreadsheet file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
@@ -80,121 +80,301 @@ ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 #print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
-               'plots' => [
-                            'test_trial21',
-                            'test_trial210',
-                            'test_trial211',
-                            'test_trial212',
-                            'test_trial213',
-                            'test_trial214',
-                            'test_trial215',
-                            'test_trial22',
-                            'test_trial23',
-                            'test_trial24',
-                            'test_trial25',
-                            'test_trial26',
-                            'test_trial27',
-                            'test_trial28',
-                            'test_trial29'
-                          ],
-               'data' => {
-                           'test_trial29' => {
-                                               'fresh root weight|CO:0000012' => '15',
-                                               'dry matter content|CO:0000092' => '35',
-                                               'fresh shoot weight|CO:0000016' => '28',
-                                               'harvest index|CO:0000015' => '8.8'
-                                             },
-                           'test_trial22' => {
-                                               'fresh root weight|CO:0000012' => '15',
-                                               'dry matter content|CO:0000092' => '30',
-                                               'fresh shoot weight|CO:0000016' => '21',
-                                               'harvest index|CO:0000015' => '1.8'
-                                             },
-                           'test_trial214' => {
-                                                'fresh root weight|CO:0000012' => '15',
-                                                'dry matter content|CO:0000092' => '30',
-                                                'fresh shoot weight|CO:0000016' => '33',
-                                                'harvest index|CO:0000015' => '13.8'
-                                              },
-                           'test_trial211' => {
-                                                'fresh root weight|CO:0000012' => '15',
-                                                'dry matter content|CO:0000092' => '38',
-                                                'fresh shoot weight|CO:0000016' => '30',
-                                                'harvest index|CO:0000015' => '10.8'
-                                              },
-                           'test_trial21' => {
-                                               'fresh root weight|CO:0000012' => '15',
-                                               'dry matter content|CO:0000092' => '35',
-                                               'fresh shoot weight|CO:0000016' => '20',
-                                               'harvest index|CO:0000015' => '0.8'
-                                             },
-                           'test_trial215' => {
-                                                'fresh root weight|CO:0000012' => '15',
-                                                'dry matter content|CO:0000092' => '38',
-                                                'fresh shoot weight|CO:0000016' => '34',
-                                                'harvest index|CO:0000015' => '14.8'
-                                              },
-                           'test_trial210' => {
-                                                'fresh root weight|CO:0000012' => '15',
-                                                'dry matter content|CO:0000092' => '30',
-                                                'fresh shoot weight|CO:0000016' => '29',
-                                                'harvest index|CO:0000015' => '9.8'
-                                              },
-                           'test_trial213' => {
-                                                'fresh root weight|CO:0000012' => '15',
-                                                'dry matter content|CO:0000092' => '35',
-                                                'fresh shoot weight|CO:0000016' => '32',
-                                                'harvest index|CO:0000015' => '12.8'
-                                              },
-                           'test_trial27' => {
-                                               'fresh root weight|CO:0000012' => '15',
-                                               'dry matter content|CO:0000092' => '38',
-                                               'fresh shoot weight|CO:0000016' => '26',
-                                               'harvest index|CO:0000015' => '6.8'
-                                             },
-                           'test_trial28' => {
-                                               'fresh root weight|CO:0000012' => '15',
-                                               'dry matter content|CO:0000092' => '39',
-                                               'fresh shoot weight|CO:0000016' => '27',
-                                               'harvest index|CO:0000015' => '7.8'
-                                             },
-                           'test_trial23' => {
-                                               'fresh root weight|CO:0000012' => '15',
-                                               'dry matter content|CO:0000092' => '38',
-                                               'fresh shoot weight|CO:0000016' => '22',
-                                               'harvest index|CO:0000015' => '2.8'
-                                             },
-                           'test_trial25' => {
-                                               'fresh root weight|CO:0000012' => '15',
-                                               'dry matter content|CO:0000092' => '35',
-                                               'fresh shoot weight|CO:0000016' => '24',
-                                               'harvest index|CO:0000015' => '4.8'
-                                             },
-                           'test_trial26' => {
-                                               'fresh root weight|CO:0000012' => '15',
-                                               'dry matter content|CO:0000092' => '30',
-                                               'fresh shoot weight|CO:0000016' => '25',
-                                               'harvest index|CO:0000015' => '5.8'
-                                             },
-                           'test_trial24' => {
-                                               'fresh root weight|CO:0000012' => '15',
-                                               'dry matter content|CO:0000092' => '39',
-                                               'fresh shoot weight|CO:0000016' => '23',
-                                               'harvest index|CO:0000015' => '3.8'
-                                             },
-                           'test_trial212' => {
-                                                'fresh root weight|CO:0000012' => '15',
-                                                'dry matter content|CO:0000092' => '39',
-                                                'fresh shoot weight|CO:0000016' => '31',
-                                                'harvest index|CO:0000015' => '11.8'
-                                              }
-                         },
-               'traits' => [
-                             'dry matter content|CO:0000092',
-                             'fresh root weight|CO:0000012',
-                             'fresh shoot weight|CO:0000016',
-                             'harvest index|CO:0000015'
-                           ]
+          'data' => {
+                      'test_trial215' => {
+                                           'harvest index|CO:0000015' => [
+                                                                           '14.8',
+                                                                           '2016-04-27 19:12:20-0500'
+                                                                         ],
+                                           'fresh root weight|CO:0000012' => [
+                                                                               '15',
+                                                                               '2016-04-27 19:12:20-0500'
+                                                                             ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '38',
+                                                                                '2016-04-27 19:12:20-0500'
+                                                                              ],
+                                           'fresh shoot weight|CO:0000016' => [
+                                                                                '34',
+                                                                                '2016-04-27 19:12:20-0500'
+                                                                              ]
+                                         },
+                      'test_trial25' => {
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '24',
+                                                                               '2016-04-27 09:12:20-0500'
+                                                                             ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              '2016-04-27 09:12:20-0500'
+                                                                            ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '4.8',
+                                                                          '2016-04-27 09:12:20-0500'
+                                                                        ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '35',
+                                                                               '2016-04-27 09:12:20-0500'
+                                                                             ]
+                                        },
+                      'test_trial27' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '38',
+                                                                               '2016-04-27 17:12:20-0500'
+                                                                             ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              '2016-04-27 17:12:20-0500'
+                                                                            ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '6.8',
+                                                                          '2016-04-27 17:12:20-0500'
+                                                                        ],
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '26',
+                                                                               '2016-04-27 17:12:20-0500'
+                                                                             ]
+                                        },
+                      'test_trial24' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '39',
+                                                                               '2016-04-27 11:12:20-0500'
+                                                                             ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              '2016-04-27 11:12:20-0500'
+                                                                            ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '3.8',
+                                                                          '2016-04-27 11:12:20-0500'
+                                                                        ],
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '23',
+                                                                               '2016-04-27 11:12:20-0500'
+                                                                             ]
+                                        },
+                      'test_trial21' => {
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              '2016-04-27 12:12:20-0500'
+                                                                            ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '0.8',
+                                                                          '2016-04-27 12:12:20-0500'
+                                                                        ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '35',
+                                                                               '2016-04-27 12:12:20-0500'
+                                                                             ],
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '20',
+                                                                               '2016-04-27 12:12:20-0500'
+                                                                             ]
+                                        },
+                      'test_trial211' => {
+                                           'fresh shoot weight|CO:0000016' => [
+                                                                                '30',
+                                                                                '2016-04-27 03:12:20-0500'
+                                                                              ],
+                                           'fresh root weight|CO:0000012' => [
+                                                                               '15',
+                                                                               '2016-04-27 03:12:20-0500'
+                                                                             ],
+                                           'harvest index|CO:0000015' => [
+                                                                           '10.8',
+                                                                           '2016-04-27 03:12:20-0500'
+                                                                         ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '38',
+                                                                                '2016-04-27 03:12:20-0500'
+                                                                              ]
+                                         },
+                      'test_trial29' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '35',
+                                                                               '2016-04-27 14:12:20-0500'
+                                                                             ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              '2016-04-27 14:12:20-0500'
+                                                                            ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '8.8',
+                                                                          '2016-04-27 14:12:20-0500'
+                                                                        ],
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '28',
+                                                                               '2016-04-27 14:12:20-0500'
+                                                                             ]
+                                        },
+                      'test_trial214' => {
+                                           'fresh shoot weight|CO:0000016' => [
+                                                                                '33',
+                                                                                '2016-04-27 23:12:20-0500'
+                                                                              ],
+                                           'fresh root weight|CO:0000012' => [
+                                                                               '15',
+                                                                               '2016-04-27 23:12:20-0500'
+                                                                             ],
+                                           'harvest index|CO:0000015' => [
+                                                                           '13.8',
+                                                                           '2016-04-27 23:12:20-0500'
+                                                                         ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '30',
+                                                                                '2016-04-27 23:12:20-0500'
+                                                                              ]
+                                         },
+                      'test_trial212' => {
+                                           'harvest index|CO:0000015' => [
+                                                                           '11.8',
+                                                                           '2016-04-27 21:12:20-0500'
+                                                                         ],
+                                           'fresh root weight|CO:0000012' => [
+                                                                               '15',
+                                                                               '2016-04-27 21:12:20-0500'
+                                                                             ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '39',
+                                                                                '2016-04-27 21:12:20-0500'
+                                                                              ],
+                                           'fresh shoot weight|CO:0000016' => [
+                                                                                '31',
+                                                                                '2016-04-27 21:12:20-0500'
+                                                                              ]
+                                         },
+                      'test_trial23' => {
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '22',
+                                                                               '2016-04-27 01:12:20-0500'
+                                                                             ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '38',
+                                                                               '2016-04-27 01:12:20-0500'
+                                                                             ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              '2016-04-27 01:12:20-0500'
+                                                                            ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '2.8',
+                                                                          '2016-04-27 01:12:20-0500'
+                                                                        ]
+                                        },
+                      'test_trial26' => {
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '25',
+                                                                               '2016-04-27 16:12:20-0500'
+                                                                             ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '5.8',
+                                                                          '2016-04-27 16:12:20-0500'
+                                                                        ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              '2016-04-27 16:12:20-0500'
+                                                                            ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '30',
+                                                                               '2016-04-27 16:12:20-0500'
+                                                                             ]
+                                        },
+                      'test_trial210' => {
+                                           'fresh shoot weight|CO:0000016' => [
+                                                                                '29',
+                                                                                '2016-04-27 15:12:20-0500'
+                                                                              ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '30',
+                                                                                '2016-04-27 15:12:20-0500'
+                                                                              ],
+                                           'harvest index|CO:0000015' => [
+                                                                           '9.8',
+                                                                           '2016-04-27 15:12:20-0500'
+                                                                         ],
+                                           'fresh root weight|CO:0000012' => [
+                                                                               '15',
+                                                                               '2016-04-27 15:12:20-0500'
+                                                                             ]
+                                         },
+                      'test_trial28' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '39',
+                                                                               '2016-04-27 13:12:20-0500'
+                                                                             ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '7.8',
+                                                                          '2016-04-27 13:12:20-0500'
+                                                                        ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              '2016-04-27 13:12:20-0500'
+                                                                            ],
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '27',
+                                                                               '2016-04-27 13:12:20-0500'
+                                                                             ]
+                                        },
+                      'test_trial22' => {
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '21',
+                                                                               '2016-04-27 02:12:20-0500'
+                                                                             ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '1.8',
+                                                                          '2016-04-27 02:12:20-0500'
+                                                                        ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              '2016-04-27 02:12:20-0500'
+                                                                            ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '30',
+                                                                               '2016-04-27 02:12:20-0500'
+                                                                             ]
+                                        },
+                      'test_trial213' => {
+                                           'dry matter content|CO:0000092' => [
+                                                                                '35',
+                                                                                '2016-04-27 22:12:20-0500'
+                                                                              ],
+                                           'fresh root weight|CO:0000012' => [
+                                                                               '15',
+                                                                               '2016-04-27 22:12:20-0500'
+                                                                             ],
+                                           'harvest index|CO:0000015' => [
+                                                                           '12.8',
+                                                                           '2016-04-27 22:12:20-0500'
+                                                                         ],
+                                           'fresh shoot weight|CO:0000016' => [
+                                                                                '32',
+                                                                                '2016-04-27 22:12:20-0500'
+                                                                              ]
+                                         }
+                    },
+          'plots' => [
+                       'test_trial21',
+                       'test_trial210',
+                       'test_trial211',
+                       'test_trial212',
+                       'test_trial213',
+                       'test_trial214',
+                       'test_trial215',
+                       'test_trial22',
+                       'test_trial23',
+                       'test_trial24',
+                       'test_trial25',
+                       'test_trial26',
+                       'test_trial27',
+                       'test_trial28',
+                       'test_trial29'
+                     ],
+          'traits' => [
+                        'dry matter content|CO:0000092',
+                        'fresh root weight|CO:0000012',
+                        'fresh shoot weight|CO:0000016',
+                        'harvest index|CO:0000015'
+                      ]
              }, "Check parse phenotyping spreadsheet" );
 
 
@@ -218,7 +398,7 @@ my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 #print STDERR Dumper @traits_assayed_sorted;
-my @traits_assayed_check = ([70666,'Fresh root weight'], [70668,'Harvest index'], [70741,'Dry matter content'], [70773,'Fresh shoot weight']);
+my @traits_assayed_check = ([70666,'Fresh root weight'], [70668,'Harvest index variable'], [70741,'Dry matter content percentage'], [70773,'Fresh shoot weight measurement in kg']);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -303,13 +483,24 @@ ok($post1_exp_md_files_diff == 60, "Check num rows in NdExperimentMdFIles table 
 
 
 
-#Check what happens on duplication
+#Check what happens on duplication of plot_name, trait, and value. timestamps must be unique or it will not be uploaded.
 
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$filename = "t/data/trial/upload_phenotypin_spreadsheet_duplicate.xls";
+$validate_file = $parser->validate('phenotype spreadsheet', $filename);
+ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
+my $parsed_file = $parser->parse('phenotype spreadsheet', $filename);
+ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
+
+my %phenotype_metadata;
 $phenotype_metadata{'archived_file'} = $filename;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
-$phenotype_metadata{'date'}="2016-02-17_01:11:58";
+$phenotype_metadata{'date'}="2016-02-22_01:10:56";
+my %parsed_data = %{$parsed_file->{'data'}};
+my @plots = @{$parsed_file->{'plots'}};
+my @traits = @{$parsed_file->{'traits'}};
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 $stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
@@ -318,7 +509,7 @@ ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 #print STDERR Dumper @traits_assayed_sorted;
-my @traits_assayed_check = ([70666,'Fresh root weight'], [70668,'Harvest index'], [70741,'Dry matter content'], [70773,'Fresh shoot weight']);
+my @traits_assayed_check = ([70666,'Fresh root weight'], [70668,'Harvest index variable'], [70741,'Dry matter content percentage'], [70773,'Fresh shoot weight measurement in kg']);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -410,13 +601,13 @@ ok($post2_exp_md_files_diff == 120, "Check num rows in NdExperimentMdFIles table
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet.xls";
 $validate_file = $parser->validate('field book', $filename);
-ok(!$validate_file, "Check if parse validate fieldbook fails for spreadsheet file");
+ok($validate_file != 1, "Check if parse validate fieldbook fails for spreadsheet file");
 
 #check that parse fails for datacollector file when using fieldbook parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/data_collector_upload.xls";
 $validate_file = $parser->validate('field book', $filename);
-ok(!$validate_file, "Check if parse validate fieldbook fails for datacollector");
+ok($validate_file != 1, "Check if parse validate fieldbook fails for datacollector");
 
 #Now parse phenotyping spreadsheet file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
@@ -430,87 +621,179 @@ ok($parsed_file, "Check if parse parse fieldbook works");
 #print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
-          'plots' => [
-                       'test_trial21',
-                       'test_trial210',
-                       'test_trial211',
-                       'test_trial212',
-                       'test_trial213',
-                       'test_trial214',
-                       'test_trial215',
-                       'test_trial22',
-                       'test_trial23',
-                       'test_trial24',
-                       'test_trial25',
-                       'test_trial26',
-                       'test_trial27',
-                       'test_trial28',
-                       'test_trial29'
-                     ],
-          'data' => {
-                      'test_trial29' => {
-                                          'dry yield|CO:0000014' => '24'
-                                        },
-                      'test_trial22' => {
-                                          'dry matter content|CO:0000092' => '45',
-                                          'dry yield|CO:0000014' => '45'
-                                        },
-                      'test_trial214' => {
-                                           'dry matter content|CO:0000092' => '32',
-                                           'dry yield|CO:0000014' => '32'
-                                         },
-                      'test_trial211' => {
-                                           'dry matter content|CO:0000092' => '13',
-                                           'dry yield|CO:0000014' => '13'
-                                         },
-                      'test_trial21' => {
-                                          'dry matter content|CO:0000092' => '42',
-                                          'dry yield|CO:0000014' => '42'
-                                        },
-                      'test_trial215' => {
-                                           'dry matter content|CO:0000092' => '31',
-                                           'dry yield|CO:0000014' => '31'
-                                         },
-                      'test_trial210' => {
-                                           'dry matter content|CO:0000092' => '12',
-                                           'dry yield|CO:0000014' => '12'
-                                         },
-                      'test_trial213' => {
-                                           'dry matter content|CO:0000092' => '35',
-                                           'dry yield|CO:0000014' => '35'
-                                         },
-                      'test_trial27' => {
-                                          'dry matter content|CO:0000092' => '52',
-                                          'dry yield|CO:0000014' => '0'
-                                        },
-                      'test_trial28' => {
-                                          'dry matter content|CO:0000092' => '41',
-                                          'dry yield|CO:0000014' => '41'
-                                        },
-                      'test_trial26' => {
-                                          'dry yield|CO:0000014' => '0'
-                                        },
-                      'test_trial25' => {
-                                          'dry matter content|CO:0000092' => '25',
-                                          'dry yield|CO:0000014' => '25'
-                                        },
-                      'test_trial23' => {
-                                          'dry matter content|CO:0000092' => '41',
-                                          'dry yield|CO:0000014' => '41'
-                                        },
-                      'test_trial24' => {
-                                          'dry matter content|CO:0000092' => '14',
-                                          'dry yield|CO:0000014' => '14'
-                                        },
-                      'test_trial212' => {
-                                           'dry matter content|CO:0000092' => '42',
-                                           'dry yield|CO:0000014' => '42'
-                                         }
-                    },
-          'traits' => [
-                        'dry matter content|CO:0000092',
-                        'dry yield|CO:0000014'
-                      ]
+	'data' => {
+	                      'test_trial212' => {
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '42',
+	                                                                                '2016-01-07 12:09:02-0500'
+	                                                                              ],
+	                                           'dry yield|CO:0000014' => [
+	                                                                       '42',
+	                                                                       '2016-01-07 12:09:02-0500'
+	                                                                     ]
+	                                         },
+	                      'test_trial23' => {
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '41',
+	                                                                               '2016-01-07 12:08:27-0500'
+	                                                                             ],
+	                                          'dry yield|CO:0000014' => [
+	                                                                      '41',
+	                                                                      '2016-01-07 12:08:27-0500'
+	                                                                    ]
+	                                        },
+	                      'test_trial24' => {
+	                                          'dry yield|CO:0000014' => [
+	                                                                      '14',
+	                                                                      '2016-01-07 12:08:46-0500'
+	                                                                    ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '14',
+	                                                                               '2016-01-07 12:08:46-0500'
+	                                                                             ]
+	                                        },
+	                      'test_trial25' => {
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '25',
+	                                                                               '2016-01-07 12:08:48-0500'
+	                                                                             ],
+	                                          'dry yield|CO:0000014' => [
+	                                                                      '25',
+	                                                                      '2016-01-07 12:08:48-0500'
+	                                                                    ]
+	                                        },
+	                      'test_trial28' => {
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '41',
+	                                                                               '2016-01-07 12:08:53-0500'
+	                                                                             ],
+	                                          'dry yield|CO:0000014' => [
+	                                                                      '41',
+	                                                                      '2016-01-07 12:08:53-0500'
+	                                                                    ]
+	                                        },
+	                      'test_trial21' => {
+	                                          'dry yield|CO:0000014' => [
+	                                                                      '42',
+	                                                                      '2016-01-07 12:08:24-0500'
+	                                                                    ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '42',
+	                                                                               '2016-01-07 12:08:24-0500'
+	                                                                             ]
+	                                        },
+	                      'test_trial211' => {
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '13',
+	                                                                                '2016-01-07 12:08:58-0500'
+	                                                                              ],
+	                                           'dry yield|CO:0000014' => [
+	                                                                       '13',
+	                                                                       '2016-01-07 12:08:58-0500'
+	                                                                     ]
+	                                         },
+	                      'test_trial213' => {
+	                                           'dry yield|CO:0000014' => [
+	                                                                       '35',
+	                                                                       '2016-01-07 12:09:04-0500'
+	                                                                     ],
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '35',
+	                                                                                '2016-01-07 12:09:04-0500'
+	                                                                              ]
+	                                         },
+	                      'test_trial29' => {
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '',
+	                                                                               '2016-01-07 12:08:55-0500'
+	                                                                             ],
+	                                          'dry yield|CO:0000014' => [
+	                                                                      '24',
+	                                                                      '2016-01-07 12:08:55-0500'
+	                                                                    ]
+	                                        },
+	                      'test_trial215' => {
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '31',
+	                                                                                '2016-01-07 12:09:07-0500'
+	                                                                              ],
+	                                           'dry yield|CO:0000014' => [
+	                                                                       '31',
+	                                                                       '2016-01-07 12:09:07-0500'
+	                                                                     ]
+	                                         },
+	                      'test_trial214' => {
+	                                           'dry yield|CO:0000014' => [
+	                                                                       '32',
+	                                                                       '2016-01-07 12:09:05-0500'
+	                                                                     ],
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '32',
+	                                                                                '2016-01-07 12:09:05-0500'
+	                                                                              ]
+	                                         },
+	                      'test_trial27' => {
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '52',
+	                                                                               '2016-01-07 12:08:51-0500'
+	                                                                             ],
+	                                          'dry yield|CO:0000014' => [
+	                                                                      '0',
+	                                                                      '2016-01-07 12:08:51-0500'
+	                                                                    ]
+	                                        },
+	                      'test_trial26' => {
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '',
+	                                                                               '2016-01-07 12:08:49-0500'
+	                                                                             ],
+	                                          'dry yield|CO:0000014' => [
+	                                                                      '0',
+	                                                                      '2016-01-07 12:08:49-0500'
+	                                                                    ]
+	                                        },
+	                      'test_trial22' => {
+	                                          'dry yield|CO:0000014' => [
+	                                                                      '45',
+	                                                                      '2016-01-07 12:08:26-0500'
+	                                                                    ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '45',
+	                                                                               '2016-01-07 12:08:26-0500'
+	                                                                             ]
+	                                        },
+	                      'test_trial210' => {
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '12',
+	                                                                                '2016-01-07 12:08:56-0500'
+	                                                                              ],
+	                                           'dry yield|CO:0000014' => [
+	                                                                       '12',
+	                                                                       '2016-01-07 12:08:56-0500'
+	                                                                     ]
+	                                         }
+	                    },
+	          'plots' => [
+	                       'test_trial21',
+	                       'test_trial210',
+	                       'test_trial211',
+	                       'test_trial212',
+	                       'test_trial213',
+	                       'test_trial214',
+	                       'test_trial215',
+	                       'test_trial22',
+	                       'test_trial23',
+	                       'test_trial24',
+	                       'test_trial25',
+	                       'test_trial26',
+	                       'test_trial27',
+	                       'test_trial28',
+	                       'test_trial29'
+	                     ],
+	          'traits' => [
+	                        'dry matter content|CO:0000092',
+	                        'dry yield|CO:0000014'
+	                      ]
         }, "Check parse fieldbook");
 
 
@@ -533,7 +816,7 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 #print STDERR Dumper @traits_assayed_sorted;
-@traits_assayed_check = ([70666,'Fresh root weight'], [70668,'Harvest index'], [70727, 'Dry yield'], [70741,'Dry matter content'], [70773,'Fresh shoot weight']);
+@traits_assayed_check = ([70666,'Fresh root weight'], [70668,'Harvest index variable'], [70727, 'Dry yield'], [70741,'Dry matter content percentage'], [70773,'Fresh shoot weight measurement in kg']);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
@@ -613,13 +896,13 @@ ok($post1_exp_md_files_diff == 148, "Check num rows in NdExperimentMdFIles table
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet.xls";
 $validate_file = $parser->validate('datacollector spreadsheet', $filename);
-ok(!$validate_file, "Check if parse validate datacollector fails for spreadsheet file");
+ok($validate_file != 1, "Check if parse validate datacollector fails for spreadsheet file");
 
 #check that parse fails for fieldbook file when using datacollector parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/fieldbook/fieldbook_phenotype_file.csv";
 $validate_file = $parser->validate('datacollector spreadsheet', $filename);
-ok(!$validate_file, "Check if parse validate datacollector fails for fieldbook");
+ok($validate_file != 1, "Check if parse validate datacollector fails for fieldbook");
 
 #Now parse datacollector file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
@@ -633,118 +916,301 @@ ok($parsed_file, "Check if parse parse datacollector works");
 #print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
-          'plots' => [
-                       'test_trial21',
-                       'test_trial210',
-                       'test_trial211',
-                       'test_trial212',
-                       'test_trial213',
-                       'test_trial214',
-                       'test_trial215',
-                       'test_trial22',
-                       'test_trial23',
-                       'test_trial24',
-                       'test_trial25',
-                       'test_trial26',
-                       'test_trial27',
-                       'test_trial28',
-                       'test_trial29'
-                     ],
-          'data' => {
-                      'test_trial29' => {
-                                          'dry matter content|CO:0000092' => '43',
-                                          'fresh shoot weight|CO:0000016' => '18',
-                                          'harvest index|CO:0000015' => '0.8'
-                                        },
-                      'test_trial22' => {
-                                          'fresh root weight|CO:0000012' => '37',
-                                          'dry matter content|CO:0000092' => '36',
-                                          'fresh shoot weight|CO:0000016' => '11',
-                                          'harvest index|CO:0000015' => '0.8'
-                                        },
-                      'test_trial214' => {
-                                           'fresh root weight|CO:0000012' => '49',
-                                           'dry matter content|CO:0000092' => '48',
-                                           'fresh shoot weight|CO:0000016' => '23',
-                                           'harvest index|CO:0000015' => '0.8'
-                                         },
-                      'test_trial211' => {
-                                           'fresh root weight|CO:0000012' => '46',
-                                           'dry matter content|CO:0000092' => '45',
-                                           'fresh shoot weight|CO:0000016' => '20',
-                                           'harvest index|CO:0000015' => '0.8'
-                                         },
-                      'test_trial21' => {
-                                          'fresh root weight|CO:0000012' => '36',
-                                          'dry matter content|CO:0000092' => '35',
-                                          'fresh shoot weight|CO:0000016' => '10',
-                                          'harvest index|CO:0000015' => '0.8'
-                                        },
-                      'test_trial215' => {
-                                           'fresh root weight|CO:0000012' => '50',
-                                           'dry matter content|CO:0000092' => '49',
-                                           'fresh shoot weight|CO:0000016' => '24',
-                                           'harvest index|CO:0000015' => '0.8'
-                                         },
-                      'test_trial210' => {
-                                           'fresh root weight|CO:0000012' => '45',
-                                           'dry matter content|CO:0000092' => '44',
-                                           'fresh shoot weight|CO:0000016' => '19',
-                                           'harvest index|CO:0000015' => '0.8'
-                                         },
-                      'test_trial213' => {
-                                           'fresh root weight|CO:0000012' => '48',
-                                           'dry matter content|CO:0000092' => '47',
-                                           'fresh shoot weight|CO:0000016' => '22',
-                                           'harvest index|CO:0000015' => '0.8'
-                                         },
-                      'test_trial27' => {
-                                          'fresh root weight|CO:0000012' => '42',
-                                          'fresh shoot weight|CO:0000016' => '16',
-                                          'harvest index|CO:0000015' => '0'
-                                        },
-                      'test_trial28' => {
-                                          'fresh root weight|CO:0000012' => '43',
-                                          'dry matter content|CO:0000092' => '42',
-                                          'fresh shoot weight|CO:0000016' => '17',
-                                          'harvest index|CO:0000015' => '0.8'
-                                        },
-                      'test_trial23' => {
-                                          'fresh root weight|CO:0000012' => '38',
-                                          'dry matter content|CO:0000092' => '37',
-                                          'fresh shoot weight|CO:0000016' => '12',
-                                          'harvest index|CO:0000015' => '0.8'
-                                        },
-                      'test_trial25' => {
-                                          'fresh root weight|CO:0000012' => '40',
-                                          'dry matter content|CO:0000092' => '39',
-                                          'fresh shoot weight|CO:0000016' => '14',
-                                          'harvest index|CO:0000015' => '0.8'
-                                        },
-                      'test_trial26' => {
-                                          'fresh root weight|CO:0000012' => '41',
-                                          'fresh shoot weight|CO:0000016' => '15',
-                                          'harvest index|CO:0000015' => '0.8'
-                                        },
-                      'test_trial24' => {
-                                          'fresh root weight|CO:0000012' => '39',
-                                          'dry matter content|CO:0000092' => '38',
-                                          'fresh shoot weight|CO:0000016' => '13',
-                                          'harvest index|CO:0000015' => '0'
-                                        },
-                      'test_trial212' => {
-                                           'fresh root weight|CO:0000012' => '47',
-                                           'dry matter content|CO:0000092' => '46',
-                                           'fresh shoot weight|CO:0000016' => '21',
-                                           'harvest index|CO:0000015' => '0.8'
-                                         }
-                    },
-          'traits' => [
-                        'dry matter content|CO:0000092',
-                        'fresh root weight|CO:0000012',
-                        'fresh shoot weight|CO:0000016',
-                        'harvest index|CO:0000015'
-                      ]
+	'data' => {
+	                      'test_trial215' => {
+	                                           'fresh shoot weight|CO:0000016' => [
+	                                                                                '24',
+	                                                                                '2016-04-21 08:20:12-0500'
+	                                                                              ],
+	                                           'harvest index|CO:0000015' => [
+	                                                                           '0.8',
+	                                                                           '2016-04-21 08:20:12-0500'
+	                                                                         ],
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '49',
+	                                                                                '2016-04-21 08:20:12-0500'
+	                                                                              ],
+	                                           'fresh root weight|CO:0000012' => [
+	                                                                               '50',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ]
+	                                         },
+	                      'test_trial28' => {
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '43',
+	                                                                              '2016-04-21 08:20:12-0500'
+	                                                                            ],
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '0.8',
+	                                                                          '2016-04-21 08:20:12-0500'
+	                                                                        ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '42',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '17',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ]
+	                                        },
+	                      'test_trial26' => {
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '41',
+	                                                                              '2016-04-21 08:20:12-0500'
+	                                                                            ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '15',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '0.8',
+	                                                                          '2016-04-21 08:20:12-0500'
+	                                                                        ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ]
+	                                        },
+	                      'test_trial29' => {
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '',
+	                                                                              '2016-04-21 08:20:12-0500'
+	                                                                            ],
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '0.8',
+	                                                                          '2016-04-21 08:20:12-0500'
+	                                                                        ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '18',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '43',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ]
+	                                        },
+	                      'test_trial214' => {
+	                                           'fresh root weight|CO:0000012' => [
+	                                                                               '49',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                           'harvest index|CO:0000015' => [
+	                                                                           '0.8',
+	                                                                           '2016-04-21 08:20:12-0500'
+	                                                                         ],
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '48',
+	                                                                                '2016-04-21 08:20:12-0500'
+	                                                                              ],
+	                                           'fresh shoot weight|CO:0000016' => [
+	                                                                                '23',
+	                                                                                '2016-04-21 08:20:12-0500'
+	                                                                              ]
+	                                         },
+	                      'test_trial210' => {
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '44',
+	                                                                                '2016-04-21 08:20:12-0500'
+	                                                                              ],
+	                                           'harvest index|CO:0000015' => [
+	                                                                           '0.8',
+	                                                                           '2016-04-21 08:20:12-0500'
+	                                                                         ],
+	                                           'fresh shoot weight|CO:0000016' => [
+	                                                                                '19',
+	                                                                                '2016-04-21 08:20:12-0500'
+	                                                                              ],
+	                                           'fresh root weight|CO:0000012' => [
+	                                                                               '45',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ]
+	                                         },
+	                      'test_trial211' => {
+	                                           'fresh root weight|CO:0000012' => [
+	                                                                               '46',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                           'fresh shoot weight|CO:0000016' => [
+	                                                                                '20',
+	                                                                                '2016-04-21 08:20:12-0500'
+	                                                                              ],
+	                                           'harvest index|CO:0000015' => [
+	                                                                           '0.8',
+	                                                                           '2016-04-21 08:20:12-0500'
+	                                                                         ],
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '45',
+	                                                                                '2016-04-21 08:20:12-0500'
+	                                                                              ]
+	                                         },
+	                      'test_trial22' => {
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '0.8',
+	                                                                          '2016-04-21 08:20:12-0500'
+	                                                                        ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '36',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '11',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '37',
+	                                                                              '2016-04-21 08:20:12-0500'
+	                                                                            ]
+	                                        },
+	                      'test_trial25' => {
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '0.8',
+	                                                                          '2016-04-21 08:20:12-0500'
+	                                                                        ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '14',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '39',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '40',
+	                                                                              '2016-04-21 08:20:12-0500'
+	                                                                            ]
+	                                        },
+	                      'test_trial23' => {
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '38',
+	                                                                              '2016-04-21 08:20:12-0500'
+	                                                                            ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '12',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '0.8',
+	                                                                          '2016-04-21 08:20:12-0500'
+	                                                                        ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '37',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ]
+	                                        },
+	                      'test_trial24' => {
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '0',
+	                                                                          '2016-04-21 08:20:12-0500'
+	                                                                        ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '13',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '38',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '39',
+	                                                                              '2016-04-21 08:20:12-0500'
+	                                                                            ]
+	                                        },
+	                      'test_trial21' => {
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '0.8',
+	                                                                          '2016-04-21 08:20:12-0500'
+	                                                                        ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '10',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '35',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '36',
+	                                                                              '2016-04-21 08:20:12-0500'
+	                                                                            ]
+	                                        },
+	                      'test_trial212' => {
+	                                           'harvest index|CO:0000015' => [
+	                                                                           '0.8',
+	                                                                           '2016-04-21 08:20:12-0500'
+	                                                                         ],
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '46',
+	                                                                                '2016-04-21 08:20:12-0500'
+	                                                                              ],
+	                                           'fresh shoot weight|CO:0000016' => [
+	                                                                                '21',
+	                                                                                '2016-04-21 08:20:12-0500'
+	                                                                              ],
+	                                           'fresh root weight|CO:0000012' => [
+	                                                                               '47',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ]
+	                                         },
+	                      'test_trial27' => {
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '0',
+	                                                                          '2016-04-21 08:20:12-0500'
+	                                                                        ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '16',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ],
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '42',
+	                                                                              '2016-04-21 08:20:12-0500'
+	                                                                            ]
+	                                        },
+	                      'test_trial213' => {
+	                                           'harvest index|CO:0000015' => [
+	                                                                           '0.8',
+	                                                                           '2016-04-21 08:20:12-0500'
+	                                                                         ],
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '47',
+	                                                                                '2016-04-21 08:20:12-0500'
+	                                                                              ],
+	                                           'fresh shoot weight|CO:0000016' => [
+	                                                                                '22',
+	                                                                                '2016-04-21 08:20:12-0500'
+	                                                                              ],
+	                                           'fresh root weight|CO:0000012' => [
+	                                                                               '48',
+	                                                                               '2016-04-21 08:20:12-0500'
+	                                                                             ]
+	                                         }
+	                    },
+	          'traits' => [
+	                        'dry matter content|CO:0000092',
+	                        'fresh root weight|CO:0000012',
+	                        'fresh shoot weight|CO:0000016',
+	                        'harvest index|CO:0000015'
+	                      ],
+	          'plots' => [
+	                       'test_trial21',
+	                       'test_trial210',
+	                       'test_trial211',
+	                       'test_trial212',
+	                       'test_trial213',
+	                       'test_trial214',
+	                       'test_trial215',
+	                       'test_trial22',
+	                       'test_trial23',
+	                       'test_trial24',
+	                       'test_trial25',
+	                       'test_trial26',
+	                       'test_trial27',
+	                       'test_trial28',
+	                       'test_trial29'
+	                     ]
         }, "Check datacollector parse");
 
 
@@ -767,7 +1233,7 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 #print STDERR Dumper @traits_assayed_sorted;
-@traits_assayed_check = ([70666,'Fresh root weight'], [70668,'Harvest index'], [70727, 'Dry yield'], [70741,'Dry matter content'], [70773,'Fresh shoot weight']);
+@traits_assayed_check = ([70666,'Fresh root weight'], [70668,'Harvest index variable'], [70727, 'Dry yield'], [70741,'Dry matter content percentage'], [70773,'Fresh shoot weight measurement in kg']);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -865,183 +1331,545 @@ ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 #print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
-          'plots' => [
-                       'test_trial21',
-                       'test_trial210',
-                       'test_trial211',
-                       'test_trial212',
-                       'test_trial213',
-                       'test_trial214',
-                       'test_trial215',
-                       'test_trial22',
-                       'test_trial23',
-                       'test_trial24',
-                       'test_trial25',
-                       'test_trial26',
-                       'test_trial27',
-                       'test_trial28',
-                       'test_trial29'
-                     ],
-          'data' => {
-                      'test_trial29' => {
-                                          'top yield|CO:0000017' => '3',
-                                          'fresh root weight|CO:0000012' => '15',
-                                          'sprouting|CO:0000008' => '76',
-                                          'fresh shoot weight|CO:0000016' => '28',
-                                          'flower|CO:0000111' => '1',
-                                          'root number|CO:0000011' => '6',
-                                          'dry matter content|CO:0000092' => '35',
-                                          'harvest index|CO:0000015' => '8.8'
-                                        },
-                      'test_trial22' => {
-                                          'top yield|CO:0000017' => '3',
-                                          'fresh root weight|CO:0000012' => '15',
-                                          'sprouting|CO:0000008' => '43',
-                                          'fresh shoot weight|CO:0000016' => '21',
-                                          'flower|CO:0000111' => '1',
-                                          'root number|CO:0000011' => '7',
-                                          'dry matter content|CO:0000092' => '30',
-                                          'harvest index|CO:0000015' => '1.8'
-                                        },
-                      'test_trial214' => {
-                                           'top yield|CO:0000017' => '7.5',
-                                           'fresh root weight|CO:0000012' => '15',
-                                           'sprouting|CO:0000008' => '87',
-                                           'fresh shoot weight|CO:0000016' => '33',
-                                           'flower|CO:0000111' => '1',
-                                           'root number|CO:0000011' => '4',
-                                           'dry matter content|CO:0000092' => '30',
-                                           'harvest index|CO:0000015' => '13.8'
-                                         },
-                      'test_trial211' => {
-                                           'top yield|CO:0000017' => '4',
-                                           'fresh root weight|CO:0000012' => '15',
-                                           'sprouting|CO:0000008' => '2',
-                                           'fresh shoot weight|CO:0000016' => '30',
-                                           'flower|CO:0000111' => '0',
-                                           'root number|CO:0000011' => '4',
-                                           'dry matter content|CO:0000092' => '38',
-                                           'harvest index|CO:0000015' => '10.8'
-                                         },
-                      'test_trial21' => {
-                                          'top yield|CO:0000017' => '2',
-                                          'fresh root weight|CO:0000012' => '15',
-                                          'sprouting|CO:0000008' => '45',
-                                          'fresh shoot weight|CO:0000016' => '20',
-                                          'flower|CO:0000111' => '0',
-                                          'root number|CO:0000011' => '3',
-                                          'dry matter content|CO:0000092' => '35',
-                                          'harvest index|CO:0000015' => '0.8'
-                                        },
-                      'test_trial215' => {
-                                           'top yield|CO:0000017' => '7',
-                                           'fresh root weight|CO:0000012' => '15',
-                                           'sprouting|CO:0000008' => '25',
-                                           'fresh shoot weight|CO:0000016' => '34',
-                                           'flower|CO:0000111' => '1',
-                                           'root number|CO:0000011' => '5',
-                                           'dry matter content|CO:0000092' => '38',
-                                           'harvest index|CO:0000015' => '14.8'
-                                         },
-                      'test_trial210' => {
-                                           'top yield|CO:0000017' => '2',
-                                           'fresh root weight|CO:0000012' => '15',
-                                           'sprouting|CO:0000008' => '45',
-                                           'dry matter content|CO:0000092' => '30',
-                                           'fresh shoot weight|CO:0000016' => '29',
-                                           'flower|CO:0000111' => '0',
-                                           'harvest index|CO:0000015' => '9.8'
-                                         },
-                      'test_trial213' => {
-                                           'top yield|CO:0000017' => '4.4',
-                                           'fresh root weight|CO:0000012' => '15',
-                                           'sprouting|CO:0000008' => '8',
-                                           'fresh shoot weight|CO:0000016' => '32',
-                                           'flower|CO:0000111' => '1',
-                                           'root number|CO:0000011' => '8',
-                                           'dry matter content|CO:0000092' => '35',
-                                           'harvest index|CO:0000015' => '12.8'
-                                         },
-                      'test_trial27' => {
-                                          'top yield|CO:0000017' => '9',
-                                          'fresh root weight|CO:0000012' => '15',
-                                          'sprouting|CO:0000008' => '34',
-                                          'fresh shoot weight|CO:0000016' => '26',
-                                          'flower|CO:0000111' => '1',
-                                          'root number|CO:0000011' => '8',
-                                          'dry matter content|CO:0000092' => '38',
-                                          'harvest index|CO:0000015' => '6.8'
-                                        },
-                      'test_trial28' => {
-                                          'top yield|CO:0000017' => '6',
-                                          'fresh root weight|CO:0000012' => '15',
-                                          'sprouting|CO:0000008' => '23',
-                                          'fresh shoot weight|CO:0000016' => '27',
-                                          'flower|CO:0000111' => '0',
-                                          'root number|CO:0000011' => '9',
-                                          'dry matter content|CO:0000092' => '39',
-                                          'harvest index|CO:0000015' => '7.8'
-                                        },
-                      'test_trial23' => {
-                                          'top yield|CO:0000017' => '5',
-                                          'fresh root weight|CO:0000012' => '15',
-                                          'sprouting|CO:0000008' => '23',
-                                          'fresh shoot weight|CO:0000016' => '22',
-                                          'flower|CO:0000111' => '1',
-                                          'root number|CO:0000011' => '4',
-                                          'dry matter content|CO:0000092' => '38',
-                                          'harvest index|CO:0000015' => '2.8'
-                                        },
-                      'test_trial25' => {
-                                          'top yield|CO:0000017' => '2',
-                                          'fresh root weight|CO:0000012' => '15',
-                                          'sprouting|CO:0000008' => '56',
-                                          'dry matter content|CO:0000092' => '35',
-                                          'fresh shoot weight|CO:0000016' => '24',
-                                          'flower|CO:0000111' => '1',
-                                          'root number|CO:0000011' => '6'
-                                        },
-                      'test_trial26' => {
-                                          'top yield|CO:0000017' => '4',
-                                          'fresh root weight|CO:0000012' => '15',
-                                          'sprouting|CO:0000008' => '45',
-                                          'fresh shoot weight|CO:0000016' => '25',
-                                          'flower|CO:0000111' => '1',
-                                          'root number|CO:0000011' => '4',
-                                          'dry matter content|CO:0000092' => '30',
-                                          'harvest index|CO:0000015' => '5.8'
-                                        },
-                      'test_trial24' => {
-                                          'top yield|CO:0000017' => '7',
-                                          'fresh root weight|CO:0000012' => '15',
-                                          'sprouting|CO:0000008' => '78',
-                                          'fresh shoot weight|CO:0000016' => '23',
-                                          'flower|CO:0000111' => '1',
-                                          'root number|CO:0000011' => '11',
-                                          'dry matter content|CO:0000092' => '39',
-                                          'harvest index|CO:0000015' => '3.8'
-                                        },
-                      'test_trial212' => {
-                                           'top yield|CO:0000017' => '7',
-                                           'fresh root weight|CO:0000012' => '15',
-                                           'sprouting|CO:0000008' => '56',
-                                           'fresh shoot weight|CO:0000016' => '31',
-                                           'flower|CO:0000111' => '0',
-                                           'root number|CO:0000011' => '6',
-                                           'dry matter content|CO:0000092' => '39',
-                                           'harvest index|CO:0000015' => '11.8'
-                                         }
-                    },
-          'traits' => [
-                        'dry matter content|CO:0000092',
-                        'flower|CO:0000111',
-                        'fresh root weight|CO:0000012',
-                        'fresh shoot weight|CO:0000016',
-                        'harvest index|CO:0000015',
-                        'root number|CO:0000011',
-                        'sprouting|CO:0000008',
-                        'top yield|CO:0000017'
-                      ]
+	'data' => {
+	                      'test_trial29' => {
+	                                          'top yield|CO:0000017' => [
+	                                                                      '3',
+	                                                                      '2016-01-20 01:30:28-0500'
+	                                                                    ],
+	                                          'flower|CO:0000111' => [
+	                                                                   '1',
+	                                                                   '2016-01-20 01:30:28-0500'
+	                                                                 ],
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '8.8',
+	                                                                          '2016-01-20 01:30:28-0500'
+	                                                                        ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '28',
+	                                                                               '2016-01-20 01:30:28-0500'
+	                                                                             ],
+	                                          'root number|CO:0000011' => [
+	                                                                        '6',
+	                                                                        '2016-01-20 01:30:28-0500'
+	                                                                      ],
+	                                          'sprouting|CO:0000008' => [
+	                                                                      '76',
+	                                                                      '2016-01-20 01:30:28-0500'
+	                                                                    ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '35',
+	                                                                               '2016-01-20 01:30:28-0500'
+	                                                                             ],
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '15',
+	                                                                              '2016-01-20 01:30:28-0500'
+	                                                                            ]
+	                                        },
+	                      'test_trial214' => {
+	                                           'sprouting|CO:0000008' => [
+	                                                                       '87',
+	                                                                       '2016-01-20 01:30:33-0500'
+	                                                                     ],
+	                                           'fresh shoot weight|CO:0000016' => [
+	                                                                                '33',
+	                                                                                '2016-01-20 01:30:33-0500'
+	                                                                              ],
+	                                           'root number|CO:0000011' => [
+	                                                                         '4',
+	                                                                         '2016-01-20 01:30:33-0500'
+	                                                                       ],
+	                                           'fresh root weight|CO:0000012' => [
+	                                                                               '15',
+	                                                                               '2016-01-20 01:30:33-0500'
+	                                                                             ],
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '30',
+	                                                                                '2016-01-20 01:30:33-0500'
+	                                                                              ],
+	                                           'top yield|CO:0000017' => [
+	                                                                       '7.5',
+	                                                                       '2016-01-20 01:30:33-0500'
+	                                                                     ],
+	                                           'harvest index|CO:0000015' => [
+	                                                                           '13.8',
+	                                                                           '2016-01-20 01:30:33-0500'
+	                                                                         ],
+	                                           'flower|CO:0000111' => [
+	                                                                    '1',
+	                                                                    '2016-01-20 01:30:33-0500'
+	                                                                  ]
+	                                         },
+	                      'test_trial24' => {
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '15',
+	                                                                              '2016-01-20 01:30:23-0500'
+	                                                                            ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '39',
+	                                                                               '2016-01-20 01:30:23-0500'
+	                                                                             ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '23',
+	                                                                               '2016-01-20 01:30:23-0500'
+	                                                                             ],
+	                                          'root number|CO:0000011' => [
+	                                                                        '11',
+	                                                                        '2016-01-20 01:30:23-0500'
+	                                                                      ],
+	                                          'sprouting|CO:0000008' => [
+	                                                                      '78',
+	                                                                      '2016-01-20 01:30:23-0500'
+	                                                                    ],
+	                                          'flower|CO:0000111' => [
+	                                                                   '1',
+	                                                                   '2016-01-20 01:30:23-0500'
+	                                                                 ],
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '3.8',
+	                                                                          '2016-01-20 01:30:23-0500'
+	                                                                        ],
+	                                          'top yield|CO:0000017' => [
+	                                                                      '7',
+	                                                                      '2016-01-20 01:30:23-0500'
+	                                                                    ]
+	                                        },
+	                      'test_trial25' => {
+	                                          'top yield|CO:0000017' => [
+	                                                                      '2',
+	                                                                      '2016-01-20 01:30:24-0500'
+	                                                                    ],
+	                                          'flower|CO:0000111' => [
+	                                                                   '1',
+	                                                                   '2016-01-20 01:30:24-0500'
+	                                                                 ],
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '',
+	                                                                          '2016-01-20 01:30:24-0500'
+	                                                                        ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '24',
+	                                                                               '2016-01-20 01:30:24-0500'
+	                                                                             ],
+	                                          'root number|CO:0000011' => [
+	                                                                        '6',
+	                                                                        '2016-01-20 01:30:24-0500'
+	                                                                      ],
+	                                          'sprouting|CO:0000008' => [
+	                                                                      '56',
+	                                                                      '2016-01-20 01:30:24-0500'
+	                                                                    ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '35',
+	                                                                               '2016-01-20 01:30:24-0500'
+	                                                                             ],
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '15',
+	                                                                              '2016-01-20 01:30:24-0500'
+	                                                                            ]
+	                                        },
+	                      'test_trial26' => {
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '5.8',
+	                                                                          '2016-01-20 01:30:25-0500'
+	                                                                        ],
+	                                          'flower|CO:0000111' => [
+	                                                                   '1',
+	                                                                   '2016-01-20 01:30:25-0500'
+	                                                                 ],
+	                                          'top yield|CO:0000017' => [
+	                                                                      '4',
+	                                                                      '2016-01-20 01:30:25-0500'
+	                                                                    ],
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '15',
+	                                                                              '2016-01-20 01:30:25-0500'
+	                                                                            ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '30',
+	                                                                               '2016-01-20 01:30:25-0500'
+	                                                                             ],
+	                                          'sprouting|CO:0000008' => [
+	                                                                      '45',
+	                                                                      '2016-01-20 01:30:25-0500'
+	                                                                    ],
+	                                          'root number|CO:0000011' => [
+	                                                                        '4',
+	                                                                        '2016-01-20 01:30:25-0500'
+	                                                                      ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '25',
+	                                                                               '2016-01-20 01:30:25-0500'
+	                                                                             ]
+	                                        },
+	                      'test_trial212' => {
+	                                           'flower|CO:0000111' => [
+	                                                                    '0',
+	                                                                    '2016-01-20 01:30:31-0500'
+	                                                                  ],
+	                                           'harvest index|CO:0000015' => [
+	                                                                           '11.8',
+	                                                                           '2016-01-20 01:30:31-0500'
+	                                                                         ],
+	                                           'top yield|CO:0000017' => [
+	                                                                       '7',
+	                                                                       '2016-01-20 01:30:31-0500'
+	                                                                     ],
+	                                           'fresh root weight|CO:0000012' => [
+	                                                                               '15',
+	                                                                               '2016-01-20 01:30:31-0500'
+	                                                                             ],
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '39',
+	                                                                                '2016-01-20 01:30:31-0500'
+	                                                                              ],
+	                                           'root number|CO:0000011' => [
+	                                                                         '6',
+	                                                                         '2016-01-20 01:30:31-0500'
+	                                                                       ],
+	                                           'fresh shoot weight|CO:0000016' => [
+	                                                                                '31',
+	                                                                                '2016-01-20 01:30:31-0500'
+	                                                                              ],
+	                                           'sprouting|CO:0000008' => [
+	                                                                       '56',
+	                                                                       '2016-01-20 01:30:31-0500'
+	                                                                     ]
+	                                         },
+	                      'test_trial210' => {
+	                                           'harvest index|CO:0000015' => [
+	                                                                           '9.8',
+	                                                                           '2016-01-20 01:30:29-0500'
+	                                                                         ],
+	                                           'flower|CO:0000111' => [
+	                                                                    '0',
+	                                                                    '2016-01-20 01:30:29-0500'
+	                                                                  ],
+	                                           'top yield|CO:0000017' => [
+	                                                                       '2',
+	                                                                       '2016-01-20 01:30:29-0500'
+	                                                                     ],
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '30',
+	                                                                                '2016-01-20 01:30:29-0500'
+	                                                                              ],
+	                                           'fresh root weight|CO:0000012' => [
+	                                                                               '15',
+	                                                                               '2016-01-20 01:30:29-0500'
+	                                                                             ],
+	                                           'sprouting|CO:0000008' => [
+	                                                                       '45',
+	                                                                       '2016-01-20 01:30:29-0500'
+	                                                                     ],
+	                                           'fresh shoot weight|CO:0000016' => [
+	                                                                                '29',
+	                                                                                '2016-01-20 01:30:29-0500'
+	                                                                              ],
+	                                           'root number|CO:0000011' => [
+	                                                                         '',
+	                                                                         '2016-01-20 01:30:29-0500'
+	                                                                       ]
+	                                         },
+	                      'test_trial21' => {
+	                                          'top yield|CO:0000017' => [
+	                                                                      '2',
+	                                                                      '2016-01-20 01:30:20-0500'
+	                                                                    ],
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '0.8',
+	                                                                          '2016-01-20 01:30:20-0500'
+	                                                                        ],
+	                                          'flower|CO:0000111' => [
+	                                                                   '0',
+	                                                                   '2016-01-20 01:30:20-0500'
+	                                                                 ],
+	                                          'sprouting|CO:0000008' => [
+	                                                                      '45',
+	                                                                      '2016-01-20 01:30:20-0500'
+	                                                                    ],
+	                                          'root number|CO:0000011' => [
+	                                                                        '3',
+	                                                                        '2016-01-20 01:30:20-0500'
+	                                                                      ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '20',
+	                                                                               '2016-01-20 01:30:20-0500'
+	                                                                             ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '35',
+	                                                                               '2016-01-20 01:30:20-0500'
+	                                                                             ],
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '15',
+	                                                                              '2016-01-20 01:30:20-0500'
+	                                                                            ]
+	                                        },
+	                      'test_trial213' => {
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '35',
+	                                                                                '2016-01-20 01:30:32-0500'
+	                                                                              ],
+	                                           'fresh root weight|CO:0000012' => [
+	                                                                               '15',
+	                                                                               '2016-01-20 01:30:32-0500'
+	                                                                             ],
+	                                           'fresh shoot weight|CO:0000016' => [
+	                                                                                '32',
+	                                                                                '2016-01-20 01:30:32-0500'
+	                                                                              ],
+	                                           'root number|CO:0000011' => [
+	                                                                         '8',
+	                                                                         '2016-01-20 01:30:32-0500'
+	                                                                       ],
+	                                           'sprouting|CO:0000008' => [
+	                                                                       '8',
+	                                                                       '2016-01-20 01:30:32-0500'
+	                                                                     ],
+	                                           'flower|CO:0000111' => [
+	                                                                    '1',
+	                                                                    '2016-01-20 01:30:32-0500'
+	                                                                  ],
+	                                           'harvest index|CO:0000015' => [
+	                                                                           '12.8',
+	                                                                           '2016-01-20 01:30:32-0500'
+	                                                                         ],
+	                                           'top yield|CO:0000017' => [
+	                                                                       '4.4',
+	                                                                       '2016-01-20 01:30:32-0500'
+	                                                                     ]
+	                                         },
+	                      'test_trial23' => {
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '15',
+	                                                                              '2016-01-20 01:30:22-0500'
+	                                                                            ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '38',
+	                                                                               '2016-01-20 01:30:22-0500'
+	                                                                             ],
+	                                          'sprouting|CO:0000008' => [
+	                                                                      '23',
+	                                                                      '2016-01-20 01:30:22-0500'
+	                                                                    ],
+	                                          'root number|CO:0000011' => [
+	                                                                        '4',
+	                                                                        '2016-01-20 01:30:22-0500'
+	                                                                      ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '22',
+	                                                                               '2016-01-20 01:30:22-0500'
+	                                                                             ],
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '2.8',
+	                                                                          '2016-01-20 01:30:22-0500'
+	                                                                        ],
+	                                          'flower|CO:0000111' => [
+	                                                                   '1',
+	                                                                   '2016-01-20 01:30:22-0500'
+	                                                                 ],
+	                                          'top yield|CO:0000017' => [
+	                                                                      '5',
+	                                                                      '2016-01-20 01:30:22-0500'
+	                                                                    ]
+	                                        },
+	                      'test_trial27' => {
+	                                          'flower|CO:0000111' => [
+	                                                                   '1',
+	                                                                   '2016-01-20 01:30:26-0500'
+	                                                                 ],
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '6.8',
+	                                                                          '2016-01-20 01:30:26-0500'
+	                                                                        ],
+	                                          'top yield|CO:0000017' => [
+	                                                                      '9',
+	                                                                      '2016-01-20 01:30:26-0500'
+	                                                                    ],
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '15',
+	                                                                              '2016-01-20 01:30:26-0500'
+	                                                                            ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '38',
+	                                                                               '2016-01-20 01:30:26-0500'
+	                                                                             ],
+	                                          'root number|CO:0000011' => [
+	                                                                        '8',
+	                                                                        '2016-01-20 01:30:26-0500'
+	                                                                      ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '26',
+	                                                                               '2016-01-20 01:30:26-0500'
+	                                                                             ],
+	                                          'sprouting|CO:0000008' => [
+	                                                                      '34',
+	                                                                      '2016-01-20 01:30:26-0500'
+	                                                                    ]
+	                                        },
+	                      'test_trial28' => {
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '7.8',
+	                                                                          '2016-01-20 01:30:27-0500'
+	                                                                        ],
+	                                          'flower|CO:0000111' => [
+	                                                                   '0',
+	                                                                   '2016-01-20 01:30:27-0500'
+	                                                                 ],
+	                                          'top yield|CO:0000017' => [
+	                                                                      '6',
+	                                                                      '2016-01-20 01:30:27-0500'
+	                                                                    ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '39',
+	                                                                               '2016-01-20 01:30:27-0500'
+	                                                                             ],
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '15',
+	                                                                              '2016-01-20 01:30:27-0500'
+	                                                                            ],
+	                                          'sprouting|CO:0000008' => [
+	                                                                      '23',
+	                                                                      '2016-01-20 01:30:27-0500'
+	                                                                    ],
+	                                          'root number|CO:0000011' => [
+	                                                                        '9',
+	                                                                        '2016-01-20 01:30:27-0500'
+	                                                                      ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '27',
+	                                                                               '2016-01-20 01:30:27-0500'
+	                                                                             ]
+	                                        },
+	                      'test_trial22' => {
+	                                          'fresh root weight|CO:0000012' => [
+	                                                                              '15',
+	                                                                              '2016-01-20 01:30:21-0500'
+	                                                                            ],
+	                                          'dry matter content|CO:0000092' => [
+	                                                                               '30',
+	                                                                               '2016-01-20 01:30:21-0500'
+	                                                                             ],
+	                                          'root number|CO:0000011' => [
+	                                                                        '7',
+	                                                                        '2016-01-20 01:30:21-0500'
+	                                                                      ],
+	                                          'fresh shoot weight|CO:0000016' => [
+	                                                                               '21',
+	                                                                               '2016-01-20 01:30:21-0500'
+	                                                                             ],
+	                                          'sprouting|CO:0000008' => [
+	                                                                      '43',
+	                                                                      '2016-01-20 01:30:21-0500'
+	                                                                    ],
+	                                          'flower|CO:0000111' => [
+	                                                                   '1',
+	                                                                   '2016-01-20 01:30:21-0500'
+	                                                                 ],
+	                                          'harvest index|CO:0000015' => [
+	                                                                          '1.8',
+	                                                                          '2016-01-20 01:30:21-0500'
+	                                                                        ],
+	                                          'top yield|CO:0000017' => [
+	                                                                      '3',
+	                                                                      '2016-01-20 01:30:21-0500'
+	                                                                    ]
+	                                        },
+	                      'test_trial215' => {
+	                                           'flower|CO:0000111' => [
+	                                                                    '1',
+	                                                                    '2016-01-20 01:30:34-0500'
+	                                                                  ],
+	                                           'harvest index|CO:0000015' => [
+	                                                                           '14.8',
+	                                                                           '2016-01-20 01:30:34-0500'
+	                                                                         ],
+	                                           'top yield|CO:0000017' => [
+	                                                                       '7',
+	                                                                       '2016-01-20 01:30:34-0500'
+	                                                                     ],
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '38',
+	                                                                                '2016-01-20 01:30:34-0500'
+	                                                                              ],
+	                                           'fresh root weight|CO:0000012' => [
+	                                                                               '15',
+	                                                                               '2016-01-20 01:30:34-0500'
+	                                                                             ],
+	                                           'root number|CO:0000011' => [
+	                                                                         '5',
+	                                                                         '2016-01-20 01:30:34-0500'
+	                                                                       ],
+	                                           'fresh shoot weight|CO:0000016' => [
+	                                                                                '34',
+	                                                                                '2016-01-20 01:30:34-0500'
+	                                                                              ],
+	                                           'sprouting|CO:0000008' => [
+	                                                                       '25',
+	                                                                       '2016-01-20 01:30:34-0500'
+	                                                                     ]
+	                                         },
+	                      'test_trial211' => {
+	                                           'fresh root weight|CO:0000012' => [
+	                                                                               '15',
+	                                                                               '2016-01-20 01:30:30-0500'
+	                                                                             ],
+	                                           'dry matter content|CO:0000092' => [
+	                                                                                '38',
+	                                                                                '2016-01-20 01:30:30-0500'
+	                                                                              ],
+	                                           'fresh shoot weight|CO:0000016' => [
+	                                                                                '30',
+	                                                                                '2016-01-20 01:30:30-0500'
+	                                                                              ],
+	                                           'root number|CO:0000011' => [
+	                                                                         '4',
+	                                                                         '2016-01-20 01:30:30-0500'
+	                                                                       ],
+	                                           'sprouting|CO:0000008' => [
+	                                                                       '2',
+	                                                                       '2016-01-20 01:30:30-0500'
+	                                                                     ],
+	                                           'flower|CO:0000111' => [
+	                                                                    '0',
+	                                                                    '2016-01-20 01:30:30-0500'
+	                                                                  ],
+	                                           'harvest index|CO:0000015' => [
+	                                                                           '10.8',
+	                                                                           '2016-01-20 01:30:30-0500'
+	                                                                         ],
+	                                           'top yield|CO:0000017' => [
+	                                                                       '4',
+	                                                                       '2016-01-20 01:30:30-0500'
+	                                                                     ]
+	                                         }
+	                    },
+	          'traits' => [
+	                        'dry matter content|CO:0000092',
+	                        'flower|CO:0000111',
+	                        'fresh root weight|CO:0000012',
+	                        'fresh shoot weight|CO:0000016',
+	                        'harvest index|CO:0000015',
+	                        'root number|CO:0000011',
+	                        'sprouting|CO:0000008',
+	                        'top yield|CO:0000017'
+	                      ],
+	          'plots' => [
+	                       'test_trial21',
+	                       'test_trial210',
+	                       'test_trial211',
+	                       'test_trial212',
+	                       'test_trial213',
+	                       'test_trial214',
+	                       'test_trial215',
+	                       'test_trial22',
+	                       'test_trial23',
+	                       'test_trial24',
+	                       'test_trial25',
+	                       'test_trial26',
+	                       'test_trial27',
+	                       'test_trial28',
+	                       'test_trial29'
+	                     ]
         }, "Check parse large phenotyping spreadsheet" );
 
 
@@ -1064,7 +1892,7 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 #print STDERR Dumper @traits_assayed_sorted;
-@traits_assayed_check = ([70666,'Fresh root weight'], [70668,'Harvest index'], [70681, 'Top yield'], [70700, 'Sprouting'], [70706, 'Root number'], [70713, 'Flower'], [70727, 'Dry yield'], [70741,'Dry matter content'], [70773,'Fresh shoot weight']);
+@traits_assayed_check = ([70666,'Fresh root weight'], [70668,'Harvest index variable'], [70681, 'Top yield'], [70700, 'Sprouting proportion'], [70706, 'Root number counting'], [70713, 'Flower'], [70727, 'Dry yield'], [70741,'Dry matter content percentage'], [70773,'Fresh shoot weight measurement in kg']);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from large phenotyping spreadsheet upload' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
