@@ -362,8 +362,11 @@ sub has_genotype {
 sub project_details {
     my ($self, $pr_id) = @_;
     
-    return $self->schema->resultset("Project::Project")
+    my $pr_rs = $self->schema->resultset("Project::Project")
         ->search( {'me.project_id' => $pr_id});
+
+    return $pr_rs;
+
 }
 
 

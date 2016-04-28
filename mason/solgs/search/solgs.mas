@@ -70,26 +70,16 @@ $gs_traits_index
       <span class="glyphicon glyphicon-search"></span>
     </button>
 
-    <button id="search_all_training_pops" style="position:absolute;right:100px;" class="btn btn-success" type="submit"> 
+    <button id="search_all_training_pops" style="position:absolute;right:20px;" class="btn btn-success" type="submit"> 
       <span value="Search for all training populations">Search for all training populations</span> 
     </button>
   </div>
 
   <div id="training_pops_message"  style="padding:20px 0px 10px 0px;font-weight:bold;text-align:center;color:#A7C942"></div>
-
-  <div id="training_populations" style="display:none;">
-    <table class="table" id="training_pops_list" style="text-align:left;"> 
-      <thead>
-	<tr>
-	  <th>Trial/training population</th>
-	  <th>Description</th>
-	  <th>Year</th>
-	  <th>Predict GEBVs</th>
-	</tr>
-      </thead>
-  </table>
+  <div id="searched_training_pops_list" style="display:none;width:100%">
+   
+ 
   </div>
-
   <br />
 
 

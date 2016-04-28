@@ -239,8 +239,9 @@ sub search_trials : Path('/solgs/search/trials') Args() {
 sub projects_links {
     my ($self, $c, $pr_rs) = @_;
 
-    my $projects = $self->get_projects_details($c, $pr_rs);
-
+    $self->get_projects_details($c, $pr_rs);
+	#my $projects  = $self->get_projects_details($c, $pr_rs);
+    my $projects  = $c->stash->{projects_details};
     my @projects_pages;
     my $update_marker_count;
 
@@ -556,7 +557,7 @@ sub trial_compatibility_file {
 
 
 sub get_projects_details {
-    my ($self,$c, $pr_rs) = @_;
+    my ($self, $c, $pr_rs) = @_;
  
     my ($year, $location, $pr_id, $pr_name, $pr_desc);
     my %projects_details = ();
@@ -566,16 +567,16 @@ sub get_projects_details {
         $pr_id   = $pr->get_column('project_id');
         $pr_name = $pr->get_column('name');
         $pr_desc = $pr->get_column('description');
-     
+
         my $pr_yr_rs = $c->model('solGS::solGS')->project_year($pr_id);
-    
-        while (my $pr = $pr_yr_rs->next) 
-	{
-            $year = $pr->value;
-	}
+
+         while (my $pr = $pr_yr_rs->next) 
+	 {
+             $year = $pr->value;
+	 }
 
 	my $location = $c->model('solGS::solGS')->project_location($pr_id);
- 
+	 
         $projects_details{$pr_id} = { 
 	    project_name     => $pr_name, 
 	    project_desc     => $pr_desc, 
@@ -2223,14 +2224,45 @@ sub check_phenotype_data_population :Path('/solgs/check/phenotype/data/populatio
 }
 
 
+sub check_population_exists :Path('/solgs/check/population/exists/') Args(0) {
+    my ($self, $c) = @_;
+    
+    my $name = $c->req->param('name');
+
+    my $rs = $c->model("solGS::solGS")->project_details_by_name($name);
+
+    my $pop_id;
+    while (my $row = $rs->next) {  
+        $pop_id =  $row->id;
+    }
+  
+    my $ret->{population_id} = $pop_id;    
+    $ret = to_json($ret);     
+   
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
 sub check_training_population :Path('/solgs/check/training/population/') Args(1) {
     my ($self, $c, $pop_id) = @_;
 
     $c->stash->{pop_id} = $pop_id;
 
     $self->check_population_is_training_population($c);
+    my $is_training_pop = $c->stash->{is_training_population};
 
-    my $ret->{is_training_population} = $c->stash->{is_training_population};    
+    my $training_pop_data;
+    if ($is_training_pop) 
+    {
+	my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
+	$self->projects_links($c, $pr_rs);
+	$training_pop_data = $c->stash->{projects_pages};
+    }
+    
+    my $ret->{is_training_population} =  $is_training_pop; 
+    $ret->{training_pop_data} = $training_pop_data; 
     $ret = to_json($ret);     
    
     $c->res->content_type('application/json');
@@ -2256,7 +2288,7 @@ sub check_population_is_training_population {
 	if ($has_phenotype) 
 	{
 	    $self->check_population_has_genotype($c);   
-	    $has_genotype = $c->stash->{population_has_genotype};	
+	    $has_genotype = $c->stash->{population_has_genotype};
 	}
     }
 
@@ -2324,6 +2356,12 @@ sub check_population_has_genotype {
 	{
 	    my $markers = $c->model("solGS::solGS")->get_project_genotyping_markers($pop_id);
 	    $has_genotype = 1 if $markers;
+
+	    my @markers = split(/\t/, $markers);
+	    my $marker_count = scalar(@markers);
+		  
+	    my $genoprop = {'project_id' => $pop_id, 'marker_count' => $marker_count};
+	    $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);    
 	}	
     }
     
@@ -3069,9 +3107,11 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
         $self->trial_compatibility_table($c, $markers_num);
         my $match_code = $c->stash->{trial_compatibility_code};
 
-        my $pop_rs       = $c->model('solGS::solGS')->project_details($pop_id);
+        my $pop_rs = $c->model('solGS::solGS')->project_details($pop_id);
        
-	my $pop_details  = $self->get_projects_details($c, $pop_rs);
+	$self->get_projects_details($c, $pop_rs);
+	#my $pop_details  = $self->get_projects_details($c, $pop_rs);
+	my $pop_details  = $c->stash->{projects_details};
         my $pop_name     = $pop_details->{$pop_id}{project_name};
         my $pop_desc     = $pop_details->{$pop_id}{project_desc};
         my $pop_year     = $pop_details->{$pop_id}{project_year};
@@ -4452,7 +4492,7 @@ sub phenotype_file {
 	if (!$c->user) {
 	    
 	    my $page = "/" . $c->req->path;
-	    print STDERR "\npheno page: $page\n";
+	 
 	    $c->res->redirect("/solgs/list/login/message?page=$page");
 	    $c->detach;   
 
