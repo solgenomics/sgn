@@ -41,13 +41,13 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
     my $warning_status;
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
     }
 
-    my ($verified_warning, $verified_error) = $store_phenotypes->verify($c, $plots, $traits, $parsed_data, $phenotype_metadata);
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify($c, $plots, $traits, $parsed_data, $phenotype_metadata, $timestamp_included);
     if ($verified_error) {
         push @$error_status, $verified_error;
         $c->stash->{rest} = {success => $success_status, error => $error_status };
@@ -66,7 +66,7 @@ sub upload_phenotype_store_POST : Args(1) {
     my ($self, $c, $file_type) = @_;
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -100,6 +100,7 @@ sub _prep_upload {
     my ($c, $file_type) = @_;
     my $uploader = CXGN::UploadFile->new();
     my $parser = CXGN::Phenotypes::ParseUpload->new();
+    my $timestamp_included;
     my $upload;
     my $subdirectory;
     my $validate_type;
@@ -109,6 +110,7 @@ sub _prep_upload {
         $subdirectory = "spreadsheet_phenotype_upload";
         $validate_type = "phenotype spreadsheet";
         $metadata_file_type = "spreadsheet phenotype file";
+        $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
     } 
     elsif ($file_type eq "fieldbook") {
@@ -116,6 +118,7 @@ sub _prep_upload {
         $subdirectory = "tablet_phenotype_upload";
         $validate_type = "field book";
         $metadata_file_type = "tablet phenotype file";
+        $timestamp_included = $c->req->param('upload_fieldbook_phenotype_timestamp_checkbox');
         $upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
     }
     elsif ($file_type eq "datacollector") {
@@ -123,6 +126,7 @@ sub _prep_upload {
         $subdirectory = "data_collector_phenotype_upload";
         $validate_type = "datacollector spreadsheet";
         $metadata_file_type = "data collector phenotype file";
+        $timestamp_included = $c->req->param('upload_datacollector_phenotype_timestamp_checkbox');
         $upload = $c->req->upload('upload_datacollector_phenotype_file_input');
     }
 
@@ -144,7 +148,7 @@ sub _prep_upload {
     unlink $upload_tempfile;
 
     ## Validate and parse uploaded file
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
     }
@@ -163,7 +167,7 @@ sub _prep_upload {
     $phenotype_metadata{'operator'} = $operator; 
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
     }
@@ -182,7 +186,7 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included);
 }
 
 #########

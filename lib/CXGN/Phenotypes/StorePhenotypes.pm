@@ -38,6 +38,7 @@ sub verify {
     my $trait_list_ref = shift;
     my $plot_trait_value_hashref = shift;
     my $phenotype_metadata_ref = shift;
+    my $timestamp_included = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $transaction_error;
     my @plot_list = @{$plot_list_ref};
@@ -122,12 +123,14 @@ sub verify {
                 }
             }
 
-            if ($timestamp) {
-                if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                    $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+            if ($timestamp_included) {
+                if ($timestamp) {
+                    if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+                        $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+                    }
+                } else {
+                    $error_message = $error_message."<small>No timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
                 }
-            } else {
-                $error_message = $error_message."<small>No timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
             }
         }
     }
@@ -163,8 +166,8 @@ sub store {
     my $plot_trait_value_hashref = shift;
     #####
 
-    my $error_message;
     my $phenotype_metadata = shift;
+    my $error_message;
     my $transaction_error;
     my @plot_list = @{$plot_list_ref};
     my @trait_list = @{$trait_list_ref};
@@ -179,7 +182,7 @@ sub store {
     my $archived_file = $phenotype_metadata->{'archived_file'};
     my $archived_file_type = $phenotype_metadata->{'archived_file_type'};
     my $operator = $phenotype_metadata->{'operator'};
-    my $phenotyping_date = $phenotype_metadata->{'date'};
+    my $upload_date = $phenotype_metadata->{'date'};
 
     my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type');
 
@@ -218,6 +221,9 @@ sub store {
                 #print STDERR Dumper $value_array;
                 my $trait_value = $value_array->[0];
                 my $timestamp = $value_array->[1];
+                if (!$timestamp) {
+                    $timestamp = 'NA';
+                }
 
                 if ($trait_value || $trait_value eq '0') {
 
@@ -244,7 +250,7 @@ sub store {
 		# 	    'type.name' => 'operator',
 		# 	    'nd_experimentprops.value' => $operator,
 		# 	    'type_2.name' => 'date',
-		# 	    'nd_experimentprops_2.value' => $phenotyping_date,
+		# 	    'nd_experimentprops_2.value' => $upload_date,
 		# 	   },
 		# 	   {
 		# 	    join => [{'nd_experimentprops' => 'type'},{'nd_experimentprops' => 'type'},{'nd_experiment_phenotypes' => 'type'}],
@@ -255,7 +261,7 @@ sub store {
                     if (!$experiment) {
                         $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
                         ->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
-                        $experiment->create_nd_experimentprops({date => $phenotyping_date},{autocreate => 1, cv_name => 'local'});
+                        $experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
                         $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
                     }
 
@@ -304,6 +310,9 @@ sub store {
         #print STDERR Dumper $value_array;
         my $trait_value = $value_array->[0];
         my $timestamp = $value_array->[1];
+        if (!$timestamp) {
+            $timestamp = 'NA';
+        }
 
 		if ($trait_value || $trait_value eq '0') {
 
@@ -329,7 +338,7 @@ sub store {
 		# 	    'type.name' => 'operator',
 		# 	    'nd_experimentprops.value' => $operator,
 		# 	    'type_2.name' => 'date',
-		# 	    'nd_experimentprops_2.value' => $phenotyping_date,
+		# 	    'nd_experimentprops_2.value' => $upload_date,
 		# 	   },
 		# 	   {
 		# 	    join => [{'nd_experimentprops' => 'type'},{'nd_experimentprops' => 'type'},{'nd_experiment_phenotypes' => 'type'}],
@@ -340,7 +349,7 @@ sub store {
 		    if (!$experiment) {
 			$experiment = $schema->resultset('NaturalDiversity::NdExperiment')
 			    ->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
-			$experiment->create_nd_experimentprops({date => $phenotyping_date},{autocreate => 1, cv_name => 'local'});
+			$experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
 			$experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
 		    }
 
