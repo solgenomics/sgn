@@ -91,7 +91,7 @@
             
             <h4>Timestamps:</h4>
             <ul>
-                <li>To include timestamp information for your measurement, click the checkbox "Includes Timestamps".</li>
+                <li>To include timestamp information for your measurements, click the checkbox "Includes Timestamps".</li>
                 <li>For timestamps, values should be recorded as <i>"Value,Timestamp"</i>.<br/>For no timestamps, values should be recorded as <i>"Value"</i>.</li>
                 <li>Timestamp format must be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</li><br/>
                 <li>Example with timestamps: <br/><br/>

@@ -38,8 +38,8 @@ sub validate {
    my  ( $row_min, $row_max ) = $worksheet->row_range();
    my  ( $col_min, $col_max ) = $worksheet->col_range();
 
-    if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header with at least plot_name and timestamp and one trait, as well as one row of phenotypes
-        $parse_result{'error'} = "Spreadsheet is missing plot_name, timestamp, and atleast one trait in header.";
+    if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header with at least plot_name and one trait, as well as one row of phenotypes
+        $parse_result{'error'} = "Spreadsheet is missing plot_name and atleast one trait in header.";
         print STDERR "Spreadsheet is missing header\n";
         return \%parse_result;
     }
@@ -110,18 +110,6 @@ sub validate {
         return \%parse_result;
     }
 
-    my $timestamp_head;
-    if ($worksheet->get_cell(0,6)) {
-        $timestamp_head  = $worksheet->get_cell(0,6)->value();
-    }
-
-    if (!$timestamp_head || $timestamp_head ne 'timestamp') {
-        $parse_result{'error'} = "No timestamp in header.";
-        print STDERR "No timestamp in header\n";
-        return \%parse_result;
-    }
-
-
     #if the rest of the header rows are not two caps followed by colon followed by text then return
 
     return 1;
@@ -130,6 +118,7 @@ sub validate {
 sub parse {
     my $self = shift;
     my $filename = shift;
+    my $timestamp_included = shift;
     my %parse_result;
     my @file_lines;
     my $delimiter = ',';
@@ -185,23 +174,26 @@ sub parse {
         }
 
         foreach my $trait_key (sort keys %header_column_info) {
-            my $trait_value = '';
+            my $value_string = '';
+
             if ($worksheet->get_cell($row,$header_column_info{$trait_key})){
-                $trait_value = $worksheet->get_cell($row,$header_column_info{$trait_key})->value();
+                $value_string = $worksheet->get_cell($row,$header_column_info{$trait_key})->value();
             }
-            
-            my $timestamp;
-            if ($worksheet->get_cell(0,6)->value() eq 'timestamp' && $worksheet->get_cell($row,6)){
-                $timestamp = $worksheet->get_cell($row,6)->value();
-            } else {
-                $parse_result{'error'} = "Timestamp missing.";
-                return \%parse_result;
+            my ($trait_value, $timestamp) = split /,/, $value_string;
+            if (!$timestamp) {
+                $timestamp = '';
             }
+            if (!$trait_value) {
+                $trait_value = '';
+            }
+            #print STDERR $trait_value." : ".$timestamp."\n";
             
-            if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
-                print STDERR "value: $timestamp\n";
-                return \%parse_result;
+            if ($timestamp_included) {
+                if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+                    $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+                    print STDERR "value: $timestamp\n";
+                    return \%parse_result;
+                }
             }
             
             if ( defined($trait_value) && defined($timestamp) ) {

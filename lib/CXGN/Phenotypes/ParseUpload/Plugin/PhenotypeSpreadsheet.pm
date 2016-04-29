@@ -138,7 +138,7 @@ sub parse {
 
         foreach my $trait_key (sort keys %header_column_info) {
             my $value_string = '';
-                
+
             if ($worksheet->get_cell($row,$header_column_info{$trait_key})){
                 $value_string = $worksheet->get_cell($row,$header_column_info{$trait_key})->value();
             }
@@ -150,7 +150,7 @@ sub parse {
                 $trait_value = '';
             }
             #print STDERR $trait_value." : ".$timestamp."\n";
-                
+
             if ( defined($trait_value) && defined($timestamp) ) {
                 if ($trait_value ne '.'){
                     $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp];

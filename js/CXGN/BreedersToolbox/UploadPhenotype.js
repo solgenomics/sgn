@@ -30,29 +30,29 @@ jQuery( document ).ready( function() {
 
     //For Datacollector Upload
     jQuery('#upload_datacollector_phenotype_submit_verify').click( function() {
-	initializeUploadPhenotype(jQuery("#upload_datacollector_phenotype_file_input").val(), "Verifying Datacollector File and Phenotype Data", "#upload_datacollector_phenotype_file_form", "/ajax/phenotype/upload_verify/datacollector");
+        initializeUploadPhenotype(jQuery("#upload_datacollector_phenotype_file_input").val(), "Verifying Datacollector File and Phenotype Data", "#upload_datacollector_phenotype_file_form", "/ajax/phenotype/upload_verify/datacollector");
     });
 
     jQuery("#upload_datacollector_phenotype_file_form").iframePostForm({
-	json: true,
-	post: function () { },
-	complete: function (response) {
-	    hidePhenotypeUploadWorkingModal();
-	    displayPhenotypeUploadVerifyResponse(response, "datacollector");
-	    
-	    jQuery("#upload_datacollector_phenotype_submit_store").click( function() {
-		initializeUploadPhenotype(jQuery("#upload_datacollector_phenotype_file_input").val(), "Storing Datacollector File and Phenotype Data", "#upload_datacollector_phenotype_file_form", "/ajax/phenotype/upload_store/datacollector");
+        json: true,
+        post: function () { },
+        complete: function (response) {
+            hidePhenotypeUploadWorkingModal();
+            displayPhenotypeUploadVerifyResponse(response, "datacollector");
+
+            jQuery("#upload_datacollector_phenotype_submit_store").click( function() {
+                initializeUploadPhenotype(jQuery("#upload_datacollector_phenotype_file_input").val(), "Storing Datacollector File and Phenotype Data", "#upload_datacollector_phenotype_file_form", "/ajax/phenotype/upload_store/datacollector");
             });
 
-    	    jQuery("#upload_datacollector_phenotype_file_form").iframePostForm({
-		json: true,
-		post: function () { },
-	    	complete: function (response) {
-	    	    hidePhenotypeUploadWorkingModal();
-		    displayPhenotypeUploadStoreResponse(response, "datacollector");
-		},
-    	    });
-	}
+            jQuery("#upload_datacollector_phenotype_file_form").iframePostForm({
+                json: true,
+                post: function () { },
+                complete: function (response) {
+                    hidePhenotypeUploadWorkingModal();
+                    displayPhenotypeUploadStoreResponse(response, "datacollector");
+                },
+            });
+        }
     });
 
     //For Fieldbook Upload

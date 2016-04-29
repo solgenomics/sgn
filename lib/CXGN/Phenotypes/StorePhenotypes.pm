@@ -124,14 +124,21 @@ sub verify {
             }
 
             if ($timestamp_included) {
-                if ($timestamp) {
-                    if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                        $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+                if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
+                    if ($timestamp) {
+                        if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+                            $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+                        }
                     }
                 } else {
-                    $error_message = $error_message."<small>No timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
+                    $error_message = $error_message."<small>'Timestamps Included' is selected, but no timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
+                }
+            } else {
+                if ($timestamp) {
+                    $error_message = $error_message."<small>Timestamps found in file, but 'Timestamps Included' is not selected.</small><hr>";
                 }
             }
+            
         }
     }
 
