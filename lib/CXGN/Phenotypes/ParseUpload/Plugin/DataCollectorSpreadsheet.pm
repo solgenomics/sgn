@@ -154,7 +154,7 @@ sub parse {
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
     #get trait names and column numbers;
-    for my $col (7 .. $col_max) {
+    for my $col (6 .. $col_max) {
         my $cell_val;
         if ($worksheet->get_cell(0,$col)) {
             $cell_val = $worksheet->get_cell(0,$col)->value();
@@ -183,7 +183,7 @@ sub parse {
             if (!$timestamp) {
                 $timestamp = '';
             }
-            if (!$trait_value) {
+            if (!defined($trait_value) ) {
                 $trait_value = '';
             }
             #print STDERR $trait_value." : ".$timestamp."\n";

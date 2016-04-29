@@ -229,7 +229,7 @@ sub store {
                 my $trait_value = $value_array->[0];
                 my $timestamp = $value_array->[1];
                 if (!$timestamp) {
-                    $timestamp = 'NA';
+                    $timestamp = 'NA'.$upload_date;
                 }
 
                 if ($trait_value || $trait_value eq '0') {
