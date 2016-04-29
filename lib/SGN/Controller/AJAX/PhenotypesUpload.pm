@@ -118,7 +118,7 @@ sub _prep_upload {
         $subdirectory = "tablet_phenotype_upload";
         $validate_type = "field book";
         $metadata_file_type = "tablet phenotype file";
-        $timestamp_included = $c->req->param('upload_fieldbook_phenotype_timestamp_checkbox');
+        $timestamp_included = 1;
         $upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
     }
     elsif ($file_type eq "datacollector") {

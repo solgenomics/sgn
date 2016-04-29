@@ -57,29 +57,29 @@ jQuery( document ).ready( function() {
 
     //For Fieldbook Upload
     jQuery('#upload_fieldbook_phenotype_submit_verify').click( function() {
-	initializeUploadPhenotype(jQuery("#upload_fieldbook_phenotype_file_input").val(), "Verifying Fieldbook File and Phenotype Data", "#upload_fieldbook_phenotype_file_form", "/ajax/phenotype/upload_verify/fieldbook");
+        initializeUploadPhenotype(jQuery("#upload_fieldbook_phenotype_file_input").val(), "Verifying Fieldbook File and Phenotype Data", "#upload_fieldbook_phenotype_file_form", "/ajax/phenotype/upload_verify/fieldbook");
     });
 
     jQuery("#upload_fieldbook_phenotype_file_form").iframePostForm({
-	json: true,
-	post: function () { },
-	complete: function (response) {
-	    hidePhenotypeUploadWorkingModal();
-	    displayPhenotypeUploadVerifyResponse(response, "fieldbook");
-	    
-	    jQuery("#upload_fieldbook_phenotype_submit_store").click( function() {
-		initializeUploadPhenotype(jQuery("#upload_fieldbook_phenotype_file_input").val(), "Storing Fieldbook File and Phenotype Data", "#upload_fieldbook_phenotype_file_form", "/ajax/phenotype/upload_store/fieldbook");
+        json: true,
+        post: function () { },
+        complete: function (response) {
+            hidePhenotypeUploadWorkingModal();
+            displayPhenotypeUploadVerifyResponse(response, "fieldbook");
+
+            jQuery("#upload_fieldbook_phenotype_submit_store").click( function() {
+                initializeUploadPhenotype(jQuery("#upload_fieldbook_phenotype_file_input").val(), "Storing Fieldbook File and Phenotype Data", "#upload_fieldbook_phenotype_file_form", "/ajax/phenotype/upload_store/fieldbook");
             });
-	    	    
-    	    jQuery("#upload_fieldbook_phenotype_file_form").iframePostForm({
-		json: true,
-		post: function () { },
-	    	complete: function (response) {
-	    	    hidePhenotypeUploadWorkingModal();
-		    displayPhenotypeUploadStoreResponse(response, "fieldbook");
-		},
-    	    });
-	}
+
+            jQuery("#upload_fieldbook_phenotype_file_form").iframePostForm({
+                json: true,
+                post: function () { },
+                complete: function (response) {
+                    hidePhenotypeUploadWorkingModal();
+                    displayPhenotypeUploadStoreResponse(response, "fieldbook");
+                },
+            });
+        }
     });
 
 	jQuery('#upload_phenotype_spreadsheet_dialog').on('hidden.bs.modal', function () {
