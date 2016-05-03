@@ -51,6 +51,31 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     $c->stash->{rest} = { success => 1 };
 }
 
+sub delete_folder : Chained('get_folder') PathPart('delete') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    if (! $self->check_privileges($c)) {
+        return;
+    }
+
+    my $folder = CXGN::Trial::Folder->new({
+        bcs_schema => $c->stash->{schema},
+        folder_id => $c->stash->{folder_id}
+    });
+
+    my $children = $folder->children();
+    if (scalar(@$children) > 0) {
+        $c->stash->{rest} = { error => "Folder has children in it. Move any trials or sub-folders out of this folder before deleting this folder." };
+        return;
+    } else {
+        my $delete_folder = $folder->delete_folder();
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
 sub associate_parent_folder : Chained('get_folder') PathPart('associate/parent') Args(1) { 
     my $self = shift;
     my $c = shift;
