@@ -102,8 +102,6 @@ $t->while_logged_in_as("curator", sub {
     sleep(1);
     $t->driver->accept_alert();
     sleep(1);
-    $t->driver->accept_alert();
-    sleep(1);
     $t->find_element_ok("//div[contains(., 'New Trial Name')]", "xpath", "verify trial name")->get_text();
 
     #Edit Trial type

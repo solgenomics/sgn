@@ -78,7 +78,7 @@ sub parse {
       $desc = "";
       $one_hsp = 0;
   
-      if ($line =~ /^>(\S+)\s+(.+)/) {
+      if ($line =~ /^>(\S+)\s*(.*)/) {
         $subject = $1;
         $desc = $2;
       }
