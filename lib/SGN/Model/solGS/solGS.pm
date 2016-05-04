@@ -2020,7 +2020,7 @@ sub get_project_genotyping_markers {
 
     my $markers;
     
-    if ($stock_genotype_rs->first()) 
+    if ($stock_genotype_rs->first) 
     {
 	$markers = $self->extract_project_markers($stock_genotype_rs->first);
     }
@@ -2028,7 +2028,6 @@ sub get_project_genotyping_markers {
     return $markers;
 
 }
-
 
 
 __PACKAGE__->meta->make_immutable;
