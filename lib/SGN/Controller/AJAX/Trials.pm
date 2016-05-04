@@ -7,6 +7,8 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial::Folder;
 use Data::Dumper;
 use Carp;
+use File::Path qw(make_path);
+use File::Spec::Functions qw / catfile catdir/;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -51,7 +53,13 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
 	   $html .= $folder->get_jstree_html('breeding_program');
     }
     
-    my $filename = $c->config->{cluster_shared_tempdir}."/folder/entire_jstree_html.txt";
+    my $dir = catdir($c->site_cluster_shared_dir, "folder");
+    eval { make_path($dir) };
+    if ($@) {
+        print "Couldn't create $dir: $@";
+    }
+    my $filename = $dir."/entire_jstree_html.txt";
+
     my $OUTFILE;
     open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
     print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
@@ -64,7 +72,8 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     my $self = shift;
     my $c = shift;
 
-    my $filename = $c->config->{cluster_shared_tempdir}."/folder/entire_jstree_html.txt";
+    my $dir = catdir($c->site_cluster_shared_dir, "folder");
+    my $filename = $dir."/entire_jstree_html.txt";
     my $html = '';
     open(my $fh, '<', $filename) or die "cannot open file $filename";
     {

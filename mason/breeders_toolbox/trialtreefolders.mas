@@ -21,6 +21,9 @@ $breeding_programs
   <tbody>
   <tr>
     <td>
+        <h4>Search</h4>
+        <input type="text" class="form-control input-sm" id="trial_tree_search" placeholder="Search" />
+        <hr>
       <h4>Download Trial</h4>
       <button class="btn btn-primary" id="download_button" disabled="disabled" title="First Select a Trial to Download">Excel</button>
       <button class="btn btn-primary" id="download_button_csv" disabled="disabled" title="First Select a Trial to Download">CSV</button><br />
@@ -85,7 +88,10 @@ $breeding_programs
                     "icon": 'glyphicon glyphicon-leaf text-success',
                 }
             },
-          "plugins" : ["html_data","types"]
+            "search" : {  
+                 "case_insensitive" : true,    
+             },
+          "plugins" : ["html_data","types","search"]
 
         });
 
@@ -94,6 +100,11 @@ $breeding_programs
         alert("An error occurred while loading the trial data.");
       }
   });
+  
+    jQuery("#trial_tree_search").keyup(function() {
+        var v = jQuery("#trial_tree_search").val();
+        jQuery("#trial_list").jstree(true).search(v);
+    });
 
 
 

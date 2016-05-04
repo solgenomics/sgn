@@ -13,6 +13,9 @@ $t->while_logged_in_as("submitter", sub {
   
   $t->get_ok("/breeders/trials");
   sleep(2);
+ 
+  my $refresh_tree = $t->find_element_ok("refresh_jstree_html", "id", "refresh tree")->click();
+  sleep(2);
   
   my $open_tree = $t->find_element_ok("jstree-icon", "class", "open up tree")->click();
   sleep(2);
@@ -58,6 +61,9 @@ $t->while_logged_in_as("submitter", sub {
   my $trial_submit = $t->find_element_ok("set_trial_folder", "id", "add trial to folder submit")->click();
   $t->driver->accept_alert();
   sleep(3);
+  
+  my $refresh_tree = $t->find_element_ok("refresh_jstree_html", "id", "refresh tree")->click();
+  sleep(2);
   
   my $open_tree = $t->find_element_ok("jstree-icon", "class", "open up tree")->click();
   sleep(2);

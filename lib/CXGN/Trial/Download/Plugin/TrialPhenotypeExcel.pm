@@ -23,7 +23,7 @@ sub download {
 
     my $trial_sql = "\'$trial_id\'";
     my $bs = CXGN::BreederSearch->new( { dbh => $schema->storage->dbh() });
-    my @data = $bs->get_phenotype_info_matrix(undef,$trial_sql, undef);
+    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef);
     my $rs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_geolocation');
 
     my $location = $rs->first()->get_column('description');
