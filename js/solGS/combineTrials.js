@@ -10,14 +10,14 @@ JSAN.use('jquery.blockUI');
 
 function getPopIds () {
 
-    var searchedPopsList = jQuery("#searched_trials_list tr").length;
+    var searchedPopsList = jQuery("#searched_trials_table tr").length;
   
     var tableId;
 
     if (searchedPopsList) {
-	tableId = 'searched_trials_list';
+	tableId = 'searched_trials_table';
     } else {	
-	tableId = 'homepage_trials_list';
+	tableId = 'all_trials_table';
     }
  
     jQuery('#' +tableId + ' tr').filter(':has(:checkbox:checked)')
@@ -53,7 +53,7 @@ jQuery(document).ready(function() {
 
 
 function hideTrialsList() {
-    jQuery("#homepage_trials_list").hide();
+    jQuery("#homepage_trials_list").empty();
     jQuery("#searched_training_pops_list").empty();
     jQuery("#done_selecting_div").hide();
     jQuery("#homepage_message").hide();
