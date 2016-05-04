@@ -134,7 +134,7 @@ jQuery(document).ready(function() {
                     }
                 },
                 error: function(response) {
-                    alert('An error occurred trying to associate a folder to the trial.');
+                    alert('An error occurred trying to delete folder.');
                 }
             });
         }

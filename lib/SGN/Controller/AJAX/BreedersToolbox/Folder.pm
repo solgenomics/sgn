@@ -64,15 +64,12 @@ sub delete_folder : Chained('get_folder') PathPart('delete') Args(0) {
         folder_id => $c->stash->{folder_id}
     });
 
-    my $children = $folder->children();
-    if (scalar(@$children) > 0) {
-        $c->stash->{rest} = { error => "Folder has children in it. Move any trials or sub-folders out of this folder before deleting this folder." };
-        return;
+    my $delete_folder = $folder->delete_folder();
+    if ($delete_folder) {
+        $c->stash->{rest} = { success => 1 };
     } else {
-        my $delete_folder = $folder->delete_folder();
+        $c->stash->{rest} = { error => 'Folder Not Deleted! To delete a folder first move all trials and sub-folders out of it.' };
     }
-
-    $c->stash->{rest} = { success => 1 };
 
 }
 
