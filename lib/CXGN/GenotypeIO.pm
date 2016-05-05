@@ -66,6 +66,17 @@ sub next {
     return $gt;
 }
 
+sub next_vcf_row {
+	my $self = shift;
+	my ($marker_info, $values) = $self->plugin()->next();
+	
+	if (!$marker_info) {
+		return;
+	}
+	return ($marker_info, $values);
+	
+}
+
 sub accessions { 
     my $self = shift;
     return $self->plugin()->accessions();

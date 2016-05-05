@@ -35,90 +35,53 @@ sub init {
     my $args = shift;
 
     $self->file($args->{file});
+	
+	my $F;
+	open($F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
 
-    # open(my $F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
+		my $header = <$F>;
+		chomp($header);
+		#print STDERR "HEADER = $header\n";
+		my @fields = split /\t/, $header;
+		my @accessions = @fields[9..$#fields];
 
-    # # gather accession names (encoded in line starting with #CHROM)
-    # #
-    # my $header = "";
-    # while (<$F>) { 
-    # 	chomp();
+		my @markers;
+		while (<$F>) { 
+		chomp;
+			my @values = split /\t/;
+			push @markers, $values[2];
+		}
 
-    # 	if (m/\#CHROM/) { 	
-    # 	    $header = $_;
-    # 	    last();
-    # 	}
-    # }
-    
-    # close($F);
-
-    # gather marker names
-    #
-    my @markers = ();
-    my @accessions = ();
-    
-    open(my $F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
-
-    my $header_seen = 0;
-    while (<$F>){ 
-	chomp;
-	if ($header_seen) { 
-	    my @fields = split /\t/;
-	    push @markers, $fields[2];
-	}
-	if (m/^\#CHROM/) { 
-	    $header_seen=1;
-	    my @fields = split /\t/;
-	    @accessions = @fields[9..$#fields];
-	}
-
-    }
-
-    $self->markers(\@markers);
-    $self->accessions(\@accessions);
+		$self->header(\@fields);
+		$self->accessions(\@accessions);
+		$self->markers(\@markers);
+		
+    close($F);
+	
+	my $fh = IO::File->new($args->{file});
+    my $ignore_first_line = <$fh>;
+    $self->current(1);
+    $self->fh($fh);
 }
 
 sub next {
     my $self = shift;
-    #my $file = shift;
-    my $current = shift;
 
-    #print STDERR "VCF NEXT CALLED\n";
-    open(my $F, "<", $self->file) || die "Can't open file $self->file\n";
-
-    print STDERR "Zooming to header...\n";
-    while (<$F>) { 
-	chomp;
-	if (m/\#CHROM/) { 
-	    last();
-	}
-    }
-
-    my @markers = ();;
-    my %rawscores = ();
-
-    print STDERR "Starting genotype parsing...\n";
-    my $lines_parsed = 0;
-    while (<$F>) { 
-	chomp;
-	my @fields = split /\t/;
+	#print STDERR "VCF NEXT CALLED\n";
+	my $line;
+	my $fh = $self->fh();
+	if ( defined($line = <$fh>) ) { 
+		
+		chomp($line);
+		my @fields = split /\t/, $line;
 	
-	#my $score = $fields[$current+9];
-	#if (defined($score)) { 
-	    #$score =~ s/([0-9.]\/[0-9.])\:.*/$1/;
-	    #$genotype{ $fields[2] } = $score;
-	    $rawscores{ $fields[2] } = $fields[$current+9];
-	#}
-	push @markers, $fields[2];
-	$lines_parsed++;
-	if ($lines_parsed % 500 ==0) { print STDERR "$lines_parsed         \r"; }
-    }
-    
-    my $genotype = $self->accessions()->[$self->current()];
+		my @marker_info = @fields[ 0..8 ];
+		my @values = @fields[ 9..$#fields ];
 
-    close($F);
-    $self->current( $self->current()+1 );
-    return (\@markers, \%rawscores, $genotype);
+		$self->current( $self->current()+1 );
+		return (\@marker_info, \@values);
+    }
+    return undef;
 }
 
 
