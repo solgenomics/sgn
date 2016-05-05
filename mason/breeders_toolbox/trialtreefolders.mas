@@ -1,7 +1,6 @@
 
 <%args>
 @locations => ()
-@roles => ()
 $breeding_programs
 </%args>
 
