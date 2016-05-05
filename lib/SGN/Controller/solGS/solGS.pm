@@ -603,7 +603,8 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
     my ($self, $c, $query) = @_;
       
     my $page = $c->req->param('page') || 1;
-    my $result = $c->model('solGS::solGS')->search_trait($query, $page);
+    my $gs_traits = $c->model('solGS::solGS')->search_trait($query);
+    my $result = $c->model('solGS::solGS')->trait_details($gs_traits);
     
     my @rows;
     while (my $row = $result->next)
@@ -615,14 +616,12 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
         my $checkbox;
         push @rows, [ qq |<a href="/solgs/search/trials/trait/$id"  onclick="solGS.waitPage()">$name</a>|, $def];      
     }
-
+  
     if (@rows)
     {
        $c->stash(template   => $self->template('/search/result/traits.mas'),
                  result     => \@rows,
                  query      => $query,
-                 pager      => $result->pager,
-                 page_links => sub {uri ( query => { trait => $query, page => shift } ) }
            );
     }
     else

@@ -55,30 +55,69 @@ sub ACCEPT_CONTEXT {
 }
 
 
-sub search_trait {
-    my ($self, $trait, $page) = @_;
+# sub search_trait {
+#     my ($self, $trait, $page) = @_;
  
-    $page = 1 if !$page;
+#     $page = 1 if !$page;
 
-    my $rs;
-    if ($trait)
-    {       
-        $rs = $self->schema->resultset("Phenotype::Phenotype")
-            ->search({})
-            ->search_related('observable', 
-                             {
-                                 'observable.name' => {'iLIKE' => '%' . $trait . '%'}
-                             },
-                             { 
-                                 distinct => 1,
-                                 page     => $page,
-                                 rows     => 10,
-                                 order_by => 'name'              
-                             },                                               
-            );             
+#     my $rs;
+#     if ($trait)
+#     {       
+#         $rs = $self->schema->resultset("Phenotype::Phenotype")
+#             ->search({})
+#             ->search_related('observable', 
+#                              {
+#                                  'observable.name' => {'iLIKE' => '%' . $trait . '%'}
+#                              },
+#                              { 
+#                                  distinct => 1,
+#                                  page     => $page,
+#                                  rows     => 10,
+#                                  order_by => 'name'              
+#                              },                                               
+#             );             
+#     }
+    
+#     return $rs;      
+# }
+
+
+sub search_trait {
+    my ($self, $trait) = @_;
+ 
+    my $q = "SELECT name FROM all_gs_traits 
+                    WHERE name ilike ?                    
+                    ORDER BY name";
+
+    my $sth = $self->context->dbc->dbh->prepare($q);
+
+    $sth->execute("%$trait%");
+
+    my @traits;
+
+    while ( my $trait  = $sth->fetchrow_array()) 
+    {
+	push @traits, $trait;
     }
     
-    return $rs;      
+    return \@traits;
+
+}
+
+
+sub trait_details {
+    my ($self, $trait_arrayref) =  @_;
+    
+    my $rs = $self->schema->resultset("Cv::Cvterm")
+        ->search({'me.name' => {-in => $trait_arrayref} },
+    		  {
+    		      'select'   => [ qw / me.cvterm_id me.name me.definition / ], 
+    		      'as'       => [ qw / cvterm_id name definition / ]
+    		  }
+    	);
+
+    return $rs;
+
 }
 
 

@@ -5,9 +5,6 @@ a general format for projects details presentation.
 </%doc>
 
 
-<& /util/import_javascript.mas, classes => [ "solGS.combineTrials"] &>
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
-
 <div id="homepage_trials_list" style="display:none;">
 </div>
 <div id="homepage_message" style="padding: 30px 10px 10px 10px; font-weight:bold; text-align:center; text-transform:uppercase; color:#A7C942">
