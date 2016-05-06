@@ -163,7 +163,7 @@ my $coderef = sub {
         #print STDERR Dumper $marker_info;
         
         #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
-        $protocolprop_json{$marker_info->[2]} = (
+        my %marker = (
             chromosome => $marker_info->[0],
             position => $marker_info->[1],
             ref => $marker_info->[3],
@@ -173,10 +173,18 @@ my $coderef = sub {
             info => $marker_info->[7],
             format => $marker_info->[8],
         );
+        $protocolprop_json{$marker_info->[2]} = \%marker;
         
         #As it goes down the rows, it contructs a separate json object for each accession column. They are all stored in the %genotypeprop_accessions. Later this hash is iterated over and actually stores the json object in the database. 
         for (my $i = 0; $i < scalar(@$accessions); $i++ ) {
-            $genotypeprop_accessions{$accessions->[$i]}->{$marker_info->[2]} = $values->[$i + 9] ;
+            my @format =  split /:/,  $marker_info->[8];
+            my @fvalues = split /:/, $values->[$i];
+            
+            my %value;
+            for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
+                $value{@format[$fv]} = @fvalues[$fv]; 
+            }
+            $genotypeprop_accessions{$accessions->[$i]}->{$marker_info->[2]} = \%value;
         }
     
     }
