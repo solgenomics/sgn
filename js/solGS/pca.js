@@ -36,7 +36,7 @@ jQuery(document).ready( function() {
    
     var url = window.location.pathname;
 
-    if (url.match(/[solgs\/trait|breeders_toolbox\/trial]/)) {
+    if (url.match(/solgs\/trait|breeders_toolbox\/trial|breeders\/trial\/|solgs\/selection\//)) {
        checkPcaResult();  
     } 
  
@@ -140,7 +140,11 @@ function pcaResult () {
 
     var popId  = getPopulationId();
     var listId = getListId();
-    
+
+    if (popId.match(/uploaded_/)) {	
+	listId = popId.replace("uploaded_", "");
+    }
+
     var listName;
     var listType;
     
@@ -263,6 +267,12 @@ function getPopulationId () {
         populationId = jQuery("#combo_pops_id").val();
     }
 
+    var page = window.location.pathname;
+
+    if (page.match(/solgs\/selection/)) {
+	populationId = jQuery("#selection_pop_id").val();
+    } 
+  
     return populationId;
         
 }

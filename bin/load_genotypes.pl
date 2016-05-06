@@ -6,20 +6,22 @@ load_genotypes.pl - loading genotypes into cxgn databases, based on the load_cas
 
 =head1 SYNOPSIS
 
-    load_genotypes.pl -H [dbhost] -D [dbname] -g [population name] [-t]
+    load_genotypes.pl -H [dbhost] -D [dbname] -i [infile] -p [project name] -y [year] g [population name] -m [protocol name] -t
 
 =head1 COMMAND-LINE OPTIONS
-
- -H host name
- -D database name
- -i infile
- -p project name (e.g. SNP genotyping 2012 Cornell Biotech)
- -y project year [2012]
- -g population name (e.g., NaCRRI training population) Mandatory option
- -m specify protocol name or defaults to GBS ApeKI Cassava genome v5
+  ARGUMENTS
+ -H host name (required) e.g. "localhost"
+ -D database name (required) e.g. "cxgn_cassava"
+ -i path to infile (required)
+ -p project name (required) e.g. "SNP genotyping 2012 Cornell Biotech"
+ -y project year (required) e.g. "2012"
+ -g population name (required) e.g. "NaCRRI training population"
+ -m protocol name (required) e.g. "GBS ApeKI Cassava genome v6"
+  FLAGS
  -x delete old genotypes for accessions that have new genotypes
- -a add accessions that are not in the database
- -s sort markers according to custom sort order (see script source)
+ -a add accessions that are not in the databaseA
+ -v order markers using version sort
+ -s sort markers according to custom sort order (see script source) 
  -t Test run . Rolling back at the end.
 
 =head1 DESCRIPTION
@@ -38,6 +40,7 @@ use strict;
 use Getopt::Std;
 use Data::Dumper;
 use JSON::Any;
+use JSON::PP;
 use Carp qw /croak/ ;
 use Try::Tiny;
 use Pod::Usage;
@@ -47,8 +50,10 @@ use CXGN::People::Person;
 use CXGN::DB::InsertDBH;
 use CXGN::Genotype;
 use CXGN::GenotypeIO;
+use Sort::Versions;
+use SGN::Model::Cvterm;
 
-our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_y, $opt_g, $opt_a, $opt_x, $opt_s, $opt_m);
+our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m);
 
 getopts('H:i:tD:p:y:g:axsm:');
 
@@ -56,7 +61,7 @@ my $dbhost = $opt_H;
 my $dbname = $opt_D;
 my $file = $opt_i;
 my $population_name = $opt_g;
-my $protocol_name = $opt_m || "GBS ApeKI Cassava genome v5";
+my $protocol_name = $opt_m;
 
 print STDERR "Input file: $file\n";
 print STDERR "DB host: $dbhost\n";
@@ -102,21 +107,14 @@ my %seq  = (
     'project_project_id_seq'   => $last_project_id,
     );
 
-my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'accession',
-      cv     => 'stock type',
-      db     => 'null',
-      dbxref => 'accession',
-    });
+my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
 
-my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'training population',
-	cv     => 'stock type',
-	db     => 'null',
-	dbxref => 'training population',
-    });
+my $population_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'training population', 'stock_type');
+   
 
- #store a project
+my $igd_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd number', 'genotype_property');
+
+#store a project
 my $project = $schema->resultset("Project::Project")->find_or_create(
     {
         name => $opt_p,
@@ -125,12 +123,7 @@ my $project = $schema->resultset("Project::Project")->find_or_create(
 $project->create_projectprops( { 'project year' => $opt_y }, { autocreate => 1 } );
 
 # find the cvterm for a genotyping experiment
-my $geno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-    { name   => 'genotyping experiment',
-      cv     => 'experiment type',
-      db     => 'null',
-      dbxref => 'genotyping experiment',
-    });
+my $geno_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type');
 
 my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_create( 
     { name => $protocol_name,
@@ -140,12 +133,7 @@ my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_c
 my $protocol_id = $protocol_row->nd_protocol_id();
 
 # find the cvterm for the SNP calling experiment
-my $snp_genotype = $schema->resultset('Cv::Cvterm')->create_with(
-    { name   => 'snp genotyping',
-      cv     => 'local',
-      db     => 'null',
-      dbxref => 'snp genotyping',
-    });
+my $snp_genotype = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property');
 
 my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
     {
@@ -159,12 +147,7 @@ my $organism = $schema->resultset("Organism::Organism")->find_or_create(
 	species => 'Manihot esculenta',
     } );
 
-my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'members of',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'members of',
-    });
+my $population_members = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship');
 
 my $organism_id = $organism->organism_id();
 ########################
@@ -178,56 +161,66 @@ my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "dosage_transposed"
 #my @rows = $spreadsheet->row_labels();
 #my @columns = $spreadsheet->column_labels();
 
-my $json_obj = JSON::Any->new;
-
 my $coderef = sub {
     while (my $gt = $gtio->next())  {
-	my $accession_name = $gt->name();
-	
+	my ($accession_name, $igd_number) = split(/:/, $gt->name());
 	my $db_name = $accession_name;
-
+	
 	$db_name =~ s/(.*?)\.(.*)/$1/;
 	
 	if ($accession_name eq "marker" || $accession_name =~ /BLANK/i ) {next;}
-
+	
 	#print Dumper($gt->rawscores);
-
+	
         print STDERR "Looking for accession $accession_name ($db_name)\n";
         my %json;
         my $cassava_stock;
         my $stock_name;
         my $stock_rs = $schema->resultset("Stock::Stock")->search(
-            {
-                -or => [
-                     'lower(me.uniquename)' => { like => lc($db_name) },
-                     -and => [
-                         'lower(type.name)'       => { like => '%synonym%' },
-                         'lower(stockprops.value)' => { like => lc($db_name) },
-                     ],
-                    ],
-            },
-            { join => { 'stockprops' => 'type'} ,
-              distinct => 1
-            }
-            );
-        if ($stock_rs->count >1 ) {
-            print STDERR "ERROR: found multiple accessions for name $accession_name! \n";
+            { 'lower(me.uniquename)' => { like => lc($db_name) },
+	      
+            });
+	
+
+	if ($stock_rs->count() == 0) {
+	    
+	    print STDERR "No uniquename found for $db_name, checking synonyms...\n";
+	    $stock_rs = $schema->resultset("Stock::Stock")->search(
+		{
+		    -and => [
+			 'lower(type.name)'       => { like => '%synonym%' },
+			 'lower(stockprops.value)' => { like => lc($db_name) },
+			],
+		},
+		{ join => { 'stockprops' => 'type'} ,
+		  distinct => 1
+		}
+		);
+	}
+        if ($stock_rs->count() >1 ) {
+            print STDERR "ERROR: found multiple accession synonyms found for that accession name, skipping $accession_name! \n";
             while ( my $st = $stock_rs->next) {
                 print STDERR "stock name = " . $st->uniquename . "\n";
             }
-	    next;
-            # die;
-        } elsif ($stock_rs->count == 1) {
-	    print STDERR "Accession $db_name found !\n";
-            $cassava_stock = $stock_rs->first;	    
-            $stock_name = $cassava_stock->uniquename;
-        } else {
-	    
-	    print STDERR "The accession $db_name was not found in the database. Use option -a to add automatically.\n";
-            #store the plant accession in the stock table if $opt_a
-	    #
-	    if ($opt_a) { 
+	    next();
+	}
 
+	if ($stock_rs->count() == 1) { 
+	    $cassava_stock = $stock_rs->first();
+	    $stock_name = $cassava_stock->uniquename();   
+	}
+
+        if ($stock_rs->count ==0)  {
+	    print STDERR "No synonym was found for $db_name\n";
+	    
+	    #store the plant accession in the stock table if $opt_a
+	    #
+	    if (!$opt_a) {
+		print STDERR "WARNING! Accession $accession_name (using: $db_name) not found.\n";
+		print STDERR "Use option -a to add automatically.\n";
+		next();
+	    }
+	    else {
 		$cassava_stock = $schema->resultset("Stock::Stock")->create(
 		    { organism_id => $organism_id,
 		      name       => $db_name,
@@ -236,25 +229,22 @@ my $coderef = sub {
 		    } );
 		
 	    }
-	    else { 
-		print STDERR "WARNING! Accession $accession_name (using: $db_name) not found.\n";
-		next();
-	    }
-        }
+	}
+	
 	my $population_stock = $schema->resultset("Stock::Stock")->find_or_create(
             { organism_id => $organism_id,
 	      name       => $population_name,
 	      uniquename => $population_name,
 	      type_id => $population_cvterm->cvterm_id,
             } );
-
+	
 	my $has_rel_rs = $schema->resultset("Stock::StockRelationship")->search(
 	    {
 		type_id => $population_members->cvterm_id(),
 		subject_id => $cassava_stock->stock_id(),
 		object_id => $population_stock->stock_id(),
 	    });
-
+	
 	if ($has_rel_rs->count() == 0) { 
 	    $cassava_stock->find_or_create_related('stock_relationship_objects', {
 		type_id => $population_members->cvterm_id(),
@@ -262,14 +252,14 @@ my $coderef = sub {
 		object_id => $population_stock->stock_id(),
 						   } );
 	}
-	    ###############
+	###############
         print STDERR "cassava stock name = " . $cassava_stock->name . "\n";
         my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
             {
                 nd_geolocation_id => $geolocation->nd_geolocation_id(),
                 type_id => $geno_cvterm->cvterm_id(),
             } );
-
+	
 	print STDERR "Linking to protocol...\n";
 	my $nd_experiment_protocol = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->create( 
 	    {
@@ -277,7 +267,7 @@ my $coderef = sub {
 		nd_protocol_id => $protocol_id,
 	    });
 	
-
+	
         #link to the project
         $experiment->find_or_create_related('nd_experiment_projects', {
             project_id => $project->project_id()
@@ -290,7 +280,7 @@ my $coderef = sub {
 	if ($opt_x) { 
 	    print STDERR "OPTION -x: REMOVING OLD GENOTYPE... \n";
 	    my $has_genotype_rs =  $schema->resultset('NaturalDiversity::NdExperimentStock')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops')->search( { 'me.stock_id' => $cassava_stock->stock_id() }); 
-
+	    
 	    while (my $has_genotype = $has_genotype_rs->next()) { 
 		print STDERR "Note: -x option: removing already present genotype for $db_name.\n";
 		my $genotypeprop_rs = $schema->resultset('Genetic::Genotypeprop')->search(  
@@ -304,14 +294,14 @@ my $coderef = sub {
 		
 		print STDERR "DELETING GENOTYPE: ".$has_genotype->genotype_id()."\n";
 		$genotype->delete();
-
+		
 		#my $nd_experiment_genotypes = $schema->resultset('Genetic::NdExperimentGenotypes')->search( { nd_experiment_id => $has_genotype_rs->nd_experiment_id(), });
-
+		
 	    }
 	}
 	
 	my @markers = @{$gtio->markers()};
-
+	
 	if ($opt_s) { 
 	    @markers = sort bychr @{$gtio->markers()};
 	}
@@ -324,24 +314,34 @@ my $coderef = sub {
 	    if ($base_calls !~/[0-9.]+|NA/i) { 
 		print STDERR "SKIPPING BASECALL $base_calls\n";
 	    }
-
+	    
 	    $json{$marker_name} = $base_calls;
         }
-
-        my $json_string = $json_obj->encode(\%json);
-	#print STDERR Dumper($json_string);
-        print "Storing new genotype for stock " . $cassava_stock->name . " \n\n";
+	
+	my $json_string;
+	if ($opt_v) {
+	    my $json_obj = JSON::PP->new;
+	    print STDERR "Sorting and encoding markers and values... \n\n";
+	    $json_string = $json_obj->sort_by(sub {versioncmp($JSON::PP::a,$JSON::PP::b)})->encode(\%json);
+	} else {
+	    my $json_obj = JSON::Any->new;
+	    $json_string = $json_obj->encode(\%json);
+	}
+	
+        print STDERR "Storing new genotype for stock " . $cassava_stock->name . " \n\n";
         my $genotype = $schema->resultset("Genetic::Genotype")->find_or_create(
             {
                 name        => $cassava_stock->name . "|" . $experiment->nd_experiment_id,
                 uniquename  => $cassava_stock->name . "|" . $experiment->nd_experiment_id,
-                description => "Cassava SNP genotypes for stock $ (name = " . $cassava_stock->name . ", id = " . $cassava_stock->stock_id . ")",
+                description => "Cassava SNP genotypes for stock " . "(name = " . $cassava_stock->name . ", id = " . $cassava_stock->stock_id . ")",
                 type_id     => $snp_genotype->cvterm_id,
             }
             );
         $genotype->create_genotypeprops( { 'snp genotyping' => $json_string } , {autocreate =>1 , allow_duplicate_values => 1 } );
+        $genotype->create_genotypeprops( { 'igd number' => $igd_number } , {autocreate =>1 , allow_duplicate_values => 1 } );
         #link the genotype to the nd_experiment
         my $nd_experiment_genotype = $experiment->find_or_create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
+	
     }
 };
 
@@ -359,7 +359,7 @@ try {
 };
 
 sub bychr { 
-my @a = split "\t", $a;
+    my @a = split "\t", $a;
     my @b = split "\t", $b;
     
     my $a_chr;

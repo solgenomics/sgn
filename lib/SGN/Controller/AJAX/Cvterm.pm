@@ -235,7 +235,7 @@ sub recursive_loci_GET :Args(0) {
         columnar_table_html(
             headings     =>  [ "Organism", "Symbol", "Name" ],
             data         => \@data,
-        )  : '<span class="ghosted">none</span>' ;
+        )  : undef ;
 }
 
 
@@ -275,5 +275,41 @@ sub phenotyped_stocks_GET :Args(0) {
         )  : undef ;
 }
 
+
+sub trials : Local : ActionClass('REST') { }
+
+sub trials_GET :Args(0) {
+    my ($self, $c) = @_;
+    my $cvterm_id = $c->request->param("cvterm_id");
+    my $q = "SELECT DISTINCT project_id, project.name, project.description
+             FROM public.project
+              JOIN nd_experiment_project USING (project_id)  
+              JOIN nd_experiment_stock USING (nd_experiment_id)
+              JOIN nd_experiment_phenotype USING (nd_experiment_id)
+              JOIN phenotype USING (phenotype_id) 
+              JOIN cvterm on cvterm.cvterm_id = phenotype.observable_id
+             WHERE observable_id = ? 
+    ";
+ 
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id );
+    my @data;
+    while ( my ($project_id, $project_name, $description) = $sth->fetchrow_array ) {
+        my $link = qq|<a href="/breeders/trial/$project_id">$project_name</a> |;
+        push @data,
+        [
+         (
+          $link,
+          $description,
+         )
+        ];
+    }
+    $c->stash->{rest}{html} = @data ?
+        columnar_table_html(
+            headings     =>  [ "trial name", "Description" ],
+            data         => \@data,
+        )  : undef ;
+}
 
 1;

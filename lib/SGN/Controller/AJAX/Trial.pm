@@ -42,6 +42,7 @@ use CXGN::BreedersToolbox::Delete;
 use CXGN::UploadFile;
 use CXGN::Trial::ParseUpload;
 use CXGN::List::Transform;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -416,6 +417,9 @@ sub upload_trial_file : Path('/ajax/trial/upload_trial_file') : ActionClass('RES
 
 sub upload_trial_file_POST : Args(0) {
   my ($self, $c) = @_;
+
+  print STDERR "Check 1: ".localtime();
+
   my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -446,6 +450,8 @@ sub upload_trial_file_POST : Args(0) {
   my $user_name;
   my $error;
 
+  print STDERR "Check 2: ".localtime();
+
   if (!$c->user()) { 
     print STDERR "User not logged in... not adding a crosses.\n";
     $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
@@ -468,6 +474,8 @@ sub upload_trial_file_POST : Args(0) {
       return;
   }
   unlink $upload_tempfile;
+
+  print STDERR "Check 3: ".localtime();
 
   $upload_metadata{'archived_file'} = $archived_filename_with_path;
   $upload_metadata{'archived_file_type'}="trial upload file";
@@ -498,6 +506,7 @@ sub upload_trial_file_POST : Args(0) {
     return;
   }
 
+  print STDERR "Check 4: ".localtime();
 
   my $trial_create = CXGN::Trial::TrialCreate
     ->new({
@@ -521,6 +530,9 @@ sub upload_trial_file_POST : Args(0) {
 #    $c->stash->{rest} = {error => "Error saving trial in the database $_"};
 #    $error = 1;
 #  };
+  
+  print STDERR "Check 5: ".localtime();
+
   if ($error) {return;}
   $c->stash->{rest} = {success => "1",};
   return;
@@ -615,13 +627,7 @@ sub _add_trial_layout_to_database {
   my $location = $c->req->param('add_project_location');
   my $project_name = $c->req->param('add_project_name');
   my $project_description = $c->req->param('add_project_description');
-  my $plot_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with({
-		   name   => 'plot',
-		   cv     => 'stock type',
-		   db     => 'null',
-		   dbxref => 'plot',
-		  });
+  my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type');
   my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")
     ->find_or_create({
 		      description => $location, #add this as an option
@@ -632,14 +638,9 @@ sub _add_trial_layout_to_database {
 		      species => 'Manihot esculenta',
 		     });
 
-  #this is wrong
-  my $plot_exp_cvterm = $schema->resultset('Cv::Cvterm')
-    ->create_with({
-		   name   => 'plot experiment',
-		   cv     => 'experiment type',
-		   db     => 'null',
-		   dbxref => 'plot experiment',
-		  });
+  #this is wrong.  Does not seem to be used in the database !!
+  my $plot_exp_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_experiment', 'experiment_type');
+
 
   #create project
   my $project = $schema->resultset('Project::Project')

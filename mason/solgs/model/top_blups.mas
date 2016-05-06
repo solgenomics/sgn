@@ -16,19 +16,16 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $top_blups
 $blups_download_url => ''
-$pop_id =>''
-$combo_pops_id => ''
-$trait_id
-$trait_combo_pops => ''
+
+
 </%args>
 
 
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Genomic estimated breeding values (GEBVs) - based on kinship" 
+  title       => "Genomic estimated breeding values (GEBVs) - GBLUP method" 
 &>
-
 
 
 <div id="gebvPlot2"> </div> 
@@ -58,4 +55,4 @@ $trait_combo_pops => ''
 
 </&>
 
-<input type="hidden" id="pops_list" value="<% $trait_combo_pops %>" />  
+

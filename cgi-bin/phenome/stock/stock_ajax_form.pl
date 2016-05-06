@@ -151,7 +151,7 @@ sub generate_form {
     my $species = $organism_obj ? $organism_obj->species : undef;
     my $organism_id = $stock->get_organism_id;
     my ($stock_type) = $stock->get_schema->resultset("Cv::Cv")->search(
-        { name => 'stock type' , }
+        { name => 'stock_type' , }
         );
     my @types;
     my @type_ids;

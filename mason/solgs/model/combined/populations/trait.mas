@@ -22,6 +22,7 @@ $list_of_prediction_pops =>''
 $prediction_pop_name => ''
 $analyzed_traits =>''
 $owner =>''
+$protocol
 $model_parameters
 
 </%args>
@@ -30,13 +31,12 @@ $model_parameters
 
 </%perl>
 
-  <& /util/import_javascript.mas, classes => [ "solGS.phenotypeDataFlot", "solGS.traitGebvFlot", 
-                                              "flot.flot", "flot.categories", 
-                                              "flot.tooltip", "flot.selection", "flot.navigate", 
-                                              "flot.axisLabels", "statistics/simple_statistics"
-                                             ] 
-  &>
-
+<& /util/import_javascript.mas, classes => [ "solGS.phenotypeDataFlot", "solGS.traitGebvFlot", 
+					     "flot.flot", "flot.categories", 
+					     "flot.tooltip", "flot.selection", "flot.navigate", 
+					     "flot.axisLabels", "statistics/simple_statistics"
+					   ] 
+&>
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
@@ -48,7 +48,9 @@ $model_parameters
   collapsible => 1, 
   collapsed   => 0, 
   title       => "Training population summary",
-  &>
+&>
+
+% $project_name = "<a href=\"/solgs/populations/combined/$combo_pops_id\">$project_name</a>";
 
 <& summary.mas,
     project_name => $project_name,
@@ -56,8 +58,9 @@ $model_parameters
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     owner        => $owner,
- &>
- 
+    protocol     => $protocol,
+&>
+
 </&>
 
 <&| /page/info_section.mas, 
@@ -70,16 +73,16 @@ $model_parameters
   combo_pops_id    => $combo_pops_id,
   trait_id         => $trait_id,
   descriptive_stat => $descriptive_stat,
- &>
+&>
 
 </&>
+
+<& /solgs/model/pca.mas &>
 
 <& /solgs/model/accuracy.mas, 
    accuracy_report        => $accuracy_report,
   validation_download_url => $validation_download_url
 &>
-
-<& /solgs/model/pca.mas &>
 
 <& /solgs/model/model_parameters.mas, 
    model_parameters => $model_parameters,
@@ -88,16 +91,12 @@ $model_parameters
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
-   combo_pops_id      => $combo_pops_id,
-   trait_combo_pops   => $trait_combo_pops,
-   trait_id           => $trait_id
 &>
 
 <& /solgs/model/marker_effects.mas, 
    top_marker_effects          => $top_marker_effects,
    marker_effects_download_url => $marker_effects_download_url
 &>
-
 
 <& /solgs/population/selection_populations.mas, 
    download_prediction     => $download_prediction,

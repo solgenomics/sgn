@@ -1,3 +1,18 @@
+<%doc>
+
+=head1 NAME 
+
+/solgs/population/selection_trait.mas - displays trait GEBV prediction output for selection population using single trial model.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+
 <%args>
 
 $pop_id
@@ -12,6 +27,7 @@ $trait_id
 $prediction_pop_id
 $prediction_pop_name => ''
 $owner=>''
+$protocol
 $top_blups
 $blups_download_url
 $combined_populations => ''
@@ -19,12 +35,14 @@ $combined_populations => ''
 
 <%perl>
 
+$project_name = "<a href=\"/solgs/trait/$trait_id/population/$pop_id\">$project_name</a>";
+
 </%perl>
 
   <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.traitGebvFlot", 
                                               "flot.flot", "flot.categories", 
                                               "flot.tooltip", "flot.selection", "flot.navigate", 
-                                              "flot.axisLabels"
+                                              "flot.axisLabels", "d3.d3Min",
                                              ] 
   &>
 
@@ -48,11 +66,14 @@ $combined_populations => ''
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
+    protocol     => $protocol,
     owner        => $owner,
    combined_populations => $combined_populations,
  &>
- 
+
 </&>
+
+<& /solgs/model/pca.mas &>
 
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,

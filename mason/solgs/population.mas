@@ -12,6 +12,7 @@ $markers_no
 $traits_no
 $uploaded_reference=>''
 $owner=>''
+$protocol
 $acronym
 
 </%args>
@@ -46,6 +47,7 @@ $acronym
     markers_no   => $markers_no,
     traits_no    => $traits_no,
     owner        => $owner,
+    protocol     => $protocol,
     uploaded_reference => $uploaded_reference
  &>
 
@@ -94,3 +96,6 @@ $acronym
 
 </&>
 %}
+
+
+ <input type="hidden" id="population_id" value="<% $pop_id %>" />
