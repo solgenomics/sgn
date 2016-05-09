@@ -56,7 +56,7 @@ function hideTrialsList() {
     jQuery("#all_trials_div").empty();
     jQuery("#searched_trials_div").empty();
     jQuery("#done_selecting_div").hide();
-    jQuery("#all_trials_message").hide();
+    jQuery("#all_trials_search_message").hide();
     
 }
 
