@@ -25,7 +25,7 @@ jQuery(document).ready(function(){
 
 function searchAllTrials(url) {
     
-    jQuery("#homepage_message").html('Searching for GS trials..').show();
+    jQuery("#all_trials_search_message").html('Searching for GS trials..').show();
     
     jQuery.ajax({
         type: 'POST',
@@ -33,27 +33,27 @@ function searchAllTrials(url) {
         url: url,
         success: function(res) { 
 
-            jQuery("#homepage_message").hide();
+            jQuery("#all_trials_search_message").hide();
   
             listAllTrials(res.trials)
             var pagination = res.pagination;
        
-            jQuery("#homepage_message").hide(); 
-	   jQuery("#homepage_trials_list").append(pagination);
+            jQuery("#all_trials_search_message").hide(); 
+	   jQuery("#all_trials_div").append(pagination);
         },
         error: function() {               
-            jQuery("#homepage_message").html('Error occured fetching the first set of GS trials.').show();          
+            jQuery("#all_trials_search_message").html('Error occured fetching the first set of GS trials.').show();          
         }
 
     });
     
   
-    jQuery("#homepage_trials_list").on('click', "div.paginate_nav a", function(e) { 
+    jQuery("#all_trials_div").on('click', "div.paginate_nav a", function(e) { 
         var page = jQuery(this).attr('href');
        
-        jQuery("#homepage_trials_list").empty();
+        jQuery("#all_trials_div").empty();
     
-        jQuery("#homepage_message").html('Searching for more GS trials..').show(); 
+        jQuery("#all_trials_search_message").html('Searching for more GS trials..').show(); 
  
         if (page) {
             jQuery.ajax({ 
@@ -63,11 +63,11 @@ function searchAllTrials(url) {
                 success: function(res) {                                                                                 
 		    listAllTrials(res.trials)
                     var pagination = res.pagination;
-                    jQuery("#homepage_message").hide(); 
-		    jQuery("#homepage_trials_list").append(pagination);
+                    jQuery("#all_trials_search_message").hide(); 
+		    jQuery("#all_trials_div").append(pagination);
                 },               
                 error: function() {
-                    jQuery("#homepage_message").html('Error occured fetching the next set of GS trials.').show();
+                    jQuery("#all_trials_search_message").html('Error occured fetching the next set of GS trials.').show();
                 }                    
             });                
         }
@@ -82,7 +82,7 @@ function listAllTrials (trials)  {
  
     if (trials) {
 	var tableId = 'all_trials_table';
-	var divId   = 'homepage_trials_list';
+	var divId   = 'all_trials_div';
 
 	var tableDetails = {
 	    'divId'  : divId, 
@@ -90,13 +90,13 @@ function listAllTrials (trials)  {
 	    'data'   : trials
 	};
 	
-	jQuery('#searched_training_pops_list').empty();
-	jQuery('#homepage_trials_list').empty();
+	jQuery('#searched_trials_div').empty();
+	jQuery('#all_trials_div').empty();
 	
 	displayTrainingPopulations(tableDetails);
 
     } else {
-	jQuery("#homepage_message").html('No trials to show.').show();	
+	jQuery("#all_trials_search_message").html('No trials to show.').show();	
     }
 
 }
@@ -110,10 +110,10 @@ function checkTrainingPopulation (popId) {
         url: '/solgs/check/training/population/' + popId,
         success: function(response) {
             if (response.is_training_population) {
-		jQuery("#training_pops_message").hide();
-		jQuery("#searched_training_pops_list").show();
+		jQuery("#searched_trials_message").hide();
+		jQuery("#searched_trials_div").show();
 		
-		var divId   = 'searched_training_pops_list';
+		var divId   = 'searched_trials_div';
 		var tableId = 'searched_trials_table'; 
 		var data    = response.training_pop_data;
 		
@@ -125,7 +125,7 @@ function checkTrainingPopulation (popId) {
 		
 		displayTrainingPopulations(tableDetails);					
             } else {
-		jQuery("#training_pops_message").html('<p> Population ' + popId + 'can not be used as a training population.');
+		jQuery("#searched_trials_message").html('<p> Population ' + popId + 'can not be used as a training population.');
 		jQuery("#search_all_training_pops").show();	
             }
 	}
@@ -145,7 +145,7 @@ jQuery(document).ready( function () {
 
     jQuery('#search_training_pop').on('click', function () {
 	
-	jQuery("#training_pops_message").hide();
+	jQuery("#searched_trials_message").hide();
 
 	var entry = jQuery('#population_search_entry').val();
 
@@ -161,8 +161,8 @@ jQuery(document).ready( function () {
     
     jQuery('#search_all_training_pops').on('click', function () {
 	
-	jQuery("#searched_training_pops_list").empty();
-	jQuery("#hompepage_trials_list").empty();
+	jQuery("#searched_trials_div").empty();
+	jQuery("#all_trials_div").empty();
 	var url = '/solgs/search/trials';
 	searchAllTrials(url);
     });
@@ -177,11 +177,11 @@ jQuery(document).ready( function () {
 
 function checkPopulationExists (name) {
     
-    jQuery("#training_pops_message")
+    jQuery("#searched_trials_message")
 	.html("Checking if trial or training population " + name + " exists...please wait...")
 	.show();
     
-	jQuery("#homepage_trials_list").empty();
+	jQuery("#all_trials_div").empty();
 
 	jQuery.ajax({
             type: 'POST',
@@ -193,11 +193,11 @@ function checkPopulationExists (name) {
 		if (res.population_id) {
 		    checkTrainingPopulation(res.population_id);
 		    
-		    jQuery('#training_pops_message').html(
+		    jQuery('#searched_trials_message').html(
 			'<p>Checking if the trial or population can be used <br />' 
 			    + 'as a training population...please wait...</p>');	
 		} else { 		
-		    jQuery('#training_pops_message').html(
+		    jQuery('#searched_trials_message').html(
 			'<p>There are no trials or training populations with the name <br />'
 			    + 'you searched in the database. <br />' 
 			    + 'If you have or want to make a training population ' 

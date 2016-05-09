@@ -75,8 +75,8 @@ $gs_traits_index
     </button>
   </div>
 
-  <div id="training_pops_message"  style="padding:20px 0px 10px 0px;font-weight:bold;text-align:center;color:#A7C942"></div>
-  <div id="searched_training_pops_list" style="display:none;"> 
+  <div id="trial_search_message"  style="padding:20px 0px 10px 0px;font-weight:bold;text-align:center;color:#A7C942"></div>
+  <div id="searched_trials_div" style="display:none;"> 
 </div>
   <br />
 

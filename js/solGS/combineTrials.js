@@ -53,10 +53,10 @@ jQuery(document).ready(function() {
 
 
 function hideTrialsList() {
-    jQuery("#homepage_trials_list").empty();
-    jQuery("#searched_training_pops_list").empty();
+    jQuery("#all_trials_div").empty();
+    jQuery("#searched_trials_div").empty();
     jQuery("#done_selecting_div").hide();
-    jQuery("#homepage_message").hide();
+    jQuery("#all_trials_message").hide();
     
 }
 
@@ -99,10 +99,10 @@ function searchAgain () {
 	url = '/solgs/search/trials/';
     }
   
-    jQuery('#homepage_trials_list').empty();
-    jQuery("#searched_training_pops_list").empty();
+    jQuery('#all_trials_div').empty();
+    jQuery("#searched_trials_div").empty();
     searchAllTrials(url);  
-    jQuery("#homepage_message").show();
+    jQuery("#all_trials_search_message").show();
     jQuery("#done_selecting_div").show();
     jQuery("#done_selecting").val('Select');
     

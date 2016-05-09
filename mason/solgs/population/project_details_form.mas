@@ -5,9 +5,9 @@ a general format for projects details presentation.
 </%doc>
 
 
-<div id="homepage_trials_list" style="display:none;">
+<div id="all_trials_div" style="display:none;">
 </div>
-<div id="homepage_message" style="padding: 30px 10px 10px 10px; font-weight:bold; text-align:center; text-transform:uppercase; color:#A7C942">
+<div id="all_trials_search_message" style="padding: 30px 10px 10px 10px; font-weight:bold; text-align:center; text-transform:uppercase; color:#A7C942">
 Searching for GS trials...
 </div>
 
