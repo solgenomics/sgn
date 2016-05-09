@@ -48,7 +48,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
-print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
+#print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
 
 </%perl>
 

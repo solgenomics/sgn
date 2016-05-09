@@ -113,7 +113,34 @@ foreach (@$children) {
 </div>
 
 <div class="well">
-  <button class="btn btn-sm btn-default" id="edit_trial_name">Rename Folder</button>
+  <button class="btn btn-sm btn-default" id="edit_trial_name">Rename Folder</button>&nbsp;&nbsp;&nbsp;&nbsp;
+  <button class="btn btn-sm btn-default" id="delete_folder_button">Delete Folder</button>
 </div>
 
+<script>
+    
+jQuery(document).ready(function() {
+    
+    jQuery('#delete_folder_button').click( function() {
+        if (confirm("Are you sure you want to delete this folder?")) {
+            jQuery.ajax( {
+                url: '/ajax/folder/'+<% $folder_id %>+'/delete',
+                success: function(response) {
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        alert("Folder successfully deleted.");
+                        window.location.replace("/breeders/trials");
+                    }
+                },
+                error: function(response) {
+                    alert('An error occurred trying to delete folder.');
+                }
+            });
+        }
+    });
+    
+});
+    
+</script>
 

@@ -127,7 +127,7 @@ function move_folder() {
       else {
         alert("Successfully associated folder");
         jQuery('#move_folder_dialog').modal("hide");
-        location.reload();
+        //location.reload();
       }
     },
     error: function(response) {
