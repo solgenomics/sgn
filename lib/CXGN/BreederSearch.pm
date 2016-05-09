@@ -331,9 +331,9 @@ sub get_extended_phenotype_info_matrix {
 	    trait_data => $trait_data,
 	    year => $year,
       cvterm_id => $trait_id,
-      studyDbId => $project_id, 
+      studyDbId => $project_id,
       locationDbId => $location_id,
-      germplasmDbId => $stock_id, 
+      germplasmDbId => $stock_id,
       plotDbId => $plot_id
 	};
 	$traits{$cvterm}++;
@@ -403,7 +403,7 @@ sub get_genotype_info {
     if (@accession_ids) {
       $q = "SELECT uniquename, value FROM (SELECT stock.uniquename, genotypeprop.value, row_number() over (partition by stock.uniquename order by genotypeprop.genotype_id) as rownum from genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.stock_id in (@{[join',', ('?') x @accession_ids]}) AND nd_experiment_protocol.nd_protocol_id=?) tmp WHERE rownum <2";
     }
-    print "QUERY: $q\n\n";
+    print STDERR "QUERY: $q\n\n";
 
     my $h = $self->dbh()->prepare($q);
     $h->execute(@accession_ids,$protocol_id);
@@ -411,6 +411,7 @@ sub get_genotype_info {
     while (my ($uniquename,$genotype_string) = $h->fetchrow_array()) {
       push @result, [ $uniquename, $genotype_string ];
     }
+    print STDERR "results first value $result[0]\n";
     return \@result;
 }
 

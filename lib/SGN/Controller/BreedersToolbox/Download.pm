@@ -9,7 +9,7 @@ BEGIN { extends 'Catalyst::Controller'; }
 
 use strict;
 use warnings;
-use JSON qw( decode_json );
+use JSON::XS;
 use Data::Dumper;
 use CGI;
 use CXGN::Trial;
@@ -490,15 +490,17 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
   open my $TEMP, '>', $tempfile or die "Cannot open output_test00.txt: $!";
 
-  print "Downloading genotype data ...\n";
+  print STDERR "Downloading genotype data ...\n";
 
   my $resultset = $bs->get_genotype_info(\@accession_ids, $protocol_id);
 
   print $TEMP "Marker\t";
 
+  print STDERR "Decoding genotype data ...\n";
+  my $json = JSON::XS->new->allow_nonref;
   for (my $i=0; $i < scalar(@$resultset) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
     print $TEMP $resultset->[$i][0] . "\t";
-    my $genotype_hash = decode_json($resultset->[$i][1]);
+    my $genotype_hash = $json->decode($resultset->[$i][1]);
     push(@accession_genotypes, $genotype_hash);
   }
   print $TEMP "\n";
@@ -508,6 +510,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   }
 
   my @markers = sort versioncmp @unsorted_markers;       # order snp_names by chrom num, then position
+  my @first_value = $markers[0];
+  print STDERR "markers sorted: @first_value \n";
 
   for my $j (0 .. $#markers) {
     print $TEMP "$markers[$j]\t";
