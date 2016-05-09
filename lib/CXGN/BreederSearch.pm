@@ -394,19 +394,20 @@ sub get_genotype_info {
     my $self = shift;
     my $accession_idref = shift;
     my $protocol_id = shift;
+    my $snp_genotype_id = shift || '76434';
     my @accession_ids = @$accession_idref;
     my ($q, @result);
-
+    #my $snp_genotype_id = '76434';
     print STDERR "accession sql= @accession_ids \n";
     print STDERR "protocol id= $protocol_id \n";
 
     if (@accession_ids) {
-      $q = "SELECT uniquename, value FROM (SELECT stock.uniquename, genotypeprop.value, row_number() over (partition by stock.uniquename order by genotypeprop.genotype_id) as rownum from genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.stock_id in (@{[join',', ('?') x @accession_ids]}) AND nd_experiment_protocol.nd_protocol_id=?) tmp WHERE rownum <2";
+      $q = "SELECT uniquename, value FROM (SELECT stock.uniquename, genotypeprop.value, row_number() over (partition by stock.uniquename order by genotypeprop.genotype_id) as rownum from genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE genotypeprop.type_id = ? AND stock.stock_id in (@{[join',', ('?') x @accession_ids]}) AND nd_experiment_protocol.nd_protocol_id=?) tmp WHERE rownum <2";
     }
     print STDERR "QUERY: $q\n\n";
 
     my $h = $self->dbh()->prepare($q);
-    $h->execute(@accession_ids,$protocol_id);
+    $h->execute($snp_genotype_id, @accession_ids,$protocol_id);
 
     while (my ($uniquename,$genotype_string) = $h->fetchrow_array()) {
       push @result, [ $uniquename, $genotype_string ];

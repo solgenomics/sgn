@@ -458,6 +458,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
   my $format = $c->req->param("format") || "list_id";
   my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
+  my $snp_genotype_row = $schema->resultset("Cv::Cvterm")->find({ name => 'snp genotyping' });
+  my $snp_genotype_id = $snp_genotype_row->cvterm_id();
+  print STDERR "Retrieved snp genotype id: $snp_genotype_id \n";
 
   my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id);
 
@@ -492,7 +495,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
   print STDERR "Downloading genotype data ...\n";
 
-  my $resultset = $bs->get_genotype_info(\@accession_ids, $protocol_id);
+  my $resultset = $bs->get_genotype_info(\@accession_ids, $protocol_id, $snp_genotype_id);
 
   print $TEMP "Marker\t";
 
