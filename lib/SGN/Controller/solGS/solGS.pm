@@ -2406,7 +2406,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
        
     my $ret = {};
 
-    if ($selection_pop_id != $training_pop_id)
+    if ($selection_pop_id !~ /$training_pop_id/)
     {
 	my $has_genotype;
 	if ($selection_pop_id)
