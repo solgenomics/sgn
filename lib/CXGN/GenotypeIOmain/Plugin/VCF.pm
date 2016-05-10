@@ -38,6 +38,11 @@ sub init {
 	
 	my $F;
 	open($F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
+	
+		#my $first_line = <$F>;
+		#if ($first_line =~ /^\s*#/) {
+		#	chomp($first_line);
+		#}
 
 		my $header = <$F>;
 		chomp($header);
@@ -49,7 +54,11 @@ sub init {
 		while (<$F>) { 
 		chomp;
 			my @values = split /\t/;
-			push @markers, $values[2];
+			if ($values[2] eq '.') {
+				push @markers, $values[0]."_".$values[1];
+			} else {
+				push @markers, $values[2];
+			}
 		}
 
 		$self->header(\@fields);

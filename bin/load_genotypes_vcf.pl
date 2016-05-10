@@ -164,8 +164,8 @@ my $coderef = sub {
         
         #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
         my %marker = (
-            chromosome => $marker_info->[0],
-            position => $marker_info->[1],
+            chrom => $marker_info->[0],
+            pos => $marker_info->[1],
             ref => $marker_info->[3],
             alt => $marker_info->[4],
             qual => $marker_info->[5],
@@ -173,7 +173,11 @@ my $coderef = sub {
             info => $marker_info->[7],
             format => $marker_info->[8],
         );
-        $protocolprop_json{$marker_info->[2]} = \%marker;
+        if ($marker_info->[2] eq '.') {
+            $protocolprop_json{$marker_info->[0]."_".$marker_info->[1]} = \%marker;
+        } else {
+            $protocolprop_json{$marker_info->[2]} = \%marker;
+        }
         
         #As it goes down the rows, it contructs a separate json object for each accession column. They are all stored in the %genotypeprop_accessions. Later this hash is iterated over and actually stores the json object in the database. 
         for (my $i = 0; $i < scalar(@$accessions); $i++ ) {
@@ -184,7 +188,12 @@ my $coderef = sub {
             for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
                 $value{@format[$fv]} = @fvalues[$fv]; 
             }
-            $genotypeprop_accessions{$accessions->[$i]}->{$marker_info->[2]} = \%value;
+            
+            if ($marker_info->[2] eq '.') {
+                $genotypeprop_accessions{$accessions->[$i]}->{$marker_info->[0]."_".$marker_info->[1]} = \%value;
+            } else {
+                $genotypeprop_accessions{$accessions->[$i]}->{$marker_info->[2]} = \%value;
+            }
         }
     
     }
@@ -198,14 +207,14 @@ my $coderef = sub {
         
         my ($accession_name, $igd_number) = split(/:/, $_);
         
-        print STDERR "Looking for accession $accession_name\n";
+        #print STDERR "Looking for accession $accession_name\n";
         my $stock;
         my $stock_name;
-        my $stock_rs = $schema->resultset("Stock::Stock")->search({ 'lower(me.uniquename)' => { like => lc($accession_name) } });
+        my $stock_rs = $schema->resultset("Stock::Stock")->search({ 'lower(me.uniquename)' => { like => lc($accession_name) }, organism_id => $organism_id });
     
         if ($stock_rs->count() == 0) {
         
-            print STDERR "No uniquename found for $accession_name, checking synonyms...\n";
+            #print STDERR "No uniquename found for $accession_name, checking synonyms...\n";
             $stock_rs = $schema->resultset("Stock::Stock")->search({
                 -and => [
                     'lower(type.name)'       => { like => '%synonym%' },
@@ -231,7 +240,7 @@ my $coderef = sub {
         }
 
         if ($stock_rs->count ==0)  {
-            print STDERR "No synonym was found for $accession_name\n";
+            #print STDERR "No synonym was found for $accession_name\n";
 
             #store the plant accession in the stock table if $opt_a
             if (!$opt_a) {
@@ -275,19 +284,19 @@ my $coderef = sub {
             type_id => $geno_cvterm->cvterm_id(),
         });
 
-        print STDERR "Linking to protocol...\n";
+        #print STDERR "Linking to protocol...\n";
         my $nd_experiment_protocol = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->create({
             nd_experiment_id => $experiment->nd_experiment_id(),
             nd_protocol_id => $protocol_id,
         });
 
         #link to the project
-        $experiment->find_or_create_related('nd_experiment_projects', {
+        $experiment->create_related('nd_experiment_projects', {
             project_id => $project->project_id()
         });
         
         #link the experiment to the stock
-        $experiment->find_or_create_related('nd_experiment_stocks' , {
+        $experiment->create_related('nd_experiment_stocks' , {
             stock_id => $stock->stock_id(),
             type_id  =>  $geno_cvterm->cvterm_id(),
         });
@@ -314,7 +323,7 @@ my $coderef = sub {
             }
         }
         
-        print STDERR "Storing new genotype for stock " . $stock->name . " \n\n";
+        print STDERR "Storing new genotype for stock " . $stock->name . " \n";
         my $genotype = $schema->resultset("Genetic::Genotype")->find_or_create({
                 name        => $stock->name . "|" . $experiment->nd_experiment_id,
                 uniquename  => $stock->name . "|" . $experiment->nd_experiment_id,
