@@ -17,6 +17,8 @@ Nicolas Morales nm529@cornell.edu
 $protocol_id
 $name
 $marker_details => undef
+$current_page
+$page_size
 </%args>
 
 <& /util/import_javascript.mas, classes => [ ] &>
@@ -83,12 +85,12 @@ $marker_details => undef
 jQuery(document).ready(function() {
     
     jQuery.ajax( {
-        url: '/brapi/v1/maps/<% $protocol_id %>',
+        url: '/brapi/v1/maps/<% $protocol_id %>?currentPage=<% $current_page %>&pageSize=<% $page_size %>',
         success: function(response) {
             console.log(response);
         },
         error: function(response) {
-            alert('An error occurred trying to delete folder.');
+            alert('An error occurred retrieving map using BrAPI.');
         }
     });
 

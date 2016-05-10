@@ -1,0 +1,49 @@
+
+<%doc>
+
+=head1 NAME
+
+/brapiclient/genome_maps/map_list_table.mas - a mason component to display BrAPI genome maps call in a table.
+
+=head1 AUTHOR
+
+Nicolas Morales nm529@cornell.edu
+
+=cut
+
+</%doc>
+
+<%args>
+$current_page => 1
+$page_size => 20
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'SGN.Table' ] &>
+
+<div id="brapi_map_list_table">
+    <div class="well">
+        [Loading...]
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function () {
+jQuery.ajax( {
+    url: '/brapi/v1/maps',
+    dataType: 'json',
+    success: function(response) {
+        console.log(response);
+        console.log(response.result.data);
+        var links = {"name":["mapId","/maps/protocols/"]}
+        create_table(response.result.data, response.metadata.pagination, "brapi_map_list_table", "/brapi/v1/maps", links);
+    },
+    error: function(response) {
+        alert('An error occurred retrieving maps through BrAPI.');
+    }
+});
+});
+
+</script>
+
