@@ -1112,7 +1112,8 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   #print STDERR Dumper \@profile_ids;
   #my @profile_ids = split ",", $markerprofile_ids;
 
-  my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }})->search_related('genotype')->search_related('nd_experiment_genotypes')->search_related('nd_experiment')->search_related('nd_experiment_protocols')->search_related('nd_protocol', {}, {select=>['nd_protocol.name', 'nd_protocol.nd_protocol_id'], as=>['map_name', 'map_id'], rows=>1} );;
+  my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }})->search_related('genotype')->search_related('nd_experiment_genotypes')->search_related('nd_experiment')->search_related('nd_experiment_protocols')->search_related('nd_protocol', {}, {select=>['nd_protocol.name', 'nd_protocol.nd_protocol_id'], as=>['map_name', 'map_id']} );;
+  #print STDERR "COUNT:".$rs->count."\n";
 
   my %scores;
   my $total_pages;
