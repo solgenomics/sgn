@@ -65,7 +65,7 @@ function create_table(data, pagination, div_id, return_url, link) {
         html = html+"</tbody></table>";
         
         html = html+"<div class='row'><div class='col-sm-3 col-sm-offset-6'>";
-        html = html+"<div class='well well-sm'>";
+        html = html+"<div class='well well-sm'><button class='btn btn-sm btn-default'><span class='glyphicon glyphicon-arrow-left'></span></button>";
         html = html+"</div></div></div>";
     }
     jQuery("#"+div_id).html(html);
