@@ -101,8 +101,8 @@
         
         <div class="carousel-sgn-links">
           <ul class="sgn_sm_list">
-            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPeaxi162"><li>Browse the <i>P. axillaris</i> genome</li></a>
-            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPeaxi162"><li>Browse the <i>P. inflata</i> genome</li></a>
+            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPeaxi162&loc=Peaxi162Scf00001"><li>Browse the <i>P. axillaris</i> genome</li></a>
+            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPeinf101&loc=Peinf101Scf00001"><li>Browse the <i>P. inflata</i> genome</li></a>
             <a href="/tools/blast/?db_id=270"><li>Find sequences by similarity</li></a>
             <a href="http://vigs.solgenomics.net"><li>Design VIGS constructs</li></a>
             <a href="ftp://ftp.solgenomics.net/genomes/Petunia_axillaris"><li><i>P. axillaris</i> Downloads</li></a>
