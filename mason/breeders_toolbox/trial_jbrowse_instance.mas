@@ -6,9 +6,9 @@ $trial_id
 
 <%perl>
 
-my $project_name = lc($c->config->{project_name});
-my $test_url = "/jbrowse_$project_name/current/data/json/trials/" . $trial_id . "/trackList.json";
-my $jbrowse_url = "/jbrowse/?data=data%2Fjson%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene%20exons%2C&cat=Diversity/NEXTGEN/Imputed&highlight=";
+my $jbrowse_path = $c->config->{jbrowse_path};
+my $test_url = $jbrowse_path . "/trials/" . $trial_id . "/trackList.json";
+my $jbrowse_url = $jbrowse_path ."%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene%20exons%2C&cat=Diversity/NEXTGEN/Imputed&highlight=";
 
 </%perl>
 
