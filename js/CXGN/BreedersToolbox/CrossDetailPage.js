@@ -30,78 +30,69 @@ jQuery(document).ready(function() {
 		    alert(response.error);
 		    return;
 		}
-
-    var html = "<table>";
 		if (response.progeny) {
-		    for (var i=0; i<response.progeny.length; i++) {
-			html += '<td><a href="/stock/'+response.progeny[i][1]+'/view">'+response.progeny[i][0]+'</a></td></tr>';
-		    }
-		}
-		html += "</table><br>";
-    html += "<p><b>Add progeny to list:</b><p>"
-    html += '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="progeny_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
-    html += '<tr><td><button class="btn btn-default btn-sm" id="progeny_select_all" name="1">Select All</button><br><br>'
-    html += '<div class="well well-sm"><div id="progeny_data_count" name="1">No Selection</div></div>'
-    html += '<div id="progeny_to_list_menu"></div><td><tr></table>'
+      var html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="progeny_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
+      html += '<tr><td><button class="btn btn-default btn-sm" id="progeny_select_all" name="1">Select All</button><br><br>'
+      html += '<div class="well well-sm"><div id="progeny_data_count" name="1">No Selection</div></div>'
+      html += '<div id="progeny_to_list_menu"></div><td><tr></table>'
 
-    jQuery('#progeny_information_div').html(html);
+      jQuery('#progeny_information_div').html(html);
 
-    var progeny = response.progeny || [];
-    var reversed_progeny = [];
-    progeny.forEach(function(accession_array) {
-      var reversed_array = accession_array.reverse();
-      reversed_progeny.push(reversed_array);
-    });
+      var progeny = response.progeny || [];
+      var reversed_progeny = [];
+      progeny.forEach(function(accession_array) {
+        var reversed_array = accession_array.reverse();
+        reversed_progeny.push(reversed_array);
+      });
 
-    progeny_html = format_options_list(progeny);
-    jQuery('#progeny_data').html(progeny_html);
+      progeny_html = format_options_list(progeny);
+      jQuery('#progeny_data').html(progeny_html);
 
-    var data = jQuery('#progeny_data').val() || [];;
-    //console.log(" progeny length ="+progeny.length+" and data.length = "+data.length);
-    show_list_counts('progeny_data_count', progeny.length, data.length);
+      var data = jQuery('#progeny_data').val() || [];;
+      show_list_counts('progeny_data_count', progeny.length, data.length);
 
-    if (jQuery('#navbar_lists').length) {
-      addToListMenu('progeny_to_list_menu', 'progeny_data', {
-        selectText: true,
-        listType: 'accessions' });
-    }
+      if (jQuery('#progeny_data').length) {
+        addToListMenu('progeny_to_list_menu', 'progeny_data', {
+          selectText: true,
+          listType: 'accessions'
+        });
+      }
 
-    jQuery('#progeny_select_all').click( // select all progeny
-      function() {
-      var data_id = "progeny_data";
-      selectAllOptions(document.getElementById(data_id));
+      jQuery('#progeny_select_all').click( function() { // select all progeny
+        var data_id = "progeny_data";
+        selectAllOptions(document.getElementById(data_id));
 
-      var data = jQuery("#"+data_id).val() || [];;
-      var count_id = "progeny_data_count";
+        var data = jQuery("#"+data_id).val() || [];;
+        var count_id = "progeny_data_count";
+        show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+      });
 
-      show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-    });
+      jQuery('#progeny_data').change( function() { // update count when data selections change
+        var data_id = jQuery(this).attr('id');
+	      var data = jQuery('#'+data_id).val() || [];;
+	      var count_id = "progeny_data_count";
+        show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+	    });
 
-    jQuery('#progeny_data').change( // update count when data selections change
-    	function() {
-
-	    var data_id = jQuery(this).attr('id');
-	    var data = jQuery('#'+data_id).val() || [];;
-	    var count_id = "progeny_data_count";
-
-	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-	});
+      jQuery('select').dblclick( function() { // open progeny detail page in new window or tab on double-click
+  	    window.open("../../stock/"+this.value+"/view");
+      });  
+    } // close if (response.progeny)
 
 		var parent_html = "";
 		if (response.maternal_parent) {
-		    parent_html = '<img src="/img/Venus_symbol.svg" width="20" /> <a href="/stock/'+response.maternal_parent[1] +'/view">'+response.maternal_parent[0]+'</a><br />';
+		  parent_html = '<img src="/img/Venus_symbol.svg" width="20" /> <a href="/stock/'+response.maternal_parent[1] +'/view">'+response.maternal_parent[0]+'</a><br />';
 		}
 		if (response.paternal_parent) {
-		    parent_html += '<img src="/img/Mars_symbol.svg" width="20" /> <a href="/stock/'+response.paternal_parent[1] +'/view">'+response.paternal_parent[0]+'</a><br />';						   }
-		jQuery('#parents_information_div').html(parent_html);
-	    },
+		  parent_html += '<img src="/img/Mars_symbol.svg" width="20" /> <a href="/stock/'+response.paternal_parent[1] +'/view">'+response.paternal_parent[0]+'</a><br />';						   }
+		  jQuery('#parents_information_div').html(parent_html);
+	  },
 
-	    error: function(response, a, b) {
-		jQuery('#progeny_information_div').html('An error occurred. '+a +' '+ b);
-	    }
+	  error: function(response, a, b) {
+		  jQuery('#progeny_information_div').html('An error occurred. '+a +' '+ b);
+	  }
 	});
-
-    }
+}
 
     function display_parents(cross_id) {
 	jQuery.ajax( {

@@ -8,7 +8,7 @@
 </p>
 
 <p>
-  <i>N. benthamiana</i> has a very complex genome consisting of n=19 chromosomes that is estimated at over 3.5GB in size. 
+  <i>N. benthamiana</i> has a very complex genome consisting of n=19 chromosomes that is estimated at over 3.5GB in size.
   Taxonomically, it is an old allotetraploid of the section Suaveolentes that was formed from diploid parents from the section Sylvestres and
   the section Noctiflorae. It is native to Australia [2, 3].
 </p>
@@ -20,7 +20,7 @@
 </p>
 
 <p>
-  The draft sequence of <i>N. benthamiana</i> will allow better design of constructs for virus-induced gene-silencing (VIGS) 
+  The draft sequence of <i>N. benthamiana</i> will allow better design of constructs for virus-induced gene-silencing (VIGS)
   in order to reduce the possibility of 'off-target' gene silencing [1]. The sequence will be also useful to identify tomato and potato orthologs
   for comparative genomics with other Solanaceae species and, to retrieve promoter sequences.
 </p>
@@ -29,7 +29,7 @@
 <center>
     <a id="blue_button" href="/tools/blast/?db_id=266" target="_blank">BLAST</a>&nbsp;&nbsp;
     <a id="blue_button" href="ftp://ftp.solgenomics.net/genomes/Nicotiana_benthamiana" target="_blank">FTP Site</a>&nbsp;&nbsp;
-    <a id="blue_button" href="http://solgenomics.net/jbrowse/current/?data=data%2Fjson%2FNiben1.0.1&loc=Niben101Scf00005" target="_blank" style="background-image:none;">JBrowse</a>&nbsp;&nbsp;
+    <a id="blue_button" href="http://solgenomics.net/jbrowse_solgenomics/?data=data%2Fjson%2FNiben1.0.1&loc=Niben101Scf00005" target="_blank" style="background-image:none;">JBrowse</a>&nbsp;&nbsp;
     <a id="blue_button" href="http://vigs.solgenomics.net" target="_blank" style="background-image:none;">VIGS Tool</a>
 </center>
 
@@ -149,10 +149,10 @@ N25 index:    12906 sequences<br />
 <h4>Sequencing approach</h4>
 
 <p>
-  Seedlings were grown in the greenhouse and nuclear DNA was extracted from etiolated leaves. 
+  Seedlings were grown in the greenhouse and nuclear DNA was extracted from etiolated leaves.
   From the DNA, three distinct libraries were synthesized for use in a Illumina HiSeq-2000 sequencer:
-  1) a paired end library with an insert size of approximately 500 bp insert size; 
-  2) a mate-pair type library with an insert size of 2kb; and 
+  1) a paired end library with an insert size of approximately 500 bp insert size;
+  2) a mate-pair type library with an insert size of 2kb; and
   3) a mate pair with an insert size of 5kb.
   Sequencing was performed using a full run with 4 lanes of the paired end library and 1 lane each of the mate pair libraries.
 </p>
@@ -193,7 +193,7 @@ N25 index:    12906 sequences<br />
   </li>
   <li>
     Goodin, M. M., D. Zaitlin, R. A. Naidu, and S. A. Lommel (2008).
-    Nicotiana benthamiana: Its history and future as a model for plant-pathogen interactions. 
+    Nicotiana benthamiana: Its history and future as a model for plant-pathogen interactions.
     <a href="http://apsjournals.apsnet.org/doi/abs/10.1094/MPMI-21-8-1015" target="_blank">Molecular Plant-Microbe Interactions 21:1026.</a>
   </li>
 </ol>

@@ -310,12 +310,14 @@ function update_download_options(this_section, categories) {
 	//if (data !== undefined) {console.log("data ="+data[i]);}
       if (categories[i] === 'trials' && data[i]) {
         selected_trials = 1;
-	      jQuery('#download_button_excel').prop( 'title', 'Click to Download Trial Phenotypes');
-        jQuery('#download_button_csv').prop('title', 'Click to Download Trial Phenotypes');
-        jQuery('#download_button_excel').removeAttr('disabled');
-        jQuery('#download_button_csv').removeAttr('disabled');
         var trial_html = '<font color="green">'+data[i].length+' trials selected</font></div>';
         jQuery('#selected_trials').html(trial_html);
+        if (isLoggedIn()) {
+	         jQuery('#download_button_excel').prop( 'title', 'Click to Download Trial Phenotypes');
+           jQuery('#download_button_csv').prop('title', 'Click to Download Trial Phenotypes');
+           jQuery('#download_button_excel').removeAttr('disabled');
+           jQuery('#download_button_csv').removeAttr('disabled');
+         }
       }
       if (categories[i] === 'accessions' && data[i]) {
         selected_accessions = 1;
@@ -333,26 +335,26 @@ function update_download_options(this_section, categories) {
         jQuery('#selected_genotyping_protocols').html(genotyping_protocols_html);
       }
     }
-    if (selected_accessions == 1 && selected_genotyping_protocols == 1) {
+    if (selected_accessions == 1 && selected_genotyping_protocols == 1 && isLoggedIn()) {
       jQuery('#download_button_genotypes').prop( 'title', 'Click to Download Accession Genotypes');
 	    jQuery('#download_button_genotypes').removeAttr('disabled');
     }
     //console.log("trials-selected="+trials_selected);
     //console.log("accessions-selected="+accessions_selected);
     if (selected_trials !== 1) {
-      jQuery('#download_button_excel').prop('title','First select a trial or trials to download');
-      jQuery('#download_button_csv').prop('title', 'First select a trial or trials to download');
+      jQuery('#download_button_excel').prop('title','You must be logged in, with a trial selected to download');
+      jQuery('#download_button_csv').prop('title', 'You must be logged in, with a trial selected to download');
       jQuery('#download_button_excel').attr('disabled', 'disabled');
       jQuery('#download_button_csv').attr('disabled', 'disabled');
       jQuery('#selected_trials').html('No trials selected');
     }
     if (selected_accessions !== 1) {
-      jQuery('#download_button_genotypes').prop('title','First select a genotyping protocol and accessions to download');
+      jQuery('#download_button_genotypes').prop('title','You must be logged in, with a genotyping protocol and accessions selected to download');
       jQuery('#download_button_genotypes').attr('disabled', 'disabled');
       jQuery('#selected_accessions').html('No accessions selected');
     }
     if (selected_genotyping_protocols !== 1) {
-      jQuery('#download_button_genotypes').prop('title','First select a genotyping protocol and accessions to download');
+      jQuery('#download_button_genotypes').prop('title','You must be logged in, with a genotyping protocol and accessions selected to download');
       jQuery('#download_button_genotypes').attr('disabled', 'disabled');
       jQuery('#selected_genotyping_protocols').html('No genotyping protocols selected');
     }

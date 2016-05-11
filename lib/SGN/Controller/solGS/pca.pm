@@ -56,7 +56,7 @@ sub pca_result :Path('/pca/result/') Args(1) {
     my $list_type   = $c->req->param('list_type');
     my $list_name   = $c->req->param('list_name');
     my $pop_list_id = $c->req->param('population_id');
-
+    print STDERR "\n list id: $list_id -- type: $list_type -- name: $list_name -- pop_list_id: $pop_list_id\n";
     if ($list_id) 
     {
 	$c->stash->{pop_id}   = $list_id;
@@ -209,20 +209,34 @@ sub create_pca_genotype_data {
 	my $list_id = $c->stash->{list_id};
 	my $list_type = $c->stash->{list_type};
 
-	if ($list_type eq 'accessions') 
+	my $referer = $c->req->referer;
+	if ($referer =~ /solgs\/trait\/\d+\/population\//) 
 	{
-	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	    my @genotypes_list = @{$list->elements};
+		my $user_id = $c->user->id;
+       	
+		my $exp = "genotype_data_${user_id}_uploaded_${list_id}";
+		my $dir = $c->stash->{solgs_prediction_upload_dir};
+	
+		my ($geno_file) = $c->controller("solGS::solGS")->grep_file($dir, $exp);
+	
+		$c->stash->{genotype_file} = $geno_file;
+	} 	   
+	elsif ($list_type eq 'accessions') 
+	{
+	    
+		my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+		my @genotypes_list = @{$list->elements};
 
-	    $c->stash->{genotypes_list} = \@genotypes_list;
-	    $c->model("solGS::solGS")->format_user_list_genotype_data;
-	    my $geno_data = $c->stash->{user_selection_list_genotype_data};
+		$c->stash->{genotypes_list} = \@genotypes_list;
+		$c->model("solGS::solGS")->format_user_list_genotype_data;
+		my $geno_data = $c->stash->{user_selection_list_genotype_data};
 
-	    my $file = "genotype_data_${list_id}";     
-	    $file = $c->controller("solGS::solGS")->create_tempfile($c, $file);    
+		my $file = "genotype_data_${list_id}";     
+		$file = $c->controller("solGS::solGS")->create_tempfile($c, $file);    
             
-	    write_file($file, $geno_data);
-	    $c->stash->{genotype_file} = $file; 
+		write_file($file, $geno_data);
+		$c->stash->{genotype_file} = $file; 
+	    
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
