@@ -14,8 +14,6 @@ Nicolas Morales nm529@cornell.edu
 </%doc>
 
 <%args>
-$current_page
-$page_size
 </%args>
 
 <& /util/import_javascript.mas, classes => [ ] &>
@@ -25,7 +23,7 @@ $page_size
 
 <&| /page/info_section.mas, title=>"Map Information", collapsible=>1, collapsed=>0 &>
 
-  <& /brapiclient/genome_maps/map_list_table.mas, current_page=>$current_page, page_size=>$page_size &>
+  <& /brapiclient/genome_maps/map_list_table.mas  &>
 
 </&>
 

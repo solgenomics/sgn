@@ -22,10 +22,6 @@ sub _build_schema {
 sub protocols_list :Path("/maps/protocols") Args(0) {
     my $self = shift;
     my $c = shift;
-    my $current_page = $c->req->param("currentPage") || 1;
-    my $page_size = $c->req->param("pageSize") || 20;
-    $c->stash->{current_page} = $current_page;
-    $c->stash->{page_size} = $page_size;
     $c->stash->{template} = '/maps/genotype_protocol_list.mas';
 }
 
@@ -34,29 +30,27 @@ sub protocol_page :Path("/maps/protocols") Args(1) {
     my $self = shift;
     my $c = shift;
     my $protocol_id = shift;
-    my $current_page = $c->req->param("currentPage") || 1;
-    my $page_size = $c->req->param("pageSize") || 20;
 
     #print STDERR Dumper $protocol_id;
 
-    my $protocol = CXGN::GenotypeProtocol->new({ schema => $self->schema, nd_protocol_id => $protocol_id });
+    my $protocol_name = $self->schema()->resultset('NaturalDiversity::NdProtocol')->find({ nd_protocol_id=>$protocol_id })->name();
+
+    #my $protocol = CXGN::GenotypeProtocol->new({ schema => $self->schema, nd_protocol_id => $protocol_id });
     #print STDERR Dumper $protocol->marker_details();
     
-    my $marker_details = $protocol->marker_details();
-    my $markers = $protocol->markers();
-    @$markers = splice @$markers, $page_size;
-    my @markerdetails_window;
-    foreach (@$markers) {
-        my @marker_info = ($_, $marker_details->{$_} );
-        push @markerdetails_window, \@marker_info;
-    }
+    #my $marker_details = $protocol->marker_details();
+    #my $markers = $protocol->markers();
+    #@$markers = splice @$markers, $page_size;
+    #my @markerdetails_window;
+    #foreach (@$markers) {
+    #    my @marker_info = ($_, $marker_details->{$_} );
+    #    push @markerdetails_window, \@marker_info;
+    #}
     #print STDERR Dumper \@markerdetails_window;
     
     $c->stash->{protocol_id} = $protocol_id;
-    $c->stash->{name} = $protocol->name();
-    $c->stash->{marker_details} = \@markerdetails_window;
-    $c->stash->{current_page} = $current_page;
-    $c->stash->{page_size} = $page_size;
+    $c->stash->{name} = $protocol_name;
+    #$c->stash->{marker_details} = \@markerdetails_window;
     $c->stash->{template} = '/maps/genotype_protocol.mas';
 }
 

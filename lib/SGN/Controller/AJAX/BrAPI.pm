@@ -998,8 +998,7 @@ sub genotype_fetch_GET {
     	    }
 
             my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-            my $end = $c->stash->{page_size}*$c->stash->{current_page};
-            my @data_window = splice @data, $start, $end;
+            my @data_window = splice @data, $start, $c->stash->{page_size};
 
     	    %result = (germplasmDbId=>$rs->get_column('stock_id'), extractDbId=>'', markerprofileDbId=>$c->stash->{markerprofile_id}, analysisMethod=>$rs->get_column('protocol_name'), encoding=>"AA,BB,AB", data => \@data_window);
     }
@@ -2021,8 +2020,7 @@ sub maps_list_GET {
 
     my $total_count = scalar(@data);
     my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page};
-    my @data_window = splice @data, $start, $end;
+    my @data_window = splice @data, $start, $c->stash->{page_size};
 
     my %result = (data => \@data_window);
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
@@ -2144,15 +2142,14 @@ sub maps_details_GET {
 
     $total_count = scalar(@data);
     my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page};
-    my @data_window = splice @data, $start, $end;
+    my @data_window = splice @data, $start, $c->stash->{page_size};
 
     %map_info = (
         mapId =>  $rs->nd_protocol_id(),
         name => $rs->name(),
         type => "physical",
         unit => "bp",
-        linkageGroups => \@data_window,
+        data => \@data_window,
     );
 
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
@@ -2270,8 +2267,7 @@ sub maps_marker_detail_GET {
 
     my $total_count = scalar(@markers);
     my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page};
-    my @data_window = splice @markers, $start, $end;
+    my @data_window = splice @markers, $start, $c->stash->{page_size};
 
     my %result = (data => \@data_window);
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);

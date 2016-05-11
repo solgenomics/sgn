@@ -15,28 +15,39 @@
 
 
 function create_table(data, pagination, div_id, return_url, link) {
+    //console.log(data);
+    //console.log(pagination);
+    //console.log(div_id);
+    //console.log(return_url);
+    //console.log(link);
     var current_page = pagination.currentPage;
     var next_page = current_page + 1;
     var previous_page = current_page - 1;
     var page_size = pagination.pageSize;
     var total_count = pagination.totalCount;
     var total_pages = pagination.totalPages;
-    var html = "";
+    var html = "<input id='table_div_id_input' type='hidden' value='"+div_id+"'/>";
+    var html = html+"<input id='table_return_url_input' type='hidden' value='"+return_url+"'/>";
+    var html = html+"<input id='table_links_input' type='hidden' value='"+JSON.stringify(link)+"'/>";
+    var html = html+"<input id='table_page_size_input' type='hidden' value='"+page_size+"'/>";
+    var html = html+"<input id='table_next_page_input' type='hidden' value='"+next_page+"'/>";
+    var html = html+"<input id='table_previous_page_input' type='hidden' value='"+previous_page+"'/>";
     if (data.length == 0) {
-        html = "<center><h3>No data available!</h3></center>";
+        html = html+"<center><h3>No data available!</h3></center>";
     } else {
-        html = "<table class='table table-hover table-bordered'><thead><tr>";
+        html = html+"<table class='table table-hover table-bordered'><thead><tr>";
         var header = [];
         for(var h in data[0]) {
             if (data[0].hasOwnProperty(h)) {
-                if (link) {
+                //console.log(h);
+                if (typeof link === 'undefined' || link === null || link === 'undefined') {
+                    header.push(h);
+                } else {
                     for(var link_header in link) {
                         if(h != link[link_header][0]) {
                             header.push(h);
                         }
                     }
-                } else {
-                    header.push(h);
                 }
             }
         }
@@ -48,7 +59,9 @@ function create_table(data, pagination, div_id, return_url, link) {
         for(var row=0; row<data.length; row++) {
             html = html+"<tr>";
             for(var col=0; col<header.length; col++){
-                if (link) {
+                if (typeof link === 'undefined' || link === null || link === 'undefined') {
+                    html = html+"<td>"+data[row][header[col]]+"</td>";
+                } else {
                     for(var link_header in link) {
                         if (header[col] == link_header) {
                             html = html+"<td><a href='"+link[link_header][1]+data[row][link[link_header][0]]+"'>"+data[row][link_header]+"</a></td>";
@@ -56,17 +69,27 @@ function create_table(data, pagination, div_id, return_url, link) {
                             html = html+"<td>"+data[row][header[col]]+"</td>";
                         }
                     }
-                } else {
-                    html = html+"<td>"+data[row][header[col]]+"</td>";
                 }
             }
             html = html+"</tr>";
         }
         html = html+"</tbody></table>";
         
-        html = html+"<div class='row'><div class='col-sm-3 col-sm-offset-6'>";
-        html = html+"<div class='well well-sm'><button class='btn btn-sm btn-default'><span class='glyphicon glyphicon-arrow-left'></span></button>";
-        html = html+"</div></div></div>";
+        html = html+"<div class='well well-sm'><div class='row'>";
+        html = html+"<div class='col-sm-6'><div class='row'><div class='col-sm-7'><div class='btn-group' role='group'>";
+        
+        if (total_pages > 1) {
+            if (current_page > 1) {
+                html = html+"<button id='table_previous_page_button' class='btn btn-sm btn-default glyphicon glyphicon-arrow-left'></button><button class='btn btn-sm btn-default' style='margin-top:1px'>Page "+current_page+" of "+total_pages+"</button><button id='table_next_page_button' class='btn btn-sm btn-default glyphicon glyphicon-arrow-right'></button>";
+            } else {
+                html = html+"<button class='disabled btn btn-sm btn-default glyphicon glyphicon-arrow-left'></button><button class='btn btn-sm btn-default' style='margin-top:1px'>Page "+current_page+" of "+total_pages+"</button><button id='table_next_page_button' class='btn btn-sm btn-default glyphicon glyphicon-arrow-right'></button>";
+            }
+        } else {
+            html = html+"<button class='disabled btn btn-sm btn-default glyphicon glyphicon-arrow-left'></button><button class='btn btn-sm btn-default' style='margin-top:1px'>Page "+current_page+" of "+total_pages+"</button><button id='table_next_page_button' class='disabled btn btn-sm btn-default glyphicon glyphicon-arrow-right'></button>";
+        }
+        html = html+"</div></div><div class='col-sm-5'><div class='input-group input-group-sm'><span class='input-group-addon' id='basic-addon1'>Page:</span><input type='text' id='table_change_current_page_input' class='form-control' placeholder='"+current_page+"' aria-describedby='basic-addon1'></div></div></div></div>";
+        html = html+"<div class='col-sm-6'><div class='row'><div class='col-sm-7'><div class='input-group input-group-sm'><span class='input-group-addon' id='basic-addon2'>Page Size:</span><input type='text' id='table_change_page_size_input' class='form-control' placeholder='"+page_size+"' aria-describedby='basic-addon2'></div></div><div class='col-sm-5'><button class='btn btn-sm btn-default'>Total: "+total_count+"</button></div></div></div></div>";
+        html = html+"</div>";
     }
     jQuery("#"+div_id).html(html);
 }
@@ -74,3 +97,111 @@ function create_table(data, pagination, div_id, return_url, link) {
 function capitalizeEachWord(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+jQuery(document).ready(function () {
+    
+    jQuery(document).on( 'click', "#table_next_page_button", function() {
+        jQuery.ajax( {
+            url: jQuery("#table_return_url_input").val()+"?currentPage="+jQuery("#table_next_page_input").val()+"&pageSize="+jQuery("#table_page_size_input").val(),
+            dataType: 'json',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                //console.log(response);
+                var div_id = jQuery("#table_div_id_input").val();
+                var return_url = jQuery("#table_return_url_input").val();
+                var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
+                jQuery("#"+jQuery("#table_div_id_input").val()).empty();
+                create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred constructing table after moving to the next page.');
+            }
+        });
+    });
+    
+    jQuery(document).on( 'click', "#table_previous_page_button", function() {
+        jQuery.ajax( {
+            url: jQuery("#table_return_url_input").val()+"?currentPage="+jQuery("#table_previous_page_input").val()+"&pageSize="+jQuery("#table_page_size_input").val(),
+            dataType: 'json',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                //console.log(response);
+                var div_id = jQuery("#table_div_id_input").val();
+                var return_url = jQuery("#table_return_url_input").val();
+                var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
+                jQuery("#"+jQuery("#table_div_id_input").val()).empty();
+                create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred constructing table after moving to the previous page.');
+            }
+        });
+    });
+    
+    jQuery(document).on( 'keyup', "#table_change_page_size_input", function() {
+        delay(function() {
+            jQuery.ajax( {
+                url: jQuery("#table_return_url_input").val()+"?currentPage="+jQuery("#table_previous_page_input").val()+"&pageSize="+jQuery("#table_change_page_size_input").val(),
+                dataType: 'json',
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response) {
+                    jQuery("#working_modal").modal("hide");
+                    //console.log(response);
+                    var div_id = jQuery("#table_div_id_input").val();
+                    var return_url = jQuery("#table_return_url_input").val();
+                    var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
+                    jQuery("#"+jQuery("#table_div_id_input").val()).empty();
+                    create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+                },
+                error: function(response) {
+                    jQuery("#working_modal").modal("hide");
+                    alert('An error occurred constructing table after moving to the previous page.');
+                }
+            });
+        }, 800);
+    });
+    
+    jQuery(document).on( 'keyup', "#table_change_current_page_input", function() {
+        delay(function() {
+            jQuery.ajax( {
+                url: jQuery("#table_return_url_input").val()+"?currentPage="+jQuery("#table_change_current_page_input").val()+"&pageSize="+jQuery("#table_page_size_input").val(),
+                dataType: 'json',
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response) {
+                    jQuery("#working_modal").modal("hide");
+                    //console.log(response);
+                    var div_id = jQuery("#table_div_id_input").val();
+                    var return_url = jQuery("#table_return_url_input").val();
+                    var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
+                    jQuery("#"+jQuery("#table_div_id_input").val()).empty();
+                    create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+                },
+                error: function(response) {
+                    jQuery("#working_modal").modal("hide");
+                    alert('An error occurred constructing table after moving to the previous page.');
+                }
+            });
+        }, 800);
+    });
+    
+    var delay = (function(){
+        var timer = 0;
+        return function(callback, ms){
+            clearTimeout (timer);
+            timer = setTimeout(callback, ms);
+        };
+    })();
+    
+});

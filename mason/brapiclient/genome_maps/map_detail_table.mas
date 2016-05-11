@@ -3,7 +3,7 @@
 
 =head1 NAME
 
-/brapiclient/genome_maps/map_list_table.mas - a mason component to display BrAPI genome maps call in a table.
+/brapiclient/genome_maps/map_detail_table.mas - a mason component to display a single map's details using BrAPI call in a table.
 
 =head1 AUTHOR
 
@@ -14,13 +14,14 @@ Nicolas Morales nm529@cornell.edu
 </%doc>
 
 <%args>
+$protocol_id
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'SGN.Table' ] &>
 
 <br/>
 
-<div id="brapi_map_list_table">
+<div id="brapi_map_detail_table">
     <div class="well">
         [Loading...]
     </div>
@@ -31,12 +32,11 @@ Nicolas Morales nm529@cornell.edu
 
 jQuery(document).ready(function () {
     jQuery.ajax( {
-        url: '/brapi/v1/maps?pageSize=10',
+        url: '/brapi/v1/maps/<% $protocol_id %>?pageSize=10',
         dataType: 'json',
         success: function(response) {
             //console.log(response);
-            var links = {"name":["mapId","/maps/protocols/"]};
-            create_table(response.result.data, response.metadata.pagination, "brapi_map_list_table", "/brapi/v1/maps", links);
+            create_table(response.result.data, response.metadata.pagination, "brapi_map_detail_table", "/brapi/v1/maps/<% $protocol_id %>");
         },
         error: function(response) {
             alert('An error occurred retrieving maps through BrAPI.');
@@ -46,4 +46,3 @@ jQuery(document).ready(function () {
 });
 
 </script>
-

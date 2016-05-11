@@ -16,82 +16,16 @@ Nicolas Morales nm529@cornell.edu
 <%args>
 $protocol_id
 $name
-$marker_details => undef
-$current_page
-$page_size
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'SGN.Table' ] &>
 
 <& /page/page_title.mas, title=>"Genotyping protocol detail for ".$name &>
 
-<hr>
+<&| /page/info_section.mas, title=>"Map Information", collapsible=>1, collapsed=>0 &>
 
-<div class="well well-sm">
-    <div class="row">
-        <div class="col-sm-6">
-        <form class="form-horizontal" role="form" method="post" id="gp_show_num_markers" name="gp_show_num_markers">
-            <div class="form-group form-group-sm">
-                <label class="col-sm-8 control-label">Show Number of Markers: </label>
-                <div class="col-sm-4" >
-                    <input type="text" class="form-control" placeholder="20" />
-                </div>
-            </div>
-        </form>
-        </div>
-        <div class="col-sm-6">
-            <div id="genotype_protocol_num_markers"></div>
-        </div>
-    </div>
-</div>
+  <& /brapiclient/genome_maps/map_detail_table.mas, protocol_id=>$protocol_id  &>
 
-<table class="table" id="genotype_protocol_details">
-    <thead>
-        <tr>
-            <th>Marker ID</th>
-            <th>Chrom</th>
-            <th>Pos</th>
-            <th>Ref</th>
-            <th>Alt</th>
-            <th>Quality</th>
-            <th>Filter</th>
-            <th>Info</th>
-            <th>Format</th>
-        </tr>
-    </thead>
-    <tbody>
-
-% foreach (@$marker_details) {
-        <tr>
-            <td><% $_[0] %></td>
-            <td><% $_[1] %></td>
-            <td><% $_[2] %></td>
-            <td><% $_[3] %></td>
-            <td><% $_[4] %></td>
-            <td><% $_[5] %></td>
-            <td><% $_[6] %></td>
-            <td><% $_[7] %></td>
-            <td><% $_[8] %></td>
-        </tr>
-% }
-
-    </tbody>
-</table>
+</&>
 
 
-
-<script>
-
-jQuery(document).ready(function() {
-    
-    jQuery.ajax( {
-        url: '/brapi/v1/maps/<% $protocol_id %>?currentPage=<% $current_page %>&pageSize=<% $page_size %>',
-        success: function(response) {
-            console.log(response);
-        },
-        error: function(response) {
-            alert('An error occurred retrieving map using BrAPI.');
-        }
-    });
-
-</script>
