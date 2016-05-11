@@ -55,8 +55,9 @@ $t->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $t->get_ok('/breeders/trials');
-
-    sleep(2);
+    
+    my $refresh_tree = $t->find_element_ok("refresh_jstree_html", "id", "refresh tree")->click();
+    sleep(3);
 
     $t->find_element_ok("test", "partial_link_text", "check program in tree")->click();
 
