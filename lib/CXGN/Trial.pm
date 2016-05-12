@@ -1350,7 +1350,7 @@ sub create_plant_entities {
 
 	 # 		    });
 
-	my $plant_number_cvterm = $chado_schema->resultset("Cv::Cvterm")->find( { name => "plant number", cv_id => $stock_property_cv_id })->cvterm_id();
+	my $plant_number_cvterm = $chado_schema->resultset("Cv::Cvterm")->find( { name => "plant_number", cv_id => $stock_property_cv_id })->cvterm_id();
 
 	 # my $has_plants_cvterm = $chado_schema->resultset("Cv::Cvterm")
 	 #     ->create_with( 
@@ -1363,12 +1363,12 @@ sub create_plant_entities {
 
 	my $has_plants_cvterm = $chado_schema->resultset("Cv::Cvterm")->find( { name => 'project_has_plant_entries', cv_id => $project_property_cv_id })->cvterm_id();
 
-	 # my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create(
-	 #     { 
-	 # 	 type_id => $has_plants_cvterm->cvterm_id(),
-	 # 	 value => $plants_per_plot,
-	 # 	 project_id => $self->get_trial_id(),
-	 #     });
+	  my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create(
+	      { 
+	  	 type_id => $has_plants_cvterm->cvterm_id(),
+	  	 value => $plants_per_plot,
+	  	 project_id => $self->get_trial_id(),
+	      });
 
 	 my $field_layout_cvterm_id = $chado_schema->resultset("Cv::Cvterm")->find( { name=>'field layout' })->cvterm_id;
 
@@ -1451,6 +1451,11 @@ sub create_plant_entities {
 	 return;
      }
      return $design_type;
+}
+
+
+
+sub duplicate { 
 }
 
 1;
