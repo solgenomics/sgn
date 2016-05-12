@@ -1,34 +1,33 @@
+<%doc>
+
+=head1 NAME 
+genome_positions.mas - a mason component for jbrowse tracks for qtl markers
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+=cut
+
+</%doc>
+
+
 <%args>
 $markers
 </%args>
-<%init>
-  
-my (@xrefs, @xrefs_latest);
 
-if ($markers->[0]) 
-  {
-    foreach my $marker (@$markers) 
-      {
-        my @xrefs_m = map {
-          $_->xrefs({
-                     -types   => ['match'],
-                     -name    => 'SGN-M'.$marker->marker_id,
-                     -aliases => 1,
-                    })
-        } $c->enabled_feature('gbrowse2');
-        push @xrefs, @xrefs_m;
-      }
-    @xrefs_latest = grep {
-      $_->data_source->description =~ /itag2\.3/i
-    } @xrefs;
-
-  }
-
-</%init>
+<%perl>
+my $src_feature = 'SL2.50';
+</%perl>
 
 <&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL markers' genomic matches" &>
-% if( @xrefs_latest ) {
-  <& /sitefeatures/gbrowse2/xref_set/rich.mas, xrefs => \@xrefs_latest &>
-% }
+% if ($markers->[0]) {
+%    foreach my $marker (@$markers) {
+%      my ($marker_name, @other_names) = $marker->name_that_marker();
+
+     <& /feature/jbrowse_exact_match.mas, feature => $marker_name, src_feature => $src_feature &>
+
+%}
+%}
+
 </&>
+
 
