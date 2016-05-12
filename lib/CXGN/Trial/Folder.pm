@@ -337,6 +337,17 @@ sub associate_breeding_program {
 
 }
 
+sub delete_folder {
+	my $self = shift;
+	
+	my $children = $self->children();
+	if (scalar(@$children) > 0) {
+		return;
+	}
+	my $delete_folder = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->folder_id })->delete();
+	return 1;
+}
+
 sub remove_parent {
 
 

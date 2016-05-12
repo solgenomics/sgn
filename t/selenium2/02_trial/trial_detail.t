@@ -11,6 +11,8 @@ $t->while_logged_in_as("curator", sub {
 
     #Upload New Trial
     $t->get_ok('/breeders/trials');
+    sleep(1);
+    $t->driver->accept_alert();
     $t->find_element_ok("upload_trial_link", "id", "click on upload_trial_link ")->click();
     sleep(2);
     my $program_select = $t->find_element_ok("trial_upload_breeding_program", "id", "find breeding program select");
