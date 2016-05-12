@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/stock/index.mas - a page for displaying stock details (e.g. accession, population, etc.) 
+/stock/index.mas - a page for displaying stock details (e.g. accession, population, etc.)
 
 =head1 DESCRIPTION
 
@@ -12,7 +12,7 @@ parameters:
 
 =item $stockref
 
-a hashref with all the parameters needed for printing the stock page! 
+a hashref with all the parameters needed for printing the stock page!
 
  $stockref->{stock_id}
  $stockref->{stock}
@@ -29,7 +29,7 @@ a hashref with all the parameters needed for printing the stock page!
  cvterm_add_uri
  cvterm_autocomplete_uri => '/ajax/cvterm/autocomplete/'
  barcode_tempdir
- barcode_tempuri 
+ barcode_tempuri
  organism_autocomplete_uri => '/ajax/organism/autocomplete/'
 
 =back
@@ -181,16 +181,16 @@ my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a href="j
 
 my $edit_privs = $curator || $submitter || $sequencer;
 
-my $project_name = lc($c->config->{project_name});
-my $test_url = "/jbrowse_$project_name/current/data/json/accessions/" . $stock_id . "/trackList.json";
-my $jbrowse_url = "/jbrowse/?data=data%2Fjson%2Faccessions%2F" . $stock_id . "&tracks=DNA%2CGene%20exons%2C" . $uniquename . "_2015_V6_imputed&highlight=";
+my $jbrowse_path = $c->config->{jbrowse_path};
+my $test_url = $jbrowse_path . "/accessions/" . $stock_id . "/trackList.json";
+my $jbrowse_url = $jbrowse_path . "%2Faccessions%2F" . $stock_id . "&tracks=DNA%2CGene%20exons%2C" . $uniquename . "_2015_V6_imputed&highlight=";
 
 </%perl>
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock"] &>
 
 
 <script language="javascript">
-function jqueryStuff() { 
+function jqueryStuff() {
    jQuery(function() {
      jQuery("#species_name").autocomplete({
         source: '/organism/autocomplete'
@@ -279,7 +279,7 @@ function jqueryStuff() {
 % }
 
 <%perl>
- my $collapsible = 0; 
+ my $collapsible = 0;
  if ($has_pedigree==1) {
   $collapsible = 1;
  }
@@ -424,7 +424,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 </&>
 
 %#<&| /page/info_section.mas, title => "Phenotypic data" &>
-  
+
 %#  <& /stock/phenotypes.mas, stock_id => $stock_id &>
 
 %#</&>
@@ -436,7 +436,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 <&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
 % foreach my $genotype (@$genotypes) {
 %  print $genotype->description . "\n";
-% }       
+% }
   </&>
 % }
 </&>
@@ -451,11 +451,11 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 
 
 <script>
-  jQuery(document).ready(function() { 
+  jQuery(document).ready(function() {
     stock_detail_page_init_dialogs();
     prepareJbrowse();
 
-    jQuery('#remove_parent_link').click( function() { 
+    jQuery('#remove_parent_link').click( function() {
       jQuery('#remove_parent_dialog').dialog("open");
       get_remove_parents_list(<% $stock_id %>);
     });
