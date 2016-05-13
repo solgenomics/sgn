@@ -19,12 +19,14 @@ my $src_feature = 'SL2.50';
 </%perl>
 
 <&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL markers' genomic matches" &>
-% if ($markers->[0]) {
+
+% if (ref($markers)) {
 %    foreach my $marker (@$markers) {
-%      my ($marker_name, @other_names) = $marker->name_that_marker();
+%      my $marker_name = $marker->name_that_marker();
+       
+  <hr/><p style="text-align:center;"><% $marker_name %></p> <hr/>
 
-     <& /feature/jbrowse_exact_match.mas, feature => $marker_name, src_feature => $src_feature &>
-
+  <& /feature/jbrowse_exact_match.mas, feature => $marker_name, src_feature => $src_feature &>
 %}
 %}
 
