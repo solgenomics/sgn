@@ -1323,45 +1323,21 @@ sub create_plant_entities {
 	 # 	 db     => 'null',
 	 # 	 dbxref => 'plant',
 	 # 		   });
-	my $stock_property_cv_id = $chado_schema->resultset("Cv::Cv")->find( { name => 'stock_property' } )->cv_id();
+	my $stock_type_cv_id = $chado_schema->resultset("Cv::Cv")->find( { name => 'stock_type' } )->cv_id();
+
+	my $stock_prop_cv_id = $chado_schema->resultset("Cv::Cv")->find( { name => 'stock_property' } )->cv_id();
 	
 	my $stock_relationship_cv_id = $chado_schema->resultset("Cv::Cv")->find( { name => 'stock_relationship' } )->cv_id();
 	
 	my $project_property_cv_id = $chado_schema ->resultset("Cv::Cv")->find( { name => 'project_property' } )->cv_id();
 
-	my $plant_cvterm = $chado_schema->resultset("Cv::Cvterm")->find( { name => 'plant', cv_id => $stock_property_cv_id });
-
-	 # my $plant_relationship_cvterm = $chado_schema->resultset("Cv::Cvterm")
-	 #     ->create_with({
-	 # 	 name   => 'plant_of',
-	 # 	 cv     => 'stock relationship',
-	 # 	 db     => 'null',
-	 # 	 dbxref => 'plant_of',
-	 # 		   });
+	my $plant_cvterm = $chado_schema->resultset("Cv::Cvterm")->find( { name => 'plant', cv_id => $stock_type_cv_id });
 
 	my $plant_relationship_cvterm = $chado_schema->resultset("Cv::Cvterm")->find( { name => "plant_of", cv_id => $stock_relationship_cv_id })->cvterm_id();
-	
 
-	 # my $plant_number_cvterm = $chado_schema->resultset("Cv::Cvterm")
-	 #     ->create_with( { 
-	 # 	 name => 'plant number',
-	 # 	 cv => 'stock_properties',
-	 # 	 dbxref => 'plant number',
+	my $plant_index_number_cvterm = $chado_schema->resultset("Cv::Cvterm")->find( { name => "plant_index_number", cv_id => $stock_prop_cv_id });
 
-	 # 		    });
-
-	my $plant_number_cvterm = $chado_schema->resultset("Cv::Cvterm")->find( { name => "plant_number", cv_id => $stock_property_cv_id })->cvterm_id();
-
-	 # my $has_plants_cvterm = $chado_schema->resultset("Cv::Cvterm")
-	 #     ->create_with( 
-	 #     { 
-	 # 	 name => 'project_has_plant_entries',
-	 # 	 cv => 'project_properties',
-	 # 	 dbxref => 'project_has_plant_entries',
-
-	 #     });
-
-	my $has_plants_cvterm = $chado_schema->resultset("Cv::Cvterm")->find( { name => 'project_has_plant_entries', cv_id => $project_property_cv_id })->cvterm_id();
+	my $has_plants_cvterm = $chado_schema->resultset("Cv::Cvterm")->find( { name => 'project_has_plant_entries', cv_id => $project_property_cv_id });
 
 	  my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create(
 	      { 
@@ -1370,7 +1346,7 @@ sub create_plant_entities {
 	  	 project_id => $self->get_trial_id(),
 	      });
 
-	 my $field_layout_cvterm_id = $chado_schema->resultset("Cv::Cvterm")->find( { name=>'field layout' })->cvterm_id;
+	 my $field_layout_cvterm_id = $chado_schema->resultset("Cv::Cvterm")->find( { name=>'field_layout' })->cvterm_id;
 
 	 foreach my $plot (keys %$design) { 
 	     print STDERR " ... creating plants for plot $plot...\n";
@@ -1398,14 +1374,14 @@ sub create_plant_entities {
 		 my $plantprop = $chado_schema->resultset("Stock::Stockprop")
 		     ->find_or_create( { 
 			 stock_id => $plant->stock_id(),
-			 type_id => $plant_number_cvterm->cvterm_id(),
+			 type_id => $plant_index_number_cvterm->cvterm_id(),
 			 value => $number,
 				       });
 		 my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create(
 		     { 
 			 subject_id => $parent_plot,
 			 object_id => $plant->stock_id(),
-			 type_id => $plant_relationship_cvterm->cvterm_id(),
+			 type_id => $plant_relationship_cvterm,
 		     });
 	     }	    
 	 }
