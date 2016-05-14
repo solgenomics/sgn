@@ -129,7 +129,7 @@ my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 #print STDERR Dumper @traits_assayed_sorted;
 
-my @traits_assayed_check = (['70666','Fresh root weight'],['70668','Harvest index'],['70741','Dry matter content'],['70773','Fresh shoot weight']);
+my @traits_assayed_check = (['70666','Fresh root weight'],['70668','Harvest index variable'],['70741','Dry matter content percentage'],['70773','Fresh shoot weight measurement in kg']);
 
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed' );
 
