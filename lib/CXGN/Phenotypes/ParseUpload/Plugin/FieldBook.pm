@@ -34,15 +34,16 @@ sub validate {
 
     #  Check header row contents
     if ($header_row[0] ne "\"plot_id\"" ||
-	$header_row[-1] ne "\"location\"" ||
-	$header_row[-2] ne "\"timestamp\"" ||
+	$header_row[-1] ne "\"number\"" ||
+	$header_row[-2] ne "\"location\"" ||
 	$header_row[-3] ne "\"person\"" ||
-	$header_row[-4] ne "\"value\"" ||
-	$header_row[-5] ne "\"trait\""
+	$header_row[-4] ne "\"timestamp\"" ||
+	$header_row[-5] ne "\"value\"" ||
+	$header_row[-6] ne "\"trait\""
        ) {
 	print STDERR "File contents incorrect\n";
 	return;
-    }
+   }
 
     return 1;
 }
