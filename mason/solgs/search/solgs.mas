@@ -93,7 +93,7 @@ $gs_traits_index
     title       => "Select a list-based training population or create a new one",
   &>
 
-  <& /solgs/population/user_reference_genotypes.mas &>
+  <& /solgs/search/list_type_training_population.mas &>
    
 </&>
 
