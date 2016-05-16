@@ -521,5 +521,23 @@ my $folder_pf = $folder->project_parent->name;
 ok($folder_pf eq 'F2', "folder has parent F2");
 
 
+# Delete a folder
+
+my $folder = CXGN::Trial::Folder->new({
+  bcs_schema => $schema,
+  folder_id => $F2_id
+});
+
+my $delete_folder = $folder->delete_folder();
+ok(!$delete_folder, "could not delete folder because of children.");
+
+my $folder = CXGN::Trial::Folder->new({
+  bcs_schema => $schema,
+  folder_id => $F1_id
+});
+
+my $delete_folder = $folder->delete_folder();
+ok($delete_folder == 1, "folder deleted.");
+
 
 done_testing();

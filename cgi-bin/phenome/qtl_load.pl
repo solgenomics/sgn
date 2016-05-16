@@ -1032,12 +1032,15 @@ sub store_genotype {
             chomp($row);
             my @plant_genotype = split /\t/, $row;
             my $plant_name = shift(@plant_genotype);
-            my @individual =
-              CXGN::Phenome::Individual->new_with_name( $dbh, $plant_name,
-                $pop_id );
+	    
+	    print STDERR "\n storing genotype... individual: $plant_name\n";
+            
+	    my @individual = CXGN::Phenome::Individual->new_with_name( $dbh, $plant_name, $pop_id );
+	   	   
+	    my $individual_id = $individual[0]->get_individual_id();
 
-            my $individual_id = $individual[0]->get_individual_id();
-
+	    print STDERR "\n storing genotype... individual: $plant_name id: $individual_id\n";
+            
             die "There are two genotypes with the same name or no genotypes 
               in the same population. Can't assign genotype values."
               unless ( scalar(@individual) == 1 );
@@ -1427,7 +1430,7 @@ sub post_stat_form {
                                $pop_id</a> is completed. |;
 
             $self->send_email( '[QTL upload: Step 5]', $message, $pop_id );
-            $self->redirect_to_next_form($c->req->base . "qtl/form/confirm/$pop_id");
+            $self->redirect_to_next_form("/qtl/form/confirm/$pop_id");
          
         }
         else 
@@ -1445,7 +1448,7 @@ sub post_stat_form {
 sub show_pop_form {
     my ( $self ) = @_;
     $self->send_email( '[QTL upload: Step 1]', 'A user is at the QTL data upload Step 1 of 5', 'NA' );    
-    $self->redirect_to_next_form($c->req->base . "qtl/form/pop_form"); 
+    $self->redirect_to_next_form("/qtl/form/pop_form"); 
 }
 
 sub post_pop_form {
@@ -1468,7 +1471,7 @@ sub post_pop_form {
     unless ( !$pop_id ) 
     {
         $self->send_email( '[QTL upload: Step 1]', 'QTL population data uploaded: Step 1 of 5 completed', $pop_id );
-        $self->redirect_to_next_form($c->req->base . "qtl/form/trait_form/$pop_id");        
+        $self->redirect_to_next_form("/qtl/form/trait_form/$pop_id");        
     }
 }
 
@@ -1491,7 +1494,7 @@ sub post_trait_form {
     if ($pop_id && $traits_in_db) 
     {
         $self->send_email('[QTL upload: Step 2]', 'QTL traits uploaded: Step 2 of 5', $pop_id);
-        $self->redirect_to_next_form($c->req->base . "qtl/form/pheno_form/$pop_id");
+        $self->redirect_to_next_form("/qtl/form/pheno_form/$pop_id");
     }
 
 
@@ -1517,7 +1520,7 @@ sub post_pheno_form {
     if ($phenotype_in_db && $pop_id) 
     {           
         $self->send_email('[QTL upload: Step 3]', 'QTL phenotype data uploaded: Step 3 of 5', $pop_id);
-        $self->redirect_to_next_form($c->req->base . "qtl/form/geno_form/$pop_id"); 
+        $self->redirect_to_next_form("/qtl/form/geno_form/$pop_id"); 
     }
 
 
@@ -1558,7 +1561,7 @@ sub post_geno_form {
         if ($genotype_uploaded) 
         {
             $self->send_email( '[QTL upload: Step 4]', 'QTL genotype data uploaded : Step 4 of 5', $pop_id );
-            $self->redirect_to_next_form($c->req->base . "qtl/form/stat_form/$pop_id");
+            $self->redirect_to_next_form("/qtl/form/stat_form/$pop_id");
         }
         else 
         {
