@@ -508,11 +508,10 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   }
   print $TEMP "\n";
 
-  for my $i ( 0 .. $#accession_genotypes ) {
-    @unsorted_markers = keys   %{ $accession_genotypes[$i] }
-  }
+  @unsorted_markers = keys   %{ $accession_genotypes[0] };
 
   my @markers = sort versioncmp @unsorted_markers;       # order snp_names by chrom num, then position
+#  my @markers = @unsorted_markers;
   my @first_value = $markers[0];
   print STDERR "markers sorted: @first_value \n";
 
