@@ -1032,12 +1032,15 @@ sub store_genotype {
             chomp($row);
             my @plant_genotype = split /\t/, $row;
             my $plant_name = shift(@plant_genotype);
-            my @individual =
-              CXGN::Phenome::Individual->new_with_name( $dbh, $plant_name,
-                $pop_id );
+	    
+	    print STDERR "\n storing genotype... individual: $plant_name\n";
+            
+	    my @individual = CXGN::Phenome::Individual->new_with_name( $dbh, $plant_name, $pop_id );
+	   	   
+	    my $individual_id = $individual[0]->get_individual_id();
 
-            my $individual_id = $individual[0]->get_individual_id();
-
+	    print STDERR "\n storing genotype... individual: $plant_name id: $individual_id\n";
+            
             die "There are two genotypes with the same name or no genotypes 
               in the same population. Can't assign genotype values."
               unless ( scalar(@individual) == 1 );
