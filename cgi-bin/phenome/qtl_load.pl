@@ -1037,10 +1037,6 @@ sub store_genotype {
             
 	    my @individual = CXGN::Phenome::Individual->new_with_name( $dbh, $plant_name, $pop_id );
 	   	   
-	    my $individual_id = $individual[0]->get_individual_id();
-
-	    print STDERR "\n storing genotype... individual: $plant_name id: $individual_id\n";
-            
             die "There are two genotypes with the same name or no genotypes 
               in the same population. Can't assign genotype values."
               unless ( scalar(@individual) == 1 );
@@ -1050,7 +1046,9 @@ sub store_genotype {
                 my $genotype = CXGN::Phenome::Genotype->new($dbh);
 
                 $genotype->set_genotype_experiment_id($experiment_id);
-                $genotype->set_individual_id($individual_id);
+            
+		my $individual_id = $individual[0]->get_individual_id();		
+		$genotype->set_individual_id($individual_id);
 
                 #$genotype->set_experiment_name($pop_name);
                 #$genotype->set_reference_map_id($map_id);
