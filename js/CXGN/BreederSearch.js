@@ -105,9 +105,9 @@ window.onload = function initialize() {
     });
 
     jQuery('#download_button_excel').on('click', function () {
-        var selected = get_selected_trials();
-        if (selected.length !== 0) {
-	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
+      var selected = get_selected_trials();
+      if (selected.length !== 0) {
+          window.open('/breeders/trials/phenotype/download/'+selected.join(","));
         }
         else { alert("No trials selected for download."); }
 
@@ -116,7 +116,7 @@ window.onload = function initialize() {
     jQuery('#download_button_csv').on('click', function () {
         var selected = get_selected_trials();
         if (selected.length !== 0) {
-	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
+	         window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
         }
         else { alert("No trials selected for download."); }
 
@@ -126,8 +126,9 @@ window.onload = function initialize() {
         var accession_ids = get_selected_accessions();
         var protocol_id = get_selected_genotyping_protocols();
         if (accession_ids.length > 0 && protocol_id.length == 1) {
-	  window.open('/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&format=accession_ids');
+          window.open('/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&format=accession_ids');
         }
+        else { alert("Both accessions and protocols must be selected for download."); }
     });
 }
 

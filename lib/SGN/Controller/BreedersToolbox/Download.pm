@@ -491,27 +491,29 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   }
 
   my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
-  open my $TEMP, '>', $tempfile or die "Cannot open output_test00.txt: $!";
+  open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
 
   print STDERR "Downloading genotype data ...\n";
 
   my $resultset = $bs->get_genotype_info(\@accession_ids, $protocol_id, $snp_genotype_id);
 
+  print $TEMP "#\tProtocol:".$resultset->{protocol_name}."\tDownloaded:".DateTime->now()."\n";
   print $TEMP "Marker\t";
 
   print STDERR "Decoding genotype data ...\n";
   my $json = JSON::XS->new->allow_nonref;
-  for (my $i=0; $i < scalar(@$resultset) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
-    print $TEMP $resultset->[$i][0] . "\t";
-    my $genotype_hash = $json->decode($resultset->[$i][1]);
+  my $genotypes = $resultset->{genotypes};
+  for (my $i=0; $i < scalar(@$genotypes) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
+    print $TEMP $genotypes->[$i][0] . "\t";
+    my $genotype_hash = $json->decode($genotypes->[$i][1]);
     push(@accession_genotypes, $genotype_hash);
   }
   print $TEMP "\n";
 
   @unsorted_markers = keys   %{ $accession_genotypes[0] };
 
-  my @markers = sort versioncmp @unsorted_markers;       # order snp_names by chrom num, then position
-#  my @markers = @unsorted_markers;
+#  my @markers = sort versioncmp @unsorted_markers;       # order snp_names by chrom num, then position
+  my @markers = @unsorted_markers;
   my @first_value = $markers[0];
   print STDERR "markers sorted: @first_value \n";
 
