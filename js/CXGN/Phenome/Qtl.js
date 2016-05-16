@@ -112,8 +112,8 @@ var Qtl = {
     waitPage: function() 
     {
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-        jQuery.blockUI({message: 'Running QTL analysis... Please wait...'});
-                       
+        jQuery.blockUI({message: 'Running QTL Analysis...Please wait...'});
+            
         if(location.reload()) 
             {
                 jQuery.unblockUI();
