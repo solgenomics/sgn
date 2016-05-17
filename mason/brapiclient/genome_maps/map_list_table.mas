@@ -16,7 +16,7 @@ Nicolas Morales nm529@cornell.edu
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'SGN.Table' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'brapi.Table' ] &>
 
 <br/>
 
