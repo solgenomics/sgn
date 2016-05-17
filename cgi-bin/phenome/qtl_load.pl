@@ -502,7 +502,7 @@ sub store_traits {
             {
                 chomp;
                 my (@values) = split /\t/;
-
+		print STDERR "\n store traits: $values[0] -- $values[1] ..\n";
                 $trait =
                   CXGN::Phenome::UserTrait->new_with_name( $dbh, $values[0] );
 
@@ -650,22 +650,31 @@ sub store_trait_values {
     my $header = <F>;
     chomp($header);
     my @fields = split /\t/, $header;
-
+    print STDERR "\n store phenotype values pop id-- $pop_id : header: $header .. \n";
     my @trait = ();
     my ( $trait_name, $trait_id );
 
     for ( my $i = 1 ; $i < @fields ; $i++ ) 
     {
-        $trait[$i] = CXGN::Phenome::UserTrait->new_with_name( $dbh, $fields[$i] );
-        $trait_name = $trait[$i]->get_name();
+	my $field_name =  $fields[$i];
+	print STDERR "\n store phenotype values: field $i: ..$fields[$i].. ..$field_name.. \n";
+	$field_name =~ s/^\s+|\s+$//g;
+	print STDERR "\n store phenotype values: field $i: ..$fields[$i].. ..$field_name.. \n";
+
+        $trait[$i] = CXGN::Phenome::UserTrait->new_with_name($dbh, $field_name);
+	print STDERR "\n store phenotype values: get_name --$fields[$i]-- \n";
+
+	$trait_name = $trait[$i]->get_name();
         $trait_id   = $trait[$i]->get_user_trait_id();
+	print STDERR "\n store phenotype values: GOT trait_name -- $trait_name -- trait id -- $trait_id .. \n";
     }
     eval {
         while (<F>)
         {
             chomp;
             my (@values) = split /\t/;
-
+	    $values[0] =~ s/^\s+|\s+$//g;
+	    print STDERR "\n store individual: $values[0]\n";
             my $individual = $self->store_individual( $values[0] );
 
             die "The genotype does not exist in the database. 
@@ -680,6 +689,7 @@ sub store_trait_values {
                 my $phenotype = CXGN::Chado::Phenotype->new($dbh);
                 $phenotype->set_unique_name(
                     qq | $individual_name $pop_id .":". $i |);
+
                 $phenotype->set_observable_id(
                     $trait[$i]->get_user_trait_id() );
                 if (!$values[$i]) {$values[$i] = undef;}
@@ -687,6 +697,10 @@ sub store_trait_values {
                 {
                     $values[$i] = undef;
                 }
+		
+		$values[$i] =~ s/^\s+|\s+$//g;
+		my $tr_name = $trait[$i]->get_name();
+		print STDERR "\nstore phenotype values: $individual_name -- $tr_name -- $values[$i] \n";
                 $phenotype->set_value($values[$i]);
                 $phenotype->set_individual_id($individual_id);
                 $phenotype->set_sp_person_id($sp_person_id);
@@ -848,12 +862,37 @@ sub store_lg {
     my $chr     = <F>;
     chomp($chr);
     close F;
+    print STDERR "\n chr: $chr \n";
+    my @all_chrs = split "\t", $chr;
+    my $num = scalar(@all_chrs);
+    print STDERR "\n all chr num: $num\n";
 
-    my @chrs = split /\t/, $chr;
-    @chrs = uniq @chrs;
+    @all_chrs = uniq @all_chrs;
+    my $num = scalar(@all_chrs);
+    print STDERR "\n unique chr numbers: $num\n";
+    foreach my $ch (@all_chrs) { print STDERR "\n chr -- $ch \n ";}
+   my @chrs = grep {$_ =~ /\d+/} @all_chrs;
+    @chrs = uniq(@chrs);
+    my $num = scalar(@chrs);
+    print STDERR "\n clean chr numbers: $num\n";     
+my @cleaned_chrs; 
 
-    die "The first cell of 2nd row must be empty." unless !$chrs[0];
-    shift(@chrs);
+    foreach my $ch (@chrs) { print STDERR "\n cleaned chr -- $ch \n "; $ch =~ s/\s+//g; push @cleaned_chrs, $ch;}
+    @chrs = @cleaned_chrs;
+    @chrs = uniq(@chrs);
+    my $num = scalar(@chrs);
+    print STDERR "\n clean chr numbers: $num\n";
+    foreach my $ch (@chrs) { print STDERR "\n final cleaned chr -- $ch \n ";}
+
+
+   
+   
+   
+   
+   
+
+   # die "The first cell of 2nd row must be empty." unless !$chrs[0];
+   # shift(@chrs);
 
     my $lg = CXGN::LinkageGroup->new( $dbh, $map_version_id, \@chrs );
     my $result = $lg->store();
@@ -904,8 +943,9 @@ sub store_marker_and_position {
     eval {
         for ( my $i = 0 ; $i < @markers ; $i++ )
         {
-            print STDERR $markers[$i] . "\t" . $positions[$i] . "\n";
-
+            print STDERR "\nstore marker and position: $markers[$i] --  $positions[$i] \n";
+	    $markers[$i] =~ s/^\s+|\s+$//g;
+	    
             my ( $marker_name, $subs ) =
               CXGN::Marker::Tools::clean_marker_name( $markers[$i] );
 
@@ -932,6 +972,11 @@ sub store_marker_and_position {
                 }
                 $marker_id = $marker_obj->marker_id();
             }
+	    
+	    $positions[$i] =~ s/^\s+|\s+$//g;
+	    $chromosomes[$i] =~ s/^\s+|\s+$//g;
+	    print STDERR "\nstore marker and position: $markers[$i] --$chromosomes[$i] -- $positions[$i] \n";
+
             my $loc      = $marker_obj->new_location();
             my $pos      = $positions[$i];
             my $conf     = 'uncalculated';
@@ -1032,7 +1077,7 @@ sub store_genotype {
             chomp($row);
             my @plant_genotype = split /\t/, $row;
             my $plant_name = shift(@plant_genotype);
-	    
+	    $plant_name =~ s/^\s+|\s+$//g;
 	    print STDERR "\n storing genotype... individual: $plant_name\n";
             
 	    my @individual = CXGN::Phenome::Individual->new_with_name( $dbh, $plant_name, $pop_id );
@@ -1059,27 +1104,46 @@ sub store_genotype {
 
                 my $mapmaker_genotype;
                 for ( my $i = 0 ; $i < @plant_genotype ; $i++ ) {
-                    my $genotype_region =
-                      CXGN::Phenome::GenotypeRegion->new($dbh);
+                    
+		    my $genotype_region = CXGN::Phenome::GenotypeRegion->new($dbh);
+		   
+		    $markers[$i] =~ s/^\s+|\s+$//g;
+		    print STDERR "\n marker name: $markers[$i]\n";
+		    $markers[$i] = CXGN::Marker::Tools::clean_marker_name( $markers[$i] );
+		    print STDERR "\n clean marker name: $markers[$i]\n";
+		    my $marker_id;
 
-                    my $marker_name =
-                      CXGN::Marker::Tools::clean_marker_name( $markers[$i] );
-                    my $marker =
-                      CXGN::Marker->new_with_name( $dbh, $marker_name );
-                    my $c     = $chrs[$i];
+		    my $marker = CXGN::Marker->new_with_name( $dbh, $markers[$i] );
+		    if ($marker) {
+			$marker_id = $marker->marker_id();
+		    } else {
+			my @marker_ids =  CXGN::Marker::Tools::marker_name_to_ids( $dbh, $markers[$i] );
+		    
+		#	if ( @marker_ids > 1 ) {
+		#	    die "Too many IDs found for marker '$markers[$i]'";
+		#	} 
+		    
+			$marker_id = $marker_ids[0];
+		    }
+
+		    print STDERR "\n marker id: $markers[$i] -- $marker_id\n";
+		    $chrs[$i] =~ s/^\s+|\s+$//g;
+		    my $c     = $chrs[$i];
                     my $lg_id = $linkage->get_lg_id( $chrs[$i] );
-
-                    if ( !$plant_genotype[$i]
+		    
+		    $plant_genotype[$i] =~ s/^\s+|\s+$//g;
+                    print STDERR "\n $markers[$i] -- $marker_id -- $chrs[$i] -- $plant_genotype[$i]\n";
+		    if ( !$plant_genotype[$i]
                         || ( $plant_genotype[$i] =~ /\-/ ) )
                     {
                         next();
                     }
 
                     $genotype_region->set_genotype_id($genotype_id);
-                    $genotype_region->set_marker_id_nn( $marker->marker_id() );
-                    $genotype_region->set_marker_id_ns( $marker->marker_id() );
-                    $genotype_region->set_marker_id_sn( $marker->marker_id() );
-                    $genotype_region->set_marker_id_ss( $marker->marker_id() );
+                    $genotype_region->set_marker_id_nn( $marker_id );
+                    $genotype_region->set_marker_id_ns( $marker_id );
+                    $genotype_region->set_marker_id_sn( $marker_id );
+                    $genotype_region->set_marker_id_ss( $marker_id );
                     $genotype_region->set_lg_id($lg_id);
                     $genotype_region->set_sp_person_id($sp_person_id);
 
