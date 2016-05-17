@@ -380,10 +380,12 @@ sub store {
 	my $file_row;
 	my $md_row;
 	my $file_metadata_transaction_error;
-	open(my $F, "<", $archived_file) || die "Can't open file ".$archived_file;
-	binmode $F;
-	$md5->addfile($F);
-	close($F);
+	if ($archived_file ne 'none') {
+		open(my $F, "<", $archived_file) || die "Can't open file ".$archived_file;
+		binmode $F;
+		$md5->addfile($F);
+		close($F);
+	}
 	$md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id,});
 	$md_row->insert();
 	$file_row = $metadata_schema->resultset("MdFiles")
