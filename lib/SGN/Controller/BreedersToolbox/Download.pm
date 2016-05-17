@@ -23,7 +23,7 @@ use CXGN::List::Transform;
 use Spreadsheet::WriteExcel;
 use CXGN::Trial::Download;
 use POSIX qw(strftime);
-use Sort::Versions;
+use Sort::Maker;
 use DateTime;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
@@ -493,14 +493,14 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
   open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
 
-  print STDERR "Downloading genotype data ...\n";
+  print STDERR "Downloading genotype data ... ".localtime()."\n";
 
   my $resultset = $bs->get_genotype_info(\@accession_ids, $protocol_id, $snp_genotype_id);
 
-  print $TEMP "#\tProtocol:".$resultset->{protocol_name}."\tDownloaded:".DateTime->now()."\n";
+  print $TEMP "#\tProtocol: ".$resultset->{protocol_name}."\tDownloaded: ".localtime()."\n";
   print $TEMP "Marker\t";
 
-  print STDERR "Decoding genotype data ...\n";
+  print STDERR "Decoding genotype data ...".localtime()."\n";
   my $json = JSON::XS->new->allow_nonref;
   my $genotypes = $resultset->{genotypes};
   for (my $i=0; $i < scalar(@$genotypes) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
@@ -511,9 +511,30 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   print $TEMP "\n";
 
   @unsorted_markers = keys   %{ $accession_genotypes[0] };
+  print STDERR "building custom optimiized sort ... ".localtime()."\n";
+  my $marker_sort = make_sorter(
+    qw( GRT ),
+    number => {
+      # primary subkeys (chrom number) comparison
+      # ascending numeric comparison
+      code => '/(\d+)/',
+      ascending => 1,
+      unsigned => 1,
+    },
+    number => {
+      # if chrom number is equal
+      # return secondary subkey (chrom position) comparison
+      # ascending numeric comparison
+      code => '/(\d+)$/',
+      ascending => 1,
+      unsigned => 1,
+    },
+  );
 
-#  my @markers = sort versioncmp @unsorted_markers;       # order snp_names by chrom num, then position
-  my @markers = @unsorted_markers;
+  die "make_sorter: $@" unless $marker_sort;
+  print STDERR "sorting ... ".localtime()."\n";
+  my @markers = $marker_sort->( @unsorted_markers );
+  print STDERR "sorted ... ".localtime()."\n";
   my @first_value = $markers[0];
   print STDERR "markers sorted: @first_value \n";
 
