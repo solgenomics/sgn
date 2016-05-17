@@ -18,7 +18,7 @@ $protocol_id
 $name
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'SGN.Table' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'brapi.Table' ] &>
 
 <& /page/page_title.mas, title=>"Genotyping protocol detail for ".$name &>
 

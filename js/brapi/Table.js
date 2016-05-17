@@ -1,4 +1,5 @@
-
+//  This is for displaying brapi paginated responses in a table format. The brapi response should be paginated over response.result.data and pagination info should be in response.metadata.pagination
+//
 //  Pass a js object with the headers and data as key:values, such as: 
 //  [ 
 //    {"col1":"col1row1value", "height":"12", "age":"900"}, 
@@ -15,11 +16,11 @@
 
 
 function create_table(data, pagination, div_id, return_url, link) {
-    //console.log(data);
-    //console.log(pagination);
-    //console.log(div_id);
-    //console.log(return_url);
-    //console.log(link);
+    console.log(data);
+    console.log(pagination);
+    console.log(div_id);
+    console.log(return_url);
+    console.log(link);
     var current_page = pagination.currentPage;
     var next_page = current_page + 1;
     var previous_page = current_page - 1;
@@ -28,7 +29,11 @@ function create_table(data, pagination, div_id, return_url, link) {
     var total_pages = pagination.totalPages;
     var html = "<input id='table_div_id_input' type='hidden' value='"+div_id+"'/>";
     var html = html+"<input id='table_return_url_input' type='hidden' value='"+return_url+"'/>";
-    var html = html+"<input id='table_links_input' type='hidden' value='"+JSON.stringify(link)+"'/>";
+    if (checkDefined(link) == 1) {
+        var html = html+"<input id='table_links_input' type='hidden' value='"+JSON.stringify(link)+"'/>";
+    } else {
+        var html = html+"<input id='table_links_input' type='hidden' value='"+link+"'/>";
+    }
     var html = html+"<input id='table_page_size_input' type='hidden' value='"+page_size+"'/>";
     var html = html+"<input id='table_next_page_input' type='hidden' value='"+next_page+"'/>";
     var html = html+"<input id='table_previous_page_input' type='hidden' value='"+previous_page+"'/>";
@@ -40,7 +45,7 @@ function create_table(data, pagination, div_id, return_url, link) {
         for(var h in data[0]) {
             if (data[0].hasOwnProperty(h)) {
                 //console.log(h);
-                if (typeof link === 'undefined' || link === null || link === 'undefined') {
+                if (checkDefined(link) == 0) {
                     header.push(h);
                 } else {
                     for(var link_header in link) {
@@ -59,7 +64,7 @@ function create_table(data, pagination, div_id, return_url, link) {
         for(var row=0; row<data.length; row++) {
             html = html+"<tr>";
             for(var col=0; col<header.length; col++){
-                if (typeof link === 'undefined' || link === null || link === 'undefined') {
+                if (checkDefined(link) == 0) {
                     html = html+"<td>"+data[row][header[col]]+"</td>";
                 } else {
                     for(var link_header in link) {
@@ -98,6 +103,14 @@ function capitalizeEachWord(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+function checkDefined(o) {
+    if (typeof o === 'undefined' || o === null || o === 'undefined') {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
 jQuery(document).ready(function () {
     
     jQuery(document).on( 'click', "#table_next_page_button", function() {
@@ -112,7 +125,11 @@ jQuery(document).ready(function () {
                 //console.log(response);
                 var div_id = jQuery("#table_div_id_input").val();
                 var return_url = jQuery("#table_return_url_input").val();
-                var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
+                if (checkDefined(jQuery("#table_links_input").val()) == 1) {
+                    var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
+                } else {
+                    var links = jQuery("#table_links_input").val();
+                }
                 jQuery("#"+jQuery("#table_div_id_input").val()).empty();
                 create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
             },
@@ -135,7 +152,11 @@ jQuery(document).ready(function () {
                 //console.log(response);
                 var div_id = jQuery("#table_div_id_input").val();
                 var return_url = jQuery("#table_return_url_input").val();
-                var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
+                if (checkDefined(jQuery("#table_links_input").val()) == 1) {
+                    var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
+                } else {
+                    var links = jQuery("#table_links_input").val();
+                }
                 jQuery("#"+jQuery("#table_div_id_input").val()).empty();
                 create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
             },
@@ -159,7 +180,11 @@ jQuery(document).ready(function () {
                     //console.log(response);
                     var div_id = jQuery("#table_div_id_input").val();
                     var return_url = jQuery("#table_return_url_input").val();
-                    var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
+                    if (checkDefined(jQuery("#table_links_input").val()) == 1) {
+                        var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
+                    } else {
+                        var links = jQuery("#table_links_input").val();
+                    }
                     jQuery("#"+jQuery("#table_div_id_input").val()).empty();
                     create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
                 },
@@ -184,7 +209,11 @@ jQuery(document).ready(function () {
                     //console.log(response);
                     var div_id = jQuery("#table_div_id_input").val();
                     var return_url = jQuery("#table_return_url_input").val();
-                    var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
+                    if (checkDefined(jQuery("#table_links_input").val()) == 1) {
+                        var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
+                    } else {
+                        var links = jQuery("#table_links_input").val();
+                    }
                     jQuery("#"+jQuery("#table_div_id_input").val()).empty();
                     create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
                 },
