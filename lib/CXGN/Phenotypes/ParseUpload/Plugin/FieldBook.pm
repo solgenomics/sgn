@@ -37,13 +37,14 @@ sub validate {
 
     #  Check header row contents
     if ($header_row[0] ne "\"plot_id\"" ||
-	$header_row[-1] ne "\"location\"" ||
-	$header_row[-2] ne "\"timestamp\"" ||
+	$header_row[-1] ne "\"number\"" ||
+	$header_row[-2] ne "\"location\"" ||
 	$header_row[-3] ne "\"person\"" ||
-	$header_row[-4] ne "\"value\"" ||
-	$header_row[-5] ne "\"trait\""
+	$header_row[-4] ne "\"timestamp\"" ||
+	$header_row[-5] ne "\"value\"" ||
+	$header_row[-6] ne "\"trait\""
        ) {
-        $parse_result{'error'} = "File contents incorrect. Header needs to be plot_id, location, timestamp, person, value, trait";
+        $parse_result{'error'} = "File contents incorrect. Header needs to be plot_id, number, location, person, timestamp, value, trait";
         print STDERR "File contents incorrect.\n";
         return \%parse_result;
     }

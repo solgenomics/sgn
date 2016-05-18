@@ -31,7 +31,7 @@ The official page for this genome sequences is <a href="http://peppersequence.ge
 <center>
     <a id="blue_button" href="/tools/blast/?db_id=217" target="_blank">BLAST</a>&nbsp;&nbsp;
     <a id="blue_button" href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/" target="_blank">FTP Site</a>&nbsp;&nbsp;
-    <a id="blue_button" href="http://solgenomics.net/jbrowse/current/?data=data%2Fjson%2FPepper.v.1.55&loc=Pepper1.55ch01" target="_blank" style="background-image:none;">JBrowse</a>&nbsp;&nbsp;
+    <a id="blue_button" href="http://solgenomics.net/jbrowse_solgenomics/?data=data%2Fjson%2FPepper.v.1.55&loc=Pepper1.55ch01" target="_blank" style="background-image:none;">JBrowse</a>&nbsp;&nbsp;
 </center>
 
 <!-- <&| /page/info_section.mas, title => 'CM334 genome' &> -->

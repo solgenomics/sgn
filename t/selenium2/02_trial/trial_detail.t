@@ -11,6 +11,8 @@ $t->while_logged_in_as("curator", sub {
 
     #Upload New Trial
     $t->get_ok('/breeders/trials');
+    sleep(1);
+    $t->driver->accept_alert();
     $t->find_element_ok("upload_trial_link", "id", "click on upload_trial_link ")->click();
     sleep(2);
     my $program_select = $t->find_element_ok("trial_upload_breeding_program", "id", "find breeding program select");
@@ -99,8 +101,6 @@ $t->while_logged_in_as("curator", sub {
     $t->find_element_ok("edit_trial_name", "id", "find edit trial name")->click();
     $t->find_element_ok("trial_name_input", "id", "edit trial name")->send_keys('New Trial Name');
     $t->find_element_ok("edit_name_save_button", "id", "submit edit trial name")->click();
-    sleep(1);
-    $t->driver->accept_alert();
     sleep(1);
     $t->driver->accept_alert();
     sleep(1);

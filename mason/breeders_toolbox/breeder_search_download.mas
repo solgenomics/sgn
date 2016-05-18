@@ -7,8 +7,8 @@
 	<td>
     <div style="min-width: 200px;overflow:auto;">
 	<p>Download Trial Phenotypes:
-	<button class="btn btn-primary" id="download_button_excel" disabled="disabled" title="First Select a Trial to Download">Excel</button>
-      	<button class="btn btn-primary" id="download_button_csv" disabled="disabled" title="First Select a Trial to Download">CSV</button>
+	<button class="btn btn-primary" id="download_button_excel" disabled="disabled" title="You must be logged in, with a trial selected to download">Excel</button>
+      	<button class="btn btn-primary" id="download_button_csv" disabled="disabled" title="You must be logged in, with a trial selected to download">CSV</button>
       	<input type="hidden" id="download_token_value" name="download_token_value"/>
 	</div>
 	</td>
@@ -20,7 +20,7 @@
 	<td>
 	<div style="min-width: 200px;overflow:auto;">
 	<p>Download Genotypes:
-      	<input class="btn btn-primary" type="button" disabled="disabled" id="download_button_genotypes" title="First Select Accessions to Download" value="Download Genotypes" />
+      	<input class="btn btn-primary" type="button" disabled="disabled" id="download_button_genotypes" title="You must be logged in, with a genotyping protocol and accessions selected to download" value="Download Genotypes" />
     </div>
 	</td>
 	<td>

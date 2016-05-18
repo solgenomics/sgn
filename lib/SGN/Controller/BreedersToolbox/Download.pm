@@ -24,6 +24,7 @@ use Spreadsheet::WriteExcel;
 use CXGN::Trial::Download;
 use POSIX qw(strftime);
 use Sort::Versions;
+use DateTime;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -638,18 +639,26 @@ sub trial_download_log {
     my $c = shift;
     my $trial_id = shift;
     my $message = shift;
+    my $now = DateTime->now();
 
     if (! $c->user) {
-	return;
+      return;
+      print STDERR "Can't find user id, skipping download logging\n";
     }
-
     if ($c->config->{trial_download_logfile}) {
-	open (my $F, ">>", $c->config->{trial_download_logfile}) || die "Can't open ".$c->config->{trial_download_logfile};
-	print $F $c->user->get_object->get_username()."\t".$trial_id."\t$message\n";
-	close($F);
+      my $logfile = $c->config->{trial_download_logfile};
+      open (my $F, ">>", $logfile) || die "Can't open logfile $logfile\n";
+      print $F join("\t", (
+            $c->user->get_object->get_username(),
+            $trial_id,
+            $message,
+            $now->year()."-".$now->month()."-".$now->day()." ".$now->hour().":".$now->minute()));
+      print $F "\n";
+      close($F);
+      print STDERR "Download logged in $logfile\n";
     }
     else {
-	print STDERR "Note: set config variable trial_download_logfile to obtain a log of downloaded trials.\n";
+      print STDERR "Note: set config variable trial_download_logfile to obtain a log of downloaded trials.\n";
     }
 }
 
