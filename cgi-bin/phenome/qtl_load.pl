@@ -73,7 +73,7 @@ sub process_data {
 
     my $login          = CXGN::Login->new($dbh);
     my $sp_person_id   = $login->verify_session();
-    my $referring_page = $c->req->base . 'qtl/form';
+    my $referring_page = '/qtl/form';
   
     my %args = $page->get_all_encoded_arguments();
     $args{pop_common_name_id} = $self->common_name_id();
