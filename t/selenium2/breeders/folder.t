@@ -46,7 +46,7 @@ $t->while_logged_in_as("submitter", sub {
   sleep(1);
   
   my $new_folder_name = $t->find_element_ok("new_folder_name", "id","pass F2 as new folder name")->send_keys("F2");
-  
+  sleep(1);
   my $new_folder_name = $t->find_element_ok("new_folder_parent_folder_id", "id","pass F1 as new folder's parent name")->send_keys("F1");
   
   my $add_folder_submit = $t->find_element_ok("new_folder_submit", "id", "create new folder submit")->click();
@@ -64,7 +64,7 @@ $t->while_logged_in_as("submitter", sub {
   sleep(1);
   
   my $folder_name = $t->find_element_ok("html_select_folder_for_trial", "id","pass F2 as folder name")->send_keys("F1F2");
-  
+  sleep(1);
   my $trial_name = $t->find_element_ok("html_select_trial_for_folder", "id","pass test_trial as trial name")->send_keys("test_trial");
   
   my $trial_submit = $t->find_element_ok("set_trial_folder", "id", "add trial to folder submit")->click();

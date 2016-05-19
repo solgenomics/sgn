@@ -11,8 +11,8 @@ $t->while_logged_in_as("curator", sub {
 
     #Upload New Trial
     $t->get_ok('/breeders/trials');
-    sleep(1);
-    $t->driver->accept_alert();
+    my $refresh_tree = $t->find_element_ok("refresh_jstree_html", "id", "refresh tree")->click();
+    sleep(3);
     $t->find_element_ok("upload_trial_link", "id", "click on upload_trial_link ")->click();
     sleep(2);
     my $program_select = $t->find_element_ok("trial_upload_breeding_program", "id", "find breeding program select");
@@ -34,6 +34,11 @@ $t->while_logged_in_as("curator", sub {
     sleep(1);
     $t->find_element_ok("upload_trial_submit", "id", "submit upload trial file ")->click();
     sleep(5);
+    my $refresh_tree = $t->find_element_ok("refresh_jstree_html", "id", "refresh tree")->click();
+    sleep(3);
+    my $open_tree = $t->find_element_ok("jstree-icon", "class", "open up tree")->click();
+    sleep(2);
+    my $open_tree = $t->find_element_ok("T100", "partial_link_text", "open up tree")->click();
 
     my $trial_id = $f->bcs_schema->resultset('Project::Project')->search({name=>'T100'}, {order_by => { -desc => 'project_id'}})->first->project_id();
 
@@ -52,7 +57,7 @@ $t->while_logged_in_as("curator", sub {
     $t->find_element_ok("dismiss_trial_coord_upload_dialog", "id", "close success msg")->click();
     sleep(3);    
     $t->find_element_ok("physical_layout_onswitch", "id", "view field map ")->click();
-    sleep(10);
+    sleep(4);
 
 
     #Verify Trial Info
@@ -99,6 +104,7 @@ $t->while_logged_in_as("curator", sub {
 
     #Edit Name
     $t->find_element_ok("edit_trial_name", "id", "find edit trial name")->click();
+    sleep(1);
     $t->find_element_ok("trial_name_input", "id", "edit trial name")->send_keys('New Trial Name');
     $t->find_element_ok("edit_name_save_button", "id", "submit edit trial name")->click();
     sleep(1);
