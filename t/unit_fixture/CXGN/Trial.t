@@ -103,9 +103,9 @@ my $plotlist_ref = [ 'anothertrial1', 'anothertrial2', 'anothertrial3', 'another
 
 my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014' ];
 
-my %plot_trait_value = ( 'anothertrial1' => { 'root number|CO:0000011'  => 12, 'dry yield|CO:0000014' => 30 },
-			   'anothertrial2' => { 'root number|CO:0000011'  => 10, 'dry yield|CO:0000014' => 40 },
-			   'anothertrial3' => { 'root number|CO:0000011'  => 20, 'dry yield|CO:0000014' => 50 },
+my %plot_trait_value = ( 'anothertrial1' => { 'root number|CO:0000011'  => [12,''], 'dry yield|CO:0000014' => [30,''] },
+			   'anothertrial2' => { 'root number|CO:0000011'  => [10,''], 'dry yield|CO:0000014' => [40,''] },
+			   'anothertrial3' => { 'root number|CO:0000011'  => [20,''], 'dry yield|CO:0000014' => [50,''] },
     );
 
 

@@ -1,2 +1,4 @@
-progeny name	female parent accession	male parent accession
-test_accession1	test_accession4	test_accession5
+﻿progeny name	female parent accession	male parent accession
+UG120001	UG120002	UG120003	biparental
+UG120004	UG120005		open
+UG120006	UG120007	UG120008,UG120009	open
