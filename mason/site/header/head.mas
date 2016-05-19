@@ -2,7 +2,7 @@
 
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
-  
+
   <!-- <link rel="stylesheet" href="/css/sgn.css" type="text/css" /> -->
   <link rel="stylesheet" href="/css/new_sgn.css" type="text/css" />
   <link rel="search" type="application/opensearchdescription+xml" title="SGN Sol Search" href="/documents/sgn_sol_search.xml" />
@@ -14,6 +14,7 @@
   <!-- <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"> -->
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/bootstrap-toggle/bootstrap-toggle.min.css">
+  <link rel="stylesheet" href="/css/ladda-themeless.min.css">
 
 <script language="javascript" type="text/javascript">
    JSAN = {};

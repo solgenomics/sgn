@@ -340,7 +340,7 @@ sub get_extended_phenotype_info_matrix {
     }
 
     my @info = ();
-    my $line = join "\t", qw | year studyDbId studyName locationDbId locationName germplasmDbId germplasmName plotDbId plotName rep blockNumber |;
+    my $line = join "\t", qw | studyYear studyDbId studyName locationDbId locationName germplasmDbId germplasmName plotDbId plotName rep blockNumber |;
 
     # generate header line
     #
@@ -397,9 +397,6 @@ sub get_genotype_info {
     my $snp_genotype_id = shift || '76434';
     my @accession_ids = @$accession_idref;
     my ($q, @result, $protocol_name);
-    #my $snp_genotype_id = '76434';
-    print STDERR "accession sql= @accession_ids \n";
-    print STDERR "protocol id= $protocol_id \n";
 
     if (@accession_ids) {
       $q = "SELECT name, uniquename, value FROM (SELECT nd_protocol.name, stock.uniquename, genotypeprop.value, row_number() over (partition by stock.uniquename order by genotypeprop.genotype_id) as rownum from genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_protocol USING(nd_protocol_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE genotypeprop.type_id = ? AND stock.stock_id in (@{[join',', ('?') x @accession_ids]}) AND nd_experiment_protocol.nd_protocol_id=?) tmp WHERE rownum <2";
@@ -414,8 +411,8 @@ sub get_genotype_info {
       push @result, [ $uniquename, $genotype_string ];
       $protocol_name = $name;
     }
-    print STDERR "protocol_name: $protocol_name\n";
-    print STDERR "results first value $result[0]\n";
+    print STDERR "Protocol Name: $protocol_name\n";
+
     return {
       protocol_name => $protocol_name,
       genotypes => \@result
