@@ -14,30 +14,39 @@
       <div class="modal-body">
         <div class="container-fluid">
 
-	  <&| /page/explanation.mas, title=>'Template Information' &>
-    	  <p>
-      	  <b>File format information</b>
-      	  <br>
-      	  <a id="phenotype_upload_spreadsheet_format_info">Spreadsheet Format</a>
-    	  </p>
-  	  </&>
+            <&| /page/explanation.mas, title=>'Template Information' &>
+                <p>
+                <b>File format information</b>
+                <br>
+                <a id="phenotype_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                </p>
+            </&>
 
-	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_spreadsheet_phenotype_file_form" name="upload_spreadsheet_phenotype_file_form">
-	    <div class="form-group">
-      	      <label class="col-sm-3 control-label">Phenotype Spreadsheet: </label>
-      	      <div class="col-sm-9" >
-	        <input type="file" id="upload_spreadsheet_phenotype_file_input" name="upload_spreadsheet_phenotype_file_input" encoding="multipart/form-data" />
-              </div>
-	    </div>
-	  </form><br/>
-	  <div id="upload_phenotype_spreadsheet_verify_status"></div>
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_spreadsheet_phenotype_file_form" name="upload_spreadsheet_phenotype_file_form">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Timestamps Included: </label>
+                    <div class="col-sm-9" >
+                        <input type="checkbox" id="upload_spreadsheet_phenotype_timestamp_checkbox" name="upload_spreadsheet_phenotype_timestamp_checkbox" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Phenotype Spreadsheet: </label>
+                    <div class="col-sm-9" >
+                        <input type="file" id="upload_spreadsheet_phenotype_file_input" name="upload_spreadsheet_phenotype_file_input" encoding="multipart/form-data" />
+                    </div>
+                </div>
+            </form><br/>
+
+            <div id="upload_phenotype_spreadsheet_verify_status"></div>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-info" name="upload_spreadsheet_phenotype_submit_verify" id="upload_spreadsheet_phenotype_submit_verify">Verify</button>
-	<button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_phenotype_submit_store" id="upload_spreadsheet_phenotype_submit_store" title="First Verify Your File">Store</button>
-      </div>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-info" name="upload_spreadsheet_phenotype_submit_verify" id="upload_spreadsheet_phenotype_submit_verify">Verify</button>
+            <button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_phenotype_submit_store" id="upload_spreadsheet_phenotype_submit_store" title="First Verify Your File">Store</button>
+        </div>
+        
     </div>
   </div>
 </div>
@@ -51,36 +60,74 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-    <b>Phenoype may be uploaded in .xls excel file format</b>
-    <br>
-    <p>(tab-delimited text formats are NOT supported)</p>
-    <hr>
-    <b>Header:</b>
-    <br>
-    <p>The first row (header) should contain the following:</p>
 
-    <table class="table table-hover table-bordered">
-      <body>
-      <tr>
-            <td>plot_name</td>
-            <td>trait name|trait id</td>
-        </tr>
-    </body>
-    </table>
+            <h4>Phenotype spreadsheet must be uploaded in .xls excel file format</h4>
+            <p>(tab-delimited text formats are NOT supported)</p>
+            <hr>
+            <h4>Header:</h4>
+            <p>The first row (header) should contain the following:</p>
 
-    <h4>Required fields:</h4>
-    <ul>
-      <li>plot_name (must exist in the database)</li>
-      <li>trait name|trait id (must exist in the trait ontology)</li>
-    </ul>
+            <table class="table table-hover table-bordered">
+                <body>
+                    <tr>
+                        <td>plot_name</td>
+                        <td>trait name|trait id</td>
+                    </tr>
+                </body>
+            </table>
 
-    
-    <h4>Notes</h4>
-    <ul>
-            <li>For <b>"sprouting"</b> in cassava, <b>"trait name|trait id"</b><br> should be written as <b>"sprouting|CO:0000008"</b>.</li>
-      <li>If trait file was not generated from the database, </br> consult the <b>Trait Ontology</b> to ensure you have the correct trait id.</li>
-      <li>Two or more traits can be uploaded at the same time.</li>
-    </ul>
+            <h4>Required fields:</h4>
+            <ul>
+                <li>plot_name (must exist in the database)</li>
+                <li>trait name|trait id (must exist in the trait ontology)</li>
+            </ul>
+
+            <h4>Notes:</h4>
+            <ul>
+                <li>For <i>"sprouting proportion"</i> in cassava, <i>"trait name|trait id"</i><br> should be written as <i>"sprouting proportion|CO:0000008"</i>.</li>
+                <li>If spreadsheet file was not generated from the database, </br>consult the <i>Trait Ontology</i> to ensure you have the correct trait id.</li>
+                <li>Two or more traits can be uploaded at the same time.</li>
+            </ul>
+            
+            <h4>Timestamps:</h4>
+            <ul>
+                <li>To include timestamp information for your measurements, click the checkbox "Includes Timestamps".</li>
+                <li>For timestamps, values should be recorded as <i>"Value,Timestamp"</i>.<br/>For no timestamps, values should be recorded as <i>"Value"</i>.</li>
+                <li>Timestamp format must be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</li><br/>
+                <li>Example with timestamps: <br/><br/>
+                <table class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th>plot_name</th>
+                            <th>sprouting proportion|CO:0000008</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Plot1</td>
+                            <td>20,2016-04-28 16:30:40-0500</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </li>
+                <li>Example without timestamps: <br/><br/>
+                <table class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th>plot_name</th>
+                            <th>sprouting proportion|CO:0000008</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Plot1</td>
+                            <td>20</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </li>
+            </ul>
+            
         </div>
       </div>
       <div class="modal-footer">
@@ -96,12 +143,11 @@
 jQuery(document).ready(function() {
 
     jQuery('#upload_spreadsheet_phenotypes_link').click( function() {
-	jQuery('#upload_phenotype_spreadsheet_dialog').modal("show");
+        jQuery('#upload_phenotype_spreadsheet_dialog').modal("show");
     });
 
     jQuery("#phenotype_upload_spreadsheet_format_info").click( function () { 
-	jQuery('#upload_phenotype_spreadsheet_dialog').modal("hide");
-	jQuery("#phenotype_upload_spreadsheet_info_dialog" ).modal("show");	
+        jQuery("#phenotype_upload_spreadsheet_info_dialog" ).modal("show");	
     });
 
 });  

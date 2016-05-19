@@ -79,12 +79,14 @@ EOM
         die "Error copying $tempfile to $confirm_filename\n";
     }
 
-    $c->{stash}->{type}          = $c->req->param('type');
-    $c->{stash}->{refering_page} = $c->req->param('refering_page');
-    $c->{stash}->{type_id}       = $c->req->param('type_id');
-    $c->{stash}->{filename}      = $filename;
-    $c->{stash}->{tempfile}      = basename($tempfile);
-    $c->{stash}->{image_url}     = $image_url;
+    $c->stash(
+        type => $c->req->param('type'),
+        refering_page => $c->req->param('refering_page'),
+        type_id => $c->req->param('type_id'),
+        filename => $filename,
+        tempfile => basename($tempfile),
+        image_url => $image_url,
+    );
 }
 
 

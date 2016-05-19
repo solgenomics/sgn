@@ -9,11 +9,12 @@ sub validate {
     my $self = shift;
     my $type = shift;
     my $filename = shift;
+    my $timestamp_included = shift;
     my $validate_result;
 
     foreach my $p ($self->plugins()) {
         if ($type eq $p->name()) {
-	     $validate_result = $p->validate($filename);
+	     $validate_result = $p->validate($filename, $timestamp_included);
 	}
     }
     return $validate_result;
@@ -23,11 +24,12 @@ sub parse {
     my $self = shift;
     my $type = shift;
     my $filename = shift;
+    my $timestamp_included = shift;
     my $parse_result;
 
     foreach my $p ($self->plugins()) {
         if ($type eq $p->name()) {
-	     $parse_result = $p->parse($filename);
+	     $parse_result = $p->parse($filename, $timestamp_included);
 	}
     }
     return $parse_result;
