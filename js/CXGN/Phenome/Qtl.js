@@ -113,7 +113,7 @@ var Qtl = {
     {
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Running QTL Analysis...Please wait...'});
-                       
+            
         if(location.reload()) 
             {
                 jQuery.unblockUI();

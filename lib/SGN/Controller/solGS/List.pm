@@ -1,10 +1,26 @@
-package SGN::Controller::solGS::Upload;
+=head1 AUTHOR
+
+Isaak Y Tecle <iyt2@cornell.edu>
+
+=head1 LICENSE
+
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 DESCRIPTION
+
+SGN::Controller::solGS::List - Controller for list based training and selection populations
+
+=cut
+
+
+package SGN::Controller::solGS::List;
 
 use Moose;
 use namespace::autoclean;
 
 use List::MoreUtils qw /uniq/;
-#use jQuery::File::Upload;
+
 use JSON;
 use File::Temp qw / tempfile tempdir /;
 use File::Spec::Functions qw / catfile catdir/;
@@ -507,3 +523,4 @@ sub begin : Private {
 
 
 1;
+
