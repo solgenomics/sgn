@@ -11,7 +11,8 @@ use CatalystX::GlobalContext '$c';
 
 eval {
     my $q = CGI->new();
-    my ($image_id, $size) = ($q->param("image_id"), $q->param("size"));
+    my $image_id = $q->param("image_id");
+    my $size = $q->param("size");
     
     my $image = SGN::Image->new( undef, $image_id, $c );
     
