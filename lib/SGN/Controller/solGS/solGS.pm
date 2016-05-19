@@ -239,133 +239,127 @@ sub search_trials : Path('/solgs/search/trials') Args() {
 sub projects_links {
     my ($self, $c, $pr_rs) = @_;
 
-    my $projects = $self->get_projects_details($c, $pr_rs);
-
+    $self->get_projects_details($c, $pr_rs);
+    my $projects  = $c->stash->{projects_details};
+    
     my @projects_pages;
     my $update_marker_count;
 
     foreach my $pr_id (keys %$projects) 
     {
-         my $pr_name     = $projects->{$pr_id}{project_name};
-         my $pr_desc     = $projects->{$pr_id}{project_desc};
-         my $pr_year     = $projects->{$pr_id}{project_year};
-         my $pr_location = $projects->{$pr_id}{project_location};
+	my $pr_name     = $projects->{$pr_id}{project_name};
+	my $pr_desc     = $projects->{$pr_id}{project_desc};
+	my $pr_year     = $projects->{$pr_id}{project_year};
+	my $pr_location = $projects->{$pr_id}{project_location};
   
-         my $dummy_name = $pr_name =~ /test\w*/ig;
-         my $dummy_desc = $pr_desc =~ /test\w*/ig;
+	my $dummy_name = $pr_name =~ /test\w*/ig;
+	my $dummy_desc = $pr_desc =~ /test\w*/ig;
        
-         my ($has_genotype, $has_phenotype, $is_gs);
+	my ($has_genotype, $has_phenotype, $is_gs);
         
-         unless ($dummy_name || $dummy_desc || !$pr_name )
-         {   
-	     $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
-	  
-	     if (!$is_gs || $is_gs !~ /genomic selection/)
-	     {
-		 my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");		 
-		 
-		 unless (-e $pheno_file)
-		 {
-		     $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
-		 }
-	     }
-	     else 
-	     {
-		 $has_phenotype = 'yes';
-	     }
-         }
+	unless ($dummy_name || $dummy_desc || !$pr_name )
+	{   
+	    $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
+	    
+	    if (!$is_gs || $is_gs !~ /genomic selection/)
+	    {
+		my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");		 		 
+		if (-e $pheno_file)
+		{
+		    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+		}
+		else 
+		{		 
+		    $has_phenotype = 1;
+		}
+	    }
+	    else 
+	    {
+		$has_phenotype = 1;
+	    }
+	}
 
-         my $marker_count;
-         if ($has_phenotype) 
-         {
-	     my $trial_compatibility_file = $self->trial_compatibility_file($c);
-	     my $size = -s $trial_compatibility_file;
+	my $marker_count;
+	if ($has_phenotype) 
+	{	
+	    my $trial_compatibility_file = $self->trial_compatibility_file($c);
+	    my $size = -s $trial_compatibility_file;
 	   
-	     if (-s $trial_compatibility_file && !$update_marker_count) 
-	     {
-		 my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
-		 $marker_count = $genotype_prop->{'marker_count'};
-
+	    if (-s $trial_compatibility_file && !$update_marker_count) 
+	    {
+		my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
+		$marker_count = $genotype_prop->{'marker_count'};
 	     } 
 	     else 
 	     {
 		 $update_marker_count = 1;
-		 my $markers = $c->model("solGS::solGS")->get_project_genotyping_markers($pr_id); 
-		 my @markers = split(/\t/, $markers);
-		 $marker_count = scalar(@markers);
+		 $c->stash->{pop_id} = $pr_id;
+		 $self->store_project_marker_count($c);
+	     }
+	 }
+
+	if (!$marker_count && $has_phenotype) 
+	{
+	    my $markers = $c->model("solGS::solGS")->get_project_genotyping_markers($pr_id);
+	     
+	    unless (!$markers) 
+	    {
+		$c->stash->{pop_id} = $pr_id;
+		$self->store_project_marker_count($c);
+	    }	    
+	}         
+         
+	my $match_code;
+	if ($marker_count) 
+	{
+	    $self->trial_compatibility_table($c, $marker_count);
+	    $match_code = $c->stash->{trial_compatibility_code};
+	} 
 	
-		 my $genoprop = {'project_id' => $pr_id, 'marker_count' => $marker_count};
-		 $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);  
-
-	     }
-
-	 }
-
-	 if (!$marker_count && $has_phenotype) 
-	 {
-	     my $markers = $c->model("solGS::solGS")->get_project_genotyping_markers($pr_id);
-	     
-	     unless (!$markers) 
-	      {
-		 my @markers = split(/\t/, $markers);
-		 $marker_count = scalar(@markers);
-		  
-		 my $genoprop = {'project_id' => $pr_id, 'marker_count' => $marker_count};
-		 $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);
-	     }	    
-	 }         
-         
-	 my $match_code;
-	 if ($marker_count) 
-	 {
-	     $self->trial_compatibility_table($c, $marker_count);
-	     $match_code = $c->stash->{trial_compatibility_code};
-	 } 
-         
-	 if ($marker_count && $has_phenotype)
-	 {
-	     unless ($is_gs) 
-	     {
-		 my $pr_prop = {'project_id'   => $pr_id, 
-				'project_type' => 'genomic selection', 
-		 };
-		 
-		 $c->model("solGS::solGS")->set_project_type($pr_prop);		 
+	if ($marker_count && $has_phenotype)
+	{
+	    unless ($is_gs) 
+	    {
+		my $pr_prop = {'project_id'   => $pr_id, 
+			       'project_type' => 'genomic selection', 
+		};
 		
-	     }
+		$c->model("solGS::solGS")->set_project_type($pr_prop);		 
+		
+	    }
 
-	     my $pop_prop = {'project_id'      => $pr_id, 
-			     'population type' => 'training population', 
-	     };
-	   
-	     my $pop_type =  $c->model("solGS::solGS")->get_population_type($pr_id);
- 
-	     unless ($pop_type) 
-	     {
-		 $c->model("solGS::solGS")->set_population_type($pop_prop);
-	     }
-	     
-             my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+	    my $pop_prop = {'project_id'      => $pr_id, 
+			    'population type' => 'training population', 
+	    };
+	    
+	    my $pop_type =  $c->model("solGS::solGS")->get_population_type($pr_id);
+	    
+	    unless ($pop_type) 
+	    {
+		$c->model("solGS::solGS")->set_population_type($pop_prop);
+	    }
+	    
+	    my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 
-             $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+	    $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:30px">code</div> |;
 
-             push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, 
-                                    $pr_desc, $pr_location, $pr_year, $match_code
-             ];            
-	 }
-	 elsif ($marker_count && !$has_phenotype)	 
-	 {
-	     my $pop_type =  $c->model("solGS::solGS")->get_population_type($pr_id);
-	     unless ($pop_type) 
-		 
-	     {
-		 my $pop_prop = {'project_id'      => $pr_id, 
-				 'population type' => 'selection population', 
-		 }; 
+	    push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, 
+				   $pr_desc, $pr_location, $pr_year, $match_code
+	    ];            
+	}
+	elsif ($marker_count && !$has_phenotype)	 
+	{
+	    my $pop_type =  $c->model("solGS::solGS")->get_population_type($pr_id);
+	    unless ($pop_type) 
+		
+	    {
+		my $pop_prop = {'project_id'      => $pr_id, 
+				'population type' => 'selection population', 
+		}; 
 
-		 $c->model("solGS::solGS")->set_population_type($pop_prop);	 
-	     }     
-	 }  
+		$c->model("solGS::solGS")->set_population_type($pop_prop);	 
+	    }     
+	}  
     }
 
     $c->stash->{projects_pages} = \@projects_pages;
@@ -410,12 +404,8 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
 	else 
 	{
 	    $update_marker_count = 1;
-	    my $markers = $c->model("solGS::solGS")->get_project_genotyping_markers($pr_id); 
-	    my @markers = split(/\t/, $markers);
-	    $marker_count = scalar(@markers);
-
-	    my $genoprop = {'project_id' => $pr_id, 'marker_count' => $marker_count};
-	    $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);   
+	    $c->stash->{pop_id} = $pr_id;
+	    $self->store_project_marker_count($c);
 	}
 
 	if ($marker_count)
@@ -557,7 +547,7 @@ sub trial_compatibility_file {
 
 
 sub get_projects_details {
-    my ($self,$c, $pr_rs) = @_;
+    my ($self, $c, $pr_rs) = @_;
  
     my ($year, $location, $pr_id, $pr_name, $pr_desc);
     my %projects_details = ();
@@ -567,16 +557,16 @@ sub get_projects_details {
         $pr_id   = $pr->get_column('project_id');
         $pr_name = $pr->get_column('name');
         $pr_desc = $pr->get_column('description');
-     
+
         my $pr_yr_rs = $c->model('solGS::solGS')->project_year($pr_id);
-    
-        while (my $pr = $pr_yr_rs->next) 
-	{
-            $year = $pr->value;
-	}
+
+         while (my $pr = $pr_yr_rs->next) 
+	 {
+             $year = $pr->value;
+	 }
 
 	my $location = $c->model('solGS::solGS')->project_location($pr_id);
- 
+	 
         $projects_details{$pr_id} = { 
 	    project_name     => $pr_name, 
 	    project_desc     => $pr_desc, 
@@ -590,11 +580,31 @@ sub get_projects_details {
 }
 
 
+sub store_project_marker_count {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id};
+    my $marker_count = $c->stash->{marker_count};
+   
+    unless ($marker_count)
+    {
+	my $markers = $c->model("solGS::solGS")->get_project_genotyping_markers($pop_id);
+	my @markers = split('\t', $markers);
+	$marker_count = scalar(@markers);
+    }  
+    		  
+    my $genoprop = {'project_id' => $pop_id, 'marker_count' => $marker_count};
+    $c->model("solGS::solGS")->set_project_genotypeprop($genoprop);    
+
+} 
+
+
 sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
     my ($self, $c, $query) = @_;
       
     my $page = $c->req->param('page') || 1;
-    my $result = $c->model('solGS::solGS')->search_trait($query, $page);
+    my $gs_traits = $c->model('solGS::solGS')->search_trait($query);
+    my $result = $c->model('solGS::solGS')->trait_details($gs_traits);
     
     my @rows;
     while (my $row = $result->next)
@@ -606,14 +616,12 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
         my $checkbox;
         push @rows, [ qq |<a href="/solgs/search/trials/trait/$id"  onclick="solGS.waitPage()">$name</a>|, $def];      
     }
-
+  
     if (@rows)
     {
        $c->stash(template   => $self->template('/search/result/traits.mas'),
                  result     => \@rows,
                  query      => $query,
-                 pager      => $result->pager,
-                 page_links => sub {uri ( query => { trait => $query, page => shift } ) }
            );
     }
     else
@@ -640,8 +648,6 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
     }
 
 } 
-
-
 
 
 sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
@@ -2211,6 +2217,124 @@ sub check_genotype_data_population :Path('/solgs/check/genotype/data/population/
 }
 
 
+sub check_phenotype_data_population :Path('/solgs/check/phenotype/data/population/') Args(1) {
+    my ($self, $c, $pop_id) = @_;
+
+    $c->stash->{pop_id} = $pop_id;
+    $self->check_population_has_phenotype($c);
+       
+    my $ret->{has_phenotype} = $c->stash->{population_has_phenotype};
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
+sub check_population_exists :Path('/solgs/check/population/exists/') Args(0) {
+    my ($self, $c) = @_;
+    
+    my $name = $c->req->param('name');
+
+    my $rs = $c->model("solGS::solGS")->project_details_by_name($name);
+
+    my $pop_id;
+    while (my $row = $rs->next) {  
+        $pop_id =  $row->id;
+    }
+  
+    my $ret->{population_id} = $pop_id;    
+    $ret = to_json($ret);     
+   
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
+sub check_training_population :Path('/solgs/check/training/population/') Args(1) {
+    my ($self, $c, $pop_id) = @_;
+
+    $c->stash->{pop_id} = $pop_id;
+
+    $self->check_population_is_training_population($c);
+    my $is_training_pop = $c->stash->{is_training_population};
+
+    my $training_pop_data;
+    if ($is_training_pop) 
+    {
+	my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
+	$self->projects_links($c, $pr_rs);
+	$training_pop_data = $c->stash->{projects_pages};
+    }
+    
+    my $ret->{is_training_population} =  $is_training_pop; 
+    $ret->{training_pop_data} = $training_pop_data; 
+    $ret = to_json($ret);     
+   
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
+sub check_population_is_training_population {
+    my ($self, $c) = @_;
+
+    my $pr_id = $c->stash->{pop_id};
+    my $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
+
+    my $has_phenotype;
+    my $has_genotype;
+
+    if ($is_gs !~ /genomic selection/) 
+    {
+	$self->check_population_has_phenotype($c);    
+	$has_phenotype = $c->stash->{population_has_phenotype};
+
+	if ($has_phenotype) 
+	{
+	    $self->check_population_has_genotype($c);   
+	    $has_genotype = $c->stash->{population_has_genotype};
+	}
+    }
+
+    if ($is_gs || ($has_phenotype && $has_genotype))
+    {
+	$c->stash->{is_training_population} = 1;
+    }
+ 
+}
+
+
+sub check_population_has_phenotype {
+    my ($self, $c) = @_;
+
+    my $pr_id = $c->stash->{pop_id};
+    my $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
+    my $has_phenotype = 1 if $is_gs;
+
+    if ($is_gs !~ /genomic selection/)
+    {
+	my $cache_dir  = $c->stash->{solgs_cache_dir};
+	my $pheno_file = $self->grep_file($cache_dir, "phenotype_data_${pr_id}.txt");		 		 
+
+	if (!-s $pheno_file)
+	{
+	    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+	}
+	else
+	{
+	    $has_phenotype = 1;
+	}
+    }
+ 
+    $c->stash->{population_has_phenotype} = $has_phenotype;
+
+}
+
+
 sub check_population_has_genotype {
     my ($self, $c) = @_;
     
@@ -2236,14 +2360,26 @@ sub check_population_has_genotype {
 	{
 	    my $dir       = $c->stash->{solgs_cache_dir}; 
 	    my $file_name = "genotype_data_${pop_id}";
-	    $geno_file     = $self->grep_file($dir,  $file_name);  
+	    $geno_file     = $self->grep_file($dir,  $file_name); 
+	 
 	}
-
+	
 	$has_genotype = 1 if -s $geno_file;
 	unless ($has_genotype) 
 	{
 	    my $markers = $c->model("solGS::solGS")->get_project_genotyping_markers($pop_id);
-	    $has_genotype = 1 if $markers;
+	     
+	    if ($markers) 
+	    {
+		$has_genotype = 1;
+		$c->stash->{pop_id} = $pop_id;
+
+		my @markers = split('\t', $markers);
+		my $marker_count = scalar(@markers);
+		$c->stash->{marker_count} = $marker_count;
+
+		$self->store_project_marker_count($c);
+	    }	   	    
 	}	
     }
     
@@ -2270,7 +2406,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
        
     my $ret = {};
 
-    if ($selection_pop_id != $training_pop_id)
+    if ($selection_pop_id !~ /$training_pop_id/)
     {
 	my $has_genotype;
 	if ($selection_pop_id)
@@ -2989,9 +3125,11 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
         $self->trial_compatibility_table($c, $markers_num);
         my $match_code = $c->stash->{trial_compatibility_code};
 
-        my $pop_rs       = $c->model('solGS::solGS')->project_details($pop_id);
+        my $pop_rs = $c->model('solGS::solGS')->project_details($pop_id);
        
-	my $pop_details  = $self->get_projects_details($c, $pop_rs);
+	$self->get_projects_details($c, $pop_rs);
+	#my $pop_details  = $self->get_projects_details($c, $pop_rs);
+	my $pop_details  = $c->stash->{projects_details};
         my $pop_name     = $pop_details->{$pop_id}{project_name};
         my $pop_desc     = $pop_details->{$pop_id}{project_desc};
         my $pop_year     = $pop_details->{$pop_id}{project_year};
@@ -4372,7 +4510,7 @@ sub phenotype_file {
 	if (!$c->user) {
 	    
 	    my $page = "/" . $c->req->path;
-	    print STDERR "\npheno page: $page\n";
+	 
 	    $c->res->redirect("/solgs/list/login/message?page=$page");
 	    $c->detach;   
 

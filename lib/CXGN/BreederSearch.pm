@@ -246,6 +246,7 @@ sub get_phenotype_info {
 	push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id ];
 
     }
+    #print STDERR Dumper $result;
     print STDERR "QUERY returned ".scalar(@$result)." rows.\n";
     return $result;
 }
@@ -290,7 +291,7 @@ sub get_phenotype_info_matrix {
 
 	foreach my $trait (@sorted_traits) {
 	    my $tab = $plot_data{$plot}->{$trait}; # ? "\t".$plot_data{$plot}->{$trait} : "\t";
-	    $line .= $tab ? "\t".$tab : "\t";
+	    $line .= defined($tab) ? "\t".$tab : "\t";
 
 	}
 	push @info, $line;
@@ -370,8 +371,7 @@ sub get_extended_phenotype_info_matrix {
       #print STDERR "Adding line for plot $p\n";
       foreach my $trait (@sorted_traits) {
         my $tab = $plot_data{$p}->{$trait};
-
-        $line .= $tab ? "\t".$tab : "\t";
+        $line .= defined($tab) ? "\t".$tab : "\t";
       }
       push @info, $line;
     }

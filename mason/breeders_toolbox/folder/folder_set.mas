@@ -1,0 +1,183 @@
+
+<%args>
+$trial_id => undef
+$trial_name => undef
+$folder_id => undef
+$folder_name => undef
+$breeding_program_id => undef
+$breeding_program_name => undef
+</%args>
+
+<div class="modal fade" id="set_folder_dialog" name="set_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="setFolderDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="setFolderDialog">Place trial in folder</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+	       <form class="form-horizontal" role="form" method="post" id="set_folder_dialog_form" name="set_folder_dialog_form">
+         
+         <div class="form-group">
+             <label class="col-sm-3 control-label">Breeding Program: </label>
+             <div class="col-sm-9" >
+               <div id="folder_set_breeding_program_select_div">
+% if ($breeding_program_id) {
+               <input type="text" class="form-control" value="<% $breeding_program_name %>" disabled/>
+               <input type="hidden" id="folder_set_breeding_program_id" name="folder_set_breeding_program_id" value="<% $breeding_program_id %>" />
+% } else {
+ [Loading...]
+% }
+               </div>
+             </div>
+         </div>
+         <hr>
+         <div class="form-group">
+             <label class="col-sm-3 control-label">Folder: </label>
+             <div class="col-sm-9" >
+               <div id="trial_folder_select_div">
+% if ($folder_id) {
+                <input type="text" class="form-control" value="<% $folder_name %>" disabled/>
+                <input type="hidden" id="html_select_folder_for_trial" name="html_select_folder_for_trial" value="<% $folder_id %>" />
+% } else {
+ [Loading...]
+% }
+               </div>
+             </div>
+         </div>
+	        <div class="form-group">
+      	      <label class="col-sm-3 control-label">Trial: </label>
+      	      <div class="col-sm-9" >
+                <div id="select_trial_for_folder">
+% if ($trial_id) {
+                <input type="text" class="form-control" value="<% $trial_name %>" disabled/>
+                <input type="hidden" id="html_select_trial_for_folder" name="html_select_trial_for_folder" value="<% $trial_id %>" />
+% } else {
+  [Loading...]
+% }
+                </div>
+              </div>
+	        </div>
+	       </form><br/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	      <button type="button" class="btn btn-primary" name="set_trial_folder" id="set_trial_folder" title="Save a trial to a folder">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script defer="defer">
+jQuery(document).ready(function() {
+
+  if(jQuery("#folder_set_breeding_program_id").length == 0) {
+    get_select_box('breeding_programs', 'folder_set_breeding_program_select_div', { 'name' : 'folder_set_breeding_program_id', 'id' : 'folder_set_breeding_program_id' });
+  }
+
+  jQuery('#open_folder_dialog_link').click( function() {
+    jQuery('#set_folder_dialog').modal("show");
+    if(jQuery("#html_select_folder_for_trial").length == 0) {
+      breeding_program_change_folders();
+    }
+    if(jQuery("#html_select_trial_for_folder").length == 0) {
+      breeding_program_change_trials();
+    }
+  });
+  
+  jQuery("#folder_set_breeding_program_select_div").on('change', "#folder_set_breeding_program_id", function() {
+    breeding_program_change_folders();
+    breeding_program_change_trials();
+  });
+
+  jQuery('#set_trial_folder').click( function() {
+    jQuery('#trial_folder_div').html('[Updating...]');
+    set_trial_folder();
+    display_trial_folder();
+    jQuery('#set_folder_dialog').modal("hide");
+  });
+
+});
+
+function breeding_program_change_folders() {
+  var breeding_program_id = jQuery("#folder_set_breeding_program_id").val();
+  get_select_box('folders', 'trial_folder_select_div', { 'name' : 'html_select_folder_for_trial', 'id' : 'html_select_folder_for_trial', 'breeding_program_id' : breeding_program_id, 'empty' : 1  });
+}
+
+function breeding_program_change_trials() {
+  var breeding_program_id = jQuery("#folder_set_breeding_program_id").val();
+  get_select_box('trials', 'select_trial_for_folder', { 'name' : 'html_select_trial_for_folder', 'id' : 'html_select_trial_for_folder', 'breeding_program_id' : breeding_program_id });
+}
+
+function set_trial_folder() {
+  var trial_ids = jQuery('#html_select_trial_for_folder').val();
+  console.log(trial_ids);
+  var folder_id = jQuery('#html_select_folder_for_trial').val();
+  
+  if ( jQuery.isArray(trial_ids) ) {
+    var errors = 0;
+    jQuery.each(trial_ids, function(index, value) {
+        //console.log(value);
+        if (value == folder_id) {
+          alert("Cannot make a folder its own parent.");
+          return;
+        }
+        jQuery.ajax( {
+            url: '/ajax/folder/'+value+'/associate/parent/'+folder_id,
+            success: function(response) {
+                if (response.error) {
+                    errors = 1;
+                    alert(response.error);
+                }
+            },
+            error: function(response) {
+                errors = 1;
+                alert('An error occurred trying to associate a folder to the trial.');
+            }
+        });
+    });
+    if (errors == 0) {
+        alert("Successfully associated trials: "+trial_ids+" to folder: "+folder_id);
+    }
+  } else {
+      if (trial_ids == folder_id) {
+        alert("Cannot make a folder its own parent.");
+        return;
+      }
+      jQuery.ajax( {
+          url: '/ajax/folder/'+trial_ids+'/associate/parent/'+folder_id,
+          success: function(response) {
+              if (response.error) {
+                  alert(response.error);
+              }
+              else {
+                  alert("Successfully associated folder");
+                  //location.reload();
+              }
+          },
+          error: function(response) {
+              alert('An error occurred trying to associate a folder to the trial.');
+          }
+      });
+  }
+}
+
+function display_trial_folder() {
+    var trial_id = jQuery('#html_select_trial_for_folder').val();
+    if (!jQuery.isArray(trial_id) ) {
+        jQuery.ajax( {
+            url: '/ajax/breeders/trial/'+trial_id+'/folder',
+            success: function(response) {
+                jQuery('#trial_folder_div').html("<a href='/folder/"+response.folder[0]+"'>"+response.folder[1]+"</a>");
+            },
+            error: function(response) {
+                jQuery('#trial_folder_div').html('[ Protocol error. ]');
+            }
+        });
+    }
+}
+
+</script>

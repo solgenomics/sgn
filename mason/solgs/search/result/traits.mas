@@ -6,8 +6,8 @@ solgs search results view.
 
 $result
 $query
-$pager
-$page_links
+$pager => undef;
+$page_links => undef;
 $form => undef;
 
 </%args>
@@ -32,10 +32,6 @@ $form => undef;
     __align      => 'l'
   &>
 
-  <& /page/pagination_control.mas, 
-     pager     => $pager, 
-    link_maker => $page_links 
-  &> 
   </&>
   
 %}

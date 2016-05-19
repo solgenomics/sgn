@@ -361,7 +361,7 @@ sub default_toolbar_data {
                     desc =>
 'Determine which genes a probe will silence using VIGS.',
 		    target => '_blank',
-   
+
                 },
 
                 {
@@ -387,7 +387,7 @@ sub default_toolbar_data {
                 { name => 'Mapping' },
                 {
                     name => 'Genome Browser (Jbrowse)',
-                    link => '/jbrowse/',
+                    link => '/jbrowse_solgenomics/',
                     desc => 'browse genomic annotations using the fast Jbrowse browser',
                 },
 
@@ -447,7 +447,7 @@ sub default_toolbar_data {
                     desc => 'In Silico PCR tool based on BLAST'
                 },
 
-		{ 
+		{
 		    name => 'Tomato Expression Database (TED)',
 		    link => '/ted',
 		    desc => 'The Tomato Expression Database',
@@ -472,7 +472,7 @@ sub default_toolbar_data {
                 },
 
 		{ name => "Breeder Tools" },
-		{ 
+		{
 		    name => 'Breeder Home',
 		    link => '/breeders/home',
 		    desc => 'Manage a breeding program',
@@ -636,7 +636,7 @@ sub option_link {
     #die"Option link not found for heading '$heading' option '$option'";
 }
 
-sub option_target { 
+sub option_target {
     my $self = shift;
     my ( $heading, $option ) = @_;
 
@@ -792,7 +792,7 @@ EOH
 
                   #menu options for each heading, these will be invisible unless hovered over
                   my $option_link = $self->option_link( $heading, $menu_option );
-		  my $option_target = $self->option_target( $heading, $menu_option ); 
+		  my $option_target = $self->option_target( $heading, $menu_option );
                   $option_link &&=
                       qq|<a class="toolbar_item" $option_target href="$option_link">$menu_option</a>|;
                   $option_link ||= qq|<span class="toolbar_item">$menu_option</span>|;

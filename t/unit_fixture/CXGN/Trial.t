@@ -103,9 +103,9 @@ my $plotlist_ref = [ 'anothertrial1', 'anothertrial2', 'anothertrial3', 'another
 
 my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014' ];
 
-my %plot_trait_value = ( 'anothertrial1' => { 'root number|CO:0000011'  => 12, 'dry yield|CO:0000014' => 30 },
-			   'anothertrial2' => { 'root number|CO:0000011'  => 10, 'dry yield|CO:0000014' => 40 },
-			   'anothertrial3' => { 'root number|CO:0000011'  => 20, 'dry yield|CO:0000014' => 50 },
+my %plot_trait_value = ( 'anothertrial1' => { 'root number|CO:0000011'  => [12,''], 'dry yield|CO:0000014' => [30,''] },
+			   'anothertrial2' => { 'root number|CO:0000011'  => [10,''], 'dry yield|CO:0000014' => [40,''] },
+			   'anothertrial3' => { 'root number|CO:0000011'  => [20,''], 'dry yield|CO:0000014' => [50,''] },
     );
 
 
@@ -129,7 +129,7 @@ my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 #print STDERR Dumper @traits_assayed_sorted;
 
-my @traits_assayed_check = (['70666','Fresh root weight'],['70668','Harvest index'],['70741','Dry matter content'],['70773','Fresh shoot weight']);
+my @traits_assayed_check = (['70666','Fresh root weight'],['70668','Harvest index variable'],['70741','Dry matter content percentage'],['70773','Fresh shoot weight measurement in kg']);
 
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed' );
 

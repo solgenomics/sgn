@@ -27,10 +27,9 @@ $gs_traits_index
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTrials", "jquery.dataTables",  "solGS.combineTrials", "solGS.ajaxAutocomplete"] &>
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTrials", "solGS.combineTrials", "solGS.ajaxAutocomplete"] &>
-
-<p>&nbsp</p>
+<p>&nbsp;</p>
 
 <& /page/page_title.mas, title => "solGS: start building a GS model by searching for a trait or selecting a training population" &>
 
@@ -46,15 +45,15 @@ $gs_traits_index
 %}
 
 <p style="text-align:center">Traits index: <b><% $gs_traits_index %> </b></p>
-<p>&nbsp</p>
-<p>&nbsp</p>
+<p>&nbsp;</p>
+<p&nbsp;></p>
 
 
 <% $form %>
 
 
-<p>&nbsp</p>
-<p>&nbsp</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
 
 </&>
 
@@ -65,39 +64,25 @@ $gs_traits_index
   &>
 
 
-<& /solgs/population/project_details_form.mas &>
+  <div  class="form-inline">
+    <input  type="text" class="form-control" placeholder="search for a trial or training population" size="50" id="population_search_entry"/>   
+    <button type="submit" class="btn btn-primary" id="search_training_pop">
+      <span class="glyphicon glyphicon-search"></span>
+    </button>
 
-<div id="selected_trials" style="display:none;width:100%">
-
-  <hr style="size:10px;color:"#5cb85c"/>
-
- <p style="text-align:center"> Trials to combine </p>
-
- <hr style="size:10px;color:"#5cb85c"/>
-
-<table class="table" id="selected_trials_table" style="text-align:left;width:100%">
-<tr>
-  <th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th><th>&nbsp</th>
-</tr>
-<tr> 
-</tr>
-</table>
-</div>
-
-<table id="selected_trials_header" style="text-align:left;width:100%">
-<tr>
-  <td>
-    <div id="combine_trials_div" style="display:none">
-      <input  class="button" type="button" id="combine_trials" value="Combine trials"/>
-  </div>  
-  </td>
-  <td>
-    <div id="search_again_div" style="display:none;text-align:right">
-    <input style class="button" type="button" id="search_again" value="Search again"/></td>
+    <button id="search_all_training_pops" style="position:absolute;right:20px;" class="btn btn-success" type="submit"> 
+      <span value="Search for all training populations">Search for all training populations</span> 
+    </button>
   </div>
-</tr>
-</table>
 
+  <div id="searched_trials_message"  style="padding:20px 0px 10px 0px;font-weight:bold;text-align:center;color:#A7C942"></div>
+  <div id="searched_trials_div" style="display:none;"> 
+</div>
+  <br />
+
+
+<& /solgs/population/project_details_form.mas &>
+<& /solgs/search/combine_trials_table.mas &>
 
 </&>
 
@@ -108,7 +93,7 @@ $gs_traits_index
     title       => "Select a list-based training population or create a new one",
   &>
 
-  <& /solgs/population/user_reference_genotypes.mas &>
+  <& /solgs/search/list_type_training_population.mas &>
    
 </&>
 
