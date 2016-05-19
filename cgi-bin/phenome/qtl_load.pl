@@ -509,7 +509,7 @@ sub store_traits {
                 if ( !$trait ) {
                     $trait = CXGN::Phenome::UserTrait->new($dbh);
 
-                    $trait->set_cv_id(17);
+                    $trait->set_cv_id(17);#16 for cassavabase
                     $trait->set_name( $values[0] );
                     $trait->set_definition( $values[1] );
                     $trait->set_sp_person_id($sp_person_id);
@@ -690,17 +690,17 @@ sub store_trait_values {
                 $phenotype->set_unique_name(
                     qq | $individual_name $pop_id .":". $i |);
 
-                $phenotype->set_observable_id(
-                    $trait[$i]->get_user_trait_id() );
-                if (!$values[$i]) {$values[$i] = undef;}
-                if ($values[$i] &&  $values[$i] =~ /NA|-|\s+/ig) 
+                $phenotype->set_observable_id( $trait[$i]->get_user_trait_id() );
+                
+		if ($values[$i] != 0 && !$values[$i]) {$values[$i] = undef;}
+                if ($values[$i] && $values[$i] =~ /NA|-|^\s+$|^\.+$/ig) 
                 {
                     $values[$i] = undef;
                 }
-		
+		      
 		$values[$i] =~ s/^\s+|\s+$//g;
 		my $tr_name = $trait[$i]->get_name();
-		print STDERR "\nstore phenotype values: $individual_name -- $tr_name -- $values[$i] \n";
+		print STDERR "\nstore phenotype values: $individual_name -- $tr_name  -- count: $i -- $values[$i] \n";
                 $phenotype->set_value($values[$i]);
                 $phenotype->set_individual_id($individual_id);
                 $phenotype->set_sp_person_id($sp_person_id);
