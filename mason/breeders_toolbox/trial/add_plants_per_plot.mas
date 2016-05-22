@@ -53,8 +53,12 @@ function add_plants_to_trial() {
     jQuery.ajax( {
       url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_subplots/',
       type: 'POST',
+      beforeSend: function() {
+          jQuery("#working_modal").modal("show");
+      },
       data: {'plants_per_plot' : jQuery('#add_plants_per_plot_num').val()},
       success: function(response) {
+        jQuery("#working_modal").modal("hide");
         if (response.error) {
           alert(response.error);
         }
@@ -65,6 +69,7 @@ function add_plants_to_trial() {
         }
       },
       error: function(response) {
+        jQuery("#working_modal").modal("hide");
         alert("An error occurred updating the trial name");
       },
     });
@@ -73,7 +78,33 @@ function add_plants_to_trial() {
 
 function display_plant_entries() {
     
+    jQuery.ajax ( {
+        url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plants',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            //console.log(response);
+            jQuery("#working_modal").modal("hide");
+            var trial_plants_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plants_table_html'><thead><tr><th>Name</th></tr></thead><tbody>";
+            for (i=0; i<response.plots[0].length; i++) {
+                trial_plants_html = trial_plants_html + "<tr><td>"+ response.plots[0][i] + "</td></tr>";
+            }
+            trial_plants_html = trial_plants_html + "</tbody></table>";
+            jQuery('#plant_entries_section').empty();
+            jQuery('#plant_entries_section').html(trial_plants_html);
+            enable_plants_datatable();
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert("Error retrieving plants.");
+        }
+    });
+    
+}
 
+function enable_plants_datatable() {
+    jQuery('#trial_plants_table_html').DataTable();
 }
 
 </script>
