@@ -15,7 +15,7 @@ $trial_type
       <div class="modal-body">
         <div class="container-fluid">
 
-	       <form class="form-horizontal" role="form" method="post" id="new_folder_dialog_form" name="new_folder_dialog_form">
+	       <form class="form-horizontal" role="form" method="post" >
 	        <div class="form-group">
       	      <label class="col-sm-3 control-label"><% $trial_type %> Name: </label>
       	      <div class="col-sm-9" >

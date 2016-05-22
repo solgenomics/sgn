@@ -350,7 +350,9 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 </style> -->
 
 
-<&| /page/info_section.mas, id => "trial_design_section", title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
+<& /breeders_toolbox/trial/download_layout_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+
+<&| /page/info_section.mas, id => "trial_design_section", title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"[<a id='trial_download_layout_button'>Download Layout</a>]"  &>
 
 <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 
@@ -392,7 +394,6 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 </&>
 
-<br />
 
 %# <&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
 %# foreach my $trait (@phenotype_data) {

@@ -489,21 +489,6 @@ sub has_plants {
     }
 }
 
-=head2 accessors set_design_type(), get_design_type()
-
- Usage:        $trial->set_design_type("RCBD");
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub get_design_type { 
-    my $self = shift;
-    return $self->get_layout()->_get_design_type_from_project();
-}
 
 sub set_design_type { 
     my $self = shift;
@@ -1437,7 +1422,18 @@ sub has_plant_entries {
 
  }
 
- sub get_design_type {
+=head2 accessors set_design_type(), get_design_type()
+
+  Usage:        $trial->set_design_type("RCBD");
+  Desc:
+  Ret:
+  Args:
+  Side Effects:
+  Example:
+
+=cut
+
+sub get_design_type {
      my $self = shift;
      my $design_prop;
      my $design_type;

@@ -190,6 +190,7 @@ sub _get_design_from_trial {
 
   my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
   my $tissue_sample_of_cv = $schema->resultset("Cv::Cvterm")->find({ name=>'tissue_sample_of' });
+  my $plant_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of', 'stock_relationship' );
 
   @plots = @{$plots_ref};
   foreach my $plot (@plots) {
@@ -213,9 +214,11 @@ sub _get_design_from_trial {
     my $row_number_prop = $plot->stockprops->find( { 'type.name' => 'row_number' }, { join => 'type'} );
     my $col_number_prop = $plot->stockprops->find( { 'type.name' => 'col_number' }, { join => 'type'} );
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
+    my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm->cvterm_id() })->search_related('object');
 
     my $accession_name = $accession->uniquename;
     my $accession_id = $accession->stock_id;
+
     $design_info{"plot_name"}=$plot_name;
     $design_info{"plot_id"}=$plot->stock_id;
 
@@ -244,6 +247,18 @@ sub _get_design_from_trial {
     if ($accession_id) {
       $design_info{"accession_id"}=$accession_id;
     }
+	if ($plants) {
+		my @plant_names;
+		my @plant_ids;
+		while (my $p = $plants->next()) {
+			my $plant_name = $p->uniquename();
+			my $plant_id = $p->stock_id();
+			push @plant_names, $plant_name;
+			push @plant_ids, $plant_id;
+		}
+		$design_info{"plant_names"}=\@plant_names;
+		$design_info{"plant_ids"}=\@plant_ids;
+	}
     $design{$plot_number_prop->value}=\%design_info;
   }
     #print STDERR "Check 2.3.4.4: ".localtime()."\n";

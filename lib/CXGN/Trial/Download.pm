@@ -52,6 +52,8 @@ has 'trial_download_logfile' => (
 ## defines the plugin with which the download will be processed
 has 'format' => (isa => 'Str', is => 'ro', required => 1);
 
+has 'data_level' => (isa => 'Str', is => 'ro', required => 1);
+
 has 'trait_list' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_trait_list' );
 
 has 'filename' => (isa => 'Str', is => 'ro',
