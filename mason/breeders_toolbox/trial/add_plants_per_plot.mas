@@ -1,0 +1,79 @@
+
+<%args>
+$trial_id
+$trial_name => undef
+</%args>
+
+<div class="modal fade" id="add_plants_dialog" name="add_plants_dialog" tabindex="-1" role="dialog" aria-labelledby="addPlantsDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addPlantsDialog">Add plants to <% $trial_name %></h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+	       <form class="form-horizontal" role="form" method="post" id="add_plants_dialog_form" name="add_plants_dialog_form">
+	        <div class="form-group">
+      	      <label class="col-sm-3 control-label">Number of plants per plot: </label>
+      	      <div class="col-sm-9" >
+                <input name="trial_name_input" id="add_plants_per_plot_num" class="form-control" type="text" autofocus/>
+              </div>
+	        </div>
+	       </form><br/>
+         
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="add_plants_cancel_button" id="add_plants_cancel_button" data-dismiss="modal">Close</button>
+	      <button type="button" class="btn btn-primary" name="add_plants_save_button" id="add_plants_save_button" title="Save">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function() {
+
+  jQuery('#create_plant_entries_button').click( function () {
+    jQuery('#add_plants_dialog').modal("show");
+  });
+  
+  jQuery('#add_plants_save_button').click( function () {
+    add_plants_to_trial();
+  });
+
+});
+
+function add_plants_to_trial() {
+    
+    jQuery.ajax( {
+      url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_subplots/',
+      type: 'POST',
+      data: {'plants_per_plot' : jQuery('#add_plants_per_plot_num').val()},
+      success: function(response) {
+        if (response.error) {
+          alert(response.error);
+        }
+        else {
+          alert("Successfully created plant entries.");
+          jQuery('#add_plants_dialog').modal("hide");
+          display_plant_entries();
+        }
+      },
+      error: function(response) {
+        alert("An error occurred updating the trial name");
+      },
+    });
+    
+}
+
+function display_plant_entries() {
+    
+
+}
+
+</script>

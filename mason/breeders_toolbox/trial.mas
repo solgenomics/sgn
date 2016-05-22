@@ -25,11 +25,11 @@ $harvest_date => undef
 $trial_description => undef
 $design_layout_view => undef
 $user_can_modify => undef
-$has_plant_entries => 0
+$has_plant_entries => undef
 $hidap_enabled => undef
 $folder_name => undef
 $folder_id => undef
-
+$plants_per_plot => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
@@ -48,7 +48,7 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
 
 my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link">change</a>] } if $user_can_modify;
 
-print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
+#print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 #print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
 
@@ -181,11 +181,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </td>
 </tr>
 
-
-<tr><td colspan="2">
-% if ($has_plant_entries) { print "This trial has plant entries which can be used to store plant level observations." }
-% else { print "This trial does not have plant entries. <a href=\"\">add</a>."; }
-%
 <tr><td><b>Description</b></td>
 <td>
 <div id="trial_description">
@@ -376,14 +371,17 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
 
 </&>
-%if (!$has_plant_entries) { 
+
+% if (!$has_plant_entries) {
    <button id="create_plant_entries_button">Add plant entries</button>
-%} else {
+   <& /breeders_toolbox/trial/add_plants_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
+   
+% } else {
 
 <&| /page/info_section.mas, title=>"Plant entries", is_subsection => 1, collapsible=> 1, collapsed=>1, hide_if_empty=> 1, is_empty => !$has_plant_entries &>
 
 </&>
-%}
+% }
 
 </&>
 
@@ -450,7 +448,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
-% print STDERR "Check 9 (mason) : ".(time() - $start_time)."\n";
+% #print STDERR "Check 9 (mason) : ".(time() - $start_time)."\n";
 
 <!-- Phenotypic correlation analysis -->
 <& /solgs/population/correlation.mas,
@@ -462,14 +460,10 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
    trial_id => $trial_id
  &>
 
-% print STDERR "Check 10 (mason) : ".(time() - $start_time)."\n";
+% #print STDERR "Check 10 (mason) : ".(time() - $start_time)."\n";
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
-</div>
-
-<div id="create_plant_entries_dialog"> 
-<input id="plants_per_plot" value="<% $plant_per_plot %>"</input>
 </div>
 
 <div id="tablet_field_layout_saved_dialog_message" title="Field book layout file" style="display:none;">

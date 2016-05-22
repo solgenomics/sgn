@@ -59,9 +59,9 @@ sub patch {
 --do your SQL here
 --
 
---INSERT INTO dbxref (accession, db_id) VALUES ('project_has_plant_entries', (SELECT db_id FROM db where name='null'));
+INSERT INTO dbxref (accession, db_id) VALUES ('project_has_plant_entries', (SELECT db_id FROM db where name='null'));
 
-  --  INSERT INTO cvterm (name, cv_id, dbxref_id) VALUES ('project_has_plant_entries',  (SELECT cv_id from cv where name='project_property'), (SELECT dbxref_id from dbxref where accession ='project_has_plant_entries'));
+    INSERT INTO cvterm (name, cv_id, dbxref_id) VALUES ('project_has_plant_entries',  (SELECT cv_id from cv where name='project_property'), (SELECT dbxref_id from dbxref where accession ='project_has_plant_entries'));
 
 INSERT INTO dbxref (accession, db_id) VALUES ('plant_index_number', (SELECT db_id FROM db where name='null'));
 

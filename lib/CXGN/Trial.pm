@@ -1399,6 +1399,35 @@ sub create_plant_entities {
      return 1;
 
  }
+ 
+=head2 function has_plant_entries()
+
+	Usage:        $trial->has_plant_entries();
+	Desc:         Some trials require plant-level data. This function will determine if a trial has plants associated with it.
+	Ret:          Returns 1 if trial has plants, 0 if the trial does not.
+	Args:
+	Side Effects:
+	Example:
+
+=cut
+
+sub has_plant_entries { 
+	my $self = shift;
+	my $chado_schema = $self->bcs_schema();
+	my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property' );
+	
+	my $rs = $chado_schema->resultset("Project::Projectprop")->find({ 
+		type_id => $has_plants_cvterm->cvterm_id(),
+		project_id => $self->get_trial_id(),
+	});
+	
+	if ($rs) {
+		return 1;
+	} else {
+		return 0;
+	}
+	
+}
 
  sub get_planting_date_cvterm_id {
      my $self = shift;

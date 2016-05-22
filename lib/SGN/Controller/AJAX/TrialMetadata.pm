@@ -616,7 +616,14 @@ sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0)
 
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
     
-    $t->create_plant_entities($plants_per_plot);
+    if ($t->create_plant_entities($plants_per_plot)) {
+        $c->stash->{rest} = {success => 1};
+        return;
+    } else {
+        $c->stash->{rest} = { error => "Error creating plant entries in controller." };
+    	return;
+    }
+    
 }
 
 
