@@ -621,7 +621,7 @@ sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0)
 	return;
     }
 
-    if (!$plants_per_plot || $plants_per_plot > 20) { 
+    if (!$plants_per_plot || $plants_per_plot > 50) { 
 	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 20." };
 	return;
     }
