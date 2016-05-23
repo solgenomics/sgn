@@ -76,7 +76,7 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
 
     if ($spreadsheet_response->{error}) {
       print STDERR "Returning with error . . .\n";
-      $c->stash->{rest} = { error => $spreadsheet_response->{'error'} };
+      $c->stash->{rest} = { error => $spreadsheet_response->{error} };
       return;
     }
 
