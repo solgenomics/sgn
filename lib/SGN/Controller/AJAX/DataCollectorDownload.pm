@@ -72,34 +72,21 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
 	  format => $format,
       });
 
-      my $spreadsheet_response = $create_spreadsheet->download();
+  my $spreadsheet_response = $create_spreadsheet->download();
 
-    if ($spreadsheet_response->{error}) {
-      print STDERR "Returning with error . . .\n";
-      $c->stash->{rest} = { error => $spreadsheet_response->{error} };
-      return;
-    }
+  if ($spreadsheet_response->{error}) {
+    print STDERR "Returning with error . . .\n";
+    $c->stash->{rest} = { error => $spreadsheet_response->{error} };
+    return;
+  }
 
-    print STDERR "DOWNLOAD FILENAME = ".$create_spreadsheet->filename()."\n";
-    print STDERR "RELATIVE  = $tempfile\n";
+  print STDERR "DOWNLOAD FILENAME = ".$create_spreadsheet->filename()."\n";
+  print STDERR "RELATIVE  = $tempfile\n";
 
-#if ($error) {
-#$c->stash->{rest} = { error => $error };
-#return;
-#}
+  my $file_name = basename($file_path);
+  print STDERR "file name= $file_name\n";
 
-my $file_name = basename($file_path);
-print STDERR "file name= $file_name\n";
-
-#$c->res->content_type('Application/xls');
-#$c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-
-#my $output = read_file($file_path, binmode=>':raw');
-#my $output = read_file($file_path);
-
-#$c->res->body($output);
-
-    $c->stash->{rest} = { filename => $urlencode{$tempfile.".xls"} };
+  $c->stash->{rest} = { filename => $urlencode{$tempfile.".xls"} };
 
 }
 
