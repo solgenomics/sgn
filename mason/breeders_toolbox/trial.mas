@@ -439,6 +439,8 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
   </&>
 </&>
 
+<& /breeders_toolbox/trial/download_datacollector_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
 <& /fieldbook/upload_phenotype_fieldbook.mas &>
 <& /breeders_toolbox/upload_phenotype_datacollector.mas &>
@@ -487,13 +489,6 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <div id="create_spreadsheet_dialog" title="Create Phenotyping Spreadsheet" style="display:none;">
   <div id="trait_list" name="trait_list">
     <label id="trait_list_label" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
-    </label>
-  </div>
-</div>
-
-<div id="create_DataCollector_dialog" title="Create Data Collector Spreadsheet" style="display:none;">
-  <div id="trait_list_dc" name="trait_list">
-    <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
     </label>
   </div>
 </div>

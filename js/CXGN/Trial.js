@@ -192,60 +192,6 @@ function open_create_fieldbook_dialog() {
     });
 }
 
-function open_create_DataCollector_dialog() {
-    //jQuery('#working').dialog("open");
-    jQuery('#working_modal').modal("show");
-    var list = new CXGN.List();
-    jQuery("#trait_list_dc").html(list.listSelect("trait_list", [ 'traits' ]));
-    //jQuery('#working').dialog("close");
-    jQuery('#working_modal').modal("hide");
-    jQuery('#create_DataCollector_dialog').dialog("open");
-}
-
-
-function create_DataCollector() {
-    //jQuery('#working').dialog("open");
-    jQuery('#working_modal').modal("show");
-    var trialID = parseInt(jQuery('#trialIDDiv').text());
-    var list = new CXGN.List();
-    var trait_list_id = jQuery('#trait_list_list_select').val();
-    var trait_list;
-    if (! trait_list_id == "") {
-	trait_list = JSON.stringify(list.getList(trait_list_id));
-    }
-     new jQuery.ajax({
-	 type: 'POST',
-	 url: '/ajax/phenotype/create_DataCollector',
-	 dataType: "json",
-	 data: {
-             'trial_id': trialID,
-             'trait_list': trait_list,
-	 },
-
-	 success: function (response) {
-	     //jQuery('#working').dialog("close");
-	     jQuery('#working_modal').modal("hide");
-
-             if (response.error) {
-		 //alert("error: "+response.error);
-		 jQuery('#open_create_DataCollector_dialog').dialog("close");
-             } else {
-		 //alert("success: "+response.filename);
-		 jQuery('#open_create_DataCollector_dialog').dialog("close");
-		 jQuery('#working_modal').modal("hide");
-		 window.location.href = "/download/"+response.filename;
-             }
-	 },
-	 error: function () {
-	     //jQuery('#working').dialog("close");
-	     jQuery('#working_modal').modal("hide");
-             alert('An error occurred creating a DataCollector file.');
-             jQuery('#open_download_DataCollector_dialog').dialog("close");
-	 }
-     });
-}
-
-
 function trial_detail_page_setup_dialogs() {
 
     jQuery('#change_breeding_program_dialog').dialog( {
@@ -312,27 +258,6 @@ function trial_detail_page_setup_dialogs() {
 	},
     });
 
-    jQuery('#create_DataCollector_dialog').dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-	width: 500,
-	position: ['top', 75],
-	modal: true,
-	buttons: {
-	    Cancel: function() {
-		jQuery( this ).dialog( "close" );
-		return;
-	    },
-	    Create: {text: "Create", id:"create_DataCollector_submit_button", click:function() {
-		create_DataCollector();
-		//save_experimental_design(design_json);
-		jQuery( this ).dialog( "close" );
-		//jQuery('#add_project_dialog').dialog("close");
-		}
-	    },
-	},
-    });
 
     jQuery('#show_change_breeding_program_link').click(
 	function() {
@@ -367,10 +292,6 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#create_fieldbook_link').click(function () {
 	open_create_fieldbook_dialog();
-    });
-
-    jQuery('#create_DataCollector_link').click(function () {
-	open_create_DataCollector_dialog();
     });
 
     jQuery('#trial_design_view_layout').dialog({

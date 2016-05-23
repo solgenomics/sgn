@@ -54,7 +54,8 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
   my $trial_id = $c->req->param('trial_id');
   my $trait_list_ref = $c->req->param('trait_list');
   my $format = $c->req->param('format') || "DataCollectorExcel";
-
+  my $data_level = $c->req->param('data_level') || "plots";
+  print STDERR $data_level."\n";
   my @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
   my $dir = $c->tempfiles_subdir('/download');
   my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
@@ -67,6 +68,7 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
 	  trait_list => \@trait_list,
 	  filename => $tempfile,
 	  format => $format,
+      data_level => $data_level,
       });
 
       $create_spreadsheet->download();

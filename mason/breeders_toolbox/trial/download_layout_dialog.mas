@@ -46,8 +46,6 @@ $trial_name => undef
   </div>
 </div>
 
-% #[<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]
-
 <script>
 
 jQuery(document).ready(function() {
