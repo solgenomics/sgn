@@ -223,6 +223,11 @@ function create_DataCollector() {
 	 },
 
 	 success: function (response) {
+
+     if (response.error) {
+       alert('An error occurred creating the DataCollector file: '+response.error);
+       return;
+     }
 	     //jQuery('#working').dialog("close");
 	     jQuery('#working_modal').modal("hide");
 

@@ -74,6 +74,12 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
 
       $create_spreadsheet->download();
 
+    if ($create_spreadsheet->{error}) {
+      print STDERR "Returning with error . . .\n";
+      $c->stash->{rest} = { error => $create_spreadsheet->{'error'} };
+      return;
+    }
+
     print STDERR "DOWNLOAD FILENAME = ".$create_spreadsheet->filename()."\n";
     print STDERR "RELATIVE  = $tempfile\n";
 

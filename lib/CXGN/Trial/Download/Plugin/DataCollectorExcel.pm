@@ -22,7 +22,7 @@ sub download {
     my $design = $trial_layout->get_design();
 
     if (! $design) {
-	return "No design found for this trial.";
+	     return { error => "No design found for this trial. A trial design must exist in order to create this file"};
     }
 
     my %design = %{$trial_layout->get_design()};
