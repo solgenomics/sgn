@@ -85,7 +85,7 @@ function create_DataCollector() {
             jQuery('#working_modal').modal("hide");
 
             if (response.error) {
-                //alert("error: "+response.error);
+                alert("Error: "+response.error);
                 jQuery('#download_datacollector_dialog').modal("hide");
             } else {
                 //alert("success: "+response.filename);

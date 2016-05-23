@@ -55,7 +55,15 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
   my $trait_list_ref = $c->req->param('trait_list');
   my $format = $c->req->param('format') || "DataCollectorExcel";
   my $data_level = $c->req->param('data_level') || "plots";
-  print STDERR $data_level."\n";
+  
+  if ($data_level eq 'plants') {
+      my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+      if (!$trial->has_plant_entries()) {
+          $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first." };
+          return;
+      }
+  }
+  
   my @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
   my $dir = $c->tempfiles_subdir('/download');
   my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');

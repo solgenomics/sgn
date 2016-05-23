@@ -167,6 +167,15 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $format = $c->req->param("format") || "xls";
     my $data_level = $c->req->param("dataLevel") || "plots";
     my $trait_list = $c->req->param("trait_list") || "";
+    
+    if ($data_level eq 'plants') {
+        my $trial = $c->stash->{trial};
+        if (!$trial->has_plant_entries()) {
+            $c->stash->{template} = 'generic_message.mas';
+            $c->stash->{message} = "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first.";
+            return;
+        }
+    }
 
     my @trait_list;
     if ($trait_list) {
