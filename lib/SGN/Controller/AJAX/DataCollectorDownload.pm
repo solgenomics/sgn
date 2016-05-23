@@ -72,11 +72,11 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
 	  format => $format,
       });
 
-      $create_spreadsheet->download();
+      my $spreadsheet_response = $create_spreadsheet->download();
 
-    if ($create_spreadsheet->{error}) {
+    if ($spreadsheet_response->{error}) {
       print STDERR "Returning with error . . .\n";
-      $c->stash->{rest} = { error => $create_spreadsheet->{'error'} };
+      $c->stash->{rest} = { error => $spreadsheet_response->{'error'} };
       return;
     }
 

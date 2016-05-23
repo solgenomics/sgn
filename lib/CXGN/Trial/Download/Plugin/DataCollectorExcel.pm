@@ -342,6 +342,7 @@ sub download {
     }
     $workbook->close();
     print STDERR "DataCollector File created!\n";
+    return { message => "DataCollector File created!"};
 }
 
 1;
