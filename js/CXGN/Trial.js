@@ -223,10 +223,12 @@ function create_DataCollector() {
 	 },
 
 	 success: function (response) {
+     console.log("success "+JSON.stringify(response));
 	     //jQuery('#working').dialog("close");
 	     jQuery('#working_modal').modal("hide");
 
              if (response.error) {
+               console.log("error: "+response.error);
 		 alert("error: "+response.error);
 		 jQuery('#open_create_DataCollector_dialog').dialog("close");
              } else {
