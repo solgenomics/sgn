@@ -45,20 +45,50 @@ sub download {
     $ws->data_validation(2,3, { validate => "date", criteria => '>', value=>'1000-01-01' });
     
 
-    my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
-    for(my $n=0; $n<@column_headers; $n++) { 
-	$ws->write(5, $n, $column_headers[$n]);
-    }
-    my @ordered_plots = sort { $a <=> $b} keys(%design);
-    for(my $n=0; $n<@ordered_plots; $n++) { 
-	my %design_info = %{$design{$ordered_plots[$n]}};
-	    
-	$ws->write($n+6, 0, $design_info{plot_name});
-	$ws->write($n+6, 1, $design_info{accession_name});
-	$ws->write($n+6, 2, $design_info{plot_number});
-	$ws->write($n+6, 3, $design_info{block_number});
-	$ws->write($n+6, 4, $design_info{is_a_control});
-	$ws->write($n+6, 5, $design_info{rep_number});
+    my $num_col_before_traits;
+    if ($self->data_level eq 'plots') {
+        $num_col_before_traits = 6;
+        my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+        for(my $n=0; $n<@column_headers; $n++) { 
+            $ws->write(5, $n, $column_headers[$n]);
+        }
+        
+        my @ordered_plots = sort { $a <=> $b} keys(%design);
+        for(my $n=0; $n<@ordered_plots; $n++) { 
+            my %design_info = %{$design{$ordered_plots[$n]}};
+
+            $ws->write($n+6, 0, $design_info{plot_name});
+            $ws->write($n+6, 1, $design_info{accession_name});
+            $ws->write($n+6, 2, $design_info{plot_number});
+            $ws->write($n+6, 3, $design_info{block_number});
+            $ws->write($n+6, 4, $design_info{is_a_control});
+            $ws->write($n+6, 5, $design_info{rep_number});
+        }
+        
+    } elsif ($self->data_level eq 'plants') {
+        $num_col_before_traits = 7;
+        my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        for(my $n=0; $n<@column_headers; $n++) { 
+            $ws->write(5, $n, $column_headers[$n]);
+        }
+        
+        my @ordered_plots = sort { $a <=> $b} keys(%design);
+        my $line = 6;
+        for(my $n=0; $n<@ordered_plots; $n++) { 
+            my %design_info = %{$design{$ordered_plots[$n]}};
+
+            my $plant_names = $design_info{plant_names};
+            foreach (@$plant_names) {
+                $ws->write($line, 0, $_);
+                $ws->write($line, 1, $design_info{plot_name});
+                $ws->write($line, 2, $design_info{accession_name});
+                $ws->write($line, 3, $design_info{plot_number});
+                $ws->write($line, 4, $design_info{block_number});
+                $ws->write($line, 5, $design_info{is_a_control});
+                $ws->write($line, 6, $design_info{rep_number});
+                $line++;
+            }
+        }
     }
 
     # write traits and format trait columns
@@ -74,39 +104,39 @@ sub download {
 
     my %cvinfo = ();
     foreach my $t (@trait_ids) { 
-	my $trait = CXGN::Trait->new( { bcs_schema=> $schema, cvterm_id => $t });
-	$cvinfo{$trait->display_name()} = $trait;
-	print STDERR "**** Trait = " . $trait->display_name . "\n\n";
+        my $trait = CXGN::Trait->new( { bcs_schema=> $schema, cvterm_id => $t });
+        $cvinfo{$trait->display_name()} = $trait;
+        print STDERR "**** Trait = " . $trait->display_name . "\n\n";
     }
-									       
-    for (my $i = 0; $i < @trait_list; $i++) { 
-	#if (exists($cvinfo{$trait_list[$i]})) { 
-	    #$ws->write(5, $i+6, $cvinfo{$trait_list[$i]}->display_name());
-	    $ws->write(5, $i+6, $trait_list[$i]);
-	#}
-	#else { 
-	#    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
-	#    next;
-	#}
-    
-	my $plot_count = scalar(keys(%design));
 
-	for (my $n = 0; $n < $plot_count; $n++) { 
-        if ($cvinfo{$trait_list[$i]}) {
-	    my $format = $cvinfo{$trait_list[$i]}->format();
-	    if ($format eq "numeric") { 
-		$ws->data_validation($n+6, $i+6, { validate => "any" });
-	    }
-	    elsif ($format =~ /\,/) {  # is a list
-		$ws->data_validation($n+6, $i+6, 
-				     { 
-					 validate => 'list',
-					 value    => [ split ",", $format ]
-				     });
-	    }
+    for (my $i = 0; $i < @trait_list; $i++) { 
+        #if (exists($cvinfo{$trait_list[$i]})) { 
+            #$ws->write(5, $i+6, $cvinfo{$trait_list[$i]}->display_name());
+            $ws->write(5, $i+$num_col_before_traits, $trait_list[$i]);
+        #}
+        #else { 
+        #    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
+        #    next;
+        #}
+    
+        my $plot_count = scalar(keys(%design));
+
+        for (my $n = 0; $n < $plot_count; $n++) { 
+            if ($cvinfo{$trait_list[$i]}) {
+                my $format = $cvinfo{$trait_list[$i]}->format();
+                if ($format eq "numeric") { 
+                    $ws->data_validation($n+6, $i+$num_col_before_traits, { validate => "any" });
+                }
+                elsif ($format =~ /\,/) {  # is a list
+                    $ws->data_validation($n+6, $i+$num_col_before_traits, { 
+                        validate => 'list',
+                        value    => [ split ",", $format ]
+                    });
+                }
+            }
         }
-	}
     }
+    
     $workbook->close();
     
 }

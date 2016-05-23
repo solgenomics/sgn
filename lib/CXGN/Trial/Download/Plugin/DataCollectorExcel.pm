@@ -346,13 +346,13 @@ sub download {
     }
 
     for (my $i = 0; $i < @trait_list; $i++) { 
-        if (exists($cvinfo{$trait_list[$i]})) { 
+        #if (exists($cvinfo{$trait_list[$i]})) { 
             #$ws->write(0, $i+6, $cvinfo{$trait_list[$i]}->display_name());
             $ws->write(0, $i+$num_col_before_traits, $trait_list[$i]);
-        }
-        else { 
-            print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
-        }
+        #}
+        #else { 
+        #    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
+        #}
 
         my $plot_count = scalar(keys(%design));
 

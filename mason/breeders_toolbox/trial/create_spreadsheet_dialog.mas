@@ -5,12 +5,12 @@ $trial_name => undef
 </%args>
 
 
-<div class="modal fade" id="download_datacollector_dialog" name="download_datacollector_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadDatacollectorDialog">
+<div class="modal fade" id="create_spreadsheet_dialog" name="create_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="createSpreadsheetDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="downloadDatacollectorDialog">Download Datacollector for <% $trial_name %></h4>
+        <h4 class="modal-title" id="createSpreadsheetDialog">Download Phenotype Spreadsheet for <% $trial_name %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -19,14 +19,14 @@ $trial_name => undef
 	        <div class="form-group">
                 <label class="col-sm-3 control-label">Trait List: </label>
                 <div class="col-sm-9" >
-                    <div id ="trait_list_dc">
+                    <div id ="trait_list_spreadsheet">
                     </div>
                 </div>
 	        </div>
             <div class="form-group">
                 <label class="col-sm-3 control-label">Data Level: </label>
                 <div class="col-sm-9" >
-                    <select class="form-control" id="download_datacollector_data_level">
+                    <select class="form-control" id="create_spreadsheet_data_level">
                         <option value="plots">Plots</option>
                         <option value="plants">Plants</option>
                     </select>
@@ -37,8 +37,8 @@ $trial_name => undef
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="download_datacollector_cancel_button" id="download_datacollector_cancel_button" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="create_DataCollector_submit_button" id="create_DataCollector_submit_button" title="Submit">Submit</button>
+        <button type="button" class="btn btn-default" name="create_phenotyping_cancel_button" id="create_phenotyping_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="create_phenotyping_ok_button" id="create_phenotyping_ok_button" title="Submit">Submit</button>
       </div>
     </div>
   </div>
@@ -48,56 +48,54 @@ $trial_name => undef
 
 jQuery(document).ready(function() {
 
-  jQuery('#create_DataCollector_link').click( function () {
-    jQuery('#download_datacollector_dialog').modal("show");
+  jQuery('#create_spreadsheet_link').click( function () {
+    jQuery('#create_spreadsheet_dialog').modal("show");
     var list = new CXGN.List();
-    jQuery("#trait_list_dc").html(list.listSelect("trait_list", [ 'traits' ]));
+    jQuery("#trait_list_spreadsheet").html(list.listSelect("trait_list_spreadsheet", [ 'traits' ]));
   });
   
-  jQuery('#create_DataCollector_submit_button').click( function () {
-    create_DataCollector();
+  jQuery('#create_phenotyping_ok_button').click( function () {
+    create_phenotype_spreadsheet();
   });
 
 });
 
 
-function create_DataCollector() {
+function create_phenotype_spreadsheet() {
     var list = new CXGN.List();
-    var trait_list_id = jQuery('#trait_list_list_select').val();
+    var trait_list_id = jQuery('#trait_list_spreadsheet_list_select').val();
     var trait_list;
     if (! trait_list_id == "") {
         trait_list = JSON.stringify(list.getList(trait_list_id));
     }
-    
-    jQuery.ajax({
+    new jQuery.ajax({
         type: 'POST',
-        url: '/ajax/phenotype/create_DataCollector',
+        url: '/ajax/phenotype/create_spreadsheet',
         dataType: "json",
         data: {
             'trial_id': <% $trial_id %>,
             'trait_list': trait_list,
-            'data_level': jQuery("#download_datacollector_data_level").val(),
+            'data_level': jQuery("#create_spreadsheet_data_level").val(),
         },
         beforeSend: function() {
             jQuery('#working_modal').modal("show");
         },
         success: function (response) {
             jQuery('#working_modal').modal("hide");
-
             if (response.error) {
-                //alert("error: "+response.error);
-                jQuery('#open_create_DataCollector_dialog').dialog("close");
+                alert(response.error);
+                jQuery('#create_spreadsheet_dialog').modal("hide");
             } else {
-                //alert("success: "+response.filename);
-                jQuery('#open_create_DataCollector_dialog').dialog("close");
+                //alert(response.filename);
+                jQuery('#create_spreadsheet_dialog').modal("hide");
                 jQuery('#working_modal').modal("hide");
                 window.location.href = "/download/"+response.filename;
             }
         },
         error: function () {
             jQuery('#working_modal').modal("hide");
-            alert('An error occurred creating a DataCollector file.');
-            jQuery('#open_download_DataCollector_dialog').dialog("close");
+            alert('An error occurred creating a phenotype file.');
+            jQuery('#create_spreadsheet_dialog').modal("hide");
         }
     });
 }
