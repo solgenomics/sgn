@@ -223,18 +223,19 @@ function create_DataCollector() {
 	 },
 
 	 success: function (response) {
-	     //jQuery('#working').dialog("close");
-	     jQuery('#working_modal').modal("hide");
+     //console.log("success "+JSON.stringify(response));
+     jQuery('#working_modal').modal("hide");
 
-             if (response.error) {
-		 //alert("error: "+response.error);
-		 jQuery('#open_create_DataCollector_dialog').dialog("close");
-             } else {
-		 //alert("success: "+response.filename);
-		 jQuery('#open_create_DataCollector_dialog').dialog("close");
-		 jQuery('#working_modal').modal("hide");
-		 window.location.href = "/download/"+response.filename;
-             }
+     if (response.error) {
+       console.log("error: "+response.error);
+       alert("error: "+response.error);
+       jQuery('#open_create_DataCollector_dialog').dialog("close");
+     } else {
+       //alert("success: "+response.filename);
+       jQuery('#open_create_DataCollector_dialog').dialog("close");
+       jQuery('#working_modal').modal("hide");
+       window.location.href = "/download/"+response.filename;
+     }
 	 },
 	 error: function () {
 	     //jQuery('#working').dialog("close");

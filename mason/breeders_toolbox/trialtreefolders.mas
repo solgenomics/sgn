@@ -195,7 +195,7 @@ $breeding_programs
       	      <div class="col-sm-9">
 		<select class="form-control" id="select_breeding_program" name="select_breeding_program">
       		<%perl>foreach my $program (@$breeding_programs) {
-         	  print "<option value=".@$program[1].">".@$program[1]."</option>"; }
+         	  print "<option value='".@$program[1]."'>".@$program[1]."</option>"; }
       		</%perl>
     		</select>
               </div>
@@ -476,7 +476,7 @@ $breeding_programs
 		<select class="form-control" id="trial_upload_breeding_program" name="trial_upload_breeding_program">
       		<%perl>
       		  foreach my $program (@$breeding_programs) {
-         	    print "<option value=".@$program[1].">".@$program[1]."</option>";
+         	    print "<option value='".@$program[1]."'>".@$program[1]."</option>";
       		  }
       		</%perl>
     		</select>
