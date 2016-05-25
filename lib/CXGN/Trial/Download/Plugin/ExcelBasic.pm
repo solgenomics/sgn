@@ -66,19 +66,47 @@ sub download {
         }
         
     } elsif ($self->data_level eq 'plants') {
-        $num_col_before_traits = 7;
-        my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
-        for(my $n=0; $n<@column_headers; $n++) { 
-            $ws->write(5, $n, $column_headers[$n]);
+        
+        my $pre_col = $self->predefined_columns;
+        if ($pre_col) {
+            my $num_predefined_col = scalar keys %$pre_col;
+            $num_col_before_traits = 7 + $num_predefined_col;
+            my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+            foreach (keys %$pre_col) {
+                push @column_headers, $_;
+            }
+            for(my $n=0; $n<scalar(@column_headers); $n++) { 
+                $ws->write(5, $n, $column_headers[$n]);
+            }
+        } else {
+            $num_col_before_traits = 7;
+            my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+            for(my $n=0; $n<@column_headers; $n++) { 
+                $ws->write(5, $n, $column_headers[$n]);
+            }
         }
         
         my @ordered_plots = sort { $a <=> $b} keys(%design);
         my $line = 6;
         for(my $n=0; $n<@ordered_plots; $n++) { 
             my %design_info = %{$design{$ordered_plots[$n]}};
-
             my $plant_names = $design_info{plant_names};
-            foreach (@$plant_names) {
+            
+            my $sampled_plant_names;
+            if ($self->sample_number) {
+                my $sample_number = $self->sample_number;
+                foreach (@$plant_names) {
+                    if ( $_ =~ m/_plant_(\d+)/) {
+                        if ($1 <= $sample_number) {
+                            push @$sampled_plant_names, $_;
+                        }
+                    }
+                }
+            } else {
+                $sampled_plant_names = $plant_names;
+            }
+
+            foreach (@$sampled_plant_names) {
                 $ws->write($line, 0, $_);
                 $ws->write($line, 1, $design_info{plot_name});
                 $ws->write($line, 2, $design_info{accession_name});
@@ -86,6 +114,15 @@ sub download {
                 $ws->write($line, 4, $design_info{block_number});
                 $ws->write($line, 5, $design_info{is_a_control});
                 $ws->write($line, 6, $design_info{rep_number});
+                
+                if ($pre_col) {
+                    my $pre_col_ind = 7;
+                    foreach (keys %$pre_col) {
+                        $ws->write($line, $pre_col_ind, $pre_col->{$_});
+                        $pre_col_ind++;
+                    }
+                }
+                
                 $line++;
             }
         }

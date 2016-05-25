@@ -25,6 +25,7 @@ use Data::Dumper;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
 use CXGN::Trial::Folder;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -186,6 +187,41 @@ sub get_genotyping_protocols_select : Path('/ajax/html/select/genotyping_protoco
 	choices => $gt_protocols,
 	selected => $gtps{$default_gtp}
 	);
+    $c->stash->{rest} = { select => $html };
+}
+
+
+sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(0) {
+    my ($self, $c) = @_;
+    my $parent_node_cvterm = $c->request->param("parent_node_cvterm");
+    my $parent_node_cv = $c->request->param("parent_node_cv");
+    my $rel_cvterm = $c->request->param("rel_cvterm");
+    my $rel_cv = $c->request->param("rel_cv");
+    
+    my $select_name = $c->request->param("selectbox_name");
+    my $select_id = $c->request->param("selectbox_id");
+    
+    my $empty = $c->request->param("empty") || '';
+    
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $parent_node_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $parent_node_cvterm, $parent_node_cv)->cvterm_id();
+    my $rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $rel_cvterm, $rel_cv)->cvterm_id();
+    
+    my $ontology_children_ref = $schema->resultset("Cv::CvtermRelationship")->search({type_id => $rel_cvterm_id, object_id => $parent_node_cvterm_id})->search_related('subject');
+    my @ontology_children;
+    while (my $child = $ontology_children_ref->next() ) {
+        push @ontology_children, [$child->name, $child->name];
+    }
+    
+    if ($empty) {
+        unshift @ontology_children, [ 0, "None" ];
+    }
+    
+    my $html = simple_selectbox_html(
+        name => $select_name,
+        id => $select_id,
+        choices => \@ontology_children,
+    );
     $c->stash->{rest} = { select => $html };
 }
 
