@@ -277,7 +277,7 @@ sub load_pop_details {
     my %pop_details = %{$pop_args};
 
     my $org            = $pop_details{organism};
-    my $name           = $pop_details{pop_name};
+    my $name           = $pop_details{pop_name};  
     my $desc           = $pop_details{pop_desc};
     my $cross_id       = $pop_details{pop_type};
     my $female         = $pop_details{pop_female_parent};
@@ -293,7 +293,8 @@ sub load_pop_details {
     my $sp_person_id = $login->verify_session();
 
     my ( $female_id, $male_id, $recurrent_id, $donor_id );
-
+    
+    $name  =~ s/^\s+|\s+$//g;
     my $population = CXGN::Phenome::Population->new_with_name( $dbh, $name );
     my $population_id = $population->get_population_id();
     if ($population_id) {
@@ -349,9 +350,9 @@ sub store_accession {
 
     print STDERR "organism_id: $accession\n";
     my ( $species, $cultivar ) = split( /cv|var|cv\.|var\./, $accession );
-    $species  =~ s/^\s+|\s+$//;
+    $species  =~ s/^\s+|\s+$//g;
     $cultivar =~ s/\.//;
-    $cultivar =~ s/^\s+|\s+$//;
+    $cultivar =~ s/^\s+|\s+$//g;
     $species = ucfirst($species);
 
     print STDERR "$accession: species:$species, cultivar:$cultivar\n";
