@@ -669,7 +669,7 @@ function trial_detail_page_setup_dialogs() {
 			var selected = 'selected="selected"';
 			for(var n=0; n<response.derived_traits.length; n++) { 
 			    //alert("derived trait: +derived_traits"+response.derived_traits[n]);
-			    html += '<option value="'+response.derived_traits[n]+'" title="'+response.formula[n][0]+'" >'+response.derived_traits[n]+' </option> ';
+			    html += '<option value="'+response.derived_traits[n]+'" title="'+response.formula[n]+'" >'+response.derived_traits[n]+' </option> ';
 			}
 			
 		    }

@@ -6,7 +6,6 @@ use Bio::Chado::Schema;
 use Getopt::Std;
 use CXGN::DB::InsertDBH;
 use SGN::Model::Cvterm;
-use JSON::Any;
 
 our ($opt_H, $opt_D);
 getopts("H:D:");
@@ -41,13 +40,9 @@ my $header = <$file_fh>;
 while (my $line = <$file_fh>) {
     chomp $line;
 
-    my ($my_trait,$my_formula,$eval_formula) = split("\t", $line);
+    my ($my_trait,$my_formula) = split("\t", $line);
 	push @traits, $my_trait;
-	my @formulas = ($my_formula, $eval_formula);
-	push (@array_ref, \@formulas);
-		
-	#push @formulas, $my_formula;
-	#push @eval_formulas, $eval_formula;
+	push @formulas, $my_formula;
 }
 
 for (my $n=0; $n<scalar(@traits); $n++) {
@@ -59,8 +54,6 @@ for (my $n=0; $n<scalar(@traits); $n++) {
     }
 
     my $cvterm_id = $trait_cvterm->cvterm_id();
-	my $json = JSON::Any->new;
-	my $formula_json_array = $json->encode($array_ref[$n]);
-	my $new_prop= $trait_cvterm->create_cvtermprops({formula=>$formula_json_array} , {} );
+    my $new_prop= $trait_cvterm->create_cvtermprops({formula=>$formulas[$n]} , {} );
 
 }
