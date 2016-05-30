@@ -145,12 +145,12 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
       foreach (@$field_trials) {
           push @trials, $_;
       }
-      foreach (@$cross_trials) {
-          push @trials, $_;
-      }
-      foreach (@$genotyping_trials) {
-          push @trials, $_;
-      }
+      #foreach (@$cross_trials) {
+        #  push @trials, $_;
+      #}
+      #foreach (@$genotyping_trials) {
+        #  push @trials, $_;
+      #}
     }
 
     #print STDERR Dumper \@trials;
