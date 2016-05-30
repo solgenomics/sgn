@@ -29,6 +29,7 @@ use Try::Tiny;
 use Data::Dumper;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
+use Bio::GeneticRelationships::Population;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 
@@ -109,6 +110,7 @@ sub add_pedigrees {
 	  my $male_parent;
 	  my $cross_type = $pedigree->get_cross_type();
 
+	  
 	  if ($pedigree->has_female_parent()) {
 	      $female_parent_name = $pedigree->get_female_parent()->get_name();
 	      $female_parent = $self->_get_accession($female_parent_name);
@@ -117,14 +119,14 @@ sub add_pedigrees {
 	  if ($pedigree->has_male_parent()) {
 	      $male_parent_name = $pedigree->get_male_parent()->get_name();
 	      $male_parent = $self->_get_accession($male_parent_name);
-	  }
+	  }	  
+
+	  my $cross_name = $pedigree->get_name();
 	  
-	  my $cross_name = $female_parent_name ."/".$male_parent_name;
-
 	  print STDERR "Creating pedigree $cross_type, $cross_name\n";
-
+	  
 	  my $progeny_accession = $self->_get_accession($pedigree->get_name());
-
+	  
 	  # organism of cross experiment will be the same as the female parent
 	  if ($female_parent) {
 	      $organism_id = $female_parent->organism_id();
@@ -151,10 +153,9 @@ sub add_pedigrees {
 		      subject_id => $male_parent->stock_id(),
 					   });
 	  }
-	  
-	  
+
+	  print STDERR "Successfully added pedigree ".$pedigree->get_name()."\n";
       }
-      
   };
   
   # try to add all crosses in a transaction
@@ -183,10 +184,6 @@ sub validate_pedigrees {
   if (!$self->has_pedigrees()){
       print STDERR "No pedigrees to add\n";
     return;
-  }
-  
-  if (!$self->has_pedigrees()) {
-      return;
   }
   
   @pedigrees = @{$self->get_pedigrees()};
@@ -234,7 +231,7 @@ sub _validate_pedigree {
       $female_parent = $self->_get_accession($female_parent_name);
       
       if (!$female_parent) {
-	  print STDERR "Parent $female_parent_name in pedigree is not a stock\n";
+	  print STDERR "Female parent $female_parent_name is not a stock or not provided. Skipping...\n";
 	  return;
       }
       
@@ -258,7 +255,7 @@ sub _get_accession {
     my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
     my $stock;
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
-
+    my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type');
     $stock_lookup->set_stock_name($accession_name);
     $stock = $stock_lookup->get_stock_exact();
     
@@ -267,8 +264,8 @@ sub _get_accession {
 	return;
     }
     
-    if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
-	print STDERR "Name in pedigree  ($accession_name) is not a stock of type accession\n";
+    if ( ($stock->type_id() != $accession_cvterm->cvterm_id()) && ($stock->type_id() != $population_cvterm->cvterm_id())) {
+	print STDERR "Name in pedigree  ($accession_name) is not a stock of type accession or population\n";
 	return;
     }
     

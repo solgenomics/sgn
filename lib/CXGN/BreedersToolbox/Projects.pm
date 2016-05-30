@@ -74,6 +74,7 @@ sub get_breeding_program_by_name {
   if (!$rs) {
     return;
   }
+  print STDERR "**Projects.pm: found program_name $program_name id = " . $rs->project_id . "\n\n";
 
   return $rs;
 

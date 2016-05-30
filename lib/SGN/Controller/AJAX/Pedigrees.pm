@@ -77,16 +77,29 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     my %stocks;
 
     my $header = <$F>; 
+    my %legal_cross_types = ( biparental => 1, open => 1, self => 1);
+    my %errors;
+
     while (<$F>) { 
 	chomp;
 	$_ =~ s/\r//g;
 	my @acc = split /\t/;
-	foreach my $a (@acc) { 
-	    $stocks{$a}++;
+	for(my $i=0; $i<3; $i++) { 
+	    if ($acc[$i] =~ /\,/) { 
+		my @a = split /\s*\,\s*/, $acc[$i];  # a comma separated list for an open pollination can be given
+		foreach (@a) { $stocks{$_}++ if $_ };
+	    }
+	    else { 
+		$stocks{$acc[$i]}++ if $acc[$i];
+	    }
+	}
+	# check if the cross types are recognized...
+	if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) { 
+	    $errors{"not legal cross type: $acc[3] (should be biparental, self, or open)"}=1;
 	}
     }    
     my @unique_stocks = keys(%stocks);
-    my %errors = $self->check_stocks($c, \@unique_stocks);
+    %errors = $self->check_stocks($c, \@unique_stocks);
     
     if (%errors) { 
 	$c->stash->{rest} = { error => "There were problems loading the pedigree for the following accessions: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
@@ -103,48 +116,89 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     my $cross_type = "";
 
     my @pedigrees;
+
+    ## NEW FILE STRUCTURE: progeny_name, female parent, male parent, cross_type
     
     while (<$F>) { 
 	chomp;
 	$_ =~ s/\r//g;
-	my @acc = split /\t/;
+	my ($progeny, $female, $male, $cross_type) = split /\t/;
 	
-	if (!$acc[1] && !$acc[2]) { 
+	if (!$female && !$male) { 
 	    print STDERR "No parents specified... skipping.\n";
 	    next;
 	}
-	if (!$acc[0]) { 
+	if (!$progeny) { 
 	    print STDERR "No progeny specified... skipping.\n";
 	    next;
 	}
 	
-	if ($acc[1] eq $acc[2]) { 
+	if (($female eq $male) && ($cross_type ne 'self')) { 
 	    $cross_type = "self";
 	}
 	
-	elsif ($acc[1] && !$acc[2]) { 
-	    $cross_type = "open";
-	}
-	
-	else {
-	    $cross_type = "biparental";
+	elsif ($female && !$male) { 
+	    if ($cross_type ne 'open') { 
+		print STDERR "No male parent specified and cross_type is not open... setting to unknown\n";
+		$cross_type = 'unknown';
+	    }
 	}
 	
 	if($cross_type eq "self") { 
-	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $acc[1] });
-	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $acc[1] });
+	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
 	}
 	elsif($cross_type eq "biparental") { 
-	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $acc[1] });
-	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $acc[2] });
+	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
 	}
-	my $p = Bio::GeneticRelationships::Pedigree->new( { 
-	    cross_type => $cross_type,
-	    female_parent => $female_parent,
-	    male_parent => $male_parent,
-	    name => $acc[0] 
-							  });
+	elsif($cross_type eq "open") { 
+	     $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+	     my $population_name = "";
+	     my @male_parents = split /\s*\,\s*/, $male;
+
+	     if ($male) {
+		 $population_name = join "_", @male_parents;
+	     }
+	     else { 
+		 $population_name = $female."_open";
+	     }
+	     $male_parent = Bio::GeneticRelationships::Population->new( { name => $population_name});
+	     $male_parent->set_members(\@male_parents);
+	     
+
+	     my $population_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "population", "stock_type");
+	     my $male_parent_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship");
+
+	     # create population stock entry
+	     # 
+	     my $pop_rs = $schema->resultset("Stock::Stock")->create( 
+		 { 
+		     name => $population_name,
+		     uniquename => $population_name,
+		     type_id => $population_cvterm_id->cvterm_id(),
+		 });
+
+	      # generate population connections to the male parents
+	     foreach my $p (@male_parents) { 
+		 my $p_row = $schema->resultset("Stock::Stock")->find({ uniquename => $p });
+		 my $connection = $schema->resultset("Stock::StockRelationship")->create( 
+		     {
+			 subject_id => $pop_rs->stock_id,
+			 object_id => $p_row->stock_id,
+			 type_id => $male_parent_cvterm_id->cvterm_id(),
+		     });
+	     }
+	     $male = $population_name;
+	}
 	
+	my $p = Bio::GeneticRelationships::Pedigree->new( 
+	    { 
+		cross_type => $cross_type,
+		female_parent => $female_parent,
+		male_parent => $male_parent,
+		name => $progeny,
+	    });
 	push @pedigrees, $p;
     }
     

@@ -149,8 +149,8 @@ sub refresh_matviews {
     return { error => 'Wizard update already in progress . . . ' };
   }
   else {
-    my $connect = "SELECT dblink_connect_u('dbname=".$self->dbname."')";
-    my $send_query = "SELECT dblink_send_query('SELECT refresh_materialized_views()')";
+    my $connect = "SELECT dblink_connect_u('async','dbname=".$self->dbname."')";
+    my $send_query = "SELECT dblink_send_query('async','SELECT refresh_materialized_views()')";
 
     $self->dbh->do($connect);
     $h = $self->dbh->do($send_query);
@@ -331,16 +331,16 @@ sub get_extended_phenotype_info_matrix {
 	    trait_data => $trait_data,
 	    year => $year,
       cvterm_id => $trait_id,
-      studyDbId => $project_id, 
+      studyDbId => $project_id,
       locationDbId => $location_id,
-      germplasmDbId => $stock_id, 
+      germplasmDbId => $stock_id,
       plotDbId => $plot_id
 	};
 	$traits{$cvterm}++;
     }
 
     my @info = ();
-    my $line = join "\t", qw | year studyDbId studyName locationDbId locationName germplasmDbId germplasmName plotDbId plotName rep blockNumber |;
+    my $line = join "\t", qw | studyYear studyDbId studyName locationDbId locationName germplasmDbId germplasmName plotDbId plotName rep blockNumber |;
 
     # generate header line
     #
@@ -394,24 +394,29 @@ sub get_genotype_info {
     my $self = shift;
     my $accession_idref = shift;
     my $protocol_id = shift;
+    my $snp_genotype_id = shift || '76434';
     my @accession_ids = @$accession_idref;
-    my ($q, @result);
-
-    print STDERR "accession sql= @accession_ids \n";
-    print STDERR "protocol id= $protocol_id \n";
+    my ($q, @result, $protocol_name);
 
     if (@accession_ids) {
-      $q = "SELECT uniquename, value FROM (SELECT stock.uniquename, genotypeprop.value, row_number() over (partition by stock.uniquename order by genotypeprop.genotype_id) as rownum from genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.stock_id in (@{[join',', ('?') x @accession_ids]}) AND nd_experiment_protocol.nd_protocol_id=?) tmp WHERE rownum <2";
+      $q = "SELECT name, uniquename, value FROM (SELECT nd_protocol.name, stock.uniquename, genotypeprop.value, row_number() over (partition by stock.uniquename order by genotypeprop.genotype_id) as rownum from genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_protocol USING(nd_protocol_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE genotypeprop.type_id = ? AND stock.stock_id in (@{[join',', ('?') x @accession_ids]}) AND nd_experiment_protocol.nd_protocol_id=?) tmp WHERE rownum <2";
     }
-    print "QUERY: $q\n\n";
+    print STDERR "QUERY: $q\n\n";
 
     my $h = $self->dbh()->prepare($q);
-    $h->execute(@accession_ids,$protocol_id);
+    $h->execute($snp_genotype_id, @accession_ids,$protocol_id);
 
-    while (my ($uniquename,$genotype_string) = $h->fetchrow_array()) {
+
+    while (my($name,$uniquename,$genotype_string) = $h->fetchrow_array()) {
       push @result, [ $uniquename, $genotype_string ];
+      $protocol_name = $name;
     }
-    return \@result;
+    print STDERR "Protocol Name: $protocol_name\n";
+
+    return {
+      protocol_name => $protocol_name,
+      genotypes => \@result
+    };
 }
 
 

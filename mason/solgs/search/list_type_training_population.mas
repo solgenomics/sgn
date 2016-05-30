@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-population/user_reference_genotypes.mas - List-based trainining population section 
+/solgs/search/list_type_training_population.mas - template for list type training populations
 
 =AUTHOR
 
@@ -16,7 +16,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["solGS.userReferenceGenotypes"] &>
+<& /util/import_javascript.mas, classes => ["solGS.listTypeTrainingPopulation"] &>
 
  <div class="fileupload-buttonbar">
    
