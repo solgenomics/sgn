@@ -28,28 +28,10 @@ has "dependency_type" => (
      required => 1, 
  );
 
-has "r_script"   => (
-     is       => 'ro',
-     isa      => 'Str',
-     required => 0, 
- );
-
 has "dependent_type" => (
      is       => 'ro',
      isa      => 'Str',
     required  => 1,
- );
-
-has "script_args" => (
-     is       => 'ro',
-     isa      => 'ArrayRef',
-     required => 0, 
- );
-
-has "temp_dir" => (
-     is       => 'ro',
-     isa      => 'Str',
-     required => 1, 
  );
 
 has "temp_file_template" => (
@@ -62,6 +44,24 @@ has "analysis_report_args_file" => (
      is       => 'ro',
      isa      => 'Str',
      required => 1, 
+ );
+
+has "temp_dir" => (
+     is       => 'ro',
+     isa      => 'Str',
+     required => 1, 
+ );
+
+has "r_script"   => (
+     is       => 'ro',
+     isa      => 'Str',
+     required => 0, 
+ );
+
+has "script_args" => (
+     is       => 'ro',
+     isa      => 'ArrayRef',
+     required => 0, 
  );
 
 has "gs_model_args_file" => (
