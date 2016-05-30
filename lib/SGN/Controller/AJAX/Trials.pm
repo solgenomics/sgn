@@ -19,6 +19,24 @@ __PACKAGE__->config(
    );
 
 
+sub get_trials : Path('/ajax/breeders/get_trials') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
+
+    my $projects = $p->get_breeding_programs();
+
+    my %data = ();
+    foreach my $project (@$projects) { 
+        my $trials = $p->get_trials_by_breeding_program($project->[0]);
+        $data{$project->[1]} = $trials;
+
+    }
+
+    $c->stash->{rest} = \%data;
+}
+
 sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Args(0) { 
     my $self = shift;
     my $c = shift;
