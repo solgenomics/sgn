@@ -5040,8 +5040,8 @@ sub run_async {
 
     my $dependency            = $c->stash->{dependency};
     my $dependency_type       = $c->stash->{dependency_type};
-    my $background_job        = $c->stash->{background_job};
-    my $dependent_job         = $c->stash->{dependent_job};
+    #  my $background_job     = $c->stash->{background_job};
+    # my $dependent_job       = $c->stash->{dependent_job};
     my $temp_file_template    = $c->stash->{r_temp_file};  
     my $job_type              = $c->stash->{job_type};
     my $model_file            = $c->stash->{gs_model_args_file};

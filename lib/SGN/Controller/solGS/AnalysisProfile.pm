@@ -567,6 +567,12 @@ sub run_analysis {
 	#$c->controller('solGS::solGS')->get_combined_pops_list($c, $combo_pops_id);
 	$c->controller("solGS::combinedTrials")->prepare_multi_pops_data($c);	
 	
+	$c->stash->{dependency} = $c->stash->{prerequisite_jobs};
+	$c->stash->{dependency_type} = 'download_data';
+	$c->stash->{job_type}  = 'send_analysis_report';
+
+	$c->controller("solGS::solGS")->run_aync($c);
+
         #my $combined_pops_list = $c->controller("solGS::combinedTrials")->get_combined_pops_arrayref($c);
 	#$c->controller('solGS::solGS')->multi_pops_geno_files($c, $combined_pops_list);
 	#my $g_files = $c->stash->{multi_pops_geno_files};
