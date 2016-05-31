@@ -524,12 +524,12 @@ sub upload_trial_file_POST : Args(0) {
 	   upload_trial_file => $upload,
 	  });
 
-#  try {
-    $trial_create->save_trial();
- # } catch {
-#    $c->stash->{rest} = {error => "Error saving trial in the database $_"};
-#    $error = 1;
-#  };
+  try {
+      $trial_create->save_trial();
+  } catch {
+      $c->stash->{rest} = {error => "Error saving trial in the database $_"};
+      $error = 1;
+  };
   
   print STDERR "Check 5: ".localtime();
 

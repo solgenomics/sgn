@@ -13,6 +13,7 @@ use CXGN::BreedersToolbox::Delete;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use CXGN::Stock::StockLookup;
+use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -528,17 +529,25 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
     });
 
     my %message;
+#    eval {
+#	%message = $ct->save_trial();
+#    };
 
-    eval {
+#    if ($@ || exists($message{error})) {
+#	$c->stash->{rest} = {
+#	    error => "Error saving the trial. $@ $message{error}"
+#	};
+#	return;
+#   }
+
+
+    try {
 	%message = $ct->save_trial();
+    } catch {
+	$c->stash->{rest} = {error => "Error saving trial in the database $_"};
     };
 
-    if ($@ || exists($message{error})) {
-	$c->stash->{rest} = {
-	    error => "Error saving the trial. $@ $message{error}"
-	};
-	return;
-    }
+ 
     $c->stash->{rest} = {
 	message => "Successfully stored the trial.",
 	trial_id => $message{trial_id},

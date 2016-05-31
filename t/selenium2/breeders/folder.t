@@ -87,6 +87,8 @@ $t->while_logged_in_as("submitter", sub {
   sleep(2);
   
   my $move_folder = $t->find_element_ok("Folders", "partial_link_text", "go to folder tab")->click();
+
+  sleep(2);
   
   my $move_folder = $t->find_element_ok("move_folder_dialog_link", "id", "move folder")->click();
   

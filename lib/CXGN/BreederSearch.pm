@@ -149,8 +149,8 @@ sub refresh_matviews {
     return { error => 'Wizard update already in progress . . . ' };
   }
   else {
-    my $connect = "SELECT dblink_connect_u('dbname=".$self->dbname."')";
-    my $send_query = "SELECT dblink_send_query('SELECT refresh_materialized_views()')";
+    my $connect = "SELECT dblink_connect_u('async','dbname=".$self->dbname."')";
+    my $send_query = "SELECT dblink_send_query('async','SELECT refresh_materialized_views()')";
 
     $self->dbh->do($connect);
     $h = $self->dbh->do($send_query);

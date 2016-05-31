@@ -8,79 +8,80 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
-		      is => 'rw',
-		      required => 1,
-    );
+	is => 'rw',
+	required => 1,
+);
 
 has 'folder_id' => (isa => "Int",
-		    is => 'rw',
-    );
+	is => 'rw',
+);
 
 has 'children' => (is => 'rw',
-		   lazy => 1,
-		   default => sub {
-		       my $self = shift;
-		       $self->_get_children();
-		   });
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		$self->_get_children();
+	}
+);
 
 has 'is_folder' => (isa => 'Bool',
-		    is => 'rw',
-		    default => 0,
-    );
+	is => 'rw',
+	default => 0,
+);
 
 has 'folder_type' => (isa => 'Str',
-		      is => 'rw',
-    );
+	is => 'rw',
+);
 
 has 'name' => (isa => 'Str',
-	       is => 'rw',
-	       default => 'Untitled',
-    );
+	is => 'rw',
+	default => 'Untitled',
+);
 
 has 'breeding_program_trial_relationship_id' =>  (isa => 'Int',
-						  is => 'rw',
-		);
+	is => 'rw',
+);
 
 has 'project_parent' => (isa => 'Bio::Chado::Schema::Result::Project::Project',
-			  is => 'rw',
-    );
+	is => 'rw',
+);
 
 has 'breeding_program' => (isa => 'Bio::Chado::Schema::Result::Project::Project',
-			  is => 'rw',
-    );
+	is => 'rw',
+);
 
 has 'breeding_program_cvterm_id' => (isa => 'Int',
-				     is => 'rw',
-    );
+	is => 'rw',
+);
 
 has 'folder_cvterm_id' => (isa => 'Int',
-			 is => 'rw',
-			 );
+	is => 'rw',
+);
 
 
 sub BUILD {
-    my $self = shift;
+	my $self = shift;
 
-    my $row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=>$self->folder_id() });
+	my $row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=>$self->folder_id() });
 
-    if (!$row) {
-	die "The specified folder with id ".$self->folder_id()." does not exist!";
-    }
+	if (!$row) {
+		die "The specified folder with id ".$self->folder_id()." does not exist!";
+	}
 
-    $self->name($row->name());
+	$self->name($row->name());
 
-		my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program', 'project_property')->cvterm_id();
-    $self->breeding_program_cvterm_id($breeding_program_type_id);
+	my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program', 'project_property')->cvterm_id();
+	$self->breeding_program_cvterm_id($breeding_program_type_id);
 
-    my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
-		$self->folder_cvterm_id($folder_cvterm_id);
+	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
+	$self->folder_cvterm_id($folder_cvterm_id);
 
-		my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
-		$self->breeding_program_trial_relationship_id($breeding_program_trial_relationship_id);
+	my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
+	$self->breeding_program_trial_relationship_id($breeding_program_trial_relationship_id);
 
-    my $folder_type = $self->bcs_schema()->resultset('Project::Projectprop')-> search( { project_id => $self->folder_id() });
+	my $folder_type = $self->bcs_schema()->resultset('Project::Projectprop')-> search( { project_id => $self->folder_id() });
 
-    while (my $folder_type_row = $folder_type->next) {
+	while (my $folder_type_row = $folder_type->next) {
 		if ($folder_type_row->type_id() == $self->folder_cvterm_id() ) {
 			$self->folder_type("folder");
 			$self->is_folder(1);
@@ -91,22 +92,35 @@ sub BUILD {
 		}
 	}
 
-		if (!$self->folder_type) {
-				$self->folder_type("trial");
+	if (!$self->folder_type) {
+		my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross',  'stock_type')->cvterm_id;
+		
+		my $trial_type_rs = $self->bcs_schema->resultset("Project::Project")->search({ 'me.project_id' => $self->folder_id })->search_related('projectprops');
+		while (my $tt = $trial_type_rs->next()) {
+			if ($tt->type_id == $cross_cvterm_id) {
+				$self->folder_type("cross");
+			} elsif ($tt->value eq 'genotyping_plate') {
+				$self->folder_type("genotyping_trial");
+			}
 		}
+		
+		if (!$self->folder_type) {
+			$self->folder_type("trial");
+		}
+	}
 
-    my $breeding_program_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( { subject_project_id => $self->folder_id(), type_id =>  $self->breeding_program_trial_relationship_id() });
-    if ($breeding_program_rel_row) {
-				my $parent_row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=> $breeding_program_rel_row->object_project_id() });
-				$self->project_parent($parent_row);
-				$self->breeding_program($parent_row);
-    }
+	my $breeding_program_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( { subject_project_id => $self->folder_id(), type_id =>  $self->breeding_program_trial_relationship_id() });
+	if ($breeding_program_rel_row) {
+		my $parent_row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=> $breeding_program_rel_row->object_project_id() });
+		$self->project_parent($parent_row);
+		$self->breeding_program($parent_row);
+	}
 
-    my $folder_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( { subject_project_id => $self->folder_id(), type_id =>  $self->folder_cvterm_id() });
-    if ($folder_rel_row) {
-				my $parent_row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=> $folder_rel_row->object_project_id() });
-				$self->project_parent($parent_row);
-    }
+	my $folder_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find( { subject_project_id => $self->folder_id(), type_id =>  $self->folder_cvterm_id() });
+	if ($folder_rel_row) {
+		my $parent_row = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=> $folder_rel_row->object_project_id() });
+		$self->project_parent($parent_row);
+	}
 
 }
 
@@ -181,37 +195,32 @@ sub list {
 # return a resultset with children of the folder
 #
 sub _get_children {
-    my $self = shift;
+	my $self = shift;
 
-    my @children;
+	my @children;
 
-    my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_subject_projects', { object_project_id => $self->folder_id() }, { order_by => 'me.name' });
+	my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_subject_projects', { object_project_id => $self->folder_id() }, { order_by => 'me.name' });
 
-    @children = map { $_->subject_project_id() } $rs->all();
+	@children = map { $_->subject_project_id() } $rs->all();
 
-    my @child_folders;
-    foreach my $id (@children) {
-	my $folder = CXGN::Trial::Folder->new( { bcs_schema=> $self->bcs_schema(), folder_id=>$id });
+	my @child_folders;
+	foreach my $id (@children) {
+		my $folder = CXGN::Trial::Folder->new( { bcs_schema=> $self->bcs_schema(), folder_id=>$id });
 
-	# if the parent is a breeding program, don't
-	# push children that have other parents
-	#
-
-	if ($self->folder_type() eq "breeding_program") {
-		if ($folder->project_parent()) {
-	    if ($folder->project_parent()->name() eq $self->name()) {
-				#print STDERR "Pushing ".$folder->name()."\n";
-				push @child_folders, $folder;
-	    }
+		if ($self->folder_type() eq "breeding_program") {
+			if ($folder->project_parent()) {
+				if ($folder->project_parent()->name() eq $self->name()) {
+					#print STDERR "Pushing ".$folder->name().$folder->folder_type."\n";
+					push @child_folders, $folder;
+				}
+			}
+		} else {
+			#print STDERR "parent is not a breeding program... pushing ".$folder->name().$folder->folder_type."...\n";
+			push @child_folders, $folder;
 		}
 	}
-	else {
-	    #print STDERR "parent is not a breeding program... pushing ".$folder->name()."...\n";
-	    push @child_folders, $folder;
-	}
-    }
 
-    return \@child_folders;
+	return \@child_folders;
 }
 
 sub associate_parent {
@@ -360,27 +369,30 @@ sub remove_child {
 }
 
 sub get_jstree_html {
-    my $self = shift;
-    my $parent_type = shift;
+	my $self = shift;
+	my $parent_type = shift;
 
-    my $html = "";
+	my $html = "";
 
-    $html .= $self->_jstree_li_html($parent_type, $self->folder_id(), $self->name());
-    $html .= "<ul>";
-    my $children = $self->children();
+	$html .= $self->_jstree_li_html($parent_type, $self->folder_id(), $self->name());
+	$html .= "<ul>";
+	my $children = $self->children();
 
-    if (@$children > 0) {
-	foreach my $child (@$children) {
-	    if ($child->is_folder()) {
-		$html .= $child->get_jstree_html('folder');
-	    }
-	    else {
-		$html .= $self->_jstree_li_html('trial', $child->folder_id(), $child->name())."</li>";
-	    }
+	if (@$children > 0) {
+		foreach my $child (@$children) {
+			if ($child->is_folder()) {
+				$html .= $child->get_jstree_html('folder');
+			}
+			else {
+				#Only display "trial" types.
+				if ($child->folder_type eq 'trial') {
+					$html .= $self->_jstree_li_html($child->folder_type(), $child->folder_id(), $child->name())."</li>";
+				}
+			}
+		}
 	}
-    }
-    $html .= '</ul></li>';
-    return $html;
+	$html .= '</ul></li>';
+	return $html;
 }
 
 sub _jstree_li_html {

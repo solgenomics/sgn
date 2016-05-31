@@ -4,13 +4,13 @@ package CXGN::Trial::Download::Plugin::DataCollectorExcel;
 use Moose::Role;
 use utf8;
 
-sub verify { 
+sub verify {
     my $self = shift;
     return 1;
 }
 
 
-sub download { 
+sub download {
     my $self = shift;
 
     my $schema = $self->bcs_schema();
@@ -22,9 +22,9 @@ sub download {
     my $design = $trial_layout->get_design();
 
     if (! $design) {
-	return "No design found for this trial.";
+	     return { error => "No design found for this trial. A trial design must exist in order to create this file"};
     }
-	
+
     my %design = %{$trial_layout->get_design()};
     my @plot_names = @{$trial_layout->get_plot_names};
 
@@ -37,7 +37,7 @@ sub download {
     my $ws6 = $workbook->add_worksheet("Crop_management");
     my $ws7 = $workbook->add_worksheet("Var List");
     my $ws = $workbook->add_worksheet("Field Book");
-	
+
     my $bold = $workbook->add_format();
     $bold->set_bold();
 
@@ -56,7 +56,7 @@ sub download {
     $ws1->write(15, 0, 'Admin1'); $ws1->write(16, 0, 'Admin2');
     $ws1->write(17, 0, 'Admin3'); $ws1->write(18, 0, 'Locality');
     $ws1->write(19, 0, 'Elevation'); $ws1->write(20, 0, 'Latitude');
-    $ws1->write(21, 0, 'Longitude'); 
+    $ws1->write(21, 0, 'Longitude');
     $ws1->write(22, 0, 'Owner'); $ws1->write(22, 1, 'International Potato Center');
     $ws1->write(23, 0, 'Publisher'); $ws1->write(23, 1, 'International Potato Center');
     $ws1->write(24, 0, 'Type'); $ws1->write(24, 1, 'dataset');
@@ -77,7 +77,7 @@ sub download {
     #
     $ws2->write(0, 0, 'Factor', $bold); $ws2->write(0, 1, 'Value', $bold);
     $ws2->write(1, 0, 'Experimental design'); $ws2->write(1, 1, 'Randomized Complete Block Design (RCBD)');
-    $ws2->write(2, 0, 'Genetic design'); 
+    $ws2->write(2, 0, 'Genetic design');
     $ws2->write(3, 0, 'Labels for factor genotypes'); $ws2->write(3, 1, 'Institutional number');
     $ws2->write(4, 0, 'Number of repetitions or blocks'); $ws2->write(4, 1, '2');
     $ws2->write(5, 0, 'Block size (applicable for BIBD only)');
@@ -89,7 +89,7 @@ sub download {
     $ws2->write(11, 0, 'Distance between plants (m)'); $ws2->write(11, 1, '0.3');
     $ws2->write(12, 0, 'Distance between rows (m)'); $ws2->write(12, 1, '0.9');
     $ws2->write(13, 0, 'Planting density (plants/Ha)'); $ws2->write(13, 1, '37,037');
-    $ws2->write(14, 0, 'Row direction'); 
+    $ws2->write(14, 0, 'Row direction');
     $ws2->write(15, 0, 'Planting mode');
     $ws2->write(16, 0, 'Area of the experiment'); $ws2->write(17, 0, 'Additional factor name');
     $ws2->write(18, 0, 'Labels for additional factor, level 1'); $ws2->write(19, 0, 'Labels for additional factor, level 2');
@@ -184,7 +184,7 @@ sub download {
     $ws6->write(0, 2, 'Date', $bold); $ws6->write(0, 3, 'Operator', $bold);
     $ws6->write(0, 4, 'Observations', $bold); $ws6->write(0, 5, 'Active Ingredient', $bold);
     $ws6->write(0, 6, 'Product concentration ', $bold); $ws6->write(0, 7, 'Dose of application', $bold);
-    $ws6->write(0, 8, 'Uncertainty of Measurement', $bold); 
+    $ws6->write(0, 8, 'Uncertainty of Measurement', $bold);
     $ws6->write(1, 0, 'Preparation'); $ws6->write(1, 1, 'Planting');
     $ws6->write(2, 0, 'Harvest '); $ws6->write(2, 1, 'Vine cutting / killing');
     $ws6->write(3, 0, 'Harvest'); $ws6->write(3, 1, 'Harvest');
@@ -271,7 +271,7 @@ sub download {
 
     # generate worksheet headers
     #
-    
+
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
    #$ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
    #$ws->write(0, 2, 'Spreadsheet format'); $ws->write(0, 3, "BasicExcel");
@@ -331,14 +331,14 @@ sub download {
     # write traits and format trait columns
     #
     my $lt = CXGN::List::Transform->new();
-    
+
     my $transform = $lt->transform($schema, "traits_2_trait_ids", \@trait_list);
 
     if (@{$transform->{missing}}>0) { 
         print STDERR "Warning: Some traits could not be found. ".join(",",@{$transform->{missing}})."\n";
     }
     my @trait_ids = @{$transform->{transform}};
-    
+
     my %cvinfo = ();
     foreach my $t (@trait_ids) { 
         my $trait = CXGN::Trait->new( { bcs_schema=> $schema, cvterm_id => $t });
@@ -372,7 +372,8 @@ sub download {
         }
     }
     $workbook->close();
-    
+    print STDERR "DataCollector File created!\n";
+    return { message => "DataCollector File created!"};
 }
-    
+
 1;

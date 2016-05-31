@@ -455,13 +455,19 @@ sub get_trait_id {
 
     if ($trait) 
     {
-        my $trait_id = $self->schema->resultset('Cv::Cvterm')
-            ->search( {name => $trait})
-            ->single
-            ->id;
+        my $trait_rs = $self->schema->resultset('Cv::Cvterm')
+            ->search({name => $trait});
 
-        return $trait_id;
-    }
+	if ($trait_rs->single)
+	{
+         return $trait_rs->single->id;
+	}
+	else
+	{
+	    return;
+	} 
+   }
+
 }
 
 

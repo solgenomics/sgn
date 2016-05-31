@@ -142,10 +142,16 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $name = $c->req->param("name") || "html_trial_select";
     my @trials;
     foreach my $project (@$projects) {
-      my $t = $p->get_trials_by_breeding_program($project->[0]);
-      foreach (@$t) {
+      my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+      foreach (@$field_trials) {
           push @trials, $_;
       }
+      #foreach (@$cross_trials) {
+        #  push @trials, $_;
+      #}
+      #foreach (@$genotyping_trials) {
+        #  push @trials, $_;
+      #}
     }
 
     #print STDERR Dumper \@trials;

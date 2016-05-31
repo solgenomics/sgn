@@ -22,6 +22,7 @@ use DateTime;
 use File::Slurp;
 use File::Spec::Functions;
 use File::Copy;
+use File::Basename;
 use List::MoreUtils qw /any /;
 use SGN::View::ArrayElements qw/array_elements_simple_view/;
 use CXGN::Stock::StockTemplate;
@@ -41,7 +42,7 @@ __PACKAGE__->config(
 
 sub create_DataCollector_spreadsheet :  Path('/ajax/phenotype/create_DataCollector') : ActionClass('REST') { }
 
-sub create_DataCollector_spreadsheet_GET : Args(0) { 
+sub create_DataCollector_spreadsheet_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     $c->forward('create_DataCollector_spreadsheet_POST');
@@ -65,30 +66,37 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
   }
   
   my @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
-  my $dir = $c->tempfiles_subdir('/download');
-  my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
-  my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
- 
-  my $create_spreadsheet = CXGN::Trial::Download->new( 
-      { 
+  my $dir = $c->tempfiles_subdir('download');
+  my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/'.$format.'_'.$trial_id.'_'.'XXXXX');
+  my $file_path = $c->config->{basepath}."/".$tempfile.".xls";
+  close($fh);
+  move($tempfile, $file_path);
+
+  my $create_spreadsheet = CXGN::Trial::Download->new(
+      {
 	  bcs_schema => $schema,
 	  trial_id => $trial_id,
 	  trait_list => \@trait_list,
-	  filename => $tempfile,
+	  filename => $file_path,
 	  format => $format,
       data_level => $data_level,
       });
 
-      $create_spreadsheet->download();
+  my $spreadsheet_response = $create_spreadsheet->download();
 
-    print STDERR "DOWNLOAD FILENAME = ".$create_spreadsheet->filename()."\n";
-    print STDERR "RELATIVE  = $rel_file\n";
+  if ($spreadsheet_response->{error}) {
+    print STDERR "Returning with error . . .\n";
+    $c->stash->{rest} = { error => $spreadsheet_response->{error} };
+    return;
+  }
 
-#if ($error) { 
-#$c->stash->{rest} = { error => $error };
-#return;
-#}
-    $c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
+  print STDERR "DOWNLOAD FILENAME = ".$create_spreadsheet->filename()."\n";
+  print STDERR "RELATIVE  = $tempfile\n";
+
+  my $file_name = basename($file_path);
+  print STDERR "file name= $file_name\n";
+
+  $c->stash->{rest} = { filename => $urlencode{$tempfile.".xls"} };
 
 }
 
