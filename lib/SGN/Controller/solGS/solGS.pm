@@ -5041,15 +5041,15 @@ sub create_cluster_acccesible_tmp_files {
 sub run_async {
     my ($self, $c) = @_;    
 
-    my $dependency            = $c->stash->{dependency};
-    my $dependency_type       = $c->stash->{dependency_type};
-    my $background_job        = $c->stash->{background_job};
-    my $dependent_job         = $c->stash->{dependent_job};
-    my $temp_file_template    = $c->stash->{r_temp_file};  
-    my $job_type              = $c->stash->{job_type};
-    my $model_file            = $c->stash->{gs_model_args_file};
-    my $combine_pops_job_id   = $c->stash->{combine_pops_job_id};
-    my $solgs_tmp_dir         = "'" . $c->stash->{solgs_tempfiles_dir} . "'";
+    my $dependency          = $c->stash->{dependency};
+    my $dependency_type     = $c->stash->{dependency_type};
+    my $background_job      = $c->stash->{background_job};
+    my $dependent_job       = $c->stash->{dependent_job};
+    my $temp_file_template  = $c->stash->{r_temp_file};  
+    my $job_type            = $c->stash->{job_type};
+    my $model_file          = $c->stash->{gs_model_args_file};
+    my $combine_pops_job_id = $c->stash->{combine_pops_job_id};
+    my $solgs_tmp_dir       = "'" . $c->stash->{solgs_tempfiles_dir} . "'";
   
     my $r_script      = $c->stash->{r_commands_file};
     my $r_script_args =  $c->stash->{r_script_args};
@@ -5058,11 +5058,8 @@ sub run_async {
     {
 	$dependency = $combine_pops_job_id;       
     }
-
-    if ($dependency =~ /^:/)
-    {    
-	$dependency =~ s/://;
-    }
+  
+    $dependency =~ s/^://;
 
     my $script_args;
     foreach my $arg (@$r_script_args) 
@@ -5074,16 +5071,20 @@ sub run_async {
     my $report_file = $self->create_tempfile($c, 'analysis_report_args');
     $c->stash->{report_file} = $report_file;
 
-    my $cmd = 'mx-run solGS::DependentJob' 
-    	. ' --dependency_jobs '           . $dependency
+    my $cmd = 'mx-run solGS::DependentJob'
+	. ' --dependency_jobs '           . $dependency
     	. ' --dependency_type '           . $dependency_type
-    	. ' --r_script '                  . $r_script 
-    	. ' --script_args '               . $script_args
-    	. ' --temp_dir '                  . $solgs_tmp_dir
+	. ' --temp_dir '                  . $solgs_tmp_dir
     	. ' --temp_file_template '        . $temp_file_template
     	. ' --analysis_report_args_file ' . $report_file
-    	. ' --gs_model_args_file '        . $model_file
-    	. ' --dependent_type '            . $job_type;
+	. ' --dependent_type '            . $job_type;
+
+     if ($r_script) 
+     {
+	 $cmd .= ' --r_script '          . $r_script 
+	     .  ' --script_args '        . $script_args 
+	     .  ' --gs_model_args_file ' . $model_file;	
+     }
 
     $c->stash->{r_temp_file} = 'run-async';
     $self->create_cluster_acccesible_tmp_files($c);
