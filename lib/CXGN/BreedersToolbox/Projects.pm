@@ -111,7 +111,9 @@ sub _get_all_trials_by_breeding_program {
 sub get_trials_by_breeding_program {
     my $self = shift;
     my $breeding_project_id = shift;
-    my $trials;
+    my $field_trials;
+    my $cross_trials;
+    my $genotyping_trials;
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
     my $cross_cvterm_id = $self->get_cross_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
@@ -134,6 +136,8 @@ sub get_trials_by_breeding_program {
       if ($prop) {
 	if ($prop == $cross_cvterm_id) {
 	  $projects_that_are_crosses{$id} = 1;
+	  $project_year{$id} = '';
+	  #print STDERR Dumper "Cross Trial: ".$name;
 	}
 	if ($prop == $project_year_cvterm_id) {
 	  $project_year{$id} = $propvalue;
@@ -142,6 +146,7 @@ sub get_trials_by_breeding_program {
 	if ($propvalue eq "genotyping_plate") {
 	    #print STDERR "$id IS GENOTYPING TRIAL\n";
 	    $projects_that_are_genotyping_trials{$id} =1;
+		#print STDERR Dumper "Genotyping Trial: ".$name;
 	}
 	}
       }
@@ -151,13 +156,17 @@ sub get_trials_by_breeding_program {
     my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
 
     foreach my $id_key (@sorted_by_year_keys) {
-	if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key}) {
-	    #print STDERR "$id_key RETAINED.\n";
-	    push @$trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
-	}
+		if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key}) {
+			#print STDERR "$id_key RETAINED.\n";
+			push @$field_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+		} elsif ($projects_that_are_crosses{$id_key} == 1) {
+			push @$cross_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+		} elsif ($projects_that_are_genotyping_trials{$id_key} == 1) {
+			push @$genotyping_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+		}
     }
 
-    return $trials;
+    return ($field_trials, $cross_trials, $genotyping_trials);
 }
 
 sub get_genotyping_trials_by_breeding_program {
