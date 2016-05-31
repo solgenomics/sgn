@@ -26,6 +26,7 @@ use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
 use Data::Dumper;
+use SGN::Model::Cvterm;
 
 has 'schema' => (
 		 is       => 'rw',
