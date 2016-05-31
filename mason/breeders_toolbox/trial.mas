@@ -458,7 +458,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
     The field book layout file was saved successfully
   </p>
   <p>
-    <a id="tablet_layout_download_link">Download File</a>
+    <a id="tablet_layout_download_link">Go To Download File</a>
   </p>
 </div>
 
