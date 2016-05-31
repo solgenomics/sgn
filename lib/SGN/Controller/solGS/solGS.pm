@@ -3984,8 +3984,11 @@ sub create_trait_data {
         
 	my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
        
-	$table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";  	
-    }
+	if ($trait_id)
+	{
+	    $table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";  	
+	} 
+   }
 
     $self->all_traits_file($c);
     my $traits_file =  $c->stash->{all_traits_file};
