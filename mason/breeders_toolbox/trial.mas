@@ -3,7 +3,7 @@
 
 =head1 NAME
 
-/breeders/trial.mas - a mason component to display a trial detail page
+/breeders_toolbox/trial.mas - a mason component to display a trial detail page
 
 =head1 AUTHOR
 
@@ -48,7 +48,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
-print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
+#print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
 
 </%perl>
 
@@ -465,7 +465,7 @@ print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
     The field book layout file was saved successfully
   </p>
   <p>
-    <a id="tablet_layout_download_link">Download File</a>
+    <a id="tablet_layout_download_link">Go To Download File</a>
   </p>
 </div>
 

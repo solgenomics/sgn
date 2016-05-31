@@ -42,6 +42,7 @@ has 'trait_accession' => (
 
 sub get_trait_info {
   my $self = shift;
+	my $trait_name = shift;
   my $chado_schema = $self->get_chado_schema();
   my $trait_info_string;
 
@@ -64,7 +65,7 @@ sub get_trait_info {
 
 
   if (!$trait_cvterm) {
-    print STDERR "Could not find trait name: ".$self->get_trait_name()."\n";
+    print STDERR "Could not find trait name: ".$trait_name."\n";
     return;
   }
 
@@ -75,7 +76,7 @@ sub get_trait_info {
 
   my %trait_props;
   #set default values
-  $trait_props{'trait_format'}='text';
+  $trait_props{'trait_format'}='numeric';
   $trait_props{'trait_default_value'}='';
   $trait_props{'trait_minimum'}='';
   $trait_props{'trait_maximum'}='';
@@ -83,7 +84,30 @@ sub get_trait_info {
   $trait_props{'trait_categories'}='';
 
 
+	print STDERR "trait name = $trait_name\n";
+	# change from default numeric based on trait name
+	if ($trait_name =~ m/percent/) {
+		$trait_props{'trait_format'}='percent';
+		$trait_props{'trait_minimum'}='0';
+		$trait_props{'trait_maximum'}='100';
+		$trait_props{'trait_default_value'}='50';
+	}
+	elsif ($trait_name =~ m/counting/) {
+		$trait_props{'trait_format'}='counter';
+	}
+	elsif ($trait_name =~ m/([0-9])-([0-9])/) {
+		print STDERR "matched categorical trait\n";
+		$trait_props{'trait_format'}='categorical';
+		my $categories;
+		foreach (my $i=$1; $i < $2; $i++ ) {
+			$categories .= $i . "/";
+		}
+		$categories .= $2;
+		print STDERR "categories = $categories\n";
+		$trait_props{'trait_categories'}= $categories;
+	}
 
+	#change from default numeric based on properties stored in the database
   foreach my $property_name (keys %{$cvterms}) {
     my $prop_cvterm = $cvterms->{$property_name};
     my $prop = $cvtermprops->find({'type_id' => $prop_cvterm->cvterm_id()});

@@ -106,7 +106,7 @@ function new_trial_folder() {
       } else {
         alert("Successfully created new folder.");
         jQuery('#new_folder_dialog').modal("hide");
-        location.reload();
+        //location.reload();
       }
     },
     error: function(response) {
