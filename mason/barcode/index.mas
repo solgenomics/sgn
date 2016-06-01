@@ -17,39 +17,6 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 <& /page/page_title.mas, title=>"Barcode Tools" &>
 
-<&| /page/info_section.mas, title=>"Barcode Tools", collapsible=>1, collapsed=>0 &>
-
-<div class="well well-sm">
-<div class="row">
-  <div class="col-md-1 col-lg-1">
-  </div>
-  <div class="col-md-10 col-lg-10">
-<& /barcode/tool/list.mas, tools_def=>\@tools_def &>
-  </div>
-  <div class="col-md-1 col-lg-1">
-  </div>
-</div>
-</div>
-
-</&>
-
-<&| /page/info_section.mas, title=>"Procedural Tools", collapsible=>1, collapsed=>1 &>
-
-<div class="well well-sm">
-<div class="row">
-  <div class="col-md-1 col-lg-1">
-  </div>
-  <div class="col-md-10 col-lg-10">
-<a href="/barcode/tool/cross"><p>Cross Tool</p></a>
-<a href="/barcode/tool/dna"><p>DNA Extraction Tool</p></a>
-  </div>
-  <div class="col-md-1 col-lg-1">
-  </div>
-</div>
-</div>
-
-</&>
-
 
 
 %#<&| /page/info_section.mas, title=>'Generate Metadata Barcode', collapsible=>1, %#collapsed=>0 &>
@@ -71,38 +38,38 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 %#</&>
 
-<&| /page/info_section.mas, title=>'Excel Sheet Download',  collapsible=>1, collapsed=>0 &>
+%#<&| /page/info_section.mas, title=>'Excel Sheet Download',  collapsible=>1, collapsed=>0 &>
 
-<div class="well well-sm">
-<div class="row">
-  <div class="col-md-1 col-lg-1">
-  </div>
-  <div class="col-md-10 col-lg-10">
-<& /barcode/excel_download.mas, locations=>\@locations, projects=>\@projects, available_cvterms => \@tools_def  &>
-  </div>
-  <div class="col-md-1 col-lg-1">
-  </div>
-</div>
-</div>
+%#<div class="well well-sm">
+%#<div class="row">
+%#  <div class="col-md-1 col-lg-1">
+%#  </div>
+%#  <div class="col-md-10 col-lg-10">
+%#<& /barcode/excel_download.mas, locations=>\@locations, projects=>\@projects, available_cvterms => \@tools_def  &>
+%#  </div>
+%#  <div class="col-md-1 col-lg-1">
+%#  </div>
+%#</div>
+%#</div>
 
-</&>
+%#</&>
 
 
-<&| /page/info_section.mas, title=>'Metadata &amp; Multibarcode Tool', collapsible=>1, collapsed=>0 &>
+%#<&| /page/info_section.mas, title=>'Metadata &amp; Multibarcode Tool', collapsible=>1, collapsed=>0 &>
 
-<div class="well well-sm">
-<div class="row">
-  <div class="col-md-1 col-lg-1">
-  </div>
-  <div class="col-md-10 col-lg-10">
-  <& /barcode/multi_tool_input.mas, locations=>\@locations, projects=>\@projects, available_cvterms => \@tools_def &>
-  </div>
-  <div class="col-md-1 col-lg-1">
-  </div>
-</div>
-</div>
+%#<div class="well well-sm">
+%#<div class="row">
+%#  <div class="col-md-1 col-lg-1">
+%#  </div>
+%#  <div class="col-md-10 col-lg-10">
+%#  <& /barcode/multi_tool_input.mas, locations=>\@locations, projects=>\@projects, available_cvterms => \@tools_def &>
+%#  </div>
+%#  <div class="col-md-1 col-lg-1">
+%#  </div>
+%#</div>
+%#</div>
 
-</&>
+%#</&>
 
 
 %#<&| /page/info_section.mas, title=>'Generate Continuous Barcode', collapsible=>1, collapsed=>1 &>
