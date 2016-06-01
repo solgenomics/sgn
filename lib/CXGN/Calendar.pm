@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-CXGN::Calendar - helper class for trials
+CXGN::Calendar - helper class for calendar
 
 =head1 SYNOPSYS
 
@@ -317,7 +317,7 @@ sub display_description {
 }
 
 #Takes an event string, which is the value stored in the database for events, and returns the url.
-sub display_description {
+sub display_url {
     my $self = shift;
     my $value = shift;
 
