@@ -149,8 +149,8 @@ sub refresh_matviews {
     return { error => 'Wizard update already in progress . . . ' };
   }
   else {
-    my $connect = "SELECT dblink_connect_u('dbname=".$self->dbname."')";
-    my $send_query = "SELECT dblink_send_query('SELECT refresh_materialized_views()')";
+    my $connect = "SELECT dblink_connect_u('async','dbname=".$self->dbname."')";
+    my $send_query = "SELECT dblink_send_query('async','SELECT refresh_materialized_views()')";
 
     $self->dbh->do($connect);
     $h = $self->dbh->do($send_query);
@@ -218,8 +218,7 @@ sub get_phenotype_info {
     }
 
     my $order_clause = " order by project.name, plot.uniquename";
-
-    my $q = "SELECT projectprop.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, db.name ||  ':' || dbxref.accession AS accession, stockprop.value, block_number.value AS rep
+    my $q = "SELECT projectprop.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, db.name ||  ':' || dbxref.accession AS accession, stockprop.value, block_number.value AS rep, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, stock.stock_id, plot.stock_id
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
              JOIN stock ON (object_id=stock.stock_id)
              LEFT JOIN stockprop ON (plot.stock_id=stockprop.stock_id)
@@ -238,15 +237,16 @@ sub get_phenotype_info {
              $where_clause
              $order_clause";
 
-    print STDERR "QUERY: $q\n\n";
+    #print STDERR "QUERY: $q\n\n";
     my $h = $self->dbh()->prepare($q);
     $h->execute();
 
     my $result = [];
-    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number) = $h->fetchrow_array()) {
-	push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number ];
+    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id) = $h->fetchrow_array()) {
+	push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id ];
 
     }
+    #print STDERR Dumper $result;
     print STDERR "QUERY returned ".scalar(@$result)." rows.\n";
     return $result;
 }
@@ -258,6 +258,7 @@ sub get_phenotype_info_matrix {
     my $trait_sql = shift;
 
     my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
+    #data contains [$year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id]
 
     my %plot_data;
     my %traits;
@@ -290,7 +291,7 @@ sub get_phenotype_info_matrix {
 
 	foreach my $trait (@sorted_traits) {
 	    my $tab = $plot_data{$plot}->{$trait}; # ? "\t".$plot_data{$plot}->{$trait} : "\t";
-	    $line .= $tab ? "\t".$tab : "\t";
+	    $line .= defined($tab) ? "\t".$tab : "\t";
 
 	}
 	push @info, $line;
@@ -306,6 +307,7 @@ sub get_extended_phenotype_info_matrix {
     my $trait_sql = shift;
 
     my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
+    #data contains [$year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id]
 
     my %plot_data;
     my %traits;
@@ -313,28 +315,32 @@ sub get_extended_phenotype_info_matrix {
     print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
     foreach my $d (@$data) {
 
-	my ($year, $project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep, $block_number) = @$d;
+	my ($year, $project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id) = @$d;
 
 	my $cvterm = $d->[4]."|".$d->[8];
 	if (!defined($rep)) { $rep = ""; }
 	$plot_data{$plot}->{$cvterm} = $trait_data;
 	$plot_data{$plot}->{metadata} = {
 	    rep => $rep,
-	    trial_name => $project_name,
-	    accession => $stock_name,
-	    location => $location,
-	    block_number => $block_number,
-	    plot => $plot,
-	    rep => $rep,
+	    studyName => $project_name,
+	    germplasmName => $stock_name,
+	    locationName => $location,
+	    blockNumber => $block_number,
+	    plotName => $plot,
 	    cvterm => $cvterm,
 	    trait_data => $trait_data,
-	    year => $year
+	    year => $year,
+      cvterm_id => $trait_id,
+      studyDbId => $project_id,
+      locationDbId => $location_id,
+      germplasmDbId => $stock_id,
+      plotDbId => $plot_id
 	};
 	$traits{$cvterm}++;
     }
 
     my @info = ();
-    my $line = join "\t", qw | year trial_name location accession plot rep block_number |;
+    my $line = join "\t", qw | studyYear studyDbId studyName locationDbId locationName germplasmDbId germplasmName plotDbId plotName rep blockNumber |;
 
     # generate header line
     #
@@ -358,17 +364,16 @@ sub get_extended_phenotype_info_matrix {
 	$previous_plot = $plot;
     }
 
-
     foreach my $p (@unique_plot_list) {
-	$line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "year", "trial_name", "location", "accession", "plot", "rep", "block_number" );
-	print STDERR "Adding line for plot $p\n";
-	foreach my $trait (@sorted_traits) {
-	    my $tab = $plot_data{$p}->{$trait};
+      #$line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "year", "trial_name", "location", "accession", "plot", "rep", "block_number" );
+      $line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "year", "studyDbId", "studyName", "locationDbId", "locationName", "germplasmDbId", "germplasmName", "plotDbId", "plotName", "rep", "blockNumber" );
 
-	    $line .= $tab ? "\t".$tab : "\t";
-
-	}
-	push @info, $line;
+      #print STDERR "Adding line for plot $p\n";
+      foreach my $trait (@sorted_traits) {
+        my $tab = $plot_data{$p}->{$trait};
+        $line .= defined($tab) ? "\t".$tab : "\t";
+      }
+      push @info, $line;
     }
 
     return @info;
@@ -389,24 +394,29 @@ sub get_genotype_info {
     my $self = shift;
     my $accession_idref = shift;
     my $protocol_id = shift;
+    my $snp_genotype_id = shift || '76434';
     my @accession_ids = @$accession_idref;
-    my ($q, @result);
-
-    print STDERR "accession sql= @accession_ids \n";
-    print STDERR "protocol id= $protocol_id \n";
+    my ($q, @result, $protocol_name);
 
     if (@accession_ids) {
-      $q = "SELECT uniquename, value FROM (SELECT stock.uniquename, genotypeprop.value, row_number() over (partition by stock.uniquename order by genotypeprop.genotype_id) as rownum from genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.stock_id in (@{[join',', ('?') x @accession_ids]}) AND nd_experiment_protocol.nd_protocol_id=?) tmp WHERE rownum <2";
+      $q = "SELECT name, uniquename, value FROM (SELECT nd_protocol.name, stock.uniquename, genotypeprop.value, row_number() over (partition by stock.uniquename order by genotypeprop.genotype_id) as rownum from genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_protocol USING(nd_protocol_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE genotypeprop.type_id = ? AND stock.stock_id in (@{[join',', ('?') x @accession_ids]}) AND nd_experiment_protocol.nd_protocol_id=?) tmp WHERE rownum <2";
     }
-    print "QUERY: $q\n\n";
+    print STDERR "QUERY: $q\n\n";
 
     my $h = $self->dbh()->prepare($q);
-    $h->execute(@accession_ids,$protocol_id);
+    $h->execute($snp_genotype_id, @accession_ids,$protocol_id);
 
-    while (my ($uniquename,$genotype_string) = $h->fetchrow_array()) {
+
+    while (my($name,$uniquename,$genotype_string) = $h->fetchrow_array()) {
       push @result, [ $uniquename, $genotype_string ];
+      $protocol_name = $name;
     }
-    return \@result;
+    print STDERR "Protocol Name: $protocol_name\n";
+
+    return {
+      protocol_name => $protocol_name,
+      genotypes => \@result
+    };
 }
 
 

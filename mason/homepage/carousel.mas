@@ -1,160 +1,8 @@
- <style>
+<div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="false">
 
-.slider-size {
-  height: 400px; /* This is your slider height */
-}
-.carousel {
-  max-width:98%;
-  /*width:100%;*/
-  margin:0 auto; /* center your carousel if other than 100% */
-  margin-bottom:0px;
-}
-
-.carousel-sgn-caption { 
-  position:relative;
-  float: left;
-  max-width:49%;
-  min-width:35%;
-  padding: 0px 10px 0px 10px;
-  margin-top:20px;
-
-  color: #000;
-  font-size: 16px;
-  text-decoration: none;
-  background-color: #fff;
-  opacity: 0.80;
-  filter: alpha(opacity=80); /* For IE8 and earlier */
-  border-top-right-radius:12px;
-  border-bottom-right-radius:12px;
-}
-
-.carousel-sgn-caption a { 
-  color: #000;
-  text-decoration: none;
-}
-
-.carousel-sgn-caption a:hover { 
-  color: #666;
-  text-decoration: none;
-}
-
-.carousel-sgn-links {
-  position:absolute;
-  min-width:35%;
-  max-width:49%;
-  margin-top:20px;
-  right:0px;
-
-  color: #000;
-  font-size: 16px;
-  text-decoration: none;
-  background-color: #fff;
-  opacity: 0.85;
-  filter: alpha(opacity=85); /* For IE8 and earlier */
-  border-top-left-radius:12px;
-  border-bottom-left-radius:12px;
-}
-
-.carousel-sgn-links ul { 
-  padding: 10px 30px 0px 15px;
-  list-style-type: none;
-}
-
-.carousel-sgn-links a { 
-  color: #000;
-  text-decoration: none;
-}
-
-.carousel-sgn-links a:hover { 
-  color: #666;
-  text-decoration: none;
-}
-
-@media (min-width: 0px) and (max-width: 650px) {
-
-    .carousel-sgn-caption {
-      margin-top:0px;
-      width: 100%;
-      max-width: 100%;
-      border-radius:0px;
-      float: none;
-      margin-bottom:0px;
-    }
-
-    .carousel-sgn-links {
-      max-width: 100%;
-      width: 100%;
-      border-radius:0px;
-      bottom:30px;
-    }
-    
-    .carousel-indicators {
-      bottom:0px;
-      margin-bottom:5px;
-    }
-
-}
-
-
-</style>
-
-<!--
-<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
--->
-
-<script>
-
-  jQuery(document).ready(function() {
-  //   $('.carousel').carousel({
-  //     interval: 20000,
-  //     // wrap:true
-  //   });
-    
-    
-    
-    
-    
-    
-    var $item = $('.carousel .item');
-    var $wHeight = $(window).height();
-
-    var $numberofSlides = $('.item').length;
-    var $currentSlide = Math.floor((Math.random() * $numberofSlides));
-
-    $('.carousel-indicators li').each(function(){
-      var $slideValue = $(this).attr('data-slide-to');
-      if($currentSlide == $slideValue) {
-        $(this).addClass('active');
-        $item.eq($slideValue).addClass('active');
-      } else {
-        $(this).removeClass('active');
-        $item.eq($slideValue).removeClass('active');
-      }
-    }); 
-
-    $('.carousel').carousel({
-      interval: 20000,
-      wrap: "true",
-      pause: "false"
-    });
-    
-    
-    //$("#myCarousel").swiperight(function() {  
-    //      $("#myCarousel").carousel('prev');  
-    //    });  
-    //   $("#myCarousel").swipeleft(function() {  
-    //      $("#myCarousel").carousel('next');  
-    //   });  
-       
-       $(".ui-loading").css("display","none");
-       $(".ui-loader").css("display","none");
-  });
-</script>
-
-  <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="false">
     <!-- Indicators -->
-    <ol class="carousel-indicators">
-      <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+    <ol class="carousel-indicators" style="display:none">
+      <li data-target="#myCarousel" data-slide-to="0"></li>
       <li data-target="#myCarousel" data-slide-to="1"></li>
       <li data-target="#myCarousel" data-slide-to="2"></li>
       <li data-target="#myCarousel" data-slide-to="3"></li>
@@ -166,86 +14,21 @@
     <!-- Wrapper for slides -->
     <div class="carousel-inner" role="listbox">
 
-      <div class="item">
-          <div style="background:url(/documents/img/homepage_carousel/carousel_slideshare.png) center center; background-size:cover;" class="slider-size">
-            <div class="carousel-sgn-caption">
-              <a href="http://www.slideshare.net/solgenomics" target="_blank">
-                <h3>SGN SlideShare</h3>
-                <p>Slides from conferences and courses</p>
-              </a>
-            </div>
-            
-            <div class="carousel-sgn-links">
-              <ul>
-                <li><a href="http://www.slideshare.net/solgenomics/sol-meeting-2015-sgn-workshop-introduction?related=1" target="_blank">SOL Meeting 2015</a></li>
-                <li><a href="http://www.slideshare.net/solgenomics/sgn-introduction-to-unix-commandline-2015-part-1?related=1" target="_blank">Introduction to UNIX Command-line</a></li>
-              </ul>
-            </div>
-            
-          </div>
-        </a>
-      </div>
-      
 
       <div class="item">
-          <div style="background:url(/documents/img/homepage_carousel/sol2016.jpeg) center center; background-size:cover;" class="slider-size">
-            <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
-              <a href="http://solgenomics2016.ucdavis.edu" target="_blank" style="color: #00426c">
-                <h3>The 13th Solanaceae Conference</h3>
-                <p><img src="/documents/img/sgn_transparent_logo.png" width="30"> September 12-16, 2016 - Davis California USA</p>
-              </a>
-            </div>
-            
-            <div class="carousel-sgn-links" style="background-color: #efefef">
-              <ul>
-                <li><a href="http://solgenomics2016.ucdavis.edu/program/" target="_blank" style="color: #00426c">Preliminary Program</a></li>
-                <li><a href="http://solgenomics2016.ucdavis.edu/registration/" target="_blank" style="color: #00426c">Registration</a></li>
-                <li><a href="http://solgenomics2016.ucdavis.edu/abstract-submission-info/" target="_blank" style="color: #00426c">Abstract Submission</a></li>
-                <li><a href="http://solgenomics2016.ucdavis.edu/hotel-information/" target="_blank" style="color: #00426c">Venue Information</a></li>
-              </ul>
-            </div>
-            
-          </div>
-        </a>
-      </div>
-      
-
-
-      <div class="item">
-          <div style="background:url(/documents/img/homepage_carousel/tomato_diseases_2016.jpeg) center center; background-size:cover;" class="slider-size">
-            <div class="carousel-sgn-caption" style="opacity: 0.95">
-              <a href="http://www.tomatodiseases2016.es/web/" target="_blank">
-                <h3>5th International Symposium on Tomato Diseases</h3>
-                <p>Malaga, Spain June 13-16, 2016</p>
-              </a>
-            </div>
-            
-            <div class="carousel-sgn-links">
-              <ul>
-                <li><a href="http://www.tomatodiseases2016.es/web/index.php/tentative-programme" target="_blank">Preliminary Program</a></li>
-                <li><a href="http://www.tomatodiseases2016.es/web/index.php/important-dates" target="_blank">Important Dates</a></li>
-                <li><a href="http://www.tomatodiseases2016.es/web/index.php/registration" target="_blank">Registration</a></li>
-                <li><a href="http://www.tomatodiseases2016.es/web/index.php/accommodation" target="_blank">Accomodation</a></li>
-              </ul>
-            </div>
-            
-          </div>
-        </a>
-      </div>
-      
-      <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/carousel_tomato.jpg) center center; background-size:cover;" class="slider-size">
+        <div style="background:url(/documents/img/homepage_carousel/carousel_tomato1.jpeg) center center; background-size:cover;" class="slider-size">
           <div class="carousel-sgn-caption">
             <h3><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome</a></h3>
             <p><a href="http://www.nature.com/nature/journal/v485/n7400/full/nature11119.html" target="_blank">The tomato genome sequence provides insights into fleshy fruit evolution</a></p>
           </div>
-        
+
           <div class="carousel-sgn-links">
-            <ul>
-              <li><a href="/jbrowse">Browse the tomato genome</a></li>
-              <li><a href="/tools/blast?db_id=224">Find sequences by similarity</a></li>
-              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/">Download the annotations</a></li>
-              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/">Download the Genome Sequence</a></li>
+            <ul class="sgn_sm_list">
+              <a href="/jbrowse_solgenomics"><li>Browse the tomato genome</li></a>
+              <a href="/tools/blast?db_id=224"><li>Find sequences by similarity</li></a>
+              <a href="http://vigs.solgenomics.net"><li>Design VIGS constructs</li></a>
+              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/"><li>Download the annotations</li></a>
+              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/"><li>Download the Genome Sequence</li></a>
             </ul>
           </div>
         </div>
@@ -258,35 +41,78 @@
             <p><a href="http://www.nature.com/nature/journal/v475/n7355/full/nature10158.html" target="_blank">Genome sequence and analysis of the tuber crop potato</a></p>
         </div>
         <div class="carousel-sgn-links">
-          <ul>
-            <li><a href="/jbrowse/current/?data=data%2Fjson%2FPGSC_DM_v4.03">Browse the potato genome</a></li>
-            <li><a href="/tools/blast?db_id=262">Find sequences by similarity</a></li>
-            <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/annotation/">Download the annotations</a></li>
-            <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/assembly/PGSC_DM_v4.03/">Download the Genome Sequence</a></li>
+          <ul class="sgn_sm_list">
+            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPGSC_DM_v4.03"><li>Browse the potato genome</li></a>
+            <a href="/tools/blast?db_id=262"><li>Find sequences by similarity</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/annotation/"><li>Download the annotations</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/assembly/PGSC_DM_v4.03/"><li>Download the Genome Sequence</li></a>
           </ul>
         </div>
-        
+
         </div>
       </div>
 
       <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/3.jpg) center center; background-size:cover;" class="slider-size">
         <div class="carousel-sgn-caption">
-            <h3><a href="/organism/Capsicum_annuum/genome">Pepper Genome</a></h3>
+            <h3><a href="/organism/Capsicum_annuum/genome">Pepper Sps. Genomes</a></h3>
             <p><a href="http://www.nature.com/ng/journal/v46/n3/full/ng.2877.html" target="_blank">Genome sequence of the hot pepper provides insights into the evolution of pungency in Capsicum species</a></p>
+        </div>
+
+        <div class="carousel-sgn-links">
+          <ul class="sgn_sm_list">
+            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPepper.v.1.55"><li>Browse the pepper genome</li></a>
+            <a href="/tools/blast?db_id=217"><li>Find sequences by similarity</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/"><li>Download the annotations</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/"><li>Download the Genome Sequence</li></a>
+          </ul>
+        </div>
+
+        </div>
+      </div>
+
+      <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/carousel_benth.jpeg) center center; background-size:cover;" class="slider-size">
+        <div class="carousel-sgn-caption">
+            <h3><a href="/organism/Nicotiana_benthamiana/genome"><i>N. benthamiana</i> Genome</a></h3>
+            <p><a href="http://apsjournals.apsnet.org/doi/abs/10.1094/MPMI-06-12-0148-TA" target="_blank">A draft genome sequence of <i>Nicotiana benthamiana</i> to enhance molecular plant-microbe biology research</a></p>
+        </div>
+
+        <div class="carousel-sgn-links">
+          <ul class="sgn_sm_list">
+            <a href="http://bti.cornell.edu/research/projects/nicotiana-benthamiana/"><li>The <i>N. benthamiana</i> sequencing project</li></a>
+            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FNiben1.0.1&loc=Niben101Scf00005"><li>Browse the genome</li></a>
+            <a href="/tools/blast/?db_id=266"><li>Find sequences by similarity</li></a>
+            <a href="http://vigs.solgenomics.net"><li>Design VIGS constructs</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_benthamiana"><li>Downloads</li></a>
+          </ul>
+        </div>
+
+        </div>
+      </div>
+
+
+      <div class="item">
+        <div style="background:url(/documents/img/homepage_carousel/carousel_petunia.jpeg) center center; background-size:cover;" class="slider-size">
+        <div class="carousel-sgn-caption">
+            <h3><a href="http://www.nature.com/nplants/">Petunia Sps. Genomes</a></h3>
+            <p><a href="http://www.nature.com/nplants/" target="_blank">Insight into the evolution of the Solanaceae from the parental genomes of Petunia hybrida</a></p>
         </div>
         
         <div class="carousel-sgn-links">
-          <ul>
-            <li><a href="/jbrowse/current/?data=data%2Fjson%2FPepper.v.1.55">Browse the pepper genome</a></li>
-            <li><a href="/tools/blast?db_id=217">Find sequences by similarity</a></li>
-            <li><a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Download the annotations</a></li>
-            <li><a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/">Download the Genome Sequence</a></li>
+          <ul class="sgn_sm_list">
+            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPeaxi162&loc=Peaxi162Scf00001"><li>Browse the <i>P. axillaris</i> genome</li></a>
+            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPeinf101&loc=Peinf101Scf00001"><li>Browse the <i>P. inflata</i> genome</li></a>
+            <a href="/tools/blast/?db_id=270"><li>Find sequences by similarity</li></a>
+            <a href="http://vigs.solgenomics.net"><li>Design VIGS constructs</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Petunia_axillaris"><li><i>P. axillaris</i> Downloads</li></a>
+            <a href="ftp://ftp.solgenomics.net/genomes/Petunia_inflata"><li><i>P. inflata</i> Downloads</li></a>
           </ul>
         </div>
         
         </div>
       </div>
+
 
       <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/carousel_eggplant.jpg) center center; background-size:cover;" class="slider-size">
@@ -294,31 +120,401 @@
               <h3><a href="/organism/Solanum_melongena/genome">Eggplant Genome</a></h3>
               <p><a href="http://dnaresearch.oxfordjournals.org/content/21/6/649" target="_blank">Draft Genome Sequence of Eggplant (<i>Solanum melongena L.</i>)</a></p>
           </div>
-          
+
           <div class="carousel-sgn-links">
-            <ul>
-              <li><a href="/tools/blast?db_id=248">Find sequences by similarity</a></li>
-              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/">Download the annotations</a></li>
-              <li><a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/">Download the Genome Sequence</a></li>
+            <ul class="sgn_sm_list">
+              <a href="/tools/blast?db_id=248"><li>Find sequences by similarity</li></a>
+              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/"><li>Download the annotations</li></a>
+              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/"><li>Download the Genome Sequence</li></a>
             </ul>
           </div>
-          
+
         </div>
+      </div>
+
+      <!-- <div class="item">
+          <div style="background:url(/documents/img/homepage_carousel/carousel_slideshare.png) center center; background-size:cover;" class="slider-size">
+            <div class="carousel-sgn-caption">
+              <a href="http://www.slideshare.net/solgenomics" target="_blank">
+                <h3>SGN SlideShare</h3>
+                <p>Slides from conferences and courses</p>
+              </a>
+            </div>
+
+            <div class="carousel-sgn-links">
+              <ul class="sgn_sm_list">
+                <a href="http://www.slideshare.net/solgenomics/sol-meeting-2015-sgn-workshop-introduction?related=1" target="_blank"><li>SOL Meeting 2015</li></a>
+                <a href="http://www.slideshare.net/solgenomics/sgn-introduction-to-unix-commandline-2015-part-1?related=1" target="_blank"><li>Introduction to UNIX Command-line</li></a>
+              </ul>
+            </div>
+
+          </div>
+        </a>
+      </div> -->
+      
+
+      <div class="item">
+          <div style="background:url(/documents/img/homepage_carousel/sol2016.jpeg) center center; background-size:cover;" class="slider-size">
+            <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
+              <a href="http://solgenomics2016.ucdavis.edu" target="_blank" style="color: #00426c">
+                <h3>The 13th Solanaceae Conference</h3>
+                <p><img src="/documents/img/sgn_transparent_logo.png" width="30"> September 12-16, 2016 - Davis California USA</p>
+              </a>
+            </div>
+
+            <div class="carousel-sgn-links" style="background-color: #efefef">
+              <ul class="sgn_sm_list">
+                <a href="http://solgenomics2016.ucdavis.edu/program/" target="_blank"><li style="color: #00426c">Preliminary Program</li></a>
+                <a href="http://solgenomics2016.ucdavis.edu/registration/" target="_blank"><li style="color: #00426c">Registration</li></a>
+                <a href="http://solgenomics2016.ucdavis.edu/abstract-submission/" target="_blank"><li style="color: #00426c">Abstract Submission</li></a>
+                <a href="http://solgenomics2016.ucdavis.edu/hotel-information/" target="_blank"><li style="color: #00426c">Venue Information</li></a>
+              </ul>
+            </div>
+
+          </div>
+        </a>
       </div>
 
 
 
-    </div>
+      <!-- <div class="item">
+          <div style="background:url(/documents/img/homepage_carousel/tomato_diseases_2016.jpeg) center center; background-size:cover;" class="slider-size">
+            <div class="carousel-sgn-caption" style="opacity: 0.95">
+              <a href="http://www.tomatodiseases2016.es/web/" target="_blank">
+                <h3>5th International Symposium on Tomato Diseases</h3>
+                <p>Malaga, Spain June 13-16, 2016</p>
+              </a>
+            </div>
 
-    <!-- Left and right controls -->
-    <!-- <a id="prev_slide" class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
-      <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-      <span class="sr-only">Previous</span>
-    </a>
-    <a  id="next_slide" class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
-      <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-      <span class="sr-only">Next</span>
-    </a> -->
+            <div class="carousel-sgn-links">
+              <ul>
+                <li><a href="http://www.tomatodiseases2016.es/web/index.php/tentative-programme" target="_blank">Preliminary Program</a></li>
+                <li><a href="http://www.tomatodiseases2016.es/web/index.php/important-dates" target="_blank">Important Dates</a></li>
+                <li><a href="http://www.tomatodiseases2016.es/web/index.php/registration" target="_blank">Registration</a></li>
+                <li><a href="http://www.tomatodiseases2016.es/web/index.php/accommodation" target="_blank">Accomodation</a></li>
+              </ul>
+            </div>
+
+          </div>
+        </a>
+      </div> -->
+
+    </div><!-- Wrapper for slides end-->
+    
+  <div class="progress" style="height:5px">
+    <hr class="transition-timer-carousel-progress-bar" />
   </div>
 
+  <!-- Left and right controls -->
+  <a id="prev_slide" class="left carousel-control" href="#myCarousel" role="button" data-slide="prev" style="color:white;">
+    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+    <span class="sr-only">Previous</span>
+  </a>
+  <a  id="next_slide" class="right carousel-control" href="#myCarousel" role="button" data-slide="next" style="color:white;">
+    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+    <span class="sr-only">Next</span>
+  </a>
 
+</div>
+
+<ul id="btn_carousel_indicators" class="nav nav-pills nav-justified sgn_carousel_button_group">
+  <li class="active"><a data-target="#myCarousel" data-slide-to="0">Tomato</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="1">Potato</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="2">Pepper</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="3"><i>N. benthamiana</i></a></li>
+  <li><a data-target="#myCarousel" data-slide-to="4">Petunia</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="5">Eggplant</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="6">SOL Meeting</a></li>
+  <!-- <li><a data-target="#myCarousel" data-slide-to="6">5th ISTD</a></li> -->
+</ul>
+
+<style>
+	.sgn_carousel_button_group {
+		margin-left: 10px;
+		margin-top: 10px;
+		width:98% !important;
+	}
+
+	.slider-size {
+	  height: 400px; /* This is your slider height */
+	}
+	.carousel {
+	  max-width:98%;
+	  /*width:100%;*/
+	  margin:0 auto; /* center your carousel if other than 100% */
+	  margin-bottom:0px;
+	}
+
+	.carousel-sgn-caption {
+	  position:relative;
+	  float: left;
+	  max-width:49%;
+	  min-width:35%;
+	  padding: 0px 10px 0px 10px;
+	  margin-top:20px;
+
+    color: #444;
+	  font-size: 16px;
+	  text-decoration: none;
+	  background-color: #fff;
+	  opacity: 0.80;
+	  filter: alpha(opacity=80); /* For IE8 and earlier */
+	  border-top-right-radius:12px;
+	  border-bottom-right-radius:12px;
+	}
+
+	.carousel-sgn-caption a {
+    color: #444;
+	  text-decoration: none;
+	}
+
+	.carousel-sgn-caption a:hover {
+	  color: #00426c;
+	  text-decoration: none;
+	}
+
+	.carousel-sgn-links {
+	  position:absolute;
+	  min-width:35%;
+	  max-width:49%;
+	  margin-top:20px;
+	  right:0px;
+
+	  color: #000;
+	  font-size: 16px;
+	  text-decoration: none;
+	  background-color: #fff;
+	  opacity: 0.85;
+	  filter: alpha(opacity=85); /* For IE8 and earlier */
+	  border-top-left-radius:12px;
+	  border-bottom-left-radius:12px;
+	}
+
+	.carousel-sgn-links ul {
+	  padding: 10px 0px 0px 15px;
+	  list-style-type: none;
+	}
+
+	.carousel-sgn-links a {
+	  color: #000;
+	  text-decoration: none;
+	}
+
+	.carousel-sgn-links a:hover {
+	  color: #666;
+	  text-decoration: none;
+	}
+
+  .sgn_sm_list {
+    color: #444;
+    width: 100%;
+    padding: 0px;
+    padding-left: 5px;
+  }
+
+  .sgn_sm_list li {
+    color: #444;
+    width: 100%;
+    padding: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+
+  .sgn_sm_list li:hover {
+    color: #00426c;
+  }
+
+  #btn_carousel_indicators {
+    cursor: pointer;
+  }
+
+	@media (min-width: 0px) and (max-width: 768px) {
+
+    .carousel-sgn-caption {
+      margin-top:0px;
+      width: 100%;
+      max-width: 100%;
+      border-radius:0px;
+      float: none;
+      margin-bottom:0px;
+      opacity: 0.90;
+    }
+
+    .carousel-sgn-links {
+      background-color: #efefef;
+      max-width: 100%;
+      width: 100%;
+      border-radius:0px;
+      bottom:0px;
+      opacity: 0.9;
+    }
+
+  	.carousel-sgn-links ul {
+  	  padding: 0px;
+      margin-bottom: 0px;
+  	}
+
+    .sgn_sm_list li {
+      color: #00426c;
+      width: 100%;
+      position: relative;
+      display: block;
+      padding: 0px;
+      padding-left: 5px;
+      border: 1px solid #ddd;
+    }
+
+    .sgn_sm_list li:hover {
+      color: #444;
+  	  background-color: #fff;
+      opacity: 1;
+    }
+
+/*    .carousel-indicators {
+      bottom:0px;
+      margin-bottom: 0px;
+      width:100%;
+      left:auto;
+      margin-left:auto;
+    }
+*/
+    .nav-pills>li>a {
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+  	.sgn_carousel_button_group {
+      margin-left: 5px;
+  		margin-top: 5px;
+  		width:98% !important;
+  	}
+
+	}
+
+	.carousel-control {
+		height:100px;
+		margin-top:170px
+	}
+  
+  .transition-timer-carousel-progress-bar {
+      height: 4px;
+      background-color: #337ab7;
+      width: 0;
+      margin: 0 0 0 0;
+      border: none;
+      z-index: 11;
+      position: relative;
+      border-radius: 0px;
+  }
+  
+  .progress {
+    margin-top: 5px;
+    border-radius: 0px;
+  }
+  
+</style>
+
+<!--
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+-->
+
+<script>
+
+  jQuery(document).ready(function() {
+
+    var $item = $('.carousel .item');
+    // var $wHeight = $(window).height();
+
+    var numberofSlides = $('.item').length;
+    var randomSlide = Math.floor((Math.random() * numberofSlides));
+    var currentSlide = randomSlide;
+
+    $('.carousel-indicators li').each(function(){
+      var $slideValue = $(this).attr('data-slide-to');
+      if (randomSlide == $slideValue) {
+        $(this).addClass('active');
+        $item.eq($slideValue).addClass('active');
+      } else {
+        $(this).removeClass('active');
+        $item.eq($slideValue).removeClass('active');
+      }
+    });
+
+    $('#btn_carousel_indicators a').each(function(){
+      var $slideValue = $(this).attr('data-slide-to');
+      // alert("currentSlide: "+$currentSlide+", slideValue: "+$slideValue)
+      if (randomSlide == $slideValue) {
+        $(this).parent().addClass('active');
+      } else {
+        $(this).parent().removeClass('active');
+      }
+    });
+
+    $('#myCarousel').bind('slid.bs.carousel', function (e) {
+      $('.carousel-indicators li').each(function(){
+        if ($(this).hasClass('active')) {
+          currentSlide = $(this).attr('data-slide-to');;
+        }
+      });
+
+      $('#btn_carousel_indicators li').removeClass('active');
+
+      $('#btn_carousel_indicators a').each(function(){
+        var $slideValue = $(this).attr('data-slide-to');
+        // alert("currentSlide: "+currentSlide+", slideValue: "+$slideValue)
+        if(currentSlide == $slideValue) {
+          $(this).parent().addClass('active');
+        }
+      });
+
+    });
+
+    // touch screen
+		//     $("#myCarousel").swiperight(function() {
+		//       $("#myCarousel").carousel('prev');
+		//     });
+		//
+		// $("#myCarousel").swipeleft(function() {
+		//       $("#myCarousel").carousel('next');
+		//     });
+       
+    
+    
+    
+  //progress bar
+  var percent = 0,
+  	interval = 50,//time showing each slide
+    $bar = $('.transition-timer-carousel-progress-bar'),
+  	$crsl = $('#myCarousel');
+
+    $crsl.carousel({//initialize
+      interval: false,
+      pause: true
+    }).on('slide.bs.carousel', function (){percent = 0;});//restart progress bar on new slide
+    
+  	function progressBarCarousel() {
+      $bar.css({width:percent+'%'});
+  		percent = percent +0.5;
+  		if (percent>=100) {
+  			percent=0;
+  			$crsl.carousel('next');
+  		}
+  	}
+  	var barInterval = setInterval(progressBarCarousel, interval);//set interval to progressBarCarousel function
+    if (!(/Mobi/.test(navigator.userAgent))) {//tests if it isn't mobile, progress bar stop on mouse over slide
+      $crsl.hover(function(){
+            clearInterval(barInterval);
+          },
+          function(){
+            barInterval = setInterval(progressBarCarousel, interval);
+          }
+      );
+    }
+    
+    
+    
+    
+    $(".ui-loading").css("display","none");
+    $(".ui-loader").css("display","none");
+  });
+</script>

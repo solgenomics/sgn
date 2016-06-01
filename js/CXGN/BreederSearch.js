@@ -104,30 +104,44 @@ window.onload = function initialize() {
 	refresh_matviews();
     });
 
-    jQuery('#download_button_excel').on('click', function () {
-        var selected = get_selected_trials();
-        if (selected.length !== 0) {
-	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
-        }
-        else { alert("No trials selected for download."); }
-
+    jQuery('#download_button_excel').on('click', function (event) {
+      event.preventDefault();
+      var selected = get_selected_trials();
+      if (selected.length !== 0) {
+        var ladda = Ladda.create(this);
+        ladda.start();
+        var token = new Date().getTime(); //use the current timestamp as the token name and value
+        manage_dl_with_cookie(token, ladda);
+        window.location.href = '/breeders/trials/phenotype/download/'+selected.join(",")+'?format=excel&token='+token;
+      }
+      else { alert("No trials selected for download."); }
     });
 
-    jQuery('#download_button_csv').on('click', function () {
-        var selected = get_selected_trials();
-        if (selected.length !== 0) {
-	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
-        }
-        else { alert("No trials selected for download."); }
-
+    jQuery('#download_button_csv').on('click', function (event) {
+      event.preventDefault();
+      var selected = get_selected_trials();
+      if (selected.length !== 0) {
+        var ladda = Ladda.create(this);
+        ladda.start();
+        var token = new Date().getTime(); //use the current timestamp as the token name and value
+        manage_dl_with_cookie(token, ladda);
+	      window.location.href = '/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv&token='+token;
+      }
+      else { alert("No trials selected for download."); }
     });
 
-    jQuery('#download_button_genotypes').on('click', function () {
-        var accession_ids = get_selected_accessions();
-        var protocol_id = get_selected_genotyping_protocols();
-        if (accession_ids.length > 0 && protocol_id.length == 1) {
-	  window.open('/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&format=accession_ids');
-        }
+    jQuery('#download_button_genotypes').on('click', function (event) {
+      event.preventDefault();
+      var accession_ids = get_selected_accessions();
+      var protocol_id = get_selected_genotyping_protocols();
+      if (accession_ids.length > 0 && protocol_id.length == 1) {
+        var ladda = Ladda.create(this);
+        ladda.start();
+        var token = new Date().getTime(); //use the current timestamp as the token name and value
+        manage_dl_with_cookie(token, ladda);
+        window.location.href = '/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&token='+token+'&format=accession_ids';
+      }
+      else { alert("Both accessions and protocols must be selected for download."); }
     });
 }
 
@@ -310,12 +324,14 @@ function update_download_options(this_section, categories) {
 	//if (data !== undefined) {console.log("data ="+data[i]);}
       if (categories[i] === 'trials' && data[i]) {
         selected_trials = 1;
-	      jQuery('#download_button_excel').prop( 'title', 'Click to Download Trial Phenotypes');
-        jQuery('#download_button_csv').prop('title', 'Click to Download Trial Phenotypes');
-        jQuery('#download_button_excel').removeAttr('disabled');
-        jQuery('#download_button_csv').removeAttr('disabled');
         var trial_html = '<font color="green">'+data[i].length+' trials selected</font></div>';
         jQuery('#selected_trials').html(trial_html);
+        if (isLoggedIn()) {
+	         jQuery('#download_button_excel').prop( 'title', 'Click to Download Trial Phenotypes');
+           jQuery('#download_button_csv').prop('title', 'Click to Download Trial Phenotypes');
+           jQuery('#download_button_excel').removeAttr('disabled');
+           jQuery('#download_button_csv').removeAttr('disabled');
+         }
       }
       if (categories[i] === 'accessions' && data[i]) {
         selected_accessions = 1;
@@ -333,26 +349,26 @@ function update_download_options(this_section, categories) {
         jQuery('#selected_genotyping_protocols').html(genotyping_protocols_html);
       }
     }
-    if (selected_accessions == 1 && selected_genotyping_protocols == 1) {
+    if (selected_accessions == 1 && selected_genotyping_protocols == 1 && isLoggedIn()) {
       jQuery('#download_button_genotypes').prop( 'title', 'Click to Download Accession Genotypes');
 	    jQuery('#download_button_genotypes').removeAttr('disabled');
     }
     //console.log("trials-selected="+trials_selected);
     //console.log("accessions-selected="+accessions_selected);
     if (selected_trials !== 1) {
-      jQuery('#download_button_excel').prop('title','First select a trial or trials to download');
-      jQuery('#download_button_csv').prop('title', 'First select a trial or trials to download');
+      jQuery('#download_button_excel').prop('title','You must be logged in, with a trial selected to download');
+      jQuery('#download_button_csv').prop('title', 'You must be logged in, with a trial selected to download');
       jQuery('#download_button_excel').attr('disabled', 'disabled');
       jQuery('#download_button_csv').attr('disabled', 'disabled');
       jQuery('#selected_trials').html('No trials selected');
     }
     if (selected_accessions !== 1) {
-      jQuery('#download_button_genotypes').prop('title','First select a genotyping protocol and accessions to download');
+      jQuery('#download_button_genotypes').prop('title','You must be logged in, with a genotyping protocol and accessions selected to download');
       jQuery('#download_button_genotypes').attr('disabled', 'disabled');
       jQuery('#selected_accessions').html('No accessions selected');
     }
     if (selected_genotyping_protocols !== 1) {
-      jQuery('#download_button_genotypes').prop('title','First select a genotyping protocol and accessions to download');
+      jQuery('#download_button_genotypes').prop('title','You must be logged in, with a genotyping protocol and accessions selected to download');
       jQuery('#download_button_genotypes').attr('disabled', 'disabled');
       jQuery('#selected_genotyping_protocols').html('No genotyping protocols selected');
     }
@@ -365,10 +381,13 @@ function reset_downstream_sections(this_section) {  // clear downstream selects,
 	var data_id = "c"+i+"_data";
 	var count_id = "c"+i+"_data_count";
 	var querytype_id = "c"+i+"_querytype";
+  var list_menu_id = "c"+i+"_to_list_menu";
+  var replacement = '<div id="'+list_menu_id+'"></div>';
 	jQuery('#'+select_id).html('');
 	jQuery('#'+data_id).html('');
-	jQuery('#'+count_id).html('');
+	jQuery('#'+count_id).html('No Selection');
 	jQuery('#'+querytype_id).bootstrapToggle('off');
+  jQuery('#'+list_menu_id).replaceWith(replacement);
     }
 }
 
@@ -383,7 +402,7 @@ function create_list_start(message) {
 }
 
 function pasteList() {
-  if (window.console) console.log("pasting list . . .");
+  //if (window.console) console.log("pasting list . . .");
 
   jQuery('#list_message').html('');
   var list_id = jQuery('#paste_list_select').val();
@@ -537,7 +556,7 @@ function get_querytypes(this_section) {
 	} else {
 	    var type = 0;
 	}
-	if (window.console) console.log("querytype="+type);
+	//if (window.console) console.log("querytype="+type);
 	querytypes.push(type);
     }
     if (querytypes.length > 0) {
@@ -553,7 +572,7 @@ function initialize_first_select() {
 
 function add_data_refresh() {
     var roles = getUserRoles();
-    console.log("userroles="+roles);
+    //console.log("userroles="+roles);
     if (jQuery.inArray(roles, ['submitter', 'curator', 'sequencer']) >= 0) {
 	jQuery('#wizard_refresh').append('<p align="center" style="margin: 0px 0"><i>Don\'t see your data?</i></p><input class="btn btn-link center-block" id="open_update_dialog" type="button" value="Update wizard">');
     }
@@ -623,4 +642,19 @@ function matviews_update_options() {
 		}
             }
     });
+}
+
+function manage_dl_with_cookie (token, ladda) {
+  var cookie = 'download'+token;
+  var fileDownloadCheckTimer = window.setInterval(function () { //checks for response cookie to keep working modal enabled until file is ready for download
+    var cookieValue = jQuery.cookie(cookie);
+    //console.log("cookieValue="+cookieValue);
+    //var allCookies = document.cookie;
+    //console.log("allCookies="+allCookies);
+    if (cookieValue == token) {
+      window.clearInterval(fileDownloadCheckTimer);
+      jQuery.removeCookie(cookie); //clears this cookie value
+      ladda.stop();
+    }
+  }, 500);
 }

@@ -15,12 +15,10 @@ use CXGN::Trial::Download;
 BEGIN { extends 'Catalyst::Controller'; }
 
 
-sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) { 
+sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;
-
-    print STDERR "TRIAL INIT...".localtime()."\n";
 
     $c->stash->{trial_id} = $trial_id;
     print STDERR "TRIAL ID = $trial_id\n";
@@ -28,19 +26,18 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     $c->stash->{schema} = $schema;
     my $trial;
-    eval { 
+    eval {
 	$trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     };
-    if ($@) { 
+    if ($@) {
 	$c->stash->{template} = 'system_message.txt';
 	$c->stash->{message} = "The requested trial ($trial_id) does not exist";
 	return;
     }
-    $c->stash->{trial} = $trial;    
-    
+    $c->stash->{trial} = $trial;
 }
 
-sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) { 
+sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
     my $self = shift;
     my $c = shift;
     my @args = @_;
@@ -48,25 +45,25 @@ sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
     $c->res->redirect('/breeders/trial/'.$args[0].'?format='.$format);
 }
 
-sub trial_info : Chained('trial_init') PathPart('') Args(0) { 
+sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     print STDERR "Check 1: ".localtime()."\n";
     my $self = shift;
     my $c = shift;
     my $format = $c->req->param("format");
     print STDERR $format;
     my $user = $c->user();
-    if (!$user) { 
+    if (!$user) {
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
     $c->stash->{user_can_modify} = ($user->check_roles("submitter") || $user->check_roles("curator")) ;
-    
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial = $c->stash->{trial};
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
- 
-    if (!$program_object->trial_exists($c->stash->{trial_id})) { 
+
+    if (!$program_object->trial_exists($c->stash->{trial_id})) {
 	$c->stash->{message} = "The requested trial does not exist or has been deleted.";
 	$c->stash->{template} = 'generic_message.mas';
 	return;
@@ -79,7 +76,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{planting_date} = $trial->get_planting_date();
 
     $c->stash->{harvest_date} = $trial->get_harvest_date();
- 
+
     $c->stash->{trial_description} = $trial->get_description();
 
     $c->stash->{location_data} = [ $trial->get_location()->[0], $trial->get_location()->[1] ];
@@ -90,23 +87,30 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
 
+    $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
+
+    if ($trial->get_folder) {
+      $c->stash->{folder_id} = $trial->get_folder()->project_id();
+      $c->stash->{folder_name} = $trial->get_folder()->name();
+    }
+
     my $design_type = $trial->get_design_type();
 
-    if ($design_type eq "genotyping_plate") { 
-	if ($format eq "as_table") { 
+    if ($design_type eq "genotyping_plate") {
+	if ($format eq "as_table") {
 	    $c->stash->{template} = '/breeders_toolbox/genotyping_trials/format/as_table.mas';
 	}
-	else { 
+	else {
 	    $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
 	}
-	
+
     }
-    else { 
+    else {
 	$c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
-    
+
     print STDERR "End Load Trial Detail Page: ".localtime()."\n";
-    
+
 }
 
 
@@ -114,45 +118,46 @@ sub trait_info :Path('/breeders/trial') Args(3) {
     my ($self, $c, $trial_id, $trait_txt, $trait_id) = @_;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-   
+
     my $trial_name = $schema->resultset("Project::Project")
         ->search( {'me.project_id' => $trial_id})
         ->single
         ->name;
-  
+
     $c->stash->{trial_name} = $trial_name;
 
     my $trait_name = $schema->resultset("Cv::Cvterm")
         ->search({'me.cvterm_id' => $trait_id})
         ->single
         ->name;
-    
+
     $c->stash->{trial_id}   = $trial_id;
     $c->stash->{trial_name} = $trial_name;
-    
+
     $c->stash->{trait_id}   = $trait_id;
     $c->stash->{trait_name} = $trait_name;
-      
+
     $c->stash->{template}   = '/breeders_toolbox/trial_trait.mas';
 }
 
 
-sub trial_tree : Path('/breeders/trialtree') Args(0) { 
+sub trial_tree : Path('/breeders/trialtree') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    
+
     $c->stash->{template} = '/breeders_toolbox/trialtree.mas';
 
 }
 
-sub trial_download : Chained('trial_init') PathPart('download') Args(1) { 
+sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
 
+
     my $user = $c->user();
-    if (!$user) { 
+    if (!$user) {
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
@@ -161,27 +166,27 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $trait_list = $c->req->param("trait_list") || "";
 
     my @trait_list;
-    if ($trait_list) { 
+    if ($trait_list) {
 	@trait_list = @{_parse_list_from_json($trait_list)};
     }
-    
+
     my $plugin = "";
-    if ( ($format eq "xls") && ($what eq "layout")) { 
+    if ( ($format eq "xls") && ($what eq "layout")) {
 	$plugin = "TrialLayoutExcel";
     }
-    if (($format eq "csv") && ($what eq "layout")) { 
+    if (($format eq "csv") && ($what eq "layout")) {
 	$plugin = "TrialLayoutCSV";
     }
-    if (($format eq "xls") && ($what =~ /phenotype/)) { 
+    if (($format eq "xls") && ($what =~ /phenotype/)) {
 	$plugin = "TrialPhenotypeExcel";
     }
-    if (($format eq "csv") && ($what =~ /phenotype/)) { 
+    if (($format eq "csv") && ($what =~ /phenotype/)) {
 	$plugin = "TrialPhenotypeCSV";
     }
-    if (($format eq "xls") && ($what eq "basic_trial_excel")) { 
+    if (($format eq "xls") && ($what eq "basic_trial_excel")) {
 	$plugin = "BasicExcel";
     }
-    
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id} });
     my $trial_name = $trial_layout->get_trial_name();
@@ -194,8 +199,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     print STDERR "TEMPFILE : $tempfile\n";
 
-    my $download = CXGN::Trial::Download->new( 
-	{ 
+    my $download = CXGN::Trial::Download->new(
+	{
 	    bcs_schema => $c->stash->{schema},
 	    trial_id => $c->stash->{trial_id},
 	    trait_list => \@trait_list,
@@ -206,8 +211,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
       my $error = $download->download();
 
       my $file_name = $trial_id . "_" . "$what" . ".$format";
-     $c->res->content_type('Application/'.$format);    
-     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);   
+     $c->res->content_type('Application/'.$format);
+     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
     my $output = read_file($tempfile);
 

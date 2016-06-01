@@ -12,7 +12,7 @@
         <div class="container-fluid">
  	  <b>Pedigrees may be uploaded in tab-delimited text file format</b>
 	  <br>
-	  <p>(.xls or .xlsx formats are NOT supported)</p>
+	  <p>(.xls or .xlsx formats are <b>NOT</b> supported)</p>
 	  <hr>
 	  <b>Header:</b>
 	  <br>
@@ -23,7 +23,11 @@
 	    <tr>
     	      <td>progeny name</td>
     	      <td>female parent accession</td>
-    	      <td>male parent accession</td>
+    	      <td>male parent accession(s) (if more than one, separate using commas)</td>
+	      <td>
+		type (biparental, open, self)
+		</td>
+	      
   	    </tr>
 	  </body>
 	  </table>
@@ -36,13 +40,13 @@
 
 	  <h4>Optional fields</h4>
 	  <ul>
-	    <li>male parent accession (if provided, must exist in the database)</li>
+	    <li>male parent accession (if provided, must exist in the database). Several potential male parents can be given separated by commas. A population entry will be generated in that case, with the listed male parents associated to the population.</li>
 	  </ul>
 
 	  <h4>Notes</h4>
 	  <ul>
-	    <li>If female parent equals male parent, a "self" is assumed.</li>
-	    <li>If male is ommitted, "open pollination" is assumed.</li>
+	    <li>Always specify the type of the cross (biparental, open, or self).</li>
+	    <li>If the type is open and no potential parents are known, leave the male parent field empty
 	  </ul>
         </div>
       </div>

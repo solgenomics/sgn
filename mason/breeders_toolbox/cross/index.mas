@@ -9,7 +9,7 @@ $trial_name => undef
 $user_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.BreedersToolbox.CrossDetailPage" ] &>
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.CrossDetailPage" ] &>
 
 % use utf8;
 % $cross_name ||= "Untitled cross";
@@ -56,7 +56,7 @@ $user_id => undef
 
   <div id="progeny_information_div">
     [loading...]
-    </div>
+  </div>
 
   <div id="add_more_progeny_dialog">
     <table>
@@ -80,7 +80,7 @@ $user_id => undef
 
 </&>
 
-<div id="edit_properties_dialog"> 
+<div id="edit_properties_dialog">
 
   <select id="properties_select">
     <option value="cross_type">Cross type</option>
@@ -99,4 +99,3 @@ $user_id => undef
   <p><b>WARNING!</b>&nbsp;Changing the parameters can have unpredicatable results in downstream analyses if they are inconsistent with other data.</p>
 
 </div>
-

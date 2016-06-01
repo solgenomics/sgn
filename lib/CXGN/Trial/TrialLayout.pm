@@ -203,6 +203,7 @@ print STDERR "Check 2.3.4.3: ".localtime()."\n";
     my $col_number_prop = $plot->stockprops->find( { 'type.name' => 'col_number' }, { join => 'type'} );
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
     my $accession_name = $accession->uniquename;
+    my $accession_id = $accession->stock_id;
     $design_info{"plot_name"}=$plot_name;
     $design_info{"plot_id"}=$plot->stock_id;
 
@@ -232,6 +233,9 @@ print STDERR "Check 2.3.4.3: ".localtime()."\n";
     if ($accession_name) {
       $design_info{"accession_name"}=$accession_name;
     }
+    if ($accession_id) {
+      $design_info{"accession_id"}=$accession_id;
+    }
     $design{$plot_number_prop->value}=\%design_info;
   }
 print STDERR "Check 2.3.4.4: ".localtime()."\n";
@@ -249,7 +253,7 @@ sub _get_field_layout_experiment_from_project {
   $field_layout_experiment = $project
      ->search_related("nd_experiment_projects")
        ->search_related("nd_experiment")
-   	->find({ 'type.name' => ['field layout', 'genotyping layout']}, {join => 'type' });
+   	->find({ 'type.name' => ['field_layout', 'genotyping_layout']}, {join => 'type' });
   return $field_layout_experiment;
 }
 

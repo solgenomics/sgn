@@ -20,6 +20,7 @@ use JSON::Any;
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs /;
 use Bio::Chado::NaturalDiversity::Reports;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -150,6 +151,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+    my $user_role = 1 if $logged_user;
     my $curator   = $logged_user->check_roles('curator') if $logged_user;
     my $submitter = $logged_user->check_roles('submitter') if $logged_user;
     my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
@@ -239,6 +241,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         stockref => {
             action    => $action,
             stock_id  => $stock_id ,
+            user      => $user_role,
             curator   => $curator,
             submitter => $submitter,
             sequencer => $sequencer,
@@ -894,14 +897,9 @@ sub _stock_owner_ids {
 sub _stock_has_pedigree {
   my ($self, $stock) = @_;
   my $bcs_stock = $stock->get_object_row;
-  my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
-										 { name   => 'female_parent',
-										   cv     => 'stock_relationship',
-										  										 });
-  my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
-									       { name   => 'male_parent',
-										 cv     => 'stock_relationship',
-										 									       });
+  my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'female_parent', 'stock_relationship');
+  
+  my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'male_parent', 'stock_relationship');
 
   my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
   my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id()});
@@ -916,14 +914,9 @@ sub _stock_has_pedigree {
 sub _stock_has_descendants {
   my ($self, $stock) = @_;
   my $bcs_stock = $stock->get_object_row;
-  my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
-										 { name   => 'female_parent',
-										   cv     => 'stock_relationship',
-																				 });
-  my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
-									       { name   => 'male_parent',
-										 cv     => 'stock_relationship',
-										 									       });
+  my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema,'female_parent', 'stock_relationship');
+
+  my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'male_parent', 'stock_relationship');
 
   my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
   if ($descendant_relationships) {

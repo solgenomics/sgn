@@ -112,7 +112,7 @@ jQuery(document).ready(function ($) {
 	    $('#working_modal').modal("hide");
             if (response.error_string) {
 		$("#upload_trial_error_display tbody").html('');
-		$("#upload_trial_error_display tbody").append(response.error_string);
+		$("#upload_trial_error_display tbody").append(response.error);
 		$('#upload_trial_error_display').modal("show");
 		//$(function () {
                 //    $("#upload_trial_error_display").dialog({
@@ -131,10 +131,13 @@ jQuery(document).ready(function ($) {
 		return;
             }
             if (response.error) {
+		console.log(response);
 		alert(response.error);
 		return;
             }
             if (response.success) {
+		console.log(response);
+		//alert("uploadTrial got success response" + response.success);
 		$('#trial_upload_success_dialog_message').modal("show");
 		//alert("File uploaded successfully");
             }

@@ -58,7 +58,7 @@ has 'trial_year' => (isa => 'Str', is => 'rw', predicate => 'has_trial_year', re
 has 'trial_description' => (isa => 'Str', is => 'rw', predicate => 'has_trial_description', required => 1,);
 has 'trial_location' => (isa => 'Str', is => 'rw', predicate => 'has_trial_location', required => 1,);
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
-has 'design' => (isa => 'HashRef[HashRef[Str]]', is => 'rw', predicate => 'has_design', required => 1);
+has 'design' => (isa => 'HashRef[HashRef[Str]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 #has 'breeding_program_id' => (isa => 'Int', is => 'rw', predicate => 'has_breeding_program_id', required => 1);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 0,);
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
@@ -91,40 +91,48 @@ sub get_breeding_program_id {
   my $self = shift;
   my $project_lookup =  CXGN::BreedersToolbox::Projects->new(schema => $self->get_chado_schema);
   my $breeding_program_ref = $project_lookup->get_breeding_program_by_name($self->get_program());
-  if (!$breeding_program_ref) {
-    return;
+  if (!$breeding_program_ref ) {
+      print STDERR "UNDEF breeding program " . $self->get_program . "\n\n";
+      return ;
   }
   my $breeding_program_id = $breeding_program_ref->project_id();
+  print STDERR "get_breeding_program _id returning $breeding_program_id";
   return $breeding_program_id;
 }
 
 
 sub save_trial {
     print STDERR "Check 4.1: ".localtime();
-  my $self = shift;
+    print STDERR "**trying to save trial \n\n";
+    my $self = shift;
   my $chado_schema = $self->get_chado_schema();
-  my %design = %{$self->get_design()};
+
+  my %design;
+  if ($self->get_design) {
+    %design = %{$self->get_design()};
+  }
 
   if ($self->trial_name_already_exists()) {
       print STDERR "Can't create trial: Trial name already exists\n";
-      return ( error => "trial name already exists" );
+      die "trial name already exists" ;
   }
-
+    
   if (!$self->get_breeding_program_id()) {
-      print STDERR "Can't create trial: Breeding program does not exist\n";
-      return ( error => "no breeding program id" );
+      print STDERR "Can't create trial: Breeding program does not exist\n"; 
+      die "No breeding program id";
+      #return ( error => "no breeding program id" );
   }
 
     print STDERR "Check 4.2: ".localtime();
 
   #lookup user by name
-  my $user_name = $self->get_user_name();;
+  my $user_name = $self->get_user_name();
   my $dbh = $self->get_dbh();
   my $owner_sp_person_id;
   $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $user_name); #add person id as an option.
   if (!$owner_sp_person_id) {
       print STDERR "Can't create trial: User/owner not found\n";
-    return ( error => "no owner" );
+      die "no owner $user_name" ;
   }
 
     print STDERR "Check 4.3: ".localtime();
@@ -135,20 +143,20 @@ sub save_trial {
   $geolocation = $geolocation_lookup->get_geolocation();
   if (!$geolocation) {
       print STDERR "Can't create trial: Location not found\n";
-     return ( error => "no geolocation" );
+      die "no geolocation" ;
   }
 
     print STDERR "Check 4.4: ".localtime();
 
   my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $chado_schema } );
 
-  my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field layout', 'experiment_type');
+  my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type');
   my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
   my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type');
   my $plot_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship');
   my $sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type');
   my $sample_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship');
-  my $genotyping_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping layout', 'experiment_type');
+  my $genotyping_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type');
 
   my $project = $chado_schema->resultset('Project::Project')
     ->create({

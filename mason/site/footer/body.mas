@@ -61,14 +61,14 @@
 
       	    <div class="col-sm-9 col-md-9 col-lg-9">
 
-	      <div class="panel panel-success" style="margin-bottom:11px; padding-bottom:5px;">
+	      <div class="panel panel-success" style="margin-bottom:11px; padding-bottom:5px; overflow:scroll;">
 	        <div class="panel-heading"></div>
 
-		  <table class="center table hidden-xs" style="margin-bottom:-4px">
+		  <table class="center table hidden-xs" style="margin-bottom:-4px;">
 	    	  <tbody>
             	    <tr>
               	      <td>
-                	<a href="http://bti.cornell.edu/" class="footer"><img width="100" alt="Boyce Thompson Institute" src="/documents/img/bti_logo2.gif" title="Boyce Thompson Institute" border="0" style="padding-bottom:2px"/></a>
+                	<a href="http://bti.cornell.edu/" class="footer"><img width="160" alt="Boyce Thompson Institute" src="/documents/img/bti_logo_2016.png" title="Boyce Thompson Institute" border="0" style="padding-bottom:2px"/></a>
               	      </td>
               	      <td>
             		<a href="http://www.nsf.gov/" class="footer"><img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo2.png" title="National Science Foundation" border="0"/></a>
@@ -85,7 +85,7 @@
 
 	        <ul class="visible-xs-block list-inline center nav-justified">
             	  <li>
-              	  <a href="http://bti.cornell.edu/" class="footer"><img width="100" alt="Boyce Thompson Institute" src="/documents/img/bti_logo2.gif" title="Boyce Thompson Institute" border="0" style="padding-top:5px"/></a>
+              	  <a href="http://bti.cornell.edu/" class="footer"><img width="160" alt="Boyce Thompson Institute" src="/documents/img/bti_logo_2016.png" title="Boyce Thompson Institute" border="0" style="padding-top:5px"/></a>
             	  </li>
             	  <li>
               	  <a href="http://www.nsf.gov/" class="footer"><img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo2.png" title="National Science Foundation" border="0" style="padding-top:5px"/></a>

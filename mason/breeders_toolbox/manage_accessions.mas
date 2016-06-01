@@ -14,7 +14,7 @@ $preferred_species => ""
 <&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
 
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
-    
+
 <div>
   </br>
   <a href="/search/stocks">Search Accessions</a>
@@ -70,7 +70,7 @@ $preferred_species => ""
 		<small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search.</small>
               </div>
 	    </div>
-	  </form>      
+	  </form>
         </div>
       </div>
       <div class="modal-footer">
@@ -83,7 +83,7 @@ $preferred_species => ""
 
 <div class="modal fade" id="review_absent_dialog" name="review_absent_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewAbsentDialog">
   <div class="modal-dialog" role="document">
-    <div class="modal-content">
+    <div class="modal-content ui-front">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title" id="reviewAbsentDialog">Accessions to be Added</h4>
@@ -99,7 +99,7 @@ $preferred_species => ""
   	  <b>The following accessions will be added to the database:</b>
   	  <div id="count_of_absent_accessions"></div>
   	  <br>
-  	  <div id="view_absent"></div> 
+  	  <div id="view_absent"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -183,7 +183,7 @@ $preferred_species => ""
   <div id="count_of_absent_accessions"></div>
   <br>
   <div id="view_absent">
-  </div> 
+  </div>
 </div>
 -->
 
@@ -311,4 +311,3 @@ $preferred_species => ""
   height: 100px;
 }
 </style>
-

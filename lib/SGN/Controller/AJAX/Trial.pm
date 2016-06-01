@@ -42,6 +42,7 @@ use CXGN::BreedersToolbox::Delete;
 use CXGN::UploadFile;
 use CXGN::Trial::ParseUpload;
 use CXGN::List::Transform;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -523,12 +524,12 @@ sub upload_trial_file_POST : Args(0) {
 	   upload_trial_file => $upload,
 	  });
 
-#  try {
-    $trial_create->save_trial();
- # } catch {
-#    $c->stash->{rest} = {error => "Error saving trial in the database $_"};
-#    $error = 1;
-#  };
+  try {
+      $trial_create->save_trial();
+  } catch {
+      $c->stash->{rest} = {error => "Error saving trial in the database $_"};
+      $error = 1;
+  };
   
   print STDERR "Check 5: ".localtime();
 
@@ -626,11 +627,7 @@ sub _add_trial_layout_to_database {
   my $location = $c->req->param('add_project_location');
   my $project_name = $c->req->param('add_project_name');
   my $project_description = $c->req->param('add_project_description');
-  my $plot_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with({
-		   name   => 'plot',
-		   cv     => 'stock_type',
-		  });
+  my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type');
   my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")
     ->find_or_create({
 		      description => $location, #add this as an option
@@ -641,12 +638,9 @@ sub _add_trial_layout_to_database {
 		      species => 'Manihot esculenta',
 		     });
 
-  #this is wrong
-  my $plot_exp_cvterm = $schema->resultset('Cv::Cvterm')
-    ->create_with({
-		   name   => 'plot experiment',
-		   cv     => 'experiment_type',
-		  });
+  #this is wrong.  Does not seem to be used in the database !!
+  my $plot_exp_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_experiment', 'experiment_type');
+
 
   #create project
   my $project = $schema->resultset('Project::Project')
