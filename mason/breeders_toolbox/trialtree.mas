@@ -110,7 +110,7 @@ $breeding_programs
 
     $("#trial_list").delegate("li", "dblclick", function(){ 
       var node = $("#trial_list").jstree("get_node", this); 
-      if ($('#trial_list').jstree('is_leaf', node)) { 				       
+      if ($('#trial_list').jstree('is_leaf', node) && node.id.substr(0,1) !== 'j') { 				       
         window.open('/breeders_toolbox/trial/'+node.id);
       }
     }); 
@@ -552,4 +552,3 @@ background-color: #ccc;
     </div>
   </div>
 </div>
-

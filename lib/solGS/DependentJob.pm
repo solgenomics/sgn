@@ -28,28 +28,10 @@ has "dependency_type" => (
      required => 1, 
  );
 
-has "r_script"   => (
-     is       => 'ro',
-     isa      => 'Str',
-     required => 1, 
- );
-
 has "dependent_type" => (
      is       => 'ro',
      isa      => 'Str',
-    required  => 0,
- );
-
-has "script_args" => (
-     is       => 'ro',
-     isa      => 'ArrayRef',
-     required => 1, 
- );
-
-has "temp_dir" => (
-     is       => 'ro',
-     isa      => 'Str',
-     required => 1, 
+    required  => 1,
  );
 
 has "temp_file_template" => (
@@ -61,6 +43,24 @@ has "temp_file_template" => (
 has "analysis_report_args_file" => (
      is       => 'ro',
      isa      => 'Str',
+     required => 1, 
+ );
+
+has "temp_dir" => (
+     is       => 'ro',
+     isa      => 'Str',
+     required => 1, 
+ );
+
+has "r_script"   => (
+     is       => 'ro',
+     isa      => 'Str',
+     required => 0, 
+ );
+
+has "script_args" => (
+     is       => 'ro',
+     isa      => 'ArrayRef',
      required => 0, 
  );
 
@@ -84,7 +84,7 @@ sub run {
     my $job_type           = $self->dependent_type;
     my $dependency_type    = $self->dependency_type;
     my $args               = $self->script_args;
-
+   
     print STDERR "\nrun dependency type: $dependency_type\n";
     print STDERR "\nrun tmpdir: $temp_dir -- template $temp_file_template\n";
     print STDERR "\nrun report file: $report_file\n";
@@ -97,13 +97,16 @@ sub run {
 
     my $all_pre_jobs_done = $self->check_prerequisite_jobs();
     my $all_jobs_done;
-    
+     
     if ($all_pre_jobs_done)
     {
-	$all_jobs_done = $self->run_dependent_job();
+	unless ($job_type =~ /send_analysis_report/) 
+	{ 
+	    $all_jobs_done = $self->run_dependent_job();
+	}
     }
     
-    if ($all_jobs_done) 
+    if ($all_jobs_done || $job_type =~ /send_analysis_report/) 
     {
 	$self->send_analysis_report();
     }
@@ -239,11 +242,11 @@ sub run_dependent_job {
 	  sleep 120 if $model_job->alive();
       } 
       
-      $modeling_done = 1;
+      $modeling_done = 1;          
   }  
+  
+   return $modeling_done;
 
-  return $modeling_done;
- 
 }
 
 

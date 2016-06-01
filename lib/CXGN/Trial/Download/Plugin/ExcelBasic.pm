@@ -42,7 +42,7 @@ sub download {
     $ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
     $ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
     $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
-    $ws->data_validation(2,3, { validate => "date" });
+    $ws->data_validation(2,3, { validate => "date", criteria => '>', value=>'1000-01-01' });
     
 
     my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
@@ -80,17 +80,19 @@ sub download {
     }
 									       
     for (my $i = 0; $i < @trait_list; $i++) { 
-	if (exists($cvinfo{$trait_list[$i]})) { 
-	    $ws->write(5, $i+6, $cvinfo{$trait_list[$i]}->display_name());
-	}
-	else { 
-	    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
-	    next;
-	}
+	#if (exists($cvinfo{$trait_list[$i]})) { 
+	    #$ws->write(5, $i+6, $cvinfo{$trait_list[$i]}->display_name());
+	    $ws->write(5, $i+6, $trait_list[$i]);
+	#}
+	#else { 
+	#    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
+	#    next;
+	#}
     
 	my $plot_count = scalar(keys(%design));
 
 	for (my $n = 0; $n < $plot_count; $n++) { 
+        if ($cvinfo{$trait_list[$i]}) {
 	    my $format = $cvinfo{$trait_list[$i]}->format();
 	    if ($format eq "numeric") { 
 		$ws->data_validation($n+6, $i+6, { validate => "any" });
@@ -102,6 +104,7 @@ sub download {
 					 value    => [ split ",", $format ]
 				     });
 	    }
+        }
 	}
     }
     $workbook->close();

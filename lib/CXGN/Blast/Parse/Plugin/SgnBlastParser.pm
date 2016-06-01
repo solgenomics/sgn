@@ -142,7 +142,7 @@ sub parse {
         my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
         ($sstart,$send) = _check_coordinates($sstart,$send);
         
-        push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+        push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
       }
       $subject = "";
       $id = 0.0;
@@ -167,7 +167,7 @@ sub parse {
       my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
       ($sstart,$send) = _check_coordinates($sstart,$send);
       
-      push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+      push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
 
       $id = 0.0;
       $aln = 0;
@@ -222,7 +222,7 @@ sub parse {
   my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
   ($sstart,$send) = _check_coordinates($sstart,$send);
   
-  push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', 'show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+  push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
   push(@res_html, "</table></center>");
   
   push(@res_html, "<br><pre>");
@@ -243,8 +243,8 @@ sub _build_jbrowse_url {
   
   my $jbrowse_url = "";
   
-  $subject =~ s/\.\d$//;
-  $subject =~ s/\.\d$//;
+  # $subject =~ s/\.\d$//;
+  # $subject =~ s/\.\d$//;
   
   if ($jbr_src) {
     if ($jbr_src =~ /(.+)_gene/) {

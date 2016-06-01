@@ -12,7 +12,10 @@ use CXGN::Trial::TrialLayout;
 use CXGN::Chado::Stock;
 use CXGN::Login;
 use CXGN::BreederSearch;
+use CXGN::Trial::TrialCreate;
+use JSON qw( decode_json );
 use Data::Dumper;
+use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -40,7 +43,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->stash->{status} = \@status;
     $c->stash->{session_token} = $c->req->param("session_token");
-    $c->stash->{current_page} = $c->req->param("page") || 1;
+    $c->stash->{current_page} = $c->req->param("currentPage") || 1;
     $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
 
 }
@@ -471,6 +474,87 @@ sub studies_list_POST {
     my $status = $c->stash->{status};
     my @status = @$status;
 
+    my $study_name = $c->req->param('studyName');
+    my $location_id = $c->req->param('locationDbId');
+    my $years = $c->req->param('studyYears');
+    my $program_id = $c->req->param('programDbId');
+    my $optional_info = $c->req->param('optionalInfo');
+
+    my $description;
+    my $study_type;
+    if ($optional_info) {
+        my $opt_info_hash = decode_json($optional_info);
+        $description = $opt_info_hash->{"studyObjective"};
+        $study_type = $opt_info_hash->{"studyType"};
+    }
+
+    my $program_obj = CXGN::BreedersToolbox::Projects->new({schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') });
+    my $programs = $program_obj->get_breeding_programs();
+    my $program_check;
+    my $program_name;
+    foreach (@$programs) {
+        if ($_->[0] == $program_id) {
+            $program_check = 1;
+            $program_name = $_->[1];
+        }
+    }
+    if (!$program_check) {
+        push @status, "Program not found with programDbId = ".$program_id;
+        $c->stash->{rest} = {status => \@status };
+        return;
+    }
+
+    my $locations = $program_obj->get_all_locations();
+    my $location_check;
+    my $location_name;
+    foreach (@$locations) {
+        if ($_->[0] == $location_id) {
+            $location_check = 1;
+            $location_name = $_->[1];
+        }
+    }
+    if (!$location_check) {
+        push @status, "Location not found with locationDbId = ".$location_id;
+        $c->stash->{rest} = {status => \@status };
+        return;
+    }
+
+    my $trial_design;
+    my $trial_create = CXGN::Trial::TrialCreate->new({ 
+        dbh => $c->dbc->dbh,
+        chado_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
+        user_name => $c->user()->get_object()->get_username(),
+        program => $program_name,
+        trial_year => $years,
+        trial_description => $description,
+        design_type => $study_type,
+        trial_location => $location_name,
+        trial_name => $study_name,
+        design => $trial_design,
+    });
+
+    if ($trial_create->trial_name_already_exists()) {
+        push @status, "Trial name \"".$trial_create->get_trial_name()."\" already exists.";
+        $c->stash->{rest} = {status => \@status };
+        return;
+    }
+
+    my $error;
+
+    try {
+        $trial_create->save_trial();
+    } catch {
+        push @status, "Error saving trial in the database $_";
+        $c->stash->{rest} = {status => \@status};
+        $error = 1;
+    };
+    if ($error) {
+        return;
+    }
+
+    push @status, "Study saved successfully.";
     $c->stash->{rest} = {status => \@status};
 }
 
@@ -761,18 +845,24 @@ sub germplasm_markerprofile_GET {
     my @status = @$status;
     my @marker_profiles;
 
-    my $rs = $self->bcs_schema()->resultset("Stock::StockGenotype")->search( {stock_id=>$c->stash->{stock_id} } );
-    my $mp;
-    while (my $gt = $rs->next()) {
-	$mp = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( {genotype_id=>$gt->genotype_id} );
-	while (my $gp = $mp->next()) {
-	    push @marker_profiles, $gp->genotypeprop_id;
-	}
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+
+    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+  	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$c->stash->{stock_id}},
+  	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
+  	     select=> ['genotypeprops.genotypeprop_id'],
+  	     as=> ['genotypeprop_id'],
+  	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
+  	    }
+  	);
+
+    my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+    while (my $gt = $rs_slice->next()) {
+      push @marker_profiles, $gt->get_column('genotypeprop_id');
     }
     %result = (germplasmDbId=>$c->stash->{stock_id}, markerProfiles=>\@marker_profiles);
-
-    my %pagination;
-    my %metadata = (pagination=>\%pagination, status=>\@status);
+    my $total_count = scalar(@marker_profiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -846,43 +936,45 @@ sub markerprofiles_list_GET {
     my @data;
     my %result;
 
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+
     my $rs;
     if ($germplasm && $method) {
 	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {'stock.stock_id'=>$germplasm, 'nd_protocol.nd_protocol_id'=>$method},
+	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$germplasm, 'nd_protocol.nd_protocol_id'=>$method},
 	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	     '+select'=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	     '+as'=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
+	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
+	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
 	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
 	    }
 	);
     }
     if ($germplasm && !$method) {
 	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {'stock.stock_id'=>$germplasm},
+	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$germplasm},
 	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	     '+select'=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	     '+as'=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
+	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
+	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
 	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
 	    }
 	);
     }
     if (!$germplasm && $method) {
 	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {'nd_protocol.nd_protocol_id'=>$method},
+	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'nd_protocol.nd_protocol_id'=>$method},
 	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	     '+select'=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	     '+as'=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
+	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
+	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
 	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
 	    }
 	);
     }
     if (!$germplasm && !$method) {
 	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {},
+	    { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id },
 	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	     '+select'=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	     '+as'=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
+	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
+	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
 	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
 	    }
 	);
@@ -892,19 +984,17 @@ sub markerprofiles_list_GET {
 	push @status, 'Extract not supported';
     }
 
-    my $total_count = 0;
-
     if ($rs) {
-	$total_count = $rs->count();
-	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-        my @runs;
-	foreach my $row ($rs_slice->all()) {
+      my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+	while (my $row = $rs_slice->next()) {
 	    my $genotype_json = $row->get_column('value');
 	    my $genotype = JSON::Any->decode($genotype_json);
 
 	    push @data, {markerProfileDbId => $row->get_column('genotypeprop_id'), germplasmDbId => $row->get_column('stock_id'), extractDbId => "", analysisMethod => $row->get_column('protocol_name'), resultCount => scalar(keys(%$genotype)) };
 	}
     }
+
+    my $total_count = $rs->count();
 
     %result = (data => \@data);
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
@@ -972,19 +1062,16 @@ sub genotype_fetch_GET {
     my %result;
 
     my $total_count = 0;
-    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->find(
 	{'genotypeprops.genotypeprop_id' => $c->stash->{markerprofile_id} },
 	{join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	 '+select'=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	 '+as'=> ['value', 'protocol_name', 'stock_id'],
-	 order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
+	 select=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
+	 as=> ['value', 'protocol_name', 'stock_id'],
 	}
     );
 
     if ($rs) {
-    	foreach my $row ($rs->first()) {
-
-    	    my $genotype_json = $row->get_column('value');
+    	    my $genotype_json = $rs->get_column('value');
     	    my $genotype = JSON::Any->decode($genotype_json);
             $total_count = scalar keys %$genotype;
 
@@ -996,8 +1083,7 @@ sub genotype_fetch_GET {
             my $end = $c->stash->{page_size}*$c->stash->{current_page};
             my @data_window = splice @data, $start, $end;
 
-    	    %result = (germplasmDbId=>$row->get_column('stock_id'), extractDbId=>'', markerprofileDbId=>$c->stash->{markerprofile_id}, analysisMethod=>$row->get_column('protocol_name'), encoding=>"AA,BB,AB", data => \@data_window);
-    	}
+    	    %result = (germplasmDbId=>$rs->get_column('stock_id'), extractDbId=>'', markerprofileDbId=>$c->stash->{markerprofile_id}, analysisMethod=>$rs->get_column('protocol_name'), encoding=>"AA,BB,AB", data => \@data_window);
     }
 
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
@@ -1009,7 +1095,7 @@ sub genotype_fetch_GET {
 sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my @status = @$status;
 
@@ -1034,10 +1120,14 @@ sub genosort {
 	$b_pos = $2;
     }
 
-    if ($a_chr == $b_chr) {
-	return $a_pos <=> $b_pos;
+    if ($a_chr && $b_chr) {
+      if ($a_chr == $b_chr) {
+          return $a_pos <=> $b_pos;
+      }
+      return $a_chr <=> $b_chr;
+    } else {
+      return -1;
     }
-    return $a_chr <=> $b_chr;
 }
 
 
@@ -1094,83 +1184,77 @@ sub convert_dosage_to_genotype {
 =cut
 
 sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @status = @$status;
+  my $self = shift;
+  my $c = shift;
+  #my $auth = _authenticate_user($c);
+  my $status = $c->stash->{status};
+  my @status = @$status;
 
-    my $markerprofile_ids = $c->req->param("markerprofileIds");
+  my @profile_ids = $c->req->param('markerprofileDbId');
+  #print STDERR Dumper \@profile_ids;
+  #my @profile_ids = split ",", $markerprofile_ids;
 
-    my @profile_ids = split ",", $markerprofile_ids;
+  my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
 
-    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
+  my %scores;
+  my $total_pages;
+  my $total_count;
+  my @marker_score_lines;
+  my @ordered_refmarkers;
 
-    my %scores;
-    my $total_pages;
-    my $total_count;
-    my @marker_score_lines;
-    my @ordered_refmarkers;
+  if ($rs->count() > 0) {
+    while (my $profile = $rs->next()) {
+      my $profile_json = $profile->value();
+      my $refmarkers = JSON::Any->decode($profile_json);
+      #print STDERR Dumper($refmarkers);
+      push @ordered_refmarkers, sort genosort keys(%$refmarkers);
 
-    if ($rs->count() > 0) {
-	my $profile_json = $rs->first()->value();
-	my $refmarkers = JSON::Any->decode($profile_json);
-
-	print STDERR Dumper($refmarkers);
-
-	@ordered_refmarkers = sort genosort keys(%$refmarkers);
-
-	print Dumper(\@ordered_refmarkers);
-
-	$total_count = scalar(@ordered_refmarkers);
-
-	if ($c->stash->{page_size}) {
-	    $total_pages = ceil($total_count / $c->stash->{page_size});
-	}
-	else {
-	    $total_pages = 1;
-	    $c->stash->{page_size} = $total_count;
-	}
-
-	while (my $profile = $rs->next()) {
-	    foreach my $m (@ordered_refmarkers) {
-		my $markers_json = $profile->value();
-		my $markers = JSON::Any->decode($markers_json);
-
-		$scores{$profile->genotypeprop_id()}->{$m} =
-		    $self->convert_dosage_to_genotype($markers->{$m});
-	    }
-	}
     }
-    my @lines;
-    foreach my $line (keys %scores) {
-	push @lines, $line;
+    #print Dumper(\@ordered_refmarkers);
+
+    $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
+    while (my $profile = $rs->next()) {
+      foreach my $m (@ordered_refmarkers) {
+        my $markers_json = $profile->value();
+        my $markers = JSON::Any->decode($markers_json);
+
+        $scores{$profile->genotypeprop_id()}->{$m} = $self->convert_dosage_to_genotype($markers->{$m});
+      }
     }
+  }
+
+  #print STDERR Dumper \%scores;
+
+  my @lines;
+  foreach my $line (keys %scores) {
+    push @lines, $line;
+  }
+
+  my %markers_seen;
+  for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
 
     my %markers_by_line;
+    my $m = $ordered_refmarkers[$n];
+      foreach my $line (keys %scores) {
+        push @{$markers_by_line{$m}}, $scores{$line}->{$m};
+        if (!exists $markers_seen{$m} ) {
+          $markers_seen{$m} = \@{$markers_by_line{$m}};
+          #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
+        }
+      }
 
-    for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
+  }
 
-	my $m = $ordered_refmarkers[$n];
-	foreach my $line (keys %scores) {
-	    push @{$markers_by_line{$m}}, $scores{$line}->{$m};
-	    push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
-	}
-    }
+  foreach my $marker_name (sort keys %markers_seen) {
+    push @marker_score_lines, { $marker_name => $markers_seen{$marker_name} };
+  }
 
-    $c->stash->{rest} = {
-	metadata => {
-	    pagination => {
-		pageSize => $c->stash->{page_size},
-		currentPage => $c->stash->{current_page},
-		totalPages => $total_pages,
-		totalCount => $total_count
-	    },
-		    status => [],
-	},
-		    markerprofileIds => \@lines,
-		    scores => \@marker_score_lines,
-    };
+  $total_count = scalar(@marker_score_lines);
+
+  $c->stash->{rest} = {
+    metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status },
+    result => {markerprofileDbIds => \@lines, data => \@marker_score_lines},
+  };
 
 }
 
@@ -1449,7 +1533,7 @@ sub studies_details_GET {
 	    studyPlatform => "",
 	    startDate => $t->get_planting_date(),
 	    endDate => $t->get_harvest_date(),
-        programDbId=>@$programs[0]->[0], 
+        programDbId=>@$programs[0]->[0],
         programName=>@$programs[0]->[1],
 	    designType => $tl->get_design_type(),
 	    keyContact => "",
@@ -1541,12 +1625,12 @@ sub studies_layout_GET {
                     "totalPages": 1
                 },
             "result" : {
-                "data" : [ 
+                "data" : [
                     {
                         "studyDbId": 1,
                         "plotDbId": 11,
                         "observationVariableDbId" : 393939,
-                        "observationVariableName" : "Yield", 
+                        "observationVariableName" : "Yield",
                         "plotName": "ZIPA_68_Ibadan_2014",
                         "timestamp" : "2015-11-05 15:12",
                         "uploadedBy" : {dbUserId},
@@ -1590,7 +1674,7 @@ sub studies_plot_phenotypes_GET {
     my $trait =$self->bcs_schema->resultset('Cv::Cvterm')->find({ cvterm_id => $trait_id });
 
     #print STDERR Dumper $phenotype_data;
-    
+
     my @data;
     my $total_count = scalar(@$phenotype_data);
     my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
@@ -1684,16 +1768,16 @@ sub studies_table_GET {
     my $start = $c->stash->{page_size}*($c->stash->{current_page}-1)+1;
     my $end = $c->stash->{page_size}*$c->stash->{current_page}+1;
     my @data_window;
-    for (my $line = $start; $line < $end; $line++) { 
+    for (my $line = $start; $line < $end; $line++) {
         if ($data[$line]) {
             my @columns = split /\t/, $data[$line], -1;
-            
+
             push @data_window, \@columns;
         }
     }
-    
+
     #print STDERR Dumper \@data_window;
-    
+
     %result = (studyDbId => $c->stash->{study_id}, observationVariableDbId => \@header_ids, observationVariableName => \@header_names, data=>\@data_window);
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
@@ -1978,15 +2062,15 @@ sub maps_list_GET {
     my $status = $c->stash->{status};
     my @status = @$status;
 
-
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
 
     my @data;
-    my %map_info;
     while (my $row = $rs->next()) {
+      my %map_info;
     	print STDERR "Retrieving map info for ".$row->name()." ID:".$row->nd_protocol_id()."\n";
         #$self->bcs_schema->storage->debug(1);
-    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id() } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {select=>['genotype.description', 'genotypeprops.value'], as=>['description', 'value'], rows=>1} );
+    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $row->nd_protocol_id() } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {select=>['genotype.description', 'genotypeprops.value'], as=>['description', 'value'], rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
     	my $lg_row = $lg_rs->first();
 
@@ -1994,26 +2078,22 @@ sub maps_list_GET {
     	    die "This was never supposed to happen :-(";
     	}
 
-    	my $scores;
-    	if ($lg_row) {
-    	    $scores = JSON::Any->decode($lg_row->value());
-    	}
+    	my $scores = JSON::Any->decode($lg_row->get_column('value'));
     	my %chrs;
 
     	my $marker_count =0;
-    	my $lg_count = 0;
     	foreach my $m (sort genosort (keys %$scores)) {
     	    my ($chr, $pos) = split "_", $m;
     	    #print STDERR "CHR: $chr. POS: $pos\n";
     	    $chrs{$chr} = $pos;
     	    $marker_count++;
-    	    $lg_count = scalar(keys(%chrs));
     	}
+      my $lg_count = scalar(keys(%chrs));
 
     	%map_info = (
     	    mapId =>  $row->nd_protocol_id(),
     	    name => $row->name(),
-            species => $lg_row->get_column('description'),
+          species => $lg_row->get_column('description'),
     	    type => "physical",
     	    unit => "bp",
     	    markerCount => $marker_count,
@@ -2107,57 +2187,68 @@ sub maps_details_GET {
     my $params = $c->req->params();
     my $total_count = 0;
 
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+
     # maps are just marker lists associated with specific protocols
-    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { nd_protocol_id => $c->stash->{map_id} } );
+    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->find( { nd_protocol_id => $c->stash->{map_id} } );
     my %map_info;
     my @data;
-    while (my $row = $rs->next()) {
-    	print STDERR "Retrieving map info for ".$row->name()."\n";
-        #$self->bcs_schema->storage->debug(1);
-    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1} );
 
-    	my $lg_row = $lg_rs->first();
+    print STDERR "Retrieving map info for ".$rs->name()."\n";
+    #$self->bcs_schema->storage->debug(1);
+    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $rs->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
-    	if (!$lg_row) {
-    	    die "This was never supposed to happen :-(";
-    	}
+    if (!$lg_rs) {
+        die "This was never supposed to happen :-(";
+    }
 
-    	my $scores;
-    	if ($lg_row) {
-    	    $scores = JSON::Any->decode($lg_row->value());
-    	}
+    my %chrs;
+    my %markers;
+    my @ordered_refmarkers;
+    while (my $profile = $lg_rs->next()) {
+      my $profile_json = $profile->value();
+      my $refmarkers = JSON::Any->decode($profile_json);
+      #print STDERR Dumper($refmarkers);
+      push @ordered_refmarkers, sort genosort keys(%$refmarkers);
 
-    	my %chrs;
-        my %chrs_marker_count;
-    	foreach my $m (sort genosort (keys %$scores)) {
-    	    my ($chr, $pos) = split "_", $m;
-    	    #print STDERR "CHR: $chr. POS: $pos\n";
-    	    $chrs{$chr} = $pos;
-            if ($chrs_marker_count{$chr}) {
-                ++$chrs_marker_count{$chr};
-            } else {
-                $chrs_marker_count{$chr} = 1;
+    }
+
+    foreach my $m (@ordered_refmarkers) {
+
+        my ($chr, $pos) = split "_", $m;
+        #print STDERR "CHR: $chr. POS: $pos\n";
+
+        $markers{$chr}->{$m} = 1;
+        if ($pos) {
+          if ($chrs{$chr}) {
+            if ($pos > $chrs{$chr}) {
+              $chrs{$chr} = $pos;
             }
-    	}
-
-        foreach my $ci (sort (keys %chrs)) {
-            my %linkage_groups_data = (linkageGroupId => $ci, numberMarkers => $chrs_marker_count{$ci}, maxPosition => $chrs{$ci} );
-            push @data, \%linkage_groups_data;
+          } else {
+            $chrs{$chr} = $pos;
+          }
         }
 
-        $total_count = scalar(@data);
-        my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-        my $end = $c->stash->{page_size}*$c->stash->{current_page};
-        my @data_window = splice @data, $start, $end;
+      }
 
-    	%map_info = (
-    	    mapId =>  $row->nd_protocol_id(),
-    	    name => $row->name(),
-    	    type => "physical",
-    	    unit => "bp",
-    	    linkageGroups => \@data_window,
-    	    );
+    foreach my $ci (sort (keys %chrs)) {
+      my $num_markers = scalar keys %{ $markers{$ci} };
+      my %linkage_groups_data = (linkageGroupId => $ci, numberMarkers => $num_markers, maxPosition => $chrs{$ci} );
+      push @data, \%linkage_groups_data;
     }
+
+    $total_count = scalar(@data);
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my @data_window = splice @data, $start, $end;
+
+    %map_info = (
+      mapId =>  $rs->nd_protocol_id(),
+      name => $rs->name(),
+      type => "physical",
+      unit => "bp",
+      linkageGroups => \@data_window,
+    );
 
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%map_info);
@@ -2223,30 +2314,32 @@ sub maps_marker_detail_GET {
         %linkage_groups = map { $_ => 1 } @linkage_groups_array;
     }
 
-    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { nd_protocol_id => $c->stash->{map_id} } );
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->find( { nd_protocol_id => $c->stash->{map_id} } );
 
     my @markers;
-    while (my $row = $rs->next()) {
-    	print STDERR "Retrieving map info for ".$row->name()."\n";
-        #$self->bcs_schema->storage->debug(1);
-    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'me.nd_protocol_id' => $row->nd_protocol_id()  } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1} );
+    print STDERR "Retrieving map info for ".$rs->name()."\n";
+      #$self->bcs_schema->storage->debug(1);
+    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $rs->nd_protocol_id()})->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
-    	my $lg_row = $lg_rs->first();
+    if (!$lg_rs) {
+        die "This was never supposed to happen :-(";
+    }
 
-    	if (!$lg_row) {
-    	    die "This was never supposed to happen :-(";
-    	}
+    my @ordered_refmarkers;
+    while (my $profile = $lg_rs->next()) {
+      my $profile_json = $profile->value();
+      my $refmarkers = JSON::Any->decode($profile_json);
+      #print STDERR Dumper($refmarkers);
+      push @ordered_refmarkers, sort genosort keys(%$refmarkers);
+    }
 
-    	my $scores;
-    	if ($lg_row) {
-    	    $scores = JSON::Any->decode($lg_row->value());
-    	}
-    	my %chrs;
+  	my %chrs;
 
-    	foreach my $m (sort genosort (keys %$scores)) {
+    	foreach my $m (@ordered_refmarkers) {
     	    my ($chr, $pos) = split "_", $m;
     	    #print STDERR "CHR: $chr. POS: $pos\n";
-    	    $chrs{$chr} = $pos;
+           $chrs{$chr} = $pos;
             #   "markerId": 1,
             #   "markerName": "marker1",
             #   "location": "1000",
@@ -2273,8 +2366,8 @@ sub maps_marker_detail_GET {
             } else {
                 push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
             }
-    	}
-    }
+
+        }
 
     my $total_count = scalar(@markers);
     my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);

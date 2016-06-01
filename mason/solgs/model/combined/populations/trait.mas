@@ -50,6 +50,8 @@ $model_parameters
   title       => "Training population summary",
 &>
 
+% $project_name = "<a href=\"/solgs/populations/combined/$combo_pops_id\">$project_name</a>";
+
 <& summary.mas,
     project_name => $project_name,
     project_desc => $project_desc,

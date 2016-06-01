@@ -181,36 +181,53 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $status;
    
-    #my $async_pid = $c->stash->{async_pid};
 
     if ($c->stash->{dependency})
-    {	 
-	my $report_file = $c->stash->{report_file};
-	nstore $output_details,  $report_file 
-	    or croak "check_analysis_status: $! serializing output_details to $report_file";	
-    }
-    else 
     {
-	try 
-	{ 
-	    my $job = CXGN::Tools::Run->run_cluster_perl({           
-		method        => ["solGS::AnalysisReport" => "check_analysis_status"],
-		args          => [$output_details],
-		load_packages => ['solGS::AnalysisReport'],
-		run_opts      => {
-		    out_file    => $out_temp_file,
-		    err_file    => $err_temp_file,
-		    working_dir => $temp_dir,
-		    max_cluster_jobs => 1_000_000_000,
-		},
-	    });
+    	my $dependency = $c->stash->{dependency};
+    	print STDERR "\nanalysis profile: depenencies... $dependency ..\n"; 
+    	my $report_file = $c->stash->{report_file};
+    	nstore $output_details,  $report_file 
+    	    or croak "check_analysis_status: $! serializing output_details to $report_file";	
+    }
+    else  
+    {
+	print STDERR "\nanalysis profile: running analysis report call..\n";
+	my $output_details_file = $c->controller('solGS::solGS')->create_tempfile($c, 'analysis_report_args');
+	nstore $output_details, $output_details_file 
+	    or croak "check_analysis_status: $! serializing output_details to $output_details_file";
 	
-	}
-	catch 
-	{
-	    $status = $_;
-	    $status =~ s/\n at .+//s;           
-	};
+	my $cmd = 'mx-run solGS::AnalysisReport --output_details_file ' . $output_details_file;
+	print STDERR "analysis report cmd: $cmd\n";
+	my $async =  CXGN::Tools::Run->run_async($cmd,
+			     {
+				 working_dir      => $c->stash->{solgs_tempfiles_dir},
+				 temp_base        => $c->stash->{solgs_tempfiles_dir},
+				 max_cluster_jobs => 1_000_000_000,
+				 out_file         => $out_temp_file,
+				 err_file         => $err_temp_file,
+			     }
+     );
+	# try 
+	# { 
+	#     my $job = CXGN::Tools::Run->run_cluster_perl({           
+	# 	method        => ["solGS::AnalysisReport" => "check_analysis_status"],
+	# 	args          => [$output_details],
+	# 	load_packages => ['solGS::AnalysisReport'],
+	# 	run_opts      => {
+	# 	    out_file    => $out_temp_file,
+	# 	    err_file    => $err_temp_file,
+	# 	    working_dir => $temp_dir,
+	# 	    max_cluster_jobs => 1_000_000_000,
+	# 	},
+	#     });
+	
+	# }
+	# catch 
+	# {
+	#     $status = $_;
+	#     $status =~ s/\n at .+//s;           
+	# };
     }
 
 
@@ -233,7 +250,8 @@ sub parse_arguments {
   my ($self, $c) = @_;
  
   my $analysis_data =  $c->stash->{analysis_profile};
-  my $arguments = $analysis_data->{arguments};
+  my $arguments     = $analysis_data->{arguments};
+  my $data_set_type = $analysis_data->{data_set_type};
 
   if ($arguments) 
   {
@@ -258,6 +276,24 @@ sub parse_arguments {
 	      $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];
 	  }
 
+	  if ($k eq 'selection_pop_id') 
+	  {
+	      $c->stash->{selection_pop_id}  = @{ $arguments->{$k} }[0];
+	      $c->stash->{prediction_pop_id} = @{ $arguments->{$k} }[0];
+	  }
+
+	  if ($k eq 'training_pop_id') 
+	  {
+	      $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];
+	      $c->stash->{pop_id}          = @{ $arguments->{$k} }[0];
+	      $c->stash->{model_id}        = @{ $arguments->{$k} }[0];
+	      
+	      if ($data_set_type =~ /combined populations/)
+	      {
+		  $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];
+	      }
+	  }
+
 	  if ($k eq 'combo_pops_list') 
 	  {
 	      my @pop_ids = @{ $arguments->{$k} };
@@ -273,6 +309,11 @@ sub parse_arguments {
 	  {
 	      my @selected_traits = @{ $arguments->{$k} };
 	      $c->stash->{selected_traits} = \@selected_traits;
+	      
+	      if (scalar(@selected_traits) == 1)
+	      {
+		$c->stash->{trait_id} = @{ $arguments->{$k} }[0]; 
+	      }
 	  } 
 	  
 	  if ($k eq 'analysis_type') 
@@ -357,7 +398,7 @@ sub structure_output_details {
 		$solgs_controller->cache_combined_pops_data($c);		
 	    }
 	    
-	    $output_details{$trait_abbr} = {
+	    $output_details{'trait_id_' . $trait_abbr} = {
 		'trait_id'       => $trait_id, 
 		'trait_name'     => $c->stash->{trait_name}, 
 		'trait_page'     => $trait_page,
@@ -380,13 +421,58 @@ sub structure_output_details {
 	$solgs_controller->genotype_file($c);
 	$solgs_controller->get_project_details($c, $pop_id);
 
-	$output_details{$pop_id} = {
+	$output_details{'population_id_' . $pop_id} = {
 		'population_page' => $population_page,
 		'population_id'   => $pop_id,
 		'population_name' => $c->stash->{project_name},
 		'phenotype_file'  => $c->stash->{phenotype_file},
 		'genotype_file'   => $c->stash->{genotype_file},  
 		'data_set_type'   => $c->stash->{data_set_type},
+	};		
+    }
+    elsif ( $analysis_page =~ m/solgs\/model\/\d+\/prediction\// ) 
+    {
+	my $trait_id = $c->stash->{trait_id};
+	$solgs_controller->get_trait_details($c, $trait_id);
+	my $trait_abbr = $c->stash->{trait_abbr};
+
+	my $training_pop_id   = $c->stash->{training_pop_id};
+	my $prediction_pop_id = $c->stash->{prediction_pop_id};
+
+	my $training_pop_page   = $base . "solgs/population/$pop_id";
+	my $model_page          = $base . "solgs/trait/$trait_id/population/$pop_id";
+	my $prediction_pop_page = $base . "solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id";
+
+	my $training_pop_name;
+
+	if ($c->stash->{data_set_type} =~ /combined populations/)
+	{
+	    $training_pop_name = 'Training population ' . $training_pop_id;
+	}
+	else
+	{	    
+	    $solgs_controller->get_project_details($c, $training_pop_id);
+	    $training_pop_name = $c->stash->{project_name};
+	}
+	
+	$solgs_controller->get_project_details($c, $prediction_pop_id);
+	my $prediction_pop_name = $c->stash->{project_name};
+	
+	my $identifier = $training_pop_id . '_' . $prediction_pop_id;
+	$solgs_controller->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+	my $gebv_file = $c->stash->{prediction_pop_gebvs_file};
+	
+	$output_details{'trait_id_' . $trait_id} = {
+		'training_pop_page'   => $training_pop_page,
+		'training_pop_id'     => $training_pop_id,
+		'training_pop_name'   => $training_pop_name,
+		'prediction_pop_name' => $prediction_pop_name,
+		'prediction_pop_page' => $prediction_pop_page,
+		'trait_name'          => $c->stash->{trait_name},
+		'trait_id'            => $trait_id,
+		'model_page'          => $model_page,	
+		'gebv_file'           => $c->stash->{prediction_pop_gebvs_file},
+		'data_set_type'       => $c->stash->{data_set_type},
 	};		
     }
     elsif ($analysis_page =~ m/solgs\/populations\/combined\//) 
@@ -415,7 +501,7 @@ sub structure_output_details {
 	    my $gen_exp = 'genotype_data_' . $pop_id . '.txt';
 	    my ($geno_file)  = grep{$_ =~ /$gen_exp/} @geno_files;
 
-	    $output_details{$pop_id} = {
+	    $output_details{'population_id_' . $pop_id} = {
 		'population_page'   => $population_page,
 		'population_id'     => $pop_id,
 		'population_name'   => $population_name,
@@ -500,11 +586,31 @@ sub run_analysis {
 	#$c->controller('solGS::solGS')->get_combined_pops_list($c, $combo_pops_id);
 	$c->controller("solGS::combinedTrials")->prepare_multi_pops_data($c);	
 	
+	$c->stash->{dependency} = $c->stash->{prerequisite_jobs};
+	$c->stash->{dependency_type} = 'download_data';
+	$c->stash->{job_type}  = 'send_analysis_report';
+
+	if ($c->stash->{dependency})
+	{
+	    $c->controller("solGS::solGS")->run_async($c);
+	}
         #my $combined_pops_list = $c->controller("solGS::combinedTrials")->get_combined_pops_arrayref($c);
 	#$c->controller('solGS::solGS')->multi_pops_geno_files($c, $combined_pops_list);
 	#my $g_files = $c->stash->{multi_pops_geno_files};
 	#my @geno_files = split(/\t/, $g_files);
 	#$c->controller('solGS::solGS')->submit_cluster_compare_trials_markers($c, \@geno_files);
+    }
+    elsif ($analysis_page =~ /solgs\/model\/\d+\/prediction\//)
+    {
+	if ($c->stash->{data_set_type} =~ /single population/)
+	{
+	    $c->controller('solGS::solGS')->predict_selection_pop_single_pop_model($c);
+	}
+	elsif ($c->stash->{data_set_type} =~ /combined populations/) 
+	{
+	    $c->controller('solGS::solGS')->predict_selection_pop_combined_pops_model($c);
+	}
+	
     }
     else 
     {
@@ -642,9 +748,13 @@ sub solgs_analysis_status_log {
 	    my $analysis_status = $analysis[$header_index->{'Status'}];
 	    my $submitted_on    = $analysis[$header_index->{'Submitted on'}];
 
-	    if ($analysis_status =~ /(Failed|Submitted)/i) 
+	    if ($analysis_status =~ /Failed/i) 
 	    {
 		$result_page = 'N/A';
+	    }
+	    elsif ($analysis_status =~ /Submitted/i)
+	    {
+		$result_page = 'In process...'
 	    }
 	    else 
 	    {

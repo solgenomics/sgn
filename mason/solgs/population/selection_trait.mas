@@ -1,3 +1,18 @@
+<%doc>
+
+=head1 NAME 
+
+/solgs/population/selection_trait.mas - displays trait GEBV prediction output for selection population using single trial model.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+
 <%args>
 
 $pop_id
@@ -19,6 +34,8 @@ $combined_populations => ''
 </%args>
 
 <%perl>
+
+$project_name = "<a href=\"/solgs/trait/$trait_id/population/$pop_id\">$project_name</a>";
 
 </%perl>
 

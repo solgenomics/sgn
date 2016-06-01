@@ -38,6 +38,7 @@ $t->while_logged_in_as("curator", sub {
     sleep(2); # wait until page is re-loaded
 
     $t->get_ok('/breeders/manage_programs');
+    sleep(2);
 
     ok($t->driver->get_page_source() =~ m/WEBTEST/, "breeding program addition successful");
 
