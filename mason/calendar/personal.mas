@@ -24,9 +24,9 @@ $roles => undef
 
 		<& events_by_user_role.mas &>
 
-		<div class="panel panel-warning">
+		<div class="panel panel-success">
 			<div class="panel-body">
-				<p>Having trouble viewing events on the calendar? <br/>Are you associated with the breeding program you are interested in viewing?</p>
+				<p><b>Having trouble viewing events on the calendar?</b> <br/>Are you associated with the breeding program you are interested in viewing?</p>
 				<a class="btn btn-primary" id="calendar_bp_user_roles_show">Calendar Permissions</a>
 			</div>
 		</div>

@@ -245,12 +245,12 @@ $(document).ready(function() {
             textColor: '#000',
             borderColor: '#FFF',
         },
-        gcal_holidays: {
-            googleCalendarId: 'en.usa#holiday@group.v.calendar.google.com',
-            className: 'bg-danger',
-            textColor: '#000',
-            borderColor: '#FFF',
-        }
+        //gcal_holidays: {
+        //    googleCalendarId: 'en.usa#holiday@group.v.calendar.google.com',
+        //    className: 'bg-danger',
+        //    textColor: '#000',
+        //    borderColor: '#FFF',
+        //}
     };
 
     var lastView;
