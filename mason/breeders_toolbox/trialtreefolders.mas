@@ -6,6 +6,8 @@ $breeding_programs
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
+<link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
+
 <& /breeders_toolbox/folder/folder_set.mas &>
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>
@@ -23,11 +25,13 @@ $breeding_programs
         <h4>Search</h4>
         <input type="text" class="form-control input-sm" id="trial_tree_search" placeholder="Search" />
         <hr>
-      <h4>Download Trial</h4>
-      <button class="btn btn-primary" id="download_button" disabled="disabled" title="First Select a Trial to Download">Excel</button>
-      <button class="btn btn-primary" id="download_button_csv" disabled="disabled" title="First Select a Trial to Download">CSV</button><br />
+      <h4>Download Trial Phenotypes</h4>
+      <h5><i>Select multiple trials by holding 'Ctrl'.</i></h5>
+      <button class="btn btn-primary" id="download_button" disabled="disabled" title="First Select Trial(s) to Download">Excel</button>
+      <button class="btn btn-primary" id="download_button_csv" disabled="disabled" title="First Select Trial(s) to Download">CSV</button><br />
       <hr>
       <h5><i>Double click<br />trial (&nbsp;<span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
+      <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
       <hr>
       <h4>Folders</h4>
       <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
@@ -75,6 +79,7 @@ $breeding_programs
         jQuery('#trial_list').html(html);
         //console.log(html);
         jQuery('#trial_list').jstree( {
+            "core": { 'themes': { 'name': 'proton', 'responsive': true}},
             "valid_children" : [ "folder", "trial", "breeding_program" ],
             "types" : {
                 "breeding_program" : {
@@ -90,7 +95,7 @@ $breeding_programs
             "search" : {  
                  "case_insensitive" : true,    
              },
-          "plugins" : ["html_data","types","search"]
+          "plugins" : ["html_data","types","search"],
 
         });
 

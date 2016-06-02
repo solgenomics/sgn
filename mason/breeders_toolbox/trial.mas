@@ -154,7 +154,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <td>
 <div id="planting_date">
 % if ($planting_date) {
-%  print "$planting_date";
+  <a href="/calendar/personal?currentDate=<% $planting_date %>" target="_blank"><% $planting_date %></a>
 % } else {
 %  print "[No Planting Date]";
 % }
@@ -170,7 +170,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <td>
 <div id="harvest_date">
 % if ($harvest_date) {
-%  print "$harvest_date";
+  <a href="/calendar/personal?currentDate=<% $harvest_date %>" target="_blank"><% $harvest_date %></a>
 % } else {
 %  print "[No Harvest Date]";
 % }
@@ -483,7 +483,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
     The field book layout file was saved successfully
   </p>
   <p>
-    <a id="tablet_layout_download_link">Download File</a>
+    <a id="tablet_layout_download_link">Go To Download File</a>
   </p>
 </div>
 

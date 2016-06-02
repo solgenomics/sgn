@@ -1,34 +1,10 @@
 
 <h3>Test</h3>
 
+<& /brapiclient/POST_study.mas &>
+
 <script>
 
-jQuery.ajax({
-	type: 'POST',
-	url: 'http://127.0.0.1:3000/brapi/v1/token?username=janedoe&password=secretpw&grant_type=password',
-	success: function(response) {
-		//console.log(response);
-		var url = 'http://127.0.0.1:3000/brapi/v1/studies/139/table?pageSize=1000000';
-
-		jQuery.ajax({
-			type: 'GET',
-			url: url,
-			beforeSend: function() {
-				jQuery('#working_modal').modal("show");
-			},
-			success: function(response) { 
-				console.log(response);
-				jQuery('#working_modal').modal("hide");
-
-			},
-			error: function(response) { 
-				jQuery('#working_modal').modal("hide");
-				alert("An error occurred.");
-			}
-    	});
-
-	}
-});
 
 
 </script>
