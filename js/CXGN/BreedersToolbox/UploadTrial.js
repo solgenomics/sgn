@@ -33,7 +33,7 @@ jQuery(document).ready(function ($) {
 
     function open_upload_trial_dialog() {
 	$('#upload_trial_dialog').modal("show");
-	//add a blank line to design method select dropdown that dissappears when dropdown is opened 
+	//add a blank line to design method select dropdown that dissappears when dropdown is opened
 	$("#trial_upload_design_method").prepend("<option value=''></option>").val('');
 	$("#trial_upload_design_method").one('mousedown', function () {
             $("option:first", this).remove();
@@ -41,7 +41,7 @@ jQuery(document).ready(function ($) {
 	    //trigger design method change events in case the first one is selected after removal of the first blank select item
 	    $("#trial_upload_design_method").change();
 	});
-	
+
 	//reset previous selections
 	$("#trial_upload_design_method").change();
     }
@@ -55,7 +55,7 @@ jQuery(document).ready(function ($) {
     });
 
 //    $("#upload_trial_dialog").dialog({
-//	autoOpen: false,	
+//	autoOpen: false,
 //	modal: true,
 //	autoResize:true,
 //        width: 500,
@@ -70,7 +70,7 @@ jQuery(document).ready(function ($) {
 //	}
 //    });
 
-    $("#trial_upload_spreadsheet_format_info").click( function () { 
+    $("#trial_upload_spreadsheet_format_info").click( function () {
 	$('#upload_trial_dialog').modal("hide");
 	$("#trial_upload_spreadsheet_info_dialog" ).modal("show");
     });
@@ -95,7 +95,7 @@ jQuery(document).ready(function ($) {
 //                  },
 //                  text: "OK"
 //                }
-//        }	
+//        }
 //    });
 
     $('#upload_trial_form').iframePostForm({
@@ -112,7 +112,7 @@ jQuery(document).ready(function ($) {
 	    $('#working_modal').modal("hide");
             if (response.error_string) {
 		$("#upload_trial_error_display tbody").html('');
-		$("#upload_trial_error_display tbody").append(response.error);
+		$("#upload_trial_error_display tbody").append(response.error_string);
 		$('#upload_trial_error_display').modal("show");
 		//$(function () {
                 //    $("#upload_trial_error_display").dialog({
