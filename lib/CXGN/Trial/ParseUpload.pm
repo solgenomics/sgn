@@ -38,21 +38,21 @@ sub parse {
   my $self = shift;
 
   if (!$self->_validate_with_plugin()) {
-    print STDERR "\nCould not validate trial file: ".$self->get_filename()."\n";
+    print STDERR "\nCould not validate trial file: ".$self->get_filename()."\nError:".$self->get_parse_errors()."\n";
     return;
   }
 
   print STDERR "Check 3.1: ".localtime();
 
   if (!$self->_parse_with_plugin()) {
-    print STDERR "\nCould not parse trial file: ".$self->get_filename()."\n";
+    print STDERR "\nCould not parse trial file: ".$self->get_filename()."\nError:".$self->get_parse_errors()."\n";
     return;
   }
 
   print STDERR "Check 3.2: ".localtime();
 
   if (!$self->_has_parsed_data()) {
-    print STDERR "\nNo parsed data for trial file: ".$self->get_filename()."\n";
+    print STDERR "\nNo parsed data for trial file: ".$self->get_filename()."\nError:".$self->get_parse_errors()."\n";
     return;
   } else {
     return $self->_parsed_data();
@@ -60,7 +60,7 @@ sub parse {
 
   print STDERR "Check 3.3: ".localtime();
 
-  print STDERR "\nError parsing trial file: ".$self->get_filename()."\n";
+  print STDERR "\nError parsing trial file: ".$self->get_filename()."\nError:".$self->get_parse_errors()."\n";
   return;
 }
 

@@ -77,7 +77,7 @@ sub _validate_with_plugin {
   if ($worksheet->get_cell(0,6)) {
     $range_number_head  = $worksheet->get_cell(0,6)->value();
   }
-  if ($worksheet->get_cell(0,7)) { 
+  if ($worksheet->get_cell(0,7)) {
       $row_number_head  = $worksheet->get_cell(0,7)->value();
   }
 
@@ -102,20 +102,20 @@ sub _validate_with_plugin {
   my $rs = $schema->resultset('Stock::Stock')->search(
       { 'me.is_obsolete' => { '!=' => 't' } },
       {
-       '+select'=> ['me.uniquename', 'me.type_id'], 
+       '+select'=> ['me.uniquename', 'me.type_id'],
        '+as'=> ['uniquename', 'stock_type_id']
       }
   );
 
   my %plot_check;
   my %accession_check;
-  while (my $s = $rs->next()) { 
+  while (my $s = $rs->next()) {
       $plot_check{$s->get_column('uniquename')} = 1;
       $accession_check{$s->get_column('uniquename'), $s->get_column('stock_type_id')} = 1;
   }
 
   for my $row ( 1 .. $row_max ) {
-      print STDERR "Check 01 ".localtime();
+      #print STDERR "Check 01 ".localtime();
     my $row_name = $row+1;
     my $plot_name;
     my $accession_name;
@@ -147,7 +147,7 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell($row,6)) {
       $range_number =  $worksheet->get_cell($row,6)->value();
     }
-    if ($worksheet->get_cell($row, 7)) { 
+    if ($worksheet->get_cell($row, 7)) {
 	$row_number = $worksheet->get_cell($row, 7)->value();
     }
 
@@ -156,7 +156,7 @@ sub _validate_with_plugin {
       next;
     }
 
-      print STDERR "Check 02 ".localtime();
+      #print STDERR "Check 02 ".localtime();
 
     #plot_name must not be blank
     if (!$plot_name || $plot_name eq '') {
@@ -174,7 +174,7 @@ sub _validate_with_plugin {
       $seen_plot_names{$plot_name}=$row_name;
     }
 
-      print STDERR "Check 03 ".localtime();
+      #print STDERR "Check 03 ".localtime();
 
     #accession name must not be blank
     if (!$accession_name || $accession_name eq '') {
@@ -188,7 +188,7 @@ sub _validate_with_plugin {
       }
     }
 
-      print STDERR "Check 04 ".localtime();
+      #print STDERR "Check 04 ".localtime();
 
     #plot number must not be blank
     if (!$plot_number || $plot_number eq '') {
@@ -252,7 +252,7 @@ sub _parse_with_plugin {
     my $block_number;
     my $is_a_control;
     my $rep_number;
-    my $range_number; 
+    my $range_number;
     my $row_number;
 
     if ($worksheet->get_cell($row,0)) {
@@ -276,7 +276,7 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,6)) {
       $range_number =  $worksheet->get_cell($row,6)->value();
     }
-    if ($worksheet->get_cell($row,7)) { 
+    if ($worksheet->get_cell($row,7)) {
 	$row_number = $worksheet->get_cell($row, 7)->value();
 
     }
@@ -301,7 +301,7 @@ sub _parse_with_plugin {
     if ($range_number) {
       $design{$key}->{range_number} = $range_number;
     }
-    if ($row_number) { 
+    if ($row_number) {
 	$design{$key}->{row_number} = $row_number;
     }
   }
@@ -356,4 +356,3 @@ sub _get_stock {
 
 
 1;
-
