@@ -66,6 +66,8 @@ sub search :Path('/ajax/search/trials') Args(0) {
     my @result;
     while ( my $p = $projects_rs->next() ) {
 	my $project_id = $p->project_id;
+	
+
 	my $project_name = $p->name;
 	my $project_description = $p->description;
 	my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $project_id } );
@@ -83,8 +85,8 @@ sub search :Path('/ajax/search/trials') Args(0) {
 	    my $year  = $trial->get_year;
 	    my $location_ref = $trial->get_location;
 	    my $location = $location_ref->[1];
-	    my $project_type = $trial->get_project_type;
-
+	    my $project_type_ref = $trial->get_project_type;
+	    my $project_type = $project_type_ref->[1];
 
 	    push @result, [ "<a href=\"/breeders_toolbox/trial/$project_id\">$project_name</a>", $project_description, $program, $year, $location, $project_type ];
 	}
