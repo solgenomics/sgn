@@ -61,6 +61,8 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     	my $selected_trait = $c->req->param('trait');
 	my %parse_result;
 	my $trait_found;
+	my $time = DateTime->now();
+  	my $timestamp = $time->ymd()."_".$time->hms();
 
 	print "TRAIT NAME: $selected_trait\n";
 	print "TRIAl ID: $trial_id\n";
@@ -245,7 +247,7 @@ project.project_id=? ) );");
 			print STDERR Dumper $msg_formula_sub;
 			my $calc_value = eval "$msg_formula_sub";
 			print STDERR Dumper $calc_value;
-			$data{$valid_plot_name}->{$selected_trait} = $calc_value;
+			$data{$valid_plot_name}->{$selected_trait} = [$calc_value,$timestamp];
 		}
 
 	}
@@ -259,8 +261,6 @@ project.project_id=? ) );");
     	$parse_result{'traits'} = \@traits;
 
 	my $size = scalar(@plots) * scalar(@traits);
-	my $time = DateTime->now();
-  	my $timestamp = $time->ymd()."_".$time->hms();
 	my %phenotype_metadata;
 	$phenotype_metadata{'archived_file'} = 'none';
   	$phenotype_metadata{'archived_file_type'}="generated from derived traits";
