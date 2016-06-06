@@ -539,13 +539,13 @@ sub set_harvest_date {
 
     my $calendar_funcs = CXGN::Calendar->new({});
 
-    if (my $harvest_event = $calendar_funcs->check_value_format($harvest_date) ) { 
+    if (my $harvest_event = $calendar_funcs->check_value_format($harvest_date) ) {
 
         my $harvest_date_cvterm_id = $self->get_harvest_date_cvterm_id();
-        
-        my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create( 
-        { 
-            project_id => $self->get_trial_id(), 
+
+        my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create(
+        {
+            project_id => $self->get_trial_id(),
             type_id => $harvest_date_cvterm_id,
         });
 
@@ -563,7 +563,7 @@ sub get_planting_date {
 	    project_id => $self->get_trial_id(),
 	    type_id => $planting_date_cvterm_id,
 	});
-    
+
     my $calendar_funcs = CXGN::Calendar->new({});
 
     if ($row) {
@@ -580,7 +580,7 @@ sub set_planting_date {
 
     my $calendar_funcs = CXGN::Calendar->new({});
 
-    if (my $planting_event = $calendar_funcs->check_value_format($planting_date) ) { 
+    if (my $planting_event = $calendar_funcs->check_value_format($planting_date) ) {
 
 	    my $planting_date_cvterm_id = $self->get_planting_date_cvterm_id();
 
@@ -596,7 +596,7 @@ sub set_planting_date {
 }
 
 
-sub get_plot_dimensions { 
+sub get_plot_dimensions {
     my $self = shift;
     my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
 
@@ -1032,7 +1032,7 @@ sub get_traits_assayed {
     my $dbh = $self->bcs_schema->storage()->dbh();
 
     my @traits_assayed;
-    my $traits_assayed_q = $dbh->prepare("SELECT cvterm.name, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY cvterm.name, cvterm.cvterm_id ORDER BY cvterm.cvterm_id;");
+    my $traits_assayed_q = $dbh->prepare("SELECT cvterm.name, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY cvterm.name, cvterm.cvterm_id ORDER BY cvterm.name;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $traits_assayed_q->execute($self->get_trial_id(), $numeric_regex );
