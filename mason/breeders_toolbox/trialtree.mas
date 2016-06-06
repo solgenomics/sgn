@@ -215,7 +215,7 @@ $breeding_programs
 	    </div>
 	    <div id="trial_design_more_info" style="display: none">
 	      <div class="form-group form-group-sm" >
-      	        <label class="col-sm-7 control-label">List of Stocks to Include (Required): <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
+      	        <label class="col-sm-7 control-label">List of Accessions to Include (Required): <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
       	        <div class="col-sm-5" id="select_list" name="select_list">
                 </div>
 	      </div>
