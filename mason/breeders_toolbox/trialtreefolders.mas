@@ -259,30 +259,30 @@ $breeding_programs
 	    </div>
 	    <div id="trial_design_more_info" style="display: none">
 	      <div class="form-group form-group-sm" >
-      	        <label class="col-sm-7 control-label">List of Stocks to Include (Required): <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
+      	        <label class="col-sm-7 control-label">List of accessions to include (required): <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
       	        <div class="col-sm-5" id="select_list" name="select_list">
                 </div>
 	      </div>
 	      <div class="form-group form-group-sm" id="show_list_of_checks_section" style="display: none" >
-      	        <label class="col-sm-7 control-label">List of Checks to Include (Required): </label>
+      	        <label class="col-sm-7 control-label">List of checks to include (required): </label>
       	        <div class="col-sm-5" id="list_of_checks_section" >
                 </div>
 	      </div>
 	      <div id="design_info" name="design_info">
 	        <div class="form-group form-group-sm" id="rep_count_section" style="display: none">
-      	          <label class="col-sm-7 control-label">Number of Replicates (Required): </label>
+      	          <label class="col-sm-7 control-label">Number of replicates (required): </label>
       	          <div class="col-sm-5" >
 		    <input class="form-control" id="rep_count" name="rep_count" />
                   </div>
 	        </div>
 		<div class="form-group form-group-sm" id="block_number_section" style="display: none">
-      	          <label class="col-sm-7 control-label">Number of Blocks (Required): </label>
+      	          <label class="col-sm-7 control-label">Number of blocks (required): </label>
       	          <div class="col-sm-5" >
 		    <input class="form-control" id="block_number" name="block_number" />
                   </div>
 	        </div>
 		<div class="form-group form-group-sm" id="row_number_section" style="display: none">
-      	          <label class="col-sm-7 control-label">Number of Field Rows (Required): </label>
+      	          <label class="col-sm-7 control-label">Number of field rows (Required): </label>
       	          <div class="col-sm-5" >
 		    <input class="form-control" id="row_number" name="row_number" />
                   </div>
@@ -296,20 +296,20 @@ $breeding_programs
 		<div id="other_parameter_section" style="display:none">
 		  <hr>
 		  <div class="form-group">
-      	            <label class="col-sm-4 control-label">Show Optional Parameters: </label>
+      	            <label class="col-sm-4 control-label">Show optional parameters: </label>
       	            <div class="col-sm-8" >
 		      <input type="checkbox" id="show_other_parameter_options" />
                     </div>
 	          </div>
 		  <div id="other_parameter_options" style="display:none">
 		    <div class="form-group form-group-sm">
-      	              <label class="col-sm-7 control-label">Column Number Per Block: </label>
+      	              <label class="col-sm-7 control-label">Column number per block: </label>
       	              <div class="col-sm-5" >
 		        <input type="text" class="form-control" id="col_number_per_block" name="col_number_per_block" />
                       </div>
 	            </div>
 		    <div class="form-group form-group-sm">
-      	              <label class="col-sm-7 control-label">Number of Field Columns: </label>
+      	              <label class="col-sm-7 control-label">Number of field columns: </label>
       	              <div class="col-sm-5" >
 		        <input type="text" class="form-control" id="col_number" name="col_number" />
                       </div>
@@ -317,39 +317,39 @@ $breeding_programs
 		  </div>
 		</div>
 		<div class="form-group form-group-sm" id="block_size_section" style="display: none">
-      	          <label class="col-sm-7 control-label">Block Size (Required): </label>
+      	          <label class="col-sm-7 control-label">Block size (required): </label>
       	          <div class="col-sm-5" >
 		    <input type="text" class="form-control" id="block_size" name="block_size" />
                   </div>
 	        </div>
 		<div class="form-group form-group-sm" id="max_block_size_section" style="display: none">
-      	          <label class="col-sm-7 control-label">Maximum Block Size (Required): </label>
+      	          <label class="col-sm-7 control-label">Maximum block size (required): </label>
       	          <div class="col-sm-5" >
 		    <input type="text" class="form-control" id="max_block_size" name="block_size" />
                   </div>
 	        </div>
 		<hr>
 		<div class="form-group" >
-      	          <label class="col-sm-4 control-label">Custom Plot Naming/Numbering: </label>
+      	          <label class="col-sm-4 control-label">Custom plot naming/numbering: </label>
       	          <div class="col-sm-8" >
 		    <input type="checkbox" id="show_plot_naming_options" />
                   </div>
 	        </div>
 		<div id="plot_naming_options" style="display: none">
 		  <div class="form-group form-group-sm" >
-      	            <label class="col-sm-7 control-label">Plot Prefix: </label>
+      	            <label class="col-sm-7 control-label">Plot prefix: </label>
       	            <div class="col-sm-5" >
 		      <input type="text" class="form-control" id="plot_prefix" name="plot_prefix" />
                     </div>
 	          </div>
 		  <div class="form-group form-group-sm" >
-      	            <label class="col-sm-7 control-label">Plot Start Number: </label>
+      	            <label class="col-sm-7 control-label">Plot start number: </label>
       	            <div class="col-sm-5" >
 		      <input type="text" class="form-control" id="start_number" name="start_number" />
                     </div>
 	          </div>
 		  <div class="form-group form-group-sm" >
-      	            <label class="col-sm-7 control-label">Plot Number Increment: </label>
+      	            <label class="col-sm-7 control-label">Plot number increment: </label>
       	            <div class="col-sm-5" >
 		      <input type="text" class="form-control" id="increment" name="increment" />
                     </div>
