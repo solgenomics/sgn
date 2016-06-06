@@ -127,6 +127,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     # get the count first
     my $rs = $schema->resultset("Stock::Stock")->search(
 	{
+	    'me.is_obsolete'   => 'f',
 	    -and => [
 		 $or_conditions,
 		 $and_conditions
@@ -144,6 +145,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     #
     my $rs2 = $schema->resultset("Stock::Stock")->search(
 	{
+	    'me.is_obsolete'   => 'f',
 	    -and => [
 		 $or_conditions,
 		 $and_conditions
