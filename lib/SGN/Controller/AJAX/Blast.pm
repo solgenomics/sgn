@@ -274,9 +274,13 @@ sub run : Path('/tools/blast/run') Args(0) {
 	 
       print STDERR "Saving job state to $seqfile.job for id ".$job->_jobid()."\n";
 
+      while (my $alive = $job->alive()) {
+        sleep(1);
+      }
+
       $job->do_not_cleanup(1);
 
-      nstore( $job->out(), $seqfile.".job" ) or die 'could not serialize job object';
+      nstore( $job, $seqfile.".job" ) or die 'could not serialize job object';
 
     };
 
@@ -318,8 +322,6 @@ sub check : Path('/tools/blast/check') Args(1) {
     
     #my $jobid =~ s/\.\.//g; # prevent hacks
     my $job = retrieve($blast_tmp_output."/".$jobid.".job");
-    
-    print STDERR "HERE";
     
     if ( $job->alive ){
       # my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
