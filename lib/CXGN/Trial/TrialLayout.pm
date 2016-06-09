@@ -433,19 +433,19 @@ sub _get_plots {
   return \@plots;
 }
 
+
 sub get_plant_names {
-	my $self = shift;
-	my $plots = shift;
+	my $class = shift;
+	my $args = shift;
 	my @plants;
-	my $project = $self->get_project();
-	if (!$project) {
-		return;
-	}
-	my $plant_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of', 'stock_relationship' );
+
+	my $schema = $args->{bcs_schema};
+	my $plots = $args->{plot_rs};
+	my $plant_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship' );
 	foreach (@$plots) {
 		my $plot_id = $_->stock_id();
 		#print STDERR $plot_id;
-		my $stock_relationships = $self->get_schema()->resultset("Stock::StockRelationship")->search({
+		my $stock_relationships =$schema->resultset("Stock::StockRelationship")->search({
 			subject_id => $plot_id,
 			#object_id => $plant->stock_id(),
 			'me.type_id' => $plant_rel_cvterm->cvterm_id(),
