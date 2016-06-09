@@ -85,7 +85,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
   }
   my $ws = $wb->add_worksheet();
   my $trial_layout;
-  print STDERR "\n\nTrial id: ($trial_id)\n\n"; 
+  print STDERR "\n\nTrial id: ($trial_id)\n\n";
   try {
     $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
   };
@@ -136,11 +136,11 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     mkdir $archive_path;
   }
 
-  if (! -d catfile($archive_path, $user_id)) { 
+  if (! -d catfile($archive_path, $user_id)) {
     mkdir (catfile($archive_path, $user_id));
   }
 
-  if (! -d catfile($archive_path, $user_id,$subdirectory_name)) { 
+  if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
     mkdir (catfile($archive_path, $user_id, $subdirectory_name));
   }
 
@@ -224,7 +224,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     mkdir $archive_path;
   }
 
-  if (! -d catfile($archive_path, $user_id)) { 
+  if (! -d catfile($archive_path, $user_id)) {
     mkdir (catfile($archive_path, $user_id));
   }
 
@@ -257,7 +257,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 	      db_name         => $db_name,
 	      trait_accession => $accession,
 		});
-      my $trait_info_string = $trait_info_lookup->get_trait_info();
+      my $trait_info_string = $trait_info_lookup->get_trait_info($trait_name);
 
       #return error if not $trait_info_string;
       #print line with trait info

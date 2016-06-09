@@ -2,14 +2,13 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'spin_min', 'ladda_min' ] &>
 <table class="table borderless" alt="breeder search" border="0" ><tr>
 	<td>
-    <div style="min-width: 200px;overflow:auto;">
-	<p>Download Trial Phenotypes:
-	<button class="btn btn-primary" id="download_button_excel" disabled="disabled" title="First Select a Trial to Download">Excel</button>
-      	<button class="btn btn-primary" id="download_button_csv" disabled="disabled" title="First Select a Trial to Download">CSV</button>
-      	<input type="hidden" id="download_token_value" name="download_token_value"/>
+    <div>
+	<p>Phenotypes:
+		<button class="btn btn-primary ladda-button" id="download_button_excel" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with a trial selected"><span class="ladda-label">Download Excel</span><span class="ladda-spinner"></span></button>
+    <button class="btn btn-primary ladda-button" id="download_button_csv" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with a trial selected"><span class="ladda-label">Download CSV</span><span class="ladda-spinner"></span></button>
 	</div>
 	</td>
 	<td>
@@ -18,10 +17,10 @@
 	</tr>
 	<tr>
 	<td>
-	<div style="min-width: 200px;overflow:auto;">
-	<p>Download Genotypes:
-      	<input class="btn btn-primary" type="button" disabled="disabled" id="download_button_genotypes" title="First Select Accessions to Download" value="Download Genotypes" />
-    </div>
+	<div>
+	<p>Genotypes:
+		<button class="btn btn-primary ladda-button" id="download_button_genotypes" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with a genotyping protocol and accessions selected"><span class="ladda-label">Download Genotypes</span><span class="ladda-spinner"></span></button>
+	</div>
 	</td>
 	<td>
 	<div class="well well-sm pull-right" style="min-width: 200px;overflow:auto;"><div><p id="selected_accessions">No accessions selected</p><p id="selected_genotyping_protocols">No genotyping protocols selected</p></div>

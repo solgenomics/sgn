@@ -55,30 +55,69 @@ sub ACCEPT_CONTEXT {
 }
 
 
-sub search_trait {
-    my ($self, $trait, $page) = @_;
+# sub search_trait {
+#     my ($self, $trait, $page) = @_;
  
-    $page = 1 if !$page;
+#     $page = 1 if !$page;
 
-    my $rs;
-    if ($trait)
-    {       
-        $rs = $self->schema->resultset("Phenotype::Phenotype")
-            ->search({})
-            ->search_related('observable', 
-                             {
-                                 'observable.name' => {'iLIKE' => '%' . $trait . '%'}
-                             },
-                             { 
-                                 distinct => 1,
-                                 page     => $page,
-                                 rows     => 10,
-                                 order_by => 'name'              
-                             },                                               
-            );             
+#     my $rs;
+#     if ($trait)
+#     {       
+#         $rs = $self->schema->resultset("Phenotype::Phenotype")
+#             ->search({})
+#             ->search_related('observable', 
+#                              {
+#                                  'observable.name' => {'iLIKE' => '%' . $trait . '%'}
+#                              },
+#                              { 
+#                                  distinct => 1,
+#                                  page     => $page,
+#                                  rows     => 10,
+#                                  order_by => 'name'              
+#                              },                                               
+#             );             
+#     }
+    
+#     return $rs;      
+# }
+
+
+sub search_trait {
+    my ($self, $trait) = @_;
+ 
+    my $q = "SELECT name FROM all_gs_traits 
+                    WHERE name ilike ?                    
+                    ORDER BY name";
+
+    my $sth = $self->context->dbc->dbh->prepare($q);
+
+    $sth->execute("%$trait%");
+
+    my @traits;
+
+    while ( my $trait  = $sth->fetchrow_array()) 
+    {
+	push @traits, $trait;
     }
     
-    return $rs;      
+    return \@traits;
+
+}
+
+
+sub trait_details {
+    my ($self, $trait_arrayref) =  @_;
+    
+    my $rs = $self->schema->resultset("Cv::Cvterm")
+        ->search({'me.name' => {-in => $trait_arrayref} },
+    		  {
+    		      'select'   => [ qw / me.cvterm_id me.name me.definition / ], 
+    		      'as'       => [ qw / cvterm_id name definition / ]
+    		  }
+    	);
+
+    return $rs;
+
 }
 
 
@@ -362,8 +401,11 @@ sub has_genotype {
 sub project_details {
     my ($self, $pr_id) = @_;
     
-    return $self->schema->resultset("Project::Project")
+    my $pr_rs = $self->schema->resultset("Project::Project")
         ->search( {'me.project_id' => $pr_id});
+
+    return $pr_rs;
+
 }
 
 
@@ -413,13 +455,19 @@ sub get_trait_id {
 
     if ($trait) 
     {
-        my $trait_id = $self->schema->resultset('Cv::Cvterm')
-            ->search( {name => $trait})
-            ->single
-            ->id;
+        my $trait_rs = $self->schema->resultset('Cv::Cvterm')
+            ->search({name => $trait});
 
-        return $trait_id;
-    }
+	if ($trait_rs->single)
+	{
+         return $trait_rs->single->id;
+	}
+	else
+	{
+	    return;
+	} 
+   }
+
 }
 
 
@@ -2017,7 +2065,7 @@ sub get_project_genotyping_markers {
 
     my $markers;
     
-    if ($stock_genotype_rs->first()) 
+    if ($stock_genotype_rs->first) 
     {
 	$markers = $self->extract_project_markers($stock_genotype_rs->first);
     }
@@ -2025,7 +2073,6 @@ sub get_project_genotyping_markers {
     return $markers;
 
 }
-
 
 
 __PACKAGE__->meta->make_immutable;

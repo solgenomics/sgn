@@ -141,7 +141,7 @@ function pcaResult () {
     var popId  = getPopulationId();
     var listId = getListId();
 
-    if (popId.match(/uploaded_/)) {	
+    if ( popId && popId.match(/uploaded_/)) {	
 	listId = popId.replace("uploaded_", "");
     }
 

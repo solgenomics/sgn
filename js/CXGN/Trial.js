@@ -174,18 +174,23 @@ function open_create_fieldbook_dialog() {
 	data: {
             'trial_id': trialID,
 	},
+	beforeSend: function() {
+		jQuery("#working_modal").modal("show");
+	},
 	success: function (response) {
+		jQuery("#working_modal").modal("hide");
             if (response.error) {
 		alert(response.error);
 		jQuery('#open_create_fieldbook_dialog').dialog("close");
             } else {
-		jQuery('#tablet_layout_download_link').attr('href',response.file);
+		jQuery('#tablet_layout_download_link').attr('href',"/fieldbook");
 		jQuery("#tablet_field_layout_saved_dialog_message").dialog("open");
-		alert(response.file);
+		//alert(response.file);
 		jQuery('#open_create_fieldbook_dialog').dialog("close");
             }
 	},
 	error: function () {
+		jQuery("#working_modal").modal("hide");
             alert('An error occurred creating the field book.');
             jQuery('#open_create_fieldbook_dialog').dialog("close");
 	}
@@ -223,18 +228,19 @@ function create_DataCollector() {
 	 },
 
 	 success: function (response) {
-	     //jQuery('#working').dialog("close");
-	     jQuery('#working_modal').modal("hide");
+     //console.log("success "+JSON.stringify(response));
+     jQuery('#working_modal').modal("hide");
 
-             if (response.error) {
-		 //alert("error: "+response.error);
-		 jQuery('#open_create_DataCollector_dialog').dialog("close");
-             } else {
-		 //alert("success: "+response.filename);
-		 jQuery('#open_create_DataCollector_dialog').dialog("close");
-		 jQuery('#working_modal').modal("hide");
-		 window.location.href = "/download/"+response.filename;
-             }
+     if (response.error) {
+       console.log("error: "+response.error);
+       alert("error: "+response.error);
+       jQuery('#open_create_DataCollector_dialog').dialog("close");
+     } else {
+       //alert("success: "+response.filename);
+       jQuery('#open_create_DataCollector_dialog').dialog("close");
+       jQuery('#working_modal').modal("hide");
+       window.location.href = "/download/"+response.filename;
+     }
 	 },
 	 error: function () {
 	     //jQuery('#working').dialog("close");
