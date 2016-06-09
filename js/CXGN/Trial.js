@@ -361,7 +361,6 @@ function trial_detail_page_setup_dialogs() {
 		create_spreadsheet();
 		//save_experimental_design(design_json);
 		jQuery( this ).dialog( "close" );
-		//jQuery('#add_project_dialog').dialog("close");
 	       },
 	    },
 	},
@@ -383,7 +382,6 @@ function trial_detail_page_setup_dialogs() {
 		create_DataCollector();
 		//save_experimental_design(design_json);
 		jQuery( this ).dialog( "close" );
-		//jQuery('#add_project_dialog').dialog("close");
 		}
 	    },
 	},
@@ -447,26 +445,6 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#create_DataCollector_link').click(function () {
 	open_create_DataCollector_dialog();
-    });
-
-    jQuery('#compute_trait_link').click(function () {
-	open_derived_trait_dialog();
-    });
-
-    jQuery('#trial_design_view_layout').dialog({
-	autoOpen: false,
-	height: 500,
-	width: 800,
-	modal: true,
-	buttons: {
-	    Close: function() {
-		jQuery( this ).dialog( "close" );
-	    }
-	}
-    });
-
-    jQuery('#view_layout_link').click(function () {
-	jQuery('#trial_design_view_layout').dialog("open");
     });
 
     jQuery('#edit_trial_description').click( function () {
