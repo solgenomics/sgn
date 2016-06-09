@@ -1341,4 +1341,31 @@ sub stock_lookup_POST {
     $c->stash->{rest} = { $lookup_from_field => $value_to_lookup, $lookup_field => $value };
 }
 
+sub plot_lookup : Chained('/') PathPart('ajax/plot') CaptureArgs(1) {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    
+    print STDERR Dumper "HERE";
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    
+    my $plot_rs = $schema->resultset("Stock::Stock")->search({ stock_id => $stock_id, type_id => $plot_cvterm_id });
+    
+    $c->stash->{plot} = $plot_rs;
+}
+
+sub plot_plants : Chained('plot_lookup') PathPart('plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    
+    my $plot_rs = $c->stash->{plot};
+    my @data = CXGN::Trial::TrialLayout->get_plant_names({
+        bcs_schema => $c->stash->{schema},
+        plot_rs => $plot_rs
+    });
+    
+    $c->stash->{rest} = { plants => \@data };
+}
+
 1;

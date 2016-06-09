@@ -266,6 +266,13 @@ function jqueryStuff() {
 </&>
 
 
+<&| /page/info_section.mas, id => "plot_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+
+<& /stock/plot_plants.mas, stock_id => $stock_id &>
+
+</&>
+
+
 <&| /page/info_section.mas, title => "Experimental data" , collapsible=> 1, is_subsection => 0 &>
       <& /stock/stockprops.mas, stock_id=>$stock_id, props=> $stockprops, subset=> $experiment  &>
 </&>

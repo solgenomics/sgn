@@ -1,0 +1,49 @@
+
+<%args>
+$stock_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [  ] &>
+
+
+<div id="plot_plants_html">
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#plot_plants_onswitch').one("click", function() {
+    
+        jQuery.ajax ( {
+            url : '/ajax/plot/<% $stock_id %>/plants',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+                var plot_plants_html = "<table class='table table-hover table-condensed table-bordered' id='plot_plants_table_html'><thead><tr><th>Name</th></tr></thead><tbody>";
+                for (i=0; i<response.plots[0].length; i++) {
+                    plot_plants_html = plot_plants_html + "<tr><td>"+ response.plots[0][i] + "</td></tr>";
+                }
+                plot_plants_html = plot_plants_html + "</tbody></table>";
+                jQuery('#plot_plants_html').empty();
+                jQuery('#plot_plants_html').html(plot_plants_html);
+                enable_plants_datatable();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving plants.");
+            }
+        });
+        
+    });
+
+});
+
+function enable_plants_datatable() {
+    jQuery('#plot_plants_table_html').DataTable();
+}
+
+</script>
