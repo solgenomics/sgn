@@ -58,7 +58,7 @@ has 'trial_year' => (isa => 'Str', is => 'rw', predicate => 'has_trial_year', re
 has 'trial_description' => (isa => 'Str', is => 'rw', predicate => 'has_trial_description', required => 1,);
 has 'trial_location' => (isa => 'Str', is => 'rw', predicate => 'has_trial_location', required => 1,);
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
-has 'design' => (isa => 'HashRef[HashRef[Str]]', is => 'rw', predicate => 'has_design', required => 1);
+has 'design' => (isa => 'HashRef[HashRef[Str]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 #has 'breeding_program_id' => (isa => 'Int', is => 'rw', predicate => 'has_breeding_program_id', required => 1);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 0,);
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
@@ -106,7 +106,11 @@ sub save_trial {
     print STDERR "**trying to save trial \n\n";
     my $self = shift;
   my $chado_schema = $self->get_chado_schema();
-  my %design = %{$self->get_design()};
+
+  my %design;
+  if ($self->get_design) {
+    %design = %{$self->get_design()};
+  }
 
   if ($self->trial_name_already_exists()) {
       print STDERR "Can't create trial: Trial name already exists\n";

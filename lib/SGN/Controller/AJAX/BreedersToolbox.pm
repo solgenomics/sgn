@@ -102,7 +102,7 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
 	return;
     }
 
-    if ( ($longitude && $longitude !~ /^[0-9.]+$/) || ($latitude && $latitude !~ /^[0-9.]+$/) || ($altitude && $altitude !~ /^[0-9.]+$/) ) {
+    if ( ($longitude && $longitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($altitude && $altitude !~ /^[0-9.]+$/) ) {
 	$c->stash->{rest} = { error => "Longitude, latitude and altitude must be numbers." };
 	return;
     }
@@ -547,7 +547,7 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
 	$c->stash->{rest} = {error => "Error saving trial in the database $_"};
     };
 
- 
+
     $c->stash->{rest} = {
 	message => "Successfully stored the trial.",
 	trial_id => $message{trial_id},

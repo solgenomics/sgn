@@ -401,7 +401,14 @@ sub _jstree_li_html {
     my $id = shift;
     my $name = shift;
 
-    return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\">".$name;
+    my $url = '#';
+    if ($type eq 'trial') {
+    	$url = "/breeders/trial/".$id;
+    } elsif ($type eq 'folder') {
+    	$url = "/folder/".$id;
+    }
+
+    return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';
 }
 
 
