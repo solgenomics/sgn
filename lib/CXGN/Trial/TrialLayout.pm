@@ -441,6 +441,7 @@ sub get_plant_names {
 
 	my $schema = $args->{bcs_schema};
 	my $plots = $args->{plot_rs};
+	
 	my $plant_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship' );
 	foreach (@$plots) {
 		my $plot_id = $_->stock_id();

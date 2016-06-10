@@ -16,7 +16,7 @@ jQuery(document).ready(function () {
     jQuery('#plot_plants_onswitch').one("click", function() {
     
         jQuery.ajax ( {
-            url : '/ajax/plot/<% $stock_id %>/plants',
+            url : '/ajax/plot/plants/<% $stock_id %>',
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -24,8 +24,8 @@ jQuery(document).ready(function () {
                 //console.log(response);
                 jQuery("#working_modal").modal("hide");
                 var plot_plants_html = "<table class='table table-hover table-condensed table-bordered' id='plot_plants_table_html'><thead><tr><th>Name</th></tr></thead><tbody>";
-                for (i=0; i<response.plots[0].length; i++) {
-                    plot_plants_html = plot_plants_html + "<tr><td>"+ response.plots[0][i] + "</td></tr>";
+                for (i=0; i<response.plants[0].length; i++) {
+                    plot_plants_html = plot_plants_html + "<tr><td>"+ response.plants[0][i] + "</td></tr>";
                 }
                 plot_plants_html = plot_plants_html + "</tbody></table>";
                 jQuery('#plot_plants_html').empty();
