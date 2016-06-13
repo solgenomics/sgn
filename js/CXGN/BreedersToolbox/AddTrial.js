@@ -291,8 +291,11 @@ jQuery(document).ready(function ($) {
     $("#select_design_method").change(function () {
 	//$("#add_project_dialog").dialog("option", "height","auto");
         
-	var design_method = $("#select_design_method").val();
-        if (design_method == "CRD") {
+    var design_method = $("#select_design_method").val();
+
+        if (design_method == 'None') {
+            $("#trial_design_more_info").hide();
+        } else if (design_method == "CRD") {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
@@ -300,12 +303,12 @@ jQuery(document).ready(function ($) {
             $("#block_number_section").hide();
             $("#block_size_section").hide();
             $("#max_block_section").hide();
-	    $("#row_number_section").hide();
-	    $("#row_number_per_block_section").hide();
-	    $("#col_number_per_block_section").hide();
-	    $("#col_number_section").hide();
-	    $("#row_number_per_block_section").hide();
-	    $("#other_parameter_section").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#other_parameter_section").hide();
         } else if (design_method == "RCBD") {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -314,12 +317,12 @@ jQuery(document).ready(function ($) {
             $("#block_number_section").show();
             $("#block_size_section").hide();
             $("#max_block_size_section").hide();
-	    $("#row_number_section").hide();
-	    $("#row_number_per_block_section").hide();
-	    $("#col_number_per_block_section").hide();
-	    $("#col_number_section").hide();
-	    $("#row_number_per_block_section").hide();
-	    $("#other_parameter_section").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#other_parameter_section").hide();
         } else if (design_method == "Alpha") {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -328,12 +331,12 @@ jQuery(document).ready(function ($) {
             $("#block_number_section").hide();
             $("#block_size_section").show();
             $("#max_block_size_section").hide();
-	    $("#row_number_section").hide();
-	    $("#row_number_per_block_section").hide();
-	    $("#col_number_per_block_section").hide();
-	    $("#col_number_section").hide();
-	    $("#row_number_per_block_section").hide();
-	    $("#other_parameter_section").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#other_parameter_section").hide();
         } else if (design_method == "Augmented") {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -342,12 +345,12 @@ jQuery(document).ready(function ($) {
             $("#block_number_section").hide();
             $("#block_size_section").hide();
             $("#max_block_size_section").show();
-	    $("#row_number_section").hide(); 
-	    $("#row_number_per_block_section").hide();
-	    $("#col_number_per_block_section").hide();
-	    $("#col_number_section").hide();
-	    $("#row_number_per_block_section").hide();
-	    $("#other_parameter_section").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#other_parameter_section").hide();
         } else if (design_method == "") {
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
