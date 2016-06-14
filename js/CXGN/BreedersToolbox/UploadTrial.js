@@ -108,12 +108,29 @@ jQuery(document).ready(function ($) {
 		alert("No file selected");
             }
 	},
-	complete: function (response) {
-	    $('#working_modal').modal("hide");
-            if (response.error_string) {
-		$("#upload_trial_error_display tbody").html('');
-		$("#upload_trial_error_display tbody").append(response.error_string);
-		$('#upload_trial_error_display').modal("show");
+    complete: function (response) {
+        console.log(response);
+
+        $('#working_modal').modal("hide");
+        if (response.error_string) {
+            $("#upload_trial_error_display tbody").html('');
+
+            if (response.missing_accessions) {
+                var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='upload_trial_missing_accessions' style='display:none'></div><div id='upload_trial_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions.</h4></div><br/>";
+                $("#upload_trial_add_missing_accessions_html").html(missing_accessions_html);
+
+                var missing_accessions_vals = '';
+                for(var i=0; i<response.missing_accessions.length; i++) {
+                    missing_accessions_vals = missing_accessions_vals + response.missing_accessions[i] + '\n';
+                }
+                $("#upload_trial_missing_accessions").html(missing_accessions_vals);
+                addToListMenu('upload_trial_add_missing_accessions', 'upload_trial_missing_accessions');
+            }
+
+            $("#upload_trial_error_display tbody").append(response.error_string);
+            $('#upload_trial_dialog').modal("hide");
+            $('#upload_trial_error_display').modal("show");
+
 		//$(function () {
                 //    $("#upload_trial_error_display").dialog({
 		//	modal: true,

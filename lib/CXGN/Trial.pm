@@ -643,16 +643,9 @@ sub delete_phenotype_data {
 
 		# delete phenotype data associated with trial
 		#
-		my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
+		#my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
 
 		my $q = "SELECT nd_experiment_id FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) WHERE project_id =?";
-	#	my $nd_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( { project_id => $trial_id }, { join => 'nd_experiment_phenotype' });
-
-	#	print STDERR "\n\nexperiment_count: ".$nd_experiment_rs->count()."\n\n";
-
-	#	my @nd_experiment_ids = map { $_->nd_experiment_id } $nd_experiment_rs->all();
-
-
 
 		my $h = $self->bcs_schema()->storage()->dbh()->prepare($q);
 
@@ -661,6 +654,7 @@ sub delete_phenotype_data {
 		while (my ($id) = $h->fetchrow_array()) {
 		    push @nd_experiment_ids, $id;
 		}
+		print STDERR "GOING TO REMOVE ".scalar(@nd_experiment_ids)." EXPERIMENTS...\n";
 		$self->_delete_phenotype_experiments(@nd_experiment_ids);
 	    });
     };
@@ -720,6 +714,63 @@ sub delete_field_layout {
     return '';
 }
 
+=head2 function delete_phenotype_metadata()
+
+ Usage:        $trial->delete_metadata($metadata_schema, $phenome_schema);
+ Desc:         obsoletes the metadata entries for this trial.
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub delete_phenotype_metadata {
+    my $self = shift;
+    my $metadata_schema = shift;
+    my $phenome_schema = shift;
+
+    if (!$metadata_schema || !$phenome_schema) { die "Need metadata schema parameter\n"; }
+
+    my $trial_id = $self->get_trial_id();
+
+    #print STDERR "Deleting metadata for trial $trial_id...\n";
+
+    # first, deal with entries in the md_metadata table, which may reference nd_experiment (through linking table)
+    #
+    my $q = "SELECT distinct(metadata_id) FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) LEFT JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    $h->execute($trial_id);
+
+    while (my ($md_id) = $h->fetchrow_array()) {
+	#print STDERR "Associated metadata id: $md_id\n";
+	my $mdmd_row = $metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
+	if ($mdmd_row) {
+	    #print STDERR "Obsoleting $md_id...\n";
+
+	    $mdmd_row -> update( { obsolete => 1 });
+	}
+    }
+
+    #print STDERR "Deleting the entries in the linking table...\n";
+
+    # delete the entries from the linking table...
+    $q = "SELECT distinct(file_id) FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    $h->execute($trial_id);
+
+    while (my ($file_id) = $h->fetchrow_array()) {
+	print STDERR "trying to delete association for file with id $file_id...\n";
+	my $ndemdf_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search( { file_id=>$file_id });
+	print STDERR "Deleting md_files linking table entries...\n";
+	foreach my $row ($ndemdf_rs->all()) {
+	    print STDERR "DELETING !!!!\n";
+	    $row->delete();
+	}
+    }
+}
+
+
 
 =head2 function delete_metadata()
 
@@ -745,7 +796,7 @@ sub delete_metadata {
 
     # first, deal with entries in the md_metadata table, which may reference nd_experiment (through linking table)
     #
-    my $q = "SELECT distinct(metadata_id) FROM nd_experiment_project JOIN phenome.nd_experiment_md_files using(nd_experiment_id) JOIN metadata.md_files using(file_id) JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    my $q = "SELECT distinct(metadata_id) FROM nd_experiment_project JOIN phenome.nd_experiment_md_files using(nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
     my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($trial_id);
 
@@ -761,17 +812,17 @@ sub delete_metadata {
 
     #print STDERR "Deleting the entries in the linking table...\n";
 
-    # delete the entries from the linking table...
-    $q = "SELECT distinct(file_id) FROM nd_experiment_project JOIN phenome.nd_experiment_md_files using(nd_experiment_id) JOIN metadata.md_files using(file_id) JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    # delete the entries from the linking table... (left joins are due to sometimes missing md_file entries)
+    $q = "SELECT distinct(file_id) FROM nd_experiment_project LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
     $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($trial_id);
 
     while (my ($file_id) = $h->fetchrow_array()) {
-	#print STDERR "trying to delete association for file with id $file_id...\n";
+	print STDERR "trying to delete association for file with id $file_id...\n";
 	my $ndemdf_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search( { file_id=>$file_id });
 	print STDERR "Deleting md_files linking table entries...\n";
 	foreach my $row ($ndemdf_rs->all()) {
-	    #print STDERR "DELETING !!!!\n";
+	    print STDERR "DELETING !!!!\n";
 	    $row->delete();
 	}
     }

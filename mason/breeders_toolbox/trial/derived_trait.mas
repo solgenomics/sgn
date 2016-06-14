@@ -1,0 +1,31 @@
+<%args>
+$trial_id
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.iframe-post-form' ] &>
+
+<div class="container">
+ 
+  	<div class="col-sm-4" id="create_button">
+		<a id="compute_derived_trait_link"><button class="button"  type="button" id="derived_button" value="Create_Trait" >Derive Trait</button></a>
+ 	</div>
+</div>
+
+<div id="compute_derived_trait_dialog" title="Compute Derived Traits" style="display:none;">
+  	<div id="trait_list_dc" name="trait_list">
+    		<label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please select trait to compute: <br />
+  			<select id="derived_trait_select"></select>
+    		</label> 
+    			
+  	</div>
+</div>
+
+<div id="derived_trait_saved_dialog_message" title="Computation of Derived Traits" style="display:none;">
+  	<p>
+    		<span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    		The trait was created and saved successfully
+  	</p>
+</div>
+
+

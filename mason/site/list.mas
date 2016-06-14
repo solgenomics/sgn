@@ -2,16 +2,16 @@
 <!-- Lists dialog -->
 
 <div class="modal fade" id="list_dialog" name="list_dialog" tabindex="-1" role="dialog" aria-labelledby="listDialog">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header" style="text-align:center">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="listDialog">Available Lists</h4>
+        <h3 class="modal-title" id="listDialog">Your Lists</h3>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 	  <div id="list_dialog_div">
-	  </div>      
+	  </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -25,14 +25,14 @@
 <div class="modal fade" id="public_list_dialog" name="public_list_dialog" tabindex="-1" role="dialog" aria-labelledby="publicListDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header" style="text-align:center">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title" id="publicListDialog">Public Lists</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 	  <div id="public_list_dialog_div">
-	  </div>      
+	  </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -43,16 +43,16 @@
 </div>
 
 <div class="modal fade" id="list_item_dialog" name="list_item_dialog" tabindex="-1" role="dialog" aria-labelledby="listItemDialog">
-  <div class="modal-dialog modal-sm" role="document">
+  <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header" style="text-align:center">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title" id="listItemDialog">List Contents</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 	  <div id="list_item_dialog_div">
-	  </div>      
+	  </div>
         </div>
       </div>
       <div class="modal-footer">

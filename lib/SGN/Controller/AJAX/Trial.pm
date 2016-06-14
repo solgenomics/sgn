@@ -497,12 +497,14 @@ sub upload_trial_file_POST : Args(0) {
 
     else {
       $parse_errors = $parser->get_parse_errors();
-      foreach my $error_string (@{$parse_errors}){
-	$return_error=$return_error.$error_string."<br>";
+      #print STDERR Dumper $parse_errors;
+
+      foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+          $return_error=$return_error.$error_string."<br>";
       }
     }
 
-    $c->stash->{rest} = {error_string => $return_error,};
+    $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}};
     return;
   }
 

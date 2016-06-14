@@ -22,7 +22,7 @@ has 'filename' => (
 
 has 'parse_errors' => (
 		       is => 'ro',
-		       isa => 'ArrayRef[Str]',
+		       isa => 'HashRef',
 		       writer => '_set_parse_errors',
 		       reader => 'get_parse_errors',
 		       predicate => 'has_parse_errors',
