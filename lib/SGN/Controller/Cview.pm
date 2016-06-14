@@ -70,9 +70,15 @@ sub index :Path("/cview") :Args(0) {
 	my $short_name = $map->get_short_name();
 	my $long_name = $map->get_long_name() || $short_name;       
 	my $id = $map->get_id();
-	push @{$map_by_species{$species} },
-             qq{<a href="}.$c->stash->{map_url}.qq{?map_version_id=$id">}.encode_entities($short_name).'</a>: '.encode_entities($long_name)."\n";
+	
+	my $map_is_private = $self->data_is_private($c, $c->dbc->dbh(), $map);
+	
+	unless ($map_is_private) {
+	    push @{$map_by_species{$species} },
+	    qq{<a href="}.$c->stash->{map_url}.qq{?map_version_id=$id">}.encode_entities($short_name).'</a>: '.encode_entities($long_name)."\n";
+	}
     }
+
     $c->stash->{map_by_species} = \%map_by_species;    
     $c->forward("View::Mason");
 }
@@ -115,7 +121,7 @@ sub map :Path("/cview/map.pl") :Args(0) {
 	return;
     }
 
-    my $private = $self->data_is_private($c, $c->stash->{dbh}, $c->stash->{map_version_id});
+    my $private = $self->data_is_private($c, $c->stash->{dbh}, $map);
 
     $c->stash->{long_name} = $map->get_long_name();
     $c->stash->{short_name} = $map->get_short_name();
@@ -236,13 +242,20 @@ sub data_is_private {
     my $self = shift;
     my $c = shift;
     my $dbh = shift;
-    my $map_version_id = shift;
-
-    if ($map_version_id!~/^\d+$/) { return ''; }
-    my $genetic_map = CXGN::Map->new($dbh, { map_version_id=>$map_version_id}); 
-    my $pop_id = $genetic_map->get_population_id();
-    my $pop = CXGN::Phenome::Population->new($dbh, $pop_id);
-    my $is_public = $pop->get_privacy_status();
+    my $map = shift;
+  
+    my $pop_name = $map->get_short_name() || $map->get_long_name();
+    
+    my ($is_public, $owner_id);
+    my $pop_id;
+    if ($pop_name) {
+	my $pop = CXGN::Phenome::Population->new_with_name($dbh, $pop_name);
+	if ($pop) {
+	    $pop_id = $pop->get_population_id();
+	    $is_public = $pop->get_privacy_status();
+	    $owner_id  = $pop->get_sp_person_id();
+	}
+   }
     
     my ($login_id, $user_type);
     if ($c->user()) { 
@@ -253,15 +266,12 @@ sub data_is_private {
 	
     if ($is_public ||
 	$user_type && $user_type eq 'curator' ||
-        $login_id  && $login_id == $pop->get_sp_person_id()
-	)  {
+        $login_id  && $owner_id && $login_id == $owner_id )  {
 	return undef;
     } 
     else {
-      
-	   my $owner_id = $pop->get_sp_person_id(); 
-    
-
+	if ($pop_id) {     
+	
 	   my $submitter = CXGN::People::Person->new($dbh, $owner_id);
            no warnings 'uninitialized';
     	   my $submitter_name = $submitter->get_first_name()." ".$submitter->get_last_name();
@@ -276,6 +286,8 @@ sub data_is_private {
                     </p> |;
 
          return $private;
+ } else {
+return undef; }
     } 
     
 }

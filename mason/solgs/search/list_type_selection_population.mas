@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-population/user_selection_genotypes.mas - prediction genotype upload form 
+/solgs/search/list_type_selection_population.mas - template for list type selection popultions 
 
 =AUTHOR
 
@@ -16,7 +16,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["solGS.userSelectionGenotypes"] &>
+<& /util/import_javascript.mas, classes => ["solGS.listTypeSelectionPopulation"] &>
   
   <div class="list_upload" id="list_label">
     <label for="prediction_genotypes_list">List-based selection population </label>

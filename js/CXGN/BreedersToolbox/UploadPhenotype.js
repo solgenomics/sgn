@@ -1,86 +1,85 @@
 
-
 jQuery( document ).ready( function() { 
 
     //For Spreadsheet Upload
     jQuery('#upload_spreadsheet_phenotype_submit_verify').click( function() {
-	initializeUploadPhenotype(jQuery("#upload_spreadsheet_phenotype_file_input").val(), "Verifying Spreadsheet File and Data", "#upload_spreadsheet_phenotype_file_form", "/ajax/phenotype/upload_verify/spreadsheet");
+        initializeUploadPhenotype(jQuery("#upload_spreadsheet_phenotype_file_input").val(), "Verifying Spreadsheet File and Data", "#upload_spreadsheet_phenotype_file_form", "/ajax/phenotype/upload_verify/spreadsheet");
     });
 
     jQuery("#upload_spreadsheet_phenotype_file_form").iframePostForm({
-	json: true,
-	post: function () { },
-	complete: function (response) {
-	    hidePhenotypeUploadWorkingModal();
-	    displayPhenotypeUploadVerifyResponse(response, "spreadsheet");
-	    
-	    jQuery("#upload_spreadsheet_phenotype_submit_store").click( function() {
-		initializeUploadPhenotype(jQuery("#upload_spreadsheet_phenotype_file_input").val(), "Storing Spreadsheet File and Data", "#upload_spreadsheet_phenotype_file_form", "/ajax/phenotype/upload_store/spreadsheet");
+        json: true,
+        post: function () { },
+        complete: function (response) {
+            hidePhenotypeUploadWorkingModal();
+            displayPhenotypeUploadVerifyResponse(response, "spreadsheet");
+
+            jQuery("#upload_spreadsheet_phenotype_submit_store").click( function() {
+                initializeUploadPhenotype(jQuery("#upload_spreadsheet_phenotype_file_input").val(), "Storing Spreadsheet File and Data", "#upload_spreadsheet_phenotype_file_form", "/ajax/phenotype/upload_store/spreadsheet");
             });
-	    
-    	    jQuery("#upload_spreadsheet_phenotype_file_form").iframePostForm({
-		json: true,
-		post: function () { },
-	    	complete: function (response) {
-	    	    hidePhenotypeUploadWorkingModal();
-		    displayPhenotypeUploadStoreResponse(response, "spreadsheet");
-		},
-    	    });
-	}
+
+            jQuery("#upload_spreadsheet_phenotype_file_form").iframePostForm({
+                json: true,
+                post: function () { },
+                complete: function (response) {
+                    hidePhenotypeUploadWorkingModal();
+                    displayPhenotypeUploadStoreResponse(response, "spreadsheet");
+                },
+            });
+        }
     });
 
     //For Datacollector Upload
     jQuery('#upload_datacollector_phenotype_submit_verify').click( function() {
-	initializeUploadPhenotype(jQuery("#upload_datacollector_phenotype_file_input").val(), "Verifying Datacollector File and Phenotype Data", "#upload_datacollector_phenotype_file_form", "/ajax/phenotype/upload_verify/datacollector");
+        initializeUploadPhenotype(jQuery("#upload_datacollector_phenotype_file_input").val(), "Verifying Datacollector File and Phenotype Data", "#upload_datacollector_phenotype_file_form", "/ajax/phenotype/upload_verify/datacollector");
     });
 
     jQuery("#upload_datacollector_phenotype_file_form").iframePostForm({
-	json: true,
-	post: function () { },
-	complete: function (response) {
-	    hidePhenotypeUploadWorkingModal();
-	    displayPhenotypeUploadVerifyResponse(response, "datacollector");
-	    
-	    jQuery("#upload_datacollector_phenotype_submit_store").click( function() {
-		initializeUploadPhenotype(jQuery("#upload_datacollector_phenotype_file_input").val(), "Storing Datacollector File and Phenotype Data", "#upload_datacollector_phenotype_file_form", "/ajax/phenotype/upload_store/datacollector");
+        json: true,
+        post: function () { },
+        complete: function (response) {
+            hidePhenotypeUploadWorkingModal();
+            displayPhenotypeUploadVerifyResponse(response, "datacollector");
+
+            jQuery("#upload_datacollector_phenotype_submit_store").click( function() {
+                initializeUploadPhenotype(jQuery("#upload_datacollector_phenotype_file_input").val(), "Storing Datacollector File and Phenotype Data", "#upload_datacollector_phenotype_file_form", "/ajax/phenotype/upload_store/datacollector");
             });
 
-    	    jQuery("#upload_datacollector_phenotype_file_form").iframePostForm({
-		json: true,
-		post: function () { },
-	    	complete: function (response) {
-	    	    hidePhenotypeUploadWorkingModal();
-		    displayPhenotypeUploadStoreResponse(response, "datacollector");
-		},
-    	    });
-	}
+            jQuery("#upload_datacollector_phenotype_file_form").iframePostForm({
+                json: true,
+                post: function () { },
+                complete: function (response) {
+                    hidePhenotypeUploadWorkingModal();
+                    displayPhenotypeUploadStoreResponse(response, "datacollector");
+                },
+            });
+        }
     });
 
     //For Fieldbook Upload
     jQuery('#upload_fieldbook_phenotype_submit_verify').click( function() {
-	initializeUploadPhenotype(jQuery("#upload_fieldbook_phenotype_file_input").val(), "Verifying Fieldbook File and Phenotype Data", "#upload_fieldbook_phenotype_file_form", "/ajax/phenotype/upload_verify/fieldbook");
+        initializeUploadPhenotype(jQuery("#upload_fieldbook_phenotype_file_input").val(), "Verifying Fieldbook File and Phenotype Data", "#upload_fieldbook_phenotype_file_form", "/ajax/phenotype/upload_verify/fieldbook");
     });
 
     jQuery("#upload_fieldbook_phenotype_file_form").iframePostForm({
-	json: true,
-	post: function () { },
-	complete: function (response) {
-	    hidePhenotypeUploadWorkingModal();
-	    displayPhenotypeUploadVerifyResponse(response, "fieldbook");
-	    
-	    jQuery("#upload_fieldbook_phenotype_submit_store").click( function() {
-		initializeUploadPhenotype(jQuery("#upload_fieldbook_phenotype_file_input").val(), "Storing Fieldbook File and Phenotype Data", "#upload_fieldbook_phenotype_file_form", "/ajax/phenotype/upload_store/fieldbook");
+        json: true,
+        post: function () { },
+        complete: function (response) {
+            hidePhenotypeUploadWorkingModal();
+            displayPhenotypeUploadVerifyResponse(response, "fieldbook");
+
+            jQuery("#upload_fieldbook_phenotype_submit_store").click( function() {
+                initializeUploadPhenotype(jQuery("#upload_fieldbook_phenotype_file_input").val(), "Storing Fieldbook File and Phenotype Data", "#upload_fieldbook_phenotype_file_form", "/ajax/phenotype/upload_store/fieldbook");
             });
-	    	    
-    	    jQuery("#upload_fieldbook_phenotype_file_form").iframePostForm({
-		json: true,
-		post: function () { },
-	    	complete: function (response) {
-	    	    hidePhenotypeUploadWorkingModal();
-		    displayPhenotypeUploadStoreResponse(response, "fieldbook");
-		},
-    	    });
-	}
+
+            jQuery("#upload_fieldbook_phenotype_file_form").iframePostForm({
+                json: true,
+                post: function () { },
+                complete: function (response) {
+                    hidePhenotypeUploadWorkingModal();
+                    displayPhenotypeUploadStoreResponse(response, "fieldbook");
+                },
+            });
+        }
     });
 
 	jQuery('#upload_phenotype_spreadsheet_dialog').on('hidden.bs.modal', function () {

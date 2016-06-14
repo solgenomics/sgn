@@ -26,8 +26,8 @@ It has been widely used for the construction of <a href="/cview/map.pl?map_id=9&
          'BLAST WGS Assembly' => '<a href="/tools/blast/?db_id=226">Genomic scaffolds</a>',
 	 'BLAST protein sequences' => '<a href="/tools/blast/?db_id=260">Protein sequences</a>',
 	 'BLAST CDS sequences' => '<a href="/tools/blast/?db_id=261">CDS sequences</a>',
-	 'JBrowse view' => '<a href="/jbrowse/current/?data=data%2Fjson%2Fspenn&loc=Spenn-ch01%3A43733407..65600109&tracks=DNA&highlight=">Browse genome</a>',
-		    
+	 'JBrowse view' => '<a href="/jbrowse_solgenomics/?data=data%2Fjson%2Fspenn&loc=Spenn-ch01%3A43733407..65600109&tracks=DNA&highlight=">Browse genome</a>',
+
      )
     %>
 </&>

@@ -58,7 +58,7 @@ has 'trial_year' => (isa => 'Str', is => 'rw', predicate => 'has_trial_year', re
 has 'trial_description' => (isa => 'Str', is => 'rw', predicate => 'has_trial_description', required => 1,);
 has 'trial_location' => (isa => 'Str', is => 'rw', predicate => 'has_trial_location', required => 1,);
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
-has 'design' => (isa => 'HashRef[HashRef[Str]]', is => 'rw', predicate => 'has_design', required => 1);
+has 'design' => (isa => 'HashRef[HashRef[Str]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 #has 'breeding_program_id' => (isa => 'Int', is => 'rw', predicate => 'has_breeding_program_id', required => 1);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 0,);
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
@@ -91,43 +91,51 @@ sub get_breeding_program_id {
   my $self = shift;
   my $project_lookup =  CXGN::BreedersToolbox::Projects->new(schema => $self->get_chado_schema);
   my $breeding_program_ref = $project_lookup->get_breeding_program_by_name($self->get_program());
-  if (!$breeding_program_ref) {
-    return;
+  if (!$breeding_program_ref ) {
+      print STDERR "UNDEF breeding program " . $self->get_program . "\n\n";
+      return ;
   }
   my $breeding_program_id = $breeding_program_ref->project_id();
+  print STDERR "get_breeding_program _id returning $breeding_program_id";
   return $breeding_program_id;
 }
 
 
 sub save_trial {
-    print STDERR "Check 4.1: ".localtime();
-  my $self = shift;
+    #print STDERR "Check 4.1: ".localtime();
+    print STDERR "**trying to save trial \n\n";
+    my $self = shift;
   my $chado_schema = $self->get_chado_schema();
-  my %design = %{$self->get_design()};
+
+  my %design;
+  if ($self->get_design) {
+    %design = %{$self->get_design()};
+  }
 
   if ($self->trial_name_already_exists()) {
       print STDERR "Can't create trial: Trial name already exists\n";
-      return ( error => "trial name already exists" );
+      die "trial name already exists" ;
   }
-
+    
   if (!$self->get_breeding_program_id()) {
-      print STDERR "Can't create trial: Breeding program does not exist\n";
-      return ( error => "no breeding program id" );
+      print STDERR "Can't create trial: Breeding program does not exist\n"; 
+      die "No breeding program id";
+      #return ( error => "no breeding program id" );
   }
 
-    print STDERR "Check 4.2: ".localtime();
+    #print STDERR "Check 4.2: ".localtime();
 
   #lookup user by name
-  my $user_name = $self->get_user_name();;
+  my $user_name = $self->get_user_name();
   my $dbh = $self->get_dbh();
   my $owner_sp_person_id;
   $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $user_name); #add person id as an option.
   if (!$owner_sp_person_id) {
       print STDERR "Can't create trial: User/owner not found\n";
-    return ( error => "no owner" );
+      die "no owner $user_name" ;
   }
 
-    print STDERR "Check 4.3: ".localtime();
+    #print STDERR "Check 4.3: ".localtime();
 
   my $geolocation;
   my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $chado_schema);
@@ -135,10 +143,10 @@ sub save_trial {
   $geolocation = $geolocation_lookup->get_geolocation();
   if (!$geolocation) {
       print STDERR "Can't create trial: Location not found\n";
-     return ( error => "no geolocation" );
+      die "no geolocation" ;
   }
 
-    print STDERR "Check 4.4: ".localtime();
+    #print STDERR "Check 4.4: ".localtime();
 
   my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $chado_schema } );
 
@@ -168,7 +176,7 @@ sub save_trial {
 		type_id => $genotyping_layout_cvterm->cvterm_id(),
 		});
 
-    print STDERR "Check 4.5: ".localtime();
+    #print STDERR "Check 4.5: ".localtime();
 
   #modify cvterms used to create the trial when it is a genotyping trial
   if ($self->get_is_genotyping()){
@@ -187,7 +195,7 @@ sub save_trial {
 	  { autocreate => 1});
   }
  
-    print STDERR "Check 4.6: ".localtime();
+    #print STDERR "Check 4.6: ".localtime();
 
   my $t = CXGN::Trial->new( { bcs_schema => $chado_schema, trial_id => $project->project_id() } );
   $t->add_location($geolocation->nd_geolocation_id()); # set location also as a project prop
@@ -195,7 +203,7 @@ sub save_trial {
   #link to the project
   $field_layout_experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});
 
-    print STDERR "Check 4.7: ".localtime();
+    #print STDERR "Check 4.7: ".localtime();
 
   $project->create_projectprops( { 'project year' => $self->get_trial_year(),'design' => $self->get_design_type()}, {autocreate=>1});
 
@@ -226,7 +234,7 @@ sub save_trial {
 
   foreach my $key (sort { $a cmp $b} keys %design) {
       
-      print STDERR "Check 01: ".localtime();
+      #print STDERR "Check 01: ".localtime();
 
     my $plot_name = $design{$key}->{plot_name};
     my $plot_number = $design{$key}->{plot_number};
@@ -275,7 +283,7 @@ sub save_trial {
 	$organism_id_checked = $parent_stock->organism_id();
     }
 
-      print STDERR "Check 02: ".localtime();
+      #print STDERR "Check 02: ".localtime();
 
     #create the plot
     $plot = $chado_schema->resultset("Stock::Stock")
@@ -314,7 +322,7 @@ sub save_trial {
 	$plot->create_stockprops({'plate' => $plate}, {autocreate => 1});
     }
 
-      print STDERR "Check 03: ".localtime();
+     # print STDERR "Check 03: ".localtime();
 
 
     #create the stock_relationship of the accession with the plot, if it does not exist already
@@ -335,14 +343,14 @@ sub save_trial {
         });
     }
 
-      print STDERR "Check 04: ".localtime();
+      #print STDERR "Check 04: ".localtime();
   }
 
-    print STDERR "Check 4.8: ".localtime();
+    #print STDERR "Check 4.8: ".localtime();
 
   $program->associate_breeding_program_with_trial($self->get_breeding_program_id, $project->project_id);
 
-    print STDERR "Check 4.9: ".localtime();
+    #print STDERR "Check 4.9: ".localtime();
 
   return ( trial_id => $project->project_id );
 

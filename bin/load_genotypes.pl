@@ -123,6 +123,7 @@ my $project = $schema->resultset("Project::Project")->find_or_create(
 $project->create_projectprops( { 'project year' => $opt_y }, { autocreate => 1 } );
 
 # find the cvterm for a genotyping experiment
+
 my $geno_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type');
 
 my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_create( 

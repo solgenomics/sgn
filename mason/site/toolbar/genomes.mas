@@ -13,6 +13,8 @@
     <li><a href="/organism/Nicotiana_benthamiana/genome"><i>Nicotiana benthamiana</i></a></li>
     <li><a href="/organism/Nicotiana_tabacum/genome"><i>Nicotiana tabacum</i></a></li>
     <li><a href="/organism/Solanum_pimpinellifolium/genome"><i>Solanum pimpinellifolium</i></a></li>
+    <li><a href="/organism/Petunia_axillaris/genome"><i>Petunia axillaris</i></a></li>
+    <li><a href="/organism/Petunia_inflata/genome"><i>Petunia inflata</i></a></li>
     
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Resequencing projects</li>

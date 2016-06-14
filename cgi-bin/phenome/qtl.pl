@@ -57,7 +57,7 @@ our $pop_name    = $pop->get_name();
 our $trait_name  = trait_name();
 our ($ci_table, $marker_details) = confidence_interval();
 
-foreach my $k (keys %$marker_details) {
+foreach my $k (keys %$marker_details) {    
     $l_m = $k if ($marker_details->{$k}{orientation} eq  'left');
     $r_m = $k if ($marker_details->{$k}{orientation} eq  'right');
 }
@@ -104,7 +104,7 @@ sub marker_positions
     my $l_m_pos = $marker_details->{$l_m}{position};
     my $p_m_pos = $marker_details->{$p_m}{position};
     my $r_m_pos = $marker_details->{$r_m}{position};
-
+    
     my $fl_markers
         = qq |<a href="../cview/view_chromosome.pl?map_version_id=$mapv_id&chr_nr=$lg&show_ruler=1&show_IL=&show_offsets=1&comp_map_version_id=&comp_chr=&color_model=&show_physical=&size=&show_zoomed=1&confidence=-2&hilite=$l_m+$p_m+$r_m&marker_type=&cM_start=$l_m_pos&cM_end=$r_m_pos">Chromosome $lg ($l_m, $r_m)</a> |;
 
@@ -130,7 +130,20 @@ sub markers
     my @markers;
     foreach my $mr (@mrs) 
     {
-        push @markers, CXGN::Marker->new_with_name($dbh, $mr);
+	if($mr) 
+	{
+	    my $marker = CXGN::Marker->new_with_name($dbh, $mr);
+	    if (!$marker) 
+	    {
+		my @marker_id = CXGN::Marker::Tools::marker_name_to_ids( $dbh, $mr);		
+		if ($marker_id[0]) 
+		{
+		    $marker = CXGN::Marker->new($dbh, $marker_id[0]);
+		}
+	    }
+	    
+	    push @markers, $marker if $marker;
+	}
     }
 
     return \@markers;
@@ -212,14 +225,14 @@ sub confidence_interval
     my $highest_lod     = $rnd->round(max( @all_lods), 2 );
     my $right_position  = $rnd->round(max( @all_positions), 2 );
     my $left_position   = $rnd->round(min( @all_positions), 2 );
-     
+
     my ($peak_marker, $linkage_group, $peak_position) = split (/\t/, $rows[1]);
     $peak_position = $rnd->round($peak_position, 1);
     
     foreach my $row ( @rows ) 
     {  
 	my ($m, $m_chr, $m_pos, $m_lod)  = split (/\t/, $row);
-	$m_pos = $rnd->round( $m_pos, 1 );
+	$m_pos = $rnd->round( $m_pos, 2 );
 	$m_lod = $rnd->round( $m_lod, 2 );
 
 	my $marker = CXGN::Marker->new_with_name( $dbh, $m );	   

@@ -497,12 +497,14 @@ sub upload_trial_file_POST : Args(0) {
 
     else {
       $parse_errors = $parser->get_parse_errors();
-      foreach my $error_string (@{$parse_errors}){
-	$return_error=$return_error.$error_string."<br>";
+      #print STDERR Dumper $parse_errors;
+
+      foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+          $return_error=$return_error.$error_string."<br>";
       }
     }
 
-    $c->stash->{rest} = {error_string => $return_error,};
+    $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}};
     return;
   }
 
@@ -524,12 +526,12 @@ sub upload_trial_file_POST : Args(0) {
 	   upload_trial_file => $upload,
 	  });
 
-#  try {
-    $trial_create->save_trial();
- # } catch {
-#    $c->stash->{rest} = {error => "Error saving trial in the database $_"};
-#    $error = 1;
-#  };
+  try {
+      $trial_create->save_trial();
+  } catch {
+      $c->stash->{rest} = {error => "Error saving trial in the database $_"};
+      $error = 1;
+  };
   
   print STDERR "Check 5: ".localtime();
 

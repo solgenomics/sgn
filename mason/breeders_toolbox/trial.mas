@@ -3,7 +3,7 @@
 
 =head1 NAME
 
-/breeders/trial.mas - a mason component to display a trial detail page
+/breeders_toolbox/trial.mas - a mason component to display a trial detail page
 
 =head1 AUTHOR
 
@@ -151,7 +151,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <td>
 <div id="planting_date">
 % if ($planting_date) {
-%  print "$planting_date";
+  <a href="/calendar/personal?currentDate=<% $planting_date %>" target="_blank"><% $planting_date %></a>
 % } else {
 %  print "[No Planting Date]";
 % }
@@ -167,7 +167,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <td>
 <div id="harvest_date">
 % if ($harvest_date) {
-%  print "$harvest_date";
+  <a href="/calendar/personal?currentDate=<% $harvest_date %>" target="_blank"><% $harvest_date %></a>
 % } else {
 %  print "[No Harvest Date]";
 % }
@@ -388,6 +388,13 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
+<&| /page/info_section.mas, id=> "compute_derived_traits", title=>'Compute Derived Traits', collapsible=>1, collapsed=>1, &>
+
+	<& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
+
+</&>
+
+
 
 <&| /page/info_section.mas,
    title       => 'Trial JBrowse',
@@ -458,7 +465,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
     The field book layout file was saved successfully
   </p>
   <p>
-    <a id="tablet_layout_download_link">Download File</a>
+    <a id="tablet_layout_download_link">Go To Download File</a>
   </p>
 </div>
 

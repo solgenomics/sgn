@@ -13,6 +13,7 @@ use CXGN::BreedersToolbox::Delete;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use CXGN::Stock::StockLookup;
+use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -101,7 +102,7 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
 	return;
     }
 
-    if ( ($longitude && $longitude !~ /^[0-9.]+$/) || ($latitude && $latitude !~ /^[0-9.]+$/) || ($altitude && $altitude !~ /^[0-9.]+$/) ) {
+    if ( ($longitude && $longitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($altitude && $altitude !~ /^[0-9.]+$/) ) {
 	$c->stash->{rest} = { error => "Longitude, latitude and altitude must be numbers." };
 	return;
     }
@@ -528,17 +529,25 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
     });
 
     my %message;
+#    eval {
+#	%message = $ct->save_trial();
+#    };
 
-    eval {
+#    if ($@ || exists($message{error})) {
+#	$c->stash->{rest} = {
+#	    error => "Error saving the trial. $@ $message{error}"
+#	};
+#	return;
+#   }
+
+
+    try {
 	%message = $ct->save_trial();
+    } catch {
+	$c->stash->{rest} = {error => "Error saving trial in the database $_"};
     };
 
-    if ($@ || exists($message{error})) {
-	$c->stash->{rest} = {
-	    error => "Error saving the trial. $@ $message{error}"
-	};
-	return;
-    }
+
     $c->stash->{rest} = {
 	message => "Successfully stored the trial.",
 	trial_id => $message{trial_id},
@@ -577,9 +586,9 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
     my $meta = $p->parse();
 
     my $errors = $p->get_parse_errors();
-    if (@$errors) {
-	$c->stash->{rest} = { error => "The file has the following problems: ".join ", ", @$errors.". Please fix these problems and try again." };
-	print STDERR "Parsing errors in uploaded file. Aborting. (".join ",", @$errors.")\n";
+    if (@{$errors->{'error_messages'}}) {
+	$c->stash->{rest} = { error => "The file has the following problems: ".join ", ", @{$errors->{'error_messages'}}.". Please fix these problems and try again." };
+	print STDERR "Parsing errors in uploaded file. Aborting. (".join ",", @{$errors->{'error_messages'}}.")\n";
 	return;
     }
     print STDERR "Meta information from genotyping trial file: ".Dumper($meta);

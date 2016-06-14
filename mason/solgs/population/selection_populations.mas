@@ -70,7 +70,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 
   <br />
 
-  <& user_selection_genotypes.mas &>
+  <& /solgs/search/list_type_selection_population.mas &>
 
 </&>
 
