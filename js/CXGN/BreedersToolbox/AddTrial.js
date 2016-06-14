@@ -291,11 +291,8 @@ jQuery(document).ready(function ($) {
     $("#select_design_method").change(function () {
 	//$("#add_project_dialog").dialog("option", "height","auto");
         
-    var design_method = $("#select_design_method").val();
-
-        if (design_method == 'None') {
-            $("#trial_design_more_info").hide();
-        } else if (design_method == "CRD") {
+	var design_method = $("#select_design_method").val();
+        if (design_method == "CRD") {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
@@ -359,13 +356,13 @@ jQuery(document).ready(function ($) {
             $("#block_number_section").hide();
             $("#block_size_section").hide();
             $("#max_block_size_section").hide();
-	    $("#row_number_section").hide();
-	    $("#row_number_per_block_section").hide();
-	    $("#col_number_per_block_section").hide();
-	    $("#col_number_section").hide();
-	    $("#row_number_per_block_section").show();
-	    $("#other_parameter_section").hide();
-	    $("#other_parameter_section2").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").hide();
+            $("#row_number_per_block_section").show();
+            $("#other_parameter_section").hide();
+            $("#other_parameter_section2").hide();
         } 
 //	else if (design_method == "MADII") {
 //	    $("#trial_design_more_info").show();
@@ -590,11 +587,11 @@ else {
 	},
 	complete: function (response) {
             if (response.error_string) {
-		$("#upload_trial_error_display tbody").html('');
-		$("#upload_trial_error_display tbody").append(response.error_string);
-		$("#upload_trial_error_display").modal("show");
+		$("#add_trial_error_display tbody").html('');
+		$("#add_trial_error_display tbody").append(response.error_string);
+		$("#add_trial_error_display").modal("show");
 		//$(function () {
-                //    $("#upload_trial_error_display").dialog({
+                //    $("#add_trial_error_display").dialog({
 		//	modal: true,
 		//	title: "Errors in uploaded file",
 		//	buttons: {
