@@ -25,7 +25,7 @@ $trial_id
 </style>
 
 
-<div class="well well-sm">
+<div class="well well-sm table-responsive">
      <center><h4>Raw Data Statistics</h4></center><hr>
      <table id="phenotype_summary_data" class="display">
      <thead>
@@ -79,8 +79,11 @@ jQuery(document).ready(function () {
    jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
 
       jQuery('#phenotype_summary_data').DataTable( {
-      	  'retrieve': true,
-          'ajax': '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes',
+      	  "retrieve": true,
+          "ajax": '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes',
+          "columnDefs": [
+            { className: "text-center", "targets": [ 6 ] }
+          ],
       });
 
       jQuery.ajax ( {
@@ -133,12 +136,13 @@ jQuery(document).ready(function () {
    });
 
    jQuery('#phenotype_summary_data').on('click', 'a[href^="#"]', function(event) {
-     console.log("scrolling triggered");
+     console.log("scrolling histo into view");
+     var offset = jQuery(window).height() - jQuery('#raw_data_histogram_well').height() - 40;
      var target = jQuery(this.getAttribute('href'));
      if( target.length ) {
        event.preventDefault();
        jQuery('html, body').stop().animate({
-         scrollTop: target.offset().top - 50
+         scrollTop: target.offset().top - offset
        }, 1500);
      }
    });

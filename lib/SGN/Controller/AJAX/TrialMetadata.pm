@@ -397,7 +397,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     my @phenotype_data;
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {
-	push @phenotype_data, [ qq{<a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a>}, $average, $min, $max, $stddev, $count, qq{<a href="#raw_data_histogram_well"onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} ];
+	push @phenotype_data, [ qq{<a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a>}, $average, $min, $max, $stddev, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} ];
     }
 
     $c->stash->{rest} = { data => \@phenotype_data };
