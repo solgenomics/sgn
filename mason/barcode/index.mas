@@ -138,7 +138,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
   </div>
   <div class="col-md-10 col-lg-10">
 
-<form class="form-horizontal" role="form" method="GET" action="/barcode/excel_download">
+<form class="form-horizontal" role="form" method="GET" action="/barcode/unique">
   <div class="form-group form-group-sm">
     <label class="col-sm-4 control-label">Enter a List of Stock Names: </label>
     <div class="col-sm-8">

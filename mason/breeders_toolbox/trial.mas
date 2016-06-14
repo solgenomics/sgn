@@ -410,6 +410,13 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 </&>
 
+<&| /page/info_section.mas, id=> "compute_derived_traits", title=>'Compute Derived Traits', collapsible=>1, collapsed=>1, &>
+
+	<& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
+
+</&>
+
+
 
 <&| /page/info_section.mas,
    title       => 'Trial JBrowse',

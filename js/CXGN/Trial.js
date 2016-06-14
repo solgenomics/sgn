@@ -148,6 +148,110 @@ function open_create_fieldbook_dialog() {
     });
 }
 
+function open_create_DataCollector_dialog() {
+    //jQuery('#working').dialog("open");
+    jQuery('#working_modal').modal("show");
+    var list = new CXGN.List();
+    jQuery("#trait_list_dc").html(list.listSelect("trait_list", [ 'traits' ]));
+    //jQuery('#working').dialog("close");
+    jQuery('#working_modal').modal("hide");
+    jQuery('#create_DataCollector_dialog').dialog("open");
+}
+
+
+function create_DataCollector() {
+    //jQuery('#working').dialog("open");
+    jQuery('#working_modal').modal("show");
+    var trialID = parseInt(jQuery('#trialIDDiv').text());
+    var list = new CXGN.List();
+    var trait_list_id = jQuery('#trait_list_list_select').val();
+    var trait_list;
+    if (! trait_list_id == "") {
+	trait_list = JSON.stringify(list.getList(trait_list_id));
+    }
+     new jQuery.ajax({
+	 type: 'POST',
+	 url: '/ajax/phenotype/create_DataCollector',
+	 dataType: "json",
+	 data: {
+             'trial_id': trialID,
+             'trait_list': trait_list,
+	 },
+
+	 success: function (response) {
+     //console.log("success "+JSON.stringify(response));
+     jQuery('#working_modal').modal("hide");
+
+     if (response.error) {
+       console.log("error: "+response.error);
+       alert("error: "+response.error);
+       jQuery('#open_create_DataCollector_dialog').dialog("close");
+     } else {
+       //alert("success: "+response.filename);
+       jQuery('#open_create_DataCollector_dialog').dialog("close");
+       jQuery('#working_modal').modal("hide");
+       window.location.href = "/download/"+response.filename;
+     }
+	 },
+	 error: function () {
+	     //jQuery('#working').dialog("close");
+	     jQuery('#working_modal').modal("hide");
+             alert('An error occurred creating a DataCollector file.');
+             jQuery('#open_download_DataCollector_dialog').dialog("close");
+	 }
+     });
+}
+
+function open_derived_trait_dialog() {
+    jQuery('#working_modal').modal("show");
+    jQuery('#compute_derived_trait_dialog').dialog("open"); 
+    var trait = jQuery('#sel1').val();
+    jQuery("#test_xyz").html(trait);
+    jQuery('#working_modal').modal("hide");
+    
+}
+
+function compute_derived_trait() {
+    jQuery('#working_modal').modal("show");
+    var trait = jQuery('#derived_trait_select').val();
+    var trialID = parseInt(jQuery('#trialIDDiv').text());
+    if (trait === '') {
+		alert("No trait selected");
+	    }
+    
+     new jQuery.ajax({
+	 type: 'POST',
+	 url: '/ajax/phenotype/create_derived_trait',
+	 dataType: "json",
+	 data: {
+             'trial_id': trialID,
+             'trait': trait,
+	 },
+		
+	 success: function (response) {
+	     jQuery('#working_modal').modal("hide");
+		
+             if (response.error) {
+		 alert("Computation stopped: "+response.error);
+		 //alert("Computation for "+trait+" stopped: "+response.error);
+		 jQuery('#open_derived_trait_dialog').dialog("close");
+		 
+             } else {
+		 jQuery('#open_derived_trait_dialog').dialog("close");
+		 jQuery('#working_modal').modal("hide");
+		 jQuery('derived_trait_saved_dialog_message');
+		 alert("Successfully derived and uploaded phenotype");
+		// alert("Successfully derived and uploaded ' "+trait+" ' values for this trial");
+             }
+	 },
+	 error: function () {
+	     jQuery('#working_modal').modal("hide");
+             alert('An error occurred creating trait.');
+	 }
+     });
+}
+
+
 function trial_detail_page_setup_dialogs() {
 
     jQuery('#change_breeding_program_dialog').dialog( {
@@ -193,6 +297,69 @@ function trial_detail_page_setup_dialogs() {
     });
 
 
+//    jQuery('#create_spreadsheet_dialog').dialog({
+//	autoOpen: false,
+//	modal: true,
+//	autoResize:true,
+//	width: 500,
+//	position: ['top', 75],
+//	modal: true,
+//	buttons: {
+//	    Cancel: function() {
+//		jQuery( this ).dialog( "close" );
+//		return;
+//	    },
+//	    Create: {text: "Ok", id:"create_phenotyping_ok_button", click:function() {
+//		create_spreadsheet();
+//		//save_experimental_design(design_json);
+//		jQuery( this ).dialog( "close" );
+//	       },
+//	    },
+//	},
+//    });
+
+//    jQuery('#create_DataCollector_dialog').dialog({
+//	autoOpen: false,
+//	modal: true,
+//	autoResize:true,
+//	width: 500,
+//	position: ['top', 75],
+//	modal: true,
+//	buttons: {
+//	    Cancel: function() {
+//		jQuery( this ).dialog( "close" );
+//		return;
+//	    },
+//	    Create: {text: "Create", id:"create_DataCollector_submit_button", click:function() {
+//		create_DataCollector();
+//		//save_experimental_design(design_json);
+//		jQuery( this ).dialog( "close" );
+//		}
+//	    },
+//	},
+//    });
+
+     jQuery('#compute_derived_trait_dialog').dialog({
+	autoOpen: false,
+	modal: true,
+	autoResize:true,
+	width: 500,
+	position: ['top', 75],
+	modal: true,
+	buttons: {
+	    Cancel: function() {
+		jQuery( this ).dialog( "close" );
+		return;
+	    },
+	    Create: {text: "Create", id:"create_derived_trait_submit_button", click:function() {
+		compute_derived_trait();
+		jQuery( this ).dialog( "close" );		
+		}
+	    },
+	},
+    });	
+
+
     jQuery('#show_change_breeding_program_link').click(
 	function() {
 	    jQuery('#change_breeding_program_dialog').dialog("open");
@@ -223,20 +390,9 @@ function trial_detail_page_setup_dialogs() {
 	open_create_fieldbook_dialog();
     });
 
-    jQuery('#trial_design_view_layout').dialog({
-	autoOpen: false,
-	height: 500,
-	width: 800,
-	modal: true,
-	buttons: {
-	    Close: function() {
-		jQuery( this ).dialog( "close" );
-	    }
-	}
-    });
 
     jQuery('#view_layout_link').click(function () {
-	jQuery('#trial_design_view_layout').dialog("open");
+        jQuery('#trial_design_view_layout').dialog("open");
     });
 
     jQuery('#edit_trial_description').click( function () {
@@ -429,6 +585,38 @@ function trial_detail_page_setup_dialogs() {
 		    }
 	}
     });
+
+    jQuery('#compute_derived_trait_link').click( function () {
+	jQuery('#compute_derived_trait_dialog').dialog("open");
+	jQuery.ajax( { 
+		url: '/ajax/breeders/trial/trait_formula',
+		success: function(response) { 
+		//console.log(response);
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+		    var html = "";
+		    if (response.derived_traits) { 
+			var selected = 'selected="selected"';
+			for(var n=0; n<response.derived_traits.length; n++) { 
+			    //alert("derived trait: +derived_traits"+response.derived_traits[n]);
+			    html += '<option value="'+response.derived_traits[n]+'" title="'+response.formula[n]+'" >'+response.derived_traits[n]+' </option> ';
+			}
+			
+		    }
+		    else { 
+			html = '<option active="false">No derived trait available</option>';
+		    }
+		}
+		jQuery('#derived_trait_select').html(html);
+	    },
+	    error: function(response) { 
+		alert("An error occurred trying to retrieve derived traits.");
+	    }
+	});
+
+});
 
 
 }

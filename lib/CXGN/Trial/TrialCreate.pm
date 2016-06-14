@@ -102,7 +102,7 @@ sub get_breeding_program_id {
 
 
 sub save_trial {
-    print STDERR "Check 4.1: ".localtime();
+    #print STDERR "Check 4.1: ".localtime();
     print STDERR "**trying to save trial \n\n";
     my $self = shift;
   my $chado_schema = $self->get_chado_schema();
@@ -123,7 +123,7 @@ sub save_trial {
       #return ( error => "no breeding program id" );
   }
 
-    print STDERR "Check 4.2: ".localtime();
+    #print STDERR "Check 4.2: ".localtime();
 
   #lookup user by name
   my $user_name = $self->get_user_name();
@@ -135,7 +135,7 @@ sub save_trial {
       die "no owner $user_name" ;
   }
 
-    print STDERR "Check 4.3: ".localtime();
+    #print STDERR "Check 4.3: ".localtime();
 
   my $geolocation;
   my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $chado_schema);
@@ -146,7 +146,7 @@ sub save_trial {
       die "no geolocation" ;
   }
 
-    print STDERR "Check 4.4: ".localtime();
+    #print STDERR "Check 4.4: ".localtime();
 
   my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $chado_schema } );
 
@@ -176,7 +176,7 @@ sub save_trial {
 		type_id => $genotyping_layout_cvterm->cvterm_id(),
 		});
 
-    print STDERR "Check 4.5: ".localtime();
+    #print STDERR "Check 4.5: ".localtime();
 
   #modify cvterms used to create the trial when it is a genotyping trial
   if ($self->get_is_genotyping()){
@@ -195,7 +195,7 @@ sub save_trial {
 	  { autocreate => 1});
   }
  
-    print STDERR "Check 4.6: ".localtime();
+    #print STDERR "Check 4.6: ".localtime();
 
   my $t = CXGN::Trial->new( { bcs_schema => $chado_schema, trial_id => $project->project_id() } );
   $t->add_location($geolocation->nd_geolocation_id()); # set location also as a project prop
@@ -203,7 +203,7 @@ sub save_trial {
   #link to the project
   $field_layout_experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});
 
-    print STDERR "Check 4.7: ".localtime();
+    #print STDERR "Check 4.7: ".localtime();
 
   $project->create_projectprops( { 'project year' => $self->get_trial_year(),'design' => $self->get_design_type()}, {autocreate=>1});
 
@@ -234,7 +234,7 @@ sub save_trial {
 
   foreach my $key (sort { $a cmp $b} keys %design) {
       
-      print STDERR "Check 01: ".localtime();
+      #print STDERR "Check 01: ".localtime();
 
     my $plot_name = $design{$key}->{plot_name};
     my $plot_number = $design{$key}->{plot_number};
@@ -283,7 +283,7 @@ sub save_trial {
 	$organism_id_checked = $parent_stock->organism_id();
     }
 
-      print STDERR "Check 02: ".localtime();
+      #print STDERR "Check 02: ".localtime();
 
     #create the plot
     $plot = $chado_schema->resultset("Stock::Stock")
@@ -322,7 +322,7 @@ sub save_trial {
 	$plot->create_stockprops({'plate' => $plate}, {autocreate => 1});
     }
 
-      print STDERR "Check 03: ".localtime();
+     # print STDERR "Check 03: ".localtime();
 
 
     #create the stock_relationship of the accession with the plot, if it does not exist already
@@ -343,14 +343,14 @@ sub save_trial {
         });
     }
 
-      print STDERR "Check 04: ".localtime();
+      #print STDERR "Check 04: ".localtime();
   }
 
-    print STDERR "Check 4.8: ".localtime();
+    #print STDERR "Check 4.8: ".localtime();
 
   $program->associate_breeding_program_with_trial($self->get_breeding_program_id, $project->project_id);
 
-    print STDERR "Check 4.9: ".localtime();
+    #print STDERR "Check 4.9: ".localtime();
 
   return ( trial_id => $project->project_id );
 

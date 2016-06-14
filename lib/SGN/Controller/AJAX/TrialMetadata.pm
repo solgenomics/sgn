@@ -65,11 +65,12 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     my $error = "";
 
     if ($datatype eq 'phenotypes') {
-	$error = $c->stash->{trial}->delete_metadata($c->stash->{schema}, $c->dbic_schema("CXGN::Phenome::Schema"));
+	$error = $c->stash->{trial}->delete_phenotype_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
 	$error .= $c->stash->{trial}->delete_phenotype_data();
     }
 
     elsif ($datatype eq 'layout') {
+	$error = $c->stash->{trial}->delete_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
 	$error = $c->stash->{trial}->delete_field_layout();
     }
     elsif ($datatype eq 'entry') {
