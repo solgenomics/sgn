@@ -36,7 +36,7 @@ $trial_id
      <th>Max</th>
      <th>Std Dev</th>
      <th>Count</th>
-     <th>More Info</th>
+     <th>Histogram</th>
      </tr>
      </thead>
      <tbody>
@@ -44,7 +44,7 @@ $trial_id
      </table>
 </div>
 
-<div class="well well-sm">
+<div class="well well-sm" id="raw_data_histogram_well">
   <center><h4>Raw Data Histogram</h4></center><hr>
   <div id="trial_summary_hist_div">
   <div class="row">
@@ -78,7 +78,7 @@ jQuery(document).ready(function () {
 
    jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
 
-      jQuery('#phenotype_summary_data').DataTable( { 
+      jQuery('#phenotype_summary_data').DataTable( {
       	  'retrieve': true,
           'ajax': '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes',
       });
@@ -103,25 +103,26 @@ jQuery(document).ready(function () {
 	      	 jQuery.ajax( {
                      url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+jQuery("#trial_summary_hist_dropdown").val(),
          	     type: 'POST',
-	  	     success: function(response){ 
+	  	     success: function(response){
 	  	         jQuery("#working_modal").modal("hide");
-		       	 if (response.error) { 
+		       	 if (response.error) {
 		             alert(response.error);
 		       	 }
-		       	 else { 
+		       	 else {
 		             d3.select("#trial_summary_hist").selectAll("*").remove();
 		 	     plot_histogram(response.data, 'trial_summary_hist');
 		       	 }
 	  	     },
-	  	     error: function(response) { 
+	  	     error: function(response) {
 	      	     	jQuery("#working_modal").modal("hide");
 	      	       	alert('An error occured retrieving trait histogram data.');
 	  	     }
-      	         });
+      	});
 	      } else {
 	          jQuery("#working_modal").modal("hide");
 		  jQuery("#trial_summary_hist_div").html("<center><h4>There is no data to plot.</h4></center>");
 	      }
+
 	  },
 	  error: function(response){
 	      alert('Error retrieving traits assayed in this trial');
@@ -131,9 +132,21 @@ jQuery(document).ready(function () {
 
    });
 
+   jQuery('#phenotype_summary_data').on('click', 'a[href^="#"]', function(event) {
+     console.log("scrolling triggered");
+     var target = jQuery(this.getAttribute('href'));
+     if( target.length ) {
+       event.preventDefault();
+       jQuery('html, body').stop().animate({
+         scrollTop: target.offset().top - 50
+       }, 1500);
+     }
+   });
+
 });
 
 function trait_summary_hist_change(value) {
+      jQuery("#trial_summary_hist_dropdown").val(value);
       jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/chado/cvterm?cvterm_id="+value+"'>Definition</a>");
 
       jQuery.ajax( {
@@ -142,22 +155,22 @@ function trait_summary_hist_change(value) {
 	  beforeSend: function() {
 	    jQuery("#working_modal").modal("show");
 	  },
-	  success: function(response){ 
+	  success: function(response){
 	        jQuery("#working_modal").modal("hide");
-		if (response.error) { 
+		if (response.error) {
 		    alert(response.error);
 		}
-		else { 
+		else {
 		 d3.select("#trial_summary_hist").selectAll("*").remove();
 		 plot_histogram(response.data, 'trial_summary_hist');
 		}
 	  },
-	  error: function(response) { 
+	  error: function(response) {
 	      jQuery("#working_modal").modal("hide");
 	      alert('An error occured retrieving trait histogram data.');
 	  }
       });
 }
 
-  
+
 </script>
