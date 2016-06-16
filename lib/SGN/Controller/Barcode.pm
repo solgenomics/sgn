@@ -136,14 +136,8 @@ sub barcode {
     my $text_width = gdLargeFont->width()*length($text);
     $barcode->string(gdLargeFont,int(($barcode->width()-$text_width)/2),10,$text, $barcode->colorAllocate(0, 0, 0));
     return $barcode;
-
 }
-
-
-
-
     
-
 #deprecated
 sub code128_png :Path('/barcode/code128png') :Args(2) { 
     my $self = shift;
