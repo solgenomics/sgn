@@ -721,14 +721,16 @@ function pasteListMenu (div_name, menu_div, button_name) {
 function pasteList(div_name) {
     var lo = new CXGN.List();
     var list_id = jQuery('#'+div_name+'_list_select').val();
+	console.log(list_id);
     var list = lo.getList(list_id);
-
+	console.log(list);
     // textify list
     var list_text = '';
     for (var n=0; n<list.length; n++) {
-      list_text = list_text + list[n][1]+"\r\n";
+      list_text = list_text + list[n]+"\r\n";
     }
-    jQuery('#'+div_name).text(list_text);
+	console.log(list_text);
+    jQuery('#'+div_name).val(list_text);
   }
 
 /*

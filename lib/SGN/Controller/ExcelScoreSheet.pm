@@ -41,7 +41,7 @@ sub excel_download : Path('/barcode/excel_download/') Args(0) {
     my $location = $c->req->param('location');
     my $lines    = $c->req->param('lines');
     my @cvterms = $c->req->param('cvterms');
-
+	print "MY PROJECT: $operator , $date ,  $location , $lines , my @cvterms\n";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $project_row = $schema->resultset("Project::Project")->find($project);
