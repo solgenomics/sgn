@@ -3,6 +3,7 @@
 $trial_name
 $breeding_program
 $location
+$year
 $trial_type
 $planting_date
 $harvest_date
@@ -28,25 +29,25 @@ $trial_description
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Edit Breeding Program: </label>
                     <div class="col-sm-9">
-                        <select class="form-control" id="edit_trial_breeding_program" name="edit_trial_breeding_program"></select>
+                        <select class="form-control" id="edit_trial_breeding_program" name="edit_trial_breeding_program" value="<%$breeding_program%>"></select>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Edit Location: </label>
                     <div class="col-sm-9">
-                        <select class="form-control" id="edit_trial_location" name="edit_trial_location"></select>
+                        <select class="form-control" id="edit_trial_location" name="edit_trial_location" value="<%$location%>"></select>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Edit Year: </label>
                     <div class="col-sm-9">
-                        <select class="form-control" id="edit_trial_year" name="edit_trial_year"></select>
+                        <select class="form-control" id="edit_trial_year" name="edit_trial_year" value="<%$year%>"></select>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Edit Trial Type: </label>
                     <div class="col-sm-9">
-                        <select class="form-control" id="edit_trial_type" name="edit_trial_type"></select>
+                        <select class="form-control" id="edit_trial_type" name="edit_trial_type" value="<%$trial_type%>"></select>
                     </div>
                 </div>
                 <div class="form-group">
@@ -72,7 +73,7 @@ $trial_description
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_description_cancel_button">Cancel</button>
-            <button type="button" class="btn btn-primary" id="edit_description_save_button" onclick="save_trial_description()">Save</button>
+            <button type="button" class="btn btn-primary" id="edit_description_save_button" onclick="save_trial_description()">Save Changes</button>
         </div>
     </div>
 </div>
