@@ -1,0 +1,123 @@
+
+<%args>
+$trial_name
+$breeding_program
+$location
+$trial_type
+$planting_date
+$harvest_date
+$trial_description
+</%args>
+
+<div class="modal fade" id="trial_details_edit_dialog" tabindex="-1" role="dialog" aria-labelledby="trialDetailsEditDialog">
+<div class="modal-dialog" role="document">
+    <div class="modal-content">
+        <div class="modal-header text-center">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="trialDetailsEditDialog">Edit Trial Details</h4>
+        </div>
+        <div class="modal-body">
+            <div class="container-fluid">
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="edit_trial_details_form" name="edit_trial_details_form">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Edit Trial Name: </label>
+                    <div class="col-sm-9">
+                        <input class="form-control" id="edit_trial_name" name="edit_trial_name" type="text" value="<%$trial_name%>" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Edit Breeding Program: </label>
+                    <div class="col-sm-9">
+                        <select class="form-control" id="edit_trial_breeding_program" name="edit_trial_breeding_program"></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Edit Location: </label>
+                    <div class="col-sm-9">
+                        <select class="form-control" id="edit_trial_location" name="edit_trial_location"></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Edit Year: </label>
+                    <div class="col-sm-9">
+                        <select class="form-control" id="edit_trial_year" name="edit_trial_year"></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Edit Trial Type: </label>
+                    <div class="col-sm-9">
+                        <select class="form-control" id="edit_trial_type" name="edit_trial_type"></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Edit Planting Date: </label>
+                    <div class="col-sm-9">
+                        <input class="form-control" id="edit_trial_planting_date" name="edit_trial_planting_date" type="text" value="<%$planting_date%>"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Edit Harvest Date: </label>
+                    <div class="col-sm-9">
+                        <input class="form-control" id="edit_trial_harvest_date" name="edit_trial_harvest_date" type="text" value="<%$harvest_date%>"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Edit Description: </label>
+                    <div class="col-sm-9">
+                        <textarea class="form-control" id="edit_trial_description" name="edit_trial_description" ><%$trial_description%></textarea>
+                    </div>
+                </div>
+              </form>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_description_cancel_button">Cancel</button>
+            <button type="button" class="btn btn-primary" id="edit_description_save_button" onclick="save_trial_description()">Save</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="trial_details_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="trialDetailsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialDetailsSavedDialog">Details Saved</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The new trial details were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="trial_details_saved_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="trial_details_error_dialog" tabindex="-1" role="dialog" aria-labelledby="trialDetailsErrorDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialDetailsErrorDialog">Error Saving Trial Details</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid ui-state-error-text" >
+                    <p>
+                        <span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 50px 0;"></span>
+                        An error occurred while trying to save the new trial details:
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="trial_details_error_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

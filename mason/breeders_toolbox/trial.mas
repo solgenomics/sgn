@@ -56,7 +56,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<&| /page/info_section.mas, title=>"Trial details",  collapsible => 1, &>
+<&| /page/info_section.mas, title=>"Trial details",  collapsible => 1, subtitle => '[<a id="edit_trial_details">Edit Trial Details</a>]'&>
 
 
 <div class="panel panel-default">
@@ -110,7 +110,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </div>
 </td>
 <td>
-  [<a id="edit_trial_type" >change</a>]
+  [<a id="change_trial_type" >change</a>]
 </td>
 </tr>
 
@@ -197,32 +197,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
-<div id="edit_trial_description_dialog">
-   Please enter the description for this trial:<br/>
-   <textarea id="trial_description_input" cols="50" rows="10"></textarea>
-</div>
-
-<div id="edit_trial_type_dialog">
-  Please choose the type of this trial:<br />
-  <select id="trial_type_select"></select>
-</div>
-
-<div id="change_trial_location_dialog">
-  Please choose the location fro this trial:<br />
-  <div id="trial_location_select_div" /></div>
-</div>
-
-<div id="change_planting_date_dialog">
-  Please enter a planting date:<br />
-  <input id="planting_date_picker"></input>
-</select>
-
-</div>
-
-<div id="change_harvest_date_dialog">
-  Please enter a harvest date [MM/DD/YYYY]:<br />
-  <input id="harvest_date_picker"></input>
-</div>
+<& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program, location => $location_data, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
 
 % my $folder_collapsed = 1;
 % if ($folder_id) {

@@ -24,6 +24,7 @@ use Moose;
 use Data::Dumper;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
+use CXGN::Trial;
 use CXGN::Trial::Folder;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -123,6 +124,24 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "trial_type_select";
+    my $name = $c->req->param("name") || "trial_type_select";
+
+    my @types = CXGN::Trial::get_all_project_types($c->dbic_schema("Bio::Chado::Schema"));
+
+    my $html = simple_selectbox_html(
+      name => $name,
+      id => $id,
+      choices => \@types,
+    );
+
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -136,7 +155,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     } else {
       push @$projects, [$breeding_program_id];
     }
-    
+
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
     my @trials;

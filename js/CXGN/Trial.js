@@ -253,11 +253,11 @@ function create_DataCollector() {
 
 function open_derived_trait_dialog() {
     jQuery('#working_modal').modal("show");
-    jQuery('#compute_derived_trait_dialog').dialog("open"); 
+    jQuery('#compute_derived_trait_dialog').dialog("open");
     var trait = jQuery('#sel1').val();
     jQuery("#test_xyz").html(trait);
     jQuery('#working_modal').modal("hide");
-    
+
 }
 
 function compute_derived_trait() {
@@ -267,7 +267,7 @@ function compute_derived_trait() {
     if (trait === '') {
 		alert("No trait selected");
 	    }
-    
+
      new jQuery.ajax({
 	 type: 'POST',
 	 url: '/ajax/phenotype/create_derived_trait',
@@ -276,15 +276,15 @@ function compute_derived_trait() {
              'trial_id': trialID,
              'trait': trait,
 	 },
-		
+
 	 success: function (response) {
 	     jQuery('#working_modal').modal("hide");
-		
+
              if (response.error) {
 		 alert("Computation stopped: "+response.error);
 		 //alert("Computation for "+trait+" stopped: "+response.error);
 		 jQuery('#open_derived_trait_dialog').dialog("close");
-		 
+
              } else {
 		 jQuery('#open_derived_trait_dialog').dialog("close");
 		 jQuery('#working_modal').modal("hide");
@@ -401,12 +401,23 @@ function trial_detail_page_setup_dialogs() {
 	    },
 	    Create: {text: "Create", id:"create_derived_trait_submit_button", click:function() {
 		compute_derived_trait();
-		jQuery( this ).dialog( "close" );		
+		jQuery( this ).dialog( "close" );
 		}
 	    },
 	},
-    });	
+    });
 
+    jQuery('#edit_trial_details').click(function () {
+        console.log("somebody has clicked edit_trial_details");
+        //populate breeding_programs, locations, years, and types dropdowns
+        get_select_box('breeding_programs', 'edit_trial_breeding_program');
+        get_select_box('locations', 'edit_trial_location');
+        get_select_box('years', 'edit_trial_year');
+        get_select_box('trial_types', 'edit_trial_type');
+        //jQuery(all selects to form control)
+        console.log("showing edit modal . . .");
+        jQuery('#trial_details_edit_dialog').modal("show");
+    });
 
     jQuery('#show_change_breeding_program_link').click(
 	function() {
@@ -445,11 +456,6 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#create_DataCollector_link').click(function () {
 	open_create_DataCollector_dialog();
-    });
-
-    jQuery('#edit_trial_description').click( function () {
-	jQuery('#edit_trial_description_dialog').dialog("open");
-
     });
 
     jQuery('#change_trial_year_dialog').dialog( {
@@ -537,7 +543,11 @@ function trial_detail_page_setup_dialogs() {
 	jQuery('#change_harvest_date_dialog').dialog("open");
     });
 
-    jQuery('#edit_trial_description_dialog').dialog( {
+    jQuery('#edit_trial_description').click(function () {
+        jQuery('#edit_trial_description_dialog').modal("show");
+    });
+
+/*    jQuery('#edit_trial_description_dialog').dialog( {
 	autoOpen: false,
 	height: 500,
 	width: 800,
@@ -555,7 +565,7 @@ function trial_detail_page_setup_dialogs() {
 	}
 
     });
-
+*/
     jQuery('#edit_trial_type').click( function () {
 	jQuery('#edit_trial_type_dialog').dialog("open");
 	jQuery.ajax( {
@@ -640,30 +650,30 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#compute_derived_trait_link').click( function () {
 	jQuery('#compute_derived_trait_dialog').dialog("open");
-	jQuery.ajax( { 
+	jQuery.ajax( {
 		url: '/ajax/breeders/trial/trait_formula',
-		success: function(response) { 
+		success: function(response) {
 		//console.log(response);
-		if (response.error) { 
+		if (response.error) {
 		    alert(response.error);
 		}
-		else { 
+		else {
 		    var html = "";
-		    if (response.derived_traits) { 
+		    if (response.derived_traits) {
 			var selected = 'selected="selected"';
-			for(var n=0; n<response.derived_traits.length; n++) { 
+			for(var n=0; n<response.derived_traits.length; n++) {
 			    //alert("derived trait: +derived_traits"+response.derived_traits[n]);
 			    html += '<option value="'+response.derived_traits[n]+'" title="'+response.formula[n]+'" >'+response.derived_traits[n]+' </option> ';
 			}
-			
+
 		    }
-		    else { 
+		    else {
 			html = '<option active="false">No derived trait available</option>';
 		    }
 		}
 		jQuery('#derived_trait_select').html(html);
 	    },
-	    error: function(response) { 
+	    error: function(response) {
 		alert("An error occurred trying to retrieve derived traits.");
 	    }
 	});
@@ -752,7 +762,7 @@ function display_harvest_date() {
     jQuery.ajax( {
 	url : '/ajax/breeders/trial/'+trial_id+'/harvest_date',
 	type: 'GET',
-	success: function(response) { 
+	success: function(response) {
 	    jQuery('#harvest_date').html("<a href='/calendar/personal?currentDate="+response.harvest_date+"' target=_blank>"+response.harvest_date+"</a>");
 	},
 	error: function(response) {
@@ -795,7 +805,7 @@ function display_planting_date() {
     jQuery.ajax( {
 	url : '/ajax/breeders/trial/'+trial_id+'/planting_date',
 	type: 'GET',
-	success: function(response) { 
+	success: function(response) {
 	    jQuery('#planting_date').html("<a href='/calendar/personal?currentDate="+response.planting_date+"' target=_blank>"+response.planting_date+"</a>");
 	},
 	error: function(response) {
