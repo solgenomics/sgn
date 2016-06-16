@@ -11,6 +11,8 @@ my $t = SGN::Test::WWW::WebDriver->new();
 $t->while_logged_in_as("submitter", sub { 
 
     $t->get_ok('/breeders/trials');
+    $t->find_element_ok("refresh_jstree_html", "id", "click on upload_trial_link ")->click();
+    sleep(10);
 
     $t->find_element_ok("upload_trial_link", "id", "click on upload_trial_link ")->click();
 
@@ -55,8 +57,12 @@ $t->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $t->get_ok('/breeders/phenotyping');
+	
+    sleep(2);
 
     $t->find_element_ok("upload_spreadsheet_phenotypes_link", "id", "submit upload phenotype file ")->click();
+
+      sleep(2);
 
      my $upload_input = $t->find_element_ok("upload_spreadsheet_phenotype_file_input", "id", "find file input");
 
@@ -79,6 +85,9 @@ $t->while_logged_in_as("submitter", sub {
     $t->get_ok('/breeders/trials');
 
     sleep(2);
+
+    $t->find_element_ok("refresh_jstree_html", "id", "click on upload_trial_link ")->click();
+    sleep(10);
 
     $t->find_element_ok("test", "partial_link_text", "check program in tree")->click();
 

@@ -12,7 +12,10 @@ use CXGN::Trial::TrialLayout;
 use CXGN::Chado::Stock;
 use CXGN::Login;
 use CXGN::BreederSearch;
+use CXGN::Trial::TrialCreate;
+use JSON qw( decode_json );
 use Data::Dumper;
+use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -471,6 +474,87 @@ sub studies_list_POST {
     my $status = $c->stash->{status};
     my @status = @$status;
 
+    my $study_name = $c->req->param('studyName');
+    my $location_id = $c->req->param('locationDbId');
+    my $years = $c->req->param('studyYears');
+    my $program_id = $c->req->param('programDbId');
+    my $optional_info = $c->req->param('optionalInfo');
+
+    my $description;
+    my $study_type;
+    if ($optional_info) {
+        my $opt_info_hash = decode_json($optional_info);
+        $description = $opt_info_hash->{"studyObjective"};
+        $study_type = $opt_info_hash->{"studyType"};
+    }
+
+    my $program_obj = CXGN::BreedersToolbox::Projects->new({schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') });
+    my $programs = $program_obj->get_breeding_programs();
+    my $program_check;
+    my $program_name;
+    foreach (@$programs) {
+        if ($_->[0] == $program_id) {
+            $program_check = 1;
+            $program_name = $_->[1];
+        }
+    }
+    if (!$program_check) {
+        push @status, "Program not found with programDbId = ".$program_id;
+        $c->stash->{rest} = {status => \@status };
+        return;
+    }
+
+    my $locations = $program_obj->get_all_locations();
+    my $location_check;
+    my $location_name;
+    foreach (@$locations) {
+        if ($_->[0] == $location_id) {
+            $location_check = 1;
+            $location_name = $_->[1];
+        }
+    }
+    if (!$location_check) {
+        push @status, "Location not found with locationDbId = ".$location_id;
+        $c->stash->{rest} = {status => \@status };
+        return;
+    }
+
+    my $trial_design;
+    my $trial_create = CXGN::Trial::TrialCreate->new({ 
+        dbh => $c->dbc->dbh,
+        chado_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
+        user_name => $c->user()->get_object()->get_username(),
+        program => $program_name,
+        trial_year => $years,
+        trial_description => $description,
+        design_type => $study_type,
+        trial_location => $location_name,
+        trial_name => $study_name,
+        design => $trial_design,
+    });
+
+    if ($trial_create->trial_name_already_exists()) {
+        push @status, "Trial name \"".$trial_create->get_trial_name()."\" already exists.";
+        $c->stash->{rest} = {status => \@status };
+        return;
+    }
+
+    my $error;
+
+    try {
+        $trial_create->save_trial();
+    } catch {
+        push @status, "Error saving trial in the database $_";
+        $c->stash->{rest} = {status => \@status};
+        $error = 1;
+    };
+    if ($error) {
+        return;
+    }
+
+    push @status, "Study saved successfully.";
     $c->stash->{rest} = {status => \@status};
 }
 

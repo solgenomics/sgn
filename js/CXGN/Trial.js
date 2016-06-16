@@ -361,7 +361,6 @@ function trial_detail_page_setup_dialogs() {
 		create_spreadsheet();
 		//save_experimental_design(design_json);
 		jQuery( this ).dialog( "close" );
-		//jQuery('#add_project_dialog').dialog("close");
 	       },
 	    },
 	},
@@ -383,7 +382,6 @@ function trial_detail_page_setup_dialogs() {
 		create_DataCollector();
 		//save_experimental_design(design_json);
 		jQuery( this ).dialog( "close" );
-		//jQuery('#add_project_dialog').dialog("close");
 		}
 	    },
 	},
@@ -447,26 +445,6 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#create_DataCollector_link').click(function () {
 	open_create_DataCollector_dialog();
-    });
-
-    jQuery('#compute_trait_link').click(function () {
-	open_derived_trait_dialog();
-    });
-
-    jQuery('#trial_design_view_layout').dialog({
-	autoOpen: false,
-	height: 500,
-	width: 800,
-	modal: true,
-	buttons: {
-	    Close: function() {
-		jQuery( this ).dialog( "close" );
-	    }
-	}
-    });
-
-    jQuery('#view_layout_link').click(function () {
-	jQuery('#trial_design_view_layout').dialog("open");
     });
 
     jQuery('#edit_trial_description').click( function () {
@@ -675,7 +653,7 @@ function trial_detail_page_setup_dialogs() {
 			var selected = 'selected="selected"';
 			for(var n=0; n<response.derived_traits.length; n++) { 
 			    //alert("derived trait: +derived_traits"+response.derived_traits[n]);
-			    html += '<option value="'+response.derived_traits[n]+'" title="'+response.formula[n][0]+'" >'+response.derived_traits[n]+' </option> ';
+			    html += '<option value="'+response.derived_traits[n]+'" title="'+response.formula[n]+'" >'+response.derived_traits[n]+' </option> ';
 			}
 			
 		    }
@@ -774,8 +752,8 @@ function display_harvest_date() {
     jQuery.ajax( {
 	url : '/ajax/breeders/trial/'+trial_id+'/harvest_date',
 	type: 'GET',
-	success: function(response) {
-	    jQuery('#harvest_date').html(response.harvest_date);
+	success: function(response) { 
+	    jQuery('#harvest_date').html("<a href='/calendar/personal?currentDate="+response.harvest_date+"' target=_blank>"+response.harvest_date+"</a>");
 	},
 	error: function(response) {
 	    jQuery('#harvest_date').html('[ Protocol error. ]');
@@ -817,8 +795,8 @@ function display_planting_date() {
     jQuery.ajax( {
 	url : '/ajax/breeders/trial/'+trial_id+'/planting_date',
 	type: 'GET',
-	success: function(response) {
-	    jQuery('#planting_date').html(response.planting_date);
+	success: function(response) { 
+	    jQuery('#planting_date').html("<a href='/calendar/personal?currentDate="+response.planting_date+"' target=_blank>"+response.planting_date+"</a>");
 	},
 	error: function(response) {
 	    jQuery('#planting_date').html('[ Protocol error. ]');

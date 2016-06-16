@@ -169,75 +169,93 @@ sub _get_genotyping_plate {
 }
 
 sub _get_crd_design {
-  my $self = shift;
-  my %crd_design;
-  #$self->set_number_of_blocks(1);
-  #%crd_design=%{_get_rcbd_design($self)};
-  my $rbase = R::YapRI::Base->new();
-  my @stock_list;
-  my $number_of_blocks;
-  my $number_of_reps;
-  my $stock_data_matrix;
-  my $r_block;
-  my $result_matrix;
-  my @plot_numbers;
-  my @stock_names;
-  my @block_numbers;
-  my @rep_numbers;
-  my @converted_plot_numbers;
-  my $number_of_stocks;
-  if ($self->has_stock_list()) {
-    @stock_list = @{$self->get_stock_list()};
-    $number_of_stocks = scalar(@stock_list);
-  } else {
-    die "No stock list specified\n";
-  }
-  if ($self->has_number_of_reps()) {
-    $number_of_reps = $self->get_number_of_reps();
-  } else {
-    die "Number of reps not specified\n";
-  }
-  $stock_data_matrix =  R::YapRI::Data::Matrix->new(
-						       {
-							name => 'stock_data_matrix',
-							rown => 1,
-							coln => scalar(@stock_list),
-							data => \@stock_list,
-						       }
-						      );
-  $r_block = $rbase->create_block('r_block');
-  $stock_data_matrix->send_rbase($rbase, 'r_block');
+    my $self = shift;
+    my %crd_design;
+    #$self->set_number_of_blocks(1);
+    #%crd_design=%{_get_rcbd_design($self)};
+    my $rbase = R::YapRI::Base->new();
+    my @stock_list;
+    my $number_of_blocks;
+    my $number_of_reps;
+    my $stock_data_matrix;
+    my $r_block;
+    my $result_matrix;
+    my @plot_numbers;
+    my @stock_names;
+    my @block_numbers;
+    my @rep_numbers;
+    my @converted_plot_numbers;
+    my $number_of_stocks;
+    if ($self->has_stock_list()) {
+        @stock_list = @{$self->get_stock_list()};
+        $number_of_stocks = scalar(@stock_list);
+    } else {
+        die "No stock list specified\n";
+    }
+    if ($self->has_number_of_reps()) {
+        $number_of_reps = $self->get_number_of_reps();
+    } else {
+        die "Number of reps not specified\n";
+    }
 
-  $r_block->add_command('library(agricolae)');
-  $r_block->add_command('trt <- stock_data_matrix[1,]');
-  $r_block->add_command('rep_vector <- rep('.$number_of_reps.',each='.$number_of_stocks.')');
-  $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
+    if (scalar(@stock_list)>1) {
 
-  if ($self->has_randomization_seed()){
-    $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=1,kinds=randomization_method, seed=randomization_seed)');
-  }
-  else {
-    $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=1,kinds=randomization_method)');
-  }
-  $r_block->add_command('crd<-crd$book'); #added for agricolae 1.1-8 changes in output
-  $r_block->add_command('crd<-as.matrix(crd)');
-  $r_block->run_block();
-  $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','crd');
-  @plot_numbers = $result_matrix->get_column("plots");
-  @rep_numbers = $result_matrix->get_column("r");
-  @stock_names = $result_matrix->get_column("trt");
-  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
-  for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
-    my %plot_info;
-    $plot_info{'stock_name'} = $stock_names[$i];
-    $plot_info{'block_number'} = 1;
-    $plot_info{'rep_number'} = $rep_numbers[$i];
-    $plot_info{'plot_name'} = $converted_plot_numbers[$i];
-    $crd_design{$converted_plot_numbers[$i]} = \%plot_info;
-  }
-  %crd_design = %{_build_plot_names($self,\%crd_design)};
-  return \%crd_design;
+        $stock_data_matrix =  R::YapRI::Data::Matrix->new({
+            name => 'stock_data_matrix',
+            rown => 1,
+            coln => scalar(@stock_list),
+            data => \@stock_list,
+        });
+        #print STDERR Dumper $stock_data_matrix;
+
+        $r_block = $rbase->create_block('r_block');
+        $stock_data_matrix->send_rbase($rbase, 'r_block');
+
+        $r_block->add_command('library(agricolae)');
+        $r_block->add_command('trt <- stock_data_matrix[1,]');
+        $r_block->add_command('rep_vector <- rep('.$number_of_reps.',each='.$number_of_stocks.')');
+        $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
+
+        if ($self->has_randomization_seed()){
+            $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
+            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=1,kinds=randomization_method, seed=randomization_seed)');
+        }
+        else {
+            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=1,kinds=randomization_method)');
+        }
+        $r_block->add_command('crd<-crd$book'); #added for agricolae 1.1-8 changes in output
+        $r_block->add_command('crd<-as.matrix(crd)');
+        $r_block->run_block();
+        $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','crd');
+        #print STDERR Dumper $result_matrix;
+
+        @plot_numbers = $result_matrix->get_column("plots");
+        #print STDERR Dumper \@plot_numbers;
+
+        @rep_numbers = $result_matrix->get_column("r");
+        @stock_names = $result_matrix->get_column("trt");
+        @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+        #print STDERR Dumper \@converted_plot_numbers;
+
+    } else { #only a single stock was given, so no randomization can occur.
+        @converted_plot_numbers = (1...$number_of_reps);
+        @rep_numbers = (1...$number_of_reps);
+        @stock_names = ($stock_list[0]) x $number_of_reps;
+    }
+
+    for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
+        my %plot_info;
+        $plot_info{'stock_name'} = $stock_names[$i];
+        $plot_info{'block_number'} = 1;
+        $plot_info{'rep_number'} = $rep_numbers[$i];
+        $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+        $crd_design{$converted_plot_numbers[$i]} = \%plot_info;
+    }
+
+    #print STDERR Dumper \%crd_design;
+
+    %crd_design = %{_build_plot_names($self,\%crd_design)};
+    return \%crd_design;
 }
 
 sub _get_rcbd_design {
@@ -299,6 +317,7 @@ sub _get_rcbd_design {
     $plot_info{'stock_name'} = $stock_names[$i];
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+    $plot_info{'rep_number'} = 1;
     $rcbd_design{$converted_plot_numbers[$i]} = \%plot_info;
   }
   %rcbd_design = %{_build_plot_names($self,\%rcbd_design)};

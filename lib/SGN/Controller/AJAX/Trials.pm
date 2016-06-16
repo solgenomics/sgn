@@ -81,5 +81,6 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     }
     close($fh);
 
+    #print STDERR $html;
     $c->stash->{rest} = { html => $html };
 }

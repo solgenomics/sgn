@@ -8,7 +8,6 @@ use List::Util qw | any |;
 use DBI;
 use DBIx::Class;
 use SGN::Model::Cvterm;
-use JSON::Any;
 
 
 BEGIN {extends 'Catalyst::Controller::REST'}
@@ -42,16 +41,10 @@ sub get_all_derived_trait : Path('/ajax/breeders/trial/trait_formula') Args(0) {
 		push @formulas, $derived_trait_formula;
 		push @trait_ids, $trait_id;
 		push @trait_db_ids, $trait_db_id;
-		my $json = JSON::Any->new;
-		$formula_json_array = $json->decode($derived_trait_formula);
- 		push @formulas_array_msg, $formula_json_array; 
 		
     }
 	for (my $n=0; $n<scalar(@derived_traits); $n++) {
-		print STDERR $derived_traits[$n]."\n";
-		print STDERR $cvterm_ids[$n]."|".$trait_db_ids[$n].":".$trait_ids[$n]."\n";
-		print STDERR $formulas[$n]."\n";
-		push @formulas_array, $formulas_array_msg[$n];
+		push @formulas_array, $formulas[$n];
 		push @derived_traits_array, $cvterm_ids[$n]."|".$trait_db_ids[$n].":".$trait_ids[$n];
     	}
 
@@ -68,6 +61,8 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     	my $selected_trait = $c->req->param('trait');
 	my %parse_result;
 	my $trait_found;
+	my $time = DateTime->now();
+  	my $timestamp = $time->ymd()."_".$time->hms();
 
 	print "TRAIT NAME: $selected_trait\n";
 	print "TRIAl ID: $trial_id\n";
@@ -138,19 +133,14 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
     	while (my ($cvterm_id, $derived_trait_formula ) = $h->fetchrow_array()) { 
 		push @cvterm_ids, $cvterm_id;  
 		push @formulas, $derived_trait_formula;	
-		my $json = JSON::Any->new;
-		$formula_json_array = $json->decode($derived_trait_formula);
- 		push @formulas_array_msg, $formula_json_array; 
+		
 	}	
    
     	for (my $n=0; $n<scalar(@formulas); $n++) {
   		if ($selected_trait_cvterm_id eq $cvterm_ids[$n]) {
-			print "formula_msg: $formulas_array_msg[$n][0]\n";
-			print "formula_eval: $formulas_array_msg[$n][1]\n";
-			$eval_formula = $formulas_array_msg[$n][1];
-			$msg_formula = $formulas_array_msg[$n][0];
-			#print "MY FORMULA: $formulas_array_msg[$n][1] with trait id $cvterm_ids[$n] and $formulas_array_msg[$n][0]\n";
-			
+			print "formula_msg: $formulas[$n]\n";
+			$msg_formula = $formulas[$n];
+	
 		}
 	}
 	
@@ -257,7 +247,7 @@ project.project_id=? ) );");
 			print STDERR Dumper $msg_formula_sub;
 			my $calc_value = eval "$msg_formula_sub";
 			print STDERR Dumper $calc_value;
-			$data{$valid_plot_name}->{$selected_trait} = $calc_value;
+			$data{$valid_plot_name}->{$selected_trait} = [$calc_value,$timestamp];
 		}
 
 	}
@@ -271,8 +261,6 @@ project.project_id=? ) );");
     	$parse_result{'traits'} = \@traits;
 
 	my $size = scalar(@plots) * scalar(@traits);
-	my $time = DateTime->now();
-  	my $timestamp = $time->ymd()."_".$time->hms();
 	my %phenotype_metadata;
 	$phenotype_metadata{'archived_file'} = 'none';
   	$phenotype_metadata{'archived_file_type'}="generated from derived traits";

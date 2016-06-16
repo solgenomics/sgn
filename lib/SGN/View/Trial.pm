@@ -83,12 +83,17 @@ sub design_layout_view {
   $design_result_html .= '<table border="1">';
   $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
   foreach my $key (sort { $a <=> $b} keys %design) {
-    #$design_result_html .= "<tr><td>".$design{$key}->{plot_name} ."</td><td>".$design{$key}->{stock_name} ."</td><td>".$design{$key}->{check_name}."</td><td>".$design{$key}->{row_number}."</td><td>".$design{$key}->{col_number}."</td><td>".$design{$key}->{block_number}."</td><td>".$design{$key}->{block_row_number}."</td><td>".$design{$key}->{block_col_number}."</td>";
-    $design_result_html .= "<tr><td>".$design{$key}->{plot_name} ."</td><td>".$design{$key}->{stock_name} ."</td><td>".$design{$key}->{check_name}."</td><td>".$design{$key}->{row_number}."</td><td>".$design{$key}->{col_number}."</td><td>".$design{$key}->{block_number}."</td><td>".$design{$key}->{block_row_number}."</td><td>".$design{$key}->{block_col_number}."</td>";
-    if ($design{$key}->{rep_number}) {
-      $design_result_html .= "<td>".$design{$key}->{rep_number}."</td>";
-    }
-    $design_result_html .= "</tr>";
+      my $plot_name = $design{$key}->{plot_name} || '';
+      my $stock_name = $design{$key}->{stock_name} || '';
+      my $check_name = $design{$key}->{check_name} || '';
+      my $row_number = $design{$key}->{row_number} || '';
+      my $col_number = $design{$key}->{col_number} || '';
+      my $block_number = $design{$key}->{block_number} || '';
+      my $block_row_number = $design{$key}->{block_row_number} || '';
+      my $block_col_number = $design{$key}->{block_col_number} || '';
+      my $rep_number = $design{$key}->{rep_number} || '';
+
+    $design_result_html .= "<tr><td>".$plot_name."</td><td>".$stock_name."</td><td>".$check_name."</td><td>".$row_number."</td><td>".$col_number."</td><td>".$block_number."</td><td>".$block_row_number."</td><td>".$block_col_number."</td><td>".$rep_number."</td></tr>";
   }
   $design_result_html .= "</table>";
   return  "$design_result_html";
