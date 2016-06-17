@@ -1216,4 +1216,25 @@ sub get_design_type {
   return $design_type;
 }
 
+sub get_accessions {
+	my $self = shift;
+	my @accessions;
+
+	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
+
+	my $trial_accession_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id() })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock")->search_related("stock_relationship_subjects", { 'stock_relationship_subjects.type_id' => [$plot_of_cvterm_id, $tissue_sample_of_cvterm_id] } );
+
+	my %unique_accessions;
+	while(my $rs = $trial_accession_rs->next()) {
+		my $r = $rs->object;
+		$unique_accessions{$r->uniquename} = $r->stock_id;
+	}
+	foreach (keys %unique_accessions) {
+		push @accessions, {accession_name=>$_, stock_id=>$unique_accessions{$_} };
+	}
+
+	return \@accessions;
+}
+
 1;
