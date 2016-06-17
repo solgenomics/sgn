@@ -7,7 +7,9 @@ $trial_id
 <%perl>
 
 my $jbrowse_path = $c->config->{jbrowse_path};
-my $test_url = $jbrowse_path . "/trials/" . $trial_id . "/trackList.json";
+my @path_parts = split('/', $jbrowse_path);
+my $basepath = $path_parts[1];
+my $test_url = $basepath . "/index.html";
 my $jbrowse_url = $jbrowse_path ."%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene%20exons%2C&cat=Diversity/NEXTGEN/Imputed&highlight=";
 
 </%perl>
@@ -16,16 +18,17 @@ my $jbrowse_url = $jbrowse_path ."%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene
 jQuery(document).ready(function () {
 	prepareJbrowse();
 
-function prepareJbrowse () { //ajax function to test for existence of given jbrowse trial url
+function prepareJbrowse () { //ajax function to test for existence of given jbrowse trial instance
   jQuery.ajax({
-    type: 'GET',
     url: "<% $test_url %>",
-    statusCode: {
-        200: function () {  // if page is found, create and display link
-		jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the vcf tracks for this trial in JBrowse</a>');
-		},
-	404: function () { // if page not found, display message that jbrowse instance wasn't found
-		jQuery('#trial_jbrowse_check').html(" <i>No Jbrowse instance found for this trial</i>.");
+		success: function(result) {
+		var jbrowse_html = jQuery(result);
+						var found = jQuery(jbrowse_html).find("a[href$='/<%$trial_id%>']")
+            if ( found ) { // if page is found, create and display link
+							jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the vcf tracks for this trial in JBrowse</a>');
+						}
+						else { // if page not found, display message that jbrowse instance wasn't found
+							jQuery('#trial_jbrowse_check').html(" <i>No Jbrowse instance found for this trial</i>.");
      		}
 	}
   });
