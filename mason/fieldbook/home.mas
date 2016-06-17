@@ -26,10 +26,10 @@ $user_id => undef
 
 <&| /page/info_section.mas, title=>'Field Layout Files', collapsible=>1, collapsed=>0, &>
 <%perl>
-my @breeding_programs = @{$programs};
-foreach my $prog (@breeding_programs) {
-  print @$prog[0].@$prog[1]."</br>";
-}
+#my @breeding_programs = @{$programs};
+#foreach my $prog (@breeding_programs) {
+#  print @$prog[0].@$prog[1]."</br>";
+#}
 foreach my $file (@file_metadata) {
    my @trial_array = @{$file};
    my $file_name = $trial_array[1];
