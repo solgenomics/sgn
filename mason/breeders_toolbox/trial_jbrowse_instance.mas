@@ -22,8 +22,11 @@ function prepareJbrowse () { //ajax function to test for existence of given jbro
   jQuery.ajax({
     url: "<% $test_url %>",
 		success: function(result) {
+		console.log("got that html . . . ");
 		var jbrowse_html = jQuery(result);
+		console.log("html="+jbrowse_html);
 						var found = jQuery(jbrowse_html).find("a[href$='/<%$trial_id%>']")
+						console.log("found="+found);
             if ( found ) { // if page is found, create and display link
 							jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the vcf tracks for this trial in JBrowse</a>');
 						}
