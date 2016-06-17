@@ -410,23 +410,11 @@ function trial_detail_page_setup_dialogs() {
     jQuery('#edit_trial_details').click(function () {
         console.log("somebody has clicked edit_trial_details");
         //populate breeding_programs, locations, years, and types dropdowns
-        get_select_box('breeding_programs', 'edit_trial_breeding_program');
-        get_select_box('locations', 'edit_trial_location');
-        get_select_box('years', 'edit_trial_year');
-        get_select_box('trial_types', 'edit_trial_type');
-        //jQuery(set all select defaults to exisiting values)
-        console.log("setting default values . . .");
-        var default_program = document.getElementById("edit_trial_breeding_program").value;
-        jQuery("select option").filter(function() { return jQuery(this).text() == default_program; }).attr('selected', true);
-
-        var default_location= document.getElementById("edit_trial_location").value;
-        jQuery("select option").filter(function() { return jQuery(this).text() == default_location; }).attr('selected', true);
-
-        var default_year = document.getElementById("edit_trial_year").value;
-        jQuery("select option").filter(function() { return jQuery(this).text() == default_year; }).attr('selected', true);
-
-        var default_trial_type = document.getElementById("edit_trial_type").value;
-        jQuery("select option").filter(function() { return jQuery(this).text() == default_trial_type; }).attr('selected', true);
+        get_select_box('breeding_programs', 'edit_trial_breeding_program', { 'default' : document.getElementById("edit_trial_breeding_program").getAttribute("value")});
+        get_select_box('locations', 'edit_trial_location', { 'default' : document.getElementById("edit_trial_location").getAttribute("value")});
+        get_select_box('years', 'edit_trial_year', { 'default' : document.getElementById("edit_trial_year").getAttribute("value")});
+        get_select_box('trial_types', 'edit_trial_type', { 'default' : document.getElementById("edit_trial_type").getAttribute("value")});
+        //create bootstrap daterangepickers for planting and harvest dates
 
         jQuery('#trial_details_edit_dialog').modal("show");
     });

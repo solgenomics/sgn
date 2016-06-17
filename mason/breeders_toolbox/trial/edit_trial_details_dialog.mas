@@ -21,49 +21,49 @@ $trial_description
             <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="edit_trial_details_form" name="edit_trial_details_form">
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Edit Trial Name: </label>
+                    <label class="col-sm-3 control-label">Trial Name: </label>
                     <div class="col-sm-9">
                         <input class="form-control" id="edit_trial_name" name="edit_trial_name" type="text" value="<%$trial_name%>" />
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Edit Breeding Program: </label>
+                    <label class="col-sm-3 control-label">Breeding Program: </label>
                     <div class="col-sm-9">
                         <select class="form-control" id="edit_trial_breeding_program" name="edit_trial_breeding_program" value="<%$breeding_program%>"></select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Edit Location: </label>
+                    <label class="col-sm-3 control-label">Location: </label>
                     <div class="col-sm-9">
                         <select class="form-control" id="edit_trial_location" name="edit_trial_location" value="<%$location%>"></select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Edit Year: </label>
+                    <label class="col-sm-3 control-label">Year: </label>
                     <div class="col-sm-9">
                         <select class="form-control" id="edit_trial_year" name="edit_trial_year" value="<%$year%>"></select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Edit Trial Type: </label>
+                    <label class="col-sm-3 control-label">Trial Type: </label>
                     <div class="col-sm-9">
                         <select class="form-control" id="edit_trial_type" name="edit_trial_type" value="<%$trial_type%>"></select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Edit Planting Date: </label>
+                    <label class="col-sm-3 control-label">Planting Date: </label>
                     <div class="col-sm-9">
                         <input class="form-control" id="edit_trial_planting_date" name="edit_trial_planting_date" type="text" value="<%$planting_date%>"/>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Edit Harvest Date: </label>
+                    <label class="col-sm-3 control-label">Harvest Date: </label>
                     <div class="col-sm-9">
                         <input class="form-control" id="edit_trial_harvest_date" name="edit_trial_harvest_date" type="text" value="<%$harvest_date%>"/>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Edit Description: </label>
+                    <label class="col-sm-3 control-label">Description: </label>
                     <div class="col-sm-9">
                         <textarea class="form-control" id="edit_trial_description" name="edit_trial_description" ><%$trial_description%></textarea>
                     </div>

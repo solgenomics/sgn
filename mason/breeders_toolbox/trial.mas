@@ -63,6 +63,19 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <table class="table table-hover" >
 
 <tr>
+<td><b>Trial Name</b></td>
+<td>
+<div id="trial_name">
+% if ($trial_name) {
+%   print "$trial_name";
+% } else {
+%   print "[No Trial Name]";
+% }
+</div>
+</td>
+</tr>
+
+<tr>
 <td><b>Breeding Program </b></td>
 <td>
 <span id="breeding_programs">
@@ -74,59 +87,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % print "No Breeding Program";
 % }
 </span>
-</td>
-<td>
- <% $change_breeding_program_link %>
-</td>
-</tr>
-
-<tr>
-<td><b>Trial Name</b></td>
-<td>
-<div id="trial_name">
-% if ($trial_name) {
-%   print "$trial_name";
-% } else {
-%   print "[No Trial Name]";
-% }
-</div>
-</td>
-<td>
-  [<a id="edit_trial_name">change</a>]
-</td>
-<& /breeders_toolbox/trial/edit_trial_name.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_type=>"Trial" &>
-
-</tr>
-
-<tr>
-<td><b>Trial Type</b></td>
-<td>
-<div id="trial_type">
-% if ($trial_type) {
-%  print "@$trial_type[1]<br/>";
-% } else {
-% print "[Type not set]";
-% }
-</div>
-</td>
-<td>
-  [<a id="change_trial_type" >change</a>]
-</td>
-</tr>
-
-<tr>
-<td><b>Year</b></td>
-<td>
-<div id="trial_year">
-% if ($year) {
-%  print "$year";
-% } else {
-%  print "[No Year]";
-% }
-</div>
-</td>
-<td>
-  [<a id="change_year_link">change</a>]
 </td>
 </tr>
 
@@ -141,8 +101,31 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
+</tr>
+
+<tr>
+<td><b>Year</b></td>
 <td>
-  [<a id="change_trial_location_link">change</a>]
+<div id="trial_year">
+% if ($year) {
+%  print "$year";
+% } else {
+%  print "[No Year]";
+% }
+</div>
+</td>
+</tr>
+
+<tr>
+<td><b>Trial Type</b></td>
+<td>
+<div id="trial_type">
+% if ($trial_type) {
+%  print "@$trial_type[1]<br/>";
+% } else {
+% print "[Type not set]";
+% }
+</div>
 </td>
 </tr>
 
@@ -157,9 +140,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-    [<a id="change_planting_date_link">change</a>]
-</td>
 </tr>
 
 <tr>
@@ -173,9 +153,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-    [<a id="change_harvest_date_link">change</a>]
-</td>
 </tr>
 
 <tr><td><b>Description</b></td>
@@ -188,16 +165,13 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-  [<a id="edit_trial_description">edit</a>]
-</td>
 </tr>
 </table>
 </div>
 
 </&>
 
-<& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program, location => $location_data->[1], year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
+<& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => @$breeding_program[0]->[0], location => $location_data->[0], year => $year, trial_type => @$trial_type[0], planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
 
 % my $folder_collapsed = 1;
 % if ($folder_id) {
