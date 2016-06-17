@@ -15,7 +15,7 @@ my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
 
 my $trial_id = $schema->resultset("Project::Project")->find({ name => 'test_trial'})->project_id();
-my @trait_list = ["dry matter content percentage|CO:0000092", "fresh root weight|CO:0000012"];
+my @trait_list = ("dry matter content percentage|CO:0000092", "fresh root weight|CO:0000012");
 my $tempfile = "/tmp/test_create_pheno_spreadsheet.xls";
 my $format = 'ExcelBasic';
 
