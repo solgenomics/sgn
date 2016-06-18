@@ -1260,5 +1260,35 @@ sub get_plots {
 	return \@plots;
 }
 
+sub get_controls {
+	my $self = shift;
+	my @controls;
+
+	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
+	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
+	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
+
+	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks");
+
+	my %unique_controls;
+	while(my $rs = $trial_plot_rs->next()) {
+		my $r = $rs->stock()->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
+		
+		my $is_a_control;
+		if ($r) {
+			$is_a_control = $r->value();
+		}
+		if ($is_a_control) {
+			my $accession = $rs->search_related("stock")->search_related('stock_relationship_subjects')->find({ 'type_id' => [$plot_of_cvterm_id, $tissue_sample_of_cvterm_id ]})->object;
+			$unique_controls{$accession->uniquename}=$accession->stock_id;
+		}
+	}
+	foreach (keys %unique_controls) {
+		push @controls, {accession_name=> $_, stock_id=>$unique_controls{$_} } ;
+	}
+
+	return \@controls;
+}
 
 1;
