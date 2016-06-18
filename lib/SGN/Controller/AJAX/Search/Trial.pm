@@ -54,13 +54,8 @@ sub search :Path('/ajax/search/trials') Args(0) {
   
 ################################################
 
-    my $projects_rs = $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Project")->search(
-	{ # -and => [ $or_conditions, $and_conditions ], 
-	} ,
-	{
-	    #join      => [ 'projectprops' , 'type' ] ,
-	}
-	);
+    my $projects_rs = $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Projectprop")->search(
+	{ 'me.type_id' => { 'not_in'  => [ $breeding_program_cvterm_id,$trial_folder_cvterm_id ]}})->search_related('project');
 
     
     my @result;
@@ -72,24 +67,15 @@ sub search :Path('/ajax/search/trials') Args(0) {
 	my $project_description = $p->description;
 	my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $project_id } );
 	
-        ##
-        #check if this is a breeding_program or a trial_folder
-	##
-	my $is_breeding_program = $schema->resultset('Project::Projectprop')->find( { project_id => $project_id , type_id=> $breeding_program_cvterm_id });
+	my $program = $trial->get_breeding_program;
+	my $year  = $trial->get_year;
+	my $location_ref = $trial->get_location;
+	my $location = $location_ref->[1];
+	my $project_type_ref = $trial->get_project_type;
+	my $project_type = $project_type_ref->[1];
 	
-	my $is_trial_folder = $schema->resultset('Project::Projectprop')->find( { project_id => $project_id, type_id => $trial_folder_cvterm_id } );
-	
-	if ( !$is_breeding_program && !$is_trial_folder ) {
-	##
-	    my $program = $trial->get_breeding_program;
-	    my $year  = $trial->get_year;
-	    my $location_ref = $trial->get_location;
-	    my $location = $location_ref->[1];
-	    my $project_type_ref = $trial->get_project_type;
-	    my $project_type = $project_type_ref->[1];
+	push @result, [ "<a href=\"/breeders_toolbox/trial/$project_id\">$project_name</a>", $project_description, $program, $year, $location, $project_type ];
 
-	    push @result, [ "<a href=\"/breeders_toolbox/trial/$project_id\">$project_name</a>", $project_description, $program, $year, $location, $project_type ];
-	}
     }
 
     $c->stash->{rest} = { data => \@result };
