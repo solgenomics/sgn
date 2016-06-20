@@ -35,6 +35,7 @@ jQuery.ajax({
 	else { // if not found, display message that jbrowse instance wasn't found
 		jQuery('#trial_jbrowse_check').html(" <i>No Jbrowse instance found for this trial</i>.");
 	}
+}
 });
 
 
