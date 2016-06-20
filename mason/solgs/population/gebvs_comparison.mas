@@ -14,13 +14,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$trait_id
-$training_pop_id
-$selection_pop_id
+$trait_id => ''
+$training_pop_id => ''
+$selection_pop_id => ''
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["solGS.compareGEBVs"] &>
+
+<& /util/import_javascript.mas, classes => ["solGS.gebvsComparison", "statistics.simple_statistics"] &>
 
 <&| /page/info_section.mas, 
       collapsible => 1, 
@@ -32,6 +33,7 @@ $selection_pop_id
 <div id="compare_gebvs_canvas">
   <input id="compare_gebvs" class="button" type="button" value="Compare GEBVs" /> 
   <div id="compare_gebvs_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
+  <div id="compare_gebvs_plot"> </div>
 </div>
 
 </&>
