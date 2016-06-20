@@ -501,8 +501,9 @@ sub add_bulk {
 		}
 
 		my $step = 1;
+		my $num_values = scalar(@values);
 		foreach (@values) {
-			if ($step < scalar(@values)) {
+			if ($step < $num_values) {
 				$iq = $iq." (".$_->[0].",".$_->[1].",'".$_->[2]."'),";
 			} else {
 				$iq = $iq." (".$_->[0].",".$_->[1].",'".$_->[2]."');";
@@ -510,7 +511,7 @@ sub add_bulk {
 			$step++;
 		}
 		#print STDERR Dumper $iq;
-		if (scalar(@elements_added)>0){
+		if ($count>0){
 			$self->dbh()->do($iq);
 		}
 		$self->dbh()->commit;
@@ -521,8 +522,8 @@ sub add_bulk {
 	}
 
 	$elements = $self->elements();
-    push @$elements, \@elements_added;
-    $self->elements($elements);
+	push @$elements, \@elements_added;
+	$self->elements($elements);
 
 	my %response = (count => $count, duplicates => \@duplicates);
 	return \%response;
