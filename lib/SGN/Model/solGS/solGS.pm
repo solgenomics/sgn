@@ -636,7 +636,7 @@ sub get_population_type {
         ->search_related('projectprops');
 
     my $pr_type;
-    if($pr_rs->next) 
+    if ($pr_rs->next) 
     {
 	$pr_type = $pr_rs->first()->value;
     }
