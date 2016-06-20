@@ -24,7 +24,7 @@ function prepareJbrowse () { //ajax function to test for existence of given jbro
     cache: false,
     success: function(response) {
 		    alert(response);
-        var result = $(response).find("a[href$='/<%$trial_id%>']");
+        var result = jQuery(response).find("a[href$='/<%$trial_id%>']");
         alert(result);
 				if ( result ) { // if jbrowse instance is found, create and display link
 					jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the vcf tracks for this trial in JBrowse</a>');
