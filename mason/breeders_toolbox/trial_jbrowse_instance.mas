@@ -18,7 +18,7 @@ my $jbrowse_url = $jbrowse_path ."%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene
 jQuery(document).ready(function () {
 
 console.log("loading standalone dataset selector from index.html body...");
-jQuery('#result').load("<% $test_url %> body", function(data) {
+jQuery('#result').load("<% $test_url %>", function(data) {
 
 	console.log("loaded body...");
 	var find_result = jQuery(data).find("a[href$='/<%$trial_id%>']");
