@@ -399,16 +399,15 @@ sub add_bulk : Path('/list/add/bulk') Args(0) {
     my $elements = $c->req->param("elements");
 
     my $user_id = $self->get_user($c);
-    
     my $error = $self->check_user($c, $list_id);
     if ($error) { 
-	$c->stash->{rest} = { error => $error };
-	return;
+        $c->stash->{rest} = { error => $error };
+        return;
     }
 
     if (!$elements) { 
-	$c->stash->{rest} = { error => "You must provide one or more elements to add to the list" };
-	return;
+        $c->stash->{rest} = { error => "You must provide one or more elements to add to the list" };
+        return;
     }
 
     my @elements = split "\t", $elements;
@@ -418,23 +417,18 @@ sub add_bulk : Path('/list/add/bulk') Args(0) {
     my @duplicates = ();
     my $count = 0;
 
-    foreach my $element (@elements) {
-	$element =~ s/^\s*(.+?)\s*$/$1/; 
+    my $response = $list->add_bulk(\@elements);
+    #print STDERR Dumper $response;
 
-	if ($list->exists_element($element)) { 
-	    push @duplicates, $element;
-	}
-	else { 
-	    #$ih->execute($list_id, $element);	    
-	    $list->add_element($element);
-	    $count++;
-	}
+    if ($response->{error}) {
+        $c->stash->{rest} = { error => $response->{error}};
+        return;
     }
-    if (@duplicates) { 
-	$c->stash->{rest} = { duplicates => \@duplicates };
+    if (scalar(@{$response->{duplicates}}) > 0){
+        $c->stash->{rest} = { duplicates => $response->{duplicates} };
     }
-    $c->stash->{rest}->{success} = $count;
-
+    
+    $c->stash->{rest}->{success} = $response->{count};
 }
 
 sub insert_element : Private { 

@@ -1,4 +1,29 @@
 
+=head1 NAME
+
+merge_stocks.pl - merge stocks using a file with stocks to merge
+
+=head1 DESCRIPTION
+
+merge_stocks.pl -H [database host] -D [database name]  [ -x ] mergefile.txt
+
+Options:
+
+ -H the database host
+ -D the database name
+ -x flag; if present, delete the empty remaining accession
+
+mergefile.txt: A file with three columns: first column is ignored, bad name, good name.
+
+All the metadata of bad name will be transferred to good name.
+If -x is used, stock with name bad name will be deleted.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
 use strict;
 
 use Getopt::Std;
