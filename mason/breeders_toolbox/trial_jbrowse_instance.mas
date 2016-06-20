@@ -9,7 +9,7 @@ $trial_id
 my $jbrowse_path = $c->config->{jbrowse_path};
 my @path_parts = split('/', $jbrowse_path);
 my $basepath = $path_parts[1];
-my $test_url = "/" . $basepath . " body";
+my $test_url = "/" . $basepath;
 my $jbrowse_url = $jbrowse_path ."%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene%20exons%2C&cat=Diversity/NEXTGEN/Imputed&highlight=";
 
 </%perl>
@@ -17,7 +17,7 @@ my $jbrowse_url = $jbrowse_path ."%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene
 <script type="text/javascript" defer="defer">
 jQuery(document).ready(function () {
 
-jQuery.get("<% $test_url %>", function(data) {
+jQuery.get("<% $test_url %> body", function(data) {
 
 	var find_result = jQuery(data).find("a[href$='/<%$trial_id%>']");
 	var filter_result = jQuery(data).filter("a[href$='/<%$trial_id%>']");
