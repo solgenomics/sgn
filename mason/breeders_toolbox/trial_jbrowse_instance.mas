@@ -17,7 +17,7 @@ my $jbrowse_url = $jbrowse_path ."%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene
 <script type="text/javascript" defer="defer">
 jQuery(document).ready(function () {
 
-jQuery.get("<% $test_url %> body", function(data) {
+jQuery('#result').load("<% $test_url %> body", function(data) {
 
 	var find_result = jQuery(data).find("a[href$='/<%$trial_id%>']");
 	var filter_result = jQuery(data).filter("a[href$='/<%$trial_id%>']");
