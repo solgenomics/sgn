@@ -416,6 +416,27 @@ function trial_detail_page_setup_dialogs() {
         get_select_box('trial_types', 'edit_trial_type', { 'default' : document.getElementById("edit_trial_type").getAttribute("value")});
         //create bootstrap daterangepickers for planting and harvest dates
 
+        jQuery('input[id="edit_trial_planting_date"]').daterangepicker(
+          {
+            "singleDatePicker": true,
+            "drops": "up",
+            "autoApply": true,
+          },
+          function(start) {
+            plantingDate = start.format('YYYY-MM-DD');
+          }
+        );
+
+        jQuery('input[id="edit_trial_harvest_date"]').daterangepicker(
+          {
+            "singleDatePicker": true,
+            "autoApply": true,
+          },
+          function(start) {
+            harvestDate = start.format('YYYY-MM-DD');
+          }
+        );
+
         jQuery('#trial_details_edit_dialog').modal("show");
     });
 
