@@ -23,10 +23,12 @@ function prepareJbrowse () { //ajax function to test for existence of given jbro
     url: "<% $test_url %>",
     cache: false,
     success: function(response) {
-		    alert(response);
-        var result = jQuery(response).find("a[href$='/<%$trial_id%>']");
-        alert(result);
-				if ( result ) { // if jbrowse instance is found, create and display link
+		    console.log(response);
+        var find_result = jQuery(response).find("a[href$='/<%$trial_id%>']");
+				var filter_result = jQuery(response).filter("a[href$='/<%$trial_id%>']");
+        console.log(JSON.stringify(find_result));
+				console.log(JSON.stringify(filter_result));
+				if ( find_result ) { // if jbrowse instance is found, create and display link
 					jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the vcf tracks for this trial in JBrowse</a>');
 				}
 				else { // if not found, display message that jbrowse instance wasn't found
