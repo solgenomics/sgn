@@ -1,4 +1,4 @@
-  
+
 <nav class="navbar navbar-default navbar-fixed-top">
   <div class="container-fluid">
     <div class="navbar-header">
@@ -33,7 +33,7 @@
   body {
     padding-top: 30px;
   }
-  
+
   @media (min-width: 0px) and (max-width: 768px) {
     body {
       padding-top: 30px;
@@ -45,7 +45,7 @@
       padding-top: 90px;
     }
   }
-  
+
   @media (max-width: 768px) {
     .sgn_brand_name {
       padding-left: 0px;
@@ -56,7 +56,7 @@
       padding-right: 0px;
     }
   }
-  
+
   @media (min-width: 768px) {
     .dropdown:hover .dropdown-menu {
       display: block;
@@ -70,18 +70,16 @@
         padding-top:0px;
     }
   }
-  
+
 </style>
 
 <script>
 
-( function($) {
-$( document ).ready(function() {
-  if ($( document ).width() > 768) {
-    $(".menu_click_dropdown").removeClass("dropdown-toggle");
-    $(".menu_click_dropdown").removeAttr("data-toggle");
+jQuery(document).ready(function() {
+  if (jQuery(document).width() > 768) {
+    jQuery(".menu_click_dropdown").removeClass("dropdown-toggle");
+    jQuery(".menu_click_dropdown").removeAttr("data-toggle");
   }
 });
-} ) ( jQuery );
 
 </script>
