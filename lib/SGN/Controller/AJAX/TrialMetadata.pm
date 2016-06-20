@@ -433,8 +433,9 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
-    my @data = $layout->get_accession_names();
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_accessions();
 
     $c->stash->{rest} = { accessions => \@data };
 }
@@ -444,8 +445,9 @@ sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
-    my @data = $layout->get_control_names();
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_controls();
 
     $c->stash->{rest} = { accessions => \@data };
 }
@@ -455,8 +457,9 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
-    my @data = $layout->get_plot_names();
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_plots();
 
     $c->stash->{rest} = { plots => \@data };
 }
