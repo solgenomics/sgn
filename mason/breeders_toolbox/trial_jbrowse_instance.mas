@@ -21,11 +21,14 @@ jQuery(document).ready(function () {
 		url: "<% $test_url %>",
 		success: function(response) {
 			if ( response.indexOf("Trial_<%$trial_id%>") > -1 ) { // if jbrowse instance is found, create and display link
-				jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the vcf tracks for this trial in JBrowse</a>');
+				jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the dataset for this trial in JBrowse</a>');
 			}
 			else { // if not found, display message that jbrowse instance wasn't found
-				jQuery('#trial_jbrowse_check').html(" <i>No Jbrowse instance found for this trial</i>.");
+				jQuery('#trial_jbrowse_check').html(" <i>This trial does not have a dataset in Jbrowse.</i>");
 			}
+		},
+		error: function(error) {
+			jQuery('#trial_jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
 		}
 	});
 });
