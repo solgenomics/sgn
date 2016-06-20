@@ -1729,8 +1729,6 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
  
     $self->get_trait_details($c, $trait_id);
     $c->stash->{pop_id} = $pop_id;
-
-    my $path = $c->req->path; my $referer= $c->req->referer;
    
     my $identifier = $pop_id . "_" . $prediction_id;
     $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
@@ -1932,11 +1930,35 @@ sub model_parameters {
 }
 
 
+sub solgs_details_trait :Path('/solgs/details/trait/') Args(1) {
+    my ($self, $c, $trait_id) = @_;
+    
+    $trait_id = $c->req->param('trait_id') if !$trait_id;
+    
+    my $ret->{status} = undef;
+    
+    if ($trait_id) 
+    {
+	$self->get_trait_details($c, $trait_id);
+	$ret->{name} = $c->stash->{trait_name};
+	$ret->{abbr} = $c->stash->{trait_abbr};
+	$ret->{id}   = $c->stash->{trait_id};
+    }
+
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+
+}
+
+
 sub get_trait_details {
     my ($self, $c, $trait_id) = @_;
 
-    my $trait_name = $c->model('solGS::solGS')->trait_name($trait_id);
-  
+    $trait_id = $c->stash->{trait_id} if !$trait_id;
+
+    my $trait_name = $c->model('solGS::solGS')->trait_name($trait_id); 
     my $abbr = $self->abbreviate_term($trait_name);
    
     $c->stash->{trait_id}   = $trait_id;
