@@ -9,7 +9,7 @@ $trial_id
 my $jbrowse_path = $c->config->{jbrowse_path};
 my @path_parts = split('/', $jbrowse_path);
 my $basepath = $path_parts[1];
-my $test_url = "/" . $basepath;
+my $test_url = "/" . $basepath . "/index.html";
 my $jbrowse_url = $jbrowse_path ."%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene%20exons%2C&cat=Diversity/NEXTGEN/Imputed&highlight=";
 
 </%perl>
@@ -17,10 +17,13 @@ my $jbrowse_url = $jbrowse_path ."%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene
 <script type="text/javascript" defer="defer">
 jQuery(document).ready(function () {
 
-console.log("loading standalone dataset selector from index.html body...");
-jQuery('#result').load("<% $test_url %>", function(data) {
-
-	console.log("loaded body...");
+console.log("loading standalone dataset selector from index.html ...");
+jQuery.ajax({
+	url: "<% $test_url %>#dijit__WidgetBase_0",
+	cache: false,
+	success: function(response) {
+	console.log("loaded dataset selector...");
+	console.log(response);
 	var find_result = jQuery(data).find("a[href$='/<%$trial_id%>']");
 	var filter_result = jQuery(data).filter("a[href$='/<%$trial_id%>']");
 	console.log(JSON.stringify(find_result));
