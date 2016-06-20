@@ -24,8 +24,8 @@ jQuery.ajax({
 	success: function(response) {
 	console.log("loaded dataset selector...");
 	console.log(response);
-	var find_result = jQuery(data).find("a[href$='/<%$trial_id%>']");
-	var filter_result = jQuery(data).filter("a[href$='/<%$trial_id%>']");
+	var find_result = jQuery(response).find("a[href$='/<%$trial_id%>']");
+	var filter_result = jQuery(response).filter("a[href$='/<%$trial_id%>']");
 	console.log(JSON.stringify(find_result));
 	console.log(JSON.stringify(filter_result));
 
