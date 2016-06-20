@@ -27,7 +27,7 @@ jQuery(document).ready(function () {
 				jQuery('#trial_jbrowse_check').html(" <i>This trial does not have a dataset in Jbrowse.</i>");
 			}
 		},
-		error: function(error) {
+		error: function() {
 			jQuery('#trial_jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
 		}
 	});

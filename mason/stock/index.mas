@@ -470,8 +470,8 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
         else { // if not found, display message that dataset doesn't exist
 		      jQuery('#jbrowse_check').html(" <i>This accession does not have any data in Jbrowse.</i>");
      		}
-	    }
-      error: function(error) {
+	    },
+      error: function() {
         jQuery('#jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
       }
     });
