@@ -163,6 +163,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $format = $c->req->param("format") || "xls";
+    my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list") || "";
 
     my @trait_list;
@@ -206,6 +207,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 	    trait_list => \@trait_list,
 	    filename => $tempfile,
 	    format => $plugin,
+        include_timestamp => $timestamp_option,
       });
 
       my $error = $download->download();

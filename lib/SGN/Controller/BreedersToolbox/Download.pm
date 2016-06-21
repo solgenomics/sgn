@@ -170,8 +170,9 @@ sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download'
 
     print STDERR "Collecting download parameters ...  ".localtime()."\n";
     my $trial_ids = shift;
-    my $format = $c->req->param("format");
+    my $format = $c->req->param("format") || 'xls';
     my $dl_token = $c->req->param("token");
+    my $timestamp = $c->req->param("timestamp") || 0;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my @trial_ids = split ",", $trial_ids;
     my $trial_sql = join ",", map { "\'$_\'" } @trial_ids;
@@ -182,7 +183,7 @@ sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download'
 
     print STDERR "Getting extended phenotype matrix ...  ".localtime()."\n";
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
-    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef);
+    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef, $timestamp);
 
     print STDERR "Finding or creating tempfiles dir ...  ".localtime()."\n";
     $c->tempfiles_subdir("data_export");
@@ -190,8 +191,11 @@ sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download'
     if ($format eq "csv") {
 	      $self->phenotype_download_csv($c, \@data, $dl_token, $dl_cookie);
     }
-    else {
+    elsif ($format eq 'xls') {
 	     $self->phenotype_download_excel($c, \@data, $dl_token, $dl_cookie);
+    }
+    else {
+        die "Format not recognized.";
     }
 }
 
@@ -257,12 +261,21 @@ sub phenotype_download_csv {
     move($tempfile, $file_path);
 
     open(my $F, ">", $file_path) || die "Can't open file $file_path\n";
+    #print STDERR Dumper \@data;
     for (my $line =0; $line< @data; $line++) {
-	    my @columns = split /\t/, $data[$line];
-
-	    print $F join(",", @columns);
-	    print $F "\n";
+        my @columns = split /\t/, $data[$line];
+        my $num_col = scalar(@columns);
+        my $step = 1;
+        foreach (@columns) {
+            print $F "\"$_\"";
+            if ($step < $num_col) {
+                print $F ",";
+            }
+            $step++;
+        }
+        print $F "\n";
     }
+    close($F);
 
     my @column = split /\t/, $data[1];
     my $trial_name = $column[2];
@@ -279,7 +292,6 @@ sub phenotype_download_csv {
       expires => '+1m',
     };
 
-    close($F);
     $c->res->body($output);
 }
 

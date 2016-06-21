@@ -17,25 +17,27 @@ sub download {
 
     my $schema = $self->bcs_schema();
     my $trial_id = $self->trial_id();
+    my $include_timestamp = $self->include_timestamp();
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
 
     $self->trial_download_log($trial_id, "trial phenotypes");
 
     my $trial_sql = "\'$trial_id\'";
     my $bs = CXGN::BreederSearch->new( { dbh => $schema->storage->dbh() });
-    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef);
-    my $rs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_geolocation');
+    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef, $include_timestamp);
 
-    my $location = $rs->first()->get_column('description');
+    #my $rs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_geolocation');
+
+    #my $location = $rs->first()->get_column('description');
     
-    my $bprs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id})->search_related_rs('project_relationship_subject_projects');
+    #my $bprs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id})->search_related_rs('project_relationship_subject_projects');
 
     #print STDERR "COUNT: ".$bprs->count()."  ". $bprs->get_column('project_relationship.object_project_id')."\n";
 
-    my $pbr = $schema->resultset("Project::Project")->search( { 'me.project_id'=> $bprs->get_column('project_relationship_subject_projects.object_project_id')->first() } );
+    #my $pbr = $schema->resultset("Project::Project")->search( { 'me.project_id'=> $bprs->get_column('project_relationship_subject_projects.object_project_id')->first() } );
     
-    my $program_name = $pbr->first()->name();
-    my $year = $trial->get_year();
+    #my $program_name = $pbr->first()->name();
+    #my $year = $trial->get_year();
 
     #print STDERR "YEAR: $year\n";
 
@@ -50,7 +52,7 @@ sub download {
 	    $ws->write($line, $col, $columns[$col]);
 	}
     }
-    $ws->write(0, 0, "$program_name, $location ($year)");
+    #$ws->write(0, 0, "$program_name, $location ($year)");
     $ss ->close();
 }
 
