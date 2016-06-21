@@ -33,9 +33,9 @@ $user_id => undef
 foreach my $file (@file_metadata) {
    my @trial_array = @{$file};
    my $file_name = $trial_array[1];
-   my $trial_layout_download = '[<a href="/fieldbook/trial_download/'.$trial_array[2].'">Download</a>]';
-   print $trial_array[1]."$trial_layout_download<br>";
-   #print $trial_array[2]."</br>";
+   my $trial_layout_download = '[<a href="/fieldbook/trial_download/'.$trial_array[2].'">Download</a>]  |   [<a id="delete_fieldbook_layout_link" href="/fieldbook/delete_FB_layout/'.$trial_array[2].'">Delete Layout</a>]'; 
+   print $trial_array[1]."$trial_layout_download<br>"; 
+   #print $trial_array[2]."</br>"; 
 }
 </%perl>
 </&>
