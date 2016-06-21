@@ -352,11 +352,22 @@ function trial_detail_page_setup_dialogs() {
     });
 
     jQuery('#edit_trial_details').click(function () {
-        //populate breeding_programs, locations, years, and types dropdowns
-        get_select_box('breeding_programs', 'edit_trial_breeding_program', { 'default' : document.getElementById("edit_trial_breeding_program").getAttribute("value")});
-        get_select_box('locations', 'edit_trial_location', { 'default' : document.getElementById("edit_trial_location").getAttribute("value")});
-        get_select_box('years', 'edit_trial_year', { 'default' : document.getElementById("edit_trial_year").getAttribute("value")});
-        get_select_box('trial_types', 'edit_trial_type', { 'default' : document.getElementById("edit_trial_type").getAttribute("value")});
+        //populate breeding_programs, locations, years, and types dropdowns, and save defaults
+        var default_bp = document.getElementById("edit_trial_breeding_program").getAttribute("value");
+        get_select_box('breeding_programs', 'edit_trial_breeding_program', { 'default' : default_bp });
+        jQuery('#edit_trial_breeding_program').data("originalValue", default_bp);
+
+        var default_loc = document.getElementById("edit_trial_location").getAttribute("value");
+        get_select_box('locations', 'edit_trial_location', { 'default' : default_loc });
+        jQuery('#edit_trial_location').data("originalValue", default_loc);
+
+        var default_year = document.getElementById("edit_trial_year").getAttribute("value");
+        get_select_box('years', 'edit_trial_year', { 'default' : default_year });
+        jQuery('#edit_trial_year').data("originalValue", default_year);
+
+        var default_type = document.getElementById("edit_trial_type").getAttribute("value");
+        get_select_box('trial_types', 'edit_trial_type', { 'default' : default_type });
+        jQuery('#edit_trial_type').data("originalValue", default_type);
 
         //create bootstrap daterangepickers for planting and harvest dates
         jQuery('input[id="edit_trial_planting_date"]').daterangepicker(
@@ -373,6 +384,16 @@ function trial_detail_page_setup_dialogs() {
     });
 
     jQuery('#save_trial_details').click(function () {
+
+      // get all changed (highlighted) options
+
+      // close edit dialog, open working modal, run respective change functions with the new values
+
+      // on success close working modal and present confirmation of successful changes
+
+      // if error present error dialog with message
+
+    });
 
 
     jQuery('#delete_phenotype_data_by_trial_id').click(
@@ -440,6 +461,29 @@ function trial_detail_page_setup_dialogs() {
 });
 
 
+}
+
+function highlight_changed_details(id, val, default_val) {
+  // compare changed value to default if different add highlight class, if same remove highlight
+  if ( !default_val ) {
+  //  console.log("originalValue="+jQuery('#'+id).data("originalValue"));
+    default_val = jQuery('#'+id).data("originalValue");
+  }
+//  console.log("running highlight method . . .");
+  console.log("id="+id+" and val="+val+" and default_val="+default_val);
+  if (val !== default_val ) {
+    console.log("highlighting changed element . . .");
+    jQuery('#'+id).siblings().remove();
+    jQuery('#'+id).parent().parent().addClass("has-warning has-feedback");
+    jQuery('#'+id).parent().append('<span class="glyphicon glyphicon-pencil form-control-feedback" aria-hidden="true"></span><span id="edit_trial_name_status" class="sr-only">(warning)</span>');
+  }
+  else {
+    console.log("resetting element that was changed back to default_val. . .");
+    jQuery('#'+id).parent().parent().removeClass("has-warning has-feedback");
+    jQuery('#'+id).siblings().remove();
+    //document.getElementById(id).parentElement.parentElement.removeAttribute("class");
+    //document.getElementById(id).parentElement.parentElement.setAttribute("class", "list-group-item");
+  }
 }
 
 function associate_breeding_program() {
