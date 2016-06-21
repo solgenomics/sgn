@@ -2693,7 +2693,7 @@ sub build_multiple_traits_models {
 
     my $pop_id = $c->stash->{pop_id};
     my $prediction_id = $c->stash->{prediction_pop_id};
-   
+    
     my @selected_traits = $c->req->param('trait_id');
 
     if (!@selected_traits) 
@@ -2701,11 +2701,11 @@ sub build_multiple_traits_models {
 	my $params = $c->stash->{analysis_profile};
 	my $args = $params->{arguments};
 
+	my $json = JSON->new();
+	$args = $json->decode($args);
+
 	if (keys %{$args}) 
-	{
-	    my $json = JSON->new();
-	    $args = $json->decode($args);
-      
+	{     
 	    foreach my $k ( keys %{$args} ) 
 	    {
 		if ($k eq 'trait_id') 
@@ -2811,8 +2811,8 @@ sub build_multiple_traits_models {
 			
                             $traits    .= $r->[0];
                             $traits    .= "\t" unless ($i == $#selected_traits);
-                            $trait_ids .= $trait_id;                                                        
-                        }
+                            $trait_ids .= $trait_id;    
+			}
                     }
                 }
             }
