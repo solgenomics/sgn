@@ -4246,8 +4246,26 @@ sub all_gs_traits_list {
 	}
     }
 
-    $traits = $c->model('solGS::solGS')->all_gs_traits();
+    try
+    {
+        $traits = $c->model('solGS::solGS')->all_gs_traits();
+    }
+    catch
+    {
+
+	if ($_ =~ /materialized view \"all_gs_traits\" has not been populated/)
+        {           
+            try
+            {
+                $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
+                $c->model('solGS::solGS')->update_matview_public($mv_name);
+                $traits = $c->model('solGS::solGS')->all_gs_traits();
+            };
+        }
+    };
+
     $c->stash->{all_gs_traits} = $traits;
+
 }
 
 
@@ -5219,7 +5237,7 @@ sub run_r_script {
 	    };
             
 	    $c->stash->{script_error} = "$r_script";
-	}   
+	};  
     }
    
 }
