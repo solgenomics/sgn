@@ -370,15 +370,18 @@ function trial_detail_page_setup_dialogs() {
         jQuery('#edit_trial_type').data("originalValue", default_type);
 
         //create bootstrap daterangepickers for planting and harvest dates
-        jQuery('input[id="edit_trial_planting_date"]').daterangepicker(
-          {"singleDatePicker": true, "drops": "up", "autoApply": true,},
+        jQuery('#edit_trial_planting_date').daterangepicker(
+          {"singleDatePicker": true, "autoApply": true, "showDropdowns": true, "buttonClasses": "btn btn-sm", "applyClass": "btn-success","cancelClass": "btn-default"},
           function(start) { plantingDate = start.format('YYYY-MM-DD')}
         );
+        jQuery('#edit_trial_planting_date').val(document.getElementById("edit_trial_planting_date").getAttribute("value"));
 
-        jQuery('input[id="edit_trial_harvest_date"]').daterangepicker(
+        jQuery('#edit_trial_harvest_date').daterangepicker(
           {"singleDatePicker": true, "autoApply": true,},
           function(start) { harvestDate = start.format('YYYY-MM-DD');}
         );
+        jQuery('#edit_trial_harvest_date').val(document.getElementById("edit_trial_harvest_date").getAttribute("value"));
+
         //show dialog
         jQuery('#trial_details_edit_dialog').modal("show");
     });
