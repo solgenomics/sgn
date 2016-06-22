@@ -61,6 +61,9 @@ has 'filename' => (isa => 'Str', is => 'ro',
 
 has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
 
+## used when downloading phenotypes as either csv or xls.
+has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
+
 
 sub BUILD { 
     my $self = shift;
