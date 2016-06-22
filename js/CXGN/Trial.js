@@ -387,11 +387,21 @@ function trial_detail_page_setup_dialogs() {
     });
 
     jQuery('#save_trial_details').click(function () {
-
       // get all changed (highlighted) options
+      var change_spans = document.getElementsByClassName("form-control-feedback");
+      var changed_elements = '';
+      for(var i=0; i<change_spans.length; i++) {
+        changed_elements += change_spans[i].previousSibling;
+      }
+      var change_html = '';
+      for(var i=0; i<changed_elements.length; i++) {
+        change_html += "<p> changing "+ changed_elements[i].id + " with old value " + changed_elements[i].defaultValue || changed_elements[i].data("originalValue");
+        change_html += " and new value "+ changed_elements[i].value;
+      }
+      console.log(change_html);
 
       // close edit dialog, open working modal, run respective change functions with the new values
-
+      jQuery('#trial_details_edit_dialog').modal("hide");
       // on success close working modal and present confirmation of successful changes
 
       // if error present error dialog with message
@@ -478,7 +488,7 @@ function highlight_changed_details(id, val, default_val) {
     console.log("highlighting changed element . . .");
     jQuery('#'+id).siblings().remove();
     jQuery('#'+id).parent().parent().addClass("has-warning has-feedback");
-    jQuery('#'+id).parent().append('<span class="glyphicon glyphicon-pencil form-control-feedback" aria-hidden="true"></span><span id="edit_trial_name_status" class="sr-only">(warning)</span>');
+    jQuery('#'+id).parent().append('<span class="glyphicon glyphicon-pencil form-control-feedback" aria-hidden="true"></span><span id="edit_trial_changed_status" class="sr-only">(warning)</span>');
   }
   else {
     console.log("resetting element that was changed back to default_val. . .");
@@ -501,6 +511,30 @@ function associate_breeding_program() {
 
 	}
     });
+}
+
+function save_trial_name() {
+  var trial_id = jQuery('#edit_trial_name_trial_id').val();
+  var names = jQuery('#trial_name_input').val();
+  //alert('New name = '+names);
+  jQuery.ajax( {
+    url: '/ajax/breeders/trial/'+trial_id+'/names/',
+    type: 'POST',
+    data: {'names' : names},
+    success: function(response) {
+      if (response.error) {
+        alert(response.error);
+      }
+      else {
+        alert("Successfully updated trial name");
+        jQuery('#edit_trial_name_dialog').modal("hide");
+        display_trial_name(trial_id, "<% $trial_type %>");
+      }
+    },
+    error: function(response) {
+      alert("An error occurred updating the trial name");
+    },
+  });
 }
 
 function save_trial_type(type) {
