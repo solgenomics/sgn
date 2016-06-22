@@ -262,19 +262,24 @@ sub phenotype_download_csv {
 
     open(my $F, ">", $file_path) || die "Can't open file $file_path\n";
     #print STDERR Dumper \@data;
-    for (my $line =0; $line< @data; $line++) {
-        my @columns = split /\t/, $data[$line];
-        my $num_col = scalar(@columns);
-        my $step = 1;
-        foreach (@columns) {
-            print $F "\"$_\"";
-            if ($step < $num_col) {
-                print $F ",";
+        my @header = split /\t/, $data[0];
+        my $num_col = scalar(@header);
+        for (my $line =0; $line< @data; $line++) {
+            my @columns = split /\t/, $data[$line];
+            my $step = 1;
+            for(my $i=0; $i<$num_col; $i++) {
+                if ($columns[$i]) {
+                    print $F "\"$columns[$i]\"";
+                } else {
+                    print $F "\"\"";
+                }
+                if ($step < $num_col) {
+                    print $F ",";
+                }
+                $step++;
             }
-            $step++;
+            print $F "\n";
         }
-        print $F "\n";
-    }
     close($F);
 
     my @column = split /\t/, $data[1];
@@ -346,6 +351,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $trait_list_id     = $c->req->param("trait_list_list_select");
     my $data_type         = $c->req->param("data_type")|| "phenotype";
     my $format            = $c->req->param("format");
+    my $timestamp_included = $c->req->param("timestamp") || 0;
     my $cookie_value      = $c->req->param("download_token_value");
 
     my $accession_data;
@@ -399,79 +405,101 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $output = "";
 
     if ($data_type eq "phenotype") {
-	my $result = $bs->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
-	my @data = @$result;
+        my @data = $bs->get_extended_phenotype_info_matrix($accession_sql, $trial_sql, $trait_sql, $timestamp_included);
 
-	if ($format eq "html") { #dump html in browser
-	    $output = "";
-	    foreach my $d (@data) {
-		$output .= join ",", @$d;
-		$output .= "\n";
-	    }
-	    $c->res->content_type("text/plain");
-	    $c->res->body($output);
-	} else {
-	    # if xls or csv, create tempfile name and place to save it
-	    my $what = "phenotype_download";
-	    my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
-	    my $dir = $c->tempfiles_subdir('download');
-	    my $temp_file_name = $time_stamp . "$what" . "XXXX";
-	    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
-	    my $tempfile = $c->config->{basepath}."/".$rel_file;
-	    my @col_names = qw/year project_name stock_name location trait value plot_name cv_name cvterm_accession rep block_number/;
+        if ($format eq "html") { #dump html in browser
+            $output = "";
+            my @header = split /\t/, $data[0];
+            my $num_col = scalar(@header);
+            for (my $line =0; $line< @data; $line++) {
+                my @columns = split /\t/, $data[$line];
+                my $step = 1;
+                for(my $i=0; $i<$num_col; $i++) {
+                    if ($columns[$i]) {
+                        $output .= "\"$columns[$i]\"";
+                    } else {
+                        $output .= "\"\"";
+                    }
+                    if ($step < $num_col) {
+                        $output .= ",";
+                    }
+                    $step++;
+                }
+                $output .= "\n";
+            }
+            $c->res->content_type("text/plain");
+            $c->res->body($output);
 
-	    if ($format eq ".csv") {
+        } else {
+            # if xls or csv, create tempfile name and place to save it
+            my $what = "phenotype_download";
+            my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+            my $dir = $c->tempfiles_subdir('download');
+            my $temp_file_name = $time_stamp . "$what" . "XXXX";
+            my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+            my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-		#build csv with column names
-		open(CSV, ">", $tempfile) || die "Can't open file $tempfile\n";
-		print CSV join(",", @col_names);
-		print CSV "\n";
-		for (my $line =0; $line< @data; $line++) {
-		    my @columns = @{$data[$line]};
-		    print CSV join(",", @columns);
-		    print CSV "\n";
-		}
-		close CSV;
+            if ($format eq ".csv") {
 
-	    } else {
+                #build csv with column names
+                open(CSV, ">", $tempfile) || die "Can't open file $tempfile\n";
+                    my @header = split /\t/, $data[0];
+                    my $num_col = scalar(@header);
+                    for (my $line =0; $line< @data; $line++) {
+                        my @columns = split /\t/, $data[$line];
+                        my $step = 1;
+                        for(my $i=0; $i<$num_col; $i++) {
+                            if ($columns[$i]) {
+                                print CSV "\"$columns[$i]\"";
+                            } else {
+                                print CSV "\"\"";
+                            }
+                            if ($step < $num_col) {
+                                print CSV ",";
+                            }
+                            $step++;
+                        }
+                        print CSV "\n";
+                    }
+                close CSV;
 
-		#build excel file; include column names
-		my $ss = Spreadsheet::WriteExcel->new($tempfile);
-		my $ws = $ss->add_worksheet();
+            } else {
+                my $ss = Spreadsheet::WriteExcel->new($tempfile);
+                my $ws = $ss->add_worksheet();
 
-		for (my $column =0; $column< @col_names; $column++) {
-		    $ws->write(0, $column, $col_names[$column]);
-		}
-		for (my $line =0; $line < @data; $line++) {
-		    my @columns = @{$data[$line]};
-		    for(my $col = 0; $col<@columns; $col++) {
-			$ws->write(($line+1), $col, $columns[$col]);
-		    }
-		}
-		$ss ->close();
-		$format = ".xls";
-	    }
+                for (my $line =0; $line< @data; $line++) { 
+                    my @columns = split /\t/, $data[$line];
+                    for(my $col = 0; $col<@columns; $col++) { 
+                        $ws->write($line, $col, $columns[$col]);
+                    }
+                }
+                #$ws->write(0, 0, "$program_name, $location ($year)");
+                $ss ->close();
 
-	    #Using tempfile and new filename,send file to client
-	    my $file_name = $time_stamp . "$what" . "$format";
-	    $c->res->content_type('Application/'.$format);
-	    $c->res->cookies->{fileDownloadToken} = { value => $cookie_value};
-	    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-	    $output = read_file($tempfile);
-	    $c->res->body($output);
-	}
+                $format = ".xls";
+            }
+
+            #Using tempfile and new filename,send file to client
+            my $file_name = $time_stamp . "$what" . "$format";
+            $c->res->content_type('Application/'.$format);
+            $c->res->cookies->{fileDownloadToken} = { value => $cookie_value};
+            $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+            $output = read_file($tempfile);
+            $c->res->body($output);
+        }
     }
-    if ($data_type eq "genotype") {
-	$result = $bs->get_genotype_info($accession_sql, $trial_sql);
-	my @data = @$result;
 
-	my $output = "";
-	foreach my $d (@data) {
-	    $output .= join "\t", @$d;
-	    $output .= "\n";
-	}
-	$c->res->content_type("text/plain");
-	$c->res->body($output);
+    if ($data_type eq "genotype") {
+        $result = $bs->get_genotype_info($accession_sql, $trial_sql);
+        my @data = @$result;
+
+        my $output = "";
+        foreach my $d (@data) {
+            $output .= join "\t", @$d;
+            $output .= "\n";
+        }
+        $c->res->content_type("text/plain");
+        $c->res->body($output);
     }
 }
 
