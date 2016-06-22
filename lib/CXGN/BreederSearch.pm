@@ -322,7 +322,7 @@ sub get_extended_phenotype_info_matrix {
         if ($include_timestamp) {
             my ($p1, $p2) = split /date: /, $phenotype_uniquename;
             my ($timestamp, $p3) = split /  operator/, $p2;
-            if (index($timestamp, 'NA') == -1) {
+            if( $timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
                 $plot_data{$plot}->{$cvterm} = "$trait_data,$timestamp";
             } else {
                 $plot_data{$plot}->{$cvterm} = $trait_data;

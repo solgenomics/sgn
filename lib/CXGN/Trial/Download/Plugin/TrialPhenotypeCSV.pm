@@ -41,12 +41,17 @@ sub download {
     #print STDERR "PHENOTYPE DATA MATRIX: ".Dumper(\@data);
     
     open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
-    for (my $line =0; $line< @data; $line++) { 
+    my @header = split /\t/, $data[0];
+    my $num_col = scalar(@header);
+    for (my $line =0; $line< @data; $line++) {
         my @columns = split /\t/, $data[$line];
-        my $num_col = scalar(@columns);
         my $step = 1;
-        foreach (@columns) {
-            print $F "\"$_\"";
+        for(my $i=0; $i<$num_col; $i++) {
+            if ($columns[$i]) {
+                print $F "\"$columns[$i]\"";
+            } else {
+                print $F "\"\"";
+            }
             if ($step < $num_col) {
                 print $F ",";
             }
