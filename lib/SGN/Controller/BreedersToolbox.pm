@@ -4,7 +4,6 @@ package SGN::Controller::BreedersToolbox;
 use Moose;
 
 use Data::Dumper;
-use CXGN::BreederSearch;
 use SGN::Controller::AJAX::List;
 use CXGN::List::Transform;
 use CXGN::BreedersToolbox::Projects;

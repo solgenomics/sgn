@@ -86,7 +86,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{year} = $trial->get_year();
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
-    
+
     $c->stash->{has_plant_entries} = $trial->has_plant_entries();
 
     $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
@@ -166,8 +166,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $format = $c->req->param("format") || "xls";
     my $data_level = $c->req->param("dataLevel") || "plots";
+    my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list") || "";
-    
+
     if ($data_level eq 'plants') {
         my $trial = $c->stash->{trial};
         if (!$trial->has_plant_entries()) {
@@ -200,9 +201,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id} });
-    my $trial_name = $trial_layout->get_trial_name();
-    my $trial_id = $trial_layout->get_trial_id();
+    my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $trial_name = $trial->get_name();
+    my $trial_id = $trial->get_trial_id();
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = $trial_id . "_" . "$what" . "XXXX";
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
@@ -219,6 +220,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 	    filename => $tempfile,
 	    format => $plugin,
         data_level => $data_level,
+        include_timestamp => $timestamp_option,
       });
 
       my $error = $download->download();

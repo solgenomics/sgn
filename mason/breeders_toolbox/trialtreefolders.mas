@@ -15,6 +15,8 @@ $breeding_programs
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
 <& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
 
+<& /breeders_toolbox/trial/download_trials_phenotypes_dialog.mas &>
+
 <table class="table table-bordered">
   <thead>
     <tr>
@@ -30,8 +32,7 @@ $breeding_programs
         <hr>
       <h4>Download Trial Phenotypes</h4>
       <h5><i>Select multiple trials by holding 'Ctrl'.</i></h5>
-      <button class="btn btn-primary" id="download_button" disabled="disabled" title="First Select Trial(s) to Download">Excel</button>
-      <button class="btn btn-primary" id="download_button_csv" disabled="disabled" title="First Select Trial(s) to Download">CSV</button><br />
+      <button class="btn btn-primary" id="trials_download_phenotypes_button" disabled="disabled" title="First Select Trial(s) to Download">Download Phenotypes</button>
       <hr>
       <h5><i>Double click<br />trial (&nbsp;<span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
       <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
@@ -118,35 +119,13 @@ $breeding_programs
   $('#trial_list').on("changed.jstree", function (e, data) {
     //console.log(data);
        if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'trial') {
-         $('#download_button').removeAttr('disabled');
-         $('#download_button_csv').removeAttr('disabled');
+         $('#trials_download_phenotypes_button').removeAttr('disabled');
        }
        else {
-         $('#download_button').attr('disabled', 'disabled');
-         $('#download_button_csv').attr('disabled', 'disabled');
+         $('#trials_download_phenotypes_button').attr('disabled', 'disabled');
        }
-
-
-         // }
     });
 
-    $('#download_button').on('click', function () {
-        var selected = $('#trial_list').jstree('get_bottom_selected');
-        if (selected.length !== 0) {
-	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
-        }
-        else { alert("No leaf nodes selected for download."); }
-
-    });
-
-    $('#download_button_csv').on('click', function () {
-        var selected = $('#trial_list').jstree('get_bottom_selected');
-        if (selected.length !== 0) {
-	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
-        }
-        else { alert("No leaf nodes selected for download."); }
-
-    });
 
     $("#trial_list").delegate("li", "dblclick", function(event){
       var node = $("#trial_list").jstree("get_node", this);
