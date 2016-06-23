@@ -19,60 +19,78 @@ $trial_description
         </div>
         <div class="modal-body">
             <div class="container-fluid">
-            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="edit_trial_details_form" name="edit_trial_details_form">
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                 <div class="form-group">
                     <label class="col-sm-3 control-label" for="edit_trial_name">Trial Name: </label>
-                    <div class="col-sm-9">
-                        <input class="form-control" id="edit_trial_name" type="text" value="<%$trial_name%>" aria-describedby="edit_trial_name_status" onchange="highlight_changed_details(this.id,this.value,this.defaultValue)"/>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <input class="form-control col-sm-8" id="edit_trial_name" type="text" value="<%$trial_name%>" aria-describedby="edit_trial_name_status"/>
+                      </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Breeding Program: </label>
-                    <div class="col-sm-9">
-                        <select class="form-control" id="edit_trial_breeding_program" value="<%$breeding_program%>" onchange="highlight_changed_details(this.id,this.value,this.defaultValue)"></select>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <select class="form-control" id="edit_trial_breeding_program" value="<%$breeding_program%>"></select>
+                      </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Location: </label>
-                    <div class="col-sm-9">
-                        <select class="form-control" id="edit_trial_location" value="<%$location%>" onchange="highlight_changed_details(this.id,this.value,this.defaultValue)"></select>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <select class="form-control" id="edit_trial_location" value="<%$location%>"></select>
+                      </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Year: </label>
-                    <div class="col-sm-9">
-                        <select class="form-control" id="edit_trial_year" value="<%$year%>" onchange="highlight_changed_details(this.id,this.value,this.defaultValue)"></select>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <select class="form-control" id="edit_trial_year" value="<%$year%>"></select>
+                      </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Trial Type: </label>
-                    <div class="col-sm-9">
-                        <select class="form-control" id="edit_trial_type" value="<%$trial_type%>" onchange="highlight_changed_details(this.id,this.value,this.defaultValue)"></select>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <select class="form-control" id="edit_trial_type" value="<%$trial_type%>"></select>
+                      </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Planting Date: </label>
-                    <div class="col-sm-9">
-                        <input class="form-control" id="edit_trial_planting_date" type="text" value="<%$harvest_date%>" onchange="highlight_changed_details(this.id,this.value,this.defaultValue)"/>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <span class="input-group-btn"><button class="btn btn-default" id="clear_planting_date" type="button">Clear</button></span>
+                        <input class="form-control" id="edit_trial_planting_date" type="text" value="<%$harvest_date%>"/>
+                      </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Harvest Date: </label>
-                    <div class="col-sm-9">
-                        <input class="form-control" id="edit_trial_harvest_date" type="text" value="<%$harvest_date%>" onchange="highlight_changed_details(this.id,this.value,this.defaultValue)"/>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <span class="input-group-btn"><button class="btn btn-default" id="clear_harvest_date" type="button">Clear</button></span>
+                        <input class="form-control" id="edit_trial_harvest_date" type="text" value="<%$harvest_date%>"/>
+                      </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Description: </label>
-                    <div class="col-sm-9">
-                        <textarea class="form-control" id="edit_trial_description" onchange="highlight_changed_details(this.id,this.value,this.defaultValue)"><%$trial_description%></textarea>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <textarea class="form-control" id="edit_trial_description" rows="5"><%$trial_description%></textarea>
+                      </div>
                     </div>
                 </div>
               </form>
             </div>
         </div>
         <div class="modal-footer">
-            <p class="text-warning vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates change</p>
+            <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
             <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_description_cancel_button">Cancel</button>
             <button type="button" class="btn btn-primary" id="save_trial_details">Save Changes</button>
         </div>

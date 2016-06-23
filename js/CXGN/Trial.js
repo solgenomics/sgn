@@ -371,32 +371,54 @@ function trial_detail_page_setup_dialogs() {
 
         //create bootstrap daterangepickers for planting and harvest dates
         jQuery('#edit_trial_planting_date').daterangepicker(
-          {"singleDatePicker": true, "autoApply": true, "showDropdowns": true, "buttonClasses": "btn btn-sm", "applyClass": "btn-success","cancelClass": "btn-default"},
+          {"singleDatePicker": true, "autoApply": true,},
           function(start) { plantingDate = start.format('YYYY-MM-DD')}
         );
-        jQuery('#edit_trial_planting_date').val(document.getElementById("edit_trial_planting_date").getAttribute("value"));
+        var planting_date = document.getElementById("edit_trial_planting_date").getAttribute("value") || '';
+        jQuery('#edit_trial_planting_date').val(planting_date);
+        jQuery('#edit_trial_planting_date').attr( "name", "" );
+        jQuery('#edit_trial_planting_date').parent().parent().removeClass("has-success has-feedback");
+        jQuery('#edit_trial_planting_date').parent().siblings('#change_indicator').remove();
 
         jQuery('#edit_trial_harvest_date').daterangepicker(
           {"singleDatePicker": true, "autoApply": true,},
           function(start) { harvestDate = start.format('YYYY-MM-DD');}
         );
-        jQuery('#edit_trial_harvest_date').val(document.getElementById("edit_trial_harvest_date").getAttribute("value"));
+        var harvest_date = document.getElementById("edit_trial_harvest_date").getAttribute("value") || '';
+        jQuery('#edit_trial_harvest_date').val(harvest_date);
+        jQuery('#edit_trial_harvest_date').attr( "name", "" );
+        jQuery('#edit_trial_harvest_date').parent().parent().removeClass("has-success has-feedback");
+        jQuery('#edit_trial_harvest_date').parent().siblings('#change_indicator').remove();
 
         //show dialog
         jQuery('#trial_details_edit_dialog').modal("show");
     });
 
+    jQuery('#clear_planting_date').click(function () {
+      //console.log("clearing planting date");
+      jQuery('#edit_trial_planting_date').val('');
+      highlight_changed_details('edit_trial_planting_date');
+    });
+
+    jQuery('#clear_harvest_date').click(function () {
+      //console.log("clearing harvest date");
+      jQuery('#edit_trial_harvest_date').val('');
+      highlight_changed_details('edit_trial_harvest_date');
+    });
+
+    jQuery('[id^="edit_trial_"]').change(function () {
+      highlight_changed_details(jQuery( this ).attr('id'));
+    });
+
     jQuery('#save_trial_details').click(function () {
       // get all changed (highlighted) options
-      var change_spans = document.getElementsByClassName("form-control-feedback");
-      var changed_elements = '';
-      for(var i=0; i<change_spans.length; i++) {
-        changed_elements += change_spans[i].previousSibling;
-      }
+      var changed_elements = document.getElementsByName("changed");
+      console.log("changed elements =" + changed_elements);
       var change_html = '';
       for(var i=0; i<changed_elements.length; i++) {
-        change_html += "<p> changing "+ changed_elements[i].id + " with old value " + changed_elements[i].defaultValue || changed_elements[i].data("originalValue");
-        change_html += " and new value "+ changed_elements[i].value;
+        var new_value = changed_elements[i].value;
+        var old_value = changed_elements[i].defaultValue || jQuery('#'+changed_elements[i].id).data("originalValue");
+        change_html += "<p> changing "+changed_elements[i].id+" with old value "+old_value+" and new value "+new_value+"</p>";
       }
       console.log(change_html);
 
@@ -476,26 +498,28 @@ function trial_detail_page_setup_dialogs() {
 
 }
 
-function highlight_changed_details(id, val, default_val) {
-  // compare changed value to default if different add highlight class, if same remove highlight
-  if ( !default_val ) {
-  //  console.log("originalValue="+jQuery('#'+id).data("originalValue"));
-    default_val = jQuery('#'+id).data("originalValue");
+function highlight_changed_details(id) {
+  // compare changed value to default and if different add class and feedback span, if same remove them
+  var detail_element = document.getElementById(id);
+  console.log("detail element id = "+console.log(detail_element));
+  var current_value = detail_element.value;
+  var default_value = detail_element.defaultValue;
+  if ( !default_value ) {
+    default_value = jQuery('#'+id).data("originalValue");
   }
-//  console.log("running highlight method . . .");
-  console.log("id="+id+" and val="+val+" and default_val="+default_val);
-  if (val !== default_val ) {
-    console.log("highlighting changed element . . .");
-    jQuery('#'+id).siblings().remove();
-    jQuery('#'+id).parent().parent().addClass("has-warning has-feedback");
-    jQuery('#'+id).parent().append('<span class="glyphicon glyphicon-pencil form-control-feedback" aria-hidden="true"></span><span id="edit_trial_changed_status" class="sr-only">(warning)</span>');
+  console.log("id="+id+" and val="+current_value+" and default_val="+default_value);
+  if ((current_value || default_value) && current_value !== default_value) {
+    console.log("giving feedback for changed detail element . . .");
+    jQuery('#'+id).parent().siblings('#change_indicator').remove();
+    jQuery('#'+id).attr( "name", "changed" );
+    jQuery('#'+id).parent().parent().addClass("has-success has-feedback");
+    jQuery('#'+id).parent().after('<span class="glyphicon glyphicon-pencil form-control-feedback" id="change_indicator" aria-hidden="true" style="right: -15px;"></span>');
   }
   else {
-    console.log("resetting element that was changed back to default_val. . .");
-    jQuery('#'+id).parent().parent().removeClass("has-warning has-feedback");
-    jQuery('#'+id).siblings().remove();
-    //document.getElementById(id).parentElement.parentElement.removeAttribute("class");
-    //document.getElementById(id).parentElement.parentElement.setAttribute("class", "list-group-item");
+    console.log("resetting element that has been changed back to default_value. . .");
+    jQuery('#'+id).attr( "name", "" );
+    jQuery('#'+id).parent().parent().removeClass("has-success has-feedback");
+    jQuery('#'+id).parent().siblings('#change_indicator').remove();
   }
 }
 
