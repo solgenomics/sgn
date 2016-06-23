@@ -41,7 +41,7 @@ jQuery(document).ready(function() {
   jQuery('#create_plant_entries_button').click( function () {
     jQuery('#add_plants_dialog').modal("show");
   });
-  
+
   jQuery('#add_plants_save_button').click( function () {
     add_plants_to_trial();
   });
@@ -49,7 +49,7 @@ jQuery(document).ready(function() {
 });
 
 function add_plants_to_trial() {
-    
+
     jQuery.ajax( {
       url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_subplots/',
       type: 'POST',
@@ -73,7 +73,7 @@ function add_plants_to_trial() {
         alert("An error occurred updating the trial name");
       },
     });
-    
+
 }
 
 function enable_working_modal() {
