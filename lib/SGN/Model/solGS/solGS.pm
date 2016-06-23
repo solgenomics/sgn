@@ -378,33 +378,19 @@ sub has_phenotype {
     my $has_phenotype;
     if ($pr_id) 
     {
-	my $file_cache  = Cache::File->new(cache_root => $self->context->stash->{solgs_cache_dir});
-	$file_cache->purge();
-	
-	my $key        = "phenotype_data_" . $pr_id;
-	my $pheno_file = $file_cache->get($key);
-        
-	no warnings 'uninitialized';
-	
-	if ( -s $pheno_file)
-	{  
-	    $has_phenotype = 'has_phenotype';
-	}
-	else 
-	{
-	    my $pr_stocks  = $self->project_subject_stocks_rs($pr_id);
+	my $pr_stocks  = $self->project_subject_stocks_rs($pr_id);
 
-	    if ($pr_stocks->first)
-	    {
-		my $phenotypes = $self->stock_phenotype_data_rs($pr_stocks);
-		my $data       = $self->structure_phenotype_data($phenotypes);
-	 
-		$has_phenotype = 1 if $data;
-	    }
+	if ($pr_stocks->first)
+	{
+	    my $phenotypes = $self->stock_phenotype_data_rs($pr_stocks);
+	    my $data       = $self->structure_phenotype_data($phenotypes);
+	    
+	    $has_phenotype = 1 if $data;
 	}
+	
     }
 
-	 return $has_phenotype;
+    return $has_phenotype;
 
 }
 
@@ -2020,6 +2006,8 @@ sub phenotypes_by_trait {
         $d .= "\n";
     }
    
+    $d = undef if $d eq '';
+
     return $d;
 }
 
