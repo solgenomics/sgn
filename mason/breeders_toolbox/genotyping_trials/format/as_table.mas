@@ -56,7 +56,8 @@ jQuery(document).ready(function () {
 			       } else {
 			           bgcolor="#FFFFFF";
 			       }
-			       cell = "<br/>" + response.design[well].accession_name + "<br/><br/>";
+			       //cell = "<br/>" + response.design[well].accession_name + "<br/><br/>";
+			       cell = "<br/><a href='/stock/" + response.design[well].accession_id +"/view'>" + response.design[well].accession_name + "</a>  <br/><br/>";
 			   }
 			}
 			trial_plate_view_html = trial_plate_view_html + "<td bgcolor=" + bgcolor + ">" + cell + "</td>";

@@ -81,4 +81,8 @@ jQuery(document).ready(function ($) {
         $('#create_trait_file_dialog').dialog("open");
     });
 
+    jQuery('#delete_fieldbook_layout_link').click( function() { 
+	alert('Layout deleted successfully.');
+    });  
+
 });

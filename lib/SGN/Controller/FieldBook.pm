@@ -130,7 +130,6 @@ sub trial_field_book_download : Path('/fieldbook/trial_download/') Args(1) {
     $c->res->body($contents);
 }
 
-
 sub tablet_trait_file_download : Path('/fieldbook/trait_file_download/') Args(1) { 
     my $self  =shift;
     my $c = shift;
@@ -141,6 +140,7 @@ sub tablet_trait_file_download : Path('/fieldbook/trait_file_download/') Args(1)
     print STDERR "\n\n\nfile name:".$file_row->basename."\n";
     my $contents = read_file($file_destination);
     my $file_name = $file_row->basename;
+
     $c->res->content_type('Application/trt');
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
     $c->res->body($contents);
@@ -186,6 +186,24 @@ sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(
     $c->res->content_type('Application/xls');
     $c->res->header('Content-Disposition', qq[attachment; filename="fieldbook_layout_$trial_name.xls"]);
     $c->res->body($contents);
+}
+
+sub delete_fieldbook_layout : Path('/fieldbook/delete_FB_layout/') Args(1) {
+     my $self  =shift;
+     my $c = shift;
+     my $json = new JSON;
+     my $file_id = shift;
+     my $decoded;
+     if ($file_id){
+		 $decoded = $json->allow_nonref->utf8->decode($file_id);
+     }
+	print STDERR Dumper($file_id);
+	print "File ID: $file_id\n"; 
+     my $dbh = $c->dbc->dbh();
+     my $h = $dbh->prepare("delete from metadata.md_files where file_id=?;");
+     $h->execute($decoded);
+     print STDERR "Layout deleted successfully.\n";
+	$c->response->redirect('/fieldbook');	
 }
 
 1;

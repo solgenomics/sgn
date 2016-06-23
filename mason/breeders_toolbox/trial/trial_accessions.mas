@@ -30,6 +30,7 @@ jQuery(document).ready(function () {
 		trial_accessions_html = trial_accessions_html + "</tbody></table>";
 		jQuery('#trial_accessions_html').empty();
 		jQuery('#trial_accessions_html').html(trial_accessions_html);
+        enable_accessions_datatable();
 	    },
 	    error: function(response){
 	        jQuery("#working_modal").modal("hide");
@@ -39,5 +40,9 @@ jQuery(document).ready(function () {
     });
 
 });
+
+function enable_accessions_datatable() {
+    jQuery('#trial_accessions_table').DataTable();
+}
 
 </script>
