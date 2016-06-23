@@ -1943,6 +1943,7 @@ sub solgs_details_trait :Path('/solgs/details/trait/') Args(1) {
 	$ret->{name} = $c->stash->{trait_name};
 	$ret->{abbr} = $c->stash->{trait_abbr};
 	$ret->{id}   = $c->stash->{trait_id};
+	$ret->{status}     = 1;
     }
 
     $ret = to_json($ret);
