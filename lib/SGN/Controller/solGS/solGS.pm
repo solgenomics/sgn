@@ -260,22 +260,18 @@ sub projects_links {
 	unless ($dummy_name || $dummy_desc || !$pr_name )
 	{   
 	    $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
-	    
-	    if (!$is_gs || $is_gs !~ /genomic selection/)
+	 
+	    if ($is_gs =~ /genomic selection|training population/)
 	    {
-		my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");		 		 
-		if (-e $pheno_file)
-		{
-		    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
-		}
-		else 
-		{		 
-		    $has_phenotype = 1;
-		}
+		$has_phenotype = 1; 
 	    }
 	    else 
 	    {
-		$has_phenotype = 1;
+		my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");
+		if (!-e $pheno_file)
+		{
+		    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+		}
 	    }
 	}
 
