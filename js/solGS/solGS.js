@@ -13,7 +13,7 @@ JSAN.use('jquery.form');
 var solGS = solGS || function solGS () {};
 
 solGS.waitPage = function (page, args) {
-    alert('wait.. ' + page)
+
     var matchItems = 'solgs/population/'
 	+ '|solgs/populations/combined/' 
 	+ '|solgs/trait/' 
@@ -25,7 +25,6 @@ solGS.waitPage = function (page, args) {
     if ( page.match(matchItems)) {
     	askUser(page, args);
     } else {
-	alert('no match')
     	blockPage(page);
     }
    
@@ -609,6 +608,10 @@ jQuery(document).ready(function (){
 
 
 solGS.getTraitDetails = function (traitId) {
+  
+    if (!traitId) {
+	traitId = jQuery("#trait_id").val();
+    }
  
     if (traitId) {	
 	jQuery.ajax({
