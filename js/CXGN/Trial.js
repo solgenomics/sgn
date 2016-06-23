@@ -374,6 +374,9 @@ function trial_detail_page_setup_dialogs() {
           {"singleDatePicker": true, "autoApply": true,},
           function(start) { plantingDate = start.format('YYYY-MM-DD')}
         );
+
+        set_daterangepicker_default('planting_date');
+
         var planting_date = document.getElementById("edit_trial_planting_date").getAttribute("value") || '';
         jQuery('#edit_trial_planting_date').val(planting_date);
         jQuery('#edit_trial_planting_date').attr( "name", "" );
@@ -384,6 +387,8 @@ function trial_detail_page_setup_dialogs() {
           {"singleDatePicker": true, "autoApply": true,},
           function(start) { harvestDate = start.format('YYYY-MM-DD');}
         );
+
+        set_daterangepicker_default('harvest_date');
         var harvest_date = document.getElementById("edit_trial_harvest_date").getAttribute("value") || '';
         jQuery('#edit_trial_harvest_date').val(harvest_date);
         jQuery('#edit_trial_harvest_date').attr( "name", "" );
@@ -502,7 +507,16 @@ function trial_detail_page_setup_dialogs() {
 
 }
 
-function highlight_changed_details(id) { // compare changed value to default. If different add class and feedback span, if same remove them
+function set_daterangepicker_default (date_type) {
+  var default_value = document.getElementById("edit_trial_"+date_type).getAttribute("value") || '';
+  var daterangepicker = jQuery('#edit_trial_'+date_type);
+  daterangepicker.val(default_value);
+  daterangepicker.attr( "name", "" );
+  daterangepicker.parent().parent().removeClass("has-success has-feedback");
+  daterangepicker.parent().siblings('#change_indicator').remove();
+}
+
+function highlight_changed_details (id) { // compare changed value to default. If different add class and feedback span, if same remove them
   var detail_element = document.getElementById(id);
   console.log("detail element id = "+console.log(detail_element));
   var current_value = detail_element.value;
