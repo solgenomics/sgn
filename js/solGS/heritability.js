@@ -106,8 +106,6 @@ function getRegressionData () {
                     
                 jQuery("#heritability_message").empty();
                 plotRegressionData(regressionData);
-                jQuery("#trait_histogram_canvas").empty();
-                getHistogramData();
             }
         },
         error: function(response) {                    
