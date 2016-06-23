@@ -395,13 +395,11 @@ function trial_detail_page_setup_dialogs() {
     });
 
     jQuery('#clear_planting_date').click(function () {
-      //console.log("clearing planting date");
       jQuery('#edit_trial_planting_date').val('');
       highlight_changed_details('edit_trial_planting_date');
     });
 
     jQuery('#clear_harvest_date').click(function () {
-      //console.log("clearing harvest date");
       jQuery('#edit_trial_harvest_date').val('');
       highlight_changed_details('edit_trial_harvest_date');
     });
@@ -414,16 +412,22 @@ function trial_detail_page_setup_dialogs() {
       // get all changed (highlighted) options
       var changed_elements = document.getElementsByName("changed");
       console.log("changed elements =" + changed_elements);
-      var change_html = '';
       for(var i=0; i<changed_elements.length; i++) {
+        var id = changed_elements[i].id;
         var new_value = changed_elements[i].value;
-        var old_value = changed_elements[i].defaultValue || jQuery('#'+changed_elements[i].id).data("originalValue");
-        change_html += "<p> changing "+changed_elements[i].id+" with old value "+old_value+" and new value "+new_value+"</p>";
+        if(jQuery('#'+id).is("select")) {
+          new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
+        }
+        var label = jQuery('[for="'+id+'"]').text(); //jQuery('#'+id).parent().parent().siblings('#label').text();
+        console.log("Setting "+label+" to "+new_value);
       }
-      console.log(change_html);
-
       // close edit dialog, open working modal, run respective change functions with the new values
       jQuery('#trial_details_edit_dialog').modal("hide");
+      jQuery('#working').dialog("open");
+
+
+
+
       // on success close working modal and present confirmation of successful changes
 
       // if error present error dialog with message
@@ -498,8 +502,7 @@ function trial_detail_page_setup_dialogs() {
 
 }
 
-function highlight_changed_details(id) {
-  // compare changed value to default and if different add class and feedback span, if same remove them
+function highlight_changed_details(id) { // compare changed value to default. If different add class and feedback span, if same remove them
   var detail_element = document.getElementById(id);
   console.log("detail element id = "+console.log(detail_element));
   var current_value = detail_element.value;
@@ -609,9 +612,7 @@ function save_trial_year() {
 function save_harvest_date() {
     var trial_id = get_trial_id();
     var harvest_date = jQuery('#harvest_date_picker').val();
-    var checked_date = check_date(harvest_date);
 
-    if (checked_date) {
 	jQuery.ajax( {
 	    url : '/ajax/breeders/trial/'+trial_id+'/harvest_date',
 	    data: { 'harvest_date' : checked_date },
@@ -631,15 +632,11 @@ function save_harvest_date() {
 	    }
 	});
 
-    }
 }
 
 function save_planting_date() {
     var trial_id = get_trial_id();
     var planting_date = jQuery('#planting_date_picker').val();
-    var checked_date = check_date(planting_date);
-
-    if (checked_date) {
 	jQuery.ajax( {
 	    url : '/ajax/breeders/trial/'+trial_id+'/planting_date',
 	    data: { 'planting_date' : checked_date },
@@ -658,21 +655,6 @@ function save_planting_date() {
 		alert('An error test.');
 	    }
 	});
-
-    }
-}
-
-function check_date(d) {
-    var regex = new RegExp("^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$");
-
-    var match = regex.exec(d);
-    if (match === null || match[1] > 12 || match[1] < 1 || match[2] >31 || match[2] < 1 || match[3]>2030 || match[3] < 1950) {
-	alert("This is not a valid date!");
-	return 0;
-    }
-    // save as year/month/day plus time
-    return match[3]+'/'+match[1]+'/'+match[2]+" 00:00:00";
-
 }
 
 function save_trial_description() {

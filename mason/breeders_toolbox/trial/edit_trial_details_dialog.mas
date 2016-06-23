@@ -29,7 +29,7 @@ $trial_description
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_breeding_program">Breeding Program: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <select class="form-control" id="edit_trial_breeding_program" value="<%$breeding_program%>"></select>
@@ -37,7 +37,7 @@ $trial_description
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Location: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_location">Location: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <select class="form-control" id="edit_trial_location" value="<%$location%>"></select>
@@ -45,7 +45,7 @@ $trial_description
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Year: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_year">Year: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <select class="form-control" id="edit_trial_year" value="<%$year%>"></select>
@@ -53,7 +53,7 @@ $trial_description
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Trial Type: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_type">Trial Type: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <select class="form-control" id="edit_trial_type" value="<%$trial_type%>"></select>
@@ -61,7 +61,7 @@ $trial_description
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Planting Date: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_planting_date">Planting Date: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <span class="input-group-btn"><button class="btn btn-default" id="clear_planting_date" type="button">Clear</button></span>
@@ -70,7 +70,7 @@ $trial_description
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Harvest Date: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_harvest_date">Harvest Date: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <span class="input-group-btn"><button class="btn btn-default" id="clear_harvest_date" type="button">Clear</button></span>
@@ -79,7 +79,7 @@ $trial_description
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Description: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_description">Description: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <textarea class="form-control" id="edit_trial_description" rows="5"><%$trial_description%></textarea>
