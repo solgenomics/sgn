@@ -38,11 +38,10 @@ jQuery(document).ready(function() {
 
       jQuery('#progeny_information_div').html(html);
 
-      var progeny = response.progeny || [];
-      var reversed_progeny = [];
-      progeny.forEach(function(accession_array) {
-        var reversed_array = accession_array.reverse();
-        reversed_progeny.push(reversed_array);
+      var progeny = response.progeny.sort() || [];
+      
+      progeny.forEach(function(accession_info_array) { // swap position of id and uniquename for each progeny array
+        accession_info_array.reverse();
       });
 
       progeny_html = format_options_list(progeny);
@@ -76,7 +75,7 @@ jQuery(document).ready(function() {
 
       jQuery('select').dblclick( function() { // open progeny detail page in new window or tab on double-click
   	    window.open("../../stock/"+this.value+"/view");
-      });  
+      });
     } // close if (response.progeny)
 
 		var parent_html = "";

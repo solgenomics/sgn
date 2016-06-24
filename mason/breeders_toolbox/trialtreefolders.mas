@@ -1,15 +1,21 @@
 
 <%args>
 @locations => ()
-@roles => ()
 $breeding_programs
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
+<link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
+
 <& /breeders_toolbox/folder/folder_set.mas &>
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>
+
+<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
+
+<& /breeders_toolbox/trial/download_trials_phenotypes_dialog.mas &>
 
 <table class="table table-bordered">
   <thead>
@@ -24,11 +30,12 @@ $breeding_programs
         <h4>Search</h4>
         <input type="text" class="form-control input-sm" id="trial_tree_search" placeholder="Search" />
         <hr>
-      <h4>Download Trial</h4>
-      <button class="btn btn-primary" id="download_button" disabled="disabled" title="First Select a Trial to Download">Excel</button>
-      <button class="btn btn-primary" id="download_button_csv" disabled="disabled" title="First Select a Trial to Download">CSV</button><br />
+      <h4>Download Trial Phenotypes</h4>
+      <h5><i>Select multiple trials by holding 'Ctrl'.</i></h5>
+      <button class="btn btn-primary" id="trials_download_phenotypes_button" disabled="disabled" title="First Select Trial(s) to Download">Download Phenotypes</button>
       <hr>
       <h5><i>Double click<br />trial (&nbsp;<span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
+      <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
       <hr>
       <h4>Folders</h4>
       <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
@@ -76,6 +83,7 @@ $breeding_programs
         jQuery('#trial_list').html(html);
         //console.log(html);
         jQuery('#trial_list').jstree( {
+            "core": { 'themes': { 'name': 'proton', 'responsive': true}},
             "valid_children" : [ "folder", "trial", "breeding_program" ],
             "types" : {
                 "breeding_program" : {
@@ -91,7 +99,7 @@ $breeding_programs
             "search" : {  
                  "case_insensitive" : true,    
              },
-          "plugins" : ["html_data","types","search"]
+          "plugins" : ["html_data","types","search"],
 
         });
 
@@ -111,35 +119,13 @@ $breeding_programs
   $('#trial_list').on("changed.jstree", function (e, data) {
     //console.log(data);
        if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'trial') {
-         $('#download_button').removeAttr('disabled');
-         $('#download_button_csv').removeAttr('disabled');
+         $('#trials_download_phenotypes_button').removeAttr('disabled');
        }
        else {
-         $('#download_button').attr('disabled', 'disabled');
-         $('#download_button_csv').attr('disabled', 'disabled');
+         $('#trials_download_phenotypes_button').attr('disabled', 'disabled');
        }
-
-
-         // }
     });
 
-    $('#download_button').on('click', function () {
-        var selected = $('#trial_list').jstree('get_bottom_selected');
-        if (selected.length !== 0) {
-	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
-        }
-        else { alert("No leaf nodes selected for download."); }
-
-    });
-
-    $('#download_button_csv').on('click', function () {
-        var selected = $('#trial_list').jstree('get_bottom_selected');
-        if (selected.length !== 0) {
-	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
-        }
-        else { alert("No leaf nodes selected for download."); }
-
-    });
 
     $("#trial_list").delegate("li", "dblclick", function(event){
       var node = $("#trial_list").jstree("get_node", this);
@@ -158,429 +144,3 @@ $breeding_programs
 
 </script>
 
-<div class="modal fade" id="add_project_dialog" name="add_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addProjectDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addProjectDialog">Add New Trial</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
-	    <div class="form-group">
-      	      <label class="col-sm-3 control-label">Trial Name: </label>
-      	      <div class="col-sm-9">
-		<input class="form-control" id="new_trial_name" name="new_trial_name" type="text" />
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-3 control-label">Year(s): </label>
-      	      <div class="col-sm-9">
-		<input class="form-control" id="add_project_year" name="add_project_year" type="text" />
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-3 control-label">Location: </label>
-      	      <div class="col-sm-9">
-		<select class="form-control" id="add_project_location" name="add_project_location">
-      		<%perl>foreach my $location (@locations) { print "
-      		  <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
-      		</%perl>
-    		</select>
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-3 control-label">Breeding Program: </label>
-      	      <div class="col-sm-9">
-		<select class="form-control" id="select_breeding_program" name="select_breeding_program">
-      		<%perl>foreach my $program (@$breeding_programs) {
-         	  print "<option value='".@$program[1]."'>".@$program[1]."</option>"; }
-      		</%perl>
-    		</select>
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-3 control-label">Description: </label>
-      	      <div class="col-sm-9">
-	        <textarea class="form-control" id="add_project_description" name="add_project_description" form="create_new_trial_form" ></textarea>
-              </div>
-	    </div>
-	    <div id="format_type_radio" style="display: none">
-	      <div class="form-group">
-      	        <label class="col-sm-2 control-label">Create Using Trial Design Tool: </label>
-      	        <div class="col-sm-10">
-	          <input type="radio" class="format_type" id="format_radio3" name="radio" value="create_with_design_tool" checked="checked" />
-                </div>
-	      </div>
-	      <div class="form-group">
-      	        <label class="col-sm-2 control-label">Create From Uploaded File: </label>
-      	        <div class="col-sm-10">
-	          <input type="radio" class="format_type" id="format_radio2" name="radio" value="create_with_upload" />
-                </div>
-	      </div>
-	      <div class="form-group">
-      	        <label class="col-sm-2 control-label">Create Empty Trial: </label>
-      	        <div class="col-sm-10">
-	          <input type="radio" class="format_type" id="format_radio1" name="radio" value="empty" />
-                </div>
-	      </div>
-	    </div>
-	    <div id="get_file_upload_data" style="display: none">
-	      <div class="form-group">
-      	        <label class="col-sm-2 control-label">Upload File: </label>
-      	        <div class="col-sm-10">
-	          <input type="file" name="trial_upload_file" id="trial_upload_file" encoding="multipart/form-data" />
-                </div>
-	      </div>
-	    </div>
-	    <div id="trial_design_info" style="display: none">
-	      <hr>
-	      <div class="form-group">
-      	        <label class="col-sm-3 control-label">Design Type: </label>
-      	        <div class="col-sm-9">
-	          <select class="form-control" id="select_design_method" name="select_design_method">
-		    <option title="generates completely a randomized design with equal or different repetition, using the methods of random number generation in R." value=CRD>Completely Randomized</option>
-        	    <option title="generates Randomized Complete Block Design, using the methods of random number generation in R." value=RCBD>Complete Block</option>
-        	    <option title="creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams." value=Alpha>Alpha Lattice</option>
-        	    <option title="some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once." value=Augmented>Augmented</option>
-		    <option title="Adjustments are calculated using data from all checks" value=MAD>Modified Augmented Design </option>
-
-		    <!--<option value=MADIII>MADIII</option>-->
-		    <!--<option value=MADIV>MADIV</option>-->
-       		    <!--<option value=MADV>MADV</option>-->
-      		  </select>
-                </div>
-	      </div>
-	    </div>
-	    <div id="trial_design_more_info" style="display: none">
-	      <div class="form-group form-group-sm" >
-      	        <label class="col-sm-7 control-label">List of Stocks to Include (Required): <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
-      	        <div class="col-sm-5" id="select_list" name="select_list">
-                </div>
-	      </div>
-	      <div class="form-group form-group-sm" id="show_list_of_checks_section" style="display: none" >
-      	        <label class="col-sm-7 control-label">List of Checks to Include (Required): </label>
-      	        <div class="col-sm-5" id="list_of_checks_section" >
-                </div>
-	      </div>
-	      <div id="design_info" name="design_info">
-	        <div class="form-group form-group-sm" id="rep_count_section" style="display: none">
-      	          <label class="col-sm-7 control-label">Number of Replicates (Required): </label>
-      	          <div class="col-sm-5" >
-		    <input class="form-control" id="rep_count" name="rep_count" />
-                  </div>
-	        </div>
-		<div class="form-group form-group-sm" id="block_number_section" style="display: none">
-      	          <label class="col-sm-7 control-label">Number of Blocks (Required): </label>
-      	          <div class="col-sm-5" >
-		    <input class="form-control" id="block_number" name="block_number" />
-                  </div>
-	        </div>
-		<div class="form-group form-group-sm" id="row_number_section" style="display: none">
-      	          <label class="col-sm-7 control-label">Number of Field Rows (Required): </label>
-      	          <div class="col-sm-5" >
-		    <input class="form-control" id="row_number" name="row_number" />
-                  </div>
-	        </div>
-		<div class="form-group form-group-sm" id="row_number_per_block_section" style="display: none">
-      	          <label class="col-sm-7 control-label">Number of Rows Per Block (Optional): </label>
-      	          <div class="col-sm-5" >
-		    <input class="form-control" id="row_number_per_block" name="row_number_per_block" />
-                  </div>
-	        </div>
-		<div id="other_parameter_section" style="display:none">
-		  <hr>
-		  <div class="form-group">
-      	            <label class="col-sm-4 control-label">Show Optional Parameters: </label>
-      	            <div class="col-sm-8" >
-		      <input type="checkbox" id="show_other_parameter_options" />
-                    </div>
-	          </div>
-		  <div id="other_parameter_options" style="display:none">
-		    <div class="form-group form-group-sm">
-      	              <label class="col-sm-7 control-label">Column Number Per Block: </label>
-      	              <div class="col-sm-5" >
-		        <input type="text" class="form-control" id="col_number_per_block" name="col_number_per_block" />
-                      </div>
-	            </div>
-		    <div class="form-group form-group-sm">
-      	              <label class="col-sm-7 control-label">Number of Field Columns: </label>
-      	              <div class="col-sm-5" >
-		        <input type="text" class="form-control" id="col_number" name="col_number" />
-                      </div>
-	            </div>
-		  </div>
-		</div>
-		<div class="form-group form-group-sm" id="block_size_section" style="display: none">
-      	          <label class="col-sm-7 control-label">Block Size (Required): </label>
-      	          <div class="col-sm-5" >
-		    <input type="text" class="form-control" id="block_size" name="block_size" />
-                  </div>
-	        </div>
-		<div class="form-group form-group-sm" id="max_block_size_section" style="display: none">
-      	          <label class="col-sm-7 control-label">Maximum Block Size (Required): </label>
-      	          <div class="col-sm-5" >
-		    <input type="text" class="form-control" id="max_block_size" name="block_size" />
-                  </div>
-	        </div>
-		<hr>
-		<div class="form-group" >
-      	          <label class="col-sm-4 control-label">Custom Plot Naming/Numbering: </label>
-      	          <div class="col-sm-8" >
-		    <input type="checkbox" id="show_plot_naming_options" />
-                  </div>
-	        </div>
-		<div id="plot_naming_options" style="display: none">
-		  <div class="form-group form-group-sm" >
-      	            <label class="col-sm-7 control-label">Plot Prefix: </label>
-      	            <div class="col-sm-5" >
-		      <input type="text" class="form-control" id="plot_prefix" name="plot_prefix" />
-                    </div>
-	          </div>
-		  <div class="form-group form-group-sm" >
-      	            <label class="col-sm-7 control-label">Plot Start Number: </label>
-      	            <div class="col-sm-5" >
-		      <input type="text" class="form-control" id="start_number" name="start_number" />
-                    </div>
-	          </div>
-		  <div class="form-group form-group-sm" >
-      	            <label class="col-sm-7 control-label">Plot Number Increment: </label>
-      	            <div class="col-sm-5" >
-		      <input type="text" class="form-control" id="increment" name="increment" />
-                    </div>
-	          </div>
-		</div>
-	      </div>
-	    </div>
-	  </form>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="new_trial_submit" id="new_trial_submit">Add Trial</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="upload_trial_error_display" name="upload_trial_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadTrialErrorDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadTrialErrorDialog">Errors In Uploaded File</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <table>
-    	  <tbody></tbody>
-  	  </table>
-	</div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="trial_design_confirm" name="trial_design_confirm" tabindex="-1" role="dialog" aria-labelledby="addTrialConfirmDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addTrialConfirmDialog">Confirm Trial Design</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <p><span class="ui-icon ui-icon-check"></span>Trial Is Valid<br>The following trial will be added</p>
-  	  <button class="btn btn-info btn-sm" id="view_trial_layout_button" >View Trial Layout</button>
-  	  <hr>
-  	  <div id="trial_design_information">
-	  </div>
-	</div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="new_trial_confirm_submit" id="new_trial_confirm_submit">Confirm</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="trial_design_view_layout" name="trial_design_view_layout" tabindex="-1" role="dialog" aria-labelledby="addTrialDesignViewDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addTrialDesignViewDialog">Trial Design Layout</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <p><span class="ui-icon ui-icon-info"></span>Trial Layout</p>
-	  <div id="trial_design_view_layout_return">
-	  </div>
-	</div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="trial_saved_dialog_message" name="trial_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addTrialSavedDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addTrialSavedDialog">Trial Saved</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <p>
-    	  <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    	  The trial was saved successfully
-  	  </p>
-	</div>
-      </div>
-      <div class="modal-footer">
-        <button id="trial_saved_dialog_message_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="upload_trial_dialog" name="upload_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialDialog">
-  <div class="modal-dialog " role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadTrialDialog">Upload Trial</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <&| /page/explanation.mas, title=>'Template information' &>
-    	    <p>
-      	    <b>File format information</b>
-      	    <br>
-      	    <a id="trial_upload_spreadsheet_format_info">Spreadsheet format</a>
-    	    </p>
-  	  </&>
-
-	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form">
-	    <div class="form-group">
-      	      <label class="col-sm-3 control-label">Breeding Program: </label>
-      	      <div class="col-sm-9">
-		<select class="form-control" id="trial_upload_breeding_program" name="trial_upload_breeding_program">
-      		<%perl>
-      		  foreach my $program (@$breeding_programs) {
-         	    print "<option value='".@$program[1]."'>".@$program[1]."</option>";
-      		  }
-      		</%perl>
-    		</select>
-              </div>
-	    </div>
-	    <div class="form-group form-group-sm">
-      	      <label class="col-sm-3 control-label">Location: </label>
-      	      <div class="col-sm-9" >
-		<select class="form-control" id="trial_upload_location" name="trial_upload_location">
-      		<%perl>foreach my $location (@locations) { print "
-        	  <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
-      		</%perl>
-    		</select>
-              </div>
-	    </div>
-	    <div class="form-group form-group-sm">
-      	      <label class="col-sm-3 control-label">Trial Name: </label>
-      	      <div class="col-sm-9" >
-		<input type="text" class="form-control" id="trial_upload_name" name="trial_upload_name" />
-              </div>
-	    </div>
-	    <div class="form-group form-group-sm">
-      	      <label class="col-sm-3 control-label">Year(s): </label>
-      	      <div class="col-sm-9" >
-		<input type="text" class="form-control" id="trial_upload_year" name="trial_upload_year" />
-              </div>
-	    </div>
-	    <div class="form-group form-group-sm">
-      	      <label class="col-sm-3 control-label">Description: </label>
-      	      <div class="col-sm-9" >
-		<textarea class="form-control" id="trial_upload_description" name="trial_upload_description" form="upload_trial_form" ></textarea>
-              </div>
-	    </div>
-	    <div class="form-group form-group-sm">
-      	      <label class="col-sm-3 control-label">Design Type: </label>
-      	      <div class="col-sm-9" >
-		<select class="form-control" id="trial_upload_design_method" name="trial_upload_design_method">
-      		  <option value=CRD>Completely Randomized</option>
-      		  <option value=RCBD>Complete Block</option>
-      		  <option value=Alpha>Alpha Lattice</option>
-      		  <option value=Augmented>Augmented</option>
-      		  <option value=MAD>Modified Augmented Design</option>
-
-    		  <!--  <option value=MADIII>MADIII</option>   -->
-    		  <!--  <option value=MADIV>MADIV</option> -->
-    		  <!--  <option value=MADV>MADV</option> -->
-    		</select>
-              </div>
-	    </div>
-	    <div class="form-group form-group-sm">
-      	      <label class="col-sm-3 control-label">Upload File: </label>
-      	      <div class="col-sm-9" >
-		<input type="file" name="trial_uploaded_file" id="trial_uploaded_file" encoding="multipart/form-data" />
-              </div>
-	    </div>
-	  </form>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="upload_trial_submit" id="upload_trial_submit">Upload Trial</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="trial_upload_spreadsheet_info_dialog" name="trial_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialInfoDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadTrialInfoDialog">Upload Template Information</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <&| /breeders_toolbox/trial/trial_spreadsheet_upload_format_info.mas &>
-  	  </&>
-	</div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="trial_upload_success_dialog_message" name="trial_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadTrialSuccessDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadTrialSuccessDialog">Upload Successful</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <p>
-    	  <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    	  The trial file was uploaded successfully
-  	  </p>
-	</div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>

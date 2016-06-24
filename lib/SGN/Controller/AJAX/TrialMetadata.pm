@@ -65,11 +65,12 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     my $error = "";
 
     if ($datatype eq 'phenotypes') {
-	$error = $c->stash->{trial}->delete_metadata($c->stash->{schema}, $c->dbic_schema("CXGN::Phenome::Schema"));
+	$error = $c->stash->{trial}->delete_phenotype_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
 	$error .= $c->stash->{trial}->delete_phenotype_data();
     }
 
     elsif ($datatype eq 'layout') {
+	$error = $c->stash->{trial}->delete_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
 	$error = $c->stash->{trial}->delete_field_layout();
     }
     elsif ($datatype eq 'entry') {
@@ -348,10 +349,10 @@ sub trial_type_GET : Chained('trial') PathPart('type') Args(0) {
     $c->stash->{rest} = { type => $type };
 }
 
-sub trial_type_POST : Chained('trial') PathPart('type') Args(1) {
+sub trial_type_POST : Chained('trial') PathPart('type') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $type = shift;
+    my $type = $c->req->param('type');
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
@@ -396,7 +397,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     my @phenotype_data;
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {
-	push @phenotype_data, [ qq{<a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a>}, $average, $min, $max, $stddev, $count, qq{<a href="/breeders/trial/$trial_id/trait/$trait_id"><span class="glyphicon glyphicon-stats"></span></a>} ];
+	push @phenotype_data, [ qq{<a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a>}, $average, $min, $max, $stddev, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} ];
     }
 
     $c->stash->{rest} = { data => \@phenotype_data };
@@ -432,8 +433,9 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
-    my @data = $layout->get_accession_names();
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_accessions();
 
     $c->stash->{rest} = { accessions => \@data };
 }
@@ -443,8 +445,9 @@ sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
-    my @data = $layout->get_control_names();
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_controls();
 
     $c->stash->{rest} = { accessions => \@data };
 }
@@ -454,8 +457,9 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
-    my @data = $layout->get_plot_names();
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_plots();
 
     $c->stash->{rest} = { plots => \@data };
 }

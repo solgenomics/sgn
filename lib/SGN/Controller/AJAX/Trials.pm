@@ -19,7 +19,6 @@ __PACKAGE__->config(
    );
 
 
-
 sub get_trials : Path('/ajax/breeders/get_trials') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -30,8 +29,8 @@ sub get_trials : Path('/ajax/breeders/get_trials') Args(0) {
 
     my %data = ();
     foreach my $project (@$projects) { 
-	my $trials = $p->get_trials_by_breeding_program($project->[0]);
-	$data{$project->[1]} = $trials;
+        my $trials = $p->get_trials_by_breeding_program($project->[0]);
+        $data{$project->[1]} = $trials;
 
     }
 
@@ -82,5 +81,6 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     }
     close($fh);
 
+    #print STDERR $html;
     $c->stash->{rest} = { html => $html };
 }

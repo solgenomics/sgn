@@ -4,13 +4,16 @@ use Moose::Role;
 use Spreadsheet::ParseExcel;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 sub _validate_with_plugin {
     print STDERR "Check 3.1.1 ".localtime();
   my $self = shift;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
-  my @errors;
+  my %errors;
+  my @error_messages;
+  my %missing_accessions;
   my %supported_trial_types;
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
@@ -25,8 +28,9 @@ sub _validate_with_plugin {
   #try to open the excel file and report any errors
   $excel_obj = $parser->parse($filename);
   if ( !$excel_obj ) {
-    push @errors,  $parser->error();
-    $self->_set_parse_errors(\@errors);
+    push @error_messages, $parser->error();
+    $errors{'error_messages'} = \@error_messages;
+    $self->_set_parse_errors(\%errors);
     return;
   }
 
@@ -34,15 +38,17 @@ sub _validate_with_plugin {
 
   $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
   if (!$worksheet) {
-      push @errors, "Spreadsheet must be on 1st tab in Excel (.xls) file";
-      $self->_set_parse_errors(\@errors);
+      push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+      $errors{'error_messages'} = \@error_messages;
+      $self->_set_parse_errors(\%errors);
       return;
   }
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
   if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
-    push @errors, "Spreadsheet is missing header or contains no rows";
-    $self->_set_parse_errors(\@errors);
+    push @error_messages, "Spreadsheet is missing header or contains no rows";
+    $errors{'error_messages'} = \@error_messages;
+    $self->_set_parse_errors(\%errors);
     return;
   }
 
@@ -77,24 +83,24 @@ sub _validate_with_plugin {
   if ($worksheet->get_cell(0,6)) {
     $range_number_head  = $worksheet->get_cell(0,6)->value();
   }
-  if ($worksheet->get_cell(0,7)) { 
+  if ($worksheet->get_cell(0,7)) {
       $row_number_head  = $worksheet->get_cell(0,7)->value();
   }
 
   if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
-    push @errors, "Cell A1: plot_name is missing from the header";
+    push @error_messages, "Cell A1: plot_name is missing from the header";
   }
   if (!$accession_name_head || $accession_name_head ne 'accession_name') {
-    push @errors, "Cell B1: accession_name is missing from the header";
+    push @error_messages, "Cell B1: accession_name is missing from the header";
   }
   if (!$plot_number_head || $plot_number_head ne 'plot_number') {
-    push @errors, "Cell C1: plot_number is missing from the header";
+    push @error_messages, "Cell C1: plot_number is missing from the header";
   }
   if (!$block_number_head || $block_number_head ne 'block_number') {
-    push @errors, "Cell D1: block_number is missing from the header";
+    push @error_messages, "Cell D1: block_number is missing from the header";
   }
   if ($is_a_control_head && $is_a_control_head ne 'is_a_control') {
-    push @errors, "Cell E1: Column E should contain the header \"is_a_control\"";
+    push @error_messages, "Cell E1: Column E should contain the header \"is_a_control\"";
   }
 
   my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
@@ -102,20 +108,20 @@ sub _validate_with_plugin {
   my $rs = $schema->resultset('Stock::Stock')->search(
       { 'me.is_obsolete' => { '!=' => 't' } },
       {
-       '+select'=> ['me.uniquename', 'me.type_id'], 
+       '+select'=> ['me.uniquename', 'me.type_id'],
        '+as'=> ['uniquename', 'stock_type_id']
       }
   );
 
   my %plot_check;
   my %accession_check;
-  while (my $s = $rs->next()) { 
+  while (my $s = $rs->next()) {
       $plot_check{$s->get_column('uniquename')} = 1;
       $accession_check{$s->get_column('uniquename'), $s->get_column('stock_type_id')} = 1;
   }
 
   for my $row ( 1 .. $row_max ) {
-      print STDERR "Check 01 ".localtime();
+      #print STDERR "Check 01 ".localtime();
     my $row_name = $row+1;
     my $plot_name;
     my $accession_name;
@@ -147,7 +153,7 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell($row,6)) {
       $range_number =  $worksheet->get_cell($row,6)->value();
     }
-    if ($worksheet->get_cell($row, 7)) { 
+    if ($worksheet->get_cell($row, 7)) {
 	$row_number = $worksheet->get_cell($row, 7)->value();
     }
 
@@ -156,73 +162,83 @@ sub _validate_with_plugin {
       next;
     }
 
-      print STDERR "Check 02 ".localtime();
+      #print STDERR "Check 02 ".localtime();
 
     #plot_name must not be blank
     if (!$plot_name || $plot_name eq '') {
-      push @errors, "Cell A$row_name: plot name missing";
+      push @error_messages, "Cell A$row_name: plot name missing";
     } else {
       #plot must not already exist in the database
       if ($plot_check{$plot_name} ) {
-	push @errors, "Cell A$row_name: plot name already exists: $plot_name";
+	push @error_messages, "Cell A$row_name: plot name already exists: $plot_name";
       }
 
       #file must not contain duplicate plot names
       if ($seen_plot_names{$plot_name}) {
-	push @errors, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
+	push @error_messages, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
       }
       $seen_plot_names{$plot_name}=$row_name;
     }
 
-      print STDERR "Check 03 ".localtime();
+      #print STDERR "Check 03 ".localtime();
 
     #accession name must not be blank
     if (!$accession_name || $accession_name eq '') {
-      push @errors, "Cell B$row_name: accession name missing";
+      push @error_messages, "Cell B$row_name: accession name missing";
     } else {
       #accession name must exist in the database
       if (!$accession_check{$accession_name, $accession_cvterm->cvterm_id()}) {
 	  if (!$self->_get_accession($accession_name)) {
-	      push @errors, "Cell B$row_name: accession name does not exist as a stock or as synonym: $accession_name";
+	      push @error_messages, "Cell B$row_name: accession name does not exist as a stock or as synonym: $accession_name";
+          $missing_accessions{$accession_name} = 1;
 	  }
       }
     }
 
-      print STDERR "Check 04 ".localtime();
+      #print STDERR "Check 04 ".localtime();
 
     #plot number must not be blank
     if (!$plot_number || $plot_number eq '') {
-      push @errors, "Cell C$row_name: plot number missing";
+      push @error_messages, "Cell C$row_name: plot number missing";
     }
     #plot number must be a positive integer
     if (!($plot_number =~ /^\d+?$/)) {
-      push @errors, "Cell C$row_name: plot number is not a positive integer: $plot_number";
+      push @error_messages, "Cell C$row_name: plot number is not a positive integer: $plot_number";
     }
     #block number must not be blank
     if (!$block_number || $block_number eq '') {
-      push @errors, "Cell D$row_name: block number missing";
+      push @error_messages, "Cell D$row_name: block number missing";
     }
     #block number must be a positive integer
     if (!($block_number =~ /^\d+?$/)) {
-      push @errors, "Cell D$row_name: block number is not a positive integer: $block_number";
+      push @error_messages, "Cell D$row_name: block number is not a positive integer: $block_number";
     }
     if ($is_a_control) {
       #is_a_control must be either yes, no 1, 0, or blank
       if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
-	push @errors, "Cell E$row_name: is_a_control is not either yes, no 1, 0, or blank: $is_a_control";
+	push @error_messages, "Cell E$row_name: is_a_control is not either yes, no 1, 0, or blank: $is_a_control";
       }
     }
   }
 
-  #store any errors found in the parsed file to parse_errors accessor
-  if (scalar(@errors) >= 1) {
-    $self->_set_parse_errors(\@errors);
-    return;
-  }
+    if (scalar( keys %missing_accessions) > 0) {
+        my @missing_accessions_list;
+        foreach (keys %missing_accessions){
+            push @missing_accessions_list, $_;
+        }
+        $errors{'missing_accessions'} = \@missing_accessions_list;
+    }
+
+    #store any errors found in the parsed file to parse_errors accessor
+    if (scalar(@error_messages) >= 1) {
+        $errors{'error_messages'} = \@error_messages;
+        $self->_set_parse_errors(\%errors);
+        return;
+    }
 
     print STDERR "Check 3.1.3 ".localtime();
 
-  return 1; #returns true if validation is passed
+    return 1; #returns true if validation is passed
 
 }
 
@@ -252,7 +268,7 @@ sub _parse_with_plugin {
     my $block_number;
     my $is_a_control;
     my $rep_number;
-    my $range_number; 
+    my $range_number;
     my $row_number;
 
     if ($worksheet->get_cell($row,0)) {
@@ -276,7 +292,7 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,6)) {
       $range_number =  $worksheet->get_cell($row,6)->value();
     }
-    if ($worksheet->get_cell($row,7)) { 
+    if ($worksheet->get_cell($row,7)) {
 	$row_number = $worksheet->get_cell($row, 7)->value();
 
     }
@@ -301,7 +317,7 @@ sub _parse_with_plugin {
     if ($range_number) {
       $design{$key}->{range_number} = $range_number;
     }
-    if ($row_number) { 
+    if ($row_number) {
 	$design{$key}->{row_number} = $row_number;
     }
   }
@@ -356,4 +372,3 @@ sub _get_stock {
 
 
 1;
-

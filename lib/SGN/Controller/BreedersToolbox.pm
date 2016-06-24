@@ -4,7 +4,6 @@ package SGN::Controller::BreedersToolbox;
 use Moose;
 
 use Data::Dumper;
-use CXGN::BreederSearch;
 use SGN::Controller::AJAX::List;
 use CXGN::List::Transform;
 use CXGN::BreedersToolbox::Projects;
@@ -64,22 +63,9 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     my $breeding_programs = $projects->get_breeding_programs();
 
-    my %trials_by_breeding_project = ();
-
-    foreach my $bp (@$breeding_programs) {
-	#print STDERR "RETRIEVING TRIALS FOR $bp->[1]\n";
-	$trials_by_breeding_project{$bp->[1]}= $projects->get_trials_by_breeding_program($bp->[0]);
-    }
-
-    #print STDERR Dumper(\%trials_by_breeding_project);
-
-    $trials_by_breeding_project{'Other'} = $projects->get_trials_by_breeding_program();
-
     # use get_all_locations, as other calls for locations can be slow
     #
     $c->stash->{locations} = $projects->get_all_locations();
-
-    $c->stash->{trials_by_breeding_project} = \%trials_by_breeding_project;
 
     $c->stash->{breeding_programs} = $breeding_programs;
 

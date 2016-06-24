@@ -1,0 +1,207 @@
+
+<%args>
+$breeding_programs
+$locations
+</%args>
+
+
+<div class="modal fade" id="upload_trial_dialog" name="upload_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTrialDialog">Upload Trial</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="trial_upload_spreadsheet_format_info">Spreadsheet format</a>
+                        </p>
+                    </&>
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Breeding Program: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="trial_upload_breeding_program" name="trial_upload_breeding_program">
+                                    <%perl>
+                                    foreach my $program (@$breeding_programs) {
+                                        print "<option value='".@$program[1]."'>".@$program[1]."</option>";
+                                    }
+                                    </%perl>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-3 control-label">Location: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="trial_upload_location" name="trial_upload_location">
+                                    <%perl>foreach my $location (@$locations) { print "
+                                        <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
+                                    </%perl>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-3 control-label">Trial Name: </label>
+                            <div class="col-sm-9" >
+                                <input type="text" class="form-control" id="trial_upload_name" name="trial_upload_name" />
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-3 control-label">Year(s): </label>
+                            <div class="col-sm-9" >
+                                <input type="text" class="form-control" id="trial_upload_year" name="trial_upload_year" />
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-3 control-label">Description: </label>
+                            <div class="col-sm-9" >
+                                <textarea class="form-control" id="trial_upload_description" name="trial_upload_description" form="upload_trial_form" ></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-3 control-label">Design Type: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="trial_upload_design_method" name="trial_upload_design_method">
+                                    <option value=CRD>Completely Randomized</option>
+                                    <option value=RCBD>Complete Block</option>
+                                    <option value=Alpha>Alpha Lattice</option>
+                                    <option value=Augmented>Augmented</option>
+                                    <option value=MAD>Modified Augmented Design</option>
+
+                                    <!--  <option value=MADIII>MADIII</option>   -->
+                                    <!--  <option value=MADIV>MADIV</option> -->
+                                    <!--  <option value=MADV>MADV</option> -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <div class="col-sm-9" >
+                                <input type="file" name="trial_uploaded_file" id="trial_uploaded_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_trial_submit" id="upload_trial_submit">Upload Trial</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="trial_upload_spreadsheet_info_dialog" name="trial_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTrialInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Trials may be uploaded in an Excel file (.xls)</b>
+                    <br />
+                    (.xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>plot_name</td>
+                                <td>accession_name</td>
+                                <td>plot_number</td>
+                                <td>block_number</td>
+                                <td>is_a_control</td>
+                                <td>rep_number</td>
+                                <td>range_number</td>
+                                <td>row_number</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    plot_name (must be unique)
+                    <br />
+                    accession_name (must exist in the database)
+                    <br />
+                    plot_number
+                    <br />
+                    block_number
+                    <br />
+                    <br/>
+                    <b>Optional fields:</b>
+                    <br />
+                    is_a_control (type 1 or yes in this field if the plot is a control)
+                    <br />
+                    rep_number (replicate number, numeric)
+                    <br />
+                    range_number (range number, numeric)
+                    <br />
+                    row_number (row number, numeric)
+                    <br />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="trial_upload_success_dialog_message" name="trial_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadTrialSuccessDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTrialSuccessDialog">Upload Successful</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The trial file was uploaded successfully
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_trial_error_display" name="upload_trial_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadTrialErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTrialErrorDialog">Errors In Uploaded File</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="upload_trial_add_missing_accessions_html">
+                    </div>
+
+                    <h3>Trial Upload Error Messages</h3>
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -260,22 +260,35 @@ sub projects_links {
 	unless ($dummy_name || $dummy_desc || !$pr_name )
 	{   
 	    $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
-	    
-	    if (!$is_gs || $is_gs !~ /genomic selection/)
+	 
+	    if ($is_gs =~ /genomic selection|training population/)
 	    {
-		my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");		 		 
-		if (-e $pheno_file)
-		{
-		    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
-		}
-		else 
-		{		 
-		    $has_phenotype = 1;
-		}
+		$has_phenotype = 1; 
 	    }
 	    else 
 	    {
-		$has_phenotype = 1;
+		my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");
+		if (!-e $pheno_file)
+		{
+		    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+
+		    if (!$has_phenotype)
+		    {
+			my $cache_dir = $c->stash->{solgs_cache_dir};
+			my $file_cache  = Cache::File->new(cache_root => $cache_dir);
+			$file_cache->purge();
+
+			my $key        = "phenotype_data_" . $pr_id;
+			my $pheno_file = $file_cache->get($key);
+
+			no warnings 'uninitialized';
+
+			$pheno_file = catfile($cache_dir, "phenotype_data_${pr_id}.txt");
+
+			write_file($pheno_file, "");
+			$file_cache->set($key, $pheno_file, '5 days');
+		    }
+		}
 	    }
 	}
 
@@ -2716,7 +2729,7 @@ sub build_multiple_traits_models {
 
     my $pop_id = $c->stash->{pop_id};
     my $prediction_id = $c->stash->{prediction_pop_id};
-   
+    
     my @selected_traits = $c->req->param('trait_id');
 
     if (!@selected_traits) 
@@ -2724,11 +2737,11 @@ sub build_multiple_traits_models {
 	my $params = $c->stash->{analysis_profile};
 	my $args = $params->{arguments};
 
+	my $json = JSON->new();
+	$args = $json->decode($args);
+
 	if (keys %{$args}) 
-	{
-	    my $json = JSON->new();
-	    $args = $json->decode($args);
-      
+	{     
 	    foreach my $k ( keys %{$args} ) 
 	    {
 		if ($k eq 'trait_id') 
@@ -2834,8 +2847,8 @@ sub build_multiple_traits_models {
 			
                             $traits    .= $r->[0];
                             $traits    .= "\t" unless ($i == $#selected_traits);
-                            $trait_ids .= $trait_id;                                                        
-                        }
+                            $trait_ids .= $trait_id;    
+			}
                     }
                 }
             }
@@ -4007,8 +4020,11 @@ sub create_trait_data {
         
 	my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
        
-	$table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";  	
-    }
+	if ($trait_id)
+	{
+	    $table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";  	
+	} 
+   }
 
     $self->all_traits_file($c);
     my $traits_file =  $c->stash->{all_traits_file};
@@ -4266,8 +4282,26 @@ sub all_gs_traits_list {
 	}
     }
 
-    $traits = $c->model('solGS::solGS')->all_gs_traits();
+    try
+    {
+        $traits = $c->model('solGS::solGS')->all_gs_traits();
+    }
+    catch
+    {
+
+	if ($_ =~ /materialized view \"all_gs_traits\" has not been populated/)
+        {           
+            try
+            {
+                $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
+                $c->model('solGS::solGS')->update_matview_public($mv_name);
+                $traits = $c->model('solGS::solGS')->all_gs_traits();
+            };
+        }
+    };
+
     $c->stash->{all_gs_traits} = $traits;
+
 }
 
 
@@ -5061,15 +5095,15 @@ sub create_cluster_acccesible_tmp_files {
 sub run_async {
     my ($self, $c) = @_;    
 
-    my $dependency            = $c->stash->{dependency};
-    my $dependency_type       = $c->stash->{dependency_type};
-    my $background_job        = $c->stash->{background_job};
-    my $dependent_job         = $c->stash->{dependent_job};
-    my $temp_file_template    = $c->stash->{r_temp_file};  
-    my $job_type              = $c->stash->{job_type};
-    my $model_file            = $c->stash->{gs_model_args_file};
-    my $combine_pops_job_id   = $c->stash->{combine_pops_job_id};
-    my $solgs_tmp_dir         = "'" . $c->stash->{solgs_tempfiles_dir} . "'";
+    my $dependency          = $c->stash->{dependency};
+    my $dependency_type     = $c->stash->{dependency_type};
+    my $background_job      = $c->stash->{background_job};
+    my $dependent_job       = $c->stash->{dependent_job};
+    my $temp_file_template  = $c->stash->{r_temp_file};  
+    my $job_type            = $c->stash->{job_type};
+    my $model_file          = $c->stash->{gs_model_args_file};
+    my $combine_pops_job_id = $c->stash->{combine_pops_job_id};
+    my $solgs_tmp_dir       = "'" . $c->stash->{solgs_tempfiles_dir} . "'";
   
     my $r_script      = $c->stash->{r_commands_file};
     my $r_script_args =  $c->stash->{r_script_args};
@@ -5078,11 +5112,8 @@ sub run_async {
     {
 	$dependency = $combine_pops_job_id;       
     }
-
-    if ($dependency =~ /^:/)
-    {    
-	$dependency =~ s/://;
-    }
+  
+    $dependency =~ s/^://;
 
     my $script_args;
     foreach my $arg (@$r_script_args) 
@@ -5094,16 +5125,20 @@ sub run_async {
     my $report_file = $self->create_tempfile($c, 'analysis_report_args');
     $c->stash->{report_file} = $report_file;
 
-    my $cmd = 'mx-run solGS::DependentJob' 
-    	. ' --dependency_jobs '           . $dependency
+    my $cmd = 'mx-run solGS::DependentJob'
+	. ' --dependency_jobs '           . $dependency
     	. ' --dependency_type '           . $dependency_type
-    	. ' --r_script '                  . $r_script 
-    	. ' --script_args '               . $script_args
-    	. ' --temp_dir '                  . $solgs_tmp_dir
+	. ' --temp_dir '                  . $solgs_tmp_dir
     	. ' --temp_file_template '        . $temp_file_template
     	. ' --analysis_report_args_file ' . $report_file
-    	. ' --gs_model_args_file '        . $model_file
-    	. ' --dependent_type '            . $job_type;
+	. ' --dependent_type '            . $job_type;
+
+     if ($r_script) 
+     {
+	 $cmd .= ' --r_script '          . $r_script 
+	     .  ' --script_args '        . $script_args 
+	     .  ' --gs_model_args_file ' . $model_file;	
+     }
 
     $c->stash->{r_temp_file} = 'run-async';
     $self->create_cluster_acccesible_tmp_files($c);
@@ -5238,7 +5273,7 @@ sub run_r_script {
 	    };
             
 	    $c->stash->{script_error} = "$r_script";
-	}   
+	};  
     }
    
 }

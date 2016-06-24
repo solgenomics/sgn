@@ -32,6 +32,7 @@ Class function (without instantiation):
 package CXGN::List;
 
 use Moose;
+use Data::Dumper;
 
 has 'dbh' => ( isa => 'DBI::db',
 	       is => 'rw',
@@ -457,6 +458,75 @@ sub retrieve_elements_with_ids {
 	push @list, [ $id, $content ];
     }
     return \@list;
+}
+
+sub add_bulk {
+	my $self = shift;
+	my $elements = shift;
+	my %elements_in_list;
+	my @elements_added;
+	my @duplicates;
+
+	#print STDERR Dumper $elements;
+
+	my $q = "SELECT content FROM sgn_people.list join sgn_people.list_item using(list_id) where list.list_id =?";
+	my $h = $self->dbh()->prepare($q);
+	$h->execute($self->list_id());
+	while (my $list_content = $h->fetchrow_array()) {
+		$elements_in_list{$list_content} = 1;
+	}
+
+	$q = "SELECT list_item_id FROM sgn_people.list_item ORDER BY list_item_id DESC LIMIT 1";
+	$h = $self->dbh()->prepare($q);
+	$h->execute();
+	my $list_item_id = $h->fetchrow_array() + 1;
+
+	my $iq = "INSERT INTO sgn_people.list_item (list_item_id, list_id, content) VALUES";
+
+	my $count = 0;
+	eval {
+		$self->dbh()->begin_work;
+
+		my @values;
+		foreach (@$elements) {
+			if (!exists $elements_in_list{$_}){
+				push @values, [$list_item_id, $self->list_id(), $_];
+				$elements_in_list{$_} = 1;
+				push @elements_added, $_;
+				$list_item_id++;
+				$count++;
+			} else {
+				push @duplicates, $_;
+			}
+		}
+
+		my $step = 1;
+		my $num_values = scalar(@values);
+		foreach (@values) {
+			if ($step < $num_values) {
+				$iq = $iq." (".$_->[0].",".$_->[1].",'".$_->[2]."'),";
+			} else {
+				$iq = $iq." (".$_->[0].",".$_->[1].",'".$_->[2]."');";
+			}
+			$step++;
+		}
+		#print STDERR Dumper $iq;
+		if ($count>0){
+			$self->dbh()->do($iq);
+		}
+		$self->dbh()->commit;
+	};
+	if ($@) {
+		$self->dbh()->rollback;
+		return {error => "An error occurred in bulk addition to list. ($@)"};
+	}
+
+	$elements = $self->elements();
+	push @$elements, \@elements_added;
+	$self->elements($elements);
+
+	my %response = (count => $count, duplicates => \@duplicates);
+	return \%response;
 }
 
 
