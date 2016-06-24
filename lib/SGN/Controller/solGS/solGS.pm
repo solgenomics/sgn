@@ -260,22 +260,35 @@ sub projects_links {
 	unless ($dummy_name || $dummy_desc || !$pr_name )
 	{   
 	    $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
-	    
-	    if (!$is_gs || $is_gs !~ /genomic selection/)
+	 
+	    if ($is_gs =~ /genomic selection|training population/)
 	    {
-		my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");		 		 
-		if (-e $pheno_file)
-		{
-		    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
-		}
-		else 
-		{		 
-		    $has_phenotype = 1;
-		}
+		$has_phenotype = 1; 
 	    }
 	    else 
 	    {
-		$has_phenotype = 1;
+		my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");
+		if (!-e $pheno_file)
+		{
+		    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+
+		    if (!$has_phenotype)
+		    {
+			my $cache_dir = $c->stash->{solgs_cache_dir};
+			my $file_cache  = Cache::File->new(cache_root => $cache_dir);
+			$file_cache->purge();
+
+			my $key        = "phenotype_data_" . $pr_id;
+			my $pheno_file = $file_cache->get($key);
+
+			no warnings 'uninitialized';
+
+			$pheno_file = catfile($cache_dir, "phenotype_data_${pr_id}.txt");
+
+			write_file($pheno_file, "");
+			$file_cache->set($key, $pheno_file, '5 days');
+		    }
+		}
 	    }
 	}
 
