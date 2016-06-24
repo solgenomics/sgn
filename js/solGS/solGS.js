@@ -522,9 +522,8 @@ solGS.waitPage = function (page, args) {
 	
     }
 
-////
 }
-////
+
 
 jQuery(document).ready(function (){
  
@@ -597,14 +596,11 @@ jQuery(document).ready(function (){
 		     'data_set_type' : dataSetType,
 		    };
 
-	 var waitPage = solGS.waitPage(page, args);
-	// askUser(page, args);
+	 solGS.waitPage(page, args);
 
      });
     
 });
-
-
 
 
 solGS.getTraitDetails = function (traitId) {
