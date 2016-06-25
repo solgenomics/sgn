@@ -16,7 +16,7 @@
 
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Molecular Biology</li>
-    <li><a href="/tools/insilicopcr">In Silico PCR</a></li>
+    <li><a href="/tools/in_silico_pcr">In Silico PCR</a></li>
     <li><a href="/ted">Tomato Expression Database (TED)</a></li>
 
     <li role="separator" class="divider"></li>
