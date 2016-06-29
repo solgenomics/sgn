@@ -552,7 +552,9 @@ sub set_harvest_date {
 
         $row->value($harvest_event);
         $row->update();
-    }
+    } else {
+			print STDERR "bad check value format when setting plantign date \n";
+		}
 }
 
 sub get_planting_date {
@@ -593,7 +595,9 @@ sub set_planting_date {
 
 	    $row->value($planting_event);
 	    $row->update();
-    }
+    } else {
+			print STDERR "bad check value format when setting plantign date \n";
+		}
 }
 
 

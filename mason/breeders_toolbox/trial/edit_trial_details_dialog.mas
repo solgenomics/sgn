@@ -65,7 +65,7 @@ $trial_description
                     <div class="col-sm-8">
                       <div class="input-group">
                         <span class="input-group-btn"><button class="btn btn-default" id="clear_planting_date" type="button">Clear</button></span>
-                        <input class="form-control" id="edit_trial_planting_date" title="planting_date" type="text" value="<%$harvest_date%>"/>
+                        <input class="form-control" id="edit_trial_planting_date" title="planting_date" type="text" value="<%$planting_date%>"/>
                       </div>
                     </div>
                 </div>

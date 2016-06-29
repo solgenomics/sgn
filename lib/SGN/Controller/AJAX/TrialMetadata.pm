@@ -143,8 +143,14 @@ sub trial_details_POST  {
         $trial->dissociate_project_type();
         $trial->associate_project_type($details->{type});
       }
-      if ($details->{harvest_date}) { $trial->set_harvest_date($details->{harvest_date}) };
-      if ($details->{planting_date}) { $trial->set_planting_date($details->{planting_date}) };
+      if ($details->{planting_date}) {
+        print STDERR "Setting new planting date:" . $details->{planting_date} . "\n";
+        $trial->set_planting_date($details->{planting_date});
+      };
+      if ($details->{harvest_date}) {
+        print STDERR "Setting new harvest date:" . $details->{harvest_date} . "\n";
+        $trial->set_harvest_date($details->{harvest_date});
+      };
       if ($details->{description}) { $trial->set_description($details->{description}) };
     };
 
