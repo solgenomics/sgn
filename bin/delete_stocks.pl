@@ -1,5 +1,23 @@
 
-# delete_stocks.pl -H [host] -D [dbname] -t (for testing only - no deletion takes place).
+=head1 NAME
+
+delete_stocks.pl - delete stocks from a cxgn database
+
+=head1 DESCRIPTION
+
+perl delete_stocks.pl -H [host] -D [dbname] -t (for testing) file
+
+where the file contains a list of uniquenames specifying the stocks to be deleted, one per line.
+
+If the -t flag is provided, the changes will be rolled back in the database.
+
+Note that it may be possible that some stocks have additional connections, such as images, that this script does not delete yet, and so won't be able to delete those stocks.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
 
 use strict;
 use Getopt::Std;
