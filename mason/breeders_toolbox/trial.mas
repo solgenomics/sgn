@@ -444,18 +444,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   </p>
 </div>
 
-<div id="change_breeding_program_dialog">
-  Please select a breeding program for this trial:<br />
-  <div id="change_breeding_program_select_div">
-  </div>
-</div>
-
-<div id="change_trial_year_dialog">
-  Please select a year for this trial:<br />
-  <div id="change_year_select_div">
-  </div>
-</div>
-
 <div id="trial_design_view_layout" title="Trial design layout">
 % print $design_layout_view;
 </div>

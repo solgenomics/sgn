@@ -353,14 +353,15 @@ sub associate_project_type {
     #
     my $type_id = 0;
     foreach my $pt (@project_type_ids) {
-	if ($pt->[1] eq $type) {
+	if ($pt->[0] eq $type) {
 	    $type_id = $pt->[0];
+			$type = $pt->[1];
 	}
     }
 
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->create(
 	{
-	    value => 1,
+	    value => $type,
 	    type_id => $type_id,
 	    project_id => $self->get_trial_id(),
 	}
@@ -1274,7 +1275,7 @@ sub get_controls {
 	my %unique_controls;
 	while(my $rs = $trial_plot_rs->next()) {
 		my $r = $rs->stock()->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
-		
+
 		my $is_a_control;
 		if ($r) {
 			$is_a_control = $r->value();

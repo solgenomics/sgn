@@ -87,6 +87,76 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     $c->stash->{rest} = { message => "Successfully deleted trial data.", success => 1 };
 }
 
+sub trial_details : Chained('trial') PathPart('details') Args(0) ActionClass('REST') {};
+
+sub trial_details_GET   {
+    my $self = shift;
+    my $c = shift;
+
+    my $trial = $c->stash->{trial};
+
+    $c->stash->{rest} = { details => $trial->get_details() };
+
+}
+
+sub trial_details_POST  {
+    my $self = shift;
+    my $c = shift;
+
+    my @categories = $c->req->param("categories[]");
+
+    my $details = {};
+    foreach my $category (@categories) {
+      $details->{$category} = $c->req->param("details[$category]");
+    }
+
+    print STDERR "Details: " . Dumper($details) . "\n";
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+	    $c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial details of this trial.' };
+	    return;
+    }
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = $c->stash->{trial};
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $c->stash->{schema} });
+    my $breeding_program = $program_object->get_breeding_programs_by_trial($trial_id);
+
+    if (! ($c->user() &&  ($c->user->check_roles("curator") || $c->user->check_roles($breeding_program)))) {
+	    $c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the details of a trial." };
+	    return;
+    }
+
+    # use respective set method for each new detail that is defined
+    eval {
+      if ($details->{name}) { $trial->set_name($details->{name}) };
+      if ($details->{breeding_program}) {
+        $program_object->remove_breeding_program_from_trial($program_object->get_breeding_programs_by_trial($trial_id), $trial_id);
+        $program_object->associate_breeding_program_with_trial($details->{breeding_program}, $trial_id);
+      }
+      if ($details->{location}) {
+        $trial->remove_location($trial->get_location()->[0]);
+        $trial->add_location($details->{location});
+      }
+      if ($details->{year}) { $trial->set_year($details->{year}) };
+      if ($details->{type}) {
+        $trial->dissociate_project_type();
+        $trial->associate_project_type($details->{type});
+      }
+      if ($details->{harvest_date}) { $trial->set_harvest_date($details->{harvest_date}) };
+      if ($details->{planting_date}) { $trial->set_planting_date($details->{planting_date}) };
+      if ($details->{description}) { $trial->set_description($details->{description}) };
+    };
+
+    if ($@) {
+	    $c->stash->{rest} = { error => "An error occurred setting the trial details %details $@" };
+    }
+    else {
+	    $c->stash->{rest} = { success => 1 };
+    }
+
+}
+
 sub trial_description : Chained('trial') PathPart('description') Args(0) ActionClass('REST') {};
 
 sub trial_description_GET   {

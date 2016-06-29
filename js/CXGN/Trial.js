@@ -352,6 +352,24 @@ function trial_detail_page_setup_dialogs() {
     });
 
     jQuery('#edit_trial_details').click(function () {
+        // set up handlers
+        jQuery('#clear_planting_date').click(function () {
+          jQuery('#edit_trial_planting_date').val('');
+          highlight_changed_details('edit_trial_planting_date');
+        });
+
+        jQuery('#clear_harvest_date').click(function () {
+          jQuery('#edit_trial_harvest_date').val('');
+          highlight_changed_details('edit_trial_harvest_date');
+        });
+
+        jQuery('[id^="edit_trial_"]').change(function () {
+          highlight_changed_details(jQuery( this ).attr('id'));
+        });
+
+        //save dialog body html for resetting on close
+        var edit_details_body_html = document.getElementById('trial_details_edit_body').innerHTML;
+
         //populate breeding_programs, locations, years, and types dropdowns, and save defaults
         var default_bp = document.getElementById("edit_trial_breeding_program").getAttribute("value");
         get_select_box('breeding_programs', 'edit_trial_breeding_program', { 'default' : default_bp });
@@ -376,7 +394,6 @@ function trial_detail_page_setup_dialogs() {
         );
 
         set_daterangepicker_default('planting_date');
-
         var planting_date = document.getElementById("edit_trial_planting_date").getAttribute("value") || '';
         jQuery('#edit_trial_planting_date').val(planting_date);
         jQuery('#edit_trial_planting_date').attr( "name", "" );
@@ -397,48 +414,40 @@ function trial_detail_page_setup_dialogs() {
 
         //show dialog
         jQuery('#trial_details_edit_dialog').modal("show");
-    });
 
-    jQuery('#clear_planting_date').click(function () {
-      jQuery('#edit_trial_planting_date').val('');
-      highlight_changed_details('edit_trial_planting_date');
-    });
+        //handle cancel and save
+        jQuery('#edit_description_cancel_button').click(function () {
+            reset_edit_details_dialog (edit_details_body_html);
+        });
 
-    jQuery('#clear_harvest_date').click(function () {
-      jQuery('#edit_trial_harvest_date').val('');
-      highlight_changed_details('edit_trial_harvest_date');
-    });
+        jQuery('#save_trial_details').click(function () {
+          // get all changed (highlighted) options
+          var changed_elements = document.getElementsByName("changed");
+          var categories = [];
+          var new_details = {};
+          console.log("changed elements =" + changed_elements);
+          for(var i=0; i<changed_elements.length; i++) {
+            var id = changed_elements[i].id;
+            var new_value = changed_elements[i].value;
+            //var detail_type = changed_elements[i].title;
+            categories.push(changed_elements[i].title);
+            new_details[changed_elements[i].title] = new_value;
+            if(jQuery('#'+id).is("select")) {
+              new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
+            }
+            var label = jQuery('[for="'+id+'"]').text();
+            console.log("Setting "+label+" to "+new_value);
+          }
+          //close and reset edit dialog
+          jQuery('#trial_details_edit_dialog').modal("hide");
+          reset_edit_details_dialog (edit_details_body_html);
 
-    jQuery('[id^="edit_trial_"]').change(function () {
-      highlight_changed_details(jQuery( this ).attr('id'));
-    });
-
-    jQuery('#save_trial_details').click(function () {
-      // get all changed (highlighted) options
-      var changed_elements = document.getElementsByName("changed");
-      console.log("changed elements =" + changed_elements);
-      for(var i=0; i<changed_elements.length; i++) {
-        var id = changed_elements[i].id;
-        var new_value = changed_elements[i].value;
-        if(jQuery('#'+id).is("select")) {
-          new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
-        }
-        var label = jQuery('[for="'+id+'"]').text(); //jQuery('#'+id).parent().parent().siblings('#label').text();
-        console.log("Setting "+label+" to "+new_value);
-      }
-      // close edit dialog, open working modal, run respective change functions with the new values
-      jQuery('#trial_details_edit_dialog').modal("hide");
-      jQuery('#working').dialog("open");
-
-
-
-
-      // on success close working modal and present confirmation of successful changes
-
-      // if error present error dialog with message
+          //save changed trial details
+          console.log("new details ="+new_details);
+          save_trial_details(categories, new_details);
+        });
 
     });
-
 
     jQuery('#delete_phenotype_data_by_trial_id').click(
 	function() {
@@ -540,6 +549,44 @@ function highlight_changed_details (id) { // compare changed value to default. I
   }
 }
 
+
+function reset_edit_details_dialog (body_html) {
+  document.getElementById('trial_details_edit_body').innerHTML = body_html;
+}
+
+function save_trial_details (categories, details) {
+//  jQuery('#working').dialog("open");
+  var trial_id = get_trial_id();
+  alert('New trial details = '+JSON.stringify(details));
+
+  jQuery.ajax( {
+    url: '/ajax/breeders/trial/'+trial_id+'/details/',
+    type: 'POST',
+    data: { 'categories' : categories, 'details' : details },
+    beforeSend: function(){
+      disable_ui();
+    },
+    complete : function(){
+      enable_ui();
+    },
+    success: function(response) {
+      jQuery('#working').dialog("close");
+      if (response.error) {
+        alert(response.error);
+      }
+      else {
+        alert("Successfully updated details");
+        document.location.reload(true);
+      }
+    },
+    error: function(response) {
+      alert("An error occurred updating the trial details");
+    },
+  });
+        // on success close working modal and present confirmation of successful changes
+        // if error present error dialog with message
+}
+
 function associate_breeding_program() {
     var program = jQuery('#breeding_program_select').val();
 
@@ -583,7 +630,6 @@ function save_trial_type(type) {
     jQuery.ajax( {
 	url: '/ajax/breeders/trial/'+trial_id+'/type/',
 	//url: '/ajax/breeders/trial/'+trial_id+'/type/'+type,
-	data: { type:type },
 	type: 'POST',
 	//async: false, //async=false because it needs to finish before page is updated again.
 	data: { 'type' : type },

@@ -17,14 +17,14 @@ $trial_description
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title" id="trialDetailsEditDialog">Edit Trial Details</h4>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" id="trial_details_edit_body">
             <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                 <div class="form-group">
                     <label class="col-sm-3 control-label" for="edit_trial_name">Trial Name: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                        <input class="form-control col-sm-8" id="edit_trial_name" type="text" value="<%$trial_name%>" aria-describedby="edit_trial_name_status"/>
+                        <input class="form-control col-sm-8" id="edit_trial_name" title="name" type="text" value="<%$trial_name%>" aria-describedby="edit_trial_name_status"/>
                       </div>
                     </div>
                 </div>
@@ -32,7 +32,7 @@ $trial_description
                     <label class="col-sm-3 control-label" for="edit_trial_breeding_program">Breeding Program: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                        <select class="form-control" id="edit_trial_breeding_program" value="<%$breeding_program%>"></select>
+                        <select class="form-control" id="edit_trial_breeding_program" title="breeding_program" value="<%$breeding_program%>"></select>
                       </div>
                     </div>
                 </div>
@@ -40,7 +40,7 @@ $trial_description
                     <label class="col-sm-3 control-label" for="edit_trial_location">Location: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                        <select class="form-control" id="edit_trial_location" value="<%$location%>"></select>
+                        <select class="form-control" id="edit_trial_location" title="location" value="<%$location%>"></select>
                       </div>
                     </div>
                 </div>
@@ -48,7 +48,7 @@ $trial_description
                     <label class="col-sm-3 control-label" for="edit_trial_year">Year: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                        <select class="form-control" id="edit_trial_year" value="<%$year%>"></select>
+                        <select class="form-control" id="edit_trial_year" title="year" value="<%$year%>"></select>
                       </div>
                     </div>
                 </div>
@@ -56,7 +56,7 @@ $trial_description
                     <label class="col-sm-3 control-label" for="edit_trial_type">Trial Type: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                        <select class="form-control" id="edit_trial_type" value="<%$trial_type%>"></select>
+                        <select class="form-control" id="edit_trial_type" title="type" value="<%$trial_type%>"></select>
                       </div>
                     </div>
                 </div>
@@ -65,7 +65,7 @@ $trial_description
                     <div class="col-sm-8">
                       <div class="input-group">
                         <span class="input-group-btn"><button class="btn btn-default" id="clear_planting_date" type="button">Clear</button></span>
-                        <input class="form-control" id="edit_trial_planting_date" type="text" value="<%$harvest_date%>"/>
+                        <input class="form-control" id="edit_trial_planting_date" title="planting_date" type="text" value="<%$harvest_date%>"/>
                       </div>
                     </div>
                 </div>
@@ -74,7 +74,7 @@ $trial_description
                     <div class="col-sm-8">
                       <div class="input-group">
                         <span class="input-group-btn"><button class="btn btn-default" id="clear_harvest_date" type="button">Clear</button></span>
-                        <input class="form-control" id="edit_trial_harvest_date" type="text" value="<%$harvest_date%>"/>
+                        <input class="form-control" id="edit_trial_harvest_date" title="harvest_date" type="text" value="<%$harvest_date%>"/>
                       </div>
                     </div>
                 </div>
@@ -82,7 +82,7 @@ $trial_description
                     <label class="col-sm-3 control-label" for="edit_trial_description">Description: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                        <textarea class="form-control" id="edit_trial_description" rows="5"><%$trial_description%></textarea>
+                        <textarea class="form-control" id="edit_trial_description" title="description" rows="5"><%$trial_description%></textarea>
                       </div>
                     </div>
                 </div>
