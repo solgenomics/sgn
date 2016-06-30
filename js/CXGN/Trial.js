@@ -388,24 +388,33 @@ function trial_detail_page_setup_dialogs() {
         jQuery('#edit_trial_type').data("originalValue", default_type);
 
         //create bootstrap daterangepickers for planting and harvest dates
+        var plantingDate;
         planting_date_element = document.getElementById("edit_trial_planting_date");
         var planting_date = planting_date_element.getAttribute("value") || '';
-        planting_date = moment(planting_date, 'YYYY-MMMM-DD').format('MM/DD/YYYY');
+        if (planting_date) { planting_date = moment(planting_date, 'YYYY-MMMM-DD').format('MM/DD/YYYY'); }
         planting_date_element.setAttribute("value", planting_date)
         jQuery("#edit_trial_planting_date").daterangepicker(
-          {"singleDatePicker": true, "autoApply": true,},
-          function(start) { plantingDate = start.format('MM/DD/YYYY')}
+          {"singleDatePicker": true, "autoUpdateInput": false,},
+          function(start) {
+            plantingDate = start.format('YYYY/MM/DD HH:mm:ss');
+            jQuery('#edit_trial_planting_date').val(start.format('MM/DD/YYYY'));
+            highlight_changed_details('edit_trial_planting_date');
+          }
         );
         set_daterangepicker_default(planting_date_element, planting_date);
 
-
+        var harvestDate;
         harvest_date_element = document.getElementById("edit_trial_harvest_date");
         var harvest_date = harvest_date_element.getAttribute("value") || '';
-        harvest_date = moment(harvest_date, 'YYYY-MMMM-DD').format('MM/DD/YYYY');
+        if (harvest_date) { harvest_date = moment(harvest_date, 'YYYY-MMMM-DD').format('MM/DD/YYYY'); }
         harvest_date_element.setAttribute("value", harvest_date)
         jQuery('#edit_trial_harvest_date').daterangepicker(
-          {"singleDatePicker": true, "autoApply": true,},
-          function(start) { harvestDate = start.format('MM/DD/YYYY');}
+          {"singleDatePicker": true, "autoUpdateInput": false,},
+          function(start) {
+            harvestDate = start.format('YYYY/MM/DD HH:mm:ss');
+            jQuery('#edit_trial_harvest_date').val(start.format('MM/DD/YYYY'));
+            highlight_changed_details('edit_trial_harvest_date');
+          }
         );
         set_daterangepicker_default(harvest_date_element, harvest_date);
 
@@ -425,10 +434,12 @@ function trial_detail_page_setup_dialogs() {
           console.log("changed elements =" + changed_elements);
           for(var i=0; i<changed_elements.length; i++) {
             var id = changed_elements[i].id;
+            var type = changed_elements[i].title;
             var new_value = changed_elements[i].value;
-            //var detail_type = changed_elements[i].title;
-            categories.push(changed_elements[i].title);
-            new_details[changed_elements[i].title] = new_value;
+            if (type === 'planting_date') { new_value = plantingDate || 'remove' ;}
+            if (type === 'harvest_date') { new_value = harvestDate || 'remove' ;}
+            categories.push(type);
+            new_details[type] = new_value;
             if(jQuery('#'+id).is("select")) {
               new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
             }

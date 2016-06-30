@@ -553,7 +553,32 @@ sub set_harvest_date {
         $row->value($harvest_event);
         $row->update();
     } else {
-			print STDERR "bad check value format when setting plantign date \n";
+			print STDERR "date format did not pass check while preparing to set harvest date: $harvest_date  \n";
+		}
+}
+
+sub remove_harvest_date {
+    my $self = shift;
+		my $harvest_date = shift;
+
+		my $calendar_funcs = CXGN::Calendar->new({});
+    if (my $harvest_event = $calendar_funcs->check_value_format($harvest_date) ) {
+
+			my $harvest_date_cvterm_id = $self->get_harvest_date_cvterm_id();
+
+			my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create(
+				{
+					project_id => $self->get_trial_id(),
+					type_id => $harvest_date_cvterm_id,
+					value => $harvest_event,
+				});
+
+    	if ($row) {
+				print STDERR "Removing harvest date $harvest_event from trial ".$self->get_trial_id()."\n";
+				$row->delete();
+    	}
+		} else {
+			print STDERR "date format did not pass check while preparing to delete harvest date: $harvest_date  \n";
 		}
 }
 
@@ -596,10 +621,34 @@ sub set_planting_date {
 	    $row->value($planting_event);
 	    $row->update();
     } else {
-			print STDERR "bad check value format when setting plantign date \n";
+			print STDERR "date format did not pass check while preparing to set planting date: $planting_date \n";
 		}
 }
 
+sub remove_planting_date {
+    my $self = shift;
+		my $planting_date = shift;
+
+		my $calendar_funcs = CXGN::Calendar->new({});
+    if (my $planting_event = $calendar_funcs->check_value_format($planting_date) ) {
+
+			my $planting_date_cvterm_id = $self->get_planting_date_cvterm_id();
+
+			my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create(
+				{
+					project_id => $self->get_trial_id(),
+					type_id => $planting_date_cvterm_id,
+					value => $planting_event,
+				});
+
+    	if ($row) {
+				print STDERR "Removing planting date $planting_event from trial ".$self->get_trial_id()."\n";
+				$row->delete();
+    	}
+		} else {
+			print STDERR "date format did not pass check while preparing to delete planting date: $planting_date  \n";
+		}
+}
 
 sub get_plot_dimensions {
     my $self = shift;

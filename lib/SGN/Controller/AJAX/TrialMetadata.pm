@@ -110,7 +110,7 @@ sub trial_details_POST  {
       $details->{$category} = $c->req->param("details[$category]");
     }
 
-    print STDERR "Details: " . Dumper($details) . "\n";
+    #print STDERR "Details: " . Dumper($details) . "\n";
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
 	    $c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial details of this trial.' };
@@ -129,29 +129,37 @@ sub trial_details_POST  {
 
     # use respective set method for each new detail that is defined
     eval {
-      if ($details->{name}) { $trial->set_name($details->{name}) };
+      if ($details->{name}) { $trial->set_name($details->{name}); }
+
       if ($details->{breeding_program}) {
         $program_object->remove_breeding_program_from_trial($program_object->get_breeding_programs_by_trial($trial_id), $trial_id);
         $program_object->associate_breeding_program_with_trial($details->{breeding_program}, $trial_id);
       }
+
       if ($details->{location}) {
         $trial->remove_location($trial->get_location()->[0]);
         $trial->add_location($details->{location});
       }
-      if ($details->{year}) { $trial->set_year($details->{year}) };
+
+      if ($details->{year}) { $trial->set_year($details->{year}); }
+
       if ($details->{type}) {
         $trial->dissociate_project_type();
         $trial->associate_project_type($details->{type});
       }
+
       if ($details->{planting_date}) {
-        print STDERR "Setting new planting date:" . $details->{planting_date} . "\n";
-        $trial->set_planting_date($details->{planting_date});
-      };
+        if ($details->{planting_date} eq 'remove') { $trial->remove_planting_date($trial->get_planting_date()); }
+        else { $trial->set_planting_date($details->{planting_date}); }
+      }
+
       if ($details->{harvest_date}) {
-        print STDERR "Setting new harvest date:" . $details->{harvest_date} . "\n";
-        $trial->set_harvest_date($details->{harvest_date});
-      };
-      if ($details->{description}) { $trial->set_description($details->{description}) };
+        if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
+        else { $trial->set_harvest_date($details->{harvest_date}); }
+      }
+
+      if ($details->{description}) { $trial->set_description($details->{description}); }
+
     };
 
     if ($@) {
