@@ -27,7 +27,7 @@ sub cvterm_detail :Path('/chado/cvterm') :Args(0) {
 	$c->throw( is_client_error => 1, public_message => 'Invalid arguments' );
     }
     $c->stash->{template} = '/chado/cvterm.mas';
-    $c->stash->{cvterm} = $cvterm;
+    $c->stash->{cvterm}   =  $cvterm;
 }
 
 sub onto_browser : Path('/tools/onto') :Args(0) { 
