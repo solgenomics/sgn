@@ -60,6 +60,9 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
   my $sample_number = $c->req->param('sample_number');
   if ($sample_number eq '') {$sample_number = undef};
   my $predefined_columns = $c->req->param('predefined_columns');
+  if ($predefined_columns) {
+      $predefined_columns = decode_json($predefined_columns);
+  }
   
   print STDERR Dumper $sample_number;
   print STDERR Dumper $predefined_columns;
@@ -86,7 +89,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
 	  format => $format,
       data_level => $data_level,
       sample_number => $sample_number,
-      predefined_columns => decode_json($predefined_columns),
+      predefined_columns => $predefined_columns,
       });
 
      $create_spreadsheet->download();
