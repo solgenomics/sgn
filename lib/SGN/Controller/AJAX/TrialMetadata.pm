@@ -110,7 +110,13 @@ sub trial_details_POST  {
       $details->{$category} = $c->req->param("details[$category]");
     }
 
-    #print STDERR "Details: " . Dumper($details) . "\n";
+    if (!%{$details}) {
+      $c->stash->{rest} = { error => "No values were edited, so no changes could be made for this trial's details." };
+      return;
+    }
+    else {
+    print STDERR "Here are the deets: " . Dumper($details) . "\n";
+    }
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
 	    $c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial details of this trial.' };
@@ -123,7 +129,7 @@ sub trial_details_POST  {
     my $breeding_program = $program_object->get_breeding_programs_by_trial($trial_id);
 
     if (! ($c->user() &&  ($c->user->check_roles("curator") || $c->user->check_roles($breeding_program)))) {
-	    $c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the details of a trial." };
+	    $c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the details of this trial." };
 	    return;
     }
 

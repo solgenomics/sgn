@@ -91,7 +91,7 @@ $trial_description
         </div>
         <div class="modal-footer">
             <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
-            <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_description_cancel_button">Cancel</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_trial_details_cancel_button">Cancel</button>
             <button type="button" class="btn btn-primary" id="save_trial_details">Save Changes</button>
         </div>
     </div>
@@ -105,16 +105,11 @@ $trial_description
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="trialDetailsSavedDialog">Details Saved</h4>
             </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <p>
-                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The new trial details were saved successfully.
-                    </p>
-                </div>
+            <div class="modal-body" id="trial_details_saved_body">
+              <ul class="list-group" id="trial_details_saved_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="trial_details_saved_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="trial_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
             </div>
         </div>
     </div>
@@ -127,16 +122,11 @@ $trial_description
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="trialDetailsErrorDialog">Error Saving Trial Details</h4>
             </div>
-            <div class="modal-body">
-                <div class="container-fluid ui-state-error-text" >
-                    <p>
-                        <span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 50px 0;"></span>
-                        An error occurred while trying to save the new trial details:
-                    </p>
-                </div>
+            <div class="modal-body" id="trial_details_error_body">
+              <ul class="list-group" id="trial_details_error_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="trial_details_error_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="trial_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

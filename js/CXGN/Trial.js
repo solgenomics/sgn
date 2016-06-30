@@ -422,8 +422,8 @@ function trial_detail_page_setup_dialogs() {
         jQuery('#trial_details_edit_dialog').modal("show");
 
         //handle cancel and save
-        jQuery('#edit_description_cancel_button').click(function () {
-            reset_edit_details_dialog (edit_details_body_html);
+        jQuery('#edit_trial_details_cancel_button').click(function () {
+            reset_dialog_body('trial_details_edit_body', edit_details_body_html);
         });
 
         jQuery('#save_trial_details').click(function () {
@@ -431,6 +431,7 @@ function trial_detail_page_setup_dialogs() {
           var changed_elements = document.getElementsByName("changed");
           var categories = [];
           var new_details = {};
+          var success_message = '';
           console.log("changed elements =" + changed_elements);
           for(var i=0; i<changed_elements.length; i++) {
             var id = changed_elements[i].id;
@@ -443,19 +444,23 @@ function trial_detail_page_setup_dialogs() {
             if(jQuery('#'+id).is("select")) {
               new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
             }
-            var label = jQuery('[for="'+id+'"]').text();
-            console.log("Setting "+label+" to "+new_value);
+            success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_value+"</b></li>";
           }
-          //close and reset edit dialog
-          jQuery('#trial_details_edit_dialog').modal("hide");
-          reset_edit_details_dialog (edit_details_body_html);
 
-          //save changed trial details
-          console.log("new details ="+new_details);
-          save_trial_details(categories, new_details);
+          jQuery('#trial_details_edit_dialog').modal("hide");
+          save_trial_details(categories, new_details, success_message);
+        //  reset_dialog_body('trial_details_edit_body', edit_details_body_html);
         });
 
     });
+
+  jQuery('#trial_details_error_close_button').click( function() {
+    document.getElementById('trial_details_error_message').innerHTML = "";
+  });
+
+  jQuery('#trial_details_saved_close_button').click( function() {
+    location.reload();
+  });
 
     jQuery('#delete_phenotype_data_by_trial_id').click(
 	function() {
@@ -521,20 +526,16 @@ function trial_detail_page_setup_dialogs() {
 
 });
 
-
 }
 
 function set_daterangepicker_default (date_element, value) {
   var jquery_element = jQuery(date_element);
-  jquery_element.attr({
-    val: value,
-    name: ""
-  });
+  jquery_element.attr({ val: value, name: "" });
   jquery_element.parent().parent().removeClass("has-success has-feedback");
   jquery_element.parent().siblings('#change_indicator').remove();
 }
 
-function highlight_changed_details (id) { // compare changed value to default. If different add class and feedback span, if same remove them
+function highlight_changed_details (id) { // compare changed value to default. If different, add class and feedback span, if same, remove them
   var detail_element = document.getElementById(id);
   console.log("detail element id = "+console.log(detail_element));
   var current_value = detail_element.value;
@@ -548,7 +549,7 @@ function highlight_changed_details (id) { // compare changed value to default. I
     jQuery('#'+id).parent().siblings('#change_indicator').remove();
     jQuery('#'+id).attr( "name", "changed" );
     jQuery('#'+id).parent().parent().addClass("has-success has-feedback");
-    jQuery('#'+id).parent().after('<span class="glyphicon glyphicon-pencil form-control-feedback" id="change_indicator" aria-hidden="true" style="right: -15px;"></span>');
+    jQuery('#'+id).parent().after('<span class="glyphicon glyphicon-pencil form-control-feedback" id="change_indicator" aria-hidden="true" style="right: -20px;"></span>');
   }
   else {
     console.log("resetting element that has been changed back to default_value. . .");
@@ -558,16 +559,12 @@ function highlight_changed_details (id) { // compare changed value to default. I
   }
 }
 
-
-function reset_edit_details_dialog (body_html) {
-  document.getElementById('trial_details_edit_body').innerHTML = body_html;
+function reset_dialog_body (body_id, body_html) {
+  document.getElementById(body_id).innerHTML = body_html;
 }
 
-function save_trial_details (categories, details) {
-//  jQuery('#working').dialog("open");
+function save_trial_details (categories, details, success_message) {
   var trial_id = get_trial_id();
-  alert('New trial details = '+JSON.stringify(details));
-
   jQuery.ajax( {
     url: '/ajax/breeders/trial/'+trial_id+'/details/',
     type: 'POST',
@@ -579,21 +576,21 @@ function save_trial_details (categories, details) {
       enable_ui();
     },
     success: function(response) {
-      jQuery('#working').dialog("close");
-      if (response.error) {
-        alert(response.error);
+      if (response.success) {
+        document.getElementById('trial_details_saved_message').innerHTML = success_message;
+        jQuery('#trial_details_saved_dialog').modal("show");
+        return;
       }
       else {
-        alert("Successfully updated details");
-        document.location.reload(true);
+        document.getElementById('trial_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'>"+response.error+"</li>";
+        jQuery('#trial_details_error_dialog').modal("show");
       }
     },
     error: function(response) {
-      alert("An error occurred updating the trial details");
+      document.getElementById('trial_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'> Trial detail update AJAX request failed. Update not completed.</li>";
+      jQuery('#trial_details_error_dialog').modal("show");
     },
   });
-        // on success close working modal and present confirmation of successful changes
-        // if error present error dialog with message
 }
 
 function trial_folder_dialog() {
