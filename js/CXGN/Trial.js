@@ -380,7 +380,7 @@ function trial_detail_page_setup_dialogs() {
         jQuery('#edit_trial_location').data("originalValue", default_loc);
 
         var default_year = document.getElementById("edit_trial_year").getAttribute("value");
-        get_select_box('years', 'edit_trial_year', { 'default' : default_year });
+        get_select_box('years', 'edit_trial_year', { 'default' : default_year, 'auto_generate': 1 });
         jQuery('#edit_trial_year').data("originalValue", default_year);
 
         var default_type = document.getElementById("edit_trial_type").getAttribute("value");
