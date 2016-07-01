@@ -371,7 +371,9 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
 <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
-
+<div id="plot_information_div">
+    
+  </div>
 </&>
 
 <&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
