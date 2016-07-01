@@ -30,7 +30,7 @@ $folder_name => undef
 $folder_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
 
 <%perl>
   use Data::Dumper;
@@ -56,11 +56,24 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<&| /page/info_section.mas, title=>"Trial details",  collapsible => 1, &>
+<&| /page/info_section.mas, title=>"Trial details",  collapsible => 1, subtitle => '[<a id="edit_trial_details">Edit Trial Details</a>]'&>
 
 
 <div class="panel panel-default">
 <table class="table table-hover" >
+
+<tr>
+<td><b>Trial Name</b></td>
+<td>
+<div id="trial_name">
+% if ($trial_name) {
+%   print "$trial_name";
+% } else {
+%   print "[No Trial Name]";
+% }
+</div>
+</td>
+</tr>
 
 <tr>
 <td><b>Breeding Program </b></td>
@@ -75,42 +88,18 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </span>
 </td>
-<td>
- <% $change_breeding_program_link %>
-</td>
 </tr>
 
 <tr>
-<td><b>Trial Name</b></td>
+<td><b>Trial Location</b></td>
 <td>
-<div id="trial_name">
-% if ($trial_name) {
-%   print "$trial_name";
+<div id="trial_location">
+% if ($location_data) {
+%  print "$location_data->[1]";
 % } else {
-%   print "[No Trial Name]";
+%  print "[No Location]";
 % }
 </div>
-</td>
-<td>
-  [<a id="edit_trial_name">change</a>]
-</td>
-<& /breeders_toolbox/trial/edit_trial_name.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_type=>"Trial" &>
-
-</tr>
-
-<tr>
-<td><b>Trial Type</b></td>
-<td>
-<div id="trial_type">
-% if ($trial_type) {
-%  print "@$trial_type[1]<br/>";
-% } else {
-% print "[Type not set]";
-% }
-</div>
-</td>
-<td>
-  [<a id="edit_trial_type" >change</a>]
 </td>
 </tr>
 
@@ -125,24 +114,18 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-  [<a id="change_year_link">change</a>]
-</td>
 </tr>
 
 <tr>
-<td><b>Trial Location</b></td>
+<td><b>Trial Type</b></td>
 <td>
-<div id="trial_location">
-% if ($location_data) {
-%  print "$location_data->[1]";
+<div id="trial_type">
+% if ($trial_type) {
+%  print "@$trial_type[1]<br/>";
 % } else {
-%  print "[No Location]";
+% print "[Type not set]";
 % }
 </div>
-</td>
-<td>
-  [<a id="change_trial_location_link">change</a>]
 </td>
 </tr>
 
@@ -157,9 +140,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-    [<a id="change_planting_date_link">change</a>]
-</td>
 </tr>
 
 <tr>
@@ -173,9 +153,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-    [<a id="change_harvest_date_link">change</a>]
-</td>
 </tr>
 
 <tr><td><b>Description</b></td>
@@ -188,41 +165,13 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-  [<a id="edit_trial_description">edit</a>]
-</td>
 </tr>
 </table>
 </div>
 
 </&>
 
-<div id="edit_trial_description_dialog">
-   Please enter the description for this trial:<br/>
-   <textarea id="trial_description_input" cols="50" rows="10"></textarea>
-</div>
-
-<div id="edit_trial_type_dialog">
-  Please choose the type of this trial:<br />
-  <select id="trial_type_select"></select>
-</div>
-
-<div id="change_trial_location_dialog">
-  Please choose the location fro this trial:<br />
-  <div id="trial_location_select_div" /></div>
-</div>
-
-<div id="change_planting_date_dialog">
-  Please enter a planting date:<br />
-  <input id="planting_date_picker"></input>
-</select>
-
-</div>
-
-<div id="change_harvest_date_dialog">
-  Please enter a harvest date [MM/DD/YYYY]:<br />
-  <input id="harvest_date_picker"></input>
-</div>
+<& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => @$breeding_program[0]->[0], location => $location_data->[0], year => $year, trial_type => @$trial_type[0], planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
 
 % my $folder_collapsed = 1;
 % if ($folder_id) {
@@ -495,18 +444,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   <p>
     <a id="data_collector_download_link">Download File</a>
   </p>
-</div>
-
-<div id="change_breeding_program_dialog">
-  Please select a breeding program for this trial:<br />
-  <div id="change_breeding_program_select_div">
-  </div>
-</div>
-
-<div id="change_trial_year_dialog">
-  Please select a year for this trial:<br />
-  <div id="change_year_select_div">
-  </div>
 </div>
 
 <div id="trial_design_view_layout" title="Trial design layout">

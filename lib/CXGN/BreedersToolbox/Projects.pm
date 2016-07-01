@@ -219,7 +219,6 @@ sub get_genotyping_trials_by_breeding_program {
 
 }
 
-
 sub get_locations_by_breeding_program {
     my $self = shift;
     my $breeding_program_id = shift;
@@ -267,7 +266,6 @@ sub get_all_locations {
     return \@locations;
 
 }
-
 
 sub get_locations {
     my $self = shift;
@@ -319,7 +317,6 @@ sub get_accessions_by_breeding_program {
 
 }
 
-
 sub new_breeding_program {
     my $self= shift;
     my $name = shift;
@@ -358,7 +355,6 @@ sub new_breeding_program {
     }
 
 }
-
 
 sub delete_breeding_program {
     my $self = shift;
@@ -414,71 +410,6 @@ sub get_breeding_program_with_trial {
 
     return $breeding_projects;
 }
-
-sub associate_breeding_program_with_trial {
-    my $self = shift;
-    my $breeding_project_id = shift;
-    my $trial_id = shift;
-
-    my $breeding_trial_cvterm_id = $self->get_breeding_trial_cvterm_id();
-
-    # to do: check if the two provided IDs are of the proper type
-
-    eval {
-	my $breeding_trial_assoc = $self->schema->resultset("Project::ProjectRelationship")->find (
-	    {
-		subject_project_id => $trial_id,
-		type_id => $breeding_trial_cvterm_id,
-	    }
-	    );
-
-	if ($breeding_trial_assoc) {
-
-	    $breeding_trial_assoc->object_project_id($breeding_project_id);
-	    $breeding_trial_assoc->update();
-	}
-	else {
-	    $breeding_trial_assoc = $self->schema->resultset("Project::ProjectRelationship")->create({
-		object_project_id => $breeding_project_id,
-		subject_project_id => $trial_id,
-		type_id => $breeding_trial_cvterm_id,
-												     });
-	    $breeding_trial_assoc->insert();
-	}
-    };
-    if ($@) {
-	print STDERR "ERROR: $@\n";
-	return { error => "An error occurred while storing the breeding program - trial relationship." };
-    }
-    return {};
-}
-
-sub remove_breeding_program_from_trial {
-    my $self = shift;
-    my $breeding_program_id = shift;
-    my $trial_id = shift;
-
-    my $breeding_trial_cvterm_id = $self->get_breeding_trial_cvterm_id();
-
-    eval {
-	my $breeding_trial_assoc_rs = $self->schema->resultset("Project::ProjectRelationship")->search(
-	    {
-		object_project_id => $breeding_program_id,
-		subject_project_id => $trial_id,
-		type_id => $breeding_trial_cvterm_id,
-	    }
-	    );
-	if (my $row = $breeding_trial_assoc_rs->first()) {
-	    $row->delete();
-	}
-    };
-
-    if ($@) {
-	return { error => "An error occurred while deleting a breeding program - trial association. $@" };
-    }
-    return {};
-}
-
 
 sub get_breeding_program_cvterm_id {
     my $self = shift;
