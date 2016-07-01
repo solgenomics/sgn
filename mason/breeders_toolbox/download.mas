@@ -29,6 +29,9 @@ Choose a list for each parameter and click "Download".
       Format
     </th>
     <th>
+      Timestamps
+    </th>
+    <th>
       Action
     </th>
   </tr>
@@ -57,6 +60,12 @@ Choose a list for each parameter and click "Download".
 <div class="checkbox">
   <label><input type="checkbox" id="format" name="format" value="html">html</label>
 </div>
+    </td>
+    <td>
+    <select class="form-control" id="timestamp" name="timestamp">
+        <option value="0">No</option>
+        <option value="1">Yes</option>
+    </select>
     </td>
     <td>
       <input class="btn btn-primary" type="button" id="phenotype" value="Download" />

@@ -349,10 +349,10 @@ sub trial_type_GET : Chained('trial') PathPart('type') Args(0) {
     $c->stash->{rest} = { type => $type };
 }
 
-sub trial_type_POST : Chained('trial') PathPart('type') Args(1) {
+sub trial_type_POST : Chained('trial') PathPart('type') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $type = shift;
+    my $type = $c->req->param('type');
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };

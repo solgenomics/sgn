@@ -54,6 +54,8 @@ my @secondary_dbxrefs = $cvterm->get_secondary_dbxrefs();
 
 my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxrefs);
 
+my $has_loci = $cvterm->has_loci;
+
 my @qtl_pops = CXGN::Phenome::Qtl::Tools->new()->is_from_qtl( $cvterm_id );
 my @qtl_data;
 
@@ -81,13 +83,13 @@ if ( @qtl_pops )
       jQuery.ajax( { url:      a.url+"?cvterm_id=<% $cvterm_id %>" ,
                      dataType: "json",
                      success: function(response) {
-                         jQuery("#"+a.content_id).html(response.html);
-                         jQuery("#"+a.count_id).html( response.count + ' ' + a.inflect[ response.count == 1 ? 0 : 1 ]);
-                         if( response.error )
+                              jQuery("#"+a.content_id).html(response.html);
+                              jQuery("#"+a.count_id).html( response.count + ' ' + a.inflect[ response.count == 1 ? 0 : 1 ]);
+                       if( response.error )  {
                              alert(response.error);
+                      }
                      }
-                   }
-                 );
+                  });
   }
 </script>
 
@@ -151,14 +153,18 @@ LOAD...
 
 <& /ontology/embedded_browser.mas, cvterm => $cvterm &>
 
+%if ($has_loci) {
 <&| /page/info_section.mas,
     title=> "Annotated loci",
     subtitle => '<span id="loci_count"></span>',
     collapsible => 1,
-    collapsed=>1
+    collapsed   => 1,
+    hide_if_empty => 1,
 &>
+
 <div id="loci_div">
-   [Loading...]
+
+
 <script language="javascript">
   recursiveAnnotations({
                          url:        "/ajax/cvterm/recursive_loci",
@@ -167,9 +173,12 @@ LOAD...
                          inflect:    [ 'locus', 'loci' ],
                        });
 </script>
-</div>
 
+</div>
 </&>
+
+%}
+
 
 <&| /page/info_section.mas,
        title=> "Annotated stocks",
@@ -185,7 +194,7 @@ LOAD...
                          content_id: "stocks_div",
                          count_id:   "stocks_count",
                          inflect:    [ 'stock', 'stocks' ],
-                       });
+                        });
 </script>
 </div>
 

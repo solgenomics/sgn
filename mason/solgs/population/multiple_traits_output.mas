@@ -31,7 +31,7 @@ $acronym
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
-<& /util/import_javascript.mas, classes => [  "solGS.userSelectionGenotypes"] &>
+<& /util/import_javascript.mas, classes => [  "solGS.listTypeSelectionPopulation"] &>
 
 <& /page/page_title.mas, 
    title => "Prediction models from $project_name"
