@@ -533,22 +533,18 @@ function set_daterangepicker_default (date_element, value) {
 
 function highlight_changed_details (id) { // compare changed value to default. If different, add class and feedback span, if same, remove them
   var detail_element = document.getElementById(id);
-  console.log("detail element id = "+console.log(detail_element));
   var current_value = detail_element.value;
   var default_value = detail_element.defaultValue;
   if ( !default_value ) {
     default_value = jQuery('#'+id).data("originalValue");
   }
-  console.log("id="+id+" and val="+current_value+" and default_val="+default_value);
   if ((current_value || default_value) && current_value !== default_value) {
-    console.log("giving feedback for changed detail element . . .");
     jQuery('#'+id).parent().siblings('#change_indicator').remove();
     jQuery('#'+id).attr( "name", "changed" );
     jQuery('#'+id).parent().parent().addClass("has-success has-feedback");
     jQuery('#'+id).parent().after('<span class="glyphicon glyphicon-pencil form-control-feedback" id="change_indicator" aria-hidden="true" style="right: -20px;"></span>');
   }
   else {
-    console.log("resetting element that has been changed back to default_value. . .");
     jQuery('#'+id).attr( "name", "" );
     jQuery('#'+id).parent().parent().removeClass("has-success has-feedback");
     jQuery('#'+id).parent().siblings('#change_indicator').remove();
