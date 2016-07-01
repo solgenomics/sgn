@@ -92,22 +92,15 @@ sub get_year_select : Path('/ajax/html/select/years') Args(0) {
 
     my @years;
     if ($auto_generate) {
-      print STDERR "auto_generating years ... \n";
-      my $year = 1900 + (localtime)[5];
-      print STDERR "year = $year \n";
-      my $next_year = $year + 1;
-      print STDERR "next year = $next_year \n";
+      my $next_year = 1901 + (localtime)[5];
       my $oldest_year = $next_year - 30;
-      print STDERR "oldest year = $oldest_year \n";
       @years = sort { $b <=> $a } ($oldest_year..$next_year);
-      print STDERR "years = @years \n";
     }
     else {
       @years = sort { $b <=> $a } CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_all_years();
-      print STDERR "years form DB = @years \n";
     }
 
-    my $default = $c->req->param("default") || 1900 + (localtime)[5];
+    my $default = $c->req->param("default") || @years[1];
 
     my $html = simple_selectbox_html(
       name => $name,
