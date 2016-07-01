@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/bootstrap-toggle/bootstrap-toggle.min.css">
   <link rel="stylesheet" href="/css/ladda-themeless.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/daterangepicker.css">
 
 <script language="javascript" type="text/javascript">
    JSAN = {};

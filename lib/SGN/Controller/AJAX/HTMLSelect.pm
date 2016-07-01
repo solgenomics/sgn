@@ -24,6 +24,7 @@ use Moose;
 use Data::Dumper;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
+use CXGN::Trial;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 
@@ -48,11 +49,14 @@ sub get_location_select : Path('/ajax/html/select/locations') Args(0) {
 
     if ($empty) { unshift @$locations, [ "", "please select" ] }
 
+    my $default = $c->req->param("default") || @$locations[0]->[0];
+
     my $html = simple_selectbox_html(
-	name => $name,
-	id => $id,
-	choices => $locations,
-	);
+      name => $name,
+      id => $id,
+      choices => $locations,
+      selected => $default
+	  );
     $c->stash->{rest} = { select => $html };
 }
 
@@ -66,13 +70,15 @@ sub get_breeding_program_select : Path('/ajax/html/select/breeding_programs') Ar
 
     my $breeding_programs = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_breeding_programs();
 
+    my $default = $c->req->param("default") || @$breeding_programs[0]->[0];
     if ($empty) { unshift @$breeding_programs, [ "", "please select" ]; }
 
     my $html = simple_selectbox_html(
-	name => $name,
-	id => $id,
-	choices => $breeding_programs,
-	);
+      name => $name,
+      id => $id,
+      choices => $breeding_programs,
+      selected => $default
+    );
     $c->stash->{rest} = { select => $html };
 }
 
@@ -86,11 +92,14 @@ sub get_year_select : Path('/ajax/html/select/years') Args(0) {
 
     my @years = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_all_years();
 
+    my $default = $c->req->param("default") || @years[0];
+
     my $html = simple_selectbox_html(
-	name => $name,
-	id => $id,
-	choices => \@years,
-	);
+      name => $name,
+      id => $id,
+      choices => \@years,
+      selected => $default
+    );
     $c->stash->{rest} = { select => $html };
 }
 
@@ -105,22 +114,40 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     my $empty = $c->req->param("empty") || ""; # set if an empty selection should be present
 
 
-    my @folders = CXGN::Trial::Folder->list(
-	{
+    my @folders = CXGN::Trial::Folder->list({
 	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
 	    breeding_program_id => $breeding_program_id
-	});
+    });
 
     if ($empty) {
-	unshift @folders, [ 0, "None" ];
+      unshift @folders, [ 0, "None" ];
     }
 
     my $html = simple_selectbox_html(
-	name => $name,
-	id => $id,
-	choices => \@folders,
-	);
+      name => $name,
+      id => $id,
+      choices => \@folders,
+    );
+    $c->stash->{rest} = { select => $html };
+}
 
+sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "trial_type_select";
+    my $name = $c->req->param("name") || "trial_type_select";
+
+    my @types = CXGN::Trial::get_all_project_types($c->dbic_schema("Bio::Chado::Schema"));
+
+    my $default = $c->req->param("default") || @types[0]->[0];
+
+    my $html = simple_selectbox_html(
+      name => $name,
+      id => $id,
+      choices => \@types,
+      selected => $default
+    );
     $c->stash->{rest} = { select => $html };
 }
 
@@ -137,7 +164,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     } else {
       push @$projects, [$breeding_program_id];
     }
-    
+
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
     my @trials;
@@ -146,22 +173,14 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
       foreach (@$field_trials) {
           push @trials, $_;
       }
-      #foreach (@$cross_trials) {
-        #  push @trials, $_;
-      #}
-      #foreach (@$genotyping_trials) {
-        #  push @trials, $_;
-      #}
     }
 
-    #print STDERR Dumper \@trials;
     my $html = simple_selectbox_html(
-        multiple => 1,
+      multiple => 1,
       name => $name,
       id => $id,
       choices => \@trials,
     );
-
     $c->stash->{rest} = { select => $html };
 }
 
@@ -188,11 +207,11 @@ sub get_genotyping_protocols_select : Path('/ajax/html/select/genotyping_protoco
 	$gt_protocols = ["No genotyping protocols found"];
     }
     my $html = simple_selectbox_html(
-	name => $name,
-	id => $id,
-	choices => $gt_protocols,
-	selected => $gtps{$default_gtp}
-	);
+      name => $name,
+      id => $id,
+      choices => $gt_protocols,
+      selected => $gtps{$default_gtp}
+    );
     $c->stash->{rest} = { select => $html };
 }
 
