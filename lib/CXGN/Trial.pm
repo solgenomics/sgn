@@ -433,30 +433,56 @@ sub get_project_type {
 
 sub get_breeding_program {
     my $self = shift;
-    my $rs = $self->bcs_schema()->resultset("Project::ProjectRelationship")->search(
-	{
-	    type_id => $self->get_breeding_program_id(),
-	    subject_project_id => $self->get_trial_id(),
-	});
 
+    my $rs = $self->bcs_schema()->resultset("Project::ProjectRelationship")->search({
+			subject_project_id => $self->get_trial_id(),
+	    type_id => $self->get_breeding_program_trial_relationship_cvterm_id(),
+		});
     if ($rs->count() == 0) {
-	return undef;
+			return undef;
     }
 
-    my $bp_rs = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $rs->first()->object_project_id() });
+    my $bp_rs = $self->bcs_schema()->resultset("Project::Project")->search({
+			project_id => $rs->first()->object_project_id()
+		});
     if ($bp_rs->count > 0) {
-	return $bp_rs->first()->name();
+			return $bp_rs->first()->name();
     }
-    return undef;
 
+    return undef;
 }
 
 sub set_breeding_program {
+	my $self = shift;
+	my $breeding_program_id = shift;
+	my $trial_id = $self->get_trial_id();
+	my $type_id = $self->get_breeding_program_trial_relationship_cvterm_id();
 
-}
+	eval {
+		my $row = $self->bcs_schema->resultset("Project::ProjectRelationship")->find ({
+			subject_project_id => $trial_id,
+			type_id => $type_id,
+		});
 
-sub remove_breeding_program {
+		if ($row) {
+			$row->object_project_id($breeding_program_id);
+			$row->update();
+		}
+		else {
+			$row = $self->bcs_schema->resultset("Project::ProjectRelationship")->create ({
+				object_project_id => $breeding_program_id,
+				subject_project_id => $trial_id,
+				type_id => $type_id,
+			});
+			$row->insert();
+		}
+	};
 
+	if ($@) {
+		print STDERR "ERROR: $@\n";
+		return { error => "An error occurred while setting the trial's breeding program." };
+	}
+	return {};
 }
 
 # CLASS METHOD!
@@ -1186,7 +1212,7 @@ sub get_year_type_id {
 }
 
 
-sub get_breeding_program_id {
+sub get_breeding_program_trial_relationship_cvterm_id {
     my $self = shift;
 
     my $breeding_program_trial_relationship_cvterm_id;

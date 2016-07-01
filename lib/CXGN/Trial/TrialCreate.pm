@@ -116,9 +116,9 @@ sub save_trial {
       print STDERR "Can't create trial: Trial name already exists\n";
       die "trial name already exists" ;
   }
-    
+
   if (!$self->get_breeding_program_id()) {
-      print STDERR "Can't create trial: Breeding program does not exist\n"; 
+      print STDERR "Can't create trial: Breeding program does not exist\n";
       die "No breeding program id";
       #return ( error => "no breeding program id" );
   }
@@ -147,8 +147,6 @@ sub save_trial {
   }
 
     #print STDERR "Check 4.4: ".localtime();
-
-  my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $chado_schema } );
 
   my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type');
   my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
@@ -187,14 +185,14 @@ sub save_trial {
 
       #print STDERR "Storing user_id and project_name provided by the IGD spreadksheet for later recovery in the spreadsheet download... ".(join ",", ($self->get_genotyping_user_id(), $self->get_genotyping_project_name()))."\n";
 
-      $genotyping_layout_experiment->create_nd_experimentprops( 
-	  { 
+      $genotyping_layout_experiment->create_nd_experimentprops(
+	  {
 	      'genotyping_user_id' => $self->get_genotyping_user_id(),
 	      'genotyping_project_name' => $self->get_genotyping_project_name(),
 	  },
 	  { autocreate => 1});
   }
- 
+
     #print STDERR "Check 4.6: ".localtime();
 
   my $t = CXGN::Trial->new( { bcs_schema => $chado_schema, trial_id => $project->project_id() } );
@@ -207,11 +205,11 @@ sub save_trial {
 
   $project->create_projectprops( { 'project year' => $self->get_trial_year(),'design' => $self->get_design_type()}, {autocreate=>1});
 
-  # instead of 
+  # instead of
   my $rs = $chado_schema->resultset('Stock::Stock')->search(
 	{ 'me.is_obsolete' => { '!=' => 't' } },
         { join => [ 'stock_relationship_objects', 'nd_experiment_stocks' ],
-	 '+select'=> ['me.stock_id', 'me.uniquename', 'me.organism_id', 'stock_relationship_objects.type_id', 'stock_relationship_objects.subject_id', 'nd_experiment_stocks.nd_experiment_id', 'nd_experiment_stocks.type_id'], 
+	 '+select'=> ['me.stock_id', 'me.uniquename', 'me.organism_id', 'stock_relationship_objects.type_id', 'stock_relationship_objects.subject_id', 'nd_experiment_stocks.nd_experiment_id', 'nd_experiment_stocks.type_id'],
 	 '+as'=> ['stock_id', 'uniquename', 'organism_id', 'stock_relationship_type_id', 'stock_relationship_subject_id', 'stock_experiment_id', 'stock_experiment_type_id']
 	}
   );
@@ -219,7 +217,7 @@ sub save_trial {
   my %stock_data;
   my %stock_relationship_data;
   my %stock_experiment_data;
-  while (my $s = $rs->next()) { 
+  while (my $s = $rs->next()) {
      $stock_data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('organism_id') ];
      if ($s->get_column('stock_relationship_type_id') && $s->get_column('stock_relationship_subject_id') ) {
 	 $stock_relationship_data{$s->get_column('stock_id'), $s->get_column('stock_relationship_type_id'), $s->get_column('stock_relationship_subject_id') } = 1;
@@ -228,12 +226,12 @@ sub save_trial {
 	 $stock_experiment_data{$s->get_column('stock_id'), $s->get_column('stock_experiment_id'), $s->get_column('stock_experiment_type_id')} = 1;
      }
   }
-  
+
     my $stock_id_checked;
     my $organism_id_checked;
 
   foreach my $key (sort { $a cmp $b} keys %design) {
-      
+
       #print STDERR "Check 01: ".localtime();
 
     my $plot_name = $design{$key}->{plot_name};
@@ -265,7 +263,7 @@ sub save_trial {
     my $is_a_control = $design{$key}->{is_a_control};
     my $plot;
 
-    #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database. 
+    #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
     if ($stock_data{$stock_name}) {
 	$stock_id_checked = $stock_data{$stock_name}[0];
 	$organism_id_checked = $stock_data{$stock_name}[1];
@@ -327,7 +325,7 @@ sub save_trial {
 
     #create the stock_relationship of the accession with the plot, if it does not exist already
     if (!$stock_relationship_data{$stock_id_checked, $plot_of->cvterm_id(), $plot->stock_id()} ) {
-	my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({  
+	my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
 	    object_id => $stock_id_checked,
 	    type_id => $plot_of->cvterm_id(),
 	    subject_id => $plot->stock_id()
@@ -336,7 +334,7 @@ sub save_trial {
 
     #link the experiment to the plot, if it is not already
     if (!$stock_experiment_data{$plot->stock_id(), $field_layout_experiment->nd_experiment_id(), $field_layout_cvterm->cvterm_id()} ) {
-	my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({ 
+	my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
 	    nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
 	    type_id => $field_layout_cvterm->cvterm_id(),
 	    stock_id => $plot->stock_id(),
@@ -348,7 +346,7 @@ sub save_trial {
 
     #print STDERR "Check 4.8: ".localtime();
 
-  $program->associate_breeding_program_with_trial($self->get_breeding_program_id, $project->project_id);
+  $t->set_breeding_program($self->get_breeding_program_id);
 
     #print STDERR "Check 4.9: ".localtime();
 

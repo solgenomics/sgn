@@ -137,10 +137,7 @@ sub trial_details_POST  {
     eval {
       if ($details->{name}) { $trial->set_name($details->{name}); }
 
-      if ($details->{breeding_program}) {
-        $program_object->remove_breeding_program_from_trial($program_object->get_breeding_programs_by_trial($trial_id), $trial_id);
-        $program_object->associate_breeding_program_with_trial($details->{breeding_program}, $trial_id);
-      }
+      if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
 
       if ($details->{location}) {
         $trial->remove_location($trial->get_location()->[0]);
