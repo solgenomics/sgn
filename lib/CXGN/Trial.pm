@@ -1278,10 +1278,13 @@ sub get_plots {
 		$unique_plots{$r->uniquename} = $r->stock_id;
 	}
 	foreach (keys %unique_plots) {
-		push @plots, {plot_name=> $_, plot_id=>$unique_plots{$_} } ;
+		#push @plots, {plot_name=> $_, plot_id=>$unique_plots{$_} } ; 
+		my $combine = [$unique_plots{$_}, $_ ];
+		push @plots, $combine;
 	}
-
+	
 	return \@plots;
+	 
 }
 
 sub get_controls {
