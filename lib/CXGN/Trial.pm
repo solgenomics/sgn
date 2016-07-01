@@ -186,9 +186,9 @@ sub get_location {
     }
 }
 
-=head2 function add_location()
+=head2 function set_location()
 
- Usage:        $trial->add_location($location_id);
+ Usage:        $trial->set_location($location_id);
  Desc:
  Ret:          nothing
  Args:
@@ -197,45 +197,28 @@ sub get_location {
 
 =cut
 
-sub add_location {
+sub set_location {
     my $self = shift;
     my $location_id = shift;
+		my $project_id = $self->get_trial_id();
+		my $type_id = $self->get_location_type_id();
 
-    my $row = $self->bcs_schema()->resultset('Project::Projectprop')->create(
-	{
-	    project_id => $self->get_trial_id(),
-	    type_id => $self->get_location_type_id(),
-	    value => $location_id,
-	});
-}
+    my $row = $self->bcs_schema()->resultset('Project::Projectprop')->find({
+	    project_id => $project_id,
+	    type_id => $type_id,
+		});
 
-=head2 function remove_location()
-
- Usage:        $trial->remove_location($location_id)
- Desc:         disociates the location with nd_geolocation_id of $location_id
-               from the trial.
- Ret:
- Args:
- Side Effects: database access
- Example:
-
-=cut
-
-sub remove_location {
-    my $self = shift;
-    my $location_id = shift;
-
-    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find(
-	{
-	    project_id => $self->get_trial_id(),
-	    type_id => $self->get_location_type_id(),
-	    value => $location_id,
-	});
-    if ($row) {
-	#print STDERR "Removing location $location_id from trail ".$self->get_trial_id()."\n";
-	$row->delete();
-    }
-
+		if ($row) {
+			$row->value($location_id);
+			$row->update();
+		}
+		else {
+			$row = $self->bcs_schema()->resultset('Project::Projectprop')->create({
+				project_id => $project_id,
+				type_id => $type_id,
+				value => $location_id,
+			});
+		}
 }
 
 # CLASS METHOD!
@@ -316,85 +299,6 @@ sub get_breeding_programs {
     return  \@projects;
 }
 
-
-=head2 function associate_project_type()
-
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub associate_project_type {
-    my $self = shift;
-    my $type = shift;
-
-    #print STDERR "\n\nAssociate type $type...\n";
-    # check if there is already a type associated with the project
-    #
-    my $cv_id = $self->bcs_schema->resultset('Cv::Cv')->find( { name => 'project_type' } )->cv_id();
-    my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
-    my @ids = map { $_->[0] } @project_type_ids;
-    my $has_project_type_rs = $self->bcs_schema->resultset('Project::Projectprop')->search(
-	{
-	    project_id => $self->get_trial_id(),
-	    type_id => { -in => [ @ids ] }
-	});
-
-    if ($has_project_type_rs->count() > 0) {
-	print STDERR "PROJECT ALREADY HAS ASSOCIATED PROJEC TYPE\n";
-	return "Project already has an associated project type - bailing out.\n";
-    }
-
-    # get the id for the right cvterm...
-    #
-    my $type_id = 0;
-    foreach my $pt (@project_type_ids) {
-	if ($pt->[0] eq $type) {
-	    $type_id = $pt->[0];
-			$type = $pt->[1];
-	}
-    }
-
-    my $row = $self->bcs_schema->resultset('Project::Projectprop')->create(
-	{
-	    value => $type,
-	    type_id => $type_id,
-	    project_id => $self->get_trial_id(),
-	}
-	);
-    $row->insert();
-    return undef;
-}
-
-=head2 function dissociate_project_type()
-
- Usage:        $t->dissociate_project_type();
- Desc:         removes the association of the trial with any trial type
- Ret:
- Args:         none
- Side Effects: modifies the database
- Example:
-
-=cut
-
-sub dissociate_project_type {
-    my $self = shift;
-
-
-    my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
-
-    my @ids = map { $_->[0] } @project_type_ids;
-    my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search( { type_id => { -in => [ @ids ] }, project_id => $self->get_trial_id() });
-    if (my $row = $rs->next()) {
-	$row->delete();
-    }
-    return undef;
-}
-
 =head2 function get_project_type()
 
  Usage:        [ $project_type_cvterm_id, $project_type_name ] = $t -> get_project_type();
@@ -429,6 +333,46 @@ sub get_project_type {
     }
     return undef;
 
+}
+
+=head2 function set_project_type()
+
+ Usage: $t -> set_project_type($type);
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub set_project_type {
+    my $self = shift;
+    my $type_id = shift;
+		my $project_id = $self->get_trial_id();
+		my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
+		my $type;
+
+		foreach my $pt (@project_type_ids) {
+			if ($pt->[0] eq $type_id) {
+				$type = $pt->[1];
+			}
+    }
+
+		my @ids = map { $_->[0] } @project_type_ids;
+    my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search({
+			type_id => { -in => [ @ids ] },
+			project_id => $project_id
+		});
+    if (my $row = $rs->next()) {
+			$row->delete();
+    }
+
+		my $row = $self->bcs_schema()->resultset('Project::Projectprop')->create({
+				project_id => $project_id,
+				type_id => $type_id,
+				value => $type,
+		});
 }
 
 sub get_breeding_program {

@@ -23,14 +23,14 @@ my $number_of_reps = 3;
 my $stock_list = [ 'test_accession1', 'test_accession2', 'test_accession3' ];
 
 my $td = CXGN::Trial::TrialDesign->new(
-    { 
+    {
 	schema => $f->bcs_schema(),
 	trial_name => "anothertrial",
 	stock_list => $stock_list,
 	number_of_reps => $number_of_reps,
 	block_size => 2,
 	design_type => 'RCBD',
-	number_of_blocks => 3,	
+	number_of_blocks => 3,
     });
 
 my $number_of_plots = $number_of_reps * scalar(@$stock_list);
@@ -42,7 +42,7 @@ my $trial_design = $td->get_design();
 my $breeding_program_row = $f->bcs_schema->resultset("Project::Project")->find( { name => 'test' });
 
 my $new_trial = CXGN::Trial::TrialCreate->new(
-    { 
+    {
 	dbh => $f->dbh(),
 	chado_schema => $f->bcs_schema(),
 	metadata_schema => $f->metadata_schema(),
@@ -67,9 +67,9 @@ my $trial_rs = $f->bcs_schema->resultset("Project::Project")->search( { name => 
 
 my $trial_id = 0;
 
-if ($trial_rs->count() > 0) { 
-    $trial_id = $trial_rs->first()->project_id(); 
-} 
+if ($trial_rs->count() > 0) {
+    $trial_id = $trial_rs->first()->project_id();
+}
 
 if (!$trial_id) { die "Test failed... could not retrieve trial\n"; }
 
@@ -79,10 +79,10 @@ my $trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 my $rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { name => 'anothertrial1' });
 
-if ($rs->count() > 0) { 
+if ($rs->count() > 0) {
     print STDERR "antohertrial1 has id ".$rs->first()->stock_id()."\n";
 }
-else { 
+else {
     print STDERR "anothertrial1 does not exist!\n";
 }
 
@@ -92,8 +92,8 @@ my $phenotype_count_before_store = $trial->phenotype_count();
 
 ok($trial->phenotype_count() == 0, "trial has no phenotype data");
 
-my $c = SimulateC->new( { dbh => $f->dbh(), 
-			  bcs_schema => $f->bcs_schema(), 
+my $c = SimulateC->new( { dbh => $f->dbh(),
+			  bcs_schema => $f->bcs_schema(),
 			  metadata_schema => $f->metadata_schema(),
 			  sp_person_id => 41 });
 
@@ -184,27 +184,22 @@ is($trial->get_year(), 2013, "set year test");
 # test location accessors
 #
 is_deeply($trial->get_location(), [ 23, 'test_location' ], "get location");
-$trial->remove_location(23);
-is_deeply($trial->get_location(), [], "remove location");
 
-$trial->add_location(23);
+$trial->set_location(23);
 is_deeply($trial->get_location(), [ 23, 'test_location' ], "set location");
 
 # test project type accessors
 #
-is($trial->get_project_type(), undef, "get project type");
+is($trial->get_project_type(), undef, "get type test");
 
-my $error = $trial->associate_project_type("clonal");
+my $error = $trial->set_type("clonal");
 
-is($trial->get_project_type()->[1], "clonal", "associate project type");
-
-my $error = $trial->dissociate_project_type();
-is($trial->get_project_type(), undef, "dissociate project type");
+is($trial->get_project_type()->[1], "clonal", "set type test");
 
 $trial->delete_project_entry();
 
 my $deleted_trial;
-eval { 
+eval {
      $deleted_trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema, trial_id=>$trial_id });
 };
 
@@ -212,5 +207,3 @@ ok($@, "deleted trial id");
 
 
 done_testing();
-
-

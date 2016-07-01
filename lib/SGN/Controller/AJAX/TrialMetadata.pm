@@ -133,40 +133,26 @@ sub trial_details_POST  {
 	    return;
     }
 
-    # use respective set method for each new detail that is defined
+    # set each new detail that is defined
     eval {
       if ($details->{name}) { $trial->set_name($details->{name}); }
-
       if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
-
-      if ($details->{location}) {
-        $trial->remove_location($trial->get_location()->[0]);
-        $trial->add_location($details->{location});
-      }
-
+      if ($details->{location}) { $trial->set_location($details->{location}); }
       if ($details->{year}) { $trial->set_year($details->{year}); }
-
-      if ($details->{type}) {
-        $trial->dissociate_project_type();
-        $trial->associate_project_type($details->{type});
-      }
-
+      if ($details->{type}) { $trial->set_project_type($details->{type}); }
       if ($details->{planting_date}) {
         if ($details->{planting_date} eq 'remove') { $trial->remove_planting_date($trial->get_planting_date()); }
         else { $trial->set_planting_date($details->{planting_date}); }
       }
-
       if ($details->{harvest_date}) {
         if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
         else { $trial->set_harvest_date($details->{harvest_date}); }
       }
-
       if ($details->{description}) { $trial->set_description($details->{description}); }
-
     };
 
     if ($@) {
-	    $c->stash->{rest} = { error => "An error occurred setting the trial details %details $@" };
+	    $c->stash->{rest} = { error => "An error occurred setting the new trial details: $@" };
     }
     else {
 	    $c->stash->{rest} = { success => 1 };
