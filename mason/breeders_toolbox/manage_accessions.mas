@@ -28,13 +28,24 @@ $preferred_species => ""
 
 </&>
 
-% #### Will not appear unless populations exist - in use with ricebase
-% if (scalar(@$population_groups) > 0) {
-<&| /page/info_section.mas, title=>"Populations", collapsible=>1, collapsed=>0, &>
-    <& /breeders_toolbox/accession_population_groups.mas, population_groups=>$population_groups&>
+<&| /page/info_section.mas, title=>"Populations", id=> "manage_accessions_populations", collapsible=>1, collapsed=>1, hide_if_empty=>1,  &>
 </&>
-% }
+<script>
 
+jQuery(document).ready(function () {
+
+  jQuery('#manage_accessions_populations_onswitch').click( function() {
+    jQuery.ajax ( {
+      url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed',
+beforeSend: function() {
+    jQuery("#working_modal").modal("show");
+},
+success: function(response){
+    //console.log(response);
+
+
+<& /breeders_toolbox/accession_population_groups.mas, population_groups=>$population_groups&>
+</script>
 </div>
 
 <& /breeders_toolbox/accessions/pedigree_spreadsheet_upload_format_info.mas &>
