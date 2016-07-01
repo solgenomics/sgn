@@ -55,6 +55,10 @@ my @secondary_dbxrefs = $cvterm->get_secondary_dbxrefs();
 my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxrefs);
 
 my $has_loci = $cvterm->has_loci;
+my $has_stocks = $cvterm->has_stocks;
+my $has_phenotypes = $cvterm->has_phenotypes;
+my $has_phen_trials = $cvterm->has_phenotyping_trials;
+
 
 my @qtl_pops = CXGN::Phenome::Qtl::Tools->new()->is_from_qtl( $cvterm_id );
 my @qtl_data;
@@ -179,7 +183,7 @@ LOAD...
 
 %}
 
-
+%if ($has_stocks) {
 <&| /page/info_section.mas,
        title=> "Annotated stocks",
        collapsible => 1,
@@ -199,6 +203,8 @@ LOAD...
 </div>
 
 </&>
+%}
+
 
 % if ( @qtl_pops )
 % {
@@ -215,6 +221,7 @@ LOAD...
   </&>
 % }
 
+%if ($has_phenotypes) {
 <&| /page/info_section.mas,
       title       => "Phenotyped accessions",
       collapsible => 1,
@@ -234,8 +241,9 @@ LOAD...
 </div>
 
 </&>
+%}
 
-
+%if ($has_phen_trials) {
 <&| /page/info_section.mas,
       title       => "Phenotyping trials",
       collapsible => 1,
@@ -255,5 +263,6 @@ LOAD...
 </div>
 
 </&>
+%}
 
 <& /qtl/waitmessage.mas &>
