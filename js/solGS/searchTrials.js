@@ -125,9 +125,15 @@ function checkTrainingPopulation (popId) {
 		
 		displayTrainingPopulations(tableDetails);					
             } else {
-		jQuery("#searched_trials_message").html('<p> Population ' + popId + 'can not be used as a training population.');
-		jQuery("#search_all_training_pops").show();	
-            }
+		jQuery("#searched_trials_message").html('<p> Population ' + popId + ' can not be used as a training population.');
+		jQuery("#search_all_training_pops").show();
+		
+		jQuery("#searched_trials_message")
+			.delay(4000)
+			.fadeOut('slow', function () {
+			    searchAllTrials('/solgs/search/trials');   
+			});
+	    }
 	}
     });
     
@@ -197,11 +203,14 @@ function checkPopulationExists (name) {
 			'<p>Checking if the trial or population can be used <br />' 
 			    + 'as a training population...please wait...</p>');	
 		} else { 		
-		    jQuery('#searched_trials_message').html(
-			'<p>There are no trials or training populations with the name <br />'
-			    + 'you searched in the database. <br />' 
-			    + 'If you have or want to make a training population ' 
-			    + 'using the search wizard, use the form below.</p>'); 			
+		    jQuery('#searched_trials_message')
+			.html('<p>' + name + ' is not in the database.</p>');
+		    
+		    jQuery("#searched_trials_message")
+			.delay(4000)
+			.fadeOut('slow', function () {
+			    searchAllTrials('/solgs/search/trials');   
+			});		   		    
 		}
 	    }
 	});
