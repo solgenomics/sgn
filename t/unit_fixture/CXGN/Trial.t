@@ -192,7 +192,7 @@ is_deeply($trial->get_location(), [ 23, 'test_location' ], "set location");
 #
 is($trial->get_project_type(), undef, "get type test");
 
-my $error = $trial->set_type("clonal");
+my $error = $trial->set_project_type("76463");
 
 is($trial->get_project_type()->[1], "clonal", "set type test");
 

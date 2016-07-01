@@ -352,7 +352,7 @@ function trial_detail_page_setup_dialogs() {
     });
 
     jQuery('#edit_trial_details').click(function () {
-        // set up handlers
+        // set up inout handlers
         jQuery('#clear_planting_date').click(function () {
           jQuery('#edit_trial_planting_date').val('');
           highlight_changed_details('edit_trial_planting_date');
@@ -418,21 +418,18 @@ function trial_detail_page_setup_dialogs() {
         );
         set_daterangepicker_default(harvest_date_element, harvest_date);
 
-        //show dialog
+        //show dialog and handle cancel and save events
         jQuery('#trial_details_edit_dialog').modal("show");
 
-        //handle cancel and save
         jQuery('#edit_trial_details_cancel_button').click(function () {
             reset_dialog_body('trial_details_edit_body', edit_details_body_html);
         });
 
         jQuery('#save_trial_details').click(function () {
-          // get all changed (highlighted) options
           var changed_elements = document.getElementsByName("changed");
           var categories = [];
           var new_details = {};
           var success_message = '';
-          console.log("changed elements =" + changed_elements);
           for(var i=0; i<changed_elements.length; i++) {
             var id = changed_elements[i].id;
             var type = changed_elements[i].title;
@@ -449,9 +446,8 @@ function trial_detail_page_setup_dialogs() {
 
           jQuery('#trial_details_edit_dialog').modal("hide");
           save_trial_details(categories, new_details, success_message);
-        //  reset_dialog_body('trial_details_edit_body', edit_details_body_html);
-        });
 
+        });
     });
 
   jQuery('#trial_details_error_close_button').click( function() {
