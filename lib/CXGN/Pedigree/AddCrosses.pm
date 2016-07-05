@@ -265,7 +265,7 @@ sub add_crosses {
 					  } );
 
       #link the cross program to the breeding program
-			my $trial_object = CXGN::Trial->new({ schema => $chado_schema, trial_id => $project->project_id() });
+			my $trial_object = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $project->project_id() });
 			$trial_object->set_breeding_program($program->project_id());
 
       #add the cross type to the experiment as an experimentprop

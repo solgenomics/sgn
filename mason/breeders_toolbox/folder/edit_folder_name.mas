@@ -1,0 +1,96 @@
+<%args>
+$trial_id
+$trial_name => undef
+$trial_type
+</%args>
+
+<div class="modal fade" id="edit_trial_name_dialog" name="edit_trial_name_dialog" tabindex="-1" role="dialog" aria-labelledby="editTrialNameDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="editTrialNameDialog">Edit Name for <% $trial_type %></h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+	       <form class="form-horizontal" role="form" method="post" id="new_folder_dialog_form" name="new_folder_dialog_form">
+	        <div class="form-group">
+      	      <label class="col-sm-3 control-label"><% $trial_type %> Name: </label>
+      	      <div class="col-sm-9" >
+                <input name="trial_name_input" placeholder="<% $trial_name %>" id="trial_name_input" class="form-control" type="text" autofocus/>
+                <input type="hidden" id="edit_trial_name_trial_id" value="<% $trial_id %>" />
+              </div>
+	        </div>
+	       </form><br/>
+         
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="edit_name_cancel_button" id="edit_name_cancel_button" data-dismiss="modal">Close</button>
+	      <button type="button" class="btn btn-primary" name="edit_name_save_button" id="edit_name_save_button" title="Save">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function() {
+
+  jQuery('#edit_trial_name').click( function () {
+    jQuery('#edit_trial_name_dialog').modal("show");
+  });
+  
+  jQuery('#edit_name_save_button').click( function () {
+    save_trial_name();
+  });
+
+});
+
+function display_trial_name(trial_id, type) {
+  jQuery.ajax( {
+    url: '/ajax/breeders/trial/'+trial_id+'/names',
+    success: function(response) {
+      if (response.error) {
+        jQuery('#trial_name').html('[ An error occurred fetching the trial name ]');
+      }
+      else {
+        jQuery('#trial_name').html(response.names);
+        jQuery('#trial_name_input').html(response.names);
+        jQuery('#pagetitle').html("<h3>"+type+" detail for "+response.names+"</h3>");
+      }
+    },
+    error: function(response) {
+      jQuery('#trial_name').html('[ A protocol error occurred ]');
+    }
+  });
+}
+
+
+function save_trial_name() {
+  var trial_id = jQuery('#edit_trial_name_trial_id').val();
+  var names = jQuery('#trial_name_input').val();
+  //alert('New name = '+names);
+  jQuery.ajax( {
+    url: '/ajax/breeders/trial/'+trial_id+'/names/',
+    type: 'POST',
+    data: {'names' : names},
+    success: function(response) {
+      if (response.error) {
+        alert(response.error);
+      }
+      else {
+        alert("Successfully updated trial name");
+        jQuery('#edit_trial_name_dialog').modal("hide");
+        display_trial_name(trial_id, "<% $trial_type %>");
+      }
+    },
+    error: function(response) {
+      alert("An error occurred updating the trial name");
+    },
+  });
+}
+
+</script>
