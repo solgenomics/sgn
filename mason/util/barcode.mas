@@ -45,6 +45,7 @@ if ($format eq "code128") {
 if ($format eq "qrcode") { 
   my $info = "http://solgenomics.net/stock/$identifier/view";
   $link = "/barcode/qrcodepng/$info/$encoded_text";
+  #$link = "/barcode/qrcodepng/$identifier/$encoded_text";
 }
 
 

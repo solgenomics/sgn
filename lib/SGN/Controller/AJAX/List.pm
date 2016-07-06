@@ -78,7 +78,6 @@ sub retrieve_contents :Path('/list/contents') Args(1) {
     my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id });
 
     my $elements = $list->elements();
-
     $c->stash->{rest} = $elements;
 }
 
@@ -397,7 +396,7 @@ sub add_bulk : Path('/list/add/bulk') Args(0) {
     my $c = shift;
     my $list_id = $c->req->param("list_id");
     my $elements = $c->req->param("elements");
-
+   
     my $user_id = $self->get_user($c);
     my $error = $self->check_user($c, $list_id);
     if ($error) { 
