@@ -2,7 +2,7 @@
 * visualize and compare gebvs of a training population 
 * and a selection population.
 * normal distribution plotting using d3.
-* uses methods from statistics/simple_statistics js library
+* uses methods from statistics/simple_statistics and solGS.linePlot js libraries
 * Isaak Y Tecle <iyt2@cornell.edu>
 *
 */
@@ -13,7 +13,6 @@ jQuery(document).ready(function () {
 	gebvsComparison();
     }); 
 });
-
 
 
 function gebvsComparison () {
@@ -255,19 +254,6 @@ function gebvsComparison () {
 	var xValuesT = getGebvs(trainingGEBVs);
 	var xValuesS = getGebvs(selectionGEBVs);
 
-	var extremesX = [
-	    d3.min(xValuesT), 
-	    d3.min(xValuesT), 
-	    d3.max(xValuesS), 
-	    d3.max(xValuesS)
-	];
-
-	var height = 300;
-	var width  = 800;
-	var pad    = {'left':60, 'top':40, 'right':20, 'bottom': 40}; 
-	var totalH = height + pad.top + pad.bottom;
-	var totalW = width + pad.left + pad.right;		
-
 	var svgId  = '#compare_gebvs_canvas';
 	var plotId = '#compare_gebvs_plot';
 
@@ -280,10 +266,30 @@ function gebvsComparison () {
 	var title = 'Normal distribution curves of GEBVs ' 
 	    + 'for the training and selection populations.';
 	
-	var legendValues = [
-	    [trColor, 'Training population'], 
-	    [slColor, 'Selection population']
-	];
+
+	var allData =  {
+	    'div_id': svgId, 
+	    'plot_title': title, 
+	    'x_axis_label': xLabel,
+	    'y_axix_label': yLabel,
+	    'lines' : 
+	    [ 		
+		{
+		    'data'  : xYT, 
+		    'legend': 'Training population' ,
+		    'color' : trColor,
+		},	
+		{
+		    'data'  : xYS, 
+		    'legend': 'Selection population',
+		    'color' : slColor,
+		},		    
+		
+	    ]    
+	};
+
+
+	var linePlot  = solGS.linePlot(allData);
 
 	var trainingMidlineData  = [
 	    [ss.mean(xValuesT), d3.min(yValuesT)], 
@@ -295,136 +301,28 @@ function gebvsComparison () {
 	    [ss.mean(xValuesS), d3.max(yValuesS)]
 	];
 
-	var xScale = d3.scale.linear()
-	    .domain([d3.min(extremesX), d3.max(extremesX)])
-	    .range([0, width]);
-
-	var yScale = d3.scale.linear()
-	    .domain([0, d3.max([d3.max(yValuesT), d3.max(yValuesS)])])
-	    .range([height, 0]);
-	
-	var line = d3.svg.line()
+	var midLine = d3.svg.line()
 	    .x(function(d) { 
-		return xScale(d[0]); 
+		return linePlot.xScale(d[0]); 
 	    })
 	    .y(function(d) { 			
-		return yScale(d[1]); 
+		return linePlot.yScale(d[1]); 
 	    });
 
-	var svg = d3.select(svgId)
-	    .append("svg")
-	    .attr("width", totalW)
-	    .attr("height", totalH);
-
-	var graph = svg.append("g")
-	    .attr("id", plotId)
-            .attr("transform", "translate(" + pad.left + "," + pad.top  + ")");
-
-	var xAxis = d3.svg.axis()
-            .scale(xScale)
-            .orient("bottom")
-	    .ticks(15);
-
-	var yAxis = d3.svg.axis()
-            .scale(yScale)
-	    .ticks(5)
-            .orient("left");
 	
-	graph.append("g")
-	    .attr("class", "x axis")
-	    .attr("transform", "translate(0,"  +  height + ")")
-	    .call(xAxis)
-	    .attr("fill", axisColor)
-            .style({"text-anchor":"start", "fill": axisColor});
-
-	graph.append("g")
-	    .attr("class", "y axis")
-	    .attr("transform", "translate(0,0)")
-	    .call(yAxis)
-	    .attr("fill", axisColor);
-	
-	var path = graph.append("path")
-	    .attr("d", line(xYT))
-	    .attr("stroke", trColor)
-	    .attr("stroke-width", "3")
-	    .attr("fill", "none");
-	
-	var totalLength = path.node().getTotalLength();
-
-	path.attr("stroke-dasharray", totalLength + " " + totalLength)
-    	    .attr("stroke-dashoffset", totalLength)
-    	    .transition()
-            .duration(2000)
-            .ease("linear")
-            .attr("stroke-dashoffset", 0);
-
-	path = graph.append("path")
-	    .attr("d", line(xYS))
-	    .attr("stroke", slColor)
-	    .attr("stroke-width", "3")
-	    .attr("fill", "none");
-	
-	totalLength = path.node().getTotalLength();
-
-	path.attr("stroke-dasharray", totalLength + " " + totalLength)
-    	    .attr("stroke-dashoffset",  totalLength)
-    	    .transition()
-            .duration(2000)
-            .ease("linear")
-            .attr("stroke-dashoffset", 0);
-
-	graph.append("path")
-	    .attr("d", line(trainingMidlineData))
+	linePlot.graph.append("path")
+	    .attr("d", midLine(trainingMidlineData))
 	    .attr("stroke", trColor)
 	    .attr("stroke-width", "3")
 	    .attr("fill", "none");
 
-	graph.append("path")
-	    .attr("d", line(selectionMidlineData))
+	linePlot.graph.append("path")
+	    .attr("d", midLine(selectionMidlineData))
 	    .attr("stroke", slColor)
 	    .attr("stroke-width", "3")
 	    .attr("fill", "none");
 
-	graph.append("text")
-            .attr("id", "title")
-            .attr("fill", axisColor)              
-            .text(title)
-            .attr("x", pad.left)
-            .attr("y", -20);
-	
-	graph.append("text")
-            .attr("id", "xLabel")
-            .attr("fill", axisColor)              
-            .text(xLabel)
-            .attr("x", width * 0.5)
-            .attr("y", height + 40);
 
-	graph.append("text")
-            .attr("id", "yLabel")
-            .attr("fill", axisColor)              
-            .text(yLabel)     
-	    .attr("transform", "translate(" + -40 + "," +  height * 0.5 + ")" + " rotate(-90)");
-
-	var legendTxt = graph.append("g")
-    	    .attr("transform", "translate(" + (width - 150) + "," + (height * 0.25)  + ")")
-            .attr("id", "normalLegend");
-
-	legendTxt.selectAll("text")
-            .data(legendValues)  
-            .enter()
-            .append("text")              
-            .attr("fill", function (d) { 
-		return d[0]; 
-	    })
-	    .attr("font-weight", "bold")
-            .attr("x", 1)
-            .attr("y", function (d, i) { 
-		return i * 20; 
-	    })
-            .text(function (d) { 
-		return d[1];
-	    }); 
-  	
     }
 
 //////////
