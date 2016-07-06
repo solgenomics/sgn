@@ -21,7 +21,7 @@ $selection_pop_id => ''
 </%args>
 
 
-<& /util/import_javascript.mas, classes => ["solGS.gebvsComparison", "statistics.simple_statistics"] &>
+<& /util/import_javascript.mas, classes => ["solGS.linePlot", "solGS.gebvsComparison", "statistics.simple_statistics"] &>
 
 <&| /page/info_section.mas, 
       collapsible => 1, 
