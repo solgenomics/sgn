@@ -1,38 +1,46 @@
 <%args>
-$population_groups
 </%args>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<script>
+jQuery(document).ready(function () {
 
+  jQuery('#manage_accessions_populations_onswitch').click( function() {
+    jQuery.ajax ( {
+      url : '/ajax/manage_accessions/populations',
+      beforeSend: function() {
+        jQuery("#working_modal").modal("show");
+      },
+      success: function(response){
+        console.log("populations object="+JSON.stringify(response.populations));
+        var populations = response.populations;
 
-% foreach my $group (@{$population_groups}) {
-  <&| /page/info_section.mas, title=>$group->{'name'}, collapsible=>1, collapsed=>1, &>
-  <table class="table table-bordered table-striped table-hover table-condensed">
-  <thead>
-    <tr>
-      <th>Accession Name</th>
-      <th>Description</th>
-      <th>Synonyms</th>
-    </tr>
-  </thead>
-  <tbody>
-  <%perl>
-  foreach my $accession (@{$group->{'members'}}) {
-      my $synonym_list = '';
-      my @synonyms = @{$accession->{'synonyms'}};
-      foreach my $synonym (@synonyms) {
-         if ($synonym_list eq '') {
-	    $synonym_list = $synonym;
-	 } else {
-           $synonym_list = $synonym_list.", ".$synonym;
-	 }
-      }    
-      print "<tr><td><a href=\"/stock/".$accession->{'stock_id'}."/view\">".$accession->{'name'}."</a></td><td>".$accession->{'description'}."</td><td>".$synonym_list."</td></tr>";
-  }
-  </%perl>
-  </tbody>
-  </table>
-  </&>
-% }
+        for (var i in populations) {
+          var name = populations[i].name;
+          console.log("name="+JSON.stringify(name));
+          var accessions = populations[i].members;
+          console.log("accessions="+JSON.stringify(accessions));
+          var table_id = name +"_pop_table";
+          console.log("table_id="+JSON.stringify(table_id));
+          var section_html = "<div class='well well-sm table-responsive'><center><h4>"+name+"</h4></center><hr><table class='display' id='"+table_id+"'></table></div>";
+          console.log("section_html="+JSON.stringify(section_html));
+          jQuery('#manage_accessions_populations_content').append(section_html);
 
-
-
-
+          jQuery('#'+table_id).DataTable( {
+            data: accessions,
+            columns: [
+              { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
+              { title: "Description", "data": "description" },
+              { title: "Synonyms", "data": "synonyms[, ]" }
+            ]
+          });
+        }
+        jQuery("#working_modal").modal("hide");
+      },
+      error: function(response) {
+        jQuery("#working_modal").modal("hide");
+        alert('An error occured retrieving population data.');
+      }
+    });
+  });
+});
+</script>
