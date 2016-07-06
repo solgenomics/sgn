@@ -85,7 +85,10 @@ jQuery(document).ready(function ($) {
                     missing_accessions_vals = missing_accessions_vals + response.missing_accessions[i] + '\n';
                 }
                 $("#upload_trial_missing_accessions").html(missing_accessions_vals);
-                addToListMenu('upload_trial_add_missing_accessions', 'upload_trial_missing_accessions');
+                addToListMenu('upload_trial_add_missing_accessions', 'upload_trial_missing_accessions', {
+          selectText: true,
+          listType: 'accessions'
+        });
             }
 
             $("#upload_trial_error_display tbody").append(response.error_string);
