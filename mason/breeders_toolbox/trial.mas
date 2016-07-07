@@ -315,9 +315,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
 <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
-<div id="plot_information_div">
-    
-  </div>
+
 </&>
 
 </&>
