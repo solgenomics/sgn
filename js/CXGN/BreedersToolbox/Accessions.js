@@ -50,7 +50,7 @@ jQuery(document).ready(function ($) {
             var table_id = name+"_pop_table";
 
             var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'">';
-            section_html += '<div class="panel-title"><a href="#" class="accordion-toggle">'+name+'</a></div></div>';
+            section_html += '<div class="panel-title"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div></div>';
             section_html += '<div id="collapse'+i+'" class="panel-collapse collapse">';
             section_html += '<div class="panel-body" style="overflow:hidden"><div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"></table></div>';
             section_html += '</div></div></div></div><br/>';
