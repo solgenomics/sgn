@@ -23,15 +23,59 @@ jQuery(document).ready(function ($) {
     var doFuzzySearch;
     var validSpecies;
 
-    function disable_ui() { 
+    function disable_ui() {
 	//$('#working').dialog("open");
 	$('#working_modal').modal("show");
     }
 
-    function enable_ui() { 
+    function enable_ui() {
 	//$('#working').dialog("close");
 	$('#working_modal').modal("hide");
     }
+
+    jQuery('#manage_accessions_populations_onswitch').click( function() {
+      var already_loaded_tables = jQuery('#accordion').find("table");
+      if (already_loaded_tables.length > 0) { return; }
+
+      jQuery.ajax ( {
+        url : '/ajax/manage_accessions/populations',
+        beforeSend: function() {
+          disable_ui();
+        },
+        success: function(response){
+          var populations = response.populations;
+          for (var i in populations) {
+            var name = populations[i].name;
+            var accessions = populations[i].members;
+            var table_id = name+i+"_pop_table";
+
+            var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'">';
+            section_html += '<div class="panel-title"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div></div>';
+            section_html += '<div id="collapse'+i+'" class="panel-collapse collapse">';
+            section_html += '<div class="panel-body" style="overflow:hidden"><div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"></table></div>';
+            section_html += '</div></div></div></div><br/>';
+
+            jQuery('#accordion').append(section_html);
+
+            jQuery('#'+table_id).DataTable( {
+              data: accessions,
+              retrieve: false,
+              columns: [
+                { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
+                { title: "Description", "data": "description" },
+                { title: "Synonyms", "data": "synonyms[, ]" }
+              ]
+            });
+
+          }
+          enable_ui();
+        },
+        error: function(response) {
+          enable_ui();
+          alert('An error occured retrieving population data.');
+        }
+      });
+    });
 
     function add_accessions(accessionsToAdd, speciesName, populationName) {
 	var accessionsAsJSON = JSON.stringify(accessionsToAdd);
@@ -48,7 +92,7 @@ jQuery(document).ready(function ($) {
 	    },
 	    beforeSend: function(){
 		disable_ui();
-            },  
+            },
 	    success: function (response) {
 		enable_ui();
 		if (response.error) {
@@ -113,7 +157,7 @@ jQuery(document).ready(function ($) {
     });
 
 //    $("#review_absent_dialog").dialog({
-//	autoOpen: false,	
+//	autoOpen: false,
 //	modal: true,
 //	autoResize:true,
 //        width: 500,
@@ -145,7 +189,7 @@ jQuery(document).ready(function ($) {
 //    });
 
     //$("#review_found_matches_dialog").dialog({
-//	autoOpen: false,	
+//	autoOpen: false,
 //	modal: true,
 //	autoResize:true,
 //        width: 500,
@@ -158,7 +202,7 @@ jQuery(document).ready(function ($) {
 //    });
 
 //    $("#review_fuzzy_matches_dialog").dialog({
-//	autoOpen: false,	
+//	autoOpen: false,
 //	modal: true,
 //	autoResize:true,
 //        width: 500,
@@ -178,22 +222,22 @@ jQuery(document).ready(function ($) {
 	    $('#count_of_found_accessions').html("Total number already in the database("+verifyResponse.found.length+")");
 	    var found_html = '<table class="table" id="found_accessions_table"><thead><tr><th>Search Name</th><th>Unique Name for Synonym</th></tr></thead><tbody>';
 	    for( i=0; i < verifyResponse.found.length; i++){
-		found_html = found_html 
+		found_html = found_html
 		    +'<tr><td>'+verifyResponse.found[i].matched_string
 		    +'</td>';
 		if (verifyResponse.found[i].matched_string != verifyResponse.found[i].unique_name){
-		    found_html = found_html 
+		    found_html = found_html
 			+'<td>'
 			+verifyResponse.found[i].unique_name
 			+'</td>';
 		} else {
-		    found_html = found_html 
+		    found_html = found_html
 			+'<td></td>';
 		}
-		found_html = found_html 
+		found_html = found_html
 		    +'</tr>';
 	    }
-	    found_html = found_html 
+	    found_html = found_html
 		+'</tbody></table>';
 
 	    $('#view_found_matches').html(found_html);
@@ -210,7 +254,7 @@ jQuery(document).ready(function ($) {
 		$('#review_found_matches_dialog').on('hidden.bs.modal', function () {
 		    $('#review_fuzzy_matches_dialog').modal('show');
 		});
-		
+
 	    }else{
 
 		accessionList = verifyResponse.absent;
@@ -225,7 +269,7 @@ jQuery(document).ready(function ($) {
 		    }
 		});
 	    }
-	    
+
 	}
 
 	if (verifyResponse.fuzzy && doFuzzySearch) {
@@ -267,14 +311,14 @@ jQuery(document).ready(function ($) {
 		source: '/organism/autocomplete'
 	    });
 	    for( i=0; i < verifyResponse.absent.length; i++){
-		absent_html = absent_html 
+		absent_html = absent_html
 		    +'<div class="left">'+verifyResponse.absent[i]
 		    +'</div>';
 	    }
 	    $('#view_absent').html(absent_html);
 	    //$('#review_absent_dialog').dialog('open');
 	}
-    } 
+    }
 
     function verify_accession_list() {
 	var accession_list_id = $('#accessions_list_select').val();
@@ -283,7 +327,7 @@ jQuery(document).ready(function ($) {
 	//alert("should be disabled");
 	//alert (doFuzzySearch);
 	//alert(accession_list);
-	
+
 
 
 	$.ajax({
@@ -298,10 +342,10 @@ jQuery(document).ready(function ($) {
 	    },
 	    beforeSend: function(){
 		disable_ui();
-            },  
+            },
             //complete : function(){
 	    //enable_ui();
-            //},  
+            //},
 	    success: function (response) {
 		//enable_ui();
 		enable_ui();
@@ -344,6 +388,6 @@ jQuery(document).ready(function ($) {
 	$("#list_div").html(list.listSelect("accessions"));
     });
 
-    
-    
+
+
 });
