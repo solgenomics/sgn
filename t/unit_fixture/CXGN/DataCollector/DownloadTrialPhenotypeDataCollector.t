@@ -10,6 +10,7 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial::Download;
 use Spreadsheet::Read;
+use utf8;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
