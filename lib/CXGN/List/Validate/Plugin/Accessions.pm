@@ -41,13 +41,13 @@ sub validate {
     # check uniquename
     #
     foreach my $item (@$list) { 
-	my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => { ilike =>  $item} });
+	my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => { ilike =>  $item}, is_obsolete => 'F' });
 	
 	if ($rs->count > 0) { $items{$item}++ }
     }
     
     foreach my $item (@$list) { 
-	my $rs = $schema->resultset("Stock::Stockprop")->search( { value => { ilike =>  $item }, type_id => $synonym_type_id });
+	my $rs = $schema->resultset("Stock::Stockprop")->search( { value => { ilike =>  $item }, 'me.type_id' => $synonym_type_id })->search_related( "stock", { is_obsolete => 'F' });
 	if ($rs->count > 0) { $items{$item}++ }
     }
 

@@ -24,7 +24,7 @@ Guillaume Bauchet (gjb99@cornell.edu)
 
     July 2015
 
-  
+
 
 =cut
 
@@ -35,7 +35,7 @@ use Getopt::Std;
 use CXGN::Tools::File::Spreadsheet;
 
 use CXGN::Phenome::Schema;
-use CXGN::BreedersToolbox::Projects;
+use CXGN::Trial;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Carp qw /croak/ ;
@@ -114,7 +114,7 @@ my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 
 print "Finding/creating cvterm for stock relationship 'member_of' \n";
 
 my $member_of = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship');
-   
+
 #the cvterm for the population
 print "Finding/creating cvterm for population\n";
 my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type');
@@ -134,14 +134,14 @@ my $population = $stock_rs->find_or_create(
 # link to MGIS database
 my $mg_dbid;
 my $mg_row = $schema->resultset("General::Db")->find( { name=>'MGIS' });
-if (!$mg_row) { 
-	my $new_mg_row = $schema->resultset("General::Db")->create( { 
+if (!$mg_row) {
+	my $new_mg_row = $schema->resultset("General::Db")->create( {
 		name => "MGIS"
 	});
-	
+
 	$mg_dbid = $new_mg_row->db_id();
 }
-else { 
+else {
 	$mg_dbid = $mg_row->db_id();
 }
 
@@ -185,9 +185,9 @@ my $coderef= sub  {
         my $year = $spreadsheet->value_at($num, "YEAR");
         my $project_description = $spreadsheet->value_at($num, "PROJECT_DESCRIPTION");
         #my $project_description = "$name $project_type ($year) $location";
-       
+
         print"project descr is $project_description /n";
-       
+
         # see if a stock exists with any of the synonyms
         my @stocks = $stock_rs->search( {
             -or => [
@@ -197,14 +197,14 @@ my $coderef= sub  {
                  uniquename => $syn3,
                  #uniquename => $syn4,
                 ], }, );
-               
+
 		my $existing_stock = $stock_rs->search( { uniquename => $accession } )->single;
 			foreach my $s(@stocks) {
 				print "Looking at accession $accession, Found stock '" . $s->uniquename . "(stock_id = " . $s->stock_id . ")'\n";
 				$existing++;
 			}
-    
-    
+
+
     ##
         if (!@stocks) {
             print "NEW stock: $accession\n";
@@ -237,17 +237,17 @@ my $coderef= sub  {
         });
         my $stock_id = $stock->stock_id;
         print "Adding owner $curator\n";
-  
+
         my $curator_person_id =  CXGN::People::Person->get_person_by_username($dbh, $curator); #add person id as an option.
         if (!$curator_person_id) { die "Person $curator does not exist in the database! Please add this user before continuing \n";}
-        #add owner for this stock       
+        #add owner for this stock
         $phenome_schema->resultset("StockOwner")->find_or_create(
             {
                 stock_id     => $stock->stock_id,
                 sp_person_id => $curator_person_id,
 
             });
-            if ($ITC_name) { 
+            if ($ITC_name) {
 				my $row = $schema -> resultset("General::Dbxref")->find_or_create(
 				{
 					accession => $ITC_name, db_id=>$mg_dbid,
@@ -275,9 +275,9 @@ my $coderef= sub  {
         #name => $name,
         description => $project_type,
         } ) ;
-       
+
         my $project_description = "$name $project_type ($year) $location";
-       
+
         #print"project descr is $project_description /n";
 
         my $project = $schema->resultset("Project::Project")->find_or_create(
@@ -285,11 +285,11 @@ my $coderef= sub  {
         name => $name,
         description => $project_description,
         } ) ;
-                
-        #associate the new project with breeding program
-        my $cxgn_project = CXGN::BreedersToolbox::Projects->new( { schema => $schema } ) ;
-        $cxgn_project->associate_breeding_program_with_trial( $banana_project->project_id, $project->project_id);
-        #
+
+        #associate the new trial with breeding program
+        my $trial = CXGN::Trial->new({ schema => $schema, trial_id => $project->project_id() });
+  			$trial->set_breeding_program($banana_project->project_id);
+
         print "banana id = " . $banana_project->project_id . " project_id = " . $project->project_id . "\n";
         #store the geolocation data and props:
         my $geo_description = $location;
@@ -327,7 +327,7 @@ my $coderef= sub  {
                                               {autocreate => 1,
                                                #cv_name => 'local', #use default stock_property cv
                                                allow_duplicate_values=> 1,
-                          
+
                                               });
                 }
             }
@@ -336,16 +336,16 @@ my $coderef= sub  {
 		foreach  my $p ( @props )  {
 			print "**the prop value for stock " . $stock->name() . " is   " . $p->value() . "\n"  if $p;
 		}
-		
+
 
 		   #########
     }
-    
-   
-	
 
-   
-    
+
+
+
+
+
     print "TOTAL: \n $count rows \n $new_count new accessions \n $existing existing stocks \n $syn_count new synonyms \n MERGE :\n  $merge\n";
     #if ($opt_t) { die "test rolling back";}
 };
@@ -359,7 +359,7 @@ try {
     }
     else {
         $schema->txn_rollback();
-        die "TEST RUN! rolling back\n";     
+        die "TEST RUN! rolling back\n";
     }
 } catch {
     # Transaction failed

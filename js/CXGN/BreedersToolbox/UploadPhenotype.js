@@ -92,6 +92,10 @@ jQuery( document ).ready( function() {
 		location.reload();
 	})
 
+	jQuery('#delete_pheno_file_link').click( function() { 
+		alert('Deleted successfully.');
+        });  
+
 });
 
 function initializeUploadPhenotype(uploadFile, message, file_form, url) {

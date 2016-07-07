@@ -186,9 +186,9 @@ sub get_location {
     }
 }
 
-=head2 function add_location()
+=head2 function set_location()
 
- Usage:        $trial->add_location($location_id);
+ Usage:        $trial->set_location($location_id);
  Desc:
  Ret:          nothing
  Args:
@@ -197,45 +197,28 @@ sub get_location {
 
 =cut
 
-sub add_location {
+sub set_location {
     my $self = shift;
     my $location_id = shift;
+		my $project_id = $self->get_trial_id();
+		my $type_id = $self->get_location_type_id();
 
-    my $row = $self->bcs_schema()->resultset('Project::Projectprop')->create(
-	{
-	    project_id => $self->get_trial_id(),
-	    type_id => $self->get_location_type_id(),
-	    value => $location_id,
-	});
-}
+    my $row = $self->bcs_schema()->resultset('Project::Projectprop')->find({
+	    project_id => $project_id,
+	    type_id => $type_id,
+		});
 
-=head2 function remove_location()
-
- Usage:        $trial->remove_location($location_id)
- Desc:         disociates the location with nd_geolocation_id of $location_id
-               from the trial.
- Ret:
- Args:
- Side Effects: database access
- Example:
-
-=cut
-
-sub remove_location {
-    my $self = shift;
-    my $location_id = shift;
-
-    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find(
-	{
-	    project_id => $self->get_trial_id(),
-	    type_id => $self->get_location_type_id(),
-	    value => $location_id,
-	});
-    if ($row) {
-	#print STDERR "Removing location $location_id from trail ".$self->get_trial_id()."\n";
-	$row->delete();
-    }
-
+		if ($row) {
+			$row->value($location_id);
+			$row->update();
+		}
+		else {
+			$row = $self->bcs_schema()->resultset('Project::Projectprop')->create({
+				project_id => $project_id,
+				type_id => $type_id,
+				value => $location_id,
+			});
+		}
 }
 
 # CLASS METHOD!
@@ -316,84 +299,6 @@ sub get_breeding_programs {
     return  \@projects;
 }
 
-
-=head2 function associate_project_type()
-
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub associate_project_type {
-    my $self = shift;
-    my $type = shift;
-
-    #print STDERR "\n\nAssociate type $type...\n";
-    # check if there is already a type associated with the project
-    #
-    my $cv_id = $self->bcs_schema->resultset('Cv::Cv')->find( { name => 'project_type' } )->cv_id();
-    my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
-    my @ids = map { $_->[0] } @project_type_ids;
-    my $has_project_type_rs = $self->bcs_schema->resultset('Project::Projectprop')->search(
-	{
-	    project_id => $self->get_trial_id(),
-	    type_id => { -in => [ @ids ] }
-	});
-
-    if ($has_project_type_rs->count() > 0) {
-	print STDERR "PROJECT ALREADY HAS ASSOCIATED PROJEC TYPE\n";
-	return "Project already has an associated project type - bailing out.\n";
-    }
-
-    # get the id for the right cvterm...
-    #
-    my $type_id = 0;
-    foreach my $pt (@project_type_ids) {
-	if ($pt->[1] eq $type) {
-	    $type_id = $pt->[0];
-	}
-    }
-
-    my $row = $self->bcs_schema->resultset('Project::Projectprop')->create(
-	{
-	    value => 1,
-	    type_id => $type_id,
-	    project_id => $self->get_trial_id(),
-	}
-	);
-    $row->insert();
-    return undef;
-}
-
-=head2 function dissociate_project_type()
-
- Usage:        $t->dissociate_project_type();
- Desc:         removes the association of the trial with any trial type
- Ret:
- Args:         none
- Side Effects: modifies the database
- Example:
-
-=cut
-
-sub dissociate_project_type {
-    my $self = shift;
-
-
-    my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
-
-    my @ids = map { $_->[0] } @project_type_ids;
-    my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search( { type_id => { -in => [ @ids ] }, project_id => $self->get_trial_id() });
-    if (my $row = $rs->next()) {
-	$row->delete();
-    }
-    return undef;
-}
-
 =head2 function get_project_type()
 
  Usage:        [ $project_type_cvterm_id, $project_type_name ] = $t -> get_project_type();
@@ -430,32 +335,98 @@ sub get_project_type {
 
 }
 
+=head2 function set_project_type()
+
+ Usage: $t -> set_project_type($type);
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub set_project_type {
+    my $self = shift;
+    my $type_id = shift;
+		my $project_id = $self->get_trial_id();
+		my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
+		my $type;
+
+		foreach my $pt (@project_type_ids) {
+			if ($pt->[0] eq $type_id) {
+				$type = $pt->[1];
+			}
+    }
+
+		my @ids = map { $_->[0] } @project_type_ids;
+    my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search({
+			type_id => { -in => [ @ids ] },
+			project_id => $project_id
+		});
+    if (my $row = $rs->next()) {
+			$row->delete();
+    }
+
+		my $row = $self->bcs_schema()->resultset('Project::Projectprop')->create({
+				project_id => $project_id,
+				type_id => $type_id,
+				value => $type,
+		});
+}
+
 sub get_breeding_program {
     my $self = shift;
-    my $rs = $self->bcs_schema()->resultset("Project::ProjectRelationship")->search(
-	{
-	    type_id => $self->get_breeding_program_id(),
-	    subject_project_id => $self->get_trial_id(),
-	});
 
+    my $rs = $self->bcs_schema()->resultset("Project::ProjectRelationship")->search({
+			subject_project_id => $self->get_trial_id(),
+	    type_id => $self->get_breeding_program_trial_relationship_cvterm_id(),
+		});
     if ($rs->count() == 0) {
-	return undef;
+			return undef;
     }
 
-    my $bp_rs = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $rs->first()->object_project_id() });
+    my $bp_rs = $self->bcs_schema()->resultset("Project::Project")->search({
+			project_id => $rs->first()->object_project_id()
+		});
     if ($bp_rs->count > 0) {
-	return $bp_rs->first()->name();
+			return $bp_rs->first()->name();
     }
-    return undef;
 
+    return undef;
 }
 
 sub set_breeding_program {
+	my $self = shift;
+	my $breeding_program_id = shift;
+	my $trial_id = $self->get_trial_id();
+	my $type_id = $self->get_breeding_program_trial_relationship_cvterm_id();
 
-}
+	eval {
+		my $row = $self->bcs_schema->resultset("Project::ProjectRelationship")->find ({
+			subject_project_id => $trial_id,
+			type_id => $type_id,
+		});
 
-sub remove_breeding_program {
+		if ($row) {
+			$row->object_project_id($breeding_program_id);
+			$row->update();
+		}
+		else {
+			$row = $self->bcs_schema->resultset("Project::ProjectRelationship")->create ({
+				object_project_id => $breeding_program_id,
+				subject_project_id => $trial_id,
+				type_id => $type_id,
+			});
+			$row->insert();
+		}
+	};
 
+	if ($@) {
+		print STDERR "ERROR: $@\n";
+		return { error => "An error occurred while setting the trial's breeding program." };
+	}
+	return {};
 }
 
 # CLASS METHOD!
@@ -551,7 +522,34 @@ sub set_harvest_date {
 
         $row->value($harvest_event);
         $row->update();
-    }
+    } else {
+			print STDERR "date format did not pass check while preparing to set harvest date: $harvest_date  \n";
+		}
+}
+
+sub remove_harvest_date {
+    my $self = shift;
+		my $harvest_date = shift;
+
+		my $calendar_funcs = CXGN::Calendar->new({});
+    if (my $harvest_event = $calendar_funcs->check_value_format($harvest_date) ) {
+
+			my $harvest_date_cvterm_id = $self->get_harvest_date_cvterm_id();
+
+			my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create(
+				{
+					project_id => $self->get_trial_id(),
+					type_id => $harvest_date_cvterm_id,
+					value => $harvest_event,
+				});
+
+    	if ($row) {
+				print STDERR "Removing harvest date $harvest_event from trial ".$self->get_trial_id()."\n";
+				$row->delete();
+    	}
+		} else {
+			print STDERR "date format did not pass check while preparing to delete harvest date: $harvest_date  \n";
+		}
 }
 
 sub get_planting_date {
@@ -592,9 +590,35 @@ sub set_planting_date {
 
 	    $row->value($planting_event);
 	    $row->update();
-    }
+    } else {
+			print STDERR "date format did not pass check while preparing to set planting date: $planting_date \n";
+		}
 }
 
+sub remove_planting_date {
+    my $self = shift;
+		my $planting_date = shift;
+
+		my $calendar_funcs = CXGN::Calendar->new({});
+    if (my $planting_event = $calendar_funcs->check_value_format($planting_date) ) {
+
+			my $planting_date_cvterm_id = $self->get_planting_date_cvterm_id();
+
+			my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create(
+				{
+					project_id => $self->get_trial_id(),
+					type_id => $planting_date_cvterm_id,
+					value => $planting_event,
+				});
+
+    	if ($row) {
+				print STDERR "Removing planting date $planting_event from trial ".$self->get_trial_id()."\n";
+				$row->delete();
+    	}
+		} else {
+			print STDERR "date format did not pass check while preparing to delete planting date: $planting_date  \n";
+		}
+}
 
 sub get_plot_dimensions {
     my $self = shift;
@@ -643,16 +667,9 @@ sub delete_phenotype_data {
 
 		# delete phenotype data associated with trial
 		#
-		my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
+		#my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
 
 		my $q = "SELECT nd_experiment_id FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) WHERE project_id =?";
-	#	my $nd_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( { project_id => $trial_id }, { join => 'nd_experiment_phenotype' });
-
-	#	print STDERR "\n\nexperiment_count: ".$nd_experiment_rs->count()."\n\n";
-
-	#	my @nd_experiment_ids = map { $_->nd_experiment_id } $nd_experiment_rs->all();
-
-
 
 		my $h = $self->bcs_schema()->storage()->dbh()->prepare($q);
 
@@ -661,6 +678,7 @@ sub delete_phenotype_data {
 		while (my ($id) = $h->fetchrow_array()) {
 		    push @nd_experiment_ids, $id;
 		}
+		print STDERR "GOING TO REMOVE ".scalar(@nd_experiment_ids)." EXPERIMENTS...\n";
 		$self->_delete_phenotype_experiments(@nd_experiment_ids);
 	    });
     };
@@ -720,6 +738,63 @@ sub delete_field_layout {
     return '';
 }
 
+=head2 function delete_phenotype_metadata()
+
+ Usage:        $trial->delete_metadata($metadata_schema, $phenome_schema);
+ Desc:         obsoletes the metadata entries for this trial.
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub delete_phenotype_metadata {
+    my $self = shift;
+    my $metadata_schema = shift;
+    my $phenome_schema = shift;
+
+    if (!$metadata_schema || !$phenome_schema) { die "Need metadata schema parameter\n"; }
+
+    my $trial_id = $self->get_trial_id();
+
+    #print STDERR "Deleting metadata for trial $trial_id...\n";
+
+    # first, deal with entries in the md_metadata table, which may reference nd_experiment (through linking table)
+    #
+    my $q = "SELECT distinct(metadata_id) FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) LEFT JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    $h->execute($trial_id);
+
+    while (my ($md_id) = $h->fetchrow_array()) {
+	#print STDERR "Associated metadata id: $md_id\n";
+	my $mdmd_row = $metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
+	if ($mdmd_row) {
+	    #print STDERR "Obsoleting $md_id...\n";
+
+	    $mdmd_row -> update( { obsolete => 1 });
+	}
+    }
+
+    #print STDERR "Deleting the entries in the linking table...\n";
+
+    # delete the entries from the linking table...
+    $q = "SELECT distinct(file_id) FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    $h->execute($trial_id);
+
+    while (my ($file_id) = $h->fetchrow_array()) {
+	print STDERR "trying to delete association for file with id $file_id...\n";
+	my $ndemdf_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search( { file_id=>$file_id });
+	print STDERR "Deleting md_files linking table entries...\n";
+	foreach my $row ($ndemdf_rs->all()) {
+	    print STDERR "DELETING !!!!\n";
+	    $row->delete();
+	}
+    }
+}
+
+
 
 =head2 function delete_metadata()
 
@@ -745,7 +820,7 @@ sub delete_metadata {
 
     # first, deal with entries in the md_metadata table, which may reference nd_experiment (through linking table)
     #
-    my $q = "SELECT distinct(metadata_id) FROM nd_experiment_project JOIN phenome.nd_experiment_md_files using(nd_experiment_id) JOIN metadata.md_files using(file_id) JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    my $q = "SELECT distinct(metadata_id) FROM nd_experiment_project JOIN phenome.nd_experiment_md_files using(nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
     my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($trial_id);
 
@@ -761,17 +836,17 @@ sub delete_metadata {
 
     #print STDERR "Deleting the entries in the linking table...\n";
 
-    # delete the entries from the linking table...
-    $q = "SELECT distinct(file_id) FROM nd_experiment_project JOIN phenome.nd_experiment_md_files using(nd_experiment_id) JOIN metadata.md_files using(file_id) JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    # delete the entries from the linking table... (left joins are due to sometimes missing md_file entries)
+    $q = "SELECT distinct(file_id) FROM nd_experiment_project LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
     $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($trial_id);
 
     while (my ($file_id) = $h->fetchrow_array()) {
-	#print STDERR "trying to delete association for file with id $file_id...\n";
+	print STDERR "trying to delete association for file with id $file_id...\n";
 	my $ndemdf_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search( { file_id=>$file_id });
 	print STDERR "Deleting md_files linking table entries...\n";
 	foreach my $row ($ndemdf_rs->all()) {
-	    #print STDERR "DELETING !!!!\n";
+	    print STDERR "DELETING !!!!\n";
 	    $row->delete();
 	}
     }
@@ -1081,7 +1156,7 @@ sub get_year_type_id {
 }
 
 
-sub get_breeding_program_id {
+sub get_breeding_program_trial_relationship_cvterm_id {
     my $self = shift;
 
     my $breeding_program_trial_relationship_cvterm_id;
@@ -1163,6 +1238,84 @@ sub get_design_type {
     return;
   }
   return $design_type;
+}
+
+sub get_accessions {
+	my $self = shift;
+	my @accessions;
+
+	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
+	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
+	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
+
+	my $trial_accession_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock")->search_related("stock_relationship_subjects", { 'stock_relationship_subjects.type_id' => [$plot_of_cvterm_id, $tissue_sample_of_cvterm_id] } );
+
+	my %unique_accessions;
+	while(my $rs = $trial_accession_rs->next()) {
+		my $r = $rs->object;
+		$unique_accessions{$r->uniquename} = $r->stock_id;
+	}
+	foreach (keys %unique_accessions) {
+		push @accessions, {accession_name=>$_, stock_id=>$unique_accessions{$_} };
+	}
+
+	return \@accessions;
+}
+
+sub get_plots {
+	my $self = shift;
+	my @plots;
+
+	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
+	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
+
+	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks");
+
+	my %unique_plots;
+	while(my $rs = $trial_plot_rs->next()) {
+		my $r = $rs->stock();
+		$unique_plots{$r->uniquename} = $r->stock_id;
+	}
+	foreach (keys %unique_plots) {
+		#push @plots, {plot_name=> $_, plot_id=>$unique_plots{$_} } ; 
+		my $combine = [$unique_plots{$_}, $_ ];
+		push @plots, $combine;
+	}
+	
+	return \@plots;
+	 
+}
+
+sub get_controls {
+	my $self = shift;
+	my @controls;
+
+	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
+	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
+	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
+
+	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks");
+
+	my %unique_controls;
+	while(my $rs = $trial_plot_rs->next()) {
+		my $r = $rs->stock()->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
+
+		my $is_a_control;
+		if ($r) {
+			$is_a_control = $r->value();
+		}
+		if ($is_a_control) {
+			my $accession = $rs->search_related("stock")->search_related('stock_relationship_subjects')->find({ 'type_id' => [$plot_of_cvterm_id, $tissue_sample_of_cvterm_id ]})->object;
+			$unique_controls{$accession->uniquename}=$accession->stock_id;
+		}
+	}
+	foreach (keys %unique_controls) {
+		push @controls, {accession_name=> $_, stock_id=>$unique_controls{$_} } ;
+	}
+
+	return \@controls;
 }
 
 1;

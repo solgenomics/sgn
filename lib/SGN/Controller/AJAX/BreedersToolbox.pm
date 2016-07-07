@@ -60,7 +60,6 @@ sub insert_new_project : Path("/ajax/breeders/project/insert") Args(0) {
     $c->stash->{rest} = { error => '' };
 }
 
-
 sub get_all_locations :Path("/ajax/breeders/location/all") Args(0) {
     my $self = shift;
     my $c = shift;
@@ -102,7 +101,7 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
 	return;
     }
 
-    if ( ($longitude && $longitude !~ /^[0-9.]+$/) || ($latitude && $latitude !~ /^[0-9.]+$/) || ($altitude && $altitude !~ /^[0-9.]+$/) ) {
+    if ( ($longitude && $longitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($altitude && $altitude !~ /^[0-9.]+$/) ) {
 	$c->stash->{rest} = { error => "Longitude, latitude and altitude must be numbers." };
 	return;
     }
@@ -156,7 +155,6 @@ sub delete_location :Path('/ajax/breeders/location/delete') Args(1) {
 
 }
 
-
 sub get_breeding_programs : Path('/ajax/breeders/all_programs') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -166,54 +164,6 @@ sub get_breeding_programs : Path('/ajax/breeders/all_programs') Args(0) {
     my $breeding_programs = $po->get_breeding_programs();
 
     $c->stash->{rest} = $breeding_programs;
-}
-
-
-sub associate_breeding_program_with_trial : Path('/breeders/program/associate') Args(2) {
-    my $self = shift;
-    my $c = shift;
-    my $breeding_program_id = shift;
-    my $trial_id = shift;
-
-    my $message = "";
-
-    if ($c->user() && ( $c->user()->check_roles('submitter')  || $c->user()->check_roles('curator'))) {
-	my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $c->dbic_schema("Bio::Chado::Schema") } );
-
-	$message = $program->associate_breeding_program_with_trial($breeding_program_id, $trial_id);
-
-	#print STDERR "MESSAGE: $xmessage->{error}\n";
-    }
-    else {
-	$message = { error => "You need to be logged in and have sufficient privileges to associate trials to programs." };
-    }
-    $c->stash->{rest} = $message;
-
-}
-
-
-sub remove_breeding_program_from_trial : Path('/breeders/program/remove') Args(2) {
-    my $self = shift;
-    my $c = shift;
-    my $breeding_program_id = shift;
-    my $trial_id = shift;
-
-    my $message = "";
-
-
-    if ($c->user() && ( $c->user()->check_roles('submitter')  || $c->user()->check_roles('curator'))) {
-	my $program = CXGN::BreedersToolbox::Projects->new( { schema=> $c->dbic_schema("Bio::Chado::Schema") } );
-
-	$message = $program->remove_breeding_program_from_trial($breeding_program_id, $trial_id);
-
-	#print STDERR "MESSAGE: $xmessage->{error}\n";
-    }
-    else {
-	$message = { error => "You need to be logged in and have sufficient privileges to associate trials to programs." };
-    }
-    $c->stash->{rest} = $message;
-
-
 }
 
 sub new_breeding_program :Path('/breeders/program/new') Args(0) {
@@ -404,39 +354,6 @@ sub get_trial_type : Path('/ajax/breeders/trial/type') Args(1) {
     $c->stash->{rest} = { type => $type };
 }
 
-sub set_trial_type : Path('/ajax/breeders/trial/settype') Args(1) {
-    my $self = shift;
-    my $c = shift;
-    my $trial_id = shift;
-
-    my $type = $c->req->param("type");
-
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
-	return;
-    }
-
-    my $t = CXGN::Trial->new(
-	{
-	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	    trial_id => $trial_id
-	});
-
-    if (!$t) {
-	$c->stash->{rest} = { error => "The specified trial with id $trial_id does not exist" };
-	return;
-    }
-    # remove previous associations
-    #
-    $t->dissociate_project_type();
-
-    # set the new trial type
-    #
-    $t->associate_project_type($type);
-
-    $c->stash->{rest} = { success => 1 };
-}
-
 sub get_all_trial_types : Path('/ajax/breeders/trial/alltypes') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -529,17 +446,6 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
     });
 
     my %message;
-#    eval {
-#	%message = $ct->save_trial();
-#    };
-
-#    if ($@ || exists($message{error})) {
-#	$c->stash->{rest} = {
-#	    error => "Error saving the trial. $@ $message{error}"
-#	};
-#	return;
-#   }
-
 
     try {
 	%message = $ct->save_trial();
@@ -547,7 +453,7 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
 	$c->stash->{rest} = {error => "Error saving trial in the database $_"};
     };
 
- 
+
     $c->stash->{rest} = {
 	message => "Successfully stored the trial.",
 	trial_id => $message{trial_id},
@@ -586,9 +492,9 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
     my $meta = $p->parse();
 
     my $errors = $p->get_parse_errors();
-    if (@$errors) {
-	$c->stash->{rest} = { error => "The file has the following problems: ".join ", ", @$errors.". Please fix these problems and try again." };
-	print STDERR "Parsing errors in uploaded file. Aborting. (".join ",", @$errors.")\n";
+    if (@{$errors->{'error_messages'}}) {
+	$c->stash->{rest} = { error => "The file has the following problems: ".join ", ", @{$errors->{'error_messages'}}.". Please fix these problems and try again." };
+	print STDERR "Parsing errors in uploaded file. Aborting. (".join ",", @{$errors->{'error_messages'}}.")\n";
 	return;
     }
     print STDERR "Meta information from genotyping trial file: ".Dumper($meta);

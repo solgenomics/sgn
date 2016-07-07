@@ -55,33 +55,6 @@ sub ACCEPT_CONTEXT {
 }
 
 
-# sub search_trait {
-#     my ($self, $trait, $page) = @_;
- 
-#     $page = 1 if !$page;
-
-#     my $rs;
-#     if ($trait)
-#     {       
-#         $rs = $self->schema->resultset("Phenotype::Phenotype")
-#             ->search({})
-#             ->search_related('observable', 
-#                              {
-#                                  'observable.name' => {'iLIKE' => '%' . $trait . '%'}
-#                              },
-#                              { 
-#                                  distinct => 1,
-#                                  page     => $page,
-#                                  rows     => 10,
-#                                  order_by => 'name'              
-#                              },                                               
-#             );             
-#     }
-    
-#     return $rs;      
-# }
-
-
 sub search_trait {
     my ($self, $trait) = @_;
  
@@ -141,23 +114,6 @@ sub all_gs_traits {
     
     return \@traits;
 }
-
-# sub all_gs_traits {
-#     my $self = shift;
-
-#     my $rs = $self->schema->resultset("Phenotype::Phenotype")
-#         ->search({})
-#         ->search_related('observable', 
-#                          {}, 
-# 			 {
-# 			     columns  => [ qw / cvterm_id observable.name / ],
-# 			     distinct => 1
-# 			 },	 	
-#         );
-
-#     return $rs; 
-     
-# }
 
 
 sub materialized_view_all_gs_traits {
@@ -324,51 +280,25 @@ sub all_projects {
 
 
 sub has_phenotype {
-     my ($self, $pr_id ) = @_; 
-    
-     my $has_phenotype;
-     if ($pr_id) 
-     {
-	 my $file_cache  = Cache::File->new(cache_root => $self->context->stash->{solgs_cache_dir});
-	 $file_cache->purge();
-   
-	 my $key        = "phenotype_data_" . $pr_id;
-	 my $pheno_file = $file_cache->get($key);
-        
-	 no warnings 'uninitialized';
+    my ($self, $pr_id) = @_;
 
-	 if ( -s $pheno_file)
-	 {  
-	     $has_phenotype = 'has_phenotype';
-	 }
-	 else 
-	 {
-	     if ( !-e $pheno_file)
-	     {
-		 my $data = $self->phenotype_data($pr_id);
-		 my ($header, $values) = split(/\n/, $data);
-		 $header =~ s/uniquename|object_id|object_name|stock_id|stock_name|design|block|replicate|\t|\n//g;
-             
-		 $pheno_file = catfile($self->context->stash->{solgs_cache_dir}, "phenotype_data_" . $pr_id . ".txt");
-	     
-		 if($header) 
-		 {
-		     $data =  $self->context->controller("solGS::solGS")->format_phenotype_dataset($data); 
-		     write_file($pheno_file, $data);
+    my $has_phenotype;
+    if ($pr_id) 
+    {
+	my $pr_stocks  = $self->project_subject_stocks_rs($pr_id);
 
-		     $file_cache->set($key, $pheno_file, '30 days');
-		     $has_phenotype = 'has_phenotype'; 
-		 }
-		 else 
-		 {
-		     write_file($pheno_file, "");
-		     $file_cache->set($key, $pheno_file, '5 days');
-		 }
-	     }	    
-	 }
-     }
-     
-     return $has_phenotype;
+	if ($pr_stocks->first)
+	{
+	    my $phenotypes = $self->stock_phenotype_data_rs($pr_stocks);
+	    my $data       = $self->structure_phenotype_data($phenotypes);
+	    
+	    $has_phenotype = 1 if $data;
+	}
+	
+    }
+
+    return $has_phenotype;
+
 }
 
 
@@ -1681,9 +1611,16 @@ sub plots_list_phenotype_data_rs {
 
 sub stock_phenotype_data_rs {
     my $self = shift;
-    my $stock = shift;
-    my $stock_id = $stock->single->stock_id;
+    my $stock_rs = shift;
   
+    my $stock_id;
+    if ($stock_rs->first) 
+    { 
+	$stock_id = $stock_rs->first->stock_id;
+    }
+   
+    die "Can't get stock phenotype data with out stock_id" if !$stock_id;
+
     my $rs = $self->schema->resultset("Stock::Stock")->search(
         {
             'observable.name' => { '!=', undef } ,
@@ -1976,6 +1913,8 @@ sub phenotypes_by_trait {
         $d .= "\n";
     }
    
+    $d = undef if $d eq '';
+
     return $d;
 }
 
