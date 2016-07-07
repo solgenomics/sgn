@@ -47,7 +47,7 @@ jQuery(document).ready(function ($) {
           for (var i in populations) {
             var name = populations[i].name;
             var accessions = populations[i].members;
-            var table_id = name+"_pop_table";
+            var table_id = name+i+"_pop_table";
 
             var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'">';
             section_html += '<div class="panel-title"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div></div>';
@@ -59,7 +59,7 @@ jQuery(document).ready(function ($) {
 
             jQuery('#'+table_id).DataTable( {
               data: accessions,
-              buttons: ['copy', 'excel', 'csv', 'print' ],
+              retrieve: false,
               columns: [
                 { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
                 { title: "Description", "data": "description" },
