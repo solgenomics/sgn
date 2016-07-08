@@ -410,9 +410,15 @@ sub copy_public {
     $h->execute($user_id, $self->list_id());
     my $list_id = $h->fetchrow_array();
 
-    $h = $self->dbh->prepare("INSERT INTO sgn_people.list_item (content, list_id) SELECT content, ? FROM sgn_people.list_item as old WHERE old.list_id=?");
-    $h->execute($list_id, $self->list_id());
-    
+	$h = $self->dbh->prepare("SELECT content FROM sgn_people.list_item WHERE list_id=?");
+	$h->execute($self->list_id());
+	my @elements;
+	while (my $el = $h->fetchrow_array) {
+		push @elements, $el;
+	}
+
+	$self->add_bulk(\@elements, $list_id);
+
     return $list_id;
 }    
 
@@ -463,6 +469,7 @@ sub retrieve_elements_with_ids {
 sub add_bulk {
 	my $self = shift;
 	my $elements = shift;
+	my $list_id = shift // $self->list_id();
 	my %elements_in_list;
 	my @elements_added;
 	my @duplicates;
@@ -471,7 +478,7 @@ sub add_bulk {
 
 	my $q = "SELECT content FROM sgn_people.list join sgn_people.list_item using(list_id) where list.list_id =?";
 	my $h = $self->dbh()->prepare($q);
-	$h->execute($self->list_id());
+	$h->execute($list_id);
 	while (my $list_content = $h->fetchrow_array()) {
 		$elements_in_list{$list_content} = 1;
 	}
@@ -490,7 +497,7 @@ sub add_bulk {
 		my @values;
 		foreach (@$elements) {
 			if (!exists $elements_in_list{$_}){
-				push @values, [$list_item_id, $self->list_id(), $_];
+				push @values, [$list_item_id, $list_id, $_];
 				$elements_in_list{$_} = 1;
 				push @elements_added, $_;
 				$list_item_id++;
