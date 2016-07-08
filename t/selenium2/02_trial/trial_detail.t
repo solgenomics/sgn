@@ -34,6 +34,12 @@ $t->while_logged_in_as("curator", sub {
     sleep(1);
     $t->find_element_ok("upload_trial_submit", "id", "submit upload trial file ")->click();
     sleep(5);
+
+    $t->find_element_ok("close_trial_upload_success_dialog", "id", "success msg")->click();
+    sleep(1);
+    $t->find_element_ok("close_trial_upload_dialog", "id", "close trial upload dialog")->click();
+    sleep(1);
+
     my $refresh_tree = $t->find_element_ok("refresh_jstree_html", "id", "refresh tree")->click();
     sleep(3);
     my $open_tree = $t->find_element_ok("jstree-icon", "class", "open up tree")->click();
@@ -57,32 +63,55 @@ $t->while_logged_in_as("curator", sub {
     $t->find_element_ok("dismiss_trial_coord_upload_dialog", "id", "close success msg")->click();
     sleep(3);    
     $t->find_element_ok("physical_layout_onswitch", "id", "view field map ")->click();
-    sleep(4);
-
+    sleep(6);
+    $t->find_element_ok("physical_layout_offswitch", "id", "view field map ")->click();
+    sleep(2);
 
     #Verify Trial Info
-    $t->find_element_ok("//div[contains(., 'test (test)')]", "xpath", "verify breeding program")->get_text();
-    sleep(1);
+    
+    sleep(3);
     $t->find_element_ok("//div[contains(., 'T100')]", "xpath", "verify trial name")->get_text();
+    $t->find_element_ok("//div[contains(., 'test (test)')]", "xpath", "verify breeding program")->get_text();
+    $t->find_element_ok("//div[contains(., 'test_location')]", "xpath", "verify trial location")->get_text();
+    $t->find_element_ok("//div[contains(., '2016')]", "xpath", "verify trial year")->get_text();
     $t->find_element_ok("//div[contains(., '[Type not set]')]", "xpath", "verify trial type")->get_text();
+    $t->find_element_ok("//div[contains(., '[No Planting Date]')]", "xpath", "verify planting date")->get_text();
+    $t->find_element_ok("//div[contains(., '[No Harvest Date]')]", "xpath", "verify harvest date")->get_text();
     $t->find_element_ok("//div[contains(., 'T100 trial test description')]", "xpath", "verify description")->get_text();
 
     #Verify Trial Design
     $t->find_element_ok("//div[contains(., 'CRD')]", "xpath", "verify design type")->get_text();
     $t->find_element_ok("//div[contains(., '2')]", "xpath", "verify number of blocks")->get_text();
     $t->find_element_ok("//div[contains(., '2')]", "xpath", "verify number of blocks")->get_text();
+    $t->find_element_ok("//div[contains(., 'undefined')]", "xpath", "verify plants per plot")->get_text();
     $t->find_element_ok("trial_accessions_onswitch", "id", "view trial accessions")->click();
-    sleep(3);
+    sleep(5);
     $t->find_element_ok("test_accession1", "partial_link_text", "verify accessions");
     $t->find_element_ok("test_accession2", "partial_link_text", "verify accessions");
     $t->find_element_ok("test_accession3", "partial_link_text", "verify accessions");
     $t->find_element_ok("test_accession4", "partial_link_text", "verify accessions");
      $t->find_element_ok("trial_controls_onswitch", "id", "view trial controls")->click();
-     sleep(3);
+     sleep(5);
     $t->find_element_ok("test_accession2", "partial_link_text", "verify controls");
     $t->find_element_ok("test_accession3", "partial_link_text", "verify controls");
     $t->find_element_ok("trial_plots_onswitch", "id", "view trial plots")->click();
+    sleep(5);
+    $t->find_element_ok("plot_select_all", "id", "select plots")->click();
+    sleep(1);
+    $t->find_element_ok("plot_data_new_list_name", "id", "find add list input");
+
+    my $add_list_input = $t->find_element_ok("plot_data_new_list_name", "id", "find add list input test");
+   
+    $add_list_input->send_keys("plots_list");
+
+    $t->find_element_ok("plot_data_add_to_new_list", "id", "find add list button")->click();
+    sleep(1);
+    $t->accept_alert_ok();
+    sleep(1);
+    my $out = $t->find_element_ok("lists_link", "name", "find lists_link")->click();
     sleep(3);
+    $t->find_element_ok("close_list_dialog_button", "id", "find close dialog button")->click();
+
     $t->find_element_ok("//div[contains(., 'T100_plot_01')]", "xpath", "verify plots")->get_text();
     $t->find_element_ok("//div[contains(., 'T100_plot_02')]", "xpath", "verify plots")->get_text();
     $t->find_element_ok("//div[contains(., 'T100_plot_03')]", "xpath", "verify plots")->get_text();
