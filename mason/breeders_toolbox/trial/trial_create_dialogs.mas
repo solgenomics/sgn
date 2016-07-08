@@ -5,9 +5,9 @@ $breeding_programs
 </%args>
 
 <div class="modal fade" id="add_project_dialog" name="add_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addProjectDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addProjectDialog">Add New Trial</h4>
             </div>
@@ -43,7 +43,7 @@ $breeding_programs
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Year: </label>
                             <div class="col-sm-9">
-                                <input class="form-control" id="add_project_year" name="add_project_year" type="text" />
+                                <select class="form-control" id="add_project_year" name="add_project_year" type="text"></select>
                             </div>
                         </div>
                         <div class="form-group">
@@ -222,7 +222,7 @@ $breeding_programs
 <div class="modal fade" id="add_trial_error_display" name="add_trial_error_display" tabindex="-1" role="dialog" aria-labelledby="addTrialErrorDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addTrialErrorDialog">Errors In Creating Trial</h4>
             </div>
@@ -243,7 +243,7 @@ $breeding_programs
 <div class="modal fade" id="trial_design_confirm" name="trial_design_confirm" tabindex="-1" role="dialog" aria-labelledby="addTrialConfirmDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addTrialConfirmDialog">Confirm Trial Design</h4>
             </div>
@@ -267,7 +267,7 @@ $breeding_programs
 <div class="modal fade" id="trial_design_view_layout" name="trial_design_view_layout" tabindex="-1" role="dialog" aria-labelledby="addTrialDesignViewDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addTrialDesignViewDialog">Trial Design Layout</h4>
             </div>
@@ -288,7 +288,7 @@ $breeding_programs
 <div class="modal fade" id="trial_saved_dialog_message" name="trial_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addTrialSavedDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addTrialSavedDialog">Trial Saved</h4>
             </div>

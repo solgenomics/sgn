@@ -64,7 +64,7 @@ sub download {
     $ws1->write(26, 0, 'Identifier'); $ws1->write(26, 1, 'to be done: doi');
     $ws1->write(27, 0, 'Language'); $ws1->write(27, 1, 'en');
     $ws1->write(28, 0, 'Relation'); $ws1->write(28, 1, 'NA');
-    $ws1->write(29, 0, 'License'); $ws1->write(29, 1, '© International Potato Center');
+    $ws1->write(29, 0, 'License'); $ws1->write(29, 1, "\x{a9} International Potato Center");
     $ws1->write(30, 0, 'Audience'); $ws1->write(30, 1, 'Breeder');
     $ws1->write(31, 0, 'Provenance'); $ws1->write(31, 1, 'original');
     $ws1->write(32, 0, 'Embargo till'); $ws1->write(32, 1, '2012-12-31');
@@ -171,11 +171,11 @@ sub download {
     # add information to Weather_data (sheet5)
     #
     $ws5->write(0, 0, 'Date of weather observation', $bold); $ws5->write(0, 1, 'Hour of weather observation', $bold);
-    $ws5->write(0, 2, 'Rainfall (mm)', $bold); $ws5->write(0, 3, 'Average temperature (°C)', $bold);
-    $ws5->write(0, 4, 'Minimum temperature (°C)', $bold); $ws5->write(0, 5, 'Maximum temperature (°C)', $bold);
-    $ws5->write(0, 6, 'Temperature amplitude °C ', $bold); $ws5->write(0, 7, 'Relative humidity (%)', $bold);
+    $ws5->write(0, 2, 'Rainfall (mm)', $bold); $ws5->write(0, 3, "Average temperature (\x{b0}C)", $bold);
+    $ws5->write(0, 4, "Minimum temperature (\x{b0}C)", $bold); $ws5->write(0, 5, "Maximum temperature (\x{b0}C)", $bold);
+    $ws5->write(0, 6, "Temperature amplitude \x{b0}C ", $bold); $ws5->write(0, 7, 'Relative humidity (%)', $bold);
     $ws5->write(0, 8, 'Solar Radiation (w/m2)', $bold); $ws5->write(0, 9, 'Barometric Pressure (mm)', $bold);
-    $ws5->write(0, 10, 'Dew point (°C) ', $bold); $ws5->write(0, 11, 'Wind speed (m/s)', $bold);
+    $ws5->write(0, 10, "Dew point (\x{b0}C) ", $bold); $ws5->write(0, 11, 'Wind speed (m/s)', $bold);
     $ws5->write(0, 12, 'Gust speed', $bold); $ws5->write(0, 13, 'Wind direction', $bold);
 
     # add information to Crop_management (sheet6)

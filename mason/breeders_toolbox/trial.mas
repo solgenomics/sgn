@@ -319,9 +319,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
 <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
-<div id="plot_information_div">
-    
-  </div>
+
 </&>
 
 <&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
@@ -344,15 +342,6 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 </&>
 
-
-%# <&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
-%# foreach my $trait (@phenotype_data) {
-%# my $trait_id = $trait->[1];
-%# my $trait_name = ucfirst($trait->[0]);
-%# print "$trait_name" . ' [ ' . "<a href=\"/breeders_toolbox/trial/$trial_id/trait/$trait_id\">view statistics</a>" . ' ] ' . "<br />";
-%# }
-
-%# </&>
 
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 

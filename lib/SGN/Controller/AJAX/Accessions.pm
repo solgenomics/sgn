@@ -19,6 +19,7 @@ package SGN::Controller::AJAX::Accessions;
 use Moose;
 use JSON -support_by_pp;
 use List::MoreUtils qw /any /;
+use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 use CXGN::Stock::AddStocks;
 use Data::Dumper;
@@ -34,7 +35,7 @@ __PACKAGE__->config(
 
 sub verify_accession_list : Path('/ajax/accession_list/verify') : ActionClass('REST') { }
 
-sub verify_accession_list_GET : Args(0) { 
+sub verify_accession_list_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     $self->verify_accession_list_POST($c);
@@ -48,20 +49,20 @@ sub verify_accession_list_POST : Args(0) {
 
   my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
 
-  if ($do_fuzzy_search) { 
+  if ($do_fuzzy_search) {
       $self->do_fuzzy_search($c, \@accession_list);
   }
-  else { 
+  else {
       $self->do_exact_search($c, \@accession_list);
   }
 
 }
 
-sub do_fuzzy_search { 
+sub do_fuzzy_search {
     my $self = shift;
     my $c = shift;
     my $accession_list = shift;
-    
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
     my $fuzzy_search_result;
@@ -70,7 +71,7 @@ sub do_fuzzy_search {
     my @found_accessions;
     my @fuzzy_accessions;
     my @absent_accessions;
-    
+
     if (!$c->user()) {
 	$c->stash->{rest} = {error => "You need to be logged in to add accessions." };
 	return;
@@ -79,64 +80,64 @@ sub do_fuzzy_search {
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add accessions." };
 	return;
     }
-   
+
     $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
     print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
-    
+
     @found_accessions = $fuzzy_search_result->{'found'};
     @fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
     @absent_accessions = $fuzzy_search_result->{'absent'};
 
     $c->stash->{rest} = {
-	success => "1", 
-	absent => @absent_accessions, 
-	fuzzy => @fuzzy_accessions, 
+	success => "1",
+	absent => @absent_accessions,
+	fuzzy => @fuzzy_accessions,
 	found => @found_accessions
     };
     return;
 }
 
-sub do_exact_search { 
+sub do_exact_search {
     my $self = shift;
     my $c = shift;
     my $accession_list = shift;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    
+
     my @found_accessions;
     my @absent_accessions;
     my @fuzzy_accessions;
 
-    foreach my $a (@$accession_list) { 
+    foreach my $a (@$accession_list) {
 	print STDERR "CHECKING $a...\n";
 	my $exact_search_rs = $schema->resultset("Stock::Stock")->search( { -or => { name => { -ilike => $a}, uniquename => { -ilike => $a }}});
-	if ($exact_search_rs->count() > 0) { 
+	if ($exact_search_rs->count() > 0) {
 	    push @found_accessions, { unique_name => $a, matched_string => $a };
 	}
-	else { 
-	    my $exact_synonym_rs = $schema->resultset("Stock::Stockprop")->search( 
-		{ value => 
-		  { 
-		      -ilike => $a }, 
-		  'lower(type.name)' => { like => '%synonym%' }, 
+	else {
+	    my $exact_synonym_rs = $schema->resultset("Stock::Stockprop")->search(
+		{ value =>
+		  {
+		      -ilike => $a },
+		  'lower(type.name)' => { like => '%synonym%' },
 		},
 		{join => 'type' }
 		);
-	    if ($exact_synonym_rs ->count() > 0) { 
+	    if ($exact_synonym_rs ->count() > 0) {
 		push @found_accessions, { unique_name => $a,  matched_string => $a};
 		push @fuzzy_accessions, { unique_name => $a,  matched_string => $a};
 	    }
-	    else { 
+	    else {
 		push @absent_accessions, $a;
 	    }
 	}
     }
 
     my $rest = {
-	success => "1", 
-	absent => \@absent_accessions, 
-	found => \@found_accessions, 
-	fuzzy => \@fuzzy_accessions 
+	success => "1",
+	absent => \@absent_accessions,
+	found => \@found_accessions,
+	fuzzy => \@fuzzy_accessions
     };
     print STDERR Dumper($rest);
     $c->stash->{rest} = $rest;
@@ -190,6 +191,18 @@ sub add_accession_list_POST : Args(0) {
   return;
 }
 
+sub populations : Path('/ajax/manage_accessions/populations') : ActionClass('REST') { }
+
+sub populations_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
+    my $populations = $ac->get_all_populations($c);
+
+    $c->stash->{rest} = { populations => $populations };
+}
 
 sub _parse_list_from_json {
   my $list_json = shift;

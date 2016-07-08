@@ -341,18 +341,19 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#edit_trial_details').click(function () {
         // set up inout handlers
-        jQuery('#clear_planting_date').click(function () {
-          jQuery('#edit_trial_planting_date').val('');
-          highlight_changed_details('edit_trial_planting_date');
+        jQuery('#clear_planting_date').click(function() {
+          planting_date_element.val('');
+          highlight_changed_details(planting_date_element);
         });
 
-        jQuery('#clear_harvest_date').click(function () {
-          jQuery('#edit_trial_harvest_date').val('');
-          highlight_changed_details('edit_trial_harvest_date');
+        jQuery('#clear_harvest_date').click(function() {
+          harvest_date_element.val('');
+          highlight_changed_details(harvest_date_element);
         });
 
         jQuery('[id^="edit_trial_"]').change(function () {
-          highlight_changed_details(jQuery( this ).attr('id'));
+          var this_element = jQuery(this);
+          highlight_changed_details(this_element);
         });
 
         //save dialog body html for resetting on close
@@ -368,7 +369,7 @@ function trial_detail_page_setup_dialogs() {
         jQuery('#edit_trial_location').data("originalValue", default_loc);
 
         var default_year = document.getElementById("edit_trial_year").getAttribute("value");
-        get_select_box('years', 'edit_trial_year', { 'default' : default_year });
+        get_select_box('years', 'edit_trial_year', { 'default' : default_year, 'auto_generate': 1 });
         jQuery('#edit_trial_year').data("originalValue", default_year);
 
         var default_type = document.getElementById("edit_trial_type").getAttribute("value");
@@ -376,35 +377,33 @@ function trial_detail_page_setup_dialogs() {
         jQuery('#edit_trial_type').data("originalValue", default_type);
 
         //create bootstrap daterangepickers for planting and harvest dates
-        var plantingDate;
-        planting_date_element = document.getElementById("edit_trial_planting_date");
-        var planting_date = planting_date_element.getAttribute("value") || '';
-        if (planting_date) { planting_date = moment(planting_date, 'YYYY-MMMM-DD').format('MM/DD/YYYY'); }
-        planting_date_element.setAttribute("value", planting_date)
-        jQuery("#edit_trial_planting_date").daterangepicker(
-          {"singleDatePicker": true, "autoUpdateInput": false,},
+        var planting_date_element = jQuery("#edit_trial_planting_date");
+        set_daterangepicker_default (planting_date_element);
+        jQuery('input[title="planting_date"]').daterangepicker(
+          {
+          "singleDatePicker": true,
+          "showDropdowns": true,
+          "autoUpdateInput": false,
+          },
           function(start) {
-            plantingDate = start.format('YYYY/MM/DD HH:mm:ss');
-            jQuery('#edit_trial_planting_date').val(start.format('MM/DD/YYYY'));
-            highlight_changed_details('edit_trial_planting_date');
+            planting_date_element.val(start.format('MM/DD/YYYY'));
+            highlight_changed_details(planting_date_element);
           }
         );
-        set_daterangepicker_default(planting_date_element, planting_date);
 
-        var harvestDate;
-        harvest_date_element = document.getElementById("edit_trial_harvest_date");
-        var harvest_date = harvest_date_element.getAttribute("value") || '';
-        if (harvest_date) { harvest_date = moment(harvest_date, 'YYYY-MMMM-DD').format('MM/DD/YYYY'); }
-        harvest_date_element.setAttribute("value", harvest_date)
-        jQuery('#edit_trial_harvest_date').daterangepicker(
-          {"singleDatePicker": true, "autoUpdateInput": false,},
+        var harvest_date_element = jQuery("#edit_trial_harvest_date");
+        set_daterangepicker_default (harvest_date_element);
+        harvest_date_element.daterangepicker(
+          {
+          "singleDatePicker": true,
+          "showDropdowns": true,
+          "autoUpdateInput": false,
+          },
           function(start) {
-            harvestDate = start.format('YYYY/MM/DD HH:mm:ss');
-            jQuery('#edit_trial_harvest_date').val(start.format('MM/DD/YYYY'));
-            highlight_changed_details('edit_trial_harvest_date');
+            harvest_date_element.val(start.format('MM/DD/YYYY'));
+            highlight_changed_details(harvest_date_element);
           }
         );
-        set_daterangepicker_default(harvest_date_element, harvest_date);
 
         //show dialog and handle cancel and save events
         jQuery('#trial_details_edit_dialog').modal("show");
@@ -422,8 +421,13 @@ function trial_detail_page_setup_dialogs() {
             var id = changed_elements[i].id;
             var type = changed_elements[i].title;
             var new_value = changed_elements[i].value;
-            if (type === 'planting_date') { new_value = plantingDate || 'remove' ;}
-            if (type === 'harvest_date') { new_value = harvestDate || 'remove' ;}
+            if (type.match(/date/)) {
+              if (new_value) {
+                new_value = moment(new_value).format('YYYY/MM/DD HH:mm:ss') || 'remove' ;
+              } else {
+                new_value = 'remove';
+              }
+            }
             categories.push(type);
             new_details[type] = new_value;
             if(jQuery('#'+id).is("select")) {
@@ -508,30 +512,29 @@ function trial_detail_page_setup_dialogs() {
 
 }
 
-function set_daterangepicker_default (date_element, value) {
-  var jquery_element = jQuery(date_element);
-  jquery_element.attr({ val: value, name: "" });
-  jquery_element.parent().parent().removeClass("has-success has-feedback");
-  jquery_element.parent().siblings('#change_indicator').remove();
+function set_daterangepicker_default (date_element) {
+  var date = date_element.val() || '';
+  if (date) {
+    date = moment(date, 'YYYY-MMMM-DD').format('MM/DD/YYYY');
+  }
+  date_element.val(date);
 }
 
-function highlight_changed_details (id) { // compare changed value to default. If different, add class and feedback span, if same, remove them
-  var detail_element = document.getElementById(id);
-  var current_value = detail_element.value;
-  var default_value = detail_element.defaultValue;
-  if ( !default_value ) {
-    default_value = jQuery('#'+id).data("originalValue");
-  }
+function highlight_changed_details(element) { // compare changed value to default. If different, add class and feedback span, if same, remove them
+  var id = element.attr('id');
+  var current_value = element.val();
+  var default_value = document.getElementById(id).defaultValue;
+  if (element.attr('title').match(/date/)) { default_value = moment(document.getElementById(id).defaultValue, 'YYYY-MMMM-DD').format('MM/DD/YYYY');}
+  if (!default_value) { default_value = element.data("originalValue");}
   if ((current_value || default_value) && current_value !== default_value) {
-    jQuery('#'+id).parent().siblings('#change_indicator').remove();
-    jQuery('#'+id).attr( "name", "changed" );
-    jQuery('#'+id).parent().parent().addClass("has-success has-feedback");
-    jQuery('#'+id).parent().after('<span class="glyphicon glyphicon-pencil form-control-feedback" id="change_indicator" aria-hidden="true" style="right: -20px;"></span>');
-  }
-  else {
-    jQuery('#'+id).attr( "name", "" );
-    jQuery('#'+id).parent().parent().removeClass("has-success has-feedback");
-    jQuery('#'+id).parent().siblings('#change_indicator').remove();
+    element.parent().siblings('#change_indicator').remove();
+    element.attr("name", "changed");
+    element.parent().parent().addClass("has-success has-feedback");
+    element.parent().after('<span class="glyphicon glyphicon-pencil form-control-feedback" id="change_indicator" aria-hidden="true" style="right: -20px;"></span>');
+  } else {
+    element.attr("name", "");
+    element.parent().parent().removeClass("has-success has-feedback");
+    element.parent().siblings('#change_indicator').remove();
   }
 }
 

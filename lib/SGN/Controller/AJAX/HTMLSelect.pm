@@ -89,10 +89,19 @@ sub get_year_select : Path('/ajax/html/select/years') Args(0) {
     my $id = $c->req->param("id") || "year_select";
     my $name = $c->req->param("name") || "year_select";
     my $empty = $c->req->param("empty") || "";
+    my $auto_generate = $c->req->param("auto_generate") || "";
 
-    my @years = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_all_years();
+    my @years;
+    if ($auto_generate) {
+      my $next_year = 1901 + (localtime)[5];
+      my $oldest_year = $next_year - 30;
+      @years = sort { $b <=> $a } ($oldest_year..$next_year);
+    }
+    else {
+      @years = sort { $b <=> $a } CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_all_years();
+    }
 
-    my $default = $c->req->param("default") || @years[0];
+    my $default = $c->req->param("default") || @years[1];
 
     my $html = simple_selectbox_html(
       name => $name,

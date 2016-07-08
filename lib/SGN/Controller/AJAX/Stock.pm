@@ -964,16 +964,18 @@ sub add_stock_parent_GET :Args(0) {
     print STDERR "PARENT_NAME = $parent_name STOCK_ID $stock_id  $cvterm_name\n";
 
     my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id });
-    my $parent = $schema->resultset("Stock::Stock")->find( { name => $parent_name } );
+    
+   my $parent = $schema->resultset("Stock::Stock")->find( { uniquename => $parent_name } );
+
+
 
     if (!$stock) { 
 	$c->stash->{rest} = { error => "Stock with $stock_id is not found in the database!"}; 
 	return; 
     }
     if (!$parent) { 
-	$c->stash->{rest} = { error => "Stock with name $parent_name is not in the database!"}; 
-	return; 
-    }
+	$c->stash->{rest} = { error => "Stock with uniquename $parent_name was not found, Either this is not unique name or it is not in the database!"}; 
+	return;     }
 
     my $new_row = $schema->resultset("Stock::StockRelationship")->new( 
 	{ 
