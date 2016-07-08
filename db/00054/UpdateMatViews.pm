@@ -14,7 +14,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch updates the index of materialized_fullview and the queries used to create the materialized view for each individual category
+This patch updates the index of materialized_fullview and the queries used to create the materialized view for each individual category. It adds views for new categories: trial type and trial design
 
 =head1 AUTHOR
 
@@ -37,7 +37,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch updates the index of materialized_fullview and the queries used to create the materialized view for each individual category
+This patch updates the index of materialized_fullview and the queries used to create the materialized view for each individual category. It adds views for new categories: trial type and trial design
 
 
 sub patch {
@@ -144,7 +144,6 @@ GRANT SELECT ON years to web_usr;
 
 
 --
-SELECT * from public.stock;
 
 EOSQL
 
