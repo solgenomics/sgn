@@ -72,22 +72,14 @@
 
             <h4>Phenotype spreadsheet must be uploaded in .xls excel file format</h4>
             <p>(tab-delimited text formats are NOT supported)</p>
+
             <hr>
-            <h4>Header:</h4>
-            <p>The first row (header) should contain the following:</p>
+            <button class="btn btn-primary" name="create_spreadsheet_link">Create Phenotyping Spreadsheet for this Trial</button>
+            <hr>
 
-            <table class="table table-hover table-bordered">
-                <body>
-                    <tr>
-                        <td>plot_name</td>
-                        <td>trait name|trait id</td>
-                    </tr>
-                </body>
-            </table>
-
-            <h4>Required fields:</h4>
+            <h4>Required Data:</h4>
             <ul>
-                <li>plot_name (must exist in the database)</li>
+                <li>plot_name or plant_name (must exist in the database)</li>
                 <li>trait name|trait id (must exist in the trait ontology)</li>
             </ul>
 
@@ -158,6 +150,18 @@ jQuery(document).ready(function() {
     jQuery("#phenotype_upload_spreadsheet_format_info").click( function () { 
         jQuery("#phenotype_upload_spreadsheet_info_dialog" ).modal("show");	
     });
+
+      jQuery("[name='create_spreadsheet_link']").click( function () {
+        jQuery('#create_spreadsheet_dialog').modal("show");
+        jQuery('#phenotype_upload_spreadsheet_info_dialog').modal("hide");
+        jQuery('#upload_phenotype_spreadsheet_dialog').modal("hide");
+        var list = new CXGN.List();
+        jQuery("#trait_list_spreadsheet").html(list.listSelect("trait_list_spreadsheet", [ 'traits' ]));
+      });
+
+      jQuery('#create_phenotyping_ok_button').click( function () {
+        create_phenotype_spreadsheet();
+      });
 
 });  
 

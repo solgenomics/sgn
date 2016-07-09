@@ -370,7 +370,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 <&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
   <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_spreadsheet_link">Create Spreadsheet</a>]' &>
+    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a name="create_spreadsheet_link">Create Spreadsheet</a>]' &>
     </&>
     <&| /page/info_section.mas, title=>"Android Field Book Layout", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_fieldbook_link">Create Field Book</a>]' &>
     </&>
@@ -387,12 +387,12 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
   </&>
 </&>
 
-<& /breeders_toolbox/trial/create_datacollector_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
-<& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
-
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
 <& /fieldbook/upload_phenotype_fieldbook.mas &>
 <& /breeders_toolbox/upload_phenotype_datacollector.mas &>
+
+<& /breeders_toolbox/trial/create_datacollector_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 % my $data_agreement_link = "Add/edit data agreement";
 % if ($user_can_modify) { $data_agreement_link = '[<a id="add_data_agreement">Add/edit data agreement</a>]'; }

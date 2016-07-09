@@ -48,8 +48,9 @@ $trial_name => undef
 
 jQuery(document).ready(function() {
 
-  jQuery('#create_spreadsheet_link').click( function () {
+  jQuery("[name='create_spreadsheet_link']").click( function () {
     jQuery('#create_spreadsheet_dialog').modal("show");
+    jQuery('#phenotype_upload_spreadsheet_info_dialog').modal("hide");
     var list = new CXGN.List();
     jQuery("#trait_list_spreadsheet").html(list.listSelect("trait_list_spreadsheet", [ 'traits' ]));
   });
