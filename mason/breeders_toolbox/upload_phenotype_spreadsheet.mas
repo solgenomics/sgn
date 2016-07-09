@@ -32,8 +32,9 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Data Level: </label>
                     <div class="col-sm-9" >
-                        <select class="form-control" id="upload_phenotype_spreadsheet_data_level">
+                        <select class="form-control" id="upload_spreadsheet_phenotype_data_level" name="upload_spreadsheet_phenotype_data_level">
                             <option value="plots">Plots</option>
+                            <option value="plants">Plants</option>
                         </select>
                     </div>
                 </div>
