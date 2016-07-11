@@ -392,6 +392,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <& /breeders_toolbox/upload_phenotype_datacollector.mas &>
 
 <& /breeders_toolbox/trial/create_datacollector_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /fieldbook/create_fieldbook_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 % my $data_agreement_link = "Add/edit data agreement";
@@ -425,25 +426,6 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 % print $trial_id;
 </div>
 
-<div id="tablet_field_layout_saved_dialog_message" title="Field book layout file" style="display:none;">
-  <p>
-    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    The field book layout file was saved successfully
-  </p>
-  <p>
-    <a id="tablet_layout_download_link">Go To Download File</a>
-  </p>
-</div>
-
-<div id="data_collector_saved_dialog_message" title="Data collector spreadsheet" style="display:none;">
-  <p>
-    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    The data collector spreadsheet file was saved successfully
-  </p>
-  <p>
-    <a id="data_collector_download_link">Download File</a>
-  </p>
-</div>
 
 <div id="trial_design_view_layout" title="Trial design layout">
 % print $design_layout_view;

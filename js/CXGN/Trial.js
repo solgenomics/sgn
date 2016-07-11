@@ -116,38 +116,6 @@ function load_breeding_program_info(trial_id) {
 }
 
 
-function open_create_fieldbook_dialog() {
-    var trialID = parseInt(jQuery('#trialIDDiv').text());
-    new jQuery.ajax({
-	type: 'POST',
-	url: '/ajax/fieldbook/create',
-	dataType: "json",
-	data: {
-            'trial_id': trialID,
-	},
-	beforeSend: function() {
-		jQuery("#working_modal").modal("show");
-	},
-	success: function (response) {
-		jQuery("#working_modal").modal("hide");
-            if (response.error) {
-		alert(response.error);
-		jQuery('#open_create_fieldbook_dialog').dialog("close");
-            } else {
-		jQuery('#tablet_layout_download_link').attr('href',"/fieldbook");
-		jQuery("#tablet_field_layout_saved_dialog_message").dialog("open");
-		//alert(response.file);
-		jQuery('#open_create_fieldbook_dialog').dialog("close");
-            }
-	},
-	error: function () {
-		jQuery("#working_modal").modal("hide");
-            alert('An error occurred creating the field book.');
-            jQuery('#open_create_fieldbook_dialog').dialog("close");
-	}
-    });
-}
-
 function open_create_DataCollector_dialog() {
     //jQuery('#working').dialog("open");
     jQuery('#working_modal').modal("show");
@@ -253,71 +221,6 @@ function compute_derived_trait() {
 
 
 function trial_detail_page_setup_dialogs() {
-
-    jQuery( "#tablet_field_layout_saved_dialog_message" ).dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-	    Ok: function() {
-		jQuery( this ).dialog( "close" );
-		location.reload();
-	    }
-	}
-    });
-
-    jQuery( "#data_collector_saved_dialog_message" ).dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-	    Ok: function() {
-		jQuery( this ).dialog( "close" );
-		location.reload();
-	    }
-	}
-    });
-
-
-//    jQuery('#create_spreadsheet_dialog').dialog({
-//	autoOpen: false,
-//	modal: true,
-//	autoResize:true,
-//	width: 500,
-//	position: ['top', 75],
-//	modal: true,
-//	buttons: {
-//	    Cancel: function() {
-//		jQuery( this ).dialog( "close" );
-//		return;
-//	    },
-//	    Create: {text: "Ok", id:"create_phenotyping_ok_button", click:function() {
-//		create_spreadsheet();
-//		//save_experimental_design(design_json);
-//		jQuery( this ).dialog( "close" );
-//	       },
-//	    },
-//	},
-//    });
-
-//    jQuery('#create_DataCollector_dialog').dialog({
-//	autoOpen: false,
-//	modal: true,
-//	autoResize:true,
-//	width: 500,
-//	position: ['top', 75],
-//	modal: true,
-//	buttons: {
-//	    Cancel: function() {
-//		jQuery( this ).dialog( "close" );
-//		return;
-//	    },
-//	    Create: {text: "Create", id:"create_DataCollector_submit_button", click:function() {
-//		create_DataCollector();
-//		//save_experimental_design(design_json);
-//		jQuery( this ).dialog( "close" );
-//		}
-//	    },
-//	},
-//    });
 
      jQuery('#compute_derived_trait_dialog').dialog({
 	autoOpen: false,
@@ -468,10 +371,6 @@ function trial_detail_page_setup_dialogs() {
 	    var trial_id = get_trial_id();
 	    delete_project_entry_by_trial_id(trial_id);
 	});
-
-    jQuery('#create_fieldbook_link').click(function () {
-	open_create_fieldbook_dialog();
-    });
 
 
     jQuery('#view_layout_link').click(function () {
