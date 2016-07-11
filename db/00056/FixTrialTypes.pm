@@ -33,6 +33,8 @@ it under the same terms as Perl itself.
 package FixTrialTypes;
 
 use Moose;
+use Bio::Chado::Schema;
+use Try::Tiny;
 extends 'CXGN::Metadata::Dbpatch';
 
 
