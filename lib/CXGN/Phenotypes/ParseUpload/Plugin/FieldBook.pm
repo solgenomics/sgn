@@ -36,20 +36,33 @@ sub validate {
     @header_row = split($delimiter, $header);
 
     #  Check header row contents
-    if ($header_row[0] ne "\"plot_id\"" ||
-	$header_row[1] ne "\"range\"" ||
-	$header_row[2] ne "\"plot\"" ||
-	$header_row[3] ne "\"rep\"" ||
-	$header_row[4] ne "\"accession\"" ||
-	$header_row[5] ne "\"is_a_control\"" ||
-	$header_row[6] ne "\"trait\"" ||
-	$header_row[7] ne "\"value\"" ||
-	$header_row[8] ne "\"timestamp\"" ||
-	$header_row[9] ne "\"person\"" ||
-	$header_row[10] ne "\"location\"" ||
-	$header_row[11] ne "\"number\""
-       ) {
-        $parse_result{'error'} = "File contents incorrect. Header needs to be plot_id, number, location, person, timestamp, value, trait";
+    if ( ($header_row[0] ne "\"plot_id\"" &&
+        $header_row[1] ne "\"range\"" &&
+        $header_row[2] ne "\"plot\"" &&
+        $header_row[3] ne "\"rep\"" &&
+        $header_row[4] ne "\"accession\"" &&
+        $header_row[5] ne "\"is_a_control\"" &&
+        $header_row[6] ne "\"trait\"" &&
+        $header_row[7] ne "\"value\"" &&
+        $header_row[8] ne "\"timestamp\"" &&
+        $header_row[9] ne "\"person\"" &&
+        $header_row[10] ne "\"location\"" &&
+        $header_row[11] ne "\"number\""
+        ) || ($header_row[0] ne "\"plot_id\"" &&
+            $header_row[1] ne "\"range\"" &&
+            $header_row[2] ne "\"plant\"" &&
+            $header_row[3] ne "\"plot\"" &&
+            $header_row[4] ne "\"rep\"" &&
+            $header_row[5] ne "\"accession\"" &&
+            $header_row[6] ne "\"is_a_control\"" &&
+            $header_row[7] ne "\"trait\"" &&
+            $header_row[8] ne "\"value\"" &&
+            $header_row[9] ne "\"timestamp\"" &&
+            $header_row[10] ne "\"person\"" &&
+            $header_row[11] ne "\"location\"" &&
+            $header_row[12] ne "\"number\""
+            ) {
+        $parse_result{'error'} = "File contents incorrect. For uploading plot phenotypes, header needs to be plot_id, range, plot, rep, accession, is_a_control, trait, value, timestamp, person, location, number. For uploading plant phenotypes, header needs to be plot_id, range, plant, plot, rep, accession, is_a_control, trait, value, timestamp, person, location, number";
         print STDERR "File contents incorrect.\n";
         return \%parse_result;
     }
