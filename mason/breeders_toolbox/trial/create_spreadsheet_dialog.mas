@@ -1,6 +1,6 @@
 
 <%args>
-$trial_id
+$trial_id => undef
 $trial_name => undef
 </%args>
 
@@ -15,26 +15,39 @@ $trial_name => undef
       <div class="modal-body">
         <div class="container-fluid">
 
-	       <form class="form-horizontal" role="form" method="post" >
-	        <div class="form-group">
-                <label class="col-sm-3 control-label">Trait List: </label>
-                <div class="col-sm-9" >
-                    <div id ="trait_list_spreadsheet">
+            <form class="form-horizontal" role="form" method="post" >
+               <div class="form-group">
+                 <label class="col-sm-3 control-label">Trial: </label>
+                 <div class="col-sm-9" >
+                   <div id="select_trial_for_create_spreadsheet">
+% if ($trial_id) {
+                   <input type="text" class="form-control" value="<% $trial_name %>" disabled/>
+                   <input type="hidden" id="html_select_trial_for_create_spreadsheet" name="html_select_trial_for_create_spreadsheet" value="<% $trial_id %>" />
+% } else {
+     [Loading...]
+% }
+                   </div>
+                 </div>
+               </div>
+
+               <div class="form-group">
+                    <label class="col-sm-3 control-label">Trait List: </label>
+                    <div class="col-sm-9" >
+                        <div id ="trait_list_spreadsheet">
+                        </div>
                     </div>
                 </div>
-	        </div>
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Data Level: </label>
-                <div class="col-sm-9" >
-                    <select class="form-control" id="create_spreadsheet_data_level">
-                        <option value="plots">Plots</option>
-                        <option value="plants">Plants</option>
-                    </select>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Data Level: </label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="create_spreadsheet_data_level">
+                            <option value="plots">Plots</option>
+                            <option value="plants">Plants</option>
+                        </select>
+                    </div>
                 </div>
-	        </div>
-	       </form><br/>
-         
-        </div>
+            </form><br/>
+         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" name="create_phenotyping_cancel_button" id="create_phenotyping_cancel_button" data-dismiss="modal">Close</button>
@@ -47,6 +60,10 @@ $trial_name => undef
 <script>
 
 jQuery(document).ready(function() {
+
+    if(jQuery("#html_select_trial_for_create_spreadsheet").length == 0) {
+        get_select_box('trials', 'select_trial_for_create_spreadsheet', { 'name' : 'html_select_trial_for_create_spreadsheet', 'id' : 'html_select_trial_for_create_spreadsheet' });
+    }
 
   jQuery("[name='create_spreadsheet_link']").click( function () {
     jQuery('#create_spreadsheet_dialog').modal("show");
@@ -74,7 +91,7 @@ function create_phenotype_spreadsheet() {
         url: '/ajax/phenotype/create_spreadsheet',
         dataType: "json",
         data: {
-            'trial_id': <% $trial_id %>,
+            'trial_id': jQuery("#html_select_trial_for_create_spreadsheet").val(),
             'trait_list': trait_list,
             'data_level': jQuery("#create_spreadsheet_data_level").val(),
         },

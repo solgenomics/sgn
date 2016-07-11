@@ -74,7 +74,7 @@
             <p>(tab-delimited text formats are NOT supported)</p>
 
             <hr>
-            <button class="btn btn-primary" name="create_spreadsheet_link">Create Phenotyping Spreadsheet for this Trial</button>
+            <button class="btn btn-primary" name="create_spreadsheet_link">Create Phenotyping Spreadsheet for Trial</button>
             <hr>
 
             <h4>Required Data:</h4>
