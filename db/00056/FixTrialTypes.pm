@@ -54,96 +54,209 @@ sub patch {
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
     my $coderef = sub {
+      #get resultsets and cv_id for project types
       my $cv_rs = $schema->resultset("Cv::Cv");
       my $cvterm_rs = $schema->resultset("Cv::Cvterm");
       my $projectprop_rs = $schema->resultset("Project::Projectprop");
+      my $cv_id = $cv_rs->search({name => 'project_type'})->first()->cv_id();
+    #  my $cv_id = $cv_row->cv_id;
+      print STDERR "Project types cv id = $cv_id \n";
 
-      my $project_type_cv_row = $cv_rs->search( { name => 'project_type' } );
-      my $cv_id = $project_type_cv_row->cv_id;
+      #update the list of possible trial types by adding/updating to standardized names and removing duplicates
+      my $SN_id = &update_or_create_type('%seedling%', 'Seedling Nursery', $cvterm_rs, $cv_id);
+      my $CE_id = &update_or_create_type('%clonal%', 'Clonal Evaluation', $cvterm_rs, $cv_id);
+      my $VR_id = &update_or_create_type('%variety%', 'Variety Release Trial', $cvterm_rs, $cv_id);
 
-      my $SN_id = update_or_create_type('%seedling%', 'Seedling Nursery', $cvterm_rs, $cv_id);
-      my $CE_id = update_or_create_type('%clonal%', 'Clonal Evaluation', $cvterm_rs, $cv_id);
-      my $PYT_id = find_or_update_type ('PYT', 'Preliminary Yield Trial', $cvterm_rs, $cv_id)
+      my $PYT_id = &find_or_update_type ('PYT', 'Preliminary Yield Trial', $cvterm_rs, $cv_id);
+      &link_to_new_type('PYT', $PYT_id, $cv_id, $cvterm_rs, $projectprop_rs);
+      &link_to_new_type('Preliminary Yield Trials', $PYT_id, $cv_id, $cvterm_rs, $projectprop_rs);
+      &delete_old_type('PYT', $cvterm_rs, $cv_id);
+      &delete_old_type('Preliminary Yield Trials', $cvterm_rs, $cv_id);
 
+      my $AYT_id = &find_or_update_type ('AYT', 'Advanced Yield Trial', $cvterm_rs, $cv_id);
+      &link_to_new_type('AYT', $AYT_id, $cv_id, $cvterm_rs, $projectprop_rs);
+      &link_to_new_type('Advanced Yield Trials', $AYT_id, $cv_id, $cvterm_rs, $projectprop_rs);
+      &delete_old_type('AYT', $cvterm_rs, $cv_id);
+      &delete_old_type('Advanced Yield Trials', $cvterm_rs, $cv_id);
 
-    link_to_new_type('PYT', $new_type_id, $cv_id, $projectprop_rs);
-    link_to_new_type('Preliminary Yield Trials', $new_type_id, $cv_id, $projectprop_rs);
-    delete_old_type('PYT');
-    delete_old_type('Preliminary Yield Trials');
+      my $UYT_id = &find_or_update_type ('UYT', 'Uniform Yield Trial', $cvterm_rs, $cv_id);
+      &link_to_new_type('UYT', $UYT_id, $cv_id, $cvterm_rs, $projectprop_rs);
+      &link_to_new_type('Uniform Yield Trials', $UYT_id, $cv_id, $cvterm_rs, $projectprop_rs);
+      &delete_old_type('UYT', $cvterm_rs, $cv_id);
+      &delete_old_type('Uniform Yield Trials', $cvterm_rs, $cv_id);
 
-
-    sub update_or_create_type ($duplicate_type_name, $new_type_name, $cvterm_rs, $cv_id) {
-      my $duplicate_rs = $cvterm_rs->find(
+      #delete any types not among the standard 6
+      my $obsolete_types = $cvterm_rs->find(
         {
           cv_id => $cv_id,
-          name => $duplicate_type_name
+          cvterm_id => [{ '!=', $SN_id }, { '!=', $CE_id }, { '!=', $VR_id }, { '!=', $PYT_id }, { '!=', $AYT_id }, { '!=', $UYT_id }]
         });
-      if ($duplicate_rs) {
-        $duplicate_rs->first->update( { name => $new_type_name }, );
-      } else {
-        my $new_rs = $cvterm_rs->create_with(
-		      {
-            cv_id => $cv_id,
-		        name => $new_type_name
-		      });
+      my $num_to_delete = $obsolete_types->count();
+      print STDERR "Deleting $num_to_delete obsolete trial types . . .\n";
+      $obsolete_types->delete();
+      print STDERR $schema->resultset("Cv::Cvterm")->search({ cv_id => $cv_id })->count() . " standard trial types remaining.\n";
+
+      # get all projects
+      my $all_trial_rs = $schema->resultset('Project')->names();
+
+      # get ids of all projects with types
+      my $trials_with_types_rs = $schema->resultset('Project')->search({
+        'cvterm.cv_id'   => $cv_id
+      }, {
+        join => [ qw/projectprop cvterm/ ],
+      });
+      my @typed_trials_ids;
+      foreach my $trial ($trials_with_types_rs) {
+        push @typed_trials_ids, $trial->project_id;
       }
-      return $new_rs->cvterm_id;
-    }
+      my %typed_trials = map { $_ => 1 } @typed_trials_ids;
 
-    sub find_or_update_type ($duplicate_type_name, $type_name, $cvterm_rs, $cv_id) {
-      my $type_rs = $cvterm_rs->find(
-        {
-          cv_id => $cv_id,
-          name => $type_name
-        });
-      if (!$type_rs) {
-        $type_rs = $cvterm_rs->find(
-          {
-            cv_id => $cv_id,
-            name => $duplicate_type_name
-          });
-        $type_rs->first->update( { name => $type_name }, );
+      #loop through all projects, and if they aren't in the set that has a type, use regex on trial name. if matches type abbrevation, add type.
+      foreach my $trial ($all_trial_rs) {
+        unless(exists($typed_trials{$trial->project_id})) {
+          my $trial_name = $trial->name;
+          for ($trial_name) {
+          if (/seedling/) {
+              print STDERR "trial $trial_name matched 'seedling', type being set to Seedling Nursery\n";
+              $schema->resultset('Project::Projectprop')->create(
+              {
+                project_id => $trial->project_id,
+                type_id => $SN_id,
+                value => 'Seedling Nursery'
+              });
+            } elsif (/clonal/) {
+              print STDERR "trial $trial_name matched 'clonal', type being set to Clonal Evaluation\n";
+              $schema->resultset('Project::Projectprop')->create(
+              {
+                project_id => $trial->project_id,
+                type_id => $CE_id,
+                value => 'Clonal Evaluation'
+              });
+            } elsif (/pyt/) {
+              print STDERR "trial $trial_name matched 'pyt', type being set to Preliminary Yield Trial\n";
+              $schema->resultset('Project::Projectprop')->create(
+              {
+                project_id => $trial->project_id,
+                type_id => $PYT_id,
+                value => 'Preliminary Yield Trial'
+              });
+            } elsif (/ayt/) {
+              print STDERR "trial $trial_name matched 'ayt', type being set to Advanced Yield Trial\n";
+              $schema->resultset('Project::Projectprop')->create(
+              {
+                project_id => $trial->project_id,
+                type_id => $AYT_id,
+                value => 'Advanced Yield Trial'
+              });
+            } elsif (/uyt/) {
+              print STDERR "trial $trial_name matched 'uyt', type being set to Uniform Yield Trial\n";
+              $schema->resultset('Project::Projectprop')->create(
+              {
+                project_id => $trial->project_id,
+                type_id => $UYT_id,
+                value => 'Uniform Yield Trial'
+              });
+            } elsif (/variety/) {
+              print STDERR "trial $trial_name matched 'variety', type being set to Variety Release Trial\n";
+              $schema->resultset('Project::Projectprop')->create(
+              {
+                project_id => $trial->project_id,
+                type_id => $VR_id,
+                value => 'Variety Release Trial'
+              });
+            } else {
+              print STDERR "no indication of type found in name of trial $trial_name\n";
+            }
+          }
+        }
       }
-      return $type_rs->cvterm_id;
-    }
 
-    sub update_project_type ($old_type_name, $new_type_id, $cv_id, $projectprop_rs) {
-      my $duplicate_rs = $cvterm_rs->find(
-        {
-          cv_id => $cv_id,
-          name => $old_type_name
-        });
-      my $duplicate_cvterm_id = $duplicate_rs->cvterm_id;
+          sub update_or_create_type () {
+            my ($duplicate_type_name, $new_type_name, $cvterm_rs, $cv_id) = @_;
+            my $new_rs;
+            my $duplicate_rs = $cvterm_rs->search_like(
+              {
+                cv_id => $cv_id,
+                name => $duplicate_type_name
+              });
+            if ($duplicate_rs) {
+              print STDERR "Updating cvterm with name $duplicate_type_name to $new_type_name \n";
+              $duplicate_rs->first->update( { name => $new_type_name }, );
+            } else {
+              print STDERR "Adding cvterm with name $new_type_name \n";
+              $new_rs = $cvterm_rs->create_with(
+      		      {
+                  cv_id => $cv_id,
+      		        name => $new_type_name
+      		      });
+            }
+            my $new_id = $new_rs->cvterm_id;
+            return $new_id;
+          }
 
-      my $trials_to_update_rs = $projectprop_rs->search(
-        {
-          type_id => $duplicate_cvterm_id
-        });
-      foreach my $row (@$trials_to_update_rs) {
-        $row->update( { type_id => $new_type_id } );
-      }
-    }
+          sub find_or_update_type () {
+            my ($duplicate_type_name, $type_name, $cvterm_rs, $cv_id) = @_;
+            my $type_rs = $cvterm_rs->find(
+              {
+                cv_id => $cv_id,
+                name => $type_name
+              });
+            if (!$type_rs) {
+              $type_rs = $cvterm_rs->find(
+                {
+                  cv_id => $cv_id,
+                  name => $duplicate_type_name
+                });
+                print STDERR "Updating cvterm with name $duplicate_type_name to $type_name \n";
+              $type_rs->first->update( { name => $type_name }, );
+            } else {
+              print STDERR "Found exisiting cvterm with name $type_name \n";
+            }
+            return $type_rs->cvterm_id;
+          }
 
-    sub delete_old_type ($old_type_name) {
+          sub link_to_new_type () {
+            my ($old_type_name, $new_type_id, $cv_id, $cvterm_rs, $projectprop_rs) = @_;
+            my $duplicate_rs = $cvterm_rs->find(
+              {
+                cv_id => $cv_id,
+                name => $old_type_name
+              });
+            my $duplicate_cvterm_id = $duplicate_rs->cvterm_id;
 
-    }
+            my $trials_to_update_rs = $projectprop_rs->search(
+              {
+                type_id => $duplicate_cvterm_id
+              });
+            foreach my $row (@$trials_to_update_rs) {
+              my $trial_id = $row->project_id;
+              print STDERR "Updating trial with id $trial_id from old type $old_type_name to new type $new_type_id \n";
+              $row->update( { type_id => $new_type_id } );
+            }
+          }
 
-    $self->dbh->do(<<EOSQL);
+          sub delete_old_type () {
+            my ($old_type_name, $cvterm_rs, $cv_id) = @_;
+            my $old_type_row = $cvterm_rs->find(
+              {
+                cv_id => $cv_id,
+                name => $old_type_name
+              });
+            print STDERR "Deleting obsolete type " . $old_type_row->name . "\n";
+            $old_type_row->delete();
+          }
 
---do your SQL here
+    };
 
-# find or create new standaradized trial_type (ex. Preliminary Yield Trial) , save it's cvterm_ids
-# find any duplicates present and save their cvterm_ids
-# update all rows with old ids in project prop table to new ids and new values
-# confirm those ids are no longer in the projectproptable, then delete them from cvterm.
-# Find all trials without a type assigned. Use regex to match and assign a type if the trial has a type or type abbreviation in its name
+    try {
+      $schema->txn_do($coderef);
 
---
-EOSQL
+    } catch {
+      die "FixTrialTypes patch failed! " . $_ .  "\n" ;
+    };
 
-print "You're done!\n";
+    print "You're done!\n";
 }
-
 
 ####
 1; #
