@@ -214,7 +214,7 @@ function getCombinedPopsId() {
 		    page = '/solgs/populations/combined/' + comboPopsId;
 		}
 		
-		askUser(page, args);
+		solGS.waitPage(page, args);
             } 
         },
         error: function(res) {
