@@ -13,18 +13,19 @@ JSAN.use('jquery.form');
 var solGS = solGS || function solGS () {};
 
 solGS.waitPage = function (page, args) {
-
+   
     var matchItems = 'solgs/population/'
 	+ '|solgs/populations/combined/' 
 	+ '|solgs/trait/' 
 	+ '|solgs/model/combined/trials/'
 	+ '|solgs/search/trials/trait/'
-	+ '|solgs/model/\d+/prediction/'
+	+ '|solgs/model/\\d+/prediction/'
      	+ '|solgs/analyze/traits/';
-			    
+   		    
     if ( page.match(matchItems)) {
     	askUser(page, args);
-    } else {
+    }
+    else {
     	blockPage(page);
     }
    
@@ -168,7 +169,7 @@ solGS.waitPage = function (page, args) {
 	    + '|solgs/confirm/request'
 	    + '|solgs/trait/'
 	    + '|solgs/model/combined/trials/'
-	    + '|solgs/model/\d+/prediction/';
+	    + '|solgs/model/\\d+/prediction/';
 	
 	var multiTraitsUrls = 'solgs/analyze/traits/population/'
 	    + '|solgs/models/combined/trials/';
@@ -241,7 +242,7 @@ solGS.waitPage = function (page, args) {
 	var matchItems = '/solgs/population/'
 	    + '|solgs/trait/' 
 	    + '|solgs/model/combined/trials/'
-	    + '|solgs/model/\d+/prediction/';
+	    + '|solgs/model/\\d+/prediction/';
 
 	if (page.match(matchItems) ) {
 
