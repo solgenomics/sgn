@@ -2,7 +2,7 @@
 * visualize and compare gebvs of a training population 
 * and a selection population.
 * normal distribution plotting using d3.
-* uses methods from statistics/simple_statistics and solGS.linePlot js libraries
+* uses methods from solGS.normalDistribution and solGS.linePlot js libraries
 * Isaak Y Tecle <iyt2@cornell.edu>
 *
 */
@@ -132,127 +132,47 @@ function gebvsComparison () {
     }
 
 
-    function getGebvs (gebvsData) {
-
-	var gebv = [];
-	
-	for (var i=0; i < gebvsData.length; i++) {      
-            var g = gebvsData[i][1];
-            g     = g.replace(/\s+/, '');
-            g     = Number(g);
-	    gebv.push(g);
-	}
-	
-	return gebv;
-    } 
-
-
-    function getPValues (normalData) {
-
-	var p = [];
-	
-	for (var i=0; i < normalData.length; i++) {
-            var pV  = normalData[i].p;
-	    p.push(pV);
-	}
-	
-	return p;
-
-    } 
-
-
-    function getGebvZScores (normalData) {
-
-	var gz = [];
-	
-	for (var i=0; i < normalData.length; i++) {
-            var g = normalData[i].gebv;
-	    var z  = normalData[i].z;
-	    gz.push([g, z]);
-
-	}
-	
-	return gz;
-    } 
-
-
-    function getZScoresP (normalData) {
-
-	var zp = [];
-
-	for (var i=0; i < normalData.length; i++) {
-            var zV  = normalData[i].z;
-	    var pV  = normalData[i].p;
-	    zp.push([zV, pV]);
-
-	}
-	
-	return zp;
-    } 
-
-
-    function getGebvP (normalData) {
-
-	var gp = [];
-
-	for (var i=0; i < normalData.length; i++) {
-            var x  = normalData[i].gebv;
-	    var y  = normalData[i].p;
-	    gp.push([x, y]);
-
-	}
-	
-	return gp;
-    } 
-
-
-    function getNormalDistData (gebvData) { 
-	
-	var gebvs = getGebvs(gebvData);
-	
-	var mean = ss.mean(gebvs);
-	var std  = ss.standard_deviation(gebvs);
-	
-	var normalDistData = [];
-	for (var i=0; i < gebvData.length; i++) {
-	    
-	    var ind  = gebvData[i][0];
-	    var gebv = gebvData[i][1];
-
-	    var z = ss.z_score(gebv, mean, std);
-	    var p = ss.cumulative_std_normal_probability(z);
-	    
-	    if (gebv > mean) {
-		p = 1 - p;
-	    }
-
-	    normalDistData.push({'ind': ind, 'gebv': gebv, 'z': z, 'p': p});
-	}
-	
-	return normalDistData;
-
-    }
-
-
     function plotGEBVs (trainingGEBVs, selectionGEBVs) {
 	
-	var trainingNormalDistData  = getNormalDistData(trainingGEBVs);
-	var selectionNormalDistData = getNormalDistData(selectionGEBVs);
+	var normalDistTraining = new solGS.normalDistribution();
 	
-	var gebvZScoresT = getGebvZScores(trainingNormalDistData);
-	var gebvZScoresS = getGebvZScores(selectionNormalDistData);
+	var trainingNormalDistData  = normalDistTraining
+	    .getNormalDistData(trainingGEBVs);
 	
-	var yValuesT = getPValues(trainingNormalDistData);
-	var yValuesS = getPValues(selectionNormalDistData);
+	var gebvZScoresT = normalDistTraining
+	    .getYValuesZScores(trainingNormalDistData);
 
-	var zScoresPT = getZScoresP(trainingNormalDistData);
-	var zScoresPS = getZScoresP(selectionNormalDistData);
+	var yValuesT = normalDistTraining
+	    .getPValues(trainingNormalDistData);
 
-	var xYT = getGebvP(trainingNormalDistData);
-	var xYS = getGebvP(selectionNormalDistData);
+	var zScoresPT = normalDistTraining
+	    .getZScoresP(trainingNormalDistData);
+
+	var xYT =  normalDistTraining
+	    .getYValuesP(trainingNormalDistData);
+
+	var xValuesT =  normalDistTraining
+	    .getYValues(trainingGEBVs);
+
+	var normalDistSelection = new solGS.normalDistribution();
+
+	var selectionNormalDistData = normalDistSelection
+	    .getNormalDistData(selectionGEBVs);
+
+	var gebvZScoresS = normalDistSelection 
+	    .getYValuesZScores(selectionNormalDistData);
 	
-	var xValuesT = getGebvs(trainingGEBVs);
-	var xValuesS = getGebvs(selectionGEBVs);
+	var yValuesS = normalDistSelection
+	    .getPValues(selectionNormalDistData);
+	
+	var zScoresPS = normalDistSelection
+	    .getZScoresP(selectionNormalDistData);
+	
+	var xYS = normalDistSelection
+	    .getYValuesP(selectionNormalDistData);
+	
+	var xValuesS = normalDistSelection
+	    .getYValues(selectionGEBVs);
 
 	var svgId  = '#compare_gebvs_canvas';
 	var plotId = '#compare_gebvs_plot';
