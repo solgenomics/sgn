@@ -54,10 +54,79 @@ sub patch {
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
     my $coderef = sub {
-  my $cvterm_rs = $schema->resultset("Cv::Cvterm");
-  my $cv_rs = $schema->resultset("Cv::Cv");
+      my $cv_rs = $schema->resultset("Cv::Cv");
+      my $cvterm_rs = $schema->resultset("Cv::Cvterm");
+      my $projectprop_rs = $schema->resultset("Project::Projectprop");
 
-  my $nd_experiment_property_cv = $cv_rs->find_or_create( { name => 'nd_experiment_property' });
+      my $project_type_cv_row = $cv_rs->search( { name => 'project_type' } );
+      my $cv_id = $project_type_cv_row->cv_id;
+
+      my $SN_id = update_or_create_type('%seedling%', 'Seedling Nursery', $cvterm_rs, $cv_id);
+      my $CE_id = update_or_create_type('%clonal%', 'Clonal Evaluation', $cvterm_rs, $cv_id);
+      my $PYT_id = find_or_update_type ('PYT', 'Preliminary Yield Trial', $cvterm_rs, $cv_id)
+
+
+    link_to_new_type('PYT', $new_type_id, $cv_id, $projectprop_rs);
+    link_to_new_type('Preliminary Yield Trials', $new_type_id, $cv_id, $projectprop_rs);
+    delete_old_type('PYT');
+    delete_old_type('Preliminary Yield Trials');
+
+
+    sub update_or_create_type ($duplicate_type_name, $new_type_name, $cvterm_rs, $cv_id) {
+      my $duplicate_rs = $cvterm_rs->find(
+        {
+          cv_id => $cv_id,
+          name => $duplicate_type_name
+        });
+      if ($duplicate_rs) {
+        $duplicate_rs->first->update( { name => $new_type_name }, );
+      } else {
+        my $new_rs = $cvterm_rs->create_with(
+		      {
+            cv_id => $cv_id,
+		        name => $new_type_name
+		      });
+      }
+      return $new_rs->cvterm_id;
+    }
+
+    sub find_or_update_type ($duplicate_type_name, $type_name, $cvterm_rs, $cv_id) {
+      my $type_rs = $cvterm_rs->find(
+        {
+          cv_id => $cv_id,
+          name => $type_name
+        });
+      if (!$type_rs) {
+        $type_rs = $cvterm_rs->find(
+          {
+            cv_id => $cv_id,
+            name => $duplicate_type_name
+          });
+        $type_rs->first->update( { name => $type_name }, );
+      }
+      return $type_rs->cvterm_id;
+    }
+
+    sub update_project_type ($old_type_name, $new_type_id, $cv_id, $projectprop_rs) {
+      my $duplicate_rs = $cvterm_rs->find(
+        {
+          cv_id => $cv_id,
+          name => $old_type_name
+        });
+      my $duplicate_cvterm_id = $duplicate_rs->cvterm_id;
+
+      my $trials_to_update_rs = $projectprop_rs->search(
+        {
+          type_id => $duplicate_cvterm_id
+        });
+      foreach my $row (@$trials_to_update_rs) {
+        $row->update( { type_id => $new_type_id } );
+      }
+    }
+
+    sub delete_old_type ($old_type_name) {
+
+    }
 
     $self->dbh->do(<<EOSQL);
 
