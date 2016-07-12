@@ -1,6 +1,6 @@
 
 <%args>
-$trial_id
+$trial_id => undef
 $trial_name => undef
 </%args>
 
@@ -15,6 +15,19 @@ $trial_name => undef
       <div class="modal-body">
         <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" >
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Trial: </label>
+                    <div class="col-sm-9" >
+                        <div id="select_trial_for_create_fieldbook">
+% if ($trial_id) {
+                            <input type="text" class="form-control" value="<% $trial_name %>" disabled/>
+                            <input type="hidden" id="html_select_trial_for_create_fieldbook" name="html_select_trial_for_create_fieldbook" value="<% $trial_id %>" />
+% } else {
+                    [Loading...]
+% }
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Data Level: </label>
                     <div class="col-sm-9" >
@@ -65,11 +78,15 @@ $trial_name => undef
 
 jQuery(document).ready(function() {
 
-    jQuery('#create_fieldbook_link').click(function() {
+    if(jQuery("#html_select_trial_for_create_fieldbook").length == 0) {
+        get_select_box('trials', 'select_trial_for_create_fieldbook', { 'name' : 'html_select_trial_for_create_fieldbook', 'id' : 'html_select_trial_for_create_fieldbook' });
+    }
+
+    jQuery("[name='create_fieldbook_link']").click( function () {
         jQuery('#create_fieldbook_dialog').modal('show');
     });
     
-    jQuery('#create_fieldbook_ok_button').click(function() {
+    jQuery('#create_fieldbook_ok_button').on('click', function() {
         open_create_fieldbook_dialog();
     });
 
@@ -77,13 +94,12 @@ jQuery(document).ready(function() {
 
 
 function open_create_fieldbook_dialog() {
-    var trialID = <% $trial_id %>;
     new jQuery.ajax({
         type: 'POST',
         url: '/ajax/fieldbook/create',
         dataType: "json",
         data: {
-            'trial_id': trialID,
+            'trial_id': parseInt(jQuery('#html_select_trial_for_create_fieldbook').val()),
             'data_level': jQuery('#create_fieldbook_data_level').val(),
         },
         beforeSend: function() {
