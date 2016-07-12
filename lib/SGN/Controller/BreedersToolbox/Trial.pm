@@ -71,7 +71,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{trial_name} = $trial->get_name();
 
-    $c->stash->{trial_type} = $trial->get_project_type();
+    $c->stash->{trial_type} = $trial->get_project_type()->[1];
 
     $c->stash->{planting_date} = $trial->get_planting_date();
 
@@ -79,9 +79,13 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{trial_description} = $trial->get_description();
 
-    $c->stash->{location_data} = [ $trial->get_location()->[0], $trial->get_location()->[1] ];
+    my $location_data = $trial->get_location();
+    $c->stash->{location_id} = $location_data->[0];
+    $c->stash->{location_name} = $location_data->[1];
 
-    $c->stash->{breeding_program} = $program_object->get_breeding_programs_by_trial($c->stash->{trial_id});
+    my $breeding_program_data = $program_object->get_breeding_programs_by_trial($c->stash->{trial_id});
+    $c->stash->{breeding_program_id} = $breeding_program_data->[0]->[0];
+    $c->stash->{breeding_program_name} = $breeding_program_data->[0]->[1];
 
     $c->stash->{year} = $trial->get_year();
 

@@ -15,9 +15,11 @@ Jeremy D. Edwards
 
 <%args>
 $trial_id
-$breeding_program
 $trial_name
-$location_data => undef
+$breeding_program_id
+$breeding_program_name
+$location_id
+$location_name
 $year => undef
 $trial_type => undef
 $planting_date => undef
@@ -80,13 +82,12 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <tr>
 <td><b>Breeding Program </b></td>
 <td>
-<span id="breeding_programs">
-% if ($breeding_program) {
-% foreach (@$breeding_program) {
-%  print "$_->[1] ($_->[2]) <br/>";
+<span id="breeding_program">
+% if ($breeding_program_name) {
+%  print "$breeding_program_name";
 % }
-% } else {
-% print "No Breeding Program";
+% else {
+%  print "No Breeding Program";
 % }
 </span>
 </td>
@@ -96,8 +97,8 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <td><b>Trial Location</b></td>
 <td>
 <div id="trial_location">
-% if ($location_data) {
-%  print "$location_data->[1]";
+% if ($location_name) {
+%  print "$location_name";
 % } else {
 %  print "[No Location]";
 % }
@@ -123,7 +124,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <td>
 <div id="trial_type">
 % if ($trial_type) {
-%  print "@$trial_type[1]<br/>";
+%  print "$trial_type";
 % } else {
 % print "[Type not set]";
 % }
@@ -173,7 +174,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 </&>
 
-<& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => @$breeding_program[0]->[0], location => $location_data->[0], year => $year, trial_type => @$trial_type[0], planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
+<& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program_id, location => $location_id, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
 
 % my $folder_collapsed = 1;
 % if ($folder_id) {
@@ -183,8 +184,8 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <&| /page/info_section.mas, title=>"Folder", collaspible=>1, collapsed=>$folder_collapsed,
   subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">Change</a>]' &>
 
-  <& /breeders_toolbox/folder/folder_set.mas, breeding_program_id => $breeding_program->[0]->[0], breeding_program_name =>$breeding_program->[0]->[1], trial_id => $trial_id, trial_name =>$trial_name &>
-  <& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program->[0]->[0], breeding_program_name =>$breeding_program->[0]->[1] &>
+  <& /breeders_toolbox/folder/folder_set.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
+  <& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
 
   <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
 
@@ -445,7 +446,7 @@ jQuery(document).ready(function () {
 	var yes = confirm("Do you really want to remove this trial from the breeding program?");
 	if (yes) {
             jQuery.ajax( {
-		url: '/breeders/program/remove/<% $breeding_program->[0]->[0] %>/'+trial_id,
+		url: '/breeders/program/remove/<% $breeding_program_id %>/'+trial_id,
 		data: { },
 		async: false,
 		success: function(response) {

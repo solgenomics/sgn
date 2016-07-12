@@ -46,7 +46,7 @@ jQuery(document).ready( function() {
 function checkPcaResult () {
     
     var popId = getPopulationId();
- 
+
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -258,9 +258,9 @@ function getPcaGenotypesListData(listId) {
 function getPopulationId () {
 
     var populationId = jQuery("#population_id").val();
-  
+    
     if (!populationId) {       
-        populationId = jQuery("#model_id").val();
+        populationId = jQuery("#model_id").val() || jQuery("#training_pop_id").val();
     }
 
     if (!populationId) {
@@ -270,9 +270,11 @@ function getPopulationId () {
     var page = window.location.pathname;
 
     if (page.match(/solgs\/selection/)) {
+	
 	populationId = jQuery("#selection_pop_id").val();
     } 
   
+    
     return populationId;
         
 }
