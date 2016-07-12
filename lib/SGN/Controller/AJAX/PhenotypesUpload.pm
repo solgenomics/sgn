@@ -112,8 +112,8 @@ sub _prep_upload {
         $validate_type = "phenotype spreadsheet";
         $metadata_file_type = "spreadsheet phenotype file";
         $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
-        $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
         $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
+        $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
     } 
     elsif ($file_type eq "fieldbook") {
         print STDERR "Fieldbook \n";
@@ -122,7 +122,6 @@ sub _prep_upload {
         $metadata_file_type = "tablet phenotype file";
         $timestamp_included = 1;
         $upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
-        $data_level = $c->req->param('upload_fieldbook_phenotype_data_level') || 'plots';
     }
     elsif ($file_type eq "datacollector") {
         print STDERR "Datacollector \n";
@@ -151,7 +150,7 @@ sub _prep_upload {
     unlink $upload_tempfile;
 
     ## Validate and parse uploaded file
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
     }

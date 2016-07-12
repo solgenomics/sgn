@@ -61,7 +61,7 @@ sub validate {
             $header_row[10] ne "\"person\"" &&
             $header_row[11] ne "\"location\"" &&
             $header_row[12] ne "\"number\""
-            ) {
+            )) {
         $parse_result{'error'} = "File contents incorrect. For uploading plot phenotypes, header needs to be plot_id, range, plot, rep, accession, is_a_control, trait, value, timestamp, person, location, number. For uploading plant phenotypes, header needs to be plot_id, range, plant, plot, rep, accession, is_a_control, trait, value, timestamp, person, location, number";
         print STDERR "File contents incorrect.\n";
         return \%parse_result;
