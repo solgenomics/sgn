@@ -194,54 +194,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 % if ($hidap_enabled) {
 
-<&| /page/info_section.mas, id => "hidap_trial", title=>"HIDAP Trial Analysis", collapsible=>1, collapsed => 0 &>
-
-<div class="row">
-  <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Map&fbaInput=<% $trial_id %>" target="_blank">
-      <div class="well">
-        <div class="row">
-          <div class="col-sm-9">
-            Phenotype Plot Map
-          </div>
-          <div class="col-sm-3">
-            <span class="glyphicon glyphicon-th"></span>
-          </div>
-        </div>
-      </div>
-    </a>
-  </div>
-  <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Correlation&fbaInput=<% $trial_id %>" target="_blank">
-      <div class="well">
-        <div class="row">
-          <div class="col-sm-9">
-            Phenotype Correlation
-          </div>
-          <div class="col-sm-3">
-            <span class="glyphicon glyphicon-stats"></span>
-          </div>
-        </div>
-      </div>
-    </a>
-  </div>
-  <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Report&fbaInput=<% $trial_id %>" target="_blank">
-      <div class="well">
-        <div class="row">
-          <div class="col-sm-9">
-            Analysis Report
-          </div>
-          <div class="col-sm-3">
-            <span class="glyphicon glyphicon-book"></span>
-          </div>
-        </div>
-      </div>
-    </a>
-  </div>
-</div>
-
-</&>
+ <& /hidap/hidap_trial_link.mas, trial_id => $trial_id &>
 
 % }
 
