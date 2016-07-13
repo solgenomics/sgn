@@ -101,7 +101,7 @@ jQuery(document).ready(function () {
 	      	 traits_assayed_html = traits_assayed_html +"</select>";
 	      	 jQuery("#traits_assayed_dropdown").html(traits_assayed_html);
 
-	      	 jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/chado/cvterm?cvterm_id="+response.traits_assayed[0][0][0]+"'>Definition</a>");
+	      	 jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
 
 	      	 jQuery.ajax( {
                      url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+jQuery("#trial_summary_hist_dropdown").val(),
@@ -151,7 +151,7 @@ jQuery(document).ready(function () {
 
 function trait_summary_hist_change(value) {
       jQuery("#trial_summary_hist_dropdown").val(value);
-      jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/chado/cvterm?cvterm_id="+value+"'>Definition</a>");
+      jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
 
       jQuery.ajax( {
           url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+value,

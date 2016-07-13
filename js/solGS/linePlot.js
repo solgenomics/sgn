@@ -8,7 +8,8 @@ var lineData =  {
 	    'div_id': svgId, 
 	    'plot_title': title, 
 	    'x_axis_label': xLabel,
-	    'y_axix_label': yLabel,
+	    'y_axis_label': yLabel,
+	    'axis_label_color: axisLabelColor,
 	    'lines' : 
 	    [ 		
 		{
@@ -141,7 +142,7 @@ solGS.linePlot = function (allData) {
 	jQuery(svgId).append('<div id=line_plot></div>');
 	
 	var plotId = '#line_plot';
-	var axisColor = '#5882FA'; 
+	var axisColor = allData.axis_label_color; 
   
 	var yLabel = allData.y_axis_label;
 	var xLabel = allData.x_axis_label;

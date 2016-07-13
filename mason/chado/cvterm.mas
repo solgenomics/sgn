@@ -59,7 +59,6 @@ my $has_stocks = $cvterm->has_stocks;
 my $has_phenotypes = $cvterm->has_phenotypes;
 my $has_phen_trials = $cvterm->has_phenotyping_trials;
 
-
 my @qtl_pops = CXGN::Phenome::Qtl::Tools->new()->is_from_qtl( $cvterm_id );
 my @qtl_data;
 
@@ -79,7 +78,7 @@ if ( @qtl_pops )
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology jquery CXGN.Phenome.Qtl] ] &>
+<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology jquery CXGN.Phenome.Qtl jquery jquery.dataTables] ] &>
 
 
 <script language="javascript">
@@ -157,38 +156,49 @@ LOAD...
 
 <& /ontology/embedded_browser.mas, cvterm => $cvterm &>
 
+
 %if ($has_loci) {
 <&| /page/info_section.mas,
     title=> "Annotated loci",
-    subtitle => '<span id="loci_count"></span>',
+    subtitle => $has_loci,
     collapsible => 1,
     collapsed   => 1,
-    hide_if_empty => 1,
 &>
 
-<div id="loci_div">
+<table id="loci_data" class="display">
+<thead>
+  <tr>
+    <th>Organism</th>
+    <th>Locus symbol</th>
+    <th>Locus name</th>
+  </tr>
+</thead>
 
+</table>
 
-<script language="javascript">
-  recursiveAnnotations({
-                         url:        "/ajax/cvterm/recursive_loci",
-                         content_id: "loci_div",
-                         count_id:   "loci_count",
-                         inflect:    [ 'locus', 'loci' ],
-                       });
+<script>
+
+  jQuery(document).ready(function () {
+  
+    jQuery('#loci_data').DataTable( { 
+      'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/annotated_loci',
+     });
+  });
+
 </script>
 
-</div>
+
 </&>
 
 %}
 
-%if ($has_stocks) {
+% if ($has_stocks) {
 <&| /page/info_section.mas,
        title=> "Annotated stocks",
        collapsible => 1,
        collapsed=>1,
        subtitle => '<span id="stocks_count"></span>',
+       hide_if_empty => 1,
  &>
 <div id="stocks_div">
    [Loading...]
@@ -221,27 +231,42 @@ LOAD...
   </&>
 % }
 
-%if ($has_phenotypes) {
+
+% if ($has_phenotypes) { 
 <&| /page/info_section.mas,
       title       => "Phenotyped accessions",
       collapsible => 1,
       collapsed=>1,
-      subtitle    => '<span id="pheno_count"></span>',
+      subtitle    => $has_phenotypes ,
 &>
-<div id="pheno_div">
-   [Loading...]
-<script language="javascript">
-  recursiveAnnotations({
-                         url:        "/ajax/cvterm/phenotyped_stocks",
-                         content_id: "pheno_div",
-                         count_id:   "pheno_count",
-                         inflect:    [ 'accession', 'accessions' ],
-                       });
+
+
+<table id="phen_stocks_data" class="display">
+<thead>
+  <tr>
+     <th>Type</th>
+    <th>Stock name</th>
+    <th>Description</th>
+  </tr>
+</thead>
+
+</table>
+
+<script>
+
+  jQuery(document).ready(function () {
+  
+    jQuery('#phen_stocks_data').DataTable( { 
+      'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/phenotyped_stocks',
+     });
+  });
+
 </script>
-</div>
+
 
 </&>
-%}
+% }
+
 
 %if ($has_phen_trials) {
 <&| /page/info_section.mas,

@@ -177,11 +177,11 @@ function gebvsComparison () {
 	var svgId  = '#compare_gebvs_canvas';
 	var plotId = '#compare_gebvs_plot';
 
-	var trColor   = '#86B404';
-	var slColor   = '#F7D358';
-	var axisColor = '#5882FA';   
-	var yLabel    = 'Probability';
-	var xLabel    = 'GEBVs';
+	var trColor      = '#02bcff'; 
+	var slColor      = '#ff1302'; 
+	var axLabelColor = '#ff8d02';    
+	var yLabel       = 'Probability';
+	var xLabel       = 'GEBVs';
 
 	var title = 'Normal distribution curves of GEBVs ' 
 	    + 'for the training and selection populations.';
@@ -191,7 +191,8 @@ function gebvsComparison () {
 	    'div_id': svgId, 
 	    'plot_title': title, 
 	    'x_axis_label': xLabel,
-	    'y_axix_label': yLabel,
+	    'y_axis_label': yLabel,
+	    'axis_label_color': axLabelColor,
 	    'lines' : 
 	    [ 		
 		{
@@ -210,15 +211,16 @@ function gebvsComparison () {
 
 
 	var linePlot  = solGS.linePlot(allData);
-
+	var trMean = ss.mean(xValuesT);
+	var slMean = ss.mean(xValuesS);
 	var trainingMidlineData  = [
-	    [ss.mean(xValuesT), d3.min(yValuesT)], 
-	    [ss.mean(xValuesT), d3.max(yValuesT)]
+	    [trMean, d3.min(yValuesT)], 
+	    [trMean, d3.max(yValuesT)]
 	];
 	
 	var selectionMidlineData = [
-	    [ss.mean(xValuesS), d3.min(yValuesS)], 
-	    [ss.mean(xValuesS), d3.max(yValuesS)]
+	    [slMean, d3.min(yValuesS)], 
+	    [slMean, d3.max(yValuesS)]
 	];
 
 	var midLine = d3.svg.line()
@@ -228,19 +230,53 @@ function gebvsComparison () {
 	    .y(function(d) { 			
 		return linePlot.yScale(d[1]); 
 	    });
-
-	
+	   
+	    	
 	linePlot.graph.append("path")
 	    .attr("d", midLine(trainingMidlineData))
 	    .attr("stroke", trColor)
 	    .attr("stroke-width", "3")
-	    .attr("fill", "none");
+	    .attr("fill", "none")
+	    .on("mouseover", function (d) {
+                if (d = trMean) {
+                    linePlot.graph.append("text")
+                        .attr("id", "tr_mean")
+                        .text(d3.format(".2f")(trMean))
+                        .style({
+			    "fill"       : trColor, 
+			    "font-weight": "bold"
+			}) 
+			.attr("x", linePlot.xScale(trMean - 3))
+                        .attr("y", linePlot.yScale(0.47))                     
+                }
+            })                
+            .on("mouseout", function() {
+                d3.selectAll("text#tr_mean").remove();
+            });
+
 
 	linePlot.graph.append("path")
 	    .attr("d", midLine(selectionMidlineData))
 	    .attr("stroke", slColor)
 	    .attr("stroke-width", "3")
-	    .attr("fill", "none");
+	    .attr("fill", "none")
+	    .on("mouseover", function (d) {
+                if (d = slMean) {
+                    linePlot.graph.append("text")
+                        .attr("id", "sl_mean")
+                        .text(d3.format(".2f")(slMean))
+                        .style({
+			    "fill"       : slColor, 
+			    "font-weight": "bold"
+			})  
+                        .attr("x", linePlot.xScale(slMean + 2))
+                        .attr("y", linePlot.yScale(0.47))
+                             
+                }
+            })                
+            .on("mouseout", function() {
+		d3.selectAll("text#sl_mean").remove(); 
+            });
 
 
     }
