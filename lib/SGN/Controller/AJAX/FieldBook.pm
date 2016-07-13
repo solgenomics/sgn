@@ -80,7 +80,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
   }
     if ($data_level eq 'plants') {
         my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-        if (!$trial->has_plants()){
+        if (!$trial->has_plant_entries()){
             $c->stash->{rest} = {error =>  "Trial does not have plant entries. You must first create plant entries." };
             return;
         }

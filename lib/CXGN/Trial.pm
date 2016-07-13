@@ -386,35 +386,6 @@ sub set_project_type {
 }
 
 
-=head2 has_plants
-
- Usage:
- Desc:         returns true if the trial has associated plant entries for
-               each plot, false if not. Plant entries can be created using
-               create_plant_entries().
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub has_plants { 
-    my $self = shift;
-    my $has_plants = $self->bcs_schema()->resultset("Project::Projectprop")->find( 
-	{ 
-	    'type.name' => 'project_has_plant_entries',
-	    'project_id' => $self->get_trial_id(),
-	}, { join => 'type' });
-    if ($has_plants) { 
-	return 1;
-    }
-    else { 
-	return 0;
-    }
-}
-
-
 sub set_design_type { 
     my $self = shift;
     my $design_type = shift;
