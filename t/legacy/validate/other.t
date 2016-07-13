@@ -43,7 +43,7 @@ my %urls = (
         "intron finder"                            => '/tools/intron_detection/find_introns.pl',
         "display intron"                           => '/tools/intron_detection/display_introns.pl',
         "about clustal file"                       => '/about/clustal_file.pl',
-        'chado cvterm page'                        => '/chado/cvterm?cvterm_id=47499',
+        'chado cvterm page'                        => '/cvterm/47499/view',
         "SGN pubs"                                 => "/help/publications.pl",
         "SGN events"                               => '/sgn-events',
         "AFRI-SOL"                                 => '/solanaceae-project/afri-sol', 

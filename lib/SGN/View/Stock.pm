@@ -32,7 +32,7 @@ sub cvterm_link {
     my ($cvterm) = @_;
     my $name = $cvterm->name;
     my $id   = $cvterm->cvterm_id;
-    return qq{<a href="/chado/cvterm?cvterm_id=$id">$name</a>};
+    return qq{<a href="/cvterm/$id/view">$name</a>};
 }
 
 sub stock_table {

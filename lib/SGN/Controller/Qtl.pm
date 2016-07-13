@@ -406,7 +406,7 @@ sub _link {
         my $owner_name = $c->stash->{owner_name};
         my $owner_id   = $c->stash->{owner_id};   
     
-        $c->stash( cvterm_page        => qq |<a href="/chado/cvterm?cvterm_id=$cvterm_id">$trait_name</a> |,
+        $c->stash( cvterm_page        => qq |<a href="/cvterm/$cvterm_id/view">$trait_name</a> |,
                    trait_page         => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
                    owner_page         => qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |,
                    guideline          => qq |<a href="/qtl/submission/guide">Guideline</a> |,
@@ -655,12 +655,12 @@ sub mark_qtl_traits {
 
             if (  $qtltool->is_from_qtl( $id ) ) 
             {                         
-                push @rows, [ qq | <a href="/chado/cvterm?cvterm_id=$id">$name</a> |, $def, $yes_mark ];
+                push @rows, [ qq | <a href="/cvterm/$id/view">$name</a> |, $def, $yes_mark ];
            
             }
             else 
             {
-                push @rows, [ qq | <a href="/chado/cvterm?cvterm_id=$id">$name</a> |, $def, $no_mark ];
+                push @rows, [ qq | <a href="/cvterm/$id/view">$name</a> |, $def, $no_mark ];
             }      
         } 
         return \@rows;
@@ -722,7 +722,7 @@ sub map_qtl_traits {
                 [
                  map { $_ } 
                  (
-                  qq |<a href=/chado/cvterm?cvterm_id=$cvterm_id>$trait</a> |
+                  qq |<a href=/cvterm/$cvterm_id/view>$trait</a> |
                  )
                 ];
             }

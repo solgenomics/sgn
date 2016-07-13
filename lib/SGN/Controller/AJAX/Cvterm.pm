@@ -239,40 +239,38 @@ sub recursive_loci_GET :Args(0) {
 }
 
 
-sub phenotyped_stocks : Local : ActionClass('REST') { }
 
-sub phenotyped_stocks_GET :Args(0) {
+sub get_phenotyped_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/phenotyped_stocks') Args(0) {
     my ($self, $c) = @_;
-    my $cvterm_id = $c->request->param("cvterm_id");
-    my $q = "SELECT DISTINCT object_id, type.name, stock.name, stock.description
-             FROM public.stock_relationship
-             JOIN stock ON stock_id = object_id
-
-             JOIN cvterm as type ON cvterm_id = stock.type_id
-             JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = stock_relationship.subject_id)
-             JOIN nd_experiment_phenotype USING (nd_experiment_id)
-             JOIN phenotype USING (phenotype_id)
-             JOIN cvterm on cvterm.cvterm_id = observable_id
-             WHERE observable_id = ? AND type.name ilike ?";
+    my $cvterm =  $c->stash->{cvterm};
+    my $cvterm_id  = $cvterm->get_cvterm_id;
+  
+    my $q = "SELECT DISTINCT object_id,  stock.name, stock.description
+             FROM cvtermpath
+              JOIN cvterm ON (cvtermpath.object_id = cvterm.cvterm_id
+                            OR cvtermpath.subject_id = cvterm.cvterm_id )
+               JOIN phenotype on cvterm.cvterm_id = phenotype.observable_id
+               JOIN nd_experiment_phenotype USING (phenotype_id)
+               JOIN nd_experiment_stock USING (nd_experiment_id)
+               JOIN stock USING (stock_id) 
+               
+             WHERE pathdistance > 0 
+             AND cvtermpath.object_id = ? ORDER BY object_id " ;
+	 
 
     my $sth = $c->dbc->dbh->prepare($q);
-    $c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id , '%population%');
+    $sth->execute($cvterm_id) ;
+    #$c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id);
     my @data;
-    while ( my ($stock_id, $type, $stock_name, $description) = $sth->fetchrow_array ) {
+    while ( my ($stock_id, $stock_name, $description) = $sth->fetchrow_array ) {
         my $link = qq|<a href="/stock/$stock_id/view">$stock_name</a> |;
-        push @data,
-        [
-         (
+        push @data, [
           $link,
           $description,
-         )
         ];
     }
-    $c->stash->{rest}{html} = @data ?
-        columnar_table_html(
-            headings     =>  [ "Stock name", "Description" ],
-            data         => \@data,
-        )  : undef ;
+    $c->stash->{rest} = { data => \@data,
+    };
 }
 
 
