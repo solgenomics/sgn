@@ -173,36 +173,38 @@ sub patch {
 
           sub update_or_create_type () {
             my ($duplicate_type_name, $new_type_name, $cvterm_rs, $cv_id) = @_;
-            my $new_rs;
-            my $duplicate_rs = $cvterm_rs->search_like(
+            my ($cvterm_id, $cvterm_name);
+            my $duplicate_rs = $cvterm_rs->search(
               {
                 cv_id => $cv_id,
-                name => $duplicate_type_name
+                name => { -like => $duplicate_type_name }
               });
-            if ($duplicate_rs) {
-              print STDERR "Updating cvterm with name $duplicate_type_name to $new_type_name \n";
+            if ($duplicate_rs->first) {
+              $cvterm_id = $duplicate_rs->first->cvterm_id;
+              $cvterm_name = $duplicate_rs->first->name;
+              print STDERR "Updating cvterm with name $cvterm_name and id $cvterm_id to $new_type_name \n";
               $duplicate_rs->first->update( { name => $new_type_name }, );
             } else {
               print STDERR "Adding cvterm with name $new_type_name \n";
-              $new_rs = $cvterm_rs->create_with(
+              my $new_rs = $cvterm_rs->create_with(
       		      {
                   cv_id => $cv_id,
       		        name => $new_type_name
       		      });
+              $cvterm_id = $new_rs->cvterm_id;
             }
-            my $new_id = $new_rs->cvterm_id;
-            return $new_id;
+            return $cvterm_id;
           }
 
           sub find_or_update_type () {
             my ($duplicate_type_name, $type_name, $cvterm_rs, $cv_id) = @_;
-            my $type_rs = $cvterm_rs->find(
+            my $type_rs = $cvterm_rs->search(
               {
                 cv_id => $cv_id,
                 name => $type_name
               });
-            if (!$type_rs) {
-              $type_rs = $cvterm_rs->find(
+            if (!$type_rs->first) {
+              $type_rs = $cvterm_rs->search(
                 {
                   cv_id => $cv_id,
                   name => $duplicate_type_name
@@ -210,26 +212,26 @@ sub patch {
                 print STDERR "Updating cvterm with name $duplicate_type_name to $type_name \n";
               $type_rs->first->update( { name => $type_name }, );
             } else {
-              print STDERR "Found exisiting cvterm with name $type_name \n";
+              print STDERR "Found exisiting cvterm with name $type_name and id ". $type_rs->first->cvterm_id ."\n";
             }
-            return $type_rs->cvterm_id;
+            return $type_rs->first->cvterm_id;
           }
 
           sub link_to_new_type () {
             my ($old_type_name, $new_type_id, $cv_id, $cvterm_rs, $projectprop_rs) = @_;
-            my $duplicate_rs = $cvterm_rs->find(
+            my $duplicate_rs = $cvterm_rs->search(
               {
                 cv_id => $cv_id,
                 name => $old_type_name
               });
-            my $duplicate_cvterm_id = $duplicate_rs->cvterm_id;
-
+            my $duplicate_cvterm_id = $duplicate_rs->first->cvterm_id;
+            print STDERR "linking duplicate type with name ". $duplicate_rs->name ." and id $duplicate_cvterm_id to new type with type_id $new_type_id \n";
             my $trials_to_update_rs = $projectprop_rs->search(
               {
                 type_id => $duplicate_cvterm_id
               });
-            foreach my $row (@$trials_to_update_rs) {
-              my $trial_id = $row->project_id;
+            foreach my $row ($trials_to_update_rs) {
+              my $trial_id = $row->first->project_id;
               print STDERR "Updating trial with id $trial_id from old type $old_type_name to new type $new_type_id \n";
               $row->update( { type_id => $new_type_id } );
             }
