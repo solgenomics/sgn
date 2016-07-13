@@ -113,7 +113,7 @@ my %metadata = ( operator => 'johndoe', date => '20141223' );
 
 my $size = scalar(@$plotlist_ref) * scalar(@$traitlist_ref);
 
-$lp->store($c, $size, $plotlist_ref, $traitlist_ref, \%plot_trait_value, \%metadata);
+$lp->store($c, $size, $plotlist_ref, $traitlist_ref, \%plot_trait_value, \%metadata, 'plots');
 
 my $total_phenotypes = $trial->total_phenotypes();
 

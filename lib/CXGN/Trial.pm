@@ -385,26 +385,6 @@ sub set_project_type {
 		});
 }
 
-sub set_project_type { 
-    my $self = shift;
-    my $project_type = shift;
-
-    my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
-    
-    my $cvterm = $self->bcs_schema()->resultset('Cv::Cvterm')->find( { name => $project_type });
-    if ($cvterm) { 
-	if (any { $cvterm->cvterm_id() } @project_type_ids) { 
-	    my $prop = $self->bcs_schema()->resultset('Project::Projectprop')->create(
-		{ 
-		    type_id => $cvterm->cvterm_id(),
-		    value => '',
-		});
-	}
-    }
-    else { 
-	print STDERR "Invalid project type $project_type\n";
-    }
-}
 
 =head2 has_plants
 
