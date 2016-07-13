@@ -982,7 +982,6 @@ sub _delete_field_layout_experiment {
 
     my $plot_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'plot' })->cvterm_id();
     #print STDERR "Plot type id = $plot_type_id\n";
-
     my $genotype_plot = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'tissue_sample' });
 
     my $genotype_plot_id;
@@ -996,13 +995,27 @@ sub _delete_field_layout_experiment {
     my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($field_layout_type_id, $genotyping_layout_type_id, $trial_id, $plot_type_id, $genotype_plot_id);
 
-    my $plots_deleted = 0;
-    while (my ($plot_id) = $h->fetchrow_array()) {
-	my $plot = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $plot_id });
-	print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
-	$plots_deleted++;
-	$plot->delete();
-    }
+	my $has_plants = $self->has_plant_entries();
+	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship')->cvterm_id();
+	my $plots_deleted = 0;
+	while (my ($plot_id) = $h->fetchrow_array()) {
+		my $plot = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $plot_id });
+
+		if ($has_plants) {
+			my $plant_rs = $plot->search_related('stock_relationship_subjects', {type_id=>$plot_of_cvterm_id});
+			while (my $plant_rel = $plant_rs->next()) {
+				my $plant = $plant_rel->object();
+				print STDERR "Deleting associated plant ".$plant->name(). " (".$plant->stock_id().") \n";
+				$plant->delete();
+				$plant_rel->delete();
+			}
+		}
+
+		print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
+
+		$plots_deleted++;
+		$plot->delete();
+	}
 
     $q = "SELECT nd_experiment_id FROM nd_experiment JOIN nd_experiment_project USING(nd_experiment_id) WHERE nd_experiment.type_id in (?,?) AND project_id=?";
     $h = $self->bcs_schema->storage()->dbh()->prepare($q);
