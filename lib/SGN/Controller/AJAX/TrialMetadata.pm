@@ -254,14 +254,11 @@ sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
-    my $plot_rs = $layout->_get_plots();
-    my @data = CXGN::Trial::TrialLayout->get_plant_names({
-        bcs_schema => $schema,
-        plot_rs => $plot_rs
-    });
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
 
-    $c->stash->{rest} = { plots => \@data };
+    my @data = $trial->get_plants();
+
+    $c->stash->{rest} = { plants => \@data };
 }
 
 sub trial_design : Chained('trial') PathPart('design') Args(0) {

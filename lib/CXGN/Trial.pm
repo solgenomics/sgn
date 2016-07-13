@@ -1456,6 +1456,27 @@ sub get_accessions {
 	return \@accessions;
 }
 
+sub get_plants {
+	my $self = shift;
+	my @plants;
+
+	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
+	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
+	my $plant_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship' )->cvterm_id();
+	my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock")->search_related("stock_relationship_subjects", { 'stock_relationship_subjects.type_id' => $plant_rel_cvterm_id } );
+
+	my %unique_plants;
+	while(my $rs = $trial_plant_rs->next()) {
+		my $r = $rs->object;
+		$unique_plants{$r->uniquename} = $r->stock_id;
+	}
+	foreach (keys %unique_plants) {
+		push @plants, {plant_name=>$_, stock_id=>$unique_plants{$_} };
+	}
+
+	return \@plants;
+}
+
 sub get_plots {
 	my $self = shift;
 	my @plots;
