@@ -66,6 +66,11 @@ sub patch {
       my $CE_id = &update_or_create_type('%clonal%', 'Clonal Evaluation', $cvterm_rs, $cv_id);
       my $VR_id = &update_or_create_type('%variety%', 'Variety Release Trial', $cvterm_rs, $cv_id);
 
+      my $CE_id = &update_or_create_type('%Clonal Evaluation%', 'Clonal Evaluation', $cvterm_rs, $cv_id);
+      $CE_id = &find_or_update_type ('clonal', 'Clonal Evaluation', $cvterm_rs, $cv_id);
+      &link_to_new_type('clonal', $CE_id, $cv_id, $cvterm_rs, $projectprop_rs);
+      &delete_old_type('clonal', $cvterm_rs, $cv_id);
+
       my $PYT_id = &find_or_update_type ('PYT', 'Preliminary Yield Trial', $cvterm_rs, $cv_id);
       &link_to_new_type('PYT', $PYT_id, $cv_id, $cvterm_rs, $projectprop_rs);
       &link_to_new_type('Preliminary Yield Trials', $PYT_id, $cv_id, $cvterm_rs, $projectprop_rs);
@@ -101,9 +106,9 @@ sub patch {
 
       # get ids of all projects with types
       my $trials_with_types_rs = $schema->resultset('Project::Project')->search({
-        'cvterm.cv_id'   => $cv_id
+        'type.cv_id'   => $cv_id
       }, {
-        join => { 'projectprop' => 'cvterm' }
+        join => { 'projectprops' => 'type' }
       });
       my @typed_trials_ids;
       while (my $trial = $trials_with_types_rs->next) {
@@ -186,12 +191,12 @@ sub patch {
               $duplicate_rs->first->update( { name => $new_type_name }, );
             } else {
               print STDERR "Adding cvterm with name $new_type_name \n";
-              my $new_rs = $cvterm_rs->create_with(
+              # looks like we may need to ge the local db_id and include it in the creation here while joining dbxref table
+              $cvterm_id = $cvterm_rs->find_or_create(
       		      {
                   cv_id => $cv_id,
       		        name => $new_type_name
-      		      });
-              $cvterm_id = $new_rs->cvterm_id;
+      		      })->cvterm_id;
             }
             return $cvterm_id;
           }
