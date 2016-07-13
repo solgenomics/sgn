@@ -207,6 +207,79 @@ my @pheno_for_trait_check = (30,30,40,40,50,50);
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check traits assayed' );
 
 
+my $retrieve_accessions = $trial->get_accessions();
+#print STDERR Dumper $retrieve_accessions;
+my @get_accessions_names;
+foreach (@$retrieve_accessions){
+    push @get_accessions_names, $_->{'accession_name'};
+}
+@get_accessions_names = sort @get_accessions_names;
+#print STDERR Dumper \@get_accessions_names;
+is_deeply(\@get_accessions_names, [
+          'test_accession1',
+          'test_accession2',
+          'test_accession3'
+        ], 'check get_accessions');
+
+my $retrieve_plots = $trial->get_plots();
+#print STDERR Dumper $retrieve_plots;
+my @get_plot_names;
+foreach (@$retrieve_plots){
+    push @get_plot_names, $_->[1];
+}
+@get_plot_names = sort @get_plot_names;
+#print STDERR Dumper \@get_plot_names;
+is_deeply(\@get_plot_names, [
+          'anothertrial1',
+          'anothertrial2',
+          'anothertrial3',
+          'anothertrial4',
+          'anothertrial5',
+          'anothertrial6',
+          'anothertrial7',
+          'anothertrial8',
+          'anothertrial9'
+        ], "check get_plots");
+
+my $retrieve_plants = $trial->get_plants();
+#print STDERR Dumper $retrieve_plants;
+my @get_plant_names;
+foreach (@$retrieve_plants){
+    push @get_plant_names, $_->{'plant_name'};
+}
+@get_plant_names = sort @get_plant_names;
+#print STDERR Dumper \@get_plant_names;
+is_deeply(\@get_plant_names, [
+          'anothertrial1_plant_1',
+          'anothertrial1_plant_2',
+          'anothertrial1_plant_3',
+          'anothertrial2_plant_1',
+          'anothertrial2_plant_2',
+          'anothertrial2_plant_3',
+          'anothertrial3_plant_1',
+          'anothertrial3_plant_2',
+          'anothertrial3_plant_3',
+          'anothertrial4_plant_1',
+          'anothertrial4_plant_2',
+          'anothertrial4_plant_3',
+          'anothertrial5_plant_1',
+          'anothertrial5_plant_2',
+          'anothertrial5_plant_3',
+          'anothertrial6_plant_1',
+          'anothertrial6_plant_2',
+          'anothertrial6_plant_3',
+          'anothertrial7_plant_1',
+          'anothertrial7_plant_2',
+          'anothertrial7_plant_3',
+          'anothertrial8_plant_1',
+          'anothertrial8_plant_2',
+          'anothertrial8_plant_3',
+          'anothertrial9_plant_1',
+          'anothertrial9_plant_2',
+          'anothertrial9_plant_3'
+        ], "check get_plants()");
+
+
 # check trial deletion - first, delete associated phenotypes
 #
 $trial->delete_phenotype_data();

@@ -1450,6 +1450,7 @@ sub get_accessions {
 	my $self = shift;
 	my @accessions;
 
+	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
@@ -1460,7 +1461,9 @@ sub get_accessions {
 	my %unique_accessions;
 	while(my $rs = $trial_accession_rs->next()) {
 		my $r = $rs->object;
-		$unique_accessions{$r->uniquename} = $r->stock_id;
+		if ($r->type_id == $accession_cvterm_id) {
+			$unique_accessions{$r->uniquename} = $r->stock_id;
+		}
 	}
 	foreach (keys %unique_accessions) {
 		push @accessions, {accession_name=>$_, stock_id=>$unique_accessions{$_} };
@@ -1476,12 +1479,16 @@ sub get_plants {
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 	my $plant_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship' )->cvterm_id();
+	my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type' )->cvterm_id();
 	my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock")->search_related("stock_relationship_subjects", { 'stock_relationship_subjects.type_id' => $plant_rel_cvterm_id } );
 
 	my %unique_plants;
 	while(my $rs = $trial_plant_rs->next()) {
 		my $r = $rs->object;
-		$unique_plants{$r->uniquename} = $r->stock_id;
+		#print STDERR $r->uniquename."\n";
+		if ($r->type_id == $plant_cvterm_id) {
+			$unique_plants{$r->uniquename} = $r->stock_id;
+		}
 	}
 	foreach (keys %unique_plants) {
 		push @plants, {plant_name=>$_, stock_id=>$unique_plants{$_} };
@@ -1494,15 +1501,15 @@ sub get_plots {
 	my $self = shift;
 	my @plots;
 
+	my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 
-	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks");
+	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plot_cvterm_id});
 
 	my %unique_plots;
 	while(my $rs = $trial_plot_rs->next()) {
-		my $r = $rs->stock();
-		$unique_plots{$r->uniquename} = $r->stock_id;
+		$unique_plots{$rs->uniquename} = $rs->stock_id;
 	}
 	foreach (keys %unique_plots) {
 		#push @plots, {plot_name=> $_, plot_id=>$unique_plots{$_} } ; 
