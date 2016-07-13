@@ -1,6 +1,5 @@
 #!/usr/bin/env perl
 
-
 =head1 NAME
 
 FixTrialTypes.pm
@@ -73,7 +72,8 @@ sub patch {
       &delete_old_type('PYT', $cvterm_rs, $cv_id);
       &delete_old_type('Preliminary Yield Trials', $cvterm_rs, $cv_id);
 
-      my $AYT_id = &find_or_update_type ('AYT', 'Advanced Yield Trial', $cvterm_rs, $cv_id);
+      my $AYT_id = &update_or_create_type('%Advance%', 'Advanced Yield Trial', $cvterm_rs, $cv_id);
+      $AYT_id = &find_or_update_type ('AYT', 'Advanced Yield Trial', $cvterm_rs, $cv_id);
       &link_to_new_type('AYT', $AYT_id, $cv_id, $cvterm_rs, $projectprop_rs);
       &link_to_new_type('Advanced Yield Trials', $AYT_id, $cv_id, $cvterm_rs, $projectprop_rs);
       &delete_old_type('AYT', $cvterm_rs, $cv_id);
@@ -86,33 +86,33 @@ sub patch {
       &delete_old_type('Uniform Yield Trials', $cvterm_rs, $cv_id);
 
       #delete any types not among the standard 6
-      my $obsolete_types = $cvterm_rs->find(
+      my $obsolete_types = $cvterm_rs->search(
         {
           cv_id => $cv_id,
-          cvterm_id => [{ '!=', $SN_id }, { '!=', $CE_id }, { '!=', $VR_id }, { '!=', $PYT_id }, { '!=', $AYT_id }, { '!=', $UYT_id }]
+          cvterm_id => { 'not in' => [$SN_id, $CE_id, $VR_id, $PYT_id, $AYT_id, $UYT_id ]}
         });
-      my $num_to_delete = $obsolete_types->count();
-      print STDERR "Deleting $num_to_delete obsolete trial types . . .\n";
+      my $num_to_delete = $obsolete_types->count;
+      print STDERR "Deleting $num_to_delete additional obsolete trial types . . .\n";
       $obsolete_types->delete();
       print STDERR $schema->resultset("Cv::Cvterm")->search({ cv_id => $cv_id })->count() . " standard trial types remaining.\n";
 
       # get all projects
-      my $all_trial_rs = $schema->resultset('Project')->names();
+      my $all_trial_rs = $schema->resultset('Project::Project')->search;
 
       # get ids of all projects with types
-      my $trials_with_types_rs = $schema->resultset('Project')->search({
+      my $trials_with_types_rs = $schema->resultset('Project::Project')->search({
         'cvterm.cv_id'   => $cv_id
       }, {
-        join => [ qw/projectprop cvterm/ ],
+        join => { 'projectprop' => 'cvterm' }
       });
       my @typed_trials_ids;
-      foreach my $trial ($trials_with_types_rs) {
+      while (my $trial = $trials_with_types_rs->next) {
         push @typed_trials_ids, $trial->project_id;
       }
       my %typed_trials = map { $_ => 1 } @typed_trials_ids;
 
       #loop through all projects, and if they aren't in the set that has a type, use regex on trial name. if matches type abbrevation, add type.
-      foreach my $trial ($all_trial_rs) {
+      while (my $trial = $all_trial_rs->next) {
         unless(exists($typed_trials{$trial->project_id})) {
           my $trial_name = $trial->name;
           for ($trial_name) {
@@ -224,28 +224,34 @@ sub patch {
                 cv_id => $cv_id,
                 name => $old_type_name
               });
-            my $duplicate_cvterm_id = $duplicate_rs->first->cvterm_id;
-            print STDERR "linking duplicate type with name ". $duplicate_rs->name ." and id $duplicate_cvterm_id to new type with type_id $new_type_id \n";
-            my $trials_to_update_rs = $projectprop_rs->search(
-              {
-                type_id => $duplicate_cvterm_id
-              });
-            foreach my $row ($trials_to_update_rs) {
-              my $trial_id = $row->first->project_id;
-              print STDERR "Updating trial with id $trial_id from old type $old_type_name to new type $new_type_id \n";
-              $row->update( { type_id => $new_type_id } );
+            if ($duplicate_rs->first) {
+              my $duplicate_cvterm_id = $duplicate_rs->first->cvterm_id;
+              print STDERR "updating prop rows linked to type ". $duplicate_rs->first->name ." to standardized type with id $new_type_id \n";
+              my $trials_to_update_rs = $projectprop_rs->search(
+                {
+                  type_id => $duplicate_cvterm_id
+                });
+              if ($trials_to_update_rs->first) {
+                foreach my $row ($trials_to_update_rs) {
+                  my $trial_id = $row->first->project_id;
+                  print STDERR "Updating trial with id $trial_id from old type $old_type_name to new type $new_type_id \n";
+                  $row->update( { type_id => $new_type_id } );
+                }
+              }
             }
           }
 
           sub delete_old_type () {
             my ($old_type_name, $cvterm_rs, $cv_id) = @_;
-            my $old_type_row = $cvterm_rs->find(
+            my $old_type_row = $cvterm_rs->search(
               {
                 cv_id => $cv_id,
                 name => $old_type_name
               });
-            print STDERR "Deleting obsolete type " . $old_type_row->name . "\n";
-            $old_type_row->delete();
+            if ($old_type_row->first) {
+              print STDERR "Deleting obsolete type $old_type_name\n";
+              $old_type_row->delete;
+            }
           }
 
     };
