@@ -225,7 +225,7 @@ sub set_location {
 
 =head2 class method get_all_locations()
 
- Usage:        my @locations = CXGN::Trial::get_all_locations($schema)
+ Usage:        my $locations = CXGN::Trial::get_all_locations($schema)
  Desc:
  Ret:
  Args:

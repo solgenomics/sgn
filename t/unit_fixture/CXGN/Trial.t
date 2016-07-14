@@ -1,3 +1,4 @@
+#This script tests all functions in CXGN::Trial, CXGN::Trial::TrialLayout, CXGN::Trial::TrialDesign, CXGN::Trial::TrialCreate
 
 use strict;
 use lib 't/lib';
@@ -15,6 +16,21 @@ use CXGN::Trial::TrialCreate;
 use CXGN::Phenotypes::StorePhenotypes;
 
 my $f = SGN::Test::Fixture->new();
+
+#CXGN::Trial Class METHODS
+my $locations = CXGN::Trial::get_all_locations($f->bcs_schema());
+#print STDERR Dumper $locations;
+my @all_location_names;
+foreach (@$locations) {
+    push @all_location_names, $_->[1];
+}
+@all_location_names = sort @all_location_names;
+#print STDERR Dumper \@all_location_names;
+is_deeply(\@all_location_names, [
+          'Cornell Biotech',
+          'test_location'
+        ], "check get_all_locations");
+
 
 my $stock_count_rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { } );
 my $initial_stock_count = $stock_count_rs->count();
@@ -76,8 +92,19 @@ if (!$trial_id) { die "Test failed... could not retrieve trial\n"; }
 my $trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 				trial_id => $trial_id });
 
+my $breeding_programs = $trial->get_breeding_programs();
+#print STDERR Dumper $breeding_programs;
+my @breeding_program_names;
+foreach (@$breeding_programs){
+    push @breeding_program_names, $_->[1];
+}
+@breeding_program_names = sort @breeding_program_names;
+#print STDERR Dumper \@breeding_program_names;
+is_deeply(\@breeding_program_names, ['test'], "check breeding_program_names");
 
 my $rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { name => 'anothertrial1' });
+is($rs->count(), 1, "check that a single plot was saved for a single name.");
+is($rs->first->name(), 'anothertrial1', 'check that plot name was saved correctly');
 
 if ($rs->count() > 0) {
     print STDERR "antohertrial1 has id ".$rs->first()->stock_id()."\n";
