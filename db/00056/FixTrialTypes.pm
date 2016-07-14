@@ -57,16 +57,19 @@ sub patch {
       my $cv_rs = $schema->resultset("Cv::Cv");
       my $cvterm_rs = $schema->resultset("Cv::Cvterm");
       my $projectprop_rs = $schema->resultset("Project::Projectprop");
+      my $db_rs = $schema->resultset("General::Db");
       my $cv_id = $cv_rs->search({name => 'project_type'})->first()->cv_id();
+      my $db_id = $db_rs->search({name => 'local'})->first()->db_id();
     #  my $cv_id = $cv_row->cv_id;
       print STDERR "Project types cv id = $cv_id \n";
+      print STDERR "Local db id = $db_id \n";
 
       #update the list of possible trial types by adding/updating to standardized names and removing duplicates
-      my $SN_id = &update_or_create_type('%seedling%', 'Seedling Nursery', $cvterm_rs, $cv_id);
-      my $CE_id = &update_or_create_type('%clonal%', 'Clonal Evaluation', $cvterm_rs, $cv_id);
-      my $VR_id = &update_or_create_type('%variety%', 'Variety Release Trial', $cvterm_rs, $cv_id);
+      my $SN_id = &update_or_create_type('%seedling%', 'Seedling Nursery', $cvterm_rs, $cv_id, $db_id);
+      my $CE_id = &update_or_create_type('%clonal%', 'Clonal Evaluation', $cvterm_rs, $cv_id, $db_id);
+      my $VR_id = &update_or_create_type('%variety%', 'Variety Release Trial', $cvterm_rs, $cv_id, $db_id);
 
-      my $CE_id = &update_or_create_type('%Clonal Evaluation%', 'Clonal Evaluation', $cvterm_rs, $cv_id);
+      my $CE_id = &update_or_create_type('%Clonal Evaluation%', 'Clonal Evaluation', $cvterm_rs, $cv_id, $db_id);
       $CE_id = &find_or_update_type ('clonal', 'Clonal Evaluation', $cvterm_rs, $cv_id);
       &link_to_new_type('clonal', $CE_id, $cv_id, $cvterm_rs, $projectprop_rs);
       &delete_old_type('clonal', $cvterm_rs, $cv_id);
@@ -77,7 +80,7 @@ sub patch {
       &delete_old_type('PYT', $cvterm_rs, $cv_id);
       &delete_old_type('Preliminary Yield Trials', $cvterm_rs, $cv_id);
 
-      my $AYT_id = &update_or_create_type('%Advance%', 'Advanced Yield Trial', $cvterm_rs, $cv_id);
+      my $AYT_id = &update_or_create_type('%Advance%', 'Advanced Yield Trial', $cvterm_rs, $cv_id, $db_id);
       $AYT_id = &find_or_update_type ('AYT', 'Advanced Yield Trial', $cvterm_rs, $cv_id);
       &link_to_new_type('AYT', $AYT_id, $cv_id, $cvterm_rs, $projectprop_rs);
       &link_to_new_type('Advanced Yield Trials', $AYT_id, $cv_id, $cvterm_rs, $projectprop_rs);
@@ -177,7 +180,7 @@ sub patch {
       }
 
           sub update_or_create_type () {
-            my ($duplicate_type_name, $new_type_name, $cvterm_rs, $cv_id) = @_;
+            my ($duplicate_type_name, $new_type_name, $cvterm_rs, $cv_id, $db_id) = @_;
             my ($cvterm_id, $cvterm_name);
             my $duplicate_rs = $cvterm_rs->search(
               {
@@ -192,12 +195,16 @@ sub patch {
             } else {
               print STDERR "Adding cvterm with name $new_type_name \n";
               # looks like we may need to ge the local db_id and include it in the creation here while joining dbxref table
-              $cvterm_id = $cvterm_rs->find_or_create(
+              my $dbxref_rs = $schema->resultset("General::Dbxref")->create(
       		      {
-                  cv_id => $cv_id,
-      		        name => $new_type_name
-      		      })->cvterm_id;
+                  cvterm => { cv_id => $cv_id, name => $new_type_name, },
+                  db_id => $db_id,
+                  accession => $new_type_name,
+      		      },
+              );
+              $cvterm_id = $cvterm_rs->search( {name => $new_type_name }, )->first->cvterm_id;
             }
+            print STDERR "$new_type_name has been created with id $cvterm_id \n";
             return $cvterm_id;
           }
 
