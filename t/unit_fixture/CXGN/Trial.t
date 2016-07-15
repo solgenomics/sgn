@@ -1,4 +1,4 @@
-#This script tests all functions in CXGN::Trial, CXGN::Trial::TrialLayout, CXGN::Trial::TrialDesign, CXGN::Trial::TrialCreate
+#This script should test all functions in CXGN::Trial, CXGN::Trial::TrialLayout, CXGN::Trial::TrialDesign, CXGN::Trial::TrialCreate
 
 use strict;
 use lib 't/lib';
@@ -13,6 +13,7 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
+use CXGN::Trial::Folder;
 use CXGN::Phenotypes::StorePhenotypes;
 
 my $f = SGN::Test::Fixture->new();
@@ -30,6 +31,24 @@ is_deeply(\@all_location_names, [
           'Cornell Biotech',
           'test_location'
         ], "check get_all_locations");
+
+my @project_types = CXGN::Trial::get_all_project_types($f->bcs_schema());
+my @all_project_types;
+foreach (@project_types) {
+    push @all_project_types, $_->[1];
+}
+@all_project_types = sort @all_project_types;
+#print STDERR Dumper \@all_project_types;
+is_deeply(\@all_project_types, [
+          'AYT',
+          'Advance Yield Trial',
+          'PYT',
+          'Preliminary Yield Trial',
+          'UYT',
+          'Uniform Yield Trial',
+          'clonal',
+          'seedling'
+        ], "check get_all_project_types");
 
 
 my $stock_count_rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { } );
@@ -150,22 +169,92 @@ print STDERR "Total phentoypes: $total_phenotypes\n";
 is($trial_phenotype_count, 6, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
-				trial_id => 141 });
+				trial_id => $trial_id });
 
 my $traits_assayed  = $tn->get_traits_assayed();
-my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper @traits_assayed_sorted;
+my @traits_assayed_names;
+#print STDERR Dumper $traits_assayed;
+foreach (@$traits_assayed) {
+    push @traits_assayed_names, $_->[1];
+}
+@traits_assayed_names = sort @traits_assayed_names;
+#print STDERR Dumper \@traits_assayed_names;
+is_deeply(\@traits_assayed_names, ['Dry yield', 'Root number counting'], 'check traits assayed' );
 
-my @traits_assayed_check = (['70666','Fresh root weight'],['70668','Harvest index variable'],['70741','Dry matter content percentage'],['70773','Fresh shoot weight measurement in kg']);
-
-is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed' );
-
-my @pheno_for_trait = $tn->get_phenotypes_for_trait(70741);
+my @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
+#print STDERR Dumper \@pheno_for_trait_sorted;
+is_deeply(\@pheno_for_trait_sorted, ['30','40','50'], 'check traits assayed' );
 
-my @pheno_for_trait_check = ('14.6', '18.3', '18.4', '19.4', '19.7', '19.7', '20.5', '20.7', '20.8', '22.2', '23.4', '23.6', '23.6', '23.8', '24.2', '24.4', '24.4', '24.5', '24.5', '24.6', '24.8', '24.9', '25.1', '25.1', '25.4', '25.8', '26.1', '26.2', '26.3', '26.4', '26.6', '26.6', '26.7', '26.8', '27', '27.3', '27.6', '28', '28.2', '28.2', '28.2', '28.3', '28.4', '28.4', '28.5', '28.5', '29', '29', '29', '29.1', '29.2', '29.6', '29.8', '29.8', '29.8', '29.9', '30.1', '30.2', '30.2', '30.6', '30.9', '30.9', '30.9', '30.9', '31', '31.1', '31.2', '31.2', '31.2', '31.2', '31.3', '31.4', '31.5', '31.5', '31.6', '31.6', '31.9', '31.9', '32', '32.2', '32.2', '32.3', '32.3', '32.5', '32.7', '32.7', '32.8', '32.9', '32.9', '32.9', '32.9', '33', '33', '33', '33', '33', '33.1', '33.1', '33.1', '33.2', '33.2', '33.3', '33.4', '33.5', '33.6', '33.7', '33.7', '33.9', '34', '34', '34.2', '34.2', '34.3', '34.4', '34.5', '34.6', '34.6', '34.6', '34.7', '34.7', '34.8', '34.9', '35', '35', '35.1', '35.2', '35.3', '35.3', '35.4', '35.6', '35.6', '35.7', '35.9', '36.1', '36.2', '36.2', '36.2', '36.2', '36.2', '36.3', '36.3', '36.4', '36.4', '36.4', '36.5', '36.6', '36.7', '36.8', '36.8', '36.9', '36.9', '36.9', '37', '37', '37', '37', '37.1', '37.1', '37.1', '37.2', '37.3', '37.4', '37.5', '37.5', '37.5', '37.5', '37.7', '37.7', '37.7', '37.8', '37.9', '37.9', '38', '38', '38.1', '38.1', '38.1', '38.2', '38.3', '38.3', '38.3', '38.4', '38.4', '38.4', '38.5', '38.5', '38.5', '38.6', '38.6', '38.7', '38.7', '38.8', '38.8', '38.9', '38.9', '38.9', '39.1', '39.1', '39.2', '39.3', '39.3', '39.4', '39.9', '40', '40', '40.1', '40.1', '40.2', '40.2', '40.3', '40.3', '40.3', '40.4', '40.4', '40.5', '40.5', '40.6', '40.7', '40.8', '40.8', '40.8', '40.9', '41', '41.2', '41.2', '41.2', '41.4', '41.4', '41.5', '41.6', '41.6', '41.6', '41.8', '41.8', '41.9', '41.9', '42.1', '42.1', '42.1', '42.1', '42.2', '42.3', '42.6', '42.8', '42.9', '42.9', '43', '43', '43', '43', '43.1', '43.3', '43.4', '43.5', '43.6', '43.7', '44.3', '44.4', '44.5', '44.6', '44.7', '44.7', '44.8', '44.8', '44.8', '45.1', '45.5', '45.8', '45.9', '46.3', '46.8', '47.2');
+my $plot_pheno_for_trait = $tn->get_plot_phenotypes_for_trait(70727);
+#print STDERR Dumper $plot_pheno_for_trait;
+my @phenotyped_stocks;
+my @phenotyped_stocks_values;
+foreach (@$plot_pheno_for_trait) {
+    push @phenotyped_stocks, $_->[1];
+    push @phenotyped_stocks_values, $_->[4];
+}
+@phenotyped_stocks = sort @phenotyped_stocks;
+@phenotyped_stocks_values = sort @phenotyped_stocks_values;
+#print STDERR Dumper \@phenotyped_stocks;
+is_deeply(\@phenotyped_stocks, ['anothertrial1', 'anothertrial2', 'anothertrial3'], "check phenotyped stocks");
+is_deeply(\@phenotyped_stocks_values, ['30', '40', '50'], "check phenotyped stocks");
 
-is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check traits assayed' );
+my $trial_experiment_count = $trial->get_experiment_count();
+#print STDERR $trial_experiment_count."\n";
+is($trial_experiment_count, 7, "check get_experiment_count");
+
+my $location_type_id = $trial->get_location_type_id();
+#print STDERR $location_type_id."\n";
+is($location_type_id, 76462, "check get_location_type_id");
+
+my $year_type_id = $trial->get_year_type_id();
+#print STDERR $year_type_id."\n";
+is($year_type_id, 76395, "check get_year_type_id");
+
+my $bp_trial_rel_cvterm_id = $trial->get_breeding_program_trial_relationship_cvterm_id();
+#print STDERR $bp_trial_rel_cvterm_id,"\n";
+is($bp_trial_rel_cvterm_id, 76448, "check get_breeding_program_trial_relationship_cvterm_id");
+
+my $bp_cvterm_id = $trial->get_breeding_program_cvterm_id();
+#print STDERR $bp_cvterm_id."\n";
+is($bp_cvterm_id, 76440, "check get_breeding_program_cvterm_id");
+
+my $folder = $trial->get_folder();
+#print STDERR $folder->name."\n";
+is($folder->name, 'test', 'check get_folder when no folder associated. should return bp name');
+
+my $folder = CXGN::Trial::Folder->create({
+  bcs_schema => $f->bcs_schema(),
+  parent_folder_id => 0,
+  name => 'F1',
+  breeding_program_id => $breeding_program_row->project_id(),
+});
+my $folder_id = $folder->folder_id();
+
+my $folder = CXGN::Trial::Folder->new({
+    bcs_schema => $f->bcs_schema(),
+    folder_id => $trial_id
+});
+
+$folder->associate_parent($folder_id);
+
+my $folder = $trial->get_folder();
+#print STDERR $folder->name."\n";
+is($folder->name, 'F1', 'check get_folder after folder associated');
+
+my $harvest_date_cvterm_id = $trial->get_harvest_date_cvterm_id();
+#print STDERR $harvest_date_cvterm_id."\n";
+is($harvest_date_cvterm_id, 76495, "check get_harvest_date_cvterm_id");
+
+my $planting_date_cvterm_id = $trial->get_planting_date_cvterm_id();
+#print STDERR $planting_date_cvterm_id."\n";
+is($planting_date_cvterm_id, 76496, "check get_planting_date_cvterm_id");
+
+my $design_type = $trial->get_design_type();
+#print STDERR $design_type."\n";
+is($design_type, 'RCBD', 'check get_design_type');
+
 
 # check trial deletion - first, delete associated phenotypes
 #
@@ -201,12 +290,39 @@ $trial->set_description("blablabla");
 
 is($trial->get_description(), "blablabla", "description setter test");
 
+# test harvest_date accessors
+#
+$trial->set_harvest_date('2016/01/01 12:20:10');
+my $harvest_date = $trial->get_harvest_date();
+#print STDERR Dumper $harvest_date;
+is($harvest_date, '2016-January-01 12:20:10', "set harvest_date test");
+$trial->remove_harvest_date('2016/01/01 12:20:10');
+$harvest_date = $trial->get_harvest_date();
+ok(!$harvest_date, "test remove harvest_date");
+
+# test planting_date accessors
+#
+$trial->set_planting_date('2016/01/01 12:20:10');
+my $planting_date = $trial->get_planting_date();
+#print STDERR Dumper $planting_date;
+is($planting_date, '2016-January-01 12:20:10', "set harvest_date test");
+$trial->remove_planting_date('2016/01/01 12:20:10');
+$planting_date = $trial->get_planting_date();
+ok(!$planting_date, "test remove planting_date");
+
 # test year accessors
 #
 is($trial->get_year(), 2014, "get year test");
 
 $trial->set_year(2013);
 is($trial->get_year(), 2013, "set year test");
+
+# test breeding program accessors
+#
+is($trial->get_breeding_program(), 'test', "get breeding program test");
+
+$trial->set_breeding_program($breeding_program_row->project_id());
+is($trial->get_breeding_program(), 'test', "set breeding program test");
 
 # test location accessors
 #
