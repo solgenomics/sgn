@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 
 =head1
-load_genotypes_vcf.pl - loading genotypes into cxgn databases, based on the load_cassava_snps.pl script by Naama.
+load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, based on the load_cassava_snps.pl script by Naama.
 
 =head1 SYNOPSIS
-    load_genotypes_vcf.pl -H [dbhost] -D [dbname] -i [infile] -p [project name] -y [year] -g [population name] -m [protocol name] -t
+    perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D fixture -i /home/vagrant/Documents/cassava_subset_108KSNP_10acc.vcf -g "test_pop_01" -p "test_project_01" -y 2016 -l "BTI" -m "test_protocol_01_new" -o "Manihot" -q "Manihot esculenta"
 
 =head1 COMMAND-LINE OPTIONS
   ARGUMENTS
@@ -77,7 +77,7 @@ print STDERR "Delete old duplicate phenotypes: $opt_x\n";
 print STDERR "Rollback: $opt_t\n";
 
 if (!$opt_H || !$opt_D || !$opt_i || !$opt_g) {
-    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file) , and -g (populations name for associating accessions in your SNP file) \n");
+    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file) , -g (populations name for associating accessions in your SNP file), -p (project name), -y (project year), -l (location of project), -m (map protocol name), -o (organism genus), -q (organism species) \n");
 }
 
 my $dbh = CXGN::DB::InsertDBH->new({ 
@@ -152,16 +152,23 @@ print STDERR "Reading genotype information...\n";
 my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
 
 my $coderef = sub {
-    
+
     my %protocolprop_json;
-    my %genotypeprop_accessions;
-    
+
     my $accessions = $gtio->accessions();
-    
+
+    #First take care of creating the protocolprop
     while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
-        
+
         #print STDERR Dumper $marker_info;
-        
+
+        my $marker_name;
+        if ($marker_info->[2] eq '.') {
+            $marker_name = $marker_info->[0]."_".$marker_info->[1];
+        } else {
+            $marker_name = $marker_info->[2];
+        }
+
         #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
         my %marker = (
             chrom => $marker_info->[0],
@@ -173,14 +180,32 @@ my $coderef = sub {
             info => $marker_info->[7],
             format => $marker_info->[8],
         );
-        if ($marker_info->[2] eq '.') {
-            $protocolprop_json{$marker_info->[0]."_".$marker_info->[1]} = \%marker;
-        } else {
-            $protocolprop_json{$marker_info->[2]} = \%marker;
-        }
-        
-        #As it goes down the rows, it contructs a separate json object for each accession column. They are all stored in the %genotypeprop_accessions. Later this hash is iterated over and actually stores the json object in the database. 
-        for (my $i = 0; $i < scalar(@$accessions); $i++ ) {
+        $protocolprop_json{$marker_name} = \%marker;
+
+    }
+    
+    #Save the protocolprop. This json string contains the details for the maarkers used in the map.
+    my $json_obj = JSON::Any->new;
+    my $json_string = $json_obj->encode(\%protocolprop_json);
+    my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
+
+    #Then take care of creating the genotypeprop and storing it for each accession
+    for (my $i = 0; $i < scalar(@$accessions); $i++ ) {
+
+        my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
+        my %genotypeprop_accessions;
+
+        while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
+
+            #print STDERR Dumper $marker_info;
+
+            my $marker_name;
+            if ($marker_info->[2] eq '.') {
+                $marker_name = $marker_info->[0]."_".$marker_info->[1];
+            } else {
+                $marker_name = $marker_info->[2];
+            }
+
             my @format =  split /:/,  $marker_info->[8];
             my @fvalues = split /:/, $values->[$i];
             
@@ -188,25 +213,12 @@ my $coderef = sub {
             for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
                 $value{@format[$fv]} = @fvalues[$fv]; 
             }
-            
-            if ($marker_info->[2] eq '.') {
-                $genotypeprop_accessions{$accessions->[$i]}->{$marker_info->[0]."_".$marker_info->[1]} = \%value;
-            } else {
-                $genotypeprop_accessions{$accessions->[$i]}->{$marker_info->[2]} = \%value;
-            }
+
+            $genotypeprop_accessions{$accessions->[$i]}->{$marker_name} = \%value;
         }
-    
-    }
-    
-    #Save the protocolprop. This json string contains the details for the maarkers used in the map.
-    my $json_obj = JSON::Any->new;
-    my $json_string = $json_obj->encode(\%protocolprop_json);
-    my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
-    
-    foreach (@$accessions) {
         
-        my ($accession_name, $igd_number) = split(/:/, $_);
-        
+        my ($accession_name, $igd_number) = split(/:/, $accessions->[$i]);
+
         #print STDERR "Looking for accession $accession_name\n";
         my $stock;
         my $stock_name;
@@ -330,12 +342,12 @@ my $coderef = sub {
                 description => "SNP genotypes for stock " . "(name = " . $stock->name . ", id = " . $stock->stock_id . ")",
                 type_id     => $snp_genotype->cvterm_id,
         });
-        
+
         my $json_obj = JSON::Any->new;
-        my $genotypeprop_json = $genotypeprop_accessions{$_};
+        my $genotypeprop_json = $genotypeprop_accessions{$accessions->[$i]};
         #print STDERR Dumper \%genotypeprop_accessions;
         my $json_string = $json_obj->encode($genotypeprop_json);
-        
+
         #Store json for genotype. Has all markers and scores for this stock.
         $genotype->create_genotypeprops( { 'snp genotyping' => $json_string } , {autocreate =>1 , allow_duplicate_values => 1 } );
         
@@ -346,8 +358,9 @@ my $coderef = sub {
         
         #link the genotype to the nd_experiment
         my $nd_experiment_genotype = $experiment->find_or_create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
-        
+
     }
+
 };
 
 
