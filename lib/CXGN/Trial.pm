@@ -235,7 +235,7 @@ sub set_location {
 
 =head2 class method get_all_locations()
 
- Usage:        my @locations = CXGN::Trial::get_all_locations($schema)
+ Usage:        my $locations = CXGN::Trial::get_all_locations($schema)
  Desc:
  Ret:
  Args:
@@ -684,26 +684,6 @@ sub remove_planting_date {
 		} else {
 			print STDERR "date format did not pass check while preparing to delete planting date: $planting_date  \n";
 		}
-}
-
-sub get_plot_dimensions {
-    my $self = shift;
-    my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
-
-    if ($row) {
-	return $row->name();
-    }
-}
-
-
-sub set_plot_dimensions {
-    my $self = shift;
-    my $name = shift;
-    my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
-    if ($row) {
-	$row->name($name);
-	$row->update();
-    }
 }
 
 
@@ -1525,6 +1505,7 @@ sub get_controls {
 	my $self = shift;
 	my @controls;
 
+	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
@@ -1542,7 +1523,9 @@ sub get_controls {
 		}
 		if ($is_a_control) {
 			my $accession = $rs->search_related("stock")->search_related('stock_relationship_subjects')->find({ 'type_id' => [$plot_of_cvterm_id, $tissue_sample_of_cvterm_id ]})->object;
-			$unique_controls{$accession->uniquename}=$accession->stock_id;
+			if ($accession->type_id == $accession_cvterm_id) {
+				$unique_controls{$accession->uniquename}=$accession->stock_id;
+			}
 		}
 	}
 	foreach (keys %unique_controls) {

@@ -1,3 +1,4 @@
+#This script should test all functions in CXGN::Trial, CXGN::Trial::TrialLayout, CXGN::Trial::TrialDesign, CXGN::Trial::TrialCreate
 
 use strict;
 use lib 't/lib';
@@ -12,9 +13,43 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
+use CXGN::Trial::Folder;
 use CXGN::Phenotypes::StorePhenotypes;
 
 my $f = SGN::Test::Fixture->new();
+
+#CXGN::Trial Class METHODS
+my $locations = CXGN::Trial::get_all_locations($f->bcs_schema());
+#print STDERR Dumper $locations;
+my @all_location_names;
+foreach (@$locations) {
+    push @all_location_names, $_->[1];
+}
+@all_location_names = sort @all_location_names;
+#print STDERR Dumper \@all_location_names;
+is_deeply(\@all_location_names, [
+          'Cornell Biotech',
+          'test_location'
+        ], "check get_all_locations");
+
+my @project_types = CXGN::Trial::get_all_project_types($f->bcs_schema());
+my @all_project_types;
+foreach (@project_types) {
+    push @all_project_types, $_->[1];
+}
+@all_project_types = sort @all_project_types;
+#print STDERR Dumper \@all_project_types;
+is_deeply(\@all_project_types, [
+          'AYT',
+          'Advance Yield Trial',
+          'PYT',
+          'Preliminary Yield Trial',
+          'UYT',
+          'Uniform Yield Trial',
+          'clonal',
+          'seedling'
+        ], "check get_all_project_types");
+
 
 my $stock_count_rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { } );
 my $initial_stock_count = $stock_count_rs->count();
@@ -76,8 +111,19 @@ if (!$trial_id) { die "Test failed... could not retrieve trial\n"; }
 my $trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 				trial_id => $trial_id });
 
+my $breeding_programs = $trial->get_breeding_programs();
+#print STDERR Dumper $breeding_programs;
+my @breeding_program_names;
+foreach (@$breeding_programs){
+    push @breeding_program_names, $_->[1];
+}
+@breeding_program_names = sort @breeding_program_names;
+#print STDERR Dumper \@breeding_program_names;
+is_deeply(\@breeding_program_names, ['test'], "check breeding_program_names");
 
 my $rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { name => 'anothertrial1' });
+is($rs->count(), 1, "check that a single plot was saved for a single name.");
+is($rs->first->name(), 'anothertrial1', 'check that plot name was saved correctly');
 
 if ($rs->count() > 0) {
     print STDERR "antohertrial1 has id ".$rs->first()->stock_id()."\n";
@@ -128,20 +174,122 @@ my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 				trial_id => $trial_id });
 
 my $traits_assayed  = $tn->get_traits_assayed();
-my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+my @traits_assayed_names;
+#print STDERR Dumper $traits_assayed;
+foreach (@$traits_assayed) {
+    push @traits_assayed_names, $_->[1];
+}
+@traits_assayed_names = sort @traits_assayed_names;
+#print STDERR Dumper \@traits_assayed_names;
+is_deeply(\@traits_assayed_names, ['Dry yield', 'Root number counting'], 'check traits assayed' );
 
-my @traits_assayed_check = (['70706','Root number counting'],['70727','Dry yield']);
-
-is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed' );
-
-my @pheno_for_trait = $tn->get_phenotypes_for_trait(70706);
+my @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
 #print STDERR Dumper \@pheno_for_trait_sorted;
+is_deeply(\@pheno_for_trait_sorted, ['30','40','50'], 'check traits assayed' );
 
-my @pheno_for_trait_check = (0,10,20);
+my $plot_pheno_for_trait = $tn->get_plot_phenotypes_for_trait(70727);
+#print STDERR Dumper $plot_pheno_for_trait;
+my @phenotyped_stocks;
+my @phenotyped_stocks_values;
+foreach (@$plot_pheno_for_trait) {
+    push @phenotyped_stocks, $_->[1];
+    push @phenotyped_stocks_values, $_->[4];
+}
+@phenotyped_stocks = sort @phenotyped_stocks;
+@phenotyped_stocks_values = sort @phenotyped_stocks_values;
+#print STDERR Dumper \@phenotyped_stocks;
+is_deeply(\@phenotyped_stocks, ['anothertrial1', 'anothertrial2', 'anothertrial3'], "check phenotyped stocks");
+is_deeply(\@phenotyped_stocks_values, ['30', '40', '50'], "check phenotyped stocks");
 
-is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check traits assayed' );
+my $trial_experiment_count = $trial->get_experiment_count();
+#print STDERR $trial_experiment_count."\n";
+is($trial_experiment_count, 7, "check get_experiment_count");
+
+my $location_type_id = $trial->get_location_type_id();
+#print STDERR $location_type_id."\n";
+is($location_type_id, 76462, "check get_location_type_id");
+
+my $year_type_id = $trial->get_year_type_id();
+#print STDERR $year_type_id."\n";
+is($year_type_id, 76395, "check get_year_type_id");
+
+my $bp_trial_rel_cvterm_id = $trial->get_breeding_program_trial_relationship_cvterm_id();
+#print STDERR $bp_trial_rel_cvterm_id,"\n";
+is($bp_trial_rel_cvterm_id, 76448, "check get_breeding_program_trial_relationship_cvterm_id");
+
+my $bp_cvterm_id = $trial->get_breeding_program_cvterm_id();
+#print STDERR $bp_cvterm_id."\n";
+is($bp_cvterm_id, 76440, "check get_breeding_program_cvterm_id");
+
+my $folder = $trial->get_folder();
+#print STDERR $folder->name."\n";
+is($folder->name, 'test', 'check get_folder when no folder associated. should return bp name');
+
+my $folder = CXGN::Trial::Folder->create({
+  bcs_schema => $f->bcs_schema(),
+  parent_folder_id => 0,
+  name => 'F1',
+  breeding_program_id => $breeding_program_row->project_id(),
+});
+my $folder_id = $folder->folder_id();
+
+my $folder = CXGN::Trial::Folder->new({
+    bcs_schema => $f->bcs_schema(),
+    folder_id => $trial_id
+});
+
+$folder->associate_parent($folder_id);
+
+my $folder = $trial->get_folder();
+#print STDERR $folder->name."\n";
+is($folder->name, 'F1', 'check get_folder after folder associated');
+
+my $harvest_date_cvterm_id = $trial->get_harvest_date_cvterm_id();
+#print STDERR $harvest_date_cvterm_id."\n";
+is($harvest_date_cvterm_id, 76495, "check get_harvest_date_cvterm_id");
+
+my $planting_date_cvterm_id = $trial->get_planting_date_cvterm_id();
+#print STDERR $planting_date_cvterm_id."\n";
+is($planting_date_cvterm_id, 76496, "check get_planting_date_cvterm_id");
+
+my $design_type = $trial->get_design_type();
+#print STDERR $design_type."\n";
+is($design_type, 'RCBD', 'check get_design_type');
+
+my $trial_accessions = $trial->get_accessions();
+#print STDERR Dumper $trial_accessions;
+my @trial_accession_names;
+foreach (@$trial_accessions) {
+    push @trial_accession_names, $_->{'accession_name'};
+}
+@trial_accession_names = sort @trial_accession_names;
+is_deeply(\@trial_accession_names, ['test_accession1', 'test_accession2', 'test_accession3'], "check get_accessions");
+
+my $trial_plots = $trial->get_plots();
+my @trial_plot_names;
+foreach (@$trial_plots){
+    push @trial_plot_names, $_->[1];
+}
+@trial_plot_names = sort @trial_plot_names;
+#print STDERR Dumper \@trial_plot_names;
+is_deeply(\@trial_plot_names, [
+          'anothertrial1',
+          'anothertrial2',
+          'anothertrial3',
+          'anothertrial4',
+          'anothertrial5',
+          'anothertrial6',
+          'anothertrial7',
+          'anothertrial8',
+          'anothertrial9'
+        ], 'Check get_plots');
+
+my $trial_controls = $trial->get_controls();
+#print STDERR Dumper $trial_controls;
+is_deeply($trial_controls, [], "check get_controls");
+
+
 
 #add plant entries
 $trial->create_plant_entities(3);
@@ -314,12 +462,39 @@ $trial->set_description("blablabla");
 
 is($trial->get_description(), "blablabla", "description setter test");
 
+# test harvest_date accessors
+#
+$trial->set_harvest_date('2016/01/01 12:20:10');
+my $harvest_date = $trial->get_harvest_date();
+#print STDERR Dumper $harvest_date;
+is($harvest_date, '2016-January-01 12:20:10', "set harvest_date test");
+$trial->remove_harvest_date('2016/01/01 12:20:10');
+$harvest_date = $trial->get_harvest_date();
+ok(!$harvest_date, "test remove harvest_date");
+
+# test planting_date accessors
+#
+$trial->set_planting_date('2016/01/01 12:20:10');
+my $planting_date = $trial->get_planting_date();
+#print STDERR Dumper $planting_date;
+is($planting_date, '2016-January-01 12:20:10', "set harvest_date test");
+$trial->remove_planting_date('2016/01/01 12:20:10');
+$planting_date = $trial->get_planting_date();
+ok(!$planting_date, "test remove planting_date");
+
 # test year accessors
 #
 is($trial->get_year(), 2014, "get year test");
 
 $trial->set_year(2013);
 is($trial->get_year(), 2013, "set year test");
+
+# test breeding program accessors
+#
+is($trial->get_breeding_program(), 'test', "get breeding program test");
+
+$trial->set_breeding_program($breeding_program_row->project_id());
+is($trial->get_breeding_program(), 'test', "set breeding program test");
 
 # test location accessors
 #
