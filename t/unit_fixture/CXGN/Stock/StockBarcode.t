@@ -7,12 +7,12 @@ use File::Slurp;
 use Data::Dumper;
 
 use Bio::Chado::Schema::Result::Stock::Stock;
-use SGN::Test::WWW::Mechanize;
+use SGN::Test::Fixture;
 
 use_ok('CXGN::Stock::StockBarcode');
 
-my $test = SGN::Test::WWW::Mechanize->new();
-my $schema = $test->context->dbic_schema('Bio::Chado::Schema');
+my $test = SGN::Test::Fixture->new();
+my $schema = $test->bcs_schema;
 
 my @contents = read_file('t/data/stock/stock_barcode/file1.txt');
 

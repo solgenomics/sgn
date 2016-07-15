@@ -6,7 +6,7 @@ use warnings;
 
 use lib 't/lib';
 use Test::More tests=>10;
-use SGN::Test::WWW::Mechanize;
+use SGN::Test::Fixture;
 
 BEGIN {use_ok('CXGN::Pedigree::AddCrosses');}
 BEGIN {use_ok('CXGN::DB::Connection');}
@@ -14,8 +14,8 @@ BEGIN {use_ok('Bio::GeneticRelationships::Pedigree');}
 BEGIN {use_ok('Bio::GeneticRelationships::Individual');}
 BEGIN {require_ok('Moose');}
 
-my $test = SGN::Test::WWW::Mechanize->new();
-my $schema = $test->context->dbic_schema('Bio::Chado::Schema');
+my $f = SGN::Test::Fixture->new();
+my $schema = $f->bcs_schema();;
 ok(my $cross = Bio::GeneticRelationships::Pedigree->new(name => "xyzAccession1234", cross_type => "biparental"),"Create pedigree object");
 ok(my $female_parent = Bio::GeneticRelationships::Individual->new(name => 'zyxFemale1234'),"Create individual for pedigree");
 ok(my $male_parent = Bio::GeneticRelationships::Individual->new(name => 'zyxMale1234'),"Create individual for pedigree");
