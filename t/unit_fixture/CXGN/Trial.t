@@ -255,6 +255,40 @@ my $design_type = $trial->get_design_type();
 #print STDERR $design_type."\n";
 is($design_type, 'RCBD', 'check get_design_type');
 
+my $trial_accessions = $trial->get_accessions();
+#print STDERR Dumper $trial_accessions;
+my @trial_accession_names;
+foreach (@$trial_accessions) {
+    push @trial_accession_names, $_->{'accession_name'};
+}
+@trial_accession_names = sort @trial_accession_names;
+is_deeply(\@trial_accession_names, ['test_accession1', 'test_accession2', 'test_accession3'], "check get_accessions");
+
+my $trial_plots = $trial->get_plots();
+my @trial_plot_names;
+foreach (@$trial_plots){
+    push @trial_plot_names, $_->[1];
+}
+@trial_plot_names = sort @trial_plot_names;
+#print STDERR Dumper \@trial_plot_names;
+is_deeply(\@trial_plot_names, [
+          'anothertrial1',
+          'anothertrial2',
+          'anothertrial3',
+          'anothertrial4',
+          'anothertrial5',
+          'anothertrial6',
+          'anothertrial7',
+          'anothertrial8',
+          'anothertrial9'
+        ], 'Check get_plots');
+
+my $trial_controls = $trial->get_controls();
+#print STDERR Dumper $trial_controls;
+is_deeply($trial_controls, [], "check get_controls");
+
+
+
 
 # check trial deletion - first, delete associated phenotypes
 #
