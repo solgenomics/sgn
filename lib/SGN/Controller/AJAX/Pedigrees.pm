@@ -53,6 +53,14 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 #    return;
 
     my $upload_original_name  = $upload->filename();
+
+    # check file type by file name extension
+    #
+    if ($upload_original_name =~ /\.xls$|\.xlsx/) { 
+	$c->stash->{rest} = { error => "Pedigree upload requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again." };
+	return;
+    }
+			      
     my $md5;
 
     my $uploader = CXGN::UploadFile->new();
@@ -203,8 +211,13 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
     }
     
     my $add = CXGN::Pedigree::AddPedigrees->new( { schema=>$c->dbic_schema("Bio::Chado::Schema"), pedigrees=>\@pedigrees });
-    #my $ok = $add->validate_pedigrees();
-    $add->add_pedigrees();
+    eval { 
+	my $ok = $add->validate_pedigrees();
+	$add->add_pedigrees();
+    };
+    if ($@) { 
+	$c->stash->{rest} = { error => "An error occurred while storing the provided pedigree. Please check your file and try again ($@)\n" };
+    }
     
     $c->stash->{rest} = { success => 1 };
 }
