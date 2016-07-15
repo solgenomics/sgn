@@ -620,26 +620,6 @@ sub remove_planting_date {
 		}
 }
 
-sub get_plot_dimensions {
-    my $self = shift;
-    my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
-
-    if ($row) {
-	return $row->name();
-    }
-}
-
-
-sub set_plot_dimensions {
-    my $self = shift;
-    my $name = shift;
-    my $row = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
-    if ($row) {
-	$row->name($name);
-	$row->update();
-    }
-}
-
 
 =head2 function delete_phenotype_data()
 
@@ -1244,6 +1224,7 @@ sub get_accessions {
 	my $self = shift;
 	my @accessions;
 
+	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
@@ -1254,7 +1235,9 @@ sub get_accessions {
 	my %unique_accessions;
 	while(my $rs = $trial_accession_rs->next()) {
 		my $r = $rs->object;
-		$unique_accessions{$r->uniquename} = $r->stock_id;
+		if ($r->type_id == $accession_cvterm_id) {
+			$unique_accessions{$r->uniquename} = $r->stock_id;
+		}
 	}
 	foreach (keys %unique_accessions) {
 		push @accessions, {accession_name=>$_, stock_id=>$unique_accessions{$_} };
@@ -1267,15 +1250,15 @@ sub get_plots {
 	my $self = shift;
 	my @plots;
 
+	my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 
-	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks");
+	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plot_cvterm_id});
 
 	my %unique_plots;
 	while(my $rs = $trial_plot_rs->next()) {
-		my $r = $rs->stock();
-		$unique_plots{$r->uniquename} = $r->stock_id;
+		$unique_plots{$rs->uniquename} = $rs->stock_id;
 	}
 	foreach (keys %unique_plots) {
 		#push @plots, {plot_name=> $_, plot_id=>$unique_plots{$_} } ; 
@@ -1291,6 +1274,7 @@ sub get_controls {
 	my $self = shift;
 	my @controls;
 
+	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
@@ -1308,7 +1292,9 @@ sub get_controls {
 		}
 		if ($is_a_control) {
 			my $accession = $rs->search_related("stock")->search_related('stock_relationship_subjects')->find({ 'type_id' => [$plot_of_cvterm_id, $tissue_sample_of_cvterm_id ]})->object;
-			$unique_controls{$accession->uniquename}=$accession->stock_id;
+			if ($accession->type_id == $accession_cvterm_id) {
+				$unique_controls{$accession->uniquename}=$accession->stock_id;
+			}
 		}
 	}
 	foreach (keys %unique_controls) {
