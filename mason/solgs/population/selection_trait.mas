@@ -37,6 +37,11 @@ $combined_populations => ''
 
 $project_name = "<a href=\"/solgs/trait/$trait_id/population/$pop_id\">$project_name</a>";
 
+my $selection_pop_id   = $prediction_pop_id;
+my $selection_pop_name = $prediction_pop_name;
+my $training_pop_id    = $pop_id;
+my $training_pop_name =  $project_name;
+
 </%perl>
 
   <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.traitGebvFlot", 
@@ -82,6 +87,15 @@ $project_name = "<a href=\"/solgs/trait/$trait_id/population/$pop_id\">$project_
    trait_id           => $trait_id
 &>
 
+
+<& /solgs/population/gebvs_comparison.mas,
+   trait_id         => $trait_id,
+   training_pop_id  => $pop_id,
+   selection_pop_id => $selection_pop_id,
+&>
+
+
  <input type="hidden"  id="model_id" value="<% $pop_id %>" /> 
+ <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
  <input type="hidden"  id="trait_id" value="<% $trait_id %>" />
- <input type="hidden"  id="selection_pop_id" value="<% $prediction_pop_id %>" />
+ <input type="hidden"  id="selection_pop_id" value="<% $selection_pop_id %>" />

@@ -119,14 +119,14 @@ foreach my $method(sort keys %info ) {
     if (scalar(@values) ) {
        no warnings 'uninitialized';
        push  @ { $data{$method}{phen} } ,  [map {$_}
-                     ( { width => "320" , content => (tooltipped_text(qq|<a href="/chado/cvterm?cvterm_id=$term_id">$term_name</a> $unit|, $definition ) ) } , { width => "60", content => $mean_value }, { with => "60" , content => $min } , { width => "60" , content => $max }, { width => "40" , content => scalar(@values) } )  ];
+                     ( { width => "320" , content => (tooltipped_text(qq|<a href="/cvterm/$term_id/view">$term_name</a> $unit|, $definition ) ) } , { width => "60", content => $mean_value }, { with => "60" , content => $min } , { width => "60" , content => $max }, { width => "40" , content => scalar(@values) } )  ];
 
       push  @ { $data{$method}{phen}[$count] } , qq | <a href="/phenome/qtl_analysis.pl?stock_id=$object_id&amp;cvterm_id=$term_id" onClick="Qtl.waitPage()"> $graph_icon</a> |    if $has_qtl;
       $count++;
     }
     if (scalar(@qual_values) ) {
       push  @qual_data,  [map {$_}
-                          ( (tooltipped_text(qq|<a href="/chado/cvterm?cvterm_id=$term_id">$term_name</a>|, $definition) )  , join(', ' , @qual_values ) ) ];
+                          ( (tooltipped_text(qq|<a href="/cvterm/$term_id/view">$term_name</a>|, $definition) )  , join(', ' , @qual_values ) ) ];
     }
   }
      @ { $data{$method}{headings} } = ("$method" , "Average", "Min", "Max", "Lines/repeats");

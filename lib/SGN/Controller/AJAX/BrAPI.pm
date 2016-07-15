@@ -1757,10 +1757,11 @@ sub studies_table_GET {
     my @status = @$status;
     my %result;
 
+    my $timestamp = $c->req->param("timestamp") || 0;
     my $bs = CXGN::BreederSearch->new( { dbh => $self->bcs_schema->storage->dbh() });
     my $trial_id = $c->stash->{study_id};
     my $trial_sql = "\'$trial_id\'";
-    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef);
+    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef, $timestamp);
 
     #print STDERR Dumper \@data;
 

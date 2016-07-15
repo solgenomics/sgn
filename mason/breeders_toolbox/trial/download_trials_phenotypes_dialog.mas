@@ -1,0 +1,65 @@
+
+<& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree' ] &>
+
+<div class="modal fade" id="download_trials_phenotypes_dialog" name="download_trials_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadTrialsPhenotypesDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="downloadTrialsPhenotypesDialog">Download Phenotypes for Trials</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+	       <form class="form-horizontal" role="form" method="post" >
+	        <div class="form-group">
+                <label class="col-sm-3 control-label">Format: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_trials_phenotypes_format">
+                        <option value="csv">CSV</option>
+                        <option value="xls">Excel (xls)</option>
+                    </select>
+                </div>
+	        </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Include Timestamps: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_trials_phenotypes_timestamp_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+            </form><br/>
+         
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="download_trials_phenotypes_cancel_button" id="download_trials_phenotypes_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="download_trials_phenotypes_submit_button" id="download_trials_phenotypes_submit_button" title="Submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+  jQuery('#trials_download_phenotypes_button').click( function () {
+    jQuery('#download_trials_phenotypes_dialog').modal("show");
+  });
+  
+  jQuery('#download_trials_phenotypes_submit_button').click( function () {
+    var format = jQuery("#download_trials_phenotypes_format").val();
+    var timestamp = jQuery("#download_trials_phenotypes_timestamp_option").val();
+    var selected = jQuery('#trial_list').jstree('get_bottom_selected');
+    if (selected.length !== 0) {
+        window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format='+format+'&timestamp='+timestamp);
+    }
+    else { alert("No leaf nodes selected for download."); }
+  });
+
+});
+
+</script>

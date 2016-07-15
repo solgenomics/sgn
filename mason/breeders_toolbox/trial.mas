@@ -15,9 +15,11 @@ Jeremy D. Edwards
 
 <%args>
 $trial_id
-$breeding_program
 $trial_name
-$location_data => undef
+$breeding_program_id
+$breeding_program_name
+$location_id
+$location_name
 $year => undef
 $trial_type => undef
 $planting_date => undef
@@ -30,7 +32,7 @@ $folder_name => undef
 $folder_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
 
 <%perl>
   use Data::Dumper;
@@ -56,29 +58,11 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<&| /page/info_section.mas, title=>"Trial details",  collapsible => 1, &>
+<&| /page/info_section.mas, title=>"Trial details",  collapsible => 1, subtitle => '[<a id="edit_trial_details">Edit Trial Details</a>]'&>
 
 
 <div class="panel panel-default">
 <table class="table table-hover" >
-
-<tr>
-<td><b>Breeding Program </b></td>
-<td>
-<span id="breeding_programs">
-% if ($breeding_program) {
-% foreach (@$breeding_program) {
-%  print "$_->[1] ($_->[2]) <br/>";
-% }
-% } else {
-% print "No Breeding Program";
-% }
-</span>
-</td>
-<td>
- <% $change_breeding_program_link %>
-</td>
-</tr>
 
 <tr>
 <td><b>Trial Name</b></td>
@@ -91,26 +75,32 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-  [<a id="edit_trial_name">change</a>]
-</td>
-<& /breeders_toolbox/trial/edit_trial_name.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_type=>"Trial" &>
-
 </tr>
 
 <tr>
-<td><b>Trial Type</b></td>
+<td><b>Breeding Program </b></td>
 <td>
-<div id="trial_type">
-% if ($trial_type) {
-%  print "@$trial_type[1]<br/>";
+<span id="breeding_program">
+% if ($breeding_program_name) {
+%  print "$breeding_program_name";
+% }
+% else {
+%  print "No Breeding Program";
+% }
+</span>
+</td>
+</tr>
+
+<tr>
+<td><b>Trial Location</b></td>
+<td>
+<div id="trial_location">
+% if ($location_name) {
+%  print "$location_name";
 % } else {
-% print "[Type not set]";
+%  print "[No Location]";
 % }
 </div>
-</td>
-<td>
-  [<a id="edit_trial_type" >change</a>]
 </td>
 </tr>
 
@@ -125,24 +115,18 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-  [<a id="change_year_link">change</a>]
-</td>
 </tr>
 
 <tr>
-<td><b>Trial Location</b></td>
+<td><b>Trial Type</b></td>
 <td>
-<div id="trial_location">
-% if ($location_data) {
-%  print "$location_data->[1]";
+<div id="trial_type">
+% if ($trial_type) {
+%  print "$trial_type";
 % } else {
-%  print "[No Location]";
+% print "[Type not set]";
 % }
 </div>
-</td>
-<td>
-  [<a id="change_trial_location_link">change</a>]
 </td>
 </tr>
 
@@ -157,9 +141,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-    [<a id="change_planting_date_link">change</a>]
-</td>
 </tr>
 
 <tr>
@@ -173,9 +154,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-    [<a id="change_harvest_date_link">change</a>]
-</td>
 </tr>
 
 <tr><td><b>Description</b></td>
@@ -188,41 +166,13 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-  [<a id="edit_trial_description">edit</a>]
-</td>
 </tr>
 </table>
 </div>
 
 </&>
 
-<div id="edit_trial_description_dialog">
-   Please enter the description for this trial:<br/>
-   <textarea id="trial_description_input" cols="50" rows="10"></textarea>
-</div>
-
-<div id="edit_trial_type_dialog">
-  Please choose the type of this trial:<br />
-  <select id="trial_type_select"></select>
-</div>
-
-<div id="change_trial_location_dialog">
-  Please choose the location fro this trial:<br />
-  <div id="trial_location_select_div" /></div>
-</div>
-
-<div id="change_planting_date_dialog">
-  Please enter a planting date:<br />
-  <input id="planting_date_picker"></input>
-</select>
-
-</div>
-
-<div id="change_harvest_date_dialog">
-  Please enter a harvest date [MM/DD/YYYY]:<br />
-  <input id="harvest_date_picker"></input>
-</div>
+<& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program_id, location => $location_id, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
 
 % my $folder_collapsed = 1;
 % if ($folder_id) {
@@ -232,8 +182,8 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <&| /page/info_section.mas, title=>"Folder", collaspible=>1, collapsed=>$folder_collapsed,
   subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">Change</a>]' &>
 
-  <& /breeders_toolbox/folder/folder_set.mas, breeding_program_id => $breeding_program->[0]->[0], breeding_program_name =>$breeding_program->[0]->[1], trial_id => $trial_id, trial_name =>$trial_name &>
-  <& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program->[0]->[0], breeding_program_name =>$breeding_program->[0]->[1] &>
+  <& /breeders_toolbox/folder/folder_set.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
+  <& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
 
   <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
 
@@ -242,54 +192,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 % if ($hidap_enabled) {
 
-<&| /page/info_section.mas, id => "hidap_trial", title=>"HIDAP Trial Analysis", collapsible=>1, collapsed => 0 &>
-
-<div class="row">
-  <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Map&fbaInput=<% $trial_id %>" target="_blank">
-      <div class="well">
-        <div class="row">
-          <div class="col-sm-9">
-            Phenotype Plot Map
-          </div>
-          <div class="col-sm-3">
-            <span class="glyphicon glyphicon-th"></span>
-          </div>
-        </div>
-      </div>
-    </a>
-  </div>
-  <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Correlation&fbaInput=<% $trial_id %>" target="_blank">
-      <div class="well">
-        <div class="row">
-          <div class="col-sm-9">
-            Phenotype Correlation
-          </div>
-          <div class="col-sm-3">
-            <span class="glyphicon glyphicon-stats"></span>
-          </div>
-        </div>
-      </div>
-    </a>
-  </div>
-  <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Report&fbaInput=<% $trial_id %>" target="_blank">
-      <div class="well">
-        <div class="row">
-          <div class="col-sm-9">
-            Analysis Report
-          </div>
-          <div class="col-sm-3">
-            <span class="glyphicon glyphicon-book"></span>
-          </div>
-        </div>
-      </div>
-    </a>
-  </div>
-</div>
-
-</&>
+ <& /hidap/hidap_trial_link.mas, trial_id => $trial_id &>
 
 % }
 
@@ -373,16 +276,9 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 <br />
 
-%# <&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
-%# foreach my $trait (@phenotype_data) {
-%# my $trait_id = $trait->[1];
-%# my $trait_name = ucfirst($trait->[0]);
-%# print "$trait_name" . ' [ ' . "<a href=\"/breeders_toolbox/trial/$trial_id/trait/$trait_id\">view statistics</a>" . ' ] ' . "<br />";
-%# }
+<& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
-%# </&>
-
-<&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle => "Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
+<&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]" &>
 
 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
 
@@ -493,18 +389,6 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   </p>
 </div>
 
-<div id="change_breeding_program_dialog">
-  Please select a breeding program for this trial:<br />
-  <div id="change_breeding_program_select_div">
-  </div>
-</div>
-
-<div id="change_trial_year_dialog">
-  Please select a year for this trial:<br />
-  <div id="change_year_select_div">
-  </div>
-</div>
-
 <div id="trial_design_view_layout" title="Trial design layout">
 % print $design_layout_view;
 </div>
@@ -523,7 +407,7 @@ jQuery(document).ready(function () {
 	var yes = confirm("Do you really want to remove this trial from the breeding program?");
 	if (yes) {
             jQuery.ajax( {
-		url: '/breeders/program/remove/<% $breeding_program->[0]->[0] %>/'+trial_id,
+		url: '/breeders/program/remove/<% $breeding_program_id %>/'+trial_id,
 		data: { },
 		async: false,
 		success: function(response) {

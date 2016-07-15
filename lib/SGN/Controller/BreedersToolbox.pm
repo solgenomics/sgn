@@ -4,7 +4,6 @@ package SGN::Controller::BreedersToolbox;
 use Moose;
 
 use Data::Dumper;
-use CXGN::BreederSearch;
 use SGN::Controller::AJAX::List;
 use CXGN::List::Transform;
 use CXGN::BreedersToolbox::Projects;
@@ -88,10 +87,10 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
 
     my $accessions = $ac->get_all_accessions($c);
-    my $populations = $ac->get_all_populations($c);
+    # my $populations = $ac->get_all_populations($c);
 
     $c->stash->{accessions} = $accessions;
-    $c->stash->{population_groups} = $populations;
+    #$c->stash->{population_groups} = $populations;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
 

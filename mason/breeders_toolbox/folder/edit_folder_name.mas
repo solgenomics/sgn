@@ -1,4 +1,3 @@
-
 <%args>
 $trial_id
 $trial_name => undef

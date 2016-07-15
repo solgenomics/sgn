@@ -80,7 +80,7 @@ window.onload = function initialize() {
 	      window.open("../../breeders/locations");
 	      break;
 	  case "traits":
-	      window.open("../../chado/cvterm?action=view&cvterm_id="+this.value);
+	      window.open("../../cvterm/"+this.value+"/view");
 	      break;
 	  default:
 	      if (window.console) console.log("no link for this category");
@@ -112,7 +112,7 @@ window.onload = function initialize() {
         ladda.start();
         var token = new Date().getTime(); //use the current timestamp as the token name and value
         manage_dl_with_cookie(token, ladda);
-        window.location.href = '/breeders/trials/phenotype/download/'+selected.join(",")+'?format=excel&token='+token;
+        window.location.href = '/breeders/trials/phenotype/download/'+selected.join(",")+'?format=xls&token='+token;
       }
       else { alert("No trials selected for download."); }
     });
