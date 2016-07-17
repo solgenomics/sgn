@@ -155,7 +155,7 @@ function open_create_fieldbook_dialog() {
 	},
 	error: function () {
 		jQuery("#working_modal").modal("hide");
-            alert('An error occurred creating the field book.');
+            alert('Missing trial design.');
             jQuery('#open_create_fieldbook_dialog').dialog("close");
 	}
     });
