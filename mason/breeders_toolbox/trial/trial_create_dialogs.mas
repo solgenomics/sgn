@@ -4,6 +4,8 @@ $locations
 $breeding_programs
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
+
 <div class="modal fade" id="add_project_dialog" name="add_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addProjectDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -298,6 +300,7 @@ $breeding_programs
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         The trial was saved successfully
                     </p>
+                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh Trial Tree</button>
                 </div>
             </div>
             <div class="modal-footer">

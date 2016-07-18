@@ -165,19 +165,23 @@ sub _validate_with_plugin {
       #print STDERR "Check 02 ".localtime();
 
     #plot_name must not be blank
-    if (!$plot_name || $plot_name eq '') {
-      push @error_messages, "Cell A$row_name: plot name missing";
-    } else {
-      #plot must not already exist in the database
-      if ($plot_check{$plot_name} ) {
-	push @error_messages, "Cell A$row_name: plot name already exists: $plot_name";
-      }
+    if (!$plot_name || $plot_name eq '' ) {
+        push @error_messages, "Cell A$row_name: plot name missing.";
+    }
+    elsif ($plot_name =~ /\s/ || $plot_name =~ /\// || $plot_name =~ /\\/ ) {
+        push @error_messages, "Cell A$row_name: plot name must not contain spaces or slashes.";
+    }
+    else {
+        #plot must not already exist in the database
+        if ($plot_check{$plot_name} ) {
+            push @error_messages, "Cell A$row_name: plot name already exists: $plot_name";
+        }
 
-      #file must not contain duplicate plot names
-      if ($seen_plot_names{$plot_name}) {
-	push @error_messages, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
-      }
-      $seen_plot_names{$plot_name}=$row_name;
+        #file must not contain duplicate plot names
+        if ($seen_plot_names{$plot_name}) {
+            push @error_messages, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
+        }
+        $seen_plot_names{$plot_name}=$row_name;
     }
 
       #print STDERR "Check 03 ".localtime();
