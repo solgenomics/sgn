@@ -35,17 +35,16 @@ sub download {
     my $bold = $workbook->add_format();
     $bold->set_bold();
 
-    my $predefined_columns_json;
+    my @predefined_columns;
+    my $json = JSON->new();
     if ($self->predefined_columns) {
-        my $json = JSON->new();
-        my @predefined_columns;
         foreach (keys %{$self->predefined_columns}) {
             if ($self->predefined_columns->{$_}) {
                 push @predefined_columns, $_;
             }
         }
-        $predefined_columns_json = $json->encode(\@predefined_columns);
     }
+    my $predefined_columns_json = $json->encode(\@predefined_columns);
 
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
