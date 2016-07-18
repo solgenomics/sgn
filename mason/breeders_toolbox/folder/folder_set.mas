@@ -8,6 +8,8 @@ $breeding_program_id => undef
 $breeding_program_name => undef
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
+
 <div class="modal fade" id="set_folder_dialog" name="set_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="setFolderDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -69,6 +71,29 @@ $breeding_program_name => undef
       </div>
     </div>
   </div>
+</div>
+
+<div class="modal fade" id="folder_set_success_dialog_message" name="folder_set_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="setFolderSuccessDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="setFolderSuccessDialog">Trial Move Successful</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The trial was moved into the folder successfully
+                    </p>
+                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh Trial Tree</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_set_folder_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script defer="defer">
@@ -140,7 +165,7 @@ function set_trial_folder() {
         });
     });
     if (errors == 0) {
-        alert("Successfully associated trials: "+trial_ids+" to folder: "+folder_id);
+        jQuery('#folder_set_success_dialog_message').modal("show");
     }
   } else {
       if (trial_ids == folder_id) {
@@ -154,7 +179,7 @@ function set_trial_folder() {
                   alert(response.error);
               }
               else {
-                  alert("Successfully associated folder");
+                    jQuery('#folder_set_success_dialog_message').modal("show");
                   //location.reload();
               }
           },

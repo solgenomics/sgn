@@ -157,20 +157,22 @@ sub evidence_description_GET :Args(0) {
     $c->stash->{rest} = $hashref;
 }
 
-sub recursive_stocks : Local : ActionClass('REST') { }
 
-sub recursive_stocks_GET :Args(0) {
+sub get_annotated_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/annotated_stocks') Args(0) {
     my ($self, $c) = @_;
-    my $cvterm_id = $c->request->param("cvterm_id");
+    my $cvterm = $c->stash->{cvterm};
+    my $cvterm_id = $cvterm->get_cvterm_id;
     my $q = <<'';
 SELECT DISTINCT
+        type.name
         stock_id
-      , stock.name
+      , stock.uniquename
       , stock.description
 FROM cvtermpath
 JOIN cvterm on (cvtermpath.object_id = cvterm.cvterm_id OR cvtermpath.subject_id = cvterm.cvterm_id )
 JOIN stock_cvterm on (stock_cvterm.cvterm_id = cvterm.cvterm_id)
 JOIN stock USING (stock_id)
+JOIN cvterm as type on type.cvterm_id = stock.type_id
 WHERE cvtermpath.object_id = ?
   AND stock.is_obsolete = ?
   AND pathdistance > 0
@@ -180,29 +182,21 @@ WHERE cvtermpath.object_id = ?
               AND p.stock_cvterm_id = stock_cvterm.stock_cvterm_id
               AND value = '1'
           )
-ORDER BY stock.name
+ORDER BY stock.uniquename
 
     my $sth = $c->dbc->dbh->prepare($q);
     my $rows = $c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id, 'false');
-    if( $rows > 500 ) {
-        $c->stash->{rest}{html} = commify_number($rows)." annotated stocks found, too many to display.";
-    } else {
-        my @stock_data;
-        while ( my ($stock_id , $stock_name, $description) = $sth->fetchrow_array ) {
+    
+    my @stock_data;
+        while ( my ($type, $stock_id , $stock_name, $description) = $sth->fetchrow_array ) {
             my $stock_link = qq|<a href="/stock/$stock_id/view">$stock_name</a> |;
             push @stock_data, [
-                $stock_link,
+                $type,
+		$stock_link,
                 $description,
                 ];
         }
-        $c->stash->{rest}{html} =
-            @stock_data
-                ? columnar_table_html(
-                    headings  =>  [ "Stock name", "Description" ],
-                    data      => \@stock_data,
-                    )
-                : undef;
-    }
+    $c->stash->{rest} = { data => \@stock_data, };
 }
 
 
@@ -272,12 +266,10 @@ sub get_phenotyped_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/p
     $c->stash->{rest} = { data => \@data, };
 }
 
-
-sub trials : Local : ActionClass('REST') { }
-
-sub trials_GET :Args(0) {
+sub get_direct_trials :Chained('/cvterm/get_cvterm') :PathPart('datatables/direct_trials') Args(0) {
     my ($self, $c) = @_;
-    my $cvterm_id = $c->request->param("cvterm_id");
+    my $cvterm = $c->stash->{cvterm};
+    my $cvterm_id = $cvterm->get_cvterm_id;
     my $q = "SELECT DISTINCT project_id, project.name, project.description
              FROM public.project
               JOIN nd_experiment_project USING (project_id)  
@@ -288,25 +280,18 @@ sub trials_GET :Args(0) {
              WHERE observable_id = ? 
     ";
  
-
     my $sth = $c->dbc->dbh->prepare($q);
-    $c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id );
+    my $count = 0 + $sth->execute($cvterm_id );
     my @data;
     while ( my ($project_id, $project_name, $description) = $sth->fetchrow_array ) {
         my $link = qq|<a href="/breeders/trial/$project_id">$project_name</a> |;
         push @data,
         [
-         (
-          $link,
-          $description,
-         )
-        ];
+	 $link,
+	 $description,
+          ];
     }
-    $c->stash->{rest}{html} = @data ?
-        columnar_table_html(
-            headings     =>  [ "trial name", "Description" ],
-            data         => \@data,
-        )  : undef ;
+    $c->stash->{rest} = { data => \@data, count => $count };
 }
 
 1;
