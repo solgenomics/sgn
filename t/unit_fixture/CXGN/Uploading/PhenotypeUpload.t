@@ -71,10 +71,10 @@ ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for
 #Now parse phenotyping spreadsheet file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet.xls";
-$validate_file = $parser->validate('phenotype spreadsheet', $filename, 1);
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 1, 'plots');
 ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 1);
+my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 1, 'plots');
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 #print STDERR Dumper $parsed_file;
@@ -389,7 +389,7 @@ my @traits = @{$parsed_file->{'traits'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 my $size = scalar(@plots) * scalar(@traits);
-my $stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+my $stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -487,10 +487,10 @@ ok($post1_exp_md_files_diff == 60, "Check num rows in NdExperimentMdFIles table 
 
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet_duplicate.xls";
-$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0);
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots');
 ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0);
+my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0), 'plots';
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 my %phenotype_metadata;
@@ -503,7 +503,7 @@ my @plots = @{$parsed_file->{'plots'}};
 my @traits = @{$parsed_file->{'traits'}};
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $traits_assayed  = $tn->get_traits_assayed();
@@ -620,9 +620,181 @@ ok($parsed_file, "Check if parse parse fieldbook works");
 
 #print STDERR Dumper $parsed_file;
 
-#is_deeply($parsed_file, {
-
-#        }, "Check parse fieldbook");
+is_deeply($parsed_file, {
+          'plots' => [
+                       'test_trial21',
+                       'test_trial210',
+                       'test_trial211',
+                       'test_trial212',
+                       'test_trial213',
+                       'test_trial214',
+                       'test_trial215',
+                       'test_trial22',
+                       'test_trial23',
+                       'test_trial24',
+                       'test_trial25',
+                       'test_trial26',
+                       'test_trial27',
+                       'test_trial28',
+                       'test_trial29'
+                     ],
+          'data' => {
+                      'test_trial22' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '45',
+                                                                      '2016-01-07 12:08:26-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '45',
+                                                                               '2016-01-07 12:08:26-0500'
+                                                                             ]
+                                        },
+                      'test_trial27' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '0',
+                                                                      '2016-01-07 12:08:51-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '52',
+                                                                               '2016-01-07 12:08:51-0500'
+                                                                             ]
+                                        },
+                      'test_trial214' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '32',
+                                                                       '2016-01-07 12:09:05-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '32',
+                                                                                '2016-01-07 12:09:05-0500'
+                                                                              ]
+                                         },
+                      'test_trial21' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '42',
+                                                                      '2016-01-07 12:08:24-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '42',
+                                                                               '2016-01-07 12:08:24-0500'
+                                                                             ]
+                                        },
+                      'test_trial28' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '41',
+                                                                               '2016-01-07 12:08:53-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '41',
+                                                                      '2016-01-07 12:08:53-0500'
+                                                                    ]
+                                        },
+                      'test_trial23' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '41',
+                                                                      '2016-01-07 12:08:27-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '41',
+                                                                               '2016-01-07 12:08:27-0500'
+                                                                             ]
+                                        },
+                      'test_trial215' => {
+                                           'dry matter content|CO:0000092' => [
+                                                                                '31',
+                                                                                '2016-01-07 12:09:07-0500'
+                                                                              ],
+                                           'dry yield|CO:0000014' => [
+                                                                       '31',
+                                                                       '2016-01-07 12:09:07-0500'
+                                                                     ]
+                                         },
+                      'test_trial24' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '14',
+                                                                      '2016-01-07 12:08:46-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '14',
+                                                                               '2016-01-07 12:08:46-0500'
+                                                                             ]
+                                        },
+                      'test_trial213' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '35',
+                                                                       '2016-01-07 12:09:04-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '35',
+                                                                                '2016-01-07 12:09:04-0500'
+                                                                              ]
+                                         },
+                      'test_trial212' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '42',
+                                                                       '2016-01-07 12:09:02-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '42',
+                                                                                '2016-01-07 12:09:02-0500'
+                                                                              ]
+                                         },
+                      'test_trial210' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '12',
+                                                                       '2016-01-07 12:08:56-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '12',
+                                                                                '2016-01-07 12:08:56-0500'
+                                                                              ]
+                                         },
+                      'test_trial25' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '25',
+                                                                      '2016-01-07 12:08:48-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '25',
+                                                                               '2016-01-07 12:08:48-0500'
+                                                                             ]
+                                        },
+                      'test_trial211' => {
+                                           'dry matter content|CO:0000092' => [
+                                                                                '13',
+                                                                                '2016-01-07 12:08:58-0500'
+                                                                              ],
+                                           'dry yield|CO:0000014' => [
+                                                                       '13',
+                                                                       '2016-01-07 12:08:58-0500'
+                                                                     ]
+                                         },
+                      'test_trial29' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '',
+                                                                               '2016-01-07 12:08:55-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '24',
+                                                                      '2016-01-07 12:08:55-0500'
+                                                                    ]
+                                        },
+                      'test_trial26' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '',
+                                                                               '2016-01-07 12:08:49-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '0',
+                                                                      '2016-01-07 12:08:49-0500'
+                                                                    ]
+                                        }
+                    },
+          'traits' => [
+                        'dry matter content|CO:0000092',
+                        'dry yield|CO:0000014'
+                      ]
+        }, "Check parse fieldbook");
 
 
 $phenotype_metadata{'archived_file'} = $filename;
@@ -635,7 +807,7 @@ $phenotype_metadata{'date'}="2016-01-16_03:15:26";
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 $size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -1053,7 +1225,7 @@ $phenotype_metadata{'date'}="2016-02-16_07:11:98";
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 $size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -1151,10 +1323,10 @@ ok($post1_exp_md_files_diff == 205, "Check num rows in NdExperimentMdFIles table
 
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet_large.xls";
-$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0);
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots');
 ok($validate_file == 1, "Check if parse validate works for large phenotype file");
 
-$parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0);
+$parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plots');
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 #print STDERR Dumper $parsed_file;
@@ -1712,7 +1884,7 @@ $phenotype_metadata{'date'}="2016-02-16_05:55:55";
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 $size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),

@@ -34,6 +34,11 @@ sub validate {
     $header = shift(@file_lines);
     chomp($header);
     @header_row = split($delimiter, $header);
+    if (!$header_row[1]) {
+        $parse_result{'error'} = "File has no header row.";
+        print STDERR "File has no header row.\n";
+        return \%parse_result;
+    }
 
     #  Check header row contents
     if ( ($header_row[0] ne "\"plot_id\"" &&
