@@ -996,6 +996,11 @@ sub _delete_field_layout_experiment {
 		$plots_deleted++;
 		$plot->delete();
 	}
+	if ($has_plants) {
+		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_has_plant_entries', 'project_property' );
+		my $has_plants_prop = $self->bcs_schema->resultset("Project::Projectprop")->find({ type_id => $has_plants_cvterm->cvterm_id(), project_id => $trial_id });
+		$has_plants_prop->delete();
+	}
 
     $q = "SELECT nd_experiment_id FROM nd_experiment JOIN nd_experiment_project USING(nd_experiment_id) WHERE nd_experiment.type_id in (?,?) AND project_id=?";
     $h = $self->bcs_schema->storage()->dbh()->prepare($q);
