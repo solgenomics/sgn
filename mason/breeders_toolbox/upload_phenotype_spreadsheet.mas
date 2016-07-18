@@ -2,7 +2,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
 
 <div class="modal fade" id="upload_phenotype_spreadsheet_dialog" name="upload_phenotype_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addSpreadsheetPhenotypeDialog">
   <div class="modal-dialog" role="document">
@@ -150,18 +150,6 @@ jQuery(document).ready(function() {
     jQuery("#phenotype_upload_spreadsheet_format_info").click( function () { 
         jQuery("#phenotype_upload_spreadsheet_info_dialog" ).modal("show");	
     });
-
-      jQuery("[name='create_spreadsheet_link']").click( function () {
-        jQuery('#create_spreadsheet_dialog').modal("show");
-        jQuery('#phenotype_upload_spreadsheet_info_dialog').modal("hide");
-        jQuery('#upload_phenotype_spreadsheet_dialog').modal("hide");
-        var list = new CXGN.List();
-        jQuery("#trait_list_spreadsheet").html(list.listSelect("trait_list_spreadsheet", [ 'traits' ]));
-      });
-
-      jQuery('#create_phenotyping_ok_button').click( function () {
-        create_phenotype_spreadsheet();
-      });
 
 });  
 

@@ -600,4 +600,56 @@ jQuery(document).ready(function ($) {
 
     }
 
+
+    jQuery("[name='create_spreadsheet_link']").click( function () {
+      jQuery('#create_spreadsheet_dialog').modal("show");
+      jQuery('#phenotype_upload_spreadsheet_info_dialog').modal("hide");
+      jQuery('#upload_phenotype_spreadsheet_dialog').modal("hide");
+      var list = new CXGN.List();
+      jQuery("#trait_list_spreadsheet").html(list.listSelect("trait_list_spreadsheet", [ 'traits' ]));
+    });
+
+    jQuery('#create_phenotyping_ok_button').click( function () {
+      create_phenotype_spreadsheet();
+    });
+
 });
+
+function create_phenotype_spreadsheet() {
+    var list = new CXGN.List();
+    var trait_list_id = jQuery('#trait_list_spreadsheet_list_select').val();
+    var trait_list;
+    if (! trait_list_id == "") {
+        trait_list = JSON.stringify(list.getList(trait_list_id));
+    }
+    new jQuery.ajax({
+        type: 'POST',
+        url: '/ajax/phenotype/create_spreadsheet',
+        dataType: "json",
+        data: {
+            'trial_id': jQuery("#html_select_trial_for_create_spreadsheet").val(),
+            'trait_list': trait_list,
+            'data_level': jQuery("#create_spreadsheet_data_level").val(),
+        },
+        beforeSend: function() {
+            jQuery('#working_modal').modal("show");
+        },
+        success: function (response) {
+            jQuery('#working_modal').modal("hide");
+            if (response.error) {
+                alert(response.error);
+                jQuery('#create_spreadsheet_dialog').modal("hide");
+            } else {
+                //alert(response.filename);
+                jQuery('#create_spreadsheet_dialog').modal("hide");
+                jQuery('#working_modal').modal("hide");
+                window.location.href = "/download/"+response.filename;
+            }
+        },
+        error: function () {
+            jQuery('#working_modal').modal("hide");
+            alert('An error occurred creating a phenotype file.');
+            jQuery('#create_spreadsheet_dialog').modal("hide");
+        }
+    });
+}
